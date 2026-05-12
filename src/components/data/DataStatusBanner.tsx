@@ -4,6 +4,8 @@ import { getMarketDataSourceLabel } from "../../data/providers/source";
 export function DataStatusBanner({ meta }: { meta: MarketDataMeta }) {
   const isLive = meta.status === "live";
   const sourceLabel = getMarketDataSourceLabel(meta.source);
+  const newsStatus = getNewsStatusLabel(meta.news);
+  const footballStatus = getFootballStatusLabel(meta.football);
 
   return (
     <div
@@ -20,6 +22,8 @@ export function DataStatusBanner({ meta }: { meta: MarketDataMeta }) {
             {isLive ? `Live ${sourceLabel} data` : "Fallback mock data"}
           </span>
           {meta.stale ? <span>/ stale</span> : null}
+          {newsStatus ? <span className="text-terminal-muted">/ {newsStatus}</span> : null}
+          {footballStatus ? <span className="text-terminal-muted">/ {footballStatus}</span> : null}
           {meta.error ? <span className="text-terminal-muted">/ {meta.error}</span> : null}
         </div>
         <span className="terminal-label text-[10px] uppercase tracking-[0.18em]">
@@ -28,6 +32,38 @@ export function DataStatusBanner({ meta }: { meta: MarketDataMeta }) {
       </div>
     </div>
   );
+}
+
+function getFootballStatusLabel(football: MarketDataMeta["football"]): string | undefined {
+  if (!football) {
+    return undefined;
+  }
+
+  if (football.status === "missing_api_key") {
+    return "API-Football key missing";
+  }
+
+  if (football.status === "unavailable") {
+    return "API-Football unavailable";
+  }
+
+  return `${football.teamCount} API-Football team profiles`;
+}
+
+function getNewsStatusLabel(news: MarketDataMeta["news"]): string | undefined {
+  if (!news) {
+    return undefined;
+  }
+
+  if (news.status === "mock") {
+    return `${news.articleCount} mock news items`;
+  }
+
+  if (news.status === "unavailable") {
+    return "GDELT news unavailable";
+  }
+
+  return `${news.articleCount} GDELT related news items`;
 }
 
 function formatUpdatedAt(value: string): string {

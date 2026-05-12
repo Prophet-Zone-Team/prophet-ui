@@ -55,7 +55,7 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
                 Watchlist Page
               </h1>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-terminal-muted">
-                Track locally saved teams, probability changes, volume context, and mock news alerts.
+                Track locally saved teams, probability changes, volume context, and possible related news alerts.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
@@ -152,7 +152,7 @@ function WatchlistTeamCard({
                 </div>
               ))
             ) : (
-              <p className="text-sm leading-6 text-terminal-muted">No tagged mock news alerts.</p>
+              <p className="text-sm leading-6 text-terminal-muted">No tagged related news alerts.</p>
             )}
           </div>
         </div>

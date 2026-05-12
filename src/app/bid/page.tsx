@@ -12,7 +12,11 @@ interface PageProps {
 
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams;
-  const marketData = await getWorldCupMarketData({ source: parseMarketDataSource(params?.source) });
+  const marketData = await getWorldCupMarketData({
+    source: parseMarketDataSource(params?.source),
+    includeNews: false,
+    includeFootballContext: false,
+  });
 
   return <BidPage snapshots={marketData.snapshots} dataStatus={marketData.meta} />;
 }

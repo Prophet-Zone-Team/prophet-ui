@@ -9,7 +9,7 @@ import {
   getOddsMismatch,
   getTopMovers,
 } from "../../lib/market/analyzer";
-import type { MarketSignal, TeamMarketSnapshot } from "../../types/market";
+import type { MarketSignal, NewsEvent, TeamMarketSnapshot } from "../../types/market";
 import { DataSourceSwitch } from "../data/DataSourceSwitch";
 import { DataStatusBanner } from "../data/DataStatusBanner";
 import { TeamMarketCard } from "./TeamMarketCard";
@@ -17,16 +17,17 @@ import { formatChange, formatProbability, formatVolume, getChangeTone } from "./
 
 interface HomePageProps {
   snapshots: TeamMarketSnapshot[];
+  newsEvents: NewsEvent[];
   dataStatus: MarketDataMeta;
 }
 
-export function HomePage({ snapshots, dataStatus }: HomePageProps) {
+export function HomePage({ snapshots, newsEvents, dataStatus }: HomePageProps) {
   const heatmapTeams = [...snapshots].sort((a, b) => b.market.volume - a.market.volume);
   const topMovers = getTopMovers(snapshots, 4);
   const biggestLosers = getBiggestLosers(snapshots, 4);
   const hotTeams = getHotTeams(snapshots, 4);
   const oddsMismatch = getOddsMismatch(snapshots, 3);
-  const marketSignals = generateMarketSignals(snapshots).slice(0, 6);
+  const marketSignals = generateMarketSignals(snapshots, newsEvents).slice(0, 6);
 
   return (
     <main className="terminal-grid min-h-screen px-4 py-5 sm:px-7 lg:px-8">

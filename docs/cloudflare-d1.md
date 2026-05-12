@@ -69,6 +69,34 @@ Authorization: Bearer $MARKET_COLLECTOR_SECRET
 
 Recommended schedule: every 15-30 minutes.
 
+Signal data is collected through:
+
+```text
+POST /api/signals/collect
+```
+
+Supported signal sources:
+
+```text
+source=gdelt
+source=api-football
+source=all
+```
+
+The scheduled Worker cron also runs signal collection. It stores:
+
+- GDELT related football coverage in `news_articles`
+- API-Football team profile and upcoming fixture context in `football_team_context`
+
+API-Football is collected in small rotating batches to reduce rate-limit pressure. A 10-minute cron will gradually refresh the whole team board instead of hitting every team at once.
+
+Read APIs:
+
+```text
+GET /api/news/events?teamId=argentina&days=30&limit=20
+GET /api/football/context?teamId=argentina
+```
+
 Example:
 
 ```bash

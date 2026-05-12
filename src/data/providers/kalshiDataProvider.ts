@@ -56,6 +56,8 @@ export const kalshiDataProvider: WorldCupMarketDataProvider = {
       snapshots,
       newsEvents: [],
       probabilityHistory: [],
+      footballContext: [],
+      footballTeamContext: [],
       meta: {
         source: "kalshi",
         status: "live",

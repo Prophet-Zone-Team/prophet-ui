@@ -1,4 +1,4 @@
-import type { MarketSignal, SignalSeverity, TeamMarketSnapshot } from "../../types/market";
+import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "../../types/market";
 
 const DEFAULT_LIMIT = 5;
 const ODDS_MISMATCH_THRESHOLD = 1.2;
@@ -73,6 +73,7 @@ export function getHotTeams(
 
 export function generateMarketSignals(
   snapshots: TeamMarketSnapshot[],
+  newsEvents: NewsEvent[] = [],
 ): MarketSignal[] {
   const createdAt = getLatestUpdatedAt(snapshots);
   const signals: MarketSignal[] = [];
@@ -139,6 +140,25 @@ export function generateMarketSignals(
     });
   }
 
+  for (const event of newsEvents.slice(0, 4)) {
+    const snapshot = snapshots.find((item) => item.team.id === event.teamId);
+
+    if (!snapshot) {
+      continue;
+    }
+
+    signals.push({
+      id: `signal-${snapshot.team.id}-${event.id}`,
+      teamId: snapshot.team.id,
+      type: "news-impact",
+      severity: getNewsSeverity(event.impactScore),
+      title: `${snapshot.team.name} has possible related coverage`,
+      description: `${event.summary} This is correlation context, not a causal claim.`,
+      value: event.impactScore,
+      createdAt: event.publishedAt,
+    });
+  }
+
   return dedupeSignals(signals).sort((a, b) => getSeverityRank(b.severity) - getSeverityRank(a.severity));
 }
 
@@ -186,6 +206,20 @@ function getMismatchSeverity(mismatch: number): SignalSeverity {
   }
 
   if (magnitude >= 1.6) {
+    return "medium";
+  }
+
+  return "low";
+}
+
+function getNewsSeverity(impactScore: number): SignalSeverity {
+  const magnitude = Math.abs(impactScore);
+
+  if (magnitude >= 78) {
+    return "high";
+  }
+
+  if (magnitude >= 58) {
     return "medium";
   }
 

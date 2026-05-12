@@ -79,13 +79,13 @@ export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
               Feed Page
             </h1>
             <p className="mt-5 text-sm leading-7 text-terminal-muted">
-              A consumer-readable tape of market moves, news impact, volume pressure, odds divergence,
-              and sentiment shifts. Each card focuses on one signal.
+              A consumer-readable tape of market moves, possible related news coverage, volume pressure,
+              odds divergence, and sentiment shifts. Each card focuses on one signal.
             </p>
             <div className="mt-7 grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               <FeedMetric label="Signals" value={String(feedItems.length)} />
               <FeedMetric label="Top confidence" value={`${Math.max(...feedItems.map((item) => item.confidence))}%`} />
-              <FeedMetric label="Mode" value="Mock data" />
+              <FeedMetric label="News" value={dataStatus.news?.source === "gdelt" ? "GDELT" : "Local"} />
             </div>
           </section>
         </aside>
@@ -220,7 +220,7 @@ function createFeedItems(snapshots: TeamMarketSnapshot[], newsEvents: NewsEvent[
       probabilityChange: snapshot.market.change24h,
       interpretation: `${formatVolume(
         snapshot.market.volume,
-      )} in mock volume makes this one of the most watched markets on the board right now.`,
+      )} in tracked volume makes this one of the most watched markets on the board right now.`,
       confidence: confidenceFromVolume(snapshot.market.volume),
       valueLabel: `Volume ${formatVolume(snapshot.market.volume)}`,
       tone: snapshot.market.change24h >= 0 ? "positive" : "negative",
