@@ -1,0 +1,10 @@
+name = "world-cup-prediction-terminal"
+compatibility_date = "2026-05-12"
+
+[[d1_databases]]
+binding = "MARKET_HISTORY_DB"
+database_name = "world-cup-market-history"
+database_id = "replace-with-cloudflare-d1-database-id"
+
+[triggers]
+crons = [ "*/30 * * * *" ]

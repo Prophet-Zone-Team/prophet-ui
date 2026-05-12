@@ -3,3 +3,8 @@ node_modules/
 tsconfig.tsbuildinfo
 .DS_Store
 *.log
+.data/
+.open-next/
+.wrangler/
+.dev.vars
+cloudflare-env.d.ts

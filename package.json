@@ -6,7 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "preview": "node scripts/stop-preview-ports.mjs && npm run d1:schema:local && opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "typecheck": "next typegen && tsc --noEmit",
+    "collect:market": "node scripts/collect-market-snapshots.mjs",
+    "collect:market:local": "node scripts/collect-market-snapshots.mjs http://localhost:3005 all",
+    "d1:schema:local": "npx wrangler d1 execute world-cup-market-history --local --file=db/d1/schema.sql",
+    "d1:schema:remote": "npx wrangler d1 execute world-cup-market-history --remote --file=db/d1/schema.sql"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.2",
@@ -21,12 +28,14 @@
     "tailwind-merge": "^3.0.1"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.8.0",
     "@types/node": "^22.13.1",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "wrangler": "^4.68.0"
   }
 }

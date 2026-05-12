@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import type { MarketDataMeta } from "../../data/providers/types";
 import { getOddsMismatch, getTopMovers } from "../../lib/market/analyzer";
 import { readStoredWatchlist, writeStoredWatchlist } from "../../lib/storage/local-terminal";
 import type { NewsEvent, TeamMarketSnapshot } from "../../types/market";
+import { DataStatusBanner } from "../data/DataStatusBanner";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "../home/market-formatters";
 
 type FeedItemType =
@@ -32,9 +34,10 @@ interface FeedItem {
 interface FeedPageProps {
   snapshots: TeamMarketSnapshot[];
   newsEvents: NewsEvent[];
+  dataStatus: MarketDataMeta;
 }
 
-export function FeedPage({ snapshots, newsEvents }: FeedPageProps) {
+export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
   const feedItems = useMemo(() => createFeedItems(snapshots, newsEvents), [snapshots, newsEvents]);
 
@@ -88,6 +91,7 @@ export function FeedPage({ snapshots, newsEvents }: FeedPageProps) {
         </aside>
 
         <section className="grid gap-5">
+          <DataStatusBanner meta={dataStatus} />
           {feedItems.map((item) => (
             <FeedCard
               key={item.id}

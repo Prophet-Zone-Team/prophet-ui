@@ -16,10 +16,10 @@ export function TeamMarketCard({ snapshot }: TeamMarketCardProps) {
   const isPositive = market.change24h >= 0;
 
   return (
-    <article className="rounded-lg border border-terminal-line/80 bg-terminal-panel/88 p-5 shadow-terminal transition duration-200 hover:border-terminal-cyan/50">
+    <article className="rounded-lg border border-terminal-line/80 bg-terminal-panel/88 p-5 shadow-terminal transition duration-200 hover:border-terminal-orange/55 hover:shadow-heat">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-terminal-muted">{team.code}</p>
+          <p className="terminal-label text-[10px] uppercase tracking-[0.28em] text-terminal-muted">{team.code}</p>
           <h3 className="mt-2 text-lg font-semibold text-terminal-text">{team.name}</h3>
           <p className="mt-1 text-xs text-terminal-muted">
             {team.code} / Group {team.group}
@@ -37,8 +37,8 @@ export function TeamMarketCard({ snapshot }: TeamMarketCardProps) {
       </div>
 
       <div className="mt-6">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Current probability</p>
-        <p className="mt-1 text-4xl font-semibold leading-none text-terminal-text">
+        <p className="terminal-label text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Current probability</p>
+        <p className="mt-1 font-display text-5xl font-semibold leading-none text-terminal-bone">
           {formatProbability(market.probability)}
         </p>
       </div>
@@ -67,7 +67,7 @@ function Metric({
 }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">{label}</p>
+      <p className="terminal-label text-[10px] uppercase tracking-[0.18em] text-terminal-muted">{label}</p>
       <p className={`mt-1 text-sm font-semibold ${valueClassName}`}>{value}</p>
     </div>
   );

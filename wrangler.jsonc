@@ -1,0 +1,37 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "main": "worker.mjs",
+  "name": "world-cup-prediction-terminal",
+  "workers_dev": false,
+  "preview_urls": false,
+  "compatibility_date": "2026-05-12",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "MARKET_HISTORY_DB",
+      "database_name": "world-cup-market-history",
+      "database_id": "674ada08-ce93-4076-ac06-4b61d1d2b4bf"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "wc.dolla.market",
+      "zone_name": "dolla.market",
+      "custom_domain": true
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "*/30 * * * *"
+    ]
+  }
+}

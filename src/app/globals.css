@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --font-display: "Canela", "Iowan Old Style", "Georgia", serif;
-  --font-mono: "Berkeley Mono", "SFMono-Regular", "Menlo", monospace;
+  --font-display: "DIN Condensed", "Avenir Next Condensed", "Helvetica Neue Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Avenir Next", "IBM Plex Sans", "Helvetica Neue", sans-serif;
+  --font-mono: "IBM Plex Mono", "Berkeley Mono", "SFMono-Regular", "Menlo", monospace;
   color-scheme: dark;
 }
 
@@ -21,11 +22,11 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    linear-gradient(135deg, rgba(36, 209, 139, 0.08), transparent 26%),
-    radial-gradient(circle at 80% 0%, rgba(87, 199, 255, 0.11), transparent 34%),
-    linear-gradient(180deg, #05070a 0%, #080c11 45%, #05070a 100%);
+    radial-gradient(circle at 18% 18%, rgba(255, 106, 42, 0.13), transparent 28%),
+    radial-gradient(circle at 78% 4%, rgba(87, 199, 255, 0.09), transparent 32%),
+    linear-gradient(180deg, #040608 0%, #080c11 45%, #05070a 100%);
   color: #e7eef5;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
 }
 
 a {
@@ -35,7 +36,12 @@ a {
 
 .terminal-grid {
   background-image:
+    radial-gradient(circle at 1px 1px, rgba(255, 138, 61, 0.08) 1px, transparent 0),
     linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 48px 48px;
+  background-size: 22px 22px, 48px 48px, 48px 48px;
+}
+
+.terminal-label {
+  font-family: var(--font-mono);
 }

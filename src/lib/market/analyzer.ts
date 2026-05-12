@@ -1,4 +1,3 @@
-import { mockTeamMarketSnapshots } from "../../data/mock/teams";
 import type { MarketSignal, SignalSeverity, TeamMarketSnapshot } from "../../types/market";
 
 const DEFAULT_LIMIT = 5;
@@ -16,7 +15,7 @@ export interface HotTeamResult extends TeamMarketSnapshot {
 }
 
 export function getTopMovers(
-  snapshots: TeamMarketSnapshot[] = mockTeamMarketSnapshots,
+  snapshots: TeamMarketSnapshot[],
   limit = DEFAULT_LIMIT,
 ): TeamMarketSnapshot[] {
   return [...snapshots]
@@ -26,7 +25,7 @@ export function getTopMovers(
 }
 
 export function getBiggestLosers(
-  snapshots: TeamMarketSnapshot[] = mockTeamMarketSnapshots,
+  snapshots: TeamMarketSnapshot[],
   limit = DEFAULT_LIMIT,
 ): TeamMarketSnapshot[] {
   return [...snapshots]
@@ -36,7 +35,7 @@ export function getBiggestLosers(
 }
 
 export function getOddsMismatch(
-  snapshots: TeamMarketSnapshot[] = mockTeamMarketSnapshots,
+  snapshots: TeamMarketSnapshot[],
   limit = DEFAULT_LIMIT,
 ): OddsMismatchResult[] {
   return snapshots
@@ -57,7 +56,7 @@ export function getOddsMismatch(
 }
 
 export function getHotTeams(
-  snapshots: TeamMarketSnapshot[] = mockTeamMarketSnapshots,
+  snapshots: TeamMarketSnapshot[],
   limit = DEFAULT_LIMIT,
 ): HotTeamResult[] {
   const maxVolume = Math.max(...snapshots.map((snapshot) => snapshot.market.volume), 1);
@@ -73,7 +72,7 @@ export function getHotTeams(
 }
 
 export function generateMarketSignals(
-  snapshots: TeamMarketSnapshot[] = mockTeamMarketSnapshots,
+  snapshots: TeamMarketSnapshot[],
 ): MarketSignal[] {
   const createdAt = getLatestUpdatedAt(snapshots);
   const signals: MarketSignal[] = [];
@@ -101,7 +100,7 @@ export function generateMarketSignals(
       severity: getMoveSeverity(snapshot.market.change24h),
       title: `${snapshot.team.name} is being repriced lower`,
       description: `Market probability is down ${formatSignedPercent(
-        Math.abs(snapshot.market.change24h),
+        snapshot.market.change24h,
       )} over 24h and sits at ${snapshot.market.probability.toFixed(1)}%.`,
       value: snapshot.market.change24h,
       createdAt,

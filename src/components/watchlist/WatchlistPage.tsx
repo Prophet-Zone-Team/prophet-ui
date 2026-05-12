@@ -3,16 +3,19 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import type { MarketDataMeta } from "../../data/providers/types";
 import { readStoredWatchlist, writeStoredWatchlist } from "../../lib/storage/local-terminal";
 import type { NewsEvent, TeamMarketSnapshot } from "../../types/market";
+import { DataStatusBanner } from "../data/DataStatusBanner";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "../home/market-formatters";
 
 interface WatchlistPageProps {
   snapshots: TeamMarketSnapshot[];
   newsEvents: NewsEvent[];
+  dataStatus: MarketDataMeta;
 }
 
-export function WatchlistPage({ snapshots, newsEvents }: WatchlistPageProps) {
+export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPageProps) {
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -62,6 +65,7 @@ export function WatchlistPage({ snapshots, newsEvents }: WatchlistPageProps) {
             </div>
           </div>
         </section>
+        <DataStatusBanner meta={dataStatus} />
 
         {watchedSnapshots.length > 0 ? (
           <section className="grid gap-5">

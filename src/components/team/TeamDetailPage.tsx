@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 
+import type { MarketDataMeta } from "../../data/providers/types";
 import type {
   MockBid,
   NewsEvent,
@@ -34,21 +35,24 @@ import {
   getChangeTone,
   getSentimentLabel,
 } from "../home/market-formatters";
+import { DataStatusBanner } from "../data/DataStatusBanner";
 
 interface TeamDetailPageProps {
   snapshot: TeamMarketSnapshot;
   probabilityHistory: ProbabilityHistoryPoint[];
   relatedNews: NewsEvent[];
+  dataStatus: MarketDataMeta;
 }
 
-export function TeamDetailPage({ snapshot, probabilityHistory, relatedNews }: TeamDetailPageProps) {
+export function TeamDetailPage({ snapshot, probabilityHistory, relatedNews, dataStatus }: TeamDetailPageProps) {
   const { team, market } = snapshot;
   const mismatch = market.probability - market.bookmakerImpliedProbability;
 
   return (
     <main className="terminal-grid min-h-screen px-4 py-5 sm:px-7 lg:px-8">
       <div className="mx-auto flex w-full max-w-[1540px] flex-col gap-8 lg:gap-9">
-        <TeamHeader snapshot={snapshot} />
+        <TeamHeader snapshot={snapshot} source={dataStatus.source} />
+        <DataStatusBanner meta={dataStatus} />
 
         <div className="grid gap-8 xl:grid-cols-[1.45fr_0.9fr]">
           <ProbabilityChart history={probabilityHistory} teamName={team.name} />
@@ -74,7 +78,7 @@ export function TeamDetailPage({ snapshot, probabilityHistory, relatedNews }: Te
   );
 }
 
-function TeamHeader({ snapshot }: { snapshot: TeamMarketSnapshot }) {
+function TeamHeader({ snapshot, source }: { snapshot: TeamMarketSnapshot; source: MarketDataMeta["source"] }) {
   const { team, market } = snapshot;
   const isPositive = market.change24h >= 0;
 
@@ -104,16 +108,16 @@ function TeamHeader({ snapshot }: { snapshot: TeamMarketSnapshot }) {
       </div>
       <div className="p-6 sm:p-8 lg:p-9">
       <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.24em] text-terminal-muted">
-        <Link href="/" className="hover:text-terminal-cyan">
+        <Link href={`/?source=${source}`} className="hover:text-terminal-cyan">
           Back to market heatmap
         </Link>
-        <Link href="/feed" className="hover:text-terminal-cyan">
+        <Link href={`/feed?source=${source}`} className="hover:text-terminal-cyan">
           Feed
         </Link>
-        <Link href="/bid" className="hover:text-terminal-cyan">
+        <Link href={`/bid?source=${source}`} className="hover:text-terminal-cyan">
           Mock bid
         </Link>
-        <Link href="/watchlist" className="hover:text-terminal-cyan">
+        <Link href={`/watchlist?source=${source}`} className="hover:text-terminal-cyan">
           Watchlist
         </Link>
       </div>

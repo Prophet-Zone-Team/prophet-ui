@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import type { MarketDataMeta } from "../../data/providers/types";
 import { calculatePotentialPayout } from "../../lib/market/mockBid";
 import { readStoredBids, writeStoredBids } from "../../lib/storage/local-terminal";
 import type { MockBid, TeamMarketSnapshot } from "../../types/market";
+import { DataStatusBanner } from "../data/DataStatusBanner";
 import {
   formatChange,
   formatProbability,
@@ -16,9 +18,10 @@ import {
 
 interface BidPageProps {
   snapshots: TeamMarketSnapshot[];
+  dataStatus: MarketDataMeta;
 }
 
-export function BidPage({ snapshots }: BidPageProps) {
+export function BidPage({ snapshots, dataStatus }: BidPageProps) {
   const [selectedTeamId, setSelectedTeamId] = useState(snapshots[0]?.team.id ?? "");
   const [amount, setAmount] = useState("100");
   const [savedBids, setSavedBids] = useState<MockBid[]>([]);
@@ -80,6 +83,7 @@ export function BidPage({ snapshots }: BidPageProps) {
             {selectedSnapshot ? <SelectedTeamPanel snapshot={selectedSnapshot} /> : null}
           </div>
         </section>
+        <DataStatusBanner meta={dataStatus} />
 
         <div className="grid gap-8 xl:grid-cols-[0.9fr_1.1fr]">
           <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7 lg:p-8">
