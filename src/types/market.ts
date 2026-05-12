@@ -12,12 +12,14 @@ export type MarketTrend = "rising" | "falling" | "flat";
 export type SignalSeverity = "low" | "medium" | "high";
 
 export type SignalType =
-  | "hot-team"
-  | "top-mover"
-  | "biggest-loser"
-  | "odds-mismatch"
-  | "volume-spike"
-  | "sentiment-shift";
+  | "heating_up"
+  | "cooling_down"
+  | "volume_spike"
+  | "odds_mismatch"
+  | "sentiment_driven"
+  | "news_impact"
+  | "overheated"
+  | "quiet_accumulation";
 
 export type MockBidSide = "yes" | "no";
 
@@ -65,9 +67,17 @@ export interface MarketSignal {
   type: SignalType;
   severity: SignalSeverity;
   title: string;
-  description: string;
-  value: number;
+  shortDescription: string;
+  explanation: string;
+  confidence: number;
+  dataPoints: MarketSignalDataPoint[];
   createdAt: string;
+}
+
+export interface MarketSignalDataPoint {
+  label: string;
+  value: string;
+  tone?: "positive" | "negative" | "neutral";
 }
 
 export interface MockBid {

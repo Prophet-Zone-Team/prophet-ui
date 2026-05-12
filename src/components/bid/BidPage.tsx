@@ -65,7 +65,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     <main className="terminal-grid min-h-screen px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
         <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8 lg:p-10">
-          <TopLinks />
+          <TopLinks source={dataStatus.source} />
           <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
             <div>
               <p className="text-[10px] uppercase tracking-[0.28em] text-terminal-cyan">Simulation desk</p>
@@ -80,7 +80,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
                 Mock bid only. This is not financial advice and does not execute a real trade.
               </p>
             </div>
-            {selectedSnapshot ? <SelectedTeamPanel snapshot={selectedSnapshot} /> : null}
+            {selectedSnapshot ? <SelectedTeamPanel snapshot={selectedSnapshot} source={dataStatus.source} /> : null}
           </div>
         </section>
         <DataStatusBanner meta={dataStatus} />
@@ -177,7 +177,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
   );
 }
 
-function SelectedTeamPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
+function SelectedTeamPanel({ snapshot, source }: { snapshot: TeamMarketSnapshot; source: MarketDataMeta["source"] }) {
   const { team, market } = snapshot;
 
   return (
@@ -190,7 +190,7 @@ function SelectedTeamPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
             {team.code} / Group {team.group}
           </p>
         </div>
-        <Link href={`/team/${team.id}`} className="rounded border border-terminal-cyan/50 px-3 py-2 text-xs text-terminal-cyan">
+        <Link href={`/team/${team.id}?source=${source}`} className="rounded border border-terminal-cyan/50 px-3 py-2 text-xs text-terminal-cyan">
           Detail
         </Link>
       </div>
@@ -204,16 +204,16 @@ function SelectedTeamPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
   );
 }
 
-function TopLinks() {
+function TopLinks({ source }: { source: MarketDataMeta["source"] }) {
   return (
     <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
-      <Link href="/" className="hover:text-terminal-cyan">
+      <Link href={`/?source=${source}`} className="hover:text-terminal-cyan">
         Market
       </Link>
-      <Link href="/feed" className="hover:text-terminal-cyan">
+      <Link href={`/feed?source=${source}`} className="hover:text-terminal-cyan">
         Feed
       </Link>
-      <Link href="/watchlist" className="hover:text-terminal-cyan">
+      <Link href={`/watchlist?source=${source}`} className="hover:text-terminal-cyan">
         Watchlist
       </Link>
     </div>

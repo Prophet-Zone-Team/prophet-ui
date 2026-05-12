@@ -4,6 +4,21 @@ Last updated: 2026-05-12
 
 ## Completed
 
+### Original Priority Plan Status
+
+- Priority 1, Data Provider Architecture:
+  completed. Mock provider, Polymarket provider, Kalshi provider, composite source, fallback behavior, and unified `getWorldCupMarketData()` are implemented.
+- Priority 2, Data Freshness and Source Disclosure:
+  completed for the current product surface. Shared data freshness banner, source disclosure, expanded status model, source-preserving links, and live-data copy cleanup are implemented.
+- Priority 3, Market Signal System:
+  completed. Signal v2 now covers `heating_up`, `cooling_down`, `volume_spike`, `odds_mismatch`, `sentiment_driven`, `news_impact`, `overheated`, and `quiet_accumulation`.
+- Priority 4, Bid Simulator:
+  not started beyond the earlier mock bid MVP. The fuller learning-oriented simulator remains pending.
+- Priority 5, Daily Brief and Watchlist Alerts:
+  completed for local/browser scope. `/brief`, Markdown export, and local watchlist alerts are implemented.
+
+### Product And Infrastructure
+
 - Project development rules documented in [AGENTS.md](/Users/joe/Sites/Polycup/AGENTS.md).
 - Core market domain types implemented:
   `Team`, `TeamMarketData`, `NewsEvent`, `MarketSignal`, `MockBid`, `UserWatchlistItem`.
@@ -18,6 +33,16 @@ Last updated: 2026-05-12
   `/watchlist`, watchlist list, probability change display, news alerts, removal flow.
 - Feed page implemented:
   `/feed`, probability moves, news impact, volume spikes, odds mismatch, sentiment shift cards.
+- Data trust cleanup implemented:
+  shared data freshness banner, source disclosure, expanded status model, source-preserving navigation, and live-data copy cleanup.
+- Market Signal v2 implemented:
+  unified signal engine with `heating_up`, `cooling_down`, `volume_spike`, `odds_mismatch`, `sentiment_driven`, `news_impact`, `overheated`, and `quiet_accumulation` signals.
+- Feed page upgraded:
+  `/feed` now uses the shared signal engine with explanation, confidence, severity, and supporting data points.
+- Watchlist alerts implemented:
+  local alert tape generated from watched teams, movement thresholds, signal matches, and tagged news context.
+- Daily Brief page implemented:
+  `/brief`, biggest movers, losers, top signals, watchlist alerts, news context, odds mismatch, and Markdown export.
 - Homepage terminal polish completed:
   typography refinement, orange heat glow, terminal chrome pass.
 - Data provider architecture implemented:
@@ -43,9 +68,18 @@ Last updated: 2026-05-12
 
 ## Pending
 
+### Product Todo
+
 - Replace composite placeholder history depth with real multi-day accumulation from scheduled snapshots over time.
 - Add real bookmaker odds provider so `Odds vs Market Probability` is not derived from market data alone.
 - Add real news ingestion/provider so related news and feed signals are no longer mostly mock/fallback content.
+- Upgrade mock bid into a fuller learning-oriented Bid Simulator:
+  implied share price, estimated shares, max loss, and probability movement simulation.
+- Add user-facing alert thresholds per watched team instead of only generated local alerts.
+- Add clearer provider coverage notes for when Polymarket/Kalshi return too few World Cup markets and the app falls back to sample data.
+
+### Operations Todo
+
 - Decide whether `workers.dev` should remain disabled permanently or retained for operational fallback.
 - Add CI/CD for Cloudflare deploys and schema management.
 - Add a real `lint` script and wire it into validation.

@@ -4,32 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import type { MarketDataMeta } from "../../data/providers/types";
-import { getOddsMismatch, getTopMovers } from "../../lib/market/analyzer";
+import { generateMarketSignals } from "../../lib/market/analyzer";
 import { readStoredWatchlist, writeStoredWatchlist } from "../../lib/storage/local-terminal";
-import type { NewsEvent, TeamMarketSnapshot } from "../../types/market";
-import { DataStatusBanner } from "../data/DataStatusBanner";
+import type { MarketSignal, NewsEvent, TeamMarketSnapshot } from "../../types/market";
+import { DataStatusBanner, SourceDisclosure } from "../data/DataStatusBanner";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "../home/market-formatters";
-
-type FeedItemType =
-  | "Probability Move"
-  | "News Impact"
-  | "Volume Spike"
-  | "Odds Mismatch"
-  | "Sentiment Shift";
-
-interface FeedItem {
-  id: string;
-  type: FeedItemType;
-  teamId: string;
-  teamName: string;
-  teamCode: string;
-  title: string;
-  probabilityChange: number;
-  interpretation: string;
-  confidence: number;
-  valueLabel: string;
-  tone: "positive" | "negative" | "neutral";
-}
 
 interface FeedPageProps {
   snapshots: TeamMarketSnapshot[];
@@ -39,7 +18,8 @@ interface FeedPageProps {
 
 export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
-  const feedItems = useMemo(() => createFeedItems(snapshots, newsEvents), [snapshots, newsEvents]);
+  const signals = useMemo(() => generateMarketSignals(snapshots, newsEvents).slice(0, 24), [snapshots, newsEvents]);
+  const topConfidence = signals.reduce((max, signal) => Math.max(max, signal.confidence), 0);
 
   useEffect(() => {
     setWatchlistIds(readStoredWatchlist());
@@ -63,43 +43,49 @@ export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
       <div className="mx-auto grid w-full max-w-7xl gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:gap-10">
         <aside className="lg:sticky lg:top-8 lg:h-fit">
           <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8">
-            <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
-              <Link href="/" className="hover:text-terminal-cyan">
-                Market
-              </Link>
-              <Link href="/bid" className="hover:text-terminal-cyan">
-                Mock bid
-              </Link>
-              <Link href="/watchlist" className="hover:text-terminal-cyan">
-                Watchlist
-              </Link>
-            </div>
+            <TopLinks source={dataStatus.source} />
             <p className="mt-8 text-[10px] uppercase tracking-[0.28em] text-terminal-cyan">Signal feed</p>
             <h1 className="mt-4 font-display text-5xl leading-none text-terminal-text sm:text-7xl lg:text-6xl">
-              Feed Page
+              Market Signal Feed
             </h1>
             <p className="mt-5 text-sm leading-7 text-terminal-muted">
-              A consumer-readable tape of market moves, news impact, volume pressure, odds divergence,
-              and sentiment shifts. Each card focuses on one signal.
+              A consumer-readable tape of probability movement, volume pressure, pricing divergence,
+              sentiment, and news context. Each card explains the data behind the signal.
             </p>
             <div className="mt-7 grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-              <FeedMetric label="Signals" value={String(feedItems.length)} />
-              <FeedMetric label="Top confidence" value={`${Math.max(...feedItems.map((item) => item.confidence))}%`} />
-              <FeedMetric label="Mode" value="Mock data" />
+              <FeedMetric label="Signals" value={String(signals.length)} />
+              <FeedMetric label="Top confidence" value={topConfidence ? `${topConfidence}%` : "Pending"} />
+              <FeedMetric label="Source" value={dataStatus.source} />
             </div>
           </section>
         </aside>
 
         <section className="grid gap-5">
           <DataStatusBanner meta={dataStatus} />
-          {feedItems.map((item) => (
-            <FeedCard
-              key={item.id}
-              item={item}
-              isWatching={watchlistIds.includes(item.teamId)}
-              onAddToWatchlist={() => addToWatchlist(item.teamId)}
-            />
-          ))}
+          <SourceDisclosure compact />
+          {signals.length > 0 ? (
+            signals.map((signal) => {
+              const snapshot = snapshots.find((item) => item.team.id === signal.teamId);
+
+              return (
+                <FeedCard
+                  key={signal.id}
+                  signal={signal}
+                  snapshot={snapshot}
+                  source={dataStatus.source}
+                  isWatching={watchlistIds.includes(signal.teamId)}
+                  onAddToWatchlist={() => addToWatchlist(signal.teamId)}
+                />
+              );
+            })
+          ) : (
+            <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal">
+              <h2 className="font-display text-3xl text-terminal-text">No signal threshold cleared</h2>
+              <p className="mt-3 text-sm leading-6 text-terminal-muted">
+                The feed will populate when movement, volume, news impact, sentiment, or pricing divergence becomes meaningful.
+              </p>
+            </section>
+          )}
         </section>
       </div>
     </main>
@@ -107,11 +93,15 @@ export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
 }
 
 function FeedCard({
-  item,
+  signal,
+  snapshot,
+  source,
   isWatching,
   onAddToWatchlist,
 }: {
-  item: FeedItem;
+  signal: MarketSignal;
+  snapshot: TeamMarketSnapshot | undefined;
+  source: MarketDataMeta["source"];
   isWatching: boolean;
   onAddToWatchlist: () => void;
 }) {
@@ -120,35 +110,50 @@ function FeedCard({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <span className={getTypeClassName(item.type)}>{item.type}</span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{item.teamCode}</span>
+            <span className={getTypeClassName(signal.type)}>{formatSignalType(signal.type)}</span>
+            {snapshot ? (
+              <span className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{snapshot.team.code}</span>
+            ) : null}
           </div>
-          <h2 className="mt-4 text-2xl font-semibold leading-tight text-terminal-text">{item.title}</h2>
+          <h2 className="mt-4 text-2xl font-semibold leading-tight text-terminal-text">{signal.title}</h2>
+          <p className="mt-2 text-sm leading-6 text-terminal-muted">{signal.shortDescription}</p>
         </div>
         <div className="rounded-lg border border-terminal-line bg-terminal-panel2/80 px-4 py-3 text-right">
           <p className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Confidence</p>
-          <p className="mt-1 text-lg font-semibold text-terminal-text">{item.confidence}%</p>
+          <p className="mt-1 text-lg font-semibold text-terminal-text">{signal.confidence}%</p>
         </div>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-[0.8fr_1.2fr]">
         <div className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4">
           <p className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Related team</p>
-          <p className="mt-2 text-lg font-semibold text-terminal-text">{item.teamName}</p>
-          <p className={`mt-3 text-sm font-semibold ${getChangeTone(item.probabilityChange)}`}>
-            {formatChange(item.probabilityChange)} probability change
-          </p>
-          <p className="mt-2 text-xs text-terminal-muted">{item.valueLabel}</p>
+          <p className="mt-2 text-lg font-semibold text-terminal-text">{snapshot?.team.name ?? signal.teamId}</p>
+          {snapshot ? (
+            <>
+              <p className={`mt-3 text-sm font-semibold ${getChangeTone(snapshot.market.change24h)}`}>
+                {formatChange(snapshot.market.change24h)} 24h probability change
+              </p>
+              <p className="mt-2 text-xs text-terminal-muted">
+                {formatProbability(snapshot.market.probability)} current probability / {formatVolume(snapshot.market.volume)} volume
+              </p>
+            </>
+          ) : null}
         </div>
         <div className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4">
           <p className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Signal read</p>
-          <p className="mt-2 text-sm leading-6 text-terminal-muted">{item.interpretation}</p>
+          <p className="mt-2 text-sm leading-6 text-terminal-muted">{signal.explanation}</p>
         </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        {signal.dataPoints.map((point) => (
+          <SignalDataPoint key={`${signal.id}-${point.label}`} point={point} />
+        ))}
       </div>
 
       <div className="mt-5 flex flex-wrap gap-3 border-t border-terminal-line/70 pt-5">
         <Link
-          href={`/team/${item.teamId}`}
+          href={`/team/${signal.teamId}?source=${source}`}
           className="rounded border border-terminal-cyan/60 bg-terminal-cyan/10 px-3 py-2 text-xs font-semibold text-terminal-cyan transition hover:bg-terminal-cyan/20"
         >
           View Team
@@ -161,7 +166,7 @@ function FeedCard({
           {isWatching ? "Watching" : "Add to Watchlist"}
         </button>
         <Link
-          href="/"
+          href={`/?source=${source}`}
           className="rounded border border-terminal-line bg-terminal-panel2 px-3 py-2 text-xs font-semibold text-terminal-muted transition hover:border-terminal-cyan/60 hover:text-terminal-cyan"
         >
           Explore Market
@@ -171,141 +176,71 @@ function FeedCard({
   );
 }
 
-function createFeedItems(snapshots: TeamMarketSnapshot[], newsEvents: NewsEvent[]): FeedItem[] {
-  const probabilityMoves = getTopMovers(snapshots, 4).map((snapshot): FeedItem => ({
-    id: `feed-probability-${snapshot.team.id}`,
-    type: "Probability Move",
-    teamId: snapshot.team.id,
-    teamName: snapshot.team.name,
-    teamCode: snapshot.team.code,
-    title: `${snapshot.team.name} is being repriced higher`,
-    probabilityChange: snapshot.market.change24h,
-    interpretation: `The market moved ${formatChange(
-      snapshot.market.change24h,
-    )} in 24h, suggesting attention has shifted toward ${snapshot.team.name} relative to yesterday.`,
-    confidence: confidenceFromMagnitude(snapshot.market.change24h, 1.2, 88),
-    valueLabel: `Current probability ${formatProbability(snapshot.market.probability)}`,
-    tone: "positive",
-  }));
-
-  const newsImpact = newsEvents.slice(0, 5).map((event): FeedItem => {
-    const snapshot = findSnapshot(snapshots, event.teamId);
-    const positive = event.impactScore >= 0;
-
-    return {
-      id: `feed-news-${event.id}`,
-      type: "News Impact",
-      teamId: snapshot.team.id,
-      teamName: snapshot.team.name,
-      teamCode: snapshot.team.code,
-      title: event.headline,
-      probabilityChange: snapshot.market.change24h,
-      interpretation: `${event.summary} The signal is framed as market context, not a causal claim or recommendation.`,
-      confidence: Math.min(91, Math.max(55, Math.abs(event.impactScore))),
-      valueLabel: `News impact ${positive ? "+" : ""}${event.impactScore}`,
-      tone: positive ? "positive" : "negative",
-    };
-  });
-
-  const volumeSpikes = [...snapshots]
-    .sort((a, b) => b.market.volume - a.market.volume)
-    .slice(0, 4)
-    .map((snapshot): FeedItem => ({
-      id: `feed-volume-${snapshot.team.id}`,
-      type: "Volume Spike",
-      teamId: snapshot.team.id,
-      teamName: snapshot.team.name,
-      teamCode: snapshot.team.code,
-      title: `${snapshot.team.name} volume is crowding the board`,
-      probabilityChange: snapshot.market.change24h,
-      interpretation: `${formatVolume(
-        snapshot.market.volume,
-      )} in mock volume makes this one of the most watched markets on the board right now.`,
-      confidence: confidenceFromVolume(snapshot.market.volume),
-      valueLabel: `Volume ${formatVolume(snapshot.market.volume)}`,
-      tone: snapshot.market.change24h >= 0 ? "positive" : "negative",
-    }));
-
-  const oddsMismatches = getOddsMismatch(snapshots, 4).map((result): FeedItem => ({
-    id: `feed-odds-${result.team.id}`,
-    type: "Odds Mismatch",
-    teamId: result.team.id,
-    teamName: result.team.name,
-    teamCode: result.team.code,
-    title: `${result.team.name} market and bookmaker pricing diverge`,
-    probabilityChange: result.market.change24h,
-    interpretation: `Market probability is ${Math.abs(result.mismatch).toFixed(
-      1,
-    )} pts ${result.marketIsHigherThanBookmaker ? "above" : "below"} bookmaker implied probability.`,
-    confidence: confidenceFromMagnitude(result.mismatch, 1.2, 90),
-    valueLabel: `Spread ${formatChange(result.mismatch)}`,
-    tone: result.mismatch >= 0 ? "positive" : "negative",
-  }));
-
-  const sentimentShifts = snapshots
-    .filter((snapshot) => snapshot.market.sentiment === "volatile" || Math.abs(snapshot.market.change7d) >= 2.5)
-    .slice(0, 5)
-    .map((snapshot): FeedItem => ({
-      id: `feed-sentiment-${snapshot.team.id}`,
-      type: "Sentiment Shift",
-      teamId: snapshot.team.id,
-      teamName: snapshot.team.name,
-      teamCode: snapshot.team.code,
-      title: `${snapshot.team.name} sentiment is shifting ${snapshot.market.change7d >= 0 ? "up" : "down"}`,
-      probabilityChange: snapshot.market.change7d,
-      interpretation: `The 7d move is ${formatChange(
-        snapshot.market.change7d,
-      )} with ${snapshot.market.sentiment} sentiment, making this a change in tone rather than just a one-day tick.`,
-      confidence: confidenceFromMagnitude(snapshot.market.change7d, 2, 86),
-      valueLabel: `Sentiment ${snapshot.market.sentiment}`,
-      tone: snapshot.market.change7d >= 0 ? "positive" : "negative",
-    }));
-
-  return [...probabilityMoves, ...newsImpact, ...volumeSpikes, ...oddsMismatches, ...sentimentShifts]
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, 18);
-}
-
-function findSnapshot(snapshots: TeamMarketSnapshot[], teamId: string): TeamMarketSnapshot {
-  const snapshot = snapshots.find((item) => item.team.id === teamId);
-
-  if (!snapshot) {
-    throw new Error(`Missing feed snapshot for team: ${teamId}`);
-  }
-
-  return snapshot;
-}
-
-function confidenceFromMagnitude(value: number, baseline: number, cap: number): number {
-  return Math.min(cap, Math.round(52 + (Math.abs(value) / baseline) * 18));
-}
-
-function confidenceFromVolume(volume: number): number {
-  return Math.min(92, Math.round(58 + volume / 650000));
+function TopLinks({ source }: { source: MarketDataMeta["source"] }) {
+  return (
+    <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
+      <Link href={`/?source=${source}`} className="hover:text-terminal-cyan">
+        Market
+      </Link>
+      <Link href={`/watchlist?source=${source}`} className="hover:text-terminal-cyan">
+        Watchlist
+      </Link>
+      <Link href={`/brief?source=${source}`} className="hover:text-terminal-cyan">
+        Brief
+      </Link>
+    </div>
+  );
 }
 
 function FeedMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-terminal-line bg-terminal-panel2/80 p-5">
       <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">{label}</p>
-      <p className="mt-3 text-2xl font-semibold text-terminal-text">{value}</p>
+      <p className="mt-3 text-2xl font-semibold capitalize text-terminal-text">{value}</p>
     </div>
   );
 }
 
-function getTypeClassName(type: FeedItemType): string {
+function SignalDataPoint({ point }: { point: MarketSignal["dataPoints"][number] }) {
+  return (
+    <div className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">{point.label}</p>
+      <p className={`mt-2 text-sm font-semibold ${getDataPointTone(point.tone)}`}>{point.value}</p>
+    </div>
+  );
+}
+
+function getDataPointTone(tone: MarketSignal["dataPoints"][number]["tone"]): string {
+  if (tone === "positive") {
+    return "text-terminal-green";
+  }
+
+  if (tone === "negative") {
+    return "text-terminal-red";
+  }
+
+  return "text-terminal-text";
+}
+
+function getTypeClassName(type: MarketSignal["type"]): string {
   const base = "rounded border px-2.5 py-1 text-[10px] uppercase tracking-[0.2em]";
 
   switch (type) {
-    case "Probability Move":
+    case "heating_up":
+    case "quiet_accumulation":
       return `${base} border-terminal-green/60 text-terminal-green`;
-    case "News Impact":
+    case "news_impact":
+    case "sentiment_driven":
       return `${base} border-terminal-cyan/60 text-terminal-cyan`;
-    case "Volume Spike":
+    case "volume_spike":
+    case "overheated":
       return `${base} border-terminal-amber/60 text-terminal-amber`;
-    case "Odds Mismatch":
+    case "cooling_down":
+    case "odds_mismatch":
       return `${base} border-terminal-red/60 text-terminal-red`;
-    case "Sentiment Shift":
-      return `${base} border-terminal-line text-terminal-muted`;
   }
+}
+
+function formatSignalType(type: MarketSignal["type"]): string {
+  return type.replace(/_/g, " ");
 }

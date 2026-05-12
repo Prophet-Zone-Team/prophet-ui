@@ -2,7 +2,7 @@ import type { NewsEvent, ProbabilityHistoryPoint, TeamMarketSnapshot } from "../
 
 export type MarketDataSource = "composite" | "polymarket" | "kalshi" | "mock";
 
-export type MarketDataStatus = "live" | "fallback";
+export type MarketDataStatus = "live" | "partial" | "cached" | "fallback" | "error";
 
 export interface MarketDataMeta {
   source: MarketDataSource;

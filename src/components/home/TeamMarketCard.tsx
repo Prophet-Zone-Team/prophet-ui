@@ -1,3 +1,6 @@
+import Link from "next/link";
+
+import type { MarketDataSource } from "../../data/providers/types";
 import type { TeamMarketSnapshot } from "../../types/market";
 import {
   formatChange,
@@ -9,14 +12,19 @@ import {
 
 interface TeamMarketCardProps {
   snapshot: TeamMarketSnapshot;
+  source: MarketDataSource;
 }
 
-export function TeamMarketCard({ snapshot }: TeamMarketCardProps) {
+export function TeamMarketCard({ snapshot, source }: TeamMarketCardProps) {
   const { team, market } = snapshot;
   const isPositive = market.change24h >= 0;
 
   return (
-    <article className="rounded-lg border border-terminal-line/80 bg-terminal-panel/88 p-5 shadow-terminal transition duration-200 hover:border-terminal-orange/55 hover:shadow-heat">
+    <Link
+      href={`/team/${team.id}?source=${source}`}
+      aria-label={`Open ${team.name} team detail`}
+      className="block rounded-lg border border-terminal-line/80 bg-terminal-panel/88 p-5 shadow-terminal transition duration-200 hover:-translate-y-0.5 hover:border-terminal-orange/55 hover:shadow-heat"
+    >
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="terminal-label text-[10px] uppercase tracking-[0.28em] text-terminal-muted">{team.code}</p>
@@ -50,9 +58,9 @@ export function TeamMarketCard({ snapshot }: TeamMarketCardProps) {
           valueClassName={getChangeTone(market.change7d)}
         />
         <Metric label="Volume" value={formatVolume(market.volume)} />
-        <Metric label="Sentiment" value={getSentimentLabel(market.sentiment)} />
+          <Metric label="Sentiment" value={getSentimentLabel(market.sentiment)} />
       </div>
-    </article>
+    </Link>
   );
 }
 

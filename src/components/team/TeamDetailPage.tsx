@@ -35,7 +35,7 @@ import {
   getChangeTone,
   getSentimentLabel,
 } from "../home/market-formatters";
-import { DataStatusBanner } from "../data/DataStatusBanner";
+import { DataStatusBanner, SourceDisclosure } from "../data/DataStatusBanner";
 
 interface TeamDetailPageProps {
   snapshot: TeamMarketSnapshot;
@@ -53,6 +53,7 @@ export function TeamDetailPage({ snapshot, probabilityHistory, relatedNews, data
       <div className="mx-auto flex w-full max-w-[1540px] flex-col gap-8 lg:gap-9">
         <TeamHeader snapshot={snapshot} source={dataStatus.source} />
         <DataStatusBanner meta={dataStatus} />
+        <SourceDisclosure compact />
 
         <div className="grid gap-8 xl:grid-cols-[1.45fr_0.9fr]">
           <ProbabilityChart history={probabilityHistory} teamName={team.name} />
@@ -102,7 +103,7 @@ function TeamHeader({ snapshot, source }: { snapshot: TeamMarketSnapshot; source
               value={formatChange(market.change24h)}
               valueClassName={getChangeTone(market.change24h)}
             />
-            <TopbarMetric label="Mock volume" value={formatVolume(market.volume)} />
+            <TopbarMetric label="Market volume" value={formatVolume(market.volume)} />
           </div>
         </div>
       </div>
@@ -135,7 +136,7 @@ function TeamHeader({ snapshot, source }: { snapshot: TeamMarketSnapshot; source
             {team.name}
           </h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-terminal-muted">
-            Team detail terminal for mock market probability, momentum, bookmaker divergence,
+            Team detail terminal for market probability, momentum, pricing divergence,
             related news context, and simulated bid outcomes.
           </p>
         </div>
@@ -200,7 +201,7 @@ function ProbabilityChart({
       <SectionHeader
         eyebrow="30 day probability"
         title="Probability Chart"
-        description={`${teamName} market probability over the last 30 mock trading days.`}
+        description={`${teamName} market probability over the latest available snapshot window.`}
       />
       <div className="mt-8 rounded-lg border border-terminal-line bg-terminal-panel2/40 p-3">
       <div className="h-[320px] sm:h-[420px]">
@@ -330,7 +331,7 @@ function OddsVsMarket({
         {formatChange(mismatch)} market-bookmaker spread
       </p>
       <p className="mt-2 text-xs leading-5 text-terminal-muted">
-        This compares mock market probability with bookmaker implied probability. It is market context,
+        This compares market probability with implied comparison probability. It is market context,
         not a recommendation.
       </p>
     </section>
@@ -368,9 +369,9 @@ function RelatedNews({ news, teamName }: { news: NewsEvent[]; teamName: string }
           ))
         ) : (
           <div className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
-            <h3 className="text-lg font-semibold text-terminal-text">No major mock news events for {teamName}</h3>
+            <h3 className="text-lg font-semibold text-terminal-text">No tagged news context for {teamName}</h3>
             <p className="mt-2 text-sm leading-6 text-terminal-muted">
-              Current movement is driven by market data in this mock dataset rather than a tagged news event.
+              Current movement is driven by market data in this dataset rather than a tagged news event.
             </p>
           </div>
         )}

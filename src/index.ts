@@ -6,6 +6,7 @@ export * from "./data/providers/source";
 export * from "./data/providers/types";
 export * from "./data/providers/worldCupMarketData";
 export * from "./lib/market/analyzer";
+export * from "./lib/market/brief";
 export * from "./server/market-history/collector";
 export * from "./server/market-history/d1MarketHistoryRepository";
 export * from "./server/market-history/historyReader";

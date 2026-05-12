@@ -80,6 +80,7 @@ function withCompositePartialStatus(
     meta: {
       ...liveData.meta,
       source: "composite",
+      status: "partial",
       error: `${failedSource} unavailable; showing ${getMarketDataSourceLabel(liveData.meta.source)} only. ${getErrorMessage(error)}`,
     },
   };

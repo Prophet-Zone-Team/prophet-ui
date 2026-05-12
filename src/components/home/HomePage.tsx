@@ -6,12 +6,11 @@ import {
   generateMarketSignals,
   getBiggestLosers,
   getHotTeams,
-  getOddsMismatch,
   getTopMovers,
 } from "../../lib/market/analyzer";
 import type { MarketSignal, TeamMarketSnapshot } from "../../types/market";
 import { DataSourceSwitch } from "../data/DataSourceSwitch";
-import { DataStatusBanner } from "../data/DataStatusBanner";
+import { DataStatusBanner, SourceDisclosure } from "../data/DataStatusBanner";
 import { TeamMarketCard } from "./TeamMarketCard";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "./market-formatters";
 
@@ -21,11 +20,10 @@ interface HomePageProps {
 }
 
 export function HomePage({ snapshots, dataStatus }: HomePageProps) {
-  const heatmapTeams = [...snapshots].sort((a, b) => b.market.volume - a.market.volume);
+  const heatmapTeams = [...snapshots].sort((a, b) => b.market.probability - a.market.probability);
   const topMovers = getTopMovers(snapshots, 4);
   const biggestLosers = getBiggestLosers(snapshots, 4);
   const hotTeams = getHotTeams(snapshots, 4);
-  const oddsMismatch = getOddsMismatch(snapshots, 3);
   const marketSignals = generateMarketSignals(snapshots).slice(0, 6);
 
   return (
@@ -33,13 +31,14 @@ export function HomePage({ snapshots, dataStatus }: HomePageProps) {
       <div className="mx-auto flex w-full max-w-[1540px] flex-col gap-8 lg:gap-9">
         <TerminalTopbar snapshots={snapshots} dataStatus={dataStatus} />
         <DataStatusBanner meta={dataStatus} />
+        <SourceDisclosure compact />
         <Hero snapshots={snapshots} hotTeams={hotTeams} dataStatus={dataStatus} />
         <MarketHeatmap teams={heatmapTeams} source={dataStatus.source} />
         <div className="grid gap-8 xl:grid-cols-2">
-          <TeamSection title="Top Movers" eyebrow="24h upside repricing" teams={topMovers} />
-          <TeamSection title="Biggest Losers" eyebrow="24h downside repricing" teams={biggestLosers} />
+          <TeamSection title="Top Movers" eyebrow="24h upside repricing" teams={topMovers} source={dataStatus.source} />
+          <TeamSection title="Biggest Losers" eyebrow="24h downside repricing" teams={biggestLosers} source={dataStatus.source} />
         </div>
-        <MarketSignals signals={marketSignals} oddsMismatch={oddsMismatch} />
+        <MarketSignals signals={marketSignals} source={dataStatus.source} />
         <TerminalFooter snapshots={snapshots} dataStatus={dataStatus} />
       </div>
     </main>
@@ -289,10 +288,12 @@ function TeamSection({
   title,
   eyebrow,
   teams,
+  source,
 }: {
   title: string;
   eyebrow: string;
   teams: TeamMarketSnapshot[];
+  source: MarketDataMeta["source"];
 }) {
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/88 p-5 shadow-terminal sm:p-7">
@@ -300,7 +301,7 @@ function TeamSection({
       {teams.length > 0 ? (
         <div className="mt-7 grid gap-5 sm:grid-cols-2">
           {teams.map((snapshot) => (
-            <TeamMarketCard key={snapshot.team.id} snapshot={snapshot} />
+            <TeamMarketCard key={snapshot.team.id} snapshot={snapshot} source={source} />
           ))}
         </div>
       ) : (
@@ -314,10 +315,10 @@ function TeamSection({
 
 function MarketSignals({
   signals,
-  oddsMismatch,
+  source,
 }: {
   signals: MarketSignal[];
-  oddsMismatch: ReturnType<typeof getOddsMismatch>;
+  source: MarketDataMeta["source"];
 }) {
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7 lg:p-8">
@@ -326,21 +327,15 @@ function MarketSignals({
           <SectionHeader
             eyebrow="Signal tape"
             title="Market Signals"
-            description="Generated from movement, heat, volume, and market-bookmaker divergence."
+            description="Generated from movement, volume, sentiment, news context, and pricing divergence."
           />
           <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-            {oddsMismatch.length > 0 ? (
-              oddsMismatch.map((result) => (
-                <div key={result.team.id} className="rounded-lg border border-terminal-line bg-terminal-panel2/80 p-4">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">Odds mismatch</p>
-                  <p className="mt-2 text-lg font-semibold text-terminal-text">{result.team.name}</p>
-                  <p className={result.mismatch > 0 ? "mt-1 text-sm text-terminal-green" : "mt-1 text-sm text-terminal-red"}>
-                    {formatChange(result.mismatch)} vs bookmaker
-                  </p>
-                </div>
+            {signals.slice(0, 3).length > 0 ? (
+              signals.slice(0, 3).map((signal) => (
+                <SignalMiniCard key={`${signal.id}-mini`} signal={signal} source={source} />
               ))
             ) : (
-              <EmptyPanel message="No bookmaker divergence clears the current threshold." />
+              <EmptyPanel message="Signals will appear after comparable movement, volume, news, or divergence clears the thresholds." />
             )}
           </div>
         </div>
@@ -349,11 +344,28 @@ function MarketSignals({
             signals.map((signal) => (
               <article key={signal.id} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">{signal.type}</span>
-                  <span className={getSeverityClassName(signal.severity)}>{signal.severity}</span>
+                  <span className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">{formatSignalType(signal.type)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded border border-terminal-line px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-terminal-muted">
+                      {signal.confidence}% confidence
+                    </span>
+                    <span className={getSeverityClassName(signal.severity)}>{signal.severity}</span>
+                  </div>
                 </div>
                 <h3 className="mt-4 text-lg font-semibold text-terminal-text">{signal.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-terminal-muted">{signal.description}</p>
+                <p className="mt-2 text-sm leading-6 text-terminal-muted">{signal.shortDescription}</p>
+                <p className="mt-3 text-xs leading-5 text-terminal-muted">{signal.explanation}</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  {signal.dataPoints.map((point) => (
+                    <SignalDataPoint key={`${signal.id}-${point.label}`} point={point} />
+                  ))}
+                </div>
+                <Link
+                  href={`/team/${signal.teamId}?source=${source}`}
+                  className="mt-4 inline-flex rounded border border-terminal-cyan/50 px-3 py-2 text-xs font-semibold text-terminal-cyan transition hover:bg-terminal-cyan/10"
+                >
+                  Inspect team
+                </Link>
               </article>
             ))
           ) : (
@@ -362,6 +374,25 @@ function MarketSignals({
         </div>
       </div>
     </section>
+  );
+}
+
+function SignalMiniCard({ signal, source }: { signal: MarketSignal; source: MarketDataMeta["source"] }) {
+  return (
+    <Link href={`/team/${signal.teamId}?source=${source}`} className="block rounded-lg border border-terminal-line bg-terminal-panel2/80 p-4 transition hover:border-terminal-cyan/50">
+      <p className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{formatSignalType(signal.type)}</p>
+      <p className="mt-2 text-lg font-semibold text-terminal-text">{signal.title}</p>
+      <p className="mt-2 text-sm leading-5 text-terminal-muted">{signal.shortDescription}</p>
+    </Link>
+  );
+}
+
+function SignalDataPoint({ point }: { point: MarketSignal["dataPoints"][number] }) {
+  return (
+    <div className="rounded border border-terminal-line bg-black/20 p-3">
+      <p className="text-[9px] uppercase tracking-[0.18em] text-terminal-muted">{point.label}</p>
+      <p className={`mt-1 text-sm font-semibold ${getDataPointTone(point.tone)}`}>{point.value}</p>
+    </div>
   );
 }
 
@@ -425,4 +456,20 @@ function getSeverityClassName(severity: MarketSignal["severity"]): string {
   }
 
   return `${base} border-terminal-line text-terminal-muted`;
+}
+
+function getDataPointTone(tone: MarketSignal["dataPoints"][number]["tone"]): string {
+  if (tone === "positive") {
+    return "text-terminal-green";
+  }
+
+  if (tone === "negative") {
+    return "text-terminal-red";
+  }
+
+  return "text-terminal-text";
+}
+
+function formatSignalType(type: MarketSignal["type"]): string {
+  return type.replace(/_/g, " ");
 }
