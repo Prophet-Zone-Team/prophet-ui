@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Area,
   AreaChart,
@@ -16,6 +16,13 @@ import {
 
 import type { MarketDataMeta } from "../../data/providers/types";
 import type {
+  ApiFootballDataIssue,
+  ApiFootballFixtureContext,
+  ApiFootballInjuryContext,
+  ApiFootballOddContext,
+  ApiFootballSquadPlayer,
+  ApiFootballStandingContext,
+  ApiFootballTeamProfile,
   MockBid,
   NewsEvent,
   ProbabilityHistoryPoint,
@@ -41,10 +48,29 @@ interface TeamDetailPageProps {
   snapshot: TeamMarketSnapshot;
   probabilityHistory: ProbabilityHistoryPoint[];
   relatedNews: NewsEvent[];
+  footballProfile?: ApiFootballTeamProfile;
+  footballFixtures: ApiFootballFixtureContext[];
+  footballSquad: ApiFootballSquadPlayer[];
+  footballInjuries: ApiFootballInjuryContext[];
+  footballStandings: ApiFootballStandingContext[];
+  footballOdds: ApiFootballOddContext[];
+  footballDataIssues: ApiFootballDataIssue[];
   dataStatus: MarketDataMeta;
 }
 
-export function TeamDetailPage({ snapshot, probabilityHistory, relatedNews, dataStatus }: TeamDetailPageProps) {
+export function TeamDetailPage({
+  snapshot,
+  probabilityHistory,
+  relatedNews,
+  footballProfile,
+  footballFixtures,
+  footballSquad,
+  footballInjuries,
+  footballStandings,
+  footballOdds,
+  footballDataIssues,
+  dataStatus,
+}: TeamDetailPageProps) {
   const { team, market } = snapshot;
   const mismatch = market.probability - market.bookmakerImpliedProbability;
 
@@ -70,12 +96,228 @@ export function TeamDetailPage({ snapshot, probabilityHistory, relatedNews, data
         <div className="grid gap-8 xl:grid-cols-[1fr_0.82fr]">
           <RelatedNews news={relatedNews} teamName={team.name} />
           <div className="flex flex-col gap-8">
+            <FootballContextPanel
+              profile={footballProfile}
+              fixtures={footballFixtures}
+              squad={footballSquad}
+              injuries={footballInjuries}
+              standings={footballStandings}
+              odds={footballOdds}
+              dataIssues={footballDataIssues}
+              teamName={team.name}
+            />
             <MockBidPanel snapshot={snapshot} />
             <WatchlistButton teamId={team.id} teamName={team.name} />
           </div>
         </div>
       </div>
     </main>
+  );
+}
+
+function FootballContextPanel({
+  profile,
+  fixtures,
+  squad,
+  injuries,
+  standings,
+  odds,
+  dataIssues,
+  teamName,
+}: {
+  profile?: ApiFootballTeamProfile;
+  fixtures: ApiFootballFixtureContext[];
+  squad: ApiFootballSquadPlayer[];
+  injuries: ApiFootballInjuryContext[];
+  standings: ApiFootballStandingContext[];
+  odds: ApiFootballOddContext[];
+  dataIssues: ApiFootballDataIssue[];
+  teamName: string;
+}) {
+  return (
+    <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7">
+      <SectionHeader eyebrow="API-Football" title="Team Context" />
+      {profile ? (
+        <div className="mt-6 grid gap-5">
+          <div className="flex items-center gap-4">
+            {profile.logoUrl ? (
+              <img
+                src={profile.logoUrl}
+                alt={`${profile.name} crest`}
+                className="h-14 w-14 rounded border border-terminal-line bg-terminal-panel2 object-contain p-2"
+              />
+            ) : null}
+            <div>
+              <h3 className="text-xl font-semibold text-terminal-text">{profile.name}</h3>
+              <p className="mt-1 text-xs uppercase tracking-[0.18em] text-terminal-muted">
+                {profile.country} / API team {profile.apiFootballTeamId}
+              </p>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <ContextMetric label="Founded" value={profile.founded ? String(profile.founded) : "Not listed"} />
+            <ContextMetric label="Code" value={profile.code ?? "Not listed"} />
+            <ContextMetric label="Venue" value={profile.venue?.name ?? "Not listed"} />
+            <ContextMetric label="City" value={profile.venue?.city ?? "Not listed"} />
+          </div>
+          <div className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Upcoming fixtures</p>
+            <div className="mt-4 grid gap-3">
+              {fixtures.length > 0 ? (
+                fixtures.slice(0, 3).map((fixture) => (
+                  <div key={fixture.fixtureId} className="border-b border-terminal-line/70 pb-3 last:border-b-0 last:pb-0">
+                    <p className="text-sm font-semibold text-terminal-text">
+                      {fixture.homeAway === "home" ? "vs" : "at"} {fixture.opponentName}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-terminal-muted">
+                      {formatFixtureDate(fixture.kickoffAt)}
+                      {fixture.leagueName ? ` / ${fixture.leagueName}` : ""}
+                      {fixture.venueName ? ` / ${fixture.venueName}` : ""}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm leading-6 text-terminal-muted">No upcoming fixtures stored yet.</p>
+              )}
+            </div>
+          </div>
+          <ApiFootballDataGrid
+            squad={squad}
+            injuries={injuries}
+            standings={standings}
+            odds={odds}
+            dataIssues={dataIssues}
+          />
+          <p className="text-xs leading-5 text-terminal-muted">
+            API-Football profile data is structural context only. It does not execute trades or imply a market view.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-6 rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
+          <h3 className="text-lg font-semibold text-terminal-text">No API-Football profile for {teamName}</h3>
+          <p className="mt-2 text-sm leading-6 text-terminal-muted">
+            The market view remains available, but the structured football profile is not attached yet.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ApiFootballDataGrid({
+  squad,
+  injuries,
+  standings,
+  odds,
+  dataIssues,
+}: {
+  squad: ApiFootballSquadPlayer[];
+  injuries: ApiFootballInjuryContext[];
+  standings: ApiFootballStandingContext[];
+  odds: ApiFootballOddContext[];
+  dataIssues: ApiFootballDataIssue[];
+}) {
+  return (
+    <div className="grid gap-4">
+      <DataSlicePanel title="Squad" emptyMessage={getIssueMessage(dataIssues, "squad") ?? "No squad stored yet."}>
+        {squad.slice(0, 6).map((player) => (
+          <MiniRow
+            key={player.playerId}
+            title={player.name}
+            detail={[player.position, player.age ? `${player.age} yrs` : undefined].filter(Boolean).join(" / ")}
+          />
+        ))}
+      </DataSlicePanel>
+      <DataSlicePanel title="Injuries" emptyMessage={getIssueMessage(dataIssues, "injuries") ?? "No injuries stored yet."}>
+        {injuries.slice(0, 4).map((injury) => (
+          <MiniRow
+            key={`${injury.playerName}-${injury.fixtureId ?? injury.reason ?? "injury"}`}
+            title={injury.playerName}
+            detail={[injury.reason, injury.leagueName].filter(Boolean).join(" / ")}
+            tone="text-terminal-red"
+          />
+        ))}
+      </DataSlicePanel>
+      <DataSlicePanel title="Standings" emptyMessage={getIssueMessage(dataIssues, "standings") ?? "No standings stored yet."}>
+        {standings.slice(0, 2).map((standing) => (
+          <MiniRow
+            key={`${standing.leagueName ?? "league"}-${standing.group ?? "group"}-${standing.rank ?? "rank"}`}
+            title={`${standing.leagueName ?? "Competition"} ${standing.rank ? `#${standing.rank}` : ""}`}
+            detail={[standing.group, standing.points !== undefined ? `${standing.points} pts` : undefined, standing.form].filter(Boolean).join(" / ")}
+          />
+        ))}
+      </DataSlicePanel>
+      <DataSlicePanel title="Odds" emptyMessage={getIssueMessage(dataIssues, "odds") ?? "No odds stored yet."}>
+        {odds.slice(0, 4).map((odd) => (
+          <MiniRow
+            key={`${odd.fixtureId}-${odd.bookmaker}-${odd.marketName}-${odd.selectionName}`}
+            title={odd.selectionName ?? odd.marketName ?? "Selection"}
+            detail={[odd.bookmaker, odd.marketName, odd.odd].filter(Boolean).join(" / ")}
+          />
+        ))}
+      </DataSlicePanel>
+    </div>
+  );
+}
+
+function DataSlicePanel({
+  title,
+  emptyMessage,
+  children,
+}: {
+  title: string;
+  emptyMessage: string;
+  children: ReactNode;
+}) {
+  const hasRows = Array.isArray(children) ? children.length > 0 : Boolean(children);
+
+  return (
+    <div className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">{title}</p>
+      <div className="mt-3 grid gap-2">
+        {hasRows ? children : <p className="text-sm leading-6 text-terminal-muted">{emptyMessage}</p>}
+      </div>
+    </div>
+  );
+}
+
+function MiniRow({ title, detail, tone = "text-terminal-text" }: { title: string; detail: string; tone?: string }) {
+  return (
+    <div className="border-b border-terminal-line/70 pb-2 last:border-b-0 last:pb-0">
+      <p className={`text-sm font-semibold ${tone}`}>{title}</p>
+      {detail ? <p className="mt-1 text-xs leading-5 text-terminal-muted">{detail}</p> : null}
+    </div>
+  );
+}
+
+function getIssueMessage(
+  issues: ApiFootballDataIssue[],
+  dimension: ApiFootballDataIssue["dimension"],
+): string | undefined {
+  return issues.find((issue) => issue.dimension === dimension)?.message;
+}
+
+function formatFixtureDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function ContextMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">{label}</p>
+      <p className="mt-2 text-sm font-semibold leading-5 text-terminal-text">{value}</p>
+    </div>
   );
 }
 
@@ -350,7 +592,7 @@ function ProbabilityBadge({ label, value, tone }: { label: string; value: number
 function RelatedNews({ news, teamName }: { news: NewsEvent[]; teamName: string }) {
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7 lg:p-8">
-      <SectionHeader eyebrow="News context" title="Related News" />
+      <SectionHeader eyebrow="News context" title="Recent Related News" />
       <div className="mt-7 grid gap-4">
         {news.length > 0 ? (
           news.map((item) => (
@@ -362,16 +604,33 @@ function RelatedNews({ news, teamName }: { news: NewsEvent[]; teamName: string }
                   {item.impactScore}
                 </p>
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-terminal-text">{item.headline}</h3>
+              {item.url ? (
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 block text-lg font-semibold text-terminal-text transition hover:text-terminal-cyan"
+                >
+                  {item.headline}
+                </a>
+              ) : (
+                <h3 className="mt-4 text-lg font-semibold text-terminal-text">{item.headline}</h3>
+              )}
               <p className="mt-2 text-sm leading-6 text-terminal-muted">{item.summary}</p>
-              <p className="mt-4 text-xs text-terminal-muted">{item.publishedAt.slice(0, 10)}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-terminal-muted">
+                <span>{item.publishedAt.slice(0, 10)}</span>
+                {item.matchedKeywords && item.matchedKeywords.length > 0 ? (
+                  <span>/ {item.matchedKeywords.slice(0, 4).join(", ")}</span>
+                ) : null}
+              </div>
             </article>
           ))
         ) : (
           <div className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
-            <h3 className="text-lg font-semibold text-terminal-text">No tagged news context for {teamName}</h3>
+            <h3 className="text-lg font-semibold text-terminal-text">No recent related news for {teamName}</h3>
             <p className="mt-2 text-sm leading-6 text-terminal-muted">
-              Current movement is driven by market data in this dataset rather than a tagged news event.
+              No qualifying GDELT coverage is currently attached to this market move. The absence of a tagged article
+              does not explain the probability move.
             </p>
           </div>
         )}

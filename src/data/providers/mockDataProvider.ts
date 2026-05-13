@@ -15,11 +15,19 @@ export const mockDataProvider: WorldCupMarketDataProvider = {
       snapshots: mockTeamMarketSnapshots,
       newsEvents: mockNewsEvents,
       probabilityHistory: mockProbabilityHistory,
+      footballContext: [],
+      footballTeamContext: [],
       meta: {
         source: "mock",
         status: "fallback",
         lastUpdated,
         stale: true,
+        news: {
+          source: "mock",
+          status: "mock",
+          articleCount: mockNewsEvents.length,
+          lastUpdated: mockNewsEvents[0]?.publishedAt,
+        },
       },
     };
   },

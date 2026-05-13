@@ -12,7 +12,10 @@ interface PageProps {
 
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams;
-  const marketData = await getWorldCupMarketData({ source: parseMarketDataSource(params?.source) });
+  const marketData = await getWorldCupMarketData({
+    source: parseMarketDataSource(params?.source),
+    includeFootballContext: false,
+  });
 
   return (
     <WatchlistPage

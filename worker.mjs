@@ -4,6 +4,7 @@ import openNextWorker, {
 } from "./.open-next/worker.js";
 
 import { collectAllMarketSnapshots } from "./src/server/market-history/collector.ts";
+import { collectAllSignalData } from "./src/server/signal-data/collector.ts";
 
 export default {
   async fetch(request, env, ctx) {
@@ -25,7 +26,14 @@ function attachBindingsToGlobalScope(env) {
 
 async function runScheduledCollection() {
   try {
-    const results = await collectAllMarketSnapshots();
+    const [marketResults, signalResults] = await Promise.all([
+      collectAllMarketSnapshots(),
+      collectAllSignalData(),
+    ]);
+    const results = {
+      market: marketResults,
+      signal: signalResults,
+    };
     console.log("Scheduled market snapshot collection complete", results);
   } catch (error) {
     console.error("Scheduled market snapshot collection failed", error);

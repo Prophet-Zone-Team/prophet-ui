@@ -47,6 +47,8 @@ export const polymarketDataProvider: WorldCupMarketDataProvider = {
       snapshots,
       newsEvents: [],
       probabilityHistory: [],
+      footballContext: [],
+      footballTeamContext: [],
       meta: {
         source: "polymarket",
         status: "live",

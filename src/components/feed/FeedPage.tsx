@@ -50,12 +50,12 @@ export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
             </h1>
             <p className="mt-5 text-sm leading-7 text-terminal-muted">
               A consumer-readable tape of probability movement, volume pressure, pricing divergence,
-              sentiment, and news context. Each card explains the data behind the signal.
+              sentiment, and possible related news coverage. Each card explains the data behind the signal.
             </p>
             <div className="mt-7 grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               <FeedMetric label="Signals" value={String(signals.length)} />
               <FeedMetric label="Top confidence" value={topConfidence ? `${topConfidence}%` : "Pending"} />
-              <FeedMetric label="Source" value={dataStatus.source} />
+              <FeedMetric label="News" value={dataStatus.news?.source === "gdelt" ? "GDELT" : "Local"} />
             </div>
           </section>
         </aside>

@@ -4,26 +4,24 @@ import { getMarketDataSourceLabel } from "../../data/providers/source";
 export function DataStatusBanner({ meta }: { meta: MarketDataMeta }) {
   const tone = getStatusTone(meta);
   const sourceLabel = getMarketDataSourceLabel(meta.source);
+  const newsStatus = getNewsStatusLabel(meta.news);
+  const footballStatus = getFootballStatusLabel(meta.football);
 
   return (
-    <div
-      className={`rounded-lg border px-4 py-3 text-sm ${tone.container}`}
-    >
+    <div className={`rounded-lg border px-4 py-3 text-sm ${tone.container}`}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`h-2 w-2 rounded-full ${tone.dot}`} />
           <span className="font-semibold">{getStatusLabel(meta.status, sourceLabel)}</span>
           {meta.stale ? <span>/ stale snapshot</span> : null}
+          {newsStatus ? <span className="text-terminal-muted">/ {newsStatus}</span> : null}
+          {footballStatus ? <span className="text-terminal-muted">/ {footballStatus}</span> : null}
           {meta.error ? <span className="text-terminal-muted">/ {meta.error}</span> : null}
         </div>
         <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.18em]">
-          <span>
-            Updated {formatUpdatedAt(meta.lastUpdated)}
-          </span>
+          <span>Updated {formatUpdatedAt(meta.lastUpdated)}</span>
           <span>/</span>
-          <span>
-            {meta.source === "mock" ? "local sample data" : "read-only provider data"}
-          </span>
+          <span>{meta.source === "mock" ? "local sample data" : "read-only provider data"}</span>
         </div>
       </div>
     </div>
@@ -115,6 +113,38 @@ function getStatusLabel(status: MarketDataMeta["status"], sourceLabel: string): 
     case "fallback":
       return "Fallback sample data";
   }
+}
+
+function getFootballStatusLabel(football: MarketDataMeta["football"]): string | undefined {
+  if (!football) {
+    return undefined;
+  }
+
+  if (football.status === "missing_api_key") {
+    return "API-Football key missing";
+  }
+
+  if (football.status === "unavailable") {
+    return "API-Football unavailable";
+  }
+
+  return `${football.teamCount} API-Football team profiles`;
+}
+
+function getNewsStatusLabel(news: MarketDataMeta["news"]): string | undefined {
+  if (!news) {
+    return undefined;
+  }
+
+  if (news.status === "mock") {
+    return `${news.articleCount} sample news items`;
+  }
+
+  if (news.status === "unavailable") {
+    return "GDELT news unavailable";
+  }
+
+  return `${news.articleCount} GDELT related news items`;
 }
 
 function formatUpdatedAt(value: string): string {
