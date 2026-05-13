@@ -116,20 +116,23 @@ Signal examples:
 - Sentiment shift
 - News impact
 
-### Mock Bid Panel
+### Embedded Trading Panel
 
 The panel should include:
 
 - Selected team
 - Current probability
-- Bid amount input
-- Potential payout mock
-- Risk note
-- Confirm mock bid button
+- Connected user/account state
+- Outcome and side selector
+- Limit price and size inputs
+- Estimated cost or proceeds
+- Potential outcome preview
+- Balance, allowance, and eligibility status
+- Final order review and confirmation button
 
 Must show:
 
-"Mock bid only. This is not financial advice and does not execute a real trade."
+"Orders use your connected Polymarket account and funds. This is not financial, betting, or investment advice."
 
 ## Interaction
 
@@ -169,6 +172,6 @@ Prefer terms like:
 - Keep mock data separate from components.
 - Do not hardcode business data inside UI components.
 - Keep components reusable.
-- Do not implement real trading in the MVP.
-- Do not connect wallet in the MVP.
-- Do not add backend unless explicitly requested.
+- Real trading must use the user's own connected wallet/account, user-specific credentials, and explicit confirmation.
+- Do not use a shared server wallet or pooled funds for user orders.
+- Backend trading services must enforce eligibility, user ownership, balance/allowance checks, and safe secret handling.

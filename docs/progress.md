@@ -1,6 +1,6 @@
 # World Cup Prediction Terminal Progress
 
-Last updated: 2026-05-13 12:05 CST
+Last updated: 2026-05-13 12:23 CST
 
 ## Priority Status
 
@@ -10,15 +10,15 @@ Last updated: 2026-05-13 12:05 CST
   completed for the current product surface. Shared data banner, source disclosure, source-preserving links, and status metadata cover market, odds, news, and football context.
 - Priority 3, Market Signal System:
   completed v2. Signals cover `heating_up`, `cooling_down`, `volume_spike`, `odds_mismatch`, `sentiment_driven`, `news_impact`, `overheated`, and `quiet_accumulation`.
-- Priority 4, Bid Simulator:
-  partially complete. The merged bid branch adds a mock/real order console, and production real order submission is explicitly disabled with `ENABLE_REAL_POLYMARKET_ORDERS=false`. The consumer learning simulator still needs price movement simulation and unrealized P/L. Real order mode should remain product-gated because the original project boundary is mock-only.
+- Priority 4, Embedded User Trading:
+  planned. The product direction has moved from simulated bid education to real user-owned Polymarket trading. The current `/bid` page is a legacy order console and production real order submission remains disabled with `ENABLE_REAL_POLYMARKET_ORDERS=false` until user login, eligibility, user-owned signing, user-specific CLOB credentials, deposit wallet/funder, balance/allowance, and order management are implemented.
 - Priority 5, Daily Brief and Watchlist Alerts:
   completed for local/browser scope. `/brief`, Markdown export, and local watchlist alerts are implemented.
 
 ## Completed
 
 - Homepage terminal/dashboard implemented with heatmap sorted by probability descending.
-- Team detail page implemented with probability chart, market stats, odds comparison, related news, mock bid, watchlist, and API-Football context.
+- Team detail page implemented with probability chart, market stats, odds comparison, related news, legacy bid panel, watchlist, and API-Football context.
 - Feed page implemented from the shared market signal engine.
 - Watchlist page implemented with local browser storage.
 - Daily Brief page implemented with Markdown export.
@@ -41,6 +41,8 @@ Last updated: 2026-05-13 12:05 CST
 - CI/Lint baseline implemented:
   `npm run lint`, ESLint flat config, and GitHub Actions workflow running install, lint, typecheck, and build.
 - Latest local `main` commits have been pushed to GitHub.
+- Product positioning updated:
+  the next trading direction is embedded real user trading, not simulated bid education.
 - Production deployment exists at:
   [https://wc.dolla.market](https://wc.dolla.market)
 
@@ -62,10 +64,11 @@ Checked on 2026-05-13:
 
 ### Product Todo
 
+- Execute the embedded user trading plan in [EMBEDDED_TRADING_PLAN.md](/Users/joe/Sites/Polycup/docs/EMBEDDED_TRADING_PLAN.md).
+- Replace the legacy `/bid` order console with a user-owned trading flow:
+  connect/login, eligibility, deposit wallet/funder, balance/allowance, order preview, signed submit, order status, cancel, and positions.
+- Remove legacy simulated-bid copy from user-facing UI once the embedded trading flow is ready.
 - Calibrate `odds_mismatch` once real bookmaker outright odds are flowing.
-- Upgrade Bid Simulator into a fuller learning tool:
-  current probability, implied share price, estimated shares, max loss, simulated probability, estimated position value, and unrealized P/L.
-- Review the merged bid page against product boundaries. Keep real order mode disabled unless the product explicitly moves beyond mock/education.
 - Add user-configurable alert thresholds per watched team.
 - Add persistent or server-side alerts if the product needs reminders outside the browser.
 - Add clearer provider coverage notes when Polymarket or Kalshi return fewer World Cup markets.
@@ -74,6 +77,10 @@ Checked on 2026-05-13:
 ### Operations Todo
 
 - Investigate current GDELT collection errors from `GET /api/system/health`; latest errors are HTTP 429 and request aborts.
+- Choose the user authentication/wallet stack for embedded trading.
+- Decide whether user CLOB API credentials are derived each session or encrypted and stored server-side.
+- Add geoblock/eligibility checks before enabling trading actions.
+- Add secure storage and audit logging design for user-specific trading credentials.
 - Use `GET /api/system/health` after deploy to verify cron freshness without querying D1 manually.
 - Add Cloudflare deploy automation if deployments should happen automatically from CI.
 - Add cron failure alerts beyond console logging.

@@ -16,14 +16,15 @@
 2. **可解释的 Market Signals**
 3. **外部赔率对比**
 4. **新闻事件解释**
-5. **后续再考虑社媒情绪与高级信号**
+5. **嵌入式真实用户交易能力**
+6. **后续再考虑社媒情绪与高级信号**
 
 产品价值不在于页面数量，而在于：
 
 - 用户能不能一眼看懂市场热度；
 - 用户能不能理解概率为什么变化；
 - 用户能不能看到预测市场与传统赔率之间的分歧；
-- 用户能不能基于信息做 watchlist、mock bid 和进一步判断。
+- 用户能不能基于信息做 watchlist、真实订单预览、用户自有资金下单和进一步判断。
 
 ---
 
@@ -35,20 +36,29 @@
 
 ## 产品定位
 
-面向 C 端用户的世界杯预测市场数据分析与 Mock Bid 平台。
+面向 C 端用户的世界杯预测市场数据分析与嵌入式 Polymarket 交易平台。
 
 它不是：
 
 - 传统体育新闻网站；
 - 纯博彩网站；
-- 真实交易下单平台。
+- 使用平台资金代客下单的托管交易平台。
 
 它是：
 
 - 预测市场数据终端；
 - 世界杯概率热力图；
 - 球队市场情绪与变化解释平台；
-- 帮助普通用户理解 Polymarket 类市场的 C 端产品。
+- 帮助普通用户理解 Polymarket 类市场，并让符合条件的用户用自己的账号、自己的资金、自己的签名完成订单的 C 端产品。
+
+真实交易产品边界：
+
+- 用户必须登录或连接自己的 Polymarket-compatible wallet/account。
+- 订单必须来自用户自己的 deposit wallet / funder 和资金。
+- 订单必须由用户 signer 或用户授权的 session signer 签名。
+- 平台不得用共享 server wallet、平台私钥或 pooled funds 代表用户下单。
+- 交易前必须显示 eligibility、balance、allowance、stale price、market status、order preview 和 final confirmation。
+- 所有市场信号仍然只能作为上下文，不得表达为投资、博彩或确定性建议。
 
 ---
 
@@ -295,13 +305,14 @@ Correlation, not causation.
 - 市场成交量；
 - 流动性；
 - 市场更新时间；
+- 后续用户交易所需的 market id、token id、tick size、neg-risk metadata。
 - 后续配合 snapshot 计算 24h / 7d 变化。
 
 ### 是否需要 API Key
 
-**不需要。**
+只读市场数据不需要 API key。
 
-当前阶段只做公开只读数据，不做交易，也不做用户身份认证。
+真实交易需要用户级认证、用户 signer、用户 funder/deposit wallet、用户级 CLOB credentials，以及 eligibility/geoblock 检查。该部分见 [EMBEDDED_TRADING_PLAN.md](/Users/joe/Sites/Polycup/docs/EMBEDDED_TRADING_PLAN.md)。
 
 ### 当前阶段是否阻塞开发
 
@@ -432,7 +443,7 @@ NEWS_API_KEY=your_api_key_here
 ## P1
 
 4. Sprint 4：GDELT + News Impact - implemented, production collector reliability pending
-5. Learning Bid Simulator - partial; current bid page is an order console with real order submission disabled
+5. Embedded User Trading - planned; current bid page is an order console with real order submission disabled and must be rebuilt around user-owned credentials/signing
 
 ## P2
 
@@ -458,6 +469,9 @@ GDELT + News Impact
 
 Sprint 5
 可选 NewsAPI / LLM Summary
+
+Sprint 6
+Embedded User Trading
 ```
 
 ---
@@ -476,7 +490,7 @@ Sprint 5
 - 数据状态、fallback 和更新时间；
 - snapshot 机制基础。
 
-本 Sprint 不做：
+本 Sprint 历史范围不做：
 
 - The Odds API；
 - 新闻数据；
@@ -498,7 +512,7 @@ Sprint 5
 - Team Detail Page；
 - Feed；
 - Signal Panel；
-- Mock Bid 相关展示。
+- 交易入口相关展示。
 
 ---
 
@@ -681,8 +695,8 @@ interface MarketSnapshotRepository {
    - 自动 fallback 到现有 mock data
    - UI 显示 fallback/mock 状态
 
-8. 不要实现真实交易
-9. 不要接钱包
+8. 不要在 Sprint 1 中实现真实交易
+9. 不要在 Sprint 1 中接钱包
 10. 不要接第三方赔率和新闻 API
 
 完成后输出：
@@ -1267,20 +1281,21 @@ NEWS_API_KEY=your_api_key_here
 
 ---
 
-# 13. 当前阶段暂不做的方向
+# 13. 交易路线更新
 
-以下方向暂缓：
+此前“真实交易、钱包、用户账户系统”被列为暂缓方向。现在产品定位已经变更：后续需要采用嵌入式真实用户交易路线。
+
+当前仍不做：
 
 1. X API 舆情；
 2. Reddit 热度；
 3. Google Trends；
-4. Sentiment Driven Signal；
-5. Overheated Signal；
-6. 真实交易；
-7. 钱包；
-8. 用户账户系统；
-9. 下注执行；
-10. 复杂后端管理系统。
+4. 平台资金代客下单；
+5. 托管用户资金；
+6. Real Trading Signals 或任何投资建议式信号；
+7. 复杂后端管理系统。
+
+交易能力必须转移到 [EMBEDDED_TRADING_PLAN.md](/Users/joe/Sites/Polycup/docs/EMBEDDED_TRADING_PLAN.md) 所定义的用户自有账号、自有资金、自签名路线。
 
 ---
 
@@ -1295,8 +1310,8 @@ NEWS_API_KEY=your_api_key_here
 5. 新增 provider 时必须做接口抽象；
 6. UI 只能消费 normalized model；
 7. 所有第三方数据都必须支持 error / unavailable / fallback；
-8. 不允许出现真实交易逻辑；
-9. 不允许引入钱包；
+8. 真实交易逻辑必须走用户自有账号、自有资金、自签名路线；
+9. 不允许使用共享 server wallet 或平台资金为用户下单；
 10. 不允许出现“稳赚”“必买”“投资建议”式文案；
 11. 每次任务开始前，先阅读：
     - `AGENTS.md`
@@ -1340,9 +1355,16 @@ THE_ODDS_API_KEY=你的key
 
 ## 暂时不需要准备
 
-### Polymarket API Key
+### Polymarket User Trading Design
 
-不需要。
+需要在实现前完成：
+
+- 用户登录 / 钱包连接方案；
+- 用户 deposit wallet / funder 获取方案；
+- 用户级 CLOB credentials 派生或存储策略；
+- eligibility / geoblock 检查；
+- balance / allowance / order status / cancel flow；
+- secret handling 和审计日志策略。
 
 ### GDELT API Key
 
@@ -1356,17 +1378,17 @@ THE_ODDS_API_KEY=你的key
 
 # 17. 最终执行建议
 
-现在建议立刻执行：
+当前数据与信号主线已经完成到可用状态。下一步建议优先执行：
 
 ```text
-Sprint 1：Polymarket 真实市场数据接入
+Sprint 6：Embedded User Trading Architecture
 ```
 
-你可以将本文档直接交给 Codex，并输入：
+你可以将本文档和 `/docs/EMBEDDED_TRADING_PLAN.md` 直接交给 Codex，并输入：
 
 ```text
-请先阅读 /docs/WORLD_CUP_DATA_SIGNAL_ROADMAP.md。
-然后严格按照文档执行 Sprint 1。
-不要提前实现 Sprint 2 及后续内容。
+请先阅读 /docs/WORLD_CUP_DATA_SIGNAL_ROADMAP.md 和 /docs/EMBEDDED_TRADING_PLAN.md。
+然后严格按照嵌入式真实用户交易路线执行 Sprint 6 的架构设计。
+不要使用共享 server wallet 或平台资金为用户下单。
 完成后按照文档规定的交付格式输出结果。
 ```
