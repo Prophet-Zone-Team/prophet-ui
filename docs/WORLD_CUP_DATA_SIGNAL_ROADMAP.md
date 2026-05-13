@@ -1,9 +1,10 @@
 # World Cup Prediction Terminal
 ## 数据接入与 Market Signal 开发路线图（Codex 执行版）
 
-> 适用对象：Codex / 开发团队  
-> 当前项目状态：已完成基础 UI、首页热力图、球队详情页、Mock Bid、Watchlist、Feed 等前端能力。  
-> 下一阶段目标：将产品从 **Mock Demo** 升级为 **真实数据驱动的 C 端预测市场分析平台**。
+> 适用对象：Codex / 开发团队
+> 当前项目状态：已完成基础 UI、首页热力图、球队详情页、Watchlist、Feed、Daily Brief、真实市场数据 provider、The Odds API 赔率对比、API-Football 上下文、D1 历史快照、市场信号 v2、Cloudflare Worker cron。
+> 当前阶段目标：继续把产品从 **真实数据驱动的 Demo** 打磨成 **可靠、可解释、可运维的 C 端预测市场分析平台**。
+> 最新生产检查见 [progress.md](/Users/joe/Sites/Polycup/docs/progress.md)。
 
 ---
 
@@ -64,12 +65,16 @@
 | Odds Mismatch | 是 | Polymarket + The Odds API | P0 |
 | News Impact | 是 | Polymarket + GDELT | P1 |
 
-暂不优先做：
+当前代码状态，2026-05-13：
+
+- `heating_up`, `cooling_down`, `volume_spike`, `quiet_accumulation`, `odds_mismatch`, `news_impact`, `sentiment_driven`, and `overheated` are implemented in `/src/lib/market/analyzer.ts`.
+- `odds_mismatch` is now backed by The Odds API when live bookmaker outright prices are available.
+- `news_impact` logic is implemented, but production GDELT collection is currently rate-limited or timing out, so the UI can legitimately show zero related news items.
+
+暂不优先做新的外部信号源：
 
 | Signal | 原因 |
 |---|---|
-| Sentiment Driven | 依赖 X / Reddit / Google Trends，噪音高，接入复杂 |
-| Overheated | 属于复合型判断，需市场 + 赔率 + 社媒 / 新闻，适合后置 |
 | Social Buzz | 接口、成本、去噪都更复杂 |
 | Real Trading Signals | 当前产品不是投资建议平台 |
 
@@ -352,6 +357,8 @@ The first The Odds API provider is now implemented in code.
 - `THE_ODDS_API_WORLD_CUP_SPORT_KEY` can override the key if The Odds API exposes a different current key.
 - If there is no API key, no open outright market, or an empty response, the product marks bookmaker odds as missing/empty/unavailable instead of inventing prices.
 - Team matching lives in `/src/config/team-name-aliases.ts`.
+- Production Cloudflare Worker has `THE_ODDS_API_KEY` configured as a secret and has non-secret vars for `THE_ODDS_API_WORLD_CUP_SPORT_KEY=soccer_fifa_world_cup_winner` and `THE_ODDS_API_REGIONS=us,uk,eu`.
+- Latest production page check showed `Live Composite data / 5 bookmaker prices`.
 
 ---
 
@@ -377,6 +384,10 @@ The first The Odds API provider is now implemented in code.
 **不阻塞。**
 
 Sprint 4 可以直接实现。
+
+### Implementation note, 2026-05-13
+
+GDELT provider, D1 cache, API route, cron collection, and `news_impact` mapping are implemented. Production health currently reports 0 cached news rows with HTTP 429 and timeout errors from GDELT. Next work should focus on lower request pressure, better retry/backoff, and graceful user-facing empty states rather than adding another UI surface.
 
 ---
 
@@ -414,18 +425,19 @@ NEWS_API_KEY=your_api_key_here
 
 ## P0
 
-1. Sprint 1：Polymarket 真实数据接入
-2. Sprint 2：基于 Polymarket 的基础 Market Signals
-3. Sprint 3：The Odds API + Odds Mismatch
+1. Sprint 1：Polymarket 真实数据接入 - completed
+2. Sprint 2：基于 Polymarket 的基础 Market Signals - completed
+3. Sprint 3：The Odds API + Odds Mismatch - completed, calibration pending
 
 ## P1
 
-4. Sprint 4：GDELT + News Impact
+4. Sprint 4：GDELT + News Impact - implemented, production collector reliability pending
+5. Learning Bid Simulator - partial; current bid page is an order console with real order submission disabled
 
 ## P2
 
-5. Sprint 5：可选 NewsAPI Provider / LLM 新闻摘要
-6. 后续：X API / Reddit / Google Trends / Sentiment Driven / Overheated
+6. Sprint 5：可选 NewsAPI Provider / LLM 新闻摘要
+7. 后续：X API / Reddit / Google Trends / Sentiment Driven / Overheated
 
 ---
 
