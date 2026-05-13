@@ -36,6 +36,30 @@ export const fileMarketHistoryRepository: MarketHistoryRepository = {
       .filter((record) => !cutoff || new Date(record.capturedAt) >= cutoff)
       .sort((a, b) => a.capturedAt.localeCompare(b.capturedAt));
   },
+
+  async readSourceStats() {
+    const records = await readAllRecords();
+    const statsBySource = new Map<string, { count: number; latestCapturedAt?: string }>();
+
+    for (const record of records) {
+      const existing = statsBySource.get(record.source) ?? { count: 0 };
+      statsBySource.set(record.source, {
+        count: existing.count + 1,
+        latestCapturedAt:
+          !existing.latestCapturedAt || record.capturedAt > existing.latestCapturedAt
+            ? record.capturedAt
+            : existing.latestCapturedAt,
+      });
+    }
+
+    return [...statsBySource.entries()]
+      .map(([source, stat]) => ({
+        source: source as MarketSnapshotRecord["source"],
+        count: stat.count,
+        latestCapturedAt: stat.latestCapturedAt,
+      }))
+      .sort((a, b) => a.source.localeCompare(b.source));
+  },
 };
 
 async function readAllRecords(): Promise<MarketSnapshotRecord[]> {

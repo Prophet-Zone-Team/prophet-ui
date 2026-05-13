@@ -46,3 +46,17 @@ CREATE TABLE IF NOT EXISTS football_team_context (
 
 CREATE INDEX IF NOT EXISTS idx_football_team_context_collected
 ON football_team_context (collected_at);
+
+CREATE TABLE IF NOT EXISTS bookmaker_odds (
+  id TEXT PRIMARY KEY,
+  team_id TEXT NOT NULL,
+  bookmaker TEXT NOT NULL,
+  decimal_odds REAL NOT NULL,
+  implied_probability REAL NOT NULL,
+  market_key TEXT,
+  odds_updated_at TEXT,
+  collected_at TEXT NOT NULL
+) STRICT;
+
+CREATE INDEX IF NOT EXISTS idx_bookmaker_odds_team_collected
+ON bookmaker_odds (team_id, collected_at);

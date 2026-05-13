@@ -66,6 +66,30 @@ export const fileSignalDataRepository: SignalDataRepository = {
       (teamContext) => !options.teamId || teamContext.profile.teamId === options.teamId,
     );
   },
+
+  async readSourceStats() {
+    const data = await readSignalData();
+
+    return {
+      news: {
+        count: data.newsArticles.length,
+        latestPublishedAt: data.newsArticles.reduce<string | undefined>((latest, article) => {
+          if (!article.publishedAt) {
+            return latest;
+          }
+
+          return !latest || article.publishedAt > latest ? article.publishedAt : latest;
+        }, undefined),
+      },
+      football: {
+        count: data.footballTeamContext.length,
+        latestCollectedAt: data.footballTeamContext.reduce<string | undefined>((latest, teamContext) => {
+          const updatedAt = teamContext.profile.updatedAt;
+          return !latest || updatedAt > latest ? updatedAt : latest;
+        }, undefined),
+      },
+    };
+  },
 };
 
 async function readSignalData(): Promise<SignalDataFile> {

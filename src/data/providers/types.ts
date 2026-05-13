@@ -6,6 +6,7 @@ import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
 } from "../../types/market";
+import type { OddsProviderMeta } from "../odds/types";
 
 export type MarketDataSource = "composite" | "polymarket" | "kalshi" | "mock";
 
@@ -31,6 +32,7 @@ export interface MarketDataMeta {
   error?: string;
   news?: NewsDataMeta;
   football?: FootballContextMeta;
+  odds?: OddsProviderMeta;
 }
 
 export interface WorldCupMarketData {
@@ -47,6 +49,7 @@ export interface WorldCupMarketDataOptions {
   includeHistory?: boolean;
   includeNews?: boolean;
   includeFootballContext?: boolean;
+  includeOdds?: boolean;
   footballContextTeamIds?: string[];
 }
 

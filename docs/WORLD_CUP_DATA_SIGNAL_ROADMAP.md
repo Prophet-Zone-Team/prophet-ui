@@ -343,6 +343,16 @@ soccer_fifa_world_cup_winner
 第一版只需要实时赔率。  
 历史 odds 能力未来再考虑，不是当前 MVP 阻塞项。
 
+### Implementation note, 2026-05-13
+
+The first The Odds API provider is now implemented in code.
+
+- Default sport-key discovery checks `/v4/sports?all=true` for an active World Cup outright market.
+- If discovery cannot find one, the provider falls back to `soccer_fifa_world_cup_winner`.
+- `THE_ODDS_API_WORLD_CUP_SPORT_KEY` can override the key if The Odds API exposes a different current key.
+- If there is no API key, no open outright market, or an empty response, the product marks bookmaker odds as missing/empty/unavailable instead of inventing prices.
+- Team matching lives in `/src/config/team-name-aliases.ts`.
+
 ---
 
 ## 5.3 GDELT DOC API

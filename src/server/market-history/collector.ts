@@ -1,4 +1,4 @@
-import { getLiveWorldCupMarketData } from "../../data/providers/worldCupMarketData";
+import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
 import type { MarketDataSource } from "../../data/providers/types";
 import { getMarketHistoryRepository } from "./repository";
 import type { MarketSnapshotRecord, StoredMarketDataSource } from "./types";
@@ -16,7 +16,12 @@ export async function collectMarketSnapshots(source: MarketDataSource): Promise<
     throw new Error("Mock data is not collected into market history.");
   }
 
-  const data = await getLiveWorldCupMarketData({ source });
+  const data = await getWorldCupMarketData({
+    source,
+    includeFootballContext: false,
+    includeHistory: false,
+    includeNews: false,
+  });
 
   if (data.meta.source === "mock") {
     throw new Error("Fallback mock data is not collected into market history.");

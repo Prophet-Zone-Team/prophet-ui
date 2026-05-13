@@ -94,6 +94,7 @@ export function TeamDetailPage({
               marketProbability={market.probability}
               bookmakerProbability={market.bookmakerImpliedProbability}
               mismatch={mismatch}
+              oddsMeta={dataStatus.odds}
             />
           </div>
         </div>
@@ -530,11 +531,14 @@ function OddsVsMarket({
   marketProbability,
   bookmakerProbability,
   mismatch,
+  oddsMeta,
 }: {
   marketProbability: number;
   bookmakerProbability: number;
   mismatch: number;
+  oddsMeta?: MarketDataMeta["odds"];
 }) {
+  const hasLiveOdds = oddsMeta?.status === "live";
   const data = [
     { source: "Market", probability: marketProbability },
     { source: "Bookmaker", probability: bookmakerProbability },
@@ -543,6 +547,12 @@ function OddsVsMarket({
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7">
       <SectionHeader eyebrow="Divergence" title="Odds vs Market Probability" />
+      {!hasLiveOdds ? (
+        <div className="mt-5 rounded-lg border border-terminal-amber/45 bg-terminal-amber/10 p-4 text-xs leading-5 text-terminal-amber">
+          Bookmaker outright odds are not live for this snapshot. The comparison below uses the current provider-side
+          fallback and should be treated as lower-confidence context.
+        </div>
+      ) : null}
       <div className="mt-7 grid gap-4 sm:grid-cols-2">
         <ProbabilityBadge label="Market" value={marketProbability} tone="text-terminal-cyan" />
         <ProbabilityBadge label="Bookmaker" value={bookmakerProbability} tone="text-terminal-amber" />
@@ -578,8 +588,8 @@ function OddsVsMarket({
         {formatChange(mismatch)} market-bookmaker spread
       </p>
       <p className="mt-2 text-xs leading-5 text-terminal-muted">
-        This compares market probability with implied comparison probability. It is market context,
-        not a recommendation.
+        This compares market probability with {hasLiveOdds ? "median bookmaker implied probability" : "the available comparison probability"}.
+        It is market context, not a recommendation.
       </p>
     </section>
   );

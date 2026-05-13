@@ -2,6 +2,7 @@ import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from
 
 const DEFAULT_LIMIT = 5;
 const ODDS_MISMATCH_THRESHOLD = 1.2;
+const EPSILON = 0.05;
 const HEATING_MOVE_THRESHOLD = 0.8;
 const COOLING_MOVE_THRESHOLD = -0.8;
 const OVERHEATED_MOVE_THRESHOLD = 2;
@@ -48,6 +49,7 @@ export function getOddsMismatch(
   limit = DEFAULT_LIMIT,
 ): OddsMismatchResult[] {
   return snapshots
+    .filter((snapshot) => Math.abs(snapshot.market.probability - snapshot.market.bookmakerImpliedProbability) > EPSILON)
     .map((snapshot) => {
       const mismatch = roundToTenth(
         snapshot.market.probability - snapshot.market.bookmakerImpliedProbability,

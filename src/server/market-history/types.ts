@@ -26,6 +26,13 @@ export interface MarketHistoryReadOptions {
 export interface MarketHistoryRepository {
   appendSnapshots(records: MarketSnapshotRecord[]): Promise<void>;
   readSnapshots(options: MarketHistoryReadOptions): Promise<MarketSnapshotRecord[]>;
+  readSourceStats(): Promise<MarketSnapshotSourceStat[]>;
+}
+
+export interface MarketSnapshotSourceStat {
+  source: StoredMarketDataSource;
+  count: number;
+  latestCapturedAt?: string;
 }
 
 export interface D1Result<T = unknown> {

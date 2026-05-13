@@ -5,6 +5,8 @@ import { getMarketDataSourceLabel } from "./source";
 import type { MarketDataSource, WorldCupMarketData, WorldCupMarketDataOptions } from "./types";
 import { getNewsImpactForSnapshots } from "../news/newsImpact";
 import { getApiFootballContext } from "../football/apiFootballProvider";
+import { theOddsApiProvider } from "../odds/theOddsApiProvider";
+import type { NormalizedTeamOddsSummary } from "../odds/types";
 import { attachStoredMarketHistory } from "../../server/market-history/historyReader";
 import { getSignalDataRepository } from "../../server/signal-data/repository";
 import type {
@@ -16,7 +18,8 @@ import type {
 
 export async function getWorldCupMarketData(options: WorldCupMarketDataOptions = {}): Promise<WorldCupMarketData> {
   const data = await getLiveWorldCupMarketData(options);
-  const dataWithHistory = options.includeHistory === false ? data : await attachStoredMarketHistory(data);
+  const dataWithOdds = options.includeOdds === false ? data : await attachBookmakerOdds(data);
+  const dataWithHistory = options.includeHistory === false ? dataWithOdds : await attachStoredMarketHistory(dataWithOdds);
 
   if (options.includeNews === false || dataWithHistory.meta.source === "mock") {
     return options.includeFootballContext === false
@@ -310,6 +313,53 @@ function mergeMarketData(polymarketMarket: TeamMarketData, kalshiMarket: TeamMar
     bookmakerImpliedProbability: kalshiMarket.probability,
     updatedAt: polymarketMarket.updatedAt > kalshiMarket.updatedAt ? polymarketMarket.updatedAt : kalshiMarket.updatedAt,
     polymarket: polymarketMarket.polymarket,
+  };
+}
+
+async function attachBookmakerOdds(data: WorldCupMarketData): Promise<WorldCupMarketData> {
+  if (data.meta.source === "mock") {
+    return data;
+  }
+
+  const result = await theOddsApiProvider.getWorldCupWinnerOdds();
+
+  if (result.summaries.length === 0) {
+    return {
+      ...data,
+      meta: {
+        ...data.meta,
+        odds: result.meta,
+      },
+    };
+  }
+
+  const summariesByTeam = new Map(result.summaries.map((summary) => [summary.teamId, summary]));
+  const snapshots = data.snapshots.map((snapshot) => applyOddsSummary(snapshot, summariesByTeam.get(snapshot.team.id)));
+
+  return {
+    ...data,
+    snapshots,
+    meta: {
+      ...data.meta,
+      odds: result.meta,
+    },
+  };
+}
+
+function applyOddsSummary(
+  snapshot: TeamMarketSnapshot,
+  summary: NormalizedTeamOddsSummary | undefined,
+): TeamMarketSnapshot {
+  if (!summary) {
+    return snapshot;
+  }
+
+  return {
+    ...snapshot,
+    market: {
+      ...snapshot.market,
+      bookmakerImpliedProbability: summary.medianImpliedProbability,
+    },
   };
 }
 

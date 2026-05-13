@@ -11,4 +11,17 @@ export interface SignalDataRepository {
   readNewsArticles(options?: SignalDataReadOptions): Promise<NewsArticle[]>;
   upsertFootballTeamContext(context: ApiFootballTeamContext[], collectedAt: string): Promise<void>;
   readFootballTeamContext(options?: { teamId?: Team["id"] }): Promise<ApiFootballTeamContext[]>;
+  readSourceStats(): Promise<SignalDataSourceStats>;
+}
+
+export interface SignalDataSourceStats {
+  news: {
+    count: number;
+    latestCollectedAt?: string;
+    latestPublishedAt?: string;
+  };
+  football: {
+    count: number;
+    latestCollectedAt?: string;
+  };
 }

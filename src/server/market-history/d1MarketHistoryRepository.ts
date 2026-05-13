@@ -19,6 +19,12 @@ interface MarketSnapshotRow {
   captured_at: string;
 }
 
+interface MarketSnapshotSourceStatRow {
+  source: string;
+  count: number;
+  latest_captured_at: string | null;
+}
+
 export function createD1MarketHistoryRepository(database: D1Database): MarketHistoryRepository {
   return {
     async appendSnapshots(records: MarketSnapshotRecord[]): Promise<void> {
@@ -106,6 +112,26 @@ export function createD1MarketHistoryRepository(database: D1Database): MarketHis
         .all<MarketSnapshotRow>();
 
       return (result.results ?? []).map(mapRowToRecord);
+    },
+
+    async readSourceStats() {
+      const result = await database
+        .prepare(
+          `SELECT
+            source,
+            COUNT(*) AS count,
+            MAX(captured_at) AS latest_captured_at
+          FROM market_snapshots
+          GROUP BY source
+          ORDER BY source ASC`,
+        )
+        .all<MarketSnapshotSourceStatRow>();
+
+      return (result.results ?? []).map((row) => ({
+        source: row.source as MarketSnapshotRecord["source"],
+        count: row.count,
+        latestCapturedAt: row.latest_captured_at ?? undefined,
+      }));
     },
   };
 }

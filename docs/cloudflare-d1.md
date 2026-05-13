@@ -67,7 +67,7 @@ In production it requires:
 Authorization: Bearer $MARKET_COLLECTOR_SECRET
 ```
 
-Recommended schedule: every 15-30 minutes.
+Recommended schedule: every 10-30 minutes.
 
 Signal data is collected through:
 
@@ -95,6 +95,7 @@ Read APIs:
 ```text
 GET /api/news/events?teamId=argentina&days=30&limit=20
 GET /api/football/context?teamId=argentina
+GET /api/system/health
 ```
 
 Example:
@@ -132,11 +133,19 @@ The preview script clears stale local Worker listeners on `8787/8788`, applies `
 
 ```json
 "triggers": {
-  "crons": ["*/30 * * * *"]
+  "crons": ["*/10 * * * *"]
 }
 ```
 
 The cron is now wired to a native Worker `scheduled` handler in [worker.mjs](/Users/joe/Sites/Polycup/worker.mjs). It calls the same `collectAllMarketSnapshots()` service used elsewhere, so scheduled runs write directly to D1 without going through an HTTP route.
+
+After deployment, use the health endpoint to confirm the cron is keeping D1 fresh:
+
+```bash
+curl "https://wc.dolla.market/api/system/health"
+```
+
+The endpoint reports market snapshot freshness, plus cached GDELT and API-Football row counts.
 
 ## Local Development
 

@@ -7,4 +7,4 @@ database_name = "world-cup-market-history"
 database_id = "replace-with-cloudflare-d1-database-id"
 
 [triggers]
-crons = [ "*/30 * * * *" ]
+crons = [ "*/10 * * * *" ]

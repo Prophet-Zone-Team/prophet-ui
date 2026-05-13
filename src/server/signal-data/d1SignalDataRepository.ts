@@ -19,6 +19,17 @@ interface FootballContextRow {
   fixtures_json: string;
 }
 
+interface NewsStatsRow {
+  count: number;
+  latest_collected_at: string | null;
+  latest_published_at: string | null;
+}
+
+interface FootballStatsRow {
+  count: number;
+  latest_collected_at: string | null;
+}
+
 export function createD1SignalDataRepository(database: D1Database): SignalDataRepository {
   return {
     async upsertNewsArticles(articles: NewsArticle[], collectedAt: string): Promise<void> {
@@ -166,6 +177,42 @@ export function createD1SignalDataRepository(database: D1Database): SignalDataRe
             .all<FootballContextRow>();
 
       return (result.results ?? []).map(mapFootballContextRow);
+    },
+
+    async readSourceStats() {
+      const [newsResult, footballResult] = await Promise.all([
+        database
+          .prepare(
+            `SELECT
+              COUNT(*) AS count,
+              MAX(collected_at) AS latest_collected_at,
+              MAX(published_at) AS latest_published_at
+            FROM news_articles`,
+          )
+          .all<NewsStatsRow>(),
+        database
+          .prepare(
+            `SELECT
+              COUNT(*) AS count,
+              MAX(collected_at) AS latest_collected_at
+            FROM football_team_context`,
+          )
+          .all<FootballStatsRow>(),
+      ]);
+      const news = newsResult.results?.[0];
+      const football = footballResult.results?.[0];
+
+      return {
+        news: {
+          count: news?.count ?? 0,
+          latestCollectedAt: news?.latest_collected_at ?? undefined,
+          latestPublishedAt: news?.latest_published_at ?? undefined,
+        },
+        football: {
+          count: football?.count ?? 0,
+          latestCollectedAt: football?.latest_collected_at ?? undefined,
+        },
+      };
     },
   };
 }

@@ -1,1 +1,5 @@
 MARKET_COLLECTOR_SECRET=replace-with-a-strong-secret
+API_FOOTBALL_KEY=
+THE_ODDS_API_KEY=
+THE_ODDS_API_WORLD_CUP_SPORT_KEY=soccer_fifa_world_cup_winner
+THE_ODDS_API_REGIONS=us,uk,eu

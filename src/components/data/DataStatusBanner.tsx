@@ -4,6 +4,7 @@ import { getMarketDataSourceLabel } from "../../data/providers/source";
 export function DataStatusBanner({ meta }: { meta: MarketDataMeta }) {
   const tone = getStatusTone(meta);
   const sourceLabel = getMarketDataSourceLabel(meta.source);
+  const oddsStatus = getOddsStatusLabel(meta.odds);
   const newsStatus = getNewsStatusLabel(meta.news);
   const footballStatus = getFootballStatusLabel(meta.football);
 
@@ -14,6 +15,7 @@ export function DataStatusBanner({ meta }: { meta: MarketDataMeta }) {
           <span className={`h-2 w-2 rounded-full ${tone.dot}`} />
           <span className="font-semibold">{getStatusLabel(meta.status, sourceLabel)}</span>
           {meta.stale ? <span>/ stale snapshot</span> : null}
+          {oddsStatus ? <span className="text-terminal-muted">/ {oddsStatus}</span> : null}
           {newsStatus ? <span className="text-terminal-muted">/ {newsStatus}</span> : null}
           {footballStatus ? <span className="text-terminal-muted">/ {footballStatus}</span> : null}
           {meta.error ? <span className="text-terminal-muted">/ {meta.error}</span> : null}
@@ -44,7 +46,7 @@ export function SourceDisclosure({ compact = false }: { compact?: boolean }) {
     },
     {
       label: "Odds mismatch",
-      body: "Compares market probability with an implied comparison price. Until a bookmaker feed is connected, live providers may use provider-side comparison data.",
+      body: "Compares market probability with median bookmaker implied probability when The Odds API has an outright market. If that feed is missing or empty, the terminal labels the comparison as unavailable instead of inventing prices.",
     },
   ];
 
@@ -113,6 +115,26 @@ function getStatusLabel(status: MarketDataMeta["status"], sourceLabel: string): 
     case "fallback":
       return "Fallback sample data";
   }
+}
+
+function getOddsStatusLabel(odds: MarketDataMeta["odds"]): string | undefined {
+  if (!odds) {
+    return undefined;
+  }
+
+  if (odds.status === "missing_api_key") {
+    return "bookmaker odds key missing";
+  }
+
+  if (odds.status === "unavailable") {
+    return "bookmaker odds unavailable";
+  }
+
+  if (odds.status === "empty") {
+    return "no outright bookmaker odds";
+  }
+
+  return `${odds.bookmakerCount} bookmaker prices`;
 }
 
 function getFootballStatusLabel(football: MarketDataMeta["football"]): string | undefined {

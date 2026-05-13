@@ -1,102 +1,88 @@
 # World Cup Prediction Terminal Progress
 
-Last updated: 2026-05-12
+Last updated: 2026-05-13
 
-## Completed
-
-### Original Priority Plan Status
+## Priority Status
 
 - Priority 1, Data Provider Architecture:
-  completed. Mock provider, Polymarket provider, Kalshi provider, composite source, fallback behavior, and unified `getWorldCupMarketData()` are implemented.
+  completed. Mock, Polymarket, Kalshi, composite source, fallback behavior, D1 history, and unified `getWorldCupMarketData()` are implemented.
 - Priority 2, Data Freshness and Source Disclosure:
-  completed for the current product surface. Shared data freshness banner, source disclosure, expanded status model, source-preserving links, and live-data copy cleanup are implemented.
+  completed for the current product surface. Shared data banner, source disclosure, source-preserving links, and status metadata cover market, odds, news, and football context.
 - Priority 3, Market Signal System:
-  completed. Signal v2 now covers `heating_up`, `cooling_down`, `volume_spike`, `odds_mismatch`, `sentiment_driven`, `news_impact`, `overheated`, and `quiet_accumulation`.
+  completed v2. Signals cover `heating_up`, `cooling_down`, `volume_spike`, `odds_mismatch`, `sentiment_driven`, `news_impact`, `overheated`, and `quiet_accumulation`.
 - Priority 4, Bid Simulator:
-  not started beyond the earlier mock bid MVP. The fuller learning-oriented simulator remains pending.
+  partially complete. The merged bid branch adds a mock/real order console, but the consumer learning simulator still needs price movement simulation and unrealized P/L. Real order mode should remain product-gated because the original project boundary is mock-only.
 - Priority 5, Daily Brief and Watchlist Alerts:
   completed for local/browser scope. `/brief`, Markdown export, and local watchlist alerts are implemented.
 
-### Product And Infrastructure
+## Completed
 
-- Project development rules documented in [AGENTS.md](/Users/joe/Sites/Polycup/AGENTS.md).
-- Core market domain types implemented:
-  `Team`, `TeamMarketData`, `NewsEvent`, `MarketSignal`, `MockBid`, `UserWatchlistItem`.
-- Mock data layer implemented with 24+ teams and analyzer utilities.
-- Homepage MVP implemented:
-  Hero, Market Heatmap, Top Movers, Biggest Losers, Market Signals.
-- Team detail page implemented:
-  `/team/[slug]`, 30-day chart surface, market stats, news, mock bid panel, watchlist action.
-- Bid page implemented:
-  `/bid`, localStorage-backed mock bid flow, payout calculation, explicit mock-only disclaimer.
-- Watchlist page implemented:
-  `/watchlist`, watchlist list, probability change display, news alerts, removal flow.
-- Feed page implemented:
-  `/feed`, probability moves, news impact, volume spikes, odds mismatch, sentiment shift cards.
-- Data trust cleanup implemented:
-  shared data freshness banner, source disclosure, expanded status model, source-preserving navigation, and live-data copy cleanup.
-- Market Signal v2 implemented:
-  unified signal engine with `heating_up`, `cooling_down`, `volume_spike`, `odds_mismatch`, `sentiment_driven`, `news_impact`, `overheated`, and `quiet_accumulation` signals.
-- Feed page upgraded:
-  `/feed` now uses the shared signal engine with explanation, confidence, severity, and supporting data points.
-- Watchlist alerts implemented:
-  local alert tape generated from watched teams, movement thresholds, signal matches, and tagged news context.
-- Daily Brief page implemented:
-  `/brief`, biggest movers, losers, top signals, watchlist alerts, news context, odds mismatch, and Markdown export.
-- Homepage terminal polish completed:
-  typography refinement, orange heat glow, terminal chrome pass.
-- Data provider architecture implemented:
-  unified `getWorldCupMarketData()`, `mockDataProvider`, `polymarketDataProvider`, fallback handling, stale/error/loading support.
-- Kalshi read-only integration implemented:
-  `kalshiDataProvider`, homepage source switch, source-preserving links.
-- Composite source implemented:
-  `composite`, `polymarket`, `kalshi`, `mock` source model.
-- Historical data backend abstraction implemented:
-  repository model, collector service, read API, collect API.
-- Cloudflare D1 production storage implemented:
-  D1 schema, D1 repository, Cloudflare binding resolver, local file fallback for development.
-- Cloudflare Workers deployment path implemented with OpenNext:
-  [wrangler.jsonc](/Users/joe/Sites/Polycup/wrangler.jsonc), [open-next.config.ts](/Users/joe/Sites/Polycup/open-next.config.ts), [worker.mjs](/Users/joe/Sites/Polycup/worker.mjs).
-- Cloudflare D1 database created and wired:
-  `world-cup-market-history`, schema applied remotely.
-- `MARKET_COLLECTOR_SECRET` configured in Cloudflare Worker secrets.
-- Native Worker `scheduled` cron handler implemented and verified locally.
-- Production deployment completed:
+- Homepage terminal/dashboard implemented with heatmap sorted by probability descending.
+- Team detail page implemented with probability chart, market stats, odds comparison, related news, mock bid, watchlist, and API-Football context.
+- Feed page implemented from the shared market signal engine.
+- Watchlist page implemented with local browser storage.
+- Daily Brief page implemented with Markdown export.
+- Read-only market providers implemented:
+  Polymarket, Kalshi, composite, and mock fallback.
+- Historical D1 snapshot system implemented:
+  schema, repository, collector, read API, collect API, and OpenNext Worker cron.
+- GDELT news collection implemented:
+  provider, D1 cache, signal collection route, and news impact mapping.
+- API-Football context collection implemented:
+  team profile, fixtures, squad, injuries, standings, fixture odds, D1 cache, and rotating collection batches.
+- The Odds API provider implemented:
+  `THE_ODDS_API_KEY`, World Cup outright sport-key discovery, bookmaker implied probability summaries, unavailable/empty fallback, and odds status disclosure.
+- System health endpoint implemented:
+  `GET /api/system/health` reports market snapshot freshness plus news and football cache health.
+- CI/Lint baseline implemented:
+  `npm run lint`, ESLint flat config, and GitHub Actions workflow running install, lint, typecheck, and build.
+- Production deployment exists at:
   [https://wc.dolla.market](https://wc.dolla.market)
-- Production history write/read verified:
-  authenticated snapshot collection succeeded and `/api/market/history` returned stored composite history.
+
+## Production Check
+
+Checked on 2026-05-13:
+
+- Remote D1 `market_snapshots` is receiving cron data.
+- Latest observed market snapshot timestamps:
+  `2026-05-13T03:00Z` for composite, Kalshi, and Polymarket.
+- Production `GET /api/system/health` returned `marketSnapshots.status: ok` with latest source age around 15 minutes.
+- Production `GET /api/news/events` and `GET /api/football/context` returned 200 after redeploy.
+- Remote D1 `news_articles` had 0 rows at the time of check.
+- Remote D1 `football_team_context` had 0 rows at the time of check.
+- Cloudflare secrets currently list `API_FOOTBALL_KEY` and `MARKET_COLLECTOR_SECRET`; `THE_ODDS_API_KEY` still needs to be added before bookmaker outright odds can go live.
 
 ## Pending
 
 ### Product Todo
 
-- Replace composite placeholder history depth with real multi-day accumulation from scheduled snapshots over time.
-- Add real bookmaker odds provider so `Odds vs Market Probability` is not derived from market data alone.
-- Add real news ingestion/provider so related news and feed signals are no longer mostly mock/fallback content.
-- Upgrade mock bid into a fuller learning-oriented Bid Simulator:
-  implied share price, estimated shares, max loss, and probability movement simulation.
-- Add user-facing alert thresholds per watched team instead of only generated local alerts.
-- Add clearer provider coverage notes for when Polymarket/Kalshi return too few World Cup markets and the app falls back to sample data.
+- Configure `THE_ODDS_API_KEY` in Cloudflare and verify whether a World Cup winner outright market is currently open. If it is not open, the app will show odds as empty/unavailable without blocking market data.
+- Calibrate `odds_mismatch` once real bookmaker outright odds are flowing.
+- Upgrade Bid Simulator into a fuller learning tool:
+  current probability, implied share price, estimated shares, max loss, simulated probability, estimated position value, and unrealized P/L.
+- Add user-facing alert thresholds per watched team.
+- Add persistent or server-side alerts if the product needs reminders outside the browser.
+- Add clearer provider coverage notes when Polymarket or Kalshi return fewer World Cup markets.
 
 ### Operations Todo
 
-- Decide whether `workers.dev` should remain disabled permanently or retained for operational fallback.
-- Add CI/CD for Cloudflare deploys and schema management.
-- Add a real `lint` script and wire it into validation.
-- Add production observability for cron failures:
-  log tailing, alerts, or failure reporting beyond console logs.
-- Decide on backfill strategy for historical data:
-  one-time import, scheduled warm-up period, or provider historical endpoint ingestion.
-- Add access control guidance for the collect endpoint if more operators will use it.
-- Review whether the old [wrangler.toml.example](/Users/joe/Sites/Polycup/wrangler.toml.example) should be removed to avoid configuration drift.
+- Redeploy latest `main` after future changes.
+- Configure Cloudflare secrets:
+  `THE_ODDS_API_KEY`, optional `THE_ODDS_API_WORLD_CUP_SPORT_KEY`, and optional `THE_ODDS_API_REGIONS`.
+- Use `GET /api/system/health` after deploy to verify cron freshness without querying D1 manually.
+- Add Cloudflare deploy automation if deployments should happen automatically from CI.
+- Add cron failure alerts beyond console logging.
+- Decide whether `workers.dev` should remain disabled or be retained as an operational fallback.
+- Decide on a historical backfill strategy beyond scheduled accumulation.
+- Review whether [wrangler.toml.example](/Users/joe/Sites/Polycup/wrangler.toml.example) should be removed to avoid configuration drift.
 
 ## Active Production
 
 - Primary app URL:
   [https://wc.dolla.market](https://wc.dolla.market)
-- Workers URL:
+- Workers fallback URL in docs:
   [https://world-cup-prediction-terminal.aidai524.workers.dev](https://world-cup-prediction-terminal.aidai524.workers.dev)
 - Historical storage:
   Cloudflare D1 `world-cup-market-history`
 - Snapshot cadence:
-  `*/30 * * * *`
+  `*/10 * * * *`
