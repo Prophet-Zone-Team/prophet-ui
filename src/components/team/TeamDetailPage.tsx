@@ -28,7 +28,12 @@ import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
 } from "../../types/market";
-import { calculatePotentialPayout } from "../../lib/market/mockBid";
+import {
+  calculateMockOrderSimulation,
+  calculateReferencePrice,
+  formatPriceCents,
+  formatShareSize,
+} from "../../lib/market/mockBid";
 import {
   readStoredBids,
   readStoredWatchlist,
@@ -650,28 +655,54 @@ function MockBidPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
 
   const numericStake = Number(stake);
   const safeStake = Number.isFinite(numericStake) && numericStake > 0 ? numericStake : 0;
-  const potentialReturn = useMemo(() => {
-    if (safeStake <= 0 || market.probability <= 0) {
-      return 0;
-    }
-
-    return calculatePotentialPayout(safeStake, market.probability);
-  }, [market.probability, safeStake]);
+  const yesPrice = calculateReferencePrice(market.probability, "yes");
+  const simulation = useMemo(
+    () =>
+      calculateMockOrderSimulation({
+        teamId: team.id,
+        teamCode: team.code,
+        side: "yes",
+        stake: safeStake,
+        probability: market.probability,
+        limitPrice: yesPrice,
+        orderType: "GTC",
+      }),
+    [market.probability, safeStake, team.code, team.id, yesPrice],
+  );
 
   function saveMockBid() {
     if (safeStake <= 0) {
       return;
     }
 
+    const createdAt = new Date().toISOString();
+    const nextSimulation = calculateMockOrderSimulation({
+      teamId: team.id,
+      teamCode: team.code,
+      side: "yes",
+      stake: safeStake,
+      probability: market.probability,
+      limitPrice: yesPrice,
+      orderType: "GTC",
+      createdAt,
+      includeOrderId: true,
+    });
     const nextBid: MockBid = {
       id: `mock-bid-${team.id}-${Date.now()}`,
       teamId: team.id,
       side: "yes",
       stake: safeStake,
       probabilityAtBid: market.probability,
-      potentialReturn,
+      potentialReturn: nextSimulation.potentialPayout,
       status: "simulated",
-      createdAt: new Date().toISOString(),
+      createdAt,
+      limitPrice: nextSimulation.sidePrice,
+      shareSize: nextSimulation.shareSize,
+      orderType: "GTC",
+      simulatedOrderId: nextSimulation.simulatedOrderId,
+      simulatedTokenId: nextSimulation.simulatedTokenId,
+      estimatedCost: nextSimulation.estimatedCost,
+      potentialOutcome: nextSimulation.potentialOutcome,
     };
     const nextBids = [nextBid, ...readStoredBids()];
 
@@ -683,7 +714,7 @@ function MockBidPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7">
       <SectionHeader eyebrow="Simulation only" title="Mock Bid Panel" />
       <p className="mt-4 rounded-lg border border-terminal-amber/50 bg-terminal-amber/10 p-4 text-sm leading-6 text-terminal-amber">
-        Mock bid only. This is not financial advice and does not execute a real trade.
+        Mock bid only. This is not financial advice and does not execute a real trade or CLOB order.
       </p>
       <div className="mt-7 rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
         <label className="block text-[10px] uppercase tracking-[0.22em] text-terminal-muted" htmlFor="mock-stake">
@@ -698,8 +729,10 @@ function MockBidPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
           className="mt-3 w-full rounded border border-terminal-line bg-terminal-black px-4 py-3 text-terminal-text outline-none focus:border-terminal-cyan"
         />
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <ScenarioMetric label="Probability at simulation" value={formatProbability(market.probability)} />
-          <ScenarioMetric label="Potential simulated return" value={`$${potentialReturn.toFixed(2)}`} />
+          <ScenarioMetric label="YES price" value={formatPriceCents(simulation.sidePrice)} />
+          <ScenarioMetric label="Simulated shares" value={formatShareSize(simulation.shareSize)} />
+          <ScenarioMetric label="Potential payout" value={`$${simulation.potentialPayout.toFixed(2)}`} />
+          <ScenarioMetric label="Potential outcome" value={`$${simulation.potentialOutcome.toFixed(2)}`} />
         </div>
         <button
           type="button"
@@ -709,7 +742,7 @@ function MockBidPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
           Save mock scenario
         </button>
         <p className="mt-4 text-xs leading-5 text-terminal-muted">
-          Saved scenarios stay in this browser only. No wallet, payment, backend, or trade venue is connected.
+          Saved scenarios stay in this browser only. No wallet, API key, backend, or trade venue is connected.
         </p>
       </div>
       {savedBids.length > 0 ? (
@@ -717,7 +750,10 @@ function MockBidPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
           {savedBids.slice(0, 3).map((bid) => (
             <div key={bid.id} className="flex items-center justify-between gap-4 rounded border border-terminal-line bg-terminal-panel2/60 p-3">
               <p className="text-xs text-terminal-muted">${bid.stake.toFixed(2)} mock stake</p>
-              <p className="text-xs font-semibold text-terminal-text">${bid.potentialReturn.toFixed(2)} scenario</p>
+              <p className="text-xs font-semibold text-terminal-text">
+                {bid.limitPrice ? formatPriceCents(bid.limitPrice) : formatProbability(bid.probabilityAtBid)} / $
+                {bid.potentialReturn.toFixed(2)}
+              </p>
             </div>
           ))}
         </div>

@@ -309,6 +309,7 @@ function mergeMarketData(polymarketMarket: TeamMarketData, kalshiMarket: TeamMar
     sentiment: deriveSentiment(change24h),
     bookmakerImpliedProbability: kalshiMarket.probability,
     updatedAt: polymarketMarket.updatedAt > kalshiMarket.updatedAt ? polymarketMarket.updatedAt : kalshiMarket.updatedAt,
+    polymarket: polymarketMarket.polymarket,
   };
 }
 

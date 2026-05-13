@@ -23,7 +23,13 @@ export type SignalType =
 
 export type MockBidSide = "yes" | "no";
 
+export type BidExecutionMode = "mock" | "real";
+
+export type BidTradeSide = "buy" | "sell";
+
 export type MockBidStatus = "draft" | "simulated" | "cancelled";
+
+export type MockBidOrderType = "GTC" | "GTD" | "FOK" | "FAK";
 
 export interface Team {
   id: string;
@@ -43,6 +49,28 @@ export interface TeamMarketData {
   sentiment: MarketSentiment;
   bookmakerImpliedProbability: number;
   updatedAt: string;
+  polymarket?: PolymarketMarketMetadata;
+}
+
+export interface PolymarketMarketMetadata {
+  marketId?: string;
+  conditionId?: string;
+  question?: string;
+  slug?: string;
+  acceptingOrders: boolean;
+  negRisk: boolean;
+  tickSize: "0.1" | "0.01" | "0.001" | "0.0001";
+  minOrderSize?: number;
+  tokens: {
+    yes?: PolymarketOutcomeToken;
+    no?: PolymarketOutcomeToken;
+  };
+}
+
+export interface PolymarketOutcomeToken {
+  tokenId: string;
+  outcome: string;
+  price?: number;
 }
 
 export interface ProbabilityHistoryPoint {
@@ -112,11 +140,22 @@ export interface MockBid {
   id: string;
   teamId: Team["id"];
   side: MockBidSide;
+  tradeSide?: BidTradeSide;
+  executionMode?: BidExecutionMode;
   stake: number;
   probabilityAtBid: number;
   potentialReturn: number;
   status: MockBidStatus;
   createdAt: string;
+  limitPrice?: number;
+  shareSize?: number;
+  orderType?: MockBidOrderType;
+  simulatedOrderId?: string;
+  simulatedTokenId?: string;
+  estimatedCost?: number;
+  potentialOutcome?: number;
+  expiresAt?: string;
+  displayAddress?: string;
 }
 
 export interface UserWatchlistItem {
