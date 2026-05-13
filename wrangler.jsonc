@@ -15,6 +15,11 @@
   "observability": {
     "enabled": true
   },
+  "vars": {
+    "THE_ODDS_API_WORLD_CUP_SPORT_KEY": "soccer_fifa_world_cup_winner",
+    "THE_ODDS_API_REGIONS": "us,uk,eu",
+    "ENABLE_REAL_POLYMARKET_ORDERS": "false"
+  },
   "d1_databases": [
     {
       "binding": "MARKET_HISTORY_DB",
