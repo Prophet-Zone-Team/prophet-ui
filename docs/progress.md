@@ -40,6 +40,7 @@ Last updated: 2026-05-13 12:05 CST
   `GET /api/system/health` reports market snapshot freshness plus news and football cache health.
 - CI/Lint baseline implemented:
   `npm run lint`, ESLint flat config, and GitHub Actions workflow running install, lint, typecheck, and build.
+- Latest local `main` commits have been pushed to GitHub.
 - Production deployment exists at:
   [https://wc.dolla.market](https://wc.dolla.market)
 
@@ -72,7 +73,6 @@ Checked on 2026-05-13:
 
 ### Operations Todo
 
-- Push the latest local `main` commits to GitHub.
 - Investigate current GDELT collection errors from `GET /api/system/health`; latest errors are HTTP 429 and request aborts.
 - Use `GET /api/system/health` after deploy to verify cron freshness without querying D1 manually.
 - Add Cloudflare deploy automation if deployments should happen automatically from CI.
