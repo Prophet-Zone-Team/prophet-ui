@@ -17,6 +17,7 @@
     "d1:schema:remote": "npx wrangler d1 execute world-cup-market-history --remote --file=db/d1/schema.sql"
   },
   "dependencies": {
+    "@polymarket/clob-client-v2": "^1.0.6",
     "@radix-ui/react-slot": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -26,7 +27,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",
-    "tailwind-merge": "^3.0.1"
+    "tailwind-merge": "^3.0.1",
+    "viem": "^2.48.11"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.8.0",

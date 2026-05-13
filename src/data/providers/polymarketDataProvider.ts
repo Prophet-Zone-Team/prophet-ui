@@ -1,6 +1,7 @@
 import { mockTeams } from "../mock/teams";
 import type {
   MarketSentiment,
+  PolymarketMarketMetadata,
   Team,
   TeamMarketSnapshot,
 } from "../../types/market";
@@ -17,11 +18,17 @@ interface GammaMarket {
   description?: string;
   outcomes?: string[] | string;
   outcomePrices?: number[] | string;
+  clobTokenIds?: string[] | string;
   lastTradePrice?: number | string;
   volume?: number | string;
   volumeNum?: number | string;
   volume24hr?: number | string;
   liquidity?: number | string;
+  conditionId?: string;
+  orderPriceMinTickSize?: number | string;
+  orderMinSize?: number | string;
+  acceptingOrders?: boolean;
+  negRisk?: boolean;
   oneDayPriceChange?: number | string;
   oneWeekPriceChange?: number | string;
   priceChange24h?: number | string;
@@ -90,38 +97,41 @@ async function fetchWorldCupMarkets(): Promise<GammaMarket[]> {
 function mapMarketsToTeamSnapshots(markets: GammaMarket[]): TeamMarketSnapshot[] {
   const usedMarketIds = new Set<string>();
 
-  return mockTeams
-    .map((team) => {
-      const market = findBestTeamMarket(markets, team, usedMarketIds);
+  const snapshots: TeamMarketSnapshot[] = [];
 
-      if (!market) {
-        return undefined;
-      }
+  for (const team of mockTeams) {
+    const market = findBestTeamMarket(markets, team, usedMarketIds);
 
-      const probability = extractYesProbability(market);
+    if (!market) {
+      continue;
+    }
 
-      if (probability === undefined) {
-        return undefined;
-      }
+    const probability = extractYesProbability(market);
+    const polymarket = extractPolymarketMetadata(market);
 
-      usedMarketIds.add(market.id ?? market.slug ?? `${team.id}-${market.question}`);
+    if (probability === undefined) {
+      continue;
+    }
 
-      return {
-        team,
-        market: {
-          teamId: team.id,
-          probability,
-          change24h: normalizePriceChange(firstNumber(market.oneDayPriceChange, market.priceChange24h)),
-          change7d: normalizePriceChange(firstNumber(market.oneWeekPriceChange, market.priceChange7d)),
-          volume: firstNumber(market.volume24hr, market.volumeNum, market.volume, market.liquidity) ?? 0,
-          sentiment: deriveSentiment(normalizePriceChange(firstNumber(market.oneDayPriceChange, market.priceChange24h))),
-          bookmakerImpliedProbability: probability,
-          updatedAt: market.updatedAt ?? market.createdAt ?? new Date().toISOString(),
-        },
-      };
-    })
-    .filter(isSnapshot)
-    .sort((a, b) => b.market.volume - a.market.volume);
+    usedMarketIds.add(market.id ?? market.slug ?? `${team.id}-${market.question}`);
+
+    snapshots.push({
+      team,
+      market: {
+        teamId: team.id,
+        probability,
+        change24h: normalizePriceChange(firstNumber(market.oneDayPriceChange, market.priceChange24h)),
+        change7d: normalizePriceChange(firstNumber(market.oneWeekPriceChange, market.priceChange7d)),
+        volume: firstNumber(market.volume24hr, market.volumeNum, market.volume, market.liquidity) ?? 0,
+        sentiment: deriveSentiment(normalizePriceChange(firstNumber(market.oneDayPriceChange, market.priceChange24h))),
+        bookmakerImpliedProbability: probability,
+        updatedAt: market.updatedAt ?? market.createdAt ?? new Date().toISOString(),
+        polymarket,
+      },
+    });
+  }
+
+  return snapshots.sort((a, b) => b.market.volume - a.market.volume);
 }
 
 function findBestTeamMarket(
@@ -142,6 +152,65 @@ function findBestTeamMarket(
       return !usedMarketIds.has(id) && isWorldCup && isTeamMarket;
     })
     .sort((a, b) => (firstNumber(b.volume24hr, b.volumeNum, b.volume) ?? 0) - (firstNumber(a.volume24hr, a.volumeNum, a.volume) ?? 0))[0];
+}
+
+function extractPolymarketMetadata(market: GammaMarket): PolymarketMarketMetadata | undefined {
+  const clobTokenIds = parseArrayField(market.clobTokenIds).map(String);
+  const outcomes = parseArrayField(market.outcomes).map(String);
+  const outcomePrices = parseArrayField(market.outcomePrices);
+  const yesIndex = outcomes.findIndex((outcome) => outcome.toLowerCase() === "yes");
+  const noIndex = outcomes.findIndex((outcome) => outcome.toLowerCase() === "no");
+  const yesTokenId = clobTokenIds[yesIndex >= 0 ? yesIndex : 0];
+  const noTokenId = clobTokenIds[noIndex >= 0 ? noIndex : 1];
+
+  if (!yesTokenId && !noTokenId) {
+    return undefined;
+  }
+
+  return {
+    marketId: market.id,
+    conditionId: market.conditionId,
+    question: market.question,
+    slug: market.slug,
+    acceptingOrders: market.acceptingOrders === true,
+    negRisk: market.negRisk === true,
+    tickSize: normalizeTickSize(market.orderPriceMinTickSize),
+    minOrderSize: firstNumber(market.orderMinSize),
+    tokens: {
+      yes: yesTokenId
+        ? {
+            tokenId: yesTokenId,
+            outcome: outcomes[yesIndex >= 0 ? yesIndex : 0] ?? "Yes",
+            price: toNumber(outcomePrices[yesIndex >= 0 ? yesIndex : 0]),
+          }
+        : undefined,
+      no: noTokenId
+        ? {
+            tokenId: noTokenId,
+            outcome: outcomes[noIndex >= 0 ? noIndex : 1] ?? "No",
+            price: toNumber(outcomePrices[noIndex >= 0 ? noIndex : 1]),
+          }
+        : undefined,
+    },
+  };
+}
+
+function normalizeTickSize(value: number | string | undefined): PolymarketMarketMetadata["tickSize"] {
+  const parsed = toNumber(value);
+
+  if (parsed === 0.1) {
+    return "0.1";
+  }
+
+  if (parsed === 0.001) {
+    return "0.001";
+  }
+
+  if (parsed === 0.0001) {
+    return "0.0001";
+  }
+
+  return "0.01";
 }
 
 function extractYesProbability(market: GammaMarket): number | undefined {
@@ -231,6 +300,11 @@ function isGammaMarket(value: unknown): value is GammaMarket {
   return typeof value === "object" && value !== null;
 }
 
-function isSnapshot(value: TeamMarketSnapshot | undefined): value is TeamMarketSnapshot {
-  return Boolean(value);
+function isSnapshot(value: unknown): value is TeamMarketSnapshot {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "team" in value &&
+    "market" in value
+  );
 }
