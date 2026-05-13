@@ -11,7 +11,17 @@ export interface SignalDataRepository {
   readNewsArticles(options?: SignalDataReadOptions): Promise<NewsArticle[]>;
   upsertFootballTeamContext(context: ApiFootballTeamContext[], collectedAt: string): Promise<void>;
   readFootballTeamContext(options?: { teamId?: Team["id"] }): Promise<ApiFootballTeamContext[]>;
+  recordCollectionRun(run: SignalDataCollectionRun): Promise<void>;
   readSourceStats(): Promise<SignalDataSourceStats>;
+}
+
+export interface SignalDataCollectionRun {
+  id: string;
+  source: "gdelt" | "api-football";
+  collectedAt: string;
+  count: number;
+  status: "ok" | "empty" | "error";
+  errors?: string[];
 }
 
 export interface SignalDataSourceStats {
@@ -19,9 +29,11 @@ export interface SignalDataSourceStats {
     count: number;
     latestCollectedAt?: string;
     latestPublishedAt?: string;
+    lastRun?: SignalDataCollectionRun;
   };
   football: {
     count: number;
     latestCollectedAt?: string;
+    lastRun?: SignalDataCollectionRun;
   };
 }

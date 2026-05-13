@@ -40,6 +40,7 @@ interface TradingConfigStatus {
   missing: string[];
   funderAddress?: string;
   signatureType: number;
+  enabled?: boolean;
 }
 
 const ORDER_TYPES: MockBidOrderType[] = ["GTC", "FOK", "FAK"];
@@ -80,6 +81,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
             ready: false,
             missing: ["POLYMARKET_API_STATUS"],
             signatureType: 0,
+            enabled: false,
           });
         }
       });
@@ -740,6 +742,10 @@ function getRealOrderDisabledReason(
 
   if (!preview.canSubmitRealOrder) {
     return preview.disabledReason ?? "This order cannot be submitted.";
+  }
+
+  if (tradingConfig?.enabled === false) {
+    return "Real order submission is disabled on this deployment.";
   }
 
   if (!tradingConfig?.ready) {

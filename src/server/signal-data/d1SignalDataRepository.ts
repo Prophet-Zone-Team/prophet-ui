@@ -1,6 +1,6 @@
 import type { D1Database } from "../market-history/types";
 import type { ApiFootballTeamContext, NewsArticle } from "../../types/market";
-import type { SignalDataReadOptions, SignalDataRepository } from "./types";
+import type { SignalDataCollectionRun, SignalDataReadOptions, SignalDataRepository } from "./types";
 
 interface NewsArticleRow {
   id: string;
@@ -28,6 +28,15 @@ interface NewsStatsRow {
 interface FootballStatsRow {
   count: number;
   latest_collected_at: string | null;
+}
+
+interface CollectionRunRow {
+  id: string;
+  source: string;
+  collected_at: string;
+  count: number;
+  status: string;
+  errors_json: string | null;
 }
 
 export function createD1SignalDataRepository(database: D1Database): SignalDataRepository {
@@ -179,8 +188,35 @@ export function createD1SignalDataRepository(database: D1Database): SignalDataRe
       return (result.results ?? []).map(mapFootballContextRow);
     },
 
+    async recordCollectionRun(run: SignalDataCollectionRun): Promise<void> {
+      await database
+        .prepare(
+          `INSERT INTO collection_runs (
+            id,
+            source,
+            collected_at,
+            count,
+            status,
+            errors_json
+          ) VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            count = excluded.count,
+            status = excluded.status,
+            errors_json = excluded.errors_json`,
+        )
+        .bind(
+          run.id,
+          run.source,
+          run.collectedAt,
+          run.count,
+          run.status,
+          run.errors ? JSON.stringify(run.errors) : null,
+        )
+        .run();
+    },
+
     async readSourceStats() {
-      const [newsResult, footballResult] = await Promise.all([
+      const [newsResult, footballResult, runResult] = await Promise.all([
         database
           .prepare(
             `SELECT
@@ -198,22 +234,53 @@ export function createD1SignalDataRepository(database: D1Database): SignalDataRe
             FROM football_team_context`,
           )
           .all<FootballStatsRow>(),
+        database
+          .prepare(
+            `SELECT
+              id,
+              source,
+              collected_at,
+              count,
+              status,
+              errors_json
+            FROM collection_runs
+            WHERE source IN ('gdelt', 'api-football')
+            ORDER BY collected_at DESC
+            LIMIT 8`,
+          )
+          .all<CollectionRunRow>(),
       ]);
       const news = newsResult.results?.[0];
       const football = footballResult.results?.[0];
+      const runs = (runResult.results ?? []).map(mapCollectionRunRow);
+      const newsLastRun = runs.find((run) => run.source === "gdelt");
+      const footballLastRun = runs.find((run) => run.source === "api-football");
 
       return {
         news: {
           count: news?.count ?? 0,
           latestCollectedAt: news?.latest_collected_at ?? undefined,
           latestPublishedAt: news?.latest_published_at ?? undefined,
+          lastRun: newsLastRun,
         },
         football: {
           count: football?.count ?? 0,
           latestCollectedAt: football?.latest_collected_at ?? undefined,
+          lastRun: footballLastRun,
         },
       };
     },
+  };
+}
+
+function mapCollectionRunRow(row: CollectionRunRow): SignalDataCollectionRun {
+  return {
+    id: row.id,
+    source: row.source === "api-football" ? "api-football" : "gdelt",
+    collectedAt: row.collected_at,
+    count: row.count,
+    status: isRunStatus(row.status) ? row.status : "error",
+    errors: row.errors_json ? parseJsonArray(row.errors_json) : undefined,
   };
 }
 
@@ -281,6 +348,10 @@ function parseJsonArray(value: string): string[] {
   } catch {
     return [];
   }
+}
+
+function isRunStatus(value: string): value is SignalDataCollectionRun["status"] {
+  return value === "ok" || value === "empty" || value === "error";
 }
 
 function getCutoffIso(days: number | undefined): string | undefined {

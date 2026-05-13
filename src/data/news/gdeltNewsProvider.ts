@@ -5,6 +5,7 @@ const GDELT_DOC_URL = "https://api.gdeltproject.org/api/v2/doc/doc";
 const DEFAULT_MAX_ARTICLES = 4;
 const REQUEST_TIMEOUT_MS = 12000;
 const CACHE_TTL_MS = 5 * 60 * 1000;
+const MAX_QUERY_LENGTH = 740;
 
 const articleCache = new Map<string, { expiresAt: number; articles: GdeltArticle[] }>();
 
@@ -104,30 +105,27 @@ function buildCombinedGdeltUrl(queries: TeamNewsQuery[]): URL {
 
 function buildQueryText(query: TeamNewsQuery): string {
   const aliases = uniqueTerms([query.teamName, ...query.aliases])
-    .slice(0, 5)
+    .slice(0, 3)
     .map(quoteTerm);
-  const players = uniqueTerms(query.keyPlayers).slice(0, 4).map(quoteTerm);
-  const context = uniqueTerms(query.contextKeywords).slice(0, 5).map(quoteTerm);
-  const excluded = uniqueTerms(query.excludeTerms).map((term) => `-${quoteTerm(term)}`);
+  const players = uniqueTerms(query.keyPlayers).slice(0, 2).map(quoteTerm);
+  const excluded = uniqueTerms(query.excludeTerms).slice(0, 2).map((term) => `-${quoteTerm(term)}`);
   const identityTerms = [...aliases, ...players].join(" OR ");
-  const contextTerms = context.join(" OR ");
+  const queryText = `(${identityTerms}) (football OR soccer OR FIFA) ${excluded.join(" ")}`.trim();
 
-  return `(${identityTerms}) (${contextTerms}) ${excluded.join(" ")}`.trim();
+  return queryText.length <= MAX_QUERY_LENGTH ? queryText : queryText.slice(0, MAX_QUERY_LENGTH);
 }
 
 function buildCombinedQueryText(queries: TeamNewsQuery[]): string {
   const teamTerms = uniqueTerms(
     queries.flatMap((query) => [query.teamName, ...query.aliases.slice(0, 2), ...query.keyPlayers.slice(0, 1)]),
   )
-    .slice(0, 32)
-    .map(quoteTerm);
-  const context = uniqueTerms(queries[0].contextKeywords)
-    .filter((term) => ["football", "soccer"].includes(term.toLowerCase()))
-    .slice(0, 3)
+    .slice(0, 18)
     .map(quoteTerm);
   const excluded = uniqueTerms(queries.flatMap((query) => query.excludeTerms)).map((term) => `-${quoteTerm(term)}`);
+  const exclusionText = excluded.slice(0, 4).join(" ");
+  const query = `(${teamTerms.join(" OR ")}) (football OR soccer OR FIFA) ${exclusionText}`.trim();
 
-  return `(football OR soccer) (${context.join(" OR ")}) (${teamTerms.join(" OR ")}) ${excluded.join(" ")}`.trim();
+  return query.length <= MAX_QUERY_LENGTH ? query : query.slice(0, MAX_QUERY_LENGTH);
 }
 
 function mapArticle(article: GdeltArticle, queries: TeamNewsQuery[]): NewsArticle | undefined {

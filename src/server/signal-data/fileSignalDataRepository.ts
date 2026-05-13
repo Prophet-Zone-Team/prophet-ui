@@ -2,13 +2,14 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import type { ApiFootballTeamContext, NewsArticle } from "../../types/market";
-import type { SignalDataReadOptions, SignalDataRepository } from "./types";
+import type { SignalDataCollectionRun, SignalDataReadOptions, SignalDataRepository } from "./types";
 
 const SIGNAL_DATA_FILE_PATH = join(process.cwd(), ".data", "signal-data.json");
 
 interface SignalDataFile {
   newsArticles: NewsArticle[];
   footballTeamContext: ApiFootballTeamContext[];
+  collectionRuns: SignalDataCollectionRun[];
 }
 
 export const fileSignalDataRepository: SignalDataRepository = {
@@ -67,8 +68,23 @@ export const fileSignalDataRepository: SignalDataRepository = {
     );
   },
 
+  async recordCollectionRun(run: SignalDataCollectionRun): Promise<void> {
+    const data = await readSignalData();
+    const byId = new Map(data.collectionRuns.map((item) => [item.id, item]));
+    byId.set(run.id, run);
+
+    await writeSignalData({
+      ...data,
+      collectionRuns: [...byId.values()]
+        .sort((a, b) => b.collectedAt.localeCompare(a.collectedAt))
+        .slice(0, 80),
+    });
+  },
+
   async readSourceStats() {
     const data = await readSignalData();
+    const newsLastRun = data.collectionRuns.find((run) => run.source === "gdelt");
+    const footballLastRun = data.collectionRuns.find((run) => run.source === "api-football");
 
     return {
       news: {
@@ -80,6 +96,7 @@ export const fileSignalDataRepository: SignalDataRepository = {
 
           return !latest || article.publishedAt > latest ? article.publishedAt : latest;
         }, undefined),
+        lastRun: newsLastRun,
       },
       football: {
         count: data.footballTeamContext.length,
@@ -87,6 +104,7 @@ export const fileSignalDataRepository: SignalDataRepository = {
           const updatedAt = teamContext.profile.updatedAt;
           return !latest || updatedAt > latest ? updatedAt : latest;
         }, undefined),
+        lastRun: footballLastRun,
       },
     };
   },
@@ -97,22 +115,38 @@ async function readSignalData(): Promise<SignalDataFile> {
     const raw = await readFile(SIGNAL_DATA_FILE_PATH, "utf8");
     const parsed = JSON.parse(raw) as Partial<SignalDataFile>;
 
-    return {
-      newsArticles: Array.isArray(parsed.newsArticles) ? parsed.newsArticles.filter(isNewsArticle) : [],
-      footballTeamContext: Array.isArray(parsed.footballTeamContext)
-        ? parsed.footballTeamContext.map(normalizeTeamContext)
-        : [],
-    };
+      return {
+        newsArticles: Array.isArray(parsed.newsArticles) ? parsed.newsArticles.filter(isNewsArticle) : [],
+        footballTeamContext: Array.isArray(parsed.footballTeamContext)
+          ? parsed.footballTeamContext.map(normalizeTeamContext)
+          : [],
+        collectionRuns: Array.isArray(parsed.collectionRuns) ? parsed.collectionRuns.filter(isCollectionRun) : [],
+      };
   } catch (error) {
     if (isNotFoundError(error)) {
       return {
         newsArticles: [],
         footballTeamContext: [],
+        collectionRuns: [],
       };
     }
 
     throw error;
   }
+}
+
+function isCollectionRun(value: unknown): value is SignalDataCollectionRun {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const run = value as Partial<SignalDataCollectionRun>;
+  return (
+    typeof run.id === "string" &&
+    (run.source === "gdelt" || run.source === "api-football") &&
+    typeof run.collectedAt === "string" &&
+    typeof run.count === "number"
+  );
 }
 
 function normalizeTeamContext(teamContext: ApiFootballTeamContext): ApiFootballTeamContext {

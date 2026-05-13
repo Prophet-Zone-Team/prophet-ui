@@ -60,3 +60,15 @@ CREATE TABLE IF NOT EXISTS bookmaker_odds (
 
 CREATE INDEX IF NOT EXISTS idx_bookmaker_odds_team_collected
 ON bookmaker_odds (team_id, collected_at);
+
+CREATE TABLE IF NOT EXISTS collection_runs (
+  id TEXT PRIMARY KEY,
+  source TEXT NOT NULL,
+  collected_at TEXT NOT NULL,
+  count INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  errors_json TEXT
+) STRICT;
+
+CREATE INDEX IF NOT EXISTS idx_collection_runs_source_time
+ON collection_runs (source, collected_at);

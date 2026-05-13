@@ -29,12 +29,19 @@ interface SignalHealthSlice {
   latestCollectedAt?: string;
   latestPublishedAt?: string;
   ageHours?: number;
+  lastRun?: {
+    collectedAt: string;
+    count: number;
+    status: string;
+    errors?: string[];
+  };
 }
 
 interface SignalStatsSlice {
   count: number;
   latestCollectedAt?: string;
   latestPublishedAt?: string;
+  lastRun?: SignalDataSourceStats["news"]["lastRun"];
 }
 
 export async function getSystemHealthReport(now = new Date()): Promise<SystemHealthReport> {
@@ -89,12 +96,36 @@ function mapSignalSlice(
   const ageHours = latest ? getAgeHours(latest, now) : undefined;
 
   return {
-    status: getSliceStatus(slice.count, ageHours, SIGNAL_FRESHNESS_THRESHOLD_HOURS),
+    status: getSignalSliceStatus(slice, ageHours),
     count: slice.count,
     latestCollectedAt: slice.latestCollectedAt,
     latestPublishedAt: slice.latestPublishedAt,
     ageHours,
+    lastRun: slice.lastRun
+      ? {
+          collectedAt: slice.lastRun.collectedAt,
+          count: slice.lastRun.count,
+          status: slice.lastRun.status,
+          errors: slice.lastRun.errors,
+        }
+      : undefined,
   };
+}
+
+function getSignalSliceStatus(slice: SignalStatsSlice, ageHours: number | undefined): HealthStatus {
+  if (slice.lastRun?.status === "error") {
+    return "error";
+  }
+
+  if (slice.count === 0) {
+    return "empty";
+  }
+
+  if (ageHours === undefined || ageHours > SIGNAL_FRESHNESS_THRESHOLD_HOURS) {
+    return "stale";
+  }
+
+  return "ok";
 }
 
 function getSliceStatus(count: number, age: number | undefined, threshold: number): HealthStatus {

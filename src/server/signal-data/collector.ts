@@ -27,15 +27,24 @@ export async function collectGdeltNewsSignals(): Promise<SignalDataCollectionRes
   const { articles, errors } = await collectGdeltArticlesInBatches(queries);
   const cappedArticles = capArticlesPerTeam(articles);
   const repository = await getSignalDataRepository();
-
-  await repository.upsertNewsArticles(cappedArticles, collectedAt);
-
-  return {
-    source: "gdelt",
+  const result = {
+    source: "gdelt" as const,
     collectedAt,
     count: cappedArticles.length,
     errors: errors.length > 0 ? errors : undefined,
   };
+
+  await repository.upsertNewsArticles(cappedArticles, collectedAt);
+  await repository.recordCollectionRun({
+    id: `gdelt:${collectedAt}`,
+    source: "gdelt",
+    collectedAt,
+    count: cappedArticles.length,
+    status: getCollectionRunStatus(cappedArticles.length, errors),
+    errors: result.errors,
+  });
+
+  return result;
 }
 
 async function collectGdeltArticlesInBatches(queries: TeamNewsQuery[]): Promise<{
@@ -47,9 +56,7 @@ async function collectGdeltArticlesInBatches(queries: TeamNewsQuery[]): Promise<
 
   for (const batch of chunkArray(queries, 6)) {
     try {
-      const batchArticles = gdeltNewsProvider.searchRecentWorldCupNews
-        ? await gdeltNewsProvider.searchRecentWorldCupNews(batch)
-        : (await Promise.all(batch.map((query) => gdeltNewsProvider.searchRecentTeamNews(query)))).flat();
+      const batchArticles = (await Promise.all(batch.map((query) => gdeltNewsProvider.searchRecentTeamNews(query)))).flat();
       articles.push(...batchArticles);
     } catch (error) {
       errors.push(getErrorMessage(error));
@@ -87,14 +94,24 @@ export async function collectApiFootballSignals(): Promise<SignalDataCollectionR
   }
 
   const repository = await getSignalDataRepository();
-  await repository.upsertFootballTeamContext(context, collectedAt);
-
-  return {
-    source: "api-football",
+  const result = {
+    source: "api-football" as const,
     collectedAt,
     count: context.length,
     errors: errors.length > 0 ? errors : undefined,
   };
+
+  await repository.upsertFootballTeamContext(context, collectedAt);
+  await repository.recordCollectionRun({
+    id: `api-football:${collectedAt}`,
+    source: "api-football",
+    collectedAt,
+    count: context.length,
+    status: getCollectionRunStatus(context.length, errors),
+    errors: result.errors,
+  });
+
+  return result;
 }
 
 export async function collectAllSignalData(): Promise<SignalDataCollectionResult[]> {
@@ -203,4 +220,12 @@ function getErrorMessage(error: unknown): string {
   }
 
   return "Unable to collect signal data.";
+}
+
+function getCollectionRunStatus(count: number, errors: string[]): "ok" | "empty" | "error" {
+  if (count > 0) {
+    return "ok";
+  }
+
+  return errors.length > 0 ? "error" : "empty";
 }

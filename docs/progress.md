@@ -30,6 +30,8 @@ Last updated: 2026-05-13
   provider, D1 cache, signal collection route, and news impact mapping.
 - API-Football context collection implemented:
   team profile, fixtures, squad, injuries, standings, fixture odds, D1 cache, and rotating collection batches.
+- Signal collection run tracking implemented:
+  D1 records the last GDELT/API-Football collection status, count, and errors for health checks.
 - The Odds API provider implemented:
   `THE_ODDS_API_KEY`, World Cup outright sport-key discovery, bookmaker implied probability summaries, unavailable/empty fallback, and odds status disclosure.
 - System health endpoint implemented:
@@ -48,8 +50,8 @@ Checked on 2026-05-13:
   `2026-05-13T03:00Z` for composite, Kalshi, and Polymarket.
 - Production `GET /api/system/health` returned `marketSnapshots.status: ok` with latest source age around 15 minutes.
 - Production `GET /api/news/events` and `GET /api/football/context` returned 200 after redeploy.
-- Remote D1 `news_articles` had 0 rows at the time of check.
-- Remote D1 `football_team_context` had 0 rows at the time of check.
+- Remote D1 `news_articles` had 0 rows at the time of check; GDELT collection returned errors and needs follow-up.
+- Remote D1 `football_team_context` had started filling; the latest check showed 6 cached teams.
 - Cloudflare secrets currently list `API_FOOTBALL_KEY` and `MARKET_COLLECTOR_SECRET`; `THE_ODDS_API_KEY` still needs to be added before bookmaker outright odds can go live.
 
 ## Pending
@@ -69,6 +71,7 @@ Checked on 2026-05-13:
 - Redeploy latest `main` after future changes.
 - Configure Cloudflare secrets:
   `THE_ODDS_API_KEY`, optional `THE_ODDS_API_WORLD_CUP_SPORT_KEY`, and optional `THE_ODDS_API_REGIONS`.
+- Investigate current GDELT collection errors from `GET /api/system/health` after the collection run status deployment.
 - Use `GET /api/system/health` after deploy to verify cron freshness without querying D1 manually.
 - Add Cloudflare deploy automation if deployments should happen automatically from CI.
 - Add cron failure alerts beyond console logging.

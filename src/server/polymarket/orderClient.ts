@@ -40,19 +40,25 @@ export function getPolymarketTradingConfigStatus(): {
   missing: string[];
   funderAddress?: string;
   signatureType: SignatureTypeV2;
+  enabled: boolean;
 } {
   const config = readConfig();
 
   return {
-    ready: config.missing.length === 0,
+    ready: config.enabled && config.missing.length === 0,
     missing: config.missing,
     funderAddress: config.funderAddress,
     signatureType: config.signatureType,
+    enabled: config.enabled,
   };
 }
 
 export async function submitPolymarketOrder(request: PolymarketOrderRequest): Promise<PolymarketOrderResult> {
   const config = readConfig();
+
+  if (!config.enabled) {
+    throw new Error("Real Polymarket order submission is disabled. Set ENABLE_REAL_POLYMARKET_ORDERS=true to enable it.");
+  }
 
   if (config.missing.length > 0) {
     throw new Error(`Missing Polymarket trading environment variables: ${config.missing.join(", ")}`);
@@ -129,9 +135,11 @@ function readConfig(): {
   funderAddress?: string;
   signatureType: SignatureTypeV2;
   builderCode?: string;
+  enabled: boolean;
   creds?: ApiKeyCreds;
   missing: string[];
 } {
+  const enabled = process.env.ENABLE_REAL_POLYMARKET_ORDERS === "true";
   const host = process.env.POLYMARKET_CLOB_HOST?.trim() || DEFAULT_HOST;
   const chainId = parseChainId(process.env.POLYMARKET_CHAIN_ID ?? process.env.CHAIN_ID);
   const privateKey =
@@ -173,6 +181,7 @@ function readConfig(): {
     funderAddress,
     signatureType,
     builderCode,
+    enabled,
     creds:
       apiKey && apiSecret && apiPassphrase
         ? {

@@ -87,6 +87,7 @@ The scheduled Worker cron also runs signal collection. It stores:
 
 - GDELT related football coverage in `news_articles`
 - API-Football team profile and upcoming fixture context in `football_team_context`
+- collection run status, counts, and errors in `collection_runs`
 
 API-Football is collected in small rotating batches to reduce rate-limit pressure. A 10-minute cron will gradually refresh the whole team board instead of hitting every team at once.
 
@@ -145,7 +146,7 @@ After deployment, use the health endpoint to confirm the cron is keeping D1 fres
 curl "https://wc.dolla.market/api/system/health"
 ```
 
-The endpoint reports market snapshot freshness, plus cached GDELT and API-Football row counts.
+The endpoint reports market snapshot freshness, cached GDELT and API-Football row counts, and the latest signal collection errors.
 
 ## Local Development
 
