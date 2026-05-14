@@ -21,15 +21,130 @@ export type SignalType =
   | "overheated"
   | "quiet_accumulation";
 
-export type MockBidSide = "yes" | "no";
-
-export type BidExecutionMode = "mock" | "real";
+export type OrderOutcomeSide = "yes" | "no";
 
 export type BidTradeSide = "buy" | "sell";
 
-export type MockBidStatus = "draft" | "simulated" | "cancelled";
+export type TradingOrderType = "GTC" | "FOK" | "FAK";
 
-export type MockBidOrderType = "GTC" | "GTD" | "FOK" | "FAK";
+export type TradingEligibilityStatus =
+  | "unknown"
+  | "eligible"
+  | "blocked_region"
+  | "unsupported_account"
+  | "needs_wallet"
+  | "error";
+
+export type TradingCredentialStorage = "session" | "encrypted_server" | "none";
+
+export type DepositWalletStatus =
+  | "unknown"
+  | "derived"
+  | "deploying"
+  | "deployed"
+  | "relayer_unconfigured"
+  | "error";
+
+export type UserOrderStatus =
+  | "previewed"
+  | "submitted"
+  | "open"
+  | "filled"
+  | "partially_filled"
+  | "cancelled"
+  | "rejected"
+  | "error";
+
+export interface TradingUserSession {
+  userId: string;
+  walletAddress: string;
+  funderAddress?: string;
+  depositWalletStatus?: DepositWalletStatus;
+  depositWalletCheckedAt?: string;
+  depositWalletTransactionId?: string;
+  depositWalletTransactionHash?: string;
+  depositWalletError?: string;
+  signatureType: number;
+  eligibilityStatus: TradingEligibilityStatus;
+  eligibilityCheckedAt?: string;
+  eligibilityCountry?: string;
+  eligibilityRegion?: string;
+  eligibilityReason?: string;
+  createdAt: string;
+  expiresAt?: string;
+}
+
+export interface UserTradingCredentialStatus {
+  hasClobCredentials: boolean;
+  derivedAt?: string;
+  storage: TradingCredentialStorage;
+}
+
+export interface UserBalanceSnapshot {
+  walletAddress: string;
+  funderAddress?: string;
+  usdcAvailable?: number;
+  usdcAllowance?: number;
+  conditionalTokenBalance?: number;
+  conditionalTokenAllowance?: number;
+  updatedAt: string;
+  error?: string;
+}
+
+export interface AccountReadinessCheck {
+  id:
+    | "wallet"
+    | "eligibility"
+    | "signature_type"
+    | "funder"
+    | "deposit_wallet"
+    | "clob_credentials"
+    | "balance"
+    | "allowance";
+  label: string;
+  status: "pass" | "fail" | "unknown";
+  detail: string;
+}
+
+export interface UserTradingReadiness {
+  ready: boolean;
+  session?: TradingUserSession;
+  credentials: UserTradingCredentialStatus;
+  balances?: UserBalanceSnapshot;
+  checks: AccountReadinessCheck[];
+  updatedAt: string;
+}
+
+export interface UserOrderPreview {
+  marketId?: string;
+  tokenId: string;
+  teamId: Team["id"];
+  outcome: OrderOutcomeSide;
+  side: BidTradeSide;
+  orderType: TradingOrderType;
+  limitPrice: number;
+  size: number;
+  estimatedCost: number;
+  estimatedTakerFee?: number;
+  estimatedTotalCost?: number;
+  estimatedProceeds?: number;
+  potentialOutcome: number;
+  tickSize: PolymarketMarketMetadata["tickSize"];
+  negRisk?: boolean;
+  stale: boolean;
+  warnings: string[];
+}
+
+export interface UserOrderRecord {
+  id: string;
+  userId: string;
+  clobOrderId?: string;
+  status: UserOrderStatus;
+  preview: UserOrderPreview;
+  submittedAt?: string;
+  updatedAt: string;
+  error?: string;
+}
 
 export interface Team {
   id: string;
@@ -61,10 +176,19 @@ export interface PolymarketMarketMetadata {
   negRisk: boolean;
   tickSize: "0.1" | "0.01" | "0.001" | "0.0001";
   minOrderSize?: number;
+  fee?: PolymarketFeeDetails;
   tokens: {
     yes?: PolymarketOutcomeToken;
     no?: PolymarketOutcomeToken;
   };
+}
+
+export interface PolymarketFeeDetails {
+  rate: number;
+  exponent: number;
+  takerOnly: boolean;
+  makerBaseFee?: number;
+  takerBaseFee?: number;
 }
 
 export interface PolymarketOutcomeToken {
@@ -134,28 +258,6 @@ export interface MarketSignalDataPoint {
   label: string;
   value: string;
   tone?: "positive" | "negative" | "neutral";
-}
-
-export interface MockBid {
-  id: string;
-  teamId: Team["id"];
-  side: MockBidSide;
-  tradeSide?: BidTradeSide;
-  executionMode?: BidExecutionMode;
-  stake: number;
-  probabilityAtBid: number;
-  potentialReturn: number;
-  status: MockBidStatus;
-  createdAt: string;
-  limitPrice?: number;
-  shareSize?: number;
-  orderType?: MockBidOrderType;
-  simulatedOrderId?: string;
-  simulatedTokenId?: string;
-  estimatedCost?: number;
-  potentialOutcome?: number;
-  expiresAt?: string;
-  displayAddress?: string;
 }
 
 export interface UserWatchlistItem {

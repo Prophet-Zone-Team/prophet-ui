@@ -29,5 +29,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Trading safety
+        run: npm run check:trading-safety
+
       - name: Build
         run: npm run build

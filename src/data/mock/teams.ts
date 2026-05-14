@@ -1,5 +1,4 @@
 import type {
-  MockBid,
   NewsEvent,
   ProbabilityHistoryPoint,
   Team,
@@ -341,29 +340,6 @@ export const mockNewsEvents: NewsEvent[] = [
     publishedAt: "2026-05-10T13:05:00.000Z",
     impactScore: 44,
     summary: "Probability and sentiment moved higher from a low base as volume improved.",
-  },
-];
-
-export const mockBids: MockBid[] = [
-  {
-    id: "mock-bid-argentina-001",
-    teamId: "argentina",
-    side: "yes",
-    stake: 100,
-    probabilityAtBid: 18.4,
-    potentialReturn: 543.48,
-    status: "simulated",
-    createdAt: "2026-05-11T10:05:00.000Z",
-  },
-  {
-    id: "mock-bid-england-001",
-    teamId: "england",
-    side: "no",
-    stake: 75,
-    probabilityAtBid: 12.9,
-    potentialReturn: 86.11,
-    status: "draft",
-    createdAt: "2026-05-11T10:12:00.000Z",
   },
 ];
 

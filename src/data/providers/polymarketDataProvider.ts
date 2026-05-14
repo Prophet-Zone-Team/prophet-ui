@@ -1,6 +1,7 @@
 import { mockTeams } from "../mock/teams";
 import type {
   MarketSentiment,
+  PolymarketFeeDetails,
   PolymarketMarketMetadata,
   Team,
   TeamMarketSnapshot,
@@ -8,6 +9,8 @@ import type {
 import type { WorldCupMarketData, WorldCupMarketDataProvider } from "./types";
 
 const GAMMA_MARKETS_URL = "https://gamma-api.polymarket.com/markets";
+const CLOB_MARKET_URL = "https://clob.polymarket.com/clob-markets";
+const CLOB_MARKET_BY_TOKEN_URL = "https://clob.polymarket.com/markets-by-token";
 const MIN_WORLD_CUP_MARKETS = 8;
 
 interface GammaMarket {
@@ -37,10 +40,21 @@ interface GammaMarket {
   createdAt?: string;
 }
 
+interface ClobMarketDetails {
+  c?: string;
+  fd?: {
+    r?: number;
+    e?: number;
+    to?: boolean;
+  };
+  mbf?: number;
+  tbf?: number;
+}
+
 export const polymarketDataProvider: WorldCupMarketDataProvider = {
   async getWorldCupMarketData(): Promise<WorldCupMarketData> {
     const markets = await fetchWorldCupMarkets();
-    const snapshots = mapMarketsToTeamSnapshots(markets);
+    const snapshots = await mapMarketsToTeamSnapshots(markets);
 
     if (snapshots.length < MIN_WORLD_CUP_MARKETS) {
       throw new Error(`Polymarket returned ${snapshots.length} matching World Cup team markets.`);
@@ -94,10 +108,14 @@ async function fetchWorldCupMarkets(): Promise<GammaMarket[]> {
   return data.filter(isGammaMarket);
 }
 
-function mapMarketsToTeamSnapshots(markets: GammaMarket[]): TeamMarketSnapshot[] {
+async function mapMarketsToTeamSnapshots(markets: GammaMarket[]): Promise<TeamMarketSnapshot[]> {
   const usedMarketIds = new Set<string>();
-
-  const snapshots: TeamMarketSnapshot[] = [];
+  const selectedMarkets: Array<{
+    team: Team;
+    market: GammaMarket;
+    probability: number;
+    polymarket?: PolymarketMarketMetadata;
+  }> = [];
 
   for (const team of mockTeams) {
     const market = findBestTeamMarket(markets, team, usedMarketIds);
@@ -114,8 +132,13 @@ function mapMarketsToTeamSnapshots(markets: GammaMarket[]): TeamMarketSnapshot[]
     }
 
     usedMarketIds.add(market.id ?? market.slug ?? `${team.id}-${market.question}`);
+    selectedMarkets.push({ team, market, probability, polymarket });
+  }
 
-    snapshots.push({
+  const feeDetails = await fetchClobFeeDetails(selectedMarkets);
+
+  return selectedMarkets
+    .map(({ team, market, probability, polymarket }) => ({
       team,
       market: {
         teamId: team.id,
@@ -126,12 +149,10 @@ function mapMarketsToTeamSnapshots(markets: GammaMarket[]): TeamMarketSnapshot[]
         sentiment: deriveSentiment(normalizePriceChange(firstNumber(market.oneDayPriceChange, market.priceChange24h))),
         bookmakerImpliedProbability: probability,
         updatedAt: market.updatedAt ?? market.createdAt ?? new Date().toISOString(),
-        polymarket,
+        polymarket: attachClobFeeDetails(polymarket, feeDetails.get(getMarketFeeKey(market))),
       },
-    });
-  }
-
-  return snapshots.sort((a, b) => b.market.volume - a.market.volume);
+    }))
+    .sort((a, b) => b.market.volume - a.market.volume);
 }
 
 function findBestTeamMarket(
@@ -192,6 +213,113 @@ function extractPolymarketMetadata(market: GammaMarket): PolymarketMarketMetadat
           }
         : undefined,
     },
+  };
+}
+
+async function fetchClobFeeDetails(
+  markets: Array<{ market: GammaMarket }>,
+): Promise<Map<string, PolymarketFeeDetails>> {
+  const marketRefs = [
+    ...new Map(
+      markets
+        .map(({ market }) => ({ key: getMarketFeeKey(market), conditionId: market.conditionId, tokenId: getFirstClobTokenId(market) }))
+        .filter((item) => item.conditionId || item.tokenId)
+        .map((item) => [item.key, item]),
+    ).values(),
+  ];
+  const entries = await Promise.all(
+    marketRefs.map(async ({ key, conditionId, tokenId }) => {
+      try {
+        const resolvedConditionId = conditionId ?? (tokenId ? await fetchConditionIdByToken(tokenId) : undefined);
+
+        if (!resolvedConditionId) {
+          return undefined;
+        }
+
+        const response = await fetch(`${CLOB_MARKET_URL}/${resolvedConditionId}`, {
+          cache: "no-store",
+          headers: {
+            accept: "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          return undefined;
+        }
+
+        const payload = (await response.json()) as ClobMarketDetails;
+
+        return [key, toPolymarketFeeDetails(payload)] as const;
+      } catch {
+        return undefined;
+      }
+    }),
+  );
+  const feesByConditionId = new Map<string, PolymarketFeeDetails>();
+
+  for (const entry of entries) {
+    if (entry?.[1]) {
+      feesByConditionId.set(entry[0], entry[1]);
+    }
+  }
+
+  return feesByConditionId;
+}
+
+async function fetchConditionIdByToken(tokenId: string): Promise<string | undefined> {
+  const response = await fetch(`${CLOB_MARKET_BY_TOKEN_URL}/${encodeURIComponent(tokenId)}`, {
+    cache: "no-store",
+    headers: {
+      accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    return undefined;
+  }
+
+  const payload = (await response.json()) as { condition_id?: unknown; c?: unknown };
+  const conditionId = typeof payload.condition_id === "string" ? payload.condition_id : payload.c;
+
+  return typeof conditionId === "string" && /^0x[a-fA-F0-9]{64}$/.test(conditionId) ? conditionId : undefined;
+}
+
+function getMarketFeeKey(market: GammaMarket): string {
+  return market.conditionId ?? getFirstClobTokenId(market) ?? market.id ?? market.slug ?? "";
+}
+
+function getFirstClobTokenId(market: GammaMarket): string | undefined {
+  return parseArrayField(market.clobTokenIds).map(String).find(Boolean);
+}
+
+function attachClobFeeDetails(
+  metadata: PolymarketMarketMetadata | undefined,
+  fee: PolymarketFeeDetails | undefined,
+): PolymarketMarketMetadata | undefined {
+  if (!metadata || !fee) {
+    return metadata;
+  }
+
+  return {
+    ...metadata,
+    fee,
+  };
+}
+
+function toPolymarketFeeDetails(payload: ClobMarketDetails): PolymarketFeeDetails | undefined {
+  const rate = toNumber(payload.fd?.r);
+  const exponent = toNumber(payload.fd?.e);
+
+  if (rate === undefined || exponent === undefined) {
+    return undefined;
+  }
+
+  return {
+    rate,
+    exponent,
+    takerOnly: payload.fd?.to === true,
+    makerBaseFee: toNumber(payload.mbf),
+    takerBaseFee: toNumber(payload.tbf),
   };
 }
 

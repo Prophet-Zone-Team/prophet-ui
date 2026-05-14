@@ -1,10 +1,10 @@
 # Embedded User Trading Plan
 
-Last updated: 2026-05-13 12:23 CST
+Last updated: 2026-05-14 00:42 CST
 
 ## Product Direction
 
-World Cup Prediction Terminal is moving from simulated bid education to embedded real user trading.
+World Cup Prediction Terminal is moving to embedded real user trading.
 
 The trading product must let eligible users place Polymarket orders with:
 
@@ -19,10 +19,18 @@ The platform must not place user orders with a shared server wallet, deployment 
 
 ## Current State
 
-- `/bid` exists, but it is a legacy order console inherited from the bid branch.
-- Production real order submission is disabled by `ENABLE_REAL_POLYMARKET_ORDERS=false`.
-- The server order client currently signs with deployment environment variables when enabled. That is not acceptable for consumer embedded trading.
-- There is no user login, wallet connection, session signer, user deposit wallet discovery, user balance, allowance, order status, or cancellation flow yet.
+- `/bid` is a Trade Ticket with a single user-owned wallet/session/readiness/signing/submit flow.
+- Legacy `/api/bid/orders` is tombstoned: GET returns disabled status and POST returns `410`.
+- The server-wallet order client and deployment private-key submit path have been removed from the app.
+- The new `/api/trading/*` endpoints support session creation, Polymarket Bridge deposit-address generation, Polymarket geoblock checks, user L1 auth CLOB credential derivation, deposit-wallet approval batches, CLOB balance/allowance sync, order-specific readiness checks, signed user order submission, open-order reads, and order cancellation.
+- Session creation now takes only the connected wallet, derives the corresponding Polymarket deposit wallet, checks deployment, and submits a relayer `WALLET-CREATE` request only when relayer auth can legally submit for that user: either the configured `RELAYER_API_KEY_ADDRESS` matches the connected wallet or app-managed Builder API credentials are configured.
+- `/bid` collapses CLOB credential derivation, deposit address generation, approval batch submission, and balance sync into one visible `Prepare account` action.
+- `/bid` also includes a deposit panel that sends Polygon USDC from the connected wallet to the generated Polymarket Bridge deposit address through a normal wallet-confirmed ERC-20 transfer, then refreshes account readiness.
+- Readiness accepts the current ticket token, side, cost, and size, then checks user balance and allowance against that order intent.
+- Submit re-validates the signed order payload before CLOB post: final confirmation, signature type 3, deployed deposit wallet maker/signer match, zero taker limit-order shape, token ID, funding requirement, and current balance/allowance.
+- CLOB order submission now matches the official client request shape by including the user's CLOB API key as `owner`.
+- `.env.example` no longer documents platform private keys, server CLOB credentials, or shared funder addresses for consumer order submission.
+- The current implementation uses an in-memory session MVP; production still needs eligible-wallet validation, durable login/session, secure credential storage policy, positions, order persistence, and audit logging.
 - Market data, prices, token IDs, tick sizes, and neg-risk metadata are already available from the Polymarket read-only provider when the market provider returns them.
 
 ## Hard Requirements
@@ -54,7 +62,8 @@ The platform must not place user orders with a shared server wallet, deployment 
 User browser
   -> connect/login with user wallet or Polymarket-compatible account
   -> create or recover user session
-  -> fetch eligibility, funder/deposit wallet, balances, allowances
+  -> fetch eligibility, deposit wallet, balances, allowances
+  -> prepare account, generate a deposit address, and deposit funds with wallet confirmation
   -> build order preview from live market metadata
   -> user signs or authorizes order action
 
@@ -144,12 +153,14 @@ interface UserOrderRecord {
 
 Goal: prevent the existing server-wallet path from being confused with consumer trading.
 
+Status: completed for public UI and route shape.
+
 Tasks:
 
-- Rename current server order client as an internal/admin-only path.
-- Keep `ENABLE_REAL_POLYMARKET_ORDERS=false` in production until user-owned trading is complete.
-- Add code comments and endpoint naming that make shared-wallet order submission non-consumer.
-- Hide or remove real submit UI from `/bid` unless a user-owned trading session exists.
+- Remove the current server order client from consumer code. Completed.
+- Remove platform private key / shared CLOB credential examples from `.env.example`. Completed.
+- Add endpoint naming that makes shared-wallet order submission non-consumer. Completed by tombstoning `/api/bid/orders` and using `/api/trading/*`.
+- Remove mock/developer bid modes from `/bid`. Completed.
 - Add tests that assert consumer order routes cannot use deployment private keys.
 
 Exit criteria:
@@ -161,10 +172,12 @@ Exit criteria:
 
 Goal: establish who the user is and which signer/funder can be used.
 
+Status: MVP started with injected wallet session.
+
 Tasks:
 
 - Choose wallet/auth stack compatible with Next.js and Polygon/Polymarket signing.
-- Add connect/login UI and session state.
+- Add connect/login UI and session state. MVP completed with injected wallet provider and in-memory server session.
 - Store only minimal user identity metadata.
 - Add a server session validation layer.
 - Determine whether Polymarket account/deposit wallet discovery is direct API, wallet-derived, or user-provided.
@@ -185,17 +198,20 @@ Exit criteria:
 
 Goal: only enable trading for users who can legally and technically trade.
 
+Status: readiness scaffold and Polymarket geoblock check implemented; eligible-wallet validation pending.
+
 Tasks:
 
-- Integrate Polymarket geoblock/eligibility check.
+- Integrate Polymarket geoblock/eligibility check. Implemented through `GET /api/trading/eligibility`, session creation, readiness, submit, and cancel guards.
 - Add account readiness state:
   - connected wallet;
   - supported signature type;
-  - deposit wallet/funder known;
+  - deposit wallet/funder derived and deployed;
   - CLOB credentials available or derivable;
   - USDC balance readable;
   - allowance readable.
 - Add user-facing blocked, unsupported, and setup-required states.
+- Remove manual funder entry from the public UI and derive the deposit wallet from the connected EOA. Implemented.
 
 Exit criteria:
 
@@ -206,10 +222,12 @@ Exit criteria:
 
 Goal: create authenticated Polymarket requests for the user, not for the platform.
 
+Status: MVP implemented with user L1 auth and session-only credentials.
+
 Tasks:
 
-- Implement L1/L2 auth flow for the user's signer.
-- Derive or create user-specific CLOB API credentials.
+- Implement L1/L2 auth flow for the user's signer. MVP completed for L1 auth challenge and CLOB credential derivation.
+- Derive or create user-specific CLOB API credentials. MVP completed.
 - Decide storage:
   - derive on each session;
   - keep in memory only;
@@ -226,13 +244,16 @@ Exit criteria:
 
 Goal: make the order ticket honest before submit.
 
+Status: order-specific balance/allowance reads, sufficiency checks, deposit-wallet approval batch submission, and CLOB balance sync implemented; positions pending.
+
 Tasks:
 
-- Read user's USDC balance and allowance.
+- Read user's USDC balance and allowance. Implemented.
+- Read selected token balance and allowance for sell orders. Implemented.
 - Read user's open positions for selected token IDs.
-- Add approval/allowance flow if required.
-- Add insufficient balance and insufficient allowance states.
-- Add stale market metadata and closed-market checks.
+- Add approval/allowance flow if required. Implemented for deposit-wallet approval batch signing, relayer submission, and CLOB balance sync.
+- Add insufficient balance and insufficient allowance states. Implemented for readiness and submit guards.
+- Add stale market metadata and closed-market checks. Partially implemented through market accepting-orders and real-token checks.
 
 Exit criteria:
 
@@ -243,11 +264,13 @@ Exit criteria:
 
 Goal: submit real orders only after explicit user review.
 
+Status: user-owned signed order flow implemented; requires production validation with eligible wallet.
+
 Tasks:
 
-- Build a consumer trading ticket from the current `/bid` calculations.
-- Require final confirmation that names market, outcome, side, limit price, size, and estimated cost.
-- Submit through a user-owned CLOB client/session.
+- Build a consumer trading ticket from the current `/bid` calculations. Completed for current UI.
+- Require final confirmation that names market, outcome, side, limit price, size, and estimated cost. Partially completed through signed payload and final confirmation text.
+- Submit through a user-owned CLOB client/session. Endpoint implemented with signed-order ownership and funding guards; production validation pending.
 - Store safe order metadata.
 - Show success, pending, rejected, and error states.
 
@@ -260,10 +283,12 @@ Exit criteria:
 
 Goal: make trading usable after submission.
 
+Status: open-order read and cancel endpoint scaffold implemented; positions and durable order records pending.
+
 Tasks:
 
-- List open orders.
-- Cancel orders.
+- List open orders. MVP implemented through `/api/trading/orders/open`.
+- Cancel orders. MVP implemented through `/api/trading/orders/cancel`.
 - Show filled/partial/rejected states.
 - Show positions and simple P/L context if reliable.
 - Add refresh and stale-state indicators.
@@ -308,9 +333,11 @@ Team detail pages should link into the trade ticket with selected team/outcome, 
 
 ## Immediate Next Tasks
 
-1. Refactor current `/bid` copy and endpoint naming so it is not presented as consumer-ready trading.
-2. Choose wallet/auth provider.
-3. Design user session and credential storage.
-4. Add geoblock/eligibility route.
-5. Add read-only account readiness endpoint.
-6. Only after those are complete, implement signed user order submission.
+1. Configure production Builder API credentials or equivalent app-managed relayer auth so first-time users can have deposit wallets deployed and approvals submitted without handling relayer details.
+2. Validate the current injected-wallet MVP with an eligible Polymarket deposit-wallet account using signature type 3 and a tiny limit order.
+3. Validate the wallet-initiated Polygon USDC deposit panel against a real eligible account and confirm Bridge settlement plus CLOB balance sync timing.
+4. Add durable order records, submitted-order status refresh, and positions.
+5. Verify geoblock behavior in production; local smoke tests have shown both blocked and eligible responses depending on egress region.
+6. Add tests proving `/bid` and `/api/trading/*` never use deployment private keys or platform CLOB credentials.
+7. Choose production auth/wallet provider beyond injected wallet if needed.
+8. Decide whether user CLOB credentials remain session-only or move to encrypted server-side storage.

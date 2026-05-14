@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata = {
   title: "World Cup Prediction Terminal",
-  description: "A mock World Cup prediction market data terminal.",
+  description: "A World Cup prediction market data terminal with user-owned Polymarket order tooling.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

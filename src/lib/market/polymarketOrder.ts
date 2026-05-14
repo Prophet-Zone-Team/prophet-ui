@@ -1,22 +1,21 @@
-import type { BidTradeSide, MockBidOrderType, MockBidSide, TeamMarketSnapshot } from "../../types/market";
-import { calculateMockOrderSimulation, normalizeLimitPrice } from "./mockBid";
+import type { BidTradeSide, OrderOutcomeSide, TeamMarketSnapshot, TradingOrderType } from "../../types/market";
+import { calculateOrderEstimate, normalizeLimitPrice } from "./orderMath";
 
 type PolymarketTickSize = NonNullable<TeamMarketSnapshot["market"]["polymarket"]>["tickSize"];
 
 export interface BidOrderPreviewInput {
   snapshot: TeamMarketSnapshot;
-  outcomeSide: MockBidSide;
+  outcomeSide: OrderOutcomeSide;
   tradeSide: BidTradeSide;
   amount: number;
   limitPrice: number;
-  orderType: MockBidOrderType;
-  createdAt?: string;
-  includeOrderId?: boolean;
+  orderType: TradingOrderType;
 }
 
 export interface BidOrderPreview {
-  outcomeSide: MockBidSide;
+  outcomeSide: OrderOutcomeSide;
   tradeSide: BidTradeSide;
+  orderType: TradingOrderType;
   tokenId?: string;
   tickSize?: PolymarketTickSize;
   negRisk?: boolean;
@@ -25,11 +24,10 @@ export interface BidOrderPreview {
   sidePrice: number;
   shareSize: number;
   estimatedCost: number;
+  estimatedTakerFee: number;
+  estimatedTotalCost: number;
   potentialPayout: number;
   potentialOutcome: number;
-  simulatedTokenId: string;
-  simulatedOrderId?: string;
-  expiresAt?: string;
   canSubmitRealOrder: boolean;
   disabledReason?: string;
 }
@@ -38,17 +36,14 @@ export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPrevi
   const token = input.snapshot.market.polymarket?.tokens[input.outcomeSide];
   const metadata = input.snapshot.market.polymarket;
   const sidePrice = normalizeLimitPrice(input.limitPrice);
-  const simulation = calculateMockOrderSimulation({
-    teamId: input.snapshot.team.id,
-    teamCode: input.snapshot.team.code,
+  const estimate = calculateOrderEstimate({
     side: input.outcomeSide,
     tradeSide: input.tradeSide,
-    stake: input.amount,
+    amount: input.amount,
     probability: input.snapshot.market.probability,
     limitPrice: sidePrice,
     orderType: input.orderType,
-    createdAt: input.createdAt,
-    includeOrderId: input.includeOrderId,
+    fee: metadata?.fee,
   });
   const disabledReason = getDisabledReason({
     acceptingOrders: metadata?.acceptingOrders,
@@ -61,19 +56,19 @@ export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPrevi
   return {
     outcomeSide: input.outcomeSide,
     tradeSide: input.tradeSide,
+    orderType: input.orderType,
     tokenId: token?.tokenId,
     tickSize: metadata?.tickSize,
     negRisk: metadata?.negRisk,
     acceptingOrders: metadata?.acceptingOrders === true,
     minOrderSize: metadata?.minOrderSize,
     sidePrice,
-    shareSize: simulation.shareSize,
-    estimatedCost: simulation.estimatedCost,
-    potentialPayout: simulation.potentialPayout,
-    potentialOutcome: simulation.potentialOutcome,
-    simulatedTokenId: token?.tokenId ?? simulation.simulatedTokenId,
-    simulatedOrderId: simulation.simulatedOrderId,
-    expiresAt: simulation.expiresAt,
+    shareSize: estimate.shareSize,
+    estimatedCost: estimate.estimatedCost,
+    estimatedTakerFee: estimate.estimatedTakerFee,
+    estimatedTotalCost: estimate.estimatedTotalCost,
+    potentialPayout: estimate.potentialPayout,
+    potentialOutcome: estimate.potentialOutcome,
     canSubmitRealOrder: !disabledReason,
     disabledReason,
   };
@@ -89,7 +84,7 @@ function getDisabledReason({
   acceptingOrders?: boolean;
   amount: number;
   minOrderSize?: number;
-  orderType: MockBidOrderType;
+  orderType: TradingOrderType;
   tokenId?: string;
 }): string | undefined {
   if (!tokenId) {
@@ -106,10 +101,6 @@ function getDisabledReason({
 
   if (minOrderSize !== undefined && amount < minOrderSize) {
     return `Amount must be at least ${minOrderSize}.`;
-  }
-
-  if (orderType === "GTD") {
-    return "GTD requires an explicit exchange expiration flow; use GTC, FOK, or FAK for now.";
   }
 
   return undefined;

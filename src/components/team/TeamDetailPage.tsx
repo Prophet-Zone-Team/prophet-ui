@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Area,
   AreaChart,
@@ -23,23 +23,11 @@ import type {
   ApiFootballSquadPlayer,
   ApiFootballStandingContext,
   ApiFootballTeamProfile,
-  MockBid,
   NewsEvent,
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
 } from "../../types/market";
-import {
-  calculateMockOrderSimulation,
-  calculateReferencePrice,
-  formatPriceCents,
-  formatShareSize,
-} from "../../lib/market/mockBid";
-import {
-  readStoredBids,
-  readStoredWatchlist,
-  writeStoredBids,
-  writeStoredWatchlist,
-} from "../../lib/storage/local-terminal";
+import { readStoredWatchlist, writeStoredWatchlist } from "../../lib/storage/local-terminal";
 import {
   formatChange,
   formatProbability,
@@ -112,7 +100,7 @@ export function TeamDetailPage({
               dataIssues={footballDataIssues}
               teamName={team.name}
             />
-            <MockBidPanel snapshot={snapshot} />
+            <TradeTicketPanel snapshot={snapshot} source={dataStatus.source} />
             <WatchlistButton teamId={team.id} teamName={team.name} />
           </div>
         </div>
@@ -364,7 +352,7 @@ function TeamHeader({ snapshot, source }: { snapshot: TeamMarketSnapshot; source
           Feed
         </Link>
         <Link href={`/bid?source=${source}`} className="hover:text-terminal-cyan">
-          Mock bid
+          Trade ticket
         </Link>
         <Link href={`/watchlist?source=${source}`} className="hover:text-terminal-cyan">
           Watchlist
@@ -385,7 +373,7 @@ function TeamHeader({ snapshot, source }: { snapshot: TeamMarketSnapshot; source
           </h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-terminal-muted">
             Team detail terminal for market probability, momentum, pricing divergence,
-            related news context, and simulated bid outcomes.
+            related news context, and user-owned order ticket preparation.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
@@ -654,120 +642,39 @@ function RelatedNews({ news, teamName }: { news: NewsEvent[]; teamName: string }
   );
 }
 
-function MockBidPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
+function TradeTicketPanel({
+  snapshot,
+  source,
+}: {
+  snapshot: TeamMarketSnapshot;
+  source: MarketDataMeta["source"];
+}) {
   const { team, market } = snapshot;
-  const [stake, setStake] = useState("100");
-  const [savedBids, setSavedBids] = useState<MockBid[]>([]);
-
-  useEffect(() => {
-    setSavedBids(readStoredBids().filter((bid) => bid.teamId === team.id));
-  }, [team.id]);
-
-  const numericStake = Number(stake);
-  const safeStake = Number.isFinite(numericStake) && numericStake > 0 ? numericStake : 0;
-  const yesPrice = calculateReferencePrice(market.probability, "yes");
-  const simulation = useMemo(
-    () =>
-      calculateMockOrderSimulation({
-        teamId: team.id,
-        teamCode: team.code,
-        side: "yes",
-        stake: safeStake,
-        probability: market.probability,
-        limitPrice: yesPrice,
-        orderType: "GTC",
-      }),
-    [market.probability, safeStake, team.code, team.id, yesPrice],
-  );
-
-  function saveMockBid() {
-    if (safeStake <= 0) {
-      return;
-    }
-
-    const createdAt = new Date().toISOString();
-    const nextSimulation = calculateMockOrderSimulation({
-      teamId: team.id,
-      teamCode: team.code,
-      side: "yes",
-      stake: safeStake,
-      probability: market.probability,
-      limitPrice: yesPrice,
-      orderType: "GTC",
-      createdAt,
-      includeOrderId: true,
-    });
-    const nextBid: MockBid = {
-      id: `mock-bid-${team.id}-${Date.now()}`,
-      teamId: team.id,
-      side: "yes",
-      stake: safeStake,
-      probabilityAtBid: market.probability,
-      potentialReturn: nextSimulation.potentialPayout,
-      status: "simulated",
-      createdAt,
-      limitPrice: nextSimulation.sidePrice,
-      shareSize: nextSimulation.shareSize,
-      orderType: "GTC",
-      simulatedOrderId: nextSimulation.simulatedOrderId,
-      simulatedTokenId: nextSimulation.simulatedTokenId,
-      estimatedCost: nextSimulation.estimatedCost,
-      potentialOutcome: nextSimulation.potentialOutcome,
-    };
-    const nextBids = [nextBid, ...readStoredBids()];
-
-    writeStoredBids(nextBids);
-    setSavedBids(nextBids.filter((bid) => bid.teamId === team.id));
-  }
 
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7">
-      <SectionHeader eyebrow="Simulation only" title="Mock Bid Panel" />
-      <p className="mt-4 rounded-lg border border-terminal-amber/50 bg-terminal-amber/10 p-4 text-sm leading-6 text-terminal-amber">
-        Mock bid only. This is not financial advice and does not execute a real trade or CLOB order.
+      <SectionHeader eyebrow="Execution" title="Trade Ticket" />
+      <p className="mt-4 rounded-lg border border-terminal-red/45 bg-terminal-red/10 p-4 text-sm leading-6 text-terminal-red">
+        Opening the ticket starts a user-owned Polymarket flow. Orders require wallet connection, user CLOB credentials,
+        a wallet signature, and final confirmation.
       </p>
-      <div className="mt-7 rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
-        <label className="block text-[10px] uppercase tracking-[0.22em] text-terminal-muted" htmlFor="mock-stake">
-          Mock stake
-        </label>
-        <input
-          id="mock-stake"
-          type="number"
-          min="1"
-          value={stake}
-          onChange={(event) => setStake(event.target.value)}
-          className="mt-3 w-full rounded border border-terminal-line bg-terminal-black px-4 py-3 text-terminal-text outline-none focus:border-terminal-cyan"
-        />
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <ScenarioMetric label="YES price" value={formatPriceCents(simulation.sidePrice)} />
-          <ScenarioMetric label="Simulated shares" value={formatShareSize(simulation.shareSize)} />
-          <ScenarioMetric label="Potential payout" value={`$${simulation.potentialPayout.toFixed(2)}`} />
-          <ScenarioMetric label="Potential outcome" value={`$${simulation.potentialOutcome.toFixed(2)}`} />
+      <div className="mt-6 grid gap-4 rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ContextMetric label="Team" value={team.name} />
+          <ContextMetric label="YES probability" value={formatProbability(market.probability)} />
+          <ContextMetric label="24h move" value={formatChange(market.change24h)} />
+          <ContextMetric label="CLOB token" value={market.polymarket?.tokens.yes?.tokenId ? "Available" : "Missing"} />
         </div>
-        <button
-          type="button"
-          onClick={saveMockBid}
-          className="mt-5 w-full rounded border border-terminal-green/60 bg-terminal-green/12 px-4 py-3 text-sm font-semibold text-terminal-green transition hover:bg-terminal-green/20"
+        <Link
+          href={`/bid?source=${source}`}
+          className="rounded border border-terminal-red/60 bg-terminal-red/12 px-4 py-3 text-center text-sm font-semibold text-terminal-red transition hover:bg-terminal-red/20"
         >
-          Save mock scenario
-        </button>
-        <p className="mt-4 text-xs leading-5 text-terminal-muted">
-          Saved scenarios stay in this browser only. No wallet, API key, backend, or trade venue is connected.
-        </p>
+          Open trade ticket
+        </Link>
       </div>
-      {savedBids.length > 0 ? (
-        <div className="mt-5 grid gap-3">
-          {savedBids.slice(0, 3).map((bid) => (
-            <div key={bid.id} className="flex items-center justify-between gap-4 rounded border border-terminal-line bg-terminal-panel2/60 p-3">
-              <p className="text-xs text-terminal-muted">${bid.stake.toFixed(2)} mock stake</p>
-              <p className="text-xs font-semibold text-terminal-text">
-                {bid.limitPrice ? formatPriceCents(bid.limitPrice) : formatProbability(bid.probabilityAtBid)} / $
-                {bid.potentialReturn.toFixed(2)}
-              </p>
-            </div>
-          ))}
-        </div>
-      ) : null}
+      <p className="mt-4 text-xs leading-5 text-terminal-muted">
+        Market data is analytical context only and is not financial, betting, or investment advice.
+      </p>
     </section>
   );
 }
@@ -803,15 +710,6 @@ function WatchlistButton({ teamId, teamName }: { teamId: string; teamName: strin
         {isWatching ? `Watching ${teamName}` : `Add ${teamName} to watchlist`}
       </button>
     </section>
-  );
-}
-
-function ScenarioMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[10px] uppercase tracking-[0.18em] text-terminal-muted">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-terminal-text">{value}</p>
-    </div>
   );
 }
 
