@@ -11,6 +11,7 @@ import {
   calculateOutcomeReferencePrice,
   calculateReferencePrice,
   formatPriceCents,
+  formatPayoutOdds,
   formatShareSize,
   normalizeLimitPrice,
 } from "../../lib/market/orderMath";
@@ -22,7 +23,6 @@ import {
 } from "../../lib/market/userOrder";
 import type { DepositWalletBatchSignablePayload } from "../../lib/market/depositWalletBatch";
 import type {
-  AccountReadinessCheck,
   BidTradeSide,
   OrderOutcomeSide,
   TeamMarketSnapshot,
@@ -45,8 +45,7 @@ interface BidPageProps {
   dataStatus: MarketDataMeta;
 }
 
-const ORDER_TYPES: TradingOrderType[] = ["GTC", "FOK", "FAK"];
-const USER_ORDER_CONFIRMATION = "SUBMIT USER ORDER";
+const DEFAULT_ORDER_TYPE: TradingOrderType = "FAK";
 const DEFAULT_SIGNATURE_TYPE = 3;
 const DEFAULT_DEPOSIT_AMOUNT = "5";
 const ERC20_TRANSFER_ABI = [
@@ -106,9 +105,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
   const [amount, setAmount] = useState("100");
   const [outcomeSide, setOutcomeSide] = useState<OrderOutcomeSide>("yes");
   const [tradeSide, setTradeSide] = useState<BidTradeSide>("buy");
-  const [orderType, setOrderType] = useState<TradingOrderType>("GTC");
   const [limitPriceCents, setLimitPriceCents] = useState("0");
-  const [confirmationText, setConfirmationText] = useState("");
   const [tradingSession, setTradingSession] = useState<TradingUserSession | undefined>();
   const [readiness, setReadiness] = useState<UserTradingReadiness | null>(null);
   const [funderAddress, setFunderAddress] = useState("");
@@ -123,13 +120,11 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
   const [depositAmount, setDepositAmount] = useState(DEFAULT_DEPOSIT_AMOUNT);
   const [depositTxState, setDepositTxState] = useState<"idle" | "switching" | "signing" | "submitted" | "settled" | "error">("idle");
   const [depositTxHash, setDepositTxHash] = useState<string | undefined>();
-  const [signedOrderPayload, setSignedOrderPayload] = useState<unknown>();
   const [orderSignState, setOrderSignState] = useState<"idle" | "signing" | "ready" | "error">("idle");
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
   const [openOrdersState, setOpenOrdersState] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [openOrdersMessage, setOpenOrdersMessage] = useState<string | undefined>();
-  const [cancelOrderId, setCancelOrderId] = useState("");
-  const [cancelConfirmation, setCancelConfirmation] = useState("");
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | undefined>();
   const [cancelState, setCancelState] = useState<"idle" | "submitting" | "submitted" | "error">("idle");
   const [submitState, setSubmitState] = useState<"idle" | "submitting" | "submitted" | "error">("idle");
   const [submitMessage, setSubmitMessage] = useState<string | undefined>();
@@ -183,7 +178,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         tradeSide,
         amount: safeAmount,
         limitPrice,
-        orderType,
+        orderType: DEFAULT_ORDER_TYPE,
       })
     : null;
   const readinessTokenId = preview?.tokenId;
@@ -192,8 +187,8 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
   const readinessShareSize = preview?.shareSize;
   const readinessEstimatedTakerFee = preview?.estimatedTakerFee;
   const readinessEstimatedTotalCost = preview?.estimatedTotalCost;
-  const userOrderDisabledReason = getUserOrderDisabledReason(preview, readiness, signedOrderPayload, confirmationText);
-  const canSubmitUserOrder = !userOrderDisabledReason && preview && signedOrderPayload;
+  const userOrderDisabledReason = getUserOrderDisabledReason(preview, readiness);
+  const canSubmitUserOrder = Boolean(!userOrderDisabledReason && preview);
 
   useEffect(() => {
     void loadReadiness(
@@ -224,10 +219,10 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
   ]);
 
   useEffect(() => {
-    setSignedOrderPayload(undefined);
     setOrderSignState("idle");
-    setConfirmationText("");
-  }, [selectedTeamId, outcomeSide, tradeSide, orderType, amount, limitPriceCents, tradingSession?.userId, funderAddress]);
+    setSubmitState("idle");
+    setSubmitMessage(undefined);
+  }, [selectedTeamId, outcomeSide, tradeSide, amount, limitPriceCents, tradingSession?.userId, funderAddress]);
 
   useEffect(() => {
     if (!readiness?.credentials.hasClobCredentials) {
@@ -305,7 +300,6 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     setTradingSession(undefined);
     setReadiness(null);
     setCredentialStatus(null);
-    setSignedOrderPayload(undefined);
     setApprovalState("idle");
     setAccountPrepState("idle");
     setDepositAddress(null);
@@ -349,7 +343,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         });
 
         if (!currentReadiness.credentials.hasClobCredentials) {
-          throw new Error("User CLOB credentials were not saved after wallet signature. Try Prepare account again.");
+          throw new Error("Trading credentials were not saved after wallet signature. Try Enable trading again.");
         }
       }
 
@@ -625,7 +619,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       }
 
       if (!currentDepositAddress?.evm) {
-        throw new Error("Prepare the account before depositing funds.");
+        throw new Error("Enable trading before depositing funds.");
       }
 
       const normalizedAmount = depositAmount.trim();
@@ -691,11 +685,11 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     }
   }
 
-  async function signUserOrder() {
+  async function buildSignedUserOrderPayload() {
     if (!selectedSnapshot || !preview || !tradingSession) {
       setOrderSignState("error");
       setSubmitMessage("Connect a wallet and choose a valid market before signing.");
-      return;
+      return undefined;
     }
 
     const sessionFunderAddress = tradingSession.funderAddress ?? funderAddress;
@@ -703,7 +697,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     if (!sessionFunderAddress) {
       setOrderSignState("error");
       setSubmitMessage("The user's Polymarket deposit wallet is not ready.");
-      return;
+      return undefined;
     }
 
     setOrderSignState("signing");
@@ -723,7 +717,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         preview,
         walletAddress,
         funderAddress: sessionFunderAddress,
-        orderType,
+        orderType: DEFAULT_ORDER_TYPE,
         builderCode,
       });
       const typedData = {
@@ -759,17 +753,18 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         signature: signature as Hex,
       });
 
-      setSignedOrderPayload(signedPayload);
       setOrderSignState("ready");
-      setSubmitMessage("User order signed. Review the ticket and final confirmation before submit.");
+      return signedPayload;
     } catch (error) {
       setOrderSignState("error");
       setSubmitMessage(error instanceof Error ? error.message : String(error));
+      return undefined;
     }
   }
 
-  async function cancelUserOrder() {
+  async function cancelUserOrder(orderId: string) {
     setCancelState("submitting");
+    setCancellingOrderId(orderId);
     setOpenOrdersMessage(undefined);
 
     try {
@@ -779,8 +774,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          orderId: cancelOrderId.trim(),
-          finalConfirmation: cancelConfirmation,
+          orderId,
         }),
       });
       const payload = (await response.json()) as { error?: string; cancelledAt?: string };
@@ -790,7 +784,6 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       }
 
       setCancelState("submitted");
-      setCancelConfirmation("");
       setOpenOrdersMessage(`Cancellation submitted at ${payload.cancelledAt ?? new Date().toISOString()}.`);
       await loadUserOpenOrders(preview?.tokenId, {
         onState: setOpenOrdersState,
@@ -800,10 +793,17 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     } catch (error) {
       setCancelState("error");
       setOpenOrdersMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCancellingOrderId(undefined);
     }
   }
 
   async function submitUserOrder() {
+    if (!tradingSession) {
+      await connectWallet();
+      return;
+    }
+
     if (!selectedSnapshot || !preview || !canSubmitUserOrder) {
       setSubmitState("error");
       setSubmitMessage(userOrderDisabledReason ?? "Order is not ready.");
@@ -814,15 +814,19 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     setSubmitMessage(undefined);
 
     try {
+      const signedPayload = await buildSignedUserOrderPayload();
+
+      if (!signedPayload) {
+        setSubmitState("error");
+        return;
+      }
+
       const response = await fetch("/api/trading/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...(signedOrderPayload as Record<string, unknown>),
-          finalConfirmation: confirmationText,
-        }),
+        body: JSON.stringify(signedPayload),
       });
       const payload = (await response.json()) as { error?: string; response?: unknown; submittedAt?: string };
 
@@ -831,7 +835,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       }
 
       setSubmitState("submitted");
-      setSubmitMessage(`User-owned order submitted at ${payload.submittedAt ?? new Date().toISOString()}.`);
+      setSubmitMessage(`Order submitted at ${payload.submittedAt ?? new Date().toISOString()}.`);
       await loadUserOpenOrders(preview.tokenId, {
         onState: setOpenOrdersState,
         onMessage: setOpenOrdersMessage,
@@ -853,7 +857,12 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     <main className="terminal-grid min-h-screen px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
         <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8 lg:p-10">
-          <TopLinks source={dataStatus.source} />
+          <TopLinks
+            source={dataStatus.source}
+            session={tradingSession}
+            walletStatus={walletStatus}
+            onConnectWallet={connectWallet}
+          />
           <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
             <div>
               <p className="text-[10px] uppercase tracking-[0.28em] text-terminal-cyan">Trading desk</p>
@@ -861,8 +870,8 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
                 Trade Ticket
               </h1>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-terminal-muted">
-                Build a World Cup Polymarket order preview, connect a user wallet, check account readiness, and submit
-                only after user-owned signatures and final review are complete.
+                Build a World Cup Polymarket order preview, connect a user wallet, enable trading when needed, and place
+                the order after the wallet signature is confirmed.
               </p>
               <p className="mt-5 rounded-lg border border-terminal-amber/50 bg-terminal-amber/10 p-4 text-sm leading-6 text-terminal-amber">
                 Live orders can move the connected user&apos;s funds or positions on Polymarket. Market data and order
@@ -881,7 +890,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
             <SectionHeader
               eyebrow="Create order"
               title="Order Parameters"
-              description="Configure a user-owned Polymarket order. Submission requires wallet connection, account readiness, order signature, and final confirmation."
+              description="Configure a user-owned Polymarket order. Orders use immediate-or-cancel execution and require a wallet signature before submission."
             />
             <div className="mt-8 grid gap-6">
               <label className="block" htmlFor="bid-team">
@@ -919,27 +928,6 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
                   value={tradeSide}
                   onChange={(value) => setTradeSide(value as BidTradeSide)}
                 />
-              </div>
-
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">Order type</p>
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  {ORDER_TYPES.map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setOrderType(type)}
-                      className={
-                        orderType === type
-                          ? "rounded border border-terminal-cyan/60 bg-terminal-cyan/12 px-3 py-3 text-xs font-semibold text-terminal-cyan"
-                          : "rounded border border-terminal-line bg-terminal-black px-3 py-3 text-xs font-semibold text-terminal-muted transition hover:border-terminal-cyan/50 hover:text-terminal-cyan"
-                      }
-                      aria-pressed={orderType === type}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2">
@@ -981,44 +969,6 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
                 </label>
               </div>
 
-              <UserTradingSetup
-                session={tradingSession}
-                readiness={readiness}
-                funderAddress={funderAddress}
-                walletStatus={walletStatus}
-                walletMessage={walletMessage}
-                credentialState={credentialState}
-                approvalState={approvalState}
-                accountPrepState={accountPrepState}
-                depositAddressState={depositAddressState}
-                depositAddress={depositAddress}
-                depositAmount={depositAmount}
-                depositTxState={depositTxState}
-                depositTxHash={depositTxHash}
-                orderSignState={orderSignState}
-                hasSignedOrder={Boolean(signedOrderPayload)}
-                disabledReason={userOrderDisabledReason}
-                onConnectWallet={connectWallet}
-                onDisconnectWallet={disconnectWallet}
-                onPrepareAccount={prepareAccount}
-                onDepositAmountChange={setDepositAmount}
-                onDepositFunds={depositFunds}
-                onSignOrder={signUserOrder}
-                onSubmitOrder={submitUserOrder}
-                onRefresh={() =>
-                  void loadReadiness(readinessFromPreview(preview), {
-                    onReadiness: setReadiness,
-                    onSession: setTradingSession,
-                    onCredentials: setCredentialStatus,
-                    onFunderAddress: setFunderAddress,
-                  })
-                }
-                confirmationText={confirmationText}
-                onConfirmationTextChange={setConfirmationText}
-                canSubmitOrder={Boolean(canSubmitUserOrder)}
-                submitState={submitState}
-              />
-
               <div className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
                 <div className="grid gap-5 sm:grid-cols-2">
                   <ScenarioMetric
@@ -1040,10 +990,20 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
                 <button
                   type="button"
                   onClick={submitUserOrder}
-                  disabled={!canSubmitUserOrder || submitState === "submitting"}
-                  className="mt-6 w-full rounded border border-terminal-red/60 bg-terminal-red/12 px-4 py-3 text-sm font-semibold text-terminal-red transition hover:bg-terminal-red/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
+                  disabled={walletStatus === "connecting" || (Boolean(tradingSession) && (!canSubmitUserOrder || submitState === "submitting"))}
+                  className="mt-6 w-full rounded border border-terminal-green/60 bg-terminal-green/12 px-4 py-3 text-sm font-semibold text-terminal-green transition hover:bg-terminal-green/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
                 >
-                  {submitState === "submitting" ? "Submitting user order..." : "Submit user-owned order"}
+                  {!tradingSession
+                    ? walletStatus === "connecting"
+                      ? "Connecting wallet..."
+                      : "Connect wallet"
+                    : submitState === "submitting"
+                      ? orderSignState === "signing"
+                        ? "Waiting for wallet signature..."
+                        : "Placing order..."
+                      : submitState === "submitted"
+                        ? "Order submitted"
+                        : "Place order"}
                 </button>
                 {submitMessage ? (
                   <p className={submitState === "error" ? "mt-4 text-xs leading-5 text-terminal-red" : "mt-4 text-xs leading-5 text-terminal-green"}>
@@ -1051,11 +1011,43 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
                   </p>
                 ) : (
                   <p className="mt-4 text-xs leading-5 text-terminal-muted">
-                    Orders require a connected user wallet, prepared account, a signed order payload, and final
-                    confirmation.
+                    Your wallet will ask for an order signature. The ticket submits automatically after the signature is confirmed.
                   </p>
                 )}
               </div>
+
+              {tradingSession && !canSubmitUserOrder ? (
+                <UserTradingSetup
+                  session={tradingSession}
+                  readiness={readiness}
+                  funderAddress={funderAddress}
+                  walletMessage={walletMessage}
+                  credentialState={credentialState}
+                  approvalState={approvalState}
+                  accountPrepState={accountPrepState}
+                  depositAddressState={depositAddressState}
+                  depositAddress={depositAddress}
+                  depositAmount={depositAmount}
+                  depositTxState={depositTxState}
+                  depositTxHash={depositTxHash}
+                  orderSignState={orderSignState}
+                  disabledReason={userOrderDisabledReason}
+                  onDisconnectWallet={disconnectWallet}
+                  onPrepareAccount={prepareAccount}
+                  onDepositAmountChange={setDepositAmount}
+                  onDepositFunds={depositFunds}
+                  onRefresh={() =>
+                    void loadReadiness(readinessFromPreview(preview), {
+                      onReadiness: setReadiness,
+                      onSession: setTradingSession,
+                      onCredentials: setCredentialStatus,
+                      onFunderAddress: setFunderAddress,
+                    })
+                  }
+                  canSubmitOrder={Boolean(canSubmitUserOrder)}
+                  submitState={submitState}
+                />
+              ) : null}
             </div>
           </section>
 
@@ -1066,7 +1058,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
                 <OrderPreview
                   snapshot={selectedSnapshot}
                   preview={preview}
-                  orderType={orderType}
+                  orderType={DEFAULT_ORDER_TYPE}
                 />
               ) : (
                 <EmptyState title="No market selected" detail="Choose a team to preview an order ticket." />
@@ -1077,8 +1069,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
               orders={openOrders}
               state={openOrdersState}
               message={openOrdersMessage}
-              cancelOrderId={cancelOrderId}
-              cancelConfirmation={cancelConfirmation}
+              cancellingOrderId={cancellingOrderId}
               cancelState={cancelState}
               onRefresh={() =>
                 void loadUserOpenOrders(preview?.tokenId, {
@@ -1087,8 +1078,6 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
                   onOrders: setOpenOrders,
                 })
               }
-              onCancelOrderIdChange={setCancelOrderId}
-              onCancelConfirmationChange={setCancelConfirmation}
               onCancelOrder={cancelUserOrder}
             />
           </div>
@@ -1149,7 +1138,7 @@ function OrderPreview({
   return (
     <div className="mt-8">
       <div className="rounded-lg border border-terminal-red/45 bg-terminal-red/10 p-4 text-sm leading-6 text-terminal-red">
-        This ticket can submit a real user-owned CLOB order after wallet signature and final confirmation.
+        This ticket can submit a real user-owned CLOB order after the connected wallet signs the order.
       </div>
       <div className="mt-5 overflow-hidden rounded-lg border border-terminal-line bg-terminal-panel2/75">
         <div className="border-b border-terminal-line bg-black/25 px-5 py-4">
@@ -1160,6 +1149,7 @@ function OrderPreview({
         </div>
         <div className="grid gap-px bg-terminal-line sm:grid-cols-2">
           <TicketRow label="Order type" value={orderType} />
+          <TicketRow label="Payout odds" value={formatPayoutOdds(preview.potentialPayout, preview.estimatedTotalCost)} />
           <TicketRow label="Limit price" value={formatPriceCents(preview.sidePrice)} />
           <TicketRow label="Order cost" value={`$${preview.estimatedCost.toFixed(2)}`} />
           <TicketRow label="Estimated taker fee" value={`$${preview.estimatedTakerFee.toFixed(2)}`} />
@@ -1192,7 +1182,6 @@ function UserTradingSetup({
   session,
   readiness,
   funderAddress,
-  walletStatus,
   walletMessage,
   credentialState,
   approvalState,
@@ -1203,25 +1192,18 @@ function UserTradingSetup({
   depositTxState,
   depositTxHash,
   orderSignState,
-  hasSignedOrder,
   disabledReason,
-  onConnectWallet,
   onDisconnectWallet,
   onPrepareAccount,
   onDepositAmountChange,
   onDepositFunds,
-  onSignOrder,
-  onSubmitOrder,
   onRefresh,
-  confirmationText,
-  onConfirmationTextChange,
   canSubmitOrder,
   submitState,
 }: {
   session?: TradingUserSession;
   readiness: UserTradingReadiness | null;
   funderAddress: string;
-  walletStatus: "idle" | "connecting" | "connected" | "error";
   walletMessage?: string;
   credentialState: "idle" | "signing" | "ready" | "error";
   approvalState: "idle" | "signing" | "submitted" | "syncing" | "synced" | "error";
@@ -1232,23 +1214,37 @@ function UserTradingSetup({
   depositTxState: "idle" | "switching" | "signing" | "submitted" | "settled" | "error";
   depositTxHash?: string;
   orderSignState: "idle" | "signing" | "ready" | "error";
-  hasSignedOrder: boolean;
   disabledReason?: string;
-  onConnectWallet: () => void;
   onDisconnectWallet: () => void;
   onPrepareAccount: () => void;
   onDepositAmountChange: (value: string) => void;
   onDepositFunds: () => void;
-  onSignOrder: () => void;
-  onSubmitOrder: () => void;
   onRefresh: () => void;
-  confirmationText: string;
-  onConfirmationTextChange: (value: string) => void;
   canSubmitOrder: boolean;
   submitState: "idle" | "submitting" | "submitted" | "error";
 }) {
-  const canPrepareAccount = Boolean(session && accountPrepState !== "running");
-  const canSignOrder = Boolean(session && readiness?.ready && readiness.credentials.hasClobCredentials && funderAddress.trim());
+  const readinessSummary = getReadinessSummary({
+    session,
+    readiness,
+    accountPrepState,
+    credentialState,
+    approvalState,
+    depositTxState,
+    canSubmitOrder,
+    disabledReason,
+  });
+  const needsEnableTrading = Boolean(
+    session &&
+      accountPrepState !== "running" &&
+      (!readiness?.credentials.hasClobCredentials ||
+        readiness.checks.some((check) => check.status !== "pass" && check.id !== "balance")),
+  );
+  const showDeposit = Boolean(
+    session &&
+      (accountPrepState === "needs_funds" ||
+        readiness?.checks.some((check) => check.id === "balance" && check.status !== "pass")),
+  );
+  const canEnableTrading = Boolean(session && accountPrepState !== "running");
   const depositNetworkAddress = depositAddress?.evm ?? depositAddress?.svm ?? depositAddress?.btc ?? depositAddress?.tron ?? depositAddress?.tvm;
   const canDeposit =
     Boolean(session && depositAddress?.evm) &&
@@ -1258,9 +1254,9 @@ function UserTradingSetup({
     <div className="rounded-lg border border-terminal-cyan/35 bg-terminal-cyan/8 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-cyan">User trading setup</p>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-cyan">Trading account</p>
           <p className="mt-3 text-sm leading-6 text-terminal-muted">
-            Connect once, then let the ticket prepare the user account before signing an order.
+            Connect a wallet, enable trading once, then place orders with a wallet signature.
           </p>
         </div>
         <button
@@ -1273,175 +1269,140 @@ function UserTradingSetup({
       </div>
 
       <div className="mt-5 grid gap-4">
-        <div className="rounded border border-terminal-line bg-terminal-panel2/75 p-4">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">Polymarket deposit wallet</p>
-          <p className="mt-2 break-all font-mono text-xs text-terminal-text">
-            {funderAddress || "Connect a wallet to create the Polymarket account."}
-          </p>
-          <p className="mt-2 text-xs leading-5 text-terminal-muted">
-            Funds and allowances are held by this user-owned Polymarket wallet.
-          </p>
+        <div className={readinessSummary.className}>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-current">{readinessSummary.eyebrow}</p>
+          <p className="mt-2 text-lg font-semibold text-terminal-text">{readinessSummary.title}</p>
+          <p className="mt-2 text-sm leading-6 text-terminal-muted">{readinessSummary.detail}</p>
+          {readinessSummary.issue ? (
+            <p className="mt-3 rounded border border-current/35 bg-black/20 px-3 py-2 text-xs leading-5 text-current">
+              {readinessSummary.issue}
+            </p>
+          ) : null}
+          {session ? (
+            <p className="mt-3 break-all font-mono text-xs leading-5 text-terminal-muted">
+              {formatHash(session.walletAddress)}
+              {funderAddress ? ` / ${formatHash(funderAddress)}` : ""}
+            </p>
+          ) : null}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={session ? onDisconnectWallet : onConnectWallet}
-            disabled={walletStatus === "connecting"}
-            className="rounded border border-terminal-green/60 bg-terminal-green/12 px-4 py-3 text-sm font-semibold text-terminal-green transition hover:bg-terminal-green/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
-          >
-            {walletStatus === "connecting"
-              ? "Connecting..."
-              : session
-                ? "Disconnect wallet"
-                : "Connect wallet"}
-          </button>
-          <button
-            type="button"
-            onClick={onPrepareAccount}
-            disabled={!canPrepareAccount}
-            className="rounded border border-terminal-cyan/60 bg-terminal-cyan/10 px-4 py-3 text-sm font-semibold text-terminal-cyan transition hover:bg-terminal-cyan/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
-          >
-            {accountPrepState === "running" ? "Preparing account..." : accountPrepState === "ready" ? "Refresh account" : "Prepare account"}
-          </button>
-        </div>
-
-        <div className="rounded border border-terminal-line bg-terminal-panel2/75 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">Deposit address</p>
-            <span className={depositAddressState === "ready" ? "text-xs text-terminal-green" : "text-xs text-terminal-muted"}>
-              {depositAddressState === "loading" ? "loading" : depositAddressState}
-            </span>
-          </div>
-          <p className="mt-3 break-all font-mono text-xs leading-5 text-terminal-text">
-            {depositNetworkAddress ?? "Prepare account to generate a deposit address."}
-          </p>
-          <p className="mt-2 text-xs leading-5 text-terminal-muted">
-            This generated address credits the user-owned Polymarket account after the transfer settles.
-          </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-            <label className="block" htmlFor="deposit-amount">
-              <span className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">
-                Deposit {DEFAULT_DEPOSIT_ASSET.symbol}
-              </span>
-              <div className="mt-2 flex rounded border border-terminal-line bg-terminal-black focus-within:border-terminal-cyan">
-                <input
-                  id="deposit-amount"
-                  type="number"
-                  min={DEFAULT_DEPOSIT_ASSET.minimumAmount}
-                  step="0.01"
-                  value={depositAmount}
-                  onChange={(event) => onDepositAmountChange(event.target.value)}
-                  className="w-full bg-transparent px-3 py-2 text-sm text-terminal-text outline-none"
-                />
-                <span className="border-l border-terminal-line px-3 py-2 text-xs text-terminal-muted">
-                  {DEFAULT_DEPOSIT_ASSET.symbol}
-                </span>
-              </div>
-            </label>
+          {session ? (
             <button
               type="button"
-              onClick={onDepositFunds}
-              disabled={!canDeposit}
-              className="self-end rounded border border-terminal-green/60 bg-terminal-green/12 px-4 py-2.5 text-sm font-semibold text-terminal-green transition hover:bg-terminal-green/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
+              onClick={onDisconnectWallet}
+              disabled={submitState === "submitting"}
+              className="rounded border border-terminal-line px-4 py-3 text-sm font-semibold text-terminal-muted transition hover:border-terminal-cyan hover:text-terminal-cyan disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
             >
-              {depositTxState === "switching"
-                ? "Switching..."
-                : depositTxState === "signing"
-                  ? "Confirming..."
-                  : depositTxState === "submitted"
-                    ? "Submitted"
-                    : "Deposit"}
+              Disconnect wallet
             </button>
-          </div>
-          <p className="mt-3 text-xs leading-5 text-terminal-muted">
-            Uses {DEFAULT_DEPOSIT_ASSET.symbol} on {DEFAULT_DEPOSIT_ASSET.chainName}. The wallet will ask the user to
-            switch network and confirm the transfer.
-          </p>
-          {depositTxHash ? <CodeMetric label="Deposit transaction" value={depositTxHash} /> : null}
+          ) : null}
+          {needsEnableTrading ? (
+            <button
+              type="button"
+              onClick={onPrepareAccount}
+              disabled={!canEnableTrading || submitState === "submitting"}
+              className="rounded border border-terminal-cyan/60 bg-terminal-cyan/10 px-4 py-3 text-sm font-semibold text-terminal-cyan transition hover:bg-terminal-cyan/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
+            >
+              {accountPrepState === "running"
+                ? approvalState === "signing"
+                  ? "Approve in wallet..."
+                  : credentialState === "signing"
+                    ? "Sign to enable..."
+                    : "Enabling trading..."
+                : "Enable trading"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={!session || submitState === "submitting"}
+              className="rounded border border-terminal-line px-4 py-3 text-sm font-semibold text-terminal-muted transition hover:border-terminal-cyan hover:text-terminal-cyan disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
+            >
+              Refresh account
+            </button>
+          )}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={onSignOrder}
-            disabled={!canSignOrder || orderSignState === "signing"}
-            className="rounded border border-terminal-green/60 bg-terminal-green/12 px-4 py-3 text-sm font-semibold text-terminal-green transition hover:bg-terminal-green/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
-          >
-            {orderSignState === "signing" ? "Signing order..." : hasSignedOrder ? "Signed. Re-sign order" : "Sign user order"}
-          </button>
-          <button
-            type="button"
-            onClick={onSubmitOrder}
-            disabled={!canSubmitOrder || submitState === "submitting"}
-            className="rounded border border-terminal-red/60 bg-terminal-red/12 px-4 py-3 text-sm font-semibold text-terminal-red transition hover:bg-terminal-red/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
-          >
-            {submitState === "submitting" ? "Submitting..." : submitState === "submitted" ? "Submitted" : "Submit signed order"}
-          </button>
-        </div>
-        {hasSignedOrder ? (
-          <p className={canSubmitOrder ? "text-xs leading-5 text-terminal-green" : "text-xs leading-5 text-terminal-amber"}>
-            {canSubmitOrder
-              ? "Order is signed and ready to submit."
-              : disabledReason ?? "Order is signed. Complete the remaining submit requirement."}
-          </p>
+        <details className="rounded border border-terminal-line bg-terminal-panel2/75 p-4">
+          <summary className="cursor-pointer text-[10px] uppercase tracking-[0.22em] text-terminal-muted">
+            Advanced details
+          </summary>
+          <div className="mt-4 grid gap-3">
+            <CodeMetric label="Connected wallet" value={session?.walletAddress ?? "Not connected"} />
+            <CodeMetric label="Deposit wallet" value={funderAddress || "Pending"} />
+            <CodeMetric label="Deposit status" value={session?.depositWalletStatus ?? "unknown"} />
+            <CodeMetric
+              label="Account state"
+              value={`${accountPrepState} / auth ${credentialState} / approval ${approvalState} / deposit ${depositTxState}`}
+            />
+            <CodeMetric label="Session type" value={session ? `signature type ${session.signatureType}` : "none"} />
+          </div>
+        </details>
+
+        {showDeposit ? (
+          <div className="rounded border border-terminal-line bg-terminal-panel2/75 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">Deposit address</p>
+              <span className={depositAddressState === "ready" ? "text-xs text-terminal-green" : "text-xs text-terminal-muted"}>
+                {depositAddressState === "loading" ? "loading" : depositAddressState}
+              </span>
+            </div>
+            <p className="mt-3 break-all font-mono text-xs leading-5 text-terminal-text">
+              {depositNetworkAddress ?? "Enable trading to generate a deposit address."}
+            </p>
+            <p className="mt-2 text-xs leading-5 text-terminal-muted">
+              This address credits the user-owned Polymarket account after the transfer settles.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+              <label className="block" htmlFor="deposit-amount">
+                <span className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">
+                  Deposit {DEFAULT_DEPOSIT_ASSET.symbol}
+                </span>
+                <div className="mt-2 flex rounded border border-terminal-line bg-terminal-black focus-within:border-terminal-cyan">
+                  <input
+                    id="deposit-amount"
+                    type="number"
+                    min={DEFAULT_DEPOSIT_ASSET.minimumAmount}
+                    step="0.01"
+                    value={depositAmount}
+                    onChange={(event) => onDepositAmountChange(event.target.value)}
+                    className="w-full bg-transparent px-3 py-2 text-sm text-terminal-text outline-none"
+                  />
+                  <span className="border-l border-terminal-line px-3 py-2 text-xs text-terminal-muted">
+                    {DEFAULT_DEPOSIT_ASSET.symbol}
+                  </span>
+                </div>
+              </label>
+              <button
+                type="button"
+                onClick={onDepositFunds}
+                disabled={!canDeposit}
+                className="self-end rounded border border-terminal-green/60 bg-terminal-green/12 px-4 py-2.5 text-sm font-semibold text-terminal-green transition hover:bg-terminal-green/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
+              >
+                {depositTxState === "switching"
+                  ? "Switching..."
+                  : depositTxState === "signing"
+                    ? "Confirming..."
+                    : depositTxState === "submitted"
+                      ? "Submitted"
+                      : "Deposit USDC"}
+              </button>
+            </div>
+            <p className="mt-3 text-xs leading-5 text-terminal-muted">
+              Uses {DEFAULT_DEPOSIT_ASSET.symbol} on {DEFAULT_DEPOSIT_ASSET.chainName}. The wallet will ask the user to
+              switch network and confirm the transfer.
+            </p>
+            {depositTxHash ? <CodeMetric label="Deposit transaction" value={depositTxHash} /> : null}
+          </div>
+        ) : null}
+
+        {walletMessage ? <p className="text-xs leading-5 text-terminal-muted">{walletMessage}</p> : null}
+        {disabledReason && session && !canSubmitOrder ? <p className="text-sm leading-6 text-terminal-red">{disabledReason}</p> : null}
+        {orderSignState === "ready" && submitState === "submitting" ? (
+          <p className="text-xs leading-5 text-terminal-green">Signature received. Submitting order...</p>
         ) : null}
       </div>
-
-      {walletMessage ? <p className="mt-4 text-xs leading-5 text-terminal-muted">{walletMessage}</p> : null}
-      {session ? (
-        <div className="mt-5 grid gap-3 rounded border border-terminal-line bg-terminal-panel2/75 p-4">
-          <CodeMetric label="Connected wallet" value={session.walletAddress} />
-          <CodeMetric label="Deposit wallet" value={session.funderAddress ?? "Pending"} />
-          <CodeMetric label="Deposit status" value={session.depositWalletStatus ?? "unknown"} />
-          <CodeMetric
-            label="Account prep"
-            value={`${accountPrepState} / auth ${credentialState} / approval ${approvalState} / deposit ${depositTxState}`}
-          />
-          <CodeMetric label="Session type" value={`signature type ${session.signatureType}`} />
-        </div>
-      ) : null}
-
-      <ReadinessList checks={readiness?.checks ?? []} />
-
-      {disabledReason && !hasSignedOrder ? <p className="mt-4 text-sm leading-6 text-terminal-red">{disabledReason}</p> : null}
-      {hasSignedOrder ? (
-        <label className="mt-5 block" htmlFor="real-order-confirmation">
-          <span className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">
-            Type {USER_ORDER_CONFIRMATION}
-          </span>
-          <input
-            id="real-order-confirmation"
-            value={confirmationText}
-            onChange={(event) => onConfirmationTextChange(event.target.value)}
-            className="mt-3 w-full rounded border border-terminal-line bg-terminal-black px-4 py-3 font-mono text-xs text-terminal-text outline-none focus:border-terminal-red"
-          />
-        </label>
-      ) : null}
-    </div>
-  );
-}
-
-function ReadinessList({ checks }: { checks: AccountReadinessCheck[] }) {
-  if (checks.length === 0) {
-    return (
-      <div className="mt-5 rounded border border-terminal-line bg-terminal-panel2/75 p-4 text-sm leading-6 text-terminal-muted">
-        Connect a wallet to inspect trading readiness.
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-5 grid gap-2">
-      {checks.map((check) => (
-        <div key={check.id} className="rounded border border-terminal-line bg-terminal-panel2/75 p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold text-terminal-text">{check.label}</p>
-            <span className={getReadinessTone(check.status)}>{check.status.toUpperCase()}</span>
-          </div>
-          <p className="mt-2 break-all text-xs leading-5 text-terminal-muted">{check.detail}</p>
-        </div>
-      ))}
     </div>
   );
 }
@@ -1450,29 +1411,27 @@ function UserOrderManagement({
   orders,
   state,
   message,
-  cancelOrderId,
-  cancelConfirmation,
+  cancellingOrderId,
   cancelState,
   onRefresh,
-  onCancelOrderIdChange,
-  onCancelConfirmationChange,
   onCancelOrder,
 }: {
   orders: UserOpenOrder[];
   state: "idle" | "loading" | "ready" | "error";
   message?: string;
-  cancelOrderId: string;
-  cancelConfirmation: string;
+  cancellingOrderId?: string;
   cancelState: "idle" | "submitting" | "submitted" | "error";
   onRefresh: () => void;
-  onCancelOrderIdChange: (value: string) => void;
-  onCancelConfirmationChange: (value: string) => void;
-  onCancelOrder: () => void;
+  onCancelOrder: (orderId: string) => void;
 }) {
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7 lg:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <SectionHeader eyebrow="User orders" title="Open CLOB Orders" />
+        <SectionHeader
+          eyebrow="Orders"
+          title="Recent Orders"
+          description="Open orders for the selected market appear here after submission or refresh."
+        />
         <button
           type="button"
           onClick={onRefresh}
@@ -1483,59 +1442,46 @@ function UserOrderManagement({
       </div>
       <div className="mt-8 grid gap-4">
         {state === "loading" ? (
-          <EmptyState title="Loading open orders" detail="Checking the connected user's active CLOB orders." />
+          <EmptyState title="Loading orders" detail="Checking active orders for the selected market." />
         ) : orders.length > 0 ? (
-          orders.slice(0, 6).map((order) => <UserOpenOrderCard key={order.id} order={order} />)
+          orders.slice(0, 6).map((order) => (
+            <UserOpenOrderCard
+              key={order.id}
+              order={order}
+              cancelState={cancelState}
+              isCancelling={cancellingOrderId === order.id}
+              onCancelOrder={onCancelOrder}
+            />
+          ))
         ) : (
           <EmptyState
-            title="No open orders loaded"
-            detail="Prepare the account, then refresh to read open orders for the selected token."
+            title="No recent orders"
+            detail="Submitted FAK orders may fill or expire immediately. Refresh after placing an order to check active CLOB orders."
           />
         )}
       </div>
-      <div className="mt-6 rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
-        <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-red">Cancel order</p>
-        <div className="mt-4 grid gap-4">
-          <label className="block" htmlFor="cancel-order-id">
-            <span className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">Order id</span>
-            <input
-              id="cancel-order-id"
-              value={cancelOrderId}
-              onChange={(event) => onCancelOrderIdChange(event.target.value)}
-              className="mt-3 w-full rounded border border-terminal-line bg-terminal-black px-4 py-3 font-mono text-xs text-terminal-text outline-none focus:border-terminal-red"
-            />
-          </label>
-          <label className="block" htmlFor="cancel-order-confirmation">
-            <span className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">
-              Type CANCEL USER ORDER
-            </span>
-            <input
-              id="cancel-order-confirmation"
-              value={cancelConfirmation}
-              onChange={(event) => onCancelConfirmationChange(event.target.value)}
-              className="mt-3 w-full rounded border border-terminal-line bg-terminal-black px-4 py-3 font-mono text-xs text-terminal-text outline-none focus:border-terminal-red"
-            />
-          </label>
-          <button
-            type="button"
-            onClick={onCancelOrder}
-            disabled={!cancelOrderId.trim() || cancelConfirmation !== "CANCEL USER ORDER" || cancelState === "submitting"}
-            className="rounded border border-terminal-red/60 bg-terminal-red/12 px-4 py-3 text-sm font-semibold text-terminal-red transition hover:bg-terminal-red/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
-          >
-            {cancelState === "submitting" ? "Submitting cancellation..." : "Cancel user order"}
-          </button>
-        </div>
-        {message ? (
-          <p className={state === "error" || cancelState === "error" ? "mt-4 text-xs leading-5 text-terminal-red" : "mt-4 text-xs leading-5 text-terminal-green"}>
-            {message}
-          </p>
-        ) : null}
-      </div>
+      {message ? (
+        <p className={state === "error" || cancelState === "error" ? "mt-4 text-xs leading-5 text-terminal-red" : "mt-4 text-xs leading-5 text-terminal-green"}>
+          {message}
+        </p>
+      ) : null}
     </section>
   );
 }
 
-function UserOpenOrderCard({ order }: { order: UserOpenOrder }) {
+function UserOpenOrderCard({
+  order,
+  cancelState,
+  isCancelling,
+  onCancelOrder,
+}: {
+  order: UserOpenOrder;
+  cancelState: "idle" | "submitting" | "submitted" | "error";
+  isCancelling: boolean;
+  onCancelOrder: (orderId: string) => void;
+}) {
+  const canCancel = isCancellableOrder(order);
+
   return (
     <article className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1545,7 +1491,19 @@ function UserOpenOrderCard({ order }: { order: UserOpenOrder }) {
           </p>
           <h3 className="mt-2 text-lg font-semibold text-terminal-text">{order.outcome || order.asset_id}</h3>
         </div>
-        <p className="text-sm font-semibold text-terminal-cyan">{Number(order.price).toFixed(3)}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm font-semibold text-terminal-cyan">{Number(order.price).toFixed(3)}</p>
+          {canCancel ? (
+            <button
+              type="button"
+              onClick={() => onCancelOrder(order.id)}
+              disabled={cancelState === "submitting"}
+              className="rounded border border-terminal-red/60 bg-terminal-red/10 px-3 py-2 text-xs font-semibold text-terminal-red transition hover:bg-terminal-red/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
+            >
+              {isCancelling ? "Cancelling..." : "Cancel"}
+            </button>
+          ) : null}
+        </div>
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-3">
         <ScenarioMetric label="Original size" value={order.original_size} />
@@ -1619,18 +1577,47 @@ function EmptyState({ title, detail }: { title: string; detail: string }) {
   );
 }
 
-function TopLinks({ source }: { source: MarketDataMeta["source"] }) {
+function TopLinks({
+  source,
+  session,
+  walletStatus,
+  onConnectWallet,
+}: {
+  source: MarketDataMeta["source"];
+  session?: TradingUserSession;
+  walletStatus: "idle" | "connecting" | "connected" | "error";
+  onConnectWallet: () => void;
+}) {
   return (
-    <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
-      <Link href={`/?source=${source}`} className="hover:text-terminal-cyan">
-        Market
-      </Link>
-      <Link href={`/feed?source=${source}`} className="hover:text-terminal-cyan">
-        Feed
-      </Link>
-      <Link href={`/watchlist?source=${source}`} className="hover:text-terminal-cyan">
-        Watchlist
-      </Link>
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
+        <Link href={`/?source=${source}`} className="hover:text-terminal-cyan">
+          Market
+        </Link>
+        <Link href={`/feed?source=${source}`} className="hover:text-terminal-cyan">
+          Feed
+        </Link>
+        <Link href={`/watchlist?source=${source}`} className="hover:text-terminal-cyan">
+          Watchlist
+        </Link>
+      </div>
+      <div className="flex items-center gap-2">
+        {session ? (
+          <div className="rounded border border-terminal-green/45 bg-terminal-green/10 px-3 py-2 text-xs text-terminal-green">
+            <span className="mr-2 inline-block h-2 w-2 rounded-full bg-terminal-green" />
+            <span className="font-mono">{formatHash(session.walletAddress)}</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onConnectWallet}
+            disabled={walletStatus === "connecting"}
+            className="rounded border border-terminal-green/60 bg-terminal-green/12 px-3 py-2 text-xs font-semibold text-terminal-green transition hover:bg-terminal-green/20 disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
+          >
+            {walletStatus === "connecting" ? "Connecting..." : "Connect"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -1673,8 +1660,6 @@ function ScenarioMetric({
 function getUserOrderDisabledReason(
   preview: BidOrderPreview | null,
   readiness: UserTradingReadiness | null,
-  signedOrderPayload: unknown,
-  confirmationText: string,
 ): string | undefined {
   if (!preview) {
     return "No order preview is available.";
@@ -1689,7 +1674,7 @@ function getUserOrderDisabledReason(
   }
 
   if (!readiness.credentials.hasClobCredentials) {
-    return "Prepare the user account before signing an order.";
+    return "Enable trading before placing an order.";
   }
 
   if (!readiness.ready) {
@@ -1697,15 +1682,133 @@ function getUserOrderDisabledReason(
     return failedCheck ? `${failedCheck.label}: ${failedCheck.detail}` : "Trading readiness checks are incomplete.";
   }
 
-  if (!signedOrderPayload) {
-    return "Sign the user order with the connected wallet.";
-  }
-
-  if (confirmationText !== USER_ORDER_CONFIRMATION) {
-    return `Type ${USER_ORDER_CONFIRMATION} to enable submit.`;
-  }
-
   return undefined;
+}
+
+function getReadinessSummary({
+  session,
+  readiness,
+  accountPrepState,
+  credentialState,
+  approvalState,
+  depositTxState,
+  canSubmitOrder,
+  disabledReason,
+}: {
+  session?: TradingUserSession;
+  readiness: UserTradingReadiness | null;
+  accountPrepState: "idle" | "running" | "ready" | "needs_funds" | "blocked" | "error";
+  credentialState: "idle" | "signing" | "ready" | "error";
+  approvalState: "idle" | "signing" | "submitted" | "syncing" | "synced" | "error";
+  depositTxState: "idle" | "switching" | "signing" | "submitted" | "settled" | "error";
+  canSubmitOrder: boolean;
+  disabledReason?: string;
+}) {
+  const baseClass = "rounded border p-4";
+
+  if (!session) {
+    return {
+      eyebrow: "Wallet required",
+      title: "Connect your wallet",
+      detail: "Connect a compatible wallet to check trading access and prepare the Polymarket account.",
+      className: `${baseClass} border-terminal-line bg-terminal-panel2/75 text-terminal-muted`,
+    };
+  }
+
+  if (depositTxState === "switching" || depositTxState === "signing" || depositTxState === "submitted") {
+    return {
+      eyebrow: "Deposit pending",
+      title: "Confirming USDC deposit",
+      detail: "The wallet or network is processing the transfer. Refresh account readiness after settlement.",
+      className: `${baseClass} border-terminal-amber/45 bg-terminal-amber/10 text-terminal-amber`,
+    };
+  }
+
+  if (accountPrepState === "running") {
+    const title =
+      approvalState === "signing"
+        ? "Approve trading in your wallet"
+        : credentialState === "signing"
+          ? "Sign to enable trading"
+          : "Enabling trading";
+
+    return {
+      eyebrow: "Wallet action",
+      title,
+      detail: "Complete the wallet prompt. This setup is usually only needed once per wallet session or after permissions change.",
+      className: `${baseClass} border-terminal-cyan/45 bg-terminal-cyan/10 text-terminal-cyan`,
+    };
+  }
+
+  const failedCheck = readiness?.checks.find((check) => check.status === "fail");
+  const unknownCheck = readiness?.checks.find((check) => check.status === "unknown");
+  const blockingCheck = failedCheck ?? unknownCheck;
+
+  if (blockingCheck?.id === "eligibility") {
+    return {
+      eyebrow: "Unavailable",
+      title: "Trading is not available",
+      detail: "Polymarket access is unavailable for the current session.",
+      issue: blockingCheck.detail,
+      className: `${baseClass} border-terminal-red/45 bg-terminal-red/10 text-terminal-red`,
+    };
+  }
+
+  if (blockingCheck?.id === "balance") {
+    return {
+      eyebrow: "Funds required",
+      title: "Add USDC to continue",
+      detail: "Your Polymarket account needs enough USDC for the order amount and estimated fees.",
+      issue: blockingCheck.detail,
+      className: `${baseClass} border-terminal-amber/45 bg-terminal-amber/10 text-terminal-amber`,
+    };
+  }
+
+  if (blockingCheck && blockingCheck.id !== "allowance") {
+    return {
+      eyebrow: "Action required",
+      title: blockingCheck.id === "clob_credentials" ? "Enable trading" : "Account setup required",
+      detail: "Complete the account setup step before placing an order.",
+      issue: disabledReason ?? blockingCheck.detail,
+      className: `${baseClass} border-terminal-amber/45 bg-terminal-amber/10 text-terminal-amber`,
+    };
+  }
+
+  if (blockingCheck?.id === "allowance") {
+    return {
+      eyebrow: "Approval required",
+      title: "Approve trading",
+      detail: "Approve the Polymarket account permissions before placing an order.",
+      issue: blockingCheck.detail,
+      className: `${baseClass} border-terminal-amber/45 bg-terminal-amber/10 text-terminal-amber`,
+    };
+  }
+
+  if (canSubmitOrder || readiness?.ready) {
+    return {
+      eyebrow: "Ready",
+      title: "Ready to place order",
+      detail: "Your wallet and Polymarket account checks passed. The next wallet prompt signs this order.",
+      className: `${baseClass} border-terminal-green/45 bg-terminal-green/10 text-terminal-green`,
+    };
+  }
+
+  if (accountPrepState === "error") {
+    return {
+      eyebrow: "Setup failed",
+      title: "Account setup needs attention",
+      detail: "Retry account setup or refresh the wallet session.",
+      issue: disabledReason,
+      className: `${baseClass} border-terminal-red/45 bg-terminal-red/10 text-terminal-red`,
+    };
+  }
+
+  return {
+    eyebrow: "Checking",
+    title: "Checking account readiness",
+    detail: "The ticket is checking wallet access, Polymarket eligibility, funds, and permissions.",
+    className: `${baseClass} border-terminal-line bg-terminal-panel2/75 text-terminal-muted`,
+  };
 }
 
 function getEthereumProvider(): EthereumProvider | undefined {
@@ -1964,6 +2067,12 @@ function formatHash(value: string) {
   return value.length > 14 ? `${value.slice(0, 8)}...${value.slice(-6)}` : value;
 }
 
+function isCancellableOrder(order: UserOpenOrder) {
+  const status = order.status.toLowerCase();
+
+  return status === "open" || status === "live" || status === "unmatched" || status === "partially_filled";
+}
+
 function readinessFromPreview(preview: BidOrderPreview | null): ReadinessOrderFunding | undefined {
   return preview
     ? {
@@ -2004,18 +2113,6 @@ async function loadUserOpenOrders(
     handlers.onState("error");
     handlers.onMessage(error instanceof Error ? error.message : String(error));
   }
-}
-
-function getReadinessTone(status: AccountReadinessCheck["status"]) {
-  if (status === "pass") {
-    return "rounded border border-terminal-green/45 px-2 py-1 text-[10px] font-semibold text-terminal-green";
-  }
-
-  if (status === "fail") {
-    return "rounded border border-terminal-red/45 px-2 py-1 text-[10px] font-semibold text-terminal-red";
-  }
-
-  return "rounded border border-terminal-amber/45 px-2 py-1 text-[10px] font-semibold text-terminal-amber";
 }
 
 function formatUnixSeconds(value: number) {

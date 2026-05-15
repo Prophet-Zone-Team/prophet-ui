@@ -18,10 +18,9 @@ export const dynamic = "force-dynamic";
 
 interface SubmitSignedOrderPayload {
   order?: unknown;
-  orderType?: "GTC" | "FOK" | "FAK";
+  orderType?: "FAK";
   postOnly?: boolean;
   deferExec?: boolean;
-  finalConfirmation?: string;
 }
 
 export async function POST(request: Request) {
@@ -146,7 +145,7 @@ export async function POST(request: Request) {
     console.info("[trading.orders] posting signed order", {
       userId: record.session.userId,
       tokenId: orderContext.tokenId,
-      orderType: payload.orderType ?? "GTC",
+      orderType: payload.orderType ?? "FAK",
       tradeSide: fundingRequirement.tradeSide,
       cost: fundingRequirement.cost,
       estimatedTakerFee: fundingRequirement.estimatedTakerFee,
@@ -158,7 +157,7 @@ export async function POST(request: Request) {
       credentials: record.credentials,
       payload: {
         order: payload.order,
-        orderType: payload.orderType ?? "GTC",
+        orderType: payload.orderType ?? "FAK",
         postOnly: payload.postOnly,
         deferExec: payload.deferExec,
       },
@@ -197,16 +196,12 @@ export async function POST(request: Request) {
 }
 
 function validatePayload(payload: SubmitSignedOrderPayload): string | undefined {
-  if (payload.finalConfirmation !== "SUBMIT USER ORDER") {
-    return "Type SUBMIT USER ORDER to confirm user-owned CLOB submission.";
-  }
-
   if (!payload.order || typeof payload.order !== "object") {
     return "Missing signed order payload.";
   }
 
-  if (payload.orderType !== "GTC" && payload.orderType !== "FOK" && payload.orderType !== "FAK") {
-    return "orderType must be GTC, FOK, or FAK.";
+  if (payload.orderType !== "FAK") {
+    return "Only FAK orders are supported by this user flow.";
   }
 
   return undefined;

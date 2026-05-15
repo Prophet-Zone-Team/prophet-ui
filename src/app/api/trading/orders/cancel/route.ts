@@ -9,7 +9,6 @@ export const dynamic = "force-dynamic";
 
 interface CancelOrderPayload {
   orderId?: string;
-  finalConfirmation?: string;
 }
 
 export async function POST(request: Request) {
@@ -64,10 +63,6 @@ export async function POST(request: Request) {
 }
 
 function validatePayload(payload: CancelOrderPayload): string | undefined {
-  if (payload.finalConfirmation !== "CANCEL USER ORDER") {
-    return "Type CANCEL USER ORDER to confirm cancellation.";
-  }
-
   if (!payload.orderId || typeof payload.orderId !== "string") {
     return "Missing orderId.";
   }

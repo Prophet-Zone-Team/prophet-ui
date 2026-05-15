@@ -100,6 +100,14 @@ export function formatShareSize(value: number): string {
   }).format(value);
 }
 
+export function formatPayoutOdds(potentialPayout: number, estimatedTotalCost: number): string {
+  if (!Number.isFinite(potentialPayout) || !Number.isFinite(estimatedTotalCost) || estimatedTotalCost <= 0) {
+    return "n/a";
+  }
+
+  return `${(potentialPayout / estimatedTotalCost).toFixed(2)}x`;
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
