@@ -12,7 +12,7 @@ import { getSignalDataRepository } from "./repository";
 
 const NEWS_LOOKBACK_DAYS = 30;
 const MAX_ARTICLES_PER_TEAM = 12;
-const API_FOOTBALL_TEAMS_PER_RUN = 4;
+const API_FOOTBALL_TEAMS_PER_RUN = 1;
 const GDELT_TEAM_BATCHES_PER_RUN = 2;
 const GDELT_TEAMS_PER_QUERY = 6;
 

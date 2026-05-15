@@ -352,7 +352,14 @@ async function fetchApiFootballTeams(search: string, apiKey: string): Promise<Ap
     throw new Error(`API-Football returned HTTP ${response.status}.`);
   }
 
-  return (await response.json()) as ApiFootballTeamsResponse;
+  const data = (await response.json()) as ApiFootballTeamsResponse;
+  const errorMessage = getApiFootballPayloadError(data.errors);
+
+  if (errorMessage) {
+    throw new Error(errorMessage);
+  }
+
+  return data;
 }
 
 async function fetchApiFootballFixtures(teamId: number, apiKey: string): Promise<ApiFootballFixturesResponse> {
@@ -376,7 +383,14 @@ async function fetchApiFootballFixtures(teamId: number, apiKey: string): Promise
     throw new Error(`API-Football fixtures returned HTTP ${response.status}.`);
   }
 
-  return (await response.json()) as ApiFootballFixturesResponse;
+  const data = (await response.json()) as ApiFootballFixturesResponse;
+  const errorMessage = getApiFootballPayloadError(data.errors);
+
+  if (errorMessage) {
+    throw new Error(errorMessage);
+  }
+
+  return data;
 }
 
 async function fetchApiFootballSquad(teamId: number, apiKey: string): Promise<ApiFootballSquadResponse> {
