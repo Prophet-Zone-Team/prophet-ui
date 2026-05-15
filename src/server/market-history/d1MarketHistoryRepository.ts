@@ -3,6 +3,7 @@ import type {
   MarketHistoryReadOptions,
   MarketHistoryRepository,
   MarketSnapshotRecord,
+  MarketUniverseSnapshotRecord,
 } from "./types";
 
 interface MarketSnapshotRow {
@@ -23,6 +24,21 @@ interface MarketSnapshotSourceStatRow {
   source: string;
   count: number;
   latest_captured_at: string | null;
+}
+
+interface MarketUniverseSnapshotRow {
+  id: string;
+  source: string;
+  provider: "polymarket";
+  market_count: number;
+  tracked_market_count: number;
+  canonical_team_count: number;
+  total_volume: number;
+  volume_24h: number;
+  liquidity: number;
+  missing_team_ids: string;
+  unmapped_market_titles: string;
+  captured_at: string;
 }
 
 export function createD1MarketHistoryRepository(database: D1Database): MarketHistoryRepository {
@@ -75,6 +91,50 @@ export function createD1MarketHistoryRepository(database: D1Database): MarketHis
       await database.batch(statements);
     },
 
+    async appendUniverseSnapshot(record: MarketUniverseSnapshotRecord): Promise<void> {
+      await database
+        .prepare(
+          `INSERT INTO market_universe_snapshots (
+            id,
+            source,
+            provider,
+            market_count,
+            tracked_market_count,
+            canonical_team_count,
+            total_volume,
+            volume_24h,
+            liquidity,
+            missing_team_ids,
+            unmapped_market_titles,
+            captured_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            market_count = excluded.market_count,
+            tracked_market_count = excluded.tracked_market_count,
+            canonical_team_count = excluded.canonical_team_count,
+            total_volume = excluded.total_volume,
+            volume_24h = excluded.volume_24h,
+            liquidity = excluded.liquidity,
+            missing_team_ids = excluded.missing_team_ids,
+            unmapped_market_titles = excluded.unmapped_market_titles`,
+        )
+        .bind(
+          record.id,
+          record.source,
+          record.provider,
+          record.marketCount,
+          record.trackedMarketCount,
+          record.canonicalTeamCount,
+          record.totalVolume,
+          record.volume24h,
+          record.liquidity,
+          JSON.stringify(record.missingTeamIds),
+          JSON.stringify(record.unmappedMarketTitles),
+          record.capturedAt,
+        )
+        .run();
+    },
+
     async readSnapshots(options: MarketHistoryReadOptions): Promise<MarketSnapshotRecord[]> {
       const cutoff = getCutoffIso(options.days);
       const bindings: Array<string | number> = [options.source];
@@ -88,6 +148,11 @@ export function createD1MarketHistoryRepository(database: D1Database): MarketHis
       if (cutoff) {
         clauses.push("captured_at >= ?");
         bindings.push(cutoff);
+      }
+
+      if (options.since) {
+        clauses.push("captured_at >= ?");
+        bindings.push(options.since);
       }
 
       const result = await database
@@ -114,6 +179,34 @@ export function createD1MarketHistoryRepository(database: D1Database): MarketHis
       return (result.results ?? []).map(mapRowToRecord);
     },
 
+    async readLatestUniverseSnapshot(source: MarketUniverseSnapshotRecord["source"]) {
+      const result = await database
+        .prepare(
+          `SELECT
+            id,
+            source,
+            provider,
+            market_count,
+            tracked_market_count,
+            canonical_team_count,
+            total_volume,
+            volume_24h,
+            liquidity,
+            missing_team_ids,
+            unmapped_market_titles,
+            captured_at
+          FROM market_universe_snapshots
+          WHERE source = ?
+          ORDER BY captured_at DESC
+          LIMIT 1`,
+        )
+        .bind(source)
+        .all<MarketUniverseSnapshotRow>();
+
+      const row = result.results?.[0];
+      return row ? mapUniverseRowToRecord(row) : undefined;
+    },
+
     async readSourceStats() {
       const result = await database
         .prepare(
@@ -134,6 +227,32 @@ export function createD1MarketHistoryRepository(database: D1Database): MarketHis
       }));
     },
   };
+}
+
+function mapUniverseRowToRecord(row: MarketUniverseSnapshotRow): MarketUniverseSnapshotRecord {
+  return {
+    id: row.id,
+    source: row.source as MarketUniverseSnapshotRecord["source"],
+    provider: row.provider,
+    marketCount: row.market_count,
+    trackedMarketCount: row.tracked_market_count,
+    canonicalTeamCount: row.canonical_team_count,
+    totalVolume: row.total_volume,
+    volume24h: row.volume_24h,
+    liquidity: row.liquidity,
+    missingTeamIds: parseStringArray(row.missing_team_ids),
+    unmappedMarketTitles: parseStringArray(row.unmapped_market_titles),
+    capturedAt: row.captured_at,
+  };
+}
+
+function parseStringArray(value: string): string[] {
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
 }
 
 function getCutoffIso(days: number | undefined): string | undefined {

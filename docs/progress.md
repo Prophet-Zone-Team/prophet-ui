@@ -5,7 +5,7 @@ Last updated: 2026-05-14 00:42 CST
 ## Priority Status
 
 - Priority 1, Data Provider Architecture:
-  completed. Mock, Polymarket, Kalshi, composite source, fallback behavior, D1 history, and unified `getWorldCupMarketData()` are implemented.
+  completed for the current Polymarket-only product surface. The app now uses a 48-team World Cup registry, hides Kalshi/composite, stores Polymarket team snapshots plus market-universe totals in D1/local history, and prefers fresh stored Polymarket snapshots before falling back to live provider reads.
 - Priority 2, Data Freshness and Source Disclosure:
   completed for the current product surface. Shared data banner, source disclosure, source-preserving links, and status metadata cover market, odds, news, and football context.
 - Priority 3, Market Signal System:
@@ -17,15 +17,15 @@ Last updated: 2026-05-14 00:42 CST
 
 ## Completed
 
-- Homepage terminal/dashboard implemented with heatmap sorted by probability descending.
+- Homepage terminal/dashboard implemented with heatmap sorted by probability descending, 48/48 Polymarket World Cup market coverage, total market volume, 24h volume, and liquidity coverage metrics.
 - Team detail page implemented with probability chart, market stats, odds comparison, related news, trade-ticket link, watchlist, and API-Football context.
 - Feed page implemented from the shared market signal engine.
 - Watchlist page implemented with local browser storage.
 - Daily Brief page implemented with Markdown export.
 - Read-only market providers implemented:
-  Polymarket, Kalshi, composite, and mock fallback.
+  Polymarket is the active product source. Kalshi/composite implementations remain hidden from the product surface, and mock fallback remains for development/error states.
 - Historical D1 snapshot system implemented:
-  schema, repository, collector, read API, collect API, and OpenNext Worker cron.
+  schema, repository, collector, read API, collect API, OpenNext Worker cron, market-universe snapshots, and DB-first Polymarket page reads.
 - GDELT news collection implemented:
   provider, D1 cache, signal collection route, and news impact mapping.
 - API-Football context collection implemented:

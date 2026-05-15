@@ -1107,7 +1107,7 @@ function SelectedTeamPanel({
           <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">Selected market</p>
           <h2 className="mt-3 text-3xl font-semibold text-terminal-text">{team.name}</h2>
           <p className="mt-1 text-xs text-terminal-muted">
-            {team.code} / Group {team.group}
+            {team.code} / {team.region}
           </p>
         </div>
         <Link href={`/team/${team.id}?source=${source}`} className="rounded border border-terminal-cyan/50 px-3 py-2 text-xs text-terminal-cyan">

@@ -1,5 +1,5 @@
 import { getMarketHistoryRepository } from "../market-history/repository";
-import type { MarketSnapshotSourceStat } from "../market-history/types";
+import type { MarketSnapshotSourceStat, MarketUniverseSnapshotRecord } from "../market-history/types";
 import { getSignalDataRepository } from "../signal-data/repository";
 import type { SignalDataSourceStats } from "../signal-data/types";
 
@@ -15,12 +15,29 @@ export interface SystemHealthReport {
     freshnessThresholdMinutes: number;
     sources: Array<MarketSnapshotSourceStat & { ageMinutes?: number; status: HealthStatus }>;
   };
+  marketUniverse: MarketUniverseHealthSlice;
   signalData: {
     status: HealthStatus;
     freshnessThresholdHours: number;
     news: SignalHealthSlice;
     football: SignalHealthSlice;
   };
+}
+
+interface MarketUniverseHealthSlice {
+  status: HealthStatus;
+  source: MarketUniverseSnapshotRecord["source"];
+  freshnessThresholdMinutes: number;
+  capturedAt?: string;
+  ageMinutes?: number;
+  marketCount?: number;
+  trackedMarketCount?: number;
+  canonicalTeamCount?: number;
+  totalVolume?: number;
+  volume24h?: number;
+  liquidity?: number;
+  missingTeamCount?: number;
+  unmappedMarketCount?: number;
 }
 
 interface SignalHealthSlice {
@@ -46,8 +63,9 @@ interface SignalStatsSlice {
 
 export async function getSystemHealthReport(now = new Date()): Promise<SystemHealthReport> {
   const checkedAt = now.toISOString();
-  const [marketStats, signalStats] = await Promise.all([
+  const [marketStats, marketUniverse, signalStats] = await Promise.all([
     readMarketStats(),
+    readMarketUniverse(),
     readSignalStats(),
   ]);
   const marketSources = marketStats.map((stat) => {
@@ -69,6 +87,7 @@ export async function getSystemHealthReport(now = new Date()): Promise<SystemHea
       freshnessThresholdMinutes: MARKET_FRESHNESS_THRESHOLD_MINUTES,
       sources: marketSources,
     },
+    marketUniverse: mapMarketUniverseSlice(marketUniverse, now),
     signalData: {
       status: aggregateStatus([news.status, football.status]),
       freshnessThresholdHours: SIGNAL_FRESHNESS_THRESHOLD_HOURS,
@@ -81,6 +100,11 @@ export async function getSystemHealthReport(now = new Date()): Promise<SystemHea
 async function readMarketStats(): Promise<MarketSnapshotSourceStat[]> {
   const repository = await getMarketHistoryRepository();
   return repository.readSourceStats();
+}
+
+async function readMarketUniverse(): Promise<MarketUniverseSnapshotRecord | undefined> {
+  const repository = await getMarketHistoryRepository();
+  return repository.readLatestUniverseSnapshot("polymarket");
 }
 
 async function readSignalStats(): Promise<SignalDataSourceStats> {
@@ -109,6 +133,29 @@ function mapSignalSlice(
           errors: slice.lastRun.errors,
         }
       : undefined,
+  };
+}
+
+function mapMarketUniverseSlice(
+  universe: MarketUniverseSnapshotRecord | undefined,
+  now: Date,
+): MarketUniverseHealthSlice {
+  const ageMinutes = universe ? getAgeMinutes(universe.capturedAt, now) : undefined;
+
+  return {
+    status: getSliceStatus(universe ? 1 : 0, ageMinutes, MARKET_FRESHNESS_THRESHOLD_MINUTES),
+    source: "polymarket",
+    freshnessThresholdMinutes: MARKET_FRESHNESS_THRESHOLD_MINUTES,
+    capturedAt: universe?.capturedAt,
+    ageMinutes,
+    marketCount: universe?.marketCount,
+    trackedMarketCount: universe?.trackedMarketCount,
+    canonicalTeamCount: universe?.canonicalTeamCount,
+    totalVolume: universe?.totalVolume,
+    volume24h: universe?.volume24h,
+    liquidity: universe?.liquidity,
+    missingTeamCount: universe?.missingTeamIds.length,
+    unmappedMarketCount: universe?.unmappedMarketTitles.length,
   };
 }
 

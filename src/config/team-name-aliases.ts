@@ -28,7 +28,7 @@ const teamAliases: Record<string, string[]> = {
 };
 
 export function getTeamNameAliases(team: Team): string[] {
-  return dedupeAliases([team.name, team.code, team.id, ...(teamAliases[team.id] ?? [])]);
+  return dedupeAliases([team.name, team.code, team.id, ...(team.aliases ?? []), ...(teamAliases[team.id] ?? [])]);
 }
 
 export function normalizeTeamAlias(value: string): string {

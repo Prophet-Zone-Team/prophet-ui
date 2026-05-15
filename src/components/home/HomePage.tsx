@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { MarketDataMeta } from "../../data/providers/types";
+import type { MarketDataMeta, WorldCupMarketData } from "../../data/providers/types";
 import { getMarketDataSourceLabel } from "../../data/providers/source";
 import {
   generateMarketSignals,
@@ -18,9 +18,10 @@ interface HomePageProps {
   snapshots: TeamMarketSnapshot[];
   newsEvents: NewsEvent[];
   dataStatus: MarketDataMeta;
+  universe?: WorldCupMarketData["universe"];
 }
 
-export function HomePage({ snapshots, newsEvents, dataStatus }: HomePageProps) {
+export function HomePage({ snapshots, newsEvents, dataStatus, universe }: HomePageProps) {
   const topMovers = getTopMovers(snapshots, 4);
   const biggestLosers = getBiggestLosers(snapshots, 4);
   const hotTeams = getHotTeams(snapshots, 4);
@@ -29,10 +30,11 @@ export function HomePage({ snapshots, newsEvents, dataStatus }: HomePageProps) {
   return (
     <main className="terminal-grid min-h-screen px-4 py-5 sm:px-7 lg:px-8">
       <div className="mx-auto flex w-full max-w-[1540px] flex-col gap-8 lg:gap-9">
-        <TerminalTopbar snapshots={snapshots} dataStatus={dataStatus} />
+        <TerminalTopbar snapshots={snapshots} dataStatus={dataStatus} universe={universe} />
         <DataStatusBanner meta={dataStatus} />
+        <MarketCoverageStrip universe={universe} />
         <SourceDisclosure compact />
-        <Hero snapshots={snapshots} hotTeams={hotTeams} dataStatus={dataStatus} />
+        <Hero snapshots={snapshots} hotTeams={hotTeams} dataStatus={dataStatus} universe={universe} />
         <MarketHeatmap teams={snapshots} source={dataStatus.source} />
         <div className="grid gap-8 xl:grid-cols-2">
           <TeamSection title="Top Movers" eyebrow="24h upside repricing" teams={topMovers} source={dataStatus.source} />
@@ -45,12 +47,61 @@ export function HomePage({ snapshots, newsEvents, dataStatus }: HomePageProps) {
   );
 }
 
-function TerminalTopbar({ snapshots, dataStatus }: { snapshots: TeamMarketSnapshot[]; dataStatus: MarketDataMeta }) {
-  const totalVolume = snapshots.reduce((sum, snapshot) => sum + snapshot.market.volume, 0);
-  const liveMarkets = snapshots.length;
+function MarketCoverageStrip({ universe }: { universe?: WorldCupMarketData["universe"] }) {
+  if (!universe) {
+    return null;
+  }
+
+  const missingCount = universe.missingTeamIds.length;
+  const coverageTone = missingCount === 0 ? "text-terminal-green" : "text-terminal-amber";
+
+  return (
+    <section className="rounded-lg border border-terminal-line bg-terminal-panel/75 px-4 py-3 shadow-terminal sm:px-5">
+      <div className="grid gap-3 text-xs text-terminal-muted sm:grid-cols-4">
+        <CoverageMetric label="Provider markets" value={String(universe.marketCount)} />
+        <CoverageMetric label="Mapped teams" value={`${universe.trackedMarketCount}/${universe.canonicalTeamCount}`} valueClassName={coverageTone} />
+        <CoverageMetric label="24h volume" value={formatVolume(universe.volume24h)} />
+        <CoverageMetric label="Liquidity" value={formatVolume(universe.liquidity)} />
+      </div>
+    </section>
+  );
+}
+
+function CoverageMetric({
+  label,
+  value,
+  valueClassName = "text-terminal-text",
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
+  return (
+    <div>
+      <p className="terminal-label text-[10px] uppercase tracking-[0.18em]">{label}</p>
+      <p className={`mt-1 text-sm font-semibold ${valueClassName}`}>{value}</p>
+    </div>
+  );
+}
+
+function TerminalTopbar({
+  snapshots,
+  dataStatus,
+  universe,
+}: {
+  snapshots: TeamMarketSnapshot[];
+  dataStatus: MarketDataMeta;
+  universe?: WorldCupMarketData["universe"];
+}) {
+  const totalVolume = universe?.totalVolume ?? snapshots.reduce((sum, snapshot) => sum + snapshot.market.volume, 0);
+  const trackedMarkets = universe ? `${universe.trackedMarketCount} / ${universe.canonicalTeamCount}` : String(snapshots.length);
   const strongestMove =
     getTopMovers(snapshots, 1)[0] ??
     [...snapshots].sort((a, b) => Math.abs(b.market.change24h) - Math.abs(a.market.change24h))[0];
+  const strongestMoveLabel =
+    strongestMove && Math.abs(strongestMove.market.change24h) > 0
+      ? `${strongestMove.team.code} ${formatChange(strongestMove.market.change24h)}`
+      : "Collecting history";
 
   return (
     <header className="rounded-lg border border-white/10 bg-black/40 px-5 py-4 shadow-terminal backdrop-blur sm:px-6">
@@ -67,11 +118,11 @@ function TerminalTopbar({ snapshots, dataStatus }: { snapshots: TeamMarketSnapsh
         <div className="flex flex-col gap-3 lg:min-w-[760px] lg:flex-row lg:items-center lg:justify-end">
           <DataSourceSwitch selectedSource={dataStatus.source} />
           <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[460px]">
-            <TopbarMetric label="Live markets" value={String(liveMarkets)} />
-            <TopbarMetric label="Market volume" value={formatVolume(totalVolume)} />
+            <TopbarMetric label="Tracked markets" value={trackedMarkets} />
+            <TopbarMetric label="Total volume" value={formatVolume(totalVolume)} />
             <TopbarMetric
-              label="Fastest move"
-              value={strongestMove ? `${strongestMove.team.code} ${formatChange(strongestMove.market.change24h)}` : "No move yet"}
+              label="24h move leader"
+              value={strongestMoveLabel}
               valueClassName={strongestMove && strongestMove.market.change24h >= 0 ? "text-terminal-green" : "text-terminal-muted"}
             />
           </div>
@@ -102,12 +153,14 @@ function Hero({
   snapshots,
   hotTeams,
   dataStatus,
+  universe,
 }: {
   snapshots: TeamMarketSnapshot[];
   hotTeams: ReturnType<typeof getHotTeams>;
   dataStatus: MarketDataMeta;
+  universe?: WorldCupMarketData["universe"];
 }) {
-  const totalVolume = snapshots.reduce((sum, snapshot) => sum + snapshot.market.volume, 0);
+  const totalVolume = universe?.totalVolume ?? snapshots.reduce((sum, snapshot) => sum + snapshot.market.volume, 0);
   const leader =
     snapshots.length > 0
       ? snapshots.reduce((current, snapshot) =>
@@ -143,7 +196,7 @@ function Hero({
             value={leader?.team.name ?? "Waiting for live board"}
             detail={leader ? formatProbability(leader.market.probability) : "provider warming up"}
           />
-          <HeroMetric label="Tracked volume" value={formatVolume(totalVolume)} detail="read-only market depth" />
+          <HeroMetric label="Total volume" value={formatVolume(totalVolume)} detail="all tracked World Cup winner markets" />
           <HeroMetric
             label="Hot signal"
             value={hottest?.team.code ?? "Pending"}

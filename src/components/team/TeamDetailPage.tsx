@@ -362,7 +362,7 @@ function TeamHeader({ snapshot, source }: { snapshot: TeamMarketSnapshot; source
         <div>
           <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.22em] text-terminal-muted">
             <span className="border border-terminal-line px-2.5 py-1">{team.code}</span>
-            <span>Group {team.group}</span>
+            {team.group ? <span>Group {team.group}</span> : null}
             <span>{team.region}</span>
             <span className={isPositive ? "text-terminal-green" : "text-terminal-red"}>
               {isPositive ? "Rising" : "Falling"}

@@ -3,7 +3,7 @@ import {
   WORLD_CUP_CONTEXT_KEYWORDS,
   getTeamNewsQueryConfig,
 } from "../../config/team-news-query-config";
-import { mockTeams } from "../../data/mock/teams";
+import { worldCupTeams } from "../../data/teams/worldCupTeams";
 import { getApiFootballTeamContext } from "../../data/football/apiFootballProvider";
 import { gdeltNewsProvider } from "../../data/news/gdeltNewsProvider";
 import type { TeamNewsQuery } from "../../data/news/types";
@@ -23,7 +23,7 @@ export interface SignalDataCollectionResult {
 
 export async function collectGdeltNewsSignals(): Promise<SignalDataCollectionResult> {
   const collectedAt = new Date().toISOString();
-  const queries = mockTeams.map(createExpandedTeamNewsQuery).filter(isTeamNewsQuery);
+  const queries = worldCupTeams.map(createExpandedTeamNewsQuery).filter(isTeamNewsQuery);
   const { articles, errors } = await collectGdeltArticlesInBatches(queries);
   const cappedArticles = capArticlesPerTeam(articles);
   const repository = await getSignalDataRepository();
@@ -76,7 +76,7 @@ export async function collectApiFootballSignals(): Promise<SignalDataCollectionR
   const selectedConfigs = getApiFootballBatch(collectedAt);
 
   for (const config of selectedConfigs) {
-    const team = mockTeams.find((item) => item.id === config.teamId);
+    const team = worldCupTeams.find((item) => item.id === config.teamId);
 
     if (!team) {
       continue;
@@ -125,10 +125,8 @@ export async function collectAllSignalData(): Promise<SignalDataCollectionResult
 
 function createExpandedTeamNewsQuery(team: Team): TeamNewsQuery | undefined {
   const config = getTeamNewsQueryConfig(team.id);
-
-  if (!config) {
-    return undefined;
-  }
+  const aliases = config?.aliases ?? [team.name, `${team.name} national team`, ...(team.aliases ?? [])];
+  const countryAliases = config?.countryAliases ?? [team.name];
 
   const endDate = getBucketedDate(new Date());
   const startDate = new Date(endDate);
@@ -137,10 +135,10 @@ function createExpandedTeamNewsQuery(team: Team): TeamNewsQuery | undefined {
   return {
     teamId: team.id,
     teamName: team.name,
-    aliases: config.aliases,
-    countryAliases: config.countryAliases,
-    keyPlayers: config.keyPlayers,
-    excludeTerms: config.excludeTerms,
+    aliases,
+    countryAliases,
+    keyPlayers: config?.keyPlayers ?? [],
+    excludeTerms: config?.excludeTerms ?? ["club world cup"],
     contextKeywords: [
       ...WORLD_CUP_CONTEXT_KEYWORDS,
       "football",

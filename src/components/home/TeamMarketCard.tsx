@@ -30,7 +30,7 @@ export function TeamMarketCard({ snapshot, source }: TeamMarketCardProps) {
           <p className="terminal-label text-[10px] uppercase tracking-[0.28em] text-terminal-muted">{team.code}</p>
           <h3 className="mt-2 text-lg font-semibold text-terminal-text">{team.name}</h3>
           <p className="mt-1 text-xs text-terminal-muted">
-            {team.code} / Group {team.group}
+            {team.code} / {team.region}
           </p>
         </div>
         <span

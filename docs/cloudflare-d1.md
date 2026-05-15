@@ -57,8 +57,6 @@ If `source` is omitted or `source=all`, the endpoint collects:
 
 ```text
 polymarket
-kalshi
-composite
 ```
 
 In production it requires:
@@ -67,7 +65,14 @@ In production it requires:
 Authorization: Bearer $MARKET_COLLECTOR_SECRET
 ```
 
-Recommended schedule: every 10-30 minutes.
+Recommended schedule: every 10 minutes.
+
+Each market collection run stores:
+
+- normalized team-level market snapshots in `market_snapshots`
+- Polymarket World Cup market-universe totals in `market_universe_snapshots`
+
+The product currently hides Kalshi and composite data sources. User-facing pages default to Polymarket and prefer fresh stored snapshots before falling back to live Polymarket provider reads.
 
 Signal data is collected through:
 

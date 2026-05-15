@@ -5,6 +5,7 @@ import type {
   NewsEvent,
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
+  MarketUniverseMeta,
 } from "../../types/market";
 import type { OddsProviderMeta } from "../odds/types";
 
@@ -42,6 +43,7 @@ export interface WorldCupMarketData {
   footballContext: ApiFootballTeamProfile[];
   footballTeamContext: ApiFootballTeamContext[];
   meta: MarketDataMeta;
+  universe?: MarketUniverseMeta;
 }
 
 export interface WorldCupMarketDataOptions {
@@ -50,6 +52,7 @@ export interface WorldCupMarketDataOptions {
   includeNews?: boolean;
   includeFootballContext?: boolean;
   includeOdds?: boolean;
+  preferStored?: boolean;
   footballContextTeamIds?: string[];
 }
 

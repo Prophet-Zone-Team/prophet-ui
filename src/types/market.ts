@@ -151,8 +151,12 @@ export interface Team {
   name: string;
   code: string;
   region: TeamRegion;
-  group: string;
-  fifaRank: number;
+  group?: string;
+  fifaRank?: number;
+  aliases?: string[];
+  qualifiedStatus?: "qualified" | "candidate" | "playoff_pending";
+  apiFootballTeamId?: number;
+  polymarketMarketSlug?: string;
 }
 
 export interface TeamMarketData {
@@ -161,10 +165,24 @@ export interface TeamMarketData {
   change24h: number;
   change7d: number;
   volume: number;
+  volume24h?: number;
+  liquidity?: number;
   sentiment: MarketSentiment;
   bookmakerImpliedProbability: number;
   updatedAt: string;
   polymarket?: PolymarketMarketMetadata;
+}
+
+export interface MarketUniverseMeta {
+  provider: "polymarket";
+  marketCount: number;
+  trackedMarketCount: number;
+  canonicalTeamCount: number;
+  totalVolume: number;
+  volume24h: number;
+  liquidity: number;
+  missingTeamIds: Team["id"][];
+  unmappedMarketTitles: string[];
 }
 
 export interface PolymarketMarketMetadata {

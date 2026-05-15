@@ -1,6 +1,7 @@
 import { mockDataProvider } from "./mockDataProvider";
 import { polymarketDataProvider } from "./polymarketDataProvider";
 import { kalshiDataProvider } from "./kalshiDataProvider";
+import { getStoredPolymarketWorldCupData } from "./storedPolymarketDataProvider";
 import { DEFAULT_MARKET_DATA_SOURCE, getMarketDataSourceLabel, normalizeMarketDataSource } from "./source";
 import type { MarketDataSource, WorldCupMarketData, WorldCupMarketDataOptions } from "./types";
 import { getNewsImpactForSnapshots } from "../news/newsImpact";
@@ -70,7 +71,9 @@ export async function getLiveWorldCupMarketData(options: WorldCupMarketDataOptio
   try {
     let data: WorldCupMarketData;
 
-    if (source === "kalshi") {
+    if (source === "polymarket" && options.preferStored !== false) {
+      data = (await getStoredPolymarketWorldCupData()) ?? await polymarketDataProvider.getWorldCupMarketData();
+    } else if (source === "kalshi") {
       data = await kalshiDataProvider.getWorldCupMarketData();
     } else if (source === "polymarket") {
       data = await polymarketDataProvider.getWorldCupMarketData();
@@ -478,6 +481,7 @@ function getMarketDataCacheKey(options: WorldCupMarketDataOptions) {
     includeNews: options.includeNews !== false,
     includeFootballContext: options.includeFootballContext !== false,
     includeOdds: options.includeOdds !== false,
+    preferStored: options.preferStored !== false,
     footballContextTeamIds: [...(options.footballContextTeamIds ?? [])].sort(),
   });
 }
@@ -534,5 +538,12 @@ function cloneMarketData(data: WorldCupMarketData): WorldCupMarketData {
       football: data.meta.football ? { ...data.meta.football } : undefined,
       odds: data.meta.odds ? { ...data.meta.odds } : undefined,
     },
+    universe: data.universe
+      ? {
+          ...data.universe,
+          missingTeamIds: [...data.universe.missingTeamIds],
+          unmappedMarketTitles: [...data.universe.unmappedMarketTitles],
+        }
+      : undefined,
   };
 }

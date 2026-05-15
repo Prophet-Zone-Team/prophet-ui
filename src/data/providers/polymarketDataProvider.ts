@@ -1,6 +1,7 @@
-import { mockTeams } from "../mock/teams";
+import { WORLD_CUP_TEAM_COUNT, worldCupTeams } from "../teams/worldCupTeams";
 import type {
   MarketSentiment,
+  MarketUniverseMeta,
   PolymarketFeeDetails,
   PolymarketMarketMetadata,
   Team,
@@ -26,6 +27,7 @@ interface GammaMarket {
   volume?: number | string;
   volumeNum?: number | string;
   volume24hr?: number | string;
+  volume24hrClob?: number | string;
   liquidity?: number | string;
   conditionId?: string;
   orderPriceMinTickSize?: number | string;
@@ -54,7 +56,9 @@ interface ClobMarketDetails {
 export const polymarketDataProvider: WorldCupMarketDataProvider = {
   async getWorldCupMarketData(): Promise<WorldCupMarketData> {
     const markets = await fetchWorldCupMarkets();
-    const snapshots = await mapMarketsToTeamSnapshots(markets);
+    const worldCupMarkets = markets.filter(isWorldCupWinnerMarket);
+    const { snapshots, matchedMarketKeys } = await mapMarketsToTeamSnapshots(worldCupMarkets);
+    const universe = createMarketUniverseMeta(worldCupMarkets, snapshots, matchedMarketKeys);
 
     if (snapshots.length < MIN_WORLD_CUP_MARKETS) {
       throw new Error(`Polymarket returned ${snapshots.length} matching World Cup team markets.`);
@@ -70,6 +74,7 @@ export const polymarketDataProvider: WorldCupMarketDataProvider = {
       probabilityHistory: [],
       footballContext: [],
       footballTeamContext: [],
+      universe,
       meta: {
         source: "polymarket",
         status: "live",
@@ -108,7 +113,10 @@ async function fetchWorldCupMarkets(): Promise<GammaMarket[]> {
   return data.filter(isGammaMarket);
 }
 
-async function mapMarketsToTeamSnapshots(markets: GammaMarket[]): Promise<TeamMarketSnapshot[]> {
+async function mapMarketsToTeamSnapshots(markets: GammaMarket[]): Promise<{
+  snapshots: TeamMarketSnapshot[];
+  matchedMarketKeys: Set<string>;
+}> {
   const usedMarketIds = new Set<string>();
   const selectedMarkets: Array<{
     team: Team;
@@ -117,7 +125,7 @@ async function mapMarketsToTeamSnapshots(markets: GammaMarket[]): Promise<TeamMa
     polymarket?: PolymarketMarketMetadata;
   }> = [];
 
-  for (const team of mockTeams) {
+  for (const team of worldCupTeams) {
     const market = findBestTeamMarket(markets, team, usedMarketIds);
 
     if (!market) {
@@ -131,21 +139,23 @@ async function mapMarketsToTeamSnapshots(markets: GammaMarket[]): Promise<TeamMa
       continue;
     }
 
-    usedMarketIds.add(market.id ?? market.slug ?? `${team.id}-${market.question}`);
+    usedMarketIds.add(getMarketIdentity(market, team.id));
     selectedMarkets.push({ team, market, probability, polymarket });
   }
 
   const feeDetails = await fetchClobFeeDetails(selectedMarkets);
 
-  return selectedMarkets
-    .map(({ team, market, probability, polymarket }) => ({
+  const snapshots = selectedMarkets
+    .map(({ team, market, probability, polymarket }): TeamMarketSnapshot => ({
       team,
       market: {
         teamId: team.id,
         probability,
         change24h: normalizePriceChange(firstNumber(market.oneDayPriceChange, market.priceChange24h)),
         change7d: normalizePriceChange(firstNumber(market.oneWeekPriceChange, market.priceChange7d)),
-        volume: firstNumber(market.volume24hr, market.volumeNum, market.volume, market.liquidity) ?? 0,
+        volume: firstNumber(market.volumeNum, market.volume, market.volume24hr, market.liquidity) ?? 0,
+        volume24h: firstNumber(market.volume24hr, market.volume24hrClob),
+        liquidity: firstNumber(market.liquidity),
         sentiment: deriveSentiment(normalizePriceChange(firstNumber(market.oneDayPriceChange, market.priceChange24h))),
         bookmakerImpliedProbability: probability,
         updatedAt: market.updatedAt ?? market.createdAt ?? new Date().toISOString(),
@@ -153,6 +163,11 @@ async function mapMarketsToTeamSnapshots(markets: GammaMarket[]): Promise<TeamMa
       },
     }))
     .sort((a, b) => b.market.volume - a.market.volume);
+
+  return {
+    snapshots,
+    matchedMarketKeys: usedMarketIds,
+  };
 }
 
 function findBestTeamMarket(
@@ -160,19 +175,85 @@ function findBestTeamMarket(
   team: Team,
   usedMarketIds: Set<string>,
 ): GammaMarket | undefined {
-  const teamName = team.name.toLowerCase();
-  const teamCode = team.code.toLowerCase();
-
   return markets
     .filter((market) => {
-      const id = market.id ?? market.slug ?? `${team.id}-${market.question}`;
-      const text = `${market.question ?? ""} ${market.title ?? ""} ${market.description ?? ""} ${market.slug ?? ""}`.toLowerCase();
-      const isWorldCup = text.includes("world cup") || text.includes("fifa");
-      const isTeamMarket = text.includes(teamName) || text.includes(` ${teamCode} `);
+      const id = getMarketIdentity(market, team.id);
+      const text = getMarketSearchText(market);
+      const aliases = getTeamSearchAliases(team);
+      const isTeamMarket = containsSearchAlias(text, aliases);
 
-      return !usedMarketIds.has(id) && isWorldCup && isTeamMarket;
+      return !usedMarketIds.has(id) && isWorldCupWinnerMarket(market) && isTeamMarket;
     })
-    .sort((a, b) => (firstNumber(b.volume24hr, b.volumeNum, b.volume) ?? 0) - (firstNumber(a.volume24hr, a.volumeNum, a.volume) ?? 0))[0];
+    .sort((a, b) => (firstNumber(b.volumeNum, b.volume, b.volume24hr) ?? 0) - (firstNumber(a.volumeNum, a.volume, a.volume24hr) ?? 0))[0];
+}
+
+function createMarketUniverseMeta(
+  markets: GammaMarket[],
+  snapshots: TeamMarketSnapshot[],
+  matchedMarketKeys: Set<string>,
+): MarketUniverseMeta {
+  const mappedTeamIds = new Set(snapshots.map((snapshot) => snapshot.team.id));
+  const missingTeamIds = worldCupTeams
+    .map((team) => team.id)
+    .filter((teamId) => !mappedTeamIds.has(teamId));
+  const unmappedMarketTitles = markets
+    .filter((market) => !matchedMarketKeys.has(getMarketIdentity(market)))
+    .map((market) => market.question ?? market.title ?? market.slug ?? market.id ?? "Untitled market")
+    .slice(0, 20);
+
+  return {
+    provider: "polymarket",
+    marketCount: markets.length,
+    trackedMarketCount: snapshots.length,
+    canonicalTeamCount: WORLD_CUP_TEAM_COUNT,
+    totalVolume: sumMarketNumbers(markets, (market) => firstNumber(market.volumeNum, market.volume)),
+    volume24h: sumMarketNumbers(markets, (market) => firstNumber(market.volume24hr, market.volume24hrClob)),
+    liquidity: sumMarketNumbers(markets, (market) => firstNumber(market.liquidity)),
+    missingTeamIds,
+    unmappedMarketTitles,
+  };
+}
+
+function isWorldCupWinnerMarket(market: GammaMarket): boolean {
+  const text = getMarketSearchText(market);
+  return (
+    text.includes("world cup") &&
+    text.includes("win") &&
+    (text.includes("2026") || text.includes("fifa"))
+  );
+}
+
+function getMarketSearchText(market: GammaMarket): string {
+  return normalizeSearchText(`${market.question ?? ""} ${market.title ?? ""} ${market.description ?? ""} ${market.slug ?? ""}`);
+}
+
+function getTeamSearchAliases(team: Team): string[] {
+  return [team.name, team.code, team.id, ...(team.aliases ?? [])]
+    .map(normalizeSearchText)
+    .filter(Boolean);
+}
+
+function containsSearchAlias(text: string, aliases: string[]): boolean {
+  const paddedText = ` ${text} `;
+  return aliases.some((alias) => paddedText.includes(` ${alias} `));
+}
+
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function getMarketIdentity(market: GammaMarket, fallback = "market"): string {
+  return market.id ?? market.slug ?? `${fallback}-${market.question}`;
+}
+
+function sumMarketNumbers(markets: GammaMarket[], getValue: (market: GammaMarket) => number | undefined): number {
+  return markets.reduce((sum, market) => sum + (getValue(market) ?? 0), 0);
 }
 
 function extractPolymarketMetadata(market: GammaMarket): PolymarketMarketMetadata | undefined {

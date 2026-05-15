@@ -129,7 +129,7 @@ function WatchlistTeamCard({
           <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">{team.code} / Watchlist</p>
           <h2 className="mt-3 text-3xl font-semibold text-terminal-text">{team.name}</h2>
           <p className="mt-2 text-xs text-terminal-muted">
-            Group {team.group} / {team.region}
+            {team.code} / {team.region}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href={`/team/${team.id}?source=${source}`} className="rounded border border-terminal-cyan/50 px-3 py-2 text-xs text-terminal-cyan">

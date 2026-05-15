@@ -18,6 +18,24 @@ ON market_snapshots (source, team_id, captured_at);
 CREATE INDEX IF NOT EXISTS idx_market_snapshots_source_time
 ON market_snapshots (source, captured_at);
 
+CREATE TABLE IF NOT EXISTS market_universe_snapshots (
+  id TEXT PRIMARY KEY,
+  source TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  market_count INTEGER NOT NULL,
+  tracked_market_count INTEGER NOT NULL,
+  canonical_team_count INTEGER NOT NULL,
+  total_volume REAL NOT NULL,
+  volume_24h REAL NOT NULL,
+  liquidity REAL NOT NULL,
+  missing_team_ids TEXT NOT NULL,
+  unmapped_market_titles TEXT NOT NULL,
+  captured_at TEXT NOT NULL
+) STRICT;
+
+CREATE INDEX IF NOT EXISTS idx_market_universe_snapshots_source_time
+ON market_universe_snapshots (source, captured_at);
+
 CREATE TABLE IF NOT EXISTS news_articles (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,

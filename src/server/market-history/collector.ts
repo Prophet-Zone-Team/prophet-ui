@@ -9,6 +9,15 @@ export interface MarketSnapshotCollectionResult {
   source: StoredMarketDataSource;
   capturedAt: string;
   count: number;
+  universe?: {
+    marketCount: number;
+    trackedMarketCount: number;
+    canonicalTeamCount: number;
+    totalVolume: number;
+    volume24h: number;
+    liquidity: number;
+    missingTeamCount: number;
+  };
 }
 
 export async function collectMarketSnapshots(source: MarketDataSource): Promise<MarketSnapshotCollectionResult> {
@@ -21,6 +30,7 @@ export async function collectMarketSnapshots(source: MarketDataSource): Promise<
     includeFootballContext: false,
     includeHistory: false,
     includeNews: false,
+    preferStored: false,
   });
 
   if (data.meta.source === "mock") {
@@ -46,10 +56,30 @@ export async function collectMarketSnapshots(source: MarketDataSource): Promise<
   const repository = await getMarketHistoryRepository();
   await repository.appendSnapshots(records);
 
+  if (data.universe) {
+    await repository.appendUniverseSnapshot({
+      id: `${historySource}:${capturedAt}`,
+      source: historySource,
+      capturedAt,
+      ...data.universe,
+    });
+  }
+
   return {
     source: historySource,
     capturedAt,
     count: records.length,
+    universe: data.universe
+      ? {
+          marketCount: data.universe.marketCount,
+          trackedMarketCount: data.universe.trackedMarketCount,
+          canonicalTeamCount: data.universe.canonicalTeamCount,
+          totalVolume: data.universe.totalVolume,
+          volume24h: data.universe.volume24h,
+          liquidity: data.universe.liquidity,
+          missingTeamCount: data.universe.missingTeamIds.length,
+        }
+      : undefined,
   };
 }
 

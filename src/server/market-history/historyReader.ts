@@ -11,18 +11,35 @@ export async function attachStoredMarketHistory(data: WorldCupMarketData): Promi
   }
 
   const repository = await getMarketHistoryRepository();
-  const records = await repository.readSnapshots({
-    source: data.meta.source,
-    days: DEFAULT_HISTORY_DAYS,
-  });
+  const source = data.meta.source;
+  const [records, universe] = await Promise.all([
+    repository.readSnapshots({
+      source,
+      days: DEFAULT_HISTORY_DAYS,
+    }),
+    repository.readLatestUniverseSnapshot(source),
+  ]);
 
-  const currentRecords = createCurrentSnapshotRecords(data.snapshots, data.meta.source, new Date().toISOString());
+  const currentRecords = createCurrentSnapshotRecords(data.snapshots, source, new Date().toISOString());
   const combinedRecords = [...records, ...currentRecords];
 
   return {
     ...data,
     snapshots: applyHistoricalChanges(data.snapshots, combinedRecords),
     probabilityHistory: createProbabilityHistory(combinedRecords),
+    universe: universe
+      ? {
+          provider: universe.provider,
+          marketCount: universe.marketCount,
+          trackedMarketCount: universe.trackedMarketCount,
+          canonicalTeamCount: universe.canonicalTeamCount,
+          totalVolume: universe.totalVolume,
+          volume24h: universe.volume24h,
+          liquidity: universe.liquidity,
+          missingTeamIds: universe.missingTeamIds,
+          unmappedMarketTitles: universe.unmappedMarketTitles,
+        }
+      : data.universe,
   };
 }
 

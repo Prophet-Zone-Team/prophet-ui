@@ -1,4 +1,4 @@
-import { mockTeams } from "../mock/teams";
+import { worldCupTeams } from "../teams/worldCupTeams";
 import { getTeamNameAliases, normalizeTeamAlias } from "../../config/team-name-aliases";
 import type { Team } from "../../types/market";
 import type {
@@ -68,7 +68,7 @@ export async function getTheOddsApiWorldCupWinnerOdds(): Promise<WorldCupWinnerO
   try {
     const marketKey = await resolveWorldCupOutrightSportKey(apiKey);
     const events = await fetchWorldCupOutrightOdds(apiKey, marketKey);
-    const odds = mapOddsEvents(events, mockTeams);
+    const odds = mapOddsEvents(events, worldCupTeams);
     const summaries = summarizeBookmakerOdds(odds);
     const lastUpdated = getLatestUpdatedAt(odds);
 
