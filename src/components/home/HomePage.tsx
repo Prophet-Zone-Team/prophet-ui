@@ -21,7 +21,6 @@ interface HomePageProps {
 }
 
 export function HomePage({ snapshots, newsEvents, dataStatus }: HomePageProps) {
-  const heatmapTeams = [...snapshots].sort((a, b) => b.market.probability - a.market.probability);
   const topMovers = getTopMovers(snapshots, 4);
   const biggestLosers = getBiggestLosers(snapshots, 4);
   const hotTeams = getHotTeams(snapshots, 4);
@@ -34,7 +33,7 @@ export function HomePage({ snapshots, newsEvents, dataStatus }: HomePageProps) {
         <DataStatusBanner meta={dataStatus} />
         <SourceDisclosure compact />
         <Hero snapshots={snapshots} hotTeams={hotTeams} dataStatus={dataStatus} />
-        <MarketHeatmap teams={heatmapTeams} source={dataStatus.source} />
+        <MarketHeatmap teams={snapshots} source={dataStatus.source} />
         <div className="grid gap-8 xl:grid-cols-2">
           <TeamSection title="Top Movers" eyebrow="24h upside repricing" teams={topMovers} source={dataStatus.source} />
           <TeamSection title="Biggest Losers" eyebrow="24h downside repricing" teams={biggestLosers} source={dataStatus.source} />
@@ -167,6 +166,8 @@ function HeroMetric({ label, value, detail }: { label: string; value: string; de
 }
 
 function MarketHeatmap({ teams, source }: { teams: TeamMarketSnapshot[]; source: MarketDataMeta["source"] }) {
+  const sortedTeams = [...teams].sort((a, b) => b.market.probability - a.market.probability);
+
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7 lg:p-8">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -185,9 +186,9 @@ function MarketHeatmap({ teams, source }: { teams: TeamMarketSnapshot[]; source:
           <span className="rounded border border-terminal-orange/40 bg-terminal-orange/10 px-3 py-2 text-terminal-orange">Heat density</span>
         </div>
       </div>
-      {teams.length > 0 ? (
+      {sortedTeams.length > 0 ? (
         <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {teams.map((snapshot) => (
+          {sortedTeams.map((snapshot) => (
             <HeatmapCell key={snapshot.team.id} snapshot={snapshot} source={source} />
           ))}
         </div>

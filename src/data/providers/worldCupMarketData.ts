@@ -1,7 +1,7 @@
 import { mockDataProvider } from "./mockDataProvider";
 import { polymarketDataProvider } from "./polymarketDataProvider";
 import { kalshiDataProvider } from "./kalshiDataProvider";
-import { getMarketDataSourceLabel } from "./source";
+import { DEFAULT_MARKET_DATA_SOURCE, getMarketDataSourceLabel, normalizeMarketDataSource } from "./source";
 import type { MarketDataSource, WorldCupMarketData, WorldCupMarketDataOptions } from "./types";
 import { getNewsImpactForSnapshots } from "../news/newsImpact";
 import { getApiFootballContext } from "../football/apiFootballProvider";
@@ -16,41 +16,74 @@ import type {
   TeamMarketSnapshot,
 } from "../../types/market";
 
+const MARKET_DATA_CACHE_TTL_MS = 60_000;
+const LIVE_MARKET_DATA_CACHE_TTL_MS = 60_000;
+const marketDataCache = new Map<string, { data: WorldCupMarketData; expiresAt: number }>();
+const liveMarketDataCache = new Map<string, { data: WorldCupMarketData; expiresAt: number }>();
+
 export async function getWorldCupMarketData(options: WorldCupMarketDataOptions = {}): Promise<WorldCupMarketData> {
+  const cacheKey = getMarketDataCacheKey(options);
+  const cached = marketDataCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cloneMarketData(withCachedStatus(cached.data));
+  }
+
   const data = await getLiveWorldCupMarketData(options);
   const dataWithOdds = options.includeOdds === false ? data : await attachBookmakerOdds(data);
   const dataWithHistory = options.includeHistory === false ? dataWithOdds : await attachStoredMarketHistory(dataWithOdds);
+  let result: WorldCupMarketData;
 
   if (options.includeNews === false || dataWithHistory.meta.source === "mock") {
-    return options.includeFootballContext === false
+    result = options.includeFootballContext === false
       ? dataWithHistory
-      : attachFootballContext(dataWithHistory, options.footballContextTeamIds);
+      : await attachFootballContext(dataWithHistory, options.footballContextTeamIds);
+  } else {
+    const dataWithNews = await attachNewsImpact(dataWithHistory);
+
+    result = options.includeFootballContext === false
+      ? dataWithNews
+      : await attachFootballContext(dataWithNews, options.footballContextTeamIds);
   }
 
-  const dataWithNews = await attachNewsImpact(dataWithHistory);
+  marketDataCache.set(cacheKey, {
+    data: cloneMarketData(result),
+    expiresAt: Date.now() + MARKET_DATA_CACHE_TTL_MS,
+  });
 
-  return options.includeFootballContext === false
-    ? dataWithNews
-    : attachFootballContext(dataWithNews, options.footballContextTeamIds);
+  return result;
 }
 
 export async function getLiveWorldCupMarketData(options: WorldCupMarketDataOptions = {}): Promise<WorldCupMarketData> {
-  const source = options.source ?? "composite";
+  const source = normalizeMarketDataSource(options.source);
+  const cacheKey = source;
+  const cached = liveMarketDataCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cloneMarketData(withCachedStatus(cached.data));
+  }
 
   if (source === "mock") {
     return mockDataProvider.getWorldCupMarketData();
   }
 
   try {
+    let data: WorldCupMarketData;
+
     if (source === "kalshi") {
-      return await kalshiDataProvider.getWorldCupMarketData();
+      data = await kalshiDataProvider.getWorldCupMarketData();
+    } else if (source === "polymarket") {
+      data = await polymarketDataProvider.getWorldCupMarketData();
+    } else {
+      data = await getCompositeWorldCupMarketData();
     }
 
-    if (source === "polymarket") {
-      return await polymarketDataProvider.getWorldCupMarketData();
-    }
+    liveMarketDataCache.set(cacheKey, {
+      data: cloneMarketData(data),
+      expiresAt: Date.now() + LIVE_MARKET_DATA_CACHE_TTL_MS,
+    });
 
-    return await getCompositeWorldCupMarketData();
+    return data;
   } catch (error) {
     return getFallbackMarketData(source, error);
   }
@@ -436,4 +469,70 @@ function deriveSentiment(change24h: number): MarketSentiment {
 
 function isSnapshot(value: TeamMarketSnapshot | undefined): value is TeamMarketSnapshot {
   return Boolean(value);
+}
+
+function getMarketDataCacheKey(options: WorldCupMarketDataOptions) {
+  return JSON.stringify({
+    source: normalizeMarketDataSource(options.source),
+    includeHistory: options.includeHistory !== false,
+    includeNews: options.includeNews !== false,
+    includeFootballContext: options.includeFootballContext !== false,
+    includeOdds: options.includeOdds !== false,
+    footballContextTeamIds: [...(options.footballContextTeamIds ?? [])].sort(),
+  });
+}
+
+function withCachedStatus(data: WorldCupMarketData): WorldCupMarketData {
+  return {
+    ...data,
+    meta: {
+      ...data.meta,
+      status: data.meta.status === "live" ? "cached" : data.meta.status,
+    },
+  };
+}
+
+function cloneMarketData(data: WorldCupMarketData): WorldCupMarketData {
+  return {
+    ...data,
+    snapshots: data.snapshots.map((snapshot) => ({
+      team: { ...snapshot.team },
+      market: {
+        ...snapshot.market,
+        polymarket: snapshot.market.polymarket
+          ? {
+              ...snapshot.market.polymarket,
+              tokens: {
+                yes: snapshot.market.polymarket.tokens.yes
+                  ? { ...snapshot.market.polymarket.tokens.yes }
+                  : undefined,
+                no: snapshot.market.polymarket.tokens.no
+                  ? { ...snapshot.market.polymarket.tokens.no }
+                  : undefined,
+              },
+              fee: snapshot.market.polymarket.fee ? { ...snapshot.market.polymarket.fee } : undefined,
+            }
+          : undefined,
+      },
+    })),
+    newsEvents: data.newsEvents.map((event) => ({ ...event })),
+    probabilityHistory: data.probabilityHistory.map((point) => ({ ...point })),
+    footballContext: data.footballContext.map((profile) => ({ ...profile })),
+    footballTeamContext: data.footballTeamContext.map((context) => ({
+      ...context,
+      profile: { ...context.profile },
+      fixtures: context.fixtures.map((fixture) => ({ ...fixture })),
+      squad: context.squad.map((player) => ({ ...player })),
+      injuries: context.injuries.map((injury) => ({ ...injury })),
+      standings: context.standings.map((standing) => ({ ...standing })),
+      odds: context.odds.map((odds) => ({ ...odds })),
+      dataIssues: context.dataIssues.map((issue) => ({ ...issue })),
+    })),
+    meta: {
+      ...data.meta,
+      news: data.meta.news ? { ...data.meta.news } : undefined,
+      football: data.meta.football ? { ...data.meta.football } : undefined,
+      odds: data.meta.odds ? { ...data.meta.odds } : undefined,
+    },
+  };
 }

@@ -3,7 +3,7 @@ import type { MarketDataSource } from "../../data/providers/types";
 import { getMarketHistoryRepository } from "./repository";
 import type { MarketSnapshotRecord, StoredMarketDataSource } from "./types";
 
-const COLLECTABLE_SOURCES: StoredMarketDataSource[] = ["polymarket", "kalshi", "composite"];
+const COLLECTABLE_SOURCES: StoredMarketDataSource[] = ["polymarket"];
 
 export interface MarketSnapshotCollectionResult {
   source: StoredMarketDataSource;

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { parseMarketDataSource } from "../../../../../data/providers/source";
+import { isEnabledMarketDataSource, parseMarketDataSource } from "../../../../../data/providers/source";
 import { collectAllMarketSnapshots, collectMarketSnapshots } from "../../../../../server/market-history/collector";
 
 export const dynamic = "force-dynamic";
@@ -17,12 +17,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ mode: "all", results });
   }
 
-  const source = parseMarketDataSource(sourceParam);
-
-  if (source === "mock") {
-    return NextResponse.json({ error: "Mock data cannot be collected into market history." }, { status: 400 });
+  if (!isEnabledMarketDataSource(sourceParam)) {
+    return NextResponse.json({ error: "Only Polymarket market snapshots are currently enabled." }, { status: 400 });
   }
 
+  const source = parseMarketDataSource(sourceParam);
   const result = await collectMarketSnapshots(source);
 
   return NextResponse.json(result);

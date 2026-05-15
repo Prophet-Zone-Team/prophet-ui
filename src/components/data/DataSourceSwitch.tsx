@@ -4,6 +4,10 @@ import { getMarketDataSourceLabel, VISIBLE_MARKET_DATA_SOURCES } from "../../dat
 import type { MarketDataSource } from "../../data/providers/types";
 
 export function DataSourceSwitch({ selectedSource }: { selectedSource: MarketDataSource }) {
+  if (VISIBLE_MARKET_DATA_SOURCES.length <= 1) {
+    return null;
+  }
+
   return (
     <nav
       aria-label="Market data source"
