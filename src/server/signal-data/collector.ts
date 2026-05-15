@@ -13,6 +13,8 @@ import { getSignalDataRepository } from "./repository";
 const NEWS_LOOKBACK_DAYS = 30;
 const MAX_ARTICLES_PER_TEAM = 12;
 const API_FOOTBALL_TEAMS_PER_RUN = 4;
+const GDELT_TEAM_BATCHES_PER_RUN = 2;
+const GDELT_TEAMS_PER_QUERY = 6;
 
 export interface SignalDataCollectionResult {
   source: "gdelt" | "api-football";
@@ -53,10 +55,13 @@ async function collectGdeltArticlesInBatches(queries: TeamNewsQuery[]): Promise<
 }> {
   const articles: NewsArticle[] = [];
   const errors: string[] = [];
+  const selectedQueries = getRotatingBatch(queries, new Date().toISOString(), GDELT_TEAMS_PER_QUERY, GDELT_TEAM_BATCHES_PER_RUN);
 
-  for (const batch of chunkArray(queries, 6)) {
+  for (const batch of chunkArray(selectedQueries, GDELT_TEAMS_PER_QUERY)) {
     try {
-      const batchArticles = (await Promise.all(batch.map((query) => gdeltNewsProvider.searchRecentTeamNews(query)))).flat();
+      const batchArticles = gdeltNewsProvider.searchRecentWorldCupNews
+        ? await gdeltNewsProvider.searchRecentWorldCupNews(batch)
+        : (await Promise.all(batch.map((query) => gdeltNewsProvider.searchRecentTeamNews(query)))).flat();
       articles.push(...batchArticles);
     } catch (error) {
       errors.push(getErrorMessage(error));
@@ -156,18 +161,10 @@ function createExpandedTeamNewsQuery(team: Team): TeamNewsQuery | undefined {
 }
 
 function getApiFootballBatch(collectedAt: string): typeof apiFootballTeamConfig {
-  if (apiFootballTeamConfig.length <= API_FOOTBALL_TEAMS_PER_RUN) {
-    return apiFootballTeamConfig;
-  }
+  const teamIds = new Set(worldCupTeams.map((team) => team.id));
+  const activeConfigs = apiFootballTeamConfig.filter((config) => teamIds.has(config.teamId));
 
-  const date = new Date(collectedAt);
-  const tenMinuteBucket = Math.floor(date.getUTCMinutes() / 10);
-  const dayBucket = Math.floor(date.getTime() / 86_400_000);
-  const start = ((dayBucket * 6 + tenMinuteBucket) * API_FOOTBALL_TEAMS_PER_RUN) % apiFootballTeamConfig.length;
-
-  return Array.from({ length: API_FOOTBALL_TEAMS_PER_RUN }, (_, index) => {
-    return apiFootballTeamConfig[(start + index) % apiFootballTeamConfig.length];
-  });
+  return getRotatingBatch(activeConfigs, collectedAt, API_FOOTBALL_TEAMS_PER_RUN, 1);
 }
 
 function capArticlesPerTeam(articles: NewsArticle[]): NewsArticle[] {
@@ -206,6 +203,21 @@ function chunkArray<T>(items: T[], size: number): T[][] {
   }
 
   return chunks;
+}
+
+function getRotatingBatch<T>(items: T[], collectedAt: string, perBatch: number, batchCount: number): T[] {
+  if (items.length <= perBatch * batchCount) {
+    return items;
+  }
+
+  const date = new Date(collectedAt);
+  const tenMinuteBucket = Math.floor(date.getUTCMinutes() / 10);
+  const dayBucket = Math.floor(date.getTime() / 86_400_000);
+  const runBucket = dayBucket * 144 + date.getUTCHours() * 6 + tenMinuteBucket;
+  const count = Math.min(items.length, perBatch * batchCount);
+  const start = (runBucket * count) % items.length;
+
+  return Array.from({ length: count }, (_, index) => items[(start + index) % items.length]);
 }
 
 function isTeamNewsQuery(query: TeamNewsQuery | undefined): query is TeamNewsQuery {

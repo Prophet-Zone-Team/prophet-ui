@@ -22,6 +22,16 @@ export { DOQueueHandler, DOShardedTagCache };
 
 function attachBindingsToGlobalScope(env) {
   globalThis.MARKET_HISTORY_DB = env.MARKET_HISTORY_DB;
+
+  if (!globalThis.process?.env) {
+    return;
+  }
+
+  for (const [key, value] of Object.entries(env)) {
+    if (typeof value === "string") {
+      globalThis.process.env[key] = value;
+    }
+  }
 }
 
 async function runScheduledCollection() {
