@@ -1,17 +1,17 @@
 # World Cup Prediction Terminal Progress
 
-Last updated: 2026-05-14 00:42 CST
+Last updated: 2026-05-16 10:07 CST
 
 ## Priority Status
 
 - Priority 1, Data Provider Architecture:
-  completed for the current Polymarket-only product surface. The app now uses a 48-team World Cup registry, hides Kalshi/composite, stores Polymarket team snapshots plus market-universe totals in D1/local history, and prefers fresh stored Polymarket snapshots before falling back to live provider reads.
+  completed for the current Polymarket-only product surface. The app now uses a 48-team World Cup registry, hides Kalshi/composite from the user-facing UI, stores Polymarket team snapshots plus market-universe totals in D1/local history, and prefers fresh stored Polymarket snapshots before falling back to live provider reads. Remaining cleanup: `GET /api/system/health` still includes stale historical Kalshi/composite rows and should filter health to enabled sources.
 - Priority 2, Data Freshness and Source Disclosure:
-  completed for the current product surface. Shared data banner, source disclosure, source-preserving links, and status metadata cover market, odds, news, and football context.
+  mostly completed for the current product surface. Shared data banner, source disclosure, source-preserving links, and status metadata cover market, odds, news, and football context. Remaining work: health should report The Odds API status explicitly, and GDELT/news empty or rate-limited states need clearer product copy.
 - Priority 3, Market Signal System:
   completed v2. Signals cover `heating_up`, `cooling_down`, `volume_spike`, `odds_mismatch`, `sentiment_driven`, `news_impact`, `overheated`, and `quiet_accumulation`.
 - Priority 4, Embedded User Trading:
-  in progress. The product direction has moved to real user-owned Polymarket trading. The legacy `/api/bid/orders` server-wallet path is tombstoned and no longer reads deployment private keys or CLOB credentials. `/bid` is now a single-path user-owned trade ticket with wallet session, automatic Polymarket account/deposit-wallet derivation, account preparation, Polymarket Bridge deposit-address generation, wallet-initiated Polygon USDC deposit, Polymarket geoblock readiness, user L1 auth credential derivation, deposit-wallet approval signing/submission, CLOB balance/allowance sync, order-specific readiness checks, user order signing, final confirmation, open-order reads, and cancellation. The submit endpoint re-validates signed-order ownership, signature type 3, token funding requirements, and balance/allowance before posting to CLOB. Production broad release remains blocked until app-managed relayer credentials for first-time user deposit-wallet deployment/approvals, eligible-wallet validation, durable user session/credential storage, positions, order persistence, audit logging, and production hardening are complete.
+  in progress. The product direction has moved to real user-owned Polymarket trading. The legacy `/api/bid/orders` server-wallet path is tombstoned and no longer reads deployment private keys or CLOB credentials. `/bid` is now a single-path user-owned trade ticket with wallet session, automatic Polymarket account/deposit-wallet derivation, account preparation, Polymarket Bridge deposit-address generation, wallet-initiated Polygon USDC deposit, Polymarket geoblock readiness, user L1 auth credential derivation, deposit-wallet approval signing/submission, CLOB balance/allowance sync, order-specific readiness checks, user order signing, final confirmation, open-order reads, and cancellation. The submit endpoint re-validates signed-order ownership, signature type 3, token funding requirements, and balance/allowance before posting to CLOB. Production broad release remains blocked until durable user session/credential handling, submitted order persistence, positions, audit logging, multi-wallet QA, production geoblock validation, and a documented small-order production regression test are complete.
 - Priority 5, Daily Brief and Watchlist Alerts:
   completed for local/browser scope. `/brief`, Markdown export, and local watchlist alerts are implemented.
 
@@ -25,11 +25,11 @@ Last updated: 2026-05-14 00:42 CST
 - Read-only market providers implemented:
   Polymarket is the active product source. Kalshi/composite implementations remain hidden from the product surface, and mock fallback remains for development/error states.
 - Historical D1 snapshot system implemented:
-  schema, repository, collector, read API, collect API, OpenNext Worker cron, market-universe snapshots, and DB-first Polymarket page reads.
+  schema, repository, collector, read API, collect API, OpenNext Worker cron, market-universe snapshots, and DB-first Polymarket page reads. Remote D1 schema is applied in production.
 - GDELT news collection implemented:
-  provider, D1 cache, signal collection route, and news impact mapping.
+  provider, D1 cache, signal collection route, news impact mapping, and lower-volume rotating batch collection. Production is still rate-limited by GDELT HTTP 429.
 - API-Football context collection implemented:
-  team profile, fixtures, squad, injuries, standings, fixture odds, D1 cache, and rotating collection batches.
+  team profile, fixtures, squad, injuries, standings, fixture odds, D1 cache, rotating collection batches, and quota/error surfacing in health. Production collection is currently one team per 10-minute cron to avoid exhausting request limits too quickly.
 - Signal collection run tracking implemented:
   D1 records the last GDELT/API-Football collection status, count, and errors for health checks.
 - The Odds API provider implemented:
@@ -37,7 +37,7 @@ Last updated: 2026-05-14 00:42 CST
 - Cloudflare Worker runtime vars configured:
   `THE_ODDS_API_WORLD_CUP_SPORT_KEY=soccer_fifa_world_cup_winner` and `THE_ODDS_API_REGIONS=us,uk,eu`.
 - System health endpoint implemented:
-  `GET /api/system/health` reports market snapshot freshness plus news and football cache health.
+  `GET /api/system/health` reports market snapshot freshness, Polymarket market-universe freshness, news cache health, and football cache health. Remaining cleanup: market snapshot health should only include enabled Polymarket sources, not stale hidden Kalshi/composite snapshots.
 - CI/Lint baseline implemented:
   `npm run lint`, ESLint flat config, and GitHub Actions workflow running install, lint, typecheck, and build.
 - Latest local `main` commits have been pushed to GitHub.
@@ -47,42 +47,52 @@ Last updated: 2026-05-14 00:42 CST
   legacy `/api/bid/orders` now returns a tombstone status for GET and `410` for POST, the server-wallet order client has been removed, `/api/trading/session`, `/api/trading/deposit`, `/api/trading/credentials`, `/api/trading/eligibility`, `/api/trading/readiness`, `/api/trading/approvals`, `/api/trading/balance-sync`, `/api/trading/orders`, `/api/trading/orders/open`, and `/api/trading/orders/cancel` are implemented, and `/bid` is a Trade Ticket with user-owned wallet/signing/order-management flow only. The visible setup is collapsed into `Prepare account`, which derives user CLOB credentials, generates a Polymarket Bridge deposit address, submits deposit-wallet approvals when needed, and syncs CLOB balance/allowance. The deposit panel now supports a user-confirmed Polygon USDC transfer from the connected wallet to the generated Bridge deposit address, then refreshes readiness after the transaction is observed. Session creation derives the deposit wallet from the connected wallet and can deploy it through the Polymarket relayer only when the configured relayer auth matches the connected wallet or app-managed Builder API credentials are configured. Readiness now checks the current ticket's token, side, cost, and size; submission re-checks signed-order ownership plus balance/allowance before CLOB post.
 - Production deployment exists at:
   [https://wc.dolla.market](https://wc.dolla.market)
+- Production Cloudflare deployment updated on 2026-05-15:
+  remote D1 schema applied, trading-related Worker secrets configured, scheduled Worker env propagation fixed, GDELT request volume reduced, API-Football quota errors surfaced, and latest `main` pushed to GitHub.
 
 ## Production Check
 
-Checked on 2026-05-13:
+Checked on 2026-05-16 10:07 CST:
 
-- Remote D1 `market_snapshots` is receiving cron data.
-- Latest observed market snapshot timestamps:
-  `2026-05-13T04:00Z` to `2026-05-13T04:01Z` for composite, Kalshi, and Polymarket.
-- Production `GET /api/system/health` returned `marketSnapshots.status: ok` with latest source age around 3 minutes.
-- Production homepage and team detail returned `Live Composite data / 5 bookmaker prices`, confirming The Odds API is configured and serving bookmaker prices.
-- Remote D1 `news_articles` still had 0 rows; GDELT collection is returning HTTP 429 and timeout errors and remains the main data issue.
-- Remote D1 `football_team_context` is filling; the latest health check showed 17 cached teams and an ok API-Football collection run.
-- Cloudflare secrets currently list `API_FOOTBALL_KEY`, `MARKET_COLLECTOR_SECRET`, and `THE_ODDS_API_KEY`.
-- Production `GET /api/bid/orders` returned `enabled:false`; after the next deploy this route should remain a tombstone while user order actions use `/api/trading/*`.
+- Remote D1 `market_snapshots` is receiving fresh Polymarket cron data.
+- Production `GET /api/market/universe` returned `status: ok`, `marketCount: 48`, `trackedMarketCount: 48`, `missingTeamIds: 0`, and `unmappedMarketTitles: 0`.
+- Latest observed Polymarket universe snapshot:
+  `2026-05-16T02:00:53.623Z`, age around 6 minutes at check time.
+- Production Polymarket universe totals at check time:
+  total volume about `983.95M`, 24h volume about `10.46M`, liquidity about `233.71M`.
+- Production homepage includes `48 / 48` and hides Kalshi/composite from the user-facing surface.
+- Production `GET /api/system/health` currently reports `marketSnapshots.status: stale` only because hidden stale `composite` and `kalshi` rows remain in health calculations. Polymarket itself is fresh and `marketUniverse.status` is `ok`.
+- GDELT remains the main live data issue:
+  latest news cache was last updated at `2026-05-15T09:40:45.425Z`, and the latest run returned two HTTP 429 errors.
+- API-Football cron is running again:
+  latest run at `2026-05-16T02:01:10.228Z` returned `count: 1`, `status: ok`. Cached football context currently covers 24 teams, not all 48.
+- API-Football dimensions such as squads, injuries, standings, and odds are implemented but constrained by plan limits, season availability, fixture availability, and daily request quota.
+- Production trading config endpoint can read Builder configuration. Real user-owned trading MVP is deployed, but broad production release still needs the hardening tasks listed below.
 
 ## Pending
 
 ### Product Todo
 
-- Execute the embedded user trading plan in [EMBEDDED_TRADING_PLAN.md](/Users/joezhu/Sites/wc/docs/EMBEDDED_TRADING_PLAN.md).
 - Continue hardening the user-owned trading flow:
-  app-managed relayer credentials for first-time user setup, eligible-wallet production validation, durable login/session, encrypted or per-session credential handling, submitted order persistence/status, positions, audit logging, and production monitoring.
+  durable login/session, encrypted or per-session credential handling, submitted order persistence/status, positions, audit logging, production monitoring, multi-wallet QA, and documented small-order production regression tests.
+- Add an order history and positions view backed by persisted user-owned order state, including cancel/status refresh paths.
+- Validate the production geoblock and eligibility flow from allowed and blocked regions.
 - Calibrate `odds_mismatch` once real bookmaker outright odds are flowing.
 - Add user-configurable alert thresholds per watched team.
 - Add persistent or server-side alerts if the product needs reminders outside the browser.
-- Add clearer provider coverage notes when Polymarket or Kalshi return fewer World Cup markets.
+- Add clearer provider coverage notes when Polymarket, GDELT, API-Football, or The Odds API data is limited, stale, or unavailable.
 - Add stronger empty states for unavailable GDELT/news context while the collector is rate-limited.
 
 ### Operations Todo
 
-- Investigate current GDELT collection errors from `GET /api/system/health`; latest errors are HTTP 429 and request aborts.
+- Fix `GET /api/system/health` so market snapshot health only evaluates enabled sources. Hidden stale Kalshi/composite rows should not make the product health stale.
+- Continue GDELT mitigation:
+  reduce request frequency further, add exponential backoff/circuit breaking after 429, cache successful batches longer, and evaluate a backup news provider if GDELT remains unreliable.
+- Continue API-Football coverage work:
+  let the one-team-per-cron collector fill all 48 teams, add a coverage report by team/dimension, and decide whether the current API-Football plan is sufficient for squads, injuries, standings, and odds.
 - Choose the production user authentication/wallet stack beyond the current injected-wallet MVP.
 - Decide whether user CLOB API credentials remain session-only or become encrypted and stored server-side.
-- Validate the Polymarket geoblock flow from deploy regions and document behavior; local smoke test returned `blocked_region` for SG, and submit/cancel now block non-eligible sessions.
 - Add secure storage and audit logging design for user-specific trading credentials.
-- Use `GET /api/system/health` after deploy to verify cron freshness without querying D1 manually.
 - Add Cloudflare deploy automation if deployments should happen automatically from CI.
 - Add cron failure alerts beyond console logging.
 - Add health coverage for The Odds API status so odds health is visible without scraping rendered pages.
