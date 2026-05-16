@@ -373,13 +373,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
 
       if (failedAllowance && currentReadiness.session?.depositWalletStatus === "deployed") {
         await approveTradingContracts();
-        await syncBalances();
-        currentReadiness = await loadReadiness(readinessFromPreview(preview), {
-          onReadiness: setReadiness,
-          onSession: setTradingSession,
-          onCredentials: setCredentialStatus,
-          onFunderAddress: setFunderAddress,
-        });
+        currentReadiness = await syncBalancesUntilAllowanceReady();
       }
 
       if (failedAllowance && currentReadiness.session?.depositWalletStatus !== "deployed") {
@@ -571,12 +565,15 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         onFunderAddress: setFunderAddress,
       });
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
       setApprovalState("error");
-      setWalletMessage(error instanceof Error ? error.message : String(error));
+      setWalletMessage(message);
+      throw new Error(message);
     }
   }
 
-  async function syncBalances() {
+  async function syncBalances(): Promise<UserTradingReadiness | undefined> {
     setApprovalState("syncing");
     setWalletMessage(undefined);
 
@@ -596,17 +593,47 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       }
 
       setApprovalState("synced");
-      setWalletMessage(`Balance and allowance cache synced at ${payload.syncedAt ?? new Date().toISOString()}.`);
-      await loadReadiness(readinessFromPreview(preview), {
+      const refreshedReadiness = await loadReadiness(readinessFromPreview(preview), {
         onReadiness: setReadiness,
         onSession: setTradingSession,
         onCredentials: setCredentialStatus,
         onFunderAddress: setFunderAddress,
       });
+      const allowanceCheck = refreshedReadiness.checks.find((check) => check.id === "allowance");
+
+      setWalletMessage(
+        allowanceCheck?.status === "fail"
+          ? `Balance synced, but trading approval is still required: ${allowanceCheck.detail}`
+          : `Balance and allowance cache synced at ${payload.syncedAt ?? new Date().toISOString()}.`,
+      );
+
+      return refreshedReadiness;
     } catch (error) {
       setApprovalState("error");
       setWalletMessage(error instanceof Error ? error.message : String(error));
+
+      return undefined;
     }
+  }
+
+  async function syncBalancesUntilAllowanceReady() {
+    let latestReadiness = await syncBalances();
+
+    for (let attempt = 0; attempt < 3 && latestReadiness?.checks.some(isFailedAllowanceCheck); attempt += 1) {
+      setWalletMessage("Approval submitted. Waiting for Polymarket allowance to update...");
+      await delay(5000);
+      latestReadiness = await syncBalances();
+    }
+
+    return (
+      latestReadiness ??
+      (await loadReadiness(readinessFromPreview(preview), {
+        onReadiness: setReadiness,
+        onSession: setTradingSession,
+        onCredentials: setCredentialStatus,
+        onFunderAddress: setFunderAddress,
+      }))
+    );
   }
 
   async function refreshAccountReadiness() {
@@ -1286,6 +1313,10 @@ function UserTradingSetup({
       (!readiness?.credentials.hasClobCredentials ||
         readiness.checks.some((check) => check.status !== "pass" && check.id !== "balance")),
   );
+  const needsTradingApproval = Boolean(
+    readiness?.credentials.hasClobCredentials && readiness.checks.some(isFailedAllowanceCheck),
+  );
+  const setupButtonLabel = needsTradingApproval ? "Approve trading" : "Enable trading";
   const refreshLabel = readiness?.credentials.hasClobCredentials ? "Sync balances" : "Refresh";
   const showDeposit = Boolean(
     session &&
@@ -1358,7 +1389,7 @@ function UserTradingSetup({
                   : credentialState === "signing"
                     ? "Sign to enable..."
                     : "Enabling trading..."
-                : "Enable trading"}
+                : setupButtonLabel}
             </button>
           ) : (
             <button
@@ -2332,4 +2363,8 @@ function getOrderStatusClassName(status: UserOrderRecord["status"]) {
 function formatSignedMoney(value: number) {
   const sign = value >= 0 ? "+" : "-";
   return `${sign}$${Math.abs(value).toFixed(2)}`;
+}
+
+function isFailedAllowanceCheck(check: UserTradingReadiness["checks"][number]) {
+  return check.id === "allowance" && check.status !== "pass";
 }
