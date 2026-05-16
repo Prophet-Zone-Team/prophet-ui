@@ -609,6 +609,20 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     }
   }
 
+  async function refreshAccountReadiness() {
+    if (readiness?.credentials.hasClobCredentials) {
+      await syncBalances();
+      return;
+    }
+
+    await loadReadiness(readinessFromPreview(preview), {
+      onReadiness: setReadiness,
+      onSession: setTradingSession,
+      onCredentials: setCredentialStatus,
+      onFunderAddress: setFunderAddress,
+    });
+  }
+
   async function depositFunds() {
     setDepositTxState("switching");
     setWalletMessage(undefined);
@@ -1062,14 +1076,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
                   onPrepareAccount={prepareAccount}
                   onDepositAmountChange={setDepositAmount}
                   onDepositFunds={depositFunds}
-                  onRefresh={() =>
-                    void loadReadiness(readinessFromPreview(preview), {
-                      onReadiness: setReadiness,
-                      onSession: setTradingSession,
-                      onCredentials: setCredentialStatus,
-                      onFunderAddress: setFunderAddress,
-                    })
-                  }
+                  onRefresh={() => void refreshAccountReadiness()}
                   canSubmitOrder={Boolean(canSubmitUserOrder)}
                   submitState={submitState}
                 />
@@ -1279,6 +1286,7 @@ function UserTradingSetup({
       (!readiness?.credentials.hasClobCredentials ||
         readiness.checks.some((check) => check.status !== "pass" && check.id !== "balance")),
   );
+  const refreshLabel = readiness?.credentials.hasClobCredentials ? "Sync balances" : "Refresh";
   const showDeposit = Boolean(
     session &&
       (accountPrepState === "needs_funds" ||
@@ -1304,7 +1312,7 @@ function UserTradingSetup({
           onClick={onRefresh}
           className="rounded border border-terminal-line px-3 py-2 text-xs text-terminal-muted transition hover:border-terminal-cyan hover:text-terminal-cyan"
         >
-          Refresh
+          {refreshLabel}
         </button>
       </div>
 
@@ -1359,7 +1367,7 @@ function UserTradingSetup({
               disabled={!session || submitState === "submitting"}
               className="rounded border border-terminal-line px-4 py-3 text-sm font-semibold text-terminal-muted transition hover:border-terminal-cyan hover:text-terminal-cyan disabled:cursor-not-allowed disabled:border-terminal-line disabled:bg-terminal-panel2 disabled:text-terminal-muted"
             >
-              Refresh account
+              {refreshLabel}
             </button>
           )}
         </div>
