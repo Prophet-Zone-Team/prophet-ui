@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recoverTypedDataAddress } from "viem";
 
 import { buildTradingApprovalBatch, type DepositWalletBatchSignablePayload } from "../../../../lib/market/depositWalletBatch";
 import { getTradingChainId } from "../../../../server/trading/clobAuth";
@@ -128,13 +129,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: approvalMismatch }, { status: 409 });
     }
 
+    const recoveredAddress = await recoverTypedDataAddress({
+      domain: submittedApproval?.domain ?? {},
+      types: submittedApproval?.types ?? {},
+      primaryType: submittedApproval?.primaryType ?? "Batch",
+      message: submittedApproval?.message ?? {},
+      signature: payload.signature as `0x${string}`,
+    });
+
+    if (recoveredAddress.toLowerCase() !== record.session.walletAddress.toLowerCase()) {
+      return NextResponse.json(
+        {
+          error: `Approval signature recovered ${recoveredAddress}, which does not match connected wallet ${record.session.walletAddress}. Disable conflicting wallet extensions and reconnect the intended wallet.`,
+        },
+        { status: 400 },
+      );
+    }
+
     const requestBody = JSON.stringify(
       buildDepositWalletBatchRequest({
         ownerAddress: record.session.walletAddress,
-        walletAddress: record.session.funderAddress,
-        nonce: submittedApproval?.nonce ?? "",
-        deadline: submittedApproval?.deadline ?? "",
-        calls: submittedApproval?.calls ?? [],
+        walletAddress: submittedApproval?.message.wallet ?? "",
+        nonce: submittedApproval?.message.nonce ?? "",
+        deadline: submittedApproval?.message.deadline ?? "",
+        calls: submittedApproval?.message.calls ?? [],
         signature: payload.signature ?? "",
       }),
     );
@@ -188,6 +206,15 @@ function validateSubmittedApproval(
 
   if (normalizeApprovalCalls(submittedApproval.calls) !== normalizeApprovalCalls(expectedApproval.calls)) {
     return "Signed approval calls changed. Refresh and approve trading again.";
+  }
+
+  if (
+    submittedApproval.message.wallet.toLowerCase() !== submittedApproval.walletAddress.toLowerCase() ||
+    submittedApproval.message.nonce !== submittedApproval.nonce ||
+    submittedApproval.message.deadline !== submittedApproval.deadline ||
+    normalizeApprovalCalls(submittedApproval.message.calls) !== normalizeApprovalCalls(submittedApproval.calls)
+  ) {
+    return "Signed approval message does not match approval payload. Refresh and approve trading again.";
   }
 
   return undefined;
