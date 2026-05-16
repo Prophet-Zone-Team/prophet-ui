@@ -312,7 +312,7 @@ function getDepositWalletContractConfig() {
   return config;
 }
 
-async function fetchRelayerTransaction(transactionId: string): Promise<RelayerTransactionRecord | undefined> {
+export async function fetchRelayerTransaction(transactionId: string): Promise<RelayerTransactionRecord | undefined> {
   const url = new URL(`${getRelayerUrl()}/transaction`);
   url.searchParams.set("id", transactionId);
   const response = await fetch(url, {

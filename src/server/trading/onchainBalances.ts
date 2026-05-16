@@ -36,12 +36,18 @@ export async function fetchOnchainCollateralSnapshot(funderAddress: string): Pro
     });
     const owner = funderAddress as Address;
     const collateral = contracts.collateralToken as Address;
-    const [balance, exchangeAllowance, negRiskExchangeAllowance] = await Promise.all([
+    const [balance, conditionalTokensAllowance, exchangeAllowance, negRiskExchangeAllowance] = await Promise.all([
       client.readContract({
         address: collateral,
         abi: erc20Abi,
         functionName: "balanceOf",
         args: [owner],
+      }),
+      client.readContract({
+        address: collateral,
+        abi: erc20Abi,
+        functionName: "allowance",
+        args: [owner, contracts.conditionalTokens as Address],
       }),
       client.readContract({
         address: collateral,
@@ -59,7 +65,7 @@ export async function fetchOnchainCollateralSnapshot(funderAddress: string): Pro
 
     return {
       usdcAvailable: atomicUsdcToNumber(balance),
-      usdcAllowance: atomicUsdcToNumber(exchangeAllowance > negRiskExchangeAllowance ? exchangeAllowance : negRiskExchangeAllowance),
+      usdcAllowance: atomicUsdcToNumber(maxBigInt([conditionalTokensAllowance, exchangeAllowance, negRiskExchangeAllowance])),
       updatedAt: new Date().toISOString(),
     };
   } catch (error) {
@@ -81,4 +87,8 @@ function getPolygonRpcUrl() {
 
 function atomicUsdcToNumber(value: bigint) {
   return Number(value) / 1_000_000;
+}
+
+function maxBigInt(values: bigint[]) {
+  return values.reduce((max, value) => (value > max ? value : max), 0n);
 }

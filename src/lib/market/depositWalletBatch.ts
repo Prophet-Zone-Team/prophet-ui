@@ -72,6 +72,10 @@ export function buildTradingApprovalBatch({
   const calls = [
     createErc20ApproveCall({
       tokenAddress: collateralToken,
+      spenderAddress: conditionalTokens,
+    }),
+    createErc20ApproveCall({
+      tokenAddress: collateralToken,
       spenderAddress: exchange,
     }),
     createErc20ApproveCall({

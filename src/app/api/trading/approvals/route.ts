@@ -4,6 +4,7 @@ import { buildTradingApprovalBatch } from "../../../../lib/market/depositWalletB
 import { getTradingChainId } from "../../../../server/trading/clobAuth";
 import {
   buildDepositWalletBatchRequest,
+  fetchRelayerTransaction,
   fetchRelayerNonce,
   submitRelayerTransaction,
 } from "../../../../server/trading/depositWallet";
@@ -41,8 +42,21 @@ export async function GET(request: Request) {
   }
 
   try {
+    const url = new URL(request.url);
+    const transactionId = url.searchParams.get("transactionId");
+
+    if (transactionId) {
+      if (!/^[A-Za-z0-9_-]+$/.test(transactionId)) {
+        return NextResponse.json({ error: "transactionId is invalid." }, { status: 400 });
+      }
+
+      return NextResponse.json({
+        transaction: await fetchRelayerTransaction(transactionId),
+      });
+    }
+
     const nonce = await fetchRelayerNonce(record.session.walletAddress);
-    const deadline = Math.floor(Date.now() / 1000 + 240).toString();
+    const deadline = Math.floor(Date.now() / 1000 + 900).toString();
 
     return NextResponse.json({
       approval: buildTradingApprovalBatch({

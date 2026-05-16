@@ -568,7 +568,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       });
       const submitPayload = (await submitResponse.json()) as {
         error?: string;
-        response?: { transactionID?: string; transactionHash?: string; hash?: string };
+        response?: { transactionID?: string; transactionHash?: string; hash?: string; state?: string };
         submittedAt?: string;
       };
 
@@ -579,17 +579,62 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       setApprovalState("submitted");
       const transactionRef =
         submitPayload.response?.transactionHash ?? submitPayload.response?.hash ?? submitPayload.response?.transactionID;
+      const failedState = getRelayerFailureState(submitPayload.response?.state);
+
+      if (failedState) {
+        throw new Error(`Account approval relayer transaction failed: ${failedState}.`);
+      }
+
       setWalletMessage(
         transactionRef
           ? `Account approval submitted (${formatHash(transactionRef)}). Waiting for on-chain confirmation...`
           : `Account approval submitted at ${submitPayload.submittedAt ?? new Date().toISOString()}.`,
       );
+
+      if (submitPayload.response?.transactionID) {
+        await waitForApprovalRelayerTransaction(submitPayload.response.transactionID);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
 
       setApprovalState("error");
       setWalletMessage(message);
       throw new Error(message);
+    }
+  }
+
+  async function waitForApprovalRelayerTransaction(transactionId: string) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      await delay(5000);
+      const response = await fetch(`/api/trading/approvals?transactionId=${encodeURIComponent(transactionId)}`, {
+        cache: "no-store",
+      });
+      const payload = (await response.json()) as {
+        error?: string;
+        transaction?: { state?: string; transactionHash?: string };
+      };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Unable to read approval transaction status.");
+      }
+
+      const state = payload.transaction?.state;
+      const failedState = getRelayerFailureState(state);
+
+      if (failedState) {
+        throw new Error(`Account approval relayer transaction failed: ${failedState}.`);
+      }
+
+      if (isRelayerSuccessState(state)) {
+        setWalletMessage(
+          payload.transaction?.transactionHash
+            ? `Account approval confirmed (${formatHash(payload.transaction.transactionHash)}). Syncing allowance...`
+            : "Account approval confirmed. Syncing allowance...",
+        );
+        return;
+      }
+
+      setWalletMessage(`Account approval is pending in Polymarket relayer... (${state ?? "unknown"})`);
     }
   }
 
@@ -1899,7 +1944,16 @@ function getUserOrderDisabledReason(
   }
 
   if (!readiness.ready) {
+    const fundingIssues = readiness.checks.filter(
+      (check) => (check.id === "balance" || check.id === "allowance") && check.status !== "pass",
+    );
+
+    if (fundingIssues.length > 0) {
+      return fundingIssues.map((check) => `${check.label}: ${check.detail}`).join(" ");
+    }
+
     const failedCheck = readiness.checks.find((check) => check.status !== "pass");
+
     return failedCheck ? `${failedCheck.label}: ${failedCheck.detail}` : "Trading readiness checks are incomplete.";
   }
 
@@ -1994,6 +2048,21 @@ function getReadinessSummary({
       detail: "Polymarket access is unavailable for the current session.",
       issue: blockingCheck.detail,
       className: `${baseClass} border-terminal-red/45 bg-terminal-red/10 text-terminal-red`,
+    };
+  }
+
+  const fundingIssues = readiness?.checks.filter(
+    (check) => (check.id === "balance" || check.id === "allowance") && check.status !== "pass",
+  ) ?? [];
+  const fundingIssueText = fundingIssues.map((check) => check.detail).join(" ");
+
+  if (fundingIssues.length > 1) {
+    return {
+      eyebrow: "Funds and approval required",
+      title: "Add funds and approve trading",
+      detail: "The order needs enough USDC and a deposit-wallet approval before it can be placed.",
+      issue: fundingIssueText,
+      className: `${baseClass} border-terminal-amber/45 bg-terminal-amber/10 text-terminal-amber`,
     };
   }
 
@@ -2412,4 +2481,12 @@ function formatSignedMoney(value: number) {
 
 function isFailedAllowanceCheck(check: UserTradingReadiness["checks"][number]) {
   return check.id === "allowance" && check.status !== "pass";
+}
+
+function isRelayerSuccessState(state: string | undefined) {
+  return state === "STATE_MINED" || state === "STATE_CONFIRMED" || state === "STATE_EXECUTED";
+}
+
+function getRelayerFailureState(state: string | undefined) {
+  return state === "STATE_FAILED" || state === "STATE_INVALID" ? state : undefined;
 }
