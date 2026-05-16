@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { buildTradingApprovalBatch } from "../../../../lib/market/depositWalletBatch";
+import { buildTradingApprovalBatch, type DepositWalletBatchSignablePayload } from "../../../../lib/market/depositWalletBatch";
 import { getTradingChainId } from "../../../../server/trading/clobAuth";
 import {
   buildDepositWalletBatchRequest,
@@ -18,6 +18,7 @@ interface ApprovalSubmitPayload {
   signature?: string;
   nonce?: string;
   deadline?: string;
+  approval?: DepositWalletBatchSignablePayload;
 }
 
 export async function GET(request: Request) {
@@ -68,6 +69,13 @@ export async function GET(request: Request) {
       }),
     });
   } catch (error) {
+    console.warn("[trading.approvals] submit failed", {
+      userId: record.session.userId,
+      walletAddress: record.session.walletAddress,
+      funderAddress: record.session.funderAddress,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : String(error),
@@ -106,20 +114,27 @@ export async function POST(request: Request) {
   }
 
   try {
-    const approval = buildTradingApprovalBatch({
+    const expectedApproval = buildTradingApprovalBatch({
       chainId: getTradingChainId(),
       walletAddress: record.session.funderAddress,
       nonce: payload.nonce ?? "",
       deadline: payload.deadline ?? "",
       ...getTradingContractAddresses(),
     });
+    const submittedApproval = payload.approval;
+    const approvalMismatch = validateSubmittedApproval(submittedApproval, expectedApproval);
+
+    if (approvalMismatch) {
+      return NextResponse.json({ error: approvalMismatch }, { status: 409 });
+    }
+
     const requestBody = JSON.stringify(
       buildDepositWalletBatchRequest({
         ownerAddress: record.session.walletAddress,
         walletAddress: record.session.funderAddress,
-        nonce: approval.nonce,
-        deadline: approval.deadline,
-        calls: approval.calls,
+        nonce: submittedApproval?.nonce ?? "",
+        deadline: submittedApproval?.deadline ?? "",
+        calls: submittedApproval?.calls ?? [],
         signature: payload.signature ?? "",
       }),
     );
@@ -153,4 +168,37 @@ function validatePayload(payload: ApprovalSubmitPayload): string | undefined {
   }
 
   return undefined;
+}
+
+function validateSubmittedApproval(
+  submittedApproval: DepositWalletBatchSignablePayload | undefined,
+  expectedApproval: DepositWalletBatchSignablePayload,
+) {
+  if (!submittedApproval) {
+    return "Missing signed approval payload.";
+  }
+
+  if (submittedApproval.walletAddress.toLowerCase() !== expectedApproval.walletAddress.toLowerCase()) {
+    return "Signed approval wallet does not match the current session deposit wallet.";
+  }
+
+  if (submittedApproval.nonce !== expectedApproval.nonce || submittedApproval.deadline !== expectedApproval.deadline) {
+    return "Signed approval nonce or deadline changed. Refresh and approve trading again.";
+  }
+
+  if (normalizeApprovalCalls(submittedApproval.calls) !== normalizeApprovalCalls(expectedApproval.calls)) {
+    return "Signed approval calls changed. Refresh and approve trading again.";
+  }
+
+  return undefined;
+}
+
+function normalizeApprovalCalls(calls: DepositWalletBatchSignablePayload["calls"]) {
+  return JSON.stringify(
+    calls.map((call) => ({
+      target: call.target.toLowerCase(),
+      value: call.value,
+      data: call.data.toLowerCase(),
+    })),
+  );
 }

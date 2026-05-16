@@ -564,6 +564,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
           signature,
           nonce: payload.approval.nonce,
           deadline: payload.approval.deadline,
+          approval: payload.approval,
         }),
       });
       const submitPayload = (await submitResponse.json()) as {

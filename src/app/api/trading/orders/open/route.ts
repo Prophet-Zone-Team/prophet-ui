@@ -40,6 +40,14 @@ export async function GET(request: Request) {
       updatedAt,
     });
   } catch (error) {
+    console.warn("[trading.orders.open] fetch failed", {
+      userId: record.session.userId,
+      walletAddress: record.session.walletAddress,
+      market: url.searchParams.get("market") ?? undefined,
+      tokenId: url.searchParams.get("tokenId") ?? undefined,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : String(error),

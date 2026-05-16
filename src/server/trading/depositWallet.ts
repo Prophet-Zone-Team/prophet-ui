@@ -263,7 +263,13 @@ export async function submitRelayerTransaction(body: string, errorPrefix = "Unab
     throw new Error(`${errorPrefix}: ${await readResponseError(response)}`);
   }
 
-  return (await response.json()) as RelayerSubmitResponse;
+  const payload = (await response.json()) as RelayerSubmitResponse & { error?: string; errorMsg?: string; message?: string };
+
+  if (payload.state === "STATE_FAILED" || payload.state === "STATE_INVALID") {
+    throw new Error(`${errorPrefix}: relayer returned ${payload.state}${payload.error ?? payload.errorMsg ?? payload.message ? ` (${payload.error ?? payload.errorMsg ?? payload.message})` : ""}`);
+  }
+
+  return payload;
 }
 
 export function buildDepositWalletBatchRequest({
