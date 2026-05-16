@@ -1,6 +1,6 @@
 # World Cup Prediction Terminal Progress
 
-Last updated: 2026-05-16 19:24 CST
+Last updated: 2026-05-16 19:42 CST
 
 ## Priority Status
 
@@ -72,14 +72,16 @@ Checked on 2026-05-16 10:07 CST:
 - Production trading config endpoint can read Builder configuration. Real user-owned trading MVP is deployed, but broad production release still needs the hardening tasks listed below.
 - Production trading persistence smoke check on 2026-05-16:
   remote D1 contains `user_trading_orders` and `user_trading_audit_events`; `/api/trading/orders/history` and `/api/trading/positions` return expected `401` without a trading session; `/bid` returns `200`; `/api/trading/config` can read Builder configuration. Eligible-wallet order history, cancellation persistence, audit rows, and positions still need a real-wallet production regression.
+- Trading regression tooling added:
+  `npm run smoke:trading:prod` verifies the production bid page, unauthenticated trading API guards, Builder config readiness, and remote D1 trading tables. [TRADING_PRODUCTION_REGRESSION.md](/Users/joezhu/Sites/wc/docs/TRADING_PRODUCTION_REGRESSION.md) documents the real-wallet small-order, geoblock, and multi-wallet QA checklist.
 
 ## Pending
 
 ### Product Todo
 
 - Continue hardening the user-owned trading flow:
-  durable login/session beyond the current cookie/session recovery, production credential storage policy, production monitoring, multi-wallet QA, and documented small-order production regression tests.
-- Validate order history, status refresh, cancellation persistence, audit rows, and positions against an eligible production wallet.
+  durable login/session beyond the current cookie/session recovery, production credential storage policy, production monitoring, multi-wallet QA, and execution of the documented small-order production regression tests.
+- Execute the real-wallet regression checklist: validate order history, status refresh, cancellation persistence, audit rows, and positions against an eligible production wallet.
 - Validate the production geoblock and eligibility flow from allowed and blocked regions.
 - Calibrate `odds_mismatch` once real bookmaker outright odds are flowing.
 - Add user-configurable alert thresholds per watched team.

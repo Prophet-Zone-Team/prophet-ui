@@ -7,6 +7,7 @@
     "build": "next build",
     "lint": "eslint . --max-warnings=0",
     "check:trading-safety": "node scripts/check-trading-safety.mjs",
+    "smoke:trading:prod": "node scripts/smoke-trading-production.mjs",
     "start": "next start",
     "preview": "node scripts/stop-preview-ports.mjs && npm run d1:schema:local && opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
