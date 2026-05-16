@@ -17,6 +17,7 @@ const GDELT_TEAM_BATCHES_PER_RUN = 1;
 const GDELT_TEAMS_PER_QUERY = 6;
 const GDELT_MIN_RUN_INTERVAL_MS = 60 * 60 * 1000;
 const GDELT_RATE_LIMIT_BACKOFF_MS = 6 * 60 * 60 * 1000;
+const API_FOOTBALL_ERROR_BACKOFF_MS = 60 * 60 * 1000;
 
 export interface SignalDataCollectionResult {
   source: "gdelt" | "api-football";
@@ -105,6 +106,29 @@ export async function collectApiFootballSignals(): Promise<SignalDataCollectionR
   const collectedAt = new Date().toISOString();
   const context: ApiFootballTeamContext[] = [];
   const errors: string[] = [];
+  const repository = await getSignalDataRepository();
+  const signalStats = await repository.readSourceStats();
+  const skipReason = getApiFootballSkipReason(signalStats.football.lastRun, collectedAt);
+
+  if (skipReason) {
+    await repository.recordCollectionRun({
+      id: `api-football:${collectedAt}`,
+      source: "api-football",
+      collectedAt,
+      count: 0,
+      status: "skipped",
+      errors: [skipReason],
+    });
+
+    return {
+      source: "api-football",
+      collectedAt,
+      count: 0,
+      status: "skipped",
+      errors: [skipReason],
+    };
+  }
+
   const selectedConfigs = getApiFootballBatch(collectedAt);
 
   for (const config of selectedConfigs) {
@@ -125,7 +149,6 @@ export async function collectApiFootballSignals(): Promise<SignalDataCollectionR
     }
   }
 
-  const repository = await getSignalDataRepository();
   const result = {
     source: "api-football" as const,
     collectedAt,
@@ -275,6 +298,24 @@ function getGdeltSkipReason(
   return undefined;
 }
 
+function getApiFootballSkipReason(
+  lastRun: { collectedAt: string; status: "ok" | "empty" | "error" | "skipped"; errors?: string[] } | undefined,
+  collectedAt: string,
+): string | undefined {
+  if (!lastRun || lastRun.status !== "error" || !hasApiFootballRateLimitError(lastRun.errors)) {
+    return undefined;
+  }
+
+  const ageMs = new Date(collectedAt).getTime() - new Date(lastRun.collectedAt).getTime();
+
+  if (!Number.isFinite(ageMs) || ageMs < 0 || ageMs >= API_FOOTBALL_ERROR_BACKOFF_MS) {
+    return undefined;
+  }
+
+  const nextRetryAt = new Date(new Date(lastRun.collectedAt).getTime() + API_FOOTBALL_ERROR_BACKOFF_MS).toISOString();
+  return `API-Football rate-limit backoff active until ${nextRetryAt}.`;
+}
+
 function hasRecoverableGdeltError(errors: string[] | undefined): boolean {
   return (errors ?? []).some((error) => {
     const normalized = error.toLowerCase();
@@ -285,6 +326,13 @@ function hasRecoverableGdeltError(errors: string[] | undefined): boolean {
       normalized.includes("not valid json") ||
       normalized.includes("unexpected token")
     );
+  });
+}
+
+function hasApiFootballRateLimitError(errors: string[] | undefined): boolean {
+  return (errors ?? []).some((error) => {
+    const normalized = error.toLowerCase();
+    return normalized.includes("too many requests") || normalized.includes("rate") || normalized.includes("limit");
   });
 }
 
