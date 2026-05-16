@@ -440,7 +440,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         throw new Error("Connect a wallet before deriving user CLOB credentials.");
       }
 
-      const provider = getEthereumProvider();
+      const provider = await getEthereumProviderForSession(tradingSession);
 
       if (!provider) {
         throw new Error("No injected wallet provider found.");
@@ -520,7 +520,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         throw new Error("Connect a wallet before preparing the account.");
       }
 
-      const provider = getEthereumProvider();
+      const provider = await getEthereumProviderForSession(tradingSession);
 
       if (!provider) {
         throw new Error("No injected wallet provider found.");
@@ -748,7 +748,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         throw new Error("Connect a wallet before depositing funds.");
       }
 
-      const provider = getEthereumProvider();
+      const provider = await getEthereumProviderForSession(tradingSession);
 
       if (!provider) {
         throw new Error("No injected wallet provider found.");
@@ -850,7 +850,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     setSubmitMessage(undefined);
 
     try {
-      const provider = getEthereumProvider();
+      const provider = await getEthereumProviderForSession(tradingSession);
 
       if (!provider) {
         throw new Error("No injected wallet provider found.");
@@ -2125,23 +2125,51 @@ function getReadinessSummary({
 }
 
 function getEthereumProvider(): EthereumProvider | undefined {
+  return getEthereumProviders()[0];
+}
+
+function getEthereumProviders(): EthereumProvider[] {
   if (typeof window === "undefined") {
-    return undefined;
+    return [];
   }
 
   const maybeWindow = window as typeof window & {
     ethereum?: EthereumProvider & { providers?: EthereumProvider[] };
     okxwallet?: EthereumProvider;
   };
+  const providers: EthereumProvider[] = [];
 
-  if (maybeWindow.okxwallet) {
-    return maybeWindow.okxwallet;
+  if (Array.isArray(maybeWindow.ethereum?.providers)) {
+    providers.push(...maybeWindow.ethereum.providers);
   }
 
-  const providers = maybeWindow.ethereum?.providers;
-  const okxProvider = providers?.find((provider) => provider.isOkxWallet || provider.isOKExWallet);
+  if (maybeWindow.ethereum) {
+    providers.push(maybeWindow.ethereum);
+  }
 
-  return okxProvider ?? maybeWindow.ethereum;
+  if (maybeWindow.okxwallet) {
+    providers.push(maybeWindow.okxwallet);
+  }
+
+  return providers.filter((provider, index) => providers.indexOf(provider) === index);
+}
+
+async function getEthereumProviderForSession(session: TradingUserSession | undefined): Promise<EthereumProvider | undefined> {
+  if (!session) {
+    return getEthereumProvider();
+  }
+
+  const providers = getEthereumProviders();
+
+  for (const provider of providers) {
+    const walletAddress = await getCurrentWalletAddress(provider).catch(() => undefined);
+
+    if (addressesEqual(walletAddress, session.walletAddress)) {
+      return provider;
+    }
+  }
+
+  return getEthereumProvider();
 }
 
 function getWalletSessionMessage(session: TradingUserSession) {
