@@ -74,6 +74,8 @@ Checked on 2026-05-16 10:07 CST:
   remote D1 contains `user_trading_orders` and `user_trading_audit_events`; `/api/trading/orders/history` and `/api/trading/positions` return expected `401` without a trading session; `/bid` returns `200`; `/api/trading/config` can read Builder configuration. Eligible-wallet order history, cancellation persistence, audit rows, and positions still need a real-wallet production regression.
 - Trading regression tooling added:
   `npm run smoke:trading:prod` verifies the production bid page, unauthenticated trading API guards, Builder config readiness, and remote D1 trading tables. [TRADING_PRODUCTION_REGRESSION.md](/Users/joezhu/Sites/wc/docs/TRADING_PRODUCTION_REGRESSION.md) documents the real-wallet small-order, geoblock, and multi-wallet QA checklist.
+- Production smoke workflow added:
+  `.github/workflows/production-smoke.yml` runs the trading production smoke manually and on a daily schedule. The GitHub workflow skips remote D1 inspection by default so it can run without Cloudflare write/read secrets; local/operator smoke still checks D1 unless `TRADING_SMOKE_SKIP_D1=1` is set.
 
 ## Pending
 
@@ -100,7 +102,7 @@ Checked on 2026-05-16 10:07 CST:
 - Decide whether user CLOB API credentials remain session-only or become encrypted and stored server-side.
 - Add secure storage and audit logging design for user-specific trading credentials.
 - Add Cloudflare deploy automation if deployments should happen automatically from CI.
-- Add cron failure alerts beyond console logging.
+- Add cron failure alerts beyond console logging. A daily GitHub production smoke now covers `/bid` and trading API guards, but scheduled collector failure alerts still need notification plumbing.
 - Add health coverage for The Odds API status so odds health is visible without scraping rendered pages.
 - Decide whether `workers.dev` should remain disabled or be retained as an operational fallback.
 - Decide on a historical backfill strategy beyond scheduled accumulation.
