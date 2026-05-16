@@ -425,6 +425,25 @@ function mergeProbabilityHistory(
 }
 
 async function getFallbackMarketData(source: MarketDataSource, error: unknown): Promise<WorldCupMarketData> {
+  if (process.env.NODE_ENV === "production" && source === "polymarket") {
+    const now = new Date().toISOString();
+
+    return {
+      snapshots: [],
+      newsEvents: [],
+      probabilityHistory: [],
+      footballContext: [],
+      footballTeamContext: [],
+      meta: {
+        source,
+        status: "error",
+        lastUpdated: now,
+        stale: true,
+        error: `${getMarketDataSourceLabel(source)} failed: ${getErrorMessage(error)}`,
+      },
+    };
+  }
+
   const fallback = await mockDataProvider.getWorldCupMarketData();
 
   return {

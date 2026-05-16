@@ -1,6 +1,6 @@
 # World Cup Prediction Terminal Progress
 
-Last updated: 2026-05-16 19:42 CST
+Last updated: 2026-05-16 19:58 CST
 
 ## Priority Status
 
@@ -78,6 +78,8 @@ Checked on 2026-05-16 10:07 CST:
   `.github/workflows/production-smoke.yml` runs the trading production smoke manually and on a daily schedule. The GitHub workflow skips remote D1 inspection by default so it can run without Cloudflare write/read secrets; local/operator smoke still checks D1 unless `TRADING_SMOKE_SKIP_D1=1` is set.
 - Cron alert hook added:
   scheduled collection now supports optional `CRON_ALERT_WEBHOOK_URL` and `CRON_ALERT_WEBHOOK_BEARER`. When configured, the Worker posts a structured alert if the scheduled task throws, if signal collection returns `error`, or if Polymarket universe coverage drops below 48 tracked markets. Deployed on 2026-05-16, version `2a029c11-ecd1-4751-ba6f-7420b00de00f`; production trading smoke passed after deploy.
+- Polymarket data fallback hardened:
+  homepage/detail inconsistency was traced to mock fallback leaking into the homepage when Polymarket stored/live data was temporarily unavailable. Stored Polymarket reads now search a six-hour window for the latest complete 48-team batch and mark it stale after 15 minutes; incomplete batches are skipped. Polymarket collection now rejects incomplete snapshots/universe coverage instead of writing partial batches. Production Polymarket fallback now returns an error/empty state rather than mock probabilities if no stored/live real data is available.
 
 ## Pending
 

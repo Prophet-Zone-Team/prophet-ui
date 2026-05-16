@@ -1,3 +1,4 @@
+import { WORLD_CUP_TEAM_COUNT } from "../../data/teams/worldCupTeams";
 import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
 import type { MarketDataSource } from "../../data/providers/types";
 import { getMarketHistoryRepository } from "./repository";
@@ -36,6 +37,8 @@ export async function collectMarketSnapshots(source: MarketDataSource): Promise<
   if (data.meta.source === "mock") {
     throw new Error("Fallback mock data is not collected into market history.");
   }
+
+  assertCompletePolymarketCoverage(data);
 
   const capturedAt = new Date().toISOString();
   const historySource = data.meta.source as StoredMarketDataSource;
@@ -81,6 +84,24 @@ export async function collectMarketSnapshots(source: MarketDataSource): Promise<
         }
       : undefined,
   };
+}
+
+function assertCompletePolymarketCoverage(data: Awaited<ReturnType<typeof getWorldCupMarketData>>): void {
+  if (data.meta.source !== "polymarket") {
+    return;
+  }
+
+  const uniqueTeamCount = new Set(data.snapshots.map((snapshot) => snapshot.team.id)).size;
+
+  if (uniqueTeamCount < WORLD_CUP_TEAM_COUNT) {
+    throw new Error(`Polymarket snapshot coverage is incomplete: ${uniqueTeamCount}/${WORLD_CUP_TEAM_COUNT} teams.`);
+  }
+
+  if (data.universe && data.universe.trackedMarketCount < WORLD_CUP_TEAM_COUNT) {
+    throw new Error(
+      `Polymarket universe coverage is incomplete: ${data.universe.trackedMarketCount}/${WORLD_CUP_TEAM_COUNT} tracked markets.`,
+    );
+  }
 }
 
 export async function collectAllMarketSnapshots(): Promise<MarketSnapshotCollectionResult[]> {

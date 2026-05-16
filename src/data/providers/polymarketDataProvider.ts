@@ -12,7 +12,7 @@ import type { WorldCupMarketData, WorldCupMarketDataProvider } from "./types";
 const GAMMA_MARKETS_URL = "https://gamma-api.polymarket.com/markets";
 const CLOB_MARKET_URL = "https://clob.polymarket.com/clob-markets";
 const CLOB_MARKET_BY_TOKEN_URL = "https://clob.polymarket.com/markets-by-token";
-const MIN_WORLD_CUP_MARKETS = 8;
+const MIN_WORLD_CUP_MARKETS = WORLD_CUP_TEAM_COUNT;
 
 interface GammaMarket {
   id?: string;

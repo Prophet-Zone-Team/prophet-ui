@@ -1,29 +1,29 @@
-import { worldCupTeams } from "../teams/worldCupTeams";
+import { WORLD_CUP_TEAM_COUNT, worldCupTeams } from "../teams/worldCupTeams";
 import { getMarketHistoryRepository } from "../../server/market-history/repository";
 import type { StoredMarketDataSource } from "../../server/market-history/types";
 import type { MarketSentiment, TeamMarketSnapshot } from "../../types/market";
 import type { WorldCupMarketData } from "./types";
 
-const STALE_AFTER_MS = 15 * 60 * 1000;
+const FRESH_AFTER_MS = 15 * 60 * 1000;
+const MAX_STORED_AGE_MS = 6 * 60 * 60 * 1000;
 
 export async function getStoredPolymarketWorldCupData(): Promise<WorldCupMarketData | undefined> {
   const source: StoredMarketDataSource = "polymarket";
   const repository = await getMarketHistoryRepository();
-  const since = new Date(Date.now() - STALE_AFTER_MS).toISOString();
+  const since = new Date(Date.now() - MAX_STORED_AGE_MS).toISOString();
   const records = await repository.readSnapshots({ source, since });
 
   if (records.length === 0) {
     return undefined;
   }
 
-  const latestCapturedAt = records.reduce((latest, record) => {
-    return record.capturedAt > latest ? record.capturedAt : latest;
-  }, records[0]?.capturedAt ?? "");
-  const latestRecords = records.filter((record) => record.capturedAt === latestCapturedAt);
+  const latestRecords = getLatestCompleteSnapshotBatch(records);
 
   if (latestRecords.length === 0) {
     return undefined;
   }
+
+  const latestCapturedAt = latestRecords[0]?.capturedAt ?? "";
 
   const teamsById = new Map(worldCupTeams.map((team) => [team.id, team]));
   const snapshots: TeamMarketSnapshot[] = latestRecords
@@ -56,7 +56,7 @@ export async function getStoredPolymarketWorldCupData(): Promise<WorldCupMarketD
   }
 
   const universeRecord = await repository.readLatestUniverseSnapshot(source);
-  const stale = Date.now() - new Date(latestCapturedAt).getTime() > STALE_AFTER_MS;
+  const stale = Date.now() - new Date(latestCapturedAt).getTime() > FRESH_AFTER_MS;
 
   return {
     snapshots,
@@ -84,6 +84,21 @@ export async function getStoredPolymarketWorldCupData(): Promise<WorldCupMarketD
       stale,
     },
   };
+}
+
+function getLatestCompleteSnapshotBatch<T extends { capturedAt: string; teamId: string }>(records: T[]): T[] {
+  const batches = new Map<string, T[]>();
+
+  for (const record of records) {
+    const batch = batches.get(record.capturedAt) ?? [];
+    batch.push(record);
+    batches.set(record.capturedAt, batch);
+  }
+
+  return [...batches.entries()]
+    .sort(([left], [right]) => right.localeCompare(left))
+    .map(([, batch]) => batch)
+    .find((batch) => new Set(batch.map((record) => record.teamId)).size >= WORLD_CUP_TEAM_COUNT) ?? [];
 }
 
 function isSnapshot(value: TeamMarketSnapshot | undefined): value is TeamMarketSnapshot {
