@@ -351,7 +351,7 @@ function parseJsonArray(value: string): string[] {
 }
 
 function isRunStatus(value: string): value is SignalDataCollectionRun["status"] {
-  return value === "ok" || value === "empty" || value === "error";
+  return value === "ok" || value === "empty" || value === "error" || value === "skipped";
 }
 
 function getCutoffIso(days: number | undefined): string | undefined {

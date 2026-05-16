@@ -215,6 +215,14 @@ function mapMarketUniverseSlice(
 }
 
 function getSignalSliceStatus(slice: SignalStatsSlice, ageHours: number | undefined): HealthStatus {
+  if (slice.lastRun?.status === "skipped") {
+    if (slice.count === 0) {
+      return "empty";
+    }
+
+    return ageHours === undefined || ageHours > SIGNAL_FRESHNESS_THRESHOLD_HOURS ? "stale" : "ok";
+  }
+
   if (slice.lastRun?.status === "error") {
     return "error";
   }

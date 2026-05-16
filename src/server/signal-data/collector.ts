@@ -13,26 +13,53 @@ import { getSignalDataRepository } from "./repository";
 const NEWS_LOOKBACK_DAYS = 30;
 const MAX_ARTICLES_PER_TEAM = 12;
 const API_FOOTBALL_TEAMS_PER_RUN = 1;
-const GDELT_TEAM_BATCHES_PER_RUN = 2;
+const GDELT_TEAM_BATCHES_PER_RUN = 1;
 const GDELT_TEAMS_PER_QUERY = 6;
+const GDELT_MIN_RUN_INTERVAL_MS = 60 * 60 * 1000;
+const GDELT_RATE_LIMIT_BACKOFF_MS = 6 * 60 * 60 * 1000;
 
 export interface SignalDataCollectionResult {
   source: "gdelt" | "api-football";
   collectedAt: string;
   count: number;
+  status?: "ok" | "empty" | "error" | "skipped";
   errors?: string[];
 }
 
 export async function collectGdeltNewsSignals(): Promise<SignalDataCollectionResult> {
   const collectedAt = new Date().toISOString();
+  const repository = await getSignalDataRepository();
+  const signalStats = await repository.readSourceStats();
+  const skipReason = getGdeltSkipReason(signalStats.news.lastRun, collectedAt);
+
+  if (skipReason) {
+    await repository.recordCollectionRun({
+      id: `gdelt:${collectedAt}`,
+      source: "gdelt",
+      collectedAt,
+      count: 0,
+      status: "skipped",
+      errors: [skipReason],
+    });
+
+    return {
+      source: "gdelt",
+      collectedAt,
+      count: 0,
+      status: "skipped",
+      errors: [skipReason],
+    };
+  }
+
   const queries = worldCupTeams.map(createExpandedTeamNewsQuery).filter(isTeamNewsQuery);
   const { articles, errors } = await collectGdeltArticlesInBatches(queries);
   const cappedArticles = capArticlesPerTeam(articles);
-  const repository = await getSignalDataRepository();
+  const status = getCollectionRunStatus(cappedArticles.length, errors);
   const result = {
     source: "gdelt" as const,
     collectedAt,
     count: cappedArticles.length,
+    status,
     errors: errors.length > 0 ? errors : undefined,
   };
 
@@ -42,7 +69,7 @@ export async function collectGdeltNewsSignals(): Promise<SignalDataCollectionRes
     source: "gdelt",
     collectedAt,
     count: cappedArticles.length,
-    status: getCollectionRunStatus(cappedArticles.length, errors),
+    status,
     errors: result.errors,
   });
 
@@ -103,6 +130,7 @@ export async function collectApiFootballSignals(): Promise<SignalDataCollectionR
     source: "api-football" as const,
     collectedAt,
     count: context.length,
+    status: getCollectionRunStatus(context.length, errors),
     errors: errors.length > 0 ? errors : undefined,
   };
 
@@ -112,7 +140,7 @@ export async function collectApiFootballSignals(): Promise<SignalDataCollectionR
     source: "api-football",
     collectedAt,
     count: context.length,
-    status: getCollectionRunStatus(context.length, errors),
+    status: result.status,
     errors: result.errors,
   });
 
@@ -218,6 +246,46 @@ function getRotatingBatch<T>(items: T[], collectedAt: string, perBatch: number, 
   const start = (runBucket * count) % items.length;
 
   return Array.from({ length: count }, (_, index) => items[(start + index) % items.length]);
+}
+
+function getGdeltSkipReason(
+  lastRun: { collectedAt: string; status: "ok" | "empty" | "error" | "skipped"; errors?: string[] } | undefined,
+  collectedAt: string,
+): string | undefined {
+  if (!lastRun) {
+    return undefined;
+  }
+
+  const ageMs = new Date(collectedAt).getTime() - new Date(lastRun.collectedAt).getTime();
+
+  if (!Number.isFinite(ageMs) || ageMs < 0) {
+    return undefined;
+  }
+
+  if (lastRun.status === "error" && hasRecoverableGdeltError(lastRun.errors) && ageMs < GDELT_RATE_LIMIT_BACKOFF_MS) {
+    const nextRetryAt = new Date(new Date(lastRun.collectedAt).getTime() + GDELT_RATE_LIMIT_BACKOFF_MS).toISOString();
+    return `GDELT backoff active until ${nextRetryAt}.`;
+  }
+
+  if (ageMs < GDELT_MIN_RUN_INTERVAL_MS) {
+    const nextRetryAt = new Date(new Date(lastRun.collectedAt).getTime() + GDELT_MIN_RUN_INTERVAL_MS).toISOString();
+    return `GDELT collection is limited to one attempt per hour. Next attempt after ${nextRetryAt}.`;
+  }
+
+  return undefined;
+}
+
+function hasRecoverableGdeltError(errors: string[] | undefined): boolean {
+  return (errors ?? []).some((error) => {
+    const normalized = error.toLowerCase();
+    return (
+      normalized.includes("http 429") ||
+      normalized.includes("rate") ||
+      normalized.includes("aborted") ||
+      normalized.includes("not valid json") ||
+      normalized.includes("unexpected token")
+    );
+  });
 }
 
 function isTeamNewsQuery(query: TeamNewsQuery | undefined): query is TeamNewsQuery {

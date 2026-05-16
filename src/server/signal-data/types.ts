@@ -20,7 +20,7 @@ export interface SignalDataCollectionRun {
   source: "gdelt" | "api-football";
   collectedAt: string;
   count: number;
-  status: "ok" | "empty" | "error";
+  status: "ok" | "empty" | "error" | "skipped";
   errors?: string[];
 }
 
