@@ -79,7 +79,7 @@ Checked on 2026-05-16 10:07 CST:
 - Cron alert hook added:
   scheduled collection now supports optional `CRON_ALERT_WEBHOOK_URL` and `CRON_ALERT_WEBHOOK_BEARER`. When configured, the Worker posts a structured alert if the scheduled task throws, if signal collection returns `error`, or if Polymarket universe coverage drops below 48 tracked markets. Deployed on 2026-05-16, version `2a029c11-ecd1-4751-ba6f-7420b00de00f`; production trading smoke passed after deploy.
 - Polymarket data fallback hardened:
-  homepage/detail inconsistency was traced to mock fallback leaking into the homepage when Polymarket stored/live data was temporarily unavailable. Stored Polymarket reads now search a six-hour window for the latest complete 48-team batch and mark it stale after 15 minutes; incomplete batches are skipped. Polymarket collection now rejects incomplete snapshots/universe coverage instead of writing partial batches. Production Polymarket fallback now returns an error/empty state rather than mock probabilities if no stored/live real data is available.
+  homepage/detail inconsistency was traced to mock fallback leaking into the homepage when Polymarket stored/live data was temporarily unavailable. Stored Polymarket reads now search a six-hour window for the latest complete 48-team batch and mark it stale after 15 minutes; incomplete batches are skipped. Polymarket collection now rejects incomplete snapshots/universe coverage instead of writing partial batches. Production Polymarket fallback now returns an error/empty state rather than mock probabilities if no stored/live real data is available. Deployed on 2026-05-16, version `d6c0904d-4044-4552-8b2b-721300ebe70d`; production homepage verified `48 / 48`, `48/48`, and Argentina `8.6%`.
 
 ## Pending
 
