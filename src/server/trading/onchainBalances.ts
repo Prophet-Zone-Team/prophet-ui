@@ -23,6 +23,17 @@ const polygonChain = defineChain({
 export interface OnchainCollateralSnapshot {
   usdcAvailable?: number;
   usdcAllowance?: number;
+  allowances?: {
+    conditionalTokens?: number;
+    exchange?: number;
+    negRiskExchange?: number;
+  };
+  contracts?: {
+    collateralToken: string;
+    conditionalTokens: string;
+    exchange: string;
+    negRiskExchange: string;
+  };
   updatedAt: string;
   error?: string;
 }
@@ -66,6 +77,12 @@ export async function fetchOnchainCollateralSnapshot(funderAddress: string): Pro
     return {
       usdcAvailable: atomicUsdcToNumber(balance),
       usdcAllowance: atomicUsdcToNumber(maxBigInt([conditionalTokensAllowance, exchangeAllowance, negRiskExchangeAllowance])),
+      allowances: {
+        conditionalTokens: atomicUsdcToNumber(conditionalTokensAllowance),
+        exchange: atomicUsdcToNumber(exchangeAllowance),
+        negRiskExchange: atomicUsdcToNumber(negRiskExchangeAllowance),
+      },
+      contracts,
       updatedAt: new Date().toISOString(),
     };
   } catch (error) {

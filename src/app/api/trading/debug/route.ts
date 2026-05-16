@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { fetchOnchainCollateralSnapshot } from "../../../../server/trading/onchainBalances";
 import { getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
 
 export const runtime = "nodejs";
@@ -7,6 +8,9 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const record = getTradingSessionFromCookie(request.headers.get("cookie"));
+  const onchainCollateral = record?.session.funderAddress
+    ? await fetchOnchainCollateralSnapshot(record.session.funderAddress)
+    : undefined;
 
   return NextResponse.json({
     hasSession: Boolean(record?.session),
@@ -16,6 +20,7 @@ export async function GET(request: Request) {
     eligibilityStatus: record?.session.eligibilityStatus,
     hasCredentials: Boolean(record?.credentials),
     credentialDerivedAt: record?.credentials?.derivedAt,
+    onchainCollateral,
     cookieNames: (request.headers.get("cookie") ?? "")
       .split(";")
       .map((item) => item.trim().split("=")[0])
