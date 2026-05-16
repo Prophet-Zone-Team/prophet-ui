@@ -85,6 +85,11 @@ export interface UserBalanceSnapshot {
   funderAddress?: string;
   usdcAvailable?: number;
   usdcAllowance?: number;
+  clobUsdcAvailable?: number;
+  clobUsdcAllowance?: number;
+  onchainUsdcAvailable?: number;
+  onchainUsdcAllowance?: number;
+  balanceSource?: "clob" | "onchain" | "mixed";
   conditionalTokenBalance?: number;
   conditionalTokenAllowance?: number;
   updatedAt: string;

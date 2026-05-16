@@ -289,7 +289,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       setFunderAddress(payload.session.funderAddress ?? "");
       setWalletStatus("connected");
       setWalletMessage(getWalletSessionMessage(payload.session));
-      await loadReadiness(readinessFromPreview(preview), {
+      const freshReadiness = await loadReadiness(readinessFromPreview(preview), {
         onReadiness: setReadiness,
         onSession: setTradingSession,
         onCredentials: setCredentialStatus,
@@ -300,6 +300,23 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         onDepositAddress: setDepositAddress,
         onMessage: setWalletMessage,
       });
+
+      if (freshReadiness.credentials.hasClobCredentials) {
+        if (freshReadiness.ready) {
+          setAccountPrepState("ready");
+          setWalletMessage("Wallet reconnected. Account is ready for order signing.");
+        } else {
+          const failedCheck = freshReadiness.checks.find((check) => check.status === "fail");
+          if (failedCheck?.id === "balance") {
+            setAccountPrepState("needs_funds");
+            setWalletMessage("Wallet reconnected. Deposit funds to continue trading.");
+          } else if (failedCheck?.id === "allowance") {
+            setWalletMessage("Wallet reconnected. Approve trading to continue.");
+          } else {
+            setWalletMessage("Wallet reconnected. Complete account setup before placing orders.");
+          }
+        }
+      }
     } catch (error) {
       setWalletStatus("error");
       setWalletMessage(error instanceof Error ? error.message : String(error));
@@ -369,31 +386,40 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         onMessage: setWalletMessage,
       });
 
-      const failedAllowance = currentReadiness.checks.find((check) => check.id === "allowance" && check.status !== "pass");
+      const hasAllowanceFailed = currentReadiness.checks.some(isFailedAllowanceCheck);
+      const depositWalletDeployed = currentReadiness.session?.depositWalletStatus === "deployed";
 
-      if (failedAllowance && currentReadiness.session?.depositWalletStatus === "deployed") {
+      if (hasAllowanceFailed && depositWalletDeployed) {
         await approveTradingContracts();
         currentReadiness = await syncBalancesUntilAllowanceReady();
-      }
-
-      if (failedAllowance && currentReadiness.session?.depositWalletStatus !== "deployed") {
+      } else if (hasAllowanceFailed && !depositWalletDeployed) {
         setAccountPrepState("blocked");
         setWalletMessage("Deposit wallet is still being deployed. Refresh account readiness in a few seconds.");
         return;
       }
 
-      const failedBalance = currentReadiness.checks.find((check) => check.id === "balance" && check.status !== "pass");
+      const balanceFailed = currentReadiness.checks.find((check) => check.id === "balance" && check.status === "fail");
       const remainingBlocker = currentReadiness.checks.find((check) => check.status === "fail");
 
-      if (failedBalance) {
+      if (balanceFailed) {
         setAccountPrepState("needs_funds");
         setWalletMessage("Account prepared. Deposit funds with the generated address, then refresh account readiness.");
         return;
       }
 
-      if (remainingBlocker) {
+      if (remainingBlocker && remainingBlocker.id !== "allowance") {
         setAccountPrepState("blocked");
         setWalletMessage(`${remainingBlocker.label}: ${remainingBlocker.detail}`);
+        return;
+      }
+
+      if (remainingBlocker?.id === "allowance" && approvalState === "error") {
+        setAccountPrepState("blocked");
+        return;
+      }
+
+      if (remainingBlocker?.id === "allowance") {
+        setAccountPrepState("running");
         return;
       }
 
@@ -555,15 +581,9 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         submitPayload.response?.transactionHash ?? submitPayload.response?.hash ?? submitPayload.response?.transactionID;
       setWalletMessage(
         transactionRef
-          ? `Account approval submitted (${transactionRef}).`
+          ? `Account approval submitted (${formatHash(transactionRef)}). Waiting for on-chain confirmation...`
           : `Account approval submitted at ${submitPayload.submittedAt ?? new Date().toISOString()}.`,
       );
-      await loadReadiness(readinessFromPreview(preview), {
-        onReadiness: setReadiness,
-        onSession: setTradingSession,
-        onCredentials: setCredentialStatus,
-        onFunderAddress: setFunderAddress,
-      });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
 
@@ -589,10 +609,9 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       const payload = (await response.json()) as { error?: string; syncedAt?: string };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Unable to sync CLOB balance and allowance.");
+        console.warn("Balance sync returned non-ok, continuing with readiness refresh", payload.error);
       }
 
-      setApprovalState("synced");
       const refreshedReadiness = await loadReadiness(readinessFromPreview(preview), {
         onReadiness: setReadiness,
         onSession: setTradingSession,
@@ -601,28 +620,52 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       });
       const allowanceCheck = refreshedReadiness.checks.find((check) => check.id === "allowance");
 
-      setWalletMessage(
-        allowanceCheck?.status === "fail"
-          ? `Balance synced, but trading approval is still required: ${allowanceCheck.detail}`
-          : `Balance and allowance cache synced at ${payload.syncedAt ?? new Date().toISOString()}.`,
-      );
+      if (allowanceCheck?.status === "fail") {
+        setApprovalState("syncing");
+        setWalletMessage(
+          `Approval submitted. Waiting for Polymarket allowance to update... (${allowanceCheck.detail})`,
+        );
+      } else {
+        setApprovalState("synced");
+        setWalletMessage(
+          `Balance and allowance cache synced at ${payload.syncedAt ?? new Date().toISOString()}.`,
+        );
+      }
 
       return refreshedReadiness;
     } catch (error) {
-      setApprovalState("error");
+      setApprovalState("syncing");
       setWalletMessage(error instanceof Error ? error.message : String(error));
 
-      return undefined;
+      try {
+        return await loadReadiness(readinessFromPreview(preview), {
+          onReadiness: setReadiness,
+          onSession: setTradingSession,
+          onCredentials: setCredentialStatus,
+          onFunderAddress: setFunderAddress,
+        });
+      } catch {
+        return undefined;
+      }
     }
   }
 
   async function syncBalancesUntilAllowanceReady() {
     let latestReadiness = await syncBalances();
 
-    for (let attempt = 0; attempt < 3 && latestReadiness?.checks.some(isFailedAllowanceCheck); attempt += 1) {
-      setWalletMessage("Approval submitted. Waiting for Polymarket allowance to update...");
-      await delay(5000);
+    for (let attempt = 0; attempt < 6 && latestReadiness?.checks.some(isFailedAllowanceCheck); attempt += 1) {
+      setWalletMessage(
+        `Approval submitted. Waiting for Polymarket allowance to update... (attempt ${attempt + 1}/6)`,
+      );
+      await delay(8000);
       latestReadiness = await syncBalances();
+    }
+
+    if (latestReadiness?.checks.some(isFailedAllowanceCheck)) {
+      setWalletMessage("Allowance sync timed out. You may need to refresh manually or wait longer for the Polygon transaction to confirm.");
+      setApprovalState("error");
+    } else if (latestReadiness) {
+      setApprovalState("synced");
     }
 
     return (
@@ -1388,7 +1431,9 @@ function UserTradingSetup({
                   ? "Approve in wallet..."
                   : credentialState === "signing"
                     ? "Sign to enable..."
-                    : "Enabling trading..."
+                    : approvalState === "submitted" || approvalState === "syncing"
+                      ? "Waiting for confirmation..."
+                      : "Enabling trading..."
                 : setupButtonLabel}
             </button>
           ) : (

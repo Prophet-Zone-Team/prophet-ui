@@ -9,7 +9,7 @@ import {
   type SignedOrderContext,
 } from "../../../../server/trading/balances";
 import { getOrderBuilderCode } from "../../../../server/trading/builderCode";
-import { postSignedUserOrder } from "../../../../server/trading/clobUserClient";
+import { postSignedUserOrder, updateUserBalanceAllowance } from "../../../../server/trading/clobUserClient";
 import { refreshSessionEligibilityIfStale } from "../../../../server/trading/eligibility";
 import { recordUserOrderError, recordUserOrderSubmitted } from "../../../../server/trading/orderStore";
 import { createTradingSessionCookie, getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
@@ -126,6 +126,19 @@ export async function POST(request: Request) {
   }
 
   const fundingRequirement = await resolveOrderFundingRequirementWithFees(baseFundingRequirement, orderContext.tokenId);
+
+  await updateUserBalanceAllowance({
+    address: record.session.walletAddress,
+    credentials: record.credentials,
+    signatureType: record.session.signatureType,
+    tokenId: orderContext.tokenId,
+  }).catch((error) => {
+    console.warn("[trading.orders] balance allowance update failed before funding check", {
+      userId: record.session.userId,
+      tokenId: orderContext.tokenId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  });
 
   const balances = await fetchUserBalanceSnapshot({
     session: record.session,

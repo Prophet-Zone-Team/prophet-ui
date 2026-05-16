@@ -240,7 +240,13 @@ function getReadableBalanceDetail({
   hasCredentials: boolean;
 }) {
   if (balances?.usdcAvailable !== undefined) {
-    return `${balances.usdcAvailable.toFixed(2)} USDC available.`;
+    return formatBalanceSourceDetail({
+      value: balances.usdcAvailable,
+      label: "USDC available",
+      clobValue: balances.clobUsdcAvailable,
+      onchainValue: balances.onchainUsdcAvailable,
+      source: balances.balanceSource,
+    });
   }
 
   return balances?.error ?? (hasCredentials ? "USDC balance could not be read." : "Balance requires user CLOB credentials.");
@@ -254,10 +260,42 @@ function getReadableAllowanceDetail({
   hasCredentials: boolean;
 }) {
   if (balances?.usdcAllowance !== undefined) {
-    return `${balances.usdcAllowance.toFixed(2)} USDC allowance observed.`;
+    return formatBalanceSourceDetail({
+      value: balances.usdcAllowance,
+      label: "USDC allowance observed",
+      clobValue: balances.clobUsdcAllowance,
+      onchainValue: balances.onchainUsdcAllowance,
+      source: balances.balanceSource,
+    });
   }
 
   return balances?.error ?? (hasCredentials ? "Allowance could not be read." : "Allowance requires user CLOB credentials.");
+}
+
+function formatBalanceSourceDetail({
+  value,
+  label,
+  clobValue,
+  onchainValue,
+  source,
+}: {
+  value: number;
+  label: string;
+  clobValue?: number;
+  onchainValue?: number;
+  source?: UserBalanceSnapshot["balanceSource"];
+}) {
+  const base = `${value.toFixed(2)} ${label}.`;
+
+  if (source === "onchain") {
+    return `${base} On-chain deposit wallet value is newer than the CLOB cache; sync may still be settling.`;
+  }
+
+  if (source === "mixed" && clobValue !== undefined && onchainValue !== undefined && clobValue !== onchainValue) {
+    return `${base} CLOB cache: ${clobValue.toFixed(2)}; on-chain: ${onchainValue.toFixed(2)}.`;
+  }
+
+  return base;
 }
 
 function getEligibilityDetail(session: TradingUserSession | undefined): string {

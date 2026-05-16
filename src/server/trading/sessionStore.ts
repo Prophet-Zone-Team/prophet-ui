@@ -18,7 +18,7 @@ export interface TradingSessionRecord {
 
 const SESSION_COOKIE_NAME = "wc_trading_session";
 const CREDENTIAL_COOKIE_NAME = "wc_trading_credentials";
-const SESSION_TTL_MS = 1000 * 60 * 60 * 8;
+const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 const CREDENTIAL_COOKIE_MAX_AGE = Math.floor(SESSION_TTL_MS / 1000);
 const ENCRYPTION_ALGORITHM = "aes-256-gcm";
 const store = new Map<string, TradingSessionRecord>();
@@ -53,6 +53,7 @@ export function createTradingSession({
   eligibilityReason?: string;
 }): TradingUserSession {
   const normalizedWallet = normalizeAddress(walletAddress);
+  const existingRecord = store.get(`wallet:${normalizedWallet.toLowerCase()}`);
   const createdAt = new Date().toISOString();
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
   const session: TradingUserSession = {
@@ -74,7 +75,10 @@ export function createTradingSession({
     expiresAt,
   };
 
-  store.set(session.userId, { session });
+  store.set(session.userId, {
+    session,
+    credentials: existingRecord?.credentials,
+  });
 
   return session;
 }

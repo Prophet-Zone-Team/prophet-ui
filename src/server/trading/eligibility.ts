@@ -25,15 +25,19 @@ interface PolymarketGeoblockResponse {
   error?: string;
 }
 
-export async function checkTradingEligibility(): Promise<TradingEligibilityResult> {
+export async function checkTradingEligibility(clientIp?: string): Promise<TradingEligibilityResult> {
   const checkedAt = new Date().toISOString();
 
   try {
+    const headers: Record<string, string> = { Accept: "application/json" };
+
+    if (clientIp) {
+      headers["X-Forwarded-For"] = clientIp;
+    }
+
     const response = await fetch(getGeoblockUrl(), {
       method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
+      headers,
       cache: "no-store",
       signal: AbortSignal.timeout(GEOBLOCK_TIMEOUT_MS),
     });
@@ -74,18 +78,18 @@ export async function checkTradingEligibility(): Promise<TradingEligibilityResul
   }
 }
 
-export async function refreshSessionEligibility(session: TradingUserSession): Promise<TradingUserSession> {
-  const eligibility = await checkTradingEligibility();
+export async function refreshSessionEligibility(session: TradingUserSession, clientIp?: string): Promise<TradingUserSession> {
+  const eligibility = await checkTradingEligibility(clientIp);
 
   return updateTradingSession(withEligibility(session, eligibility));
 }
 
-export async function refreshSessionEligibilityIfStale(session: TradingUserSession): Promise<TradingUserSession> {
+export async function refreshSessionEligibilityIfStale(session: TradingUserSession, clientIp?: string): Promise<TradingUserSession> {
   if (isFreshEligibleSession(session)) {
     return session;
   }
 
-  const eligibility = await checkTradingEligibility();
+  const eligibility = await checkTradingEligibility(clientIp);
 
   if (eligibility.status === "error" && isEligibleSessionWithin(session, ELIGIBILITY_ERROR_GRACE_MS)) {
     console.warn("[trading.eligibility] geoblock refresh failed; using cached eligible session", {
@@ -124,6 +128,28 @@ function withEligibility(session: TradingUserSession, eligibility: TradingEligib
     eligibilityRegion: eligibility.region,
     eligibilityReason: eligibility.reason,
   };
+}
+
+export function getClientIp(request: Request): string | undefined {
+  const cfIp = request.headers.get("cf-connecting-ip");
+
+  if (cfIp) {
+    return cfIp;
+  }
+
+  const forwarded = request.headers.get("x-forwarded-for");
+
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+
+  const realIp = request.headers.get("x-real-ip");
+
+  if (realIp) {
+    return realIp;
+  }
+
+  return undefined;
 }
 
 function getGeoblockUrl() {

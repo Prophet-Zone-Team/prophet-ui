@@ -6,6 +6,7 @@ import { estimateBuyTakerFee as estimatePolymarketBuyTakerFee } from "../../lib/
 import type { BidTradeSide, TradingUserSession, UserBalanceSnapshot } from "../../types/market";
 import { getBuilderTakerFeeRate } from "./builderCode";
 import { fetchClobMarketDetails, fetchUserBalanceAllowance } from "./clobUserClient";
+import { fetchOnchainCollateralSnapshot } from "./onchainBalances";
 
 export interface OrderFundingRequirement {
   tradeSide: BidTradeSide;
@@ -52,11 +53,23 @@ export async function fetchUserBalanceSnapshot({
       tokenId,
     });
 
-    return toBalanceSnapshot({
+    const clobSnapshot = toBalanceSnapshot({
       session,
       collateral: result.collateral,
       conditional: result.conditional,
     });
+
+    if (session.signatureType !== 3 || !session.funderAddress) {
+      return clobSnapshot;
+    }
+
+    const onchainSnapshot = await fetchOnchainCollateralSnapshot(session.funderAddress);
+
+    if (onchainSnapshot.error) {
+      return clobSnapshot;
+    }
+
+    return mergeCollateralSnapshots(clobSnapshot, onchainSnapshot);
   } catch (error) {
     return {
       walletAddress: session.walletAddress,
@@ -113,6 +126,37 @@ export function toBalanceSnapshot({
     usdcAllowance: parseAllowanceMap(collateral?.allowances),
     conditionalTokenBalance: parseAtomicValue(conditional?.balance),
     conditionalTokenAllowance: parseAllowanceMap(conditional?.allowances),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function mergeCollateralSnapshots(
+  clobSnapshot: UserBalanceSnapshot,
+  onchainSnapshot: {
+    usdcAvailable?: number;
+    usdcAllowance?: number;
+    updatedAt: string;
+  },
+): UserBalanceSnapshot {
+  const usdcAvailable = maxDefined(clobSnapshot.usdcAvailable, onchainSnapshot.usdcAvailable);
+  const usdcAllowance = maxDefined(clobSnapshot.usdcAllowance, onchainSnapshot.usdcAllowance);
+
+  return {
+    ...clobSnapshot,
+    clobUsdcAvailable: clobSnapshot.usdcAvailable,
+    clobUsdcAllowance: clobSnapshot.usdcAllowance,
+    onchainUsdcAvailable: onchainSnapshot.usdcAvailable,
+    onchainUsdcAllowance: onchainSnapshot.usdcAllowance,
+    usdcAvailable,
+    usdcAllowance,
+    balanceSource: getBalanceSource({
+      clobAvailable: clobSnapshot.usdcAvailable,
+      clobAllowance: clobSnapshot.usdcAllowance,
+      onchainAvailable: onchainSnapshot.usdcAvailable,
+      onchainAllowance: onchainSnapshot.usdcAllowance,
+      mergedAvailable: usdcAvailable,
+      mergedAllowance: usdcAllowance,
+    }),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -277,12 +321,14 @@ function checkBuyFunding({
       available: balances.usdcAvailable,
       required: requiredUsdc,
       unit: "USDC",
+      suffix: getFundingSourceSuffix(balances, "balance"),
     }),
     allowanceDetail: formatFundingDetail({
       label: "USDC allowance",
       available: balances.usdcAllowance,
       required: requiredUsdc,
       unit: "USDC",
+      suffix: getFundingSourceSuffix(balances, "allowance"),
     }),
   };
 }
@@ -353,17 +399,19 @@ function formatFundingDetail({
   available,
   required,
   unit,
+  suffix,
 }: {
   label: string;
   available?: number;
   required: number;
   unit: string;
+  suffix?: string;
 }) {
   if (available === undefined) {
     return `${label} is not available. Required: ${formatAmount(required)} ${unit}.`;
   }
 
-  return `${label}: ${formatAmount(available)} ${unit} available; ${formatAmount(required)} ${unit} required.`;
+  return `${label}: ${formatAmount(available)} ${unit} available; ${formatAmount(required)} ${unit} required.${suffix ? ` ${suffix}` : ""}`;
 }
 
 function parsePositiveNumber(value: unknown): number | undefined {
@@ -442,6 +490,81 @@ function parseAllowanceMap(allowances: Record<string, string> | undefined): numb
   }
 
   return Math.max(...values);
+}
+
+function maxDefined(left: number | undefined, right: number | undefined): number | undefined {
+  if (left === undefined) {
+    return right;
+  }
+
+  if (right === undefined) {
+    return left;
+  }
+
+  return Math.max(left, right);
+}
+
+function getBalanceSource({
+  clobAvailable,
+  clobAllowance,
+  onchainAvailable,
+  onchainAllowance,
+  mergedAvailable,
+  mergedAllowance,
+}: {
+  clobAvailable?: number;
+  clobAllowance?: number;
+  onchainAvailable?: number;
+  onchainAllowance?: number;
+  mergedAvailable?: number;
+  mergedAllowance?: number;
+}): UserBalanceSnapshot["balanceSource"] {
+  const balanceSource = getValueSource(clobAvailable, onchainAvailable, mergedAvailable);
+  const allowanceSource = getValueSource(clobAllowance, onchainAllowance, mergedAllowance);
+
+  if (balanceSource === "both" && allowanceSource === "both") {
+    return "mixed";
+  }
+
+  if (
+    (balanceSource === "onchain" || balanceSource === "both") &&
+    (allowanceSource === "onchain" || allowanceSource === "both")
+  ) {
+    return "onchain";
+  }
+
+  if (balanceSource !== allowanceSource) {
+    return "mixed";
+  }
+
+  return "clob";
+}
+
+function getValueSource(
+  clobValue: number | undefined,
+  onchainValue: number | undefined,
+  mergedValue: number | undefined,
+): "clob" | "onchain" | "both" {
+  if (mergedValue === undefined || clobValue === onchainValue) {
+    return "both";
+  }
+
+  return onchainValue === mergedValue ? "onchain" : "clob";
+}
+
+function getFundingSourceSuffix(balances: UserBalanceSnapshot, kind: "balance" | "allowance") {
+  if (balances.balanceSource !== "onchain") {
+    return undefined;
+  }
+
+  const clobValue = kind === "balance" ? balances.clobUsdcAvailable : balances.clobUsdcAllowance;
+  const onchainValue = kind === "balance" ? balances.onchainUsdcAvailable : balances.onchainUsdcAllowance;
+
+  if (onchainValue === undefined || clobValue === undefined || onchainValue <= clobValue) {
+    return "On-chain and CLOB cache are being reconciled.";
+  }
+
+  return `On-chain deposit wallet shows ${formatAmount(onchainValue)} USDC; CLOB cache shows ${formatAmount(clobValue)} USDC.`;
 }
 
 function formatAmount(value: number) {

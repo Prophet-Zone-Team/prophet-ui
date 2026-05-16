@@ -6,9 +6,11 @@ import {
   clearTradingCredentialsCookie,
   createTradingSession,
   createTradingSessionCookie,
+  createTradingCredentialsCookie,
   getTradingSessionFromCookie,
+  getTradingSession,
 } from "../../../../server/trading/sessionStore";
-import { checkTradingEligibility } from "../../../../server/trading/eligibility";
+import { checkTradingEligibility, getClientIp } from "../../../../server/trading/eligibility";
 import { setupDepositWalletForOwner } from "../../../../server/trading/depositWallet";
 import { recordTradingAuditEvent } from "../../../../server/trading/orderStore";
 
@@ -36,7 +38,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
-  const eligibility = await checkTradingEligibility();
+  const userId = `wallet:${(payload.walletAddress ?? "").toLowerCase()}`;
+  const existingCookieRecord = getTradingSessionFromCookie(request.headers.get("cookie"));
+  const existingRecord =
+    existingCookieRecord?.session.userId === userId ? existingCookieRecord : getTradingSession(userId);
+  const eligibility = await checkTradingEligibility(getClientIp(request));
   const depositWallet = await setupDepositWalletForOwner(payload.walletAddress ?? "");
   const session = createTradingSession({
     walletAddress: payload.walletAddress ?? "",
@@ -64,16 +70,21 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json(
-    {
-      session,
-    },
-    {
-      headers: {
-        "Set-Cookie": createTradingSessionCookie(session),
-      },
-    },
-  );
+  const response = NextResponse.json({ session });
+
+  response.headers.append("Set-Cookie", createTradingSessionCookie(session));
+
+  if (existingRecord?.credentials) {
+    response.headers.append(
+      "Set-Cookie",
+      createTradingCredentialsCookie({
+        userId: session.userId,
+        credentials: existingRecord.credentials,
+      }),
+    );
+  }
+
+  return response;
 }
 
 export async function DELETE(request: Request) {
