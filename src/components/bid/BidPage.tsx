@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { encodeFunctionData, parseUnits } from "viem";
+import { encodeFunctionData, parseUnits, recoverTypedDataAddress } from "viem";
 import type { Hex } from "viem";
 
 import type { MarketDataMeta } from "../../data/providers/types";
@@ -443,7 +443,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       const provider = await getEthereumProviderForSession(tradingSession);
 
       if (!provider) {
-        throw new Error("No injected wallet provider found.");
+        throw new Error(getNoSessionProviderMessage(tradingSession));
       }
 
       await ensurePolygonNetwork(provider);
@@ -520,15 +520,6 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         throw new Error("Connect a wallet before preparing the account.");
       }
 
-      const provider = await getEthereumProviderForSession(tradingSession);
-
-      if (!provider) {
-        throw new Error("No injected wallet provider found.");
-      }
-
-      await ensurePolygonNetwork(provider);
-      const walletAddress = await requireActiveSessionWallet(provider, tradingSession);
-
       const response = await fetch("/api/trading/approvals", {
         cache: "no-store",
       });
@@ -538,22 +529,17 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         throw new Error(payload.error ?? "Unable to create deposit wallet approval batch.");
       }
 
-      const signature = await provider.request({
-        method: "eth_signTypedData_v4",
-        params: [
-          walletAddress,
-          JSON.stringify({
-            domain: payload.approval.domain,
-            types: payload.approval.types,
-            primaryType: payload.approval.primaryType,
-            message: payload.approval.message,
-          }),
-        ],
+      const typedData = {
+        domain: payload.approval.domain,
+        types: payload.approval.types,
+        primaryType: payload.approval.primaryType,
+        message: payload.approval.message,
+      };
+      const { signature } = await signTypedDataForSession({
+        session: tradingSession,
+        typedData,
+        purpose: "approval",
       });
-
-      if (typeof signature !== "string") {
-        throw new Error("Wallet did not return an approval signature.");
-      }
 
       const submitResponse = await fetch("/api/trading/approvals", {
         method: "POST",
@@ -751,7 +737,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       const provider = await getEthereumProviderForSession(tradingSession);
 
       if (!provider) {
-        throw new Error("No injected wallet provider found.");
+        throw new Error(getNoSessionProviderMessage(tradingSession));
       }
 
       let currentDepositAddress = depositAddress;
@@ -850,18 +836,10 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     setSubmitMessage(undefined);
 
     try {
-      const provider = await getEthereumProviderForSession(tradingSession);
-
-      if (!provider) {
-        throw new Error("No injected wallet provider found.");
-      }
-
-      await ensurePolygonNetwork(provider);
-      const walletAddress = await requireActiveSessionWallet(provider, tradingSession);
       const builderCode = await loadTradingBuilderCode();
       const signable = buildUserOrderSignablePayload({
         preview,
-        walletAddress,
+        walletAddress: tradingSession.walletAddress,
         funderAddress: sessionFunderAddress,
         orderType: DEFAULT_ORDER_TYPE,
         builderCode,
@@ -872,14 +850,11 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         primaryType: signable.primaryType,
         message: signable.message,
       };
-      const signature = await provider.request({
-        method: "eth_signTypedData_v4",
-        params: [walletAddress, JSON.stringify(typedData)],
+      const { signature, walletAddress } = await signTypedDataForSession({
+        session: tradingSession,
+        typedData,
+        purpose: "order",
       });
-
-      if (typeof signature !== "string") {
-        throw new Error("Wallet did not return an order signature.");
-      }
 
       const recoveredAddress = await recoverUserOrderSignerAddress({
         signable,
@@ -2159,17 +2134,111 @@ async function getEthereumProviderForSession(session: TradingUserSession | undef
     return getEthereumProvider();
   }
 
+  const providers = await getEthereumProvidersForSession(session);
+
+  return providers[0];
+}
+
+async function getEthereumProvidersForSession(session: TradingUserSession): Promise<EthereumProvider[]> {
   const providers = getEthereumProviders();
+  const matches: EthereumProvider[] = [];
 
   for (const provider of providers) {
-    const walletAddress = await getCurrentWalletAddress(provider).catch(() => undefined);
+    const walletAddresses = await getCurrentWalletAddresses(provider).catch(() => []);
 
-    if (addressesEqual(walletAddress, session.walletAddress)) {
-      return provider;
+    if (walletAddresses.some((walletAddress) => addressesEqual(walletAddress, session.walletAddress))) {
+      matches.push(provider);
     }
   }
 
-  return getEthereumProvider();
+  return matches;
+}
+
+function getNoSessionProviderMessage(session: TradingUserSession) {
+  return `No injected wallet provider is connected to this trading session wallet ${formatHash(
+    session.walletAddress,
+  )}. Unlock the intended wallet extension, disconnect conflicting wallet extensions, then reconnect.`;
+}
+
+async function signTypedDataForSession({
+  session,
+  typedData,
+  purpose,
+}: {
+  session: TradingUserSession;
+  typedData: {
+    domain: unknown;
+    types: Record<string, unknown>;
+    primaryType: string;
+    message: unknown;
+  };
+  purpose: string;
+}): Promise<{ signature: string; walletAddress: string }> {
+  const providers = await getEthereumProvidersForSession(session);
+
+  if (providers.length === 0) {
+    throw new Error(getNoSessionProviderMessage(session));
+  }
+
+  const mismatches: string[] = [];
+  let lastError: string | undefined;
+
+  for (const provider of providers) {
+    try {
+      await ensurePolygonNetwork(provider);
+      const walletAddress = await requireActiveSessionWallet(provider, session);
+      const signature = await provider.request({
+        method: "eth_signTypedData_v4",
+        params: [walletAddress, JSON.stringify(typedData)],
+      });
+
+      if (typeof signature !== "string") {
+        lastError = "Wallet did not return a signature.";
+        continue;
+      }
+
+      const recoveredAddress = await recoverTypedDataAddress({
+        domain: typedData.domain,
+        types: typedData.types,
+        primaryType: typedData.primaryType,
+        message: typedData.message,
+        signature: signature as Hex,
+      } as Parameters<typeof recoverTypedDataAddress>[0]);
+
+      if (addressesEqual(recoveredAddress, session.walletAddress)) {
+        return { signature, walletAddress };
+      }
+
+      mismatches.push(`${formatHash(recoveredAddress)} from ${getProviderLabel(provider)}`);
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  const mismatchDetail =
+    mismatches.length > 0
+      ? ` Recovered signer(s): ${mismatches.join(", ")}.`
+      : lastError
+        ? ` Last wallet error: ${lastError}.`
+        : "";
+
+  throw new Error(
+    `Unable to produce a valid ${purpose} signature for connected wallet ${formatHash(
+      session.walletAddress,
+    )}.${mismatchDetail} Disable conflicting wallet extensions and reconnect the intended wallet.`,
+  );
+}
+
+function getProviderLabel(provider: EthereumProvider) {
+  if (provider.isMetaMask) {
+    return "MetaMask";
+  }
+
+  if (provider.isOkxWallet || provider.isOKExWallet) {
+    return "OKX Wallet";
+  }
+
+  return "injected wallet";
 }
 
 function getWalletSessionMessage(session: TradingUserSession) {
@@ -2300,11 +2369,17 @@ async function loadTradingBuilderCode() {
 }
 
 async function getCurrentWalletAddress(provider: EthereumProvider): Promise<string | undefined> {
+  const accounts = await getCurrentWalletAddresses(provider);
+
+  return accounts[0];
+}
+
+async function getCurrentWalletAddresses(provider: EthereumProvider): Promise<string[]> {
   const accounts = await provider.request({
     method: "eth_accounts",
   });
 
-  return Array.isArray(accounts) && typeof accounts[0] === "string" ? accounts[0] : undefined;
+  return Array.isArray(accounts) ? accounts.filter((account): account is string => typeof account === "string") : [];
 }
 
 async function requireActiveSessionWallet(provider: EthereumProvider, session: TradingUserSession) {
