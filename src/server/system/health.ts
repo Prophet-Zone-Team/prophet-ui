@@ -1,10 +1,17 @@
+import { getTheOddsApiWorldCupWinnerOdds } from "../../data/odds/theOddsApiProvider";
+import type { OddsProviderMeta } from "../../data/odds/types";
+import { ENABLED_MARKET_DATA_SOURCES } from "../../data/providers/source";
+import type { MarketDataSource } from "../../data/providers/types";
 import { getMarketHistoryRepository } from "../market-history/repository";
-import type { MarketSnapshotSourceStat, MarketUniverseSnapshotRecord } from "../market-history/types";
+import type { MarketSnapshotSourceStat, MarketUniverseSnapshotRecord, StoredMarketDataSource } from "../market-history/types";
 import { getSignalDataRepository } from "../signal-data/repository";
 import type { SignalDataSourceStats } from "../signal-data/types";
 
 const MARKET_FRESHNESS_THRESHOLD_MINUTES = 30;
 const SIGNAL_FRESHNESS_THRESHOLD_HOURS = 24;
+const ODDS_HEALTH_CACHE_TTL_MS = 10 * 60 * 1000;
+
+let oddsHealthCache: { expiresAt: number; meta: OddsProviderMeta } | undefined;
 
 export type HealthStatus = "ok" | "stale" | "empty" | "error";
 
@@ -16,6 +23,7 @@ export interface SystemHealthReport {
     sources: Array<MarketSnapshotSourceStat & { ageMinutes?: number; status: HealthStatus }>;
   };
   marketUniverse: MarketUniverseHealthSlice;
+  oddsData: OddsHealthSlice;
   signalData: {
     status: HealthStatus;
     freshnessThresholdHours: number;
@@ -54,6 +62,19 @@ interface SignalHealthSlice {
   };
 }
 
+interface OddsHealthSlice {
+  status: HealthStatus;
+  source: OddsProviderMeta["source"];
+  providerStatus: OddsProviderMeta["status"];
+  cacheTtlMinutes: number;
+  bookmakerCount: number;
+  teamCount: number;
+  marketKey?: string;
+  lastUpdated?: string;
+  ageHours?: number;
+  error?: string;
+}
+
 interface SignalStatsSlice {
   count: number;
   latestCollectedAt?: string;
@@ -63,12 +84,13 @@ interface SignalStatsSlice {
 
 export async function getSystemHealthReport(now = new Date()): Promise<SystemHealthReport> {
   const checkedAt = now.toISOString();
-  const [marketStats, marketUniverse, signalStats] = await Promise.all([
+  const [marketStats, marketUniverse, oddsMeta, signalStats] = await Promise.all([
     readMarketStats(),
     readMarketUniverse(),
+    readOddsMeta(),
     readSignalStats(),
   ]);
-  const marketSources = marketStats.map((stat) => {
+  const marketSources = getEnabledMarketStats(marketStats).map((stat) => {
     const ageMinutes = stat.latestCapturedAt ? getAgeMinutes(stat.latestCapturedAt, now) : undefined;
 
     return {
@@ -77,6 +99,7 @@ export async function getSystemHealthReport(now = new Date()): Promise<SystemHea
       status: getSliceStatus(stat.count, ageMinutes, MARKET_FRESHNESS_THRESHOLD_MINUTES),
     };
   });
+  const odds = mapOddsSlice(oddsMeta, now);
   const news = mapSignalSlice(signalStats.news, now);
   const football = mapSignalSlice(signalStats.football, now);
 
@@ -88,6 +111,7 @@ export async function getSystemHealthReport(now = new Date()): Promise<SystemHea
       sources: marketSources,
     },
     marketUniverse: mapMarketUniverseSlice(marketUniverse, now),
+    oddsData: odds,
     signalData: {
       status: aggregateStatus([news.status, football.status]),
       freshnessThresholdHours: SIGNAL_FRESHNESS_THRESHOLD_HOURS,
@@ -100,6 +124,20 @@ export async function getSystemHealthReport(now = new Date()): Promise<SystemHea
 async function readMarketStats(): Promise<MarketSnapshotSourceStat[]> {
   const repository = await getMarketHistoryRepository();
   return repository.readSourceStats();
+}
+
+async function readOddsMeta(): Promise<OddsProviderMeta> {
+  if (oddsHealthCache && oddsHealthCache.expiresAt > Date.now()) {
+    return oddsHealthCache.meta;
+  }
+
+  const result = await getTheOddsApiWorldCupWinnerOdds();
+  oddsHealthCache = {
+    meta: result.meta,
+    expiresAt: Date.now() + ODDS_HEALTH_CACHE_TTL_MS,
+  };
+
+  return result.meta;
 }
 
 async function readMarketUniverse(): Promise<MarketUniverseSnapshotRecord | undefined> {
@@ -133,6 +171,23 @@ function mapSignalSlice(
           errors: slice.lastRun.errors,
         }
       : undefined,
+  };
+}
+
+function mapOddsSlice(meta: OddsProviderMeta, now: Date): OddsHealthSlice {
+  const ageHours = meta.lastUpdated ? getAgeHours(meta.lastUpdated, now) : undefined;
+
+  return {
+    status: getOddsStatus(meta),
+    source: meta.source,
+    providerStatus: meta.status,
+    cacheTtlMinutes: ODDS_HEALTH_CACHE_TTL_MS / 60_000,
+    bookmakerCount: meta.bookmakerCount,
+    teamCount: meta.teamCount,
+    marketKey: meta.marketKey,
+    lastUpdated: meta.lastUpdated,
+    ageHours,
+    error: meta.error,
   };
 }
 
@@ -173,6 +228,33 @@ function getSignalSliceStatus(slice: SignalStatsSlice, ageHours: number | undefi
   }
 
   return "ok";
+}
+
+function getOddsStatus(meta: OddsProviderMeta): HealthStatus {
+  switch (meta.status) {
+    case "live":
+      return "ok";
+    case "empty":
+      return "empty";
+    case "missing_api_key":
+    case "unavailable":
+      return "error";
+  }
+}
+
+function getEnabledMarketStats(stats: MarketSnapshotSourceStat[]): MarketSnapshotSourceStat[] {
+  const statsBySource = new Map(stats.map((stat) => [stat.source, stat]));
+
+  return ENABLED_MARKET_DATA_SOURCES.filter(isStoredMarketDataSource).map((source) => (
+    statsBySource.get(source) ?? {
+      source,
+      count: 0,
+    }
+  ));
+}
+
+function isStoredMarketDataSource(source: MarketDataSource): source is StoredMarketDataSource {
+  return source !== "mock";
 }
 
 function getSliceStatus(count: number, age: number | undefined, threshold: number): HealthStatus {
