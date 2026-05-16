@@ -28,6 +28,9 @@ import type {
   TeamMarketSnapshot,
   TradingOrderType,
   TradingUserSession,
+  UserOrderRecord,
+  UserOrderPreview,
+  UserPositionRecord,
   UserTradingCredentialStatus,
   UserTradingReadiness,
 } from "../../types/market";
@@ -122,8 +125,12 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
   const [depositTxHash, setDepositTxHash] = useState<string | undefined>();
   const [orderSignState, setOrderSignState] = useState<"idle" | "signing" | "ready" | "error">("idle");
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
+  const [orderHistory, setOrderHistory] = useState<UserOrderRecord[]>([]);
   const [openOrdersState, setOpenOrdersState] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [openOrdersMessage, setOpenOrdersMessage] = useState<string | undefined>();
+  const [positions, setPositions] = useState<UserPositionRecord[]>([]);
+  const [positionsState, setPositionsState] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [positionsMessage, setPositionsMessage] = useState<string | undefined>();
   const [cancellingOrderId, setCancellingOrderId] = useState<string | undefined>();
   const [cancelState, setCancelState] = useState<"idle" | "submitting" | "submitted" | "error">("idle");
   const [submitState, setSubmitState] = useState<"idle" | "submitting" | "submitted" | "error">("idle");
@@ -233,6 +240,12 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       onState: setOpenOrdersState,
       onMessage: setOpenOrdersMessage,
       onOrders: setOpenOrders,
+      onHistory: setOrderHistory,
+    });
+    void loadUserPositions({
+      onState: setPositionsState,
+      onMessage: setPositionsMessage,
+      onPositions: setPositions,
     });
   }, [readiness?.credentials.hasClobCredentials, preview?.tokenId]);
 
@@ -306,6 +319,9 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
     setDepositAddressState("idle");
     setDepositTxState("idle");
     setDepositTxHash(undefined);
+    setOpenOrders([]);
+    setOrderHistory([]);
+    setPositions([]);
     setWalletStatus("idle");
     setWalletMessage("Trading session disconnected.");
   }
@@ -789,6 +805,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         onState: setOpenOrdersState,
         onMessage: setOpenOrdersMessage,
         onOrders: setOpenOrders,
+        onHistory: setOrderHistory,
       });
     } catch (error) {
       setCancelState("error");
@@ -826,7 +843,10 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(signedPayload),
+        body: JSON.stringify({
+          ...signedPayload,
+          preview: toUserOrderPreview(preview, selectedSnapshot),
+        }),
       });
       const payload = (await response.json()) as { error?: string; response?: unknown; submittedAt?: string };
 
@@ -840,6 +860,12 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
         onState: setOpenOrdersState,
         onMessage: setOpenOrdersMessage,
         onOrders: setOpenOrders,
+        onHistory: setOrderHistory,
+      });
+      await loadUserPositions({
+        onState: setPositionsState,
+        onMessage: setPositionsMessage,
+        onPositions: setPositions,
       });
       await loadReadiness(readinessFromPreview(preview), {
         onReadiness: setReadiness,
@@ -1067,6 +1093,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
 
             <UserOrderManagement
               orders={openOrders}
+              history={orderHistory}
               state={openOrdersState}
               message={openOrdersMessage}
               cancellingOrderId={cancellingOrderId}
@@ -1076,9 +1103,22 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
                   onState: setOpenOrdersState,
                   onMessage: setOpenOrdersMessage,
                   onOrders: setOpenOrders,
+                  onHistory: setOrderHistory,
                 })
               }
               onCancelOrder={cancelUserOrder}
+            />
+            <UserPositionsPanel
+              positions={positions}
+              state={positionsState}
+              message={positionsMessage}
+              onRefresh={() =>
+                void loadUserPositions({
+                  onState: setPositionsState,
+                  onMessage: setPositionsMessage,
+                  onPositions: setPositions,
+                })
+              }
             />
           </div>
         </div>
@@ -1409,6 +1449,7 @@ function UserTradingSetup({
 
 function UserOrderManagement({
   orders,
+  history,
   state,
   message,
   cancellingOrderId,
@@ -1417,6 +1458,7 @@ function UserOrderManagement({
   onCancelOrder,
 }: {
   orders: UserOpenOrder[];
+  history: UserOrderRecord[];
   state: "idle" | "loading" | "ready" | "error";
   message?: string;
   cancellingOrderId?: string;
@@ -1460,12 +1502,107 @@ function UserOrderManagement({
           />
         )}
       </div>
+      {history.length > 0 ? (
+        <div className="mt-6 border-t border-terminal-line pt-5">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">Persisted history</p>
+          <div className="mt-4 grid gap-3">
+            {history.slice(0, 5).map((order) => (
+              <UserOrderHistoryRow key={order.id} order={order} />
+            ))}
+          </div>
+        </div>
+      ) : null}
       {message ? (
         <p className={state === "error" || cancelState === "error" ? "mt-4 text-xs leading-5 text-terminal-red" : "mt-4 text-xs leading-5 text-terminal-green"}>
           {message}
         </p>
       ) : null}
     </section>
+  );
+}
+
+function UserOrderHistoryRow({ order }: { order: UserOrderRecord }) {
+  return (
+    <div className="grid gap-3 rounded border border-terminal-line bg-terminal-panel2/65 p-4 sm:grid-cols-[1fr_auto]">
+      <div>
+        <p className="text-sm font-semibold text-terminal-text">
+          {order.preview.teamId.toUpperCase()} {order.preview.outcome.toUpperCase()} / {order.preview.side.toUpperCase()}
+        </p>
+        <p className="mt-1 break-all font-mono text-[11px] leading-5 text-terminal-muted">
+          {order.clobOrderId ?? order.id}
+        </p>
+      </div>
+      <div className="sm:text-right">
+        <p className={getOrderStatusClassName(order.status)}>{order.status.replace(/_/g, " ")}</p>
+        <p className="mt-1 text-xs text-terminal-muted">{order.updatedAt}</p>
+      </div>
+    </div>
+  );
+}
+
+function UserPositionsPanel({
+  positions,
+  state,
+  message,
+  onRefresh,
+}: {
+  positions: UserPositionRecord[];
+  state: "idle" | "loading" | "ready" | "error";
+  message?: string;
+  onRefresh: () => void;
+}) {
+  return (
+    <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7 lg:p-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <SectionHeader
+          eyebrow="Positions"
+          title="User Positions"
+          description="Current Polymarket positions are fetched for the connected user account when available."
+        />
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="rounded border border-terminal-line px-3 py-2 text-xs text-terminal-muted transition hover:border-terminal-cyan hover:text-terminal-cyan"
+        >
+          Refresh
+        </button>
+      </div>
+      <div className="mt-8 grid gap-4">
+        {state === "loading" ? (
+          <EmptyState title="Loading positions" detail="Checking current Polymarket positions for the connected account." />
+        ) : positions.length > 0 ? (
+          positions.slice(0, 6).map((position) => <UserPositionCard key={`${position.conditionId}:${position.asset}`} position={position} />)
+        ) : (
+          <EmptyState title="No positions" detail="No current positions were returned for the connected Polymarket account." />
+        )}
+      </div>
+      {message ? (
+        <p className={state === "error" ? "mt-4 text-xs leading-5 text-terminal-red" : "mt-4 text-xs leading-5 text-terminal-muted"}>
+          {message}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+function UserPositionCard({ position }: { position: UserPositionRecord }) {
+  return (
+    <article className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">{position.outcome}</p>
+          <h3 className="mt-2 text-lg font-semibold text-terminal-text">{position.title}</h3>
+        </div>
+        <p className={position.cashPnl >= 0 ? "text-sm font-semibold text-terminal-green" : "text-sm font-semibold text-terminal-red"}>
+          {formatSignedMoney(position.cashPnl)}
+        </p>
+      </div>
+      <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        <ScenarioMetric label="Size" value={formatShareSize(position.size)} />
+        <ScenarioMetric label="Avg price" value={formatPriceCents(position.avgPrice)} />
+        <ScenarioMetric label="Current value" value={`$${position.currentValue.toFixed(2)}`} />
+      </div>
+    </article>
   );
 }
 
@@ -1683,6 +1820,28 @@ function getUserOrderDisabledReason(
   }
 
   return undefined;
+}
+
+function toUserOrderPreview(preview: BidOrderPreview, snapshot: TeamMarketSnapshot): UserOrderPreview {
+  return {
+    marketId: snapshot.market.polymarket?.marketId,
+    tokenId: preview.tokenId ?? "",
+    teamId: snapshot.team.id,
+    outcome: preview.outcomeSide,
+    side: preview.tradeSide,
+    orderType: preview.orderType,
+    limitPrice: preview.sidePrice,
+    size: preview.shareSize,
+    estimatedCost: preview.estimatedCost,
+    estimatedTakerFee: preview.estimatedTakerFee,
+    estimatedTotalCost: preview.estimatedTotalCost,
+    estimatedProceeds: preview.tradeSide === "sell" ? preview.potentialOutcome : undefined,
+    potentialOutcome: preview.potentialOutcome,
+    tickSize: preview.tickSize ?? "0.01",
+    negRisk: preview.negRisk,
+    stale: false,
+    warnings: preview.disabledReason ? [preview.disabledReason] : [],
+  };
 }
 
 function getReadinessSummary({
@@ -2092,6 +2251,7 @@ async function loadUserOpenOrders(
     onState: (value: "idle" | "loading" | "ready" | "error") => void;
     onMessage: (value: string | undefined) => void;
     onOrders: (value: UserOpenOrder[]) => void;
+    onHistory?: (value: UserOrderRecord[]) => void;
   },
 ) {
   handlers.onState("loading");
@@ -2100,16 +2260,42 @@ async function loadUserOpenOrders(
   try {
     const url = tokenId ? `/api/trading/orders/open?tokenId=${encodeURIComponent(tokenId)}` : "/api/trading/orders/open";
     const response = await fetch(url);
-    const payload = (await response.json()) as { orders?: UserOpenOrder[]; error?: string };
+    const payload = (await response.json()) as { orders?: UserOpenOrder[]; history?: UserOrderRecord[]; error?: string };
 
     if (!response.ok) {
       throw new Error(payload.error ?? "Unable to fetch open orders.");
     }
 
     handlers.onOrders(payload.orders ?? []);
+    handlers.onHistory?.(payload.history ?? []);
     handlers.onState("ready");
   } catch (error) {
     handlers.onOrders([]);
+    handlers.onState("error");
+    handlers.onMessage(error instanceof Error ? error.message : String(error));
+  }
+}
+
+async function loadUserPositions(handlers: {
+  onState: (value: "idle" | "loading" | "ready" | "error") => void;
+  onMessage: (value: string | undefined) => void;
+  onPositions: (value: UserPositionRecord[]) => void;
+}) {
+  handlers.onState("loading");
+  handlers.onMessage(undefined);
+
+  try {
+    const response = await fetch("/api/trading/positions?limit=50");
+    const payload = (await response.json()) as { positions?: UserPositionRecord[]; error?: string };
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Unable to fetch positions.");
+    }
+
+    handlers.onPositions(payload.positions ?? []);
+    handlers.onState("ready");
+  } catch (error) {
+    handlers.onPositions([]);
     handlers.onState("error");
     handlers.onMessage(error instanceof Error ? error.message : String(error));
   }
@@ -2121,4 +2307,21 @@ function formatUnixSeconds(value: number) {
   }
 
   return new Date(value * 1000).toISOString();
+}
+
+function getOrderStatusClassName(status: UserOrderRecord["status"]) {
+  if (status === "filled" || status === "open" || status === "submitted") {
+    return "text-xs font-semibold uppercase tracking-[0.18em] text-terminal-green";
+  }
+
+  if (status === "cancelled") {
+    return "text-xs font-semibold uppercase tracking-[0.18em] text-terminal-muted";
+  }
+
+  return "text-xs font-semibold uppercase tracking-[0.18em] text-terminal-red";
+}
+
+function formatSignedMoney(value: number) {
+  const sign = value >= 0 ? "+" : "-";
+  return `${sign}$${Math.abs(value).toFixed(2)}`;
 }

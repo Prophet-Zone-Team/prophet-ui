@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { cancelUserOrder } from "../../../../../server/trading/clobUserClient";
 import { refreshSessionEligibility } from "../../../../../server/trading/eligibility";
+import { recordUserOrderCancelError, recordUserOrderCancelled } from "../../../../../server/trading/orderStore";
 import { getTradingSessionFromCookie } from "../../../../../server/trading/sessionStore";
 
 export const runtime = "nodejs";
@@ -47,12 +48,26 @@ export async function POST(request: Request) {
       credentials: record.credentials,
       orderId: payload.orderId ?? "",
     });
+    const cancelledAt = new Date().toISOString();
+    const order = await recordUserOrderCancelled({
+      session: record.session,
+      clobOrderId: payload.orderId ?? "",
+      response: result,
+      cancelledAt,
+    });
 
     return NextResponse.json({
       response: result,
-      cancelledAt: new Date().toISOString(),
+      order,
+      cancelledAt,
     });
   } catch (error) {
+    await recordUserOrderCancelError({
+      session: record.session,
+      clobOrderId: payload.orderId ?? "",
+      error: error instanceof Error ? error.message : String(error),
+    });
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : String(error),

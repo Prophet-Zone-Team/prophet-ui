@@ -138,12 +138,61 @@ export interface UserOrderPreview {
 export interface UserOrderRecord {
   id: string;
   userId: string;
+  walletAddress: string;
+  funderAddress?: string;
   clobOrderId?: string;
   status: UserOrderStatus;
   preview: UserOrderPreview;
+  response?: unknown;
   submittedAt?: string;
   updatedAt: string;
   error?: string;
+}
+
+export interface UserTradingAuditEvent {
+  id: string;
+  userId: string;
+  walletAddress: string;
+  eventType:
+    | "session_created"
+    | "credentials_derived"
+    | "order_submitted"
+    | "order_submit_failed"
+    | "order_status_refreshed"
+    | "order_cancel_requested"
+    | "order_cancel_failed";
+  orderId?: string;
+  clobOrderId?: string;
+  detail?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface UserPositionRecord {
+  proxyWallet: string;
+  asset: string;
+  conditionId: string;
+  size: number;
+  avgPrice: number;
+  initialValue: number;
+  currentValue: number;
+  cashPnl: number;
+  percentPnl: number;
+  totalBought: number;
+  realizedPnl: number;
+  percentRealizedPnl: number;
+  curPrice: number;
+  redeemable: boolean;
+  mergeable: boolean;
+  title: string;
+  slug: string;
+  icon?: string;
+  eventSlug?: string;
+  outcome: string;
+  outcomeIndex: number;
+  oppositeOutcome?: string;
+  oppositeAsset?: string;
+  endDate?: string;
+  negativeRisk: boolean;
 }
 
 export interface Team {

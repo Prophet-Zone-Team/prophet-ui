@@ -11,7 +11,7 @@ import type {
   TickSize,
 } from "@polymarket/clob-client-v2";
 
-import type { BidTradeSide, TradingOrderType } from "../../types/market";
+import type { BidTradeSide, TradingOrderType, UserPositionRecord } from "../../types/market";
 import { getTradingHost } from "./clobAuth";
 
 export interface SignedUserOrderPayload {
@@ -212,6 +212,37 @@ export async function cancelUserOrder({
   }
 
   return response.json();
+}
+
+export async function fetchUserPositions({
+  userAddress,
+  conditionIds,
+  limit = 100,
+}: {
+  userAddress: string;
+  conditionIds?: string[];
+  limit?: number;
+}): Promise<UserPositionRecord[]> {
+  const params = new URLSearchParams({
+    user: userAddress,
+    limit: String(Math.max(1, Math.min(limit, 500))),
+    sizeThreshold: "0",
+  });
+
+  if (conditionIds?.length) {
+    params.set("market", conditionIds.join(","));
+  }
+
+  const response = await fetch(`https://data-api.polymarket.com/positions?${params.toString()}`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to fetch user positions: ${await readResponseError(response)}`);
+  }
+
+  const payload = (await response.json()) as unknown;
+  return Array.isArray(payload) ? payload.filter(isUserPositionRecord) : [];
 }
 
 export async function postSignedUserOrder({
@@ -457,6 +488,25 @@ function parseSide(value: unknown): "BUY" | "SELL" | undefined {
   }
 
   return undefined;
+}
+
+function isUserPositionRecord(value: unknown): value is UserPositionRecord {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const record = value as Partial<UserPositionRecord>;
+
+  return (
+    typeof record.proxyWallet === "string" &&
+    typeof record.asset === "string" &&
+    typeof record.conditionId === "string" &&
+    typeof record.size === "number" &&
+    typeof record.avgPrice === "number" &&
+    typeof record.currentValue === "number" &&
+    typeof record.title === "string" &&
+    typeof record.outcome === "string"
+  );
 }
 
 async function createUserL2Headers({

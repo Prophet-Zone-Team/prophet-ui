@@ -5,6 +5,7 @@ import {
   getFreshClobAuthTypedData,
   recoverClobAuthSignerAddress,
 } from "../../../../server/trading/clobAuth";
+import { recordTradingAuditEvent } from "../../../../server/trading/orderStore";
 import {
   createTradingCredentialsCookie,
   getTradingSessionFromCookie,
@@ -102,6 +103,15 @@ export async function POST(request: Request) {
       ...credentials,
       derivedAt: status.derivedAt ?? new Date().toISOString(),
     };
+    await recordTradingAuditEvent({
+      userId: record.session.userId,
+      walletAddress: record.session.walletAddress,
+      eventType: "credentials_derived",
+      detail: {
+        storage: status.storage,
+        derivedAt: status.derivedAt,
+      },
+    });
 
     return NextResponse.json(
       {

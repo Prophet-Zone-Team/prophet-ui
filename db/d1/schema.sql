@@ -90,3 +90,49 @@ CREATE TABLE IF NOT EXISTS collection_runs (
 
 CREATE INDEX IF NOT EXISTS idx_collection_runs_source_time
 ON collection_runs (source, collected_at);
+
+CREATE TABLE IF NOT EXISTS user_trading_orders (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  wallet_address TEXT NOT NULL,
+  funder_address TEXT,
+  clob_order_id TEXT,
+  status TEXT NOT NULL,
+  market_id TEXT,
+  token_id TEXT NOT NULL,
+  team_id TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  side TEXT NOT NULL,
+  order_type TEXT NOT NULL,
+  limit_price REAL NOT NULL,
+  size REAL NOT NULL,
+  estimated_cost REAL NOT NULL,
+  estimated_total_cost REAL,
+  estimated_proceeds REAL,
+  potential_outcome REAL NOT NULL,
+  preview_json TEXT NOT NULL,
+  response_json TEXT,
+  submitted_at TEXT,
+  updated_at TEXT NOT NULL,
+  error TEXT
+) STRICT;
+
+CREATE INDEX IF NOT EXISTS idx_user_trading_orders_user_time
+ON user_trading_orders (user_id, updated_at);
+
+CREATE INDEX IF NOT EXISTS idx_user_trading_orders_clob
+ON user_trading_orders (clob_order_id);
+
+CREATE TABLE IF NOT EXISTS user_trading_audit_events (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  wallet_address TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  order_id TEXT,
+  clob_order_id TEXT,
+  detail_json TEXT,
+  created_at TEXT NOT NULL
+) STRICT;
+
+CREATE INDEX IF NOT EXISTS idx_user_trading_audit_user_time
+ON user_trading_audit_events (user_id, created_at);

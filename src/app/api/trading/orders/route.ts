@@ -11,7 +11,9 @@ import {
 import { getOrderBuilderCode } from "../../../../server/trading/builderCode";
 import { postSignedUserOrder } from "../../../../server/trading/clobUserClient";
 import { refreshSessionEligibilityIfStale } from "../../../../server/trading/eligibility";
+import { recordUserOrderError, recordUserOrderSubmitted } from "../../../../server/trading/orderStore";
 import { createTradingSessionCookie, getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
+import type { UserOrderPreview, UserOrderStatus } from "../../../../types/market";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +23,7 @@ interface SubmitSignedOrderPayload {
   orderType?: "FAK";
   postOnly?: boolean;
   deferExec?: boolean;
+  preview?: UserOrderPreview;
 }
 
 export async function POST(request: Request) {
@@ -102,6 +105,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: ownershipError }, { status: 400 });
   }
 
+  const previewError = validatePreview(payload.preview, orderContext);
+
+  if (previewError) {
+    console.warn("[trading.orders] preview validation failed", {
+      userId: record.session.userId,
+      error: previewError,
+      tokenId: orderContext.tokenId,
+    });
+    return NextResponse.json({ error: previewError }, { status: 400 });
+  }
+
   const baseFundingRequirement = getOrderFundingRequirementFromSignedOrder(payload);
 
   if (!baseFundingRequirement) {
@@ -167,11 +181,22 @@ export async function POST(request: Request) {
       userId: record.session.userId,
       tokenId: orderContext.tokenId,
     });
+    const submittedAt = new Date().toISOString();
+    const persistedOrder = payload.preview
+      ? await recordUserOrderSubmitted({
+          session: record.session,
+          preview: payload.preview,
+          response: result,
+          status: getSubmittedOrderStatus(result),
+          submittedAt,
+        })
+      : undefined;
 
     return NextResponse.json(
       {
         response: result,
-        submittedAt: new Date().toISOString(),
+        order: persistedOrder,
+        submittedAt,
       },
       {
         headers: {
@@ -180,6 +205,12 @@ export async function POST(request: Request) {
       },
     );
   } catch (error) {
+    await recordUserOrderError({
+      session: record.session,
+      preview: payload.preview,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
     console.warn("[trading.orders] post failed", {
       userId: record.session.userId,
       tokenId: orderContext.tokenId,
@@ -243,6 +274,70 @@ function validateSignedOrderOwnership({
   }
 
   return undefined;
+}
+
+function validatePreview(preview: UserOrderPreview | undefined, order: SignedOrderContext): string | undefined {
+  if (!preview) {
+    return "Missing safe order preview metadata.";
+  }
+
+  if (preview.tokenId !== order.tokenId) {
+    return "Order preview token does not match signed order token.";
+  }
+
+  if (preview.orderType !== "FAK") {
+    return "Only FAK order previews are supported.";
+  }
+
+  if (!Number.isFinite(preview.limitPrice) || preview.limitPrice <= 0 || preview.limitPrice >= 1) {
+    return "Order preview limit price is invalid.";
+  }
+
+  if (!Number.isFinite(preview.size) || preview.size <= 0) {
+    return "Order preview size is invalid.";
+  }
+
+  if (!preview.teamId || !["yes", "no"].includes(preview.outcome) || !["buy", "sell"].includes(preview.side)) {
+    return "Order preview metadata is incomplete.";
+  }
+
+  return undefined;
+}
+
+function getSubmittedOrderStatus(response: unknown): UserOrderStatus {
+  if (!response || typeof response !== "object") {
+    return "submitted";
+  }
+
+  const responseObject = response as { success?: unknown; status?: unknown; errorMsg?: unknown };
+
+  if (responseObject.success === false) {
+    return "rejected";
+  }
+
+  if (typeof responseObject.status !== "string") {
+    return "submitted";
+  }
+
+  const status = responseObject.status.toLowerCase();
+
+  if (status.includes("matched") || status.includes("fill")) {
+    return "filled";
+  }
+
+  if (status.includes("open") || status.includes("live")) {
+    return "open";
+  }
+
+  if (status.includes("cancel")) {
+    return "cancelled";
+  }
+
+  if (status.includes("reject") || status.includes("fail")) {
+    return "rejected";
+  }
+
+  return "submitted";
 }
 
 function normalizeAddress(address: string | undefined) {

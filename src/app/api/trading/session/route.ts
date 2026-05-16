@@ -10,6 +10,7 @@ import {
 } from "../../../../server/trading/sessionStore";
 import { checkTradingEligibility } from "../../../../server/trading/eligibility";
 import { setupDepositWalletForOwner } from "../../../../server/trading/depositWallet";
+import { recordTradingAuditEvent } from "../../../../server/trading/orderStore";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,6 +52,16 @@ export async function POST(request: Request) {
     eligibilityCountry: eligibility.country,
     eligibilityRegion: eligibility.region,
     eligibilityReason: eligibility.reason,
+  });
+  await recordTradingAuditEvent({
+    userId: session.userId,
+    walletAddress: session.walletAddress,
+    eventType: "session_created",
+    detail: {
+      signatureType: session.signatureType,
+      eligibilityStatus: session.eligibilityStatus,
+      depositWalletStatus: session.depositWalletStatus,
+    },
   });
 
   return NextResponse.json(

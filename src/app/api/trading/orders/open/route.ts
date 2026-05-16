@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { fetchUserOpenOrders } from "../../../../../server/trading/clobUserClient";
+import { refreshPersistedOrderStatuses } from "../../../../../server/trading/orderStore";
 import { getTradingSessionFromCookie } from "../../../../../server/trading/sessionStore";
 
 export const runtime = "nodejs";
@@ -26,10 +27,17 @@ export async function GET(request: Request) {
       market: url.searchParams.get("market") ?? undefined,
       tokenId: url.searchParams.get("tokenId") ?? undefined,
     });
+    const updatedAt = new Date().toISOString();
+    const history = await refreshPersistedOrderStatuses({
+      session: record.session,
+      openOrders: orders,
+      refreshedAt: updatedAt,
+    });
 
     return NextResponse.json({
       orders,
-      updatedAt: new Date().toISOString(),
+      history,
+      updatedAt,
     });
   } catch (error) {
     return NextResponse.json(

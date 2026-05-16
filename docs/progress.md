@@ -1,6 +1,6 @@
 # World Cup Prediction Terminal Progress
 
-Last updated: 2026-05-16 10:07 CST
+Last updated: 2026-05-16 12:18 CST
 
 ## Priority Status
 
@@ -11,7 +11,7 @@ Last updated: 2026-05-16 10:07 CST
 - Priority 3, Market Signal System:
   completed v2. Signals cover `heating_up`, `cooling_down`, `volume_spike`, `odds_mismatch`, `sentiment_driven`, `news_impact`, `overheated`, and `quiet_accumulation`.
 - Priority 4, Embedded User Trading:
-  in progress. The product direction has moved to real user-owned Polymarket trading. The legacy `/api/bid/orders` server-wallet path is tombstoned and no longer reads deployment private keys or CLOB credentials. `/bid` is now a single-path user-owned trade ticket with wallet session, automatic Polymarket account/deposit-wallet derivation, account preparation, Polymarket Bridge deposit-address generation, wallet-initiated Polygon USDC deposit, Polymarket geoblock readiness, user L1 auth credential derivation, deposit-wallet approval signing/submission, CLOB balance/allowance sync, order-specific readiness checks, user order signing, final confirmation, open-order reads, and cancellation. The submit endpoint re-validates signed-order ownership, signature type 3, token funding requirements, and balance/allowance before posting to CLOB. Production broad release remains blocked until durable user session/credential handling, submitted order persistence, positions, audit logging, multi-wallet QA, production geoblock validation, and a documented small-order production regression test are complete.
+  in progress. The product direction has moved to real user-owned Polymarket trading. The legacy `/api/bid/orders` server-wallet path is tombstoned and no longer reads deployment private keys or CLOB credentials. `/bid` is now a single-path user-owned trade ticket with wallet session, automatic Polymarket account/deposit-wallet derivation, account preparation, Polymarket Bridge deposit-address generation, wallet-initiated Polygon USDC deposit, Polymarket geoblock readiness, user L1 auth credential derivation, deposit-wallet approval signing/submission, CLOB balance/allowance sync, order-specific readiness checks, user order signing, final confirmation, open-order reads, cancellation, persisted safe order metadata, status refresh reconciliation, current positions read, and audit events for session/credential/order lifecycle. The submit endpoint re-validates signed-order ownership, signature type 3, token funding requirements, balance/allowance, and safe preview metadata before posting to CLOB. Production broad release remains blocked until durable user session/credential handling beyond encrypted session cookies, remote D1 schema deployment for the new trading tables, multi-wallet QA, production geoblock validation, and a documented small-order production regression test are complete.
 - Priority 5, Daily Brief and Watchlist Alerts:
   completed for local/browser scope. `/brief`, Markdown export, and local watchlist alerts are implemented.
 
@@ -45,6 +45,8 @@ Last updated: 2026-05-16 10:07 CST
   the trading direction is embedded real user trading through user-owned wallets, not server-wallet execution.
 - Embedded user trading MVP implemented:
   legacy `/api/bid/orders` now returns a tombstone status for GET and `410` for POST, the server-wallet order client has been removed, `/api/trading/session`, `/api/trading/deposit`, `/api/trading/credentials`, `/api/trading/eligibility`, `/api/trading/readiness`, `/api/trading/approvals`, `/api/trading/balance-sync`, `/api/trading/orders`, `/api/trading/orders/open`, and `/api/trading/orders/cancel` are implemented, and `/bid` is a Trade Ticket with user-owned wallet/signing/order-management flow only. The visible setup is collapsed into `Prepare account`, which derives user CLOB credentials, generates a Polymarket Bridge deposit address, submits deposit-wallet approvals when needed, and syncs CLOB balance/allowance. The deposit panel now supports a user-confirmed Polygon USDC transfer from the connected wallet to the generated Bridge deposit address, then refreshes readiness after the transaction is observed. Session creation derives the deposit wallet from the connected wallet and can deploy it through the Polymarket relayer only when the configured relayer auth matches the connected wallet or app-managed Builder API credentials are configured. Readiness now checks the current ticket's token, side, cost, and size; submission re-checks signed-order ownership plus balance/allowance before CLOB post.
+- Embedded user trading hardening started:
+  D1 schema now includes `user_trading_orders` and `user_trading_audit_events`; server-side order submission persists safe order preview metadata plus CLOB response summaries; open-order refresh reconciles persisted order status; cancellation updates persisted records; `/api/trading/orders/history` returns order history for the active session; `/api/trading/positions` reads current positions from Polymarket Data API for the connected deposit wallet/user account; `/bid` displays persisted order history and current positions. The persisted metadata intentionally excludes signed order payloads, API keys, secrets, passphrases, and private keys.
 - Production deployment exists at:
   [https://wc.dolla.market](https://wc.dolla.market)
 - Production Cloudflare deployment updated on 2026-05-15:
@@ -74,8 +76,8 @@ Checked on 2026-05-16 10:07 CST:
 ### Product Todo
 
 - Continue hardening the user-owned trading flow:
-  durable login/session, encrypted or per-session credential handling, submitted order persistence/status, positions, audit logging, production monitoring, multi-wallet QA, and documented small-order production regression tests.
-- Add an order history and positions view backed by persisted user-owned order state, including cancel/status refresh paths.
+  durable login/session beyond the current cookie/session recovery, production credential storage policy, production monitoring, multi-wallet QA, and documented small-order production regression tests.
+- Deploy the new remote D1 schema for trading persistence, then validate order history, status refresh, cancellation persistence, audit rows, and positions against an eligible production wallet.
 - Validate the production geoblock and eligibility flow from allowed and blocked regions.
 - Calibrate `odds_mismatch` once real bookmaker outright odds are flowing.
 - Add user-configurable alert thresholds per watched team.
