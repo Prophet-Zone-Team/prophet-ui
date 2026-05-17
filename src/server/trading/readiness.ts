@@ -210,26 +210,26 @@ function getEligibilityCheckStatus(session: TradingUserSession | undefined): Acc
 
 function getBalanceLabel(tradeSide: BidTradeSide | undefined) {
   if (tradeSide === "sell") {
-    return "Token balance sufficient";
+    return "Token balance";
   }
 
   if (tradeSide === "buy") {
-    return "USDC balance sufficient";
+    return "USDC balance";
   }
 
-  return "USDC balance readable";
+  return "USDC balance";
 }
 
 function getAllowanceLabel(tradeSide: BidTradeSide | undefined) {
   if (tradeSide === "sell") {
-    return "Token allowance sufficient";
+    return "Token allowance";
   }
 
   if (tradeSide === "buy") {
-    return "USDC allowance sufficient";
+    return "USDC allowance";
   }
 
-  return "Allowance readable";
+  return "Allowance";
 }
 
 function getReadableBalanceDetail({

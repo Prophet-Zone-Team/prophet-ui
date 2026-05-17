@@ -311,7 +311,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
             setAccountPrepState("needs_funds");
             setWalletMessage("Wallet reconnected. Deposit funds to continue trading.");
           } else if (failedCheck?.id === "allowance") {
-            setWalletMessage("Wallet reconnected. Approve trading to continue.");
+            setWalletMessage("Wallet reconnected. Enable trading to finish account setup.");
           } else {
             setWalletMessage("Wallet reconnected. Complete account setup before placing orders.");
           }
@@ -1377,10 +1377,6 @@ function UserTradingSetup({
       (!readiness?.credentials.hasClobCredentials ||
         readiness.checks.some((check) => check.status !== "pass" && check.id !== "balance")),
   );
-  const needsTradingApproval = Boolean(
-    readiness?.credentials.hasClobCredentials && readiness.checks.some(isFailedAllowanceCheck),
-  );
-  const setupButtonLabel = needsTradingApproval ? "Approve trading" : "Enable trading";
   const refreshLabel = readiness?.credentials.hasClobCredentials ? "Sync balances" : "Refresh";
   const showDeposit = Boolean(
     session &&
@@ -1449,13 +1445,13 @@ function UserTradingSetup({
             >
               {accountPrepState === "running"
                 ? approvalState === "signing"
-                  ? "Approve in wallet..."
+                  ? "Confirm setup..."
                   : credentialState === "signing"
                     ? "Sign to enable..."
                     : approvalState === "submitted" || approvalState === "syncing"
                       ? "Waiting for confirmation..."
                       : "Enabling trading..."
-                : setupButtonLabel}
+                : "Enable trading"}
             </button>
           ) : (
             <button
@@ -1925,7 +1921,7 @@ function getUserOrderDisabledReason(
     );
 
     if (fundingIssues.length > 0) {
-      return fundingIssues.map((check) => `${check.label}: ${check.detail}`).join(" ");
+      return fundingIssues.map((check) => check.detail).join(" ");
     }
 
     const failedCheck = readiness.checks.find((check) => check.status !== "pass");
@@ -2000,7 +1996,7 @@ function getReadinessSummary({
   if (accountPrepState === "running") {
     const title =
       approvalState === "signing"
-        ? "Approve trading in your wallet"
+        ? "Confirm account setup in your wallet"
         : credentialState === "signing"
           ? "Sign to enable trading"
           : "Enabling trading";
@@ -2034,9 +2030,9 @@ function getReadinessSummary({
 
   if (fundingIssues.length > 1) {
     return {
-      eyebrow: "Funds and approval required",
-      title: "Add funds and approve trading",
-      detail: "The order needs enough USDC and a deposit-wallet approval before it can be placed.",
+      eyebrow: "Account setup",
+      title: "Add funds and enable trading",
+      detail: "The order needs enough USDC and completed Polymarket account setup before it can be placed.",
       issue: fundingIssueText,
       className: `${baseClass} border-terminal-amber/45 bg-terminal-amber/10 text-terminal-amber`,
     };
@@ -2064,9 +2060,9 @@ function getReadinessSummary({
 
   if (blockingCheck?.id === "allowance") {
     return {
-      eyebrow: "Approval required",
-      title: "Approve trading",
-      detail: "Approve the Polymarket account permissions before placing an order.",
+      eyebrow: "Setup required",
+      title: "Enable trading",
+      detail: "Finish the Polymarket account setup before placing an order.",
       issue: blockingCheck.detail,
       className: `${baseClass} border-terminal-amber/45 bg-terminal-amber/10 text-terminal-amber`,
     };
