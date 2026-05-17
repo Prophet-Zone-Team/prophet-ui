@@ -43,6 +43,11 @@ export interface UserBalanceAllowanceSnapshot {
   conditional?: BalanceAllowanceResponse;
 }
 
+export interface ClobBestPrices {
+  bestBid?: number;
+  bestAsk?: number;
+}
+
 export async function fetchClobMarketDetails(tokenId: string): Promise<MarketDetails | undefined> {
   const marketByTokenResponse = await fetch(`${getTradingHost()}/markets-by-token/${encodeURIComponent(tokenId)}`, {
     cache: "no-store",
@@ -68,6 +73,26 @@ export async function fetchClobMarketDetails(tokenId: string): Promise<MarketDet
   }
 
   return (await marketResponse.json()) as MarketDetails;
+}
+
+export async function fetchClobBestPrices(tokenId: string): Promise<ClobBestPrices> {
+  const response = await fetch(`${getTradingHost()}/book?token_id=${encodeURIComponent(tokenId)}`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to fetch CLOB order book: ${await readResponseError(response)}`);
+  }
+
+  const book = (await response.json()) as {
+    bids?: Array<{ price?: unknown }>;
+    asks?: Array<{ price?: unknown }>;
+  };
+
+  return {
+    bestBid: maxPrice(book.bids),
+    bestAsk: minPrice(book.asks),
+  };
 }
 
 export async function fetchUserBalanceAllowance({
@@ -456,6 +481,24 @@ function parseIntegerString(value: unknown): string | undefined {
   }
 
   return value;
+}
+
+function minPrice(levels: Array<{ price?: unknown }> | undefined): number | undefined {
+  const prices = parsePrices(levels);
+
+  return prices.length > 0 ? Math.min(...prices) : undefined;
+}
+
+function maxPrice(levels: Array<{ price?: unknown }> | undefined): number | undefined {
+  const prices = parsePrices(levels);
+
+  return prices.length > 0 ? Math.max(...prices) : undefined;
+}
+
+function parsePrices(levels: Array<{ price?: unknown }> | undefined): number[] {
+  return (levels ?? [])
+    .map((level) => (typeof level.price === "string" || typeof level.price === "number" ? Number(level.price) : Number.NaN))
+    .filter((price) => Number.isFinite(price) && price > 0 && price < 1);
 }
 
 function parseAddress(value: unknown): string | undefined {

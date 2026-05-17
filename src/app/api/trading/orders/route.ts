@@ -9,7 +9,7 @@ import {
   type SignedOrderContext,
 } from "../../../../server/trading/balances";
 import { getOrderBuilderCode } from "../../../../server/trading/builderCode";
-import { postSignedUserOrder, updateUserBalanceAllowance } from "../../../../server/trading/clobUserClient";
+import { fetchClobBestPrices, postSignedUserOrder, updateUserBalanceAllowance } from "../../../../server/trading/clobUserClient";
 import { refreshSessionEligibilityIfStale } from "../../../../server/trading/eligibility";
 import { recordUserOrderError, recordUserOrderSubmitted } from "../../../../server/trading/orderStore";
 import { createTradingSessionCookie, getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
@@ -114,6 +114,17 @@ export async function POST(request: Request) {
       tokenId: orderContext.tokenId,
     });
     return NextResponse.json({ error: previewError }, { status: 400 });
+  }
+
+  const executionPriceError = await validateExecutionPrice(orderContext);
+
+  if (executionPriceError) {
+    console.warn("[trading.orders] execution price guard failed", {
+      userId: record.session.userId,
+      error: executionPriceError,
+      tokenId: orderContext.tokenId,
+    });
+    return NextResponse.json({ error: executionPriceError }, { status: 409 });
   }
 
   const baseFundingRequirement = getOrderFundingRequirementFromSignedOrder(payload);
@@ -315,6 +326,53 @@ function validatePreview(preview: UserOrderPreview | undefined, order: SignedOrd
   }
 
   return undefined;
+}
+
+async function validateExecutionPrice(order: SignedOrderContext): Promise<string | undefined> {
+  const orderPrice = getSignedOrderPrice(order);
+
+  if (orderPrice === undefined) {
+    return "Unable to derive signed order price.";
+  }
+
+  try {
+    const prices = await fetchClobBestPrices(order.tokenId);
+    const tolerance = 0.02;
+
+    if (order.side === "BUY" && prices.bestAsk === undefined) {
+      return "No current ask liquidity is available for this token. Refresh the market before submitting.";
+    }
+
+    if (order.side === "SELL" && prices.bestBid === undefined) {
+      return "No current bid liquidity is available for this token. Refresh the market before submitting.";
+    }
+
+    if (order.side === "BUY" && prices.bestAsk !== undefined && orderPrice > prices.bestAsk + tolerance) {
+      return `Order price ${(orderPrice * 100).toFixed(1)}c is far above the current best ask ${(prices.bestAsk * 100).toFixed(
+        1,
+      )}c. Refresh the ticket before submitting.`;
+    }
+
+    if (order.side === "SELL" && prices.bestBid !== undefined && orderPrice < prices.bestBid - tolerance) {
+      return `Order price ${(orderPrice * 100).toFixed(1)}c is far below the current best bid ${(prices.bestBid * 100).toFixed(
+        1,
+      )}c. Refresh the ticket before submitting.`;
+    }
+  } catch (error) {
+    return `Unable to verify the current CLOB order book before submission: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
+  }
+
+  return undefined;
+}
+
+function getSignedOrderPrice(order: SignedOrderContext): number | undefined {
+  if (order.makerAmount <= 0 || order.takerAmount <= 0) {
+    return undefined;
+  }
+
+  return order.side === "BUY" ? order.makerAmount / order.takerAmount : order.takerAmount / order.makerAmount;
 }
 
 function getSubmittedOrderStatus(response: unknown): UserOrderStatus {
