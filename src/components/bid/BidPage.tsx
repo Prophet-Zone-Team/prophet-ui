@@ -580,6 +580,12 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
 
       if (submitPayload.response?.transactionID) {
         await waitForApprovalRelayerTransaction(submitPayload.response.transactionID);
+      } else if (!isRelayerSuccessState(submitPayload.response?.state)) {
+        throw new Error(
+          `Account approval relayer did not return a transaction id. State: ${
+            submitPayload.response?.state ?? "unknown"
+          }. Retry Enable trading and check relayer configuration if this repeats.`,
+        );
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -591,7 +597,9 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
   }
 
   async function waitForApprovalRelayerTransaction(transactionId: string) {
-    for (let attempt = 0; attempt < 8; attempt += 1) {
+    let lastState: string | undefined;
+
+    for (let attempt = 0; attempt < 24; attempt += 1) {
       await delay(5000);
       const response = await fetch(`/api/trading/approvals?transactionId=${encodeURIComponent(transactionId)}`, {
         cache: "no-store",
@@ -606,6 +614,7 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
       }
 
       const state = payload.transaction?.state;
+      lastState = state;
       const failedState = getRelayerFailureState(state);
 
       if (failedState) {
@@ -623,6 +632,12 @@ export function BidPage({ snapshots, dataStatus }: BidPageProps) {
 
       setWalletMessage(`Account approval is pending in Polymarket relayer... (${state ?? "unknown"})`);
     }
+
+    throw new Error(
+      `Account approval relayer transaction ${transactionId} did not confirm after 2 minutes. Last state: ${
+        lastState ?? "unknown"
+      }. Wait a little longer, then retry Enable trading if allowance is still 0.`,
+    );
   }
 
   async function syncBalances(): Promise<UserTradingReadiness | undefined> {
@@ -2584,9 +2599,9 @@ function isFailedAllowanceCheck(check: UserTradingReadiness["checks"][number]) {
 }
 
 function isRelayerSuccessState(state: string | undefined) {
-  return state === "STATE_MINED" || state === "STATE_CONFIRMED" || state === "STATE_EXECUTED";
+  return Boolean(state && (state.includes("MINED") || state.includes("CONFIRMED") || state.includes("EXECUTED")));
 }
 
 function getRelayerFailureState(state: string | undefined) {
-  return state === "STATE_FAILED" || state === "STATE_INVALID" ? state : undefined;
+  return state && (state.includes("FAILED") || state.includes("INVALID") || state.includes("REVERTED")) ? state : undefined;
 }
