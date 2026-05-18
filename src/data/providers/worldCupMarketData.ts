@@ -220,6 +220,16 @@ async function attachFootballContext(
     };
   }
 
+  if (!teamIds || teamIds.length !== 1) {
+    return {
+      ...data,
+      meta: {
+        ...data.meta,
+        football: cached.meta,
+      },
+    };
+  }
+
   const snapshots = teamIds
     ? data.snapshots.filter((snapshot) => teamIds.includes(snapshot.team.id))
     : data.snapshots;

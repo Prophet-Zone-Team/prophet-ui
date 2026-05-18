@@ -13,7 +13,7 @@ export default function Loading() {
             <span>Teams</span>
             <span>Portfolio</span>
           </nav>
-          <div className="bid-button">Place a Bid</div>
+          <div className="wallet-connect-button">Connect</div>
         </header>
 
         <section className="hero loading-hero" aria-label="Loading market data">

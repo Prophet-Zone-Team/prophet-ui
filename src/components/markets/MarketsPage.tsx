@@ -4,6 +4,7 @@ import type { MarketDataMeta, WorldCupMarketData } from "../../data/providers/ty
 import { getMarketDataSourceLabel } from "../../data/providers/source";
 import type { TeamMarketSnapshot } from "../../types/market";
 import { TeamFlag } from "../teams/TeamFlag";
+import { WalletMenuButton } from "../trading/WalletMenuButton";
 import { formatChange, formatProbability, formatVolume, getSentimentLabel } from "../home/market-formatters";
 
 interface MarketsPageProps {
@@ -69,15 +70,12 @@ function MarketsTopbar({ source }: { source: MarketDataMeta["source"] }) {
         Prophet
       </Link>
       <nav aria-label="Primary navigation">
-        <Link href={`/markets?source=${source}`}>Markets</Link>
-        <Link href={`/?source=${source}#matches-title`}>Matches</Link>
-        <Link href={`/markets?source=${source}`}>Teams</Link>
+        <Link href={`/markets?source=${source}`} aria-current="page">Markets</Link>
+        <Link href={`/matches?source=${source}`}>Matches</Link>
+        <Link href={`/teams?source=${source}`}>Teams</Link>
         <Link href={`/bid?source=${source}`}>Portfolio</Link>
       </nav>
-      <Link className="bid-button" href={`/bid?source=${source}`}>
-        Place a Bid
-        <ArrowIcon />
-      </Link>
+      <WalletMenuButton source={source} />
     </header>
   );
 }
@@ -183,8 +181,4 @@ function formatUpdatedAt(value: string): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
-}
-
-function ArrowIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
 }

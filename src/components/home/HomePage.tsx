@@ -10,6 +10,8 @@ import {
   getTopMovers,
 } from "../../lib/market/analyzer";
 import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "../../types/market";
+import { PlaceBidButton } from "../trading/PlaceBidButton";
+import { WalletMenuButton } from "../trading/WalletMenuButton";
 import { TeamFlag } from "../teams/TeamFlag";
 import { formatChange, formatProbability, formatVolume } from "./market-formatters";
 
@@ -48,7 +50,7 @@ export function HomePage({ snapshots, newsEvents, dataStatus, universe }: HomePa
           biggestLosers={biggestLosers}
           dataStatus={dataStatus}
         />
-        <MatchesSection />
+        <MatchesSection source={dataStatus.source} />
         <InfoGrid />
         <Footer />
       </div>
@@ -65,14 +67,11 @@ function Topbar({ dataStatus }: { dataStatus: MarketDataMeta }) {
       </Link>
       <nav aria-label="Primary navigation">
         <Link href={`/markets?source=${dataStatus.source}`}>Markets</Link>
-        <Link href="#matches-title">Matches</Link>
-        <Link href="#teams-title">Teams</Link>
+        <Link href={`/matches?source=${dataStatus.source}`}>Matches</Link>
+        <Link href={`/teams?source=${dataStatus.source}`}>Teams</Link>
         <Link href={`/bid?source=${dataStatus.source}`}>Portfolio</Link>
       </nav>
-      <Link className="bid-button" href={`/bid?source=${dataStatus.source}`}>
-        Place a Bid
-        <ArrowIcon />
-      </Link>
+      <WalletMenuButton source={dataStatus.source} />
     </header>
   );
 }
@@ -114,15 +113,12 @@ function Hero({
           move is already on your screen.
         </p>
         <div className="hero-actions">
-          <Link className="bid-button" href={`/bid?source=${dataStatus.source}`}>
-            Place a Bid
-            <ArrowIcon />
-          </Link>
+          <PlaceBidButton source={dataStatus.source} />
           <div className="hero-secondary-actions">
-            <a className="hero-link" href="#matches-title">
+            <Link className="hero-link" href={`/matches?source=${dataStatus.source}`}>
               View matches
               <ArrowIcon />
-            </a>
+            </Link>
             <div className="ticker-stack" aria-hidden="true">
               <div className="ticker-track">
                 <div className="coin-row"><span className="coin usd">$</span></div>
@@ -255,7 +251,7 @@ function Dashboard({
             <TeamCard key={snapshot.team.id} snapshot={snapshot} rank={index + 1} source={dataStatus.source} />
           ))}
           {teams.length > 16 ? (
-            <Link className="team-card more" href={`/markets?source=${dataStatus.source}`}>
+            <Link className="team-card more" href={`/teams?source=${dataStatus.source}`}>
               <span><span className="more-number">+{teams.length - 16}</span>more teams</span>
             </Link>
           ) : null}
@@ -349,12 +345,12 @@ function MoveCard({ item, source }: { item: MovementRow; source: MarketDataMeta[
   );
 }
 
-function MatchesSection() {
+function MatchesSection({ source }: { source: MarketDataMeta["source"] }) {
   return (
     <section className="panel matches" aria-labelledby="matches-title">
       <div className="section-head">
         <h2 id="matches-title">Upcoming Matches <span className="not-real">(not real)</span></h2>
-        <a className="matches-link" href="#matches-title">View all matches <span aria-hidden="true">›</span></a>
+        <Link className="matches-link" href={`/matches?source=${source}`}>View all matches <span aria-hidden="true">›</span></Link>
       </div>
       <div className="match-grid">
         <MatchCard home="Argentina" homeCode="ARG" away="Japan" awayCode="JPN" time="Today · 20:00" odds={["58%", "24%", "18%"]} />

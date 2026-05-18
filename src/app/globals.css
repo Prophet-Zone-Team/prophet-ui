@@ -122,9 +122,45 @@ a {
 }
 
 .prophet-html nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 2px;
   color: inherit;
   text-decoration: none;
   opacity: 0.9;
+}
+
+.prophet-html nav a::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  bottom: 1px;
+  left: 2px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #20c2e4, #125afc);
+  opacity: 0;
+  transform: scaleX(0.42);
+  transform-origin: center;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.prophet-html nav a:hover,
+.prophet-html nav a[aria-current="page"] {
+  color: #125afc;
+  opacity: 1;
+}
+
+.prophet-html nav a[aria-current="page"] {
+  font-weight: 800;
+}
+
+.prophet-html nav a:hover::after,
+.prophet-html nav a[aria-current="page"]::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .prophet-html .bid-button {
@@ -142,6 +178,102 @@ a {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.prophet-html .bid-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.prophet-html .wallet-menu-shell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.prophet-html .wallet-connect-button {
+  min-width: 168px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid #dce8f5;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.84);
+  color: #14203a;
+  box-shadow: 0 10px 22px rgba(31, 75, 130, 0.08);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.prophet-html div.wallet-connect-button {
+  cursor: default;
+}
+
+.prophet-html .wallet-connect-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.prophet-html .wallet-connect-button svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
+}
+
+.prophet-html .wallet-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: 168px;
+  overflow: hidden;
+  border: 1px solid #dce8f5;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 42px rgba(31, 75, 130, 0.16);
+}
+
+.prophet-html .wallet-dropdown a,
+.prophet-html .wallet-dropdown button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  padding: 11px 13px;
+  color: #14203a;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.prophet-html .wallet-dropdown a:hover,
+.prophet-html .wallet-dropdown button:hover {
+  background: #f2f7fd;
+}
+
+.prophet-html .wallet-menu-error {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 31;
+  width: min(300px, 76vw);
+  margin: 0;
+  border: 1px solid rgba(217, 72, 95, 0.24);
+  border-radius: 7px;
+  background: #fff4f6;
+  padding: 10px 12px;
+  color: var(--red);
+  font-size: 11px;
+  line-height: 1.45;
+  box-shadow: 0 18px 42px rgba(31, 75, 130, 0.14);
 }
 
 .prophet-html .bid-button svg,
@@ -290,7 +422,7 @@ a {
 
 .prophet-html .hero-stat span {
   color: #66728a;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.25;
 }
 
@@ -543,7 +675,7 @@ a {
 .prophet-html .terminal-row p {
   margin: 0;
   color: #6d788e;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .prophet-html .terminal-row strong {
@@ -577,7 +709,7 @@ a {
 
 .prophet-html .terminal-metric span {
   color: #69758b;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .prophet-html .dashboard {
@@ -780,7 +912,7 @@ a {
   gap: 16px;
   margin-top: 20px;
   color: #667188;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .prophet-html .movement {
@@ -841,13 +973,13 @@ a {
   justify-content: space-between;
   gap: 14px;
   margin-top: 13px;
-  font-size: 10px;
+  font-size: 12px;
   color: #748096;
 }
 
 .prophet-html .move-meta strong {
   color: #172036;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .prophet-html .bars {
@@ -983,14 +1115,14 @@ a {
 .prophet-html .odd span {
   display: block;
   color: #58657b;
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
   margin-bottom: 6px;
 }
 
 .prophet-html .odd small {
   color: #3b465d;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .prophet-html .info-grid {
@@ -1311,7 +1443,7 @@ a {
 .prophet-html .market-team-main p {
   margin: 5px 0 0;
   color: #6d788e;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.2;
 }
 
@@ -1400,6 +1532,689 @@ a {
   color: #14203a;
   border: 1px solid #dce8f5;
   background: rgba(255, 255, 255, 0.72);
+}
+
+.prophet-html .matches-page-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
+  gap: 36px;
+  align-items: end;
+  padding: 58px 0 34px;
+}
+
+.prophet-html .matches-page-hero h1 {
+  max-width: 640px;
+  margin: 0;
+  color: #07142d;
+  font-size: 54px;
+  line-height: 0.98;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.prophet-html .matches-page-hero p {
+  max-width: 570px;
+  margin: 22px 0 0;
+  color: #5d687d;
+  font-size: 15px;
+  line-height: 1.58;
+}
+
+.prophet-html .matches-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.prophet-html .matches-command-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.42fr) minmax(300px, 0.82fr);
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.prophet-html .match-feature-panel,
+.prophet-html .match-signal-panel,
+.prophet-html .matches-board-panel {
+  padding: 18px;
+}
+
+.prophet-html .featured-match {
+  display: grid;
+  gap: 18px;
+}
+
+.prophet-html .featured-match-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  min-height: 112px;
+  padding: 18px;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(32, 194, 228, 0.14), transparent 42%),
+    rgba(255, 255, 255, 0.74);
+}
+
+.prophet-html .match-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.prophet-html .match-identity.right {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.prophet-html .match-identity .flag,
+.prophet-html .compact-match-team .flag {
+  width: 34px;
+  height: 34px;
+  font-size: 26px;
+}
+
+.prophet-html .match-identity h3 {
+  margin: 0;
+  color: #101b31;
+  font-size: 17px;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.prophet-html .match-identity p {
+  margin: 6px 0 0;
+  color: #657189;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.prophet-html .featured-match-center {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  min-width: 98px;
+  color: #657189;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.prophet-html .featured-match-center strong {
+  color: #0d172c;
+  font-size: 20px;
+  line-height: 1;
+  text-transform: none;
+}
+
+.prophet-html .featured-match-center small {
+  color: #1b6bd8;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: none;
+}
+
+.prophet-html .match-probability-strip {
+  display: flex;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eef4fb;
+  box-shadow: inset 0 0 0 1px rgba(220, 232, 245, 0.9);
+}
+
+.prophet-html .match-probability-strip span {
+  min-width: 8px;
+}
+
+.prophet-html .match-probability-strip span:nth-child(1) {
+  background: linear-gradient(90deg, #20c2e4, #125afc);
+}
+
+.prophet-html .match-probability-strip span:nth-child(2) {
+  background: #c9d7e9;
+}
+
+.prophet-html .match-probability-strip span:nth-child(3) {
+  background: linear-gradient(90deg, #16a67c, #79d5bd);
+}
+
+.prophet-html .featured-match-metrics,
+.prophet-html .match-market-prices,
+.prophet-html .match-market-context {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.prophet-html .match-outcome,
+.prophet-html .outcome-pill,
+.prophet-html .match-mini-metric {
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 8px 18px rgba(31, 75, 130, 0.04);
+}
+
+.prophet-html .match-outcome {
+  padding: 13px 12px;
+}
+
+.prophet-html .match-outcome span,
+.prophet-html .outcome-pill span,
+.prophet-html .match-mini-metric span {
+  display: block;
+  color: #748096;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.prophet-html .match-outcome strong {
+  display: block;
+  margin-top: 7px;
+  color: #07142d;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.prophet-html .match-outcome small,
+.prophet-html .outcome-pill small {
+  display: block;
+  margin-top: 8px;
+  color: #44516a;
+  font-size: 11px;
+}
+
+.prophet-html .featured-match-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 16px;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: linear-gradient(135deg, rgba(241, 253, 248, 0.76), rgba(255, 255, 255, 0.88));
+}
+
+.prophet-html .featured-match-footer span {
+  display: block;
+  margin-bottom: 4px;
+  color: #748096;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.prophet-html .featured-match-footer strong {
+  color: #13203a;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.prophet-html .match-signal-list {
+  display: grid;
+  gap: 8px;
+}
+
+.prophet-html .match-signal-item {
+  min-height: 94px;
+  padding: 14px 13px;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.prophet-html .match-signal-item.up {
+  background: linear-gradient(135deg, rgba(241, 253, 248, 0.86), rgba(255, 255, 255, 0.9));
+}
+
+.prophet-html .match-signal-item.down {
+  background: linear-gradient(135deg, rgba(255, 240, 244, 0.9), rgba(255, 255, 255, 0.9));
+}
+
+.prophet-html .match-signal-item span {
+  color: #748096;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.prophet-html .match-signal-item strong {
+  display: block;
+  margin-top: 8px;
+  color: #101b31;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.prophet-html .match-signal-item p {
+  margin: 10px 0 0;
+  color: #5f6c82;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.prophet-html .matches-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.prophet-html .match-market-card {
+  display: grid;
+  gap: 14px;
+  padding: 15px;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 8px 20px rgba(31, 75, 130, 0.04);
+}
+
+.prophet-html .match-market-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #657189;
+  font-size: 11px;
+}
+
+.prophet-html .match-market-meta span,
+.prophet-html .match-market-meta small {
+  color: #748096;
+}
+
+.prophet-html .match-market-meta strong {
+  color: #1b6bd8;
+  font-size: 12px;
+}
+
+.prophet-html .match-market-teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.prophet-html .compact-match-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.prophet-html .compact-match-team strong {
+  display: block;
+  color: #101b31;
+  font-size: 13px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prophet-html .compact-match-team .delta {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.prophet-html .delta.flat {
+  color: #748096;
+}
+
+.prophet-html .delta.flat::before {
+  content: "•";
+}
+
+.prophet-html .match-market-vs {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e7eef7;
+  border-radius: 50%;
+  background: #f8fbff;
+  color: #748096;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.prophet-html .outcome-pill {
+  padding: 10px 9px;
+}
+
+.prophet-html .outcome-pill strong {
+  display: block;
+  margin-top: 5px;
+  color: #07142d;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.prophet-html .match-market-context {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.prophet-html .match-mini-metric {
+  padding: 10px 9px;
+}
+
+.prophet-html .match-mini-metric strong {
+  display: block;
+  margin-top: 5px;
+  color: #172036;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.prophet-html .match-market-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 2px;
+}
+
+.prophet-html .match-market-bottom p {
+  margin: 0;
+  color: #5f6c82;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.prophet-html .teams-page-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
+  gap: 36px;
+  align-items: end;
+  padding: 58px 0 34px;
+}
+
+.prophet-html .teams-page-hero h1 {
+  max-width: 640px;
+  margin: 0;
+  color: #07142d;
+  font-size: 54px;
+  line-height: 0.98;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.prophet-html .teams-page-hero p {
+  max-width: 570px;
+  margin: 22px 0 0;
+  color: #5d687d;
+  font-size: 15px;
+  line-height: 1.58;
+}
+
+.prophet-html .teams-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.prophet-html .team-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.prophet-html .team-feature-card {
+  display: grid;
+  gap: 14px;
+  min-height: 258px;
+  padding: 16px;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: linear-gradient(135deg, rgba(241, 253, 248, 0.8), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 8px 20px rgba(31, 75, 130, 0.04);
+}
+
+.prophet-html .team-feature-card.football {
+  background:
+    linear-gradient(135deg, rgba(239, 248, 255, 0.82), rgba(255, 255, 255, 0.92)),
+    radial-gradient(circle at 8% 8%, rgba(32, 194, 228, 0.14), transparent 32%);
+}
+
+.prophet-html .team-feature-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.prophet-html .team-feature-head span {
+  color: #748096;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.prophet-html .team-feature-head strong {
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  height: 24px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #125afc;
+  font-size: 12px;
+}
+
+.prophet-html .team-feature-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.prophet-html .team-feature-main .flag {
+  width: 40px;
+  height: 40px;
+  font-size: 30px;
+}
+
+.prophet-html .team-feature-main h3 {
+  margin: 0;
+  color: #101b31;
+  font-size: 17px;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.prophet-html .team-feature-main p {
+  margin: 5px 0 0;
+  color: #657189;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.prophet-html .team-feature-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.prophet-html .feature-metric {
+  padding: 12px;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.prophet-html .feature-metric span {
+  display: block;
+  color: #748096;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.prophet-html .feature-metric strong {
+  display: block;
+  margin-top: 7px;
+  color: #07142d;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.prophet-html .feature-metric.down strong {
+  color: var(--red);
+}
+
+.prophet-html .team-feature-copy {
+  min-height: 36px;
+  margin: 0;
+  color: #5f6c82;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.prophet-html .teams-index-panel {
+  padding: 18px;
+}
+
+.prophet-html .teams-index-list {
+  display: grid;
+  gap: 8px;
+}
+
+.prophet-html .team-directory-row {
+  display: grid;
+  grid-template-columns: 34px minmax(200px, 1.22fr) minmax(94px, 0.38fr) minmax(94px, 0.38fr) minmax(230px, 0.95fr) minmax(116px, 0.48fr) minmax(116px, auto);
+  gap: 12px;
+  align-items: center;
+  min-height: 104px;
+  padding: 13px 12px;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: linear-gradient(135deg, rgba(239, 248, 255, 0.78), rgba(255, 255, 255, 0.92));
+  box-shadow: 0 8px 20px rgba(31, 75, 130, 0.04);
+}
+
+.prophet-html .team-index-rank {
+  color: #394760;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.prophet-html .team-index-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.prophet-html .team-index-main .flag {
+  width: 32px;
+  height: 32px;
+  font-size: 25px;
+}
+
+.prophet-html .team-index-main h3 {
+  margin: 0;
+  color: #121a2c;
+  font-size: 13px;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.prophet-html .team-index-main p {
+  margin: 5px 0 0;
+  color: #6d788e;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.prophet-html .team-directory-profile,
+.prophet-html .team-directory-football,
+.prophet-html .team-directory-schedule {
+  display: grid;
+  gap: 8px;
+}
+
+.prophet-html .team-directory-profile,
+.prophet-html .team-directory-football,
+.prophet-html .team-directory-schedule {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.prophet-html .team-directory-profile {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.prophet-html .team-directory-football {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.prophet-html .team-market-context {
+  min-width: 0;
+  padding: 10px 9px;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.prophet-html .team-metric {
+  min-width: 0;
+}
+
+.prophet-html .team-metric span,
+.prophet-html .team-market-context span {
+  display: block;
+  color: #748096;
+  font-size: 9px;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.prophet-html .team-metric strong,
+.prophet-html .team-market-context strong {
+  display: block;
+  margin-top: 4px;
+  color: #172036;
+  font-size: 11px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prophet-html .team-market-context strong {
+  color: #125afc;
+  font-size: 16px;
+}
+
+.prophet-html .team-market-context small {
+  display: block;
+  margin-top: 4px;
+  color: var(--green);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.prophet-html .team-metric.down strong {
+  color: var(--red);
+}
+
+.prophet-html .team-metric.up strong {
+  color: var(--green);
+}
+
+.prophet-html .team-index-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .prophet-html .loading-hero {
@@ -1562,11 +2377,17 @@ a {
 
   .prophet-html .dashboard,
   .prophet-html .info-grid,
-  .prophet-html .markets-hero {
+  .prophet-html .markets-hero,
+  .prophet-html .matches-page-hero,
+  .prophet-html .matches-command-grid,
+  .prophet-html .teams-page-hero,
+  .prophet-html .team-feature-grid {
     grid-template-columns: 1fr;
   }
 
-  .prophet-html .markets-summary {
+  .prophet-html .markets-summary,
+  .prophet-html .matches-summary,
+  .prophet-html .teams-summary {
     max-width: 520px;
   }
 
@@ -1585,6 +2406,23 @@ a {
     justify-content: flex-start;
   }
 
+  .prophet-html .team-directory-row {
+    grid-template-columns: 34px minmax(0, 1fr) minmax(132px, auto);
+    align-items: start;
+  }
+
+  .prophet-html .team-directory-profile,
+  .prophet-html .team-directory-football,
+  .prophet-html .team-directory-schedule,
+  .prophet-html .team-market-context,
+  .prophet-html .team-index-actions {
+    grid-column: 2 / -1;
+  }
+
+  .prophet-html .team-index-actions {
+    justify-content: flex-start;
+  }
+
   .prophet-html .info-grid .panel + .panel {
     margin-left: 0;
     margin-top: -1px;
@@ -1592,6 +2430,10 @@ a {
 
   .prophet-html .match-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .prophet-html .matches-board {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1607,6 +2449,11 @@ a {
 
   .prophet-html .bid-button {
     min-width: 124px;
+  }
+
+  .prophet-html .wallet-connect-button {
+    min-width: 148px;
+    padding: 0 12px;
   }
 
   .prophet-html .hero {
@@ -1626,11 +2473,23 @@ a {
     padding: 42px 0 26px;
   }
 
-  .prophet-html .markets-hero h1 {
+  .prophet-html .matches-page-hero {
+    padding: 42px 0 26px;
+  }
+
+  .prophet-html .teams-page-hero {
+    padding: 42px 0 26px;
+  }
+
+  .prophet-html .markets-hero h1,
+  .prophet-html .matches-page-hero h1,
+  .prophet-html .teams-page-hero h1 {
     font-size: 40px;
   }
 
-  .prophet-html .markets-hero p {
+  .prophet-html .markets-hero p,
+  .prophet-html .matches-page-hero p,
+  .prophet-html .teams-page-hero p {
     font-size: 14px;
   }
 
@@ -1719,15 +2578,67 @@ a {
   }
 
   .prophet-html .markets-summary,
-  .prophet-html .market-metrics {
+  .prophet-html .matches-summary,
+  .prophet-html .teams-summary,
+  .prophet-html .market-metrics,
+  .prophet-html .match-market-context,
+  .prophet-html .team-directory-profile,
+  .prophet-html .team-directory-football,
+  .prophet-html .team-directory-schedule {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .prophet-html .featured-match-header {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    text-align: left;
+  }
+
+  .prophet-html .match-identity.right {
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .prophet-html .featured-match-center {
+    justify-items: start;
+    min-width: 0;
+  }
+
+  .prophet-html .featured-match-metrics,
+  .prophet-html .match-market-prices {
+    grid-template-columns: 1fr;
+  }
+
+  .prophet-html .featured-match-footer,
+  .prophet-html .match-market-bottom {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .prophet-html .match-market-teams {
+    grid-template-columns: 1fr;
+  }
+
+  .prophet-html .match-market-vs {
+    width: auto;
+    height: 28px;
+    border-radius: 7px;
   }
 
   .prophet-html .markets-list-panel {
     padding: 14px;
   }
 
+  .prophet-html .teams-index-panel {
+    padding: 14px;
+  }
+
   .prophet-html .market-row {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .prophet-html .team-directory-row {
     grid-template-columns: 28px minmax(0, 1fr);
     gap: 12px;
   }
@@ -1738,9 +2649,22 @@ a {
     grid-column: 1 / -1;
   }
 
+  .prophet-html .team-directory-profile,
+  .prophet-html .team-directory-football,
+  .prophet-html .team-directory-schedule,
+  .prophet-html .team-market-context,
+  .prophet-html .team-index-actions {
+    grid-column: 1 / -1;
+  }
+
   .prophet-html .market-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .prophet-html .team-index-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px;
   }
 
   .prophet-html .market-quick-bid,

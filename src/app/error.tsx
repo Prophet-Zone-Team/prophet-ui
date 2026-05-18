@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+import { WalletMenuButton } from "../components/trading/WalletMenuButton";
+
 export default function ErrorPage({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <main className="prophet-html">
@@ -12,14 +14,12 @@ export default function ErrorPage({ error, reset }: { error: Error; reset: () =>
             Prophet
           </Link>
           <nav aria-label="Primary navigation">
-            <Link href="/">Markets</Link>
-            <Link href="/#matches-title">Matches</Link>
-            <Link href="/#teams-title">Teams</Link>
-            <Link href="/bid">Portfolio</Link>
+            <Link href="/markets?source=polymarket">Markets</Link>
+            <Link href="/matches?source=polymarket">Matches</Link>
+            <Link href="/teams?source=polymarket">Teams</Link>
+            <Link href="/bid?source=polymarket">Portfolio</Link>
           </nav>
-          <Link className="bid-button" href="/bid">
-            Place a Bid
-          </Link>
+          <WalletMenuButton source="polymarket" />
         </header>
 
         <section className="panel error-panel" aria-labelledby="error-title">
