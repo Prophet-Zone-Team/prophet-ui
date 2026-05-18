@@ -1,17 +1,83 @@
 export default function Loading() {
   return (
-    <main className="terminal-grid min-h-screen px-4 py-5 sm:px-7 lg:px-8">
-      <div className="mx-auto flex w-full max-w-[1540px] flex-col gap-6">
-        <div className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal">
-          <p className="terminal-label text-[10px] uppercase tracking-[0.28em] text-terminal-cyan">Loading market data</p>
-          <div className="mt-6 h-10 max-w-lg animate-pulse rounded bg-terminal-panel2" />
-          <div className="mt-4 h-4 max-w-2xl animate-pulse rounded bg-terminal-panel2" />
-        </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {Array.from({ length: 8 }, (_, index) => (
-            <div key={index} className="h-64 animate-pulse rounded-lg border border-terminal-line bg-terminal-panel/80" />
-          ))}
-        </div>
+    <main className="prophet-html">
+      <div className="page">
+        <header className="topbar">
+          <div className="brand" aria-label="Prophet loading">
+            <span className="mark" aria-hidden="true" />
+            Prophet
+          </div>
+          <nav aria-label="Loading navigation">
+            <span>Markets</span>
+            <span>Matches</span>
+            <span>Teams</span>
+            <span>Portfolio</span>
+          </nav>
+          <div className="bid-button">Place a Bid</div>
+        </header>
+
+        <section className="hero loading-hero" aria-label="Loading market data">
+          <div className="pixel-blast-container pixel-blast-fallback" aria-hidden="true" />
+          <div className="hero-copy">
+            <span className="eyebrow">Prediction market terminal</span>
+            <div className="loading-headline" />
+            <div className="loading-copy" />
+            <div className="loading-copy short" />
+            <div className="hero-actions">
+              <div className="bid-button">Place a Bid</div>
+              <div className="loading-link" />
+            </div>
+            <div className="hero-stats" aria-hidden="true">
+              <div className="hero-stat loading-block" />
+              <div className="hero-stat loading-block" />
+              <div className="hero-stat loading-block" />
+            </div>
+          </div>
+
+          <aside className="hero-terminal">
+            <div className="terminal-inner">
+              <div className="terminal-head">
+                <div className="terminal-kicker">Live Signal Terminal</div>
+                <span className="terminal-live">Loading</span>
+              </div>
+              <div className="signal-hero-card">
+                <div className="loading-line wide" />
+                <div className="loading-line" />
+                <div className="loading-line narrow" />
+              </div>
+              <div className="terminal-list">
+                <div className="terminal-row loading-row" />
+                <div className="terminal-row loading-row" />
+                <div className="terminal-row loading-row" />
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section className="dashboard" aria-label="Loading dashboard">
+          <div className="panel probability">
+            <div className="panel-head">
+              <h2 className="panel-title">World Cup Winner Probability</h2>
+              <span className="live">Loading</span>
+            </div>
+            <div className="teams-grid">
+              {Array.from({ length: 16 }, (_, index) => (
+                <div key={index} className="team-card loading-card" />
+              ))}
+            </div>
+          </div>
+
+          <aside className="panel movement">
+            <div className="panel-head">
+              <h2 className="panel-title">Highlighted Movement</h2>
+            </div>
+            <div className="movement-list">
+              <div className="move-card loading-card" />
+              <div className="move-card loading-card" />
+              <div className="move-card loading-card" />
+            </div>
+          </aside>
+        </section>
       </div>
     </main>
   );

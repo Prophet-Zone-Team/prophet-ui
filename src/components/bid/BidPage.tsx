@@ -46,6 +46,7 @@ import {
 interface BidPageProps {
   snapshots: TeamMarketSnapshot[];
   dataStatus: MarketDataMeta;
+  initialTeamId?: string;
 }
 
 const DEFAULT_ORDER_TYPE: TradingOrderType = "FAK";
@@ -103,8 +104,12 @@ interface DepositAddressState {
   funderAddress?: string;
 }
 
-export function BidPage({ snapshots, dataStatus }: BidPageProps) {
-  const [selectedTeamId, setSelectedTeamId] = useState(snapshots[0]?.team.id ?? "");
+export function BidPage({ snapshots, dataStatus, initialTeamId }: BidPageProps) {
+  const requestedTeamId = snapshots.some((snapshot) => snapshot.team.id === initialTeamId)
+    ? initialTeamId
+    : undefined;
+  const initialSelectedTeamId = requestedTeamId ?? snapshots[0]?.team.id ?? "";
+  const [selectedTeamId, setSelectedTeamId] = useState(initialSelectedTeamId);
   const [amount, setAmount] = useState("100");
   const [outcomeSide, setOutcomeSide] = useState<OrderOutcomeSide>("yes");
   const [tradeSide, setTradeSide] = useState<BidTradeSide>("buy");

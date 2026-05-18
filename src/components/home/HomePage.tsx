@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import type { MarketDataMeta, WorldCupMarketData } from "../../data/providers/types";
 import { getMarketDataSourceLabel } from "../../data/providers/source";
@@ -8,11 +9,9 @@ import {
   getHotTeams,
   getTopMovers,
 } from "../../lib/market/analyzer";
-import type { MarketSignal, NewsEvent, TeamMarketSnapshot } from "../../types/market";
-import { DataSourceSwitch } from "../data/DataSourceSwitch";
-import { DataStatusBanner, SourceDisclosure } from "../data/DataStatusBanner";
-import { TeamMarketCard } from "./TeamMarketCard";
-import { formatChange, formatProbability, formatVolume, getChangeTone } from "./market-formatters";
+import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "../../types/market";
+import { TeamFlag } from "../teams/TeamFlag";
+import { formatChange, formatProbability, formatVolume } from "./market-formatters";
 
 interface HomePageProps {
   snapshots: TeamMarketSnapshot[];
@@ -22,509 +21,714 @@ interface HomePageProps {
 }
 
 export function HomePage({ snapshots, newsEvents, dataStatus, universe }: HomePageProps) {
-  const topMovers = getTopMovers(snapshots, 4);
-  const biggestLosers = getBiggestLosers(snapshots, 4);
-  const hotTeams = getHotTeams(snapshots, 4);
-  const marketSignals = generateMarketSignals(snapshots, newsEvents).slice(0, 6);
+  const sortedTeams = [...snapshots].sort((a, b) => b.market.probability - a.market.probability);
+  const topMovers = getTopMovers(sortedTeams, 4);
+  const biggestLosers = getBiggestLosers(sortedTeams, 4);
+  const hotTeams = getHotTeams(sortedTeams, 4);
+  const marketSignals = generateMarketSignals(sortedTeams, newsEvents).slice(0, 8);
+  const signalTeamMap = new Map(sortedTeams.map((snapshot) => [snapshot.team.id, snapshot]));
 
   return (
-    <main className="terminal-grid min-h-screen px-4 py-5 sm:px-7 lg:px-8">
-      <div className="mx-auto flex w-full max-w-[1540px] flex-col gap-8 lg:gap-9">
-        <TerminalTopbar snapshots={snapshots} dataStatus={dataStatus} universe={universe} />
-        <DataStatusBanner meta={dataStatus} />
-        <MarketCoverageStrip universe={universe} />
-        <SourceDisclosure compact />
-        <Hero snapshots={snapshots} hotTeams={hotTeams} dataStatus={dataStatus} universe={universe} />
-        <MarketHeatmap teams={snapshots} source={dataStatus.source} />
-        <div className="grid gap-8 xl:grid-cols-2">
-          <TeamSection title="Top Movers" eyebrow="24h upside repricing" teams={topMovers} source={dataStatus.source} />
-          <TeamSection title="Biggest Losers" eyebrow="24h downside repricing" teams={biggestLosers} source={dataStatus.source} />
-        </div>
-        <MarketSignals signals={marketSignals} source={dataStatus.source} />
-        <TerminalFooter snapshots={snapshots} dataStatus={dataStatus} />
+    <main className="prophet-html">
+      <div className="page">
+        <Topbar dataStatus={dataStatus} />
+        <Hero
+          teams={sortedTeams}
+          hotTeams={hotTeams}
+          signals={marketSignals}
+          signalTeamMap={signalTeamMap}
+          dataStatus={dataStatus}
+          universe={universe}
+        />
+        <Dashboard
+          teams={sortedTeams}
+          signals={marketSignals}
+          signalTeamMap={signalTeamMap}
+          topMovers={topMovers}
+          biggestLosers={biggestLosers}
+          dataStatus={dataStatus}
+        />
+        <MatchesSection />
+        <InfoGrid />
+        <Footer />
       </div>
     </main>
   );
 }
 
-function MarketCoverageStrip({ universe }: { universe?: WorldCupMarketData["universe"] }) {
-  if (!universe) {
-    return null;
-  }
-
-  const missingCount = universe.missingTeamIds.length;
-  const coverageTone = missingCount === 0 ? "text-terminal-green" : "text-terminal-amber";
-
+function Topbar({ dataStatus }: { dataStatus: MarketDataMeta }) {
   return (
-    <section className="rounded-lg border border-terminal-line bg-terminal-panel/75 px-4 py-3 shadow-terminal sm:px-5">
-      <div className="grid gap-3 text-xs text-terminal-muted sm:grid-cols-4">
-        <CoverageMetric label="Provider markets" value={String(universe.marketCount)} />
-        <CoverageMetric label="Mapped teams" value={`${universe.trackedMarketCount}/${universe.canonicalTeamCount}`} valueClassName={coverageTone} />
-        <CoverageMetric label="24h volume" value={formatVolume(universe.volume24h)} />
-        <CoverageMetric label="Liquidity" value={formatVolume(universe.liquidity)} />
-      </div>
-    </section>
-  );
-}
-
-function CoverageMetric({
-  label,
-  value,
-  valueClassName = "text-terminal-text",
-}: {
-  label: string;
-  value: string;
-  valueClassName?: string;
-}) {
-  return (
-    <div>
-      <p className="terminal-label text-[10px] uppercase tracking-[0.18em]">{label}</p>
-      <p className={`mt-1 text-sm font-semibold ${valueClassName}`}>{value}</p>
-    </div>
-  );
-}
-
-function TerminalTopbar({
-  snapshots,
-  dataStatus,
-  universe,
-}: {
-  snapshots: TeamMarketSnapshot[];
-  dataStatus: MarketDataMeta;
-  universe?: WorldCupMarketData["universe"];
-}) {
-  const totalVolume = universe?.totalVolume ?? snapshots.reduce((sum, snapshot) => sum + snapshot.market.volume, 0);
-  const trackedMarkets = universe ? `${universe.trackedMarketCount} / ${universe.canonicalTeamCount}` : String(snapshots.length);
-  const strongestMove =
-    getTopMovers(snapshots, 1)[0] ??
-    [...snapshots].sort((a, b) => Math.abs(b.market.change24h) - Math.abs(a.market.change24h))[0];
-  const strongestMoveLabel =
-    strongestMove && Math.abs(strongestMove.market.change24h) > 0
-      ? `${strongestMove.team.code} ${formatChange(strongestMove.market.change24h)}`
-      : "Collecting history";
-
-  return (
-    <header className="rounded-lg border border-white/10 bg-black/40 px-5 py-4 shadow-terminal backdrop-blur sm:px-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded border border-terminal-orange/55 bg-terminal-orange/10 font-display text-xl font-semibold text-terminal-orange shadow-[0_0_24px_rgba(255,106,42,0.22)]">
-            WC
-          </div>
-          <div>
-            <p className="terminal-label text-[10px] uppercase tracking-[0.32em] text-terminal-muted">World Cup Prediction</p>
-            <p className="mt-1 font-display text-2xl font-semibold uppercase text-terminal-text">Market Terminal</p>
-          </div>
-        </div>
-        <div className="flex flex-col gap-3 lg:min-w-[760px] lg:flex-row lg:items-center lg:justify-end">
-          <DataSourceSwitch selectedSource={dataStatus.source} />
-          <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[460px]">
-            <TopbarMetric label="Tracked markets" value={trackedMarkets} />
-            <TopbarMetric label="Total volume" value={formatVolume(totalVolume)} />
-            <TopbarMetric
-              label="24h move leader"
-              value={strongestMoveLabel}
-              valueClassName={strongestMove && strongestMove.market.change24h >= 0 ? "text-terminal-green" : "text-terminal-muted"}
-            />
-          </div>
-        </div>
-      </div>
+    <header className="topbar">
+      <Link className="brand" href="/" aria-label="Prophet home">
+        <span className="mark" aria-hidden="true" />
+        Prophet
+      </Link>
+      <nav aria-label="Primary navigation">
+        <Link href={`/markets?source=${dataStatus.source}`}>Markets</Link>
+        <Link href="#matches-title">Matches</Link>
+        <Link href="#teams-title">Teams</Link>
+        <Link href={`/bid?source=${dataStatus.source}`}>Portfolio</Link>
+      </nav>
+      <Link className="bid-button" href={`/bid?source=${dataStatus.source}`}>
+        Place a Bid
+        <ArrowIcon />
+      </Link>
     </header>
   );
 }
 
-function TopbarMetric({
-  label,
-  value,
-  valueClassName = "text-terminal-text",
-}: {
-  label: string;
-  value: string;
-  valueClassName?: string;
-}) {
-  return (
-    <div className="border-l border-terminal-line/80 pl-4">
-      <p className="terminal-label text-[10px] uppercase tracking-[0.22em] text-terminal-muted">{label}</p>
-      <p className={`mt-1 text-sm font-semibold ${valueClassName}`}>{value}</p>
-    </div>
-  );
-}
-
 function Hero({
-  snapshots,
+  teams,
   hotTeams,
+  signals,
+  signalTeamMap,
   dataStatus,
   universe,
 }: {
-  snapshots: TeamMarketSnapshot[];
+  teams: TeamMarketSnapshot[];
   hotTeams: ReturnType<typeof getHotTeams>;
+  signals: MarketSignal[];
+  signalTeamMap: Map<string, TeamMarketSnapshot>;
   dataStatus: MarketDataMeta;
   universe?: WorldCupMarketData["universe"];
 }) {
-  const totalVolume = universe?.totalVolume ?? snapshots.reduce((sum, snapshot) => sum + snapshot.market.volume, 0);
-  const leader =
-    snapshots.length > 0
-      ? snapshots.reduce((current, snapshot) =>
-          snapshot.market.probability > current.market.probability ? snapshot : current,
-        )
-      : undefined;
-  const hottest =
-    hotTeams[0] ??
-    [...snapshots].sort((a, b) => b.market.volume - a.market.volume)[0];
+  const leader = teams[0];
+  const strongestMove = getStrongestMove(teams);
+  const volumeSignal = signals.find((signal) => signal.type === "volume_spike");
+  const volumeSignalTeam = volumeSignal ? signalTeamMap.get(volumeSignal.teamId) : hotTeams[0] ?? leader;
+  const heroSignal = signals[0];
+  const heroSignalTeam = heroSignal ? signalTeamMap.get(heroSignal.teamId) : leader;
+  const trackedMarkets = universe?.trackedMarketCount ?? teams.length;
+  const sourceConfidence = getAverageConfidence(signals);
 
   return (
-    <section className="overflow-hidden rounded-lg border border-terminal-line bg-terminal-panel/85 shadow-terminal">
-      <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.16fr_0.84fr] lg:p-9">
-        <div>
-          <div className="terminal-label flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.24em] text-terminal-muted">
-            <span className="border border-terminal-line px-2.5 py-1">
-              {getMarketDataSourceLabel(dataStatus.source)}
-            </span>
-            <span>Dark premium sports prediction terminal</span>
+    <section className="hero" aria-labelledby="hero-title">
+      <div className="pixel-blast-container pixel-blast-fallback" aria-hidden="true" />
+      <div className="hero-copy">
+        <span className="eyebrow">Prediction market terminal</span>
+        <h1 id="hero-title">
+          Before the news,<br />it <span>moves.</span>
+        </h1>
+        <p className="hero-subcopy">
+          Prophet tracks probability, volume, and team updates in one live World Cup market feed, so the first meaningful
+          move is already on your screen.
+        </p>
+        <div className="hero-actions">
+          <Link className="bid-button" href={`/bid?source=${dataStatus.source}`}>
+            Place a Bid
+            <ArrowIcon />
+          </Link>
+          <div className="hero-secondary-actions">
+            <a className="hero-link" href="#matches-title">
+              View matches
+              <ArrowIcon />
+            </a>
+            <div className="ticker-stack" aria-hidden="true">
+              <div className="ticker-track">
+                <div className="coin-row"><span className="coin usd">$</span></div>
+                <div className="coin-row"><span className="coin tether">T</span></div>
+                <div className="coin-row">%</div>
+                <div className="coin-row"><span className="coin usd">$</span></div>
+              </div>
+            </div>
           </div>
-          <h1 className="mt-7 max-w-4xl font-display text-5xl font-semibold uppercase leading-[0.86] text-terminal-text sm:text-7xl lg:text-8xl">
-            See World Cup market heat before the narrative catches up.
-          </h1>
-          <p className="mt-5 max-w-2xl text-sm leading-7 text-terminal-muted sm:text-base">
-            A consumer-readable terminal for probability shifts, hot teams, fading teams, and signal
-            context. It is market intelligence only, not trading or betting advice.
-          </p>
         </div>
-
-        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-          <HeroMetric
-            label="Market leader"
-            value={leader?.team.name ?? "Waiting for live board"}
-            detail={leader ? formatProbability(leader.market.probability) : "provider warming up"}
-          />
-          <HeroMetric label="Total volume" value={formatVolume(totalVolume)} detail="all tracked World Cup winner markets" />
-          <HeroMetric
-            label="Hot signal"
-            value={hottest?.team.code ?? "Pending"}
-            detail={hotTeams[0] ? `${hotTeams[0].hotScore.toFixed(0)} heat score` : "waiting for comparative movement"}
-          />
+        <div className="hero-stats" aria-label="Prophet market summary">
+          <div className="hero-stat">
+            <strong>{volumeSignalTeam ? formatVolume(volumeSignalTeam.market.volume) : "-"}</strong>
+            <span>{volumeSignalTeam ? `${volumeSignalTeam.team.name} current market volume` : "Volume signal pending"}</span>
+          </div>
+          <div className="hero-stat">
+            <strong>{strongestMove ? formatChange(strongestMove.market.change24h) : "-"}</strong>
+            <span>{strongestMove ? `${strongestMove.team.name} winner odds move` : "Winner odds move pending"}</span>
+          </div>
+          <div className="hero-stat">
+            <strong>{signals.length}</strong>
+            <span>Signals detected today</span>
+          </div>
         </div>
       </div>
+
+      <aside className="hero-terminal" aria-label="Live market signal terminal">
+        <div className="terminal-inner">
+          <div className="terminal-head">
+            <div className="terminal-kicker">
+              <LightningIcon />
+              Live Signal Terminal
+            </div>
+            <span className={dataStatus.status === "live" ? "terminal-live" : "terminal-live cached"}>
+              {getStatusCopy(dataStatus)}
+            </span>
+          </div>
+
+          <div className="signal-hero-card">
+            <div className="signal-hero-top">
+              <div className="signal-team">
+                <TeamFlag code={heroSignalTeam?.team.code} name={heroSignalTeam?.team.name} />
+                {heroSignalTeam ? `${heroSignalTeam.team.name} winner market` : "Winner market"}
+              </div>
+              <div className="signal-score">
+                <strong>{heroSignalTeam ? formatProbability(heroSignalTeam.market.probability) : "-"}</strong>
+                <span className={heroSignalTeam && heroSignalTeam.market.change24h < 0 ? "delta down" : "delta"}>
+                  {heroSignalTeam ? formatChange(heroSignalTeam.market.change24h) : "pending"}
+                </span>
+              </div>
+            </div>
+            <div className="signal-bar">
+              <span style={{ width: `${heroSignalTeam ? getProbabilityWidth(heroSignalTeam.market.probability) : 8}%` }} />
+            </div>
+            <div className="signal-copy">
+              <span>
+                {heroSignal ? formatSignalType(heroSignal.type) : "Signal pending"}{" "}
+                <strong>{heroSignalTeam ? formatVolume(heroSignalTeam.market.volume) : "-"}</strong>
+              </span>
+              <span>{heroSignal ? `${formatConfidence(heroSignal.confidence)} confidence` : "Confidence pending"}</span>
+            </div>
+          </div>
+
+          <div className="terminal-list">
+            {getTerminalRows(signals, teams, signalTeamMap).map((item) => (
+              <Link key={item.key} className="terminal-row" href={`/team/${item.snapshot.team.id}?source=${dataStatus.source}`}>
+                <TeamFlag code={item.snapshot.team.code} name={item.snapshot.team.name} />
+                <div>
+                  <h3>{item.title}</h3>
+                  <p>{item.copy}</p>
+                </div>
+                <div>
+                  <strong>{formatProbability(item.snapshot.market.probability)}</strong>
+                  <span className={item.snapshot.market.change24h < 0 ? "delta down" : "delta"}>
+                    {formatChange(item.snapshot.market.change24h)}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="terminal-footer">
+            <div className="terminal-metric">
+              <strong>N/A</strong>
+              <span>Median signal lag (not real)</span>
+            </div>
+            <div className="terminal-metric">
+              <strong>{trackedMarkets}</strong>
+              <span>Markets tracked</span>
+            </div>
+            <div className="terminal-metric">
+              <strong>{sourceConfidence ? `${sourceConfidence}%` : "-"}</strong>
+              <span>Source confidence</span>
+            </div>
+          </div>
+        </div>
+      </aside>
     </section>
   );
 }
 
-function HeroMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
+function Dashboard({
+  teams,
+  signals,
+  signalTeamMap,
+  topMovers,
+  biggestLosers,
+  dataStatus,
+}: {
+  teams: TeamMarketSnapshot[];
+  signals: MarketSignal[];
+  signalTeamMap: Map<string, TeamMarketSnapshot>;
+  topMovers: TeamMarketSnapshot[];
+  biggestLosers: TeamMarketSnapshot[];
+  dataStatus: MarketDataMeta;
+}) {
   return (
-    <div className="rounded-lg border border-terminal-line bg-terminal-panel2/80 p-5">
-      <p className="terminal-label text-[10px] uppercase tracking-[0.22em] text-terminal-muted">{label}</p>
-      <p className="mt-3 font-display text-3xl font-semibold uppercase leading-none text-terminal-text">{value}</p>
-      <p className="mt-1 text-xs text-terminal-muted">{detail}</p>
-    </div>
-  );
-}
+    <section id="dashboard" className="dashboard" aria-label="World Cup market dashboard">
+      <div className="panel probability">
+        <div className="panel-head">
+          <h2 id="teams-title" className="panel-title">
+            World Cup Winner Probability
+            <InfoIcon />
+          </h2>
+          <span className="live">{getStatusCopy(dataStatus)}</span>
+        </div>
 
-function MarketHeatmap({ teams, source }: { teams: TeamMarketSnapshot[]; source: MarketDataMeta["source"] }) {
-  const sortedTeams = [...teams].sort((a, b) => b.market.probability - a.market.probability);
+        <div className="teams-grid">
+          {teams.slice(0, 16).map((snapshot, index) => (
+            <TeamCard key={snapshot.team.id} snapshot={snapshot} rank={index + 1} source={dataStatus.source} />
+          ))}
+          {teams.length > 16 ? (
+            <Link className="team-card more" href={`/markets?source=${dataStatus.source}`}>
+              <span><span className="more-number">+{teams.length - 16}</span>more teams</span>
+            </Link>
+          ) : null}
+        </div>
 
-  return (
-    <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7 lg:p-8">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <SectionHeader
-          eyebrow="Core board"
-          title="Market Heatmap"
-          description="Probability intensity, 24h movement, seven-day direction, and volume in one scanning surface."
-        />
-        <div className="flex flex-wrap gap-3 text-[10px] uppercase tracking-[0.2em] text-terminal-muted">
-          <span className="rounded border border-terminal-green/40 bg-terminal-green/10 px-3 py-2 text-terminal-green">
-            Rising
-          </span>
-          <span className="rounded border border-terminal-red/40 bg-terminal-red/10 px-3 py-2 text-terminal-red">
-            Falling
-          </span>
-          <span className="rounded border border-terminal-orange/40 bg-terminal-orange/10 px-3 py-2 text-terminal-orange">Heat density</span>
+        <div className="footnote">
+          <span>Probabilities reflect implied chance of winning the World Cup</span>
+          <span>Source: {getMarketDataSourceLabel(dataStatus.source)} prediction market data</span>
         </div>
       </div>
-      {sortedTeams.length > 0 ? (
-        <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {sortedTeams.map((snapshot) => (
-            <HeatmapCell key={snapshot.team.id} snapshot={snapshot} source={source} />
+
+      <aside className="panel movement" aria-label="Highlighted movement">
+        <div className="panel-head">
+          <h2 className="panel-title">
+            <LightningIcon />
+            Highlighted Movement
+          </h2>
+          <Link className="view-all" href={`/feed?source=${dataStatus.source}`}>View all</Link>
+        </div>
+        <div className="movement-list">
+          {getMovementRows(signals, topMovers, biggestLosers, signalTeamMap).map((item) => (
+            <MoveCard key={item.key} item={item} source={dataStatus.source} />
           ))}
         </div>
-      ) : (
-        <EmptyPanel message="No teams are available from the current provider yet." />
-      )}
+      </aside>
     </section>
   );
 }
 
-function HeatmapCell({ snapshot, source }: { snapshot: TeamMarketSnapshot; source: MarketDataMeta["source"] }) {
-  const { team, market } = snapshot;
-  const intensity = Math.max(20, Math.min(88, market.probability * 4.8 + market.volume / 480000));
-  const isRising = market.change24h >= 0;
-  const movementColor = isRising ? "rgba(36, 209, 139, 0.16)" : "rgba(255, 95, 109, 0.18)";
-  const glowColor = "rgba(255, 106, 42, 0.26)";
-  const bars = getDensityBars(snapshot);
+function TeamCard({
+  snapshot,
+  rank,
+  source,
+}: {
+  snapshot: TeamMarketSnapshot;
+  rank: number;
+  source: MarketDataMeta["source"];
+}) {
+  const isDown = snapshot.market.change24h < 0;
 
   return (
     <Link
-      href={`/team/${team.id}?source=${source}`}
-      aria-label={`Open ${team.name} team detail`}
-      className="group relative min-h-[260px] overflow-hidden rounded-lg border border-terminal-line p-5 transition duration-200 hover:-translate-y-0.5 hover:border-terminal-orange/70 hover:shadow-heat"
-      style={{
-        background: `radial-gradient(circle at 18% 0%, ${glowColor}, transparent 34%), linear-gradient(135deg, ${movementColor}, rgba(16, 24, 35, 0.93) ${intensity}%)`,
-      }}
+      className={isDown ? "team-card down" : "team-card"}
+      href={`/team/${snapshot.team.id}?source=${source}`}
+      aria-label={`Open ${snapshot.team.name} team detail`}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.04)_1px,transparent_1px)] [background-size:18px_18px]" />
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex h-20 items-end gap-1 px-5 opacity-70">
-        {bars.map((height, index) => (
-          <span
-            key={`${team.id}-bar-${index}`}
-            className="w-full rounded-t bg-gradient-to-t from-terminal-ember/45 via-terminal-orange/70 to-terminal-bone/80"
-            style={{ height: `${height}%` }}
-          />
-        ))}
+      <span className="rank">{rank}</span>
+      <div className="team-name">
+        <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+        {snapshot.team.name}
       </div>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="terminal-label text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{team.code}</p>
-          <h3 className="mt-2 text-base font-semibold text-terminal-text">{team.name}</h3>
-        </div>
-        <p
-          className={
-            isRising
-              ? "rounded border border-terminal-green/40 bg-terminal-green/10 px-2.5 py-1 text-sm font-semibold text-terminal-green"
-              : "rounded border border-terminal-red/40 bg-terminal-red/10 px-2.5 py-1 text-sm font-semibold text-terminal-red"
-          }
-        >
-          {formatChange(market.change24h)}
-        </p>
-      </div>
-      <div className="relative mt-9">
-        <div>
-          <p className="terminal-label text-[10px] uppercase tracking-[0.18em] text-terminal-muted">Probability</p>
-          <p className="mt-1 font-display text-6xl font-semibold leading-none text-terminal-bone sm:text-7xl">
-            {formatProbability(market.probability)}
-          </p>
-        </div>
-      </div>
-      <div className="relative mt-8 grid grid-cols-3 gap-3 border-t border-terminal-line/70 pt-4">
-        <CellMetric label="7d" value={formatChange(market.change7d)} tone={getChangeTone(market.change7d)} />
-        <CellMetric label="Volume" value={formatVolume(market.volume)} />
-        <CellMetric label="Sentiment" value={market.sentiment} />
+      <div className="team-value">
+        <span className="percentage">{formatProbability(snapshot.market.probability)}</span>
+        <span className={isDown ? "delta down" : "delta"}>{formatChange(snapshot.market.change24h)}</span>
       </div>
     </Link>
   );
 }
 
-function getDensityBars(snapshot: TeamMarketSnapshot): number[] {
-  const seed = snapshot.team.code.charCodeAt(0) + snapshot.team.code.charCodeAt(1) + snapshot.team.code.charCodeAt(2);
-  const base = Math.max(14, Math.min(86, snapshot.market.probability * 3.6 + snapshot.market.volume / 620000));
-
-  return Array.from({ length: 24 }, (_, index) => {
-    const wave = Math.sin((index + seed) * 0.72) * 18;
-    const trend = snapshot.market.change24h * index * 0.75;
-    return Math.max(8, Math.min(96, base + wave + trend));
-  });
-}
-
-function CellMetric({
-  label,
-  value,
-  tone = "text-terminal-text",
-}: {
-  label: string;
-  value: string;
-  tone?: string;
-}) {
-  return (
-    <div>
-      <p className="terminal-label text-[9px] uppercase tracking-[0.18em] text-terminal-muted">{label}</p>
-      <p className={`mt-1 truncate text-xs font-semibold ${tone}`}>{value}</p>
-    </div>
-  );
-}
-
-function TeamSection({
-  title,
-  eyebrow,
-  teams,
-  source,
-}: {
+interface MovementRow {
+  key: string;
+  snapshot: TeamMarketSnapshot;
   title: string;
-  eyebrow: string;
-  teams: TeamMarketSnapshot[];
-  source: MarketDataMeta["source"];
-}) {
-  return (
-    <section className="rounded-lg border border-terminal-line bg-terminal-panel/88 p-5 shadow-terminal sm:p-7">
-      <SectionHeader eyebrow={eyebrow} title={title} />
-      {teams.length > 0 ? (
-        <div className="mt-7 grid gap-5 sm:grid-cols-2">
-          {teams.map((snapshot) => (
-            <TeamMarketCard key={snapshot.team.id} snapshot={snapshot} source={source} />
-          ))}
-        </div>
-      ) : (
-        <div className="mt-7">
-          <EmptyPanel message="No comparable movers are available for this snapshot window." />
-        </div>
-      )}
-    </section>
-  );
+  copy: string;
+  meta: string;
+  severity: SignalSeverity;
 }
 
-function MarketSignals({
-  signals,
-  source,
-}: {
-  signals: MarketSignal[];
-  source: MarketDataMeta["source"];
-}) {
+function MoveCard({ item, source }: { item: MovementRow; source: MarketDataMeta["source"] }) {
+  const isDown = item.snapshot.market.change24h < 0;
+
   return (
-    <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7 lg:p-8">
-      <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-        <div>
-          <SectionHeader
-            eyebrow="Signal tape"
-            title="Market Signals"
-            description="Generated from movement, volume, sentiment, news context, and pricing divergence."
-          />
-          <div className="mt-8 grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-            {signals.slice(0, 3).length > 0 ? (
-              signals.slice(0, 3).map((signal) => (
-                <SignalMiniCard key={`${signal.id}-mini`} signal={signal} source={source} />
-              ))
-            ) : (
-              <EmptyPanel message="Signals will appear after comparable movement, volume, news, or divergence clears the thresholds." />
-            )}
-          </div>
-        </div>
-        <div className="grid gap-4">
-          {signals.length > 0 ? (
-            signals.map((signal) => (
-              <article key={signal.id} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="text-[10px] uppercase tracking-[0.22em] text-terminal-muted">{formatSignalType(signal.type)}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="rounded border border-terminal-line px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-terminal-muted">
-                      {signal.confidence}% confidence
-                    </span>
-                    <span className={getSeverityClassName(signal.severity)}>{signal.severity}</span>
-                  </div>
-                </div>
-                <h3 className="mt-4 text-lg font-semibold text-terminal-text">{signal.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-terminal-muted">{signal.shortDescription}</p>
-                <p className="mt-3 text-xs leading-5 text-terminal-muted">{signal.explanation}</p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  {signal.dataPoints.map((point) => (
-                    <SignalDataPoint key={`${signal.id}-${point.label}`} point={point} />
-                  ))}
-                </div>
-                <Link
-                  href={`/team/${signal.teamId}?source=${source}`}
-                  className="mt-4 inline-flex rounded border border-terminal-cyan/50 px-3 py-2 text-xs font-semibold text-terminal-cyan transition hover:bg-terminal-cyan/10"
-                >
-                  Inspect team
-                </Link>
-              </article>
-            ))
-          ) : (
-            <EmptyPanel message="Signals will appear after the provider accumulates comparable movement and divergence." />
-          )}
+    <Link className="move-card" href={`/team/${item.snapshot.team.id}?source=${source}`}>
+      <TeamFlag code={item.snapshot.team.code} name={item.snapshot.team.name} />
+      <div>
+        <h3 className={isDown ? "move-title down" : "move-title"}>{item.title}</h3>
+        <p className="move-copy">{item.copy}</p>
+        <div className="move-meta">
+          <span>Vol: <strong>{formatVolume(item.snapshot.market.volume)}</strong></span>
+          <span>
+            {formatSeverity(item.severity)} confidence{" "}
+            <span className={item.severity === "high" ? "bars" : "bars yellow"}><i /><i /><i /><i /></span>
+          </span>
         </div>
       </div>
-    </section>
-  );
-}
-
-function SignalMiniCard({ signal, source }: { signal: MarketSignal; source: MarketDataMeta["source"] }) {
-  return (
-    <Link href={`/team/${signal.teamId}?source=${source}`} className="block rounded-lg border border-terminal-line bg-terminal-panel2/80 p-4 transition hover:border-terminal-cyan/50">
-      <p className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{formatSignalType(signal.type)}</p>
-      <p className="mt-2 text-lg font-semibold text-terminal-text">{signal.title}</p>
-      <p className="mt-2 text-sm leading-5 text-terminal-muted">{signal.shortDescription}</p>
+      <div className="move-score">
+        <strong>{formatProbability(item.snapshot.market.probability)}</strong>
+        <span className={isDown ? "delta down" : "delta"}>{formatChange(item.snapshot.market.change24h)}</span>
+      </div>
     </Link>
   );
 }
 
-function SignalDataPoint({ point }: { point: MarketSignal["dataPoints"][number] }) {
+function MatchesSection() {
   return (
-    <div className="rounded border border-terminal-line bg-black/20 p-3">
-      <p className="text-[9px] uppercase tracking-[0.18em] text-terminal-muted">{point.label}</p>
-      <p className={`mt-1 text-sm font-semibold ${getDataPointTone(point.tone)}`}>{point.value}</p>
+    <section className="panel matches" aria-labelledby="matches-title">
+      <div className="section-head">
+        <h2 id="matches-title">Upcoming Matches <span className="not-real">(not real)</span></h2>
+        <a className="matches-link" href="#matches-title">View all matches <span aria-hidden="true">›</span></a>
+      </div>
+      <div className="match-grid">
+        <MatchCard home="Argentina" homeCode="ARG" away="Japan" awayCode="JPN" time="Today · 20:00" odds={["58%", "24%", "18%"]} />
+        <MatchCard home="France" homeCode="FRA" away="Mexico" awayCode="MEX" time="Today · 23:00" odds={["61%", "23%", "16%"]} />
+        <MatchCard home="Brazil" homeCode="BRA" away="Croatia" awayCode="CRO" time="Tomorrow · 20:00" odds={["54%", "25%", "21%"]} />
+        <MatchCard home="England" homeCode="ENG" away="USA" awayCode="USA" time="Tomorrow · 23:00" odds={["49%", "27%", "24%"]} />
+      </div>
+    </section>
+  );
+}
+
+function MatchCard({
+  home,
+  homeCode,
+  away,
+  awayCode,
+  time,
+  odds,
+}: {
+  home: string;
+  homeCode: string;
+  away: string;
+  awayCode: string;
+  time: string;
+  odds: [string, string, string];
+}) {
+  return (
+    <article className="match-card">
+      <div className="match-teams">
+        <div className="match-team"><TeamFlag code={homeCode} name={home} />{home}</div>
+        <span className="versus">vs</span>
+        <div className="match-team"><TeamFlag code={awayCode} name={away} />{away}</div>
+        <span className="arrow">→</span>
+      </div>
+      <div className="match-time">{time}</div>
+      <div className="odds">
+        <div className="odd"><strong>{odds[0]}</strong><span>{homeCode}</span><small>{formatMockPrice(odds[0])}</small></div>
+        <div className="odd"><strong>{odds[1]}</strong><span>Draw</span><small>{formatMockPrice(odds[1])}</small></div>
+        <div className="odd"><strong>{odds[2]}</strong><span>{awayCode}</span><small>{formatMockPrice(odds[2])}</small></div>
+      </div>
+    </article>
+  );
+}
+
+function InfoGrid() {
+  return (
+    <section className="info-grid" aria-label="Prophet explanation and signals">
+      <div className="panel">
+        <h2 className="panel-title">How Prophet Works</h2>
+        <div className="work-steps">
+          <article className="step">
+            <div className="step-icon"><TargetIcon /></div>
+            <div className="step-number">1</div>
+            <h3>Detect</h3>
+            <p>Probability movement before headlines.</p>
+          </article>
+          <article className="step">
+            <div className="step-icon"><MessageIcon /></div>
+            <div className="step-number">2</div>
+            <h3>Understand</h3>
+            <p>See why the market moved.</p>
+          </article>
+          <article className="step">
+            <div className="step-icon"><PlayIcon /></div>
+            <div className="step-number">3</div>
+            <h3>Bid</h3>
+            <p>Act directly from Prophet.</p>
+          </article>
+        </div>
+      </div>
+
+      <div className="panel">
+        <h2 className="panel-title">Market Signals</h2>
+        <div className="signals-grid">
+          <SignalTaxonomy icon={<TrendIcon />} label="Team odds movement" />
+          <SignalTaxonomy icon={<BarsIcon />} label="Volume spikes" />
+          <SignalTaxonomy icon={<UsersIcon />} label="Squad updates" />
+          <SignalTaxonomy icon={<PlusCircleIcon />} label="Injury impact" />
+          <SignalTaxonomy icon={<WeatherIcon />} label="Venue / weather shifts" />
+          <SignalTaxonomy icon={<TargetSmallIcon />} label="Market mispricing" />
+        </div>
+      </div>
+
+      <div className="panel">
+        <h2 className="panel-title">Why Prophet</h2>
+        <div className="why-list">
+          <WhyItem icon={<ShieldTrendIcon />} title="Markets move before media does" copy="Track probability shifts before they become headlines." />
+          <WhyItem icon={<ShieldPlusIcon />} title="Built around World Cup markets" copy="Follow teams, matches, and market movement in one clean terminal." />
+          <WhyItem icon={<ExclamationIcon />} title="From signal to execution" copy="Understand the move, then place a bid directly." />
+          <WhyItem icon={<HexIcon />} title="Not news. Not sportsbook. Market intelligence." copy="A new layer for event-driven information." />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SignalTaxonomy({ icon, label }: { icon: ReactNode; label: string }) {
+  return (
+    <div className="signal">
+      {icon}
+      <span>{label}</span>
     </div>
   );
 }
 
-function TerminalFooter({
-  snapshots,
-  dataStatus,
-}: {
-  snapshots: TeamMarketSnapshot[];
-  dataStatus: MarketDataMeta;
-}) {
-  const latestUpdate = dataStatus.lastUpdated.slice(0, 10) || snapshots[0]?.market.updatedAt.slice(0, 10) || "Market session";
-
+function WhyItem({ icon, title, copy }: { icon: ReactNode; title: string; copy: string }) {
   return (
-    <footer className="flex flex-col gap-3 border-t border-terminal-line/80 py-5 text-xs text-terminal-muted sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-2">
-        <span className="h-2 w-2 rounded-full bg-terminal-green" />
-        <span>{getMarketDataSourceLabel(dataStatus.source)} read-only board</span>
-        <span>/</span>
-        <span>Updated {latestUpdate}</span>
+    <article className="why-item">
+      {icon}
+      <div>
+        <h3>{title}</h3>
+        <p>{copy}</p>
       </div>
-      <p>World Cup Prediction Terminal / Homepage MVP</p>
+    </article>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="footer">
+      <h2>World Cup first.<br />Global <span>probability-native news</span> next. </h2>
+      <div className="category-row" aria-label="Future market categories">
+        <Category icon={<TrophyIcon />} label="Sports" />
+        <Category icon={<BuildingIcon />} label="Politics" />
+        <Category icon={<BitcoinIcon />} label="Crypto" />
+        <Category icon={<GlobeIcon />} label="Macro" />
+        <Category icon={<ElectionIcon />} label="Elections" />
+        <Category icon={<CultureIcon />} label="Culture" />
+      </div>
     </footer>
   );
 }
 
-function SectionHeader({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow: string;
-  title: string;
-  description?: string;
-}) {
+function Category({ icon, label }: { icon: ReactNode; label: string }) {
   return (
-    <div>
-      <p className="text-[10px] uppercase tracking-[0.28em] text-terminal-cyan">{eyebrow}</p>
-      <h2 className="mt-3 font-display text-4xl font-semibold uppercase leading-none text-terminal-text sm:text-5xl">{title}</h2>
-      {description ? <p className="mt-3 max-w-2xl text-sm leading-6 text-terminal-muted">{description}</p> : null}
+    <div className="category">
+      {icon}
+      <span>{label}</span>
     </div>
   );
 }
 
-function EmptyPanel({ message }: { message: string }) {
-  return (
-    <div className="rounded-lg border border-dashed border-terminal-line bg-terminal-panel2/60 p-5 text-sm text-terminal-muted">
-      {message}
-    </div>
-  );
+function getTerminalRows(
+  signals: MarketSignal[],
+  teams: TeamMarketSnapshot[],
+  signalTeamMap: Map<string, TeamMarketSnapshot>,
+) {
+  const fromSignals = signals
+    .slice(0, 3)
+    .map((signal) => {
+      const snapshot = signalTeamMap.get(signal.teamId);
+
+      if (!snapshot) {
+        return undefined;
+      }
+
+      return {
+        key: signal.id,
+        snapshot,
+        title: signal.title,
+        copy: signal.shortDescription,
+      };
+    })
+    .filter(isDefined);
+
+  if (fromSignals.length > 0) {
+    return fromSignals;
+  }
+
+  return teams.slice(0, 3).map((snapshot) => ({
+    key: snapshot.team.id,
+    snapshot,
+    title: `${snapshot.team.name} market update`,
+    copy: "Probability and volume are available from the current provider.",
+  }));
 }
 
-function getSeverityClassName(severity: MarketSignal["severity"]): string {
-  const base = "rounded border px-2.5 py-1 text-[10px] uppercase tracking-[0.2em]";
+function getMovementRows(
+  signals: MarketSignal[],
+  topMovers: TeamMarketSnapshot[],
+  biggestLosers: TeamMarketSnapshot[],
+  signalTeamMap: Map<string, TeamMarketSnapshot>,
+): MovementRow[] {
+  const rows = signals
+    .slice(0, 4)
+    .map((signal) => {
+      const snapshot = signalTeamMap.get(signal.teamId);
 
-  if (severity === "high") {
-    return `${base} border-terminal-red/60 text-terminal-red`;
+      if (!snapshot) {
+        return undefined;
+      }
+
+      return {
+        key: signal.id,
+        snapshot,
+        title: signal.title,
+        copy: signal.shortDescription,
+        meta: formatSignalType(signal.type),
+        severity: signal.severity,
+      };
+    })
+    .filter(isDefined);
+
+  if (rows.length > 0) {
+    return rows;
   }
 
-  if (severity === "medium") {
-    return `${base} border-terminal-amber/60 text-terminal-amber`;
-  }
-
-  return `${base} border-terminal-line text-terminal-muted`;
+  return [...topMovers, ...biggestLosers].slice(0, 4).map((snapshot) => ({
+    key: snapshot.team.id,
+    snapshot,
+    title: `${snapshot.team.name} ${snapshot.market.change24h < 0 ? "reprices lower" : "moves higher"}`,
+    copy: `Win probability ${formatChange(snapshot.market.change24h)} in 24h`,
+    meta: "24h move",
+    severity: Math.abs(snapshot.market.change24h) >= 2 ? "high" : "medium",
+  }));
 }
 
-function getDataPointTone(tone: MarketSignal["dataPoints"][number]["tone"]): string {
-  if (tone === "positive") {
-    return "text-terminal-green";
+function getStrongestMove(snapshots: TeamMarketSnapshot[]): TeamMarketSnapshot | undefined {
+  return [...snapshots].sort((a, b) => Math.abs(b.market.change24h) - Math.abs(a.market.change24h))[0];
+}
+
+function getAverageConfidence(signals: MarketSignal[]): number | undefined {
+  if (signals.length === 0) {
+    return undefined;
   }
 
-  if (tone === "negative") {
-    return "text-terminal-red";
-  }
+  return Math.round(signals.reduce((sum, signal) => sum + signal.confidence, 0) / signals.length);
+}
 
-  return "text-terminal-text";
+function getProbabilityWidth(probability: number): number {
+  return Math.max(4, Math.min(100, probability));
+}
+
+function getStatusCopy(meta: MarketDataMeta): string {
+  switch (meta.status) {
+    case "live":
+      return "Live";
+    case "partial":
+      return "Partial";
+    case "cached":
+      return "Cached";
+    case "error":
+      return "Error";
+    case "fallback":
+      return "Fallback";
+  }
 }
 
 function formatSignalType(type: MarketSignal["type"]): string {
   return type.replace(/_/g, " ");
+}
+
+function formatConfidence(confidence: number): string {
+  if (confidence >= 75) {
+    return "High";
+  }
+
+  if (confidence >= 55) {
+    return "Medium";
+  }
+
+  return "Low";
+}
+
+function formatSeverity(severity: SignalSeverity): string {
+  if (severity === "high") {
+    return "High";
+  }
+
+  if (severity === "medium") {
+    return "Medium";
+  }
+
+  return "Low";
+}
+
+function formatMockPrice(value: string): string {
+  const percentage = Number(value.replace("%", ""));
+
+  if (!Number.isFinite(percentage)) {
+    return "$0.00";
+  }
+
+  return `$${(percentage / 100).toFixed(2)}`;
+}
+
+function isDefined<T>(value: T | undefined): value is T {
+  return value !== undefined;
+}
+
+function ArrowIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
+}
+
+function LightningIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" /></svg>;
+}
+
+function InfoIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 17v-5M12 8h.01" /></svg>;
+}
+
+function TargetIcon() {
+  return <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" /><circle cx="32" cy="32" r="8" /><path d="M32 8v8M32 48v8M8 32h8M48 32h8M47 17l-6 6M17 47l6-6" /></svg>;
+}
+
+function MessageIcon() {
+  return <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M18 14h28a4 4 0 0 1 4 4v26a4 4 0 0 1-4 4H30l-12 8V18a4 4 0 0 1 4-4Z" /><path d="M26 26h18M26 34h12" /></svg>;
+}
+
+function PlayIcon() {
+  return <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" /><path d="m27 20 17 12-17 12Z" /></svg>;
+}
+
+function TrendIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M4 27 13 18l6 4L31 8" /><path d="M25 8h6v6" /></svg>;
+}
+
+function BarsIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M7 29V18M15 29V10M23 29V15M31 29V5" /></svg>;
+}
+
+function UsersIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M8 28v-3a8 8 0 0 1 8-8h4a8 8 0 0 1 8 8v3" /><circle cx="18" cy="10" r="5" /><path d="M4 18a7 7 0 0 1 4-6M32 18a7 7 0 0 0-4-6" /></svg>;
+}
+
+function PlusCircleIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="11" /><path d="M18 12v12M12 18h12" /></svg>;
+}
+
+function WeatherIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M9 29h17a6 6 0 0 0 1-12 9 9 0 0 0-17-3 7 7 0 0 0-1 15Z" /><path d="M8 9 5 6M18 6V2M28 9l3-3" /></svg>;
+}
+
+function TargetSmallIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="12" /><circle cx="18" cy="18" r="5" /><path d="M18 2v6M18 28v6M2 18h6M28 18h6" /></svg>;
+}
+
+function ShieldTrendIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M18 3 30 8v8c0 8-5 14-12 17C11 30 6 24 6 16V8l12-5Z" /><path d="M18 22V12M18 12l5 4M18 12l-5 4" /></svg>;
+}
+
+function ShieldPlusIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M18 3 30 8v8c0 8-5 14-12 17C11 30 6 24 6 16V8l12-5Z" /><path d="M18 12v9M14 17h8" /></svg>;
+}
+
+function ExclamationIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M18 4v20" /><circle cx="18" cy="25" r="6" /><path d="M18 25h.01" /></svg>;
+}
+
+function HexIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M18 3 31 10v16l-13 7-13-7V10l13-7Z" /><circle cx="18" cy="18" r="5" /><path d="m18 14 2 4-2 4-2-4 2-4Z" /></svg>;
+}
+
+function TrophyIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M12 5h12v8a6 6 0 0 1-12 0V5Z" /><path d="M12 8H6v4a5 5 0 0 0 6 5M24 8h6v4a5 5 0 0 1-6 5M18 19v7M13 31h10M10 31h16" /></svg>;
+}
+
+function BuildingIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M6 16h24M8 28h20M10 16v12M16 16v12M22 16v12M28 16v12M18 5 5 13h26L18 5Z" /></svg>;
+}
+
+function BitcoinIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="12" /><path d="M18 10v16M14 12h6a4 4 0 0 1 0 8h-6M14 20h7a3 3 0 0 1 0 6h-7" /></svg>;
+}
+
+function GlobeIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="13" /><path d="M5 18h26M18 5a20 20 0 0 1 0 26M18 5a20 20 0 0 0 0 26" /></svg>;
+}
+
+function ElectionIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M8 15h20v16H8V15Z" /><path d="m18 5 11 10H7L18 5Z" /><path d="M14 23h8M14 27h5" /></svg>;
+}
+
+function CultureIcon() {
+  return <svg viewBox="0 0 36 36" aria-hidden="true"><path d="M7 6h10v8c0 6-4 9-5 9s-5-3-5-9V6ZM19 6h10v8c0 6-4 9-5 9s-5-3-5-9V6Z" /><path d="M10 13h4M22 13h4M10 18c1 1 3 1 4 0M22 18c1 1 3 1 4 0" /></svg>;
 }
