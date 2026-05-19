@@ -3264,7 +3264,8 @@ a {
   margin-top: 10px;
 }
 
-.prophet-html .trade-outcomes span {
+.prophet-html .trade-outcomes span,
+.prophet-html .trade-outcomes button {
   display: grid;
   place-items: center;
   min-height: 34px;
@@ -3274,12 +3275,59 @@ a {
   color: #526078;
   font-size: 12px;
   font-weight: 800;
+  cursor: pointer;
 }
 
-.prophet-html .trade-outcomes span.active {
+.prophet-html .trade-outcomes span.active,
+.prophet-html .trade-outcomes button.active {
   border-color: rgba(18, 90, 252, 0.34);
   background: linear-gradient(135deg, #0d69ff, #124cf0);
   color: #fff;
+}
+
+.prophet-html .trade-ticket-input-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.prophet-html .trade-ticket-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  gap: 0;
+  align-items: end;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 10px 12px;
+}
+
+.prophet-html .trade-ticket-input span {
+  grid-column: 1 / -1;
+  color: #748096;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.prophet-html .trade-ticket-input input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #07142d;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.prophet-html .trade-ticket-input b {
+  justify-self: end;
+  color: #526078;
+  font-size: 11px;
+  line-height: 1.8;
 }
 
 .prophet-html .bid-button.full {
@@ -3292,6 +3340,65 @@ a {
   color: #647189;
   font-size: 11px;
   line-height: 1.45;
+}
+
+.prophet-html .trade-readiness {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.prophet-html .trade-readiness div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.prophet-html .trade-readiness span,
+.prophet-html .trade-readiness-list span {
+  display: block;
+  color: #748096;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.prophet-html .trade-readiness strong {
+  display: block;
+  margin-top: 5px;
+  overflow: hidden;
+  color: #101b31;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prophet-html .trade-readiness-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.prophet-html .trade-readiness-list span {
+  padding: 8px 10px;
+  border: 1px solid rgba(217, 72, 95, 0.2);
+  border-radius: 7px;
+  background: rgba(217, 72, 95, 0.06);
+  color: #a7384a;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.prophet-html .trade-ticket-message {
+  color: var(--green);
+  font-weight: 800;
+}
+
+.prophet-html .trade-ticket-message.error {
+  color: var(--red);
 }
 
 .prophet-html .related-market-list {

@@ -27,11 +27,18 @@ import type {
   ApiFootballStandingContext,
   ApiFootballTeamProfile,
   NewsEvent,
+  OrderOutcomeSide,
   ProbabilityHistoryPoint,
   TeamFootballMetadata,
   TeamKeyPlayer,
   TeamMarketSnapshot,
+  TradingUserSession,
+  UserOrderPreview,
+  UserTradingReadiness,
 } from "../../types/market";
+import { buildBidOrderPreview } from "../../lib/market/polymarketOrder";
+import { calculateReferencePrice, formatPriceCents, formatShareSize } from "../../lib/market/orderMath";
+import { attachUserOrderSignature, buildUserOrderSignablePayload } from "../../lib/market/userOrder";
 import { readStoredWatchlist, writeStoredWatchlist } from "../../lib/storage/local-terminal";
 import {
   formatChange,
@@ -40,7 +47,11 @@ import {
   getSentimentLabel,
 } from "../home/market-formatters";
 import { TeamFlag } from "../teams/TeamFlag";
-import { PlaceBidButton } from "../trading/PlaceBidButton";
+import {
+  connectTradingWallet,
+  formatShortWalletAddress,
+  loadTradingSession,
+} from "../trading/tradingWalletSession";
 import { WalletMenuButton } from "../trading/WalletMenuButton";
 
 interface TeamDetailPageProps {
@@ -91,6 +102,24 @@ type KeyPlayerSource = ApiFootballSquadPlayer & {
   club?: string;
   note?: string;
 };
+
+type TradeTicketStatus = "idle" | "loading" | "signing" | "submitting" | "success" | "error";
+
+interface EthereumProvider {
+  request: (args: { method: string; params?: unknown[] | Record<string, unknown> }) => Promise<unknown>;
+}
+
+interface TradingConfig {
+  builderCode?: string;
+  builderTakerFeeRate?: number;
+}
+
+interface TypedDataPayload {
+  domain: unknown;
+  types: Record<string, unknown>;
+  primaryType: string;
+  message: Record<string, unknown>;
+}
 
 export function TeamDetailPage({
   snapshot,
@@ -641,31 +670,320 @@ function NewsSignalsPanel({
 function TradeEntryPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
   const yesPrice = snapshot.market.probability;
   const noPrice = Math.max(0, 100 - yesPrice);
+  const [session, setSession] = useState<TradingUserSession | undefined>();
+  const [readiness, setReadiness] = useState<UserTradingReadiness | undefined>();
+  const [config, setConfig] = useState<TradingConfig | undefined>();
+  const [outcomeSide, setOutcomeSide] = useState<OrderOutcomeSide>("yes");
+  const [amount, setAmount] = useState("25");
+  const [limitPrice, setLimitPrice] = useState(() => getDefaultLimitPrice(snapshot, "yes").toFixed(3));
+  const [status, setStatus] = useState<TradeTicketStatus>("idle");
+  const [message, setMessage] = useState<string | undefined>();
+  const numericAmount = Number(amount);
+  const numericLimitPrice = Number(limitPrice);
+  const orderAmount = Number.isFinite(numericAmount) ? Math.max(0, numericAmount) : 0;
+  const orderLimitPrice = Number.isFinite(numericLimitPrice) ? numericLimitPrice : getDefaultLimitPrice(snapshot, outcomeSide);
+  const preview = useMemo(
+    () =>
+      buildBidOrderPreview({
+        snapshot,
+        outcomeSide,
+        tradeSide: "buy",
+        amount: orderAmount,
+        limitPrice: orderLimitPrice,
+        orderType: "FAK",
+      }),
+    [orderAmount, orderLimitPrice, outcomeSide, snapshot],
+  );
+  const failedChecks = readiness?.checks.filter((check) => check.status === "fail") ?? [];
+  const canSubmit =
+    Boolean(session) &&
+    readiness?.ready === true &&
+    preview.canSubmitRealOrder &&
+    status !== "loading" &&
+    status !== "signing" &&
+    status !== "submitting";
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadTicketState() {
+      setStatus("loading");
+
+      try {
+        const [loadedSession, loadedConfig] = await Promise.all([
+          loadTradingSession(),
+          fetchJson<TradingConfig>("/api/trading/config"),
+        ]);
+
+        if (ignore) {
+          return;
+        }
+
+        setSession(loadedSession);
+        setConfig(loadedConfig);
+        setStatus("idle");
+      } catch (error) {
+        if (!ignore) {
+          setStatus("error");
+          setMessage(error instanceof Error ? error.message : String(error));
+        }
+      }
+    }
+
+    void loadTicketState();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadReadiness() {
+      try {
+        const query = new URLSearchParams({
+          tradeSide: "buy",
+          cost: String(preview.estimatedCost),
+          size: String(preview.shareSize),
+          totalCost: String(preview.estimatedTotalCost),
+          estimatedTakerFee: String(preview.estimatedTakerFee),
+        });
+
+        if (preview.tokenId) {
+          query.set("tokenId", preview.tokenId);
+        }
+
+        const nextReadiness = await fetchJson<UserTradingReadiness>(`/api/trading/readiness?${query.toString()}`);
+
+        if (!ignore) {
+          setReadiness(nextReadiness);
+        }
+      } catch (error) {
+        if (!ignore) {
+          setMessage(error instanceof Error ? error.message : String(error));
+        }
+      }
+    }
+
+    void loadReadiness();
+
+    return () => {
+      ignore = true;
+    };
+  }, [preview.estimatedCost, preview.estimatedTakerFee, preview.estimatedTotalCost, preview.shareSize, preview.tokenId]);
+
+  async function connectWallet() {
+    setStatus("loading");
+    setMessage(undefined);
+
+    try {
+      const nextSession = await connectTradingWallet();
+      setSession(nextSession);
+      setReadiness(await loadReadinessForPreview(preview));
+      setStatus("idle");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function deriveCredentials() {
+    if (!session) {
+      return;
+    }
+
+    setStatus("signing");
+    setMessage("Sign the CLOB auth message in your wallet to derive user-specific API credentials.");
+
+    try {
+      const { challenge } = await fetchJson<{ challenge: TypedDataPayload }>("/api/trading/credentials", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ mode: "challenge" }),
+      });
+      const signature = await signTypedData(session.walletAddress, challenge);
+      const response = await fetchJson<{ credentials?: unknown }>("/api/trading/credentials", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          signature,
+          timestamp: String(challenge.message.timestamp ?? ""),
+          nonce: String(challenge.message.nonce ?? "0"),
+        }),
+      });
+
+      if (!response.credentials) {
+        throw new Error("User CLOB credentials were not returned.");
+      }
+
+      setReadiness(await loadReadinessForPreview(preview));
+      setStatus("idle");
+      setMessage("Trading credentials are ready for this connected account.");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function submitRealBid() {
+    if (!session?.funderAddress || !preview.tokenId) {
+      setStatus("error");
+      setMessage("A connected wallet, deployed deposit wallet, and Polymarket token are required.");
+      return;
+    }
+
+    setStatus("signing");
+    setMessage("Review and sign the Polymarket order in your wallet.");
+
+    try {
+      const signable = buildUserOrderSignablePayload({
+        preview,
+        walletAddress: session.walletAddress,
+        funderAddress: session.funderAddress,
+        orderType: "FAK",
+        builderCode: config?.builderCode,
+      });
+      const signature = await signTypedData(session.walletAddress, signable);
+      const signedOrder = attachUserOrderSignature({
+        signable,
+        signature: signature as `0x${string}`,
+      });
+
+      setStatus("submitting");
+      setMessage("Submitting signed order to Polymarket CLOB.");
+
+      const payload = await fetchJson<{ order?: unknown; response?: unknown; error?: string }>("/api/trading/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...signedOrder,
+          preview: buildUserOrderPreview(snapshot, preview),
+        }),
+      });
+
+      setStatus("success");
+      setMessage(payload.order ? "Real bid submitted and recorded." : "Real bid submitted to Polymarket.");
+      setReadiness(await loadReadinessForPreview(preview));
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : String(error));
+    }
+  }
 
   return (
     <section className="panel team-detail-panel trade-entry-panel">
       <div className="panel-head">
         <h2 className="panel-title">Place a Bid</h2>
-        <span className="view-all">User-owned flow</span>
+        <span className="view-all">User-owned real order</span>
       </div>
       <div className="trade-entry-market">
         <span>Market</span>
         <strong>{snapshot.team.name} to win World Cup</strong>
-        <small>Winner</small>
+        <small>{snapshot.market.polymarket?.question ?? "Winner market"}</small>
       </div>
       <div className="trade-outcomes">
-        <span className="active">YES {formatProbability(yesPrice)}</span>
-        <span>NO {formatProbability(noPrice)}</span>
+        <button
+          type="button"
+          className={outcomeSide === "yes" ? "active" : ""}
+          onClick={() => {
+            setOutcomeSide("yes");
+            setLimitPrice(getDefaultLimitPrice(snapshot, "yes").toFixed(3));
+            setMessage(undefined);
+          }}
+        >
+          YES {formatProbability(yesPrice)}
+        </button>
+        <button
+          type="button"
+          className={outcomeSide === "no" ? "active" : ""}
+          onClick={() => {
+            setOutcomeSide("no");
+            setLimitPrice(getDefaultLimitPrice(snapshot, "no").toFixed(3));
+            setMessage(undefined);
+          }}
+        >
+          NO {formatProbability(noPrice)}
+        </button>
+      </div>
+      <div className="trade-ticket-input-grid">
+        <label className="trade-ticket-input">
+          <span>Bid amount</span>
+          <input
+            min="0"
+            inputMode="decimal"
+            type="number"
+            value={amount}
+            onChange={(event) => {
+              setAmount(event.target.value);
+              setMessage(undefined);
+            }}
+          />
+          <b>USDC</b>
+        </label>
+        <label className="trade-ticket-input">
+          <span>Limit price</span>
+          <input
+            min="0.01"
+            max="0.99"
+            step="0.001"
+            inputMode="decimal"
+            type="number"
+            value={limitPrice}
+            onChange={(event) => {
+              setLimitPrice(event.target.value);
+              setMessage(undefined);
+            }}
+          />
+          <b>{formatPriceCents(preview.sidePrice)}</b>
+        </label>
       </div>
       <div className="team-detail-mini-grid">
-        <PanelMetric label="Reference price" value={`${yesPrice.toFixed(1)}c`} />
-        <PanelMetric label="Min order" value={snapshot.market.polymarket?.minOrderSize ? `$${snapshot.market.polymarket.minOrderSize}` : "Pending"} />
-        <PanelMetric label="Accepting orders" value={snapshot.market.polymarket?.acceptingOrders ? "Yes" : "Pending"} />
+        <PanelMetric label="Reference price" value={formatPriceCents(preview.sidePrice)} />
+        <PanelMetric label="Estimated shares" value={formatShareSize(preview.shareSize)} />
+        <PanelMetric label="Estimated total" value={formatMoney(preview.estimatedTotalCost)} />
+        <PanelMetric label="Potential outcome" value={formatMoney(preview.potentialOutcome)} />
+        <PanelMetric label="Min order" value={preview.minOrderSize ? formatMoney(preview.minOrderSize) : "Pending"} />
+        <PanelMetric label="Accepting orders" value={preview.acceptingOrders ? "Yes" : "No"} />
       </div>
-      <PlaceBidButton className="bid-button full" teamName={snapshot.team.name}>
-        Review Bid
-      </PlaceBidButton>
-      <p>The real embedded order flow is TBD and must use the user&apos;s own account, eligibility, balance, and confirmation.</p>
+      <div className="trade-readiness">
+        <div>
+          <span>Wallet</span>
+          <strong>{session ? formatShortWalletAddress(session.walletAddress) : "Not connected"}</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>{getReadinessLabel(readiness, preview.disabledReason)}</strong>
+        </div>
+      </div>
+      {failedChecks.length > 0 ? (
+        <div className="trade-readiness-list">
+          {failedChecks.slice(0, 3).map((check) => (
+            <span key={check.id}>{check.label}: {check.detail}</span>
+          ))}
+        </div>
+      ) : null}
+      {!session ? (
+        <button className="bid-button full" type="button" disabled={status === "loading"} onClick={connectWallet}>
+          {status === "loading" ? "Connecting..." : "Connect Wallet"}
+        </button>
+      ) : readiness?.credentials.hasClobCredentials === false ? (
+        <button className="bid-button full" type="button" disabled={status === "signing"} onClick={deriveCredentials}>
+          {status === "signing" ? "Waiting for signature..." : "Enable Trading Credentials"}
+        </button>
+      ) : (
+        <button className="bid-button full" type="button" disabled={!canSubmit} onClick={submitRealBid}>
+          {status === "signing" ? "Waiting for signature..." : status === "submitting" ? "Submitting..." : "Sign and Submit Real Bid"}
+        </button>
+      )}
+      {message ? <p className={status === "error" ? "trade-ticket-message error" : "trade-ticket-message"}>{message}</p> : null}
+      <p>Real orders use the connected user&apos;s wallet, deposit wallet, CLOB credentials, funds, and explicit signature. This is not financial advice.</p>
     </section>
   );
 }
@@ -1056,6 +1374,121 @@ function formatShortDate(value: string): string {
 
 function formatImpact(value: number): string {
   return value >= 0 ? `+${value}` : String(value);
+}
+
+function formatMoney(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    cache: "no-store",
+    ...init,
+  });
+  const payload = (await response.json()) as T & { error?: string };
+
+  if (!response.ok) {
+    throw new Error(payload.error ?? `Request failed: ${response.status}`);
+  }
+
+  return payload;
+}
+
+async function loadReadinessForPreview(preview: ReturnType<typeof buildBidOrderPreview>) {
+  const query = new URLSearchParams({
+    tradeSide: "buy",
+    cost: String(preview.estimatedCost),
+    size: String(preview.shareSize),
+    totalCost: String(preview.estimatedTotalCost),
+    estimatedTakerFee: String(preview.estimatedTakerFee),
+  });
+
+  if (preview.tokenId) {
+    query.set("tokenId", preview.tokenId);
+  }
+
+  return fetchJson<UserTradingReadiness>(`/api/trading/readiness?${query.toString()}`);
+}
+
+function getDefaultLimitPrice(snapshot: TeamMarketSnapshot, outcomeSide: OrderOutcomeSide) {
+  return snapshot.market.polymarket?.tokens[outcomeSide]?.price ?? calculateReferencePrice(snapshot.market.probability, outcomeSide);
+}
+
+function buildUserOrderPreview(snapshot: TeamMarketSnapshot, preview: ReturnType<typeof buildBidOrderPreview>): UserOrderPreview {
+  if (!preview.tokenId) {
+    throw new Error("A Polymarket token ID is required before submitting a real order.");
+  }
+
+  return {
+    marketId: snapshot.market.polymarket?.marketId ?? snapshot.market.polymarket?.conditionId,
+    tokenId: preview.tokenId,
+    teamId: snapshot.team.id,
+    outcome: preview.outcomeSide,
+    side: preview.tradeSide,
+    orderType: "FAK",
+    limitPrice: preview.sidePrice,
+    size: preview.shareSize,
+    estimatedCost: preview.estimatedCost,
+    estimatedTakerFee: preview.estimatedTakerFee,
+    estimatedTotalCost: preview.estimatedTotalCost,
+    potentialOutcome: preview.potentialOutcome,
+    tickSize: preview.tickSize ?? "0.01",
+    negRisk: preview.negRisk,
+    stale: false,
+    warnings: preview.disabledReason ? [preview.disabledReason] : [],
+  };
+}
+
+function getReadinessLabel(readiness: UserTradingReadiness | undefined, disabledReason: string | undefined) {
+  if (disabledReason) {
+    return "Market unavailable";
+  }
+
+  if (!readiness) {
+    return "Checking";
+  }
+
+  if (readiness.ready) {
+    return "Ready";
+  }
+
+  return "Needs review";
+}
+
+async function signTypedData(walletAddress: string, typedData: unknown): Promise<string> {
+  const provider = getEthereumProvider();
+
+  if (!provider) {
+    throw new Error("No injected wallet provider found. Install or unlock an EVM wallet, then try again.");
+  }
+
+  const signature = await provider.request({
+    method: "eth_signTypedData_v4",
+    params: [walletAddress, JSON.stringify(typedData)],
+  });
+
+  if (typeof signature !== "string" || !/^0x[a-fA-F0-9]+$/.test(signature)) {
+    throw new Error("Wallet did not return a valid signature.");
+  }
+
+  return signature;
+}
+
+function getEthereumProvider(): EthereumProvider | undefined {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  const maybeWindow = window as typeof window & {
+    ethereum?: EthereumProvider & { providers?: EthereumProvider[] };
+    okxwallet?: EthereumProvider;
+  };
+
+  return maybeWindow.ethereum?.providers?.[0] ?? maybeWindow.ethereum ?? maybeWindow.okxwallet;
 }
 
 function shortenName(name: string): string {
