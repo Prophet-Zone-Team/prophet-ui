@@ -14,6 +14,7 @@ import { PlaceBidButton } from "../trading/PlaceBidButton";
 import { WalletMenuButton } from "../trading/WalletMenuButton";
 import { TeamFlag } from "../teams/TeamFlag";
 import { formatChange, formatProbability, formatVolume } from "./market-formatters";
+import { PixelBlast } from "./PixelBlast";
 
 interface HomePageProps {
   snapshots: TeamMarketSnapshot[];
@@ -102,11 +103,16 @@ function Hero({
 
   return (
     <section className="hero" aria-labelledby="hero-title">
-      <div className="pixel-blast-container pixel-blast-fallback" aria-hidden="true" />
+      <PixelBlast />
       <div className="hero-copy">
         <span className="eyebrow">Prediction market terminal</span>
         <h1 id="hero-title">
-          Before the news,<br />it <span>moves.</span>
+          Before the news,
+          <br />
+          <span className="hero-title-line">
+            it <span className="hero-title-gradient">moves.</span>
+            <TickerStack />
+          </span>
         </h1>
         <p className="hero-subcopy">
           Prophet tracks probability, volume, and team updates in one live World Cup market feed, so the first meaningful
@@ -119,14 +125,6 @@ function Hero({
               View matches
               <ArrowIcon />
             </Link>
-            <div className="ticker-stack" aria-hidden="true">
-              <div className="ticker-track">
-                <div className="coin-row"><span className="coin usd">$</span></div>
-                <div className="coin-row"><span className="coin tether">T</span></div>
-                <div className="coin-row">%</div>
-                <div className="coin-row"><span className="coin usd">$</span></div>
-              </div>
-            </div>
           </div>
         </div>
         <div className="hero-stats" aria-label="Prophet market summary">
@@ -217,6 +215,25 @@ function Hero({
         </div>
       </aside>
     </section>
+  );
+}
+
+function TickerStack() {
+  return (
+    <div className="ticker-stack hero-title-ticker" aria-hidden="true">
+      <div className="ticker-track">
+        <div className="coin-row">
+          <span className="coin usd">$</span>
+        </div>
+        <div className="coin-row">
+          <span className="coin tether">T</span>
+        </div>
+        <div className="coin-row">%</div>
+        <div className="coin-row">
+          <span className="coin usd">$</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
