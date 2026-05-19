@@ -1,25 +1,19 @@
 import { notFound } from "next/navigation";
 
 import { getWorldCupMarketData } from "../../../data/providers/worldCupMarketData";
-import { parseMarketDataSource } from "../../../data/providers/source";
 import { TeamDetailPage } from "../../../components/team/TeamDetailPage";
 
 interface TeamPageProps {
   params: Promise<{
     slug: string;
   }>;
-  searchParams?: Promise<{
-    source?: string | string[];
-  }>;
 }
 
 export const dynamic = "force-dynamic";
 
-export default async function Page({ params, searchParams }: TeamPageProps) {
+export default async function Page({ params }: TeamPageProps) {
   const { slug } = await params;
-  const search = await searchParams;
   const marketData = await getWorldCupMarketData({
-    source: parseMarketDataSource(search?.source),
     footballContextTeamIds: [slug],
   });
   const snapshot = marketData.snapshots.find((item) => item.team.id === slug);

@@ -21,7 +21,7 @@ export function MarketsPage({ snapshots, dataStatus, universe }: MarketsPageProp
   return (
     <main className="prophet-html">
       <div className="page">
-        <MarketsTopbar source={dataStatus.source} />
+        <MarketsTopbar />
 
         <section className="markets-hero" aria-labelledby="markets-title">
           <div>
@@ -48,7 +48,7 @@ export function MarketsPage({ snapshots, dataStatus, universe }: MarketsPageProp
 
           <div className="markets-list">
             {teams.map((snapshot, index) => (
-              <MarketListItem key={snapshot.team.id} snapshot={snapshot} rank={index + 1} source={dataStatus.source} />
+              <MarketListItem key={snapshot.team.id} snapshot={snapshot} rank={index + 1} />
             ))}
           </div>
 
@@ -62,20 +62,20 @@ export function MarketsPage({ snapshots, dataStatus, universe }: MarketsPageProp
   );
 }
 
-function MarketsTopbar({ source }: { source: MarketDataMeta["source"] }) {
+function MarketsTopbar() {
   return (
     <header className="topbar">
-      <Link className="brand" href={`/?source=${source}`} aria-label="Prophet home">
+      <Link className="brand" href="/" aria-label="Prophet home">
         <span className="mark" aria-hidden="true" />
         Prophet
       </Link>
       <nav aria-label="Primary navigation">
-        <Link href={`/markets?source=${source}`} aria-current="page">Markets</Link>
-        <Link href={`/matches?source=${source}`}>Matches</Link>
-        <Link href={`/teams?source=${source}`}>Teams</Link>
-        <Link href={`/bid?source=${source}`}>Portfolio</Link>
+        <Link href="/markets" aria-current="page">Markets</Link>
+        <Link href="/matches">Matches</Link>
+        <Link href="/teams">Teams</Link>
+        <Link href="/portfolio">Portfolio</Link>
       </nav>
-      <WalletMenuButton source={source} />
+      <WalletMenuButton />
     </header>
   );
 }
@@ -83,16 +83,14 @@ function MarketsTopbar({ source }: { source: MarketDataMeta["source"] }) {
 function MarketListItem({
   snapshot,
   rank,
-  source,
 }: {
   snapshot: TeamMarketSnapshot;
   rank: number;
-  source: MarketDataMeta["source"];
 }) {
   const { team, market } = snapshot;
   const isDown = market.change24h < 0;
-  const quickBidHref = `/bid?source=${source}&team=${team.id}`;
-  const detailHref = `/team/${team.id}?source=${source}`;
+  const quickBidHref = `/bid?team=${team.id}`;
+  const detailHref = `/team/${team.id}`;
 
   return (
     <article className={isDown ? "market-row down" : "market-row"}>

@@ -1009,7 +1009,6 @@ export function BidPage({ snapshots, dataStatus, initialTeamId }: BidPageProps) 
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
         <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8 lg:p-10">
           <TopLinks
-            source={dataStatus.source}
             session={tradingSession}
             walletStatus={walletStatus}
             onConnectWallet={connectWallet}
@@ -1030,7 +1029,7 @@ export function BidPage({ snapshots, dataStatus, initialTeamId }: BidPageProps) 
               </p>
             </div>
             {selectedSnapshot ? (
-              <SelectedTeamPanel snapshot={selectedSnapshot} side={outcomeSide} source={dataStatus.source} />
+              <SelectedTeamPanel snapshot={selectedSnapshot} side={outcomeSide} />
             ) : null}
           </div>
         </section>
@@ -1248,11 +1247,9 @@ export function BidPage({ snapshots, dataStatus, initialTeamId }: BidPageProps) 
 function SelectedTeamPanel({
   snapshot,
   side,
-  source,
 }: {
   snapshot: TeamMarketSnapshot;
   side: OrderOutcomeSide;
-  source: MarketDataMeta["source"];
 }) {
   const { team, market } = snapshot;
   const sidePrice = calculateReferencePrice(market.probability, side);
@@ -1268,7 +1265,7 @@ function SelectedTeamPanel({
             {team.code} / {team.region}
           </p>
         </div>
-        <Link href={`/team/${team.id}?source=${source}`} className="rounded border border-terminal-cyan/50 px-3 py-2 text-xs text-terminal-cyan">
+        <Link href={`/team/${team.id}`} className="rounded border border-terminal-cyan/50 px-3 py-2 text-xs text-terminal-cyan">
           Detail
         </Link>
       </div>
@@ -1836,12 +1833,10 @@ function EmptyState({ title, detail }: { title: string; detail: string }) {
 }
 
 function TopLinks({
-  source,
   session,
   walletStatus,
   onConnectWallet,
 }: {
-  source: MarketDataMeta["source"];
   session?: TradingUserSession;
   walletStatus: "idle" | "connecting" | "connected" | "error";
   onConnectWallet: () => void;
@@ -1849,13 +1844,13 @@ function TopLinks({
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
-        <Link href={`/?source=${source}`} className="hover:text-terminal-cyan">
+        <Link href="/" className="hover:text-terminal-cyan">
           Market
         </Link>
-        <Link href={`/feed?source=${source}`} className="hover:text-terminal-cyan">
+        <Link href="/feed" className="hover:text-terminal-cyan">
           Feed
         </Link>
-        <Link href={`/watchlist?source=${source}`} className="hover:text-terminal-cyan">
+        <Link href="/watchlist" className="hover:text-terminal-cyan">
           Watchlist
         </Link>
       </div>

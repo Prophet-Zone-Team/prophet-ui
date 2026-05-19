@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import type { MarketDataSource } from "../../data/providers/types";
 import type { TeamMarketSnapshot } from "../../types/market";
 import {
   formatChange,
@@ -12,16 +11,15 @@ import {
 
 interface TeamMarketCardProps {
   snapshot: TeamMarketSnapshot;
-  source: MarketDataSource;
 }
 
-export function TeamMarketCard({ snapshot, source }: TeamMarketCardProps) {
+export function TeamMarketCard({ snapshot }: TeamMarketCardProps) {
   const { team, market } = snapshot;
   const isPositive = market.change24h >= 0;
 
   return (
     <Link
-      href={`/team/${team.id}?source=${source}`}
+      href={`/team/${team.id}`}
       aria-label={`Open ${team.name} team detail`}
       className="block rounded-lg border border-terminal-line/80 bg-terminal-panel/88 p-5 shadow-terminal transition duration-200 hover:-translate-y-0.5 hover:border-terminal-orange/55 hover:shadow-heat"
     >

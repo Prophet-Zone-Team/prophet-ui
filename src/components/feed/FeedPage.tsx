@@ -43,7 +43,7 @@ export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
       <div className="mx-auto grid w-full max-w-7xl gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:gap-10">
         <aside className="lg:sticky lg:top-8 lg:h-fit">
           <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8">
-            <TopLinks source={dataStatus.source} />
+            <TopLinks />
             <p className="mt-8 text-[10px] uppercase tracking-[0.28em] text-terminal-cyan">Signal feed</p>
             <h1 className="mt-4 font-display text-5xl leading-none text-terminal-text sm:text-7xl lg:text-6xl">
               Market Signal Feed
@@ -72,7 +72,6 @@ export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
                   key={signal.id}
                   signal={signal}
                   snapshot={snapshot}
-                  source={dataStatus.source}
                   isWatching={watchlistIds.includes(signal.teamId)}
                   onAddToWatchlist={() => addToWatchlist(signal.teamId)}
                 />
@@ -95,13 +94,11 @@ export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
 function FeedCard({
   signal,
   snapshot,
-  source,
   isWatching,
   onAddToWatchlist,
 }: {
   signal: MarketSignal;
   snapshot: TeamMarketSnapshot | undefined;
-  source: MarketDataMeta["source"];
   isWatching: boolean;
   onAddToWatchlist: () => void;
 }) {
@@ -153,7 +150,7 @@ function FeedCard({
 
       <div className="mt-5 flex flex-wrap gap-3 border-t border-terminal-line/70 pt-5">
         <Link
-          href={`/team/${signal.teamId}?source=${source}`}
+          href={`/team/${signal.teamId}`}
           className="rounded border border-terminal-cyan/60 bg-terminal-cyan/10 px-3 py-2 text-xs font-semibold text-terminal-cyan transition hover:bg-terminal-cyan/20"
         >
           View Team
@@ -166,7 +163,7 @@ function FeedCard({
           {isWatching ? "Watching" : "Add to Watchlist"}
         </button>
         <Link
-          href={`/?source=${source}`}
+          href="/"
           className="rounded border border-terminal-line bg-terminal-panel2 px-3 py-2 text-xs font-semibold text-terminal-muted transition hover:border-terminal-cyan/60 hover:text-terminal-cyan"
         >
           Explore Market
@@ -176,16 +173,16 @@ function FeedCard({
   );
 }
 
-function TopLinks({ source }: { source: MarketDataMeta["source"] }) {
+function TopLinks() {
   return (
     <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
-      <Link href={`/?source=${source}`} className="hover:text-terminal-cyan">
+      <Link href="/" className="hover:text-terminal-cyan">
         Market
       </Link>
-      <Link href={`/watchlist?source=${source}`} className="hover:text-terminal-cyan">
+      <Link href="/watchlist" className="hover:text-terminal-cyan">
         Watchlist
       </Link>
-      <Link href={`/brief?source=${source}`} className="hover:text-terminal-cyan">
+      <Link href="/brief" className="hover:text-terminal-cyan">
         Brief
       </Link>
     </div>

@@ -46,13 +46,13 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
         <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8 lg:p-10">
           <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
-            <Link href={`/?source=${dataStatus.source}`} className="hover:text-terminal-cyan">
+            <Link href="/" className="hover:text-terminal-cyan">
               Market
             </Link>
-            <Link href={`/feed?source=${dataStatus.source}`} className="hover:text-terminal-cyan">
+            <Link href="/feed" className="hover:text-terminal-cyan">
               Feed
             </Link>
-            <Link href={`/brief?source=${dataStatus.source}`} className="hover:text-terminal-cyan">
+            <Link href="/brief" className="hover:text-terminal-cyan">
               Brief
             </Link>
           </div>
@@ -76,7 +76,7 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
         <DataStatusBanner meta={dataStatus} />
         <SourceDisclosure compact />
 
-        <WatchlistAlerts alerts={alerts} source={dataStatus.source} />
+        <WatchlistAlerts alerts={alerts} />
 
         {watchedSnapshots.length > 0 ? (
           <section className="grid gap-5">
@@ -85,7 +85,6 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
                 key={snapshot.team.id}
                 snapshot={snapshot}
                 news={newsEvents.filter((event) => event.teamId === snapshot.team.id)}
-                source={dataStatus.source}
                 onRemove={() => removeTeam(snapshot.team.id)}
               />
             ))}
@@ -97,7 +96,7 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
               Add teams from a team detail page. The list is stored in this browser only and does not use a backend.
             </p>
             <Link
-              href={`/?source=${dataStatus.source}`}
+              href="/"
               className="mt-6 inline-flex rounded border border-terminal-cyan/60 bg-terminal-cyan/10 px-4 py-3 text-sm font-semibold text-terminal-cyan"
             >
               Browse market heatmap
@@ -112,12 +111,10 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
 function WatchlistTeamCard({
   snapshot,
   news,
-  source,
   onRemove,
 }: {
   snapshot: TeamMarketSnapshot;
   news: NewsEvent[];
-  source: MarketDataMeta["source"];
   onRemove: () => void;
 }) {
   const { team, market } = snapshot;
@@ -132,7 +129,7 @@ function WatchlistTeamCard({
             {team.code} / {team.region}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href={`/team/${team.id}?source=${source}`} className="rounded border border-terminal-cyan/50 px-3 py-2 text-xs text-terminal-cyan">
+            <Link href={`/team/${team.id}`} className="rounded border border-terminal-cyan/50 px-3 py-2 text-xs text-terminal-cyan">
               Team detail
             </Link>
             <button
@@ -175,7 +172,7 @@ function WatchlistTeamCard({
   );
 }
 
-function WatchlistAlerts({ alerts, source }: { alerts: WatchlistAlert[]; source: MarketDataMeta["source"] }) {
+function WatchlistAlerts({ alerts }: { alerts: WatchlistAlert[] }) {
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -187,7 +184,7 @@ function WatchlistAlerts({ alerts, source }: { alerts: WatchlistAlert[]; source:
           </p>
         </div>
         <Link
-          href={`/brief?source=${source}`}
+          href="/brief"
           className="inline-flex rounded border border-terminal-cyan/60 bg-terminal-cyan/10 px-4 py-3 text-sm font-semibold text-terminal-cyan"
         >
           Open brief

@@ -57,13 +57,13 @@ export function BriefPage({ snapshots, newsEvents, dataStatus }: BriefPageProps)
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
         <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8 lg:p-10">
           <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
-            <Link href={`/?source=${dataStatus.source}`} className="hover:text-terminal-cyan">
+            <Link href="/" className="hover:text-terminal-cyan">
               Market
             </Link>
-            <Link href={`/feed?source=${dataStatus.source}`} className="hover:text-terminal-cyan">
+            <Link href="/feed" className="hover:text-terminal-cyan">
               Feed
             </Link>
-            <Link href={`/watchlist?source=${dataStatus.source}`} className="hover:text-terminal-cyan">
+            <Link href="/watchlist" className="hover:text-terminal-cyan">
               Watchlist
             </Link>
           </div>
@@ -90,18 +90,18 @@ export function BriefPage({ snapshots, newsEvents, dataStatus }: BriefPageProps)
         <SourceDisclosure compact />
 
         <div className="grid gap-8 xl:grid-cols-2">
-          <SnapshotList title="Today's Biggest Movers" eyebrow="Upside repricing" snapshots={topMovers} source={dataStatus.source} />
-          <SnapshotList title="Biggest Losers" eyebrow="Downside repricing" snapshots={biggestLosers} source={dataStatus.source} />
+          <SnapshotList title="Today's Biggest Movers" eyebrow="Upside repricing" snapshots={topMovers} />
+          <SnapshotList title="Biggest Losers" eyebrow="Downside repricing" snapshots={biggestLosers} />
         </div>
 
         <section className="grid gap-8 xl:grid-cols-[1.08fr_0.92fr]">
-          <SignalPanel signals={signals.slice(0, 8)} source={dataStatus.source} />
-          <WatchlistAlertPanel alerts={alerts} source={dataStatus.source} />
+          <SignalPanel signals={signals.slice(0, 8)} />
+          <WatchlistAlertPanel alerts={alerts} />
         </section>
 
         <section className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
           <NewsPanel newsEvents={newsEvents} />
-          <OddsMismatchPanel oddsMismatch={oddsMismatch} source={dataStatus.source} />
+          <OddsMismatchPanel oddsMismatch={oddsMismatch} />
         </section>
 
         <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7 lg:p-8">
@@ -134,12 +134,10 @@ function SnapshotList({
   title,
   eyebrow,
   snapshots,
-  source,
 }: {
   title: string;
   eyebrow: string;
   snapshots: TeamMarketSnapshot[];
-  source: MarketDataMeta["source"];
 }) {
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7">
@@ -149,7 +147,7 @@ function SnapshotList({
           snapshots.map((snapshot) => (
             <Link
               key={snapshot.team.id}
-              href={`/team/${snapshot.team.id}?source=${source}`}
+              href={`/team/${snapshot.team.id}`}
               className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -175,14 +173,14 @@ function SnapshotList({
   );
 }
 
-function SignalPanel({ signals, source }: { signals: MarketSignal[]; source: MarketDataMeta["source"] }) {
+function SignalPanel({ signals }: { signals: MarketSignal[] }) {
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7">
       <SectionHeader eyebrow="Top market signals" title="Signal Brief" />
       <div className="mt-6 grid gap-4">
         {signals.length > 0 ? (
           signals.map((signal) => (
-            <Link key={signal.id} href={`/team/${signal.teamId}?source=${source}`} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
+            <Link key={signal.id} href={`/team/${signal.teamId}`} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{formatSignalType(signal.type)}</p>
                 <p className="text-xs font-semibold text-terminal-cyan">{signal.confidence}% confidence</p>
@@ -199,14 +197,14 @@ function SignalPanel({ signals, source }: { signals: MarketSignal[]; source: Mar
   );
 }
 
-function WatchlistAlertPanel({ alerts, source }: { alerts: WatchlistAlert[]; source: MarketDataMeta["source"] }) {
+function WatchlistAlertPanel({ alerts }: { alerts: WatchlistAlert[] }) {
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7">
       <SectionHeader eyebrow="Watchlist alerts" title="Local Watch Alerts" />
       <div className="mt-6 grid gap-4">
         {alerts.length > 0 ? (
           alerts.slice(0, 6).map((alert) => (
-            <Link key={alert.id} href={`/team/${alert.teamId}?source=${source}`} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
+            <Link key={alert.id} href={`/team/${alert.teamId}`} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{alert.teamName}</p>
                 <span className={getSeverityClassName(alert.severity)}>{alert.severity}</span>
@@ -252,10 +250,8 @@ function NewsPanel({ newsEvents }: { newsEvents: NewsEvent[] }) {
 
 function OddsMismatchPanel({
   oddsMismatch,
-  source,
 }: {
   oddsMismatch: ReturnType<typeof getOddsMismatch>;
-  source: MarketDataMeta["source"];
 }) {
   return (
     <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-5 shadow-terminal sm:p-7">
@@ -263,7 +259,7 @@ function OddsMismatchPanel({
       <div className="mt-6 grid gap-4">
         {oddsMismatch.length > 0 ? (
           oddsMismatch.map((result) => (
-            <Link key={result.team.id} href={`/team/${result.team.id}?source=${source}`} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
+            <Link key={result.team.id} href={`/team/${result.team.id}`} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{result.team.code}</p>
                 <p className={result.mismatch >= 0 ? "text-sm font-semibold text-terminal-green" : "text-sm font-semibold text-terminal-red"}>

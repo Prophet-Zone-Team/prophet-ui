@@ -7,7 +7,7 @@ Last updated: 2026-05-16 19:58 CST
 - Priority 1, Data Provider Architecture:
   completed for the current Polymarket-only product surface. The app now uses a 48-team World Cup registry, hides Kalshi/composite from the user-facing UI, stores Polymarket team snapshots plus market-universe totals in D1/local history, and prefers fresh stored Polymarket snapshots before falling back to live provider reads. Remaining cleanup: `GET /api/system/health` still includes stale historical Kalshi/composite rows and should filter health to enabled sources.
 - Priority 2, Data Freshness and Source Disclosure:
-  mostly completed for the current product surface. Shared data banner, source disclosure, source-preserving links, and status metadata cover market, odds, news, and football context. Remaining work: health should report The Odds API status explicitly, and GDELT/news empty or rate-limited states need clearer product copy.
+  mostly completed for the current product surface. Shared data banner, Polymarket-default source disclosure, clean source-free links, and status metadata cover market, odds, news, and football context. Remaining work: health should report The Odds API status explicitly, and GDELT/news empty or rate-limited states need clearer product copy.
 - Priority 3, Market Signal System:
   completed v2. Signals cover `heating_up`, `cooling_down`, `volume_spike`, `odds_mismatch`, `sentiment_driven`, `news_impact`, `overheated`, and `quiet_accumulation`.
 - Priority 4, Embedded User Trading:

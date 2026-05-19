@@ -250,7 +250,7 @@ export function MatchesPage({ source }: MatchesPageProps) {
   return (
     <main className="prophet-html">
       <div className="page">
-        <MatchesTopbar source={source} />
+        <MatchesTopbar />
 
         <section className="matches-page-hero" aria-labelledby="matches-page-title">
           <div>
@@ -276,13 +276,13 @@ export function MatchesPage({ source }: MatchesPageProps) {
               <h2 className="panel-title">Featured Match Pressure</h2>
               <span className="live">Static</span>
             </div>
-            <FeaturedMatch match={hottestMatch} source={source} />
+            <FeaturedMatch match={hottestMatch} />
           </article>
 
           <aside className="panel match-signal-panel">
             <div className="panel-head">
               <h2 className="panel-title">Signal Queue</h2>
-              <Link className="view-all" href={`/markets?source=${source}`}>
+              <Link className="view-all" href="/markets">
                 Open markets
               </Link>
             </div>
@@ -303,7 +303,7 @@ export function MatchesPage({ source }: MatchesPageProps) {
 
           <div className="matches-board">
             {STATIC_MATCHES.map((match) => (
-              <MatchMarketCard key={match.id} match={match} source={source} />
+              <MatchMarketCard key={match.id} match={match} />
             ))}
           </div>
 
@@ -317,25 +317,25 @@ export function MatchesPage({ source }: MatchesPageProps) {
   );
 }
 
-function MatchesTopbar({ source }: { source: MarketDataMeta["source"] }) {
+function MatchesTopbar() {
   return (
     <header className="topbar">
-      <Link className="brand" href={`/?source=${source}`} aria-label="Prophet home">
+      <Link className="brand" href="/" aria-label="Prophet home">
         <span className="mark" aria-hidden="true" />
         Prophet
       </Link>
       <nav aria-label="Primary navigation">
-        <Link href={`/markets?source=${source}`}>Markets</Link>
-        <Link href={`/matches?source=${source}`} aria-current="page">Matches</Link>
-        <Link href={`/teams?source=${source}`}>Teams</Link>
-        <Link href={`/bid?source=${source}`}>Portfolio</Link>
+        <Link href="/markets">Markets</Link>
+        <Link href="/matches" aria-current="page">Matches</Link>
+        <Link href="/teams">Teams</Link>
+        <Link href="/portfolio">Portfolio</Link>
       </nav>
-      <WalletMenuButton source={source} />
+      <WalletMenuButton />
     </header>
   );
 }
 
-function FeaturedMatch({ match, source }: { match: StaticMatch | undefined; source: MarketDataMeta["source"] }) {
+function FeaturedMatch({ match }: { match: StaticMatch | undefined }) {
   if (!match) {
     return null;
   }
@@ -369,7 +369,7 @@ function FeaturedMatch({ match, source }: { match: StaticMatch | undefined; sour
           <span>Signal</span>
           <strong>{match.signal}</strong>
         </div>
-        <Link className="market-detail-button" href={`/bid?source=${source}`}>
+        <Link className="market-detail-button" href="/bid">
           Open order panel
         </Link>
       </div>
@@ -377,7 +377,7 @@ function FeaturedMatch({ match, source }: { match: StaticMatch | undefined; sour
   );
 }
 
-function MatchMarketCard({ match, source }: { match: StaticMatch; source: MarketDataMeta["source"] }) {
+function MatchMarketCard({ match }: { match: StaticMatch }) {
   return (
     <article className="match-market-card">
       <div className="match-market-meta">
@@ -407,7 +407,7 @@ function MatchMarketCard({ match, source }: { match: StaticMatch; source: Market
 
       <div className="match-market-bottom">
         <p>{match.signal}</p>
-        <Link className="market-detail-button" href={`/teams?source=${source}`}>
+        <Link className="market-detail-button" href="/teams">
           Compare teams
         </Link>
       </div>

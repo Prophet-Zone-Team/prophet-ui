@@ -33,7 +33,7 @@ export function HomePage({ snapshots, newsEvents, dataStatus, universe }: HomePa
   return (
     <main className="prophet-html">
       <div className="page">
-        <Topbar dataStatus={dataStatus} />
+        <Topbar />
         <Hero
           teams={sortedTeams}
           hotTeams={hotTeams}
@@ -50,7 +50,7 @@ export function HomePage({ snapshots, newsEvents, dataStatus, universe }: HomePa
           biggestLosers={biggestLosers}
           dataStatus={dataStatus}
         />
-        <MatchesSection source={dataStatus.source} />
+        <MatchesSection />
         <InfoGrid />
         <Footer />
       </div>
@@ -58,7 +58,7 @@ export function HomePage({ snapshots, newsEvents, dataStatus, universe }: HomePa
   );
 }
 
-function Topbar({ dataStatus }: { dataStatus: MarketDataMeta }) {
+function Topbar() {
   return (
     <header className="topbar">
       <Link className="brand" href="/" aria-label="Prophet home">
@@ -66,12 +66,12 @@ function Topbar({ dataStatus }: { dataStatus: MarketDataMeta }) {
         Prophet
       </Link>
       <nav aria-label="Primary navigation">
-        <Link href={`/markets?source=${dataStatus.source}`}>Markets</Link>
-        <Link href={`/matches?source=${dataStatus.source}`}>Matches</Link>
-        <Link href={`/teams?source=${dataStatus.source}`}>Teams</Link>
-        <Link href={`/bid?source=${dataStatus.source}`}>Portfolio</Link>
+        <Link href="/markets">Markets</Link>
+        <Link href="/matches">Matches</Link>
+        <Link href="/teams">Teams</Link>
+        <Link href="/portfolio">Portfolio</Link>
       </nav>
-      <WalletMenuButton source={dataStatus.source} />
+      <WalletMenuButton />
     </header>
   );
 }
@@ -113,9 +113,9 @@ function Hero({
           move is already on your screen.
         </p>
         <div className="hero-actions">
-          <PlaceBidButton source={dataStatus.source} />
+          <PlaceBidButton />
           <div className="hero-secondary-actions">
-            <Link className="hero-link" href={`/matches?source=${dataStatus.source}`}>
+            <Link className="hero-link" href="/matches">
               View matches
               <ArrowIcon />
             </Link>
@@ -184,7 +184,7 @@ function Hero({
 
           <div className="terminal-list">
             {getTerminalRows(signals, teams, signalTeamMap).map((item) => (
-              <Link key={item.key} className="terminal-row" href={`/team/${item.snapshot.team.id}?source=${dataStatus.source}`}>
+              <Link key={item.key} className="terminal-row" href={`/team/${item.snapshot.team.id}`}>
                 <TeamFlag code={item.snapshot.team.code} name={item.snapshot.team.name} />
                 <div>
                   <h3>{item.title}</h3>
@@ -248,10 +248,10 @@ function Dashboard({
 
         <div className="teams-grid">
           {teams.slice(0, 16).map((snapshot, index) => (
-            <TeamCard key={snapshot.team.id} snapshot={snapshot} rank={index + 1} source={dataStatus.source} />
+            <TeamCard key={snapshot.team.id} snapshot={snapshot} rank={index + 1} />
           ))}
           {teams.length > 16 ? (
-            <Link className="team-card more" href={`/teams?source=${dataStatus.source}`}>
+            <Link className="team-card more" href="/teams">
               <span><span className="more-number">+{teams.length - 16}</span>more teams</span>
             </Link>
           ) : null}
@@ -269,11 +269,11 @@ function Dashboard({
             <LightningIcon />
             Highlighted Movement
           </h2>
-          <Link className="view-all" href={`/feed?source=${dataStatus.source}`}>View all</Link>
+          <Link className="view-all" href="/feed">View all</Link>
         </div>
         <div className="movement-list">
           {getMovementRows(signals, topMovers, biggestLosers, signalTeamMap).map((item) => (
-            <MoveCard key={item.key} item={item} source={dataStatus.source} />
+            <MoveCard key={item.key} item={item} />
           ))}
         </div>
       </aside>
@@ -284,18 +284,16 @@ function Dashboard({
 function TeamCard({
   snapshot,
   rank,
-  source,
 }: {
   snapshot: TeamMarketSnapshot;
   rank: number;
-  source: MarketDataMeta["source"];
 }) {
   const isDown = snapshot.market.change24h < 0;
 
   return (
     <Link
       className={isDown ? "team-card down" : "team-card"}
-      href={`/team/${snapshot.team.id}?source=${source}`}
+      href={`/team/${snapshot.team.id}`}
       aria-label={`Open ${snapshot.team.name} team detail`}
     >
       <span className="rank">{rank}</span>
@@ -320,11 +318,11 @@ interface MovementRow {
   severity: SignalSeverity;
 }
 
-function MoveCard({ item, source }: { item: MovementRow; source: MarketDataMeta["source"] }) {
+function MoveCard({ item }: { item: MovementRow }) {
   const isDown = item.snapshot.market.change24h < 0;
 
   return (
-    <Link className="move-card" href={`/team/${item.snapshot.team.id}?source=${source}`}>
+    <Link className="move-card" href={`/team/${item.snapshot.team.id}`}>
       <TeamFlag code={item.snapshot.team.code} name={item.snapshot.team.name} />
       <div>
         <h3 className={isDown ? "move-title down" : "move-title"}>{item.title}</h3>
@@ -345,12 +343,12 @@ function MoveCard({ item, source }: { item: MovementRow; source: MarketDataMeta[
   );
 }
 
-function MatchesSection({ source }: { source: MarketDataMeta["source"] }) {
+function MatchesSection() {
   return (
     <section className="panel matches" aria-labelledby="matches-title">
       <div className="section-head">
         <h2 id="matches-title">Upcoming Matches <span className="not-real">(not real)</span></h2>
-        <Link className="matches-link" href={`/matches?source=${source}`}>View all matches <span aria-hidden="true">›</span></Link>
+        <Link className="matches-link" href="/matches">View all matches <span aria-hidden="true">›</span></Link>
       </div>
       <div className="match-grid">
         <MatchCard home="Argentina" homeCode="ARG" away="Japan" awayCode="JPN" time="Today · 20:00" odds={["58%", "24%", "18%"]} />
@@ -535,7 +533,7 @@ function getMovementRows(
   signalTeamMap: Map<string, TeamMarketSnapshot>,
 ): MovementRow[] {
   const rows = signals
-    .slice(0, 4)
+    .slice(0, 3)
     .map((signal) => {
       const snapshot = signalTeamMap.get(signal.teamId);
 
@@ -558,7 +556,7 @@ function getMovementRows(
     return rows;
   }
 
-  return [...topMovers, ...biggestLosers].slice(0, 4).map((snapshot) => ({
+  return [...topMovers, ...biggestLosers].slice(0, 3).map((snapshot) => ({
     key: snapshot.team.id,
     snapshot,
     title: `${snapshot.team.name} ${snapshot.market.change24h < 0 ? "reprices lower" : "moves higher"}`,

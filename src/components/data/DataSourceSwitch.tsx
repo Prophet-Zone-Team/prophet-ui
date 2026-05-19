@@ -19,7 +19,7 @@ export function DataSourceSwitch({ selectedSource }: { selectedSource: MarketDat
         return (
           <Link
             key={source}
-            href={`/?source=${source}`}
+            href="/"
             aria-current={isSelected ? "page" : undefined}
             className={
               isSelected

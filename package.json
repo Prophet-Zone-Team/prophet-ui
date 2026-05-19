@@ -14,8 +14,8 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "typecheck": "next typegen && tsc --noEmit",
     "collect:market": "node scripts/collect-market-snapshots.mjs",
-    "collect:market:local": "node scripts/collect-market-snapshots.mjs http://localhost:3005 all",
-    "collect:signals:local": "curl -X POST http://localhost:3000/api/signals/collect?source=all",
+    "collect:market:local": "node scripts/collect-market-snapshots.mjs http://localhost:3005",
+    "collect:signals:local": "curl -X POST http://localhost:3000/api/signals/collect",
     "d1:schema:local": "npx wrangler d1 execute world-cup-market-history --local --file=db/d1/schema.sql",
     "d1:schema:remote": "npx wrangler d1 execute world-cup-market-history --remote --file=db/d1/schema.sql"
   },

@@ -1,18 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { MarketDataMeta } from "../../data/providers/types";
 import { connectTradingWallet, loadTradingSession } from "./tradingWalletSession";
 
-interface PlaceBidButtonProps {
-  source: MarketDataMeta["source"];
-}
-
-export function PlaceBidButton({ source }: PlaceBidButtonProps) {
+export function PlaceBidButton() {
   const router = useRouter();
-  const marketsHref = useMemo(() => `/markets?source=${source}`, [source]);
+  const marketsHref = "/markets";
   const [hasSession, setHasSession] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isChecking, setIsChecking] = useState(false);

@@ -43,7 +43,7 @@ export function TeamsPage({ snapshots, newsEvents, footballTeamContext, dataStat
   return (
     <main className="prophet-html">
       <div className="page">
-        <TeamsTopbar source={dataStatus.source} />
+        <TeamsTopbar />
 
         <section className="teams-page-hero" aria-labelledby="teams-page-title">
           <div>
@@ -63,9 +63,9 @@ export function TeamsPage({ snapshots, newsEvents, footballTeamContext, dataStat
         </section>
 
         <section className="team-feature-grid" aria-label="Featured football team data">
-          <FeaturedTeamCard title="Top FIFA Rank" row={topRankedTeam} source={dataStatus.source} metric="rank" />
-          <FeaturedTeamCard title="Injury Watch" row={injuryWatchTeam} source={dataStatus.source} metric="injury" />
-          <FeaturedTeamCard title="Next Fixture" row={nextFixtureTeam ?? rows[0]} source={dataStatus.source} metric="fixture" />
+          <FeaturedTeamCard title="Top FIFA Rank" row={topRankedTeam} metric="rank" />
+          <FeaturedTeamCard title="Injury Watch" row={injuryWatchTeam} metric="injury" />
+          <FeaturedTeamCard title="Next Fixture" row={nextFixtureTeam ?? rows[0]} metric="fixture" />
         </section>
 
         <section className="panel teams-index-panel" aria-label="World Cup team directory">
@@ -76,7 +76,7 @@ export function TeamsPage({ snapshots, newsEvents, footballTeamContext, dataStat
 
           <div className="teams-index-list">
             {rows.map((row, index) => (
-              <TeamDirectoryItem key={row.snapshot.team.id} row={row} rank={index + 1} source={dataStatus.source} />
+              <TeamDirectoryItem key={row.snapshot.team.id} row={row} rank={index + 1} />
             ))}
           </div>
 
@@ -90,20 +90,20 @@ export function TeamsPage({ snapshots, newsEvents, footballTeamContext, dataStat
   );
 }
 
-function TeamsTopbar({ source }: { source: MarketDataMeta["source"] }) {
+function TeamsTopbar() {
   return (
     <header className="topbar">
-      <Link className="brand" href={`/?source=${source}`} aria-label="Prophet home">
+      <Link className="brand" href="/" aria-label="Prophet home">
         <span className="mark" aria-hidden="true" />
         Prophet
       </Link>
       <nav aria-label="Primary navigation">
-        <Link href={`/markets?source=${source}`}>Markets</Link>
-        <Link href={`/matches?source=${source}`}>Matches</Link>
-        <Link href={`/teams?source=${source}`} aria-current="page">Teams</Link>
-        <Link href={`/bid?source=${source}`}>Portfolio</Link>
+        <Link href="/markets">Markets</Link>
+        <Link href="/matches">Matches</Link>
+        <Link href="/teams" aria-current="page">Teams</Link>
+        <Link href="/portfolio">Portfolio</Link>
       </nav>
-      <WalletMenuButton source={source} />
+      <WalletMenuButton />
     </header>
   );
 }
@@ -111,12 +111,10 @@ function TeamsTopbar({ source }: { source: MarketDataMeta["source"] }) {
 function FeaturedTeamCard({
   title,
   row,
-  source,
   metric,
 }: {
   title: string;
   row: TeamDirectoryRow | undefined;
-  source: MarketDataMeta["source"];
   metric: "rank" | "injury" | "fixture";
 }) {
   if (!row) {
@@ -147,14 +145,14 @@ function FeaturedTeamCard({
         <FeatureMetric label="Market context" value={`${formatProbability(market.probability)} / ${formatChange(market.change24h)}`} tone={market.change24h < 0 ? "down" : "up"} />
       </div>
       <p className="team-feature-copy">{featured.copy}</p>
-      <Link className="market-detail-button" href={`/team/${team.id}?source=${source}`}>
+      <Link className="market-detail-button" href={`/team/${team.id}`}>
         View Team Detail
       </Link>
     </article>
   );
 }
 
-function TeamDirectoryItem({ row, rank, source }: { row: TeamDirectoryRow; rank: number; source: MarketDataMeta["source"] }) {
+function TeamDirectoryItem({ row, rank }: { row: TeamDirectoryRow; rank: number }) {
   const { team, market } = row.snapshot;
 
   return (
@@ -192,7 +190,7 @@ function TeamDirectoryItem({ row, rank, source }: { row: TeamDirectoryRow; rank:
       </div>
 
       <div className="team-index-actions">
-        <Link className="market-detail-button" href={`/team/${team.id}?source=${source}`}>
+        <Link className="market-detail-button" href={`/team/${team.id}`}>
           View Detail
         </Link>
       </div>

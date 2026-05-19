@@ -53,7 +53,7 @@ The write endpoint is:
 POST /api/market/snapshots/collect
 ```
 
-If `source` is omitted or `source=all`, the endpoint collects:
+The endpoint collects:
 
 ```text
 polymarket

@@ -1,9 +1,6 @@
 "use client";
-
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import type { MarketDataMeta } from "../../data/providers/types";
 import type { TradingUserSession } from "../../types/market";
 import {
   connectTradingWallet,
@@ -12,11 +9,7 @@ import {
   loadTradingSession,
 } from "./tradingWalletSession";
 
-interface WalletMenuButtonProps {
-  source: MarketDataMeta["source"];
-}
-
-export function WalletMenuButton({ source }: WalletMenuButtonProps) {
+export function WalletMenuButton() {
   const menuRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<TradingUserSession | undefined>();
   const [isConnecting, setIsConnecting] = useState(false);
@@ -109,9 +102,6 @@ export function WalletMenuButton({ source }: WalletMenuButtonProps) {
 
       {isOpen ? (
         <div className="wallet-dropdown" role="menu">
-          <Link role="menuitem" href={`/bid?source=${source}`} onClick={() => setIsOpen(false)}>
-            Profile
-          </Link>
           <button type="button" role="menuitem" onClick={logout}>
             Logout
           </button>

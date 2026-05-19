@@ -14,12 +14,12 @@ export default function ErrorPage({ error, reset }: { error: Error; reset: () =>
             Prophet
           </Link>
           <nav aria-label="Primary navigation">
-            <Link href="/markets?source=polymarket">Markets</Link>
-            <Link href="/matches?source=polymarket">Matches</Link>
-            <Link href="/teams?source=polymarket">Teams</Link>
-            <Link href="/bid?source=polymarket">Portfolio</Link>
+            <Link href="/markets">Markets</Link>
+            <Link href="/matches">Matches</Link>
+            <Link href="/teams">Teams</Link>
+            <Link href="/portfolio">Portfolio</Link>
           </nav>
-          <WalletMenuButton source="polymarket" />
+          <WalletMenuButton />
         </header>
 
         <section className="panel error-panel" aria-labelledby="error-title">
