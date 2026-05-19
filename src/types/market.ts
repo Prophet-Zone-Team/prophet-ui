@@ -213,6 +213,33 @@ export interface Team {
   polymarketMarketSlug?: string;
 }
 
+export type TeamFootballMetadataStatus = "curated" | "partial" | "pending";
+
+export type TeamFootballMetadataConfidence = "high" | "medium" | "low";
+
+export interface TeamKeyPlayer {
+  name: string;
+  position: string;
+  club?: string;
+  note?: string;
+}
+
+export interface TeamFootballMetadata {
+  teamId: Team["id"];
+  fifaRank?: number;
+  squadValue?: number;
+  squadValueCurrency?: "EUR" | "USD";
+  worldCupBestFinish: string;
+  worldCupTitles: number;
+  group?: string;
+  groupPeers: Team["id"][];
+  keyPlayers: TeamKeyPlayer[];
+  source: string;
+  updatedAt: string;
+  status: TeamFootballMetadataStatus;
+  confidence: TeamFootballMetadataConfidence;
+}
+
 export interface TeamMarketData {
   teamId: Team["id"];
   probability: number;
@@ -381,6 +408,10 @@ export interface ApiFootballFixtureContext {
   city?: string;
   kickoffAt: string;
   status: ApiFootballFixtureStatus;
+  goalsFor?: number;
+  goalsAgainst?: number;
+  result?: "W" | "D" | "L";
+  isWorldCupFixture?: boolean;
   updatedAt: string;
 }
 

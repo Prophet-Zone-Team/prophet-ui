@@ -60,7 +60,7 @@ const FRAGMENT_SHADER = `
     float dist = length(d);
     float ring = exp(-pow((dist - t * 0.22) / 0.035, 2.0)) * exp(-t * 0.75);
     if (u_click.x < 0.0) ring = 0.0;
-    field = max(field, ring * 0.9);
+    field = max(field, ring * 1.08);
 
     float shape = step(abs(local.x - 0.5), 0.38) * step(abs(local.y - 0.5), 0.38);
     float edgeFade = smoothstep(0.0, 0.22, min(min(uv.x, uv.y), min(1.0 - uv.x, 1.0 - uv.y)));
@@ -72,9 +72,9 @@ const FRAGMENT_SHADER = `
     vec3 color = mix(cyan, blue, smoothstep(0.18, 0.92, uv.x));
     color = mix(color, green, ring * 0.34);
 
-    float alpha = coverage * (0.12 + 0.18 * smoothstep(0.35, 1.0, uv.x));
-    alpha += ring * shape * 0.16;
-    gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.34));
+    float alpha = coverage * (0.2 + 0.28 * smoothstep(0.24, 1.0, uv.x));
+    alpha += ring * shape * 0.24;
+    gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.52));
   }
 `;
 

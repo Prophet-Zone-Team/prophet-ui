@@ -20,6 +20,7 @@
     "d1:schema:remote": "npx wrangler d1 execute world-cup-market-history --remote --file=db/d1/schema.sql"
   },
   "dependencies": {
+    "@lucide/lab": "^0.1.2",
     "@polymarket/builder-relayer-client": "^0.0.9",
     "@polymarket/clob-client-v2": "^1.0.6",
     "@radix-ui/react-slot": "^1.1.2",

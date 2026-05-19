@@ -1,4 +1,5 @@
 import { WORLD_CUP_TEAM_COUNT, worldCupTeams } from "../teams/worldCupTeams";
+import { getAllTeamFootballMetadata } from "../teams/footballMetadata";
 import { getMarketHistoryRepository } from "../../server/market-history/repository";
 import type { StoredMarketDataSource } from "../../server/market-history/types";
 import type { MarketSentiment, TeamMarketSnapshot } from "../../types/market";
@@ -64,6 +65,7 @@ export async function getStoredPolymarketWorldCupData(): Promise<WorldCupMarketD
     probabilityHistory: [],
     footballContext: [],
     footballTeamContext: [],
+    footballMetadata: getAllTeamFootballMetadata(),
     universe: universeRecord
       ? {
           provider: universeRecord.provider,

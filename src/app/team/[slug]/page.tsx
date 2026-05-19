@@ -39,6 +39,8 @@ export default async function Page({ params }: TeamPageProps) {
       footballStandings={footballContext?.standings ?? []}
       footballOdds={footballContext?.odds ?? []}
       footballDataIssues={footballContext?.dataIssues ?? []}
+      footballMetadata={marketData.footballMetadata.find((metadata) => metadata.teamId === snapshot.team.id)}
+      allFootballMetadata={marketData.footballMetadata}
       dataStatus={marketData.meta}
     />
   );

@@ -1,4 +1,5 @@
 import { WORLD_CUP_TEAM_COUNT, worldCupTeams } from "../teams/worldCupTeams";
+import { getAllTeamFootballMetadata } from "../teams/footballMetadata";
 import type {
   MarketSentiment,
   MarketUniverseMeta,
@@ -74,6 +75,7 @@ export const polymarketDataProvider: WorldCupMarketDataProvider = {
       probabilityHistory: [],
       footballContext: [],
       footballTeamContext: [],
+      footballMetadata: getAllTeamFootballMetadata(),
       universe,
       meta: {
         source: "polymarket",

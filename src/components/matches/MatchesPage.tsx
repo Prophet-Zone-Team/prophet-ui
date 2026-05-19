@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { MarketDataMeta } from "../../data/providers/types";
 import { getMarketDataSourceLabel } from "../../data/providers/source";
 import { TeamFlag } from "../teams/TeamFlag";
+import { PlaceBidButton } from "../trading/PlaceBidButton";
 import { WalletMenuButton } from "../trading/WalletMenuButton";
 
 type MatchTrend = "up" | "down" | "flat";
@@ -369,9 +370,9 @@ function FeaturedMatch({ match }: { match: StaticMatch | undefined }) {
           <span>Signal</span>
           <strong>{match.signal}</strong>
         </div>
-        <Link className="market-detail-button" href="/bid">
+        <PlaceBidButton className="market-detail-button">
           Open order panel
-        </Link>
+        </PlaceBidButton>
       </div>
     </div>
   );

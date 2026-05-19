@@ -9,6 +9,20 @@ export function formatChange(value: number): string {
   return `${sign}${value.toFixed(1)} pts`;
 }
 
+export function formatRelativeChange(currentProbability: number, changePoints: number): string {
+  return formatProbabilityChangePercent(getRelativeChangePercent(currentProbability, changePoints));
+}
+
+export function getRelativeChangePercent(currentProbability: number, changePoints: number): number {
+  const previousProbability = currentProbability - changePoints;
+
+  if (previousProbability <= 0 || !Number.isFinite(previousProbability)) {
+    return changePoints;
+  }
+
+  return (changePoints / previousProbability) * 100;
+}
+
 export function formatVolume(value: number): string {
   return new Intl.NumberFormat("en", {
     notation: "compact",
@@ -39,4 +53,9 @@ export function getSentimentLabel(sentiment: MarketSentiment): string {
     case "volatile":
       return "Volatile";
   }
+}
+
+function formatProbabilityChangePercent(value: number): string {
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(1)}%`;
 }

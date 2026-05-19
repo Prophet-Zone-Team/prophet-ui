@@ -1,3 +1,5 @@
+import { soccerBall } from "@lucide/lab";
+import { Icon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -13,7 +15,7 @@ import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from
 import { PlaceBidButton } from "../trading/PlaceBidButton";
 import { WalletMenuButton } from "../trading/WalletMenuButton";
 import { TeamFlag } from "../teams/TeamFlag";
-import { formatChange, formatProbability, formatVolume } from "./market-formatters";
+import { formatChange, formatProbability, formatRelativeChange, formatVolume } from "./market-formatters";
 import { PixelBlast } from "./PixelBlast";
 
 interface HomePageProps {
@@ -230,10 +232,19 @@ function TickerStack() {
         </div>
         <div className="coin-row">%</div>
         <div className="coin-row">
+          <SoccerIcon />
+        </div>
+        <div className="coin-row">
           <span className="coin usd">$</span>
         </div>
       </div>
     </div>
+  );
+}
+
+function SoccerIcon() {
+  return (
+    <Icon className="soccer-icon" iconNode={soccerBall} aria-hidden="true" />
   );
 }
 
@@ -320,7 +331,9 @@ function TeamCard({
       </div>
       <div className="team-value">
         <span className="percentage">{formatProbability(snapshot.market.probability)}</span>
-        <span className={isDown ? "delta down" : "delta"}>{formatChange(snapshot.market.change24h)}</span>
+        <span className={isDown ? "delta down" : "delta"}>
+          {formatRelativeChange(snapshot.market.probability, snapshot.market.change24h)}
+        </span>
       </div>
     </Link>
   );

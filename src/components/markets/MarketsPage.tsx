@@ -4,8 +4,15 @@ import type { MarketDataMeta, WorldCupMarketData } from "../../data/providers/ty
 import { getMarketDataSourceLabel } from "../../data/providers/source";
 import type { TeamMarketSnapshot } from "../../types/market";
 import { TeamFlag } from "../teams/TeamFlag";
+import { PlaceBidButton } from "../trading/PlaceBidButton";
 import { WalletMenuButton } from "../trading/WalletMenuButton";
-import { formatChange, formatProbability, formatVolume, getSentimentLabel } from "../home/market-formatters";
+import {
+  formatProbability,
+  formatRelativeChange,
+  formatVolume,
+  getRelativeChangePercent,
+  getSentimentLabel,
+} from "../home/market-formatters";
 
 interface MarketsPageProps {
   snapshots: TeamMarketSnapshot[];
@@ -16,7 +23,10 @@ interface MarketsPageProps {
 export function MarketsPage({ snapshots, dataStatus, universe }: MarketsPageProps) {
   const teams = [...snapshots].sort((a, b) => b.market.probability - a.market.probability);
   const totalVolume = universe?.totalVolume ?? teams.reduce((sum, snapshot) => sum + snapshot.market.volume, 0);
-  const topMove = [...teams].sort((a, b) => Math.abs(b.market.change24h) - Math.abs(a.market.change24h))[0];
+  const topMove = [...teams].sort((a, b) => {
+    return Math.abs(getRelativeChangePercent(b.market.probability, b.market.change24h))
+      - Math.abs(getRelativeChangePercent(a.market.probability, a.market.change24h));
+  })[0];
 
   return (
     <main className="prophet-html">
@@ -35,7 +45,10 @@ export function MarketsPage({ snapshots, dataStatus, universe }: MarketsPageProp
           <div className="markets-summary" aria-label="Markets summary">
             <SummaryMetric label="Teams listed" value={String(teams.length)} />
             <SummaryMetric label="Total volume" value={formatVolume(totalVolume)} />
-            <SummaryMetric label="Largest 24h move" value={topMove ? `${topMove.team.code} ${formatChange(topMove.market.change24h)}` : "-"} />
+            <SummaryMetric
+              label="Largest 24h move"
+              value={topMove ? `${topMove.team.code} ${formatRelativeChange(topMove.market.probability, topMove.market.change24h)}` : "-"}
+            />
             <SummaryMetric label="Source" value={getMarketDataSourceLabel(dataStatus.source)} />
           </div>
         </section>
@@ -89,7 +102,6 @@ function MarketListItem({
 }) {
   const { team, market } = snapshot;
   const isDown = market.change24h < 0;
-  const quickBidHref = `/bid?team=${team.id}`;
   const detailHref = `/team/${team.id}`;
 
   return (
@@ -108,23 +120,23 @@ function MarketListItem({
 
       <div className="market-probability">
         <strong>{formatProbability(market.probability)}</strong>
-        <span className={isDown ? "delta down" : "delta"}>{formatChange(market.change24h)}</span>
+        <span className={isDown ? "delta down" : "delta"}>{formatRelativeChange(market.probability, market.change24h)}</span>
         <div className="market-probability-bar" aria-hidden="true">
           <span style={{ width: `${Math.max(3, Math.min(100, market.probability))}%` }} />
         </div>
       </div>
 
       <div className="market-metrics">
-        <MarketMetric label="7d" value={formatChange(market.change7d)} tone={market.change7d < 0 ? "down" : "up"} />
+        <MarketMetric label="7d" value={formatRelativeChange(market.probability, market.change7d)} tone={market.change7d < 0 ? "down" : "up"} />
         <MarketMetric label="Volume" value={formatVolume(market.volume)} />
         <MarketMetric label="Liquidity" value={market.liquidity ? formatVolume(market.liquidity) : "-"} />
         <MarketMetric label="Sentiment" value={getSentimentLabel(market.sentiment)} />
       </div>
 
       <div className="market-actions">
-        <Link className="market-quick-bid" href={quickBidHref}>
+        <PlaceBidButton className="market-quick-bid" teamName={team.name}>
           Quick Bid
-        </Link>
+        </PlaceBidButton>
         <Link className="market-detail-button" href={detailHref}>
           Detail
         </Link>

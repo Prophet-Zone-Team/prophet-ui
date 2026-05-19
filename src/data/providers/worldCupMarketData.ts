@@ -7,6 +7,7 @@ import type { MarketDataSource, WorldCupMarketData, WorldCupMarketDataOptions } 
 import { getNewsImpactForSnapshots } from "../news/newsImpact";
 import { getApiFootballContext } from "../football/apiFootballProvider";
 import { theOddsApiProvider } from "../odds/theOddsApiProvider";
+import { getAllTeamFootballMetadata } from "../teams/footballMetadata";
 import type { NormalizedTeamOddsSummary } from "../odds/types";
 import { attachStoredMarketHistory } from "../../server/market-history/historyReader";
 import { getSignalDataRepository } from "../../server/signal-data/repository";
@@ -153,6 +154,7 @@ function mergeProviderData(polymarketData: WorldCupMarketData, kalshiData: World
     probabilityHistory: mergeProbabilityHistory(polymarketData.probabilityHistory, kalshiData.probabilityHistory),
     footballContext: [],
     footballTeamContext: [],
+    footballMetadata: getAllTeamFootballMetadata(),
     meta: {
       source: "composite",
       status: "live",
@@ -444,6 +446,7 @@ async function getFallbackMarketData(source: MarketDataSource, error: unknown): 
       probabilityHistory: [],
       footballContext: [],
       footballTeamContext: [],
+      footballMetadata: getAllTeamFootballMetadata(),
       meta: {
         source,
         status: "error",
@@ -551,6 +554,11 @@ function cloneMarketData(data: WorldCupMarketData): WorldCupMarketData {
     newsEvents: data.newsEvents.map((event) => ({ ...event })),
     probabilityHistory: data.probabilityHistory.map((point) => ({ ...point })),
     footballContext: data.footballContext.map((profile) => ({ ...profile })),
+    footballMetadata: data.footballMetadata.map((metadata) => ({
+      ...metadata,
+      groupPeers: [...metadata.groupPeers],
+      keyPlayers: metadata.keyPlayers.map((player) => ({ ...player })),
+    })),
     footballTeamContext: data.footballTeamContext.map((context) => ({
       ...context,
       profile: { ...context.profile },

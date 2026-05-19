@@ -90,6 +90,10 @@ interface ApiFootballFixtureResponse {
     name?: string;
     round?: string;
   };
+  goals?: {
+    home?: number | null;
+    away?: number | null;
+  };
   teams?: {
     home?: ApiFootballFixtureTeam;
     away?: ApiFootballFixtureTeam;
@@ -363,9 +367,28 @@ async function fetchApiFootballTeams(search: string, apiKey: string): Promise<Ap
 }
 
 async function fetchApiFootballFixtures(teamId: number, apiKey: string): Promise<ApiFootballFixturesResponse> {
+  const [lastPayload, nextPayload] = await Promise.all([
+    fetchApiFootballFixturesWindow(teamId, apiKey, "last"),
+    fetchApiFootballFixturesWindow(teamId, apiKey, "next"),
+  ]);
+
+  return {
+    response: dedupeFixtures([
+      ...(lastPayload.response ?? []),
+      ...(nextPayload.response ?? []),
+    ]),
+    errors: lastPayload.errors ?? nextPayload.errors,
+  };
+}
+
+async function fetchApiFootballFixturesWindow(
+  teamId: number,
+  apiKey: string,
+  window: "last" | "next",
+): Promise<ApiFootballFixturesResponse> {
   const url = new URL(`${API_FOOTBALL_BASE_URL}/fixtures`);
   url.searchParams.set("team", String(teamId));
-  url.searchParams.set("next", "5");
+  url.searchParams.set(window, "5");
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -380,7 +403,7 @@ async function fetchApiFootballFixtures(teamId: number, apiKey: string): Promise
   }).finally(() => clearTimeout(timeout));
 
   if (!response.ok) {
-    throw new Error(`API-Football fixtures returned HTTP ${response.status}.`);
+    throw new Error(`API-Football fixtures ${window} returned HTTP ${response.status}.`);
   }
 
   const data = (await response.json()) as ApiFootballFixturesResponse;
@@ -391,6 +414,22 @@ async function fetchApiFootballFixtures(teamId: number, apiKey: string): Promise
   }
 
   return data;
+}
+
+function dedupeFixtures(fixtures: ApiFootballFixtureResponse[]): ApiFootballFixtureResponse[] {
+  const byId = new Map<number, ApiFootballFixtureResponse>();
+
+  for (const fixture of fixtures) {
+    const fixtureId = fixture.fixture?.id;
+
+    if (!fixtureId) {
+      continue;
+    }
+
+    byId.set(fixtureId, fixture);
+  }
+
+  return [...byId.values()].sort((a, b) => (a.fixture?.date ?? "").localeCompare(b.fixture?.date ?? ""));
 }
 
 async function fetchApiFootballSquad(teamId: number, apiKey: string): Promise<ApiFootballSquadResponse> {
@@ -501,6 +540,9 @@ function mapFixtureContext(
   const isHome = home.id === profile.apiFootballTeamId;
   const isAway = away.id === profile.apiFootballTeamId;
   const opponent = isHome ? away : home;
+  const status = mapFixtureStatus(fixture.status?.short);
+  const goalsFor = isHome ? item.goals?.home ?? undefined : item.goals?.away ?? undefined;
+  const goalsAgainst = isHome ? item.goals?.away ?? undefined : item.goals?.home ?? undefined;
 
   if (!isHome && !isAway) {
     return undefined;
@@ -517,7 +559,11 @@ function mapFixtureContext(
     venueName: fixture.venue?.name,
     city: fixture.venue?.city,
     kickoffAt: fixture.date,
-    status: mapFixtureStatus(fixture.status?.short),
+    status,
+    goalsFor,
+    goalsAgainst,
+    result: getFixtureResult(status, goalsFor, goalsAgainst),
+    isWorldCupFixture: isWorldCupLeague(item.league?.name),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -694,6 +740,34 @@ function mapFixtureStatus(status: string | undefined): ApiFootballFixtureContext
     default:
       return "unknown";
   }
+}
+
+function getFixtureResult(
+  status: ApiFootballFixtureContext["status"],
+  goalsFor: number | undefined,
+  goalsAgainst: number | undefined,
+): ApiFootballFixtureContext["result"] | undefined {
+  if (status !== "finished" || goalsFor === undefined || goalsAgainst === undefined) {
+    return undefined;
+  }
+
+  if (goalsFor > goalsAgainst) {
+    return "W";
+  }
+
+  if (goalsFor < goalsAgainst) {
+    return "L";
+  }
+
+  return "D";
+}
+
+function isWorldCupLeague(leagueName: string | undefined): boolean {
+  if (!leagueName) {
+    return false;
+  }
+
+  return normalizeText(leagueName).includes("world cup");
 }
 
 function normalizeText(value: string): string {

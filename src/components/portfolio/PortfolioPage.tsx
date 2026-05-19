@@ -26,6 +26,7 @@ import {
   formatShortWalletAddress,
   loadTradingSession,
 } from "../trading/tradingWalletSession";
+import { PlaceBidButton } from "../trading/PlaceBidButton";
 import { WalletMenuButton } from "../trading/WalletMenuButton";
 import { TeamFlag } from "../teams/TeamFlag";
 import { formatChange, formatProbability, formatVolume } from "../home/market-formatters";
@@ -148,7 +149,6 @@ export function PortfolioPage({ snapshots, dataStatus }: PortfolioPageProps) {
     [openOrders, orderHistory, positions, readiness, snapshots],
   );
   const selectedSnapshot = portfolio.primaryTeam ?? snapshots[0];
-  const bidHref = selectedSnapshot ? `/bid?team=${selectedSnapshot.team.id}` : "/bid";
   const numericAmount = Number(amount);
   const referencePrice = selectedSnapshot ? Math.max(0.01, selectedSnapshot.market.probability / 100) : 0;
   const estimatedShares = Number.isFinite(numericAmount) && referencePrice > 0 ? numericAmount / referencePrice : 0;
@@ -164,10 +164,10 @@ export function PortfolioPage({ snapshots, dataStatus }: PortfolioPageProps) {
             <h1 id="portfolio-title">Portfolio</h1>
             <p>Track your World Cup market exposure, PnL, positions, and order activity from the connected account.</p>
             <div className="portfolio-actions">
-              <Link className="bid-button" href={bidHref}>
+              <PlaceBidButton className="bid-button" teamName={selectedSnapshot?.team.name}>
                 Place Bid
                 <ArrowIcon />
-              </Link>
+              </PlaceBidButton>
               <a className="market-detail-button" href="#open-positions">
                 Manage Positions
               </a>
@@ -211,7 +211,6 @@ export function PortfolioPage({ snapshots, dataStatus }: PortfolioPageProps) {
               amount={amount}
               estimatedShares={estimatedShares}
               onAmountChange={setAmount}
-              bidHref={bidHref}
             />
             <RecentActivityPanel activities={portfolio.activities} />
           </aside>
@@ -386,8 +385,8 @@ function OpenPositionsPanel({
                 <span>{formatMoney(position.currentValue)}</span>
                 <span className={position.cashPnl < 0 ? "down" : "up"}>{formatSignedMoney(position.cashPnl)}</span>
                 <div className="portfolio-position-actions">
-                  <Link href={teamId ? `/bid?team=${teamId}` : "/bid"}>Add</Link>
-                  <Link href={teamId ? `/bid?team=${teamId}` : "/bid"}>Manage</Link>
+                  <PlaceBidButton className="portfolio-action-link" teamName={snapshot?.team.name}>Add</PlaceBidButton>
+                  <PlaceBidButton className="portfolio-action-link" teamName={snapshot?.team.name}>Manage</PlaceBidButton>
                 </div>
               </div>
             );
@@ -473,13 +472,11 @@ function AdjustPositionPanel({
   amount,
   estimatedShares,
   onAmountChange,
-  bidHref,
 }: {
   snapshot?: TeamMarketSnapshot;
   amount: string;
   estimatedShares: number;
   onAmountChange: (value: string) => void;
-  bidHref: string;
 }) {
   return (
     <section className="panel portfolio-panel adjust-position-panel">
@@ -509,9 +506,9 @@ function AdjustPositionPanel({
             <PanelMetric label="Est. Shares" value={formatShareSize(estimatedShares)} />
             <PanelMetric label="Est. Payout" value={`${formatShareSize(estimatedShares)} USDC`} />
           </div>
-          <Link className="bid-button full" href={bidHref}>
+          <PlaceBidButton className="bid-button full" teamName={snapshot.team.name}>
             Review Bid
-          </Link>
+          </PlaceBidButton>
         </>
       ) : (
         <PortfolioEmptyState title="No market selected" body="Markets will appear here after data loads." />

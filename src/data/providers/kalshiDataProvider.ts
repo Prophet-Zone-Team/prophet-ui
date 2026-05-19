@@ -1,4 +1,5 @@
 import { mockTeams } from "../mock/teams";
+import { getAllTeamFootballMetadata } from "../teams/footballMetadata";
 import type {
   MarketSentiment,
   Team,
@@ -58,6 +59,7 @@ export const kalshiDataProvider: WorldCupMarketDataProvider = {
       probabilityHistory: [],
       footballContext: [],
       footballTeamContext: [],
+      footballMetadata: getAllTeamFootballMetadata(),
       meta: {
         source: "kalshi",
         status: "live",

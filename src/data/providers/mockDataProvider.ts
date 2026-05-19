@@ -3,6 +3,7 @@ import {
   mockProbabilityHistory,
   mockTeamMarketSnapshots,
 } from "../mock/teams";
+import { getAllTeamFootballMetadata } from "../teams/footballMetadata";
 import type { WorldCupMarketData, WorldCupMarketDataProvider } from "./types";
 
 export const mockDataProvider: WorldCupMarketDataProvider = {
@@ -17,6 +18,7 @@ export const mockDataProvider: WorldCupMarketDataProvider = {
       probabilityHistory: mockProbabilityHistory,
       footballContext: [],
       footballTeamContext: [],
+      footballMetadata: getAllTeamFootballMetadata(),
       meta: {
         source: "mock",
         status: "fallback",

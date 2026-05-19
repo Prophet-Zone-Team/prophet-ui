@@ -6,6 +6,7 @@ import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
   MarketUniverseMeta,
+  TeamFootballMetadata,
 } from "../../types/market";
 import type { OddsProviderMeta } from "../odds/types";
 
@@ -42,6 +43,7 @@ export interface WorldCupMarketData {
   probabilityHistory: ProbabilityHistoryPoint[];
   footballContext: ApiFootballTeamProfile[];
   footballTeamContext: ApiFootballTeamContext[];
+  footballMetadata: TeamFootballMetadata[];
   meta: MarketDataMeta;
   universe?: MarketUniverseMeta;
 }

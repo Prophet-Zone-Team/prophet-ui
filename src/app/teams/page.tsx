@@ -13,6 +13,7 @@ export default async function Page() {
       snapshots={marketData.snapshots}
       newsEvents={marketData.newsEvents}
       footballTeamContext={marketData.footballTeamContext}
+      footballMetadata={marketData.footballMetadata}
       dataStatus={marketData.meta}
       universe={marketData.universe}
     />

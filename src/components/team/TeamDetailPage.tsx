@@ -28,6 +28,8 @@ import type {
   ApiFootballTeamProfile,
   NewsEvent,
   ProbabilityHistoryPoint,
+  TeamFootballMetadata,
+  TeamKeyPlayer,
   TeamMarketSnapshot,
 } from "../../types/market";
 import { readStoredWatchlist, writeStoredWatchlist } from "../../lib/storage/local-terminal";
@@ -38,6 +40,7 @@ import {
   getSentimentLabel,
 } from "../home/market-formatters";
 import { TeamFlag } from "../teams/TeamFlag";
+import { PlaceBidButton } from "../trading/PlaceBidButton";
 import { WalletMenuButton } from "../trading/WalletMenuButton";
 
 interface TeamDetailPageProps {
@@ -51,6 +54,8 @@ interface TeamDetailPageProps {
   footballStandings: ApiFootballStandingContext[];
   footballOdds: ApiFootballOddContext[];
   footballDataIssues: ApiFootballDataIssue[];
+  footballMetadata?: TeamFootballMetadata;
+  allFootballMetadata: TeamFootballMetadata[];
   dataStatus: MarketDataMeta;
 }
 
@@ -63,6 +68,8 @@ interface KeyPlayerView {
   name: string;
   number?: number;
   position: string;
+  club?: string;
+  note?: string;
   expectedMinutes: number;
   squadProbability: number;
   formScore: number;
@@ -80,6 +87,11 @@ interface RecentMatchView {
   note: string;
 }
 
+type KeyPlayerSource = ApiFootballSquadPlayer & {
+  club?: string;
+  note?: string;
+};
+
 export function TeamDetailPage({
   snapshot,
   probabilityHistory,
@@ -91,14 +103,15 @@ export function TeamDetailPage({
   footballStandings,
   footballOdds,
   footballDataIssues,
+  footballMetadata,
+  allFootballMetadata,
   dataStatus,
 }: TeamDetailPageProps) {
   const { team, market } = snapshot;
-  const strength = getStrengthMetrics(snapshot, footballSquad, footballInjuries, footballStandings, relatedNews);
-  const keyPlayers = getKeyPlayers(footballSquad, footballInjuries, snapshot);
-  const recentMatches = getRecentMatches(footballFixtures, snapshot);
+  const strength = getStrengthMetrics(snapshot, footballMetadata, footballSquad, footballInjuries, footballStandings, relatedNews);
+  const keyPlayers = getKeyPlayers(footballMetadata, footballSquad, footballInjuries, snapshot);
+  const recentMatches = getRecentMatches(footballFixtures);
   const upcomingFixture = getNextFixture(footballFixtures);
-  const bidHref = `/bid?team=${team.id}`;
 
   return (
     <main className="prophet-html">
@@ -108,26 +121,33 @@ export function TeamDetailPage({
         <TeamHero
           snapshot={snapshot}
           profile={footballProfile}
-          relatedNewsCount={relatedNews.length}
-          bidHref={bidHref}
+          metadata={footballMetadata}
         />
+
+        <section className="team-dossier-strip" aria-label="Football dossier quick scan">
+          <RecentFormCard matches={recentMatches} />
+          <NextFixtureCard fixture={upcomingFixture} snapshot={snapshot} />
+          <GroupContextCard metadata={footballMetadata} allMetadata={allFootballMetadata} />
+          <KeyStarsCard players={keyPlayers} metadata={footballMetadata} />
+        </section>
 
         <div className="team-detail-grid">
           <div className="team-detail-main">
             <section className="team-detail-two-up">
-              <ProbabilityPanel history={probabilityHistory} snapshot={snapshot} />
               <StrengthPanel metrics={strength} />
+              <OddsComparisonPanel snapshot={snapshot} odds={footballOdds} dataStatus={dataStatus} />
             </section>
 
+            <RecentMatchesPanel matches={recentMatches} />
             <LineupPanel squad={footballSquad} injuries={footballInjuries} dataIssues={footballDataIssues} />
             <KeyPlayersPanel players={keyPlayers} />
-            <RecentMatchesPanel matches={recentMatches} />
             <NewsSignalsPanel news={relatedNews} snapshot={snapshot} />
           </div>
 
           <aside className="team-detail-sidebar">
-            <TradeEntryPanel snapshot={snapshot} bidHref={bidHref} />
-            <RelatedMarketsPanel snapshot={snapshot} odds={footballOdds} />
+            <NextMatchPanel fixture={upcomingFixture} snapshot={snapshot} />
+            <TradeEntryPanel snapshot={snapshot} />
+            <ProbabilityPanel history={probabilityHistory} snapshot={snapshot} />
             <MarketIntelligencePanel
               snapshot={snapshot}
               history={probabilityHistory}
@@ -135,13 +155,12 @@ export function TeamDetailPage({
               dataStatus={dataStatus}
               relatedNewsCount={relatedNews.length}
             />
-            <NextMatchPanel fixture={upcomingFixture} snapshot={snapshot} />
             <WatchlistPanel teamId={team.id} teamName={team.name} />
           </aside>
         </div>
 
         <div className="team-detail-footnote">
-          <span>Source: {getMarketDataSourceLabel(dataStatus.source)} market data, API-Football team context, and GDELT news matching when available.</span>
+          <span>Source: curated football metadata, API-Football team context, GDELT news, The Odds API, and {getMarketDataSourceLabel(dataStatus.source)} market data.</span>
           <span>All probability, payout, and signal views are analytical context only.</span>
         </div>
       </div>
@@ -170,16 +189,14 @@ function TeamDetailTopbar() {
 function TeamHero({
   snapshot,
   profile,
-  relatedNewsCount,
-  bidHref,
+  metadata,
 }: {
   snapshot: TeamMarketSnapshot;
   profile?: ApiFootballTeamProfile;
-  relatedNewsCount: number;
-  bidHref: string;
+  metadata?: TeamFootballMetadata;
 }) {
-  const { team, market } = snapshot;
-  const isDown = market.change24h < 0;
+  const { team } = snapshot;
+  const fifaRank = metadata?.fifaRank ?? team.fifaRank;
 
   return (
     <section className="team-detail-hero">
@@ -199,29 +216,22 @@ function TeamHero({
           <div>
             <h1>{team.name}</h1>
             <p>
-              {team.fifaRank ? `FIFA Ranking #${team.fifaRank}` : "FIFA ranking pending"}
-              {team.group ? ` / Group ${team.group}` : ""}
+              {fifaRank ? `FIFA Ranking #${fifaRank}` : "FIFA ranking pending"}
+              {metadata?.group && metadata.group !== "Pending" ? ` / Group ${metadata.group}` : " / Group pending"}
             </p>
             <div className="team-detail-tags">
-              <span>Market momentum</span>
-              <strong className={isDown ? "down" : ""}>{isDown ? "Falling" : "Rising"}</strong>
-              <span>{relatedNewsCount > 0 ? `${relatedNewsCount} news signals` : "No news signal"}</span>
+              <span>{metadata?.worldCupBestFinish ?? "World Cup history pending"}</span>
+              <strong>{metadata?.worldCupTitles ? `${metadata.worldCupTitles} titles` : "No titles"}</strong>
+              <span>{metadata ? `${metadata.status} metadata` : "Metadata pending"}</span>
             </div>
           </div>
         </div>
 
         <div className="team-detail-hero-metrics">
-          <HeroMetric label="Winner probability" value={formatProbability(market.probability)} />
-          <HeroMetric label="24h change" value={formatChange(market.change24h)} tone={market.change24h < 0 ? "down" : "up"} />
-          <HeroMetric label="7d change" value={formatChange(market.change7d)} tone={market.change7d < 0 ? "down" : "up"} />
-          <HeroMetric label="Market volume" value={formatVolume(market.volume)} />
-        </div>
-
-        <div className="team-detail-hero-actions">
-          <Link className="market-quick-bid" href={bidHref}>
-            Place Bid
-          </Link>
-          <span className="team-detail-favorite" aria-label="Watchlist shortcut">☆</span>
+          <HeroMetric label="FIFA rank" value={fifaRank ? `#${fifaRank}` : "Pending"} />
+          <HeroMetric label="Squad value" value={formatSquadValue(metadata)} />
+          <HeroMetric label="Best finish" value={metadata?.worldCupBestFinish ?? "Pending"} />
+          <HeroMetric label="Group" value={metadata?.group && metadata.group !== "Pending" ? `Group ${metadata.group}` : "Pending"} />
         </div>
       </div>
     </section>
@@ -282,6 +292,124 @@ function ProbabilityPanel({ history, snapshot }: { history: ProbabilityHistoryPo
   );
 }
 
+function RecentFormCard({ matches }: { matches: RecentMatchView[] }) {
+  return (
+    <section className="panel team-dossier-card">
+      <div className="panel-head">
+        <h2 className="panel-title">Recent Form</h2>
+        <span className="live">Last 5</span>
+      </div>
+      {matches.length > 0 ? (
+        <>
+          <div className="form-strip large">
+            {matches.map((match) => (
+              <span key={match.id} className={match.result === "W" ? "win" : match.result === "L" ? "loss" : "draw"}>
+                {match.result}
+              </span>
+            ))}
+          </div>
+          <p>{matches[0]?.opponent ? `Latest: ${matches[0].result} vs ${matches[0].opponent}, ${matches[0].score}` : "Recent results loaded."}</p>
+        </>
+      ) : (
+        <EmptyPanel title="No recent result data" body="API-Football has not attached finished fixtures for this team yet." />
+      )}
+    </section>
+  );
+}
+
+function NextFixtureCard({
+  fixture,
+  snapshot,
+}: {
+  fixture?: ApiFootballFixtureContext;
+  snapshot: TeamMarketSnapshot;
+}) {
+  return (
+    <section className="panel team-dossier-card">
+      <div className="panel-head">
+        <h2 className="panel-title">Next Fixture</h2>
+        <span className="live">{fixture?.isWorldCupFixture ? "World Cup" : "Schedule"}</span>
+      </div>
+      {fixture ? (
+        <div className="dossier-fixture">
+          <div>
+            <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+            <strong>{snapshot.team.code}</strong>
+          </div>
+          <span>{fixture.homeAway === "away" ? "at" : "vs"}</span>
+          <div>
+            {fixture.opponentLogoUrl ? <img src={fixture.opponentLogoUrl} alt="" /> : <b>{fixture.opponentName.slice(0, 3)}</b>}
+            <strong>{fixture.opponentName}</strong>
+          </div>
+          <p>{formatFixtureDate(fixture.kickoffAt)}{fixture.venueName ? ` / ${fixture.venueName}` : ""}</p>
+        </div>
+      ) : (
+        <EmptyPanel title="No official fixture" body="Upcoming fixture data is pending for this team." />
+      )}
+    </section>
+  );
+}
+
+function GroupContextCard({
+  metadata,
+  allMetadata,
+}: {
+  metadata?: TeamFootballMetadata;
+  allMetadata: TeamFootballMetadata[];
+}) {
+  const peers = getGroupPeerMetadata(metadata, allMetadata);
+
+  return (
+    <section className="panel team-dossier-card">
+      <div className="panel-head">
+        <h2 className="panel-title">Group Context</h2>
+        <span className="live">{metadata?.group && metadata.group !== "Pending" ? `Group ${metadata.group}` : "Pending"}</span>
+      </div>
+      {metadata?.group && metadata.group !== "Pending" ? (
+        <div className="group-peer-list">
+          <strong>{peers.length > 0 ? `${peers.length} listed peers` : "Peers pending"}</strong>
+          {peers.slice(0, 3).map((peer) => (
+            <span key={peer.teamId}>
+              {peer.teamId.replace(/-/g, " ")}
+              {peer.fifaRank ? ` / #${peer.fifaRank}` : ""}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <EmptyPanel title="Group pending" body="Official or curated group context is not attached yet." />
+      )}
+    </section>
+  );
+}
+
+function KeyStarsCard({
+  players,
+  metadata,
+}: {
+  players: KeyPlayerView[];
+  metadata?: TeamFootballMetadata;
+}) {
+  return (
+    <section className="panel team-dossier-card">
+      <div className="panel-head">
+        <h2 className="panel-title">Key Stars</h2>
+        <span className="live">{metadata?.source ? "Curated" : "Pending"}</span>
+      </div>
+      <div className="dossier-star-list">
+        {players.slice(0, 3).map((player) => (
+          <div key={player.name} className="dossier-star-row">
+            <div className="player-avatar fallback">{getInitials(player.name)}</div>
+            <div>
+              <strong>{player.name}</strong>
+              <span>{player.position}{player.club ? ` / ${player.club}` : ""}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function StrengthPanel({ metrics }: { metrics: StrengthMetric[] }) {
   const score = Math.round(metrics.reduce((sum, item) => sum + item.value, 0) / metrics.length);
 
@@ -305,6 +433,47 @@ function StrengthPanel({ metrics }: { metrics: StrengthMetric[] }) {
         <strong>{score}</strong>
         <small>/100</small>
       </div>
+    </section>
+  );
+}
+
+function OddsComparisonPanel({
+  snapshot,
+  odds,
+  dataStatus,
+}: {
+  snapshot: TeamMarketSnapshot;
+  odds: ApiFootballOddContext[];
+  dataStatus: MarketDataMeta;
+}) {
+  const fixtureOdds = odds.slice(0, 6);
+  const spread = snapshot.market.probability - snapshot.market.bookmakerImpliedProbability;
+
+  return (
+    <section className="panel team-detail-panel odds-comparison-panel">
+      <div className="panel-head">
+        <h2 className="panel-title">Odds Comparison</h2>
+        <span className="live">{dataStatus.odds?.source === "the-odds-api" ? "The Odds API" : "Odds pending"}</span>
+      </div>
+      <div className="team-detail-mini-grid">
+        <PanelMetric label="Outright odds implied" value={formatProbability(snapshot.market.bookmakerImpliedProbability)} />
+        <PanelMetric label="Market probability" value={formatProbability(snapshot.market.probability)} />
+        <PanelMetric label="Difference" value={formatChange(spread)} tone={spread < 0 ? "down" : "up"} />
+      </div>
+      <div className="fixture-odds-list">
+        {fixtureOdds.length > 0 ? (
+          fixtureOdds.map((item) => (
+            <div key={`${item.fixtureId}-${item.bookmaker ?? "book"}-${item.marketName ?? "market"}-${item.selectionName ?? "selection"}`} className="fixture-odds-row">
+              <span>{item.bookmaker ?? "Bookmaker"}</span>
+              <strong>{item.selectionName ?? item.marketName ?? "Fixture odds"}</strong>
+              <b>{item.odd ?? "Pending"}</b>
+            </div>
+          ))
+        ) : (
+          <EmptyPanel title="Fixture odds pending" body="API-Football fixture odds are only shown when a priced upcoming match is available." />
+        )}
+      </div>
+      <p className="odds-disclosure">Outright odds are third-party context. Fixture odds depend on available scheduled matches and bookmaker coverage.</p>
     </section>
   );
 }
@@ -391,8 +560,8 @@ function KeyPlayersPanel({ players }: { players: KeyPlayerView[] }) {
             <PlayerMetric label="Form score" value={String(player.formScore)} />
             <PlayerMetric label="Injury status" value={player.injuryStatus} tone={player.injuryStatus === "Risk" ? "down" : "up"} />
             <div className="key-player-market">
-              <span>Top market</span>
-              <strong>{player.topMarket}</strong>
+              <span>{player.club ? "Club" : "Profile note"}</span>
+              <strong>{player.club ?? player.note ?? player.topMarket}</strong>
             </div>
           </article>
         ))}
@@ -406,26 +575,30 @@ function RecentMatchesPanel({ matches }: { matches: RecentMatchView[] }) {
     <section className="panel team-detail-panel recent-matches-panel">
       <div className="panel-head">
         <h2 className="panel-title">Recent Matches</h2>
-        <span className="view-all">View all</span>
+        <span className="view-all">API-Football</span>
       </div>
-      <div className="recent-match-table">
-        <div className="recent-match-row head">
-          <span>Date</span>
-          <span>Opponent</span>
-          <span>Result</span>
-          <span>Score</span>
-          <span>Key note</span>
-        </div>
-        {matches.map((match) => (
-          <div key={match.id} className="recent-match-row">
-            <span>{match.date}</span>
-            <strong>{match.opponent}</strong>
-            <b className={match.result === "W" ? "up" : match.result === "L" ? "down" : ""}>{match.result}</b>
-            <span>{match.score}</span>
-            <p>{match.note}</p>
+      {matches.length > 0 ? (
+        <div className="recent-match-table">
+          <div className="recent-match-row head">
+            <span>Date</span>
+            <span>Opponent</span>
+            <span>Result</span>
+            <span>Score</span>
+            <span>Competition</span>
           </div>
-        ))}
-      </div>
+          {matches.map((match) => (
+            <div key={match.id} className="recent-match-row">
+              <span>{match.date}</span>
+              <strong>{match.opponent}</strong>
+              <b className={match.result === "W" ? "up" : match.result === "L" ? "down" : ""}>{match.result}</b>
+              <span>{match.score}</span>
+              <p>{match.note}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyPanel title="No recent result data" body="Finished fixtures are not attached for this team yet. Market movement is not used as a substitute for match form." />
+      )}
     </section>
   );
 }
@@ -437,7 +610,7 @@ function NewsSignalsPanel({
   news: NewsEvent[];
   snapshot: TeamMarketSnapshot;
 }) {
-  const signals = news.length > 0 ? news.slice(0, 4) : buildFallbackNewsSignals(snapshot);
+  const signals = news.length > 0 ? [...news].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 4) : [];
 
   return (
     <section className="panel team-detail-panel news-signals-panel">
@@ -445,23 +618,27 @@ function NewsSignalsPanel({
         <h2 className="panel-title">News-to-Market Signals</h2>
         <Link className="view-all" href="/feed">View all</Link>
       </div>
-      <div className="news-signal-grid">
-        {signals.map((item) => (
-          <article key={item.id} className="news-signal-card">
-            <span className={item.impactScore < 0 ? "signal-dot down" : "signal-dot"} />
-            <h3>{item.headline}</h3>
-            <p>{item.summary}</p>
-            <SignalMeta label="Source" value={item.source} />
-            <SignalMeta label="Impact" value={formatImpact(item.impactScore)} tone={item.impactScore < 0 ? "down" : "up"} />
-            <SignalMeta label="Confidence" value={item.matchedKeywords?.length ? "Medium" : "Low"} />
-          </article>
-        ))}
-      </div>
+      {signals.length > 0 ? (
+        <div className="news-signal-grid">
+          {signals.map((item) => (
+            <article key={item.id} className="news-signal-card">
+              <span className={item.impactScore < 0 ? "signal-dot down" : "signal-dot"} />
+              <h3>{item.headline}</h3>
+              <p>{item.summary}</p>
+              <SignalMeta label="Source" value={item.source} />
+              <SignalMeta label="Impact" value={formatImpact(item.impactScore)} tone={item.impactScore < 0 ? "down" : "up"} />
+              <SignalMeta label="Published" value={formatShortDate(item.publishedAt)} />
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyPanel title="No related news" body={`${snapshot.team.name} has no qualifying GDELT news signal attached right now.`} />
+      )}
     </section>
   );
 }
 
-function TradeEntryPanel({ snapshot, bidHref }: { snapshot: TeamMarketSnapshot; bidHref: string }) {
+function TradeEntryPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
   const yesPrice = snapshot.market.probability;
   const noPrice = Math.max(0, 100 - yesPrice);
 
@@ -485,58 +662,10 @@ function TradeEntryPanel({ snapshot, bidHref }: { snapshot: TeamMarketSnapshot; 
         <PanelMetric label="Min order" value={snapshot.market.polymarket?.minOrderSize ? `$${snapshot.market.polymarket.minOrderSize}` : "Pending"} />
         <PanelMetric label="Accepting orders" value={snapshot.market.polymarket?.acceptingOrders ? "Yes" : "Pending"} />
       </div>
-      <Link className="bid-button full" href={bidHref}>
+      <PlaceBidButton className="bid-button full" teamName={snapshot.team.name}>
         Review Bid
-      </Link>
-      <p>Wallet connection, eligibility, balance, allowance, signature, and confirmation happen in the bid flow.</p>
-    </section>
-  );
-}
-
-function RelatedMarketsPanel({
-  snapshot,
-  odds,
-}: {
-  snapshot: TeamMarketSnapshot;
-  odds: ApiFootballOddContext[];
-}) {
-  const rows = [
-    {
-      market: `${snapshot.team.name} to win World Cup`,
-      probability: snapshot.market.probability,
-      change: snapshot.market.change24h,
-      volume: snapshot.market.volume,
-    },
-    {
-      market: `${snapshot.team.name} market depth`,
-      probability: snapshot.market.liquidity ? Math.min(99, snapshot.market.probability + 6) : snapshot.market.probability,
-      change: snapshot.market.change7d,
-      volume: snapshot.market.liquidity ?? 0,
-    },
-    {
-      market: odds[0]?.marketName ?? "Bookmaker comparison",
-      probability: snapshot.market.bookmakerImpliedProbability,
-      change: snapshot.market.probability - snapshot.market.bookmakerImpliedProbability,
-      volume: snapshot.market.volume24h ?? 0,
-    },
-  ];
-
-  return (
-    <section className="panel team-detail-panel related-markets-panel">
-      <div className="panel-head">
-        <h2 className="panel-title">Related Markets</h2>
-        <Link className="view-all" href="/markets">View all</Link>
-      </div>
-      <div className="related-market-list">
-        {rows.map((row) => (
-          <Link key={row.market} className="related-market-row" href={`/bid?team=${snapshot.team.id}`}>
-            <span>{row.market}</span>
-            <strong>{formatProbability(row.probability)}</strong>
-            <small className={row.change < 0 ? "down" : ""}>{formatChange(row.change)}</small>
-            <b>{row.volume > 0 ? formatVolume(row.volume) : "Pending"}</b>
-          </Link>
-        ))}
-      </div>
+      </PlaceBidButton>
+      <p>The real embedded order flow is TBD and must use the user&apos;s own account, eligibility, balance, and confirmation.</p>
     </section>
   );
 }
@@ -719,18 +848,21 @@ function EmptyPanel({ title, body }: { title: string; body: string }) {
 
 function getStrengthMetrics(
   snapshot: TeamMarketSnapshot,
+  metadata: TeamFootballMetadata | undefined,
   squad: ApiFootballSquadPlayer[],
   injuries: ApiFootballInjuryContext[],
   standings: ApiFootballStandingContext[],
   news: NewsEvent[],
 ): StrengthMetric[] {
-  const rankBase = snapshot.team.fifaRank ? Math.max(64, 99 - snapshot.team.fifaRank * 1.2) : 76;
-  const attack = clampScore(rankBase + snapshot.market.probability * 0.16);
+  const rank = metadata?.fifaRank ?? snapshot.team.fifaRank;
+  const rankBase = rank ? Math.max(64, 99 - rank * 1.2) : 76;
+  const valueBoost = metadata?.squadValue ? Math.min(9, metadata.squadValue / 140_000_000) : 0;
+  const attack = clampScore(rankBase + valueBoost);
   const midfield = clampScore(rankBase - 2 + squad.length * 0.18);
   const defense = clampScore(rankBase - injuries.length * 3);
-  const form = clampScore(76 + (standings[0]?.wins ?? 2) * 3 + snapshot.market.change7d);
+  const form = clampScore(76 + (standings[0]?.wins ?? 2) * 3);
   const depth = clampScore(68 + Math.min(18, squad.length * 0.7) - injuries.length * 1.4);
-  const momentum = clampScore(72 + snapshot.market.change24h * 3 + news.length * 1.5);
+  const continuity = clampScore(72 + news.length * 1.5 + (metadata?.worldCupTitles ? 3 : 0));
 
   return [
     { label: "Attack", value: attack },
@@ -738,19 +870,22 @@ function getStrengthMetrics(
     { label: "Defense", value: defense },
     { label: "Form", value: form },
     { label: "Depth", value: depth },
-    { label: "Momentum", value: momentum },
+    { label: "Continuity", value: continuity },
   ];
 }
 
 function getKeyPlayers(
+  metadata: TeamFootballMetadata | undefined,
   squad: ApiFootballSquadPlayer[],
   injuries: ApiFootballInjuryContext[],
   snapshot: TeamMarketSnapshot,
 ): KeyPlayerView[] {
   const injuryNames = new Set(injuries.map((injury) => injury.playerName.toLowerCase()));
-  const sourcePlayers = squad.length > 0
-    ? squad.slice(0, 5)
-    : buildFallbackPlayers(snapshot.team.name);
+  const sourcePlayers: KeyPlayerSource[] = metadata?.keyPlayers.length
+    ? metadata.keyPlayers.slice(0, 3).map((player, index) => mapMetadataPlayer(player, index))
+    : squad.length > 0
+      ? squad.slice(0, 3)
+        : buildFallbackPlayers(snapshot.team.name).slice(0, 3);
 
   return sourcePlayers.map((player, index) => {
     const injured = injuryNames.has(player.name.toLowerCase());
@@ -759,13 +894,25 @@ function getKeyPlayers(
       name: player.name,
       number: player.number,
       position: player.position ?? "Player",
+      club: player.club,
+      note: player.note,
       expectedMinutes: Math.max(54, 88 - index * 5 - (injured ? 22 : 0)),
       squadProbability: Math.max(64, 96 - index * 4 - (injured ? 20 : 0)),
-      formScore: Math.max(70, Math.round(82 + snapshot.market.change7d - index * 2)),
+      formScore: Math.max(70, Math.round(84 - index * 2)),
       injuryStatus: injured ? "Risk" : "Fit",
-      topMarket: index % 2 === 0 ? "To Win Group" : "To Score",
+      topMarket: player.note ?? "Curated key player",
     };
   });
+}
+
+function mapMetadataPlayer(player: TeamKeyPlayer, index: number): KeyPlayerSource {
+  return {
+    playerId: index + 1,
+    name: player.name,
+    position: player.position,
+    club: player.club,
+    note: player.note,
+  };
 }
 
 function getLineupPlayers(squad: ApiFootballSquadPlayer[]): ApiFootballSquadPlayer[] {
@@ -789,41 +936,22 @@ function getLineupPlayers(squad: ApiFootballSquadPlayer[]): ApiFootballSquadPlay
   return [...unique.values()].slice(0, 11);
 }
 
-function getRecentMatches(fixtures: ApiFootballFixtureContext[], snapshot: TeamMarketSnapshot): RecentMatchView[] {
-  const finished = fixtures.filter((fixture) => fixture.status === "finished").slice(0, 5);
-
-  if (finished.length > 0) {
-    return finished.map((fixture) => ({
+function getRecentMatches(fixtures: ApiFootballFixtureContext[]): RecentMatchView[] {
+  return fixtures
+    .filter((fixture) => fixture.status === "finished" && fixture.result)
+    .sort((a, b) => b.kickoffAt.localeCompare(a.kickoffAt))
+    .slice(0, 5)
+    .map((fixture) => ({
       id: String(fixture.fixtureId),
       date: formatShortDate(fixture.kickoffAt),
       opponent: fixture.opponentName,
       status: fixture.status,
-      result: "D",
-      score: "Stored",
+      result: fixture.result ?? "-",
+      score: fixture.goalsFor !== undefined && fixture.goalsAgainst !== undefined
+        ? `${fixture.goalsFor}-${fixture.goalsAgainst}`
+        : "Pending",
       note: fixture.leagueName ?? "Fixture result stored from API-Football.",
     }));
-  }
-
-  return [
-    {
-      id: "market-form-1",
-      date: "Latest",
-      opponent: "Market window",
-      status: "market",
-      result: snapshot.market.change24h >= 0 ? "W" : "L",
-      score: formatChange(snapshot.market.change24h),
-      note: "Market probability changed over the last reported window.",
-    },
-    {
-      id: "market-form-2",
-      date: "7D",
-      opponent: "Market trend",
-      status: "market",
-      result: snapshot.market.change7d >= 0 ? "W" : "L",
-      score: formatChange(snapshot.market.change7d),
-      note: "Seven-day movement is used when match results are pending.",
-    },
-  ];
 }
 
 function getNextFixture(fixtures: ApiFootballFixtureContext[]): ApiFootballFixtureContext | undefined {
@@ -856,29 +984,6 @@ function buildFallbackPlayers(teamName: string): ApiFootballSquadPlayer[] {
   }));
 }
 
-function buildFallbackNewsSignals(snapshot: TeamMarketSnapshot): NewsEvent[] {
-  return [
-    {
-      id: "volume-signal",
-      teamId: snapshot.team.id,
-      headline: "Volume Spike",
-      source: "Market tape",
-      publishedAt: snapshot.market.updatedAt,
-      impactScore: snapshot.market.change24h,
-      summary: `${snapshot.team.name} market volume is ${formatVolume(snapshot.market.volume)} with ${formatChange(snapshot.market.change24h)} over 24h.`,
-    },
-    {
-      id: "momentum-signal",
-      teamId: snapshot.team.id,
-      headline: "Narrative Momentum",
-      source: "Probability model",
-      publishedAt: snapshot.market.updatedAt,
-      impactScore: snapshot.market.change7d,
-      summary: `Seven-day probability move is ${formatChange(snapshot.market.change7d)}.`,
-    },
-  ];
-}
-
 function getMovementNarrative(snapshot: TeamMarketSnapshot, relatedNewsCount: number): string {
   const direction = snapshot.market.change24h >= 0 ? "rose" : "fell";
   const newsCopy = relatedNewsCount > 0
@@ -893,6 +998,32 @@ function getIssueMessage(
   dimension: ApiFootballDataIssue["dimension"],
 ): string | undefined {
   return issues.find((issue) => issue.dimension === dimension)?.message;
+}
+
+function getGroupPeerMetadata(
+  metadata: TeamFootballMetadata | undefined,
+  allMetadata: TeamFootballMetadata[],
+): TeamFootballMetadata[] {
+  if (!metadata) {
+    return [];
+  }
+
+  const peerIds = new Set(metadata.groupPeers);
+  return allMetadata.filter((item) => peerIds.has(item.teamId));
+}
+
+function formatSquadValue(metadata: TeamFootballMetadata | undefined): string {
+  if (!metadata?.squadValue) {
+    return "Pending";
+  }
+
+  const currency = metadata.squadValueCurrency === "USD" ? "$" : "€";
+
+  if (metadata.squadValue >= 1_000_000_000) {
+    return `${currency}${(metadata.squadValue / 1_000_000_000).toFixed(2)}B`;
+  }
+
+  return `${currency}${Math.round(metadata.squadValue / 1_000_000)}M`;
 }
 
 function formatFixtureDate(value: string): string {

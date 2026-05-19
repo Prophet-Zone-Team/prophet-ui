@@ -4,6 +4,7 @@ import { getMarketHistoryRepository } from "./repository";
 import type { MarketSnapshotRecord, StoredMarketDataSource } from "./types";
 
 const DEFAULT_HISTORY_DAYS = 30;
+const HISTORY_WINDOW_TOLERANCE_HOURS = 6;
 
 export async function attachStoredMarketHistory(data: WorldCupMarketData): Promise<WorldCupMarketData> {
   if (data.meta.source === "mock") {
@@ -104,8 +105,18 @@ function getChangeFromHistory(
   const target = new Date(latest.capturedAt);
   target.setUTCDate(target.getUTCDate() - daysBack);
 
-  const baseline =
-    [...teamRecords].reverse().find((record) => new Date(record.capturedAt) <= target) ?? teamRecords[0];
+  const baseline = [...teamRecords].reverse().find((record) => new Date(record.capturedAt) <= target);
+
+  if (!baseline) {
+    return daysBack === 1 ? market.change24h : market.change7d;
+  }
+
+  const baselineAgeMs = Math.abs(new Date(baseline.capturedAt).getTime() - target.getTime());
+  const toleranceMs = HISTORY_WINDOW_TOLERANCE_HOURS * 60 * 60 * 1000;
+
+  if (baselineAgeMs > toleranceMs) {
+    return daysBack === 1 ? market.change24h : market.change7d;
+  }
 
   return roundProbability(latest.probability - baseline.probability);
 }
