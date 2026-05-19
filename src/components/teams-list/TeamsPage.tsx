@@ -98,8 +98,8 @@ export function TeamsPage({
           </div>
 
           <div className="teams-index-list">
-            {rows.map((row, index) => (
-              <TeamDirectoryItem key={row.snapshot.team.id} row={row} rank={index + 1} />
+            {rows.map((row) => (
+              <TeamDirectoryItem key={row.snapshot.team.id} row={row} />
             ))}
           </div>
 
@@ -175,22 +175,18 @@ function FeaturedTeamCard({
   );
 }
 
-function TeamDirectoryItem({ row, rank }: { row: TeamDirectoryRow; rank: number }) {
+function TeamDirectoryItem({ row }: { row: TeamDirectoryRow }) {
   const { team, market } = row.snapshot;
   const metadata = row.metadata;
   const rankValue = getTeamRank(row);
 
   return (
     <article className="team-directory-row pro">
-      <div className="team-index-rank">{rank}</div>
-
       <div className="team-index-main">
         <TeamFlag code={team.code} name={team.name} />
         <div>
           <h3>{team.name}</h3>
-          <p>
-            {team.code} / {team.region}
-          </p>
+          <p>{team.region}</p>
         </div>
       </div>
 
@@ -199,8 +195,7 @@ function TeamDirectoryItem({ row, rank }: { row: TeamDirectoryRow; rank: number 
         <TeamMetric label="Squad value" value={formatSquadValue(metadata)} />
       </div>
 
-      <div className="team-directory-form">
-        <span>Last 5</span>
+      <div className="team-directory-form" aria-label="Last five match results">
         <FormStrip matches={row.recentMatches} />
       </div>
 
@@ -208,13 +203,11 @@ function TeamDirectoryItem({ row, rank }: { row: TeamDirectoryRow; rank: number 
         <TeamMetric label="Group" value={formatGroup(metadata)} />
       </div>
 
-      <div className="team-directory-player">
-        <span>Key player</span>
+      <div className="team-directory-player" aria-label="Key player">
         <strong>{metadata?.keyPlayers[0]?.name ?? "Pending"}</strong>
       </div>
 
-      <div className="team-market-context">
-        <span>Outright odds / market</span>
+      <div className="team-market-context" aria-label="Outright odds and market probability">
         <strong>{formatProbability(market.bookmakerImpliedProbability)}</strong>
         <small className={market.change24h < 0 ? "text-red" : ""}>
           Market {formatProbability(market.probability)} · {formatRelativeChange(market.probability, market.change24h)}
@@ -244,8 +237,10 @@ function FeatureMetric({ label, value, tone }: { label: string; value: string; t
 
 function TeamMetric({ label, value, tone }: { label: string; value: string; tone?: "up" | "down" }) {
   return (
-    <div className={tone === "down" ? "team-metric down" : tone === "up" ? "team-metric up" : "team-metric"}>
-      <span>{label}</span>
+    <div
+      aria-label={`${label}: ${value}`}
+      className={tone === "down" ? "team-metric down" : tone === "up" ? "team-metric up" : "team-metric"}
+    >
       <strong>{value}</strong>
     </div>
   );

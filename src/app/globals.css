@@ -2092,9 +2092,10 @@ a {
 
 .prophet-html .teams-index-header {
   display: grid;
-  grid-template-columns: minmax(220px, 1.15fr) minmax(130px, 0.58fr) minmax(92px, 0.42fr) minmax(180px, 0.8fr) minmax(150px, 0.66fr) minmax(150px, 0.68fr) minmax(138px, auto);
+  grid-template-columns: 196px 96px 112px 82px 176px 154px 110px;
+  justify-content: start;
   gap: 12px;
-  padding: 0 12px 9px 46px;
+  padding: 0 16px 9px;
   color: #748096;
   font-size: 9px;
   font-weight: 900;
@@ -2116,14 +2117,12 @@ a {
 }
 
 .prophet-html .team-directory-row.pro {
-  grid-template-columns: 34px minmax(180px, 1.12fr) minmax(128px, 0.58fr) minmax(90px, 0.4fr) minmax(176px, 0.78fr) minmax(142px, 0.62fr) minmax(150px, 0.68fr) minmax(138px, auto);
+  grid-template-columns: 196px 96px 112px 82px 176px 154px 110px;
+  justify-content: start;
+  gap: 12px;
   min-height: 112px;
-}
-
-.prophet-html .team-index-rank {
-  color: #394760;
-  font-size: 12px;
-  font-weight: 700;
+  overflow: visible;
+  padding: 14px 16px;
 }
 
 .prophet-html .team-index-main {
@@ -2131,6 +2130,8 @@ a {
   align-items: center;
   gap: 12px;
   min-width: 0;
+  width: 100%;
+  justify-self: start;
 }
 
 .prophet-html .team-index-main .flag {
@@ -2141,17 +2142,24 @@ a {
 
 .prophet-html .team-index-main h3 {
   margin: 0;
+  overflow: hidden;
   color: #121a2c;
   font-size: 13px;
   line-height: 1.15;
   font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .prophet-html .team-index-main p {
   margin: 5px 0 0;
+  max-width: 150px;
+  overflow: hidden;
   color: #6d788e;
   font-size: 12px;
   line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .prophet-html .team-directory-profile,
@@ -2169,7 +2177,16 @@ a {
 }
 
 .prophet-html .team-directory-profile {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: max-content max-content;
+  justify-content: start;
+  align-items: center;
+  column-gap: 22px;
+}
+
+.prophet-html .team-directory-schedule {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  justify-items: center;
 }
 
 .prophet-html .team-directory-football {
@@ -2178,11 +2195,18 @@ a {
 
 .prophet-html .team-directory-form,
 .prophet-html .team-directory-player {
+  display: flex;
+  align-items: center;
   min-width: 0;
-  padding: 10px 9px;
+  min-height: 52px;
+  padding: 9px;
   border: 1px solid #e7eef7;
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.66);
+}
+
+.prophet-html .team-directory-player {
+  padding-inline: 10px;
 }
 
 .prophet-html .team-directory-form > span,
@@ -2196,7 +2220,6 @@ a {
 
 .prophet-html .team-directory-player strong {
   display: block;
-  margin-top: 5px;
   overflow: hidden;
   color: #172036;
   font-size: 12px;
@@ -2219,7 +2242,6 @@ a {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 7px;
 }
 
 .prophet-html .form-strip span {
@@ -2259,14 +2281,18 @@ a {
 
 .prophet-html .form-empty {
   display: block;
-  margin-top: 7px;
   color: #748096;
   font-size: 11px;
+  line-height: 1.35;
 }
 
 .prophet-html .team-market-context {
+  display: flex;
+  min-height: 58px;
+  flex-direction: column;
+  justify-content: center;
   min-width: 0;
-  padding: 10px 9px;
+  padding: 9px;
   border: 1px solid #e7eef7;
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.66);
@@ -2274,6 +2300,10 @@ a {
 
 .prophet-html .team-metric {
   min-width: 0;
+}
+
+.prophet-html .team-directory-schedule .team-metric {
+  text-align: center;
 }
 
 .prophet-html .team-metric span,
@@ -2288,7 +2318,6 @@ a {
 .prophet-html .team-metric strong,
 .prophet-html .team-market-context strong {
   display: block;
-  margin-top: 4px;
   color: #172036;
   font-size: 11px;
   line-height: 1.2;
@@ -2305,9 +2334,12 @@ a {
 .prophet-html .team-market-context small {
   display: block;
   margin-top: 4px;
+  overflow: hidden;
   color: var(--green);
   font-size: 11px;
   line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .prophet-html .team-metric.down strong {
@@ -2322,6 +2354,12 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
+  width: 100%;
+}
+
+.prophet-html .team-index-actions .market-detail-button,
+.prophet-html .team-index-actions .market-quick-bid {
+  min-width: 0;
 }
 
 .prophet-html .market-quick-bid.secondary {
@@ -4336,6 +4374,36 @@ a {
   }
 }
 
+@media (max-width: 1280px) and (min-width: 901px) {
+  .prophet-html .teams-index-header {
+    display: none;
+  }
+
+  .prophet-html .team-directory-row.pro {
+    grid-template-columns: minmax(220px, 1fr) minmax(128px, 0.52fr) minmax(140px, 0.58fr);
+    gap: 10px;
+    align-items: stretch;
+    padding: 14px;
+  }
+
+  .prophet-html .team-directory-row.pro .team-index-main {
+    grid-column: 1 / -1;
+  }
+
+  .prophet-html .team-directory-row.pro .team-directory-profile,
+  .prophet-html .team-directory-row.pro .team-directory-form,
+  .prophet-html .team-directory-row.pro .team-directory-schedule,
+  .prophet-html .team-directory-row.pro .team-directory-player,
+  .prophet-html .team-directory-row.pro .team-market-context,
+  .prophet-html .team-directory-row.pro .team-index-actions {
+    grid-column: auto;
+  }
+
+  .prophet-html .team-directory-row.pro .team-index-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   .prophet-html .page {
     padding: 18px 16px 30px;
@@ -4390,6 +4458,10 @@ a {
     max-width: 520px;
   }
 
+  .prophet-html .teams-index-header {
+    display: none;
+  }
+
   .prophet-html .market-row {
     grid-template-columns: 34px minmax(0, 1fr) minmax(132px, auto);
     align-items: start;
@@ -4405,9 +4477,15 @@ a {
     justify-content: flex-start;
   }
 
-  .prophet-html .team-directory-row {
-    grid-template-columns: 34px minmax(0, 1fr) minmax(132px, auto);
+  .prophet-html .team-directory-row,
+  .prophet-html .team-directory-row.pro {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
+    padding: 14px;
+  }
+
+  .prophet-html .team-directory-row.pro .team-index-main {
+    grid-column: 1 / -1;
   }
 
   .prophet-html .team-directory-profile,
@@ -4417,10 +4495,12 @@ a {
   .prophet-html .team-directory-player,
   .prophet-html .team-market-context,
   .prophet-html .team-index-actions {
-    grid-column: 2 / -1;
+    grid-column: auto;
   }
 
   .prophet-html .team-index-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-content: flex-start;
   }
 
@@ -4727,6 +4807,11 @@ a {
     gap: 12px;
   }
 
+  .prophet-html .team-directory-row.pro {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
   .prophet-html .market-probability,
   .prophet-html .market-metrics,
   .prophet-html .market-actions {
@@ -4750,7 +4835,7 @@ a {
 
   .prophet-html .team-index-actions {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 72px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .prophet-html .team-detail-hero-card {
