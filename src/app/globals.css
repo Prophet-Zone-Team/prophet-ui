@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --font-display: "DIN Condensed", "Avenir Next Condensed", "Helvetica Neue Condensed", "Arial Narrow", sans-serif;
-  --font-body: "Avenir Next", "IBM Plex Sans", "Helvetica Neue", sans-serif;
+  --font-display: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", "Berkeley Mono", "SFMono-Regular", "Menlo", monospace;
   color-scheme: dark;
 }
@@ -52,7 +52,7 @@ a {
   background:
     radial-gradient(circle at 74% 19%, rgba(99, 174, 248, 0.22), transparent 22%),
     linear-gradient(180deg, #fbfdff 0%, #f7fbff 48%, #ffffff 100%);
-  font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
 }
 
 .prophet-html .page {
@@ -73,42 +73,18 @@ a {
 .prophet-html .brand {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 0;
   color: #0b1429;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 6px;
-  text-transform: uppercase;
+  font-size: 0;
+  line-height: 1;
   text-decoration: none;
 }
 
 .prophet-html .mark {
-  width: 32px;
+  width: 184px;
   height: 38px;
-  position: relative;
   display: inline-block;
-}
-
-.prophet-html .mark::before,
-.prophet-html .mark::after {
-  content: "";
-  position: absolute;
-  border-radius: 16px 16px 16px 2px;
-}
-
-.prophet-html .mark::before {
-  inset: 0 7px 9px 0;
-  background: linear-gradient(135deg, #1ec3db, #134eff 72%);
-  clip-path: polygon(0 0, 100% 0, 100% 48%, 68% 78%, 35% 78%, 35% 100%, 0 100%);
-}
-
-.prophet-html .mark::after {
-  width: 12px;
-  height: 21px;
-  left: 7px;
-  top: 8px;
-  background: #fff;
-  border-radius: 0 10px 10px 0;
+  background: url("/brand/prophet-logo.png") left center / contain no-repeat;
 }
 
 .prophet-html nav {
@@ -4147,8 +4123,13 @@ a {
 
 @media (max-width: 640px) {
   .prophet-html .brand {
-    letter-spacing: 4px;
-    font-size: 13px;
+    letter-spacing: 0;
+    font-size: 0;
+  }
+
+  .prophet-html .mark {
+    width: 124px;
+    height: 26px;
   }
 
   .prophet-html .topbar {
