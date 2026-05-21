@@ -3516,6 +3516,82 @@ a {
   gap: 12px;
 }
 
+.prophet-html .path-scenario-controls,
+.prophet-html .path-scenario-card,
+.prophet-html .path-error-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.prophet-html .path-scenario-controls {
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid #e7eef7;
+}
+
+.prophet-html .path-scenario-controls > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.prophet-html .path-scenario-controls strong,
+.prophet-html .path-scenario-card p,
+.prophet-html .path-error-panel p {
+  color: #647189;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.prophet-html .third-place-grid,
+.prophet-html .path-assignment-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.prophet-html .third-place-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.prophet-html .third-place-grid button {
+  min-height: 42px;
+  border: 1px solid #dce8f5;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #526078;
+  font-weight: 900;
+}
+
+.prophet-html .third-place-grid button.active {
+  border-color: rgba(18, 90, 252, 0.48);
+  background: rgba(18, 90, 252, 0.1);
+  color: #125afc;
+}
+
+.prophet-html .path-assignment-grid div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #e7eef7;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.68);
+  padding: 11px 12px;
+}
+
+.prophet-html .path-assignment-grid span {
+  color: #748096;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.prophet-html .path-assignment-grid strong,
+.prophet-html .path-error-panel h2 {
+  color: #07142d;
+}
+
 .prophet-html .path-layout {
   display: grid;
   gap: 16px;
@@ -3610,14 +3686,15 @@ a {
 
 @media (min-width: 900px) {
   .prophet-html .path-controls {
-    grid-template-columns: 1fr 240px;
+    grid-template-columns: minmax(0, 1fr) 240px 240px;
   }
 
   .prophet-html .path-layout {
     grid-template-columns: 300px minmax(0, 1fr);
   }
 
-  .prophet-html .path-exclusion-grid {
+  .prophet-html .path-exclusion-grid,
+  .prophet-html .path-assignment-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }

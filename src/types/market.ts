@@ -438,6 +438,16 @@ export type FinishType = "GROUP_WINNER" | "RUNNER_UP" | "BEST_THIRD";
 
 export type KnockoutRound = "R32" | "R16" | "QF" | "SF" | "FINAL";
 
+export type PathMode = "GENERAL" | "SCENARIO";
+
+export interface PathScenarioResolution {
+  status: "general" | "resolved";
+  qualifiedThirdGroups: string[];
+  allocationOptionIds: number[];
+  assignments: Record<string, string[]>;
+  exactAssignments?: Record<string, string>;
+}
+
 export interface OpponentPossibility {
   teamId: Team["id"];
   teamName: string;
@@ -457,7 +467,7 @@ export interface RoundOpponentSummary {
 export interface PathQuery {
   teamId: string;
   finishType: FinishType;
-  mode: "GENERAL" | "SCENARIO";
+  mode: PathMode;
   scenario?: {
     qualifiedThirdGroups?: string[];
     exactGroupPlacements?: Record<string, {
@@ -475,7 +485,8 @@ export interface PathResult {
   group: string;
   seed: string;
   finishType: FinishType;
-  mode: "GENERAL" | "SCENARIO";
+  mode: PathMode;
+  scenario?: PathScenarioResolution;
   rounds: RoundOpponentSummary[];
   earliestPossibleMeetingMap: Record<string, KnockoutRound | null>;
   neverMeetTeamIds: Team["id"][];

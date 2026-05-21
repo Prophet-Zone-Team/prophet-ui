@@ -9,6 +9,10 @@ export async function GET(request: NextRequest) {
   const teamId = request.nextUrl.searchParams.get("teamId");
   const finishType = request.nextUrl.searchParams.get("finishType") as FinishType | null;
   const mode = request.nextUrl.searchParams.get("mode") ?? "GENERAL";
+  const qualifiedThirdGroups =
+    request.nextUrl.searchParams.get("thirdPlaceGroups") ??
+    request.nextUrl.searchParams.get("qualifiedThirdGroups") ??
+    "";
 
   if (!teamId) {
     return NextResponse.json({ error: "teamId is required." }, { status: 400 });
@@ -23,7 +27,16 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    return NextResponse.json(calculateWorldCupPath({ teamId, finishType, mode }));
+    return NextResponse.json(
+      calculateWorldCupPath({
+        teamId,
+        finishType,
+        mode,
+        scenario: mode === "SCENARIO"
+          ? { qualifiedThirdGroups: qualifiedThirdGroups.split(",").filter(Boolean) }
+          : undefined,
+      }),
+    );
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to calculate path." }, { status: 400 });
   }
