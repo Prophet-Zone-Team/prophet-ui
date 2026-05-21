@@ -23,11 +23,29 @@ export function DataStatusBanner({ meta }: { meta: MarketDataMeta }) {
         <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.18em]">
           <span>Updated {formatUpdatedAt(meta.lastUpdated)}</span>
           <span>/</span>
+          <span>Age {formatAge(meta.lastUpdated)}</span>
+          <span>/</span>
           <span>{meta.source === "mock" ? "local sample data" : "read-only provider data"}</span>
         </div>
       </div>
     </div>
   );
+}
+
+function formatAge(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "unknown";
+  }
+
+  const minutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60_000));
+
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+
+  return `${Math.round(minutes / 60)}h`;
 }
 
 export function SourceDisclosure({ compact = false }: { compact?: boolean }) {

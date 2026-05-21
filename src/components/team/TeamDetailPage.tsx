@@ -17,6 +17,7 @@ import {
 } from "recharts";
 
 import type { MarketDataMeta } from "../../data/providers/types";
+import type { NormalizedBookmakerOdds } from "../../data/odds/types";
 import { getMarketDataSourceLabel } from "../../data/providers/source";
 import type {
   ApiFootballDataIssue,
@@ -34,12 +35,12 @@ import type {
   TeamMarketSnapshot,
   TradingUserSession,
   UserOrderPreview,
+  UserFavourite,
   UserTradingReadiness,
 } from "../../types/market";
 import { buildBidOrderPreview } from "../../lib/market/polymarketOrder";
 import { calculateReferencePrice, formatPriceCents, formatShareSize } from "../../lib/market/orderMath";
 import { attachUserOrderSignature, buildUserOrderSignablePayload } from "../../lib/market/userOrder";
-import { readStoredWatchlist, writeStoredWatchlist } from "../../lib/storage/local-terminal";
 import {
   formatChange,
   formatProbability,
@@ -64,6 +65,7 @@ interface TeamDetailPageProps {
   footballInjuries: ApiFootballInjuryContext[];
   footballStandings: ApiFootballStandingContext[];
   footballOdds: ApiFootballOddContext[];
+  outrightOdds: NormalizedBookmakerOdds[];
   footballDataIssues: ApiFootballDataIssue[];
   footballMetadata?: TeamFootballMetadata;
   allFootballMetadata: TeamFootballMetadata[];
@@ -131,6 +133,7 @@ export function TeamDetailPage({
   footballInjuries,
   footballStandings,
   footballOdds,
+  outrightOdds,
   footballDataIssues,
   footballMetadata,
   allFootballMetadata,
@@ -164,7 +167,7 @@ export function TeamDetailPage({
           <div className="team-detail-main">
             <section className="team-detail-two-up">
               <StrengthPanel metrics={strength} />
-              <OddsComparisonPanel snapshot={snapshot} odds={footballOdds} dataStatus={dataStatus} />
+              <OddsComparisonPanel snapshot={snapshot} fixtureOdds={footballOdds} outrightOdds={outrightOdds} dataStatus={dataStatus} />
             </section>
 
             <RecentMatchesPanel matches={recentMatches} />
@@ -208,6 +211,7 @@ function TeamDetailTopbar() {
         <Link href="/markets">Markets</Link>
         <Link href="/matches">Matches</Link>
         <Link href="/teams" aria-current="page">Teams</Link>
+        <Link href="/search">Search</Link>
         <Link href="/portfolio">Portfolio</Link>
       </nav>
       <WalletMenuButton />
@@ -468,15 +472,21 @@ function StrengthPanel({ metrics }: { metrics: StrengthMetric[] }) {
 
 function OddsComparisonPanel({
   snapshot,
-  odds,
+  fixtureOdds,
+  outrightOdds,
   dataStatus,
 }: {
   snapshot: TeamMarketSnapshot;
-  odds: ApiFootballOddContext[];
+  fixtureOdds: ApiFootballOddContext[];
+  outrightOdds: NormalizedBookmakerOdds[];
   dataStatus: MarketDataMeta;
 }) {
-  const fixtureOdds = odds.slice(0, 6);
+  const visibleFixtureOdds = fixtureOdds.slice(0, 6);
+  const visibleOutrightOdds = outrightOdds.slice(0, 5);
   const spread = snapshot.market.probability - snapshot.market.bookmakerImpliedProbability;
+  const impliedValues = outrightOdds.map((item) => item.impliedProbability).sort((a, b) => a - b);
+  const min = impliedValues[0];
+  const max = impliedValues.at(-1);
 
   return (
     <section className="panel team-detail-panel odds-comparison-panel">
@@ -488,10 +498,19 @@ function OddsComparisonPanel({
         <PanelMetric label="Outright odds implied" value={formatProbability(snapshot.market.bookmakerImpliedProbability)} />
         <PanelMetric label="Market probability" value={formatProbability(snapshot.market.probability)} />
         <PanelMetric label="Difference" value={formatChange(spread)} tone={spread < 0 ? "down" : "up"} />
+        <PanelMetric label="Bookmaker spread" value={min !== undefined && max !== undefined ? `${formatProbability(min)} - ${formatProbability(max)}` : "Unavailable"} />
       </div>
       <div className="fixture-odds-list">
-        {fixtureOdds.length > 0 ? (
-          fixtureOdds.map((item) => (
+        {visibleOutrightOdds.length > 0 ? (
+          visibleOutrightOdds.map((item) => (
+            <div key={`${item.bookmaker}-${item.teamId}-${item.decimalOdds}`} className="fixture-odds-row">
+              <span>{item.bookmaker}</span>
+              <strong>Winner outright</strong>
+              <b>{formatProbability(item.impliedProbability)}</b>
+            </div>
+          ))
+        ) : visibleFixtureOdds.length > 0 ? (
+          visibleFixtureOdds.map((item) => (
             <div key={`${item.fixtureId}-${item.bookmaker ?? "book"}-${item.marketName ?? "market"}-${item.selectionName ?? "selection"}`} className="fixture-odds-row">
               <span>{item.bookmaker ?? "Bookmaker"}</span>
               <strong>{item.selectionName ?? item.marketName ?? "Fixture odds"}</strong>
@@ -878,7 +897,7 @@ function TradeEntryPanel({ snapshot }: { snapshot: TeamMarketSnapshot }) {
   }
 
   return (
-    <section className="panel team-detail-panel trade-entry-panel">
+    <section id="trade" className="panel team-detail-panel trade-entry-panel">
       <div className="panel-head">
         <h2 className="panel-title">Place a Bid</h2>
         <span className="view-all">User-owned real order</span>
@@ -1075,17 +1094,79 @@ function NextMatchPanel({
 
 function WatchlistPanel({ teamId, teamName }: { teamId: string; teamName: string }) {
   const [isWatching, setIsWatching] = useState(false);
+  const [session, setSession] = useState<TradingUserSession | undefined>();
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [message, setMessage] = useState<string | undefined>();
 
   useEffect(() => {
-    setIsWatching(readStoredWatchlist().includes(teamId));
+    let ignore = false;
+
+    async function loadFavouriteState() {
+      try {
+        const loadedSession = await loadTradingSession();
+
+        if (ignore) {
+          return;
+        }
+
+        setSession(loadedSession);
+
+        if (!loadedSession) {
+          setIsWatching(false);
+          return;
+        }
+
+        const payload = await fetchJson<{ favourites: UserFavourite[] }>("/api/favourites");
+
+        if (!ignore) {
+          setIsWatching(payload.favourites.some((item) => item.entityType === "team" && item.entityId === teamId));
+        }
+      } catch (error) {
+        if (!ignore) {
+          setStatus("error");
+          setMessage(error instanceof Error ? error.message : String(error));
+        }
+      }
+    }
+
+    void loadFavouriteState();
+
+    return () => {
+      ignore = true;
+    };
   }, [teamId]);
 
-  function toggleWatchlist() {
-    const ids = readStoredWatchlist();
-    const nextIds = ids.includes(teamId) ? ids.filter((id) => id !== teamId) : [teamId, ...ids];
+  async function toggleWatchlist() {
+    setStatus("loading");
+    setMessage(undefined);
 
-    writeStoredWatchlist(nextIds);
-    setIsWatching(nextIds.includes(teamId));
+    try {
+      let activeSession = session;
+
+      if (!activeSession) {
+        activeSession = await connectTradingWallet();
+        setSession(activeSession);
+      }
+
+      if (isWatching) {
+        await fetch(`/api/favourites?entityType=team&entityId=${encodeURIComponent(teamId)}`, { method: "DELETE" });
+        setIsWatching(false);
+      } else {
+        await fetchJson<{ favourite: UserFavourite }>("/api/favourites", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ entityType: "team", entityId: teamId }),
+        });
+        setIsWatching(true);
+      }
+
+      setStatus("idle");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : String(error));
+    }
   }
 
   return (
@@ -1093,11 +1174,12 @@ function WatchlistPanel({ teamId, teamName }: { teamId: string; teamName: string
       <div>
         <span>Watchlist</span>
         <h2>{teamName}</h2>
-        <p>Track this team locally and surface it on the watchlist board.</p>
+        <p>Save this team to your wallet-bound favourites and surface it on the watchlist board.</p>
       </div>
-      <button type="button" onClick={toggleWatchlist}>
-        {isWatching ? "Watching" : "Add to Watchlist"}
+      <button type="button" onClick={toggleWatchlist} disabled={status === "loading"}>
+        {status === "loading" ? "Saving..." : isWatching ? "Watching" : session ? "Add to Favourites" : "Connect to Favourite"}
       </button>
+      {message ? <p className={status === "error" ? "trade-ticket-message error" : "trade-ticket-message"}>{message}</p> : null}
     </section>
   );
 }

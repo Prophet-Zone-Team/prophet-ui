@@ -72,6 +72,7 @@ function Topbar() {
         <Link href="/markets">Markets</Link>
         <Link href="/matches">Matches</Link>
         <Link href="/teams">Teams</Link>
+        <Link href="/search">Search</Link>
         <Link href="/portfolio">Portfolio</Link>
       </nav>
       <WalletMenuButton />

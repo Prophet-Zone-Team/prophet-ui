@@ -1,6 +1,7 @@
 import { getTheOddsApiWorldCupWinnerOdds } from "../../data/odds/theOddsApiProvider";
 import type { OddsProviderMeta } from "../../data/odds/types";
 import { ENABLED_MARKET_DATA_SOURCES } from "../../data/providers/source";
+import { getStaticWorldCupMatches } from "../../data/world-cup-2026/matches";
 import type { MarketDataSource } from "../../data/providers/types";
 import { getMarketHistoryRepository } from "../market-history/repository";
 import type { MarketSnapshotSourceStat, MarketUniverseSnapshotRecord, StoredMarketDataSource } from "../market-history/types";
@@ -29,6 +30,13 @@ export interface SystemHealthReport {
     freshnessThresholdHours: number;
     news: SignalHealthSlice;
     football: SignalHealthSlice;
+  };
+  matchSchedule: {
+    status: HealthStatus;
+    source: string;
+    matchCount: number;
+    groupMatchCount: number;
+    knockoutMatchCount: number;
   };
 }
 
@@ -118,6 +126,19 @@ export async function getSystemHealthReport(now = new Date()): Promise<SystemHea
       news,
       football,
     },
+    matchSchedule: mapMatchScheduleSlice(),
+  };
+}
+
+function mapMatchScheduleSlice(): SystemHealthReport["matchSchedule"] {
+  const matches = getStaticWorldCupMatches();
+
+  return {
+    status: matches.length > 0 ? "ok" : "empty",
+    source: "static-world-cup-2026",
+    matchCount: matches.length,
+    groupMatchCount: matches.filter((match) => match.stage === "GROUP").length,
+    knockoutMatchCount: matches.filter((match) => match.stage !== "GROUP").length,
   };
 }
 

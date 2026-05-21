@@ -7,10 +7,10 @@ import type { MarketDataMeta } from "../../data/providers/types";
 import { generateMarketSignals } from "../../lib/market/analyzer";
 import { createWatchlistAlerts } from "../../lib/market/brief";
 import type { WatchlistAlert } from "../../lib/market/brief";
-import { readStoredWatchlist, writeStoredWatchlist } from "../../lib/storage/local-terminal";
-import type { NewsEvent, TeamMarketSnapshot } from "../../types/market";
+import type { NewsEvent, TeamMarketSnapshot, TradingUserSession, UserFavourite } from "../../types/market";
 import { DataStatusBanner, SourceDisclosure } from "../data/DataStatusBanner";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "../home/market-formatters";
+import { connectTradingWallet, loadTradingSession } from "../trading/tradingWalletSession";
 
 interface WatchlistPageProps {
   snapshots: TeamMarketSnapshot[];
@@ -20,9 +20,12 @@ interface WatchlistPageProps {
 
 export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPageProps) {
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
+  const [session, setSession] = useState<TradingUserSession | undefined>();
+  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [message, setMessage] = useState<string | undefined>();
 
   useEffect(() => {
-    setWatchlistIds(readStoredWatchlist());
+    void loadFavourites();
   }, []);
 
   const watchedSnapshots = useMemo(
@@ -35,10 +38,45 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
     [snapshots, newsEvents, signals, watchlistIds],
   );
 
-  function removeTeam(teamId: string) {
-    const nextIds = watchlistIds.filter((id) => id !== teamId);
-    writeStoredWatchlist(nextIds);
-    setWatchlistIds(nextIds);
+  async function loadFavourites() {
+    setStatus("loading");
+    setMessage(undefined);
+
+    try {
+      const loadedSession = await loadTradingSession();
+      setSession(loadedSession);
+
+      if (!loadedSession) {
+        setWatchlistIds([]);
+        setStatus("ready");
+        return;
+      }
+
+      const payload = await fetchJson<{ favourites: UserFavourite[] }>("/api/favourites");
+      setWatchlistIds(payload.favourites.filter((item) => item.entityType === "team").map((item) => item.entityId));
+      setStatus("ready");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function connectWallet() {
+    setStatus("loading");
+    setMessage(undefined);
+
+    try {
+      setSession(await connectTradingWallet());
+      await loadFavourites();
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function removeTeam(teamId: string) {
+    await fetch(`/api/favourites?entityType=team&entityId=${encodeURIComponent(teamId)}`, { method: "DELETE" });
+    await loadFavourites();
   }
 
   return (
@@ -58,27 +96,43 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
           </div>
           <div className="mt-8 grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.28em] text-terminal-cyan">Local watch desk</p>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-terminal-cyan">Favourite watch desk</p>
               <h1 className="mt-4 font-display text-5xl leading-none text-terminal-text sm:text-7xl">
                 Watchlist
               </h1>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-terminal-muted">
-                Track locally saved teams, probability changes, volume context, signal alerts, and possible related news coverage.
+                Track wallet-bound favourite teams, probability changes, volume context, signal alerts, and possible related news coverage.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               <HeaderMetric label="Watched teams" value={String(watchedSnapshots.length)} />
-              <HeaderMetric label="Local alerts" value={String(alerts.length)} />
-              <HeaderMetric label="Storage" value="Local only" />
+              <HeaderMetric label="Favourite alerts" value={String(alerts.length)} />
+              <HeaderMetric label="Storage" value={session ? "Wallet synced" : "Connect wallet"} />
             </div>
           </div>
         </section>
         <DataStatusBanner meta={dataStatus} />
         <SourceDisclosure compact />
+        {message ? <p className="portfolio-message error">{message}</p> : null}
 
-        <WatchlistAlerts alerts={alerts} />
+        {session ? <WatchlistAlerts alerts={alerts} /> : null}
 
-        {watchedSnapshots.length > 0 ? (
+        {!session ? (
+          <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8">
+            <h2 className="font-display text-3xl text-terminal-text sm:text-4xl">Connect wallet to load favourites</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-terminal-muted">
+              Favourites are tied to your connected wallet so teams persist across devices.
+            </p>
+            <button
+              type="button"
+              onClick={connectWallet}
+              disabled={status === "loading"}
+              className="mt-6 inline-flex rounded border border-terminal-cyan/60 bg-terminal-cyan/10 px-4 py-3 text-sm font-semibold text-terminal-cyan"
+            >
+              {status === "loading" ? "Connecting..." : "Connect wallet"}
+            </button>
+          </section>
+        ) : watchedSnapshots.length > 0 ? (
           <section className="grid gap-5">
             {watchedSnapshots.map((snapshot) => (
               <WatchlistTeamCard
@@ -93,7 +147,7 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
           <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8">
             <h2 className="font-display text-3xl text-terminal-text sm:text-4xl">No teams on watchlist</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-terminal-muted">
-              Add teams from a team detail page. The list is stored in this browser only and does not use a backend.
+              Add teams from a team detail page. The list is saved to your connected wallet profile.
             </p>
             <Link
               href="/"
@@ -204,7 +258,7 @@ function WatchlistAlerts({ alerts }: { alerts: WatchlistAlert[] }) {
           ))
         ) : (
           <div className="rounded-lg border border-dashed border-terminal-line bg-terminal-panel2/60 p-5 text-sm text-terminal-muted lg:col-span-2">
-            No local watchlist alerts are active. Add teams or wait for meaningful movement, news context, or signal changes.
+            No favourite alerts are active. Add teams or wait for meaningful movement, news context, or signal changes.
           </div>
         )}
       </div>
@@ -254,4 +308,15 @@ function getSeverityClassName(severity: WatchlistAlert["severity"]): string {
   }
 
   return `${base} border-terminal-line text-terminal-muted`;
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url, { cache: "no-store" });
+  const payload = (await response.json()) as T & { error?: string };
+
+  if (!response.ok) {
+    throw new Error(payload.error ?? `Request failed: ${response.status}`);
+  }
+
+  return payload;
 }

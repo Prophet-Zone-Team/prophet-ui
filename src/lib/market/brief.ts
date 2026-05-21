@@ -164,7 +164,7 @@ function formatSignalBullets(signals: MarketSignal[]): string[] {
 
 function formatAlertBullets(alerts: WatchlistAlert[]): string[] {
   if (alerts.length === 0) {
-    return ["- No local watchlist alerts for this browser."];
+    return ["- No wallet-bound favourite alerts for the connected account."];
   }
 
   return alerts.map((alert) => `- ${alert.teamName}: ${alert.description}`);

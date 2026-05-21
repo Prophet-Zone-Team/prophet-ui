@@ -8,10 +8,10 @@ import type { MarketDataMeta } from "../../data/providers/types";
 import { generateMarketSignals, getBiggestLosers, getOddsMismatch, getTopMovers } from "../../lib/market/analyzer";
 import { createDailyBriefMarkdown, createWatchlistAlerts } from "../../lib/market/brief";
 import type { WatchlistAlert } from "../../lib/market/brief";
-import { readStoredWatchlist } from "../../lib/storage/local-terminal";
-import type { MarketSignal, NewsEvent, TeamMarketSnapshot } from "../../types/market";
+import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "../../types/market";
 import { DataStatusBanner, SourceDisclosure } from "../data/DataStatusBanner";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "../home/market-formatters";
+import { loadTradingSession } from "../trading/tradingWalletSession";
 
 interface BriefPageProps {
   snapshots: TeamMarketSnapshot[];
@@ -43,7 +43,36 @@ export function BriefPage({ snapshots, newsEvents, dataStatus }: BriefPageProps)
   );
 
   useEffect(() => {
-    setWatchlistIds(readStoredWatchlist());
+    let cancelled = false;
+
+    async function loadFavourites() {
+      const session = await loadTradingSession();
+
+      if (!session) {
+        if (!cancelled) {
+          setWatchlistIds([]);
+        }
+        return;
+      }
+
+      try {
+        const payload = await fetchJson<{ favourites: UserFavourite[] }>("/api/favourites");
+
+        if (!cancelled) {
+          setWatchlistIds(payload.favourites.filter((item) => item.entityType === "team").map((item) => item.entityId));
+        }
+      } catch {
+        if (!cancelled) {
+          setWatchlistIds([]);
+        }
+      }
+    }
+
+    void loadFavourites();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function exportMarkdown() {
@@ -214,7 +243,7 @@ function WatchlistAlertPanel({ alerts }: { alerts: WatchlistAlert[] }) {
             </Link>
           ))
         ) : (
-          <EmptyPanel message="No local alerts. Add teams to the watchlist to personalize this section." />
+          <EmptyPanel message="No favourite alerts. Connect a wallet and save teams to personalize this section." />
         )}
       </div>
     </section>
@@ -331,4 +360,14 @@ function getSeverityClassName(severity: WatchlistAlert["severity"]): string {
 
 function formatSignalType(type: MarketSignal["type"]): string {
   return type.replace(/_/g, " ");
+}
+
+async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+  const response = await fetch(input, init);
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
 }

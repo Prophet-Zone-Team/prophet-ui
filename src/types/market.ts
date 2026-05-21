@@ -367,6 +367,121 @@ export interface UserWatchlistItem {
   notes?: string;
 }
 
+export type FavouriteEntityType = "team" | "match" | "news" | "market";
+
+export interface UserFavourite {
+  id: string;
+  userId: string;
+  walletAddress: string;
+  entityType: FavouriteEntityType;
+  entityId: string;
+  createdAt: string;
+}
+
+export type WorldCupMatchStatus = "scheduled" | "live" | "finished" | "postponed" | "cancelled" | "unknown";
+
+export interface MatchOddsOutcome {
+  label: string;
+  decimalOdds?: number;
+  impliedProbability?: number;
+  bookmaker?: string;
+  lastUpdated?: string;
+}
+
+export interface MatchOddsSummary {
+  source: "api-football" | "the-odds-api" | "none";
+  status: "live" | "cached" | "unavailable";
+  outcomes: MatchOddsOutcome[];
+  lastUpdated?: string;
+}
+
+export interface FreshnessMeta {
+  source: string;
+  status: "live" | "cached" | "stale" | "unavailable";
+  lastUpdated?: string;
+  ageMinutes?: number;
+}
+
+export interface WorldCupMatch {
+  id: string;
+  matchId: number;
+  stage: "GROUP" | "R32" | "R16" | "QF" | "SF" | "THIRD_PLACE" | "FINAL";
+  group?: string;
+  homeTeamId?: Team["id"];
+  awayTeamId?: Team["id"];
+  homeSeed?: string;
+  awaySeed?: string;
+  homeScore?: number;
+  awayScore?: number;
+  status: WorldCupMatchStatus;
+  kickoffAt?: string;
+  venue?: string;
+  city?: string;
+  marketMove?: number;
+  odds?: MatchOddsSummary;
+  freshness: FreshnessMeta;
+}
+
+export type SearchResultType = "team" | "match" | "news" | "market" | "path";
+
+export interface SearchResult {
+  id: string;
+  type: SearchResultType;
+  title: string;
+  subtitle?: string;
+  href: string;
+  score: number;
+  metadata?: Record<string, string | number | boolean | undefined>;
+}
+
+export type FinishType = "GROUP_WINNER" | "RUNNER_UP" | "BEST_THIRD";
+
+export type KnockoutRound = "R32" | "R16" | "QF" | "SF" | "FINAL";
+
+export interface OpponentPossibility {
+  teamId: Team["id"];
+  teamName: string;
+  zhName?: string;
+  possibleRounds: KnockoutRound[];
+  earliestRound: KnockoutRound;
+}
+
+export interface RoundOpponentSummary {
+  round: KnockoutRound;
+  matchIds: number[];
+  possibleOpponentTeamIds: Team["id"][];
+  possibleOpponentTeams: OpponentPossibility[];
+  impossibleOpponentTeamIds: Team["id"][];
+}
+
+export interface PathQuery {
+  teamId: string;
+  finishType: FinishType;
+  mode: "GENERAL" | "SCENARIO";
+  scenario?: {
+    qualifiedThirdGroups?: string[];
+    exactGroupPlacements?: Record<string, {
+      first?: string;
+      second?: string;
+      third?: string;
+    }>;
+  };
+}
+
+export interface PathResult {
+  teamId: Team["id"];
+  teamCode: string;
+  teamName: string;
+  group: string;
+  seed: string;
+  finishType: FinishType;
+  mode: "GENERAL" | "SCENARIO";
+  rounds: RoundOpponentSummary[];
+  earliestPossibleMeetingMap: Record<string, KnockoutRound | null>;
+  neverMeetTeamIds: Team["id"][];
+  pathMatchIds: number[];
+}
+
 export interface TeamMarketSnapshot {
   team: Team;
   market: TeamMarketData;

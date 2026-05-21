@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { getWorldCupMarketData } from "../../../data/providers/worldCupMarketData";
 import { TeamDetailPage } from "../../../components/team/TeamDetailPage";
+import { getTheOddsApiWorldCupWinnerOdds } from "../../../data/odds/theOddsApiProvider";
 
 interface TeamPageProps {
   params: Promise<{
@@ -13,9 +14,12 @@ export const dynamic = "force-dynamic";
 
 export default async function Page({ params }: TeamPageProps) {
   const { slug } = await params;
-  const marketData = await getWorldCupMarketData({
-    footballContextTeamIds: [slug],
-  });
+  const [marketData, oddsData] = await Promise.all([
+    getWorldCupMarketData({
+      footballContextTeamIds: [slug],
+    }),
+    getTheOddsApiWorldCupWinnerOdds(),
+  ]);
   const snapshot = marketData.snapshots.find((item) => item.team.id === slug);
 
   if (!snapshot) {
@@ -38,6 +42,7 @@ export default async function Page({ params }: TeamPageProps) {
       footballInjuries={footballContext?.injuries ?? []}
       footballStandings={footballContext?.standings ?? []}
       footballOdds={footballContext?.odds ?? []}
+      outrightOdds={oddsData.odds.filter((item) => item.teamId === snapshot.team.id)}
       footballDataIssues={footballContext?.dataIssues ?? []}
       footballMetadata={marketData.footballMetadata.find((metadata) => metadata.teamId === snapshot.team.id)}
       allFootballMetadata={marketData.footballMetadata}

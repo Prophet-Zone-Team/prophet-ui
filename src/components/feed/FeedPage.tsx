@@ -5,10 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { MarketDataMeta } from "../../data/providers/types";
 import { generateMarketSignals } from "../../lib/market/analyzer";
-import { readStoredWatchlist, writeStoredWatchlist } from "../../lib/storage/local-terminal";
-import type { MarketSignal, NewsEvent, TeamMarketSnapshot } from "../../types/market";
+import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "../../types/market";
 import { DataStatusBanner, SourceDisclosure } from "../data/DataStatusBanner";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "../home/market-formatters";
+import { connectTradingWallet, loadTradingSession } from "../trading/tradingWalletSession";
 
 interface FeedPageProps {
   snapshots: TeamMarketSnapshot[];
@@ -22,20 +22,26 @@ export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
   const topConfidence = signals.reduce((max, signal) => Math.max(max, signal.confidence), 0);
 
   useEffect(() => {
-    setWatchlistIds(readStoredWatchlist());
+    loadTradingSession()
+      .then((session) => session ? fetchJson<{ favourites: UserFavourite[] }>("/api/favourites") : { favourites: [] })
+      .then((payload) => setWatchlistIds(payload.favourites.filter((item) => item.entityType === "team").map((item) => item.entityId)))
+      .catch(() => undefined);
   }, []);
 
-  function addToWatchlist(teamId: string) {
-    const currentIds = readStoredWatchlist();
-
-    if (currentIds.includes(teamId)) {
-      setWatchlistIds(currentIds);
+  async function addToWatchlist(teamId: string) {
+    if (watchlistIds.includes(teamId)) {
       return;
     }
 
-    const nextIds = [teamId, ...currentIds];
-    writeStoredWatchlist(nextIds);
-    setWatchlistIds(nextIds);
+    await connectTradingWallet();
+    await fetchJson<{ favourite: UserFavourite }>("/api/favourites", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ entityType: "team", entityId: teamId }),
+    });
+    setWatchlistIds([teamId, ...watchlistIds]);
   }
 
   return (
@@ -240,4 +246,15 @@ function getTypeClassName(type: MarketSignal["type"]): string {
 
 function formatSignalType(type: MarketSignal["type"]): string {
   return type.replace(/_/g, " ");
+}
+
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, { cache: "no-store", ...init });
+  const payload = (await response.json()) as T & { error?: string };
+
+  if (!response.ok) {
+    throw new Error(payload.error ?? `Request failed: ${response.status}`);
+  }
+
+  return payload;
 }

@@ -136,3 +136,18 @@ CREATE TABLE IF NOT EXISTS user_trading_audit_events (
 
 CREATE INDEX IF NOT EXISTS idx_user_trading_audit_user_time
 ON user_trading_audit_events (user_id, created_at);
+
+CREATE TABLE IF NOT EXISTS user_favourites (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  wallet_address TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  created_at TEXT NOT NULL
+) STRICT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_favourites_unique
+ON user_favourites (user_id, entity_type, entity_id);
+
+CREATE INDEX IF NOT EXISTS idx_user_favourites_user_time
+ON user_favourites (user_id, created_at);

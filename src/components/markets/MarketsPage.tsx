@@ -86,6 +86,7 @@ function MarketsTopbar() {
         <Link href="/markets" aria-current="page">Markets</Link>
         <Link href="/matches">Matches</Link>
         <Link href="/teams">Teams</Link>
+        <Link href="/search">Search</Link>
         <Link href="/portfolio">Portfolio</Link>
       </nav>
       <WalletMenuButton />
