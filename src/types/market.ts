@@ -56,6 +56,7 @@ export type UserOrderStatus =
   | "error";
 
 export interface TradingUserSession {
+  sessionId?: string;
   userId: string;
   walletAddress: string;
   funderAddress?: string;
@@ -70,6 +71,7 @@ export interface TradingUserSession {
   eligibilityCountry?: string;
   eligibilityRegion?: string;
   eligibilityReason?: string;
+  authenticatedAt?: string;
   createdAt: string;
   expiresAt?: string;
 }

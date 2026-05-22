@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 
 import type { TradingUserSession, UserTradingCredentialStatus } from "../../types/market";
 
@@ -53,10 +53,11 @@ export function createTradingSession({
   eligibilityReason?: string;
 }): TradingUserSession {
   const normalizedWallet = normalizeAddress(walletAddress);
-  const existingRecord = store.get(`wallet:${normalizedWallet.toLowerCase()}`);
   const createdAt = new Date().toISOString();
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
+  const sessionId = randomBytes(16).toString("hex");
   const session: TradingUserSession = {
+    sessionId,
     userId: `wallet:${normalizedWallet.toLowerCase()}`,
     walletAddress: normalizedWallet,
     funderAddress: funderAddress ? normalizeAddress(funderAddress) : undefined,
@@ -71,13 +72,13 @@ export function createTradingSession({
     eligibilityCountry,
     eligibilityRegion,
     eligibilityReason,
+    authenticatedAt: createdAt,
     createdAt,
     expiresAt,
   };
 
-  store.set(session.userId, {
+  store.set(getSessionStoreKey(session), {
     session,
-    credentials: existingRecord?.credentials,
   });
 
   return session;
@@ -88,14 +89,14 @@ export function getTradingSession(userId: string | undefined): TradingSessionRec
     return undefined;
   }
 
-  const record = store.get(userId);
+  const record = store.get(userId) ?? [...store.values()].find((candidate) => candidate.session.userId === userId);
 
   if (!record) {
     return undefined;
   }
 
   if (record.session.expiresAt && Date.parse(record.session.expiresAt) <= Date.now()) {
-    store.delete(userId);
+    store.delete(getSessionStoreKey(record.session));
     return undefined;
   }
 
@@ -109,11 +110,15 @@ export function getTradingSessionFromCookie(cookieHeader: string | null): Tradin
     return undefined;
   }
 
-  const existingRecord = getTradingSession(cookie.userId);
+  const existingRecord = store.get(getSessionStoreKey(cookie.session));
 
   if (existingRecord) {
     if (!existingRecord.credentials) {
-      const credentials = parseTradingCredentialsCookie(cookieHeader, existingRecord.session.userId);
+      const credentials = parseTradingCredentialsCookie(
+        cookieHeader,
+        existingRecord.session.userId,
+        existingRecord.session.sessionId,
+      );
 
       if (credentials) {
         existingRecord.credentials = credentials;
@@ -129,16 +134,16 @@ export function getTradingSessionFromCookie(cookieHeader: string | null): Tradin
 
   const record = {
     session: cookie.session,
-    credentials: parseTradingCredentialsCookie(cookieHeader, cookie.userId),
+    credentials: parseTradingCredentialsCookie(cookieHeader, cookie.userId, cookie.session.sessionId),
   };
-  store.set(cookie.userId, record);
+  store.set(getSessionStoreKey(cookie.session), record);
 
   return record;
 }
 
 export function updateTradingSession(session: TradingUserSession): TradingUserSession {
-  const existing = store.get(session.userId);
-  store.set(session.userId, {
+  const existing = store.get(getSessionStoreKey(session));
+  store.set(getSessionStoreKey(session), {
     session,
     credentials: existing?.credentials,
   });
@@ -149,8 +154,9 @@ export function updateTradingSession(session: TradingUserSession): TradingUserSe
 export function setTradingCredentials(
   userId: string,
   credentials: Omit<StoredUserTradingCredentials, "derivedAt"> & { derivedAt?: string },
+  sessionId?: string,
 ): UserTradingCredentialStatus {
-  const record = getTradingSession(userId);
+  const record = sessionId ? store.get(`${userId}:${sessionId}`) : getTradingSession(userId);
 
   if (!record) {
     throw new Error("Trading session not found.");
@@ -161,23 +167,26 @@ export function setTradingCredentials(
     derivedAt: credentials.derivedAt ?? new Date().toISOString(),
   };
 
-  store.set(userId, {
+  store.set(getSessionStoreKey(record.session), {
     ...record,
     credentials: storedCredentials,
   });
 
-  return getTradingCredentialStatus(userId);
+  return getTradingCredentialStatus(userId, record.session.sessionId);
 }
 
 export function createTradingCredentialsCookie({
   userId,
+  sessionId,
   credentials,
 }: {
   userId: string;
+  sessionId: string;
   credentials: StoredUserTradingCredentials;
 }): string {
   const payload = encryptCookiePayload({
     userId,
+    sessionId,
     credentials,
   });
 
@@ -190,8 +199,8 @@ export function createTradingCredentialsCookie({
   ].join("; ");
 }
 
-export function getTradingCredentialStatus(userId: string | undefined): UserTradingCredentialStatus {
-  const record = getTradingSession(userId);
+export function getTradingCredentialStatus(userId: string | undefined, sessionId?: string): UserTradingCredentialStatus {
+  const record = userId && sessionId ? store.get(`${userId}:${sessionId}`) : getTradingSession(userId);
 
   if (!record?.credentials) {
     return {
@@ -209,7 +218,11 @@ export function getTradingCredentialStatus(userId: string | undefined): UserTrad
 
 export function clearTradingSession(userId: string | undefined) {
   if (userId) {
-    store.delete(userId);
+    for (const [key, record] of store.entries()) {
+      if (record.session.userId === userId) {
+        store.delete(key);
+      }
+    }
   }
 }
 
@@ -231,7 +244,7 @@ export function parseTradingSessionCookie(
 
   try {
     const value = decodeURIComponent(cookie.slice(`${SESSION_COOKIE_NAME}=`.length));
-    const payload = JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as { session?: TradingUserSession };
+    const payload = verifySignedPayload(value) as { session?: TradingUserSession };
     const session = payload.session;
 
     if (!isValidSessionPayload(session)) {
@@ -249,7 +262,7 @@ export function parseTradingSessionCookie(
 
 export function createTradingSessionCookie(session: TradingUserSession): string {
   const maxAge = Math.max(0, Math.floor((Date.parse(session.expiresAt ?? session.createdAt) - Date.now()) / 1000));
-  const payload = Buffer.from(JSON.stringify({ session }), "utf8").toString("base64url");
+  const payload = signCookiePayload({ session });
 
   return [
     `${SESSION_COOKIE_NAME}=${encodeURIComponent(payload)}`,
@@ -271,6 +284,7 @@ export function clearTradingCredentialsCookie(): string {
 function parseTradingCredentialsCookie(
   cookieHeader: string | null,
   expectedUserId: string,
+  expectedSessionId: string | undefined,
 ): StoredUserTradingCredentials | undefined {
   const value = getCookieValue(cookieHeader, CREDENTIAL_COOKIE_NAME);
 
@@ -279,9 +293,13 @@ function parseTradingCredentialsCookie(
   }
 
   try {
-    const payload = decryptCookiePayload(value) as { userId?: unknown; credentials?: unknown };
+    const payload = decryptCookiePayload(value) as { userId?: unknown; sessionId?: unknown; credentials?: unknown };
 
-    if (payload.userId !== expectedUserId || !isValidCredentialPayload(payload.credentials)) {
+    if (
+      payload.userId !== expectedUserId ||
+      payload.sessionId !== expectedSessionId ||
+      !isValidCredentialPayload(payload.credentials)
+    ) {
       return undefined;
     }
 
@@ -330,6 +348,10 @@ function getCookieEncryptionKey() {
   return createHash("sha256").update(secret).digest();
 }
 
+function getCookieSigningKey() {
+  return getCookieEncryptionKey();
+}
+
 function isValidSessionPayload(value: unknown): value is TradingUserSession {
   if (!value || typeof value !== "object") {
     return false;
@@ -340,11 +362,44 @@ function isValidSessionPayload(value: unknown): value is TradingUserSession {
   return (
     typeof session.userId === "string" &&
     session.userId.startsWith("wallet:") &&
+    typeof session.sessionId === "string" &&
+    /^[a-f0-9]{32}$/.test(session.sessionId) &&
     typeof session.walletAddress === "string" &&
     /^0x[a-fA-F0-9]{40}$/.test(session.walletAddress) &&
+    session.userId === `wallet:${session.walletAddress.toLowerCase()}` &&
     typeof session.signatureType === "number" &&
+    typeof session.authenticatedAt === "string" &&
     typeof session.createdAt === "string"
   );
+}
+
+function getSessionStoreKey(session: TradingUserSession) {
+  return `${session.userId}:${session.sessionId}`;
+}
+
+function signCookiePayload(payload: unknown) {
+  const body = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+  const signature = createHmac("sha256", getCookieSigningKey()).update(body).digest("base64url");
+
+  return `${body}.${signature}`;
+}
+
+function verifySignedPayload(value: string): unknown {
+  const [body, signature] = value.split(".");
+
+  if (!body || !signature) {
+    throw new Error("Invalid signed cookie payload.");
+  }
+
+  const expected = createHmac("sha256", getCookieSigningKey()).update(body).digest("base64url");
+  const actualBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expected);
+
+  if (actualBuffer.length !== expectedBuffer.length || !timingSafeEqual(actualBuffer, expectedBuffer)) {
+    throw new Error("Invalid signed cookie signature.");
+  }
+
+  return JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
 }
 
 function isValidCredentialPayload(value: unknown): value is StoredUserTradingCredentials {

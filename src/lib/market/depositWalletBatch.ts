@@ -49,6 +49,18 @@ const ERC1155_ABI = [
     outputs: [],
   },
 ] as const;
+const DEPOSIT_WALLET_SESSION_ABI = [
+  {
+    name: "authorizeSessionSigner",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "sessionSigner", type: "address" },
+      { name: "validUntil", type: "uint256" },
+    ],
+    outputs: [],
+  },
+] as const;
 
 export function buildTradingApprovalBatch({
   chainId,
@@ -59,6 +71,8 @@ export function buildTradingApprovalBatch({
   conditionalTokens,
   exchange,
   negRiskExchange,
+  sessionSignerAddress,
+  sessionSignerValidUntil,
 }: {
   chainId: number;
   walletAddress: string;
@@ -68,6 +82,8 @@ export function buildTradingApprovalBatch({
   conditionalTokens: string;
   exchange: string;
   negRiskExchange: string;
+  sessionSignerAddress?: string;
+  sessionSignerValidUntil?: string;
 }): DepositWalletBatchSignablePayload {
   const calls = [
     createErc20ApproveCall({
@@ -91,6 +107,16 @@ export function buildTradingApprovalBatch({
       operatorAddress: negRiskExchange,
     }),
   ];
+
+  if (sessionSignerAddress && sessionSignerValidUntil) {
+    calls.push(
+      createAuthorizeSessionSignerCall({
+        walletAddress,
+        sessionSignerAddress,
+        validUntil: sessionSignerValidUntil,
+      }),
+    );
+  }
 
   return {
     walletAddress,
@@ -123,6 +149,26 @@ export function buildTradingApprovalBatch({
       deadline,
       calls,
     },
+  };
+}
+
+function createAuthorizeSessionSignerCall({
+  walletAddress,
+  sessionSignerAddress,
+  validUntil,
+}: {
+  walletAddress: string;
+  sessionSignerAddress: string;
+  validUntil: string;
+}): DepositWalletCall {
+  return {
+    target: walletAddress,
+    value: "0",
+    data: encodeFunctionData({
+      abi: DEPOSIT_WALLET_SESSION_ABI,
+      functionName: "authorizeSessionSigner",
+      args: [sessionSignerAddress as `0x${string}`, BigInt(validUntil)],
+    }),
   };
 }
 

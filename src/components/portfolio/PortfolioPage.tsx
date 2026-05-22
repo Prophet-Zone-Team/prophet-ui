@@ -164,7 +164,7 @@ export function PortfolioPage({ snapshots, dataStatus }: PortfolioPageProps) {
             <h1 id="portfolio-title">Portfolio</h1>
             <p>Track your World Cup market exposure, PnL, positions, and order activity from the connected account.</p>
             <div className="portfolio-actions">
-              <PlaceBidButton className="bid-button" teamName={selectedSnapshot?.team.name}>
+              <PlaceBidButton className="bid-button" snapshot={selectedSnapshot} teamName={selectedSnapshot?.team.name}>
                 Place Bid
                 <ArrowIcon />
               </PlaceBidButton>
@@ -386,8 +386,8 @@ function OpenPositionsPanel({
                 <span>{formatMoney(position.currentValue)}</span>
                 <span className={position.cashPnl < 0 ? "down" : "up"}>{formatSignedMoney(position.cashPnl)}</span>
                 <div className="portfolio-position-actions">
-                  <PlaceBidButton className="portfolio-action-link" teamName={snapshot?.team.name}>Add</PlaceBidButton>
-                  <PlaceBidButton className="portfolio-action-link" teamName={snapshot?.team.name}>Manage</PlaceBidButton>
+                  <PlaceBidButton className="portfolio-action-link" snapshot={snapshot} teamName={snapshot?.team.name}>Add</PlaceBidButton>
+                  <PlaceBidButton className="portfolio-action-link" snapshot={snapshot} teamName={snapshot?.team.name}>Manage</PlaceBidButton>
                 </div>
               </div>
             );
@@ -507,7 +507,7 @@ function AdjustPositionPanel({
             <PanelMetric label="Est. Shares" value={formatShareSize(estimatedShares)} />
             <PanelMetric label="Est. Payout" value={`${formatShareSize(estimatedShares)} USDC`} />
           </div>
-          <PlaceBidButton className="bid-button full" teamName={snapshot.team.name}>
+          <PlaceBidButton className="bid-button full" snapshot={snapshot} teamName={snapshot.team.name}>
             Review Bid
           </PlaceBidButton>
         </>

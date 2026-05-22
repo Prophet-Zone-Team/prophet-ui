@@ -105,7 +105,7 @@ export function TeamsPage({
 
           <div className="footnote">
             <span>Squad values, honors, and key stars are curated metadata with source timestamps.</span>
-            <span>Quick Bid is a placeholder while the embedded real order flow is being redesigned.</span>
+            <span>Quick Bid uses the user&apos;s own Polymarket deposit wallet and a locally approved session signer.</span>
           </div>
         </section>
       </div>
@@ -219,7 +219,7 @@ function TeamDirectoryItem({ row }: { row: TeamDirectoryRow }) {
         <Link className="market-detail-button" href={`/team/${team.id}`}>
           View Detail
         </Link>
-        <PlaceBidButton className="market-quick-bid secondary" teamName={team.name}>
+        <PlaceBidButton className="market-quick-bid secondary" snapshot={row.snapshot} teamName={team.name}>
           Quick Bid
         </PlaceBidButton>
       </div>

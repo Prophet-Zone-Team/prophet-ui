@@ -29,6 +29,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Trading session not found." }, { status: 401 });
   }
 
+  if (!record.session.sessionId) {
+    return NextResponse.json(
+      { error: "Trading session must be reconnected before deriving credentials." },
+      { status: 401 },
+    );
+  }
+
   return NextResponse.json({
     challenge: await getFreshClobAuthTypedData({
       walletAddress: record.session.walletAddress,
@@ -41,6 +48,13 @@ export async function POST(request: Request) {
 
   if (!record) {
     return NextResponse.json({ error: "Trading session not found." }, { status: 401 });
+  }
+
+  if (!record.session.sessionId) {
+    return NextResponse.json(
+      { error: "Trading session must be reconnected before deriving credentials." },
+      { status: 401 },
+    );
   }
 
   const payload = (await request.json()) as CredentialPayload;
@@ -98,7 +112,7 @@ export async function POST(request: Request) {
       timestamp: payload.timestamp ?? "",
       nonce: payload.nonce,
     });
-    const status = setTradingCredentials(record.session.userId, credentials);
+    const status = setTradingCredentials(record.session.userId, credentials, record.session.sessionId);
     const storedCredentials = {
       ...credentials,
       derivedAt: status.derivedAt ?? new Date().toISOString(),
@@ -121,6 +135,7 @@ export async function POST(request: Request) {
         headers: {
           "Set-Cookie": createTradingCredentialsCookie({
             userId: record.session.userId,
+            sessionId: record.session.sessionId,
             credentials: storedCredentials,
           }),
         },

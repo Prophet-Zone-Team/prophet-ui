@@ -27,7 +27,7 @@ export async function buildUserTradingReadiness({
   fundingRequirement?: OrderFundingRequirement;
 }): Promise<UserTradingReadiness> {
   const refreshedRecord = record ? await refreshDepositWalletSession(record) : undefined;
-  const credentials = getTradingCredentialStatus(record?.session.userId);
+  const credentials = getTradingCredentialStatus(record?.session.userId, record?.session.sessionId);
   const balances = refreshedRecord?.credentials
     ? await fetchUserBalanceSnapshot({
         session: refreshedRecord.session,

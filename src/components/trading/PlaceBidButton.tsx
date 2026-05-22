@@ -1,44 +1,258 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import { buildBidOrderPreview, type BidOrderPreview } from "../../lib/market/polymarketOrder";
+import { calculateReferencePrice } from "../../lib/market/orderMath";
+import { attachUserOrderSignature, buildUserOrderSignablePayload } from "../../lib/market/userOrder";
+import type { TeamMarketSnapshot, TradingUserSession, UserOrderPreview, UserTradingReadiness } from "../../types/market";
+import {
+  fetchJson,
+  getQuickBidSetupIssue,
+} from "./quickBidAccountSetup";
+import {
+  formatQuickBidAmount,
+  readActiveQuickBidWalletAddress,
+  readQuickBidAmount,
+  subscribeQuickBidAmountChange,
+  writeQuickBidAmount,
+} from "./quickBidAmount";
+import { getOrCreateQuickBidSessionSigner, signQuickBidOrder } from "./quickBidSessionSigner";
+import { loadTradingSession } from "./tradingWalletSession";
+
+type QuickBidStatus = "idle" | "checking" | "submitting" | "success" | "error";
+
+interface TradingConfig {
+  builderCode?: string;
+  builderTakerFeeRate?: number;
+}
 
 interface PlaceBidButtonProps {
   children?: ReactNode;
   className?: string;
+  snapshot?: TeamMarketSnapshot;
   teamName?: string;
 }
 
-export function PlaceBidButton({ children = "Quick Bid", className = "market-quick-bid", teamName }: PlaceBidButtonProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export function PlaceBidButton({
+  children = "Quick Bid",
+  className = "market-quick-bid",
+  snapshot,
+}: PlaceBidButtonProps) {
+  const [amount, setAmount] = useState(() => readQuickBidAmount());
+  const [status, setStatus] = useState<QuickBidStatus>("idle");
+  const [message, setMessage] = useState<string>();
+  const [session, setSession] = useState<TradingUserSession>();
+  const shouldShowAmount = isQuickBidLabel(children);
+  const buttonText = useMemo(() => {
+    if (status === "checking") {
+      return "Checking";
+    }
+
+    if (status === "submitting") {
+      return "Submitting";
+    }
+
+    return shouldShowAmount ? `Quick Bid(${formatQuickBidAmount(amount)})` : children;
+  }, [amount, children, shouldShowAmount, status]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeQuickBidAmountChange(() => {
+      setAmount(readQuickBidAmount());
+    });
+
+    setAmount(readQuickBidAmount());
+
+    return unsubscribe;
+  }, []);
+
+  async function handleClick() {
+    if (!snapshot) {
+      window.location.assign("/markets");
+      return;
+    }
+
+    await runQuickBid();
+  }
+
+  async function runQuickBid() {
+    if (!snapshot || status === "checking" || status === "submitting") {
+      return;
+    }
+
+    const activeWalletAddress = readActiveQuickBidWalletAddress();
+    const numericAmount = Number(readQuickBidAmount(activeWalletAddress));
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      showResult("error", "Set a positive Quick Bid amount from the account menu first.");
+      return;
+    }
+
+    writeQuickBidAmount(String(numericAmount), activeWalletAddress);
+    setStatus("checking");
+    setMessage(`Checking Quick Bid readiness for ${snapshot.team.name}.`);
+
+    try {
+      const activeSession = await loadTradingSession();
+      setSession(activeSession);
+
+      const setupIssue = await getQuickBidSetupIssue(activeSession);
+
+      if (setupIssue) {
+        throw new Error(setupIssue);
+      }
+
+      if (!activeSession?.funderAddress) {
+        throw new Error("Trading session is missing a Polymarket deposit wallet.");
+      }
+
+      const preview = buildQuickBidPreview(snapshot, numericAmount);
+
+      if (!preview.canSubmitRealOrder) {
+        throw new Error(preview.disabledReason ?? "This market is not available for real orders.");
+      }
+
+      const [config, readiness] = await Promise.all([
+        fetchJson<TradingConfig>("/api/trading/config"),
+        loadReadinessForPreview(preview),
+      ]);
+      const readinessError = getReadinessError(readiness);
+
+      if (readinessError) {
+        throw new Error(readinessError);
+      }
+
+      const signer = getOrCreateQuickBidSessionSigner(activeSession.walletAddress);
+      const signable = buildUserOrderSignablePayload({
+        preview,
+        walletAddress: activeSession.walletAddress,
+        funderAddress: activeSession.funderAddress,
+        orderType: "FAK",
+        builderCode: config.builderCode,
+      });
+      const signature = await signQuickBidOrder(signable, signer);
+      const signedOrder = attachUserOrderSignature({
+        signable,
+        signature,
+      });
+
+      setStatus("submitting");
+      setMessage(`Submitting ${formatQuickBidAmount(String(numericAmount))} USDC Quick Bid for ${snapshot.team.name} YES.`);
+
+      const payload = await fetchJson<{ order?: { id?: string }; response?: unknown }>("/api/trading/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...signedOrder,
+          preview: buildUserOrderPreview(snapshot, preview),
+        }),
+      });
+
+      showResult(
+        "success",
+        `Quick Bid submitted for ${snapshot.team.name}${payload.order?.id ? ` / ${payload.order.id}` : ""}.`,
+      );
+    } catch (error) {
+      showResult("error", error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  function showResult(nextStatus: "success" | "error", nextMessage: string) {
+    setStatus(nextStatus);
+    setMessage(nextMessage);
+
+    window.setTimeout(() => {
+      setStatus("idle");
+      setMessage(undefined);
+    }, nextStatus === "success" ? 4200 : 6400);
+  }
 
   return (
     <>
       <button
         type="button"
         className={className}
-        aria-haspopup="dialog"
-        aria-expanded={isModalOpen}
-        onClick={() => setIsModalOpen(true)}
+        disabled={status === "checking" || status === "submitting"}
+        onClick={() => void handleClick()}
       >
-        {children}
+        {buttonText}
       </button>
-
-      {isModalOpen ? (
-        <div className="bid-tbd-backdrop" role="dialog" aria-modal="true" aria-labelledby="bid-tbd-title">
-          <div className="bid-tbd-dialog">
-            <p>Trading module</p>
-            <h2 id="bid-tbd-title">Bid flow TBD</h2>
-            <span>
-              {teamName ? `${teamName} real order flow is not enabled here yet.` : "The embedded real order flow is not enabled yet."}
-              {" "}Orders will require the user&apos;s own connected account, eligibility checks, balance checks, and explicit confirmation.
-            </span>
-            <button type="button" onClick={() => setIsModalOpen(false)}>
-              Got it
-            </button>
-          </div>
+      {message ? (
+        <div className={status === "error" ? "quick-bid-toast error" : status === "success" ? "quick-bid-toast success" : "quick-bid-toast"}>
+          <span>{status === "error" ? "Quick Bid blocked" : status === "success" ? "Quick Bid submitted" : "Quick Bid"}</span>
+          <strong>{message}</strong>
+          {session ? <small>{session.walletAddress.slice(0, 6)}...{session.walletAddress.slice(-4)}</small> : null}
         </div>
       ) : null}
     </>
   );
+}
+
+async function loadReadinessForPreview(preview: BidOrderPreview) {
+  const query = new URLSearchParams({
+    tradeSide: "buy",
+    cost: String(preview.estimatedCost),
+    size: String(preview.shareSize),
+    totalCost: String(preview.estimatedTotalCost),
+    estimatedTakerFee: String(preview.estimatedTakerFee),
+  });
+
+  if (preview.tokenId) {
+    query.set("tokenId", preview.tokenId);
+  }
+
+  return fetchJson<UserTradingReadiness>(`/api/trading/readiness?${query.toString()}`);
+}
+
+function buildQuickBidPreview(snapshot: TeamMarketSnapshot, amount: number) {
+  return buildBidOrderPreview({
+    snapshot,
+    outcomeSide: "yes",
+    tradeSide: "buy",
+    amount,
+    limitPrice: snapshot.market.polymarket?.tokens.yes?.price ?? calculateReferencePrice(snapshot.market.probability, "yes"),
+    orderType: "FAK",
+  });
+}
+
+function buildUserOrderPreview(snapshot: TeamMarketSnapshot, preview: BidOrderPreview): UserOrderPreview {
+  if (!preview.tokenId) {
+    throw new Error("A Polymarket token ID is required before submitting a real order.");
+  }
+
+  return {
+    marketId: snapshot.market.polymarket?.marketId ?? snapshot.market.polymarket?.conditionId,
+    tokenId: preview.tokenId,
+    teamId: snapshot.team.id,
+    outcome: preview.outcomeSide,
+    side: preview.tradeSide,
+    orderType: "FAK",
+    limitPrice: preview.sidePrice,
+    size: preview.shareSize,
+    estimatedCost: preview.estimatedCost,
+    estimatedTakerFee: preview.estimatedTakerFee,
+    estimatedTotalCost: preview.estimatedTotalCost,
+    potentialOutcome: preview.potentialOutcome,
+    tickSize: preview.tickSize ?? "0.01",
+    negRisk: preview.negRisk,
+    stale: false,
+    warnings: preview.disabledReason ? [preview.disabledReason] : [],
+  };
+}
+
+function getReadinessError(readiness: UserTradingReadiness) {
+  const failed = readiness.checks.find((check) => check.status === "fail");
+
+  if (!failed) {
+    return undefined;
+  }
+
+  return `${failed.label}: ${failed.detail}`;
+}
+
+function isQuickBidLabel(children: ReactNode) {
+  return typeof children === "string" && children.trim().toLowerCase() === "quick bid";
 }

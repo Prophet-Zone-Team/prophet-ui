@@ -135,7 +135,7 @@ function MarketListItem({
       </div>
 
       <div className="market-actions">
-        <PlaceBidButton className="market-quick-bid" teamName={team.name}>
+        <PlaceBidButton className="market-quick-bid" snapshot={snapshot} teamName={team.name}>
           Quick Bid
         </PlaceBidButton>
         <Link className="market-detail-button" href={detailHref}>
