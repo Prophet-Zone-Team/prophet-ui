@@ -13,7 +13,6 @@ import {
 } from "../../lib/market/analyzer";
 import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "../../types/market";
 import { PlaceBidButton } from "../trading/PlaceBidButton";
-import { WalletMenuButton } from "../trading/WalletMenuButton";
 import { TeamFlag } from "../teams/TeamFlag";
 import { formatChange, formatProbability, formatRelativeChange, formatVolume } from "./market-formatters";
 import { PixelBlast } from "./PixelBlast";
@@ -34,49 +33,27 @@ export function HomePage({ snapshots, newsEvents, dataStatus, universe }: HomePa
   const signalTeamMap = new Map(sortedTeams.map((snapshot) => [snapshot.team.id, snapshot]));
 
   return (
-    <main className="prophet-html">
-      <div className="page">
-        <Topbar />
-        <Hero
-          teams={sortedTeams}
-          hotTeams={hotTeams}
-          signals={marketSignals}
-          signalTeamMap={signalTeamMap}
-          dataStatus={dataStatus}
-          universe={universe}
-        />
-        <Dashboard
-          teams={sortedTeams}
-          signals={marketSignals}
-          signalTeamMap={signalTeamMap}
-          topMovers={topMovers}
-          biggestLosers={biggestLosers}
-          dataStatus={dataStatus}
-        />
-        <MatchesSection />
-        <InfoGrid />
-        <Footer />
-      </div>
-    </main>
-  );
-}
-
-function Topbar() {
-  return (
-    <header className="topbar">
-      <Link className="brand" href="/" aria-label="Prophet home">
-        <span className="mark" aria-hidden="true" />
-        Prophet
-      </Link>
-      <nav aria-label="Primary navigation">
-        <Link href="/markets">Markets</Link>
-        <Link href="/matches">Matches</Link>
-        <Link href="/teams">Teams</Link>
-        <Link href="/search">Search</Link>
-        <Link href="/portfolio">Portfolio</Link>
-      </nav>
-      <WalletMenuButton />
-    </header>
+    <>
+      <Hero
+        teams={sortedTeams}
+        hotTeams={hotTeams}
+        signals={marketSignals}
+        signalTeamMap={signalTeamMap}
+        dataStatus={dataStatus}
+        universe={universe}
+      />
+      <Dashboard
+        teams={sortedTeams}
+        signals={marketSignals}
+        signalTeamMap={signalTeamMap}
+        topMovers={topMovers}
+        biggestLosers={biggestLosers}
+        dataStatus={dataStatus}
+      />
+      <MatchesSection />
+      <InfoGrid />
+      <Footer />
+    </>
   );
 }
 

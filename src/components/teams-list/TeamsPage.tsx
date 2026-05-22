@@ -11,7 +11,6 @@ import type {
 import { formatProbability, formatRelativeChange } from "../home/market-formatters";
 import { TeamFlag } from "../teams/TeamFlag";
 import { PlaceBidButton } from "../trading/PlaceBidButton";
-import { WalletMenuButton } from "../trading/WalletMenuButton";
 
 interface TeamsPageProps {
   snapshots: TeamMarketSnapshot[];
@@ -54,11 +53,8 @@ export function TeamsPage({
     .sort((a, b) => getFormScore(b.recentMatches) - getFormScore(a.recentMatches))[0];
 
   return (
-    <main className="prophet-html">
-      <div className="page teams-pro-page">
-        <TeamsTopbar />
-
-        <section className="teams-page-hero" aria-labelledby="teams-page-title">
+    <div className="teams-pro-page">
+      <section className="teams-page-hero" aria-labelledby="teams-page-title">
           <div>
             <span className="eyebrow">Team directory</span>
             <h1 id="teams-page-title">World Cup team dossiers.</h1>
@@ -107,28 +103,8 @@ export function TeamsPage({
             <span>Squad values, honors, and key stars are curated metadata with source timestamps.</span>
             <span>Quick Bid uses the user&apos;s own Polymarket deposit wallet and a locally approved session signer.</span>
           </div>
-        </section>
-      </div>
-    </main>
-  );
-}
-
-function TeamsTopbar() {
-  return (
-    <header className="topbar">
-      <Link className="brand" href="/" aria-label="Prophet home">
-        <span className="mark" aria-hidden="true" />
-        Prophet
-      </Link>
-      <nav aria-label="Primary navigation">
-        <Link href="/markets">Markets</Link>
-        <Link href="/matches">Matches</Link>
-        <Link href="/teams" aria-current="page">Teams</Link>
-        <Link href="/search">Search</Link>
-        <Link href="/portfolio">Portfolio</Link>
-      </nav>
-      <WalletMenuButton />
-    </header>
+      </section>
+    </div>
   );
 }
 

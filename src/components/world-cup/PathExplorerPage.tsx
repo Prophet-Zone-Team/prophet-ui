@@ -7,8 +7,6 @@ import { WORLD_CUP_2026_GROUPS, WORLD_CUP_2026_GROUP_ORDER, getWorldCupGroupForT
 import { calculateWorldCupPath } from "../../lib/world-cup-path/calculatePath";
 import type { FinishType, PathMode, PathResult } from "../../types/market";
 import { TeamFlag } from "../teams/TeamFlag";
-import { WalletMenuButton } from "../trading/WalletMenuButton";
-
 const FINISH_OPTIONS: Array<{ value: FinishType; label: string }> = [
   { value: "GROUP_WINNER", label: "Group winner" },
   { value: "RUNNER_UP", label: "Runner-up" },
@@ -36,10 +34,8 @@ export function PathExplorerPage({ initialTeamId = "brazil" }: { initialTeamId?:
   const groupTeams = WORLD_CUP_2026_GROUPS[activeGroup as keyof typeof WORLD_CUP_2026_GROUPS];
 
   return (
-    <main className="prophet-html">
-      <div className="page">
-        <PathTopbar />
-        <section className="panel path-hero">
+    <>
+      <section className="panel path-hero">
           <span className="eyebrow">Road to Final</span>
           <h1>Explore the official World Cup knockout path.</h1>
           <p>Choose a team and assumed group finish. The engine expands official Round of 32 slots and FIFA Annexe C third-place allocation options.</p>
@@ -153,9 +149,8 @@ export function PathExplorerPage({ initialTeamId = "brazil" }: { initialTeamId?:
           <p>
             {result.teamName} as {result.seed} follows match path {result.pathMatchIds.map((id) => `M${id}`).join(" -> ")}.
           </p>
-        </section> : null}
-      </div>
-    </main>
+      </section> : null}
+    </>
   );
 }
 
@@ -192,24 +187,6 @@ function ScenarioResolutionCard({ result }: { result: PathResult }) {
         ))}
       </div>
     </section>
-  );
-}
-
-function PathTopbar() {
-  return (
-    <header className="topbar">
-      <Link className="brand" href="/" aria-label="Prophet home">
-        <span className="mark" aria-hidden="true" />
-        Prophet
-      </Link>
-      <nav aria-label="Primary navigation">
-        <Link href="/matches">Matches</Link>
-        <Link href="/teams">Teams</Link>
-        <Link href="/search">Search</Link>
-        <Link href="/world-cup/path-explorer" aria-current="page">Path</Link>
-      </nav>
-      <WalletMenuButton />
-    </header>
   );
 }
 

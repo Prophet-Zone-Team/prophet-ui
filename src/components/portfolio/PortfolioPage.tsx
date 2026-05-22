@@ -27,7 +27,6 @@ import {
   loadTradingSession,
 } from "../trading/tradingWalletSession";
 import { PlaceBidButton } from "../trading/PlaceBidButton";
-import { WalletMenuButton } from "../trading/WalletMenuButton";
 import { TeamFlag } from "../teams/TeamFlag";
 import { formatChange, formatProbability, formatVolume } from "../home/market-formatters";
 
@@ -154,11 +153,8 @@ export function PortfolioPage({ snapshots, dataStatus }: PortfolioPageProps) {
   const estimatedShares = Number.isFinite(numericAmount) && referencePrice > 0 ? numericAmount / referencePrice : 0;
 
   return (
-    <main className="prophet-html">
-      <div className="page portfolio-page">
-        <PortfolioTopbar />
-
-        <section className="portfolio-hero" aria-labelledby="portfolio-title">
+    <div className="portfolio-page">
+      <section className="portfolio-hero" aria-labelledby="portfolio-title">
           <div>
             <span className="eyebrow">Portfolio</span>
             <h1 id="portfolio-title">Portfolio</h1>
@@ -224,28 +220,8 @@ export function PortfolioPage({ snapshots, dataStatus }: PortfolioPageProps) {
               {status === "loading" ? "Connecting..." : "Connect Wallet"}
             </button>
           </section>
-        ) : null}
-      </div>
-    </main>
-  );
-}
-
-function PortfolioTopbar() {
-  return (
-    <header className="topbar">
-      <Link className="brand" href="/" aria-label="Prophet home">
-        <span className="mark" aria-hidden="true" />
-        Prophet
-      </Link>
-      <nav aria-label="Primary navigation">
-        <Link href="/markets">Markets</Link>
-        <Link href="/matches">Matches</Link>
-        <Link href="/teams">Teams</Link>
-        <Link href="/search">Search</Link>
-        <Link href="/portfolio" aria-current="page">Portfolio</Link>
-      </nav>
-      <WalletMenuButton />
-    </header>
+      ) : null}
+    </div>
   );
 }
 

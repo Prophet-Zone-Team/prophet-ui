@@ -9,3 +9,4 @@ tsconfig.tsbuildinfo
 .wrangler/
 .dev.vars
 cloudflare-env.d.ts
+.env

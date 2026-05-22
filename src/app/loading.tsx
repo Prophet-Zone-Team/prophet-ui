@@ -1,22 +1,7 @@
 export default function Loading() {
   return (
-    <main className="prophet-html">
-      <div className="page">
-        <header className="topbar">
-          <div className="brand" aria-label="Prophet loading">
-            <span className="mark" aria-hidden="true" />
-            Prophet
-          </div>
-          <nav aria-label="Loading navigation">
-            <span>Markets</span>
-            <span>Matches</span>
-            <span>Teams</span>
-            <span>Portfolio</span>
-          </nav>
-          <div className="wallet-connect-button">Connect</div>
-        </header>
-
-        <section className="hero loading-hero" aria-label="Loading market data">
+    <>
+      <section className="hero loading-hero" aria-label="Loading market data">
           <div className="pixel-blast-container pixel-blast-fallback" aria-hidden="true" />
           <div className="hero-copy">
             <span className="eyebrow">Prediction market terminal</span>
@@ -77,8 +62,7 @@ export default function Loading() {
               <div className="move-card loading-card" />
             </div>
           </aside>
-        </section>
-      </div>
-    </main>
+      </section>
+    </>
   );
 }

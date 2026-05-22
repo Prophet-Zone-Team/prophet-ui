@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import type { SearchResult } from "../../types/market";
-import { WalletMenuButton } from "../trading/WalletMenuButton";
 
 export function SearchPage({ initialQuery }: { initialQuery: string }) {
   const [query, setQuery] = useState(initialQuery);
@@ -38,10 +37,8 @@ export function SearchPage({ initialQuery }: { initialQuery: string }) {
   }, [query]);
 
   return (
-    <main className="prophet-html">
-      <div className="page">
-        <SearchTopbar />
-        <section className="panel search-page-panel">
+    <>
+      <section className="panel search-page-panel">
           <span className="eyebrow">Global search</span>
           <h1>Find teams, matches, markets, news, and paths.</h1>
           <label className="global-search-input">
@@ -60,27 +57,7 @@ export function SearchPage({ initialQuery }: { initialQuery: string }) {
               {result.subtitle ? <small>{result.subtitle}</small> : null}
             </Link>
           ))}
-        </section>
-      </div>
-    </main>
-  );
-}
-
-function SearchTopbar() {
-  return (
-    <header className="topbar">
-      <Link className="brand" href="/" aria-label="Prophet home">
-        <span className="mark" aria-hidden="true" />
-        Prophet
-      </Link>
-      <nav aria-label="Primary navigation">
-        <Link href="/markets">Markets</Link>
-        <Link href="/matches">Matches</Link>
-        <Link href="/teams">Teams</Link>
-        <Link href="/news">News</Link>
-        <Link href="/search" aria-current="page">Search</Link>
-      </nav>
-      <WalletMenuButton />
-    </header>
+      </section>
+    </>
   );
 }

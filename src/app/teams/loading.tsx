@@ -1,22 +1,7 @@
 export default function TeamsLoading() {
   return (
-    <main className="prophet-html">
-      <div className="page">
-        <header className="topbar">
-          <div className="brand" aria-label="Prophet loading">
-            <span className="mark" aria-hidden="true" />
-            Prophet
-          </div>
-          <nav aria-label="Loading navigation">
-            <span>Markets</span>
-            <span>Matches</span>
-            <span>Teams</span>
-            <span>Portfolio</span>
-          </nav>
-          <div className="wallet-connect-button">Connect</div>
-        </header>
-
-        <section className="teams-page-hero" aria-label="Loading team directory">
+    <>
+      <section className="teams-page-hero" aria-label="Loading team directory">
           <div>
             <span className="eyebrow">Team directory</span>
             <div className="loading-headline" />
@@ -46,8 +31,7 @@ export default function TeamsLoading() {
               <div key={index} className="team-directory-row loading-card" />
             ))}
           </div>
-        </section>
-      </div>
-    </main>
+      </section>
+    </>
   );
 }

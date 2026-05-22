@@ -53,7 +53,6 @@ import {
   formatShortWalletAddress,
   loadTradingSession,
 } from "../trading/tradingWalletSession";
-import { WalletMenuButton } from "../trading/WalletMenuButton";
 
 interface TeamDetailPageProps {
   snapshot: TeamMarketSnapshot;
@@ -146,11 +145,8 @@ export function TeamDetailPage({
   const upcomingFixture = getNextFixture(footballFixtures);
 
   return (
-    <main className="prophet-html">
-      <div className="page team-detail-page">
-        <TeamDetailTopbar />
-
-        <TeamHero
+    <div className="team-detail-page">
+      <TeamHero
           snapshot={snapshot}
           profile={footballProfile}
           metadata={footballMetadata}
@@ -194,28 +190,8 @@ export function TeamDetailPage({
         <div className="team-detail-footnote">
           <span>Source: curated football metadata, API-Football team context, GDELT news, The Odds API, and {getMarketDataSourceLabel(dataStatus.source)} market data.</span>
           <span>All probability, payout, and signal views are analytical context only.</span>
-        </div>
       </div>
-    </main>
-  );
-}
-
-function TeamDetailTopbar() {
-  return (
-    <header className="topbar">
-      <Link className="brand" href="/" aria-label="Prophet home">
-        <span className="mark" aria-hidden="true" />
-        Prophet
-      </Link>
-      <nav aria-label="Primary navigation">
-        <Link href="/markets">Markets</Link>
-        <Link href="/matches">Matches</Link>
-        <Link href="/teams" aria-current="page">Teams</Link>
-        <Link href="/search">Search</Link>
-        <Link href="/portfolio">Portfolio</Link>
-      </nav>
-      <WalletMenuButton />
-    </header>
+    </div>
   );
 }
 

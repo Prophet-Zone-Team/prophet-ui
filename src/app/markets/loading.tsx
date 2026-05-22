@@ -1,22 +1,7 @@
 export default function MarketsLoading() {
   return (
-    <main className="prophet-html">
-      <div className="page">
-        <header className="topbar">
-          <div className="brand" aria-label="Prophet loading">
-            <span className="mark" aria-hidden="true" />
-            Prophet
-          </div>
-          <nav aria-label="Loading navigation">
-            <span>Markets</span>
-            <span>Matches</span>
-            <span>Teams</span>
-            <span>Portfolio</span>
-          </nav>
-          <div className="wallet-connect-button">Connect</div>
-        </header>
-
-        <section className="markets-hero" aria-label="Loading World Cup markets">
+    <>
+      <section className="markets-hero" aria-label="Loading World Cup markets">
           <div>
             <span className="eyebrow">World Cup markets</span>
             <div className="loading-headline" />
@@ -46,8 +31,7 @@ export default function MarketsLoading() {
             <span>Loading market probabilities.</span>
             <span>Loading update time.</span>
           </div>
-        </section>
-      </div>
-    </main>
+      </section>
+    </>
   );
 }

@@ -5,7 +5,6 @@ import { getMarketDataSourceLabel } from "../../data/providers/source";
 import type { TeamMarketSnapshot } from "../../types/market";
 import { TeamFlag } from "../teams/TeamFlag";
 import { PlaceBidButton } from "../trading/PlaceBidButton";
-import { WalletMenuButton } from "../trading/WalletMenuButton";
 import {
   formatProbability,
   formatRelativeChange,
@@ -29,31 +28,42 @@ export function MarketsPage({ snapshots, dataStatus, universe }: MarketsPageProp
   })[0];
 
   return (
-    <main className="prophet-html">
-      <div className="page">
-        <MarketsTopbar />
-
-        <section className="markets-hero" aria-labelledby="markets-title">
+    <>
+      <section className="markets-hero" aria-labelledby="markets-title">
           <div>
             <span className="eyebrow">World Cup markets</span>
             <h1 id="markets-title">All teams, one probability board.</h1>
             <p>
-              Compare every World Cup winner market by probability, movement, volume, and order readiness. Market data is
-              analytical context only.
+              Compare every World Cup winner market by probability, movement,
+              volume, and order readiness. Market data is analytical context
+              only.
             </p>
           </div>
           <div className="markets-summary" aria-label="Markets summary">
             <SummaryMetric label="Teams listed" value={String(teams.length)} />
-            <SummaryMetric label="Total volume" value={formatVolume(totalVolume)} />
+            <SummaryMetric
+              label="Total volume"
+              value={formatVolume(totalVolume)}
+            />
             <SummaryMetric
               label="Largest 24h move"
-              value={topMove ? `${topMove.team.code} ${formatRelativeChange(topMove.market.probability, topMove.market.change24h)}` : "-"}
+              value={
+                topMove
+                  ? `${topMove.team.code} ${formatRelativeChange(topMove.market.probability, topMove.market.change24h)}`
+                  : "-"
+              }
             />
-            <SummaryMetric label="Source" value={getMarketDataSourceLabel(dataStatus.source)} />
+            <SummaryMetric
+              label="Source"
+              value={getMarketDataSourceLabel(dataStatus.source)}
+            />
           </div>
         </section>
 
-        <section className="panel markets-list-panel" aria-label="All World Cup team markets">
+        <section
+          className="panel markets-list-panel"
+          aria-label="All World Cup team markets"
+        >
           <div className="panel-head">
             <h2 className="panel-title">World Cup Winner Probability</h2>
             <span className="live">{getStatusCopy(dataStatus)}</span>
@@ -61,36 +71,23 @@ export function MarketsPage({ snapshots, dataStatus, universe }: MarketsPageProp
 
           <div className="markets-list">
             {teams.map((snapshot, index) => (
-              <MarketListItem key={snapshot.team.id} snapshot={snapshot} rank={index + 1} />
+              <MarketListItem
+                key={snapshot.team.id}
+                snapshot={snapshot}
+                rank={index + 1}
+              />
             ))}
           </div>
 
           <div className="footnote">
-            <span>Probability is implied by market price where provider data is available.</span>
+            <span>
+              Probability is implied by market price where provider data is
+              available.
+            </span>
             <span>Updated {formatUpdatedAt(dataStatus.lastUpdated)}</span>
           </div>
-        </section>
-      </div>
-    </main>
-  );
-}
-
-function MarketsTopbar() {
-  return (
-    <header className="topbar">
-      <Link className="brand" href="/" aria-label="Prophet home">
-        <span className="mark" aria-hidden="true" />
-        Prophet
-      </Link>
-      <nav aria-label="Primary navigation">
-        <Link href="/markets" aria-current="page">Markets</Link>
-        <Link href="/matches">Matches</Link>
-        <Link href="/teams">Teams</Link>
-        <Link href="/search">Search</Link>
-        <Link href="/portfolio">Portfolio</Link>
-      </nav>
-      <WalletMenuButton />
-    </header>
+      </section>
+    </>
   );
 }
 

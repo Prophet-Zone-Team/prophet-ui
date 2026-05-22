@@ -5,8 +5,6 @@ import { getMarketDataSourceLabel } from "../../data/providers/source";
 import type { TeamMarketSnapshot, WorldCupMatch } from "../../types/market";
 import { formatChange, formatProbability } from "../home/market-formatters";
 import { TeamFlag } from "../teams/TeamFlag";
-import { WalletMenuButton } from "../trading/WalletMenuButton";
-
 interface MatchesPageProps {
   matches: WorldCupMatch[];
   snapshots: TeamMarketSnapshot[];
@@ -20,10 +18,8 @@ export function MatchesPage({ matches, snapshots, dataStatus }: MatchesPageProps
   const featured = [...upcoming].sort((a, b) => getMatchMarketHeat(b, snapshots) - getMatchMarketHeat(a, snapshots))[0];
 
   return (
-    <main className="prophet-html">
-      <div className="page">
-        <MatchesTopbar />
-        <section className="matches-page-hero" aria-labelledby="matches-page-title">
+    <>
+      <section className="matches-page-hero" aria-labelledby="matches-page-title">
           <div>
             <span className="eyebrow">World Cup Match Center</span>
             <h1 id="matches-page-title">Fixtures, results, market movement.</h1>
@@ -71,9 +67,8 @@ export function MatchesPage({ matches, snapshots, dataStatus }: MatchesPageProps
             <span>Schedule base: official World Cup bracket configuration.</span>
             <span>Scores, odds, and lineups depend on cached provider coverage.</span>
           </div>
-        </section>
-      </div>
-    </main>
+      </section>
+    </>
   );
 }
 
@@ -152,26 +147,6 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
-  );
-}
-
-function MatchesTopbar() {
-  return (
-    <header className="topbar">
-      <Link className="brand" href="/" aria-label="Prophet home">
-        <span className="mark" aria-hidden="true" />
-        Prophet
-      </Link>
-      <nav aria-label="Primary navigation">
-        <Link href="/markets">Markets</Link>
-        <Link href="/matches" aria-current="page">Matches</Link>
-        <Link href="/teams">Teams</Link>
-        <Link href="/search">Search</Link>
-        <Link href="/news">News</Link>
-        <Link href="/world-cup/path-explorer">Path</Link>
-      </nav>
-      <WalletMenuButton />
-    </header>
   );
 }
 

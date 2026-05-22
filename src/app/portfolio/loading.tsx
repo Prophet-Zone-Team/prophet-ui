@@ -1,22 +1,7 @@
 export default function PortfolioLoading() {
   return (
-    <main className="prophet-html">
-      <div className="page portfolio-page">
-        <header className="topbar">
-          <div className="brand" aria-label="Prophet loading">
-            <span className="mark" aria-hidden="true" />
-            Prophet
-          </div>
-          <nav aria-label="Loading navigation">
-            <span>Markets</span>
-            <span>Matches</span>
-            <span>Teams</span>
-            <span>Portfolio</span>
-          </nav>
-          <div className="wallet-connect-button">Connect</div>
-        </header>
-
-        <section className="portfolio-hero" aria-label="Loading portfolio">
+    <div className="portfolio-page">
+      <section className="portfolio-hero" aria-label="Loading portfolio">
           <div>
             <span className="eyebrow">Portfolio</span>
             <div className="loading-headline" />
@@ -92,8 +77,7 @@ export default function PortfolioLoading() {
             <div className="panel portfolio-panel adjust-position-panel loading-card" />
             <div className="panel portfolio-panel recent-activity-panel loading-card" />
           </aside>
-        </div>
       </div>
-    </main>
+    </div>
   );
 }

@@ -1,22 +1,7 @@
 export default function TeamDetailLoading() {
   return (
-    <main className="prophet-html">
-      <div className="page team-detail-page">
-        <header className="topbar">
-          <div className="brand" aria-label="Prophet loading">
-            <span className="mark" aria-hidden="true" />
-            Prophet
-          </div>
-          <nav aria-label="Loading navigation">
-            <span>Markets</span>
-            <span>Matches</span>
-            <span>Teams</span>
-            <span>Portfolio</span>
-          </nav>
-          <div className="wallet-connect-button">Connect</div>
-        </header>
-
-        <section className="team-detail-hero" aria-label="Loading team detail">
+    <div className="team-detail-page">
+      <section className="team-detail-hero" aria-label="Loading team detail">
           <div className="team-detail-breadcrumb">
             <span>Teams</span>
             <span>/</span>
@@ -121,8 +106,7 @@ export default function TeamDetailLoading() {
             <div className="panel team-detail-panel probability-panel loading-card" />
             <div className="panel team-detail-panel intelligence-panel loading-card" />
           </aside>
-        </div>
       </div>
-    </main>
+    </div>
   );
 }
