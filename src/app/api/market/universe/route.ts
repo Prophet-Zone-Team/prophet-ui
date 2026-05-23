@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { DEFAULT_MARKET_DATA_SOURCE } from "../../../../data/providers/source";
-import { getMarketHistoryRepository } from "../../../../server/market-history/repository";
-import type { StoredMarketDataSource } from "../../../../server/market-history/types";
+import { DEFAULT_MARKET_DATA_SOURCE } from "@/data/providers/source";
+import { getMarketHistoryRepository } from "@/server/market-history/repository";
+import type { StoredMarketDataSource } from "@/server/market-history/types";
 
 export const dynamic = "force-dynamic";
 

@@ -2,20 +2,20 @@
 
 import { useMemo, useState } from "react";
 
-import type { MarketDataMeta } from "../../data/providers/types";
+import type { MarketDataMeta } from "@/data/providers/types";
 import type {
   ApiFootballTeamProfile,
   ProbabilityHistoryPoint,
   TeamFootballMetadata,
   TeamMarketSnapshot,
   WorldCupMatch
-} from "../../types/market";
-import { ActivityTabs } from "./activity-tabs";
-import { TradeHeader } from "./trade-header";
-import { ProbabilitySection } from "./probability-section";
-import { RelatedGames } from "./related-games";
-import { TradeWidget } from "./trade-widget";
-import { tradePageClass } from "./trade-widget/trade-ui";
+} from "@/types/market";
+import { ActivityTabs } from "@/views/trade/activity-tabs";
+import { TradeHeader } from "@/views/trade/trade-header";
+import { ProbabilitySection } from "@/views/trade/probability-section";
+import { RelatedGames } from "@/views/trade/related-games";
+import { TradeWidget } from "@/views/trade/trade-widget";
+import { tradePageClass } from "@/views/trade/trade-widget/trade-ui";
 
 export interface TradeTeamProViewProps {
   snapshot: TeamMarketSnapshot;

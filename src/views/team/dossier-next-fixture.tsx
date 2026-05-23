@@ -1,14 +1,14 @@
-import { TeamFlag } from "../../components/teams/team-flag";
-import type { ApiFootballFixtureContext } from "../../types/market";
-import type { TeamMarketSnapshot } from "../../types/market";
-import { formatFixtureDate } from "../../lib/team/team-detail-model";
-import { TeamEmptyState } from "./team-empty-state";
+import { TeamFlag } from "@/components/teams/team-flag";
+import type { ApiFootballFixtureContext } from "@/types/market";
+import type { TeamMarketSnapshot } from "@/types/market";
+import { formatFixtureDate } from "@/lib/team/team-detail-model";
+import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
   teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface DossierNextFixtureProps {
   fixture?: ApiFootballFixtureContext;

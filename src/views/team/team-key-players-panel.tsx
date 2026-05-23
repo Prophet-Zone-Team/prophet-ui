@@ -1,12 +1,12 @@
-import type { KeyPlayerView } from "../../lib/team/team-detail-model";
-import { getInitials } from "../../lib/team/team-detail-model";
-import { cn } from "../../lib/cn";
+import type { KeyPlayerView } from "@/lib/team/team-detail-model";
+import { getInitials } from "@/lib/team/team-detail-model";
+import { cn } from "@/lib/cn";
 import {
   teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface TeamKeyPlayersPanelProps {
   players: KeyPlayerView[];

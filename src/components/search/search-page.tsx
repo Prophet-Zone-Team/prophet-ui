@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import type { SearchResult } from "../../types/market";
+import type { SearchResult } from "@/types/market";
 
 export function SearchPage({ initialQuery }: { initialQuery: string }) {
   const [query, setQuery] = useState(initialQuery);

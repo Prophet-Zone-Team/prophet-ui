@@ -2,18 +2,18 @@
 
 import { useMemo, useState } from "react";
 
-import { formatTradePanelPrice } from "../../../lib/market/order-math";
+import { formatTradePanelPrice } from "@/lib/market/order-math";
 import {
   buildGameBidOrderPreview,
   getDefaultGameLimitPrice
-} from "../../../lib/market/game-order";
-import { formatTeamDetailMoney } from "../../../lib/team/detail-format";
-import { cn } from "../../../lib/cn";
-import type { GameMarketSnapshot, MatchOutcomeSide } from "../../../types/market";
+} from "@/lib/market/game-order";
+import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import { cn } from "@/lib/cn";
+import type { GameMarketSnapshot, MatchOutcomeSide } from "@/types/market";
 import {
   tradeBidButtonClass,
   tradeQuickAmountClass
-} from "../trade-widget/trade-ui";
+} from "@/views/trade/trade-widget/trade-ui";
 
 const QUICK_AMOUNTS = [10, 50, 100] as const;
 
@@ -21,12 +21,14 @@ export interface GameBuyPanelProps {
   snapshot: GameMarketSnapshot;
   outcomeSide: MatchOutcomeSide;
   onOutcomeSideChange: (side: MatchOutcomeSide) => void;
+  hideOutcomeSelector?: boolean;
 }
 
 export function GameBuyPanel({
   snapshot,
   outcomeSide,
-  onOutcomeSideChange
+  onOutcomeSideChange,
+  hideOutcomeSelector = false
 }: GameBuyPanelProps) {
   const [amount, setAmount] = useState("100");
 
@@ -53,18 +55,26 @@ export function GameBuyPanel({
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-4 pt-3">
-      <div className="grid grid-cols-3 gap-2">
-        {outcomes.map((outcome) => (
-          <OutcomeButton
-            key={outcome.side}
-            side={outcome.side}
-            label={outcome.side === "draw" ? "Draw" : outcome.side === "home" ? "Home" : "Away"}
-            active={outcomeSide === outcome.side}
-            probability={outcome.probability}
-            onSelect={() => onOutcomeSideChange(outcome.side)}
-          />
-        ))}
-      </div>
+      {!hideOutcomeSelector ? (
+        <div className="grid grid-cols-3 gap-2">
+          {outcomes.map((outcome) => (
+            <OutcomeButton
+              key={outcome.side}
+              side={outcome.side}
+              label={
+                outcome.side === "draw"
+                  ? "Draw"
+                  : outcome.side === "home"
+                    ? "Home"
+                    : "Away"
+              }
+              active={outcomeSide === outcome.side}
+              probability={outcome.probability}
+              onSelect={() => onOutcomeSideChange(outcome.side)}
+            />
+          ))}
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-prophet-line p-4">
         <div className="flex items-start justify-between gap-2">

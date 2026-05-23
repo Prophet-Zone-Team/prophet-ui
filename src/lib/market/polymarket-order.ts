@@ -1,5 +1,5 @@
-import type { BidTradeSide, OrderOutcomeSide, TeamMarketSnapshot, TradingOrderType } from "../../types/market";
-import { calculateOrderEstimate, normalizeLimitPrice } from "./order-math";
+import type { BidTradeSide, OrderOutcomeSide, TeamMarketSnapshot, TradingOrderType } from "@/types/market";
+import { calculateOrderEstimate, normalizeLimitPrice } from "@/lib/market/order-math";
 
 type PolymarketTickSize = NonNullable<TeamMarketSnapshot["market"]["polymarket"]>["tickSize"];
 

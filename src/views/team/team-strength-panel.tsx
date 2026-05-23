@@ -8,14 +8,14 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-import type { StrengthMetric } from "../../lib/team/team-detail-model";
-import { getStrengthScore } from "../../lib/team/team-detail-model";
+import type { StrengthMetric } from "@/lib/team/team-detail-model";
+import { getStrengthScore } from "@/lib/team/team-detail-model";
 import {
   teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface TeamStrengthPanelProps {
   metrics: StrengthMetric[];

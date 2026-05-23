@@ -3,17 +3,17 @@
 import { useId, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
 
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 import {
   formatPortfolioMoney,
   formatSignedPercent,
   formatSignedPortfolioMoney
-} from "../../lib/portfolio/portfolio-format";
+} from "@/lib/portfolio/portfolio-format";
 import type {
   PortfolioSeriesPoint,
   PortfolioTimeRange
-} from "../../lib/portfolio/types";
-import { portfolioSummaryLabelClass } from "./portfolio-ui";
+} from "@/lib/portfolio/types";
+import { portfolioSummaryLabelClass } from "@/views/portfolio/portfolio-ui";
 
 const CHART_LINE_COLOR = "#65AF14";
 const CHART_FILL_TOP = "rgba(138, 185, 86, 0.3)";

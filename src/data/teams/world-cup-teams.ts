@@ -1,4 +1,4 @@
-import type { Team } from "../../types/market";
+import type { Team } from "@/types/market";
 
 export const worldCupTeams: Team[] = [
   { id: "spain", name: "Spain", code: "ESP", region: "Europe", qualifiedStatus: "qualified", aliases: ["España", "La Roja"] },

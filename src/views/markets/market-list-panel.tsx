@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
-import type { MarketDataMeta } from "../../data/providers/types";
-import type { TeamMarketSnapshot } from "../../types/market";
-import { MarketListItem } from "./market-list-item";
+import type { MarketDataMeta } from "@/data/providers/types";
+import type { TeamMarketSnapshot } from "@/types/market";
+import { MarketListItem } from "@/views/markets/market-list-item";
 
 export interface MarketListPanelProps {
   teams: TeamMarketSnapshot[];

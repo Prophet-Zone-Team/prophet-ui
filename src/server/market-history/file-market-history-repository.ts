@@ -6,7 +6,7 @@ import type {
   MarketHistoryRepository,
   MarketSnapshotRecord,
   MarketUniverseSnapshotRecord,
-} from "./types";
+} from "@/server/market-history/types";
 
 const HISTORY_FILE_PATH = join(process.cwd(), ".data", "market-history.json");
 const UNIVERSE_HISTORY_FILE_PATH = join(process.cwd(), ".data", "market-universe-history.json");

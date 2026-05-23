@@ -1,8 +1,8 @@
 "use client";
 
-import { Modal } from "../../components/ui/modal";
-import type { TeamMarketSnapshot } from "../../types/market";
-import { TradeWidget } from "../trade/trade-widget";
+import { Modal } from "@/components/ui/modal";
+import type { TeamMarketSnapshot } from "@/types/market";
+import { TradeWidget } from "@/views/trade/trade-widget";
 
 export interface MarketBidDialogProps {
   open: boolean;

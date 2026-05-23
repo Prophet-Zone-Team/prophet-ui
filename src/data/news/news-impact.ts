@@ -1,7 +1,7 @@
 import {
   WORLD_CUP_CONTEXT_KEYWORDS,
   getTeamNewsQueryConfig,
-} from "../../config/team-news-query-config";
+} from "@/config/team-news-query-config";
 import type {
   MarketSignal,
   NewsArticle,
@@ -9,9 +9,9 @@ import type {
   NewsImpactSignal,
   SignalSeverity,
   TeamMarketSnapshot,
-} from "../../types/market";
-import { gdeltNewsProvider } from "./gdelt-news-provider";
-import type { NewsProvider, TeamNewsQuery } from "./types";
+} from "@/types/market";
+import { gdeltNewsProvider } from "@/data/news/gdelt-news-provider";
+import type { NewsProvider, TeamNewsQuery } from "@/data/news/types";
 
 const NEWS_LOOKBACK_HOURS = 48;
 const MARKET_MOVE_THRESHOLD = 0.8;

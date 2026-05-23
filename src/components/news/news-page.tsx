@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { getNewsArticleSlug } from "../../lib/news/news-slugs";
-import type { NewsArticle, TeamMarketSnapshot } from "../../types/market";
+import { getNewsArticleSlug } from "@/lib/news/news-slugs";
+import type { NewsArticle, TeamMarketSnapshot } from "@/types/market";
 export function NewsPage({
   articles,
   snapshots,

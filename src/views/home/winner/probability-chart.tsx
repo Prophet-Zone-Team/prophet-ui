@@ -9,8 +9,8 @@ import {
   YAxis
 } from "recharts";
 
-import { formatProbability } from "../../../components/home/market-formatters";
-import { cn } from "../../../lib/cn";
+import { formatProbability } from "@/components/home/market-formatters";
+import { cn } from "@/lib/cn";
 import {
   buildWinnerChartData,
   filterWinnerChartByRange,
@@ -18,11 +18,11 @@ import {
   getWinnerChartYDomain,
   WINNER_CHART_TIME_RANGES,
   type WinnerChartTimeRange
-} from "../../../lib/market/winner-probability-chart";
+} from "@/lib/market/winner-probability-chart";
 import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot
-} from "../../../types/market";
+} from "@/types/market";
 
 export interface WinnerProbabilityChartProps {
   className?: string;

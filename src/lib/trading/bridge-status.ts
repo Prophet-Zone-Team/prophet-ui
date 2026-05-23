@@ -1,4 +1,4 @@
-import type { BridgeAggregateStatus, BridgeStatusResponse, BridgeTransactionRecord } from "../../types/funding";
+import type { BridgeAggregateStatus, BridgeStatusResponse, BridgeTransactionRecord } from "@/types/funding";
 
 const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED"]);
 

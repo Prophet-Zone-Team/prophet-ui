@@ -2,8 +2,8 @@
 
 import { createContext } from "react";
 
-import type { CashBalanceView, FundingLoadStatus } from "../../types/funding";
-import type { TradingUserSession } from "../../types/market";
+import type { CashBalanceView, FundingLoadStatus } from "@/types/funding";
+import type { TradingUserSession } from "@/types/market";
 
 export interface AuthContextValue {
   session: TradingUserSession | undefined;

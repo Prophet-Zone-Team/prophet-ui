@@ -2,13 +2,13 @@
 
 import { useMemo } from "react";
 
-import { getRelatedMatchesForTeam } from "../../lib/team/related-matches";
-import type { TeamMarketSnapshot, WorldCupMatch } from "../../types/market";
-import { RelatedGameCard } from "./related-game-card";
+import { getRelatedMatchesForTeam } from "@/lib/team/related-matches";
+import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
+import { RelatedGameCard } from "@/views/trade/related-game-card";
 import {
   tradeSectionClass,
   tradePanelTitleClass
-} from "./trade-widget/trade-ui";
+} from "@/views/trade/trade-widget/trade-ui";
 
 export interface RelatedGamesProps {
   teamId: string;

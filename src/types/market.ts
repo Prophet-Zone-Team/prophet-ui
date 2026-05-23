@@ -461,6 +461,21 @@ export interface GameProbabilityHistoryPoint {
   probability: number;
 }
 
+export interface GameMatchMinuteHistoryPoint {
+  matchId: string;
+  minute: number;
+  minuteLabel: string;
+  home: number;
+  draw: number;
+  away: number;
+}
+
+export interface GameMatchChartEvent {
+  minute: number;
+  side: "home" | "away";
+  type: "goal";
+}
+
 export type SearchResultType = "team" | "match" | "news" | "market" | "path";
 
 export interface SearchResult {

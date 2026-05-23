@@ -2,17 +2,17 @@
 
 import Link from "next/link";
 
-import { TeamFlag } from "../../components/teams/team-flag";
-import { gameTradeHref } from "../../lib/routes/trade";
-import { cn } from "../../lib/cn";
-import { formatMatchScore } from "../../lib/market/match-display";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { gameTradeHref } from "@/lib/routes/trade";
+import { cn } from "@/lib/cn";
+import { formatMatchScore } from "@/lib/market/match-display";
 import {
   formatScheduleKickoff,
   getScheduleRowVariant,
   resolveMatchSides,
   type ScheduleRowVariant
-} from "../../lib/market/schedule-match";
-import type { TeamMarketSnapshot, WorldCupMatch } from "../../types/market";
+} from "@/lib/market/schedule-match";
+import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 
 function MatchSide({
   name,

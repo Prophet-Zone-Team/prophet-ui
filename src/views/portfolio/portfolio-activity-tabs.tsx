@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 
-import { TabSwitcher } from "../../components/ui/tab-switcher";
-import type { UserOpenOrder, PortfolioLoadStatus } from "../../lib/portfolio/types";
-import type { TeamMarketSnapshot, UserOrderRecord, UserPositionRecord } from "../../types/market";
-import { PortfolioHistoryTable } from "./portfolio-history-table";
-import { PortfolioOpenOrdersTable } from "./portfolio-open-orders-table";
-import { PortfolioPositionsTable } from "./portfolio-positions-table";
+import { TabSwitcher } from "@/components/ui/tab-switcher";
+import type { UserOpenOrder, PortfolioLoadStatus } from "@/lib/portfolio/types";
+import type { TeamMarketSnapshot, UserOrderRecord, UserPositionRecord } from "@/types/market";
+import { PortfolioHistoryTable } from "@/views/portfolio/portfolio-history-table";
+import { PortfolioOpenOrdersTable } from "@/views/portfolio/portfolio-open-orders-table";
+import { PortfolioPositionsTable } from "@/views/portfolio/portfolio-positions-table";
 import {
   portfolioHistoryTableHeadClass,
   portfolioOrdersTableHeadClass,
   portfolioPositionsTableHeadClass,
   portfolioActivityCardClass,
   portfolioTableScrollClass
-} from "./portfolio-ui";
+} from "@/views/portfolio/portfolio-ui";
 
 const PORTFOLIO_TABS = [
   { id: "position", label: "Position" },

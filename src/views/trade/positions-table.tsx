@@ -2,18 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { cn } from "../../lib/cn";
-import { fetchJson } from "../../lib/team/client-fetch";
+import { cn } from "@/lib/cn";
+import { fetchJson } from "@/lib/team/client-fetch";
 import {
   formatShortWallet,
   formatTeamDetailMoney
-} from "../../lib/team/detail-format";
-import type { TeamMarketSnapshot, UserPositionRecord } from "../../types/market";
+} from "@/lib/team/detail-format";
+import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import {
   connectTradingWallet,
   loadTradingSession
-} from "../../components/trading/trading-wallet-session";
-import { tradeBidButtonClass } from "./trade-widget/trade-ui";
+} from "@/components/trading/trading-wallet-session";
+import { tradeBidButtonClass } from "@/views/trade/trade-widget/trade-ui";
 
 export interface PositionsTableProps {
   snapshot: TeamMarketSnapshot;

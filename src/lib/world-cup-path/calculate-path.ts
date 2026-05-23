@@ -1,6 +1,6 @@
-import { KNOCKOUT_LINKS } from "../../data/world-cup-2026/knockout-links";
-import { ROUND_OF_32 } from "../../data/world-cup-2026/round-of-32";
-import { THIRD_PLACE_ALLOCATION_OPTIONS, type ThirdPlaceAllocationOption } from "../../data/world-cup-2026/third-place-options";
+import { KNOCKOUT_LINKS } from "@/data/world-cup-2026/knockout-links";
+import { ROUND_OF_32 } from "@/data/world-cup-2026/round-of-32";
+import { THIRD_PLACE_ALLOCATION_OPTIONS, type ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 import {
   WORLD_CUP_2026_GROUPS,
   WORLD_CUP_2026_GROUP_ORDER,
@@ -8,7 +8,7 @@ import {
   getWorldCupGroupForTeam,
   getWorldCupTeamByIdOrCode,
   type WorldCup2026Group,
-} from "../../data/world-cup-2026/groups";
+} from "@/data/world-cup-2026/groups";
 import type {
   FinishType,
   KnockoutRound,
@@ -18,7 +18,7 @@ import type {
   PathScenarioResolution,
   RoundOpponentSummary,
   Team,
-} from "../../types/market";
+} from "@/types/market";
 
 interface BracketMatch {
   matchId: number;

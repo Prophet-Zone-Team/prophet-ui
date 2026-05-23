@@ -3,8 +3,8 @@
 import { createWalletClient, custom, erc20Abi, parseUnits, type Address, type Hex } from "viem";
 import { polygon } from "viem/chains";
 
-import { getStoredTradingWalletProvider } from "../../components/trading/trading-wallet-session";
-import { getEthereumProviderForWallet } from "../../components/trading/wallet-provider";
+import { getStoredTradingWalletProvider } from "@/components/trading/trading-wallet-session";
+import { getEthereumProviderForWallet } from "@/components/trading/wallet-provider";
 
 const COLLATERAL_DECIMALS = 6;
 

@@ -1,4 +1,4 @@
-import type { ProbabilityHistoryPoint, TeamMarketSnapshot } from "../../types/market";
+import type { ProbabilityHistoryPoint, TeamMarketSnapshot } from "@/types/market";
 
 export type TeamChartTimeRange = "1H" | "1D" | "1W" | "1M" | "all";
 

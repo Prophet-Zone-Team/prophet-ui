@@ -5,18 +5,18 @@ import { useRouter } from "next/navigation";
 import { Zap } from "lucide-react";
 import { useState, type KeyboardEvent } from "react";
 
-import { TeamFlag } from "../../components/teams/team-flag";
-import { teamDetailHref } from "../../lib/routes/team";
-import { teamTradeHref } from "../../lib/routes/trade";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { teamDetailHref } from "@/lib/routes/team";
+import { teamTradeHref } from "@/lib/routes/trade";
 import {
   formatProbability,
   formatVolume,
   getRelativeChangePercent
-} from "../../components/home/market-formatters";
-import { cn } from "../../lib/cn";
-import type { TeamMarketSnapshot } from "../../types/market";
-import { MarketBookmarkControl } from "../home/winner/market-bookmark-control";
-import { MarketBidDialog } from "./market-bid-dialog";
+} from "@/components/home/market-formatters";
+import { cn } from "@/lib/cn";
+import type { TeamMarketSnapshot } from "@/types/market";
+import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-control";
+import { MarketBidDialog } from "@/views/markets/market-bid-dialog";
 
 export interface MarketListItemProps {
   snapshot: TeamMarketSnapshot;

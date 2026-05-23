@@ -1,11 +1,11 @@
-import { mockTeams } from "../mock/teams";
-import { getAllTeamFootballMetadata } from "../teams/football-metadata";
+import { mockTeams } from "@/data/mock/teams";
+import { getAllTeamFootballMetadata } from "@/data/teams/football-metadata";
 import type {
   MarketSentiment,
   Team,
   TeamMarketSnapshot,
-} from "../../types/market";
-import type { WorldCupMarketData, WorldCupMarketDataProvider } from "./types";
+} from "@/types/market";
+import type { WorldCupMarketData, WorldCupMarketDataProvider } from "@/data/providers/types";
 
 const KALSHI_MARKETS_URL = "https://external-api.kalshi.com/trade-api/v2/markets";
 const KALSHI_WORLD_CUP_EVENT_TICKER = "KXMENWORLDCUP-26";

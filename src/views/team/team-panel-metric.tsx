@@ -1,4 +1,4 @@
-import { teamMetricToneClass, teamMetricValueClass } from "./team-detail-ui";
+import { teamMetricToneClass, teamMetricValueClass } from "@/views/team/team-detail-ui";
 
 export interface TeamPanelMetricProps {
   label: string;

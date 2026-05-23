@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { getMarketDataSourceLabel, VISIBLE_MARKET_DATA_SOURCES } from "../../data/providers/source";
-import type { MarketDataSource } from "../../data/providers/types";
+import { getMarketDataSourceLabel, VISIBLE_MARKET_DATA_SOURCES } from "@/data/providers/source";
+import type { MarketDataSource } from "@/data/providers/types";
 
 export function DataSourceSwitch({ selectedSource }: { selectedSource: MarketDataSource }) {
   if (VISIBLE_MARKET_DATA_SOURCES.length <= 1) {

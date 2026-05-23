@@ -1,4 +1,4 @@
-import { apiFootballTeamConfig, getApiFootballTeamConfig } from "../../config/api-football-team-config";
+import { apiFootballTeamConfig, getApiFootballTeamConfig } from "@/config/api-football-team-config";
 import type {
   ApiFootballDataIssue,
   ApiFootballFixtureContext,
@@ -11,7 +11,7 @@ import type {
   FootballContextMeta,
   Team,
   TeamMarketSnapshot,
-} from "../../types/market";
+} from "@/types/market";
 
 const API_FOOTBALL_BASE_URL = "https://v3.football.api-sports.io";
 const REQUEST_TIMEOUT_MS = 5000;

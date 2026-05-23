@@ -1,23 +1,23 @@
 "use client";
 
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 import {
   formatPortfolioDateTime,
   formatPnlSubline,
   formatSharePrice,
   getOutcomeToneClass
-} from "../../lib/portfolio/portfolio-format";
-import { findSnapshotForPosition } from "../../lib/portfolio/portfolio-metrics";
-import { formatTeamDetailMoney } from "../../lib/team/detail-format";
-import type { TeamMarketSnapshot, UserPositionRecord } from "../../types/market";
-import { TeamFlag } from "../../components/teams/team-flag";
-import { PortfolioEmptyState } from "./portfolio-empty-state";
+} from "@/lib/portfolio/portfolio-format";
+import { findSnapshotForPosition } from "@/lib/portfolio/portfolio-metrics";
+import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import {
   portfolioActionButtonClass,
   portfolioConnectButtonClass,
   portfolioPositionsTableRowClass,
   portfolioTableScrollClass
-} from "./portfolio-ui";
+} from "@/views/portfolio/portfolio-ui";
 
 export interface PortfolioPositionsTableProps {
   positions: UserPositionRecord[];

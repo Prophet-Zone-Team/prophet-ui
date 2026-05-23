@@ -2,20 +2,20 @@
 
 import Link from "next/link";
 
-import { BackChevronIcon, CopyLinkIcon } from "../../../components/icons";
-import { TeamFlag } from "../../../components/teams/team-flag";
-import { cn } from "../../../lib/cn";
-import { formatMatchScore } from "../../../lib/market/match-display";
+import { BackChevronIcon, CopyLinkIcon } from "@/components/icons";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { cn } from "@/lib/cn";
+import { formatMatchScore } from "@/lib/market/match-display";
 import {
   formatScheduleKickoff,
   getScheduleRowVariant,
   resolveMatchSides
-} from "../../../lib/market/schedule-match";
-import { useLiveElapsedClock } from "../../../lib/market/use-live-elapsed-clock";
+} from "@/lib/market/schedule-match";
+import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
 import type {
   GameMarketSnapshot,
   TeamMarketSnapshot
-} from "../../../types/market";
+} from "@/types/market";
 
 export interface GameTradeHeaderProps {
   snapshot: GameMarketSnapshot;

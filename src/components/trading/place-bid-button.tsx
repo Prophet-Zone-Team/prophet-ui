@@ -4,25 +4,25 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 
-import { teamTradeHref } from "../../lib/routes/trade";
+import { teamTradeHref } from "@/lib/routes/trade";
 
-import { buildBidOrderPreview, type BidOrderPreview } from "../../lib/market/polymarket-order";
-import { calculateReferencePrice } from "../../lib/market/order-math";
-import { attachUserOrderSignature, buildUserOrderSignablePayload } from "../../lib/market/user-order";
-import type { TeamMarketSnapshot, TradingUserSession, UserOrderPreview, UserTradingReadiness } from "../../types/market";
+import { buildBidOrderPreview, type BidOrderPreview } from "@/lib/market/polymarket-order";
+import { calculateReferencePrice } from "@/lib/market/order-math";
+import { attachUserOrderSignature, buildUserOrderSignablePayload } from "@/lib/market/user-order";
+import type { TeamMarketSnapshot, TradingUserSession, UserOrderPreview, UserTradingReadiness } from "@/types/market";
 import {
   fetchJson,
   getQuickBidSetupIssue,
-} from "./quick-bid-account-setup";
+} from "@/components/trading/quick-bid-account-setup";
 import {
   formatQuickBidAmount,
   readActiveQuickBidWalletAddress,
   readQuickBidAmount,
   subscribeQuickBidAmountChange,
   writeQuickBidAmount,
-} from "./quick-bid-amount";
-import { getOrCreateQuickBidSessionSigner, signQuickBidOrder } from "./quick-bid-session-signer";
-import { loadTradingSession } from "./trading-wallet-session";
+} from "@/components/trading/quick-bid-amount";
+import { getOrCreateQuickBidSessionSigner, signQuickBidOrder } from "@/components/trading/quick-bid-session-signer";
+import { loadTradingSession } from "@/components/trading/trading-wallet-session";
 
 type QuickBidStatus = "idle" | "checking" | "submitting" | "success" | "error";
 

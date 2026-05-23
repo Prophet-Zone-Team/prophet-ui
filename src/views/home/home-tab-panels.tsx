@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-import { TabSwitcher } from "../../components/ui/tab-switcher";
+import { TabSwitcher } from "@/components/ui/tab-switcher";
 
 const HOME_TABS = [
   { id: "winner", label: "Winner" },

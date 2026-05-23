@@ -1,4 +1,4 @@
-import { formatTeamDetailMoney } from "../team/detail-format";
+import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 
 export function formatPortfolioMoney(value: number): string {
   return new Intl.NumberFormat("en-US", {

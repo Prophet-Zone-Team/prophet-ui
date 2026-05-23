@@ -4,7 +4,7 @@ import type {
   MarketHistoryRepository,
   MarketSnapshotRecord,
   MarketUniverseSnapshotRecord,
-} from "./types";
+} from "@/server/market-history/types";
 
 interface MarketSnapshotRow {
   id: string;

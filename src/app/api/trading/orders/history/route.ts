@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { readUserOrderHistory } from "../../../../../server/trading/order-store";
-import { getTradingSessionFromCookie } from "../../../../../server/trading/session-store";
+import { readUserOrderHistory } from "@/server/trading/order-store";
+import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

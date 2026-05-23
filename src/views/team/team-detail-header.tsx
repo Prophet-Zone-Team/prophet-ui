@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 
-import { CopyLinkIcon } from "../../components/icons";
-import { TeamFlag } from "../../components/teams/team-flag";
-import { teamTradeHref } from "../../lib/routes/trade";
-import { formatSquadValue } from "../../lib/team/team-detail-model";
+import { CopyLinkIcon } from "@/components/icons";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { teamTradeHref } from "@/lib/routes/trade";
+import { formatSquadValue } from "@/lib/team/team-detail-model";
 import type {
   ApiFootballTeamProfile,
   TeamFootballMetadata,
   TeamMarketSnapshot
-} from "../../types/market";
+} from "@/types/market";
 
 function getGroupLabel(metadata?: TeamFootballMetadata): string {
   if (metadata?.group && metadata.group !== "Pending") {
@@ -19,12 +19,12 @@ function getGroupLabel(metadata?: TeamFootballMetadata): string {
 
   return "Pending";
 }
-import { BookmarkControl } from "../trade/bookmark-control";
+import { BookmarkControl } from "@/views/trade/bookmark-control";
 import {
   teamHeroCardClass,
   teamHeroMetricsClass,
   teamOpenTradeButtonClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface TeamDetailHeaderProps {
   snapshot: TeamMarketSnapshot;

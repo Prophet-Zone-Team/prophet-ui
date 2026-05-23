@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 
-import { teamTradeHref } from "../../../lib/routes/trade";
-import { formatScheduleKickoff, resolveMatchSides } from "../../../lib/market/schedule-match";
-import type { TeamMarketSnapshot, WorldCupMatch } from "../../../types/market";
+import { teamTradeHref } from "@/lib/routes/trade";
+import { formatScheduleKickoff, resolveMatchSides } from "@/lib/market/schedule-match";
+import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import {
   tradePanelClass,
   tradePanelTitleClass,
   tradeSectionClass
-} from "../trade-widget/trade-ui";
-import { RelatedGameCard } from "../related-game-card";
+} from "@/views/trade/trade-widget/trade-ui";
+import { RelatedGameCard } from "@/views/trade/related-game-card";
 
 export interface RelatedMatchGamesProps {
   currentMatchId: string;

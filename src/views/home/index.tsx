@@ -1,17 +1,17 @@
 import type {
   MarketDataMeta,
   WorldCupMarketData
-} from "../../data/providers/types";
+} from "@/data/providers/types";
 import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
   WorldCupMatch
-} from "../../types/market";
-import { HomeHero } from "./header";
-import { HomeTabPanels } from "./home-tab-panels";
-import { HomeMatchesPanel } from "./matches";
-import { HomeWinnerPanel } from "./winner";
-import { getRelativeChangePercent } from "../../components/home/market-formatters";
+} from "@/types/market";
+import { HomeHero } from "@/views/home/header";
+import { HomeTabPanels } from "@/views/home/home-tab-panels";
+import { HomeMatchesPanel } from "@/views/home/matches";
+import { HomeWinnerPanel } from "@/views/home/winner";
+import { getRelativeChangePercent } from "@/components/home/market-formatters";
 
 export interface HomeViewProps {
   snapshots: TeamMarketSnapshot[];

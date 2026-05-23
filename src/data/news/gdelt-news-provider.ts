@@ -1,5 +1,5 @@
-import type { NewsArticle } from "../../types/market";
-import type { NewsProvider, TeamNewsQuery } from "./types";
+import type { NewsArticle } from "@/types/market";
+import type { NewsProvider, TeamNewsQuery } from "@/data/news/types";
 
 const GDELT_DOC_URL = "https://api.gdeltproject.org/api/v2/doc/doc";
 const DEFAULT_MAX_ARTICLES = 4;

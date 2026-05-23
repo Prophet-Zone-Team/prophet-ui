@@ -1,8 +1,8 @@
-import { WORLD_CUP_TEAM_COUNT } from "../../data/teams/world-cup-teams";
-import { getWorldCupMarketData } from "../../data/providers/world-cup-market-data";
-import type { MarketDataSource } from "../../data/providers/types";
-import { getMarketHistoryRepository } from "./repository";
-import type { MarketSnapshotRecord, StoredMarketDataSource } from "./types";
+import { WORLD_CUP_TEAM_COUNT } from "@/data/teams/world-cup-teams";
+import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
+import type { MarketDataSource } from "@/data/providers/types";
+import { getMarketHistoryRepository } from "@/server/market-history/repository";
+import type { MarketSnapshotRecord, StoredMarketDataSource } from "@/server/market-history/types";
 
 const COLLECTABLE_SOURCES: StoredMarketDataSource[] = ["polymarket"];
 

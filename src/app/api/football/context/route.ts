@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getSignalDataRepository } from "../../../../server/signal-data/repository";
+import { getSignalDataRepository } from "@/server/signal-data/repository";
 
 export const dynamic = "force-dynamic";
 

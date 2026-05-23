@@ -2,33 +2,34 @@
 
 import Link from "next/link";
 
-import { TeamFlag } from "../../../components/teams/team-flag";
-import { formatVolume } from "../../../components/home/market-formatters";
-import { cn } from "../../../lib/cn";
-import { formatMatchScore } from "../../../lib/market/match-display";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { formatVolume } from "@/components/home/market-formatters";
+import { cn } from "@/lib/cn";
+import { formatMatchScore } from "@/lib/market/match-display";
 import {
   getOutcomePillLabel,
   getOutcomePillStyles,
   getTeamMatchOutcome,
   resolveMatchResultWinner,
   type TeamMatchOutcome
-} from "../../../lib/market/match-result";
+} from "@/lib/market/match-result";
 import {
   formatOutcomePercent,
   parseMatchOutcomeOdds
-} from "../../../lib/market/match-outcome-odds";
+} from "@/lib/market/match-outcome-odds";
 import {
   formatScheduleKickoff,
   getMatchVolume,
   getScheduleRowVariant,
   resolveMatchSides,
   type ScheduleRowVariant
-} from "../../../lib/market/schedule-match";
-import { gameTradeHref } from "../../../lib/routes/trade";
-import type { TeamMarketSnapshot, WorldCupMatch } from "../../../types/market";
-import { MatchBookmarkControl } from "./match-bookmark-control";
-import { MatchProbabilityBar } from "./match-probability-bar";
-import { MatchResultBar } from "./match-result-bar";
+} from "@/lib/market/schedule-match";
+import { gameTradeHref } from "@/lib/routes/trade";
+import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
+import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-control";
+import { MatchProbabilityBar } from "@/views/home/matches/match-probability-bar";
+import { MatchResultBar } from "@/views/home/matches/match-result-bar";
+import { useRouter } from "next/navigation";
 
 export interface ScheduleMatchRowProps {
   match: WorldCupMatch;
@@ -41,6 +42,7 @@ export function ScheduleMatchRow({
   snapshots,
   className
 }: ScheduleMatchRowProps) {
+  const router = useRouter();
   const variant = getScheduleRowVariant(match.status);
   const sides = resolveMatchSides(match, snapshots);
   const oddsResult = parseMatchOutcomeOdds(
@@ -73,6 +75,9 @@ export function ScheduleMatchRow({
         className
       )}
       aria-label={`${sides.home.name} vs ${sides.away.name}, ${variant}`}
+      onClick={() => {
+        router.push(gameTradeHref(match.id));
+      }}
     >
       <div className="flex shrink-0 items-center gap-3">
         <MatchBookmarkControl matchId={match.id} />
@@ -111,12 +116,6 @@ export function ScheduleMatchRow({
 
       <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
         <VolumeColumn amount={volumeLabel} />
-        <Link
-          href={gameTradeHref(match.id)}
-          className="inline-flex h-9 items-center justify-center rounded-lg border border-[#909090] bg-white px-3 text-sm font-[556] leading-[17px] text-[#18110F] hover:border-prophet-green/50"
-        >
-          Trade
-        </Link>
       </div>
     </article>
   );

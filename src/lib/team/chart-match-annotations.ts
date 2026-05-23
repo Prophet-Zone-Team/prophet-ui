@@ -1,11 +1,11 @@
-import { formatMatchScore } from "../market/match-display";
-import { resolveMatchSides } from "../market/schedule-match";
-import { getRelatedMatchesForTeam } from "./related-matches";
+import { formatMatchScore } from "@/lib/market/match-display";
+import { resolveMatchSides } from "@/lib/market/schedule-match";
+import { getRelatedMatchesForTeam } from "@/lib/team/related-matches";
 import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
   WorldCupMatch
-} from "../../types/market";
+} from "@/types/market";
 
 export interface TeamChartMatchAnnotation {
   matchId: string;

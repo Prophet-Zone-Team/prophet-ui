@@ -2,14 +2,14 @@
 
 import { useMemo } from "react";
 
-import type { MarketDataMeta } from "../../data/providers/types";
-import type { NormalizedBookmakerOdds } from "../../data/odds/types";
+import type { MarketDataMeta } from "@/data/providers/types";
+import type { NormalizedBookmakerOdds } from "@/data/odds/types";
 import {
   getKeyPlayers,
   getNextFixture,
   getRecentMatches,
   getStrengthMetrics
-} from "../../lib/team/team-detail-model";
+} from "@/lib/team/team-detail-model";
 import type {
   ApiFootballDataIssue,
   ApiFootballFixtureContext,
@@ -22,27 +22,27 @@ import type {
   ProbabilityHistoryPoint,
   TeamFootballMetadata,
   TeamMarketSnapshot
-} from "../../types/market";
-import { TradeWidget } from "../trade/trade-widget";
-import { DossierStrip } from "./dossier-strip";
-import { TeamDetailFootnote } from "./team-detail-footnote";
-import { TeamDetailHeader } from "./team-detail-header";
-import { TeamKeyPlayersPanel } from "./team-key-players-panel";
-import { TeamLineupPanel } from "./team-lineup-panel";
-import { TeamMarketIntelligencePanel } from "./team-market-intelligence-panel";
-import { TeamNewsSignalsPanel } from "./team-news-signals-panel";
-import { TeamNextMatchPanel } from "./team-next-match-panel";
-import { TeamOddsComparisonPanel } from "./team-odds-comparison-panel";
-import { TeamProbabilityPanel } from "./team-probability-panel";
-import { TeamRecentMatchesPanel } from "./team-recent-matches-panel";
-import { TeamStrengthPanel } from "./team-strength-panel";
+} from "@/types/market";
+import { TradeWidget } from "@/views/trade/trade-widget";
+import { DossierStrip } from "@/views/team/dossier-strip";
+import { TeamDetailFootnote } from "@/views/team/team-detail-footnote";
+import { TeamDetailHeader } from "@/views/team/team-detail-header";
+import { TeamKeyPlayersPanel } from "@/views/team/team-key-players-panel";
+import { TeamLineupPanel } from "@/views/team/team-lineup-panel";
+import { TeamMarketIntelligencePanel } from "@/views/team/team-market-intelligence-panel";
+import { TeamNewsSignalsPanel } from "@/views/team/team-news-signals-panel";
+import { TeamNextMatchPanel } from "@/views/team/team-next-match-panel";
+import { TeamOddsComparisonPanel } from "@/views/team/team-odds-comparison-panel";
+import { TeamProbabilityPanel } from "@/views/team/team-probability-panel";
+import { TeamRecentMatchesPanel } from "@/views/team/team-recent-matches-panel";
+import { TeamStrengthPanel } from "@/views/team/team-strength-panel";
 import {
   teamMainColumnClass,
   teamMainGridClass,
   teamPageClass,
   teamSidebarClass,
   teamTwoUpClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface TeamDetailViewProps {
   snapshot: TeamMarketSnapshot;

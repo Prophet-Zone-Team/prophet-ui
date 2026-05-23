@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 
-import { TabSwitcher } from "../../components/ui/tab-switcher";
-import { PositionsTable } from "./positions-table";
-import { TopTradersTable } from "./top-traders-table";
-import { TradesTable, TradesTableHeader } from "./trades-table";
-import { tradeSectionClass } from "./trade-widget/trade-ui";
-import type { TeamMarketSnapshot } from "../../types/market";
+import { TabSwitcher } from "@/components/ui/tab-switcher";
+import { PositionsTable } from "@/views/trade/positions-table";
+import { TopTradersTable } from "@/views/trade/top-traders-table";
+import { TradesTable, TradesTableHeader } from "@/views/trade/trades-table";
+import { tradeSectionClass } from "@/views/trade/trade-widget/trade-ui";
+import type { TeamMarketSnapshot } from "@/types/market";
 
 const ACTIVITY_TABS = [
   { id: "trades", label: "Trades" },

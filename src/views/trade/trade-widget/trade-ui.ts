@@ -1,4 +1,4 @@
-import { cn } from "../../../lib/cn";
+import { cn } from "@/lib/cn";
 
 export const tradePageClass =
   "mx-auto max-w-[1440px] px-4 pb-10 pt-2 sm:px-6";

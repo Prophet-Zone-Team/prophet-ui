@@ -2,13 +2,13 @@ import type {
   ApiFootballFixtureContext,
   TeamFootballMetadata,
   TeamMarketSnapshot
-} from "../../types/market";
-import type { KeyPlayerView, RecentMatchView } from "../../lib/team/team-detail-model";
-import { DossierGroupContext } from "./dossier-group-context";
-import { DossierKeyStars } from "./dossier-key-stars";
-import { DossierNextFixture } from "./dossier-next-fixture";
-import { DossierRecentForm } from "./dossier-recent-form";
-import { teamDossierStripClass } from "./team-detail-ui";
+} from "@/types/market";
+import type { KeyPlayerView, RecentMatchView } from "@/lib/team/team-detail-model";
+import { DossierGroupContext } from "@/views/team/dossier-group-context";
+import { DossierKeyStars } from "@/views/team/dossier-key-stars";
+import { DossierNextFixture } from "@/views/team/dossier-next-fixture";
+import { DossierRecentForm } from "@/views/team/dossier-recent-form";
+import { teamDossierStripClass } from "@/views/team/team-detail-ui";
 
 export interface DossierStripProps {
   snapshot: TeamMarketSnapshot;

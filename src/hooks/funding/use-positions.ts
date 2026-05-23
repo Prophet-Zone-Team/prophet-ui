@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { buildPositionsView } from "../../lib/trading/positions-model";
-import { fetchJson } from "../../lib/team/client-fetch";
-import type { FundingLoadStatus, PositionsView } from "../../types/funding";
-import type { UserPositionRecord } from "../../types/market";
-import { useAuthOptional } from "../../context/auth";
+import { buildPositionsView } from "@/lib/trading/positions-model";
+import { fetchJson } from "@/lib/team/client-fetch";
+import type { FundingLoadStatus, PositionsView } from "@/types/funding";
+import type { UserPositionRecord } from "@/types/market";
+import { useAuthOptional } from "@/context/auth";
 
 export interface UsePositionsOptions {
   enabled?: boolean;

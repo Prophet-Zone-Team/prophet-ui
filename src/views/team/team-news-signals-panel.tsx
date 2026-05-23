@@ -1,18 +1,18 @@
 import Link from "next/link";
 
-import type { NewsEvent, TeamMarketSnapshot } from "../../types/market";
+import type { NewsEvent, TeamMarketSnapshot } from "@/types/market";
 import {
   formatImpact,
   formatShortDate,
   sortNewsByPublished
-} from "../../lib/team/team-detail-model";
-import { TeamEmptyState } from "./team-empty-state";
-import { cn } from "../../lib/cn";
+} from "@/lib/team/team-detail-model";
+import { TeamEmptyState } from "@/views/team/team-empty-state";
+import { cn } from "@/lib/cn";
 import {
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface TeamNewsSignalsPanelProps {
   news: NewsEvent[];

@@ -1,5 +1,5 @@
-import type { CashBalanceView } from "../../types/funding";
-import type { UserBalanceSnapshot, UserTradingReadiness } from "../../types/market";
+import type { CashBalanceView } from "@/types/funding";
+import type { UserBalanceSnapshot, UserTradingReadiness } from "@/types/market";
 
 export function buildCashBalanceView(readiness: UserTradingReadiness | undefined): CashBalanceView | undefined {
   const balances = readiness?.balances;

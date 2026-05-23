@@ -2,13 +2,13 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import { signTypedData } from "../../components/trading/quick-bid-account-setup";
-import { useAuth } from "../../context/auth";
+import { signTypedData } from "@/components/trading/quick-bid-account-setup";
+import { useAuth } from "@/context/auth";
 import {
   isTerminalBridgeStatus,
   pollBridgeAddress,
-} from "../../lib/trading/bridge-status";
-import { fetchJson } from "../../lib/team/client-fetch";
+} from "@/lib/trading/bridge-status";
+import { fetchJson } from "@/lib/team/client-fetch";
 import type {
   BridgeAggregateStatus,
   BridgeFlowStatus,
@@ -16,7 +16,7 @@ import type {
   BridgeTransactionRecord,
   BridgeWithdrawParams,
   WithdrawPreparePayload,
-} from "../../types/funding";
+} from "@/types/funding";
 
 export interface UseWithdrawResult {
   status: BridgeFlowStatus;

@@ -1,8 +1,8 @@
 "use client";
 
-import type { MarketDataMeta } from "../../../data/providers/types";
-import type { TeamMarketSnapshot } from "../../../types/market";
-import { MarketListPanel } from "../../markets/market-list-panel";
+import type { MarketDataMeta } from "@/data/providers/types";
+import type { TeamMarketSnapshot } from "@/types/market";
+import { MarketListPanel } from "@/views/markets/market-list-panel";
 
 export interface HomeWinnerMarketListProps {
   teams: TeamMarketSnapshot[];

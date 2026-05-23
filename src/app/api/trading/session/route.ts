@@ -7,14 +7,14 @@ import {
   createTradingSession,
   createTradingSessionCookie,
   getTradingSessionFromCookie,
-} from "../../../../server/trading/session-store";
-import { checkTradingEligibility, getClientIp } from "../../../../server/trading/eligibility";
-import { setupDepositWalletForOwner } from "../../../../server/trading/deposit-wallet";
-import { recordTradingAuditEvent } from "../../../../server/trading/order-store";
+} from "@/server/trading/session-store";
+import { checkTradingEligibility, getClientIp } from "@/server/trading/eligibility";
+import { setupDepositWalletForOwner } from "@/server/trading/deposit-wallet";
+import { recordTradingAuditEvent } from "@/server/trading/order-store";
 import {
   createTradingSessionChallenge,
   verifyTradingSessionChallenge,
-} from "../../../../server/trading/session-auth";
+} from "@/server/trading/session-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

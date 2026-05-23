@@ -1,4 +1,4 @@
-import type { MarketSentiment } from "../../types/market";
+import type { MarketSentiment } from "@/types/market";
 
 export function formatProbability(value: number): string {
   return `${value.toFixed(1)}%`;

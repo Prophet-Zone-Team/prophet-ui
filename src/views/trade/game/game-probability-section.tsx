@@ -6,30 +6,30 @@ import {
   formatProbability,
   formatRelativeChange,
   formatVolume
-} from "../../../components/home/market-formatters";
-import { MatchProbabilityBar } from "../../home/matches/match-probability-bar";
-import { cn } from "../../../lib/cn";
+} from "@/components/home/market-formatters";
+import { MatchProbabilityBar } from "@/views/home/matches/match-probability-bar";
+import { cn } from "@/lib/cn";
 import {
   filterGameChartByRange,
   filterGameHistoryByOutcome,
   GAME_CHART_TIME_RANGES,
   getGameChartYDomain,
   type GameChartTimeRange
-} from "../../../lib/market/game-market-snapshot";
-import { parseMatchOutcomeOdds } from "../../../lib/market/match-outcome-odds";
-import { resolveMatchSides } from "../../../lib/market/schedule-match";
+} from "@/lib/market/game-market-snapshot";
+import { parseMatchOutcomeOdds } from "@/lib/market/match-outcome-odds";
+import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type {
   GameMarketSnapshot,
   GameProbabilityHistoryPoint,
   MatchOutcomeSide,
   TeamMarketSnapshot
-} from "../../../types/market";
+} from "@/types/market";
 import {
   tradeAwayOutcomePill,
   tradeDrawOutcomePill,
   tradeMatchOutcomePill
-} from "../trade-widget/trade-ui";
-import { GameProbabilityChart } from "./game-probability-chart";
+} from "@/views/trade/trade-widget/trade-ui";
+import { GameProbabilityChart } from "@/views/trade/game/game-probability-chart";
 
 const probabilityCardClass =
   "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";

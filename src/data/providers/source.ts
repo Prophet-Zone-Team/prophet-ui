@@ -1,4 +1,4 @@
-import type { MarketDataSource } from "./types";
+import type { MarketDataSource } from "@/data/providers/types";
 
 export const MARKET_DATA_SOURCES: MarketDataSource[] = ["composite", "polymarket", "kalshi", "mock"];
 

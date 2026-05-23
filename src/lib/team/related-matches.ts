@@ -1,4 +1,4 @@
-import type { WorldCupMatch, WorldCupMatchStatus } from "../../types/market";
+import type { WorldCupMatch, WorldCupMatchStatus } from "@/types/market";
 
 const STATUS_ORDER: Record<WorldCupMatchStatus, number> = {
   live: 0,

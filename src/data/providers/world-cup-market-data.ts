@@ -1,22 +1,22 @@
-import { mockDataProvider } from "./mock-data-provider";
-import { polymarketDataProvider } from "./polymarket-data-provider";
-import { kalshiDataProvider } from "./kalshi-data-provider";
-import { getStoredPolymarketWorldCupData } from "./stored-polymarket-data-provider";
-import { DEFAULT_MARKET_DATA_SOURCE, getMarketDataSourceLabel, normalizeMarketDataSource } from "./source";
-import type { MarketDataSource, WorldCupMarketData, WorldCupMarketDataOptions } from "./types";
-import { getNewsImpactForSnapshots } from "../news/news-impact";
-import { getApiFootballContext } from "../football/api-football-provider";
-import { theOddsApiProvider } from "../odds/the-odds-api-provider";
-import { getAllTeamFootballMetadata } from "../teams/football-metadata";
-import type { NormalizedTeamOddsSummary } from "../odds/types";
-import { attachStoredMarketHistory } from "../../server/market-history/history-reader";
-import { getSignalDataRepository } from "../../server/signal-data/repository";
+import { mockDataProvider } from "@/data/providers/mock-data-provider";
+import { polymarketDataProvider } from "@/data/providers/polymarket-data-provider";
+import { kalshiDataProvider } from "@/data/providers/kalshi-data-provider";
+import { getStoredPolymarketWorldCupData } from "@/data/providers/stored-polymarket-data-provider";
+import { DEFAULT_MARKET_DATA_SOURCE, getMarketDataSourceLabel, normalizeMarketDataSource } from "@/data/providers/source";
+import type { MarketDataSource, WorldCupMarketData, WorldCupMarketDataOptions } from "@/data/providers/types";
+import { getNewsImpactForSnapshots } from "@/data/news/news-impact";
+import { getApiFootballContext } from "@/data/football/api-football-provider";
+import { theOddsApiProvider } from "@/data/odds/the-odds-api-provider";
+import { getAllTeamFootballMetadata } from "@/data/teams/football-metadata";
+import type { NormalizedTeamOddsSummary } from "@/data/odds/types";
+import { attachStoredMarketHistory } from "@/server/market-history/history-reader";
+import { getSignalDataRepository } from "@/server/signal-data/repository";
 import type {
   MarketSentiment,
   ProbabilityHistoryPoint,
   TeamMarketData,
   TeamMarketSnapshot,
-} from "../../types/market";
+} from "@/types/market";
 
 const MARKET_DATA_CACHE_TTL_MS = 60_000;
 const LIVE_MARKET_DATA_CACHE_TTL_MS = 60_000;

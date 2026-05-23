@@ -1,10 +1,10 @@
-import type { MarketDataMeta } from "../../../data/providers/types";
+import type { MarketDataMeta } from "@/data/providers/types";
 import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot
-} from "../../../types/market";
-import { HomeWinnerMarketList } from "./home-winner-market-list";
-import { WinnerProbabilityChart } from "./probability-chart";
+} from "@/types/market";
+import { HomeWinnerMarketList } from "@/views/home/winner/home-winner-market-list";
+import { WinnerProbabilityChart } from "@/views/home/winner/probability-chart";
 
 export interface HomeWinnerPanelProps {
   teams: TeamMarketSnapshot[];

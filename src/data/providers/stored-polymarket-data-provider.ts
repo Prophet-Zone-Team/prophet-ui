@@ -1,9 +1,9 @@
-import { WORLD_CUP_TEAM_COUNT, worldCupTeams } from "../teams/world-cup-teams";
-import { getAllTeamFootballMetadata } from "../teams/football-metadata";
-import { getMarketHistoryRepository } from "../../server/market-history/repository";
-import type { StoredMarketDataSource } from "../../server/market-history/types";
-import type { MarketSentiment, TeamMarketSnapshot } from "../../types/market";
-import type { WorldCupMarketData } from "./types";
+import { WORLD_CUP_TEAM_COUNT, worldCupTeams } from "@/data/teams/world-cup-teams";
+import { getAllTeamFootballMetadata } from "@/data/teams/football-metadata";
+import { getMarketHistoryRepository } from "@/server/market-history/repository";
+import type { StoredMarketDataSource } from "@/server/market-history/types";
+import type { MarketSentiment, TeamMarketSnapshot } from "@/types/market";
+import type { WorldCupMarketData } from "@/data/providers/types";
 
 const FRESH_AFTER_MS = 15 * 60 * 1000;
 const MAX_STORED_AGE_MS = 6 * 60 * 60 * 1000;

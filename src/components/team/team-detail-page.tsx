@@ -1,8 +1,8 @@
 "use client";
 
-import type { MarketDataMeta } from "../../data/providers/types";
-import type { NormalizedBookmakerOdds } from "../../data/odds/types";
-import { TeamDetailView } from "../../views/team";
+import type { MarketDataMeta } from "@/data/providers/types";
+import type { NormalizedBookmakerOdds } from "@/data/odds/types";
+import { TeamDetailView } from "@/views/team";
 import type {
   ApiFootballDataIssue,
   ApiFootballFixtureContext,
@@ -15,7 +15,7 @@ import type {
   ProbabilityHistoryPoint,
   TeamFootballMetadata,
   TeamMarketSnapshot
-} from "../../types/market";
+} from "@/types/market";
 
 export interface TeamDetailPageProps {
   snapshot: TeamMarketSnapshot;

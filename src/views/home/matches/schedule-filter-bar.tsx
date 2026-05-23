@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "../../../lib/cn";
-import type { ScheduleSortKey } from "../../../lib/market/schedule-match";
+import { cn } from "@/lib/cn";
+import type { ScheduleSortKey } from "@/lib/market/schedule-match";
 
 export interface ScheduleFilterBarProps {
   sortKey: ScheduleSortKey;

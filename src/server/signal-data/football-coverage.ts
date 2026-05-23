@@ -1,6 +1,6 @@
-import { worldCupTeams } from "../../data/teams/world-cup-teams";
-import type { ApiFootballDataIssue, ApiFootballTeamContext, Team } from "../../types/market";
-import { getSignalDataRepository } from "./repository";
+import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import type { ApiFootballDataIssue, ApiFootballTeamContext, Team } from "@/types/market";
+import { getSignalDataRepository } from "@/server/signal-data/repository";
 
 const DIMENSIONS = ["profile", "fixtures", "squad", "injuries", "standings", "odds"] as const;
 

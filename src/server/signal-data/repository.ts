@@ -1,6 +1,6 @@
-import { getCloudflareD1Database } from "../cloudflare/d1";
-import { createD1SignalDataRepository } from "./d1-signal-data-repository";
-import type { SignalDataRepository } from "./types";
+import { getCloudflareD1Database } from "@/server/cloudflare/d1";
+import { createD1SignalDataRepository } from "@/server/signal-data/d1-signal-data-repository";
+import type { SignalDataRepository } from "@/server/signal-data/types";
 
 export async function getSignalDataRepository(): Promise<SignalDataRepository> {
   const database = await getCloudflareD1Database();

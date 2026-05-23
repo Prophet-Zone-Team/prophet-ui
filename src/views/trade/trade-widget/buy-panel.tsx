@@ -2,33 +2,33 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { buildBidOrderPreview } from "../../../lib/market/polymarket-order";
+import { buildBidOrderPreview } from "@/lib/market/polymarket-order";
 import {
   calculateReferencePrice,
   formatTradePanelPrice
-} from "../../../lib/market/order-math";
+} from "@/lib/market/order-math";
 import {
   attachUserOrderSignature,
   buildUserOrderSignablePayload
-} from "../../../lib/market/user-order";
-import { formatProbability } from "../../../components/home/market-formatters";
-import { cn } from "../../../lib/cn";
-import { fetchJson } from "../../../lib/team/client-fetch";
-import { formatTeamDetailMoney } from "../../../lib/team/detail-format";
-import { signTypedData } from "../../../lib/team/wallet-sign";
+} from "@/lib/market/user-order";
+import { formatProbability } from "@/components/home/market-formatters";
+import { cn } from "@/lib/cn";
+import { fetchJson } from "@/lib/team/client-fetch";
+import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import { signTypedData } from "@/lib/team/wallet-sign";
 import type {
   OrderOutcomeSide,
   TeamMarketSnapshot,
   TradingUserSession,
   UserOrderPreview,
   UserTradingReadiness
-} from "../../../types/market";
+} from "@/types/market";
 import {
   connectTradingWallet,
   formatShortWalletAddress,
   loadTradingSession
-} from "../../../components/trading/trading-wallet-session";
-import { tradeBidButtonClass, tradeQuickAmountClass } from "./trade-ui";
+} from "@/components/trading/trading-wallet-session";
+import { tradeBidButtonClass, tradeQuickAmountClass } from "@/views/trade/trade-widget/trade-ui";
 
 type TradeTicketStatus =
   | "idle"

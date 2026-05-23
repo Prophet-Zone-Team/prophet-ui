@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getSystemHealthReport } from "../../../../server/system/health";
+import { getSystemHealthReport } from "@/server/system/health";
 
 export const dynamic = "force-dynamic";
 

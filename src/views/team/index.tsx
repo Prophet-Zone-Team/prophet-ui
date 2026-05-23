@@ -1,1 +1,1 @@
-export { TeamDetailView, type TeamDetailViewProps } from "./team-detail-view";
+export { TeamDetailView, type TeamDetailViewProps } from "@/views/team/team-detail-view";

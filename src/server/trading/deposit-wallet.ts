@@ -3,8 +3,8 @@ import "server-only";
 import { deriveDepositWallet, TransactionType } from "@polymarket/builder-relayer-client";
 import { BuilderConfig } from "@polymarket/builder-signing-sdk";
 
-import type { DepositWalletStatus, TradingUserSession } from "../../types/market";
-import { getTradingChainId } from "./clob-auth";
+import type { DepositWalletStatus, TradingUserSession } from "@/types/market";
+import { getTradingChainId } from "@/server/trading/clob-auth";
 
 const DEFAULT_RELAYER_URL = "https://relayer-v2.polymarket.com";
 const RELAYER_TIMEOUT_MS = 8000;

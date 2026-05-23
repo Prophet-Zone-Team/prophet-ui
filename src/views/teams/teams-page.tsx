@@ -1,18 +1,18 @@
 import Link from "next/link";
 
-import type { MarketDataMeta, WorldCupMarketData } from "../../data/providers/types";
-import { TeamFlag } from "../../components/teams/team-flag";
-import { teamDetailHref } from "../../lib/routes/team";
-import { teamTradeHref } from "../../lib/routes/trade";
-import { cn } from "../../lib/cn";
+import type { MarketDataMeta, WorldCupMarketData } from "@/data/providers/types";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { teamDetailHref } from "@/lib/routes/team";
+import { teamTradeHref } from "@/lib/routes/trade";
+import { cn } from "@/lib/cn";
 import type {
   ApiFootballFixtureContext,
   ApiFootballTeamContext,
   NewsEvent,
   TeamFootballMetadata,
   TeamMarketSnapshot
-} from "../../types/market";
-import { TeamsDirectoryItem } from "./teams-directory-item";
+} from "@/types/market";
+import { TeamsDirectoryItem } from "@/views/teams/teams-directory-item";
 import {
   teamsDetailButtonClass,
   teamsDirectoryHeadClass,
@@ -22,7 +22,7 @@ import {
   teamsMetricLabelClass,
   teamsPageClass,
   teamsPanelClass
-} from "./teams-ui";
+} from "@/views/teams/teams-ui";
 
 export interface TeamsPageProps {
   snapshots: TeamMarketSnapshot[];

@@ -1,7 +1,7 @@
-import type { WorldCupMarketData } from "../../data/providers/types";
-import type { ProbabilityHistoryPoint, TeamMarketData, TeamMarketSnapshot } from "../../types/market";
-import { getMarketHistoryRepository } from "./repository";
-import type { MarketSnapshotRecord, StoredMarketDataSource } from "./types";
+import type { WorldCupMarketData } from "@/data/providers/types";
+import type { ProbabilityHistoryPoint, TeamMarketData, TeamMarketSnapshot } from "@/types/market";
+import { getMarketHistoryRepository } from "@/server/market-history/repository";
+import type { MarketSnapshotRecord, StoredMarketDataSource } from "@/server/market-history/types";
 
 const DEFAULT_HISTORY_DAYS = 30;
 const HISTORY_WINDOW_TOLERANCE_HOURS = 6;

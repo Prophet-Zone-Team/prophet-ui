@@ -1,13 +1,13 @@
 "use client";
 
-import type { TradingUserSession } from "../../types/market";
+import type { TradingUserSession } from "@/types/market";
 import {
   getEthereumProvider,
   getEthereumProviderForWallet,
   getProviderKind,
   type EthereumProvider,
   type WalletProviderKind,
-} from "./wallet-provider";
+} from "@/components/trading/wallet-provider";
 
 const DEFAULT_SIGNATURE_TYPE = 3;
 const PROVIDER_STORAGE_PREFIX = "wc_trading_wallet_provider";

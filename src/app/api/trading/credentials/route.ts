@@ -4,13 +4,13 @@ import {
   deriveUserClobCredentials,
   getFreshClobAuthTypedData,
   recoverClobAuthSignerAddress,
-} from "../../../../server/trading/clob-auth";
-import { recordTradingAuditEvent } from "../../../../server/trading/order-store";
+} from "@/server/trading/clob-auth";
+import { recordTradingAuditEvent } from "@/server/trading/order-store";
 import {
   createTradingCredentialsCookie,
   getTradingSessionFromCookie,
   setTradingCredentials,
-} from "../../../../server/trading/session-store";
+} from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -11,8 +11,8 @@ import type {
   TickSize,
 } from "@polymarket/clob-client-v2";
 
-import type { BidTradeSide, TradingOrderType, UserPositionRecord } from "../../types/market";
-import { getTradingHost } from "./clob-auth";
+import type { BidTradeSide, TradingOrderType, UserPositionRecord } from "@/types/market";
+import { getTradingHost } from "@/server/trading/clob-auth";
 
 export interface SignedUserOrderPayload {
   order: unknown;

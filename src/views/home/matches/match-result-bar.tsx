@@ -1,10 +1,10 @@
 "use client";
 
-import { cn } from "../../../lib/cn";
+import { cn } from "@/lib/cn";
 import {
   getMatchResultBarColor,
   type MatchResultWinner
-} from "../../../lib/market/match-result";
+} from "@/lib/market/match-result";
 
 export interface MatchResultBarProps {
   winner: MatchResultWinner | undefined;

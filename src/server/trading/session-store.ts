@@ -2,7 +2,7 @@ import "server-only";
 
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 
-import type { TradingUserSession, UserTradingCredentialStatus } from "../../types/market";
+import type { TradingUserSession, UserTradingCredentialStatus } from "@/types/market";
 
 export interface StoredUserTradingCredentials {
   key: string;

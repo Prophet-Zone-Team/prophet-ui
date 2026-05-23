@@ -1,5 +1,5 @@
-import { cn } from "../../lib/cn";
-import type { IconProps } from "./types";
+import { cn } from "@/lib/cn";
+import type { IconProps } from "@/components/icons/types";
 
 export function BackChevronIcon({ className, ...props }: IconProps) {
   return (

@@ -11,25 +11,25 @@ import {
   YAxis
 } from "recharts";
 
-import { formatProbability } from "../../components/home/market-formatters";
+import { formatProbability } from "@/components/home/market-formatters";
 import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot
-} from "../../types/market";
+} from "@/types/market";
 import {
   filterTeamChartByRange,
   getTeamChartYDomain,
   resolveTeamChartData,
   TEAM_CHART_TIME_RANGES,
   type TeamChartTimeRange
-} from "../../lib/team/probability-history";
-import { TeamPanelMetric } from "./team-panel-metric";
-import { cn } from "../../lib/cn";
+} from "@/lib/team/probability-history";
+import { TeamPanelMetric } from "@/views/team/team-panel-metric";
+import { cn } from "@/lib/cn";
 import {
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface TeamProbabilityPanelProps {
   history: ProbabilityHistoryPoint[];

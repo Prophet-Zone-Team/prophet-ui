@@ -1,15 +1,15 @@
 import Link from "next/link";
 
-import { teamTradeHref } from "../../lib/routes/trade";
+import { teamTradeHref } from "@/lib/routes/trade";
 
-import type { TeamMarketSnapshot } from "../../types/market";
+import type { TeamMarketSnapshot } from "@/types/market";
 import {
   formatChange,
   formatProbability,
   formatVolume,
   getChangeTone,
   getSentimentLabel,
-} from "./market-formatters";
+} from "@/components/home/market-formatters";
 
 interface TeamMarketCardProps {
   snapshot: TeamMarketSnapshot;

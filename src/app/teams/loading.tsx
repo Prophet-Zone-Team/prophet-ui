@@ -2,7 +2,7 @@ import {
   teamsFeaturedCardClass,
   teamsPageClass,
   teamsPanelClass
-} from "../../views/teams/teams-ui";
+} from "@/views/teams/teams-ui";
 
 export default function TeamsLoading() {
   return (

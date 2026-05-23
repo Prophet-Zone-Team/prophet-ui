@@ -2,17 +2,17 @@
 
 import { useCallback, useRef, useState } from "react";
 
-import { useAuth } from "../../context/auth";
-import { isTerminalBridgeStatus, pollBridgeAddress } from "../../lib/trading/bridge-status";
-import { transferCollateralFromConnectedWallet } from "../../lib/trading/polygon-collateral-transfer";
-import { fetchJson } from "../../lib/team/client-fetch";
+import { useAuth } from "@/context/auth";
+import { isTerminalBridgeStatus, pollBridgeAddress } from "@/lib/trading/bridge-status";
+import { transferCollateralFromConnectedWallet } from "@/lib/trading/polygon-collateral-transfer";
+import { fetchJson } from "@/lib/team/client-fetch";
 import type {
   BridgeAggregateStatus,
   BridgeFlowStatus,
   BridgeStatusResponse,
   BridgeTransactionRecord,
   DepositAddressesPayload,
-} from "../../types/funding";
+} from "@/types/funding";
 
 export interface UseDepositResult {
   status: BridgeFlowStatus;

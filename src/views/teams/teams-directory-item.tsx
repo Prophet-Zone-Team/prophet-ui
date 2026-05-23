@@ -4,27 +4,27 @@ import Link from "next/link";
 import { Zap } from "lucide-react";
 import { useState } from "react";
 
-import { TeamFlag } from "../../components/teams/team-flag";
+import { TeamFlag } from "@/components/teams/team-flag";
 import {
   formatProbability,
   formatRelativeChange
-} from "../../components/home/market-formatters";
-import { teamDetailHref } from "../../lib/routes/team";
-import { teamTradeHref } from "../../lib/routes/trade";
-import { cn } from "../../lib/cn";
+} from "@/components/home/market-formatters";
+import { teamDetailHref } from "@/lib/routes/team";
+import { teamTradeHref } from "@/lib/routes/trade";
+import { cn } from "@/lib/cn";
 import type {
   ApiFootballFixtureContext,
   TeamFootballMetadata,
   TeamMarketSnapshot
-} from "../../types/market";
-import { MarketBidDialog } from "../markets/market-bid-dialog";
+} from "@/types/market";
+import { MarketBidDialog } from "@/views/markets/market-bid-dialog";
 import {
   teamsBidButtonClass,
   teamsDetailButtonClass,
   teamsDirectoryGridClass,
   teamsDirectoryRowClass,
   teamsMetricLabelClass
-} from "./teams-ui";
+} from "@/views/teams/teams-ui";
 
 export interface TeamsDirectoryItemProps {
   snapshot: TeamMarketSnapshot;

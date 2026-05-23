@@ -1,6 +1,6 @@
 "use client";
 
-import { tradeMarketButtonClass } from "./trade-ui";
+import { tradeMarketButtonClass } from "@/views/trade/trade-widget/trade-ui";
 
 export function TradeMarketButton() {
   return (

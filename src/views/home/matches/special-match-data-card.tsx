@@ -2,19 +2,19 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 
-import { TeamFlag } from "../../../components/teams/team-flag";
-import { cn } from "../../../lib/cn";
-import { formatMatchScore } from "../../../lib/market/match-display";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { cn } from "@/lib/cn";
+import { formatMatchScore } from "@/lib/market/match-display";
 import {
   buildProbabilityClips,
   getSlantOffsetPx
-} from "../../../lib/market/match-probability-bar";
+} from "@/lib/market/match-probability-bar";
 import {
   formatOutcomePercent,
   parseMatchOutcomeOdds
-} from "../../../lib/market/match-outcome-odds";
-import { useLiveElapsedClock } from "../../../lib/market/use-live-elapsed-clock";
-import type { TeamMarketSnapshot, WorldCupMatch } from "../../../types/market";
+} from "@/lib/market/match-outcome-odds";
+import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
+import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 
 function useSlantOffsetPx(): [number, (node: HTMLDivElement | null) => void] {
   const containerRef = useRef<HTMLDivElement | null>(null);

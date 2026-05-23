@@ -3,7 +3,7 @@
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import type { Hex } from "viem";
 
-import type { UserOrderSignablePayload } from "../../lib/market/user-order";
+import type { UserOrderSignablePayload } from "@/lib/market/user-order";
 
 const STORAGE_PREFIX = "wc_quick_bid_signer";
 const AUTHORIZATION_GRACE_SECONDS = 90;

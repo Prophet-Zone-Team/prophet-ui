@@ -2,9 +2,9 @@ import {
   mockNewsEvents,
   mockProbabilityHistory,
   mockTeamMarketSnapshots,
-} from "../mock/teams";
-import { getAllTeamFootballMetadata } from "../teams/football-metadata";
-import type { WorldCupMarketData, WorldCupMarketDataProvider } from "./types";
+} from "@/data/mock/teams";
+import { getAllTeamFootballMetadata } from "@/data/teams/football-metadata";
+import type { WorldCupMarketData, WorldCupMarketDataProvider } from "@/data/providers/types";
 
 export const mockDataProvider: WorldCupMarketDataProvider = {
   async getWorldCupMarketData(): Promise<WorldCupMarketData> {

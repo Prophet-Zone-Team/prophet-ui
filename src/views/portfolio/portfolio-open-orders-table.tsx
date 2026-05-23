@@ -1,22 +1,22 @@
 "use client";
 
-import { findSnapshotForTokenId } from "../../lib/portfolio/portfolio-metrics";
+import { findSnapshotForTokenId } from "@/lib/portfolio/portfolio-metrics";
 import {
   formatSharePrice,
   formatUnixSeconds,
   titleCase
-} from "../../lib/portfolio/portfolio-format";
-import type { UserOpenOrder } from "../../lib/portfolio/types";
-import { formatShareSize } from "../../lib/market/order-math";
-import type { TeamMarketSnapshot } from "../../types/market";
-import { TeamFlag } from "../../components/teams/team-flag";
-import { PortfolioEmptyState } from "./portfolio-empty-state";
+} from "@/lib/portfolio/portfolio-format";
+import type { UserOpenOrder } from "@/lib/portfolio/types";
+import { formatShareSize } from "@/lib/market/order-math";
+import type { TeamMarketSnapshot } from "@/types/market";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import {
   portfolioActionButtonClass,
   portfolioConnectButtonClass,
   portfolioOrdersTableRowClass,
   portfolioTableScrollClass
-} from "./portfolio-ui";
+} from "@/views/portfolio/portfolio-ui";
 
 export interface PortfolioOpenOrdersTableProps {
   openOrders: UserOpenOrder[];

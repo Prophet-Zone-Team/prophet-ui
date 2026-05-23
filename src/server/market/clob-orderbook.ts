@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getTradingHost } from "../trading/clob-auth";
+import { getTradingHost } from "@/server/trading/clob-auth";
 
 export interface OrderbookLevel {
   price: number;

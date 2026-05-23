@@ -1,8 +1,8 @@
 import { encodeAbiParameters, keccak256, parseUnits, recoverTypedDataAddress, toHex } from "viem";
 import type { Hex, TypedDataDomain, TypedDataParameter } from "viem";
 
-import type { BidTradeSide, TradingOrderType } from "../../types/market";
-import type { BidOrderPreview } from "./polymarket-order";
+import type { BidTradeSide, TradingOrderType } from "@/types/market";
+import type { BidOrderPreview } from "@/lib/market/polymarket-order";
 
 type SupportedOrderType = TradingOrderType;
 

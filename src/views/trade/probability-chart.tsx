@@ -13,13 +13,13 @@ import {
   type TooltipProps
 } from "recharts";
 
-import { TeamFlag } from "../../components/teams/team-flag";
-import { formatProbability } from "../../components/home/market-formatters";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { formatProbability } from "@/components/home/market-formatters";
 import {
   findAnnotationForChartPoint,
   type TeamChartMatchAnnotation
-} from "../../lib/team/chart-match-annotations";
-import type { ProbabilityHistoryPoint } from "../../types/market";
+} from "@/lib/team/chart-match-annotations";
+import type { ProbabilityHistoryPoint } from "@/types/market";
 
 const CHART_LINE_COLOR = "#8AB956";
 const CHART_FILL_TOP = "rgba(138, 185, 86, 0.3)";

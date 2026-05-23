@@ -1,22 +1,22 @@
 "use client";
 
-import { findSnapshotForTokenId } from "../../lib/portfolio/portfolio-metrics";
+import { findSnapshotForTokenId } from "@/lib/portfolio/portfolio-metrics";
 import {
   formatPortfolioDateTime,
   formatSharePrice,
   titleCase
-} from "../../lib/portfolio/portfolio-format";
-import { formatShareSize } from "../../lib/market/order-math";
-import type { TeamMarketSnapshot, UserOrderRecord } from "../../types/market";
-import { TeamFlag } from "../../components/teams/team-flag";
-import { formatTeamDetailMoney } from "../../lib/team/detail-format";
-import { PortfolioEmptyState } from "./portfolio-empty-state";
+} from "@/lib/portfolio/portfolio-format";
+import { formatShareSize } from "@/lib/market/order-math";
+import type { TeamMarketSnapshot, UserOrderRecord } from "@/types/market";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import {
   portfolioHistoryTableRowClass,
   portfolioConnectButtonClass,
   portfolioOrdersTableRowClass,
   portfolioTableScrollClass
-} from "./portfolio-ui";
+} from "@/views/portfolio/portfolio-ui";
 
 export interface PortfolioHistoryTableProps {
   orderHistory: UserOrderRecord[];

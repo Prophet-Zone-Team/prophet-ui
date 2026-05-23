@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import { WORLD_CUP_2026_GROUPS, WORLD_CUP_2026_GROUP_ORDER, getWorldCupGroupForTeam } from "../../data/world-cup-2026/groups";
-import { teamTradeHref } from "../../lib/routes/trade";
-import { calculateWorldCupPath } from "../../lib/world-cup-path/calculate-path";
-import type { FinishType, PathMode, PathResult } from "../../types/market";
-import { TeamFlag } from "../teams/team-flag";
+import { WORLD_CUP_2026_GROUPS, WORLD_CUP_2026_GROUP_ORDER, getWorldCupGroupForTeam } from "@/data/world-cup-2026/groups";
+import { teamTradeHref } from "@/lib/routes/trade";
+import { calculateWorldCupPath } from "@/lib/world-cup-path/calculate-path";
+import type { FinishType, PathMode, PathResult } from "@/types/market";
+import { TeamFlag } from "@/components/teams/team-flag";
 const FINISH_OPTIONS: Array<{ value: FinishType; label: string }> = [
   { value: "GROUP_WINNER", label: "Group winner" },
   { value: "RUNNER_UP", label: "Runner-up" },

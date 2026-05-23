@@ -1,6 +1,6 @@
-import { getCloudflareD1Database } from "../cloudflare/d1";
-import type { D1Database } from "../market-history/types";
-import type { FavouriteEntityType, UserFavourite } from "../../types/market";
+import { getCloudflareD1Database } from "@/server/cloudflare/d1";
+import type { D1Database } from "@/server/market-history/types";
+import type { FavouriteEntityType, UserFavourite } from "@/types/market";
 
 interface FavouriteRow {
   id: string;

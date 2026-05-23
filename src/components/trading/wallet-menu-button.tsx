@@ -1,21 +1,21 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-import type { TradingUserSession } from "../../types/market";
-import { prepareQuickBidAccount, QuickBidApprovalPendingError } from "./quick-bid-account-setup";
+import type { TradingUserSession } from "@/types/market";
+import { prepareQuickBidAccount, QuickBidApprovalPendingError } from "@/components/trading/quick-bid-account-setup";
 import {
   formatQuickBidAmount,
   readQuickBidAmount,
   subscribeQuickBidAmountChange,
   writeActiveQuickBidWalletAddress,
   writeQuickBidAmount,
-} from "./quick-bid-amount";
+} from "@/components/trading/quick-bid-amount";
 import {
   connectTradingWallet,
   disconnectTradingSession,
   formatShortWalletAddress,
   loadTradingSession,
-} from "./trading-wallet-session";
+} from "@/components/trading/trading-wallet-session";
 
 const loginButtonClassName =
   "inline-flex h-10 min-w-[168px] items-center justify-center gap-4 px-4 text-[13px] font-extrabold text-black disabled:cursor-wait disabled:opacity-70";

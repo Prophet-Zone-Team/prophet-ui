@@ -6,8 +6,8 @@ import {
   buildProbabilityClips,
   getSlantOffsetPx,
   type MatchOutcomeProbabilities
-} from "../../../lib/market/match-probability-bar";
-import { cn } from "../../../lib/cn";
+} from "@/lib/market/match-probability-bar";
+import { cn } from "@/lib/cn";
 
 export interface MatchProbabilityBarProps {
   probabilities: MatchOutcomeProbabilities;
@@ -91,4 +91,4 @@ function useSlantOffsetPx(defaultHeight: number): [number, (node: HTMLDivElement
   return [slantPx, setContainerRef];
 }
 
-export { buildProbabilityClips, getSlantOffsetPx } from "../../../lib/market/match-probability-bar";
+export { buildProbabilityClips, getSlantOffsetPx } from "@/lib/market/match-probability-bar";

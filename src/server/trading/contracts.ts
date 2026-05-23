@@ -2,7 +2,7 @@ import "server-only";
 
 import { getContractConfig } from "@polymarket/clob-client-v2";
 
-import { getTradingChainId } from "./clob-auth";
+import { getTradingChainId } from "@/server/trading/clob-auth";
 
 export function getTradingContractAddresses() {
   const config = getContractConfig(getTradingChainId());

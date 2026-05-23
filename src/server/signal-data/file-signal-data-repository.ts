@@ -1,8 +1,8 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-import type { ApiFootballTeamContext, NewsArticle } from "../../types/market";
-import type { SignalDataCollectionRun, SignalDataReadOptions, SignalDataRepository } from "./types";
+import type { ApiFootballTeamContext, NewsArticle } from "@/types/market";
+import type { SignalDataCollectionRun, SignalDataReadOptions, SignalDataRepository } from "@/server/signal-data/types";
 
 const SIGNAL_DATA_FILE_PATH = join(process.cwd(), ".data", "signal-data.json");
 

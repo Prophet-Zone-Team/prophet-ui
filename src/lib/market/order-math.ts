@@ -1,8 +1,8 @@
-import type { BidTradeSide, OrderOutcomeSide, PolymarketFeeDetails, TradingOrderType } from "../../types/market";
+import type { BidTradeSide, OrderOutcomeSide, PolymarketFeeDetails, TradingOrderType } from "@/types/market";
 import {
   calculateBuyOrderCostFromBudget,
   estimateBuyTakerFee,
-} from "./polymarket-fees";
+} from "@/lib/market/polymarket-fees";
 
 const MIN_PRICE = 0.01;
 const MAX_PRICE = 0.99;

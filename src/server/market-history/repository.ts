@@ -1,6 +1,6 @@
-import { getCloudflareD1Database } from "../cloudflare/d1";
-import { createD1MarketHistoryRepository } from "./d1-market-history-repository";
-import type { MarketHistoryRepository } from "./types";
+import { getCloudflareD1Database } from "@/server/cloudflare/d1";
+import { createD1MarketHistoryRepository } from "@/server/market-history/d1-market-history-repository";
+import type { MarketHistoryRepository } from "@/server/market-history/types";
 
 export async function getMarketHistoryRepository(): Promise<MarketHistoryRepository> {
   const database = await getCloudflareD1Database();

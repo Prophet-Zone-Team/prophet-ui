@@ -1,4 +1,4 @@
-import { fetchJson } from "../team/client-fetch";
+import { fetchJson } from "@/lib/team/client-fetch";
 
 export async function postCollateralBalanceSync(tokenId?: string): Promise<{ syncedAt: string }> {
   return fetchJson<{ syncedAt: string }>("/api/trading/balance-sync", {

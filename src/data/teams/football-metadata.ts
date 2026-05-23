@@ -1,4 +1,4 @@
-import type { Team, TeamFootballMetadata } from "../../types/market";
+import type { Team, TeamFootballMetadata } from "@/types/market";
 
 const UPDATED_AT = "2026-05-19T00:00:00.000Z";
 const SOURCE = "Curated editorial football metadata; rankings and squad values require periodic operator review.";

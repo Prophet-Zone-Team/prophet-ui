@@ -3,15 +3,15 @@
 import { recoverTypedDataAddress } from "viem";
 import type { Hex } from "viem";
 
-import type { DepositWalletBatchSignablePayload } from "../../lib/market/deposit-wallet-batch";
-import type { TradingUserSession, UserTradingReadiness } from "../../types/market";
+import type { DepositWalletBatchSignablePayload } from "@/lib/market/deposit-wallet-batch";
+import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
 import {
   getOrCreateQuickBidSessionSigner,
   isQuickBidSessionSignerAuthorized,
   writeQuickBidSessionSigner,
-} from "./quick-bid-session-signer";
-import { getStoredTradingWalletProvider } from "./trading-wallet-session";
-import { getEthereumProvidersForWallet, getProviderLabel, type EthereumProvider } from "./wallet-provider";
+} from "@/components/trading/quick-bid-session-signer";
+import { getStoredTradingWalletProvider } from "@/components/trading/trading-wallet-session";
+import { getEthereumProvidersForWallet, getProviderLabel, type EthereumProvider } from "@/components/trading/wallet-provider";
 
 interface TypedDataPayload {
   domain: unknown;

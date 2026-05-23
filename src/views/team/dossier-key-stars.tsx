@@ -1,12 +1,12 @@
-import type { KeyPlayerView } from "../../lib/team/team-detail-model";
-import { getInitials } from "../../lib/team/team-detail-model";
-import type { TeamFootballMetadata } from "../../types/market";
+import type { KeyPlayerView } from "@/lib/team/team-detail-model";
+import { getInitials } from "@/lib/team/team-detail-model";
+import type { TeamFootballMetadata } from "@/types/market";
 import {
   teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface DossierKeyStarsProps {
   players: KeyPlayerView[];

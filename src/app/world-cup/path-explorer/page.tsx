@@ -1,4 +1,4 @@
-import { PathExplorerPage } from "../../../components/world-cup/path-explorer-page";
+import { PathExplorerPage } from "@/components/world-cup/path-explorer-page";
 
 interface PageProps {
   searchParams: Promise<{

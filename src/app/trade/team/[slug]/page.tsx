@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 
-import { TradePage } from "../../../../components/trade/trade-page";
-import { getTheOddsApiWorldCupWinnerOdds } from "../../../../data/odds/the-odds-api-provider";
-import { getWorldCupMarketData } from "../../../../data/providers/world-cup-market-data";
+import { TradePage } from "@/components/trade/trade-page";
+import { getTheOddsApiWorldCupWinnerOdds } from "@/data/odds/the-odds-api-provider";
+import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 import {
   attachCachedFootballToMatches,
   getStaticWorldCupMatches
-} from "../../../../data/world-cup-2026/matches";
+} from "@/data/world-cup-2026/matches";
 
 interface TradePageRouteProps {
   params: Promise<{

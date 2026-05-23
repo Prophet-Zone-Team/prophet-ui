@@ -1,7 +1,7 @@
 import "server-only";
 
-import type { TradingEligibilityStatus, TradingUserSession } from "../../types/market";
-import { updateTradingSession } from "./session-store";
+import type { TradingEligibilityStatus, TradingUserSession } from "@/types/market";
+import { updateTradingSession } from "@/server/trading/session-store";
 
 const DEFAULT_GEOBLOCK_URL = "https://polymarket.com/api/geoblock";
 const GEOBLOCK_TIMEOUT_MS = 8000;

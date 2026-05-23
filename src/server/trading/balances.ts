@@ -2,11 +2,11 @@ import "server-only";
 
 import type { ApiKeyCreds, BalanceAllowanceResponse, MarketDetails } from "@polymarket/clob-client-v2";
 
-import { estimateBuyTakerFee as estimatePolymarketBuyTakerFee } from "../../lib/market/polymarket-fees";
-import type { BidTradeSide, TradingUserSession, UserBalanceSnapshot } from "../../types/market";
-import { getBuilderTakerFeeRate } from "./builder-code";
-import { fetchClobMarketDetails, fetchUserBalanceAllowance } from "./clob-user-client";
-import { fetchOnchainCollateralSnapshot } from "./onchain-balances";
+import { estimateBuyTakerFee as estimatePolymarketBuyTakerFee } from "@/lib/market/polymarket-fees";
+import type { BidTradeSide, TradingUserSession, UserBalanceSnapshot } from "@/types/market";
+import { getBuilderTakerFeeRate } from "@/server/trading/builder-code";
+import { fetchClobMarketDetails, fetchUserBalanceAllowance } from "@/server/trading/clob-user-client";
+import { fetchOnchainCollateralSnapshot } from "@/server/trading/onchain-balances";
 
 export interface OrderFundingRequirement {
   tradeSide: BidTradeSide;

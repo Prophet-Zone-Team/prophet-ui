@@ -1,12 +1,12 @@
-import type { TeamFootballMetadata } from "../../types/market";
-import { getGroupPeerMetadata } from "../../lib/team/team-detail-model";
-import { TeamEmptyState } from "./team-empty-state";
+import type { TeamFootballMetadata } from "@/types/market";
+import { getGroupPeerMetadata } from "@/lib/team/team-detail-model";
+import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
   teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface DossierGroupContextProps {
   metadata?: TeamFootballMetadata;

@@ -7,8 +7,8 @@ import type {
   TeamMarketSnapshot,
   MarketUniverseMeta,
   TeamFootballMetadata,
-} from "../../types/market";
-import type { OddsProviderMeta } from "../odds/types";
+} from "@/types/market";
+import type { OddsProviderMeta } from "@/data/odds/types";
 
 export type MarketDataSource = "composite" | "polymarket" | "kalshi" | "mock";
 

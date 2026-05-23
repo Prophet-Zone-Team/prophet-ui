@@ -1,14 +1,14 @@
-import { apiFootballTeamConfig } from "../../config/api-football-team-config";
+import { apiFootballTeamConfig } from "@/config/api-football-team-config";
 import {
   WORLD_CUP_CONTEXT_KEYWORDS,
   getTeamNewsQueryConfig,
-} from "../../config/team-news-query-config";
-import { worldCupTeams } from "../../data/teams/world-cup-teams";
-import { getApiFootballTeamContext } from "../../data/football/api-football-provider";
-import { gdeltNewsProvider } from "../../data/news/gdelt-news-provider";
-import type { TeamNewsQuery } from "../../data/news/types";
-import type { ApiFootballTeamContext, NewsArticle, Team } from "../../types/market";
-import { getSignalDataRepository } from "./repository";
+} from "@/config/team-news-query-config";
+import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { getApiFootballTeamContext } from "@/data/football/api-football-provider";
+import { gdeltNewsProvider } from "@/data/news/gdelt-news-provider";
+import type { TeamNewsQuery } from "@/data/news/types";
+import type { ApiFootballTeamContext, NewsArticle, Team } from "@/types/market";
+import { getSignalDataRepository } from "@/server/signal-data/repository";
 
 const NEWS_LOOKBACK_DAYS = 30;
 const MAX_ARTICLES_PER_TEAM = 12;

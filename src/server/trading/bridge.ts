@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getPolymarketBuilderCode } from "./builder-code";
+import { getPolymarketBuilderCode } from "@/server/trading/builder-code";
 
 const DEFAULT_BRIDGE_URL = "https://bridge.polymarket.com";
 const BRIDGE_TIMEOUT_MS = 8000;

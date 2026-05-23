@@ -2,13 +2,13 @@
 
 import { useCallback, useState } from "react";
 
-import { CopyLinkIcon } from "../../components/icons/copy-link-icon";
-import { formatPortfolioMoney } from "../../lib/portfolio/portfolio-format";
-import type { PortfolioViewModel } from "../../lib/portfolio/portfolio-metrics";
-import type { PortfolioLoadStatus } from "../../lib/portfolio/types";
-import { formatShortWallet } from "../../lib/team/detail-format";
-import type { TradingUserSession } from "../../types/market";
-import { PortfolioPerformanceChart } from "./portfolio-performance-chart";
+import { CopyLinkIcon } from "@/components/icons/copy-link-icon";
+import { formatPortfolioMoney } from "@/lib/portfolio/portfolio-format";
+import type { PortfolioViewModel } from "@/lib/portfolio/portfolio-metrics";
+import type { PortfolioLoadStatus } from "@/lib/portfolio/types";
+import { formatShortWallet } from "@/lib/team/detail-format";
+import type { TradingUserSession } from "@/types/market";
+import { PortfolioPerformanceChart } from "@/views/portfolio/portfolio-performance-chart";
 import {
   portfolioAvatarClass,
   portfolioConnectButtonClass,
@@ -19,7 +19,7 @@ import {
   portfolioSummaryValueMediumClass,
   portfolioWalletAddressClass,
   portfolioWithdrawButtonClass
-} from "./portfolio-ui";
+} from "@/views/portfolio/portfolio-ui";
 
 export interface PortfolioSummarySectionProps {
   session: TradingUserSession | undefined;

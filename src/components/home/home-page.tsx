@@ -3,22 +3,22 @@ import { Icon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { teamDetailHref } from "../../lib/routes/team";
-import { teamTradeHref } from "../../lib/routes/trade";
+import { teamDetailHref } from "@/lib/routes/team";
+import { teamTradeHref } from "@/lib/routes/trade";
 
-import type { MarketDataMeta, WorldCupMarketData } from "../../data/providers/types";
-import { getMarketDataSourceLabel } from "../../data/providers/source";
+import type { MarketDataMeta, WorldCupMarketData } from "@/data/providers/types";
+import { getMarketDataSourceLabel } from "@/data/providers/source";
 import {
   generateMarketSignals,
   getBiggestLosers,
   getHotTeams,
   getTopMovers,
-} from "../../lib/market/analyzer";
-import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "../../types/market";
-import { PlaceBidButton } from "../trading/place-bid-button";
-import { TeamFlag } from "../teams/team-flag";
-import { formatChange, formatProbability, formatRelativeChange, formatVolume } from "./market-formatters";
-import { PixelBlast } from "./pixel-blast";
+} from "@/lib/market/analyzer";
+import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "@/types/market";
+import { PlaceBidButton } from "@/components/trading/place-bid-button";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { formatChange, formatProbability, formatRelativeChange, formatVolume } from "@/components/home/market-formatters";
+import { PixelBlast } from "@/components/home/pixel-blast";
 
 interface HomePageProps {
   snapshots: TeamMarketSnapshot[];

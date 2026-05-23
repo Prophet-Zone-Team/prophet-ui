@@ -1,5 +1,5 @@
-import type { MarketDataMeta } from "../../data/providers/types";
-import { getMarketDataSourceLabel } from "../../data/providers/source";
+import type { MarketDataMeta } from "@/data/providers/types";
+import { getMarketDataSourceLabel } from "@/data/providers/source";
 
 export function DataStatusBanner({ meta }: { meta: MarketDataMeta }) {
   const tone = getStatusTone(meta);

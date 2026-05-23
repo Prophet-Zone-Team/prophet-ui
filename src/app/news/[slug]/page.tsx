@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { NewsDetailPage } from "../../../components/news/news-page";
-import { getWorldCupMarketData } from "../../../data/providers/world-cup-market-data";
-import { findNewsArticleBySlug } from "../../../lib/news/news-slugs";
-import { getSignalDataRepository } from "../../../server/signal-data/repository";
+import { NewsDetailPage } from "@/components/news/news-page";
+import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
+import { findNewsArticleBySlug } from "@/lib/news/news-slugs";
+import { getSignalDataRepository } from "@/server/signal-data/repository";
 
 interface PageProps {
   params: Promise<{

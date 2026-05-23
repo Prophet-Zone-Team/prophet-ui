@@ -1,4 +1,4 @@
-import type { ApiFootballTeamContext, NewsArticle, Team } from "../../types/market";
+import type { ApiFootballTeamContext, NewsArticle, Team } from "@/types/market";
 
 export interface SignalDataReadOptions {
   teamId?: Team["id"];

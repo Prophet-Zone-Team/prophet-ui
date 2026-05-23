@@ -5,7 +5,7 @@ import {
   ROUND_OF_32,
   THIRD_PLACE_ALLOCATION_OPTIONS,
   WORLD_CUP_2026_GROUPS,
-} from "../../../../data/world-cup-2026/bracket";
+} from "@/data/world-cup-2026/bracket";
 
 export const dynamic = "force-dynamic";
 

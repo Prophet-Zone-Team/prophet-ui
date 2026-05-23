@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 
-import { BackChevronIcon, CopyLinkIcon } from "../../components/icons";
-import { TeamFlag } from "../../components/teams/team-flag";
-import { cn } from "../../lib/cn";
+import { BackChevronIcon, CopyLinkIcon } from "@/components/icons";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { cn } from "@/lib/cn";
 import type {
   ApiFootballTeamProfile,
   TeamFootballMetadata,
   TeamMarketSnapshot
-} from "../../types/market";
-import { BookmarkControl } from "./bookmark-control";
+} from "@/types/market";
+import { BookmarkControl } from "@/views/trade/bookmark-control";
 
 export interface TradeHeaderProps {
   snapshot: TeamMarketSnapshot;

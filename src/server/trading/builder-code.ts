@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Hex } from "viem";
 
-import { getTradingHost } from "./clob-auth";
+import { getTradingHost } from "@/server/trading/clob-auth";
 
 const ZERO_BUILDER_CODE = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 

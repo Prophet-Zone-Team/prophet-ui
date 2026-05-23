@@ -1,5 +1,5 @@
-import type { TeamMarketSnapshot, WorldCupMatch } from "../../../types/market";
-import { HomeMatchesSchedulePanel } from "./home-matches-schedule-panel";
+import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
+import { HomeMatchesSchedulePanel } from "@/views/home/matches/home-matches-schedule-panel";
 
 export interface HomeMatchesPanelProps {
   matches: WorldCupMatch[];

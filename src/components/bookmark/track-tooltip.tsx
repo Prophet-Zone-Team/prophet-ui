@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { TrackHintIcon } from "./bookmark-icons";
+import { TrackHintIcon } from "@/components/bookmark/bookmark-icons";
 
 export function TrackTooltip({ children }: { children: ReactNode }) {
   return (

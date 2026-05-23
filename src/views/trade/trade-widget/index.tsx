@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 
-import { TabSwitcher } from "../../../components/ui/tab-switcher";
+import { TabSwitcher } from "@/components/ui/tab-switcher";
 import type {
   OrderOutcomeSide,
   TeamMarketSnapshot
-} from "../../../types/market";
-import { BuyPanel } from "./buy-panel";
-import { SellPlaceholder } from "./sell-placeholder";
-import { TradeWidgetHeader } from "./header";
-import { TradeMarketButton } from "./trade-market-button";
-import { tradePanelClass } from "./trade-ui";
+} from "@/types/market";
+import { BuyPanel } from "@/views/trade/trade-widget/buy-panel";
+import { SellPlaceholder } from "@/views/trade/trade-widget/sell-placeholder";
+import { TradeWidgetHeader } from "@/views/trade/trade-widget/header";
+import { TradeMarketButton } from "@/views/trade/trade-widget/trade-market-button";
+import { tradePanelClass } from "@/views/trade/trade-widget/trade-ui";
 
 const TRADE_TABS = [
   { id: "buy", label: "Buy" },

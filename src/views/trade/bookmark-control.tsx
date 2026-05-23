@@ -1,9 +1,9 @@
 "use client";
 
-import { BookmarkToggle } from "../../components/bookmark/bookmark-toggle";
-import { TrackLink, TrackTooltip } from "../../components/bookmark/track-tooltip";
-import { useIsTeamTracked, useToggleTrackedTeam } from "../../store";
-import { useTracksHydrated } from "../../store/use-tracks-hydrated";
+import { BookmarkToggle } from "@/components/bookmark/bookmark-toggle";
+import { TrackLink, TrackTooltip } from "@/components/bookmark/track-tooltip";
+import { useIsTeamTracked, useToggleTrackedTeam } from "@/store";
+import { useTracksHydrated } from "@/store/use-tracks-hydrated";
 
 export interface BookmarkControlProps {
   teamId: string;

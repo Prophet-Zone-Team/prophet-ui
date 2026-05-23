@@ -3,28 +3,28 @@
 import { useId, useMemo } from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
-import type { MarketDataMeta } from "../../data/providers/types";
-import { getMarketDataSourceLabel } from "../../data/providers/source";
+import type { MarketDataMeta } from "@/data/providers/types";
+import { getMarketDataSourceLabel } from "@/data/providers/source";
 import {
   formatChange,
   formatProbability,
   formatVolume,
   getSentimentLabel
-} from "../../components/home/market-formatters";
+} from "@/components/home/market-formatters";
 import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot
-} from "../../types/market";
-import { getMovementNarrative, resolveChartHistory } from "../../lib/team/team-detail-model";
-import { formatShortDate } from "../../lib/team/team-detail-model";
-import { TeamPanelMetric } from "./team-panel-metric";
+} from "@/types/market";
+import { getMovementNarrative, resolveChartHistory } from "@/lib/team/team-detail-model";
+import { formatShortDate } from "@/lib/team/team-detail-model";
+import { TeamPanelMetric } from "@/views/team/team-panel-metric";
 import {
   teamMiniGridClass,
   teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface TeamMarketIntelligencePanelProps {
   snapshot: TeamMarketSnapshot;

@@ -1,6 +1,6 @@
-import type { D1Database } from "../market-history/types";
-import type { ApiFootballTeamContext, NewsArticle } from "../../types/market";
-import type { SignalDataCollectionRun, SignalDataReadOptions, SignalDataRepository } from "./types";
+import type { D1Database } from "@/server/market-history/types";
+import type { ApiFootballTeamContext, NewsArticle } from "@/types/market";
+import type { SignalDataCollectionRun, SignalDataReadOptions, SignalDataRepository } from "@/server/signal-data/types";
 
 interface NewsArticleRow {
   id: string;

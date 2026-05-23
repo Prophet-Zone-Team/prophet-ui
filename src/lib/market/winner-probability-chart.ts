@@ -1,8 +1,8 @@
-import { buildFallbackProbabilityHistory } from "../team/probability-history";
+import { buildFallbackProbabilityHistory } from "@/lib/team/probability-history";
 import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot
-} from "../../types/market";
+} from "@/types/market";
 
 export type WinnerChartTimeRange = "1H" | "1D" | "1W" | "1M" | "all";
 

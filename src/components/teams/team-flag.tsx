@@ -1,5 +1,5 @@
-import { cn } from "../../lib/cn";
-import { getFifaFlagIconCode } from "../../lib/teams/fifa-flag-icon";
+import { cn } from "@/lib/cn";
+import { getFifaFlagIconCode } from "@/lib/teams/fifa-flag-icon";
 
 interface TeamFlagProps {
   code?: string;

@@ -4,7 +4,7 @@ import {
   collectAllSignalData,
   collectApiFootballSignals,
   collectGdeltNewsSignals,
-} from "../../../../server/signal-data/collector";
+} from "@/server/signal-data/collector";
 
 export const dynamic = "force-dynamic";
 

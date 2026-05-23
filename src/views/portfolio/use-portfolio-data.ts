@@ -2,19 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { fetchJson } from "../../lib/team/client-fetch";
-import type { PortfolioLoadStatus } from "../../lib/portfolio/types";
-import type { UserOpenOrder } from "../../lib/portfolio/types";
+import { fetchJson } from "@/lib/team/client-fetch";
+import type { PortfolioLoadStatus } from "@/lib/portfolio/types";
+import type { UserOpenOrder } from "@/lib/portfolio/types";
 import type {
   TradingUserSession,
   UserOrderRecord,
   UserPositionRecord,
   UserTradingReadiness
-} from "../../types/market";
+} from "@/types/market";
 import {
   connectTradingWallet,
   loadTradingSession
-} from "../../components/trading/trading-wallet-session";
+} from "@/components/trading/trading-wallet-session";
 
 export interface UsePortfolioDataResult {
   session: TradingUserSession | undefined;

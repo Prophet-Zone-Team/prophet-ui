@@ -2,7 +2,7 @@ import "server-only";
 
 import { createPublicClient, defineChain, erc20Abi, http, type Address } from "viem";
 
-import { getTradingContractAddresses } from "./contracts";
+import { getTradingContractAddresses } from "@/server/trading/contracts";
 
 const DEFAULT_POLYGON_RPC_URL = "https://polygon-bor-rpc.publicnode.com";
 const polygonChain = defineChain({

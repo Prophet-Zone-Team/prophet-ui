@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { getMarketDataSourceLabel } from "../../data/providers/source";
-import type { MarketDataMeta } from "../../data/providers/types";
-import { generateMarketSignals, getBiggestLosers, getOddsMismatch, getTopMovers } from "../../lib/market/analyzer";
-import { teamTradeHref } from "../../lib/routes/trade";
-import { createDailyBriefMarkdown, createWatchlistAlerts } from "../../lib/market/brief";
-import type { WatchlistAlert } from "../../lib/market/brief";
-import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "../../types/market";
-import { DataStatusBanner, SourceDisclosure } from "../data/data-status-banner";
-import { formatChange, formatProbability, formatVolume, getChangeTone } from "../home/market-formatters";
-import { loadTradingSession } from "../trading/trading-wallet-session";
+import { getMarketDataSourceLabel } from "@/data/providers/source";
+import type { MarketDataMeta } from "@/data/providers/types";
+import { generateMarketSignals, getBiggestLosers, getOddsMismatch, getTopMovers } from "@/lib/market/analyzer";
+import { teamTradeHref } from "@/lib/routes/trade";
+import { createDailyBriefMarkdown, createWatchlistAlerts } from "@/lib/market/brief";
+import type { WatchlistAlert } from "@/lib/market/brief";
+import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "@/types/market";
+import { DataStatusBanner, SourceDisclosure } from "@/components/data/data-status-banner";
+import { formatChange, formatProbability, formatVolume, getChangeTone } from "@/components/home/market-formatters";
+import { loadTradingSession } from "@/components/trading/trading-wallet-session";
 
 interface BriefPageProps {
   snapshots: TeamMarketSnapshot[];

@@ -12,8 +12,8 @@ import {
   type TooltipProps
 } from "recharts";
 
-import { formatProbability } from "../../../components/home/market-formatters";
-import type { GameProbabilityHistoryPoint } from "../../../types/market";
+import { formatProbability } from "@/components/home/market-formatters";
+import type { GameProbabilityHistoryPoint } from "@/types/market";
 
 const CHART_LINE_COLOR = "#8AB956";
 

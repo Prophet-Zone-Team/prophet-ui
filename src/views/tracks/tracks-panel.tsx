@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useMemo } from "react";
 
-import type { MarketDataMeta } from "../../data/providers/types";
-import type { TeamMarketSnapshot, WorldCupMatch } from "../../types/market";
-import { useTrackedMatchIds, useTrackedTeamIds } from "../../store";
-import { useTracksHydrated } from "../../store/use-tracks-hydrated";
-import { MarketListPanel } from "../markets/market-list-panel";
-import { ScheduleMatchRow } from "../home/matches/schedule-match-row";
+import type { MarketDataMeta } from "@/data/providers/types";
+import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
+import { useTrackedMatchIds, useTrackedTeamIds } from "@/store";
+import { useTracksHydrated } from "@/store/use-tracks-hydrated";
+import { MarketListPanel } from "@/views/markets/market-list-panel";
+import { ScheduleMatchRow } from "@/views/home/matches/schedule-match-row";
 
 export interface TracksPanelProps {
   snapshots: TeamMarketSnapshot[];

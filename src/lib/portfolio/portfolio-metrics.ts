@@ -3,8 +3,8 @@ import type {
   UserOrderRecord,
   UserPositionRecord,
   UserTradingReadiness
-} from "../../types/market";
-import type { PortfolioSeriesPoint, UserOpenOrder } from "./types";
+} from "@/types/market";
+import type { PortfolioSeriesPoint, UserOpenOrder } from "@/lib/portfolio/types";
 
 export function safeNumber(value: number | undefined): number {
   return Number.isFinite(value) ? (value ?? 0) : 0;

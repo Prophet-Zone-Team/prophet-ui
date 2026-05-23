@@ -1,4 +1,4 @@
-import type { NewsArticle } from "../../types/market";
+import type { NewsArticle } from "@/types/market";
 
 export function getNewsArticleSlug(article: Pick<NewsArticle, "id" | "title">): string {
   const titleSlug = article.title

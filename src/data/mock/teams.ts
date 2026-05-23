@@ -5,7 +5,7 @@ import type {
   TeamMarketData,
   TeamMarketSnapshot,
   UserWatchlistItem,
-} from "../../types/market";
+} from "@/types/market";
 
 export const mockTeams: Team[] = [
   { id: "argentina", name: "Argentina", code: "ARG", region: "South America", group: "A", fifaRank: 1 },

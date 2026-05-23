@@ -6,16 +6,16 @@ import type {
   TradingUserSession,
   UserBalanceSnapshot,
   UserTradingReadiness,
-} from "../../types/market";
-import type { TradingSessionRecord } from "./session-store";
+} from "@/types/market";
+import type { TradingSessionRecord } from "@/server/trading/session-store";
 import {
   checkOrderFunding,
   fetchUserBalanceSnapshot,
   resolveOrderFundingRequirementWithFees,
   type OrderFundingRequirement,
-} from "./balances";
-import { refreshDepositWalletDeployment } from "./deposit-wallet";
-import { getTradingCredentialStatus, updateTradingSession } from "./session-store";
+} from "@/server/trading/balances";
+import { refreshDepositWalletDeployment } from "@/server/trading/deposit-wallet";
+import { getTradingCredentialStatus, updateTradingSession } from "@/server/trading/session-store";
 
 export async function buildUserTradingReadiness({
   record,

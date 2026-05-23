@@ -2,20 +2,20 @@ import type {
   ApiFootballDataIssue,
   ApiFootballInjuryContext,
   ApiFootballSquadPlayer
-} from "../../types/market";
+} from "@/types/market";
 import {
   getInitials,
   getIssueMessage,
   getLineupPlayers,
   shortenName
-} from "../../lib/team/team-detail-model";
-import { TeamEmptyState } from "./team-empty-state";
+} from "@/lib/team/team-detail-model";
+import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
   teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 
 export interface TeamLineupPanelProps {

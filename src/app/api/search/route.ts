@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getNewsArticleSlug } from "../../../lib/news/news-slugs";
-import { teamTradeHref, gameTradeHref } from "../../../lib/routes/trade";
-import { getStaticWorldCupMatches } from "../../../data/world-cup-2026/matches";
-import { getWorldCupTeamByIdOrCode } from "../../../data/world-cup-2026/groups";
-import { worldCupTeams } from "../../../data/teams/world-cup-teams";
-import { getSignalDataRepository } from "../../../server/signal-data/repository";
-import type { SearchResult, SearchResultType } from "../../../types/market";
+import { getNewsArticleSlug } from "@/lib/news/news-slugs";
+import { teamTradeHref, gameTradeHref } from "@/lib/routes/trade";
+import { getStaticWorldCupMatches } from "@/data/world-cup-2026/matches";
+import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
+import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { getSignalDataRepository } from "@/server/signal-data/repository";
+import type { SearchResult, SearchResultType } from "@/types/market";
 
 export const dynamic = "force-dynamic";
 

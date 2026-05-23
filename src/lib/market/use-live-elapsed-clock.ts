@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { formatLiveClockLabel } from "./match-display";
+import { formatLiveClockLabel } from "@/lib/market/match-display";
 
 export function useLiveElapsedClock(
   baseElapsedSeconds: number | undefined,

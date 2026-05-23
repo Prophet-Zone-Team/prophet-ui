@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
-import { useTrackedItemsStore } from "./tracked-items-store";
+import { useTrackedItemsStore } from "@/store/tracked-items-store";
 
 function subscribeHydration(onStoreChange: () => void) {
   return useTrackedItemsStore.persist.onFinishHydration(onStoreChange);

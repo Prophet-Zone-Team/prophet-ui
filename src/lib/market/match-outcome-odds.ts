@@ -1,4 +1,4 @@
-import type { MatchOddsOutcome, WorldCupMatch } from "../../types/market";
+import type { MatchOddsOutcome, WorldCupMatch } from "@/types/market";
 
 export interface MatchOutcomeProbabilities {
   home: number;

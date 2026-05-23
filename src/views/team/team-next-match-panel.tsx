@@ -1,15 +1,15 @@
 import Link from "next/link";
 
-import { TeamFlag } from "../../components/teams/team-flag";
-import type { ApiFootballFixtureContext, TeamMarketSnapshot } from "../../types/market";
-import { formatFixtureDate } from "../../lib/team/team-detail-model";
-import { TeamEmptyState } from "./team-empty-state";
-import { teamOpenTradeButtonClass } from "./team-detail-ui";
+import { TeamFlag } from "@/components/teams/team-flag";
+import type { ApiFootballFixtureContext, TeamMarketSnapshot } from "@/types/market";
+import { formatFixtureDate } from "@/lib/team/team-detail-model";
+import { TeamEmptyState } from "@/views/team/team-empty-state";
+import { teamOpenTradeButtonClass } from "@/views/team/team-detail-ui";
 import {
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface TeamNextMatchPanelProps {
   fixture?: ApiFootballFixtureContext;

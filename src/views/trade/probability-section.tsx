@@ -6,25 +6,25 @@ import {
   formatProbability,
   formatRelativeChange,
   formatVolume
-} from "../../components/home/market-formatters";
-import { cn } from "../../lib/cn";
-import { buildTeamChartMatchAnnotations } from "../../lib/team/chart-match-annotations";
+} from "@/components/home/market-formatters";
+import { cn } from "@/lib/cn";
+import { buildTeamChartMatchAnnotations } from "@/lib/team/chart-match-annotations";
 import {
   filterTeamChartByRange,
   getTeamChartYDomain,
   resolveTeamChartData,
   TEAM_CHART_TIME_RANGES,
   type TeamChartTimeRange
-} from "../../lib/team/probability-history";
+} from "@/lib/team/probability-history";
 import type {
   OrderOutcomeSide,
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
   WorldCupMatch
-} from "../../types/market";
-import { Orderbook } from "./orderbook";
-import { ProbabilityChart } from "./probability-chart";
-import { tradeYesNoPill } from "./trade-widget/trade-ui";
+} from "@/types/market";
+import { Orderbook } from "@/views/trade/orderbook";
+import { ProbabilityChart } from "@/views/trade/probability-chart";
+import { tradeYesNoPill } from "@/views/trade/trade-widget/trade-ui";
 
 const probabilityCardClass =
   "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";

@@ -1,4 +1,4 @@
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 export const portfolioPageClass = "mx-auto w-[1112px] px-4 py-8 sm:px-6";
 

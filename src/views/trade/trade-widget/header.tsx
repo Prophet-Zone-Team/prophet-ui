@@ -1,8 +1,8 @@
 "use client";
 
-import { TeamFlag } from "../../../components/teams/team-flag";
-import { cn } from "../../../lib/cn";
-import type { OrderOutcomeSide, TeamMarketSnapshot } from "../../../types/market";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { cn } from "@/lib/cn";
+import type { OrderOutcomeSide, TeamMarketSnapshot } from "@/types/market";
 
 export interface TradeWidgetHeaderProps {
   snapshot: TeamMarketSnapshot;

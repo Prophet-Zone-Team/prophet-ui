@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { fetchBridgeSupportedAssets } from "../../../../../server/trading/bridge";
+import { fetchBridgeSupportedAssets } from "@/server/trading/bridge";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

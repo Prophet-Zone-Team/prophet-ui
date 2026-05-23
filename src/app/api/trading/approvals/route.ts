@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { recoverTypedDataAddress } from "viem";
 
-import { buildTradingApprovalBatch, type DepositWalletBatchSignablePayload } from "../../../../lib/market/deposit-wallet-batch";
-import { getTradingChainId } from "../../../../server/trading/clob-auth";
+import { buildTradingApprovalBatch, type DepositWalletBatchSignablePayload } from "@/lib/market/deposit-wallet-batch";
+import { getTradingChainId } from "@/server/trading/clob-auth";
 import {
   buildDepositWalletBatchRequest,
   fetchRelayerTransaction,
   fetchRelayerNonce,
   submitRelayerTransaction,
-} from "../../../../server/trading/deposit-wallet";
-import { getTradingContractAddresses } from "../../../../server/trading/contracts";
-import { getTradingSessionFromCookie } from "../../../../server/trading/session-store";
+} from "@/server/trading/deposit-wallet";
+import { getTradingContractAddresses } from "@/server/trading/contracts";
+import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

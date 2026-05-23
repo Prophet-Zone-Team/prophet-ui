@@ -1,7 +1,7 @@
 import {
   tradePageClass,
   tradeSectionClass
-} from "../../../../views/trade/trade-widget/trade-ui";
+} from "@/views/trade/trade-widget/trade-ui";
 
 function LoadingBlock({ className }: { className?: string }) {
   return (

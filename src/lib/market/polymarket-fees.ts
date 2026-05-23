@@ -1,4 +1,4 @@
-import type { PolymarketFeeDetails } from "../../types/market";
+import type { PolymarketFeeDetails } from "@/types/market";
 
 const MIN_PRICE = 0.01;
 const MAX_PRICE = 0.99;

@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
-import { TeamDetailPage } from "../../../components/team/team-detail-page";
-import { getTheOddsApiWorldCupWinnerOdds } from "../../../data/odds/the-odds-api-provider";
-import { getWorldCupMarketData } from "../../../data/providers/world-cup-market-data";
+import { TeamDetailPage } from "@/components/team/team-detail-page";
+import { getTheOddsApiWorldCupWinnerOdds } from "@/data/odds/the-odds-api-provider";
+import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 
 interface TeamPageProps {
   params: Promise<{

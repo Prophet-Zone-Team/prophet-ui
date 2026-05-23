@@ -1,22 +1,22 @@
-import type { MarketDataMeta } from "../../data/providers/types";
-import type { NormalizedBookmakerOdds } from "../../data/odds/types";
+import type { MarketDataMeta } from "@/data/providers/types";
+import type { NormalizedBookmakerOdds } from "@/data/odds/types";
 import {
   formatChange,
   formatProbability
-} from "../../components/home/market-formatters";
+} from "@/components/home/market-formatters";
 import type {
   ApiFootballOddContext,
   TeamMarketSnapshot
-} from "../../types/market";
-import { TeamEmptyState } from "./team-empty-state";
-import { TeamPanelMetric } from "./team-panel-metric";
+} from "@/types/market";
+import { TeamEmptyState } from "@/views/team/team-empty-state";
+import { TeamPanelMetric } from "@/views/team/team-panel-metric";
 import {
   teamMiniGridClass,
   teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
-} from "./team-detail-ui";
+} from "@/views/team/team-detail-ui";
 
 export interface TeamOddsComparisonPanelProps {
   snapshot: TeamMarketSnapshot;

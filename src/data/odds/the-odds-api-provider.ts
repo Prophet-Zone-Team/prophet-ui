@@ -1,12 +1,12 @@
-import { worldCupTeams } from "../teams/world-cup-teams";
-import { getTeamNameAliases, normalizeTeamAlias } from "../../config/team-name-aliases";
-import type { Team } from "../../types/market";
+import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { getTeamNameAliases, normalizeTeamAlias } from "@/config/team-name-aliases";
+import type { Team } from "@/types/market";
 import type {
   NormalizedBookmakerOdds,
   NormalizedTeamOddsSummary,
   OddsProvider,
   WorldCupWinnerOdds,
-} from "./types";
+} from "@/data/odds/types";
 
 const THE_ODDS_API_BASE_URL = "https://api.the-odds-api.com/v4";
 const DEFAULT_MARKET_KEYS = ["soccer_fifa_world_cup_winner", "soccer_fifa_world_cup"];

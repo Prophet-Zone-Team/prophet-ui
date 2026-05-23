@@ -1,7 +1,7 @@
-import type { ApiFootballTeamContext, WorldCupMatch } from "../../types/market";
-import { KNOCKOUT_LINKS } from "./knockout-links";
-import { ROUND_OF_32 } from "./round-of-32";
-import { WORLD_CUP_2026_GROUPS, WORLD_CUP_2026_GROUP_ORDER } from "./groups";
+import type { ApiFootballTeamContext, WorldCupMatch } from "@/types/market";
+import { KNOCKOUT_LINKS } from "@/data/world-cup-2026/knockout-links";
+import { ROUND_OF_32 } from "@/data/world-cup-2026/round-of-32";
+import { WORLD_CUP_2026_GROUPS, WORLD_CUP_2026_GROUP_ORDER } from "@/data/world-cup-2026/groups";
 
 const GROUP_PAIRINGS = [
   [0, 1],

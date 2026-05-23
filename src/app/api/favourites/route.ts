@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { deleteUserFavourite, readUserFavourites, upsertUserFavourite } from "../../../server/favourites/repository";
-import { getTradingSessionFromCookie } from "../../../server/trading/session-store";
-import type { FavouriteEntityType } from "../../../types/market";
+import { deleteUserFavourite, readUserFavourites, upsertUserFavourite } from "@/server/favourites/repository";
+import { getTradingSessionFromCookie } from "@/server/trading/session-store";
+import type { FavouriteEntityType } from "@/types/market";
 
 export const dynamic = "force-dynamic";
 

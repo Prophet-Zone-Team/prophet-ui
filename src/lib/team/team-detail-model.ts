@@ -1,4 +1,4 @@
-import type { NormalizedBookmakerOdds } from "../../data/odds/types";
+import type { NormalizedBookmakerOdds } from "@/data/odds/types";
 import type {
   ApiFootballDataIssue,
   ApiFootballFixtureContext,
@@ -9,9 +9,9 @@ import type {
   TeamFootballMetadata,
   TeamKeyPlayer,
   TeamMarketSnapshot
-} from "../../types/market";
-import { formatChange, formatProbability } from "../../components/home/market-formatters";
-import { buildFallbackProbabilityHistory } from "./probability-history";
+} from "@/types/market";
+import { formatChange, formatProbability } from "@/components/home/market-formatters";
+import { buildFallbackProbabilityHistory } from "@/lib/team/probability-history";
 
 export interface StrengthMetric {
   label: string;

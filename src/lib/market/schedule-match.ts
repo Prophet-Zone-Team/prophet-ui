@@ -2,7 +2,7 @@ import type {
   TeamMarketSnapshot,
   WorldCupMatch,
   WorldCupMatchStatus
-} from "../../types/market";
+} from "@/types/market";
 
 export type ScheduleRowVariant = "upcoming" | "ongoing" | "ended";
 

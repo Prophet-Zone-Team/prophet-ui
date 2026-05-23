@@ -1,18 +1,20 @@
 import {
   attachCachedFootballToMatches,
   getStaticWorldCupMatches
-} from "../../data/world-cup-2026/matches";
+} from "@/data/world-cup-2026/matches";
 import type {
   ApiFootballTeamContext,
   GameMarketOutcome,
   GameMarketSnapshot,
+  GameMatchChartEvent,
+  GameMatchMinuteHistoryPoint,
   GameProbabilityHistoryPoint,
   MatchOutcomeSide,
   TeamMarketSnapshot,
   WorldCupMatch
-} from "../../types/market";
-import { parseMatchOutcomeOdds } from "./match-outcome-odds";
-import { getMatchVolume, resolveMatchSides } from "./schedule-match";
+} from "@/types/market";
+import { parseMatchOutcomeOdds } from "@/lib/market/match-outcome-odds";
+import { getMatchVolume, resolveMatchSides } from "@/lib/market/schedule-match";
 
 export function findWorldCupMatch(
   matchId: string,
@@ -229,6 +231,114 @@ export function filterGameChartByRange(
   };
 
   return data.slice(-limits[range]);
+}
+
+const MATCH_MINUTE_MARKS = [
+  { minute: 0, minuteLabel: "0'" },
+  { minute: 15, minuteLabel: "15'" },
+  { minute: 30, minuteLabel: "30'" },
+  { minute: 45, minuteLabel: "Half" },
+  { minute: 60, minuteLabel: "60'" },
+  { minute: 75, minuteLabel: "75'" },
+  { minute: 90, minuteLabel: "90'" }
+] as const;
+
+export function buildGameMatchMinuteHistory(
+  snapshot: GameMarketSnapshot
+): GameMatchMinuteHistoryPoint[] {
+  const { match } = snapshot;
+  const homeFinal = getOutcomeProbability(snapshot, "home");
+  const drawFinal = getOutcomeProbability(snapshot, "draw");
+  const awayFinal = getOutcomeProbability(snapshot, "away");
+
+  const homeStart = clampProbability(33 + pseudoMinuteOffset(match.id, "home"));
+  const drawStart = clampProbability(34 + pseudoMinuteOffset(match.id, "draw"));
+  const awayStart = clampProbability(33 + pseudoMinuteOffset(match.id, "away"));
+
+  const lastIndex = MATCH_MINUTE_MARKS.length - 1;
+
+  return MATCH_MINUTE_MARKS.map((mark, index) => {
+    const progress = index / lastIndex;
+    const curve = 0.5 - Math.cos(progress * Math.PI) / 2;
+    const wobble =
+      Math.sin(index * 0.9 + homeFinal * 0.05) * 1.5 +
+      Math.cos(index * 0.6 + awayFinal * 0.04) * 1.2;
+
+    const home = interpolateOutcome(homeStart, homeFinal, curve, wobble, "home");
+    const draw = interpolateOutcome(drawStart, drawFinal, curve, -wobble * 0.6, "draw");
+    const away = interpolateOutcome(awayStart, awayFinal, curve, wobble * 0.8, "away");
+    const normalized = normalizeMinuteProbabilities(home, draw, away);
+
+    return {
+      matchId: match.id,
+      minute: mark.minute,
+      minuteLabel: mark.minuteLabel,
+      home: normalized.home,
+      draw: normalized.draw,
+      away: normalized.away
+    };
+  });
+}
+
+function interpolateOutcome(
+  start: number,
+  end: number,
+  curve: number,
+  wobble: number,
+  side: MatchOutcomeSide
+): number {
+  const drift = start + (end - start) * curve + wobble;
+  const sideBias = side === "draw" ? 0.5 : 0;
+  return clampProbability(drift + sideBias);
+}
+
+function normalizeMinuteProbabilities(home: number, draw: number, away: number) {
+  const total = home + draw + away || 1;
+  return {
+    home: Number(((home / total) * 100).toFixed(1)),
+    draw: Number(((draw / total) * 100).toFixed(1)),
+    away: Number(((away / total) * 100).toFixed(1))
+  };
+}
+
+function clampProbability(value: number): number {
+  return Number(Math.max(0.1, Math.min(99.9, value)).toFixed(1));
+}
+
+function pseudoMinuteOffset(matchId: string, side: MatchOutcomeSide): number {
+  const seed = matchId.length + (side === "home" ? 2 : side === "draw" ? 5 : 8);
+  return ((seed * 7) % 11) - 5;
+}
+
+export function getGameMatchChartEvents(match: WorldCupMatch): GameMatchChartEvent[] {
+  const homeGoals = match.homeScore ?? 0;
+  const awayGoals = match.awayScore ?? 0;
+
+  if (homeGoals === 0 && awayGoals === 0) {
+    return [];
+  }
+
+  const homeMinutes = [18, 41, 58, 78];
+  const awayMinutes = [27, 52, 71, 86];
+  const events: GameMatchChartEvent[] = [];
+
+  for (let index = 0; index < homeGoals; index += 1) {
+    events.push({
+      minute: homeMinutes[index] ?? 15 + index * 20,
+      side: "home",
+      type: "goal"
+    });
+  }
+
+  for (let index = 0; index < awayGoals; index += 1) {
+    events.push({
+      minute: awayMinutes[index] ?? 20 + index * 22,
+      side: "away",
+      type: "goal"
+    });
+  }
+
+  return events.sort((left, right) => left.minute - right.minute);
 }
 
 export function getGameChartYDomain(

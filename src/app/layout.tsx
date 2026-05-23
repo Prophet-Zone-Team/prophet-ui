@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
-import { AuthProvider } from "../context/auth";
-import { AppHeader } from "../layout/header";
+import { AuthProvider } from "@/context/auth";
+import { AppHeader } from "@/layout/header";
 import "flag-icons/css/flag-icons.min.css";
-import "./globals.css";
+import "@/app/globals.css";
 
 export const metadata = {
   title: "World Cup Prediction Terminal",

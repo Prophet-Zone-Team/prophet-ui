@@ -6,11 +6,11 @@ import {
   buildScheduleDateGroups,
   buildScheduleMatchList,
   type ScheduleSortKey
-} from "../../../lib/market/schedule-match";
-import type { TeamMarketSnapshot, WorldCupMatch } from "../../../types/market";
-import { ScheduleFilterBar } from "./schedule-filter-bar";
-import { ScheduleMatchRow } from "./schedule-match-row";
-import { SpecialMatchDataCard } from "./special-match-data-card";
+} from "@/lib/market/schedule-match";
+import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
+import { ScheduleFilterBar } from "@/views/home/matches/schedule-filter-bar";
+import { ScheduleMatchRow } from "@/views/home/matches/schedule-match-row";
+import { SpecialMatchDataCard } from "@/views/home/matches/special-match-data-card";
 
 export interface HomeMatchesSchedulePanelProps {
   matches: WorldCupMatch[];

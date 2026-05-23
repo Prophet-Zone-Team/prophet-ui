@@ -6,13 +6,13 @@ import {
   connectTradingWallet,
   disconnectTradingSession,
   loadTradingSession,
-} from "../../components/trading/trading-wallet-session";
-import { buildCashBalanceView } from "../../lib/trading/cash-balance-model";
-import { postCollateralBalanceSync } from "../../lib/trading/sync-collateral-balance";
-import { fetchJson } from "../../lib/team/client-fetch";
-import type { CashBalanceView, FundingLoadStatus } from "../../types/funding";
-import type { TradingUserSession, UserTradingReadiness } from "../../types/market";
-import { AuthContext, type AuthContextValue } from "./auth-context";
+} from "@/components/trading/trading-wallet-session";
+import { buildCashBalanceView } from "@/lib/trading/cash-balance-model";
+import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
+import { fetchJson } from "@/lib/team/client-fetch";
+import type { CashBalanceView, FundingLoadStatus } from "@/types/funding";
+import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
+import { AuthContext, type AuthContextValue } from "@/context/auth/auth-context";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<TradingUserSession | undefined>();

@@ -3,9 +3,9 @@ import type {
   GameMarketSnapshot,
   MatchOutcomeSide,
   TradingOrderType
-} from "../../types/market";
-import { getOutcomeProbability } from "./game-market-snapshot";
-import { calculateOrderEstimate, normalizeLimitPrice } from "./order-math";
+} from "@/types/market";
+import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
+import { calculateOrderEstimate, normalizeLimitPrice } from "@/lib/market/order-math";
 
 export interface GameBidOrderPreviewInput {
   snapshot: GameMarketSnapshot;

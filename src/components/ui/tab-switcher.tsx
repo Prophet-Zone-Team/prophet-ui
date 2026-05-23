@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useId } from "react";
 
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/cn";
 
 const TAB_UNDERLINE_TRANSITION = {
   type: "spring" as const,

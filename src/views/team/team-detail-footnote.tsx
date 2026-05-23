@@ -1,5 +1,5 @@
-import { getMarketDataSourceLabel } from "../../data/providers/source";
-import type { MarketDataMeta } from "../../data/providers/types";
+import { getMarketDataSourceLabel } from "@/data/providers/source";
+import type { MarketDataMeta } from "@/data/providers/types";
 
 export interface TeamDetailFootnoteProps {
   dataStatus: MarketDataMeta;

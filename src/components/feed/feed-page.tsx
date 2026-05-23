@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import type { MarketDataMeta } from "../../data/providers/types";
-import { generateMarketSignals } from "../../lib/market/analyzer";
-import { teamTradeHref } from "../../lib/routes/trade";
-import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "../../types/market";
-import { DataStatusBanner, SourceDisclosure } from "../data/data-status-banner";
-import { formatChange, formatProbability, formatVolume, getChangeTone } from "../home/market-formatters";
-import { connectTradingWallet, loadTradingSession } from "../trading/trading-wallet-session";
+import type { MarketDataMeta } from "@/data/providers/types";
+import { generateMarketSignals } from "@/lib/market/analyzer";
+import { teamTradeHref } from "@/lib/routes/trade";
+import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "@/types/market";
+import { DataStatusBanner, SourceDisclosure } from "@/components/data/data-status-banner";
+import { formatChange, formatProbability, formatVolume, getChangeTone } from "@/components/home/market-formatters";
+import { connectTradingWallet, loadTradingSession } from "@/components/trading/trading-wallet-session";
 
 interface FeedPageProps {
   snapshots: TeamMarketSnapshot[];

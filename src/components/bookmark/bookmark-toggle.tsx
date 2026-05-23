@@ -2,8 +2,8 @@
 
 import type { ReactNode } from "react";
 
-import { cn } from "../../lib/cn";
-import { TrackedBookmarkIcon, UntrackedBookmarkIcon } from "./bookmark-icons";
+import { cn } from "@/lib/cn";
+import { TrackedBookmarkIcon, UntrackedBookmarkIcon } from "@/components/bookmark/bookmark-icons";
 
 export interface BookmarkToggleProps {
   isTracked: boolean;

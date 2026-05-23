@@ -1,5 +1,5 @@
-import type { PositionsSummary, PositionsView } from "../../types/funding";
-import type { UserPositionRecord } from "../../types/market";
+import type { PositionsSummary, PositionsView } from "@/types/funding";
+import type { UserPositionRecord } from "@/types/market";
 
 function safeNumber(value: number | undefined): number {
   return Number.isFinite(value) ? (value ?? 0) : 0;

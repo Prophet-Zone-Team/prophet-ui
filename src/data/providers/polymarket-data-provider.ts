@@ -1,5 +1,5 @@
-import { WORLD_CUP_TEAM_COUNT, worldCupTeams } from "../teams/world-cup-teams";
-import { getAllTeamFootballMetadata } from "../teams/football-metadata";
+import { WORLD_CUP_TEAM_COUNT, worldCupTeams } from "@/data/teams/world-cup-teams";
+import { getAllTeamFootballMetadata } from "@/data/teams/football-metadata";
 import type {
   MarketSentiment,
   MarketUniverseMeta,
@@ -7,8 +7,8 @@ import type {
   PolymarketMarketMetadata,
   Team,
   TeamMarketSnapshot,
-} from "../../types/market";
-import type { WorldCupMarketData, WorldCupMarketDataProvider } from "./types";
+} from "@/types/market";
+import type { WorldCupMarketData, WorldCupMarketDataProvider } from "@/data/providers/types";
 
 const GAMMA_MARKETS_URL = "https://gamma-api.polymarket.com/markets";
 const CLOB_MARKET_URL = "https://clob.polymarket.com/clob-markets";

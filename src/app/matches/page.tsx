@@ -1,9 +1,9 @@
-import { MatchesPage } from "../../views/home/matches";
-import { getWorldCupMarketData } from "../../data/providers/world-cup-market-data";
+import { MatchesPage } from "@/views/home/matches";
+import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 import {
   attachCachedFootballToMatches,
   getStaticWorldCupMatches
-} from "../../data/world-cup-2026/matches";
+} from "@/data/world-cup-2026/matches";
 
 export const dynamic = "force-dynamic";
 

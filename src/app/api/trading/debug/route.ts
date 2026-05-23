@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { fetchOnchainCollateralSnapshot } from "../../../../server/trading/onchain-balances";
-import { getTradingSessionFromCookie } from "../../../../server/trading/session-store";
+import { fetchOnchainCollateralSnapshot } from "@/server/trading/onchain-balances";
+import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
