@@ -108,7 +108,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   }, [selectedChain, supportedAssets]);
 
   const amount = parseWithdrawAmount(amountInput);
-  const maxAmount = portfolio?.portfolioValue ?? 0;
+  const maxAmount = portfolio?.availableToTrade ?? 0;
   const validationError = validateWithdrawAmount(amount, maxAmount);
   const minCheckoutError =
     selectedToken && amount !== undefined && amount > 0 && amount < selectedToken.minCheckoutUsd
@@ -204,10 +204,10 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   const handleMax = useCallback(() => {
     setAmountInput(
       removeNumberEndZero(
-        Big(portfolio?.portfolioValue || 0).toFixed(POLYMARKET_USD.decimals, Big.roundDown),
+        Big(portfolio?.availableToTrade || 0).toFixed(POLYMARKET_USD.decimals, Big.roundDown),
       ),
     );
-  }, [portfolio?.portfolioValue]);
+  }, [portfolio?.availableToTrade]);
 
   const handleWithdraw = useCallback(async () => {
     if (!canSubmit || !session?.walletAddress || !selectedToken || amount === undefined) {
