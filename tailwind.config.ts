@@ -61,10 +61,15 @@ const config: Config = {
         "prophet-loading": {
           "0%": { backgroundPosition: "120% 0" },
           "100%": { backgroundPosition: "-120% 0" }
+        },
+        "match-status-pulse": {
+          "0%, 100%": { transform: "scale(1)", opacity: "1" },
+          "50%": { transform: "scale(1.25)", opacity: "0.55" }
         }
       },
       animation: {
-        "prophet-loading": "prophet-loading 1.5s ease-in-out infinite"
+        "prophet-loading": "prophet-loading 1.5s ease-in-out infinite",
+        "match-status-pulse": "match-status-pulse 1.6s ease-in-out infinite"
       },
       backgroundSize: {
         "prophet-shimmer": "220% 100%"

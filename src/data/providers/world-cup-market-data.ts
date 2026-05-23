@@ -20,8 +20,37 @@ import type {
 
 const MARKET_DATA_CACHE_TTL_MS = 60_000;
 const LIVE_MARKET_DATA_CACHE_TTL_MS = 60_000;
+const ENRICHMENT_CACHE_TTL_MS = 60_000;
 const marketDataCache = new Map<string, { data: WorldCupMarketData; expiresAt: number }>();
 const liveMarketDataCache = new Map<string, { data: WorldCupMarketData; expiresAt: number }>();
+const oddsLayerCache = new Map<string, { layer: OddsLayer; expiresAt: number }>();
+const historyLayerCache = new Map<string, { layer: HistoryLayer; expiresAt: number }>();
+const newsLayerCache = new Map<string, { layer: NewsLayer; expiresAt: number }>();
+const footballLayerCache = new Map<string, { layer: FootballLayer; expiresAt: number }>();
+
+interface OddsLayer {
+  bookmakerByTeamId: Map<string, number | undefined>;
+  meta?: WorldCupMarketData["meta"]["odds"];
+}
+
+interface HistoryLayer {
+  snapshots: TeamMarketSnapshot[];
+  probabilityHistory: ProbabilityHistoryPoint[];
+  universe?: WorldCupMarketData["universe"];
+}
+
+interface NewsLayer {
+  newsEvents: WorldCupMarketData["newsEvents"];
+  meta?: WorldCupMarketData["meta"]["news"];
+  error?: string;
+}
+
+interface FootballLayer {
+  footballContext: WorldCupMarketData["footballContext"];
+  footballTeamContext: WorldCupMarketData["footballTeamContext"];
+  meta?: WorldCupMarketData["meta"]["football"];
+  error?: string;
+}
 
 export async function getWorldCupMarketData(options: WorldCupMarketDataOptions = {}): Promise<WorldCupMarketData> {
   const cacheKey = getMarketDataCacheKey(options);
@@ -32,26 +61,223 @@ export async function getWorldCupMarketData(options: WorldCupMarketDataOptions =
   }
 
   const data = await getLiveWorldCupMarketData(options);
-  const dataWithOdds = options.includeOdds === false ? data : await attachBookmakerOdds(data);
-  const dataWithHistory = options.includeHistory === false ? dataWithOdds : await attachStoredMarketHistory(dataWithOdds);
-  let result: WorldCupMarketData;
+  const isMock = data.meta.source === "mock";
+  const includeOdds = options.includeOdds !== false && !isMock;
+  const includeHistory = options.includeHistory !== false && !isMock;
+  const includeNews = options.includeNews !== false && !isMock;
+  const includeFootball = options.includeFootballContext !== false;
 
-  if (options.includeNews === false || dataWithHistory.meta.source === "mock") {
-    result = options.includeFootballContext === false
-      ? dataWithHistory
-      : await attachFootballContext(dataWithHistory, options.footballContextTeamIds);
-  } else {
-    const dataWithNews = await attachNewsImpact(dataWithHistory);
+  const [oddsLayer, historyLayer, newsLayer, footballLayer] = await Promise.all([
+    includeOdds ? getOddsLayer(data) : Promise.resolve(null),
+    includeHistory ? getHistoryLayer(data) : Promise.resolve(null),
+    includeNews ? getNewsLayer(data) : Promise.resolve(null),
+    includeFootball
+      ? getFootballLayer(data, options.footballContextTeamIds)
+      : Promise.resolve(null),
+  ]);
 
-    result = options.includeFootballContext === false
-      ? dataWithNews
-      : await attachFootballContext(dataWithNews, options.footballContextTeamIds);
-  }
+  const result = mergeMarketDataLayers(data, {
+    oddsLayer,
+    historyLayer,
+    newsLayer,
+    footballLayer,
+    footballContextTeamIds: options.footballContextTeamIds,
+  });
 
   marketDataCache.set(cacheKey, {
     data: cloneMarketData(result),
     expiresAt: Date.now() + MARKET_DATA_CACHE_TTL_MS,
   });
+
+  return result;
+}
+
+async function getOddsLayer(data: WorldCupMarketData): Promise<OddsLayer> {
+  const cacheKey = data.meta.source;
+  const cached = oddsLayerCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.layer;
+  }
+
+  const enriched = await attachBookmakerOdds(data);
+  const layer: OddsLayer = {
+    bookmakerByTeamId: new Map(
+      enriched.snapshots.map((snapshot) => [
+        snapshot.team.id,
+        snapshot.market.bookmakerImpliedProbability,
+      ]),
+    ),
+    meta: enriched.meta.odds,
+  };
+
+  oddsLayerCache.set(cacheKey, {
+    layer,
+    expiresAt: Date.now() + ENRICHMENT_CACHE_TTL_MS,
+  });
+
+  return layer;
+}
+
+async function getHistoryLayer(data: WorldCupMarketData): Promise<HistoryLayer> {
+  const cacheKey = `${data.meta.source}:${data.meta.lastUpdated}`;
+  const cached = historyLayerCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.layer;
+  }
+
+  const enriched = await attachStoredMarketHistory(data);
+  const layer: HistoryLayer = {
+    snapshots: enriched.snapshots,
+    probabilityHistory: enriched.probabilityHistory,
+    universe: enriched.universe,
+  };
+
+  historyLayerCache.set(cacheKey, {
+    layer,
+    expiresAt: Date.now() + ENRICHMENT_CACHE_TTL_MS,
+  });
+
+  return layer;
+}
+
+async function getNewsLayer(data: WorldCupMarketData): Promise<NewsLayer> {
+  const cacheKey = `${data.meta.source}:${data.meta.lastUpdated}`;
+  const cached = newsLayerCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.layer;
+  }
+
+  const enriched = await attachNewsImpact(data);
+  const layer: NewsLayer = {
+    newsEvents: enriched.newsEvents,
+    meta: enriched.meta.news,
+    error: enriched.meta.error,
+  };
+
+  newsLayerCache.set(cacheKey, {
+    layer,
+    expiresAt: Date.now() + ENRICHMENT_CACHE_TTL_MS,
+  });
+
+  return layer;
+}
+
+async function getFootballLayer(
+  data: WorldCupMarketData,
+  teamIds: string[] | undefined,
+): Promise<FootballLayer> {
+  const cacheKey =
+    teamIds?.length === 1 ? `team:${teamIds[0]}` : "all";
+  const cached = footballLayerCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.layer;
+  }
+
+  const enriched = await attachFootballContext(data, teamIds);
+  const layer: FootballLayer = {
+    footballContext: enriched.footballContext,
+    footballTeamContext: enriched.footballTeamContext,
+    meta: enriched.meta.football,
+    error: enriched.meta.error,
+  };
+
+  footballLayerCache.set(cacheKey, {
+    layer,
+    expiresAt: Date.now() + ENRICHMENT_CACHE_TTL_MS,
+  });
+
+  return layer;
+}
+
+function mergeMarketDataLayers(
+  data: WorldCupMarketData,
+  layers: {
+    oddsLayer: OddsLayer | null;
+    historyLayer: HistoryLayer | null;
+    newsLayer: NewsLayer | null;
+    footballLayer: FootballLayer | null;
+    footballContextTeamIds?: string[];
+  },
+): WorldCupMarketData {
+  let snapshots = data.snapshots;
+  let result: WorldCupMarketData = {
+    ...data,
+    newsEvents: [],
+    probabilityHistory: [],
+    footballContext: [],
+    footballTeamContext: [],
+  };
+
+  if (layers.historyLayer) {
+    snapshots = layers.historyLayer.snapshots;
+    result = {
+      ...result,
+      snapshots,
+      probabilityHistory: layers.historyLayer.probabilityHistory,
+      universe: layers.historyLayer.universe,
+    };
+  } else {
+    result = {
+      ...result,
+      snapshots,
+    };
+  }
+
+  if (layers.oddsLayer) {
+    result = {
+      ...result,
+      snapshots: result.snapshots.map((snapshot) => ({
+        ...snapshot,
+        market: {
+          ...snapshot.market,
+          bookmakerImpliedProbability:
+            layers.oddsLayer?.bookmakerByTeamId.get(snapshot.team.id) ??
+            snapshot.market.bookmakerImpliedProbability,
+        },
+      })),
+      meta: {
+        ...result.meta,
+        odds: layers.oddsLayer.meta,
+      },
+    };
+  }
+
+  if (layers.newsLayer) {
+    result = {
+      ...result,
+      newsEvents: layers.newsLayer.newsEvents,
+      meta: {
+        ...result.meta,
+        error: joinMetaErrors(result.meta.error, layers.newsLayer.error),
+        news: layers.newsLayer.meta,
+      },
+    };
+  }
+
+  if (layers.footballLayer) {
+    const teamIds = layers.footballContextTeamIds;
+    const footballTeamContext =
+      teamIds && teamIds.length > 0
+        ? layers.footballLayer.footballTeamContext.filter((context) =>
+            teamIds.includes(context.profile.teamId),
+          )
+        : layers.footballLayer.footballTeamContext;
+
+    result = {
+      ...result,
+      footballContext: footballTeamContext.map((context) => context.profile),
+      footballTeamContext,
+      meta: {
+        ...result.meta,
+        error: joinMetaErrors(result.meta.error, layers.footballLayer.error),
+        football: layers.footballLayer.meta,
+      },
+    };
+  }
 
   return result;
 }

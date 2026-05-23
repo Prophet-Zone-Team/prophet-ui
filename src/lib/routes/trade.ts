@@ -1,13 +1,16 @@
 import type { TradeViewMode } from "@/types/market";
 
+export function tradeHref(slug: string, mode?: TradeViewMode) {
+  const base = `/trade/${slug}`;
+  return mode === "pro" ? `${base}/pro` : base;
+}
+
 export function teamTradeHref(teamId: string, mode?: TradeViewMode) {
-  const base = `/trade/team/${teamId}`;
-  return mode === "pro" ? `${base}?mode=pro` : base;
+  return tradeHref(teamId, mode);
 }
 
 export function gameTradeHref(matchId: string, mode?: TradeViewMode) {
-  const base = `/trade/game/${matchId}`;
-  return mode === "pro" ? `${base}?mode=pro` : base;
+  return tradeHref(matchId, mode);
 }
 
 export function parseTradeViewMode(value: string | string[] | undefined): TradeViewMode {

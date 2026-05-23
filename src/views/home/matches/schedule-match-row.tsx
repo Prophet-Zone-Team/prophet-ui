@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { MatchStatusBadge } from "@/components/match/match-status-badge";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { formatVolume } from "@/components/home/market-formatters";
 import { cn } from "@/lib/cn";
@@ -128,58 +129,14 @@ function StatusColumn({
   variant: ScheduleRowVariant;
   kickoffLabel: string;
 }) {
-  const config = getStatusConfig(variant);
-
   return (
     <div className="w-[72px] shrink-0 sm:w-[80px]">
-      <div
-        className={cn(
-          "inline-flex items-center gap-1.5 text-sm font-semibold",
-          config.textClass
-        )}
-      >
-        {variant === "ongoing" ? (
-          <span
-            className="size-3.5 shrink-0 rounded-full border-[3px] border-[rgba(123,202,37,0.3)] bg-[#7BCA25]"
-            aria-hidden
-          />
-        ) : (
-          <span
-            className={cn("size-2 shrink-0 rounded-full", config.dotClass)}
-            aria-hidden
-          />
-        )}
-        {config.label}
-      </div>
+      <MatchStatusBadge variant={variant} className="font-semibold" />
       <p className="m-0 mt-0.5 text-xs leading-[14px] text-[#909090]">
         {kickoffLabel}
       </p>
     </div>
   );
-}
-
-function getStatusConfig(variant: ScheduleRowVariant) {
-  switch (variant) {
-    case "ongoing":
-      return {
-        label: "ongoing",
-        textClass: "text-[#7BCA25]",
-        dotClass:
-          "size-3.5 border-[3px] border-[rgba(123,202,37,0.3)] bg-[#7BCA25]"
-      };
-    case "ended":
-      return {
-        label: "ended",
-        textClass: "text-[#909090]",
-        dotClass: "bg-[#909090]"
-      };
-    default:
-      return {
-        label: "upcoming",
-        textClass: "text-[#9B7BFF]",
-        dotClass: "bg-[#9B7BFF]"
-      };
-  }
 }
 
 function UpcomingMatchBody({

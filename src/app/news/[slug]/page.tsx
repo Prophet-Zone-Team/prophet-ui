@@ -12,8 +12,6 @@ interface PageProps {
   }>;
 }
 
-export const dynamic = "force-dynamic";
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const repository = await getSignalDataRepository();

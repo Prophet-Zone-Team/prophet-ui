@@ -10,8 +10,6 @@ interface TeamPageProps {
   }>;
 }
 
-export const dynamic = "force-dynamic";
-
 export default async function Page({ params }: TeamPageProps) {
   const { slug } = await params;
   const [marketData, oddsData] = await Promise.all([

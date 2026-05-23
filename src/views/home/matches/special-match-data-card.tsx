@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 
+import { MatchStatusBadge } from "@/components/match/match-status-badge";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { formatMatchScore } from "@/lib/market/match-display";
@@ -100,13 +101,7 @@ export function SpecialMatchDataCard({
 
             <div className="flex min-w-[88px] flex-col items-center gap-1 text-center">
               {match.status === "live" ? (
-                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#7BCA25]">
-                  <span
-                    className="size-3.5 shrink-0 rounded-full border-[3px] border-[rgba(123,202,37,0.3)] bg-[#7BCA25]"
-                    aria-hidden
-                  />
-                  ongoing
-                </span>
+                <MatchStatusBadge variant="ongoing" className="font-semibold" />
               ) : null}
               <strong className="text-[28px] font-semibold leading-none text-black sm:text-4xl">
                 {scoreLabel}

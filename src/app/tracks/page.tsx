@@ -5,8 +5,6 @@ import {
 } from "@/data/world-cup-2026/matches";
 import { TracksView } from "@/views/tracks";
 
-export const dynamic = "force-dynamic";
-
 export default async function TracksPage() {
   const marketData = await getWorldCupMarketData({
     includeFootballContext: true,

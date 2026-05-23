@@ -5,12 +5,11 @@ import {
   getStaticWorldCupMatches
 } from "@/data/world-cup-2026/matches";
 
-export const dynamic = "force-dynamic";
-
 export default async function Page() {
   const marketData = await getWorldCupMarketData({
     includeFootballContext: true,
-    includeNews: false
+    includeNews: false,
+    includeOdds: false,
   });
   const matches = attachCachedFootballToMatches(
     getStaticWorldCupMatches(),

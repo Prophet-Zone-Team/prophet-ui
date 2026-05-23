@@ -7,10 +7,13 @@ import type {
   OrderOutcomeSide,
   TeamMarketSnapshot
 } from "@/types/market";
-import { BuyPanel } from "@/views/trade/trade-widget/buy-panel";
+import { ActionPanel } from "@/views/trade/trade-widget/action-panel";
 import { SellPlaceholder } from "@/views/trade/trade-widget/sell-placeholder";
 import { TradeWidgetHeader } from "@/views/trade/trade-widget/header";
-import { TradeMarketButton } from "@/views/trade/trade-widget/trade-market-button";
+import {
+  TradeMarketButton,
+  type TradeOrderMode
+} from "@/views/trade/trade-widget/trade-market-button";
 import { tradePanelClass } from "@/views/trade/trade-widget/trade-ui";
 
 const TRADE_TABS = [
@@ -27,9 +30,9 @@ export interface TradeWidgetProps {
 export function TradeWidget({ snapshot }: TradeWidgetProps) {
   const [tab, setTab] = useState<TradeTabId>("buy");
   const [outcomeSide, setOutcomeSide] = useState<OrderOutcomeSide>("yes");
-
+  const [orderMode, setOrderMode] = useState<TradeOrderMode>("market");
   return (
-    <section id="trade" className={tradePanelClass} aria-label="Place order">
+    <section className={tradePanelClass} aria-label="Place order">
       <TradeWidgetHeader
         snapshot={snapshot}
         outcomeSide={outcomeSide}
@@ -44,17 +47,14 @@ export function TradeWidget({ snapshot }: TradeWidgetProps) {
           size="compact"
           aria-label="Trade side"
         />
-        {tab === "buy" ? <TradeMarketButton /> : null}
+        <TradeMarketButton value={orderMode} onChange={setOrderMode} />
       </div>
-
-      {tab === "buy" ? (
-        <BuyPanel
-          snapshot={snapshot}
-          outcomeSide={outcomeSide}
-          onOutcomeSideChange={setOutcomeSide}
-        />
-      ) : null}
-      {tab === "sell" ? <SellPlaceholder /> : null}
+      <ActionPanel
+        snapshot={snapshot}
+        outcomeSide={outcomeSide}
+        orderMode={orderMode}
+        onOutcomeSideChange={setOutcomeSide}
+      />
     </section>
   );
 }

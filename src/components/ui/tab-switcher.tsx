@@ -39,18 +39,13 @@ export function TabSwitcher({
   size = "default",
   "aria-label": ariaLabel
 }: TabSwitcherProps) {
-  const useSpreadLayout = items.length === 2;
   const underlineLayoutId = `${useId()}-tab-underline`;
 
   return (
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className={cn(
-        "flex h-9 items-start",
-        useSpreadLayout ? "w-[219px] justify-between" : "gap-6",
-        className
-      )}
+      className={cn("flex h-9 items-start", "gap-6", className)}
     >
       {items.map((item) => {
         const isActive = item.id === value;

@@ -9,6 +9,17 @@ export function formatMatchScore(
   return `${homeScore}-${awayScore}`;
 }
 
+export function formatTeamWinLossRecord(
+  wins?: number,
+  losses?: number
+): string {
+  if (wins === undefined && losses === undefined) {
+    return "—";
+  }
+
+  return `${wins ?? 0}-${losses ?? 0}`;
+}
+
 export function formatElapsedDuration(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
   const hours = Math.floor(safeSeconds / 3600);
