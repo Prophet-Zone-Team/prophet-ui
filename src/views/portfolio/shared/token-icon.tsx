@@ -2,28 +2,13 @@
 
 import { cn } from "@/lib/cn";
 
-const TOKEN_COLORS: Record<string, string> = {
-  USDT: "bg-[#26A17B]",
-  ETH: "bg-[#627EEA]",
-  USDC: "bg-[#2775CA]",
-  TRON: "bg-[#EF0027]",
-  pUSD: "bg-black"
-};
-
-const CHAIN_COLORS: Record<string, string> = {
-  Ethereum: "bg-[#6284F5]",
-  Polygon: "bg-[#8247E5]",
-  Avalanche: "bg-[#E84142]",
-  Optimism: "bg-[#FF0420]",
-  "BNB Chain": "bg-[#F0B90B]",
-  TRON: "bg-[#EF0027]"
-};
-
 export interface TokenIconProps {
   symbol: string;
   chainLabel?: string;
   size?: "sm" | "md";
   className?: string;
+  icon?: string;
+  chainIcon?: string;
   dimmed?: boolean;
 }
 
@@ -32,6 +17,8 @@ export function TokenIcon({
   chainLabel,
   size = "md",
   className,
+  icon,
+  chainIcon,
   dimmed = false
 }: TokenIconProps) {
   const iconSize = size === "sm" ? "size-[23px] text-[8px]" : "size-[30px] text-[10px]";
@@ -39,28 +26,51 @@ export function TokenIcon({
 
   return (
     <div className={cn("relative shrink-0", dimmed && "opacity-30", className)}>
-      <div
-        className={cn(
-          "flex items-center justify-center rounded-full font-[556] text-white",
-          iconSize,
-          TOKEN_COLORS[symbol] ?? "bg-[#909090]"
-        )}
-        aria-hidden="true"
-      >
-        {symbol.slice(0, 1)}
-      </div>
-      {chainLabel ? (
-        <div
-          className={cn(
-            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-white font-[556] text-white",
-            badgeSize,
-            CHAIN_COLORS[chainLabel] ?? "bg-[#909090]"
-          )}
-          aria-hidden="true"
-        >
-          {chainLabel.slice(0, 1)}
-        </div>
-      ) : null}
+      {
+        icon ? (
+          <img
+            src={icon}
+            alt={symbol}
+            className={cn(iconSize)}
+          />
+        ) : (
+          <div
+            className={cn(
+              "flex items-center justify-center rounded-full font-[556] text-white",
+              iconSize,
+              "bg-[#909090]"
+            )}
+            aria-hidden="true"
+          >
+            {symbol.slice(0, 1)}
+          </div>
+        )
+      }
+      {
+        chainIcon ? (
+          <img
+            src={chainIcon}
+            alt={chainLabel}
+            className={cn(
+              "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-white font-[556] text-white",
+              badgeSize,
+            )}
+          />
+        ) : (
+          chainLabel ? (
+            <div
+              className={cn(
+                "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-white font-[556] text-white",
+                badgeSize,
+                "bg-[#909090]"
+              )}
+              aria-hidden="true"
+            >
+              {chainLabel.slice(0, 1)}
+            </div>
+          ) : null
+        )
+      }
     </div>
   );
 }

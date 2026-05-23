@@ -80,3 +80,20 @@ export interface WithdrawPreparePayload {
   transfer: DepositWalletBatchSignablePayload;
   funderAddress: string;
 }
+
+export interface SupportedAsset {
+  chainId: string;
+  chainName: string;
+  token: {
+    name: string;
+    symbol: string;
+    address: string;
+    decimals: number;
+  };
+  minCheckoutUsd: number;
+}
+
+export interface SupportedAssetsPayload {
+  note: string;
+  supportedAssets: SupportedAsset[];
+}

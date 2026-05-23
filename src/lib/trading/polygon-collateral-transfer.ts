@@ -1,7 +1,7 @@
 "use client";
 
 import { createWalletClient, custom, erc20Abi, parseUnits, type Address, type Hex } from "viem";
-import { polygon } from "viem/chains";
+import { polygon, arbitrum, optimism } from "viem/chains";
 
 import { getStoredTradingWalletProvider } from "@/components/trading/trading-wallet-session";
 import { getEthereumProviderForWallet } from "@/components/trading/wallet-provider";

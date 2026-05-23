@@ -27,7 +27,9 @@ export interface UsePortfolioDataResult {
 
 export function usePortfolioData(): UsePortfolioDataResult {
   const { session, isAuthenticated, openLogin } = useAuth();
-  const [readiness, setReadiness] = useState<UserTradingReadiness | undefined>();
+  const [readiness, setReadiness] = useState<
+    UserTradingReadiness | undefined
+  >();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
   const [orderHistory, setOrderHistory] = useState<UserOrderRecord[]>([]);
@@ -50,37 +52,45 @@ export function usePortfolioData(): UsePortfolioDataResult {
 
       const errors: string[] = [];
 
-      const [positionsPayload, openOrdersPayload, historyPayload, readinessPayload] =
-        await Promise.all([
-          fetchJson<{ positions?: UserPositionRecord[]; error?: string }>(
-            "/api/trading/positions?limit=100"
-          ).catch((error) => {
+      const [
+        positionsPayload,
+        openOrdersPayload,
+        historyPayload,
+        readinessPayload
+      ] = await Promise.all([
+        fetchJson<{ positions?: UserPositionRecord[]; error?: string }>(
+          "/api/trading/positions?limit=100"
+        ).catch((error) => {
+          errors.push(error instanceof Error ? error.message : String(error));
+          return undefined;
+        }),
+        fetchJson<{
+          orders?: UserOpenOrder[];
+          history?: UserOrderRecord[];
+          error?: string;
+        }>("/api/trading/orders/open").catch((error) => {
+          errors.push(error instanceof Error ? error.message : String(error));
+          return undefined;
+        }),
+        fetchJson<{ orders?: UserOrderRecord[]; error?: string }>(
+          "/api/trading/orders/history?limit=40"
+        ).catch((error) => {
+          errors.push(error instanceof Error ? error.message : String(error));
+          return undefined;
+        }),
+        fetchJson<UserTradingReadiness>("/api/trading/readiness").catch(
+          (error) => {
             errors.push(error instanceof Error ? error.message : String(error));
             return undefined;
-          }),
-          fetchJson<{
-            orders?: UserOpenOrder[];
-            history?: UserOrderRecord[];
-            error?: string;
-          }>("/api/trading/orders/open").catch((error) => {
-            errors.push(error instanceof Error ? error.message : String(error));
-            return undefined;
-          }),
-          fetchJson<{ orders?: UserOrderRecord[]; error?: string }>(
-            "/api/trading/orders/history?limit=40"
-          ).catch((error) => {
-            errors.push(error instanceof Error ? error.message : String(error));
-            return undefined;
-          }),
-          fetchJson<UserTradingReadiness>("/api/trading/readiness").catch((error) => {
-            errors.push(error instanceof Error ? error.message : String(error));
-            return undefined;
-          })
-        ]);
+          }
+        )
+      ]);
 
       setPositions(positionsPayload?.positions ?? []);
       setOpenOrders(openOrdersPayload?.orders ?? []);
-      setOrderHistory(historyPayload?.orders ?? openOrdersPayload?.history ?? []);
+      setOrderHistory(
+        historyPayload?.orders ?? openOrdersPayload?.history ?? []
+      );
       setReadiness(readinessPayload);
 
       const apiErrors = [
@@ -89,7 +99,8 @@ export function usePortfolioData(): UsePortfolioDataResult {
         historyPayload?.error
       ].filter(Boolean);
 
-      const combinedMessage = [...errors, ...apiErrors].join(" ").trim() || undefined;
+      const combinedMessage =
+        [...errors, ...apiErrors].join(" ").trim() || undefined;
       setMessage(combinedMessage);
       setStatus(combinedMessage && !positionsPayload ? "error" : "ready");
     } catch (error) {

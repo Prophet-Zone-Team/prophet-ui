@@ -9,7 +9,6 @@ import {
   depositPercentButtonClass,
   depositTransferBarClass
 } from "@/views/portfolio/deposit/deposit-ui";
-import type { DepositTokenOption } from "@/views/portfolio/deposit/types";
 import {
   applyBalancePercent,
   formatAmountInputValue,
@@ -17,11 +16,12 @@ import {
   validateDepositAmount
 } from "@/views/portfolio/deposit/utils";
 import { TokenIcon } from "@/views/portfolio/shared/token-icon";
+import { FundingAsset } from "@/config/funding";
 
 const PERCENT_OPTIONS = [25, 50, 75, 100] as const;
 
 export interface DepositAmountStepProps {
-  token: DepositTokenOption;
+  token: FundingAsset;
   amount: number;
   onAmountChange: (amount: number) => void;
 }
@@ -32,12 +32,12 @@ export function DepositAmountStep({
   onAmountChange
 }: DepositAmountStepProps) {
   const [inputValue, setInputValue] = useState(() =>
-    amount > 0 ? formatAmountInputValue(amount) : formatAmountInputValue(token.balance)
+    amount > 0 ? formatAmountInputValue(amount) : formatAmountInputValue(0)
   );
 
   const validationError = useMemo(
-    () => validateDepositAmount(parseAmountInput(inputValue), token.balance),
-    [inputValue, token.balance]
+    () => validateDepositAmount(parseAmountInput(inputValue), 0),
+    [inputValue]
   );
 
   function handleInputChange(nextRaw: string) {
@@ -52,7 +52,7 @@ export function DepositAmountStep({
   }
 
   function handlePercent(percent: number) {
-    const next = applyBalancePercent(token.balance, percent);
+    const next = applyBalancePercent(0, percent);
     setInputValue(formatAmountInputValue(next));
     onAmountChange(next);
   }
@@ -90,10 +90,10 @@ export function DepositAmountStep({
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <span className="text-sm font-[556] text-[#909090]">Send</span>
           <div className="flex items-center gap-2">
-            <TokenIcon symbol={token.symbol} chainLabel={token.chainLabel} size="md" />
+            <TokenIcon symbol={token.symbol} chainLabel={token.chainName} size="md" />
             <div className="flex min-w-0 flex-col">
               <span className="text-sm font-[556] text-black">{token.symbol}</span>
-              <span className="text-xs font-[556] text-[#909090]">{token.chainLabel}</span>
+              <span className="text-xs font-[556] text-[#909090]">{token.chainName}</span>
             </div>
           </div>
         </div>
