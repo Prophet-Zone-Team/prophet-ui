@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { MarketDataMeta } from "../../data/providers/types";
 import { generateMarketSignals } from "../../lib/market/analyzer";
 import { createWatchlistAlerts } from "../../lib/market/brief";
+import { teamTradeHref } from "../../lib/routes/trade";
 import type { WatchlistAlert } from "../../lib/market/brief";
 import type { NewsEvent, TeamMarketSnapshot, TradingUserSession, UserFavourite } from "../../types/market";
 import { DataStatusBanner, SourceDisclosure } from "../data/DataStatusBanner";
@@ -147,7 +148,7 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
           <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8">
             <h2 className="font-display text-3xl text-terminal-text sm:text-4xl">No teams on watchlist</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-terminal-muted">
-              Add teams from a team detail page. The list is saved to your connected wallet profile.
+              Add teams from a trade page. The list is saved to your connected wallet profile.
             </p>
             <Link
               href="/"
@@ -183,8 +184,8 @@ function WatchlistTeamCard({
             {team.code} / {team.region}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href={`/team/${team.id}`} className="rounded border border-terminal-cyan/50 px-3 py-2 text-xs text-terminal-cyan">
-              Team detail
+            <Link href={teamTradeHref(team.id)} className="rounded border border-terminal-cyan/50 px-3 py-2 text-xs text-terminal-cyan">
+              Trade
             </Link>
             <button
               type="button"

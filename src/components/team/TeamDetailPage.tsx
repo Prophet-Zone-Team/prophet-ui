@@ -2,6 +2,7 @@
 
 import type { MarketDataMeta } from "../../data/providers/types";
 import type { NormalizedBookmakerOdds } from "../../data/odds/types";
+import { TeamDetailView } from "../../views/team";
 import type {
   ApiFootballDataIssue,
   ApiFootballFixtureContext,
@@ -13,48 +14,26 @@ import type {
   NewsEvent,
   ProbabilityHistoryPoint,
   TeamFootballMetadata,
-  TeamMarketSnapshot,
-  WorldCupMatch
+  TeamMarketSnapshot
 } from "../../types/market";
-import { TeamDetailView } from "../../views/team";
 
 export interface TeamDetailPageProps {
   snapshot: TeamMarketSnapshot;
   probabilityHistory: ProbabilityHistoryPoint[];
-  matches: WorldCupMatch[];
-  snapshots: TeamMarketSnapshot[];
-  relatedNews?: NewsEvent[];
+  relatedNews: NewsEvent[];
   footballProfile?: ApiFootballTeamProfile;
-  footballFixtures?: ApiFootballFixtureContext[];
-  footballSquad?: ApiFootballSquadPlayer[];
-  footballInjuries?: ApiFootballInjuryContext[];
-  footballStandings?: ApiFootballStandingContext[];
-  footballOdds?: ApiFootballOddContext[];
-  outrightOdds?: NormalizedBookmakerOdds[];
-  footballDataIssues?: ApiFootballDataIssue[];
+  footballFixtures: ApiFootballFixtureContext[];
+  footballSquad: ApiFootballSquadPlayer[];
+  footballInjuries: ApiFootballInjuryContext[];
+  footballStandings: ApiFootballStandingContext[];
+  footballOdds: ApiFootballOddContext[];
+  outrightOdds: NormalizedBookmakerOdds[];
+  footballDataIssues: ApiFootballDataIssue[];
   footballMetadata?: TeamFootballMetadata;
-  allFootballMetadata?: TeamFootballMetadata[];
+  allFootballMetadata: TeamFootballMetadata[];
   dataStatus: MarketDataMeta;
 }
 
-export function TeamDetailPage({
-  snapshot,
-  probabilityHistory,
-  matches,
-  snapshots,
-  footballProfile,
-  footballMetadata,
-  dataStatus
-}: TeamDetailPageProps) {
-  return (
-    <TeamDetailView
-      snapshot={snapshot}
-      probabilityHistory={probabilityHistory}
-      matches={matches}
-      snapshots={snapshots}
-      footballProfile={footballProfile}
-      footballMetadata={footballMetadata}
-      dataStatus={dataStatus}
-    />
-  );
+export function TeamDetailPage(props: TeamDetailPageProps) {
+  return <TeamDetailView {...props} />;
 }

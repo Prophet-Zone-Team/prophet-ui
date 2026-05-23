@@ -3,6 +3,9 @@ import { Icon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { teamDetailHref } from "../../lib/routes/team";
+import { teamTradeHref } from "../../lib/routes/trade";
+
 import type { MarketDataMeta, WorldCupMarketData } from "../../data/providers/types";
 import { getMarketDataSourceLabel } from "../../data/providers/source";
 import {
@@ -162,7 +165,7 @@ function Hero({
 
           <div className="terminal-list">
             {getTerminalRows(signals, teams, signalTeamMap).map((item) => (
-              <Link key={item.key} className="terminal-row" href={`/team/${item.snapshot.team.id}`}>
+              <Link key={item.key} className="terminal-row" href={teamDetailHref(item.snapshot.team.id)}>
                 <TeamFlag code={item.snapshot.team.code} name={item.snapshot.team.name} />
                 <div>
                   <h3>{item.title}</h3>
@@ -299,8 +302,8 @@ function TeamCard({
   return (
     <Link
       className={isDown ? "team-card down" : "team-card"}
-      href={`/team/${snapshot.team.id}`}
-      aria-label={`Open ${snapshot.team.name} team detail`}
+      href={teamDetailHref(snapshot.team.id)}
+      aria-label={`Open ${snapshot.team.name} team dossier`}
     >
       <span className="rank">{rank}</span>
       <div className="team-name">
@@ -330,7 +333,7 @@ function MoveCard({ item }: { item: MovementRow }) {
   const isDown = item.snapshot.market.change24h < 0;
 
   return (
-    <Link className="move-card" href={`/team/${item.snapshot.team.id}`}>
+    <Link className="move-card" href={teamDetailHref(item.snapshot.team.id)}>
       <TeamFlag code={item.snapshot.team.code} name={item.snapshot.team.name} />
       <div>
         <h3 className={isDown ? "move-title down" : "move-title"}>{item.title}</h3>

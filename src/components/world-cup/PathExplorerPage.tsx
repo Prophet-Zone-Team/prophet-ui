@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { WORLD_CUP_2026_GROUPS, WORLD_CUP_2026_GROUP_ORDER, getWorldCupGroupForTeam } from "../../data/world-cup-2026/groups";
+import { teamTradeHref } from "../../lib/routes/trade";
 import { calculateWorldCupPath } from "../../lib/world-cup-path/calculatePath";
 import type { FinishType, PathMode, PathResult } from "../../types/market";
 import { TeamFlag } from "../teams/TeamFlag";
@@ -121,7 +122,7 @@ export function PathExplorerPage({ initialTeamId = "brazil" }: { initialTeamId?:
                 <p>{round.possibleOpponentTeamIds.length} possible opponents under the official bracket.</p>
                 <div className="path-opponent-list">
                   {round.possibleOpponentTeams.slice(0, 12).map((team) => (
-                    <Link key={team.teamId} href={`/team/${team.teamId}`}>
+                    <Link key={team.teamId} href={teamTradeHref(team.teamId)}>
                       {team.teamName}
                     </Link>
                   ))}

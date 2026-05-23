@@ -1,46 +1,60 @@
 import { cn } from "../../lib/cn";
 
-export const teamDetailPageClass =
+export const teamPageClass =
   "mx-auto max-w-[1440px] px-4 pb-10 pt-2 sm:px-6";
 
-export const teamDetailPanelClass = "";
+export const teamPanelClass = cn(
+  "overflow-hidden rounded-[12px] border border-prophet-line bg-white"
+);
 
-export const teamDetailPanelHeadClass =
+export const teamPanelHeadClass =
   "flex flex-wrap items-center justify-between gap-2 border-b border-prophet-line px-4 py-3";
 
-export const teamDetailPanelTitleClass =
+export const teamPanelTitleClass =
   "m-0 text-base font-[556] text-black sm:text-lg";
 
-export const teamDetailTableHeadClass =
-  "grid grid-cols-[minmax(0,1fr)_repeat(5,minmax(0,1fr))] gap-2 border-b border-prophet-line px-4 py-2 text-xs text-prophet-muted";
+export const teamPanelBadgeClass =
+  "text-xs font-[556] text-prophet-muted";
 
-export const teamDetailTableRowClass =
-  "grid grid-cols-[minmax(0,1fr)_repeat(5,minmax(0,1fr))] gap-2 border-b border-prophet-line/60 px-4 py-2.5 text-sm last:border-b-0";
+export const teamHeroCardClass = cn(
+  "rounded-[12px] border border-prophet-line bg-gradient-to-br from-[#f5f9ff] to-white p-5 shadow-prophet",
+  "grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,1.2fr)] lg:items-center"
+);
 
-export function teamDetailYesNoPill(active: boolean, side: "yes" | "no") {
-  return cn(
-    "rounded-[6px] px-3 py-1 text-sm font-[556] leading-[17px] transition-colors",
-    side === "yes"
-      ? active
-        ? "bg-[#65AF14] text-white"
-        : "text-prophet-muted"
-      : active
-        ? "bg-[#65AF14] text-white"
-        : "text-[#FF674B]"
+export const teamHeroMetricsClass =
+  "grid grid-cols-2 gap-2 sm:grid-cols-4";
+
+export const teamDossierStripClass =
+  "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4";
+
+export const teamMainGridClass =
+  "flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_345px] xl:items-start";
+
+export const teamMainColumnClass = "order-2 flex min-w-0 flex-col gap-4 xl:order-1";
+
+export const teamSidebarClass =
+  "order-1 flex min-w-0 flex-col gap-4 xl:order-2 xl:sticky xl:top-14";
+
+export const teamTwoUpClass =
+  "grid grid-cols-1 gap-4 lg:grid-cols-2";
+
+export const teamMetricToneClass = (tone?: "up" | "down") =>
+  cn(
+    "flex flex-col gap-0.5 rounded-lg border border-prophet-line/80 bg-[#fafbfc] px-3 py-2",
+    tone === "up" && "border-prophet-green/30",
+    tone === "down" && "border-prophet-red/30"
   );
-}
 
-export const teamDetailBidButtonClass = cn(
-  "flex h-[46px] w-full items-center justify-center rounded-xl text-lg font-[556] text-white transition-opacity",
-  "bg-[#65AF14] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-);
+export const teamMetricValueClass = (tone?: "up" | "down") =>
+  cn(
+    "text-sm font-[556] text-black",
+    tone === "up" && "text-prophet-green",
+    tone === "down" && "text-prophet-red"
+  );
 
-export const teamTradeQuickAmountClass = cn(
-  "flex h-[30px] items-center justify-center rounded-lg border border-prophet-line bg-white px-3",
-  "text-sm font-[457] text-prophet-muted transition-colors hover:bg-[#fafbfc]"
-);
+export const teamMiniGridClass = "grid grid-cols-2 gap-2 sm:grid-cols-3";
 
-export const teamTradeMarketButtonClass = cn(
-  "flex h-8 shrink-0 items-center gap-1 rounded-md border border-prophet-line bg-white px-2.5",
-  "text-sm font-[556] leading-[17px] text-black"
+export const teamOpenTradeButtonClass = cn(
+  "inline-flex h-9 items-center justify-center rounded-lg border border-prophet-line bg-white px-4",
+  "text-sm font-[556] text-black transition-colors hover:bg-[#fafbfc]"
 );

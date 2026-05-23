@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { MarketDataMeta } from "../../data/providers/types";
 import { generateMarketSignals } from "../../lib/market/analyzer";
+import { teamTradeHref } from "../../lib/routes/trade";
 import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "../../types/market";
 import { DataStatusBanner, SourceDisclosure } from "../data/DataStatusBanner";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "../home/market-formatters";
@@ -156,10 +157,10 @@ function FeedCard({
 
       <div className="mt-5 flex flex-wrap gap-3 border-t border-terminal-line/70 pt-5">
         <Link
-          href={`/team/${signal.teamId}`}
+          href={teamTradeHref(signal.teamId)}
           className="rounded border border-terminal-cyan/60 bg-terminal-cyan/10 px-3 py-2 text-xs font-semibold text-terminal-cyan transition hover:bg-terminal-cyan/20"
         >
-          View Team
+          Trade
         </Link>
         <button
           type="button"

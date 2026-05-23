@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getNewsArticleSlug } from "../../../lib/news/newsSlugs";
+import { teamTradeHref, gameTradeHref } from "../../../lib/routes/trade";
 import { getStaticWorldCupMatches } from "../../../data/world-cup-2026/matches";
 import { getWorldCupTeamByIdOrCode } from "../../../data/world-cup-2026/groups";
 import { worldCupTeams } from "../../../data/teams/worldCupTeams";
@@ -62,15 +63,15 @@ function searchTeams(q: string, type: SearchResultType | "all"): SearchResult[] 
         type: "team",
         title: team.name,
         subtitle: `${team.code} / ${team.region}`,
-        href: `/team/${team.id}`,
+        href: teamTradeHref(team.id),
         score: baseScore,
       },
       {
         id: `market:${team.id}`,
         type: "market",
         title: `${team.name} winner market`,
-        subtitle: "Open team market and bid ticket",
-        href: `/team/${team.id}#trade`,
+        subtitle: "Open team market trade ticket",
+        href: teamTradeHref(team.id),
         score: baseScore - 5,
       },
       {
@@ -104,7 +105,7 @@ function searchMatches(q: string, type: SearchResultType | "all"): SearchResult[
       type: "match",
       title: home && away ? `${home.name} vs ${away.name}` : `Match ${match.matchId}`,
       subtitle: `${match.stage}${match.group ? ` / Group ${match.group}` : ""}`,
-      href: `/matches#${match.id}`,
+      href: gameTradeHref(match.id),
       score: 70,
     } satisfies SearchResult;
   });
@@ -159,7 +160,7 @@ async function searchFootballContext(q: string, type: SearchResultType | "all"):
       type: "team",
       title: `${context.profile.name} squad context`,
       subtitle: `Club match: ${clubHits.slice(0, 2).map((player) => player.name).join(", ")}`,
-      href: `/team/${context.profile.teamId}`,
+      href: teamTradeHref(context.profile.teamId),
       score: 45,
     } satisfies SearchResult;
   });

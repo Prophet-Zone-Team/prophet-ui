@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 
 import {
   createBridgeDepositAddresses,
-  fetchBridgeDepositStatus,
+  fetchBridgeTransactionStatus,
 } from "../../../../server/trading/bridge";
+import { getTradingChainId } from "../../../../server/trading/clobAuth";
+import { getTradingContractAddresses } from "../../../../server/trading/contracts";
 import { getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
 
 export const runtime = "nodejs";
@@ -30,13 +32,17 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.json({
-        status: await fetchBridgeDepositStatus(statusAddress),
+        status: await fetchBridgeTransactionStatus(statusAddress),
       });
     }
+
+    const contracts = getTradingContractAddresses();
 
     return NextResponse.json({
       deposit: await createBridgeDepositAddresses(record.session.funderAddress),
       funderAddress: record.session.funderAddress,
+      chainId: getTradingChainId(),
+      collateralToken: contracts.collateralToken,
     });
   } catch (error) {
     return NextResponse.json(

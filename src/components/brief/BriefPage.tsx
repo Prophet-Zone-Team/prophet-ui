@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getMarketDataSourceLabel } from "../../data/providers/source";
 import type { MarketDataMeta } from "../../data/providers/types";
 import { generateMarketSignals, getBiggestLosers, getOddsMismatch, getTopMovers } from "../../lib/market/analyzer";
+import { teamTradeHref } from "../../lib/routes/trade";
 import { createDailyBriefMarkdown, createWatchlistAlerts } from "../../lib/market/brief";
 import type { WatchlistAlert } from "../../lib/market/brief";
 import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "../../types/market";
@@ -176,7 +177,7 @@ function SnapshotList({
           snapshots.map((snapshot) => (
             <Link
               key={snapshot.team.id}
-              href={`/team/${snapshot.team.id}`}
+              href={teamTradeHref(snapshot.team.id)}
               className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -209,7 +210,7 @@ function SignalPanel({ signals }: { signals: MarketSignal[] }) {
       <div className="mt-6 grid gap-4">
         {signals.length > 0 ? (
           signals.map((signal) => (
-            <Link key={signal.id} href={`/team/${signal.teamId}`} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
+            <Link key={signal.id} href={teamTradeHref(signal.teamId)} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{formatSignalType(signal.type)}</p>
                 <p className="text-xs font-semibold text-terminal-cyan">{signal.confidence}% confidence</p>
@@ -233,7 +234,7 @@ function WatchlistAlertPanel({ alerts }: { alerts: WatchlistAlert[] }) {
       <div className="mt-6 grid gap-4">
         {alerts.length > 0 ? (
           alerts.slice(0, 6).map((alert) => (
-            <Link key={alert.id} href={`/team/${alert.teamId}`} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
+            <Link key={alert.id} href={teamTradeHref(alert.teamId)} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{alert.teamName}</p>
                 <span className={getSeverityClassName(alert.severity)}>{alert.severity}</span>
@@ -288,7 +289,7 @@ function OddsMismatchPanel({
       <div className="mt-6 grid gap-4">
         {oddsMismatch.length > 0 ? (
           oddsMismatch.map((result) => (
-            <Link key={result.team.id} href={`/team/${result.team.id}`} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
+            <Link key={result.team.id} href={teamTradeHref(result.team.id)} className="rounded-lg border border-terminal-line bg-terminal-panel2/75 p-4 transition hover:border-terminal-cyan/50">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-terminal-muted">{result.team.code}</p>
                 <p className={result.mismatch >= 0 ? "text-sm font-semibold text-terminal-green" : "text-sm font-semibold text-terminal-red"}>

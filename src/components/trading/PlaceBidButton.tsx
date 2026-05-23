@@ -1,7 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
+
+import { teamTradeHref } from "../../lib/routes/trade";
 
 import { buildBidOrderPreview, type BidOrderPreview } from "../../lib/market/polymarketOrder";
 import { calculateReferencePrice } from "../../lib/market/orderMath";
@@ -33,12 +36,15 @@ interface PlaceBidButtonProps {
   className?: string;
   snapshot?: TeamMarketSnapshot;
   teamName?: string;
+  /** When set with a snapshot, navigates to the trade page instead of submitting inline. */
+  navigateToTrade?: boolean;
 }
 
 export function PlaceBidButton({
   children = "Quick Bid",
   className = "inline-flex h-9 min-w-[86px] items-center justify-center rounded-[7px] bg-gradient-to-br from-[#0d69ff] to-[#124cf0] text-xs font-extrabold text-white shadow-[0_10px_22px_rgba(18,82,246,0.22)] disabled:cursor-wait disabled:opacity-70",
   snapshot,
+  navigateToTrade = false
 }: PlaceBidButtonProps) {
   const [amount, setAmount] = useState(() => readQuickBidAmount());
   const [status, setStatus] = useState<QuickBidStatus>("idle");
@@ -168,6 +174,22 @@ export function PlaceBidButton({
       setStatus("idle");
       setMessage(undefined);
     }, nextStatus === "success" ? 4200 : 6400);
+  }
+
+  if (navigateToTrade && snapshot) {
+    return (
+      <Link
+        href={`${teamTradeHref(snapshot.team.id)}#trade`}
+        className={className}
+        aria-label={
+          typeof children === "string"
+            ? `${children} for ${snapshot.team.name}`
+            : `Open trade for ${snapshot.team.name}`
+        }
+      >
+        {children}
+      </Link>
+    );
   }
 
   return (

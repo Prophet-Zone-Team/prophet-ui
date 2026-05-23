@@ -1,12 +1,8 @@
 import { notFound } from "next/navigation";
 
-import { getWorldCupMarketData } from "../../../data/providers/worldCupMarketData";
 import { TeamDetailPage } from "../../../components/team/TeamDetailPage";
 import { getTheOddsApiWorldCupWinnerOdds } from "../../../data/odds/theOddsApiProvider";
-import {
-  attachCachedFootballToMatches,
-  getStaticWorldCupMatches
-} from "../../../data/world-cup-2026/matches";
+import { getWorldCupMarketData } from "../../../data/providers/worldCupMarketData";
 
 interface TeamPageProps {
   params: Promise<{
@@ -43,17 +39,11 @@ export default async function Page({ params }: TeamPageProps) {
   const footballProfile =
     footballContext?.profile ??
     marketData.footballContext.find((profile) => profile.teamId === snapshot.team.id);
-  const matches = attachCachedFootballToMatches(
-    getStaticWorldCupMatches(),
-    marketData.footballTeamContext
-  );
 
   return (
     <TeamDetailPage
       snapshot={snapshot}
       probabilityHistory={probabilityHistory}
-      matches={matches}
-      snapshots={marketData.snapshots}
       relatedNews={relatedNews}
       footballProfile={footballProfile}
       footballFixtures={footballContext?.fixtures ?? []}

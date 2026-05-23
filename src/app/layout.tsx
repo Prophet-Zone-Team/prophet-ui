@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { AuthProvider } from "../context/auth";
 import { AppHeader } from "../layout/header";
 import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
@@ -19,10 +20,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <main className="min-h-screen overflow-x-hidden font-body">
-          <AppHeader />
-          <div className="pt-11">{children}</div>
-        </main>
+        <AuthProvider>
+          <main className="min-h-screen overflow-x-hidden font-body">
+            <AppHeader />
+            <div className="pt-11">{children}</div>
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,62 +1,69 @@
-import { teamDetailPageClass, teamDetailPanelClass } from "../../../views/team/teamDetailUi";
-
-function LoadingBlock({ className }: { className?: string }) {
+export default function TeamLoading() {
   return (
     <div
-      className={`animate-pulse rounded-md bg-[#ebebeb]/80 ${className ?? "h-4 w-full"}`}
-      aria-hidden
-    />
-  );
-}
-
-export default function TeamDetailLoading() {
-  return (
-    <div className={teamDetailPageClass} aria-busy aria-label="Loading team detail">
-      <div className="mb-4 flex gap-3 border-b border-prophet-line pb-4">
-        <LoadingBlock className="h-5 w-12" />
-        <LoadingBlock className="h-14 w-14 shrink-0" />
-        <div className="flex-1 space-y-2">
-          <LoadingBlock className="h-7 w-48" />
-          <LoadingBlock className="h-4 w-32" />
+      className="mx-auto max-w-[1440px] px-4 pb-10 pt-2 sm:px-6"
+      aria-busy
+      aria-label="Loading team page"
+    >
+      <div className="my-4">
+        <div className="mb-3 h-4 w-24 animate-pulse rounded bg-[#ebebeb]/80" />
+        <div className="animate-pulse rounded-[12px] border border-prophet-line bg-gradient-to-br from-[#f5f9ff] to-white p-5">
+          <div className="flex gap-3">
+            <div className="size-[68px] rounded-lg bg-[#ebebeb]/80" />
+            <div className="flex-1 space-y-2">
+              <div className="h-8 w-48 rounded bg-[#ebebeb]/80" />
+              <div className="h-4 w-64 rounded bg-[#ebebeb]/80" />
+              <div className="flex gap-2">
+                <div className="h-6 w-20 rounded-full bg-[#ebebeb]/80" />
+                <div className="h-6 w-16 rounded-full bg-[#ebebeb]/80" />
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {Array.from({ length: 4 }, (_, index) => (
+              <div
+                key={index}
+                className="h-14 rounded-lg bg-[#ebebeb]/80"
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div
+        className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        aria-hidden
+      >
+        {Array.from({ length: 4 }, (_, index) => (
+          <div
+            key={index}
+            className="h-[178px] animate-pulse rounded-[12px] border border-prophet-line bg-white"
+          />
+        ))}
+      </div>
+
+      <div
+        className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_345px]"
+        aria-label="Loading team analysis"
+      >
         <div className="order-2 flex flex-col gap-4 xl:order-1">
-          <div className={`${teamDetailPanelClass} p-5`}>
-            <LoadingBlock className="mb-4 h-6 w-40" />
-            <LoadingBlock className="mb-6 h-12 w-56" />
-            <LoadingBlock className="h-[280px] w-full" />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="h-[320px] animate-pulse rounded-[12px] border border-prophet-line bg-white" />
+            <div className="h-[320px] animate-pulse rounded-[12px] border border-prophet-line bg-white" />
           </div>
-          <div className={teamDetailPanelClass}>
-            <div className="border-b border-prophet-line px-4 py-3">
-              <LoadingBlock className="h-6 w-64" />
-            </div>
-            {Array.from({ length: 6 }, (_, index) => (
-              <div key={index} className="border-b border-prophet-line/60 px-4 py-3">
-                <LoadingBlock className="h-4 w-full" />
-              </div>
-            ))}
-          </div>
+          {Array.from({ length: 4 }, (_, index) => (
+            <div
+              key={index}
+              className="h-40 animate-pulse rounded-[12px] border border-prophet-line bg-white"
+            />
+          ))}
         </div>
 
         <aside className="order-1 flex flex-col gap-4 xl:order-2">
-          <div className={`${teamDetailPanelClass} p-4`}>
-            <LoadingBlock className="mb-4 h-6 w-24" />
-            <LoadingBlock className="mb-3 h-20 w-full" />
-            <LoadingBlock className="h-11 w-full rounded-lg" />
-          </div>
-          <div className={teamDetailPanelClass}>
-            <div className="border-b border-prophet-line px-4 py-3">
-              <LoadingBlock className="h-5 w-36" />
-            </div>
-            {Array.from({ length: 3 }, (_, index) => (
-              <div key={index} className="m-3 rounded-xl border border-prophet-line p-3">
-                <LoadingBlock className="mb-2 h-4 w-20" />
-                <LoadingBlock className="h-16 w-full" />
-              </div>
-            ))}
-          </div>
+          <div className="h-36 animate-pulse rounded-[12px] border border-prophet-line bg-white" />
+          <div className="h-[420px] animate-pulse rounded-[12px] border border-prophet-line bg-white" />
+          <div className="h-56 animate-pulse rounded-[12px] border border-prophet-line bg-white" />
+          <div className="h-64 animate-pulse rounded-[12px] border border-prophet-line bg-white" />
         </aside>
       </div>
     </div>

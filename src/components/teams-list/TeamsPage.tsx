@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import type { MarketDataMeta, WorldCupMarketData } from "../../data/providers/types";
+import { teamDetailHref } from "../../lib/routes/team";
+import { teamTradeHref } from "../../lib/routes/trade";
 import type {
   ApiFootballFixtureContext,
   ApiFootballTeamContext,
@@ -145,8 +147,11 @@ function FeaturedTeamCard({
         <FeatureMetric label={featured.secondaryLabel} value={featured.secondaryValue} />
       </div>
       <p className="team-feature-copy">{featured.copy}</p>
-      <Link className="market-detail-button" href={`/team/${team.id}`}>
-        View Team Detail
+      <Link className="market-detail-button" href={teamDetailHref(team.id)}>
+        View dossier
+      </Link>
+      <Link className="market-detail-button" href={teamTradeHref(team.id)}>
+        Open trade
       </Link>
     </article>
   );
@@ -159,13 +164,13 @@ function TeamDirectoryItem({ row }: { row: TeamDirectoryRow }) {
 
   return (
     <article className="team-directory-row pro">
-      <div className="team-index-main">
+      <Link href={teamDetailHref(team.id)} className="team-index-main">
         <TeamFlag code={team.code} name={team.name} />
         <div>
           <h3>{team.name}</h3>
           <p>{team.region}</p>
         </div>
-      </div>
+      </Link>
 
       <div className="team-directory-profile">
         <TeamMetric label="FIFA rank" value={rankValue ? `#${rankValue}` : "Pending"} />
@@ -192,11 +197,19 @@ function TeamDirectoryItem({ row }: { row: TeamDirectoryRow }) {
       </div>
 
       <div className="team-index-actions">
-        <Link className="market-detail-button" href={`/team/${team.id}`}>
-          View Detail
+        <Link className="market-detail-button" href={teamDetailHref(team.id)}>
+          Details
         </Link>
-        <PlaceBidButton className="market-quick-bid secondary" snapshot={row.snapshot} teamName={team.name}>
-          Quick Bid
+        <Link className="market-detail-button" href={teamTradeHref(team.id)}>
+          Trade
+        </Link>
+        <PlaceBidButton
+          className="market-quick-bid secondary"
+          snapshot={row.snapshot}
+          teamName={team.name}
+          navigateToTrade
+        >
+          Bid
         </PlaceBidButton>
       </div>
     </article>

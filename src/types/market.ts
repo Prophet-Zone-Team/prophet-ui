@@ -23,6 +23,12 @@ export type SignalType =
 
 export type OrderOutcomeSide = "yes" | "no";
 
+export type MatchOutcomeSide = "home" | "draw" | "away";
+
+export type TradeViewMode = "pro" | "simple";
+
+export type TradeEntityType = "team" | "game";
+
 export type BidTradeSide = "buy" | "sell";
 
 export type TradingOrderType = "GTC" | "FOK" | "FAK";
@@ -424,6 +430,35 @@ export interface WorldCupMatch {
   /** Elapsed match time in seconds (API-Football live clock baseline for client timer). */
   liveElapsedSeconds?: number;
   freshness: FreshnessMeta;
+}
+
+export interface GameMarketOutcome {
+  side: MatchOutcomeSide;
+  label: string;
+  probability: number;
+  change24h?: number;
+  volume?: number;
+  tokenId?: string;
+}
+
+export interface GameMarketSnapshot {
+  match: WorldCupMatch;
+  homeTeamId?: Team["id"];
+  awayTeamId?: Team["id"];
+  outcomes: GameMarketOutcome[];
+  market: {
+    volume: number;
+    acceptingOrders: boolean;
+    source: string;
+    freshness: FreshnessMeta;
+  };
+}
+
+export interface GameProbabilityHistoryPoint {
+  matchId: string;
+  outcome: MatchOutcomeSide;
+  timestamp: string;
+  probability: number;
 }
 
 export type SearchResultType = "team" | "match" | "news" | "market" | "path";

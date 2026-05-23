@@ -17,6 +17,13 @@ export interface BridgeDepositAddressResponse {
   note?: string;
 }
 
+export interface BridgeWithdrawRequest {
+  address: string;
+  toChainId: string;
+  toTokenAddress: string;
+  recipientAddr: string;
+}
+
 export interface BridgeStatusResponse {
   transactions?: Array<Record<string, unknown>>;
 }
@@ -39,18 +46,52 @@ export async function createBridgeDepositAddresses(walletAddress: string): Promi
   return (await response.json()) as BridgeDepositAddressResponse;
 }
 
-export async function fetchBridgeDepositStatus(depositAddress: string): Promise<BridgeStatusResponse> {
+export async function createBridgeWithdrawalAddresses(
+  payload: BridgeWithdrawRequest,
+): Promise<BridgeDepositAddressResponse> {
+  const response = await fetch(`${getBridgeUrl()}/withdraw`, {
+    method: "POST",
+    headers: createBridgeHeaders(),
+    body: JSON.stringify(payload),
+    cache: "no-store",
+    signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to create Polymarket withdrawal addresses: ${await readResponseError(response)}`);
+  }
+
+  return (await response.json()) as BridgeDepositAddressResponse;
+}
+
+export async function fetchBridgeSupportedAssets(): Promise<unknown> {
+  const response = await fetch(`${getBridgeUrl()}/supported-assets`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to read Polymarket supported assets: ${await readResponseError(response)}`);
+  }
+
+  return response.json();
+}
+
+export async function fetchBridgeTransactionStatus(depositAddress: string): Promise<BridgeStatusResponse> {
   const response = await fetch(`${getBridgeUrl()}/status/${encodeURIComponent(depositAddress)}`, {
     cache: "no-store",
     signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
   });
 
   if (!response.ok) {
-    throw new Error(`Unable to read Polymarket deposit status: ${await readResponseError(response)}`);
+    throw new Error(`Unable to read Polymarket bridge status: ${await readResponseError(response)}`);
   }
 
   return (await response.json()) as BridgeStatusResponse;
 }
+
+/** @deprecated Use fetchBridgeTransactionStatus */
+export const fetchBridgeDepositStatus = fetchBridgeTransactionStatus;
 
 function getBridgeUrl() {
   return (process.env.POLYMARKET_BRIDGE_URL ?? DEFAULT_BRIDGE_URL).trim().replace(/\/$/, "");

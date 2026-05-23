@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { teamTradeHref } from "../../lib/routes/trade";
+
 import type { TeamMarketSnapshot } from "../../types/market";
 import {
   formatChange,
@@ -19,8 +21,8 @@ export function TeamMarketCard({ snapshot }: TeamMarketCardProps) {
 
   return (
     <Link
-      href={`/team/${team.id}`}
-      aria-label={`Open ${team.name} team detail`}
+      href={teamTradeHref(team.id)}
+      aria-label={`Open ${team.name} trade`}
       className="block rounded-lg border border-terminal-line/80 bg-terminal-panel/88 p-5 shadow-terminal transition duration-200 hover:-translate-y-0.5 hover:border-terminal-orange/55 hover:shadow-heat"
     >
       <div className="flex items-start justify-between gap-4">

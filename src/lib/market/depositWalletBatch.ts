@@ -36,6 +36,16 @@ const ERC20_ABI = [
     ],
     outputs: [{ name: "", type: "bool" }],
   },
+  {
+    name: "transfer",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "value", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
 ] as const;
 const ERC1155_ABI = [
   {
@@ -169,6 +179,85 @@ function createAuthorizeSessionSignerCall({
       functionName: "authorizeSessionSigner",
       args: [sessionSignerAddress as `0x${string}`, BigInt(validUntil)],
     }),
+  };
+}
+
+export function createErc20TransferCall({
+  tokenAddress,
+  recipientAddress,
+  amountBaseUnits,
+}: {
+  tokenAddress: string;
+  recipientAddress: string;
+  amountBaseUnits: bigint;
+}): DepositWalletCall {
+  return {
+    target: tokenAddress,
+    value: "0",
+    data: encodeFunctionData({
+      abi: ERC20_ABI,
+      functionName: "transfer",
+      args: [recipientAddress as `0x${string}`, amountBaseUnits],
+    }),
+  };
+}
+
+export function buildWithdrawTransferBatch({
+  chainId,
+  walletAddress,
+  nonce,
+  deadline,
+  collateralToken,
+  recipientAddress,
+  amountBaseUnits,
+}: {
+  chainId: number;
+  walletAddress: string;
+  nonce: string;
+  deadline: string;
+  collateralToken: string;
+  recipientAddress: string;
+  amountBaseUnits: bigint;
+}): DepositWalletBatchSignablePayload {
+  const calls = [
+    createErc20TransferCall({
+      tokenAddress: collateralToken,
+      recipientAddress,
+      amountBaseUnits,
+    }),
+  ];
+
+  return {
+    walletAddress,
+    nonce,
+    deadline,
+    calls,
+    domain: {
+      name: DEPOSIT_WALLET_DOMAIN_NAME,
+      version: DEPOSIT_WALLET_DOMAIN_VERSION,
+      chainId,
+      verifyingContract: walletAddress as `0x${string}`,
+    },
+    types: {
+      Batch: [
+        { name: "wallet", type: "address" },
+        { name: "nonce", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+        { name: "calls", type: "Call[]" },
+      ],
+      Call: [
+        { name: "target", type: "address" },
+        { name: "value", type: "uint256" },
+        { name: "data", type: "bytes" },
+      ],
+    },
+    primaryType: "Batch",
+    message: {
+      wallet: walletAddress,
+      nonce,
+      deadline,
+      calls,
+    },
   };
 }
 

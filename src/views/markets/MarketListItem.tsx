@@ -3,6 +3,8 @@ import { Zap } from "lucide-react";
 
 import { TeamFlag } from "../../components/teams/TeamFlag";
 import { PlaceBidButton } from "../../components/trading/PlaceBidButton";
+import { teamDetailHref } from "../../lib/routes/team";
+import { teamTradeHref } from "../../lib/routes/trade";
 import {
   formatProbability,
   formatVolume,
@@ -30,7 +32,8 @@ export function MarketListItem({ snapshot, rank }: MarketListItemProps) {
     market.change24h
   );
   const trendColor = isDown ? "text-[#D64545]" : "text-[#65AF14]";
-  const detailHref = `/team/${team.id}`;
+  const detailHref = teamDetailHref(team.id);
+  const tradeHref = teamTradeHref(team.id);
 
   return (
     <article
@@ -91,6 +94,7 @@ export function MarketListItem({ snapshot, rank }: MarketListItemProps) {
           className="inline-flex h-9 w-[83px] items-center justify-center gap-1 rounded-lg bg-[#18110F] text-sm font-[556] leading-[17px] text-white disabled:cursor-wait disabled:opacity-70"
           snapshot={snapshot}
           teamName={team.name}
+          navigateToTrade
         >
           <Zap
             className="h-3.5 w-2.5 shrink-0 fill-white stroke-white"
@@ -103,6 +107,12 @@ export function MarketListItem({ snapshot, rank }: MarketListItemProps) {
           href={detailHref}
         >
           Details
+        </Link>
+        <Link
+          className="inline-flex h-9 w-[83px] items-center justify-center rounded-lg border border-[#909090] bg-white text-sm font-[556] leading-[17px] text-[#18110F]"
+          href={tradeHref}
+        >
+          Trade
         </Link>
       </div>
     </article>

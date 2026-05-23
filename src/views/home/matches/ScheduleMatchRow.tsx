@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { TeamFlag } from "../../../components/teams/TeamFlag";
 import { formatVolume } from "../../../components/home/market-formatters";
 import { cn } from "../../../lib/cn";
@@ -22,6 +24,7 @@ import {
   resolveMatchSides,
   type ScheduleRowVariant
 } from "../../../lib/market/scheduleMatch";
+import { gameTradeHref } from "../../../lib/routes/trade";
 import type { TeamMarketSnapshot, WorldCupMatch } from "../../../types/market";
 import { MatchBookmarkControl } from "./MatchBookmarkControl";
 import { MatchProbabilityBar } from "./MatchProbabilityBar";
@@ -106,7 +109,15 @@ export function ScheduleMatchRow({
         </div>
       </div>
 
-      <VolumeColumn amount={volumeLabel} />
+      <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+        <VolumeColumn amount={volumeLabel} />
+        <Link
+          href={gameTradeHref(match.id)}
+          className="inline-flex h-9 items-center justify-center rounded-lg border border-[#909090] bg-white px-3 text-sm font-[556] leading-[17px] text-[#18110F] hover:border-prophet-green/50"
+        >
+          Trade
+        </Link>
+      </div>
     </article>
   );
 }
