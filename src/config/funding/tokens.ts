@@ -1,8 +1,4 @@
-export interface FundingNetwork {
-  chainId: number;
-  chainName: string;
-  chainIcon: string;
-}
+import { FUNDING_NETWORKS, FundingNetwork } from "./networks";
 
 export interface FundingToken extends FundingNetwork {
   symbol: string;
@@ -15,19 +11,6 @@ export interface FundingAsset extends FundingToken {
   minCheckoutUsd: number;
   name: string;
 }
-
-export const FUNDING_NETWORKS: Record<string, FundingNetwork> = {
-  arbitrum: {
-    chainId: 42161,
-    chainName: "Arbitrum",
-    chainIcon: "/networks/arbitrum.png",
-  },
-  optimism: {
-    chainId: 10,
-    chainName: "Optimism",
-    chainIcon: "/networks/optimism.png",
-  },
-};
 
 export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
   arbitrum: {
@@ -132,6 +115,66 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       icon: "/tokens/eth.png",
     },
   },
+  bsc: {
+    "WBTC": {
+      ...FUNDING_NETWORKS.bsc,
+      symbol: "WBTC",
+      address: "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
+      decimals: 8,
+      icon: "/tokens/wbtc.png",
+    },
+    "DAI": {
+      ...FUNDING_NETWORKS.bsc,
+      symbol: "DAI",
+      address: "0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3",
+      decimals: 18,
+      icon: "/tokens/dai.png",
+    },
+    "ETH": {
+      ...FUNDING_NETWORKS.bsc,
+      symbol: "ETH",
+      address: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+      decimals: 18,
+      icon: "/tokens/eth.png",
+    },
+    "USDT": {
+      ...FUNDING_NETWORKS.bsc,
+      symbol: "USDT",
+      address: "0x55d398326f99059fF775485246999027B3197955",
+      decimals: 18,
+      icon: "/tokens/usdt.png",
+    },
+    "USDC": {
+      ...FUNDING_NETWORKS.bsc,
+      symbol: "USDC",
+      address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
+      decimals: 18,
+      icon: "/tokens/usdc.png",
+    },
+    "BNB": {
+      ...FUNDING_NETWORKS.bsc,
+      symbol: "BNB",
+      address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+      decimals: 18,
+      icon: "/tokens/bnb.png",
+    },
+    "FDUSD": {
+      ...FUNDING_NETWORKS.bsc,
+      symbol: "FDUSD",
+      address: "0xc5f0f7b66764F6ec8C8Dff7BA683102295E16409",
+      decimals: 18,
+      icon: "/tokens/fdusd.png",
+    },
+    "USD1": {
+      ...FUNDING_NETWORKS.bsc,
+      symbol: "USD1",
+      address: "0x8d0D000Ee44948FC98c9B98A4FA4921476f08B0d",
+      decimals: 18,
+      icon: "/tokens/usd1.png",
+    },
+  },
 };
 
 export const FUNDING_TOKENS_LIST = Object.values(FUNDING_TOKENS).flatMap(item => Object.values(item));
+
+export const STABLECOIN_SYMBOLS = new Set(["USDC", "USDT", "USDC.e", "USD₮0", "DAI", "FDUSD", "USD1"]);

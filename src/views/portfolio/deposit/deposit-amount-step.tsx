@@ -3,6 +3,7 @@
 import { ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { FundingAsset } from "@/config/funding";
 import { DEPOSIT_RECEIVE_ASSET } from "@/views/portfolio/deposit/config";
 import {
   depositAmountInputClass,
@@ -16,19 +17,20 @@ import {
   validateDepositAmount
 } from "@/views/portfolio/deposit/utils";
 import { TokenIcon } from "@/views/portfolio/shared/token-icon";
-import { FundingAsset } from "@/config/funding";
 
 const PERCENT_OPTIONS = [25, 50, 75, 100] as const;
 
 export interface DepositAmountStepProps {
   token: FundingAsset;
   amount: number;
+  maxAmount: number;
   onAmountChange: (amount: number) => void;
 }
 
 export function DepositAmountStep({
   token,
   amount,
+  maxAmount,
   onAmountChange
 }: DepositAmountStepProps) {
   const [inputValue, setInputValue] = useState(() =>
@@ -36,8 +38,8 @@ export function DepositAmountStep({
   );
 
   const validationError = useMemo(
-    () => validateDepositAmount(parseAmountInput(inputValue), 0),
-    [inputValue]
+    () => validateDepositAmount(parseAmountInput(inputValue), maxAmount),
+    [inputValue, maxAmount]
   );
 
   function handleInputChange(nextRaw: string) {
@@ -52,7 +54,7 @@ export function DepositAmountStep({
   }
 
   function handlePercent(percent: number) {
-    const next = applyBalancePercent(0, percent);
+    const next = applyBalancePercent(maxAmount, percent);
     setInputValue(formatAmountInputValue(next));
     onAmountChange(next);
   }
@@ -76,6 +78,7 @@ export function DepositAmountStep({
               type="button"
               className={depositPercentButtonClass}
               onClick={() => handlePercent(percent)}
+              disabled={maxAmount <= 0}
             >
               {percent}%
             </button>

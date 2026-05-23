@@ -2,13 +2,13 @@
 
 import { formatPortfolioMoney } from "@/lib/portfolio/portfolio-format";
 import { formatShortWallet } from "@/lib/team/detail-format";
-import { MOCK_CONNECTED_BALANCE_USD } from "@/views/portfolio/deposit/config";
 import {
   depositConnectedRowClass,
   depositSectionLabelClass
 } from "@/views/portfolio/deposit/deposit-ui";
 import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import { usePortfolioContext } from "../context";
+import { useDepositContext } from "./context";
 
 export interface DepositEntryStepProps {
   onSelectConnected: () => void;
@@ -22,6 +22,11 @@ export function DepositEntryStep({
     onConnectWallet,
     status,
   } = usePortfolioContext();
+  const {
+    connectedWalletBalanceUsd,
+    balancesLoading,
+    pricesLoading,
+  } = useDepositContext();
 
   if (!session) {
     return (
@@ -38,6 +43,8 @@ export function DepositEntryStep({
     );
   }
 
+  const isLoading = balancesLoading || pricesLoading;
+
   return (
     <div className="flex flex-col gap-3 pb-2">
       <span className={depositSectionLabelClass}>Connected</span>
@@ -53,7 +60,7 @@ export function DepositEntryStep({
           </span>
         </span>
         <span className="shrink-0 text-base font-[556] text-black">
-          {formatPortfolioMoney(MOCK_CONNECTED_BALANCE_USD)}
+          {isLoading ? "…" : formatPortfolioMoney(connectedWalletBalanceUsd)}
         </span>
       </button>
     </div>

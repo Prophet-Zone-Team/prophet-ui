@@ -97,3 +97,20 @@ export interface SupportedAssetsPayload {
   note: string;
   supportedAssets: SupportedAsset[];
 }
+
+/** chainId string -> token address (lowercase) -> decimal balance string */
+export type EvmBalancesByChain = Record<string, Record<string, string>>;
+
+export interface EvmBalancesSnapshot {
+  byChain: EvmBalancesByChain;
+  updatedAt?: string;
+  error?: string;
+}
+
+/** symbol -> USD price string */
+export type TokenPricesBySymbol = Record<string, string>;
+
+export interface TokenPriceApiResponse {
+  code: number;
+  data: TokenPricesBySymbol;
+}

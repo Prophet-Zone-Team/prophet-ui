@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
+import { FundingAsset } from "@/config/funding";
+import { useDeposit, useEvmBalances, usePrices } from "@/hooks/funding";
+import type { TradingUserSession } from "@/types/market";
 import { DEPOSIT_MODAL_WIDTH } from "@/views/portfolio/deposit/config";
 import { DepositAmountStep, isDepositAmountValid } from "@/views/portfolio/deposit/deposit-amount-step";
 import { DepositConfirmStep } from "@/views/portfolio/deposit/deposit-confirm-step";
@@ -13,10 +16,14 @@ import {
   FundingModalShell,
   fundingPrimaryButtonClass
 } from "@/views/portfolio/shared/funding-modal-shell";
-import type { TradingUserSession } from "@/types/market";
 import { DepositProvider } from "./context";
-import { useDeposit } from "@/hooks/funding";
-import { FundingAsset } from "@/config/funding";
+import { selectFundingTokenBalanceNumber } from "@/lib/funding/balance-selectors";
+import { useBalancesStore } from "@/store/use-balances";
+import { usePricesStore } from "@/store";
+import { selectTokenUsdValue } from "@/lib/funding/price-selectors";
+import Big from "big.js";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export interface DepositDialogProps {
   open: boolean;
@@ -30,8 +37,27 @@ export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
   const [selectedToken, setSelectedToken] = useState<FundingAsset | undefined>();
   const [amount, setAmount] = useState(0);
+  const [continueToAmountLoading, setContinueToAmountLoading] = useState(false);
 
+  const prices = usePricesStore((state) => state.prices);
   const { supportedAssets } = useDeposit();
+  const { loading: balancesLoading, getTokenBalance } = useEvmBalances({
+    auto: open,
+    enabled: open && !!session,
+  });
+  const { loading: pricesLoading } = usePrices({
+    auto: open,
+    enabled: open,
+  });
+  const evmBalances = useBalancesStore((state) => state.evmBalances);
+
+  const selectedTokenMaxAmount = useMemo(() => {
+    if (!selectedToken) {
+      return 0;
+    }
+
+    return selectFundingTokenBalanceNumber(evmBalances, selectedToken);
+  }, [evmBalances, selectedToken]);
 
   const reset = useCallback(() => {
     setStep(INITIAL_STEP);
@@ -88,11 +114,23 @@ export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
 
   const showBack = !["entry", "tokens"].includes(step);
 
-  // When the Continue button is clicked
-  // Get the token balance
   const onContinueToAmount = async () => {
+    setContinueToAmountLoading(true);
+    if (selectedToken) {
+      const latestBalance = await getTokenBalance(selectedToken);
+      const latestBalanceUsd = selectTokenUsdValue(prices, selectedToken.symbol, latestBalance);
+      console.log("latestBalance: %o", latestBalance);
+      console.log("latestBalanceUsd: %o", latestBalanceUsd);
+      console.log("selectedToken: %o", selectedToken);
+      if (Big(latestBalanceUsd || 0).lt(selectedToken.minCheckoutUsd)) {
+        setContinueToAmountLoading(false);
+        toast.error(`${selectedToken.symbol} minimum deposit amount is $${selectedToken.minCheckoutUsd} or higher`);
+        return;
+      }
+    }
     setAmount(0);
     setStep("amount");
+    setContinueToAmountLoading(false);
   };
 
   const footer = useMemo(() => {
@@ -107,16 +145,17 @@ export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
         <button
           type="button"
           className={fundingPrimaryButtonClass}
-          disabled={!canContinue}
-          onClick={onContinueToAmount}
+          disabled={!canContinue || continueToAmountLoading}
+          onClick={() => void onContinueToAmount()}
         >
+          {continueToAmountLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
           Continue
         </button>
       );
     }
 
     if (step === "amount" && selectedToken) {
-      const canContinue = isDepositAmountValid(amount, 1000);
+      const canContinue = isDepositAmountValid(amount, selectedTokenMaxAmount);
 
       return (
         <button
@@ -143,7 +182,7 @@ export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
     }
 
     return undefined;
-  }, [amount, handleClose, selectedToken, step]);
+  }, [amount, getTokenBalance, handleClose, selectedToken, selectedTokenMaxAmount, step, continueToAmountLoading]);
 
   return (
     <Modal
@@ -157,6 +196,8 @@ export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
       <DepositProvider
         value={{
           supportedAssets,
+          balancesLoading,
+          pricesLoading,
         }}
       >
         <FundingModalShell
@@ -184,6 +225,7 @@ export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
               key={`${selectedToken.chainId}-${selectedToken.address}`}
               token={selectedToken}
               amount={amount}
+              maxAmount={selectedTokenMaxAmount}
               onAmountChange={setAmount}
             />
           ) : null}
