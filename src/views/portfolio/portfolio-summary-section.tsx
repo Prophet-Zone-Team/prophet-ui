@@ -8,7 +8,9 @@ import type { PortfolioViewModel } from "@/lib/portfolio/portfolio-metrics";
 import type { PortfolioLoadStatus } from "@/lib/portfolio/types";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import type { TradingUserSession } from "@/types/market";
+import { DepositDialog } from "@/views/portfolio/deposit";
 import { PortfolioPerformanceChart } from "@/views/portfolio/portfolio-performance-chart";
+import { WithdrawDialog } from "@/views/portfolio/withdraw";
 import {
   portfolioAvatarClass,
   portfolioConnectButtonClass,
@@ -35,6 +37,8 @@ export function PortfolioSummarySection({
   onConnectWallet
 }: PortfolioSummarySectionProps) {
   const [copied, setCopied] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const copyAddress = useCallback(async () => {
     if (!session?.walletAddress) {
@@ -132,16 +136,14 @@ export function PortfolioSummarySection({
                 <button
                   type="button"
                   className={portfolioDepositButtonClass}
-                  disabled
-                  title="Coming soon"
+                  onClick={() => setDepositOpen(true)}
                 >
                   Deposit
                 </button>
                 <button
                   type="button"
                   className={portfolioWithdrawButtonClass}
-                  disabled
-                  title="Coming soon"
+                  onClick={() => setWithdrawOpen(true)}
                 >
                   Withdraw
                 </button>
@@ -161,6 +163,21 @@ export function PortfolioSummarySection({
           unrealizedPnlPercent={portfolio.unrealizedPnlPercent}
         />
       </div>
+
+      {session ? (
+        <>
+          <DepositDialog
+            open={depositOpen}
+            onClose={() => setDepositOpen(false)}
+            session={session}
+          />
+          <WithdrawDialog
+            open={withdrawOpen}
+            onClose={() => setWithdrawOpen(false)}
+            session={session}
+          />
+        </>
+      ) : null}
     </section>
   );
 }
