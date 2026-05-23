@@ -24,6 +24,7 @@
     "@polymarket/builder-relayer-client": "^0.0.9",
     "@polymarket/clob-client-v2": "^1.0.6",
     "@radix-ui/react-slot": "^1.1.2",
+    "big.js": "^7.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "flag-icons": "^7.5.0",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.8.0",
+    "@types/big.js": "^7.0.0",
     "@types/node": "^22.13.1",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",

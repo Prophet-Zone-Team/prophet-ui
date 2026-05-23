@@ -8,12 +8,15 @@ import { DepositAmountStep, isDepositAmountValid } from "@/views/portfolio/depos
 import { DepositConfirmStep } from "@/views/portfolio/deposit/deposit-confirm-step";
 import { DepositEntryStep } from "@/views/portfolio/deposit/deposit-entry-step";
 import { DepositTokenStep } from "@/views/portfolio/deposit/deposit-token-step";
-import type { DepositStep, DepositTokenOption } from "@/views/portfolio/deposit/types";
+import type { DepositStep } from "@/views/portfolio/deposit/types";
 import {
   FundingModalShell,
   fundingPrimaryButtonClass
 } from "@/views/portfolio/shared/funding-modal-shell";
 import type { TradingUserSession } from "@/types/market";
+import { DepositProvider } from "./context";
+import { useDeposit } from "@/hooks/funding";
+import { FundingAsset } from "@/config/funding";
 
 export interface DepositDialogProps {
   open: boolean;
@@ -21,12 +24,14 @@ export interface DepositDialogProps {
   session: TradingUserSession;
 }
 
-const INITIAL_STEP: DepositStep = "entry";
+const INITIAL_STEP: DepositStep = "tokens";
 
 export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
-  const [selectedToken, setSelectedToken] = useState<DepositTokenOption | undefined>();
+  const [selectedToken, setSelectedToken] = useState<FundingAsset | undefined>();
   const [amount, setAmount] = useState(0);
+
+  const { supportedAssets } = useDeposit();
 
   const reset = useCallback(() => {
     setStep(INITIAL_STEP);
@@ -81,7 +86,14 @@ export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
     }
   }
 
-  const showBack = step !== "entry";
+  const showBack = !["entry", "tokens"].includes(step);
+
+  // When the Continue button is clicked
+  // Get the token balance
+  const onContinueToAmount = async () => {
+    setAmount(0);
+    setStep("amount");
+  };
 
   const footer = useMemo(() => {
     if (step === "entry") {
@@ -89,19 +101,14 @@ export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
     }
 
     if (step === "tokens") {
-      const canContinue = Boolean(selectedToken && !selectedToken.unsupported);
+      const canContinue = !!selectedToken;
 
       return (
         <button
           type="button"
           className={fundingPrimaryButtonClass}
           disabled={!canContinue}
-          onClick={() => {
-            if (selectedToken) {
-              setAmount(selectedToken.balance);
-              setStep("amount");
-            }
-          }}
+          onClick={onContinueToAmount}
         >
           Continue
         </button>
@@ -109,7 +116,7 @@ export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
     }
 
     if (step === "amount" && selectedToken) {
-      const canContinue = isDepositAmountValid(amount, selectedToken.balance);
+      const canContinue = isDepositAmountValid(amount, 1000);
 
       return (
         <button
@@ -145,45 +152,51 @@ export function DepositDialog({ open, onClose, session }: DepositDialogProps) {
       ariaLabel={ariaLabel}
       className={modalWidth}
       hideCloseButton
+      overlayCloseable={false}
     >
-      <FundingModalShell
-        title="Deposit"
-        onClose={handleClose}
-        onBack={showBack ? handleBack : undefined}
-        footer={footer}
-        className={step === "entry" ? "min-h-[400px]" : step === "confirm" ? "min-h-[600px]" : "min-h-[515px]"}
+      <DepositProvider
+        value={{
+          supportedAssets,
+        }}
       >
-        {step === "entry" ? (
-          <DepositEntryStep
-            walletAddress={session.walletAddress}
-            onSelectConnected={() => setStep("tokens")}
-          />
-        ) : null}
+        <FundingModalShell
+          title="Deposit"
+          onClose={handleClose}
+          onBack={showBack ? handleBack : undefined}
+          footer={footer}
+          className={step === "entry" ? "min-h-[400px]" : step === "confirm" ? "min-h-[600px]" : "min-h-[515px]"}
+        >
+          {step === "entry" ? (
+            <DepositEntryStep
+              onSelectConnected={() => setStep("tokens")}
+            />
+          ) : null}
 
-        {step === "tokens" ? (
-          <DepositTokenStep
-            selectedTokenId={selectedToken?.id}
-            onSelectToken={setSelectedToken}
-          />
-        ) : null}
+          {step === "tokens" ? (
+            <DepositTokenStep
+              selectedToken={selectedToken}
+              onSelectToken={setSelectedToken}
+            />
+          ) : null}
 
-        {step === "amount" && selectedToken ? (
-          <DepositAmountStep
-            key={selectedToken.id}
-            token={selectedToken}
-            amount={amount}
-            onAmountChange={setAmount}
-          />
-        ) : null}
+          {step === "amount" && selectedToken ? (
+            <DepositAmountStep
+              key={`${selectedToken.chainId}-${selectedToken.address}`}
+              token={selectedToken}
+              amount={amount}
+              onAmountChange={setAmount}
+            />
+          ) : null}
 
-        {step === "confirm" && selectedToken ? (
-          <DepositConfirmStep
-            walletAddress={session.walletAddress}
-            token={selectedToken}
-            amount={amount}
-          />
-        ) : null}
-      </FundingModalShell>
+          {step === "confirm" && selectedToken ? (
+            <DepositConfirmStep
+              walletAddress={session.walletAddress}
+              token={selectedToken}
+              amount={amount}
+            />
+          ) : null}
+        </FundingModalShell>
+      </DepositProvider>
     </Modal>
   );
 }

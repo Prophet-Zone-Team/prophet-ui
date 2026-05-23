@@ -1,17 +1,3 @@
-import { formatPortfolioMoney } from "@/lib/portfolio/portfolio-format";
-
-export function formatTokenBalance(value: number, symbol: string): string {
-  if (symbol === "ETH" || symbol === "TRON") {
-    return value.toFixed(4);
-  }
-
-  return value.toFixed(2);
-}
-
-export function formatTokenBalanceUsd(value: number): string {
-  return formatPortfolioMoney(value);
-}
-
 export function parseAmountInput(raw: string): number | undefined {
   const normalized = raw.trim().replace(/,/g, "");
 

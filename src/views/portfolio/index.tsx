@@ -9,6 +9,7 @@ import { PortfolioActivityTabs } from "@/views/portfolio/portfolio-activity-tabs
 import { PortfolioSummarySection } from "@/views/portfolio/portfolio-summary-section";
 import { portfolioPageClass } from "@/views/portfolio/portfolio-ui";
 import { usePortfolioData } from "@/views/portfolio/use-portfolio-data";
+import { PortfolioProvider } from "./context";
 
 export interface PortfolioViewProps {
   snapshots: TeamMarketSnapshot[];
@@ -39,38 +40,47 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
   );
 
   return (
-    <section className={portfolioPageClass}>
-      <div className="flex flex-col gap-4">
-        <PortfolioSummarySection
-          session={session}
-          portfolio={portfolio}
-          status={status}
-          onConnectWallet={() => void connectWallet()}
-        />
+    <PortfolioProvider
+      value={{
+        session,
+        portfolio,
+        status,
+        onConnectWallet: () => void connectWallet()
+      }}
+    >
+      <section className={portfolioPageClass}>
+        <div className="flex flex-col gap-4">
+          <PortfolioSummarySection
+            session={session}
+            portfolio={portfolio}
+            status={status}
+            onConnectWallet={() => void connectWallet()}
+          />
 
-        {message ? (
-          <p
-            className={
-              status === "error"
-                ? "m-0 text-sm text-prophet-red"
-                : "m-0 text-sm text-prophet-muted"
-            }
-          >
-            {message}
-          </p>
-        ) : null}
+          {message ? (
+            <p
+              className={
+                status === "error"
+                  ? "m-0 text-sm text-prophet-red"
+                  : "m-0 text-sm text-prophet-muted"
+              }
+            >
+              {message}
+            </p>
+          ) : null}
 
-        <PortfolioActivityTabs
-          snapshots={snapshots}
-          positions={positions}
-          openOrders={openOrders}
-          orderHistory={orderHistory}
-          positionTimeMap={portfolio.positionTimeMap}
-          sessionConnected={Boolean(session)}
-          status={status}
-          onConnectWallet={() => void connectWallet()}
-        />
-      </div>
-    </section>
+          <PortfolioActivityTabs
+            snapshots={snapshots}
+            positions={positions}
+            openOrders={openOrders}
+            orderHistory={orderHistory}
+            positionTimeMap={portfolio.positionTimeMap}
+            sessionConnected={Boolean(session)}
+            status={status}
+            onConnectWallet={() => void connectWallet()}
+          />
+        </div>
+      </section>
+    </PortfolioProvider>
   );
 }

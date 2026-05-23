@@ -1,37 +1,40 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { MOCK_DEPOSIT_TOKENS } from "@/views/portfolio/deposit/config";
 import {
   depositTokenRowClass,
   depositTokenRowDisabledClass,
   depositTokenRowSelectedClass
 } from "@/views/portfolio/deposit/deposit-ui";
-import type { DepositTokenOption } from "@/views/portfolio/deposit/types";
-import {
-  formatTokenBalance,
-  formatTokenBalanceUsd
-} from "@/views/portfolio/deposit/utils";
 import { TokenIcon } from "@/views/portfolio/shared/token-icon";
+import { usePortfolioContext } from "../context";
+import { useDepositContext } from "./context";
+import { FundingAsset } from "@/config/funding";
+import { formatNumber } from "@/utils";
 
 export interface DepositTokenStepProps {
-  selectedTokenId: string | undefined;
-  onSelectToken: (token: DepositTokenOption) => void;
+  selectedToken?: FundingAsset;
+  onSelectToken: (token: FundingAsset) => void;
 }
 
 export function DepositTokenStep({
-  selectedTokenId,
+  selectedToken,
   onSelectToken
 }: DepositTokenStepProps) {
+  const {
+    session,
+  } = usePortfolioContext();
+  const { supportedAssets } = useDepositContext();
+
   return (
     <div className="flex max-h-[340px] flex-col gap-0.5 overflow-y-auto pb-2">
-      {MOCK_DEPOSIT_TOKENS.map((token) => {
-        const isSelected = selectedTokenId === token.id;
-        const isDisabled = Boolean(token.unsupported);
+      {supportedAssets.map((token) => {
+        const isSelected = selectedToken?.chainId === token.chainId && selectedToken?.address === token.address;
+        const isDisabled = false;
 
         return (
           <button
-            key={token.id}
+            key={`${token.chainId}-${token.address}`}
             type="button"
             disabled={isDisabled}
             className={cn(
@@ -47,21 +50,23 @@ export function DepositTokenStep({
           >
             <TokenIcon
               symbol={token.symbol}
-              chainLabel={token.chainLabel}
+              chainLabel={token.chainName}
+              icon={token.icon}
+              chainIcon={token.chainIcon}
               dimmed={isDisabled}
             />
             <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
               <span className="text-sm font-[556] text-black">{token.symbol}</span>
               <span className="text-xs font-[556] text-[#909090]">
-                {formatTokenBalance(token.balance, token.symbol)}
+                {formatNumber(0, 2, true, { round: 0, isZeroPrecision: true })}
               </span>
             </span>
             <span className="flex shrink-0 flex-col items-end gap-0.5">
-              {token.unsupported ? (
+              {isDisabled ? (
                 <span className="text-sm font-[556] text-[#909090]">Unsupported</span>
               ) : null}
               <span className="text-sm font-[556] text-black">
-                {formatTokenBalanceUsd(token.balanceUsd)}
+                {formatNumber(0, 2, true, { prefix: "$", round: 0, isZeroPrecision: true })}
               </span>
             </span>
           </button>

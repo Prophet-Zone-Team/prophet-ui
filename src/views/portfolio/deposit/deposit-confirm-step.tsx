@@ -10,13 +10,13 @@ import {
 } from "@/views/portfolio/deposit/config";
 import { depositDetailRowClass } from "@/views/portfolio/deposit/deposit-ui";
 import { TransactionBreakdown } from "@/views/portfolio/deposit/transaction-breakdown";
-import type { DepositTokenOption } from "@/views/portfolio/deposit/types";
 import { formatAmountInputValue } from "@/views/portfolio/deposit/utils";
 import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
+import { FundingAsset } from "@/config/funding";
 
 export interface DepositConfirmStepProps {
   walletAddress: string;
-  token: DepositTokenOption;
+  token: FundingAsset;
   amount: number;
 }
 
@@ -51,7 +51,7 @@ export function DepositConfirmStep({
         </DetailRow>
         <DetailRow label="Send">
           <span className="flex items-center gap-2">
-            <TokenIcon symbol={token.symbol} chainLabel={token.chainLabel} size="sm" />
+            <TokenIcon symbol={token.symbol} chainLabel={token.chainName} size="sm" />
             <span>{displayAmount}</span>
           </span>
         </DetailRow>

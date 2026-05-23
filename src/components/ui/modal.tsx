@@ -14,6 +14,7 @@ export interface ModalProps {
   ariaLabel: string;
   className?: string;
   hideCloseButton?: boolean;
+  overlayCloseable?: boolean;
 }
 
 export function Modal({
@@ -22,7 +23,8 @@ export function Modal({
   children,
   ariaLabel,
   className,
-  hideCloseButton = false
+  hideCloseButton = false,
+  overlayCloseable = true
 }: ModalProps) {
   useEffect(() => {
     if (!open) {
@@ -53,7 +55,12 @@ export function Modal({
   return createPortal(
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 p-4"
-      onClick={onClose}
+      onClick={() => {
+        if (!overlayCloseable) {
+          return;
+        }
+        onClose?.();
+      }}
     >
       <div
         role="dialog"

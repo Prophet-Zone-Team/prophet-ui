@@ -121,21 +121,6 @@ export function usePortfolioData(): UsePortfolioDataResult {
     }
   }, [loadPortfolio]);
 
-  // FIXME
-  useEffect(() => {
-    if (!session) {
-      return;
-    }
-    console.log(session)
-    const url = new URL("https://gamma-api.polymarket.com/public-profile");
-    url.searchParams.set("address", session.walletAddress);
-    fetch(url.toString()).then((res) => {
-      console.log(res)
-    }).catch((error) => {
-      console.log(error)
-    })
-  }, [session]);
-
   return {
     session,
     readiness,
