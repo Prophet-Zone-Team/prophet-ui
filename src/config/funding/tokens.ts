@@ -234,7 +234,7 @@ export const POLYMARKET_USD: FundingToken & { underlyingToken: FundingToken; } =
   ...FUNDING_NETWORKS.polygon,
   symbol: "USDC (Prophet)",
   address: "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB",
-  decimals: 18,
+  decimals: 6,
   icon: "/tokens/pusd.png",
   underlyingToken: {
     ...FUNDING_NETWORKS.polygon,

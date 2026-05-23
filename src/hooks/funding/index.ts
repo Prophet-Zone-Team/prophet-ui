@@ -1,5 +1,11 @@
 export { useDeposit, type UseDepositResult } from "@/hooks/funding/use-deposit";
 export {
+  useSupportedAssets,
+  type UseSupportedAssetsOptions,
+  type UseSupportedAssetsResult,
+} from "@/hooks/funding/use-supported-assets";
+export { useBridgeQuote, type UseBridgeQuoteOptions, type UseBridgeQuoteResult } from "@/hooks/funding/use-bridge-quote";
+export {
   useEvmBalances,
   type UseEvmBalancesOptions,
   type UseEvmBalancesResult,

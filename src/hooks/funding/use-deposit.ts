@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
+import type { FundingAsset } from "@/config/funding";
+import { useSupportedAssets } from "@/hooks/funding/use-supported-assets";
 import { isTerminalBridgeStatus, pollBridgeAddress } from "@/lib/trading/bridge-status";
 import { transferCollateralFromConnectedWallet } from "@/lib/trading/polygon-collateral-transfer";
 import { fetchJson } from "@/lib/team/client-fetch";
@@ -12,9 +14,7 @@ import type {
   BridgeStatusResponse,
   BridgeTransactionRecord,
   DepositAddressesPayload,
-  SupportedAssetsPayload,
 } from "@/types/funding";
-import { FUNDING_TOKENS_LIST, FundingAsset } from "@/config/funding";
 
 export interface UseDepositResult {
   status: BridgeFlowStatus;
@@ -35,8 +35,7 @@ export function useDeposit(): UseDepositResult {
   const [transactions, setTransactions] = useState<BridgeTransactionRecord[]>([]);
   const [error, setError] = useState<string | undefined>();
   const pollAbortRef = useRef<AbortController | undefined>(undefined);
-
-  const [supportedAssets, setSupportedAssets] = useState<FundingAsset[]>([]);
+  const { supportedAssets } = useSupportedAssets();
 
   const fetchDepositStatus = useCallback(async (statusAddress: string) => {
     const payload = await fetchJson<{ status: BridgeStatusResponse }>(
@@ -189,39 +188,6 @@ export function useDeposit(): UseDepositResult {
       throw depositError;
     }
   };
-
-  const getSupportedAssets = async () => {
-    try {
-      const payload = await fetchJson<SupportedAssetsPayload>("https://bridge.polymarket.com/supported-assets");
-      const { supportedAssets } = payload;
-
-      // Determine which tokens to display based on local configuration
-      const displayTokens: FundingAsset[] = FUNDING_TOKENS_LIST.map((token) => {
-        const current = supportedAssets.find((asset) => {
-          return token.address.toLowerCase() === asset.token.address.toLowerCase()
-            && token.chainId.toString() === asset.chainId;
-        });
-        if (!current) {
-          return null;
-        }
-        return {
-          ...token,
-          minCheckoutUsd: current.minCheckoutUsd,
-          name: current.token.name,
-        };
-      }).filter((token) => token !== null);
-      console.log("displayTokens: %o", displayTokens);
-
-      setSupportedAssets(displayTokens);
-    } catch (error) {
-      console.log("getSupportedAssets failed: %o", error);
-      setSupportedAssets([]);
-    }
-  };
-
-  useEffect(() => {
-    getSupportedAssets();
-  }, []);
 
   return {
     status,

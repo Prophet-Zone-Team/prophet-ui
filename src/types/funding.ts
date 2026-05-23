@@ -98,6 +98,39 @@ export interface SupportedAssetsPayload {
   supportedAssets: SupportedAsset[];
 }
 
+export interface BridgeQuoteFeeBreakdown {
+  gasUsd: number;
+  appFeeLabel?: string;
+  appFeePercent?: number;
+  appFeeUsd?: number;
+  fillCostPercent?: number;
+  fillCostUsd?: number;
+  maxSlippage?: number;
+  minReceived?: number;
+  swapImpact?: number;
+  swapImpactUsd?: number;
+  totalImpact?: number;
+  totalImpactUsd?: number;
+}
+
+export interface BridgeQuoteRequest {
+  fromAmountBaseUnit: string;
+  fromChainId: string;
+  fromTokenAddress: string;
+  recipientAddress: string;
+  toChainId: string;
+  toTokenAddress: string;
+}
+
+export interface BridgeQuoteResponse {
+  estCheckoutTimeMs: number;
+  estInputUsd: number;
+  estOutputUsd: number;
+  estToTokenBaseUnit: string;
+  quoteId: string;
+  estFeeBreakdown: BridgeQuoteFeeBreakdown;
+}
+
 /** chainId string -> token address (lowercase) -> decimal balance string */
 export type EvmBalancesByChain = Record<string, Record<string, string>>;
 
