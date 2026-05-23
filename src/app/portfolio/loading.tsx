@@ -1,83 +1,53 @@
+import { portfolioActivityCardClass, portfolioPageClass, portfolioSummaryCardClass } from "../../views/portfolio/portfolioUi";
+
 export default function PortfolioLoading() {
   return (
-    <div className="portfolio-page">
-      <section className="portfolio-hero" aria-label="Loading portfolio">
-          <div>
-            <span className="eyebrow">Portfolio</span>
-            <div className="loading-headline" />
-            <div className="loading-copy" />
-            <div className="loading-copy short" />
-            <div className="portfolio-actions" aria-hidden="true">
-              <div className="bid-button loading-block" />
-              <div className="market-detail-button loading-block" />
+    <section className={portfolioPageClass} aria-label="Loading portfolio">
+      <header className="mb-6">
+        <div className="h-3 w-16 animate-pulse rounded bg-prophet-line" />
+        <div className="mt-2 h-7 w-48 animate-pulse rounded bg-prophet-line" />
+        <div className="mt-2 h-4 w-full max-w-2xl animate-pulse rounded bg-prophet-line" />
+      </header>
+
+      <div className="flex flex-col gap-4">
+        <div className={`${portfolioSummaryCardClass} animate-pulse`}>
+          <div className="flex flex-col gap-6 lg:flex-row lg:h-full">
+            <div className="flex flex-1 flex-col justify-between gap-5 lg:pr-8">
+              <div className="flex items-center gap-3">
+                <div className="size-[52px] rounded-full bg-prophet-line" />
+                <div className="h-6 w-28 rounded bg-prophet-line" />
+              </div>
+              <div className="flex gap-12">
+                <div className="h-[38px] w-32 rounded bg-prophet-line" />
+                <div className="h-6 w-20 rounded bg-prophet-line" />
+              </div>
+              <div className="flex gap-3">
+                <div className="h-[55px] w-[235px] max-w-full rounded-xl bg-prophet-line" />
+                <div className="h-[55px] w-[235px] max-w-full rounded-xl bg-prophet-line/70" />
+              </div>
+            </div>
+            <div className="hidden w-px shrink-0 bg-prophet-line lg:block" />
+            <div className="flex flex-1 flex-col justify-between gap-4 lg:pl-8">
+              <div className="flex justify-between gap-4">
+                <div className="h-[38px] w-32 rounded bg-prophet-line" />
+                <div className="h-4 w-40 rounded bg-prophet-line" />
+              </div>
+              <div className="h-[83px] rounded bg-prophet-line/60" />
             </div>
           </div>
-          <div className="portfolio-account-panel loading-card" />
-        </section>
+        </div>
 
-        <section className="portfolio-summary-grid" aria-label="Loading portfolio summary">
-          {Array.from({ length: 5 }, (_, index) => (
-            <div key={index} className="portfolio-summary-card loading-card" />
-          ))}
-        </section>
-
-        <div className="portfolio-grid" aria-label="Loading portfolio detail">
-          <div className="portfolio-main">
-            <div className="panel portfolio-panel portfolio-performance-panel">
-              <div className="panel-head">
-                <h2 className="panel-title">Portfolio Performance</h2>
-                <div className="team-detail-tabs">
-                  <span>1D</span>
-                  <strong>7D</strong>
-                  <span>30D</span>
-                  <span>All</span>
-                </div>
-              </div>
-              <div className="portfolio-performance-chart loading-card" />
-            </div>
-
-            <div className="panel portfolio-panel open-positions-panel">
-              <div className="panel-head">
-                <h2 className="panel-title">Open Positions</h2>
-                <span className="view-all">Loading</span>
-              </div>
-              <div className="portfolio-position-table">
-                {Array.from({ length: 6 }, (_, index) => (
-                  <div key={index} className="portfolio-position-row loading-card" />
-                ))}
-              </div>
-            </div>
-
-            <div className="panel portfolio-panel exposure-breakdown-panel">
-              <div className="panel-head">
-                <h2 className="panel-title">Exposure Breakdown</h2>
-              </div>
-              <div className="exposure-breakdown-grid">
-                {Array.from({ length: 4 }, (_, index) => (
-                  <div key={index} className="donut-breakdown loading-card" />
-                ))}
-              </div>
-            </div>
-
-            <div className="panel portfolio-panel risk-watch-panel">
-              <div className="panel-head">
-                <h2 className="panel-title">Risk Watch</h2>
-                <span className="view-all">Loading</span>
-              </div>
-              <div className="risk-watch-grid">
-                {Array.from({ length: 5 }, (_, index) => (
-                  <div key={index} className="risk-watch-card loading-card" />
-                ))}
-              </div>
-            </div>
+        <div className={`${portfolioActivityCardClass} animate-pulse`}>
+          <div className="border-b border-[#EBEBEB] px-4 py-3">
+            <div className="h-6 w-64 rounded bg-prophet-line" />
           </div>
-
-          <aside className="portfolio-sidebar">
-            <div className="panel portfolio-panel portfolio-signals-panel loading-card" />
-            <div className="panel portfolio-panel adjust-position-panel loading-card" />
-            <div className="panel portfolio-panel recent-activity-panel loading-card" />
-          </aside>
+          <div className="space-y-3 p-4">
+            {Array.from({ length: 5 }, (_, index) => (
+              <div key={index} className="h-12 rounded bg-prophet-line/70" />
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -80,6 +80,7 @@ interface ApiFootballFixtureResponse {
     status?: {
       short?: string;
       long?: string;
+      elapsed?: number | null;
     };
     venue?: {
       name?: string;
@@ -564,6 +565,10 @@ function mapFixtureContext(
     goalsAgainst,
     result: getFixtureResult(status, goalsFor, goalsAgainst),
     isWorldCupFixture: isWorldCupLeague(item.league?.name),
+    elapsedMinutes:
+      status === "live" && typeof fixture.status?.elapsed === "number"
+        ? fixture.status.elapsed
+        : undefined,
     updatedAt: new Date().toISOString(),
   };
 }

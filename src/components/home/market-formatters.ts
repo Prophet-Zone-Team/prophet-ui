@@ -9,6 +9,11 @@ export function formatChange(value: number): string {
   return `${sign}${value.toFixed(1)} pts`;
 }
 
+export function formatChangePercent(value: number): string {
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(1)}%`;
+}
+
 export function formatRelativeChange(currentProbability: number, changePoints: number): string {
   return formatProbabilityChangePercent(getRelativeChangePercent(currentProbability, changePoints));
 }

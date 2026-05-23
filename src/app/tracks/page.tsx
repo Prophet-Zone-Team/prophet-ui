@@ -1,13 +1,27 @@
-export default function TracksPage() {
+import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
+import {
+  attachCachedFootballToMatches,
+  getStaticWorldCupMatches
+} from "../../data/world-cup-2026/matches";
+import { TracksView } from "../../views/tracks";
+
+export const dynamic = "force-dynamic";
+
+export default async function TracksPage() {
+  const marketData = await getWorldCupMarketData({
+    includeFootballContext: true,
+    includeNews: false
+  });
+  const matches = attachCachedFootballToMatches(
+    getStaticWorldCupMatches(),
+    marketData.footballTeamContext
+  );
+
   return (
-    <section className="panel" aria-labelledby="tracks-title">
-      <span className="eyebrow">Tracks</span>
-      <h1 id="tracks-title">Analysis tracks</h1>
-      <p>
-        Team and market tracking views are coming soon. This area will surface
-        follow lists, movement alerts, and comparison tracks for World Cup
-        markets.
-      </p>
-    </section>
+    <TracksView
+      snapshots={marketData.snapshots}
+      matches={matches}
+      dataStatus={marketData.meta}
+    />
   );
 }

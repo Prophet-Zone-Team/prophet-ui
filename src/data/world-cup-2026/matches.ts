@@ -69,6 +69,10 @@ export function attachCachedFootballToMatches(
       city: fixture.city ?? match.city,
       homeScore: fixture.homeAway === "home" ? fixture.goalsFor : fixture.goalsAgainst,
       awayScore: fixture.homeAway === "home" ? fixture.goalsAgainst : fixture.goalsFor,
+      liveElapsedSeconds:
+        fixture.status === "live" && fixture.elapsedMinutes !== undefined
+          ? fixture.elapsedMinutes * 60
+          : undefined,
       odds: odds.length > 0
         ? {
             source: "api-football",

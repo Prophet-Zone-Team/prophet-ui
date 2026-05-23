@@ -1,111 +1,63 @@
+import { teamDetailPageClass, teamDetailPanelClass } from "../../../views/team/teamDetailUi";
+
+function LoadingBlock({ className }: { className?: string }) {
+  return (
+    <div
+      className={`animate-pulse rounded-md bg-[#ebebeb]/80 ${className ?? "h-4 w-full"}`}
+      aria-hidden
+    />
+  );
+}
+
 export default function TeamDetailLoading() {
   return (
-    <div className="team-detail-page">
-      <section className="team-detail-hero" aria-label="Loading team detail">
-          <div className="team-detail-breadcrumb">
-            <span>Teams</span>
-            <span>/</span>
-            <span>Loading</span>
+    <div className={teamDetailPageClass} aria-busy aria-label="Loading team detail">
+      <div className="mb-4 flex gap-3 border-b border-prophet-line pb-4">
+        <LoadingBlock className="h-5 w-12" />
+        <LoadingBlock className="h-14 w-14 shrink-0" />
+        <div className="flex-1 space-y-2">
+          <LoadingBlock className="h-7 w-48" />
+          <LoadingBlock className="h-4 w-32" />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="order-2 flex flex-col gap-4 xl:order-1">
+          <div className={`${teamDetailPanelClass} p-5`}>
+            <LoadingBlock className="mb-4 h-6 w-40" />
+            <LoadingBlock className="mb-6 h-12 w-56" />
+            <LoadingBlock className="h-[280px] w-full" />
           </div>
-
-          <div className="team-detail-hero-card">
-            <div className="team-detail-identity">
-              <div className="team-detail-flag loading-block" />
-              <div>
-                <div className="loading-line wide" />
-                <div className="loading-line" />
-                <div className="team-detail-tags" aria-hidden="true">
-                  <span className="loading-block" />
-                  <span className="loading-block" />
-                  <span className="loading-block" />
-                </div>
+          <div className={teamDetailPanelClass}>
+            <div className="border-b border-prophet-line px-4 py-3">
+              <LoadingBlock className="h-6 w-64" />
+            </div>
+            {Array.from({ length: 6 }, (_, index) => (
+              <div key={index} className="border-b border-prophet-line/60 px-4 py-3">
+                <LoadingBlock className="h-4 w-full" />
               </div>
-            </div>
-
-            <div className="team-detail-hero-metrics" aria-hidden="true">
-              {Array.from({ length: 4 }, (_, index) => (
-                <div key={index} className="team-hero-metric loading-block" />
-              ))}
-            </div>
-
+            ))}
           </div>
-        </section>
+        </div>
 
-        <section className="team-dossier-strip" aria-label="Loading football dossier">
-          {Array.from({ length: 4 }, (_, index) => (
-            <div key={index} className="panel team-dossier-card loading-card" />
-          ))}
-        </section>
-
-        <div className="team-detail-grid" aria-label="Loading team analysis">
-          <div className="team-detail-main">
-            <section className="team-detail-two-up">
-              <div className="panel team-detail-panel strength-panel">
-                <div className="panel-head">
-                  <h2 className="panel-title">Team Strength</h2>
-                  <span className="live">Loading</span>
-                </div>
-                <div className="team-strength-chart loading-card" />
-                <div className="strength-score loading-block" />
-              </div>
-
-              <div className="panel team-detail-panel odds-comparison-panel loading-card" />
-            </section>
-
-            <div className="panel team-detail-panel lineup-panel">
-              <div className="panel-head">
-                <h2 className="panel-title">Expected Starting XI</h2>
-                <span className="view-all">Loading</span>
-              </div>
-              <div className="lineup-layout">
-                <div className="pitch loading-card" />
-                <div className="bench-list loading-card" />
-              </div>
-            </div>
-
-            <div className="panel team-detail-panel key-players-panel">
-              <div className="panel-head">
-                <h2 className="panel-title">Key Players</h2>
-                <span className="view-all">Loading</span>
-              </div>
-              <div className="key-player-grid">
-                {Array.from({ length: 4 }, (_, index) => (
-                  <div key={index} className="key-player-card loading-card" />
-                ))}
-              </div>
-            </div>
-
-            <div className="panel team-detail-panel recent-matches-panel">
-              <div className="panel-head">
-                <h2 className="panel-title">Recent Matches</h2>
-                <span className="view-all">Loading</span>
-              </div>
-              <div className="recent-match-table">
-                {Array.from({ length: 5 }, (_, index) => (
-                  <div key={index} className="recent-match-row loading-card" />
-                ))}
-              </div>
-            </div>
-
-            <div className="panel team-detail-panel news-signals-panel">
-              <div className="panel-head">
-                <h2 className="panel-title">News-to-Market Signals</h2>
-                <span className="view-all">Loading</span>
-              </div>
-              <div className="news-signal-grid">
-                {Array.from({ length: 4 }, (_, index) => (
-                  <div key={index} className="news-signal-card loading-card" />
-                ))}
-              </div>
-            </div>
+        <aside className="order-1 flex flex-col gap-4 xl:order-2">
+          <div className={`${teamDetailPanelClass} p-4`}>
+            <LoadingBlock className="mb-4 h-6 w-24" />
+            <LoadingBlock className="mb-3 h-20 w-full" />
+            <LoadingBlock className="h-11 w-full rounded-lg" />
           </div>
-
-          <aside className="team-detail-sidebar">
-            <div className="panel team-detail-panel next-match-panel loading-card" />
-            <div className="panel team-detail-panel trade-entry-panel loading-card" />
-            <div className="panel team-detail-panel probability-panel loading-card" />
-            <div className="panel team-detail-panel intelligence-panel loading-card" />
-          </aside>
+          <div className={teamDetailPanelClass}>
+            <div className="border-b border-prophet-line px-4 py-3">
+              <LoadingBlock className="h-5 w-36" />
+            </div>
+            {Array.from({ length: 3 }, (_, index) => (
+              <div key={index} className="m-3 rounded-xl border border-prophet-line p-3">
+                <LoadingBlock className="mb-2 h-4 w-20" />
+                <LoadingBlock className="h-16 w-full" />
+              </div>
+            ))}
+          </div>
+        </aside>
       </div>
     </div>
   );

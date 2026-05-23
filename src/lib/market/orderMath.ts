@@ -94,6 +94,35 @@ export function formatPriceCents(price: number): string {
   return `${(normalizeLimitPrice(price) * 100).toFixed(1)}c`;
 }
 
+/** Share price on 0–1 scale, displayed as cents-denominated USD (e.g. $12.35). */
+export function formatTradePanelPrice(price: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(normalizeLimitPrice(price) * 100);
+}
+
+export function formatOrderbookPrice(price: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4
+  }).format(normalizeLimitPrice(price));
+}
+
+export function formatOrderbookTotal(size: number, price: number): string {
+  const total = normalizeLimitPrice(price) * size;
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0
+  }).format(total);
+}
+
 export function formatShareSize(value: number): string {
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 4,

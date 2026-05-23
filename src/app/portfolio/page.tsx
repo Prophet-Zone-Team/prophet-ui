@@ -1,13 +1,15 @@
 import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
-import { PortfolioPage } from "../../components/portfolio/PortfolioPage";
+import { PortfolioView } from "../../views/portfolio";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const marketData = await getWorldCupMarketData({
     includeNews: false,
-    includeFootballContext: false,
+    includeFootballContext: false
   });
 
-  return <PortfolioPage snapshots={marketData.snapshots} dataStatus={marketData.meta} />;
+  return (
+    <PortfolioView snapshots={marketData.snapshots} dataStatus={marketData.meta} />
+  );
 }

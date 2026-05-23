@@ -37,7 +37,7 @@ interface PlaceBidButtonProps {
 
 export function PlaceBidButton({
   children = "Quick Bid",
-  className = "market-quick-bid",
+  className = "inline-flex h-9 min-w-[86px] items-center justify-center rounded-[7px] bg-gradient-to-br from-[#0d69ff] to-[#124cf0] text-xs font-extrabold text-white shadow-[0_10px_22px_rgba(18,82,246,0.22)] disabled:cursor-wait disabled:opacity-70",
   snapshot,
 }: PlaceBidButtonProps) {
   const [amount, setAmount] = useState(() => readQuickBidAmount());
@@ -69,7 +69,7 @@ export function PlaceBidButton({
 
   async function handleClick() {
     if (!snapshot) {
-      window.location.assign("/markets");
+      window.location.assign("/");
       return;
     }
 
@@ -181,7 +181,15 @@ export function PlaceBidButton({
         {buttonText}
       </button>
       {message ? (
-        <div className={status === "error" ? "quick-bid-toast error" : status === "success" ? "quick-bid-toast success" : "quick-bid-toast"}>
+        <div
+          className={
+            status === "error"
+              ? "mt-2 rounded-[7px] border border-prophet-red/30 bg-[rgba(255,240,244,0.95)] px-3 py-2 text-xs text-prophet-red"
+              : status === "success"
+                ? "mt-2 rounded-[7px] border border-prophet-green/30 bg-[rgba(241,253,248,0.95)] px-3 py-2 text-xs text-prophet-green"
+                : "mt-2 rounded-[7px] border border-prophet-line bg-white/90 px-3 py-2 text-xs text-prophet-ink"
+          }
+        >
           <span>{status === "error" ? "Quick Bid blocked" : status === "success" ? "Quick Bid submitted" : "Quick Bid"}</span>
           <strong>{message}</strong>
           {session ? <small>{session.walletAddress.slice(0, 6)}...{session.walletAddress.slice(-4)}</small> : null}

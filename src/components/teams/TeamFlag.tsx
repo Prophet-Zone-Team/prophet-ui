@@ -1,64 +1,42 @@
+import { cn } from "../../lib/cn";
+import { getFifaFlagIconCode } from "../../lib/teams/fifaFlagIcon";
+
 interface TeamFlagProps {
   code?: string;
   name?: string;
   className?: string;
 }
 
-export function TeamFlag({ code, name, className = "flag" }: TeamFlagProps) {
-  const classes = code === "ENG" ? `${className} england-flag` : className;
+const defaultFlagClassName = "inline-block h-[23px] w-[23px] shrink-0";
 
-  if (code === "ENG") {
-    return <span className={classes} aria-label={name ?? "England"} />;
+export function TeamFlag({ code, name, className }: TeamFlagProps) {
+  const flagIconCode = code ? getFifaFlagIconCode(code) : undefined;
+
+  if (!flagIconCode) {
+    return (
+      <span
+        className={cn(
+          defaultFlagClassName,
+          "grid place-items-center text-[10px] font-semibold text-prophet-muted",
+          className
+        )}
+        aria-label={name ?? "Unknown team"}
+      >
+        {code?.slice(0, 2) ?? "?"}
+      </span>
+    );
   }
 
-  return <span className={classes}>{code ? TEAM_FLAGS[code] ?? code.slice(0, 2) : "?"}</span>;
+  return (
+    <span
+      className={cn(
+        "fi fis",
+        `fi-${flagIconCode}`,
+        defaultFlagClassName,
+        className
+      )}
+      role="img"
+      aria-label={name ?? code}
+    />
+  );
 }
-
-const TEAM_FLAGS: Record<string, string> = {
-  ARG: "🇦🇷",
-  AUS: "🇦🇺",
-  AUT: "🇦🇹",
-  BEL: "🇧🇪",
-  BIH: "🇧🇦",
-  BRA: "🇧🇷",
-  CAN: "🇨🇦",
-  CIV: "🇨🇮",
-  COD: "🇨🇩",
-  COL: "🇨🇴",
-  CPV: "🇨🇻",
-  CRO: "🇭🇷",
-  CUW: "🇨🇼",
-  CZE: "🇨🇿",
-  ECU: "🇪🇨",
-  EGY: "🇪🇬",
-  ESP: "🇪🇸",
-  FRA: "🇫🇷",
-  GER: "🇩🇪",
-  GHA: "🇬🇭",
-  HAI: "🇭🇹",
-  IRN: "🇮🇷",
-  IRQ: "🇮🇶",
-  JOR: "🇯🇴",
-  JPN: "🇯🇵",
-  KOR: "🇰🇷",
-  KSA: "🇸🇦",
-  MAR: "🇲🇦",
-  MEX: "🇲🇽",
-  NED: "🇳🇱",
-  NOR: "🇳🇴",
-  NZL: "🇳🇿",
-  PAN: "🇵🇦",
-  PAR: "🇵🇾",
-  POR: "🇵🇹",
-  QAT: "🇶🇦",
-  RSA: "🇿🇦",
-  SCO: "🏴",
-  SEN: "🇸🇳",
-  SUI: "🇨🇭",
-  SWE: "🇸🇪",
-  TUN: "🇹🇳",
-  TUR: "🇹🇷",
-  URU: "🇺🇾",
-  USA: "🇺🇸",
-  UZB: "🇺🇿",
-};

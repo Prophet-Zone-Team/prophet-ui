@@ -1,0 +1,30 @@
+export function formatMatchScore(
+  homeScore?: number,
+  awayScore?: number
+): string {
+  if (homeScore === undefined || awayScore === undefined) {
+    return "—";
+  }
+
+  return `${homeScore}-${awayScore}`;
+}
+
+export function formatElapsedDuration(totalSeconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const seconds = safeSeconds % 60;
+
+  const paddedMinutes = String(minutes).padStart(2, "0");
+  const paddedSeconds = String(seconds).padStart(2, "0");
+
+  if (hours > 0) {
+    return `${hours}:${paddedMinutes}:${paddedSeconds}`;
+  }
+
+  return `${minutes}:${paddedSeconds}`;
+}
+
+export function formatLiveClockLabel(totalSeconds: number): string {
+  return `Lasts ${formatElapsedDuration(totalSeconds)}`;
+}

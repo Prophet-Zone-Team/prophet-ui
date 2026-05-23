@@ -421,6 +421,8 @@ export interface WorldCupMatch {
   city?: string;
   marketMove?: number;
   odds?: MatchOddsSummary;
+  /** Elapsed match time in seconds (API-Football live clock baseline for client timer). */
+  liveElapsedSeconds?: number;
   freshness: FreshnessMeta;
 }
 
@@ -540,6 +542,8 @@ export interface ApiFootballFixtureContext {
   goalsAgainst?: number;
   result?: "W" | "D" | "L";
   isWorldCupFixture?: boolean;
+  /** Elapsed minutes from API-Football fixture.status.elapsed when live. */
+  elapsedMinutes?: number;
   updatedAt: string;
 }
 

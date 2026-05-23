@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 import { getWorldCupMarketData } from "../../../data/providers/worldCupMarketData";
 import { TeamDetailPage } from "../../../components/team/TeamDetailPage";
 import { getTheOddsApiWorldCupWinnerOdds } from "../../../data/odds/theOddsApiProvider";
+import {
+  attachCachedFootballToMatches,
+  getStaticWorldCupMatches
+} from "../../../data/world-cup-2026/matches";
 
 interface TeamPageProps {
   params: Promise<{
@@ -17,8 +21,9 @@ export default async function Page({ params }: TeamPageProps) {
   const [marketData, oddsData] = await Promise.all([
     getWorldCupMarketData({
       footballContextTeamIds: [slug],
+      includeFootballContext: true
     }),
-    getTheOddsApiWorldCupWinnerOdds(),
+    getTheOddsApiWorldCupWinnerOdds()
   ]);
   const snapshot = marketData.snapshots.find((item) => item.team.id === slug);
 
@@ -26,15 +31,29 @@ export default async function Page({ params }: TeamPageProps) {
     notFound();
   }
 
-  const probabilityHistory = marketData.probabilityHistory.filter((point) => point.teamId === snapshot.team.id);
-  const relatedNews = marketData.newsEvents.filter((event) => event.teamId === snapshot.team.id);
-  const footballContext = marketData.footballTeamContext.find((context) => context.profile.teamId === snapshot.team.id);
-  const footballProfile = footballContext?.profile ?? marketData.footballContext.find((profile) => profile.teamId === snapshot.team.id);
+  const probabilityHistory = marketData.probabilityHistory.filter(
+    (point) => point.teamId === snapshot.team.id
+  );
+  const relatedNews = marketData.newsEvents.filter(
+    (event) => event.teamId === snapshot.team.id
+  );
+  const footballContext = marketData.footballTeamContext.find(
+    (context) => context.profile.teamId === snapshot.team.id
+  );
+  const footballProfile =
+    footballContext?.profile ??
+    marketData.footballContext.find((profile) => profile.teamId === snapshot.team.id);
+  const matches = attachCachedFootballToMatches(
+    getStaticWorldCupMatches(),
+    marketData.footballTeamContext
+  );
 
   return (
     <TeamDetailPage
       snapshot={snapshot}
       probabilityHistory={probabilityHistory}
+      matches={matches}
+      snapshots={marketData.snapshots}
       relatedNews={relatedNews}
       footballProfile={footballProfile}
       footballFixtures={footballContext?.fixtures ?? []}
@@ -44,7 +63,9 @@ export default async function Page({ params }: TeamPageProps) {
       footballOdds={footballContext?.odds ?? []}
       outrightOdds={oddsData.odds.filter((item) => item.teamId === snapshot.team.id)}
       footballDataIssues={footballContext?.dataIssues ?? []}
-      footballMetadata={marketData.footballMetadata.find((metadata) => metadata.teamId === snapshot.team.id)}
+      footballMetadata={marketData.footballMetadata.find(
+        (metadata) => metadata.teamId === snapshot.team.id
+      )}
       allFootballMetadata={marketData.footballMetadata}
       dataStatus={marketData.meta}
     />

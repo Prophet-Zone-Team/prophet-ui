@@ -17,6 +17,9 @@ import {
   loadTradingSession,
 } from "./tradingWalletSession";
 
+const loginButtonClassName =
+  "inline-flex h-10 min-w-[168px] items-center justify-center gap-4 px-4 text-[13px] font-extrabold text-black disabled:cursor-wait disabled:opacity-70";
+
 export function WalletMenuButton() {
   const menuRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<TradingUserSession | undefined>();
@@ -124,40 +127,63 @@ export function WalletMenuButton() {
     }
   }
 
+  const loginLabel = isConnecting
+    ? "Connecting..."
+    : session
+      ? formatShortWalletAddress(session.walletAddress)
+      : "Login";
+
   if (!session) {
     return (
-      <div className="wallet-menu-shell">
-        <button type="button" className="wallet-connect-button" onClick={connectWallet} disabled={isConnecting}>
-          {isConnecting ? "Connecting..." : "Connect"}
+      <div className="relative inline-flex flex-col items-end">
+        <button
+          type="button"
+          className={loginButtonClassName}
+          onClick={connectWallet}
+          disabled={isConnecting}
+        >
+          <LoginIcon />
+          <span>{loginLabel}</span>
         </button>
-        {message ? <p className="wallet-menu-error">{message}</p> : null}
+        {message ? (
+          <p className="mt-2 max-w-[220px] text-right text-xs text-prophet-red">
+            {message}
+          </p>
+        ) : null}
       </div>
     );
   }
 
   return (
-    <div ref={menuRef} className="wallet-menu-shell">
+    <div ref={menuRef} className="relative inline-flex flex-col items-end">
       <button
         type="button"
-        className="wallet-connect-button"
+        className={loginButtonClassName}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((value) => !value)}
       >
-        {formatShortWalletAddress(session.walletAddress)}
-        <ChevronIcon />
+        <LoginIcon />
+        <span>{loginLabel}</span>
       </button>
 
       {isOpen ? (
-        <div className="wallet-dropdown" role="menu">
-          <div className="wallet-quick-bid-setting" role="none">
-            <span>Quick Bid</span>
-            <label>
+        <div
+          className="absolute right-0 top-[calc(100%+8px)] z-20 min-w-[220px] rounded-[7px] border border-prophet-line bg-white p-2 shadow-prophet"
+          role="menu"
+        >
+          <div
+            className="mb-2 border-b border-prophet-line px-2 py-2 text-xs text-prophet-muted"
+            role="none"
+          >
+            <span className="font-extrabold text-prophet-ink">Quick Bid</span>
+            <label className="mt-2 flex items-center justify-between gap-2">
               <input
                 type="number"
                 min="1"
                 inputMode="decimal"
                 value={quickBidAmount}
+                className="w-20 rounded border border-prophet-line px-2 py-1 text-prophet-ink"
                 onChange={(event) => {
                   const nextAmount = event.target.value;
 
@@ -168,23 +194,56 @@ export function WalletMenuButton() {
                   }
                 }}
               />
-              <b>USDC</b>
+              <b className="text-prophet-ink">USDC</b>
             </label>
           </div>
-          <button type="button" role="menuitem" disabled={isPreparingQuickBid} onClick={() => void enableQuickBid()}>
+          <button
+            type="button"
+            role="menuitem"
+            className="block w-full rounded px-2 py-2 text-left text-sm hover:bg-[#f3f8fd] disabled:opacity-60"
+            disabled={isPreparingQuickBid}
+            onClick={() => void enableQuickBid()}
+          >
             {isPreparingQuickBid ? "Enabling Quick Bid..." : "Enable Quick Bid"}
           </button>
-          <button type="button" role="menuitem" onClick={logout}>
+          <button
+            type="button"
+            role="menuitem"
+            className="block w-full rounded px-2 py-2 text-left text-sm hover:bg-[#f3f8fd]"
+            onClick={logout}
+          >
             Logout
           </button>
-          {message ? <p className="wallet-dropdown-message">{message}</p> : null}
+          {message ? (
+            <p className="mt-2 px-2 text-xs text-prophet-muted">{message}</p>
+          ) : null}
         </div>
       ) : null}
-      {message && !isOpen ? <p className="wallet-menu-error">{message}</p> : null}
+      {message && !isOpen ? (
+        <p className="mt-2 max-w-[220px] text-right text-xs text-prophet-red">
+          {message}
+        </p>
+      ) : null}
     </div>
   );
 }
 
-function ChevronIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>;
+function LoginIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="17"
+      viewBox="0 0 18 17"
+      fill="none"
+      aria-hidden
+    >
+      <circle cx="9" cy="5" r="4" stroke="black" strokeWidth="2" />
+      <path
+        d="M17 17C17 14.2386 14.7614 12 12 12H6C3.23858 12 1 14.2386 1 17"
+        stroke="black"
+        strokeWidth="2"
+      />
+    </svg>
+  );
 }
