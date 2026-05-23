@@ -1,9 +1,4 @@
-export const DEPOSIT_RECEIVE_ASSET = {
-  symbol: "USDC (Prophet)",
-  chainLabel: "Polygon"
-} as const;
-
-export const MOCK_CONNECTED_BALANCE_USD = 81.35;
+export const MOCK_CONNECTED_BALANCE_USD = 0;
 
 export const MOCK_TRANSACTION_BREAKDOWN = {
   networkCost: 0.12,

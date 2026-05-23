@@ -1,4 +1,7 @@
-export function parseAmountInput(raw: string): number | undefined {
+import { removeNumberEndZero } from "@/utils";
+import Big from "big.js";
+
+export function parseAmountInput(raw: string): string | undefined {
   const normalized = raw.trim().replace(/,/g, "");
 
   if (!normalized) {
@@ -11,32 +14,23 @@ export function parseAmountInput(raw: string): number | undefined {
     return undefined;
   }
 
-  return value;
+  return normalized;
 }
 
-export function formatAmountInputValue(value: number): string {
-  if (!Number.isFinite(value)) {
-    return "";
-  }
-
-  const decimals = value >= 100 ? 2 : 4;
-  return value.toFixed(decimals).replace(/\.?0+$/, "") || "0";
-}
-
-export function applyBalancePercent(maxAmount: number, percent: number): number {
-  const amount = (maxAmount * percent) / 100;
-  return Math.floor(amount * 10000) / 10000;
+export function applyBalancePercent(maxAmount: string, percent: number): string {
+  const amount = Big(maxAmount).times(percent).div(100);
+  return removeNumberEndZero(amount.toFixed(4, Big.roundDown));
 }
 
 export function validateDepositAmount(
-  amount: number | undefined,
-  maxAmount: number
+  amount: string | undefined,
+  maxAmount: string
 ): string | undefined {
-  if (amount === undefined || amount <= 0) {
+  if (amount === undefined || Big(amount).lte(0)) {
     return "Enter an amount greater than zero.";
   }
 
-  if (amount > maxAmount) {
+  if (Big(amount).gt(maxAmount)) {
     return "Amount exceeds available balance.";
   }
 

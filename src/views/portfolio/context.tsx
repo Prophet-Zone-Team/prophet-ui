@@ -8,6 +8,7 @@ export interface PortfolioContextType {
   portfolio: PortfolioViewModel | undefined;
   status: PortfolioLoadStatus;
   onConnectWallet: () => void;
+  reload: () => void;
 }
 
 const PortfolioContext = createContext<PortfolioContextType>({
@@ -15,6 +16,7 @@ const PortfolioContext = createContext<PortfolioContextType>({
   portfolio: undefined,
   status: "idle",
   onConnectWallet: () => { },
+  reload: () => { },
 });
 
 export function PortfolioProvider({ children, value }: { children: React.ReactNode, value: PortfolioContextType }) {

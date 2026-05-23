@@ -3,7 +3,7 @@
 import { FundingAsset, type FundingToken } from "@/config/funding";
 import {
   selectFundingTokenBalance,
-  selectFundingTokenBalanceNumber,
+  selectFundingTokenBalanceString,
 } from "@/lib/funding/balance-selectors";
 import {
   hasTokenPrice,
@@ -19,7 +19,7 @@ export interface DepositContextType {
   balancesLoading: boolean;
   pricesLoading: boolean;
   getTokenBalance: (token: Pick<FundingToken, "chainId" | "address">) => string;
-  getTokenBalanceNumber: (token: Pick<FundingToken, "chainId" | "address">) => number;
+  getTokenBalanceString: (token: Pick<FundingToken, "chainId" | "address" | "decimals">) => string;
   getTokenUsdValue: (token: Pick<FundingToken, "symbol" | "chainId" | "address">) => number;
   hasTokenUsdPrice: (symbol: string) => boolean;
   connectedWalletBalanceUsd: number;
@@ -30,7 +30,7 @@ const DepositContext = createContext<DepositContextType>({
   balancesLoading: false,
   pricesLoading: false,
   getTokenBalance: () => "0",
-  getTokenBalanceNumber: () => 0,
+  getTokenBalanceString: () => "0",
   getTokenUsdValue: () => 0,
   hasTokenUsdPrice: () => false,
   connectedWalletBalanceUsd: 0,
@@ -52,9 +52,9 @@ export function DepositProvider({
     [evmBalances],
   );
 
-  const getTokenBalanceNumber = useCallback(
-    (token: Pick<FundingToken, "chainId" | "address">) =>
-      selectFundingTokenBalanceNumber(evmBalances, token),
+  const getTokenBalanceString = useCallback(
+    (token: Pick<FundingToken, "chainId" | "address" | "decimals">) =>
+      selectFundingTokenBalanceString(evmBalances, token),
     [evmBalances],
   );
 
@@ -82,7 +82,7 @@ export function DepositProvider({
       balancesLoading: value.balancesLoading,
       pricesLoading: value.pricesLoading,
       getTokenBalance,
-      getTokenBalanceNumber,
+      getTokenBalanceString,
       getTokenUsdValue,
       hasTokenUsdPrice,
       connectedWalletBalanceUsd,
@@ -90,7 +90,7 @@ export function DepositProvider({
     [
       connectedWalletBalanceUsd,
       getTokenBalance,
-      getTokenBalanceNumber,
+      getTokenBalanceString,
       getTokenUsdValue,
       hasTokenUsdPrice,
       value.balancesLoading,

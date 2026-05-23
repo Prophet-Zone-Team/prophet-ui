@@ -1,6 +1,6 @@
 "use client";
 
-import { formatPortfolioMoney } from "@/lib/portfolio/portfolio-format";
+import { formatNumber } from "@/utils";
 import { MOCK_TRANSACTION_BREAKDOWN } from "@/views/portfolio/deposit/config";
 import {
   depositBreakdownBoxClass,
@@ -15,7 +15,7 @@ export function TransactionBreakdown() {
       <p className="m-0 mb-2 text-sm text-[#909090]">Transaction breakdown</p>
       <div className={depositBreakdownRowClass}>
         <span>Network cost</span>
-        <span>{formatPortfolioMoney(breakdown.networkCost)}</span>
+        <span>{formatNumber(breakdown.networkCost, 2, true, { round: 0, isZeroPrecision: true })}</span>
       </div>
       <div className={depositBreakdownRowClass}>
         <span>Price impact</span>

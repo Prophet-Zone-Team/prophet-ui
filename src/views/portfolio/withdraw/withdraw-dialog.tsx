@@ -7,7 +7,6 @@ import { Modal } from "@/components/ui/modal";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { TransactionBreakdown } from "@/views/portfolio/deposit/transaction-breakdown";
 import {
-  MOCK_WITHDRAW_MAX_AMOUNT,
   WITHDRAW_CHAIN_OPTIONS,
   WITHDRAW_MODAL_WIDTH,
   WITHDRAW_SOURCE_TOKEN_LABEL,
@@ -31,25 +30,28 @@ import {
   fundingPrimaryButtonClass
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
-import type { TradingUserSession } from "@/types/market";
+import { usePortfolioContext } from "../context";
+import { FUNDING_NETWORKS, FUNDING_TOKENS, FundingNetwork, FundingToken, POLYMARKET_USD } from "@/config/funding";
+import Big from "big.js";
+import { removeNumberEndZero } from "@/utils";
 
 export interface WithdrawDialogProps {
   open: boolean;
   onClose: () => void;
-  session: TradingUserSession;
 }
 
-export function WithdrawDialog({ open, onClose, session }: WithdrawDialogProps) {
+export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
+  const {
+    session,
+    portfolio,
+  } = usePortfolioContext();
+
   const [amountInput, setAmountInput] = useState("");
-  const [selectedChain, setSelectedChain] = useState<WithdrawChainOption>(
-    WITHDRAW_CHAIN_OPTIONS[0]
-  );
-  const [selectedToken, setSelectedToken] = useState<WithdrawTokenOption>(
-    WITHDRAW_TOKEN_OPTIONS[0]
-  );
+  const [selectedChain, setSelectedChain] = useState<FundingNetwork>(FUNDING_NETWORKS.polygon);
+  const [selectedToken, setSelectedToken] = useState<FundingToken>(FUNDING_TOKENS.polygon.USDC);
 
   const amount = parseWithdrawAmount(amountInput);
-  const validationError = validateWithdrawAmount(amount, MOCK_WITHDRAW_MAX_AMOUNT);
+  const validationError = validateWithdrawAmount(amount, portfolio?.portfolioValue || 0);
   const canSubmit = validationError === undefined;
 
   const estimate = useMemo(
@@ -63,7 +65,7 @@ export function WithdrawDialog({ open, onClose, session }: WithdrawDialogProps) 
   }
 
   function handleMax() {
-    setAmountInput(String(MOCK_WITHDRAW_MAX_AMOUNT));
+    setAmountInput(removeNumberEndZero(Big(portfolio?.portfolioValue || 0).toFixed(POLYMARKET_USD.decimals, Big.roundDown)));
   }
 
   return (
@@ -96,7 +98,7 @@ export function WithdrawDialog({ open, onClose, session }: WithdrawDialogProps) 
               <span className="flex min-w-0 items-center gap-2">
                 <WalletAvatarIcon />
                 <span className="truncate text-base font-[556] text-black">
-                  {formatShortWallet(session.walletAddress)}
+                  {formatShortWallet(session?.walletAddress)}
                 </span>
               </span>
               <span className="shrink-0 text-base font-[556] text-[#909090]">Connected</span>
@@ -136,30 +138,32 @@ export function WithdrawDialog({ open, onClose, session }: WithdrawDialogProps) 
           <div className="grid grid-cols-2 gap-3">
             <SelectorField
               label="Receive Chain"
-              value={selectedChain.label}
+              value={selectedChain.chainName}
               icon={
-                <TokenIcon symbol="USDC" chainLabel={selectedChain.label} size="sm" />
+                <TokenIcon
+                  symbol="USDC"
+                  chainLabel={selectedChain.chainName}
+                  chainIcon={selectedChain.chainIcon}
+                  size="sm"
+                  chainOnly
+                />
               }
               onClick={() => {
-                const index = WITHDRAW_CHAIN_OPTIONS.findIndex(
-                  (item) => item.id === selectedChain.id
-                );
-                const next =
-                  WITHDRAW_CHAIN_OPTIONS[(index + 1) % WITHDRAW_CHAIN_OPTIONS.length];
-                setSelectedChain(next);
+
               }}
             />
             <SelectorField
               label="Receive Token"
               value={selectedToken.symbol}
-              icon={<TokenIcon symbol={selectedToken.symbol} size="sm" />}
+              icon={(
+                <TokenIcon
+                  symbol={selectedToken.symbol}
+                  icon={selectedToken.icon}
+                  size="sm"
+                />
+              )}
               onClick={() => {
-                const index = WITHDRAW_TOKEN_OPTIONS.findIndex(
-                  (item) => item.id === selectedToken.id
-                );
-                const next =
-                  WITHDRAW_TOKEN_OPTIONS[(index + 1) % WITHDRAW_TOKEN_OPTIONS.length];
-                setSelectedToken(next);
+
               }}
             />
           </div>

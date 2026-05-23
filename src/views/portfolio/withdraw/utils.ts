@@ -1,4 +1,4 @@
-import { formatPortfolioMoney } from "@/lib/portfolio/portfolio-format";
+import { formatNumber } from "@/utils";
 
 import { WITHDRAW_ESTIMATE_RATE } from "@/views/portfolio/withdraw/config";
 
@@ -24,7 +24,7 @@ export function formatWithdrawEstimate(amount: number, receiveSymbol: string) {
 
   return {
     receiveLabel: `${receiveAmount.toFixed(2)} ${receiveSymbol}`,
-    fiatLabel: `~${formatPortfolioMoney(fiatEstimate)}`
+    fiatLabel: `~${formatNumber(fiatEstimate, 2, true, { round: 0 })}`
   };
 }
 

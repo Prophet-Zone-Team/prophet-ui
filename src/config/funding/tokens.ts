@@ -173,8 +173,74 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       icon: "/tokens/usd1.png",
     },
   },
+  polygon: {
+    "USDT": {
+      ...FUNDING_NETWORKS.polygon,
+      symbol: "USDT",
+      address: "0x9417669fBF23357D2774e9D421307bd5eA1006d2",
+      decimals: 6,
+      icon: "/tokens/usdt.png",
+    },
+    "USDT0": {
+      ...FUNDING_NETWORKS.polygon,
+      symbol: "USDT0",
+      address: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+      decimals: 6,
+      icon: "/tokens/usdt.png",
+    },
+    "USDC.e": {
+      ...FUNDING_NETWORKS.polygon,
+      symbol: "USDC.e",
+      address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+      decimals: 6,
+      icon: "/tokens/usdc.png",
+    },
+    "USDC": {
+      ...FUNDING_NETWORKS.polygon,
+      symbol: "USDC",
+      address: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+      decimals: 6,
+      icon: "/tokens/usdc.png",
+    },
+    "DAI": {
+      ...FUNDING_NETWORKS.polygon,
+      symbol: "DAI",
+      address: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+      decimals: 18,
+      icon: "/tokens/dai.png",
+    },
+    "WETH": {
+      ...FUNDING_NETWORKS.polygon,
+      symbol: "WETH",
+      address: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+      decimals: 18,
+      icon: "/tokens/weth.png",
+    },
+    "POL": {
+      ...FUNDING_NETWORKS.polygon,
+      symbol: "POL",
+      address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+      decimals: 18,
+      icon: "/tokens/pol.webp",
+    },
+  }
 };
 
 export const FUNDING_TOKENS_LIST = Object.values(FUNDING_TOKENS).flatMap(item => Object.values(item));
 
 export const STABLECOIN_SYMBOLS = new Set(["USDC", "USDT", "USDC.e", "USD₮0", "DAI", "FDUSD", "USD1"]);
+
+export const POLYMARKET_USD: FundingToken & { underlyingToken: FundingToken; } = {
+  ...FUNDING_NETWORKS.polygon,
+  symbol: "USDC (Prophet)",
+  address: "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB",
+  decimals: 18,
+  icon: "/tokens/pusd.png",
+  underlyingToken: {
+    ...FUNDING_NETWORKS.polygon,
+    symbol: "USDC.e",
+    address: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+    decimals: 6,
+    icon: "/tokens/usdc.png",
+  },
+};

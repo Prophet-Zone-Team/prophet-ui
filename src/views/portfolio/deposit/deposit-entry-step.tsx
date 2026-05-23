@@ -1,6 +1,5 @@
 "use client";
 
-import { formatPortfolioMoney } from "@/lib/portfolio/portfolio-format";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import {
   depositConnectedRowClass,
@@ -9,6 +8,7 @@ import {
 import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import { usePortfolioContext } from "../context";
 import { useDepositContext } from "./context";
+import { formatNumber } from "@/utils";
 
 export interface DepositEntryStepProps {
   onSelectConnected: () => void;
@@ -60,7 +60,7 @@ export function DepositEntryStep({
           </span>
         </span>
         <span className="shrink-0 text-base font-[556] text-black">
-          {isLoading ? "…" : formatPortfolioMoney(connectedWalletBalanceUsd)}
+          {isLoading ? "…" : formatNumber(connectedWalletBalanceUsd, 2, true, { round: 0, isZeroPrecision: true })}
         </span>
       </button>
     </div>

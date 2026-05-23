@@ -1,5 +1,5 @@
 import { createPublicClient, http } from "viem";
-import { arbitrum, bsc, optimism } from "viem/chains";
+import { arbitrum, bsc, optimism, polygon } from "viem/chains";
 
 import { getFundingRpcUrl } from "@/config/funding/networks";
 
@@ -15,6 +15,7 @@ export type FundingPublicClient = ReturnType<typeof createArbitrumFundingClient>
 let arbitrumClient: FundingPublicClient | undefined;
 let optimismClient: FundingPublicClient | undefined;
 let bscClient: FundingPublicClient | undefined;
+let polygonClient: FundingPublicClient | undefined;
 
 export function getFundingPublicClient(chainId: number): FundingPublicClient {
   if (chainId === arbitrum.id) {
@@ -36,6 +37,14 @@ export function getFundingPublicClient(chainId: number): FundingPublicClient {
       transport: http(getFundingRpcUrl(bsc.id)),
     }) as unknown as FundingPublicClient;
     return bscClient;
+  }
+
+  if (chainId === polygon.id) {
+    polygonClient ??= createPublicClient({
+      chain: polygon,
+      transport: http(getFundingRpcUrl(polygon.id)),
+    }) as unknown as FundingPublicClient;
+    return polygonClient;
   }
 
   throw new Error(`No viem chain configured for funding chainId: ${chainId}`);

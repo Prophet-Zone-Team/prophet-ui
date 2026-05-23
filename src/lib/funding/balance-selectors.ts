@@ -3,6 +3,7 @@ import Big from "big.js";
 import { FUNDING_TOKENS_LIST, STABLECOIN_SYMBOLS, type FundingToken } from "@/config/funding";
 import { normalizeTokenAddress } from "@/lib/funding/evm-balances";
 import type { EvmBalancesByChain } from "@/types/funding";
+import { removeNumberEndZero } from "@/utils";
 
 export function selectTokenBalance(
   balances: EvmBalancesByChain,
@@ -21,16 +22,16 @@ export function selectFundingTokenBalance(
   return selectTokenBalance(balances, token.chainId, token.address);
 }
 
-export function selectFundingTokenBalanceNumber(
+export function selectFundingTokenBalanceString(
   balances: EvmBalancesByChain,
-  token: Pick<FundingToken, "chainId" | "address">,
-): number {
+  token: Pick<FundingToken, "chainId" | "address" | "decimals">,
+): string {
   const value = selectFundingTokenBalance(balances, token);
 
   try {
-    return Big(value).toNumber();
+    return removeNumberEndZero(Big(value).toFixed(token.decimals, Big.roundDown));
   } catch {
-    return 0;
+    return "0";
   }
 }
 

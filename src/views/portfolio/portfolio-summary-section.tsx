@@ -2,12 +2,7 @@
 
 import { useCallback, useState } from "react";
 
-import { CopyLinkIcon } from "@/components/icons/copy-link-icon";
-import { formatPortfolioMoney } from "@/lib/portfolio/portfolio-format";
-import type { PortfolioViewModel } from "@/lib/portfolio/portfolio-metrics";
-import type { PortfolioLoadStatus } from "@/lib/portfolio/types";
 import { formatShortWallet } from "@/lib/team/detail-format";
-import type { TradingUserSession } from "@/types/market";
 import { DepositDialog } from "@/views/portfolio/deposit";
 import { PortfolioPerformanceChart } from "@/views/portfolio/portfolio-performance-chart";
 import { WithdrawDialog } from "@/views/portfolio/withdraw";
@@ -22,20 +17,20 @@ import {
   portfolioWalletAddressClass,
   portfolioWithdrawButtonClass
 } from "@/views/portfolio/portfolio-ui";
+import { formatNumber } from "@/utils";
+import { usePortfolioContext } from "./context";
 
 export interface PortfolioSummarySectionProps {
-  session: TradingUserSession | undefined;
-  portfolio: PortfolioViewModel;
-  status: PortfolioLoadStatus;
-  onConnectWallet: () => void;
 }
 
-export function PortfolioSummarySection({
-  session,
-  portfolio,
-  status,
-  onConnectWallet
-}: PortfolioSummarySectionProps) {
+export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
+  const {
+    session,
+    portfolio,
+    status,
+    onConnectWallet
+  } = usePortfolioContext();
+
   const [copied, setCopied] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
@@ -55,10 +50,10 @@ export function PortfolioSummarySection({
   }, [session]);
 
   const portfolioDisplay = session
-    ? formatPortfolioMoney(portfolio.portfolioValue)
+    ? formatNumber(portfolio?.portfolioValue, 2, true, { round: 0, isZeroPrecision: true })
     : "—";
   const availableDisplay = session
-    ? formatPortfolioMoney(portfolio.availableToTrade)
+    ? formatNumber(portfolio?.availableToTrade, 2, true, { round: 0, isZeroPrecision: true })
     : "—";
 
   return (
@@ -157,11 +152,7 @@ export function PortfolioSummarySection({
           aria-hidden="true"
         />
 
-        <PortfolioPerformanceChart
-          series={portfolio.performanceSeries}
-          unrealizedPnl={portfolio.unrealizedPnl}
-          unrealizedPnlPercent={portfolio.unrealizedPnlPercent}
-        />
+        <PortfolioPerformanceChart />
       </div>
 
       {session ? (
@@ -169,12 +160,10 @@ export function PortfolioSummarySection({
           <DepositDialog
             open={depositOpen}
             onClose={() => setDepositOpen(false)}
-            session={session}
           />
           <WithdrawDialog
             open={withdrawOpen}
             onClose={() => setWithdrawOpen(false)}
-            session={session}
           />
         </>
       ) : null}

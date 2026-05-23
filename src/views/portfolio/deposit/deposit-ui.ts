@@ -30,7 +30,7 @@ export const depositTransferBarClass =
   "flex items-center justify-between gap-3 rounded-[6px] bg-[#f4f4f4] px-4 py-3";
 
 export const depositDetailRowClass =
-  "flex items-center justify-between border-b border-[#EBEBEB]/60 py-3 text-sm last:border-b-0";
+  "flex items-center justify-between py-3 text-sm last:border-b-0 gap-2";
 
 export const depositBreakdownBoxClass = "rounded-[6px] bg-[#f4f4f4] p-4";
 

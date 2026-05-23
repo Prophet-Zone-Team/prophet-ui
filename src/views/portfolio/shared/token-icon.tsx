@@ -10,6 +10,7 @@ export interface TokenIconProps {
   icon?: string;
   chainIcon?: string;
   dimmed?: boolean;
+  chainOnly?: boolean;
 }
 
 export function TokenIcon({
@@ -19,10 +20,43 @@ export function TokenIcon({
   className,
   icon,
   chainIcon,
-  dimmed = false
+  dimmed = false,
+  chainOnly = false,
 }: TokenIconProps) {
   const iconSize = size === "sm" ? "size-[23px] text-[8px]" : "size-[30px] text-[10px]";
   const badgeSize = size === "sm" ? "size-[14px] text-[7px]" : "size-4 text-[8px]";
+
+  if (chainOnly) {
+    return (
+      <div className={cn("relative shrink-0", dimmed && "opacity-30", className)}>
+        {
+          chainIcon ? (
+            <img
+              src={chainIcon}
+              alt={chainLabel}
+              className={cn(
+                "rounded-[4px] border border-white font-[556] text-white",
+                iconSize,
+              )}
+            />
+          ) : (
+            chainLabel ? (
+              <div
+                className={cn(
+                  "rounded-[4px] border border-white font-[556] text-white",
+                  iconSize,
+                  "bg-[#909090]"
+                )}
+                aria-hidden="true"
+              >
+                {chainLabel.slice(0, 1)}
+              </div>
+            ) : null
+          )
+        }
+      </div>
+    );
+  }
 
   return (
     <div className={cn("relative shrink-0", dimmed && "opacity-30", className)}>

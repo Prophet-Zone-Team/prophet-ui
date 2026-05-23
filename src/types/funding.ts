@@ -114,3 +114,14 @@ export interface TokenPriceApiResponse {
   code: number;
   data: TokenPricesBySymbol;
 }
+
+export interface CreateDepositAddressesPayload {
+  note: string;
+  address: {
+    evm: string;
+    svm: string;
+    tron: string;
+    btc: string;
+  };
+  warnings?: { code: string; message: string; }[];
+}

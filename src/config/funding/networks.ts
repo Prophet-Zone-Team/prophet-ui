@@ -34,6 +34,13 @@ export const FUNDING_NETWORKS: Record<string, FundingNetwork> = {
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://56.rpc.thirdweb.com",
   },
+  polygon: {
+    chainId: 137,
+    chainName: "Polygon",
+    chainIcon: "/networks/polygon.png",
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://polygon.drpc.org",
+  },
 };
 
 const RPC_ENV_BY_CHAIN_ID: Record<number, string> = {

@@ -1,7 +1,5 @@
 import type { WithdrawChainOption, WithdrawTokenOption } from "@/views/portfolio/withdraw/types";
 
-export const MOCK_WITHDRAW_MAX_AMOUNT = 23.45;
-
 export const WITHDRAW_CHAIN_OPTIONS: WithdrawChainOption[] = [
   { id: "polygon", label: "Polygon" }
 ];
