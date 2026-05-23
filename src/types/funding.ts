@@ -1,4 +1,4 @@
-import type { DepositWalletBatchSignablePayload } from "../lib/market/depositWalletBatch";
+import type { DepositWalletBatchSignablePayload } from "../lib/market/deposit-wallet-batch";
 import type { UserPositionRecord } from "./market";
 
 export type FundingLoadStatus = "idle" | "loading" | "ready" | "error";

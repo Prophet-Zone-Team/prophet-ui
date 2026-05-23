@@ -18,7 +18,7 @@ import {
   getWinnerChartYDomain,
   WINNER_CHART_TIME_RANGES,
   type WinnerChartTimeRange
-} from "../../../lib/market/winnerProbabilityChart";
+} from "../../../lib/market/winner-probability-chart";
 import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot

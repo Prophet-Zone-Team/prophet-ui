@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { fetchMarketOrderbook } from "../../../../server/market/clobOrderbook";
+import { fetchMarketOrderbook } from "../../../../server/market/clob-orderbook";
 
 export const dynamic = "force-dynamic";
 

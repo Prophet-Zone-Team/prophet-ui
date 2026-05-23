@@ -7,6 +7,6 @@ export {
   useTrackedMatchIds,
   useTrackedTeamIds,
   useTrackedTeamsStore
-} from "./trackedItemsStore";
+} from "./tracked-items-store";
 
-export { useTracksHydrated } from "./useTracksHydrated";
+export { useTracksHydrated } from "./use-tracks-hydrated";

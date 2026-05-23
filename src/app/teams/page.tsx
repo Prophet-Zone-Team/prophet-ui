@@ -1,5 +1,5 @@
-import { TeamsPage } from "../../components/teams-list/TeamsPage";
-import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
+import { TeamsPage } from "../../views/teams";
+import { getWorldCupMarketData } from "../../data/providers/world-cup-market-data";
 
 export const dynamic = "force-dynamic";
 

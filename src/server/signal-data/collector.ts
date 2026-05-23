@@ -3,9 +3,9 @@ import {
   WORLD_CUP_CONTEXT_KEYWORDS,
   getTeamNewsQueryConfig,
 } from "../../config/team-news-query-config";
-import { worldCupTeams } from "../../data/teams/worldCupTeams";
-import { getApiFootballTeamContext } from "../../data/football/apiFootballProvider";
-import { gdeltNewsProvider } from "../../data/news/gdeltNewsProvider";
+import { worldCupTeams } from "../../data/teams/world-cup-teams";
+import { getApiFootballTeamContext } from "../../data/football/api-football-provider";
+import { gdeltNewsProvider } from "../../data/news/gdelt-news-provider";
 import type { TeamNewsQuery } from "../../data/news/types";
 import type { ApiFootballTeamContext, NewsArticle, Team } from "../../types/market";
 import { getSignalDataRepository } from "./repository";

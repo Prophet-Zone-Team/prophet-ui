@@ -3,7 +3,7 @@ import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot
 } from "../../../types/market";
-import { HomeWinnerMarketList } from "./HomeWinnerMarketList";
+import { HomeWinnerMarketList } from "./home-winner-market-list";
 import { WinnerProbabilityChart } from "./probability-chart";
 
 export interface HomeWinnerPanelProps {

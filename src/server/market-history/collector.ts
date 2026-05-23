@@ -1,5 +1,5 @@
-import { WORLD_CUP_TEAM_COUNT } from "../../data/teams/worldCupTeams";
-import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
+import { WORLD_CUP_TEAM_COUNT } from "../../data/teams/world-cup-teams";
+import { getWorldCupMarketData } from "../../data/providers/world-cup-market-data";
 import type { MarketDataSource } from "../../data/providers/types";
 import { getMarketHistoryRepository } from "./repository";
 import type { MarketSnapshotRecord, StoredMarketDataSource } from "./types";

@@ -1,4 +1,4 @@
-import { getTheOddsApiWorldCupWinnerOdds } from "../../data/odds/theOddsApiProvider";
+import { getTheOddsApiWorldCupWinnerOdds } from "../../data/odds/the-odds-api-provider";
 import type { OddsProviderMeta } from "../../data/odds/types";
 import { ENABLED_MARKET_DATA_SOURCES } from "../../data/providers/source";
 import { getStaticWorldCupMatches } from "../../data/world-cup-2026/matches";

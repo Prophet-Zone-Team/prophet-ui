@@ -9,13 +9,13 @@ import type {
   TeamMarketSnapshot,
   WorldCupMatch
 } from "../../../types/market";
-import { TradesTable, TradesTableHeader } from "../TradesTable";
-import { tradePageClass, tradeSectionClass } from "../tradeUi";
-import { TabSwitcher } from "../../../components/ui/TabSwitcher";
-import { GameProbabilitySection } from "./GameProbabilitySection";
-import { GameTradeHeader } from "./GameTradeHeader";
-import { GameTradeWidget } from "./GameTradeWidget";
-import { MatchTeamLinks, RelatedMatchGames } from "./RelatedMatchGames";
+import { TradesTable, TradesTableHeader } from "../trades-table";
+import { tradePageClass, tradeSectionClass } from "../trade-widget/trade-ui";
+import { TabSwitcher } from "../../../components/ui/tab-switcher";
+import { GameProbabilitySection } from "./game-probability-section";
+import { GameTradeHeader } from "./game-trade-header";
+import { GameTradeWidget } from "./game-trade-widget";
+import { MatchTeamLinks, RelatedMatchGames } from "./related-match-games";
 
 const ACTIVITY_TABS = [
   { id: "trades", label: "Trades" },

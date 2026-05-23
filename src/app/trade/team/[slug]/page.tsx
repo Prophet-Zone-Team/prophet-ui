@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
-import { TradePage } from "../../../../components/trade/TradePage";
-import { getTheOddsApiWorldCupWinnerOdds } from "../../../../data/odds/theOddsApiProvider";
-import { getWorldCupMarketData } from "../../../../data/providers/worldCupMarketData";
+import { TradePage } from "../../../../components/trade/trade-page";
+import { getTheOddsApiWorldCupWinnerOdds } from "../../../../data/odds/the-odds-api-provider";
+import { getWorldCupMarketData } from "../../../../data/providers/world-cup-market-data";
 import {
   attachCachedFootballToMatches,
   getStaticWorldCupMatches

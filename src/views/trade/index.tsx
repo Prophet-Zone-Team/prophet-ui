@@ -10,12 +10,12 @@ import type {
   TeamMarketSnapshot,
   WorldCupMatch
 } from "../../types/market";
-import { ActivityTabs } from "./ActivityTabs";
-import { TradeHeader } from "./TradeHeader";
-import { ProbabilitySection } from "./ProbabilitySection";
-import { RelatedGames } from "./RelatedGames";
-import { TradeWidget } from "./TradeWidget";
-import { tradePageClass } from "./tradeUi";
+import { ActivityTabs } from "./activity-tabs";
+import { TradeHeader } from "./trade-header";
+import { ProbabilitySection } from "./probability-section";
+import { RelatedGames } from "./related-games";
+import { TradeWidget } from "./trade-widget";
+import { tradePageClass } from "./trade-widget/trade-ui";
 
 export interface TradeTeamProViewProps {
   snapshot: TeamMarketSnapshot;

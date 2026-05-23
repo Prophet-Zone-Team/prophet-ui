@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getNewsArticleSlug } from "../../../lib/news/newsSlugs";
+import { getNewsArticleSlug } from "../../../lib/news/news-slugs";
 import { getSignalDataRepository } from "../../../server/signal-data/repository";
 
 export const dynamic = "force-dynamic";

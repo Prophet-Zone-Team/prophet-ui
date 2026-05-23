@@ -1,4 +1,7 @@
-import { tradePageClass, tradeSectionClass } from "../../../../views/trade/tradeUi";
+import {
+  tradePageClass,
+  tradeSectionClass
+} from "../../../../views/trade/trade-widget/trade-ui";
 
 function LoadingBlock({ className }: { className?: string }) {
   return (
@@ -33,7 +36,10 @@ export default function TradeLoading() {
               <LoadingBlock className="h-6 w-64" />
             </div>
             {Array.from({ length: 6 }, (_, index) => (
-              <div key={index} className="border-b border-prophet-line/60 px-4 py-3">
+              <div
+                key={index}
+                className="border-b border-prophet-line/60 px-4 py-3"
+              >
                 <LoadingBlock className="h-4 w-full" />
               </div>
             ))}
@@ -51,7 +57,10 @@ export default function TradeLoading() {
               <LoadingBlock className="h-5 w-36" />
             </div>
             {Array.from({ length: 3 }, (_, index) => (
-              <div key={index} className="m-3 rounded-xl border border-prophet-line p-3">
+              <div
+                key={index}
+                className="m-3 rounded-xl border border-prophet-line p-3"
+              >
                 <LoadingBlock className="mb-2 h-4 w-20" />
                 <LoadingBlock className="h-16 w-full" />
               </div>

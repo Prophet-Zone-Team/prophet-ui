@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { fetchUserOpenOrders } from "../../../../../server/trading/clobUserClient";
-import { refreshPersistedOrderStatuses } from "../../../../../server/trading/orderStore";
-import { getTradingSessionFromCookie } from "../../../../../server/trading/sessionStore";
+import { fetchUserOpenOrders } from "../../../../../server/trading/clob-user-client";
+import { refreshPersistedOrderStatuses } from "../../../../../server/trading/order-store";
+import { getTradingSessionFromCookie } from "../../../../../server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

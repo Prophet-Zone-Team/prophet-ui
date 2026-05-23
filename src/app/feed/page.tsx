@@ -1,5 +1,5 @@
-import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
-import { FeedPage } from "../../components/feed/FeedPage";
+import { getWorldCupMarketData } from "../../data/providers/world-cup-market-data";
+import { FeedPage } from "../../components/feed/feed-page";
 
 export const dynamic = "force-dynamic";
 

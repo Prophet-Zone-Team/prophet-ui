@@ -1,5 +1,5 @@
 import { getCloudflareD1Database } from "../cloudflare/d1";
-import { createD1MarketHistoryRepository } from "./d1MarketHistoryRepository";
+import { createD1MarketHistoryRepository } from "./d1-market-history-repository";
 import type { MarketHistoryRepository } from "./types";
 
 export async function getMarketHistoryRepository(): Promise<MarketHistoryRepository> {
@@ -13,6 +13,6 @@ export async function getMarketHistoryRepository(): Promise<MarketHistoryReposit
     throw new Error("Missing Cloudflare D1 binding MARKET_HISTORY_DB for market history storage.");
   }
 
-  const { fileMarketHistoryRepository } = await import("./fileMarketHistoryRepository");
+  const { fileMarketHistoryRepository } = await import("./file-market-history-repository");
   return fileMarketHistoryRepository;
 }

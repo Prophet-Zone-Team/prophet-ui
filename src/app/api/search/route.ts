@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getNewsArticleSlug } from "../../../lib/news/newsSlugs";
+import { getNewsArticleSlug } from "../../../lib/news/news-slugs";
 import { teamTradeHref, gameTradeHref } from "../../../lib/routes/trade";
 import { getStaticWorldCupMatches } from "../../../data/world-cup-2026/matches";
 import { getWorldCupTeamByIdOrCode } from "../../../data/world-cup-2026/groups";
-import { worldCupTeams } from "../../../data/teams/worldCupTeams";
+import { worldCupTeams } from "../../../data/teams/world-cup-teams";
 import { getSignalDataRepository } from "../../../server/signal-data/repository";
 import type { SearchResult, SearchResultType } from "../../../types/market";
 

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { MarketDataMeta } from "../../../data/providers/types";
 import { getMarketDataSourceLabel } from "../../../data/providers/source";
 import type { TeamMarketSnapshot } from "../../../types/market";
-import { TeamFlag } from "../../../components/teams/TeamFlag";
+import { TeamFlag } from "../../../components/teams/team-flag";
 import { cn } from "../../../lib/cn";
 import {
   formatVolume,

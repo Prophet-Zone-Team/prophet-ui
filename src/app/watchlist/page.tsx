@@ -1,5 +1,5 @@
-import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
-import { WatchlistPage } from "../../components/watchlist/WatchlistPage";
+import { getWorldCupMarketData } from "../../data/providers/world-cup-market-data";
+import { WatchlistPage } from "../../components/watchlist/watchlist-page";
 
 export const dynamic = "force-dynamic";
 

@@ -4,8 +4,8 @@ import { recoverTypedDataAddress } from "viem";
 import {
   buildWithdrawTransferBatch,
   type DepositWalletBatchSignablePayload,
-} from "../../../../lib/market/depositWalletBatch";
-import { getTradingChainId } from "../../../../server/trading/clobAuth";
+} from "../../../../lib/market/deposit-wallet-batch";
+import { getTradingChainId } from "../../../../server/trading/clob-auth";
 import {
   createBridgeWithdrawalAddresses,
   fetchBridgeTransactionStatus,
@@ -15,8 +15,8 @@ import {
   buildDepositWalletBatchRequest,
   fetchRelayerNonce,
   submitRelayerTransaction,
-} from "../../../../server/trading/depositWallet";
-import { getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
+} from "../../../../server/trading/deposit-wallet";
+import { getTradingSessionFromCookie } from "../../../../server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

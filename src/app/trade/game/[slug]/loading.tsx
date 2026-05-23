@@ -1,4 +1,7 @@
-import { tradePageClass, tradeSectionClass } from "../../../../views/trade/tradeUi";
+import {
+  tradePageClass,
+  tradeSectionClass
+} from "../../../../views/trade/trade-widget/trade-ui";
 
 function LoadingBlock({ className }: { className?: string }) {
   return (

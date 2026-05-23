@@ -1,6 +1,6 @@
 import type { MarketDataMeta } from "../../data/providers/types";
 import type { TeamMarketSnapshot, WorldCupMatch } from "../../types/market";
-import { TracksPanel } from "./TracksPanel";
+import { TracksPanel } from "./tracks-panel";
 
 export interface TracksViewProps {
   snapshots: TeamMarketSnapshot[];

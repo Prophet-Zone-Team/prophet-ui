@@ -7,15 +7,15 @@ import type {
   UserBalanceSnapshot,
   UserTradingReadiness,
 } from "../../types/market";
-import type { TradingSessionRecord } from "./sessionStore";
+import type { TradingSessionRecord } from "./session-store";
 import {
   checkOrderFunding,
   fetchUserBalanceSnapshot,
   resolveOrderFundingRequirementWithFees,
   type OrderFundingRequirement,
 } from "./balances";
-import { refreshDepositWalletDeployment } from "./depositWallet";
-import { getTradingCredentialStatus, updateTradingSession } from "./sessionStore";
+import { refreshDepositWalletDeployment } from "./deposit-wallet";
+import { getTradingCredentialStatus, updateTradingSession } from "./session-store";
 
 export async function buildUserTradingReadiness({
   record,

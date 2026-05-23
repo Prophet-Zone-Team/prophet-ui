@@ -1,3 +1,3 @@
-export { useDeposit, type UseDepositResult } from "./useDeposit";
-export { usePositions, type UsePositionsOptions, type UsePositionsResult } from "./usePositions";
-export { useWithdraw, type UseWithdrawResult } from "./useWithdraw";
+export { useDeposit, type UseDepositResult } from "./use-deposit";
+export { usePositions, type UsePositionsOptions, type UsePositionsResult } from "./use-positions";
+export { useWithdraw, type UseWithdrawResult } from "./use-withdraw";

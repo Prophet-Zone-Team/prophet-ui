@@ -8,11 +8,11 @@ import {
   resolveOrderFundingRequirementWithFees,
   type SignedOrderContext,
 } from "../../../../server/trading/balances";
-import { getOrderBuilderCode } from "../../../../server/trading/builderCode";
-import { fetchClobBestPrices, postSignedUserOrder, updateUserBalanceAllowance } from "../../../../server/trading/clobUserClient";
+import { getOrderBuilderCode } from "../../../../server/trading/builder-code";
+import { fetchClobBestPrices, postSignedUserOrder, updateUserBalanceAllowance } from "../../../../server/trading/clob-user-client";
 import { refreshSessionEligibilityIfStale } from "../../../../server/trading/eligibility";
-import { recordUserOrderError, recordUserOrderSubmitted } from "../../../../server/trading/orderStore";
-import { createTradingSessionCookie, getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
+import { recordUserOrderError, recordUserOrderSubmitted } from "../../../../server/trading/order-store";
+import { createTradingSessionCookie, getTradingSessionFromCookie } from "../../../../server/trading/session-store";
 import type { UserOrderPreview, UserOrderStatus } from "../../../../types/market";
 
 export const runtime = "nodejs";

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
-import { GameTradePage } from "../../../../components/trade/GameTradePage";
-import { getWorldCupMarketData } from "../../../../data/providers/worldCupMarketData";
+import { GameTradePage } from "../../../../components/trade/game-trade-page";
+import { getWorldCupMarketData } from "../../../../data/providers/world-cup-market-data";
 import {
   attachCachedFootballToMatches,
   getStaticWorldCupMatches
@@ -11,7 +11,7 @@ import {
   buildGameProbabilityHistory,
   findWorldCupMatch,
   getRelatedMatches
-} from "../../../../lib/market/gameMarketSnapshot";
+} from "../../../../lib/market/game-market-snapshot";
 
 interface GameTradeRouteProps {
   params: Promise<{

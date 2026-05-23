@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { updateUserBalanceAllowance } from "../../../../server/trading/clobUserClient";
-import { getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
+import { updateUserBalanceAllowance } from "../../../../server/trading/clob-user-client";
+import { getTradingSessionFromCookie } from "../../../../server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

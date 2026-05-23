@@ -4,9 +4,9 @@ import {
   createBridgeDepositAddresses,
   fetchBridgeTransactionStatus,
 } from "../../../../server/trading/bridge";
-import { getTradingChainId } from "../../../../server/trading/clobAuth";
+import { getTradingChainId } from "../../../../server/trading/clob-auth";
 import { getTradingContractAddresses } from "../../../../server/trading/contracts";
-import { getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
+import { getTradingSessionFromCookie } from "../../../../server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

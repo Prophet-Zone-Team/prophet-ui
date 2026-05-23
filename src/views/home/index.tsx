@@ -8,7 +8,7 @@ import type {
   WorldCupMatch
 } from "../../types/market";
 import { HomeHero } from "./header";
-import { HomeTabPanels } from "./HomeTabPanels";
+import { HomeTabPanels } from "./home-tab-panels";
 import { HomeMatchesPanel } from "./matches";
 import { HomeWinnerPanel } from "./winner";
 import { getRelativeChangePercent } from "../../components/home/market-formatters";

@@ -1,5 +1,5 @@
 import { HomeView } from "../views/home";
-import { getWorldCupMarketData } from "../data/providers/worldCupMarketData";
+import { getWorldCupMarketData } from "../data/providers/world-cup-market-data";
 import {
   attachCachedFootballToMatches,
   getStaticWorldCupMatches

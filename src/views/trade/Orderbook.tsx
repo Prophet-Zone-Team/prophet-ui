@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 
 import { cn } from "../../lib/cn";
-import { fetchJson } from "../../lib/team/clientFetch";
+import { fetchJson } from "../../lib/team/client-fetch";
 import {
   formatOrderbookPrice,
   formatOrderbookTotal
-} from "../../lib/market/orderMath";
+} from "../../lib/market/order-math";
 
 interface OrderbookLevel {
   price: number;

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { parseOrderFundingRequirement } from "../../../../server/trading/balances";
 import { buildUserTradingReadiness } from "../../../../server/trading/readiness";
-import { getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
+import { getTradingSessionFromCookie } from "../../../../server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -3,12 +3,12 @@
 import { useMemo } from "react";
 
 import type { MarketDataMeta } from "../../data/providers/types";
-import { buildPortfolioView } from "../../lib/portfolio/portfolioMetrics";
+import { buildPortfolioView } from "../../lib/portfolio/portfolio-metrics";
 import type { TeamMarketSnapshot } from "../../types/market";
-import { PortfolioActivityTabs } from "./PortfolioActivityTabs";
-import { PortfolioSummarySection } from "./PortfolioSummarySection";
-import { portfolioPageClass } from "./portfolioUi";
-import { usePortfolioData } from "./usePortfolioData";
+import { PortfolioActivityTabs } from "./portfolio-activity-tabs";
+import { PortfolioSummarySection } from "./portfolio-summary-section";
+import { portfolioPageClass } from "./portfolio-ui";
+import { usePortfolioData } from "./use-portfolio-data";
 
 export interface PortfolioViewProps {
   snapshots: TeamMarketSnapshot[];

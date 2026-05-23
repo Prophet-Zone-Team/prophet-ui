@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { checkTradingEligibility, getClientIp, refreshSessionEligibility } from "../../../../server/trading/eligibility";
-import { createTradingSessionCookie, getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
+import { createTradingSessionCookie, getTradingSessionFromCookie } from "../../../../server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

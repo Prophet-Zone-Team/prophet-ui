@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { NewsPage } from "../../components/news/NewsPage";
-import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
+import { NewsPage } from "../../components/news/news-page";
+import { getWorldCupMarketData } from "../../data/providers/world-cup-market-data";
 import { getSignalDataRepository } from "../../server/signal-data/repository";
 
 export const dynamic = "force-dynamic";

@@ -1,4 +1,4 @@
-import { portfolioActivityCardClass, portfolioPageClass, portfolioSummaryCardClass } from "../../views/portfolio/portfolioUi";
+import { portfolioActivityCardClass, portfolioPageClass, portfolioSummaryCardClass } from "../../views/portfolio/portfolio-ui";
 
 export default function PortfolioLoading() {
   return (
