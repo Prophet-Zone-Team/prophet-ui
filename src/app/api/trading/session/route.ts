@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 interface CreateSessionPayload {
   walletAddress?: string;
   mode?: "challenge" | "create";
-  nonce?: string;
+  token?: string;
   signature?: string;
   signatureType?: number;
 }
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   try {
     await verifyTradingSessionChallenge({
       walletAddress: payload.walletAddress ?? "",
-      nonce: payload.nonce ?? "",
+      token: payload.token ?? "",
       signature: payload.signature ?? "",
     });
   } catch (error) {
@@ -136,8 +136,8 @@ function validateCreatePayload(payload: CreateSessionPayload): string | undefine
     return walletError;
   }
 
-  if (!payload.nonce || !/^[a-f0-9]{32}$/.test(payload.nonce)) {
-    return "Missing or invalid trading session challenge nonce.";
+  if (!payload.token || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(payload.token)) {
+    return "Missing or invalid trading session challenge token.";
   }
 
   if (!payload.signature || !/^0x[a-fA-F0-9]+$/.test(payload.signature)) {

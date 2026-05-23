@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/auth";
 import { AppHeader } from "@/layout/header";
 import "flag-icons/css/flag-icons.min.css";
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <AppHeader />
             <div className="pt-11">{children}</div>
           </main>
+          <Toaster />
         </AuthProvider>
       </body>
     </html>

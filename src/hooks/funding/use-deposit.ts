@@ -58,8 +58,19 @@ export function useDeposit(): UseDepositResult {
         await syncCash();
         setStatus("success");
       } catch (syncError) {
+        const message = syncError instanceof Error ? syncError.message : String(syncError);
+        const missingClobCredentials = /CLOB credentials are required/i.test(message);
+
+        if (missingClobCredentials) {
+          setStatus("success");
+          setError(
+            "Deposit completed. Complete Step 2 in the Enable trading dialog to sync your tradable balance.",
+          );
+          return aggregateStatus;
+        }
+
         setStatus("error");
-        setError(syncError instanceof Error ? syncError.message : String(syncError));
+        setError(message);
       }
 
       return aggregateStatus;

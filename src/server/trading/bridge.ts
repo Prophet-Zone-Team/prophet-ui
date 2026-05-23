@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getPolymarketBuilderCode } from "@/server/trading/builder-code";
+import { serverFetch } from "@/server/trading/server-fetch";
 
 const DEFAULT_BRIDGE_URL = "https://bridge.polymarket.com";
 const BRIDGE_TIMEOUT_MS = 8000;
@@ -29,7 +30,7 @@ export interface BridgeStatusResponse {
 }
 
 export async function createBridgeDepositAddresses(walletAddress: string): Promise<BridgeDepositAddressResponse> {
-  const response = await fetch(`${getBridgeUrl()}/deposit`, {
+  const response = await serverFetch(`${getBridgeUrl()}/deposit`, {
     method: "POST",
     headers: createBridgeHeaders(),
     body: JSON.stringify({
@@ -49,7 +50,7 @@ export async function createBridgeDepositAddresses(walletAddress: string): Promi
 export async function createBridgeWithdrawalAddresses(
   payload: BridgeWithdrawRequest,
 ): Promise<BridgeDepositAddressResponse> {
-  const response = await fetch(`${getBridgeUrl()}/withdraw`, {
+  const response = await serverFetch(`${getBridgeUrl()}/withdraw`, {
     method: "POST",
     headers: createBridgeHeaders(),
     body: JSON.stringify(payload),
@@ -65,7 +66,7 @@ export async function createBridgeWithdrawalAddresses(
 }
 
 export async function fetchBridgeSupportedAssets(): Promise<unknown> {
-  const response = await fetch(`${getBridgeUrl()}/supported-assets`, {
+  const response = await serverFetch(`${getBridgeUrl()}/supported-assets`, {
     cache: "no-store",
     signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
   });
@@ -78,7 +79,7 @@ export async function fetchBridgeSupportedAssets(): Promise<unknown> {
 }
 
 export async function fetchBridgeTransactionStatus(depositAddress: string): Promise<BridgeStatusResponse> {
-  const response = await fetch(`${getBridgeUrl()}/status/${encodeURIComponent(depositAddress)}`, {
+  const response = await serverFetch(`${getBridgeUrl()}/status/${encodeURIComponent(depositAddress)}`, {
     cache: "no-store",
     signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
   });

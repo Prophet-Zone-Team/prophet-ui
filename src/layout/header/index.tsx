@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/cn";
-import { WalletMenuButton } from "@/components/trading/wallet-menu-button";
+import { WalletMenuButton } from "@/layout/header/wallet-menu-button";
 import { isNavActive, PRIMARY_NAV } from "@/layout/header/nav";
 
 const NAV_PILL_TRANSITION = {

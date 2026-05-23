@@ -38,6 +38,18 @@ export interface OnchainCollateralSnapshot {
   error?: string;
 }
 
+export async function isContractDeployedOnPolygon(address: string) {
+  const client = createPublicClient({
+    chain: polygonChain,
+    transport: http(getPolygonRpcUrl()),
+  });
+  const bytecode = await client.getBytecode({
+    address: address as Address,
+  });
+
+  return Boolean(bytecode && bytecode !== "0x");
+}
+
 export async function fetchOnchainCollateralSnapshot(funderAddress: string): Promise<OnchainCollateralSnapshot> {
   try {
     const contracts = getTradingContractAddresses();

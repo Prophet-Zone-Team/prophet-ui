@@ -3,6 +3,7 @@ import "server-only";
 import type { Hex } from "viem";
 
 import { getTradingHost } from "@/server/trading/clob-auth";
+import { serverFetch } from "@/server/trading/server-fetch";
 
 const ZERO_BUILDER_CODE = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
@@ -21,7 +22,7 @@ export async function getBuilderTakerFeeRate(builderCode = getOrderBuilderCode()
     return 0;
   }
 
-  const response = await fetch(`${getTradingHost()}/fees/builder-fees/${builderCode}`, {
+  const response = await serverFetch(`${getTradingHost()}/fees/builder-fees/${builderCode}`, {
     cache: "no-store",
   });
 

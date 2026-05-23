@@ -13,6 +13,7 @@ import type {
 
 import type { BidTradeSide, TradingOrderType, UserPositionRecord } from "@/types/market";
 import { getTradingHost } from "@/server/trading/clob-auth";
+import { serverFetch } from "@/server/trading/server-fetch";
 
 export interface SignedUserOrderPayload {
   order: unknown;
@@ -49,7 +50,7 @@ export interface ClobBestPrices {
 }
 
 export async function fetchClobMarketDetails(tokenId: string): Promise<MarketDetails | undefined> {
-  const marketByTokenResponse = await fetch(`${getTradingHost()}/markets-by-token/${encodeURIComponent(tokenId)}`, {
+  const marketByTokenResponse = await serverFetch(`${getTradingHost()}/markets-by-token/${encodeURIComponent(tokenId)}`, {
     cache: "no-store",
   });
 
@@ -64,7 +65,7 @@ export async function fetchClobMarketDetails(tokenId: string): Promise<MarketDet
     return undefined;
   }
 
-  const marketResponse = await fetch(`${getTradingHost()}/clob-markets/${encodeURIComponent(conditionId)}`, {
+  const marketResponse = await serverFetch(`${getTradingHost()}/clob-markets/${encodeURIComponent(conditionId)}`, {
     cache: "no-store",
   });
 
@@ -76,7 +77,7 @@ export async function fetchClobMarketDetails(tokenId: string): Promise<MarketDet
 }
 
 export async function fetchClobBestPrices(tokenId: string): Promise<ClobBestPrices> {
-  const response = await fetch(`${getTradingHost()}/book?token_id=${encodeURIComponent(tokenId)}`, {
+  const response = await serverFetch(`${getTradingHost()}/book?token_id=${encodeURIComponent(tokenId)}`, {
     cache: "no-store",
   });
 
@@ -188,7 +189,7 @@ export async function fetchUserOpenOrders({
   }
 
   const url = params.size > 0 ? `${getTradingHost()}${requestPath}?${params.toString()}` : `${getTradingHost()}${requestPath}`;
-  const response = await fetch(url, {
+  const response = await serverFetch(url, {
     method: "GET",
     headers: await createUserL2Headers({
       address,
@@ -219,7 +220,7 @@ export async function cancelUserOrder({
   const body = JSON.stringify({
     orderID: orderId,
   });
-  const response = await fetch(`${getTradingHost()}${requestPath}`, {
+  const response = await serverFetch(`${getTradingHost()}${requestPath}`, {
     method: "DELETE",
     headers: await createUserL2Headers({
       address,
@@ -258,7 +259,7 @@ export async function fetchUserPositions({
     params.set("market", conditionIds.join(","));
   }
 
-  const response = await fetch(`https://data-api.polymarket.com/positions?${params.toString()}`, {
+  const response = await serverFetch(`https://data-api.polymarket.com/positions?${params.toString()}`, {
     cache: "no-store",
   });
 
@@ -293,7 +294,7 @@ export async function postSignedUserOrder({
     postOnly: payload.postOnly ?? false,
     deferExec: payload.deferExec ?? false,
   });
-  const response = await fetch(`${getTradingHost()}${requestPath}`, {
+  const response = await serverFetch(`${getTradingHost()}${requestPath}`, {
     method: "POST",
     headers: await createUserL2Headers({
       address,
@@ -407,7 +408,7 @@ async function getBalanceAllowance({
     searchParams.set("token_id", params.token_id);
   }
 
-  const response = await fetch(`${getTradingHost()}${requestPath}?${searchParams.toString()}`, {
+  const response = await serverFetch(`${getTradingHost()}${requestPath}?${searchParams.toString()}`, {
     method: "GET",
     headers: await createUserL2Headers({
       address,
@@ -449,7 +450,7 @@ async function updateBalanceAllowance({
     searchParams.set("token_id", params.token_id);
   }
 
-  const response = await fetch(`${getTradingHost()}${requestPath}?${searchParams.toString()}`, {
+  const response = await serverFetch(`${getTradingHost()}${requestPath}?${searchParams.toString()}`, {
     method: "GET",
     headers: await createUserL2Headers({
       address,

@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-import type { TradingUserSession } from "@/types/market";
 import { prepareQuickBidAccount, QuickBidApprovalPendingError } from "@/components/trading/quick-bid-account-setup";
 import {
   formatQuickBidAmount,
@@ -10,42 +9,53 @@ import {
   writeActiveQuickBidWalletAddress,
   writeQuickBidAmount,
 } from "@/components/trading/quick-bid-amount";
-import {
-  connectTradingWallet,
-  disconnectTradingSession,
-  formatShortWalletAddress,
-  loadTradingSession,
-} from "@/components/trading/trading-wallet-session";
+import { formatShortWalletAddress } from "@/components/trading/trading-wallet-session";
+import { useAuth } from "@/context/auth";
 
 const loginButtonClassName =
   "inline-flex h-10 min-w-[168px] items-center justify-center gap-4 px-4 text-[13px] font-extrabold text-black disabled:cursor-wait disabled:opacity-70";
 
+const LOGIN_STEP_LABELS = {
+  requesting_wallet: "Connecting wallet…",
+  checking_wallet_deployment: "Checking deposit wallet…",
+  wallet_already_deployed: "Deposit wallet already deployed",
+  deploying_wallet: "Deploying wallet…",
+  awaiting_session_signature: "Awaiting session signature…",
+  creating_session: "Creating session…",
+  checking_clob_credentials: "Checking credentials…",
+  clob_already_derived: "Trading already enabled",
+  checking_trading_chain: "Checking network…",
+  switching_trading_chain: "Switching to Polygon…",
+  awaiting_clob_signature: "Awaiting CLOB signature…",
+  deriving_credentials: "Deriving credentials…",
+  checking_token_approval: "Checking token approval…",
+  tokens_already_authorized: "Tokens already authorized",
+  awaiting_token_approval_signature: "Awaiting token approval signature…",
+  submitting_token_approval: "Submitting token approval…",
+  verifying_readiness: "Verifying readiness…",
+} as const;
+
 export function WalletMenuButton() {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [session, setSession] = useState<TradingUserSession | undefined>();
-  const [isConnecting, setIsConnecting] = useState(false);
+  const {
+    session,
+    hydrated,
+    isAuthenticated,
+    loginInProgress,
+    loginStep,
+    error,
+    openLogin,
+    disconnect,
+  } = useAuth();
   const [isPreparingQuickBid, setIsPreparingQuickBid] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [quickBidAmount, setQuickBidAmount] = useState(() => readQuickBidAmount());
   const [message, setMessage] = useState<string | undefined>();
 
   useEffect(() => {
-    let ignore = false;
-
-    loadTradingSession()
-      .then((record) => {
-        if (!ignore) {
-          setSession(record);
-          writeActiveQuickBidWalletAddress(record?.walletAddress);
-          setQuickBidAmount(readQuickBidAmount(record?.walletAddress));
-        }
-      })
-      .catch(() => undefined);
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
+    writeActiveQuickBidWalletAddress(session?.walletAddress);
+    setQuickBidAmount(readQuickBidAmount(session?.walletAddress));
+  }, [session?.walletAddress]);
 
   useEffect(() => {
     return subscribeQuickBidAmountChange(() => {
@@ -71,25 +81,19 @@ export function WalletMenuButton() {
     };
   }, [isOpen]);
 
-  async function connectWallet() {
+  async function handleLogin() {
     setMessage(undefined);
-    setIsConnecting(true);
 
     try {
-      const nextSession = await connectTradingWallet();
-      setSession(nextSession);
-      writeActiveQuickBidWalletAddress(nextSession.walletAddress);
-      setQuickBidAmount(readQuickBidAmount(nextSession.walletAddress));
+      await openLogin();
       setIsOpen(false);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsConnecting(false);
+    } catch (loginError) {
+      setMessage(loginError instanceof Error ? loginError.message : String(loginError));
     }
   }
 
   async function enableQuickBid() {
-    if (!session) {
+    if (!session || !isAuthenticated) {
       return;
     }
 
@@ -118,36 +122,52 @@ export function WalletMenuButton() {
     setMessage(undefined);
 
     try {
-      await disconnectTradingSession();
-      setSession(undefined);
+      await disconnect();
       writeActiveQuickBidWalletAddress(undefined);
       setIsOpen(false);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : String(error));
+    } catch (logoutError) {
+      setMessage(logoutError instanceof Error ? logoutError.message : String(logoutError));
     }
   }
 
-  const loginLabel = isConnecting
-    ? "Connecting..."
-    : session
-      ? formatShortWalletAddress(session.walletAddress)
-      : "Login";
+  const loginLabel = !hydrated
+    ? "Login"
+    : loginInProgress
+      ? loginStep
+        ? LOGIN_STEP_LABELS[loginStep]
+        : "Connecting..."
+      : isAuthenticated && session
+        ? formatShortWalletAddress(session.walletAddress)
+        : session
+          ? formatShortWalletAddress(session.walletAddress)
+          : "Login";
 
-  if (!session) {
+  if (!hydrated) {
+    return (
+      <div className="relative inline-flex flex-col items-end">
+        <button type="button" className={loginButtonClassName} disabled>
+          <LoginIcon />
+          <span>{loginLabel}</span>
+        </button>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return (
       <div className="relative inline-flex flex-col items-end">
         <button
           type="button"
           className={loginButtonClassName}
-          onClick={connectWallet}
-          disabled={isConnecting}
+          onClick={() => void handleLogin()}
+          disabled={loginInProgress}
         >
           <LoginIcon />
           <span>{loginLabel}</span>
         </button>
-        {message ? (
+        {(message ?? error) ? (
           <p className="mt-2 max-w-[220px] text-right text-xs text-prophet-red">
-            {message}
+            {message ?? error}
           </p>
         ) : null}
       </div>
@@ -161,10 +181,17 @@ export function WalletMenuButton() {
         className={loginButtonClassName}
         aria-haspopup="menu"
         aria-expanded={isOpen}
+        disabled={loginInProgress}
         onClick={() => setIsOpen((value) => !value)}
       >
         <LoginIcon />
-        <span>{loginLabel}</span>
+        <span>
+          {loginInProgress
+            ? loginStep
+              ? LOGIN_STEP_LABELS[loginStep]
+              : "Connecting..."
+            : formatShortWalletAddress(session!.walletAddress)}
+        </span>
       </button>
 
       {isOpen ? (
@@ -189,7 +216,7 @@ export function WalletMenuButton() {
 
                   setQuickBidAmount(nextAmount);
 
-                  if (Number(nextAmount) > 0) {
+                  if (Number(nextAmount) > 0 && session) {
                     writeQuickBidAmount(nextAmount, session.walletAddress);
                   }
                 }}
@@ -210,7 +237,7 @@ export function WalletMenuButton() {
             type="button"
             role="menuitem"
             className="block w-full rounded px-2 py-2 text-left text-sm hover:bg-[#f3f8fd]"
-            onClick={logout}
+            onClick={() => void logout()}
           >
             Logout
           </button>

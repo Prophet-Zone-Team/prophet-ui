@@ -2,23 +2,20 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { useAuth } from "@/context/auth";
 import { fetchJson } from "@/lib/team/client-fetch";
 import type { PortfolioLoadStatus } from "@/lib/portfolio/types";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
 import type {
-  TradingUserSession,
   UserOrderRecord,
   UserPositionRecord,
   UserTradingReadiness
 } from "@/types/market";
-import {
-  connectTradingWallet,
-  loadTradingSession
-} from "@/components/trading/trading-wallet-session";
 
 export interface UsePortfolioDataResult {
-  session: TradingUserSession | undefined;
+  session: ReturnType<typeof useAuth>["session"];
   readiness: UserTradingReadiness | undefined;
+  isAuthenticated: boolean;
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
   orderHistory: UserOrderRecord[];
@@ -29,7 +26,7 @@ export interface UsePortfolioDataResult {
 }
 
 export function usePortfolioData(): UsePortfolioDataResult {
-  const [session, setSession] = useState<TradingUserSession | undefined>();
+  const { session, isAuthenticated, openLogin } = useAuth();
   const [readiness, setReadiness] = useState<UserTradingReadiness | undefined>();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
@@ -42,10 +39,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     setMessage(undefined);
 
     try {
-      const tradingSession = await loadTradingSession();
-      setSession(tradingSession);
-
-      if (!tradingSession) {
+      if (!session) {
         setPositions([]);
         setOpenOrders([]);
         setOrderHistory([]);
@@ -102,7 +96,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     void loadPortfolio();
@@ -113,32 +107,18 @@ export function usePortfolioData(): UsePortfolioDataResult {
     setMessage(undefined);
 
     try {
-      setSession(await connectTradingWallet());
+      await openLogin();
       await loadPortfolio();
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [loadPortfolio]);
-
-  // FIXME
-  useEffect(() => {
-    if (!session) {
-      return;
-    }
-    console.log(session)
-    const url = new URL("https://gamma-api.polymarket.com/public-profile");
-    url.searchParams.set("address", session.walletAddress);
-    fetch(url.toString()).then((res) => {
-      console.log(res)
-    }).catch((error) => {
-      console.log(error)
-    })
-  }, [session]);
+  }, [loadPortfolio, openLogin]);
 
   return {
     session,
     readiness,
+    isAuthenticated,
     positions,
     openOrders,
     orderHistory,

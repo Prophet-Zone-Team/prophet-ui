@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import {
   deriveUserClobCredentials,
   getFreshClobAuthTypedData,
+  isClobUnreachableError,
   recoverClobAuthSignerAddress,
 } from "@/server/trading/clob-auth";
 import { recordTradingAuditEvent } from "@/server/trading/order-store";
@@ -36,11 +37,26 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json({
-    challenge: await getFreshClobAuthTypedData({
+  try {
+    return NextResponse.json({
+      challenge: await getFreshClobAuthTypedData({
+        walletAddress: record.session.walletAddress,
+      }),
+    });
+  } catch (error) {
+    console.warn("[trading.credentials] challenge failed", {
+      userId: record.session.userId,
       walletAddress: record.session.walletAddress,
-    }),
-  });
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 502 },
+    );
+  }
 }
 
 export async function POST(request: Request) {
@@ -60,11 +76,26 @@ export async function POST(request: Request) {
   const payload = (await request.json()) as CredentialPayload;
 
   if (payload.mode === "challenge") {
-    return NextResponse.json({
-      challenge: await getFreshClobAuthTypedData({
+    try {
+      return NextResponse.json({
+        challenge: await getFreshClobAuthTypedData({
+          walletAddress: record.session.walletAddress,
+        }),
+      });
+    } catch (error) {
+      console.warn("[trading.credentials] challenge failed", {
+        userId: record.session.userId,
         walletAddress: record.session.walletAddress,
-      }),
-    });
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      return NextResponse.json(
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        { status: 502 },
+      );
+    }
   }
 
   const validationError = validateDerivePayload(payload);
@@ -148,11 +179,13 @@ export async function POST(request: Request) {
       error: error instanceof Error ? error.message : String(error),
     });
 
+    const message = error instanceof Error ? error.message : String(error);
+
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : String(error),
+        error: message,
       },
-      { status: 502 },
+      { status: isClobUnreachableError(message) ? 503 : 502 },
     );
   }
 }

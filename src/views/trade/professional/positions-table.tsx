@@ -9,10 +9,7 @@ import {
   formatTeamDetailMoney
 } from "@/lib/team/detail-format";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
-import {
-  connectTradingWallet,
-  loadTradingSession
-} from "@/components/trading/trading-wallet-session";
+import { useAuth } from "@/context/auth";
 import { tradeBidButtonClass } from "@/views/trade/trade-widget/trade-ui";
 
 export interface PositionsTableProps {
@@ -27,9 +24,9 @@ function getTeamTokenIds(snapshot: TeamMarketSnapshot): string[] {
 }
 
 export function PositionsTable({ snapshot }: PositionsTableProps) {
+  const { isAuthenticated, openLogin } = useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [needsWallet, setNeedsWallet] = useState(false);
   const tokenIds = useMemo(() => getTeamTokenIds(snapshot), [snapshot]);
 
   useEffect(() => {
@@ -39,11 +36,8 @@ export function PositionsTable({ snapshot }: PositionsTableProps) {
       setLoading(true);
 
       try {
-        const session = await loadTradingSession();
-
-        if (!session) {
+        if (!isAuthenticated) {
           if (!ignore) {
-            setNeedsWallet(true);
             setPositions([]);
           }
           return;
@@ -57,7 +51,6 @@ export function PositionsTable({ snapshot }: PositionsTableProps) {
         );
 
         if (!ignore) {
-          setNeedsWallet(false);
           setPositions(filtered);
         }
       } catch {
@@ -76,13 +69,13 @@ export function PositionsTable({ snapshot }: PositionsTableProps) {
     return () => {
       ignore = true;
     };
-  }, [tokenIds]);
+  }, [isAuthenticated, tokenIds]);
 
   if (loading) {
     return <p className="px-4 py-8 text-center text-sm text-prophet-muted">Loading positions…</p>;
   }
 
-  if (needsWallet) {
+  if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center gap-3 px-4 py-10">
         <p className="m-0 text-sm text-prophet-muted">
@@ -91,7 +84,7 @@ export function PositionsTable({ snapshot }: PositionsTableProps) {
         <button
           type="button"
           className={cn(tradeBidButtonClass, "max-w-xs")}
-          onClick={() => void connectTradingWallet().then(() => window.location.reload())}
+          onClick={() => void openLogin()}
         >
           Connect Wallet
         </button>

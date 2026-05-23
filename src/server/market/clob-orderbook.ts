@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getTradingHost } from "@/server/trading/clob-auth";
+import { serverFetch } from "@/server/trading/server-fetch";
 
 export interface OrderbookLevel {
   price: number;
@@ -44,7 +45,7 @@ function parseLevels(
 export async function fetchMarketOrderbook(
   tokenId: string
 ): Promise<MarketOrderbook> {
-  const response = await fetch(
+  const response = await serverFetch(
     `${getTradingHost()}/book?token_id=${encodeURIComponent(tokenId)}`,
     { cache: "no-store" }
   );

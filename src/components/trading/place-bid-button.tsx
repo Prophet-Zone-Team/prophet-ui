@@ -9,7 +9,7 @@ import { teamTradeHref } from "@/lib/routes/trade";
 import { buildBidOrderPreview, type BidOrderPreview } from "@/lib/market/polymarket-order";
 import { calculateReferencePrice } from "@/lib/market/order-math";
 import { attachUserOrderSignature, buildUserOrderSignablePayload } from "@/lib/market/user-order";
-import type { TeamMarketSnapshot, TradingUserSession, UserOrderPreview, UserTradingReadiness } from "@/types/market";
+import type { TeamMarketSnapshot, UserOrderPreview, UserTradingReadiness } from "@/types/market";
 import {
   fetchJson,
   getQuickBidSetupIssue,
@@ -22,7 +22,7 @@ import {
   writeQuickBidAmount,
 } from "@/components/trading/quick-bid-amount";
 import { getOrCreateQuickBidSessionSigner, signQuickBidOrder } from "@/components/trading/quick-bid-session-signer";
-import { loadTradingSession } from "@/components/trading/trading-wallet-session";
+import { useAuthOptional } from "@/context/auth";
 
 type QuickBidStatus = "idle" | "checking" | "submitting" | "success" | "error";
 
@@ -46,10 +46,10 @@ export function PlaceBidButton({
   snapshot,
   navigateToTrade = false
 }: PlaceBidButtonProps) {
+  const auth = useAuthOptional();
   const [amount, setAmount] = useState(() => readQuickBidAmount());
   const [status, setStatus] = useState<QuickBidStatus>("idle");
   const [message, setMessage] = useState<string>();
-  const [session, setSession] = useState<TradingUserSession>();
   const shouldShowAmount = isQuickBidLabel(children);
   const buttonText = useMemo(() => {
     if (status === "checking") {
@@ -100,16 +100,20 @@ export function PlaceBidButton({
     setMessage(`Checking Quick Bid readiness for ${snapshot.team.name}.`);
 
     try {
-      const activeSession = await loadTradingSession();
-      setSession(activeSession);
+      let session = auth?.session;
 
-      const setupIssue = await getQuickBidSetupIssue(activeSession);
+      if (!auth?.isAuthenticated || !session) {
+        const loginResult = await auth?.openLogin();
+        session = loginResult?.session;
+      }
+
+      const setupIssue = await getQuickBidSetupIssue(session);
 
       if (setupIssue) {
         throw new Error(setupIssue);
       }
 
-      if (!activeSession?.funderAddress) {
+      if (!session?.funderAddress) {
         throw new Error("Trading session is missing a Polymarket deposit wallet.");
       }
 
@@ -129,11 +133,11 @@ export function PlaceBidButton({
         throw new Error(readinessError);
       }
 
-      const signer = getOrCreateQuickBidSessionSigner(activeSession.walletAddress);
+      const signer = getOrCreateQuickBidSessionSigner(session.walletAddress);
       const signable = buildUserOrderSignablePayload({
         preview,
-        walletAddress: activeSession.walletAddress,
-        funderAddress: activeSession.funderAddress,
+        walletAddress: session.walletAddress,
+        funderAddress: session.funderAddress,
         orderType: "FAK",
         builderCode: config.builderCode,
       });
@@ -214,7 +218,11 @@ export function PlaceBidButton({
         >
           <span>{status === "error" ? "Quick Bid blocked" : status === "success" ? "Quick Bid submitted" : "Quick Bid"}</span>
           <strong>{message}</strong>
-          {session ? <small>{session.walletAddress.slice(0, 6)}...{session.walletAddress.slice(-4)}</small> : null}
+          {auth?.session ? (
+            <small>
+              {auth.session.walletAddress.slice(0, 6)}...{auth.session.walletAddress.slice(-4)}
+            </small>
+          ) : null}
         </div>
       ) : null}
     </>

@@ -9,7 +9,8 @@ import { teamTradeHref } from "@/lib/routes/trade";
 import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "@/types/market";
 import { DataStatusBanner, SourceDisclosure } from "@/components/data/data-status-banner";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "@/components/home/market-formatters";
-import { connectTradingWallet, loadTradingSession } from "@/components/trading/trading-wallet-session";
+import { useAuthOptional } from "@/context/auth";
+import { fetchJson } from "@/lib/team/client-fetch";
 
 interface FeedPageProps {
   snapshots: TeamMarketSnapshot[];
@@ -18,23 +19,40 @@ interface FeedPageProps {
 }
 
 export function FeedPage({ snapshots, newsEvents, dataStatus }: FeedPageProps) {
+  const auth = useAuthOptional();
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
   const signals = useMemo(() => generateMarketSignals(snapshots, newsEvents).slice(0, 24), [snapshots, newsEvents]);
   const topConfidence = signals.reduce((max, signal) => Math.max(max, signal.confidence), 0);
 
   useEffect(() => {
-    loadTradingSession()
-      .then((session) => session ? fetchJson<{ favourites: UserFavourite[] }>("/api/favourites") : { favourites: [] })
-      .then((payload) => setWatchlistIds(payload.favourites.filter((item) => item.entityType === "team").map((item) => item.entityId)))
+    if (!auth?.session) {
+      setWatchlistIds([]);
+      return;
+    }
+
+    fetchJson<{ favourites: UserFavourite[] }>("/api/favourites")
+      .then((payload) =>
+        setWatchlistIds(payload.favourites.filter((item) => item.entityType === "team").map((item) => item.entityId)),
+      )
       .catch(() => undefined);
-  }, []);
+  }, [auth?.session?.walletAddress]);
 
   async function addToWatchlist(teamId: string) {
     if (watchlistIds.includes(teamId)) {
       return;
     }
 
-    await connectTradingWallet();
+    let activeSession = auth?.session;
+
+    if (!activeSession) {
+      const loginResult = await auth?.openLogin();
+      activeSession = loginResult?.session;
+    }
+
+    if (!activeSession) {
+      return;
+    }
+
     await fetchJson<{ favourite: UserFavourite }>("/api/favourites", {
       method: "POST",
       headers: {
@@ -247,15 +265,4 @@ function getTypeClassName(type: MarketSignal["type"]): string {
 
 function formatSignalType(type: MarketSignal["type"]): string {
   return type.replace(/_/g, " ");
-}
-
-async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, { cache: "no-store", ...init });
-  const payload = (await response.json()) as T & { error?: string };
-
-  if (!response.ok) {
-    throw new Error(payload.error ?? `Request failed: ${response.status}`);
-  }
-
-  return payload;
 }

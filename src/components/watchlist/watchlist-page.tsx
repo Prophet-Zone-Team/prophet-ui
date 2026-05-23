@@ -8,10 +8,11 @@ import { generateMarketSignals } from "@/lib/market/analyzer";
 import { createWatchlistAlerts } from "@/lib/market/brief";
 import { teamTradeHref } from "@/lib/routes/trade";
 import type { WatchlistAlert } from "@/lib/market/brief";
-import type { NewsEvent, TeamMarketSnapshot, TradingUserSession, UserFavourite } from "@/types/market";
+import type { NewsEvent, TeamMarketSnapshot, UserFavourite } from "@/types/market";
 import { DataStatusBanner, SourceDisclosure } from "@/components/data/data-status-banner";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "@/components/home/market-formatters";
-import { connectTradingWallet, loadTradingSession } from "@/components/trading/trading-wallet-session";
+import { useAuth } from "@/context/auth";
+import { fetchJson } from "@/lib/team/client-fetch";
 
 interface WatchlistPageProps {
   snapshots: TeamMarketSnapshot[];
@@ -20,14 +21,14 @@ interface WatchlistPageProps {
 }
 
 export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPageProps) {
+  const { session, isAuthenticated, openLogin } = useAuth();
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
-  const [session, setSession] = useState<TradingUserSession | undefined>();
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [message, setMessage] = useState<string | undefined>();
 
   useEffect(() => {
     void loadFavourites();
-  }, []);
+  }, [session?.walletAddress]);
 
   const watchedSnapshots = useMemo(
     () => watchlistIds.map((id) => snapshots.find((snapshot) => snapshot.team.id === id)).filter(isSnapshot),
@@ -44,10 +45,7 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
     setMessage(undefined);
 
     try {
-      const loadedSession = await loadTradingSession();
-      setSession(loadedSession);
-
-      if (!loadedSession) {
+      if (!session) {
         setWatchlistIds([]);
         setStatus("ready");
         return;
@@ -67,7 +65,7 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
     setMessage(undefined);
 
     try {
-      setSession(await connectTradingWallet());
+      await openLogin();
       await loadFavourites();
     } catch (error) {
       setStatus("error");
@@ -108,7 +106,7 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               <HeaderMetric label="Watched teams" value={String(watchedSnapshots.length)} />
               <HeaderMetric label="Favourite alerts" value={String(alerts.length)} />
-              <HeaderMetric label="Storage" value={session ? "Wallet synced" : "Connect wallet"} />
+              <HeaderMetric label="Storage" value={isAuthenticated ? "Wallet synced" : "Connect wallet"} />
             </div>
           </div>
         </section>
@@ -116,9 +114,9 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
         <SourceDisclosure compact />
         {message ? <p className="portfolio-message error">{message}</p> : null}
 
-        {session ? <WatchlistAlerts alerts={alerts} /> : null}
+        {isAuthenticated ? <WatchlistAlerts alerts={alerts} /> : null}
 
-        {!session ? (
+        {!isAuthenticated ? (
           <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8">
             <h2 className="font-display text-3xl text-terminal-text sm:text-4xl">Connect wallet to load favourites</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-terminal-muted">
@@ -309,15 +307,4 @@ function getSeverityClassName(severity: WatchlistAlert["severity"]): string {
   }
 
   return `${base} border-terminal-line text-terminal-muted`;
-}
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, { cache: "no-store" });
-  const payload = (await response.json()) as T & { error?: string };
-
-  if (!response.ok) {
-    throw new Error(payload.error ?? `Request failed: ${response.status}`);
-  }
-
-  return payload;
 }

@@ -51,6 +51,31 @@ export type DepositWalletStatus =
   | "relayer_unconfigured"
   | "error";
 
+export interface DepositWalletCheckResponse {
+  walletAddress: string;
+  deployed: boolean;
+  status: Extract<DepositWalletStatus, "deployed" | "derived" | "error">;
+  checkedAt: string;
+  error?: string;
+  source?: "relayer" | "onchain";
+}
+
+export interface DepositWalletDeployResponse {
+  walletAddress: string;
+  status: DepositWalletStatus;
+  checkedAt: string;
+  transactionId?: string;
+  transactionHash?: string;
+  error?: string;
+}
+
+export interface ClobHealthResponse {
+  reachable: boolean;
+  host: string;
+  checkedAt: string;
+  error?: string;
+}
+
 export type UserOrderStatus =
   | "previewed"
   | "submitted"

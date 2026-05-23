@@ -3,8 +3,14 @@ import "server-only";
 import { deriveDepositWallet, TransactionType } from "@polymarket/builder-relayer-client";
 import { BuilderConfig } from "@polymarket/builder-signing-sdk";
 
-import type { DepositWalletStatus, TradingUserSession } from "@/types/market";
+import type {
+  DepositWalletCheckResponse,
+  DepositWalletStatus,
+  TradingUserSession,
+} from "@/types/market";
 import { getTradingChainId } from "@/server/trading/clob-auth";
+import { isContractDeployedOnPolygon } from "@/server/trading/onchain-balances";
+import { serverFetch } from "@/server/trading/server-fetch";
 
 const DEFAULT_RELAYER_URL = "https://relayer-v2.polymarket.com";
 const RELAYER_TIMEOUT_MS = 8000;
@@ -54,14 +60,41 @@ interface RelayerTransactionRecord {
   type?: string;
 }
 
+export async function checkDepositWalletForOwner(
+  ownerAddress: string,
+): Promise<DepositWalletCheckResponse> {
+  const walletAddress = deriveDepositWalletForOwner(ownerAddress);
+  const checkedAt = new Date().toISOString();
+
+  try {
+    const deployment = await fetchDepositWalletDeployed(walletAddress);
+
+    return {
+      walletAddress,
+      deployed: deployment.deployed,
+      status: deployment.deployed ? "deployed" : "derived",
+      checkedAt,
+      source: deployment.source,
+    };
+  } catch (error) {
+    return {
+      walletAddress,
+      deployed: false,
+      status: "error",
+      checkedAt,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 export async function setupDepositWalletForOwner(ownerAddress: string): Promise<DepositWalletSetupResult> {
   const walletAddress = deriveDepositWalletForOwner(ownerAddress);
   const checkedAt = new Date().toISOString();
 
   try {
-    const deployed = await fetchDepositWalletDeployed(walletAddress);
+    const deployment = await fetchDepositWalletDeployed(walletAddress);
 
-    if (deployed) {
+    if (deployment.deployed) {
       return {
         walletAddress,
         status: "deployed",
@@ -111,9 +144,9 @@ export async function refreshDepositWalletDeployment(session: TradingUserSession
   }
 
   try {
-    const deployed = await fetchDepositWalletDeployed(session.funderAddress);
+    const deployment = await fetchDepositWalletDeployed(session.funderAddress);
 
-    if (deployed) {
+    if (deployment.deployed) {
       return {
         status: "deployed",
         checkedAt,
@@ -203,7 +236,7 @@ export async function fetchRelayerNonce(ownerAddress: string, signerType: Transa
   const url = new URL(`${getRelayerUrl()}/nonce`);
   url.searchParams.set("address", ownerAddress);
   url.searchParams.set("type", signerType);
-  const response = await fetch(url, {
+  const response = await serverFetch(url, {
     cache: "no-store",
     signal: AbortSignal.timeout(RELAYER_TIMEOUT_MS),
   });
@@ -222,10 +255,43 @@ export async function fetchRelayerNonce(ownerAddress: string, signerType: Transa
 }
 
 async function fetchDepositWalletDeployed(walletAddress: string) {
+  try {
+    const onchainDeployed = await isContractDeployedOnPolygon(walletAddress);
+
+    return {
+      deployed: onchainDeployed,
+      source: "onchain" as const,
+    };
+  } catch (onchainError) {
+    const onchainMessage = onchainError instanceof Error ? onchainError.message : String(onchainError);
+
+    console.warn("[deposit-wallet] on-chain deployed check failed; falling back to relayer", {
+      walletAddress,
+      error: onchainMessage,
+    });
+  }
+
+  try {
+    const relayerDeployed = await fetchDepositWalletDeployedFromRelayer(walletAddress);
+
+    return {
+      deployed: relayerDeployed,
+      source: "relayer" as const,
+    };
+  } catch (relayerError) {
+    const relayerMessage = relayerError instanceof Error ? relayerError.message : String(relayerError);
+
+    throw new Error(
+      `Unable to check deposit wallet deployment: on-chain and relayer checks failed (${relayerMessage}).`,
+    );
+  }
+}
+
+async function fetchDepositWalletDeployedFromRelayer(walletAddress: string) {
   const url = new URL(`${getRelayerUrl()}/deployed`);
   url.searchParams.set("address", walletAddress);
   url.searchParams.set("type", TransactionType.WALLET);
-  const response = await fetch(url, {
+  const response = await serverFetch(url, {
     cache: "no-store",
     signal: AbortSignal.timeout(RELAYER_TIMEOUT_MS),
   });
@@ -251,7 +317,7 @@ async function submitDepositWalletCreate(ownerAddress: string): Promise<RelayerS
 }
 
 export async function submitRelayerTransaction(body: string, errorPrefix = "Unable to submit relayer transaction"): Promise<RelayerSubmitResponse> {
-  const response = await fetch(`${getRelayerUrl()}/submit`, {
+  const response = await serverFetch(`${getRelayerUrl()}/submit`, {
     method: "POST",
     headers: await createRelayerHeaders("POST", "/submit", body),
     body,
@@ -321,7 +387,7 @@ function getDepositWalletContractConfig() {
 export async function fetchRelayerTransaction(transactionId: string): Promise<RelayerTransactionRecord | undefined> {
   const url = new URL(`${getRelayerUrl()}/transaction`);
   url.searchParams.set("id", transactionId);
-  const response = await fetch(url, {
+  const response = await serverFetch(url, {
     cache: "no-store",
     signal: AbortSignal.timeout(RELAYER_TIMEOUT_MS),
   });

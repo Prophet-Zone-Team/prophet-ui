@@ -15,7 +15,12 @@ import {
   type OrderFundingRequirement,
 } from "@/server/trading/balances";
 import { refreshDepositWalletDeployment } from "@/server/trading/deposit-wallet";
+import {
+  fetchOnchainCollateralSnapshot,
+  type OnchainCollateralSnapshot,
+} from "@/server/trading/onchain-balances";
 import { getTradingCredentialStatus, updateTradingSession } from "@/server/trading/session-store";
+import { isTradingTokenAllowanceAuthorized } from "@/lib/trading/trading-allowance-setup";
 
 export async function buildUserTradingReadiness({
   record,
@@ -28,21 +33,24 @@ export async function buildUserTradingReadiness({
 }): Promise<UserTradingReadiness> {
   const refreshedRecord = record ? await refreshDepositWalletSession(record) : undefined;
   const credentials = getTradingCredentialStatus(record?.session.userId, record?.session.sessionId);
+  const session = refreshedRecord?.session;
+  const onchainSnapshot = await fetchSetupOnchainSnapshot(session);
   const balances = refreshedRecord?.credentials
     ? await fetchUserBalanceSnapshot({
         session: refreshedRecord.session,
         credentials: refreshedRecord.credentials,
         tokenId,
       })
-    : undefined;
+    : toOnchainBalanceSnapshot(session, onchainSnapshot);
   const resolvedFundingRequirement =
     fundingRequirement && tokenId
       ? await resolveOrderFundingRequirementWithFees(fundingRequirement, tokenId)
       : fundingRequirement;
   const checks = createChecks({
-    session: refreshedRecord?.session,
+    session,
     hasCredentials: credentials.hasClobCredentials,
     balances,
+    onchainAllowances: onchainSnapshot?.allowances,
     fundingRequirement: resolvedFundingRequirement,
   });
 
@@ -60,16 +68,23 @@ function createChecks({
   session,
   hasCredentials,
   balances,
+  onchainAllowances,
   fundingRequirement,
 }: {
   session?: TradingUserSession;
   hasCredentials: boolean;
   balances?: UserBalanceSnapshot;
+  onchainAllowances?: OnchainCollateralSnapshot["allowances"];
   fundingRequirement?: OrderFundingRequirement;
 }): AccountReadinessCheck[] {
   const funding = checkOrderFunding({
     balances,
     requirement: fundingRequirement,
+  });
+  const setupAllowanceStatus = getSetupAllowanceCheckStatus({
+    balances,
+    onchainAllowances,
+    hasCredentials,
   });
 
   return [
@@ -118,10 +133,71 @@ function createChecks({
     {
       id: "allowance",
       label: getAllowanceLabel(fundingRequirement?.tradeSide),
-      status: funding?.allowance ?? (balances?.usdcAllowance !== undefined ? "pass" : hasCredentials ? "fail" : "unknown"),
-      detail: funding?.allowanceDetail ?? getReadableAllowanceDetail({ balances, hasCredentials }),
+      status: funding?.allowance ?? setupAllowanceStatus,
+      detail:
+        funding?.allowanceDetail ??
+        getReadableAllowanceDetail({ balances, hasCredentials, onchainAllowances }),
     },
   ];
+}
+
+async function fetchSetupOnchainSnapshot(session: TradingUserSession | undefined) {
+  if (session?.depositWalletStatus !== "deployed" || !session.funderAddress) {
+    return undefined;
+  }
+
+  return fetchOnchainCollateralSnapshot(session.funderAddress);
+}
+
+function toOnchainBalanceSnapshot(
+  session: TradingUserSession | undefined,
+  onchainSnapshot: OnchainCollateralSnapshot | undefined,
+): UserBalanceSnapshot | undefined {
+  if (!session || !onchainSnapshot || onchainSnapshot.error) {
+    return onchainSnapshot?.error
+      ? {
+          walletAddress: session?.walletAddress ?? "",
+          funderAddress: session?.funderAddress,
+          updatedAt: onchainSnapshot.updatedAt,
+          error: onchainSnapshot.error,
+        }
+      : undefined;
+  }
+
+  return {
+    walletAddress: session.walletAddress,
+    funderAddress: session.funderAddress,
+    usdcAvailable: onchainSnapshot.usdcAvailable,
+    usdcAllowance: onchainSnapshot.usdcAllowance,
+    onchainUsdcAvailable: onchainSnapshot.usdcAvailable,
+    onchainUsdcAllowance: onchainSnapshot.usdcAllowance,
+    balanceSource: "onchain",
+    updatedAt: onchainSnapshot.updatedAt,
+  };
+}
+
+function getSetupAllowanceCheckStatus({
+  balances,
+  onchainAllowances,
+  hasCredentials,
+}: {
+  balances?: UserBalanceSnapshot;
+  onchainAllowances?: OnchainCollateralSnapshot["allowances"];
+  hasCredentials: boolean;
+}): AccountReadinessCheck["status"] {
+  if (isTradingTokenAllowanceAuthorized(onchainAllowances)) {
+    return "pass";
+  }
+
+  if (onchainAllowances) {
+    return "fail";
+  }
+
+  if (balances?.error) {
+    return "unknown";
+  }
+
+  return hasCredentials || balances ? "fail" : "unknown";
 }
 
 async function refreshDepositWalletSession(record: TradingSessionRecord): Promise<TradingSessionRecord> {
@@ -255,10 +331,32 @@ function getReadableBalanceDetail({
 function getReadableAllowanceDetail({
   balances,
   hasCredentials,
+  onchainAllowances,
 }: {
   balances?: UserBalanceSnapshot;
   hasCredentials: boolean;
+  onchainAllowances?: OnchainCollateralSnapshot["allowances"];
 }) {
+  if (isTradingTokenAllowanceAuthorized(onchainAllowances)) {
+    return "Required USDC allowances are approved on-chain for trading.";
+  }
+
+  if (onchainAllowances) {
+    const missing = [
+      onchainAllowances.conditionalTokens === undefined || onchainAllowances.conditionalTokens <= 0
+        ? "conditional tokens"
+        : undefined,
+      onchainAllowances.exchange === undefined || onchainAllowances.exchange <= 0 ? "exchange" : undefined,
+      onchainAllowances.negRiskExchange === undefined || onchainAllowances.negRiskExchange <= 0
+        ? "neg-risk exchange"
+        : undefined,
+    ].filter(Boolean);
+
+    return missing.length > 0
+      ? `Missing on-chain USDC allowance for ${missing.join(", ")}.`
+      : "Required USDC allowances are not approved yet.";
+  }
+
   if (balances?.usdcAllowance !== undefined) {
     return formatBalanceSourceDetail({
       value: balances.usdcAllowance,

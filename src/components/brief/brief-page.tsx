@@ -12,7 +12,8 @@ import type { WatchlistAlert } from "@/lib/market/brief";
 import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "@/types/market";
 import { DataStatusBanner, SourceDisclosure } from "@/components/data/data-status-banner";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "@/components/home/market-formatters";
-import { loadTradingSession } from "@/components/trading/trading-wallet-session";
+import { useAuthOptional } from "@/context/auth";
+import { fetchJson } from "@/lib/team/client-fetch";
 
 interface BriefPageProps {
   snapshots: TeamMarketSnapshot[];
@@ -21,6 +22,7 @@ interface BriefPageProps {
 }
 
 export function BriefPage({ snapshots, newsEvents, dataStatus }: BriefPageProps) {
+  const auth = useAuthOptional();
   const [watchlistIds, setWatchlistIds] = useState<string[]>([]);
   const signals = useMemo(() => generateMarketSignals(snapshots, newsEvents), [snapshots, newsEvents]);
   const topMovers = useMemo(() => getTopMovers(snapshots, 5), [snapshots]);
@@ -47,9 +49,7 @@ export function BriefPage({ snapshots, newsEvents, dataStatus }: BriefPageProps)
     let cancelled = false;
 
     async function loadFavourites() {
-      const session = await loadTradingSession();
-
-      if (!session) {
+      if (!auth?.session) {
         if (!cancelled) {
           setWatchlistIds([]);
         }
@@ -74,7 +74,7 @@ export function BriefPage({ snapshots, newsEvents, dataStatus }: BriefPageProps)
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [auth?.session?.walletAddress]);
 
   async function exportMarkdown() {
     if (navigator.clipboard) {
@@ -361,14 +361,4 @@ function getSeverityClassName(severity: WatchlistAlert["severity"]): string {
 
 function formatSignalType(type: MarketSignal["type"]): string {
   return type.replace(/_/g, " ");
-}
-
-async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
-  const response = await fetch(input, init);
-
-  if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
-  }
-
-  return response.json() as Promise<T>;
 }

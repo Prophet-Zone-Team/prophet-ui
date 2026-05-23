@@ -4,9 +4,20 @@ import type { ApiKeyCreds } from "@polymarket/clob-client-v2";
 import { recoverTypedDataAddress } from "viem";
 import type { Hex } from "viem";
 
+import { serverFetch } from "@/server/trading/server-fetch";
+
 export const DEFAULT_TRADING_HOST = "https://clob.polymarket.com";
 const DEFAULT_CHAIN_ID = 137;
+const CLOB_FETCH_TIMEOUT_MS = 20000;
+const CLOB_CONNECTIVITY_TIMEOUT_MS = 8000;
 const CLOB_AUTH_MESSAGE = "This message attests that I control the given wallet";
+
+export interface ClobHealthResult {
+  reachable: boolean;
+  host: string;
+  checkedAt: string;
+  error?: string;
+}
 
 interface L1AuthHeaders extends Record<string, string> {
   POLY_ADDRESS: string;
@@ -119,13 +130,78 @@ export async function recoverClobAuthSignerAddress(input: DeriveUserClobCredenti
   });
 }
 
+export async function probeClobApiReachability(): Promise<ClobHealthResult> {
+  const host = getTradingHost();
+  const checkedAt = new Date().toISOString();
+
+  try {
+    const response = await serverFetch(`${host}/time`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(CLOB_CONNECTIVITY_TIMEOUT_MS),
+    });
+
+    if (!response.ok) {
+      return {
+        reachable: false,
+        host,
+        checkedAt,
+        error: `Polymarket CLOB /time returned ${response.status} ${response.statusText}.`,
+      };
+    }
+
+    return {
+      reachable: true,
+      host,
+      checkedAt,
+    };
+  } catch (error) {
+    return {
+      reachable: false,
+      host,
+      checkedAt,
+      error: formatClobFetchError("checking CLOB connectivity", error),
+    };
+  }
+}
+
+export function isClobUnreachableError(message: string) {
+  return /CLOB API unreachable/i.test(message);
+}
+
+export function formatClobFetchError(operation: string, error: unknown) {
+  const host = getTradingHost();
+  const detail = error instanceof Error ? error.message : String(error);
+  const proxyHint =
+    process.env.NODE_ENV === "development" && !hasDevelopmentProxyConfigured()
+      ? " In development, set HTTPS_PROXY if Polymarket APIs require a local proxy."
+      : "";
+
+  return `Polymarket CLOB API unreachable at ${host} while ${operation}. Check server network access or POLYMARKET_CLOB_HOST.${proxyHint} (${detail})`;
+}
+
+function hasDevelopmentProxyConfigured() {
+  return Boolean(
+    process.env.HTTPS_PROXY?.trim() ||
+      process.env.https_proxy?.trim() ||
+      process.env.HTTP_PROXY?.trim() ||
+      process.env.http_proxy?.trim(),
+  );
+}
+
 export async function deriveUserClobCredentials(input: DeriveUserClobCredentialsInput): Promise<ApiKeyCreds> {
   const headers = createL1AuthHeaders(input);
-  const createResponse = await fetch(`${getTradingHost()}/auth/api-key`, {
-    method: "POST",
-    headers,
-    cache: "no-store",
-  });
+  let createResponse: Response;
+
+  try {
+    createResponse = await serverFetch(`${getTradingHost()}/auth/api-key`, {
+      method: "POST",
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(CLOB_FETCH_TIMEOUT_MS),
+    });
+  } catch (error) {
+    throw new Error(formatClobFetchError("creating user CLOB credentials", error));
+  }
 
   if (createResponse.ok) {
     const credentials = tryToApiKeyCreds(await createResponse.json());
@@ -139,11 +215,18 @@ export async function deriveUserClobCredentials(input: DeriveUserClobCredentials
     ? "CLOB create credential response was missing key, secret, or passphrase."
     : await readResponseError(createResponse);
 
-  const deriveResponse = await fetch(`${getTradingHost()}/auth/derive-api-key`, {
-    method: "GET",
-    headers,
-    cache: "no-store",
-  });
+  let deriveResponse: Response;
+
+  try {
+    deriveResponse = await serverFetch(`${getTradingHost()}/auth/derive-api-key`, {
+      method: "GET",
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(CLOB_FETCH_TIMEOUT_MS),
+    });
+  } catch (error) {
+    throw new Error(formatClobFetchError("deriving user CLOB credentials", error));
+  }
 
   if (deriveResponse.ok) {
     return toApiKeyCreds(await deriveResponse.json());
@@ -157,18 +240,33 @@ export async function deriveUserClobCredentials(input: DeriveUserClobCredentials
 }
 
 async function fetchClobServerTime() {
-  const response = await fetch(`${getTradingHost()}/time`, {
-    cache: "no-store",
-  });
+  try {
+    const response = await serverFetch(`${getTradingHost()}/time`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(CLOB_FETCH_TIMEOUT_MS)
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return Math.floor(Date.now() / 1000).toString();
+    }
+
+    const text = (await response.text()).trim();
+    const parsed = Number.parseInt(text, 10);
+
+    return Number.isFinite(parsed)
+      ? parsed.toString()
+      : Math.floor(Date.now() / 1000).toString();
+  } catch (error) {
+    console.warn(
+      "[trading.clob-auth] CLOB /time unavailable, using local timestamp",
+      {
+        host: getTradingHost(),
+        error: error instanceof Error ? error.message : String(error)
+      }
+    );
+
     return Math.floor(Date.now() / 1000).toString();
   }
-
-  const text = (await response.text()).trim();
-  const parsed = Number.parseInt(text, 10);
-
-  return Number.isFinite(parsed) ? parsed.toString() : Math.floor(Date.now() / 1000).toString();
 }
 
 function createL1AuthHeaders(input: DeriveUserClobCredentialsInput): L1AuthHeaders {

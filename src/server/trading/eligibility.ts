@@ -2,6 +2,7 @@ import "server-only";
 
 import type { TradingEligibilityStatus, TradingUserSession } from "@/types/market";
 import { updateTradingSession } from "@/server/trading/session-store";
+import { serverFetch } from "@/server/trading/server-fetch";
 
 const DEFAULT_GEOBLOCK_URL = "https://polymarket.com/api/geoblock";
 const GEOBLOCK_TIMEOUT_MS = 8000;
@@ -35,7 +36,7 @@ export async function checkTradingEligibility(clientIp?: string): Promise<Tradin
       headers["X-Forwarded-For"] = clientIp;
     }
 
-    const response = await fetch(getGeoblockUrl(), {
+    const response = await serverFetch(getGeoblockUrl(), {
       method: "GET",
       headers,
       cache: "no-store",

@@ -97,7 +97,7 @@ export async function getProviderAccounts(provider: EthereumProvider): Promise<s
   ].filter((account): account is string => Boolean(account && normalizeAddressOrUndefined(account)));
 }
 
-function getInjectedEthereumProviders() {
+function getInjectedEthereumProviders(): EthereumProvider[] {
   if (typeof window === "undefined") {
     return [];
   }
@@ -113,6 +113,33 @@ function getInjectedEthereumProviders() {
   ].filter((provider): provider is EthereumProvider => Boolean(provider));
 
   return [...new Set(providers)];
+}
+
+export { getInjectedEthereumProviders };
+
+export async function getAuthorizedWalletAccounts(): Promise<string[]> {
+  const providers = getInjectedEthereumProviders();
+  const accounts = new Set<string>();
+
+  for (const provider of providers) {
+    for (const account of await getProviderAccounts(provider)) {
+      accounts.add(account.toLowerCase());
+    }
+  }
+
+  return [...accounts];
+}
+
+export function isWalletAddressAuthorized(
+  walletAddress: string,
+  authorizedAccounts: string[],
+): boolean {
+  const normalized = walletAddress.toLowerCase();
+  return authorizedAccounts.some((account) => account === normalized);
+}
+
+export function getPrimaryAuthorizedWalletAccount(authorizedAccounts: string[]): string | undefined {
+  return authorizedAccounts[0];
 }
 
 export function getProviderLabel(provider: EthereumProvider) {

@@ -12,6 +12,8 @@ import {
   buildUserOrderSignablePayload
 } from "@/lib/market/user-order";
 import { formatProbability } from "@/components/home/market-formatters";
+import { formatShortWalletAddress } from "@/components/trading/trading-wallet-session";
+import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
@@ -19,15 +21,9 @@ import { signTypedData } from "@/lib/team/wallet-sign";
 import type {
   OrderOutcomeSide,
   TeamMarketSnapshot,
-  TradingUserSession,
   UserOrderPreview,
   UserTradingReadiness
 } from "@/types/market";
-import {
-  connectTradingWallet,
-  formatShortWalletAddress,
-  loadTradingSession
-} from "@/components/trading/trading-wallet-session";
 import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-button";
 import {
   tradeBidButtonClass,
@@ -46,13 +42,6 @@ interface TradingConfig {
   builderCode?: string;
 }
 
-interface TypedDataPayload {
-  domain: unknown;
-  types: Record<string, unknown>;
-  primaryType: string;
-  message: Record<string, unknown>;
-}
-
 const QUICK_AMOUNTS = [10, 50, 100] as const;
 
 export interface BuyPanelProps {
@@ -68,9 +57,9 @@ export function ActionPanel({
   orderMode,
   onOutcomeSideChange
 }: BuyPanelProps) {
+  const { session, isAuthenticated, openLogin } = useAuth();
   const yesPrice = snapshot.market.probability;
   const noPrice = Math.max(0, 100 - yesPrice);
-  const [session, setSession] = useState<TradingUserSession | undefined>();
   const [readiness, setReadiness] = useState<
     UserTradingReadiness | undefined
   >();
@@ -108,6 +97,7 @@ export function ActionPanel({
   const failedChecks =
     readiness?.checks.filter((check) => check.status === "fail") ?? [];
   const canSubmit =
+    isAuthenticated &&
     Boolean(session) &&
     readiness?.ready === true &&
     preview.canSubmitRealOrder &&
@@ -129,16 +119,14 @@ export function ActionPanel({
       setStatus("loading");
 
       try {
-        const [loadedSession, loadedConfig] = await Promise.all([
-          loadTradingSession(),
-          fetchJson<TradingConfig>("/api/trading/config")
-        ]);
+        const loadedConfig = await fetchJson<TradingConfig>(
+          "/api/trading/config"
+        );
 
         if (ignore) {
           return;
         }
 
-        setSession(loadedSession);
         setConfig(loadedConfig);
         setStatus("idle");
       } catch (error) {
@@ -200,61 +188,13 @@ export function ActionPanel({
     preview.tokenId
   ]);
 
-  async function connectWallet() {
-    setStatus("loading");
+  async function handleOpenLogin() {
     setMessage(undefined);
 
     try {
-      const nextSession = await connectTradingWallet();
-      setSession(nextSession);
+      await openLogin();
       setReadiness(await loadReadinessForPreview(preview));
       setStatus("idle");
-    } catch (error) {
-      setStatus("error");
-      setMessage(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  async function deriveCredentials() {
-    if (!session) {
-      return;
-    }
-
-    setStatus("signing");
-    setMessage(
-      "Sign the CLOB auth message in your wallet to derive user-specific API credentials."
-    );
-
-    try {
-      const { challenge } = await fetchJson<{ challenge: TypedDataPayload }>(
-        "/api/trading/credentials",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode: "challenge" })
-        }
-      );
-      const signature = await signTypedData(session.walletAddress, challenge);
-      const response = await fetchJson<{ credentials?: unknown }>(
-        "/api/trading/credentials",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            signature,
-            timestamp: String(challenge.message.timestamp ?? ""),
-            nonce: String(challenge.message.nonce ?? "0")
-          })
-        }
-      );
-
-      if (!response.credentials) {
-        throw new Error("User CLOB credentials were not returned.");
-      }
-
-      setReadiness(await loadReadinessForPreview(preview));
-      setStatus("idle");
-      setMessage("Trading credentials are ready for this connected account.");
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : String(error));
@@ -436,25 +376,14 @@ export function ActionPanel({
         </span>
       </div>
 
-      {!session ? (
+      {!isAuthenticated ? (
         <button
           type="button"
           className={tradeBidButtonClass}
           disabled={status === "loading"}
-          onClick={() => void connectWallet()}
+          onClick={() => void handleOpenLogin()}
         >
-          {status === "loading" ? "Connecting…" : "Connect Wallet"}
-        </button>
-      ) : readiness?.credentials.hasClobCredentials === false ? (
-        <button
-          type="button"
-          className={tradeBidButtonClass}
-          disabled={status === "signing"}
-          onClick={() => void deriveCredentials()}
-        >
-          {status === "signing"
-            ? "Waiting for signature…"
-            : "Enable Trading Credentials"}
+          Connect Wallet
         </button>
       ) : (
         <button
@@ -471,7 +400,7 @@ export function ActionPanel({
         </button>
       )}
 
-      {session ? (
+      {session && isAuthenticated ? (
         <p className="m-0 text-center text-xs text-prophet-muted">
           {formatShortWalletAddress(session.walletAddress)}
         </p>
