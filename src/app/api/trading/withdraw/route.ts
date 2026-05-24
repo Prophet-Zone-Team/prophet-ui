@@ -3,6 +3,8 @@ import { recoverTypedDataAddress } from "viem";
 
 import {
   buildWithdrawTransferBatch,
+  requiresWithdrawQuoteId,
+  resolveWithdrawBatchStrategy,
   type DepositWalletBatchSignablePayload,
 } from "@/lib/market/deposit-wallet-batch";
 import { getTradingChainId } from "@/server/trading/clob-auth";
@@ -10,7 +12,6 @@ import {
   createBridgeWithdrawalAddresses,
   fetchBridgeTransactionStatus,
 } from "@/server/trading/bridge";
-import { getTradingContractAddresses } from "@/server/trading/contracts";
 import {
   buildDepositWalletBatchRequest,
   fetchRelayerNonce,
@@ -69,6 +70,7 @@ export async function GET(request: Request) {
     const toTokenAddress = url.searchParams.get("toTokenAddress")?.trim();
     const recipientAddr = url.searchParams.get("recipientAddr")?.trim();
     const amount = url.searchParams.get("amount")?.trim();
+    const quoteId = url.searchParams.get("quoteId")?.trim();
 
     if (!toChainId || !toTokenAddress || !recipientAddr || !amount) {
       return NextResponse.json(
@@ -99,21 +101,50 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Bridge did not return a valid EVM withdrawal address." }, { status: 502 });
     }
 
+    const tradingChainId = getTradingChainId();
+
+    if (
+      requiresWithdrawQuoteId({ tradingChainId, toChainId, toTokenAddress }) &&
+      !quoteId
+    ) {
+      return NextResponse.json(
+        { error: "quoteId is required to prepare a same-chain USDC withdrawal." },
+        { status: 400 },
+      );
+    }
+
+    let strategy;
+
+    try {
+      strategy = resolveWithdrawBatchStrategy({
+        tradingChainId,
+        toChainId,
+        toTokenAddress,
+        bridgeRecipient,
+        quoteId,
+      });
+    } catch (strategyError) {
+      return NextResponse.json(
+        {
+          error: strategyError instanceof Error ? strategyError.message : String(strategyError),
+        },
+        { status: 400 },
+      );
+    }
+
     const nonce = await fetchRelayerNonce(record.session.walletAddress);
     const deadline = Math.floor(Date.now() / 1000 + 900).toString();
-    const contracts = getTradingContractAddresses();
 
     return NextResponse.json({
       withdrawal,
       funderAddress: record.session.funderAddress,
       transfer: buildWithdrawTransferBatch({
-        chainId: getTradingChainId(),
+        chainId: tradingChainId,
         walletAddress: record.session.funderAddress,
         nonce,
         deadline,
-        collateralToken: contracts.collateralToken,
-        recipientAddress: bridgeRecipient,
         amountBaseUnits,
+        strategy,
       }),
     });
   } catch (error) {
@@ -160,7 +191,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing signed withdrawal transfer payload." }, { status: 400 });
   }
 
-  if (submittedTransfer.walletAddress.toLowerCase() !== record.session.funderAddress.toLowerCase()) {
+  if (submittedTransfer.message.wallet.toLowerCase() !== record.session.funderAddress.toLowerCase()) {
     return NextResponse.json({ error: "Signed withdrawal wallet does not match the session deposit wallet." }, { status: 409 });
   }
 

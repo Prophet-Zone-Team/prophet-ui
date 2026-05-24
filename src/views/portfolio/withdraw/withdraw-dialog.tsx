@@ -45,6 +45,7 @@ import { FundingSelectorDropdown } from "@/views/portfolio/shared/funding-select
 import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import { usePortfolioContext } from "../context";
 import { POLYMARKET_USD } from "@/config/funding";
+import { requiresWithdrawQuoteId } from "@/lib/market/deposit-wallet-batch";
 import Big from "big.js";
 import { formatNumber, removeNumberEndZero } from "@/utils";
 
@@ -88,7 +89,8 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         return current;
       }
 
-      return chainOptions[0];
+      const defaultChain = chainOptions.find((chain) => chain.chainId === 137);
+      return defaultChain ?? chainOptions[0];
     });
   }, [open, chainOptions]);
 
@@ -110,26 +112,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   const amount = parseWithdrawAmount(amountInput);
   const maxAmount = portfolio?.availableToTrade ?? 0;
   const validationError = validateWithdrawAmount(amount, maxAmount);
-  const minCheckoutError =
-    selectedToken && amount !== undefined && amount > 0 && amount < selectedToken.minCheckoutUsd
-      ? `Minimum withdrawal is $${selectedToken.minCheckoutUsd}.`
-      : undefined;
-  const formError = validationError ?? minCheckoutError;
-
-  const isBusy =
-    submitting ||
-    status === "preparing" ||
-    status === "awaiting_wallet" ||
-    status === "polling" ||
-    status === "syncing";
-
-  const canSubmit =
-    !assetsLoading &&
-    !!session?.walletAddress &&
-    !!selectedToken &&
-    formError === undefined &&
-    amount !== undefined &&
-    !isBusy;
+  const formError = validationError;
 
   const quoteEnabled =
     open &&
@@ -155,6 +138,27 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     request: quoteRequest,
     enabled: quoteEnabled,
   });
+
+  const quoteIdError = quoteEnabled && !quoteLoading && !quote?.quoteId
+      ? "Bridge quote is required before withdrawing."
+      : undefined;
+
+  const isBusy =
+    submitting ||
+    status === "preparing" ||
+    status === "awaiting_wallet" ||
+    status === "polling" ||
+    status === "syncing";
+
+  const canSubmit =
+    !assetsLoading &&
+    !!session?.walletAddress &&
+    !!selectedToken &&
+    formError === undefined &&
+    quoteIdError === undefined &&
+    amount !== undefined &&
+    !!quote?.quoteId &&
+    !isBusy;
 
   const breakdown = quote ? mapQuoteToBreakdown(quote) : undefined;
 
@@ -224,6 +228,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         toTokenAddress: selectedToken.address,
         recipientAddr: session.walletAddress,
         amountUsd: amount,
+        quoteId: quote?.quoteId,
       });
 
       toast.success("Withdrawal submitted");
@@ -235,7 +240,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     } finally {
       setSubmitting(false);
     }
-  }, [amount, canSubmit, executeWithdraw, handleClose, reload, selectedToken, session?.walletAddress]);
+  }, [amount, canSubmit, executeWithdraw, handleClose, quote?.quoteId, reload, selectedToken, session?.walletAddress]);
 
   return (
     <Modal

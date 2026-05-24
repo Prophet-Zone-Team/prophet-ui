@@ -46,6 +46,7 @@ export interface BridgeWithdrawParams {
   toChainId: string;
   toTokenAddress: string;
   recipientAddr: string;
+  quoteId?: string;
 }
 
 export interface BridgeTransactionRecord {

@@ -146,12 +146,12 @@ export function DepositDialog({ open, onClose }: DepositDialogProps) {
       return false;
     }
     setContinueLoading(true);
-    const amountUsd = selectTokenUsdValue(prices, selectedToken.symbol, amount);
-    if (Big(amountUsd || 0).lt(selectedToken.minCheckoutUsd)) {
-      setContinueLoading(false);
-      toast.error(`${selectedToken.symbol} minimum deposit amount is $${selectedToken.minCheckoutUsd} or higher`);
-      return;
-    }
+    // const amountUsd = selectTokenUsdValue(prices, selectedToken.symbol, amount);
+    // if (Big(amountUsd || 0).lt(selectedToken.minCheckoutUsd)) {
+    //   setContinueLoading(false);
+    //   toast.error(`${selectedToken.symbol} minimum deposit amount is $${selectedToken.minCheckoutUsd} or higher`);
+    //   return;
+    // }
     setStep("confirm");
     setContinueLoading(false);
   };

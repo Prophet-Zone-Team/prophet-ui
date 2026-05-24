@@ -121,7 +121,13 @@ export function useWithdraw(): UseWithdrawResult {
     [bridgeStatus, fetchWithdrawStatus, finalizeIfCompleted, stopStatusPoll],
   );
 
-  const prepareWithdraw = useCallback(async ({ toChainId, toTokenAddress, recipientAddr, amountUsd }: BridgeWithdrawParams & { amountUsd: number }) => {
+  const prepareWithdraw = useCallback(async ({
+    toChainId,
+    toTokenAddress,
+    recipientAddr,
+    amountUsd,
+    quoteId,
+  }: BridgeWithdrawParams & { amountUsd: number }) => {
     setStatus("preparing");
     setError(undefined);
 
@@ -131,6 +137,10 @@ export function useWithdraw(): UseWithdrawResult {
       recipientAddr,
       amount: String(amountUsd),
     });
+
+    if (quoteId) {
+      search.set("quoteId", quoteId);
+    }
 
     try {
       const payload = await fetchJson<WithdrawPreparePayload>(`/api/trading/withdraw?${search.toString()}`);
@@ -160,8 +170,8 @@ export function useWithdraw(): UseWithdrawResult {
         },
         body: JSON.stringify({
           signature,
-          nonce: payload.transfer.nonce,
-          deadline: payload.transfer.deadline,
+          nonce: payload.transfer.message.nonce,
+          deadline: payload.transfer.message.deadline,
           transfer: payload.transfer,
         }),
       });
