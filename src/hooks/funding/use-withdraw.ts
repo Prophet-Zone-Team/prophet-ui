@@ -5,6 +5,9 @@ import { useCallback, useRef, useState } from "react";
 import { signTypedData } from "@/components/trading/quick-bid-account-setup";
 import { useAuth } from "@/context/auth";
 import {
+  resolveBridgeWithdrawDepositAddress,
+} from "@/lib/market/deposit-wallet-batch";
+import {
   isTerminalBridgeStatus,
   pollBridgeAddress,
 } from "@/lib/trading/bridge-status";
@@ -121,7 +124,12 @@ export function useWithdraw(): UseWithdrawResult {
     [bridgeStatus, fetchWithdrawStatus, finalizeIfCompleted, stopStatusPoll],
   );
 
-  const prepareWithdraw = useCallback(async ({ toChainId, toTokenAddress, recipientAddr, amountUsd }: BridgeWithdrawParams & { amountUsd: number }) => {
+  const prepareWithdraw = useCallback(async ({
+    toChainId,
+    toTokenAddress,
+    recipientAddr,
+    amountUsd,
+  }: BridgeWithdrawParams & { amountUsd: number }) => {
     setStatus("preparing");
     setError(undefined);
 
@@ -160,21 +168,17 @@ export function useWithdraw(): UseWithdrawResult {
         },
         body: JSON.stringify({
           signature,
-          nonce: payload.transfer.nonce,
-          deadline: payload.transfer.deadline,
+          nonce: payload.transfer.message.nonce,
+          deadline: payload.transfer.message.deadline,
           transfer: payload.transfer,
         }),
       });
 
-      const statusAddress = payload.withdrawal.address.evm;
-
-      if (!statusAddress) {
-        throw new Error("Bridge did not return an EVM withdrawal address.");
-      }
+      const statusAddress = resolveBridgeWithdrawDepositAddress(payload.withdrawal.address);
 
       return { statusAddress };
     },
-    [session?.walletAddress],
+    [session],
   );
 
   const executeWithdraw = useCallback(

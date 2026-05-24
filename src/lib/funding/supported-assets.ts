@@ -65,7 +65,8 @@ export function getDefaultTokenForChain(
   assets: FundingAsset[],
   chainId: number,
 ): FundingAsset | undefined {
-  return assets.find((asset) => asset.chainId === chainId);
+  const defaultToken = assets.find((asset) => asset.chainId === chainId && asset.symbol === "USDC");
+  return defaultToken ?? assets.find((asset) => asset.chainId === chainId);
 }
 
 export function getTokensForChain(assets: FundingAsset[], chainId: number): FundingAsset[] {

@@ -1,5 +1,9 @@
-import { encodeFunctionData, maxUint256 } from "viem";
+import { encodeFunctionData, getAddress, maxUint256 } from "viem";
 import type { Hex, TypedDataDomain, TypedDataParameter } from "viem";
+
+import { FundingNetworkType } from "@/config/funding/networks";
+import { POLYGON_COLLATERAL_CONTRACTS } from "@/lib/market/polymarket-collateral-contracts";
+import type { BridgeAddressSet } from "@/types/funding";
 
 export interface DepositWalletCall {
   target: string;
@@ -8,19 +12,15 @@ export interface DepositWalletCall {
 }
 
 export interface DepositWalletBatchSignablePayload {
-  walletAddress: string;
-  nonce: string;
-  deadline: string;
-  calls: DepositWalletCall[];
   domain: TypedDataDomain;
-  types: Record<string, TypedDataParameter[]>;
-  primaryType: "Batch";
   message: {
     wallet: string;
     nonce: string;
     deadline: string;
     calls: DepositWalletCall[];
   };
+  primaryType: "Batch";
+  types: Record<string, TypedDataParameter[]>;
 }
 
 const DEPOSIT_WALLET_DOMAIN_NAME = "DepositWallet";
@@ -71,6 +71,41 @@ const DEPOSIT_WALLET_SESSION_ABI = [
     outputs: [],
   },
 ] as const;
+
+export function resolveBridgeWithdrawDepositAddress(
+  addresses: BridgeAddressSet,
+  chainType: FundingNetworkType = FundingNetworkType.EVM,
+): string {
+  switch (chainType) {
+    case FundingNetworkType.SVM: {
+      const svmAddress = addresses.svm?.trim();
+
+      if (!svmAddress) {
+        throw new Error("Bridge did not return a Solana withdrawal address.");
+      }
+
+      return svmAddress;
+    }
+    case FundingNetworkType.BTC: {
+      const btcAddress = addresses.btc?.trim();
+
+      if (!btcAddress) {
+        throw new Error("Bridge did not return a Bitcoin withdrawal address.");
+      }
+
+      return btcAddress;
+    }
+    default: {
+      const evmAddress = addresses.evm?.trim();
+
+      if (!evmAddress || !/^0x[a-fA-F0-9]{40}$/.test(evmAddress)) {
+        throw new Error("Bridge did not return a valid EVM withdrawal address.");
+      }
+
+      return evmAddress;
+    }
+  }
+}
 
 export function buildTradingApprovalBatch({
   chainId,
@@ -128,38 +163,13 @@ export function buildTradingApprovalBatch({
     );
   }
 
-  return {
+  return buildDepositWalletBatchPayload({
+    chainId,
     walletAddress,
     nonce,
     deadline,
     calls,
-    domain: {
-      name: DEPOSIT_WALLET_DOMAIN_NAME,
-      version: DEPOSIT_WALLET_DOMAIN_VERSION,
-      chainId,
-      verifyingContract: walletAddress as `0x${string}`,
-    },
-    types: {
-      Batch: [
-        { name: "wallet", type: "address" },
-        { name: "nonce", type: "uint256" },
-        { name: "deadline", type: "uint256" },
-        { name: "calls", type: "Call[]" },
-      ],
-      Call: [
-        { name: "target", type: "address" },
-        { name: "value", type: "uint256" },
-        { name: "data", type: "bytes" },
-      ],
-    },
-    primaryType: "Batch",
-    message: {
-      wallet: walletAddress,
-      nonce,
-      deadline,
-      calls,
-    },
-  };
+  });
 }
 
 function createAuthorizeSessionSignerCall({
@@ -197,7 +207,7 @@ export function createErc20TransferCall({
     data: encodeFunctionData({
       abi: ERC20_ABI,
       functionName: "transfer",
-      args: [recipientAddress as `0x${string}`, amountBaseUnits],
+      args: [getAddress(recipientAddress), amountBaseUnits],
     }),
   };
 }
@@ -207,56 +217,78 @@ export function buildWithdrawTransferBatch({
   walletAddress,
   nonce,
   deadline,
-  collateralToken,
-  recipientAddress,
   amountBaseUnits,
+  bridgeRecipient,
 }: {
   chainId: number;
   walletAddress: string;
   nonce: string;
   deadline: string;
-  collateralToken: string;
-  recipientAddress: string;
   amountBaseUnits: bigint;
+  bridgeRecipient: string;
 }): DepositWalletBatchSignablePayload {
   const calls = [
     createErc20TransferCall({
-      tokenAddress: collateralToken,
-      recipientAddress,
+      tokenAddress: POLYGON_COLLATERAL_CONTRACTS.pUsd,
+      recipientAddress: bridgeRecipient,
       amountBaseUnits,
     }),
   ];
 
-  return {
+  return buildDepositWalletBatchPayload({
+    chainId,
     walletAddress,
     nonce,
     deadline,
     calls,
+  });
+}
+
+function buildDepositWalletBatchPayload({
+  chainId,
+  walletAddress,
+  nonce,
+  deadline,
+  calls,
+}: {
+  chainId: number;
+  walletAddress: string;
+  nonce: string;
+  deadline: string;
+  calls: DepositWalletCall[];
+}): DepositWalletBatchSignablePayload {
+  return {
     domain: {
       name: DEPOSIT_WALLET_DOMAIN_NAME,
       version: DEPOSIT_WALLET_DOMAIN_VERSION,
       chainId,
       verifyingContract: walletAddress as `0x${string}`,
     },
+    message: {
+      wallet: walletAddress,
+      nonce,
+      deadline,
+      calls,
+    },
+    primaryType: "Batch",
     types: {
-      Batch: [
-        { name: "wallet", type: "address" },
-        { name: "nonce", type: "uint256" },
-        { name: "deadline", type: "uint256" },
-        { name: "calls", type: "Call[]" },
+      EIP712Domain: [
+        { name: "name", type: "string" },
+        { name: "version", type: "string" },
+        { name: "chainId", type: "uint256" },
+        { name: "verifyingContract", type: "address" },
       ],
       Call: [
         { name: "target", type: "address" },
         { name: "value", type: "uint256" },
         { name: "data", type: "bytes" },
       ],
-    },
-    primaryType: "Batch",
-    message: {
-      wallet: walletAddress,
-      nonce,
-      deadline,
-      calls,
+      Batch: [
+        { name: "wallet", type: "address" },
+        { name: "nonce", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+        { name: "calls", type: "Call[]" },
+      ],
     },
   };
 }

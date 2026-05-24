@@ -3,6 +3,7 @@ import { recoverTypedDataAddress } from "viem";
 
 import {
   buildWithdrawTransferBatch,
+  resolveBridgeWithdrawDepositAddress,
   type DepositWalletBatchSignablePayload,
 } from "@/lib/market/deposit-wallet-batch";
 import { getTradingChainId } from "@/server/trading/clob-auth";
@@ -10,7 +11,6 @@ import {
   createBridgeWithdrawalAddresses,
   fetchBridgeTransactionStatus,
 } from "@/server/trading/bridge";
-import { getTradingContractAddresses } from "@/server/trading/contracts";
 import {
   buildDepositWalletBatchRequest,
   fetchRelayerNonce,
@@ -93,27 +93,34 @@ export async function GET(request: Request) {
       toTokenAddress,
       recipientAddr,
     });
-    const bridgeRecipient = withdrawal.address.evm;
 
-    if (!bridgeRecipient || !/^0x[a-fA-F0-9]{40}$/.test(bridgeRecipient)) {
-      return NextResponse.json({ error: "Bridge did not return a valid EVM withdrawal address." }, { status: 502 });
+    let bridgeRecipient: string;
+
+    try {
+      bridgeRecipient = resolveBridgeWithdrawDepositAddress(withdrawal.address);
+    } catch (addressError) {
+      return NextResponse.json(
+        {
+          error: addressError instanceof Error ? addressError.message : String(addressError),
+        },
+        { status: 502 },
+      );
     }
 
+    const tradingChainId = getTradingChainId();
     const nonce = await fetchRelayerNonce(record.session.walletAddress);
     const deadline = Math.floor(Date.now() / 1000 + 900).toString();
-    const contracts = getTradingContractAddresses();
 
     return NextResponse.json({
       withdrawal,
       funderAddress: record.session.funderAddress,
       transfer: buildWithdrawTransferBatch({
-        chainId: getTradingChainId(),
+        chainId: tradingChainId,
         walletAddress: record.session.funderAddress,
         nonce,
         deadline,
-        collateralToken: contracts.collateralToken,
-        recipientAddress: bridgeRecipient,
         amountBaseUnits,
+        bridgeRecipient,
       }),
     });
   } catch (error) {
@@ -160,7 +167,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing signed withdrawal transfer payload." }, { status: 400 });
   }
 
-  if (submittedTransfer.walletAddress.toLowerCase() !== record.session.funderAddress.toLowerCase()) {
+  if (submittedTransfer.message.wallet.toLowerCase() !== record.session.funderAddress.toLowerCase()) {
     return NextResponse.json({ error: "Signed withdrawal wallet does not match the session deposit wallet." }, { status: 409 });
   }
 
