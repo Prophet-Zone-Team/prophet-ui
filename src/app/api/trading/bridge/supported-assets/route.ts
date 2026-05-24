@@ -7,9 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    return NextResponse.json({
-      assets: await fetchBridgeSupportedAssets(),
-    });
+    return NextResponse.json(await fetchBridgeSupportedAssets());
   } catch (error) {
     return NextResponse.json(
       {

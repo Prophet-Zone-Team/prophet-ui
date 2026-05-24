@@ -10,3 +10,7 @@ tsconfig.tsbuildinfo
 .dev.vars
 cloudflare-env.d.ts
 .env
+
+.idea/
+.cursor/
+.vscode/

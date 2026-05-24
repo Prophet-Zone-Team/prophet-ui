@@ -25,7 +25,8 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
     readiness,
     status,
     message,
-    connectWallet
+    connectWallet,
+    reload,
   } = usePortfolioData();
 
   const portfolio = useMemo(
@@ -45,17 +46,13 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
         session,
         portfolio,
         status,
-        onConnectWallet: () => void connectWallet()
+        onConnectWallet: () => void connectWallet(),
+        reload,
       }}
     >
       <section className={portfolioPageClass}>
         <div className="flex flex-col gap-4">
-          <PortfolioSummarySection
-            session={session}
-            portfolio={portfolio}
-            status={status}
-            onConnectWallet={() => void connectWallet()}
-          />
+          <PortfolioSummarySection />
 
           {message ? (
             <p

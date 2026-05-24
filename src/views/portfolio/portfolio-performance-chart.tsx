@@ -5,15 +5,14 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { cn } from "@/lib/cn";
 import {
-  formatPortfolioMoney,
   formatSignedPercent,
-  formatSignedPortfolioMoney
 } from "@/lib/portfolio/portfolio-format";
 import type {
-  PortfolioSeriesPoint,
   PortfolioTimeRange
 } from "@/lib/portfolio/types";
 import { portfolioSummaryLabelClass } from "@/views/portfolio/portfolio-ui";
+import { formatNumber } from "@/utils";
+import { usePortfolioContext } from "./context";
 
 const CHART_LINE_COLOR = "#65AF14";
 const CHART_FILL_TOP = "rgba(138, 185, 86, 0.3)";
@@ -21,19 +20,24 @@ const CHART_FILL_TOP = "rgba(138, 185, 86, 0.3)";
 const TIME_RANGES: PortfolioTimeRange[] = ["1H", "1D", "1W", "1M", "All"];
 
 export interface PortfolioPerformanceChartProps {
-  series: PortfolioSeriesPoint[];
-  unrealizedPnl: number;
-  unrealizedPnlPercent: number;
 }
 
-export function PortfolioPerformanceChart({
-  series,
-  unrealizedPnl,
-  unrealizedPnlPercent
-}: PortfolioPerformanceChartProps) {
+export function PortfolioPerformanceChart({ }: PortfolioPerformanceChartProps) {
+  const {
+    session,
+    portfolio,
+    status,
+    onConnectWallet
+  } = usePortfolioContext();
+  const {
+    performanceSeries: series,
+    unrealizedPnl,
+    unrealizedPnlPercent
+  } = portfolio ?? {};
+
   const [range, setRange] = useState<PortfolioTimeRange>("1M");
   const gradientId = useId().replace(/:/g, "");
-  const isPositive = unrealizedPnl >= 0;
+  const isPositive = !!unrealizedPnl && unrealizedPnl >= 0;
   const pnlTone = isPositive ? "text-prophet-green" : "text-prophet-red";
 
   return (
@@ -45,7 +49,7 @@ export function PortfolioPerformanceChart({
             <span
               className={cn("text-[32px] font-[556] leading-[38px]", pnlTone)}
             >
-              {formatSignedPortfolioMoney(unrealizedPnl)}
+              {formatNumber(unrealizedPnl, 2, true, { round: 0, prefix: !!unrealizedPnl && unrealizedPnl >= 0 ? "+" : "", isZeroPrecision: true })}
             </span>
             <span
               className={cn(
@@ -103,7 +107,7 @@ export function PortfolioPerformanceChart({
                 fontSize: 12
               }}
               formatter={(value: number) => [
-                formatPortfolioMoney(value),
+                formatNumber(value, 2, true, { round: 0 }),
                 "Value"
               ]}
             />

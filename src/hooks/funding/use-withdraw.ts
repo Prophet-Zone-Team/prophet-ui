@@ -23,8 +23,6 @@ export interface UseWithdrawResult {
   bridgeStatus: BridgeAggregateStatus;
   transactions: BridgeTransactionRecord[];
   error: string | undefined;
-  supportedAssets: unknown;
-  loadSupportedAssets: () => Promise<unknown>;
   prepareWithdraw: (params: BridgeWithdrawParams & { amountUsd: number }) => Promise<WithdrawPreparePayload>;
   signAndSubmitWithdraw: (payload: WithdrawPreparePayload) => Promise<{ statusAddress: string }>;
   executeWithdraw: (params: BridgeWithdrawParams & { amountUsd: number }) => Promise<BridgeAggregateStatus>;
@@ -38,7 +36,6 @@ export function useWithdraw(): UseWithdrawResult {
   const [bridgeStatus, setBridgeStatus] = useState<BridgeAggregateStatus>("pending");
   const [transactions, setTransactions] = useState<BridgeTransactionRecord[]>([]);
   const [error, setError] = useState<string | undefined>();
-  const [supportedAssets, setSupportedAssets] = useState<unknown>();
   const pollAbortRef = useRef<AbortController | undefined>(undefined);
 
   const fetchWithdrawStatus = useCallback(async (statusAddress: string) => {
@@ -123,12 +120,6 @@ export function useWithdraw(): UseWithdrawResult {
     },
     [bridgeStatus, fetchWithdrawStatus, finalizeIfCompleted, stopStatusPoll],
   );
-
-  const loadSupportedAssets = useCallback(async () => {
-    const payload = await fetchJson<{ assets: unknown }>("/api/trading/bridge/supported-assets");
-    setSupportedAssets(payload.assets);
-    return payload.assets;
-  }, []);
 
   const prepareWithdraw = useCallback(async ({ toChainId, toTokenAddress, recipientAddr, amountUsd }: BridgeWithdrawParams & { amountUsd: number }) => {
     setStatus("preparing");
@@ -215,8 +206,6 @@ export function useWithdraw(): UseWithdrawResult {
     bridgeStatus,
     transactions,
     error,
-    supportedAssets,
-    loadSupportedAssets,
     prepareWithdraw,
     signAndSubmitWithdraw,
     executeWithdraw,

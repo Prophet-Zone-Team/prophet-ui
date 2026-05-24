@@ -1,19 +1,9 @@
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 
-export function formatPortfolioMoney(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: Math.abs(value) >= 1000 ? 0 : 2
-  }).format(value);
-}
-
-export function formatSignedPortfolioMoney(value: number): string {
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${formatPortfolioMoney(value)}`;
-}
-
-export function formatSignedPercent(value: number): string {
+export function formatSignedPercent(value?: number): string {
+  if (!value) {
+    return "0%";
+  }
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(1)}%`;
 }

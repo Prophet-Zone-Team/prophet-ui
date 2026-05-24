@@ -28,3 +28,5 @@ export {
   useTradeTab,
   useTradeTicketStore
 } from "@/store/trade-ticket-store";
+export { useBalancesStore } from "@/store/use-balances";
+export { usePricesStore } from "@/store/use-prices";

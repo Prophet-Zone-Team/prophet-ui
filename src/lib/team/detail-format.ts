@@ -6,7 +6,11 @@ export function formatTeamDetailMoney(value: number): string {
   }).format(value);
 }
 
-export function formatShortWallet(value: string): string {
+export function formatShortWallet(value?: string): string {
+  if (!value) {
+    return "";
+  }
+
   if (value.length <= 10) {
     return value;
   }

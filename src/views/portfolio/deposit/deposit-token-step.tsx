@@ -1,16 +1,18 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import { formatNumber } from "@/utils";
 import {
   depositTokenRowClass,
   depositTokenRowDisabledClass,
   depositTokenRowSelectedClass
 } from "@/views/portfolio/deposit/deposit-ui";
 import { TokenIcon } from "@/views/portfolio/shared/token-icon";
-import { usePortfolioContext } from "../context";
-import { useDepositContext } from "./context";
 import { FundingAsset } from "@/config/funding";
-import { formatNumber } from "@/utils";
+import { useDepositContext } from "./context";
+import { useMemo } from "react";
+import Big from "big.js";
+import { Loader2 } from "lucide-react";
 
 export interface DepositTokenStepProps {
   selectedToken?: FundingAsset;
@@ -22,15 +24,46 @@ export function DepositTokenStep({
   onSelectToken
 }: DepositTokenStepProps) {
   const {
-    session,
-  } = usePortfolioContext();
-  const { supportedAssets } = useDepositContext();
+    supportedAssets,
+    getTokenBalance,
+    getTokenUsdValue,
+    hasTokenUsdPrice,
+    balancesLoading,
+    pricesLoading,
+  } = useDepositContext();
+
+  const sortedSupportedAssets = useMemo(() => {
+    return supportedAssets?.map((asset) => {
+      const token: FundingAsset & { balance: string; usdValue: number; isLowBalance: boolean } = {
+        ...asset,
+        balance: getTokenBalance(asset),
+        usdValue: getTokenUsdValue(asset),
+        isLowBalance: false,
+      };
+      token.isLowBalance = Big(token.usdValue || 0).lt(token.minCheckoutUsd);
+      return token;
+    }).sort((a, b) => {
+      if (a.isLowBalance && !b.isLowBalance) {
+        return 1;
+      }
+      if (!a.isLowBalance && b.isLowBalance) {
+        return -1;
+      }
+      return b.usdValue - a.usdValue;
+    });
+  }, [supportedAssets, getTokenBalance, getTokenUsdValue]);
+
+  const loading = balancesLoading || pricesLoading;
 
   return (
     <div className="flex max-h-[340px] flex-col gap-0.5 overflow-y-auto pb-2">
-      {supportedAssets.map((token) => {
+      {sortedSupportedAssets?.map((token) => {
         const isSelected = selectedToken?.chainId === token.chainId && selectedToken?.address === token.address;
         const isDisabled = false;
+        const usdDisplay =
+          token.usdValue > 0 || hasTokenUsdPrice(token.symbol)
+            ? formatNumber(token.usdValue, 2, true, { prefix: "$", round: 0, isZeroPrecision: true })
+            : "--";
 
         return (
           <button
@@ -58,16 +91,25 @@ export function DepositTokenStep({
             <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
               <span className="text-sm font-[556] text-black">{token.symbol}</span>
               <span className="text-xs font-[556] text-[#909090]">
-                {formatNumber(0, 2, true, { round: 0, isZeroPrecision: true })}
+                {formatNumber(token.balance, 4, true, { round: 0, isZeroPrecision: true })}
               </span>
             </span>
             <span className="flex shrink-0 flex-col items-end gap-0.5">
               {isDisabled ? (
                 <span className="text-sm font-[556] text-[#909090]">Unsupported</span>
               ) : null}
-              <span className="text-sm font-[556] text-black">
-                {formatNumber(0, 2, true, { prefix: "$", round: 0, isZeroPrecision: true })}
-              </span>
+              {
+                loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    {
+                      token.isLowBalance && <span className="text-xs font-[556] text-[#FF674B] opacity-80">Low balance</span>
+                    }
+                    <span className="text-sm font-[556] text-black">{usdDisplay}</span>
+                  </>
+                )
+              }
             </span>
           </button>
         );

@@ -1,7 +1,3 @@
-import { formatPortfolioMoney } from "@/lib/portfolio/portfolio-format";
-
-import { WITHDRAW_ESTIMATE_RATE } from "@/views/portfolio/withdraw/config";
-
 export function parseWithdrawAmount(raw: string): number | undefined {
   const normalized = raw.trim().replace(/,/g, "");
 
@@ -16,16 +12,6 @@ export function parseWithdrawAmount(raw: string): number | undefined {
   }
 
   return value;
-}
-
-export function formatWithdrawEstimate(amount: number, receiveSymbol: string) {
-  const receiveAmount = Math.floor(amount * WITHDRAW_ESTIMATE_RATE * 100) / 100;
-  const fiatEstimate = receiveAmount * 0.999;
-
-  return {
-    receiveLabel: `${receiveAmount.toFixed(2)} ${receiveSymbol}`,
-    fiatLabel: `~${formatPortfolioMoney(fiatEstimate)}`
-  };
 }
 
 export function validateWithdrawAmount(
