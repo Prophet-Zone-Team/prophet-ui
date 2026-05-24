@@ -41,8 +41,9 @@ export function MarketListItem({ snapshot, rank }: MarketListItemProps) {
     market.change24h
   );
   const trendColor = isDown ? "text-[#D64545]" : "text-[#65AF14]";
-  const detailHref = teamDetailHref(team.id);
   const tradeHref = teamTradeHref(team.id);
+  const detailHref = teamDetailHref(team.id);
+  const subtitle = `${team.code} / ${team.region}${team.group ? ` / Group ${team.group}` : ""}`;
 
   function navigateToTrade() {
     router.push(tradeHref);
@@ -83,8 +84,7 @@ export function MarketListItem({ snapshot, rank }: MarketListItemProps) {
             {team.name}
           </h3>
           <p className={cn("m-0 mt-0.5", rowLabelClassName)}>
-            {team.code} / {team.region}
-            {team.group ? ` / Group ${team.group}` : ""}
+            {subtitle}
           </p>
         </div>
       </div>

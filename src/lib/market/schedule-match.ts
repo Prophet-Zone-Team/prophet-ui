@@ -56,12 +56,20 @@ export function resolveMatchSides(
 
   return {
     home: {
-      name: homeSnapshot?.team.name ?? match.homeSeed ?? "TBD",
+      name:
+        homeSnapshot?.team.name ??
+        match.homeDisplayName ??
+        match.homeSeed ??
+        "TBD",
       code: homeSnapshot?.team.code,
       snapshot: homeSnapshot
     },
     away: {
-      name: awaySnapshot?.team.name ?? match.awaySeed ?? "TBD",
+      name:
+        awaySnapshot?.team.name ??
+        match.awayDisplayName ??
+        match.awaySeed ??
+        "TBD",
       code: awaySnapshot?.team.code,
       snapshot: awaySnapshot
     }
@@ -72,6 +80,10 @@ export function getMatchVolume(
   match: WorldCupMatch,
   snapshots: TeamMarketSnapshot[]
 ): number {
+  if (match.polymarket?.volume !== undefined) {
+    return match.polymarket.volume;
+  }
+
   return [match.homeTeamId, match.awayTeamId].reduce((sum, teamId) => {
     if (!teamId) {
       return sum;

@@ -1,35 +1,27 @@
 import { notFound } from "next/navigation";
 
 import { getTheOddsApiWorldCupWinnerOdds } from "@/data/odds/the-odds-api-provider";
+import { getFootballMatches } from "@/data/providers/football-matches";
 import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 import type { WorldCupMarketDataOptions } from "@/data/providers/types";
 import { worldCupTeams } from "@/data/teams/world-cup-teams";
 import {
-  attachCachedFootballToMatches,
-  getStaticWorldCupMatches
-} from "@/data/world-cup-2026/matches";
-import {
   buildGameMarketSnapshot,
-  buildGameMatchMinuteHistory,
-  buildGameProbabilityHistory,
   findWorldCupMatch,
-  getGameMatchChartEvents,
   getRelatedMatches
 } from "@/lib/market/game-market-snapshot";
-import type { TradeViewMode } from "@/types/market";
+import type { TeamMarketSnapshot, TradeViewMode, WorldCupMatch } from "@/types/market";
 import SimplePage from "@/views/trade/simple";
 import ProfessionalPage from "@/views/trade/professional";
 
 function resolveTradeMarketOptions(
   slug: string,
+  footballMatch: WorldCupMatch | undefined,
   mode: TradeViewMode
 ): WorldCupMarketDataOptions {
-  const staticMatch = getStaticWorldCupMatches().find(
-    (match) => match.id === slug
-  );
   const isTeam = worldCupTeams.some((team) => team.id === slug);
-  const footballContextTeamIds = staticMatch
-    ? [staticMatch.homeTeamId, staticMatch.awayTeamId].filter(
+  const footballContextTeamIds = footballMatch
+    ? [footballMatch.homeTeamId, footballMatch.awayTeamId].filter(
         (teamId): teamId is string => Boolean(teamId)
       )
     : isTeam
@@ -38,7 +30,7 @@ function resolveTradeMarketOptions(
 
   if (mode === "simple") {
     return {
-      includeFootballContext: true,
+      includeFootballContext: Boolean(footballContextTeamIds?.length),
       includeNews: false,
       includeOdds: false,
       includeHistory: false,
@@ -47,28 +39,26 @@ function resolveTradeMarketOptions(
   }
 
   return {
-    includeFootballContext: true,
+    includeFootballContext: Boolean(footballContextTeamIds?.length),
     includeNews: false,
     footballContextTeamIds
   };
 }
 
 export async function renderTradePage(slug: string, mode: TradeViewMode) {
+  const { matches } = await getFootballMatches();
+  const footballMatch = findWorldCupMatch(slug, matches);
   const marketData = await getWorldCupMarketData(
-    resolveTradeMarketOptions(slug, mode)
+    resolveTradeMarketOptions(slug, footballMatch, mode)
   );
-  const teamSnapshot = marketData.snapshots.find(
-    (item) => item.team.id === slug
-  );
+  const teamSnapshot = marketData.snapshots.find((item) => item.team.id === slug);
 
   if (teamSnapshot) {
-    return renderTeamTrade(mode, teamSnapshot, marketData);
+    return renderTeamTrade(mode, teamSnapshot, marketData, matches);
   }
 
-  const match = findWorldCupMatch(slug, marketData.footballTeamContext);
-
-  if (match) {
-    return renderGameTrade(mode, match, marketData);
+  if (footballMatch) {
+    return renderGameTrade(mode, footballMatch, marketData, matches);
   }
 
   notFound();
@@ -76,10 +66,9 @@ export async function renderTradePage(slug: string, mode: TradeViewMode) {
 
 async function renderTeamTrade(
   mode: TradeViewMode,
-  snapshot: NonNullable<
-    Awaited<ReturnType<typeof getWorldCupMarketData>>["snapshots"][number]
-  >,
-  marketData: Awaited<ReturnType<typeof getWorldCupMarketData>>
+  snapshot: TeamMarketSnapshot,
+  marketData: Awaited<ReturnType<typeof getWorldCupMarketData>>,
+  matches: WorldCupMatch[]
 ) {
   if (mode === "simple") {
     const footballContext = marketData.footballTeamContext.find(
@@ -90,11 +79,6 @@ async function renderTeamTrade(
       marketData.footballContext.find(
         (profile) => profile.teamId === snapshot.team.id
       );
-
-    const matches = attachCachedFootballToMatches(
-      getStaticWorldCupMatches(),
-      marketData.footballTeamContext
-    );
 
     return (
       <SimplePage
@@ -120,10 +104,6 @@ async function renderTeamTrade(
     marketData.footballContext.find(
       (profile) => profile.teamId === snapshot.team.id
     );
-  const matches = attachCachedFootballToMatches(
-    getStaticWorldCupMatches(),
-    marketData.footballTeamContext
-  );
 
   return (
     <ProfessionalPage
@@ -141,37 +121,28 @@ async function renderTeamTrade(
 }
 
 function loadGameTradeData(
-  match: NonNullable<ReturnType<typeof findWorldCupMatch>>,
-  marketData: Awaited<ReturnType<typeof getWorldCupMarketData>>
+  match: WorldCupMatch,
+  marketData: Awaited<ReturnType<typeof getWorldCupMarketData>>,
+  matches: WorldCupMatch[]
 ) {
-  const teamSnapshots = marketData.snapshots;
-  const snapshot = buildGameMarketSnapshot(match, teamSnapshots);
-  const allMatches = attachCachedFootballToMatches(
-    getStaticWorldCupMatches(),
-    marketData.footballTeamContext
-  );
-  const relatedMatches = getRelatedMatches(
-    match,
-    marketData.footballTeamContext
-  );
+  const snapshot = buildGameMarketSnapshot(match, marketData.snapshots);
+  const relatedMatches = getRelatedMatches(match, matches);
 
   return {
     snapshot,
-    probabilityHistory: buildGameProbabilityHistory(snapshot),
-    matchMinuteHistory: buildGameMatchMinuteHistory(snapshot),
-    chartEvents: getGameMatchChartEvents(match),
-    teamSnapshots,
-    relatedMatches: relatedMatches.length > 0 ? relatedMatches : allMatches,
+    teamSnapshots: marketData.snapshots,
+    relatedMatches: relatedMatches.length > 0 ? relatedMatches : matches,
     dataStatus: marketData.meta
   };
 }
 
 function renderGameTrade(
   _mode: TradeViewMode,
-  match: NonNullable<ReturnType<typeof findWorldCupMatch>>,
-  marketData: Awaited<ReturnType<typeof getWorldCupMarketData>>
+  match: WorldCupMatch,
+  marketData: Awaited<ReturnType<typeof getWorldCupMarketData>>,
+  matches: WorldCupMatch[]
 ) {
-  const gameData = loadGameTradeData(match, marketData);
+  const gameData = loadGameTradeData(match, marketData, matches);
   const teamProfiles = Object.fromEntries(
     marketData.footballTeamContext.map((context) => [
       context.profile.teamId,

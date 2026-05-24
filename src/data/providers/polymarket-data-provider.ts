@@ -9,6 +9,7 @@ import type {
   TeamMarketSnapshot,
 } from "@/types/market";
 import type { WorldCupMarketData, WorldCupMarketDataProvider } from "@/data/providers/types";
+import { serverFetch } from "@/server/trading/server-fetch";
 
 const GAMMA_MARKETS_URL = "https://gamma-api.polymarket.com/markets";
 const CLOB_MARKET_URL = "https://clob.polymarket.com/clob-markets";
@@ -95,7 +96,7 @@ async function fetchWorldCupMarkets(): Promise<GammaMarket[]> {
   url.searchParams.set("order", "volume_24hr");
   url.searchParams.set("ascending", "false");
 
-  const response = await fetch(url, {
+  const response = await serverFetch(url, {
     cache: "no-store",
     headers: {
       accept: "application/json",
@@ -319,7 +320,7 @@ async function fetchClobFeeDetails(
           return undefined;
         }
 
-        const response = await fetch(`${CLOB_MARKET_URL}/${resolvedConditionId}`, {
+        const response = await serverFetch(`${CLOB_MARKET_URL}/${resolvedConditionId}`, {
           cache: "no-store",
           headers: {
             accept: "application/json",
@@ -350,7 +351,7 @@ async function fetchClobFeeDetails(
 }
 
 async function fetchConditionIdByToken(tokenId: string): Promise<string | undefined> {
-  const response = await fetch(`${CLOB_MARKET_BY_TOKEN_URL}/${encodeURIComponent(tokenId)}`, {
+  const response = await serverFetch(`${CLOB_MARKET_BY_TOKEN_URL}/${encodeURIComponent(tokenId)}`, {
     cache: "no-store",
     headers: {
       accept: "application/json",

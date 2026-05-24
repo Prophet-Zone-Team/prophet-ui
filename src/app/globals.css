@@ -4,16 +4,88 @@
 
 @font-face {
   font-family: "SF Compact Text";
-  src: url("/fonts/sf-compact-text-heavy-58646f645b774.otf") format("opentype");
-  font-weight: 100 900;
+  src: url("/fonts/SFCompactText-Light.otf") format("opentype");
+  font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
   font-family: "SF Compact Text";
-  src: url("/fonts/sf-compact-text-italic-58646f7cbab10.otf") format("opentype");
-  font-weight: 100 900;
+  src: url("/fonts/SFCompactText-LightItalic.otf") format("opentype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Compact Text";
+  src: url("/fonts/SFCompactText-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Compact Text";
+  src: url("/fonts/SFCompactText-RegularItalic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Compact Text";
+  src: url("/fonts/SFCompactText-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Compact Text";
+  src: url("/fonts/SFCompactText-MediumItalic.otf") format("opentype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Compact Text";
+  src: url("/fonts/SFCompactText-Semibold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Compact Text";
+  src: url("/fonts/SFCompactText-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Compact Text";
+  src: url("/fonts/SFCompactText-BoldItalic.otf") format("opentype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Compact Text";
+  src: url("/fonts/SFCompactText-Heavy.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SF Compact Text";
+  src: url("/fonts/SFCompactText-HeavyItalic.otf") format("opentype");
+  font-weight: 800;
   font-style: italic;
   font-display: swap;
 }

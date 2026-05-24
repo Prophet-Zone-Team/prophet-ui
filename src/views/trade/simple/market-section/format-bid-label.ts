@@ -2,7 +2,15 @@ import {
   buildGameBidOrderPreview,
   getDefaultGameLimitPrice
 } from "@/lib/market/game-order";
-import { calculateReferencePrice } from "@/lib/market/order-math";
+import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
+import {
+  findGameMarketOutcome,
+  resolveGameOutcomeTradePrice
+} from "@/lib/market/game-outcome-price";
+import {
+  calculateReferencePrice,
+  formatTradePanelPrice
+} from "@/lib/market/order-math";
 import { buildBidOrderPreview } from "@/lib/market/polymarket-order";
 import type {
   GameMarketSnapshot,
@@ -13,8 +21,15 @@ import type {
 
 const DEFAULT_BID_AMOUNT = 100;
 
-export function formatSimpleBidLabel(amount: number): string {
-  return `Bid $${amount.toFixed(1)}`;
+export function getGameSimpleSidePrice(
+  snapshot: GameMarketSnapshot,
+  side: MatchOutcomeSide,
+  binarySide: OrderOutcomeSide = "yes"
+): number {
+  const outcome = findGameMarketOutcome(snapshot.outcomes, side);
+  const probability = getOutcomeProbability(snapshot, side);
+
+  return resolveGameOutcomeTradePrice(outcome, probability, binarySide, "buy");
 }
 
 export function getGameSimpleBidPrice(
@@ -24,33 +39,52 @@ export function getGameSimpleBidPrice(
   const preview = buildGameBidOrderPreview({
     snapshot,
     outcomeSide: side,
+    binarySide: "yes",
     tradeSide: "buy",
     amount: DEFAULT_BID_AMOUNT,
-    limitPrice: getDefaultGameLimitPrice(snapshot, side),
+    limitPrice: getDefaultGameLimitPrice(snapshot, side, "yes", "buy"),
     orderType: "FAK"
   });
 
   return preview.estimatedTotalCost;
 }
 
+export function getTeamSimpleSidePrice(
+  snapshot: TeamMarketSnapshot,
+  side: OrderOutcomeSide
+): number {
+  return (
+    snapshot.market.polymarket?.tokens[side]?.price ??
+    calculateReferencePrice(snapshot.market.probability, side)
+  );
+}
+
 export function getTeamSimpleBidPrice(
   snapshot: TeamMarketSnapshot,
   side: OrderOutcomeSide
 ): number {
-  const limitPrice =
-    snapshot.market.polymarket?.tokens[side]?.price ??
-    calculateReferencePrice(snapshot.market.probability, side);
-
   const preview = buildBidOrderPreview({
     snapshot,
     outcomeSide: side,
     tradeSide: "buy",
     amount: DEFAULT_BID_AMOUNT,
-    limitPrice,
+    limitPrice: getTeamSimpleSidePrice(snapshot, side),
     orderType: "FAK"
   });
 
   return preview.estimatedTotalCost;
+}
+
+export function formatSimpleOutcomeBidLabel(
+  side: OrderOutcomeSide,
+  price: number
+): string {
+  const sideLabel = side === "yes" ? "Yes" : "No";
+  return `${sideLabel} ${formatTradePanelPrice(price)}`;
+}
+
+export function formatGameMatchBidLabel(label: string, price: number): string {
+  return `${label} ${formatTradePanelPrice(price)}`;
 }
 
 export function formatChangePillLabel(change24h?: number): string | undefined {

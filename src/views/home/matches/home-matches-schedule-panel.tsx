@@ -21,7 +21,7 @@ export function HomeMatchesSchedulePanel({
   matches,
   snapshots
 }: HomeMatchesSchedulePanelProps) {
-  const [sortKey, setSortKey] = useState<ScheduleSortKey>("volume");
+  const [sortKey, setSortKey] = useState<ScheduleSortKey>("time");
   const [showEnded, setShowEnded] = useState(false);
 
   const sortedMatches = useMemo(
@@ -61,7 +61,7 @@ export function HomeMatchesSchedulePanel({
   }, [matches, snapshots]);
 
   return (
-    <section className="min-w-0" aria-label="World Cup match schedule">
+    <section className="min-w-0" aria-label="Football match schedule">
       {featuredCard ? (
         <div className="mb-3.5">
           <SpecialMatchDataCard

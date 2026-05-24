@@ -1,9 +1,15 @@
+"use client";
+
 import type { TeamMarketSnapshot } from "@/types/market";
+import {
+  useSetTradeOutcomeSide,
+  useTradeOutcomeSide
+} from "@/store/trade-ticket-store";
 import { simpleTeamColors } from "@/views/trade/simple/ui";
 import {
   formatChangePillLabel,
-  formatSimpleBidLabel,
-  getTeamSimpleBidPrice
+  formatSimpleOutcomeBidLabel,
+  getTeamSimpleSidePrice
 } from "@/views/trade/simple/market-section/format-bid-label";
 import {
   BidButton,
@@ -16,13 +22,17 @@ export interface TeamMarketSectionProps {
 }
 
 export function TeamMarketSection({ snapshot }: TeamMarketSectionProps) {
+  const outcomeSide = useTradeOutcomeSide();
+  const setOutcomeSide = useSetTradeOutcomeSide();
   const yesProb = snapshot.market.probability;
   const noProb = Math.max(0, 100 - yesProb);
   const yesChange = formatChangePillLabel(snapshot.market.change24h);
   const noChange = formatChangePillLabel(-snapshot.market.change24h);
+  const yesPrice = getTeamSimpleSidePrice(snapshot, "yes");
+  const noPrice = getTeamSimpleSidePrice(snapshot, "no");
 
   return (
-    <section className="flex flex-col gap-5 py-6">
+    <section className="flex flex-col gap-5 pt-[110px]">
       <div className="grid grid-cols-2 items-end gap-3 text-black">
         <p className="text-[60px] font-[556] capitalize leading-[72px]">
           {Math.round(yesProb)}%
@@ -62,12 +72,16 @@ export function TeamMarketSection({ snapshot }: TeamMarketSectionProps) {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <BidButton
-          label={formatSimpleBidLabel(getTeamSimpleBidPrice(snapshot, "yes"))}
+          label={formatSimpleOutcomeBidLabel("yes", yesPrice)}
           background={simpleTeamColors.yes}
+          active={outcomeSide === "yes"}
+          onClick={() => setOutcomeSide("yes")}
         />
         <BidButton
-          label={formatSimpleBidLabel(getTeamSimpleBidPrice(snapshot, "no"))}
+          label={formatSimpleOutcomeBidLabel("no", noPrice)}
           background={simpleTeamColors.no}
+          active={outcomeSide === "no"}
+          onClick={() => setOutcomeSide("no")}
         />
       </div>
     </section>

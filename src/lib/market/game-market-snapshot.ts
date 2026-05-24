@@ -1,7 +1,3 @@
-import {
-  attachCachedFootballToMatches,
-  getStaticWorldCupMatches
-} from "@/data/world-cup-2026/matches";
 import type {
   ApiFootballTeamContext,
   GameMarketOutcome,
@@ -18,17 +14,24 @@ import { getMatchVolume, resolveMatchSides } from "@/lib/market/schedule-match";
 
 export function findWorldCupMatch(
   matchId: string,
-  contexts: ApiFootballTeamContext[] = []
+  matches: WorldCupMatch[] = [],
+  _contexts: ApiFootballTeamContext[] = []
 ): WorldCupMatch | undefined {
-  const matches = attachCachedFootballToMatches(getStaticWorldCupMatches(), contexts);
-  return matches.find((match) => match.id === matchId);
+  return matches.find(
+    (match) => match.id === matchId || match.polymarket?.slug === matchId,
+  );
 }
 
 export function getRelatedMatches(
   match: WorldCupMatch,
-  contexts: ApiFootballTeamContext[] = []
+  matches: WorldCupMatch[] = [],
+  _contexts: ApiFootballTeamContext[] = []
 ): WorldCupMatch[] {
-  const matches = attachCachedFootballToMatches(getStaticWorldCupMatches(), contexts);
+  if (match.league) {
+    return matches
+      .filter((item) => item.league === match.league && item.id !== match.id)
+      .slice(0, 6);
+  }
 
   if (match.group) {
     return matches.filter(
@@ -36,9 +39,9 @@ export function getRelatedMatches(
     );
   }
 
-  return matches.filter(
-    (item) => item.stage === match.stage && item.id !== match.id
-  ).slice(0, 6);
+  return matches
+    .filter((item) => item.stage === match.stage && item.id !== match.id)
+    .slice(0, 6);
 }
 
 export function buildGameMarketSnapshot(
@@ -51,8 +54,17 @@ export function buildGameMarketSnapshot(
 
   let outcomes: GameMarketOutcome[];
   let source: string;
+  let acceptingOrders = false;
 
-  if (oddsResult.status === "ready") {
+  if (match.polymarket?.moneyline.outcomes.length) {
+    outcomes = buildOutcomesFromPolymarket(
+      match,
+      sides.home.name,
+      sides.away.name
+    );
+    source = "polymarket";
+    acceptingOrders = match.polymarket.moneyline.acceptingOrders;
+  } else if (oddsResult.status === "ready") {
     outcomes = buildOutcomesFromOdds(
       oddsResult.probabilities,
       sides.home.name,
@@ -71,11 +83,40 @@ export function buildGameMarketSnapshot(
     outcomes,
     market: {
       volume,
-      acceptingOrders: false,
+      acceptingOrders,
       source,
       freshness: match.freshness
     }
   };
+}
+
+function buildOutcomesFromPolymarket(
+  match: WorldCupMatch,
+  homeName: string,
+  awayName: string
+): GameMarketOutcome[] {
+  const polymarketOutcomes = match.polymarket?.moneyline.outcomes ?? [];
+
+  return polymarketOutcomes.map((outcome) => ({
+    side: outcome.side,
+    label:
+      outcome.side === "home"
+        ? `${homeName} win`
+        : outcome.side === "away"
+          ? `${awayName} win`
+          : "Draw",
+    probability: outcome.probability,
+    tokenId: outcome.tokenId,
+    noTokenId: outcome.noTokenId,
+    conditionId: outcome.conditionId,
+    yesAsk: outcome.yesAsk,
+    yesBid: outcome.yesBid,
+    noAsk: outcome.noAsk,
+    noBid: outcome.noBid,
+    fee: outcome.fee,
+    volume: outcome.volume,
+    change24h: pseudoChange(outcome.side)
+  }));
 }
 
 function buildOutcomesFromOdds(
@@ -147,6 +188,7 @@ export function getOutcomeProbability(
   return snapshot.outcomes.find((item) => item.side === side)?.probability ?? 0;
 }
 
+/** @deprecated Use CLOB fixture price history via `/api/market/fixture-history` instead. */
 export function buildGameProbabilityHistory(
   snapshot: GameMarketSnapshot
 ): GameProbabilityHistoryPoint[] {
@@ -243,6 +285,7 @@ const MATCH_MINUTE_MARKS = [
   { minute: 90, minuteLabel: "90'" }
 ] as const;
 
+/** @deprecated Use CLOB fixture price history via `/api/market/fixture-history` instead. */
 export function buildGameMatchMinuteHistory(
   snapshot: GameMarketSnapshot
 ): GameMatchMinuteHistoryPoint[] {
@@ -310,6 +353,7 @@ function pseudoMinuteOffset(matchId: string, side: MatchOutcomeSide): number {
   return ((seed * 7) % 11) - 5;
 }
 
+/** @deprecated Live goal markers require a real in-match event feed. */
 export function getGameMatchChartEvents(match: WorldCupMatch): GameMatchChartEvent[] {
   const homeGoals = match.homeScore ?? 0;
   const awayGoals = match.awayScore ?? 0;

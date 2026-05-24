@@ -545,7 +545,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void refreshCash();
     }
   }, [session, setupSteps.clobSigned, status, refreshCash]);
-
   const value: AuthContextValue = {
     session,
     readiness,

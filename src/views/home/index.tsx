@@ -2,6 +2,7 @@ import type {
   MarketDataMeta,
   WorldCupMarketData
 } from "@/data/providers/types";
+import type { FootballMatchesResult } from "@/data/providers/football-matches";
 import type {
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
@@ -16,6 +17,7 @@ import { getRelativeChangePercent } from "@/components/home/market-formatters";
 export interface HomeViewProps {
   snapshots: TeamMarketSnapshot[];
   matches: WorldCupMatch[];
+  matchesMeta: FootballMatchesResult["meta"];
   dataStatus: MarketDataMeta;
   probabilityHistory: ProbabilityHistoryPoint[];
   universe?: WorldCupMarketData["universe"];
@@ -24,6 +26,7 @@ export interface HomeViewProps {
 export function HomeView({
   snapshots,
   matches,
+  matchesMeta,
   dataStatus,
   probabilityHistory,
   universe
@@ -62,7 +65,13 @@ export function HomeView({
             probabilityHistory={probabilityHistory}
           />
         }
-        matches={<HomeMatchesPanel matches={matches} snapshots={teams} />}
+        matches={
+          <HomeMatchesPanel
+            matches={matches}
+            matchesMeta={matchesMeta}
+            snapshots={teams}
+          />
+        }
       />
     </section>
   );

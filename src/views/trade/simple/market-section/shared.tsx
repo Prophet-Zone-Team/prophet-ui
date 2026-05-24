@@ -118,17 +118,24 @@ export function ProbabilityBar({
 
 export function BidButton({
   label,
-  background
+  background,
+  active = false,
+  onClick
 }: {
   label: string;
   background: string;
+  active?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <button
       type="button"
-      disabled
-      aria-disabled="true"
-      className="flex h-[58px] w-full cursor-default items-center justify-center rounded-[12px] border-0 text-xl font-[556] leading-6 text-white opacity-100"
+      onClick={onClick}
+      className={cn(
+        "flex h-[58px] w-full items-center justify-center rounded-[12px] border-0 text-xl font-[556] leading-6 text-white transition-opacity",
+        onClick ? "cursor-pointer" : "cursor-default",
+        active ? "opacity-100" : "opacity-70 hover:opacity-85"
+      )}
       style={{ backgroundColor: background }}
     >
       {label}

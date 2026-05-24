@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { getFootballMatches } from "@/data/providers/football-matches";
 import { getNewsArticleSlug } from "@/lib/news/news-slugs";
 import { teamTradeHref, gameTradeHref } from "@/lib/routes/trade";
-import { getStaticWorldCupMatches } from "@/data/world-cup-2026/matches";
 import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { worldCupTeams } from "@/data/teams/world-cup-teams";
 import { getSignalDataRepository } from "@/server/signal-data/repository";
@@ -19,13 +19,14 @@ export async function GET(request: NextRequest) {
   }
 
   const normalized = q.toLowerCase();
-  const [newsResults, footballContext] = await Promise.all([
+  const [{ matches }, newsResults, footballContext] = await Promise.all([
+    getFootballMatches(),
     searchNews(normalized, type),
     searchFootballContext(normalized, type),
   ]);
   const results = [
     ...searchTeams(normalized, type),
-    ...searchMatches(normalized, type),
+    ...searchMatches(normalized, type, matches),
     ...newsResults,
     ...footballContext,
   ]
@@ -86,15 +87,21 @@ function searchTeams(q: string, type: SearchResultType | "all"): SearchResult[] 
   }).filter((result) => type === "all" || result.type === type);
 }
 
-function searchMatches(q: string, type: SearchResultType | "all"): SearchResult[] {
+function searchMatches(
+  q: string,
+  type: SearchResultType | "all",
+  matches: Awaited<ReturnType<typeof getFootballMatches>>["matches"],
+): SearchResult[] {
   if (type !== "all" && type !== "match") {
     return [];
   }
 
-  return getStaticWorldCupMatches().flatMap((match) => {
+  return matches.flatMap((match) => {
     const home = match.homeTeamId ? getWorldCupTeamByIdOrCode(match.homeTeamId) : undefined;
     const away = match.awayTeamId ? getWorldCupTeamByIdOrCode(match.awayTeamId) : undefined;
-    const text = `${match.matchId} ${match.group ?? ""} ${match.stage} ${home?.name ?? match.homeSeed ?? ""} ${away?.name ?? match.awaySeed ?? ""}`.toLowerCase();
+    const homeName = home?.name ?? match.homeDisplayName ?? match.homeSeed ?? "";
+    const awayName = away?.name ?? match.awayDisplayName ?? match.awaySeed ?? "";
+    const text = `${match.matchId} ${match.group ?? ""} ${match.stage} ${match.league ?? ""} ${homeName} ${awayName}`.toLowerCase();
 
     if (!text.includes(q)) {
       return [];
@@ -103,8 +110,8 @@ function searchMatches(q: string, type: SearchResultType | "all"): SearchResult[
     return {
       id: `match:${match.id}`,
       type: "match",
-      title: home && away ? `${home.name} vs ${away.name}` : `Match ${match.matchId}`,
-      subtitle: `${match.stage}${match.group ? ` / Group ${match.group}` : ""}`,
+      title: homeName && awayName ? `${homeName} vs ${awayName}` : `Match ${match.matchId}`,
+      subtitle: match.league ?? `${match.stage}${match.group ? ` / Group ${match.group}` : ""}`,
       href: gameTradeHref(match.id),
       score: 70,
     } satisfies SearchResult;

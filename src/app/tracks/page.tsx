@@ -1,19 +1,15 @@
+import { getFootballMatches } from "@/data/providers/football-matches";
 import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
-import {
-  attachCachedFootballToMatches,
-  getStaticWorldCupMatches
-} from "@/data/world-cup-2026/matches";
 import { TracksView } from "@/views/tracks";
 
 export default async function TracksPage() {
-  const marketData = await getWorldCupMarketData({
-    includeFootballContext: true,
-    includeNews: false
-  });
-  const matches = attachCachedFootballToMatches(
-    getStaticWorldCupMatches(),
-    marketData.footballTeamContext
-  );
+  const [marketData, { matches }] = await Promise.all([
+    getWorldCupMarketData({
+      includeFootballContext: false,
+      includeNews: false,
+    }),
+    getFootballMatches(),
+  ]);
 
   return (
     <TracksView

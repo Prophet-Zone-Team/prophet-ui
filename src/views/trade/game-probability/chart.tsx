@@ -5,7 +5,6 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -14,15 +13,16 @@ import {
 } from "recharts";
 
 import { formatProbability } from "@/components/home/market-formatters";
-import type {
-  GameMatchChartEvent,
-  GameMatchMinuteHistoryPoint
-} from "@/types/market";
+import {
+  getFixtureChartYDomain,
+  getLatestFixtureChartValues
+} from "@/lib/market/fixture-probability-chart";
+import type { GameFixtureChartPoint } from "@/types/market";
 
 const CHART_COLORS = {
-  home: "#8AB956",
-  draw: "#909090",
-  away: "#FF674B",
+  home: "#3168FF",
+  draw: "#D9D9D9",
+  away: "#F4B600",
   grid: "#EBEBEB",
   muted: "#909090"
 } as const;
@@ -33,149 +33,147 @@ const SERIES = [
   { key: "away" as const, color: CHART_COLORS.away, label: "Away" }
 ];
 
-interface ChartRow extends GameMatchMinuteHistoryPoint {
-  label: string;
+interface ChartRow extends GameFixtureChartPoint {
+  chartLabel: string;
 }
 
 export interface GameProbabilityChartProps {
-  data: GameMatchMinuteHistoryPoint[];
-  events?: GameMatchChartEvent[];
+  data: GameFixtureChartPoint[];
+  homeLabel?: string;
+  drawLabel?: string;
+  awayLabel?: string;
 }
 
 export function GameProbabilityChart({
   data,
-  events = []
+  homeLabel = "Home",
+  drawLabel = "Draw",
+  awayLabel = "Away"
 }: GameProbabilityChartProps) {
+  const seriesLabels = useMemo(
+    () => ({
+      home: homeLabel,
+      draw: drawLabel,
+      away: awayLabel
+    }),
+    [awayLabel, drawLabel, homeLabel]
+  );
+
   const chartData = useMemo<ChartRow[]>(
     () =>
       data.map((point) => ({
         ...point,
-        label: point.minuteLabel
+        chartLabel: point.label
       })),
     [data]
   );
 
-  const yDomain = useMemo(() => getMinuteChartYDomain(data), [data]);
+  const yDomain = useMemo(() => getFixtureChartYDomain(data), [data]);
+  const latestValues = useMemo(() => getLatestFixtureChartValues(data), [data]);
 
-  const goalDots = useMemo(
-    () =>
-      events
-        .map((event) => {
-          const point = findNearestPoint(data, event.minute);
-          if (!point) {
-            return null;
-          }
-
-          const value =
-            event.side === "home"
-              ? point.home
-              : event.side === "away"
-                ? point.away
-                : point.draw;
-
-          return {
-            key: `${event.side}-${event.minute}`,
-            label: point.minuteLabel,
-            value
-          };
-        })
-        .filter((item): item is NonNullable<typeof item> => item !== null),
-    [data, events]
-  );
+  if (data.length === 0) {
+    return null;
+  }
 
   return (
     <div className="h-[280px] w-full min-h-[240px] sm:h-[320px] xl:h-[340px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={chartData}
-          margin={{ top: 28, right: 48, left: 4, bottom: 4 }}
-        >
-          <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
-          <XAxis
-            dataKey="label"
-            tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            domain={yDomain}
-            orientation="right"
-            tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(value: number) => `${value}%`}
-            width={40}
-          />
-          <Tooltip content={<ChartTooltip />} />
+      <div className="flex h-full gap-4">
+        <div className="min-w-0 flex-1">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={chartData}
+              margin={{ top: 28, right: 12, left: 4, bottom: 4 }}
+            >
+              <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
+              <XAxis
+                dataKey="chartLabel"
+                tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
+                axisLine={false}
+                tickLine={false}
+                minTickGap={24}
+                padding={{ left: 0, right: 32 }}
+              />
+              <YAxis
+                domain={yDomain}
+                orientation="right"
+                tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(value: number) => `${value}%`}
+                width={44}
+              />
+              <Tooltip content={<ChartTooltip seriesLabels={seriesLabels} />} />
+              {SERIES.map((series) => (
+                <Line
+                  key={series.key}
+                  type="monotone"
+                  dataKey={series.key}
+                  stroke={series.color}
+                  strokeWidth={2}
+                  dot={(props) => {
+                    const { cx, cy, index } = props;
+                    if (
+                      index !== chartData.length - 1 ||
+                      cx === undefined ||
+                      cy === undefined
+                    ) {
+                      return <g />;
+                    }
+
+                    return (
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={5}
+                        fill={series.color}
+                        stroke={`${series.color}33`}
+                        strokeWidth={3}
+                      />
+                    );
+                  }}
+                  activeDot={{
+                    r: 5,
+                    fill: series.color,
+                    stroke: `${series.color}33`,
+                    strokeWidth: 3
+                  }}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="flex shrink-0 flex-col justify-center gap-3 pt-6 pr-1">
           {SERIES.map((series) => (
-            <Line
+            <div
               key={series.key}
-              type="monotone"
-              dataKey={series.key}
-              stroke={series.color}
-              strokeWidth={2}
-              dot={(props) => {
-                const { cx, cy, index, payload } = props;
-                if (index !== chartData.length - 1 || !payload) {
-                  return <g />;
-                }
-
-                const value = payload[series.key] as number;
-
-                return (
-                  <g key={series.key}>
-                    <line
-                      x1={cx}
-                      x2={cx}
-                      y1={cy}
-                      y2={(cy ?? 0) - 28}
-                      stroke={series.color}
-                      strokeWidth={1}
-                    />
-                    <text
-                      x={(cx ?? 0) + 8}
-                      y={(cy ?? 0) - 32}
-                      fill={series.color}
-                      fontSize={20}
-                      fontWeight={556}
-                    >
-                      {Math.round(value)}%
-                    </text>
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r={5}
-                      fill={series.color}
-                      stroke={`${series.color}33`}
-                      strokeWidth={3}
-                    />
-                  </g>
-                );
-              }}
-              activeDot={{
-                r: 5,
-                fill: series.color,
-                stroke: `${series.color}33`,
-                strokeWidth: 3
-              }}
-            />
+              className="flex items-center gap-2 text-sm font-[556] leading-[17px]"
+              style={{ color: series.color }}
+            >
+              <span
+                className="size-2 shrink-0 rounded-full"
+                style={{ backgroundColor: series.color }}
+                aria-hidden
+              />
+              <span className="whitespace-nowrap">
+                {Math.round(latestValues[series.key])}%
+              </span>
+            </div>
           ))}
-          {goalDots.map((goal) => (
-            <ReferenceDot
-              key={goal.key}
-              x={goal.label}
-              y={goal.value}
-              r={0}
-              label={{ value: "⚽", position: "top", fontSize: 16 }}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+        </div>
+      </div>
     </div>
   );
 }
 
-function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function ChartTooltip({
+  active,
+  payload,
+  label,
+  seriesLabels
+}: TooltipProps<number, string> & {
+  seriesLabels: Record<(typeof SERIES)[number]["key"], string>;
+}) {
   if (!active || !payload?.length) {
     return null;
   }
@@ -194,7 +192,7 @@ function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) 
             className="m-0 text-sm font-[556] leading-[17px]"
             style={{ color: entry.color }}
           >
-            {series?.label ?? entry.dataKey}:{" "}
+            {series ? seriesLabels[series.key] : entry.dataKey}:{" "}
             {typeof entry.value === "number"
               ? formatProbability(entry.value)
               : "—"}
@@ -203,39 +201,4 @@ function ChartTooltip({ active, payload, label }: TooltipProps<number, string>) 
       })}
     </div>
   );
-}
-
-function getMinuteChartYDomain(
-  data: GameMatchMinuteHistoryPoint[]
-): [number, number] {
-  if (data.length === 0) {
-    return [0, 100];
-  }
-
-  const values = data.flatMap((point) => [point.home, point.draw, point.away]);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const padding = Math.max(2, (max - min) * 0.2);
-  const lower = Math.max(0, Math.floor((min - padding) / 5) * 5);
-  const upper = Math.min(100, Math.ceil((max + padding) / 5) * 5);
-
-  return [lower, Math.max(lower + 10, upper)];
-}
-
-function findNearestPoint(
-  data: GameMatchMinuteHistoryPoint[],
-  minute: number
-): GameMatchMinuteHistoryPoint | undefined {
-  let nearest: GameMatchMinuteHistoryPoint | undefined;
-  let nearestDistance = Number.POSITIVE_INFINITY;
-
-  for (const point of data) {
-    const distance = Math.abs(point.minute - minute);
-    if (distance < nearestDistance) {
-      nearestDistance = distance;
-      nearest = point;
-    }
-  }
-
-  return nearest;
 }

@@ -244,6 +244,7 @@ export interface Team {
   qualifiedStatus?: "qualified" | "candidate" | "playoff_pending";
   apiFootballTeamId?: number;
   polymarketMarketSlug?: string;
+  logoUrl?: string;
 }
 
 export type TeamFootballMetadataStatus = "curated" | "partial" | "pending";
@@ -309,6 +310,8 @@ export interface PolymarketMarketMetadata {
   tickSize: "0.1" | "0.01" | "0.001" | "0.0001";
   minOrderSize?: number;
   fee?: PolymarketFeeDetails;
+  fixtureEventSlug?: string;
+  marketKind?: "outright" | "moneyline";
   tokens: {
     yes?: PolymarketOutcomeToken;
     no?: PolymarketOutcomeToken;
@@ -422,7 +425,7 @@ export interface MatchOddsOutcome {
 }
 
 export interface MatchOddsSummary {
-  source: "api-football" | "the-odds-api" | "none";
+  source: "api-football" | "the-odds-api" | "polymarket" | "none";
   status: "live" | "cached" | "unavailable";
   outcomes: MatchOddsOutcome[];
   lastUpdated?: string;
@@ -435,15 +438,46 @@ export interface FreshnessMeta {
   ageMinutes?: number;
 }
 
+export interface PolymarketFixtureMoneylineOutcome {
+  side: MatchOutcomeSide;
+  label: string;
+  tokenId?: string;
+  noTokenId?: string;
+  conditionId?: string;
+  probability: number;
+  volume?: number;
+  yesAsk?: number;
+  yesBid?: number;
+  noAsk?: number;
+  noBid?: number;
+  fee?: PolymarketFeeDetails;
+}
+
+export interface PolymarketFixtureMetadata {
+  eventId: string;
+  slug: string;
+  league?: string;
+  volume: number;
+  volume24hr?: number;
+  moneyline: {
+    conditionId?: string;
+    acceptingOrders: boolean;
+    outcomes: PolymarketFixtureMoneylineOutcome[];
+  };
+}
+
 export interface WorldCupMatch {
   id: string;
   matchId: number;
-  stage: "GROUP" | "R32" | "R16" | "QF" | "SF" | "THIRD_PLACE" | "FINAL";
+  stage: "GROUP" | "R32" | "R16" | "QF" | "SF" | "THIRD_PLACE" | "FINAL" | "EXTERNAL";
   group?: string;
   homeTeamId?: Team["id"];
   awayTeamId?: Team["id"];
   homeSeed?: string;
   awaySeed?: string;
+  homeDisplayName?: string;
+  awayDisplayName?: string;
+  league?: string;
   homeScore?: number;
   awayScore?: number;
   status: WorldCupMatchStatus;
@@ -455,6 +489,7 @@ export interface WorldCupMatch {
   /** Elapsed match time in seconds (API-Football live clock baseline for client timer). */
   liveElapsedSeconds?: number;
   freshness: FreshnessMeta;
+  polymarket?: PolymarketFixtureMetadata;
 }
 
 export interface GameMarketOutcome {
@@ -464,6 +499,13 @@ export interface GameMarketOutcome {
   change24h?: number;
   volume?: number;
   tokenId?: string;
+  noTokenId?: string;
+  conditionId?: string;
+  yesAsk?: number;
+  yesBid?: number;
+  noAsk?: number;
+  noBid?: number;
+  fee?: PolymarketFeeDetails;
 }
 
 export interface GameMarketSnapshot {
@@ -494,6 +536,17 @@ export interface GameMatchMinuteHistoryPoint {
   draw: number;
   away: number;
 }
+
+export interface GameFixtureChartPoint {
+  matchId: string;
+  timestamp: string;
+  label: string;
+  home: number;
+  draw: number;
+  away: number;
+}
+
+export type GameFixtureChartTimeRange = "1D" | "1W" | "1M" | "all";
 
 export interface GameMatchChartEvent {
   minute: number;

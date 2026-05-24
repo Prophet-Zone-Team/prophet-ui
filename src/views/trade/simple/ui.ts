@@ -2,7 +2,7 @@ export const simpleGameColors = {
   home: "#3168FF",
   draw: "#A5A5A5",
   drawBar: "#D9D9D9",
-  awayBar: "#4EE190"
+  awayBar: "#F4B600"
 } as const;
 
 export const simpleTeamColors = {

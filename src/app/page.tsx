@@ -1,25 +1,22 @@
 import { HomeView } from "@/views/home";
+import { getFootballMatches } from "@/data/providers/football-matches";
 import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
-import {
-  attachCachedFootballToMatches,
-  getStaticWorldCupMatches
-} from "@/data/world-cup-2026/matches";
 
 export default async function Page() {
-  const marketData = await getWorldCupMarketData({
-    includeFootballContext: true,
-    includeNews: false,
-    includeOdds: false,
-  });
-  const matches = attachCachedFootballToMatches(
-    getStaticWorldCupMatches(),
-    marketData.footballTeamContext
-  );
+  const [marketData, { matches, meta: matchesMeta }] = await Promise.all([
+    getWorldCupMarketData({
+      includeFootballContext: false,
+      includeNews: false,
+      includeOdds: false,
+    }),
+    getFootballMatches(),
+  ]);
 
   return (
     <HomeView
       snapshots={marketData.snapshots}
       matches={matches}
+      matchesMeta={matchesMeta}
       dataStatus={marketData.meta}
       probabilityHistory={marketData.probabilityHistory}
       universe={marketData.universe}

@@ -39,34 +39,27 @@ function isGameProps(
   return props.variant === "game";
 }
 
-function findTeamSnapshot(
-  teamId: string | undefined,
-  snapshots: TeamMarketSnapshot[]
-): TeamMarketSnapshot | undefined {
-  if (!teamId) {
-    return snapshots[0];
-  }
-
-  return snapshots.find((item) => item.team.id === teamId) ?? snapshots[0];
-}
-
 export default function TradeSimpleView(props: TradeSimpleViewProps) {
-  const teamSidebar = useMemo(() => {
+  const sidebar = useMemo(() => {
     if (isGameProps(props)) {
       const focalTeamId =
         props.match.homeTeamId ??
         props.gameSnapshot.homeTeamId ??
         props.snapshots[0]?.team.id;
-      const snapshot = findTeamSnapshot(focalTeamId, props.snapshots);
 
-      if (!snapshot) {
-        return null;
+      if (!focalTeamId) {
+        return {
+          relatedGames: {
+            teamId: props.snapshots[0]?.team.id ?? "",
+            matches: props.relatedMatches,
+            snapshots: props.snapshots
+          }
+        };
       }
 
       return {
-        snapshot,
         relatedGames: {
-          teamId: snapshot.team.id,
+          teamId: focalTeamId,
           matches: props.relatedMatches,
           snapshots: props.snapshots
         }
@@ -116,12 +109,20 @@ export default function TradeSimpleView(props: TradeSimpleViewProps) {
             />
           )}
         </div>
-        {teamSidebar ? (
-          <div className="mt-6 flex flex-col gap-4 w-[345px]">
-            <TradeWidget snapshot={teamSidebar.snapshot} />
-            <RelatedGames {...teamSidebar.relatedGames} />
-          </div>
-        ) : null}
+        <div className="mt-6 flex flex-col gap-4 w-[345px]">
+          {isGameProps(props) ? (
+            <TradeWidget
+              variant="game"
+              gameSnapshot={props.gameSnapshot}
+              teamSnapshots={props.snapshots}
+            />
+          ) : sidebar.snapshot ? (
+            <TradeWidget snapshot={sidebar.snapshot} />
+          ) : null}
+          {sidebar.relatedGames.teamId ? (
+            <RelatedGames {...sidebar.relatedGames} />
+          ) : null}
+        </div>
       </div>
     </div>
   );

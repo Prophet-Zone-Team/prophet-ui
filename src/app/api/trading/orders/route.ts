@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 
 interface SubmitSignedOrderPayload {
   order?: unknown;
-  orderType?: "FAK";
+  orderType?: "FAK" | "GTC";
   postOnly?: boolean;
   deferExec?: boolean;
   preview?: UserOrderPreview;
@@ -77,6 +77,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
+  const orderType = payload.orderType ?? "FAK";
+
   const orderContext = getSignedOrderContext(payload);
 
   if (!orderContext) {
@@ -105,7 +107,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: ownershipError }, { status: 400 });
   }
 
-  const previewError = validatePreview(payload.preview, orderContext);
+  const previewError = validatePreview(
+    payload.preview,
+    orderContext,
+    orderType
+  );
 
   if (previewError) {
     console.warn("[trading.orders] preview validation failed", {
@@ -116,7 +122,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: previewError }, { status: 400 });
   }
 
-  const executionPriceError = await validateExecutionPrice(orderContext);
+  const executionPriceError =
+    orderType === "FAK"
+      ? await validateExecutionPrice(orderContext)
+      : undefined;
 
   if (executionPriceError) {
     console.warn("[trading.orders] execution price guard failed", {
@@ -255,8 +264,10 @@ function validatePayload(payload: SubmitSignedOrderPayload): string | undefined 
     return "Missing signed order payload.";
   }
 
-  if (payload.orderType !== "FAK") {
-    return "Only FAK orders are supported by this user flow.";
+  const orderType = payload.orderType ?? "FAK";
+
+  if (orderType !== "FAK" && orderType !== "GTC") {
+    return "Only FAK and GTC orders are supported by this user flow.";
   }
 
   return undefined;
@@ -300,7 +311,11 @@ function validateSignedOrderOwnership({
   return undefined;
 }
 
-function validatePreview(preview: UserOrderPreview | undefined, order: SignedOrderContext): string | undefined {
+function validatePreview(
+  preview: UserOrderPreview | undefined,
+  order: SignedOrderContext,
+  orderType: "FAK" | "GTC"
+): string | undefined {
   if (!preview) {
     return "Missing safe order preview metadata.";
   }
@@ -309,11 +324,21 @@ function validatePreview(preview: UserOrderPreview | undefined, order: SignedOrd
     return "Order preview token does not match signed order token.";
   }
 
-  if (preview.orderType !== "FAK") {
-    return "Only FAK order previews are supported.";
+  if (preview.orderType !== orderType) {
+    return "Order preview order type does not match submitted order type.";
   }
 
-  if (!Number.isFinite(preview.limitPrice) || preview.limitPrice <= 0 || preview.limitPrice >= 1) {
+  const expectedSide = order.side === "BUY" ? "buy" : "sell";
+
+  if (preview.side !== expectedSide) {
+    return "Order preview side does not match signed order side.";
+  }
+
+  if (
+    !Number.isFinite(preview.limitPrice) ||
+    preview.limitPrice <= 0 ||
+    preview.limitPrice >= 1
+  ) {
     return "Order preview limit price is invalid.";
   }
 
@@ -321,7 +346,11 @@ function validatePreview(preview: UserOrderPreview | undefined, order: SignedOrd
     return "Order preview size is invalid.";
   }
 
-  if (!preview.teamId || !["yes", "no"].includes(preview.outcome) || !["buy", "sell"].includes(preview.side)) {
+  if (
+    !preview.teamId ||
+    !["yes", "no"].includes(preview.outcome) ||
+    !["buy", "sell"].includes(preview.side)
+  ) {
     return "Order preview metadata is incomplete.";
   }
 

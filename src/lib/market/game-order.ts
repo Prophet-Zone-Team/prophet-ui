@@ -2,14 +2,20 @@ import type {
   BidTradeSide,
   GameMarketSnapshot,
   MatchOutcomeSide,
+  OrderOutcomeSide,
   TradingOrderType
 } from "@/types/market";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
+import {
+  findGameMarketOutcome,
+  resolveGameOutcomeTradePrice
+} from "@/lib/market/game-outcome-price";
 import { calculateOrderEstimate, normalizeLimitPrice } from "@/lib/market/order-math";
 
 export interface GameBidOrderPreviewInput {
   snapshot: GameMarketSnapshot;
   outcomeSide: MatchOutcomeSide;
+  binarySide: OrderOutcomeSide;
   tradeSide: BidTradeSide;
   amount: number;
   limitPrice: number;
@@ -18,6 +24,7 @@ export interface GameBidOrderPreviewInput {
 
 export interface GameBidOrderPreview {
   outcomeSide: MatchOutcomeSide;
+  binarySide: OrderOutcomeSide;
   tradeSide: BidTradeSide;
   orderType: TradingOrderType;
   tokenId?: string;
@@ -36,29 +43,34 @@ export interface GameBidOrderPreview {
 export function buildGameBidOrderPreview(
   input: GameBidOrderPreviewInput
 ): GameBidOrderPreview {
-  const outcome = input.snapshot.outcomes.find((item) => item.side === input.outcomeSide);
-  const probability = outcome?.probability ?? getOutcomeProbability(input.snapshot, input.outcomeSide);
+  const outcome = findGameMarketOutcome(input.snapshot.outcomes, input.outcomeSide);
+  const probability =
+    outcome?.probability ?? getOutcomeProbability(input.snapshot, input.outcomeSide);
+  const tokenId =
+    input.binarySide === "yes" ? outcome?.tokenId : outcome?.noTokenId;
   const sidePrice = normalizeLimitPrice(input.limitPrice);
   const estimate = calculateOrderEstimate({
-    side: "yes",
+    side: input.binarySide,
     tradeSide: input.tradeSide,
     amount: input.amount,
     probability,
     limitPrice: sidePrice,
-    orderType: input.orderType
+    orderType: input.orderType,
+    fee: outcome?.fee
   });
 
   const disabledReason = getGameDisabledReason({
     acceptingOrders: input.snapshot.market.acceptingOrders,
     amount: input.amount,
-    tokenId: outcome?.tokenId
+    tokenId
   });
 
   return {
     outcomeSide: input.outcomeSide,
+    binarySide: input.binarySide,
     tradeSide: input.tradeSide,
     orderType: input.orderType,
-    tokenId: outcome?.tokenId,
+    tokenId,
     acceptingOrders: input.snapshot.market.acceptingOrders,
     sidePrice,
     shareSize: estimate.shareSize,
@@ -98,8 +110,17 @@ function getGameDisabledReason({
 
 export function getDefaultGameLimitPrice(
   snapshot: GameMarketSnapshot,
-  outcomeSide: MatchOutcomeSide
+  outcomeSide: MatchOutcomeSide,
+  binarySide: OrderOutcomeSide = "yes",
+  tradeSide: BidTradeSide = "buy"
 ): number {
+  const outcome = findGameMarketOutcome(snapshot.outcomes, outcomeSide);
   const probability = getOutcomeProbability(snapshot, outcomeSide);
-  return normalizeLimitPrice(probability / 100);
+
+  return resolveGameOutcomeTradePrice(
+    outcome,
+    probability,
+    binarySide,
+    tradeSide
+  );
 }
