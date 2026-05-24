@@ -2,8 +2,16 @@ import { encodeFunctionData, getAddress, maxUint256 } from "viem";
 import type { Hex, TypedDataDomain, TypedDataParameter } from "viem";
 
 import { FundingNetworkType } from "@/config/funding/networks";
+import { POLYGON_USDC_NATIVE } from "@/lib/funding/stableflow";
 import { POLYGON_COLLATERAL_CONTRACTS } from "@/lib/market/polymarket-collateral-contracts";
 import type { BridgeAddressSet } from "@/types/funding";
+
+export const POLYGON_USDC_BRIDGED = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+export const UNISWAP_V3_ROUTER = "0xe592427a0aece92de3edee1f18e0157c05861564";
+export const PUSD_WRAP_TARGET = "0x93070a847efEf7F70739046A929D47a521F5B8ee";
+export const UNISWAP_FEE_TIER = 100;
+
+const CONVERT_SLIPPAGE_BPS = 50n;
 
 export interface DepositWalletCall {
   target: string;
@@ -45,6 +53,43 @@ const ERC20_ABI = [
       { name: "value", type: "uint256" },
     ],
     outputs: [{ name: "", type: "bool" }],
+  },
+] as const;
+const UNISWAP_V3_ROUTER_ABI = [
+  {
+    name: "exactInputSingle",
+    type: "function",
+    stateMutability: "payable",
+    inputs: [
+      {
+        name: "params",
+        type: "tuple",
+        components: [
+          { name: "tokenIn", type: "address" },
+          { name: "tokenOut", type: "address" },
+          { name: "fee", type: "uint24" },
+          { name: "recipient", type: "address" },
+          { name: "deadline", type: "uint256" },
+          { name: "amountIn", type: "uint256" },
+          { name: "amountOutMinimum", type: "uint256" },
+          { name: "sqrtPriceLimitX96", type: "uint160" },
+        ],
+      },
+    ],
+    outputs: [{ name: "amountOut", type: "uint256" }],
+  },
+] as const;
+const PUSD_WRAP_ABI = [
+  {
+    name: "wrap",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "token", type: "address" },
+      { name: "recipient", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
   },
 ] as const;
 const ERC1155_ABI = [
@@ -210,6 +255,169 @@ export function createErc20TransferCall({
       args: [getAddress(recipientAddress), amountBaseUnits],
     }),
   };
+}
+
+function applySlippageMinimum(amountBaseUnits: bigint, slippageBps = CONVERT_SLIPPAGE_BPS): bigint {
+  if (amountBaseUnits <= 0n) {
+    return 0n;
+  }
+
+  return (amountBaseUnits * (10_000n - slippageBps)) / 10_000n;
+}
+
+export function createErc20ApproveCallWithAmount({
+  tokenAddress,
+  spenderAddress,
+  amountBaseUnits,
+}: {
+  tokenAddress: string;
+  spenderAddress: string;
+  amountBaseUnits: bigint;
+}): DepositWalletCall {
+  return {
+    target: tokenAddress,
+    value: "0",
+    data: encodeFunctionData({
+      abi: ERC20_ABI,
+      functionName: "approve",
+      args: [spenderAddress as `0x${string}`, amountBaseUnits],
+    }),
+  };
+}
+
+export function createUniswapExactInputSingleCall({
+  tokenIn,
+  tokenOut,
+  fee,
+  recipient,
+  amountIn,
+  amountOutMinimum,
+  deadline,
+}: {
+  tokenIn: string;
+  tokenOut: string;
+  fee: number;
+  recipient: string;
+  amountIn: bigint;
+  amountOutMinimum: bigint;
+  deadline: bigint;
+}): DepositWalletCall {
+  return {
+    target: UNISWAP_V3_ROUTER,
+    value: "0",
+    data: encodeFunctionData({
+      abi: UNISWAP_V3_ROUTER_ABI,
+      functionName: "exactInputSingle",
+      args: [
+        {
+          tokenIn: getAddress(tokenIn),
+          tokenOut: getAddress(tokenOut),
+          fee,
+          recipient: getAddress(recipient),
+          deadline,
+          amountIn,
+          amountOutMinimum,
+          sqrtPriceLimitX96: 0n,
+        },
+      ],
+    }),
+  };
+}
+
+export function createPusdWrapCall({
+  usdceAddress,
+  amountBaseUnits,
+  recipient,
+}: {
+  usdceAddress: string;
+  amountBaseUnits: bigint;
+  recipient: string;
+}): DepositWalletCall {
+  return {
+    target: PUSD_WRAP_TARGET,
+    value: "0",
+    data: encodeFunctionData({
+      abi: PUSD_WRAP_ABI,
+      functionName: "wrap",
+      args: [getAddress(usdceAddress), getAddress(recipient), amountBaseUnits],
+    }),
+  };
+}
+
+export function buildUsdcToUsdceConvertBatch({
+  chainId,
+  walletAddress,
+  nonce,
+  deadline,
+  amountBaseUnits,
+}: {
+  chainId: number;
+  walletAddress: string;
+  nonce: string;
+  deadline: string;
+  amountBaseUnits: bigint;
+}): DepositWalletBatchSignablePayload {
+  const swapDeadline = BigInt(Math.floor(Date.now() / 1000) + 900);
+  const amountOutMinimum = applySlippageMinimum(amountBaseUnits);
+
+  const calls = [
+    createErc20ApproveCall({
+      tokenAddress: POLYGON_USDC_NATIVE,
+      spenderAddress: UNISWAP_V3_ROUTER,
+    }),
+    createUniswapExactInputSingleCall({
+      tokenIn: POLYGON_USDC_NATIVE,
+      tokenOut: POLYGON_USDC_BRIDGED,
+      fee: UNISWAP_FEE_TIER,
+      recipient: walletAddress,
+      amountIn: amountBaseUnits,
+      amountOutMinimum,
+      deadline: swapDeadline,
+    }),
+  ];
+
+  return buildDepositWalletBatchPayload({
+    chainId,
+    walletAddress,
+    nonce,
+    deadline,
+    calls,
+  });
+}
+
+export function buildUsdceToPusdConvertBatch({
+  chainId,
+  walletAddress,
+  nonce,
+  deadline,
+  amountBaseUnits,
+}: {
+  chainId: number;
+  walletAddress: string;
+  nonce: string;
+  deadline: string;
+  amountBaseUnits: bigint;
+}): DepositWalletBatchSignablePayload {
+  const calls = [
+    createErc20ApproveCallWithAmount({
+      tokenAddress: POLYGON_USDC_BRIDGED,
+      spenderAddress: PUSD_WRAP_TARGET,
+      amountBaseUnits,
+    }),
+    createPusdWrapCall({
+      usdceAddress: POLYGON_USDC_BRIDGED,
+      amountBaseUnits,
+      recipient: walletAddress,
+    }),
+  ];
+
+  return buildDepositWalletBatchPayload({
+    chainId,
+    walletAddress,
+    nonce,
+    deadline,
+    calls,
+  });
 }
 
 export function buildWithdrawTransferBatch({

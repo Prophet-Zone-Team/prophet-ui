@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
+import { usePendingFunderUsdc } from "@/hooks/funding";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { DepositDialog } from "@/views/portfolio/deposit";
 import { PortfolioPerformanceChart } from "@/views/portfolio/portfolio-performance-chart";
@@ -10,6 +13,7 @@ import {
   portfolioAvatarClass,
   portfolioConnectButtonClass,
   portfolioDepositButtonClass,
+  portfolioPendingDepositButtonClass,
   portfolioSummaryCardClass,
   portfolioSummaryLabelClass,
   portfolioSummaryValueLargeClass,
@@ -28,12 +32,21 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
     session,
     portfolio,
     status,
-    onConnectWallet
+    onConnectWallet,
+    reload,
   } = usePortfolioContext();
 
   const [copied, setCopied] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+
+  const {
+    hasPendingDeposit,
+    converting,
+    confirmPendingDeposit,
+  } = usePendingFunderUsdc({
+    enabled: Boolean(session),
+  });
 
   const copyAddress = useCallback(async () => {
     if (!session?.walletAddress) {
@@ -48,6 +61,17 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
       setCopied(false);
     }
   }, [session]);
+
+  const onConfirmPendingDeposit = async () => {
+    try {
+      await confirmPendingDeposit();
+      toast.success("Deposit successful");
+      reload();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message);
+    }
+  };
 
   const portfolioDisplay = session
     ? formatNumber(portfolio?.portfolioValue, 2, true, { round: 0, isZeroPrecision: true })
@@ -108,9 +132,24 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
               </strong>
             </div>
             <div className="flex flex-col gap-1">
-              <span className={portfolioSummaryLabelClass}>
-                Available to trade
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={portfolioSummaryLabelClass}>
+                  Available to trade
+                </span>
+                {session && hasPendingDeposit ? (
+                  <button
+                    type="button"
+                    className={portfolioPendingDepositButtonClass}
+                    disabled={converting}
+                    onClick={() => void onConfirmPendingDeposit()}
+                  >
+                    {converting ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    ) : null}
+                    Confirm pending deposit
+                  </button>
+                ) : null}
+              </div>
               <strong className={portfolioSummaryValueMediumClass}>
                 {availableDisplay}
               </strong>

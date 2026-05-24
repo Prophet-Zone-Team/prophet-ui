@@ -1,5 +1,7 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
+
 import { formatShortWallet } from "@/lib/team/detail-format";
 import {
   depositConnectedRowClass,
@@ -12,10 +14,14 @@ import { formatNumber } from "@/utils";
 
 export interface DepositEntryStepProps {
   onSelectConnected: () => void;
+  onSelectStableflow: () => void;
+  stableflowLoading?: boolean;
 }
 
 export function DepositEntryStep({
-  onSelectConnected
+  onSelectConnected,
+  onSelectStableflow,
+  stableflowLoading = false,
 }: DepositEntryStepProps) {
   const {
     session,
@@ -24,6 +30,7 @@ export function DepositEntryStep({
   } = usePortfolioContext();
   const {
     connectedWalletBalanceUsd,
+    stableflowBalanceUsd,
     balancesLoading,
     pricesLoading,
   } = useDepositContext();
@@ -47,6 +54,27 @@ export function DepositEntryStep({
 
   return (
     <div className="flex flex-col gap-3 pb-2">
+      <span className={depositSectionLabelClass}>Stableflow</span>
+      <button
+        type="button"
+        className={depositConnectedRowClass}
+        onClick={() => void onSelectStableflow()}
+        disabled={stableflowLoading}
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          {stableflowLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
+          ) : (
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f4f4f4] text-xs font-[556] text-black">
+              SF
+            </span>
+          )}
+          <span className="truncate text-base font-[556] text-black">Stableflow</span>
+        </span>
+        <span className="shrink-0 text-base font-[556] text-black">
+        </span>
+      </button>
+
       <span className={depositSectionLabelClass}>Connected</span>
       <button
         type="button"
@@ -60,7 +88,13 @@ export function DepositEntryStep({
           </span>
         </span>
         <span className="shrink-0 text-base font-[556] text-black">
-          {isLoading ? "…" : formatNumber(connectedWalletBalanceUsd, 2, true, { round: 0, isZeroPrecision: true })}
+          {
+            isLoading
+              ? (
+                <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
+              )
+              : formatNumber(connectedWalletBalanceUsd, 2, true, { round: 0, isZeroPrecision: true })
+          }
         </span>
       </button>
     </div>

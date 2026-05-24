@@ -13,3 +13,8 @@ export {
 export { usePrices, type UsePricesOptions, type UsePricesResult } from "@/hooks/funding/use-prices";
 export { usePositions, type UsePositionsOptions, type UsePositionsResult } from "@/hooks/funding/use-positions";
 export { useWithdraw, type UseWithdrawResult } from "@/hooks/funding/use-withdraw";
+export {
+  usePendingFunderUsdc,
+  type UsePendingFunderUsdcOptions,
+  type UsePendingFunderUsdcResult,
+} from "@/hooks/funding/use-pending-funder-usdc";

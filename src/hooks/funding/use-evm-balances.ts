@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import {
   FUNDING_TOKENS_LIST,
@@ -23,6 +23,8 @@ const DEBOUNCE_MS = 5_000;
 export interface UseEvmBalancesOptions {
   auto?: boolean;
   enabled?: boolean;
+  tokens?: FundingToken[];
+  merge?: boolean;
 }
 
 export interface UseEvmBalancesResult {
@@ -33,15 +35,34 @@ export interface UseEvmBalancesResult {
   getTokenBalance: (token: FundingToken) => Promise<string>;
 }
 
+function mergeBalancesByChain(
+  current: EvmBalancesByChain,
+  incoming: EvmBalancesByChain,
+): EvmBalancesByChain {
+  const merged: EvmBalancesByChain = { ...current };
+
+  for (const [chainKey, chainBalances] of Object.entries(incoming)) {
+    merged[chainKey] = {
+      ...merged[chainKey],
+      ...chainBalances,
+    };
+  }
+
+  return merged;
+}
+
 export function useEvmBalances(options: UseEvmBalancesOptions = {}): UseEvmBalancesResult {
-  const { auto = false, enabled = true } = options;
+  const { auto = false, enabled = true, tokens, merge = false } = options;
   const auth = useAuthOptional();
   const walletAddress = auth?.session?.walletAddress;
+
+  const resolvedTokens = useMemo(() => tokens ?? EVM_FUNDING_TOKENS, [tokens]);
 
   const evmBalances = useBalancesStore((state) => state.evmBalances);
   const loading = useBalancesStore((state) => state.loading);
   const error = useBalancesStore((state) => state.error);
   const setEvmBalances = useBalancesStore((state) => state.setEvmBalances);
+  const mergeEvmBalances = useBalancesStore((state) => state.mergeEvmBalances);
   const setLoading = useBalancesStore((state) => state.setLoading);
   const setError = useBalancesStore((state) => state.setError);
   const patchEvmTokenBalance = useBalancesStore((state) => state.patchEvmTokenBalance);
@@ -54,6 +75,22 @@ export function useEvmBalances(options: UseEvmBalancesOptions = {}): UseEvmBalan
   const initRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const applyBalances = useCallback(
+    (byChain: EvmBalancesByChain) => {
+      if (merge) {
+        mergeEvmBalances(byChain);
+        return;
+      }
+
+      setEvmBalances({
+        evmBalances: byChain,
+        updatedAt: new Date().toISOString(),
+        error: undefined,
+      });
+    },
+    [merge, mergeEvmBalances, setEvmBalances],
+  );
 
   const getBalances = useCallback(async () => {
     if (!walletAddress) {
@@ -72,7 +109,7 @@ export function useEvmBalances(options: UseEvmBalancesOptions = {}): UseEvmBalan
     setError(undefined);
 
     try {
-      const byChain = await fetchEvmTokenBalances(walletAddress, EVM_FUNDING_TOKENS, {
+      const byChain = await fetchEvmTokenBalances(walletAddress, resolvedTokens, {
         signal: abortController.signal,
       });
 
@@ -80,11 +117,16 @@ export function useEvmBalances(options: UseEvmBalancesOptions = {}): UseEvmBalan
         return;
       }
 
-      setEvmBalances({
-        evmBalances: byChain,
-        updatedAt: new Date().toISOString(),
-        error: undefined,
-      });
+      if (merge) {
+        const merged = mergeBalancesByChain(useBalancesStore.getState().evmBalances, byChain);
+        setEvmBalances({
+          evmBalances: merged,
+          updatedAt: new Date().toISOString(),
+          error: undefined,
+        });
+      } else {
+        applyBalances(byChain);
+      }
     } catch (fetchError) {
       if (fetchError instanceof Error && fetchError.name === "AbortError") {
         return;
@@ -104,7 +146,7 @@ export function useEvmBalances(options: UseEvmBalancesOptions = {}): UseEvmBalan
 
       initRef.current = true;
     }
-  }, [setError, setEvmBalances, setLoading, walletAddress]);
+  }, [applyBalances, merge, resolvedTokens, setError, setEvmBalances, setLoading, walletAddress]);
 
   const getTokenBalance = useCallback(
     async (token: FundingToken) => {
@@ -187,14 +229,16 @@ export function useEvmBalances(options: UseEvmBalancesOptions = {}): UseEvmBalan
 
   useEffect(() => {
     if (!enabled || !walletAddress) {
-      clearEvmBalances();
+      if (!merge) {
+        clearEvmBalances();
+      }
       return;
     }
 
     if (!initRef.current) {
       debouncedGetBalances();
     }
-  }, [clearEvmBalances, debouncedGetBalances, enabled, walletAddress]);
+  }, [clearEvmBalances, debouncedGetBalances, enabled, merge, walletAddress]);
 
   useEffect(() => {
     if (!enabled || !walletAddress || !auto) {

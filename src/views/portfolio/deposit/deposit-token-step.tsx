@@ -8,15 +8,15 @@ import {
   depositTokenRowSelectedClass
 } from "@/views/portfolio/deposit/deposit-ui";
 import { TokenIcon } from "@/views/portfolio/shared/token-icon";
-import { FundingAsset } from "@/config/funding";
 import { useDepositContext } from "./context";
+import type { DepositSelectableToken } from "./types";
 import { useMemo } from "react";
 import Big from "big.js";
 import { Loader2 } from "lucide-react";
 
 export interface DepositTokenStepProps {
-  selectedToken?: FundingAsset;
-  onSelectToken: (token: FundingAsset) => void;
+  selectedToken?: DepositSelectableToken;
+  onSelectToken: (token: DepositSelectableToken) => void;
 }
 
 export function DepositTokenStep({
@@ -24,7 +24,8 @@ export function DepositTokenStep({
   onSelectToken
 }: DepositTokenStepProps) {
   const {
-    supportedAssets,
+    depositMethod,
+    selectableTokens,
     getTokenBalance,
     getTokenUsdValue,
     hasTokenUsdPrice,
@@ -33,14 +34,16 @@ export function DepositTokenStep({
   } = useDepositContext();
 
   const sortedSupportedAssets = useMemo(() => {
-    return supportedAssets?.map((asset) => {
-      const token: FundingAsset & { balance: string; usdValue: number; isLowBalance: boolean } = {
+    return selectableTokens?.map((asset) => {
+      const token: DepositSelectableToken & { balance: string; usdValue: number; isLowBalance: boolean } = {
         ...asset,
         balance: getTokenBalance(asset),
         usdValue: getTokenUsdValue(asset),
         isLowBalance: false,
       };
-      token.isLowBalance = Big(token.usdValue || 0).lt(token.minCheckoutUsd);
+      const minCheckoutUsd = depositMethod === "stableflow" ? 0 : token.minCheckoutUsd;
+      token.isLowBalance =
+        depositMethod !== "stableflow" && Big(token.usdValue || 0).lt(minCheckoutUsd);
       return token;
     }).sort((a, b) => {
       if (a.isLowBalance && !b.isLowBalance) {
@@ -51,7 +54,7 @@ export function DepositTokenStep({
       }
       return b.usdValue - a.usdValue;
     });
-  }, [supportedAssets, getTokenBalance, getTokenUsdValue]);
+  }, [depositMethod, selectableTokens, getTokenBalance, getTokenUsdValue]);
 
   const loading = balancesLoading || pricesLoading;
 
