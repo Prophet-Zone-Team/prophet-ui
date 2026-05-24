@@ -20,6 +20,29 @@ const CTF_EXCHANGE_NAME_HASH = keccak256(toHex(CTF_EXCHANGE_V2_DOMAIN_NAME));
 const CTF_EXCHANGE_VERSION_HASH = keccak256(toHex(CTF_EXCHANGE_V2_DOMAIN_VERSION));
 const SIGNATURE_TYPE_POLY_1271 = 3;
 const CONDITIONAL_TOKEN_DECIMALS = 6;
+const TYPED_DATA_SIGN_TYPES = {
+  TypedDataSign: [
+    { name: "contents", type: "Order" },
+    { name: "name", type: "string" },
+    { name: "version", type: "string" },
+    { name: "chainId", type: "uint256" },
+    { name: "verifyingContract", type: "address" },
+    { name: "salt", type: "bytes32" },
+  ],
+  Order: [
+    { name: "salt", type: "uint256" },
+    { name: "maker", type: "address" },
+    { name: "signer", type: "address" },
+    { name: "tokenId", type: "uint256" },
+    { name: "makerAmount", type: "uint256" },
+    { name: "takerAmount", type: "uint256" },
+    { name: "side", type: "uint8" },
+    { name: "signatureType", type: "uint8" },
+    { name: "timestamp", type: "uint256" },
+    { name: "metadata", type: "bytes32" },
+    { name: "builder", type: "bytes32" },
+  ],
+} as const;
 
 export interface UserOrderSignablePayload {
   order: {
@@ -205,6 +228,67 @@ export function buildUserOrderSignablePayload({
   };
 }
 
+export function getWalletSignableTypedData(signable: UserOrderSignablePayload) {
+  const contents = signable.message.contents as {
+    salt: string;
+    maker: string;
+    signer: string;
+    tokenId: string;
+    makerAmount: string;
+    takerAmount: string;
+    side: number;
+    signatureType: number;
+    timestamp: string;
+    metadata: Hex;
+    builder: Hex;
+  };
+  const verifyingContract = signable.domain.verifyingContract;
+
+  if (typeof verifyingContract !== "string") {
+    throw new Error("Missing CTF Exchange verifying contract for order signing.");
+  }
+
+  return {
+    domain: {
+      name: CTF_EXCHANGE_V2_DOMAIN_NAME,
+      version: CTF_EXCHANGE_V2_DOMAIN_VERSION,
+      chainId: POLYGON_CHAIN_ID,
+      verifyingContract: verifyingContract as `0x${string}`,
+    },
+    types: TYPED_DATA_SIGN_TYPES,
+    primaryType: "TypedDataSign" as const,
+    message: {
+      contents,
+      name: "DepositWallet",
+      version: "1",
+      chainId: POLYGON_CHAIN_ID,
+      verifyingContract: signable.order.signer as `0x${string}`,
+      salt: BYTES32_ZERO,
+    },
+  };
+}
+
+export async function assertUserOrderSignatureValid({
+  signable,
+  signature,
+  walletAddress,
+}: {
+  signable: UserOrderSignablePayload;
+  signature: Hex;
+  walletAddress: string;
+}) {
+  const recoveredAddress = await recoverUserOrderSignerAddress({
+    signable,
+    signature,
+  });
+
+  if (!isSameAddress(recoveredAddress, walletAddress)) {
+    throw new Error(
+      `Order signature does not match the connected wallet. Expected ${walletAddress}, recovered ${recoveredAddress}. Reconnect the intended wallet and retry.`,
+    );
+  }
+}
+
 export function attachUserOrderSignature({
   signable,
   signature,
@@ -212,13 +296,22 @@ export function attachUserOrderSignature({
   signable: UserOrderSignablePayload;
   signature: Hex;
 }): SignedUserOrderPayload {
+  const wrappedSignature = finalizePoly1271Signature({
+    signature,
+    signable,
+  });
+
+  if (process.env.NODE_ENV === "development") {
+    console.info("[user-order] poly1271 signature debug", {
+      contentsHash: createOrderContentsHash(signable.order),
+      wrappedSignatureLength: wrappedSignature.length,
+    });
+  }
+
   return {
     order: {
       ...signable.order,
-      signature: finalizePoly1271Signature({
-        signature,
-        signable,
-      }),
+      signature: wrappedSignature,
     },
     orderType: signable.orderType,
     postOnly: signable.postOnly,
@@ -233,13 +326,19 @@ export async function recoverUserOrderSignerAddress({
   signable: UserOrderSignablePayload;
   signature: Hex;
 }) {
+  const walletTypedData = getWalletSignableTypedData(signable);
+
   return recoverTypedDataAddress({
-    domain: signable.domain,
-    types: signable.types,
-    primaryType: signable.primaryType,
-    message: signable.message,
+    domain: walletTypedData.domain,
+    types: walletTypedData.types,
+    primaryType: walletTypedData.primaryType,
+    message: walletTypedData.message,
     signature,
-  });
+  } as unknown as Parameters<typeof recoverTypedDataAddress>[0]);
+}
+
+function isSameAddress(left: string, right: string) {
+  return left.toLowerCase() === right.toLowerCase();
 }
 
 function buildOrder({

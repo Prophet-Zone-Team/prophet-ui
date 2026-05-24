@@ -5,7 +5,10 @@ import type { Hex } from "viem";
 import { getTradingHost } from "@/server/trading/clob-auth";
 import { serverFetch } from "@/server/trading/server-fetch";
 
-const ZERO_BUILDER_CODE = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
+export const ZERO_ORDER_BUILDER_CODE =
+  "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
+
+const ZERO_BUILDER_CODE = ZERO_ORDER_BUILDER_CODE;
 
 export function getPolymarketBuilderCode(): Hex | undefined {
   const value = process.env.POLYMARKET_BUILDER_CODE?.trim() ?? process.env.BUILDER_CODE?.trim();

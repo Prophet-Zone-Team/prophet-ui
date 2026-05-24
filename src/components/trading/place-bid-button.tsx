@@ -1,15 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 
-import { teamTradeHref } from "@/lib/routes/trade";
-
-import { buildBidOrderPreview, type BidOrderPreview } from "@/lib/market/polymarket-order";
-import { calculateReferencePrice } from "@/lib/market/order-math";
-import { attachUserOrderSignature, buildUserOrderSignablePayload } from "@/lib/market/user-order";
-import type { TeamMarketSnapshot, UserOrderPreview, UserTradingReadiness } from "@/types/market";
 import {
   fetchJson,
   getQuickBidSetupIssue,
@@ -21,15 +16,21 @@ import {
   subscribeQuickBidAmountChange,
   writeQuickBidAmount,
 } from "@/components/trading/quick-bid-amount";
-import { getOrCreateQuickBidSessionSigner, signQuickBidOrder } from "@/components/trading/quick-bid-session-signer";
+import { getOrCreateQuickBidSessionSigner } from "@/components/trading/quick-bid-session-signer";
 import { useAuthOptional } from "@/context/auth";
+import { buildBidOrderPreview, type BidOrderPreview } from "@/lib/market/polymarket-order";
+import { calculateReferencePrice } from "@/lib/market/order-math";
+import { teamTradeHref } from "@/lib/routes/trade";
+import {
+  formatOrderToastSummary,
+  showOrderErrorToast,
+  showOrderSubmittedToast
+} from "@/lib/trading/order-toast";
+import { createLocalClobWalletClient } from "@/lib/trading/viem-clob-signer";
+import type { TeamMarketSnapshot, UserOrderPreview, UserTradingReadiness } from "@/types/market";
+import { submitSignedTradeOrder } from "@/views/trade/trade-widget/trade-ticket-helpers";
 
-type QuickBidStatus = "idle" | "checking" | "submitting" | "success" | "error";
-
-interface TradingConfig {
-  builderCode?: string;
-  builderTakerFeeRate?: number;
-}
+type QuickBidStatus = "idle" | "checking" | "submitting";
 
 interface PlaceBidButtonProps {
   children?: ReactNode;
@@ -46,10 +47,10 @@ export function PlaceBidButton({
   snapshot,
   navigateToTrade = false
 }: PlaceBidButtonProps) {
+  const router = useRouter();
   const auth = useAuthOptional();
   const [amount, setAmount] = useState(() => readQuickBidAmount());
   const [status, setStatus] = useState<QuickBidStatus>("idle");
-  const [message, setMessage] = useState<string>();
   const shouldShowAmount = isQuickBidLabel(children);
   const buttonText = useMemo(() => {
     if (status === "checking") {
@@ -91,13 +92,12 @@ export function PlaceBidButton({
     const numericAmount = Number(readQuickBidAmount(activeWalletAddress));
 
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-      showResult("error", "Set a positive Quick Bid amount from the account menu first.");
+      showOrderErrorToast("Set a positive Quick Bid amount from the account menu first.");
       return;
     }
 
     writeQuickBidAmount(String(numericAmount), activeWalletAddress);
     setStatus("checking");
-    setMessage(`Checking Quick Bid readiness for ${snapshot.team.name}.`);
 
     try {
       let session = auth?.session;
@@ -123,61 +123,43 @@ export function PlaceBidButton({
         throw new Error(preview.disabledReason ?? "This market is not available for real orders.");
       }
 
-      const [config, readiness] = await Promise.all([
-        fetchJson<TradingConfig>("/api/trading/config"),
-        loadReadinessForPreview(preview),
-      ]);
+      const readiness = await loadReadinessForPreview(preview);
       const readinessError = getReadinessError(readiness);
 
       if (readinessError) {
         throw new Error(readinessError);
       }
 
-      const signer = getOrCreateQuickBidSessionSigner(session.walletAddress);
-      const signable = buildUserOrderSignablePayload({
-        preview,
-        walletAddress: session.walletAddress,
-        funderAddress: session.funderAddress,
-        orderType: "FAK",
-        builderCode: config.builderCode,
-      });
-      const signature = await signQuickBidOrder(signable, signer);
-      const signedOrder = attachUserOrderSignature({
-        signable,
-        signature,
-      });
-
+      const sessionSigner = getOrCreateQuickBidSessionSigner(session.walletAddress);
       setStatus("submitting");
-      setMessage(`Submitting ${formatQuickBidAmount(String(numericAmount))} USDC Quick Bid for ${snapshot.team.name} YES.`);
 
-      const payload = await fetchJson<{ order?: { id?: string }; response?: unknown }>("/api/trading/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...signedOrder,
-          preview: buildUserOrderPreview(snapshot, preview),
-        }),
+      const result = await submitSignedTradeOrder({
+        session,
+        preview,
+        orderType: "FAK",
+        userOrderPreview: buildUserOrderPreview(snapshot, preview),
+        signer: createLocalClobWalletClient(sessionSigner.privateKey),
       });
 
-      showResult(
-        "success",
-        `Quick Bid submitted for ${snapshot.team.name}${payload.order?.id ? ` / ${payload.order.id}` : ""}.`,
+      showOrderSubmittedToast(
+        formatOrderToastSummary({
+          tradeSide: preview.tradeSide,
+          outcomeSide: preview.outcomeSide,
+          estimatedTotalCost: preview.estimatedTotalCost,
+          shareSize: preview.shareSize,
+          variant: "team",
+          teamName: snapshot.team.name,
+        }),
+        {
+          orderId: result.order?.id,
+          onViewPortfolio: () => router.push("/portfolio"),
+        }
       );
-    } catch (error) {
-      showResult("error", error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  function showResult(nextStatus: "success" | "error", nextMessage: string) {
-    setStatus(nextStatus);
-    setMessage(nextMessage);
-
-    window.setTimeout(() => {
       setStatus("idle");
-      setMessage(undefined);
-    }, nextStatus === "success" ? 4200 : 6400);
+    } catch (error) {
+      setStatus("idle");
+      showOrderErrorToast(error);
+    }
   }
 
   if (navigateToTrade && snapshot) {
@@ -197,35 +179,14 @@ export function PlaceBidButton({
   }
 
   return (
-    <>
-      <button
-        type="button"
-        className={className}
-        disabled={status === "checking" || status === "submitting"}
-        onClick={() => void handleClick()}
-      >
-        {buttonText}
-      </button>
-      {message ? (
-        <div
-          className={
-            status === "error"
-              ? "mt-2 rounded-[7px] border border-prophet-red/30 bg-[rgba(255,240,244,0.95)] px-3 py-2 text-xs text-prophet-red"
-              : status === "success"
-                ? "mt-2 rounded-[7px] border border-prophet-green/30 bg-[rgba(241,253,248,0.95)] px-3 py-2 text-xs text-prophet-green"
-                : "mt-2 rounded-[7px] border border-prophet-line bg-white/90 px-3 py-2 text-xs text-prophet-ink"
-          }
-        >
-          <span>{status === "error" ? "Quick Bid blocked" : status === "success" ? "Quick Bid submitted" : "Quick Bid"}</span>
-          <strong>{message}</strong>
-          {auth?.session ? (
-            <small>
-              {auth.session.walletAddress.slice(0, 6)}...{auth.session.walletAddress.slice(-4)}
-            </small>
-          ) : null}
-        </div>
-      ) : null}
-    </>
+    <button
+      type="button"
+      className={className}
+      disabled={status === "checking" || status === "submitting"}
+      onClick={() => void handleClick()}
+    >
+      {buttonText}
+    </button>
   );
 }
 

@@ -74,9 +74,63 @@ export async function checkTradingEligibility(clientIp?: string): Promise<Tradin
     return {
       status: "error",
       checkedAt,
-      reason: error instanceof Error ? error.message : String(error),
+      reason: formatGeoblockFetchError(error),
     };
   }
+}
+
+export function isGeoblockNetworkError(reason: string | undefined) {
+  if (!reason) {
+    return false;
+  }
+
+  const normalized = reason.toLowerCase();
+
+  return (
+    normalized.includes("timeout") ||
+    normalized.includes("aborted") ||
+    normalized.includes("fetch failed") ||
+    normalized.includes("network") ||
+    normalized.includes("econnrefused") ||
+    normalized.includes("enotfound") ||
+    normalized.includes("unreachable")
+  );
+}
+
+export function formatGeoblockFetchError(error: unknown) {
+  const detail = error instanceof Error ? error.message : String(error);
+
+  if (isGeoblockNetworkError(detail)) {
+    return formatGeoblockNetworkErrorMessage();
+  }
+
+  return detail;
+}
+
+export function formatGeoblockNetworkErrorMessage() {
+  const proxyHint =
+    process.env.NODE_ENV === "development" && !hasDevelopmentProxyConfigured()
+      ? " In development, set HTTPS_PROXY if Polymarket APIs require a local proxy."
+      : "";
+
+  return `Polymarket geoblock check timed out or is unreachable.${proxyHint} Retry the eligibility check or verify server network access.`;
+}
+
+export function formatEligibilityErrorDetail(reason: string | undefined) {
+  if (isGeoblockNetworkError(reason)) {
+    return formatGeoblockNetworkErrorMessage();
+  }
+
+  return reason ?? "Polymarket geoblock check failed.";
+}
+
+function hasDevelopmentProxyConfigured() {
+  return Boolean(
+    process.env.HTTPS_PROXY?.trim() ||
+      process.env.https_proxy?.trim() ||
+      process.env.HTTP_PROXY?.trim() ||
+      process.env.http_proxy?.trim(),
+  );
 }
 
 export async function refreshSessionEligibility(session: TradingUserSession, clientIp?: string): Promise<TradingUserSession> {

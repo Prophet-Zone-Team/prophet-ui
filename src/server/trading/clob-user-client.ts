@@ -1,6 +1,6 @@
 import "server-only";
 
-import { AssetType, Side } from "@polymarket/clob-client-v2";
+import { AssetType, OrderType, orderToJsonV2, Side } from "@polymarket/clob-client-v2";
 import type {
   ApiKeyCreds,
   BalanceAllowanceResponse,
@@ -26,7 +26,6 @@ export interface ClobSignedOrderPayload {
   salt: number;
   maker: string;
   signer: string;
-  taker: string;
   tokenId: string;
   makerAmount: string;
   takerAmount: string;
@@ -281,19 +280,21 @@ export async function postSignedUserOrder({
   payload: SignedUserOrderPayload;
 }): Promise<OrderResponse> {
   const requestPath = "/order";
-  const order = serializeSignedOrderForClob(payload.order);
+  const signedOrder = normalizeSignedOrderV2(payload.order);
 
-  if (!order) {
+  if (!signedOrder) {
     throw new Error("Signed order payload is missing required CLOB submission fields.");
   }
 
-  const body = JSON.stringify({
-    order,
-    owner: credentials.key,
-    orderType: payload.orderType,
-    postOnly: payload.postOnly ?? false,
-    deferExec: payload.deferExec ?? false,
-  });
+  const body = JSON.stringify(
+    orderToJsonV2(
+      signedOrder,
+      credentials.key,
+      payload.orderType as OrderType,
+      payload.postOnly ?? false,
+      payload.deferExec ?? false,
+    ),
+  );
   const response = await serverFetch(`${getTradingHost()}${requestPath}`, {
     method: "POST",
     headers: await createUserL2Headers({
@@ -326,6 +327,158 @@ export function isSupportedTickSize(value: unknown): value is TickSize {
   return value === "0.1" || value === "0.01" || value === "0.001" || value === "0.0001";
 }
 
+export interface ClobTokenSigningMeta {
+  negRisk: boolean;
+  tickSize: TickSize;
+  bestAsk?: number;
+  bestBid?: number;
+}
+
+export async function fetchClobTokenSigningMeta(tokenId: string): Promise<ClobTokenSigningMeta> {
+  const [negRiskResponse, tickSizeResponse, bookPrices] = await Promise.all([
+    serverFetch(`${getTradingHost()}/neg-risk?token_id=${encodeURIComponent(tokenId)}`, {
+      cache: "no-store",
+      headers: { accept: "application/json" },
+    }),
+    serverFetch(`${getTradingHost()}/tick-size?token_id=${encodeURIComponent(tokenId)}`, {
+      cache: "no-store",
+      headers: { accept: "application/json" },
+    }),
+    fetchClobBestPrices(tokenId).catch(() => ({ bestAsk: undefined, bestBid: undefined })),
+  ]);
+
+  let negRisk = negRiskResponse.ok
+    ? parseNegRiskValue((await negRiskResponse.json()) as { neg_risk?: unknown })
+    : undefined;
+  let tickSize = tickSizeResponse.ok
+    ? normalizeClobTickSize(((await tickSizeResponse.json()) as { minimum_tick_size?: unknown }).minimum_tick_size)
+    : undefined;
+
+  if (negRisk === undefined || tickSize === undefined) {
+    const fallback = await fetchClobMarketMetaFallback(tokenId);
+
+    if (negRisk === undefined && fallback.negRisk !== undefined) {
+      negRisk = fallback.negRisk;
+    }
+
+    if (tickSize === undefined && fallback.tickSize !== undefined) {
+      tickSize = fallback.tickSize;
+    }
+  }
+
+  if (negRisk === undefined) {
+    throw new Error(`Unable to resolve negRisk metadata for token ${tokenId}.`);
+  }
+
+  if (tickSize === undefined) {
+    throw new Error(`Unable to resolve tick size metadata for token ${tokenId}.`);
+  }
+
+  return {
+    negRisk,
+    tickSize,
+    bestAsk: bookPrices.bestAsk,
+    bestBid: bookPrices.bestBid,
+  };
+}
+
+async function fetchClobMarketMetaFallback(
+  tokenId: string,
+): Promise<{ negRisk?: boolean; tickSize?: TickSize }> {
+  const marketByTokenResponse = await serverFetch(
+    `${getTradingHost()}/markets-by-token/${encodeURIComponent(tokenId)}`,
+    {
+      cache: "no-store",
+      headers: { accept: "application/json" },
+    },
+  );
+
+  if (!marketByTokenResponse.ok) {
+    return {};
+  }
+
+  const marketByToken = (await marketByTokenResponse.json()) as { condition_id?: unknown; c?: unknown };
+  const conditionId = parseConditionId(marketByToken.condition_id) ?? parseConditionId(marketByToken.c);
+
+  if (!conditionId) {
+    return {};
+  }
+
+  const marketResponse = await serverFetch(`${getTradingHost()}/clob-markets/${encodeURIComponent(conditionId)}`, {
+    cache: "no-store",
+    headers: { accept: "application/json" },
+  });
+
+  if (!marketResponse.ok) {
+    return {};
+  }
+
+  const payload = (await marketResponse.json()) as { nr?: unknown; mts?: unknown };
+
+  return {
+    negRisk: parseNegRiskValue({ neg_risk: payload.nr }),
+    tickSize: normalizeClobTickSize(payload.mts),
+  };
+}
+
+function parseNegRiskValue(payload: { neg_risk?: unknown }): boolean | undefined {
+  if (payload.neg_risk === true || payload.neg_risk === "true") {
+    return true;
+  }
+
+  if (payload.neg_risk === false || payload.neg_risk === "false") {
+    return false;
+  }
+
+  return undefined;
+}
+
+function normalizeClobTickSize(value: unknown): TickSize | undefined {
+  const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
+
+  if (parsed === 0.1) {
+    return "0.1";
+  }
+
+  if (parsed === 0.01) {
+    return "0.01";
+  }
+
+  if (parsed === 0.001) {
+    return "0.001";
+  }
+
+  if (parsed === 0.0001) {
+    return "0.0001";
+  }
+
+  return undefined;
+}
+
+function normalizeSignedOrderV2(order: unknown) {
+  const serialized = serializeSignedOrderForClob(order);
+
+  if (!serialized) {
+    return undefined;
+  }
+
+  return {
+    salt: serialized.salt.toString(),
+    maker: serialized.maker,
+    signer: serialized.signer,
+    tokenId: serialized.tokenId,
+    makerAmount: serialized.makerAmount,
+    takerAmount: serialized.takerAmount,
+    side: serialized.side as Side,
+    signatureType: serialized.signatureType as 3,
+    timestamp: serialized.timestamp,
+    expiration: serialized.expiration,
+    metadata: serialized.metadata,
+    builder: serialized.builder,
+    signature: serialized.signature,
+  };
+}
+
 export function serializeSignedOrderForClob(order: unknown): ClobSignedOrderPayload | undefined {
   if (!order || typeof order !== "object") {
     return undefined;
@@ -337,7 +490,6 @@ export function serializeSignedOrderForClob(order: unknown): ClobSignedOrderPayl
   const side = parseSide(input.side);
   const maker = parseAddress(input.maker);
   const signer = parseAddress(input.signer);
-  const taker = parseAddress(input.taker);
   const tokenId = parseIntegerString(input.tokenId);
   const makerAmount = parseIntegerString(input.makerAmount);
   const takerAmount = parseIntegerString(input.takerAmount);
@@ -353,7 +505,6 @@ export function serializeSignedOrderForClob(order: unknown): ClobSignedOrderPayl
     !side ||
     !maker ||
     !signer ||
-    !taker ||
     !tokenId ||
     !makerAmount ||
     !takerAmount ||
@@ -370,7 +521,6 @@ export function serializeSignedOrderForClob(order: unknown): ClobSignedOrderPayl
     salt,
     maker,
     signer,
-    taker,
     tokenId,
     makerAmount,
     takerAmount,

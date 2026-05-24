@@ -8,7 +8,8 @@ import {
   resolveOrderFundingRequirementWithFees,
   type SignedOrderContext,
 } from "@/server/trading/balances";
-import { getOrderBuilderCode } from "@/server/trading/builder-code";
+import { ZERO_ORDER_BUILDER_CODE } from "@/server/trading/builder-code";
+import { getClobOrderSubmissionStatus } from "@/server/trading/clob-auth";
 import { fetchClobBestPrices, postSignedUserOrder, updateUserBalanceAllowance } from "@/server/trading/clob-user-client";
 import { refreshSessionEligibilityIfStale } from "@/server/trading/eligibility";
 import { recordUserOrderError, recordUserOrderSubmitted } from "@/server/trading/order-store";
@@ -92,7 +93,6 @@ export async function POST(request: Request) {
     order: orderContext,
     funderAddress: record.session.funderAddress,
     signatureType: record.session.signatureType,
-    builderCode: getOrderBuilderCode(),
   });
 
   if (ownershipError) {
@@ -254,7 +254,7 @@ export async function POST(request: Request) {
       {
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 502 },
+      { status: getClobOrderSubmissionStatus(error) },
     );
   }
 }
@@ -277,12 +277,10 @@ function validateSignedOrderOwnership({
   order,
   funderAddress,
   signatureType,
-  builderCode,
 }: {
   order: SignedOrderContext;
   funderAddress?: string;
   signatureType: number;
-  builderCode: string;
 }): string | undefined {
   if (signatureType !== 3 || order.signatureType !== 3) {
     return "This trading flow only accepts signature type 3 deposit-wallet orders.";
@@ -304,8 +302,8 @@ function validateSignedOrderOwnership({
     return "Only open CLOB limit orders with the zero taker address are supported.";
   }
 
-  if (order.builder.toLowerCase() !== builderCode.toLowerCase()) {
-    return "Signed order builder code does not match the configured product builder code.";
+  if (order.builder.toLowerCase() !== ZERO_ORDER_BUILDER_CODE) {
+    return "Signed user orders must use a zero builder code.";
   }
 
   return undefined;

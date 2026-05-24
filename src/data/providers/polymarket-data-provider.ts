@@ -46,6 +46,8 @@ interface GammaMarket {
 
 interface ClobMarketDetails {
   c?: string;
+  nr?: boolean;
+  mts?: number | string;
   fd?: {
     r?: number;
     e?: number;
@@ -53,6 +55,12 @@ interface ClobMarketDetails {
   };
   mbf?: number;
   tbf?: number;
+}
+
+interface ClobMarketEnrichment {
+  fee?: PolymarketFeeDetails;
+  negRisk?: boolean;
+  tickSize?: PolymarketMarketMetadata["tickSize"];
 }
 
 export const polymarketDataProvider: WorldCupMarketDataProvider = {
@@ -146,7 +154,7 @@ async function mapMarketsToTeamSnapshots(markets: GammaMarket[]): Promise<{
     selectedMarkets.push({ team, market, probability, polymarket });
   }
 
-  const feeDetails = await fetchClobFeeDetails(selectedMarkets);
+  const feeDetails = await fetchClobMarketEnrichment(selectedMarkets);
 
   const snapshots = selectedMarkets
     .map(({ team, market, probability, polymarket }): TeamMarketSnapshot => ({
@@ -162,7 +170,7 @@ async function mapMarketsToTeamSnapshots(markets: GammaMarket[]): Promise<{
         sentiment: deriveSentiment(normalizePriceChange(firstNumber(market.oneDayPriceChange, market.priceChange24h))),
         bookmakerImpliedProbability: probability,
         updatedAt: market.updatedAt ?? market.createdAt ?? new Date().toISOString(),
-        polymarket: attachClobFeeDetails(polymarket, feeDetails.get(getMarketFeeKey(market))),
+        polymarket: attachClobMarketEnrichment(polymarket, feeDetails.get(getMarketFeeKey(market))),
       },
     }))
     .sort((a, b) => b.market.volume - a.market.volume);
@@ -300,9 +308,9 @@ function extractPolymarketMetadata(market: GammaMarket): PolymarketMarketMetadat
   };
 }
 
-async function fetchClobFeeDetails(
+async function fetchClobMarketEnrichment(
   markets: Array<{ market: GammaMarket }>,
-): Promise<Map<string, PolymarketFeeDetails>> {
+): Promise<Map<string, ClobMarketEnrichment>> {
   const marketRefs = [
     ...new Map(
       markets
@@ -333,21 +341,21 @@ async function fetchClobFeeDetails(
 
         const payload = (await response.json()) as ClobMarketDetails;
 
-        return [key, toPolymarketFeeDetails(payload)] as const;
+        return [key, toClobMarketEnrichment(payload)] as const;
       } catch {
         return undefined;
       }
     }),
   );
-  const feesByConditionId = new Map<string, PolymarketFeeDetails>();
+  const enrichmentByConditionId = new Map<string, ClobMarketEnrichment>();
 
   for (const entry of entries) {
     if (entry?.[1]) {
-      feesByConditionId.set(entry[0], entry[1]);
+      enrichmentByConditionId.set(entry[0], entry[1]);
     }
   }
 
-  return feesByConditionId;
+  return enrichmentByConditionId;
 }
 
 async function fetchConditionIdByToken(tokenId: string): Promise<string | undefined> {
@@ -376,17 +384,35 @@ function getFirstClobTokenId(market: GammaMarket): string | undefined {
   return parseArrayField(market.clobTokenIds).map(String).find(Boolean);
 }
 
-function attachClobFeeDetails(
+function attachClobMarketEnrichment(
   metadata: PolymarketMarketMetadata | undefined,
-  fee: PolymarketFeeDetails | undefined,
+  enrichment: ClobMarketEnrichment | undefined,
 ): PolymarketMarketMetadata | undefined {
-  if (!metadata || !fee) {
+  if (!metadata || !enrichment) {
     return metadata;
   }
 
   return {
     ...metadata,
+    ...(enrichment.fee ? { fee: enrichment.fee } : {}),
+    ...(enrichment.negRisk !== undefined ? { negRisk: enrichment.negRisk } : {}),
+    ...(enrichment.tickSize ? { tickSize: enrichment.tickSize } : {}),
+  };
+}
+
+function toClobMarketEnrichment(payload: ClobMarketDetails): ClobMarketEnrichment | undefined {
+  const fee = toPolymarketFeeDetails(payload);
+  const negRisk = payload.nr === true ? true : payload.nr === false ? false : undefined;
+  const tickSize = normalizeTickSize(payload.mts);
+
+  if (!fee && negRisk === undefined && !tickSize) {
+    return undefined;
+  }
+
+  return {
     fee,
+    negRisk,
+    tickSize,
   };
 }
 

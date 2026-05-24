@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
@@ -8,6 +9,12 @@ import {
   resolveGameOutcomeTradePrice
 } from "@/lib/market/game-outcome-price";
 import { calculateReferencePrice } from "@/lib/market/order-math";
+import {
+  formatOrderToastSummary,
+  resolveOrderErrorMessage,
+  showOrderErrorToast,
+  showOrderSubmittedToast
+} from "@/lib/trading/order-toast";
 import { useAuth } from "@/context/auth";
 import {
   useSetTradeAmount,
@@ -35,8 +42,10 @@ import {
   formatTeamDefaultLimitPriceString,
   getGameDefaultLimitPrice,
   getTeamDefaultLimitPrice,
+  isEligibilityNetworkFailure,
   parseLimitPriceInput,
   parseOrderAmount,
+  refreshTradingEligibility,
   resolveOrderLimitPrice,
   resolveOrderType,
   resolveQuickAmountAllBalance,
@@ -62,6 +71,7 @@ export type UseTradeTicketInput =
   | UseTradeTicketGameInput;
 
 export function useTradeTicket(input: UseTradeTicketInput) {
+  const router = useRouter();
   const {
     session,
     isAuthenticated,
@@ -89,6 +99,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const [config, setConfig] = useState<TradingConfig | undefined>();
   const [status, setStatus] = useState<TradeTicketStatus>("idle");
   const [message, setMessage] = useState<string | undefined>();
+  const [eligibilityRetryAvailable, setEligibilityRetryAvailable] =
+    useState(false);
 
   const orderAmount = parseOrderAmount(amount);
   const orderType = resolveOrderType(orderMode);
@@ -336,8 +348,36 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
     const nextReadiness = await fetchReadinessForPreview(preview, tradeSide);
     setReadiness(nextReadiness);
+    setEligibilityRetryAvailable(isEligibilityNetworkFailure(nextReadiness));
     return nextReadiness;
   }, [preview, tradeSide]);
+
+  const handleRetryEligibility = useCallback(async () => {
+    setStatus("loading");
+    setMessage("Checking Polymarket trading eligibility...");
+
+    try {
+      await refreshTradingEligibility();
+      const nextReadiness = await refreshOrderReadiness();
+      const stillBlocked = isEligibilityNetworkFailure(nextReadiness);
+
+      setEligibilityRetryAvailable(stillBlocked);
+      setStatus(stillBlocked ? "error" : "idle");
+      const blockedMessage = stillBlocked
+        ? nextReadiness?.checks.find((check) => check.id === "eligibility")
+            ?.detail
+        : undefined;
+      setMessage(blockedMessage);
+      if (blockedMessage) {
+        showOrderErrorToast(blockedMessage);
+      }
+    } catch (error) {
+      setEligibilityRetryAvailable(true);
+      setStatus("error");
+      setMessage(resolveOrderErrorMessage(error));
+      showOrderErrorToast(error);
+    }
+  }, [refreshOrderReadiness]);
 
   const handleSubmit = useCallback(async () => {
     if (!preview || actionInProgress) {
@@ -358,28 +398,31 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       refreshSetupReadiness
     });
 
-    console.log(355, gate);
-
     if (!gate.ok) {
-      if (gate.action === "show_error") {
+      if (gate.action === "show_error" || gate.action === "retry_eligibility") {
         setStatus("error");
         setMessage(gate.message);
+        setEligibilityRetryAvailable(gate.action === "retry_eligibility");
+        showOrderErrorToast(gate.message);
       } else {
         setStatus("idle");
         setMessage(gate.message);
+        setEligibilityRetryAvailable(false);
         await refreshOrderReadiness();
       }
 
       return;
     }
 
+    setEligibilityRetryAvailable(false);
     setReadiness(gate.readiness);
 
     if (!session?.funderAddress || !preview.tokenId) {
+      const missingSessionMessage =
+        "A connected wallet, deployed deposit wallet, and Polymarket token are required.";
       setStatus("error");
-      setMessage(
-        "A connected wallet, deployed deposit wallet, and Polymarket token are required."
-      );
+      setMessage(missingSessionMessage);
+      showOrderErrorToast(missingSessionMessage);
       return;
     }
 
@@ -403,25 +446,38 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       setStatus("submitting");
       setMessage("Submitting signed order to Polymarket CLOB.");
 
-      await submitSignedTradeOrder({
+      const result = await submitSignedTradeOrder({
         session,
         preview,
         orderType,
-        builderCode: config?.builderCode,
         userOrderPreview
       });
 
-      setStatus("success");
-      setMessage("Order submitted with your wallet signature.");
+      showOrderSubmittedToast(
+        formatOrderToastSummary({
+          tradeSide: preview.tradeSide,
+          outcomeSide: preview.outcomeSide,
+          estimatedTotalCost: preview.estimatedTotalCost,
+          shareSize: preview.shareSize,
+          variant: input.variant
+        }),
+        {
+          orderId: result.order?.id,
+          onViewPortfolio: () => router.push("/portfolio")
+        }
+      );
+      setStatus("idle");
+      setMessage(undefined);
       await refreshOrderReadiness();
     } catch (error) {
+      const errorMessage = resolveOrderErrorMessage(error);
       setStatus("error");
-      setMessage(error instanceof Error ? error.message : String(error));
+      setMessage(errorMessage);
+      showOrderErrorToast(error);
     }
   }, [
     actionInProgress,
     authReadiness,
-    config?.builderCode,
     gameDefaults?.orderLimitPrice,
     input,
     matchOutcomeSide,
@@ -434,6 +490,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     readiness,
     refreshOrderReadiness,
     refreshSetupReadiness,
+    router,
     session,
     signClobCredentials,
     signTokenApprovals,
@@ -455,11 +512,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
     setAmount(String(value));
     setMessage(undefined);
+    setEligibilityRetryAvailable(false);
   }
 
   function selectOutcome(side: typeof outcomeSide) {
     setOutcomeSide(side);
     setMessage(undefined);
+    setEligibilityRetryAvailable(false);
   }
 
   if (!preview) {
@@ -489,12 +548,17 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       isAuthenticated,
       status,
       message,
+      eligibilityRetryAvailable,
       onSelectOutcome: selectOutcome,
       onAmountChange: setAmount,
       onLimitPriceChange: setLimitPrice,
       onQuickAmount: applyQuickAmount,
       onSubmit: handleSubmit,
-      onLoginStart: () => setMessage(undefined),
+      onRetryEligibility: handleRetryEligibility,
+      onLoginStart: () => {
+        setMessage(undefined);
+        setEligibilityRetryAvailable(false);
+      },
       onLoginSuccess: async () => {
         await refreshOrderReadiness();
         setStatus("idle");
@@ -503,7 +567,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         setStatus("error");
         setMessage(error.message);
       },
-      onAmountMessageClear: () => setMessage(undefined)
+      onAmountMessageClear: () => {
+        setMessage(undefined);
+        setEligibilityRetryAvailable(false);
+      }
     }
   };
 }

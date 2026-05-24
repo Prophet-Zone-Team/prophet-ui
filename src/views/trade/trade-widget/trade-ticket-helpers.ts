@@ -10,17 +10,14 @@ import {
   getDefaultGameTradeLimitPrice,
   getDefaultTradeLimitPrice
 } from "@/lib/market/trade-ticket";
-import {
-  attachUserOrderSignature,
-  buildUserOrderSignablePayload
-} from "@/lib/market/user-order";
+import { buildSdkSignedUserOrder } from "@/lib/market/sdk-user-order";
+import type { WalletClient } from "viem";
 import {
   getTradingSetupSteps,
   isSetupStepComplete,
   isTradingSetupComplete
 } from "@/lib/trading/trading-setup";
 import { fetchJson } from "@/lib/team/client-fetch";
-import { signTypedData } from "@/lib/team/wallet-sign";
 import type {
   AccountReadinessCheck,
   BidTradeSide,
@@ -30,6 +27,7 @@ import type {
   TradingOrderType,
   TradingUserSession,
   UserOrderPreview,
+  UserOrderRecord,
   UserTradingReadiness
 } from "@/types/market";
 import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-button";
@@ -64,7 +62,8 @@ export type BidGateAction =
   | "open_login"
   | "sign_clob"
   | "sign_tokens"
-  | "show_error";
+  | "show_error"
+  | "retry_eligibility";
 
 export type BidGateResult =
   | { ok: true; readiness: UserTradingReadiness }
@@ -197,6 +196,7 @@ export function toBidOrderPreview(
     acceptingOrders: gamePreview.acceptingOrders,
     sidePrice: gamePreview.sidePrice,
     shareSize: gamePreview.shareSize,
+    inputAmount: gamePreview.inputAmount,
     estimatedCost: gamePreview.estimatedCost,
     estimatedTakerFee: gamePreview.estimatedTakerFee,
     estimatedTotalCost: gamePreview.estimatedTotalCost,
@@ -373,6 +373,76 @@ export function canSubmitTradeTicket(input: {
   );
 }
 
+export interface TradingEligibilitySnapshot {
+  status: TradingUserSession["eligibilityStatus"];
+  checkedAt?: string;
+  country?: string;
+  region?: string;
+  reason?: string;
+}
+
+function isGeoblockNetworkErrorMessage(text: string | undefined) {
+  if (!text) {
+    return false;
+  }
+
+  const normalized = text.toLowerCase();
+
+  return (
+    normalized.includes("timeout") ||
+    normalized.includes("aborted") ||
+    normalized.includes("fetch failed") ||
+    normalized.includes("network") ||
+    normalized.includes("econnrefused") ||
+    normalized.includes("enotfound") ||
+    normalized.includes("unreachable")
+  );
+}
+
+export function isEligibilityNetworkFailure(
+  readiness: UserTradingReadiness | undefined
+): boolean {
+  const eligibilityCheck = readiness?.checks.find(
+    (check) => check.id === "eligibility"
+  );
+
+  if (eligibilityCheck?.status !== "fail") {
+    return false;
+  }
+
+  return (
+    isGeoblockNetworkErrorMessage(eligibilityCheck.detail) ||
+    isGeoblockNetworkErrorMessage(readiness?.session?.eligibilityReason)
+  );
+}
+
+export async function refreshTradingEligibility(): Promise<TradingEligibilitySnapshot> {
+  const response = await fetchJson<{ eligibility: TradingEligibilitySnapshot }>(
+    "/api/trading/eligibility"
+  );
+
+  return response.eligibility;
+}
+
+async function resolveOrderReadinessForBid(deps: {
+  orderReadiness?: UserTradingReadiness;
+}): Promise<UserTradingReadiness> {
+  let orderReadiness =
+    deps.orderReadiness ??
+    (await fetchJson<UserTradingReadiness>("/api/trading/readiness"));
+
+  if (!isEligibilityNetworkFailure(orderReadiness)) {
+    return orderReadiness;
+  }
+
+  await refreshTradingEligibility();
+  orderReadiness = await fetchJson<UserTradingReadiness>(
+    "/api/trading/readiness"
+  );
+
+  return orderReadiness;
+}
+
 export async function ensureTradingReadyForBid(deps: {
   session?: TradingUserSession;
   authReadiness?: UserTradingReadiness;
@@ -435,9 +505,9 @@ export async function ensureTradingReadyForBid(deps: {
     };
   }
 
-  const orderReadiness =
-    deps.orderReadiness ??
-    (await fetchJson<UserTradingReadiness>("/api/trading/readiness"));
+  const orderReadiness = await resolveOrderReadinessForBid({
+    orderReadiness: deps.orderReadiness
+  });
 
   const eligibilityCheck = orderReadiness.checks.find(
     (check) => check.id === "eligibility"
@@ -446,7 +516,9 @@ export async function ensureTradingReadyForBid(deps: {
   if (eligibilityCheck?.status === "fail") {
     return {
       ok: false,
-      action: "show_error",
+      action: isEligibilityNetworkFailure(orderReadiness)
+        ? "retry_eligibility"
+        : "show_error",
       message: eligibilityCheck.detail
     };
   }
@@ -486,33 +558,33 @@ export async function ensureTradingReadyForBid(deps: {
   return { ok: true, readiness: orderReadiness };
 }
 
+export type SubmitOrderResult = {
+  order?: UserOrderRecord;
+  submittedAt?: string;
+};
+
 export async function submitSignedTradeOrder(input: {
   session: TradingUserSession;
   preview: BidOrderPreview;
   orderType: TradingOrderType;
-  builderCode?: string;
   userOrderPreview: UserOrderPreview;
-}): Promise<void> {
+  signer?: WalletClient;
+}): Promise<SubmitOrderResult> {
   if (!input.session.funderAddress || !input.preview.tokenId) {
     throw new Error(
       "A connected wallet, deployed deposit wallet, and Polymarket token are required."
     );
   }
 
-  const signable = buildUserOrderSignablePayload({
+  const signedOrder = await buildSdkSignedUserOrder({
     preview: input.preview,
     walletAddress: input.session.walletAddress,
     funderAddress: input.session.funderAddress,
     orderType: input.orderType,
-    builderCode: input.builderCode
-  });
-  const signature = await signTypedData(input.session.walletAddress, signable);
-  const signedOrder = attachUserOrderSignature({
-    signable,
-    signature: signature as `0x${string}`
+    signer: input.signer,
   });
 
-  await fetchJson<{ order?: unknown }>("/api/trading/orders", {
+  return fetchJson<SubmitOrderResult>("/api/trading/orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

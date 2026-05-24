@@ -35,11 +35,13 @@ export interface TradeTicketFormProps {
   isAuthenticated: boolean;
   status: TradeTicketStatus;
   message?: string;
+  eligibilityRetryAvailable?: boolean;
   onSelectOutcome: (side: "yes" | "no") => void;
   onAmountChange: (value: string) => void;
   onLimitPriceChange: (value: string) => void;
   onQuickAmount: (value: number | "all") => void;
   onSubmit: () => void | Promise<void>;
+  onRetryEligibility?: () => void | Promise<void>;
   onLoginStart: () => void;
   onLoginSuccess: () => void | Promise<void>;
   onLoginError: (error: Error) => void;
@@ -63,11 +65,13 @@ export function TradeTicketForm({
   isAuthenticated,
   status,
   message,
+  eligibilityRetryAvailable = false,
   onSelectOutcome,
   onAmountChange,
   onLimitPriceChange,
   onQuickAmount,
   onSubmit,
+  onRetryEligibility,
   onLoginStart,
   onLoginSuccess,
   onLoginError,
@@ -188,9 +192,7 @@ export function TradeTicketForm({
         actionLabel={actionLabel}
         connectLabel="Enable trading"
         canSubmit={
-          isAuthenticated
-            ? !actionInProgress
-            : canSubmit && !actionInProgress
+          isAuthenticated ? !actionInProgress : canSubmit && !actionInProgress
         }
         connectDisabled={status === "loading"}
         actionStatus={
@@ -203,14 +205,26 @@ export function TradeTicketForm({
       />
 
       {message ? (
-        <p
-          className={cn(
-            "m-0 text-xs",
-            status === "error" ? "text-prophet-red" : "text-prophet-muted"
-          )}
-        >
-          {message}
-        </p>
+        <div className="flex flex-col gap-2">
+          <p
+            className={cn(
+              "m-0 text-xs",
+              status === "error" ? "text-prophet-red" : "text-prophet-muted"
+            )}
+          >
+            {message}
+          </p>
+          {eligibilityRetryAvailable && onRetryEligibility ? (
+            <button
+              type="button"
+              className="self-start text-xs font-[556] text-black underline underline-offset-2 disabled:opacity-50"
+              disabled={actionInProgress || status === "loading"}
+              onClick={() => void onRetryEligibility()}
+            >
+              Retry eligibility check
+            </button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

@@ -21,6 +21,7 @@ import {
 } from "@/server/trading/onchain-balances";
 import { getTradingCredentialStatus, updateTradingSession } from "@/server/trading/session-store";
 import { isTradingTokenAllowanceAuthorized } from "@/lib/trading/trading-allowance-setup";
+import { formatEligibilityErrorDetail } from "@/server/trading/eligibility";
 
 export async function buildUserTradingReadiness({
   record,
@@ -413,7 +414,7 @@ function getEligibilityDetail(session: TradingUserSession | undefined): string {
   }
 
   if (session.eligibilityStatus === "error") {
-    return `${session.eligibilityReason ?? "Polymarket geoblock check failed."}${suffix}`;
+    return `${formatEligibilityErrorDetail(session.eligibilityReason)}${suffix}`;
   }
 
   return `Eligibility is ${session.eligibilityStatus}.${suffix}`;

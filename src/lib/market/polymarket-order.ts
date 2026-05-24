@@ -23,6 +23,8 @@ export interface BidOrderPreview {
   minOrderSize?: number;
   sidePrice: number;
   shareSize: number;
+  /** User-entered budget/share amount before fee-adjusted order notional. */
+  inputAmount: number;
   estimatedCost: number;
   estimatedTakerFee: number;
   estimatedTotalCost: number;
@@ -64,6 +66,7 @@ export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPrevi
     minOrderSize: metadata?.minOrderSize,
     sidePrice,
     shareSize: estimate.shareSize,
+    inputAmount: input.amount,
     estimatedCost: estimate.estimatedCost,
     estimatedTakerFee: estimate.estimatedTakerFee,
     estimatedTotalCost: estimate.estimatedTotalCost,

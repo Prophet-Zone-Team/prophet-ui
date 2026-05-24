@@ -31,6 +31,7 @@ export interface GameBidOrderPreview {
   acceptingOrders: boolean;
   sidePrice: number;
   shareSize: number;
+  inputAmount: number;
   estimatedCost: number;
   estimatedTakerFee: number;
   estimatedTotalCost: number;
@@ -74,6 +75,7 @@ export function buildGameBidOrderPreview(
     acceptingOrders: input.snapshot.market.acceptingOrders,
     sidePrice,
     shareSize: estimate.shareSize,
+    inputAmount: input.amount,
     estimatedCost: estimate.estimatedCost,
     estimatedTakerFee: estimate.estimatedTakerFee,
     estimatedTotalCost: estimate.estimatedTotalCost,

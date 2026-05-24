@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { parseOrderFundingRequirement } from "@/server/trading/balances";
+import { getClientIp, refreshSessionEligibilityIfStale } from "@/server/trading/eligibility";
 import { buildUserTradingReadiness } from "@/server/trading/readiness";
-import { getTradingSessionFromCookie } from "@/server/trading/session-store";
+import { createTradingSessionCookie, getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,7 +11,19 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const tokenId = url.searchParams.get("tokenId") ?? undefined;
-  const record = getTradingSessionFromCookie(request.headers.get("cookie"));
+  let record = getTradingSessionFromCookie(request.headers.get("cookie"));
+
+  if (record) {
+    const refreshedSession = await refreshSessionEligibilityIfStale(
+      record.session,
+      getClientIp(request),
+    );
+    record = {
+      ...record,
+      session: refreshedSession,
+    };
+  }
+
   const readiness = await buildUserTradingReadiness({
     record,
     tokenId,
@@ -23,7 +36,13 @@ export async function GET(request: Request) {
     }),
   });
 
-  return NextResponse.json(readiness);
+  return NextResponse.json(readiness, {
+    headers: record
+      ? {
+          "Set-Cookie": createTradingSessionCookie(record.session),
+        }
+      : undefined,
+  });
 }
 
 function parseNumberParam(value: string | null) {

@@ -168,6 +168,44 @@ export function isClobUnreachableError(message: string) {
   return /CLOB API unreachable/i.test(message);
 }
 
+export function isClobNetworkError(message: string) {
+  if (isClobUnreachableError(message)) {
+    return true;
+  }
+
+  const normalized = message.toLowerCase();
+
+  return (
+    normalized.includes("fetch failed") ||
+    normalized.includes("timeout") ||
+    normalized.includes("aborted") ||
+    normalized.includes("network") ||
+    normalized.includes("econnrefused") ||
+    normalized.includes("enotfound") ||
+    normalized.includes("unreachable")
+  );
+}
+
+export function getClobOrderSubmissionStatus(error: unknown): number {
+  const message = error instanceof Error ? error.message : String(error);
+  const normalized = message.toLowerCase();
+
+  if (isClobNetworkError(message)) {
+    return 502;
+  }
+
+  if (
+    normalized.includes("invalid signature") ||
+    normalized.includes("malformed") ||
+    normalized.includes("missing signed order") ||
+    normalized.includes("incomplete or malformed")
+  ) {
+    return 400;
+  }
+
+  return 409;
+}
+
 export function formatClobFetchError(operation: string, error: unknown) {
   const host = getTradingHost();
   const detail = error instanceof Error ? error.message : String(error);

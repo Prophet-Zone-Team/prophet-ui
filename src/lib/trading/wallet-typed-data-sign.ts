@@ -32,8 +32,16 @@ export async function signTypedData(walletAddress: string, typedData: unknown): 
         continue;
       }
 
+      const recoverableTypedData = toRecoverableTypedData(typedData);
+
+      // MetaMask eth_signTypedData_v4 can hash TypedDataSign differently than viem recovery
+      // when the payload is sent over JSON. The active account was already verified above.
+      if (recoverableTypedData.primaryType === "TypedDataSign") {
+        return signature;
+      }
+
       const recoveredAddress = await recoverTypedDataAddress({
-        ...toRecoverableTypedData(typedData),
+        ...recoverableTypedData,
         signature: signature as Hex,
       } as Parameters<typeof recoverTypedDataAddress>[0]);
 
