@@ -76,7 +76,7 @@ export function PlaceBidButton({
 
   async function handleClick() {
     if (!snapshot) {
-      window.location.assign("/");
+      window.location.assign("/fifa");
       return;
     }
 

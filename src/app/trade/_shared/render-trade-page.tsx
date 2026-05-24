@@ -33,7 +33,7 @@ function resolveTradeMarketOptions(
       includeFootballContext: Boolean(footballContextTeamIds?.length),
       includeNews: false,
       includeOdds: false,
-      includeHistory: false,
+      includeHistory: isTeam,
       footballContextTeamIds
     };
   }
@@ -71,6 +71,9 @@ async function renderTeamTrade(
   matches: WorldCupMatch[]
 ) {
   if (mode === "simple") {
+    const probabilityHistory = marketData.probabilityHistory.filter(
+      (point) => point.teamId === snapshot.team.id
+    );
     const footballContext = marketData.footballTeamContext.find(
       (context) => context.profile.teamId === snapshot.team.id
     );
@@ -88,6 +91,7 @@ async function renderTeamTrade(
         standings={footballContext?.standings}
         matches={matches}
         snapshots={marketData.snapshots}
+        probabilityHistory={probabilityHistory}
       />
     );
   }
@@ -150,14 +154,28 @@ function renderGameTrade(
     ])
   );
 
+  if (_mode === "simple") {
+    return (
+      <SimplePage
+        variant="game"
+        match={match}
+        snapshots={gameData.teamSnapshots}
+        gameSnapshot={gameData.snapshot}
+        teamProfiles={teamProfiles}
+        relatedMatches={gameData.relatedMatches}
+      />
+    );
+  }
+
   return (
-    <SimplePage
+    <ProfessionalPage
       variant="game"
       match={match}
-      snapshots={gameData.teamSnapshots}
       gameSnapshot={gameData.snapshot}
-      teamProfiles={teamProfiles}
+      teamSnapshots={gameData.teamSnapshots}
       relatedMatches={gameData.relatedMatches}
+      teamProfiles={teamProfiles}
+      dataStatus={gameData.dataStatus}
     />
   );
 }

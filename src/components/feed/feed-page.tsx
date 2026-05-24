@@ -188,7 +188,7 @@ function FeedCard({
           {isWatching ? "Watching" : "Add to Watchlist"}
         </button>
         <Link
-          href="/"
+          href="/fifa"
           className="rounded border border-terminal-line bg-terminal-panel2 px-3 py-2 text-xs font-semibold text-terminal-muted transition hover:border-terminal-cyan/60 hover:text-terminal-cyan"
         >
           Explore Market
@@ -201,7 +201,7 @@ function FeedCard({
 function TopLinks() {
   return (
     <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
-      <Link href="/" className="hover:text-terminal-cyan">
+      <Link href="/fifa" className="hover:text-terminal-cyan">
         Market
       </Link>
       <Link href="/watchlist" className="hover:text-terminal-cyan">

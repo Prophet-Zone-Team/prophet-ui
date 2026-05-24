@@ -83,7 +83,7 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
         <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8 lg:p-10">
           <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
-            <Link href="/" className="hover:text-terminal-cyan">
+            <Link href="/fifa" className="hover:text-terminal-cyan">
               Market
             </Link>
             <Link href="/feed" className="hover:text-terminal-cyan">
@@ -149,7 +149,7 @@ export function WatchlistPage({ snapshots, newsEvents, dataStatus }: WatchlistPa
               Add teams from a trade page. The list is saved to your connected wallet profile.
             </p>
             <Link
-              href="/"
+              href="/fifa"
               className="mt-6 inline-flex rounded border border-terminal-cyan/60 bg-terminal-cyan/10 px-4 py-3 text-sm font-semibold text-terminal-cyan"
             >
               Browse market heatmap

@@ -96,7 +96,7 @@ function TracksEmptyState() {
         schedule to see them here.
       </p>
       <Link
-        href="/"
+        href="/fifa"
         className="mt-4 inline-flex h-9 items-center justify-center rounded-lg border border-[#909090] bg-white px-4 text-sm font-[556] leading-[17px] text-[#18110F]"
       >
         Go to FIFA markets

@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
-
+import { useMemo, useState } from "react";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
+import { findGameMarketOutcome } from "@/lib/market/game-outcome-price";
 import { formatMatchScore } from "@/lib/market/match-display";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
+import { useTradeMatchOutcomeSide } from "@/store/trade-ticket-store";
 import type {
   GameFixtureChartTimeRange,
+  GameMarketSnapshot,
   TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
+import { Orderbook } from "@/views/trade/professional/orderbook";
 import { GameProbabilityChart } from "@/views/trade/game-probability/chart";
 import { useFixturePriceHistory } from "@/views/trade/game-probability/use-fixture-price-history";
 
@@ -25,20 +28,25 @@ const GAME_PROBABILITY_TIME_RANGES = [
 }>;
 
 const probabilityCardClass =
-  "rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
+  "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
 
 export interface GameProbabilitySectionProps {
   match: WorldCupMatch;
   snapshots?: TeamMarketSnapshot[];
+  gameSnapshot?: GameMarketSnapshot;
+  showOrderbook?: boolean;
   className?: string;
 }
 
 export function GameProbabilitySection({
   match,
   snapshots = [],
+  gameSnapshot,
+  showOrderbook = false,
   className
 }: GameProbabilitySectionProps) {
   const [timeRange, setTimeRange] = useState<GameFixtureChartTimeRange>("all");
+  const matchOutcomeSide = useTradeMatchOutcomeSide();
   const { points, status, error, refetch } = useFixturePriceHistory(
     match.id,
     timeRange
@@ -46,80 +54,105 @@ export function GameProbabilitySection({
 
   const sides = resolveMatchSides(match, snapshots);
   const isLive = match.status === "live";
+  const orderbookEnabled = showOrderbook && Boolean(gameSnapshot);
+
+  const tokenId = useMemo(() => {
+    if (!gameSnapshot) {
+      return undefined;
+    }
+
+    return findGameMarketOutcome(gameSnapshot.outcomes, matchOutcomeSide)
+      ?.tokenId;
+  }, [gameSnapshot, matchOutcomeSide]);
+
+  const homeLabel = sides.home.name ?? "Home";
+  const awayLabel = sides.away.name ?? "Away";
 
   return (
     <section
-      className={cn(probabilityCardClass, className)}
+      className={cn(
+        "flex flex-col gap-3 xl:flex-row xl:items-stretch",
+        !orderbookEnabled && "xl:flex-col",
+        className
+      )}
       aria-label="Match outcome probability"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <h2 className="m-0 text-[20px] font-[556] leading-6 text-black">
-          Probability
-        </h2>
+      <div className={cn(probabilityCardClass, !orderbookEnabled && "w-full")}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="m-0 text-[20px] font-[556] leading-6 text-black">
+              Probability
+            </h2>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-          {isLive ? (
-            <LiveScoreBadge
-              homeCode={sides.home.code}
-              homeName={sides.home.name ?? "Home"}
-              awayCode={sides.away.code}
-              awayName={sides.away.name ?? "Away"}
-              score={formatMatchScore(match.homeScore, match.awayScore)}
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+            {isLive ? (
+              <LiveScoreBadge
+                homeCode={sides.home.code}
+                homeName={homeLabel}
+                awayCode={sides.away.code}
+                awayName={awayLabel}
+                score={formatMatchScore(match.homeScore, match.awayScore)}
+              />
+            ) : null}
+
+            <div
+              className="flex flex-wrap gap-4"
+              role="group"
+              aria-label="Chart time range"
+            >
+              {GAME_PROBABILITY_TIME_RANGES.map((range) => (
+                <button
+                  key={range.id}
+                  type="button"
+                  className={cn(
+                    "border-0 bg-transparent p-0 text-sm leading-[17px]",
+                    timeRange === range.id
+                      ? "font-[556] text-black"
+                      : "font-[457] text-[#909090]"
+                  )}
+                  onClick={() => setTimeRange(range.id)}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          {status === "loading" ? (
+            <ChartStateMessage message="Loading market price history..." />
+          ) : null}
+
+          {status === "empty" ? (
+            <ChartStateMessage message="No price history available for this market." />
+          ) : null}
+
+          {status === "error" ? (
+            <ChartStateMessage
+              message={error ?? "Unable to load market price history."}
+              actionLabel="Retry"
+              onAction={() => {
+                void refetch();
+              }}
             />
           ) : null}
 
-          <div
-            className="flex flex-wrap gap-4"
-            role="group"
-            aria-label="Chart time range"
-          >
-            {GAME_PROBABILITY_TIME_RANGES.map((range) => (
-              <button
-                key={range.id}
-                type="button"
-                className={cn(
-                  "border-0 bg-transparent p-0 text-sm leading-[17px]",
-                  timeRange === range.id
-                    ? "font-[556] text-black"
-                    : "font-[457] text-[#909090]"
-                )}
-                onClick={() => setTimeRange(range.id)}
-              >
-                {range.label}
-              </button>
-            ))}
-          </div>
+          {status === "ready" ? (
+            <GameProbabilityChart
+              data={points}
+              homeLabel={homeLabel}
+              drawLabel="Draw"
+              awayLabel={awayLabel}
+            />
+          ) : null}
         </div>
       </div>
 
-      <div className="mt-4">
-        {status === "loading" ? (
-          <ChartStateMessage message="Loading market price history..." />
-        ) : null}
-
-        {status === "empty" ? (
-          <ChartStateMessage message="No price history available for this market." />
-        ) : null}
-
-        {status === "error" ? (
-          <ChartStateMessage
-            message={error ?? "Unable to load market price history."}
-            actionLabel="Retry"
-            onAction={() => {
-              void refetch();
-            }}
-          />
-        ) : null}
-
-        {status === "ready" ? (
-          <GameProbabilityChart
-            data={points}
-            homeLabel={sides.home.name ?? "Home"}
-            drawLabel="Draw"
-            awayLabel={sides.away.name ?? "Away"}
-          />
-        ) : null}
-      </div>
+      {orderbookEnabled ? (
+        <Orderbook tokenId={tokenId} className="w-full shrink-0 xl:w-[272px]" />
+      ) : null}
     </section>
   );
 }

@@ -147,17 +147,16 @@ function TeamSide({
 function HeaderMetric({
   value,
   statusVariant,
-  subtitle,
-  className
+  subtitle
 }: HeaderMetricData & { className?: string }) {
   return (
     <div className="relative w-[453px] h-full">
-      <div className="absolute top-[10px] h-full">
+      <div className="absolute top-[-14px] h-full">
         <Bg />
       </div>
       <div
         className={cn(
-          "flex flex-col justify-center items-center h-full relative z-10 mt-[80px]"
+          "flex flex-col justify-center items-center h-full relative z-10 mt-[50px]"
         )}
       >
         <strong className="text-center text-[40px] font-[556] capitalize leading-[48px] text-white sm:text-[60px] sm:leading-[72px]">

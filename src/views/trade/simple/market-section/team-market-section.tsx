@@ -32,7 +32,7 @@ export function TeamMarketSection({ snapshot }: TeamMarketSectionProps) {
   const noPrice = getTeamSimpleSidePrice(snapshot, "no");
 
   return (
-    <section className="flex flex-col gap-5 pt-[110px]">
+    <section className="flex flex-col gap-5 pt-[60px] pb-[20px]">
       <div className="grid grid-cols-2 items-end gap-3 text-black">
         <p className="text-[60px] font-[556] capitalize leading-[72px]">
           {Math.round(yesProb)}%

@@ -12,7 +12,7 @@ export default function ErrorPage({ error, reset }: { error: Error; reset: () =>
         <button type="button" className="bid-button" onClick={reset}>
           Retry
         </button>
-        <Link className="hero-link" href="/">
+        <Link className="hero-link" href="/fifa">
           Back to market
         </Link>
       </div>

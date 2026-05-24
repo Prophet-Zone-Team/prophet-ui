@@ -2,6 +2,7 @@ import { calculateReferencePrice, normalizeLimitPrice } from "@/lib/market/order
 import type {
   BidTradeSide,
   GameMarketOutcome,
+  GameMarketSnapshot,
   OrderOutcomeSide,
 } from "@/types/market";
 
@@ -41,4 +42,12 @@ export function findGameMarketOutcome(
   side: GameMarketOutcome["side"],
 ): GameMarketOutcome | undefined {
   return outcomes.find((item) => item.side === side);
+}
+
+export function getGameTokenIds(
+  snapshot: { outcomes: GameMarketOutcome[] },
+): string[] {
+  return snapshot.outcomes
+    .map((outcome) => outcome.tokenId)
+    .filter((id): id is string => Boolean(id));
 }

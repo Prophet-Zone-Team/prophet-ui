@@ -22,32 +22,6 @@ export const tradeTableHeadClass =
 export const tradeTableRowClass =
   "grid grid-cols-[minmax(0,1fr)_repeat(5,minmax(0,1fr))] gap-2 border-b border-prophet-line/60 px-4 py-2.5 text-sm last:border-b-0";
 
-export function tradeMatchOutcomePill(active: boolean) {
-  return cn(
-    "rounded-[6px] px-2.5 py-1 text-xs font-[556] leading-[17px] transition-colors sm:px-3 sm:text-sm",
-    active
-      ? "bg-[#65AF14] text-white"
-      : "text-prophet-muted hover:text-black"
-  );
-}
-
-export function tradeDrawOutcomePill(active: boolean) {
-  return cn(
-    "rounded-[6px] px-2.5 py-1 text-xs font-[556] leading-[17px] transition-colors sm:px-3 sm:text-sm",
-    active
-      ? "bg-[#909090] text-white"
-      : "text-prophet-muted hover:text-black"
-  );
-}
-
-export function tradeAwayOutcomePill(active: boolean) {
-  return cn(
-    "rounded-[6px] px-2.5 py-1 text-xs font-[556] leading-[17px] transition-colors sm:px-3 sm:text-sm",
-    active
-      ? "bg-[#FF674B] text-white"
-      : "text-[#FF674B]/80 hover:text-[#FF674B]"
-  );
-}
 
 export function tradeYesNoPill(active: boolean, side: "yes" | "no") {
   return cn(

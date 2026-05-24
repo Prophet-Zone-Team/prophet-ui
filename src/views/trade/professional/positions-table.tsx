@@ -3,18 +3,35 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { cn } from "@/lib/cn";
+import { getGameTokenIds } from "@/lib/market/game-outcome-price";
+import { resolveMatchSides } from "@/lib/market/schedule-match";
 import { fetchJson } from "@/lib/team/client-fetch";
 import {
   formatShortWallet,
   formatTeamDetailMoney
 } from "@/lib/team/detail-format";
-import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
+import type {
+  GameMarketSnapshot,
+  TeamMarketSnapshot,
+  UserPositionRecord
+} from "@/types/market";
 import { useAuth } from "@/context/auth";
 import { tradeBidButtonClass } from "@/views/trade/trade-widget/trade-ui";
 
-export interface PositionsTableProps {
+export type PositionsTableTeamProps = {
+  variant?: "team";
   snapshot: TeamMarketSnapshot;
-}
+};
+
+export type PositionsTableGameProps = {
+  variant: "game";
+  gameSnapshot: GameMarketSnapshot;
+  teamSnapshots: TeamMarketSnapshot[];
+};
+
+export type PositionsTableProps =
+  | PositionsTableTeamProps
+  | PositionsTableGameProps;
 
 function getTeamTokenIds(snapshot: TeamMarketSnapshot): string[] {
   const tokens = snapshot.market.polymarket?.tokens;
@@ -23,11 +40,30 @@ function getTeamTokenIds(snapshot: TeamMarketSnapshot): string[] {
   );
 }
 
-export function PositionsTable({ snapshot }: PositionsTableProps) {
+function resolveEmptyMessage(props: PositionsTableProps): string {
+  if (props.variant === "game") {
+    const sides = resolveMatchSides(
+      props.gameSnapshot.match,
+      props.teamSnapshots
+    );
+    return `No open positions for ${sides.home.name} vs ${sides.away.name} in your connected account.`;
+  }
+
+  return `No open positions for ${props.snapshot.team.name} in your connected account.`;
+}
+
+export function PositionsTable(props: PositionsTableProps) {
   const { isAuthenticated, openLogin } = useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const tokenIds = useMemo(() => getTeamTokenIds(snapshot), [snapshot]);
+
+  const tokenIds = useMemo(() => {
+    if (props.variant === "game") {
+      return getGameTokenIds(props.gameSnapshot);
+    }
+
+    return getTeamTokenIds(props.snapshot);
+  }, [props]);
 
   useEffect(() => {
     let ignore = false;
@@ -72,7 +108,11 @@ export function PositionsTable({ snapshot }: PositionsTableProps) {
   }, [isAuthenticated, tokenIds]);
 
   if (loading) {
-    return <p className="px-4 py-8 text-center text-sm text-prophet-muted">Loading positions…</p>;
+    return (
+      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
+        Loading positions…
+      </p>
+    );
   }
 
   if (!isAuthenticated) {
@@ -95,7 +135,7 @@ export function PositionsTable({ snapshot }: PositionsTableProps) {
   if (positions.length === 0) {
     return (
       <p className="px-4 py-10 text-center text-sm text-prophet-muted">
-        No open positions for {snapshot.team.name} in your connected account.
+        {resolveEmptyMessage(props)}
       </p>
     );
   }

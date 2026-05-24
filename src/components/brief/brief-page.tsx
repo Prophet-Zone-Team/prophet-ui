@@ -87,7 +87,7 @@ export function BriefPage({ snapshots, newsEvents, dataStatus }: BriefPageProps)
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
         <section className="rounded-lg border border-terminal-line bg-terminal-panel/90 p-6 shadow-terminal sm:p-8 lg:p-10">
           <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.22em] text-terminal-muted">
-            <Link href="/" className="hover:text-terminal-cyan">
+            <Link href="/fifa" className="hover:text-terminal-cyan">
               Market
             </Link>
             <Link href="/feed" className="hover:text-terminal-cyan">

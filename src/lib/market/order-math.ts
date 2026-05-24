@@ -162,12 +162,7 @@ export function formatTradePanelPrice(price: number): string {
 }
 
 export function formatOrderbookPrice(price: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 4
-  }).format(normalizeLimitPrice(price));
+  return formatTradePanelPrice(price);
 }
 
 export function formatOrderbookTotal(size: number, price: number): string {

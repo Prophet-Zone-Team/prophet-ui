@@ -66,16 +66,26 @@ interface ClobMarketEnrichment {
 export const polymarketDataProvider: WorldCupMarketDataProvider = {
   async getWorldCupMarketData(): Promise<WorldCupMarketData> {
     const markets = await fetchWorldCupMarkets();
+
     const worldCupMarkets = markets.filter(isWorldCupWinnerMarket);
-    const { snapshots, matchedMarketKeys } = await mapMarketsToTeamSnapshots(worldCupMarkets);
-    const universe = createMarketUniverseMeta(worldCupMarkets, snapshots, matchedMarketKeys);
+    const { snapshots, matchedMarketKeys } =
+      await mapMarketsToTeamSnapshots(worldCupMarkets);
+    const universe = createMarketUniverseMeta(
+      worldCupMarkets,
+      snapshots,
+      matchedMarketKeys
+    );
 
     if (snapshots.length < MIN_WORLD_CUP_MARKETS) {
-      throw new Error(`Polymarket returned ${snapshots.length} matching World Cup team markets.`);
+      throw new Error(
+        `Polymarket returned ${snapshots.length} matching World Cup team markets.`
+      );
     }
 
     const lastUpdated = snapshots.reduce((latest, snapshot) => {
-      return snapshot.market.updatedAt > latest ? snapshot.market.updatedAt : latest;
+      return snapshot.market.updatedAt > latest
+        ? snapshot.market.updatedAt
+        : latest;
     }, snapshots[0]?.market.updatedAt ?? new Date().toISOString());
 
     return {
@@ -90,8 +100,8 @@ export const polymarketDataProvider: WorldCupMarketDataProvider = {
         source: "polymarket",
         status: "live",
         lastUpdated,
-        stale: false,
-      },
+        stale: false
+      }
     };
   },
 };

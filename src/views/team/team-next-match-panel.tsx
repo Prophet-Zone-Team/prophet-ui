@@ -58,7 +58,7 @@ export function TeamNextMatchPanel({
               {fixture.venueName ? ` / ${fixture.venueName}` : ""}
             </p>
             <Link
-              href="/matches"
+              href="/fifa/matches"
               className={`${teamOpenTradeButtonClass} mt-4 w-full`}
             >
               View Match

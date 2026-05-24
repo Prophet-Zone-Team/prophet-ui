@@ -2,21 +2,10 @@
 
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type { GameMarketSnapshot, TeamMarketSnapshot } from "@/types/market";
-import {
-  useSetTradeMatchOutcomeSide,
-  useTradeMatchOutcomeSide
-} from "@/store/trade-ticket-store";
+import { GameOutcomeBidButtons } from "@/views/trade/shared/game-outcome-bid-buttons";
 import { simpleGameColors } from "@/views/trade/simple/ui";
-import {
-  formatChangePillLabel,
-  formatGameMatchBidLabel,
-  getGameSimpleSidePrice
-} from "@/views/trade/simple/market-section/format-bid-label";
-import {
-  BidButton,
-  ChangePill,
-  ProbabilityBar
-} from "@/views/trade/simple/market-section/shared";
+import { formatChangePillLabel } from "@/views/trade/simple/market-section/format-bid-label";
+import { ChangePill, ProbabilityBar } from "@/views/trade/simple/market-section/shared";
 
 export interface GameMarketSectionProps {
   snapshot: GameMarketSnapshot;
@@ -41,8 +30,6 @@ export function GameMarketSection({
   snapshot,
   teamSnapshots
 }: GameMarketSectionProps) {
-  const matchOutcomeSide = useTradeMatchOutcomeSide();
-  const setMatchOutcomeSide = useSetTradeMatchOutcomeSide();
   const sides = resolveMatchSides(snapshot.match, teamSnapshots);
   const homeProb = getOutcomeProbability(snapshot, "home");
   const drawProb = getOutcomeProbability(snapshot, "draw");
@@ -51,12 +38,6 @@ export function GameMarketSection({
   const homeChange = formatChangePillLabel(getOutcomeChange(snapshot, "home"));
   const drawChange = formatChangePillLabel(getOutcomeChange(snapshot, "draw"));
   const awayChange = formatChangePillLabel(getOutcomeChange(snapshot, "away"));
-
-  const homePrice = getGameSimpleSidePrice(snapshot, "home");
-  const drawPrice = getGameSimpleSidePrice(snapshot, "draw");
-  const awayPrice = getGameSimpleSidePrice(snapshot, "away");
-  const homeBidLabel = sides.home.code ?? sides.home.name.slice(0, 3).toUpperCase();
-  const awayBidLabel = sides.away.code ?? sides.away.name.slice(0, 3).toUpperCase();
 
   return (
     <section className="flex flex-col gap-5 py-6">
@@ -110,26 +91,10 @@ export function GameMarketSection({
         ]}
       />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <BidButton
-          label={formatGameMatchBidLabel(homeBidLabel, homePrice)}
-          background={simpleGameColors.home}
-          active={matchOutcomeSide === "home"}
-          onClick={() => setMatchOutcomeSide("home")}
-        />
-        <BidButton
-          label={formatGameMatchBidLabel("Draw", drawPrice)}
-          background={simpleGameColors.draw}
-          active={matchOutcomeSide === "draw"}
-          onClick={() => setMatchOutcomeSide("draw")}
-        />
-        <BidButton
-          label={formatGameMatchBidLabel(awayBidLabel, awayPrice)}
-          background={simpleGameColors.awayBar}
-          active={matchOutcomeSide === "away"}
-          onClick={() => setMatchOutcomeSide("away")}
-        />
-      </div>
+      <GameOutcomeBidButtons
+        gameSnapshot={snapshot}
+        teamSnapshots={teamSnapshots}
+      />
     </section>
   );
 }

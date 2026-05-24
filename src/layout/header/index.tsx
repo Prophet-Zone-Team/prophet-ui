@@ -41,7 +41,7 @@ export function AppHeader() {
       <div className="flex items-center gap-7">
         <Link
           className="inline-flex items-center gap-0 text-prophet-navy"
-          href="/"
+          href="/fifa"
           aria-label="Prophet home"
         >
           <img

@@ -10,7 +10,7 @@ import {
   TradesTableHeader
 } from "@/views/trade/professional/trades-table";
 import { tradeSectionClass } from "@/views/trade/trade-widget/trade-ui";
-import type { TeamMarketSnapshot } from "@/types/market";
+import type { GameMarketSnapshot, TeamMarketSnapshot } from "@/types/market";
 
 const ACTIVITY_TABS = [
   { id: "trades", label: "Trades" },
@@ -20,11 +20,20 @@ const ACTIVITY_TABS = [
 
 type ActivityTabId = (typeof ACTIVITY_TABS)[number]["id"];
 
-export interface ActivityTabsProps {
+export type ActivityTabsTeamProps = {
+  variant?: "team";
   snapshot: TeamMarketSnapshot;
-}
+};
 
-export function ActivityTabs({ snapshot }: ActivityTabsProps) {
+export type ActivityTabsGameProps = {
+  variant: "game";
+  gameSnapshot: GameMarketSnapshot;
+  teamSnapshots: TeamMarketSnapshot[];
+};
+
+export type ActivityTabsProps = ActivityTabsTeamProps | ActivityTabsGameProps;
+
+export function ActivityTabs(props: ActivityTabsProps) {
   const [tab, setTab] = useState<ActivityTabId>("trades");
 
   return (
@@ -61,7 +70,15 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
         {tab === "trades" ? <TradesTable /> : null}
         {tab === "position" ? (
           <div aria-label="Your positions">
-            <PositionsTable snapshot={snapshot} />
+            {props.variant === "game" ? (
+              <PositionsTable
+                variant="game"
+                gameSnapshot={props.gameSnapshot}
+                teamSnapshots={props.teamSnapshots}
+              />
+            ) : (
+              <PositionsTable snapshot={props.snapshot} />
+            )}
           </div>
         ) : null}
         {tab === "top-traders" ? (

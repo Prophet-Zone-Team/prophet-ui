@@ -142,25 +142,6 @@ export function GameProbabilityChart({
             </LineChart>
           </ResponsiveContainer>
         </div>
-
-        <div className="flex shrink-0 flex-col justify-center gap-3 pt-6 pr-1">
-          {SERIES.map((series) => (
-            <div
-              key={series.key}
-              className="flex items-center gap-2 text-sm font-[556] leading-[17px]"
-              style={{ color: series.color }}
-            >
-              <span
-                className="size-2 shrink-0 rounded-full"
-                style={{ backgroundColor: series.color }}
-                aria-hidden
-              />
-              <span className="whitespace-nowrap">
-                {Math.round(latestValues[series.key])}%
-              </span>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

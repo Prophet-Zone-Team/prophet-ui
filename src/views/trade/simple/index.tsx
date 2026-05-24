@@ -8,13 +8,16 @@ import {
   type TradeSimpleHeaderProps,
   type TradeSimpleHeaderTeamProps
 } from "@/views/trade/simple/header";
+import { TradeSimpleHeaderToolbar } from "@/views/trade/simple/header-toolbar";
 import { GameProbabilitySection } from "@/views/trade/game-probability";
 import { RelatedGames } from "@/views/trade/related-games";
 import { TradeSimpleMarketSection } from "@/views/trade/simple/market-section";
 import { simpleContentClass } from "@/views/trade/simple/ui";
+import { ProbabilitySection } from "@/views/trade/team-probability";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import type {
   GameMarketSnapshot,
+  ProbabilityHistoryPoint,
   TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
@@ -27,6 +30,7 @@ export type TradeSimpleViewGameProps = TradeSimpleHeaderGameProps & {
 export type TradeSimpleViewTeamProps = TradeSimpleHeaderTeamProps & {
   matches: WorldCupMatch[];
   snapshots: TeamMarketSnapshot[];
+  probabilityHistory: ProbabilityHistoryPoint[];
 };
 
 export type TradeSimpleViewProps =
@@ -83,8 +87,9 @@ export default function TradeSimpleView(props: TradeSimpleViewProps) {
   }, [props]);
 
   return (
-    <div className="relative left-1/2 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2 bg-white">
+    <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2 bg-white">
       <div className="bg-black h-[258px] w-full absolute top-0 left-0" />
+      <TradeSimpleHeaderToolbar />
       <div className={`${simpleContentClass} pb-10 relative z-10`}>
         <div className="shrink-0 w-[1000px] pt-2">
           <div className="relative">
@@ -103,10 +108,19 @@ export default function TradeSimpleView(props: TradeSimpleViewProps) {
               />
             </>
           ) : (
-            <TradeSimpleMarketSection
-              variant="team"
-              snapshot={props.snapshot}
-            />
+            <>
+              <TradeSimpleMarketSection
+                variant="team"
+                snapshot={props.snapshot}
+              />
+              <ProbabilitySection
+                snapshot={props.snapshot}
+                probabilityHistory={props.probabilityHistory}
+                matches={props.matches}
+                snapshots={sidebar.relatedGames.snapshots}
+                showOrderbook={false}
+              />
+            </>
           )}
         </div>
         <div className="mt-6 flex flex-col gap-4 w-[345px]">
