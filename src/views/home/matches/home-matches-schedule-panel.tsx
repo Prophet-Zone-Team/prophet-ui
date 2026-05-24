@@ -4,10 +4,11 @@ import { useMemo, useState } from "react";
 
 import {
   buildScheduleDateGroups,
+  buildScheduleFilterTeams,
   buildScheduleMatchList,
   type ScheduleSortKey
 } from "@/lib/market/schedule-match";
-import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
+import type { Team, TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { ScheduleFilterBar } from "@/views/home/matches/schedule-filter-bar";
 import { ScheduleMatchRow } from "@/views/home/matches/schedule-match-row";
 import { SpecialMatchDataCard } from "@/views/home/matches/special-match-data-card";
@@ -23,23 +24,31 @@ export function HomeMatchesSchedulePanel({
 }: HomeMatchesSchedulePanelProps) {
   const [sortKey, setSortKey] = useState<ScheduleSortKey>("time");
   const [showEnded, setShowEnded] = useState(false);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<Team["id"][]>([]);
+
+  const filterTeams = useMemo(
+    () => buildScheduleFilterTeams(matches, snapshots),
+    [matches, snapshots]
+  );
 
   const sortedMatches = useMemo(
     () =>
       buildScheduleMatchList(matches, snapshots, {
         showEnded,
-        sortKey
+        sortKey,
+        teamIds: selectedTeamIds
       }),
-    [matches, snapshots, showEnded, sortKey]
+    [matches, snapshots, showEnded, sortKey, selectedTeamIds]
   );
 
   const dateGroups = useMemo(
     () =>
       buildScheduleDateGroups(matches, snapshots, {
         showEnded,
-        sortKey
+        sortKey,
+        teamIds: selectedTeamIds
       }),
-    [matches, snapshots, showEnded, sortKey]
+    [matches, snapshots, showEnded, sortKey, selectedTeamIds]
   );
 
   const featuredCard = useMemo(() => {
@@ -75,8 +84,11 @@ export function HomeMatchesSchedulePanel({
       <ScheduleFilterBar
         sortKey={sortKey}
         showEnded={showEnded}
+        teams={filterTeams}
+        selectedTeamIds={selectedTeamIds}
         onSortKeyChange={setSortKey}
         onShowEndedChange={setShowEnded}
+        onSelectedTeamIdsChange={setSelectedTeamIds}
       />
 
       {sortedMatches.length > 0 ? (

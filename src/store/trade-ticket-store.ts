@@ -6,12 +6,14 @@ import {
   formatDefaultGameTradeLimitPrice,
   formatDefaultTradeLimitPrice
 } from "@/lib/market/trade-ticket";
+import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
 import type {
   GameMarketSnapshot,
   MatchOutcomeSide,
   OrderOutcomeSide,
   TeamMarketSnapshot,
-  TradeEntityType
+  TradeEntityType,
+  UserPositionRecord
 } from "@/types/market";
 import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-button";
 
@@ -39,6 +41,10 @@ interface TradeTicketState {
   limitExpirationCustom?: string;
   syncForTeamSnapshot: (snapshot: TeamMarketSnapshot) => void;
   syncForGameSnapshot: (snapshot: GameMarketSnapshot) => void;
+  syncForPositionSell: (
+    snapshot: TeamMarketSnapshot,
+    position: UserPositionRecord
+  ) => void;
   setOutcomeSide: (side: OrderOutcomeSide) => void;
   setMatchOutcomeSide: (side: MatchOutcomeSide) => void;
   setTab: (tab: TradeTabId) => void;
@@ -100,6 +106,22 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       orderMode: "market",
       amount: "1",
       limitPrice: formatDefaultGameTradeLimitPrice(snapshot, "home", "yes"),
+      limitExpiration: "never",
+      limitExpirationCustom: undefined
+    });
+  },
+  syncForPositionSell: (snapshot, position) => {
+    const outcomeSide = resolveOutcomeSideForPosition(position, snapshot);
+
+    set({
+      marketKey: snapshot.team.id,
+      entityType: "team",
+      matchOutcomeSide: "home",
+      outcomeSide,
+      tab: "sell",
+      orderMode: "market",
+      amount: String(position.size),
+      limitPrice: formatDefaultTradeLimitPrice(snapshot, outcomeSide),
       limitExpiration: "never",
       limitExpirationCustom: undefined
     });
@@ -207,6 +229,10 @@ export function useSyncTradeTeamSnapshot() {
 
 export function useSyncTradeGameSnapshot() {
   return useTradeTicketStore((state) => state.syncForGameSnapshot);
+}
+
+export function useSyncForPositionSell() {
+  return useTradeTicketStore((state) => state.syncForPositionSell);
 }
 
 /** @deprecated Use useSyncTradeTeamSnapshot instead. */

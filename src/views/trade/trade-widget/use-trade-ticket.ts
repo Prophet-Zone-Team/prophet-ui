@@ -31,7 +31,8 @@ import {
   useTradeOutcomeSide,
   useTradeTab
 } from "@/store/trade-ticket-store";
-import type { GameMarketSnapshot, TeamMarketSnapshot } from "@/types/market";
+import type { GameMarketSnapshot, TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
+import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
 import {
   buildGameTradePreview,
   buildTeamTradePreview,
@@ -43,7 +44,6 @@ import {
   ensureTradingReadyForBid,
   fetchMarketOutcomeShares,
   fetchReadinessForPreview,
-  fetchTradingConfig,
   formatGameDefaultLimitPriceString,
   formatTeamDefaultLimitPriceString,
   getGameDefaultLimitPrice,
@@ -73,11 +73,14 @@ import {
 export type UseTradeTicketTeamInput = {
   variant: "team";
   snapshot: TeamMarketSnapshot;
+  sellPosition?: UserPositionRecord;
+  onOrderSuccess?: () => void | Promise<void>;
 };
 
 export type UseTradeTicketGameInput = {
   variant: "game";
   gameSnapshot: GameMarketSnapshot;
+  onOrderSuccess?: () => void | Promise<void>;
 };
 
 export type UseTradeTicketInput =
@@ -158,7 +161,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   const { conditionId, yesTokenId, noTokenId } = marketTokenIds;
 
-  const availableShares = outcomeShares[outcomeSide];
+  const sellPosition =
+    input.variant === "team" ? input.sellPosition : undefined;
+
+  const availableShares =
+    sellPosition && tradeSide === "sell"
+      ? sellPosition.size
+      : outcomeShares[outcomeSide];
 
   const limitPriceContextKey =
     input.variant === "team"
@@ -334,34 +343,6 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [limitPriceContextKey, setLimitPrice]);
 
   useEffect(() => {
-    let ignore = false;
-
-    async function loadTicketState() {
-      setStatus("loading");
-
-      try {
-        const loadedConfig = await fetchTradingConfig();
-
-        if (!ignore) {
-          setConfig(loadedConfig);
-          setStatus("idle");
-        }
-      } catch (error) {
-        if (!ignore) {
-          setStatus("error");
-          setMessage(error instanceof Error ? error.message : String(error));
-        }
-      }
-    }
-
-    void loadTicketState();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  useEffect(() => {
     if (!preview) {
       return undefined;
     }
@@ -430,6 +411,21 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [conditionId, isAuthenticated, noTokenId, yesTokenId]);
 
   useEffect(() => {
+    if (sellPosition && tradeSide === "sell" && input.variant === "team") {
+      const side = resolveOutcomeSideForPosition(sellPosition, input.snapshot);
+      const nextShares = {
+        yes: side === "yes" ? sellPosition.size : 0,
+        no: side === "no" ? sellPosition.size : 0
+      };
+
+      setOutcomeShares((current) =>
+        current.yes === nextShares.yes && current.no === nextShares.no
+          ? current
+          : nextShares
+      );
+      return;
+    }
+
     if (!isAuthenticated) {
       setOutcomeShares((current) =>
         current.yes === 0 && current.no === 0 ? current : { yes: 0, no: 0 }
@@ -440,7 +436,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     if (tradeSide === "sell") {
       void refreshOutcomeShares();
     }
-  }, [isAuthenticated, refreshOutcomeShares, tradeSide]);
+  }, [
+    input,
+    isAuthenticated,
+    refreshOutcomeShares,
+    sellPosition,
+    tradeSide
+  ]);
 
   const refreshOrderReadiness = useCallback(async () => {
     if (!preview) {
@@ -588,6 +590,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         refreshSetupReadiness(),
         refreshOutcomeShares()
       ]);
+      await input.onOrderSuccess?.();
     } catch (error) {
       const errorMessage = resolveOrderErrorMessage(error);
       setStatus("error");

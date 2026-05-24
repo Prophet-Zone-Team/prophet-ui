@@ -23,11 +23,15 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
     openOrders,
     activityHistory,
     readiness,
-    status,
+    coreStatus,
+    openOrdersStatus,
+    historyStatus,
     message,
     connectWallet,
     reload,
     removeOpenOrder,
+    loadOpenOrders,
+    loadActivityHistory,
   } = usePortfolioData();
 
   const portfolio = useMemo(
@@ -46,7 +50,7 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
       value={{
         session,
         portfolio,
-        status,
+        status: coreStatus,
         onConnectWallet: () => void connectWallet(),
         reload,
         removeOpenOrder,
@@ -59,7 +63,7 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
           {message ? (
             <p
               className={
-                status === "error"
+                coreStatus === "error"
                   ? "m-0 text-sm text-prophet-red"
                   : "m-0 text-sm text-prophet-muted"
               }
@@ -75,8 +79,12 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
             activityHistory={activityHistory}
             positionTimeMap={portfolio.positionTimeMap}
             sessionConnected={Boolean(session)}
-            status={status}
+            coreStatus={coreStatus}
+            openOrdersStatus={openOrdersStatus}
+            historyStatus={historyStatus}
             onConnectWallet={() => void connectWallet()}
+            loadOpenOrders={loadOpenOrders}
+            loadActivityHistory={loadActivityHistory}
           />
         </div>
       </section>

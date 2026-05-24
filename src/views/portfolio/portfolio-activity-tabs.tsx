@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import type {
@@ -22,6 +22,10 @@ const PORTFOLIO_TABS = [
 
 type PortfolioTabId = (typeof PORTFOLIO_TABS)[number]["id"];
 
+function isTabLoading(status: PortfolioLoadStatus): boolean {
+  return status === "loading" || status === "idle";
+}
+
 export interface PortfolioActivityTabsProps {
   snapshots: TeamMarketSnapshot[];
   positions: UserPositionRecord[];
@@ -29,8 +33,12 @@ export interface PortfolioActivityTabsProps {
   activityHistory: UserActivityRecord[];
   positionTimeMap: Map<string, string>;
   sessionConnected: boolean;
-  status: PortfolioLoadStatus;
+  coreStatus: PortfolioLoadStatus;
+  openOrdersStatus: PortfolioLoadStatus;
+  historyStatus: PortfolioLoadStatus;
   onConnectWallet: () => void;
+  loadOpenOrders: () => Promise<void>;
+  loadActivityHistory: () => Promise<void>;
 }
 
 export function PortfolioActivityTabs({
@@ -40,12 +48,29 @@ export function PortfolioActivityTabs({
   activityHistory,
   positionTimeMap,
   sessionConnected,
-  status,
-  onConnectWallet
+  coreStatus,
+  openOrdersStatus,
+  historyStatus,
+  onConnectWallet,
+  loadOpenOrders,
+  loadActivityHistory
 }: PortfolioActivityTabsProps) {
   const [tab, setTab] = useState<PortfolioTabId>("position");
-  const loading = status === "loading" || status === "idle";
-  const needsWallet = !sessionConnected && !loading;
+
+  useEffect(() => {
+    if (!sessionConnected) {
+      return;
+    }
+
+    if (tab === "open-order") {
+      void loadOpenOrders();
+    } else if (tab === "history") {
+      void loadActivityHistory();
+    }
+  }, [loadActivityHistory, loadOpenOrders, sessionConnected, tab]);
+
+  const coreLoading = isTabLoading(coreStatus);
+  const needsWallet = !sessionConnected && !coreLoading;
 
   return (
     <section
@@ -68,7 +93,7 @@ export function PortfolioActivityTabs({
           snapshots={snapshots}
           positionTimeMap={positionTimeMap}
           needsWallet={needsWallet}
-          loading={loading}
+          loading={coreLoading}
           onConnectWallet={onConnectWallet}
         />
       ) : null}
@@ -78,7 +103,7 @@ export function PortfolioActivityTabs({
           openOrders={openOrders}
           snapshots={snapshots}
           needsWallet={needsWallet}
-          loading={loading}
+          loading={sessionConnected && isTabLoading(openOrdersStatus)}
           onConnectWallet={onConnectWallet}
         />
       ) : null}
@@ -88,7 +113,7 @@ export function PortfolioActivityTabs({
           activityHistory={activityHistory}
           snapshots={snapshots}
           needsWallet={needsWallet}
-          loading={loading}
+          loading={sessionConnected && isTabLoading(historyStatus)}
           onConnectWallet={onConnectWallet}
         />
       ) : null}

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { cn } from "@/lib/cn";
 import {
   formatPortfolioDateTime,
@@ -7,12 +9,18 @@ import {
   formatSharePrice,
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
-import { findSnapshotForPosition } from "@/lib/portfolio/portfolio-metrics";
+import {
+  findSnapshotForPosition,
+  findSnapshotForTokenId
+} from "@/lib/portfolio/portfolio-metrics";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import { useTradeTicketStore } from "@/store/trade-ticket-store";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
+import { PortfolioPositionSellDialog } from "@/views/portfolio/portfolio-position-sell-dialog";
 import {
+  portfolioActionButtonClass,
   portfolioConnectButtonClass,
   portfolioPositionsTableHeadClass,
   portfolioPositionsTableRowClass,
@@ -28,6 +36,11 @@ export interface PortfolioPositionsTableProps {
   onConnectWallet: () => void;
 }
 
+type SellTarget = {
+  position: UserPositionRecord;
+  snapshot: TeamMarketSnapshot;
+};
+
 function PortfolioPositionsTableHeader() {
   return (
     <div className={portfolioPositionsTableHeadClass}>
@@ -36,6 +49,15 @@ function PortfolioPositionsTableHeader() {
       <span>To Win</span>
       <span>Value</span>
       <span>Time</span>
+      <span
+        aria-hidden="true"
+        className={cn(
+          portfolioActionButtonClass,
+          "invisible pointer-events-none justify-self-end"
+        )}
+      >
+        Sell
+      </span>
     </div>
   );
 }
@@ -48,6 +70,8 @@ export function PortfolioPositionsTable({
   loading,
   onConnectWallet
 }: PortfolioPositionsTableProps) {
+  const [sellTarget, setSellTarget] = useState<SellTarget | null>(null);
+
   if (loading) {
     return (
       <p className="px-4 py-8 text-center text-sm text-prophet-muted">Loading positions…</p>
@@ -84,9 +108,12 @@ export function PortfolioPositionsTable({
   }
 
   const rows = positions.map((position) => {
-    const snapshot = findSnapshotForPosition(position, snapshots);
+    const snapshot =
+      findSnapshotForTokenId(position.asset, snapshots) ??
+      findSnapshotForPosition(position, snapshots);
     const timeValue = positionTimeMap.get(position.asset);
     const pnlTone = position.cashPnl >= 0 ? "text-prophet-green" : "text-prophet-red";
+    const canSell = Boolean(snapshot) && position.size > 0;
 
     return (
       <div
@@ -136,14 +163,45 @@ export function PortfolioPositionsTable({
         <span className="text-prophet-muted">
           {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
         </span>
+        <button
+          type="button"
+          className={cn(
+            portfolioActionButtonClass,
+            "justify-self-end",
+            "disabled:opacity-50"
+          )}
+          disabled={!canSell}
+          title={canSell ? undefined : "Market data unavailable"}
+          onClick={() => {
+            if (snapshot) {
+              useTradeTicketStore
+                .getState()
+                .syncForPositionSell(snapshot, position);
+              setSellTarget({ position, snapshot });
+            }
+          }}
+        >
+          Sell
+        </button>
       </div>
     );
   });
 
   return (
-    <div className={portfolioTableScrollClass} aria-label="Your positions">
-      <PortfolioPositionsTableHeader />
-      {rows}
-    </div>
+    <>
+      <div className={portfolioTableScrollClass} aria-label="Your positions">
+        <PortfolioPositionsTableHeader />
+        {rows}
+      </div>
+
+      {sellTarget ? (
+        <PortfolioPositionSellDialog
+          open
+          position={sellTarget.position}
+          snapshot={sellTarget.snapshot}
+          onClose={() => setSellTarget(null)}
+        />
+      ) : null}
+    </>
   );
 }

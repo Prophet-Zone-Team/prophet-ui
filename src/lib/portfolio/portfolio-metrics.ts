@@ -1,4 +1,5 @@
 import type {
+  OrderOutcomeSide,
   TeamMarketSnapshot,
   UserPositionRecord,
   UserTradingReadiness
@@ -45,6 +46,35 @@ export function findSnapshotForTokenId(
     const tokens = snapshot.market.polymarket?.tokens;
     return tokens?.yes?.tokenId === assetId || tokens?.no?.tokenId === assetId;
   });
+}
+
+export function resolveOutcomeSideForPosition(
+  position: UserPositionRecord,
+  snapshot: TeamMarketSnapshot
+): OrderOutcomeSide {
+  const tokens = snapshot.market.polymarket?.tokens;
+
+  if (tokens?.yes?.tokenId === position.asset) {
+    return "yes";
+  }
+
+  if (tokens?.no?.tokenId === position.asset) {
+    return "no";
+  }
+
+  return position.outcomeIndex === 0 ? "yes" : "no";
+}
+
+export function derivePositionSellReceiveAmount(
+  position: UserPositionRecord,
+  selectedShares: number
+): number {
+  if (position.size <= 0 || selectedShares <= 0) {
+    return 0;
+  }
+
+  const ratio = Math.min(1, selectedShares / position.size);
+  return roundMoney(position.currentValue * ratio);
 }
 
 export function buildPositionTimeMap(

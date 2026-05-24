@@ -210,10 +210,6 @@ export function toBidOrderPreview(
   };
 }
 
-export async function fetchTradingConfig(): Promise<TradingConfig> {
-  return fetchJson<TradingConfig>("/api/trading/config");
-}
-
 export async function fetchReadinessForPreview(
   preview: OrderPreviewFields,
   tradeSide: BidTradeSide

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { cn } from "@/lib/cn";
 import { findSnapshotForTokenId } from "@/lib/portfolio/portfolio-metrics";
 import {
@@ -12,7 +14,7 @@ import { formatShareSize } from "@/lib/market/order-math";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
-import { useCancelOpenOrder } from "@/views/portfolio/use-cancel-open-order";
+import { PortfolioOpenOrderCancelDialog } from "@/views/portfolio/portfolio-open-order-cancel-dialog";
 import {
   portfolioActionButtonClass,
   portfolioConnectButtonClass,
@@ -28,6 +30,11 @@ export interface PortfolioOpenOrdersTableProps {
   loading: boolean;
   onConnectWallet: () => void;
 }
+
+type CancelTarget = {
+  order: UserOpenOrder;
+  snapshot?: TeamMarketSnapshot;
+};
 
 function getRemainingSize(order: UserOpenOrder): number {
   const original = Number(order.original_size);
@@ -80,7 +87,7 @@ export function PortfolioOpenOrdersTable({
   loading,
   onConnectWallet
 }: PortfolioOpenOrdersTableProps) {
-  const { cancelOpenOrder, isCanceling } = useCancelOpenOrder();
+  const [cancelTarget, setCancelTarget] = useState<CancelTarget | null>(null);
 
   if (loading) {
     return (
@@ -157,19 +164,29 @@ export function PortfolioOpenOrdersTable({
             "justify-self-end",
             "disabled:opacity-50"
           )}
-          disabled={isCanceling(order.id)}
-          onClick={() => void cancelOpenOrder(order)}
+          onClick={() => setCancelTarget({ order, snapshot: snapshot ?? undefined })}
         >
-          {isCanceling(order.id) ? "Cancelling…" : "Cancel"}
+          Cancel
         </button>
       </div>
     );
   });
 
   return (
-    <div className={portfolioTableScrollClass} aria-label="Open orders">
-      <PortfolioOpenOrdersTableHeader />
-      {rows}
-    </div>
+    <>
+      <div className={portfolioTableScrollClass} aria-label="Open orders">
+        <PortfolioOpenOrdersTableHeader />
+        {rows}
+      </div>
+
+      {cancelTarget ? (
+        <PortfolioOpenOrderCancelDialog
+          open
+          order={cancelTarget.order}
+          snapshot={cancelTarget.snapshot}
+          onClose={() => setCancelTarget(null)}
+        />
+      ) : null}
+    </>
   );
 }

@@ -1,28 +1,39 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import type { ScheduleSortKey } from "@/lib/market/schedule-match";
+import type {
+  ScheduleFilterTeam,
+  ScheduleSortKey
+} from "@/lib/market/schedule-match";
+import type { Team } from "@/types/market";
+import { ScheduleTeamFilter } from "@/views/home/matches/schedule-team-filter";
 
 export interface ScheduleFilterBarProps {
   sortKey: ScheduleSortKey;
   showEnded: boolean;
+  teams: ScheduleFilterTeam[];
+  selectedTeamIds: Team["id"][];
   onSortKeyChange: (key: ScheduleSortKey) => void;
   onShowEndedChange: (value: boolean) => void;
+  onSelectedTeamIdsChange: (teamIds: Team["id"][]) => void;
 }
 
 export function ScheduleFilterBar({
   sortKey,
   showEnded,
+  teams,
+  selectedTeamIds,
   onSortKeyChange,
-  onShowEndedChange
+  onShowEndedChange,
+  onSelectedTeamIdsChange
 }: ScheduleFilterBarProps) {
   return (
     <div
-      className="mb-3 flex h-[34px] items-center justify-between gap-3 rounded-[20px] px-3 sm:px-4"
+      className="mb-3 flex min-h-[34px] items-center justify-between gap-3 rounded-[20px] px-3 sm:px-4"
       role="toolbar"
       aria-label="Schedule filters and sorting"
     >
-      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         <SortPill
           label="Volume"
           active={sortKey === "volume"}
@@ -32,6 +43,12 @@ export function ScheduleFilterBar({
           label="Time"
           active={sortKey === "time"}
           onClick={() => onSortKeyChange("time")}
+        />
+        <div className="w-[1px] h-[32px] bg-[#090909] mx-2" />
+        <ScheduleTeamFilter
+          teams={teams}
+          selectedTeamIds={selectedTeamIds}
+          onSelectedTeamIdsChange={onSelectedTeamIdsChange}
         />
       </div>
 

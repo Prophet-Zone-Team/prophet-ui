@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
 import { fetchJson } from "@/lib/team/client-fetch";
@@ -18,9 +18,13 @@ export interface UsePortfolioDataResult {
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
   activityHistory: UserActivityRecord[];
-  status: PortfolioLoadStatus;
+  coreStatus: PortfolioLoadStatus;
+  openOrdersStatus: PortfolioLoadStatus;
+  historyStatus: PortfolioLoadStatus;
   message: string | undefined;
   reload: () => Promise<void>;
+  loadOpenOrders: () => Promise<void>;
+  loadActivityHistory: () => Promise<void>;
   removeOpenOrder: (orderId: string) => void;
   connectWallet: () => Promise<void>;
 }
@@ -35,45 +39,42 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const [activityHistory, setActivityHistory] = useState<UserActivityRecord[]>(
     []
   );
-  const [status, setStatus] = useState<PortfolioLoadStatus>("idle");
+  const [coreStatus, setCoreStatus] = useState<PortfolioLoadStatus>("idle");
+  const [openOrdersStatus, setOpenOrdersStatus] =
+    useState<PortfolioLoadStatus>("idle");
+  const [historyStatus, setHistoryStatus] =
+    useState<PortfolioLoadStatus>("idle");
   const [message, setMessage] = useState<string | undefined>();
+  const openOrdersLoadedRef = useRef(false);
+  const historyLoadedRef = useRef(false);
 
-  const loadPortfolio = useCallback(async () => {
-    setStatus("loading");
+  const resetTabData = useCallback(() => {
+    setOpenOrders([]);
+    setActivityHistory([]);
+    setOpenOrdersStatus("idle");
+    setHistoryStatus("idle");
+    openOrdersLoadedRef.current = false;
+    historyLoadedRef.current = false;
+  }, []);
+
+  const loadCore = useCallback(async () => {
+    setCoreStatus("loading");
     setMessage(undefined);
 
     try {
       if (!session) {
         setPositions([]);
-        setOpenOrders([]);
-        setActivityHistory([]);
         setReadiness(undefined);
-        setStatus("ready");
+        resetTabData();
+        setCoreStatus("ready");
         return;
       }
 
       const errors: string[] = [];
 
-      const [
-        positionsPayload,
-        openOrdersPayload,
-        historyPayload,
-        readinessPayload
-      ] = await Promise.all([
+      const [positionsPayload, readinessPayload] = await Promise.all([
         fetchJson<{ positions?: UserPositionRecord[]; error?: string }>(
           "/api/trading/positions?limit=100"
-        ).catch((error) => {
-          errors.push(error instanceof Error ? error.message : String(error));
-          return undefined;
-        }),
-        fetchJson<{ orders?: UserOpenOrder[]; error?: string }>(
-          "/api/trading/orders/open"
-        ).catch((error) => {
-          errors.push(error instanceof Error ? error.message : String(error));
-          return undefined;
-        }),
-        fetchJson<{ activities?: UserActivityRecord[]; error?: string }>(
-          "/api/trading/orders/history?limit=40"
         ).catch((error) => {
           errors.push(error instanceof Error ? error.message : String(error));
           return undefined;
@@ -87,46 +88,112 @@ export function usePortfolioData(): UsePortfolioDataResult {
       ]);
 
       setPositions(positionsPayload?.positions ?? []);
-      setOpenOrders(openOrdersPayload?.orders ?? []);
-      setActivityHistory(historyPayload?.activities ?? []);
       setReadiness(readinessPayload);
 
-      const apiErrors = [
-        positionsPayload?.error,
-        openOrdersPayload?.error,
-        historyPayload?.error
-      ].filter(Boolean);
-
+      const apiErrors = [positionsPayload?.error].filter(Boolean);
       const combinedMessage =
         [...errors, ...apiErrors].join(" ").trim() || undefined;
       setMessage(combinedMessage);
-      setStatus(combinedMessage && !positionsPayload ? "error" : "ready");
+      setCoreStatus(combinedMessage && !positionsPayload ? "error" : "ready");
     } catch (error) {
-      setStatus("error");
+      setCoreStatus("error");
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [session]);
+  }, [resetTabData, session]);
+
+  const loadOpenOrders = useCallback(
+    async (options?: { force?: boolean }) => {
+      if (!session) {
+        return;
+      }
+
+      if (openOrdersLoadedRef.current && !options?.force) {
+        return;
+      }
+
+      setOpenOrdersStatus("loading");
+
+      try {
+        const payload = await fetchJson<{
+          orders?: UserOpenOrder[];
+          error?: string;
+        }>("/api/trading/orders/open");
+
+        setOpenOrders(payload?.orders ?? []);
+        openOrdersLoadedRef.current = true;
+        setOpenOrdersStatus(payload?.error ? "error" : "ready");
+      } catch {
+        openOrdersLoadedRef.current = true;
+        setOpenOrders([]);
+        setOpenOrdersStatus("error");
+      }
+    },
+    [session]
+  );
+
+  const loadActivityHistory = useCallback(
+    async (options?: { force?: boolean }) => {
+      if (!session) {
+        return;
+      }
+
+      if (historyLoadedRef.current && !options?.force) {
+        return;
+      }
+
+      setHistoryStatus("loading");
+
+      try {
+        const payload = await fetchJson<{
+          activities?: UserActivityRecord[];
+          error?: string;
+        }>("/api/trading/orders/history?limit=40");
+
+        setActivityHistory(payload?.activities ?? []);
+        historyLoadedRef.current = true;
+        setHistoryStatus(payload?.error ? "error" : "ready");
+      } catch {
+        historyLoadedRef.current = true;
+        setActivityHistory([]);
+        setHistoryStatus("error");
+      }
+    },
+    [session]
+  );
+
+  const reload = useCallback(async () => {
+    await loadCore();
+
+    if (openOrdersLoadedRef.current) {
+      await loadOpenOrders({ force: true });
+    }
+
+    if (historyLoadedRef.current) {
+      await loadActivityHistory({ force: true });
+    }
+  }, [loadActivityHistory, loadCore, loadOpenOrders]);
 
   useEffect(() => {
-    void loadPortfolio();
-  }, [loadPortfolio]);
+    resetTabData();
+    void loadCore();
+  }, [loadCore, resetTabData]);
 
   const removeOpenOrder = useCallback((orderId: string) => {
     setOpenOrders((current) => current.filter((order) => order.id !== orderId));
   }, []);
 
   const connectWallet = useCallback(async () => {
-    setStatus("loading");
+    setCoreStatus("loading");
     setMessage(undefined);
 
     try {
       await openLogin();
-      await loadPortfolio();
+      await loadCore();
     } catch (error) {
-      setStatus("error");
+      setCoreStatus("error");
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [loadPortfolio, openLogin]);
+  }, [loadCore, openLogin]);
 
   return {
     session,
@@ -135,9 +202,13 @@ export function usePortfolioData(): UsePortfolioDataResult {
     positions,
     openOrders,
     activityHistory,
-    status,
+    coreStatus,
+    openOrdersStatus,
+    historyStatus,
     message,
-    reload: loadPortfolio,
+    reload,
+    loadOpenOrders,
+    loadActivityHistory,
     removeOpenOrder,
     connectWallet
   };

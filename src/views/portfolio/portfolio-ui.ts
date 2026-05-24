@@ -46,7 +46,7 @@ export const portfolioConnectButtonClass = cn(
 );
 
 const portfolioPositionsTableGridColsClass =
-  "grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]";
+  "grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))_5.5rem]";
 
 const portfolioOrdersTableGridColsClass =
   "grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_5.5rem]";
@@ -87,6 +87,12 @@ export const portfolioHistoryTableRowClass = cn(
 export const portfolioActionButtonClass = cn(
   "flex h-8 shrink-0 items-center justify-center rounded-md bg-black px-4",
   "text-sm font-[556] text-white transition-opacity hover:opacity-90",
+  "disabled:cursor-not-allowed disabled:opacity-50"
+);
+
+export const portfolioSecondaryButtonClass = cn(
+  "flex h-[50px] w-full items-center justify-center rounded-[8px] border border-[#909090] bg-white",
+  "text-base font-[457] leading-[19px] text-black transition-colors hover:bg-[#fafbfc]",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
