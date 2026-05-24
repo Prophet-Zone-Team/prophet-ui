@@ -45,7 +45,6 @@ import { FundingSelectorDropdown } from "@/views/portfolio/shared/funding-select
 import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import { usePortfolioContext } from "../context";
 import { POLYMARKET_USD } from "@/config/funding";
-import { requiresWithdrawQuoteId } from "@/lib/market/deposit-wallet-batch";
 import Big from "big.js";
 import { formatNumber, removeNumberEndZero } from "@/utils";
 
@@ -131,17 +130,13 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
             recipientAddress: session.walletAddress,
           })
         : undefined,
-    [amountInput, selectedToken, session?.walletAddress],
+    [amountInput, selectedToken, session],
   );
 
   const { quote, loading: quoteLoading, error: quoteError } = useBridgeQuote({
     request: quoteRequest,
     enabled: quoteEnabled,
   });
-
-  const quoteIdError = quoteEnabled && !quoteLoading && !quote?.quoteId
-      ? "Bridge quote is required before withdrawing."
-      : undefined;
 
   const isBusy =
     submitting ||
@@ -155,9 +150,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     !!session?.walletAddress &&
     !!selectedToken &&
     formError === undefined &&
-    quoteIdError === undefined &&
     amount !== undefined &&
-    !!quote?.quoteId &&
     !isBusy;
 
   const breakdown = quote ? mapQuoteToBreakdown(quote) : undefined;
@@ -228,7 +221,6 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         toTokenAddress: selectedToken.address,
         recipientAddr: session.walletAddress,
         amountUsd: amount,
-        quoteId: quote?.quoteId,
       });
 
       toast.success("Withdrawal submitted");
@@ -240,7 +232,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     } finally {
       setSubmitting(false);
     }
-  }, [amount, canSubmit, executeWithdraw, handleClose, quote?.quoteId, reload, selectedToken, session?.walletAddress]);
+  }, [amount, canSubmit, executeWithdraw, handleClose, reload, selectedToken, session]);
 
   return (
     <Modal
@@ -416,7 +408,9 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
               </div>
             </div>
             {quoteError ? (
-              <p className="m-0 text-right text-sm text-prophet-red">{quoteError}</p>
+              <p className="m-0 text-right text-sm text-[#909090]">
+                Quote unavailable; estimated output not shown.
+              </p>
             ) : null}
           </div>
 

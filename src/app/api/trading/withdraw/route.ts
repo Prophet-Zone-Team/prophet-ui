@@ -3,8 +3,7 @@ import { recoverTypedDataAddress } from "viem";
 
 import {
   buildWithdrawTransferBatch,
-  requiresWithdrawQuoteId,
-  resolveWithdrawBatchStrategy,
+  resolveBridgeWithdrawDepositAddress,
   type DepositWalletBatchSignablePayload,
 } from "@/lib/market/deposit-wallet-batch";
 import { getTradingChainId } from "@/server/trading/clob-auth";
@@ -70,7 +69,6 @@ export async function GET(request: Request) {
     const toTokenAddress = url.searchParams.get("toTokenAddress")?.trim();
     const recipientAddr = url.searchParams.get("recipientAddr")?.trim();
     const amount = url.searchParams.get("amount")?.trim();
-    const quoteId = url.searchParams.get("quoteId")?.trim();
 
     if (!toChainId || !toTokenAddress || !recipientAddr || !amount) {
       return NextResponse.json(
@@ -95,43 +93,21 @@ export async function GET(request: Request) {
       toTokenAddress,
       recipientAddr,
     });
-    const bridgeRecipient = withdrawal.address.evm;
 
-    if (!bridgeRecipient || !/^0x[a-fA-F0-9]{40}$/.test(bridgeRecipient)) {
-      return NextResponse.json({ error: "Bridge did not return a valid EVM withdrawal address." }, { status: 502 });
+    let bridgeRecipient: string;
+
+    try {
+      bridgeRecipient = resolveBridgeWithdrawDepositAddress(withdrawal.address);
+    } catch (addressError) {
+      return NextResponse.json(
+        {
+          error: addressError instanceof Error ? addressError.message : String(addressError),
+        },
+        { status: 502 },
+      );
     }
 
     const tradingChainId = getTradingChainId();
-
-    if (
-      requiresWithdrawQuoteId({ tradingChainId, toChainId, toTokenAddress }) &&
-      !quoteId
-    ) {
-      return NextResponse.json(
-        { error: "quoteId is required to prepare a same-chain USDC withdrawal." },
-        { status: 400 },
-      );
-    }
-
-    let strategy;
-
-    try {
-      strategy = resolveWithdrawBatchStrategy({
-        tradingChainId,
-        toChainId,
-        toTokenAddress,
-        bridgeRecipient,
-        quoteId,
-      });
-    } catch (strategyError) {
-      return NextResponse.json(
-        {
-          error: strategyError instanceof Error ? strategyError.message : String(strategyError),
-        },
-        { status: 400 },
-      );
-    }
-
     const nonce = await fetchRelayerNonce(record.session.walletAddress);
     const deadline = Math.floor(Date.now() / 1000 + 900).toString();
 
@@ -144,7 +120,7 @@ export async function GET(request: Request) {
         nonce,
         deadline,
         amountBaseUnits,
-        strategy,
+        bridgeRecipient,
       }),
     });
   } catch (error) {
