@@ -18,9 +18,13 @@ import {
 import { useAuth } from "@/context/auth";
 import {
   useSetTradeAmount,
+  useSetTradeLimitExpiration,
+  useSetTradeLimitExpirationCustom,
   useSetTradeLimitPrice,
   useSetTradeOutcomeSide,
   useTradeAmount,
+  useTradeLimitExpiration,
+  useTradeLimitExpirationCustom,
   useTradeLimitPrice,
   useTradeMatchOutcomeSide,
   useTradeOrderMode,
@@ -33,9 +37,11 @@ import {
   buildTeamTradePreview,
   buildGameUserOrderPreview,
   buildTeamUserOrderPreview,
+  buildOutcomeShareMap,
   canSubmitTradeTicket,
   deriveTradeActionLabel,
   ensureTradingReadyForBid,
+  fetchMarketOutcomeShares,
   fetchReadinessForPreview,
   fetchTradingConfig,
   formatGameDefaultLimitPriceString,
@@ -46,12 +52,20 @@ import {
   parseLimitPriceInput,
   parseOrderAmount,
   refreshTradingEligibility,
+  resolveGameOutcomeTokenIds,
   resolveOrderLimitPrice,
   resolveOrderType,
   resolveQuickAmountAllBalance,
+  resolveSellQuickAmount,
+  resolveTeamOutcomeTokenIds,
   resolveTradeSide,
   submitSignedTradeOrder,
   toBidOrderPreview,
+  resolveLimitShareQuickAmount,
+  resolveLimitExpirationTimestamp,
+  validateLimitExpirationCustom,
+  type OutcomeShareMap,
+  type SellQuickAmountFraction,
   type TradeTicketStatus,
   type TradingConfig
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
@@ -89,9 +103,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const orderMode = useTradeOrderMode();
   const amount = useTradeAmount();
   const limitPrice = useTradeLimitPrice();
+  const limitExpiration = useTradeLimitExpiration();
+  const limitExpirationCustom = useTradeLimitExpirationCustom();
   const setOutcomeSide = useSetTradeOutcomeSide();
   const setAmount = useSetTradeAmount();
   const setLimitPrice = useSetTradeLimitPrice();
+  const setLimitExpiration = useSetTradeLimitExpiration();
+  const setLimitExpirationCustom = useSetTradeLimitExpirationCustom();
 
   const [readiness, setReadiness] = useState<
     Awaited<ReturnType<typeof fetchReadinessForPreview>> | undefined
@@ -101,9 +119,46 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const [message, setMessage] = useState<string | undefined>();
   const [eligibilityRetryAvailable, setEligibilityRetryAvailable] =
     useState(false);
+  const [outcomeShares, setOutcomeShares] = useState<OutcomeShareMap>({
+    yes: 0,
+    no: 0
+  });
 
   const orderAmount = parseOrderAmount(amount);
   const orderType = resolveOrderType(orderMode);
+
+  const marketTokenIds = useMemo(() => {
+    if (input.variant === "team") {
+      return resolveTeamOutcomeTokenIds(input.snapshot);
+    }
+
+    return resolveGameOutcomeTokenIds(
+      input.gameSnapshot,
+      matchOutcomeSide
+    );
+  }, [
+    input.variant,
+    matchOutcomeSide,
+    input.variant === "team"
+      ? [
+          input.snapshot.team.id,
+          input.snapshot.market.polymarket?.conditionId,
+          input.snapshot.market.polymarket?.tokens.yes?.tokenId,
+          input.snapshot.market.polymarket?.tokens.no?.tokenId
+        ].join("|")
+      : [
+          input.gameSnapshot.match.id,
+          input.gameSnapshot.match.polymarket?.moneyline.conditionId,
+          findGameMarketOutcome(input.gameSnapshot.outcomes, matchOutcomeSide)
+            ?.tokenId,
+          findGameMarketOutcome(input.gameSnapshot.outcomes, matchOutcomeSide)
+            ?.noTokenId
+        ].join("|")
+  ]);
+
+  const { conditionId, yesTokenId, noTokenId } = marketTokenIds;
+
+  const availableShares = outcomeShares[outcomeSide];
 
   const limitPriceContextKey =
     input.variant === "team"
@@ -235,12 +290,17 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const preview = teamDefaults?.preview ?? gameDefaults?.preview;
   const previewCanSubmit = preview?.canSubmitRealOrder ?? false;
 
+  const expirationError =
+    orderMode === "limit" && limitExpiration === "custom"
+      ? validateLimitExpirationCustom(limitExpirationCustom)
+      : undefined;
+
   const actionInProgress =
     status === "loading" || status === "signing" || status === "submitting";
 
   const canSubmit = canSubmitTradeTicket({
     status,
-    previewCanSubmit: Boolean(preview)
+    previewCanSubmit: Boolean(preview) && !expirationError
   });
 
   const actionLabel = deriveTradeActionLabel(
@@ -341,6 +401,47 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     tradeSide
   ]);
 
+  const refreshOutcomeShares = useCallback(async () => {
+    if (!isAuthenticated || !conditionId) {
+      setOutcomeShares((current) =>
+        current.yes === 0 && current.no === 0 ? current : { yes: 0, no: 0 }
+      );
+      return;
+    }
+
+    try {
+      const positions = await fetchMarketOutcomeShares(conditionId);
+      const nextShares = buildOutcomeShareMap(
+        positions,
+        yesTokenId,
+        noTokenId
+      );
+
+      setOutcomeShares((current) =>
+        current.yes === nextShares.yes && current.no === nextShares.no
+          ? current
+          : nextShares
+      );
+    } catch {
+      setOutcomeShares((current) =>
+        current.yes === 0 && current.no === 0 ? current : { yes: 0, no: 0 }
+      );
+    }
+  }, [conditionId, isAuthenticated, noTokenId, yesTokenId]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setOutcomeShares((current) =>
+        current.yes === 0 && current.no === 0 ? current : { yes: 0, no: 0 }
+      );
+      return;
+    }
+
+    if (tradeSide === "sell") {
+      void refreshOutcomeShares();
+    }
+  }, [isAuthenticated, refreshOutcomeShares, tradeSide]);
+
   const refreshOrderReadiness = useCallback(async () => {
     if (!preview) {
       return undefined;
@@ -381,6 +482,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   const handleSubmit = useCallback(async () => {
     if (!preview || actionInProgress) {
+      return;
+    }
+
+    if (expirationError) {
+      setStatus("error");
+      setMessage(expirationError);
+      showOrderErrorToast(expirationError);
       return;
     }
 
@@ -450,7 +558,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         session,
         preview,
         orderType,
-        userOrderPreview
+        userOrderPreview,
+        expiration:
+          orderMode === "limit"
+            ? resolveLimitExpirationTimestamp(
+                limitExpiration,
+                limitExpirationCustom
+              )
+            : undefined
       });
 
       showOrderSubmittedToast(
@@ -468,7 +583,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       );
       setStatus("idle");
       setMessage(undefined);
-      await refreshOrderReadiness();
+      await Promise.all([
+        refreshOrderReadiness(),
+        refreshSetupReadiness(),
+        refreshOutcomeShares()
+      ]);
     } catch (error) {
       const errorMessage = resolveOrderErrorMessage(error);
       setStatus("error");
@@ -478,11 +597,15 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [
     actionInProgress,
     authReadiness,
+    expirationError,
     gameDefaults?.orderLimitPrice,
     input,
+    limitExpiration,
+    limitExpirationCustom,
     matchOutcomeSide,
     openLogin,
     orderAmount,
+    orderMode,
     orderType,
     outcomeSide,
     preview,
@@ -494,12 +617,51 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     session,
     signClobCredentials,
     signTokenApprovals,
+    refreshOutcomeShares,
     tradeSide
   ]);
 
   function applyQuickAmount(value: number | "all") {
+    if (orderMode === "limit" && tradeSide === "buy" && typeof value === "number") {
+      setAmount(resolveLimitShareQuickAmount(amount, value));
+      setMessage(undefined);
+      setEligibilityRetryAvailable(false);
+      return;
+    }
+
+    if (tradeSide === "sell") {
+      if (value === "all") {
+        const nextAmount = resolveSellQuickAmount(availableShares, "max");
+
+        if (nextAmount) {
+          setAmount(nextAmount);
+        }
+
+        return;
+      }
+
+      if (value > 0 && value < 1) {
+        const nextAmount = resolveSellQuickAmount(
+          availableShares,
+          value as SellQuickAmountFraction
+        );
+
+        if (nextAmount) {
+          setAmount(nextAmount);
+        }
+
+        setMessage(undefined);
+        setEligibilityRetryAvailable(false);
+        return;
+      }
+    }
+
     if (value === "all") {
-      const balance = resolveQuickAmountAllBalance(readiness, tradeSide);
+      const balance = resolveQuickAmountAllBalance(
+        readiness,
+        tradeSide,
+        availableShares
+      );
 
       if (balance !== undefined && balance > 0) {
         setAmount(
@@ -530,6 +692,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     return null;
   }
 
+  const kickoffAt =
+    input.variant === "game" ? input.gameSnapshot.match.kickoffAt : undefined;
+  const availableCash = readiness?.balances?.clobUsdcAvailable;
+
   return {
     formProps: {
       yesTokenPrice: display.yesTokenPrice,
@@ -542,6 +708,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       amount,
       limitPrice,
       preview,
+      yesShares: outcomeShares.yes,
+      noShares: outcomeShares.no,
+      availableShares,
+      availableCash,
+      kickoffAt,
+      limitExpiration,
+      limitExpirationCustom,
+      expirationError,
       actionLabel,
       canSubmit,
       actionInProgress,
@@ -552,6 +726,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       onSelectOutcome: selectOutcome,
       onAmountChange: setAmount,
       onLimitPriceChange: setLimitPrice,
+      onLimitExpirationChange: setLimitExpiration,
+      onLimitExpirationCustomChange: setLimitExpirationCustom,
       onQuickAmount: applyQuickAmount,
       onSubmit: handleSubmit,
       onRetryEligibility: handleRetryEligibility,

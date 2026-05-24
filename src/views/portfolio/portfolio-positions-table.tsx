@@ -13,8 +13,8 @@ import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import {
-  portfolioActionButtonClass,
   portfolioConnectButtonClass,
+  portfolioPositionsTableHeadClass,
   portfolioPositionsTableRowClass,
   portfolioTableScrollClass
 } from "@/views/portfolio/portfolio-ui";
@@ -26,7 +26,18 @@ export interface PortfolioPositionsTableProps {
   needsWallet: boolean;
   loading: boolean;
   onConnectWallet: () => void;
-  embedded?: boolean;
+}
+
+function PortfolioPositionsTableHeader() {
+  return (
+    <div className={portfolioPositionsTableHeadClass}>
+      <span>Market</span>
+      <span>Traded</span>
+      <span>To Win</span>
+      <span>Value</span>
+      <span>Time</span>
+    </div>
+  );
 }
 
 export function PortfolioPositionsTable({
@@ -35,8 +46,7 @@ export function PortfolioPositionsTable({
   positionTimeMap,
   needsWallet,
   loading,
-  onConnectWallet,
-  embedded = false
+  onConnectWallet
 }: PortfolioPositionsTableProps) {
   if (loading) {
     return (
@@ -63,10 +73,13 @@ export function PortfolioPositionsTable({
 
   if (positions.length === 0) {
     return (
-      <PortfolioEmptyState
-        title="No open positions"
-        body="No current Polymarket positions were returned for the connected account."
-      />
+      <div className={portfolioTableScrollClass} aria-label="Your positions">
+        <PortfolioPositionsTableHeader />
+        <PortfolioEmptyState
+          title="No open positions"
+          body="No current Polymarket positions were returned for the connected account."
+        />
+      </div>
     );
   }
 
@@ -92,16 +105,30 @@ export function PortfolioPositionsTable({
             </span>
           )}
           <div className="min-w-0">
-            <p className="m-0 truncate font-[556] text-black">{position.title}</p>
-            <p className={cn("m-0 mt-0.5 text-xs", getOutcomeToneClass(position.outcome))}>
+            <a
+              href={`/trade/${position.eventSlug}`}
+              className="m-0 truncate font-[556] text-black hover:underline"
+            >
+              {position.title}
+            </a>
+            <p
+              className={cn(
+                "m-0 mt-0.5 text-xs",
+                getOutcomeToneClass(position.outcome)
+              )}
+            >
               {position.outcome} {formatSharePrice(position.avgPrice)}
             </p>
           </div>
         </div>
-        <span className="font-[556]">{formatTeamDetailMoney(position.initialValue)}</span>
+        <span className="font-[556]">
+          {formatTeamDetailMoney(position.initialValue)}
+        </span>
         <span className="font-[556]">{formatTeamDetailMoney(position.size)}</span>
         <div className="flex flex-col gap-0.5">
-          <span className="font-[556]">{formatTeamDetailMoney(position.currentValue)}</span>
+          <span className="font-[556]">
+            {formatTeamDetailMoney(position.currentValue)}
+          </span>
           <span className={cn("text-xs", pnlTone)}>
             {formatPnlSubline(position.cashPnl, position.percentPnl)}
           </span>
@@ -109,21 +136,14 @@ export function PortfolioPositionsTable({
         <span className="text-prophet-muted">
           {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
         </span>
-        <button
-          type="button"
-          className={portfolioActionButtonClass}
-          disabled
-          title="Coming soon"
-        >
-          Sell
-        </button>
       </div>
     );
   });
 
-  if (embedded) {
-    return <>{rows}</>;
-  }
-
-  return <div className={portfolioTableScrollClass}>{rows}</div>;
+  return (
+    <div className={portfolioTableScrollClass} aria-label="Your positions">
+      <PortfolioPositionsTableHeader />
+      {rows}
+    </div>
+  );
 }

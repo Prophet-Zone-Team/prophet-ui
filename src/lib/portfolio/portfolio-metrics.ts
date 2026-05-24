@@ -1,10 +1,13 @@
 import type {
   TeamMarketSnapshot,
-  UserOrderRecord,
   UserPositionRecord,
   UserTradingReadiness
 } from "@/types/market";
-import type { PortfolioSeriesPoint, UserOpenOrder } from "@/lib/portfolio/types";
+import type {
+  PortfolioSeriesPoint,
+  UserActivityRecord,
+  UserOpenOrder
+} from "@/lib/portfolio/types";
 
 export function safeNumber(value: number | undefined): number {
   return Number.isFinite(value) ? (value ?? 0) : 0;
@@ -45,21 +48,17 @@ export function findSnapshotForTokenId(
 }
 
 export function buildPositionTimeMap(
-  orderHistory: UserOrderRecord[]
+  activityHistory: UserActivityRecord[]
 ): Map<string, string> {
   const map = new Map<string, string>();
 
-  for (const order of orderHistory) {
-    const tokenId = order.preview.tokenId;
+  for (const activity of activityHistory) {
+    const tokenId = activity.asset;
     const existing = map.get(tokenId);
-    const orderTime = order.updatedAt ?? order.submittedAt;
+    const activityTime = new Date(activity.timestamp * 1000).toISOString();
 
-    if (!orderTime) {
-      continue;
-    }
-
-    if (!existing || new Date(orderTime).getTime() > new Date(existing).getTime()) {
-      map.set(tokenId, orderTime);
+    if (!existing || new Date(activityTime).getTime() > new Date(existing).getTime()) {
+      map.set(tokenId, activityTime);
     }
   }
 
@@ -109,12 +108,12 @@ export function buildPortfolioView({
   positions,
   snapshots,
   readiness,
-  orderHistory
+  activityHistory
 }: {
   positions: UserPositionRecord[];
   snapshots: TeamMarketSnapshot[];
   readiness?: UserTradingReadiness;
-  orderHistory: UserOrderRecord[];
+  activityHistory: UserActivityRecord[];
 }): PortfolioViewModel {
   const totalPositionValue = roundMoney(
     positions.reduce((sum, position) => sum + safeNumber(position.currentValue), 0)
@@ -133,7 +132,7 @@ export function buildPortfolioView({
     portfolioValue,
     unrealizedPnl
   );
-  const positionTimeMap = buildPositionTimeMap(orderHistory);
+  const positionTimeMap = buildPositionTimeMap(activityHistory);
 
   return {
     portfolioValue,

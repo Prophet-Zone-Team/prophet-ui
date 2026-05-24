@@ -11,6 +11,7 @@ import type {
   TickSize,
 } from "@polymarket/clob-client-v2";
 
+import type { UserActivityRecord } from "@/lib/portfolio/types";
 import type { BidTradeSide, TradingOrderType, UserPositionRecord } from "@/types/market";
 import { getTradingHost } from "@/server/trading/clob-auth";
 import { serverFetch } from "@/server/trading/server-fetch";
@@ -203,7 +204,18 @@ export async function fetchUserOpenOrders({
     throw new Error(`Unable to fetch open orders: ${await readResponseError(response)}`);
   }
 
-  return ((await response.json()) as OpenOrdersResponse) ?? [];
+  const payload = (await response.json()) as OpenOrdersResponse | OpenOrder[] | null;
+  return normalizeOpenOrdersResponse(payload);
+}
+
+export function normalizeOpenOrdersResponse(
+  payload: OpenOrdersResponse | OpenOrder[] | null | undefined
+): OpenOrder[] {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  return payload?.data ?? [];
 }
 
 export async function cancelUserOrder({
@@ -237,6 +249,41 @@ export async function cancelUserOrder({
   }
 
   return response.json();
+}
+
+export async function fetchUserActivity({
+  userAddress,
+  limit = 25,
+  offset = 0,
+}: {
+  userAddress: string;
+  limit?: number;
+  offset?: number;
+}): Promise<UserActivityRecord[]> {
+  const params = new URLSearchParams({
+    user: userAddress,
+    type: "TRADE",
+    limit: String(Math.max(1, Math.min(limit, 500))),
+    offset: String(Math.max(0, Math.min(offset, 10000))),
+    sortBy: "TIMESTAMP",
+    sortDirection: "DESC",
+  });
+
+  const response = await serverFetch(
+    `https://data-api.polymarket.com/activity?${params.toString()}`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Unable to fetch user activity: ${await readResponseError(response)}`);
+  }
+
+  const payload = (await response.json()) as unknown;
+  return Array.isArray(payload)
+    ? payload.filter(isPolymarketActivityRecord).map(normalizeUserActivityRecord)
+    : [];
 }
 
 export async function fetchUserPositions({
@@ -682,6 +729,72 @@ function parseSide(value: unknown): "BUY" | "SELL" | undefined {
   }
 
   return undefined;
+}
+
+interface PolymarketActivityRecord {
+  proxyWallet: string;
+  timestamp: number;
+  conditionId: string;
+  type: string;
+  size: number;
+  usdcSize: number;
+  transactionHash: string;
+  price: number;
+  asset: string;
+  side: "BUY" | "SELL";
+  outcomeIndex: number;
+  title: string;
+  slug: string;
+  icon?: string;
+  eventSlug?: string;
+  outcome: string;
+}
+
+function isPolymarketActivityRecord(value: unknown): value is PolymarketActivityRecord {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const record = value as Partial<PolymarketActivityRecord>;
+
+  return (
+    record.type === "TRADE" &&
+    typeof record.proxyWallet === "string" &&
+    typeof record.timestamp === "number" &&
+    typeof record.conditionId === "string" &&
+    typeof record.size === "number" &&
+    typeof record.usdcSize === "number" &&
+    typeof record.transactionHash === "string" &&
+    typeof record.price === "number" &&
+    typeof record.asset === "string" &&
+    (record.side === "BUY" || record.side === "SELL") &&
+    typeof record.outcomeIndex === "number" &&
+    typeof record.title === "string" &&
+    typeof record.slug === "string" &&
+    typeof record.outcome === "string"
+  );
+}
+
+function normalizeUserActivityRecord(record: PolymarketActivityRecord): UserActivityRecord {
+  return {
+    id: `${record.transactionHash}:${record.asset}:${record.side}:${record.timestamp}`,
+    proxyWallet: record.proxyWallet,
+    timestamp: record.timestamp,
+    conditionId: record.conditionId,
+    type: "TRADE",
+    size: record.size,
+    usdcSize: record.usdcSize,
+    transactionHash: record.transactionHash,
+    price: record.price,
+    asset: record.asset,
+    side: record.side,
+    outcomeIndex: record.outcomeIndex,
+    title: record.title,
+    slug: record.slug,
+    icon: record.icon,
+    eventSlug: record.eventSlug,
+    outcome: record.outcome,
+  };
 }
 
 function isUserPositionRecord(value: unknown): value is UserPositionRecord {

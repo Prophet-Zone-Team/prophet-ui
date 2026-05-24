@@ -71,7 +71,7 @@ export function ScheduleMatchRow({
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-xl border border-[#EBEBEB] bg-white px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4",
+        "flex cursor-pointer flex-col gap-3 rounded-xl border border-[#EBEBEB] bg-white px-3 py-3 transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc] sm:flex-row sm:items-center sm:gap-4 sm:px-4",
         variant === "ended" && "opacity-90",
         className
       )}

@@ -1,5 +1,9 @@
 import type { BidTradeSide, OrderOutcomeSide, TeamMarketSnapshot, TradingOrderType } from "@/types/market";
-import { calculateOrderEstimate, normalizeLimitPrice } from "@/lib/market/order-math";
+import {
+  calculateOrderEstimate,
+  normalizeLimitPrice,
+  validateOrderAmount
+} from "@/lib/market/order-math";
 
 type PolymarketTickSize = NonNullable<TeamMarketSnapshot["market"]["polymarket"]>["tickSize"];
 
@@ -52,7 +56,8 @@ export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPrevi
     amount: input.amount,
     minOrderSize: metadata?.minOrderSize,
     orderType: input.orderType,
-    tokenId: token?.tokenId,
+    tradeSide: input.tradeSide,
+    tokenId: token?.tokenId
   });
 
   return {
@@ -82,12 +87,14 @@ function getDisabledReason({
   amount,
   minOrderSize,
   orderType,
-  tokenId,
+  tradeSide,
+  tokenId
 }: {
   acceptingOrders?: boolean;
   amount: number;
   minOrderSize?: number;
   orderType: TradingOrderType;
+  tradeSide: BidTradeSide;
   tokenId?: string;
 }): string | undefined {
   if (!tokenId) {
@@ -98,13 +105,10 @@ function getDisabledReason({
     return "This Polymarket market is not accepting orders.";
   }
 
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return "Enter a positive amount.";
-  }
-
-  if (minOrderSize !== undefined && amount < minOrderSize) {
-    return `Amount must be at least ${minOrderSize}.`;
-  }
-
-  return undefined;
+  return validateOrderAmount({
+    amount,
+    orderType,
+    tradeSide,
+    minOrderSize
+  });
 }

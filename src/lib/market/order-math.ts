@@ -7,6 +7,8 @@ import {
 const MIN_PRICE = 0.01;
 const MAX_PRICE = 0.99;
 
+export const LIMIT_BUY_MIN_SHARES = 5;
+
 export interface OrderEstimateInput {
   side: OrderOutcomeSide;
   tradeSide?: BidTradeSide;
@@ -56,8 +58,30 @@ export function normalizeLimitPrice(price: number): number {
 
 export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate {
   const sidePrice = normalizeLimitPrice(input.limitPrice ?? calculateReferencePrice(input.probability, input.side));
-  const requestedAmount = roundMoney(Math.max(0, input.amount));
   const tradeSide = input.tradeSide ?? "buy";
+  const isLimitOrder = input.orderType === "GTC";
+
+  if (isLimitOrder) {
+    const shareSize = roundShares(Math.max(0, input.amount));
+    const orderCost = roundMoney(shareSize * sidePrice);
+    const estimatedTakerFee = 0;
+    const estimatedTotalCost = orderCost;
+    const potentialPayout =
+      tradeSide === "buy" ? roundMoney(shareSize) : roundMoney(shareSize * sidePrice);
+
+    return {
+      sidePrice,
+      shareSize,
+      orderCost,
+      estimatedCost: orderCost,
+      estimatedTakerFee,
+      estimatedTotalCost,
+      potentialPayout,
+      potentialOutcome: roundMoney(potentialPayout - estimatedTotalCost),
+    };
+  }
+
+  const requestedAmount = roundMoney(Math.max(0, input.amount));
   const orderCost =
     tradeSide === "buy"
       ? calculateBuyOrderCostFromBudget({
@@ -92,6 +116,39 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
 
 export function formatPriceCents(price: number): string {
   return `${(normalizeLimitPrice(price) * 100).toFixed(1)}c`;
+}
+
+/** Limit price stored on 0–1 scale, displayed as cents (e.g. 0.50 → "50"). */
+export function formatLimitPriceInputValue(price: string | number): string {
+  const numeric = typeof price === "string" ? Number(price) : price;
+
+  if (!Number.isFinite(numeric)) {
+    return "";
+  }
+
+  const cents = normalizeLimitPrice(numeric) * 100;
+
+  return Number.isInteger(cents) ? String(cents) : cents.toFixed(1);
+}
+
+/** Parse cents-denominated limit price input back to 0–1 scale string. */
+export function parseLimitPriceDisplayValue(
+  displayValue: string,
+  fallback: number
+): string {
+  const trimmed = displayValue.trim();
+
+  if (!trimmed) {
+    return normalizeLimitPrice(fallback).toFixed(3);
+  }
+
+  const cents = Number(trimmed);
+
+  if (!Number.isFinite(cents) || cents <= 0 || cents >= 100) {
+    return normalizeLimitPrice(fallback).toFixed(3);
+  }
+
+  return normalizeLimitPrice(cents / 100).toFixed(3);
 }
 
 /** Share price on 0–1 scale, displayed as cents-denominated USD (e.g. $12.35). */
@@ -151,4 +208,31 @@ function roundMoney(value: number): number {
 
 function roundShares(value: number): number {
   return Math.round(value * 10000) / 10000;
+}
+
+export function validateOrderAmount(input: {
+  amount: number;
+  orderType: TradingOrderType;
+  tradeSide: BidTradeSide;
+  minOrderSize?: number;
+}): string | undefined {
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    return "Enter a positive amount.";
+  }
+
+  if (input.orderType === "GTC" && input.tradeSide === "buy") {
+    if (input.amount < LIMIT_BUY_MIN_SHARES) {
+      return `Limit buy orders must be at least ${LIMIT_BUY_MIN_SHARES} shares.`;
+    }
+
+    return undefined;
+  }
+
+  if (input.orderType !== "GTC" && input.tradeSide === "buy") {
+    if (input.minOrderSize !== undefined && input.amount < input.minOrderSize) {
+      return `Amount must be at least $${input.minOrderSize}.`;
+    }
+  }
+
+  return undefined;
 }

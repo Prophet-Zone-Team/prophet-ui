@@ -21,12 +21,13 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
     session,
     positions,
     openOrders,
-    orderHistory,
+    activityHistory,
     readiness,
     status,
     message,
     connectWallet,
     reload,
+    removeOpenOrder,
   } = usePortfolioData();
 
   const portfolio = useMemo(
@@ -35,9 +36,9 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
         positions,
         snapshots,
         readiness,
-        orderHistory
+        activityHistory
       }),
-    [orderHistory, positions, readiness, snapshots]
+    [activityHistory, positions, readiness, snapshots]
   );
 
   return (
@@ -48,6 +49,7 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
         status,
         onConnectWallet: () => void connectWallet(),
         reload,
+        removeOpenOrder,
       }}
     >
       <section className={portfolioPageClass}>
@@ -70,7 +72,7 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
             snapshots={snapshots}
             positions={positions}
             openOrders={openOrders}
-            orderHistory={orderHistory}
+            activityHistory={activityHistory}
             positionTimeMap={portfolio.positionTimeMap}
             sessionConnected={Boolean(session)}
             status={status}

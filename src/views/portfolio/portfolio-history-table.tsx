@@ -6,34 +6,46 @@ import {
   formatSharePrice,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
+import type { UserActivityRecord } from "@/lib/portfolio/types";
 import { formatShareSize } from "@/lib/market/order-math";
-import type { TeamMarketSnapshot, UserOrderRecord } from "@/types/market";
+import type { TeamMarketSnapshot } from "@/types/market";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import {
-  portfolioHistoryTableRowClass,
   portfolioConnectButtonClass,
-  portfolioOrdersTableRowClass,
+  portfolioHistoryTableHeadClass,
+  portfolioHistoryTableRowClass,
   portfolioTableScrollClass
 } from "@/views/portfolio/portfolio-ui";
 
 export interface PortfolioHistoryTableProps {
-  orderHistory: UserOrderRecord[];
+  activityHistory: UserActivityRecord[];
   snapshots: TeamMarketSnapshot[];
   needsWallet: boolean;
   loading: boolean;
   onConnectWallet: () => void;
-  embedded?: boolean;
+}
+
+function PortfolioHistoryTableHeader() {
+  return (
+    <div className={portfolioHistoryTableHeadClass}>
+      <span>Market</span>
+      <span>Side / Price</span>
+      <span>Size</span>
+      <span>Status</span>
+      <span>Cost</span>
+      <span>Time</span>
+    </div>
+  );
 }
 
 export function PortfolioHistoryTable({
-  orderHistory,
+  activityHistory,
   snapshots,
   needsWallet,
   loading,
-  onConnectWallet,
-  embedded = false
+  onConnectWallet
 }: PortfolioHistoryTableProps) {
   if (loading) {
     return (
@@ -58,64 +70,64 @@ export function PortfolioHistoryTable({
     );
   }
 
-  if (orderHistory.length === 0) {
+  if (activityHistory.length === 0) {
     return (
-      <PortfolioEmptyState
-        title="No order history"
-        body="Submitted orders will appear here after you place trades from your connected account."
-      />
+      <div className={portfolioTableScrollClass} aria-label="Order history">
+        <PortfolioHistoryTableHeader />
+        <PortfolioEmptyState
+          title="No order history"
+          body="Trade activity from your connected Polymarket account will appear here."
+        />
+      </div>
     );
   }
 
-  const rows = orderHistory.map((order) => {
-        const snapshot = findSnapshotForTokenId(order.preview.tokenId, snapshots);
-        const sideLabel = titleCase(order.preview.side);
-        const timeValue = order.updatedAt ?? order.submittedAt ?? "";
+  const rows = activityHistory.map((activity) => {
+    const snapshot = findSnapshotForTokenId(activity.asset, snapshots);
+    const sideLabel = titleCase(activity.side.toLowerCase());
+    const timeValue = new Date(activity.timestamp * 1000).toISOString();
 
-        return (
-          <div key={order.id} className={portfolioHistoryTableRowClass}>
-            <div className="flex min-w-0 items-start gap-2">
-              {snapshot ? (
-                <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
-              ) : (
-                <span
-                  className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
-                  aria-hidden="true"
-                >
-                  ?
-                </span>
-              )}
-              <div className="min-w-0">
-                <p className="m-0 truncate font-[556] text-black">
-                  {snapshot?.team.name ?? order.preview.teamId.toUpperCase()}
-                </p>
-                <p className="m-0 mt-0.5 text-xs text-prophet-muted">
-                  {order.preview.outcome.toUpperCase()}
-                </p>
-              </div>
-            </div>
-            <span className="font-[556]">
-              {sideLabel} {formatSharePrice(order.preview.limitPrice)}
+    return (
+      <div key={activity.id} className={portfolioHistoryTableRowClass}>
+        <div className="flex min-w-0 items-start gap-2">
+          {snapshot ? (
+            <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+          ) : (
+            <span
+              className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
+              aria-hidden="true"
+            >
+              ?
             </span>
-            <span>{formatShareSize(order.preview.size)}</span>
-            <span className="capitalize text-prophet-muted">
-              {order.status.replace(/_/g, " ")}
-            </span>
-            <span className="font-[556]">
-              {order.preview.estimatedTotalCost !== undefined
-                ? formatTeamDetailMoney(order.preview.estimatedTotalCost)
-                : "—"}
-            </span>
-            <span className="text-prophet-muted">
-              {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
-            </span>
+          )}
+          <div className="min-w-0">
+            <p className="m-0 truncate font-[556] text-black">
+              {snapshot?.team.name ?? activity.title}
+            </p>
+            <p className="m-0 mt-0.5 text-xs text-prophet-muted">
+              {activity.outcome.toUpperCase()}
+            </p>
           </div>
-        );
-      });
+        </div>
+        <span className="font-[556]">
+          {sideLabel} {formatSharePrice(activity.price)}
+        </span>
+        <span>{formatShareSize(activity.size)}</span>
+        <span className="capitalize text-prophet-muted">Trade</span>
+        <span className="font-[556]">
+          {formatTeamDetailMoney(activity.usdcSize)}
+        </span>
+        <span className="text-prophet-muted">
+          {formatPortfolioDateTime(timeValue)}
+        </span>
+      </div>
+    );
+  });
 
-  if (embedded) {
-    return <>{rows}</>;
-  }
-
-  return <div className={portfolioTableScrollClass}>{rows}</div>;
+  return (
+    <div className={portfolioTableScrollClass} aria-label="Order history">
+      <PortfolioHistoryTableHeader />
+      {rows}
+    </div>
+  );
 }

@@ -74,12 +74,12 @@ export function GameMarketSection({
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          {homeChange ? (
-            <ChangePill label={homeChange} color={simpleGameColors.home} />
-          ) : null}
           <p className="truncate text-xl font-[556] capitalize leading-6 text-black">
             {sides.home.name}
           </p>
+          {homeChange ? (
+            <ChangePill label={homeChange} color={simpleGameColors.home} />
+          ) : null}
         </div>
 
         <div className="flex items-center justify-center gap-2">

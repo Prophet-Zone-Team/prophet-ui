@@ -3,6 +3,8 @@
 import { toast } from "sonner";
 
 import { formatShareSize } from "@/lib/market/order-math";
+import { formatSharePrice } from "@/lib/portfolio/portfolio-format";
+import type { UserOpenOrder } from "@/lib/portfolio/types";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { BidTradeSide, OrderOutcomeSide } from "@/types/market";
 
@@ -69,6 +71,26 @@ export function showOrderSubmittedToast(
 
 export function showOrderErrorToast(error: unknown): void {
   toast.error(resolveOrderErrorMessage(error));
+}
+
+export function formatOrderCancelToastSummary(order: UserOpenOrder): string {
+  const outcomeLabel = order.outcome || "—";
+  const sideLabel = order.side?.toLowerCase() === "sell" ? "Sell" : "Buy";
+  const price = Number(order.price);
+  const priceLabel = Number.isFinite(price)
+    ? formatSharePrice(price)
+    : order.price;
+  const original = Number(order.original_size);
+  const matched = Number(order.size_matched);
+  const remaining = Number.isFinite(original)
+    ? Math.max(0, original - (Number.isFinite(matched) ? matched : 0))
+    : 0;
+
+  return `${sideLabel} ${outcomeLabel} · ${priceLabel} · ${formatShareSize(remaining)} shares`;
+}
+
+export function showOrderCancelledToast(summary: string): void {
+  toast.success("Order cancelled", { description: summary });
 }
 
 function truncateOrderId(orderId: string): string {

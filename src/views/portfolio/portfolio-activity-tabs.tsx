@@ -3,18 +3,16 @@
 import { useState } from "react";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
-import type { UserOpenOrder, PortfolioLoadStatus } from "@/lib/portfolio/types";
-import type { TeamMarketSnapshot, UserOrderRecord, UserPositionRecord } from "@/types/market";
+import type {
+  PortfolioLoadStatus,
+  UserActivityRecord,
+  UserOpenOrder
+} from "@/lib/portfolio/types";
+import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import { PortfolioHistoryTable } from "@/views/portfolio/portfolio-history-table";
 import { PortfolioOpenOrdersTable } from "@/views/portfolio/portfolio-open-orders-table";
 import { PortfolioPositionsTable } from "@/views/portfolio/portfolio-positions-table";
-import {
-  portfolioHistoryTableHeadClass,
-  portfolioOrdersTableHeadClass,
-  portfolioPositionsTableHeadClass,
-  portfolioActivityCardClass,
-  portfolioTableScrollClass
-} from "@/views/portfolio/portfolio-ui";
+import { portfolioActivityCardClass } from "@/views/portfolio/portfolio-ui";
 
 const PORTFOLIO_TABS = [
   { id: "position", label: "Position" },
@@ -28,7 +26,7 @@ export interface PortfolioActivityTabsProps {
   snapshots: TeamMarketSnapshot[];
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
-  orderHistory: UserOrderRecord[];
+  activityHistory: UserActivityRecord[];
   positionTimeMap: Map<string, string>;
   sessionConnected: boolean;
   status: PortfolioLoadStatus;
@@ -39,7 +37,7 @@ export function PortfolioActivityTabs({
   snapshots,
   positions,
   openOrders,
-  orderHistory,
+  activityHistory,
   positionTimeMap,
   sessionConnected,
   status,
@@ -50,7 +48,10 @@ export function PortfolioActivityTabs({
   const needsWallet = !sessionConnected && !loading;
 
   return (
-    <section className={portfolioActivityCardClass} aria-label="Portfolio activity">
+    <section
+      className={portfolioActivityCardClass}
+      aria-label="Portfolio activity"
+    >
       <div className="shrink-0 border-b border-[#EBEBEB] px-4 pt-3">
         <TabSwitcher
           items={[...PORTFOLIO_TABS]}
@@ -62,67 +63,34 @@ export function PortfolioActivityTabs({
       </div>
 
       {tab === "position" ? (
-        <div className={portfolioTableScrollClass} aria-label="Your positions">
-          <div className={portfolioPositionsTableHeadClass}>
-            <span>Market</span>
-            <span>Traded</span>
-            <span>To Win</span>
-            <span>Value</span>
-            <span>Time</span>
-            <span className="sr-only">Action</span>
-          </div>
-          <PortfolioPositionsTable
-            positions={positions}
-            snapshots={snapshots}
-            positionTimeMap={positionTimeMap}
-            needsWallet={needsWallet}
-            loading={loading}
-            onConnectWallet={onConnectWallet}
-            embedded
-          />
-        </div>
+        <PortfolioPositionsTable
+          positions={positions}
+          snapshots={snapshots}
+          positionTimeMap={positionTimeMap}
+          needsWallet={needsWallet}
+          loading={loading}
+          onConnectWallet={onConnectWallet}
+        />
       ) : null}
 
       {tab === "open-order" ? (
-        <div className={portfolioTableScrollClass} aria-label="Open orders">
-          <div className={portfolioOrdersTableHeadClass}>
-            <span>Market</span>
-            <span>Side / Price</span>
-            <span>Size</span>
-            <span>Filled</span>
-            <span>Time</span>
-            <span className="sr-only">Action</span>
-          </div>
-          <PortfolioOpenOrdersTable
-            openOrders={openOrders}
-            snapshots={snapshots}
-            needsWallet={needsWallet}
-            loading={loading}
-            onConnectWallet={onConnectWallet}
-            embedded
-          />
-        </div>
+        <PortfolioOpenOrdersTable
+          openOrders={openOrders}
+          snapshots={snapshots}
+          needsWallet={needsWallet}
+          loading={loading}
+          onConnectWallet={onConnectWallet}
+        />
       ) : null}
 
       {tab === "history" ? (
-        <div className={portfolioTableScrollClass} aria-label="Order history">
-          <div className={portfolioHistoryTableHeadClass}>
-            <span>Market</span>
-            <span>Side / Price</span>
-            <span>Size</span>
-            <span>Status</span>
-            <span>Cost</span>
-            <span>Time</span>
-          </div>
-          <PortfolioHistoryTable
-            orderHistory={orderHistory}
-            snapshots={snapshots}
-            needsWallet={needsWallet}
-            loading={loading}
-            onConnectWallet={onConnectWallet}
-            embedded
-          />
-        </div>
+        <PortfolioHistoryTable
+          activityHistory={activityHistory}
+          snapshots={snapshots}
+          needsWallet={needsWallet}
+          loading={loading}
+          onConnectWallet={onConnectWallet}
+        />
       ) : null}
     </section>
   );

@@ -1,3 +1,4 @@
+import { findGameMarketOutcome } from "@/lib/market/game-outcome-price";
 import { buildGameBidOrderPreview } from "@/lib/market/game-order";
 import {
   buildBidOrderPreview,
@@ -22,16 +23,18 @@ import type {
   AccountReadinessCheck,
   BidTradeSide,
   GameMarketSnapshot,
+  MatchOutcomeSide,
   OrderOutcomeSide,
   TeamMarketSnapshot,
   TradingOrderType,
   TradingUserSession,
   UserOrderPreview,
   UserOrderRecord,
+  UserPositionRecord,
   UserTradingReadiness
 } from "@/types/market";
 import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-button";
-import type { TradeTabId } from "@/store/trade-ticket-store";
+import type { LimitExpirationPreset, TradeTabId } from "@/store/trade-ticket-store";
 
 export type TradeTicketStatus =
   | "idle"
@@ -307,36 +310,270 @@ export function deriveTradeActionLabel(
 }
 
 export function deriveOutcomeSummaryLabel(tradeSide: BidTradeSide): string {
-  return tradeSide === "sell" ? "Est. Proceeds" : "To Win";
+  return tradeSide === "sell" ? "You will receive" : "To Win";
 }
 
-/** Buy To Win includes the order cost (total payout if the outcome wins). */
+/** Estimated total payout if the selected outcome wins ($1 per share). */
 export function deriveOutcomeSummaryValue(
   tradeSide: BidTradeSide,
   preview: OrderPreviewFields
 ): number {
-  if (tradeSide === "sell") {
-    return preview.potentialOutcome;
-  }
-
   return preview.potentialPayout;
 }
 
-export function deriveAmountInputLabel(tradeSide: BidTradeSide): string {
-  return tradeSide === "sell" ? "Shares" : "Amount";
+export function deriveAmountInputLabel(
+  orderMode: TradeOrderMode,
+  tradeSide: BidTradeSide
+): string {
+  if (orderMode === "limit" || tradeSide === "sell") {
+    return "Shares";
+  }
+
+  return "Amount";
+}
+
+export function deriveLimitBuyTotal(preview: OrderPreviewFields): number {
+  return preview.estimatedCost;
+}
+
+export const LIMIT_EXPIRATION_OPTIONS: {
+  id: LimitExpirationPreset;
+  label: string;
+}[] = [
+  { id: "never", label: "Never" },
+  { id: "5m", label: "5 min" },
+  { id: "1h", label: "1 hour" },
+  { id: "12h", label: "12 hours" },
+  { id: "24h", label: "24 hours" },
+  { id: "end_of_day", label: "End of day" },
+  { id: "custom", label: "Custom" }
+];
+
+export function getLimitExpirationLabel(
+  preset: LimitExpirationPreset,
+  customDate?: string
+): string {
+  if (preset === "custom" && customDate) {
+    const date = new Date(customDate);
+
+    if (!Number.isNaN(date.getTime())) {
+      return new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      }).format(date);
+    }
+  }
+
+  return (
+    LIMIT_EXPIRATION_OPTIONS.find((option) => option.id === preset)?.label ??
+    "Never"
+  );
+}
+
+export function resolveLimitExpirationTimestamp(
+  preset: LimitExpirationPreset,
+  customDate?: string,
+  now = new Date()
+): string {
+  if (preset === "never") {
+    return "0";
+  }
+
+  let expirationDate: Date;
+
+  switch (preset) {
+    case "5m":
+      expirationDate = new Date(now.getTime() + 5 * 60 * 1000);
+      break;
+    case "1h":
+      expirationDate = new Date(now.getTime() + 60 * 60 * 1000);
+      break;
+    case "12h":
+      expirationDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+      break;
+    case "24h":
+      expirationDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      break;
+    case "end_of_day": {
+      expirationDate = new Date(now);
+      expirationDate.setHours(23, 59, 59, 999);
+      break;
+    }
+    case "custom": {
+      if (!customDate) {
+        return "0";
+      }
+
+      expirationDate = new Date(customDate);
+
+      if (
+        Number.isNaN(expirationDate.getTime()) ||
+        expirationDate.getTime() <= now.getTime()
+      ) {
+        return "0";
+      }
+
+      break;
+    }
+    default:
+      return "0";
+  }
+
+  return String(Math.floor(expirationDate.getTime() / 1000));
+}
+
+export function validateLimitExpirationCustom(
+  customDate: string | undefined,
+  now = new Date()
+): string | undefined {
+  if (!customDate) {
+    return "Select a custom expiration date and time.";
+  }
+
+  const expirationDate = new Date(customDate);
+
+  if (Number.isNaN(expirationDate.getTime())) {
+    return "Custom expiration date is invalid.";
+  }
+
+  if (expirationDate.getTime() <= now.getTime()) {
+    return "Custom expiration must be in the future.";
+  }
+
+  return undefined;
+}
+
+export function resolveLimitShareQuickAmount(
+  currentAmount: string,
+  delta: number
+): string {
+  const current = parseOrderAmount(currentAmount);
+  const next = Math.max(0, Math.round((current + delta) * 10000) / 10000);
+
+  return String(next);
+}
+
+export function resolveDefaultTradeAmount(orderMode: TradeOrderMode): string {
+  return orderMode === "limit" ? "5" : "1";
+}
+
+export interface OutcomeShareMap {
+  yes: number;
+  no: number;
+}
+
+export interface MarketOutcomeTokenIds {
+  yesTokenId?: string;
+  noTokenId?: string;
+  conditionId?: string;
+}
+
+export function resolveTeamOutcomeTokenIds(
+  snapshot: TeamMarketSnapshot
+): MarketOutcomeTokenIds {
+  const polymarket = snapshot.market.polymarket;
+
+  return {
+    yesTokenId: polymarket?.tokens.yes?.tokenId,
+    noTokenId: polymarket?.tokens.no?.tokenId,
+    conditionId: polymarket?.conditionId ?? polymarket?.marketId
+  };
+}
+
+export function resolveGameOutcomeTokenIds(
+  gameSnapshot: GameMarketSnapshot,
+  matchOutcomeSide: MatchOutcomeSide
+): MarketOutcomeTokenIds {
+  const outcome = findGameMarketOutcome(
+    gameSnapshot.outcomes,
+    matchOutcomeSide
+  );
+
+  return {
+    yesTokenId: outcome?.tokenId,
+    noTokenId: outcome?.noTokenId,
+    conditionId: gameSnapshot.match.polymarket?.moneyline.conditionId
+  };
+}
+
+export function buildOutcomeShareMap(
+  positions: UserPositionRecord[],
+  yesTokenId?: string,
+  noTokenId?: string
+): OutcomeShareMap {
+  let yes = 0;
+  let no = 0;
+
+  for (const position of positions) {
+    if (yesTokenId && position.asset === yesTokenId) {
+      yes = position.size;
+    } else if (noTokenId && position.asset === noTokenId) {
+      no = position.size;
+    }
+  }
+
+  return { yes, no };
+}
+
+export async function fetchMarketOutcomeShares(
+  conditionId: string | undefined
+): Promise<UserPositionRecord[]> {
+  if (!conditionId) {
+    return [];
+  }
+
+  const payload = await fetchJson<{
+    positions?: UserPositionRecord[];
+    error?: string;
+  }>(
+    `/api/trading/positions?market=${encodeURIComponent(conditionId)}&limit=10`
+  );
+
+  if (payload.error) {
+    throw new Error(payload.error);
+  }
+
+  return payload.positions ?? [];
+}
+
+export type SellQuickAmountFraction = 0.25 | 0.5 | 0.75 | "max";
+
+export function resolveSellQuickAmount(
+  availableShares: number | undefined,
+  fraction: SellQuickAmountFraction
+): string | undefined {
+  if (availableShares === undefined || availableShares <= 0) {
+    return undefined;
+  }
+
+  if (fraction === "max") {
+    return String(availableShares);
+  }
+
+  const amount = Math.round(availableShares * fraction * 10000) / 10000;
+
+  return amount > 0 ? String(amount) : undefined;
 }
 
 export function resolveQuickAmountAllBalance(
   readiness: UserTradingReadiness | undefined,
-  tradeSide: BidTradeSide
+  tradeSide: BidTradeSide,
+  availableShares?: number
 ): number | undefined {
-  if (!readiness?.balances) {
-    return undefined;
+  if (tradeSide === "sell") {
+    if (availableShares !== undefined && availableShares > 0) {
+      return availableShares;
+    }
+
+    const shares = readiness?.balances?.conditionalTokenBalance;
+    return shares !== undefined && shares > 0 ? shares : undefined;
   }
 
-  if (tradeSide === "sell") {
-    const shares = readiness.balances.conditionalTokenBalance;
-    return shares !== undefined && shares > 0 ? shares : undefined;
+  if (!readiness?.balances) {
+    return undefined;
   }
 
   const balance = readiness.balances.clobUsdcAvailable;
@@ -568,6 +805,7 @@ export async function submitSignedTradeOrder(input: {
   preview: BidOrderPreview;
   orderType: TradingOrderType;
   userOrderPreview: UserOrderPreview;
+  expiration?: string;
   signer?: WalletClient;
 }): Promise<SubmitOrderResult> {
   if (!input.session.funderAddress || !input.preview.tokenId) {
@@ -581,7 +819,8 @@ export async function submitSignedTradeOrder(input: {
     walletAddress: input.session.walletAddress,
     funderAddress: input.session.funderAddress,
     orderType: input.orderType,
-    signer: input.signer,
+    expiration: input.expiration,
+    signer: input.signer
   });
 
   return fetchJson<SubmitOrderResult>("/api/trading/orders", {

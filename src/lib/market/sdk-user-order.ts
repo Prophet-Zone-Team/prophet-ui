@@ -49,12 +49,14 @@ export async function buildSdkSignedUserOrder({
   walletAddress,
   funderAddress,
   orderType,
+  expiration,
   signer
 }: {
   preview: BidOrderPreview;
   walletAddress: string;
   funderAddress: string;
   orderType: TradingOrderType;
+  expiration?: string;
   signer?: WalletClient;
 }): Promise<SignedUserOrderPayload> {
   if (!preview.tokenId) {
@@ -78,6 +80,10 @@ export async function buildSdkSignedUserOrder({
   };
   const side = preview.tradeSide === "buy" ? Side.BUY : Side.SELL;
   const marketOrderPrice = resolveMarketOrderPrice(preview, orderType, signingMeta);
+  const limitExpiration =
+    expiration !== undefined && expiration !== "0"
+      ? Number(expiration)
+      : undefined;
 
   const signedOrder =
     orderType === "GTC"
@@ -86,7 +92,10 @@ export async function buildSdkSignedUserOrder({
             tokenID: preview.tokenId,
             price: preview.sidePrice,
             size: preview.shareSize,
-            side
+            side,
+            ...(limitExpiration !== undefined && Number.isFinite(limitExpiration)
+              ? { expiration: limitExpiration }
+              : {})
           },
           options,
           2

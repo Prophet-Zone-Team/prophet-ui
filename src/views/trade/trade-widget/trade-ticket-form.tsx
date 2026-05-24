@@ -3,11 +3,23 @@
 import { formatProbability } from "@/components/home/market-formatters";
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
 import { cn } from "@/lib/cn";
-import { formatTradePanelPrice } from "@/lib/market/order-math";
+import {
+  formatOrderBookClearingTip,
+  formatOrderBookClearingTooltip
+} from "@/lib/market/limit-order-clearing-tip";
+import {
+  formatLimitPriceInputValue,
+  formatShareSize,
+  formatTradePanelPrice,
+  parseLimitPriceDisplayValue
+} from "@/lib/market/order-math";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { BidTradeSide } from "@/types/market";
+import type { LimitExpirationPreset } from "@/store/trade-ticket-store";
+import { LimitExpirationSelect } from "@/views/trade/trade-widget/limit-expiration-select";
 import {
   deriveAmountInputLabel,
+  deriveLimitBuyTotal,
   deriveOutcomeSummaryLabel,
   deriveOutcomeSummaryValue,
   type OrderPreviewFields,
@@ -17,6 +29,13 @@ import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-but
 import { tradeQuickAmountClass } from "@/views/trade/trade-widget/trade-ui";
 
 const QUICK_AMOUNTS = [1, 5, 10, 100] as const;
+const LIMIT_BUY_SHARE_DELTAS = [-100, -10, 10, 100] as const;
+
+const SELL_QUICK_FRACTIONS = [
+  { label: "25%", value: 0.25 },
+  { label: "50%", value: 0.5 },
+  { label: "75%", value: 0.75 }
+] as const;
 
 export interface TradeTicketFormProps {
   yesTokenPrice: number;
@@ -29,6 +48,14 @@ export interface TradeTicketFormProps {
   amount: string;
   limitPrice: string;
   preview: OrderPreviewFields;
+  yesShares?: number;
+  noShares?: number;
+  availableShares?: number;
+  availableCash?: number;
+  kickoffAt?: string;
+  limitExpiration: LimitExpirationPreset;
+  limitExpirationCustom?: string;
+  expirationError?: string;
   actionLabel: string;
   canSubmit: boolean;
   actionInProgress: boolean;
@@ -39,6 +66,8 @@ export interface TradeTicketFormProps {
   onSelectOutcome: (side: "yes" | "no") => void;
   onAmountChange: (value: string) => void;
   onLimitPriceChange: (value: string) => void;
+  onLimitExpirationChange: (value: LimitExpirationPreset) => void;
+  onLimitExpirationCustomChange: (value: string) => void;
   onQuickAmount: (value: number | "all") => void;
   onSubmit: () => void | Promise<void>;
   onRetryEligibility?: () => void | Promise<void>;
@@ -59,6 +88,14 @@ export function TradeTicketForm({
   amount,
   limitPrice,
   preview,
+  yesShares = 0,
+  noShares = 0,
+  availableShares = 0,
+  availableCash,
+  kickoffAt,
+  limitExpiration,
+  limitExpirationCustom,
+  expirationError,
   actionLabel,
   canSubmit,
   actionInProgress,
@@ -69,6 +106,8 @@ export function TradeTicketForm({
   onSelectOutcome,
   onAmountChange,
   onLimitPriceChange,
+  onLimitExpirationChange,
+  onLimitExpirationCustomChange,
   onQuickAmount,
   onSubmit,
   onRetryEligibility,
@@ -77,30 +116,38 @@ export function TradeTicketForm({
   onLoginError,
   onAmountMessageClear
 }: TradeTicketFormProps) {
+  const isLimitOrder = orderMode === "limit";
   const outcomeSummaryLabel = deriveOutcomeSummaryLabel(tradeSide);
-  const amountInputLabel = deriveAmountInputLabel(tradeSide);
+  const amountInputLabel = deriveAmountInputLabel(orderMode, tradeSide);
   const summaryValue = deriveOutcomeSummaryValue(tradeSide, preview);
+  const sellQuickDisabled = availableShares <= 0;
+  const showCashBalance =
+    isLimitOrder && tradeSide === "buy" && availableCash !== undefined;
+  const showClearingTip = isLimitOrder && Boolean(kickoffAt);
+  const displayMessage = expirationError ?? message;
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-4 pt-4">
       <div className="grid grid-cols-2 gap-2">
-        <OutcomeButton
+        <OutcomeButtonColumn
           side="yes"
           active={outcomeSide === "yes"}
           priceLabel={formatTradePanelPrice(yesTokenPrice)}
           probabilityLabel={formatProbability(yesProbability)}
+          shareCount={tradeSide === "sell" ? yesShares : undefined}
           onSelect={() => onSelectOutcome("yes")}
         />
-        <OutcomeButton
+        <OutcomeButtonColumn
           side="no"
           active={outcomeSide === "no"}
           priceLabel={formatTradePanelPrice(noTokenPrice)}
           probabilityLabel={formatProbability(noProbability)}
+          shareCount={tradeSide === "sell" ? noShares : undefined}
           onSelect={() => onSelectOutcome("no")}
         />
       </div>
 
-      {orderMode === "limit" ? (
+      {isLimitOrder ? (
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-[556] leading-[17px] text-black">
             Limit Price
@@ -112,13 +159,18 @@ export function TradeTicketForm({
             <input
               id="trade-limit-price"
               type="number"
-              min={0.01}
-              max={0.99}
-              step={0.001}
+              min={1}
+              max={99}
+              step={0.1}
               inputMode="decimal"
-              value={limitPrice}
+              value={formatLimitPriceInputValue(limitPrice)}
               onChange={(event) => {
-                onLimitPriceChange(event.target.value);
+                onLimitPriceChange(
+                  parseLimitPriceDisplayValue(
+                    event.target.value,
+                    preview.sidePrice
+                  )
+                );
                 onAmountMessageClear();
               }}
               className="min-w-[4ch] max-w-[8ch] flex-1 border-0 bg-transparent p-0 text-right text-[32px] font-[556] leading-[38px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -128,12 +180,19 @@ export function TradeTicketForm({
       ) : null}
 
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-[556] leading-[17px] text-black">
-            {amountInputLabel}
-          </span>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-[556] leading-[17px] text-black">
+              {amountInputLabel}
+            </span>
+            {showCashBalance ? (
+              <span className="text-xs font-[457] leading-4 text-prophet-muted">
+                {formatTeamDetailMoney(availableCash)} cash
+              </span>
+            ) : null}
+          </div>
           <label className="sr-only" htmlFor="trade-amount">
-            {tradeSide === "sell"
+            {isLimitOrder || tradeSide === "sell"
               ? "Order size in shares"
               : "Order amount in USDC"}
           </label>
@@ -154,39 +213,93 @@ export function TradeTicketForm({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {QUICK_AMOUNTS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              className={tradeQuickAmountClass}
-              onClick={() => onQuickAmount(value)}
-            >
-              +{value}
-            </button>
-          ))}
-          <button
-            type="button"
-            className={tradeQuickAmountClass}
-            onClick={() => onQuickAmount("all")}
-          >
-            All-in
-          </button>
+          {tradeSide === "sell" ? (
+            <>
+              {SELL_QUICK_FRACTIONS.map(({ label, value }) => (
+                <button
+                  key={label}
+                  type="button"
+                  className={cn(
+                    tradeQuickAmountClass,
+                    "disabled:cursor-not-allowed disabled:opacity-50"
+                  )}
+                  disabled={sellQuickDisabled}
+                  onClick={() => onQuickAmount(value)}
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={cn(
+                  tradeQuickAmountClass,
+                  "disabled:cursor-not-allowed disabled:opacity-50"
+                )}
+                disabled={sellQuickDisabled}
+                onClick={() => onQuickAmount("all")}
+              >
+                Max
+              </button>
+            </>
+          ) : isLimitOrder ? (
+            LIMIT_BUY_SHARE_DELTAS.map((delta) => (
+              <button
+                key={delta}
+                type="button"
+                className={tradeQuickAmountClass}
+                onClick={() => onQuickAmount(delta)}
+              >
+                {delta > 0 ? `+${delta}` : delta}
+              </button>
+            ))
+          ) : (
+            <>
+              {QUICK_AMOUNTS.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={tradeQuickAmountClass}
+                  onClick={() => onQuickAmount(value)}
+                >
+                  +{value}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={tradeQuickAmountClass}
+                onClick={() => onQuickAmount("all")}
+              >
+                All-in
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-[556] leading-[17px] text-black">
-            {outcomeSummaryLabel}
-          </span>
-          <span className="text-sm font-[457] leading-[17px] text-prophet-muted">
-            Avg. Price {formatTradePanelPrice(preview.sidePrice)}
+      {isLimitOrder ? (
+        <LimitOrderSummary
+          tradeSide={tradeSide}
+          preview={preview}
+          limitExpiration={limitExpiration}
+          limitExpirationCustom={limitExpirationCustom}
+          onLimitExpirationChange={onLimitExpirationChange}
+          onLimitExpirationCustomChange={onLimitExpirationCustomChange}
+        />
+      ) : (
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-[556] leading-[17px] text-black">
+              {outcomeSummaryLabel}
+            </span>
+            <span className="text-sm font-[457] leading-[17px] text-prophet-muted">
+              Avg. Price {formatTradePanelPrice(preview.sidePrice)}
+            </span>
+          </div>
+          <span className="text-[32px] font-[556] leading-[38px] text-[#69C800]">
+            {formatTeamDetailMoney(summaryValue)}
           </span>
         </div>
-        <span className="text-[32px] font-[556] leading-[38px] text-[#69C800]">
-          {formatTeamDetailMoney(summaryValue)}
-        </span>
-      </div>
+      )}
 
       <TradeAuthActionButton
         actionLabel={actionLabel}
@@ -204,15 +317,17 @@ export function TradeTicketForm({
         onLoginError={onLoginError}
       />
 
-      {message ? (
+      {displayMessage ? (
         <div className="flex flex-col gap-2">
           <p
             className={cn(
               "m-0 text-xs",
-              status === "error" ? "text-prophet-red" : "text-prophet-muted"
+              status === "error" || expirationError
+                ? "text-prophet-red"
+                : "text-prophet-muted"
             )}
           >
-            {message}
+            {displayMessage}
           </p>
           {eligibilityRetryAvailable && onRetryEligibility ? (
             <button
@@ -225,6 +340,125 @@ export function TradeTicketForm({
             </button>
           ) : null}
         </div>
+      ) : preview.disabledReason ? (
+        <p className="m-0 text-xs text-prophet-muted">
+          {preview.disabledReason}
+        </p>
+      ) : null}
+
+      {showClearingTip && kickoffAt ? (
+        <OrderBookClearingTip kickoffAt={kickoffAt} />
+      ) : null}
+    </div>
+  );
+}
+
+function LimitOrderSummary({
+  tradeSide,
+  preview,
+  limitExpiration,
+  limitExpirationCustom,
+  onLimitExpirationChange,
+  onLimitExpirationCustomChange
+}: {
+  tradeSide: BidTradeSide;
+  preview: OrderPreviewFields;
+  limitExpiration: LimitExpirationPreset;
+  limitExpirationCustom?: string;
+  onLimitExpirationChange: (value: LimitExpirationPreset) => void;
+  onLimitExpirationCustomChange: (value: string) => void;
+}) {
+  const outcomeSummaryLabel = deriveOutcomeSummaryLabel(tradeSide);
+  const summaryValue = deriveOutcomeSummaryValue(tradeSide, preview);
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-prophet-line pt-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-[556] leading-[17px] text-black">
+          Expiration
+        </span>
+        <LimitExpirationSelect
+          value={limitExpiration}
+          customDate={limitExpirationCustom}
+          onChange={onLimitExpirationChange}
+          onCustomDateChange={onLimitExpirationCustomChange}
+        />
+      </div>
+
+      {tradeSide === "buy" ? (
+        <div className="flex items-center justify-between gap-2 border-t border-prophet-line/60 pt-3">
+          <span className="text-sm font-[556] leading-[17px] text-black">
+            Total
+          </span>
+          <span className="text-sm font-[556] leading-[17px] text-[#0d69ff]">
+            {formatTeamDetailMoney(deriveLimitBuyTotal(preview))}
+          </span>
+        </div>
+      ) : null}
+
+      <div className="flex items-center justify-between gap-2 border-t border-prophet-line/60 pt-3">
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-[556] leading-[17px] text-black">
+            {outcomeSummaryLabel}
+          </span>
+        </div>
+        <span className="text-sm font-[556] leading-[17px] text-[#69C800]">
+          {formatTeamDetailMoney(summaryValue)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function OrderBookClearingTip({ kickoffAt }: { kickoffAt: string }) {
+  const tip = formatOrderBookClearingTip(kickoffAt);
+  const tooltip = formatOrderBookClearingTooltip(kickoffAt);
+
+  return (
+    <div className="flex items-center justify-center gap-1 text-center">
+      <span className="text-xs font-[457] leading-4 text-prophet-muted">
+        {tip}
+      </span>
+    </div>
+  );
+}
+
+function OutcomeButtonColumn({
+  side,
+  active,
+  priceLabel,
+  probabilityLabel,
+  shareCount,
+  onSelect
+}: {
+  side: "yes" | "no";
+  active: boolean;
+  priceLabel: string;
+  probabilityLabel: string;
+  shareCount?: number;
+  onSelect: () => void;
+}) {
+  const isYes = side === "yes";
+  const showShares = shareCount !== undefined && shareCount > 0;
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <OutcomeButton
+        side={side}
+        active={active}
+        priceLabel={priceLabel}
+        probabilityLabel={probabilityLabel}
+        onSelect={onSelect}
+      />
+      {showShares ? (
+        <span
+          className={cn(
+            "text-xs font-[556] leading-4",
+            isYes ? "text-[#65AF14]" : "text-[#FF674B]"
+          )}
+        >
+          {formatShareSize(shareCount)} shares
+        </span>
       ) : null}
     </div>
   );

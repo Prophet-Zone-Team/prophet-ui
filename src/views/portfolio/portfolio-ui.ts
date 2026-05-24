@@ -45,23 +45,44 @@ export const portfolioConnectButtonClass = cn(
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
-export const portfolioPositionsTableHeadClass =
-  "grid min-w-[720px] grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))_auto] gap-3 px-4 py-2 text-xs text-prophet-muted";
+const portfolioPositionsTableGridColsClass =
+  "grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]";
 
-export const portfolioPositionsTableRowClass =
-  "grid min-w-[720px] grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))_auto] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center";
+const portfolioOrdersTableGridColsClass =
+  "grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_5.5rem]";
 
-export const portfolioOrdersTableHeadClass =
-  "grid min-w-[680px] grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_auto] gap-3 px-4 py-2 text-xs text-prophet-muted";
+export const portfolioPositionsTableHeadClass = cn(
+  "grid min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted",
+  portfolioPositionsTableGridColsClass
+);
 
-export const portfolioOrdersTableRowClass =
-  "grid min-w-[680px] grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_auto] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center";
+export const portfolioPositionsTableRowClass = cn(
+  "grid min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center",
+  portfolioPositionsTableGridColsClass
+);
 
-export const portfolioHistoryTableHeadClass =
-  "grid min-w-[720px] grid-cols-[minmax(0,1.5fr)_repeat(5,minmax(0,1fr))] gap-3 px-4 py-2 text-xs text-prophet-muted";
+export const portfolioOrdersTableHeadClass = cn(
+  "grid min-w-[680px] gap-3 px-4 py-2 text-xs text-prophet-muted",
+  portfolioOrdersTableGridColsClass
+);
 
-export const portfolioHistoryTableRowClass =
-  "grid min-w-[720px] grid-cols-[minmax(0,1.5fr)_repeat(5,minmax(0,1fr))] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center";
+export const portfolioOrdersTableRowClass = cn(
+  "grid min-w-[680px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center",
+  portfolioOrdersTableGridColsClass
+);
+
+const portfolioHistoryTableGridColsClass =
+  "grid-cols-[minmax(0,1.5fr)_repeat(5,minmax(0,1fr))]";
+
+export const portfolioHistoryTableHeadClass = cn(
+  "grid min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted",
+  portfolioHistoryTableGridColsClass
+);
+
+export const portfolioHistoryTableRowClass = cn(
+  "grid min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center",
+  portfolioHistoryTableGridColsClass
+);
 
 export const portfolioActionButtonClass = cn(
   "flex h-8 shrink-0 items-center justify-center rounded-md bg-black px-4",

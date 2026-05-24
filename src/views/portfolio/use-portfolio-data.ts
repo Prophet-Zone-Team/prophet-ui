@@ -4,13 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/context/auth";
 import { fetchJson } from "@/lib/team/client-fetch";
-import type { PortfolioLoadStatus } from "@/lib/portfolio/types";
-import type { UserOpenOrder } from "@/lib/portfolio/types";
 import type {
-  UserOrderRecord,
-  UserPositionRecord,
-  UserTradingReadiness
-} from "@/types/market";
+  PortfolioLoadStatus,
+  UserActivityRecord,
+  UserOpenOrder
+} from "@/lib/portfolio/types";
+import type { UserPositionRecord, UserTradingReadiness } from "@/types/market";
 
 export interface UsePortfolioDataResult {
   session: ReturnType<typeof useAuth>["session"];
@@ -18,10 +17,11 @@ export interface UsePortfolioDataResult {
   isAuthenticated: boolean;
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
-  orderHistory: UserOrderRecord[];
+  activityHistory: UserActivityRecord[];
   status: PortfolioLoadStatus;
   message: string | undefined;
   reload: () => Promise<void>;
+  removeOpenOrder: (orderId: string) => void;
   connectWallet: () => Promise<void>;
 }
 
@@ -32,7 +32,9 @@ export function usePortfolioData(): UsePortfolioDataResult {
   >();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
-  const [orderHistory, setOrderHistory] = useState<UserOrderRecord[]>([]);
+  const [activityHistory, setActivityHistory] = useState<UserActivityRecord[]>(
+    []
+  );
   const [status, setStatus] = useState<PortfolioLoadStatus>("idle");
   const [message, setMessage] = useState<string | undefined>();
 
@@ -44,7 +46,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
       if (!session) {
         setPositions([]);
         setOpenOrders([]);
-        setOrderHistory([]);
+        setActivityHistory([]);
         setReadiness(undefined);
         setStatus("ready");
         return;
@@ -64,15 +66,13 @@ export function usePortfolioData(): UsePortfolioDataResult {
           errors.push(error instanceof Error ? error.message : String(error));
           return undefined;
         }),
-        fetchJson<{
-          orders?: UserOpenOrder[];
-          history?: UserOrderRecord[];
-          error?: string;
-        }>("/api/trading/orders/open").catch((error) => {
+        fetchJson<{ orders?: UserOpenOrder[]; error?: string }>(
+          "/api/trading/orders/open"
+        ).catch((error) => {
           errors.push(error instanceof Error ? error.message : String(error));
           return undefined;
         }),
-        fetchJson<{ orders?: UserOrderRecord[]; error?: string }>(
+        fetchJson<{ activities?: UserActivityRecord[]; error?: string }>(
           "/api/trading/orders/history?limit=40"
         ).catch((error) => {
           errors.push(error instanceof Error ? error.message : String(error));
@@ -88,9 +88,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
 
       setPositions(positionsPayload?.positions ?? []);
       setOpenOrders(openOrdersPayload?.orders ?? []);
-      setOrderHistory(
-        historyPayload?.orders ?? openOrdersPayload?.history ?? []
-      );
+      setActivityHistory(historyPayload?.activities ?? []);
       setReadiness(readinessPayload);
 
       const apiErrors = [
@@ -113,6 +111,10 @@ export function usePortfolioData(): UsePortfolioDataResult {
     void loadPortfolio();
   }, [loadPortfolio]);
 
+  const removeOpenOrder = useCallback((orderId: string) => {
+    setOpenOrders((current) => current.filter((order) => order.id !== orderId));
+  }, []);
+
   const connectWallet = useCallback(async () => {
     setStatus("loading");
     setMessage(undefined);
@@ -132,10 +134,11 @@ export function usePortfolioData(): UsePortfolioDataResult {
     isAuthenticated,
     positions,
     openOrders,
-    orderHistory,
+    activityHistory,
     status,
     message,
     reload: loadPortfolio,
+    removeOpenOrder,
     connectWallet
   };
 }

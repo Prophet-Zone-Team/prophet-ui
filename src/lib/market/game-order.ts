@@ -10,7 +10,11 @@ import {
   findGameMarketOutcome,
   resolveGameOutcomeTradePrice
 } from "@/lib/market/game-outcome-price";
-import { calculateOrderEstimate, normalizeLimitPrice } from "@/lib/market/order-math";
+import {
+  calculateOrderEstimate,
+  normalizeLimitPrice,
+  validateOrderAmount
+} from "@/lib/market/order-math";
 
 export interface GameBidOrderPreviewInput {
   snapshot: GameMarketSnapshot;
@@ -63,6 +67,8 @@ export function buildGameBidOrderPreview(
   const disabledReason = getGameDisabledReason({
     acceptingOrders: input.snapshot.market.acceptingOrders,
     amount: input.amount,
+    orderType: input.orderType,
+    tradeSide: input.tradeSide,
     tokenId
   });
 
@@ -89,10 +95,14 @@ export function buildGameBidOrderPreview(
 function getGameDisabledReason({
   acceptingOrders,
   amount,
+  orderType,
+  tradeSide,
   tokenId
 }: {
   acceptingOrders: boolean;
   amount: number;
+  orderType: TradingOrderType;
+  tradeSide: BidTradeSide;
   tokenId?: string;
 }): string | undefined {
   if (!tokenId) {
@@ -103,11 +113,11 @@ function getGameDisabledReason({
     return "This match market is not accepting orders.";
   }
 
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return "Enter a positive amount.";
-  }
-
-  return undefined;
+  return validateOrderAmount({
+    amount,
+    orderType,
+    tradeSide
+  });
 }
 
 export function getDefaultGameLimitPrice(

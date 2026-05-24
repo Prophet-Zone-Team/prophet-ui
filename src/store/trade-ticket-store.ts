@@ -17,6 +17,15 @@ import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-but
 
 export type TradeTabId = "buy" | "sell";
 
+export type LimitExpirationPreset =
+  | "never"
+  | "5m"
+  | "1h"
+  | "12h"
+  | "24h"
+  | "end_of_day"
+  | "custom";
+
 interface TradeTicketState {
   marketKey: string | null;
   entityType: TradeEntityType;
@@ -26,6 +35,8 @@ interface TradeTicketState {
   orderMode: TradeOrderMode;
   amount: string;
   limitPrice: string;
+  limitExpiration: LimitExpirationPreset;
+  limitExpirationCustom?: string;
   syncForTeamSnapshot: (snapshot: TeamMarketSnapshot) => void;
   syncForGameSnapshot: (snapshot: GameMarketSnapshot) => void;
   setOutcomeSide: (side: OrderOutcomeSide) => void;
@@ -34,6 +45,8 @@ interface TradeTicketState {
   setOrderMode: (mode: TradeOrderMode) => void;
   setAmount: (amount: string) => void;
   setLimitPrice: (limitPrice: string) => void;
+  setLimitExpiration: (preset: LimitExpirationPreset) => void;
+  setLimitExpirationCustom: (value: string | undefined) => void;
 }
 
 const defaultTicketState = {
@@ -44,7 +57,9 @@ const defaultTicketState = {
   tab: "buy" as TradeTabId,
   orderMode: "market" as TradeOrderMode,
   amount: "1",
-  limitPrice: "0.010"
+  limitPrice: "0.010",
+  limitExpiration: "never" as LimitExpirationPreset,
+  limitExpirationCustom: undefined as string | undefined
 };
 
 export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
@@ -64,7 +79,9 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       tab: "buy",
       orderMode: "market",
       amount: "1",
-      limitPrice: formatDefaultTradeLimitPrice(snapshot, "yes")
+      limitPrice: formatDefaultTradeLimitPrice(snapshot, "yes"),
+      limitExpiration: "never",
+      limitExpirationCustom: undefined
     });
   },
   syncForGameSnapshot: (snapshot) => {
@@ -82,15 +99,38 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       tab: "buy",
       orderMode: "market",
       amount: "1",
-      limitPrice: formatDefaultGameTradeLimitPrice(snapshot, "home", "yes")
+      limitPrice: formatDefaultGameTradeLimitPrice(snapshot, "home", "yes"),
+      limitExpiration: "never",
+      limitExpirationCustom: undefined
     });
   },
   setOutcomeSide: (side) => set({ outcomeSide: side }),
   setMatchOutcomeSide: (side) => set({ matchOutcomeSide: side, outcomeSide: "yes" }),
   setTab: (tab) => set({ tab }),
-  setOrderMode: (orderMode) => set({ orderMode }),
+  setOrderMode: (orderMode) => {
+    const current = get();
+
+    if (current.orderMode === orderMode) {
+      return;
+    }
+
+    set({
+      orderMode,
+      amount: orderMode === "limit" ? "5" : "1",
+      limitExpiration: "never",
+      limitExpirationCustom: undefined
+    });
+  },
   setAmount: (amount) => set({ amount }),
-  setLimitPrice: (limitPrice) => set({ limitPrice })
+  setLimitPrice: (limitPrice) => set({ limitPrice }),
+  setLimitExpiration: (limitExpiration) =>
+    set({
+      limitExpiration,
+      limitExpirationCustom:
+        limitExpiration === "custom" ? get().limitExpirationCustom : undefined
+    }),
+  setLimitExpirationCustom: (limitExpirationCustom) =>
+    set({ limitExpirationCustom })
 }));
 
 export function useTradeEntityType() {
@@ -143,6 +183,22 @@ export function useTradeLimitPrice() {
 
 export function useSetTradeLimitPrice() {
   return useTradeTicketStore((state) => state.setLimitPrice);
+}
+
+export function useTradeLimitExpiration() {
+  return useTradeTicketStore((state) => state.limitExpiration);
+}
+
+export function useTradeLimitExpirationCustom() {
+  return useTradeTicketStore((state) => state.limitExpirationCustom);
+}
+
+export function useSetTradeLimitExpiration() {
+  return useTradeTicketStore((state) => state.setLimitExpiration);
+}
+
+export function useSetTradeLimitExpirationCustom() {
+  return useTradeTicketStore((state) => state.setLimitExpirationCustom);
 }
 
 export function useSyncTradeTeamSnapshot() {

@@ -203,7 +203,13 @@ export async function refreshPersistedOrderStatuses({
   refreshedAt: string;
 }): Promise<UserOrderRecord[]> {
   const records = await readUserOrderHistory(session.userId, 100);
-  const openStatusById = new Map(openOrders.map((order) => [order.id, normalizeOpenOrderStatus(order.status)]));
+  const safeOpenOrders = Array.isArray(openOrders) ? openOrders : [];
+  const openStatusById = new Map(
+    safeOpenOrders.map((order) => [
+      order.id,
+      normalizeOpenOrderStatus(order.status)
+    ])
+  );
   const refreshed: UserOrderRecord[] = [];
 
   for (const record of records) {
@@ -228,7 +234,7 @@ export async function refreshPersistedOrderStatuses({
     walletAddress: session.walletAddress,
     eventType: "order_status_refreshed",
     detail: {
-      openOrderCount: openOrders.length,
+      openOrderCount: safeOpenOrders.length,
       trackedOrderCount: records.length,
     },
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/cn";
 import { findSnapshotForTokenId } from "@/lib/portfolio/portfolio-metrics";
 import {
   formatSharePrice,
@@ -11,9 +12,11 @@ import { formatShareSize } from "@/lib/market/order-math";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
+import { useCancelOpenOrder } from "@/views/portfolio/use-cancel-open-order";
 import {
   portfolioActionButtonClass,
   portfolioConnectButtonClass,
+  portfolioOrdersTableHeadClass,
   portfolioOrdersTableRowClass,
   portfolioTableScrollClass
 } from "@/views/portfolio/portfolio-ui";
@@ -24,7 +27,6 @@ export interface PortfolioOpenOrdersTableProps {
   needsWallet: boolean;
   loading: boolean;
   onConnectWallet: () => void;
-  embedded?: boolean;
 }
 
 function getRemainingSize(order: UserOpenOrder): number {
@@ -50,14 +52,36 @@ function getFilledPercent(order: UserOpenOrder): string {
   return `${percent.toFixed(0)}%`;
 }
 
+function PortfolioOpenOrdersTableHeader() {
+  return (
+    <div className={portfolioOrdersTableHeadClass}>
+      <span>Market</span>
+      <span>Side / Price</span>
+      <span>Size</span>
+      <span>Filled</span>
+      <span>Time</span>
+      <span
+        aria-hidden="true"
+        className={cn(
+          portfolioActionButtonClass,
+          "invisible pointer-events-none justify-self-end"
+        )}
+      >
+        Cancel
+      </span>
+    </div>
+  );
+}
+
 export function PortfolioOpenOrdersTable({
   openOrders,
   snapshots,
   needsWallet,
   loading,
-  onConnectWallet,
-  embedded = false
+  onConnectWallet
 }: PortfolioOpenOrdersTableProps) {
+  const { cancelOpenOrder, isCanceling } = useCancelOpenOrder();
+
   if (loading) {
     return (
       <p className="px-4 py-8 text-center text-sm text-prophet-muted">Loading open orders…</p>
@@ -83,59 +107,69 @@ export function PortfolioOpenOrdersTable({
 
   if (openOrders.length === 0) {
     return (
-      <PortfolioEmptyState
-        title="No open orders"
-        body="No open CLOB orders were returned for the connected account."
-      />
+      <div className={portfolioTableScrollClass} aria-label="Open orders">
+        <PortfolioOpenOrdersTableHeader />
+        <PortfolioEmptyState
+          title="No open orders"
+          body="No open CLOB orders were returned for the connected account."
+        />
+      </div>
     );
   }
 
   const rows = openOrders.map((order) => {
-        const snapshot = findSnapshotForTokenId(order.asset_id, snapshots);
-        const price = Number(order.price);
-        const sideLabel = titleCase(order.side);
+    const snapshot = findSnapshotForTokenId(order.asset_id, snapshots);
+    const price = Number(order.price);
+    const sideLabel = titleCase(order.side);
 
-        return (
-          <div key={order.id} className={portfolioOrdersTableRowClass}>
-            <div className="flex min-w-0 items-start gap-2">
-              {snapshot ? (
-                <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
-              ) : (
-                <span
-                  className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
-                  aria-hidden="true"
-                >
-                  ?
-                </span>
-              )}
-              <div className="min-w-0">
-                <p className="m-0 truncate font-[556] text-black">
-                  {order.outcome || order.market || order.asset_id}
-                </p>
-              </div>
-            </div>
-            <span className="font-[556]">
-              {sideLabel}{" "}
-              {Number.isFinite(price) ? formatSharePrice(price) : order.price}
-            </span>
-            <span>{formatShareSize(getRemainingSize(order))}</span>
-            <span className="text-prophet-muted">{getFilledPercent(order)}</span>
-            <span className="text-prophet-muted">{formatUnixSeconds(order.created_at)}</span>
-            <button
-              type="button"
-              className={portfolioActionButtonClass}
-              disabled
-              title="Coming soon"
+    return (
+      <div key={order.id} className={portfolioOrdersTableRowClass}>
+        <div className="flex min-w-0 items-start gap-2">
+          {snapshot ? (
+            <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+          ) : (
+            <span
+              className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
+              aria-hidden="true"
             >
-              Cancel
-            </button>
+              ?
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="m-0 truncate font-[556] text-black">
+              {order.outcome || order.market || order.asset_id}
+            </p>
           </div>
-        );
-      });
+        </div>
+        <span className="font-[556]">
+          {sideLabel}{" "}
+          {Number.isFinite(price) ? formatSharePrice(price) : order.price}
+        </span>
+        <span>{formatShareSize(getRemainingSize(order))}</span>
+        <span className="text-prophet-muted">{getFilledPercent(order)}</span>
+        <span className="text-prophet-muted">
+          {formatUnixSeconds(order.created_at)}
+        </span>
+        <button
+          type="button"
+          className={cn(
+            portfolioActionButtonClass,
+            "justify-self-end",
+            "disabled:opacity-50"
+          )}
+          disabled={isCanceling(order.id)}
+          onClick={() => void cancelOpenOrder(order)}
+        >
+          {isCanceling(order.id) ? "Cancelling…" : "Cancel"}
+        </button>
+      </div>
+    );
+  });
 
-  if (embedded) {
-    return <>{rows}</>;
-  }
-
-  return <div className={portfolioTableScrollClass}>{rows}</div>;
+  return (
+    <div className={portfolioTableScrollClass} aria-label="Open orders">
+      <PortfolioOpenOrdersTableHeader />
+      {rows}
+    </div>
+  );
 }

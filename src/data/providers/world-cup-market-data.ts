@@ -2,7 +2,10 @@ import { mockDataProvider } from "@/data/providers/mock-data-provider";
 import { polymarketDataProvider } from "@/data/providers/polymarket-data-provider";
 import { kalshiDataProvider } from "@/data/providers/kalshi-data-provider";
 import { getStoredPolymarketWorldCupData } from "@/data/providers/stored-polymarket-data-provider";
-import { DEFAULT_MARKET_DATA_SOURCE, getMarketDataSourceLabel, normalizeMarketDataSource } from "@/data/providers/source";
+import {
+  getMarketDataSourceLabel,
+  normalizeMarketDataSource
+} from "@/data/providers/source";
 import type { MarketDataSource, WorldCupMarketData, WorldCupMarketDataOptions } from "@/data/providers/types";
 import { getNewsImpactForSnapshots } from "@/data/news/news-impact";
 import { getApiFootballContext } from "@/data/football/api-football-provider";

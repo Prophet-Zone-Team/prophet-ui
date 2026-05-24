@@ -1,3 +1,25 @@
+export type UserActivityType = "TRADE";
+
+export interface UserActivityRecord {
+  id: string;
+  proxyWallet: string;
+  timestamp: number;
+  conditionId: string;
+  type: UserActivityType;
+  size: number;
+  usdcSize: number;
+  transactionHash: string;
+  price: number;
+  asset: string;
+  side: "BUY" | "SELL";
+  outcomeIndex: number;
+  title: string;
+  slug: string;
+  icon?: string;
+  eventSlug?: string;
+  outcome: string;
+}
+
 export interface UserOpenOrder {
   id: string;
   status: string;
