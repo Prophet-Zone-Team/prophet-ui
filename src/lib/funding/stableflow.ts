@@ -12,17 +12,6 @@ export const STABLEFLOW_BLOCKCHAIN_TO_CHAIN_ID: Record<string, number> = {
   bsc: FUNDING_NETWORKS.bsc.chainId,
 };
 
-const TOKEN_ICON_BY_SYMBOL: Record<string, string> = {
-  USDC: "/tokens/usdc.png",
-  "USDC.e": "/tokens/usdc.png",
-  USDT: "/tokens/usdt.png",
-  ETH: "/tokens/eth.png",
-  WETH: "/tokens/weth.png",
-  DAI: "/tokens/dai.png",
-  WBTC: "/tokens/wbtc.png",
-  BNB: "/tokens/bnb.png",
-};
-
 export interface StableflowDepositToken extends FundingAsset {
   assetId: string;
   blockchain: string;
@@ -66,7 +55,7 @@ export function mapStableflowTokenToDepositToken(token: TokenResponse): Stablefl
     return undefined;
   }
 
-  const icon = TOKEN_ICON_BY_SYMBOL[token.symbol] ?? "/tokens/usdc.png";
+  const icon = `/tokens/${token.symbol.toLowerCase()}.png`;
 
   return {
     ...network,

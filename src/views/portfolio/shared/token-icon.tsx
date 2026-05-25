@@ -1,5 +1,6 @@
 "use client";
 
+import LazyImage from "@/components/lazy-image";
 import { cn } from "@/lib/cn";
 
 export interface TokenIconProps {
@@ -31,13 +32,15 @@ export function TokenIcon({
       <div className={cn("relative shrink-0", dimmed && "opacity-30", className)}>
         {
           chainIcon ? (
-            <img
+            <LazyImage
               src={chainIcon}
               alt={chainLabel}
-              className={cn(
+              containerClassName={cn(
                 "rounded-[4px] border border-white font-[556] text-white",
                 iconSize,
               )}
+              width={size === "sm" ? 23 : 30}
+              height={size === "sm" ? 23 : 30}
             />
           ) : (
             chainLabel ? (
@@ -62,10 +65,12 @@ export function TokenIcon({
     <div className={cn("relative shrink-0", dimmed && "opacity-30", className)}>
       {
         icon ? (
-          <img
+          <LazyImage
             src={icon}
             alt={symbol}
-            className={cn(iconSize)}
+            containerClassName={cn(iconSize)}
+            width={size === "sm" ? 23 : 30}
+            height={size === "sm" ? 23 : 30}
           />
         ) : (
           <div
@@ -82,13 +87,18 @@ export function TokenIcon({
       }
       {
         chainIcon ? (
-          <img
+          <LazyImage
             src={chainIcon}
             alt={chainLabel}
-            className={cn(
+            containerClassName={cn(
               "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-white font-[556] text-white",
               badgeSize,
             )}
+            containerStyle={{
+              position: "absolute",
+            }}
+            width={size === "sm" ? 14 : 16}
+            height={size === "sm" ? 14 : 16}
           />
         ) : (
           chainLabel ? (
@@ -109,20 +119,28 @@ export function TokenIcon({
   );
 }
 
-export function WalletAvatarIcon({ className }: { className?: string }) {
+export function WalletAvatarIcon({ className, logo }: { className?: string; logo?: string; }) {
+  if (logo) {
+    return (
+      <img
+        src={logo}
+        alt=""
+        className={cn(
+          "size-5 shrink-0 rounded object-center object-contain",
+          className
+        )}
+      />
+    );
+  }
   return (
     <div
       className={cn(
-        "flex size-5 shrink-0 items-center justify-center rounded bg-black",
+        "flex size-5 shrink-0 items-center justify-center rounded",
+        "bg-[radial-gradient(100%_100%_at_50%_0%,#FF6BBA_0%,#4DA0FF_65.38%,#59FFA1_100%)]",
         className
       )}
-      aria-hidden="true"
     >
-      <span className="grid grid-cols-2 gap-0.5 p-1">
-        {[0, 1, 2, 3].map((i) => (
-          <span key={i} className="size-1 rounded-[1px] bg-white" />
-        ))}
-      </span>
+
     </div>
   );
 }

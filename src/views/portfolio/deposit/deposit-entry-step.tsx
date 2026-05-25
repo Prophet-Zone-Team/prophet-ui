@@ -11,6 +11,7 @@ import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import { useAuth } from "@/context/auth";
 import { useDepositContext } from "./context";
 import { formatNumber } from "@/utils";
+import { getStoredTradingWalletInfo } from "@/components/trading/trading-wallet-session";
 
 export interface DepositEntryStepProps {
   onSelectConnected: () => void;
@@ -30,6 +31,7 @@ export function DepositEntryStep({
     balancesLoading,
     pricesLoading,
   } = useDepositContext();
+  const walletKind = getStoredTradingWalletInfo(session?.walletAddress);
 
   if (!session) {
     return (
@@ -61,9 +63,11 @@ export function DepositEntryStep({
           {stableflowLoading ? (
             <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
           ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f4f4f4] text-xs font-[556] text-black">
-              SF
-            </span>
+            <img
+              src="/logos/logo-stableflow.svg"
+              alt=""
+              className="size-8 shrink-0 rounded-full object-center object-contain"
+            />
           )}
           <span className="truncate text-base font-[556] text-black">Stableflow</span>
         </span>
@@ -78,7 +82,7 @@ export function DepositEntryStep({
         onClick={onSelectConnected}
       >
         <span className="flex min-w-0 items-center gap-3">
-          <WalletAvatarIcon />
+          <WalletAvatarIcon logo={walletKind.logo} />
           <span className="truncate text-base font-[556] text-black">
             {formatShortWallet(session.walletAddress)}
           </span>

@@ -10,6 +10,7 @@ export interface PortfolioContextType {
   onConnectWallet: () => void;
   reload: () => void;
   removeOpenOrder: (orderId: string) => void;
+  coreStatus: PortfolioLoadStatus;
 }
 
 const PortfolioContext = createContext<PortfolioContextType>({
@@ -19,6 +20,7 @@ const PortfolioContext = createContext<PortfolioContextType>({
   onConnectWallet: () => { },
   reload: () => { },
   removeOpenOrder: () => { },
+  coreStatus: "idle",
 });
 
 export function PortfolioProvider({ children, value }: { children: React.ReactNode, value: PortfolioContextType }) {

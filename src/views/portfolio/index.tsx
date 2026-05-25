@@ -54,6 +54,7 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
         onConnectWallet: () => void connectWallet(),
         reload,
         removeOpenOrder,
+        coreStatus,
       }}
     >
       <section className={portfolioPageClass}>
