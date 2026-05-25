@@ -1,12 +1,12 @@
-import { renderTradePage } from "@/app/trade/_shared/render-trade-page";
+import { resolveTradeRedirect } from "@/app/trade/_shared/render-trade-page";
 
-interface TradeRouteProps {
+interface LegacyTradeRouteProps {
   params: Promise<{
     slug: string;
   }>;
 }
 
-export default async function Page({ params }: TradeRouteProps) {
+export default async function Page({ params }: LegacyTradeRouteProps) {
   const { slug } = await params;
-  return renderTradePage(slug, "simple");
+  return resolveTradeRedirect(slug);
 }

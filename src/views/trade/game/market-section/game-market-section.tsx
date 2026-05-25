@@ -3,9 +3,9 @@
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type { GameMarketSnapshot, TeamMarketSnapshot } from "@/types/market";
 import { GameOutcomeBidButtons } from "@/views/trade/shared/game-outcome-bid-buttons";
-import { simpleGameColors } from "@/views/trade/simple/ui";
-import { formatChangePillLabel } from "@/views/trade/simple/market-section/format-bid-label";
-import { ChangePill, ProbabilityBar } from "@/views/trade/simple/market-section/shared";
+import { gameColors } from "@/views/trade/game/ui";
+import { formatChangePillLabel } from "@/views/trade/game/market-section/format-bid-label";
+import { ChangePill, ProbabilityBar } from "@/views/trade/game/market-section/shared";
 
 export interface GameMarketSectionProps {
   snapshot: GameMarketSnapshot;
@@ -59,13 +59,13 @@ export function GameMarketSection({
             {sides.home.name}
           </p>
           {homeChange ? (
-            <ChangePill label={homeChange} color={simpleGameColors.home} />
+            <ChangePill label={homeChange} color={gameColors.home} />
           ) : null}
         </div>
 
         <div className="flex items-center justify-center gap-2">
           {drawChange ? (
-            <ChangePill label={drawChange} color={simpleGameColors.draw} />
+            <ChangePill label={drawChange} color={gameColors.draw} />
           ) : null}
           <p className="text-xl font-[556] capitalize leading-6 text-black">
             Draw
@@ -74,7 +74,7 @@ export function GameMarketSection({
 
         <div className="flex min-w-0 items-center justify-end gap-2">
           {awayChange ? (
-            <ChangePill label={awayChange} color={simpleGameColors.awayBar} />
+            <ChangePill label={awayChange} color={gameColors.awayBar} />
           ) : null}
           <p className="truncate text-right text-xl font-[556] capitalize leading-6 text-black">
             {sides.away.name}
@@ -83,11 +83,11 @@ export function GameMarketSection({
       </div>
 
       <ProbabilityBar
-        trackColor={simpleGameColors.drawBar}
+        trackColor={gameColors.drawBar}
         segments={[
-          { value: homeProb, color: simpleGameColors.home },
-          { value: drawProb, color: simpleGameColors.draw },
-          { value: awayProb, color: simpleGameColors.awayBar }
+          { value: homeProb, color: gameColors.home },
+          { value: drawProb, color: gameColors.draw },
+          { value: awayProb, color: gameColors.awayBar }
         ]}
       />
 

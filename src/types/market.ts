@@ -25,8 +25,6 @@ export type OrderOutcomeSide = "yes" | "no";
 
 export type MatchOutcomeSide = "home" | "draw" | "away";
 
-export type TradeViewMode = "pro" | "simple";
-
 export type TradeEntityType = "team" | "game";
 
 export type BidTradeSide = "buy" | "sell";

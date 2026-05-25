@@ -13,6 +13,7 @@ import {
   findSnapshotForPosition,
   findSnapshotForTokenId
 } from "@/lib/portfolio/portfolio-metrics";
+import { resolveTradeHref } from "@/lib/routes/trade";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { useTradeTicketStore } from "@/store/trade-ticket-store";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
@@ -133,7 +134,7 @@ export function PortfolioPositionsTable({
           )}
           <div className="min-w-0">
             <a
-              href={`/trade/${position.eventSlug}`}
+              href={resolveTradeHref(position.eventSlug ?? position.slug)}
               className="m-0 truncate font-[556] text-black hover:underline"
             >
               {position.title}

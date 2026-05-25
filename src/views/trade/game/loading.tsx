@@ -1,4 +1,4 @@
-import { simpleContentClass } from "@/views/trade/simple/ui";
+import { gameContentClass } from "@/views/trade/game/ui";
 import { tradePanelClass } from "@/views/trade/trade-widget/trade-ui";
 
 function LoadingBlock({
@@ -123,7 +123,7 @@ function RelatedGamesSkeleton() {
   );
 }
 
-export function TradeSimpleLoading() {
+export function TradeGameLoading() {
   return (
     <div
       className="relative left-1/2 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2 bg-white pt-6"
@@ -137,7 +137,7 @@ export function TradeSimpleLoading() {
         <LoadingBlock onDark className="h-5 w-12" />
       </div>
 
-      <div className={`${simpleContentClass} relative z-10 pb-10`}>
+      <div className={`${gameContentClass} relative z-10 pb-10`}>
         <div className="w-[1000px] shrink-0 pt-2">
           <div className="relative flex w-full justify-center">
             <HeaderTeamSkeleton align="end" />

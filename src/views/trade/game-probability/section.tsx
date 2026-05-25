@@ -13,7 +13,7 @@ import type {
   TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
-import { Orderbook } from "@/views/trade/professional/orderbook";
+import { Orderbook } from "@/views/trade/team/orderbook";
 import { GameProbabilityChart } from "@/views/trade/game-probability/chart";
 import { useFixturePriceHistory } from "@/views/trade/game-probability/use-fixture-price-history";
 

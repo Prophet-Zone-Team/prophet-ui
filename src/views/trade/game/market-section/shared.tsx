@@ -87,7 +87,15 @@ export function ProbabilityBar({
   trackColor: string;
 }) {
   const total = segments.reduce((sum, segment) => sum + segment.value, 0) || 1;
-  let offset = 0;
+  const positionedSegments = segments.reduce<
+    Array<ProbabilitySegment & { left: number; width: number }>
+  >((items, segment) => {
+    const width = (segment.value / total) * 100;
+    const left = items.reduce((sum, item) => sum + item.width, 0);
+
+    items.push({ ...segment, left, width });
+    return items;
+  }, []);
 
   return (
     <div
@@ -95,23 +103,17 @@ export function ProbabilityBar({
       style={{ backgroundColor: trackColor }}
       aria-hidden
     >
-      {segments.map((segment, index) => {
-        const width = (segment.value / total) * 100;
-        const left = offset;
-        offset += width;
-
-        return (
-          <div
-            key={index}
-            className="absolute inset-y-0"
-            style={{
-              left: `${left}%`,
-              width: `${width}%`,
-              backgroundColor: segment.color
-            }}
-          />
-        );
-      })}
+      {positionedSegments.map((segment, index) => (
+        <div
+          key={index}
+          className="absolute inset-y-0"
+          style={{
+            left: `${segment.left}%`,
+            width: `${segment.width}%`,
+            backgroundColor: segment.color
+          }}
+        />
+      ))}
     </div>
   );
 }

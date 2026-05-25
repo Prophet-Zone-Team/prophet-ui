@@ -1,19 +1,17 @@
-import type { TradeViewMode } from "@/types/market";
+import { worldCupTeams } from "@/data/teams/world-cup-teams";
 
-export function tradeHref(slug: string, mode?: TradeViewMode) {
-  const base = `/trade/${slug}`;
-  return mode === "pro" ? `${base}/pro` : base;
+export function gameTradeHref(matchId: string) {
+  return `/trade/game/${matchId}`;
 }
 
-export function teamTradeHref(teamId: string, mode?: TradeViewMode) {
-  return tradeHref(teamId, mode);
+export function teamTradeHref(teamId: string) {
+  return `/trade/team/${teamId}`;
 }
 
-export function gameTradeHref(matchId: string, mode?: TradeViewMode) {
-  return tradeHref(matchId, mode);
-}
+export function resolveTradeHref(slug: string) {
+  if (worldCupTeams.some((team) => team.id === slug)) {
+    return teamTradeHref(slug);
+  }
 
-export function parseTradeViewMode(value: string | string[] | undefined): TradeViewMode {
-  const raw = Array.isArray(value) ? value[0] : value;
-  return raw === "pro" ? "pro" : "simple";
+  return gameTradeHref(slug);
 }

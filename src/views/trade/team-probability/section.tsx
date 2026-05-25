@@ -22,7 +22,7 @@ import type {
   TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
-import { Orderbook } from "@/views/trade/professional/orderbook";
+import { Orderbook } from "@/views/trade/team/orderbook";
 import { ProbabilityChart } from "@/views/trade/team-probability/chart";
 import { tradeYesNoPill } from "@/views/trade/trade-widget/trade-ui";
 

@@ -130,18 +130,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const orderAmount = parseOrderAmount(amount);
   const orderType = resolveOrderType(orderMode);
 
-  const marketTokenIds = useMemo(() => {
-    if (input.variant === "team") {
-      return resolveTeamOutcomeTokenIds(input.snapshot);
-    }
-
-    return resolveGameOutcomeTokenIds(
-      input.gameSnapshot,
-      matchOutcomeSide
-    );
-  }, [
-    input.variant,
-    matchOutcomeSide,
+  const marketTokenDeps =
     input.variant === "team"
       ? [
           input.snapshot.team.id,
@@ -156,8 +145,15 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             ?.tokenId,
           findGameMarketOutcome(input.gameSnapshot.outcomes, matchOutcomeSide)
             ?.noTokenId
-        ].join("|")
-  ]);
+        ].join("|");
+
+  const marketTokenIds = useMemo(() => {
+    if (input.variant === "team") {
+      return resolveTeamOutcomeTokenIds(input.snapshot);
+    }
+
+    return resolveGameOutcomeTokenIds(input.gameSnapshot, matchOutcomeSide);
+  }, [input.variant, matchOutcomeSide, marketTokenDeps]);
 
   const { conditionId, yesTokenId, noTokenId } = marketTokenIds;
 

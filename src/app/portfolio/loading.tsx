@@ -1,52 +1,95 @@
-import { portfolioActivityCardClass, portfolioPageClass, portfolioSummaryCardClass } from "@/views/portfolio/portfolio-ui";
+import {
+  portfolioActivityCardClass,
+  portfolioPageClass,
+  portfolioPositionsTableHeadClass,
+  portfolioPositionsTableRowClass,
+  portfolioSummaryCardClass,
+  portfolioTableScrollClass
+} from "@/views/portfolio/portfolio-ui";
+
+function LoadingBlock({ className }: { className?: string }) {
+  return (
+    <div
+      className={`animate-pulse rounded-md bg-[#ebebeb]/80 ${className ?? "h-4 w-full"}`}
+      aria-hidden="true"
+    />
+  );
+}
 
 export default function PortfolioLoading() {
   return (
     <section className={portfolioPageClass} aria-label="Loading portfolio">
-      <header className="mb-6">
-        <div className="h-3 w-16 animate-pulse rounded bg-prophet-line" />
-        <div className="mt-2 h-7 w-48 animate-pulse rounded bg-prophet-line" />
-        <div className="mt-2 h-4 w-full max-w-2xl animate-pulse rounded bg-prophet-line" />
-      </header>
-
       <div className="flex flex-col gap-4">
-        <div className={`${portfolioSummaryCardClass} animate-pulse`}>
-          <div className="flex flex-col gap-6 lg:flex-row lg:h-full">
-            <div className="flex flex-1 flex-col justify-between gap-5 lg:pr-8">
-              <div className="flex items-center gap-3">
-                <div className="size-[52px] rounded-full bg-prophet-line" />
-                <div className="h-6 w-28 rounded bg-prophet-line" />
-              </div>
-              <div className="flex gap-12">
-                <div className="h-[38px] w-32 rounded bg-prophet-line" />
-                <div className="h-6 w-20 rounded bg-prophet-line" />
-              </div>
-              <div className="flex gap-3">
-                <div className="h-[55px] w-[235px] max-w-full rounded-xl bg-prophet-line" />
-                <div className="h-[55px] w-[235px] max-w-full rounded-xl bg-prophet-line/70" />
-              </div>
-            </div>
-            <div className="hidden w-px shrink-0 bg-prophet-line lg:block" />
-            <div className="flex flex-1 flex-col justify-between gap-4 lg:pl-8">
-              <div className="flex justify-between gap-4">
-                <div className="h-[38px] w-32 rounded bg-prophet-line" />
-                <div className="h-4 w-40 rounded bg-prophet-line" />
-              </div>
-              <div className="h-[83px] rounded bg-prophet-line/60" />
-            </div>
+        <section className={portfolioSummaryCardClass} aria-hidden="true">
+          <div className="flex items-center gap-3">
+            <LoadingBlock className="size-[52px] shrink-0 rounded-full" />
+            <LoadingBlock className="h-6 w-28" />
           </div>
-        </div>
 
-        <div className={`${portfolioActivityCardClass} animate-pulse`}>
-          <div className="border-b border-[#EBEBEB] px-4 py-3">
-            <div className="h-6 w-64 rounded bg-prophet-line" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-[160px] w-1/2 flex-col justify-between pt-2">
+              <div className="flex items-end gap-8 sm:gap-12">
+                <div className="flex flex-col gap-1">
+                  <LoadingBlock className="h-[17px] w-16" />
+                  <LoadingBlock className="h-[38px] w-24" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <LoadingBlock className="h-[17px] w-28" />
+                  <LoadingBlock className="mt-2 h-6 w-20" />
+                </div>
+              </div>
+              <div className="mt-4 flex gap-3">
+                <LoadingBlock className="h-[55px] max-w-[235px] flex-1 rounded-xl" />
+                <LoadingBlock className="h-[55px] max-w-[235px] flex-1 rounded-xl" />
+              </div>
+            </div>
+
+            <div
+              className="hidden w-px shrink-0 self-stretch bg-prophet-line lg:block"
+              aria-hidden="true"
+            />
+
+            <div className="flex w-1/2 flex-col justify-between gap-4 border-t border-prophet-line pt-6 lg:border-t-0 lg:pl-8 lg:pt-0">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                  <LoadingBlock className="h-[17px] w-24" />
+                  <LoadingBlock className="h-[38px] w-32" />
+                </div>
+                <div className="flex shrink-0 gap-4">
+                  {Array.from({ length: 5 }, (_, index) => (
+                    <LoadingBlock key={index} className="h-[17px] w-6" />
+                  ))}
+                </div>
+              </div>
+              <LoadingBlock className="h-[83px] w-full" />
+            </div>
           </div>
-          <div className="space-y-3 p-4">
+        </section>
+
+        <section className={portfolioActivityCardClass} aria-hidden="true">
+          <div className="shrink-0 border-b border-[#EBEBEB] px-4 pt-3">
+            <div className="flex h-9 items-start gap-6">
+              <LoadingBlock className="h-[19px] w-16" />
+              <LoadingBlock className="h-[19px] w-24" />
+              <LoadingBlock className="h-[19px] w-16" />
+            </div>
+          </div>
+
+          <div className={portfolioTableScrollClass}>
+            <div className={portfolioPositionsTableHeadClass}>
+              {Array.from({ length: 6 }, (_, index) => (
+                <LoadingBlock key={index} className="h-3 w-full" />
+              ))}
+            </div>
             {Array.from({ length: 5 }, (_, index) => (
-              <div key={index} className="h-12 rounded bg-prophet-line/70" />
+              <div key={index} className={portfolioPositionsTableRowClass}>
+                {Array.from({ length: 6 }, (_, cellIndex) => (
+                  <LoadingBlock key={cellIndex} className="h-4 w-full" />
+                ))}
+              </div>
             ))}
           </div>
-        </div>
+        </section>
       </div>
     </section>
   );

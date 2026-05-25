@@ -19,7 +19,7 @@ function getGroupLabel(metadata?: TeamFootballMetadata): string {
 
   return "Pending";
 }
-import { BookmarkControl } from "@/views/trade/professional/bookmark-control";
+import { BookmarkControl } from "@/views/trade/team/bookmark-control";
 import {
   teamHeroCardClass,
   teamHeroMetricsClass,

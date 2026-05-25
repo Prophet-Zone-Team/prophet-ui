@@ -4,42 +4,22 @@ import type { ReactNode } from "react";
 
 import { CopyLinkIcon } from "@/components/icons";
 import { TeamFlag } from "@/components/teams/team-flag";
+import { PageBack } from "@/components/ui/page-back";
 import { cn } from "@/lib/cn";
-import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type {
   ApiFootballTeamProfile,
   TeamFootballMetadata,
-  TeamMarketSnapshot,
-  WorldCupMatch
+  TeamMarketSnapshot
 } from "@/types/market";
-import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-control";
-import { BookmarkControl } from "@/views/trade/professional/bookmark-control";
-import { PageBack } from "@/components/ui/page-back";
+import { BookmarkControl } from "@/views/trade/team/bookmark-control";
 
-type TradeHeaderBaseProps = {
-  showOrderbook: boolean;
-  onOrderbookChange: (value: boolean) => void;
-};
-
-type TradeHeaderControlsProps = TradeHeaderBaseProps & {
-  bookmark: ReactNode;
-};
-
-export type TradeHeaderTeamProps = TradeHeaderBaseProps & {
-  variant?: "team";
+export interface TradeHeaderProps {
   snapshot: TeamMarketSnapshot;
   profile?: ApiFootballTeamProfile;
   metadata?: TeamFootballMetadata;
-};
-
-export type TradeHeaderGameProps = TradeHeaderBaseProps & {
-  variant: "game";
-  match: WorldCupMatch;
-  teamSnapshots: TeamMarketSnapshot[];
-  teamProfiles?: Partial<Record<string, ApiFootballTeamProfile>>;
-};
-
-export type TradeHeaderProps = TradeHeaderTeamProps | TradeHeaderGameProps;
+  showOrderbook: boolean;
+  onOrderbookChange: (value: boolean) => void;
+}
 
 function TeamLogo({
   code,
@@ -85,7 +65,11 @@ function HeaderControls({
   showOrderbook,
   onOrderbookChange,
   bookmark
-}: TradeHeaderControlsProps) {
+}: {
+  showOrderbook: boolean;
+  onOrderbookChange: (value: boolean) => void;
+  bookmark: ReactNode;
+}) {
   return (
     <div className="flex flex-col items-end gap-3 sm:pt-0">
       <div className="flex items-center gap-3">
@@ -129,13 +113,13 @@ function HeaderControls({
   );
 }
 
-function TradeTeamHeader({
+export function TradeHeader({
   snapshot,
   profile,
   metadata,
   showOrderbook,
   onOrderbookChange
-}: TradeHeaderTeamProps) {
+}: TradeHeaderProps) {
   const { team } = snapshot;
   const fifaRank = metadata?.fifaRank ?? team.fifaRank;
 
@@ -180,64 +164,4 @@ function TradeTeamHeader({
       </div>
     </header>
   );
-}
-
-function TradeGameHeader({
-  match,
-  teamSnapshots,
-  teamProfiles,
-  showOrderbook,
-  onOrderbookChange
-}: TradeHeaderGameProps) {
-  const sides = resolveMatchSides(match, teamSnapshots);
-  const homeProfile = match.homeTeamId
-    ? teamProfiles?.[match.homeTeamId]
-    : undefined;
-  const awayProfile = match.awayTeamId
-    ? teamProfiles?.[match.awayTeamId]
-    : undefined;
-
-  return (
-    <header className="my-4">
-      <div className="flex items-center justify-between">
-        <div className="min-w-0">
-          <PageBack />
-
-          <div className="flex min-w-0 items-center gap-6 m-0 truncate text-[36px] font-[556] capitalize leading-[43px] text-black">
-            <div className="flex shrink-0 items-center gap-2">
-              <TeamLogo
-                code={sides.home.code}
-                name={sides.home.name ?? "Home"}
-                logoUrl={homeProfile?.logoUrl}
-              />
-              <span>{sides.home.name}</span>
-            </div>
-            <span className="text-[30px]">vs</span>
-            <div className="flex shrink-0 items-center gap-2">
-              <TeamLogo
-                code={sides.away.code}
-                name={sides.away.name ?? "Away"}
-                logoUrl={awayProfile?.logoUrl}
-              />
-              <span>{sides.away.name}</span>
-            </div>
-          </div>
-        </div>
-
-        <HeaderControls
-          showOrderbook={showOrderbook}
-          onOrderbookChange={onOrderbookChange}
-          bookmark={<MatchBookmarkControl matchId={match.id} />}
-        />
-      </div>
-    </header>
-  );
-}
-
-export function TradeHeader(props: TradeHeaderProps) {
-  if (props.variant === "game") {
-    return <TradeGameHeader {...props} />;
-  }
-
-  return <TradeTeamHeader {...props} />;
 }

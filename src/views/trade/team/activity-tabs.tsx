@@ -3,14 +3,14 @@
 import { useState } from "react";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
-import { PositionsTable } from "@/views/trade/professional/positions-table";
-import { TopTradersTable } from "@/views/trade/professional/top-traders-table";
+import { PositionsTable } from "@/views/trade/team/positions-table";
+import { TopTradersTable } from "@/views/trade/team/top-traders-table";
 import {
   TradesTable,
   TradesTableHeader
-} from "@/views/trade/professional/trades-table";
+} from "@/views/trade/team/trades-table";
 import { tradeSectionClass } from "@/views/trade/trade-widget/trade-ui";
-import type { GameMarketSnapshot, TeamMarketSnapshot } from "@/types/market";
+import type { TeamMarketSnapshot } from "@/types/market";
 
 const ACTIVITY_TABS = [
   { id: "trades", label: "Trades" },
@@ -20,20 +20,11 @@ const ACTIVITY_TABS = [
 
 type ActivityTabId = (typeof ACTIVITY_TABS)[number]["id"];
 
-export type ActivityTabsTeamProps = {
-  variant?: "team";
+export interface ActivityTabsProps {
   snapshot: TeamMarketSnapshot;
-};
+}
 
-export type ActivityTabsGameProps = {
-  variant: "game";
-  gameSnapshot: GameMarketSnapshot;
-  teamSnapshots: TeamMarketSnapshot[];
-};
-
-export type ActivityTabsProps = ActivityTabsTeamProps | ActivityTabsGameProps;
-
-export function ActivityTabs(props: ActivityTabsProps) {
+export function ActivityTabs({ snapshot }: ActivityTabsProps) {
   const [tab, setTab] = useState<ActivityTabId>("trades");
 
   return (
@@ -70,15 +61,7 @@ export function ActivityTabs(props: ActivityTabsProps) {
         {tab === "trades" ? <TradesTable /> : null}
         {tab === "position" ? (
           <div aria-label="Your positions">
-            {props.variant === "game" ? (
-              <PositionsTable
-                variant="game"
-                gameSnapshot={props.gameSnapshot}
-                teamSnapshots={props.teamSnapshots}
-              />
-            ) : (
-              <PositionsTable snapshot={props.snapshot} />
-            )}
+            <PositionsTable snapshot={snapshot} />
           </div>
         ) : null}
         {tab === "top-traders" ? (

@@ -5,68 +5,34 @@ import Link from "next/link";
 import { MatchStatusBadge } from "@/components/match/match-status-badge";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
-import {
-  formatMatchScore,
-  formatTeamWinLossRecord
-} from "@/lib/market/match-display";
+import { formatMatchScore } from "@/lib/market/match-display";
 import {
   formatScheduleKickoff,
   getScheduleRowVariant,
-  resolveMatchSides,
-  type ScheduleRowVariant
+  resolveMatchSides
 } from "@/lib/market/schedule-match";
 import { teamDetailHref } from "@/lib/routes/team";
-import Bg from "@/views/trade/simple/header/bg";
+import Bg from "@/views/trade/game/header/bg";
 import type {
-  ApiFootballStandingContext,
   ApiFootballTeamProfile,
   TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
 
-const HEADER_HEIGHT = 258;
 const flagClassName =
   "h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-cover bg-center shadow-[0_0_2px_rgba(0,0,0,0.2)] sm:h-[85px] sm:w-[85px]";
 
-export type TradeSimpleHeaderGameProps = {
-  variant: "game";
+export type TradeGameHeaderProps = {
   match: WorldCupMatch;
   snapshots: TeamMarketSnapshot[];
   teamProfiles?: Partial<Record<string, ApiFootballTeamProfile>>;
 };
-
-export type TradeSimpleHeaderTeamProps = {
-  variant: "team";
-  snapshot: TeamMarketSnapshot;
-  profile?: ApiFootballTeamProfile;
-  standings?: ApiFootballStandingContext[];
-};
-
-export type TradeSimpleHeaderProps =
-  | TradeSimpleHeaderGameProps
-  | TradeSimpleHeaderTeamProps;
 
 type TeamSideData = {
   teamId?: string;
   name: string;
   code?: string;
   logoUrl?: string;
-};
-
-type HeaderMetricData = {
-  value: string;
-  statusVariant?: ScheduleRowVariant;
-  subtitle?: string;
-};
-
-type HeaderViewModel = {
-  layout: "game" | "team";
-  metric: HeaderMetricData;
-  teams: {
-    focal?: TeamSideData;
-    home?: TeamSideData;
-    away?: TeamSideData;
-  };
 };
 
 function ForwardChevronIcon() {
@@ -148,17 +114,17 @@ function HeaderMetric({
   value,
   statusVariant,
   subtitle
-}: HeaderMetricData & { className?: string }) {
+}: {
+  value: string;
+  statusVariant?: ReturnType<typeof getScheduleRowVariant>;
+  subtitle?: string;
+}) {
   return (
     <div className="relative w-[453px] h-full">
       <div className="absolute top-[-14px] h-full">
         <Bg />
       </div>
-      <div
-        className={cn(
-          "flex flex-col justify-center items-center h-full relative z-10 mt-[50px]"
-        )}
-      >
+      <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[50px]">
         <strong className="text-center text-[40px] font-[556] capitalize leading-[48px] text-white sm:text-[60px] sm:leading-[72px]">
           {value}
         </strong>
@@ -203,97 +169,44 @@ function TeamSideColumn({
   );
 }
 
-function getTeamRecordSubtitle(
-  standings?: ApiFootballStandingContext[]
-): string | undefined {
-  const standing = standings?.[0];
+export function TradeGameHeader({
+  match,
+  snapshots,
+  teamProfiles
+}: TradeGameHeaderProps) {
+  const sides = resolveMatchSides(match, snapshots);
+  const homeProfile = match.homeTeamId
+    ? teamProfiles?.[match.homeTeamId]
+    : undefined;
+  const awayProfile = match.awayTeamId
+    ? teamProfiles?.[match.awayTeamId]
+    : undefined;
 
-  if (!standing) {
-    return undefined;
-  }
-
-  if (standing.group) {
-    return `Group ${standing.group}`;
-  }
-
-  if (standing.played !== undefined) {
-    return `${standing.played} played`;
-  }
-
-  return undefined;
-}
-
-function resolveHeaderViewModel(
-  props: TradeSimpleHeaderProps
-): HeaderViewModel {
-  if (props.variant === "game") {
-    const sides = resolveMatchSides(props.match, props.snapshots);
-    const homeProfile = props.match.homeTeamId
-      ? props.teamProfiles?.[props.match.homeTeamId]
-      : undefined;
-    const awayProfile = props.match.awayTeamId
-      ? props.teamProfiles?.[props.match.awayTeamId]
-      : undefined;
-
-    return {
-      layout: "game",
-      metric: {
-        value: formatMatchScore(props.match.homeScore, props.match.awayScore),
-        statusVariant: getScheduleRowVariant(props.match.status),
-        subtitle: formatScheduleKickoff(props.match.kickoffAt)
-      },
-      teams: {
-        home: {
-          teamId: props.match.homeTeamId,
+  return (
+    <div className="relative h-full flex w-full justify-center">
+      <TeamSideColumn
+        team={{
+          teamId: match.homeTeamId,
           name: sides.home.name,
           code: sides.home.code,
           logoUrl: homeProfile?.logoUrl
-        },
-        away: {
-          teamId: props.match.awayTeamId,
+        }}
+        justify="end"
+      />
+      <HeaderMetric
+        value={formatMatchScore(match.homeScore, match.awayScore)}
+        statusVariant={getScheduleRowVariant(match.status)}
+        subtitle={formatScheduleKickoff(match.kickoffAt)}
+      />
+      <TeamSideColumn
+        team={{
+          teamId: match.awayTeamId,
           name: sides.away.name,
           code: sides.away.code,
           logoUrl: awayProfile?.logoUrl
-        }
-      }
-    };
-  }
-
-  const standing = props.standings?.[0];
-  const { team } = props.snapshot;
-
-  return {
-    layout: "team",
-    metric: {
-      value: formatTeamWinLossRecord(standing?.wins, standing?.losses),
-      subtitle: getTeamRecordSubtitle(props.standings)
-    },
-    teams: {
-      focal: {
-        teamId: team.id,
-        name: team.name,
-        code: team.code,
-        logoUrl: props.profile?.logoUrl
-      }
-    }
-  };
-}
-
-export function TradeSimpleHeader(props: TradeSimpleHeaderProps) {
-  const { layout, metric, teams } = resolveHeaderViewModel(props);
-
-  return layout === "game" ? (
-    <div className="relative h-full flex w-full justify-center">
-      <TeamSideColumn team={teams.home} justify="end" />
-      <HeaderMetric {...metric} />
-      <TeamSideColumn team={teams.away} justify="start" />
-    </div>
-  ) : (
-    <div className="relative h-full flex w-full justify-center">
-      <div className="mt-[60px]">
-        {teams.focal ? <TeamSide {...teams.focal} align="center" /> : null}
-      </div>
-      <HeaderMetric {...metric} />
+        }}
+        justify="start"
+      />
     </div>
   );
 }

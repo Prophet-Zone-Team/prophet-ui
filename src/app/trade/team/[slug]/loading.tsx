@@ -12,7 +12,7 @@ function LoadingBlock({ className }: { className?: string }) {
   );
 }
 
-export default function TradeProLoading() {
+export default function TradeTeamRouteLoading() {
   return (
     <div className={tradePageClass} aria-busy aria-label="Loading trade">
       <div className="mb-4 flex gap-3 border-b border-prophet-line pb-4">

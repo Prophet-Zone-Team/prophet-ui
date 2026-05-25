@@ -21,7 +21,7 @@ import type {
 
 const DEFAULT_BID_AMOUNT = 100;
 
-export function getGameSimpleSidePrice(
+export function getGameSidePrice(
   snapshot: GameMarketSnapshot,
   side: MatchOutcomeSide,
   binarySide: OrderOutcomeSide = "yes"

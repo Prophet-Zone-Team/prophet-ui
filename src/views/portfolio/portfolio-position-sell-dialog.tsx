@@ -11,6 +11,7 @@ import {
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
 import { derivePositionSellReceiveAmount } from "@/lib/portfolio/portfolio-metrics";
+import { resolveTradeHref } from "@/lib/routes/trade";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { useSyncForPositionSell } from "@/store/trade-ticket-store";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
@@ -85,8 +86,8 @@ function PortfolioPositionSellBody({
   const isBusy = formProps.actionInProgress;
 
   function handleEditOrder() {
-    if (position.eventSlug) {
-      router.push(`/trade/${position.eventSlug}`);
+    if (position.eventSlug || position.slug) {
+      router.push(resolveTradeHref(position.eventSlug ?? position.slug));
     }
 
     onClose();
