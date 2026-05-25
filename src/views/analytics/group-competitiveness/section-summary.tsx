@@ -36,7 +36,7 @@ export function SectionSummary({
         <div className="flex shrink-0 items-center justify-center">{icon}</div>
         <p
           className={cn(
-            "m-0 text-[16px] font-[300] leading-[19px]",
+            "m-0 text-[16px] font-[400] leading-[19px]",
             LABEL_COLORS[variant]
           )}
         >
@@ -45,13 +45,13 @@ export function SectionSummary({
       </div>
 
       <div className="mt-[16px] flex items-baseline justify-between gap-3">
-        <h3 className="m-0 text-[20px] font-[400] leading-[24px] text-black">
+        <h3 className="m-0 text-[20px] font-[500] leading-[24px] text-black">
           {formatGroupLabel(groupId)}
         </h3>
         <CompetitivenessScore score={score} />
       </div>
 
-      <p className="m-0 mt-[12px] max-w-[317px] text-[14px] font-[300] leading-[17px] text-[#909090]">
+      <p className="m-0 mt-[12px] max-w-[317px] text-[14px] font-[400] leading-[17px] text-[#909090]">
         {description}
       </p>
     </div>

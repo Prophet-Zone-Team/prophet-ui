@@ -46,7 +46,7 @@ export function TopAnalyticsCard({
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <p className="m-0 text-[14px] font-[300] capitalize leading-[17px] text-[#909090]">
+        <p className="m-0 text-[14px] font-[400] capitalize leading-[17px] text-[#909090]">
           {categoryLabel}
         </p>
 
@@ -56,12 +56,12 @@ export function TopAnalyticsCard({
             name={teamName}
             className="h-[26px] w-[26px] shrink-0 rounded-[6px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
           />
-          <h3 className="m-0 truncate text-[20px] font-[400] leading-[24px] text-black">
+          <h3 className="m-0 truncate text-[20px] font-[500] leading-[24px] text-black">
             {teamName}
           </h3>
         </div>
 
-        <p className="m-0 mt-[10px] max-w-[226px] text-[14px] font-[300] leading-[17px] text-black">
+        <p className="m-0 mt-[10px] max-w-[226px] text-[14px] font-[400] leading-[17px] text-black">
           {description}
         </p>
       </div>

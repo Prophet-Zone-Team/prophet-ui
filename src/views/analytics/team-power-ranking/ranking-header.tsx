@@ -18,7 +18,7 @@ export function RankingHeader({
         className
       )}
     >
-      <h2 className="m-0 text-[18px] font-[300] leading-[21px] text-black">
+      <h2 className="m-0 text-[18px] font-[400] leading-[21px] text-black">
         Team Power Ranking
       </h2>
       <ViewFullRankingLink onClick={onViewFullRanking} />

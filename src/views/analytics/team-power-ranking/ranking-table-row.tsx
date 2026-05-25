@@ -11,7 +11,7 @@ export function RankingTableRow({ entry }: RankingTableRowProps) {
   return (
     <div
       role="row"
-      className="grid grid-cols-[28px_minmax(0,1fr)_105px_78px_38px] items-center gap-x-[12px] px-[20px] py-[6px] text-[14px] font-[300] leading-[17px] text-black"
+      className="grid grid-cols-[28px_minmax(0,1fr)_105px_78px_38px] items-center gap-x-[12px] px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-black"
     >
       <span role="cell">{entry.rank}</span>
       <div role="cell" className="min-w-0">

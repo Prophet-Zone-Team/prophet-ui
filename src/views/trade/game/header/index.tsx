@@ -87,8 +87,8 @@ function TeamSide({
         />
       )}
 
-      <span className="mt-3 inline-flex max-w-full items-center gap-1 sm:mt-[21px] sm:gap-1.5">
-        <span className="truncate text-lg font-[556] capitalize leading-6 text-white sm:text-[26px] sm:leading-[31px]">
+      <span className="mt-3 inline-flex max-w-full items-center gap-[10px] sm:mt-[21px] sm:gap-1.5">
+        <span className="truncate text-lg font-[500] capitalize leading-6 text-white sm:text-[26px] sm:leading-[31px]">
           {name}
         </span>
         {teamId ? <ForwardChevronIcon /> : null}
@@ -131,14 +131,14 @@ function HeaderMetric({
 
         {statusVariant ? (
           <div className="mt-4 sm:mt-7">
-            <MatchStatusBadge variant={statusVariant} className="gap-[7px]" />
+            <MatchStatusBadge variant={"ongoing"} className="gap-[7px]" />
           </div>
         ) : null}
 
         {subtitle ? (
           <span
             className={cn(
-              "text-xs font-[556] leading-[17px] text-[#909090] sm:text-sm",
+              "text-xs font-[500] leading-[17px] text-[#909090] sm:text-sm",
               statusVariant ? "mt-5 sm:mt-[33px]" : "mt-4 sm:mt-7"
             )}
           >

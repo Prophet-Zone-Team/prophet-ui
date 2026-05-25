@@ -26,12 +26,12 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 my-2">
-      <span className="shrink-0 text-[14px] font-[300] leading-[17px] text-[#909090]">
+      <span className="shrink-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
         {label}
       </span>
       <span
         className={cn(
-          "min-w-0 text-right text-[14px] font-[300] leading-[17px] text-black",
+          "min-w-0 text-right text-[14px] font-[400] leading-[17px] text-black",
           valueClassName
         )}
         style={valueStyle}
@@ -75,7 +75,7 @@ export function Simulator() {
             name={selectedTeam.teamName}
             className="h-[36px] w-[36px] shrink-0 rounded-[6px] text-[36px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
           />
-          <span className="text-[18px] font-[400] leading-[21px] text-black">
+          <span className="text-[18px] font-[500] leading-[21px] text-black">
             {selectedTeam.teamName}
           </span>
           <svg
@@ -109,7 +109,7 @@ export function Simulator() {
           className="mt-auto flex h-[42px] w-full max-w-[307px] items-center justify-center gap-[6px] rounded-[8px] bg-[#18110F] no-underline"
           aria-label={`Open road to final simulator for ${selectedTeam.teamName}`}
         >
-          <span className="text-[14px] font-[400] leading-[17px] text-white">
+          <span className="text-[14px] font-[500] leading-[17px] text-white">
             Open Simulator
           </span>
           <svg

@@ -12,7 +12,7 @@ export function Simulator() {
       )}
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-[12px] overflow-hidden">
-        <h2 className="m-0 shrink-0 text-[18px] font-[300] leading-[21px] text-black">
+        <h2 className="m-0 shrink-0 text-[18px] font-[400] leading-[21px] text-black">
           Road to Final
         </h2>
         <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto">

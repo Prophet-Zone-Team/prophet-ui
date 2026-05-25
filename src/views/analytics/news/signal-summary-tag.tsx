@@ -39,7 +39,7 @@ export function SignalSummaryTag({
       )}
     >
       {icon}
-      <span className="whitespace-nowrap text-[16px] font-[400] leading-[19px] text-black">
+      <span className="whitespace-nowrap text-[16px] font-[500] leading-[19px] text-black">
         {label} {count}
       </span>
     </div>

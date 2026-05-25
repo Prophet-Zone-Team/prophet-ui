@@ -23,9 +23,11 @@ const STATUS_CONFIG: Record<
 };
 
 const ONGOING_DOT_SIZE = {
-  sm: "size-[9px]",
-  md: "size-[14px]"
+  sm: { className: "size-[9px]", px: 9 },
+  md: { className: "size-[14px]", px: 14 }
 } as const;
+
+const ONGOING_HALO_OFFSET = 6;
 
 const STATIC_DOT_SIZE = "size-2";
 
@@ -36,26 +38,22 @@ export interface MatchStatusBadgeProps {
 }
 
 function OngoingStatusDot({ size }: { size: "sm" | "md" }) {
-  const dotSize = ONGOING_DOT_SIZE[size];
+  const { className: dotClassName, px: dotPx } = ONGOING_DOT_SIZE[size];
+  const haloPx = dotPx + ONGOING_HALO_OFFSET;
 
   return (
     <span
-      className={cn(
-        "relative inline-flex shrink-0 items-center justify-center",
-        dotSize
-      )}
+      className="relative inline-flex shrink-0 items-center justify-center"
+      style={{ width: haloPx, height: haloPx }}
       aria-hidden
     >
       <span
         className={cn(
-          "absolute inset-0 rounded-full border-[3px] border-[rgba(123,202,37,0.3)] animate-match-status-pulse"
+          "absolute inset-0 rounded-full bg-[#7BCA254D] animate-match-status-pulse"
         )}
       />
       <span
-        className={cn(
-          "relative rounded-full bg-[#7BCA25] animate-match-status-pulse",
-          dotSize
-        )}
+        className={cn("relative z-[1] rounded-full bg-[#7BCA25]", dotClassName)}
       />
     </span>
   );
@@ -85,7 +83,7 @@ export function MatchStatusBadge({
     <span
       role="status"
       className={cn(
-        "inline-flex items-center gap-1.5 text-sm font-[556] leading-[17px]",
+        "inline-flex items-center gap-1.5 text-sm font-[400] leading-[17px]",
         config.textClass,
         className
       )}

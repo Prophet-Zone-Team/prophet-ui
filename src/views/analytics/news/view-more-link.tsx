@@ -9,7 +9,7 @@ export function ViewMoreLink({ className }: ViewMoreLinkProps) {
     <span
       className={cn(
         "inline-flex items-center gap-[7px] cursor-pointer transition-opacity hover:opacity-80",
-        "text-[14px] font-[300] text-[#3168FF]",
+        "text-[14px] font-[400] text-[#3168FF]",
         className
       )}
     >

@@ -15,7 +15,7 @@ export function ViewFullRankingLink({
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-[7px] border-0 bg-transparent p-0",
-        "text-[14px] font-[300] leading-[17px] text-[#3168FF]",
+        "text-[14px] font-[400] leading-[17px] text-[#3168FF]",
         "cursor-pointer transition-opacity hover:opacity-80",
         className
       )}

@@ -63,7 +63,7 @@ const config: Config = {
           "100%": { backgroundPosition: "-120% 0" }
         },
         "match-status-pulse": {
-          "0%, 100%": { transform: "scale(1)", opacity: "1" },
+          "0%, 100%": { transform: "scale(0.8)", opacity: "1" },
           "50%": { transform: "scale(1.25)", opacity: "0.55" }
         }
       },

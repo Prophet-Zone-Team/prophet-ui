@@ -33,7 +33,7 @@ export function FullRankingModal({
         <h2 className="m-0 px-[20px] text-[18px] font-[457] leading-[21px] text-black">
           Team Power Ranking
         </h2>
-        <p className="m-0 mt-[6px] px-[20px] text-[14px] font-[300] leading-[17px] text-[#909090]">
+        <p className="m-0 mt-[6px] px-[20px] text-[14px] font-[400] leading-[17px] text-[#909090]">
           Market-derived title and knockout-stage probabilities
         </p>
         <div className="mt-[16px] max-h-[min(60vh,520px)] overflow-y-auto">

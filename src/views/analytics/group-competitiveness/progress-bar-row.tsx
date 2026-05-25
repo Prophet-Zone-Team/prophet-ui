@@ -26,7 +26,7 @@ export function ProgressBarRow({ entry, variant, className }: ProgressBarRowProp
       )}
       aria-label={`${formatGroupLabel(entry.groupId)}, ${entry.score} out of 100`}
     >
-      <span className="text-[14px] font-[300] leading-[17px] text-[#909090]">
+      <span className="text-[14px] font-[400] leading-[17px] text-[#909090]">
         {formatGroupLabel(entry.groupId)}
       </span>
 

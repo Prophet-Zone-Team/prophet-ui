@@ -34,10 +34,10 @@ export function TeamSelectModal({
           "px-0 pb-[12px] pt-[20px]"
         )}
       >
-        <h2 className="m-0 px-[20px] text-[18px] font-[400] leading-[21px] text-black">
+        <h2 className="m-0 px-[20px] text-[18px] font-[500] leading-[21px] text-black">
           Select Team
         </h2>
-        <p className="m-0 mt-[6px] px-[20px] text-[14px] font-[300] leading-[17px] text-[#909090]">
+        <p className="m-0 mt-[6px] px-[20px] text-[14px] font-[400] leading-[17px] text-[#909090]">
           Choose a team to preview knockout path context
         </p>
         <ul
@@ -69,11 +69,11 @@ export function TeamSelectModal({
                     name={team.teamName}
                     className="h-[28px] w-[28px] shrink-0 rounded-[6px] text-[28px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
                   />
-                  <span className="min-w-0 flex-1 truncate text-[16px] font-[400] leading-[19px] text-black">
+                  <span className="min-w-0 flex-1 truncate text-[16px] font-[500] leading-[19px] text-black">
                     {team.teamName}
                   </span>
                   {isSelected ? (
-                    <span className="shrink-0 text-[12px] font-[300] leading-[14px] text-[#909090]">
+                    <span className="shrink-0 text-[12px] font-[400] leading-[14px] text-[#909090]">
                       Selected
                     </span>
                   ) : null}
