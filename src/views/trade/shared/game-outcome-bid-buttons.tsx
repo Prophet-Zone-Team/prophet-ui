@@ -18,12 +18,12 @@ export interface GameOutcomeBidButtonsProps {
 
 const gameOutcomeBidButtonSizeClass = {
   default: {
-    button: "h-[52px] gap-0.5 rounded-[12px]",
+    button: "h-[52px] gap-2 rounded-[12px]",
     title: "text-sm leading-[17px]",
     price: "text-xs leading-[14px]"
   },
   sm: {
-    button: "h-[36px] gap-0 rounded-[8px]",
+    button: "h-[36px] gap-1 rounded-[8px]",
     title: "text-[10px] leading-3",
     price: "text-[10px] leading-3"
   }
@@ -56,7 +56,7 @@ export function GameOutcomeBidButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full flex-col items-center justify-center border-0 font-[556] text-white transition-opacity",
+        "flex w-full items-center justify-center border-0 font-[556] text-white transition-opacity",
         sizeClass.button,
         onClick ? "cursor-pointer" : "cursor-default",
         onClick

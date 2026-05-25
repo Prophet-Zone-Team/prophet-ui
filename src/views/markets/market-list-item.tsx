@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Zap } from "lucide-react";
-import { useState, type KeyboardEvent } from "react";
+import type { KeyboardEvent } from "react";
 
+import { FastBidButton } from "@/components/trading/fast-bid-button";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { teamDetailHref } from "@/lib/routes/team";
 import { teamTradeHref } from "@/lib/routes/trade";
@@ -16,7 +17,6 @@ import {
 import { cn } from "@/lib/cn";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-control";
-import { MarketBidDialog } from "@/views/markets/market-bid-dialog";
 
 export interface MarketListItemProps {
   snapshot: TeamMarketSnapshot;
@@ -29,11 +29,10 @@ const rowBackgroundClassName =
   "bg-[linear-gradient(90deg,rgba(220,255,181,0.2)_0%,rgba(255,255,255,0.2)_38.67%),#FFF]";
 
 const bidButtonClassName =
-  "inline-flex h-9 w-[83px] items-center justify-center gap-1 rounded-lg bg-[#18110F] text-sm font-[556] leading-[17px] text-white";
+  "inline-flex h-9 min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] px-2 text-sm font-[556] leading-[17px] text-white disabled:cursor-wait disabled:opacity-70";
 
 export function MarketListItem({ snapshot, rank }: MarketListItemProps) {
   const router = useRouter();
-  const [bidOpen, setBidOpen] = useState(false);
   const { team, market } = snapshot;
   const isDown = market.change24h < 0;
   const changePercent = getRelativeChangePercent(
@@ -117,17 +116,15 @@ export function MarketListItem({ snapshot, rank }: MarketListItemProps) {
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          className={bidButtonClassName}
-          aria-label={`Bid on ${team.name}`}
-        >
-          <Zap
-            className="h-3.5 w-2.5 shrink-0 fill-white stroke-white"
-            aria-hidden="true"
-          />
-          Bid
-        </button>
+        <FastBidButton snapshot={snapshot} className={bidButtonClassName}>
+          <>
+            <Zap
+              className="h-3.5 w-2.5 shrink-0 fill-white stroke-white"
+              aria-hidden="true"
+            />
+            Bid
+          </>
+        </FastBidButton>
         <Link
           className="inline-flex h-9 w-[83px] items-center justify-center rounded-lg border border-[#909090] bg-white text-sm font-[556] leading-[17px] text-[#18110F]"
           href={detailHref}
@@ -135,12 +132,6 @@ export function MarketListItem({ snapshot, rank }: MarketListItemProps) {
           Details
         </Link>
       </div>
-
-      <MarketBidDialog
-        open={bidOpen}
-        onClose={() => setBidOpen(false)}
-        snapshot={snapshot}
-      />
     </article>
   );
 }

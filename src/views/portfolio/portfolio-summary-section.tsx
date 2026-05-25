@@ -28,15 +28,8 @@ import { usePortfolioContext } from "./context";
 export interface PortfolioSummarySectionProps {}
 
 export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
-  const {
-    session,
-    portfolio,
-    status,
-    onConnectWallet,
-    reload,
-    onConnectWallet,
-    reload
-  } = usePortfolioContext();
+  const { session, portfolio, status, onConnectWallet, reload } =
+    usePortfolioContext();
 
   const [copied, setCopied] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);

@@ -7,7 +7,7 @@ import {
   LogoutIcon,
   FastBidIcon
 } from "@/layout/header/wallet-menu-icons";
-import { RightArrowIcon, CheckIcon, CopyIcon } from "@/components/icons";
+import { CheckIcon, CopyIcon, RightArrowIcon } from "@/components/icons";
 
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import {
@@ -16,19 +16,32 @@ import {
   walletMenuLogoutClass
 } from "@/layout/header/wallet-menu-ui";
 import { formatShortWallet } from "@/lib/team/detail-format";
+import {
+  DEFAULT_FAST_BID_AMOUNT,
+  formatFastBidAmountDisplay,
+  useConfigHydrated,
+  useFastBidAmount
+} from "@/store";
 
 export interface WalletMenuDropdownProps {
   polymarketAddress: string;
   onClose: () => void;
   onLogout: () => void | Promise<void>;
+  onOpenFastBid: () => void;
 }
 
 export function WalletMenuDropdown({
   polymarketAddress,
   onClose,
-  onLogout
+  onLogout,
+  onOpenFastBid
 }: WalletMenuDropdownProps) {
   const [copied, setCopied] = useState(false);
+  const fastBidAmount = useFastBidAmount();
+  const hasHydrated = useConfigHydrated();
+  const fastBidDisplay = formatFastBidAmountDisplay(
+    hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT
+  );
 
   const copyAddress = useCallback(async () => {
     try {
@@ -73,13 +86,17 @@ export function WalletMenuDropdown({
         type="button"
         role="menuitem"
         className={walletMenuItemClass}
-        onClick={() => {}}
+        onClick={() => {
+          onClose();
+          onOpenFastBid();
+        }}
       >
         <span className="flex items-center gap-2">
           <FastBidIcon />
           <span>Fast Bid</span>
         </span>
-        <span className="shrink-0">
+        <span className="flex items-center gap-2">
+          <span className="shrink-0 text-sm text-black">{fastBidDisplay}</span>
           <RightArrowIcon />
         </span>
       </button>

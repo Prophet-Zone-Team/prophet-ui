@@ -33,7 +33,7 @@ export const walletMenuDropdownClass = cn(
 );
 
 export const walletMenuItemClass = cn(
-  "flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left",
+  "flex w-full justify-between items-center gap-3 rounded-lg px-2 py-2.5 text-left",
   "text-sm font-[457] leading-[17px] text-black transition-colors hover:bg-[#f3f8fd]"
 );
 

@@ -30,3 +30,13 @@ export {
 } from "@/store/trade-ticket-store";
 export { useBalancesStore } from "@/store/use-balances";
 export { usePricesStore } from "@/store/use-prices";
+
+export {
+  DEFAULT_FAST_BID_AMOUNT,
+  FAST_BID_PRESET_AMOUNTS,
+  formatFastBidAmountDisplay,
+  useFastBidAmount,
+  useSetFastBidAmount,
+  useUserConfigStore
+} from "@/store/user-config-store";
+export { useConfigHydrated } from "@/store/use-config-hydrated";

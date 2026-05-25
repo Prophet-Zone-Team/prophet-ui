@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import { LoginModal } from "@/components/auth/login-modal";
-import { writeActiveQuickBidWalletAddress } from "@/components/trading/quick-bid-amount";
 import {
   disconnectTradingSession,
   loadTradingSession,
@@ -64,7 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // ignore disconnect errors during cleanup
       }
 
-      writeActiveQuickBidWalletAddress(undefined);
       store.clearAuth();
       store.setLoginInProgress(false);
       store.setLoginStep(undefined);

@@ -6,6 +6,7 @@ import { useAuth } from "@/context/auth";
 import { WalletConnectedBar } from "@/layout/header/wallet-connected-bar";
 import { WalletLoginButton } from "@/layout/header/wallet-login-button";
 import { WalletMenuDropdown } from "@/layout/header/wallet-menu-dropdown";
+import { FastBidSettingDialog } from "@/layout/header/fast-bid-setting-dialog";
 import { DepositDialog } from "@/views/portfolio/deposit";
 import { formatNumber } from "@/utils";
 
@@ -45,6 +46,7 @@ export function WalletMenuButton() {
   } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
+  const [fastBidOpen, setFastBidOpen] = useState(false);
   const [message, setMessage] = useState<string | undefined>();
 
   useEffect(() => {
@@ -143,12 +145,18 @@ export function WalletMenuButton() {
           polymarketAddress={polymarketAddress}
           onClose={() => setIsOpen(false)}
           onLogout={logout}
+          onOpenFastBid={() => setFastBidOpen(true)}
         />
       ) : null}
 
       <DepositDialog
         open={depositOpen}
         onClose={() => setDepositOpen(false)}
+      />
+
+      <FastBidSettingDialog
+        open={fastBidOpen}
+        onClose={() => setFastBidOpen(false)}
       />
 
       {message ? (
