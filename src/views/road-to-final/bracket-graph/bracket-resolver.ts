@@ -229,6 +229,22 @@ function resolveCandidateTeams(
   return resolved.team ? [resolved.team] : [];
 }
 
+export function getSeedCandidateTeams(
+  seed: string,
+  match: BracketMatchConfig,
+  placements: GroupPlacements,
+  thirdPlaceOption: ThirdPlaceAllocationOption | undefined,
+  knockoutWinners: KnockoutWinners
+): WorldCup2026GroupTeam[] {
+  return resolveCandidateTeams(
+    seed,
+    match,
+    placements,
+    thirdPlaceOption,
+    knockoutWinners
+  );
+}
+
 export function getMatchCandidateTeams(
   match: BracketMatchConfig,
   placements: GroupPlacements,

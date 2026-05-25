@@ -1,13 +1,10 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { cn } from "@/lib/cn";
 import type { PathResult } from "@/types/market";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 
 import {
   LEFT_BRACKET_COLUMNS,
-  MATCH_LOOKUP,
   RIGHT_BRACKET_COLUMNS
 } from "../lib/bracket-config";
 import type {
@@ -17,13 +14,11 @@ import type {
   KnockoutWinners
 } from "../types";
 import {
-  getMatchCandidateTeams,
-  isActiveSlot,
+  getSeedCandidateTeams,
   resolveBracketSeed
 } from "./bracket-resolver";
 import { BracketMatchCard } from "./bracket-match-card";
 import { SeedSlot } from "./seed-slot";
-import { WinnerSelect } from "./winner-select";
 
 function CollapsedBracketSide({
   onToggle,
@@ -110,17 +105,20 @@ function BracketSideColumns({
 function ResolvedFinalSlot({
   active,
   knockoutWinners,
+  onWinnerChange,
   placements,
   seed,
   thirdPlaceOption
 }: {
   active?: boolean;
   knockoutWinners: KnockoutWinners;
+  onWinnerChange: (matchId: number, teamId: string) => void;
   placements: GroupPlacements;
   seed: string;
   thirdPlaceOption?: ThirdPlaceAllocationOption;
 }) {
-  const match = { matchId: 104, left: "W101", right: "W102", stage: "FINAL" };
+  const matchId = 104;
+  const match = { matchId, left: "W101", right: "W102", stage: "FINAL" };
   const resolved = resolveBracketSeed(
     seed,
     match,
@@ -128,12 +126,33 @@ function ResolvedFinalSlot({
     thirdPlaceOption,
     knockoutWinners
   );
+  const candidates = getSeedCandidateTeams(
+    seed,
+    match,
+    placements,
+    thirdPlaceOption,
+    knockoutWinners
+  );
+  const selectedWinnerId = knockoutWinners[matchId];
+  const slotTeamId =
+    resolved.team?.id ?? (candidates.length === 1 ? candidates[0].id : undefined);
+  const selected = Boolean(
+    selectedWinnerId && slotTeamId && selectedWinnerId === slotTeamId
+  );
+  const selectable = candidates.length === 1;
 
   return (
     <SeedSlot
       active={active || resolved.active}
+      disabled={!selectable}
       label={resolved.label}
+      onClick={
+        selectable
+          ? () => onWinnerChange(matchId, candidates[0].id)
+          : undefined
+      }
       seed={resolved.seed}
+      selected={selected}
       team={resolved.team}
     />
   );
@@ -161,17 +180,6 @@ export function BracketCanvas({
   variant?: "fullscreen";
 }) {
   const finalActive = activeMatchIds.has(104);
-  const finalMatch = MATCH_LOOKUP.get(104) ?? {
-    matchId: 104,
-    left: "W101",
-    right: "W102"
-  };
-  const finalCandidates = getMatchCandidateTeams(
-    finalMatch,
-    placements,
-    thirdPlaceOption,
-    knockoutWinners
-  );
 
   return (
     <div
@@ -182,7 +190,7 @@ export function BracketCanvas({
     >
       <div
         className={cn(
-          "flex min-w-max items-stretch gap-[12px] py-[8px]",
+          "mx-auto flex w-fit min-w-max items-stretch justify-center gap-[12px] py-[8px]",
           collapsedSides.left && "pl-0",
           collapsedSides.right && "pr-0"
         )}
@@ -210,14 +218,7 @@ export function BracketCanvas({
           aria-label="Final"
         >
           <span className="text-[10px] font-[300] text-[#909090]">Final</span>
-          <div
-            className={cn(
-              "w-full rounded-[8px] border p-[12px]",
-              finalActive
-                ? "border-[#18110F] bg-[#F9FAFC]"
-                : "border-[#EBEBEB] bg-white"
-            )}
-          >
+          <div className="w-full rounded-[8px] border border-[#EBEBEB] bg-white p-[12px]">
             <span className="rounded-[4px] bg-[#F3F4F6] px-[6px] py-[2px] text-[10px] text-[#909090]">
               M104
             </span>
@@ -228,6 +229,7 @@ export function BracketCanvas({
               <ResolvedFinalSlot
                 active={activeMatchIds.has(101)}
                 knockoutWinners={knockoutWinners}
+                onWinnerChange={onWinnerChange}
                 placements={placements}
                 seed="W101"
                 thirdPlaceOption={thirdPlaceOption}
@@ -236,18 +238,12 @@ export function BracketCanvas({
               <ResolvedFinalSlot
                 active={activeMatchIds.has(102)}
                 knockoutWinners={knockoutWinners}
+                onWinnerChange={onWinnerChange}
                 placements={placements}
                 seed="W102"
                 thirdPlaceOption={thirdPlaceOption}
               />
             </div>
-            <WinnerSelect
-              label="Champion"
-              matchId={104}
-              onWinnerChange={onWinnerChange}
-              options={finalCandidates}
-              value={knockoutWinners[104] ?? ""}
-            />
             <div className="mt-[8px] text-center text-[24px]" aria-hidden>
               🏆
             </div>

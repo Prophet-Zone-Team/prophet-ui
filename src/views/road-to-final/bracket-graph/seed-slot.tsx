@@ -2,26 +2,41 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import type { WorldCup2026GroupTeam } from "@/data/world-cup-2026/groups";
 import { cn } from "@/lib/cn";
 
+import {
+  bracketSelectedClassName,
+  bracketSelectedStyle
+} from "./selection-styles";
+
 export function SeedSlot({
   active = false,
+  disabled = false,
   label,
+  onClick,
   seed,
+  selected = false,
   team
 }: {
   active?: boolean;
+  disabled?: boolean;
   label: string;
+  onClick?: () => void;
   seed: string;
+  selected?: boolean;
   team?: WorldCup2026GroupTeam;
 }) {
-  return (
-    <div
-      className={cn(
-        "flex min-w-0 items-center gap-[6px] rounded-[6px] border px-[8px] py-[6px]",
-        active
-          ? "border-[#18110F] bg-[#F9FAFC]"
-          : "border-[#EBEBEB] bg-white"
-      )}
-    >
+  const highlighted = selected || active;
+  const className = cn(
+    "flex min-w-0 items-center gap-[6px] rounded-[6px] px-[8px] py-[6px] text-left",
+    bracketSelectedClassName(highlighted),
+    onClick &&
+      !disabled &&
+      "cursor-pointer transition-[border-color,box-shadow,background-color] hover:border-[#22C55E]",
+    disabled && !highlighted && "cursor-not-allowed opacity-60"
+  );
+  const style = bracketSelectedStyle(highlighted);
+
+  const content = (
+    <>
       <span className="shrink-0 text-[10px] font-[300] text-[#909090]">
         {seed}
       </span>
@@ -42,6 +57,27 @@ export function SeedSlot({
       <strong className="min-w-0 truncate text-[12px] font-[400] text-black">
         {label}
       </strong>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={cn(className, "w-full appearance-none outline-none")}
+        disabled={disabled}
+        aria-pressed={selected}
+        style={style}
+        onClick={onClick}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className={className} style={style}>
+      {content}
     </div>
   );
 }
