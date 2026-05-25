@@ -6,6 +6,9 @@
   "preview_urls": false,
   "compatibility_date": "2026-05-12",
   "compatibility_flags": ["nodejs_compat"],
+  "alias": {
+    "server-only": "./scripts/server-only-stub.mjs"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
