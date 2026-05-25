@@ -6,6 +6,8 @@ import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 import { findNewsArticleBySlug } from "@/lib/news/news-slugs";
 import { getSignalDataRepository } from "@/server/signal-data/repository";
 
+export const runtime = "edge";
+
 interface PageProps {
   params: Promise<{
     slug: string;

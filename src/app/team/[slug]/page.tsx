@@ -4,6 +4,8 @@ import { TeamDetailPage } from "@/components/team/team-detail-page";
 import { getTheOddsApiWorldCupWinnerOdds } from "@/data/odds/the-odds-api-provider";
 import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 
+export const runtime = "edge";
+
 interface TeamPageProps {
   params: Promise<{
     slug: string;

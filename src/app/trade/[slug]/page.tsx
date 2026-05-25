@@ -1,5 +1,7 @@
 import { resolveTradeRedirect } from "@/app/trade/_shared/render-trade-page";
 
+export const runtime = "edge";
+
 interface LegacyTradeRouteProps {
   params: Promise<{
     slug: string;
