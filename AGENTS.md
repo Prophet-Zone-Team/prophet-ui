@@ -8,6 +8,7 @@ The product helps eligible users understand market sentiment, probability moveme
 
 ## Product Boundaries
 
+
 - Build a sports prediction market terminal, not a sports news site.
 - Build a data analysis and embedded trading experience, not a sportsbook.
 - Real order flows must use the user's own account, signer, deposit wallet or funder, funds, and explicit confirmation.
