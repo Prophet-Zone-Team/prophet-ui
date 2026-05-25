@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { getFootballMatches } from "@/data/providers/football-matches";
 import { getNewsArticleSlug } from "@/lib/news/news-slugs";
+import { newsDetailHref } from "@/lib/routes/news";
 import { teamTradeHref, gameTradeHref } from "@/lib/routes/trade";
 import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { worldCupTeams } from "@/data/teams/world-cup-teams";
@@ -138,7 +139,7 @@ async function searchNews(q: string, type: SearchResultType | "all"): Promise<Se
       type: "news",
       title: article.title,
       subtitle: article.source ?? "World Cup news",
-      href: `/news/${getNewsArticleSlug(article)}`,
+      href: newsDetailHref(getNewsArticleSlug(article)),
       score: 60,
     } satisfies SearchResult;
   });

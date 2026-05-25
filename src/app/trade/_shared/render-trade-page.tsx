@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { getTheOddsApiWorldCupWinnerOdds } from "@/data/odds/the-odds-api-provider";
 import { getFootballMatches } from "@/data/providers/football-matches";
@@ -10,10 +10,6 @@ import {
   findWorldCupMatch,
   getRelatedMatches
 } from "@/lib/market/game-market-snapshot";
-import {
-  gameTradeHref,
-  teamTradeHref
-} from "@/lib/routes/trade";
 import type { WorldCupMatch } from "@/types/market";
 import TradeGameView from "@/views/trade/game";
 import TradeTeamView from "@/views/trade/team";
@@ -41,21 +37,6 @@ function resolveTeamMarketOptions(teamId: string): WorldCupMarketDataOptions {
     includeNews: false,
     footballContextTeamIds: [teamId]
   };
-}
-
-export async function resolveTradeRedirect(slug: string) {
-  if (worldCupTeams.some((team) => team.id === slug)) {
-    redirect(teamTradeHref(slug));
-  }
-
-  const { matches } = await getFootballMatches();
-  const footballMatch = findWorldCupMatch(slug, matches);
-
-  if (footballMatch) {
-    redirect(gameTradeHref(slug));
-  }
-
-  notFound();
 }
 
 export async function renderGameTradePage(slug: string) {

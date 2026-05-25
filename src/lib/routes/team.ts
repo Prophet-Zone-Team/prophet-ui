@@ -1,3 +1,3 @@
 export function teamDetailHref(teamId: string) {
-  return `/team/${teamId}`;
+  return `/team?slug=${encodeURIComponent(teamId)}`;
 }

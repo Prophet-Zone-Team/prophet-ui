@@ -4,16 +4,19 @@ import { TeamDetailPage } from "@/components/team/team-detail-page";
 import { getTheOddsApiWorldCupWinnerOdds } from "@/data/odds/the-odds-api-provider";
 import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 
-export const runtime = "edge";
-
 interface TeamPageProps {
-  params: Promise<{
-    slug: string;
+  searchParams: Promise<{
+    slug?: string;
   }>;
 }
 
-export default async function Page({ params }: TeamPageProps) {
-  const { slug } = await params;
+export default async function Page({ searchParams }: TeamPageProps) {
+  const { slug } = await searchParams;
+
+  if (!slug) {
+    notFound();
+  }
+
   const [marketData, oddsData] = await Promise.all([
     getWorldCupMarketData({
       footballContextTeamIds: [slug],

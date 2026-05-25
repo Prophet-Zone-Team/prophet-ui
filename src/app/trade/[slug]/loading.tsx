@@ -1,5 +1,0 @@
-import { TradeGameLoading } from "@/views/trade/game/loading";
-
-export default function LegacyTradeRouteLoading() {
-  return <TradeGameLoading />;
-}

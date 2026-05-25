@@ -1,11 +1,11 @@
 import { worldCupTeams } from "@/data/teams/world-cup-teams";
 
 export function gameTradeHref(matchId: string) {
-  return `/trade/game/${matchId}`;
+  return `/trade/game?slug=${encodeURIComponent(matchId)}`;
 }
 
 export function teamTradeHref(teamId: string) {
-  return `/trade/team/${teamId}`;
+  return `/trade/team?slug=${encodeURIComponent(teamId)}`;
 }
 
 export function resolveTradeHref(slug: string) {

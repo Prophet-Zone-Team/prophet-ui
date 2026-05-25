@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getNewsArticleSlug } from "@/lib/news/news-slugs";
+import { newsDetailHref } from "@/lib/routes/news";
 import type { NewsArticle, TeamMarketSnapshot } from "@/types/market";
 export function NewsPage({
   articles,
@@ -18,7 +19,7 @@ export function NewsPage({
         </section>
         <section className="news-index-list">
           {articles.length > 0 ? articles.map((article) => (
-            <Link key={article.id} href={`/news/${getNewsArticleSlug(article)}`} className="news-index-card">
+            <Link key={article.id} href={newsDetailHref(getNewsArticleSlug(article))} className="news-index-card">
               <span>{article.source ?? "World Cup news"} / {formatDate(article.publishedAt)}</span>
               <h2>{article.title}</h2>
               <p>{article.snippet ?? "Related World Cup coverage stored from the news signal cache."}</p>
