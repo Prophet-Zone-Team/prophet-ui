@@ -48,6 +48,25 @@ export function findSnapshotForTokenId(
   });
 }
 
+export function findSnapshotForConditionId(
+  conditionId: string,
+  snapshots: TeamMarketSnapshot[]
+): TeamMarketSnapshot | undefined {
+  return snapshots.find(
+    (snapshot) => snapshot.market.polymarket?.conditionId === conditionId
+  );
+}
+
+export function isAuthoritativeSnapshotForPosition(
+  position: UserPositionRecord,
+  snapshot: TeamMarketSnapshot
+): boolean {
+  return (
+    findSnapshotForTokenId(position.asset, [snapshot]) !== undefined ||
+    findSnapshotForConditionId(position.conditionId, [snapshot]) !== undefined
+  );
+}
+
 export function resolveOutcomeSideForPosition(
   position: UserPositionRecord,
   snapshot: TeamMarketSnapshot
@@ -59,6 +78,22 @@ export function resolveOutcomeSideForPosition(
   }
 
   if (tokens?.no?.tokenId === position.asset) {
+    return "no";
+  }
+
+  const normalizedOutcome = position.outcome.trim().toLowerCase();
+
+  if (
+    tokens?.yes?.outcome &&
+    tokens.yes.outcome.trim().toLowerCase() === normalizedOutcome
+  ) {
+    return "yes";
+  }
+
+  if (
+    tokens?.no?.outcome &&
+    tokens.no.outcome.trim().toLowerCase() === normalizedOutcome
+  ) {
     return "no";
   }
 

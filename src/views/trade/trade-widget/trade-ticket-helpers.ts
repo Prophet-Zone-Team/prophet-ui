@@ -153,6 +153,9 @@ export function buildTeamTradePreview(input: {
   amount: number;
   limitPrice: number;
   orderType: TradingOrderType;
+  tokenId?: string;
+  maxShareSize?: number;
+  acceptingOrders?: boolean;
 }): BidOrderPreview {
   return buildBidOrderPreview({
     snapshot: input.snapshot,
@@ -160,8 +163,32 @@ export function buildTeamTradePreview(input: {
     tradeSide: input.tradeSide,
     amount: input.amount,
     limitPrice: input.limitPrice,
-    orderType: input.orderType
+    orderType: input.orderType,
+    tokenId: input.tokenId,
+    maxShareSize: input.maxShareSize,
+    acceptingOrders: input.acceptingOrders
   });
+}
+
+export async function fetchMarketAcceptingOrders(input: {
+  slug?: string;
+  conditionId?: string;
+}): Promise<boolean | undefined> {
+  const query = new URLSearchParams();
+
+  if (input.conditionId) {
+    query.set("conditionId", input.conditionId);
+  } else if (input.slug) {
+    query.set("slug", input.slug);
+  } else {
+    return undefined;
+  }
+
+  const payload = await fetchJson<{ acceptingOrders?: boolean }>(
+    `/api/trading/market-status?${query.toString()}`
+  );
+
+  return payload.acceptingOrders;
 }
 
 export function buildGameTradePreview(input: {
@@ -208,6 +235,25 @@ export function toBidOrderPreview(
     canSubmitRealOrder: gamePreview.canSubmitRealOrder,
     disabledReason: gamePreview.disabledReason
   };
+}
+
+export async function fetchConditionalTokenBalance(
+  tokenId: string
+): Promise<number | undefined> {
+  const query = new URLSearchParams({
+    tradeSide: "sell",
+    tokenId,
+    cost: "0.01",
+    size: "0.01",
+    totalCost: "0.01",
+    estimatedTakerFee: "0"
+  });
+
+  const readiness = await fetchJson<UserTradingReadiness>(
+    `/api/trading/readiness?${query.toString()}`
+  );
+
+  return readiness.balances?.conditionalTokenBalance;
 }
 
 export async function fetchReadinessForPreview(
@@ -546,10 +592,10 @@ export function resolveSellQuickAmount(
   }
 
   if (fraction === "max") {
-    return String(availableShares);
+    return String(Math.floor(availableShares * 10000) / 10000);
   }
 
-  const amount = Math.round(availableShares * fraction * 10000) / 10000;
+  const amount = Math.floor(availableShares * fraction * 10000) / 10000;
 
   return amount > 0 ? String(amount) : undefined;
 }
@@ -572,7 +618,8 @@ export function resolveQuickAmountAllBalance(
     return undefined;
   }
 
-  const balance = readiness.balances.clobUsdcAvailable;
+  const balance =
+    readiness.balances.clobUsdcAvailable ?? readiness.balances.usdcAvailable;
   return balance !== undefined && balance > 0 ? Math.floor(balance) : undefined;
 }
 

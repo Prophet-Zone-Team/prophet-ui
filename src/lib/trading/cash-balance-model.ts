@@ -32,3 +32,16 @@ export function mapBalanceSnapshotToCash(snapshot: UserBalanceSnapshot): CashBal
     updatedAt: snapshot.updatedAt,
   };
 }
+
+/** Spendable USDC for trade-ticket cash display and quick-amount "all". */
+export function resolveTradeTicketAvailableCash(
+  readiness: UserTradingReadiness | undefined
+): number | undefined {
+  const balances = readiness?.balances;
+
+  if (!balances) {
+    return undefined;
+  }
+
+  return balances.clobUsdcAvailable ?? balances.usdcAvailable;
+}

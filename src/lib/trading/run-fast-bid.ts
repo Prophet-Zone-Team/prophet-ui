@@ -2,21 +2,30 @@
 
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
-import { fetchJson, getQuickBidSetupIssue } from "@/components/trading/quick-bid-account-setup";
-import { getOrCreateQuickBidSessionSigner } from "@/components/trading/quick-bid-session-signer";
 import type { AuthContextValue } from "@/context/auth/auth-context";
-import { buildBidOrderPreview, type BidOrderPreview } from "@/lib/market/polymarket-order";
-import { calculateReferencePrice } from "@/lib/market/order-math";
 import {
   formatOrderToastSummary,
+  resolveOrderErrorMessage,
   showOrderErrorToast,
   showOrderSubmittedToast
 } from "@/lib/trading/order-toast";
-import { createLocalClobWalletClient } from "@/lib/trading/viem-clob-signer";
-import type { TeamMarketSnapshot, UserOrderPreview, UserTradingReadiness } from "@/types/market";
-import { submitSignedTradeOrder } from "@/views/trade/trade-widget/trade-ticket-helpers";
+import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
+import { useAuthStore } from "@/store/auth-store";
+import type { TeamMarketSnapshot } from "@/types/market";
+import {
+  buildTeamTradePreview,
+  buildTeamUserOrderPreview,
+  ensureTradingReadyForBid,
+  fetchReadinessForPreview,
+  getTeamDefaultLimitPrice,
+  submitSignedTradeOrder
+} from "@/views/trade/trade-widget/trade-ticket-helpers";
 
 export type FastBidStatus = "idle" | "checking" | "submitting";
+
+const FAST_BID_OUTCOME_SIDE = "yes" as const;
+const FAST_BID_TRADE_SIDE = "buy" as const;
+const FAST_BID_ORDER_TYPE = "FAK" as const;
 
 export interface RunFastBidOptions {
   snapshot: TeamMarketSnapshot;
@@ -40,50 +49,56 @@ export async function runFastBid({
     return;
   }
 
+  if (!auth) {
+    showOrderErrorToast("Connect your wallet to continue.");
+    return;
+  }
+
   onStatusChange?.("checking");
 
   try {
-    let session = auth?.session;
-
-    if (!auth?.isAuthenticated || !session) {
-      const loginResult = await auth?.openLogin();
-      session = loginResult?.session;
-    }
-
-    const setupIssue = await getQuickBidSetupIssue(session);
-
-    if (setupIssue) {
-      throw new Error(setupIssue);
-    }
-
-    if (!session?.funderAddress) {
-      throw new Error("Trading session is missing a Polymarket deposit wallet.");
-    }
-
     const preview = buildFastBidPreview(snapshot, amount);
+    const orderReadiness = await fetchReadinessForPreview(
+      preview,
+      FAST_BID_TRADE_SIDE
+    );
 
-    if (!preview.canSubmitRealOrder) {
+    const gate = await ensureTradingReadyForBid({
+      session: resolveTradingSession(auth.session),
+      authReadiness: auth.readiness,
+      orderReadiness,
+      previewCanSubmit: preview.canSubmitRealOrder,
+      previewDisabledReason: preview.disabledReason,
+      openLogin: () => auth.openLogin(),
+      signClobCredentials: () => auth.signClobCredentials(),
+      signTokenApprovals: () => auth.signTokenApprovals(),
+      refreshSetupReadiness: () => auth.refreshSetupReadiness()
+    });
+
+    if (!gate.ok) {
+      if (gate.action === "show_error" || gate.action === "retry_eligibility") {
+        showOrderErrorToast(gate.message);
+      }
+
+      onStatusChange?.("idle");
+      return;
+    }
+
+    const session = resolveTradingSession(auth.session);
+
+    if (!session?.funderAddress || !preview.tokenId) {
       throw new Error(
-        preview.disabledReason ?? "This market is not available for real orders."
+        "A connected wallet, deployed deposit wallet, and Polymarket token are required."
       );
     }
 
-    const readiness = await loadReadinessForPreview(preview);
-    const readinessError = getReadinessError(readiness);
-
-    if (readinessError) {
-      throw new Error(readinessError);
-    }
-
-    const sessionSigner = getOrCreateQuickBidSessionSigner(session.walletAddress);
     onStatusChange?.("submitting");
 
     const result = await submitSignedTradeOrder({
       session,
       preview,
-      orderType: "FAK",
-      userOrderPreview: buildUserOrderPreview(snapshot, preview),
-      signer: createLocalClobWalletClient(sessionSigner.privateKey)
+      orderType: FAST_BID_ORDER_TYPE,
+      userOrderPreview: buildTeamUserOrderPreview(snapshot, preview)
     });
 
     showOrderSubmittedToast(
@@ -100,77 +115,31 @@ export async function runFastBid({
         onViewPortfolio: () => router.push("/portfolio")
       }
     );
+
+    await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
+    await auth.refreshSetupReadiness();
     onStatusChange?.("idle");
   } catch (error) {
     onStatusChange?.("idle");
-    showOrderErrorToast(error);
+    showOrderErrorToast(resolveOrderErrorMessage(error));
   }
-}
-
-async function loadReadinessForPreview(preview: BidOrderPreview) {
-  const query = new URLSearchParams({
-    tradeSide: "buy",
-    cost: String(preview.estimatedCost),
-    size: String(preview.shareSize),
-    totalCost: String(preview.estimatedTotalCost),
-    estimatedTakerFee: String(preview.estimatedTakerFee)
-  });
-
-  if (preview.tokenId) {
-    query.set("tokenId", preview.tokenId);
-  }
-
-  return fetchJson<UserTradingReadiness>(`/api/trading/readiness?${query.toString()}`);
 }
 
 export function buildFastBidPreview(snapshot: TeamMarketSnapshot, amount: number) {
-  return buildBidOrderPreview({
+  return buildTeamTradePreview({
     snapshot,
-    outcomeSide: "yes",
-    tradeSide: "buy",
+    outcomeSide: FAST_BID_OUTCOME_SIDE,
+    tradeSide: FAST_BID_TRADE_SIDE,
     amount,
-    limitPrice:
-      snapshot.market.polymarket?.tokens.yes?.price ??
-      calculateReferencePrice(snapshot.market.probability, "yes"),
-    orderType: "FAK"
+    limitPrice: getTeamDefaultLimitPrice(
+      snapshot,
+      FAST_BID_OUTCOME_SIDE,
+      FAST_BID_TRADE_SIDE
+    ),
+    orderType: FAST_BID_ORDER_TYPE
   });
 }
 
-function buildUserOrderPreview(
-  snapshot: TeamMarketSnapshot,
-  preview: BidOrderPreview
-): UserOrderPreview {
-  if (!preview.tokenId) {
-    throw new Error("A Polymarket token ID is required before submitting a real order.");
-  }
-
-  return {
-    marketId:
-      snapshot.market.polymarket?.marketId ?? snapshot.market.polymarket?.conditionId,
-    tokenId: preview.tokenId,
-    teamId: snapshot.team.id,
-    outcome: preview.outcomeSide,
-    side: preview.tradeSide,
-    orderType: "FAK",
-    limitPrice: preview.sidePrice,
-    size: preview.shareSize,
-    estimatedCost: preview.estimatedCost,
-    estimatedTakerFee: preview.estimatedTakerFee,
-    estimatedTotalCost: preview.estimatedTotalCost,
-    potentialOutcome: preview.potentialOutcome,
-    tickSize: preview.tickSize ?? "0.01",
-    negRisk: preview.negRisk,
-    stale: false,
-    warnings: preview.disabledReason ? [preview.disabledReason] : []
-  };
-}
-
-function getReadinessError(readiness: UserTradingReadiness) {
-  const failed = readiness.checks.find((check) => check.status === "fail");
-
-  if (!failed) {
-    return undefined;
-  }
-
-  return `${failed.label}: ${failed.detail}`;
+function resolveTradingSession(fallback?: AuthContextValue["session"]) {
+  return useAuthStore.getState().session ?? fallback;
 }

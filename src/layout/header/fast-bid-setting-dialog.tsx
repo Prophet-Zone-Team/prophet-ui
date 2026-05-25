@@ -96,7 +96,8 @@ export function FastBidSettingDialog({
               value={draftInput}
               onChange={(event) => handleInputChange(event.target.value)}
               aria-label="Fast bid amount"
-              className="max-w-full field-sizing-content border-0 bg-transparent text-[36px] font-[556] leading-[43px] text-black outline-none focus:ring-0"
+              style={{ fieldSizing: "content" }}
+              className="max-w-full border-0 bg-transparent text-[36px] font-[556] leading-[43px] text-black outline-none focus:ring-0"
             />
           </label>
 

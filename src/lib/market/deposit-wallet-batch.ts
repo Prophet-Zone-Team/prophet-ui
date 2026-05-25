@@ -211,6 +211,8 @@ export function buildTradingApprovalBatch({
     }),
   ];
 
+  // Polymarket relayer rejects batch self-calls to authorizeSessionSigner on the
+  // deposit wallet (target === walletAddress). Do not add this call to relayer batches.
   if (sessionSignerAddress && sessionSignerValidUntil) {
     calls.push(
       createAuthorizeSessionSignerCall({

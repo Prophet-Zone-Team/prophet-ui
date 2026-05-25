@@ -1,14 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
+import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
 import {
   findGameMarketOutcome,
   resolveGameOutcomeTradePrice
 } from "@/lib/market/game-outcome-price";
-import { calculateReferencePrice } from "@/lib/market/order-math";
+import {
+  calculateReferencePrice,
+  resolveMaxSellShares
+} from "@/lib/market/order-math";
 import {
   formatOrderToastSummary,
   resolveOrderErrorMessage,
@@ -22,6 +28,7 @@ import {
   useSetTradeLimitExpirationCustom,
   useSetTradeLimitPrice,
   useSetTradeOutcomeSide,
+  useTradeTicketStore,
   useTradeAmount,
   useTradeLimitExpiration,
   useTradeLimitExpirationCustom,
@@ -42,6 +49,8 @@ import {
   canSubmitTradeTicket,
   deriveTradeActionLabel,
   ensureTradingReadyForBid,
+  fetchConditionalTokenBalance,
+  fetchMarketAcceptingOrders,
   fetchMarketOutcomeShares,
   fetchReadinessForPreview,
   formatGameDefaultLimitPriceString,
@@ -122,10 +131,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const [message, setMessage] = useState<string | undefined>();
   const [eligibilityRetryAvailable, setEligibilityRetryAvailable] =
     useState(false);
+  const [positionAcceptingOrders, setPositionAcceptingOrders] = useState<
+    boolean | undefined
+  >();
   const [outcomeShares, setOutcomeShares] = useState<OutcomeShareMap>({
     yes: 0,
     no: 0
   });
+  const readinessFetchGeneration = useRef(0);
 
   const orderAmount = parseOrderAmount(amount);
   const orderType = resolveOrderType(orderMode);
@@ -160,10 +173,42 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const sellPosition =
     input.variant === "team" ? input.sellPosition : undefined;
 
+  const maxSellShares = useMemo(() => {
+    if (tradeSide !== "sell") {
+      return undefined;
+    }
+
+    const positionSize =
+      sellPosition?.size ??
+      (outcomeShares[outcomeSide] > 0 ? outcomeShares[outcomeSide] : undefined);
+
+    return resolveMaxSellShares(
+      positionSize,
+      readiness?.balances?.conditionalTokenBalance
+    );
+  }, [
+    outcomeShares,
+    outcomeSide,
+    readiness?.balances?.conditionalTokenBalance,
+    sellPosition?.size,
+    tradeSide
+  ]);
+
   const availableShares =
-    sellPosition && tradeSide === "sell"
-      ? sellPosition.size
-      : outcomeShares[outcomeSide];
+    tradeSide === "sell" ? (maxSellShares ?? 0) : outcomeShares[outcomeSide];
+
+  const cappedOrderAmount =
+    maxSellShares !== undefined
+      ? Math.min(orderAmount, maxSellShares)
+      : orderAmount;
+
+  const sellAcceptingOrders = useMemo(() => {
+    if (!sellPosition || tradeSide !== "sell" || input.variant !== "team") {
+      return undefined;
+    }
+
+    return positionAcceptingOrders;
+  }, [input.variant, positionAcceptingOrders, sellPosition, tradeSide]);
 
   const limitPriceContextKey =
     input.variant === "team"
@@ -191,9 +236,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       snapshot,
       outcomeSide,
       tradeSide,
-      amount: orderAmount,
+      amount: cappedOrderAmount,
       limitPrice: orderLimitPrice,
-      orderType
+      orderType,
+      tokenId:
+        sellPosition && tradeSide === "sell" ? sellPosition.asset : undefined,
+      maxShareSize: maxSellShares,
+      acceptingOrders: sellAcceptingOrders
     });
 
     const yesTokenPrice =
@@ -214,12 +263,15 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       orderLimitPrice
     };
   }, [
+    cappedOrderAmount,
     input,
-    orderAmount,
+    maxSellShares,
     orderMode,
     orderType,
     outcomeSide,
     limitPrice,
+    sellAcceptingOrders,
+    sellPosition,
     tradeSide
   ]);
 
@@ -250,7 +302,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       matchOutcomeSide,
       binarySide: outcomeSide,
       tradeSide,
-      amount: orderAmount,
+      amount: cappedOrderAmount,
       limitPrice: orderLimitPrice,
       orderType
     });
@@ -282,9 +334,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       orderLimitPrice
     };
   }, [
+    cappedOrderAmount,
     input,
     matchOutcomeSide,
-    orderAmount,
+    maxSellShares,
     orderMode,
     orderType,
     outcomeSide,
@@ -338,37 +391,43 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot read from latest closure
   }, [limitPriceContextKey, setLimitPrice]);
 
-  useEffect(() => {
-    if (!preview) {
-      return undefined;
-    }
+  const applyReadinessFetch = useCallback(
+    async (orderPreview: NonNullable<typeof preview>) => {
+      const generation = ++readinessFetchGeneration.current;
 
-    const orderPreview = preview;
-    let ignore = false;
-
-    async function loadReadiness() {
       try {
         const nextReadiness = await fetchReadinessForPreview(
           orderPreview,
           tradeSide
         );
 
-        if (!ignore) {
+        if (generation === readinessFetchGeneration.current) {
           setReadiness(nextReadiness);
+          setEligibilityRetryAvailable(
+            isEligibilityNetworkFailure(nextReadiness)
+          );
         }
+
+        return nextReadiness;
       } catch (error) {
-        if (!ignore) {
+        if (generation === readinessFetchGeneration.current) {
           setMessage(error instanceof Error ? error.message : String(error));
         }
+
+        throw error;
       }
+    },
+    [tradeSide]
+  );
+
+  useEffect(() => {
+    if (!preview) {
+      return undefined;
     }
 
-    void loadReadiness();
-
-    return () => {
-      ignore = true;
-    };
+    void applyReadinessFetch(preview);
   }, [
+    applyReadinessFetch,
     preview?.estimatedCost,
     preview?.estimatedTakerFee,
     preview?.estimatedTotalCost,
@@ -405,6 +464,73 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       );
     }
   }, [conditionId, isAuthenticated, noTokenId, yesTokenId]);
+
+  useEffect(() => {
+    if (!sellPosition || input.variant !== "team") {
+      setPositionAcceptingOrders(undefined);
+      return;
+    }
+
+    let cancelled = false;
+
+    void fetchMarketAcceptingOrders({
+      slug: sellPosition.slug,
+      conditionId: sellPosition.conditionId
+    }).then((acceptingOrders) => {
+      if (!cancelled) {
+        setPositionAcceptingOrders(acceptingOrders);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    input.variant,
+    sellPosition?.asset,
+    sellPosition?.conditionId,
+    sellPosition?.slug
+  ]);
+
+  useEffect(() => {
+    if (tradeSide !== "sell" || !sellPosition || input.variant !== "team") {
+      return;
+    }
+
+    let cancelled = false;
+
+    void fetchConditionalTokenBalance(sellPosition.asset).then((balance) => {
+      if (cancelled) {
+        return;
+      }
+
+      const cap = resolveMaxSellShares(sellPosition.size, balance);
+
+      if (cap === undefined || cap <= 0) {
+        return;
+      }
+
+      const currentAmount = parseOrderAmount(useTradeTicketStore.getState().amount);
+
+      if (currentAmount > cap) {
+        setAmount(String(cap));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [input.variant, sellPosition, setAmount, tradeSide]);
+
+  useEffect(() => {
+    if (maxSellShares === undefined || maxSellShares <= 0) {
+      return;
+    }
+
+    if (parseOrderAmount(amount) > maxSellShares) {
+      setAmount(String(maxSellShares));
+    }
+  }, [amount, maxSellShares, setAmount]);
 
   useEffect(() => {
     if (sellPosition && tradeSide === "sell" && input.variant === "team") {
@@ -445,11 +571,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       return undefined;
     }
 
-    const nextReadiness = await fetchReadinessForPreview(preview, tradeSide);
-    setReadiness(nextReadiness);
-    setEligibilityRetryAvailable(isEligibilityNetworkFailure(nextReadiness));
-    return nextReadiness;
-  }, [preview, tradeSide]);
+    return applyReadinessFetch(preview);
+  }, [applyReadinessFetch, preview]);
 
   const handleRetryEligibility = useCallback(async () => {
     setStatus("loading");
@@ -581,10 +704,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       );
       setStatus("idle");
       setMessage(undefined);
+
+      await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
+
       await Promise.all([
         refreshOrderReadiness(),
         refreshSetupReadiness(),
-        refreshOutcomeShares()
+        refreshOutcomeShares(),
       ]);
       await input.onOrderSuccess?.();
     } catch (error) {
@@ -693,7 +819,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   const kickoffAt =
     input.variant === "game" ? input.gameSnapshot.match.kickoffAt : undefined;
-  const availableCash = readiness?.balances?.clobUsdcAvailable;
+  const availableCash = resolveTradeTicketAvailableCash(readiness);
 
   return {
     formProps: {

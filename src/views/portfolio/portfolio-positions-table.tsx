@@ -10,8 +10,10 @@ import {
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
 import {
+  findSnapshotForConditionId,
   findSnapshotForPosition,
-  findSnapshotForTokenId
+  findSnapshotForTokenId,
+  isAuthoritativeSnapshotForPosition
 } from "@/lib/portfolio/portfolio-metrics";
 import { resolveTradeHref } from "@/lib/routes/trade";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
@@ -111,10 +113,17 @@ export function PortfolioPositionsTable({
   const rows = positions.map((position) => {
     const snapshot =
       findSnapshotForTokenId(position.asset, snapshots) ??
+      findSnapshotForConditionId(position.conditionId, snapshots) ??
       findSnapshotForPosition(position, snapshots);
     const timeValue = positionTimeMap.get(position.asset);
     const pnlTone = position.cashPnl >= 0 ? "text-prophet-green" : "text-prophet-red";
-    const canSell = Boolean(snapshot) && position.size > 0;
+    const canSell =
+      position.size > 0 &&
+      Boolean(snapshot) &&
+      (snapshot
+        ? isAuthoritativeSnapshotForPosition(position, snapshot) ||
+          Boolean(position.slug || position.conditionId)
+        : false);
 
     return (
       <div

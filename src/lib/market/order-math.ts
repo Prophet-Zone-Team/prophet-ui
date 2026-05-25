@@ -17,6 +17,8 @@ export interface OrderEstimateInput {
   limitPrice?: number;
   orderType: TradingOrderType;
   fee?: PolymarketFeeDetails;
+  /** Caps sell share size to on-chain balance or position size. */
+  maxShareSize?: number;
 }
 
 export interface OrderEstimate {
@@ -62,7 +64,8 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
   const isLimitOrder = input.orderType === "GTC";
 
   if (isLimitOrder) {
-    const shareSize = roundShares(Math.max(0, input.amount));
+    let shareSize = roundShares(Math.max(0, input.amount));
+    shareSize = capSellShareSize(shareSize, tradeSide, input.maxShareSize);
     const orderCost = roundMoney(shareSize * sidePrice);
     const estimatedTakerFee = 0;
     const estimatedTotalCost = orderCost;
@@ -81,7 +84,10 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
     };
   }
 
-  const requestedAmount = roundMoney(Math.max(0, input.amount));
+  const requestedAmount =
+    tradeSide === "sell"
+      ? floorShares(Math.max(0, input.amount))
+      : roundMoney(Math.max(0, input.amount));
   const orderCost =
     tradeSide === "buy"
       ? calculateBuyOrderCostFromBudget({
@@ -99,16 +105,23 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
         })
       : 0;
   const estimatedTotalCost = tradeSide === "buy" ? roundMoney(orderCost + estimatedTakerFee) : orderCost;
-  const shareSize = tradeSide === "buy" && sidePrice > 0 ? roundShares(orderCost / sidePrice) : roundShares(orderCost);
+  let shareSize =
+    tradeSide === "buy" && sidePrice > 0
+      ? roundShares(orderCost / sidePrice)
+      : roundShares(orderCost);
+  shareSize = capSellShareSize(shareSize, tradeSide, input.maxShareSize);
+  const resolvedOrderCost = tradeSide === "sell" ? shareSize : orderCost;
+  const resolvedTotalCost =
+    tradeSide === "buy" ? estimatedTotalCost : resolvedOrderCost;
   const potentialPayout = tradeSide === "buy" ? roundMoney(shareSize) : roundMoney(shareSize * sidePrice);
 
   return {
     sidePrice,
     shareSize,
-    orderCost,
-    estimatedCost: orderCost,
+    orderCost: resolvedOrderCost,
+    estimatedCost: resolvedOrderCost,
     estimatedTakerFee,
-    estimatedTotalCost,
+    estimatedTotalCost: resolvedTotalCost,
     potentialPayout,
     potentialOutcome: roundMoney(potentialPayout - estimatedTotalCost),
   };
@@ -201,8 +214,39 @@ function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+export function floorShares(value: number): number {
+  return Math.floor(value * 10000) / 10000;
+}
+
+export function resolveMaxSellShares(
+  ...candidates: Array<number | undefined>
+): number | undefined {
+  const valid = candidates.filter(
+    (value): value is number =>
+      value !== undefined && Number.isFinite(value) && value > 0
+  );
+
+  if (valid.length === 0) {
+    return undefined;
+  }
+
+  return floorShares(Math.min(...valid));
+}
+
 function roundShares(value: number): number {
   return Math.round(value * 10000) / 10000;
+}
+
+function capSellShareSize(
+  shareSize: number,
+  tradeSide: BidTradeSide,
+  maxShareSize?: number
+): number {
+  if (tradeSide !== "sell" || maxShareSize === undefined) {
+    return shareSize;
+  }
+
+  return floorShares(Math.min(shareSize, maxShareSize));
 }
 
 export function validateOrderAmount(input: {

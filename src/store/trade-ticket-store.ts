@@ -6,6 +6,7 @@ import {
   formatDefaultGameTradeLimitPrice,
   formatDefaultTradeLimitPrice
 } from "@/lib/market/trade-ticket";
+import { resolveMaxSellShares } from "@/lib/market/order-math";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
 import type {
   GameMarketSnapshot,
@@ -120,7 +121,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       outcomeSide,
       tab: "sell",
       orderMode: "market",
-      amount: String(position.size),
+      amount: String(resolveMaxSellShares(position.size) ?? position.size),
       limitPrice: formatDefaultTradeLimitPrice(snapshot, outcomeSide),
       limitExpiration: "never",
       limitExpirationCustom: undefined

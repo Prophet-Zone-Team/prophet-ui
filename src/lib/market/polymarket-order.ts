@@ -14,6 +14,11 @@ export interface BidOrderPreviewInput {
   amount: number;
   limitPrice: number;
   orderType: TradingOrderType;
+  /** When selling an existing position, use the held outcome token id. */
+  tokenId?: string;
+  maxShareSize?: number;
+  /** Live or position-specific market status; overrides cached snapshot metadata. */
+  acceptingOrders?: boolean;
 }
 
 export interface BidOrderPreview {
@@ -41,6 +46,7 @@ export interface BidOrderPreview {
 export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPreview {
   const token = input.snapshot.market.polymarket?.tokens[input.outcomeSide];
   const metadata = input.snapshot.market.polymarket;
+  const tokenId = input.tokenId ?? token?.tokenId;
   const sidePrice = normalizeLimitPrice(input.limitPrice);
   const estimate = calculateOrderEstimate({
     side: input.outcomeSide,
@@ -50,24 +56,27 @@ export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPrevi
     limitPrice: sidePrice,
     orderType: input.orderType,
     fee: metadata?.fee,
+    maxShareSize: input.maxShareSize,
   });
+  const acceptingOrders =
+    input.acceptingOrders ?? metadata?.acceptingOrders;
   const disabledReason = getDisabledReason({
-    acceptingOrders: metadata?.acceptingOrders,
+    acceptingOrders,
     amount: input.amount,
     minOrderSize: metadata?.minOrderSize,
     orderType: input.orderType,
     tradeSide: input.tradeSide,
-    tokenId: token?.tokenId
+    tokenId
   });
 
   return {
     outcomeSide: input.outcomeSide,
     tradeSide: input.tradeSide,
     orderType: input.orderType,
-    tokenId: token?.tokenId,
+    tokenId,
     tickSize: metadata?.tickSize,
     negRisk: metadata?.negRisk,
-    acceptingOrders: metadata?.acceptingOrders === true,
+    acceptingOrders: acceptingOrders === true,
     minOrderSize: metadata?.minOrderSize,
     sidePrice,
     shareSize: estimate.shareSize,
@@ -101,7 +110,11 @@ function getDisabledReason({
     return "No Polymarket token ID is available for this outcome.";
   }
 
-  if (acceptingOrders !== true) {
+  if (acceptingOrders === false) {
+    return "This Polymarket market is not accepting orders.";
+  }
+
+  if (acceptingOrders !== true && tradeSide === "buy") {
     return "This Polymarket market is not accepting orders.";
   }
 
