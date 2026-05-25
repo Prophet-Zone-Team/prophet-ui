@@ -22,6 +22,10 @@ import {
   type EthereumProvider
 } from "@/components/trading/wallet-provider";
 import { getStoredTradingWalletProvider } from "@/components/trading/trading-wallet-session";
+import {
+  isUserRejectedRequest,
+  resolveWalletErrorMessage,
+} from "@/lib/trading/wallet-error-message";
 
 const DEFAULT_SIGNATURE_TYPE = 3;
 
@@ -216,9 +220,16 @@ export async function connectWallet(options?: {
     );
   }
 
-  const accounts = await provider.request({
-    method: "eth_requestAccounts"
-  });
+  let accounts: unknown;
+
+  try {
+    accounts = await provider.request({
+      method: "eth_requestAccounts",
+    });
+  } catch (error) {
+    throw new Error(resolveWalletErrorMessage(error));
+  }
+
   const walletAddress =
     Array.isArray(accounts) && typeof accounts[0] === "string"
       ? accounts[0]
@@ -322,7 +333,7 @@ async function signTradingSessionMessage({
     }
   } catch (error) {
     if (isUserRejectedRequest(error)) {
-      throw error;
+      throw new Error(resolveWalletErrorMessage(error));
     }
 
     const fallbackSignature = await provider.request({
@@ -334,19 +345,10 @@ async function signTradingSessionMessage({
       return fallbackSignature;
     }
 
-    throw error;
+    throw new Error(resolveWalletErrorMessage(error));
   }
 
   throw new Error("Wallet did not return a trading session signature.");
-}
-
-function isUserRejectedRequest(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    Number((error as { code?: unknown }).code) === 4001
-  );
 }
 
 function writeStoredTradingWalletProvider(

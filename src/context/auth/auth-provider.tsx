@@ -29,6 +29,7 @@ import {
   type TradingSetupStepId,
 } from "@/lib/trading/trading-setup";
 import { fetchJson } from "@/lib/team/client-fetch";
+import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
 import { selectIsAuthenticated, useAuthStore } from "@/store/auth-store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
@@ -110,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setCashStatus("ready");
     } catch (refreshError) {
       store.setCashStatus("error");
-      store.setCashError(refreshError instanceof Error ? refreshError.message : String(refreshError));
+      store.setCashError(resolveWalletErrorMessage(refreshError));
     }
   }, []);
 
@@ -180,9 +181,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (switchError) {
         if (!loginAbortRef.current) {
           useAuthStore.getState().setStatus("error");
-          useAuthStore.getState().setError(
-            switchError instanceof Error ? switchError.message : String(switchError),
-          );
+          useAuthStore
+            .getState()
+            .setError(resolveWalletErrorMessage(switchError));
           useAuthStore.getState().setLoginModalOpen(true);
         }
       } finally {
@@ -297,7 +298,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (sessionError) {
       store.setStatus("error");
-      store.setError(sessionError instanceof Error ? sessionError.message : String(sessionError));
+      store.setError(resolveWalletErrorMessage(sessionError));
     } finally {
       store.setLoginInProgress(false);
       walletHandlingRef.current = false;
@@ -324,7 +325,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await refreshCash();
     } catch (syncError) {
       store.setCashStatus("error");
-      store.setCashError(syncError instanceof Error ? syncError.message : String(syncError));
+      store.setCashError(resolveWalletErrorMessage(syncError));
       throw syncError;
     } finally {
       syncingRef.current = false;
@@ -370,7 +371,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setSession(undefined);
       store.setReadiness(undefined);
       store.setStatus("error");
-      store.setError(loginError instanceof Error ? loginError.message : String(loginError));
+      store.setError(resolveWalletErrorMessage(loginError));
       store.setLoginStep(undefined);
       throw loginError;
     } finally {
@@ -439,7 +440,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         maybeCloseSetupModal(nextReadiness);
       } catch (stepError) {
-        store.setError(stepError instanceof Error ? stepError.message : String(stepError));
+        store.setError(resolveWalletErrorMessage(stepError));
         throw stepError;
       } finally {
         store.setLoginInProgress(false);
@@ -498,7 +499,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setError(undefined);
     } catch (disconnectError) {
       store.setStatus("error");
-      store.setError(disconnectError instanceof Error ? disconnectError.message : String(disconnectError));
+      store.setError(resolveWalletErrorMessage(disconnectError));
       throw disconnectError;
     } finally {
       walletHandlingRef.current = false;
