@@ -41,10 +41,10 @@ Do **not** use the Pages framework preset **Next.js** (`npx @cloudflare/next-on-
 
 In the Worker **Settings → Build**:
 
-| Setting | Value |
-| --- | --- |
-| Build command | `npm run cf:build` (runs `opennextjs-cloudflare build`, which invokes `next build` first) |
-| Deploy command | `npm run deploy` (or `opennextjs-cloudflare build && opennextjs-cloudflare deploy`) |
+| Setting        | Value                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| Build command  | `npm run cf:build` (runs `opennextjs-cloudflare build`, which invokes `next build` first) |
+| Deploy command | `npm run deploy` (or `opennextjs-cloudflare build && opennextjs-cloudflare deploy`)       |
 
 Copy required env vars from `.env.example` into **Build variables and secrets** and **Variables & secrets** so `next build` and runtime handlers can reach Polymarket, D1, and odds providers.
 
