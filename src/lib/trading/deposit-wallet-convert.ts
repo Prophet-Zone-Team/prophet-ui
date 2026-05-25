@@ -4,7 +4,13 @@ import { FUNDING_NETWORKS } from "@/config/funding/networks";
 import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import type { DepositWalletBatchSignablePayload } from "@/lib/market/deposit-wallet-batch";
 import { fetchJson } from "@/lib/team/client-fetch";
+import {
+  pollRelayerTransaction as pollRelayerTransactionShared,
+  submitDepositWalletBatchWithRetry,
+} from "@/lib/trading/deposit-wallet-relayer";
 import { signTypedData } from "@/lib/trading/wallet-typed-data-sign";
+
+const DEPOSIT_CONVERT_STATUS_PATH = "/api/trading/deposit-convert";
 
 const DEPOSIT_CONVERT_CHAIN_ID = FUNDING_NETWORKS.polygon.chainId;
 
@@ -13,11 +19,6 @@ export async function ensureDepositConvertPolygonChain(walletAddress: string) {
 }
 
 export type DepositConvertPhase = "usdc-to-usdce" | "usdce-to-pusd";
-
-interface RelayerTransactionRecord {
-  transactionID?: string;
-  state?: string;
-}
 
 export async function prepareDepositConvertBatch(phase: DepositConvertPhase, amountUsd: string) {
   const search = new URLSearchParams({
@@ -136,34 +137,15 @@ export async function pollRelayerTransaction(
     onStatus?: (message: string) => void;
   },
 ) {
-  const maxAttempts = options?.maxAttempts ?? 90;
-  const intervalMs = options?.intervalMs ?? 2000;
-  let lastState: string | undefined;
+  await pollRelayerTransactionShared(transactionId, {
+    statusApiPath: DEPOSIT_CONVERT_STATUS_PATH,
+    maxAttempts: options?.maxAttempts,
+    intervalMs: options?.intervalMs,
+    onStatus: options?.onStatus,
+    errorPrefix: "Deposit convert transaction",
+  });
 
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    await delay(intervalMs);
-
-    const payload = await fetchJson<{ transaction?: RelayerTransactionRecord }>(
-      `/api/trading/deposit-convert?transactionId=${encodeURIComponent(transactionId)}`,
-    );
-    const state = payload.transaction?.state;
-    lastState = state;
-
-    if (isRelayerMinedState(state)) {
-      options?.onStatus?.("Transaction confirmed on chain.");
-      return true;
-    }
-
-    if (isRelayerFailureState(state)) {
-      throw new Error(`Deposit convert transaction ${state}.`);
-    }
-
-    options?.onStatus?.(`Transaction pending (${state ?? "unknown"})...`);
-  }
-
-  throw new Error(
-    `Deposit convert transaction ${transactionId} timed out before confirmation. Last state: ${lastState ?? "unknown"}.`,
-  );
+  return true;
 }
 
 export async function executeDepositConvertPhase({
@@ -183,7 +165,11 @@ export async function executeDepositConvertPhase({
   const signature = await signTypedData(walletAddress, transfer);
   onStatus?.("Submitting signed batch to relayer…");
 
-  const response = await submitDepositConvertBatchWithRetry({ transfer, signature }, onStatus);
+  const response = await submitDepositWalletBatchWithRetry({
+    submit: submitDepositConvertBatch,
+    payload: { transfer, signature },
+    onStatus,
+  });
   const transactionId = response.response?.transactionID;
 
   if (!transactionId) {
@@ -258,9 +244,6 @@ export async function executeFullDepositConvert({
 const DEPOSIT_WALLET_IDLE_DELAY_MS = 1_500;
 const USDC_E_BALANCE_POLL_INTERVAL_MS = 2_000;
 const USDC_E_BALANCE_MAX_ATTEMPTS = 20;
-const WALLET_BUSY_RETRY_INTERVAL_MS = 2_000;
-const WALLET_BUSY_MAX_ATTEMPTS = 20;
-
 export async function resolveFunderUsdceWrapAmount(onStatus?: (message: string) => void): Promise<string> {
   for (let attempt = 0; attempt < USDC_E_BALANCE_MAX_ATTEMPTS; attempt += 1) {
     const balances = await fetchFunderCollateralBalances();
@@ -283,40 +266,3 @@ function delay(ms: number) {
   });
 }
 
-async function submitDepositConvertBatchWithRetry(
-  payload: { transfer: DepositWalletBatchSignablePayload; signature: string },
-  onStatus?: (message: string) => void,
-) {
-  let lastError: unknown;
-
-  for (let attempt = 0; attempt < WALLET_BUSY_MAX_ATTEMPTS; attempt += 1) {
-    try {
-      return await submitDepositConvertBatch(payload);
-    } catch (error) {
-      lastError = error;
-
-      if (!isWalletBusyError(error) || attempt >= WALLET_BUSY_MAX_ATTEMPTS - 1) {
-        throw error;
-      }
-
-      onStatus?.("Deposit wallet is finishing the previous step. Retrying…");
-      await delay(WALLET_BUSY_RETRY_INTERVAL_MS);
-    }
-  }
-
-  throw lastError instanceof Error ? lastError : new Error(String(lastError));
-}
-
-function isRelayerMinedState(state: string | undefined) {
-  return Boolean(state && (state.includes("MINED") || state.includes("CONFIRMED")));
-}
-
-function isRelayerFailureState(state: string | undefined) {
-  return Boolean(state && (state.includes("FAILED") || state.includes("INVALID") || state.includes("REVERTED")));
-}
-
-function isWalletBusyError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-
-  return /wallet busy/i.test(message) || /active action exists/i.test(message);
-}

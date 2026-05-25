@@ -79,6 +79,19 @@ const UNISWAP_V3_ROUTER_ABI = [
     outputs: [{ name: "amountOut", type: "uint256" }],
   },
 ] as const;
+const COLLATERAL_OFFRAMP_ABI = [
+  {
+    name: "unwrap",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "collateralToken", type: "address" },
+      { name: "recipient", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
+  },
+] as const;
 const PUSD_WRAP_ABI = [
   {
     name: "wrap",
@@ -370,6 +383,112 @@ export function buildUsdcToUsdceConvertBatch({
       tokenOut: POLYGON_USDC_BRIDGED,
       fee: UNISWAP_FEE_TIER,
       recipient: walletAddress,
+      amountIn: amountBaseUnits,
+      amountOutMinimum,
+      deadline: swapDeadline,
+    }),
+  ];
+
+  return buildDepositWalletBatchPayload({
+    chainId,
+    walletAddress,
+    nonce,
+    deadline,
+    calls,
+  });
+}
+
+export function createPusdOfframpUnwrapCall({
+  offrampAddress,
+  usdceAddress,
+  recipient,
+  amountBaseUnits,
+}: {
+  offrampAddress: string;
+  usdceAddress: string;
+  recipient: string;
+  amountBaseUnits: bigint;
+}): DepositWalletCall {
+  return {
+    target: offrampAddress,
+    value: "0",
+    data: encodeFunctionData({
+      abi: COLLATERAL_OFFRAMP_ABI,
+      functionName: "unwrap",
+      args: [
+        getAddress(usdceAddress),
+        getAddress(recipient),
+        amountBaseUnits,
+      ],
+    }),
+  };
+}
+
+export function buildPusdUnwrapToUsdceBatch({
+  chainId,
+  walletAddress,
+  nonce,
+  deadline,
+  amountBaseUnits,
+}: {
+  chainId: number;
+  walletAddress: string;
+  nonce: string;
+  deadline: string;
+  amountBaseUnits: bigint;
+}): DepositWalletBatchSignablePayload {
+  const calls = [
+    createErc20ApproveCallWithAmount({
+      tokenAddress: POLYGON_COLLATERAL_CONTRACTS.pUsd,
+      spenderAddress: POLYGON_COLLATERAL_CONTRACTS.offramp,
+      amountBaseUnits,
+    }),
+    createPusdOfframpUnwrapCall({
+      offrampAddress: POLYGON_COLLATERAL_CONTRACTS.offramp,
+      usdceAddress: POLYGON_USDC_BRIDGED,
+      recipient: walletAddress,
+      amountBaseUnits,
+    }),
+  ];
+
+  return buildDepositWalletBatchPayload({
+    chainId,
+    walletAddress,
+    nonce,
+    deadline,
+    calls,
+  });
+}
+
+export function buildUsdceToUsdcConvertBatch({
+  chainId,
+  walletAddress,
+  nonce,
+  deadline,
+  amountBaseUnits,
+  swapRecipient,
+}: {
+  chainId: number;
+  walletAddress: string;
+  nonce: string;
+  deadline: string;
+  amountBaseUnits: bigint;
+  swapRecipient: string;
+}): DepositWalletBatchSignablePayload {
+  const swapDeadline = BigInt(Math.floor(Date.now() / 1000) + 900);
+  const amountOutMinimum = applySlippageMinimum(amountBaseUnits);
+
+  const calls = [
+    createErc20ApproveCallWithAmount({
+      tokenAddress: POLYGON_USDC_BRIDGED,
+      spenderAddress: UNISWAP_V3_ROUTER,
+      amountBaseUnits,
+    }),
+    createUniswapExactInputSingleCall({
+      tokenIn: POLYGON_USDC_BRIDGED,
+      tokenOut: POLYGON_USDC_NATIVE,
+      fee: UNISWAP_FEE_TIER,
+      recipient: swapRecipient,
       amountIn: amountBaseUnits,
       amountOutMinimum,
       deadline: swapDeadline,

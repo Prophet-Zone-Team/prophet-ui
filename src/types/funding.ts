@@ -81,6 +81,18 @@ export interface WithdrawPreparePayload {
   funderAddress: string;
 }
 
+export type WithdrawOperationPhase =
+  | "idle"
+  | "quoting"
+  | "unwrapping"
+  | "swapping"
+  | "submitting_deposit_tx"
+  | "polling_stableflow"
+  | "polling_bridge"
+  | "syncing"
+  | "success"
+  | "error";
+
 export interface SupportedAsset {
   chainId: string;
   chainName: string;

@@ -1,19 +1,23 @@
 "use client";
 
+import type { QuoteResponse } from "@stableflow/core";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import Big from "big.js";
 
 import { Modal } from "@/components/ui/modal";
 import type { FundingAsset } from "@/config/funding";
+import { POLYMARKET_USD } from "@/config/funding";
+import { getEvmFundingNetworks } from "@/config/funding/networks";
 import { useBridgeQuote, useSupportedAssets, useWithdraw } from "@/hooks/funding";
 import {
   buildWithdrawQuoteRequest,
   formatQuoteTokenAmount,
   mapQuoteToBreakdown,
 } from "@/lib/funding/bridge-quote";
-import { formatShortWallet } from "@/lib/team/detail-format";
-import { ensureTradingChain } from "@/lib/trading/wallet-trading-chain";
+import { mapStableflowQuoteToConfirmDisplay } from "@/lib/funding/stableflow";
+import type { StableflowWithdrawToken } from "@/lib/funding/stableflow-withdraw";
 import {
   getDefaultTokenForChain,
   getTokensForChain,
@@ -21,6 +25,9 @@ import {
   type SupportedChainOption,
 } from "@/lib/funding/supported-assets";
 import { cn } from "@/lib/cn";
+import { fetchJson } from "@/lib/team/client-fetch";
+import { formatShortWallet } from "@/lib/team/detail-format";
+import { ensureTradingChain } from "@/lib/trading/wallet-trading-chain";
 import { TransactionBreakdown } from "@/views/portfolio/deposit/transaction-breakdown";
 import {
   depositTokenRowClass,
@@ -30,6 +37,14 @@ import {
   WITHDRAW_MODAL_WIDTH,
   WITHDRAW_SOURCE_TOKEN_LABEL,
 } from "@/views/portfolio/withdraw/config";
+import { WithdrawEntryStep } from "@/views/portfolio/withdraw/withdraw-entry-step";
+import { WithdrawStatusStep } from "@/views/portfolio/withdraw/withdraw-status-step";
+import {
+  isStableflowWithdrawSelectableToken,
+  type WithdrawMethod,
+  type WithdrawSelectableToken,
+  type WithdrawStep,
+} from "@/views/portfolio/withdraw/types";
 import { parseWithdrawAmount, validateWithdrawAmount } from "@/views/portfolio/withdraw/utils";
 import {
   withdrawAmountInputClass,
@@ -43,10 +58,11 @@ import {
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { FundingSelectorDropdown } from "@/views/portfolio/shared/funding-selector-dropdown";
 import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
-import { usePortfolioContext } from "../context";
-import { POLYMARKET_USD } from "@/config/funding";
-import Big from "big.js";
 import { formatNumber, removeNumberEndZero } from "@/utils";
+import { usePortfolioContext } from "../context";
+
+const EVM_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+const INITIAL_STEP: WithdrawStep = "entry";
 
 export interface WithdrawDialogProps {
   open: boolean;
@@ -56,27 +72,74 @@ export interface WithdrawDialogProps {
 export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   const { session, portfolio, reload } = usePortfolioContext();
   const { supportedAssets, loading: assetsLoading } = useSupportedAssets({ enabled: open });
-  const { status, error: withdrawError, executeWithdraw } = useWithdraw();
+  const {
+    status,
+    error: withdrawError,
+    operationPhase,
+    operationDetail,
+    executeBridgeWithdraw,
+    executeStableflowWithdraw,
+    fetchStableflowWithdrawQuote,
+    stopStatusPoll,
+  } = useWithdraw();
 
+  const [step, setStep] = useState<WithdrawStep>(INITIAL_STEP);
+  const [withdrawMethod, setWithdrawMethod] = useState<WithdrawMethod>("bridge");
   const [amountInput, setAmountInput] = useState("");
   const [selectedChain, setSelectedChain] = useState<SupportedChainOption | undefined>();
-  const [selectedToken, setSelectedToken] = useState<FundingAsset | undefined>();
+  const [selectedToken, setSelectedToken] = useState<WithdrawSelectableToken | undefined>();
+  const [recipientInput, setRecipientInput] = useState("");
+  const [stableflowTokens, setStableflowTokens] = useState<StableflowWithdrawToken[]>([]);
+  const [stableflowTokensLoading, setStableflowTokensLoading] = useState(false);
+  const [stableflowQuote, setStableflowQuote] = useState<QuoteResponse | undefined>();
+  const [stableflowQuoteLoading, setStableflowQuoteLoading] = useState(false);
+  const [stableflowQuoteError, setStableflowQuoteError] = useState<string | undefined>();
   const [chainDropdownOpen, setChainDropdownOpen] = useState(false);
   const [tokenDropdownOpen, setTokenDropdownOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const chainOptions = useMemo(
+  const isBridge = withdrawMethod === "bridge";
+
+  const bridgeChainOptions = useMemo(
     () => getUniqueChainsFromAssets(supportedAssets),
     [supportedAssets],
   );
+
+  const stableflowChainOptions = useMemo(
+    () =>
+      getEvmFundingNetworks().map((network) => ({
+        chainId: network.chainId,
+        chainName: network.chainName,
+        chainIcon: network.chainIcon,
+      })),
+    [],
+  );
+
+  const chainOptions = isBridge ? bridgeChainOptions : stableflowChainOptions;
 
   const tokensForChain = useMemo(() => {
     if (!selectedChain) {
       return [];
     }
 
-    return getTokensForChain(supportedAssets, selectedChain.chainId);
-  }, [selectedChain, supportedAssets]);
+    if (isBridge) {
+      return getTokensForChain(supportedAssets, selectedChain.chainId);
+    }
+
+    return stableflowTokens.filter((token) => token.chainId === selectedChain.chainId);
+  }, [isBridge, selectedChain, stableflowTokens, supportedAssets]);
+
+  const assetsLoadingForMethod = isBridge ? assetsLoading : stableflowTokensLoading;
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (session?.walletAddress && !recipientInput) {
+      setRecipientInput(session.walletAddress);
+    }
+  }, [open, recipientInput, session?.walletAddress]);
 
   useEffect(() => {
     if (!open || chainOptions.length === 0) {
@@ -94,98 +157,231 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   }, [open, chainOptions]);
 
   useEffect(() => {
-    if (!selectedChain || supportedAssets.length === 0) {
+    if (!selectedChain) {
       setSelectedToken(undefined);
       return;
     }
 
+    if (isBridge) {
+      if (supportedAssets.length === 0) {
+        setSelectedToken(undefined);
+        return;
+      }
+
+      setSelectedToken((current) => {
+        if (current && !("assetId" in current) && current.chainId === selectedChain.chainId) {
+          return current;
+        }
+
+        return getDefaultTokenForChain(supportedAssets, selectedChain.chainId);
+      });
+
+      return;
+    }
+
     setSelectedToken((current) => {
-      if (current && current.chainId === selectedChain.chainId) {
+      if (current && "assetId" in current && current.chainId === selectedChain.chainId) {
         return current;
       }
 
-      return getDefaultTokenForChain(supportedAssets, selectedChain.chainId);
+      return (
+        stableflowTokens.find((token) => token.chainId === selectedChain.chainId) ??
+        stableflowTokens.find((token) => token.symbol === "USDC")
+      );
     });
-  }, [selectedChain, supportedAssets]);
+  }, [isBridge, selectedChain, stableflowTokens, supportedAssets]);
 
   const amount = parseWithdrawAmount(amountInput);
   const maxAmount = portfolio?.availableToTrade ?? 0;
   const validationError = validateWithdrawAmount(amount, maxAmount);
-  const formError = validationError;
+  const recipientError =
+    !isBridge && recipientInput.trim() && !EVM_ADDRESS_PATTERN.test(recipientInput.trim())
+      ? "Enter a valid EVM recipient address."
+      : undefined;
+  const formError = validationError ?? recipientError;
 
   const quoteEnabled =
     open &&
+    step === "form" &&
     !!session?.walletAddress &&
     !!selectedToken &&
     amount !== undefined &&
     amount > 0 &&
-    formError === undefined;
+    formError === undefined &&
+    (isBridge || EVM_ADDRESS_PATTERN.test(recipientInput.trim()));
 
-  const quoteRequest = useMemo(
+  const bridgeQuoteRequest = useMemo(
     () =>
-      selectedToken && session?.walletAddress
+      isBridge && selectedToken && !("assetId" in selectedToken) && session?.walletAddress
         ? buildWithdrawQuoteRequest({
             token: selectedToken,
             amount: amountInput,
             recipientAddress: session.walletAddress,
           })
         : undefined,
-    [amountInput, selectedToken, session],
+    [amountInput, isBridge, selectedToken, session],
   );
 
-  const { quote, loading: quoteLoading, error: quoteError } = useBridgeQuote({
-    request: quoteRequest,
-    enabled: quoteEnabled,
+  const { quote: bridgeQuote, loading: bridgeQuoteLoading, error: bridgeQuoteError } = useBridgeQuote({
+    request: bridgeQuoteRequest,
+    enabled: quoteEnabled && isBridge,
   });
+
+  useEffect(() => {
+    if (!quoteEnabled || isBridge || !isStableflowWithdrawSelectableToken(selectedToken)) {
+      setStableflowQuote(undefined);
+      setStableflowQuoteError(undefined);
+      return;
+    }
+
+    let cancelled = false;
+    setStableflowQuoteLoading(true);
+    setStableflowQuoteError(undefined);
+
+    void fetchStableflowWithdrawQuote({
+      amountUsd: amount!,
+      destinationToken: selectedToken,
+      recipient: recipientInput.trim(),
+      dry: true,
+    })
+      .then((quote) => {
+        if (!cancelled) {
+          setStableflowQuote(quote);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setStableflowQuote(undefined);
+          setStableflowQuoteError(error instanceof Error ? error.message : String(error));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setStableflowQuoteLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    amount,
+    amountInput,
+    fetchStableflowWithdrawQuote,
+    isBridge,
+    quoteEnabled,
+    recipientInput,
+    selectedToken,
+  ]);
+
+  const stableflowDisplay = useMemo(
+    () => (stableflowQuote ? mapStableflowQuoteToConfirmDisplay(stableflowQuote) : undefined),
+    [stableflowQuote],
+  );
+
+  const breakdown = bridgeQuote ? mapQuoteToBreakdown(bridgeQuote) : undefined;
+
+  const receiveTokenAmount = isBridge
+    ? bridgeQuote
+      ? formatQuoteTokenAmount(bridgeQuote.estToTokenBaseUnit, selectedToken?.decimals ?? 6)
+      : undefined
+    : stableflowDisplay?.receiveAmountFormatted;
+
+  const quoteLoading = isBridge ? bridgeQuoteLoading : stableflowQuoteLoading;
+  const quoteError = isBridge ? bridgeQuoteError : stableflowQuoteError;
+
+  const receiveLabel =
+    quoteLoading && quoteEnabled
+      ? "…"
+      : receiveTokenAmount && selectedToken
+        ? isBridge
+          ? `${formatNumber(receiveTokenAmount, 4, true, { round: 0 })} ${selectedToken.symbol}`
+          : receiveTokenAmount
+        : "--";
+
+  const fiatLabel =
+    quoteLoading && quoteEnabled
+      ? "…"
+      : isBridge && bridgeQuote
+        ? `~${formatNumber(bridgeQuote.estOutputUsd, 2, true, { round: 0 })}`
+        : stableflowDisplay
+          ? `~${formatNumber(stableflowDisplay.estOutputUsd, 2, true, { round: 0 })}`
+          : "--";
 
   const isBusy =
     submitting ||
     status === "preparing" ||
     status === "awaiting_wallet" ||
     status === "polling" ||
-    status === "syncing";
+    status === "syncing" ||
+    (step === "status" && operationPhase !== "idle" && operationPhase !== "error" && operationPhase !== "success");
 
   const canSubmit =
-    !assetsLoading &&
+    !assetsLoadingForMethod &&
     !!session?.walletAddress &&
     !!selectedToken &&
     formError === undefined &&
     amount !== undefined &&
     !isBusy;
 
-  const breakdown = quote ? mapQuoteToBreakdown(quote) : undefined;
-
-  const receiveTokenAmount = quote
-    ? formatQuoteTokenAmount(quote.estToTokenBaseUnit, selectedToken?.decimals ?? 6)
-    : undefined;
-
-  const receiveLabel =
-    quoteLoading && quoteRequest
-      ? "…"
-      : receiveTokenAmount && selectedToken
-        ? `${formatNumber(receiveTokenAmount, 4, true, { round: 0 })} ${selectedToken.symbol}`
-        : "--";
-
-  const fiatLabel =
-    quoteLoading && quoteRequest
-      ? "…"
-      : quote
-        ? `~${formatNumber(quote.estOutputUsd, 2, true, { round: 0 })}`
-        : "--";
-
   const resetForm = useCallback(() => {
+    setStep(INITIAL_STEP);
+    setWithdrawMethod("bridge");
     setAmountInput("");
     setSelectedChain(undefined);
     setSelectedToken(undefined);
+    setRecipientInput("");
+    setStableflowQuote(undefined);
+    setStableflowQuoteError(undefined);
     setChainDropdownOpen(false);
     setTokenDropdownOpen(false);
     setSubmitting(false);
-  }, []);
+    stopStatusPoll();
+  }, [stopStatusPoll]);
 
   const handleClose = useCallback(() => {
     resetForm();
     onClose();
   }, [onClose, resetForm]);
+
+  useEffect(() => {
+    if (!open) {
+      resetForm();
+    }
+  }, [open, resetForm]);
+
+  const loadStableflowTokens = useCallback(async () => {
+    setStableflowTokensLoading(true);
+
+    try {
+      const payload = await fetchJson<{ tokens: StableflowWithdrawToken[] }>(
+        "/api/trading/stableflow/tokens",
+      );
+      setStableflowTokens(payload.tokens);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message);
+      throw error;
+    } finally {
+      setStableflowTokensLoading(false);
+    }
+  }, []);
+
+  const handleBack = useCallback(() => {
+    if (step === "form") {
+      setStep("entry");
+      setAmountInput("");
+      setSelectedChain(undefined);
+      setSelectedToken(undefined);
+      setStableflowQuote(undefined);
+      return;
+    }
+
+    if (step === "status") {
+      setStep("form");
+      stopStatusPoll();
+    }
+  }, [step, stopStatusPoll]);
 
   const handleChainSelect = useCallback((chain: SupportedChainOption) => {
     setSelectedChain(chain);
@@ -193,7 +389,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     setTokenDropdownOpen(false);
   }, []);
 
-  const handleTokenSelect = useCallback((token: FundingAsset) => {
+  const handleTokenSelect = useCallback((token: WithdrawSelectableToken) => {
     setSelectedToken(token);
     setTokenDropdownOpen(false);
   }, []);
@@ -212,16 +408,27 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     }
 
     setSubmitting(true);
+    setStep("status");
 
     try {
       await ensureTradingChain(session.walletAddress);
 
-      await executeWithdraw({
-        toChainId: String(selectedToken.chainId),
-        toTokenAddress: selectedToken.address,
-        recipientAddr: session.walletAddress,
-        amountUsd: amount,
-      });
+      if (isBridge && !("assetId" in selectedToken)) {
+        await executeBridgeWithdraw({
+          toChainId: String(selectedToken.chainId),
+          toTokenAddress: selectedToken.address,
+          recipientAddr: session.walletAddress,
+          amountUsd: amount,
+        });
+      } else if (isStableflowWithdrawSelectableToken(selectedToken)) {
+        await executeStableflowWithdraw({
+          amountUsd: amount,
+          destinationToken: selectedToken,
+          recipient: recipientInput.trim(),
+        });
+      } else {
+        throw new Error("Selected token is not supported for this withdrawal method.");
+      }
 
       toast.success("Withdrawal submitted");
       handleClose();
@@ -232,195 +439,269 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     } finally {
       setSubmitting(false);
     }
-  }, [amount, canSubmit, executeWithdraw, handleClose, reload, selectedToken, session]);
+  }, [
+    amount,
+    canSubmit,
+    executeBridgeWithdraw,
+    executeStableflowWithdraw,
+    handleClose,
+    isBridge,
+    recipientInput,
+    reload,
+    selectedToken,
+    session,
+  ]);
+
+  const onSelectStableflow = async () => {
+    try {
+      if (stableflowTokens.length === 0) {
+        await loadStableflowTokens();
+      }
+
+      setWithdrawMethod("stableflow");
+      setSelectedChain(undefined);
+      setSelectedToken(undefined);
+      setStep("form");
+    } catch {
+      // toast already shown
+    }
+  };
+
+  const modalWidth = step === "entry" ? WITHDRAW_MODAL_WIDTH.entry : WITHDRAW_MODAL_WIDTH.form;
+  const showBack = step === "form" || step === "status";
+  const showFooter = step === "form";
+
+  const ariaLabel =
+    step === "entry" ? "Withdraw entry" : step === "status" ? "Withdraw status" : "Withdraw funds";
 
   return (
     <Modal
       open={open}
       onClose={handleClose}
-      ariaLabel="Withdraw funds"
-      className={WITHDRAW_MODAL_WIDTH}
+      ariaLabel={ariaLabel}
+      className={modalWidth}
       hideCloseButton
       overlayCloseable={false}
     >
       <FundingModalShell
         title="Withdraw"
         onClose={handleClose}
-        className="min-h-[680px]"
+        onBack={showBack ? handleBack : undefined}
+        className={step === "entry" ? "min-h-[400px]" : "min-h-[680px]"}
         footer={
-          <button
-            type="button"
-            className={fundingPrimaryButtonClass}
-            disabled={!canSubmit}
-            onClick={() => void handleWithdraw()}
-          >
-            {isBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Withdraw
-          </button>
+          showFooter ? (
+            <button
+              type="button"
+              className={fundingPrimaryButtonClass}
+              disabled={!canSubmit}
+              onClick={() => void handleWithdraw()}
+            >
+              {isBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Withdraw
+            </button>
+          ) : undefined
         }
       >
-        <div className="flex flex-col gap-5 pb-2">
-          <div className="flex flex-col gap-2">
-            <span className={withdrawFieldLabelClass}>Recipient Address</span>
-            <div className={withdrawInputBoxClass}>
-              <span className="flex min-w-0 items-center gap-2">
-                <WalletAvatarIcon />
-                <span className="truncate text-base font-[556] text-black">
-                  {formatShortWallet(session?.walletAddress)}
-                </span>
-              </span>
-              <span className="shrink-0 text-base font-[556] text-[#909090]">Connected</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <span className={withdrawFieldLabelClass}>Amount</span>
-            <div className={withdrawInputBoxClass}>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={amountInput}
-                onChange={(event) => setAmountInput(event.target.value)}
-                className={withdrawAmountInputClass}
-                placeholder="0"
-                aria-label="Withdraw amount"
-              />
-              <span className="flex shrink-0 items-center gap-3">
-                <span className="text-base font-[556] text-[#909090]">
-                  {WITHDRAW_SOURCE_TOKEN_LABEL}
-                </span>
-                <button type="button" className={withdrawMaxButtonClass} onClick={handleMax}>
-                  Max
-                </button>
-              </span>
-            </div>
-            {formError && amountInput.trim() ? (
-              <p className="m-0 text-sm text-prophet-red">{formError}</p>
-            ) : null}
-            {withdrawError ? (
-              <p className="m-0 text-sm text-prophet-red">{withdrawError}</p>
-            ) : null}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <FundingSelectorDropdown
-              label="Receive Chain"
-              triggerLabel={selectedChain?.chainName ?? (assetsLoading ? "Loading…" : "Select chain")}
-              disabled={assetsLoading || chainOptions.length === 0}
-              open={chainDropdownOpen}
-              onOpenChange={(next) => {
-                setChainDropdownOpen(next);
-                if (next) {
-                  setTokenDropdownOpen(false);
-                }
-              }}
-              triggerIcon={
-                selectedChain ? (
-                  <TokenIcon
-                    symbol="USDC"
-                    chainLabel={selectedChain.chainName}
-                    chainIcon={selectedChain.chainIcon}
-                    size="sm"
-                    chainOnly
-                  />
-                ) : null
-              }
-            >
-              {chainOptions.map((chain) => (
-                <button
-                  key={chain.chainId}
-                  type="button"
-                  role="option"
-                  aria-selected={selectedChain?.chainId === chain.chainId}
-                  className={cn(
-                    depositTokenRowClass,
-                    "w-full",
-                    selectedChain?.chainId === chain.chainId && depositTokenRowSelectedClass,
-                  )}
-                  onClick={() => handleChainSelect(chain)}
-                >
-                  <TokenIcon
-                    symbol="USDC"
-                    chainLabel={chain.chainName}
-                    chainIcon={chain.chainIcon}
-                    size="sm"
-                    chainOnly
-                  />
-                  <span className="text-sm font-[556] text-black">{chain.chainName}</span>
-                </button>
-              ))}
-            </FundingSelectorDropdown>
-
-            <FundingSelectorDropdown
-              label="Receive Token"
-              triggerLabel={selectedToken?.symbol ?? (assetsLoading ? "Loading…" : "Select token")}
-              disabled={assetsLoading || tokensForChain.length === 0}
-              open={tokenDropdownOpen}
-              onOpenChange={(next) => {
-                setTokenDropdownOpen(next);
-                if (next) {
-                  setChainDropdownOpen(false);
-                }
-              }}
-              triggerIcon={
-                selectedToken ? (
-                  <TokenIcon symbol={selectedToken.symbol} icon={selectedToken.icon} size="sm" />
-                ) : null
-              }
-            >
-              {tokensForChain.map((token) => (
-                <button
-                  key={`${token.chainId}-${token.address}`}
-                  type="button"
-                  role="option"
-                  aria-selected={
-                    selectedToken?.chainId === token.chainId &&
-                    selectedToken?.address === token.address
-                  }
-                  className={cn(
-                    depositTokenRowClass,
-                    "w-full",
-                    selectedToken?.chainId === token.chainId &&
-                      selectedToken?.address === token.address &&
-                      depositTokenRowSelectedClass,
-                  )}
-                  onClick={() => handleTokenSelect(token)}
-                >
-                  <TokenIcon
-                    symbol={token.symbol}
-                    chainLabel={token.chainName}
-                    icon={token.icon}
-                    chainIcon={token.chainIcon}
-                    size="sm"
-                  />
-                  <span className="text-sm font-[556] text-black">{token.symbol}</span>
-                </button>
-              ))}
-            </FundingSelectorDropdown>
-          </div>
-
-          <div className="flex flex-col gap-1 py-1">
-            <div className="flex items-center justify-between">
-              <span className={withdrawFieldLabelClass}>Est. Receive</span>
-              <div className="flex flex-col items-end gap-0.5">
-                <span className="text-base font-[556] text-black">{receiveLabel}</span>
-                <span className="text-base font-[556] text-[#909090]">{fiatLabel}</span>
-              </div>
-            </div>
-            {quoteError ? (
-              <p className="m-0 text-right text-sm text-[#909090]">
-                Quote unavailable; estimated output not shown.
-              </p>
-            ) : null}
-          </div>
-
-          <TransactionBreakdown
-            loading={quoteLoading && Boolean(quoteRequest)}
-            networkCostUsd={breakdown?.networkCost}
-            priceImpactPercent={breakdown?.priceImpactPercent}
-            maxSlippagePercent={breakdown?.maxSlippagePercent}
+        {step === "entry" ? (
+          <WithdrawEntryStep
+            onSelectBridge={() => {
+              setWithdrawMethod("bridge");
+              setStep("form");
+            }}
+            onSelectStableflow={() => void onSelectStableflow()}
+            stableflowLoading={stableflowTokensLoading}
           />
-        </div>
+        ) : null}
+
+        {step === "form" ? (
+          <div className="flex flex-col gap-5 pb-2">
+            <div className="flex flex-col gap-2">
+              <span className={withdrawFieldLabelClass}>Recipient Address</span>
+              {isBridge ? (
+                <div className={withdrawInputBoxClass}>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <WalletAvatarIcon />
+                    <span className="truncate text-base font-[556] text-black">
+                      {formatShortWallet(session?.walletAddress)}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-base font-[556] text-[#909090]">Connected</span>
+                </div>
+              ) : (
+                <div className={withdrawInputBoxClass}>
+                  <input
+                    type="text"
+                    value={recipientInput}
+                    onChange={(event) => setRecipientInput(event.target.value)}
+                    className={withdrawAmountInputClass}
+                    placeholder="0x…"
+                    aria-label="Recipient address"
+                    spellCheck={false}
+                  />
+                </div>
+              )}
+              {recipientError ? (
+                <p className="m-0 text-sm text-prophet-red">{recipientError}</p>
+              ) : null}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className={withdrawFieldLabelClass}>Amount</span>
+              <div className={withdrawInputBoxClass}>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={amountInput}
+                  onChange={(event) => setAmountInput(event.target.value)}
+                  className={withdrawAmountInputClass}
+                  placeholder="0"
+                  aria-label="Withdraw amount"
+                />
+                <span className="flex shrink-0 items-center gap-3">
+                  <span className="text-base font-[556] text-[#909090]">
+                    {WITHDRAW_SOURCE_TOKEN_LABEL}
+                  </span>
+                  <button type="button" className={withdrawMaxButtonClass} onClick={handleMax}>
+                    Max
+                  </button>
+                </span>
+              </div>
+              {formError && amountInput.trim() ? (
+                <p className="m-0 text-sm text-prophet-red">{formError}</p>
+              ) : null}
+              {withdrawError && step === "form" ? (
+                <p className="m-0 text-sm text-prophet-red">{withdrawError}</p>
+              ) : null}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FundingSelectorDropdown
+                label="Receive Chain"
+                triggerLabel={selectedChain?.chainName ?? (assetsLoadingForMethod ? "Loading…" : "Select chain")}
+                disabled={assetsLoadingForMethod || chainOptions.length === 0}
+                open={chainDropdownOpen}
+                onOpenChange={(next) => {
+                  setChainDropdownOpen(next);
+                  if (next) {
+                    setTokenDropdownOpen(false);
+                  }
+                }}
+                triggerIcon={
+                  selectedChain ? (
+                    <TokenIcon
+                      symbol="USDC"
+                      chainLabel={selectedChain.chainName}
+                      chainIcon={selectedChain.chainIcon}
+                      size="sm"
+                      chainOnly
+                    />
+                  ) : null
+                }
+              >
+                {chainOptions.map((chain) => (
+                  <button
+                    key={chain.chainId}
+                    type="button"
+                    role="option"
+                    aria-selected={selectedChain?.chainId === chain.chainId}
+                    className={cn(
+                      depositTokenRowClass,
+                      "w-full",
+                      selectedChain?.chainId === chain.chainId && depositTokenRowSelectedClass,
+                    )}
+                    onClick={() => handleChainSelect(chain)}
+                  >
+                    <TokenIcon
+                      symbol="USDC"
+                      chainLabel={chain.chainName}
+                      chainIcon={chain.chainIcon}
+                      size="sm"
+                      chainOnly
+                    />
+                    <span className="text-sm font-[556] text-black">{chain.chainName}</span>
+                  </button>
+                ))}
+              </FundingSelectorDropdown>
+
+              <FundingSelectorDropdown
+                label="Receive Token"
+                triggerLabel={selectedToken?.symbol ?? (assetsLoadingForMethod ? "Loading…" : "Select token")}
+                disabled={assetsLoadingForMethod || tokensForChain.length === 0}
+                open={tokenDropdownOpen}
+                onOpenChange={(next) => {
+                  setTokenDropdownOpen(next);
+                  if (next) {
+                    setChainDropdownOpen(false);
+                  }
+                }}
+                triggerIcon={
+                  selectedToken ? (
+                    <TokenIcon symbol={selectedToken.symbol} icon={selectedToken.icon} size="sm" />
+                  ) : null
+                }
+              >
+                {tokensForChain.map((token) => (
+                  <button
+                    key={`${token.chainId}-${token.address}`}
+                    type="button"
+                    role="option"
+                    aria-selected={
+                      selectedToken?.chainId === token.chainId &&
+                      selectedToken?.address === token.address
+                    }
+                    className={cn(
+                      depositTokenRowClass,
+                      "w-full",
+                      selectedToken?.chainId === token.chainId &&
+                        selectedToken?.address === token.address &&
+                        depositTokenRowSelectedClass,
+                    )}
+                    onClick={() => handleTokenSelect(token)}
+                  >
+                    <TokenIcon
+                      symbol={token.symbol}
+                      chainLabel={token.chainName}
+                      icon={token.icon}
+                      chainIcon={token.chainIcon}
+                      size="sm"
+                    />
+                    <span className="text-sm font-[556] text-black">{token.symbol}</span>
+                  </button>
+                ))}
+              </FundingSelectorDropdown>
+            </div>
+
+            <div className="flex flex-col gap-1 py-1">
+              <div className="flex items-center justify-between">
+                <span className={withdrawFieldLabelClass}>Est. Receive</span>
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className="text-base font-[556] text-black">{receiveLabel}</span>
+                  <span className="text-base font-[556] text-[#909090]">{fiatLabel}</span>
+                </div>
+              </div>
+              {quoteError ? (
+                <p className="m-0 text-right text-sm text-[#909090]">
+                  Quote unavailable; estimated output not shown.
+                </p>
+              ) : null}
+            </div>
+
+            <TransactionBreakdown
+              loading={quoteLoading && quoteEnabled && isBridge}
+              networkCostUsd={breakdown?.networkCost}
+              priceImpactPercent={breakdown?.priceImpactPercent}
+              maxSlippagePercent={breakdown?.maxSlippagePercent}
+            />
+          </div>
+        ) : null}
+
+        {step === "status" ? (
+          <WithdrawStatusStep
+            phase={operationPhase}
+            detail={operationDetail}
+            error={withdrawError}
+          />
+        ) : null}
       </FundingModalShell>
     </Modal>
   );
