@@ -267,7 +267,7 @@ export function useWithdraw(): UseWithdrawResult {
 
       return quote;
     },
-    [session?.funderAddress],
+    [session],
   );
 
   const pollStableflowWithdraw = useCallback(
@@ -403,13 +403,7 @@ export function useWithdraw(): UseWithdrawResult {
         throw withdrawError;
       }
     },
-    [
-      fetchStableflowWithdrawQuote,
-      pollStableflowWithdraw,
-      session?.funderAddress,
-      session?.walletAddress,
-      syncCash,
-    ],
+    [fetchStableflowWithdrawQuote, pollStableflowWithdraw, session, syncCash],
   );
 
   return {
