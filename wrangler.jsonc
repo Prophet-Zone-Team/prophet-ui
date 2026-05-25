@@ -1,13 +1,11 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "main": "worker.mjs",
-  "name": "world-cup-prediction-terminal",
+  "name": "prophet-ui-dev",
   "workers_dev": false,
   "preview_urls": false,
   "compatibility_date": "2026-05-12",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -29,14 +27,12 @@
   ],
   "routes": [
     {
-      "pattern": "wc.dolla.market",
-      "zone_name": "dolla.market",
+      "pattern": "dev.prophet.zone",
+      "zone_name": "prophet.zone",
       "custom_domain": true
     }
   ],
   "triggers": {
-    "crons": [
-      "*/10 * * * *"
-    ]
+    "crons": ["*/10 * * * *"]
   }
 }
