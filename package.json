@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "cf:build": "opennextjs-cloudflare build",
     "lint": "eslint . --max-warnings=0",
     "check:trading-safety": "node scripts/check-trading-safety.mjs",
     "smoke:trading:prod": "node scripts/smoke-trading-production.mjs",
