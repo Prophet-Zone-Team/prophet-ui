@@ -1,8 +1,8 @@
 export const PRIMARY_NAV = [
   { href: "/fifa", label: "FIFA" },
-  { href: "/news", label: "Analytics" },
+  { href: "/analytics", label: "Analytics" },
   { href: "/tracks", label: "Tracks" },
-  { href: "/portfolio", label: "Portfolio" },
+  { href: "/portfolio", label: "Portfolio" }
 ] as const;
 
 export function isNavActive(pathname: string, href: string): boolean {

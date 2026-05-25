@@ -302,7 +302,18 @@ export async function getLiveWorldCupMarketData(options: WorldCupMarketDataOptio
     let data: WorldCupMarketData;
 
     if (source === "polymarket" && options.preferStored !== false) {
-      data = (await getStoredPolymarketWorldCupData()) ?? await polymarketDataProvider.getWorldCupMarketData();
+      const stored = await getStoredPolymarketWorldCupData();
+
+      if (stored) {
+        data = snapshotsNeedPolymarketTradingMetadata(stored.snapshots)
+          ? mergePolymarketTradingMetadata(
+              stored,
+              await polymarketDataProvider.getWorldCupMarketData(),
+            )
+          : stored;
+      } else {
+        data = await polymarketDataProvider.getWorldCupMarketData();
+      }
     } else if (source === "kalshi") {
       data = await kalshiDataProvider.getWorldCupMarketData();
     } else if (source === "polymarket") {
@@ -733,6 +744,42 @@ function deriveSentiment(change24h: number): MarketSentiment {
 
 function isSnapshot(value: TeamMarketSnapshot | undefined): value is TeamMarketSnapshot {
   return Boolean(value);
+}
+
+function snapshotsNeedPolymarketTradingMetadata(snapshots: TeamMarketSnapshot[]): boolean {
+  return snapshots.some((snapshot) => !hasPolymarketOutcomeTokenIds(snapshot));
+}
+
+function hasPolymarketOutcomeTokenIds(snapshot: TeamMarketSnapshot): boolean {
+  const tokens = snapshot.market.polymarket?.tokens;
+
+  return Boolean(tokens?.yes?.tokenId || tokens?.no?.tokenId);
+}
+
+function mergePolymarketTradingMetadata(
+  base: WorldCupMarketData,
+  live: WorldCupMarketData,
+): WorldCupMarketData {
+  const liveByTeamId = new Map(live.snapshots.map((snapshot) => [snapshot.team.id, snapshot]));
+
+  return {
+    ...base,
+    snapshots: base.snapshots.map((snapshot) => {
+      const polymarket = liveByTeamId.get(snapshot.team.id)?.market.polymarket;
+
+      if (!polymarket) {
+        return snapshot;
+      }
+
+      return {
+        ...snapshot,
+        market: {
+          ...snapshot.market,
+          polymarket,
+        },
+      };
+    }),
+  };
 }
 
 function getMarketDataCacheKey(options: WorldCupMarketDataOptions) {
