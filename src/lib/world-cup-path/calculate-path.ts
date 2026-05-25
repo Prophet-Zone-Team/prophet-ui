@@ -339,8 +339,20 @@ function unique<T>(items: T[]): T[] {
   return [...new Set(items)];
 }
 
-function normalizeQualifiedThirdGroups(groups: string[]): string[] {
+export function normalizeQualifiedThirdGroups(groups: string[]): string[] {
   return unique(groups.map((group) => group.trim().toUpperCase()).filter((group) => WORLD_CUP_2026_GROUP_ORDER.includes(group as WorldCup2026Group))).sort();
+}
+
+export function resolveThirdPlaceOption(qualifiedThirdGroups: string[]): ThirdPlaceAllocationOption | undefined {
+  const normalizedGroups = normalizeQualifiedThirdGroups(qualifiedThirdGroups);
+
+  if (normalizedGroups.length !== 8) {
+    return undefined;
+  }
+
+  return THIRD_PLACE_ALLOCATION_OPTIONS.find((option) =>
+    sameGroups(option.qualifiedThirdGroups, normalizedGroups),
+  );
 }
 
 function sameGroups(left: string[], right: string[]): boolean {
