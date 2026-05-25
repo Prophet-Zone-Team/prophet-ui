@@ -24,20 +24,18 @@ import { selectTokenPrice, selectTokenUsdValue } from "@/lib/funding/price-selec
 import Big from "big.js";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { usePortfolioContext } from "../context";
+import { useAuth } from "@/context/auth";
 
 export interface DepositDialogProps {
   open: boolean;
   onClose: () => void;
+  onDepositSuccess?: () => void | Promise<void>;
 }
 
 const INITIAL_STEP: DepositStep = "tokens";
 
-export function DepositDialog({ open, onClose }: DepositDialogProps) {
-  const {
-    session,
-    reload,
-  } = usePortfolioContext();
+export function DepositDialog({ open, onClose, onDepositSuccess }: DepositDialogProps) {
+  const { session, syncCash } = useAuth();
 
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
   const [selectedToken, setSelectedToken] = useState<FundingAsset | undefined>();
@@ -171,7 +169,11 @@ export function DepositDialog({ open, onClose }: DepositDialogProps) {
 
       toast.success("Deposit successful");
       handleClose();
-      reload();
+      if (onDepositSuccess) {
+        await onDepositSuccess();
+      } else {
+        await syncCash();
+      }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       toast.error(message);

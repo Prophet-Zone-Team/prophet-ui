@@ -6,7 +6,7 @@ import {
   depositSectionLabelClass
 } from "@/views/portfolio/deposit/deposit-ui";
 import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
-import { usePortfolioContext } from "../context";
+import { useAuth } from "@/context/auth";
 import { useDepositContext } from "./context";
 import { formatNumber } from "@/utils";
 
@@ -17,11 +17,7 @@ export interface DepositEntryStepProps {
 export function DepositEntryStep({
   onSelectConnected
 }: DepositEntryStepProps) {
-  const {
-    session,
-    onConnectWallet,
-    status,
-  } = usePortfolioContext();
+  const { session, openLogin, loginInProgress } = useAuth();
   const {
     connectedWalletBalanceUsd,
     balancesLoading,
@@ -34,10 +30,10 @@ export function DepositEntryStep({
         <button
           type="button"
           className="bg-black text-white flex justify-center items-center w-60 h-10 text-base rounded-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() => void onConnectWallet()}
-          disabled={status === "loading"}
+          onClick={() => void openLogin()}
+          disabled={loginInProgress}
         >
-          {status === "loading" ? "Connecting…" : "Connect Wallet"}
+          {loginInProgress ? "Connecting…" : "Connect Wallet"}
         </button>
       </div>
     );

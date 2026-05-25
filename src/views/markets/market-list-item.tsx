@@ -61,8 +61,8 @@ export function MarketListItem({ snapshot, rank }: MarketListItemProps) {
       role="link"
       tabIndex={0}
       aria-label={`Open trade page for ${team.name}`}
-      // onClick={navigateToTrade}
-      // onKeyDown={handleRowKeyDown}
+      onClick={navigateToTrade}
+      onKeyDown={handleRowKeyDown}
       className={cn(
         "flex min-h-[78px] cursor-pointer items-center gap-x-10 gap-y-3 overflow-visible rounded-xl border border-[#EBEBEB] px-4 transition-colors hover:border-[#d0d0d0]",
         "max-lg:flex-col max-lg:items-stretch max-lg:gap-4 max-lg:py-3",
@@ -121,7 +121,6 @@ export function MarketListItem({ snapshot, rank }: MarketListItemProps) {
           type="button"
           className={bidButtonClassName}
           aria-label={`Bid on ${team.name}`}
-          onClick={navigateToTrade}
         >
           <Zap
             className="h-3.5 w-2.5 shrink-0 fill-white stroke-white"

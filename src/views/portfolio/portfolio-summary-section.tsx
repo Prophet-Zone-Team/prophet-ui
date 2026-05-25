@@ -3,11 +3,11 @@
 import { useCallback, useState } from "react";
 
 import { formatShortWallet } from "@/lib/team/detail-format";
+import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import { DepositDialog } from "@/views/portfolio/deposit";
 import { PortfolioPerformanceChart } from "@/views/portfolio/portfolio-performance-chart";
 import { WithdrawDialog } from "@/views/portfolio/withdraw";
 import {
-  portfolioAvatarClass,
   portfolioConnectButtonClass,
   portfolioDepositButtonClass,
   portfolioSummaryCardClass,
@@ -28,7 +28,8 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
     session,
     portfolio,
     status,
-    onConnectWallet
+    onConnectWallet,
+    reload,
   } = usePortfolioContext();
 
   const [copied, setCopied] = useState(false);
@@ -62,7 +63,14 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
       aria-label="Portfolio summary"
     >
       <div className="flex items-center gap-3">
-        <div className={portfolioAvatarClass} aria-hidden="true" />
+        {session ? (
+          <WalletAvatar address={session.walletAddress} size="lg" />
+        ) : (
+          <div
+            className="size-[52px] shrink-0 rounded-full border-4 border-white bg-prophet-line shadow-[0_0_4px_rgba(0,0,0,0.25)]"
+            aria-hidden="true"
+          />
+        )}
         {session ? (
           <div className="flex min-w-0 items-center gap-2">
             <span className={portfolioWalletAddressClass}>
@@ -160,6 +168,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
           <DepositDialog
             open={depositOpen}
             onClose={() => setDepositOpen(false)}
+            onDepositSuccess={reload}
           />
           <WithdrawDialog
             open={withdrawOpen}
