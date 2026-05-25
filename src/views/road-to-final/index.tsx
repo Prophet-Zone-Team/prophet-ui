@@ -15,6 +15,7 @@ import { createDefaultPlacements } from "./lib/placements";
 import { defaultSimulatorTeamId } from "./lib/teams";
 import { RoadWorkbench } from "./workbench";
 import type { KnockoutWinners } from "./types";
+import { PageBack } from "@/components/ui/page-back";
 
 export function RoadToFinalPage({
   initialTeamId = defaultSimulatorTeamId
@@ -53,7 +54,10 @@ export function RoadToFinalPage({
   const thirdPlaceOption = resolveThirdPlaceOption(advancingThirdGroups);
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-4 pb-8 pt-[30px]">
+    <div className="mx-auto w-full max-w-[1600px] px-4 pb-8 pt-[30px] relative">
+      <div className="absolute left-[-60px] top-[10px]">
+        <PageBack />
+      </div>
       <RoadWorkbench
         activeGroup={activeGroup}
         advancingThirdGroups={advancingThirdGroups}
