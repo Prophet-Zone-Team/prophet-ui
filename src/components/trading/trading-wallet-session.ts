@@ -42,6 +42,19 @@ export function getStoredTradingWalletProvider(walletAddress: string): WalletPro
   return value === "okx" || value === "metamask" || value === "injected" ? value : undefined;
 }
 
+export function getStoredTradingWalletInfo(walletAddress?: string) {
+  const walletKind = getStoredTradingWalletProvider(walletAddress ?? "");
+  const walletLogos: Record<WalletProviderKind, string> = {
+    okx: "/wallets/logo-okx.png",
+    metamask: "/wallets/logo-metamask.png",
+    injected: "",
+  };
+  return {
+    kind: walletKind,
+    logo: walletKind ? walletLogos[walletKind] : undefined,
+  };
+}
+
 function writeStoredTradingWalletProvider(walletAddress: string, providerKind: WalletProviderKind) {
   if (typeof window === "undefined") {
     return;

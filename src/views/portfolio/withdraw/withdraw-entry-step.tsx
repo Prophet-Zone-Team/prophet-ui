@@ -9,6 +9,9 @@ import {
 } from "@/views/portfolio/deposit/deposit-ui";
 import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import { usePortfolioContext } from "../context";
+import { getStoredTradingWalletInfo } from "@/components/trading/trading-wallet-session";
+import { formatNumber } from "@/utils";
+import { useEffect } from "react";
 
 export interface WithdrawEntryStepProps {
   onSelectBridge: () => void;
@@ -21,7 +24,18 @@ export function WithdrawEntryStep({
   onSelectStableflow,
   stableflowLoading = false,
 }: WithdrawEntryStepProps) {
-  const { session, onConnectWallet, status } = usePortfolioContext();
+  const { session, onConnectWallet, status, portfolio, reload, coreStatus } = usePortfolioContext();
+  const walletKind = getStoredTradingWalletInfo(session?.walletAddress);
+  const availableDisplay = session
+    ? formatNumber(portfolio?.availableToTrade, 4, true, {
+      round: 0,
+      isZeroPrecision: true
+    })
+    : "0.00";
+
+  useEffect(() => {
+    reload();
+  }, []);
 
   if (!session) {
     return (
@@ -51,22 +65,32 @@ export function WithdrawEntryStep({
           {stableflowLoading ? (
             <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
           ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f4f4f4] text-xs font-[556] text-black">
-              SF
-            </span>
+            <img
+              src="/logos/logo-stableflow.svg"
+              alt=""
+              className="size-8 shrink-0 rounded-full object-center object-contain"
+            />
           )}
           <span className="truncate text-base font-[556] text-black">Stableflow</span>
         </span>
       </button>
 
-      <span className={depositSectionLabelClass}>Polymarket Bridge</span>
+      <span className={depositSectionLabelClass}>Connected</span>
       <button type="button" className={depositConnectedRowClass} onClick={onSelectBridge}>
         <span className="flex min-w-0 items-center gap-3">
-          <WalletAvatarIcon />
-          <span className="truncate text-base font-[556] text-black">Polymarket Bridge</span>
+          <WalletAvatarIcon logo={walletKind.logo} />
+          <span className="truncate text-base font-[556] text-black">
+            {formatShortWallet(session.walletAddress)}
+          </span>
         </span>
         <span className="shrink-0 text-base font-[556] text-[#909090]">
-          {formatShortWallet(session.walletAddress)}
+          {
+            coreStatus === "loading"
+              ? (
+                <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
+              )
+              : availableDisplay
+          }
         </span>
       </button>
     </div>
