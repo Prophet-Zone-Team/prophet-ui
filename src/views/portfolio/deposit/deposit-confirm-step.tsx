@@ -95,7 +95,7 @@ export function DepositConfirmStep({
       <div className="flex flex-col">
         <DetailRow label="From">
           <span className="flex items-center gap-2">
-            <WalletAvatarIcon />
+            <WalletAvatarIcon address={walletAddress} />
             <span>{formatShortWallet(walletAddress)}</span>
           </span>
         </DetailRow>

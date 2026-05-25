@@ -33,7 +33,7 @@ export function AppHeader() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 flex h-11 items-center justify-between px-10 transition-[background-color,box-shadow,border-color] duration-200",
+        "fixed inset-x-0 top-0 z-50 flex items-center justify-between px-10 py-2.5 transition-[background-color,box-shadow,border-color] duration-200",
         isScrolled &&
           "border-b border-prophet-line/50 bg-white/75 shadow-prophet-wallet backdrop-blur-2xl backdrop-saturate-150"
       )}

@@ -520,7 +520,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
               {isBridge ? (
                 <div className={withdrawInputBoxClass}>
                   <span className="flex min-w-0 items-center gap-2">
-                    <WalletAvatarIcon />
+                    <WalletAvatarIcon address={session?.walletAddress} />
                     <span className="truncate text-base font-[556] text-black">
                       {formatShortWallet(session?.walletAddress)}
                     </span>

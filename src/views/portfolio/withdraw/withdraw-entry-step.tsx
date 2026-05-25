@@ -25,7 +25,6 @@ export function WithdrawEntryStep({
   stableflowLoading = false,
 }: WithdrawEntryStepProps) {
   const { session, onConnectWallet, status, portfolio, reload, coreStatus } = usePortfolioContext();
-  const walletKind = getStoredTradingWalletInfo(session?.walletAddress);
   const availableDisplay = session
     ? formatNumber(portfolio?.availableToTrade, 4, true, {
       round: 0,
@@ -78,7 +77,7 @@ export function WithdrawEntryStep({
       <span className={depositSectionLabelClass}>Connected</span>
       <button type="button" className={depositConnectedRowClass} onClick={onSelectBridge}>
         <span className="flex min-w-0 items-center gap-3">
-          <WalletAvatarIcon logo={walletKind.logo} />
+          <WalletAvatarIcon address={session?.walletAddress} />
           <span className="truncate text-base font-[556] text-black">
             {formatShortWallet(session.walletAddress)}
           </span>

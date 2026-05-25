@@ -81,7 +81,7 @@ export function WalletMenuButton() {
 
   const balanceDisplay = useMemo(() => {
     if (cashStatus === "loading") {
-      return "…";
+      return "-";
     }
 
     return formatNumber(cash?.available, 2, true, {

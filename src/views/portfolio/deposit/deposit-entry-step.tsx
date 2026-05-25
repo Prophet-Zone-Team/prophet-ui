@@ -31,7 +31,6 @@ export function DepositEntryStep({
     balancesLoading,
     pricesLoading,
   } = useDepositContext();
-  const walletKind = getStoredTradingWalletInfo(session?.walletAddress);
 
   if (!session) {
     return (
@@ -82,7 +81,7 @@ export function DepositEntryStep({
         onClick={onSelectConnected}
       >
         <span className="flex min-w-0 items-center gap-3">
-          <WalletAvatarIcon logo={walletKind.logo} />
+          <WalletAvatarIcon address={session?.walletAddress} />
           <span className="truncate text-base font-[556] text-black">
             {formatShortWallet(session.walletAddress)}
           </span>
