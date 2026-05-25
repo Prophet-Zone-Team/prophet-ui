@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { CheckIcon, CopyIcon } from "@/components/icons";
+import { usePendingFunderUsdc } from "@/hooks/funding";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import { DepositDialog } from "@/views/portfolio/deposit";
@@ -11,6 +14,7 @@ import { WithdrawDialog } from "@/views/portfolio/withdraw";
 import {
   portfolioConnectButtonClass,
   portfolioDepositButtonClass,
+  portfolioPendingDepositButtonClass,
   portfolioSummaryCardClass,
   portfolioSummaryLabelClass,
   portfolioSummaryValueLargeClass,
@@ -21,16 +25,17 @@ import {
 import { formatNumber } from "@/utils";
 import { usePortfolioContext } from "./context";
 
-export interface PortfolioSummarySectionProps {
-}
+export interface PortfolioSummarySectionProps {}
 
-export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
+export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
   const {
     session,
     portfolio,
     status,
     onConnectWallet,
     reload,
+    onConnectWallet,
+    reload
   } = usePortfolioContext();
 
   const [copied, setCopied] = useState(false);
@@ -38,6 +43,11 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const polymarketAddress = session?.funderAddress ?? session?.walletAddress;
+
+  const { hasPendingDeposit, converting, confirmPendingDeposit } =
+    usePendingFunderUsdc({
+      enabled: Boolean(session)
+    });
 
   const copyAddress = useCallback(async () => {
     if (!polymarketAddress) {
@@ -53,11 +63,28 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
     }
   }, [polymarketAddress]);
 
+  const onConfirmPendingDeposit = async () => {
+    try {
+      await confirmPendingDeposit();
+      toast.success("Deposit successful");
+      reload();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message);
+    }
+  };
+
   const portfolioDisplay = session
-    ? formatNumber(portfolio?.portfolioValue, 2, true, { round: 0, isZeroPrecision: true })
+    ? formatNumber(portfolio?.portfolioValue, 2, true, {
+        round: 0,
+        isZeroPrecision: true
+      })
     : "—";
   const availableDisplay = session
-    ? formatNumber(portfolio?.availableToTrade, 2, true, { round: 0, isZeroPrecision: true })
+    ? formatNumber(portfolio?.availableToTrade, 2, true, {
+        round: 0,
+        isZeroPrecision: true
+      })
     : "—";
 
   return (
@@ -67,7 +94,10 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
     >
       <div className="flex items-center gap-3">
         {session ? (
-          <WalletAvatar address={session.funderAddress ?? session.walletAddress} size="lg" />
+          <WalletAvatar
+            address={session.funderAddress ?? session.walletAddress}
+            size="lg"
+          />
         ) : (
           <div
             className="size-[52px] shrink-0 rounded-full border-4 border-white bg-prophet-line shadow-[0_0_4px_rgba(0,0,0,0.25)]"
@@ -106,9 +136,27 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
               </strong>
             </div>
             <div className="flex flex-col gap-1">
-              <span className={portfolioSummaryLabelClass}>
-                Available to trade
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={portfolioSummaryLabelClass}>
+                  Available to trade
+                </span>
+                {session && hasPendingDeposit ? (
+                  <button
+                    type="button"
+                    className={portfolioPendingDepositButtonClass}
+                    disabled={converting}
+                    onClick={() => void onConfirmPendingDeposit()}
+                  >
+                    {converting ? (
+                      <Loader2
+                        className="mr-1.5 h-3.5 w-3.5 animate-spin"
+                        aria-hidden="true"
+                      />
+                    ) : null}
+                    Confirm pending deposit
+                  </button>
+                ) : null}
+              </div>
               <strong className={portfolioSummaryValueMediumClass}>
                 {availableDisplay}
               </strong>

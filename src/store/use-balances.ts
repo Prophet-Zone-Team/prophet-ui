@@ -22,6 +22,7 @@ interface BalancesStore {
     address: string;
     balance: string;
   }) => void;
+  mergeEvmBalances: (partial: EvmBalancesByChain) => void;
   clearEvmBalances: () => void;
 }
 
@@ -55,6 +56,22 @@ export const useBalancesStore = create<BalancesStore>((set) => ({
             [tokenKey]: balance,
           },
         },
+        updatedAt: new Date().toISOString(),
+      };
+    }),
+  mergeEvmBalances: (partial) =>
+    set((state) => {
+      const merged: EvmBalancesByChain = { ...state.evmBalances };
+
+      for (const [chainKey, chainBalances] of Object.entries(partial)) {
+        merged[chainKey] = {
+          ...merged[chainKey],
+          ...chainBalances,
+        };
+      }
+
+      return {
+        evmBalances: merged,
         updatedAt: new Date().toISOString(),
       };
     }),

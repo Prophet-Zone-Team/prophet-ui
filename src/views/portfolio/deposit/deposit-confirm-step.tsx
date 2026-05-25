@@ -1,9 +1,10 @@
 "use client";
 
+import type { QuoteResponse } from "@stableflow/core";
 import { Loader2 } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 
-import { FundingAsset, POLYMARKET_USD } from "@/config/funding";
+import { POLYMARKET_USD } from "@/config/funding";
 import { useBridgeQuote } from "@/hooks/funding";
 import {
   buildDepositQuoteRequest,
@@ -11,44 +12,68 @@ import {
   formatQuoteTokenAmount,
   mapQuoteToBreakdown,
 } from "@/lib/funding/bridge-quote";
+import { mapStableflowQuoteToConfirmDisplay } from "@/lib/funding/stableflow";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { depositDetailRowClass } from "@/views/portfolio/deposit/deposit-ui";
 import { TransactionBreakdown } from "@/views/portfolio/deposit/transaction-breakdown";
+import type { DepositSelectableToken } from "@/views/portfolio/deposit/types";
 import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import { formatNumber } from "@/utils";
 
 export interface DepositConfirmStepProps {
   walletAddress: string;
-  token: FundingAsset;
+  token: DepositSelectableToken;
   amount: string;
+  quoteMode?: "bridge" | "stableflow";
+  stableflowQuote?: QuoteResponse;
+  recipientAddress?: string;
 }
 
 export function DepositConfirmStep({
   walletAddress,
   token,
   amount,
+  quoteMode = "bridge",
+  stableflowQuote,
+  recipientAddress,
 }: DepositConfirmStepProps) {
   const quoteRequest = useMemo(
-    () => buildDepositQuoteRequest({ token, amount }),
-    [amount, token],
+    () => (quoteMode === "bridge" ? buildDepositQuoteRequest({ token, amount }) : undefined),
+    [amount, quoteMode, token],
   );
 
   const { quote, loading: quoteLoading, error: quoteError } = useBridgeQuote({
     request: quoteRequest,
-    enabled: Boolean(quoteRequest),
+    enabled: quoteMode === "bridge" && Boolean(quoteRequest),
   });
+
+  const stableflowDisplay = useMemo(
+    () => (stableflowQuote ? mapStableflowQuoteToConfirmDisplay(stableflowQuote) : undefined),
+    [stableflowQuote],
+  );
 
   const breakdown = quote ? mapQuoteToBreakdown(quote) : undefined;
 
-  const estimatedTime = quote
-    ? formatQuoteCheckoutTime(quote.estCheckoutTimeMs)
-    : quoteLoading
-      ? "…"
-      : "--";
+  const estimatedTime =
+    quoteMode === "stableflow" && stableflowDisplay
+      ? formatQuoteCheckoutTime(stableflowDisplay.estCheckoutTimeMs)
+      : quote
+        ? formatQuoteCheckoutTime(quote.estCheckoutTimeMs)
+        : quoteLoading
+          ? "…"
+          : "--";
 
-  const receiveAmount = quote
-    ? formatQuoteTokenAmount(quote.estToTokenBaseUnit, POLYMARKET_USD.decimals)
-    : amount;
+  const receiveAmount =
+    quoteMode === "stableflow" && stableflowDisplay
+      ? stableflowDisplay.receiveAmountFormatted
+      : quote
+        ? formatQuoteTokenAmount(quote.estToTokenBaseUnit, POLYMARKET_USD.decimals)
+        : amount;
+
+  const toAddress = recipientAddress ?? walletAddress;
+  const isStableflow = quoteMode === "stableflow";
+  const showQuoteLoading = isStableflow ? false : quoteLoading;
+  const showQuoteError = isStableflow ? undefined : quoteError;
 
   return (
     <div className="flex flex-col gap-4 pb-2">
@@ -56,15 +81,15 @@ export function DepositConfirmStep({
         {formatNumber(amount, token.decimals, true, { round: 0 })}
       </p>
 
-      {quoteLoading ? (
+      {showQuoteLoading ? (
         <div className="flex items-center justify-center gap-2 text-sm text-[#909090]">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           <span>Fetching quote…</span>
         </div>
       ) : null}
 
-      {quoteError ? (
-        <p className="m-0 text-center text-sm text-prophet-red">{quoteError}</p>
+      {showQuoteError ? (
+        <p className="m-0 text-center text-sm text-prophet-red">{showQuoteError}</p>
       ) : null}
 
       <div className="flex flex-col">
@@ -83,7 +108,7 @@ export function DepositConfirmStep({
               chainIcon={POLYMARKET_USD.chainIcon}
               size="sm"
             />
-            <span>{formatShortWallet(walletAddress)}</span>
+            <span>{formatShortWallet(toAddress)}</span>
           </span>
         </DetailRow>
         <DetailRow label="Est. Time">
@@ -111,7 +136,7 @@ export function DepositConfirmStep({
               size="sm"
             />
             <span>
-              {quoteLoading
+              {showQuoteLoading
                 ? "…"
                 : formatNumber(receiveAmount, 4, true, { round: 0 })}
             </span>
@@ -119,12 +144,14 @@ export function DepositConfirmStep({
         </DetailRow>
       </div>
 
-      <TransactionBreakdown
-        loading={quoteLoading && Boolean(quoteRequest)}
-        networkCostUsd={breakdown?.networkCost}
-        priceImpactPercent={breakdown?.priceImpactPercent}
-        maxSlippagePercent={breakdown?.maxSlippagePercent}
-      />
+      {!isStableflow ? (
+        <TransactionBreakdown
+          loading={quoteLoading && Boolean(quoteRequest)}
+          networkCostUsd={breakdown?.networkCost}
+          priceImpactPercent={breakdown?.priceImpactPercent}
+          maxSlippagePercent={breakdown?.maxSlippagePercent}
+        />
+      ) : null}
     </div>
   );
 }

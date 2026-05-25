@@ -3,7 +3,8 @@
 import { ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { FundingAsset, POLYMARKET_USD } from "@/config/funding";
+import { POLYMARKET_USD } from "@/config/funding";
+import type { DepositSelectableToken } from "@/views/portfolio/deposit/types";
 import {
   depositAmountInputClass,
   depositPercentButtonClass,
@@ -20,7 +21,7 @@ import Big from "big.js";
 const PERCENT_OPTIONS = [25, 50, 75, 100] as const;
 
 export interface DepositAmountStepProps {
-  token: FundingAsset;
+  token: DepositSelectableToken;
   amount: string;
   maxAmount: string;
   onAmountChange: (amount: string) => void;

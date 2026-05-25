@@ -19,6 +19,12 @@ export const portfolioSummaryValueLargeClass =
 export const portfolioSummaryValueMediumClass =
   "text-xl font-[556] leading-12 text-black mt-2";
 
+export const portfolioPendingDepositButtonClass = cn(
+  "inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-black px-3",
+  "text-xs font-[556] leading-[14px] text-white transition-opacity hover:opacity-90",
+  "disabled:cursor-not-allowed disabled:opacity-50"
+);
+
 export const portfolioWalletAddressClass =
   "truncate text-xl font-[556] leading-6 text-black";
 
