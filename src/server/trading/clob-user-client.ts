@@ -204,18 +204,14 @@ export async function fetchUserOpenOrders({
     throw new Error(`Unable to fetch open orders: ${await readResponseError(response)}`);
   }
 
-  const payload = (await response.json()) as OpenOrdersResponse | OpenOrder[] | null;
+  const payload = (await response.json()) as OpenOrdersResponse | null;
   return normalizeOpenOrdersResponse(payload);
 }
 
 export function normalizeOpenOrdersResponse(
-  payload: OpenOrdersResponse | OpenOrder[] | null | undefined
+  payload: OpenOrdersResponse | null | undefined
 ): OpenOrder[] {
-  if (Array.isArray(payload)) {
-    return payload;
-  }
-
-  return payload?.data ?? [];
+  return Array.isArray(payload) ? payload : [];
 }
 
 export async function cancelUserOrder({

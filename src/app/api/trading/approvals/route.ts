@@ -288,31 +288,30 @@ function validateSubmittedApproval(
     return "Missing signed approval payload.";
   }
 
-  if (submittedApproval.walletAddress.toLowerCase() !== expectedApproval.walletAddress.toLowerCase()) {
+  if (
+    submittedApproval.message.wallet.toLowerCase() !== expectedApproval.message.wallet.toLowerCase()
+  ) {
     return "Signed approval wallet does not match the current session deposit wallet.";
   }
 
-  if (submittedApproval.nonce !== expectedApproval.nonce || submittedApproval.deadline !== expectedApproval.deadline) {
+  if (
+    submittedApproval.message.nonce !== expectedApproval.message.nonce ||
+    submittedApproval.message.deadline !== expectedApproval.message.deadline
+  ) {
     return "Signed approval nonce or deadline changed. Refresh and approve trading again.";
   }
 
-  if (normalizeApprovalCalls(submittedApproval.calls) !== normalizeApprovalCalls(expectedApproval.calls)) {
-    return "Signed approval calls changed. Refresh and approve trading again.";
-  }
-
   if (
-    submittedApproval.message.wallet.toLowerCase() !== submittedApproval.walletAddress.toLowerCase() ||
-    submittedApproval.message.nonce !== submittedApproval.nonce ||
-    submittedApproval.message.deadline !== submittedApproval.deadline ||
-    normalizeApprovalCalls(submittedApproval.message.calls) !== normalizeApprovalCalls(submittedApproval.calls)
+    normalizeApprovalCalls(submittedApproval.message.calls) !==
+    normalizeApprovalCalls(expectedApproval.message.calls)
   ) {
-    return "Signed approval message does not match approval payload. Refresh and approve trading again.";
+    return "Signed approval calls changed. Refresh and approve trading again.";
   }
 
   return undefined;
 }
 
-function normalizeApprovalCalls(calls: DepositWalletBatchSignablePayload["calls"]) {
+function normalizeApprovalCalls(calls: DepositWalletBatchSignablePayload["message"]["calls"]) {
   return JSON.stringify(
     calls.map((call) => ({
       target: call.target.toLowerCase(),

@@ -22,6 +22,7 @@
   "dependencies": {
     "@lucide/lab": "^0.1.2",
     "@polymarket/builder-relayer-client": "^0.0.9",
+    "@polymarket/builder-signing-sdk": "^0.0.8",
     "@polymarket/clob-client-v2": "^1.0.6",
     "@radix-ui/react-slot": "^1.1.2",
     "@stableflow/core": "^3.0.0",

@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
-
 import { MatchStatusBadge } from "@/components/match/match-status-badge";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { gameTradeHref } from "@/lib/routes/trade";
@@ -59,10 +57,7 @@ export function RelatedGameCard({
   highlightTeamId
 }: RelatedGameCardProps) {
   const sides = resolveMatchSides(match, snapshots);
-  const gameSnapshot = useMemo(
-    () => buildGameMarketSnapshot(match, snapshots),
-    [match, snapshots]
-  );
+  const gameSnapshot = buildGameMarketSnapshot(match, snapshots);
   const homePrice = getGameSidePrice(gameSnapshot, "home");
   const drawPrice = getGameSidePrice(gameSnapshot, "draw");
   const awayPrice = getGameSidePrice(gameSnapshot, "away");

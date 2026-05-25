@@ -64,8 +64,8 @@ export async function submitDepositWalletApproval(
       },
       body: JSON.stringify({
         signature,
-        nonce: approval.nonce,
-        deadline: approval.deadline,
+        nonce: approval.message.nonce,
+        deadline: approval.message.deadline,
         approval,
         sessionSignerAddress: sessionSigner?.sessionSignerAddress,
         sessionSignerValidUntil: sessionSigner?.sessionSignerValidUntil,
