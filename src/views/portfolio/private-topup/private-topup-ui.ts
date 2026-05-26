@@ -62,7 +62,7 @@ export const privateTopupModalAmountPrefixClass =
   "shrink-0 text-[36px] font-[556] leading-[43px] text-black";
 
 export const privateTopupModalAmountInputClass = cn(
-  "min-w-0 flex-1 border-0 bg-transparent p-0 text-left text-[36px] font-[556] leading-[43px] text-black",
+  "min-w-0 flex-1 border-0 bg-transparent p-0 text-center text-[36px] font-[556] leading-[43px] text-black",
   "outline-none placeholder:text-[#c8c8c8]",
 );
 

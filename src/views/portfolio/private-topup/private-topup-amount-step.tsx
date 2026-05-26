@@ -32,6 +32,7 @@ import {
   validatePrivateTopupAmount,
 } from "@/views/portfolio/private-topup/utils";
 import { cn } from "@/lib/cn";
+import InputNumber from "@/components/input-number";
 
 const PERCENT_OPTIONS = [25, 50, 75, 100] as const;
 
@@ -51,9 +52,7 @@ export function PrivateTopupAmountStep({
   const { topupWalletAddress, privateAccountAddress } = usePrivateTopupContext();
   const prices = usePricesStore((state) => state.prices);
 
-  const [inputValue, setInputValue] = useState(() =>
-    Big(amount.amountUsd || 0).gt(0) ? amount.amountUsd : "0",
-  );
+  const [inputValue, setInputValue] = useState("0");
 
   const validationError = useMemo(
     () => validatePrivateTopupAmount(amount.tokenAmount, maxAmount),
@@ -93,7 +92,6 @@ export function PrivateTopupAmountStep({
 
     const amountUsd = computeUsdFromTokenAmount(tokenAmount, prices, token);
     onAmountChange({ tokenAmount, amountUsd });
-    setInputValue(amountUsd);
   }
 
   function handlePercent(percent: number) {
@@ -109,14 +107,10 @@ export function PrivateTopupAmountStep({
     <div className="flex flex-col justify-between gap-6 pb-2 pt-8 h-full">
       <div className="flex flex-col items-center gap-4">
         <div className={privateTopupModalAmountInputWrapClass}>
-          <span className={privateTopupModalAmountPrefixClass} aria-hidden>
-            $
-          </span>
-          <input
-            type="text"
-            inputMode="decimal"
+          <InputNumber
+            prefix="$"
             value={inputValue}
-            onChange={(event) => handleInputChange(event.target.value)}
+            onNumberChange={handleInputChange}
             className={privateTopupModalAmountInputClass}
             aria-label="Top up amount in USD"
             placeholder="0"
