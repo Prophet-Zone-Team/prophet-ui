@@ -5,6 +5,7 @@ import { arbitrum, bsc, optimism, polygon } from "viem/chains";
 
 import { getStoredTradingWalletProvider } from "@/components/trading/trading-wallet-session";
 import { getEthereumProviderForWallet } from "@/components/trading/wallet-provider";
+import { isNativeFundingToken } from "@/lib/funding/evm-balances";
 import Big from "big.js";
 
 const VIEM_CHAIN_BY_ID: Record<number, Chain> = {
@@ -14,6 +15,52 @@ const VIEM_CHAIN_BY_ID: Record<number, Chain> = {
   [polygon.id]: polygon,
 };
 
+export interface CollateralTransferParams {
+  tokenAddress: string;
+  toAddress: string;
+  amountUsd: string;
+  tokenDecimals: number;
+}
+
+export interface CollateralTransferWalletClient {
+  sendTransaction(request: { to: Address; value: bigint }): Promise<Hex>;
+  writeContract(request: {
+    address: Address;
+    abi: typeof erc20Abi;
+    functionName: "transfer";
+    args: readonly [Address, bigint];
+  }): Promise<Hex>;
+}
+
+export async function transferCollateralWithWalletClient(
+  walletClient: CollateralTransferWalletClient,
+  { tokenAddress, toAddress, amountUsd, tokenDecimals }: CollateralTransferParams,
+): Promise<{ txHash: Hex }> {
+  if (Big(amountUsd).lte(0)) {
+    throw new Error("Transfer amount must be greater than zero.");
+  }
+
+  const amount = parseUnits(amountUsd, tokenDecimals);
+
+  if (isNativeFundingToken(tokenAddress)) {
+    return {
+      txHash: await walletClient.sendTransaction({
+        to: toAddress as Address,
+        value: amount,
+      }),
+    };
+  }
+
+  return {
+    txHash: await walletClient.writeContract({
+      address: tokenAddress as Address,
+      abi: erc20Abi,
+      functionName: "transfer",
+      args: [toAddress as Address, amount],
+    }),
+  };
+}
+
 export async function transferCollateralFromConnectedWallet({
   walletAddress,
   tokenAddress,
@@ -21,18 +68,10 @@ export async function transferCollateralFromConnectedWallet({
   amountUsd,
   tokenDecimals,
   chainId,
-}: {
+}: CollateralTransferParams & {
   walletAddress: string;
-  tokenAddress: string;
-  toAddress: string;
-  amountUsd: string;
-  tokenDecimals: number;
   chainId: number;
 }): Promise<{ txHash: Hex }> {
-  if (Big(amountUsd).lte(0)) {
-    throw new Error("Transfer amount must be greater than zero.");
-  }
-
   const chain = VIEM_CHAIN_BY_ID[chainId];
 
   if (!chain) {
@@ -45,14 +84,11 @@ export async function transferCollateralFromConnectedWallet({
     chain,
     transport: custom(provider),
   });
-  const amount = parseUnits(amountUsd, tokenDecimals);
 
-  return {
-    txHash: await walletClient.writeContract({
-      address: tokenAddress as Address,
-      abi: erc20Abi,
-      functionName: "transfer",
-      args: [toAddress as Address, amount],
-    }),
-  };
+  return transferCollateralWithWalletClient(walletClient, {
+    tokenAddress,
+    toAddress,
+    amountUsd,
+    tokenDecimals,
+  });
 }
