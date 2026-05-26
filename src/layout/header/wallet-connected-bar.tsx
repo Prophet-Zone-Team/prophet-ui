@@ -15,6 +15,7 @@ export interface WalletConnectedBarProps {
   balanceDisplay: string;
   isMenuOpen: boolean;
   onDeposit: () => void;
+  onPrivateTopup: () => void;
   onToggleMenu: () => void;
 }
 
@@ -23,6 +24,7 @@ export function WalletConnectedBar({
   balanceDisplay,
   isMenuOpen,
   onDeposit,
+  onPrivateTopup,
   onToggleMenu
 }: WalletConnectedBarProps) {
   const popoverRef = useRef<any>(null);
@@ -70,7 +72,7 @@ export function WalletConnectedBar({
               type="button"
               className="w-full text-left cursor-pointer hover:bg-[#999]/10 duration-150 px-3 py-2"
               onClick={() => {
-                onDeposit();
+                onPrivateTopup();
                 popoverRef.current?.onClose?.();
               }}
             >

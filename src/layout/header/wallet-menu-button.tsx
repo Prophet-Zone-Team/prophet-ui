@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
@@ -31,6 +32,7 @@ const LOGIN_STEP_LABELS = {
 } as const;
 
 export function WalletMenuButton() {
+  const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
   const {
     session,
@@ -137,6 +139,7 @@ export function WalletMenuButton() {
         balanceDisplay={balanceDisplay}
         isMenuOpen={isOpen}
         onDeposit={() => setDepositOpen(true)}
+        onPrivateTopup={() => router.push("/portfolio/private-topup")}
         onToggleMenu={() => setIsOpen((value) => !value)}
       />
 

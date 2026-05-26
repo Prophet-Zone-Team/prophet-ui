@@ -11,6 +11,7 @@ export interface TransactionBreakdownProps {
   networkCostUsd?: number;
   priceImpactPercent?: number;
   maxSlippagePercent?: number;
+  poweredByLogoSrc?: string;
 }
 
 export function TransactionBreakdown({
@@ -18,6 +19,7 @@ export function TransactionBreakdown({
   networkCostUsd,
   priceImpactPercent,
   maxSlippagePercent,
+  poweredByLogoSrc,
 }: TransactionBreakdownProps) {
   const networkDisplay =
     loading || networkCostUsd === undefined
@@ -32,7 +34,19 @@ export function TransactionBreakdown({
 
   return (
     <div className={depositBreakdownBoxClass}>
-      <p className="m-0 mb-2 text-sm text-[#909090]">Transaction breakdown</p>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="m-0 text-sm text-[#909090]">Transaction breakdown</p>
+        {poweredByLogoSrc ? (
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm text-[#909090]">Powered by</span>
+            <img
+              src={poweredByLogoSrc}
+              alt="Stableflow"
+              className="h-4 w-auto object-contain"
+            />
+          </div>
+        ) : null}
+      </div>
       <div className={depositBreakdownRowClass}>
         <span>Network cost</span>
         <span>{networkDisplay}</span>

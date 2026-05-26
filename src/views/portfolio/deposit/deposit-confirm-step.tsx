@@ -12,7 +12,11 @@ import {
   formatQuoteTokenAmount,
   mapQuoteToBreakdown,
 } from "@/lib/funding/bridge-quote";
-import { mapStableflowQuoteToConfirmDisplay } from "@/lib/funding/stableflow";
+import {
+  mapStableflowQuoteToBreakdownFees,
+  mapStableflowQuoteToConfirmDisplay,
+  STABLEFLOW_MAX_SLIPPAGE_PERCENT,
+} from "@/lib/funding/stableflow";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { depositDetailRowClass } from "@/views/portfolio/deposit/deposit-ui";
 import { TransactionBreakdown } from "@/views/portfolio/deposit/transaction-breakdown";
@@ -53,6 +57,24 @@ export function DepositConfirmStep({
   );
 
   const breakdown = quote ? mapQuoteToBreakdown(quote) : undefined;
+
+  const stableflowBreakdownFees = useMemo(() => {
+    if (!stableflowQuote) {
+      return {
+        networkCostUsd: undefined,
+        priceImpactPercent: undefined,
+        maxSlippagePercent: STABLEFLOW_MAX_SLIPPAGE_PERCENT,
+      };
+    }
+
+    const fees = mapStableflowQuoteToBreakdownFees(stableflowQuote);
+
+    return {
+      networkCostUsd: fees.networkCostUsd,
+      priceImpactPercent: fees.priceImpactPercent,
+      maxSlippagePercent: STABLEFLOW_MAX_SLIPPAGE_PERCENT,
+    };
+  }, [stableflowQuote]);
 
   const estimatedTime =
     quoteMode === "stableflow" && stableflowDisplay
@@ -144,14 +166,27 @@ export function DepositConfirmStep({
         </DetailRow>
       </div>
 
-      {!isStableflow ? (
-        <TransactionBreakdown
-          loading={quoteLoading && Boolean(quoteRequest)}
-          networkCostUsd={breakdown?.networkCost}
-          priceImpactPercent={breakdown?.priceImpactPercent}
-          maxSlippagePercent={breakdown?.maxSlippagePercent}
-        />
-      ) : null}
+      <TransactionBreakdown
+        loading={isStableflow ? false : quoteLoading && Boolean(quoteRequest)}
+        networkCostUsd={
+          isStableflow
+            ? stableflowBreakdownFees.networkCostUsd
+            : breakdown?.networkCost
+        }
+        priceImpactPercent={
+          isStableflow
+            ? stableflowBreakdownFees.priceImpactPercent
+            : breakdown?.priceImpactPercent
+        }
+        maxSlippagePercent={
+          isStableflow
+            ? stableflowBreakdownFees.maxSlippagePercent
+            : breakdown?.maxSlippagePercent
+        }
+        poweredByLogoSrc={
+          isStableflow ? "/logos/logo-stableflow-full.svg" : undefined
+        }
+      />
     </div>
   );
 }
