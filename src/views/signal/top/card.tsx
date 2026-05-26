@@ -11,6 +11,7 @@ import type { NewsImpactItem } from "@/views/analytics/news/types";
 
 export type SignalTopCardProps = {
   item: NewsImpactItem;
+  onSelect?: (item: NewsImpactItem) => void;
   className?: string;
 };
 
@@ -67,18 +68,27 @@ function SentimentIcon({
   return <PositiveSentimentIcon />;
 }
 
-export function SignalTopCard({ item, className }: SignalTopCardProps) {
+export function SignalTopCard({ item, onSelect, className }: SignalTopCardProps) {
   const isPositiveImpact = item.impactScore >= 0;
 
   return (
     <article
       className={cn(
-        "box-border flex h-[140px] w-[458px] items-center gap-[14px]",
+        "relative box-border flex h-[140px] w-[458px] items-center gap-[14px]",
         "rounded-[12px] border border-[#EBEBEB] bg-white p-[12px]",
+        onSelect && "cursor-pointer transition-colors hover:border-[#D8D8D8]",
         className
       )}
       aria-label={`${item.teamName}: ${item.headline}. Impact ${formatImpactScore(item.impactScore)}`}
     >
+      {onSelect ? (
+        <button
+          type="button"
+          className="absolute inset-0 z-[1] rounded-[12px] opacity-0"
+          aria-label={`Open details for ${item.headline}`}
+          onClick={() => onSelect(item)}
+        />
+      ) : null}
       <SignalTopCardThumbnail
         alt={item.thumbnailAlt}
         imageUrl={item.thumbnailUrl}

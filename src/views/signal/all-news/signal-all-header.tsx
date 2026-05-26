@@ -31,7 +31,12 @@ export function SignalAllHeader({
   className
 }: SignalAllHeaderProps) {
   return (
-    <header className={cn("flex w-full max-w-[679px] flex-col", className)}>
+    <header
+      className={cn(
+        "flex w-full max-w-[679px] flex-col p-[20px] pb-[0px]",
+        className
+      )}
+    >
       <div className="flex items-center justify-between gap-3">
         <h2 className="m-0 text-[20px] font-[457] leading-[24px] text-black">
           All Signals &amp; News

@@ -1,8 +1,17 @@
 "use client";
+
+import { useMemo, useState } from "react";
+
 import { cn } from "@/lib/cn";
 import { PageBack } from "@/components/ui/page-back";
+import type { NewsImpactItem } from "@/views/analytics/news/types";
+import {
+  getSignalNewsDetail,
+  SignalNewsDetailDrawer
+} from "@/views/signal/news-detail";
 
 import { SignalAllList } from "./all-news";
+import { signalAllNewsItems } from "./all-news/mock-data";
 import { SignalNewsItem } from "./signals/item";
 import { MostAffectedTeam } from "./most-affected-team";
 import { ImpactDistributionOverview } from "./overview";
@@ -23,10 +32,44 @@ const SUMMARY_VARIANTS = [
   { variant: "high-impact" as const, countKey: "highImpact" as const }
 ];
 
+function findNewsItemById(
+  id: string,
+  topItems: NewsImpactItem[],
+  allItems: NewsImpactItem[]
+): NewsImpactItem | null {
+  return (
+    topItems.find((item) => item.id === id) ??
+    allItems.find((item) => item.id === id) ??
+    null
+  );
+}
+
 export function SignalPage({
   data = signalPageData,
   className
 }: SignalPageProps) {
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  const selectedItem = useMemo(
+    () =>
+      selectedItemId
+        ? findNewsItemById(
+            selectedItemId,
+            data.topImpactItems,
+            signalAllNewsItems
+          )
+        : null,
+    [data.topImpactItems, selectedItemId]
+  );
+
+  const selectedDetail = useMemo(
+    () =>
+      selectedItemId
+        ? getSignalNewsDetail(selectedItemId, selectedItem ?? undefined)
+        : null,
+    [selectedItem, selectedItemId]
+  );
+
   return (
     <div className={cn("mx-auto w-full max-w-[1412px] px-4 pb-8", className)}>
       <PageBack />
@@ -37,7 +80,11 @@ export function SignalPage({
         </h1>
         <div className="mt-[24px] grid grid-cols-3 gap-[19px]">
           {data.topImpactItems.map((item) => (
-            <SignalTopCard key={item.id} item={item} />
+            <SignalTopCard
+              key={item.id}
+              item={item}
+              onSelect={() => setSelectedItemId(item.id)}
+            />
           ))}
         </div>
       </section>
@@ -58,7 +105,10 @@ export function SignalPage({
       </section>
 
       <div className="mt-[20px] flex items-start gap-[37px]">
-        <SignalAllList className="w-[679px] shrink-0 rounded-[12px] p-[20px] border border-[#EBEBEB] bg-white" />
+        <SignalAllList
+          className="w-[679px] shrink-0 rounded-[12px] border border-[#EBEBEB] bg-white"
+          onItemSelect={(item) => setSelectedItemId(item.id)}
+        />
 
         <div className="flex w-[696px] shrink-0 flex-col gap-[20px]">
           <MostAffectedTeam />
@@ -66,6 +116,12 @@ export function SignalPage({
           <ImpactDistributionOverview />
         </div>
       </div>
+
+      <SignalNewsDetailDrawer
+        open={selectedItemId !== null}
+        detail={selectedDetail}
+        onClose={() => setSelectedItemId(null)}
+      />
     </div>
   );
 }

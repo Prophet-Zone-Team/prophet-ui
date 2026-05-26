@@ -38,7 +38,7 @@ export function WalletConnectedBar({
   const privateBalanceButton = (
     <button
       type="button"
-      className="cursor-pointer text-[#909090] text-sm font-[457] px-2.5 rounded-lg bg-white border border-[#EBEBEB] h-[50px] flex flex-col items-end justify-center gap-0 transition-colors hover:border-[#d0d0d0]"
+      className="cursor-pointer text-[#909090] text-sm font-[457] px-2.5 rounded-lg border border-[#EBEBEB] h-[50px] flex flex-col items-end justify-center gap-0 transition-colors hover:border-[#d0d0d0]"
       onClick={onPrivateBalanceClick}
       aria-label="Open Private Topup"
     >

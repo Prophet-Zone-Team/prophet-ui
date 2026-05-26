@@ -9,6 +9,7 @@ import type { NewsImpactItem } from "@/views/analytics/news/types";
 
 export type SignalAllItemProps = {
   item: NewsImpactItem;
+  onSelect?: (item: NewsImpactItem) => void;
   className?: string;
 };
 
@@ -24,17 +25,26 @@ function SentimentIcon({
   return <PositiveSentimentIcon />;
 }
 
-export function SignalAllItem({ item, className }: SignalAllItemProps) {
+export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps) {
   const isPositiveImpact = item.impactScore >= 0;
 
   return (
     <article
       className={cn(
-        "flex h-[78px] w-full max-w-[679px] items-center gap-[16px] rounded-[12px] bg-[#F9FAFC] transition-colors hover:bg-[#F0F2F5]",
+        "relative flex h-[78px] w-full max-w-[679px] px-[20px] items-center gap-[16px] rounded-[12px] bg-[#F9FAFC] transition-colors hover:bg-[#F0F2F5]",
+        onSelect && "cursor-pointer",
         className
       )}
       aria-label={`${item.teamName}: ${item.headline}. Impact ${formatImpactScore(item.impactScore)}`}
     >
+      {onSelect ? (
+        <button
+          type="button"
+          className="absolute inset-0 z-[1] rounded-[12px] opacity-0"
+          aria-label={`Open details for ${item.headline}`}
+          onClick={() => onSelect(item)}
+        />
+      ) : null}
       <div className="flex w-[110px] shrink-0 flex-col gap-[4px]">
         <div className="flex min-w-0 items-center gap-[8px]">
           <TeamFlag

@@ -21,6 +21,7 @@ import type {
 
 export type SignalAllListProps = {
   items?: SignalAllNewsItem[];
+  onItemSelect?: (item: SignalAllNewsItem) => void;
   className?: string;
 };
 
@@ -31,6 +32,7 @@ const DEFAULT_SORT: SignalAllSortState = {
 
 export function SignalAllList({
   items = signalAllNewsItems,
+  onItemSelect,
   className
 }: SignalAllListProps) {
   const [teamFilter, setTeamFilter] = useState<SignalAllTeamFilter>("all");
@@ -46,7 +48,7 @@ export function SignalAllList({
   return (
     <section
       aria-label="All signals and news"
-      className={cn("flex w-full flex-col ", className)}
+      className={cn("flex w-full flex-col pb-[20px]", className)}
     >
       <SignalAllHeader
         teamFilter={teamFilter}
@@ -65,7 +67,11 @@ export function SignalAllList({
           </p>
         ) : (
           visibleItems.map((item) => (
-            <SignalAllItem key={item.id} item={item} />
+            <SignalAllItem
+              key={item.id}
+              item={item}
+              onSelect={onItemSelect ? () => onItemSelect(item) : undefined}
+            />
           ))
         )}
       </div>
