@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
+import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import {
   formatPortfolioDateTime,
@@ -74,6 +76,8 @@ export function PortfolioPositionsTable({
   onConnectWallet
 }: PortfolioPositionsTableProps) {
   const [sellTarget, setSellTarget] = useState<SellTarget | null>(null);
+  const { isRegionBlocked } = useAuth();
+  const regionRestricted = isRegionBlocked;
 
   if (loading) {
     return (
@@ -173,26 +177,28 @@ export function PortfolioPositionsTable({
         <span className="text-prophet-muted">
           {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
         </span>
-        <button
-          type="button"
-          className={cn(
-            portfolioActionButtonClass,
-            "justify-self-end",
-            "disabled:opacity-50"
-          )}
-          disabled={!canSell}
-          title={canSell ? undefined : "Market data unavailable"}
-          onClick={() => {
-            if (snapshot) {
-              useTradeTicketStore
-                .getState()
-                .syncForPositionSell(snapshot, position);
-              setSellTarget({ position, snapshot });
-            }
-          }}
-        >
-          Sell
-        </button>
+        <RegionRestrictedControl restricted={regionRestricted}>
+          <button
+            type="button"
+            className={cn(
+              portfolioActionButtonClass,
+              "justify-self-end",
+              "disabled:opacity-50"
+            )}
+            disabled={!canSell || regionRestricted}
+            title={canSell || regionRestricted ? undefined : "Market data unavailable"}
+            onClick={() => {
+              if (snapshot && !regionRestricted) {
+                useTradeTicketStore
+                  .getState()
+                  .syncForPositionSell(snapshot, position);
+                setSellTarget({ position, snapshot });
+              }
+            }}
+          >
+            Sell
+          </button>
+        </RegionRestrictedControl>
       </div>
     );
   });

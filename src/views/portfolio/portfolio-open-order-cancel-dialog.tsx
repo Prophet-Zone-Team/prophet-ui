@@ -1,6 +1,8 @@
 "use client";
 
 import { Modal } from "@/components/ui/modal";
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
+import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { formatShareSize } from "@/lib/market/order-math";
 import {
@@ -71,6 +73,7 @@ export function PortfolioOpenOrderCancelDialog({
   onClose
 }: PortfolioOpenOrderCancelDialogProps) {
   const { removeOpenOrder } = usePortfolioContext();
+  const { isRegionBlocked } = useAuth();
   const { cancelOpenOrder, isCanceling } = useCancelOpenOrder({
     onOrderCancelled: (orderId) => {
       removeOpenOrder(orderId);
@@ -154,14 +157,16 @@ export function PortfolioOpenOrderCancelDialog({
           >
             Keep order
           </button>
-          <button
-            type="button"
-            className={fundingPrimaryButtonClass}
-            disabled={isBusy}
-            onClick={() => void cancelOpenOrder(order)}
-          >
-            {isBusy ? "Cancelling…" : "Cancel order"}
-          </button>
+          <RegionRestrictedControl restricted={isRegionBlocked}>
+            <button
+              type="button"
+              className={fundingPrimaryButtonClass}
+              disabled={isBusy || isRegionBlocked}
+              onClick={() => void cancelOpenOrder(order)}
+            >
+              {isBusy ? "Cancelling…" : "Cancel order"}
+            </button>
+          </RegionRestrictedControl>
         </div>
       </FundingModalShell>
     </Modal>

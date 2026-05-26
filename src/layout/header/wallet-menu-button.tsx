@@ -38,12 +38,14 @@ export function WalletMenuButton() {
     session,
     hydrated,
     isAuthenticated,
+    isRegionBlocked,
     loginInProgress,
     loginStep,
     error,
     cash,
     cashStatus,
     openLogin,
+    openLoginModalOnly,
     disconnect,
   } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -98,6 +100,11 @@ export function WalletMenuButton() {
     setMessage(undefined);
 
     try {
+      if (isRegionBlocked) {
+        openLoginModalOnly();
+        return;
+      }
+
       await openLogin();
     } catch (loginError) {
       setMessage(loginError instanceof Error ? loginError.message : String(loginError));
@@ -140,6 +147,7 @@ export function WalletMenuButton() {
         polymarketAddress={polymarketAddress}
         balanceDisplay={balanceDisplay}
         isMenuOpen={isOpen}
+        regionRestricted={isRegionBlocked}
         onDeposit={() => setDepositOpen(true)}
         onPrivateTopup={() => setPrivateTopupIntroOpen(true)}
         onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}

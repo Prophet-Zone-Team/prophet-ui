@@ -57,7 +57,12 @@ export function isTradingSetupComplete(
 export function shouldAutoOpenTradingSetupModal(options: {
   session: unknown;
   readiness: UserTradingReadiness | undefined;
+  isRegionBlocked?: boolean;
 }): boolean {
+  if (options.isRegionBlocked) {
+    return false;
+  }
+
   if (!options.session) {
     return true;
   }

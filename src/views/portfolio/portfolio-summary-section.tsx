@@ -5,6 +5,8 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { CheckIcon, CopyIcon } from "@/components/icons";
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
+import { useAuth } from "@/context/auth";
 import { usePendingFunderUsdc } from "@/hooks/funding";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
@@ -36,6 +38,9 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const polymarketAddress = session?.funderAddress ?? session?.walletAddress;
+
+  const { isRegionBlocked } = useAuth();
+  const regionRestricted = Boolean(session && isRegionBlocked);
 
   const { hasPendingDeposit, converting, confirmPendingDeposit } =
     usePendingFunderUsdc({
@@ -134,20 +139,22 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
                   Available to trade
                 </div>
                 {session && hasPendingDeposit ? (
-                  <button
-                    type="button"
-                    className={portfolioPendingDepositButtonClass}
-                    disabled={converting}
-                    onClick={() => void onConfirmPendingDeposit()}
-                  >
-                    {converting ? (
-                      <Loader2
-                        className="mr-1.5 h-3.5 w-3.5 animate-spin"
-                        aria-hidden="true"
-                      />
-                    ) : null}
-                    Confirm pending deposit
-                  </button>
+                  <RegionRestrictedControl restricted={regionRestricted}>
+                    <button
+                      type="button"
+                      className={portfolioPendingDepositButtonClass}
+                      disabled={converting || regionRestricted}
+                      onClick={() => void onConfirmPendingDeposit()}
+                    >
+                      {converting ? (
+                        <Loader2
+                          className="mr-1.5 h-3.5 w-3.5 animate-spin"
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                      Confirm pending deposit
+                    </button>
+                  </RegionRestrictedControl>
                 ) : null}
               </div>
               <strong className={portfolioSummaryValueMediumClass}>
@@ -167,13 +174,16 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
               </button>
             ) : (
               <>
-                <button
-                  type="button"
-                  className={portfolioDepositButtonClass}
-                  onClick={() => setDepositOpen(true)}
-                >
-                  Deposit
-                </button>
+                <RegionRestrictedControl restricted={regionRestricted}>
+                  <button
+                    type="button"
+                    className={portfolioDepositButtonClass}
+                    disabled={regionRestricted}
+                    onClick={() => setDepositOpen(true)}
+                  >
+                    Deposit
+                  </button>
+                </RegionRestrictedControl>
                 <button
                   type="button"
                   className={portfolioWithdrawButtonClass}

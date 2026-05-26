@@ -9,6 +9,7 @@ import {
   showOrderErrorToast
 } from "@/lib/trading/order-toast";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
+import { selectIsRegionBlocked, useAuthStore } from "@/store/auth-store";
 import { usePortfolioContext } from "@/views/portfolio/context";
 
 export function useCancelOpenOrder(options?: {
@@ -21,7 +22,7 @@ export function useCancelOpenOrder(options?: {
 
   const cancelOpenOrder = useCallback(
     async (order: UserOpenOrder) => {
-      if (cancelingOrderId !== null) {
+      if (cancelingOrderId !== null || selectIsRegionBlocked(useAuthStore.getState())) {
         return;
       }
 

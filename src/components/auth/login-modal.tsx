@@ -5,6 +5,10 @@ import { Check, Loader2 } from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
+import {
+  formatRegionBlockedDetail,
+  REGION_BLOCKED_LABEL,
+} from "@/lib/trading/trading-eligibility-client";
 import type { TradingLoginStep } from "@/lib/trading/trading-login";
 import type { AuthContextValue } from "@/context/auth/auth-context";
 
@@ -20,6 +24,8 @@ interface LoginModalProps {
     | "session"
     | "setupSteps"
     | "isAuthenticated"
+    | "isRegionBlocked"
+    | "eligibilityView"
     | "closeLogin"
     | "connectWallet"
     | "signClobCredentials"
@@ -61,6 +67,8 @@ export function LoginModal({ auth }: LoginModalProps) {
     session,
     setupSteps,
     isAuthenticated,
+    isRegionBlocked,
+    eligibilityView,
     closeLogin,
     connectWallet,
     signClobCredentials,
@@ -78,15 +86,22 @@ export function LoginModal({ auth }: LoginModalProps) {
   }, [hydrated, loginModalOpen, session, refreshSetupReadiness]);
 
   const showPolygonHint = Boolean(error) && /chainId|137|polygon/i.test(error ?? "");
+  const showRestrictedView = isRegionBlocked && !loginInProgress;
 
   return (
     <Modal
       open={hydrated && loginModalOpen}
       onClose={() => void closeLogin()}
-      ariaLabel="Enable trading"
+      ariaLabel={showRestrictedView ? "Trading unavailable" : "Enable trading"}
       hideCloseButton={loginInProgress}
       className="w-full max-w-md rounded-xl border border-prophet-line bg-white p-6 shadow-prophet"
     >
+      {showRestrictedView ? (
+        <RestrictedRegionView
+          detail={formatRegionBlockedDetail(eligibilityView)}
+          onClose={() => void closeLogin()}
+        />
+      ) : (
       <div className="flex flex-col gap-5">
         <div>
           <h2 className="text-lg font-extrabold text-prophet-ink">Enable trading</h2>
@@ -190,7 +205,44 @@ export function LoginModal({ auth }: LoginModalProps) {
           </div>
         ) : null}
       </div>
+      )}
     </Modal>
+  );
+}
+
+function RestrictedRegionView({
+  detail,
+  onClose,
+}: {
+  detail: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-5">
+      <div>
+        <h2 className="text-lg font-extrabold text-prophet-ink">
+          Trading unavailable in your region
+        </h2>
+        <p className="mt-1 text-sm text-prophet-muted">
+          Market data remains available. Trading and funding actions are disabled.
+        </p>
+      </div>
+
+      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm text-prophet-red">
+        <p className="m-0 font-semibold">{REGION_BLOCKED_LABEL}</p>
+        <p className="mt-1 m-0 text-prophet-red/90">{detail}</p>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          className="rounded-lg border border-prophet-line bg-white px-4 py-2 text-sm font-extrabold text-prophet-ink"
+          onClick={onClose}
+        >
+          Close
+        </button>
+      </div>
+    </div>
   );
 }
 

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
+import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { findSnapshotForTokenId } from "@/lib/portfolio/portfolio-metrics";
 import {
@@ -88,6 +90,8 @@ export function PortfolioOpenOrdersTable({
   onConnectWallet
 }: PortfolioOpenOrdersTableProps) {
   const [cancelTarget, setCancelTarget] = useState<CancelTarget | null>(null);
+  const { isRegionBlocked } = useAuth();
+  const regionRestricted = isRegionBlocked;
 
   if (loading) {
     return (
@@ -157,17 +161,24 @@ export function PortfolioOpenOrdersTable({
         <span className="text-prophet-muted">
           {formatUnixSeconds(order.created_at)}
         </span>
-        <button
-          type="button"
-          className={cn(
-            portfolioActionButtonClass,
-            "justify-self-end",
-            "disabled:opacity-50"
-          )}
-          onClick={() => setCancelTarget({ order, snapshot: snapshot ?? undefined })}
-        >
-          Cancel
-        </button>
+        <RegionRestrictedControl restricted={regionRestricted}>
+          <button
+            type="button"
+            className={cn(
+              portfolioActionButtonClass,
+              "justify-self-end",
+              "disabled:opacity-50"
+            )}
+            disabled={regionRestricted}
+            onClick={() => {
+              if (!regionRestricted) {
+                setCancelTarget({ order, snapshot: snapshot ?? undefined });
+              }
+            }}
+          >
+            Cancel
+          </button>
+        </RegionRestrictedControl>
       </div>
     );
   });

@@ -34,7 +34,7 @@ export const portfolioAvatarClass = cn(
 );
 
 export const portfolioDepositButtonClass = cn(
-  "flex h-[55px] w-full max-w-[235px] items-center justify-center rounded-xl bg-black",
+  "flex h-[55px] w-[235px] items-center justify-center rounded-xl bg-black",
   "text-base font-[457] leading-[19px] text-white transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );

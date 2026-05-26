@@ -17,6 +17,6 @@ export function bracketSelectedStyle(highlighted: boolean): CSSProperties | unde
 
 export function bracketSelectedClassName(highlighted: boolean, base = "border bg-white") {
   return highlighted
-    ? `${base} border-2 border-[#22C55E] bg-[#F0FDF4]`
+    ? `${base} border-1 border-[#22C55E] bg-[#F0FDF4]`
     : `${base} border-[#EBEBEB]`;
 }

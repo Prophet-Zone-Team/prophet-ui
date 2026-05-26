@@ -11,7 +11,10 @@ import {
 import { ZERO_ORDER_BUILDER_CODE } from "@/server/trading/builder-code";
 import { getClobOrderSubmissionStatus } from "@/server/trading/clob-auth";
 import { fetchClobBestPrices, postSignedUserOrder, updateUserBalanceAllowance } from "@/server/trading/clob-user-client";
-import { refreshSessionEligibilityIfStale } from "@/server/trading/eligibility";
+import {
+  refreshSessionEligibilityIfStale,
+  getClientIp
+} from "@/server/trading/eligibility";
 import { recordUserOrderError, recordUserOrderSubmitted } from "@/server/trading/order-store";
 import { createTradingSessionCookie, getTradingSessionFromCookie } from "@/server/trading/session-store";
 import type { UserOrderPreview, UserOrderStatus } from "@/types/market";
@@ -46,7 +49,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "User CLOB credentials are required before order submission." }, { status: 409 });
   }
 
-  const eligibility = await refreshSessionEligibilityIfStale(record.session);
+  const eligibility = await refreshSessionEligibilityIfStale(
+    record.session,
+    getClientIp(request)
+  );
 
   if (eligibility.eligibilityStatus !== "eligible") {
     console.warn("[trading.orders] eligibility failed", {

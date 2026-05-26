@@ -22,7 +22,7 @@ export const walletDepositButtonClass = cn(
 
 export const walletMenuTriggerClass = cn(
   "inline-flex h-10 min-w-[70px] items-center justify-center gap-2 rounded-[20px]",
-  "bg-white px-3 transition-colors hover:bg-[#fafbfc]"
+  "px-3 transition-colors hover:bg-[#fafbfc]"
 );
 
 export const walletMenuDividerClass = "h-[31px] w-px shrink-0 bg-prophet-line";

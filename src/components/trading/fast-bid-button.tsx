@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuthOptional } from "@/context/auth";
 import { runFastBid, type FastBidStatus } from "@/lib/trading/run-fast-bid";
 import {
@@ -34,6 +35,9 @@ export function FastBidButton({
   const fastBidAmount = useFastBidAmount();
   const hasHydrated = useConfigHydrated();
   const [status, setStatus] = useState<FastBidStatus>("idle");
+  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isAuthenticated = auth?.isAuthenticated ?? false;
+  const regionRestricted = isAuthenticated && isRegionBlocked;
 
   const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
 
@@ -50,7 +54,7 @@ export function FastBidButton({
   }, [children, status]);
 
   async function handleClick() {
-    if (status === "checking" || status === "submitting") {
+    if (status === "checking" || status === "submitting" || regionRestricted) {
       return;
     }
 
@@ -63,11 +67,11 @@ export function FastBidButton({
     });
   }
 
-  return (
+  const bidButton = (
     <button
       type="button"
       className={className}
-      disabled={status === "checking" || status === "submitting"}
+      disabled={status === "checking" || status === "submitting" || regionRestricted}
       aria-label={`Bid ${formatFastBidAmountDisplay(displayAmount)} on ${snapshot.team.name}`}
       onClick={() => void handleClick()}
     >
@@ -78,5 +82,11 @@ export function FastBidButton({
         </span>
       ) : null}
     </button>
+  );
+
+  return (
+    <RegionRestrictedControl restricted={regionRestricted}>
+      {bidButton}
+    </RegionRestrictedControl>
   );
 }

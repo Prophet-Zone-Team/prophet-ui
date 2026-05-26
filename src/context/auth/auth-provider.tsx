@@ -29,8 +29,17 @@ import {
   type TradingSetupStepId,
 } from "@/lib/trading/trading-setup";
 import { fetchJson } from "@/lib/team/client-fetch";
+import {
+  fetchTradingEligibility,
+  resolveEligibilityView,
+  syncStandaloneFromSession,
+} from "@/lib/trading/trading-eligibility-client";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
-import { selectIsAuthenticated, useAuthStore } from "@/store/auth-store";
+import {
+  selectIsAuthenticated,
+  selectIsRegionBlocked,
+  useAuthStore,
+} from "@/store/auth-store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
 
@@ -47,12 +56,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const cashStatus = useAuthStore((state) => state.cashStatus);
   const error = useAuthStore((state) => state.error);
   const cashError = useAuthStore((state) => state.cashError);
+  const standaloneEligibility = useAuthStore((state) => state.standaloneEligibility);
+  const eligibilityView = useMemo(
+    () => resolveEligibilityView(session, standaloneEligibility),
+    [session, standaloneEligibility],
+  );
+  const eligibilityLoadStatus = useAuthStore((state) => state.eligibilityLoadStatus);
+  const isRegionBlocked = useAuthStore(selectIsRegionBlocked);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const setupSteps = useMemo(() => getTradingSetupSteps(readiness), [readiness]);
 
   const syncingRef = useRef(false);
   const loginAbortRef = useRef(false);
   const walletHandlingRef = useRef(false);
+  const eligibilityRefreshRef = useRef(false);
+
+  const syncEligibilityFromSession = useCallback((nextSession?: TradingUserSession) => {
+    const store = useAuthStore.getState();
+    const synced = syncStandaloneFromSession(nextSession);
+
+    if (synced) {
+      store.setStandaloneEligibility(synced);
+    }
+  }, []);
+
+  const refreshEligibility = useCallback(async () => {
+    const store = useAuthStore.getState();
+
+    if (eligibilityRefreshRef.current) {
+      return store.standaloneEligibility;
+    }
+
+    eligibilityRefreshRef.current = true;
+    store.setEligibilityLoadStatus("loading");
+
+    try {
+      const eligibility = await fetchTradingEligibility();
+      store.setStandaloneEligibility(eligibility);
+      store.setEligibilityLoadStatus("ready");
+      return eligibility;
+    } catch (refreshError) {
+      store.setEligibilityLoadStatus("ready");
+      console.warn("[auth.eligibility] refresh failed", refreshError);
+      return store.standaloneEligibility;
+    } finally {
+      eligibilityRefreshRef.current = false;
+    }
+  }, []);
 
   const clearAuthState = useCallback(
     async (options?: { error?: string; openModal?: boolean }) => {
@@ -74,7 +124,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (options?.openModal !== false) {
-        store.setLoginModalOpen(true);
+        if (!selectIsRegionBlocked(useAuthStore.getState())) {
+          store.setLoginModalOpen(true);
+        }
       }
     },
     [],
@@ -107,6 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const nextReadiness = await fetchJson<UserTradingReadiness>("/api/trading/readiness");
       store.setReadiness(nextReadiness);
+      syncEligibilityFromSession(nextReadiness.session ?? currentSession);
       store.setCash(buildCashBalanceView(nextReadiness));
       store.setCashStatus("ready");
     } catch (refreshError) {
@@ -171,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         activeStore.setSession(result.session);
         activeStore.setReadiness(result.readiness);
+        syncEligibilityFromSession(result.session);
         activeStore.setStatus("ready");
         activeStore.setLoginStep(undefined);
         maybeCloseSetupModal(result.readiness);
@@ -193,7 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [clearAuthState, maybeCloseSetupModal],
+    [clearAuthState, maybeCloseSetupModal, syncEligibilityFromSession],
   );
 
   const refreshReadiness = useCallback(async (nextSession?: TradingUserSession) => {
@@ -206,8 +260,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const nextReadiness = await fetchJson<UserTradingReadiness>("/api/trading/readiness");
     store.setReadiness(nextReadiness);
+    syncEligibilityFromSession(nextSession);
     return nextReadiness;
-  }, []);
+  }, [syncEligibilityFromSession]);
 
   const pollSetupReadiness = useCallback(
     async (nextSession: TradingUserSession, step: TradingSetupStepId) => {
@@ -239,6 +294,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       shouldAutoOpenTradingSetupModal({
         session: store.session,
         readiness: store.readiness,
+        isRegionBlocked: selectIsRegionBlocked(store),
       })
     ) {
       store.setLoginModalOpen(true);
@@ -335,6 +391,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const runLogin = useCallback(async (resume: boolean) => {
     const store = useAuthStore.getState();
 
+    if (selectIsRegionBlocked(store)) {
+      store.setLoginModalOpen(true);
+      return undefined;
+    }
+
     loginAbortRef.current = false;
     store.setLoginInProgress(true);
     store.setLoginModalOpen(true);
@@ -358,6 +419,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       store.setSession(result.session);
       store.setReadiness(result.readiness);
+      syncEligibilityFromSession(result.session);
       store.setStatus("ready");
       store.setLoginStep(undefined);
       maybeCloseSetupModal(result.readiness);
@@ -379,7 +441,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.setLoginInProgress(false);
       }
     }
-  }, [maybeCloseSetupModal]);
+  }, [maybeCloseSetupModal, syncEligibilityFromSession]);
 
   const refreshSetupReadiness = useCallback(async () => {
     const store = useAuthStore.getState();
@@ -450,9 +512,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [maybeCloseSetupModal, pollSetupReadiness, refreshReadiness],
   );
 
+  const openLoginModalOnly = useCallback(() => {
+    const store = useAuthStore.getState();
+    store.setLoginModalOpen(true);
+    store.setError(undefined);
+  }, []);
+
   const openLogin = useCallback(async () => {
-    return runLogin(Boolean(useAuthStore.getState().session));
-  }, [runLogin]);
+    const store = useAuthStore.getState();
+
+    if (selectIsRegionBlocked(store)) {
+      openLoginModalOnly();
+      return undefined;
+    }
+
+    return runLogin(Boolean(store.session));
+  }, [openLoginModalOnly, runLogin]);
 
   const connectWallet = openLogin;
 
@@ -528,6 +603,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    void refreshEligibility();
+  }, [hydrated, refreshEligibility]);
+
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+
     void refreshSession();
   }, [hydrated, refreshSession]);
 
@@ -558,6 +641,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     cashStatus,
     error,
     cashError,
+    eligibilityView,
+    eligibilityLoadStatus,
+    isRegionBlocked,
+    openLoginModalOnly,
+    refreshEligibility,
     openLogin,
     connectWallet,
     retryLogin,

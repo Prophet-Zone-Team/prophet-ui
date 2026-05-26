@@ -54,6 +54,10 @@ export async function runFastBid({
     return;
   }
 
+  if (auth.isAuthenticated && auth.isRegionBlocked) {
+    return;
+  }
+
   onStatusChange?.("checking");
 
   try {

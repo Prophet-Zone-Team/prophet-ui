@@ -53,7 +53,7 @@ function resolveEmptyMessage(props: PositionsTableProps): string {
 }
 
 export function PositionsTable(props: PositionsTableProps) {
-  const { isAuthenticated, openLogin } = useAuth();
+  const { isAuthenticated, openLogin, openLoginModalOnly, isRegionBlocked } = useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -124,7 +124,7 @@ export function PositionsTable(props: PositionsTableProps) {
         <button
           type="button"
           className={cn(tradeBidButtonClass, "max-w-xs")}
-          onClick={() => void openLogin()}
+          onClick={() => void (isRegionBlocked ? openLoginModalOnly() : openLogin())}
         >
           Connect Wallet
         </button>

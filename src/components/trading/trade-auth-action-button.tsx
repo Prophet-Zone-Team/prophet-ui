@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { tradeBidButtonClass } from "@/views/trade/trade-widget/trade-ui";
@@ -37,13 +38,24 @@ export function TradeAuthActionButton({
   onLoginSuccess,
   onLoginError
 }: TradeAuthActionButtonProps) {
-  const { isAuthenticated, openLogin, loginInProgress } = useAuth();
+  const {
+    isAuthenticated,
+    isRegionBlocked,
+    openLogin,
+    openLoginModalOnly,
+    loginInProgress,
+  } = useAuth();
   const buttonClass = cn(tradeBidButtonClass, className);
 
   async function handleConnect() {
     onLoginStart?.();
 
     try {
+      if (isRegionBlocked) {
+        openLoginModalOnly();
+        return;
+      }
+
       await openLogin();
       await onLoginSuccess?.();
     } catch (error) {
@@ -52,7 +64,7 @@ export function TradeAuthActionButton({
   }
 
   if (!isAuthenticated) {
-    return (
+    const connectButton = (
       <button
         type="button"
         className={buttonClass}
@@ -62,6 +74,8 @@ export function TradeAuthActionButton({
         {loginInProgress ? connectingLabel : connectLabel}
       </button>
     );
+
+    return connectButton;
   }
 
   const label =
@@ -71,14 +85,20 @@ export function TradeAuthActionButton({
         ? submittingLabel
         : actionLabel;
 
-  return (
+  const actionButton = (
     <button
       type="button"
       className={buttonClass}
-      disabled={!canSubmit}
+      disabled={!canSubmit || isRegionBlocked}
       onClick={() => void onAction()}
     >
       {label}
     </button>
+  );
+
+  return (
+    <RegionRestrictedControl restricted={isRegionBlocked}>
+      {actionButton}
+    </RegionRestrictedControl>
   );
 }

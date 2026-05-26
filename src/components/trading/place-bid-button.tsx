@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuthOptional } from "@/context/auth";
 import { teamTradeHref } from "@/lib/routes/trade";
 import { runFastBid, type FastBidStatus } from "@/lib/trading/run-fast-bid";
@@ -38,6 +39,9 @@ export function PlaceBidButton({
   const [status, setStatus] = useState<FastBidStatus>("idle");
   const shouldShowAmount = isQuickBidLabel(children);
   const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
+  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isAuthenticated = auth?.isAuthenticated ?? false;
+  const regionRestricted = isAuthenticated && isRegionBlocked;
 
   const buttonText = useMemo(() => {
     if (status === "checking") {
@@ -59,7 +63,7 @@ export function PlaceBidButton({
       return;
     }
 
-    if (status === "checking" || status === "submitting") {
+    if (status === "checking" || status === "submitting" || regionRestricted) {
       return;
     }
 
@@ -88,15 +92,21 @@ export function PlaceBidButton({
     );
   }
 
-  return (
+  const bidButton = (
     <button
       type="button"
       className={className}
-      disabled={status === "checking" || status === "submitting"}
+      disabled={status === "checking" || status === "submitting" || regionRestricted}
       onClick={() => void handleClick()}
     >
       {buttonText}
     </button>
+  );
+
+  return (
+    <RegionRestrictedControl restricted={regionRestricted}>
+      {bidButton}
+    </RegionRestrictedControl>
   );
 }
 

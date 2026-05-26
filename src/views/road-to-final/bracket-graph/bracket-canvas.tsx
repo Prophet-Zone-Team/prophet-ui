@@ -13,10 +13,7 @@ import type {
   GroupPlacements,
   KnockoutWinners
 } from "../types";
-import {
-  getSeedCandidateTeams,
-  resolveBracketSeed
-} from "./bracket-resolver";
+import { getSeedCandidateTeams, resolveBracketSeed } from "./bracket-resolver";
 import { BracketMatchCard } from "./bracket-match-card";
 import { SeedSlot } from "./seed-slot";
 
@@ -75,12 +72,12 @@ function BracketSideColumns({
       {columns.map((column) => (
         <div
           key={`${side}-${column.key}`}
-          className="flex shrink-0 flex-col gap-[8px]"
+          className="flex shrink-0 flex-col justify-center gap-[16px]"
         >
           <span className="text-center text-[10px] font-[300] text-[#909090]">
             {column.label}
           </span>
-          <div className="flex flex-col gap-[10px]">
+          <div className="flex flex-col gap-[16px]">
             {column.matchIds.map((matchId) => (
               <BracketMatchCard
                 key={matchId}
@@ -135,7 +132,8 @@ function ResolvedFinalSlot({
   );
   const selectedWinnerId = knockoutWinners[matchId];
   const slotTeamId =
-    resolved.team?.id ?? (candidates.length === 1 ? candidates[0].id : undefined);
+    resolved.team?.id ??
+    (candidates.length === 1 ? candidates[0].id : undefined);
   const selected = Boolean(
     selectedWinnerId && slotTeamId && selectedWinnerId === slotTeamId
   );
@@ -147,9 +145,7 @@ function ResolvedFinalSlot({
       disabled={!selectable}
       label={resolved.label}
       onClick={
-        selectable
-          ? () => onWinnerChange(matchId, candidates[0].id)
-          : undefined
+        selectable ? () => onWinnerChange(matchId, candidates[0].id) : undefined
       }
       seed={resolved.seed}
       selected={selected}
