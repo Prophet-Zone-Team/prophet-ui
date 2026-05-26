@@ -16,6 +16,7 @@ export interface WalletConnectedBarProps {
   isMenuOpen: boolean;
   onDeposit: () => void;
   onPrivateTopup: () => void;
+  onPrivateBalanceClick: () => void;
   onToggleMenu: () => void;
 }
 
@@ -25,13 +26,19 @@ export function WalletConnectedBar({
   isMenuOpen,
   onDeposit,
   onPrivateTopup,
+  onPrivateBalanceClick,
   onToggleMenu
 }: WalletConnectedBarProps) {
   const popoverRef = useRef<any>(null);
 
   return (
     <div className={walletConnectedBarClass}>
-      <div className="cursor-pointer text-[#909090] text-base font-[457] px-2.5 rounded-lg bg-white border border-[#EBEBEB] h-[50px] flex flex-col items-end justify-center gap-0">
+      <button
+        type="button"
+        className="cursor-pointer text-[#909090] text-base font-[457] px-2.5 rounded-lg bg-white border border-[#EBEBEB] h-[50px] flex flex-col items-end justify-center gap-0 transition-colors hover:border-[#d0d0d0]"
+        onClick={onPrivateBalanceClick}
+        aria-label="Open Private Topup"
+      >
         <div className="flex items-center justify-center gap-1 leading-[17px]">
           <img
             src="/icons/icon-private.svg"
@@ -45,7 +52,7 @@ export function WalletConnectedBar({
         <div className="text-black text-base leading-[19px]">
           $0.00
         </div>
-      </div>
+      </button>
       <div className="h-[31px] w-px shrink-0 bg-prophet-line"></div>
       <div className="flex flex-col justify-center items-end gap-0">
         <span className={walletBalanceLabelClass}>Balance</span>
