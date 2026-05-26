@@ -1,14 +1,22 @@
+import Link from "next/link";
+
 import { cn } from "@/lib/cn";
 
 export type ViewMoreLinkProps = {
+  href?: string;
   className?: string;
 };
 
-export function ViewMoreLink({ className }: ViewMoreLinkProps) {
+export function ViewMoreLink({
+  href = "/signal",
+  className
+}: ViewMoreLinkProps) {
   return (
-    <span
+    <Link
+      href={href}
       className={cn(
-        "inline-flex items-center gap-[7px] cursor-pointer transition-opacity hover:opacity-80",
+        "inline-flex items-center gap-[7px] border-0 bg-transparent p-0",
+        "cursor-pointer transition-opacity hover:opacity-80",
         "text-[14px] font-[400] text-[#3168FF]",
         className
       )}
@@ -28,6 +36,6 @@ export function ViewMoreLink({ className }: ViewMoreLinkProps) {
           strokeLinecap="round"
         />
       </svg>
-    </span>
+    </Link>
   );
 }
