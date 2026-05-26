@@ -3,80 +3,72 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: "SF Compact Display";
-  src: url("/fonts/SFCompactDisplay-Ultralight.otf") format("opentype");
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "SF Compact Display";
-  src: url("/fonts/SFCompactDisplay-Thin.otf") format("opentype");
+  font-family: "Sora";
+  src: url("/fonts/Sora-Thin.ttf") format("truetype");
   font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Compact Display";
-  src: url("/fonts/SFCompactDisplay-Light.otf") format("opentype");
+  font-family: "Sora";
+  src: url("/fonts/Sora-ExtraLight.ttf") format("truetype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sora";
+  src: url("/fonts/Sora-Light.ttf") format("truetype");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Compact Display";
-  src: url("/fonts/SFCompactDisplay-Regular.otf") format("opentype");
+  font-family: "Sora";
+  src: url("/fonts/Sora-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Compact Display";
-  src: url("/fonts/SFCompactDisplay-Medium.otf") format("opentype");
+  font-family: "Sora";
+  src: url("/fonts/Sora-Medium.ttf") format("truetype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Compact Display";
-  src: url("/fonts/SFCompactDisplay-Semibold.otf") format("opentype");
+  font-family: "Sora";
+  src: url("/fonts/Sora-SemiBold.ttf") format("truetype");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Compact Display";
-  src: url("/fonts/SFCompactDisplay-Bold.otf") format("opentype");
+  font-family: "Sora";
+  src: url("/fonts/Sora-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "SF Compact Display";
-  src: url("/fonts/SFCompactDisplay-Heavy.otf") format("opentype");
+  font-family: "Sora";
+  src: url("/fonts/Sora-ExtraBold.ttf") format("truetype");
   font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
 
-@font-face {
-  font-family: "SF Compact Display";
-  src: url("/fonts/SFCompactDisplay-Black.otf") format("opentype");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
-  --font-display: "SF Compact Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-body: "SF Compact Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Sora", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Sora", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", "Berkeley Mono", "SFMono-Regular", "Menlo", monospace;
   color-scheme: light;
 }
