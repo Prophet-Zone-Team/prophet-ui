@@ -27,13 +27,12 @@ export function SeedSlot({
   const highlighted = selected || active;
   const className = cn(
     "flex min-w-0 items-center gap-[6px] rounded-[6px] px-[8px] py-[6px] text-left",
-    bracketSelectedClassName(highlighted),
     onClick &&
       !disabled &&
       "cursor-pointer transition-[border-color,box-shadow,background-color] hover:border-[#22C55E]",
     disabled && !highlighted && "cursor-not-allowed opacity-60"
   );
-  const style = bracketSelectedStyle(highlighted);
+  const style = bracketSelectedStyle(selected);
 
   const content = (
     <>
