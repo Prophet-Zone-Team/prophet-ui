@@ -9,10 +9,7 @@ import { Modal } from "@/components/ui/modal";
 import { FundingNetworkType } from "@/config/funding";
 import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
-import {
-  selectTokenPrice,
-  selectTokenUsdValue
-} from "@/lib/funding/price-selectors";
+import { selectTokenUsdValue } from "@/lib/funding/price-selectors";
 import {
   stableflowTokensToFundingTokens,
   type StableflowDepositToken
@@ -29,10 +26,7 @@ import { fetchJson } from "@/lib/team/client-fetch";
 import { useBalancesStore } from "@/store/use-balances";
 import { usePricesStore } from "@/store";
 import { DEPOSIT_MODAL_WIDTH } from "@/views/portfolio/deposit/config";
-import {
-  DepositAmountStep,
-  isDepositAmountValid
-} from "@/views/portfolio/deposit/deposit-amount-step";
+import { DepositAmountStep } from "@/views/portfolio/deposit/deposit-amount-step";
 import { DepositConfirmStep } from "@/views/portfolio/deposit/deposit-confirm-step";
 import { DepositEntryStep } from "@/views/portfolio/deposit/deposit-entry-step";
 import {
@@ -41,6 +35,7 @@ import {
 } from "@/views/portfolio/deposit/deposit-status-step";
 import { DepositTokenStep } from "@/views/portfolio/deposit/deposit-token-step";
 import type {
+  DepositAmountState,
   DepositMethod,
   DepositSelectableToken,
   DepositStatusPhase,
@@ -48,6 +43,12 @@ import type {
   StableflowDepositContext
 } from "@/views/portfolio/deposit/types";
 import { isStableflowDepositToken } from "@/views/portfolio/deposit/types";
+import {
+  buildDepositAmountFromMaxBalance,
+  buildDepositAmountFromMinUsd,
+  getEffectiveMinDepositUsd,
+  isDepositAmountValid
+} from "@/views/portfolio/deposit/utils";
 import {
   FundingModalShell,
   fundingPrimaryButtonClass
@@ -62,6 +63,8 @@ export interface DepositDialogProps {
 
 const INITIAL_STEP: DepositStep = "entry";
 
+const INITIAL_AMOUNT: DepositAmountState = { tokenAmount: "0", amountUsd: "0" };
+
 export function DepositDialog({
   open,
   onClose,
@@ -75,7 +78,7 @@ export function DepositDialog({
   const [selectedToken, setSelectedToken] = useState<
     DepositSelectableToken | undefined
   >();
-  const [amount, setAmount] = useState("0");
+  const [amount, setAmount] = useState<DepositAmountState>(INITIAL_AMOUNT);
   const [continueLoading, setContinueLoading] = useState(false);
   const [stableflowTokens, setStableflowTokens] = useState<
     StableflowDepositToken[]
@@ -171,7 +174,7 @@ export function DepositDialog({
     setStep(INITIAL_STEP);
     setDepositMethod("connected");
     setSelectedToken(undefined);
-    setAmount("0");
+    setAmount(INITIAL_AMOUNT);
     setStableflowQuote(undefined);
     setStableflowExecution(undefined);
     setStatusPhase("bridging");
@@ -246,7 +249,7 @@ export function DepositDialog({
 
     if (step === "amount") {
       setStep("tokens");
-      setAmount("0");
+      setAmount(INITIAL_AMOUNT);
       return;
     }
 
@@ -293,27 +296,39 @@ export function DepositDialog({
         latestBalance
       );
 
+      const effectiveMinUsd = getEffectiveMinDepositUsd(
+        selectedToken.minCheckoutUsd,
+      );
+
       if (
         depositMethod === "connected" &&
-        Big(latestBalanceUsd || 0).lt(selectedToken.minCheckoutUsd)
+        Big(latestBalanceUsd || 0).lt(effectiveMinUsd)
       ) {
         toast.error(
-          `${selectedToken.symbol} minimum deposit amount is $${selectedToken.minCheckoutUsd} or higher`
+          `${selectedToken.symbol} minimum deposit amount is $${effectiveMinUsd} or higher`,
         );
         return;
       }
 
       if (depositMethod === "connected") {
-        const selectedTokenPrice = selectTokenPrice(
-          prices,
-          selectedToken.symbol
+        setAmount(
+          buildDepositAmountFromMinUsd(
+            selectedToken.minCheckoutUsd,
+            latestBalance,
+            prices,
+            selectedToken,
+          ),
         );
-        const minAmount = Big(selectedToken.minCheckoutUsd)
-          .div(selectedTokenPrice || 1)
-          .toFixed(4, Big.roundDown);
-        setAmount(minAmount);
       } else if (Big(latestBalance || 0).gt(0)) {
-        setAmount(latestBalance);
+        setAmount(
+          buildDepositAmountFromMaxBalance(
+            latestBalance,
+            prices,
+            selectedToken,
+          ),
+        );
+      } else {
+        setAmount(INITIAL_AMOUNT);
       }
 
       setStep("amount");
@@ -327,6 +342,22 @@ export function DepositDialog({
       return false;
     }
 
+    const effectiveMinUsd =
+      depositMethod === "connected"
+        ? getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd)
+        : 0;
+
+    if (
+      depositMethod === "connected" &&
+      effectiveMinUsd > 0 &&
+      Big(amount.amountUsd || 0).lt(effectiveMinUsd)
+    ) {
+      toast.error(
+        `${selectedToken.symbol} minimum deposit amount is $${effectiveMinUsd} or higher`,
+      );
+      return;
+    }
+
     setContinueLoading(true);
 
     try {
@@ -335,7 +366,7 @@ export function DepositDialog({
         isStableflowDepositToken(selectedToken) &&
         session?.funderAddress
       ) {
-        const amountBaseUnits = Big(amount)
+        const amountBaseUnits = Big(amount.tokenAmount)
           .times(10 ** selectedToken.decimals)
           .toFixed(0, 0);
         const { quote } = await fetchJson<{ quote: QuoteResponse }>(
@@ -460,7 +491,7 @@ export function DepositDialog({
           );
         }
 
-        await depositViaPolygon(amount, selectedToken);
+        await depositViaPolygon(amount.tokenAmount, selectedToken);
         toast.success("Deposit successful");
         handleClose();
         syncCash();
@@ -497,7 +528,7 @@ export function DepositDialog({
       }
 
       const execution = await depositViaStableflow(
-        amount,
+        amount.tokenAmount,
         selectedToken,
         session.funderAddress,
         polygonUsdcDestinationAssetId
@@ -593,7 +624,18 @@ export function DepositDialog({
     }
 
     if (step === "amount" && selectedToken) {
-      const canContinue = isDepositAmountValid(amount, selectedTokenMaxAmount);
+      const effectiveMinUsd =
+        depositMethod === "stableflow"
+          ? 0
+          : getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd);
+      const canContinue = isDepositAmountValid(
+        amount.tokenAmount,
+        selectedTokenMaxAmount,
+        {
+          minDepositUsd: effectiveMinUsd,
+          amountUsd: amount.amountUsd,
+        },
+      );
 
       return (
         <button
@@ -689,6 +731,11 @@ export function DepositDialog({
               token={selectedToken}
               amount={amount}
               maxAmount={selectedTokenMaxAmount}
+              minDepositUsd={
+                depositMethod === "stableflow"
+                  ? 0
+                  : getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd)
+              }
               onAmountChange={setAmount}
             />
           ) : null}
@@ -697,7 +744,8 @@ export function DepositDialog({
             <DepositConfirmStep
               walletAddress={session?.walletAddress ?? ""}
               token={selectedToken}
-              amount={amount}
+              amount={amount.tokenAmount}
+              amountUsd={amount.amountUsd}
               quoteMode={
                 depositMethod === "stableflow" ? "stableflow" : "bridge"
               }

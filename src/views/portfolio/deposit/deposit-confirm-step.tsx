@@ -28,6 +28,7 @@ export interface DepositConfirmStepProps {
   walletAddress: string;
   token: DepositSelectableToken;
   amount: string;
+  amountUsd: string;
   quoteMode?: "bridge" | "stableflow";
   stableflowQuote?: QuoteResponse;
   recipientAddress?: string;
@@ -37,6 +38,7 @@ export function DepositConfirmStep({
   walletAddress,
   token,
   amount,
+  amountUsd,
   quoteMode = "bridge",
   stableflowQuote,
   recipientAddress,
@@ -100,7 +102,7 @@ export function DepositConfirmStep({
   return (
     <div className="flex flex-col gap-4 pb-2">
       <p className="m-0 text-center text-[36px] font-[556] leading-[43px] text-black">
-        {formatNumber(amount, token.decimals, true, { round: 0 })}
+        {formatNumber(amountUsd, 2, true, { prefix: "$", round: 0 })}
       </p>
 
       {showQuoteLoading ? (

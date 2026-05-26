@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AuthProvider>
           <main className="min-h-screen overflow-x-hidden font-body">
             <AppHeader />
-            <div className="pt-11">{children}</div>
+            <div className="pt-[70px]">{children}</div>
           </main>
           <Toaster />
         </AuthProvider>

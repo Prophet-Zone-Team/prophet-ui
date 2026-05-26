@@ -24,6 +24,9 @@ export function resolveSupportedFundingAssets(payload: SupportedAssetsPayload): 
 
 export async function fetchSupportedFundingAssets(): Promise<FundingAsset[]> {
   const payload = await fetchJson<SupportedAssetsPayload>("/api/trading/bridge/supported-assets");
+  payload.supportedAssets.forEach((asset) => {
+    asset.minCheckoutUsd = asset.minCheckoutUsd + 1;
+  });
   return resolveSupportedFundingAssets(payload);
 }
 

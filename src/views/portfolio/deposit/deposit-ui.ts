@@ -21,6 +21,14 @@ export const depositAmountInputClass = cn(
   "outline-none placeholder:text-[#c8c8c8]"
 );
 
+export const depositModalAmountInputWrapClass =
+  "mx-auto flex w-1/2 min-w-[200px] max-w-[250px] items-baseline";
+
+export const depositModalAmountInputClass = cn(
+  "min-w-0 flex-1 border-0 bg-transparent p-0 text-center text-[36px] font-[556] leading-[43px] text-black",
+  "outline-none placeholder:text-[#c8c8c8]",
+);
+
 export const depositPercentButtonClass = cn(
   "flex h-[30px] min-w-[50px] items-center justify-center rounded-[8px] border border-[#EBEBEB]",
   "bg-white px-3 text-sm font-[457] text-[#909090] transition-colors hover:border-black hover:text-black"
