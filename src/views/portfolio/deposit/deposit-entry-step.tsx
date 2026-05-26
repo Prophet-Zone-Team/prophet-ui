@@ -51,29 +51,6 @@ export function DepositEntryStep({
 
   return (
     <div className="flex flex-col gap-3 pb-2">
-      <span className={depositSectionLabelClass}>Stableflow</span>
-      <button
-        type="button"
-        className={depositConnectedRowClass}
-        onClick={() => void onSelectStableflow()}
-        disabled={stableflowLoading}
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          {stableflowLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
-          ) : (
-            <img
-              src="/logos/logo-stableflow.svg"
-              alt=""
-              className="size-8 shrink-0 rounded-full object-center object-contain"
-            />
-          )}
-          <span className="truncate text-base font-[556] text-black">Stableflow</span>
-        </span>
-        <span className="shrink-0 text-base font-[556] text-black">
-        </span>
-      </button>
-
       <span className={depositSectionLabelClass}>Connected</span>
       <button
         type="button"
@@ -94,6 +71,29 @@ export function DepositEntryStep({
               )
               : formatNumber(connectedWalletBalanceUsd, 2, true, { round: 0, isZeroPrecision: true })
           }
+        </span>
+      </button>
+
+      <span className={depositSectionLabelClass}>Stableflow</span>
+      <button
+        type="button"
+        className={depositConnectedRowClass}
+        onClick={() => void onSelectStableflow()}
+        disabled={stableflowLoading}
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          {stableflowLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
+          ) : (
+            <img
+              src="/logos/logo-stableflow.svg"
+              alt=""
+              className="size-8 shrink-0 rounded-full object-center object-contain"
+            />
+          )}
+          <span className="truncate text-base font-[556] text-black">Stableflow</span>
+        </span>
+        <span className="shrink-0 text-base font-[556] text-black">
         </span>
       </button>
     </div>
