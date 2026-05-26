@@ -14,6 +14,7 @@ import {
   formatOutcomePercent,
   parseMatchOutcomeOdds
 } from "@/lib/market/match-outcome-odds";
+import { formatScheduleKickoff } from "@/lib/market/schedule-match";
 import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 
@@ -94,23 +95,40 @@ export function SpecialMatchDataCard({
         <div className="absolute inset-0 z-0 bg-[#f4f6f9]" aria-hidden />
       )}
 
-      <div className="relative z-10 flex justify-center px-3 pb-6 pt-4 sm:px-6 sm:pb-10 sm:pt-6">
-        <div className="w-full max-w-[568px] rounded-[20px] bg-white px-4 py-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] sm:px-8 sm:py-5">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-6">
+      <div className="relative z-10 flex justify-center pt-[50px]">
+        <div className="w-[568px] h-[138px] rounded-[20px] bg-white px-4 py-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] sm:px-8 sm:py-5">
+          <div className="flex justify-between items-center relative">
             <TeamColumn name={homeName} code={home?.team.code} align="start" />
 
-            <div className="flex min-w-[88px] flex-col items-center gap-1 text-center">
+            <div className="flex min-w-[88px] flex-col items-center text-center">
               {match.status === "live" ? (
-                <MatchStatusBadge variant="ongoing" className="font-semibold" />
-              ) : null}
-              <strong className="text-[28px] font-semibold leading-none text-black sm:text-4xl">
-                {scoreLabel}
-              </strong>
-              {liveClock ? (
-                <span className="text-base font-normal text-black">
-                  {liveClock}
-                </span>
-              ) : null}
+                <>
+                  <MatchStatusBadge
+                    variant="ongoing"
+                    className="font-semibold"
+                  />
+                  <strong className="text-[28px] font-semibold leading-none text-black sm:text-4xl">
+                    {scoreLabel}
+                  </strong>
+                  {liveClock ? (
+                    <span className="text-base font-normal text-black">
+                      {liveClock}
+                    </span>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <div className="text-[14px] text-[#9D84FF] font-[556]">
+                    Next Match
+                  </div>
+                  <div className="text-[36px] text-[#909090] font-[556]">
+                    VS
+                  </div>
+                  <div className="text-[16px] text-[#000] font-[457]">
+                    Starts {formatScheduleKickoff(match.kickoffAt)}
+                  </div>
+                </>
+              )}
             </div>
 
             <TeamColumn name={awayName} code={away?.team.code} align="end" />
@@ -131,18 +149,13 @@ function TeamColumn({
   align: "start" | "end";
 }) {
   return (
-    <div
-      className={cn(
-        "flex min-w-0 flex-col gap-2",
-        align === "end" ? "items-end text-right" : "items-start text-left"
-      )}
-    >
+    <div className={cn("flex min-w-0 flex-col gap-2 items-center")}>
       <TeamFlag
         code={code}
         name={name}
-        className="h-[50px] w-[50px] rounded-[6px] text-[40px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="h-[50px] w-[50px] rounded-[6px] text-[50px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
       />
-      <strong className="max-w-full truncate text-xl font-semibold text-black sm:text-[26px] sm:leading-[31px]">
+      <strong className="max-w-full truncate text-[26px] font-[556] leading-[31px] text-black">
         {name}
       </strong>
     </div>
@@ -182,7 +195,6 @@ function ProbabilityStrip({
 
       <div className="pointer-events-none absolute inset-0 z-30">
         <ProbabilitySegmentLabel
-          clipPath={homeClip}
           label={homeName}
           percent={homePct}
           tone="light"
@@ -190,7 +202,6 @@ function ProbabilityStrip({
           align="start"
         />
         <ProbabilitySegmentLabel
-          clipPath={drawClip}
           label="Draw"
           percent={drawPct}
           tone="dark"
@@ -198,7 +209,6 @@ function ProbabilityStrip({
           contentLeft={`calc(${homeEnd}% + 60px)`}
         />
         <ProbabilitySegmentLabel
-          clipPath={awayClip}
           label={awayName}
           percent={awayPct}
           tone="dark"
@@ -225,7 +235,6 @@ function ProbabilitySegmentFill({
 }
 
 function ProbabilitySegmentLabel({
-  clipPath,
   label,
   percent,
   tone,
@@ -233,7 +242,6 @@ function ProbabilitySegmentLabel({
   align = "start",
   contentLeft
 }: {
-  clipPath: string;
   label: string;
   percent: string;
   tone: "light" | "dark";
@@ -244,10 +252,7 @@ function ProbabilitySegmentLabel({
   const textColor = tone === "light" ? "text-white" : "text-black";
 
   return (
-    <div
-      className="pointer-events-none absolute inset-0 z-30"
-      style={{ clipPath }}
-    >
+    <div className="pointer-events-none absolute inset-0 z-30">
       <div
         className={cn(
           "absolute bottom-5 z-30 flex max-w-[min(100%,280px)] flex-col gap-0.5 sm:bottom-8",

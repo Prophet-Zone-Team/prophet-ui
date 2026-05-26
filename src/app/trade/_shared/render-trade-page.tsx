@@ -10,6 +10,9 @@ import {
   findWorldCupMatch,
   getRelatedMatches
 } from "@/lib/market/game-market-snapshot";
+import { buildFixtureMarketsSnapshot } from "@/lib/market/build-fixture-markets-snapshot";
+import { enrichFootballMatchesWithClobData } from "@/server/market/fixture-clob-enrichment";
+import { enrichMatchWithSiblingFixtureMarkets } from "@/server/market/fixture-sibling-enrichment";
 import type { WorldCupMatch } from "@/types/market";
 import TradeGameView from "@/views/trade/game";
 import TradeTeamView from "@/views/trade/team";
@@ -47,11 +50,15 @@ export async function renderGameTradePage(slug: string) {
     notFound();
   }
 
+  const matchWithSiblingMarkets = await enrichMatchWithSiblingFixtureMarkets(footballMatch);
+  const [enrichedMatch] = await enrichFootballMatchesWithClobData([matchWithSiblingMarkets]);
+
   const marketData = await getWorldCupMarketData(
-    resolveGameMarketOptions(footballMatch)
+    resolveGameMarketOptions(enrichedMatch)
   );
-  const snapshot = buildGameMarketSnapshot(footballMatch, marketData.snapshots);
-  const relatedMatches = getRelatedMatches(footballMatch, matches);
+  const snapshot = buildGameMarketSnapshot(enrichedMatch, marketData.snapshots);
+  const fixtureMarkets = buildFixtureMarketsSnapshot(enrichedMatch);
+  const relatedMatches = getRelatedMatches(enrichedMatch, matches);
   const teamProfiles = Object.fromEntries(
     marketData.footballTeamContext.map((context) => [
       context.profile.teamId,
@@ -61,9 +68,10 @@ export async function renderGameTradePage(slug: string) {
 
   return (
     <TradeGameView
-      match={footballMatch}
+      match={enrichedMatch}
       snapshots={marketData.snapshots}
       gameSnapshot={snapshot}
+      fixtureMarkets={fixtureMarkets}
       teamProfiles={teamProfiles}
       relatedMatches={
         relatedMatches.length > 0 ? relatedMatches : matches

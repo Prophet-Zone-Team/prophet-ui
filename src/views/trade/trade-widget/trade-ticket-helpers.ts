@@ -1,5 +1,5 @@
 import { findGameMarketOutcome } from "@/lib/market/game-outcome-price";
-import { buildGameBidOrderPreview } from "@/lib/market/game-order";
+import { buildGameBidOrderPreview, buildFixtureBidOrderPreview } from "@/lib/market/game-order";
 import {
   buildBidOrderPreview,
   type BidOrderPreview
@@ -22,6 +22,7 @@ import { fetchJson } from "@/lib/team/client-fetch";
 import type {
   AccountReadinessCheck,
   BidTradeSide,
+  FixtureMarketOutcome,
   GameMarketSnapshot,
   MatchOutcomeSide,
   OrderOutcomeSide,
@@ -201,7 +202,22 @@ export function buildGameTradePreview(input: {
   amount: number;
   limitPrice: number;
   orderType: TradingOrderType;
+  fixtureOutcome?: FixtureMarketOutcome | null;
 }): ReturnType<typeof buildGameBidOrderPreview> {
+  if (input.fixtureOutcome) {
+    return buildFixtureBidOrderPreview({
+      outcome: input.fixtureOutcome,
+      acceptingOrders:
+        input.fixtureOutcome.acceptingOrders ??
+        input.gameSnapshot.market.acceptingOrders,
+      binarySide: input.binarySide,
+      tradeSide: input.tradeSide,
+      amount: input.amount,
+      limitPrice: input.limitPrice,
+      orderType: input.orderType
+    });
+  }
+
   return buildGameBidOrderPreview({
     snapshot: input.gameSnapshot,
     outcomeSide: input.matchOutcomeSide,
@@ -277,6 +293,33 @@ export async function fetchReadinessForPreview(
   );
 }
 
+export async function fetchTokenBestAsk(
+  tokenId: string
+): Promise<number | undefined> {
+  const payload = await fetchJson<{
+    orderbook: { asks: Array<{ price: number }> };
+  }>(`/api/market/orderbook?tokenId=${encodeURIComponent(tokenId)}`);
+
+  const ask = payload.orderbook.asks[0]?.price;
+
+  return ask !== undefined && ask > 0 && ask < 1 ? ask : undefined;
+}
+
+export async function fetchFixtureLiveAsks(
+  outcome: Pick<FixtureMarketOutcome, "tokenId" | "noTokenId">
+): Promise<{ yesAsk?: number; noAsk?: number }> {
+  const [yesAsk, noAsk] = await Promise.all([
+    outcome.tokenId
+      ? fetchTokenBestAsk(outcome.tokenId)
+      : Promise.resolve(undefined),
+    outcome.noTokenId
+      ? fetchTokenBestAsk(outcome.noTokenId)
+      : Promise.resolve(undefined),
+  ]);
+
+  return { yesAsk, noAsk };
+}
+
 export function buildTeamUserOrderPreview(
   snapshot: TeamMarketSnapshot,
   preview: BidOrderPreview
@@ -309,14 +352,17 @@ export function buildTeamUserOrderPreview(
 
 export function buildGameUserOrderPreview(
   gameSnapshot: GameMarketSnapshot,
-  preview: ReturnType<typeof buildGameBidOrderPreview>
+  preview: ReturnType<typeof buildGameBidOrderPreview>,
+  fixtureOutcome?: FixtureMarketOutcome | null
 ): UserOrderPreview {
   if (!preview.tokenId) {
     throw new Error("A Polymarket token ID is required before submitting.");
   }
 
   return {
-    marketId: gameSnapshot.match.polymarket?.moneyline.conditionId,
+    marketId:
+      fixtureOutcome?.conditionId ??
+      gameSnapshot.match.polymarket?.moneyline.conditionId,
     tokenId: preview.tokenId,
     teamId: gameSnapshot.homeTeamId ?? gameSnapshot.match.id,
     outcome: preview.binarySide,
@@ -527,8 +573,17 @@ export function resolveTeamOutcomeTokenIds(
 
 export function resolveGameOutcomeTokenIds(
   gameSnapshot: GameMarketSnapshot,
-  matchOutcomeSide: MatchOutcomeSide
+  matchOutcomeSide: MatchOutcomeSide,
+  fixtureOutcome?: FixtureMarketOutcome | null
 ): MarketOutcomeTokenIds {
+  if (fixtureOutcome) {
+    return {
+      yesTokenId: fixtureOutcome.tokenId,
+      noTokenId: fixtureOutcome.noTokenId,
+      conditionId: fixtureOutcome.conditionId
+    };
+  }
+
   const outcome = findGameMarketOutcome(
     gameSnapshot.outcomes,
     matchOutcomeSide

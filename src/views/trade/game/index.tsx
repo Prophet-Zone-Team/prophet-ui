@@ -14,13 +14,15 @@ import { gameContentClass } from "@/views/trade/game/ui";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import type {
   ApiFootballTeamProfile,
+  GameFixtureMarketsSnapshot,
   GameMarketSnapshot,
-  TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
+import { GameFixtureMarketsSection } from "@/views/trade/game/fixture-markets";
 
 export type TradeGameViewProps = TradeGameHeaderProps & {
   gameSnapshot: GameMarketSnapshot;
+  fixtureMarkets: GameFixtureMarketsSnapshot;
   relatedMatches: WorldCupMatch[];
   teamProfiles?: Partial<Record<string, ApiFootballTeamProfile>>;
 };
@@ -29,14 +31,13 @@ export default function TradeGameView({
   match,
   snapshots,
   gameSnapshot,
+  fixtureMarkets,
   relatedMatches,
   teamProfiles
 }: TradeGameViewProps) {
   const sidebar = useMemo(() => {
     const focalTeamId =
-      match.homeTeamId ??
-      gameSnapshot.homeTeamId ??
-      snapshots[0]?.team.id;
+      match.homeTeamId ?? gameSnapshot.homeTeamId ?? snapshots[0]?.team.id;
 
     if (!focalTeamId) {
       return {
@@ -74,7 +75,16 @@ export default function TradeGameView({
             gameSnapshot={gameSnapshot}
             teamSnapshots={snapshots}
           />
-          <GameProbabilitySection match={match} snapshots={snapshots} />
+          <GameProbabilitySection
+            match={match}
+            snapshots={snapshots}
+            gameSnapshot={gameSnapshot}
+          />
+          <GameFixtureMarketsSection
+            fixtureMarkets={fixtureMarkets}
+            gameSnapshot={gameSnapshot}
+            teamSnapshots={snapshots}
+          />
         </div>
         <div className="mt-6 flex flex-col gap-4 w-[345px]">
           <TradeWidget

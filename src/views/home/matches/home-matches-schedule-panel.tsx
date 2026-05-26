@@ -6,6 +6,7 @@ import {
   buildScheduleDateGroups,
   buildScheduleFilterTeams,
   buildScheduleMatchList,
+  findFeaturedScheduleMatch,
   type ScheduleSortKey
 } from "@/lib/market/schedule-match";
 import type { Team, TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
@@ -52,19 +53,23 @@ export function HomeMatchesSchedulePanel({
   );
 
   const featuredCard = useMemo(() => {
-    const liveMatch = matches.find((match) => match.status === "live");
+    const featuredMatch = findFeaturedScheduleMatch(matches);
 
-    if (!liveMatch) {
+    if (!featuredMatch) {
       return null;
     }
 
     return {
-      match: liveMatch,
-      home: liveMatch.homeTeamId
-        ? snapshots.find((snapshot) => snapshot.team.id === liveMatch.homeTeamId)
+      match: featuredMatch,
+      home: featuredMatch.homeTeamId
+        ? snapshots.find(
+            (snapshot) => snapshot.team.id === featuredMatch.homeTeamId
+          )
         : undefined,
-      away: liveMatch.awayTeamId
-        ? snapshots.find((snapshot) => snapshot.team.id === liveMatch.awayTeamId)
+      away: featuredMatch.awayTeamId
+        ? snapshots.find(
+            (snapshot) => snapshot.team.id === featuredMatch.awayTeamId
+          )
         : undefined
     };
   }, [matches, snapshots]);
@@ -72,7 +77,7 @@ export function HomeMatchesSchedulePanel({
   return (
     <section className="min-w-0" aria-label="Football match schedule">
       {featuredCard ? (
-        <div className="mb-3.5">
+        <div className="pb-[20px]">
           <SpecialMatchDataCard
             match={featuredCard.match}
             home={featuredCard.home}
@@ -95,8 +100,12 @@ export function HomeMatchesSchedulePanel({
         dateGroups ? (
           <div className="flex flex-col gap-4">
             {dateGroups.map((group) => (
-              <section key={group.dateKey} aria-label={group.label}>
-                <h3 className="m-0 mb-2.5 text-base font-[556] leading-[19px] text-[#606060]">
+              <section
+                key={group.dateKey}
+                aria-label={group.label}
+                className="mt-[16px]"
+              >
+                <h3 className="m-0 mb-2.5 text-[20px] font-[556] leading-[19px] text-black">
                   {group.label}
                 </h3>
                 <ul className="m-0 flex list-none flex-col gap-2.5 p-0">

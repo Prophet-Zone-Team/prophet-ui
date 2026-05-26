@@ -117,6 +117,61 @@ export function getMatchKickoffTime(match: WorldCupMatch): number {
   return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time;
 }
 
+export function findFeaturedScheduleMatch(
+  matches: WorldCupMatch[]
+): WorldCupMatch | undefined {
+  const liveMatch = matches.find((match) => match.status === "live");
+
+  if (liveMatch) {
+    return liveMatch;
+  }
+
+  const now = Date.now();
+  let nearest: WorldCupMatch | undefined;
+
+  for (const match of matches) {
+    const kickoff = getMatchKickoffTime(match);
+
+    if (kickoff === Number.NEGATIVE_INFINITY) {
+      continue;
+    }
+
+    if (!nearest) {
+      nearest = match;
+      continue;
+    }
+
+    const nearestKickoff = getMatchKickoffTime(nearest);
+    const delta = Math.abs(kickoff - now);
+    const nearestDelta = Math.abs(nearestKickoff - now);
+
+    if (delta < nearestDelta) {
+      nearest = match;
+      continue;
+    }
+
+    if (delta !== nearestDelta) {
+      continue;
+    }
+
+    const kickoffIsUpcoming = kickoff >= now;
+    const nearestIsUpcoming = nearestKickoff >= now;
+
+    if (kickoffIsUpcoming && !nearestIsUpcoming) {
+      nearest = match;
+      continue;
+    }
+
+    if (kickoffIsUpcoming === nearestIsUpcoming) {
+      if (kickoffIsUpcoming ? kickoff < nearestKickoff : kickoff > nearestKickoff) {
+        nearest = match;
+      }
+    }
+  }
+
+  return nearest;
+}
+
 export function formatScheduleKickoff(value: string | undefined): string {
   if (!value) {
     return "TBD";

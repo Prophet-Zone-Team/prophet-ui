@@ -75,30 +75,37 @@ export function ScheduleTeamFilter({
 
   return (
     <div
-      className="flex min-w-0 items-center gap-2 sm:gap-3"
+      className="flex min-w-0 items-center gap-[14px]"
       role="group"
       aria-label="Filter by team"
     >
-      <span className="shrink-0 text-base font-[556] leading-[19px] text-[#909090]">
+      <span className="shrink-0 text-[16px] font-[556] leading-[19px] text-[#909090]">
         Filter
       </span>
 
       <div ref={containerRef} className="relative shrink-0">
         <button
           type="button"
-          className="inline-flex h-[34px] items-center gap-1.5 rounded-[20px] border border-[#909090] bg-white px-3 text-base font-normal leading-[19px] text-black"
+          className="inline-flex h-[34px] justify-center items-center w-[98px] rounded-[20px] gap-[10px] border border-[#909090] bg-white font-normal leading-[19px] text-black"
           aria-expanded={open}
           aria-haspopup="listbox"
           onClick={() => setOpen((current) => !current)}
         >
           Teams
-          <ChevronDown
-            className={cn(
-              "size-3 shrink-0 text-black transition-transform",
-              open && "rotate-180"
-            )}
-            aria-hidden
-          />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="10"
+            height="6"
+            viewBox="0 0 10 6"
+            fill="none"
+            className={cn("transition-transform", open && "rotate-180")}
+          >
+            <path
+              d="M0.5 0.5L4.89223 4.5L9.5 0.5"
+              stroke="black"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
 
         {open ? (
@@ -133,13 +140,13 @@ function ScheduleTeamFilterChip({
   onRemove: () => void;
 }) {
   return (
-    <span className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-[20px] bg-[#EBEBEB] px-2.5">
+    <span className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-[20px] bg-[#EBEBEB] pl-[10px] pr-[14px]">
       <TeamFlag
         code={team.code}
         name={team.name}
-        className="h-4 w-4 shrink-0 rounded-[2px] text-base shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="h-[16px] w-[16px] shrink-0 rounded-[2px] text-[16px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
       />
-      <span className="text-base font-normal leading-[19px] text-black">
+      <span className="text-[16px] font-[457] leading-[19px] text-black">
         {team.code}
       </span>
       <button
@@ -208,10 +215,10 @@ function ScheduleTeamFilterPanel({
                 name={team.name}
                 className="h-[26px] w-[26px] shrink-0 rounded text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
               />
-              <span className="min-w-0 flex-1 truncate text-sm font-[556] leading-[17px] text-black">
+              <span className="truncate text-[14px] font-[556] leading-[17px] text-black">
                 {team.name}
               </span>
-              <span className="shrink-0 text-sm font-[556] leading-[17px] text-[#909090]">
+              <span className="shrink-0 text-[14px] font-[556] leading-[17px] text-[#909090]">
                 {team.code}
               </span>
             </button>

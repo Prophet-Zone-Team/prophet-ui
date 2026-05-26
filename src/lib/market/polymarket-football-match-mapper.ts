@@ -8,6 +8,9 @@ import {
   type GammaEventRecord,
   type GammaMarketRecord,
 } from "@/lib/market/polymarket-gamma";
+import {
+  mapEventSportsMarkets,
+} from "@/lib/market/fixture-markets-mapper";
 import type {
   MatchOddsOutcome,
   MatchOutcomeSide,
@@ -199,6 +202,12 @@ export function mapGammaEventToMatch(event: GammaEventRecord): WorldCupMatch | u
         acceptingOrders: moneylineMarkets.some((market) => market.acceptingOrders === true),
         outcomes,
       },
+      fixtureMarkets: mapEventSportsMarkets(
+        event.markets ?? [],
+        sides.homeName,
+        sides.awayName,
+        outcomes,
+      ),
     },
   };
 }

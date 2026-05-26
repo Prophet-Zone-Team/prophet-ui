@@ -57,7 +57,7 @@ export function TracksPanel({ snapshots, matches, dataStatus }: TracksPanelProps
       {trackedTeams.length > 0 ? (
         <section aria-label="Tracked World Cup team markets">
           <h2 className="m-0 mb-3 text-lg font-[556] leading-[21px] text-black">
-            Teams
+            Winners
           </h2>
           <MarketListPanel
             teams={trackedTeams}

@@ -34,9 +34,10 @@ export type GameOutcomeBidButtonSize =
 
 export interface GameOutcomeBidButtonProps {
   title: string;
-  price: number;
+  price?: number;
   background: string;
   active?: boolean;
+  disabled?: boolean;
   size?: GameOutcomeBidButtonSize;
   onClick?: () => void;
 }
@@ -46,29 +47,36 @@ export function GameOutcomeBidButton({
   price,
   background,
   active = false,
+  disabled = false,
   size = "default",
   onClick
 }: GameOutcomeBidButtonProps) {
   const sizeClass = gameOutcomeBidButtonSizeClass[size];
+  const isInteractive = Boolean(onClick) && !disabled;
 
   return (
     <button
       type="button"
-      onClick={onClick}
+      disabled={disabled}
+      onClick={isInteractive ? onClick : undefined}
       className={cn(
         "flex w-full items-center justify-center border-0 font-[556] text-white transition-opacity",
         sizeClass.button,
-        onClick ? "cursor-pointer" : "cursor-default",
-        onClick
-          ? active
-            ? "opacity-100"
-            : "opacity-70 hover:opacity-85"
-          : "opacity-100"
+        isInteractive ? "cursor-pointer" : "cursor-not-allowed",
+        disabled
+          ? "opacity-40"
+          : isInteractive
+            ? active
+              ? "opacity-100"
+              : "opacity-70 hover:opacity-85"
+            : "opacity-100"
       )}
       style={{ backgroundColor: background }}
     >
       <span className={sizeClass.title}>{title}</span>
-      <span className={sizeClass.price}>{formatTradePanelPrice(price)}</span>
+      {price !== undefined ? (
+        <span className={sizeClass.price}>{formatTradePanelPrice(price)}</span>
+      ) : null}
     </button>
   );
 }

@@ -9,19 +9,18 @@ export interface MarketListPanelProps {
   dataStatus: MarketDataMeta;
   ariaLabel: string;
   emptyState?: ReactNode;
+  getNavigationDisabled?: (snapshot: TeamMarketSnapshot) => boolean;
 }
 
 export function MarketListPanel({
   teams,
   dataStatus,
   ariaLabel,
-  emptyState
+  emptyState,
+  getNavigationDisabled
 }: MarketListPanelProps) {
   return (
-    <section
-      className="min-w-0 bg-prophet-panel p-[18px] shadow-prophet backdrop-blur-2xl"
-      aria-label={ariaLabel}
-    >
+    <section className="min-w-0" aria-label={ariaLabel}>
       {teams.length === 0 && emptyState ? (
         emptyState
       ) : (
@@ -31,18 +30,11 @@ export function MarketListPanel({
               key={snapshot.team.id}
               snapshot={snapshot}
               rank={index + 1}
+              navigationDisabled={getNavigationDisabled?.(snapshot)}
             />
           ))}
         </div>
       )}
-
-      <div className="mt-5 flex flex-wrap justify-between gap-4 text-xs text-[#667188]">
-        <span>
-          Probability is implied by market price where provider data is
-          available.
-        </span>
-        <span>Updated {formatUpdatedAt(dataStatus.lastUpdated)}</span>
-      </div>
     </section>
   );
 }

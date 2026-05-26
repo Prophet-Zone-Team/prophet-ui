@@ -451,6 +451,76 @@ export interface PolymarketFixtureMoneylineOutcome {
   fee?: PolymarketFeeDetails;
 }
 
+export type FixtureMarketCategory = "lines" | "exact_score" | "halftime";
+
+export type FixtureSportsMarketType =
+  | "moneyline"
+  | "spread"
+  | "total"
+  | "btts"
+  | "exact_score"
+  | "halftime";
+
+export type FixtureOutcomeSide =
+  | MatchOutcomeSide
+  | "over"
+  | "under"
+  | "yes"
+  | "no";
+
+export interface FixtureMarketOutcome {
+  id: string;
+  marketType: FixtureSportsMarketType;
+  category: FixtureMarketCategory;
+  label: string;
+  side?: FixtureOutcomeSide;
+  line?: number;
+  probability: number;
+  price: number;
+  volume?: number;
+  tokenId?: string;
+  noTokenId?: string;
+  conditionId?: string;
+  yesAsk?: number;
+  yesBid?: number;
+  noAsk?: number;
+  noBid?: number;
+  fee?: PolymarketFeeDetails;
+  acceptingOrders?: boolean;
+}
+
+export interface FixtureLineOption {
+  key: string;
+  label: number;
+}
+
+export interface FixtureMarketGroup {
+  type: FixtureSportsMarketType;
+  title: string;
+  volume?: number;
+  /** Display labels for line tabs. Prefer `lineOptionKeys` when keys must be unique. */
+  lineOptions?: number[];
+  lineOptionKeys?: FixtureLineOption[];
+  defaultLine?: number;
+  defaultLineKey?: string;
+  outcomesByLine?: Record<string, FixtureMarketOutcome[]>;
+  outcomes: FixtureMarketOutcome[];
+}
+
+export interface PolymarketFixtureMarketsData {
+  lines: FixtureMarketGroup[];
+  exactScores: FixtureMarketOutcome[];
+  halftime: FixtureMarketOutcome[];
+}
+
+export interface GameFixtureMarketsSnapshot {
+  matchId: string;
+  lines: FixtureMarketGroup[];
+  exactScores: FixtureMarketOutcome[];
+  halftime: FixtureMarketOutcome[];
+  freshness: FreshnessMeta;
+}
+
 export interface PolymarketFixtureMetadata {
   eventId: string;
   slug: string;
@@ -462,6 +532,7 @@ export interface PolymarketFixtureMetadata {
     acceptingOrders: boolean;
     outcomes: PolymarketFixtureMoneylineOutcome[];
   };
+  fixtureMarkets?: PolymarketFixtureMarketsData;
 }
 
 export interface WorldCupMatch {

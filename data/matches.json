@@ -5,8 +5,151 @@
     "status": "live",
     "lastUpdated": "2026-05-25T02:16:41.716Z"
   },
-  "count": 72,
+  "count": 77,
   "matches": [
+    {
+      "id": "mock-upcoming",
+      "matchId": 900001,
+      "stage": "GROUP",
+      "group": "A",
+      "homeTeamId": "germany",
+      "awayTeamId": "spain",
+      "homeDisplayName": "Germany",
+      "awayDisplayName": "Spain",
+      "status": "scheduled",
+      "kickoffAt": "2026-06-20T18:00:00Z",
+      "league": "FIFA World Cup",
+      "odds": {
+        "source": "mock",
+        "status": "cached",
+        "outcomes": [
+          {
+            "label": "Germany",
+            "impliedProbability": 0.42,
+            "lastUpdated": "2026-05-26T07:49:45.813Z"
+          },
+          {
+            "label": "Draw",
+            "impliedProbability": 0.28,
+            "lastUpdated": "2026-05-26T07:49:45.813Z"
+          },
+          {
+            "label": "Spain",
+            "impliedProbability": 0.3,
+            "lastUpdated": "2026-05-26T07:49:45.813Z"
+          }
+        ],
+        "lastUpdated": "2026-05-26T07:49:45.813Z"
+      },
+      "freshness": {
+        "source": "mock-schedule-matches",
+        "status": "cached",
+        "lastUpdated": "2026-05-26T07:49:45.813Z"
+      }
+    },
+    {
+      "id": "mock-live",
+      "matchId": 900002,
+      "stage": "GROUP",
+      "group": "B",
+      "homeTeamId": "france",
+      "awayTeamId": "brazil",
+      "homeDisplayName": "France",
+      "awayDisplayName": "Brazil",
+      "status": "live",
+      "kickoffAt": "2026-05-26T20:00:00Z",
+      "homeScore": 1,
+      "awayScore": 1,
+      "liveElapsedSeconds": 3720,
+      "league": "FIFA World Cup",
+      "odds": {
+        "source": "mock",
+        "status": "cached",
+        "outcomes": [
+          {
+            "label": "France",
+            "impliedProbability": 0.35,
+            "lastUpdated": "2026-05-26T07:49:45.813Z"
+          },
+          {
+            "label": "Draw",
+            "impliedProbability": 0.25,
+            "lastUpdated": "2026-05-26T07:49:45.813Z"
+          },
+          {
+            "label": "Brazil",
+            "impliedProbability": 0.4,
+            "lastUpdated": "2026-05-26T07:49:45.813Z"
+          }
+        ],
+        "lastUpdated": "2026-05-26T07:49:45.813Z"
+      },
+      "freshness": {
+        "source": "mock-schedule-matches",
+        "status": "cached",
+        "lastUpdated": "2026-05-26T07:49:45.813Z"
+      }
+    },
+    {
+      "id": "mock-finished-home",
+      "matchId": 900003,
+      "stage": "GROUP",
+      "group": "C",
+      "homeTeamId": "argentina",
+      "awayTeamId": "france",
+      "homeDisplayName": "Argentina",
+      "awayDisplayName": "France",
+      "status": "finished",
+      "kickoffAt": "2026-05-20T16:00:00Z",
+      "homeScore": 2,
+      "awayScore": 1,
+      "league": "FIFA World Cup",
+      "freshness": {
+        "source": "mock-schedule-matches",
+        "status": "cached",
+        "lastUpdated": "2026-05-26T07:49:45.813Z"
+      }
+    },
+    {
+      "id": "mock-finished-away",
+      "matchId": 900004,
+      "stage": "GROUP",
+      "group": "D",
+      "homeTeamId": "germany",
+      "awayTeamId": "brazil",
+      "homeDisplayName": "Germany",
+      "awayDisplayName": "Brazil",
+      "status": "finished",
+      "kickoffAt": "2026-05-19T20:00:00Z",
+      "homeScore": 0,
+      "awayScore": 2,
+      "league": "FIFA World Cup",
+      "freshness": {
+        "source": "mock-schedule-matches",
+        "status": "cached",
+        "lastUpdated": "2026-05-26T07:49:45.813Z"
+      }
+    },
+    {
+      "id": "mock-finished-draw",
+      "matchId": 900005,
+      "stage": "GROUP",
+      "group": "E",
+      "homeTeamId": "spain",
+      "awayTeamId": "argentina",
+      "homeDisplayName": "Spain",
+      "awayDisplayName": "Argentina",
+      "status": "finished",
+      "kickoffAt": "2026-05-18T14:00:00Z",
+      "homeScore": 1,
+      "awayScore": 1,
+      "league": "FIFA World Cup",
+      "freshness": {
+        "source": "mock-schedule-matches",
+        "status": "cached",
+        "lastUpdated": "2026-05-26T07:49:45.813Z"
+      }
+    },
     {
       "id": "fifwc-ger-kor-2026-06-14",
       "matchId": 547529,

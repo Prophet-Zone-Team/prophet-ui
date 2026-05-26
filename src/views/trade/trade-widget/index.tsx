@@ -69,13 +69,11 @@ export function TradeWidget(props: TradeWidgetProps) {
           gameSnapshot={props.gameSnapshot}
           teamSnapshots={props.teamSnapshots}
           matchOutcomeSide={matchOutcomeSide}
-          showOutcomeLabel={tab === "buy"}
         />
       ) : (
         <TradeWidgetHeader
           snapshot={props.snapshot}
           outcomeSide={outcomeSide}
-          showOutcomeLabel={tab === "buy"}
         />
       )}
 

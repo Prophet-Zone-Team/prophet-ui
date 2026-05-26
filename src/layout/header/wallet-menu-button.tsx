@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
@@ -140,14 +141,17 @@ export function WalletMenuButton() {
         onToggleMenu={() => setIsOpen((value) => !value)}
       />
 
-      {isOpen ? (
-        <WalletMenuDropdown
-          polymarketAddress={polymarketAddress}
-          onClose={() => setIsOpen(false)}
-          onLogout={logout}
-          onOpenFastBid={() => setFastBidOpen(true)}
-        />
-      ) : null}
+      <AnimatePresence>
+        {isOpen ? (
+          <WalletMenuDropdown
+            key="wallet-menu-dropdown"
+            polymarketAddress={polymarketAddress}
+            onClose={() => setIsOpen(false)}
+            onLogout={logout}
+            onOpenFastBid={() => setFastBidOpen(true)}
+          />
+        ) : null}
+      </AnimatePresence>
 
       <DepositDialog
         open={depositOpen}

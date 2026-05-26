@@ -1,9 +1,18 @@
 "use client";
 
-import type { ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FocusEvent,
+  type ReactNode
+} from "react";
 
 import { cn } from "@/lib/cn";
 import { TrackedBookmarkIcon, UntrackedBookmarkIcon } from "@/components/bookmark/bookmark-icons";
+
+const TOOLTIP_HIDE_DELAY_MS = 1000;
 
 export interface BookmarkToggleProps {
   isTracked: boolean;
@@ -20,8 +29,69 @@ export function BookmarkToggle({
   tooltip,
   className
 }: BookmarkToggleProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+
+  const clearHideTimeout = useCallback(() => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+  }, []);
+
+  const showTooltip = useCallback(() => {
+    if (isTracked || !tooltip) {
+      return;
+    }
+
+    clearHideTimeout();
+    setIsTooltipVisible(true);
+  }, [clearHideTimeout, isTracked, tooltip]);
+
+  const scheduleHideTooltip = useCallback(() => {
+    if (isTracked || !tooltip) {
+      return;
+    }
+
+    clearHideTimeout();
+    hideTimeoutRef.current = setTimeout(() => {
+      setIsTooltipVisible(false);
+      hideTimeoutRef.current = null;
+    }, TOOLTIP_HIDE_DELAY_MS);
+  }, [clearHideTimeout, isTracked, tooltip]);
+
+  const handleFocusOut = useCallback(
+    (event: FocusEvent<HTMLDivElement>) => {
+      const nextTarget = event.relatedTarget;
+
+      if (nextTarget instanceof Node && rootRef.current?.contains(nextTarget)) {
+        return;
+      }
+
+      scheduleHideTooltip();
+    },
+    [scheduleHideTooltip]
+  );
+
+  useEffect(() => {
+    if (isTracked) {
+      clearHideTimeout();
+      setIsTooltipVisible(false);
+    }
+  }, [clearHideTimeout, isTracked]);
+
+  useEffect(() => clearHideTimeout, [clearHideTimeout]);
+
   return (
-    <div className={cn("group relative shrink-0", className)}>
+    <div
+      ref={rootRef}
+      className={cn("relative flex shrink-0 items-center", className)}
+      onMouseEnter={showTooltip}
+      onMouseLeave={scheduleHideTooltip}
+      onFocusCapture={showTooltip}
+      onBlurCapture={handleFocusOut}
+    >
       <button
         type="button"
         className="inline-flex shrink-0 items-center justify-center rounded-[2px] p-0"
@@ -35,13 +105,10 @@ export function BookmarkToggle({
         {isTracked ? <TrackedBookmarkIcon /> : <UntrackedBookmarkIcon />}
       </button>
 
-      {!isTracked && tooltip ? (
+      {!isTracked && tooltip && isTooltipVisible ? (
         <div
           role="tooltip"
-          className={cn(
-            "pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-[min(384px,calc(100vw-2rem))]",
-            "group-hover:block group-focus-within:block"
-          )}
+          className="absolute bottom-full left-[-20px] z-20 w-[min(384px,calc(100vw-2rem))] pb-2"
         >
           {tooltip}
         </div>

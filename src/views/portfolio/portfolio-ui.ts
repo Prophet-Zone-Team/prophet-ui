@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 
-export const portfolioPageClass = "mx-auto w-[1112px] px-4 py-8 sm:px-6";
+export const portfolioPageClass = "mx-auto w-[1112px] px-4 pt-[20px] sm:px-6";
 
 export const portfolioSummaryCardClass = cn(
   "box-border min-h-[300px] rounded-[20px] border border-prophet-line bg-white p-6 sm:p-8 lg:h-[300px]"
@@ -11,13 +11,13 @@ export const portfolioActivityCardClass = cn(
 );
 
 export const portfolioSummaryLabelClass =
-  "text-sm font-[556] leading-[17px] text-prophet-muted";
+  "text-[14px] font-[556] leading-[17px] text-[#909090] pb-[10px]";
 
 export const portfolioSummaryValueLargeClass =
   "text-[32px] font-[556] leading-[38px] text-black";
 
 export const portfolioSummaryValueMediumClass =
-  "text-xl font-[556] leading-12 text-black mt-2";
+  "text-[20px] font-[556] leading-12 text-black mt-2";
 
 export const portfolioPendingDepositButtonClass = cn(
   "inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-black px-3",
@@ -26,7 +26,7 @@ export const portfolioPendingDepositButtonClass = cn(
 );
 
 export const portfolioWalletAddressClass =
-  "truncate text-xl font-[556] leading-6 text-black";
+  "truncate text-[20px] font-[556] leading-6 text-black";
 
 export const portfolioAvatarClass = cn(
   "size-[52px] shrink-0 rounded-full border-4 border-white shadow-[0_0_4px_rgba(0,0,0,0.25)]",

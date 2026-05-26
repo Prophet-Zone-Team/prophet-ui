@@ -28,7 +28,7 @@ export function OutcomeStat({
     >
       <p
         className={cn(
-          "font-[556] capitalize text-black",
+          "font-[500] capitalize text-black",
           large ? "text-[60px] leading-[72px]" : "text-xl leading-6"
         )}
       >
@@ -46,7 +46,7 @@ export function OutcomeStat({
         {changeLabel && changeColor ? (
           <ChangePill label={changeLabel} color={changeColor} />
         ) : null}
-        <p className="truncate text-xl font-[556] capitalize leading-6 text-black">
+        <p className="truncate text-xl font-[500] capitalize leading-6 text-black">
           {label}
         </p>
       </div>
@@ -63,7 +63,7 @@ export function ChangePill({
 }) {
   return (
     <span
-      className="inline-flex h-[29px] shrink-0 items-center justify-center rounded-[6px] px-2 text-sm font-[556] leading-[17px]"
+      className="inline-flex h-[29px] shrink-0 items-center justify-center rounded-[6px] px-2 text-sm font-[400] leading-[17px]"
       style={{
         backgroundColor: `${color}33`,
         color
@@ -81,10 +81,12 @@ export type ProbabilitySegment = {
 
 export function ProbabilityBar({
   segments,
-  trackColor
+  trackColor,
+  height = 12
 }: {
   segments: ProbabilitySegment[];
   trackColor: string;
+  height?: number;
 }) {
   const total = segments.reduce((sum, segment) => sum + segment.value, 0) || 1;
   const positionedSegments = segments.reduce<
@@ -99,8 +101,12 @@ export function ProbabilityBar({
 
   return (
     <div
-      className="relative h-5 w-full overflow-hidden rounded-[10px]"
-      style={{ backgroundColor: trackColor }}
+      className="relative w-full overflow-hidden"
+      style={{
+        backgroundColor: trackColor,
+        height: `${height}px`,
+        borderRadius: `${Math.min(height / 2, 10)}px`
+      }}
       aria-hidden
     >
       {positionedSegments.map((segment, index) => (

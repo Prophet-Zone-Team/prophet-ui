@@ -22,13 +22,19 @@ export interface TabSwitcherProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  tabLabelClassName?: string;
   size?: "default" | "compact";
   "aria-label"?: string;
 }
 
 const tabLabelSizeClass = {
-  default: "text-[18px] leading-[21px]",
-  compact: "text-base leading-[19px]"
+  default: "text-[18px] leading-[21px] font-[400] pb-[8px]",
+  compact: "text-base leading-[19px] font-[300] pb-[4px]"
+} as const;
+
+const tabLabelActiveClass = {
+  default: "font-[500]",
+  compact: "font-[400]"
 } as const;
 
 export function TabSwitcher({
@@ -36,6 +42,7 @@ export function TabSwitcher({
   value,
   onChange,
   className,
+  tabLabelClassName,
   size = "default",
   "aria-label": ariaLabel
 }: TabSwitcherProps) {
@@ -64,7 +71,9 @@ export function TabSwitcher({
               className={cn(
                 "text-center text-black transition-opacity duration-200",
                 tabLabelSizeClass[size],
-                isActive ? "font-[556] opacity-100" : "font-[457] opacity-55"
+                isActive && tabLabelActiveClass[size],
+                isActive ? "opacity-100" : "opacity-55",
+                tabLabelClassName
               )}
             >
               {item.label}
@@ -73,7 +82,7 @@ export function TabSwitcher({
               <motion.span
                 layoutId={underlineLayoutId}
                 aria-hidden="true"
-                className="mt-auto block h-0 w-10 shrink-0 border-b-[3px] border-black"
+                className="mt-auto block h-0 w-10 shrink-0 border-b-[3px] border-black rounded-[6px]"
                 transition={TAB_UNDERLINE_TRANSITION}
               />
             ) : (

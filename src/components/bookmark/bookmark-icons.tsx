@@ -40,24 +40,24 @@ export function TrackedBookmarkIcon() {
 
 export function TrackHintIcon() {
   return (
-    <span className="relative mt-0.5 inline-flex h-6 w-[22px] shrink-0 items-center justify-center rounded-[2px] bg-black">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="8"
-        height="6"
-        viewBox="0 0 8 6"
-        fill="none"
-        className="shrink-0"
-        aria-hidden="true"
-      >
-        <path
-          d="M1 3L3 5L7 1"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </span>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="22"
+      height="24"
+      viewBox="0 0 22 24"
+      fill="none"
+      className="shrink-0 mt-[4px]"
+    >
+      <path
+        d="M0 2C0 0.89543 0.895431 0 2 0H20C21.1046 0 22 0.895431 22 2V20.7284C22 22.2237 20.419 23.1901 19.0882 22.5084L11.9118 18.8323C11.3393 18.539 10.6607 18.539 10.0882 18.8323L2.91183 22.5084C1.58098 23.1901 0 22.2237 0 20.7284V2Z"
+        fill="black"
+      />
+      <path
+        d="M7 9.66667L9.85714 13L15 7"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }

@@ -33,14 +33,14 @@ export function AppHeader() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 flex h-11 items-center justify-between px-10 transition-[background-color,box-shadow,border-color] duration-200",
+        "fixed inset-x-0 top-0 left-1/2 -translate-x-1/2 z-50 flex h-[60px] items-center justify-between w-[1412px] transition-[background-color,box-shadow,border-color] duration-200",
         isScrolled &&
           "border-b border-prophet-line/50 bg-white/75 shadow-prophet-wallet backdrop-blur-2xl backdrop-saturate-150"
       )}
     >
-      <div className="flex items-center gap-7">
+      <div className="flex items-center gap-[50px]">
         <Link
-          className="inline-flex items-center gap-0 text-prophet-navy"
+          className="inline-flex items-center gap-[6px]"
           href="/fifa"
           aria-label="Prophet home"
         >
@@ -52,12 +52,10 @@ export function AppHeader() {
             className="block"
             aria-hidden
           />
-          <span className="text-[13px] font-extrabold tracking-[0.08em]">
-            PROPHET
-          </span>
+          <span className="text-[20px] font-[500]">PROPHET</span>
         </Link>
         <nav
-          className="flex flex-1 items-center justify-end gap-[34px] text-[13px] text-prophet-nav"
+          className="flex flex-1 items-center justify-end gap-[20px] text-[13px] text-prophet-nav"
           aria-label="Primary navigation"
         >
           {PRIMARY_NAV.map(({ href, label }) => {
@@ -68,7 +66,7 @@ export function AppHeader() {
                 key={href}
                 href={href}
                 className={cn(
-                  "group relative inline-flex h-8 items-center rounded-[40px] px-4 transition-colors duration-200",
+                  "group relative text-[18px] inline-flex h-[40px] items-center rounded-[40px] px-[20px] transition-colors duration-200",
                   active
                     ? "text-white"
                     : "text-prophet-nav hover:text-[#14203a]"

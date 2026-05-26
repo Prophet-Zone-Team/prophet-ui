@@ -29,11 +29,11 @@ export function ScheduleFilterBar({
 }: ScheduleFilterBarProps) {
   return (
     <div
-      className="mb-3 flex min-h-[34px] items-center justify-between gap-3 rounded-[20px] px-3 sm:px-4"
+      className="mt-[30px] mb-3 flex min-h-[34px] items-center justify-between gap-3 rounded-[20px]"
       role="toolbar"
       aria-label="Schedule filters and sorting"
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-[10px] sm:gap-3">
         <SortPill
           label="Volume"
           active={sortKey === "volume"}
@@ -72,7 +72,7 @@ export function ScheduleFilterBar({
             aria-hidden
           />
         </button>
-        <span className="whitespace-nowrap text-base font-normal leading-[19px] text-black">
+        <span className="whitespace-nowrap text-[16px] font-normal leading-[19px] text-black">
           Show Ended
         </span>
       </label>
@@ -93,19 +93,13 @@ function SortPill({
     <button
       type="button"
       className={cn(
-        "inline-flex h-[34px] items-center gap-1.5 rounded-[20px] border border-[#909090] px-3 text-base font-normal leading-[19px] transition-colors",
+        "inline-flex h-[34px] items-center gap-1.5 rounded-[20px] border border-[#909090] px-[16px] text-[16px] font-[457] leading-[19px] transition-colors",
         active ? "bg-black text-white" : "bg-white text-black"
       )}
       aria-pressed={active}
       onClick={onClick}
     >
       {label}
-      {/* {active ? (
-        <span
-          className="inline-block size-0 border-x-[3px] border-b-[5px] border-x-transparent border-b-white"
-          aria-hidden
-        />
-      ) : null} */}
     </button>
   );
 }

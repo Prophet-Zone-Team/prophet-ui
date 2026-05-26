@@ -9,6 +9,7 @@ import {
 import { resolveMaxSellShares } from "@/lib/market/order-math";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
 import type {
+  FixtureMarketOutcome,
   GameMarketSnapshot,
   MatchOutcomeSide,
   OrderOutcomeSide,
@@ -33,6 +34,7 @@ interface TradeTicketState {
   marketKey: string | null;
   entityType: TradeEntityType;
   matchOutcomeSide: MatchOutcomeSide;
+  selectedFixtureOutcome: FixtureMarketOutcome | null;
   outcomeSide: OrderOutcomeSide;
   tab: TradeTabId;
   orderMode: TradeOrderMode;
@@ -48,6 +50,10 @@ interface TradeTicketState {
   ) => void;
   setOutcomeSide: (side: OrderOutcomeSide) => void;
   setMatchOutcomeSide: (side: MatchOutcomeSide) => void;
+  selectFixtureOutcome: (
+    outcome: FixtureMarketOutcome,
+    binarySide?: OrderOutcomeSide
+  ) => void;
   setTab: (tab: TradeTabId) => void;
   setOrderMode: (mode: TradeOrderMode) => void;
   setAmount: (amount: string) => void;
@@ -60,6 +66,7 @@ const defaultTicketState = {
   marketKey: null as string | null,
   entityType: "team" as TradeEntityType,
   matchOutcomeSide: "home" as MatchOutcomeSide,
+  selectedFixtureOutcome: null as FixtureMarketOutcome | null,
   outcomeSide: "yes" as OrderOutcomeSide,
   tab: "buy" as TradeTabId,
   orderMode: "market" as TradeOrderMode,
@@ -82,6 +89,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       marketKey,
       entityType: "team",
       matchOutcomeSide: "home",
+      selectedFixtureOutcome: null,
       outcomeSide: "yes",
       tab: "buy",
       orderMode: "market",
@@ -102,6 +110,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       marketKey,
       entityType: "game",
       matchOutcomeSide: "home",
+      selectedFixtureOutcome: null,
       outcomeSide: "yes",
       tab: "buy",
       orderMode: "market",
@@ -118,6 +127,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       marketKey: snapshot.team.id,
       entityType: "team",
       matchOutcomeSide: "home",
+      selectedFixtureOutcome: null,
       outcomeSide,
       tab: "sell",
       orderMode: "market",
@@ -129,6 +139,19 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
   },
   setOutcomeSide: (side) => set({ outcomeSide: side }),
   setMatchOutcomeSide: (side) => set({ matchOutcomeSide: side, outcomeSide: "yes" }),
+  selectFixtureOutcome: (outcome, binarySide = "yes") => {
+    const nextMatchOutcomeSide =
+      outcome.side === "home" || outcome.side === "draw" || outcome.side === "away"
+        ? outcome.side
+        : get().matchOutcomeSide;
+
+    set({
+      selectedFixtureOutcome: outcome,
+      outcomeSide: binarySide,
+      matchOutcomeSide: nextMatchOutcomeSide,
+      limitPrice: resolveFixtureSelectionLimitPrice(outcome, binarySide).toFixed(3)
+    });
+  },
   setTab: (tab) => set({ tab }),
   setOrderMode: (orderMode) => {
     const current = get();
@@ -166,6 +189,14 @@ export function useTradeMatchOutcomeSide() {
 
 export function useSetTradeMatchOutcomeSide() {
   return useTradeTicketStore((state) => state.setMatchOutcomeSide);
+}
+
+export function useSelectedFixtureOutcome() {
+  return useTradeTicketStore((state) => state.selectedFixtureOutcome);
+}
+
+export function useSelectFixtureOutcome() {
+  return useTradeTicketStore((state) => state.selectFixtureOutcome);
 }
 
 export function useTradeOutcomeSide() {
@@ -239,4 +270,21 @@ export function useSyncForPositionSell() {
 /** @deprecated Use useSyncTradeTeamSnapshot instead. */
 export function useSyncTradeTicketSnapshot() {
   return useTradeTicketStore((state) => state.syncForTeamSnapshot);
+}
+
+function resolveFixtureSelectionLimitPrice(
+  outcome: FixtureMarketOutcome,
+  binarySide: OrderOutcomeSide
+): number {
+  if (binarySide === "no") {
+  const noPrice = outcome.noAsk ?? outcome.noBid;
+    if (noPrice !== undefined && noPrice > 0 && noPrice < 1) {
+      return noPrice;
+    }
+
+    const yesPrice = outcome.yesAsk ?? outcome.price;
+    return Math.max(0.001, Math.min(0.999, 1 - yesPrice));
+  }
+
+  return outcome.yesAsk ?? outcome.price;
 }

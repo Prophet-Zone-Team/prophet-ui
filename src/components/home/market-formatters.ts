@@ -14,6 +14,13 @@ export function formatChangePercent(value: number): string {
   return `${sign}${value.toFixed(1)}%`;
 }
 
+export function formatChangePercentMagnitude(
+  value: number,
+  decimals = 0
+): string {
+  return `${Math.abs(value).toFixed(decimals)}%`;
+}
+
 export function formatRelativeChange(currentProbability: number, changePoints: number): string {
   return formatProbabilityChangePercent(getRelativeChangePercent(currentProbability, changePoints));
 }

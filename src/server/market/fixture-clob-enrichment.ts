@@ -29,17 +29,21 @@ export async function enrichFootballMatchesWithClobData(
 
   for (const match of matches) {
     for (const outcome of match.polymarket?.moneyline.outcomes ?? []) {
-      if (outcome.tokenId) {
-        tokenIds.add(outcome.tokenId);
-      }
+      collectOutcomeTokens(outcome, tokenIds, conditionIds);
+    }
 
-      if (outcome.noTokenId) {
-        tokenIds.add(outcome.noTokenId);
+    for (const group of match.polymarket?.fixtureMarkets?.lines ?? []) {
+      for (const outcome of group.outcomes) {
+        collectFixtureOutcomeTokens(outcome, tokenIds, conditionIds);
       }
+    }
 
-      if (outcome.conditionId) {
-        conditionIds.add(outcome.conditionId);
-      }
+    for (const outcome of match.polymarket?.fixtureMarkets?.exactScores ?? []) {
+      collectFixtureOutcomeTokens(outcome, tokenIds, conditionIds);
+    }
+
+    for (const outcome of match.polymarket?.fixtureMarkets?.halftime ?? []) {
+      collectFixtureOutcomeTokens(outcome, tokenIds, conditionIds);
     }
   }
 
@@ -131,6 +135,32 @@ function applyClobDataToMatch(
   const outcomes = match.polymarket.moneyline.outcomes.map((outcome) =>
     enrichOutcomeWithClobData(outcome, pricesByToken, feesByCondition),
   );
+  const fixtureMarkets = match.polymarket.fixtureMarkets
+    ? {
+        lines: match.polymarket.fixtureMarkets.lines.map((group) => ({
+          ...group,
+          outcomes: group.outcomes.map((outcome) =>
+            enrichFixtureOutcomeWithClobData(outcome, pricesByToken, feesByCondition),
+          ),
+          outcomesByLine: group.outcomesByLine
+            ? Object.fromEntries(
+                Object.entries(group.outcomesByLine).map(([line, lineOutcomes]) => [
+                  line,
+                  lineOutcomes.map((outcome) =>
+                    enrichFixtureOutcomeWithClobData(outcome, pricesByToken, feesByCondition),
+                  ),
+                ]),
+              )
+            : undefined,
+        })),
+        exactScores: match.polymarket.fixtureMarkets.exactScores.map((outcome) =>
+          enrichFixtureOutcomeWithClobData(outcome, pricesByToken, feesByCondition),
+        ),
+        halftime: match.polymarket.fixtureMarkets.halftime.map((outcome) =>
+          enrichFixtureOutcomeWithClobData(outcome, pricesByToken, feesByCondition),
+        ),
+      }
+    : undefined;
 
   return {
     ...match,
@@ -140,7 +170,82 @@ function applyClobDataToMatch(
         ...match.polymarket.moneyline,
         outcomes,
       },
+      fixtureMarkets,
     },
+  };
+}
+
+function collectOutcomeTokens(
+  outcome: PolymarketFixtureMoneylineOutcome,
+  tokenIds: Set<string>,
+  conditionIds: Set<string>,
+): void {
+  if (outcome.tokenId) {
+    tokenIds.add(outcome.tokenId);
+  }
+
+  if (outcome.noTokenId) {
+    tokenIds.add(outcome.noTokenId);
+  }
+
+  if (outcome.conditionId) {
+    conditionIds.add(outcome.conditionId);
+  }
+}
+
+function collectFixtureOutcomeTokens(
+  outcome: {
+    tokenId?: string;
+    noTokenId?: string;
+    conditionId?: string;
+  },
+  tokenIds: Set<string>,
+  conditionIds: Set<string>,
+): void {
+  if (outcome.tokenId) {
+    tokenIds.add(outcome.tokenId);
+  }
+
+  if (outcome.noTokenId) {
+    tokenIds.add(outcome.noTokenId);
+  }
+
+  if (outcome.conditionId) {
+    conditionIds.add(outcome.conditionId);
+  }
+}
+
+function enrichFixtureOutcomeWithClobData<
+  T extends {
+    tokenId?: string;
+    noTokenId?: string;
+    conditionId?: string;
+    probability: number;
+    price: number;
+    yesAsk?: number;
+    yesBid?: number;
+    noAsk?: number;
+    noBid?: number;
+    fee?: PolymarketFeeDetails;
+  },
+>(outcome: T, pricesByToken: Map<string, { bestBid?: number; bestAsk?: number }>, feesByCondition: Map<string, PolymarketFeeDetails>): T {
+  const yesPrices = outcome.tokenId ? pricesByToken.get(outcome.tokenId) : undefined;
+  const noPrices = outcome.noTokenId ? pricesByToken.get(outcome.noTokenId) : undefined;
+  const fee = outcome.conditionId ? feesByCondition.get(outcome.conditionId) : undefined;
+  const yesAsk = yesPrices?.bestAsk;
+  const noAsk = noPrices?.bestAsk;
+
+  return {
+    ...outcome,
+    yesAsk,
+    yesBid: yesPrices?.bestBid ?? outcome.yesBid,
+    noAsk,
+    noBid: noPrices?.bestBid ?? outcome.noBid,
+    price:
+      yesAsk !== undefined && yesAsk > 0 && yesAsk < 1
+        ? yesAsk
+        : outcome.price,
+    fee,
   };
 }
 

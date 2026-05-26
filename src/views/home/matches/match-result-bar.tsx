@@ -14,7 +14,10 @@ export interface MatchResultBarProps {
 export function MatchResultBar({ winner, className }: MatchResultBarProps) {
   return (
     <div
-      className={cn("h-2 w-full overflow-hidden rounded-full", className)}
+      className={cn(
+        "h-[8px] w-full overflow-hidden rounded-[4px] mt-[20px]",
+        className
+      )}
       style={{ background: getMatchResultBarColor(winner) }}
       aria-hidden
     />

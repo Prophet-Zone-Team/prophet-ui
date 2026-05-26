@@ -34,6 +34,10 @@ export function resolveGameOutcomeTradePrice(
     return normalizeLimitPrice(executable);
   }
 
+  if (tradeSide === "buy") {
+    return 0;
+  }
+
   return calculateReferencePrice(probability, binarySide);
 }
 

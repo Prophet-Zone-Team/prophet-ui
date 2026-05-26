@@ -82,8 +82,8 @@ export function WinnerProbabilityChart({
       )}
       aria-label="World Cup winner probability chart"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <h2 className="text-[20px] font-[556] leading-6 text-black">
+      <div className="flex flex-wrap items-start justify-between gap-3 pr-[6px]">
+        <h2 className="text-[20px] font-[500] leading-6 text-black">
           World Cup Winner Probability
         </h2>
 
@@ -94,7 +94,10 @@ export function WinnerProbabilityChart({
 
       <div className="mt-4 h-[190px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 8, right: 36, left: 8, bottom: 0 }}>
+          <LineChart
+            data={chartData}
+            margin={{ top: 8, right: 0, left: 8, bottom: 0 }}
+          >
             <XAxis dataKey="date" hide />
             <YAxis
               orientation="right"
@@ -181,14 +184,16 @@ function ChartLegendItem({
   item: ReturnType<typeof getLatestSeriesValues>[number];
 }) {
   return (
-    <div className="flex items-center gap-2 text-sm leading-[17px]">
+    <div className="flex items-center gap-2 text-[14px] leading-[17px]">
       <span
         className="h-3 w-3 shrink-0 rounded-full"
         style={{ backgroundColor: item.color }}
         aria-hidden="true"
       />
       <span className="text-[#909090]">{item.label}</span>
-      <span className="font-[556] text-black">{formatProbability(item.value)}</span>
+      <span className="font-[556] text-black">
+        {formatProbability(item.value)}
+      </span>
     </div>
   );
 }

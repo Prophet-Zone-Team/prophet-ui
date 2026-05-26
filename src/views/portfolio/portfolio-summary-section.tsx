@@ -85,7 +85,7 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
       className={portfolioSummaryCardClass}
       aria-label="Portfolio summary"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-[20px]">
         {session ? (
           <WalletAvatar
             address={session.funderAddress ?? session.walletAddress}
@@ -113,26 +113,26 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
             </button>
           </div>
         ) : (
-          <span className="text-xl font-[556] leading-6 text-prophet-muted">
+          <span className="text-[20px] font-[556] leading-6 text-prophet-muted">
             Wallet not connected
           </span>
         )}
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="w-1/2 flex flex-col justify-between pt-2 h-[160px]">
-          <div className="flex items-end gap-8 sm:gap-12">
-            <div className="flex flex-col gap-1">
-              <span className={portfolioSummaryLabelClass}>Portfolio</span>
-              <strong className={portfolioSummaryValueLargeClass}>
-                {portfolioDisplay}
-              </strong>
+        <div className="w-1/2 flex flex-col justify-between pt-[20px] h-[160px]">
+          <div className="flex">
+            <div className="w-1/2">
+              <div className={portfolioSummaryLabelClass}>Portfolio</div>
+              <div className={portfolioSummaryValueLargeClass}>
+                ${portfolioDisplay}
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="w-1/2">
               <div className="flex flex-wrap items-center gap-2">
-                <span className={portfolioSummaryLabelClass}>
+                <div className={portfolioSummaryLabelClass}>
                   Available to trade
-                </span>
+                </div>
                 {session && hasPendingDeposit ? (
                   <button
                     type="button"
@@ -151,11 +151,11 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
                 ) : null}
               </div>
               <strong className={portfolioSummaryValueMediumClass}>
-                {availableDisplay}
+                ${availableDisplay}
               </strong>
             </div>
           </div>
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-[36px]">
             {!session ? (
               <button
                 type="button"

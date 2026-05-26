@@ -2,7 +2,6 @@
 
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type { GameMarketSnapshot, TeamMarketSnapshot } from "@/types/market";
-import { GameOutcomeBidButtons } from "@/views/trade/shared/game-outcome-bid-buttons";
 import { gameColors } from "@/views/trade/game/ui";
 import { formatChangePillLabel } from "@/views/trade/game/market-section/format-bid-label";
 import { ChangePill, ProbabilityBar } from "@/views/trade/game/market-section/shared";
@@ -40,45 +39,51 @@ export function GameMarketSection({
   const awayChange = formatChangePillLabel(getOutcomeChange(snapshot, "away"));
 
   return (
-    <section className="flex flex-col gap-5 py-6">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-3 text-black">
-        <p className="text-[60px] font-[556] capitalize leading-[72px]">
-          {Math.round(homeProb)}%
-        </p>
-        <p className="text-xl font-[556] capitalize leading-6">
-          {Math.round(drawProb)}%
-        </p>
-        <p className="text-right text-[60px] font-[556] capitalize leading-[72px]">
-          {Math.round(awayProb)}%
-        </p>
-      </div>
-
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <p className="truncate text-xl font-[556] capitalize leading-6 text-black">
-            {sides.home.name}
+    <section className="flex flex-col gap-2 py-6">
+      <div className="flex justify-between items-center relative">
+        <div>
+          <p className="text-[60px] font-[556] capitalize leading-[72px]">
+            {Math.round(homeProb)}%
           </p>
-          {homeChange ? (
-            <ChangePill label={homeChange} color={gameColors.home} />
-          ) : null}
+          <div className="flex min-w-0 items-center gap-2">
+            <p className="truncate text-xl font-[400] capitalize leading-6 text-black min-w-[100px]">
+              {sides.home.name}
+            </p>
+            {homeChange ? (
+              <ChangePill label={homeChange} color={gameColors.home} />
+            ) : null}
+          </div>
         </div>
-
-        <div className="flex items-center justify-center gap-2">
-          {drawChange ? (
-            <ChangePill label={drawChange} color={gameColors.draw} />
-          ) : null}
-          <p className="text-xl font-[556] capitalize leading-6 text-black">
-            Draw
+        <div
+          className="absolute bottom-0"
+          style={{
+            left: Math.round(homeProb) + "%"
+          }}
+        >
+          <p className="text-xl font-[556] capitalize leading-6">
+            {Math.round(drawProb)}%
           </p>
+          <div className="flex items-center gap-2">
+            <p className="text-xl font-[400] capitalize leading-6 text-black">
+              Draw
+            </p>
+            {drawChange ? (
+              <ChangePill label={drawChange} color={gameColors.draw} />
+            ) : null}
+          </div>
         </div>
-
-        <div className="flex min-w-0 items-center justify-end gap-2">
-          {awayChange ? (
-            <ChangePill label={awayChange} color={gameColors.awayBar} />
-          ) : null}
-          <p className="truncate text-right text-xl font-[556] capitalize leading-6 text-black">
-            {sides.away.name}
+        <div>
+          <p className="text-right text-[60px] font-[556] capitalize leading-[72px]">
+            {Math.round(awayProb)}%
           </p>
+          <div className="flex min-w-0 items-center justify-end gap-2">
+            {awayChange ? (
+              <ChangePill label={awayChange} color={gameColors.awayBar} />
+            ) : null}
+            <p className="truncate text-right text-xl font-[400] capitalize leading-6 text-black">
+              {sides.away.name}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -89,11 +94,6 @@ export function GameMarketSection({
           { value: drawProb, color: gameColors.draw },
           { value: awayProb, color: gameColors.awayBar }
         ]}
-      />
-
-      <GameOutcomeBidButtons
-        gameSnapshot={snapshot}
-        teamSnapshots={teamSnapshots}
       />
     </section>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import {
@@ -22,6 +23,13 @@ import {
   useConfigHydrated,
   useFastBidAmount
 } from "@/store";
+
+const WALLET_MENU_DROPDOWN_TRANSITION = {
+  type: "spring" as const,
+  stiffness: 480,
+  damping: 34,
+  mass: 0.85
+};
 
 export interface WalletMenuDropdownProps {
   polymarketAddress: string;
@@ -54,16 +62,24 @@ export function WalletMenuDropdown({
   }, [polymarketAddress]);
 
   return (
-    <div className={walletMenuDropdownClass} role="menu">
+    <motion.div
+      className={walletMenuDropdownClass}
+      role="menu"
+      initial={{ opacity: 0, scaleY: 0.88, y: -6 }}
+      animate={{ opacity: 1, scaleY: 1, y: 0 }}
+      exit={{ opacity: 0, scaleY: 0.88, y: -6 }}
+      transition={WALLET_MENU_DROPDOWN_TRANSITION}
+      style={{ transformOrigin: "top right" }}
+    >
       <div className="mb-2 flex items-center gap-2 border-b border-prophet-line pb-3">
         <WalletAvatar address={polymarketAddress} />
-        <span className="min-w-0 truncate text-sm font-[556] leading-[17px] text-black">
+        <span className="truncate text-[14px] font-[400] leading-[17px] text-black">
           {formatShortWallet(polymarketAddress)}
         </span>
         <button
           type="button"
           onClick={() => void copyAddress()}
-          className="ml-auto shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
+          className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
           aria-label={copied ? "Copied" : "Copy Polymarket address"}
           title={copied ? "Copied" : "Copy Polymarket address"}
         >
@@ -77,8 +93,12 @@ export function WalletMenuDropdown({
         className={walletMenuItemClass}
         onClick={onClose}
       >
-        <PortfolioIcon />
-        <span className="flex-1">Portfolio</span>
+        <div className="flex items-center gap-2">
+          <div className="w-[14px]">
+            <PortfolioIcon />
+          </div>
+          <span className="flex-1">Portfolio</span>
+        </div>
         <RightArrowIcon />
       </Link>
 
@@ -91,14 +111,16 @@ export function WalletMenuDropdown({
           onOpenFastBid();
         }}
       >
-        <span className="flex items-center gap-2">
-          <FastBidIcon />
+        <div className="flex items-center gap-2">
+          <div className="w-[14px]">
+            <FastBidIcon />
+          </div>
           <span>Fast Bid</span>
-        </span>
-        <span className="flex items-center gap-2">
+        </div>
+        <div className="flex items-center gap-2">
           <span className="shrink-0 text-sm text-black">{fastBidDisplay}</span>
           <RightArrowIcon />
-        </span>
+        </div>
       </button>
 
       <button
@@ -110,6 +132,6 @@ export function WalletMenuDropdown({
         <LogoutIcon />
         <span>Logout</span>
       </button>
-    </div>
+    </motion.div>
   );
 }

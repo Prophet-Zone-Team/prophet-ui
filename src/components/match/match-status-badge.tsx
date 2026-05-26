@@ -27,9 +27,9 @@ const ONGOING_DOT_SIZE = {
   md: { className: "size-[14px]", px: 14 }
 } as const;
 
-const ONGOING_HALO_OFFSET = 6;
 
-const STATIC_DOT_SIZE = "size-2";
+
+const ONGOING_HALO_OFFSET = 6;
 
 export interface MatchStatusBadgeProps {
   variant: ScheduleRowVariant;
@@ -60,13 +60,19 @@ function OngoingStatusDot({ size }: { size: "sm" | "md" }) {
 }
 
 function StaticStatusDot({
-  dotClass
+  dotClass,
+  size
 }: {
   dotClass: string;
+  size: "sm" | "md";
 }) {
   return (
     <span
-      className={cn("shrink-0 rounded-full", STATIC_DOT_SIZE, dotClass)}
+      className={cn(
+        "shrink-0 rounded-full",
+        ONGOING_DOT_SIZE[size].className,
+        dotClass
+      )}
       aria-hidden
     />
   );
@@ -83,7 +89,7 @@ export function MatchStatusBadge({
     <span
       role="status"
       className={cn(
-        "inline-flex items-center gap-1.5 text-sm font-[400] leading-[17px]",
+        "inline-flex shrink-0 items-center gap-1.5 text-sm font-[400] leading-[17px]",
         config.textClass,
         className
       )}
@@ -91,7 +97,7 @@ export function MatchStatusBadge({
       {variant === "ongoing" ? (
         <OngoingStatusDot size={size} />
       ) : (
-        <StaticStatusDot dotClass={config.dotClass} />
+        <StaticStatusDot dotClass={config.dotClass} size={size} />
       )}
       {config.label}
     </span>

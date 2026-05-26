@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 
+import { getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
+import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
 import {
   findGameMarketOutcome,
@@ -34,6 +36,7 @@ import {
   useTradeLimitExpirationCustom,
   useTradeLimitPrice,
   useTradeMatchOutcomeSide,
+  useSelectedFixtureOutcome,
   useTradeOrderMode,
   useTradeOutcomeSide,
   useTradeTab
@@ -50,6 +53,7 @@ import {
   deriveTradeActionLabel,
   ensureTradingReadyForBid,
   fetchConditionalTokenBalance,
+  fetchFixtureLiveAsks,
   fetchMarketAcceptingOrders,
   fetchMarketOutcomeShares,
   fetchReadinessForPreview,
@@ -112,6 +116,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const tradeSide = resolveTradeSide(tab);
   const outcomeSide = useTradeOutcomeSide();
   const matchOutcomeSide = useTradeMatchOutcomeSide();
+  const selectedFixtureOutcome = useSelectedFixtureOutcome();
   const orderMode = useTradeOrderMode();
   const amount = useTradeAmount();
   const limitPrice = useTradeLimitPrice();
@@ -138,6 +143,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     yes: 0,
     no: 0
   });
+  const [liveFixtureAsks, setLiveFixtureAsks] = useState<
+    { yesAsk?: number; noAsk?: number } | undefined
+  >();
   const readinessFetchGeneration = useRef(0);
 
   const orderAmount = parseOrderAmount(amount);
@@ -153,7 +161,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         ].join("|")
       : [
           input.gameSnapshot.match.id,
-          input.gameSnapshot.match.polymarket?.moneyline.conditionId,
+          selectedFixtureOutcome?.id,
+          selectedFixtureOutcome?.conditionId,
+          selectedFixtureOutcome?.tokenId,
+          selectedFixtureOutcome?.noTokenId,
           findGameMarketOutcome(input.gameSnapshot.outcomes, matchOutcomeSide)
             ?.tokenId,
           findGameMarketOutcome(input.gameSnapshot.outcomes, matchOutcomeSide)
@@ -165,8 +176,44 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       return resolveTeamOutcomeTokenIds(input.snapshot);
     }
 
-    return resolveGameOutcomeTokenIds(input.gameSnapshot, matchOutcomeSide);
-  }, [input.variant, matchOutcomeSide, marketTokenDeps]);
+    return resolveGameOutcomeTokenIds(
+      input.gameSnapshot,
+      matchOutcomeSide,
+      selectedFixtureOutcome
+    );
+  }, [input.variant, matchOutcomeSide, marketTokenDeps, selectedFixtureOutcome]);
+
+  useEffect(() => {
+    if (input.variant !== "game" || !selectedFixtureOutcome) {
+      setLiveFixtureAsks(undefined);
+      return;
+    }
+
+    let cancelled = false;
+
+    void fetchFixtureLiveAsks(selectedFixtureOutcome).then((asks) => {
+      if (!cancelled) {
+        setLiveFixtureAsks(asks);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    input.variant,
+    selectedFixtureOutcome?.id,
+    selectedFixtureOutcome?.tokenId,
+    selectedFixtureOutcome?.noTokenId,
+  ]);
+
+  const effectiveFixtureOutcome = useMemo(() => {
+    if (!selectedFixtureOutcome) {
+      return undefined;
+    }
+
+    return mergeFixtureOutcomeLiveAsks(selectedFixtureOutcome, liveFixtureAsks);
+  }, [liveFixtureAsks, selectedFixtureOutcome]);
 
   const { conditionId, yesTokenId, noTokenId } = marketTokenIds;
 
@@ -213,7 +260,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const limitPriceContextKey =
     input.variant === "team"
       ? `team:${input.snapshot.team.id}:${outcomeSide}:${tradeSide}`
-      : `game:${input.gameSnapshot.match.id}:${matchOutcomeSide}:${outcomeSide}:${tradeSide}`;
+      : `game:${input.gameSnapshot.match.id}:${selectedFixtureOutcome?.id ?? matchOutcomeSide}:${outcomeSide}:${tradeSide}`;
 
   const teamDefaults = useMemo(() => {
     if (input.variant !== "team") {
@@ -281,20 +328,25 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     const gameSnapshot = input.gameSnapshot;
-    const matchProbability = getOutcomeProbability(
-      gameSnapshot,
-      matchOutcomeSide
-    );
-    const defaultLimit = getGameDefaultLimitPrice(
-      gameSnapshot,
-      matchOutcomeSide,
-      outcomeSide,
-      tradeSide
-    );
+    const matchProbability = effectiveFixtureOutcome
+      ? effectiveFixtureOutcome.probability
+      : getOutcomeProbability(gameSnapshot, matchOutcomeSide);
+    const defaultLimit = effectiveFixtureOutcome
+      ? getDefaultFixtureLimitPrice(
+          effectiveFixtureOutcome,
+          outcomeSide,
+          tradeSide
+        )
+      : getGameDefaultLimitPrice(
+          gameSnapshot,
+          matchOutcomeSide,
+          outcomeSide,
+          tradeSide
+        );
     const orderLimitPrice = resolveOrderLimitPrice(
       orderMode,
-      parseLimitPriceInput(limitPrice, defaultLimit),
-      defaultLimit
+      parseLimitPriceInput(limitPrice, defaultLimit ?? 0),
+      defaultLimit ?? 0
     );
 
     const gamePreview = buildGameTradePreview({
@@ -304,13 +356,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       tradeSide,
       amount: cappedOrderAmount,
       limitPrice: orderLimitPrice,
-      orderType
+      orderType,
+      fixtureOutcome: effectiveFixtureOutcome
     });
     const preview = toBidOrderPreview(gamePreview);
-    const matchOutcome = findGameMarketOutcome(
-      gameSnapshot.outcomes,
-      matchOutcomeSide
-    );
+    const matchOutcome = effectiveFixtureOutcome
+      ? undefined
+      : findGameMarketOutcome(gameSnapshot.outcomes, matchOutcomeSide);
 
     return {
       gameSnapshot,
@@ -318,23 +370,30 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       preview,
       yesPrice: matchProbability,
       noPrice: Math.max(0, 100 - matchProbability),
-      yesTokenPrice: resolveGameOutcomeTradePrice(
-        matchOutcome,
-        matchProbability,
-        "yes",
-        tradeSide
-      ),
-      noTokenPrice: resolveGameOutcomeTradePrice(
-        matchOutcome,
-        matchProbability,
-        "no",
-        tradeSide
-      ),
+      yesTokenPrice: effectiveFixtureOutcome
+        ? getDefaultFixtureLimitPrice(effectiveFixtureOutcome, "yes", tradeSide) ??
+          0
+        : resolveGameOutcomeTradePrice(
+            matchOutcome,
+            matchProbability,
+            "yes",
+            tradeSide
+          ),
+      noTokenPrice: effectiveFixtureOutcome
+        ? getDefaultFixtureLimitPrice(effectiveFixtureOutcome, "no", tradeSide) ??
+          0
+        : resolveGameOutcomeTradePrice(
+            matchOutcome,
+            matchProbability,
+            "no",
+            tradeSide
+          ),
       defaultLimit,
       orderLimitPrice
     };
   }, [
     cappedOrderAmount,
+    effectiveFixtureOutcome,
     input,
     matchOutcomeSide,
     maxSellShares,
@@ -668,7 +727,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       } else {
         userOrderPreview = buildGameUserOrderPreview(
           input.gameSnapshot,
-          gameDefaults.gamePreview
+          gameDefaults.gamePreview,
+          selectedFixtureOutcome
         );
       }
 

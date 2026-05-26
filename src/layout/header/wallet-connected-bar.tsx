@@ -7,6 +7,7 @@ import {
   walletMenuDividerClass,
   walletMenuTriggerClass
 } from "@/layout/header/wallet-menu-ui";
+import { cn } from "@/lib/cn";
 
 export interface WalletConnectedBarProps {
   polymarketAddress: string;
@@ -58,19 +59,16 @@ function ChevronIcon({ open }: { open: boolean }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="11"
-      height="11"
-      viewBox="0 0 11 11"
+      width="12"
+      height="6"
+      viewBox="0 0 12 6"
       fill="none"
-      aria-hidden
-      className={open ? "rotate-180" : undefined}
+      className={cn("transition-transform", open ? "rotate-180" : undefined)}
     >
       <path
-        d="M2 4L5.5 7.5L9 4"
+        d="M0.5 0.5L5.86828 4.5L11.5 0.5"
         stroke="black"
-        strokeWidth="1"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </svg>
   );

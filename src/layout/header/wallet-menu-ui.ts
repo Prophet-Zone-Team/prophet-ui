@@ -10,14 +10,14 @@ export const walletLoginButtonClass = cn(
 export const walletConnectedBarClass = "inline-flex items-center gap-3";
 
 export const walletBalanceLabelClass =
-  "text-sm font-[457] leading-[17px] text-prophet-muted";
+  "text-[14px] font-[400] leading-[17px] text-[#909090]";
 
 export const walletBalanceValueClass =
-  "text-base font-[457] leading-[19px] text-black";
+  "text-[16px] font-[400] leading-[19px] text-black";
 
 export const walletDepositButtonClass = cn(
-  "inline-flex h-10 min-w-[88px] items-center justify-center rounded-[20px] bg-black px-4",
-  "text-sm font-[457] leading-[17px] text-white transition-opacity hover:opacity-90"
+  "inline-flex h-[40px] min-w-[88px] items-center justify-center rounded-[20px] bg-black text-center",
+  "text-[14px] font-[400] leading-[17px] text-white transition-opacity hover:opacity-90"
 );
 
 export const walletMenuTriggerClass = cn(
@@ -33,11 +33,10 @@ export const walletMenuDropdownClass = cn(
 );
 
 export const walletMenuItemClass = cn(
-  "flex w-full justify-between items-center gap-3 rounded-lg px-2 py-2.5 text-left",
-  "text-sm font-[457] leading-[17px] text-black transition-colors hover:bg-[#f3f8fd]"
+  "flex w-full justify-between items-center gap-3 rounded-lg px-1.5 py-2.5 text-left",
+  "text-[14px] font-[400] leading-[17px] text-black transition-colors hover:bg-[#f3f8fd]"
 );
 
 export const walletMenuLogoutClass = cn(
-  walletMenuItemClass,
-  "font-[556] text-[#FF674B] hover:bg-[#fff5f2]"
+  "flex items-center px-1.5 py-2.5 gap-2 text-[14px] font-[400] leading-[17px] text-[#FF674B] hover:bg-[#fff5f2]"
 );

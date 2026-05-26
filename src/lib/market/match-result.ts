@@ -60,11 +60,11 @@ export function getOutcomePillStyles(outcome: TeamMatchOutcome): {
 } {
   switch (outcome) {
     case "win":
-      return { background: "#E5F4D6", color: "#4A7C1B" };
+      return { background: "#65AF144D", color: "#65AF14" };
     case "lose":
-      return { background: "#FFE8E8", color: "#C62828" };
+      return { background: "#FF674B4D", color: "#FF674B" };
     default:
-      return { background: "#EBEBEB", color: "#606060" };
+      return { background: "#9090904D", color: "#909090" };
   }
 }
 

@@ -3,7 +3,17 @@
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
+import {
+  resolveTradeWidgetHeaderIconKind,
+  resolveTradeWidgetHeaderTitle
+} from "@/lib/market/trade-widget-header";
+import {
+  useSelectedFixtureOutcome,
+  useTradeOutcomeSide
+} from "@/store/trade-ticket-store";
+import { FixtureOutcomeSplitIcon } from "@/views/trade/trade-widget/fixture-outcome-split-icon";
 import type {
+  FixtureMarketOutcome,
   GameMarketSnapshot,
   MatchOutcomeSide,
   OrderOutcomeSide,
@@ -61,24 +71,118 @@ function resolveGameOutcomeLabel(
   return homeName;
 }
 
+function resolveFixtureOutcomeLabel(outcome: FixtureMarketOutcome): string {
+  if (outcome.marketType === "halftime") {
+    return `HT ${outcome.label}`;
+  }
+
+  if (outcome.marketType === "exact_score") {
+    return outcome.label;
+  }
+
+  if (outcome.marketType === "total" || outcome.marketType === "spread") {
+    return outcome.label;
+  }
+
+  if (outcome.marketType === "btts") {
+    return "Both Teams to Score";
+  }
+
+  return outcome.label;
+}
+
+function TradeWidgetHeaderIcon({
+  iconKind,
+  homeCode,
+  homeName,
+  awayCode,
+  awayName
+}: {
+  iconKind: ReturnType<typeof resolveTradeWidgetHeaderIconKind>;
+  homeCode?: string;
+  homeName: string;
+  awayCode?: string;
+  awayName: string;
+}) {
+  const flagClassName =
+    "!h-9 !w-9 shrink-0 rounded-md shadow-[0_0_2px_rgba(0,0,0,0.2)]";
+
+  if (iconKind.kind === "none") {
+    return null;
+  }
+
+  if (iconKind.kind === "draw") {
+    return <MatchPlaceholderIcon />;
+  }
+
+  if (iconKind.kind === "split") {
+    return (
+      <FixtureOutcomeSplitIcon
+        variant={iconKind.variant}
+        activeSide={iconKind.activeSide}
+      />
+    );
+  }
+
+  const team =
+    iconKind.side === "home"
+      ? { code: homeCode, name: homeName }
+      : { code: awayCode, name: awayName };
+
+  return <TeamFlag code={team.code} name={team.name} className={flagClassName} />;
+}
+
 export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
+  const selectedFixtureOutcome = useSelectedFixtureOutcome();
+  const tradeOutcomeSide = useTradeOutcomeSide();
+
   if (props.variant === "game") {
+    const { showOutcomeLabel = true } = props;
     const sides = resolveMatchSides(props.gameSnapshot.match, props.teamSnapshots);
-    const outcomeLabel = resolveGameOutcomeLabel(
-      props.matchOutcomeSide,
+    const outcomeLabel = selectedFixtureOutcome
+      ? resolveFixtureOutcomeLabel(selectedFixtureOutcome)
+      : resolveGameOutcomeLabel(
+          props.matchOutcomeSide,
+          sides.home.name,
+          sides.away.name
+        );
+    const headerTitle = resolveTradeWidgetHeaderTitle(
+      selectedFixtureOutcome,
       sides.home.name,
       sides.away.name
     );
+    const iconKind = resolveTradeWidgetHeaderIconKind(
+      selectedFixtureOutcome,
+      props.matchOutcomeSide,
+      tradeOutcomeSide
+    );
+    const showHeaderIcon = iconKind.kind !== "none";
 
     return (
-      <div className="flex items-start gap-2.5 px-4 pt-4">
-        <MatchPlaceholderIcon />
+      <div
+        className={cn(
+          "flex items-start px-4 pt-4",
+          showHeaderIcon ? "gap-2.5" : "gap-0"
+        )}
+      >
+        <TradeWidgetHeaderIcon
+          iconKind={iconKind}
+          homeCode={sides.home.code}
+          homeName={sides.home.name}
+          awayCode={sides.away.code}
+          awayName={sides.away.name}
+        />
         <div className="min-w-0 flex-1">
-          <p className="m-0 line-clamp-2 text-sm font-[556] leading-[17px] text-prophet-muted">
-            {sides.home.name} vs {sides.away.name}
+          <p className="m-0 line-clamp-2 text-[14px] font-[556] leading-[17px] text-prophet-muted">
+            {headerTitle}
           </p>
-          {props.showOutcomeLabel ? (
-            <p className="m-0 mt-0.5 text-base font-[556] leading-[19px] text-black">
+          {showOutcomeLabel ? (
+            <p
+              className={cn(
+                "m-0 mt-0.5 text-[16px] font-[556] leading-[19px]",
+                tradeOutcomeSide === "no" ? "text-[#FF674B]" : "text-[#65AF14]"
+              )}
+            >
               {outcomeLabel}
             </p>
           ) : null}

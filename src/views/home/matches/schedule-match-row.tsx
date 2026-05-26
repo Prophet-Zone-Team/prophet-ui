@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 import { MatchStatusBadge } from "@/components/match/match-status-badge";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { formatVolume } from "@/components/home/market-formatters";
@@ -28,8 +26,8 @@ import {
 import { gameTradeHref } from "@/lib/routes/trade";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-control";
-import { MatchProbabilityBar } from "@/views/home/matches/match-probability-bar";
 import { MatchResultBar } from "@/views/home/matches/match-result-bar";
+import { ScheduleMatchOutcomeBar } from "@/views/home/matches/schedule-match-outcome-bar";
 import { useRouter } from "next/navigation";
 
 export interface ScheduleMatchRowProps {
@@ -67,18 +65,28 @@ export function ScheduleMatchRow({
     match.homeScore,
     match.awayScore
   );
+  const canNavigate = variant !== "ended";
 
   return (
     <article
       className={cn(
-        "flex cursor-pointer flex-col gap-3 rounded-xl border border-[#EBEBEB] bg-white px-3 py-3 transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc] sm:flex-row sm:items-center sm:gap-4 sm:px-4",
+        "flex flex-col gap-3 rounded-xl border border-[#EBEBEB] bg-white px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4",
+        canNavigate
+          ? "cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]"
+          : "cursor-default",
         variant === "ended" && "opacity-90",
+        variant === "ongoing" &&
+          "border-[#7BCA25] shadow-[0_0_10px_rgba(123,202,37,0.25)]",
         className
       )}
       aria-label={`${sides.home.name} vs ${sides.away.name}, ${variant}`}
-      onClick={() => {
-        router.push(gameTradeHref(match.id));
-      }}
+      onClick={
+        canNavigate
+          ? () => {
+              router.push(gameTradeHref(match.id));
+            }
+          : undefined
+      }
     >
       <div className="flex shrink-0 items-center gap-3">
         <MatchBookmarkControl matchId={match.id} />
@@ -92,6 +100,11 @@ export function ScheduleMatchRow({
               sides={sides}
               homePct={homePct}
               awayPct={awayPct}
+              probabilities={
+                oddsResult.status === "ready"
+                  ? oddsResult.probabilities
+                  : undefined
+              }
             />
           ) : variant === "ended" ? (
             <EndedMatchBody
@@ -132,7 +145,7 @@ function StatusColumn({
   return (
     <div className="w-[72px] shrink-0 sm:w-[80px]">
       <MatchStatusBadge variant={variant} className="font-semibold" />
-      <p className="m-0 mt-0.5 text-xs leading-[14px] text-[#909090]">
+      <p className="m-0 mt-[4px] text-[14px] leading-[14px] text-[#909090]">
         {kickoffLabel}
       </p>
     </div>
@@ -142,29 +155,34 @@ function StatusColumn({
 function UpcomingMatchBody({
   sides,
   homePct,
-  awayPct
+  awayPct,
+  probabilities
 }: {
   sides: ReturnType<typeof resolveMatchSides>;
   homePct: string;
   awayPct: string;
+  probabilities?: { home: number; draw: number; away: number };
 }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-      <TeamPercentSide
-        align="start"
-        percent={homePct}
-        name={sides.home.name}
-        code={sides.home.code}
-        percentFirst
-      />
-      <span className="px-1 text-sm font-normal text-[#909090]">VS</span>
-      <TeamPercentSide
-        align="end"
-        percent={awayPct}
-        name={sides.away.name}
-        code={sides.away.code}
-        percentFirst={false}
-      />
+    <div className="pt-[14px] pb-[10px]">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+        <TeamPercentSide
+          align="start"
+          percent={homePct}
+          name={sides.home.name}
+          code={sides.home.code}
+        />
+        <span className="px-1 text-sm font-normal text-[#909090]">VS</span>
+        <TeamPercentSide
+          align="end"
+          percent={awayPct}
+          name={sides.away.name}
+          code={sides.away.code}
+        />
+      </div>
+      {probabilities ? (
+        <ScheduleMatchOutcomeBar probabilities={probabilities} />
+      ) : null}
     </div>
   );
 }
@@ -183,14 +201,13 @@ function OngoingMatchBody({
   probabilities?: { home: number; draw: number; away: number };
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="pt-[14px] pb-[10px]">
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
         <TeamPercentSide
           align="start"
           percent={homePct}
           name={sides.home.name}
           code={sides.home.code}
-          percentFirst
         />
         <strong className="px-1 text-lg font-[556] leading-[21px] text-black">
           {scoreLabel}
@@ -200,11 +217,10 @@ function OngoingMatchBody({
           percent={awayPct}
           name={sides.away.name}
           code={sides.away.code}
-          percentFirst={false}
         />
       </div>
       {probabilities ? (
-        <MatchProbabilityBar probabilities={probabilities} variant="compact" />
+        <ScheduleMatchOutcomeBar probabilities={probabilities} />
       ) : null}
     </div>
   );
@@ -229,14 +245,13 @@ function EndedMatchBody({
       : undefined;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="pt-[14px] pb-[10px]">
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
         <TeamResultSide
           align="start"
           outcome={homeOutcome}
           name={sides.home.name}
           code={sides.home.code}
-          outcomeFirst
         />
         <strong className="px-1 text-lg font-[556] leading-[21px] text-black">
           {scoreLabel}
@@ -246,7 +261,6 @@ function EndedMatchBody({
           outcome={awayOutcome}
           name={sides.away.name}
           code={sides.away.code}
-          outcomeFirst={false}
         />
       </div>
       <MatchResultBar winner={resultWinner} />
@@ -258,14 +272,12 @@ function TeamPercentSide({
   align,
   percent,
   name,
-  code,
-  percentFirst
+  code
 }: {
   align: "start" | "end";
   percent: string;
   name: string;
   code?: string;
-  percentFirst: boolean;
 }) {
   const flag = (
     <TeamFlag
@@ -275,12 +287,12 @@ function TeamPercentSide({
     />
   );
   const pct = (
-    <span className="text-base font-[556] leading-[19px] text-black">
+    <span className="text-[18px] font-[556] leading-[19px] text-black w-[60px]">
       {percent}
     </span>
   );
   const label = (
-    <span className="truncate text-base font-[556] leading-[19px] text-black">
+    <span className="truncate text-[18px] font-[556] leading-[19px] text-black">
       {name}
     </span>
   );
@@ -292,19 +304,9 @@ function TeamPercentSide({
         align === "end" && "flex-row-reverse justify-start text-right"
       )}
     >
-      {percentFirst ? (
-        <>
-          {pct}
-          {flag}
-          {label}
-        </>
-      ) : (
-        <>
-          {label}
-          {flag}
-          {pct}
-        </>
-      )}
+      {pct}
+      {flag}
+      {label}
     </div>
   );
 }
@@ -313,14 +315,12 @@ function TeamResultSide({
   align,
   outcome,
   name,
-  code,
-  outcomeFirst
+  code
 }: {
   align: "start" | "end";
   outcome?: TeamMatchOutcome;
   name: string;
   code?: string;
-  outcomeFirst: boolean;
 }) {
   const flag = (
     <TeamFlag
@@ -343,19 +343,9 @@ function TeamResultSide({
         align === "end" && "flex-row-reverse justify-start text-right"
       )}
     >
-      {outcomeFirst ? (
-        <>
-          {pill}
-          {flag}
-          {label}
-        </>
-      ) : (
-        <>
-          {label}
-          {flag}
-          {pill}
-        </>
-      )}
+      {pill}
+      {flag}
+      {label}
     </div>
   );
 }
@@ -365,7 +355,7 @@ function OutcomePill({ outcome }: { outcome: TeamMatchOutcome }) {
 
   return (
     <span
-      className="inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-semibold leading-[14px]"
+      className="inline-flex shrink-0 items-center rounded-full px-[18px] h-[34px] text-[14px] font-[556] leading-[14px]"
       style={{ background: styles.background, color: styles.color }}
     >
       {getOutcomePillLabel(outcome)}

@@ -1,5 +1,6 @@
 import type {
   BidTradeSide,
+  FixtureMarketOutcome,
   GameMarketSnapshot,
   MatchOutcomeSide,
   OrderOutcomeSide,
@@ -15,6 +16,10 @@ import {
   normalizeLimitPrice,
   validateOrderAmount
 } from "@/lib/market/order-math";
+import {
+  resolveFixtureBuyAsk,
+  resolveFixtureBuyAskDisabledReason,
+} from "@/lib/market/fixture-ask-liquidity";
 
 export interface GameBidOrderPreviewInput {
   snapshot: GameMarketSnapshot;
@@ -45,6 +50,85 @@ export interface GameBidOrderPreview {
   disabledReason?: string;
 }
 
+export function buildFixtureBidOrderPreview(input: {
+  outcome: FixtureMarketOutcome;
+  acceptingOrders: boolean;
+  binarySide: OrderOutcomeSide;
+  tradeSide: BidTradeSide;
+  amount: number;
+  limitPrice: number;
+  orderType: TradingOrderType;
+}): GameBidOrderPreview {
+  const tokenId =
+    input.binarySide === "yes" ? input.outcome.tokenId : input.outcome.noTokenId;
+  const sidePrice = normalizeLimitPrice(input.limitPrice);
+  const estimate = calculateOrderEstimate({
+    side: input.binarySide,
+    tradeSide: input.tradeSide,
+    amount: input.amount,
+    probability: input.outcome.probability,
+    limitPrice: sidePrice,
+    orderType: input.orderType,
+    fee: input.outcome.fee
+  });
+
+  const disabledReason =
+    resolveFixtureBuyAskDisabledReason(
+      input.outcome,
+      input.binarySide,
+      input.tradeSide,
+    ) ??
+    getGameDisabledReason({
+      acceptingOrders: input.acceptingOrders,
+      amount: input.amount,
+      orderType: input.orderType,
+      tradeSide: input.tradeSide,
+      tokenId,
+    });
+
+  const outcomeSide: MatchOutcomeSide =
+    input.outcome.side === "home" ||
+    input.outcome.side === "draw" ||
+    input.outcome.side === "away"
+      ? input.outcome.side
+      : "home";
+
+  return {
+    outcomeSide,
+    binarySide: input.binarySide,
+    tradeSide: input.tradeSide,
+    orderType: input.orderType,
+    tokenId,
+    acceptingOrders: input.acceptingOrders,
+    sidePrice,
+    shareSize: estimate.shareSize,
+    inputAmount: input.amount,
+    estimatedCost: estimate.estimatedCost,
+    estimatedTakerFee: estimate.estimatedTakerFee,
+    estimatedTotalCost: estimate.estimatedTotalCost,
+    potentialPayout: estimate.potentialPayout,
+    potentialOutcome: estimate.potentialOutcome,
+    canSubmitRealOrder: !disabledReason,
+    disabledReason
+  };
+}
+
+export function getDefaultFixtureLimitPrice(
+  outcome: FixtureMarketOutcome,
+  binarySide: OrderOutcomeSide = "yes",
+  tradeSide: BidTradeSide = "buy"
+): number | undefined {
+  if (tradeSide === "sell") {
+    if (binarySide === "yes") {
+      return outcome.yesBid ?? outcome.yesAsk ?? outcome.price;
+    }
+
+    return outcome.noBid ?? outcome.noAsk ?? Math.max(0.001, 1 - outcome.price);
+  }
+
+  return resolveFixtureBuyAsk(outcome, binarySide);
+}
+
 export function buildGameBidOrderPreview(
   input: GameBidOrderPreviewInput
 ): GameBidOrderPreview {
@@ -64,13 +148,19 @@ export function buildGameBidOrderPreview(
     fee: outcome?.fee
   });
 
-  const disabledReason = getGameDisabledReason({
-    acceptingOrders: input.snapshot.market.acceptingOrders,
-    amount: input.amount,
-    orderType: input.orderType,
-    tradeSide: input.tradeSide,
-    tokenId
-  });
+  const disabledReason =
+    getGameBuyAskDisabledReason({
+      outcome,
+      binarySide: input.binarySide,
+      tradeSide: input.tradeSide,
+    }) ??
+    getGameDisabledReason({
+      acceptingOrders: input.snapshot.market.acceptingOrders,
+      amount: input.amount,
+      orderType: input.orderType,
+      tradeSide: input.tradeSide,
+      tokenId
+    });
 
   return {
     outcomeSide: input.outcomeSide,
@@ -90,6 +180,22 @@ export function buildGameBidOrderPreview(
     canSubmitRealOrder: !disabledReason,
     disabledReason
   };
+}
+
+function getGameBuyAskDisabledReason({
+  outcome,
+  binarySide,
+  tradeSide,
+}: {
+  outcome?: Pick<FixtureMarketOutcome, "yesAsk" | "noAsk">;
+  binarySide: OrderOutcomeSide;
+  tradeSide: BidTradeSide;
+}): string | undefined {
+  if (!outcome) {
+    return undefined;
+  }
+
+  return resolveFixtureBuyAskDisabledReason(outcome, binarySide, tradeSide);
 }
 
 function getGameDisabledReason({
