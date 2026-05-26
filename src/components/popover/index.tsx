@@ -22,7 +22,7 @@ import {
 //            |                                  |
 // LeftBottom ------------------------------------ RightBottom
 //            BottomLeft     Bottom    BottomRight
-const Popover = forwardRef((props: Props, ref: any) => {
+export const Popover = forwardRef(function Popover(props: Props, ref: any) {
   const {
     children,
     content,
