@@ -3,14 +3,10 @@ import { cn } from "@/lib/cn";
 import { ViewFullRankingLink } from "./view-full-ranking-link";
 
 export type RankingHeaderProps = {
-  onViewFullRanking: () => void;
   className?: string;
 };
 
-export function RankingHeader({
-  onViewFullRanking,
-  className
-}: RankingHeaderProps) {
+export function RankingHeader({ className }: RankingHeaderProps) {
   return (
     <header
       className={cn(
@@ -21,7 +17,7 @@ export function RankingHeader({
       <h2 className="m-0 text-[18px] font-[400] leading-[21px] text-black">
         Team Power Ranking
       </h2>
-      <ViewFullRankingLink onClick={onViewFullRanking} />
+      <ViewFullRankingLink />
     </header>
   );
 }

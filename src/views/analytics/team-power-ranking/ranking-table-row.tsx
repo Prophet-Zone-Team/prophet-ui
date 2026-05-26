@@ -1,7 +1,10 @@
-import { formatRoundOf16Probability, formatTitleProbability } from "./format";
-import { TeamInfo } from "./team-info";
-import { TrendIndicator } from "./trend-indicator";
-import type { TeamPowerRankingEntry } from "./types";
+import {
+  formatRoundOf16Probability,
+  formatTitleProbability
+} from "@/views/team-power-ranking/format";
+import { TeamInfo } from "@/views/team-power-ranking/team-info";
+import { TrendIndicator } from "@/views/team-power-ranking/trend-indicator";
+import type { TeamPowerRankingEntry } from "@/views/team-power-ranking/types";
 
 export type RankingTableRowProps = {
   entry: TeamPowerRankingEntry;

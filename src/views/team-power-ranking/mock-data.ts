@@ -1,8 +1,62 @@
-import type { TeamPowerRankingEntry } from "./types";
+import { mockTeams } from "@/data/mock/teams";
+
+import type {
+  TeamPowerRankingEntry,
+  TeamPowerRankingFilters,
+  TeamPowerRankingPathDifficulty,
+  TeamPowerRankingSignalStatus,
+  TeamPowerRankingTrend
+} from "./types";
 
 export const TEAM_POWER_RANKING_PREVIEW_COUNT = 6;
 
-export const teamPowerRankingEntries: TeamPowerRankingEntry[] = [
+const TEAM_GROUPS = Object.fromEntries(
+  mockTeams.map((team) => [team.id, team.group])
+) as Record<string, string>;
+
+const HARD_PATH_TEAM_IDS = new Set([
+  "england",
+  "netherlands",
+  "croatia",
+  "morocco",
+  "denmark",
+  "ghana"
+]);
+
+function trendToSignalStatus(
+  trend: TeamPowerRankingTrend
+): TeamPowerRankingSignalStatus {
+  if (trend === "up") return "positive";
+  if (trend === "down") return "negative";
+  return "neutral";
+}
+
+type RawEntry = {
+  id: string;
+  rank: number;
+  teamCode: string;
+  teamName: string;
+  titleProbability: number;
+  roundOf16Probability: number;
+  trend: TeamPowerRankingTrend;
+};
+
+function buildEntry(raw: RawEntry): TeamPowerRankingEntry {
+  const pathDifficulty: TeamPowerRankingPathDifficulty = HARD_PATH_TEAM_IDS.has(
+    raw.id
+  )
+    ? "hard"
+    : "moderate";
+
+  return {
+    ...raw,
+    group: TEAM_GROUPS[raw.id] ?? "A",
+    pathDifficulty,
+    signalStatus: trendToSignalStatus(raw.trend)
+  };
+}
+
+const rawEntries: RawEntry[] = [
   {
     id: "brazil",
     rank: 1,
@@ -37,7 +91,7 @@ export const teamPowerRankingEntries: TeamPowerRankingEntry[] = [
     teamName: "England",
     titleProbability: 8.6,
     roundOf16Probability: 78,
-    trend: "up"
+    trend: "down"
   },
   {
     id: "argentina",
@@ -100,7 +154,7 @@ export const teamPowerRankingEntries: TeamPowerRankingEntry[] = [
     teamName: "Uruguay",
     titleProbability: 3.8,
     roundOf16Probability: 58,
-    trend: "up"
+    trend: "neutral"
   },
   {
     id: "croatia",
@@ -172,7 +226,7 @@ export const teamPowerRankingEntries: TeamPowerRankingEntry[] = [
     teamName: "Switzerland",
     titleProbability: 1.6,
     roundOf16Probability: 41,
-    trend: "up"
+    trend: "neutral"
   },
   {
     id: "senegal",
@@ -221,9 +275,63 @@ export const teamPowerRankingEntries: TeamPowerRankingEntry[] = [
   }
 ];
 
+export const teamPowerRankingEntries: TeamPowerRankingEntry[] =
+  rawEntries.map(buildEntry);
+
 export function getTeamPowerRankingPreview(
   entries: TeamPowerRankingEntry[] = teamPowerRankingEntries,
   count: number = TEAM_POWER_RANKING_PREVIEW_COUNT
 ): TeamPowerRankingEntry[] {
   return entries.slice(0, count);
+}
+
+export function filterTeamPowerRankingEntries(
+  entries: TeamPowerRankingEntry[],
+  filters: TeamPowerRankingFilters
+): TeamPowerRankingEntry[] {
+  return entries.filter((entry) => {
+    if (filters.teamId !== "all" && entry.id !== filters.teamId) {
+      return false;
+    }
+    if (filters.group !== "all" && entry.group !== filters.group) {
+      return false;
+    }
+    return true;
+  });
+}
+
+export function getTeamFilterOptions(
+  entries: TeamPowerRankingEntry[] = teamPowerRankingEntries
+): { value: string; label: string }[] {
+  return [
+    { value: "all", label: "All" },
+    ...entries.map((entry) => ({
+      value: entry.id,
+      label: entry.teamName
+    }))
+  ];
+}
+
+export const GROUP_FILTER_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "A", label: "A" },
+  { value: "B", label: "B" },
+  { value: "C", label: "C" },
+  { value: "D", label: "D" },
+  { value: "E", label: "E" },
+  { value: "F", label: "F" },
+  { value: "G", label: "G" },
+  { value: "H", label: "H" }
+] as const;
+
+export function getTitleOddsMax(
+  entries: TeamPowerRankingEntry[]
+): number {
+  return Math.max(...entries.map((entry) => entry.titleProbability), 1);
+}
+
+export function getAdvanceOddsMax(
+  entries: TeamPowerRankingEntry[]
+): number {
+  return Math.max(...entries.map((entry) => entry.roundOf16Probability), 1);
 }

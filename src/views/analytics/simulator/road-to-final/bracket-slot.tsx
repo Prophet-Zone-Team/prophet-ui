@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { TeamInfo } from "@/views/analytics/team-power-ranking/team-info";
+import { TeamInfo } from "@/views/team-power-ranking/team-info";
 import { cn } from "@/lib/cn";
 
 import { BRACKET_SLOT_WIDTH } from "./bracket-layout";

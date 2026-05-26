@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 
 import { RankingTableHeader } from "./ranking-table-header";
 import { RankingTableRow } from "./ranking-table-row";
-import type { TeamPowerRankingEntry } from "./types";
+import type { TeamPowerRankingEntry } from "@/views/team-power-ranking/types";
 
 export type RankingTableProps = {
   entries: TeamPowerRankingEntry[];
