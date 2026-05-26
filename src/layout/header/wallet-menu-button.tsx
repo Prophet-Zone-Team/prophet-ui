@@ -9,6 +9,7 @@ import { WalletLoginButton } from "@/layout/header/wallet-login-button";
 import { WalletMenuDropdown } from "@/layout/header/wallet-menu-dropdown";
 import { FastBidSettingDialog } from "@/layout/header/fast-bid-setting-dialog";
 import { DepositDialog } from "@/views/portfolio/deposit";
+import { PrivateTopupOnboarding } from "@/views/portfolio/private-topup/private-topup-onboarding";
 import { formatNumber } from "@/utils";
 
 const LOGIN_STEP_LABELS = {
@@ -48,6 +49,8 @@ export function WalletMenuButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
   const [fastBidOpen, setFastBidOpen] = useState(false);
+  const [privateTopupIntroOpen, setPrivateTopupIntroOpen] = useState(false);
+  const [privateTopupGuideOpen, setPrivateTopupGuideOpen] = useState(false);
   const [message, setMessage] = useState<string | undefined>();
 
   useEffect(() => {
@@ -82,7 +85,7 @@ export function WalletMenuButton() {
 
   const balanceDisplay = useMemo(() => {
     if (cashStatus === "loading") {
-      return "…";
+      return "-";
     }
 
     return formatNumber(cash?.available, 2, true, {
@@ -138,6 +141,8 @@ export function WalletMenuButton() {
         balanceDisplay={balanceDisplay}
         isMenuOpen={isOpen}
         onDeposit={() => setDepositOpen(true)}
+        onPrivateTopup={() => setPrivateTopupIntroOpen(true)}
+        onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
         onToggleMenu={() => setIsOpen((value) => !value)}
       />
 
@@ -161,6 +166,14 @@ export function WalletMenuButton() {
       <FastBidSettingDialog
         open={fastBidOpen}
         onClose={() => setFastBidOpen(false)}
+      />
+
+      <PrivateTopupOnboarding
+        introOpen={privateTopupIntroOpen}
+        guideOpen={privateTopupGuideOpen}
+        walletAddress={session.walletAddress}
+        onIntroOpenChange={setPrivateTopupIntroOpen}
+        onGuideOpenChange={setPrivateTopupGuideOpen}
       />
 
       {message ? (

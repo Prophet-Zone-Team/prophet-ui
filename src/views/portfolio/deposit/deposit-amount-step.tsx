@@ -2,75 +2,118 @@
 
 import { ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
+import Big from "big.js";
 
+import InputNumber from "@/components/input-number";
 import { POLYMARKET_USD } from "@/config/funding";
-import type { DepositSelectableToken } from "@/views/portfolio/deposit/types";
+import { usePricesStore } from "@/store/use-prices";
 import {
-  depositAmountInputClass,
+  depositModalAmountInputClass,
+  depositModalAmountInputWrapClass,
   depositPercentButtonClass,
-  depositTransferBarClass
+  depositTransferBarClass,
 } from "@/views/portfolio/deposit/deposit-ui";
+import type {
+  DepositAmountState,
+  DepositSelectableToken,
+} from "@/views/portfolio/deposit/types";
 import {
-  applyBalancePercent,
-  parseAmountInput,
-  validateDepositAmount
+  applyTokenBalancePercent,
+  computeUsdFromTokenAmount,
+  parseUsdInput,
+  selectDepositTokenUnitPrice,
+  usdInputToTokenAmount,
+  validateDepositAmount,
 } from "@/views/portfolio/deposit/utils";
 import { TokenIcon } from "@/views/portfolio/shared/token-icon";
-import Big from "big.js";
 
 const PERCENT_OPTIONS = [25, 50, 75, 100] as const;
 
 export interface DepositAmountStepProps {
   token: DepositSelectableToken;
-  amount: string;
+  amount: DepositAmountState;
   maxAmount: string;
-  onAmountChange: (amount: string) => void;
+  minDepositUsd: number;
+  onAmountChange: (amount: DepositAmountState) => void;
 }
 
 export function DepositAmountStep({
   token,
   amount,
   maxAmount,
-  onAmountChange
+  minDepositUsd,
+  onAmountChange,
 }: DepositAmountStepProps) {
+  const prices = usePricesStore((state) => state.prices);
+
   const [inputValue, setInputValue] = useState(() =>
-    Big(amount || 0).gt(0) ? amount : "0"
+    Big(amount.amountUsd || 0).gt(0) ? amount.amountUsd : "0",
   );
 
   const validationError = useMemo(
-    () => validateDepositAmount(parseAmountInput(inputValue), maxAmount),
-    [inputValue, maxAmount]
+    () =>
+      validateDepositAmount(amount.tokenAmount, maxAmount, {
+        minDepositUsd,
+        amountUsd: amount.amountUsd,
+      }),
+    [amount.amountUsd, amount.tokenAmount, maxAmount, minDepositUsd],
   );
+
+  const unitPrice = selectDepositTokenUnitPrice(prices, token);
+
+  function syncFromTokenAmount(tokenAmount: string) {
+    const amountUsd = computeUsdFromTokenAmount(tokenAmount, prices, token);
+    onAmountChange({ tokenAmount, amountUsd });
+    setInputValue(amountUsd);
+  }
 
   function handleInputChange(nextRaw: string) {
     setInputValue(nextRaw);
-    const parsed = parseAmountInput(nextRaw);
+    const parsedUsd = parseUsdInput(nextRaw);
 
-    if (parsed !== undefined) {
-      onAmountChange(parsed);
-    } else if (!nextRaw.trim()) {
-      onAmountChange("0");
+    if (parsedUsd === undefined) {
+      if (!nextRaw.trim()) {
+        onAmountChange({ tokenAmount: "0", amountUsd: "0" });
+      }
+      return;
     }
+
+    if (!unitPrice || Big(unitPrice).lte(0)) {
+      return;
+    }
+
+    const { tokenAmount, amountUsd } = usdInputToTokenAmount({
+      usdInput: parsedUsd,
+      maxAmount,
+      price: unitPrice,
+      decimals: token.decimals,
+    });
+
+    onAmountChange({ tokenAmount, amountUsd });
   }
 
   function handlePercent(percent: number) {
-    const next = applyBalancePercent(maxAmount, percent);
-    setInputValue(next);
-    onAmountChange(next);
+    const tokenAmount = applyTokenBalancePercent(
+      maxAmount,
+      percent,
+      token.decimals,
+    );
+    syncFromTokenAmount(tokenAmount);
   }
 
   return (
     <div className="flex flex-col gap-6 pb-2 pt-20">
       <div className="flex flex-col items-center gap-4">
-        <input
-          type="text"
-          inputMode="decimal"
-          value={inputValue}
-          onChange={(event) => handleInputChange(event.target.value)}
-          className={depositAmountInputClass}
-          aria-label="Deposit amount"
-          placeholder="0"
-        />
+        <div className={depositModalAmountInputWrapClass}>
+          <InputNumber
+            prefix="$"
+            value={inputValue}
+            onNumberChange={handleInputChange}
+            className={depositModalAmountInputClass}
+            aria-label="Deposit amount in USD"
+            placeholder="0"
+          />
+        </div>
         <div className="flex flex-wrap items-center justify-center gap-2">
           {PERCENT_OPTIONS.map((percent) => (
             <button
@@ -90,7 +133,7 @@ export function DepositAmountStep({
       </div>
 
       <div className="mt-20">
-        <div className="flex justify-between items-center gap-1 px-4 py-3">
+        <div className="flex items-center justify-between gap-1 px-4 py-3">
           <span className="text-sm font-[556] text-[#909090]">Send</span>
           <span className="text-sm font-[556] text-[#909090]">Receive</span>
         </div>
@@ -106,7 +149,9 @@ export function DepositAmountStep({
               />
               <div className="flex min-w-0 flex-col">
                 <span className="text-sm font-[556] text-black">{token.symbol}</span>
-                <span className="text-xs font-[556] text-[#909090]">{token.chainName}</span>
+                <span className="text-xs font-[556] text-[#909090]">
+                  {token.chainName}
+                </span>
               </div>
             </div>
           </div>
@@ -136,11 +181,4 @@ export function DepositAmountStep({
       </div>
     </div>
   );
-}
-
-export function isDepositAmountValid(
-  amount: string,
-  maxAmount: string
-): boolean {
-  return validateDepositAmount(amount, maxAmount) === undefined;
 }

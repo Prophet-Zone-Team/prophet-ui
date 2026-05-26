@@ -31,7 +31,6 @@ export function DepositEntryStep({
     balancesLoading,
     pricesLoading,
   } = useDepositContext();
-  const walletKind = getStoredTradingWalletInfo(session?.walletAddress);
 
   if (!session) {
     return (
@@ -52,6 +51,29 @@ export function DepositEntryStep({
 
   return (
     <div className="flex flex-col gap-3 pb-2">
+      <span className={depositSectionLabelClass}>Connected</span>
+      <button
+        type="button"
+        className={depositConnectedRowClass}
+        onClick={onSelectConnected}
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          <WalletAvatarIcon address={session?.walletAddress} />
+          <span className="truncate text-base font-[556] text-black">
+            {formatShortWallet(session.walletAddress)}
+          </span>
+        </span>
+        <span className="shrink-0 text-base font-[556] text-black">
+          {
+            isLoading
+              ? (
+                <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
+              )
+              : formatNumber(connectedWalletBalanceUsd, 2, true, { round: 0, isZeroPrecision: true })
+          }
+        </span>
+      </button>
+
       <span className={depositSectionLabelClass}>Stableflow</span>
       <button
         type="button"
@@ -72,29 +94,6 @@ export function DepositEntryStep({
           <span className="truncate text-base font-[556] text-black">Stableflow</span>
         </span>
         <span className="shrink-0 text-base font-[556] text-black">
-        </span>
-      </button>
-
-      <span className={depositSectionLabelClass}>Connected</span>
-      <button
-        type="button"
-        className={depositConnectedRowClass}
-        onClick={onSelectConnected}
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          <WalletAvatarIcon logo={walletKind.logo} />
-          <span className="truncate text-base font-[556] text-black">
-            {formatShortWallet(session.walletAddress)}
-          </span>
-        </span>
-        <span className="shrink-0 text-base font-[556] text-black">
-          {
-            isLoading
-              ? (
-                <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
-              )
-              : formatNumber(connectedWalletBalanceUsd, 2, true, { round: 0, isZeroPrecision: true })
-          }
         </span>
       </button>
     </div>

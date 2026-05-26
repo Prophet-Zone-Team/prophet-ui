@@ -1,0 +1,126 @@
+"use client";
+
+import { useState } from "react";
+
+import { CheckIcon, CopyIcon } from "@/components/icons";
+import { cn } from "@/lib/cn";
+import { formatShortWallet } from "@/lib/team/detail-format";
+import { formatNumber } from "@/utils";
+import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
+import {
+  privateTopupChangeLinkClass,
+  privateTopupPrimaryButtonClass,
+  privateTopupSectionLabelClass,
+  privateTopupWalletCardClass,
+  privateTopupBalanceLargeClass,
+} from "@/views/portfolio/private-topup/private-topup-ui";
+
+export interface TopupWalletCardProps {
+  connected: boolean;
+  address?: string;
+  balanceUsd: number;
+  balanceLoading?: boolean;
+  onConnect: () => void;
+  onDisconnect: () => void;
+}
+
+export function TopupWalletCard({
+  connected,
+  address,
+  balanceUsd,
+  balanceLoading = false,
+  onConnect,
+  onDisconnect,
+}: TopupWalletCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    if (!address) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <div className={privateTopupWalletCardClass}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
+          {connected && address ? (
+            <WalletAvatarIcon address={address} className="size-[50px]" />
+          ) : (
+            <div
+              className="size-[50px] shrink-0 rounded-full bg-[#f4f4f4]"
+              aria-hidden
+            />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className={`m-0 ${privateTopupSectionLabelClass}`}>Top up Wallet</p>
+            {connected && address ? (
+              <div className="mt-1 flex items-center gap-2">
+                <p className="m-0 truncate text-lg font-[556] text-black">
+                  {formatShortWallet(address)}
+                </p>
+                <button
+                  type="button"
+                  className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-colors hover:text-black"
+                  aria-label="Copy wallet address"
+                  onClick={() => void handleCopy()}
+                >
+                  {copied ? <CheckIcon /> : <CopyIcon />}
+                </button>
+              </div>
+            ) : (
+              <p className="m-0 mt-1 text-lg font-[556] text-black">-</p>
+            )}
+          </div>
+        </div>
+        {connected ? (
+          <button
+            type="button"
+            className={privateTopupChangeLinkClass}
+            onClick={onDisconnect}
+          >
+            Change
+          </button>
+        ) : null}
+      </div>
+
+      <img
+        src="/icons/icon-right-multi.svg"
+        alt=""
+        className="pointer-events-none absolute right-6 top-1/2 h-5 w-9 -translate-y-1/2 object-contain"
+        aria-hidden
+      />
+
+      {connected ? (
+        <div className="mt-auto pt-8">
+          <p className={`m-0 ${privateTopupSectionLabelClass}`}>Balance</p>
+          <p className={cn("m-0 mt-2", privateTopupBalanceLargeClass)}>
+            {balanceLoading
+              ? "…"
+              : formatNumber(balanceUsd, 2, true, {
+                  prefix: "$",
+                  round: 0,
+                  isZeroPrecision: true,
+                })}
+          </p>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={cn(privateTopupPrimaryButtonClass, "mt-auto")}
+          onClick={onConnect}
+        >
+          Connect Top up Wallet
+        </button>
+      )}
+    </div>
+  );
+}

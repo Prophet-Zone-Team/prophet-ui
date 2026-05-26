@@ -5,80 +5,81 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Big from "big.js";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+
 import { Modal } from "@/components/ui/modal";
 import { FundingNetworkType } from "@/config/funding";
 import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
-import { selectTokenUsdValue } from "@/lib/funding/price-selectors";
 import {
   stableflowTokensToFundingTokens,
-  type StableflowDepositToken
+  type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
 import {
   executePendingDepositConvert,
   getPendingConvertAmountUsd,
   resolvePendingDepositConvertMode,
-  type FunderCollateralBalances
+  type FunderCollateralBalances,
 } from "@/lib/trading/deposit-wallet-convert";
 import { useDeposit, useEvmBalances, usePrices } from "@/hooks/funding";
 import { useAuth } from "@/context/auth";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { useBalancesStore } from "@/store/use-balances";
-import { usePricesStore } from "@/store";
-import { DEPOSIT_MODAL_WIDTH } from "@/views/portfolio/deposit/config";
-import { DepositAmountStep } from "@/views/portfolio/deposit/deposit-amount-step";
-import { DepositConfirmStep } from "@/views/portfolio/deposit/deposit-confirm-step";
-import { DepositEntryStep } from "@/views/portfolio/deposit/deposit-entry-step";
+import { PRIVATE_TOPUP_MODAL_WIDTH } from "@/views/portfolio/private-topup/config";
+import { PrivateTopupProvider } from "@/views/portfolio/private-topup/context";
+import {
+  PrivateTopupAmountStep,
+  isPrivateTopupAmountStepValid,
+} from "@/views/portfolio/private-topup/private-topup-amount-step";
+import { PrivateTopupConfirmStep } from "@/views/portfolio/private-topup/private-topup-confirm-step";
 import {
   DepositStatusStep,
-  formatStableflowStatusLabel
+  formatStableflowStatusLabel,
 } from "@/views/portfolio/deposit/deposit-status-step";
-import { DepositTokenStep } from "@/views/portfolio/deposit/deposit-token-step";
+import { PrivateTopupTokenStep } from "@/views/portfolio/private-topup/private-topup-token-step";
 import type {
-  DepositAmountState,
-  DepositMethod,
-  DepositSelectableToken,
   DepositStatusPhase,
-  DepositStep,
-  StableflowDepositContext
-} from "@/views/portfolio/deposit/types";
-import { isStableflowDepositToken } from "@/views/portfolio/deposit/types";
+  PrivateTopupAmountState,
+  PrivateTopupSelectableToken,
+  PrivateTopupStep,
+  StableflowDepositContext,
+} from "@/views/portfolio/private-topup/types";
 import {
-  buildDepositAmountFromMaxBalance,
-  buildDepositAmountFromMinUsd,
-  getEffectiveMinDepositUsd,
-  isDepositAmountValid
-} from "@/views/portfolio/deposit/utils";
+  applyTokenBalancePercent,
+  computeUsdFromTokenAmount,
+} from "@/views/portfolio/private-topup/utils";
 import {
   FundingModalShell,
-  fundingPrimaryButtonClass
+  fundingPrimaryButtonClass,
 } from "@/views/portfolio/shared/funding-modal-shell";
-import { DepositProvider } from "./context";
+import { usePricesStore } from "@/store";
 
-export interface DepositDialogProps {
+const INITIAL_STEP: PrivateTopupStep = "tokens";
+
+const INITIAL_AMOUNT: PrivateTopupAmountState = {
+  amountUsd: "0",
+  tokenAmount: "0",
+};
+
+export interface PrivateTopupDialogProps {
   open: boolean;
+  topupWalletAddress: string;
   onClose: () => void;
-  onDepositSuccess?: () => void | Promise<void>;
+  onSuccess?: () => void;
 }
 
-const INITIAL_STEP: DepositStep = "entry";
-
-const INITIAL_AMOUNT: DepositAmountState = { tokenAmount: "0", amountUsd: "0" };
-
-export function DepositDialog({
+export function PrivateTopupDialog({
   open,
+  topupWalletAddress,
   onClose,
-  onDepositSuccess
-}: DepositDialogProps) {
+  onSuccess,
+}: PrivateTopupDialogProps) {
   const { session, syncCash } = useAuth();
 
-  const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
-  const [depositMethod, setDepositMethod] =
-    useState<DepositMethod>("connected");
+  const [step, setStep] = useState<PrivateTopupStep>(INITIAL_STEP);
   const [selectedToken, setSelectedToken] = useState<
-    DepositSelectableToken | undefined
+    PrivateTopupSelectableToken | undefined
   >();
-  const [amount, setAmount] = useState<DepositAmountState>(INITIAL_AMOUNT);
+  const [amount, setAmount] = useState<PrivateTopupAmountState>(INITIAL_AMOUNT);
   const [continueLoading, setContinueLoading] = useState(false);
   const [stableflowTokens, setStableflowTokens] = useState<
     StableflowDepositToken[]
@@ -112,14 +113,18 @@ export function DepositDialog({
   const statusPollAbortRef = useRef<AbortController | undefined>(undefined);
 
   const prices = usePricesStore((state) => state.prices);
+
   const {
-    supportedAssets,
-    depositViaPolygon,
     depositViaStableflow,
     pollStableflowBridge,
     pollFunderCollateralBalances,
-    stopStatusPoll
+    stopStatusPoll,
   } = useDeposit();
+
+  const { loading: pricesLoading } = usePrices({
+    auto: open,
+    enabled: open,
+  });
 
   const pendingConvertMode = funderCollateralBalances
     ? resolvePendingDepositConvertMode(funderCollateralBalances)
@@ -127,40 +132,18 @@ export function DepositDialog({
 
   const stableflowFundingTokens = useMemo(
     () => stableflowTokensToFundingTokens(stableflowTokens),
-    [stableflowTokens]
-  );
-
-  const { loading: connectedBalancesLoading, getTokenBalance } = useEvmBalances(
-    {
-      auto: open,
-      enabled: open && !!session && depositMethod === "connected"
-    }
+    [stableflowTokens],
   );
 
   useEvmBalances({
-    auto: true,
-    enabled:
-      open &&
-      !!session &&
-      depositMethod === "stableflow" &&
-      stableflowFundingTokens.length > 0,
-    tokens: stableflowFundingTokens,
-    merge: true
-  });
-
-  const { loading: pricesLoading } = usePrices({
     auto: open,
-    enabled: open
+    enabled: open && stableflowFundingTokens.length > 0,
+    tokens: stableflowFundingTokens,
+    merge: true,
   });
 
   const evmBalances = useBalancesStore((state) => state.evmBalances);
-  const balancesLoading =
-    depositMethod === "stableflow"
-      ? stableflowTokensLoading
-      : connectedBalancesLoading;
-
-  const selectableTokens =
-    depositMethod === "stableflow" ? stableflowTokens : supportedAssets;
+  const balancesLoading = stableflowTokensLoading;
 
   const selectedTokenMaxAmount = useMemo(() => {
     if (!selectedToken) {
@@ -172,7 +155,6 @@ export function DepositDialog({
 
   const reset = useCallback(() => {
     setStep(INITIAL_STEP);
-    setDepositMethod("connected");
     setSelectedToken(undefined);
     setAmount(INITIAL_AMOUNT);
     setStableflowQuote(undefined);
@@ -220,33 +202,28 @@ export function DepositDialog({
     }
   }, []);
 
-  const modalWidth =
-    step === "entry" ? DEPOSIT_MODAL_WIDTH.entry : DEPOSIT_MODAL_WIDTH.step;
+  useEffect(() => {
+    if (open && stableflowTokens.length === 0) {
+      void loadStableflowTokens();
+    }
+  }, [loadStableflowTokens, open, stableflowTokens.length]);
 
   const ariaLabel = useMemo(() => {
     switch (step) {
-      case "entry":
-        return "Deposit entry";
       case "tokens":
-        return "Select deposit token";
+        return "Select top up asset";
       case "amount":
-        return "Enter deposit amount";
+        return "Enter top up amount";
       case "confirm":
-        return "Confirm deposit";
+        return "Confirm private top up";
       case "status":
-        return "Deposit status";
+        return "Top up status";
       default:
-        return "Deposit";
+        return "Private top up";
     }
   }, [step]);
 
   function handleBack() {
-    if (step === "tokens") {
-      setStep("entry");
-      setSelectedToken(undefined);
-      return;
-    }
-
     if (step === "amount") {
       setStep("tokens");
       setAmount(INITIAL_AMOUNT);
@@ -265,129 +242,61 @@ export function DepositDialog({
     }
   }
 
-  const showBack = !["entry", "tokens"].includes(step);
+  const showBack = step !== "tokens";
 
-  const onSelectStableflow = async () => {
-    try {
-      if (stableflowTokens.length === 0) {
-        await loadStableflowTokens();
-      }
-
-      setDepositMethod("stableflow");
-      setSelectedToken(undefined);
-      setStep("tokens");
-    } catch {
-      // toast already shown
-    }
-  };
-
-  const onContinueToAmount = async () => {
+  const onContinueToAmount = () => {
     if (!selectedToken) {
-      return false;
+      return;
     }
 
-    setContinueLoading(true);
-
-    try {
-      const latestBalance = await getTokenBalance(selectedToken);
-      const latestBalanceUsd = selectTokenUsdValue(
+    const max = selectedTokenMaxAmount;
+    if (Big(max || 0).gt(0)) {
+      const tokenAmount = applyTokenBalancePercent(
+        max,
+        100,
+        selectedToken.decimals,
+      );
+      const amountUsd = computeUsdFromTokenAmount(
+        tokenAmount,
         prices,
-        selectedToken.symbol,
-        latestBalance
+        selectedToken,
       );
-
-      const effectiveMinUsd = getEffectiveMinDepositUsd(
-        selectedToken.minCheckoutUsd,
-      );
-
-      if (
-        depositMethod === "connected" &&
-        Big(latestBalanceUsd || 0).lt(effectiveMinUsd)
-      ) {
-        toast.error(
-          `${selectedToken.symbol} minimum deposit amount is $${effectiveMinUsd} or higher`,
-        );
-        return;
-      }
-
-      if (depositMethod === "connected") {
-        setAmount(
-          buildDepositAmountFromMinUsd(
-            selectedToken.minCheckoutUsd,
-            latestBalance,
-            prices,
-            selectedToken,
-          ),
-        );
-      } else if (Big(latestBalance || 0).gt(0)) {
-        setAmount(
-          buildDepositAmountFromMaxBalance(
-            latestBalance,
-            prices,
-            selectedToken,
-          ),
-        );
-      } else {
-        setAmount(INITIAL_AMOUNT);
-      }
-
-      setStep("amount");
-    } finally {
-      setContinueLoading(false);
+      setAmount({ tokenAmount, amountUsd });
+    } else {
+      setAmount(INITIAL_AMOUNT);
     }
+
+    setStep("amount");
   };
 
   const onContinueToConfirm = async () => {
-    if (!selectedToken) {
-      return false;
-    }
-
-    const effectiveMinUsd =
-      depositMethod === "connected"
-        ? getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd)
-        : 0;
-
-    if (
-      depositMethod === "connected" &&
-      effectiveMinUsd > 0 &&
-      Big(amount.amountUsd || 0).lt(effectiveMinUsd)
-    ) {
-      toast.error(
-        `${selectedToken.symbol} minimum deposit amount is $${effectiveMinUsd} or higher`,
-      );
+    if (!selectedToken || !session?.funderAddress) {
       return;
     }
 
     setContinueLoading(true);
 
     try {
-      if (
-        depositMethod === "stableflow" &&
-        isStableflowDepositToken(selectedToken) &&
-        session?.funderAddress
-      ) {
-        const amountBaseUnits = Big(amount.tokenAmount)
-          .times(10 ** selectedToken.decimals)
-          .toFixed(0, 0);
-        const { quote } = await fetchJson<{ quote: QuoteResponse }>(
-          "/api/trading/stableflow/quote",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              originAssetId: selectedToken.assetId,
-              destinationAssetId: polygonUsdcDestinationAssetId,
-              amountBaseUnits,
-              refundTo: session.walletAddress,
-              recipient: session.funderAddress
-            })
-          }
-        );
-        setStableflowQuote(quote);
-      }
-
+      const amountBaseUnits = Big(amount.tokenAmount)
+        .times(10 ** selectedToken.decimals)
+        .toFixed(0, 0);
+      const { quote } = await fetchJson<{ quote: QuoteResponse }>(
+        "/api/trading/stableflow/quote",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            originAssetId: selectedToken.assetId,
+            destinationAssetId: polygonUsdcDestinationAssetId,
+            amountBaseUnits,
+            refundTo: topupWalletAddress,
+            recipient: session.funderAddress,
+          }),
+        },
+      );
+      setStableflowQuote(quote);
       setStep("confirm");
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -411,28 +320,26 @@ export function DepositDialog({
             execution.depositMemo,
             (status: OneClickStatus) => {
               setBridgeStatusLabel(formatStableflowStatusLabel(status));
-            }
+            },
           );
         }
 
         setStatusPhase("awaiting_funds");
-        const balancePayload = await pollFunderCollateralBalances(
-          (balances) => {
-            const mode = resolvePendingDepositConvertMode(balances);
+        const balancePayload = await pollFunderCollateralBalances((balances) => {
+          const mode = resolvePendingDepositConvertMode(balances);
 
-            if (mode === "wrap-only") {
-              setDetectedUsdceAmount(balances.usdce.balance);
-              setDetectedUsdcAmount(undefined);
-            } else if (mode === "full") {
-              setDetectedUsdcAmount(balances.usdc.balance);
-              setDetectedUsdceAmount(
-                BigInt(balances.usdce.balanceBaseUnits || "0") > 0n
-                  ? balances.usdce.balance
-                  : undefined
-              );
-            }
+          if (mode === "wrap-only") {
+            setDetectedUsdceAmount(balances.usdce.balance);
+            setDetectedUsdcAmount(undefined);
+          } else if (mode === "full") {
+            setDetectedUsdcAmount(balances.usdc.balance);
+            setDetectedUsdceAmount(
+              BigInt(balances.usdce.balanceBaseUnits || "0") > 0n
+                ? balances.usdce.balance
+                : undefined,
+            );
           }
-        );
+        });
 
         setFunderCollateralBalances(balancePayload);
         const readyMode = resolvePendingDepositConvertMode(balancePayload);
@@ -445,7 +352,7 @@ export function DepositDialog({
           setDetectedUsdceAmount(
             BigInt(balancePayload.usdce.balanceBaseUnits || "0") > 0n
               ? balancePayload.usdce.balance
-              : undefined
+              : undefined,
           );
         }
 
@@ -457,10 +364,10 @@ export function DepositDialog({
                   current.expectedAmountBaseUnits,
                   readyMode === "wrap-only"
                     ? balancePayload.usdce.balanceBaseUnits
-                    : balancePayload.usdc.balanceBaseUnits
-                )
+                    : balancePayload.usdc.balanceBaseUnits,
+                ),
               }
-            : current
+            : current,
         );
         setStatusPhase("ready");
       } catch (error) {
@@ -472,45 +379,17 @@ export function DepositDialog({
         setStatusError(error instanceof Error ? error.message : String(error));
       }
     },
-    [pollFunderCollateralBalances, pollStableflowBridge]
+    [pollFunderCollateralBalances, pollStableflowBridge],
   );
 
-  const onConfirmDeposit = async () => {
-    if (!selectedToken || !session?.walletAddress) {
-      return;
-    }
-
-    if (depositMethod === "connected") {
-      setContinueLoading(true);
-
-      try {
-        if (selectedToken.chainType === FundingNetworkType.EVM) {
-          await ensureFundingEvmChain(
-            session.walletAddress,
-            selectedToken.chainId
-          );
-        }
-
-        await depositViaPolygon(amount.tokenAmount, selectedToken);
-        toast.success("Deposit successful");
-        handleClose();
-        syncCash();
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
-        toast.error(message);
-      } finally {
-        setContinueLoading(false);
-      }
-
-      return;
-    }
-
+  const onConfirmTopup = async () => {
     if (
-      !isStableflowDepositToken(selectedToken) ||
+      !selectedToken ||
+      !session?.walletAddress ||
       !session.funderAddress ||
       !polygonUsdcDestinationAssetId
     ) {
-      toast.error("Stableflow deposit is not ready. Try again.");
+      toast.error("Private top up is not ready. Try again.");
       return;
     }
 
@@ -523,7 +402,7 @@ export function DepositDialog({
       if (selectedToken.chainType === FundingNetworkType.EVM) {
         await ensureFundingEvmChain(
           session.walletAddress,
-          selectedToken.chainId
+          selectedToken.chainId,
         );
       }
 
@@ -531,7 +410,7 @@ export function DepositDialog({
         amount.tokenAmount,
         selectedToken,
         session.funderAddress,
-        polygonUsdcDestinationAssetId
+        polygonUsdcDestinationAssetId,
       );
 
       setStableflowExecution(execution);
@@ -563,14 +442,14 @@ export function DepositDialog({
     try {
       const amountUsd = getPendingConvertAmountUsd(
         funderCollateralBalances,
-        pendingConvertMode
+        pendingConvertMode,
       );
 
       await executePendingDepositConvert({
         walletAddress: session.walletAddress,
         mode: pendingConvertMode,
         amountUsd,
-        onStatus: setConvertStatusLabel
+        onStatus: setConvertStatusLabel,
       });
 
       setStatusPhase("success");
@@ -579,19 +458,14 @@ export function DepositDialog({
         await syncCash();
       } catch (syncError) {
         console.warn(
-          "[deposit-dialog] syncCash after convert failed",
-          syncError
+          "[private-topup-dialog] syncCash after convert failed",
+          syncError,
         );
       }
 
-      toast.success("Deposit successful");
-      syncCash();
+      toast.success("Top up successful");
       handleClose();
-      if (onDepositSuccess) {
-        await onDepositSuccess();
-      } else {
-        await syncCash();
-      }
+      await onSuccess?.();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       setStatusPhase("error");
@@ -603,38 +477,27 @@ export function DepositDialog({
   };
 
   const footer = useMemo(() => {
-    if (step === "entry" || step === "status") {
+    if (step === "status") {
       return undefined;
     }
 
     if (step === "tokens") {
-      const canContinue = !!selectedToken;
-
       return (
         <button
           type="button"
           className={fundingPrimaryButtonClass}
-          disabled={!canContinue || continueLoading}
-          onClick={() => void onContinueToAmount()}
+          disabled={!selectedToken || continueLoading}
+          onClick={onContinueToAmount}
         >
-          {continueLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
           Continue
         </button>
       );
     }
 
     if (step === "amount" && selectedToken) {
-      const effectiveMinUsd =
-        depositMethod === "stableflow"
-          ? 0
-          : getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd);
-      const canContinue = isDepositAmountValid(
+      const canContinue = isPrivateTopupAmountStepValid(
         amount.tokenAmount,
         selectedTokenMaxAmount,
-        {
-          minDepositUsd: effectiveMinUsd,
-          amountUsd: amount.amountUsd,
-        },
       );
 
       return (
@@ -644,7 +507,9 @@ export function DepositDialog({
           disabled={!canContinue || continueLoading}
           onClick={() => void onContinueToConfirm()}
         >
-          {continueLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+          {continueLoading && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
           Continue
         </button>
       );
@@ -655,10 +520,12 @@ export function DepositDialog({
         <button
           type="button"
           className={fundingPrimaryButtonClass}
-          disabled={continueLoading}
-          onClick={() => void onConfirmDeposit()}
+          disabled={continueLoading || !stableflowQuote}
+          onClick={() => void onConfirmTopup()}
         >
-          {continueLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+          {continueLoading && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
           Confirm
         </button>
       );
@@ -666,91 +533,70 @@ export function DepositDialog({
 
     return undefined;
   }, [
-    amount,
+    amount.tokenAmount,
     continueLoading,
-    depositMethod,
-    onConfirmDeposit,
+    onConfirmTopup,
+    onContinueToConfirm,
     selectedToken,
     selectedTokenMaxAmount,
-    step
+    stableflowQuote,
+    step,
   ]);
+
+  const shellMinHeight =
+    step === "confirm" ? "min-h-[600px]" : step === "amount" ? "min-h-[480px]" : "min-h-[515px]";
 
   return (
     <Modal
       open={open}
       onClose={handleClose}
       ariaLabel={ariaLabel}
-      className={modalWidth}
+      className={PRIVATE_TOPUP_MODAL_WIDTH}
       hideCloseButton
       overlayCloseable={false}
     >
-      <DepositProvider
+      <PrivateTopupProvider
         value={{
-          depositMethod,
-          selectableTokens,
-          funderAddress: session?.funderAddress,
-          supportedAssets: selectableTokens,
+          selectableTokens: stableflowTokens,
+          topupWalletAddress,
+          privateAccountAddress: session?.funderAddress,
           balancesLoading,
-          pricesLoading
+          pricesLoading,
         }}
       >
         <FundingModalShell
-          title="Deposit"
+          title="Top up Private Balance"
           onClose={handleClose}
           onBack={showBack ? handleBack : undefined}
           footer={footer}
-          className={
-            step === "entry"
-              ? "min-h-[400px]"
-              : step === "confirm"
-                ? "min-h-[600px]"
-                : "min-h-[515px]"
-          }
+          className={shellMinHeight}
         >
-          {step === "entry" ? (
-            <DepositEntryStep
-              onSelectConnected={() => {
-                setDepositMethod("connected");
-                setStep("tokens");
-              }}
-              onSelectStableflow={() => void onSelectStableflow()}
-              stableflowLoading={stableflowTokensLoading}
-            />
-          ) : null}
-
           {step === "tokens" ? (
-            <DepositTokenStep
+            <PrivateTopupTokenStep
               selectedToken={selectedToken}
               onSelectToken={setSelectedToken}
+              onChangeWallet={handleClose}
             />
           ) : null}
 
           {step === "amount" && selectedToken ? (
-            <DepositAmountStep
+            <PrivateTopupAmountStep
               key={`${selectedToken.chainId}-${selectedToken.address}`}
               token={selectedToken}
               amount={amount}
               maxAmount={selectedTokenMaxAmount}
-              minDepositUsd={
-                depositMethod === "stableflow"
-                  ? 0
-                  : getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd)
-              }
               onAmountChange={setAmount}
             />
           ) : null}
 
-          {step === "confirm" && selectedToken ? (
-            <DepositConfirmStep
-              walletAddress={session?.walletAddress ?? ""}
+          {step === "confirm" && selectedToken && session?.funderAddress ? (
+            <PrivateTopupConfirmStep
+              topupWalletAddress={topupWalletAddress}
+              privateAccountAddress={session.funderAddress}
               token={selectedToken}
-              amount={amount.tokenAmount}
+              tokenAmount={amount.tokenAmount}
               amountUsd={amount.amountUsd}
-              quoteMode={
-                depositMethod === "stableflow" ? "stableflow" : "bridge"
-              }
               stableflowQuote={stableflowQuote}
-              recipientAddress={session?.funderAddress}
             />
           ) : null}
 
@@ -769,7 +615,7 @@ export function DepositDialog({
             />
           ) : null}
         </FundingModalShell>
-      </DepositProvider>
+      </PrivateTopupProvider>
     </Modal>
   );
 }

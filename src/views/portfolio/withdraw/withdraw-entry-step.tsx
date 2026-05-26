@@ -25,7 +25,6 @@ export function WithdrawEntryStep({
   stableflowLoading = false,
 }: WithdrawEntryStepProps) {
   const { session, onConnectWallet, status, portfolio, reload, coreStatus } = usePortfolioContext();
-  const walletKind = getStoredTradingWalletInfo(session?.walletAddress);
   const availableDisplay = session
     ? formatNumber(portfolio?.availableToTrade, 4, true, {
       round: 0,
@@ -54,6 +53,25 @@ export function WithdrawEntryStep({
 
   return (
     <div className="flex flex-col gap-3 pb-2">
+      <span className={depositSectionLabelClass}>Connected</span>
+      <button type="button" className={depositConnectedRowClass} onClick={onSelectBridge}>
+        <span className="flex min-w-0 items-center gap-3">
+          <WalletAvatarIcon address={session?.walletAddress} />
+          <span className="truncate text-base font-[556] text-black">
+            {formatShortWallet(session.walletAddress)}
+          </span>
+        </span>
+        <span className="shrink-0 text-base font-[556] text-[#909090]">
+          {
+            coreStatus === "loading"
+              ? (
+                <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
+              )
+              : availableDisplay
+          }
+        </span>
+      </button>
+
       <span className={depositSectionLabelClass}>Stableflow</span>
       <button
         type="button"
@@ -72,25 +90,6 @@ export function WithdrawEntryStep({
             />
           )}
           <span className="truncate text-base font-[556] text-black">Stableflow</span>
-        </span>
-      </button>
-
-      <span className={depositSectionLabelClass}>Connected</span>
-      <button type="button" className={depositConnectedRowClass} onClick={onSelectBridge}>
-        <span className="flex min-w-0 items-center gap-3">
-          <WalletAvatarIcon logo={walletKind.logo} />
-          <span className="truncate text-base font-[556] text-black">
-            {formatShortWallet(session.walletAddress)}
-          </span>
-        </span>
-        <span className="shrink-0 text-base font-[556] text-[#909090]">
-          {
-            coreStatus === "loading"
-              ? (
-                <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
-              )
-              : availableDisplay
-          }
         </span>
       </button>
     </div>

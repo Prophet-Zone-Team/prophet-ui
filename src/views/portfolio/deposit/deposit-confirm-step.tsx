@@ -12,7 +12,11 @@ import {
   formatQuoteTokenAmount,
   mapQuoteToBreakdown,
 } from "@/lib/funding/bridge-quote";
-import { mapStableflowQuoteToConfirmDisplay } from "@/lib/funding/stableflow";
+import {
+  mapStableflowQuoteToBreakdownFees,
+  mapStableflowQuoteToConfirmDisplay,
+  STABLEFLOW_MAX_SLIPPAGE_PERCENT,
+} from "@/lib/funding/stableflow";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { depositDetailRowClass } from "@/views/portfolio/deposit/deposit-ui";
 import { TransactionBreakdown } from "@/views/portfolio/deposit/transaction-breakdown";
@@ -24,6 +28,7 @@ export interface DepositConfirmStepProps {
   walletAddress: string;
   token: DepositSelectableToken;
   amount: string;
+  amountUsd: string;
   quoteMode?: "bridge" | "stableflow";
   stableflowQuote?: QuoteResponse;
   recipientAddress?: string;
@@ -33,6 +38,7 @@ export function DepositConfirmStep({
   walletAddress,
   token,
   amount,
+  amountUsd,
   quoteMode = "bridge",
   stableflowQuote,
   recipientAddress,
@@ -53,6 +59,24 @@ export function DepositConfirmStep({
   );
 
   const breakdown = quote ? mapQuoteToBreakdown(quote) : undefined;
+
+  const stableflowBreakdownFees = useMemo(() => {
+    if (!stableflowQuote) {
+      return {
+        networkCostUsd: undefined,
+        priceImpactPercent: undefined,
+        maxSlippagePercent: STABLEFLOW_MAX_SLIPPAGE_PERCENT,
+      };
+    }
+
+    const fees = mapStableflowQuoteToBreakdownFees(stableflowQuote);
+
+    return {
+      networkCostUsd: fees.networkCostUsd,
+      priceImpactPercent: fees.priceImpactPercent,
+      maxSlippagePercent: STABLEFLOW_MAX_SLIPPAGE_PERCENT,
+    };
+  }, [stableflowQuote]);
 
   const estimatedTime =
     quoteMode === "stableflow" && stableflowDisplay
@@ -78,7 +102,7 @@ export function DepositConfirmStep({
   return (
     <div className="flex flex-col gap-4 pb-2">
       <p className="m-0 text-center text-[36px] font-[556] leading-[43px] text-black">
-        {formatNumber(amount, token.decimals, true, { round: 0 })}
+        {formatNumber(amountUsd, 2, true, { prefix: "$", round: 0 })}
       </p>
 
       {showQuoteLoading ? (
@@ -95,7 +119,7 @@ export function DepositConfirmStep({
       <div className="flex flex-col">
         <DetailRow label="From">
           <span className="flex items-center gap-2">
-            <WalletAvatarIcon />
+            <WalletAvatarIcon address={walletAddress} />
             <span>{formatShortWallet(walletAddress)}</span>
           </span>
         </DetailRow>
@@ -144,14 +168,27 @@ export function DepositConfirmStep({
         </DetailRow>
       </div>
 
-      {!isStableflow ? (
-        <TransactionBreakdown
-          loading={quoteLoading && Boolean(quoteRequest)}
-          networkCostUsd={breakdown?.networkCost}
-          priceImpactPercent={breakdown?.priceImpactPercent}
-          maxSlippagePercent={breakdown?.maxSlippagePercent}
-        />
-      ) : null}
+      <TransactionBreakdown
+        loading={isStableflow ? false : quoteLoading && Boolean(quoteRequest)}
+        networkCostUsd={
+          isStableflow
+            ? stableflowBreakdownFees.networkCostUsd
+            : breakdown?.networkCost
+        }
+        priceImpactPercent={
+          isStableflow
+            ? stableflowBreakdownFees.priceImpactPercent
+            : breakdown?.priceImpactPercent
+        }
+        maxSlippagePercent={
+          isStableflow
+            ? stableflowBreakdownFees.maxSlippagePercent
+            : breakdown?.maxSlippagePercent
+        }
+        poweredByLogoSrc={
+          isStableflow ? "/logos/logo-stableflow-full.svg" : undefined
+        }
+      />
     </div>
   );
 }

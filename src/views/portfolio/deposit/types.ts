@@ -19,6 +19,11 @@ export type { PendingDepositConvertMode } from "@/lib/trading/deposit-wallet-con
 
 export type DepositSelectableToken = FundingAsset | StableflowDepositToken;
 
+export interface DepositAmountState {
+  amountUsd: string;
+  tokenAmount: string;
+}
+
 export interface DepositTokenOption {
   id: string;
   symbol: string;

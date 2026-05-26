@@ -33,6 +33,7 @@ import {
   depositTokenRowClass,
   depositTokenRowSelectedClass,
 } from "@/views/portfolio/deposit/deposit-ui";
+import { getEffectiveMinDepositUsd } from "@/views/portfolio/deposit/utils";
 import {
   WITHDRAW_MODAL_WIDTH,
   WITHDRAW_SOURCE_TOKEN_LABEL,
@@ -193,7 +194,13 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
 
   const amount = parseWithdrawAmount(amountInput);
   const maxAmount = portfolio?.availableToTrade ?? 0;
-  const validationError = validateWithdrawAmount(amount, maxAmount);
+  const effectiveMinUsd =
+    isBridge && selectedToken && !("assetId" in selectedToken)
+      ? getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd)
+      : 0;
+  const validationError = validateWithdrawAmount(amount, maxAmount, {
+    minWithdrawUsd: effectiveMinUsd,
+  });
   const recipientError =
     !isBridge && recipientInput.trim() && !EVM_ADDRESS_PATTERN.test(recipientInput.trim())
       ? "Enter a valid EVM recipient address."
@@ -520,7 +527,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
               {isBridge ? (
                 <div className={withdrawInputBoxClass}>
                   <span className="flex min-w-0 items-center gap-2">
-                    <WalletAvatarIcon />
+                    <WalletAvatarIcon address={session?.walletAddress} />
                     <span className="truncate text-base font-[556] text-black">
                       {formatShortWallet(session?.walletAddress)}
                     </span>

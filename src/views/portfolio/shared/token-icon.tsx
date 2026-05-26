@@ -1,7 +1,9 @@
 "use client";
 
 import LazyImage from "@/components/lazy-image";
+import { getStoredTradingWalletInfo } from "@/components/trading/trading-wallet-session";
 import { cn } from "@/lib/cn";
+import { getWalletAvatarGradient } from "@/lib/wallet/avatar-gradient";
 
 export interface TokenIconProps {
   symbol: string;
@@ -119,11 +121,13 @@ export function TokenIcon({
   );
 }
 
-export function WalletAvatarIcon({ className, logo }: { className?: string; logo?: string; }) {
-  if (logo) {
+export function WalletAvatarIcon({ className, address }: { className?: string; address?: string; }) {
+  const walletKind = getStoredTradingWalletInfo(address);
+
+  if (walletKind.logo) {
     return (
       <img
-        src={logo}
+        src={walletKind.logo}
         alt=""
         className={cn(
           "size-5 shrink-0 rounded object-center object-contain",
@@ -132,13 +136,16 @@ export function WalletAvatarIcon({ className, logo }: { className?: string; logo
       />
     );
   }
+
+  const gradient = address ? getWalletAvatarGradient(address) : "radial-gradient(100% 100% at 50% 0%, #FF6BBA 0%, #4DA0FF 65.38%, #59FFA1 100%)";
+
   return (
     <div
       className={cn(
         "flex size-5 shrink-0 items-center justify-center rounded",
-        "bg-[radial-gradient(100%_100%_at_50%_0%,#FF6BBA_0%,#4DA0FF_65.38%,#59FFA1_100%)]",
         className
       )}
+      style={{ background: gradient }}
     >
 
     </div>

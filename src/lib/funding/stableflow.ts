@@ -1,4 +1,5 @@
 import { QuoteRequest, type QuoteResponse, type TokenResponse } from "@stableflow/core";
+import Big from "big.js";
 
 import { FUNDING_NETWORKS, FundingNetworkType, type FundingNetwork } from "@/config/funding/networks";
 import type { FundingAsset } from "@/config/funding/tokens";
@@ -24,6 +25,16 @@ export interface StableflowQuoteDisplay {
   estOutputUsd: number;
   estToTokenBaseUnit: string;
   receiveAmountFormatted: string;
+}
+
+/** Network cost rate applied to quote amountInUsd (0.01%). */
+export const STABLEFLOW_NETWORK_COST_RATE = 0.0001;
+
+export const STABLEFLOW_MAX_SLIPPAGE_PERCENT = 0.5;
+
+export interface StableflowQuoteBreakdownFees {
+  networkCostUsd: number;
+  priceImpactPercent: number;
 }
 
 export function getFundingNetworkForStableflowBlockchain(blockchain: string): FundingNetwork | undefined {
@@ -122,6 +133,26 @@ export function mapStableflowQuoteToConfirmDisplay(quote: QuoteResponse): Stable
     estOutputUsd: Number(quote.quote.amountOutUsd ?? 0),
     estToTokenBaseUnit: quote.quote.amountOut,
     receiveAmountFormatted: quote.quote.amountOutFormatted,
+  };
+}
+
+export function mapStableflowQuoteToBreakdownFees(
+  quote: QuoteResponse,
+): StableflowQuoteBreakdownFees {
+  const amountInUsd = quote.quote.amountInUsd ?? "0";
+  const amountOutUsd = quote.quote.amountOutUsd ?? "0";
+
+  let priceImpact = Big(amountInUsd).minus(amountOutUsd).div(amountInUsd || 1);
+
+  if (priceImpact.lt(0)) {
+    priceImpact = Big(0);
+  }
+
+  const networkCostUsd = Big(amountInUsd).times(STABLEFLOW_NETWORK_COST_RATE);
+
+  return {
+    networkCostUsd: networkCostUsd.toNumber(),
+    priceImpactPercent: priceImpact.times(100).toNumber(),
   };
 }
 

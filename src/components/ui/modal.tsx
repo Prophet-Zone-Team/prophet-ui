@@ -13,6 +13,7 @@ export interface ModalProps {
   children: ReactNode;
   ariaLabel: string;
   className?: string;
+  overlayClassName?: string;
   hideCloseButton?: boolean;
   overlayCloseable?: boolean;
 }
@@ -23,6 +24,7 @@ export function Modal({
   children,
   ariaLabel,
   className,
+  overlayClassName,
   hideCloseButton = false,
   overlayCloseable = true
 }: ModalProps) {
@@ -54,7 +56,10 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 p-4"
+      className={cn(
+        "fixed inset-0 z-[60] flex items-center justify-center bg-black/45 p-4",
+        overlayClassName,
+      )}
       onClick={() => {
         if (!overlayCloseable) {
           return;
