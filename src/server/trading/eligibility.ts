@@ -29,6 +29,17 @@ interface PolymarketGeoblockResponse {
 export async function checkTradingEligibility(clientIp?: string): Promise<TradingEligibilityResult> {
   const checkedAt = new Date().toISOString();
 
+  const isForceEligible = process.env.ELIGIBILITY_FORCE_ELIGIBLE === "true";
+  if (isForceEligible) {
+    return {
+      status: "eligible",
+      checkedAt,
+      country: undefined,
+      region: undefined,
+      reason: undefined,
+    };
+  }
+
   try {
     const headers: Record<string, string> = { Accept: "application/json" };
 
@@ -127,9 +138,9 @@ export function formatEligibilityErrorDetail(reason: string | undefined) {
 function hasDevelopmentProxyConfigured() {
   return Boolean(
     process.env.HTTPS_PROXY?.trim() ||
-      process.env.https_proxy?.trim() ||
-      process.env.HTTP_PROXY?.trim() ||
-      process.env.http_proxy?.trim(),
+    process.env.https_proxy?.trim() ||
+    process.env.HTTP_PROXY?.trim() ||
+    process.env.http_proxy?.trim(),
   );
 }
 
