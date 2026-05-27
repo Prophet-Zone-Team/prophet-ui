@@ -59,7 +59,7 @@ export function ExactScorePanel({
           className="flex flex-wrap items-center justify-between gap-4 p-[16px] transition-colors hover:bg-[#F5F5F5]"
         >
           <div className="min-w-0 shrink-0">
-            <h3 className="m-0 text-[20px] font-[500] leading-6 text-black">
+            <h3 className="m-0 text-[18px] font-[500] leading-6 text-black">
               Exact Score: {outcome.label}
             </h3>
             <p className="m-0 mt-[6px] text-[14px] font-[500] leading-[17px] text-[#909090]">

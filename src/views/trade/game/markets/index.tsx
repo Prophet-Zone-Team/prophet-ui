@@ -10,7 +10,6 @@ import {
   sortFixtureGroupOutcomes
 } from "@/lib/market/build-fixture-markets-snapshot";
 import {
-  isEffectiveLiveMatch,
   isMockLiveFixtureEnabled,
 } from "@/data/mock/live-fixture-simulation";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
@@ -114,7 +113,6 @@ export function GameMarketsSection({
   const setShowOrderbook = useSetShowOrderbook();
   const sides = resolveMatchSides(match, teamSnapshots);
   const activeLineKey = tab === "totals" ? totalsLineKey : spreadsLineKey;
-  const effectiveLive = isEffectiveLiveMatch(match);
   const chartKind = resolveTabChartKind(tab);
   const activeTabOutcomes = useMemo(
     () => resolveFixtureOutcomesForTab(fixtureMarkets, tab, activeLineKey),
@@ -127,7 +125,7 @@ export function GameMarketsSection({
   });
   const { pricesByOutcomeId: apiPricesByOutcomeId } = useLiveFixtureTabPrices({
     outcomes: activeTabOutcomes,
-    enabled: effectiveLive && !isMockLiveFixtureEnabled(),
+    enabled: !isMockLiveFixtureEnabled(),
   });
   const pricesByOutcomeId = mockSimulation.isActive
     ? mockSimulation.pricesByOutcomeId

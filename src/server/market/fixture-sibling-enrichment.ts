@@ -4,7 +4,7 @@ import { mapEventSportsMarkets } from "@/lib/market/fixture-markets-mapper";
 import {
   isFixtureMainEventSlug,
   mergeGammaMarkets,
-  resolveFixtureSiblingSlugs,
+  resolveFixtureSiblingSlugs
 } from "@/lib/market/fixture-sibling-events";
 import { fetchGammaEventBySlug } from "@/data/providers/polymarket-football-events-provider";
 import type { GammaMarketRecord } from "@/lib/market/polymarket-gamma";
@@ -17,12 +17,17 @@ export function clearFixtureSiblingMarketsCache(): void {
 }
 
 export async function enrichMatchWithSiblingFixtureMarkets(
-  match: WorldCupMatch,
+  match: WorldCupMatch
 ): Promise<WorldCupMatch> {
   const slug = match.polymarket?.slug;
   const moneylineOutcomes = match.polymarket?.moneyline.outcomes ?? [];
 
-  if (!slug || !isFixtureMainEventSlug(slug) || moneylineOutcomes.length === 0) {
+  // TODO
+  if (
+    !slug ||
+    !isFixtureMainEventSlug(slug) ||
+    moneylineOutcomes.length === 0
+  ) {
     return match;
   }
 
@@ -38,19 +43,21 @@ export async function enrichMatchWithSiblingFixtureMarkets(
     siblingMarkets,
     homeName,
     awayName,
-    moneylineOutcomes,
+    moneylineOutcomes
   );
 
   return {
     ...match,
     polymarket: {
       ...match.polymarket!,
-      fixtureMarkets,
-    },
+      fixtureMarkets
+    }
   };
 }
 
-async function fetchSiblingMarketsForSlug(slug: string): Promise<GammaMarketRecord[]> {
+async function fetchSiblingMarketsForSlug(
+  slug: string
+): Promise<GammaMarketRecord[]> {
   const cached = siblingMarketsCache.get(slug);
 
   if (cached) {
@@ -58,8 +65,13 @@ async function fetchSiblingMarketsForSlug(slug: string): Promise<GammaMarketReco
   }
 
   const siblingSlugs = resolveFixtureSiblingSlugs(slug);
-  const siblingEvents = await Promise.all(siblingSlugs.map(fetchGammaEventBySlug));
-  const markets = mergeGammaMarkets(...siblingEvents.map((event) => event?.markets));
+  const siblingEvents = await Promise.all(
+    siblingSlugs.map(fetchGammaEventBySlug)
+  );
+
+  const markets = mergeGammaMarkets(
+    ...siblingEvents.map((event) => event?.markets)
+  );
 
   siblingMarketsCache.set(slug, markets);
 

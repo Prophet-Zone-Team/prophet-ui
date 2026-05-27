@@ -53,8 +53,12 @@ export async function renderGameTradePage(slug: string) {
 
   const { matches } = await getFootballMatches();
 
-  const matchWithSiblingMarkets = await enrichMatchWithSiblingFixtureMarkets(footballMatch);
-  const [enrichedMatch] = await enrichFootballMatchesWithClobData([matchWithSiblingMarkets]);
+  const matchWithSiblingMarkets =
+    await enrichMatchWithSiblingFixtureMarkets(footballMatch);
+
+  const [enrichedMatch] = await enrichFootballMatchesWithClobData([
+    matchWithSiblingMarkets
+  ]);
 
   const marketData = await getWorldCupMarketData(
     resolveGameMarketOptions(enrichedMatch)
@@ -62,6 +66,7 @@ export async function renderGameTradePage(slug: string) {
   const snapshot = buildGameMarketSnapshot(enrichedMatch, marketData.snapshots);
   const fixtureMarkets = buildFixtureMarketsSnapshot(enrichedMatch);
   const relatedMatches = getRelatedMatches(enrichedMatch, matches);
+  // console.log("fixtureMarkets", fixtureMarkets);
   const teamProfiles = Object.fromEntries(
     marketData.footballTeamContext.map((context) => [
       context.profile.teamId,
@@ -76,9 +81,7 @@ export async function renderGameTradePage(slug: string) {
       gameSnapshot={snapshot}
       fixtureMarkets={fixtureMarkets}
       teamProfiles={teamProfiles}
-      relatedMatches={
-        relatedMatches.length > 0 ? relatedMatches : matches
-      }
+      relatedMatches={relatedMatches.length > 0 ? relatedMatches : matches}
     />
   );
 }

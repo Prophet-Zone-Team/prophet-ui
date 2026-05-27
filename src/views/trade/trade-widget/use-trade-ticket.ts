@@ -12,7 +12,7 @@ import {
   livePricesToFixtureAsks,
 } from "@/data/mock/live-fixture-simulation";
 import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity";
-import { useMarketTokenPrices } from "@/hooks/market/use-market-token-prices";
+import { useMarketWsPrices } from "@/context/market-ws";
 import { useMockLiveFixturePricesForOutcome } from "@/store/mock-live-fixture-store";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
 import {
@@ -211,12 +211,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     Boolean(selectedFixtureOutcome) &&
     !isMockLiveFixtureEnabled();
 
-  const { pricesByTokenId: fixtureTokenPrices } = useMarketTokenPrices(
-    [selectedFixtureOutcome?.tokenId, selectedFixtureOutcome?.noTokenId],
-    {
-      enabled: fixtureWsEnabled,
-      customFeatureEnabled: true,
-    }
+  const { pricesByTokenId: fixtureTokenPrices } = useMarketWsPrices(
+    fixtureWsEnabled
+      ? [selectedFixtureOutcome?.tokenId, selectedFixtureOutcome?.noTokenId]
+      : []
   );
 
   const liveFixtureAsks = useMemo(() => {

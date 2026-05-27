@@ -8,6 +8,7 @@ export const FIXTURE_SIBLING_EVENT_SUFFIXES = [
 ] as const;
 
 export function isFixtureMainEventSlug(slug: string): boolean {
+  return true;
   return slug.startsWith("fifwc-") && !FIXTURE_SIBLING_EVENT_SUFFIXES.some((suffix) => slug.endsWith(`-${suffix}`));
 }
 

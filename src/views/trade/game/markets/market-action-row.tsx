@@ -21,7 +21,7 @@ import {
   resolveOutcomePrice,
   resolveSpreadVariant,
   resolveTotalVariant
-} from "@/views/trade/game/markets/fixture-market-actions";
+} from "./fixture-market-actions";
 
 const cardClass = "rounded-[12px] border border-[#EBEBEB] bg-white";
 

@@ -41,6 +41,13 @@ export function resolveFixtureBuyAskDisabledReason(
     : NO_ASK_LIQUIDITY_MESSAGE;
 }
 
+function resolveMergedLiveAsk(
+  liveAsk: number | undefined,
+  snapshotAsk: number | undefined,
+): number | undefined {
+  return isValidAskPrice(liveAsk) ? liveAsk : snapshotAsk;
+}
+
 export function mergeFixtureOutcomeLiveAsks(
   outcome: FixtureMarketOutcome,
   liveAsks: { yesAsk?: number; noAsk?: number } | undefined,
@@ -49,10 +56,13 @@ export function mergeFixtureOutcomeLiveAsks(
     return outcome;
   }
 
+  const yesAsk = resolveMergedLiveAsk(liveAsks.yesAsk, outcome.yesAsk);
+  const noAsk = resolveMergedLiveAsk(liveAsks.noAsk, outcome.noAsk);
+
   return {
     ...outcome,
-    yesAsk: liveAsks.yesAsk,
-    noAsk: liveAsks.noAsk,
-    price: isValidAskPrice(liveAsks.yesAsk) ? liveAsks.yesAsk : outcome.price,
+    yesAsk,
+    noAsk,
+    price: isValidAskPrice(yesAsk) ? yesAsk : outcome.price,
   };
 }

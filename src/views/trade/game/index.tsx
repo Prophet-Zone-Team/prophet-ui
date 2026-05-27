@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 
+import { MarketWsProvider } from "@/context/market-ws";
+import { isMockLiveFixtureEnabled } from "@/data/mock/live-fixture-simulation";
 import {
   TradeGameHeader,
   type TradeGameHeaderProps
@@ -33,6 +35,8 @@ export default function TradeGameView({
   relatedMatches,
   teamProfiles
 }: TradeGameViewProps) {
+  const marketWsEnabled = !isMockLiveFixtureEnabled();
+
   const sidebar = useMemo(() => {
     const focalTeamId =
       match.homeTeamId ?? gameSnapshot.homeTeamId ?? snapshots[0]?.team.id;
@@ -57,36 +61,38 @@ export default function TradeGameView({
   }, [gameSnapshot.homeTeamId, match.homeTeamId, relatedMatches, snapshots]);
 
   return (
-    <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2">
-      <div className="bg-black h-[258px] w-full absolute top-0 left-0" />
-      <TradeGameHeaderToolbar />
-      <div className={`${gameContentClass} pb-10 relative z-10`}>
-        <div className="shrink-0 w-[1080px] pt-2">
-          <div className="relative">
-            <TradeGameHeader
+    <MarketWsProvider enabled={marketWsEnabled}>
+      <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2">
+        <div className="bg-black h-[258px] w-full absolute top-0 left-0" />
+        <TradeGameHeaderToolbar />
+        <div className={`${gameContentClass} pb-10 relative z-10`}>
+          <div className="shrink-0 w-[1080px] pt-2">
+            <div className="relative">
+              <TradeGameHeader
+                match={match}
+                snapshots={snapshots}
+                teamProfiles={teamProfiles}
+              />
+            </div>
+            <GameMarketsSection
               match={match}
-              snapshots={snapshots}
-              teamProfiles={teamProfiles}
+              gameSnapshot={gameSnapshot}
+              fixtureMarkets={fixtureMarkets}
+              teamSnapshots={snapshots}
             />
           </div>
-          <GameMarketsSection
-            match={match}
-            gameSnapshot={gameSnapshot}
-            fixtureMarkets={fixtureMarkets}
-            teamSnapshots={snapshots}
-          />
-        </div>
-        <div className="mt-6 flex flex-col gap-4 w-[345px]">
-          <TradeWidget
-            variant="game"
-            gameSnapshot={gameSnapshot}
-            teamSnapshots={snapshots}
-          />
-          {sidebar.relatedGames.teamId ? (
-            <RelatedGames {...sidebar.relatedGames} />
-          ) : null}
+          <div className="mt-6 flex flex-col gap-4 w-[345px]">
+            <TradeWidget
+              variant="game"
+              gameSnapshot={gameSnapshot}
+              teamSnapshots={snapshots}
+            />
+            {sidebar.relatedGames.teamId ? (
+              <RelatedGames {...sidebar.relatedGames} />
+            ) : null}
+          </div>
         </div>
       </div>
-    </div>
+    </MarketWsProvider>
   );
 }

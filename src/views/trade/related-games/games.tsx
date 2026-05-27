@@ -31,7 +31,7 @@ export function RelatedGames({
       <h2 className={`${tradePanelTitleClass} px-4 py-3`}>Related Games</h2>
 
       {related.length > 0 ? (
-        <div className="flex max-h-[520px] flex-col gap-3 overflow-y-auto px-3">
+        <div className="flex flex-col gap-3 px-3">
           {related.map((match) => (
             <RelatedGameCard
               key={match.id}

@@ -3,9 +3,11 @@ import { describe, it } from "node:test";
 
 import {
   hasFixtureBuyAsk,
+  mergeFixtureOutcomeLiveAsks,
   NO_ASK_LIQUIDITY_MESSAGE,
   resolveFixtureBuyAskDisabledReason,
 } from "@/lib/market/fixture-ask-liquidity";
+import type { FixtureMarketOutcome } from "@/types/market";
 import { buildFixtureBidOrderPreview } from "@/lib/market/game-order";
 
 describe("fixture ask liquidity", () => {
@@ -46,5 +48,52 @@ describe("fixture ask liquidity", () => {
 
     assert.equal(preview.canSubmitRealOrder, false);
     assert.equal(preview.disabledReason, NO_ASK_LIQUIDITY_MESSAGE);
+  });
+
+  it("keeps snapshot asks when live asks are missing or invalid", () => {
+    const snapshot: FixtureMarketOutcome = {
+      id: "moneyline:home",
+      marketType: "moneyline",
+      category: "lines",
+      label: "Home",
+      side: "home",
+      probability: 55,
+      price: 0.55,
+      tokenId: "yes-token",
+      yesAsk: 0.55,
+      noAsk: 0.48,
+    };
+
+    const merged = mergeFixtureOutcomeLiveAsks(snapshot, {
+      yesAsk: undefined,
+      noAsk: undefined,
+    });
+
+    assert.equal(merged.yesAsk, 0.55);
+    assert.equal(merged.noAsk, 0.48);
+    assert.equal(hasFixtureBuyAsk(merged, "yes"), true);
+  });
+
+  it("applies valid live asks over snapshot values", () => {
+    const snapshot: FixtureMarketOutcome = {
+      id: "moneyline:home",
+      marketType: "moneyline",
+      category: "lines",
+      label: "Home",
+      side: "home",
+      probability: 55,
+      price: 0.55,
+      tokenId: "yes-token",
+      yesAsk: 0.55,
+      noAsk: 0.48,
+    };
+
+    const merged = mergeFixtureOutcomeLiveAsks(snapshot, {
+      yesAsk: 0.58,
+      noAsk: 0.45,
+    });
+
+    assert.equal(merged.yesAsk, 0.58);
+    assert.equal(merged.noAsk, 0.45);
   });
 });

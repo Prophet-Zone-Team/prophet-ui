@@ -35,7 +35,7 @@ function MatchSide({
       />
       <span
         className={cn(
-          "max-w-full truncate text-center text-base font-[556] leading-[19px]",
+          "max-w-full truncate text-center text-[16px] font-[500]",
           emphasized ? "text-black" : "text-[#909090]"
         )}
       >
@@ -74,7 +74,7 @@ export function RelatedGameCard({
       <Link href={gameTradeHref(match.id)} className="block">
         <div className="flex items-center justify-between">
           <MatchStatusBadge variant={statusVariant} size="sm" />
-          <span className="text-sm font-[556] leading-[17px] text-[#909090]">
+          <span className="text-[14px] font-[500] leading-[17px] text-[#909090]">
             {kickoffLabel}
           </span>
         </div>
@@ -85,7 +85,7 @@ export function RelatedGameCard({
             code={sides.home.code}
             emphasized={match.homeTeamId === highlightTeamId}
           />
-          <strong className="text-center text-[26px] font-[556] leading-[31px] text-black">
+          <strong className="text-center text-[26px] font-[500] leading-[31px] text-black">
             {scoreLabel}
           </strong>
           <MatchSide

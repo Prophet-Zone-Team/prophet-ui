@@ -176,7 +176,6 @@ export function formatScheduleKickoff(value: string | undefined): string {
   if (!value) {
     return "TBD";
   }
-  console.log("value", value);
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {

@@ -92,6 +92,10 @@ export class PolymarketMarketWsClient {
   private readonly orderbooks = new Map<string, MarketOrderbook>();
   private readonly tokenPrices = new Map<string, TokenBestPrices>();
   private readonly connectionListeners = new Set<(connected: boolean) => void>();
+  private connected = false;
+  private disposeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private static readonly DISPOSE_DELAY_MS = 250;
 
   subscribe(
     assetIds: string[],
@@ -140,7 +144,7 @@ export class PolymarketMarketWsClient {
 
   onConnectionChange(listener: (connected: boolean) => void): () => void {
     this.connectionListeners.add(listener);
-    listener(this.isConnected());
+    listener(this.connected);
 
     return () => {
       this.connectionListeners.delete(listener);
@@ -156,13 +160,23 @@ export class PolymarketMarketWsClient {
   }
 
   isConnected(): boolean {
-    return this.socket?.readyState === WebSocket.OPEN;
+    return this.connected;
+  }
+
+  private setConnected(next: boolean): void {
+    if (this.connected === next) {
+      return;
+    }
+
+    this.connected = next;
+    this.notifyConnectionChange(next);
   }
 
   dispose(): void {
     this.disposed = true;
     this.clearPingTimer();
     this.clearReconnectTimer();
+    this.clearDisposeTimer();
 
     if (this.socket) {
       this.socket.onopen = null;
@@ -173,10 +187,12 @@ export class PolymarketMarketWsClient {
       this.socket = null;
     }
 
-    this.notifyConnectionChange(false);
+    this.setConnected(false);
   }
 
   private resetIfDisposed(): void {
+    this.clearDisposeTimer();
+
     if (this.disposed) {
       this.disposed = false;
       this.reconnectAttempt = 0;
@@ -215,7 +231,7 @@ export class PolymarketMarketWsClient {
       this.hasInitialSubscription = false;
       this.startPingTimer();
       this.sendInitialSubscription();
-      this.notifyConnectionChange(true);
+      this.setConnected(true);
     };
 
     socket.onmessage = (message) => {
@@ -227,14 +243,14 @@ export class PolymarketMarketWsClient {
     };
 
     socket.onerror = () => {
-      this.notifyConnectionChange(false);
+      this.setConnected(false);
     };
 
     socket.onclose = () => {
       this.hasInitialSubscription = false;
       this.clearPingTimer();
       this.socket = null;
-      this.notifyConnectionChange(false);
+      this.setConnected(false);
       this.scheduleReconnect();
     };
   }
@@ -280,6 +296,26 @@ export class PolymarketMarketWsClient {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+  }
+
+  private clearDisposeTimer(): void {
+    if (this.disposeTimer) {
+      clearTimeout(this.disposeTimer);
+      this.disposeTimer = null;
+    }
+  }
+
+  private scheduleDispose(): void {
+    this.clearDisposeTimer();
+
+    this.disposeTimer = setTimeout(() => {
+      this.disposeTimer = null;
+
+      if (this.assetSubscriptions.size === 0) {
+        this.dispose();
+        clientInstance = null;
+      }
+    }, PolymarketMarketWsClient.DISPOSE_DELAY_MS);
   }
 
   private getActiveAssetIds(): string[] {
@@ -371,8 +407,7 @@ export class PolymarketMarketWsClient {
     }
 
     if (this.assetSubscriptions.size === 0) {
-      this.dispose();
-      clientInstance = null;
+      this.scheduleDispose();
       return;
     }
   }
@@ -414,20 +449,28 @@ export class PolymarketMarketWsClient {
   private handlePriceChangeEvent(event: PriceChangeEvent): void {
     for (const change of event.price_changes) {
       const existing = this.orderbooks.get(change.asset_id);
-      const next = existing
-        ? applyPriceChangeToBook(existing, change)
-        : undefined;
+      const next = applyPriceChangeToBook(existing, change);
 
       if (next) {
         this.orderbooks.set(change.asset_id, next);
       }
 
       const derived = bestPricesFromPriceChange(change);
-      this.updateTokenPrices(change.asset_id, {
-        bestBid: derived.bestBid ?? next?.bids[0]?.price,
-        bestAsk: derived.bestAsk ?? next?.asks[0]?.price,
+      const pricePatch: Partial<TokenBestPrices> = {
         updatedAt: new Date().toISOString(),
-      });
+      };
+      const bestBid = derived.bestBid ?? next?.bids[0]?.price;
+      const bestAsk = derived.bestAsk ?? next?.asks[0]?.price;
+
+      if (bestBid !== undefined) {
+        pricePatch.bestBid = bestBid;
+      }
+
+      if (bestAsk !== undefined) {
+        pricePatch.bestAsk = bestAsk;
+      }
+
+      this.updateTokenPrices(change.asset_id, pricePatch);
     }
   }
 
@@ -445,21 +488,37 @@ export class PolymarketMarketWsClient {
   }
 
   private handleBestBidAskEvent(event: BestBidAskEvent): void {
-    this.updateTokenPrices(event.asset_id, {
-      bestBid: parseOptionalPrice(event.best_bid),
-      bestAsk: parseOptionalPrice(event.best_ask),
+    const pricePatch: Partial<TokenBestPrices> = {
       updatedAt: new Date(Number(event.timestamp)).toISOString(),
-    });
+    };
+    const bestBid = parseOptionalPrice(event.best_bid);
+    const bestAsk = parseOptionalPrice(event.best_ask);
+
+    if (bestBid !== undefined) {
+      pricePatch.bestBid = bestBid;
+    }
+
+    if (bestAsk !== undefined) {
+      pricePatch.bestAsk = bestAsk;
+    }
+
+    this.updateTokenPrices(event.asset_id, pricePatch);
   }
 
   private updateTokenPrices(
     tokenId: string,
     patch: Partial<TokenBestPrices>
   ): void {
+    const definedPatch = pickDefinedTokenPriceFields(patch);
+
+    if (Object.keys(definedPatch).length === 0) {
+      return;
+    }
+
     const current = this.tokenPrices.get(tokenId) ?? {};
     const next: TokenBestPrices = {
       ...current,
-      ...patch,
+      ...definedPatch,
     };
 
     if (
@@ -480,8 +539,32 @@ export class PolymarketMarketWsClient {
   }
 }
 
+function pickDefinedTokenPriceFields(
+  patch: Partial<TokenBestPrices>
+): Partial<TokenBestPrices> {
+  const next: Partial<TokenBestPrices> = {};
+
+  if (patch.bestBid !== undefined) {
+    next.bestBid = patch.bestBid;
+  }
+
+  if (patch.bestAsk !== undefined) {
+    next.bestAsk = patch.bestAsk;
+  }
+
+  if (patch.lastTradePrice !== undefined) {
+    next.lastTradePrice = patch.lastTradePrice;
+  }
+
+  if (patch.updatedAt !== undefined) {
+    next.updatedAt = patch.updatedAt;
+  }
+
+  return next;
+}
+
 function applyPriceChangeToBook(
-  book: MarketOrderbook,
+  book: MarketOrderbook | undefined,
   change: PriceChangeEvent["price_changes"][number]
 ): MarketOrderbook | undefined {
   return applyPriceChangeEvent(book, {
