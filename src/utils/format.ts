@@ -156,3 +156,15 @@ export const formatNumber = (
 export const removeNumberEndZero = (value: string) => {
   return value.replace("-", "").replace(/\.?0+$/, "");
 };
+
+export function formatLongText(
+  text?: string,
+  front: number = 4,
+  ending: number = 2
+) {
+  if (!text) return text;
+  if (text.length <= front + ending) {
+    return text;
+  }
+  return `${text.slice(0, front)}...${text.slice(-ending)}`;
+}

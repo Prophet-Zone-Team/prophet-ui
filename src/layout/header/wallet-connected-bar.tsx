@@ -79,7 +79,7 @@ export function WalletConnectedBar({
           placement="BottomRight"
           trigger="Hover"
           content={
-            <div className="w-[120px] flex flex-col items-stretch gap-1 py-1 text-black text-sm font-[457] rounded-xl bg-white border border-[#EBEBEB] shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
+            <div className="w-[130px] flex flex-col items-stretch gap-1 py-1 text-black text-sm rounded-xl bg-white border border-[#EBEBEB] shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
               <button
                 type="button"
                 className="w-full text-left cursor-pointer hover:bg-[#999]/10 duration-150 px-3 py-2"
