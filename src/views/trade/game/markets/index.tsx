@@ -126,9 +126,7 @@ export function GameMarketsSection({
     enabled: isMockLiveFixtureEnabled(),
   });
   const { pricesByOutcomeId: apiPricesByOutcomeId } = useLiveFixtureTabPrices({
-    matchSlug: match.id,
-    tab,
-    lineKey: activeLineKey,
+    outcomes: activeTabOutcomes,
     enabled: effectiveLive && !isMockLiveFixtureEnabled(),
   });
   const pricesByOutcomeId = mockSimulation.isActive

@@ -1,0 +1,429 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+
+import {
+  formatProbability,
+  formatVolume
+} from "@/components/home/market-formatters";
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { useAuthOptional } from "@/context/auth";
+import { cn } from "@/lib/cn";
+import { formatScheduleKickoff } from "@/lib/market/schedule-match";
+import { gameTradeHref, teamTradeHref } from "@/lib/routes/trade";
+import { runFastBid, type FastBidStatus } from "@/lib/trading/run-fast-bid";
+import {
+  DEFAULT_FAST_BID_AMOUNT,
+  formatFastBidAmountDisplay,
+  useConfigHydrated,
+  useFastBidAmount,
+  useSetTradeOutcomeSide,
+  useSyncTradeTicketSnapshot
+} from "@/store";
+import { useSetTradeMatchOutcomeSide } from "@/store/trade-ticket-store";
+import type {
+  MatchOutcomeSide,
+  OrderOutcomeSide,
+  Team,
+  TeamMarketSnapshot,
+  WorldCupMatch
+} from "@/types/market";
+import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-control";
+import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-control";
+import { gameColors } from "@/views/trade/game/ui";
+
+export type TopAttentionCardBadge =
+  | "most_popular"
+  | "highest_volume"
+  | "dark_horse"
+  | "top_probability";
+
+const TOP_ATTENTION_BADGE_STYLES: Record<
+  TopAttentionCardBadge,
+  { label: string; color: string; backgroundColor: string }
+> = {
+  most_popular: {
+    label: "most popular",
+    color: "#FF6BBA",
+    backgroundColor: "rgba(255, 107, 186, 0.1)"
+  },
+  highest_volume: {
+    label: "highest volume",
+    color: "#3168FF",
+    backgroundColor: "rgba(49, 104, 255, 0.1)"
+  },
+  dark_horse: {
+    label: "dark horse",
+    color: "#9D84FF",
+    backgroundColor: "rgba(157, 132, 255, 0.1)"
+  },
+  top_probability: {
+    label: "top probability",
+    color: "#65AF14",
+    backgroundColor: "rgba(101, 175, 20, 0.1)"
+  }
+};
+
+const MATCH_OUTCOME_BUTTON_STYLES: Record<
+  MatchOutcomeSide,
+  { label: string; background: string }
+> = {
+  home: { label: "Win", background: gameColors.home },
+  draw: { label: "Draw", background: gameColors.draw },
+  away: { label: "Loss", background: gameColors.awayBar }
+};
+
+export type TopAttentionTeamCardProps = {
+  variant?: "team";
+  snapshot: TeamMarketSnapshot;
+  attention: number;
+  categoryLabel?: string;
+  badge?: TopAttentionCardBadge;
+  className?: string;
+};
+
+export type TopAttentionMatchCardProps = {
+  variant: "match";
+  match: WorldCupMatch;
+  homeTeam: Team;
+  awayTeam: Team;
+  attention: number;
+  volume: number;
+  probability: number;
+  className?: string;
+};
+
+export type TopAttentionCardProps =
+  | TopAttentionTeamCardProps
+  | TopAttentionMatchCardProps;
+
+const labelClassName = "text-[12px] font-[400] leading-[15px] text-[#909090]";
+const valueClassName =
+  "text-[18px] font-[500] leading-[23px] text-black mt-[2px]";
+
+const cardClassName =
+  "box-border flex h-[214px] w-[345px] max-w-full flex-col rounded-[12px] border border-[#EBEBEB] bg-white px-4 py-4";
+
+function formatAttention(value: number): string {
+  return new Intl.NumberFormat("en-US").format(Math.round(value));
+}
+
+export function TopAttentionCard(props: TopAttentionCardProps) {
+  if (props.variant === "match") {
+    return <TopAttentionMatchCard {...props} />;
+  }
+
+  return <TopAttentionTeamCard {...props} />;
+}
+
+function TopAttentionTeamCard({
+  snapshot,
+  attention,
+  categoryLabel = "FIFA World Cup",
+  badge,
+  className
+}: TopAttentionTeamCardProps) {
+  const { team, market } = snapshot;
+  const volumeLabel = `$${formatVolume(market.volume)}`;
+  const attentionLabel = `🔥${formatAttention(attention)}`;
+
+  return (
+    <article
+      className={cn(cardClassName, className)}
+      aria-label={`${team.name} top attention card`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <p className="m-0 text-[12px] font-[400] capitalize leading-[15px] text-[#909090]">
+          {categoryLabel}
+        </p>
+        <MarketBookmarkControl teamId={team.id} />
+      </div>
+
+      <div className="mt-2 flex min-w-0 items-center gap-2">
+        <TeamFlag
+          code={team.code}
+          name={team.name}
+          className="h-[26px] w-[26px] shrink-0 rounded-[4px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        />
+        <h3 className="m-0 truncate text-[16px] font-[500] leading-[20px] text-black">
+          {team.name}
+        </h3>
+        {badge ? <TopAttentionBadge badge={badge} /> : null}
+      </div>
+
+      <TopAttentionStatsRow
+        probability={formatProbability(market.probability)}
+        volume={volumeLabel}
+        attention={attentionLabel}
+      />
+
+      <div className="grid grid-cols-2 gap-2.5">
+        <OutcomeQuickBidButton snapshot={snapshot} side="yes" />
+        <OutcomeQuickBidButton snapshot={snapshot} side="no" />
+      </div>
+    </article>
+  );
+}
+
+function TopAttentionMatchCard({
+  match,
+  homeTeam,
+  awayTeam,
+  attention,
+  volume,
+  probability,
+  className
+}: TopAttentionMatchCardProps) {
+  const kickoffLabel = formatScheduleKickoff(match.kickoffAt);
+  const volumeLabel = `$${formatVolume(volume)}`;
+  const attentionLabel = `🔥${formatAttention(attention)}`;
+  const matchTitle = `${homeTeam.name} vs ${awayTeam.name}`;
+  return (
+    <article
+      className={cn(cardClassName, className)}
+      aria-label={`${matchTitle} top attention card`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <p className="m-0 text-[12px] font-[400] leading-[15px] text-[#909090]">
+          {kickoffLabel}
+        </p>
+        <MatchBookmarkControl matchId={match.id} />
+      </div>
+
+      <div className="mt-2 flex min-w-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-[4px]">
+          <TeamFlag
+            code={homeTeam.code}
+            name={homeTeam.name}
+            className="relative z-[1] h-[26px] w-[26px] rounded-[4px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          />
+          <TeamFlag
+            code={awayTeam.code}
+            name={awayTeam.name}
+            className="relative h-[26px] w-[26px] rounded-[4px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          />
+        </div>
+        <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-black">
+          {matchTitle}
+        </h3>
+      </div>
+
+      <TopAttentionStatsRow
+        probability={formatProbability(probability)}
+        volume={volumeLabel}
+        attention={attentionLabel}
+      />
+
+      <div className="grid grid-cols-3 gap-2">
+        {(["home", "draw", "away"] as const).map((outcomeSide) => (
+          <MatchOutcomeQuickBidButton
+            key={outcomeSide}
+            matchId={match.id}
+            outcomeSide={outcomeSide}
+            label={resolveMatchOutcomeButtonLabel(outcomeSide)}
+            background={MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].background}
+            matchLabel={matchTitle}
+          />
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function resolveMatchOutcomeButtonLabel(outcomeSide: MatchOutcomeSide): string {
+  return MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].label;
+}
+
+function TopAttentionStatsRow({
+  probability,
+  volume,
+  attention
+}: {
+  probability: string;
+  volume: string;
+  attention: string;
+}) {
+  return (
+    <div className="mt-6 grid flex-1 grid-cols-3 items-start gap-2">
+      <StatColumn label="Probability" value={probability} />
+      <StatColumn label="Volume" value={volume} />
+      <StatColumn label="Attention" value={attention} align="center" />
+    </div>
+  );
+}
+
+function TopAttentionBadge({ badge }: { badge: TopAttentionCardBadge }) {
+  const style = TOP_ATTENTION_BADGE_STYLES[badge];
+
+  return (
+    <span
+      className="shrink-0 rounded-[10px] px-2 py-0.5 text-[12px] font-[400] capitalize leading-[15px]"
+      style={{
+        color: style.color,
+        backgroundColor: style.backgroundColor
+      }}
+    >
+      {style.label}
+    </span>
+  );
+}
+
+function StatColumn({
+  label,
+  value,
+  align = "start"
+}: {
+  label: string;
+  value: string;
+  align?: "start" | "center";
+}) {
+  const alignmentClassName = align === "center" ? "text-center" : "text-left";
+
+  return (
+    <div className={cn("min-w-0", alignmentClassName)}>
+      <p className={cn("m-0 mt-0.5", labelClassName)}>{label}</p>
+      <p className={cn("m-0", valueClassName)}>{value}</p>
+    </div>
+  );
+}
+
+function MatchOutcomeQuickBidButton({
+  matchId,
+  outcomeSide,
+  label,
+  background,
+  matchLabel
+}: {
+  matchId: string;
+  outcomeSide: MatchOutcomeSide;
+  label: string;
+  background: string;
+  matchLabel: string;
+}) {
+  const router = useRouter();
+  const auth = useAuthOptional();
+  const fastBidAmount = useFastBidAmount();
+  const hasHydrated = useConfigHydrated();
+  const setMatchOutcomeSide = useSetTradeMatchOutcomeSide();
+  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isAuthenticated = auth?.isAuthenticated ?? false;
+  const regionRestricted = isAuthenticated && isRegionBlocked;
+  const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
+  const amountLabel = formatFastBidAmountDisplay(displayAmount);
+  const outcomeLabel = MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].label;
+  const buttonLabel = `${label} ${amountLabel}`;
+
+  function handleClick() {
+    if (regionRestricted) {
+      return;
+    }
+
+    setMatchOutcomeSide(outcomeSide);
+    router.push(gameTradeHref(matchId));
+  }
+
+  const button = (
+    <button
+      type="button"
+      disabled={regionRestricted}
+      aria-label={`${outcomeLabel} on ${matchLabel} at ${buttonLabel}`}
+      onClick={handleClick}
+      className={cn(
+        "inline-flex h-10 w-full items-center justify-center rounded-[8px]",
+        "truncate px-1 text-[14px] font-[500] leading-[18px] text-white",
+        "disabled:cursor-not-allowed disabled:opacity-70"
+      )}
+      style={{ backgroundColor: background }}
+    >
+      {buttonLabel}
+    </button>
+  );
+
+  return (
+    <RegionRestrictedControl restricted={regionRestricted}>
+      {button}
+    </RegionRestrictedControl>
+  );
+}
+
+function OutcomeQuickBidButton({
+  snapshot,
+  side
+}: {
+  snapshot: TeamMarketSnapshot;
+  side: OrderOutcomeSide;
+}) {
+  const router = useRouter();
+  const auth = useAuthOptional();
+  const fastBidAmount = useFastBidAmount();
+  const hasHydrated = useConfigHydrated();
+  const syncTeamSnapshot = useSyncTradeTicketSnapshot();
+  const setOutcomeSide = useSetTradeOutcomeSide();
+  const [status, setStatus] = useState<FastBidStatus>("idle");
+  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isAuthenticated = auth?.isAuthenticated ?? false;
+  const regionRestricted = isAuthenticated && isRegionBlocked;
+  const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
+  const isYes = side === "yes";
+  const amountLabel = formatFastBidAmountDisplay(displayAmount);
+
+  const buttonLabel = useMemo(() => {
+    if (status === "checking") {
+      return "Checking";
+    }
+
+    if (status === "submitting") {
+      return "Submitting";
+    }
+
+    return `${isYes ? "YES" : "NO"} ${amountLabel}`;
+  }, [amountLabel, isYes, status]);
+
+  async function handleClick() {
+    if (status === "checking" || status === "submitting" || regionRestricted) {
+      return;
+    }
+
+    if (isYes) {
+      await runFastBid({
+        snapshot,
+        amount: displayAmount,
+        auth,
+        router,
+        onStatusChange: setStatus
+      });
+      return;
+    }
+
+    syncTeamSnapshot(snapshot);
+    setOutcomeSide("no");
+    router.push(teamTradeHref(snapshot.team.id));
+  }
+
+  const button = (
+    <button
+      type="button"
+      disabled={
+        status === "checking" || status === "submitting" || regionRestricted
+      }
+      aria-label={`${isYes ? "Yes" : "No"} quick bid ${amountLabel} on ${snapshot.team.name}`}
+      onClick={() => void handleClick()}
+      className={cn(
+        "inline-flex h-10 w-full items-center justify-center rounded-[8px]",
+        "text-[14px] font-[500] leading-[18px] text-white",
+        "disabled:cursor-wait disabled:opacity-70",
+        isYes ? "bg-[#65AF14]" : "bg-[#FF674B]"
+      )}
+    >
+      {buttonLabel}
+    </button>
+  );
+
+  return (
+    <RegionRestrictedControl restricted={regionRestricted}>
+      {button}
+    </RegionRestrictedControl>
+  );
+}

@@ -12,6 +12,7 @@ import {
   livePricesToFixtureAsks,
 } from "@/data/mock/live-fixture-simulation";
 import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity";
+import { useMarketTokenPrices } from "@/hooks/market/use-market-token-prices";
 import { useMockLiveFixturePricesForOutcome } from "@/store/mock-live-fixture-store";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
 import {
@@ -68,7 +69,6 @@ import {
   deriveTradeActionLabel,
   ensureTradingReadyForBid,
   fetchConditionalTokenBalance,
-  fetchFixtureLiveAsks,
   fetchMarketAcceptingOrders,
   fetchMarketOutcomeShares,
   fetchReadinessForPreview,
@@ -165,9 +165,6 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     yes: 0,
     no: 0
   });
-  const [liveFixtureAsks, setLiveFixtureAsks] = useState<
-    { yesAsk?: number; noAsk?: number } | undefined
-  >();
   const mockLivePrices = useMockLiveFixturePricesForOutcome(
     selectedFixtureOutcome?.id,
   );
@@ -209,35 +206,45 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     );
   }, [input.variant, matchOutcomeSide, marketTokenDeps, selectedFixtureOutcome]);
 
-  useEffect(() => {
+  const fixtureWsEnabled =
+    input.variant === "game" &&
+    Boolean(selectedFixtureOutcome) &&
+    !isMockLiveFixtureEnabled();
+
+  const { pricesByTokenId: fixtureTokenPrices } = useMarketTokenPrices(
+    [selectedFixtureOutcome?.tokenId, selectedFixtureOutcome?.noTokenId],
+    {
+      enabled: fixtureWsEnabled,
+      customFeatureEnabled: true,
+    }
+  );
+
+  const liveFixtureAsks = useMemo(() => {
     if (input.variant !== "game" || !selectedFixtureOutcome) {
-      setLiveFixtureAsks(undefined);
-      return;
+      return undefined;
     }
 
     if (isMockLiveFixtureEnabled()) {
-      setLiveFixtureAsks(livePricesToFixtureAsks(mockLivePrices));
-      return;
+      return livePricesToFixtureAsks(mockLivePrices);
     }
 
-    let cancelled = false;
+    const yesAsk = selectedFixtureOutcome.tokenId
+      ? fixtureTokenPrices[selectedFixtureOutcome.tokenId]?.bestAsk
+      : undefined;
+    const noAsk = selectedFixtureOutcome.noTokenId
+      ? fixtureTokenPrices[selectedFixtureOutcome.noTokenId]?.bestAsk
+      : undefined;
 
-    void fetchFixtureLiveAsks(selectedFixtureOutcome).then((asks) => {
-      if (!cancelled) {
-        setLiveFixtureAsks(asks);
-      }
-    });
+    if (yesAsk === undefined && noAsk === undefined) {
+      return undefined;
+    }
 
-    return () => {
-      cancelled = true;
-    };
+    return { yesAsk, noAsk };
   }, [
+    fixtureTokenPrices,
     input.variant,
     mockLivePrices,
     selectedFixtureOutcome,
-    selectedFixtureOutcome?.id,
-    selectedFixtureOutcome?.noTokenId,
-    selectedFixtureOutcome?.tokenId,
   ]);
 
   const effectiveFixtureOutcome = useMemo(() => {

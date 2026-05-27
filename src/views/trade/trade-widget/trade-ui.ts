@@ -48,5 +48,5 @@ export const tradeQuickAmountClass = cn(
 
 export const tradeMarketButtonClass = cn(
   "flex h-8 shrink-0 items-center gap-1 rounded-md border border-prophet-line bg-white px-2.5",
-  "text-[18px] font-[500] leading-[17px] text-black"
+  "text-[14px] font-[400] leading-[17px] text-black"
 );

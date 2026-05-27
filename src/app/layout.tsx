@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/auth";
 import { AppHeader } from "@/layout/header";
 import "flag-icons/css/flag-icons.min.css";
 import "@/app/globals.css";
+import Script from "next/script";
 
 export const metadata = {
   title: "World Cup Prediction Terminal",
@@ -20,11 +21,15 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <Script
+        id="telegram-widget"
+        src="https://telegram.org/js/telegram-widget.js?22"
+      />
+      <body className="bg-[#F9FAFC] min-h-screen">
         <AuthProvider>
           <main className="min-h-screen overflow-x-hidden font-body">
             <AppHeader />
-            <div className="pt-[70px] bg-[#F9FAFC]">{children}</div>
+            <div className="pt-[70px]">{children}</div>
           </main>
           <Toaster />
         </AuthProvider>

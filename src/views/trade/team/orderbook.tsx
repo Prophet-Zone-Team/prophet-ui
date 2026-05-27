@@ -1,24 +1,11 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { fetchJson } from "@/lib/team/client-fetch";
 import { formatOrderbookPrice, formatShareSize } from "@/lib/market/order-math";
-
-interface OrderbookLevel {
-  price: number;
-  size: number;
-}
-
-interface MarketOrderbook {
-  tokenId: string;
-  bids: OrderbookLevel[];
-  asks: OrderbookLevel[];
-  marketPrice?: number;
-  updatedAt?: string;
-}
+import { useMarketOrderbook } from "@/hooks/market/use-market-orderbook";
 
 const MAX_ASK_ROWS = 8;
 const MAX_BID_ROWS = 8;
@@ -29,62 +16,8 @@ export interface OrderbookProps {
 }
 
 export function Orderbook({ tokenId, className }: OrderbookProps) {
-  const [book, setBook] = useState<MarketOrderbook | undefined>();
-  const [error, setError] = useState<string | undefined>();
-  const [loading, setLoading] = useState(false);
+  const { book, loading, error } = useMarketOrderbook(tokenId);
   const asksScrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!tokenId) {
-      setBook(undefined);
-      setError(undefined);
-      setLoading(false);
-      return;
-    }
-
-    const activeTokenId = tokenId;
-    let requestId = 0;
-    let ignore = false;
-
-    setBook(undefined);
-    setError(undefined);
-
-    async function load() {
-      const currentRequestId = ++requestId;
-      setLoading(true);
-
-      try {
-        const payload = await fetchJson<{ orderbook: MarketOrderbook }>(
-          `/api/market/orderbook?tokenId=${encodeURIComponent(activeTokenId)}`
-        );
-
-        if (ignore || currentRequestId !== requestId) {
-          return;
-        }
-        setBook(payload.orderbook);
-        setError(undefined);
-      } catch (loadError) {
-        if (ignore || currentRequestId !== requestId) {
-          return;
-        }
-
-        setError(
-          loadError instanceof Error ? loadError.message : String(loadError)
-        );
-        setBook(undefined);
-      } finally {
-        if (!ignore && currentRequestId === requestId) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      ignore = true;
-    };
-  }, [tokenId]);
 
   const asks = useMemo(
     () => [...(book?.asks ?? [])].slice(0, MAX_ASK_ROWS).reverse(),

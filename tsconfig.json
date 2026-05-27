@@ -33,6 +33,7 @@
     "*.mts",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "src/**/*.d.ts",
     "cloudflare-env.d.ts",
     ".next/types/**/*.ts"
   ],

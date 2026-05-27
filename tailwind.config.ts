@@ -65,11 +65,17 @@ const config: Config = {
         "match-status-pulse": {
           "0%, 100%": { transform: "scale(0.8)", opacity: "1" },
           "50%": { transform: "scale(1.25)", opacity: "0.55" }
+        },
+        "track-signal-feed-marquee": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" }
         }
       },
       animation: {
         "prophet-loading": "prophet-loading 1.5s ease-in-out infinite",
-        "match-status-pulse": "match-status-pulse 1.6s ease-in-out infinite"
+        "match-status-pulse": "match-status-pulse 1.6s ease-in-out infinite",
+        "track-signal-feed-marquee":
+          "track-signal-feed-marquee linear infinite"
       },
       backgroundSize: {
         "prophet-shimmer": "220% 100%"

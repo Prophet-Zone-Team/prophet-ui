@@ -52,12 +52,6 @@ export function TeamNewsSignalsPanel({ news, snapshot }: TeamNewsSignalsPanelPro
     <section className={teamPanelClass} aria-label="News-to-market signals">
       <div className={teamPanelHeadClass}>
         <h2 className={teamPanelTitleClass}>News-to-Market Signals</h2>
-        <Link
-          href="/feed"
-          className="text-xs font-[556] text-[#125afc] hover:opacity-80"
-        >
-          View all
-        </Link>
       </div>
       <div className="grid gap-3 p-4 sm:grid-cols-2">
         {signals.length > 0 ? (

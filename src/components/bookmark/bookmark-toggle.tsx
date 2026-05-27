@@ -108,7 +108,7 @@ export function BookmarkToggle({
       {!isTracked && tooltip && isTooltipVisible ? (
         <div
           role="tooltip"
-          className="absolute bottom-full left-[-20px] z-20 w-[min(384px,calc(100vw-2rem))] pb-2"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 z-20 w-[min(384px,calc(100vw-2rem))] pb-2"
         >
           {tooltip}
         </div>

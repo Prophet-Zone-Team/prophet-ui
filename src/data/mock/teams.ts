@@ -8,30 +8,206 @@ import type {
 } from "@/types/market";
 
 export const mockTeams: Team[] = [
-  { id: "argentina", name: "Argentina", code: "ARG", region: "South America", group: "A", fifaRank: 1 },
-  { id: "france", name: "France", code: "FRA", region: "Europe", group: "B", fifaRank: 2 },
-  { id: "brazil", name: "Brazil", code: "BRA", region: "South America", group: "C", fifaRank: 5 },
-  { id: "england", name: "England", code: "ENG", region: "Europe", group: "D", fifaRank: 4 },
-  { id: "spain", name: "Spain", code: "ESP", region: "Europe", group: "E", fifaRank: 3 },
-  { id: "germany", name: "Germany", code: "GER", region: "Europe", group: "F", fifaRank: 10 },
-  { id: "portugal", name: "Portugal", code: "POR", region: "Europe", group: "G", fifaRank: 6 },
-  { id: "netherlands", name: "Netherlands", code: "NED", region: "Europe", group: "H", fifaRank: 7 },
-  { id: "italy", name: "Italy", code: "ITA", region: "Europe", group: "A", fifaRank: 9 },
-  { id: "belgium", name: "Belgium", code: "BEL", region: "Europe", group: "B", fifaRank: 8 },
-  { id: "uruguay", name: "Uruguay", code: "URU", region: "South America", group: "C", fifaRank: 11 },
-  { id: "croatia", name: "Croatia", code: "CRO", region: "Europe", group: "D", fifaRank: 12 },
-  { id: "usa", name: "United States", code: "USA", region: "North America", group: "E", fifaRank: 16 },
-  { id: "mexico", name: "Mexico", code: "MEX", region: "North America", group: "F", fifaRank: 14 },
-  { id: "japan", name: "Japan", code: "JPN", region: "Asia", group: "G", fifaRank: 18 },
-  { id: "morocco", name: "Morocco", code: "MAR", region: "Africa", group: "H", fifaRank: 13 },
-  { id: "colombia", name: "Colombia", code: "COL", region: "South America", group: "A", fifaRank: 15 },
-  { id: "denmark", name: "Denmark", code: "DEN", region: "Europe", group: "B", fifaRank: 20 },
-  { id: "switzerland", name: "Switzerland", code: "SUI", region: "Europe", group: "C", fifaRank: 19 },
-  { id: "senegal", name: "Senegal", code: "SEN", region: "Africa", group: "D", fifaRank: 17 },
-  { id: "south-korea", name: "South Korea", code: "KOR", region: "Asia", group: "E", fifaRank: 23 },
-  { id: "australia", name: "Australia", code: "AUS", region: "Asia", group: "F", fifaRank: 24 },
-  { id: "canada", name: "Canada", code: "CAN", region: "North America", group: "G", fifaRank: 31 },
-  { id: "ghana", name: "Ghana", code: "GHA", region: "Africa", group: "H", fifaRank: 28 },
+  {
+    id: "argentina",
+    name: "Argentina",
+    code: "ARG",
+    region: "South America",
+    group: "A",
+    fifaRank: 1
+  },
+  {
+    id: "france",
+    name: "France",
+    code: "FRA",
+    region: "Europe",
+    group: "B",
+    fifaRank: 2
+  },
+  {
+    id: "brazil",
+    name: "Brazil",
+    code: "BRA",
+    region: "South America",
+    group: "C",
+    fifaRank: 5
+  },
+  {
+    id: "england",
+    name: "England",
+    code: "ENG",
+    region: "Europe",
+    group: "D",
+    fifaRank: 4
+  },
+  {
+    id: "spain",
+    name: "Spain",
+    code: "ESP",
+    region: "Europe",
+    group: "E",
+    fifaRank: 3
+  },
+  {
+    id: "germany",
+    name: "Germany",
+    code: "GER",
+    region: "Europe",
+    group: "F",
+    fifaRank: 10
+  },
+  {
+    id: "portugal",
+    name: "Portugal",
+    code: "POR",
+    region: "Europe",
+    group: "G",
+    fifaRank: 6
+  },
+  {
+    id: "netherlands",
+    name: "Netherlands",
+    code: "NED",
+    region: "Europe",
+    group: "H",
+    fifaRank: 7
+  },
+  {
+    id: "norway",
+    name: "Norway",
+    code: "NOR",
+    region: "Europe",
+    group: "I",
+    fifaRank: 22
+  },
+  {
+    id: "italy",
+    name: "Italy",
+    code: "ITA",
+    region: "Europe",
+    group: "A",
+    fifaRank: 9
+  },
+  {
+    id: "belgium",
+    name: "Belgium",
+    code: "BEL",
+    region: "Europe",
+    group: "B",
+    fifaRank: 8
+  },
+  {
+    id: "uruguay",
+    name: "Uruguay",
+    code: "URU",
+    region: "South America",
+    group: "C",
+    fifaRank: 11
+  },
+  {
+    id: "croatia",
+    name: "Croatia",
+    code: "CRO",
+    region: "Europe",
+    group: "D",
+    fifaRank: 12
+  },
+  {
+    id: "usa",
+    name: "United States",
+    code: "USA",
+    region: "North America",
+    group: "E",
+    fifaRank: 16
+  },
+  {
+    id: "mexico",
+    name: "Mexico",
+    code: "MEX",
+    region: "North America",
+    group: "F",
+    fifaRank: 14
+  },
+  {
+    id: "japan",
+    name: "Japan",
+    code: "JPN",
+    region: "Asia",
+    group: "G",
+    fifaRank: 18
+  },
+  {
+    id: "morocco",
+    name: "Morocco",
+    code: "MAR",
+    region: "Africa",
+    group: "H",
+    fifaRank: 13
+  },
+  {
+    id: "colombia",
+    name: "Colombia",
+    code: "COL",
+    region: "South America",
+    group: "A",
+    fifaRank: 15
+  },
+  {
+    id: "denmark",
+    name: "Denmark",
+    code: "DEN",
+    region: "Europe",
+    group: "B",
+    fifaRank: 20
+  },
+  {
+    id: "switzerland",
+    name: "Switzerland",
+    code: "SUI",
+    region: "Europe",
+    group: "C",
+    fifaRank: 19
+  },
+  {
+    id: "senegal",
+    name: "Senegal",
+    code: "SEN",
+    region: "Africa",
+    group: "D",
+    fifaRank: 17
+  },
+  {
+    id: "south-korea",
+    name: "South Korea",
+    code: "KOR",
+    region: "Asia",
+    group: "E",
+    fifaRank: 23
+  },
+  {
+    id: "australia",
+    name: "Australia",
+    code: "AUS",
+    region: "Asia",
+    group: "F",
+    fifaRank: 24
+  },
+  {
+    id: "canada",
+    name: "Canada",
+    code: "CAN",
+    region: "North America",
+    group: "G",
+    fifaRank: 31
+  },
+  {
+    id: "ghana",
+    name: "Ghana",
+    code: "GHA",
+    region: "Africa",
+    group: "H",
+    fifaRank: 28
+  }
 ];
 
 export const mockTeamMarketData: TeamMarketData[] = [
@@ -43,7 +219,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 18420000,
     sentiment: "bullish",
     bookmakerImpliedProbability: 15.9,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "france",
@@ -53,7 +229,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 17650000,
     sentiment: "volatile",
     bookmakerImpliedProbability: 18.6,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "brazil",
@@ -63,7 +239,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 15930000,
     sentiment: "bullish",
     bookmakerImpliedProbability: 13.1,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "england",
@@ -73,7 +249,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 13180000,
     sentiment: "bearish",
     bookmakerImpliedProbability: 15.2,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "spain",
@@ -83,7 +259,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 11440000,
     sentiment: "bullish",
     bookmakerImpliedProbability: 11.1,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "germany",
@@ -93,7 +269,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 10270000,
     sentiment: "volatile",
     bookmakerImpliedProbability: 8.4,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "portugal",
@@ -103,7 +279,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 9180000,
     sentiment: "neutral",
     bookmakerImpliedProbability: 9.6,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "netherlands",
@@ -113,7 +289,17 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 7440000,
     sentiment: "bullish",
     bookmakerImpliedProbability: 6.2,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
+  },
+  {
+    teamId: "norway",
+    probability: 3.2,
+    change24h: 0.5,
+    change7d: 1.1,
+    volume: 4120000,
+    sentiment: "neutral",
+    bookmakerImpliedProbability: 2.8,
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "italy",
@@ -123,7 +309,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 6800000,
     sentiment: "bearish",
     bookmakerImpliedProbability: 8.3,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "belgium",
@@ -133,7 +319,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 5220000,
     sentiment: "bearish",
     bookmakerImpliedProbability: 6.7,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "uruguay",
@@ -143,7 +329,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 4890000,
     sentiment: "bullish",
     bookmakerImpliedProbability: 3.8,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "croatia",
@@ -153,7 +339,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 3770000,
     sentiment: "neutral",
     bookmakerImpliedProbability: 4.9,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "usa",
@@ -163,7 +349,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 8310000,
     sentiment: "volatile",
     bookmakerImpliedProbability: 2.4,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "mexico",
@@ -173,7 +359,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 6420000,
     sentiment: "bearish",
     bookmakerImpliedProbability: 4.5,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "japan",
@@ -183,7 +369,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 3940000,
     sentiment: "bullish",
     bookmakerImpliedProbability: 1.8,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "morocco",
@@ -193,7 +379,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 3620000,
     sentiment: "neutral",
     bookmakerImpliedProbability: 3.4,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "colombia",
@@ -203,7 +389,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 3160000,
     sentiment: "bullish",
     bookmakerImpliedProbability: 2.1,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "denmark",
@@ -213,7 +399,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 2410000,
     sentiment: "neutral",
     bookmakerImpliedProbability: 2.8,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "switzerland",
@@ -223,7 +409,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 1940000,
     sentiment: "neutral",
     bookmakerImpliedProbability: 2.2,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "senegal",
@@ -233,7 +419,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 1810000,
     sentiment: "bullish",
     bookmakerImpliedProbability: 1.1,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "south-korea",
@@ -243,7 +429,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 1560000,
     sentiment: "bearish",
     bookmakerImpliedProbability: 1.9,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "australia",
@@ -253,7 +439,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 980000,
     sentiment: "neutral",
     bookmakerImpliedProbability: 1.3,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "canada",
@@ -263,7 +449,7 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 2120000,
     sentiment: "volatile",
     bookmakerImpliedProbability: 0.5,
-    updatedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z"
   },
   {
     teamId: "ghana",
@@ -273,8 +459,8 @@ export const mockTeamMarketData: TeamMarketData[] = [
     volume: 870000,
     sentiment: "bearish",
     bookmakerImpliedProbability: 1,
-    updatedAt: "2026-05-11T10:00:00.000Z",
-  },
+    updatedAt: "2026-05-11T10:00:00.000Z"
+  }
 ];
 
 export const mockNewsEvents: NewsEvent[] = [

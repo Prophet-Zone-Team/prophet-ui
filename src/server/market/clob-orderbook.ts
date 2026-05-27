@@ -1,47 +1,14 @@
 import "server-only";
 
+import {
+  type MarketOrderbook,
+  parseLevels,
+  resolveMarketPrice,
+} from "@/lib/market/orderbook-levels";
 import { getTradingHost } from "@/server/trading/clob-auth";
 import { serverFetch } from "@/server/trading/server-fetch";
 
-export interface OrderbookLevel {
-  price: number;
-  size: number;
-}
-
-export interface MarketOrderbook {
-  tokenId: string;
-  bids: OrderbookLevel[];
-  asks: OrderbookLevel[];
-  marketPrice?: number;
-  updatedAt: string;
-}
-
-function parseLevels(
-  levels: Array<{ price?: unknown; size?: unknown }> | undefined,
-  descending: boolean
-): OrderbookLevel[] {
-  if (!levels?.length) {
-    return [];
-  }
-
-  const parsed = levels
-    .map((level) => ({
-      price: Number(level.price),
-      size: Number(level.size)
-    }))
-    .filter(
-      (level) =>
-        Number.isFinite(level.price) &&
-        level.price > 0 &&
-        level.price < 1 &&
-        Number.isFinite(level.size) &&
-        level.size > 0
-    );
-
-  parsed.sort((a, b) => (descending ? b.price - a.price : a.price - b.price));
-
-  return parsed.slice(0, 12);
-}
+export type { MarketOrderbook, OrderbookLevel } from "@/lib/market/orderbook-levels";
 
 export async function fetchMarketOrderbook(
   tokenId: string
@@ -62,18 +29,12 @@ export async function fetchMarketOrderbook(
 
   const bids = parseLevels(book.bids, true);
   const asks = parseLevels(book.asks, false);
-  const bestBid = bids[0]?.price;
-  const bestAsk = asks[0]?.price;
-  const marketPrice =
-    bestBid !== undefined && bestAsk !== undefined
-      ? (bestBid + bestAsk) / 2
-      : bestBid ?? bestAsk;
 
   return {
     tokenId,
     bids,
     asks,
-    marketPrice,
-    updatedAt: new Date().toISOString()
+    marketPrice: resolveMarketPrice(bids, asks),
+    updatedAt: new Date().toISOString(),
   };
 }

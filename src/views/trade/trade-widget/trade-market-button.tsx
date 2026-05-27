@@ -97,7 +97,7 @@ export function TradeMarketButton({ value, onChange }: TradeMarketButtonProps) {
                 aria-selected={isSelected}
                 title={option.description}
                 className={cn(
-                  "block w-full px-3 py-1.5 text-left text-sm font-[556] leading-[17px] transition-colors",
+                  "block w-full px-3 py-1.5 text-left text-[14px] font-[400] leading-[17px] transition-colors",
                   isSelected
                     ? "bg-[#fafbfc] text-black"
                     : "text-prophet-muted hover:bg-[#fafbfc] hover:text-black"
