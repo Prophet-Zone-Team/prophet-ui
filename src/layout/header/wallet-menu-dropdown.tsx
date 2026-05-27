@@ -33,6 +33,7 @@ const WALLET_MENU_DROPDOWN_TRANSITION = {
 
 export interface WalletMenuDropdownProps {
   polymarketAddress: string;
+  isPrivateMode?: boolean;
   onClose: () => void;
   onLogout: () => void | Promise<void>;
   onOpenFastBid: () => void;
@@ -42,7 +43,8 @@ export function WalletMenuDropdown({
   polymarketAddress,
   onClose,
   onLogout,
-  onOpenFastBid
+  onOpenFastBid,
+  isPrivateMode,
 }: WalletMenuDropdownProps) {
   const [copied, setCopied] = useState(false);
   const fastBidAmount = useFastBidAmount();
@@ -87,41 +89,47 @@ export function WalletMenuDropdown({
         </button>
       </div>
 
-      <Link
-        href="/portfolio"
-        role="menuitem"
-        className={walletMenuItemClass}
-        onClick={onClose}
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-[14px]">
-            <PortfolioIcon />
-          </div>
-          <span className="flex-1">Portfolio</span>
-        </div>
-        <RightArrowIcon />
-      </Link>
+      {
+        !isPrivateMode && (
+          <>
+            <Link
+              href="/portfolio"
+              role="menuitem"
+              className={walletMenuItemClass}
+              onClick={onClose}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-[14px]">
+                  <PortfolioIcon />
+                </div>
+                <span className="flex-1">Portfolio</span>
+              </div>
+              <RightArrowIcon />
+            </Link>
 
-      <button
-        type="button"
-        role="menuitem"
-        className={walletMenuItemClass}
-        onClick={() => {
-          onClose();
-          onOpenFastBid();
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-[14px]">
-            <FastBidIcon />
-          </div>
-          <span>Fast Bid</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="shrink-0 text-sm text-black">{fastBidDisplay}</span>
-          <RightArrowIcon />
-        </div>
-      </button>
+            <button
+              type="button"
+              role="menuitem"
+              className={walletMenuItemClass}
+              onClick={() => {
+                onClose();
+                onOpenFastBid();
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-[14px]">
+                  <FastBidIcon />
+                </div>
+                <span>Fast Bid</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-sm text-black">{fastBidDisplay}</span>
+                <RightArrowIcon />
+              </div>
+            </button>
+          </>
+        )
+      }
 
       <button
         type="button"

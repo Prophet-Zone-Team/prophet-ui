@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Check, Loader2 } from "lucide-react";
 
 import { Modal } from "@/components/ui/modal";
@@ -11,6 +11,7 @@ import {
 } from "@/lib/trading/trading-eligibility-client";
 import type { TradingLoginStep } from "@/lib/trading/trading-login";
 import type { AuthContextValue } from "@/context/auth/auth-context";
+import { usePathname } from "next/navigation";
 
 interface LoginModalProps {
   auth: Pick<
@@ -88,9 +89,14 @@ export function LoginModal({ auth }: LoginModalProps) {
   const showPolygonHint = Boolean(error) && /chainId|137|polygon/i.test(error ?? "");
   const showRestrictedView = isRegionBlocked && !loginInProgress;
 
+  const pathname = usePathname();
+  const isPrivateMode = useMemo(() => {
+    return [/^\/private/].some((reg) => reg.test(pathname));
+  }, [pathname]);
+
   return (
     <Modal
-      open={hydrated && loginModalOpen}
+      open={hydrated && loginModalOpen && !isPrivateMode}
       onClose={() => void closeLogin()}
       ariaLabel={showRestrictedView ? "Trading unavailable" : "Enable trading"}
       hideCloseButton={loginInProgress}
@@ -102,109 +108,109 @@ export function LoginModal({ auth }: LoginModalProps) {
           onClose={() => void closeLogin()}
         />
       ) : (
-      <div className="flex flex-col gap-5">
-        <div>
-          <h2 className="text-lg font-extrabold text-prophet-ink">Enable trading</h2>
-          <p className="mt-1 text-sm text-prophet-muted">
-            Complete setup with your own wallet. Market data only — not financial advice.
-          </p>
-        </div>
+        <div className="flex flex-col gap-5">
+          <div>
+            <h2 className="text-lg font-extrabold text-prophet-ink">Enable trading</h2>
+            <p className="mt-1 text-sm text-prophet-muted">
+              Complete setup with your own wallet. Market data only — not financial advice.
+            </p>
+          </div>
 
-        <ol className="flex flex-col gap-0">
-          {SETUP_STEPS.map((step, index) => {
-            const state = getSetupStepState(step.id, {
-              session,
-              setupSteps,
-              loginStep,
-              loginInProgress,
-              readiness,
-            });
-            const isLast = index === SETUP_STEPS.length - 1;
+          <ol className="flex flex-col gap-0">
+            {SETUP_STEPS.map((step, index) => {
+              const state = getSetupStepState(step.id, {
+                session,
+                setupSteps,
+                loginStep,
+                loginInProgress,
+                readiness,
+              });
+              const isLast = index === SETUP_STEPS.length - 1;
 
-            return (
-              <li key={step.id} className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <StepIcon state={state} />
-                  {!isLast ? (
-                    <span
-                      className={cn(
-                        "my-1 w-px flex-1 min-h-6",
-                        state === "done" ? "bg-[#0d69ff]" : "bg-prophet-line",
-                      )}
-                      aria-hidden="true"
-                    />
-                  ) : null}
-                </div>
-
-                <div className={cn("min-w-0 flex-1", !isLast && "pb-4")}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p
+              return (
+                <li key={step.id} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <StepIcon state={state} />
+                    {!isLast ? (
+                      <span
                         className={cn(
-                          "text-sm font-semibold",
-                          state === "done" || state === "active"
-                            ? "text-prophet-ink"
-                            : "text-prophet-muted",
-                          state === "failed" && "text-prophet-red",
+                          "my-1 w-px flex-1 min-h-6",
+                          state === "done" ? "bg-[#0d69ff]" : "bg-prophet-line",
                         )}
-                      >
-                        {step.label}
-                      </p>
-                      <p className="mt-0.5 text-xs text-prophet-muted">
-                        {step.id === "deploy_wallet"
-                          ? getDeployWalletDescription({
+                        aria-hidden="true"
+                      />
+                    ) : null}
+                  </div>
+
+                  <div className={cn("min-w-0 flex-1", !isLast && "pb-4")}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p
+                          className={cn(
+                            "text-sm font-semibold",
+                            state === "done" || state === "active"
+                              ? "text-prophet-ink"
+                              : "text-prophet-muted",
+                            state === "failed" && "text-prophet-red",
+                          )}
+                        >
+                          {step.label}
+                        </p>
+                        <p className="mt-0.5 text-xs text-prophet-muted">
+                          {step.id === "deploy_wallet"
+                            ? getDeployWalletDescription({
                               loginStep,
                               readiness,
                               session,
                             })
-                          : step.description}
-                      </p>
+                            : step.description}
+                        </p>
+                      </div>
+
+                      <StepAction
+                        stepId={step.id}
+                        state={state}
+                        setupSteps={setupSteps}
+                        loginStep={loginStep}
+                        loginInProgress={loginInProgress}
+                        session={session}
+                        readiness={readiness}
+                        onConnectWallet={() => void connectWallet()}
+                        onSignClob={() => void signClobCredentials()}
+                        onSignTokens={() => void signTokenApprovals()}
+                        onRefresh={() => void refreshSession()}
+                      />
                     </div>
-
-                    <StepAction
-                      stepId={step.id}
-                      state={state}
-                      setupSteps={setupSteps}
-                      loginStep={loginStep}
-                      loginInProgress={loginInProgress}
-                      session={session}
-                      readiness={readiness}
-                      onConnectWallet={() => void connectWallet()}
-                      onSignClob={() => void signClobCredentials()}
-                      onSignTokens={() => void signTokenApprovals()}
-                      onRefresh={() => void refreshSession()}
-                    />
                   </div>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+                </li>
+              );
+            })}
+          </ol>
 
-        {error ? (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-prophet-red">
-            {error}
-          </p>
-        ) : null}
+          {error ? (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-prophet-red">
+              {error}
+            </p>
+          ) : null}
 
-        {showPolygonHint ? (
-          <p className="rounded-lg border border-prophet-line bg-[#fafbfc] px-3 py-2 text-xs text-prophet-muted">
-            {POLYGON_HINT}
-          </p>
-        ) : null}
+          {showPolygonHint ? (
+            <p className="rounded-lg border border-prophet-line bg-[#fafbfc] px-3 py-2 text-xs text-prophet-muted">
+              {POLYGON_HINT}
+            </p>
+          ) : null}
 
-        {isAuthenticated ? (
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="rounded-lg bg-gradient-to-br from-[#0d69ff] to-[#124cf0] px-4 py-2 text-sm font-extrabold text-white"
-              onClick={() => void closeLogin()}
-            >
-              Done
-            </button>
-          </div>
-        ) : null}
-      </div>
+          {isAuthenticated ? (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="rounded-lg bg-gradient-to-br from-[#0d69ff] to-[#124cf0] px-4 py-2 text-sm font-extrabold text-white"
+                onClick={() => void closeLogin()}
+              >
+                Done
+              </button>
+            </div>
+          ) : null}
+        </div>
       )}
     </Modal>
   );

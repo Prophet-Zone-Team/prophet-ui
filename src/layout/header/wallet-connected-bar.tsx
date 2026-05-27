@@ -1,4 +1,3 @@
-import Popover from "@/components/popover";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import {
@@ -17,6 +16,7 @@ export interface WalletConnectedBarProps {
   balanceDisplay: string;
   isMenuOpen: boolean;
   regionRestricted?: boolean;
+  isPrivateMode?: boolean;
   onDeposit: () => void;
   onPrivateTopup: () => void;
   onPrivateBalanceClick: () => void;
@@ -31,7 +31,8 @@ export function WalletConnectedBar({
   onDeposit,
   onPrivateTopup,
   onPrivateBalanceClick,
-  onToggleMenu
+  onToggleMenu,
+  isPrivateMode,
 }: WalletConnectedBarProps) {
   const popoverRef = useRef<any>(null);
 
@@ -66,6 +67,10 @@ export function WalletConnectedBar({
       Deposit
     </button>
   );
+
+  if (isPrivateMode) {
+    return null;
+  }
 
   return (
     <div className={walletConnectedBarClass}>

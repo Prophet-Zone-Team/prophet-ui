@@ -33,7 +33,7 @@ export function PrivateTopupOnboarding({
 
   const handleProceed = useCallback(() => {
     closeAll();
-    router.push(`https://${PRIVATE_MODE_HOSTNAME}`);
+    window.location.href = `https://${PRIVATE_MODE_HOSTNAME}/private`;
   }, [closeAll, router]);
 
   const handleChangeWallet = useCallback(async () => {

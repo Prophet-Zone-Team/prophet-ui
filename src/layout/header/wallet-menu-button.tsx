@@ -32,7 +32,13 @@ const LOGIN_STEP_LABELS = {
   verifying_readiness: "Verifying readiness…",
 } as const;
 
-export function WalletMenuButton() {
+interface WalletMenuButtonProps {
+  isPrivateMode?: boolean;
+}
+
+export function WalletMenuButton(props: WalletMenuButtonProps) {
+  const { isPrivateMode } = props;
+
   const menuRef = useRef<HTMLDivElement>(null);
   const {
     session,
@@ -152,6 +158,7 @@ export function WalletMenuButton() {
         onPrivateTopup={() => setPrivateTopupIntroOpen(true)}
         onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
         onToggleMenu={() => setIsOpen((value) => !value)}
+        isPrivateMode={isPrivateMode}
       />
 
       <AnimatePresence>
@@ -162,6 +169,7 @@ export function WalletMenuButton() {
             onClose={() => setIsOpen(false)}
             onLogout={logout}
             onOpenFastBid={() => setFastBidOpen(true)}
+            isPrivateMode={isPrivateMode}
           />
         ) : null}
       </AnimatePresence>
