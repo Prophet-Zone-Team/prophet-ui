@@ -28,6 +28,11 @@
       "pattern": "dev.prophet.zone",
       "zone_name": "prophet.zone",
       "custom_domain": true
+    },
+    {
+      "pattern": "private-test.prophet.zone",
+      "zone_name": "prophet.zone",
+      "custom_domain": true
     }
   ],
   "triggers": {

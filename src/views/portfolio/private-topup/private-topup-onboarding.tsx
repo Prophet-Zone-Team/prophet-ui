@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { useAuth } from "@/context/auth";
 import { PrivateTopupGuideDialog } from "@/views/portfolio/private-topup/private-topup-guide-dialog";
 import { PrivateTopupIntroDialog } from "@/views/portfolio/private-topup/private-topup-intro-dialog";
+import { PRIVATE_MODE_HOSTNAME } from "@/config/funding";
 
 export interface PrivateTopupOnboardingProps {
   introOpen: boolean;
@@ -32,7 +33,7 @@ export function PrivateTopupOnboarding({
 
   const handleProceed = useCallback(() => {
     closeAll();
-    router.push("/portfolio/private-topup");
+    router.push(`https://${PRIVATE_MODE_HOSTNAME}`);
   }, [closeAll, router]);
 
   const handleChangeWallet = useCallback(async () => {

@@ -19,6 +19,7 @@ import {
   privateTopupPageClass,
 } from "@/views/portfolio/private-topup/private-topup-ui";
 import { TopupWalletCard } from "@/views/portfolio/private-topup/topup-wallet-card";
+import { MAIN_HOSTNAME } from "@/config/funding";
 
 export function PrivateTopupPage() {
   const { session } = useAuth();
@@ -115,7 +116,10 @@ export function PrivateTopupPage() {
             onTopUp={() => setDialogOpen(true)}
           />
 
-          <Link href="/fifa" className={privateTopupGetStartedLinkClass}>
+          <Link
+            href={`https://${MAIN_HOSTNAME}/fifa`}
+            className={privateTopupGetStartedLinkClass}
+          >
             <span>Starts to get Prophet</span>
             <ChevronRight aria-hidden />
           </Link>
