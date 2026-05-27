@@ -9,6 +9,14 @@ const MAX_PRICE = 0.99;
 
 export const LIMIT_BUY_MIN_SHARES = 5;
 
+export function isTakeProfitLimitAvailable(shareSize: number): boolean {
+  return Number.isFinite(shareSize) && shareSize >= LIMIT_BUY_MIN_SHARES;
+}
+
+export function formatTakeProfitLimitDisabledMessage(): string {
+  return `Take profit limit requires a market buy of at least ${LIMIT_BUY_MIN_SHARES} shares.`;
+}
+
 export interface OrderEstimateInput {
   side: OrderOutcomeSide;
   tradeSide?: BidTradeSide;
@@ -56,6 +64,24 @@ export function normalizeLimitPrice(price: number): number {
   }
 
   return roundPrice(clamp(price, MIN_PRICE, MAX_PRICE));
+}
+
+export const TAKE_PROFIT_LIMIT_DEFAULT_MULTIPLIER = 1.2;
+
+export function deriveDefaultTakeProfitLimitPrice(
+  purchasePrice: number
+): number {
+  if (!Number.isFinite(purchasePrice) || purchasePrice <= 0) {
+    return MIN_PRICE;
+  }
+
+  return normalizeLimitPrice(
+    purchasePrice * TAKE_PROFIT_LIMIT_DEFAULT_MULTIPLIER
+  );
+}
+
+export function formatTakeProfitLimitPriceString(purchasePrice: number): string {
+  return deriveDefaultTakeProfitLimitPrice(purchasePrice).toFixed(3);
 }
 
 export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate {

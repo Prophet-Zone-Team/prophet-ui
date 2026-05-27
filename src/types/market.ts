@@ -615,7 +615,17 @@ export interface GameFixtureChartPoint {
   away: number;
 }
 
+export interface GameFixtureBinaryChartPoint {
+  matchId: string;
+  timestamp: string;
+  label: string;
+  primary: number;
+  secondary: number;
+}
+
 export type GameFixtureChartTimeRange = "1D" | "1W" | "1M" | "all";
+
+export type FixtureChartKind = "moneyline" | "halftime" | "total" | "spread";
 
 export interface GameMatchChartEvent {
   minute: number;

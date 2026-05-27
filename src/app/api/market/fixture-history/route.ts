@@ -1,16 +1,24 @@
 import { NextResponse } from "next/server";
 
-import { getFootballMatches } from "@/data/providers/football-matches";
-import { findWorldCupMatch } from "@/lib/market/game-market-snapshot";
+import { getFootballMatchBySlug } from "@/data/providers/football-matches";
 import {
+  attachHistoryToBinaryInputs,
+  attachHistoryToTernaryInputs,
+  resolveFixtureChartTokens
+} from "@/lib/market/fixture-chart-tokens";
+import {
+  buildBinaryFixtureChartPoints,
   buildFixtureChartPoints,
-  mapUiRangeToClobInterval,
+  mapUiRangeToClobInterval
 } from "@/lib/market/fixture-probability-chart";
 import {
   fetchBatchTokenPriceHistory,
   type FixtureHistoryInterval,
 } from "@/server/market/clob-prices-history";
-import type { GameFixtureChartTimeRange, MatchOutcomeSide } from "@/types/market";
+import type {
+  FixtureChartKind,
+  GameFixtureChartTimeRange
+} from "@/types/market";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +32,11 @@ interface CachedFixtureHistoryResponse {
 interface FixtureHistoryResponse {
   matchSlug: string;
   interval: FixtureHistoryInterval;
+  chartKind: FixtureChartKind;
+  lineKey?: string;
+  chartMode: "ternary" | "binary";
   points: ReturnType<typeof buildFixtureChartPoints>;
+  binaryPoints: ReturnType<typeof buildBinaryFixtureChartPoints>;
   updatedAt: string;
   volume?: number;
 }
@@ -33,6 +45,12 @@ const fixtureHistoryCache = new Map<string, CachedFixtureHistoryResponse>();
 
 const VALID_UI_RANGES: GameFixtureChartTimeRange[] = ["1D", "1W", "1M", "all"];
 const VALID_INTERVALS: FixtureHistoryInterval[] = ["1h", "1d", "1w", "1m", "max", "all"];
+const VALID_CHART_KINDS: FixtureChartKind[] = [
+  "moneyline",
+  "halftime",
+  "total",
+  "spread"
+];
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -41,6 +59,10 @@ export async function GET(request: Request) {
   const rangeParam = url.searchParams.get("range")?.trim() as
     | GameFixtureChartTimeRange
     | undefined;
+  const chartKindParam = url.searchParams.get("chartKind")?.trim() as
+    | FixtureChartKind
+    | undefined;
+  const lineKey = url.searchParams.get("lineKey")?.trim() || undefined;
 
   if (!matchSlug) {
     return NextResponse.json({ error: "matchSlug is required." }, { status: 400 });
@@ -55,7 +77,12 @@ export async function GET(request: Request) {
     );
   }
 
-  const cacheKey = `${matchSlug}:${interval}`;
+  const chartKind =
+    chartKindParam && VALID_CHART_KINDS.includes(chartKindParam)
+      ? chartKindParam
+      : "moneyline";
+
+  const cacheKey = `${matchSlug}:${interval}:${chartKind}:${lineKey ?? ""}`;
   const cached = fixtureHistoryCache.get(cacheKey);
 
   if (cached && cached.expiresAt > Date.now()) {
@@ -63,47 +90,54 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { matches } = await getFootballMatches();
-    const match = findWorldCupMatch(matchSlug, matches);
+    const match = await getFootballMatchBySlug(matchSlug);
 
     if (!match) {
       return NextResponse.json({ error: "Match not found." }, { status: 404 });
     }
 
-    const outcomes = match.polymarket?.moneyline.outcomes ?? [];
-    const tokenOutcomes = outcomes.filter(
-      (outcome): outcome is typeof outcome & { tokenId: string } =>
-        Boolean(outcome.tokenId),
+    const tokenResolution = resolveFixtureChartTokens(
+      match,
+      chartKind,
+      lineKey
     );
 
-    if (tokenOutcomes.length === 0) {
+    if (!tokenResolution) {
       return NextResponse.json(
-        { error: "Match moneyline token IDs are unavailable." },
-        { status: 404 },
+        { error: `Chart tokens unavailable for ${chartKind}.` },
+        { status: 404 }
       );
     }
 
+    const tokenIds = tokenResolution.inputs.map((input) => input.tokenId);
     const historyByToken = await fetchBatchTokenPriceHistory({
-      markets: tokenOutcomes.map((outcome) => outcome.tokenId),
-      interval,
+      markets: tokenIds,
+      interval
     });
-
-    const points = buildFixtureChartPoints(
-      match.id,
-      tokenOutcomes.map((outcome) => ({
-        side: outcome.side as MatchOutcomeSide,
-        tokenId: outcome.tokenId,
-        history: historyByToken.get(outcome.tokenId) ?? [],
-      })),
-    );
 
     const payload: FixtureHistoryResponse = {
       matchSlug,
       interval,
-      points,
+      chartKind,
+      lineKey,
+      chartMode: tokenResolution.mode,
+      points: [],
+      binaryPoints: [],
       updatedAt: new Date().toISOString(),
-      volume: match.polymarket?.volume,
+      volume: match.polymarket?.volume
     };
+
+    if (tokenResolution.mode === "ternary") {
+      payload.points = buildFixtureChartPoints(
+        match.id,
+        attachHistoryToTernaryInputs(tokenResolution.inputs, historyByToken)
+      );
+    } else {
+      payload.binaryPoints = buildBinaryFixtureChartPoints(
+        match.id,
+        attachHistoryToBinaryInputs(tokenResolution.inputs, historyByToken)
+      );
+    }
 
     fixtureHistoryCache.set(cacheKey, {
       payload,

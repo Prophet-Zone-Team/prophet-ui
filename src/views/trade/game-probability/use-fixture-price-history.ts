@@ -2,31 +2,53 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import type { GameFixtureChartPoint, GameFixtureChartTimeRange } from "@/types/market";
+import type {
+  FixtureChartKind,
+  GameFixtureBinaryChartPoint,
+  GameFixtureChartPoint,
+  GameFixtureChartTimeRange,
+} from "@/types/market";
 
 export type FixturePriceHistoryStatus = "loading" | "ready" | "empty" | "error";
 
 interface FixturePriceHistoryResponse {
   matchSlug: string;
   interval: string;
+  chartKind: FixtureChartKind;
+  lineKey?: string;
+  chartMode: "ternary" | "binary";
   points: GameFixtureChartPoint[];
+  binaryPoints: GameFixtureBinaryChartPoint[];
   updatedAt: string;
   volume?: number;
 }
 
+export interface UseFixturePriceHistoryOptions {
+  matchSlug: string | undefined;
+  timeRange: GameFixtureChartTimeRange;
+  chartKind?: FixtureChartKind;
+  lineKey?: string;
+}
+
 export interface UseFixturePriceHistoryResult {
   points: GameFixtureChartPoint[];
+  binaryPoints: GameFixtureBinaryChartPoint[];
+  chartMode: "ternary" | "binary";
   status: FixturePriceHistoryStatus;
   lastUpdated?: string;
   error?: string;
   refetch: () => Promise<void>;
 }
 
-export function useFixturePriceHistory(
-  matchSlug: string | undefined,
-  timeRange: GameFixtureChartTimeRange,
-): UseFixturePriceHistoryResult {
+export function useFixturePriceHistory({
+  matchSlug,
+  timeRange,
+  chartKind = "moneyline",
+  lineKey,
+}: UseFixturePriceHistoryOptions): UseFixturePriceHistoryResult {
   const [points, setPoints] = useState<GameFixtureChartPoint[]>([]);
+  const [binaryPoints, setBinaryPoints] = useState<GameFixtureBinaryChartPoint[]>([]);
+  const [chartMode, setChartMode] = useState<"ternary" | "binary">("ternary");
   const [status, setStatus] = useState<FixturePriceHistoryStatus>("loading");
   const [lastUpdated, setLastUpdated] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
@@ -34,6 +56,7 @@ export function useFixturePriceHistory(
   const refetch = useCallback(async () => {
     if (!matchSlug) {
       setPoints([]);
+      setBinaryPoints([]);
       setStatus("empty");
       setLastUpdated(undefined);
       setError(undefined);
@@ -47,7 +70,13 @@ export function useFixturePriceHistory(
       const params = new URLSearchParams({
         matchSlug,
         range: timeRange,
+        chartKind,
       });
+
+      if (lineKey) {
+        params.set("lineKey", lineKey);
+      }
+
       const response = await fetch(`/api/market/fixture-history?${params}`, {
         cache: "no-store",
       });
@@ -60,12 +89,19 @@ export function useFixturePriceHistory(
       }
 
       const nextPoints = payload.points ?? [];
+      const nextBinaryPoints = payload.binaryPoints ?? [];
+      const nextChartMode = payload.chartMode ?? "ternary";
+      const hasData =
+        nextChartMode === "binary" ? nextBinaryPoints.length > 0 : nextPoints.length > 0;
 
       setPoints(nextPoints);
+      setBinaryPoints(nextBinaryPoints);
+      setChartMode(nextChartMode);
       setLastUpdated(payload.updatedAt);
-      setStatus(nextPoints.length > 0 ? "ready" : "empty");
+      setStatus(hasData ? "ready" : "empty");
     } catch (fetchError) {
       setPoints([]);
+      setBinaryPoints([]);
       setStatus("error");
       setError(
         fetchError instanceof Error
@@ -73,7 +109,7 @@ export function useFixturePriceHistory(
           : "Unable to load fixture price history.",
       );
     }
-  }, [matchSlug, timeRange]);
+  }, [chartKind, lineKey, matchSlug, timeRange]);
 
   useEffect(() => {
     void refetch();
@@ -81,6 +117,8 @@ export function useFixturePriceHistory(
 
   return {
     points,
+    binaryPoints,
+    chartMode,
     status,
     lastUpdated,
     error,

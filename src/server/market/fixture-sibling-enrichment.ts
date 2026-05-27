@@ -6,13 +6,8 @@ import {
   mergeGammaMarkets,
   resolveFixtureSiblingSlugs,
 } from "@/lib/market/fixture-sibling-events";
-import {
-  GAMMA_API_BASE,
-  isGammaEventRecord,
-  type GammaEventRecord,
-  type GammaMarketRecord,
-} from "@/lib/market/polymarket-gamma";
-import { serverFetch } from "@/server/trading/server-fetch";
+import { fetchGammaEventBySlug } from "@/data/providers/polymarket-football-events-provider";
+import type { GammaMarketRecord } from "@/lib/market/polymarket-gamma";
 import type { WorldCupMatch } from "@/types/market";
 
 const siblingMarketsCache = new Map<string, GammaMarketRecord[]>();
@@ -69,21 +64,4 @@ async function fetchSiblingMarketsForSlug(slug: string): Promise<GammaMarketReco
   siblingMarketsCache.set(slug, markets);
 
   return markets;
-}
-
-async function fetchGammaEventBySlug(slug: string): Promise<GammaEventRecord | undefined> {
-  const response = await serverFetch(`${GAMMA_API_BASE}/events/slug/${encodeURIComponent(slug)}`, {
-    cache: "no-store",
-    headers: {
-      accept: "application/json",
-    },
-  });
-
-  if (response.status === 404 || !response.ok) {
-    return undefined;
-  }
-
-  const payload = (await response.json()) as unknown;
-
-  return isGammaEventRecord(payload) ? payload : undefined;
 }

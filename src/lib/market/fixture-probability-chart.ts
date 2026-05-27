@@ -1,5 +1,6 @@
 import type { FixtureHistoryInterval } from "@/server/market/clob-prices-history";
 import type {
+  GameFixtureBinaryChartPoint,
   GameFixtureChartPoint,
   GameFixtureChartTimeRange,
   MatchOutcomeSide,
@@ -7,6 +8,12 @@ import type {
 
 export interface FixtureOutcomeHistoryInput {
   side: MatchOutcomeSide;
+  tokenId: string;
+  history: Array<{ t: number; p: number }>;
+}
+
+export interface FixtureBinaryOutcomeHistoryInput {
+  key: "primary" | "secondary";
   tokenId: string;
   history: Array<{ t: number; p: number }>;
 }
@@ -158,5 +165,118 @@ export function getLatestFixtureChartValues(points: GameFixtureChartPoint[]): {
     home: latest?.home ?? 0,
     draw: latest?.draw ?? 0,
     away: latest?.away ?? 0,
+  };
+}
+
+export function buildBinaryFixtureChartPoints(
+  matchId: string,
+  outcomes: FixtureBinaryOutcomeHistoryInput[],
+): GameFixtureBinaryChartPoint[] {
+  const historiesByKey = new Map<
+    "primary" | "secondary",
+    Array<{ t: number; p: number }>
+  >();
+
+  for (const outcome of outcomes) {
+    historiesByKey.set(outcome.key, [...outcome.history].sort((a, b) => a.t - b.t));
+  }
+
+  const timestamps = [
+    ...new Set(
+      outcomes.flatMap((outcome) => outcome.history.map((point) => point.t * 1000)),
+    ),
+  ].sort((left, right) => left - right);
+
+  if (timestamps.length === 0) {
+    return [];
+  }
+
+  const latestByKey: Partial<Record<"primary" | "secondary", number>> = {};
+  const indexesByKey = new Map<"primary" | "secondary", number>([
+    ["primary", 0],
+    ["secondary", 0],
+  ]);
+  const points: GameFixtureBinaryChartPoint[] = [];
+
+  for (const timestampMs of timestamps) {
+    const timestampSeconds = Math.floor(timestampMs / 1000);
+
+    for (const key of ["primary", "secondary"] as const) {
+      const history = historiesByKey.get(key) ?? [];
+      let pointIndex = indexesByKey.get(key) ?? 0;
+
+      while (pointIndex < history.length && history[pointIndex]!.t <= timestampSeconds) {
+        latestByKey[key] = priceToProbabilityPercent(history[pointIndex]!.p);
+        pointIndex += 1;
+      }
+
+      indexesByKey.set(key, pointIndex);
+    }
+
+    if (latestByKey.primary === undefined || latestByKey.secondary === undefined) {
+      continue;
+    }
+
+    points.push({
+      matchId,
+      timestamp: new Date(timestampMs).toISOString(),
+      label: formatFixtureChartLabel(timestampMs),
+      primary: latestByKey.primary,
+      secondary: latestByKey.secondary,
+    });
+  }
+
+  return mergeBinaryFixtureChartPoints(points);
+}
+
+function mergeBinaryFixtureChartPoints(
+  points: GameFixtureBinaryChartPoint[],
+): GameFixtureBinaryChartPoint[] {
+  const merged: GameFixtureBinaryChartPoint[] = [];
+
+  for (const point of points) {
+    const previous = merged.at(-1);
+
+    if (!previous || previous.label !== point.label) {
+      merged.push(point);
+      continue;
+    }
+
+    merged[merged.length - 1] = {
+      ...previous,
+      timestamp: point.timestamp,
+      primary: point.primary,
+      secondary: point.secondary,
+    };
+  }
+
+  return merged;
+}
+
+export function getBinaryFixtureChartYDomain(
+  points: GameFixtureBinaryChartPoint[],
+): [number, number] {
+  if (points.length === 0) {
+    return [0, 100];
+  }
+
+  const values = points.flatMap((point) => [point.primary, point.secondary]);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const padding = Math.max(2, (max - min) * 0.2);
+  const lower = Math.max(0, Math.floor((min - padding) / 5) * 5);
+  const upper = Math.min(100, Math.ceil((max + padding) / 5) * 5);
+
+  return [lower, Math.max(lower + 10, upper)];
+}
+
+export function getLatestBinaryFixtureChartValues(
+  points: GameFixtureBinaryChartPoint[],
+): { primary: number; secondary: number } {
+  const latest = points.at(-1);
+
+  return {
+    primary: latest?.primary ?? 0,
+    secondary: latest?.secondary ?? 0,
   };
 }

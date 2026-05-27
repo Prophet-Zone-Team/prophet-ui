@@ -1,13 +1,15 @@
 import { notFound } from "next/navigation";
 
 import { getTheOddsApiWorldCupWinnerOdds } from "@/data/odds/the-odds-api-provider";
-import { getFootballMatches } from "@/data/providers/football-matches";
+import {
+  getFootballMatches,
+  getFootballMatchBySlug
+} from "@/data/providers/football-matches";
 import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 import type { WorldCupMarketDataOptions } from "@/data/providers/types";
 import { worldCupTeams } from "@/data/teams/world-cup-teams";
 import {
   buildGameMarketSnapshot,
-  findWorldCupMatch,
   getRelatedMatches
 } from "@/lib/market/game-market-snapshot";
 import { buildFixtureMarketsSnapshot } from "@/lib/market/build-fixture-markets-snapshot";
@@ -43,12 +45,13 @@ function resolveTeamMarketOptions(teamId: string): WorldCupMarketDataOptions {
 }
 
 export async function renderGameTradePage(slug: string) {
-  const { matches } = await getFootballMatches();
-  const footballMatch = findWorldCupMatch(slug, matches);
+  const footballMatch = await getFootballMatchBySlug(slug);
 
   if (!footballMatch) {
     notFound();
   }
+
+  const { matches } = await getFootballMatches();
 
   const matchWithSiblingMarkets = await enrichMatchWithSiblingFixtureMarkets(footballMatch);
   const [enrichedMatch] = await enrichFootballMatchesWithClobData([matchWithSiblingMarkets]);

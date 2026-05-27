@@ -7,9 +7,8 @@ import {
   type TradeGameHeaderProps
 } from "@/views/trade/game/header";
 import { TradeGameHeaderToolbar } from "@/views/trade/game/header-toolbar";
-import { GameProbabilitySection } from "@/views/trade/game-probability";
+import { GameMarketsSection } from "@/views/trade/game/markets";
 import { RelatedGames } from "@/views/trade/related-games";
-import { TradeGameMarketSection } from "@/views/trade/game/market-section";
 import { gameContentClass } from "@/views/trade/game/ui";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import type {
@@ -18,7 +17,6 @@ import type {
   GameMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
-import { GameFixtureMarketsSection } from "@/views/trade/game/fixture-markets";
 
 export type TradeGameViewProps = TradeGameHeaderProps & {
   gameSnapshot: GameMarketSnapshot;
@@ -59,11 +57,11 @@ export default function TradeGameView({
   }, [gameSnapshot.homeTeamId, match.homeTeamId, relatedMatches, snapshots]);
 
   return (
-    <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2 bg-white">
+    <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2">
       <div className="bg-black h-[258px] w-full absolute top-0 left-0" />
       <TradeGameHeaderToolbar />
       <div className={`${gameContentClass} pb-10 relative z-10`}>
-        <div className="shrink-0 w-[1000px] pt-2">
+        <div className="shrink-0 w-[1080px] pt-2">
           <div className="relative">
             <TradeGameHeader
               match={match}
@@ -71,18 +69,10 @@ export default function TradeGameView({
               teamProfiles={teamProfiles}
             />
           </div>
-          <TradeGameMarketSection
-            gameSnapshot={gameSnapshot}
-            teamSnapshots={snapshots}
-          />
-          <GameProbabilitySection
+          <GameMarketsSection
             match={match}
-            snapshots={snapshots}
             gameSnapshot={gameSnapshot}
-          />
-          <GameFixtureMarketsSection
             fixtureMarkets={fixtureMarkets}
-            gameSnapshot={gameSnapshot}
             teamSnapshots={snapshots}
           />
         </div>

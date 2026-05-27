@@ -34,7 +34,7 @@ export function HomeHero({
     : null;
 
   return (
-    <section className="flex justify-between py-14 pb-8">
+    <section className="flex justify-between py-8">
       <div className="flex-1">
         <p className="text-[26px]">2026 FIFA World Cup</p>
         <h1 className="mt-[8px] text-[56px] font-[500] leading-[0.9]">

@@ -42,6 +42,8 @@ interface TradeTicketState {
   limitPrice: string;
   limitExpiration: LimitExpirationPreset;
   limitExpirationCustom?: string;
+  takeProfitLimitEnabled: boolean;
+  takeProfitLimitPrice: string;
   syncForTeamSnapshot: (snapshot: TeamMarketSnapshot) => void;
   syncForGameSnapshot: (snapshot: GameMarketSnapshot) => void;
   syncForPositionSell: (
@@ -60,6 +62,8 @@ interface TradeTicketState {
   setLimitPrice: (limitPrice: string) => void;
   setLimitExpiration: (preset: LimitExpirationPreset) => void;
   setLimitExpirationCustom: (value: string | undefined) => void;
+  setTakeProfitLimitEnabled: (enabled: boolean) => void;
+  setTakeProfitLimitPrice: (price: string) => void;
 }
 
 const defaultTicketState = {
@@ -73,8 +77,17 @@ const defaultTicketState = {
   amount: "1",
   limitPrice: "0.010",
   limitExpiration: "never" as LimitExpirationPreset,
-  limitExpirationCustom: undefined as string | undefined
+  limitExpirationCustom: undefined as string | undefined,
+  takeProfitLimitEnabled: true,
+  takeProfitLimitPrice: "0.012"
 };
+
+function resetTakeProfitLimitState() {
+  return {
+    takeProfitLimitEnabled: true,
+    takeProfitLimitPrice: defaultTicketState.takeProfitLimitPrice
+  };
+}
 
 export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
   ...defaultTicketState,
@@ -96,7 +109,8 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       amount: "1",
       limitPrice: formatDefaultTradeLimitPrice(snapshot, "yes"),
       limitExpiration: "never",
-      limitExpirationCustom: undefined
+      limitExpirationCustom: undefined,
+      ...resetTakeProfitLimitState()
     });
   },
   syncForGameSnapshot: (snapshot) => {
@@ -117,7 +131,8 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       amount: "1",
       limitPrice: formatDefaultGameTradeLimitPrice(snapshot, "home", "yes"),
       limitExpiration: "never",
-      limitExpirationCustom: undefined
+      limitExpirationCustom: undefined,
+      ...resetTakeProfitLimitState()
     });
   },
   syncForPositionSell: (snapshot, position) => {
@@ -134,7 +149,8 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       amount: String(resolveMaxSellShares(position.size) ?? position.size),
       limitPrice: formatDefaultTradeLimitPrice(snapshot, outcomeSide),
       limitExpiration: "never",
-      limitExpirationCustom: undefined
+      limitExpirationCustom: undefined,
+      ...resetTakeProfitLimitState()
     });
   },
   setOutcomeSide: (side) => set({ outcomeSide: side }),
@@ -152,7 +168,11 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       limitPrice: resolveFixtureSelectionLimitPrice(outcome, binarySide).toFixed(3)
     });
   },
-  setTab: (tab) => set({ tab }),
+  setTab: (tab) =>
+    set({
+      tab,
+      ...resetTakeProfitLimitState()
+    }),
   setOrderMode: (orderMode) => {
     const current = get();
 
@@ -164,7 +184,8 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       orderMode,
       amount: orderMode === "limit" ? "5" : "1",
       limitExpiration: "never",
-      limitExpirationCustom: undefined
+      limitExpirationCustom: undefined,
+      ...resetTakeProfitLimitState()
     });
   },
   setAmount: (amount) => set({ amount }),
@@ -176,7 +197,11 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
         limitExpiration === "custom" ? get().limitExpirationCustom : undefined
     }),
   setLimitExpirationCustom: (limitExpirationCustom) =>
-    set({ limitExpirationCustom })
+    set({ limitExpirationCustom }),
+  setTakeProfitLimitEnabled: (takeProfitLimitEnabled) =>
+    set({ takeProfitLimitEnabled }),
+  setTakeProfitLimitPrice: (takeProfitLimitPrice) =>
+    set({ takeProfitLimitPrice })
 }));
 
 export function useTradeEntityType() {
@@ -253,6 +278,22 @@ export function useSetTradeLimitExpiration() {
 
 export function useSetTradeLimitExpirationCustom() {
   return useTradeTicketStore((state) => state.setLimitExpirationCustom);
+}
+
+export function useTradeTakeProfitLimitEnabled() {
+  return useTradeTicketStore((state) => state.takeProfitLimitEnabled);
+}
+
+export function useSetTradeTakeProfitLimitEnabled() {
+  return useTradeTicketStore((state) => state.setTakeProfitLimitEnabled);
+}
+
+export function useTradeTakeProfitLimitPrice() {
+  return useTradeTicketStore((state) => state.takeProfitLimitPrice);
+}
+
+export function useSetTradeTakeProfitLimitPrice() {
+  return useTradeTicketStore((state) => state.setTakeProfitLimitPrice);
 }
 
 export function useSyncTradeTeamSnapshot() {

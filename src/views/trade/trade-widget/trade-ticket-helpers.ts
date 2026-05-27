@@ -4,7 +4,7 @@ import {
   buildBidOrderPreview,
   type BidOrderPreview
 } from "@/lib/market/polymarket-order";
-import { calculateReferencePrice } from "@/lib/market/order-math";
+import { calculateReferencePrice, normalizeLimitPrice } from "@/lib/market/order-math";
 import {
   formatDefaultGameTradeLimitPrice,
   formatDefaultTradeLimitPrice,
@@ -12,6 +12,7 @@ import {
   getDefaultTradeLimitPrice
 } from "@/lib/market/trade-ticket";
 import { buildSdkSignedUserOrder } from "@/lib/market/sdk-user-order";
+import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
 import type { WalletClient } from "viem";
 import {
   getTradingSetupSteps,
@@ -417,7 +418,7 @@ export function deriveAmountInputLabel(
     return "Shares";
   }
 
-  return "Amount";
+  return "Value";
 }
 
 export function deriveLimitBuyTotal(preview: OrderPreviewFields): number {
@@ -696,6 +697,42 @@ export function formatReadinessFailureMessage(
   return `${failed.label}: ${failed.detail}`;
 }
 
+export const INSUFFICIENT_FUNDS_MESSAGE = "Insufficient funds";
+
+export function isBuyInsufficientFunds(input: {
+  tradeSide: BidTradeSide;
+  preview: Pick<OrderPreviewFields, "estimatedTotalCost">;
+  readiness: UserTradingReadiness | undefined;
+}): boolean {
+  if (input.tradeSide !== "buy") {
+    return false;
+  }
+
+  const required = input.preview.estimatedTotalCost;
+
+  if (!Number.isFinite(required) || required <= 0) {
+    return false;
+  }
+
+  const balanceCheck = input.readiness?.checks?.find(
+    (check) => check.id === "balance"
+  );
+
+  if (balanceCheck?.status === "fail") {
+    return true;
+  }
+
+  if (balanceCheck?.status === "pass") {
+    return false;
+  }
+
+  const available =
+    input.readiness?.balances?.usdcAvailable ??
+    resolveTradeTicketAvailableCash(input.readiness);
+
+  return available !== undefined && available < required;
+}
+
 export function canSubmitTradeTicket(input: {
   status: TradeTicketStatus;
   previewCanSubmit: boolean;
@@ -960,4 +997,137 @@ export function formatGameDefaultLimitPriceString(
     binarySide,
     tradeSide
   );
+}
+
+export const TAKE_PROFIT_LIMIT_FAILED_MESSAGE =
+  "Buy order succeeded, but the take profit limit order could not be placed. You can add a sell limit order from Portfolio.";
+
+export function resolveTakeProfitLimitPrice(
+  takeProfitLimitPrice: string,
+  purchasePrice: number
+): number {
+  return normalizeLimitPrice(
+    parseLimitPriceInput(takeProfitLimitPrice, purchasePrice)
+  );
+}
+
+export function buildTakeProfitSellPreview(
+  input:
+    | {
+        variant: "team";
+        snapshot: TeamMarketSnapshot;
+        outcomeSide: OrderOutcomeSide;
+        shareSize: number;
+        limitPrice: number;
+        tokenId: string;
+        maxShareSize?: number;
+        acceptingOrders?: boolean;
+      }
+    | {
+        variant: "game";
+        gameSnapshot: GameMarketSnapshot;
+        matchOutcomeSide: MatchOutcomeSide;
+        outcomeSide: OrderOutcomeSide;
+        shareSize: number;
+        limitPrice: number;
+        tokenId: string;
+        fixtureOutcome?: FixtureMarketOutcome | null;
+        maxShareSize?: number;
+      }
+): BidOrderPreview {
+  if (input.variant === "team") {
+    return buildTeamTradePreview({
+      snapshot: input.snapshot,
+      outcomeSide: input.outcomeSide,
+      tradeSide: "sell",
+      amount: input.shareSize,
+      limitPrice: input.limitPrice,
+      orderType: "GTC",
+      tokenId: input.tokenId,
+      maxShareSize: input.maxShareSize,
+      acceptingOrders: input.acceptingOrders
+    });
+  }
+
+  return toBidOrderPreview(
+    buildGameTradePreview({
+      gameSnapshot: input.gameSnapshot,
+      matchOutcomeSide: input.matchOutcomeSide,
+      binarySide: input.outcomeSide,
+      tradeSide: "sell",
+      amount: input.shareSize,
+      limitPrice: input.limitPrice,
+      orderType: "GTC",
+      fixtureOutcome: input.fixtureOutcome
+    })
+  );
+}
+
+export function buildTakeProfitOrderBundle(
+  input:
+    | {
+        variant: "team";
+        snapshot: TeamMarketSnapshot;
+        outcomeSide: OrderOutcomeSide;
+        shareSize: number;
+        limitPrice: number;
+        tokenId: string;
+        maxShareSize?: number;
+        acceptingOrders?: boolean;
+      }
+    | {
+        variant: "game";
+        gameSnapshot: GameMarketSnapshot;
+        matchOutcomeSide: MatchOutcomeSide;
+        outcomeSide: OrderOutcomeSide;
+        shareSize: number;
+        limitPrice: number;
+        tokenId: string;
+        fixtureOutcome?: FixtureMarketOutcome | null;
+        maxShareSize?: number;
+      }
+): { bidPreview: BidOrderPreview; userPreview: UserOrderPreview } {
+  if (input.variant === "team") {
+    const bidPreview = buildTakeProfitSellPreview(input);
+
+    return {
+      bidPreview,
+      userPreview: buildTeamUserOrderPreview(input.snapshot, bidPreview)
+    };
+  }
+
+  const gamePreview = buildGameTradePreview({
+    gameSnapshot: input.gameSnapshot,
+    matchOutcomeSide: input.matchOutcomeSide,
+    binarySide: input.outcomeSide,
+    tradeSide: "sell",
+    amount: input.shareSize,
+    limitPrice: input.limitPrice,
+    orderType: "GTC",
+    fixtureOutcome: input.fixtureOutcome
+  });
+
+  return {
+    bidPreview: toBidOrderPreview(gamePreview),
+    userPreview: buildGameUserOrderPreview(
+      input.gameSnapshot,
+      gamePreview,
+      input.fixtureOutcome
+    )
+  };
+}
+
+export async function submitTakeProfitLimitOrder(input: {
+  session: TradingUserSession;
+  preview: BidOrderPreview;
+  userOrderPreview: UserOrderPreview;
+  signer?: WalletClient;
+}): Promise<SubmitOrderResult> {
+  return submitSignedTradeOrder({
+    session: input.session,
+    preview: input.preview,
+    orderType: "GTC",
+    userOrderPreview: input.userOrderPreview,
+    signer: input.signer
+  });
 }

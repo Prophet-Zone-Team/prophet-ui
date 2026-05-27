@@ -17,6 +17,7 @@ import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { BidTradeSide } from "@/types/market";
 import type { LimitExpirationPreset } from "@/store/trade-ticket-store";
 import { LimitExpirationSelect } from "@/views/trade/trade-widget/limit-expiration-select";
+import { TakeProfitLimitRow } from "@/views/trade/trade-widget/take-profit-limit-row";
 import {
   deriveAmountInputLabel,
   deriveLimitBuyTotal,
@@ -56,6 +57,7 @@ export interface TradeTicketFormProps {
   limitExpiration: LimitExpirationPreset;
   limitExpirationCustom?: string;
   expirationError?: string;
+  fundingMessage?: string;
   actionLabel: string;
   canSubmit: boolean;
   actionInProgress: boolean;
@@ -75,6 +77,11 @@ export interface TradeTicketFormProps {
   onLoginSuccess: () => void | Promise<void>;
   onLoginError: (error: Error) => void;
   onAmountMessageClear: () => void;
+  takeProfitLimitEnabled?: boolean;
+  takeProfitLimitDisabled?: boolean;
+  takeProfitLimitPrice?: string;
+  onTakeProfitLimitEnabledChange?: (value: boolean) => void;
+  onTakeProfitLimitPriceChange?: (value: string) => void;
 }
 
 export function TradeTicketForm({
@@ -96,6 +103,7 @@ export function TradeTicketForm({
   limitExpiration,
   limitExpirationCustom,
   expirationError,
+  fundingMessage,
   actionLabel,
   canSubmit,
   actionInProgress,
@@ -114,7 +122,12 @@ export function TradeTicketForm({
   onLoginStart,
   onLoginSuccess,
   onLoginError,
-  onAmountMessageClear
+  onAmountMessageClear,
+  takeProfitLimitEnabled = false,
+  takeProfitLimitDisabled = false,
+  takeProfitLimitPrice = "0.012",
+  onTakeProfitLimitEnabledChange,
+  onTakeProfitLimitPriceChange
 }: TradeTicketFormProps) {
   const isLimitOrder = orderMode === "limit";
   const outcomeSummaryLabel = deriveOutcomeSummaryLabel(tradeSide);
@@ -124,7 +137,10 @@ export function TradeTicketForm({
   const showCashBalance =
     isLimitOrder && tradeSide === "buy" && availableCash !== undefined;
   const showClearingTip = isLimitOrder && Boolean(kickoffAt);
-  const displayMessage = expirationError ?? message;
+  const displayMessage = expirationError ?? message ?? fundingMessage;
+  const displayMessageIsError = Boolean(
+    expirationError || message || fundingMessage
+  );
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-4 pt-4">
@@ -196,7 +212,8 @@ export function TradeTicketForm({
               ? "Order size in shares"
               : "Order amount in USDC"}
           </label>
-          <div className="flex min-w-0 items-baseline justify-end">
+          <div className="flex flex-1  items-baseline justify-end  text-[26px] font-[500]">
+            <span>$</span>
             <input
               id="trade-amount"
               type="number"
@@ -207,12 +224,13 @@ export function TradeTicketForm({
                 onAmountChange(event.target.value);
                 onAmountMessageClear();
               }}
-              className="min-w-[3ch] max-w-[8ch] flex-1 border-0 bg-transparent p-0 text-right text-[32px] font-[556] leading-[38px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              style={{ fieldSizing: "content" }}
+              className="border-0 bg-transparent p-0 leading-[38px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           {tradeSide === "sell" ? (
             <>
               {SELL_QUICK_FRACTIONS.map(({ label, value }) => (
@@ -276,6 +294,19 @@ export function TradeTicketForm({
         </div>
       </div>
 
+      {!isLimitOrder &&
+      tradeSide === "buy" &&
+      onTakeProfitLimitEnabledChange ? (
+        <TakeProfitLimitRow
+          enabled={takeProfitLimitEnabled}
+          disabled={takeProfitLimitDisabled}
+          price={takeProfitLimitPrice}
+          purchasePrice={preview.sidePrice}
+          onEnabledChange={onTakeProfitLimitEnabledChange}
+          onPriceChange={(value) => onTakeProfitLimitPriceChange?.(value)}
+        />
+      ) : null}
+
       {isLimitOrder ? (
         <LimitOrderSummary
           tradeSide={tradeSide}
@@ -288,14 +319,14 @@ export function TradeTicketForm({
       ) : (
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-[556] leading-[17px] text-black">
+            <span className="text-[14px] font-[400] leading-[17px] text-black">
               {outcomeSummaryLabel}
             </span>
             <span className="text-sm font-[457] leading-[17px] text-prophet-muted">
               Avg. Price {formatTradePanelPrice(preview.sidePrice)}
             </span>
           </div>
-          <span className="text-[32px] font-[556] leading-[38px] text-[#69C800]">
+          <span className="text-[26px] font-[500] leading-[38px] text-[#69C800]">
             {formatTeamDetailMoney(summaryValue)}
           </span>
         </div>
@@ -304,9 +335,7 @@ export function TradeTicketForm({
       <TradeAuthActionButton
         actionLabel={actionLabel}
         connectLabel="Enable trading"
-        canSubmit={
-          isAuthenticated ? !actionInProgress : canSubmit && !actionInProgress
-        }
+        canSubmit={canSubmit && !actionInProgress}
         connectDisabled={status === "loading"}
         actionStatus={
           status === "signing" || status === "submitting" ? status : undefined
@@ -322,7 +351,7 @@ export function TradeTicketForm({
           <p
             className={cn(
               "m-0 text-xs",
-              status === "error" || expirationError
+              status === "error" || displayMessageIsError
                 ? "text-prophet-red"
                 : "text-prophet-muted"
             )}
@@ -494,13 +523,13 @@ function OutcomeButton({
             : "border-[#FF674B] bg-white text-[#FF674B] hover:bg-[#fafbfc]"
       )}
     >
-      <span className="text-xl font-[556] leading-6">
+      <span className="text-[20px] font-[500] leading-6">
         {isYes ? "Yes" : "No"}
       </span>
       <div className="flex items-center gap-2">
         <span
           className={cn(
-            "text-lg font-[556]",
+            "text-[18px] font-[500]",
             active ? "text-white" : "inherit"
           )}
         >
@@ -508,7 +537,7 @@ function OutcomeButton({
         </span>
         <span
           className={cn(
-            "text-xs font-[556] mt-1",
+            "text-[12px] font-[500] mt-1",
             active ? "text-white" : "inherit"
           )}
         >

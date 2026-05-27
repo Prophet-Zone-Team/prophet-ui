@@ -6,11 +6,13 @@ import type { FixtureLineOption } from "@/types/market";
 export function LineSelector({
   options,
   value,
-  onChange
+  onChange,
+  variant = "underline"
 }: {
   options: FixtureLineOption[];
   value?: string;
   onChange: (lineKey: string) => void;
+  variant?: "underline" | "pill";
 }) {
   if (options.length <= 1) {
     return null;
@@ -18,12 +20,33 @@ export function LineSelector({
 
   return (
     <div
-      className="flex flex-wrap items-center justify-center gap-6"
+      className={cn(
+        "flex flex-wrap items-center justify-center gap-6",
+        variant === "pill" && "gap-3"
+      )}
       role="group"
       aria-label="Line selector"
     >
       {options.map((option) => {
         const isActive = option.key === value;
+
+        if (variant === "pill") {
+          return (
+            <button
+              key={option.key}
+              type="button"
+              onClick={() => onChange(option.key)}
+              className={cn(
+                "border bg-transparent w-[52px] h-[56px] flex items-center justify-center transition-colors rounded-[8px]",
+                isActive
+                  ? "border-[#EBEBEB] text-[18px] rounded-[12px] font-[500] text-black bg-white"
+                  : "border-transparent text-[14px] font-[400] text-[#909090] hover:text-black"
+              )}
+            >
+              {option.label}
+            </button>
+          );
+        }
 
         return (
           <button

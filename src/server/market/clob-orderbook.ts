@@ -33,6 +33,7 @@ function parseLevels(
       (level) =>
         Number.isFinite(level.price) &&
         level.price > 0 &&
+        level.price < 1 &&
         Number.isFinite(level.size) &&
         level.size > 0
     );

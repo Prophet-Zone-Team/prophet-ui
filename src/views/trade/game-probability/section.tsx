@@ -1,21 +1,32 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { findGameMarketOutcome } from "@/lib/market/game-outcome-price";
 import { formatMatchScore } from "@/lib/market/match-display";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
-import { useTradeMatchOutcomeSide } from "@/store/trade-ticket-store";
+import {
+  useSelectedFixtureOutcome,
+  useTradeMatchOutcomeSide,
+  useTradeOutcomeSide
+} from "@/store/trade-ticket-store";
 import type {
+  FixtureChartKind,
+  FixtureMarketOutcome,
   GameFixtureChartTimeRange,
+  GameMarketOutcome,
   GameMarketSnapshot,
   TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
-import { Orderbook } from "@/views/trade/team/orderbook";
+import { resolveOrderbookTokenId } from "@/views/trade/game/markets/fixture-market-actions";
+import { gameColors } from "@/views/trade/game/ui";
+import { GameBinaryProbabilityChart } from "@/views/trade/game-probability/binary-chart";
 import { GameProbabilityChart } from "@/views/trade/game-probability/chart";
 import { useFixturePriceHistory } from "@/views/trade/game-probability/use-fixture-price-history";
+import { OrderbookPanel } from "@/views/trade/orderbook-panel";
 
 const GAME_PROBABILITY_TIME_RANGES = [
   { id: "1D", label: "1D" },
@@ -30,59 +41,118 @@ const GAME_PROBABILITY_TIME_RANGES = [
 const probabilityCardClass =
   "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
 
+export type ProbabilitySummaryItem = {
+  label: string;
+  value: number;
+  color?: string;
+  code?: string;
+};
+
 export interface GameProbabilitySectionProps {
   match: WorldCupMatch;
   snapshots?: TeamMarketSnapshot[];
   gameSnapshot?: GameMarketSnapshot;
   showOrderbook?: boolean;
   className?: string;
+  chartKind?: FixtureChartKind;
+  lineKey?: string;
+  summaryMode?: "ternary" | "binary";
+  summaryItems?: ProbabilitySummaryItem[];
+  binaryPrimaryLabel?: string;
+  binarySecondaryLabel?: string;
 }
 
 export function GameProbabilitySection({
   match,
   snapshots = [],
   gameSnapshot,
-  showOrderbook = false,
-  className
+  showOrderbook = true,
+  className,
+  chartKind = "moneyline",
+  lineKey,
+  summaryMode = "ternary",
+  summaryItems,
+  binaryPrimaryLabel,
+  binarySecondaryLabel
 }: GameProbabilitySectionProps) {
   const [timeRange, setTimeRange] = useState<GameFixtureChartTimeRange>("all");
   const matchOutcomeSide = useTradeMatchOutcomeSide();
-  const { points, status, error, refetch } = useFixturePriceHistory(
-    match.id,
-    timeRange
-  );
+  const selectedFixtureOutcome = useSelectedFixtureOutcome();
+  const tradeOutcomeSide = useTradeOutcomeSide();
+  const { points, binaryPoints, chartMode, status, error, refetch } =
+    useFixturePriceHistory({
+      matchSlug: match.id,
+      timeRange,
+      chartKind,
+      lineKey
+    });
 
   const sides = resolveMatchSides(match, snapshots);
   const isLive = match.status === "live";
   const orderbookEnabled = showOrderbook && Boolean(gameSnapshot);
 
-  const tokenId = useMemo(() => {
+  const fallbackOutcome = useMemo(() => {
     if (!gameSnapshot) {
       return undefined;
     }
 
-    return findGameMarketOutcome(gameSnapshot.outcomes, matchOutcomeSide)
-      ?.tokenId;
+    return findGameMarketOutcome(gameSnapshot.outcomes, matchOutcomeSide);
   }, [gameSnapshot, matchOutcomeSide]);
+
+  const tokenId = useMemo(
+    () =>
+      resolveOrderbookTokenId(
+        selectedFixtureOutcome,
+        tradeOutcomeSide,
+        fallbackOutcome
+          ? {
+              tokenId: fallbackOutcome.tokenId,
+              noTokenId: fallbackOutcome.noTokenId
+            }
+          : undefined
+      ),
+    [fallbackOutcome, selectedFixtureOutcome, tradeOutcomeSide]
+  );
 
   const homeLabel = sides.home.name ?? "Home";
   const awayLabel = sides.away.name ?? "Away";
+  const resolvedSummaryItems = useMemo(
+    () =>
+      summaryItems ??
+      buildDefaultSummaryItems({
+        summaryMode,
+        gameSnapshot,
+        homeLabel,
+        awayLabel
+      }),
+    [awayLabel, gameSnapshot, homeLabel, summaryItems, summaryMode]
+  );
+
+  const effectiveChartMode =
+    chartMode === "binary" || summaryMode === "binary" ? "binary" : "ternary";
 
   return (
     <section
       className={cn(
-        "flex flex-col gap-3 xl:flex-row xl:items-stretch",
+        "mt-[8px] flex flex-col gap-3 xl:flex-row xl:items-stretch",
         !orderbookEnabled && "xl:flex-col",
         className
       )}
       aria-label="Match outcome probability"
     >
-      <div className={cn(probabilityCardClass, !orderbookEnabled && "w-full")}>
+      <motion.div
+        layout
+        transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.85 }}
+        className={cn(probabilityCardClass, !orderbookEnabled && "w-full")}
+      >
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="m-0 text-[20px] font-[556] leading-6 text-black">
+          <div className="min-w-0 flex-1">
+            <h2 className="m-0 text-[18px] font-[500] leading-6 text-black">
               Probability
             </h2>
+            {resolvedSummaryItems.length ? (
+              <ProbabilitySummaryRow items={resolvedSummaryItems} />
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-4 sm:gap-6">
@@ -106,7 +176,7 @@ export function GameProbabilitySection({
                   key={range.id}
                   type="button"
                   className={cn(
-                    "border-0 bg-transparent p-0 text-sm leading-[17px]",
+                    "border-0 bg-transparent p-0 text-[14px] leading-[17px]",
                     timeRange === range.id
                       ? "font-[556] text-black"
                       : "font-[457] text-[#909090]"
@@ -139,7 +209,7 @@ export function GameProbabilitySection({
             />
           ) : null}
 
-          {status === "ready" ? (
+          {status === "ready" && effectiveChartMode === "ternary" ? (
             <GameProbabilityChart
               data={points}
               homeLabel={homeLabel}
@@ -147,13 +217,95 @@ export function GameProbabilitySection({
               awayLabel={awayLabel}
             />
           ) : null}
-        </div>
-      </div>
 
-      {orderbookEnabled ? (
-        <Orderbook tokenId={tokenId} className="w-full shrink-0 xl:w-[272px]" />
-      ) : null}
+          {status === "ready" && effectiveChartMode === "binary" ? (
+            <GameBinaryProbabilityChart
+              data={binaryPoints}
+              primaryLabel={
+                binaryPrimaryLabel ?? resolvedSummaryItems[0]?.label
+              }
+              secondaryLabel={
+                binarySecondaryLabel ?? resolvedSummaryItems[1]?.label
+              }
+              primaryColor={resolvedSummaryItems[0]?.color ?? gameColors.home}
+              secondaryColor={
+                resolvedSummaryItems[1]?.color ?? gameColors.awayBar
+              }
+            />
+          ) : null}
+        </div>
+      </motion.div>
+
+      <OrderbookPanel
+        visible={orderbookEnabled}
+        tokenId={tokenId}
+        className="w-full shrink-0 xl:w-[272px]"
+      />
     </section>
+  );
+}
+
+function buildDefaultSummaryItems({
+  summaryMode,
+  gameSnapshot,
+  homeLabel,
+  awayLabel
+}: {
+  summaryMode: "ternary" | "binary";
+  gameSnapshot?: GameMarketSnapshot;
+  homeLabel: string;
+  awayLabel: string;
+}): ProbabilitySummaryItem[] {
+  if (!gameSnapshot) {
+    return [];
+  }
+
+  if (summaryMode === "binary") {
+    return [];
+  }
+
+  const home = gameSnapshot.outcomes.find((item) => item.side === "home");
+  const draw = gameSnapshot.outcomes.find((item) => item.side === "draw");
+  const away = gameSnapshot.outcomes.find((item) => item.side === "away");
+
+  return [
+    {
+      label: homeLabel,
+      value: home?.probability ?? 0,
+      color: gameColors.home
+    },
+    {
+      label: "Draw",
+      value: draw?.probability ?? 0,
+      color: gameColors.draw
+    },
+    {
+      label: awayLabel,
+      value: away?.probability ?? 0,
+      color: gameColors.awayBar
+    }
+  ];
+}
+
+function ProbabilitySummaryRow({ items }: { items: ProbabilitySummaryItem[] }) {
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+      {items.map((item) => (
+        <div key={item.label} className="inline-flex items-center gap-2">
+          <span
+            className="w-[12px] h-[12px] shrink-0 rounded-full"
+            style={{ backgroundColor: item.color ?? gameColors.draw }}
+            aria-hidden
+          />
+          <span className="text-[12px] font-[457] leading-[17px] text-[#909090]">
+            {item.label}
+          </span>
+          <span className="text-[12px] font-[556] leading-[17px] text-black">
+            {Math.round(item.value)}%
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -202,10 +354,7 @@ function LiveScoreBadge({
   return (
     <div className="flex items-center gap-3 text-sm font-[556] leading-[17px]">
       <span className="inline-flex items-center gap-1.5 text-[#65AF14]">
-        <span
-          className="size-2 rounded-full bg-[#65AF14]"
-          aria-hidden
-        />
+        <span className="size-2 rounded-full bg-[#65AF14]" aria-hidden />
         LIVE
       </span>
 
@@ -228,4 +377,62 @@ function LiveScoreBadge({
       </span>
     </div>
   );
+}
+
+export function buildTernarySummaryFromOutcomes(
+  outcomes: Array<
+    Pick<FixtureMarketOutcome | GameMarketOutcome, "side" | "probability">
+  >,
+  homeLabel: string,
+  awayLabel: string,
+  homeCode?: string,
+  awayCode?: string
+): ProbabilitySummaryItem[] {
+  const home = outcomes.find((item) => item.side === "home");
+  const draw = outcomes.find((item) => item.side === "draw");
+  const away = outcomes.find((item) => item.side === "away");
+
+  return [
+    {
+      label: homeLabel,
+      value: home?.probability ?? 0,
+      color: gameColors.home,
+      code: homeCode
+    },
+    {
+      label: "Draw",
+      value: draw?.probability ?? 0,
+      color: gameColors.draw
+    },
+    {
+      label: awayLabel,
+      value: away?.probability ?? 0,
+      color: gameColors.awayBar,
+      code: awayCode
+    }
+  ];
+}
+
+export function buildBinarySummaryFromOutcomes(
+  outcomes: FixtureMarketOutcome[],
+  primarySide: string,
+  secondarySide: string,
+  primaryLabel: string,
+  secondaryLabel: string
+): ProbabilitySummaryItem[] {
+  const primary = outcomes.find((item) => item.side === primarySide);
+  const secondary = outcomes.find((item) => item.side === secondarySide);
+
+  return [
+    {
+      label: primaryLabel,
+      value: primary?.probability ?? 0,
+      color: gameColors.home
+    },
+    {
+      label: secondaryLabel,
+      value: secondary?.probability ?? 0,
+      color: gameColors.awayBar
+    }
+  ];
 }

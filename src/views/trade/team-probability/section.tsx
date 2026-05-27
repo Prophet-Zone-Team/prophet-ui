@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 
 import {
@@ -22,7 +23,7 @@ import type {
   TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
-import { Orderbook } from "@/views/trade/team/orderbook";
+import { OrderbookPanel } from "@/views/trade/orderbook-panel";
 import { ProbabilityChart } from "@/views/trade/team-probability/chart";
 import { tradeYesNoPill } from "@/views/trade/trade-widget/trade-ui";
 
@@ -103,7 +104,11 @@ export function ProbabilitySection({
       )}
       aria-label="Winner probability"
     >
-      <div className={cn(probabilityCardClass, !showOrderbook && "w-full")}>
+      <motion.div
+        layout
+        transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.85 }}
+        className={cn(probabilityCardClass, !showOrderbook && "w-full")}
+      >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="m-0 text-[20px] font-[556] leading-6 text-black">
@@ -192,11 +197,13 @@ export function ProbabilitySection({
             annotations={annotations}
           />
         </div>
-      </div>
+      </motion.div>
 
-      {showOrderbook ? (
-        <Orderbook tokenId={tokenId} className="w-full shrink-0 xl:w-[272px]" />
-      ) : null}
+      <OrderbookPanel
+        visible={showOrderbook}
+        tokenId={tokenId}
+        className="w-full shrink-0 xl:w-[272px]"
+      />
     </section>
   );
 }

@@ -173,13 +173,13 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
           awayName={sides.away.name}
         />
         <div className="min-w-0 flex-1">
-          <p className="m-0 line-clamp-2 text-[14px] font-[556] leading-[17px] text-prophet-muted">
+          <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-black">
             {headerTitle}
           </p>
           {showOutcomeLabel ? (
             <p
               className={cn(
-                "m-0 mt-0.5 text-[16px] font-[556] leading-[19px]",
+                "m-0 mt-0.5 text-[16px] font-[500] leading-[19px]",
                 tradeOutcomeSide === "no" ? "text-[#FF674B]" : "text-[#65AF14]"
               )}
             >
@@ -201,16 +201,16 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
       <TeamFlag
         code={snapshot.team.code}
         name={snapshot.team.name}
-        className="!h-9 !w-9 shrink-0 rounded-md shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="!h-[36px] !w-[36px] shrink-0 rounded-md shadow-[0_0_2px_rgba(0,0,0,0.2)]"
       />
       <div className="min-w-0 flex-1">
-        <p className="m-0 line-clamp-2 text-sm font-[556] leading-[17px] text-black">
+        <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-black">
           {question}
         </p>
         {showOutcomeLabel ? (
           <p
             className={cn(
-              "m-0 mt-0.5 text-base font-[556] leading-[19px]",
+              "m-0 mt-0.5 text-[16px] font-[500] leading-[19px]",
               outcomeSide === "yes" ? "text-[#65AF14]" : "text-[#FF674B]"
             )}
           >

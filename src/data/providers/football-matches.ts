@@ -7,7 +7,8 @@ import {
 import { clearFootballMatchesFileFallbackCache } from "@/data/providers/football-matches-fallback";
 import {
   clearPolymarketFootballEventsCache,
-  fetchPolymarketFootballEvents
+  fetchPolymarketFootballEvents,
+  fetchPolymarketFootballMatchBySlug
 } from "@/data/providers/polymarket-football-events-provider";
 import { clearFixtureSiblingMarketsCache } from "@/server/market/fixture-sibling-enrichment";
 import type { FreshnessMeta, WorldCupMatch } from "@/types/market";
@@ -60,13 +61,30 @@ export async function getFootballMatches(): Promise<FootballMatchesResult> {
   return result;
 }
 
-export async function findFootballMatch(
-  matchId: string
-): Promise<WorldCupMatch | undefined> {
-  const { matches } = await getFootballMatches();
+function findMatchInList(
+  slug: string,
+  matches: WorldCupMatch[],
+): WorldCupMatch | undefined {
   return matches.find(
-    (match) => match.id === matchId || match.polymarket?.slug === matchId
+    (match) => match.id === slug || match.polymarket?.slug === slug,
   );
+}
+
+export async function getFootballMatchBySlug(
+  slug: string,
+): Promise<WorldCupMatch | undefined> {
+  if (USE_MOCK_SCHEDULE_MATCHES) {
+    const matches = await getMockScheduleMatchesFromFile();
+    return findMatchInList(slug, matches);
+  }
+
+  return fetchPolymarketFootballMatchBySlug(slug);
+}
+
+export async function findFootballMatch(
+  matchId: string,
+): Promise<WorldCupMatch | undefined> {
+  return getFootballMatchBySlug(matchId);
 }
 
 export function clearFootballMatchesCache(): void {

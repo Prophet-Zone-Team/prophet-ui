@@ -3,9 +3,9 @@
 import type { ReactNode } from "react";
 
 import { CopyLinkIcon } from "@/components/icons";
+import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { PageBack } from "@/components/ui/page-back";
-import { cn } from "@/lib/cn";
 import type {
   ApiFootballTeamProfile,
   TeamFootballMetadata,
@@ -85,30 +85,11 @@ function HeaderControls({
         </button>
       </div>
 
-      <label className="flex cursor-pointer items-center gap-2">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={showOrderbook}
-          aria-label="Show orderbook"
-          onClick={() => onOrderbookChange(!showOrderbook)}
-          className={cn(
-            "relative h-4 w-[29px] shrink-0 rounded-lg border border-[#EAEAEA] transition-colors",
-            showOrderbook ? "bg-[#F4B600]" : "bg-[#EBEBEB]"
-          )}
-        >
-          <span
-            className={cn(
-              "absolute top-1/2 size-3 -translate-y-1/2 rounded-lg border border-[#EAEAEA] bg-white transition-[left]",
-              showOrderbook ? "left-[calc(100%-14px)]" : "left-0.5"
-            )}
-            aria-hidden
-          />
-        </button>
-        <span className="whitespace-nowrap text-base font-[457] leading-[19px] text-[#909090]">
-          Orderbook
-        </span>
-      </label>
+      <OrderbookToggle
+        variant="team"
+        checked={showOrderbook}
+        onChange={onOrderbookChange}
+      />
     </div>
   );
 }

@@ -15,6 +15,9 @@ import {
 } from "@/lib/market/game-outcome-price";
 import {
   calculateReferencePrice,
+  formatTakeProfitLimitPriceString,
+  isTakeProfitLimitAvailable,
+  LIMIT_BUY_MIN_SHARES,
   resolveMaxSellShares
 } from "@/lib/market/order-math";
 import {
@@ -30,6 +33,8 @@ import {
   useSetTradeLimitExpirationCustom,
   useSetTradeLimitPrice,
   useSetTradeOutcomeSide,
+  useSetTradeTakeProfitLimitEnabled,
+  useSetTradeTakeProfitLimitPrice,
   useTradeTicketStore,
   useTradeAmount,
   useTradeLimitExpiration,
@@ -39,7 +44,9 @@ import {
   useSelectedFixtureOutcome,
   useTradeOrderMode,
   useTradeOutcomeSide,
-  useTradeTab
+  useTradeTab,
+  useTradeTakeProfitLimitEnabled,
+  useTradeTakeProfitLimitPrice
 } from "@/store/trade-ticket-store";
 import type { GameMarketSnapshot, TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
@@ -47,9 +54,12 @@ import {
   buildGameTradePreview,
   buildTeamTradePreview,
   buildGameUserOrderPreview,
+  buildTakeProfitOrderBundle,
   buildTeamUserOrderPreview,
   buildOutcomeShareMap,
   canSubmitTradeTicket,
+  INSUFFICIENT_FUNDS_MESSAGE,
+  isBuyInsufficientFunds,
   deriveTradeActionLabel,
   ensureTradingReadyForBid,
   fetchConditionalTokenBalance,
@@ -70,9 +80,12 @@ import {
   resolveOrderType,
   resolveQuickAmountAllBalance,
   resolveSellQuickAmount,
+  resolveTakeProfitLimitPrice,
   resolveTeamOutcomeTokenIds,
   resolveTradeSide,
   submitSignedTradeOrder,
+  submitTakeProfitLimitOrder,
+  TAKE_PROFIT_LIMIT_FAILED_MESSAGE,
   toBidOrderPreview,
   resolveLimitShareQuickAmount,
   resolveLimitExpirationTimestamp,
@@ -122,11 +135,15 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const limitPrice = useTradeLimitPrice();
   const limitExpiration = useTradeLimitExpiration();
   const limitExpirationCustom = useTradeLimitExpirationCustom();
+  const takeProfitLimitEnabled = useTradeTakeProfitLimitEnabled();
+  const takeProfitLimitPrice = useTradeTakeProfitLimitPrice();
   const setOutcomeSide = useSetTradeOutcomeSide();
   const setAmount = useSetTradeAmount();
   const setLimitPrice = useSetTradeLimitPrice();
   const setLimitExpiration = useSetTradeLimitExpiration();
   const setLimitExpirationCustom = useSetTradeLimitExpirationCustom();
+  const setTakeProfitLimitEnabled = useSetTradeTakeProfitLimitEnabled();
+  const setTakeProfitLimitPrice = useSetTradeTakeProfitLimitPrice();
 
   const [readiness, setReadiness] = useState<
     Awaited<ReturnType<typeof fetchReadinessForPreview>> | undefined
@@ -147,6 +164,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     { yesAsk?: number; noAsk?: number } | undefined
   >();
   const readinessFetchGeneration = useRef(0);
+  const takeProfitPriceTouched = useRef(false);
 
   const orderAmount = parseOrderAmount(amount);
   const orderType = resolveOrderType(orderMode);
@@ -406,6 +424,19 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   const preview = teamDefaults?.preview ?? gameDefaults?.preview;
   const previewCanSubmit = preview?.canSubmitRealOrder ?? false;
+  const takeProfitLimitAvailable = isTakeProfitLimitAvailable(
+    preview?.shareSize ?? 0
+  );
+
+  useEffect(() => {
+    if (!takeProfitLimitAvailable && takeProfitLimitEnabled) {
+      setTakeProfitLimitEnabled(false);
+    }
+  }, [
+    takeProfitLimitAvailable,
+    takeProfitLimitEnabled,
+    setTakeProfitLimitEnabled
+  ]);
 
   const expirationError =
     orderMode === "limit" && limitExpiration === "custom"
@@ -415,9 +446,28 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const actionInProgress =
     status === "loading" || status === "signing" || status === "submitting";
 
+  const insufficientFunds = useMemo(() => {
+    if (!preview) {
+      return false;
+    }
+
+    return isBuyInsufficientFunds({
+      tradeSide,
+      preview,
+      readiness
+    });
+  }, [
+    tradeSide,
+    preview,
+    readiness?.checks,
+    readiness?.balances?.usdcAvailable,
+    readiness?.balances?.clobUsdcAvailable
+  ]);
+
   const canSubmit = canSubmitTradeTicket({
     status,
-    previewCanSubmit: Boolean(preview) && !expirationError
+    previewCanSubmit:
+      previewCanSubmit && !expirationError && !insufficientFunds
   });
 
   const actionLabel = deriveTradeActionLabel(
@@ -449,6 +499,29 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     // Reset default limit price only when trade context changes, not on snapshot refreshes.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot read from latest closure
   }, [limitPriceContextKey, setLimitPrice]);
+
+  useEffect(() => {
+    takeProfitPriceTouched.current = false;
+  }, [limitPriceContextKey, orderMode, tab]);
+
+  useEffect(() => {
+    if (orderMode !== "market" || tradeSide !== "buy" || !preview) {
+      return;
+    }
+
+    if (takeProfitPriceTouched.current) {
+      return;
+    }
+
+    setTakeProfitLimitPrice(
+      formatTakeProfitLimitPriceString(preview.sidePrice)
+    );
+  }, [
+    orderMode,
+    preview?.sidePrice,
+    setTakeProfitLimitPrice,
+    tradeSide
+  ]);
 
   const applyReadinessFetch = useCallback(
     async (orderPreview: NonNullable<typeof preview>) => {
@@ -749,6 +822,90 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             : undefined
       });
 
+      await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
+      await refreshOutcomeShares();
+
+      let takeProfitLimitPlaced = false;
+
+      if (
+        orderMode === "market" &&
+        tradeSide === "buy" &&
+        takeProfitLimitEnabled &&
+        takeProfitLimitAvailable &&
+        preview.shareSize >= LIMIT_BUY_MIN_SHARES &&
+        preview.tokenId
+      ) {
+        try {
+          const takeProfitPrice = resolveTakeProfitLimitPrice(
+            takeProfitLimitPrice,
+            preview.sidePrice
+          );
+          const conditionalBalance = await fetchConditionalTokenBalance(
+            preview.tokenId
+          ).catch(() => undefined);
+          const cappedShareSize = resolveMaxSellShares(
+            preview.shareSize,
+            conditionalBalance
+          );
+
+          if (cappedShareSize === undefined || cappedShareSize <= 0) {
+            throw new Error(
+              "Conditional token balance is not yet available for a take profit sell limit."
+            );
+          }
+
+          const takeProfitBundle =
+            input.variant === "team"
+              ? buildTakeProfitOrderBundle({
+                  variant: "team",
+                  snapshot: input.snapshot,
+                  outcomeSide: preview.outcomeSide,
+                  shareSize: cappedShareSize,
+                  limitPrice: takeProfitPrice,
+                  tokenId: preview.tokenId,
+                  maxShareSize: cappedShareSize,
+                  acceptingOrders: preview.acceptingOrders
+                })
+              : buildTakeProfitOrderBundle({
+                  variant: "game",
+                  gameSnapshot: input.gameSnapshot,
+                  matchOutcomeSide,
+                  outcomeSide: preview.outcomeSide,
+                  shareSize: cappedShareSize,
+                  limitPrice: takeProfitPrice,
+                  tokenId: preview.tokenId,
+                  fixtureOutcome:
+                    effectiveFixtureOutcome ?? selectedFixtureOutcome,
+                  maxShareSize: cappedShareSize
+                });
+
+          if (!takeProfitBundle.bidPreview.canSubmitRealOrder) {
+            throw new Error(
+              takeProfitBundle.bidPreview.disabledReason ??
+                "Take profit limit order is unavailable."
+            );
+          }
+
+          setStatus("signing");
+          setMessage(
+            "Review and sign the take profit limit order in your wallet."
+          );
+
+          setStatus("submitting");
+          setMessage("Submitting take profit limit order to Polymarket CLOB.");
+
+          await submitTakeProfitLimitOrder({
+            session,
+            preview: takeProfitBundle.bidPreview,
+            userOrderPreview: takeProfitBundle.userPreview
+          });
+          takeProfitLimitPlaced = true;
+        } catch (takeProfitError) {
+          const detail = resolveOrderErrorMessage(takeProfitError);
+          showOrderErrorToast(`${TAKE_PROFIT_LIMIT_FAILED_MESSAGE} ${detail}`);
+        }
+      }
+
       showOrderSubmittedToast(
         formatOrderToastSummary({
           tradeSide: preview.tradeSide,
@@ -756,7 +913,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
           estimatedTotalCost: preview.estimatedTotalCost,
           shareSize: preview.shareSize,
           variant: input.variant
-        }),
+        }) +
+          (takeProfitLimitPlaced
+            ? " · Take profit limit order submitted"
+            : ""),
         {
           orderId: result.order?.id,
           onViewPortfolio: () => router.push("/portfolio")
@@ -764,8 +924,6 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       );
       setStatus("idle");
       setMessage(undefined);
-
-      await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
 
       await Promise.all([
         refreshOrderReadiness(),
@@ -803,6 +961,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     signClobCredentials,
     signTokenApprovals,
     refreshOutcomeShares,
+    takeProfitLimitEnabled,
+    takeProfitLimitPrice,
+    effectiveFixtureOutcome,
+    selectedFixtureOutcome,
+    matchOutcomeSide,
     tradeSide
   ]);
 
@@ -857,7 +1020,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       return;
     }
 
-    setAmount(String(value));
+    setAmount(resolveLimitShareQuickAmount(amount, value));
     setMessage(undefined);
     setEligibilityRetryAvailable(false);
   }
@@ -880,6 +1043,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const kickoffAt =
     input.variant === "game" ? input.gameSnapshot.match.kickoffAt : undefined;
   const availableCash = resolveTradeTicketAvailableCash(readiness);
+  const fundingMessage =
+    insufficientFunds && !expirationError && !message
+      ? INSUFFICIENT_FUNDS_MESSAGE
+      : undefined;
 
   return {
     formProps: {
@@ -901,6 +1068,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       limitExpiration,
       limitExpirationCustom,
       expirationError,
+      fundingMessage,
       actionLabel,
       canSubmit,
       actionInProgress,
@@ -931,6 +1099,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       onAmountMessageClear: () => {
         setMessage(undefined);
         setEligibilityRetryAvailable(false);
+      },
+      takeProfitLimitEnabled,
+      takeProfitLimitDisabled: !takeProfitLimitAvailable,
+      takeProfitLimitPrice,
+      onTakeProfitLimitEnabledChange: setTakeProfitLimitEnabled,
+      onTakeProfitLimitPriceChange: (value: string) => {
+        takeProfitPriceTouched.current = true;
+        setTakeProfitLimitPrice(value);
       }
     }
   };

@@ -15,6 +15,7 @@ const TAB_UNDERLINE_TRANSITION = {
 export interface TabSwitcherItem {
   id: string;
   label: string;
+  iconSrc?: string;
 }
 
 export interface TabSwitcherProps {
@@ -69,13 +70,21 @@ export function TabSwitcher({
           >
             <span
               className={cn(
-                "text-center text-black transition-opacity duration-200",
+                "flex items-center gap-1 text-center text-black transition-opacity duration-200",
                 tabLabelSizeClass[size],
                 isActive && tabLabelActiveClass[size],
                 isActive ? "opacity-100" : "opacity-55",
                 tabLabelClassName
               )}
             >
+              {item.iconSrc ? (
+                <img
+                  src={item.iconSrc}
+                  alt=""
+                  aria-hidden="true"
+                  className="size-5 shrink-0"
+                />
+              ) : null}
               {item.label}
             </span>
             {isActive ? (

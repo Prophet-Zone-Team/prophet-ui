@@ -9,7 +9,9 @@ export const FAST_BID_PRESET_AMOUNTS = [5, 10, 100, 1000] as const;
 
 interface UserConfigState {
   fastBidAmount: number;
+  showOrderbook: boolean;
   setFastBidAmount: (amount: number) => void;
+  setShowOrderbook: (value: boolean) => void;
 }
 
 export function normalizeFastBidAmount(amount: number): number {
@@ -34,24 +36,32 @@ export const useUserConfigStore = create<UserConfigState>()(
   persist(
     (set) => ({
       fastBidAmount: DEFAULT_FAST_BID_AMOUNT,
+      showOrderbook: true,
       setFastBidAmount: (amount) => {
         set({ fastBidAmount: normalizeFastBidAmount(amount) });
+      },
+      setShowOrderbook: (value) => {
+        set({ showOrderbook: value });
       }
     }),
     {
       name: "wc-user-config",
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        fastBidAmount: state.fastBidAmount
+        fastBidAmount: state.fastBidAmount,
+        showOrderbook: state.showOrderbook
       }),
       migrate: (persisted) => {
-        const state = persisted as { fastBidAmount?: number } | undefined;
+        const state = persisted as
+          | { fastBidAmount?: number; showOrderbook?: boolean }
+          | undefined;
 
         return {
           fastBidAmount: normalizeFastBidAmount(
             state?.fastBidAmount ?? DEFAULT_FAST_BID_AMOUNT
-          )
+          ),
+          showOrderbook: state?.showOrderbook ?? true
         };
       }
     }
@@ -64,4 +74,12 @@ export function useFastBidAmount() {
 
 export function useSetFastBidAmount() {
   return useUserConfigStore((state) => state.setFastBidAmount);
+}
+
+export function useShowOrderbook() {
+  return useUserConfigStore((state) => state.showOrderbook);
+}
+
+export function useSetShowOrderbook() {
+  return useUserConfigStore((state) => state.setShowOrderbook);
 }

@@ -1,8 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import type { MarketDataMeta } from "@/data/providers/types";
+import {
+  useSetShowOrderbook,
+  useShowOrderbook
+} from "@/store/user-config-store";
 import type {
   ApiFootballTeamProfile,
   ProbabilityHistoryPoint,
@@ -35,7 +39,8 @@ export default function TradeTeamView({
   footballProfile,
   footballMetadata
 }: TradeTeamViewProps) {
-  const [showOrderbook, setShowOrderbook] = useState(true);
+  const showOrderbook = useShowOrderbook();
+  const setShowOrderbook = useSetShowOrderbook();
   const allSnapshots = useMemo(() => {
     const byId = new Map(snapshots.map((item) => [item.team.id, item]));
     byId.set(snapshot.team.id, snapshot);

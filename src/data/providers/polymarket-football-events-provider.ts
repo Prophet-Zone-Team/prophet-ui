@@ -8,6 +8,7 @@ import {
 } from "@/lib/market/polymarket-gamma";
 import {
   isWorldCupFixtureEvent,
+  mapGammaEventToMatch,
   mapGammaEventsToMatches,
   resolveWorldCupTagIds,
 } from "@/lib/market/polymarket-football-match-mapper";
@@ -263,6 +264,42 @@ function getEventKickoffTime(event: GammaEventRecord): number {
 
   const time = Date.parse(kickoff);
   return Number.isNaN(time) ? Number.POSITIVE_INFINITY : time;
+}
+
+export async function fetchGammaEventBySlug(
+  slug: string,
+): Promise<GammaEventRecord | undefined> {
+  const response = await serverFetch(
+    `${GAMMA_API_BASE}/events/slug/${encodeURIComponent(slug)}`,
+    {
+      cache: "no-store",
+      headers: {
+        accept: "application/json",
+      },
+    },
+  );
+
+  if (response.status === 404 || !response.ok) {
+    return undefined;
+  }
+
+  const payload = (await response.json()) as unknown;
+
+  return isGammaEventRecord(payload) ? payload : undefined;
+}
+
+export async function fetchPolymarketFootballMatchBySlug(
+  slug: string,
+): Promise<WorldCupMatch | undefined> {
+  const event = await fetchGammaEventBySlug(slug);
+  const match = event ? mapGammaEventToMatch(event) : undefined;
+
+  if (!match) {
+    return undefined;
+  }
+
+  const [enrichedMatch] = await enrichFootballMatchesWithClobData([match]);
+  return enrichedMatch;
 }
 
 export function clearPolymarketFootballEventsCache(): void {
