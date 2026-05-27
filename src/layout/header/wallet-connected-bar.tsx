@@ -1,4 +1,3 @@
-import Popover from "@/components/popover";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import {
@@ -10,13 +9,14 @@ import {
   walletMenuTriggerClass
 } from "@/layout/header/wallet-menu-ui";
 import { cn } from "@/lib/cn";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 
 export interface WalletConnectedBarProps {
   polymarketAddress: string;
   balanceDisplay: string;
   isMenuOpen: boolean;
   regionRestricted?: boolean;
+  isPrivateMode?: boolean;
   onDeposit: () => void;
   onPrivateTopup: () => void;
   onPrivateBalanceClick: () => void;
@@ -31,7 +31,8 @@ export function WalletConnectedBar({
   onDeposit,
   onPrivateTopup,
   onPrivateBalanceClick,
-  onToggleMenu
+  onToggleMenu,
+  isPrivateMode,
 }: WalletConnectedBarProps) {
   const popoverRef = useRef<any>(null);
 
@@ -69,52 +70,58 @@ export function WalletConnectedBar({
 
   return (
     <div className={walletConnectedBarClass}>
-      <RegionRestrictedControl restricted={regionRestricted}>
-        {privateBalanceButton}
-      </RegionRestrictedControl>
-      <div className="h-[31px] w-px shrink-0 bg-prophet-line"></div>
-      <div className="flex flex-col justify-center items-end gap-0">
-        <span className={walletBalanceLabelClass}>Balance</span>
-        <span className={walletBalanceValueClass}>${balanceDisplay}</span>
-      </div>
+      {
+        !isPrivateMode && (
+          <>
+            <RegionRestrictedControl restricted={regionRestricted}>
+              {privateBalanceButton}
+            </RegionRestrictedControl>
+            <div className="h-[31px] w-px shrink-0 bg-prophet-line"></div>
+            <div className="flex flex-col justify-center items-end gap-0">
+              <span className={walletBalanceLabelClass}>Balance</span>
+              <span className={walletBalanceValueClass}>${balanceDisplay}</span>
+            </div>
 
-      {regionRestricted ? (
-        <RegionRestrictedControl restricted>{depositButton}</RegionRestrictedControl>
-      ) : (
-        // <Popover
-        //   ref={popoverRef}
-        //   placement="BottomRight"
-        //   trigger="Hover"
-        //   content={
-        //     <div className="w-[130px] flex flex-col items-stretch gap-1 py-1 text-black text-sm rounded-xl bg-white border border-[#EBEBEB] shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
-        //       <button
-        //         type="button"
-        //         className="w-full text-left cursor-pointer hover:bg-[#999]/10 duration-150 px-3 py-2"
-        //         onClick={() => {
-        //           onDeposit();
-        //           popoverRef.current?.onClose?.();
-        //         }}
-        //       >
-        //         Deposit
-        //       </button>
-        //       <button
-        //         type="button"
-        //         className="w-full text-left cursor-pointer hover:bg-[#999]/10 duration-150 px-3 py-2"
-        //         onClick={() => {
-        //           onPrivateTopup();
-        //           popoverRef.current?.onClose?.();
-        //         }}
-        //       >
-        //         Private Topup
-        //       </button>
-        //     </div>
-        //   }
-        // >
-        depositButton
-        // </Popover>
-      )}
+            {regionRestricted ? (
+              <RegionRestrictedControl restricted>{depositButton}</RegionRestrictedControl>
+            ) : (
+              // <Popover
+              //   ref={popoverRef}
+              //   placement="BottomRight"
+              //   trigger="Hover"
+              //   content={
+              //     <div className="w-[130px] flex flex-col items-stretch gap-1 py-1 text-black text-sm rounded-xl bg-white border border-[#EBEBEB] shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
+              //       <button
+              //         type="button"
+              //         className="w-full text-left cursor-pointer hover:bg-[#999]/10 duration-150 px-3 py-2"
+              //         onClick={() => {
+              //           onDeposit();
+              //           popoverRef.current?.onClose?.();
+              //         }}
+              //       >
+              //         Deposit
+              //       </button>
+              //       <button
+              //         type="button"
+              //         className="w-full text-left cursor-pointer hover:bg-[#999]/10 duration-150 px-3 py-2"
+              //         onClick={() => {
+              //           onPrivateTopup();
+              //           popoverRef.current?.onClose?.();
+              //         }}
+              //       >
+              //         Private Topup
+              //       </button>
+              //     </div>
+              //   }
+              // >
+              depositButton
+              // </Popover>
+            )}
 
-      <span className={walletMenuDividerClass} aria-hidden="true" />
+            <span className={walletMenuDividerClass} aria-hidden="true" />
+          </>
+        )
+      }
 
       <button
         type="button"
