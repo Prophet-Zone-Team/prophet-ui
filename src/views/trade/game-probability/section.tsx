@@ -6,6 +6,11 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { findGameMarketOutcome } from "@/lib/market/game-outcome-price";
 import { formatMatchScore } from "@/lib/market/match-display";
+import {
+  isEffectiveLiveMatch,
+  isMockLiveFixtureEnabled,
+  resolveMockLiveDisplayScore,
+} from "@/data/mock/live-fixture-simulation";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import {
   useSelectedFixtureOutcome,
@@ -16,6 +21,7 @@ import type {
   FixtureChartKind,
   FixtureMarketOutcome,
   GameFixtureChartTimeRange,
+  GameFixtureMarketsSnapshot,
   GameMarketOutcome,
   GameMarketSnapshot,
   TeamMarketSnapshot,
@@ -26,6 +32,10 @@ import { gameColors } from "@/views/trade/game/ui";
 import { GameBinaryProbabilityChart } from "@/views/trade/game-probability/binary-chart";
 import { GameProbabilityChart } from "@/views/trade/game-probability/chart";
 import { useFixturePriceHistory } from "@/views/trade/game-probability/use-fixture-price-history";
+import {
+  useLiveMatchProbabilityChart,
+  type LiveChartSimulationTick,
+} from "@/views/trade/game-probability/use-live-match-probability-chart";
 import { OrderbookPanel } from "@/views/trade/orderbook-panel";
 
 const GAME_PROBABILITY_TIME_RANGES = [
@@ -52,6 +62,7 @@ export interface GameProbabilitySectionProps {
   match: WorldCupMatch;
   snapshots?: TeamMarketSnapshot[];
   gameSnapshot?: GameMarketSnapshot;
+  fixtureMarkets?: GameFixtureMarketsSnapshot;
   showOrderbook?: boolean;
   className?: string;
   chartKind?: FixtureChartKind;
@@ -60,12 +71,14 @@ export interface GameProbabilitySectionProps {
   summaryItems?: ProbabilitySummaryItem[];
   binaryPrimaryLabel?: string;
   binarySecondaryLabel?: string;
+  liveChartSimulation?: LiveChartSimulationTick;
 }
 
 export function GameProbabilitySection({
   match,
   snapshots = [],
   gameSnapshot,
+  fixtureMarkets,
   showOrderbook = true,
   className,
   chartKind = "moneyline",
@@ -73,22 +86,38 @@ export function GameProbabilitySection({
   summaryMode = "ternary",
   summaryItems,
   binaryPrimaryLabel,
-  binarySecondaryLabel
+  binarySecondaryLabel,
+  liveChartSimulation,
 }: GameProbabilitySectionProps) {
   const [timeRange, setTimeRange] = useState<GameFixtureChartTimeRange>("all");
   const matchOutcomeSide = useTradeMatchOutcomeSide();
   const selectedFixtureOutcome = useSelectedFixtureOutcome();
   const tradeOutcomeSide = useTradeOutcomeSide();
+  const isLive = isEffectiveLiveMatch(match);
+  const liveChartActive =
+    isLive && Boolean(chartKind) && Boolean(gameSnapshot && fixtureMarkets);
   const { points, binaryPoints, chartMode, status, error, refetch } =
     useFixturePriceHistory({
       matchSlug: match.id,
       timeRange,
       chartKind,
-      lineKey
+      lineKey,
+      enabled: !liveChartActive,
     });
+  const liveChart = useLiveMatchProbabilityChart({
+    match,
+    gameSnapshot: gameSnapshot!,
+    fixtureMarkets: fixtureMarkets!,
+    chartKind: chartKind ?? "moneyline",
+    lineKey,
+    enabled: liveChartActive,
+    simulation: liveChartSimulation,
+  });
 
   const sides = resolveMatchSides(match, snapshots);
-  const isLive = match.status === "live";
+  const displayScore = isMockLiveFixtureEnabled()
+    ? resolveMockLiveDisplayScore(match)
+    : { homeScore: match.homeScore, awayScore: match.awayScore };
   const orderbookEnabled = showOrderbook && Boolean(gameSnapshot);
 
   const fallbackOutcome = useMemo(() => {
@@ -128,8 +157,23 @@ export function GameProbabilitySection({
     [awayLabel, gameSnapshot, homeLabel, summaryItems, summaryMode]
   );
 
-  const effectiveChartMode =
-    chartMode === "binary" || summaryMode === "binary" ? "binary" : "ternary";
+  const liveChartHasData =
+    liveChart.chartMode === "binary"
+      ? liveChart.binaryPoints.length > 0
+      : liveChart.points.length > 0;
+  const effectiveChartMode = liveChartActive
+    ? liveChart.chartMode
+    : chartMode === "binary" || summaryMode === "binary"
+      ? "binary"
+      : "ternary";
+  const chartPoints = liveChartActive ? liveChart.points : points;
+  const chartBinaryPoints = liveChartActive ? liveChart.binaryPoints : binaryPoints;
+  const chartEvents = liveChartActive ? liveChart.events : [];
+  const chartStatus = liveChartActive
+    ? liveChartHasData
+      ? "ready"
+      : "empty"
+    : status;
 
   return (
     <section
@@ -162,44 +206,49 @@ export function GameProbabilitySection({
                 homeName={homeLabel}
                 awayCode={sides.away.code}
                 awayName={awayLabel}
-                score={formatMatchScore(match.homeScore, match.awayScore)}
+                score={formatMatchScore(
+                  displayScore.homeScore,
+                  displayScore.awayScore,
+                )}
               />
             ) : null}
 
-            <div
-              className="flex flex-wrap gap-4"
-              role="group"
-              aria-label="Chart time range"
-            >
-              {GAME_PROBABILITY_TIME_RANGES.map((range) => (
-                <button
-                  key={range.id}
-                  type="button"
-                  className={cn(
-                    "border-0 bg-transparent p-0 text-[14px] leading-[17px]",
-                    timeRange === range.id
-                      ? "font-[556] text-black"
-                      : "font-[457] text-[#909090]"
-                  )}
-                  onClick={() => setTimeRange(range.id)}
-                >
-                  {range.label}
-                </button>
-              ))}
-            </div>
+            {!isLive ? (
+              <div
+                className="flex flex-wrap gap-4"
+                role="group"
+                aria-label="Chart time range"
+              >
+                {GAME_PROBABILITY_TIME_RANGES.map((range) => (
+                  <button
+                    key={range.id}
+                    type="button"
+                    className={cn(
+                      "border-0 bg-transparent p-0 text-[14px] leading-[17px]",
+                      timeRange === range.id
+                        ? "font-[556] text-black"
+                        : "font-[457] text-[#909090]"
+                    )}
+                    onClick={() => setTimeRange(range.id)}
+                  >
+                    {range.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
 
         <div className="mt-4">
-          {status === "loading" ? (
+          {chartStatus === "loading" ? (
             <ChartStateMessage message="Loading market price history..." />
           ) : null}
 
-          {status === "empty" ? (
+          {chartStatus === "empty" ? (
             <ChartStateMessage message="No price history available for this market." />
           ) : null}
 
-          {status === "error" ? (
+          {chartStatus === "error" ? (
             <ChartStateMessage
               message={error ?? "Unable to load market price history."}
               actionLabel="Retry"
@@ -209,18 +258,23 @@ export function GameProbabilitySection({
             />
           ) : null}
 
-          {status === "ready" && effectiveChartMode === "ternary" ? (
+          {chartStatus === "ready" && effectiveChartMode === "ternary" ? (
             <GameProbabilityChart
-              data={points}
+              data={chartPoints}
               homeLabel={homeLabel}
               drawLabel="Draw"
               awayLabel={awayLabel}
+              mode={liveChartActive ? "live" : "historical"}
+              events={chartEvents}
+              maxElapsedSeconds={liveChart.maxElapsedSeconds}
+              homeCode={sides.home.code}
+              awayCode={sides.away.code}
             />
           ) : null}
 
-          {status === "ready" && effectiveChartMode === "binary" ? (
+          {chartStatus === "ready" && effectiveChartMode === "binary" ? (
             <GameBinaryProbabilityChart
-              data={binaryPoints}
+              data={chartBinaryPoints}
               primaryLabel={
                 binaryPrimaryLabel ?? resolvedSummaryItems[0]?.label
               }
@@ -231,6 +285,11 @@ export function GameProbabilitySection({
               secondaryColor={
                 resolvedSummaryItems[1]?.color ?? gameColors.awayBar
               }
+              mode={liveChartActive ? "live" : "historical"}
+              events={chartEvents}
+              maxElapsedSeconds={liveChart.maxElapsedSeconds}
+              homeCode={sides.home.code}
+              awayCode={sides.away.code}
             />
           ) : null}
         </div>

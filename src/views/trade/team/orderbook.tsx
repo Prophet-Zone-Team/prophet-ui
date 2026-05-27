@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { fetchJson } from "@/lib/team/client-fetch";
@@ -19,9 +20,8 @@ interface MarketOrderbook {
   updatedAt?: string;
 }
 
-const MAX_ASK_ROWS = 7;
+const MAX_ASK_ROWS = 8;
 const MAX_BID_ROWS = 8;
-const ORDERBOOK_POLL_INTERVAL_MS = 15_000;
 
 export interface OrderbookProps {
   tokenId?: string;
@@ -49,12 +49,9 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
     setBook(undefined);
     setError(undefined);
 
-    async function load(isInitial: boolean) {
+    async function load() {
       const currentRequestId = ++requestId;
-
-      if (isInitial) {
-        setLoading(true);
-      }
+      setLoading(true);
 
       try {
         const payload = await fetchJson<{ orderbook: MarketOrderbook }>(
@@ -82,20 +79,15 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
       }
     }
 
-    void load(true);
-    const interval = window.setInterval(
-      () => void load(false),
-      ORDERBOOK_POLL_INTERVAL_MS
-    );
+    void load();
 
     return () => {
       ignore = true;
-      window.clearInterval(interval);
     };
   }, [tokenId]);
 
   const asks = useMemo(
-    () => [...(book?.asks ?? [])].reverse().slice(0, MAX_ASK_ROWS),
+    () => [...(book?.asks ?? [])].slice(0, MAX_ASK_ROWS).reverse(),
     [book]
   );
   const bids = useMemo(() => (book?.bids ?? []).slice(0, MAX_BID_ROWS), [book]);
@@ -145,47 +137,60 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div
-          ref={asksScrollRef}
-          className="flex min-h-0 flex-1 flex-col justify-end overflow-y-auto"
-        >
-          {loading && !book ? (
-            <p className="px-1 py-4 text-[#909090]">Loading…</p>
-          ) : error ? (
-            <p className="px-1 py-4 text-[#FF674B]">{error}</p>
-          ) : (
-            asks.map((level, index) => (
-              <OrderbookRow
-                key={`ask-${level.price}-${index}`}
-                price={level.price}
-                size={level.size}
-                side="ask"
-              />
-            ))
-          )}
-        </div>
-
-        <div className="mx-[-4px] flex h-8 shrink-0 items-center justify-between bg-[#EBEBEB] px-2">
-          <span className="font-[400] leading-[17px] text-black">
-            {marketPrice !== undefined
-              ? formatOrderbookPrice(marketPrice)
-              : "—"}
-          </span>
-          <span className="font-[400] leading-[17px] text-[#909090]">
-            Market Price
-          </span>
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-          {bids.map((level, index) => (
-            <OrderbookRow
-              key={`bid-${level.price}-${index}`}
-              price={level.price}
-              size={level.size}
-              side="bid"
+        {loading && !book ? (
+          <div
+            className="flex min-h-0 flex-1 items-center justify-center"
+            aria-busy="true"
+            aria-label="Loading order book"
+          >
+            <Loader2
+              className="h-5 w-5 animate-spin text-[#909090]"
+              aria-hidden="true"
             />
-          ))}
-        </div>
+          </div>
+        ) : error && !book ? (
+          <div className="flex min-h-0 flex-1 items-center justify-center px-1">
+            <p className="text-center text-[#FF674B]">{error}</p>
+          </div>
+        ) : (
+          <>
+            <div
+              ref={asksScrollRef}
+              className="flex min-h-0 flex-1 flex-col justify-end overflow-y-auto"
+            >
+              {asks.map((level, index) => (
+                <OrderbookRow
+                  key={`ask-${level.price}-${index}`}
+                  price={level.price}
+                  size={level.size}
+                  side="ask"
+                />
+              ))}
+            </div>
+
+            <div className="mx-[-4px] flex h-8 shrink-0 items-center justify-between bg-[#EBEBEB] px-2">
+              <span className="font-[400] leading-[17px] text-black">
+                {marketPrice !== undefined
+                  ? formatOrderbookPrice(marketPrice)
+                  : "—"}
+              </span>
+              <span className="font-[400] leading-[17px] text-[#909090]">
+                Market Price
+              </span>
+            </div>
+
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+              {bids.map((level, index) => (
+                <OrderbookRow
+                  key={`bid-${level.price}-${index}`}
+                  price={level.price}
+                  size={level.size}
+                  side="bid"
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

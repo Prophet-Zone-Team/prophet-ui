@@ -367,22 +367,24 @@ export function getGameMatchChartEvents(match: WorldCupMatch): GameMatchChartEve
   const events: GameMatchChartEvent[] = [];
 
   for (let index = 0; index < homeGoals; index += 1) {
+    const minute = homeMinutes[index] ?? 15 + index * 20;
     events.push({
-      minute: homeMinutes[index] ?? 15 + index * 20,
+      elapsedSeconds: minute * 60,
       side: "home",
-      type: "goal"
+      type: "goal",
     });
   }
 
   for (let index = 0; index < awayGoals; index += 1) {
+    const minute = awayMinutes[index] ?? 20 + index * 22;
     events.push({
-      minute: awayMinutes[index] ?? 20 + index * 22,
+      elapsedSeconds: minute * 60,
       side: "away",
-      type: "goal"
+      type: "goal",
     });
   }
 
-  return events.sort((left, right) => left.minute - right.minute);
+  return events.sort((left, right) => left.elapsedSeconds - right.elapsedSeconds);
 }
 
 export function getGameChartYDomain(

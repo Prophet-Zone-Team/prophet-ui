@@ -39,3 +39,23 @@ export function formatElapsedDuration(totalSeconds: number): string {
 export function formatLiveClockLabel(totalSeconds: number): string {
   return `Lasts ${formatElapsedDuration(totalSeconds)}`;
 }
+
+export function formatGoalEventTime(totalSeconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
+  const paddedSeconds = String(seconds).padStart(2, "0");
+
+  return `${minutes}'${paddedSeconds}''`;
+}
+
+export function formatMatchMinuteAxisLabel(totalSeconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const minutes = Math.floor(safeSeconds / 60);
+
+  if (minutes === 45) {
+    return "Half";
+  }
+
+  return `${minutes}'`;
+}

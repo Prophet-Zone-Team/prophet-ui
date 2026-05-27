@@ -7,7 +7,12 @@ import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-mode
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 
 import { getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
+import {
+  isMockLiveFixtureEnabled,
+  livePricesToFixtureAsks,
+} from "@/data/mock/live-fixture-simulation";
 import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity";
+import { useMockLiveFixturePricesForOutcome } from "@/store/mock-live-fixture-store";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
 import {
   findGameMarketOutcome,
@@ -163,6 +168,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const [liveFixtureAsks, setLiveFixtureAsks] = useState<
     { yesAsk?: number; noAsk?: number } | undefined
   >();
+  const mockLivePrices = useMockLiveFixturePricesForOutcome(
+    selectedFixtureOutcome?.id,
+  );
   const readinessFetchGeneration = useRef(0);
   const takeProfitPriceTouched = useRef(false);
 
@@ -207,6 +215,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       return;
     }
 
+    if (isMockLiveFixtureEnabled()) {
+      setLiveFixtureAsks(livePricesToFixtureAsks(mockLivePrices));
+      return;
+    }
+
     let cancelled = false;
 
     void fetchFixtureLiveAsks(selectedFixtureOutcome).then((asks) => {
@@ -220,9 +233,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     };
   }, [
     input.variant,
+    mockLivePrices,
+    selectedFixtureOutcome,
     selectedFixtureOutcome?.id,
-    selectedFixtureOutcome?.tokenId,
     selectedFixtureOutcome?.noTokenId,
+    selectedFixtureOutcome?.tokenId,
   ]);
 
   const effectiveFixtureOutcome = useMemo(() => {

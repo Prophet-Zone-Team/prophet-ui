@@ -121,18 +121,22 @@ function MarketActionRowShell({
 
 export function MoneylineActionRow({
   group,
+  outcomesOverride,
   selectedOutcomeId,
   selectedBinarySide,
   onSelect
 }: {
   group?: FixtureMarketGroup;
+  outcomesOverride?: FixtureMarketOutcome[];
   selectedOutcomeId?: string;
   selectedBinarySide?: "yes" | "no";
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
 }) {
   const outcomes = useMemo(
-    () => sortFixtureGroupOutcomes(group?.outcomes ?? [], "moneyline"),
-    [group?.outcomes]
+    () =>
+      outcomesOverride ??
+      sortFixtureGroupOutcomes(group?.outcomes ?? [], "moneyline"),
+    [group?.outcomes, outcomesOverride]
   );
 
   return (
@@ -190,6 +194,7 @@ export function LineGroupActionRow({
   groupType,
   selectedLineKey,
   onLineChange,
+  outcomesOverride,
   selectedOutcomeId,
   selectedBinarySide,
   onSelect
@@ -198,6 +203,7 @@ export function LineGroupActionRow({
   groupType: "spread" | "total";
   selectedLineKey?: string;
   onLineChange: (lineKey: string) => void;
+  outcomesOverride?: FixtureMarketOutcome[];
   selectedOutcomeId?: string;
   selectedBinarySide?: "yes" | "no";
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
@@ -209,6 +215,10 @@ export function LineGroupActionRow({
   const activeLineKey =
     selectedLineKey ?? group?.defaultLineKey ?? lineOptions[0]?.key;
   const visibleOutcomes = useMemo(() => {
+    if (outcomesOverride) {
+      return outcomesOverride;
+    }
+
     if (!group) {
       return [];
     }
@@ -217,7 +227,7 @@ export function LineGroupActionRow({
       getFixtureOutcomesForGroup(group, activeLineKey),
       groupType
     );
-  }, [activeLineKey, group, groupType]);
+  }, [activeLineKey, group, groupType, outcomesOverride]);
 
   return (
     <MarketActionRowShell

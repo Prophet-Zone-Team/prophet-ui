@@ -7,10 +7,17 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { formatMatchScore } from "@/lib/market/match-display";
 import {
+  isEffectiveLiveMatch,
+  isMockLiveFixtureEnabled,
+  resolveMockLiveDisplayScore,
+} from "@/data/mock/live-fixture-simulation";
+import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
+import {
   formatScheduleKickoff,
   getScheduleRowVariant,
   resolveMatchSides
 } from "@/lib/market/schedule-match";
+import { useMockLiveFixtureElapsed } from "@/store/mock-live-fixture-store";
 import { teamDetailHref } from "@/lib/routes/team";
 import Bg from "@/views/trade/game/header/bg";
 import type {
@@ -113,11 +120,13 @@ function TeamSide({
 function HeaderMetric({
   value,
   statusVariant,
-  subtitle
+  subtitle,
+  statusLabel
 }: {
   value: string;
   statusVariant?: ReturnType<typeof getScheduleRowVariant>;
   subtitle?: string;
+  statusLabel?: string;
 }) {
   return (
     <div className="relative w-[453px] h-full">
@@ -130,8 +139,13 @@ function HeaderMetric({
         </strong>
 
         {statusVariant ? (
-          <div className="mt-4 sm:mt-7">
+          <div className="mt-4 flex flex-col items-center gap-1 sm:mt-7">
             <MatchStatusBadge variant={statusVariant} className="gap-[7px]" />
+            {statusLabel ? (
+              <span className="text-[10px] font-[457] uppercase tracking-wide text-[#909090]">
+                {statusLabel}
+              </span>
+            ) : null}
           </div>
         ) : null}
 
@@ -181,6 +195,24 @@ export function TradeGameHeader({
   const awayProfile = match.awayTeamId
     ? teamProfiles?.[match.awayTeamId]
     : undefined;
+  const effectiveLive = isEffectiveLiveMatch(match);
+  const mockEnabled = isMockLiveFixtureEnabled();
+  const simulatedElapsed = useMockLiveFixtureElapsed(match.id);
+  const displayScore = mockEnabled
+    ? resolveMockLiveDisplayScore(match)
+    : { homeScore: match.homeScore, awayScore: match.awayScore };
+  const liveClock = useLiveElapsedClock(
+    mockEnabled
+      ? (simulatedElapsed ?? match.liveElapsedSeconds)
+      : match.liveElapsedSeconds,
+    effectiveLive,
+  );
+  const statusVariant = effectiveLive
+    ? "ongoing"
+    : getScheduleRowVariant(match.status);
+  const subtitle = effectiveLive
+    ? liveClock
+    : formatScheduleKickoff(match.kickoffAt);
 
   return (
     <div className="relative h-full flex w-full justify-center">
@@ -194,9 +226,10 @@ export function TradeGameHeader({
         justify="end"
       />
       <HeaderMetric
-        value={formatMatchScore(match.homeScore, match.awayScore)}
-        statusVariant={getScheduleRowVariant(match.status)}
-        subtitle={formatScheduleKickoff(match.kickoffAt)}
+        value={formatMatchScore(displayScore.homeScore, displayScore.awayScore)}
+        statusVariant={statusVariant}
+        subtitle={subtitle}
+        statusLabel={mockEnabled ? "Mock live data" : undefined}
       />
       <TeamSideColumn
         team={{

@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import {
   CartesianGrid,
+  Customized,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -13,10 +14,15 @@ import {
 } from "recharts";
 
 import { formatProbability } from "@/components/home/market-formatters";
+import { formatMatchMinuteAxisLabel } from "@/lib/market/match-display";
 import {
   getBinaryFixtureChartYDomain,
 } from "@/lib/market/fixture-probability-chart";
-import type { GameFixtureBinaryChartPoint } from "@/types/market";
+import type { GameFixtureBinaryChartPoint, GameMatchChartEvent } from "@/types/market";
+import {
+  GoalEventMarkerLayer,
+  type GoalEventMarkerLayerProps,
+} from "@/views/trade/game-probability/goal-event-marker-layer";
 
 const CHART_COLORS = {
   primary: "#3168FF",
@@ -35,6 +41,11 @@ export interface GameBinaryProbabilityChartProps {
   secondaryLabel?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  mode?: "historical" | "live";
+  events?: GameMatchChartEvent[];
+  maxElapsedSeconds?: number;
+  homeCode?: string;
+  awayCode?: string;
 }
 
 export function GameBinaryProbabilityChart({
@@ -42,8 +53,15 @@ export function GameBinaryProbabilityChart({
   primaryLabel = "Primary",
   secondaryLabel = "Secondary",
   primaryColor = CHART_COLORS.primary,
-  secondaryColor = CHART_COLORS.secondary
+  secondaryColor = CHART_COLORS.secondary,
+  mode = "historical",
+  events = [],
+  maxElapsedSeconds = 0,
+  homeCode,
+  awayCode,
 }: GameBinaryProbabilityChartProps) {
+  const isLive = mode === "live";
+
   const series = useMemo(
     () => [
       { key: "primary" as const, color: primaryColor, label: primaryLabel },
@@ -67,6 +85,11 @@ export function GameBinaryProbabilityChart({
     return null;
   }
 
+  const resolvedMaxElapsed =
+    maxElapsedSeconds > 0
+      ? maxElapsedSeconds
+      : Math.max(...data.map((point) => point.elapsedSeconds ?? 0), 1);
+
   return (
     <div className="h-[280px] w-full min-h-[240px] sm:h-[320px] xl:h-[340px]">
       <div className="flex h-full gap-4">
@@ -74,7 +97,12 @@ export function GameBinaryProbabilityChart({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}
-              margin={{ top: 28, right: 12, left: 4, bottom: 4 }}
+              margin={{
+                top: 28,
+                right: 12,
+                left: 4,
+                bottom: isLive ? 36 : 4,
+              }}
             >
               <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
               <XAxis
@@ -84,6 +112,7 @@ export function GameBinaryProbabilityChart({
                 tickLine={false}
                 minTickGap={24}
                 padding={{ left: 0, right: 32 }}
+                interval={isLive ? "preserveStartEnd" : undefined}
               />
               <YAxis
                 domain={yDomain}
@@ -133,6 +162,23 @@ export function GameBinaryProbabilityChart({
                   }}
                 />
               ))}
+              {isLive ? (
+                <Customized
+                  component={(props: Record<string, unknown>) => (
+                    <GoalEventMarkerLayer
+                      offset={props.offset as GoalEventMarkerLayerProps["offset"]}
+                      width={props.width as number | undefined}
+                      height={props.height as number | undefined}
+                      maxElapsedSeconds={resolvedMaxElapsed}
+                      events={events}
+                      homeCode={homeCode}
+                      homeName={primaryLabel}
+                      awayCode={awayCode}
+                      awayName={secondaryLabel}
+                    />
+                  )}
+                />
+              ) : null}
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -153,10 +199,15 @@ function BinaryChartTooltip({
     return null;
   }
 
+  const timeLabel =
+    typeof label === "number"
+      ? formatMatchMinuteAxisLabel(label)
+      : String(label ?? "");
+
   return (
     <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
       <p className="m-0 mb-1 text-sm font-[556] leading-[17px] text-[#909090]">
-        {label}
+        {timeLabel}
       </p>
       {payload.map((entry) => {
         const item = series.find((seriesItem) => seriesItem.key === entry.dataKey);

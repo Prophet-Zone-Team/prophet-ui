@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import {
   CartesianGrid,
+  Customized,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -13,11 +14,15 @@ import {
 } from "recharts";
 
 import { formatProbability } from "@/components/home/market-formatters";
+import { formatMatchMinuteAxisLabel } from "@/lib/market/match-display";
 import {
   getFixtureChartYDomain,
-  getLatestFixtureChartValues
 } from "@/lib/market/fixture-probability-chart";
-import type { GameFixtureChartPoint } from "@/types/market";
+import type { GameFixtureChartPoint, GameMatchChartEvent } from "@/types/market";
+import {
+  GoalEventMarkerLayer,
+  type GoalEventMarkerLayerProps,
+} from "@/views/trade/game-probability/goal-event-marker-layer";
 
 const CHART_COLORS = {
   home: "#3168FF",
@@ -42,14 +47,26 @@ export interface GameProbabilityChartProps {
   homeLabel?: string;
   drawLabel?: string;
   awayLabel?: string;
+  mode?: "historical" | "live";
+  events?: GameMatchChartEvent[];
+  maxElapsedSeconds?: number;
+  homeCode?: string;
+  awayCode?: string;
 }
 
 export function GameProbabilityChart({
   data,
   homeLabel = "Home",
   drawLabel = "Draw",
-  awayLabel = "Away"
+  awayLabel = "Away",
+  mode = "historical",
+  events = [],
+  maxElapsedSeconds = 0,
+  homeCode,
+  awayCode,
 }: GameProbabilityChartProps) {
+  const isLive = mode === "live";
+
   const seriesLabels = useMemo(
     () => ({
       home: homeLabel,
@@ -69,11 +86,15 @@ export function GameProbabilityChart({
   );
 
   const yDomain = useMemo(() => getFixtureChartYDomain(data), [data]);
-  const latestValues = useMemo(() => getLatestFixtureChartValues(data), [data]);
 
   if (data.length === 0) {
     return null;
   }
+
+  const resolvedMaxElapsed =
+    maxElapsedSeconds > 0
+      ? maxElapsedSeconds
+      : Math.max(...data.map((point) => point.elapsedSeconds ?? 0), 1);
 
   return (
     <div className="h-[280px] w-full min-h-[240px] sm:h-[320px] xl:h-[340px]">
@@ -82,16 +103,22 @@ export function GameProbabilityChart({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}
-              margin={{ top: 28, right: 12, left: 4, bottom: 4 }}
+              margin={{
+                top: 28,
+                right: 12,
+                left: 4,
+                bottom: isLive ? 36 : 4,
+              }}
             >
               <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
               <XAxis
                 dataKey="chartLabel"
-                tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
+                tick={{ fill: CHART_COLORS.muted, fontSize: 14, dy: 6 }}
                 axisLine={false}
                 tickLine={false}
                 minTickGap={24}
                 padding={{ left: 0, right: 32 }}
+                interval={isLive ? "preserveStartEnd" : undefined}
               />
               <YAxis
                 domain={yDomain}
@@ -139,6 +166,23 @@ export function GameProbabilityChart({
                   }}
                 />
               ))}
+              {isLive ? (
+                <Customized
+                  component={(props: Record<string, unknown>) => (
+                    <GoalEventMarkerLayer
+                      offset={props.offset as GoalEventMarkerLayerProps["offset"]}
+                      width={props.width as number | undefined}
+                      height={props.height as number | undefined}
+                      maxElapsedSeconds={resolvedMaxElapsed}
+                      events={events}
+                      homeCode={homeCode}
+                      homeName={homeLabel}
+                      awayCode={awayCode}
+                      awayName={awayLabel}
+                    />
+                  )}
+                />
+              ) : null}
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -159,10 +203,15 @@ function ChartTooltip({
     return null;
   }
 
+  const timeLabel =
+    typeof label === "number"
+      ? formatMatchMinuteAxisLabel(label)
+      : String(label ?? "");
+
   return (
     <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-      <p className="m-0 mb-1 text-sm font-[556] leading-[17px] text-[#909090]">
-        {label}
+      <p className="m-0 mb-1 text-sm font-[400] leading-[17px] text-[#909090]">
+        {timeLabel}
       </p>
       {payload.map((entry) => {
         const series = SERIES.find((item) => item.key === entry.dataKey);
@@ -170,7 +219,7 @@ function ChartTooltip({
         return (
           <p
             key={String(entry.dataKey)}
-            className="m-0 text-sm font-[556] leading-[17px]"
+            className="m-0 text-[12px] font-[400] leading-[20px]"
             style={{ color: entry.color }}
           >
             {series ? seriesLabels[series.key] : entry.dataKey}:{" "}

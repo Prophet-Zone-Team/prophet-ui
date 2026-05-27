@@ -603,6 +603,7 @@ export interface GameMatchMinuteHistoryPoint {
   matchId: string;
   minute: number;
   minuteLabel: string;
+  elapsedSeconds?: number;
   home: number;
   draw: number;
   away: number;
@@ -612,6 +613,7 @@ export interface GameFixtureChartPoint {
   matchId: string;
   timestamp: string;
   label: string;
+  elapsedSeconds?: number;
   home: number;
   draw: number;
   away: number;
@@ -621,6 +623,7 @@ export interface GameFixtureBinaryChartPoint {
   matchId: string;
   timestamp: string;
   label: string;
+  elapsedSeconds?: number;
   primary: number;
   secondary: number;
 }
@@ -630,7 +633,7 @@ export type GameFixtureChartTimeRange = "1D" | "1W" | "1M" | "all";
 export type FixtureChartKind = "moneyline" | "halftime" | "total" | "spread";
 
 export interface GameMatchChartEvent {
-  minute: number;
+  elapsedSeconds: number;
   side: "home" | "away";
   type: "goal";
 }

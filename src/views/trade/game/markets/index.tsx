@@ -9,7 +9,16 @@ import {
   getFixtureOutcomesForGroup,
   sortFixtureGroupOutcomes
 } from "@/lib/market/build-fixture-markets-snapshot";
+import {
+  isEffectiveLiveMatch,
+  isMockLiveFixtureEnabled,
+} from "@/data/mock/live-fixture-simulation";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
+import {
+  mergeLivePricesIntoFixtureOutcomes,
+  mergeLivePricesIntoGameOutcomes,
+} from "@/lib/market/merge-live-outcome-prices";
+import { resolveFixtureOutcomesForTab } from "@/lib/market/fixture-tab-outcomes";
 import {
   useSelectFixtureOutcome,
   useSelectedFixtureOutcome,
@@ -48,6 +57,8 @@ import {
 } from "@/views/trade/game/markets/market-action-row";
 import { GAME_MARKET_TAB_ICONS } from "@/views/trade/game/icons";
 import { MarketContextRow } from "@/views/trade/game/markets/market-context-row";
+import { useLiveFixtureTabPrices } from "@/views/trade/game/markets/use-live-fixture-tab-prices";
+import { useMockLiveFixtureSimulation } from "@/views/trade/game/markets/use-mock-live-fixture-simulation";
 
 const GAME_MARKET_TABS = [
   {
@@ -102,8 +113,27 @@ export function GameMarketsSection({
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
   const sides = resolveMatchSides(match, teamSnapshots);
-
   const activeLineKey = tab === "totals" ? totalsLineKey : spreadsLineKey;
+  const effectiveLive = isEffectiveLiveMatch(match);
+  const chartKind = resolveTabChartKind(tab);
+  const activeTabOutcomes = useMemo(
+    () => resolveFixtureOutcomesForTab(fixtureMarkets, tab, activeLineKey),
+    [activeLineKey, fixtureMarkets, tab],
+  );
+  const mockSimulation = useMockLiveFixtureSimulation({
+    match,
+    outcomes: activeTabOutcomes,
+    enabled: isMockLiveFixtureEnabled(),
+  });
+  const { pricesByOutcomeId: apiPricesByOutcomeId } = useLiveFixtureTabPrices({
+    matchSlug: match.id,
+    tab,
+    lineKey: activeLineKey,
+    enabled: effectiveLive && !isMockLiveFixtureEnabled(),
+  });
+  const pricesByOutcomeId = mockSimulation.isActive
+    ? mockSimulation.pricesByOutcomeId
+    : apiPricesByOutcomeId;
 
   const selectDefaultForTab = useCallback(
     (nextTab: GameMarketTabId, lineKey?: string) => {
@@ -189,7 +219,19 @@ export function GameMarketsSection({
     }
   };
 
-  const chartKind = resolveTabChartKind(tab);
+  const liveActiveTabOutcomes = useMemo(
+    () => mergeLivePricesIntoFixtureOutcomes(activeTabOutcomes, pricesByOutcomeId),
+    [activeTabOutcomes, pricesByOutcomeId],
+  );
+  const liveGameOutcomes = useMemo(
+    () =>
+      mergeLivePricesIntoGameOutcomes(
+        gameSnapshot.outcomes,
+        activeTabOutcomes,
+        pricesByOutcomeId,
+      ),
+    [activeTabOutcomes, gameSnapshot.outcomes, pricesByOutcomeId],
+  );
   const summaryConfig = useMemo(
     () =>
       buildSummaryConfig({
@@ -201,7 +243,9 @@ export function GameMarketsSection({
         homeLabel: sides.home.name ?? "Home",
         awayLabel: sides.away.name ?? "Away",
         homeCode: sides.home.code,
-        awayCode: sides.away.code
+        awayCode: sides.away.code,
+        liveActiveTabOutcomes,
+        liveGameOutcomes,
       }),
     [
       fixtureMarkets,
@@ -212,9 +256,13 @@ export function GameMarketsSection({
       sides.home.name,
       spreadsLineKey,
       tab,
-      totalsLineKey
+      totalsLineKey,
+      liveActiveTabOutcomes,
+      liveGameOutcomes,
     ]
   );
+
+  const moneylineGroup = findFixtureGroupByType(fixtureMarkets.lines, "moneyline");
 
   return (
     <section
@@ -237,7 +285,8 @@ export function GameMarketsSection({
 
       {tab === "moneyline" ? (
         <MoneylineActionRow
-          group={findFixtureGroupByType(fixtureMarkets.lines, "moneyline")}
+          group={moneylineGroup}
+          outcomesOverride={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
           onSelect={handleSelect}
@@ -250,6 +299,7 @@ export function GameMarketsSection({
           groupType="total"
           selectedLineKey={totalsLineKey}
           onLineChange={handleLineChange}
+          outcomesOverride={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
           onSelect={handleSelect}
@@ -262,6 +312,7 @@ export function GameMarketsSection({
           groupType="spread"
           selectedLineKey={spreadsLineKey}
           onLineChange={handleLineChange}
+          outcomesOverride={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
           onSelect={handleSelect}
@@ -270,7 +321,7 @@ export function GameMarketsSection({
 
       {tab === "halftime" ? (
         <HalftimeActionRow
-          outcomes={fixtureMarkets.halftime}
+          outcomes={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
           onSelect={handleSelect}
@@ -279,7 +330,7 @@ export function GameMarketsSection({
 
       {tab === "top_scores" ? (
         <ExactScorePanel
-          outcomes={fixtureMarkets.exactScores}
+          outcomes={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
           onSelect={handleSelect}
@@ -291,6 +342,7 @@ export function GameMarketsSection({
           match={match}
           snapshots={teamSnapshots}
           gameSnapshot={gameSnapshot}
+          fixtureMarkets={fixtureMarkets}
           showOrderbook={showOrderbook}
           chartKind={chartKind}
           lineKey={
@@ -304,6 +356,14 @@ export function GameMarketsSection({
           summaryItems={summaryConfig.summaryItems}
           binaryPrimaryLabel={summaryConfig.binaryPrimaryLabel}
           binarySecondaryLabel={summaryConfig.binarySecondaryLabel}
+          liveChartSimulation={
+            mockSimulation.isActive
+              ? {
+                  tickIndex: mockSimulation.tickIndex,
+                  simulatedElapsedSeconds: mockSimulation.simulatedElapsedSeconds,
+                }
+              : undefined
+          }
         />
       ) : null}
 
@@ -315,13 +375,14 @@ export function GameMarketsSection({
 function buildSummaryConfig({
   tab,
   fixtureMarkets,
-  gameSnapshot,
   totalsLineKey,
   spreadsLineKey,
   homeLabel,
   awayLabel,
   homeCode,
-  awayCode
+  awayCode,
+  liveActiveTabOutcomes,
+  liveGameOutcomes,
 }: {
   tab: GameMarketTabId;
   fixtureMarkets: GameFixtureMarketsSnapshot;
@@ -332,12 +393,14 @@ function buildSummaryConfig({
   awayLabel: string;
   homeCode?: string;
   awayCode?: string;
+  liveActiveTabOutcomes: FixtureMarketOutcome[];
+  liveGameOutcomes: ReturnType<typeof mergeLivePricesIntoGameOutcomes>;
 }) {
   if (tab === "moneyline") {
     return {
       summaryMode: "ternary" as const,
       summaryItems: buildTernarySummaryFromOutcomes(
-        gameSnapshot.outcomes,
+        liveGameOutcomes,
         homeLabel,
         awayLabel,
         homeCode,
@@ -350,7 +413,7 @@ function buildSummaryConfig({
     return {
       summaryMode: "ternary" as const,
       summaryItems: buildTernarySummaryFromOutcomes(
-        fixtureMarkets.halftime,
+        liveActiveTabOutcomes,
         homeLabel,
         awayLabel,
         homeCode,
@@ -360,16 +423,20 @@ function buildSummaryConfig({
   }
 
   if (tab === "totals") {
-    const group = findFixtureGroupByType(fixtureMarkets.lines, "total");
-    const outcomes = group
-      ? sortFixtureGroupOutcomes(
-          getFixtureOutcomesForGroup(
-            group,
-            totalsLineKey ?? group.defaultLineKey
-          ),
-          "total"
-        )
-      : [];
+    const outcomes = liveActiveTabOutcomes.length
+      ? liveActiveTabOutcomes
+      : (() => {
+          const group = findFixtureGroupByType(fixtureMarkets.lines, "total");
+          return group
+            ? sortFixtureGroupOutcomes(
+                getFixtureOutcomesForGroup(
+                  group,
+                  totalsLineKey ?? group.defaultLineKey
+                ),
+                "total"
+              )
+            : [];
+        })();
 
     return {
       summaryMode: "binary" as const,
@@ -386,16 +453,20 @@ function buildSummaryConfig({
   }
 
   if (tab === "spreads") {
-    const group = findFixtureGroupByType(fixtureMarkets.lines, "spread");
-    const outcomes = group
-      ? sortFixtureGroupOutcomes(
-          getFixtureOutcomesForGroup(
-            group,
-            spreadsLineKey ?? group.defaultLineKey
-          ),
-          "spread"
-        )
-      : [];
+    const outcomes = liveActiveTabOutcomes.length
+      ? liveActiveTabOutcomes
+      : (() => {
+          const group = findFixtureGroupByType(fixtureMarkets.lines, "spread");
+          return group
+            ? sortFixtureGroupOutcomes(
+                getFixtureOutcomesForGroup(
+                  group,
+                  spreadsLineKey ?? group.defaultLineKey
+                ),
+                "spread"
+              )
+            : [];
+        })();
     const homeOutcome = outcomes.find((item) => item.side === "home");
     const awayOutcome = outcomes.find((item) => item.side === "away");
 

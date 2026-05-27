@@ -28,6 +28,8 @@ export interface UseFixturePriceHistoryOptions {
   timeRange: GameFixtureChartTimeRange;
   chartKind?: FixtureChartKind;
   lineKey?: string;
+  enabled?: boolean;
+  pollIntervalMs?: number;
 }
 
 export interface UseFixturePriceHistoryResult {
@@ -45,6 +47,8 @@ export function useFixturePriceHistory({
   timeRange,
   chartKind = "moneyline",
   lineKey,
+  enabled = true,
+  pollIntervalMs,
 }: UseFixturePriceHistoryOptions): UseFixturePriceHistoryResult {
   const [points, setPoints] = useState<GameFixtureChartPoint[]>([]);
   const [binaryPoints, setBinaryPoints] = useState<GameFixtureBinaryChartPoint[]>([]);
@@ -53,20 +57,12 @@ export function useFixturePriceHistory({
   const [lastUpdated, setLastUpdated] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
 
-  const refetch = useCallback(async () => {
-    if (!matchSlug) {
-      setPoints([]);
-      setBinaryPoints([]);
-      setStatus("empty");
-      setLastUpdated(undefined);
-      setError(undefined);
-      return;
-    }
+  const fetchHistory = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!matchSlug || !enabled) {
+        return false;
+      }
 
-    setStatus("loading");
-    setError(undefined);
-
-    try {
       const params = new URLSearchParams({
         matchSlug,
         range: timeRange,
@@ -79,6 +75,7 @@ export function useFixturePriceHistory({
 
       const response = await fetch(`/api/market/fixture-history?${params}`, {
         cache: "no-store",
+        signal,
       });
       const payload = (await response.json()) as FixturePriceHistoryResponse & {
         error?: string;
@@ -99,6 +96,28 @@ export function useFixturePriceHistory({
       setChartMode(nextChartMode);
       setLastUpdated(payload.updatedAt);
       setStatus(hasData ? "ready" : "empty");
+      setError(undefined);
+
+      return true;
+    },
+    [chartKind, enabled, lineKey, matchSlug, timeRange],
+  );
+
+  const refetch = useCallback(async () => {
+    if (!matchSlug || !enabled) {
+      setPoints([]);
+      setBinaryPoints([]);
+      setStatus(enabled ? "empty" : "loading");
+      setLastUpdated(undefined);
+      setError(undefined);
+      return;
+    }
+
+    setStatus("loading");
+    setError(undefined);
+
+    try {
+      await fetchHistory();
     } catch (fetchError) {
       setPoints([]);
       setBinaryPoints([]);
@@ -109,11 +128,73 @@ export function useFixturePriceHistory({
           : "Unable to load fixture price history.",
       );
     }
-  }, [chartKind, lineKey, matchSlug, timeRange]);
+  }, [enabled, fetchHistory, matchSlug]);
 
   useEffect(() => {
-    void refetch();
-  }, [refetch]);
+    if (!enabled) {
+      return;
+    }
+
+    if (!matchSlug) {
+      setPoints([]);
+      setBinaryPoints([]);
+      setStatus("empty");
+      setLastUpdated(undefined);
+      setError(undefined);
+      return;
+    }
+
+    const controller = new AbortController();
+    let timeoutId: number | undefined;
+    let isInitialFetch = true;
+
+    const poll = async () => {
+      if (isInitialFetch) {
+        setStatus("loading");
+        setError(undefined);
+      }
+
+      try {
+        const success = await fetchHistory(controller.signal);
+
+        if (!success || controller.signal.aborted) {
+          return;
+        }
+
+        isInitialFetch = false;
+
+        if (pollIntervalMs === undefined) {
+          return;
+        }
+
+        timeoutId = window.setTimeout(() => {
+          void poll();
+        }, pollIntervalMs);
+      } catch {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        if (isInitialFetch) {
+          setPoints([]);
+          setBinaryPoints([]);
+          setStatus("error");
+          setError("Unable to load fixture price history.");
+        }
+
+        isInitialFetch = false;
+      }
+    };
+
+    void poll();
+
+    return () => {
+      controller.abort();
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [enabled, fetchHistory, matchSlug, pollIntervalMs]);
 
   return {
     points,
