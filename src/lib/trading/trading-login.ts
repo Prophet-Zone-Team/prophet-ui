@@ -1,9 +1,16 @@
 "use client";
 
+
 import {
   disconnectTradingSession,
-  loadTradingSession
+  loadTradingSession,
+  storeConnectedWalletConnector,
 } from "@/components/trading/trading-wallet-session";
+import { getAccount } from "wagmi/actions";
+
+import { getConnectGate } from "@/context/rainbowkit/connect-gate";
+import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+import { signMessageWithWallet } from "@/components/trading/wallet-provider";
 import { deriveTradingCredentials } from "@/lib/trading/clob-credentials-client";
 import {
   deployDepositWallet,
@@ -15,17 +22,7 @@ import { fetchJson } from "@/lib/team/client-fetch";
 import { isSetupStepComplete } from "@/lib/trading/trading-setup";
 import { ensureTradingChain } from "@/lib/trading/wallet-trading-chain";
 import type { DepositWalletCheckResponse, TradingUserSession, UserTradingReadiness } from "@/types/market";
-import {
-  getEthereumProvider,
-  getEthereumProviderForWallet,
-  getProviderKind,
-  type EthereumProvider
-} from "@/components/trading/wallet-provider";
-import { getStoredTradingWalletProvider } from "@/components/trading/trading-wallet-session";
-import {
-  isUserRejectedRequest,
-  resolveWalletErrorMessage,
-} from "@/lib/trading/wallet-error-message";
+import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
 
 const DEFAULT_SIGNATURE_TYPE = 3;
 
@@ -58,6 +55,7 @@ export type TradingLoginStep =
 export async function completeTradingLogin(options?: {
   onStep?: (step: TradingLoginStep) => void;
   resume?: boolean;
+  connectSignal?: AbortSignal;
 }): Promise<{ session: TradingUserSession; readiness: UserTradingReadiness }> {
   let session: TradingUserSession | undefined;
 
@@ -69,6 +67,7 @@ export async function completeTradingLogin(options?: {
     if (!session) {
       const walletAddress = await connectWallet({
         onStep: options?.onStep,
+        signal: options?.connectSignal,
       });
       await ensureDepositWalletDeployed(walletAddress, {
         onStep: options?.onStep,
@@ -209,37 +208,42 @@ async function fetchTradingReadiness() {
 
 export async function connectWallet(options?: {
   onStep?: (step: TradingLoginStep) => void;
+  signal?: AbortSignal;
+  expectedAddress?: string;
 }): Promise<string> {
   options?.onStep?.("requesting_wallet");
 
-  const provider = getEthereumProvider();
+  const account = getAccount(wagmiConfig);
 
-  if (!provider) {
-    throw new Error(
-      "No injected wallet provider found. Install or unlock an EVM wallet, then try again."
-    );
+  if (account.isConnected && account.address) {
+    if (
+      !options?.expectedAddress ||
+      account.address.toLowerCase() === options.expectedAddress.toLowerCase()
+    ) {
+      if (account.connector?.id) {
+        storeConnectedWalletConnector(account.address, account.connector.id);
+      }
+
+      return account.address;
+    }
   }
 
-  let accounts: unknown;
-
   try {
-    accounts = await provider.request({
-      method: "eth_requestAccounts",
+    const walletAddress = await getConnectGate().openConnectAndWait({
+      expectedAddress: options?.expectedAddress,
+      signal: options?.signal,
     });
+
+    const connected = getAccount(wagmiConfig);
+
+    if (connected.connector?.id) {
+      storeConnectedWalletConnector(walletAddress, connected.connector.id);
+    }
+
+    return walletAddress;
   } catch (error) {
     throw new Error(resolveWalletErrorMessage(error));
   }
-
-  const walletAddress =
-    Array.isArray(accounts) && typeof accounts[0] === "string"
-      ? accounts[0]
-      : undefined;
-
-  if (!walletAddress) {
-    throw new Error("Wallet did not return an account.");
-  }
-
-  return walletAddress;
 }
 
 export async function createTradingSession(
@@ -251,12 +255,12 @@ export async function createTradingSession(
   const challengeResponse = await fetch("/api/trading/session", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       mode: "challenge",
-      walletAddress
-    })
+      walletAddress,
+    }),
   });
   const challengePayload = (await challengeResponse.json()) as {
     challenge?: TradingSessionChallenge;
@@ -265,36 +269,37 @@ export async function createTradingSession(
 
   if (!challengeResponse.ok || !challengePayload.challenge) {
     throw new Error(
-      challengePayload.error ?? "Unable to create a trading session challenge."
+      challengePayload.error ?? "Unable to create a trading session challenge.",
     );
   }
 
   options?.onStep?.("awaiting_session_signature");
 
-  const signingProvider = await getEthereumProviderForWallet(
-    walletAddress,
-    getStoredTradingWalletProvider(walletAddress)
-  );
-  const signature = await signTradingSessionMessage({
-    provider: signingProvider,
-    walletAddress,
-    message: challengePayload.challenge.message
-  });
+  let signature: string;
+
+  try {
+    signature = await signMessageWithWallet(
+      walletAddress,
+      challengePayload.challenge.message,
+    );
+  } catch (error) {
+    throw new Error(resolveWalletErrorMessage(error));
+  }
 
   options?.onStep?.("creating_session");
 
   const response = await fetch("/api/trading/session", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       mode: "create",
       walletAddress,
       token: challengePayload.challenge.token,
       signature,
-      signatureType: DEFAULT_SIGNATURE_TYPE
-    })
+      signatureType: DEFAULT_SIGNATURE_TYPE,
+    }),
   });
   const payload = (await response.json()) as {
     session?: TradingUserSession;
@@ -305,63 +310,14 @@ export async function createTradingSession(
     throw new Error(payload.error ?? "Unable to create a trading session.");
   }
 
-  writeStoredTradingWalletProvider(
-    payload.session.walletAddress,
-    getProviderKind(signingProvider)
-  );
+  const connected = getAccount(wagmiConfig);
+
+  if (connected.connector?.id) {
+    storeConnectedWalletConnector(
+      payload.session.walletAddress,
+      connected.connector.id,
+    );
+  }
 
   return payload.session;
-}
-
-async function signTradingSessionMessage({
-  provider,
-  walletAddress,
-  message
-}: {
-  provider: EthereumProvider;
-  walletAddress: string;
-  message: string;
-}) {
-  try {
-    const signature = await provider.request({
-      method: "personal_sign",
-      params: [message, walletAddress]
-    });
-
-    if (typeof signature === "string") {
-      return signature;
-    }
-  } catch (error) {
-    if (isUserRejectedRequest(error)) {
-      throw new Error(resolveWalletErrorMessage(error));
-    }
-
-    const fallbackSignature = await provider.request({
-      method: "personal_sign",
-      params: [walletAddress, message]
-    });
-
-    if (typeof fallbackSignature === "string") {
-      return fallbackSignature;
-    }
-
-    throw new Error(resolveWalletErrorMessage(error));
-  }
-
-  throw new Error("Wallet did not return a trading session signature.");
-}
-
-function writeStoredTradingWalletProvider(
-  walletAddress: string,
-  providerKind: ReturnType<typeof getProviderKind>
-) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const PROVIDER_STORAGE_PREFIX = "wc_trading_wallet_provider";
-  window.localStorage.setItem(
-    `${PROVIDER_STORAGE_PREFIX}:${walletAddress.toLowerCase()}`,
-    providerKind
-  );
 }

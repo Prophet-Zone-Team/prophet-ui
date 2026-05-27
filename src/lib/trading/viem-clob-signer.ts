@@ -1,20 +1,13 @@
 "use client";
 
-import { createWalletClient, custom, type Address, type Hex, type WalletClient } from "viem";
+import { createWalletClient, custom, type Hex, type WalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { polygon } from "viem/chains";
 
-import { getStoredTradingWalletProvider } from "@/components/trading/trading-wallet-session";
-import { getEthereumProviderForWallet } from "@/components/trading/wallet-provider";
+import { getWalletClientForAddress } from "@/components/trading/wallet-provider";
 
 export async function createViemClobWalletClient(walletAddress: string): Promise<WalletClient> {
-  const provider = await getEthereumProviderForWallet(walletAddress, getStoredTradingWalletProvider(walletAddress));
-
-  return createWalletClient({
-    account: walletAddress as Address,
-    chain: polygon,
-    transport: custom(provider),
-  });
+  return getWalletClientForAddress(walletAddress);
 }
 
 export function createLocalClobWalletClient(privateKey: Hex): WalletClient {

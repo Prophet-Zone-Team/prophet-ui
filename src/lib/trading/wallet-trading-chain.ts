@@ -1,33 +1,18 @@
 "use client";
 
-import { getStoredTradingWalletProvider } from "@/components/trading/trading-wallet-session";
+import { getAccount, switchChain } from "wagmi/actions";
+
+import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+
 import {
-  getEthereumProviderForWallet,
-  type EthereumProvider,
+  getWalletClientForAddress,
+  requestWalletRpc,
 } from "@/components/trading/wallet-provider";
 import { POLYGON_NETWORK } from "@/lib/market/deposit-assets";
 
 export const TRADING_CHAIN_ID = POLYGON_NETWORK.chainId;
 
 const CHAIN_NOT_ADDED_ERROR_CODE = 4902;
-
-export async function getProviderChainId(
-  provider: EthereumProvider,
-): Promise<number | undefined> {
-  const chainId = await provider.request({
-    method: "eth_chainId",
-  });
-
-  if (typeof chainId === "string") {
-    return Number.parseInt(chainId, 16);
-  }
-
-  if (typeof chainId === "number") {
-    return chainId;
-  }
-
-  return undefined;
-}
 
 export async function ensureTradingChain(
   walletAddress: string,
@@ -36,61 +21,54 @@ export async function ensureTradingChain(
     onSwitching?: () => void;
   },
 ): Promise<void> {
-  const provider = await getEthereumProviderForWallet(
-    walletAddress,
-    getStoredTradingWalletProvider(walletAddress),
-  );
-
   options?.onChecking?.();
 
-  const currentChainId = await getProviderChainId(provider);
+  const account = getAccount(wagmiConfig);
 
-  if (currentChainId === TRADING_CHAIN_ID) {
+  if (account.chainId === TRADING_CHAIN_ID) {
     return;
   }
 
   options?.onSwitching?.();
 
   try {
-    await provider.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: POLYGON_NETWORK.chainIdHex }],
-    });
+    await switchChain(wagmiConfig, { chainId: TRADING_CHAIN_ID });
   } catch (error) {
     if (isUserRejectedRequest(error)) {
-      throw new Error("Wallet network switch was rejected. Switch to Polygon mainnet (chainId 137) to continue.");
+      throw new Error(
+        "Wallet network switch was rejected. Switch to Polygon mainnet (chainId 137) to continue.",
+      );
     }
 
-    if (isChainNotAddedError(error)) {
-      await provider.request({
-        method: "wallet_addEthereumChain",
-        params: [
-          {
-            chainId: POLYGON_NETWORK.chainIdHex,
-            chainName: POLYGON_NETWORK.chainName,
-            nativeCurrency: POLYGON_NETWORK.nativeCurrency,
-            rpcUrls: [...POLYGON_NETWORK.rpcUrls],
-            blockExplorerUrls: [...POLYGON_NETWORK.blockExplorerUrls],
-          },
-        ],
-      });
+    const client = await getWalletClientForAddress(walletAddress);
 
-      const chainIdAfterAdd = await getProviderChainId(provider);
-
-      if (chainIdAfterAdd !== TRADING_CHAIN_ID) {
-        await provider.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: POLYGON_NETWORK.chainIdHex }],
+    try {
+      await client.switchChain({ id: TRADING_CHAIN_ID });
+    } catch (switchError) {
+      if (isChainNotAddedError(switchError)) {
+        await requestWalletRpc(walletAddress, {
+          method: "wallet_addEthereumChain",
+          params: [
+            {
+              chainId: POLYGON_NETWORK.chainIdHex,
+              chainName: POLYGON_NETWORK.chainName,
+              nativeCurrency: POLYGON_NETWORK.nativeCurrency,
+              rpcUrls: [...POLYGON_NETWORK.rpcUrls],
+              blockExplorerUrls: [...POLYGON_NETWORK.blockExplorerUrls],
+            },
+          ],
         });
+
+        await client.switchChain({ id: TRADING_CHAIN_ID });
+      } else {
+        throw switchError;
       }
-    } else {
-      throw error;
     }
   }
 
-  const nextChainId = await getProviderChainId(provider);
+  const nextAccount = getAccount(wagmiConfig);
 
-  if (nextChainId !== TRADING_CHAIN_ID) {
+  if (nextAccount.chainId !== TRADING_CHAIN_ID) {
     throw new Error(
       `Switch your wallet to Polygon mainnet (chainId ${TRADING_CHAIN_ID}) before signing.`,
     );
