@@ -5,6 +5,10 @@ import type { StableflowDepositToken } from "@/lib/funding/stableflow";
 
 export type DepositMethod = "connected" | "stableflow";
 
+export type DepositEntryTab = "crypto" | "private_balance" | "cash";
+
+export type PrivateAccountStatus = "not_created" | "created_empty" | "funded";
+
 export type DepositStep = "entry" | "tokens" | "amount" | "confirm" | "status";
 
 export type DepositStatusPhase =

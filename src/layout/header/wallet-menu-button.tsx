@@ -169,6 +169,10 @@ export function WalletMenuButton() {
       <DepositDialog
         open={depositOpen}
         onClose={() => setDepositOpen(false)}
+        onOpenPrivateTopup={() => {
+          setDepositOpen(false);
+          setPrivateTopupIntroOpen(true);
+        }}
       />
 
       <FastBidSettingDialog

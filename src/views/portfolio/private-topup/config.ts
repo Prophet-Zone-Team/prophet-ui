@@ -12,7 +12,7 @@ export const PRIVATE_MODE_STEPS = [
     step: 1,
     title: "Use a clean wallet",
     description:
-      "Avoid connecting a wallet that has direct activity with exchange accounts or publicly known addresses. For stronger privacy, create a fresh EVM wallet for Prophet.",
+      "Avoid connecting a wallet that has direct activity with exchange accounts or publicly known addresses. For stronger privacy, create a fresh EVM wallet for Prophet.",
   },
   {
     step: 2,

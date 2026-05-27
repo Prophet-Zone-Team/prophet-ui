@@ -22,16 +22,16 @@ export const privateTopupAccountInnerClass =
   "relative flex min-h-[240px] flex-col p-6";
 
 export const privateTopupChangeLinkClass =
-  "text-sm font-[457] text-[#3168ff] transition-opacity hover:opacity-80";
+  "text-sm font-[400] text-[#3168ff] transition-opacity hover:opacity-80";
 
 export const privateTopupPrimaryButtonClass = cn(
   "flex h-[55px] w-full items-center justify-center rounded-[12px] bg-black",
-  "text-base font-[457] leading-[19px] text-white transition-opacity hover:opacity-90",
+  "text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90",
 );
 
 export const privateTopupTopUpButtonClass = cn(
   "flex h-[50px] min-w-[115px] items-center justify-center rounded-[12px] bg-white",
-  "text-base font-[457] text-black transition-opacity hover:opacity-90",
+  "text-base font-[400] text-black transition-opacity hover:opacity-90",
 );
 
 export const privateTopupTopUpButtonDisabledClass =
@@ -68,7 +68,7 @@ export const privateTopupModalAmountInputClass = cn(
 );
 
 export const privateTopupGetStartedLinkClass = cn(
-  "inline-flex items-center gap-2 text-base font-[457] text-black",
+  "inline-flex items-center gap-2 text-base font-[400] text-black",
   "transition-opacity hover:opacity-70",
 );
 
@@ -84,32 +84,32 @@ export const privateTopupIntroConnectedCardClass = cn(
 
 export const privateTopupWarningBannerClass = cn(
   "flex items-center gap-2 rounded-[6px] bg-[#fdd357]/20 px-3 py-2",
-  "text-[14px] font-[457] leading-normal text-[#d1a00f]",
+  "text-[14px] font-[400] leading-normal text-[#d1a00f]",
 );
 
 export const privateTopupInfoBannerClass = cn(
   "rounded-[8px] bg-[#e3e9ff] px-4 py-3 text-center",
-  "text-[14px] font-[457] leading-normal text-[#007aff]",
+  "text-[14px] font-[400] leading-normal text-[#007aff]",
 );
 
 export const privateTopupIntroFooterCancelClass = cn(
   "inline-flex h-[50px] w-[210px] items-center justify-center rounded-[8px]",
-  "border border-[#909090] bg-white text-[16px] font-[457] text-black",
+  "border border-[#909090] bg-white text-[16px] font-[400] text-black",
   "transition-opacity hover:opacity-80",
 );
 
 export const privateTopupIntroFooterProceedClass = cn(
   "inline-flex h-[50px] w-[210px] items-center justify-center gap-1 rounded-[8px]",
-  "bg-black text-[16px] font-[457] text-white transition-opacity hover:opacity-90",
+  "bg-black text-[16px] font-[400] text-white transition-opacity hover:opacity-90",
 );
 
 export const privateTopupGuideFooterCancelClass = cn(
   "inline-flex h-[38px] min-w-[107px] items-center justify-center rounded-[8px]",
-  "border border-[#909090] bg-white px-4 text-[16px] font-[457] text-black",
+  "border border-[#909090] bg-white px-4 text-[16px] font-[400] text-black",
   "transition-opacity hover:opacity-80",
 );
 
 export const privateTopupGuideFooterProceedClass = cn(
   "inline-flex h-[38px] min-w-[107px] items-center justify-center gap-1 rounded-[8px]",
-  "bg-black px-4 text-[16px] font-[457] text-white transition-opacity hover:opacity-90",
+  "bg-black px-4 text-[16px] font-[400] text-white transition-opacity hover:opacity-90",
 );

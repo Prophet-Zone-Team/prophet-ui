@@ -11,6 +11,7 @@ import { usePendingFunderUsdc } from "@/hooks/funding";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import { DepositDialog } from "@/views/portfolio/deposit";
+import { PrivateTopupOnboarding } from "@/views/portfolio/private-topup/private-topup-onboarding";
 import { PortfolioPerformanceChart } from "@/views/portfolio/portfolio-performance-chart";
 import { WithdrawDialog } from "@/views/portfolio/withdraw";
 import {
@@ -35,6 +36,8 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
 
   const [copied, setCopied] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
+  const [privateTopupIntroOpen, setPrivateTopupIntroOpen] = useState(false);
+  const [privateTopupGuideOpen, setPrivateTopupGuideOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const polymarketAddress = session?.funderAddress ?? session?.walletAddress;
@@ -210,6 +213,17 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
             open={depositOpen}
             onClose={() => setDepositOpen(false)}
             onDepositSuccess={reload}
+            onOpenPrivateTopup={() => {
+              setDepositOpen(false);
+              setPrivateTopupIntroOpen(true);
+            }}
+          />
+          <PrivateTopupOnboarding
+            introOpen={privateTopupIntroOpen}
+            guideOpen={privateTopupGuideOpen}
+            walletAddress={session.walletAddress}
+            onIntroOpenChange={setPrivateTopupIntroOpen}
+            onGuideOpenChange={setPrivateTopupGuideOpen}
           />
           <WithdrawDialog
             open={withdrawOpen}

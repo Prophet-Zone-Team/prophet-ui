@@ -20,12 +20,6 @@ import {
   privateTopupWarningBannerClass,
 } from "@/views/portfolio/private-topup/private-topup-ui";
 
-const INTRO_DESCRIPTION =
-  "Want to participate without exposing your onchain activity? Private Mode helps keep your funding activity separate from your connected wallet, so you can use Prophet with greater privacy.";
-
-const INFO_BANNER_TEXT =
-  "You can fund a private balance first, then withdraw only the amount you want to use on the site.";
-
 export interface PrivateTopupIntroDialogProps {
   open: boolean;
   guideOpen?: boolean;
@@ -87,10 +81,13 @@ export function PrivateTopupIntroDialog({
               className="h-[52px] w-[70px] object-contain"
             />
             <h2 className="m-0 mt-4 text-center text-[26px] font-[556] leading-normal text-black">
-              Private Topup
+              Private Balance
             </h2>
-            <p className="m-0 mt-4 max-w-[416px] text-center text-[16px] font-[457] leading-normal text-black">
-              {INTRO_DESCRIPTION}
+            <p className="m-0 mt-4 max-w-[416px] text-center text-[16px] font-[400] leading-normal text-black">
+              Trade on Prophet with stronger onchain privacy.
+              <br />
+              <br />
+              For better privacy, make sure your connected wallet has no past activity linked to known wallets, exchanges, or your main account. You can also create a new wallet before using Private Top-Up.
             </p>
           </div>
 
@@ -145,7 +142,10 @@ export function PrivateTopupIntroDialog({
             </div>
           </div>
 
-          <p className={`${privateTopupInfoBannerClass} mt-4`}>{INFO_BANNER_TEXT}</p>
+          <p className={`${privateTopupInfoBannerClass} mt-4`}>
+            Top up your private balance first, then withdraw only the amount you need to use on Prophet.
+            Your funds always remain under your custody.
+          </p>
 
           <div className="mt-6 flex items-center justify-center gap-3">
             <button

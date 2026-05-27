@@ -3,7 +3,7 @@
 import type { OneClickStatus, QuoteResponse } from "@stableflow/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Big from "big.js";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Modal } from "@/components/ui/modal";
 import { FundingNetworkType } from "@/config/funding";
@@ -25,10 +25,12 @@ import { useAuth } from "@/context/auth";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { useBalancesStore } from "@/store/use-balances";
 import { usePricesStore } from "@/store";
-import { DEPOSIT_MODAL_WIDTH } from "@/views/portfolio/deposit/config";
+import { DEPOSIT_ENTRY_MODAL_MIN_HEIGHT, DEPOSIT_MODAL_WIDTH } from "@/views/portfolio/deposit/config";
 import { DepositAmountStep } from "@/views/portfolio/deposit/deposit-amount-step";
 import { DepositConfirmStep } from "@/views/portfolio/deposit/deposit-confirm-step";
 import { DepositEntryStep } from "@/views/portfolio/deposit/deposit-entry-step";
+import { depositPrivateFooterLinkClass } from "@/views/portfolio/deposit/deposit-ui";
+import { resolvePrivateAccountStatus } from "@/views/portfolio/deposit/resolve-private-account-status";
 import {
   DepositStatusStep,
   formatStableflowStatusLabel
@@ -36,6 +38,7 @@ import {
 import { DepositTokenStep } from "@/views/portfolio/deposit/deposit-token-step";
 import type {
   DepositAmountState,
+  DepositEntryTab,
   DepositMethod,
   DepositSelectableToken,
   DepositStatusPhase,
@@ -59,20 +62,25 @@ export interface DepositDialogProps {
   open: boolean;
   onClose: () => void;
   onDepositSuccess?: () => void | Promise<void>;
+  onOpenPrivateTopup?: () => void;
 }
 
 const INITIAL_STEP: DepositStep = "entry";
 
 const INITIAL_AMOUNT: DepositAmountState = { tokenAmount: "0", amountUsd: "0" };
 
+const INITIAL_ENTRY_TAB: DepositEntryTab = "crypto";
+
 export function DepositDialog({
   open,
   onClose,
-  onDepositSuccess
+  onDepositSuccess,
+  onOpenPrivateTopup,
 }: DepositDialogProps) {
   const { session, syncCash } = useAuth();
 
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
+  const [entryTab, setEntryTab] = useState<DepositEntryTab>(INITIAL_ENTRY_TAB);
   const [depositMethod, setDepositMethod] =
     useState<DepositMethod>("connected");
   const [selectedToken, setSelectedToken] = useState<
@@ -172,6 +180,7 @@ export function DepositDialog({
 
   const reset = useCallback(() => {
     setStep(INITIAL_STEP);
+    setEntryTab(INITIAL_ENTRY_TAB);
     setDepositMethod("connected");
     setSelectedToken(undefined);
     setAmount(INITIAL_AMOUNT);
@@ -602,8 +611,52 @@ export function DepositDialog({
     }
   };
 
+  const privateAccountStatus = resolvePrivateAccountStatus(session);
+
+  const entryModalMinHeight = useMemo(() => {
+    if (step !== "entry") {
+      return undefined;
+    }
+
+    if (entryTab === "crypto") {
+      return DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.crypto;
+    }
+
+    if (entryTab === "private_balance") {
+      return privateAccountStatus === "not_created"
+        ? DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.privateBalanceNotCreated
+        : DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.privateBalance;
+    }
+
+    return DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.crypto;
+  }, [entryTab, privateAccountStatus, step]);
+
   const footer = useMemo(() => {
-    if (step === "entry" || step === "status") {
+    if (step === "status") {
+      return undefined;
+    }
+
+    if (
+      step === "entry" &&
+      entryTab === "private_balance" &&
+      privateAccountStatus === "not_created"
+    ) {
+      return (
+        <button
+          type="button"
+          className={depositPrivateFooterLinkClass}
+          onClick={() => {
+            handleClose();
+            onOpenPrivateTopup?.();
+          }}
+        >
+          Private Balance
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        </button>
+      );
+    }
+
+    if (step === "entry") {
       return undefined;
     }
 
@@ -669,10 +722,16 @@ export function DepositDialog({
     amount,
     continueLoading,
     depositMethod,
+    entryTab,
+    handleClose,
     onConfirmDeposit,
+    onContinueToAmount,
+    onContinueToConfirm,
+    onOpenPrivateTopup,
+    privateAccountStatus,
     selectedToken,
     selectedTokenMaxAmount,
-    step
+    step,
   ]);
 
   return (
@@ -700,15 +759,19 @@ export function DepositDialog({
           onBack={showBack ? handleBack : undefined}
           footer={footer}
           className={
-            step === "entry"
-              ? "min-h-[400px]"
+            step === "entry" && entryModalMinHeight
+              ? entryModalMinHeight
               : step === "confirm"
                 ? "min-h-[600px]"
-                : "min-h-[515px]"
+                : step === "entry"
+                  ? DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.crypto
+                  : "min-h-[515px]"
           }
         >
           {step === "entry" ? (
             <DepositEntryStep
+              entryTab={entryTab}
+              onEntryTabChange={setEntryTab}
               onSelectConnected={() => {
                 setDepositMethod("connected");
                 setStep("tokens");

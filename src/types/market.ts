@@ -89,6 +89,8 @@ export interface TradingUserSession {
   userId: string;
   walletAddress: string;
   funderAddress?: string;
+  /** Reserved for future private account API; mirrors funderAddress lifecycle. */
+  privateAccountAddress?: string;
   depositWalletStatus?: DepositWalletStatus;
   depositWalletCheckedAt?: string;
   depositWalletTransactionId?: string;

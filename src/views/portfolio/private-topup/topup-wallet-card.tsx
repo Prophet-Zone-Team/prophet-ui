@@ -61,7 +61,7 @@ export function TopupWalletCard({
             />
           )}
           <div className="min-w-0 flex-1">
-            <p className={`m-0 ${privateTopupSectionLabelClass}`}>Top up Wallet</p>
+            <p className={`m-0 ${privateTopupSectionLabelClass}`}>Funding Wallet</p>
             {connected && address ? (
               <div className="mt-1 flex items-center gap-2">
                 <p className="m-0 truncate text-lg font-[556] text-black">
@@ -118,7 +118,7 @@ export function TopupWalletCard({
           className={cn(privateTopupPrimaryButtonClass, "mt-auto")}
           onClick={onConnect}
         >
-          Connect Top up Wallet
+          Connect Funding Wallet
         </button>
       )}
     </div>
