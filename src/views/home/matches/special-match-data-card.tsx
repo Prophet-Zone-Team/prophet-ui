@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { MatchStatusBadge } from "@/components/match/match-status-badge";
@@ -14,7 +15,11 @@ import {
   formatOutcomePercent,
   parseMatchOutcomeOdds
 } from "@/lib/market/match-outcome-odds";
-import { formatScheduleKickoff } from "@/lib/market/schedule-match";
+import {
+  formatScheduleKickoff,
+  getScheduleRowVariant
+} from "@/lib/market/schedule-match";
+import { gameTradeHref } from "@/lib/routes/trade";
 import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 
@@ -59,6 +64,8 @@ export function SpecialMatchDataCard({
   home,
   away
 }: SpecialMatchDataCardProps) {
+  const router = useRouter();
+  const canNavigate = getScheduleRowVariant(match.status) !== "ended";
   const homeName = home?.team.name ?? match.homeSeed ?? "Home";
   const awayName = away?.team.name ?? match.awaySeed ?? "Away";
   const oddsResult = parseMatchOutcomeOdds(match, homeName, awayName);
@@ -82,8 +89,19 @@ export function SpecialMatchDataCard({
 
   return (
     <article
-      className="relative min-h-[220px] overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white sm:min-h-[280px] lg:min-h-[345px]"
+      className={cn(
+        "relative min-h-[220px] overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white sm:min-h-[280px] lg:min-h-[345px]",
+        canNavigate &&
+          "cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]"
+      )}
       aria-label={ariaLabel}
+      onClick={
+        canNavigate
+          ? () => {
+              router.push(gameTradeHref(match.id));
+            }
+          : undefined
+      }
     >
       {oddsResult.status === "ready" ? (
         <ProbabilityStrip

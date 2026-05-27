@@ -101,7 +101,7 @@ export function PortfolioHistoryTable({
             </span>
           )}
           <div className="min-w-0">
-            <p className="m-0 truncate font-[556] text-black">
+            <p className="m-0 truncate font-[400] text-black">
               {snapshot?.team.name ?? activity.title}
             </p>
             <p className="m-0 mt-0.5 text-xs text-prophet-muted">
@@ -109,7 +109,7 @@ export function PortfolioHistoryTable({
             </p>
           </div>
         </div>
-        <span className="font-[556]">
+        <span className="font-[400]">
           {sideLabel} {formatSharePrice(activity.price)}
         </span>
         <span>{formatShareSize(activity.size)}</span>

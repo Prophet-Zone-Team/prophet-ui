@@ -9,6 +9,7 @@ import {
   formatVolume,
   getRelativeChangePercent
 } from "@/components/home/market-formatters";
+import { HomeHeroTitleIconCycle } from "@/views/home/header/home-hero-title-icon-cycle";
 
 const WORLD_CUP_2026_KICKOFF = new Date(Date.UTC(2026, 5, 11, 18, 0, 0));
 
@@ -37,8 +38,9 @@ export function HomeHero({
     <section className="flex justify-between py-8">
       <div className="flex-1">
         <p className="text-[26px]">2026 FIFA World Cup</p>
-        <h1 className="mt-[8px] text-[56px] font-[500] leading-[0.9]">
-          All Teams, One Probability Board
+        <h1 className="mt-[8px] flex items-center gap-[8px] text-[56px] font-[500] leading-[0.9]">
+          <span>Before the news, it moves</span>
+          <HomeHeroTitleIconCycle />
         </h1>
         <p className="text-[#909090] text-[14px] mt-[8px]">
           source: {getMarketDataSourceLabel(dataSource)}

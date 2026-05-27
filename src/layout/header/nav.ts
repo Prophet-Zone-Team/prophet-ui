@@ -1,5 +1,5 @@
 export const PRIMARY_NAV = [
-  { href: "/fifa", label: "FIFA" },
+  { href: "/fifa/matches", label: "Matches" },
   { href: "/analytics", label: "Analytics" },
   { href: "/tracks", label: "Tracks" },
   { href: "/portfolio", label: "Portfolio" }

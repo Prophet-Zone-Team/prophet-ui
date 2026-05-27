@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 
 const HOME_SECTIONS = [
-  { href: "/fifa", label: "Champion" },
+  { href: "/fifa", label: "World Cup Winner" },
   { href: "/fifa/matches", label: "Matches" }
 ] as const;
 

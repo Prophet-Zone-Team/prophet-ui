@@ -1,13 +1,13 @@
 import { cn } from "@/lib/cn";
 
-export const portfolioPageClass = "mx-auto w-[1112px] px-4 pt-[20px] sm:px-6";
+export const portfolioPageClass = "mx-auto w-[1112px] px-4 py-[20px] sm:px-6";
 
 export const portfolioSummaryCardClass = cn(
   "box-border min-h-[300px] rounded-[20px] border border-prophet-line bg-white p-6 sm:p-8 lg:h-[300px]"
 );
 
 export const portfolioActivityCardClass = cn(
-  "box-border flex h-[523px] flex-col overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white"
+  "box-border flex min-h-[523px] flex-col rounded-[12px] border border-[#EBEBEB] bg-white"
 );
 
 export const portfolioSummaryLabelClass =
@@ -102,4 +102,4 @@ export const portfolioSecondaryButtonClass = cn(
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
-export const portfolioTableScrollClass = "min-h-0 flex-1 overflow-auto";
+export const portfolioTableScrollClass = "flex-1";
