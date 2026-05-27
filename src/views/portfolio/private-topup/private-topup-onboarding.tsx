@@ -33,7 +33,6 @@ export function PrivateTopupOnboarding({
 
   const handleProceed = useCallback(() => {
     closeAll();
-    console.log("PRIVATE_MODE_HOSTNAME: %o", PRIVATE_MODE_HOSTNAME);
     window.location.href = `https://${PRIVATE_MODE_HOSTNAME}/private`;
   }, [closeAll, router]);
 
