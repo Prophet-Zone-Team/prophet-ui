@@ -1,17 +1,11 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-
-import { formatShortWallet } from "@/lib/team/detail-format";
-import {
-  depositConnectedRowClass,
-  depositSectionLabelClass,
-} from "@/views/portfolio/deposit/deposit-ui";
-import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
-import { usePortfolioContext } from "../context";
-import { getStoredTradingWalletInfo } from "@/components/trading/trading-wallet-session";
-import { formatNumber } from "@/utils";
 import { useEffect } from "react";
+
+import { usePortfolioContext } from "../context";
+import { formatNumber } from "@/utils";
+import { FundingCryptoEntry } from "@/views/portfolio/shared/funding-crypto-entry";
 
 export interface WithdrawEntryStepProps {
   onSelectBridge: () => void;
@@ -24,17 +18,18 @@ export function WithdrawEntryStep({
   onSelectStableflow,
   stableflowLoading = false,
 }: WithdrawEntryStepProps) {
-  const { session, onConnectWallet, status, portfolio, reload, coreStatus } = usePortfolioContext();
+  const { session, onConnectWallet, status, portfolio, reload, coreStatus } =
+    usePortfolioContext();
   const availableDisplay = session
     ? formatNumber(portfolio?.availableToTrade, 4, true, {
-      round: 0,
-      isZeroPrecision: true
-    })
+        round: 0,
+        isZeroPrecision: true,
+      })
     : "0.00";
 
   useEffect(() => {
     reload();
-  }, []);
+  }, [reload]);
 
   if (!session) {
     return (
@@ -53,45 +48,20 @@ export function WithdrawEntryStep({
 
   return (
     <div className="flex flex-col gap-3 pb-2">
-      <span className={depositSectionLabelClass}>Connected</span>
-      <button type="button" className={depositConnectedRowClass} onClick={onSelectBridge}>
-        <span className="flex min-w-0 items-center gap-3">
-          <WalletAvatarIcon address={session?.walletAddress} />
-          <span className="truncate text-base font-[556] text-black">
-            {formatShortWallet(session.walletAddress)}
-          </span>
-        </span>
-        <span className="shrink-0 text-base font-[556] text-[#909090]">
-          {
-            coreStatus === "loading"
-              ? (
-                <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
-              )
-              : availableDisplay
-          }
-        </span>
-      </button>
-
-      <span className={depositSectionLabelClass}>Stableflow</span>
-      <button
-        type="button"
-        className={depositConnectedRowClass}
-        onClick={() => void onSelectStableflow()}
-        disabled={stableflowLoading}
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          {stableflowLoading ? (
+      <FundingCryptoEntry
+        walletAddress={session.walletAddress}
+        connectedBalance={
+          coreStatus === "loading" ? (
             <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
           ) : (
-            <img
-              src="/logos/logo-stableflow.svg"
-              alt=""
-              className="size-8 shrink-0 rounded-full object-center object-contain"
-            />
-          )}
-          <span className="truncate text-base font-[556] text-black">Stableflow</span>
-        </span>
-      </button>
+            availableDisplay
+          )
+        }
+        connectedBalanceClassName="text-[#909090]"
+        onSelectConnected={onSelectBridge}
+        onSelectStableflow={onSelectStableflow}
+        stableflowLoading={stableflowLoading}
+      />
     </div>
   );
 }

@@ -2,35 +2,33 @@
 
 import { Loader2 } from "lucide-react";
 
-import { formatShortWallet } from "@/lib/team/detail-format";
-import {
-  depositConnectedRowClass,
-  depositSectionLabelClass
-} from "@/views/portfolio/deposit/deposit-ui";
-import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import { useAuth } from "@/context/auth";
-import { useDepositContext } from "./context";
 import { formatNumber } from "@/utils";
-import { getStoredTradingWalletInfo } from "@/components/trading/trading-wallet-session";
+import { DepositPrivateBalanceEntry } from "@/views/portfolio/deposit/deposit-private-balance-entry";
+import { DepositSourceTabs } from "@/views/portfolio/deposit/deposit-source-tabs";
+import { resolvePrivateAccountStatus } from "@/views/portfolio/deposit/resolve-private-account-status";
+import type { DepositEntryTab } from "@/views/portfolio/deposit/types";
+import { useDepositContext } from "@/views/portfolio/deposit/context";
+import { FundingCryptoEntry } from "@/views/portfolio/shared/funding-crypto-entry";
 
 export interface DepositEntryStepProps {
+  entryTab: DepositEntryTab;
+  onEntryTabChange: (tab: DepositEntryTab) => void;
   onSelectConnected: () => void;
   onSelectStableflow: () => void;
   stableflowLoading?: boolean;
 }
 
 export function DepositEntryStep({
+  entryTab,
+  onEntryTabChange,
   onSelectConnected,
   onSelectStableflow,
   stableflowLoading = false,
 }: DepositEntryStepProps) {
   const { session, openLogin, loginInProgress } = useAuth();
-  const {
-    connectedWalletBalanceUsd,
-    stableflowBalanceUsd,
-    balancesLoading,
-    pricesLoading,
-  } = useDepositContext();
+  const { connectedWalletBalanceUsd, balancesLoading, pricesLoading } =
+    useDepositContext();
 
   if (!session) {
     return (
@@ -48,54 +46,38 @@ export function DepositEntryStep({
   }
 
   const isLoading = balancesLoading || pricesLoading;
+  const privateAccountStatus = resolvePrivateAccountStatus(session);
 
   return (
-    <div className="flex flex-col gap-3 pb-2">
-      <span className={depositSectionLabelClass}>Connected</span>
-      <button
-        type="button"
-        className={depositConnectedRowClass}
-        onClick={onSelectConnected}
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          <WalletAvatarIcon address={session?.walletAddress} />
-          <span className="truncate text-base font-[556] text-black">
-            {formatShortWallet(session.walletAddress)}
-          </span>
-        </span>
-        <span className="shrink-0 text-base font-[556] text-black">
-          {
-            isLoading
-              ? (
-                <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
-              )
-              : formatNumber(connectedWalletBalanceUsd, 2, true, { round: 0, isZeroPrecision: true })
-          }
-        </span>
-      </button>
+    <div className="flex flex-col gap-4 pb-2">
+      <DepositSourceTabs value={entryTab} onChange={onEntryTabChange} />
 
-      <span className={depositSectionLabelClass}>Stableflow</span>
-      <button
-        type="button"
-        className={depositConnectedRowClass}
-        onClick={() => void onSelectStableflow()}
-        disabled={stableflowLoading}
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          {stableflowLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
-          ) : (
-            <img
-              src="/logos/logo-stableflow.svg"
-              alt=""
-              className="size-8 shrink-0 rounded-full object-center object-contain"
-            />
-          )}
-          <span className="truncate text-base font-[556] text-black">Stableflow</span>
-        </span>
-        <span className="shrink-0 text-base font-[556] text-black">
-        </span>
-      </button>
+      {entryTab === "crypto" ? (
+        <FundingCryptoEntry
+          walletAddress={session.walletAddress}
+          connectedBalance={
+            isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
+            ) : (
+              formatNumber(connectedWalletBalanceUsd, 2, true, {
+                round: 0,
+                isZeroPrecision: true,
+              })
+            )
+          }
+          connectedBalanceClassName="text-black"
+          onSelectConnected={onSelectConnected}
+          onSelectStableflow={onSelectStableflow}
+          stableflowLoading={stableflowLoading}
+        />
+      ) : null}
+
+      {entryTab === "private_balance" ? (
+        <DepositPrivateBalanceEntry
+          status={privateAccountStatus}
+          privateAccountAddress={session.privateAccountAddress}
+        />
+      ) : null}
     </div>
   );
 }
