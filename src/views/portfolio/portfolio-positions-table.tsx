@@ -145,7 +145,7 @@ export function PortfolioPositionsTable({
               ?
             </span>
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 overflow-hidden text-ellipsis">
             <a
               href={resolveTradeHref(position.eventSlug ?? position.slug)}
               className="m-0 truncate font-[556] text-black hover:underline"
