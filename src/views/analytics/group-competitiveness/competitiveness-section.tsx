@@ -30,7 +30,7 @@ export function CompetitivenessSection({
     <section
       aria-label={data.label}
       className={cn(
-        "flex flex-1 items-start gap-[40px] px-[25px] py-[24px]",
+        "flex flex-1 items-start gap-[30px] px-[25px] py-[24px]",
         className
       )}
     >
@@ -41,7 +41,7 @@ export function CompetitivenessSection({
         score={featuredEntry.score}
         description={data.description}
         icon={<Icon />}
-        className="w-[317px] shrink-0"
+        className="w-[280px] shrink-0"
       />
 
       <CompetitivenessList

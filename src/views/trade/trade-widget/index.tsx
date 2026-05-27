@@ -77,13 +77,14 @@ export function TradeWidget(props: TradeWidgetProps) {
         />
       )}
 
-      <div className="flex items-end justify-between gap-3 border-b border-prophet-line px-4 pb-0 pt-3">
+      <div className="flex items-end justify-between gap-3 px-4 pb-0 pt-3">
         <TabSwitcher
           items={[...TRADE_TABS]}
           value={tab}
           onChange={(value) => setTab(value as typeof tab)}
           size="compact"
           aria-label="Trade side"
+          className="border-b border-prophet-line flex-1"
         />
         <TradeMarketButton value={orderMode} onChange={setOrderMode} />
       </div>
