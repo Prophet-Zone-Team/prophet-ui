@@ -101,7 +101,7 @@ export function HomeMatchesSchedulePanel({
 
       {sortedMatches.length > 0 ? (
         dateGroups ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 px-3 md:px-0">
             {dateGroups.map((group) => (
               <section
                 key={group.dateKey}

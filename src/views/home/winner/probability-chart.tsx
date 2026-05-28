@@ -77,7 +77,7 @@ export function WinnerProbabilityChart({
   return (
     <section
       className={cn(
-        "min-w-0 rounded-xl border border-[#EBEBEB] bg-white px-5 pb-5 pt-4",
+        "min-w-0 rounded-xl border border-[#EBEBEB] bg-white px-3 md:px-5 pb-5 pt-4",
         className
       )}
       aria-label="World Cup winner probability chart"

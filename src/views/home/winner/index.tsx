@@ -12,13 +12,13 @@ export function HomeWinnerPanel() {
   const dataStatus = useWinnerMarketDataMeta();
 
   return (
-    <>
+    <div className="px-3 md:px-0">
       <WinnerProbabilityChart
         className="mb-4"
         teams={teams}
         probabilityHistory={[]}
       />
       <HomeWinnerMarketList teams={teams} dataStatus={dataStatus} />
-    </>
+    </div>
   );
 }
