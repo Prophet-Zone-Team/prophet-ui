@@ -12,7 +12,8 @@ import {
 export type WalletConnectionStatus =
   | "matched"
   | "disconnected"
-  | "account_changed";
+  | "account_changed"
+  | "reconnecting";
 
 export interface WalletConnectionSnapshot {
   accounts: string[];
@@ -21,10 +22,89 @@ export interface WalletConnectionSnapshot {
 }
 
 const DEBOUNCE_MS = 300;
+const WALLET_RECONNECT_TIMEOUT_MS = 10_000;
+
+function isWalletSettling() {
+  const status = getAccount(wagmiConfig).status;
+
+  return status === "connecting" || status === "reconnecting";
+}
+
+function isWalletSettled() {
+  const status = getAccount(wagmiConfig).status;
+
+  return status === "connected" || status === "disconnected";
+}
+
+export async function waitForWalletReady(options?: {
+  timeoutMs?: number;
+  signal?: AbortSignal;
+}): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (isWalletSettled()) {
+    return;
+  }
+
+  const timeoutMs = options?.timeoutMs ?? WALLET_RECONNECT_TIMEOUT_MS;
+
+  await new Promise<void>((resolve) => {
+    let settled = false;
+    let timeoutId: number | undefined;
+    let unwatch: (() => void) | undefined;
+
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+
+      unwatch?.();
+      options?.signal?.removeEventListener("abort", onAbort);
+      resolve();
+    };
+
+    const onAbort = () => {
+      finish();
+    };
+
+    if (options?.signal) {
+      options.signal.addEventListener("abort", onAbort);
+    }
+
+    timeoutId = window.setTimeout(finish, timeoutMs);
+
+    unwatch = watchAccount(wagmiConfig, {
+      onChange() {
+        if (isWalletSettled()) {
+          finish();
+        }
+      },
+    });
+
+    if (isWalletSettled()) {
+      finish();
+    }
+  });
+}
 
 export async function inspectWalletConnection(
   expectedAddress?: string,
+  options?: {
+    waitForReconnect?: boolean;
+  },
 ): Promise<WalletConnectionSnapshot> {
+  if (options?.waitForReconnect) {
+    await waitForWalletReady();
+  }
+
   const account = getAccount(wagmiConfig);
   const connectedAddress = account.isConnected ? account.address : undefined;
   const accounts = connectedAddress ? [connectedAddress.toLowerCase()] : [];
@@ -34,6 +114,13 @@ export async function inspectWalletConnection(
       accounts,
       status: "matched",
       activeAccount: connectedAddress,
+    };
+  }
+
+  if (isWalletSettling()) {
+    return {
+      accounts,
+      status: "reconnecting",
     };
   }
 
@@ -105,6 +192,10 @@ export function subscribeWalletConnection(options: SubscribeWalletConnectionOpti
       const snapshot = await inspectWalletConnection(options.expectedAddress);
 
       if (disposed || options.isPaused?.()) {
+        return;
+      }
+
+      if (snapshot.status === "reconnecting") {
         return;
       }
 

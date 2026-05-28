@@ -334,12 +334,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       store.setSession(nextSession);
 
-      const walletSnapshot = await inspectWalletConnection(nextSession.walletAddress);
+      const walletSnapshot = await inspectWalletConnection(nextSession.walletAddress, {
+        waitForReconnect: true,
+      });
 
       if (walletSnapshot.status === "disconnected") {
         await clearAuthState({
           error: "Wallet disconnected. Connect again to continue.",
         });
+        return;
+      }
+
+      if (walletSnapshot.status === "reconnecting") {
+        const nextReadiness = await refreshReadiness(nextSession);
+        store.setStatus("ready");
+        store.setLoginStep(undefined);
+
+        if (isTradingSetupComplete(nextReadiness)) {
+          store.setLoginModalOpen(false);
+          store.setError(undefined);
+        } else {
+          openSetupModalIfNeeded();
+        }
+
         return;
       }
 
