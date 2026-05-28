@@ -28,7 +28,7 @@ export const teamDossierStripClass =
   "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4";
 
 export const teamMainGridClass =
-  "flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_345px] xl:items-start";
+  "flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_345px] xl:items-start mt-4";
 
 export const teamMainColumnClass = "order-2 flex min-w-0 flex-col gap-4 xl:order-1";
 

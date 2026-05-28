@@ -150,22 +150,24 @@ export function TeamDetailHeader({
             <HeroMetric label="Group" value={getGroupLabel(metadata)} />
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center justify-between md:justify-end gap-2">
             <Link
               href={teamTradeHref(team.id)}
               className={teamOpenTradeButtonClass}
             >
               Open Trade
             </Link>
-            <BookmarkControl teamId={team.id} teamName={team.name} />
-            <button
-              type="button"
-              className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted hover:text-black"
-              aria-label="Copy page link"
-              onClick={() => void copyPageLink()}
-            >
-              <CopyLinkIcon />
-            </button>
+            <div className="flex items-center gap-2">
+              <BookmarkControl teamId={team.id} teamName={team.name} />
+              <button
+                type="button"
+                className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted hover:text-black"
+                aria-label="Copy page link"
+                onClick={() => void copyPageLink()}
+              >
+                <CopyLinkIcon />
+              </button>
+            </div>
           </div>
         </div>
       </div>
