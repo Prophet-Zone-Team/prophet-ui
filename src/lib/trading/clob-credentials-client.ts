@@ -1,8 +1,8 @@
 "use client";
 
-import { signTypedData } from "@/components/trading/quick-bid-account-setup";
 import { ensureClobApiReachable } from "@/lib/trading/clob-health-client";
 import { fetchJson } from "@/lib/team/client-fetch";
+import { signTypedData } from "@/lib/trading/wallet-typed-data-sign";
 import type { TradingUserSession } from "@/types/market";
 
 interface TypedDataPayload {

@@ -1,133 +1,119 @@
 "use client";
 
-export interface EthereumProvider {
-  request: (args: { method: string; params?: unknown[] | Record<string, unknown> }) => Promise<unknown>;
-  selectedAddress?: string;
-  providers?: EthereumProvider[];
-  isMetaMask?: boolean;
-  isOkxWallet?: boolean;
-  isOKExWallet?: boolean;
+import { createWalletClient, custom, type Address, type Chain, type WalletClient } from "viem";
+
+import { disconnect, getAccount } from "wagmi/actions";
+import type { Connector } from "wagmi";
+
+import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+
+interface WalletClientOptions {
+  chainId?: number;
+}
+
+export interface WalletRpcRequest {
+  method: string;
+  params?: unknown[] | Record<string, unknown>;
 }
 
 export type WalletProviderKind = "okx" | "metamask" | "injected";
 
-export function getEthereumProvider(): EthereumProvider | undefined {
-  const providers = getInjectedEthereumProviders();
+export function connectorIdToProviderKind(connectorId?: string): WalletProviderKind {
+  if (!connectorId) {
+    return "injected";
+  }
 
-  return providers.find((provider) => provider.selectedAddress) ?? providers[0];
+  const legacyKinds: WalletProviderKind[] = ["okx", "metamask", "injected"];
+
+  if (legacyKinds.includes(connectorId as WalletProviderKind)) {
+    return connectorId as WalletProviderKind;
+  }
+
+  const lower = connectorId.toLowerCase();
+
+  if (lower.includes("okx") || lower.includes("okex")) {
+    return "okx";
+  }
+
+  if (lower.includes("metamask") || lower.includes("io.metamask")) {
+    return "metamask";
+  }
+
+  return "injected";
 }
 
-export async function getEthereumProviderForWallet(
+export function getProviderKindFromConnectorId(connectorId?: string): WalletProviderKind {
+  return connectorIdToProviderKind(connectorId);
+}
+
+export function getProviderLabelFromConnectorId(connectorId?: string) {
+  const kind = connectorIdToProviderKind(connectorId);
+
+  if (kind === "okx") {
+    return "OKX Wallet";
+  }
+
+  if (kind === "metamask") {
+    return "MetaMask";
+  }
+
+  return "connected wallet";
+}
+
+export async function getWalletClientForAddress(
   walletAddress: string,
-  preferredKind?: WalletProviderKind,
-): Promise<EthereumProvider> {
-  const providers = await getEthereumProvidersForWallet(walletAddress, preferredKind);
+  options?: WalletClientOptions,
+): Promise<WalletClient> {
+  const account = getAccount(wagmiConfig);
 
-  if (providers[0]) {
-    return providers[0];
+  if (!account.isConnected || !account.address) {
+    throw new Error("No wallet connected. Connect your wallet to continue.");
   }
 
-  throw getNoProviderForWalletError(walletAddress, []);
+  if (!isSameAddress(account.address, walletAddress)) {
+    throw new Error(
+      `The connected trading session is ${normalizeAddress(walletAddress)}, but the active wallet is ${account.address}. Switch your wallet account or reconnect.`,
+    );
+  }
+
+  const chainId = options?.chainId ?? account.chainId;
+  const connector = resolveLiveConnector(account.connector);
+
+  if (!connector) {
+    throw new Error("Unable to access the connected wallet connector. Reconnect and try again.");
+  }
+
+  const provider = await connector.getProvider();
+  const chain = resolveWalletChain(chainId);
+
+  return createWalletClient({
+    account: walletAddress as Address,
+    chain,
+    transport: custom(provider as Parameters<typeof custom>[0]),
+  });
 }
 
-export async function getEthereumProvidersForWallet(
+export async function requestWalletRpc(
   walletAddress: string,
-  preferredKind?: WalletProviderKind,
-): Promise<EthereumProvider[]> {
-  const expectedAddress = normalizeAddress(walletAddress);
-  const providers = getInjectedEthereumProviders();
-  const seenAccounts: string[] = [];
-  const matches: Array<{
-    provider: EthereumProvider;
-    rank: number;
-  }> = [];
+  request: WalletRpcRequest,
+  options?: WalletClientOptions,
+): Promise<unknown> {
+  const client = await getWalletClientForAddress(walletAddress, options);
 
-  for (const provider of providers) {
-    const accounts = await getProviderAccounts(provider);
-    const selected = normalizeAddressOrUndefined(provider.selectedAddress);
-    const firstAccount = accounts[0];
-
-    seenAccounts.push(...accounts);
-
-    if (accounts.some((account) => isSameAddress(account, expectedAddress))) {
-      matches.push({
-        provider,
-        rank: getProviderMatchRank({
-          provider,
-          preferredKind,
-          expectedAddress,
-          selected,
-          firstAccount,
-        }),
-      });
-    }
-  }
-
-  if (matches.length > 0) {
-    return matches.sort((left, right) => right.rank - left.rank).map((match) => match.provider);
-  }
-
-  throw getNoProviderForWalletError(walletAddress, seenAccounts);
+  return client.request({
+    method: request.method as never,
+    params: request.params as never,
+  });
 }
 
-function getNoProviderForWalletError(walletAddress: string, seenAccounts: string[]) {
-  const expectedAddress = normalizeAddress(walletAddress);
-  const uniqueAccounts = [...new Set(seenAccounts.map((account) => account.toLowerCase()))];
-  const activeCopy =
-    uniqueAccounts.length > 0
-      ? ` Active wallet account${uniqueAccounts.length > 1 ? "s" : ""}: ${uniqueAccounts.join(", ")}.`
-      : "";
+export async function getAuthorizedWalletAccounts(): Promise<string[]> {
+  const account = getAccount(wagmiConfig);
 
-  return new Error(
-    `The connected trading session is ${expectedAddress}, but the active wallet provider does not expose that account.${activeCopy} Switch your wallet to ${expectedAddress} or reconnect this app with the intended wallet.`,
-  );
-}
-
-export async function getProviderAccounts(provider: EthereumProvider): Promise<string[]> {
-  const selected = normalizeAddressOrUndefined(provider.selectedAddress);
-  const accounts = await provider
-    .request({
-      method: "eth_accounts",
-    })
-    .catch(() => undefined);
-
-  return [
-    selected,
-    ...(Array.isArray(accounts) ? accounts.filter((account): account is string => typeof account === "string") : []),
-  ].filter((account): account is string => Boolean(account && normalizeAddressOrUndefined(account)));
-}
-
-function getInjectedEthereumProviders(): EthereumProvider[] {
-  if (typeof window === "undefined") {
+  if (!account.isConnected || !account.address) {
     return [];
   }
 
-  const maybeWindow = window as typeof window & {
-    ethereum?: EthereumProvider;
-    okxwallet?: EthereumProvider;
-  };
-  const providers = [
-    maybeWindow.okxwallet,
-    ...(maybeWindow.ethereum?.providers ?? []),
-    maybeWindow.ethereum,
-  ].filter((provider): provider is EthereumProvider => Boolean(provider));
-
-  return [...new Set(providers)];
-}
-
-export { getInjectedEthereumProviders };
-
-export async function getAuthorizedWalletAccounts(): Promise<string[]> {
-  const providers = getInjectedEthereumProviders();
-  const accounts = new Set<string>();
-
-  for (const provider of providers) {
-    for (const account of await getProviderAccounts(provider)) {
-      accounts.add(account.toLowerCase());
-    }
-  }
-
-  return [...accounts];
+  return [account.address.toLowerCase()];
 }
 
 export function isWalletAddressAuthorized(
@@ -138,66 +124,39 @@ export function isWalletAddressAuthorized(
   return authorizedAccounts.some((account) => account === normalized);
 }
 
-export function getPrimaryAuthorizedWalletAccount(authorizedAccounts: string[]): string | undefined {
+export function getPrimaryAuthorizedWalletAccount(
+  authorizedAccounts: string[],
+): string | undefined {
   return authorizedAccounts[0];
 }
 
-export function getProviderLabel(provider: EthereumProvider) {
-  if (getProviderKind(provider) === "okx") {
-    return "OKX Wallet";
+function resolveLiveConnector(connector: Connector | undefined): Connector | undefined {
+  if (!connector) {
+    return undefined;
   }
 
-  if (provider.isMetaMask) {
-    return "MetaMask";
+  if (typeof connector.getProvider === "function") {
+    return connector;
   }
 
-  return "injected wallet";
+  return wagmiConfig.connectors.find(
+    (candidate) => candidate.uid === connector.uid || candidate.id === connector.id,
+  );
 }
 
-export function getProviderKind(provider: EthereumProvider): WalletProviderKind {
-  if (provider.isOkxWallet || provider.isOKExWallet) {
-    return "okx";
+function resolveWalletChain(chainId?: number): Chain {
+  if (chainId) {
+    const chain = wagmiConfig.chains.find((candidate) => candidate.id === chainId);
+
+    if (chain) {
+      return chain;
+    }
   }
 
-  if (provider.isMetaMask) {
-    return "metamask";
-  }
+  const accountChainId = getAccount(wagmiConfig).chainId;
+  const accountChain = wagmiConfig.chains.find((candidate) => candidate.id === accountChainId);
 
-  return "injected";
-}
-
-function getProviderMatchRank({
-  provider,
-  preferredKind,
-  expectedAddress,
-  selected,
-  firstAccount,
-}: {
-  provider: EthereumProvider;
-  preferredKind?: WalletProviderKind;
-  expectedAddress: string;
-  selected?: string;
-  firstAccount?: string;
-}) {
-  let rank = 0;
-
-  if (preferredKind && getProviderKind(provider) === preferredKind) {
-    rank += 100;
-  }
-
-  if (!preferredKind && getProviderKind(provider) === "okx") {
-    rank += 10;
-  }
-
-  if (selected && isSameAddress(selected, expectedAddress)) {
-    rank += 50;
-  }
-
-  if (firstAccount && isSameAddress(firstAccount, expectedAddress)) {
-    rank += 25;
-  }
-
-  return rank;
+  return accountChain ?? wagmiConfig.chains[0];
 }
 
 function normalizeAddress(address: string) {
@@ -210,10 +169,22 @@ function normalizeAddress(address: string) {
   return value;
 }
 
-function normalizeAddressOrUndefined(address: string | undefined) {
-  return address && /^0x[a-fA-F0-9]{40}$/.test(address) ? address : undefined;
-}
-
 function isSameAddress(left: string, right: string) {
   return left.toLowerCase() === right.toLowerCase();
+}
+
+export async function signMessageWithWallet(
+  walletAddress: string,
+  message: string,
+): Promise<`0x${string}`> {
+  const client = await getWalletClientForAddress(walletAddress);
+
+  return client.signMessage({
+    account: walletAddress as Address,
+    message,
+  });
+}
+
+export async function disconnectWagmiWallet() {
+  await disconnect(wagmiConfig);
 }

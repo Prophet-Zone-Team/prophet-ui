@@ -4,7 +4,6 @@ import type { OneClickStatus, QuoteResponse } from "@stableflow/core";
 import { useCallback, useRef, useState } from "react";
 import { parseUnits } from "viem";
 
-import { signTypedData } from "@/components/trading/quick-bid-account-setup";
 import { useAuth } from "@/context/auth";
 import {
   isStableflowWithdrawLocalPolygonUsdc,
@@ -22,6 +21,7 @@ import {
   ensureWithdrawConvertPolygonChain,
   executeWithdrawConvertPhase,
 } from "@/lib/trading/withdraw-wallet-convert";
+import { signTypedData } from "@/lib/trading/wallet-typed-data-sign";
 import type {
   BridgeAggregateStatus,
   BridgeFlowStatus,

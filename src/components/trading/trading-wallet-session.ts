@@ -2,9 +2,9 @@
 
 import type { TradingUserSession } from "@/types/market";
 import type { WalletProviderKind } from "@/components/trading/wallet-provider";
+import { connectorIdToProviderKind } from "@/components/trading/wallet-provider";
 
 const PROVIDER_STORAGE_PREFIX = "wc_trading_wallet_provider";
-
 
 export async function loadTradingSession() {
   const response = await fetch("/api/trading/session", {
@@ -32,14 +32,35 @@ export function formatShortWalletAddress(address: string) {
   return address.length > 10 ? `${address.slice(0, 6)}...${address.slice(-4)}` : address;
 }
 
-export function getStoredTradingWalletProvider(walletAddress: string): WalletProviderKind | undefined {
+export function storeConnectedWalletConnector(
+  walletAddress: string,
+  connectorId: string,
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(getProviderStorageKey(walletAddress), connectorId);
+}
+
+export function getStoredWalletConnectorId(walletAddress: string): string | undefined {
   if (typeof window === "undefined") {
     return undefined;
   }
 
-  const value = window.localStorage.getItem(getProviderStorageKey(walletAddress));
+  return window.localStorage.getItem(getProviderStorageKey(walletAddress)) ?? undefined;
+}
 
-  return value === "okx" || value === "metamask" || value === "injected" ? value : undefined;
+export function getStoredTradingWalletProvider(
+  walletAddress: string,
+): WalletProviderKind | undefined {
+  const connectorId = getStoredWalletConnectorId(walletAddress);
+
+  if (!connectorId) {
+    return undefined;
+  }
+
+  return connectorIdToProviderKind(connectorId);
 }
 
 export function getStoredTradingWalletInfo(walletAddress?: string) {
@@ -49,18 +70,11 @@ export function getStoredTradingWalletInfo(walletAddress?: string) {
     metamask: "/wallets/logo-metamask.png",
     injected: "",
   };
+
   return {
     kind: walletKind,
     logo: walletKind ? walletLogos[walletKind] : undefined,
   };
-}
-
-function writeStoredTradingWalletProvider(walletAddress: string, providerKind: WalletProviderKind) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(getProviderStorageKey(walletAddress), providerKind);
 }
 
 function getProviderStorageKey(walletAddress: string) {

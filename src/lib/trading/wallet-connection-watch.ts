@@ -1,11 +1,12 @@
 "use client";
 
+import { getAccount, watchAccount } from "wagmi/actions";
+
+import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+
 import {
-  getAuthorizedWalletAccounts,
-  getInjectedEthereumProviders,
   getPrimaryAuthorizedWalletAccount,
   isWalletAddressAuthorized,
-  type EthereumProvider,
 } from "@/components/trading/wallet-provider";
 
 export type WalletConnectionStatus =
@@ -24,17 +25,19 @@ const DEBOUNCE_MS = 300;
 export async function inspectWalletConnection(
   expectedAddress?: string,
 ): Promise<WalletConnectionSnapshot> {
-  const accounts = await getAuthorizedWalletAccounts();
+  const account = getAccount(wagmiConfig);
+  const connectedAddress = account.isConnected ? account.address : undefined;
+  const accounts = connectedAddress ? [connectedAddress.toLowerCase()] : [];
 
   if (!expectedAddress) {
     return {
       accounts,
       status: "matched",
-      activeAccount: getPrimaryAuthorizedWalletAccount(accounts),
+      activeAccount: connectedAddress,
     };
   }
 
-  if (accounts.length === 0) {
+  if (!connectedAddress) {
     return {
       accounts,
       status: "disconnected",
@@ -45,14 +48,14 @@ export async function inspectWalletConnection(
     return {
       accounts,
       status: "matched",
-      activeAccount: expectedAddress,
+      activeAccount: connectedAddress,
     };
   }
 
   return {
     accounts,
     status: "account_changed",
-    activeAccount: getPrimaryAuthorizedWalletAccount(accounts),
+    activeAccount: getPrimaryAuthorizedWalletAccount(accounts) ?? connectedAddress,
   };
 }
 
@@ -71,9 +74,6 @@ export function subscribeWalletConnection(options: SubscribeWalletConnectionOpti
   let disposed = false;
   let debounceTimer: number | undefined;
   let handling = false;
-
-  const providers = getInjectedEthereumProviders();
-  const cleanups: Array<() => void> = [];
 
   const scheduleInspection = () => {
     if (disposed) {
@@ -121,9 +121,11 @@ export function subscribeWalletConnection(options: SubscribeWalletConnectionOpti
     }
   };
 
-  for (const provider of providers) {
-    cleanups.push(attachAccountsChangedListener(provider, scheduleInspection));
-  }
+  const unwatchAccount = watchAccount(wagmiConfig, {
+    onChange() {
+      scheduleInspection();
+    },
+  });
 
   const handleFocus = () => {
     scheduleInspection();
@@ -141,35 +143,8 @@ export function subscribeWalletConnection(options: SubscribeWalletConnectionOpti
       window.clearTimeout(debounceTimer);
     }
 
-    for (const cleanup of cleanups) {
-      cleanup();
-    }
-
+    unwatchAccount();
     window.removeEventListener("focus", handleFocus);
     document.removeEventListener("visibilitychange", handleFocus);
-  };
-}
-
-function attachAccountsChangedListener(
-  provider: EthereumProvider,
-  onAccountsChanged: (accounts: string[]) => void,
-) {
-  const maybeProvider = provider as EthereumProvider & {
-    on?: (event: string, listener: (accounts: string[]) => void) => void;
-    removeListener?: (event: string, listener: (accounts: string[]) => void) => void;
-  };
-
-  if (typeof maybeProvider.on !== "function") {
-    return () => undefined;
-  }
-
-  const listener = (accounts: string[]) => {
-    onAccountsChanged(accounts);
-  };
-
-  maybeProvider.on("accountsChanged", listener);
-
-  return () => {
-    maybeProvider.removeListener?.("accountsChanged", listener);
   };
 }

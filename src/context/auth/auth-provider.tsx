@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import { LoginModal } from "@/components/auth/login-modal";
+import { disconnectWagmiWallet } from "@/components/trading/wallet-provider";
 import {
   disconnectTradingSession,
   loadTradingSession,
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const syncingRef = useRef(false);
   const loginAbortRef = useRef(false);
+  const loginConnectAbortRef = useRef<AbortController | undefined>(undefined);
   const walletHandlingRef = useRef(false);
   const eligibilityRefreshRef = useRef(false);
 
@@ -112,6 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await disconnectTradingSession();
       } catch {
         // ignore disconnect errors during cleanup
+      }
+
+      try {
+        await disconnectWagmiWallet();
+      } catch {
+        // ignore wagmi disconnect errors during cleanup
       }
 
       store.clearAuth();
@@ -209,8 +217,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         activeStore.setStatus("loading");
         activeStore.setLoginStep(undefined);
 
+        loginConnectAbortRef.current?.abort();
+        loginConnectAbortRef.current = new AbortController();
+
         const result = await completeTradingLogin({
           resume: false,
+          connectSignal: loginConnectAbortRef.current.signal,
           onStep: (step) => {
             if (!loginAbortRef.current) {
               useAuthStore.getState().setLoginStep(step);
@@ -397,6 +409,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     loginAbortRef.current = false;
+    loginConnectAbortRef.current?.abort();
+    loginConnectAbortRef.current = new AbortController();
     store.setLoginInProgress(true);
     store.setLoginModalOpen(true);
     store.setStatus("loading");
@@ -406,6 +420,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await completeTradingLogin({
         resume,
+        connectSignal: loginConnectAbortRef.current.signal,
         onStep: (step) => {
           if (!loginAbortRef.current) {
             useAuthStore.getState().setLoginStep(step);
@@ -547,6 +562,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
 
     loginAbortRef.current = true;
+    loginConnectAbortRef.current?.abort();
 
     if (store.loginInProgress) {
       await clearAuthState({ openModal: false });
@@ -562,6 +578,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
 
     loginAbortRef.current = true;
+    loginConnectAbortRef.current?.abort();
     walletHandlingRef.current = true;
     store.setStatus("loading");
     store.setError(undefined);

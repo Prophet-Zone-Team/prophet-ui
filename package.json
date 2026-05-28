@@ -26,7 +26,9 @@
     "@polymarket/builder-signing-sdk": "^0.0.8",
     "@polymarket/clob-client-v2": "^1.0.6",
     "@radix-ui/react-slot": "^1.1.2",
+    "@rainbow-me/rainbowkit": "^2.2.11",
     "@stableflow/core": "^3.0.0",
+    "@tanstack/react-query": "^5.100.14",
     "big.js": "^7.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -41,6 +43,7 @@
     "tailwind-merge": "^3.0.1",
     "undici": "^8.3.0",
     "viem": "^2.48.11",
+    "wagmi": "^2.19.5",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
@@ -56,5 +59,10 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
     "wrangler": "^4.68.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "qr": "~0.5.5"
+    }
   }
 }
