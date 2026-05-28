@@ -122,7 +122,7 @@ export async function fetchBatchTokenPriceHistory(
   }
 
   const body: Record<string, unknown> = {
-    markets: tokenIds,
+    markets: tokenIds
   };
 
   if (options.interval) {
@@ -141,15 +141,18 @@ export async function fetchBatchTokenPriceHistory(
     body.end_ts = options.endTs;
   }
 
-  const response = await serverFetch(`${getTradingHost()}/batch-prices-history`, {
-    method: "POST",
-    cache: "no-store",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+  const response = await serverFetch(
+    `${getTradingHost()}/batch-prices-history`,
+    {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(body)
+    }
+  );
 
   if (!response.ok) {
     return fetchTokenHistoriesIndividually(tokenIds, options);

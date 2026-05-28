@@ -205,7 +205,7 @@ export function TradeGameHeader({
     mockEnabled
       ? (simulatedElapsed ?? match.liveElapsedSeconds)
       : match.liveElapsedSeconds,
-    effectiveLive,
+    effectiveLive
   );
   const statusVariant = effectiveLive
     ? "ongoing"
