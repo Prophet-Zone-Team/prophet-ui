@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { TabSwitcher } from "@/components/ui/tab-switcher";
+import { GameMarketTabSwitcher } from "@/views/trade/game/markets/game-market-tab-switcher";
 import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
 import { resolveDefaultFixtureOutcome } from "@/lib/market/fixture-markets-mapper";
 import {
@@ -274,13 +274,15 @@ export function GameMarketsSection({
       className="mt-[50px] flex flex-col gap-[5px]"
       aria-label="Match markets"
     >
-      <div className="flex items-center justify-between gap-4">
-        <TabSwitcher
-          items={[...GAME_MARKET_TABS]}
-          value={tab}
-          onChange={handleTabChange}
-          aria-label="Match market categories"
-        />
+      <div className="flex min-w-0 items-center justify-between gap-4 px-3 md:px-0">
+        <div className="min-w-0 shrink">
+          <GameMarketTabSwitcher
+            items={[...GAME_MARKET_TABS]}
+            value={tab}
+            onChange={handleTabChange}
+            aria-label="Match market categories"
+          />
+        </div>
         <OrderbookToggle
           variant="game"
           checked={showOrderbook}

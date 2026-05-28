@@ -18,6 +18,7 @@ import { ActionPanel } from "@/views/trade/trade-widget/action-panel";
 import { TradeWidgetHeader } from "@/views/trade/trade-widget/header";
 import { TradeMarketButton } from "@/views/trade/trade-widget/trade-market-button";
 import { tradePanelClass } from "@/views/trade/trade-widget/trade-ui";
+import { cn } from "@/lib/cn";
 
 const TRADE_TABS = [
   { id: "buy", label: "Buy" },
@@ -37,7 +38,7 @@ export type TradeWidgetGameProps = {
 
 export type TradeWidgetProps = TradeWidgetTeamProps | TradeWidgetGameProps;
 
-export function TradeWidget(props: TradeWidgetProps) {
+export function TradeWidget(props: TradeWidgetProps & { className?: string; }) {
   const syncForTeamSnapshot = useSyncTradeTeamSnapshot();
   const syncForGameSnapshot = useSyncTradeGameSnapshot();
   const outcomeSide = useTradeOutcomeSide();
@@ -62,7 +63,7 @@ export function TradeWidget(props: TradeWidgetProps) {
   ]);
 
   return (
-    <section className={tradePanelClass} aria-label="Place order">
+    <section className={cn(tradePanelClass, props.className)} aria-label="Place order">
       {props.variant === "game" ? (
         <TradeWidgetHeader
           variant="game"

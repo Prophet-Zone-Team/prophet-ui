@@ -149,9 +149,9 @@ export function GameProbabilitySection({
         tradeOutcomeSide,
         fallbackOutcome
           ? {
-              tokenId: fallbackOutcome.tokenId,
-              noTokenId: fallbackOutcome.noTokenId
-            }
+            tokenId: fallbackOutcome.tokenId,
+            noTokenId: fallbackOutcome.noTokenId
+          }
           : undefined
       ),
     [fallbackOutcome, selectedFixtureOutcome, tradeOutcomeSide]
@@ -218,9 +218,6 @@ export function GameProbabilitySection({
             <h2 className="m-0 text-[18px] font-[500] leading-6 text-black">
               Probability
             </h2>
-            {resolvedSummaryItems.length ? (
-              <ProbabilitySummaryRow items={resolvedSummaryItems} />
-            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-4 sm:gap-6">
@@ -261,6 +258,11 @@ export function GameProbabilitySection({
               </div>
             ) : null}
           </div>
+        </div>
+        <div className="">
+          {resolvedSummaryItems.length ? (
+            <ProbabilitySummaryRow items={resolvedSummaryItems} />
+          ) : null}
         </div>
 
         <div className="mt-4">
@@ -374,9 +376,9 @@ function buildDefaultSummaryItems({
 
 function ProbabilitySummaryRow({ items }: { items: ProbabilitySummaryItem[] }) {
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+    <div className="w-full mt-3 flex flex-wrap items-center gap-x-2 md:gap-x-6 gap-y-2">
       {items.map((item) => (
-        <div key={item.label} className="inline-flex items-center gap-2">
+        <div key={item.label} className="inline-flex items-center gap-1 md:gap-2">
           <span
             className="w-[12px] h-[12px] shrink-0 rounded-full"
             style={{ backgroundColor: item.color ?? gameColors.draw }}

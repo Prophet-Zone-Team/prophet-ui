@@ -130,7 +130,7 @@ export function TradeGameLoading() {
       aria-busy
       aria-label="Loading trade"
     >
-      <div className="absolute left-0 top-0 h-[258px] w-full bg-black" />
+      <div className="absolute left-0 top-0 h-[228px] md:h-[258px] w-full bg-black" />
 
       <div className="absolute inset-x-0 top-2 z-20 flex items-center justify-between px-4 pt-2 sm:px-10">
         <LoadingBlock onDark className="h-5 w-14" />

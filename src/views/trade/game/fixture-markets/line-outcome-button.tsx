@@ -29,13 +29,15 @@ export function LineOutcomeButton({
   variant,
   active = false,
   disabled = false,
-  onClick
+  onClick,
+  className,
 }: {
   label: string;
   price?: number;
   variant: LineOutcomeButtonVariant;
   active?: boolean;
   disabled?: boolean;
+  className?: string;
   onClick?: () => void;
 }) {
   const color = variantStyles[variant];
@@ -53,7 +55,7 @@ export function LineOutcomeButton({
         } as React.CSSProperties
       }
       className={cn(
-        "flex h-[44px] min-w-[120px] shrink-0 items-center justify-center gap-1.5 rounded-[12px] border bg-white px-4 text-sm font-[500] leading-[17px] transition-colors duration-200 ease-out",
+        "flex h-[40px] md:h-[44px] min-w-[80px] md:min-w-[120px] shrink-0 items-center justify-center gap-1.5 rounded-[12px] border bg-white px-2 md:px-4 text-sm font-[500] leading-[17px] transition-colors duration-200 ease-out",
         disabled
           ? "cursor-not-allowed opacity-40"
           : onClick
@@ -61,9 +63,10 @@ export function LineOutcomeButton({
             : "cursor-default",
         active ? "text-white" : "text-black",
         !disabled &&
-          !active &&
-          onClick &&
-          "hover:bg-[var(--line-outcome-color)] hover:text-white"
+        !active &&
+        onClick &&
+        "hover:bg-[var(--line-outcome-color)] hover:text-white",
+        className
       )}
     >
       <span>{label}</span>

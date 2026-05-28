@@ -5,4 +5,4 @@ export const gameColors = {
   awayBar: "#F4B600"
 } as const;
 
-export const gameContentClass = "flex justify-center gap-8";
+export const gameContentClass = "flex justify-center gap-8 flex-col md:flex-row";

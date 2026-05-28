@@ -72,7 +72,7 @@ function TeamSide({
   const content = (
     <div
       className={cn(
-        "flex w-[108px] flex-col sm:w-[170px]",
+        "flex w-[108px] flex-col md:w-[170px]",
         align === "end" && "items-end",
         align === "start" && "items-start",
         align === "center" && "items-center"
@@ -130,11 +130,11 @@ function HeaderMetric({
   statusLabel?: string;
 }) {
   return (
-    <div className="relative w-[453px] h-full">
-      <div className="absolute top-[-14px] h-full">
+    <div className="relative md:w-[453px] h-full">
+      <div className="absolute top-[-14px] h-full hidden md:block">
         <Bg />
       </div>
-      <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[50px]">
+      <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[35px]">
         <strong className="text-center text-[40px] font-[556] capitalize leading-[48px] text-white sm:text-[60px] sm:leading-[72px]">
           {value}
         </strong>
@@ -217,7 +217,7 @@ export function TradeGameHeader({
     : formatScheduleKickoff(liveMatch.kickoffAt);
 
   return (
-    <div className="relative h-full flex w-full justify-center">
+    <div className="grid grid-cols-[1fr_auto_1fr] w-full relative h-full gap-x-5">
       <TeamSideColumn
         team={{
           teamId: match.homeTeamId,

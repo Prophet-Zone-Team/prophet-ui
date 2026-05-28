@@ -97,8 +97,8 @@ function MarketActionRowShell({
   const volumeLabel = formatCompactVolume(volume);
 
   return (
-    <article className={cn(cardClass, "p-[16px]", className)}>
-      <div className="flex items-center gap-4">
+    <article className={cn(cardClass, "p-3 md:p-[16px]", className)}>
+      <div className="flex items-center gap-2 md:gap-4 flex-col md:flex-row">
         <div className="min-w-[88px] shrink-0">
           {volumeLabel ? (
             <p className="m-0 text-[20px] font-[556] leading-6 text-black">
@@ -111,7 +111,7 @@ function MarketActionRowShell({
           {lineSelector}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-center md:justify-end gap-2">
           {actions}
         </div>
       </div>

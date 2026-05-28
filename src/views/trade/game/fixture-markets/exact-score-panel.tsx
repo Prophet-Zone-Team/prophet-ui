@@ -56,7 +56,7 @@ export function ExactScorePanel({
       {outcomes.map((outcome) => (
         <div
           key={outcome.id}
-          className="flex flex-wrap items-center justify-between gap-4 p-[16px] transition-colors hover:bg-[#F5F5F5]"
+          className="flex flex-col md:flex-row flex-wrap items-stretch md:items-center justify-between gap-4 p-[16px] transition-colors hover:bg-[#F5F5F5]"
         >
           <div className="min-w-0 shrink-0">
             <h3 className="m-0 text-[18px] font-[500] leading-6 text-black">
@@ -67,7 +67,7 @@ export function ExactScorePanel({
             </p>
           </div>
 
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <div className="flex shrink-0 flex-wrap items-center justify-between md:justify-end gap-2">
             {(["yes", "no"] as const).map((binarySide) => {
               const buyable = isOutcomeBuyable(outcome, binarySide);
 
@@ -91,6 +91,7 @@ export function ExactScorePanel({
                   onClick={
                     buyable ? () => onSelect(outcome, binarySide) : undefined
                   }
+                  className="flex-1 md:flex-grow-0"
                 />
               );
             })}

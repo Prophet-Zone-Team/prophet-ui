@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/cn";
 
-import { MatchHistoryRow } from "./row";
+import { MatchHistoryDesktopRow, MatchHistoryMobileCard } from "./row";
 import { matchHistoryTableGridClass } from "./table-grid";
 import { MatchHistoryTeamToggle } from "./team-toggle";
 import { tradeGameMatchHistoryTeams } from "./mock-data";
@@ -35,7 +35,7 @@ export function MatchHistory({
     <section
       aria-label="Match history"
       className={cn(
-        "w-full max-w-[531px] rounded-[12px] bg-white px-[12px] py-[16px]",
+        "w-full max-w-none md:max-w-[531px] rounded-[12px] bg-white px-[12px] py-[16px]",
         "shadow-[0_0_10px_rgba(0,0,0,0.1)]",
         className
       )}
@@ -53,44 +53,61 @@ export function MatchHistory({
         ) : null}
       </div>
 
-      <div
-        role="table"
-        aria-label={`${selectedTeam?.name ?? "Team"} match history`}
-        className="mt-[12px] flex w-full flex-col"
-      >
-        <div
-          role="row"
-          className={cn(
-            matchHistoryTableGridClass,
-            "px-[12px] pb-[8px] text-[12px] font-[400] leading-[17px] text-[#909090]"
-          )}
-        >
-          <span role="columnheader">Time</span>
-          <span role="columnheader">Format</span>
-          <span role="columnheader">Home</span>
-          <span role="columnheader" className="text-center">
-            VS
-          </span>
-          <span role="columnheader">Away</span>
-          <span role="columnheader">Result</span>
-        </div>
+      <div className="mt-[12px] flex w-full flex-col">
+        {matches.length === 0 ? (
+          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+            No match history is available for this team yet.
+          </p>
+        ) : (
+          <>
+            <div
+              role="table"
+              aria-label={`${selectedTeam?.name ?? "Team"} match history`}
+              className="hidden w-full flex-col md:flex"
+            >
+              <div
+                role="row"
+                className={cn(
+                  matchHistoryTableGridClass,
+                  "px-[12px] pb-[8px] text-[12px] font-[400] leading-[17px] text-[#909090]"
+                )}
+              >
+                <span role="columnheader">Time</span>
+                <span role="columnheader">Format</span>
+                <span role="columnheader">Home</span>
+                <span role="columnheader" className="text-center">
+                  VS
+                </span>
+                <span role="columnheader">Away</span>
+                <span role="columnheader">Result</span>
+              </div>
 
-        <div className="flex flex-col gap-[2px]">
-          {matches.length === 0 ? (
-            <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
-              No match history is available for this team yet.
-            </p>
-          ) : (
-            matches.map((entry, index) => (
-              <MatchHistoryRow
-                key={entry.id}
-                entry={entry}
-                highlighted={index % 2 === 0}
-                tall={Boolean(entry.penaltyScore)}
-              />
-            ))
-          )}
-        </div>
+              <div className="flex flex-col gap-[2px]">
+                {matches.map((entry, index) => (
+                  <MatchHistoryDesktopRow
+                    key={entry.id}
+                    entry={entry}
+                    highlighted={index % 2 === 0}
+                    tall={Boolean(entry.penaltyScore)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div
+              className="flex flex-col gap-2 md:hidden"
+              aria-label={`${selectedTeam?.name ?? "Team"} match history`}
+            >
+              {matches.map((entry, index) => (
+                <MatchHistoryMobileCard
+                  key={entry.id}
+                  entry={entry}
+                  highlighted={index % 2 === 0}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
