@@ -22,7 +22,7 @@ import { TopupWalletCard } from "@/views/portfolio/private-topup/topup-wallet-ca
 import { MAIN_HOSTNAME } from "@/config/funding";
 
 export function PrivateTopupPage() {
-  const { session } = useAuth();
+  const { session, openLogin, loginInProgress } = useAuth();
   const [topupWalletConnected, setTopupWalletConnected] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [stableflowTokens, setStableflowTokens] = useState<
@@ -74,7 +74,21 @@ export function PrivateTopupPage() {
   });
 
   function handleConnectWallet() {
+    void connectTopupWallet();
+  }
+
+  async function connectTopupWallet() {
+    if (loginInProgress) {
+      return;
+    }
+
     if (!session?.walletAddress) {
+      const result = await openLogin();
+
+      if (result?.session.walletAddress) {
+        setTopupWalletConnected(true);
+      }
+
       return;
     }
 

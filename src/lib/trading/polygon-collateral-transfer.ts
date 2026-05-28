@@ -1,10 +1,9 @@
 "use client";
 
-import { createWalletClient, custom, erc20Abi, parseUnits, type Address, type Chain, type Hex } from "viem";
+import { erc20Abi, parseUnits, type Address, type Chain, type Hex } from "viem";
 import { arbitrum, bsc, optimism, polygon } from "viem/chains";
 
-import { getStoredTradingWalletProvider } from "@/components/trading/trading-wallet-session";
-import { getEthereumProviderForWallet } from "@/components/trading/wallet-provider";
+import { getWalletClientForAddress } from "@/components/trading/wallet-provider";
 import { isNativeFundingToken } from "@/lib/funding/evm-balances";
 import Big from "big.js";
 
@@ -78,14 +77,28 @@ export async function transferCollateralFromConnectedWallet({
     throw new Error(`Transfers are not configured for chainId ${chainId}.`);
   }
 
-  const provider = await getEthereumProviderForWallet(walletAddress, getStoredTradingWalletProvider(walletAddress));
-  const walletClient = createWalletClient({
-    account: walletAddress as Address,
-    chain,
-    transport: custom(provider),
-  });
+  const walletClient = await getWalletClientForAddress(walletAddress, { chainId });
 
-  return transferCollateralWithWalletClient(walletClient, {
+  if (walletClient.chain?.id !== chainId) {
+    throw new Error(`Switch your wallet to ${chain.name} (chainId ${chainId}) before transferring.`);
+  }
+
+  const transferClient: CollateralTransferWalletClient = {
+    sendTransaction: (request) =>
+      walletClient.sendTransaction({
+        account: walletAddress as Address,
+        chain,
+        ...request,
+      }),
+    writeContract: (request) =>
+      walletClient.writeContract({
+        account: walletAddress as Address,
+        chain,
+        ...request,
+      }),
+  };
+
+  return transferCollateralWithWalletClient(transferClient, {
     tokenAddress,
     toAddress,
     amountUsd,
