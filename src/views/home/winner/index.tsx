@@ -1,28 +1,22 @@
-import type { MarketDataMeta } from "@/data/providers/types";
-import type {
-  ProbabilityHistoryPoint,
-  TeamMarketSnapshot
-} from "@/types/market";
+"use client";
+
+import {
+  useWinnerMarketDataMeta,
+  useWinnerSnapshots
+} from "@/store/winner-teams-store";
 import { HomeWinnerMarketList } from "@/views/home/winner/home-winner-market-list";
 import { WinnerProbabilityChart } from "@/views/home/winner/probability-chart";
 
-export interface HomeWinnerPanelProps {
-  teams: TeamMarketSnapshot[];
-  dataStatus: MarketDataMeta;
-  probabilityHistory: ProbabilityHistoryPoint[];
-}
+export function HomeWinnerPanel() {
+  const teams = useWinnerSnapshots();
+  const dataStatus = useWinnerMarketDataMeta();
 
-export function HomeWinnerPanel({
-  teams,
-  dataStatus,
-  probabilityHistory
-}: HomeWinnerPanelProps) {
   return (
     <>
       <WinnerProbabilityChart
         className="mb-4"
         teams={teams}
-        probabilityHistory={probabilityHistory}
+        probabilityHistory={[]}
       />
       <HomeWinnerMarketList teams={teams} dataStatus={dataStatus} />
     </>

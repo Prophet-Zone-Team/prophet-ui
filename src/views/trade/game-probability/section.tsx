@@ -12,6 +12,7 @@ import {
   resolveMockLiveDisplayScore,
 } from "@/data/mock/live-fixture-simulation";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import {
   useSelectedFixtureOutcome,
   useTradeMatchOutcomeSide,
@@ -89,11 +90,12 @@ export function GameProbabilitySection({
   binarySecondaryLabel,
   liveChartSimulation,
 }: GameProbabilitySectionProps) {
+  const liveMatch = useMatchWithLiveState(match);
   const [timeRange, setTimeRange] = useState<GameFixtureChartTimeRange>("all");
   const matchOutcomeSide = useTradeMatchOutcomeSide();
   const selectedFixtureOutcome = useSelectedFixtureOutcome();
   const tradeOutcomeSide = useTradeOutcomeSide();
-  const isLive = isEffectiveLiveMatch(match);
+  const isLive = isEffectiveLiveMatch(liveMatch);
   const liveChartActive =
     isLive && Boolean(chartKind) && Boolean(gameSnapshot && fixtureMarkets);
   const { points, binaryPoints, chartMode, status, error, refetch } =
@@ -105,7 +107,7 @@ export function GameProbabilitySection({
       enabled: !liveChartActive,
     });
   const liveChart = useLiveMatchProbabilityChart({
-    match,
+    match: liveMatch,
     gameSnapshot: gameSnapshot!,
     fixtureMarkets: fixtureMarkets!,
     chartKind: chartKind ?? "moneyline",
@@ -114,10 +116,10 @@ export function GameProbabilitySection({
     simulation: liveChartSimulation,
   });
 
-  const sides = resolveMatchSides(match, snapshots);
+  const sides = resolveMatchSides(liveMatch, snapshots);
   const displayScore = isMockLiveFixtureEnabled()
-    ? resolveMockLiveDisplayScore(match)
-    : { homeScore: match.homeScore, awayScore: match.awayScore };
+    ? resolveMockLiveDisplayScore(liveMatch)
+    : { homeScore: liveMatch.homeScore, awayScore: liveMatch.awayScore };
   const orderbookEnabled = showOrderbook && Boolean(gameSnapshot);
 
   const fallbackOutcome = useMemo(() => {

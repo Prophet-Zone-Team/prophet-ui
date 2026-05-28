@@ -255,6 +255,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   const { conditionId, yesTokenId, noTokenId } = marketTokenIds;
 
+  const teamWsEnabled =
+    input.variant === "team" && Boolean(yesTokenId || noTokenId);
+
+  const { pricesByTokenId: teamTokenPrices } = useMarketWsPrices(
+    teamWsEnabled ? [yesTokenId, noTokenId] : []
+  );
+
   const sellPosition =
     input.variant === "team" ? input.sellPosition : undefined;
 
@@ -331,9 +338,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     });
 
     const yesTokenPrice =
+      (yesTokenId ? teamTokenPrices[yesTokenId]?.bestAsk : undefined) ??
       snapshot.market.polymarket?.tokens.yes?.price ??
       calculateReferencePrice(snapshot.market.probability, "yes");
     const noTokenPrice =
+      (noTokenId ? teamTokenPrices[noTokenId]?.bestAsk : undefined) ??
       snapshot.market.polymarket?.tokens.no?.price ??
       calculateReferencePrice(snapshot.market.probability, "no");
 
@@ -351,13 +360,16 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     cappedOrderAmount,
     input,
     maxSellShares,
+    noTokenId,
     orderMode,
     orderType,
     outcomeSide,
     limitPrice,
     sellAcceptingOrders,
     sellPosition,
-    tradeSide
+    teamTokenPrices,
+    tradeSide,
+    yesTokenId
   ]);
 
   const gameDefaults = useMemo(() => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useRegisterMarketWsTokens } from "@/context/market-ws";
+
 import {
   buildMarketTokenKey,
   useMarketTokenPrices,
@@ -55,12 +55,6 @@ export function useLiveFixtureTabPrices({
 }: UseLiveFixtureTabPricesOptions): UseLiveFixtureTabPricesResult {
   const tokenKey = buildMarketTokenKey(
     outcomes.flatMap((outcome) => [outcome.tokenId, outcome.noTokenId])
-  );
-
-  useRegisterMarketWsTokens(
-    "fixture-tab",
-    outcomes.flatMap((outcome) => [outcome.tokenId, outcome.noTokenId]),
-    { enabled }
   );
 
   const { pricesByTokenId } = useMarketTokenPrices(

@@ -40,3 +40,20 @@ export {
   useUserConfigStore
 } from "@/store/user-config-store";
 export { useConfigHydrated } from "@/store/use-config-hydrated";
+
+export {
+  useMatchLiveScore,
+  useMatchLiveSnapshot,
+  useMatchLiveStore,
+  useMatchWithLiveState,
+} from "@/store/match-live-store";
+
+export {
+  useWinnerEventVolume,
+  useWinnerMarketDataMeta,
+  useWinnerSnapshots,
+  useWinnerTeamsError,
+  useWinnerTeamsLastUpdated,
+  useWinnerTeamsStatus,
+  useWinnerTeamsStore,
+} from "@/store/winner-teams-store";

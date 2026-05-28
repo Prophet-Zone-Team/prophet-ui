@@ -3,11 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { POLYMARKET_MARKET_WS_INITIAL_TIMEOUT_MS } from "@/config/polymarket-ws";
-import {
-  useMarketWsContext,
-  useMarketWsOrderbook,
-  useRegisterMarketWsTokens,
-} from "@/context/market-ws";
+import { useMarketWsContext, useMarketWsOrderbook } from "@/context/market-ws";
 import type { MarketOrderbook } from "@/lib/market/orderbook-levels";
 import {
   applyPriceChangeEvent,
@@ -39,18 +35,18 @@ export function useMarketOrderbook(
 ): UseMarketOrderbookResult {
   const marketWsContext = useMarketWsContext();
   const providerBook = useMarketWsOrderbook(tokenId);
-  const [book, setBook] = useState<MarketOrderbook | undefined>();
+  const [fallbackBook, setFallbackBook] = useState<
+    MarketOrderbook | undefined
+  >();
+  const [standaloneBook, setStandaloneBook] = useState<
+    MarketOrderbook | undefined
+  >();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [connected, setConnected] = useState(false);
-  const receivedWsBookRef = useRef(false);
   const fallbackAttemptedRef = useRef(false);
-
-  useRegisterMarketWsTokens(
-    `orderbook:${tokenId ?? "none"}`,
-    [tokenId],
-    { enabled: Boolean(marketWsContext && tokenId) }
-  );
+  const marketWsContextRef = useRef(marketWsContext);
+  marketWsContextRef.current = marketWsContext;
 
   const runFallback = useCallback(async (activeTokenId: string) => {
     if (fallbackAttemptedRef.current) {
@@ -62,7 +58,13 @@ export function useMarketOrderbook(
 
     try {
       const nextBook = await fetchOrderbookFallback(activeTokenId);
-      setBook((current) => current ?? nextBook);
+
+      if (marketWsContextRef.current) {
+        setFallbackBook(nextBook);
+      } else {
+        setStandaloneBook(nextBook);
+      }
+
       setError(undefined);
     } catch (loadError) {
       setError(
@@ -79,30 +81,23 @@ export function useMarketOrderbook(
     }
 
     if (!tokenId) {
-      setBook(undefined);
+      setFallbackBook(undefined);
       setError(undefined);
       setLoading(false);
-      receivedWsBookRef.current = false;
       fallbackAttemptedRef.current = false;
       return;
     }
 
     const activeTokenId = tokenId;
-    receivedWsBookRef.current = false;
     fallbackAttemptedRef.current = false;
-    setBook(undefined);
+    setFallbackBook(undefined);
     setError(undefined);
-    setLoading(true);
-
-    if (providerBook) {
-      receivedWsBookRef.current = true;
-      setBook(providerBook);
-      setLoading(false);
-      setError(undefined);
-    }
+    setLoading(!providerBook);
 
     const fallbackTimer = window.setTimeout(() => {
-      if (!receivedWsBookRef.current) {
+      const cached = getPolymarketMarketWsClient().getOrderbook(activeTokenId);
+
+      if (!cached) {
         void runFallback(activeTokenId);
       }
     }, POLYMARKET_MARKET_WS_INITIAL_TIMEOUT_MS);
@@ -113,35 +108,22 @@ export function useMarketOrderbook(
   }, [marketWsContext, providerBook, runFallback, tokenId]);
 
   useEffect(() => {
-    if (!marketWsContext || !tokenId || !providerBook) {
-      return;
-    }
-
-    receivedWsBookRef.current = true;
-    setBook(providerBook);
-    setLoading(false);
-    setError(undefined);
-  }, [marketWsContext, providerBook, tokenId]);
-
-  useEffect(() => {
     if (marketWsContext) {
       return;
     }
 
     if (!tokenId) {
-      setBook(undefined);
+      setStandaloneBook(undefined);
       setError(undefined);
       setLoading(false);
       setConnected(false);
-      receivedWsBookRef.current = false;
       fallbackAttemptedRef.current = false;
       return;
     }
 
     const activeTokenId = tokenId;
-    receivedWsBookRef.current = false;
     fallbackAttemptedRef.current = false;
-    setBook(undefined);
+    setStandaloneBook(undefined);
     setError(undefined);
     setLoading(true);
 
@@ -149,8 +131,7 @@ export function useMarketOrderbook(
 
     const handleEvent = (event: PolymarketMarketWsEvent) => {
       if (event.event_type === "book" && event.asset_id === activeTokenId) {
-        receivedWsBookRef.current = true;
-        setBook(bookEventToMarketOrderbook(event));
+        setStandaloneBook(bookEventToMarketOrderbook(event));
         setError(undefined);
         setLoading(false);
         return;
@@ -165,11 +146,10 @@ export function useMarketOrderbook(
           return;
         }
 
-        setBook((current) => {
+        setStandaloneBook((current) => {
           const next = applyPriceChangeEvent(current, event);
 
           if (next?.tokenId === activeTokenId) {
-            receivedWsBookRef.current = true;
             return next;
           }
 
@@ -188,13 +168,12 @@ export function useMarketOrderbook(
     const cached = client.getOrderbook(activeTokenId);
 
     if (cached) {
-      receivedWsBookRef.current = true;
-      setBook(cached);
+      setStandaloneBook(cached);
       setLoading(false);
     }
 
     const fallbackTimer = window.setTimeout(() => {
-      if (!receivedWsBookRef.current) {
+      if (!client.getOrderbook(activeTokenId)) {
         void runFallback(activeTokenId);
       }
     }, POLYMARKET_MARKET_WS_INITIAL_TIMEOUT_MS);
@@ -206,10 +185,14 @@ export function useMarketOrderbook(
     };
   }, [marketWsContext, runFallback, tokenId]);
 
+  const book = marketWsContext
+    ? (providerBook ?? fallbackBook)
+    : standaloneBook;
+
   return {
     book,
-    loading,
+    loading: loading && !book,
     error,
-    connected: marketWsContext?.connected ?? connected,
+    connected: marketWsContext?.connected ?? connected
   };
 }

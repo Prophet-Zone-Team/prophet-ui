@@ -9,6 +9,8 @@ import type {
   TeamMarketSnapshot,
 } from "@/types/market";
 import type { WorldCupMarketData, WorldCupMarketDataProvider } from "@/data/providers/types";
+import { extractFastBidPolymarketMetadata } from "@/lib/market/polymarket-fast-bid-metadata";
+import type { GammaMarketRecord } from "@/lib/market/polymarket-gamma";
 import { serverFetch } from "@/server/trading/server-fetch";
 
 const GAMMA_MARKETS_URL = "https://gamma-api.polymarket.com/markets";
@@ -278,44 +280,7 @@ function sumMarketNumbers(markets: GammaMarket[], getValue: (market: GammaMarket
 }
 
 function extractPolymarketMetadata(market: GammaMarket): PolymarketMarketMetadata | undefined {
-  const clobTokenIds = parseArrayField(market.clobTokenIds).map(String);
-  const outcomes = parseArrayField(market.outcomes).map(String);
-  const outcomePrices = parseArrayField(market.outcomePrices);
-  const yesIndex = outcomes.findIndex((outcome) => outcome.toLowerCase() === "yes");
-  const noIndex = outcomes.findIndex((outcome) => outcome.toLowerCase() === "no");
-  const yesTokenId = clobTokenIds[yesIndex >= 0 ? yesIndex : 0];
-  const noTokenId = clobTokenIds[noIndex >= 0 ? noIndex : 1];
-
-  if (!yesTokenId && !noTokenId) {
-    return undefined;
-  }
-
-  return {
-    marketId: market.id,
-    conditionId: market.conditionId,
-    question: market.question,
-    slug: market.slug,
-    acceptingOrders: market.acceptingOrders === true,
-    negRisk: market.negRisk === true,
-    tickSize: normalizeTickSize(market.orderPriceMinTickSize),
-    minOrderSize: firstNumber(market.orderMinSize),
-    tokens: {
-      yes: yesTokenId
-        ? {
-            tokenId: yesTokenId,
-            outcome: outcomes[yesIndex >= 0 ? yesIndex : 0] ?? "Yes",
-            price: toNumber(outcomePrices[yesIndex >= 0 ? yesIndex : 0]),
-          }
-        : undefined,
-      no: noTokenId
-        ? {
-            tokenId: noTokenId,
-            outcome: outcomes[noIndex >= 0 ? noIndex : 1] ?? "No",
-            price: toNumber(outcomePrices[noIndex >= 0 ? noIndex : 1]),
-          }
-        : undefined,
-    },
-  };
+  return extractFastBidPolymarketMetadata(market as GammaMarketRecord);
 }
 
 async function fetchClobMarketEnrichment(

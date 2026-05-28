@@ -25,6 +25,7 @@ import {
   teamHeroMetricsClass,
   teamOpenTradeButtonClass
 } from "@/views/team/team-detail-ui";
+import { PageBack } from "@/components/ui/page-back";
 
 export interface TeamDetailHeaderProps {
   snapshot: TeamMarketSnapshot;
@@ -83,16 +84,7 @@ export function TeamDetailHeader({
 
   return (
     <header className="my-4">
-      <nav
-        aria-label="Breadcrumb"
-        className="mb-3 flex items-center gap-2 text-xs font-[556] text-prophet-muted"
-      >
-        <Link href="/teams" className="text-[#125afc] hover:opacity-80">
-          Teams
-        </Link>
-        <span>/</span>
-        <span className="text-black">{team.name}</span>
-      </nav>
+      <PageBack />
 
       <div className={teamHeroCardClass}>
         <div className="flex min-w-0 items-center gap-3">
@@ -147,7 +139,10 @@ export function TeamDetailHeader({
               label="FIFA rank"
               value={fifaRank ? `#${fifaRank}` : "Pending"}
             />
-            <HeroMetric label="Squad value" value={formatSquadValue(metadata)} />
+            <HeroMetric
+              label="Squad value"
+              value={formatSquadValue(metadata)}
+            />
             <HeroMetric
               label="Best finish"
               value={metadata?.worldCupBestFinish ?? "Pending"}

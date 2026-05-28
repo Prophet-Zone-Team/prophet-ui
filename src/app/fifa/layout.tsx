@@ -1,22 +1,13 @@
 import type { ReactNode } from "react";
 
-import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
+import { SyncWinnerTeamsStore } from "@/components/home/sync-winner-teams-store";
 import { HomePageShell } from "@/views/home";
 
-export default async function FifaLayout({ children }: { children: ReactNode }) {
-  const marketData = await getWorldCupMarketData({
-    includeFootballContext: false,
-    includeNews: false,
-    includeOdds: false
-  });
-
+export default function FifaLayout({ children }: { children: ReactNode }) {
   return (
-    <HomePageShell
-      snapshots={marketData.snapshots}
-      dataStatus={marketData.meta}
-      universe={marketData.universe}
-    >
-      {children}
-    </HomePageShell>
+    <>
+      <SyncWinnerTeamsStore />
+      <HomePageShell>{children}</HomePageShell>
+    </>
   );
 }

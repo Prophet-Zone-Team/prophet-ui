@@ -21,6 +21,7 @@ import {
 } from "@/lib/market/schedule-match";
 import { gameTradeHref } from "@/lib/routes/trade";
 import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 
 function useSlantOffsetPx(): [number, (node: HTMLDivElement | null) => void] {
@@ -65,20 +66,21 @@ export function SpecialMatchDataCard({
   away
 }: SpecialMatchDataCardProps) {
   const router = useRouter();
-  const canNavigate = getScheduleRowVariant(match.status) !== "ended";
-  const homeName = home?.team.name ?? match.homeSeed ?? "Home";
-  const awayName = away?.team.name ?? match.awaySeed ?? "Away";
-  const oddsResult = parseMatchOutcomeOdds(match, homeName, awayName);
+  const liveMatch = useMatchWithLiveState(match);
+  const canNavigate = getScheduleRowVariant(liveMatch.status) !== "ended";
+  const homeName = home?.team.name ?? liveMatch.homeSeed ?? "Home";
+  const awayName = away?.team.name ?? liveMatch.awaySeed ?? "Away";
+  const oddsResult = parseMatchOutcomeOdds(liveMatch, homeName, awayName);
   const liveClock = useLiveElapsedClock(
-    match.liveElapsedSeconds,
-    match.status === "live"
+    liveMatch.liveElapsedSeconds,
+    liveMatch.status === "live"
   );
-  const scoreLabel = formatMatchScore(match.homeScore, match.awayScore);
+  const scoreLabel = formatMatchScore(liveMatch.homeScore, liveMatch.awayScore);
 
   const ariaLabel = [
     `${homeName} vs ${awayName}`,
     `Score ${scoreLabel}`,
-    match.status === "live" ? "ongoing" : match.status,
+    liveMatch.status === "live" ? "ongoing" : liveMatch.status,
     oddsResult.status === "ready"
       ? `Win probabilities ${formatOutcomePercent(oddsResult.probabilities.home)} home, ${formatOutcomePercent(oddsResult.probabilities.draw)} draw, ${formatOutcomePercent(oddsResult.probabilities.away)} away`
       : undefined,
@@ -119,7 +121,7 @@ export function SpecialMatchDataCard({
             <TeamColumn name={homeName} code={home?.team.code} align="start" />
 
             <div className="flex min-w-[88px] flex-col items-center text-center">
-              {match.status === "live" ? (
+              {liveMatch.status === "live" ? (
                 <>
                   <MatchStatusBadge
                     variant="ongoing"
@@ -143,7 +145,7 @@ export function SpecialMatchDataCard({
                     VS
                   </div>
                   <div className="text-[16px] text-[#000] font-[457]">
-                    Starts {formatScheduleKickoff(match.kickoffAt)}
+                    Starts {formatScheduleKickoff(liveMatch.kickoffAt)}
                   </div>
                 </>
               )}

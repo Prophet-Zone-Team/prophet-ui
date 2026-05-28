@@ -21,6 +21,9 @@ export interface GammaMarketRecord {
   acceptingOrders?: boolean;
   negRisk?: boolean;
   oneDayPriceChange?: number | string;
+  oneWeekPriceChange?: number | string;
+  priceChange24h?: number | string;
+  priceChange7d?: number | string;
   sportsMarketType?: string;
   groupItemTitle?: string;
   updatedAt?: string;

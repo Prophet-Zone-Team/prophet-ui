@@ -1,6 +1,6 @@
 "use client";
 
-import { getAccount, watchAccount } from "wagmi/actions";
+import { getAccount, reconnect, watchAccount } from "wagmi/actions";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 
@@ -21,6 +21,107 @@ export interface WalletConnectionSnapshot {
 }
 
 const DEBOUNCE_MS = 300;
+const WALLET_RECONNECT_WAIT_MS = 10_000;
+
+export interface WaitForWalletConnectionOptions {
+  timeoutMs?: number;
+  signal?: AbortSignal;
+}
+
+export async function waitForWalletConnection(
+  expectedAddress: string,
+  options?: WaitForWalletConnectionOptions,
+): Promise<WalletConnectionSnapshot> {
+  const timeoutMs = options?.timeoutMs ?? WALLET_RECONNECT_WAIT_MS;
+
+  const resolveWhenReady = async () => {
+    const snapshot = await inspectWalletConnection(expectedAddress);
+
+    if (snapshot.status !== "disconnected") {
+      return snapshot;
+    }
+
+    return undefined;
+  };
+
+  const immediate = await resolveWhenReady();
+
+  if (immediate) {
+    return immediate;
+  }
+
+  try {
+    await reconnect(wagmiConfig);
+  } catch {
+    // Reconnect can fail when no persisted connector is available yet.
+  }
+
+  const afterReconnect = await resolveWhenReady();
+
+  if (afterReconnect) {
+    return afterReconnect;
+  }
+
+  if (typeof window === "undefined") {
+    return inspectWalletConnection(expectedAddress);
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let timeoutId: number | undefined;
+    let unwatch: (() => void) | undefined;
+
+    const finish = (snapshot: WalletConnectionSnapshot) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+
+      unwatch?.();
+      options?.signal?.removeEventListener("abort", onAbort);
+      resolve(snapshot);
+    };
+
+    const onAbort = () => {
+      finish({
+        accounts: [],
+        status: "disconnected",
+      });
+    };
+
+    if (options?.signal?.aborted) {
+      onAbort();
+      return;
+    }
+
+    options?.signal?.addEventListener("abort", onAbort);
+
+    const inspect = async () => {
+      const snapshot = await resolveWhenReady();
+
+      if (snapshot) {
+        finish(snapshot);
+      }
+    };
+
+    unwatch = watchAccount(wagmiConfig, {
+      onChange() {
+        void inspect();
+      },
+    });
+
+    void inspect();
+
+    timeoutId = window.setTimeout(() => {
+      void inspectWalletConnection(expectedAddress).then(finish);
+    }, timeoutMs);
+  });
+}
 
 export async function inspectWalletConnection(
   expectedAddress?: string,

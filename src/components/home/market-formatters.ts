@@ -4,6 +4,14 @@ export function formatProbability(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
+export function formatListProbability(value: number): string {
+  if (value > 0 && value < 1) {
+    return "<1%";
+  }
+
+  return formatProbability(value);
+}
+
 export function formatChange(value: number): string {
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(1)} pts`;

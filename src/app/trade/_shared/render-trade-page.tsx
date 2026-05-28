@@ -1,18 +1,26 @@
 import { notFound } from "next/navigation";
 
-import { getTheOddsApiWorldCupWinnerOdds } from "@/data/odds/the-odds-api-provider";
 import {
   getFootballMatches,
   getFootballMatchBySlug
 } from "@/data/providers/football-matches";
 import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
-import type { WorldCupMarketDataOptions } from "@/data/providers/types";
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import type {
+  MarketDataMeta,
+  WorldCupMarketDataOptions
+} from "@/data/providers/types";
 import {
   buildGameMarketSnapshot,
   getRelatedMatches
 } from "@/lib/market/game-market-snapshot";
 import { buildFixtureMarketsSnapshot } from "@/lib/market/build-fixture-markets-snapshot";
+import {
+  fetchPolymarketGamma,
+  PolymarketGammaNotFoundError
+} from "@/lib/market/polymarket-gamma-fetch";
+import type { GammaMarketRecord } from "@/lib/market/polymarket-gamma";
+import { mapGammaMarketToTeamSnapshot } from "@/lib/market/winner-event-mapper";
+import { buildFallbackProbabilityHistory } from "@/lib/team/probability-history";
 import { enrichFootballMatchesWithClobData } from "@/server/market/fixture-clob-enrichment";
 import { enrichMatchWithSiblingFixtureMarkets } from "@/server/market/fixture-sibling-enrichment";
 import type { WorldCupMatch } from "@/types/market";
@@ -33,14 +41,6 @@ function resolveGameMarketOptions(
     includeOdds: false,
     includeHistory: false,
     footballContextTeamIds
-  };
-}
-
-function resolveTeamMarketOptions(teamId: string): WorldCupMarketDataOptions {
-  return {
-    includeFootballContext: true,
-    includeNews: false,
-    footballContextTeamIds: [teamId]
   };
 }
 
@@ -66,7 +66,6 @@ export async function renderGameTradePage(slug: string) {
   const snapshot = buildGameMarketSnapshot(enrichedMatch, marketData.snapshots);
   const fixtureMarkets = buildFixtureMarketsSnapshot(enrichedMatch);
   const relatedMatches = getRelatedMatches(enrichedMatch, matches);
-  // console.log("fixtureMarkets", fixtureMarkets);
   const teamProfiles = Object.fromEntries(
     marketData.footballTeamContext.map((context) => [
       context.profile.teamId,
@@ -87,43 +86,40 @@ export async function renderGameTradePage(slug: string) {
 }
 
 export async function renderTeamTradePage(slug: string) {
-  if (!worldCupTeams.some((team) => team.id === slug)) {
-    notFound();
+  let market: GammaMarketRecord | undefined;
+
+  try {
+    market = await fetchPolymarketGamma<GammaMarketRecord>(
+      `/markets/slug/${encodeURIComponent(slug)}`
+    );
+  } catch (error) {
+    if (error instanceof PolymarketGammaNotFoundError) {
+      notFound();
+    }
+
+    throw error;
   }
 
-  const { matches } = await getFootballMatches();
-  const marketData = await getWorldCupMarketData(resolveTeamMarketOptions(slug));
-  const snapshot = marketData.snapshots.find((item) => item.team.id === slug);
+  const snapshot = mapGammaMarketToTeamSnapshot(market, { expectedSlug: slug });
 
   if (!snapshot) {
     notFound();
   }
 
-  await getTheOddsApiWorldCupWinnerOdds();
-
-  const probabilityHistory = marketData.probabilityHistory.filter(
-    (point) => point.teamId === snapshot.team.id
-  );
-  const footballContext = marketData.footballTeamContext.find(
-    (context) => context.profile.teamId === snapshot.team.id
-  );
-  const footballProfile =
-    footballContext?.profile ??
-    marketData.footballContext.find(
-      (profile) => profile.teamId === snapshot.team.id
-    );
+  const dataStatus: MarketDataMeta = {
+    source: "polymarket",
+    status: "live",
+    lastUpdated: snapshot.market.updatedAt,
+    stale: false
+  };
 
   return (
     <TradeTeamView
       snapshot={snapshot}
-      probabilityHistory={probabilityHistory}
-      matches={matches}
-      snapshots={marketData.snapshots}
-      footballProfile={footballProfile}
-      footballMetadata={marketData.footballMetadata.find(
-        (metadata) => metadata.teamId === snapshot.team.id
-      )}
-      dataStatus={marketData.meta}
+      probabilityHistory={buildFallbackProbabilityHistory(snapshot)}
+      matches={[]}
+      snapshots={[snapshot]}
+      dataStatus={dataStatus}
     />
   );
 }

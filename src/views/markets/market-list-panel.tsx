@@ -8,6 +8,8 @@ export interface MarketListPanelProps {
   teams: TeamMarketSnapshot[];
   dataStatus: MarketDataMeta;
   ariaLabel: string;
+  hasLiveValues?: boolean;
+  isLoading?: boolean;
   emptyState?: ReactNode;
   getNavigationDisabled?: (snapshot: TeamMarketSnapshot) => boolean;
 }
@@ -16,6 +18,8 @@ export function MarketListPanel({
   teams,
   dataStatus,
   ariaLabel,
+  hasLiveValues = true,
+  isLoading = false,
   emptyState,
   getNavigationDisabled
 }: MarketListPanelProps) {
@@ -30,6 +34,8 @@ export function MarketListPanel({
               key={snapshot.team.id}
               snapshot={snapshot}
               rank={index + 1}
+              hasLiveValues={hasLiveValues}
+              isLoading={isLoading}
               navigationDisabled={getNavigationDisabled?.(snapshot)}
             />
           ))}

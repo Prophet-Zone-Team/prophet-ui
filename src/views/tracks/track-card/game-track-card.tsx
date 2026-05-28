@@ -1,5 +1,8 @@
+"use client";
+
 import { getScheduleRowVariant } from "@/lib/market/schedule-match";
 import { cn } from "@/lib/cn";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import { TrackCardActions } from "./header/actions";
 import { GameIdentity } from "./header/game-identity";
 import { GameStatsRow } from "./header/stats-row";
@@ -21,8 +24,9 @@ export function GameTrackCard({
   youBid,
   className
 }: TrackCardGameProps) {
+  const liveMatch = useMatchWithLiveState(match);
   const title = `${homeTeam.name} vs ${awayTeam.name}`;
-  const isOngoing = getScheduleRowVariant(match.status) === "ongoing";
+  const isOngoing = getScheduleRowVariant(liveMatch.status) === "ongoing";
 
   return (
     <TrackCardShell

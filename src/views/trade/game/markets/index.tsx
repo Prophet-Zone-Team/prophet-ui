@@ -56,6 +56,7 @@ import {
 } from "@/views/trade/game/markets/market-action-row";
 import { GAME_MARKET_TAB_ICONS } from "@/views/trade/game/icons";
 import { MarketContextRow } from "@/views/trade/game/markets/market-context-row";
+import { useGameMarketWsTokens } from "@/views/trade/game/markets/use-game-market-ws-tokens";
 import { useLiveFixtureTabPrices } from "@/views/trade/game/markets/use-live-fixture-tab-prices";
 import { useMockLiveFixtureSimulation } from "@/views/trade/game/markets/use-mock-live-fixture-simulation";
 
@@ -123,9 +124,17 @@ export function GameMarketsSection({
     outcomes: activeTabOutcomes,
     enabled: isMockLiveFixtureEnabled(),
   });
+  const marketWsEnabled = !isMockLiveFixtureEnabled();
+
+  useGameMarketWsTokens({
+    activeTabOutcomes,
+    gameSnapshot,
+    enabled: marketWsEnabled,
+  });
+
   const { pricesByOutcomeId: apiPricesByOutcomeId } = useLiveFixtureTabPrices({
     outcomes: activeTabOutcomes,
-    enabled: !isMockLiveFixtureEnabled(),
+    enabled: marketWsEnabled,
   });
   const pricesByOutcomeId = mockSimulation.isActive
     ? mockSimulation.pricesByOutcomeId

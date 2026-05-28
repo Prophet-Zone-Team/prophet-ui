@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 
+import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
+
 import {
   buildScheduleDateGroups,
   buildScheduleFilterTeams,
@@ -76,6 +78,7 @@ export function HomeMatchesSchedulePanel({
 
   return (
     <section className="min-w-0" aria-label="Football match schedule">
+      <SyncMatchLiveStore matches={matches} />
       {featuredCard ? (
         <div className="pb-[20px]">
           <SpecialMatchDataCard

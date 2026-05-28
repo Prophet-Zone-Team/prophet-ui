@@ -11,17 +11,20 @@ import { ProbabilityChangeTrend } from "@/components/market/probability-change-t
 import { teamDetailHref } from "@/lib/routes/team";
 import { teamTradeHref } from "@/lib/routes/trade";
 import {
-  formatProbability,
+  formatListProbability,
   formatVolume,
   getRelativeChangePercent
 } from "@/components/home/market-formatters";
 import { cn } from "@/lib/cn";
 import type { TeamMarketSnapshot } from "@/types/market";
+import { MarketListMetricLoading } from "@/views/home/home-data-loading";
 import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-control";
 
 export interface MarketListItemProps {
   snapshot: TeamMarketSnapshot;
   rank: number;
+  hasLiveValues?: boolean;
+  isLoading?: boolean;
   /** When true, row does not navigate and has no hover affordance. */
   navigationDisabled?: boolean;
 }
@@ -34,19 +37,25 @@ const bidButtonClassName =
 export function MarketListItem({
   snapshot,
   rank,
+  hasLiveValues = true,
+  isLoading = false,
   navigationDisabled = false
 }: MarketListItemProps) {
   const router = useRouter();
   const { team, market } = snapshot;
+  const yesTokenId = snapshot.market.polymarket?.tokens?.yes?.tokenId;
   const changePercent = getRelativeChangePercent(
     market.probability,
     market.change24h
   );
-  const tradeHref = teamTradeHref(team.id);
+
+  const tradeHref = teamTradeHref(market?.polymarket?.slug || "");
   const detailHref = teamDetailHref(team.id);
   const subtitle = `${team.code} / ${team.region}${team.group ? ` / Group ${team.group}` : ""}`;
   const canNavigate =
-    !navigationDisabled && snapshot.market.polymarket?.acceptingOrders !== false;
+    !navigationDisabled &&
+    Boolean(yesTokenId) &&
+    snapshot.market.polymarket?.acceptingOrders !== false;
 
   function navigateToTrade() {
     if (!canNavigate) {
@@ -110,18 +119,31 @@ export function MarketListItem({
 
       <div className="flex w-1/5 flex-col max-lg:w-full">
         <div className="flex items-center gap-[8px]">
-          <span className="text-[24px] font-[556] leading-[29px] text-black">
-            {formatProbability(market.probability)}
-          </span>
-          <ProbabilityChangeTrend changePercent={changePercent} decimals={1} />
+          {isLoading ? (
+            <MarketListMetricLoading variant="probability" />
+          ) : (
+            <span className="text-[24px] font-[556] leading-[29px] text-black">
+              {hasLiveValues ? formatListProbability(market.probability) : "-"}
+            </span>
+          )}
+          {hasLiveValues ? (
+            <ProbabilityChangeTrend
+              changePercent={changePercent}
+              decimals={1}
+            />
+          ) : null}
         </div>
         <span className={cn("mt-0.5", rowLabelClassName)}>Probability</span>
       </div>
 
       <div className="flex w-1/5 flex-col max-lg:w-full">
-        <strong className="text-lg font-[556] leading-[21px] text-black">
-          ${formatVolume(market.volume)}
-        </strong>
+        {isLoading ? (
+          <MarketListMetricLoading variant="volume" />
+        ) : (
+          <strong className="text-lg font-[556] leading-[21px] text-black">
+            {hasLiveValues ? `$${formatVolume(market.volume)}` : "-"}
+          </strong>
+        )}
         <span className={cn("mt-0.5", rowLabelClassName)}>Volume</span>
       </div>
 
@@ -130,7 +152,11 @@ export function MarketListItem({
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
       >
-        <FastBidButton snapshot={snapshot} className={bidButtonClassName}>
+        <FastBidButton
+          snapshot={snapshot}
+          className={bidButtonClassName}
+          disabled={isLoading || !hasLiveValues || !yesTokenId}
+        >
           <>
             <Zap
               className="h-3.5 w-2.5 shrink-0 fill-white stroke-white"

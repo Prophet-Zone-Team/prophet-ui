@@ -54,6 +54,8 @@ export function WinnerProbabilityChart({
 }: WinnerProbabilityChartProps) {
   const [timeRange, setTimeRange] = useState<WinnerChartTimeRange>("1M");
 
+  console.log("teams", teams);
+
   const { series, points } = useMemo(
     () => buildWinnerChartData(teams, probabilityHistory),
     [teams, probabilityHistory]

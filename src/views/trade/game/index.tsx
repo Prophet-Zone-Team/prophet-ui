@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 
+import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { MarketWsProvider } from "@/context/market-ws";
 import { isMockLiveFixtureEnabled } from "@/data/mock/live-fixture-simulation";
 import {
@@ -60,8 +61,14 @@ export default function TradeGameView({
     };
   }, [gameSnapshot.homeTeamId, match.homeTeamId, relatedMatches, snapshots]);
 
+  const matchesToSync = useMemo(
+    () => [match, ...relatedMatches],
+    [match, relatedMatches]
+  );
+
   return (
     <MarketWsProvider enabled={marketWsEnabled}>
+      <SyncMatchLiveStore matches={matchesToSync} />
       <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2">
         <div className="bg-black h-[258px] w-full absolute top-0 left-0" />
         <TradeGameHeaderToolbar />

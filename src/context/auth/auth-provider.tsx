@@ -19,8 +19,8 @@ import {
 } from "@/lib/trading/trading-login";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import {
-  inspectWalletConnection,
   subscribeWalletConnection,
+  waitForWalletConnection,
 } from "@/lib/trading/wallet-connection-watch";
 import {
   getTradingSetupSteps,
@@ -334,7 +334,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       store.setSession(nextSession);
 
-      const walletSnapshot = await inspectWalletConnection(nextSession.walletAddress);
+      const walletSnapshot = await waitForWalletConnection(nextSession.walletAddress);
 
       if (walletSnapshot.status === "disconnected") {
         await clearAuthState({

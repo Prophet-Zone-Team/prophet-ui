@@ -17,12 +17,16 @@ import {
   TEAM_CHART_TIME_RANGES,
   type TeamChartTimeRange
 } from "@/lib/team/probability-history";
+import { resolveTeamOrderbookTokenId } from "@/lib/market/resolve-team-orderbook-token";
 import type {
-  OrderOutcomeSide,
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
+import {
+  useSetTradeOutcomeSide,
+  useTradeOutcomeSide
+} from "@/store/trade-ticket-store";
 import { OrderbookPanel } from "@/views/trade/orderbook-panel";
 import { ProbabilityChart } from "@/views/trade/team-probability/chart";
 import { tradeYesNoPill } from "@/views/trade/trade-widget/trade-ui";
@@ -45,7 +49,8 @@ export function ProbabilitySection({
   snapshots,
   showOrderbook
 }: ProbabilitySectionProps) {
-  const [outcomeView, setOutcomeView] = useState<OrderOutcomeSide>("yes");
+  const outcomeView = useTradeOutcomeSide();
+  const setOutcomeView = useSetTradeOutcomeSide();
   const [timeRange, setTimeRange] = useState<TeamChartTimeRange>("1M");
 
   const yesProbability = snapshot.market.probability;
@@ -79,9 +84,10 @@ export function ProbabilitySection({
   );
 
   const yDomain = useMemo(() => getTeamChartYDomain(chartData), [chartData]);
-  const tokenId =
-    snapshot.market.polymarket?.tokens[outcomeView]?.tokenId ??
-    snapshot.market.polymarket?.tokens.yes?.tokenId;
+  const tokenId = useMemo(
+    () => resolveTeamOrderbookTokenId(snapshot, outcomeView),
+    [outcomeView, snapshot]
+  );
 
   const change24h = snapshot.market.change24h;
   const change24hPoints = outcomeView === "yes" ? change24h : -change24h;

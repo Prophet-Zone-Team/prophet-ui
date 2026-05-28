@@ -4,6 +4,7 @@ import {
   formatScheduleKickoff,
   getScheduleRowVariant
 } from "@/lib/market/schedule-match";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import type { Team, WorldCupMatch } from "@/types/market";
 import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-control";
 
@@ -14,8 +15,9 @@ export type GameIdentityProps = {
 };
 
 export function GameIdentity({ match, homeTeam, awayTeam }: GameIdentityProps) {
-  const variant = getScheduleRowVariant(match.status);
-  const kickoffLabel = formatScheduleKickoff(match.kickoffAt);
+  const liveMatch = useMatchWithLiveState(match);
+  const variant = getScheduleRowVariant(liveMatch.status);
+  const kickoffLabel = formatScheduleKickoff(liveMatch.kickoffAt);
   const title = `${homeTeam.name} vs ${awayTeam.name}`;
 
   return (

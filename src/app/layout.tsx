@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/auth";
+import { SportsWsProvider } from "@/context/sports-ws";
 import { AppHeader } from "@/layout/header";
 import "flag-icons/css/flag-icons.min.css";
 import "@/app/globals.css";
@@ -32,11 +33,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className="bg-[#F9FAFC] min-h-screen">
         <RainbowProvider cookie={cookie}>
           <AuthProvider>
-            <main className="min-h-screen overflow-x-hidden font-body">
-              <AppHeader />
-              <div className="pt-[70px]">{children}</div>
-            </main>
-            <Toaster />
+            <SportsWsProvider>
+              <main className="min-h-screen overflow-x-hidden font-body">
+                <AppHeader />
+                <div className="pt-[70px]">{children}</div>
+              </main>
+              <Toaster />
+            </SportsWsProvider>
           </AuthProvider>
         </RainbowProvider>
       </body>

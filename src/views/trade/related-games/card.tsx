@@ -12,6 +12,7 @@ import {
   getScheduleRowVariant,
   resolveMatchSides
 } from "@/lib/market/schedule-match";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { getGameSidePrice } from "@/views/trade/game/market-section/format-bid-label";
 import { gameColors } from "@/views/trade/game/ui";
@@ -56,8 +57,9 @@ export function RelatedGameCard({
   snapshots,
   highlightTeamId
 }: RelatedGameCardProps) {
-  const sides = resolveMatchSides(match, snapshots);
-  const gameSnapshot = buildGameMarketSnapshot(match, snapshots);
+  const liveMatch = useMatchWithLiveState(match);
+  const sides = resolveMatchSides(liveMatch, snapshots);
+  const gameSnapshot = buildGameMarketSnapshot(liveMatch, snapshots);
   const homePrice = getGameSidePrice(gameSnapshot, "home");
   const drawPrice = getGameSidePrice(gameSnapshot, "draw");
   const awayPrice = getGameSidePrice(gameSnapshot, "away");
@@ -65,9 +67,9 @@ export function RelatedGameCard({
     sides.home.code ?? sides.home.name.slice(0, 3).toUpperCase();
   const awayBidLabel =
     sides.away.code ?? sides.away.name.slice(0, 3).toUpperCase();
-  const scoreLabel = formatMatchScore(match.homeScore, match.awayScore);
-  const kickoffLabel = formatScheduleKickoff(match.kickoffAt);
-  const statusVariant = getScheduleRowVariant(match.status);
+  const scoreLabel = formatMatchScore(liveMatch.homeScore, liveMatch.awayScore);
+  const kickoffLabel = formatScheduleKickoff(liveMatch.kickoffAt);
+  const statusVariant = getScheduleRowVariant(liveMatch.status);
 
   return (
     <div className="w-full max-w-[313px] rounded-xl bg-white px-4 py-3 shadow-[0_0_10px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0_0_14px_rgba(0,0,0,0.14)]">

@@ -11,6 +11,7 @@ import {
 import {
   mapEventSportsMarkets,
 } from "@/lib/market/fixture-markets-mapper";
+import { parseMatchScoreString } from "@/lib/market/parse-match-score";
 import type {
   MatchOddsOutcome,
   MatchOutcomeSide,
@@ -364,7 +365,7 @@ function resolveFixtureSides(event: GammaEventRecord): {
 
   return {
     ...parsedFromTitle,
-    ...parseScore(event.score),
+    ...parseMatchScoreString(event.score),
   };
 }
 
@@ -402,23 +403,6 @@ function parseTeamsFromTitle(title: string): { homeName?: string; awayName?: str
   return {
     homeName: parts[0]?.trim(),
     awayName: parts[1]?.trim(),
-  };
-}
-
-function parseScore(score: string | undefined): { homeScore?: number; awayScore?: number } {
-  if (!score) {
-    return {};
-  }
-
-  const match = score.match(/(\d+)\s*[-:]\s*(\d+)/);
-
-  if (!match) {
-    return {};
-  }
-
-  return {
-    homeScore: Number(match[1]),
-    awayScore: Number(match[2]),
   };
 }
 

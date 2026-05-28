@@ -21,6 +21,7 @@ export interface FastBidButtonProps {
   children?: ReactNode;
   showAmount?: boolean;
   amountClassName?: string;
+  disabled?: boolean;
 }
 
 export function FastBidButton({
@@ -28,7 +29,8 @@ export function FastBidButton({
   className,
   children,
   showAmount = true,
-  amountClassName
+  amountClassName,
+  disabled = false
 }: FastBidButtonProps) {
   const router = useRouter();
   const auth = useAuthOptional();
@@ -54,7 +56,7 @@ export function FastBidButton({
   }, [children, status]);
 
   async function handleClick() {
-    if (status === "checking" || status === "submitting" || regionRestricted) {
+    if (disabled || status === "checking" || status === "submitting" || regionRestricted) {
       return;
     }
 
@@ -71,7 +73,9 @@ export function FastBidButton({
     <button
       type="button"
       className={className}
-      disabled={status === "checking" || status === "submitting" || regionRestricted}
+      disabled={
+        disabled || status === "checking" || status === "submitting" || regionRestricted
+      }
       aria-label={`Bid ${formatFastBidAmountDisplay(displayAmount)} on ${snapshot.team.name}`}
       onClick={() => void handleClick()}
     >

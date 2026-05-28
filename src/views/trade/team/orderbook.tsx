@@ -17,6 +17,7 @@ export interface OrderbookProps {
 
 export function Orderbook({ tokenId, className }: OrderbookProps) {
   const { book, loading, error } = useMarketOrderbook(tokenId);
+
   const asksScrollRef = useRef<HTMLDivElement>(null);
 
   const asks = useMemo(

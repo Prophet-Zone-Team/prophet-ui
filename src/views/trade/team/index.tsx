@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 
+import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
+import { MarketWsProvider } from "@/context/market-ws";
 import type { MarketDataMeta } from "@/data/providers/types";
 import {
   useSetShowOrderbook,
@@ -16,6 +18,7 @@ import type {
 } from "@/types/market";
 import { ActivityTabs } from "@/views/trade/team/activity-tabs";
 import { TradeHeader } from "@/views/trade/team/trade-header";
+import { useTeamMarketWsTokens } from "@/views/trade/team/use-team-market-ws-tokens";
 import { ProbabilitySection } from "@/views/trade/team-probability";
 import { RelatedGames } from "@/views/trade/related-games";
 import { TradeWidget } from "@/views/trade/trade-widget";
@@ -31,14 +34,14 @@ export interface TradeTeamViewProps {
   dataStatus: MarketDataMeta;
 }
 
-export default function TradeTeamView({
+function TradeTeamViewContent({
   snapshot,
   probabilityHistory,
   matches,
   snapshots,
   footballProfile,
   footballMetadata
-}: TradeTeamViewProps) {
+}: Omit<TradeTeamViewProps, "dataStatus">) {
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
   const allSnapshots = useMemo(() => {
@@ -47,8 +50,17 @@ export default function TradeTeamView({
     return [...byId.values()];
   }, [snapshot, snapshots]);
 
+  useTeamMarketWsTokens(
+    snapshot,
+    Boolean(
+      snapshot.market.polymarket?.tokens.yes?.tokenId ||
+        snapshot.market.polymarket?.tokens.no?.tokenId
+    )
+  );
+
   return (
     <div className={tradePageClass}>
+      <SyncMatchLiveStore matches={matches} />
       <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_345px] xl:items-start">
         <div className="order-2 flex min-w-0 flex-col gap-4 xl:order-1">
           <TradeHeader
@@ -78,6 +90,33 @@ export default function TradeTeamView({
         </aside>
       </div>
     </div>
+  );
+}
+
+export default function TradeTeamView({
+  snapshot,
+  probabilityHistory,
+  matches,
+  snapshots,
+  footballProfile,
+  footballMetadata,
+  dataStatus: _dataStatus
+}: TradeTeamViewProps) {
+  const yesTokenId = snapshot.market.polymarket?.tokens.yes?.tokenId;
+  const noTokenId = snapshot.market.polymarket?.tokens.no?.tokenId;
+  const marketWsEnabled = Boolean(yesTokenId || noTokenId);
+
+  return (
+    <MarketWsProvider enabled={marketWsEnabled}>
+      <TradeTeamViewContent
+        snapshot={snapshot}
+        probabilityHistory={probabilityHistory}
+        matches={matches}
+        snapshots={snapshots}
+        footballProfile={footballProfile}
+        footballMetadata={footballMetadata}
+      />
+    </MarketWsProvider>
   );
 }
 

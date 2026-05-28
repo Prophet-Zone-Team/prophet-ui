@@ -17,6 +17,7 @@ import {
   getScheduleRowVariant,
   resolveMatchSides
 } from "@/lib/market/schedule-match";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import { useMockLiveFixtureElapsed } from "@/store/mock-live-fixture-store";
 import { teamDetailHref } from "@/lib/routes/team";
 import Bg from "@/views/trade/game/header/bg";
@@ -188,31 +189,32 @@ export function TradeGameHeader({
   snapshots,
   teamProfiles
 }: TradeGameHeaderProps) {
-  const sides = resolveMatchSides(match, snapshots);
-  const homeProfile = match.homeTeamId
-    ? teamProfiles?.[match.homeTeamId]
+  const liveMatch = useMatchWithLiveState(match);
+  const sides = resolveMatchSides(liveMatch, snapshots);
+  const homeProfile = liveMatch.homeTeamId
+    ? teamProfiles?.[liveMatch.homeTeamId]
     : undefined;
-  const awayProfile = match.awayTeamId
-    ? teamProfiles?.[match.awayTeamId]
+  const awayProfile = liveMatch.awayTeamId
+    ? teamProfiles?.[liveMatch.awayTeamId]
     : undefined;
-  const effectiveLive = isEffectiveLiveMatch(match);
+  const effectiveLive = isEffectiveLiveMatch(liveMatch);
   const mockEnabled = isMockLiveFixtureEnabled();
-  const simulatedElapsed = useMockLiveFixtureElapsed(match.id);
+  const simulatedElapsed = useMockLiveFixtureElapsed(liveMatch.id);
   const displayScore = mockEnabled
-    ? resolveMockLiveDisplayScore(match)
-    : { homeScore: match.homeScore, awayScore: match.awayScore };
+    ? resolveMockLiveDisplayScore(liveMatch)
+    : { homeScore: liveMatch.homeScore, awayScore: liveMatch.awayScore };
   const liveClock = useLiveElapsedClock(
     mockEnabled
-      ? (simulatedElapsed ?? match.liveElapsedSeconds)
-      : match.liveElapsedSeconds,
+      ? (simulatedElapsed ?? liveMatch.liveElapsedSeconds)
+      : liveMatch.liveElapsedSeconds,
     effectiveLive
   );
   const statusVariant = effectiveLive
     ? "ongoing"
-    : getScheduleRowVariant(match.status);
+    : getScheduleRowVariant(liveMatch.status);
   const subtitle = effectiveLive
     ? liveClock
-    : formatScheduleKickoff(match.kickoffAt);
+    : formatScheduleKickoff(liveMatch.kickoffAt);
 
   return (
     <div className="relative h-full flex w-full justify-center">

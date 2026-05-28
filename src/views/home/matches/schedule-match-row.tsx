@@ -24,6 +24,7 @@ import {
   type ScheduleRowVariant
 } from "@/lib/market/schedule-match";
 import { gameTradeHref } from "@/lib/routes/trade";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-control";
 import { MatchResultBar } from "@/views/home/matches/match-result-bar";
@@ -42,10 +43,11 @@ export function ScheduleMatchRow({
   className
 }: ScheduleMatchRowProps) {
   const router = useRouter();
-  const variant = getScheduleRowVariant(match.status);
+  const liveMatch = useMatchWithLiveState(match);
+  const variant = getScheduleRowVariant(liveMatch.status);
   const sides = resolveMatchSides(match, snapshots);
   const oddsResult = parseMatchOutcomeOdds(
-    match,
+    liveMatch,
     sides.home.name,
     sides.away.name
   );
@@ -57,13 +59,13 @@ export function ScheduleMatchRow({
     oddsResult.status === "ready"
       ? formatOutcomePercent(oddsResult.probabilities.away)
       : "—";
-  const volume = getMatchVolume(match, snapshots);
+  const volume = getMatchVolume(liveMatch, snapshots);
   const volumeLabel = volume > 0 ? `$${formatVolume(volume)}` : "—";
-  const kickoffLabel = formatScheduleKickoff(match.kickoffAt);
-  const scoreLabel = formatMatchScore(match.homeScore, match.awayScore);
+  const kickoffLabel = formatScheduleKickoff(liveMatch.kickoffAt);
+  const scoreLabel = formatMatchScore(liveMatch.homeScore, liveMatch.awayScore);
   const resultWinner = resolveMatchResultWinner(
-    match.homeScore,
-    match.awayScore
+    liveMatch.homeScore,
+    liveMatch.awayScore
   );
   const canNavigate = variant !== "ended";
 

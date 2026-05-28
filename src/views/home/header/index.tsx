@@ -1,38 +1,16 @@
 import type { ReactNode } from "react";
-import type { MarketDataMeta } from "@/data/providers/types";
-import { getMarketDataSourceLabel } from "@/data/providers/source";
-import type { TeamMarketSnapshot } from "@/types/market";
-import { TeamFlag } from "@/components/teams/team-flag";
-import { ProbabilityChangeTrend } from "@/components/market/probability-change-trend";
 import { cn } from "@/lib/cn";
-import {
-  formatVolume,
-  getRelativeChangePercent
-} from "@/components/home/market-formatters";
 import { HomeHeroTitleIconCycle } from "@/views/home/header/home-hero-title-icon-cycle";
 
 const WORLD_CUP_2026_KICKOFF = new Date(Date.UTC(2026, 5, 11, 18, 0, 0));
 
 export interface HomeHeroProps {
-  teamCount: number;
-  totalVolume: number;
-  topMove?: TeamMarketSnapshot;
-  dataSource: MarketDataMeta["source"];
+  totalVolumeLabel: ReactNode;
+  topMoveValue: ReactNode;
 }
 
-export function HomeHero({
-  teamCount,
-  totalVolume,
-  topMove,
-  dataSource
-}: HomeHeroProps) {
+export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
   const kickoffLabel = formatKickoffCountdown(WORLD_CUP_2026_KICKOFF);
-  const changePercent = topMove
-    ? getRelativeChangePercent(
-        topMove.market.probability,
-        topMove.market.change24h
-      )
-    : null;
 
   return (
     <section className="flex justify-between py-8">
@@ -43,31 +21,15 @@ export function HomeHero({
           <HomeHeroTitleIconCycle />
         </h1>
         <p className="text-[#909090] text-[14px] mt-[8px]">
-          source: {getMarketDataSourceLabel(dataSource)}
+          source: Polymarket
         </p>
         <div
           className="flex justify-between mt-2 w-[806px]"
           aria-label="World Cup market summary"
         >
-          <HomeHeroStat label="Teams Listed" value={String(teamCount)} />
-          <HomeHeroStat
-            label="Total Volume"
-            value={`$${formatVolume(totalVolume)}`}
-          />
-          <HomeHeroStat
-            label="24h Changes"
-            value={
-              topMove && changePercent !== null ? (
-                <HomeHeroChangeValue
-                  teamCode={topMove.team.code}
-                  teamName={topMove.team.name}
-                  changePercent={changePercent}
-                />
-              ) : (
-                "-"
-              )
-            }
-          />
+          <HomeHeroStat label="Teams Listed" value={48} />
+          <HomeHeroStat label="Total Volume" value={totalVolumeLabel} />
+          <HomeHeroStat label="24h Changes" value={topMoveValue} />
           <HomeHeroStat label="Starts in" value={kickoffLabel} />
         </div>
       </div>
@@ -102,30 +64,6 @@ function HomeHeroStat({ label, value }: { label: string; value: ReactNode }) {
 function HomeHeroStatValue({ children }: { children: ReactNode }) {
   return (
     <strong className={cn("block", heroStatValueClassName)}>{children}</strong>
-  );
-}
-
-interface HomeHeroChangeValueProps {
-  teamCode: string;
-  teamName: string;
-  changePercent: number;
-}
-
-function HomeHeroChangeValue({
-  teamCode,
-  teamName,
-  changePercent
-}: HomeHeroChangeValueProps) {
-  return (
-    <div className="inline-flex items-center gap-[5px]">
-      <TeamFlag
-        code={teamCode}
-        name={teamName}
-        className="rounded-[2px] text-base shadow-[0_0_2px_rgba(0,0,0,0.2)]"
-      />
-      <span className={heroStatValueClassName}>{teamCode}</span>
-      <ProbabilityChangeTrend changePercent={changePercent} />
-    </div>
   );
 }
 
