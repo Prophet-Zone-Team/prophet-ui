@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import Big from "big.js";
 
-import { Modal } from "@/components/ui/modal";
 import type { FundingAsset } from "@/config/funding";
 import { POLYMARKET_USD } from "@/config/funding";
 import { getEvmFundingNetworks } from "@/config/funding/networks";
@@ -57,6 +56,7 @@ import {
   FundingModalShell,
   fundingPrimaryButtonClass,
 } from "@/views/portfolio/shared/funding-modal-shell";
+import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
 import { FundingSelectorDropdown } from "@/views/portfolio/shared/funding-selector-dropdown";
 import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import { formatNumber, removeNumberEndZero } from "@/utils";
@@ -482,7 +482,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     step === "entry" ? "Withdraw entry" : step === "status" ? "Withdraw status" : "Withdraw funds";
 
   return (
-    <Modal
+    <FundingResponsiveOverlay
       open={open}
       onClose={handleClose}
       ariaLabel={ariaLabel}
@@ -494,7 +494,11 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         title="Withdraw"
         onClose={handleClose}
         onBack={showBack ? handleBack : undefined}
-        className={step === "entry" ? "min-h-[400px]" : "min-h-[680px]"}
+        className={
+          step === "entry"
+            ? "min-h-0 md:min-h-[400px]"
+            : "min-h-0 md:min-h-[680px]"
+        }
         footer={
           showFooter ? (
             <button
@@ -521,7 +525,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         ) : null}
 
         {step === "form" ? (
-          <div className="flex flex-col gap-5 pb-2">
+          <div className="flex flex-col gap-5 pb-10 md:pb-2">
             <div className="flex flex-col gap-2">
               <span className={withdrawFieldLabelClass}>Recipient Address</span>
               {isBridge ? (
@@ -581,7 +585,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
               ) : null}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <FundingSelectorDropdown
                 label="Receive Chain"
                 triggerLabel={selectedChain?.chainName ?? (assetsLoadingForMethod ? "Loading…" : "Select chain")}
@@ -710,6 +714,6 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
           />
         ) : null}
       </FundingModalShell>
-    </Modal>
+    </FundingResponsiveOverlay>
   );
 }

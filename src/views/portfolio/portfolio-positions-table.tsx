@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
+import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import {
@@ -21,14 +22,17 @@ import { resolveTradeHref } from "@/lib/routes/trade";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { useTradeTicketStore } from "@/store/trade-ticket-store";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
-import { TeamFlag } from "@/components/teams/team-flag";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import { PortfolioPositionSellDialog } from "@/views/portfolio/portfolio-position-sell-dialog";
+import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mobile";
 import {
   portfolioActionButtonClass,
   portfolioConnectButtonClass,
   portfolioPositionsTableHeadClass,
   portfolioPositionsTableRowClass,
+  portfolioTableDesktopScrollClass,
+  portfolioTableMobileCardClass,
+  portfolioTableMobileListClass,
   portfolioTableScrollClass
 } from "@/views/portfolio/portfolio-ui";
 
@@ -63,6 +67,45 @@ function PortfolioPositionsTableHeader() {
       >
         Sell
       </span>
+    </div>
+  );
+}
+
+function PositionMarketCell({
+  position,
+  snapshot
+}: {
+  position: UserPositionRecord;
+  snapshot?: TeamMarketSnapshot;
+}) {
+  return (
+    <div className="flex min-w-0 items-start gap-2">
+      {snapshot ? (
+        <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+      ) : (
+        <span
+          className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
+          aria-hidden="true"
+        >
+          ?
+        </span>
+      )}
+      <div className="min-w-0 overflow-hidden text-ellipsis">
+        <a
+          href={resolveTradeHref(position.eventSlug ?? position.slug)}
+          className="m-0 truncate font-[556] text-black hover:underline"
+        >
+          {position.title}
+        </a>
+        <p
+          className={cn(
+            "m-0 mt-0.5 text-xs",
+            getOutcomeToneClass(position.outcome)
+          )}
+        >
+          {position.outcome} {formatSharePrice(position.avgPrice)}
+        </p>
+      </div>
     </div>
   );
 }
@@ -105,7 +148,9 @@ export function PortfolioPositionsTable({
   if (positions.length === 0) {
     return (
       <div className={portfolioTableScrollClass} aria-label="Your positions">
-        <PortfolioPositionsTableHeader />
+        <div className={portfolioTableDesktopScrollClass}>
+          <PortfolioPositionsTableHeader />
+        </div>
         <PortfolioEmptyState
           title="No open positions"
           body="No current Polymarket positions were returned for the connected account."
@@ -114,7 +159,10 @@ export function PortfolioPositionsTable({
     );
   }
 
-  const rows = positions.map((position) => {
+  const desktopRows: ReactNode[] = [];
+  const mobileCards: ReactNode[] = [];
+
+  positions.forEach((position) => {
     const snapshot =
       findSnapshotForTokenId(position.asset, snapshots) ??
       findSnapshotForConditionId(position.conditionId, snapshots) ??
@@ -128,40 +176,37 @@ export function PortfolioPositionsTable({
         ? isAuthoritativeSnapshotForPosition(position, snapshot) ||
           Boolean(position.slug || position.conditionId)
         : false);
+    const rowKey = `${position.conditionId}:${position.asset}`;
 
-    return (
-      <div
-        key={`${position.conditionId}:${position.asset}`}
-        className={portfolioPositionsTableRowClass}
-      >
-        <div className="flex min-w-0 items-start gap-2">
-          {snapshot ? (
-            <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
-          ) : (
-            <span
-              className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
-              aria-hidden="true"
-            >
-              ?
-            </span>
+    const handleSell = () => {
+      if (snapshot && !regionRestricted) {
+        useTradeTicketStore.getState().syncForPositionSell(snapshot, position);
+        setSellTarget({ position, snapshot });
+      }
+    };
+
+    const sellButton = (
+      <RegionRestrictedControl restricted={regionRestricted}>
+        <button
+          type="button"
+          className={cn(
+            portfolioActionButtonClass,
+            "justify-self-end md:justify-self-end",
+            "w-full md:w-auto",
+            "disabled:opacity-50"
           )}
-          <div className="min-w-0 overflow-hidden text-ellipsis">
-            <a
-              href={resolveTradeHref(position.eventSlug ?? position.slug)}
-              className="m-0 truncate font-[556] text-black hover:underline"
-            >
-              {position.title}
-            </a>
-            <p
-              className={cn(
-                "m-0 mt-0.5 text-xs",
-                getOutcomeToneClass(position.outcome)
-              )}
-            >
-              {position.outcome} {formatSharePrice(position.avgPrice)}
-            </p>
-          </div>
-        </div>
+          disabled={!canSell || regionRestricted}
+          title={canSell || regionRestricted ? undefined : "Market data unavailable"}
+          onClick={handleSell}
+        >
+          Sell
+        </button>
+      </RegionRestrictedControl>
+    );
+
+    desktopRows.push(
+      <div key={rowKey} className={portfolioPositionsTableRowClass}>
+        <PositionMarketCell position={position} snapshot={snapshot} />
         <span className="font-[556]">
           {formatTeamDetailMoney(position.initialValue)}
         </span>
@@ -177,37 +222,45 @@ export function PortfolioPositionsTable({
         <span className="text-prophet-muted">
           {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
         </span>
-        <RegionRestrictedControl restricted={regionRestricted}>
-          <button
-            type="button"
-            className={cn(
-              portfolioActionButtonClass,
-              "justify-self-end",
-              "disabled:opacity-50"
-            )}
-            disabled={!canSell || regionRestricted}
-            title={canSell || regionRestricted ? undefined : "Market data unavailable"}
-            onClick={() => {
-              if (snapshot && !regionRestricted) {
-                useTradeTicketStore
-                  .getState()
-                  .syncForPositionSell(snapshot, position);
-                setSellTarget({ position, snapshot });
-              }
-            }}
-          >
-            Sell
-          </button>
-        </RegionRestrictedControl>
+        {sellButton}
       </div>
+    );
+
+    mobileCards.push(
+      <article key={`${rowKey}-mobile`} className={portfolioTableMobileCardClass}>
+        <PositionMarketCell position={position} snapshot={snapshot} />
+        <div className="grid grid-cols-2 gap-2">
+          <PortfolioTableMobileField label="Traded">
+            {formatTeamDetailMoney(position.initialValue)}
+          </PortfolioTableMobileField>
+          <PortfolioTableMobileField label="To Win">
+            {formatTeamDetailMoney(position.size)}
+          </PortfolioTableMobileField>
+          <PortfolioTableMobileField label="Value">
+            <div className="flex flex-col items-end gap-0.5">
+              <span>{formatTeamDetailMoney(position.currentValue)}</span>
+              <span className={cn("text-xs font-normal", pnlTone)}>
+                {formatPnlSubline(position.cashPnl, position.percentPnl)}
+              </span>
+            </div>
+          </PortfolioTableMobileField>
+          <PortfolioTableMobileField label="Time" valueClassName="font-normal text-prophet-muted">
+            {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
+          </PortfolioTableMobileField>
+        </div>
+        {sellButton}
+      </article>
     );
   });
 
   return (
     <>
       <div className={portfolioTableScrollClass} aria-label="Your positions">
-        <PortfolioPositionsTableHeader />
-        {rows}
+        <div className={portfolioTableDesktopScrollClass}>
+          <PortfolioPositionsTableHeader />
+          {desktopRows}
+        </div>
+        <div className={portfolioTableMobileListClass}>{mobileCards}</div>
       </div>
 
       {sellTarget ? (

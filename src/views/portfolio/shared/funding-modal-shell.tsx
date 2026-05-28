@@ -4,6 +4,7 @@ import { ChevronLeft, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { useFundingOverlayLayout } from "@/views/portfolio/shared/funding-responsive-overlay";
 
 export const fundingModalCardClass = cn(
   "flex w-full flex-col overflow-hidden rounded-[20px] border border-[#EBEBEB] bg-white",
@@ -33,8 +34,17 @@ export function FundingModalShell({
   footer,
   className
 }: FundingModalShellProps) {
+  const layout = useFundingOverlayLayout();
+  const isDrawer = layout === "drawer";
+
   return (
-    <div className={cn(fundingModalCardClass, className)}>
+    <div
+      className={cn(
+        fundingModalCardClass,
+        isDrawer && "h-full max-h-[92dvh] min-h-0 rounded-b-none border-b-0 shadow-none",
+        className
+      )}
+    >
       <header className="relative flex shrink-0 items-center justify-center px-5 pb-4 pt-5">
         {onBack ? (
           <button
@@ -60,7 +70,7 @@ export function FundingModalShell({
       <div className="min-h-0 flex-1 overflow-y-auto px-5">{children}</div>
 
       {footer ? (
-        <footer className="shrink-0 px-5 pb-5 pt-2">{footer}</footer>
+        <footer className="shrink-0 px-5 pb-10 md:pb-5 pt-2">{footer}</footer>
       ) : null}
     </div>
   );

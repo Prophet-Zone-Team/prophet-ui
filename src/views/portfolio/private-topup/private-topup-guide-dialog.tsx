@@ -1,11 +1,11 @@
 "use client";
 
-import { Modal } from "@/components/ui/modal";
 import {
   PRIVATE_MODE_STEPS,
   PRIVATE_TOPUP_GUIDE_MODAL_WIDTH,
 } from "@/views/portfolio/private-topup/config";
 import { PrivateModeStepCard } from "@/views/portfolio/private-topup/private-mode-step-card";
+import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
 import {
   PrivateTopupModalClose,
   PrivateTopupProceedChevron,
@@ -31,19 +31,18 @@ export function PrivateTopupGuideDialog({
   onChangeWallet,
 }: PrivateTopupGuideDialogProps) {
   return (
-    <Modal
+    <FundingResponsiveOverlay
       open={open}
       onClose={onClose}
       ariaLabel="How to use Private Mode"
       className={PRIVATE_TOPUP_GUIDE_MODAL_WIDTH}
-      overlayClassName="z-[70]"
       hideCloseButton
       overlayCloseable
     >
       <div
-        className={`${privateTopupOnboardingCardClass} ${PRIVATE_TOPUP_GUIDE_MODAL_WIDTH} min-h-[527px]`}
+        className={`${privateTopupOnboardingCardClass} w-full md:w-[966px] min-h-0 md:min-h-[527px]`}
       >
-        <div className="relative px-5 pb-5 pt-5">
+        <div className="relative px-5 pb-10 md:pb-5 pt-5">
           <PrivateTopupModalClose onClose={onClose} />
 
           <div className="flex flex-col items-center pt-2">
@@ -80,15 +79,15 @@ export function PrivateTopupGuideDialog({
             ))}
           </div>
 
-          <div className="mt-6 flex items-center justify-between gap-4">
+          <div className="mt-6 flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-center md:gap-4">
             <button
               type="button"
-              className="border-0 bg-transparent p-0 text-[14px] font-[457] text-black transition-opacity hover:opacity-70"
+              className="border-0 bg-transparent p-0 text-left text-[14px] font-[457] text-black transition-opacity hover:opacity-70 md:text-center"
               onClick={onProceed}
             >
               Skip Guide
             </button>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-end gap-3">
               <button
                 type="button"
                 className={privateTopupGuideFooterCancelClass}
@@ -108,6 +107,6 @@ export function PrivateTopupGuideDialog({
           </div>
         </div>
       </div>
-    </Modal>
+    </FundingResponsiveOverlay>
   );
 }

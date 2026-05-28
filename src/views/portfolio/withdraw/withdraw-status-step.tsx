@@ -24,7 +24,7 @@ export function WithdrawStatusStep({ phase, detail, error }: WithdrawStatusStepP
       : detail ?? defaultDescription(phase);
 
   return (
-    <div className="flex flex-col items-center gap-4 pb-2 pt-16 text-center">
+    <div className="flex flex-col items-center gap-4 pb-10 md:pb-2 pt-16 text-center">
       {loading ? <Loader2 className="h-8 w-8 animate-spin text-[#909090]" aria-hidden="true" /> : null}
       <p className={`m-0 text-xl font-[556] ${isError ? "text-prophet-red" : "text-black"}`}>{title}</p>
       <p className="m-0 max-w-sm text-sm text-[#909090]">{description}</p>

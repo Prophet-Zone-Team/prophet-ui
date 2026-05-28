@@ -1,5 +1,6 @@
 "use client";
 
+import { useDevice } from "@/hooks/common/use-device";
 import { cn } from "@/lib/cn";
 import {
   depositSourceTabActiveClass,
@@ -15,14 +16,14 @@ const TABS: Array<{
   disabled?: boolean;
   activeWidthClass?: string;
 }> = [
-  { id: "crypto", label: "By Crypto", activeWidthClass: "min-w-[140px]" },
-  {
-    id: "private_balance",
-    label: "Private Balance",
-    activeWidthClass: "min-w-[160px]",
-  },
-  { id: "cash", label: "By Cash", disabled: true },
-];
+    { id: "crypto", label: "By Crypto", activeWidthClass: "md:min-w-[140px]" },
+    {
+      id: "private_balance",
+      label: "Private Balance",
+      activeWidthClass: "md:min-w-[160px]",
+    },
+    { id: "cash", label: "By Cash", disabled: true },
+  ];
 
 export interface DepositSourceTabsProps {
   value: DepositEntryTab;
@@ -30,6 +31,8 @@ export interface DepositSourceTabsProps {
 }
 
 export function DepositSourceTabs({ value, onChange }: DepositSourceTabsProps) {
+  const isMobile = useDevice();
+
   return (
     <div className={depositSourceTabsTrackClass} role="tablist" aria-label="Deposit source">
       {TABS.map((tab) => {
@@ -43,7 +46,7 @@ export function DepositSourceTabs({ value, onChange }: DepositSourceTabsProps) {
             aria-selected={isActive}
             disabled={tab.disabled}
             className={cn(
-              "whitespace-nowrap",
+              "truncate whitespace-nowrap",
               isActive ? depositSourceTabActiveClass : depositSourceTabInactiveClass,
               isActive && tab.activeWidthClass,
               tab.disabled && depositSourceTabDisabledClass,
@@ -54,7 +57,7 @@ export function DepositSourceTabs({ value, onChange }: DepositSourceTabsProps) {
               }
             }}
           >
-            {tab.label}
+            {isMobile && tab.label === "Private Balance" ? "Private" : tab.label}
           </button>
         );
       })}

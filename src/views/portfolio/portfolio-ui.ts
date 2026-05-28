@@ -1,14 +1,27 @@
 import { cn } from "@/lib/cn";
 
-export const portfolioPageClass = "mx-auto w-[1112px] px-4 py-[20px] sm:px-6";
+export const portfolioPageClass = "mx-auto w-full md:w-[1112px] px-3 md:px-4 py-[20px] sm:px-6";
 
 export const portfolioSummaryCardClass = cn(
-  "box-border min-h-[300px] rounded-[20px] border border-prophet-line bg-white p-6 sm:p-8 lg:h-[300px]"
+  "box-border min-h-[300px] rounded-[20px] border border-prophet-line bg-white p-3 md:p-6 lg:h-[300px]"
 );
 
 export const portfolioActivityCardClass = cn(
-  "box-border flex min-h-[523px] flex-col rounded-[12px] border border-[#EBEBEB] bg-white"
+  "box-border flex min-h-0 flex-col rounded-[12px] border border-[#EBEBEB] bg-white md:min-h-[523px]"
 );
+
+export const portfolioTableDesktopScrollClass =
+  "hidden min-h-0 flex-1 md:flex-grow-0 flex-col overflow-x-auto md:flex";
+
+export const portfolioTableMobileListClass = "flex flex-col md:hidden";
+
+export const portfolioTableMobileCardClass = cn(
+  "flex flex-col gap-2.5 border-b border-prophet-line/60 px-3 py-3 last:border-b-0"
+);
+
+export const portfolioTableMobileLabelClass = "text-xs text-prophet-muted";
+
+export const portfolioTableMobileValueClass = "text-sm font-[556] text-black";
 
 export const portfolioSummaryLabelClass =
   "text-[14px] font-[556] leading-[17px] text-[#909090] pb-[10px]";
@@ -17,12 +30,13 @@ export const portfolioSummaryValueLargeClass =
   "text-[32px] font-[556] leading-[38px] text-black";
 
 export const portfolioSummaryValueMediumClass =
-  "text-[20px] font-[556] leading-12 text-black mt-2";
+  "text-[32px] md:text-[20px] font-[556] leading-[38px] md:leading-12 text-black mt-2";
 
 export const portfolioPendingDepositButtonClass = cn(
-  "inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-black px-3",
+  "inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-black px-2 md:px-3 mt-2",
   "text-xs font-[556] leading-[14px] text-white transition-opacity hover:opacity-90",
-  "disabled:cursor-not-allowed disabled:opacity-50"
+  "disabled:cursor-not-allowed disabled:opacity-50",
+  "md:absolute md:right-0 md:top-[-55px] md:z-10"
 );
 
 export const portfolioWalletAddressClass =
@@ -58,22 +72,22 @@ const portfolioOrdersTableGridColsClass =
   "grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_5.5rem]";
 
 export const portfolioPositionsTableHeadClass = cn(
-  "grid min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted",
+  "hidden min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
   portfolioPositionsTableGridColsClass
 );
 
 export const portfolioPositionsTableRowClass = cn(
-  "grid min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center",
+  "hidden min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
   portfolioPositionsTableGridColsClass
 );
 
 export const portfolioOrdersTableHeadClass = cn(
-  "grid min-w-[680px] gap-3 px-4 py-2 text-xs text-prophet-muted",
+  "hidden min-w-[680px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
   portfolioOrdersTableGridColsClass
 );
 
 export const portfolioOrdersTableRowClass = cn(
-  "grid min-w-[680px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center",
+  "hidden min-w-[680px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
   portfolioOrdersTableGridColsClass
 );
 
@@ -81,12 +95,12 @@ const portfolioHistoryTableGridColsClass =
   "grid-cols-[minmax(0,1.5fr)_repeat(5,minmax(0,1fr))]";
 
 export const portfolioHistoryTableHeadClass = cn(
-  "grid min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted",
+  "hidden min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
   portfolioHistoryTableGridColsClass
 );
 
 export const portfolioHistoryTableRowClass = cn(
-  "grid min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center",
+  "hidden min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
   portfolioHistoryTableGridColsClass
 );
 
@@ -102,4 +116,5 @@ export const portfolioSecondaryButtonClass = cn(
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
-export const portfolioTableScrollClass = "flex-1";
+export const portfolioTableScrollClass =
+  "flex min-h-0 flex-1 flex-col overflow-x-auto";

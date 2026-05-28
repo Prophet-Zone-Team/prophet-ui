@@ -27,10 +27,11 @@ import {
 } from "@/views/portfolio/portfolio-ui";
 import { formatNumber } from "@/utils";
 import { usePortfolioContext } from "./context";
+import { cn } from "@/lib/cn";
 
-export interface PortfolioSummarySectionProps {}
+export interface PortfolioSummarySectionProps { }
 
-export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
+export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
   const { session, portfolio, status, onConnectWallet, reload } =
     usePortfolioContext();
 
@@ -77,15 +78,15 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
 
   const portfolioDisplay = session
     ? formatNumber(portfolio?.portfolioValue, 2, true, {
-        round: 0,
-        isZeroPrecision: true
-      })
+      round: 0,
+      isZeroPrecision: true
+    })
     : "—";
   const availableDisplay = session
     ? formatNumber(portfolio?.availableToTrade, 2, true, {
-        round: 0,
-        isZeroPrecision: true
-      })
+      round: 0,
+      isZeroPrecision: true
+    })
     : "—";
 
   return (
@@ -127,8 +128,8 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
         )}
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="w-1/2 flex flex-col justify-between pt-[20px] h-[160px]">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+        <div className="w-full md:w-1/2 flex flex-col justify-between pt-[20px] md:h-[160px] relative">
           <div className="flex">
             <div className="w-1/2">
               <div className={portfolioSummaryLabelClass}>Portfolio</div>
@@ -141,31 +142,31 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
                 <div className={portfolioSummaryLabelClass}>
                   Available to trade
                 </div>
-                {session && hasPendingDeposit ? (
-                  <RegionRestrictedControl restricted={regionRestricted}>
-                    <button
-                      type="button"
-                      className={portfolioPendingDepositButtonClass}
-                      disabled={converting || regionRestricted}
-                      onClick={() => void onConfirmPendingDeposit()}
-                    >
-                      {converting ? (
-                        <Loader2
-                          className="mr-1.5 h-3.5 w-3.5 animate-spin"
-                          aria-hidden="true"
-                        />
-                      ) : null}
-                      Confirm pending deposit
-                    </button>
-                  </RegionRestrictedControl>
-                ) : null}
               </div>
               <strong className={portfolioSummaryValueMediumClass}>
                 ${availableDisplay}
               </strong>
             </div>
           </div>
-          <div className="flex gap-3 mt-[36px]">
+          {session && hasPendingDeposit ? (
+            <RegionRestrictedControl restricted={regionRestricted}>
+              <button
+                type="button"
+                className={portfolioPendingDepositButtonClass}
+                disabled={converting || regionRestricted}
+                onClick={() => void onConfirmPendingDeposit()}
+              >
+                {converting ? (
+                  <Loader2
+                    className="mr-1.5 h-3.5 w-3.5 animate-spin"
+                    aria-hidden="true"
+                  />
+                ) : null}
+                Confirm pending deposit
+              </button>
+            </RegionRestrictedControl>
+          ) : null}
+          <div className="flex gap-3 mt-[20px]">
             {!session ? (
               <button
                 type="button"
@@ -180,7 +181,7 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
                 <RegionRestrictedControl restricted={regionRestricted}>
                   <button
                     type="button"
-                    className={portfolioDepositButtonClass}
+                    className={cn(portfolioDepositButtonClass, "flex-1")}
                     disabled={regionRestricted}
                     onClick={() => setDepositOpen(true)}
                   >
@@ -189,7 +190,7 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
                 </RegionRestrictedControl>
                 <button
                   type="button"
-                  className={portfolioWithdrawButtonClass}
+                  className={cn(portfolioWithdrawButtonClass, "flex-1")}
                   onClick={() => setWithdrawOpen(true)}
                 >
                   Withdraw
@@ -200,7 +201,7 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
         </div>
 
         <div
-          className="hidden w-px shrink-0 self-stretch bg-prophet-line lg:block"
+          className="hidden w-px shrink-0 self-stretch bg-prophet-line md:block"
           aria-hidden="true"
         />
 

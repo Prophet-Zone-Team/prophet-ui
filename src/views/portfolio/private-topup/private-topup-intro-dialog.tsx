@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 
-import { Modal } from "@/components/ui/modal";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { PRIVATE_TOPUP_INTRO_MODAL_WIDTH } from "@/views/portfolio/private-topup/config";
+import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
 import {
   PrivateTopupModalClose,
   PrivateTopupProceedChevron,
@@ -52,23 +52,25 @@ export function PrivateTopupIntroDialog({
   }
 
   return (
-    <Modal
+    <FundingResponsiveOverlay
       open={open}
       onClose={onClose}
       ariaLabel="Private Topup"
       className={PRIVATE_TOPUP_INTRO_MODAL_WIDTH}
-      overlayClassName="z-[60]"
       hideCloseButton
       overlayCloseable={!guideOpen}
     >
       <div
-        className={`${privateTopupOnboardingCardClass} ${PRIVATE_TOPUP_INTRO_MODAL_WIDTH} min-h-[534px]`}
+        className={`${privateTopupOnboardingCardClass} w-full md:w-[472px] min-h-0 md:min-h-[534px]`}
       >
-        <div className="relative px-5 pb-5 pt-5">
+        <div className="relative px-5 pb-10 md:pb-5 pt-5">
           <button
             type="button"
             className="absolute left-5 top-5 border-0 bg-transparent p-0 text-[16px] font-[457] text-[#3168ff] transition-opacity hover:opacity-80"
-            onClick={onOpenGuide}
+            onClick={() => {
+              // onClose();
+              onOpenGuide();
+            }}
           >
             How to use?
           </button>
@@ -166,6 +168,6 @@ export function PrivateTopupIntroDialog({
           </div>
         </div>
       </div>
-    </Modal>
+    </FundingResponsiveOverlay>
   );
 }

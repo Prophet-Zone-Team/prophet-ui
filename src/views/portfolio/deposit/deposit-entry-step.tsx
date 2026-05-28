@@ -49,7 +49,7 @@ export function DepositEntryStep({
   const privateAccountStatus = resolvePrivateAccountStatus(session);
 
   return (
-    <div className="flex flex-col gap-4 pb-2">
+    <div className="flex min-w-0 flex-col gap-4 pb-10 md:pb-2">
       <DepositSourceTabs value={entryTab} onChange={onEntryTabChange} />
 
       {entryTab === "crypto" ? (

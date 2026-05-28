@@ -41,7 +41,7 @@ export function PortfolioPerformanceChart({ }: PortfolioPerformanceChartProps) {
   const pnlTone = isPositive ? "text-prophet-green" : "text-prophet-red";
 
   return (
-    <div className="flex w-1/2 flex-col justify-between gap-4 border-t border-prophet-line pt-6 lg:border-t-0 lg:pl-8 lg:pt-0">
+    <div className="flex w-full md:w-1/2 flex-col justify-between gap-4 border-t border-prophet-line pt-6 lg:border-t-0 lg:pl-8 lg:pt-0">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <span className={portfolioSummaryLabelClass}>Profit / Loss</span>

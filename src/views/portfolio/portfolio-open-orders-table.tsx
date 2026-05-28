@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
+import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { findSnapshotForTokenId } from "@/lib/portfolio/portfolio-metrics";
@@ -14,14 +15,17 @@ import {
 import type { UserOpenOrder } from "@/lib/portfolio/types";
 import { formatShareSize } from "@/lib/market/order-math";
 import type { TeamMarketSnapshot } from "@/types/market";
-import { TeamFlag } from "@/components/teams/team-flag";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import { PortfolioOpenOrderCancelDialog } from "@/views/portfolio/portfolio-open-order-cancel-dialog";
+import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mobile";
 import {
   portfolioActionButtonClass,
   portfolioConnectButtonClass,
   portfolioOrdersTableHeadClass,
   portfolioOrdersTableRowClass,
+  portfolioTableDesktopScrollClass,
+  portfolioTableMobileCardClass,
+  portfolioTableMobileListClass,
   portfolioTableScrollClass
 } from "@/views/portfolio/portfolio-ui";
 
@@ -82,6 +86,34 @@ function PortfolioOpenOrdersTableHeader() {
   );
 }
 
+function OpenOrderMarketCell({
+  order,
+  snapshot
+}: {
+  order: UserOpenOrder;
+  snapshot?: TeamMarketSnapshot;
+}) {
+  return (
+    <div className="flex min-w-0 items-start gap-2">
+      {snapshot ? (
+        <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+      ) : (
+        <span
+          className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
+          aria-hidden="true"
+        >
+          ?
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className="m-0 truncate font-[556] text-black">
+          {order.outcome || order.market || order.asset_id}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function PortfolioOpenOrdersTable({
   openOrders,
   snapshots,
@@ -119,7 +151,9 @@ export function PortfolioOpenOrdersTable({
   if (openOrders.length === 0) {
     return (
       <div className={portfolioTableScrollClass} aria-label="Open orders">
-        <PortfolioOpenOrdersTableHeader />
+        <div className={portfolioTableDesktopScrollClass}>
+          <PortfolioOpenOrdersTableHeader />
+        </div>
         <PortfolioEmptyState
           title="No open orders"
           body="No open CLOB orders were returned for the connected account."
@@ -128,66 +162,83 @@ export function PortfolioOpenOrdersTable({
     );
   }
 
-  const rows = openOrders.map((order) => {
+  const desktopRows: ReactNode[] = [];
+  const mobileCards: ReactNode[] = [];
+
+  openOrders.forEach((order) => {
     const snapshot = findSnapshotForTokenId(order.asset_id, snapshots);
     const price = Number(order.price);
     const sideLabel = titleCase(order.side);
+    const sidePriceLabel = `${sideLabel} ${
+      Number.isFinite(price) ? formatSharePrice(price) : order.price
+    }`;
 
-    return (
-      <div key={order.id} className={portfolioOrdersTableRowClass}>
-        <div className="flex min-w-0 items-start gap-2">
-          {snapshot ? (
-            <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
-          ) : (
-            <span
-              className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
-              aria-hidden="true"
-            >
-              ?
-            </span>
+    const cancelButton = (
+      <RegionRestrictedControl restricted={regionRestricted}>
+        <button
+          type="button"
+          className={cn(
+            portfolioActionButtonClass,
+            "w-full md:w-auto md:justify-self-end",
+            "disabled:opacity-50"
           )}
-          <div className="min-w-0">
-            <p className="m-0 truncate font-[556] text-black">
-              {order.outcome || order.market || order.asset_id}
-            </p>
-          </div>
-        </div>
-        <span className="font-[556]">
-          {sideLabel}{" "}
-          {Number.isFinite(price) ? formatSharePrice(price) : order.price}
-        </span>
+          disabled={regionRestricted}
+          onClick={() => {
+            if (!regionRestricted) {
+              setCancelTarget({ order, snapshot: snapshot ?? undefined });
+            }
+          }}
+        >
+          Cancel
+        </button>
+      </RegionRestrictedControl>
+    );
+
+    desktopRows.push(
+      <div key={order.id} className={portfolioOrdersTableRowClass}>
+        <OpenOrderMarketCell order={order} snapshot={snapshot} />
+        <span className="font-[556]">{sidePriceLabel}</span>
         <span>{formatShareSize(getRemainingSize(order))}</span>
         <span className="text-prophet-muted">{getFilledPercent(order)}</span>
         <span className="text-prophet-muted">
           {formatUnixSeconds(order.created_at)}
         </span>
-        <RegionRestrictedControl restricted={regionRestricted}>
-          <button
-            type="button"
-            className={cn(
-              portfolioActionButtonClass,
-              "justify-self-end",
-              "disabled:opacity-50"
-            )}
-            disabled={regionRestricted}
-            onClick={() => {
-              if (!regionRestricted) {
-                setCancelTarget({ order, snapshot: snapshot ?? undefined });
-              }
-            }}
-          >
-            Cancel
-          </button>
-        </RegionRestrictedControl>
+        {cancelButton}
       </div>
+    );
+
+    mobileCards.push(
+      <article key={`${order.id}-mobile`} className={portfolioTableMobileCardClass}>
+        <OpenOrderMarketCell order={order} snapshot={snapshot} />
+        <PortfolioTableMobileField label="Side / Price">{sidePriceLabel}</PortfolioTableMobileField>
+        <PortfolioTableMobileField label="Size">
+          {formatShareSize(getRemainingSize(order))}
+        </PortfolioTableMobileField>
+        <PortfolioTableMobileField
+          label="Filled"
+          valueClassName="font-normal text-prophet-muted"
+        >
+          {getFilledPercent(order)}
+        </PortfolioTableMobileField>
+        <PortfolioTableMobileField
+          label="Time"
+          valueClassName="font-normal text-prophet-muted"
+        >
+          {formatUnixSeconds(order.created_at)}
+        </PortfolioTableMobileField>
+        {cancelButton}
+      </article>
     );
   });
 
   return (
     <>
       <div className={portfolioTableScrollClass} aria-label="Open orders">
-        <PortfolioOpenOrdersTableHeader />
-        {rows}
+        <div className={portfolioTableDesktopScrollClass}>
+          <PortfolioOpenOrdersTableHeader />
+          {desktopRows}
+        </div>
+        <div className={portfolioTableMobileListClass}>{mobileCards}</div>
       </div>
 
       {cancelTarget ? (

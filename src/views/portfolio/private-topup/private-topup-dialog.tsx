@@ -6,7 +6,6 @@ import Big from "big.js";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Modal } from "@/components/ui/modal";
 import { FundingNetworkType } from "@/config/funding";
 import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
@@ -51,6 +50,7 @@ import {
   FundingModalShell,
   fundingPrimaryButtonClass,
 } from "@/views/portfolio/shared/funding-modal-shell";
+import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
 import { usePricesStore } from "@/store";
 
 const INITIAL_STEP: PrivateTopupStep = "tokens";
@@ -544,10 +544,14 @@ export function PrivateTopupDialog({
   ]);
 
   const shellMinHeight =
-    step === "confirm" ? "min-h-[600px]" : step === "amount" ? "min-h-[480px]" : "min-h-[515px]";
+    step === "confirm"
+      ? "min-h-0 md:min-h-[600px]"
+      : step === "amount"
+        ? "min-h-0 md:min-h-[480px]"
+        : "min-h-0 md:min-h-[515px]";
 
   return (
-    <Modal
+    <FundingResponsiveOverlay
       open={open}
       onClose={handleClose}
       ariaLabel={ariaLabel}
@@ -616,7 +620,7 @@ export function PrivateTopupDialog({
           ) : null}
         </FundingModalShell>
       </PrivateTopupProvider>
-    </Modal>
+    </FundingResponsiveOverlay>
   );
 }
 

@@ -15,15 +15,15 @@ export const depositConnectedRowHighlightedClass = cn(
 export const depositBridgeLabelClass = "text-sm font-semibold text-black";
 
 export const depositSourceTabsTrackClass =
-  "flex h-[46px] items-center gap-1 rounded-[6px] bg-[#f4f4f4] p-1";
+  "flex h-[46px] w-full min-w-0 items-center gap-1 rounded-[6px] bg-[#f4f4f4] p-1";
 
 export const depositSourceTabActiveClass = cn(
-  "flex h-[36px] items-center justify-center rounded-[6px] border border-[#ebebeb]",
-  "bg-white px-4 text-base font-[556] text-black"
+  "flex h-[36px] min-w-0 flex-1 items-center justify-center rounded-[6px] border border-[#ebebeb]",
+  "bg-white px-2 text-sm font-[556] text-black md:flex-none md:px-4 md:text-base"
 );
 
 export const depositSourceTabInactiveClass =
-  "flex h-[36px] flex-1 items-center justify-center bg-transparent px-3 text-base font-[556] text-black transition-opacity hover:opacity-80";
+  "flex h-[36px] min-w-0 flex-1 items-center justify-center bg-transparent px-2 text-sm font-[556] text-black transition-opacity hover:opacity-80 md:px-3 md:text-base";
 
 export const depositSourceTabDisabledClass =
   "pointer-events-none text-black/50";

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Big from "big.js";
 import { Loader2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { Modal } from "@/components/ui/modal";
+import { useDevice } from "@/hooks/common/use-device";
 import { FundingNetworkType } from "@/config/funding";
 import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
@@ -56,6 +56,7 @@ import {
   FundingModalShell,
   fundingPrimaryButtonClass
 } from "@/views/portfolio/shared/funding-modal-shell";
+import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
 import { DepositProvider } from "./context";
 
 export interface DepositDialogProps {
@@ -78,6 +79,7 @@ export function DepositDialog({
   onOpenPrivateTopup,
 }: DepositDialogProps) {
   const { session, syncCash } = useAuth();
+  const isMobile = useDevice();
 
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
   const [entryTab, setEntryTab] = useState<DepositEntryTab>(INITIAL_ENTRY_TAB);
@@ -614,6 +616,10 @@ export function DepositDialog({
   const privateAccountStatus = resolvePrivateAccountStatus(session);
 
   const entryModalMinHeight = useMemo(() => {
+    if (isMobile) {
+      return undefined;
+    }
+
     if (step !== "entry") {
       return undefined;
     }
@@ -629,7 +635,7 @@ export function DepositDialog({
     }
 
     return DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.crypto;
-  }, [entryTab, privateAccountStatus, step]);
+  }, [entryTab, isMobile, privateAccountStatus, step]);
 
   const footer = useMemo(() => {
     if (step === "status") {
@@ -735,7 +741,7 @@ export function DepositDialog({
   ]);
 
   return (
-    <Modal
+    <FundingResponsiveOverlay
       open={open}
       onClose={handleClose}
       ariaLabel={ariaLabel}
@@ -762,10 +768,10 @@ export function DepositDialog({
             step === "entry" && entryModalMinHeight
               ? entryModalMinHeight
               : step === "confirm"
-                ? "min-h-[600px]"
+                ? "min-h-0 md:min-h-[600px]"
                 : step === "entry"
-                  ? DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.crypto
-                  : "min-h-[515px]"
+                  ? (isMobile ? "min-h-0" : DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.crypto)
+                  : "min-h-0 md:min-h-[515px]"
           }
         >
           {step === "entry" ? (
@@ -833,7 +839,7 @@ export function DepositDialog({
           ) : null}
         </FundingModalShell>
       </DepositProvider>
-    </Modal>
+    </FundingResponsiveOverlay>
   );
 }
 
