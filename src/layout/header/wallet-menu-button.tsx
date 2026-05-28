@@ -11,6 +11,7 @@ import { FastBidSettingDialog } from "@/layout/header/fast-bid-setting-dialog";
 import { DepositDialog } from "@/views/portfolio/deposit";
 import { PrivateTopupOnboarding } from "@/views/portfolio/private-topup/private-topup-onboarding";
 import { formatNumber } from "@/utils";
+import MobileDrawer from "./mobile-drawer";
 
 const LOGIN_STEP_LABELS = {
   requesting_wallet: "Connecting wallet…",
@@ -34,10 +35,12 @@ const LOGIN_STEP_LABELS = {
 
 interface WalletMenuButtonProps {
   isPrivateMode?: boolean;
+  isMobileDrawerOpen: boolean;
+  onMobileDrawerClose: () => void;
 }
 
 export function WalletMenuButton(props: WalletMenuButtonProps) {
-  const { isPrivateMode } = props;
+  const { isPrivateMode, isMobileDrawerOpen, onMobileDrawerClose } = props;
 
   const menuRef = useRef<HTMLDivElement>(null);
   const {
@@ -201,6 +204,14 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
           {message}
         </p>
       ) : null}
+
+      <MobileDrawer
+        open={isMobileDrawerOpen}
+        onClose={onMobileDrawerClose}
+        regionRestricted={isRegionBlocked}
+        onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
+        balanceDisplay={balanceDisplay}
+      />
     </div>
   );
 }

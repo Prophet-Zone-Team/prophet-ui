@@ -10,6 +10,7 @@ import {
 } from "@/layout/header/wallet-menu-ui";
 import { cn } from "@/lib/cn";
 import { useRef } from "react";
+import PrivateBalance from "./private-balance";
 
 export interface WalletConnectedBarProps {
   polymarketAddress: string;
@@ -36,25 +37,6 @@ export function WalletConnectedBar({
 }: WalletConnectedBarProps) {
   const popoverRef = useRef<any>(null);
 
-  const privateBalanceButton = (
-    <button
-      type="button"
-      className="cursor-pointer text-[#909090] text-sm font-[457] px-2.5 rounded-lg border border-[#EBEBEB] h-[50px] flex flex-col items-end justify-center gap-0 transition-colors hover:border-[#d0d0d0]"
-      onClick={onPrivateBalanceClick}
-      aria-label="Open Private Topup"
-    >
-      <div className="flex items-center justify-center gap-1 leading-[17px]">
-        <img
-          src="/icons/icon-private.svg"
-          alt=""
-          className="shrink-0 w-4 h-3 object-center object-contain"
-        />
-        <div className="">Private Balance</div>
-      </div>
-      <div className="text-black text-base leading-[19px]">$0.00</div>
-    </button>
-  );
-
   const depositButton = (
     <button
       type="button"
@@ -75,10 +57,10 @@ export function WalletConnectedBar({
   return (
     <div className={walletConnectedBarClass}>
       <RegionRestrictedControl restricted={regionRestricted}>
-        {privateBalanceButton}
+        <PrivateBalance onClick={onPrivateBalanceClick} className="hidden md:flex" />
       </RegionRestrictedControl>
-      <div className="h-[31px] w-px shrink-0 bg-prophet-line"></div>
-      <div className="flex flex-col justify-center items-end gap-0">
+      <div className="hidden md:block h-[31px] w-px shrink-0 bg-prophet-line"></div>
+      <div className="hidden md:flex flex-col justify-center items-end gap-0">
         <span className={walletBalanceLabelClass}>Balance</span>
         <span className={walletBalanceValueClass}>${balanceDisplay}</span>
       </div>
