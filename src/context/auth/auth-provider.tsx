@@ -51,8 +51,10 @@ import {
 } from "@/store/auth-store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
+import { useDisconnect } from "wagmi";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { disconnect: wagmiDisconnect } = useDisconnect();
   const hydrated = useAuthHydrated();
   const pathname = usePathname();
   const session = useAuthStore((state) => state.session);
@@ -642,6 +644,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearAuthState]);
 
   const disconnect = useCallback(async () => {
+    wagmiDisconnect?.();
     const store = useAuthStore.getState();
 
     loginAbortRef.current = true;
