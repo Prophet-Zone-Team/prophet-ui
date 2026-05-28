@@ -1,8 +1,9 @@
 "use client";
 
-import type { Address, WalletClient } from "viem";
+import { createWalletClient, custom, type Address, type Chain, type WalletClient } from "viem";
 
-import { disconnect, getAccount, getWalletClient } from "wagmi/actions";
+import { disconnect, getAccount } from "wagmi/actions";
+import type { Connector } from "wagmi";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 
@@ -76,13 +77,20 @@ export async function getWalletClientForAddress(
   }
 
   const chainId = options?.chainId ?? account.chainId;
-  const client = await getWalletClient(wagmiConfig, { chainId });
+  const connector = resolveLiveConnector(account.connector);
 
-  if (!client) {
-    throw new Error("Unable to access the connected wallet. Reconnect and try again.");
+  if (!connector) {
+    throw new Error("Unable to access the connected wallet connector. Reconnect and try again.");
   }
 
-  return client;
+  const provider = await connector.getProvider();
+  const chain = resolveWalletChain(chainId);
+
+  return createWalletClient({
+    account: walletAddress as Address,
+    chain,
+    transport: custom(provider as Parameters<typeof custom>[0]),
+  });
 }
 
 export async function requestWalletRpc(
@@ -120,6 +128,35 @@ export function getPrimaryAuthorizedWalletAccount(
   authorizedAccounts: string[],
 ): string | undefined {
   return authorizedAccounts[0];
+}
+
+function resolveLiveConnector(connector: Connector | undefined): Connector | undefined {
+  if (!connector) {
+    return undefined;
+  }
+
+  if (typeof connector.getProvider === "function") {
+    return connector;
+  }
+
+  return wagmiConfig.connectors.find(
+    (candidate) => candidate.uid === connector.uid || candidate.id === connector.id,
+  );
+}
+
+function resolveWalletChain(chainId?: number): Chain {
+  if (chainId) {
+    const chain = wagmiConfig.chains.find((candidate) => candidate.id === chainId);
+
+    if (chain) {
+      return chain;
+    }
+  }
+
+  const accountChainId = getAccount(wagmiConfig).chainId;
+  const accountChain = wagmiConfig.chains.find((candidate) => candidate.id === accountChainId);
+
+  return accountChain ?? wagmiConfig.chains[0];
 }
 
 function normalizeAddress(address: string) {
