@@ -21,9 +21,9 @@ export function GameIdentity({ match, homeTeam, awayTeam }: GameIdentityProps) {
   const title = `${homeTeam.name} vs ${awayTeam.name}`;
 
   return (
-    <div className="flex items-center gap-3 w-[38%]">
+    <div className="flex w-full min-w-0 items-center gap-2 md:w-[38%] md:gap-3">
       <MatchBookmarkControl matchId={match.id} />
-      <div className="flex shrink-0 items-center mx-[16px] w-[32px]">
+      <div className="mx-0 flex w-8 shrink-0 items-center md:mx-4 md:w-[32px]">
         <TeamFlag
           code={homeTeam.code}
           name={homeTeam.name}

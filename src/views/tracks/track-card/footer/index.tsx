@@ -26,18 +26,20 @@ export function TrackCardFooter(props: TrackCardFooterProps) {
 
   return (
     <>
-      <SignalsMetric
-        signals={props.signals}
-        showPositiveLabel={showPositiveLabel}
-      />
-      {props.variant === "team" ? (
-        <PowerRankingMetric
-          variant="team"
-          powerRanking={props.powerRanking}
+      <div className="flex w-full items-start gap-4 md:contents">
+        <SignalsMetric
+          signals={props.signals}
+          showPositiveLabel={showPositiveLabel}
         />
-      ) : (
-        <PowerRankingMetric variant="game" powerRanking={props.powerRanking} />
-      )}
+        {props.variant === "team" ? (
+          <PowerRankingMetric
+            variant="team"
+            powerRanking={props.powerRanking}
+          />
+        ) : (
+          <PowerRankingMetric variant="game" powerRanking={props.powerRanking} />
+        )}
+      </div>
       <SignalFeed items={props.signalItems} />
     </>
   );

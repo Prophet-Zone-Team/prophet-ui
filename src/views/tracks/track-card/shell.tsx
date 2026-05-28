@@ -18,15 +18,15 @@ export function TrackCardShell({
   return (
     <article
       className={cn(
-        "flex w-full max-w-[1260px] flex-col overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white",
+        "flex w-full max-w-none flex-col overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white md:max-w-[1260px]",
         className
       )}
       aria-label={ariaLabel}
     >
-      <div className="flex min-h-[78px] items-center gap-6 px-4 py-3 max-lg:flex-wrap max-lg:gap-4 max-lg:py-4">
+      <div className="flex min-h-0 flex-col gap-3 px-3 py-3 md:min-h-[78px] md:flex-row md:flex-nowrap md:items-center md:gap-6 md:px-4">
         {header}
       </div>
-      <div className="flex min-h-[60px] items-center gap-6 border-t border-[#EBEBEB] bg-[#EDF0F3] px-4 py-3 max-lg:flex-wrap max-lg:gap-4">
+      <div className="flex min-h-0 flex-col gap-3 border-t border-[#EBEBEB] bg-[#EDF0F3] px-3 py-3 md:min-h-[60px] md:flex-row md:flex-nowrap md:items-center md:gap-6 md:px-4">
         {footer}
       </div>
     </article>

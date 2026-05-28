@@ -12,6 +12,7 @@ import {
   trackCardBidButtonClassName,
   trackCardOutlineButtonClassName
 } from "../styles";
+import { cn } from "@/lib/cn";
 
 export type TrackCardTeamActionsProps = {
   variant: "team";
@@ -41,13 +42,13 @@ function TrackCardTeamActions({ snapshot }: TrackCardTeamActionsProps) {
 
   return (
     <div
-      className="ml-auto flex shrink-0 items-center justify-end gap-2 w-[25%]"
+      className="flex w-full flex-wrap items-center gap-2 md:ml-auto md:w-[25%] md:shrink-0 justify-between md:justify-end"
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
       <FastBidButton
         snapshot={snapshot}
-        className={trackCardBidButtonClassName}
+        className={cn(trackCardBidButtonClassName, "flex-1 md:flex-grow-0")}
       >
         <>
           <Zap
@@ -72,7 +73,7 @@ function TrackCardGameActions({ matchId }: TrackCardGameActionsProps) {
 
   return (
     <div
-      className="ml-auto flex shrink-0 items-center justify-end gap-2 w-[25%]"
+      className="flex w-full flex-wrap items-center gap-2 md:ml-auto md:w-[25%] md:shrink-0 md:justify-end"
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >

@@ -27,11 +27,11 @@ export default function TracksTitle() {
             </linearGradient>
           </defs>
         </svg>
-        <h2 className="m-0 text-[26px] font-[500] leading-[32px] text-black">
+        <h2 className="m-0 text-[22px] font-[500] leading-[26px] text-black md:text-[26px] md:leading-[32px]">
           Tracks
         </h2>
       </div>
-      <div className="mt-[4px] text-[16px] font-[400] text-[#909090]">
+      <div className="mt-1 max-w-[313px] px-2 text-center text-[14px] font-[400] leading-[18px] text-[#909090] md:mt-[4px] md:max-w-none md:px-0 md:text-[16px] md:leading-[20px]">
         The teams or matches you subscibed or bid will be listed here
       </div>
     </div>

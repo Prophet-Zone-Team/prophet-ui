@@ -17,7 +17,7 @@ export function SignalsMetric({
   const positiveCount = signals.positiveCount ?? 0;
 
   return (
-    <div className={cn("flex shrink-0 flex-col w-[10%]", className)}>
+    <div className={cn("flex shrink-0 flex-col md:w-[10%]", className)}>
       <div className="flex min-h-[20px] items-center gap-1">
         <span className="text-[16px] font-[400] leading-[20px] text-black">
           {signals.count}

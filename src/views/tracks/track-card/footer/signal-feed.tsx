@@ -86,7 +86,7 @@ export function SignalFeed({ items, className }: SignalFeedProps) {
     <div
       ref={containerRef}
       className={cn(
-        "group relative w-[75%] overflow-hidden",
+        "group relative w-full min-w-0 overflow-hidden md:w-[75%]",
         "before:pointer-events-none before:absolute before:inset-y-0 before:right-0 before:z-[1] before:w-16 before:bg-gradient-to-l before:from-[#EDF0F3] before:to-transparent",
         className
       )}

@@ -47,7 +47,7 @@ export default function TracksTelegramBanner() {
 
   return (
     <>
-      <div className="mt-4 flex h-[30px] items-center justify-center gap-[8px]">
+      <div className="mt-4 flex flex-col items-center justify-center gap-2 px-2 text-center sm:flex-row sm:gap-[8px] sm:text-left">
         <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[12px] bg-black">
           <Bell
             className="h-[20px] w-[16px] text-white"
@@ -55,7 +55,7 @@ export default function TracksTelegramBanner() {
             aria-hidden
           />
         </div>
-        <p className="m-0 text-[16px] font-[400] leading-[20px] text-black">
+        <p className="m-0 text-[14px] font-[400] leading-[18px] text-black md:text-[16px] md:leading-[20px]">
           Track on your{" "}
           <button
             type="button"

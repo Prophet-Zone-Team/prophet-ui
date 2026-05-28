@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function TracksEmptyState() {
   return (
-    <div className="flex flex-col justify-center items-center gap-[26px] py-[60px]">
+    <div className="flex flex-col items-center justify-center gap-5 px-3 py-10 md:gap-[26px] md:py-[60px]">
       <p className="m-0 w-full max-w-[313px] text-center text-[16px] font-[400] leading-[20px] text-black">
         You didn&apos;t track any team or match yet.
       </p>

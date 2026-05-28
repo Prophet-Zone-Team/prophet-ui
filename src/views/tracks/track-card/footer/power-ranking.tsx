@@ -36,7 +36,7 @@ function TeamPowerRankingMetric({
   className
 }: TeamPowerRankingMetricProps) {
   return (
-    <div className={cn("flex w-[90px] shrink-0 flex-col w-[15%]", className)}>
+    <div className={cn("flex shrink-0 flex-col md:w-[15%]", className)}>
       <span className="text-[16px] font-[400] leading-[20px] text-black">
         #{powerRanking.rank}
       </span>
@@ -51,10 +51,7 @@ function GamePowerRankingMetric({
 }: GamePowerRankingMetricProps) {
   return (
     <div
-      className={cn(
-        "flex w-[140px] shrink-0 flex-col gap-1 w-[15%]",
-        className
-      )}
+      className={cn("flex shrink-0 flex-col gap-1 md:w-[15%]", className)}
     >
       <div className="flex min-h-[20px] items-center gap-3">
         <PowerRankingTeamEntry

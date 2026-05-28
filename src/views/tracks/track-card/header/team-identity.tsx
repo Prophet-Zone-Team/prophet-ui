@@ -10,12 +10,12 @@ export function TeamIdentity({ team }: TeamIdentityProps) {
   const subtitle = `${team.code} / ${team.region}`;
 
   return (
-    <div className="flex w-[38%] items-center gap-3">
+    <div className="flex w-full min-w-0 items-center gap-2 md:w-[38%] md:gap-3">
       <MarketBookmarkControl teamId={team.id} />
       <TeamFlag
         code={team.code}
         name={team.name}
-        className="mx-[16px] h-[32px] w-[32px] shrink-0 rounded-[2px] text-[32px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="mx-0 h-7 w-7 shrink-0 rounded-[2px] text-[28px] shadow-[0_0_2px_rgba(0,0,0,0.2)] md:mx-4 md:h-[32px] md:w-[32px] md:text-[32px]"
       />
       <div className="min-w-0">
         <h3 className="m-0 truncate text-[18px] font-[500] leading-[23px] text-black">

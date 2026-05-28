@@ -104,7 +104,7 @@ const valueClassName =
   "text-[18px] font-[500] leading-[23px] text-black mt-[2px]";
 
 const cardClassName =
-  "box-border flex h-[214px] w-[345px] max-w-full flex-col rounded-[12px] border border-[#EBEBEB] bg-white px-4 py-4";
+  "box-border flex h-auto min-h-[214px] w-full max-w-[345px] flex-col rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-3 md:px-4 md:py-4";
 
 function formatAttention(value: number): string {
   return new Intl.NumberFormat("en-US").format(Math.round(value));

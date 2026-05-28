@@ -25,7 +25,7 @@ export function TeamStatsRow({
   youBid
 }: TeamStatsRowProps) {
   return (
-    <div className="w-[37%] flex shrink-0 items-end gap-[50px]">
+    <div className="grid w-full grid-cols-3 gap-2 md:flex md:w-[37%] md:shrink-0 md:items-end md:gap-[50px]">
       <ProbabilityStat probability={probability} change24h={change24h} />
       <VolumeStat volumeLabel={`$${formatVolume(volume)}`} />
       <YouBidStat
@@ -43,7 +43,7 @@ export function GameStatsRow({
   youBid
 }: GameStatsRowProps) {
   return (
-    <div className="w-[37%] flex shrink-0 items-end gap-[50px]">
+    <div className="grid w-full grid-cols-3 gap-2 md:flex md:w-[37%] md:shrink-0 md:items-end md:gap-[50px]">
       <ProbabilityStat
         probability={probability}
         change24h={0}

@@ -201,9 +201,9 @@ export function TracksView({
   const argentina = teamById("argentina");
 
   return (
-    <section className="mx-auto w-[1406px] py-8">
+    <section className="mx-auto w-full max-w-[1406px] px-3 py-6 md:px-4 md:py-8">
       <TracksTitle />
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-4 flex flex-col gap-3 md:mt-6">
         <TrackCard
           snapshot={spainSnapshot}
           powerRanking={{ rank: 3 }}
@@ -246,8 +246,10 @@ export function TracksView({
       </div>
       <TracksEmptyState />
       <TracksTelegramBanner />
-      <div className="mt-4 text-[18px] font-[500]">Top Attention</div>
-      <div className="mt-4 flex flex-wrap gap-[8px]">
+      <div className="mt-5 text-base font-[500] text-black md:mt-4 md:text-[18px]">
+        Top Attention
+      </div>
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:mt-4 lg:flex lg:flex-wrap lg:gap-2">
         {TOP_ATTENTION_TEAM_TEST_CARDS.map((card) => (
           <TopAttentionCard
             key={card.key}
