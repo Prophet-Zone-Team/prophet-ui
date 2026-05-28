@@ -19,8 +19,8 @@ export function SignalNewsImpact({
     <section
       aria-label="Signal and news impact"
       className={cn(
-        "box-border flex h-[453px] w-full max-w-[696px] flex-col",
-        "rounded-[12px] border border-[#EBEBEB] bg-white px-[20px] py-[20px]",
+        "box-border flex h-auto w-full max-w-none flex-col md:h-[453px] md:max-w-[696px]",
+        "rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-4 md:px-[20px] md:py-[20px]",
         className
       )}
     >

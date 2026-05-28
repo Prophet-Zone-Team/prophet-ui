@@ -21,19 +21,30 @@ export function ImpactDistributionOverview({
     <section
       aria-label="Impact distribution overview"
       className={cn(
-        "box-border flex h-[174px] w-full max-w-[696px] flex-col",
-        "rounded-[12px] border border-[#EBEBEB] bg-white px-[20px] py-[20px]",
+        "box-border flex h-auto w-full max-w-none flex-col md:h-[174px] md:max-w-[696px]",
+        "rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-4 md:px-5 md:py-5",
         className
       )}
     >
-      <h2 className="m-0 text-[20px] font-[457] leading-[24px] text-black">
+      <h2 className="m-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
         Impact Distribution Overview
       </h2>
 
-      <div className="mt-[20px]">
+      <div className="mt-4 md:mt-5">
         <ImpactDistributionBar segments={data.segments} />
 
-        <div className="mt-[16px] flex gap-[4px]">
+        <div className="mt-3 flex flex-col gap-2 md:hidden">
+          {data.segments.map((segment, index) => (
+            <ImpactDistributionLegendItem
+              key={segment.sentiment}
+              sentiment={segment.sentiment}
+              count={segment.count}
+              percent={percentages[index] ?? 0}
+            />
+          ))}
+        </div>
+
+        <div className="mt-4 hidden gap-1 md:flex">
           {data.segments.map((segment, index) => (
             <div
               key={segment.sentiment}

@@ -7,11 +7,10 @@ import type { MostAffectedTeamEntry } from "./types";
 
 export type MostAffectedTeamTableRowProps = {
   entry: MostAffectedTeamEntry;
+  className?: string;
 };
 
-export function MostAffectedTeamTableRow({
-  entry
-}: MostAffectedTeamTableRowProps) {
+export function MostAffectedTeamDesktopRow({ entry }: MostAffectedTeamTableRowProps) {
   const isNegativeImpact = entry.netImpact < 0;
 
   return (
@@ -46,5 +45,48 @@ export function MostAffectedTeamTableRow({
         {entry.highImpactEventCount}
       </span>
     </div>
+  );
+}
+
+export function MostAffectedTeamMobileCard({
+  entry,
+  className
+}: MostAffectedTeamTableRowProps) {
+  const isNegativeImpact = entry.netImpact < 0;
+
+  return (
+    <article
+      className={cn(
+        "flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[457] leading-[17px] text-black",
+        className
+      )}
+    >
+      <div className="flex items-center gap-2">
+        <span className="w-8 shrink-0 tabular-nums font-[500]">{entry.rank}</span>
+        <TeamFlag
+          code={entry.teamCode}
+          name={entry.teamName}
+          className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        />
+        <span className="min-w-0 truncate font-[500]">{entry.teamName}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-3 border-t border-[#EBEBEB] pt-2">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[12px] text-[#909090]">Net Impact</span>
+          <span
+            className={cn(
+              "tabular-nums",
+              isNegativeImpact ? "text-[#FF674B]" : "text-black"
+            )}
+          >
+            {formatNetImpact(entry.netImpact)}
+          </span>
+        </div>
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-[12px] text-[#909090]">High-Impact Events</span>
+          <span className="tabular-nums">{entry.highImpactEventCount}</span>
+        </div>
+      </div>
+    </article>
   );
 }

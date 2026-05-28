@@ -21,17 +21,17 @@ export function TopCategories({
     <section
       aria-label="Today's top categories"
       className={cn(
-        "box-border flex h-[277px] w-full max-w-[696px] flex-col",
-        "rounded-[12px] border border-[#EBEBEB] bg-white px-[20px] py-[20px]",
+        "box-border flex h-auto w-full max-w-none flex-col md:h-[277px] md:max-w-[696px]",
+        "rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-4 md:px-5 md:py-5",
         className
       )}
     >
-      <h2 className="m-0 shrink-0 text-[20px] font-[457] leading-[24px] text-black">
+      <h2 className="m-0 shrink-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
         Today&apos;s Top Categories
       </h2>
 
-      <div className="mt-[20px] flex min-h-0 flex-1 items-center justify-between gap-[20px]">
-        <div className="flex min-w-0 flex-1 flex-col">
+      <div className="mt-4 flex min-h-0 flex-1 flex-col items-center gap-4 md:mt-5 md:flex-row md:items-center md:justify-between md:gap-5">
+        <div className="flex w-full min-w-0 flex-1 flex-col">
           {data.categories.map((category, index) => (
             <TopCategoriesLegendRow
               key={category.id}
@@ -44,7 +44,7 @@ export function TopCategories({
 
         <TopCategoriesDonutChart
           categories={data.categories}
-          className="shrink-0"
+          className="mx-auto shrink-0 md:mx-0"
         />
       </div>
     </section>

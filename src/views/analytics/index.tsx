@@ -6,13 +6,13 @@ import { SignalNewsImpact } from "./news";
 
 export default function Analytics() {
   return (
-    <div className="w-[1408px] mx-auto items-center gap-[20px] px-4 pt-[30px] pb-8">
+    <div className="w-full md:w-[1408px] mx-auto items-center gap-4 md:gap-5 px-3 md:px-4 pt-[30px] pb-8">
       <AnalyticsTopSection />
-      <div className="mt-[20px] flex gap-[20px]">
+      <div className="mt-[20px] flex flex-col md:flex-row gap-4 md:gap-[20px]">
         <TeamPowerRanking />
         <Simulator />
       </div>
-      <div className="mt-[20px] flex gap-[20px]">
+      <div className="mt-[20px] flex flex-col md:flex-row gap-4 md:gap-[20px]">
         <SignalNewsImpact />
         <GroupCompetitiveness />
       </div>

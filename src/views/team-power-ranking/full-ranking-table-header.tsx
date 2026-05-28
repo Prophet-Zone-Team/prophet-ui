@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 
 /** Column widths as percentages (sum = 100%) */
 const HEADER_GRID =
-  "grid w-full grid-cols-[5%_13%_10%_15%_15%_13%_13%_13%] items-center gap-x-2 px-5";
+  "hidden md:grid w-full grid-cols-[5%_13%_10%_15%_15%_13%_13%_13%] items-center gap-x-2 px-5";
 
 export function FullRankingTableHeader() {
   return (

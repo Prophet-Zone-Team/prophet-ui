@@ -22,7 +22,7 @@ export function ProgressBarRow({ entry, variant, className }: ProgressBarRowProp
   return (
     <div
       className={cn(
-        "grid grid-cols-[70px_minmax(0,1fr)_50px] items-center gap-x-[12px] whitespace-nowrap",
+        "grid grid-cols-[62px_minmax(0,1fr)_44px] items-center gap-x-2 whitespace-nowrap md:grid-cols-[70px_minmax(0,1fr)_50px] md:gap-x-[12px]",
         className
       )}
       aria-label={`${formatGroupLabel(entry.groupId)}, ${entry.score} out of 100`}

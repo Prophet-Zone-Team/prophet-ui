@@ -71,14 +71,14 @@ export function SignalPage({
   );
 
   return (
-    <div className={cn("mx-auto w-full max-w-[1412px] px-4 pb-8", className)}>
+    <div className={cn("mx-auto w-full max-w-[1412px] px-3 pb-8 md:px-4", className)}>
       <PageBack />
 
-      <section aria-label="Signal and news impact" className="pt-[20px]">
-        <h1 className="m-0 text-[26px] font-[457] leading-[31px] text-black">
+      <section aria-label="Signal and news impact" className="pt-4 md:pt-[20px]">
+        <h1 className="m-0 text-[22px] font-[457] leading-[26px] text-black md:text-[26px] md:leading-[31px]">
           Signal &amp; New Impact
         </h1>
-        <div className="mt-[24px] grid grid-cols-3 gap-[19px]">
+        <div className="mt-4 grid grid-cols-1 gap-3 md:mt-[24px] md:grid-cols-3 md:gap-[19px]">
           {data.topImpactItems.map((item) => (
             <SignalTopCard
               key={item.id}
@@ -89,11 +89,11 @@ export function SignalPage({
         </div>
       </section>
 
-      <section aria-label="All signals and news summary" className="mt-[20px]">
-        <h2 className="m-0 text-[20px] font-[457] leading-[24px] text-black">
+      <section aria-label="All signals and news summary" className="mt-5 md:mt-[20px]">
+        <h2 className="m-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
           All Signals &amp; News
         </h2>
-        <div className="mt-[20px] grid grid-cols-4 gap-[21px]">
+        <div className="mt-4 grid grid-cols-2 gap-3 md:mt-[20px] md:grid-cols-4 md:gap-[21px]">
           {SUMMARY_VARIANTS.map(({ variant, countKey }) => (
             <SignalNewsItem
               key={variant}
@@ -104,16 +104,16 @@ export function SignalPage({
         </div>
       </section>
 
-      <div className="mt-[20px] flex items-start gap-[37px]">
+      <div className="mt-5 flex flex-col items-stretch gap-5 md:mt-[20px] lg:flex-row lg:gap-[37px]">
         <SignalAllList
-          className="w-[679px] shrink-0 rounded-[12px] border border-[#EBEBEB] bg-white"
+          className="min-w-0 w-full shrink-0 rounded-[12px] border border-[#EBEBEB] bg-white lg:w-[679px]"
           onItemSelect={(item) => setSelectedItemId(item.id)}
         />
 
-        <div className="flex w-[696px] shrink-0 flex-col gap-[20px]">
-          <MostAffectedTeam />
-          <TopCategories />
-          <ImpactDistributionOverview />
+        <div className="flex min-w-0 w-full flex-col gap-5 lg:w-[696px] lg:shrink-0">
+          <MostAffectedTeam className="max-w-none" />
+          <TopCategories className="max-w-none" />
+          <ImpactDistributionOverview className="max-w-none" />
         </div>
       </div>
 

@@ -20,7 +20,7 @@ export function CompetitivenessScore({
       className={cn(
         "whitespace-nowrap tabular-nums",
         isLarge
-          ? "text-[26px] font-[500] leading-[31px]"
+          ? "text-[22px] font-[500] leading-[26px] md:text-[26px] md:leading-[31px]"
           : "text-[14px] font-[400] leading-[17px] text-[#909090]",
         className
       )}

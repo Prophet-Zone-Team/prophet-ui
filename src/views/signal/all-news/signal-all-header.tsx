@@ -33,12 +33,12 @@ export function SignalAllHeader({
   return (
     <header
       className={cn(
-        "flex w-full max-w-[679px] flex-col p-[20px] pb-[0px]",
+        "flex w-full max-w-none flex-col px-3 pb-0 pt-4 md:max-w-[679px] md:p-5 md:pb-0",
         className
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 className="m-0 text-[20px] font-[457] leading-[24px] text-black">
+        <h2 className="m-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
           All Signals &amp; News
         </h2>
         <SignalAllTeamFilterControl
@@ -52,7 +52,7 @@ export function SignalAllHeader({
         role="row"
         className={cn(
           signalAllListRowClass,
-          "mt-[22px] text-[16px] font-[457] leading-[19px] text-[#909090]"
+          "mt-4 hidden text-[16px] font-[457] leading-[19px] text-[#909090] md:flex md:mt-[22px]"
         )}
       >
         <SortableColumnHeader

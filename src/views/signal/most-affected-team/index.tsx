@@ -17,16 +17,16 @@ export function MostAffectedTeam({
     <section
       aria-label="Most affected team"
       className={cn(
-        "box-border flex h-[564px] w-full max-w-[696px] flex-col",
-        "rounded-[12px] border border-[#EBEBEB] bg-white px-[20px] pt-[20px]",
+        "box-border flex h-auto w-full max-w-none flex-col md:h-[564px] md:max-w-[696px]",
+        "rounded-[12px] border border-[#EBEBEB] bg-white px-3 pb-4 pt-4 md:px-5 md:pb-5 md:pt-5",
         className
       )}
     >
-      <h2 className="m-0 shrink-0 text-[20px] font-[457] leading-[24px] text-black">
+      <h2 className="m-0 shrink-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
         Most Affected Team
       </h2>
 
-      <div className="mt-[26px] min-h-0 flex-1">
+      <div className="mt-4 min-h-0 flex-1 md:mt-[26px]">
         <MostAffectedTeamTable entries={data.entries} />
       </div>
     </section>

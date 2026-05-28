@@ -33,14 +33,14 @@ export function TeamPowerRankingPage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1408px] px-4 pb-8">
+    <div className="mx-auto w-full max-w-[1408px] px-3 pb-8 md:px-4">
       <PageBack />
-      <div className="flex items-center justify-between">
-        <h1 className="m-0 text-[26px] font-[457] leading-[31px] text-black  pt-[20px]">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <h1 className="m-0 pt-4 text-[22px] font-[457] leading-[26px] text-black md:pt-[20px] md:text-[26px] md:leading-[31px]">
           Team Power Ranking
         </h1>
 
-        <div className="mt-5 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:mt-5 md:gap-3">
           <RankingFilterPill
             prefix="Team"
             value={teamFilter}
@@ -58,11 +58,11 @@ export function TeamPowerRankingPage() {
 
       <div
         className={cn(
-          "mt-5 box-border overflow-hidden rounded-[12px]",
-          "border border-[#EBEBEB] bg-white pb-5 pt-5"
+          "mt-4 box-border overflow-hidden rounded-[12px] md:mt-5",
+          "border border-[#EBEBEB] bg-white pb-4 pt-4 md:pb-5 md:pt-5"
         )}
       >
-        <div className="overflow-x-auto">
+        <div className="md:overflow-x-auto">
           <FullRankingTable entries={filteredEntries} />
         </div>
       </div>

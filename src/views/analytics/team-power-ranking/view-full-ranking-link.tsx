@@ -15,8 +15,8 @@ export function ViewFullRankingLink({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center gap-[7px] border-0 bg-transparent p-0",
-        "text-[14px] font-[400] leading-[17px] text-[#3168FF]",
+        "inline-flex items-center gap-1 md:gap-[7px] border-0 bg-transparent p-0",
+        "text-xs md:text-[14px] font-[400] leading-[17px] text-[#3168FF]",
         "cursor-pointer transition-opacity hover:opacity-80",
         className
       )}

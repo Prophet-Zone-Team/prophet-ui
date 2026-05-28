@@ -6,15 +6,17 @@ import { TeamInfo } from "@/views/team-power-ranking/team-info";
 import { TrendIndicator } from "@/views/team-power-ranking/trend-indicator";
 import type { TeamPowerRankingEntry } from "@/views/team-power-ranking/types";
 
+import { rankingPreviewTableGridClass } from "./table-grid";
+
 export type RankingTableRowProps = {
   entry: TeamPowerRankingEntry;
 };
 
-export function RankingTableRow({ entry }: RankingTableRowProps) {
+export function RankingTableDesktopRow({ entry }: RankingTableRowProps) {
   return (
     <div
       role="row"
-      className="grid grid-cols-[28px_minmax(0,1fr)_105px_78px_38px] items-center gap-x-[12px] px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-black"
+      className={`${rankingPreviewTableGridClass} px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-black`}
     >
       <span role="cell">{entry.rank}</span>
       <div role="cell" className="min-w-0">
@@ -28,5 +30,42 @@ export function RankingTableRow({ entry }: RankingTableRowProps) {
         <TrendIndicator trend={entry.trend} />
       </span>
     </div>
+  );
+}
+
+export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
+  return (
+    <article className="flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="w-7 shrink-0 tabular-nums">{entry.rank}</span>
+          <TeamInfo
+            teamCode={entry.teamCode}
+            teamName={entry.teamName}
+            className="min-w-0"
+          />
+        </div>
+        <TrendIndicator trend={entry.trend} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 border-t border-[#EBEBEB] pt-2">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-[12px] leading-[17px] text-[#909090]">
+            Title Probability
+          </span>
+          <span className="tabular-nums">
+            {formatTitleProbability(entry.titleProbability)}
+          </span>
+        </div>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-[12px] leading-[17px] text-[#909090]">
+            Round of 16
+          </span>
+          <span className="tabular-nums">
+            {formatRoundOf16Probability(entry.roundOf16Probability)}
+          </span>
+        </div>
+      </div>
+    </article>
   );
 }

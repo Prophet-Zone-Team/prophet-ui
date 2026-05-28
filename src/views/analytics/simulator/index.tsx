@@ -7,11 +7,11 @@ export function Simulator() {
     <section
       aria-label="Simulator"
       className={cn(
-        "box-border flex h-[346px] w-full max-w-[868px] flex-row items-start p-[20px]",
+        "box-border flex md:h-[346px] w-full md:max-w-[868px] flex-col md:flex-row gap-5 md:gap-0 items-start p-3 md:p-[20px]",
         "rounded-[12px] border border-[#EBEBEB] bg-white"
       )}
     >
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-[12px] overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-[12px] overflow-hidden w-full">
         <h2 className="m-0 shrink-0 text-[18px] font-[400] leading-[21px] text-black">
           Road to Final
         </h2>
@@ -20,7 +20,7 @@ export function Simulator() {
         </div>
       </div>
       <div
-        className="h-[304px] w-px shrink-0 self-stretch bg-[#EBEBEB]"
+        className="h-[1px] md:h-[304px] w-full md:w-px shrink-0 self-stretch bg-[#EBEBEB]"
         aria-hidden
       />
       <SimulatorComponent />

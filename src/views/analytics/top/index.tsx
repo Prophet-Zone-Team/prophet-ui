@@ -8,7 +8,7 @@ import {
 
 export function AnalyticsTopSection() {
   return (
-    <section aria-label="Top analytics highlights" className="flex gap-[20px]">
+    <section aria-label="Top analytics highlights" className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <TopAnalyticsCard
         icon={<ChampionIcon />}
         categoryLabel="Most Likely Champion"

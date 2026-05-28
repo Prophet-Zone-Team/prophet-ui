@@ -4,6 +4,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
+import { useDevice } from "@/hooks/common/use-device";
+import { cn } from "@/lib/cn";
+
 import { SignalNewsDetailArticleBody } from "./article-body";
 import { SignalNewsDetailCloseButton } from "./close-button";
 import { SignalNewsDetailMetadataRow } from "./metadata-row";
@@ -31,6 +34,8 @@ export function SignalNewsDetailDrawer({
   detail,
   onClose
 }: SignalNewsDetailDrawerProps) {
+  const isMobile = useDevice();
+
   useEffect(() => {
     if (!open) {
       return undefined;
@@ -60,7 +65,12 @@ export function SignalNewsDetailDrawer({
   return createPortal(
     <AnimatePresence>
       {open && detail ? (
-        <div className="fixed inset-0 z-[70] flex justify-end">
+        <div
+          className={cn(
+            "fixed inset-0 z-[70] flex",
+            isMobile ? "items-end justify-center" : "justify-end"
+          )}
+        >
           <motion.button
             type="button"
             aria-label="Close news detail overlay"
@@ -76,13 +86,18 @@ export function SignalNewsDetailDrawer({
             role="dialog"
             aria-modal="true"
             aria-label={detail.title}
-            className="relative flex h-full w-full max-w-[660px] flex-col bg-white shadow-[-10px_0px_10px_rgba(0,0,0,0.1)]"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
+            className={cn(
+              "relative flex w-full flex-col bg-white",
+              isMobile
+                ? "max-h-[92dvh] rounded-t-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.12)]"
+                : "h-full max-w-[660px] shadow-[-10px_0px_10px_rgba(0,0,0,0.1)]"
+            )}
+            initial={isMobile ? { y: "100%" } : { x: "100%" }}
+            animate={isMobile ? { y: 0 } : { x: 0 }}
+            exit={isMobile ? { y: "100%" } : { x: "100%" }}
             transition={DRAWER_TRANSITION}
           >
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-[30px] pb-[40px] pt-[20px]">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-8 pt-4 md:px-[30px] md:pb-[40px] md:pt-[20px]">
               <SignalNewsDetailCloseButton
                 onClick={onClose}
                 className="mb-[20px] shrink-0 self-start"
@@ -93,11 +108,11 @@ export function SignalNewsDetailDrawer({
                   <img
                     src={detail.imageUrl}
                     alt={detail.imageAlt}
-                    className="h-[338px] w-full rounded-[12px] object-cover"
+                    className="h-[200px] w-full rounded-[12px] object-cover md:h-[338px]"
                   />
                 ) : (
                   <div
-                    className="flex h-[338px] w-full items-center justify-center rounded-[12px] bg-[#F0F2F5] text-[14px] font-[457] text-[#909090]"
+                    className="flex h-[200px] w-full items-center justify-center rounded-[12px] bg-[#F0F2F5] text-[14px] font-[457] text-[#909090] md:h-[338px]"
                     aria-hidden="true"
                   >
                     No image available

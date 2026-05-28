@@ -51,7 +51,7 @@ export function SignalNewsItem({
   return (
     <div
       className={cn(
-        "flex h-[56px] w-full max-w-[337px] items-center justify-between rounded-[8px] px-[16px]",
+        "flex h-[56px] w-full max-w-none items-center justify-between rounded-[8px] px-3 md:max-w-[337px] md:px-[16px]",
         BACKGROUND_CLASS_NAMES[variant],
         className
       )}

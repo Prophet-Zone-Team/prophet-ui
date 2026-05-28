@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 export const mostAffectedTeamTableGridClass =
-  "grid w-full grid-cols-[10%_30%_22%_34%] items-center gap-x-2";
+  "hidden md:grid w-full grid-cols-[10%_30%_22%_34%] items-center gap-x-2";
 
 export function MostAffectedTeamTableHeader() {
   return (

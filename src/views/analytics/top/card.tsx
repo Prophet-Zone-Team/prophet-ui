@@ -35,8 +35,8 @@ export function TopAnalyticsCard({
   return (
     <article
       className={cn(
-        "box-border flex h-[145px] w-[337px] items-center gap-[20px] rounded-[12px]",
-        "border border-[#EBEBEB] bg-white px-[20px]",
+        "box-border flex flex-col md:flex-row md:h-[145px] items-center gap-4 md:gap-[20px] rounded-[12px]",
+        "border border-[#EBEBEB] bg-white px-3 md:px-[20px] py-3 md:py-0",
         className
       )}
       aria-label={resolvedAriaLabel}
@@ -46,7 +46,7 @@ export function TopAnalyticsCard({
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <p className="m-0 text-[14px] font-[400] capitalize leading-[17px] text-[#909090]">
+        <p className="m-0 text-[14px] font-[400] capitalize leading-[17px] text-[#909090] h-[34px] md:h-auto">
           {categoryLabel}
         </p>
 
@@ -56,7 +56,7 @@ export function TopAnalyticsCard({
             name={teamName}
             className="h-[26px] w-[26px] shrink-0 rounded-[6px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
           />
-          <h3 className="m-0 truncate text-[20px] font-[500] leading-[24px] text-black">
+          <h3 className="m-0 truncate text-base md:text-[20px] font-[500] leading-[24px] text-black">
             {teamName}
           </h3>
         </div>

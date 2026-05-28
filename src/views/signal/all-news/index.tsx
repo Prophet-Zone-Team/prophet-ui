@@ -48,7 +48,7 @@ export function SignalAllList({
   return (
     <section
       aria-label="All signals and news"
-      className={cn("flex w-full flex-col pb-[20px]", className)}
+      className={cn("flex w-full flex-col pb-4 md:pb-5", className)}
     >
       <SignalAllHeader
         teamFilter={teamFilter}
@@ -60,7 +60,7 @@ export function SignalAllList({
         }}
       />
 
-      <div className="mt-[12px] flex flex-col">
+      <div className="mt-3 flex flex-col gap-2 px-3 md:mt-[12px] md:gap-0 md:px-0">
         {visibleItems.length === 0 ? (
           <p className="py-8 text-center text-[16px] font-[457] leading-[19px] text-[#909090]">
             No signals match this team filter.
