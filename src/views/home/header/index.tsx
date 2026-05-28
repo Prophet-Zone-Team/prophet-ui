@@ -14,17 +14,25 @@ export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
 
   return (
     <section className="flex justify-between py-8">
-      <div className="flex-1">
-        <p className="text-[26px]">2026 FIFA World Cup</p>
-        <h1 className="mt-[8px] flex items-center gap-[8px] text-[56px] font-[500] leading-[0.9]">
-          <span>Before the news, it moves</span>
-          <HomeHeroTitleIconCycle />
-        </h1>
-        <p className="text-[#909090] text-[14px] mt-[8px]">
-          source: Polymarket
-        </p>
+      <div className="flex-1 px-3 md:px-0">
+        <div className="flex items-start gap-5">
+          <img src="/fifa.png" className="w-[80px] object-top object-contain shrink-0" />
+          <div className="flex-1">
+            <p className="text-[20px] md:text-[26px]">2026 FIFA World Cup</p>
+            <h1 className="mt-[8px] flex flex-col md:flex-row items-start md:items-center gap-[8px] text-[26px] md:text-[56px] font-[500] leading-[0.9]">
+              <span>Before the news, </span>
+              <span className="flex items-center gap-[8px]">
+                <span>it moves</span>
+                <HomeHeroTitleIconCycle className="w-[40px] h-[40px] md:w-[56px] md:h-[56px]" />
+              </span>
+            </h1>
+            <p className="text-[#909090] text-[14px] mt-[8px]">
+              source: Polymarket
+            </p>
+          </div>
+        </div>
         <div
-          className="flex justify-between mt-2 w-[806px]"
+          className="md:flex md:justify-between mt-2 md:w-[806px] grid grid-cols-2 gap-y-2 md:gap-y-0"
           aria-label="World Cup market summary"
         >
           <HomeHeroStat label="Teams Listed" value={48} />
@@ -33,13 +41,13 @@ export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
           <HomeHeroStat label="Starts in" value={kickoffLabel} />
         </div>
       </div>
-      <img src="/fifa.png" className="w-[180px]" />
+      <img src="/fifa.png" className="hidden md:block w-[180px] object-center object-contain shrink-0" />
     </section>
   );
 }
 
 const heroStatValueClassName =
-  "text-[32px] font-[556] leading-[38px] text-black";
+  "text-[26px] md:text-[32px] font-[556] leading-[38px] text-black";
 
 function HomeHeroStat({ label, value }: { label: string; value: ReactNode }) {
   const valueContent =
@@ -50,8 +58,8 @@ function HomeHeroStat({ label, value }: { label: string; value: ReactNode }) {
     );
 
   return (
-    <div className="p-3 text-center">
-      <div className="flex min-h-[38px] items-center justify-center text-[32px] font-[500] leading-[38px] text-black">
+    <div className="px-2 md:p-3 text-center">
+      <div className="flex min-h-[38px] items-center justify-center text-[26px] md:text-[32px] font-[500] leading-[38px] text-black">
         {valueContent}
       </div>
       <span className="mt-1 block text-[14px] leading-tight text-black">

@@ -78,22 +78,26 @@ export function ScheduleMatchRow({
           : "cursor-default",
         variant === "ended" && "opacity-90",
         variant === "ongoing" &&
-          "border-[#7BCA25] shadow-[0_0_10px_rgba(123,202,37,0.25)]",
+        "border-[#7BCA25] shadow-[0_0_10px_rgba(123,202,37,0.25)]",
         className
       )}
       aria-label={`${sides.home.name} vs ${sides.away.name}, ${variant}`}
       onClick={
         canNavigate
           ? () => {
-              router.push(gameTradeHref(match.id));
-            }
+            router.push(gameTradeHref(match.id));
+          }
           : undefined
       }
     >
-      <div className="flex shrink-0 items-center gap-3">
-        <MatchBookmarkControl matchId={match.id} />
-        <StatusColumn variant={variant} kickoffLabel={kickoffLabel} />
+      <div className="flex justify-between items-center gap-1">
+        <div className="flex shrink-0 items-center gap-3">
+          <MatchBookmarkControl matchId={match.id} />
+          <StatusColumn variant={variant} kickoffLabel={kickoffLabel} />
+        </div>
+        <VolumeColumn amount={volumeLabel} />
       </div>
+
 
       <div className="flex min-w-0 flex-1 justify-center">
         <div className="w-full max-w-[558px]">
@@ -130,7 +134,7 @@ export function ScheduleMatchRow({
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+      <div className="hidden md:flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
         <VolumeColumn amount={volumeLabel} />
       </div>
     </article>
@@ -145,9 +149,9 @@ function StatusColumn({
   kickoffLabel: string;
 }) {
   return (
-    <div className="w-[72px] shrink-0 sm:w-[80px]">
+    <div className="md:w-[72px] shrink-0">
       <MatchStatusBadge variant={variant} className="font-semibold" />
-      <p className="m-0 mt-[4px] text-[14px] leading-[14px] text-[#909090]">
+      <p className="m-0 mt-[4px] text-xs md:text-[14px] leading-[14px] text-[#909090]">
         {kickoffLabel}
       </p>
     </div>
@@ -285,16 +289,16 @@ function TeamPercentSide({
     <TeamFlag
       code={code}
       name={name}
-      className="h-6 w-6 shrink-0 rounded-[2px] text-[24px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+      className="h-5 w-5 md:h-6 md:w-6 shrink-0 rounded-[2px] text-[20px] md:text-[24px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
     />
   );
   const pct = (
-    <span className="text-[18px] font-[556] leading-[19px] text-black w-[60px]">
+    <span className="text-sm md:text-[18px] font-[556] leading-[19px] text-black w-[60px]">
       {percent}
     </span>
   );
   const label = (
-    <span className="truncate text-[18px] font-[556] leading-[19px] text-black">
+    <span className="truncate text-sm md:text-[18px] font-[556] leading-[19px] text-black">
       {name}
     </span>
   );
@@ -302,7 +306,7 @@ function TeamPercentSide({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-3",
+        "flex min-w-0 items-center gap-2 md:gap-3",
         align === "end" && "flex-row-reverse justify-start text-right"
       )}
     >
@@ -367,7 +371,7 @@ function OutcomePill({ outcome }: { outcome: TeamMatchOutcome }) {
 
 function VolumeColumn({ amount }: { amount: string }) {
   return (
-    <div className="flex w-full shrink-0 flex-col items-end sm:w-[88px]">
+    <div className="flex flex-1 md:flex-grow-0 md:w-full shrink-0 flex-col items-end sm:w-[88px]">
       <strong className="text-lg font-[556] leading-[21px] text-black">
         {amount}
       </strong>

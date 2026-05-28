@@ -34,7 +34,7 @@ export function HomeSectionNav() {
       value={activeHref}
       onChange={(href) => router.push(href)}
       aria-label="World Cup market views"
-      className="pl-[40px] mb-[-4px]"
+      className="md:pl-[40px] mb-[-4px] justify-center md:justify-start"
     />
   );
 }

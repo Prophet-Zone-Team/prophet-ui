@@ -1,12 +1,15 @@
 "use client";
 
-import { Check, ChevronDown } from "lucide-react";
+import Drawer, { DrawerDirection } from "@/components/drawer";
+import { useDevice } from "@/hooks/common/use-device";
+import { Check } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import type { ScheduleFilterTeam } from "@/lib/market/schedule-match";
 import type { Team } from "@/types/market";
+import { ScheduleFilterTriggerButton } from "@/views/home/matches/schedule-filter-trigger-button";
 
 export interface ScheduleTeamFilterProps {
   teams: ScheduleFilterTeam[];
@@ -19,6 +22,7 @@ export function ScheduleTeamFilter({
   selectedTeamIds,
   onSelectedTeamIdsChange
 }: ScheduleTeamFilterProps) {
+  const isMobile = useDevice();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -31,7 +35,7 @@ export function ScheduleTeamFilter({
   );
 
   useEffect(() => {
-    if (!open) {
+    if (!open || isMobile) {
       return;
     }
 
@@ -54,7 +58,7 @@ export function ScheduleTeamFilter({
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [isMobile, open]);
 
   function toggleTeam(teamId: Team["id"]) {
     if (selectedTeamIds.includes(teamId)) {
@@ -79,43 +83,46 @@ export function ScheduleTeamFilter({
       role="group"
       aria-label="Filter by team"
     >
-      <span className="shrink-0 text-[16px] font-[556] leading-[19px] text-[#909090]">
+      <span className="hidden md:block shrink-0 text-[16px] font-[556] leading-[19px] text-[#909090]">
         Filter
       </span>
 
       <div ref={containerRef} className="relative shrink-0">
-        <button
-          type="button"
-          className="inline-flex h-[34px] justify-center items-center w-[98px] rounded-[20px] gap-[10px] border border-[#909090] bg-white font-normal leading-[19px] text-black"
-          aria-expanded={open}
-          aria-haspopup="listbox"
+        <ScheduleFilterTriggerButton
+          label="Teams"
+          open={open}
+          ariaHaspopup={isMobile ? "dialog" : "listbox"}
           onClick={() => setOpen((current) => !current)}
-        >
-          Teams
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="10"
-            height="6"
-            viewBox="0 0 10 6"
-            fill="none"
-            className={cn("transition-transform", open && "rotate-180")}
-          >
-            <path
-              d="M0.5 0.5L4.89223 4.5L9.5 0.5"
-              stroke="black"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
+        />
 
-        {open ? (
-          <ScheduleTeamFilterPanel
-            teams={teams}
-            selectedTeamIds={selectedTeamIds}
-            onToggleTeam={toggleTeam}
-          />
+        {!isMobile && open ? (
+          <div className="absolute left-0 top-full z-50 mt-2 w-[min(920px,calc(100vw-2rem))] rounded-xl border border-[#EBEBEB] bg-white p-4 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+            <ScheduleTeamFilterPanelContent
+              teams={teams}
+              selectedTeamIds={selectedTeamIds}
+              onToggleTeam={toggleTeam}
+            />
+          </div>
         ) : null}
       </div>
+
+      {isMobile ? (
+        <Drawer
+          open={open}
+          onClose={() => setOpen(false)}
+          title="Teams"
+          direction={DrawerDirection.Bottom}
+          className="!h-auto max-h-[70dvh]"
+        >
+          <div className="px-4 pb-6">
+            <ScheduleTeamFilterPanelContent
+              teams={teams}
+              selectedTeamIds={selectedTeamIds}
+              onToggleTeam={toggleTeam}
+            />
+          </div>
+        </Drawer>
+      ) : null}
 
       {selectedTeams.length > 0 ? (
         <div className="flex min-w-0 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -170,7 +177,7 @@ function ScheduleTeamFilterChip({
   );
 }
 
-function ScheduleTeamFilterPanel({
+function ScheduleTeamFilterPanelContent({
   teams,
   selectedTeamIds,
   onToggleTeam
@@ -181,50 +188,48 @@ function ScheduleTeamFilterPanel({
 }) {
   return (
     <div
-      className="absolute left-0 top-full z-50 mt-2 w-[min(920px,calc(100vw-2rem))] rounded-xl border border-[#EBEBEB] bg-white p-4 shadow-[0_0_10px_rgba(0,0,0,0.1)]"
       role="listbox"
       aria-label="Select teams"
       aria-multiselectable="true"
+      className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3"
     >
-      <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
-        {teams.map((team) => {
-          const selected = selectedTeamIds.includes(team.id);
+      {teams.map((team) => {
+        const selected = selectedTeamIds.includes(team.id);
 
-          return (
-            <button
-              key={team.id}
-              type="button"
-              role="option"
-              aria-selected={selected}
-              className="flex min-w-0 items-center gap-2.5 rounded-md border-0 bg-transparent p-1 text-left"
-              onClick={() => onToggleTeam(team.id)}
+        return (
+          <button
+            key={team.id}
+            type="button"
+            role="option"
+            aria-selected={selected}
+            className="flex min-w-0 items-center gap-2.5 rounded-md border-0 bg-transparent p-1 text-left"
+            onClick={() => onToggleTeam(team.id)}
+          >
+            <span
+              className={cn(
+                "inline-flex size-[18px] shrink-0 items-center justify-center rounded-[2px] border border-[#CFCFCF]",
+                selected ? "border-black bg-black" : "bg-white"
+              )}
+              aria-hidden
             >
-              <span
-                className={cn(
-                  "inline-flex size-[18px] shrink-0 items-center justify-center rounded-[2px] border border-[#CFCFCF]",
-                  selected ? "border-black bg-black" : "bg-white"
-                )}
-                aria-hidden
-              >
-                {selected ? (
-                  <Check className="size-3 text-white" strokeWidth={3} />
-                ) : null}
-              </span>
-              <TeamFlag
-                code={team.code}
-                name={team.name}
-                className="h-[26px] w-[26px] shrink-0 rounded text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
-              />
-              <span className="truncate text-[14px] font-[556] leading-[17px] text-black">
-                {team.name}
-              </span>
-              <span className="shrink-0 text-[14px] font-[556] leading-[17px] text-[#909090]">
-                {team.code}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+              {selected ? (
+                <Check className="size-3 text-white" strokeWidth={3} />
+              ) : null}
+            </span>
+            <TeamFlag
+              code={team.code}
+              name={team.name}
+              className="h-[26px] w-[26px] shrink-0 rounded text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+            />
+            <span className="truncate text-[14px] font-[556] leading-[17px] text-black">
+              {team.name}
+            </span>
+            <span className="shrink-0 text-[14px] font-[556] leading-[17px] text-[#909090]">
+              {team.code}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -99,7 +99,7 @@ export function MarketListItem({
           "linear-gradient(90deg, rgba(220, 255, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
       }}
     >
-      <div className="flex w-2/5 items-center gap-[20px] max-lg:flex-none">
+      <div className="flex w-full md:w-2/5 items-center gap-[20px]">
         <MarketBookmarkControl teamId={team.id} />
         <span className="w-[18px] shrink-0 text-center text-[18px] font-[556] leading-[21px] text-black">
           {rank}
@@ -117,44 +117,46 @@ export function MarketListItem({
         </div>
       </div>
 
-      <div className="flex w-1/5 flex-col max-lg:w-full">
-        <div className="flex items-center gap-[8px]">
-          {isLoading ? (
-            <MarketListMetricLoading variant="probability" />
-          ) : (
-            <span className="text-[24px] font-[556] leading-[29px] text-black">
-              {hasLiveValues ? formatListProbability(market.probability) : "-"}
-            </span>
-          )}
-          {hasLiveValues ? (
-            <ProbabilityChangeTrend
-              changePercent={changePercent}
-              decimals={1}
-            />
-          ) : null}
+      <div className="flex items-center gap-x-10 w-full md:w-2/5">
+        <div className="flex w-1/2 flex-col max-lg:w-full">
+          <div className="flex items-center gap-[8px]">
+            {isLoading ? (
+              <MarketListMetricLoading variant="probability" />
+            ) : (
+              <span className="text-[24px] font-[556] leading-[29px] text-black">
+                {hasLiveValues ? formatListProbability(market.probability) : "-"}
+              </span>
+            )}
+            {hasLiveValues ? (
+              <ProbabilityChangeTrend
+                changePercent={changePercent}
+                decimals={1}
+              />
+            ) : null}
+          </div>
+          <span className={cn("mt-0.5", rowLabelClassName)}>Probability</span>
         </div>
-        <span className={cn("mt-0.5", rowLabelClassName)}>Probability</span>
-      </div>
 
-      <div className="flex w-1/5 flex-col max-lg:w-full">
-        {isLoading ? (
-          <MarketListMetricLoading variant="volume" />
-        ) : (
-          <strong className="text-lg font-[556] leading-[21px] text-black">
-            {hasLiveValues ? `$${formatVolume(market.volume)}` : "-"}
-          </strong>
-        )}
-        <span className={cn("mt-0.5", rowLabelClassName)}>Volume</span>
+        <div className="flex w-1/2 flex-col max-lg:w-full">
+          {isLoading ? (
+            <MarketListMetricLoading variant="volume" />
+          ) : (
+            <strong className="text-lg font-[556] leading-[21px] text-black">
+              {hasLiveValues ? `$${formatVolume(market.volume)}` : "-"}
+            </strong>
+          )}
+          <span className={cn("mt-0.5", rowLabelClassName)}>Volume</span>
+        </div>
       </div>
 
       <div
-        className="ml-auto flex w-1/5 items-center gap-2 max-lg:ml-0 max-lg:w-full max-lg:justify-end"
+        className="ml-auto flex w-full md:w-1/5 items-center gap-2 justify-between md:justify-start"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
       >
         <FastBidButton
           snapshot={snapshot}
-          className={bidButtonClassName}
+          className={cn(bidButtonClassName, "flex-1 md:flex-grow-0")}
           disabled={isLoading || !hasLiveValues || !yesTokenId}
         >
           <>
@@ -166,7 +168,7 @@ export function MarketListItem({
           </>
         </FastBidButton>
         <Link
-          className="inline-flex h-[36px] w-[83px] items-center justify-center rounded-lg border border-[#909090] bg-white text-[14px] font-[556] leading-[17px] text-[#18110F]"
+          className="flex-1 md:flex-grow-0 px-2 inline-flex h-[36px] w-[83px] items-center justify-center rounded-lg border border-[#909090] bg-white text-[14px] font-[556] leading-[17px] text-[#18110F]"
           href={detailHref}
         >
           Details

@@ -115,9 +115,9 @@ export function SpecialMatchDataCard({
         <div className="absolute inset-0 z-0 bg-[#f4f6f9]" aria-hidden />
       )}
 
-      <div className="relative z-10 flex justify-center pt-[50px]">
-        <div className="w-[568px] h-[138px] rounded-[20px] bg-white px-4 py-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] sm:px-8 sm:py-5">
-          <div className="flex justify-between items-center relative">
+      <div className="relative z-10 flex justify-center pt-[50px] px-2 md:px-0">
+        <div className="w-full flex justify-center items-center md:w-[568px] h-[138px] rounded-[20px] bg-white px-2 md:px-4 py-3 md:py-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] sm:px-8 sm:py-5">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 relative">
             <TeamColumn name={homeName} code={home?.team.code} align="start" />
 
             <div className="flex min-w-[88px] flex-col items-center text-center">
@@ -127,11 +127,11 @@ export function SpecialMatchDataCard({
                     variant="ongoing"
                     className="font-semibold"
                   />
-                  <strong className="text-[28px] font-semibold leading-none text-black sm:text-4xl">
+                  <strong className="text-[22px] md:text-[28px] font-semibold leading-none text-black sm:text-4xl">
                     {scoreLabel}
                   </strong>
                   {liveClock ? (
-                    <span className="text-base font-normal text-black">
+                    <span className="text-sm md:text-base font-normal text-black">
                       {liveClock}
                     </span>
                   ) : null}
@@ -141,10 +141,10 @@ export function SpecialMatchDataCard({
                   <div className="text-[14px] text-[#9D84FF] font-[556]">
                     Next Match
                   </div>
-                  <div className="text-[36px] text-[#909090] font-[556]">
+                  <div className="text-[30px] md:text-[36px] text-[#909090] font-[556]">
                     VS
                   </div>
-                  <div className="text-[16px] text-[#000] font-[457]">
+                  <div className="text-sm md:text-[16px] text-[#000] font-[457]">
                     Starts {formatScheduleKickoff(liveMatch.kickoffAt)}
                   </div>
                 </>
@@ -173,9 +173,9 @@ function TeamColumn({
       <TeamFlag
         code={code}
         name={name}
-        className="h-[50px] w-[50px] rounded-[6px] text-[50px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="h-[40px] md:h-[50px] w-[40px] md:w-[50px] rounded-[6px] text-[40px] md:text-[50px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
       />
-      <strong className="max-w-full truncate text-[26px] font-[556] leading-[31px] text-black">
+      <strong className="max-w-full truncate text-base md:text-[26px] font-[556] leading-[31px] text-black">
         {name}
       </strong>
     </div>
