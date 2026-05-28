@@ -16,7 +16,7 @@ export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
     <section className="flex justify-between py-8">
       <div className="flex-1 px-3 md:px-0">
         <div className="flex items-start gap-5">
-          <img src="/fifa.png" className="w-[80px] object-top object-contain shrink-0" />
+          <img src="/fifa.png" className="block md:hidden w-[80px] object-top object-contain shrink-0" />
           <div className="flex-1">
             <p className="text-[20px] md:text-[26px]">2026 FIFA World Cup</p>
             <h1 className="mt-[8px] flex flex-col md:flex-row items-start md:items-center gap-[8px] text-[26px] md:text-[56px] font-[500] leading-[0.9]">
