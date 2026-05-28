@@ -4,7 +4,7 @@ import {
   bsc,
   optimism,
 } from "viem/chains";
-import { createConfig, http } from "wagmi";
+import { createConfig, cookieStorage, createStorage, http } from "wagmi";
 import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import {
   metaMaskWallet,
@@ -53,13 +53,16 @@ export const wagmiConfig = createConfig({
     },
   ),
   chains: [polygon, arbitrum, bsc, optimism],
+  ssr: true,
+  storage: createStorage({
+    storage: cookieStorage,
+  }),
   transports: {
     [polygon.id]: http(),
     [arbitrum.id]: http(),
     [bsc.id]: http(),
     [optimism.id]: http(),
   },
-  ssr: true,
 });
 
 export const wagmiChains = wagmiConfig.chains;
