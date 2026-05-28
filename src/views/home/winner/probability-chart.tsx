@@ -84,8 +84,8 @@ export function WinnerProbabilityChart({
       )}
       aria-label="World Cup winner probability chart"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3 pr-[6px]">
-        <h2 className="text-[20px] font-[500] leading-6 text-black">
+      <div className="flex flex-wrap items-center md:items-start flex-col md:flex-row justify-between gap-3 pr-[6px]">
+        <h2 className="text-base md:text-[20px] font-[500] leading-6 text-black">
           World Cup Winner Probability
         </h2>
 
@@ -172,7 +172,7 @@ function ChartLegend({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-wrap gap-x-8 gap-y-2", className)}>
+    <div className={cn("md:flex md:flex-wrap gap-x-8 gap-y-2 grid grid-cols-2", className)}>
       {items.map((item) => (
         <ChartLegendItem key={item.teamId} item={item} />
       ))}

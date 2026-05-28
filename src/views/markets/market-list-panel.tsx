@@ -28,7 +28,7 @@ export function MarketListPanel({
       {teams.length === 0 && emptyState ? (
         emptyState
       ) : (
-        <div className="grid gap-2 overflow-visible">
+        <div className="grid gap-2 overflow-visible pb-10">
           {teams.map((snapshot, index) => (
             <MarketListItem
               key={snapshot.team.id}
