@@ -32,7 +32,7 @@ export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
           </div>
         </div>
         <div
-          className="md:flex md:justify-between mt-2 md:w-[806px] grid grid-cols-2"
+          className="md:flex md:justify-between mt-2 md:w-[806px] grid grid-cols-2 gap-y-2 md:gap-y-0"
           aria-label="World Cup market summary"
         >
           <HomeHeroStat label="Teams Listed" value={48} />
@@ -58,8 +58,8 @@ function HomeHeroStat({ label, value }: { label: string; value: ReactNode }) {
     );
 
   return (
-    <div className="p-3 text-center">
-      <div className="flex min-h-[38px] items-center justify-center text-[32px] font-[500] leading-[38px] text-black">
+    <div className="px-2 md:p-3 text-center">
+      <div className="flex min-h-[38px] items-center justify-center text-[26px] md:text-[32px] font-[500] leading-[38px] text-black">
         {valueContent}
       </div>
       <span className="mt-1 block text-[14px] leading-tight text-black">

@@ -19,7 +19,7 @@ export interface HomePageShellProps {
 }
 
 const heroStatValueClassName =
-  "text-[32px] font-[556] leading-[38px] text-black";
+  "text-[26px] md:text-[32px] font-[556] leading-[38px] text-black";
 
 export function HomePageShell({ children }: HomePageShellProps) {
   const { snapshots, totalVolume, status, isLoading } = useTeams();
