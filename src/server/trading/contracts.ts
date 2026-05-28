@@ -12,5 +12,6 @@ export function getTradingContractAddresses() {
     conditionalTokens: config.conditionalTokens,
     exchange: config.exchangeV2,
     negRiskExchange: config.negRiskExchangeV2,
+    negRiskAdapter: config.negRiskAdapter,
   };
 }

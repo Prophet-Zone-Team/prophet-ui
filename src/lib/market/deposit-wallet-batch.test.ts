@@ -8,12 +8,34 @@ import { POLYMARKET_USD } from "../../config/funding";
 import { POLYGON_COLLATERAL_CONTRACTS } from "./polymarket-collateral-contracts";
 import {
   buildPusdUnwrapToUsdceBatch,
+  buildTradingApprovalBatch,
   buildUsdceToUsdcConvertBatch,
   buildWithdrawTransferBatch,
   POLYGON_USDC_BRIDGED,
   resolveBridgeWithdrawDepositAddress,
   UNISWAP_V3_ROUTER,
 } from "./deposit-wallet-batch";
+
+const ERC1155_SET_APPROVAL_FOR_ALL_ABI = [
+  {
+    name: "setApprovalForAll",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "operator", type: "address" },
+      { name: "approved", type: "bool" },
+    ],
+    outputs: [],
+  },
+] as const;
+
+const TRADING_APPROVAL_CONTRACTS = {
+  collateralToken: "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB",
+  conditionalTokens: "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045",
+  exchange: "0xE111180000d2663C0091e4f400237545B87B996B",
+  negRiskExchange: "0xe2222d279d744050d28e00520010520000310F59",
+  negRiskAdapter: "0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296",
+};
 
 const ERC20_APPROVE_ABI = [
   {
@@ -79,6 +101,57 @@ const ERC20_TRANSFER_ABI = [
     outputs: [{ name: "", type: "bool" }],
   },
 ] as const;
+
+describe("buildTradingApprovalBatch", () => {
+  it("includes ERC20 and ERC1155 approvals for negRiskAdapter", () => {
+    const walletAddress = "0x9156dd10bea4c8d7e2d591b633d1694b1d764756";
+
+    const batch = buildTradingApprovalBatch({
+      chainId: 137,
+      walletAddress,
+      nonce: "0",
+      deadline: "9999999999",
+      ...TRADING_APPROVAL_CONTRACTS,
+    });
+
+    assert.equal(batch.message.calls.length, 7);
+
+    const erc20Approves = batch.message.calls
+      .filter((call) => getAddress(call.target) === getAddress(TRADING_APPROVAL_CONTRACTS.collateralToken))
+      .map((call) =>
+        decodeFunctionData({
+          abi: ERC20_APPROVE_ABI,
+          data: call.data,
+        }),
+      );
+
+    assert.equal(erc20Approves.length, 4);
+    assert.ok(
+      erc20Approves.some(
+        (decoded) => getAddress(decoded.args[0]) === getAddress(TRADING_APPROVAL_CONTRACTS.negRiskAdapter),
+      ),
+    );
+
+    const erc1155Approves = batch.message.calls
+      .filter((call) => getAddress(call.target) === getAddress(TRADING_APPROVAL_CONTRACTS.conditionalTokens))
+      .map((call) =>
+        decodeFunctionData({
+          abi: ERC1155_SET_APPROVAL_FOR_ALL_ABI,
+          data: call.data,
+        }),
+      );
+
+    assert.equal(erc1155Approves.length, 3);
+    assert.ok(
+      erc1155Approves.some(
+        (decoded) => getAddress(decoded.args[0]) === getAddress(TRADING_APPROVAL_CONTRACTS.negRiskAdapter),
+      ),
+    );
+    assert.equal(erc1155Approves.find(
+      (decoded) => getAddress(decoded.args[0]) === getAddress(TRADING_APPROVAL_CONTRACTS.negRiskAdapter),
+    )?.args[1], true);
+  });
+});
 
 describe("buildWithdrawTransferBatch", () => {
   it("builds a single pUSD transfer call to the bridge deposit address", () => {

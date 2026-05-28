@@ -9,7 +9,12 @@ import type {
   UserActivityRecord,
   UserOpenOrder
 } from "@/lib/portfolio/types";
-import type { UserPositionRecord, UserTradingReadiness } from "@/types/market";
+import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
+import type {
+  UserPositionRecord,
+  UserTradingBalancesResponse,
+  UserTradingReadiness,
+} from "@/types/market";
 
 export interface UsePortfolioDataResult {
   session: ReturnType<typeof useAuth>["session"];
@@ -72,23 +77,31 @@ export function usePortfolioData(): UsePortfolioDataResult {
 
       const errors: string[] = [];
 
-      const [positionsPayload, readinessPayload] = await Promise.all([
+      const [positionsPayload, setupPayload, balancesPayload] = await Promise.all([
         fetchJson<{ positions?: UserPositionRecord[]; error?: string }>(
           "/api/trading/positions?limit=100"
         ).catch((error) => {
           errors.push(error instanceof Error ? error.message : String(error));
           return undefined;
         }),
-        fetchJson<UserTradingReadiness>("/api/trading/readiness").catch(
+        fetchJson<UserTradingReadiness>("/api/trading/readiness").catch((error) => {
+          errors.push(error instanceof Error ? error.message : String(error));
+          return undefined;
+        }),
+        fetchJson<UserTradingBalancesResponse>("/api/trading/balances").catch(
           (error) => {
             errors.push(error instanceof Error ? error.message : String(error));
             return undefined;
           }
-        )
+        ),
       ]);
 
       setPositions(positionsPayload?.positions ?? []);
-      setReadiness(readinessPayload);
+      setReadiness(
+        setupPayload
+          ? mergeTradingReadiness(setupPayload, balancesPayload)
+          : undefined
+      );
 
       const apiErrors = [positionsPayload?.error].filter(Boolean);
       const combinedMessage =

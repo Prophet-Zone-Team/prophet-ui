@@ -174,6 +174,7 @@ export function buildTradingApprovalBatch({
   conditionalTokens,
   exchange,
   negRiskExchange,
+  negRiskAdapter,
   sessionSignerAddress,
   sessionSignerValidUntil,
 }: {
@@ -185,6 +186,7 @@ export function buildTradingApprovalBatch({
   conditionalTokens: string;
   exchange: string;
   negRiskExchange: string;
+  negRiskAdapter: string;
   sessionSignerAddress?: string;
   sessionSignerValidUntil?: string;
 }): DepositWalletBatchSignablePayload {
@@ -201,6 +203,10 @@ export function buildTradingApprovalBatch({
       tokenAddress: collateralToken,
       spenderAddress: negRiskExchange,
     }),
+    createErc20ApproveCall({
+      tokenAddress: collateralToken,
+      spenderAddress: negRiskAdapter,
+    }),
     createErc1155ApprovalCall({
       tokenAddress: conditionalTokens,
       operatorAddress: exchange,
@@ -208,6 +214,10 @@ export function buildTradingApprovalBatch({
     createErc1155ApprovalCall({
       tokenAddress: conditionalTokens,
       operatorAddress: negRiskExchange,
+    }),
+    createErc1155ApprovalCall({
+      tokenAddress: conditionalTokens,
+      operatorAddress: negRiskAdapter,
     }),
   ];
 

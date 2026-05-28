@@ -30,6 +30,7 @@ function readinessWithChecks(
 ): UserTradingReadiness {
   return {
     ready: checks.every((check) => check.status === "pass"),
+    session: baseInput.session,
     credentials: { hasClobCredentials: true, storage: "session" },
     checks,
     updatedAt: new Date().toISOString(),
@@ -117,6 +118,31 @@ describe("trade primary action classification", () => {
 
     assert.equal(action.kind, "deposit");
     assert.equal(action.label, "Add funds");
+  });
+
+  it("blocks trading when the region is restricted", () => {
+    const action = resolveTradePrimaryAction({
+      ...baseInput,
+      isRegionBlocked: true,
+      orderReadiness: readinessWithChecks([]),
+    });
+
+    assert.equal(action.kind, "eligibility_blocked");
+  });
+
+  it("offers retry when eligibility refresh failed with a network error", () => {
+    const action = resolveTradePrimaryAction({
+      ...baseInput,
+      eligibilityNetworkError: true,
+      session: {
+        ...baseInput.session,
+        eligibilityStatus: "error",
+        eligibilityReason: "Polymarket geoblock check timed out.",
+      },
+      orderReadiness: readinessWithChecks([]),
+    });
+
+    assert.equal(action.kind, "retry_eligibility");
   });
 
   it("uses order readiness over auth readiness for allowance", () => {

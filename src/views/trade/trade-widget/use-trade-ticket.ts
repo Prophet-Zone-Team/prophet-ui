@@ -126,6 +126,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     session,
     isAuthenticated,
     readiness: authReadiness,
+    isRegionBlocked,
     openLogin,
     signClobCredentials,
     signTokenApprovals,
@@ -496,18 +497,21 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       submitLabel,
       previewCanSubmit,
       previewDisabledReason: preview?.disabledReason,
-      expirationError
+      expirationError,
+      isRegionBlocked,
+      eligibilityNetworkError: isEligibilityNetworkFailure(session),
     });
   }, [
     authReadiness,
     expirationError,
     isAuthenticated,
+    isRegionBlocked,
     preview?.disabledReason,
     previewCanSubmit,
     readiness,
     session,
     submitLabel,
-    tradeSide
+    tradeSide,
   ]);
 
   const canSubmit = canSubmitTradeTicket({
@@ -571,14 +575,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       try {
         const nextReadiness = await fetchReadinessForPreview(
           orderPreview,
-          tradeSide
+          tradeSide,
+          authReadiness
         );
 
         if (generation === readinessFetchGeneration.current) {
           setReadiness(nextReadiness);
-          setEligibilityRetryAvailable(
-            isEligibilityNetworkFailure(nextReadiness)
-          );
+          setEligibilityRetryAvailable(isEligibilityNetworkFailure(session));
         }
 
         return nextReadiness;
@@ -590,7 +593,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         throw error;
       }
     },
-    [tradeSide]
+    [authReadiness, session, tradeSide]
   );
 
   useEffect(() => {
@@ -754,14 +757,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     try {
       await refreshTradingEligibility();
       const nextReadiness = await refreshOrderReadiness();
-      const stillBlocked = isEligibilityNetworkFailure(nextReadiness);
+      const stillBlocked = isEligibilityNetworkFailure(session);
 
       setEligibilityRetryAvailable(stillBlocked);
       setStatus(stillBlocked ? "error" : "idle");
-      const blockedMessage = stillBlocked
-        ? nextReadiness?.checks.find((check) => check.id === "eligibility")
-            ?.detail
-        : undefined;
+      const blockedMessage = stillBlocked ? session?.eligibilityReason : undefined;
       setMessage(blockedMessage);
       if (blockedMessage) {
         showOrderErrorToast(blockedMessage);
@@ -772,7 +772,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       setMessage(resolveOrderErrorMessage(error));
       showOrderErrorToast(error);
     }
-  }, [refreshOrderReadiness]);
+  }, [refreshOrderReadiness, session]);
 
   const submitOrder = useCallback(async () => {
     if (!preview || actionInProgress) {
@@ -787,10 +787,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       orderReadiness: readiness,
       previewCanSubmit,
       previewDisabledReason: preview.disabledReason,
+      isRegionBlocked,
       openLogin,
       signClobCredentials,
       signTokenApprovals,
-      refreshSetupReadiness
+      refreshSetupReadiness,
     });
 
     if (!gate.ok) {

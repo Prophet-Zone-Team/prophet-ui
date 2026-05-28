@@ -19,9 +19,15 @@ import {
 } from "@/lib/trading/deposit-wallet-client";
 import { submitDepositWalletApproval } from "@/lib/trading/deposit-wallet-approval";
 import { fetchJson } from "@/lib/team/client-fetch";
+import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
 import { isSetupStepComplete } from "@/lib/trading/trading-setup";
 import { ensureTradingChain } from "@/lib/trading/wallet-trading-chain";
-import type { DepositWalletCheckResponse, TradingUserSession, UserTradingReadiness } from "@/types/market";
+import type {
+  DepositWalletCheckResponse,
+  TradingUserSession,
+  UserTradingBalancesResponse,
+  UserTradingReadiness,
+} from "@/types/market";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
 
 const DEFAULT_SIGNATURE_TYPE = 3;
@@ -82,7 +88,7 @@ export async function completeTradingLogin(options?: {
   }
 
   options?.onStep?.("verifying_readiness");
-  const readiness = await fetchJson<UserTradingReadiness>("/api/trading/readiness");
+  const readiness = await fetchTradingReadinessWithBalances();
 
   return { session: session!, readiness };
 }
@@ -204,6 +210,19 @@ export async function ensureTokenApprovals(
 
 async function fetchTradingReadiness() {
   return fetchJson<UserTradingReadiness>("/api/trading/readiness");
+}
+
+export async function fetchTradingBalances() {
+  return fetchJson<UserTradingBalancesResponse>("/api/trading/balances");
+}
+
+export async function fetchTradingReadinessWithBalances() {
+  const [setup, balances] = await Promise.all([
+    fetchTradingReadiness(),
+    fetchTradingBalances().catch(() => undefined),
+  ]);
+
+  return mergeTradingReadiness(setup, balances);
 }
 
 export async function connectWallet(options?: {

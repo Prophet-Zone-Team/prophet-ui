@@ -27,12 +27,14 @@ export interface OnchainCollateralSnapshot {
     conditionalTokens?: number;
     exchange?: number;
     negRiskExchange?: number;
+    negRiskAdapter?: number;
   };
   contracts?: {
     collateralToken: string;
     conditionalTokens: string;
     exchange: string;
     negRiskExchange: string;
+    negRiskAdapter: string;
   };
   updatedAt: string;
   error?: string;
@@ -59,7 +61,13 @@ export async function fetchOnchainCollateralSnapshot(funderAddress: string): Pro
     });
     const owner = funderAddress as Address;
     const collateral = contracts.collateralToken as Address;
-    const [balance, conditionalTokensAllowance, exchangeAllowance, negRiskExchangeAllowance] = await Promise.all([
+    const [
+      balance,
+      conditionalTokensAllowance,
+      exchangeAllowance,
+      negRiskExchangeAllowance,
+      negRiskAdapterAllowance,
+    ] = await Promise.all([
       client.readContract({
         address: collateral,
         abi: erc20Abi,
@@ -84,15 +92,29 @@ export async function fetchOnchainCollateralSnapshot(funderAddress: string): Pro
         functionName: "allowance",
         args: [owner, contracts.negRiskExchange as Address],
       }),
+      client.readContract({
+        address: collateral,
+        abi: erc20Abi,
+        functionName: "allowance",
+        args: [owner, contracts.negRiskAdapter as Address],
+      }),
     ]);
 
     return {
       usdcAvailable: atomicUsdcToNumber(balance),
-      usdcAllowance: atomicUsdcToNumber(maxBigInt([conditionalTokensAllowance, exchangeAllowance, negRiskExchangeAllowance])),
+      usdcAllowance: atomicUsdcToNumber(
+        maxBigInt([
+          conditionalTokensAllowance,
+          exchangeAllowance,
+          negRiskExchangeAllowance,
+          negRiskAdapterAllowance,
+        ]),
+      ),
       allowances: {
         conditionalTokens: atomicUsdcToNumber(conditionalTokensAllowance),
         exchange: atomicUsdcToNumber(exchangeAllowance),
         negRiskExchange: atomicUsdcToNumber(negRiskExchangeAllowance),
+        negRiskAdapter: atomicUsdcToNumber(negRiskAdapterAllowance),
       },
       contracts,
       updatedAt: new Date().toISOString(),

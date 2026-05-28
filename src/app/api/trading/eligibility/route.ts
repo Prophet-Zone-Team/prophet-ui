@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { checkTradingEligibility, getClientIp, refreshSessionEligibility } from "@/server/trading/eligibility";
+import {
+  checkTradingEligibility,
+  getClientIp,
+  refreshSessionEligibilityIfStale,
+} from "@/server/trading/eligibility";
 import { createTradingSessionCookie, getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
@@ -10,7 +14,7 @@ export async function GET(request: Request) {
   const record = getTradingSessionFromCookie(request.headers.get("cookie"));
 
   if (record) {
-    const session = await refreshSessionEligibility(record.session, getClientIp(request));
+    const session = await refreshSessionEligibilityIfStale(record.session, getClientIp(request));
 
     return NextResponse.json(
       {

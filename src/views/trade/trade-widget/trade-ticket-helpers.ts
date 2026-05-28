@@ -13,6 +13,11 @@ import {
 } from "@/lib/market/trade-ticket";
 import { buildSdkSignedUserOrder } from "@/lib/market/sdk-user-order";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
+import {
+  buildBalancesQuery,
+  mergeTradingReadiness,
+} from "@/lib/trading/merge-trading-readiness";
+import { formatRegionBlockedDetail } from "@/lib/trading/trading-eligibility-client";
 import type { WalletClient } from "viem";
 import {
   getTradingSetupSteps,
@@ -33,7 +38,8 @@ import type {
   UserOrderPreview,
   UserOrderRecord,
   UserPositionRecord,
-  UserTradingReadiness
+  UserTradingBalancesResponse,
+  UserTradingReadiness,
 } from "@/types/market";
 import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-button";
 import type { LimitExpirationPreset, TradeTabId } from "@/store/trade-ticket-store";
@@ -257,41 +263,44 @@ export function toBidOrderPreview(
 export async function fetchConditionalTokenBalance(
   tokenId: string
 ): Promise<number | undefined> {
-  const query = new URLSearchParams({
+  const query = buildBalancesQuery({
     tradeSide: "sell",
     tokenId,
-    cost: "0.01",
-    size: "0.01",
-    totalCost: "0.01",
-    estimatedTakerFee: "0"
+    cost: 0.01,
+    size: 0.01,
+    totalCost: 0.01,
+    estimatedTakerFee: 0,
   });
 
-  const readiness = await fetchJson<UserTradingReadiness>(
-    `/api/trading/readiness?${query.toString()}`
+  const balances = await fetchJson<UserTradingBalancesResponse>(
+    `/api/trading/balances?${query}`
   );
 
-  return readiness.balances?.conditionalTokenBalance;
+  return balances.balances?.conditionalTokenBalance;
 }
 
 export async function fetchReadinessForPreview(
   preview: OrderPreviewFields,
-  tradeSide: BidTradeSide
+  tradeSide: BidTradeSide,
+  setupReadiness?: UserTradingReadiness
 ): Promise<UserTradingReadiness> {
-  const query = new URLSearchParams({
+  const query = buildBalancesQuery({
     tradeSide,
-    cost: String(preview.estimatedCost),
-    size: String(preview.shareSize),
-    totalCost: String(preview.estimatedTotalCost),
-    estimatedTakerFee: String(preview.estimatedTakerFee)
+    tokenId: preview.tokenId,
+    cost: preview.estimatedCost,
+    size: preview.shareSize,
+    totalCost: preview.estimatedTotalCost,
+    estimatedTakerFee: preview.estimatedTakerFee,
   });
 
-  if (preview.tokenId) {
-    query.set("tokenId", preview.tokenId);
-  }
+  const [setup, balances] = await Promise.all([
+    setupReadiness
+      ? Promise.resolve(setupReadiness)
+      : fetchJson<UserTradingReadiness>("/api/trading/readiness"),
+    fetchJson<UserTradingBalancesResponse>(`/api/trading/balances?${query}`),
+  ]);
 
-  return fetchJson<UserTradingReadiness>(
-    `/api/trading/readiness?${query.toString()}`
-  );
+  return mergeTradingReadiness(setup, balances, { tradeSide });
 }
 
 export async function fetchTokenBestAsk(
@@ -727,8 +736,8 @@ export function isBuyInsufficientFunds(input: {
   }
 
   const available =
-    input.readiness?.balances?.usdcAvailable ??
-    resolveTradeTicketAvailableCash(input.readiness);
+    resolveTradeTicketAvailableCash(input.readiness) ??
+    input.readiness?.balances?.usdcAvailable;
 
   return available !== undefined && available < required;
 }
@@ -772,20 +781,13 @@ function isGeoblockNetworkErrorMessage(text: string | undefined) {
 }
 
 export function isEligibilityNetworkFailure(
-  readiness: UserTradingReadiness | undefined
+  session: TradingUserSession | undefined
 ): boolean {
-  const eligibilityCheck = readiness?.checks.find(
-    (check) => check.id === "eligibility"
-  );
-
-  if (eligibilityCheck?.status !== "fail") {
+  if (session?.eligibilityStatus !== "error") {
     return false;
   }
 
-  return (
-    isGeoblockNetworkErrorMessage(eligibilityCheck.detail) ||
-    isGeoblockNetworkErrorMessage(readiness?.session?.eligibilityReason)
-  );
+  return isGeoblockNetworkErrorMessage(session.eligibilityReason);
 }
 
 export async function refreshTradingEligibility(): Promise<TradingEligibilitySnapshot> {
@@ -796,36 +798,45 @@ export async function refreshTradingEligibility(): Promise<TradingEligibilitySna
   return response.eligibility;
 }
 
-async function resolveOrderReadinessForBid(deps: {
-  orderReadiness?: UserTradingReadiness;
-}): Promise<UserTradingReadiness> {
-  let orderReadiness =
-    deps.orderReadiness ??
-    (await fetchJson<UserTradingReadiness>("/api/trading/readiness"));
-
-  if (!isEligibilityNetworkFailure(orderReadiness)) {
-    return orderReadiness;
-  }
-
-  await refreshTradingEligibility();
-  orderReadiness = await fetchJson<UserTradingReadiness>(
-    "/api/trading/readiness"
-  );
-
-  return orderReadiness;
-}
-
 export async function ensureTradingReadyForBid(deps: {
   session?: TradingUserSession;
   authReadiness?: UserTradingReadiness;
   orderReadiness?: UserTradingReadiness;
   previewCanSubmit: boolean;
   previewDisabledReason?: string;
+  isRegionBlocked?: boolean;
   openLogin: () => Promise<unknown>;
   signClobCredentials: () => Promise<void>;
   signTokenApprovals: () => Promise<void>;
   refreshSetupReadiness?: () => Promise<UserTradingReadiness | undefined>;
 }): Promise<BidGateResult> {
+  if (deps.isRegionBlocked) {
+    return {
+      ok: false,
+      action: "show_error",
+      message: formatRegionBlockedDetail(
+        deps.session
+          ? {
+              status: deps.session.eligibilityStatus,
+              checkedAt: deps.session.eligibilityCheckedAt,
+              country: deps.session.eligibilityCountry,
+              region: deps.session.eligibilityRegion,
+              reason: deps.session.eligibilityReason,
+            }
+          : undefined
+      ),
+    };
+  }
+
+  if (isEligibilityNetworkFailure(deps.session)) {
+    return {
+      ok: false,
+      action: "retry_eligibility",
+      message:
+        deps.session?.eligibilityReason ??
+        "Polymarket geoblock check timed out or is unreachable. Retry the eligibility check.",
+    };
+  }
   const setupReadiness = deps.orderReadiness ?? deps.authReadiness;
   const setupSteps = getTradingSetupSteps(setupReadiness);
   if (!deps.session) {
@@ -877,21 +888,13 @@ export async function ensureTradingReadyForBid(deps: {
     };
   }
 
-  const orderReadiness = await resolveOrderReadinessForBid({
-    orderReadiness: deps.orderReadiness
-  });
+  const orderReadiness = deps.orderReadiness;
 
-  const eligibilityCheck = orderReadiness.checks.find(
-    (check) => check.id === "eligibility"
-  );
-
-  if (eligibilityCheck?.status === "fail") {
+  if (!orderReadiness) {
     return {
       ok: false,
-      action: isEligibilityNetworkFailure(orderReadiness)
-        ? "retry_eligibility"
-        : "show_error",
-      message: eligibilityCheck.detail
+      action: "show_error",
+      message: "Order readiness is unavailable. Refresh and try again.",
     };
   }
 

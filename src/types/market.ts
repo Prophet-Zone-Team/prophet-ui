@@ -102,9 +102,18 @@ export interface TradingUserSession {
   eligibilityCountry?: string;
   eligibilityRegion?: string;
   eligibilityReason?: string;
+  setupAllowances?: TradingSetupAllowances;
+  setupAllowancesCheckedAt?: string;
   authenticatedAt?: string;
   createdAt: string;
   expiresAt?: string;
+}
+
+export interface TradingSetupAllowances {
+  conditionalTokens?: number;
+  exchange?: number;
+  negRiskExchange?: number;
+  negRiskAdapter?: number;
 }
 
 export interface UserTradingCredentialStatus {
@@ -144,6 +153,20 @@ export interface AccountReadinessCheck {
   detail: string;
 }
 
+export interface UserOrderFundingCheck {
+  balance: "pass" | "fail" | "unknown";
+  allowance: "pass" | "fail" | "unknown";
+  balanceDetail: string;
+  allowanceDetail: string;
+}
+
+export interface UserTradingBalancesResponse {
+  balances?: UserBalanceSnapshot;
+  funding?: UserOrderFundingCheck;
+  updatedAt: string;
+}
+
+/** Setup-only readiness; balances come from `/api/trading/balances`. */
 export interface UserTradingReadiness {
   ready: boolean;
   session?: TradingUserSession;

@@ -13,7 +13,12 @@ import {
   AuthContext,
   type AuthContextValue
 } from "@/context/auth/auth-context";
-import { buildCashBalanceView } from "@/lib/trading/cash-balance-model";
+import { mapBalanceSnapshotToCash } from "@/lib/trading/cash-balance-model";
+import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
+import {
+  fetchTradingBalances,
+  fetchTradingReadinessWithBalances,
+} from "@/lib/trading/trading-login";
 import {
   completeTradingLogin,
   ensureClobCredentials,
@@ -178,12 +183,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setCashError(undefined);
 
     try {
-      const nextReadiness = await fetchJson<UserTradingReadiness>(
-        "/api/trading/readiness"
-      );
+      const balances = await fetchTradingBalances();
+      const setup =
+        store.readiness ??
+        (await fetchJson<UserTradingReadiness>("/api/trading/readiness"));
+      const nextReadiness = mergeTradingReadiness(setup, balances);
       store.setReadiness(nextReadiness);
       syncEligibilityFromSession(nextReadiness.session ?? currentSession);
-      store.setCash(buildCashBalanceView(nextReadiness));
+      store.setCash(
+        balances.balances ? mapBalanceSnapshotToCash(balances.balances) : undefined
+      );
       store.setCashStatus("ready");
     } catch (refreshError) {
       store.setCashStatus("error");
@@ -286,9 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return undefined;
       }
 
-      const nextReadiness = await fetchJson<UserTradingReadiness>(
-        "/api/trading/readiness"
-      );
+      const nextReadiness = await fetchTradingReadinessWithBalances();
       store.setReadiness(nextReadiness);
       syncEligibilityFromSession(nextSession);
       return nextReadiness;

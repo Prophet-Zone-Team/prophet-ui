@@ -68,7 +68,8 @@ export async function runFastBid({
     const preview = buildFastBidPreview(snapshot, amount);
     const orderReadiness = await fetchReadinessForPreview(
       preview,
-      FAST_BID_TRADE_SIDE
+      FAST_BID_TRADE_SIDE,
+      auth.readiness
     );
     const session = resolveTradingSession(auth.session);
     const primaryAction = resolveTradePrimaryAction({
@@ -79,7 +80,12 @@ export async function runFastBid({
       tradeSide: FAST_BID_TRADE_SIDE,
       submitLabel: "Bid",
       previewCanSubmit: preview.canSubmitRealOrder,
-      previewDisabledReason: preview.disabledReason
+      previewDisabledReason: preview.disabledReason,
+      isRegionBlocked: auth.isRegionBlocked,
+      eligibilityNetworkError:
+        session?.eligibilityStatus === "error" &&
+        Boolean(session.eligibilityReason?.toLowerCase().includes("timeout") ||
+          session.eligibilityReason?.toLowerCase().includes("network")),
     });
 
     if (primaryAction.kind !== "submit") {
@@ -110,10 +116,11 @@ export async function runFastBid({
       orderReadiness,
       previewCanSubmit: preview.canSubmitRealOrder,
       previewDisabledReason: preview.disabledReason,
+      isRegionBlocked: auth.isRegionBlocked,
       openLogin: () => auth.openLogin(),
       signClobCredentials: () => auth.signClobCredentials(),
       signTokenApprovals: () => auth.signTokenApprovals(),
-      refreshSetupReadiness: () => auth.refreshSetupReadiness()
+      refreshSetupReadiness: () => auth.refreshSetupReadiness(),
     });
 
     if (!gate.ok) {

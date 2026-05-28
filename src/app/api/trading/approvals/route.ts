@@ -10,7 +10,12 @@ import {
   submitRelayerTransaction,
 } from "@/server/trading/deposit-wallet";
 import { getTradingContractAddresses } from "@/server/trading/contracts";
-import { getTradingSessionFromCookie } from "@/server/trading/session-store";
+import { invalidateSetupAllowanceCache } from "@/lib/trading/setup-allowance-cache";
+import {
+  getTradingSessionFromCookie,
+  updateTradingSession,
+  createTradingSessionCookie,
+} from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -178,11 +183,19 @@ export async function POST(request: Request) {
       }),
     );
     const response = await submitRelayerTransaction(requestBody, "Unable to submit deposit wallet approvals");
+    const session = updateTradingSession(invalidateSetupAllowanceCache(record.session));
 
-    return NextResponse.json({
-      response,
-      submittedAt: new Date().toISOString(),
-    });
+    return NextResponse.json(
+      {
+        response,
+        submittedAt: new Date().toISOString(),
+      },
+      {
+        headers: {
+          "Set-Cookie": createTradingSessionCookie(session),
+        },
+      },
+    );
   } catch (error) {
     return NextResponse.json(
       {

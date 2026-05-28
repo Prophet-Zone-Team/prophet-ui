@@ -39,6 +39,8 @@ export interface ResolveTradePrimaryActionInput {
   previewCanSubmit: boolean;
   previewDisabledReason?: string;
   expirationError?: string;
+  isRegionBlocked?: boolean;
+  eligibilityNetworkError?: boolean;
 }
 
 export const INSUFFICIENT_FUNDS_TOAST_MESSAGE = "Insufficient funds";
@@ -154,6 +156,24 @@ export function resolveTradePrimaryAction(
     };
   }
 
+  if (input.isRegionBlocked) {
+    return {
+      kind: "eligibility_blocked",
+      label: input.submitLabel,
+      hint: "Polymarket reports trading is unavailable in your region.",
+    };
+  }
+
+  if (input.eligibilityNetworkError) {
+    return {
+      kind: "retry_eligibility",
+      label: "Retry eligibility",
+      hint:
+        input.session.eligibilityReason ??
+        "Polymarket geoblock check timed out or is unreachable.",
+    };
+  }
+
   const readiness = input.orderReadiness ?? input.authReadiness;
   const setupSteps = getTradingSetupSteps(readiness);
 
@@ -207,21 +227,6 @@ export function resolveTradePrimaryAction(
       hint:
         allowanceCheck?.detail ??
         "Refresh your trading allowance, then submit your order again.",
-    };
-  }
-
-  const eligibilityCheck = getReadinessCheck(readiness, "eligibility");
-
-  if (eligibilityCheck?.status === "fail") {
-    const isRetry =
-      eligibilityCheck.detail?.toLowerCase().includes("timeout") ||
-      eligibilityCheck.detail?.toLowerCase().includes("network") ||
-      eligibilityCheck.detail?.toLowerCase().includes("fetch failed");
-
-    return {
-      kind: isRetry ? "retry_eligibility" : "eligibility_blocked",
-      label: isRetry ? "Retry eligibility" : input.submitLabel,
-      hint: eligibilityCheck.detail,
     };
   }
 
