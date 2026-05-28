@@ -5,6 +5,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
+import {
+  resolveTradePrimaryAction,
+  runTradePrimaryAction,
+} from "@/lib/trading/trade-primary-action";
 
 import { getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
 import {
@@ -64,8 +68,6 @@ import {
   buildTeamUserOrderPreview,
   buildOutcomeShareMap,
   canSubmitTradeTicket,
-  INSUFFICIENT_FUNDS_MESSAGE,
-  isBuyInsufficientFunds,
   deriveTradeActionLabel,
   ensureTradingReadyForBid,
   fetchConditionalTokenBalance,
@@ -478,35 +480,42 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const actionInProgress =
     status === "loading" || status === "signing" || status === "submitting";
 
-  const insufficientFunds = useMemo(() => {
-    if (!preview) {
-      return false;
-    }
-
-    return isBuyInsufficientFunds({
-      tradeSide,
-      preview,
-      readiness
-    });
-  }, [
-    tradeSide,
-    preview,
-    readiness?.checks,
-    readiness?.balances?.usdcAvailable,
-    readiness?.balances?.clobUsdcAvailable
-  ]);
-
-  const canSubmit = canSubmitTradeTicket({
-    status,
-    previewCanSubmit:
-      previewCanSubmit && !expirationError && !insufficientFunds
-  });
-
-  const actionLabel = deriveTradeActionLabel(
+  const submitLabel = deriveTradeActionLabel(
     tradeSide,
     outcomeSide,
     input.variant
   );
+
+  const primaryAction = useMemo(() => {
+    return resolveTradePrimaryAction({
+      isAuthenticated,
+      session,
+      orderReadiness: readiness,
+      authReadiness,
+      tradeSide,
+      submitLabel,
+      previewCanSubmit,
+      previewDisabledReason: preview?.disabledReason,
+      expirationError
+    });
+  }, [
+    authReadiness,
+    expirationError,
+    isAuthenticated,
+    preview?.disabledReason,
+    previewCanSubmit,
+    readiness,
+    session,
+    submitLabel,
+    tradeSide
+  ]);
+
+  const canSubmit = canSubmitTradeTicket({
+    status,
+    previewCanSubmit: previewCanSubmit && !expirationError
+  });
+
+  const actionLabel = primaryAction.label;
 
   useEffect(() => {
     if (input.variant === "team") {
@@ -765,15 +774,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
   }, [refreshOrderReadiness]);
 
-  const handleSubmit = useCallback(async () => {
+  const submitOrder = useCallback(async () => {
     if (!preview || actionInProgress) {
-      return;
-    }
-
-    if (expirationError) {
-      setStatus("error");
-      setMessage(expirationError);
-      showOrderErrorToast(expirationError);
       return;
     }
 
@@ -1001,6 +1003,84 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     tradeSide
   ]);
 
+  const handleTradeAction = useCallback(async () => {
+    if (!preview || actionInProgress) {
+      return;
+    }
+
+    if (expirationError) {
+      setStatus("error");
+      setMessage(expirationError);
+      showOrderErrorToast(expirationError);
+      return;
+    }
+
+    if (primaryAction.kind !== "submit") {
+      setMessage(undefined);
+      setEligibilityRetryAvailable(false);
+
+      try {
+        if (primaryAction.kind === "sync_allowance") {
+          setStatus("loading");
+        }
+
+        await runTradePrimaryAction(primaryAction, {
+          tokenId: preview.tokenId,
+          openLogin,
+          signClobCredentials,
+          signTokenApprovals,
+          refreshOrderReadiness,
+          refreshSetupReadiness,
+          onRetryEligibility: handleRetryEligibility
+        });
+
+        if (primaryAction.kind === "sync_allowance") {
+          setStatus("idle");
+          setMessage(
+            "Trading allowance refreshed. Review your order and submit again."
+          );
+        } else if (primaryAction.kind === "deposit") {
+          setStatus("idle");
+          setMessage(primaryAction.hint);
+        } else if (
+          primaryAction.kind === "market_blocked" ||
+          primaryAction.kind === "eligibility_blocked"
+        ) {
+          setStatus("error");
+          setMessage(primaryAction.hint);
+          if (primaryAction.hint) {
+            showOrderErrorToast(primaryAction.hint);
+          }
+        } else if (primaryAction.kind === "retry_eligibility") {
+          return;
+        } else {
+          setStatus("idle");
+          setMessage(primaryAction.hint);
+        }
+      } catch (error) {
+        setStatus("error");
+        setMessage(resolveOrderErrorMessage(error));
+        showOrderErrorToast(error);
+      }
+
+      return;
+    }
+
+    await submitOrder();
+  }, [
+    actionInProgress,
+    expirationError,
+    handleRetryEligibility,
+    openLogin,
+    preview,
+    primaryAction,
+    refreshOrderReadiness,
+    refreshSetupReadiness,
+    signClobCredentials,
+    signTokenApprovals,
+    submitOrder
+  ]);
+
   function applyQuickAmount(value: number | "all") {
     if (orderMode === "limit" && tradeSide === "buy" && typeof value === "number") {
       setAmount(resolveLimitShareQuickAmount(amount, value));
@@ -1076,8 +1156,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     input.variant === "game" ? input.gameSnapshot.match.kickoffAt : undefined;
   const availableCash = resolveTradeTicketAvailableCash(readiness);
   const fundingMessage =
-    insufficientFunds && !expirationError && !message
-      ? INSUFFICIENT_FUNDS_MESSAGE
+    !expirationError &&
+    !message &&
+    primaryAction.kind !== "submit" &&
+    primaryAction.hint
+      ? primaryAction.hint
       : undefined;
 
   return {
@@ -1107,14 +1190,16 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       isAuthenticated,
       status,
       message,
-      eligibilityRetryAvailable,
+      eligibilityRetryAvailable:
+        eligibilityRetryAvailable ||
+        primaryAction.kind === "retry_eligibility",
       onSelectOutcome: selectOutcome,
       onAmountChange: setAmount,
       onLimitPriceChange: setLimitPrice,
       onLimitExpirationChange: setLimitExpiration,
       onLimitExpirationCustomChange: setLimitExpirationCustom,
       onQuickAmount: applyQuickAmount,
-      onSubmit: handleSubmit,
+      onSubmit: handleTradeAction,
       onRetryEligibility: handleRetryEligibility,
       onLoginStart: () => {
         setMessage(undefined);

@@ -17,12 +17,9 @@ import {
   TEAM_CHART_TIME_RANGES,
   type TeamChartTimeRange
 } from "@/lib/team/probability-history";
+import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { resolveTeamOrderbookTokenId } from "@/lib/market/resolve-team-orderbook-token";
-import type {
-  ProbabilityHistoryPoint,
-  TeamMarketSnapshot,
-  WorldCupMatch
-} from "@/types/market";
+import type { TeamMarketSnapshot } from "@/types/market";
 import {
   useSetTradeOutcomeSide,
   useTradeOutcomeSide
@@ -36,23 +33,24 @@ const probabilityCardClass =
 
 export interface ProbabilitySectionProps {
   snapshot: TeamMarketSnapshot;
-  probabilityHistory: ProbabilityHistoryPoint[];
-  matches: WorldCupMatch[];
-  snapshots: TeamMarketSnapshot[];
   showOrderbook: boolean;
 }
 
 export function ProbabilitySection({
   snapshot,
-  probabilityHistory,
-  matches,
-  snapshots,
   showOrderbook
 }: ProbabilitySectionProps) {
   const outcomeView = useTradeOutcomeSide();
   const setOutcomeView = useSetTradeOutcomeSide();
-  const [timeRange, setTimeRange] = useState<TeamChartTimeRange>("1M");
-
+  const [timeRange, setTimeRange] = useState<TeamChartTimeRange>("all");
+  const yesTokenId = resolveTeamOrderbookTokenId(snapshot, "yes");
+  const { points: probabilityHistory } = useProbabilityChart({
+    kind: "team",
+    tokenId: yesTokenId,
+    entityId: snapshot.team.id,
+    pollIntervalMs: 5000,
+    enabled: Boolean(yesTokenId)
+  });
   const yesProbability = snapshot.market.probability;
   const noProbability = Math.max(0, 100 - yesProbability);
   const displayProbability =
@@ -76,11 +74,11 @@ export function ProbabilitySection({
     () =>
       buildTeamChartMatchAnnotations({
         teamId: snapshot.team.id,
-        matches,
+        matches: [],
         chartData,
-        snapshots
+        snapshots: [snapshot]
       }),
-    [chartData, matches, snapshot.team.id, snapshots]
+    [chartData, snapshot]
   );
 
   const yDomain = useMemo(() => getTeamChartYDomain(chartData), [chartData]);
@@ -201,6 +199,7 @@ export function ProbabilitySection({
             chartData={chartData}
             yDomain={yDomain}
             annotations={annotations}
+            timeRange={timeRange}
           />
         </div>
       </motion.div>

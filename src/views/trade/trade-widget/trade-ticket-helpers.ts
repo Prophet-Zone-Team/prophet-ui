@@ -826,7 +826,7 @@ export async function ensureTradingReadyForBid(deps: {
   signTokenApprovals: () => Promise<void>;
   refreshSetupReadiness?: () => Promise<UserTradingReadiness | undefined>;
 }): Promise<BidGateResult> {
-  const setupReadiness = deps.authReadiness ?? deps.orderReadiness;
+  const setupReadiness = deps.orderReadiness ?? deps.authReadiness;
   const setupSteps = getTradingSetupSteps(setupReadiness);
   if (!deps.session) {
     await deps.openLogin();

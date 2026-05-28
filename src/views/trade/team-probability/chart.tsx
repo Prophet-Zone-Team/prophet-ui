@@ -19,6 +19,10 @@ import {
   findAnnotationForChartPoint,
   type TeamChartMatchAnnotation
 } from "@/lib/team/chart-match-annotations";
+import {
+  formatTeamChartXAxisTick,
+  type TeamChartTimeRange
+} from "@/lib/team/probability-history";
 import type { ProbabilityHistoryPoint } from "@/types/market";
 
 const CHART_LINE_COLOR = "#8AB956";
@@ -28,6 +32,7 @@ interface ProbabilityChartProps {
   chartData: ProbabilityHistoryPoint[];
   yDomain: [number, number];
   annotations: TeamChartMatchAnnotation[];
+  timeRange: TeamChartTimeRange;
 }
 
 interface ChartCustomizedProps {
@@ -52,9 +57,12 @@ interface ChartCustomizedProps {
 export function ProbabilityChart({
   chartData,
   yDomain,
-  annotations
+  annotations,
+  timeRange
 }: ProbabilityChartProps) {
   const gradientId = useId().replace(/:/g, "");
+  const formatXAxisTick = (value: string) =>
+    formatTeamChartXAxisTick(value, timeRange);
 
   return (
     <div className="h-[267px] w-full min-h-[240px] sm:h-[280px] xl:h-[324px]">
@@ -72,11 +80,11 @@ export function ProbabilityChart({
           <CartesianGrid stroke="#ebebeb" vertical={false} />
           <XAxis
             dataKey="date"
-            tick={{ fill: "#909090", fontSize: 14 }}
+            tick={{ fill: "#909090", fontSize: 14, dy: 6 }}
             tickLine={false}
             axisLine={false}
             minTickGap={32}
-            tickFormatter={formatChartDayTick}
+            tickFormatter={formatXAxisTick}
           />
           <YAxis
             domain={yDomain}
@@ -88,9 +96,7 @@ export function ProbabilityChart({
           />
           <Tooltip
             cursor={{ stroke: "#EBEBEB", strokeWidth: 1 }}
-            content={
-              <ChartTooltip annotations={annotations} />
-            }
+            content={<ChartTooltip annotations={annotations} />}
           />
           <Area
             type="monotone"
@@ -236,16 +242,6 @@ function ChartTooltip({
       ) : null}
     </div>
   );
-}
-
-function formatChartDayTick(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return String(date.getDate());
 }
 
 function formatTooltipDate(value: string): string {

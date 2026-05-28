@@ -628,7 +628,7 @@ export interface GameFixtureBinaryChartPoint {
   secondary: number;
 }
 
-export type GameFixtureChartTimeRange = "1D" | "1W" | "1M" | "all";
+export type GameFixtureChartTimeRange = "1H" | "1D" | "1W" | "1M" | "all";
 
 export type FixtureChartKind = "moneyline" | "halftime" | "total" | "spread";
 

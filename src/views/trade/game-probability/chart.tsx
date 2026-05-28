@@ -16,9 +16,14 @@ import {
 import { formatProbability } from "@/components/home/market-formatters";
 import { formatMatchMinuteAxisLabel } from "@/lib/market/match-display";
 import {
+  formatGameChartXAxisTick,
   getFixtureChartYDomain,
 } from "@/lib/market/fixture-probability-chart";
-import type { GameFixtureChartPoint, GameMatchChartEvent } from "@/types/market";
+import type {
+  GameFixtureChartPoint,
+  GameFixtureChartTimeRange,
+  GameMatchChartEvent,
+} from "@/types/market";
 import {
   GoalEventMarkerLayer,
   type GoalEventMarkerLayerProps,
@@ -48,6 +53,7 @@ export interface GameProbabilityChartProps {
   drawLabel?: string;
   awayLabel?: string;
   mode?: "historical" | "live";
+  timeRange?: GameFixtureChartTimeRange;
   events?: GameMatchChartEvent[];
   maxElapsedSeconds?: number;
   homeCode?: string;
@@ -60,6 +66,7 @@ export function GameProbabilityChart({
   drawLabel = "Draw",
   awayLabel = "Away",
   mode = "historical",
+  timeRange = "all",
   events = [],
   maxElapsedSeconds = 0,
   homeCode,
@@ -112,13 +119,18 @@ export function GameProbabilityChart({
             >
               <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
               <XAxis
-                dataKey="chartLabel"
+                dataKey={isLive ? "chartLabel" : "timestamp"}
                 tick={{ fill: CHART_COLORS.muted, fontSize: 14, dy: 6 }}
                 axisLine={false}
                 tickLine={false}
                 minTickGap={24}
                 padding={{ left: 0, right: 32 }}
                 interval={isLive ? "preserveStartEnd" : undefined}
+                tickFormatter={
+                  isLive
+                    ? undefined
+                    : (value: string) => formatGameChartXAxisTick(value, timeRange)
+                }
               />
               <YAxis
                 domain={yDomain}
@@ -129,7 +141,15 @@ export function GameProbabilityChart({
                 tickFormatter={(value: number) => `${value}%`}
                 width={44}
               />
-              <Tooltip content={<ChartTooltip seriesLabels={seriesLabels} />} />
+              <Tooltip
+                content={
+                  <ChartTooltip
+                    seriesLabels={seriesLabels}
+                    isLive={isLive}
+                    timeRange={timeRange}
+                  />
+                }
+              />
               {SERIES.map((series) => (
                 <Line
                   key={series.key}
@@ -195,9 +215,13 @@ function ChartTooltip({
   active,
   payload,
   label,
-  seriesLabels
+  seriesLabels,
+  isLive,
+  timeRange,
 }: TooltipProps<number, string> & {
   seriesLabels: Record<(typeof SERIES)[number]["key"], string>;
+  isLive: boolean;
+  timeRange: GameFixtureChartTimeRange;
 }) {
   if (!active || !payload?.length) {
     return null;
@@ -206,7 +230,9 @@ function ChartTooltip({
   const timeLabel =
     typeof label === "number"
       ? formatMatchMinuteAxisLabel(label)
-      : String(label ?? "");
+      : isLive
+        ? String(label ?? "")
+        : formatGameChartXAxisTick(String(label ?? ""), timeRange);
 
   return (
     <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">

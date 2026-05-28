@@ -10,6 +10,10 @@ import {
   showOrderSubmittedToast
 } from "@/lib/trading/order-toast";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
+import {
+  resolveTradePrimaryAction,
+  runTradePrimaryAction
+} from "@/lib/trading/trade-primary-action";
 import { useAuthStore } from "@/store/auth-store";
 import type { TeamMarketSnapshot } from "@/types/market";
 import {
@@ -54,7 +58,7 @@ export async function runFastBid({
     return;
   }
 
-  if (auth.isAuthenticated && auth.isRegionBlocked) {
+  if (auth.isRegionBlocked) {
     return;
   }
 
@@ -66,9 +70,42 @@ export async function runFastBid({
       preview,
       FAST_BID_TRADE_SIDE
     );
+    const session = resolveTradingSession(auth.session);
+    const primaryAction = resolveTradePrimaryAction({
+      isAuthenticated: auth.isAuthenticated,
+      session,
+      orderReadiness,
+      authReadiness: auth.readiness,
+      tradeSide: FAST_BID_TRADE_SIDE,
+      submitLabel: "Bid",
+      previewCanSubmit: preview.canSubmitRealOrder,
+      previewDisabledReason: preview.disabledReason
+    });
+
+    if (primaryAction.kind !== "submit") {
+      if (
+        primaryAction.kind === "market_blocked" ||
+        primaryAction.kind === "eligibility_blocked"
+      ) {
+        showOrderErrorToast(
+          primaryAction.hint ?? "Trading is not ready for this order."
+        );
+      } else {
+        await runTradePrimaryAction(primaryAction, {
+          tokenId: preview.tokenId,
+          openLogin: () => auth.openLogin(),
+          signClobCredentials: () => auth.signClobCredentials(),
+          signTokenApprovals: () => auth.signTokenApprovals(),
+          refreshSetupReadiness: () => auth.refreshSetupReadiness()
+        });
+      }
+
+      onStatusChange?.("idle");
+      return;
+    }
 
     const gate = await ensureTradingReadyForBid({
-      session: resolveTradingSession(auth.session),
+      session,
       authReadiness: auth.readiness,
       orderReadiness,
       previewCanSubmit: preview.canSubmitRealOrder,
@@ -87,8 +124,6 @@ export async function runFastBid({
       onStatusChange?.("idle");
       return;
     }
-
-    const session = resolveTradingSession(auth.session);
 
     if (!session?.funderAddress || !preview.tokenId) {
       throw new Error(

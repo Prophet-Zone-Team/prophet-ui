@@ -16,9 +16,14 @@ import {
 import { formatProbability } from "@/components/home/market-formatters";
 import { formatMatchMinuteAxisLabel } from "@/lib/market/match-display";
 import {
+  formatGameChartXAxisTick,
   getBinaryFixtureChartYDomain,
 } from "@/lib/market/fixture-probability-chart";
-import type { GameFixtureBinaryChartPoint, GameMatchChartEvent } from "@/types/market";
+import type {
+  GameFixtureBinaryChartPoint,
+  GameFixtureChartTimeRange,
+  GameMatchChartEvent,
+} from "@/types/market";
 import {
   GoalEventMarkerLayer,
   type GoalEventMarkerLayerProps,
@@ -42,6 +47,7 @@ export interface GameBinaryProbabilityChartProps {
   primaryColor?: string;
   secondaryColor?: string;
   mode?: "historical" | "live";
+  timeRange?: GameFixtureChartTimeRange;
   events?: GameMatchChartEvent[];
   maxElapsedSeconds?: number;
   homeCode?: string;
@@ -55,6 +61,7 @@ export function GameBinaryProbabilityChart({
   primaryColor = CHART_COLORS.primary,
   secondaryColor = CHART_COLORS.secondary,
   mode = "historical",
+  timeRange = "all",
   events = [],
   maxElapsedSeconds = 0,
   homeCode,
@@ -106,13 +113,18 @@ export function GameBinaryProbabilityChart({
             >
               <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
               <XAxis
-                dataKey="chartLabel"
+                dataKey={isLive ? "chartLabel" : "timestamp"}
                 tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
                 axisLine={false}
                 tickLine={false}
                 minTickGap={24}
                 padding={{ left: 0, right: 32 }}
                 interval={isLive ? "preserveStartEnd" : undefined}
+                tickFormatter={
+                  isLive
+                    ? undefined
+                    : (value: string) => formatGameChartXAxisTick(value, timeRange)
+                }
               />
               <YAxis
                 domain={yDomain}
@@ -124,7 +136,13 @@ export function GameBinaryProbabilityChart({
                 width={44}
               />
               <Tooltip
-                content={<BinaryChartTooltip series={series} />}
+                content={
+                  <BinaryChartTooltip
+                    series={series}
+                    isLive={isLive}
+                    timeRange={timeRange}
+                  />
+                }
               />
               {series.map((item) => (
                 <Line
@@ -191,9 +209,13 @@ function BinaryChartTooltip({
   active,
   payload,
   label,
-  series
+  series,
+  isLive,
+  timeRange,
 }: TooltipProps<number, string> & {
   series: Array<{ key: "primary" | "secondary"; color: string; label: string }>;
+  isLive: boolean;
+  timeRange: GameFixtureChartTimeRange;
 }) {
   if (!active || !payload?.length) {
     return null;
@@ -202,7 +224,9 @@ function BinaryChartTooltip({
   const timeLabel =
     typeof label === "number"
       ? formatMatchMinuteAxisLabel(label)
-      : String(label ?? "");
+      : isLive
+        ? String(label ?? "")
+        : formatGameChartXAxisTick(String(label ?? ""), timeRange);
 
   return (
     <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">

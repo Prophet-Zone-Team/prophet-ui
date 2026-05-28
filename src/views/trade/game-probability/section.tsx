@@ -11,7 +11,12 @@ import {
   isMockLiveFixtureEnabled,
   resolveMockLiveDisplayScore,
 } from "@/data/mock/live-fixture-simulation";
+import {
+  filterGameBinaryFixtureChartByRange,
+  filterGameFixtureChartByRange,
+} from "@/lib/market/fixture-probability-chart";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
+import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import {
   useSelectedFixtureOutcome,
@@ -32,7 +37,6 @@ import { resolveOrderbookTokenId } from "@/views/trade/game/markets/fixture-mark
 import { gameColors } from "@/views/trade/game/ui";
 import { GameBinaryProbabilityChart } from "@/views/trade/game-probability/binary-chart";
 import { GameProbabilityChart } from "@/views/trade/game-probability/chart";
-import { useFixturePriceHistory } from "@/views/trade/game-probability/use-fixture-price-history";
 import {
   useLiveMatchProbabilityChart,
   type LiveChartSimulationTick,
@@ -40,10 +44,11 @@ import {
 import { OrderbookPanel } from "@/views/trade/orderbook-panel";
 
 const GAME_PROBABILITY_TIME_RANGES = [
+  { id: "1H", label: "1H" },
   { id: "1D", label: "1D" },
   { id: "1W", label: "1W" },
   { id: "1M", label: "1M" },
-  { id: "all", label: "All" }
+  { id: "all", label: "All" },
 ] as const satisfies ReadonlyArray<{
   id: GameFixtureChartTimeRange;
   label: string;
@@ -98,14 +103,21 @@ export function GameProbabilitySection({
   const isLive = isEffectiveLiveMatch(liveMatch);
   const liveChartActive =
     isLive && Boolean(chartKind) && Boolean(gameSnapshot && fixtureMarkets);
-  const { points, binaryPoints, chartMode, status, error, refetch } =
-    useFixturePriceHistory({
-      matchSlug: match.id,
-      timeRange,
-      chartKind,
-      lineKey,
-      enabled: !liveChartActive,
-    });
+  const {
+    points: rawPoints,
+    binaryPoints: rawBinaryPoints,
+    chartMode,
+    status,
+    error,
+    refetch,
+  } = useProbabilityChart({
+    kind: "fixture",
+    match,
+    chartKind,
+    lineKey,
+    pollIntervalMs: 5000,
+    enabled: !liveChartActive,
+  });
   const liveChart = useLiveMatchProbabilityChart({
     match: liveMatch,
     gameSnapshot: gameSnapshot!,
@@ -168,8 +180,18 @@ export function GameProbabilitySection({
     : chartMode === "binary" || summaryMode === "binary"
       ? "binary"
       : "ternary";
-  const chartPoints = liveChartActive ? liveChart.points : points;
-  const chartBinaryPoints = liveChartActive ? liveChart.binaryPoints : binaryPoints;
+  const filteredPoints = useMemo(
+    () => filterGameFixtureChartByRange(rawPoints, timeRange),
+    [rawPoints, timeRange],
+  );
+  const filteredBinaryPoints = useMemo(
+    () => filterGameBinaryFixtureChartByRange(rawBinaryPoints, timeRange),
+    [rawBinaryPoints, timeRange],
+  );
+  const chartPoints = liveChartActive ? liveChart.points : filteredPoints;
+  const chartBinaryPoints = liveChartActive
+    ? liveChart.binaryPoints
+    : filteredBinaryPoints;
   const chartEvents = liveChartActive ? liveChart.events : [];
   const chartStatus = liveChartActive
     ? liveChartHasData
@@ -267,6 +289,7 @@ export function GameProbabilitySection({
               drawLabel="Draw"
               awayLabel={awayLabel}
               mode={liveChartActive ? "live" : "historical"}
+              timeRange={timeRange}
               events={chartEvents}
               maxElapsedSeconds={liveChart.maxElapsedSeconds}
               homeCode={sides.home.code}
@@ -288,6 +311,7 @@ export function GameProbabilitySection({
                 resolvedSummaryItems[1]?.color ?? gameColors.awayBar
               }
               mode={liveChartActive ? "live" : "historical"}
+              timeRange={timeRange}
               events={chartEvents}
               maxElapsedSeconds={liveChart.maxElapsedSeconds}
               homeCode={sides.home.code}

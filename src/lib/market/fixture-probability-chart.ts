@@ -29,6 +29,8 @@ export function mapUiRangeToClobInterval(
   range: GameFixtureChartTimeRange,
 ): FixtureHistoryInterval {
   switch (range) {
+    case "1H":
+      return "1h";
     case "1D":
       return "1d";
     case "1W":
@@ -38,6 +40,257 @@ export function mapUiRangeToClobInterval(
     case "all":
       return "max";
   }
+}
+
+const GAME_RANGE_POINT_LIMIT: Record<
+  Exclude<GameFixtureChartTimeRange, "all">,
+  number
+> = {
+  "1H": 6,
+  "1D": 8,
+  "1W": 14,
+  "1M": 30,
+};
+
+const ONE_HOUR_CHART_POINT_COUNT = 6;
+const ONE_HOUR_CHART_INTERVAL_MS = 10 * 60 * 1000;
+
+export function formatGameChartXAxisTick(
+  value: string,
+  range: GameFixtureChartTimeRange,
+): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  if (range === "1H" || range === "1D") {
+    return new Intl.DateTimeFormat("en", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(date);
+  }
+
+  return chartDateFormatter.format(date);
+}
+
+export function filterGameFixtureChartByRange(
+  data: GameFixtureChartPoint[],
+  range: GameFixtureChartTimeRange,
+  nowMs = Date.now(),
+): GameFixtureChartPoint[] {
+  if (range === "all" || data.length === 0) {
+    return data;
+  }
+
+  const parsed = data.map((point, index) => ({
+    point,
+    time: Date.parse(point.timestamp),
+    index,
+  }));
+
+  const hasValidTimes = parsed.some((item) => !Number.isNaN(item.time));
+  let filtered = data;
+
+  if (hasValidTimes) {
+    const rangeMs: Record<Exclude<GameFixtureChartTimeRange, "all">, number> = {
+      "1H": 60 * 60 * 1000,
+      "1D": 24 * 60 * 60 * 1000,
+      "1W": 7 * 24 * 60 * 60 * 1000,
+      "1M": 30 * 24 * 60 * 60 * 1000,
+    };
+    const cutoff = nowMs - rangeMs[range];
+    const inRange = parsed.filter(
+      (item) => !Number.isNaN(item.time) && item.time >= cutoff,
+    );
+
+    if (inRange.length > 0) {
+      filtered = inRange.map((item) => item.point);
+    } else {
+      const latest = parsed
+        .filter((item) => !Number.isNaN(item.time))
+        .sort((left, right) => left.time - right.time)
+        .at(-1);
+
+      filtered = latest ? [latest.point] : data;
+    }
+  } else {
+    const limit = GAME_RANGE_POINT_LIMIT[range];
+    filtered = data.slice(-Math.min(limit, data.length));
+  }
+
+  if (range === "1H") {
+    return padGameFixtureTernaryOneHourSeries(filtered, nowMs);
+  }
+
+  return filtered;
+}
+
+export function filterGameBinaryFixtureChartByRange(
+  data: GameFixtureBinaryChartPoint[],
+  range: GameFixtureChartTimeRange,
+  nowMs = Date.now(),
+): GameFixtureBinaryChartPoint[] {
+  if (range === "all" || data.length === 0) {
+    return data;
+  }
+
+  const parsed = data.map((point, index) => ({
+    point,
+    time: Date.parse(point.timestamp),
+    index,
+  }));
+
+  const hasValidTimes = parsed.some((item) => !Number.isNaN(item.time));
+  let filtered = data;
+
+  if (hasValidTimes) {
+    const rangeMs: Record<Exclude<GameFixtureChartTimeRange, "all">, number> = {
+      "1H": 60 * 60 * 1000,
+      "1D": 24 * 60 * 60 * 1000,
+      "1W": 7 * 24 * 60 * 60 * 1000,
+      "1M": 30 * 24 * 60 * 60 * 1000,
+    };
+    const cutoff = nowMs - rangeMs[range];
+    const inRange = parsed.filter(
+      (item) => !Number.isNaN(item.time) && item.time >= cutoff,
+    );
+
+    if (inRange.length > 0) {
+      filtered = inRange.map((item) => item.point);
+    } else {
+      const latest = parsed
+        .filter((item) => !Number.isNaN(item.time))
+        .sort((left, right) => left.time - right.time)
+        .at(-1);
+
+      filtered = latest ? [latest.point] : data;
+    }
+  } else {
+    const limit = GAME_RANGE_POINT_LIMIT[range];
+    filtered = data.slice(-Math.min(limit, data.length));
+  }
+
+  if (range === "1H") {
+    return padGameFixtureBinaryOneHourSeries(filtered, nowMs);
+  }
+
+  return filtered;
+}
+
+export function padGameFixtureTernaryOneHourSeries(
+  data: GameFixtureChartPoint[],
+  nowMs = Date.now(),
+): GameFixtureChartPoint[] {
+  if (data.length === 0) {
+    return data;
+  }
+
+  const matchId = data[0]!.matchId;
+  const sorted = [...data].sort(
+    (left, right) => Date.parse(left.timestamp) - Date.parse(right.timestamp),
+  );
+
+  const slotTimes = Array.from(
+    { length: ONE_HOUR_CHART_POINT_COUNT },
+    (_, index) =>
+      nowMs -
+      (ONE_HOUR_CHART_POINT_COUNT - 1 - index) * ONE_HOUR_CHART_INTERVAL_MS,
+  );
+
+  const resolveValuesAt = (timeMs: number) => {
+    let home = sorted[0]!.home;
+    let draw = sorted[0]!.draw;
+    let away = sorted[0]!.away;
+
+    for (const point of sorted) {
+      const pointTime = Date.parse(point.timestamp);
+
+      if (Number.isNaN(pointTime)) {
+        continue;
+      }
+
+      if (pointTime <= timeMs) {
+        home = point.home;
+        draw = point.draw;
+        away = point.away;
+      } else {
+        break;
+      }
+    }
+
+    return { home, draw, away };
+  };
+
+  return slotTimes.map((timeMs) => {
+    const values = resolveValuesAt(timeMs);
+
+    return {
+      matchId,
+      timestamp: new Date(timeMs).toISOString(),
+      label: formatFixtureChartLabel(timeMs),
+      home: values.home,
+      draw: values.draw,
+      away: values.away,
+    };
+  });
+}
+
+export function padGameFixtureBinaryOneHourSeries(
+  data: GameFixtureBinaryChartPoint[],
+  nowMs = Date.now(),
+): GameFixtureBinaryChartPoint[] {
+  if (data.length === 0) {
+    return data;
+  }
+
+  const matchId = data[0]!.matchId;
+  const sorted = [...data].sort(
+    (left, right) => Date.parse(left.timestamp) - Date.parse(right.timestamp),
+  );
+
+  const slotTimes = Array.from(
+    { length: ONE_HOUR_CHART_POINT_COUNT },
+    (_, index) =>
+      nowMs -
+      (ONE_HOUR_CHART_POINT_COUNT - 1 - index) * ONE_HOUR_CHART_INTERVAL_MS,
+  );
+
+  const resolveValuesAt = (timeMs: number) => {
+    let primary = sorted[0]!.primary;
+    let secondary = sorted[0]!.secondary;
+
+    for (const point of sorted) {
+      const pointTime = Date.parse(point.timestamp);
+
+      if (Number.isNaN(pointTime)) {
+        continue;
+      }
+
+      if (pointTime <= timeMs) {
+        primary = point.primary;
+        secondary = point.secondary;
+      } else {
+        break;
+      }
+    }
+
+    return { primary, secondary };
+  };
+
+  return slotTimes.map((timeMs) => {
+    const values = resolveValuesAt(timeMs);
+
+    return {
+      matchId,
+      timestamp: new Date(timeMs).toISOString(),
+      label: formatFixtureChartLabel(timeMs),
+      primary: values.primary,
+      secondary: values.secondary,
+    };
+  });
 }
 
 function priceToProbabilityPercent(price: number): number {

@@ -4,14 +4,12 @@ import { useMemo } from "react";
 
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { MarketWsProvider } from "@/context/market-ws";
-import type { MarketDataMeta } from "@/data/providers/types";
 import {
   useSetShowOrderbook,
   useShowOrderbook
 } from "@/store/user-config-store";
 import type {
   ApiFootballTeamProfile,
-  ProbabilityHistoryPoint,
   TeamFootballMetadata,
   TeamMarketSnapshot,
   WorldCupMatch
@@ -26,35 +24,25 @@ import { tradePageClass } from "@/views/trade/trade-widget/trade-ui";
 
 export interface TradeTeamViewProps {
   snapshot: TeamMarketSnapshot;
-  probabilityHistory: ProbabilityHistoryPoint[];
-  matches: WorldCupMatch[];
-  snapshots: TeamMarketSnapshot[];
   footballProfile?: ApiFootballTeamProfile;
   footballMetadata?: TeamFootballMetadata;
-  dataStatus: MarketDataMeta;
 }
 
 function TradeTeamViewContent({
   snapshot,
-  probabilityHistory,
-  matches,
-  snapshots,
   footballProfile,
   footballMetadata
-}: Omit<TradeTeamViewProps, "dataStatus">) {
+}: TradeTeamViewProps) {
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
-  const allSnapshots = useMemo(() => {
-    const byId = new Map(snapshots.map((item) => [item.team.id, item]));
-    byId.set(snapshot.team.id, snapshot);
-    return [...byId.values()];
-  }, [snapshot, snapshots]);
+  const allSnapshots = useMemo(() => [snapshot], [snapshot]);
+  const matches = useMemo<WorldCupMatch[]>(() => [], []);
 
   useTeamMarketWsTokens(
     snapshot,
     Boolean(
       snapshot.market.polymarket?.tokens.yes?.tokenId ||
-        snapshot.market.polymarket?.tokens.no?.tokenId
+      snapshot.market.polymarket?.tokens.no?.tokenId
     )
   );
 
@@ -72,9 +60,6 @@ function TradeTeamViewContent({
           />
           <ProbabilitySection
             snapshot={snapshot}
-            probabilityHistory={probabilityHistory}
-            matches={matches}
-            snapshots={allSnapshots}
             showOrderbook={showOrderbook}
           />
           <ActivityTabs snapshot={snapshot} />
@@ -95,12 +80,8 @@ function TradeTeamViewContent({
 
 export default function TradeTeamView({
   snapshot,
-  probabilityHistory,
-  matches,
-  snapshots,
   footballProfile,
-  footballMetadata,
-  dataStatus: _dataStatus
+  footballMetadata
 }: TradeTeamViewProps) {
   const yesTokenId = snapshot.market.polymarket?.tokens.yes?.tokenId;
   const noTokenId = snapshot.market.polymarket?.tokens.no?.tokenId;
@@ -110,9 +91,6 @@ export default function TradeTeamView({
     <MarketWsProvider enabled={marketWsEnabled}>
       <TradeTeamViewContent
         snapshot={snapshot}
-        probabilityHistory={probabilityHistory}
-        matches={matches}
-        snapshots={snapshots}
         footballProfile={footballProfile}
         footballMetadata={footballMetadata}
       />

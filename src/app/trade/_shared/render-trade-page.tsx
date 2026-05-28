@@ -5,10 +5,7 @@ import {
   getFootballMatchBySlug
 } from "@/data/providers/football-matches";
 import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
-import type {
-  MarketDataMeta,
-  WorldCupMarketDataOptions
-} from "@/data/providers/types";
+import type { WorldCupMarketDataOptions } from "@/data/providers/types";
 import {
   buildGameMarketSnapshot,
   getRelatedMatches
@@ -20,7 +17,6 @@ import {
 } from "@/lib/market/polymarket-gamma-fetch";
 import type { GammaMarketRecord } from "@/lib/market/polymarket-gamma";
 import { mapGammaMarketToTeamSnapshot } from "@/lib/market/winner-event-mapper";
-import { buildFallbackProbabilityHistory } from "@/lib/team/probability-history";
 import { enrichFootballMatchesWithClobData } from "@/server/market/fixture-clob-enrichment";
 import { enrichMatchWithSiblingFixtureMarkets } from "@/server/market/fixture-sibling-enrichment";
 import type { WorldCupMatch } from "@/types/market";
@@ -106,20 +102,5 @@ export async function renderTeamTradePage(slug: string) {
     notFound();
   }
 
-  const dataStatus: MarketDataMeta = {
-    source: "polymarket",
-    status: "live",
-    lastUpdated: snapshot.market.updatedAt,
-    stale: false
-  };
-
-  return (
-    <TradeTeamView
-      snapshot={snapshot}
-      probabilityHistory={buildFallbackProbabilityHistory(snapshot)}
-      matches={[]}
-      snapshots={[snapshot]}
-      dataStatus={dataStatus}
-    />
-  );
+  return <TradeTeamView snapshot={snapshot} />;
 }

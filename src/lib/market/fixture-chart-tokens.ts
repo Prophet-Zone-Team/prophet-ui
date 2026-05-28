@@ -152,6 +152,26 @@ export function resolveFixtureChartTokens(
   return undefined;
 }
 
+/** Stable key for fixture chart polling; ignores live score-only match updates. */
+export function buildFixtureChartFetchKey(
+  match: WorldCupMatch,
+  chartKind: FixtureChartKind,
+  lineKey?: string,
+): string {
+  const resolution = resolveFixtureChartTokens(match, chartKind, lineKey);
+
+  if (!resolution) {
+    return `${match.id}|${chartKind}|${lineKey ?? ""}|`;
+  }
+
+  const tokenIds = resolution.inputs
+    .map((input) => input.tokenId)
+    .sort()
+    .join(",");
+
+  return `${match.id}|${chartKind}|${lineKey ?? ""}|${resolution.mode}|${tokenIds}`;
+}
+
 export function attachHistoryToTernaryInputs(
   inputs: Array<{ side: MatchOutcomeSide; tokenId: string }>,
   historyByToken: Map<string, Array<{ t: number; p: number }>>,

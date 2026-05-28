@@ -43,7 +43,13 @@ interface FixtureHistoryResponse {
 
 const fixtureHistoryCache = new Map<string, CachedFixtureHistoryResponse>();
 
-const VALID_UI_RANGES: GameFixtureChartTimeRange[] = ["1D", "1W", "1M", "all"];
+const VALID_UI_RANGES: GameFixtureChartTimeRange[] = [
+  "1H",
+  "1D",
+  "1W",
+  "1M",
+  "all",
+];
 const VALID_INTERVALS: FixtureHistoryInterval[] = ["1h", "1d", "1w", "1m", "max", "all"];
 const VALID_CHART_KINDS: FixtureChartKind[] = [
   "moneyline",

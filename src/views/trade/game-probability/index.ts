@@ -11,9 +11,9 @@ export type {
   GameProbabilitySectionProps,
   ProbabilitySummaryItem,
 } from "@/views/trade/game-probability/section";
-export { useFixturePriceHistory } from "@/views/trade/game-probability/use-fixture-price-history";
-export type {
-  FixturePriceHistoryStatus,
-  UseFixturePriceHistoryOptions,
-  UseFixturePriceHistoryResult,
-} from "@/views/trade/game-probability/use-fixture-price-history";
+export {
+  useProbabilityChart,
+  type ProbabilityChartStatus,
+  type UseProbabilityChartFixtureOptions,
+  type UseProbabilityChartFixtureResult
+} from "@/hooks/market/use-probability-chart";
