@@ -5,10 +5,15 @@ import axios, {
 } from "axios";
 
 import type {
+  ProphetAnalyticsCompetitiveness,
+  ProphetAnalyticsRecommend,
+  ProphetAnalyticsTeamPowerRanking,
   ProphetApiResponse,
   ProphetBindTelegramRequest,
   ProphetCancelTrackRequest,
+  ProphetGetAnalyticsNewsData,
   ProphetGetGamesData,
+  ProphetGetLatestAnalyticsNewsData,
   ProphetLoginData,
   ProphetLoginRequest,
   ProphetTrackRequest,
@@ -28,9 +33,10 @@ export class ProphetApiError extends Error {
 }
 
 function resolveBaseUrl(): string {
-  return process.env.MAIN_HOSTNAME === "dev.prophet.zone"
-    ? "https://api_stg.prophet.zone"
-    : "https://api.prophet.zone";
+  // return process.env.MAIN_HOSTNAME === "dev.prophet.zone"
+  //   ? "https://api_stg.prophet.zone"
+  //   : "https://api.prophet.zone";
+  return "https://api_stg.prophet.zone";
 }
 
 function readStoredToken(): string | null {
@@ -200,6 +206,60 @@ export async function untrackProphet(
   request: ProphetCancelTrackRequest
 ): Promise<void> {
   await prophetPost<unknown>("/v1/user/untrack", request);
+}
+
+/** GET /v1/analytics/competitiveness */
+export async function getAnalyticsCompetitiveness(): Promise<
+  ProphetAnalyticsCompetitiveness[]
+> {
+  return prophetGet<ProphetAnalyticsCompetitiveness[]>(
+    "/v1/analytics/competitiveness"
+  );
+}
+
+/** GET /v1/analytics/recommends */
+export async function getAnalyticsRecommends(): Promise<
+  ProphetAnalyticsRecommend[]
+> {
+  return prophetGet<ProphetAnalyticsRecommend[]>("/v1/analytics/recommends");
+}
+
+/** GET /v1/analytics/team-power-rankings */
+export async function getAnalyticsTeamPowerRankings(): Promise<
+  ProphetAnalyticsTeamPowerRanking[]
+> {
+  return prophetGet<ProphetAnalyticsTeamPowerRanking[]>(
+    "/v1/analytics/team-power-rankings"
+  );
+}
+
+/** GET /v1/analytics/news/latest */
+export async function getAnalyticsLatestNews(params?: {
+  category?: string;
+}): Promise<ProphetGetLatestAnalyticsNewsData> {
+  return prophetGet<ProphetGetLatestAnalyticsNewsData>(
+    "/v1/analytics/news/latest",
+    {
+      params: {
+        category: params?.category ?? ""
+      }
+    }
+  );
+}
+
+/** GET /v1/analytics/news */
+export async function getAnalyticsNews(params: {
+  page: number;
+  page_size: number;
+  category?: string;
+}): Promise<ProphetGetAnalyticsNewsData> {
+  return prophetGet<ProphetGetAnalyticsNewsData>("/v1/analytics/news", {
+    params: {
+      page: params.page,
+      page_size: params.page_size,
+      category: params.category ?? ""
+    }
+  });
 }
 
 export { prophetClient };

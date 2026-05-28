@@ -5,11 +5,12 @@ interface TeamFlagProps {
   code?: string;
   name?: string;
   className?: string;
+  noFlagIconCodeClassName?: string;
 }
 
 const defaultFlagClassName = "inline-block h-[23px] w-[23px] shrink-0";
 
-export function TeamFlag({ code, name, className }: TeamFlagProps) {
+export function TeamFlag({ code, name, className, noFlagIconCodeClassName }: TeamFlagProps) {
   const flagIconCode = code ? getFifaFlagIconCode(code) : undefined;
 
   if (!flagIconCode) {
@@ -18,7 +19,7 @@ export function TeamFlag({ code, name, className }: TeamFlagProps) {
         className={cn(
           defaultFlagClassName,
           "grid place-items-center text-[10px] font-semibold text-prophet-muted",
-          className
+          noFlagIconCodeClassName
         )}
         aria-label={name ?? "Unknown team"}
       >

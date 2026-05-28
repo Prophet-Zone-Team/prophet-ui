@@ -19,6 +19,12 @@ export type NewsImpactItem = {
   thumbnailUrl?: string;
   thumbnailAlt: string;
   highlighted?: boolean;
+  publishedAt?: string;
+  sourceUrl?: string;
+  category?: string;
+  matchedTeams?: string[];
+  matchedPlayers?: string[];
+  reasons?: string[];
 };
 
 export type SignalNewsImpactData = {

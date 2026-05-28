@@ -1,15 +1,18 @@
+"use client";
+
 import { cn } from "@/lib/cn";
+import { useAnalyticsCompetitiveness } from "@/hooks/analytics/use-analytics-competitiveness";
 
 import { CompetitivenessHeader } from "./competitiveness-header";
 import { CompetitivenessSection } from "./competitiveness-section";
-import { groupCompetitivenessData } from "./mock-data";
 
 export type GroupCompetitivenessProps = {
   className?: string;
 };
 
 export function GroupCompetitiveness({ className }: GroupCompetitivenessProps) {
-  const { deathSection, easiestSection } = groupCompetitivenessData;
+  const { data, isLoading, isError } = useAnalyticsCompetitiveness();
+  const { deathSection, easiestSection } = data;
 
   return (
     <article
@@ -22,17 +25,27 @@ export function GroupCompetitiveness({ className }: GroupCompetitivenessProps) {
     >
       <CompetitivenessHeader />
 
-      <div className="mt-[16px] flex min-h-0 flex-1 flex-col">
-        <CompetitivenessSection data={deathSection} />
+      {isLoading ? (
+        <p className="px-3 py-8 text-center text-[14px] text-[#909090] md:px-[25px]">
+          Loading...
+        </p>
+      ) : isError ? (
+        <p className="px-3 py-8 text-center text-[14px] text-[#909090] md:px-[25px]">
+          Unable to load data.
+        </p>
+      ) : (
+        <div className="mt-[16px] flex min-h-0 flex-1 flex-col">
+          <CompetitivenessSection data={deathSection} />
 
-        <div
-          className="mx-3 border-t border-[#EBEBEB] md:mx-[25px]"
-          role="separator"
-          aria-hidden
-        />
+          <div
+            className="mx-3 border-t border-[#EBEBEB] md:mx-[25px]"
+            role="separator"
+            aria-hidden
+          />
 
-        <CompetitivenessSection data={easiestSection} />
-      </div>
+          <CompetitivenessSection data={easiestSection} />
+        </div>
+      )}
     </article>
   );
 }

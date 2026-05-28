@@ -3,33 +3,41 @@
 import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/cn";
+import { useAnalyticsTeamPowerRankings } from "@/hooks/analytics/use-analytics-team-power-rankings";
+import { PageBack } from "@/components/ui/page-back";
 
 import { FullRankingTable } from "./full-ranking-table";
 import {
   filterTeamPowerRankingEntries,
-  getTeamFilterOptions,
-  GROUP_FILTER_OPTIONS,
-  teamPowerRankingEntries
+  getTeamFilterOptions
 } from "./mock-data";
 import { RankingFilterPill } from "./ranking-filter-pill";
-import { PageBack } from "@/components/ui/page-back";
 
 export function TeamPowerRankingPage() {
+  const { entries, isLoading, isError } = useAnalyticsTeamPowerRankings();
   const [teamFilter, setTeamFilter] = useState("all");
   const [groupFilter, setGroupFilter] = useState("all");
 
   const teamOptions = useMemo(
-    () => getTeamFilterOptions(teamPowerRankingEntries),
-    []
+    () => getTeamFilterOptions(entries),
+    [entries]
   );
+
+  const groupOptions = useMemo(() => {
+    const groups = [...new Set(entries.map((entry) => entry.group).filter(Boolean))].sort();
+    return [
+      { value: "all", label: "All" },
+      ...groups.map((group) => ({ value: group, label: group }))
+    ];
+  }, [entries]);
 
   const filteredEntries = useMemo(
     () =>
-      filterTeamPowerRankingEntries(teamPowerRankingEntries, {
+      filterTeamPowerRankingEntries(entries, {
         teamId: teamFilter,
         group: groupFilter
       }),
-    [teamFilter, groupFilter]
+    [entries, teamFilter, groupFilter]
   );
 
   return (
@@ -50,7 +58,7 @@ export function TeamPowerRankingPage() {
           <RankingFilterPill
             prefix="Group"
             value={groupFilter}
-            options={[...GROUP_FILTER_OPTIONS]}
+            options={groupOptions}
             onChange={setGroupFilter}
           />
         </div>
@@ -62,9 +70,19 @@ export function TeamPowerRankingPage() {
           "border border-[#EBEBEB] bg-white pb-4 pt-4 md:pb-5 md:pt-5"
         )}
       >
-        <div className="md:overflow-x-auto">
-          <FullRankingTable entries={filteredEntries} />
-        </div>
+        {isLoading ? (
+          <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-[#909090] md:px-5">
+            Loading...
+          </p>
+        ) : isError ? (
+          <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-[#909090] md:px-5">
+            Unable to load data.
+          </p>
+        ) : (
+          <div className="md:overflow-x-auto">
+            <FullRankingTable entries={filteredEntries} />
+          </div>
+        )}
       </div>
     </div>
   );

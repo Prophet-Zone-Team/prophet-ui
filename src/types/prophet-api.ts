@@ -75,3 +75,62 @@ export interface ProphetUserTrackItem {
   goals?: number[];
   team?: ProphetWorldCupTeam;
 }
+
+export interface ProphetAnalyticsCompetitiveness {
+  id?: number;
+  category?: string;
+  group_name?: string;
+  score?: number;
+}
+
+export interface ProphetAnalyticsRecommend {
+  id?: number;
+  category?: string;
+  team?: string;
+  reason?: string;
+}
+
+export interface ProphetAnalyticsTeamPowerRanking {
+  id?: number;
+  rank?: number;
+  previous_rank?: number;
+  team_code?: string;
+  team_name?: string;
+  group_name?: string;
+  title_probability?: string;
+  round_of_32_probability?: string;
+  round_of_16_probability?: string;
+  trend_direction?: string;
+  rank_delta?: number;
+  title_probability_source?: string;
+  knockout_probability_source?: string;
+}
+
+export interface ProphetAnalyticsNewsArticle {
+  id?: number;
+  url?: string;
+  source_id?: string;
+  source_name?: string;
+  author?: string;
+  title?: string;
+  description?: string;
+  url_to_image?: string;
+  published_at?: string;
+  fetched_at?: string;
+  language?: string;
+  score?: number;
+  category?: string;
+  reasons_json?: string;
+  matched_teams_json?: string;
+  matched_players_json?: string;
+  updated_at?: string;
+}
+
+export interface ProphetGetAnalyticsNewsData {
+  list?: ProphetAnalyticsNewsArticle[];
+  total?: number;
+}
+
+export interface ProphetGetLatestAnalyticsNewsData {
+  list?: ProphetAnalyticsNewsArticle[];
+}

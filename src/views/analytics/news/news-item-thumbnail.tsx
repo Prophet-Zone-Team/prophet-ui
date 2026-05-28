@@ -28,6 +28,7 @@ export function NewsItemThumbnail({
         alt={alt}
         width={72}
         height={72}
+        unoptimized
         className={cn(
           "size-[72px] shrink-0 rounded-[12px] object-cover",
           className
