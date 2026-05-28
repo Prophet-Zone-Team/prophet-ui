@@ -46,7 +46,10 @@ export function useMarketOrderbook(
   const [connected, setConnected] = useState(false);
   const fallbackAttemptedRef = useRef(false);
   const marketWsContextRef = useRef(marketWsContext);
-  marketWsContextRef.current = marketWsContext;
+
+  useEffect(() => {
+    if (marketWsContext) marketWsContextRef.current = marketWsContext;
+  }, [marketWsContext]);
 
   const runFallback = useCallback(async (activeTokenId: string) => {
     if (fallbackAttemptedRef.current) {

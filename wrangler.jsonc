@@ -6,6 +6,7 @@
   "preview_urls": false,
   "compatibility_date": "2026-05-12",
   "compatibility_flags": ["nodejs_compat"],
+  "keep_vars": true,
   "alias": {
     "server-only": "./scripts/server-only-stub.mjs"
   },

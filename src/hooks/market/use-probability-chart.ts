@@ -76,6 +76,25 @@ export type UseProbabilityChartResult =
   | UseProbabilityChartTeamResult
   | UseProbabilityChartFixtureResult;
 
+const DISABLED_TEAM_CHART_OPTIONS: UseProbabilityChartTeamOptions = {
+  kind: "team",
+  tokenId: undefined,
+  entityId: "__disabled__",
+  enabled: false,
+};
+
+const DISABLED_FIXTURE_CHART_OPTIONS: UseProbabilityChartFixtureOptions = {
+  kind: "fixture",
+  match: {
+    id: "__disabled__",
+    matchId: 0,
+    stage: "EXTERNAL",
+    status: "unknown",
+    freshness: { source: "disabled", status: "unavailable" },
+  },
+  enabled: false,
+};
+
 function historyResponseToMap(
   history: PolymarketClobBatchPricesHistoryResponse["history"],
 ): Map<string, Array<{ t: number; p: number }>> {
@@ -101,11 +120,14 @@ export function useProbabilityChart(
 export function useProbabilityChart(
   options: UseProbabilityChartOptions,
 ): UseProbabilityChartResult {
-  if (options.kind === "team") {
-    return useProbabilityChartTeam(options);
-  }
+  const teamResult = useProbabilityChartTeam(
+    options.kind === "team" ? options : DISABLED_TEAM_CHART_OPTIONS,
+  );
+  const fixtureResult = useProbabilityChartFixture(
+    options.kind === "fixture" ? options : DISABLED_FIXTURE_CHART_OPTIONS,
+  );
 
-  return useProbabilityChartFixture(options);
+  return options.kind === "team" ? teamResult : fixtureResult;
 }
 
 function useProbabilityChartTeam(
@@ -262,8 +284,11 @@ function useProbabilityChartFixture(
   } = options;
 
   const matchRef = useRef(match);
-  matchRef.current = match;
   const fetchKey = buildFixtureChartFetchKey(match, chartKind, lineKey);
+
+  useEffect(() => {
+    matchRef.current = match;
+  }, [match]);
 
   const [points, setPoints] = useState<GameFixtureChartPoint[]>([]);
   const [binaryPoints, setBinaryPoints] = useState<GameFixtureBinaryChartPoint[]>(
