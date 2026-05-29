@@ -308,6 +308,8 @@ export interface TeamMarketData {
   sentiment: MarketSentiment;
   bookmakerImpliedProbability: number;
   updatedAt: string;
+  /** Polymarket event/market slug for trade deep links. */
+  slug?: string;
   polymarket?: PolymarketMarketMetadata;
 }
 

@@ -7,10 +7,11 @@ import {
 import { clearFootballMatchesFileFallbackCache } from "@/data/providers/football-matches-fallback";
 import {
   clearPolymarketFootballEventsCache,
-  fetchPolymarketFootballEvents,
   fetchPolymarketFootballMatchBySlug
 } from "@/data/providers/polymarket-football-events-provider";
+import { mapProphetGamesToMatches } from "@/lib/market/prophet-game-mapper";
 import { clearFixtureSiblingMarketsCache } from "@/server/market/fixture-sibling-enrichment";
+import { getProphetGames } from "@/service/prophet";
 import type { FreshnessMeta, WorldCupMatch } from "@/types/market";
 
 export interface FootballMatchesResult {
@@ -30,28 +31,7 @@ export async function getFootballMatches(): Promise<FootballMatchesResult> {
     };
   }
 
-  if (USE_MOCK_SCHEDULE_MATCHES) {
-    const [matches, meta] = await Promise.all([
-      getMockScheduleMatchesFromFile(),
-      getMockScheduleMatchesMeta()
-    ]);
-
-    const result: FootballMatchesResult = { matches, meta };
-
-    cachedResult = {
-      ...result,
-      expiresAt: Date.now() + MATCHES_CACHE_TTL_MS
-    };
-
-    return result;
-  }
-
-  const { matches, meta } = await fetchPolymarketFootballEvents();
-
-  const result: FootballMatchesResult = {
-    matches,
-    meta
-  };
+  const result = await fetchProphetFootballMatches();
 
   cachedResult = {
     ...result,
@@ -85,6 +65,36 @@ export async function findFootballMatch(
   matchId: string,
 ): Promise<WorldCupMatch | undefined> {
   return getFootballMatchBySlug(matchId);
+}
+
+async function fetchProphetFootballMatches(): Promise<FootballMatchesResult> {
+  const lastUpdated = new Date().toISOString();
+
+  try {
+    const { list } = await getProphetGames();
+    const matches = mapProphetGamesToMatches(list ?? []);
+
+    return {
+      matches,
+      meta: {
+        source: "prophet-api",
+        status: matches.length > 0 ? "live" : "unavailable",
+        lastUpdated
+      }
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unable to load Prophet games.";
+
+    return {
+      matches: [],
+      meta: {
+        source: `prophet-api: ${message}`,
+        status: "unavailable",
+        lastUpdated
+      }
+    };
+  }
 }
 
 export function clearFootballMatchesCache(): void {

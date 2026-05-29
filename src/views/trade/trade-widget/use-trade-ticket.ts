@@ -7,13 +7,13 @@ import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-mode
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import {
   resolveTradePrimaryAction,
-  runTradePrimaryAction,
+  runTradePrimaryAction
 } from "@/lib/trading/trade-primary-action";
 
 import { getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
 import {
   isMockLiveFixtureEnabled,
-  livePricesToFixtureAsks,
+  livePricesToFixtureAsks
 } from "@/data/mock/live-fixture-simulation";
 import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity";
 import { useMarketWsPrices } from "@/context/market-ws";
@@ -58,7 +58,11 @@ import {
   useTradeTakeProfitLimitEnabled,
   useTradeTakeProfitLimitPrice
 } from "@/store/trade-ticket-store";
-import type { GameMarketSnapshot, TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
+import type {
+  GameMarketSnapshot,
+  TeamMarketSnapshot,
+  UserPositionRecord
+} from "@/types/market";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
 import {
   buildGameTradePreview,
@@ -85,6 +89,8 @@ import {
   resolveGameOutcomeTokenIds,
   resolveOrderLimitPrice,
   resolveOrderType,
+  formatMarketBuyAmountInput,
+  resolveMarketBuyAllInAmount,
   resolveQuickAmountAllBalance,
   resolveSellQuickAmount,
   resolveTakeProfitLimitPrice,
@@ -99,8 +105,7 @@ import {
   validateLimitExpirationCustom,
   type OutcomeShareMap,
   type SellQuickAmountFraction,
-  type TradeTicketStatus,
-  type TradingConfig
+  type TradeTicketStatus
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
 
 export type UseTradeTicketTeamInput = {
@@ -156,7 +161,6 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const [readiness, setReadiness] = useState<
     Awaited<ReturnType<typeof fetchReadinessForPreview>> | undefined
   >();
-  const [config, setConfig] = useState<TradingConfig | undefined>();
   const [status, setStatus] = useState<TradeTicketStatus>("idle");
   const [message, setMessage] = useState<string | undefined>();
   const [eligibilityRetryAvailable, setEligibilityRetryAvailable] =
@@ -169,7 +173,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     no: 0
   });
   const mockLivePrices = useMockLiveFixturePricesForOutcome(
-    selectedFixtureOutcome?.id,
+    selectedFixtureOutcome?.id
   );
   const readinessFetchGeneration = useRef(0);
   const takeProfitPriceTouched = useRef(false);
@@ -207,7 +211,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       matchOutcomeSide,
       selectedFixtureOutcome
     );
-  }, [input.variant, matchOutcomeSide, marketTokenDeps, selectedFixtureOutcome]);
+  }, [
+    input.variant,
+    matchOutcomeSide,
+    marketTokenDeps,
+    selectedFixtureOutcome
+  ]);
 
   const fixtureWsEnabled =
     input.variant === "game" &&
@@ -245,7 +254,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     fixtureTokenPrices,
     input.variant,
     mockLivePrices,
-    selectedFixtureOutcome,
+    selectedFixtureOutcome
   ]);
 
   const effectiveFixtureOutcome = useMemo(() => {
@@ -424,8 +433,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       yesPrice: matchProbability,
       noPrice: Math.max(0, 100 - matchProbability),
       yesTokenPrice: effectiveFixtureOutcome
-        ? getDefaultFixtureLimitPrice(effectiveFixtureOutcome, "yes", tradeSide) ??
-          0
+        ? (getDefaultFixtureLimitPrice(
+            effectiveFixtureOutcome,
+            "yes",
+            tradeSide
+          ) ?? 0)
         : resolveGameOutcomeTradePrice(
             matchOutcome,
             matchProbability,
@@ -433,8 +445,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             tradeSide
           ),
       noTokenPrice: effectiveFixtureOutcome
-        ? getDefaultFixtureLimitPrice(effectiveFixtureOutcome, "no", tradeSide) ??
-          0
+        ? (getDefaultFixtureLimitPrice(
+            effectiveFixtureOutcome,
+            "no",
+            tradeSide
+          ) ?? 0)
         : resolveGameOutcomeTradePrice(
             matchOutcome,
             matchProbability,
@@ -499,7 +514,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       previewDisabledReason: preview?.disabledReason,
       expirationError,
       isRegionBlocked,
-      eligibilityNetworkError: isEligibilityNetworkFailure(session),
+      eligibilityNetworkError: isEligibilityNetworkFailure(session)
     });
   }, [
     authReadiness,
@@ -511,7 +526,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     readiness,
     session,
     submitLabel,
-    tradeSide,
+    tradeSide
   ]);
 
   const canSubmit = canSubmitTradeTicket({
@@ -561,12 +576,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     setTakeProfitLimitPrice(
       formatTakeProfitLimitPriceString(preview.sidePrice)
     );
-  }, [
-    orderMode,
-    preview?.sidePrice,
-    setTakeProfitLimitPrice,
-    tradeSide
-  ]);
+  }, [orderMode, preview?.sidePrice, setTakeProfitLimitPrice, tradeSide]);
 
   const applyReadinessFetch = useCallback(
     async (orderPreview: NonNullable<typeof preview>) => {
@@ -623,11 +633,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
     try {
       const positions = await fetchMarketOutcomeShares(conditionId);
-      const nextShares = buildOutcomeShareMap(
-        positions,
-        yesTokenId,
-        noTokenId
-      );
+      const nextShares = buildOutcomeShareMap(positions, yesTokenId, noTokenId);
 
       setOutcomeShares((current) =>
         current.yes === nextShares.yes && current.no === nextShares.no
@@ -686,7 +692,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         return;
       }
 
-      const currentAmount = parseOrderAmount(useTradeTicketStore.getState().amount);
+      const currentAmount = parseOrderAmount(
+        useTradeTicketStore.getState().amount
+      );
 
       if (currentAmount > cap) {
         setAmount(String(cap));
@@ -734,13 +742,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     if (tradeSide === "sell") {
       void refreshOutcomeShares();
     }
-  }, [
-    input,
-    isAuthenticated,
-    refreshOutcomeShares,
-    sellPosition,
-    tradeSide
-  ]);
+  }, [input, isAuthenticated, refreshOutcomeShares, sellPosition, tradeSide]);
 
   const refreshOrderReadiness = useCallback(async () => {
     if (!preview) {
@@ -761,7 +763,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
       setEligibilityRetryAvailable(stillBlocked);
       setStatus(stillBlocked ? "error" : "idle");
-      const blockedMessage = stillBlocked ? session?.eligibilityReason : undefined;
+      const blockedMessage = stillBlocked
+        ? session?.eligibilityReason
+        : undefined;
       setMessage(blockedMessage);
       if (blockedMessage) {
         showOrderErrorToast(blockedMessage);
@@ -791,7 +795,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       openLogin,
       signClobCredentials,
       signTokenApprovals,
-      refreshSetupReadiness,
+      refreshSetupReadiness
     });
 
     if (!gate.ok) {
@@ -949,9 +953,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
           shareSize: preview.shareSize,
           variant: input.variant
         }) +
-          (takeProfitLimitPlaced
-            ? " · Take profit limit order submitted"
-            : ""),
+          (takeProfitLimitPlaced ? " · Take profit limit order submitted" : ""),
         {
           orderId: result.order?.id,
           onViewPortfolio: () => router.push("/portfolio")
@@ -963,7 +965,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       await Promise.all([
         refreshOrderReadiness(),
         refreshSetupReadiness(),
-        refreshOutcomeShares(),
+        refreshOutcomeShares()
       ]);
       await input.onOrderSuccess?.();
     } catch (error) {
@@ -1083,7 +1085,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   ]);
 
   function applyQuickAmount(value: number | "all") {
-    if (orderMode === "limit" && tradeSide === "buy" && typeof value === "number") {
+    if (
+      orderMode === "limit" &&
+      tradeSide === "buy" &&
+      typeof value === "number"
+    ) {
       setAmount(resolveLimitShareQuickAmount(amount, value));
       setMessage(undefined);
       setEligibilityRetryAvailable(false);
@@ -1118,6 +1124,35 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     if (value === "all") {
+      if (tradeSide === "buy" && orderMode === "market" && preview) {
+        const availableCash = resolveTradeTicketAvailableCash(readiness);
+
+        if (availableCash !== undefined && availableCash > 0) {
+          const fee =
+            input.variant === "team"
+              ? input.snapshot.market.polymarket?.fee
+              : (effectiveFixtureOutcome?.fee ??
+                findGameMarketOutcome(
+                  input.gameSnapshot.outcomes,
+                  matchOutcomeSide
+                )?.fee);
+
+          const nextAmount = resolveMarketBuyAllInAmount({
+            availableCash,
+            sidePrice: preview.sidePrice,
+            fee
+          });
+
+          if (nextAmount > 0) {
+            setAmount(formatMarketBuyAmountInput(nextAmount));
+            setMessage(undefined);
+            setEligibilityRetryAvailable(false);
+          }
+        }
+
+        return;
+      }
+
       const balance = resolveQuickAmountAllBalance(
         readiness,
         tradeSide,
@@ -1125,9 +1160,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       );
 
       if (balance !== undefined && balance > 0) {
-        setAmount(
-          tradeSide === "sell" ? String(balance) : String(Math.floor(balance))
-        );
+        setAmount(String(balance));
       }
 
       return;
@@ -1192,8 +1225,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       status,
       message,
       eligibilityRetryAvailable:
-        eligibilityRetryAvailable ||
-        primaryAction.kind === "retry_eligibility",
+        eligibilityRetryAvailable || primaryAction.kind === "retry_eligibility",
       onSelectOutcome: selectOutcome,
       onAmountChange: setAmount,
       onLimitPriceChange: setLimitPrice,

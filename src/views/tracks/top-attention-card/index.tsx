@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
 
 import {
   formatProbability,
@@ -13,7 +12,6 @@ import { useAuthOptional } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { formatScheduleKickoff } from "@/lib/market/schedule-match";
 import { gameTradeHref, teamTradeHref } from "@/lib/routes/trade";
-import { runFastBid, type FastBidStatus } from "@/lib/trading/run-fast-bid";
 import {
   DEFAULT_FAST_BID_AMOUNT,
   formatFastBidAmountDisplay,
@@ -138,7 +136,7 @@ function TopAttentionTeamCard({
         <p className="m-0 text-[12px] font-[400] capitalize leading-[15px] text-[#909090]">
           {categoryLabel}
         </p>
-        <MarketBookmarkControl teamId={team.id} />
+        <MarketBookmarkControl teamId={market.polymarket?.slug || ""} />
       </div>
 
       <div className="mt-2 flex min-w-0 items-center gap-2">
@@ -189,7 +187,11 @@ function TopAttentionMatchCard({
         <p className="m-0 text-[12px] font-[400] leading-[15px] text-[#909090]">
           {kickoffLabel}
         </p>
-        <MatchBookmarkControl matchId={match.id} />
+        <MatchBookmarkControl
+          matchId={match.id}
+          homeTeamName={homeTeam.name}
+          awayTeamName={awayTeam.name}
+        />
       </div>
 
       <div className="mt-2 flex min-w-0 items-center gap-2">
@@ -361,59 +363,34 @@ function OutcomeQuickBidButton({
   const hasHydrated = useConfigHydrated();
   const syncTeamSnapshot = useSyncTradeTicketSnapshot();
   const setOutcomeSide = useSetTradeOutcomeSide();
-  const [status, setStatus] = useState<FastBidStatus>("idle");
   const isRegionBlocked = auth?.isRegionBlocked ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const regionRestricted = isAuthenticated && isRegionBlocked;
   const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
   const isYes = side === "yes";
   const amountLabel = formatFastBidAmountDisplay(displayAmount);
+  const buttonLabel = `${isYes ? "YES" : "NO"} ${amountLabel}`;
 
-  const buttonLabel = useMemo(() => {
-    if (status === "checking") {
-      return "Checking";
-    }
-
-    if (status === "submitting") {
-      return "Submitting";
-    }
-
-    return `${isYes ? "YES" : "NO"} ${amountLabel}`;
-  }, [amountLabel, isYes, status]);
-
-  async function handleClick() {
-    if (status === "checking" || status === "submitting" || regionRestricted) {
-      return;
-    }
-
-    if (isYes) {
-      await runFastBid({
-        snapshot,
-        amount: displayAmount,
-        auth,
-        router,
-        onStatusChange: setStatus
-      });
+  function handleClick() {
+    if (regionRestricted) {
       return;
     }
 
     syncTeamSnapshot(snapshot);
-    setOutcomeSide("no");
+    setOutcomeSide(side);
     router.push(teamTradeHref(snapshot.team.id));
   }
 
   const button = (
     <button
       type="button"
-      disabled={
-        status === "checking" || status === "submitting" || regionRestricted
-      }
-      aria-label={`${isYes ? "Yes" : "No"} quick bid ${amountLabel} on ${snapshot.team.name}`}
-      onClick={() => void handleClick()}
+      disabled={regionRestricted}
+      aria-label={`${isYes ? "Yes" : "No"} trade ${amountLabel} on ${snapshot.team.name}`}
+      onClick={handleClick}
       className={cn(
         "inline-flex h-10 w-full items-center justify-center rounded-[8px]",
         "text-[14px] font-[500] leading-[18px] text-white",
-        "disabled:cursor-wait disabled:opacity-70",
+        "disabled:cursor-not-allowed disabled:opacity-70",
         isYes ? "bg-[#65AF14]" : "bg-[#FF674B]"
       )}
     >

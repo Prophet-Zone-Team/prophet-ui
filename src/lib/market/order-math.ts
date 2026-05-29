@@ -113,7 +113,7 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
   const requestedAmount =
     tradeSide === "sell"
       ? floorShares(Math.max(0, input.amount))
-      : roundMoney(Math.max(0, input.amount));
+      : roundBudgetDown(Math.max(0, input.amount));
   const orderCost =
     tradeSide === "buy"
       ? calculateBuyOrderCostFromBudget({
@@ -242,6 +242,11 @@ function roundMoney(value: number): number {
 
 export function floorShares(value: number): number {
   return Math.floor(value * 10000) / 10000;
+}
+
+/** Rounds USDC budget inputs down so values like 5.005 are not rounded up to 5.01. */
+export function roundBudgetDown(value: number): number {
+  return Math.floor((value + Number.EPSILON) * 10000) / 10000;
 }
 
 export function resolveMaxSellShares(

@@ -1,28 +1,28 @@
 "use client";
 
-import { BookmarkToggle } from "@/components/bookmark/bookmark-toggle";
+import {
+  BookmarkToggle,
+  type ProphetBookmarkTarget
+} from "@/components/bookmark/bookmark-toggle";
 import { TrackLink, TrackTooltip } from "@/components/bookmark/track-tooltip";
-import { useIsTeamTracked, useToggleTrackedTeam } from "@/store";
-import { useTracksHydrated } from "@/store/use-tracks-hydrated";
 
 export interface BookmarkControlProps {
-  teamId: string;
+  slug: string;
   teamName: string;
 }
 
-export function BookmarkControl({ teamId, teamName }: BookmarkControlProps) {
-  const isTracked = useIsTeamTracked(teamId);
-  const toggleTeam = useToggleTrackedTeam();
-  const hasHydrated = useTracksHydrated();
-  const showTracked = hasHydrated && isTracked;
+export function BookmarkControl({ slug, teamName }: BookmarkControlProps) {
+  const target: ProphetBookmarkTarget = {
+    category: "team",
+    slug: slug,
+    teamName
+  };
 
   return (
     <BookmarkToggle
-      isTracked={showTracked}
-      ariaLabel={
-        showTracked ? `Remove ${teamName} from Track` : `Add ${teamName} to Track`
-      }
-      onToggle={() => toggleTeam(teamId)}
+      target={target}
+      ariaLabel={`Add ${teamName} to Track`}
+      trackedAriaLabel={`Remove ${teamName} from Track`}
       tooltip={
         <TrackTooltip>
           You subscribed will be listed in <TrackLink />, and team changes will

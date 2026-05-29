@@ -1,25 +1,34 @@
 "use client";
 
-import { BookmarkToggle } from "@/components/bookmark/bookmark-toggle";
+import {
+  BookmarkToggle,
+  type ProphetBookmarkTarget
+} from "@/components/bookmark/bookmark-toggle";
 import { TrackLink, TrackTooltip } from "@/components/bookmark/track-tooltip";
-import { useIsMatchTracked, useToggleTrackedMatch } from "@/store";
-import { useTracksHydrated } from "@/store/use-tracks-hydrated";
 
 export interface MatchBookmarkControlProps {
   matchId: string;
+  homeTeamName: string;
+  awayTeamName: string;
 }
 
-export function MatchBookmarkControl({ matchId }: MatchBookmarkControlProps) {
-  const isTracked = useIsMatchTracked(matchId);
-  const toggleMatch = useToggleTrackedMatch();
-  const hasHydrated = useTracksHydrated();
-  const showTracked = hasHydrated && isTracked;
+export function MatchBookmarkControl({
+  matchId,
+  homeTeamName,
+  awayTeamName
+}: MatchBookmarkControlProps) {
+  const target: ProphetBookmarkTarget = {
+    category: "game",
+    slug: matchId,
+    homeTeamName,
+    awayTeamName
+  };
 
   return (
     <BookmarkToggle
-      isTracked={showTracked}
-      ariaLabel={showTracked ? "Remove match from Track" : "Add match to Track"}
-      onToggle={() => toggleMatch(matchId)}
+      target={target}
+      ariaLabel="Add match to Track"
+      trackedAriaLabel="Remove match from Track"
       tooltip={
         <TrackTooltip>
           Tracked matches appear in <TrackLink /> alongside your subscribed

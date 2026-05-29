@@ -10,6 +10,12 @@ export interface ProphetPolyMarketTeam {
   name?: string;
 }
 
+export interface ProphetPolyMarketMarket {
+  slug?: string;
+  outcomes?: string[];
+  prices?: string[];
+}
+
 export interface ProphetWorldCupTeam {
   id?: number;
   code?: string;
@@ -31,7 +37,9 @@ export interface ProphetPolyMarketGameItem {
   active?: number;
   archived?: number;
   closed?: number;
-  teams?: ProphetPolyMarketTeam[];
+  status?: number;
+  teams?: ProphetPolyMarketTeam[] | null;
+  markets?: ProphetPolyMarketMarket[] | null;
 }
 
 export interface ProphetGetGamesData {
@@ -55,15 +63,37 @@ export type ProphetTrackCategory = "team" | "game";
 
 export interface ProphetTrackRequest {
   category: ProphetTrackCategory;
-  slug: string;
+  slug?: string;
   team_name?: string;
 }
 
 export interface ProphetCancelTrackRequest {
-  track_id: number;
+  slug: string;
+}
+
+/** Lightweight row from GET /v1/user/tracks/list (bookmark state). */
+export interface ProphetUserTrackListItem {
+  id?: number;
+  category?: ProphetTrackCategory;
+  slug?: string;
+  team_name?: string;
+  user_id?: number;
+}
+
+export interface ProphetUserTrackMarket {
+  slug?: string;
+  groupItemTitle?: string;
+  volume?: string;
+  outcomePrices?: string;
+  oneHourPriceChange?: string;
+  oneDayPriceChange?: string;
+  oneWeekPriceChange?: string;
+  oneMonthPriceChange?: string;
 }
 
 export interface ProphetUserTrackItem {
+  track_id?: number;
+  category?: ProphetTrackCategory;
   slug?: string;
   team_name?: string;
   volume?: string;
@@ -72,6 +102,7 @@ export interface ProphetUserTrackItem {
   oneDayPriceChange?: string;
   oneWeekPriceChange?: string;
   oneMonthPriceChange?: string;
-  goals?: number[];
+  goals?: number[] | null;
   team?: ProphetWorldCupTeam;
+  markets?: ProphetUserTrackMarket[];
 }

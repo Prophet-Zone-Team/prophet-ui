@@ -12,10 +12,15 @@ import type {
   ProphetLoginData,
   ProphetLoginRequest,
   ProphetTrackRequest,
-  ProphetUserTrackItem
+  ProphetUserTrackItem,
+  ProphetUserTrackListItem
 } from "@/types/prophet-api";
 
 const AUTH_STORAGE_KEY = "prophet_api_token";
+const WALLET_STORAGE_KEY = "prophet_api_wallet";
+
+const PROPHET_AUTH_REQUIRED_MESSAGE =
+  "Connect your wallet to use this feature.";
 
 export class ProphetApiError extends Error {
   readonly code: number;
@@ -28,9 +33,9 @@ export class ProphetApiError extends Error {
 }
 
 function resolveBaseUrl(): string {
-  return process.env.MAIN_HOSTNAME === "dev.prophet.zone"
-    ? "https://api_stg.prophet.zone"
-    : "https://api.prophet.zone";
+  return process.env.NEXT_PUBLIC_ENV === "production"
+    ? "https://api.prophet.zone"
+    : "https://api_stg.prophet.zone";
 }
 
 function readStoredToken(): string | null {
@@ -38,7 +43,7 @@ function readStoredToken(): string | null {
     return null;
   }
 
-  return window.sessionStorage.getItem(AUTH_STORAGE_KEY);
+  return window.localStorage.getItem(AUTH_STORAGE_KEY);
 }
 
 function writeStoredToken(token: string | null): void {
@@ -47,21 +52,74 @@ function writeStoredToken(token: string | null): void {
   }
 
   if (token) {
-    window.sessionStorage.setItem(AUTH_STORAGE_KEY, token);
+    window.localStorage.setItem(AUTH_STORAGE_KEY, token);
   } else {
-    window.sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
   }
 }
 
+function readStoredWallet(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem(WALLET_STORAGE_KEY);
+}
+
+function writeStoredWallet(wallet: string | null): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (wallet) {
+    window.localStorage.setItem(WALLET_STORAGE_KEY, wallet);
+  } else {
+    window.localStorage.removeItem(WALLET_STORAGE_KEY);
+  }
+}
+
+function normalizeWalletAddress(address: string): string {
+  return address.toLowerCase();
+}
+
 let memoryToken: string | null = null;
+let memoryWallet: string | null = null;
 
 export function getProphetApiToken(): string | null {
   return memoryToken ?? readStoredToken();
 }
 
+export function getProphetApiWallet(): string | null {
+  return memoryWallet ?? readStoredWallet();
+}
+
 export function setProphetApiToken(token: string | null): void {
   memoryToken = token;
   writeStoredToken(token);
+
+  if (!token) {
+    memoryWallet = null;
+    writeStoredWallet(null);
+  }
+}
+
+function setProphetApiWallet(wallet: string | null): void {
+  memoryWallet = wallet ? normalizeWalletAddress(wallet) : null;
+  writeStoredWallet(memoryWallet);
+}
+
+export function isProphetAuthenticated(): boolean {
+  return Boolean(getProphetApiToken());
+}
+
+export function requireProphetApiToken(): string {
+  const token = getProphetApiToken();
+
+  if (!token) {
+    throw new ProphetApiError(401, PROPHET_AUTH_REQUIRED_MESSAGE);
+  }
+
+  return token;
 }
 
 function attachAuthHeader(
@@ -138,6 +196,7 @@ export async function loginProphet(
 
   if (data.token) {
     setProphetApiToken(data.token);
+    setProphetApiWallet(request.address);
   }
 
   return data;
@@ -145,6 +204,26 @@ export async function loginProphet(
 
 export function logoutProphet(): void {
   setProphetApiToken(null);
+}
+
+/** Sync Prophet session for the connected wallet; never throws. */
+export async function syncProphetWalletLogin(
+  address: string
+): Promise<ProphetLoginData | null> {
+  const normalizedAddress = normalizeWalletAddress(address);
+  const existingToken = getProphetApiToken();
+  const existingWallet = getProphetApiWallet();
+
+  if (existingToken && existingWallet === normalizedAddress) {
+    return { token: existingToken };
+  }
+
+  try {
+    return await loginProphet({ address: normalizedAddress });
+  } catch (error) {
+    console.warn("[prophet.login] wallet sync failed", error);
+    return null;
+  }
 }
 
 /** GET /v1/polymarket — proxy Polymarket GET */
@@ -180,6 +259,7 @@ export async function proxyPolymarketPost<T = unknown>(
 export async function bindProphetTelegram(
   request: ProphetBindTelegramRequest
 ): Promise<void> {
+  requireProphetApiToken();
   await prophetPost<unknown>("/v1/user/bind/telegram", request);
 }
 
@@ -187,18 +267,27 @@ export async function bindProphetTelegram(
 export async function trackProphet(
   request: ProphetTrackRequest
 ): Promise<void> {
+  requireProphetApiToken();
   await prophetPost<unknown>("/v1/user/track", request);
 }
 
 /** GET /v1/user/tracks */
 export async function getProphetTracks(): Promise<ProphetUserTrackItem[]> {
+  requireProphetApiToken();
   return prophetGet<ProphetUserTrackItem[]>("/v1/user/tracks");
+}
+
+/** GET /v1/user/tracks/list — lightweight subscription list for bookmark state */
+export async function getProphetTrackList(): Promise<ProphetUserTrackListItem[]> {
+  requireProphetApiToken();
+  return prophetGet<ProphetUserTrackListItem[]>("/v1/user/tracks/list");
 }
 
 /** POST /v1/user/untrack */
 export async function untrackProphet(
   request: ProphetCancelTrackRequest
 ): Promise<void> {
+  requireProphetApiToken();
   await prophetPost<unknown>("/v1/user/untrack", request);
 }
 

@@ -56,7 +56,12 @@ export function FastBidButton({
   }, [children, status]);
 
   async function handleClick() {
-    if (disabled || status === "checking" || status === "submitting" || regionRestricted) {
+    if (
+      disabled ||
+      status === "checking" ||
+      status === "submitting" ||
+      regionRestricted
+    ) {
       return;
     }
 

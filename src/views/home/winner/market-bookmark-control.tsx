@@ -1,25 +1,36 @@
 "use client";
 
-import { BookmarkToggle } from "@/components/bookmark/bookmark-toggle";
+import {
+  BookmarkToggle,
+  type ProphetBookmarkTarget
+} from "@/components/bookmark/bookmark-toggle";
 import { TrackLink, TrackTooltip } from "@/components/bookmark/track-tooltip";
-import { useIsTeamTracked, useToggleTrackedTeam } from "@/store";
-import { useTracksHydrated } from "@/store/use-tracks-hydrated";
+import { worldCupTeams } from "@/data/teams/world-cup-teams";
 
 export interface MarketBookmarkControlProps {
-  teamId: string;
+  slug: string;
+  teamName: string;
 }
 
-export function MarketBookmarkControl({ teamId }: MarketBookmarkControlProps) {
-  const isTracked = useIsTeamTracked(teamId);
-  const toggleTeam = useToggleTrackedTeam();
-  const hasHydrated = useTracksHydrated();
-  const showTracked = hasHydrated && isTracked;
+function resolveTeamName(teamId: string): string {
+  return worldCupTeams.find((team) => team.id === teamId)?.name ?? teamId;
+}
+
+export function MarketBookmarkControl({
+  slug,
+  teamName
+}: MarketBookmarkControlProps) {
+  const target: ProphetBookmarkTarget = {
+    category: "team",
+    slug: slug,
+    teamName
+  };
 
   return (
     <BookmarkToggle
-      isTracked={showTracked}
-      ariaLabel={showTracked ? "Remove from Track" : "Add to Track"}
-      onToggle={() => toggleTeam(teamId)}
+      target={target}
+      ariaLabel="Add to Track"
+      trackedAriaLabel="Remove from Track"
       tooltip={
         <TrackTooltip>
           You subscribed will be listed in <TrackLink />, and team changes will

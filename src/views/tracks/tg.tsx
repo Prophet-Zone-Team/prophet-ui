@@ -2,18 +2,28 @@
 
 import { useCallback, useState } from "react";
 import { Bell } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   BindTelegramDialog,
   type BindTelegramStatus
 } from "@/components/bind-tg";
 import { DEFAULT_BOT_USERNAME } from "@/components/bind-tg/constants";
+import { useAuth } from "@/context/auth/use-auth";
+import {
+  bindProphetTelegram,
+  isProphetAuthenticated,
+  ProphetApiError
+} from "@/service/prophet";
 
 const TELEGRAM_BOT_URL = `https://t.me/${DEFAULT_BOT_USERNAME}`;
 
 export default function TracksTelegramBanner() {
+  const { openLogin } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bindStatus, setBindStatus] = useState<BindTelegramStatus>("unbound");
+  const [connectedAt, setConnectedAt] = useState<string | undefined>();
+  const [isBinding, setIsBinding] = useState(false);
 
   const openBindDialog = useCallback(() => {
     setDialogOpen(true);
@@ -23,18 +33,61 @@ export default function TracksTelegramBanner() {
     setDialogOpen(false);
   }, []);
 
-  const handleOpenBot = useCallback(() => {
-    // setBindStatus("binding");
-    window.Telegram?.Login.auth(
-      { bot_id: "8770327699", request_access: true },
+  const handleOpenBot = useCallback(async () => {
+    if (isBinding) {
+      return;
+    }
+
+    if (!isProphetAuthenticated()) {
+      await openLogin();
+      return;
+    }
+
+    const loginAuth = window.Telegram?.Login?.auth;
+    if (!loginAuth) {
+      toast.error(
+        "Telegram login is unavailable. Please refresh and try again."
+      );
+      return;
+    }
+
+    loginAuth(
+      {
+        bot_id: process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID || "",
+        request_access: true
+      },
       (data) => {
         if (!data) {
           return;
         }
-        console.log(data);
+
+        void (async () => {
+          setIsBinding(true);
+          setBindStatus("binding");
+
+          try {
+            await bindProphetTelegram({ tg_user_id: data.id });
+            setConnectedAt(new Date().toLocaleDateString());
+            setBindStatus("success");
+          } catch (error) {
+            setBindStatus("unbound");
+
+            if (error instanceof ProphetApiError && error.code === 401) {
+              await openLogin();
+            } else if (error instanceof ProphetApiError) {
+              toast.error(error.message);
+            } else if (error instanceof Error) {
+              toast.error(error.message);
+            } else {
+              toast.error("Unable to bind Telegram.");
+            }
+          } finally {
+            setIsBinding(false);
+          }
+        })();
       }
     );
-  }, []);
+  }, [isBinding, openLogin]);
 
   const handleCheckStatus = useCallback(() => {
     setBindStatus((current) => (current === "unbound" ? "binding" : current));
@@ -42,6 +95,7 @@ export default function TracksTelegramBanner() {
 
   const handleDisconnect = useCallback(() => {
     setBindStatus("unbound");
+    setConnectedAt(undefined);
     setDialogOpen(false);
   }, []);
 
@@ -74,7 +128,8 @@ export default function TracksTelegramBanner() {
         status={bindStatus}
         botUsername={DEFAULT_BOT_USERNAME}
         botUrl={TELEGRAM_BOT_URL}
-        onOpenBot={handleOpenBot}
+        connectedAt={connectedAt}
+        onOpenBot={() => void handleOpenBot()}
         onCheckStatus={handleCheckStatus}
         onDisconnect={handleDisconnect}
       />

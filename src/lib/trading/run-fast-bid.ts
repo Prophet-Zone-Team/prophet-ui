@@ -186,6 +186,17 @@ export function buildFastBidPreview(snapshot: TeamMarketSnapshot, amount: number
   });
 }
 
+export function isTeamFastBidReady(
+  snapshot: TeamMarketSnapshot,
+  amount: number
+): boolean {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return false;
+  }
+
+  return buildFastBidPreview(snapshot, amount).canSubmitRealOrder;
+}
+
 function resolveTradingSession(fallback?: AuthContextValue["session"]) {
   return useAuthStore.getState().session ?? fallback;
 }

@@ -100,7 +100,10 @@ export function MarketListItem({
       }}
     >
       <div className="flex w-full md:w-2/5 items-center gap-[20px]">
-        <MarketBookmarkControl teamId={team.id} />
+        <MarketBookmarkControl
+          slug={market.polymarket?.slug || ""}
+          teamName={team.name}
+        />
         <span className="w-[18px] shrink-0 text-center text-[18px] font-[556] leading-[21px] text-black">
           {rank}
         </span>
@@ -124,7 +127,9 @@ export function MarketListItem({
               <MarketListMetricLoading variant="probability" />
             ) : (
               <span className="text-[24px] font-[556] leading-[29px] text-black">
-                {hasLiveValues ? formatListProbability(market.probability) : "-"}
+                {hasLiveValues
+                  ? formatListProbability(market.probability)
+                  : "-"}
               </span>
             )}
             {hasLiveValues ? (

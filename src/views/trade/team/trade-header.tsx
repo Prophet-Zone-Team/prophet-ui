@@ -101,9 +101,9 @@ export function TradeHeader({
   showOrderbook,
   onOrderbookChange
 }: TradeHeaderProps) {
-  const { team } = snapshot;
+  const { team, market } = snapshot;
   const fifaRank = metadata?.fifaRank ?? team.fifaRank;
-
+  console.log(snapshot);
   return (
     <header className="my-4">
       <div className="flex items-center justify-between">
@@ -140,7 +140,12 @@ export function TradeHeader({
         <HeaderControls
           showOrderbook={showOrderbook}
           onOrderbookChange={onOrderbookChange}
-          bookmark={<BookmarkControl teamId={team.id} teamName={team.name} />}
+          bookmark={
+            <BookmarkControl
+              slug={market.polymarket?.slug || ""}
+              teamName={team.name}
+            />
+          }
         />
       </div>
     </header>

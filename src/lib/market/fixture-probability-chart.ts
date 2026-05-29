@@ -1,3 +1,4 @@
+import { PROBABILITY_CHART_HISTORY_WINDOW_SECONDS } from "@/lib/team/probability-history";
 import type { FixtureHistoryInterval } from "@/server/market/clob-prices-history";
 import type {
   GameFixtureBinaryChartPoint,
@@ -52,8 +53,47 @@ const GAME_RANGE_POINT_LIMIT: Record<
   "1M": 30,
 };
 
+const GAME_CHART_RANGE_MS: Record<
+  Exclude<GameFixtureChartTimeRange, "all">,
+  number
+> = {
+  "1H": 60 * 60 * 1000,
+  "1D": 24 * 60 * 60 * 1000,
+  "1W": 7 * 24 * 60 * 60 * 1000,
+  "1M": 30 * 24 * 60 * 60 * 1000,
+};
+
 const ONE_HOUR_CHART_POINT_COUNT = 6;
 const ONE_HOUR_CHART_INTERVAL_MS = 10 * 60 * 1000;
+
+const ALL_CHART_POINT_COUNT = 30;
+const ALL_CHART_RANGE_MS = PROBABILITY_CHART_HISTORY_WINDOW_SECONDS * 1000;
+
+export function resolveGameChartRangePadding(
+  range: GameFixtureChartTimeRange,
+): { pointCount: number; intervalMs: number } {
+  if (range === "1H") {
+    return {
+      pointCount: ONE_HOUR_CHART_POINT_COUNT,
+      intervalMs: ONE_HOUR_CHART_INTERVAL_MS,
+    };
+  }
+
+  if (range === "all") {
+    return {
+      pointCount: ALL_CHART_POINT_COUNT,
+      intervalMs: ALL_CHART_RANGE_MS / (ALL_CHART_POINT_COUNT - 1),
+    };
+  }
+
+  const pointCount = GAME_RANGE_POINT_LIMIT[range];
+  const rangeMs = GAME_CHART_RANGE_MS[range];
+
+  return {
+    pointCount,
+    intervalMs: rangeMs / (pointCount - 1),
+  };
+}
 
 export function formatGameChartXAxisTick(
   value: string,
@@ -81,7 +121,7 @@ export function filterGameFixtureChartByRange(
   range: GameFixtureChartTimeRange,
   nowMs = Date.now(),
 ): GameFixtureChartPoint[] {
-  if (range === "all" || data.length === 0) {
+  if (data.length === 0) {
     return data;
   }
 
@@ -94,14 +134,12 @@ export function filterGameFixtureChartByRange(
   const hasValidTimes = parsed.some((item) => !Number.isNaN(item.time));
   let filtered = data;
 
-  if (hasValidTimes) {
-    const rangeMs: Record<Exclude<GameFixtureChartTimeRange, "all">, number> = {
-      "1H": 60 * 60 * 1000,
-      "1D": 24 * 60 * 60 * 1000,
-      "1W": 7 * 24 * 60 * 60 * 1000,
-      "1M": 30 * 24 * 60 * 60 * 1000,
-    };
-    const cutoff = nowMs - rangeMs[range];
+  if (range === "all") {
+    if (!hasValidTimes) {
+      filtered = data.slice(-Math.min(ALL_CHART_POINT_COUNT, data.length));
+    }
+  } else if (hasValidTimes) {
+    const cutoff = nowMs - GAME_CHART_RANGE_MS[range];
     const inRange = parsed.filter(
       (item) => !Number.isNaN(item.time) && item.time >= cutoff,
     );
@@ -121,11 +159,8 @@ export function filterGameFixtureChartByRange(
     filtered = data.slice(-Math.min(limit, data.length));
   }
 
-  if (range === "1H") {
-    return padGameFixtureTernaryOneHourSeries(filtered, nowMs);
-  }
-
-  return filtered;
+  const { pointCount, intervalMs } = resolveGameChartRangePadding(range);
+  return padGameFixtureTernarySeries(filtered, pointCount, intervalMs, nowMs);
 }
 
 export function filterGameBinaryFixtureChartByRange(
@@ -133,7 +168,7 @@ export function filterGameBinaryFixtureChartByRange(
   range: GameFixtureChartTimeRange,
   nowMs = Date.now(),
 ): GameFixtureBinaryChartPoint[] {
-  if (range === "all" || data.length === 0) {
+  if (data.length === 0) {
     return data;
   }
 
@@ -146,14 +181,12 @@ export function filterGameBinaryFixtureChartByRange(
   const hasValidTimes = parsed.some((item) => !Number.isNaN(item.time));
   let filtered = data;
 
-  if (hasValidTimes) {
-    const rangeMs: Record<Exclude<GameFixtureChartTimeRange, "all">, number> = {
-      "1H": 60 * 60 * 1000,
-      "1D": 24 * 60 * 60 * 1000,
-      "1W": 7 * 24 * 60 * 60 * 1000,
-      "1M": 30 * 24 * 60 * 60 * 1000,
-    };
-    const cutoff = nowMs - rangeMs[range];
+  if (range === "all") {
+    if (!hasValidTimes) {
+      filtered = data.slice(-Math.min(ALL_CHART_POINT_COUNT, data.length));
+    }
+  } else if (hasValidTimes) {
+    const cutoff = nowMs - GAME_CHART_RANGE_MS[range];
     const inRange = parsed.filter(
       (item) => !Number.isNaN(item.time) && item.time >= cutoff,
     );
@@ -173,18 +206,17 @@ export function filterGameBinaryFixtureChartByRange(
     filtered = data.slice(-Math.min(limit, data.length));
   }
 
-  if (range === "1H") {
-    return padGameFixtureBinaryOneHourSeries(filtered, nowMs);
-  }
-
-  return filtered;
+  const { pointCount, intervalMs } = resolveGameChartRangePadding(range);
+  return padGameFixtureBinarySeries(filtered, pointCount, intervalMs, nowMs);
 }
 
-export function padGameFixtureTernaryOneHourSeries(
+export function padGameFixtureTernarySeries(
   data: GameFixtureChartPoint[],
+  pointCount: number,
+  intervalMs: number,
   nowMs = Date.now(),
 ): GameFixtureChartPoint[] {
-  if (data.length === 0) {
+  if (data.length === 0 || pointCount < 2) {
     return data;
   }
 
@@ -194,10 +226,8 @@ export function padGameFixtureTernaryOneHourSeries(
   );
 
   const slotTimes = Array.from(
-    { length: ONE_HOUR_CHART_POINT_COUNT },
-    (_, index) =>
-      nowMs -
-      (ONE_HOUR_CHART_POINT_COUNT - 1 - index) * ONE_HOUR_CHART_INTERVAL_MS,
+    { length: pointCount },
+    (_, index) => nowMs - (pointCount - 1 - index) * intervalMs,
   );
 
   const resolveValuesAt = (timeMs: number) => {
@@ -238,11 +268,21 @@ export function padGameFixtureTernaryOneHourSeries(
   });
 }
 
-export function padGameFixtureBinaryOneHourSeries(
+export function padGameFixtureTernaryOneHourSeries(
+  data: GameFixtureChartPoint[],
+  nowMs = Date.now(),
+): GameFixtureChartPoint[] {
+  const { pointCount, intervalMs } = resolveGameChartRangePadding("1H");
+  return padGameFixtureTernarySeries(data, pointCount, intervalMs, nowMs);
+}
+
+export function padGameFixtureBinarySeries(
   data: GameFixtureBinaryChartPoint[],
+  pointCount: number,
+  intervalMs: number,
   nowMs = Date.now(),
 ): GameFixtureBinaryChartPoint[] {
-  if (data.length === 0) {
+  if (data.length === 0 || pointCount < 2) {
     return data;
   }
 
@@ -252,10 +292,8 @@ export function padGameFixtureBinaryOneHourSeries(
   );
 
   const slotTimes = Array.from(
-    { length: ONE_HOUR_CHART_POINT_COUNT },
-    (_, index) =>
-      nowMs -
-      (ONE_HOUR_CHART_POINT_COUNT - 1 - index) * ONE_HOUR_CHART_INTERVAL_MS,
+    { length: pointCount },
+    (_, index) => nowMs - (pointCount - 1 - index) * intervalMs,
   );
 
   const resolveValuesAt = (timeMs: number) => {
@@ -291,6 +329,14 @@ export function padGameFixtureBinaryOneHourSeries(
       secondary: values.secondary,
     };
   });
+}
+
+export function padGameFixtureBinaryOneHourSeries(
+  data: GameFixtureBinaryChartPoint[],
+  nowMs = Date.now(),
+): GameFixtureBinaryChartPoint[] {
+  const { pointCount, intervalMs } = resolveGameChartRangePadding("1H");
+  return padGameFixtureBinarySeries(data, pointCount, intervalMs, nowMs);
 }
 
 function priceToProbabilityPercent(price: number): number {

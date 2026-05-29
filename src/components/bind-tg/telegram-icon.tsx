@@ -39,15 +39,15 @@ export function TelegramIcon({ variant = "default", className }: TelegramIconPro
 function TelegramMark({ className }: { className?: string }) {
   return (
     <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
+      width="27"
+      height="23"
+      viewBox="0 0 27 23"
+      fill="none"
+      className={className}
     >
-      <circle cx="12" cy="12" r="12" fill="#29ABE2" />
       <path
-        d="M5.5 11.8L17.2 7.1C17.8 6.9 18.3 7.2 18.1 8L16.4 16.4C16.2 17.3 15.7 17.5 15 17.1L11.8 14.7L10.3 16.1C10.1 16.3 9.9 16.5 9.5 16.5L9.7 13.1L15.8 8.4C16.1 8.2 15.8 8.1 15.4 8.3L8.1 12.6L4.9 11.7C4.1 11.4 4.1 10.9 5.1 10.5L5.5 11.8Z"
+        d="M26.9231 2.09385L22.8486 21.6116C22.5412 22.9891 21.7396 23.332 20.6004 22.683L14.3923 18.0362L11.3967 20.9627C11.0652 21.2994 10.7879 21.581 10.149 21.581L10.595 15.1588L22.1012 4.59785C22.6015 4.14481 21.9927 3.89379 21.3237 4.34684L7.0992 13.4445L0.975442 11.4976C-0.356596 11.0752 -0.380706 10.1446 1.2527 9.49566L25.2053 0.122482C26.3143 -0.299954 27.2847 0.373494 26.9231 2.09385Z"
         fill="white"
       />
     </svg>

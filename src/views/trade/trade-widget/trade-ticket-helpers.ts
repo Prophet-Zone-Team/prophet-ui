@@ -4,10 +4,14 @@ import {
   buildBidOrderPreview,
   type BidOrderPreview
 } from "@/lib/market/polymarket-order";
-import { calculateReferencePrice, normalizeLimitPrice } from "@/lib/market/order-math";
+import {
+  calculateOrderEstimate,
+  calculateReferencePrice,
+  normalizeLimitPrice,
+  roundBudgetDown
+} from "@/lib/market/order-math";
 import {
   formatDefaultGameTradeLimitPrice,
-  formatDefaultTradeLimitPrice,
   getDefaultGameTradeLimitPrice,
   getDefaultTradeLimitPrice
 } from "@/lib/market/trade-ticket";
@@ -33,13 +37,14 @@ import type {
   MatchOutcomeSide,
   OrderOutcomeSide,
   TeamMarketSnapshot,
+  PolymarketFeeDetails,
   TradingOrderType,
   TradingUserSession,
   UserOrderPreview,
   UserOrderRecord,
   UserPositionRecord,
   UserTradingBalancesResponse,
-  UserTradingReadiness,
+  UserTradingReadiness
 } from "@/types/market";
 import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-button";
 import type { LimitExpirationPreset, TradeTabId } from "@/store/trade-ticket-store";
@@ -685,7 +690,55 @@ export function resolveQuickAmountAllBalance(
 
   const balance =
     readiness.balances.clobUsdcAvailable ?? readiness.balances.usdcAvailable;
-  return balance !== undefined && balance > 0 ? Math.floor(balance) : undefined;
+  return balance !== undefined && balance > 0 ? balance : undefined;
+}
+
+const MARKET_BUY_ALL_IN_STEP = 0.0001;
+
+export function resolveMarketBuyAllInAmount(input: {
+  availableCash: number;
+  sidePrice: number;
+  fee?: PolymarketFeeDetails;
+}): number {
+  if (!Number.isFinite(input.availableCash) || input.availableCash <= 0) {
+    return 0;
+  }
+
+  if (!Number.isFinite(input.sidePrice) || input.sidePrice <= 0) {
+    return 0;
+  }
+
+  let budget = roundBudgetDown(input.availableCash);
+
+  while (budget > 0) {
+    const estimate = calculateOrderEstimate({
+      side: "yes",
+      tradeSide: "buy",
+      amount: budget,
+      probability: input.sidePrice * 100,
+      limitPrice: input.sidePrice,
+      orderType: "FAK",
+      fee: input.fee
+    });
+
+    if (estimate.estimatedTotalCost <= input.availableCash + Number.EPSILON) {
+      return budget;
+    }
+
+    budget = roundBudgetDown(budget - MARKET_BUY_ALL_IN_STEP);
+  }
+
+  return 0;
+}
+
+export function formatMarketBuyAmountInput(value: number): string {
+  const normalized = roundBudgetDown(value);
+
+  if (!Number.isFinite(normalized) || normalized <= 0) {
+    return "0";
+  }
+
+  return String(normalized);
 }
 
 export function getFirstFailedCheck(

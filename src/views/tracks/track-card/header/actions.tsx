@@ -1,11 +1,20 @@
 "use client";
 
+"use client";
+
 import Link from "next/link";
 import { Zap } from "lucide-react";
+import { useMemo } from "react";
 
 import { FastBidButton } from "@/components/trading/fast-bid-button";
 import { teamDetailHref } from "@/lib/routes/team";
 import { gameTradeHref, teamTradeHref } from "@/lib/routes/trade";
+import { isTeamFastBidReady } from "@/lib/trading/run-fast-bid";
+import {
+  DEFAULT_FAST_BID_AMOUNT,
+  useConfigHydrated,
+  useFastBidAmount
+} from "@/store";
 import type { TeamMarketSnapshot } from "@/types/market";
 
 import {
@@ -37,7 +46,15 @@ export function TrackCardActions(props: TrackCardActionsProps) {
 }
 
 function TrackCardTeamActions({ snapshot }: TrackCardTeamActionsProps) {
-  const tradeHref = teamTradeHref(snapshot.team.id);
+  const fastBidAmount = useFastBidAmount();
+  const hasHydrated = useConfigHydrated();
+  const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
+  const fastBidReady = useMemo(
+    () => isTeamFastBidReady(snapshot, displayAmount),
+    [snapshot, displayAmount]
+  );
+
+  const tradeHref = teamTradeHref(snapshot.market.slug || "");
   const detailHref = teamDetailHref(snapshot.team.id);
 
   return (
@@ -48,6 +65,7 @@ function TrackCardTeamActions({ snapshot }: TrackCardTeamActionsProps) {
     >
       <FastBidButton
         snapshot={snapshot}
+        disabled={!fastBidReady}
         className={cn(trackCardBidButtonClassName, "flex-1 md:flex-grow-0")}
       >
         <>
@@ -79,9 +97,6 @@ function TrackCardGameActions({ matchId }: TrackCardGameActionsProps) {
     >
       <Link href={tradeHref} className={trackCardOutlineButtonClassName}>
         Trade
-      </Link>
-      <Link href={tradeHref} className={trackCardOutlineButtonClassName}>
-        Details
       </Link>
     </div>
   );

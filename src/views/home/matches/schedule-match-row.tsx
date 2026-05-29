@@ -78,28 +78,33 @@ export function ScheduleMatchRow({
           : "cursor-default",
         variant === "ended" && "opacity-90",
         variant === "ongoing" &&
-        "border-[#7BCA25] shadow-[0_0_10px_rgba(123,202,37,0.25)]",
+          "border-[#7BCA25] shadow-[0_0_10px_rgba(123,202,37,0.25)]",
         className
       )}
       aria-label={`${sides.home.name} vs ${sides.away.name}, ${variant}`}
       onClick={
         canNavigate
           ? () => {
-            router.push(gameTradeHref(match.id));
-          }
+              router.push(gameTradeHref(match.id));
+            }
           : undefined
       }
     >
-      <div className="flex justify-between items-center gap-1">
+      <div className="flex shrink-0 justify-between items-center gap-1 md:w-[20%]">
         <div className="flex shrink-0 items-center gap-3">
-          <MatchBookmarkControl matchId={match.id} />
+          <MatchBookmarkControl
+            matchId={match.id}
+            homeTeamName={sides.home.name}
+            awayTeamName={sides.away.name}
+          />
           <StatusColumn variant={variant} kickoffLabel={kickoffLabel} />
         </div>
-        <VolumeColumn amount={volumeLabel} />
+        <div className="block md:hidden">
+          <VolumeColumn amount={volumeLabel} />
+        </div>
       </div>
 
-
-      <div className="flex min-w-0 flex-1 justify-center">
+      <div className="flex justify-center md:w-[60%]">
         <div className="w-full max-w-[558px]">
           {variant === "upcoming" ? (
             <UpcomingMatchBody
@@ -134,7 +139,7 @@ export function ScheduleMatchRow({
         </div>
       </div>
 
-      <div className="hidden md:flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+      <div className="hidden sm:w-[20%] md:flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-end md:justify-end">
         <VolumeColumn amount={volumeLabel} />
       </div>
     </article>
@@ -149,7 +154,7 @@ function StatusColumn({
   kickoffLabel: string;
 }) {
   return (
-    <div className="md:w-[72px] shrink-0">
+    <div className="shrink-0">
       <MatchStatusBadge variant={variant} className="font-semibold" />
       <p className="m-0 mt-[4px] text-xs md:text-[14px] leading-[14px] text-[#909090]">
         {kickoffLabel}

@@ -44,6 +44,11 @@ import {
   syncStandaloneFromSession
 } from "@/lib/trading/trading-eligibility-client";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
+import { clearTrackStatus } from "@/lib/tracks/track-status";
+import {
+  logoutProphet,
+  syncProphetWalletLogin
+} from "@/service/prophet";
 import {
   selectIsAuthenticated,
   selectIsRegionBlocked,
@@ -141,6 +146,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         // ignore wagmi disconnect errors during cleanup
       }
+
+      logoutProphet();
+      clearTrackStatus();
 
       store.clearAuth();
       store.setLoginInProgress(false);
@@ -266,6 +274,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         activeStore.setStatus("ready");
         activeStore.setLoginStep(undefined);
         maybeCloseSetupModal(result.readiness);
+        void syncProphetWalletLogin(result.session.walletAddress);
 
         if (!isTradingSetupComplete(result.readiness)) {
           activeStore.setLoginModalOpen(true);
@@ -409,6 +418,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const nextReadiness = await refreshReadiness(nextSession);
       store.setStatus("ready");
       store.setLoginStep(undefined);
+      void syncProphetWalletLogin(nextSession.walletAddress);
 
       if (isTradingSetupComplete(nextReadiness)) {
         store.setLoginModalOpen(false);
@@ -496,6 +506,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.setStatus("ready");
         store.setLoginStep(undefined);
         maybeCloseSetupModal(result.readiness);
+        void syncProphetWalletLogin(result.session.walletAddress);
 
         return result;
       } catch (loginError) {

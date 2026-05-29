@@ -83,15 +83,53 @@ const RANGE_POINT_LIMIT: Record<Exclude<TeamChartTimeRange, "all">, number> = {
   "1M": 30
 };
 
+const TEAM_CHART_RANGE_MS: Record<Exclude<TeamChartTimeRange, "all">, number> = {
+  "1H": 60 * 60 * 1000,
+  "1D": 24 * 60 * 60 * 1000,
+  "1W": 7 * 24 * 60 * 60 * 1000,
+  "1M": 30 * 24 * 60 * 60 * 1000,
+};
+
 const ONE_HOUR_CHART_POINT_COUNT = 6;
 const ONE_HOUR_CHART_INTERVAL_MS = 10 * 60 * 1000;
 
-/** Pad 1H chart to six points, 10 minutes apart, carrying the latest known price forward. */
-export function padTeamChartOneHourSeries(
+const ALL_CHART_POINT_COUNT = 30;
+const ALL_CHART_RANGE_MS = PROBABILITY_CHART_HISTORY_WINDOW_SECONDS * 1000;
+
+export function resolveTeamChartRangePadding(
+  range: TeamChartTimeRange,
+): { pointCount: number; intervalMs: number } {
+  if (range === "1H") {
+    return {
+      pointCount: ONE_HOUR_CHART_POINT_COUNT,
+      intervalMs: ONE_HOUR_CHART_INTERVAL_MS,
+    };
+  }
+
+  if (range === "all") {
+    return {
+      pointCount: ALL_CHART_POINT_COUNT,
+      intervalMs: ALL_CHART_RANGE_MS / (ALL_CHART_POINT_COUNT - 1),
+    };
+  }
+
+  const pointCount = RANGE_POINT_LIMIT[range];
+  const rangeMs = TEAM_CHART_RANGE_MS[range];
+
+  return {
+    pointCount,
+    intervalMs: rangeMs / (pointCount - 1),
+  };
+}
+
+/** Pad chart slots across the selected range, carrying the latest known price forward. */
+export function padTeamChartSeries(
   data: ProbabilityHistoryPoint[],
+  pointCount: number,
+  intervalMs: number,
   nowMs = Date.now(),
 ): ProbabilityHistoryPoint[] {
-  if (data.length === 0) {
+  if (data.length === 0 || pointCount < 2) {
     return data;
   }
 
@@ -101,10 +139,8 @@ export function padTeamChartOneHourSeries(
   );
 
   const slotTimes = Array.from(
-    { length: ONE_HOUR_CHART_POINT_COUNT },
-    (_, index) =>
-      nowMs -
-      (ONE_HOUR_CHART_POINT_COUNT - 1 - index) * ONE_HOUR_CHART_INTERVAL_MS,
+    { length: pointCount },
+    (_, index) => nowMs - (pointCount - 1 - index) * intervalMs,
   );
 
   const resolveProbabilityAt = (timeMs: number): number => {
@@ -132,6 +168,15 @@ export function padTeamChartOneHourSeries(
     date: new Date(timeMs).toISOString(),
     probability: resolveProbabilityAt(timeMs),
   }));
+}
+
+/** Pad 1H chart to six points, 10 minutes apart, carrying the latest known price forward. */
+export function padTeamChartOneHourSeries(
+  data: ProbabilityHistoryPoint[],
+  nowMs = Date.now(),
+): ProbabilityHistoryPoint[] {
+  const { pointCount, intervalMs } = resolveTeamChartRangePadding("1H");
+  return padTeamChartSeries(data, pointCount, intervalMs, nowMs);
 }
 
 export function buildFallbackProbabilityHistory(
@@ -174,7 +219,7 @@ export function filterTeamChartByRange(
   range: TeamChartTimeRange,
   nowMs = Date.now(),
 ): ProbabilityHistoryPoint[] {
-  if (range === "all" || data.length === 0) {
+  if (data.length === 0) {
     return data;
   }
 
@@ -187,14 +232,12 @@ export function filterTeamChartByRange(
   const hasValidTimes = parsed.some((item) => !Number.isNaN(item.time));
   let filtered = data;
 
-  if (hasValidTimes) {
-    const rangeMs: Record<Exclude<TeamChartTimeRange, "all">, number> = {
-      "1H": 60 * 60 * 1000,
-      "1D": 24 * 60 * 60 * 1000,
-      "1W": 7 * 24 * 60 * 60 * 1000,
-      "1M": 30 * 24 * 60 * 60 * 1000
-    };
-    const cutoff = nowMs - rangeMs[range];
+  if (range === "all") {
+    if (!hasValidTimes) {
+      filtered = data.slice(-Math.min(ALL_CHART_POINT_COUNT, data.length));
+    }
+  } else if (hasValidTimes) {
+    const cutoff = nowMs - TEAM_CHART_RANGE_MS[range];
     const inRange = parsed.filter(
       (item) => !Number.isNaN(item.time) && item.time >= cutoff,
     );
@@ -214,11 +257,8 @@ export function filterTeamChartByRange(
     filtered = data.slice(-Math.min(limit, data.length));
   }
 
-  if (range === "1H") {
-    return padTeamChartOneHourSeries(filtered, nowMs);
-  }
-
-  return filtered;
+  const { pointCount, intervalMs } = resolveTeamChartRangePadding(range);
+  return padTeamChartSeries(filtered, pointCount, intervalMs, nowMs);
 }
 
 export function formatTeamChartXAxisTick(

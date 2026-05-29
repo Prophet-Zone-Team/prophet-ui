@@ -29,6 +29,12 @@ export default {
     abbreviation: "kr",
     continent: "Asia"
   },
+  "Korea Republic": {
+    name: "Korea Republic",
+    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/kr.png",
+    abbreviation: "kr",
+    continent: "Asia"
+  },
   Paraguay: {
     name: "Paraguay",
     logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/py.png",

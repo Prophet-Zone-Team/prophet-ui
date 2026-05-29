@@ -5,13 +5,14 @@ import { HomeMatchesSchedulePanel } from "@/views/home/matches/home-matches-sche
 export interface HomeMatchesPanelProps {
   matches: WorldCupMatch[];
   matchesMeta: FootballMatchesResult["meta"];
-  snapshots: TeamMarketSnapshot[];
+  /** Optional team winner snapshots; schedule rows use match display names when empty. */
+  snapshots?: TeamMarketSnapshot[];
 }
 
 export function HomeMatchesPanel({
   matches,
   matchesMeta,
-  snapshots
+  snapshots = []
 }: HomeMatchesPanelProps) {
   if (matches.length === 0) {
     return (
