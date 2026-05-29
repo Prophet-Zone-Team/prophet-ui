@@ -20,7 +20,7 @@ export function TeamFlag({
 }: TeamFlagProps) {
   const flagIconCode = code ? getFifaFlagIconCode(code) : undefined;
 
-  if (logoUrl) {
+  if (logoUrl && !flagIconCode) {
     return (
       <img
         src={logoUrl}
@@ -30,7 +30,7 @@ export function TeamFlag({
     );
   }
 
-  if (!flagIconCode) {
+  if (!logoUrl && !flagIconCode) {
     return (
       <span
         className={cn(

@@ -112,6 +112,7 @@ export function MarketListItem({
         <TeamFlag
           code={team.code}
           name={team.name}
+          logoUrl={team.logoUrl}
           className="h-[32px] w-[32px] shrink-0 rounded-[2px] text-[32px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
         />
         <div className="min-w-0">

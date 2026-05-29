@@ -61,6 +61,7 @@ export function HomePageShell({ children }: HomePageShellProps) {
         <TeamFlag
           code={topMove.team.code}
           name={topMove.team.name}
+          logoUrl={topMove.team.logoUrl}
           className="rounded-[2px] text-base shadow-[0_0_2px_rgba(0,0,0,0.2)]"
         />
         <span className={heroStatValueClassName}>{topMove.team.code}</span>
