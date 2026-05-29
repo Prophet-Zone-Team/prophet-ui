@@ -67,7 +67,7 @@ export function TeamDetailHeader({
   profile,
   metadata
 }: TeamDetailHeaderProps) {
-  const { team } = snapshot;
+  const { team, market } = snapshot;
   const fifaRank = metadata?.fifaRank ?? team.fifaRank;
 
   async function copyPageLink() {
@@ -158,7 +158,10 @@ export function TeamDetailHeader({
               Open Trade
             </Link>
             <div className="flex items-center gap-2">
-              <BookmarkControl teamId={team.id} teamName={team.name} />
+              <BookmarkControl
+                slug={market.polymarket?.slug || ""}
+                teamName={team.name}
+              />
               <button
                 type="button"
                 className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted hover:text-black"

@@ -4,14 +4,15 @@ import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-contr
 
 export type TeamIdentityProps = {
   team: Team;
+  slug: string;
 };
 
-export function TeamIdentity({ team }: TeamIdentityProps) {
+export function TeamIdentity({ team, slug }: TeamIdentityProps) {
   const subtitle = `${team.code} / ${team.region}`;
 
   return (
     <div className="flex w-full min-w-0 items-center gap-2 md:w-[38%] md:gap-3">
-      <MarketBookmarkControl teamId={team.id} />
+      <MarketBookmarkControl slug={slug} teamName={team.name} />
       <TeamFlag
         code={team.code}
         name={team.name}

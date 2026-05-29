@@ -136,7 +136,10 @@ function TopAttentionTeamCard({
         <p className="m-0 text-[12px] font-[400] capitalize leading-[15px] text-[#909090]">
           {categoryLabel}
         </p>
-        <MarketBookmarkControl teamId={market.polymarket?.slug || ""} />
+        <MarketBookmarkControl
+          slug={market.polymarket?.slug || ""}
+          teamName={team.name}
+        />
       </div>
 
       <div className="mt-2 flex min-w-0 items-center gap-2">

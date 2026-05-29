@@ -21,7 +21,10 @@ export function TeamTrackCard({
       ariaLabel={`${team.name} track card`}
       header={
         <>
-          <TeamIdentity team={team} />
+          <TeamIdentity
+            team={team}
+            slug={market.polymarket?.slug || ""}
+          />
           <TeamStatsRow
             probability={market.probability}
             change24h={market.change24h}
