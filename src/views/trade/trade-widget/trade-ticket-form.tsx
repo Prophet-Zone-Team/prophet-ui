@@ -282,13 +282,13 @@ export function TradeTicketForm({
                   +{value}
                 </button>
               ))}
-              <button
+              {/* <button
                 type="button"
                 className={tradeQuickAmountClass}
                 onClick={() => onQuickAmount("all")}
               >
                 All-in
-              </button>
+              </button> */}
             </>
           )}
         </div>
