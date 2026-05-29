@@ -15,8 +15,8 @@ const trackVariantClass = {
     off: "bg-black border-[#EAEAEA]"
   },
   team: {
-    on: "bg-[#F4B600] border-[#EAEAEA]",
-    off: "bg-[#EBEBEB] border-[#EAEAEA]"
+    on: "bg-black border-[#EAEAEA]",
+    off: "bg-black border-[#EAEAEA]"
   }
 } as const;
 

@@ -24,7 +24,11 @@ import type {
   WorldCupMatch
 } from "@/types/market";
 import Drawer from "@/components/drawer";
-import { useTradeTab, useTradeTicketStore } from "@/store";
+import {
+  useSetTradeOrderMode,
+  useTradeTab,
+  useTradeTicketStore
+} from "@/store";
 
 export type TradeGameViewProps = TradeGameHeaderProps & {
   gameSnapshot: GameMarketSnapshot;
@@ -100,6 +104,7 @@ export default function TradeGameView({
   );
 
   const setTab = useTradeTicketStore((state) => state.setTab);
+  const setOrderMode = useSetTradeOrderMode();
   const tab = useTradeTab();
   const [tradeDrawerOpen, setTradeDrawerOpen] = useState<boolean>(false);
 
@@ -156,6 +161,9 @@ export default function TradeGameView({
           className="flex flex-1 h-[46px] justify-center items-center rounded-xl text-lg font-[500] text-white transition-opacity bg-[#65AF14] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={!canTrade}
           onClick={() => {
+            if (canTrade) {
+              setOrderMode("market");
+            }
             setTradeDrawerOpen(true);
             setTab("buy");
           }}

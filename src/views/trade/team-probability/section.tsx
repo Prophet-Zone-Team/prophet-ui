@@ -103,15 +103,21 @@ export function ProbabilitySection({
   return (
     <section
       className={cn(
-        "flex flex-col gap-3 xl:flex-row xl:items-stretch",
-        !showOrderbook && "xl:flex-col"
+        "flex flex-col gap-3",
+        showOrderbook
+          ? "xl:grid xl:grid-cols-[minmax(0,1fr)_272px] xl:items-stretch"
+          : "xl:flex-col"
       )}
       aria-label="Winner probability"
     >
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.85 }}
-        className={cn(probabilityCardClass, !showOrderbook && "w-full")}
+        className={cn(
+          probabilityCardClass,
+          !showOrderbook && "w-full",
+          showOrderbook && "min-h-0"
+        )}
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -207,7 +213,7 @@ export function ProbabilitySection({
       <OrderbookPanel
         visible={showOrderbook}
         tokenId={tokenId}
-        className="w-full shrink-0 xl:w-[272px]"
+        className="min-h-0 w-full"
       />
     </section>
   );

@@ -35,17 +35,15 @@ export function BindTgFooter({
       <button type="button" className={primaryClass} onClick={onPrimaryClick}>
         {primaryLabel}
       </button>
-      <button
-        type="button"
-        className={
-          primaryVariant === "success"
-            ? bindTgDisconnectButtonClass
-            : bindTgSecondaryButtonClass
-        }
-        onClick={onSecondaryClick}
-      >
-        {secondaryLabel}
-      </button>
+      {primaryVariant !== "success" && (
+        <button
+          type="button"
+          className={bindTgSecondaryButtonClass}
+          onClick={onSecondaryClick}
+        >
+          {secondaryLabel}
+        </button>
+      )}
     </div>
   );
 }

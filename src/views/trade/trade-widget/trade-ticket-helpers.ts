@@ -711,7 +711,6 @@ export function resolveMarketBuyAllInAmount(input: {
   let budget = roundBudgetDown(input.availableCash);
 
   while (budget > 0) {
-    console.log("budget", budget);
     const estimate = calculateOrderEstimate({
       side: "yes",
       tradeSide: "buy",
@@ -721,7 +720,6 @@ export function resolveMarketBuyAllInAmount(input: {
       orderType: "FAK",
       fee: input.fee
     });
-    console.log("estimate", estimate);
 
     if (estimate.estimatedTotalCost <= input.availableCash + Number.EPSILON) {
       return budget;

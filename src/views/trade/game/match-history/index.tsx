@@ -27,9 +27,6 @@ export function MatchHistory({
   const initialTeamId = defaultTeamId ?? teams[0]?.id ?? "";
   const [selectedTeamId, setSelectedTeamId] = useState(initialTeamId);
 
-  console.log("selectedTeamId: %o", selectedTeamId)
-  console.log("teams: %o", teams)
-
   const selectedTeam = useMemo(
     () => teams.find((team) => team.id === selectedTeamId) ?? teams[0],
     [selectedTeamId, teams]

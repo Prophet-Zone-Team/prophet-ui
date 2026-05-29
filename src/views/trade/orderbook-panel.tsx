@@ -33,14 +33,14 @@ export function OrderbookPanel({
           exit={{ opacity: 0, x: 12 }}
           transition={ORDERBOOK_PANEL_TRANSITION}
           className={cn(
-            "h-full min-h-0 w-full shrink-0 self-stretch overflow-hidden xl:w-[272px]",
+            "flex min-h-0 w-full flex-col overflow-hidden",
             className
           )}
         >
           <Orderbook
             key={tokenId ?? "orderbook"}
             tokenId={tokenId}
-            className="h-full w-full xl:w-[272px]"
+            className="min-h-0 flex-1"
           />
         </motion.div>
       ) : null}

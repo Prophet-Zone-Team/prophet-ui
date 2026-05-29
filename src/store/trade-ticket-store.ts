@@ -2,9 +2,12 @@
 
 import { create } from "zustand";
 
+import { hasFixtureBuyAsk } from "@/lib/market/fixture-ask-liquidity";
 import {
   formatDefaultGameTradeLimitPrice,
-  formatDefaultTradeLimitPrice
+  formatDefaultTradeLimitPrice,
+  resolveGameDefaultFixtureOutcome,
+  shouldDefaultGameMarketOrder
 } from "@/lib/market/trade-ticket";
 import { resolveMaxSellShares } from "@/lib/market/order-math";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
@@ -115,8 +118,48 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
   },
   syncForGameSnapshot: (snapshot) => {
     const marketKey = snapshot.match.id;
+    const defaultOutcome = resolveGameDefaultFixtureOutcome(snapshot);
+    const defaultBinarySide: OrderOutcomeSide = "yes";
+    const bidReady = shouldDefaultGameMarketOrder(
+      snapshot,
+      defaultOutcome,
+      defaultBinarySide
+    );
+    const defaultLimitPrice = defaultOutcome
+      ? resolveFixtureSelectionLimitPrice(
+          defaultOutcome,
+          defaultBinarySide
+        ).toFixed(3)
+      : formatDefaultGameTradeLimitPrice(snapshot, "home", defaultBinarySide);
 
     if (get().marketKey === marketKey && get().entityType === "game") {
+      const current = get();
+      const updates: Partial<TradeTicketState> = {};
+
+      if (!current.selectedFixtureOutcome && defaultOutcome) {
+        updates.selectedFixtureOutcome = defaultOutcome;
+        updates.outcomeSide = defaultBinarySide;
+        updates.matchOutcomeSide =
+          defaultOutcome.side === "home" ||
+          defaultOutcome.side === "draw" ||
+          defaultOutcome.side === "away"
+            ? defaultOutcome.side
+            : current.matchOutcomeSide;
+        updates.limitPrice = resolveFixtureSelectionLimitPrice(
+          defaultOutcome,
+          defaultBinarySide
+        ).toFixed(3);
+      }
+
+      if (bidReady && current.tab === "buy" && current.orderMode !== "market") {
+        updates.orderMode = "market";
+        updates.amount = "1";
+      }
+
+      if (Object.keys(updates).length > 0) {
+        set(updates);
+      }
+
       return;
     }
 
@@ -124,12 +167,12 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       marketKey,
       entityType: "game",
       matchOutcomeSide: "home",
-      selectedFixtureOutcome: null,
-      outcomeSide: "yes",
+      selectedFixtureOutcome: defaultOutcome ?? null,
+      outcomeSide: defaultBinarySide,
       tab: "buy",
       orderMode: "market",
       amount: "1",
-      limitPrice: formatDefaultGameTradeLimitPrice(snapshot, "home", "yes"),
+      limitPrice: defaultLimitPrice,
       limitExpiration: "never",
       limitExpirationCustom: undefined,
       ...resetTakeProfitLimitState()
@@ -156,16 +199,24 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
   setOutcomeSide: (side) => set({ outcomeSide: side }),
   setMatchOutcomeSide: (side) => set({ matchOutcomeSide: side, outcomeSide: "yes" }),
   selectFixtureOutcome: (outcome, binarySide = "yes") => {
+    const current = get();
     const nextMatchOutcomeSide =
       outcome.side === "home" || outcome.side === "draw" || outcome.side === "away"
         ? outcome.side
-        : get().matchOutcomeSide;
+        : current.matchOutcomeSide;
+    const bidReady =
+      Boolean(outcome.tokenId) &&
+      outcome.acceptingOrders !== false &&
+      hasFixtureBuyAsk(outcome, binarySide);
 
     set({
       selectedFixtureOutcome: outcome,
       outcomeSide: binarySide,
       matchOutcomeSide: nextMatchOutcomeSide,
-      limitPrice: resolveFixtureSelectionLimitPrice(outcome, binarySide).toFixed(3)
+      limitPrice: resolveFixtureSelectionLimitPrice(outcome, binarySide).toFixed(3),
+      ...(bidReady && current.tab === "buy"
+        ? { orderMode: "market" as TradeOrderMode, amount: "1" }
+        : {})
     });
   },
   setTab: (tab) =>
@@ -318,7 +369,7 @@ function resolveFixtureSelectionLimitPrice(
   binarySide: OrderOutcomeSide
 ): number {
   if (binarySide === "no") {
-  const noPrice = outcome.noAsk ?? outcome.noBid;
+    const noPrice = outcome.noAsk ?? outcome.noBid;
     if (noPrice !== undefined && noPrice > 0 && noPrice < 1) {
       return noPrice;
     }

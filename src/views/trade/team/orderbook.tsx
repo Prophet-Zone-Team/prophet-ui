@@ -45,7 +45,7 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
     return (
       <div
         className={cn(
-          "flex items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white px-3 text-center text-sm text-prophet-muted",
+          "flex min-h-0 flex-1 items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white px-3 text-center text-sm text-prophet-muted",
           className
         )}
       >
@@ -57,7 +57,7 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 flex-col rounded-[12px] border border-[#EBEBEB] bg-white p-3 text-[12px]",
+        "flex min-h-0 flex-1 flex-col rounded-[12px] border border-[#EBEBEB] bg-white p-3 text-[12px]",
         className
       )}
       aria-label="Market order book"

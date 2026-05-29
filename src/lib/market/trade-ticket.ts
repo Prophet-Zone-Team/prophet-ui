@@ -1,3 +1,5 @@
+import { hasFixtureBuyAsk } from "@/lib/market/fixture-ask-liquidity";
+import { resolveDefaultFixtureOutcome } from "@/lib/market/fixture-markets-mapper";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
 import {
   findGameMarketOutcome,
@@ -6,11 +8,53 @@ import {
 import { calculateReferencePrice } from "@/lib/market/order-math";
 import type {
   BidTradeSide,
+  FixtureMarketOutcome,
   GameMarketSnapshot,
   MatchOutcomeSide,
   OrderOutcomeSide,
   TeamMarketSnapshot
 } from "@/types/market";
+
+export function resolveGameDefaultFixtureOutcome(
+  snapshot: GameMarketSnapshot
+): FixtureMarketOutcome | undefined {
+  return resolveDefaultFixtureOutcome(snapshot.match.polymarket?.fixtureMarkets);
+}
+
+export function isGameFixtureOutcomeBidReady(
+  outcome: FixtureMarketOutcome,
+  snapshot: GameMarketSnapshot,
+  binarySide: OrderOutcomeSide = "yes"
+): boolean {
+  const acceptingOrders =
+    outcome.acceptingOrders ?? snapshot.market.acceptingOrders;
+
+  if (!acceptingOrders || !outcome.tokenId) {
+    return false;
+  }
+
+  return hasFixtureBuyAsk(outcome, binarySide);
+}
+
+export function isGameMoneylineBidReady(snapshot: GameMarketSnapshot): boolean {
+  if (!snapshot.market.acceptingOrders) {
+    return false;
+  }
+
+  return snapshot.outcomes.some((outcome) => Boolean(outcome.tokenId));
+}
+
+export function shouldDefaultGameMarketOrder(
+  snapshot: GameMarketSnapshot,
+  outcome?: FixtureMarketOutcome,
+  binarySide: OrderOutcomeSide = "yes"
+): boolean {
+  if (outcome) {
+    return isGameFixtureOutcomeBidReady(outcome, snapshot, binarySide);
+  }
+
+  return isGameMoneylineBidReady(snapshot);
+}
 
 export function getDefaultTradeLimitPrice(
   snapshot: TeamMarketSnapshot,
