@@ -31,37 +31,14 @@ export function parseJsonArrayField(value: string | undefined): string[] {
   }
 }
 
-export function inferNewsSentiment(
-  reasons: string[],
-  category: string
-): NewsSentiment {
-  const haystack = [...reasons, category].join(" ").toLowerCase();
-
-  const hasNegative = NEWS_IMPACT_NEGATIVE_KEYWORDS.some((keyword) =>
-    haystack.includes(keyword)
-  );
-
-  if (hasNegative) {
-    return "negative";
-  }
-
-  const hasPositive = NEWS_IMPACT_POSITIVE_KEYWORDS.some((keyword) =>
-    haystack.includes(keyword)
-  );
-
-  if (hasPositive) {
-    return "positive";
-  }
-
-  return "positive";
-}
-
 export function computeImpactScore(
   score: number,
-  sentiment: NewsSentiment
-): number {
-  const magnitude = Math.round((score / 10) * 10) / 10;
-  return sentiment === "negative" ? -magnitude : magnitude;
+): { impactScore: number; sentiment: NewsSentiment; } {
+  const magnitude = Math.round(score - 100) / 10;
+  return {
+    impactScore: magnitude,
+    sentiment: magnitude < 0 ? "negative" : "positive"
+  };
 }
 
 function formatCategoryLabel(category: string | undefined): string {
@@ -100,10 +77,11 @@ export function mapNewsArticleToImpactItem(
   const matchedTeams = parseJsonArrayField(article.matched_teams_json);
   const matchedPlayers = parseJsonArrayField(article.matched_players_json);
   const category = article.category ?? "";
-  const sentiment = inferNewsSentiment(reasons, category);
   const apiScore = article.score ?? 0;
   const teamName = matchedTeams[0] ?? "World Cup";
   const publishedAt = article.published_at;
+
+  const { impactScore, sentiment } = computeImpactScore(apiScore);
 
   return {
     id: String(article.id ?? ""),
@@ -113,7 +91,7 @@ export function mapNewsArticleToImpactItem(
     headline: article.title ?? "",
     summary: article.description ?? "",
     publishedAtLabel: formatRelativeTime(publishedAt),
-    impactScore: computeImpactScore(apiScore, sentiment),
+    impactScore,
     thumbnailUrl: article.url_to_image || undefined,
     thumbnailAlt: buildThumbnailAlt(matchedPlayers, article.title),
     highlighted:
@@ -142,15 +120,11 @@ export function mapNewsArticleToDetail(
   article: ProphetAnalyticsNewsArticle,
   listItem?: NewsImpactItem
 ): SignalNewsDetail {
-  const reasons = parseJsonArrayField(article.reasons_json);
   const matchedTeams = parseJsonArrayField(article.matched_teams_json);
   const matchedPlayers = parseJsonArrayField(article.matched_players_json);
   const category = article.category ?? "";
-  const sentiment =
-    listItem?.sentiment ?? inferNewsSentiment(reasons, category);
-  const impactScore =
-    listItem?.impactScore ??
-    computeImpactScore(article.score ?? 0, sentiment);
+  const sentiment = listItem?.sentiment ?? "positive";
+  const impactScore = listItem?.impactScore ?? computeImpactScore(article.score ?? 0)?.impactScore;
 
   const body: SignalNewsDetail["body"] = [];
 
