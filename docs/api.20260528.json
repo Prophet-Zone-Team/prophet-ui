@@ -1,1312 +1,1529 @@
 {
-    "schemes": [],
-    "swagger": "2.0",
-    "info": {
-      "description": "Prophet API 文档",
-      "title": "Prophet",
-      "contact": {
-  
-      },
-      "version": "0.1"
+  "schemes": [],
+  "swagger": "2.0",
+  "info": {
+    "description": "Prophet API 文档",
+    "title": "Prophet",
+    "contact": {
+
     },
-    "host": "",
-    "basePath": "",
-    "paths": {
-      "/ip": {
-        "get": {
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "system"
-          ],
-          "summary": "ip",
-          "responses": {
-  
+    "version": "0.1"
+  },
+  "host": "",
+  "basePath": "",
+  "paths": {
+    "/ip": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "system"
+        ],
+        "summary": "ip",
+        "responses": {
+
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "system"
+        ],
+        "summary": "ping",
+        "responses": {
+          "0": {
+            "description": "响应结果",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer"
+              }
+            }
           }
         }
-      },
-      "/status": {
-        "get": {
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "system"
-          ],
-          "summary": "ping",
-          "responses": {
-            "0": {
-              "description": "响应结果",
-              "schema": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "integer"
+      }
+    },
+    "/v1/analytics/competitiveness": {
+      "get": {
+        "description": "获取分组竞争力（死亡之组 / 竞争力最小）",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get Competitiveness",
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/database.AnalyticsCompetitiveness"
+                      }
+                    }
+                  }
                 }
-              }
+              ]
             }
-          }
-        }
-      },
-      "/v1/analytics/competitiveness": {
-        "get": {
-          "description": "获取分组竞争力（死亡之组 / 竞争力最小）",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Analytics"
-          ],
-          "summary": "Get Competitiveness",
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "type": "array",
-                        "items": {
-                          "$ref": "#/definitions/database.AnalyticsCompetitiveness"
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/analytics/fixtures/head-to-head": {
-        "get": {
-          "description": "两支球队最近 5 场比赛，按 fixture_date 倒序",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Analytics"
-          ],
-          "summary": "Get Head-to-Head Fixtures",
-          "parameters": [
-            {
-              "type": "string",
-              "name": "team_a",
-              "in": "query",
-              "required": true
-            },
-            {
-              "type": "string",
-              "name": "team_b",
-              "in": "query",
-              "required": true
-            }
-          ],
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "$ref": "#/definitions/handler.GetHeadToHeadFixturesResp"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/analytics/news": {
-        "get": {
-          "description": "分页查询新闻，按 published_at 倒序",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Analytics"
-          ],
-          "summary": "Get Analytics News",
-          "parameters": [
-            {
-              "type": "string",
-              "name": "category",
-              "in": "query"
-            },
-            {
-              "minimum": 1,
-              "type": "integer",
-              "name": "page",
-              "in": "query",
-              "required": true
-            },
-            {
-              "maximum": 100,
-              "minimum": 1,
-              "type": "integer",
-              "name": "page_size",
-              "in": "query",
-              "required": true
-            }
-          ],
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "$ref": "#/definitions/handler.GetAnalyticsNewsResp"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/analytics/news/latest": {
-        "get": {
-          "description": "最新 3 条新闻，按 published_at 倒序",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Analytics"
-          ],
-          "summary": "Get Latest Analytics News",
-          "parameters": [
-            {
-              "type": "string",
-              "description": "category",
-              "name": "category",
-              "in": "query"
-            }
-          ],
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "$ref": "#/definitions/handler.GetLatestAnalyticsNewsResp"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/analytics/news/team-related": {
-        "get": {
-          "description": "根据 team 名（逗号分隔）查询相关新闻最新 3 条，按 published_at 倒序，OR 命中",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Analytics"
-          ],
-          "summary": "Get Team Related News",
-          "parameters": [
-            {
-              "type": "string",
-              "description": "team names, comma-separated, e.g. Argentina,Canada",
-              "name": "teams",
-              "in": "query",
-              "required": true
-            }
-          ],
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "$ref": "#/definitions/handler.GetTeamRelatedNewsResp"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/analytics/recommends": {
-        "get": {
-          "description": "获取分析推荐列表",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Analytics"
-          ],
-          "summary": "Get Analytics Recommends",
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "type": "array",
-                        "items": {
-                          "$ref": "#/definitions/database.AnalyticsRecommend"
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/analytics/team-power-rankings": {
-        "get": {
-          "description": "获取球队战斗力排名（全部，按 rank 升序）",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Analytics"
-          ],
-          "summary": "Get Team Power Rankings",
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "type": "array",
-                        "items": {
-                          "$ref": "#/definitions/database.AnalyticsTeamPowerRanking"
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/game": {
-        "get": {
-          "description": "获取全部 polymarket 赛事",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Game"
-          ],
-          "summary": "Get Game",
-          "parameters": [
-            {
-              "type": "string",
-              "name": "slug",
-              "in": "query",
-              "required": true
-            }
-          ],
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "$ref": "#/definitions/model.PolyMarketGameDetail"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/games": {
-        "get": {
-          "description": "获取全部 polymarket 赛事，按 start_time 升序",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Game"
-          ],
-          "summary": "Get Games",
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "$ref": "#/definitions/handler.GetGamesResp"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/login": {
-        "post": {
-          "description": "使用钱包地址登录，地址不存在自动创建账户",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Account"
-          ],
-          "summary": "Login",
-          "parameters": [
-            {
-              "description": "请求参数",
-              "name": "data",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/handler.LoginReq"
-              }
-            }
-          ],
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "$ref": "#/definitions/handler.LoginResp"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/polymarket": {
-        "get": {
-          "description": "Proxy polymarket Get Api",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Proxy"
-          ],
-          "summary": "Proxy polymarket Get Api",
-          "parameters": [
-            {
-              "type": "string",
-              "description": "目标 polymarket api 完整地址",
-              "name": "target_url",
-              "in": "query",
-              "required": true
-            }
-          ],
-          "responses": {
-  
-          }
-        },
-        "post": {
-          "description": "Proxy polymarket post Api",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Proxy"
-          ],
-          "summary": "Proxy polymarket post Api",
-          "parameters": [
-            {
-              "type": "string",
-              "description": "目标 polymarket api 完整地址",
-              "name": "target_url",
-              "in": "query",
-              "required": true
-            }
-          ],
-          "responses": {
-  
-          }
-        },
-        "delete": {
-          "description": "Proxy polymarket delete Api",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Proxy"
-          ],
-          "summary": "Proxy polymarket delete Api",
-          "parameters": [
-            {
-              "type": "string",
-              "description": "目标 polymarket api 完整地址",
-              "name": "target_url",
-              "in": "query",
-              "required": true
-            }
-          ],
-          "responses": {
-  
-          }
-        }
-      },
-      "/v1/user/bind/telegram": {
-        "post": {
-          "security": [
-            {
-              "BearerAuth": []
-            }
-          ],
-          "description": "将 Telegram 用户绑定到账户，已绑定则报错",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Account"
-          ],
-          "summary": "Bind Telegram",
-          "parameters": [
-            {
-              "description": "请求参数",
-              "name": "data",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/handler.BindTelegramReq"
-              }
-            }
-          ],
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "$ref": "#/definitions/common.Response"
-              }
-            }
-          }
-        }
-      },
-      "/v1/user/track": {
-        "post": {
-          "security": [
-            {
-              "BearerAuth": []
-            }
-          ],
-          "description": "订阅 team/game，重复订阅幂等成功",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Account"
-          ],
-          "summary": "Track",
-          "parameters": [
-            {
-              "description": "请求参数",
-              "name": "data",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/handler.TrackReq"
-              }
-            }
-          ],
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "$ref": "#/definitions/common.Response"
-              }
-            }
-          }
-        }
-      },
-      "/v1/user/tracks": {
-        "get": {
-          "security": [
-            {
-              "BearerAuth": []
-            }
-          ],
-          "description": "查询当前用户所有订阅",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Account"
-          ],
-          "summary": "Get Tracks",
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "type": "array",
-                        "items": {
-                          "$ref": "#/definitions/model.UserTrackItem"
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/user/tracks/list": {
-        "get": {
-          "security": [
-            {
-              "BearerAuth": []
-            }
-          ],
-          "description": "查询当前用户所有订阅",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Account"
-          ],
-          "summary": "Get Track List",
-          "responses": {
-            "0": {
-              "description": "Success",
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/common.Response"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "data": {
-                        "type": "array",
-                        "items": {
-                          "$ref": "#/definitions/database.UserTrack"
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      "/v1/user/untrack": {
-        "post": {
-          "security": [
-            {
-              "BearerAuth": []
-            }
-          ],
-          "description": "取消订阅 team/game，未订阅时幂等成功",
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "tags": [
-            "Account"
-          ],
-          "summary": "Untrack",
-          "parameters": [
-            {
-              "description": "请求参数",
-              "name": "data",
-              "in": "body",
-              "required": true,
-              "schema": {
-                "$ref": "#/definitions/handler.UnTrackReq"
-              }
-            }
-          ],
-          "responses": {
-  
           }
         }
       }
     },
-    "definitions": {
-      "common.Response": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer"
-          },
-          "data": {
-  
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      },
-      "database.AnalyticsCompetitiveness": {
-        "type": "object",
-        "properties": {
-          "category": {
-            "type": "string"
-          },
-          "group_name": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer"
-          },
-          "score": {
-            "type": "integer"
-          }
-        }
-      },
-      "database.AnalyticsNewsArticle": {
-        "type": "object",
-        "properties": {
-          "author": {
-            "type": "string"
-          },
-          "category": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "fetched_at": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer"
-          },
-          "language": {
-            "type": "string"
-          },
-          "matched_players_json": {
-            "type": "string"
-          },
-          "matched_teams_json": {
-            "type": "string"
-          },
-          "published_at": {
-            "type": "string"
-          },
-          "reasons_json": {
-            "type": "string"
-          },
-          "score": {
-            "type": "integer"
-          },
-          "source_id": {
-            "type": "string"
-          },
-          "source_name": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string"
-          },
-          "url_to_image": {
-            "type": "string"
-          }
-        }
-      },
-      "database.AnalyticsRecommend": {
-        "type": "object",
-        "properties": {
-          "category": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer"
-          },
-          "reason": {
-            "type": "string"
-          },
-          "team": {
-            "type": "string"
-          }
-        }
-      },
-      "database.AnalyticsTeamPowerRanking": {
-        "type": "object",
-        "properties": {
-          "group_name": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer"
-          },
-          "path_difficulty_label": {
-            "type": "string"
-          },
-          "path_difficulty_score": {
-            "type": "string"
-          },
-          "rank": {
-            "type": "integer"
-          },
-          "recent_trend": {
-            "type": "string"
-          },
-          "round_of_16_probability": {
-            "type": "string"
-          },
-          "signal_status": {
-            "type": "string"
-          },
-          "team_name": {
-            "type": "string"
-          },
-          "title_probability": {
-            "type": "string"
-          }
-        }
-      },
-      "database.HeadToHeadFixture": {
-        "type": "object",
-        "properties": {
-          "away_goals": {
-            "type": "integer"
-          },
-          "away_team_name": {
-            "type": "string"
-          },
-          "fixture_date": {
-            "type": "string"
-          },
-          "home_goals": {
-            "type": "integer"
-          },
-          "home_team_name": {
-            "type": "string"
-          },
-          "league_name": {
-            "type": "string"
-          },
-          "season": {
-            "type": "integer"
-          },
-          "status_short": {
-            "type": "string"
-          }
-        }
-      },
-      "database.PolyMarketMarket": {
-        "type": "object",
-        "properties": {
-          "outcomePrices": {
-            "type": "string"
-          },
-          "outcomes": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          }
-        }
-      },
-      "database.PolyMarketTeam": {
-        "type": "object",
-        "properties": {
-          "logo": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
-        }
-      },
-      "database.UserTrack": {
-        "type": "object",
-        "properties": {
-          "category": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "team_name": {
-            "type": "string"
-          },
-          "user_id": {
-            "type": "integer"
-          }
-        }
-      },
-      "handler.BindTelegramReq": {
-        "type": "object",
-        "required": [
-          "tg_user_id"
+    "/v1/analytics/fixtures/head-to-head": {
+      "get": {
+        "description": "两支球队最近 5 场比赛，按 fixture_date 倒序",
+        "consumes": [
+          "application/json"
         ],
-        "properties": {
-          "tg_user_id": {
-            "type": "integer"
-          }
-        }
-      },
-      "handler.GetAnalyticsNewsResp": {
-        "type": "object",
-        "properties": {
-          "list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/database.AnalyticsNewsArticle"
-            }
-          },
-          "total": {
-            "type": "integer"
-          }
-        }
-      },
-      "handler.GetGamesResp": {
-        "type": "object",
-        "properties": {
-          "list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.PolyMarketGameItem"
-            }
-          }
-        }
-      },
-      "handler.GetHeadToHeadFixturesResp": {
-        "type": "object",
-        "properties": {
-          "list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/database.HeadToHeadFixture"
-            }
-          }
-        }
-      },
-      "handler.GetLatestAnalyticsNewsResp": {
-        "type": "object",
-        "properties": {
-          "list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/database.AnalyticsNewsArticle"
-            }
-          }
-        }
-      },
-      "handler.GetTeamRelatedNewsResp": {
-        "type": "object",
-        "properties": {
-          "list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/database.AnalyticsNewsArticle"
-            }
-          }
-        }
-      },
-      "handler.LoginReq": {
-        "type": "object",
-        "required": [
-          "address"
+        "produces": [
+          "application/json"
         ],
-        "properties": {
-          "address": {
-            "type": "string"
-          }
-        }
-      },
-      "handler.LoginResp": {
-        "type": "object",
-        "properties": {
-          "account_id": {
-            "type": "integer"
-          },
-          "token": {
-            "type": "string"
-          }
-        }
-      },
-      "handler.TrackReq": {
-        "type": "object",
-        "required": [
-          "category",
-          "slug"
+        "tags": [
+          "Analytics"
         ],
-        "properties": {
-          "category": {
+        "summary": "Get Head-to-Head Fixtures",
+        "parameters": [
+          {
             "type": "string",
-            "enum": [
-              "team",
-              "game"
-            ]
+            "name": "team_a",
+            "in": "query",
+            "required": true
           },
-          "slug": {
-            "type": "string"
-          },
-          "team_name": {
-            "type": "string"
+          {
+            "type": "string",
+            "name": "team_b",
+            "in": "query",
+            "required": true
           }
-        }
-      },
-      "handler.UnTrackReq": {
-        "type": "object",
-        "required": [
-          "slug"
         ],
-        "properties": {
-          "slug": {
-            "type": "string"
-          }
-        }
-      },
-      "model.PolyMarketGameDetail": {
-        "type": "object",
-        "properties": {
-          "active": {
-            "type": "integer"
-          },
-          "archived": {
-            "type": "integer"
-          },
-          "closed": {
-            "type": "integer"
-          },
-          "event_id": {
-            "type": "string"
-          },
-          "events": {
-            "type": "array",
-            "items": {
-              "type": "string"
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/definitions/handler.GetHeadToHeadFixturesResp"
+                    }
+                  }
+                }
+              ]
             }
-          },
-          "icon": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer"
-          },
-          "image": {
-            "type": "string"
-          },
-          "markets": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/database.PolyMarketMarket"
-            }
-          },
-          "slug": {
-            "type": "string"
-          },
-          "start_time": {
-            "type": "string"
-          },
-          "status": {
-            "type": "integer"
-          },
-          "teams": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/database.PolyMarketTeam"
-            }
-          },
-          "title": {
-            "type": "string"
-          },
-          "tracked": {
-            "type": "boolean"
-          },
-          "volume": {
-            "type": "string"
-          }
-        }
-      },
-      "model.PolyMarketGameItem": {
-        "type": "object",
-        "properties": {
-          "active": {
-            "type": "integer"
-          },
-          "archived": {
-            "type": "integer"
-          },
-          "closed": {
-            "type": "integer"
-          },
-          "event_id": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer"
-          },
-          "image": {
-            "type": "string"
-          },
-          "markets": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/database.PolyMarketMarket"
-            }
-          },
-          "slug": {
-            "type": "string"
-          },
-          "start_time": {
-            "type": "string"
-          },
-          "status": {
-            "type": "integer"
-          },
-          "teams": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/database.PolyMarketTeam"
-            }
-          },
-          "title": {
-            "type": "string"
-          },
-          "volume": {
-            "type": "string"
-          }
-        }
-      },
-      "model.PolyMarketMarket": {
-        "type": "object",
-        "properties": {
-          "acceptingOrders": {
-            "type": "boolean"
-          },
-          "clobTokenIds": {
-            "type": "string"
-          },
-          "conditionId": {
-            "type": "string"
-          },
-          "groupItemTitle": {
-            "type": "string"
-          },
-          "negRisk": {
-            "type": "boolean"
-          },
-          "oneDayPriceChange": {
-            "type": "number"
-          },
-          "oneHourPriceChange": {
-            "type": "number"
-          },
-          "oneMonthPriceChange": {
-            "type": "number"
-          },
-          "oneWeekPriceChange": {
-            "type": "number"
-          },
-          "outcomePrices": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "volume": {
-            "type": "number"
-          }
-        }
-      },
-      "model.UserTrackItem": {
-        "type": "object",
-        "properties": {
-          "category": {
-            "type": "string"
-          },
-          "goals": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
-          },
-          "markets": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/model.PolyMarketMarket"
-            }
-          },
-          "oneDayPriceChange": {
-            "type": "string"
-          },
-          "oneHourPriceChange": {
-            "type": "string"
-          },
-          "oneMonthPriceChange": {
-            "type": "string"
-          },
-          "oneWeekPriceChange": {
-            "type": "string"
-          },
-          "probobility": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "team_name": {
-            "type": "string"
-          },
-          "volume": {
-            "type": "string"
           }
         }
       }
     },
-    "securityDefinitions": {
-      "BearerAuth": {
-        "description": "输入 \"Bearer {token}\"",
-        "type": "apiKey",
-        "name": "Authorization",
-        "in": "header"
+    "/v1/analytics/news": {
+      "get": {
+        "description": "分页查询新闻，按 published_at 倒序",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get Analytics News",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "category",
+            "in": "query"
+          },
+          {
+            "minimum": 1,
+            "type": "integer",
+            "name": "page",
+            "in": "query",
+            "required": true
+          },
+          {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "name": "page_size",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/definitions/handler.GetAnalyticsNewsResp"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/news/latest": {
+      "get": {
+        "description": "最新 3 条新闻，按 published_at 倒序",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get Latest Analytics News",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "category",
+            "name": "category",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/definitions/handler.GetLatestAnalyticsNewsResp"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/news/team-related": {
+      "get": {
+        "description": "根据 team 名（逗号分隔）查询相关新闻最新 3 条，按 published_at 倒序，OR 命中",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get Team Related News",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "team names, comma-separated, e.g. Argentina,Canada",
+            "name": "teams",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/definitions/handler.GetTeamRelatedNewsResp"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/recommends": {
+      "get": {
+        "description": "获取分析推荐列表",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get Analytics Recommends",
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/database.AnalyticsRecommend"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/team": {
+      "get": {
+        "description": "team data",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get team data",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "team_name",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/definitions/model.TeamData"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/analytics/team-power-rankings": {
+      "get": {
+        "description": "获取球队战斗力排名（全部，按 rank 升序）",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get Team Power Rankings",
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/database.AnalyticsTeamPowerRanking"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/game": {
+      "get": {
+        "description": "获取全部 polymarket 赛事",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Game"
+        ],
+        "summary": "Get Game",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "slug",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/definitions/model.PolyMarketGameDetail"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/games": {
+      "get": {
+        "description": "获取全部 polymarket 赛事，按 start_time 升序",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Game"
+        ],
+        "summary": "Get Games",
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/definitions/handler.GetGamesResp"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/login": {
+      "post": {
+        "description": "使用钱包地址登录，地址不存在自动创建账户",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Account"
+        ],
+        "summary": "Login",
+        "parameters": [
+          {
+            "description": "请求参数",
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/handler.LoginReq"
+            }
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/definitions/handler.LoginResp"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/polymarket": {
+      "get": {
+        "description": "Proxy polymarket Get Api",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Proxy"
+        ],
+        "summary": "Proxy polymarket Get Api",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "目标 polymarket api 完整地址",
+            "name": "target_url",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+
+        }
+      },
+      "post": {
+        "description": "Proxy polymarket post Api",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Proxy"
+        ],
+        "summary": "Proxy polymarket post Api",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "目标 polymarket api 完整地址",
+            "name": "target_url",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+
+        }
+      },
+      "delete": {
+        "description": "Proxy polymarket delete Api",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Proxy"
+        ],
+        "summary": "Proxy polymarket delete Api",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "目标 polymarket api 完整地址",
+            "name": "target_url",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+
+        }
+      }
+    },
+    "/v1/user/bind/telegram": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "将 Telegram 用户绑定到账户，已绑定则报错",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Account"
+        ],
+        "summary": "Bind Telegram",
+        "parameters": [
+          {
+            "description": "请求参数",
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/handler.BindTelegramReq"
+            }
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/common.Response"
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/track": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "订阅 team/game，重复订阅幂等成功",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Account"
+        ],
+        "summary": "Track",
+        "parameters": [
+          {
+            "description": "请求参数",
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/handler.TrackReq"
+            }
+          }
+        ],
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/common.Response"
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/tracks": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "查询当前用户所有订阅",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Account"
+        ],
+        "summary": "Get Tracks",
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/model.UserTrackItem"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/tracks/list": {
+      "get": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "查询当前用户所有订阅",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Account"
+        ],
+        "summary": "Get Track List",
+        "responses": {
+          "0": {
+            "description": "Success",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/common.Response"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/database.UserTrack"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/v1/user/untrack": {
+      "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "description": "取消订阅 team/game，未订阅时幂等成功",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Account"
+        ],
+        "summary": "Untrack",
+        "parameters": [
+          {
+            "description": "请求参数",
+            "name": "data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/handler.UnTrackReq"
+            }
+          }
+        ],
+        "responses": {
+
+        }
       }
     }
+  },
+  "definitions": {
+    "common.Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "data": {
+
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "database.AnalyticsCompetitiveness": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "group_name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "score": {
+          "type": "integer"
+        }
+      }
+    },
+    "database.AnalyticsFixture": {
+      "type": "object",
+      "properties": {
+        "api_fixture_id": {
+          "type": "integer"
+        },
+        "away_goals": {
+          "type": "integer"
+        },
+        "away_team_id": {
+          "type": "integer"
+        },
+        "away_team_name": {
+          "type": "string"
+        },
+        "fixture_date": {
+          "type": "string"
+        },
+        "fixture_timestamp": {
+          "type": "integer"
+        },
+        "home_goals": {
+          "type": "integer"
+        },
+        "home_team_id": {
+          "type": "integer"
+        },
+        "home_team_name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "league_country": {
+          "type": "string"
+        },
+        "league_id": {
+          "type": "integer"
+        },
+        "league_name": {
+          "type": "string"
+        },
+        "referee": {
+          "type": "string"
+        },
+        "round": {
+          "type": "string"
+        },
+        "season": {
+          "type": "integer"
+        },
+        "status_elapsed": {
+          "type": "integer"
+        },
+        "status_long": {
+          "type": "string"
+        },
+        "status_short": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      }
+    },
+    "database.AnalyticsNationalTeamDimension": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        }
+      }
+    },
+    "database.AnalyticsNewsArticle": {
+      "type": "object",
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "language": {
+          "type": "string"
+        },
+        "matched_players_json": {
+          "type": "string"
+        },
+        "matched_teams_json": {
+          "type": "string"
+        },
+        "published_at": {
+          "type": "string"
+        },
+        "reasons_json": {
+          "type": "string"
+        },
+        "score": {
+          "type": "integer"
+        },
+        "source_id": {
+          "type": "string"
+        },
+        "source_name": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "url_to_image": {
+          "type": "string"
+        }
+      }
+    },
+    "database.AnalyticsRecommend": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "team": {
+          "type": "string"
+        }
+      }
+    },
+    "database.AnalyticsTeamPowerRanking": {
+      "type": "object",
+      "properties": {
+        "group_name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "path_difficulty_label": {
+          "type": "string"
+        },
+        "path_difficulty_score": {
+          "type": "string"
+        },
+        "rank": {
+          "type": "integer"
+        },
+        "raw_json": {
+          "type": "string"
+        },
+        "recent_trend": {
+          "type": "string"
+        },
+        "round_of_16_probability": {
+          "type": "string"
+        },
+        "signal_status": {
+          "type": "string"
+        },
+        "team_id": {
+          "type": "integer"
+        },
+        "team_name": {
+          "type": "string"
+        },
+        "title_probability": {
+          "type": "string"
+        }
+      }
+    },
+    "database.HeadToHeadFixture": {
+      "type": "object",
+      "properties": {
+        "away_goals": {
+          "type": "integer"
+        },
+        "away_team_name": {
+          "type": "string"
+        },
+        "fixture_date": {
+          "type": "string"
+        },
+        "home_goals": {
+          "type": "integer"
+        },
+        "home_team_name": {
+          "type": "string"
+        },
+        "league_name": {
+          "type": "string"
+        },
+        "season": {
+          "type": "integer"
+        },
+        "status_short": {
+          "type": "string"
+        }
+      }
+    },
+    "database.UserTrack": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "team_name": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "handler.BindTelegramReq": {
+      "type": "object",
+      "required": [
+        "tg_user_id"
+      ],
+      "properties": {
+        "tg_user_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "handler.GetAnalyticsNewsResp": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/database.AnalyticsNewsArticle"
+          }
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "handler.GetGamesResp": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model.PolyMarketGameItem"
+          }
+        }
+      }
+    },
+    "handler.GetHeadToHeadFixturesResp": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/database.HeadToHeadFixture"
+          }
+        }
+      }
+    },
+    "handler.GetLatestAnalyticsNewsResp": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/database.AnalyticsNewsArticle"
+          }
+        }
+      }
+    },
+    "handler.GetTeamRelatedNewsResp": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/database.AnalyticsNewsArticle"
+          }
+        }
+      }
+    },
+    "handler.LoginReq": {
+      "type": "object",
+      "required": [
+        "address"
+      ],
+      "properties": {
+        "address": {
+          "type": "string"
+        }
+      }
+    },
+    "handler.LoginResp": {
+      "type": "object",
+      "properties": {
+        "account_id": {
+          "type": "integer"
+        },
+        "token": {
+          "type": "string"
+        }
+      }
+    },
+    "handler.TrackReq": {
+      "type": "object",
+      "required": [
+        "category",
+        "slug"
+      ],
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": [
+            "team",
+            "game"
+          ]
+        },
+        "slug": {
+          "type": "string"
+        },
+        "team_name": {
+          "type": "string"
+        }
+      }
+    },
+    "handler.UnTrackReq": {
+      "type": "object",
+      "required": [
+        "slug"
+      ],
+      "properties": {
+        "slug": {
+          "type": "string"
+        }
+      }
+    },
+    "model.PolyMarketGameDetail": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "integer"
+        },
+        "archived": {
+          "type": "integer"
+        },
+        "closed": {
+          "type": "integer"
+        },
+        "event_id": {
+          "type": "string"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "icon": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "image": {
+          "type": "string"
+        },
+        "markets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model.PolyMarketMarket"
+          }
+        },
+        "slug": {
+          "type": "string"
+        },
+        "start_time": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model.PolyMarketTeam"
+          }
+        },
+        "title": {
+          "type": "string"
+        },
+        "tracked": {
+          "type": "boolean"
+        },
+        "volume": {
+          "type": "string"
+        }
+      }
+    },
+    "model.PolyMarketGameItem": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "integer"
+        },
+        "archived": {
+          "type": "integer"
+        },
+        "closed": {
+          "type": "integer"
+        },
+        "event_id": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "image": {
+          "type": "string"
+        },
+        "markets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model.PolyMarketMarket"
+          }
+        },
+        "slug": {
+          "type": "string"
+        },
+        "start_time": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model.PolyMarketTeam"
+          }
+        },
+        "title": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "string"
+        }
+      }
+    },
+    "model.PolyMarketMarket": {
+      "type": "object",
+      "properties": {
+        "acceptingOrders": {
+          "type": "boolean"
+        },
+        "clobTokenIds": {
+          "type": "string"
+        },
+        "conditionId": {
+          "type": "string"
+        },
+        "groupItemTitle": {
+          "type": "string"
+        },
+        "negRisk": {
+          "type": "boolean"
+        },
+        "oneDayPriceChange": {
+          "type": "number"
+        },
+        "oneHourPriceChange": {
+          "type": "number"
+        },
+        "oneMonthPriceChange": {
+          "type": "number"
+        },
+        "oneWeekPriceChange": {
+          "type": "number"
+        },
+        "outcomePrices": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "number"
+        }
+      }
+    },
+    "model.PolyMarketTeam": {
+      "type": "object",
+      "properties": {
+        "logo": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "model.RecentForm": {
+      "type": "object",
+      "properties": {
+        "latest": {
+          "type": "string"
+        },
+        "matches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/database.AnalyticsFixture"
+          }
+        },
+        "result": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "model.TeamData": {
+      "type": "object",
+      "properties": {
+        "best_finish": {
+          "type": "string"
+        },
+        "fifa_rank": {
+          "type": "integer"
+        },
+        "group_name": {
+          "type": "string"
+        },
+        "logo": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "news": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/database.AnalyticsNewsArticle"
+          }
+        },
+        "recent_form": {
+          "$ref": "#/definitions/model.RecentForm"
+        },
+        "team_key_stars": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model.TeamKeyStar"
+          }
+        },
+        "team_strength": {
+          "$ref": "#/definitions/model.TeamStrength"
+        }
+      }
+    },
+    "model.TeamKeyStar": {
+      "type": "object",
+      "properties": {
+        "club_name": {
+          "type": "string"
+        },
+        "expected_minutes": {
+          "type": "string"
+        },
+        "form_score": {
+          "type": "string"
+        },
+        "injury_status": {
+          "type": "integer"
+        },
+        "logo": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "position": {
+          "type": "string"
+        },
+        "squad_probability": {
+          "type": "string"
+        }
+      }
+    },
+    "model.TeamStrength": {
+      "type": "object",
+      "properties": {
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/database.AnalyticsNationalTeamDimension"
+          }
+        },
+        "score": {
+          "type": "number"
+        }
+      }
+    },
+    "model.UserTrackItem": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "goals": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "markets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/model.PolyMarketMarket"
+          }
+        },
+        "oneDayPriceChange": {
+          "type": "string"
+        },
+        "oneHourPriceChange": {
+          "type": "string"
+        },
+        "oneMonthPriceChange": {
+          "type": "string"
+        },
+        "oneWeekPriceChange": {
+          "type": "string"
+        },
+        "probobility": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "team_name": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "description": "输入 \"Bearer {token}\"",
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
   }
-  
+}

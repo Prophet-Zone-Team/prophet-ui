@@ -16,6 +16,7 @@ import type {
   ProphetGetHeadToHeadFixturesData,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
+  ProphetGetTeamDetailData,
   ProphetGetTeamRelatedNewsData,
   ProphetLoginData,
   ProphetLoginRequest,
@@ -352,6 +353,17 @@ export async function getAnalyticsTeamPowerRankings(): Promise<
   return prophetGet<ProphetAnalyticsTeamPowerRanking[]>(
     "/v1/analytics/team-power-rankings"
   );
+}
+
+/** GET /v1/analytics/team */
+export async function getAnalyticsTeamDetail(params: {
+  team_name: string;
+}): Promise<ProphetGetTeamDetailData> {
+  return prophetGet<ProphetGetTeamDetailData>("/v1/analytics/team", {
+    params: {
+      team_name: params.team_name
+    }
+  });
 }
 
 /** GET /v1/analytics/news/latest */

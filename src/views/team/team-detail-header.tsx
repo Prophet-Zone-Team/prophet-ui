@@ -5,20 +5,8 @@ import Link from "next/link";
 import { CopyLinkIcon } from "@/components/icons";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { teamTradeHref } from "@/lib/routes/trade";
-import { formatSquadValue } from "@/lib/team/team-detail-model";
-import type {
-  ApiFootballTeamProfile,
-  TeamFootballMetadata,
-  TeamMarketSnapshot
-} from "@/types/market";
-
-function getGroupLabel(metadata?: TeamFootballMetadata): string {
-  if (metadata?.group && metadata.group !== "Pending") {
-    return `Group ${metadata.group}`;
-  }
-
-  return "Pending";
-}
+import type { TeamDetailHeaderData } from "@/lib/team/map-team-detail";
+import type { TeamMarketSnapshot } from "@/types/market";
 import { BookmarkControl } from "@/views/trade/team/bookmark-control";
 import {
   teamHeroCardClass,
@@ -29,8 +17,7 @@ import { PageBack } from "@/components/ui/page-back";
 
 export interface TeamDetailHeaderProps {
   snapshot: TeamMarketSnapshot;
-  profile?: ApiFootballTeamProfile;
-  metadata?: TeamFootballMetadata;
+  detail?: TeamDetailHeaderData;
 }
 
 function HeroMetric({
@@ -62,13 +49,23 @@ function HeroMetric({
   );
 }
 
+function getGroupLabel(groupName?: string): string {
+  if (!groupName) {
+    return "Pending";
+  }
+
+  return groupName.startsWith("Group") ? groupName : `Group ${groupName}`;
+}
+
 export function TeamDetailHeader({
   snapshot,
-  profile,
-  metadata
+  detail
 }: TeamDetailHeaderProps) {
   const { team, market } = snapshot;
-  const fifaRank = metadata?.fifaRank ?? team.fifaRank;
+  const fifaRank = detail?.fifaRank ?? team.fifaRank;
+  const displayName = detail?.name ?? team.name;
+  const logoUrl = detail?.logo;
+  const bestFinish = detail?.bestFinish;
 
   async function copyPageLink() {
     if (typeof window === "undefined") {
@@ -88,16 +85,16 @@ export function TeamDetailHeader({
 
       <div className={teamHeroCardClass}>
         <div className="flex min-w-0 items-center gap-3">
-          {profile?.logoUrl ? (
+          {logoUrl ? (
             <img
-              src={profile.logoUrl}
+              src={logoUrl}
               alt=""
               className="h-[68px] w-[68px] shrink-0 rounded-lg object-contain shadow-[0_0_2px_rgba(0,0,0,0.2)]"
             />
           ) : (
             <TeamFlag
               code={team.code}
-              name={team.name}
+              name={displayName}
               className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
             />
           )}
@@ -105,7 +102,7 @@ export function TeamDetailHeader({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="m-0 truncate text-2xl font-[556] capitalize text-black sm:text-[32px]">
-                {team.name}
+                {displayName}
               </h1>
               <span className="inline-flex h-[26px] items-center rounded-[14px] border border-[#909090] px-3 text-sm font-[556] text-[#909090]">
                 Team
@@ -113,21 +110,16 @@ export function TeamDetailHeader({
             </div>
             <p className="m-0 mt-1 text-sm text-prophet-muted">
               {fifaRank ? `FIFA Ranking #${fifaRank}` : "FIFA ranking pending"}
-              {metadata?.group && metadata.group !== "Pending"
-                ? ` / Group ${metadata.group}`
+              {detail?.groupName
+                ? ` / ${getGroupLabel(detail.groupName)}`
                 : " / Group pending"}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <span className="rounded-full border border-prophet-line px-2 py-0.5 text-[11px] font-[556] text-prophet-muted">
-                {metadata?.worldCupBestFinish ?? "World Cup history pending"}
+                {bestFinish ?? "World Cup history pending"}
               </span>
-              <strong className="rounded-full border border-prophet-green/30 bg-[#f1fdf8] px-2 py-0.5 text-[11px] font-[556] text-prophet-green">
-                {metadata?.worldCupTitles
-                  ? `${metadata.worldCupTitles} titles`
-                  : "No titles"}
-              </strong>
               <span className="rounded-full border border-prophet-line px-2 py-0.5 text-[11px] font-[556] text-prophet-muted">
-                {metadata ? `${metadata.status} metadata` : "Metadata pending"}
+                curated metadata
               </span>
             </div>
           </div>
@@ -139,15 +131,15 @@ export function TeamDetailHeader({
               label="FIFA rank"
               value={fifaRank ? `#${fifaRank}` : "Pending"}
             />
-            <HeroMetric
-              label="Squad value"
-              value={formatSquadValue(metadata)}
-            />
+            <HeroMetric label="Squad value" value="-" />
             <HeroMetric
               label="Best finish"
-              value={metadata?.worldCupBestFinish ?? "Pending"}
+              value={bestFinish ?? "Pending"}
             />
-            <HeroMetric label="Group" value={getGroupLabel(metadata)} />
+            <HeroMetric
+              label="Group"
+              value={getGroupLabel(detail?.groupName)}
+            />
           </div>
 
           <div className="flex flex-wrap items-center justify-between md:justify-end gap-2">
@@ -160,7 +152,7 @@ export function TeamDetailHeader({
             <div className="flex items-center gap-2">
               <BookmarkControl
                 slug={market.polymarket?.slug || ""}
-                teamName={team.name}
+                teamName={displayName}
               />
               <button
                 type="button"
