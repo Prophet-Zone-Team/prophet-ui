@@ -12,13 +12,33 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function readNonEmptyString(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+
+  return trimmed || undefined;
+}
+
 function parseSportsWsUpdate(raw: unknown): PolymarketSportsWsUpdate | undefined {
-  if (!isRecord(raw) || typeof raw.slug !== "string" || !raw.slug) {
+  if (!isRecord(raw)) {
+    return undefined;
+  }
+
+  const slug = readNonEmptyString(raw.slug);
+  const gameId =
+    readNonEmptyString(raw.gameId) ?? readNonEmptyString(raw.game_id);
+  const eventId = readNonEmptyString(raw.event_id);
+
+  if (!slug && !gameId && !eventId) {
     return undefined;
   }
 
   return {
-    slug: raw.slug,
+    slug,
+    gameId,
     live: typeof raw.live === "boolean" ? raw.live : undefined,
     ended: typeof raw.ended === "boolean" ? raw.ended : undefined,
     score: typeof raw.score === "string" ? raw.score : undefined,
@@ -30,7 +50,7 @@ function parseSportsWsUpdate(raw: unknown): PolymarketSportsWsUpdate | undefined
       typeof raw.finished_timestamp === "string"
         ? raw.finished_timestamp
         : undefined,
-    turn: typeof raw.turn === "string" ? raw.turn : undefined,
+    turn: typeof raw.turn === "string" ? raw.turn : undefined
   };
 }
 

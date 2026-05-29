@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { MarketWsProvider } from "@/context/market-ws";
-import { isMockLiveFixtureEnabled } from "@/data/mock/live-fixture-simulation";
 import {
   TradeGameHeader,
   type TradeGameHeaderProps
@@ -15,6 +14,7 @@ import type { GameMarketTabId } from "@/views/trade/game/markets/fixture-market-
 import { RelatedGames } from "@/views/trade/related-games";
 import { gameContentClass } from "@/views/trade/game/ui";
 import { useGameTradingMetadata } from "@/views/trade/game/use-game-trading-metadata";
+import { isGameClosedForTrading } from "@/lib/market/trading-market-status";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import type { ProphetGameSiblingEventSlugs } from "@/types/prophet-api";
 import type {
@@ -48,7 +48,6 @@ export default function TradeGameView({
   siblingEventSlugs,
   teamProfiles
 }: TradeGameViewProps) {
-  const marketWsEnabled = !isMockLiveFixtureEnabled();
   const [activeMarketTab, setActiveMarketTab] =
     useState<GameMarketTabId>("moneyline");
 
@@ -68,7 +67,9 @@ export default function TradeGameView({
   });
 
   const canTrade =
-    isTabTradingReady(activeMarketTab) && loadingTab !== activeMarketTab;
+    isTabTradingReady(activeMarketTab) &&
+    loadingTab !== activeMarketTab &&
+    !isGameClosedForTrading(match, gameSnapshot.market.closed);
 
   const handleMarketTabChange = (tab: GameMarketTabId) => {
     setActiveMarketTab(tab);
@@ -109,7 +110,7 @@ export default function TradeGameView({
   const [tradeDrawerOpen, setTradeDrawerOpen] = useState<boolean>(false);
 
   return (
-    <MarketWsProvider enabled={marketWsEnabled}>
+    <MarketWsProvider enabled>
       <SyncMatchLiveStore matches={matchesToSync} />
       <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2">
         <div className="bg-black h-[228px] md:h-[258px] w-full absolute top-0 left-0" />

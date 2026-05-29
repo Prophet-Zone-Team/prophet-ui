@@ -11,13 +11,8 @@ import {
 } from "@/lib/trading/trade-primary-action";
 
 import { getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
-import {
-  isMockLiveFixtureEnabled,
-  livePricesToFixtureAsks
-} from "@/data/mock/live-fixture-simulation";
 import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity";
 import { useMarketWsPrices } from "@/context/market-ws";
-import { useMockLiveFixturePricesForOutcome } from "@/store/mock-live-fixture-store";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
 import {
   findGameMarketOutcome,
@@ -172,9 +167,6 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     yes: 0,
     no: 0
   });
-  const mockLivePrices = useMockLiveFixturePricesForOutcome(
-    selectedFixtureOutcome?.id
-  );
   const readinessFetchGeneration = useRef(0);
   const takeProfitPriceTouched = useRef(false);
 
@@ -219,9 +211,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   ]);
 
   const fixtureWsEnabled =
-    input.variant === "game" &&
-    Boolean(selectedFixtureOutcome) &&
-    !isMockLiveFixtureEnabled();
+    input.variant === "game" && Boolean(selectedFixtureOutcome);
 
   const { pricesByTokenId: fixtureTokenPrices } = useMarketWsPrices(
     fixtureWsEnabled
@@ -232,10 +222,6 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const liveFixtureAsks = useMemo(() => {
     if (input.variant !== "game" || !selectedFixtureOutcome) {
       return undefined;
-    }
-
-    if (isMockLiveFixtureEnabled()) {
-      return livePricesToFixtureAsks(mockLivePrices);
     }
 
     const yesAsk = selectedFixtureOutcome.tokenId
@@ -250,12 +236,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     return { yesAsk, noAsk };
-  }, [
-    fixtureTokenPrices,
-    input.variant,
-    mockLivePrices,
-    selectedFixtureOutcome
-  ]);
+  }, [fixtureTokenPrices, input.variant, selectedFixtureOutcome]);
 
   const effectiveFixtureOutcome = useMemo(() => {
     if (!selectedFixtureOutcome) {

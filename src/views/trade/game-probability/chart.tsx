@@ -19,6 +19,10 @@ import {
   formatGameChartXAxisTick,
   getFixtureChartYDomain,
 } from "@/lib/market/fixture-probability-chart";
+import {
+  LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
+  resolveLiveChartAxisTicks
+} from "@/lib/market/live-fixture-probability-chart";
 import type {
   GameFixtureChartPoint,
   GameFixtureChartTimeRange,
@@ -98,10 +102,14 @@ export function GameProbabilityChart({
     return null;
   }
 
-  const resolvedMaxElapsed =
-    maxElapsedSeconds > 0
+  const resolvedMaxElapsed = isLive
+    ? maxElapsedSeconds > 0
       ? maxElapsedSeconds
-      : Math.max(...data.map((point) => point.elapsedSeconds ?? 0), 1);
+      : Math.max(
+          ...data.map((point) => point.elapsedSeconds ?? 0),
+          LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS
+        )
+    : 0;
 
   return (
     <div className="h-[280px] w-full min-h-[240px] sm:h-[320px] xl:h-[340px]">
@@ -114,22 +122,29 @@ export function GameProbabilityChart({
                 top: 28,
                 right: 12,
                 left: 4,
-                bottom: isLive ? 36 : 4,
+                bottom: isLive ? 36 : 4
               }}
             >
               <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
               <XAxis
-                dataKey={isLive ? "chartLabel" : "timestamp"}
+                type={isLive ? "number" : "category"}
+                dataKey={isLive ? "elapsedSeconds" : "timestamp"}
+                domain={isLive ? [0, resolvedMaxElapsed] : undefined}
+                ticks={
+                  isLive
+                    ? resolveLiveChartAxisTicks(resolvedMaxElapsed)
+                    : undefined
+                }
                 tick={{ fill: CHART_COLORS.muted, fontSize: 14, dy: 6 }}
                 axisLine={false}
                 tickLine={false}
                 minTickGap={24}
                 padding={{ left: 0, right: 32 }}
-                interval={isLive ? "preserveStartEnd" : undefined}
                 tickFormatter={
                   isLive
-                    ? undefined
-                    : (value: string) => formatGameChartXAxisTick(value, timeRange)
+                    ? (value: number) => formatMatchMinuteAxisLabel(value)
+                    : (value: string) =>
+                        formatGameChartXAxisTick(value, timeRange)
                 }
               />
               <YAxis
@@ -190,7 +205,9 @@ export function GameProbabilityChart({
                 <Customized
                   component={(props: Record<string, unknown>) => (
                     <GoalEventMarkerLayer
-                      offset={props.offset as GoalEventMarkerLayerProps["offset"]}
+                      offset={
+                        props.offset as GoalEventMarkerLayerProps["offset"]
+                      }
                       width={props.width as number | undefined}
                       height={props.height as number | undefined}
                       maxElapsedSeconds={resolvedMaxElapsed}

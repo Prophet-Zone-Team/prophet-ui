@@ -331,6 +331,7 @@ export interface PolymarketMarketMetadata {
   question?: string;
   slug?: string;
   acceptingOrders: boolean;
+  closed?: boolean;
   negRisk: boolean;
   tickSize: "0.1" | "0.01" | "0.001" | "0.0001";
   minOrderSize?: number;
@@ -554,6 +555,7 @@ export interface PolymarketFixtureMetadata {
   league?: string;
   volume: number;
   volume24hr?: number;
+  closed?: boolean;
   moneyline: {
     conditionId?: string;
     acceptingOrders: boolean;
@@ -564,8 +566,17 @@ export interface PolymarketFixtureMetadata {
 
 export interface WorldCupMatch {
   id: string;
-  matchId: number;
-  stage: "GROUP" | "R32" | "R16" | "QF" | "SF" | "THIRD_PLACE" | "FINAL" | "EXTERNAL";
+  matchId?: number;
+  eventId?: string;
+  stage:
+    | "GROUP"
+    | "R32"
+    | "R16"
+    | "QF"
+    | "SF"
+    | "THIRD_PLACE"
+    | "FINAL"
+    | "EXTERNAL";
   group?: string;
   homeTeamId?: Team["id"];
   awayTeamId?: Team["id"];
@@ -614,6 +625,7 @@ export interface GameMarketSnapshot {
   market: {
     volume: number;
     acceptingOrders: boolean;
+    closed?: boolean;
     source: string;
     freshness: FreshnessMeta;
   };

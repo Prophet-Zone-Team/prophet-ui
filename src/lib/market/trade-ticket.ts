@@ -6,6 +6,10 @@ import {
   resolveGameOutcomeTradePrice
 } from "@/lib/market/game-outcome-price";
 import { calculateReferencePrice } from "@/lib/market/order-math";
+import {
+  isGameClosedForTrading,
+  resolveEffectiveAcceptingOrders,
+} from "@/lib/market/trading-market-status";
 import type {
   BidTradeSide,
   FixtureMarketOutcome,
@@ -26,8 +30,14 @@ export function isGameFixtureOutcomeBidReady(
   snapshot: GameMarketSnapshot,
   binarySide: OrderOutcomeSide = "yes"
 ): boolean {
-  const acceptingOrders =
-    outcome.acceptingOrders ?? snapshot.market.acceptingOrders;
+  if (isGameClosedForTrading(snapshot.match, snapshot.market.closed)) {
+    return false;
+  }
+
+  const acceptingOrders = resolveEffectiveAcceptingOrders(
+    outcome.acceptingOrders ?? snapshot.market.acceptingOrders,
+    snapshot.market.closed,
+  );
 
   if (!acceptingOrders || !outcome.tokenId) {
     return false;
@@ -37,6 +47,10 @@ export function isGameFixtureOutcomeBidReady(
 }
 
 export function isGameMoneylineBidReady(snapshot: GameMarketSnapshot): boolean {
+  if (isGameClosedForTrading(snapshot.match, snapshot.market.closed)) {
+    return false;
+  }
+
   if (!snapshot.market.acceptingOrders) {
     return false;
   }

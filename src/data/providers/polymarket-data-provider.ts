@@ -42,6 +42,7 @@ interface GammaMarket {
   orderPriceMinTickSize?: number | string;
   orderMinSize?: number | string;
   acceptingOrders?: boolean;
+  closed?: boolean;
   negRisk?: boolean;
   oneDayPriceChange?: number | string;
   oneWeekPriceChange?: number | string;

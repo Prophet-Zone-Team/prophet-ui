@@ -1,5 +1,8 @@
 export interface PolymarketSportsWsUpdate {
-  slug: string;
+  /** Polymarket fixture slug when the WS payload includes it. */
+  slug?: string;
+  /** Alias some payloads use for the same identifier as `gameId`. */
+  gameId?: string;
   live?: boolean;
   ended?: boolean;
   score?: string;

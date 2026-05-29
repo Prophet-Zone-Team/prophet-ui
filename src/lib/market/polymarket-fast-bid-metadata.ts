@@ -36,6 +36,7 @@ export function extractFastBidPolymarketMetadata(
     question: market.question,
     slug: market.slug,
     acceptingOrders: market.acceptingOrders === true,
+    closed: market.closed === true,
     negRisk: market.negRisk === true,
     tickSize: normalizeTickSize(market.orderPriceMinTickSize),
     minOrderSize: firstGammaNumber(market.orderMinSize),

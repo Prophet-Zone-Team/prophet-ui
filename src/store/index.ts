@@ -34,6 +34,7 @@ export {
 export { useConfigHydrated } from "@/store/use-config-hydrated";
 
 export {
+  useMatchGoalChartEvents,
   useMatchLiveScore,
   useMatchLiveSnapshot,
   useMatchLiveStore,

@@ -2,7 +2,6 @@ import type {
   ApiFootballTeamContext,
   GameMarketOutcome,
   GameMarketSnapshot,
-  GameMatchChartEvent,
   GameMatchMinuteHistoryPoint,
   GameProbabilityHistoryPoint,
   MatchOutcomeSide,
@@ -11,6 +10,7 @@ import type {
 } from "@/types/market";
 import { parseMatchOutcomeOdds } from "@/lib/market/match-outcome-odds";
 import { getMatchVolume, resolveMatchSides } from "@/lib/market/schedule-match";
+import { resolveEffectiveAcceptingOrders } from "@/lib/market/trading-market-status";
 
 export function findWorldCupMatch(
   matchId: string,
@@ -55,6 +55,7 @@ export function buildGameMarketSnapshot(
   let outcomes: GameMarketOutcome[];
   let source: string;
   let acceptingOrders = false;
+  const marketClosed = match.polymarket?.closed === true;
 
   if (match.polymarket?.moneyline.outcomes.length) {
     outcomes = buildOutcomesFromPolymarket(
@@ -63,7 +64,10 @@ export function buildGameMarketSnapshot(
       sides.away.name
     );
     source = "polymarket";
-    acceptingOrders = match.polymarket.moneyline.acceptingOrders;
+    acceptingOrders = resolveEffectiveAcceptingOrders(
+      match.polymarket.moneyline.acceptingOrders,
+      marketClosed,
+    );
   } else if (oddsResult.status === "ready") {
     outcomes = buildOutcomesFromOdds(
       oddsResult.probabilities,
@@ -84,6 +88,7 @@ export function buildGameMarketSnapshot(
     market: {
       volume,
       acceptingOrders,
+      closed: marketClosed,
       source,
       freshness: match.freshness
     }
@@ -351,40 +356,6 @@ function clampProbability(value: number): number {
 function pseudoMinuteOffset(matchId: string, side: MatchOutcomeSide): number {
   const seed = matchId.length + (side === "home" ? 2 : side === "draw" ? 5 : 8);
   return ((seed * 7) % 11) - 5;
-}
-
-/** @deprecated Live goal markers require a real in-match event feed. */
-export function getGameMatchChartEvents(match: WorldCupMatch): GameMatchChartEvent[] {
-  const homeGoals = match.homeScore ?? 0;
-  const awayGoals = match.awayScore ?? 0;
-
-  if (homeGoals === 0 && awayGoals === 0) {
-    return [];
-  }
-
-  const homeMinutes = [18, 41, 58, 78];
-  const awayMinutes = [27, 52, 71, 86];
-  const events: GameMatchChartEvent[] = [];
-
-  for (let index = 0; index < homeGoals; index += 1) {
-    const minute = homeMinutes[index] ?? 15 + index * 20;
-    events.push({
-      elapsedSeconds: minute * 60,
-      side: "home",
-      type: "goal",
-    });
-  }
-
-  for (let index = 0; index < awayGoals; index += 1) {
-    const minute = awayMinutes[index] ?? 20 + index * 22;
-    events.push({
-      elapsedSeconds: minute * 60,
-      side: "away",
-      type: "goal",
-    });
-  }
-
-  return events.sort((left, right) => left.elapsedSeconds - right.elapsedSeconds);
 }
 
 export function getGameChartYDomain(

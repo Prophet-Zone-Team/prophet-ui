@@ -3,23 +3,23 @@ import {
   normalizeGammaSearchText,
   parseGammaArrayField,
   priceToProbability,
-  toGammaNumber,
+  toGammaNumber
 } from "@/lib/market/polymarket-gamma";
 import { resolveWorldCupTeamByGroupItemTitle } from "@/lib/market/resolve-winner-team";
 import type {
   ProphetPolyMarketGameItem,
-  ProphetPolyMarketMarket,
+  ProphetPolyMarketMarket
 } from "@/types/prophet-api";
 import type {
   MatchOddsOutcome,
   MatchOutcomeSide,
   PolymarketFixtureMoneylineOutcome,
   WorldCupMatch,
-  WorldCupMatchStatus,
+  WorldCupMatchStatus
 } from "@/types/market";
 
 export function mapProphetGamesToMatches(
-  games: ProphetPolyMarketGameItem[],
+  games: ProphetPolyMarketGameItem[]
 ): WorldCupMatch[] {
   const matches: WorldCupMatch[] = [];
 
@@ -35,7 +35,7 @@ export function mapProphetGamesToMatches(
 }
 
 export function mapProphetGameToMatch(
-  game: ProphetPolyMarketGameItem,
+  game: ProphetPolyMarketGameItem
 ): WorldCupMatch | undefined {
   const slug = game.slug?.trim();
 
@@ -62,12 +62,13 @@ export function mapProphetGameToMatch(
     homeName,
     awayName,
     lastUpdated,
-    fixtureAbbrevs,
+    fixtureAbbrevs
   );
 
   return {
     id: slug,
     matchId: hashFixtureId(eventId),
+    eventId,
     stage: "EXTERNAL",
     homeTeamId: homeTeam?.id,
     awayTeamId: awayTeam?.id,
@@ -86,13 +87,13 @@ export function mapProphetGameToMatch(
             source: "polymarket",
             status: "live",
             outcomes: oddsOutcomes,
-            lastUpdated,
+            lastUpdated
           }
         : undefined,
     freshness: {
       source: "prophet-api",
       status: "live",
-      lastUpdated,
+      lastUpdated
     },
     polymarket: {
       eventId,
@@ -100,9 +101,9 @@ export function mapProphetGameToMatch(
       volume,
       moneyline: {
         acceptingOrders: game.active === 1,
-        outcomes: [],
-      },
-    },
+        outcomes: []
+      }
+    }
   };
 }
 
@@ -123,7 +124,7 @@ function resolveProphetFixtureSides(game: ProphetPolyMarketGameItem): {
       homeName,
       awayName,
       homeLogoUrl: homeTeam?.logo?.trim() || undefined,
-      awayLogoUrl: awayTeam?.logo?.trim() || undefined,
+      awayLogoUrl: awayTeam?.logo?.trim() || undefined
     };
   }
 
@@ -142,11 +143,13 @@ export function parseTeamsFromTitle(title: string): {
 
   return {
     homeName: parts[0]?.trim(),
-    awayName: parts[1]?.trim(),
+    awayName: parts[1]?.trim()
   };
 }
 
-function mapProphetGameStatus(game: ProphetPolyMarketGameItem): WorldCupMatchStatus {
+function mapProphetGameStatus(
+  game: ProphetPolyMarketGameItem
+): WorldCupMatchStatus {
   if (game.closed === 1) {
     return "finished";
   }
@@ -168,7 +171,7 @@ export function extractFixtureTeamAbbreviations(fixtureSlug: string): {
   awayAbbrev?: string;
 } {
   const match = fixtureSlug.match(
-    /^(?:fifwc|ucl)-([^-]+)-([^-]+)-\d{4}-\d{2}-\d{2}$/i,
+    /^(?:fifwc|ucl)-([^-]+)-([^-]+)-\d{4}-\d{2}-\d{2}$/i
   );
 
   if (!match) {
@@ -177,7 +180,7 @@ export function extractFixtureTeamAbbreviations(fixtureSlug: string): {
 
   return {
     homeAbbrev: match[1]?.trim().toLowerCase(),
-    awayAbbrev: match[2]?.trim().toLowerCase(),
+    awayAbbrev: match[2]?.trim().toLowerCase()
   };
 }
 
@@ -185,7 +188,7 @@ export function buildFixtureMoneylineOutcomesFromProphetMarkets(
   markets: ProphetPolyMarketMarket[] | null | undefined,
   homeName: string,
   awayName: string,
-  fixtureSlug: string,
+  fixtureSlug: string
 ): PolymarketFixtureMoneylineOutcome[] {
   if (!markets?.length) {
     return [];
@@ -199,7 +202,7 @@ export function buildFixtureMoneylineOutcomesFromProphetMarkets(
       market,
       homeName,
       awayName,
-      fixtureAbbrevs,
+      fixtureAbbrevs
     );
 
     if (!side) {
@@ -221,26 +224,29 @@ export function buildFixtureMoneylineOutcomesFromProphetMarkets(
       noTokenId: tokenIds[1] || undefined,
       conditionId: market.conditionId,
       probability,
-      volume: parseProphetVolume(
-        market.volume === undefined ? undefined : String(market.volume),
-      ) || undefined,
+      volume:
+        parseProphetVolume(
+          market.volume === undefined ? undefined : String(market.volume)
+        ) || undefined
     });
   }
 
   const sideOrder: Record<MatchOutcomeSide, number> = {
     home: 0,
     draw: 1,
-    away: 2,
+    away: 2
   };
 
-  return outcomes.sort((left, right) => sideOrder[left.side] - sideOrder[right.side]);
+  return outcomes.sort(
+    (left, right) => sideOrder[left.side] - sideOrder[right.side]
+  );
 }
 
 function resolveProphetMarketOutcomeSide(
   market: ProphetPolyMarketMarket,
   homeName: string,
   awayName: string,
-  fixtureAbbrevs: ReturnType<typeof extractFixtureTeamAbbreviations>,
+  fixtureAbbrevs: ReturnType<typeof extractFixtureTeamAbbreviations>
 ): MatchOutcomeSide | undefined {
   const slug = market.slug?.trim();
   const suffix = slug ? extractMarketSlugSuffix(slug) : undefined;
@@ -261,7 +267,7 @@ function resolveProphetMarketOutcomeSide(
     market,
     homeName,
     awayName,
-    fixtureAbbrevs,
+    fixtureAbbrevs
   );
 
   if (!label || label === "Draw") {
@@ -284,7 +290,7 @@ function buildOddsFromProphetMarkets(
   homeName: string,
   awayName: string,
   lastUpdated: string,
-  fixtureAbbrevs: ReturnType<typeof extractFixtureTeamAbbreviations>,
+  fixtureAbbrevs: ReturnType<typeof extractFixtureTeamAbbreviations>
 ): MatchOddsOutcome[] {
   if (!markets?.length) {
     return [];
@@ -300,7 +306,7 @@ function buildOddsFromProphetMarkets(
         market,
         homeName,
         awayName,
-        fixtureAbbrevs,
+        fixtureAbbrevs
       );
 
       if (!label) {
@@ -310,7 +316,7 @@ function buildOddsFromProphetMarkets(
       outcomes.push({
         label,
         impliedProbability: yesPrice,
-        lastUpdated,
+        lastUpdated
       });
       continue;
     }
@@ -334,7 +340,7 @@ function buildOddsFromProphetMarkets(
       outcomes.push({
         label: normalizeOutcomeLabel(label, homeName, awayName),
         impliedProbability: price,
-        lastUpdated,
+        lastUpdated
       });
     }
   }
@@ -343,7 +349,7 @@ function buildOddsFromProphetMarkets(
 }
 
 function parseProphetMarketYesPrice(
-  market: ProphetPolyMarketMarket,
+  market: ProphetPolyMarketMarket
 ): number | undefined {
   if (!market.outcomePrices) {
     return undefined;
@@ -360,7 +366,7 @@ function parseProphetMarketYesPrice(
 }
 
 function parseProphetMarketOutcomeLabels(
-  market: ProphetPolyMarketMarket,
+  market: ProphetPolyMarketMarket
 ): string[] {
   return parseGammaArrayField(market.outcomes).map(String);
 }
@@ -369,7 +375,7 @@ function resolveProphetMarketOutcomeLabel(
   market: ProphetPolyMarketMarket,
   homeName: string,
   awayName: string,
-  fixtureAbbrevs: ReturnType<typeof extractFixtureTeamAbbreviations>,
+  fixtureAbbrevs: ReturnType<typeof extractFixtureTeamAbbreviations>
 ): string | undefined {
   const groupTitle = market.groupItemTitle?.trim();
 
@@ -419,22 +425,33 @@ function extractMarketSlugSuffix(slug: string): string | undefined {
 function normalizeOutcomeLabel(
   label: string,
   homeName: string,
-  awayName: string,
+  awayName: string
 ): string {
   const normalized = normalizeGammaSearchText(label);
 
-  if (["draw", "tie", "x", "d"].includes(normalized) || normalized.includes("draw")) {
+  if (
+    ["draw", "tie", "x", "d"].includes(normalized) ||
+    normalized.includes("draw")
+  ) {
     return "Draw";
   }
 
   const home = normalizeGammaSearchText(homeName);
   const away = normalizeGammaSearchText(awayName);
 
-  if (normalized === home || normalized.includes(home) || home.includes(normalized)) {
+  if (
+    normalized === home ||
+    normalized.includes(home) ||
+    home.includes(normalized)
+  ) {
     return homeName;
   }
 
-  if (normalized === away || normalized.includes(away) || away.includes(normalized)) {
+  if (
+    normalized === away ||
+    normalized.includes(away) ||
+    away.includes(normalized)
+  ) {
     return awayName;
   }
 

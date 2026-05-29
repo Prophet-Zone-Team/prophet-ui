@@ -9,9 +9,6 @@ import {
   getFixtureOutcomesForGroup,
   sortFixtureGroupOutcomes
 } from "@/lib/market/build-fixture-markets-snapshot";
-import {
-  isMockLiveFixtureEnabled,
-} from "@/data/mock/live-fixture-simulation";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import {
   mergeLivePricesIntoFixtureOutcomes,
@@ -58,7 +55,6 @@ import { GAME_MARKET_TAB_ICONS } from "@/views/trade/game/icons";
 import { MarketContextRow } from "@/views/trade/game/markets/market-context-row";
 import { useGameMarketWsTokens } from "@/views/trade/game/markets/use-game-market-ws-tokens";
 import { useLiveFixtureTabPrices } from "@/views/trade/game/markets/use-live-fixture-tab-prices";
-import { useMockLiveFixtureSimulation } from "@/views/trade/game/markets/use-mock-live-fixture-simulation";
 
 const GAME_MARKET_TABS = [
   {
@@ -121,26 +117,17 @@ export function GameMarketsSection({
     () => resolveFixtureOutcomesForTab(fixtureMarkets, tab, activeLineKey),
     [activeLineKey, fixtureMarkets, tab],
   );
-  const mockSimulation = useMockLiveFixtureSimulation({
-    match,
-    outcomes: activeTabOutcomes,
-    enabled: isMockLiveFixtureEnabled(),
-  });
-  const marketWsEnabled = !isMockLiveFixtureEnabled();
 
   useGameMarketWsTokens({
     activeTabOutcomes,
     gameSnapshot,
-    enabled: marketWsEnabled,
+    enabled: true,
   });
 
-  const { pricesByOutcomeId: apiPricesByOutcomeId } = useLiveFixtureTabPrices({
+  const { pricesByOutcomeId } = useLiveFixtureTabPrices({
     outcomes: activeTabOutcomes,
-    enabled: marketWsEnabled,
+    enabled: true,
   });
-  const pricesByOutcomeId = mockSimulation.isActive
-    ? mockSimulation.pricesByOutcomeId
-    : apiPricesByOutcomeId;
 
   const selectDefaultForTab = useCallback(
     (nextTab: GameMarketTabId, lineKey?: string) => {
@@ -366,14 +353,6 @@ export function GameMarketsSection({
           summaryItems={summaryConfig.summaryItems}
           binaryPrimaryLabel={summaryConfig.binaryPrimaryLabel}
           binarySecondaryLabel={summaryConfig.binarySecondaryLabel}
-          liveChartSimulation={
-            mockSimulation.isActive
-              ? {
-                  tickIndex: mockSimulation.tickIndex,
-                  simulatedElapsedSeconds: mockSimulation.simulatedElapsedSeconds,
-                }
-              : undefined
-          }
         />
       ) : null}
 

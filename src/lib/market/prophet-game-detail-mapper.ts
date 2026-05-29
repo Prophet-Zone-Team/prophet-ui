@@ -149,12 +149,14 @@ export function mapProphetGameDetailToMatch(
     detail.markets?.some((market) => market.acceptingOrders === true) ??
     match.polymarket?.moneyline.acceptingOrders ??
     false;
+  const closed = detail.closed === 1;
   const matchWithDisplayOutcomes =
     moneylineOutcomes.length > 0 && match.polymarket
       ? {
           ...match,
           polymarket: {
             ...match.polymarket,
+            closed,
             moneyline: {
               ...match.polymarket.moneyline,
               acceptingOrders,

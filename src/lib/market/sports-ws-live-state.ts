@@ -1,12 +1,20 @@
 import { parseMatchScoreString } from "@/lib/market/parse-match-score";
 import type { PolymarketSportsWsUpdate } from "@/types/polymarket-sports-ws";
-import type { WorldCupMatch, WorldCupMatchStatus } from "@/types/market";
+import type {
+  GameMatchChartEvent,
+  WorldCupMatch,
+  WorldCupMatchStatus,
+} from "@/types/market";
 
 export interface MatchLiveSnapshot {
   homeScore?: number;
   awayScore?: number;
   status: WorldCupMatchStatus;
   liveElapsedSeconds?: number;
+  goalEvents?: GameMatchChartEvent[];
+  /** Last score used for goal-increment detection; seeded from REST. */
+  trackedHomeScore?: number;
+  trackedAwayScore?: number;
 }
 
 export type MatchLiveSnapshotPatch = Partial<MatchLiveSnapshot>;
@@ -19,14 +27,52 @@ export function resolveMatchSlug(match: WorldCupMatch): string {
   return match.id || match.polymarket?.slug || "";
 }
 
+export function resolveMatchEventId(match: WorldCupMatch): string | undefined {
+  const eventId = match.eventId || match.polymarket?.eventId;
+
+  return eventId?.trim() || undefined;
+}
+
+/** Unique non-empty keys used to index and look up live match snapshots. */
+export function resolveMatchLiveKeys(match: WorldCupMatch): string[] {
+  const keys = new Set<string>();
+  const slug = resolveMatchSlug(match);
+  const eventId = resolveMatchEventId(match);
+
+  if (slug) {
+    keys.add(slug);
+  }
+
+  if (eventId) {
+    keys.add(eventId);
+  }
+
+  return [...keys];
+}
+
+export function resolveWsUpdateKey(
+  update: PolymarketSportsWsUpdate
+): string | undefined {
+  const slug = update.slug?.trim();
+  const eventId = update.gameId?.trim();
+
+  return slug || eventId || undefined;
+}
+
 export function worldCupMatchToLiveSnapshot(
   match: WorldCupMatch
 ): MatchLiveSnapshot {
+  const homeScore = match.homeScore ?? 0;
+  const awayScore = match.awayScore ?? 0;
+
   return {
     homeScore: match.homeScore,
     awayScore: match.awayScore,
     status: match.status,
     liveElapsedSeconds: match.liveElapsedSeconds,
+    goalEvents: [],
+    trackedHomeScore: homeScore,
+    trackedAwayScore: awayScore,
   };
 }
 
@@ -141,6 +187,9 @@ export function mergeLiveSnapshot(
     status: patch.status ?? current?.status ?? "unknown",
     liveElapsedSeconds:
       patch.liveElapsedSeconds ?? current?.liveElapsedSeconds,
+    goalEvents: current?.goalEvents ?? [],
+    trackedHomeScore: current?.trackedHomeScore,
+    trackedAwayScore: current?.trackedAwayScore,
   };
 }
 

@@ -6,11 +6,7 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { findGameMarketOutcome } from "@/lib/market/game-outcome-price";
 import { formatMatchScore } from "@/lib/market/match-display";
-import {
-  isEffectiveLiveMatch,
-  isMockLiveFixtureEnabled,
-  resolveMockLiveDisplayScore,
-} from "@/data/mock/live-fixture-simulation";
+import { isEffectiveLiveMatch } from "@/lib/market/live-match";
 import {
   filterGameBinaryFixtureChartByRange,
   filterGameFixtureChartByRange,
@@ -37,10 +33,7 @@ import { resolveOrderbookTokenId } from "@/views/trade/game/markets/fixture-mark
 import { gameColors } from "@/views/trade/game/ui";
 import { GameBinaryProbabilityChart } from "@/views/trade/game-probability/binary-chart";
 import { GameProbabilityChart } from "@/views/trade/game-probability/chart";
-import {
-  useLiveMatchProbabilityChart,
-  type LiveChartSimulationTick,
-} from "@/views/trade/game-probability/use-live-match-probability-chart";
+import { useLiveMatchProbabilityChart } from "@/views/trade/game-probability/use-live-match-probability-chart";
 import { OrderbookPanel } from "@/views/trade/orderbook-panel";
 
 const GAME_PROBABILITY_TIME_RANGES = [
@@ -77,7 +70,6 @@ export interface GameProbabilitySectionProps {
   summaryItems?: ProbabilitySummaryItem[];
   binaryPrimaryLabel?: string;
   binarySecondaryLabel?: string;
-  liveChartSimulation?: LiveChartSimulationTick;
 }
 
 export function GameProbabilitySection({
@@ -93,7 +85,6 @@ export function GameProbabilitySection({
   summaryItems,
   binaryPrimaryLabel,
   binarySecondaryLabel,
-  liveChartSimulation,
 }: GameProbabilitySectionProps) {
   const liveMatch = useMatchWithLiveState(match);
   const [timeRange, setTimeRange] = useState<GameFixtureChartTimeRange>("all");
@@ -125,13 +116,13 @@ export function GameProbabilitySection({
     chartKind: chartKind ?? "moneyline",
     lineKey,
     enabled: liveChartActive,
-    simulation: liveChartSimulation,
   });
 
   const sides = resolveMatchSides(liveMatch, snapshots);
-  const displayScore = isMockLiveFixtureEnabled()
-    ? resolveMockLiveDisplayScore(liveMatch)
-    : { homeScore: liveMatch.homeScore, awayScore: liveMatch.awayScore };
+  const displayScore = {
+    homeScore: liveMatch.homeScore,
+    awayScore: liveMatch.awayScore,
+  };
   const orderbookEnabled = showOrderbook && Boolean(gameSnapshot);
 
   const fallbackOutcome = useMemo(() => {
@@ -171,10 +162,6 @@ export function GameProbabilitySection({
     [awayLabel, gameSnapshot, homeLabel, summaryItems, summaryMode]
   );
 
-  const liveChartHasData =
-    liveChart.chartMode === "binary"
-      ? liveChart.binaryPoints.length > 0
-      : liveChart.points.length > 0;
   const effectiveChartMode = liveChartActive
     ? liveChart.chartMode
     : chartMode === "binary" || summaryMode === "binary"
@@ -193,11 +180,7 @@ export function GameProbabilitySection({
     ? liveChart.binaryPoints
     : filteredBinaryPoints;
   const chartEvents = liveChartActive ? liveChart.events : [];
-  const chartStatus = liveChartActive
-    ? liveChartHasData
-      ? "ready"
-      : "empty"
-    : status;
+  const chartStatus = liveChartActive ? liveChart.status : status;
 
   return (
     <section
@@ -276,10 +259,13 @@ export function GameProbabilitySection({
 
           {chartStatus === "error" ? (
             <ChartStateMessage
-              message={error ?? "Unable to load market price history."}
+              message={
+                (liveChartActive ? liveChart.error : error) ??
+                "Unable to load market price history."
+              }
               actionLabel="Retry"
               onAction={() => {
-                void refetch();
+                void (liveChartActive ? liveChart.refetch() : refetch());
               }}
             />
           ) : null}

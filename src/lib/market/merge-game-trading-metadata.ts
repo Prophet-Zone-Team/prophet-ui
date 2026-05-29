@@ -40,6 +40,7 @@ export function mergeMoneylineFromGammaEvent(
     ...match,
     polymarket: {
       ...match.polymarket,
+      closed: event.closed === true || match.polymarket.closed === true,
       moneyline: {
         ...match.polymarket.moneyline,
         conditionId: outcomes[0]?.conditionId ?? match.polymarket.moneyline.conditionId,
@@ -146,6 +147,7 @@ export function mergeFixtureMarketsFromGammaEvent(
     ...match,
     polymarket: {
       ...match.polymarket,
+      closed: event.closed === true || match.polymarket.closed === true,
       fixtureMarkets: mergeFixtureMarketGroups(existing, incoming, tab),
     },
   };

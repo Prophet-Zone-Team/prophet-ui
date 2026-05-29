@@ -6,11 +6,7 @@ import { MatchStatusBadge } from "@/components/match/match-status-badge";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { formatMatchScore } from "@/lib/market/match-display";
-import {
-  isEffectiveLiveMatch,
-  isMockLiveFixtureEnabled,
-  resolveMockLiveDisplayScore,
-} from "@/data/mock/live-fixture-simulation";
+import { isEffectiveLiveMatch } from "@/lib/market/live-match";
 import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
 import {
   formatScheduleKickoff,
@@ -18,7 +14,6 @@ import {
   resolveMatchSides
 } from "@/lib/market/schedule-match";
 import { useMatchWithLiveState } from "@/store/match-live-store";
-import { useMockLiveFixtureElapsed } from "@/store/mock-live-fixture-store";
 import { teamDetailHref } from "@/lib/routes/team";
 import Bg from "@/views/trade/game/header/bg";
 import type {
@@ -199,15 +194,12 @@ export function TradeGameHeader({
     ? teamProfiles?.[liveMatch.awayTeamId]
     : undefined;
   const effectiveLive = isEffectiveLiveMatch(liveMatch);
-  const mockEnabled = isMockLiveFixtureEnabled();
-  const simulatedElapsed = useMockLiveFixtureElapsed(liveMatch.id);
-  const displayScore = mockEnabled
-    ? resolveMockLiveDisplayScore(liveMatch)
-    : { homeScore: liveMatch.homeScore, awayScore: liveMatch.awayScore };
+  const displayScore = {
+    homeScore: liveMatch.homeScore,
+    awayScore: liveMatch.awayScore,
+  };
   const liveClock = useLiveElapsedClock(
-    mockEnabled
-      ? (simulatedElapsed ?? liveMatch.liveElapsedSeconds)
-      : liveMatch.liveElapsedSeconds,
+    liveMatch.liveElapsedSeconds,
     effectiveLive
   );
   const statusVariant = effectiveLive
@@ -232,7 +224,7 @@ export function TradeGameHeader({
         value={formatMatchScore(displayScore.homeScore, displayScore.awayScore)}
         statusVariant={statusVariant}
         subtitle={subtitle}
-        statusLabel={mockEnabled ? "Mock live data" : undefined}
+        statusLabel={undefined}
       />
       <TeamSideColumn
         team={{

@@ -222,6 +222,8 @@ export function buildGameTradePreview(input: {
       acceptingOrders:
         input.fixtureOutcome.acceptingOrders ??
         input.gameSnapshot.market.acceptingOrders,
+      closed: input.gameSnapshot.market.closed,
+      match: input.gameSnapshot.match,
       binarySide: input.binarySide,
       tradeSide: input.tradeSide,
       amount: input.amount,

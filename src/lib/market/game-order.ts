@@ -20,6 +20,10 @@ import {
   resolveFixtureBuyAsk,
   resolveFixtureBuyAskDisabledReason,
 } from "@/lib/market/fixture-ask-liquidity";
+import {
+  getClosedMarketDisabledReason,
+  resolveEffectiveAcceptingOrders,
+} from "@/lib/market/trading-market-status";
 
 export interface GameBidOrderPreviewInput {
   snapshot: GameMarketSnapshot;
@@ -53,6 +57,8 @@ export interface GameBidOrderPreview {
 export function buildFixtureBidOrderPreview(input: {
   outcome: FixtureMarketOutcome;
   acceptingOrders: boolean;
+  closed?: boolean;
+  match?: GameMarketSnapshot["match"];
   binarySide: OrderOutcomeSide;
   tradeSide: BidTradeSide;
   amount: number;
@@ -73,13 +79,20 @@ export function buildFixtureBidOrderPreview(input: {
   });
 
   const disabledReason =
+    getClosedMarketDisabledReason({
+      closed: input.closed,
+      match: input.match,
+    }) ??
     resolveFixtureBuyAskDisabledReason(
       input.outcome,
       input.binarySide,
       input.tradeSide,
     ) ??
     getGameDisabledReason({
-      acceptingOrders: input.acceptingOrders,
+      acceptingOrders: resolveEffectiveAcceptingOrders(
+        input.acceptingOrders,
+        input.closed,
+      ),
       amount: input.amount,
       orderType: input.orderType,
       tradeSide: input.tradeSide,
@@ -149,6 +162,10 @@ export function buildGameBidOrderPreview(
   });
 
   const disabledReason =
+    getClosedMarketDisabledReason({
+      closed: input.snapshot.market.closed,
+      match: input.snapshot.match,
+    }) ??
     getGameBuyAskDisabledReason({
       outcome,
       binarySide: input.binarySide,

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 
-import { resolveMatchSlug } from "@/lib/market/sports-ws-live-state";
+import { resolveMatchLiveKeys } from "@/lib/market/sports-ws-live-state";
 import { useMatchLiveStore } from "@/store/match-live-store";
 import type { WorldCupMatch } from "@/types/market";
 
@@ -17,7 +17,7 @@ export function SyncMatchLiveStore({ matches }: SyncMatchLiveStoreProps) {
       matches
         .map(
           (match) =>
-            `${resolveMatchSlug(match)}:${match.homeScore ?? ""}:${match.awayScore ?? ""}:${match.status}:${match.liveElapsedSeconds ?? ""}`
+            `${resolveMatchLiveKeys(match).join("/")}:${match.homeScore ?? ""}:${match.awayScore ?? ""}:${match.status}:${match.liveElapsedSeconds ?? ""}`
         )
         .join("|"),
     [matches]

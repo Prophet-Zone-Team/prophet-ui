@@ -9,6 +9,14 @@ export interface SportsWsProviderProps {
 }
 
 export function SportsWsProvider({ children }: SportsWsProviderProps) {
+  const hydrateFromSession = useMatchLiveStore(
+    (state) => state.hydrateFromSession
+  );
+
+  useEffect(() => {
+    hydrateFromSession();
+  }, [hydrateFromSession]);
+
   useEffect(() => {
     const client = getPolymarketSportsWsClient();
     const applyWsUpdate = useMatchLiveStore.getState().applyWsUpdate;

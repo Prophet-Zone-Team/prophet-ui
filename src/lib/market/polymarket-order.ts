@@ -4,6 +4,7 @@ import {
   normalizeLimitPrice,
   validateOrderAmount
 } from "@/lib/market/order-math";
+import { getClosedMarketDisabledReason } from "@/lib/market/trading-market-status";
 
 type PolymarketTickSize = NonNullable<TeamMarketSnapshot["market"]["polymarket"]>["tickSize"];
 
@@ -60,14 +61,16 @@ export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPrevi
   });
   const acceptingOrders =
     input.acceptingOrders ?? metadata?.acceptingOrders;
-  const disabledReason = getDisabledReason({
-    acceptingOrders,
-    amount: input.amount,
-    minOrderSize: metadata?.minOrderSize,
-    orderType: input.orderType,
-    tradeSide: input.tradeSide,
-    tokenId
-  });
+  const disabledReason =
+    getClosedMarketDisabledReason({ closed: metadata?.closed }) ??
+    getDisabledReason({
+      acceptingOrders,
+      amount: input.amount,
+      minOrderSize: metadata?.minOrderSize,
+      orderType: input.orderType,
+      tradeSide: input.tradeSide,
+      tokenId
+    });
 
   return {
     outcomeSide: input.outcomeSide,

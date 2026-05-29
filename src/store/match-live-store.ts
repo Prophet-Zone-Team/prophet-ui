@@ -3,19 +3,36 @@
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
+import { applyScoreChangeToGoalEvents } from "@/lib/market/match-goal-events";
+import {
+  loadMatchLiveSession,
+  saveMatchLiveSession,
+} from "@/lib/market/match-live-session";
 import {
   mergeLiveSnapshot,
   mergeMatchWithLiveSnapshot,
+  parseSportsElapsedSeconds,
   polymarketSportsWsUpdateToLivePatch,
-  resolveMatchSlug,
+  resolveMatchLiveKeys,
+  resolveWsUpdateKey,
   worldCupMatchToLiveSnapshot,
   type MatchLiveSnapshot,
 } from "@/lib/market/sports-ws-live-state";
+import { parseMatchScoreString } from "@/lib/market/parse-match-score";
 import type { PolymarketSportsWsUpdate } from "@/types/polymarket-sports-ws";
-import type { WorldCupMatch, WorldCupMatchStatus } from "@/types/market";
+import type {
+  GameMatchChartEvent,
+  WorldCupMatch,
+  WorldCupMatchStatus,
+} from "@/types/market";
 
 interface MatchLiveState {
+  /** Snapshots keyed by fixture slug and/or event id. */
   bySlug: Record<string, MatchLiveSnapshot>;
+  /** Maps event ids to their canonical fixture slug when both are known. */
+  eventIdToSlug: Record<string, string>;
+  hydrated: boolean;
+  hydrateFromSession: () => void;
   syncFromMatches: (matches: WorldCupMatch[]) => void;
   applyWsUpdate: (update: PolymarketSportsWsUpdate) => void;
 }
@@ -32,42 +49,264 @@ function snapshotsEqual(
     left.homeScore === right.homeScore &&
     left.awayScore === right.awayScore &&
     left.status === right.status &&
-    left.liveElapsedSeconds === right.liveElapsedSeconds
+    left.liveElapsedSeconds === right.liveElapsedSeconds &&
+    left.trackedHomeScore === right.trackedHomeScore &&
+    left.trackedAwayScore === right.trackedAwayScore &&
+    JSON.stringify(left.goalEvents ?? []) === JSON.stringify(right.goalEvents ?? [])
   );
+}
+
+function findSnapshot(
+  bySlug: Record<string, MatchLiveSnapshot>,
+  keys: string[]
+): MatchLiveSnapshot | undefined {
+  for (const key of keys) {
+    const snapshot = bySlug[key];
+
+    if (snapshot) {
+      return snapshot;
+    }
+  }
+
+  return undefined;
+}
+
+function collectAliasKeys(
+  state: MatchLiveState,
+  primaryKey: string
+): string[] {
+  const keys = new Set<string>([primaryKey]);
+  const canonicalSlug = state.eventIdToSlug[primaryKey];
+
+  if (canonicalSlug) {
+    keys.add(canonicalSlug);
+  }
+
+  for (const [eventId, slug] of Object.entries(state.eventIdToSlug)) {
+    if (eventId === primaryKey || slug === primaryKey) {
+      keys.add(eventId);
+      keys.add(slug);
+    }
+  }
+
+  return [...keys];
+}
+
+function writeSnapshot(
+  state: MatchLiveState,
+  keys: string[],
+  snapshot: MatchLiveSnapshot
+): Pick<MatchLiveState, "bySlug" | "eventIdToSlug"> {
+  const nextBySlug = { ...state.bySlug };
+
+  for (const key of keys) {
+    nextBySlug[key] = snapshot;
+  }
+
+  return {
+    bySlug: nextBySlug,
+    eventIdToSlug: state.eventIdToSlug,
+  };
+}
+
+function seedTrackedScores(snapshot: MatchLiveSnapshot): MatchLiveSnapshot {
+  const trackedHomeScore = snapshot.trackedHomeScore ?? snapshot.homeScore ?? 0;
+  const trackedAwayScore = snapshot.trackedAwayScore ?? snapshot.awayScore ?? 0;
+
+  return {
+    ...snapshot,
+    goalEvents: snapshot.goalEvents ?? [],
+    trackedHomeScore,
+    trackedAwayScore,
+  };
+}
+
+function mergeSnapshotFromMatch(
+  current: MatchLiveSnapshot | undefined,
+  next: MatchLiveSnapshot
+): MatchLiveSnapshot {
+  if (!current) {
+    return seedTrackedScores(next);
+  }
+
+  return seedTrackedScores({
+    ...next,
+    goalEvents: current.goalEvents ?? [],
+    trackedHomeScore: current.trackedHomeScore ?? next.trackedHomeScore,
+    trackedAwayScore: current.trackedAwayScore ?? next.trackedAwayScore,
+  });
+}
+
+function resolveGoalEventElapsedSeconds(
+  update: PolymarketSportsWsUpdate,
+  snapshot: MatchLiveSnapshot,
+): number | undefined {
+  return (
+    parseSportsElapsedSeconds(update.elapsed) ?? snapshot.liveElapsedSeconds
+  );
+}
+
+function buildSnapshotForGoalDetection(
+  current: MatchLiveSnapshot | undefined,
+  merged: MatchLiveSnapshot,
+): MatchLiveSnapshot {
+  const seeded = seedTrackedScores(merged);
+
+  return {
+    ...seeded,
+    goalEvents: current?.goalEvents ?? [],
+    trackedHomeScore: current?.trackedHomeScore ?? current?.homeScore ?? 0,
+    trackedAwayScore: current?.trackedAwayScore ?? current?.awayScore ?? 0,
+    homeScore: merged.homeScore,
+    awayScore: merged.awayScore,
+    liveElapsedSeconds:
+      merged.liveElapsedSeconds ?? current?.liveElapsedSeconds,
+  };
+}
+
+function applyGoalEventsFromWsUpdate(
+  snapshot: MatchLiveSnapshot,
+  update: PolymarketSportsWsUpdate
+): MatchLiveSnapshot {
+  if (!update.score) {
+    return snapshot;
+  }
+
+  const parsedScore = parseMatchScoreString(update.score);
+  const homeScore = parsedScore.homeScore;
+  const awayScore = parsedScore.awayScore;
+
+  if (homeScore === undefined || awayScore === undefined) {
+    return snapshot;
+  }
+
+  const elapsedSeconds = resolveGoalEventElapsedSeconds(update, snapshot);
+
+  if (elapsedSeconds === undefined) {
+    return snapshot;
+  }
+
+  const trackedHomeScore = snapshot.trackedHomeScore ?? 0;
+  const trackedAwayScore = snapshot.trackedAwayScore ?? 0;
+
+  if (homeScore === trackedHomeScore && awayScore === trackedAwayScore) {
+    return snapshot;
+  }
+
+  const goalResult = applyScoreChangeToGoalEvents({
+    trackedHomeScore,
+    trackedAwayScore,
+    homeScore,
+    awayScore,
+    elapsedSeconds,
+    existingEvents: snapshot.goalEvents ?? [],
+  });
+
+  if (goalResult.addedEvents.length === 0) {
+    return {
+      ...snapshot,
+      trackedHomeScore: goalResult.trackedHomeScore,
+      trackedAwayScore: goalResult.trackedAwayScore,
+    };
+  }
+
+  return {
+    ...snapshot,
+    goalEvents: goalResult.events,
+    trackedHomeScore: goalResult.trackedHomeScore,
+    trackedAwayScore: goalResult.trackedAwayScore,
+  };
+}
+
+function persistState(state: Pick<MatchLiveState, "bySlug" | "eventIdToSlug">) {
+  saveMatchLiveSession({
+    bySlug: state.bySlug,
+    eventIdToSlug: state.eventIdToSlug,
+  });
 }
 
 export const useMatchLiveStore = create<MatchLiveState>()((set, get) => ({
   bySlug: {},
+  eventIdToSlug: {},
+  hydrated: false,
+  hydrateFromSession: () => {
+    if (get().hydrated) {
+      return;
+    }
+
+    const persisted = loadMatchLiveSession();
+
+    if (persisted) {
+      set({
+        bySlug: persisted.bySlug,
+        eventIdToSlug: persisted.eventIdToSlug,
+        hydrated: true,
+      });
+      return;
+    }
+
+    set({ hydrated: true });
+  },
   syncFromMatches: (matches) => {
     if (matches.length === 0) {
       return;
     }
 
-    const next = { ...get().bySlug };
+    let nextBySlug = { ...get().bySlug };
+    let nextEventIdToSlug = { ...get().eventIdToSlug };
     let changed = false;
 
     for (const match of matches) {
-      const slug = resolveMatchSlug(match);
+      const keys = resolveMatchLiveKeys(match);
 
-      if (!slug) {
+      if (keys.length === 0) {
         continue;
       }
 
-      const snapshot = worldCupMatchToLiveSnapshot(match);
+      const slug = keys[0];
+      const eventId = keys.find((key) => key !== slug);
 
-      if (!snapshotsEqual(next[slug], snapshot)) {
-        next[slug] = snapshot;
+      if (slug && eventId && nextEventIdToSlug[eventId] !== slug) {
+        nextEventIdToSlug[eventId] = slug;
+        changed = true;
+      }
+
+      const snapshot = worldCupMatchToLiveSnapshot(match);
+      const current = findSnapshot(nextBySlug, keys);
+      const merged = mergeSnapshotFromMatch(current, snapshot);
+
+      if (!snapshotsEqual(current, merged)) {
+        for (const key of keys) {
+          nextBySlug[key] = merged;
+        }
+
         changed = true;
       }
     }
 
     if (changed) {
-      set({ bySlug: next });
+      const nextState = {
+        bySlug: nextBySlug,
+        eventIdToSlug: nextEventIdToSlug,
+      };
+
+      set(nextState);
+      persistState(nextState);
     }
   },
   applyWsUpdate: (update) => {
-    const slug = update.slug;
-    const current = get().bySlug[slug];
+    const updateKey = resolveWsUpdateKey(update);
+
+    if (!updateKey) {
+      return;
+    }
+
+    const state = get();
+    const canonicalSlug = update.slug?.trim() || state.eventIdToSlug[updateKey];
+    const lookupKeys = canonicalSlug
+      ? [canonicalSlug, updateKey]
+      : [updateKey];
+    const current = findSnapshot(state.bySlug, lookupKeys);
     const patch = polymarketSportsWsUpdateToLivePatch(update, current);
     const merged = mergeLiveSnapshot(current, patch);
 
@@ -75,16 +314,41 @@ export const useMatchLiveStore = create<MatchLiveState>()((set, get) => ({
       return;
     }
 
-    if (snapshotsEqual(current, merged)) {
+    const withGoals = applyGoalEventsFromWsUpdate(
+      buildSnapshotForGoalDetection(current, merged),
+      update,
+    );
+
+    if (snapshotsEqual(current, withGoals)) {
       return;
     }
 
-    set({
-      bySlug: {
-        ...get().bySlug,
-        [slug]: merged,
-      },
-    });
+    const writeKeys = new Set(collectAliasKeys(state, updateKey));
+    writeKeys.add(updateKey);
+
+    if (canonicalSlug) {
+      writeKeys.add(canonicalSlug);
+    }
+
+    const nextEventIdToSlug = { ...state.eventIdToSlug };
+
+    if (update.slug?.trim() && updateKey !== update.slug.trim()) {
+      nextEventIdToSlug[updateKey] = update.slug.trim();
+    } else if (canonicalSlug && updateKey !== canonicalSlug) {
+      nextEventIdToSlug[updateKey] = canonicalSlug;
+    }
+
+    const nextState = {
+      ...writeSnapshot(
+        { ...state, eventIdToSlug: nextEventIdToSlug },
+        [...writeKeys],
+        withGoals
+      ),
+      eventIdToSlug: nextEventIdToSlug,
+    };
+
+    set(nextState);
+    persistState(nextState);
   },
 }));
 
@@ -97,12 +361,25 @@ export function useMatchLiveSnapshot(
 }
 
 export function useMatchWithLiveState(match: WorldCupMatch): WorldCupMatch {
-  const slug = resolveMatchSlug(match);
+  const keys = resolveMatchLiveKeys(match);
   const snapshot = useMatchLiveStore((state) =>
-    slug ? state.bySlug[slug] : undefined
+    findSnapshot(state.bySlug, keys)
   );
 
   return mergeMatchWithLiveSnapshot(match, snapshot);
+}
+
+export function useMatchGoalChartEvents(
+  match: WorldCupMatch
+): GameMatchChartEvent[] {
+  const keys = resolveMatchLiveKeys(match);
+
+  return useMatchLiveStore(
+    useShallow((state) => {
+      const snapshot = findSnapshot(state.bySlug, keys);
+      return snapshot?.goalEvents ?? [];
+    })
+  );
 }
 
 export function useMatchLiveScore(slug: string | undefined): {
