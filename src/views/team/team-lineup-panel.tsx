@@ -5,13 +5,11 @@ import type {
 } from "@/types/market";
 import {
   getInitials,
-  getIssueMessage,
   getLineupPlayers,
   shortenName
 } from "@/lib/team/team-detail-model";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
-  teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
@@ -72,11 +70,6 @@ export function TeamLineupPanel({
     <section className={teamPanelClass} aria-label="Expected starting XI">
       <div className={teamPanelHeadClass}>
         <h2 className={teamPanelTitleClass}>Expected Starting XI</h2>
-        <span className={teamPanelBadgeClass}>
-          {hasSquad
-            ? "API-Football squad"
-            : getIssueMessage(dataIssues, "squad") ?? "Pending"}
-        </span>
       </div>
       <div className="p-4">
         {hasSquad ? (
@@ -152,10 +145,7 @@ export function TeamLineupPanel({
         ) : (
           <TeamEmptyState
             title="Starting XI pending"
-            body={
-              getIssueMessage(dataIssues, "squad") ??
-              "Squad data has not been attached for this team yet."
-            }
+            body="Expected starting lineup data is not available for this team yet."
           />
         )}
       </div>

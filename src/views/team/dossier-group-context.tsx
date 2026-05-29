@@ -1,54 +1,54 @@
-import type { TeamFootballMetadata } from "@/types/market";
-import { getGroupPeerMetadata } from "@/lib/team/team-detail-model";
+import type { TeamDetailGroupPeer } from "@/lib/team/map-team-detail";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
-  teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
 } from "@/views/team/team-detail-ui";
 
 export interface DossierGroupContextProps {
-  metadata?: TeamFootballMetadata;
-  allMetadata: TeamFootballMetadata[];
+  groupLabel?: string;
+  peers: TeamDetailGroupPeer[];
 }
 
 export function DossierGroupContext({
-  metadata,
-  allMetadata
+  groupLabel,
+  peers
 }: DossierGroupContextProps) {
-  const peers = getGroupPeerMetadata(metadata, allMetadata);
-
   return (
     <section className={teamPanelClass} aria-label="Group context">
       <div className={teamPanelHeadClass}>
         <h2 className={teamPanelTitleClass}>Group Context</h2>
-        <span className={teamPanelBadgeClass}>
-          {metadata?.group && metadata.group !== "Pending"
-            ? `Group ${metadata.group}`
-            : "Pending"}
-        </span>
       </div>
       <div className="p-4">
-        {metadata?.group && metadata.group !== "Pending" ? (
+        {groupLabel && peers.length > 0 ? (
           <div className="grid gap-1.5">
             <strong className="rounded-md border border-prophet-line bg-[#f5f9ff] px-2 py-1.5 text-xs font-[556] text-[#125afc]">
-              {peers.length > 0 ? `${peers.length} listed peers` : "Peers pending"}
+              {groupLabel.startsWith("Group") ? groupLabel : `Group ${groupLabel}`}
             </strong>
-            {peers.slice(0, 3).map((peer) => (
+            {peers.slice(0, 4).map((peer) => (
               <span
-                key={peer.teamId}
-                className="rounded-md border border-prophet-line px-2 py-1.5 text-xs capitalize text-black"
+                key={peer.code}
+                className="flex items-center gap-2 rounded-md border border-prophet-line px-2 py-1.5 text-xs capitalize text-black"
               >
-                {peer.teamId.replace(/-/g, " ")}
-                {peer.fifaRank ? ` / #${peer.fifaRank}` : ""}
+                {peer.logo ? (
+                  <img
+                    src={peer.logo}
+                    alt=""
+                    className="size-5 shrink-0 rounded-full object-contain"
+                  />
+                ) : null}
+                <span className="min-w-0 truncate">
+                  {peer.name}
+                  {peer.fifaRank ? ` / #${peer.fifaRank}` : ""}
+                </span>
               </span>
             ))}
           </div>
         ) : (
           <TeamEmptyState
             title="Group pending"
-            body="Official or curated group context is not attached yet."
+            body="Group context is not available for this team yet."
           />
         )}
       </div>

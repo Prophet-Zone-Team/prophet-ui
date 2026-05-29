@@ -1,7 +1,6 @@
 import type { RecentMatchView } from "@/lib/team/team-detail-model";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
-  teamPanelBadgeClass,
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
@@ -16,7 +15,6 @@ export function TeamRecentMatchesPanel({ matches }: TeamRecentMatchesPanelProps)
     <section className={teamPanelClass} aria-label="Recent matches">
       <div className={teamPanelHeadClass}>
         <h2 className={teamPanelTitleClass}>Recent Matches</h2>
-        <span className={teamPanelBadgeClass}>API-Football</span>
       </div>
       <div className="p-4">
         {matches.length > 0 ? (
@@ -58,7 +56,7 @@ export function TeamRecentMatchesPanel({ matches }: TeamRecentMatchesPanelProps)
         ) : (
           <TeamEmptyState
             title="No recent result data"
-            body="Finished fixtures are not attached for this team yet. Market movement is not used as a substitute for match form."
+            body="Finished fixtures are not available for this team yet. Market movement is not used as a substitute for match form."
           />
         )}
       </div>

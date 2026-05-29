@@ -233,3 +233,91 @@ export interface ProphetHeadToHeadFixture {
 export interface ProphetGetHeadToHeadFixturesData {
   list?: ProphetHeadToHeadFixture[];
 }
+
+export interface ProphetGetTeamDetailMatch {
+  id: number;
+  api_fixture_id: number;
+  referee: string;
+  timezone: string;
+  fixture_date: string;
+  fixture_timestamp: number;
+  status_long: string;
+  status_short: string;
+  status_elapsed: number;
+  league_id: number;
+  league_name: string;
+  league_country: string;
+  season: number;
+  round: string;
+  home_team_id: number;
+  home_team_name: string;
+  away_team_id: number;
+  away_team_name: string;
+  home_goals: number;
+  away_goals: number;
+  updated_at: string;
+}
+
+export interface ProphetGetTeamDetailDimension {
+  key: string;
+  label: string;
+  score: number;
+}
+
+export interface ProphetGetTeamDetailKeyStar {
+  name: string;
+  logo: string;
+  position: string;
+  club_name: string;
+  expected_minutes: string;
+  squad_probability: string;
+  form_score: string;
+  injury_status: number;
+}
+
+export interface ProphetGetTeamDetailNews {
+  id: number;
+  url: string;
+  source_id: string;
+  source_name: string;
+  author: string;
+  title: string;
+  description: string;
+  url_to_image: string;
+  published_at: string;
+  fetched_at: string;
+  language: string;
+  score: number;
+  category: string;
+  reasons_json: string;
+  matched_teams_json: string;
+  matched_players_json: string;
+  updated_at: string;
+}
+
+export interface ProphetGetTeamDetailPeer {
+  code: string;
+  fifaRank: number;
+  logo: string;
+  name: string;
+}
+
+export interface ProphetGetTeamDetailData {
+  name: string;
+  logo: string;
+  best_finish: string;
+  fifa_rank: number;
+  group_name: string;
+  recent_form: {
+    result: string[];
+    latest: string;
+    matches: ProphetGetTeamDetailMatch[];
+  };
+  team_strength: {
+    score: number;
+    dimensions: ProphetGetTeamDetailDimension[];
+  };
+  team_key_stars: ProphetGetTeamDetailKeyStar[];
+  news: ProphetGetTeamDetailNews[];
+  team_peers: ProphetGetTeamDetailPeer[];
+}

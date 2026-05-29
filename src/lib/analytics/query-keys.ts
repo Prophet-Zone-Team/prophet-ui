@@ -9,5 +9,6 @@ export const analyticsQueryKeys = {
   teamRelatedNews: (teamsKey: string) =>
     ["analytics", "news", "team-related", teamsKey] as const,
   headToHead: (teamA: string, teamB: string) =>
-    ["analytics", "fixtures", "head-to-head", teamA, teamB] as const
+    ["analytics", "fixtures", "head-to-head", teamA, teamB] as const,
+  teamDetail: (teamName: string) => ["analytics", "team", teamName] as const
 };

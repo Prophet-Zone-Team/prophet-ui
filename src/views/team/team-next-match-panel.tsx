@@ -67,7 +67,7 @@ export function TeamNextMatchPanel({
         ) : (
           <TeamEmptyState
             title="Next match pending"
-            body="Upcoming fixture data is not attached for this team yet."
+            body="Upcoming fixture data is not available for this team yet."
           />
         )}
       </div>

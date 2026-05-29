@@ -28,6 +28,9 @@ export interface WinnerProbabilityChartProps {
   className?: string;
   teams: TeamMarketSnapshot[];
   probabilityHistory: ProbabilityHistoryPoint[];
+  /** When true, omit the built-in section title (e.g. parent panel provides the heading). */
+  hideTitle?: boolean;
+  topTeamCount?: number;
 }
 
 function renderEndDot(
@@ -50,13 +53,15 @@ function renderEndDot(
 export function WinnerProbabilityChart({
   className,
   teams,
-  probabilityHistory
+  probabilityHistory,
+  hideTitle = false,
+  topTeamCount
 }: WinnerProbabilityChartProps) {
   const [timeRange, setTimeRange] = useState<WinnerChartTimeRange>("1M");
 
   const { series, points } = useMemo(
-    () => buildWinnerChartData(teams, probabilityHistory),
-    [teams, probabilityHistory]
+    () => buildWinnerChartData(teams, probabilityHistory, topTeamCount),
+    [teams, probabilityHistory, topTeamCount]
   );
 
   const chartData = useMemo(
@@ -82,12 +87,22 @@ export function WinnerProbabilityChart({
       )}
       aria-label="World Cup winner probability chart"
     >
-      <div className="flex flex-wrap items-center md:items-start flex-col md:flex-row justify-between gap-3 pr-[6px]">
-        <h2 className="text-base md:text-[20px] font-[500] leading-6 text-black">
-          World Cup Winner Probability
-        </h2>
-
-        <TimeRangePicker value={timeRange} onChange={setTimeRange} />
+      <div
+        className={cn(
+          "flex flex-wrap items-center md:items-start flex-col md:flex-row justify-between gap-3",
+          hideTitle ? "pr-0" : "pr-[6px]"
+        )}
+      >
+        {hideTitle ? (
+          <TimeRangePicker value={timeRange} onChange={setTimeRange} />
+        ) : (
+          <>
+            <h2 className="text-base md:text-[20px] font-[500] leading-6 text-black">
+              World Cup Winner Probability
+            </h2>
+            <TimeRangePicker value={timeRange} onChange={setTimeRange} />
+          </>
+        )}
       </div>
 
       <ChartLegend items={legendValues} className="mt-3" />

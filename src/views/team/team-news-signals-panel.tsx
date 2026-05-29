@@ -1,13 +1,16 @@
-import Link from "next/link";
+"use client";
 
-import type { NewsEvent, TeamMarketSnapshot } from "@/types/market";
+import { useMemo, useState } from "react";
+
+import type { TeamMarketSnapshot } from "@/types/market";
+import { NewsList } from "@/views/analytics/news/news-list";
+import type { NewsImpactItem } from "@/views/analytics/news/types";
 import {
-  formatImpact,
-  formatShortDate,
-  sortNewsByPublished
-} from "@/lib/team/team-detail-model";
+  buildSignalNewsDetailFromImpactItem,
+  getSignalNewsDetail
+} from "@/views/signal/news-detail/format";
+import { SignalNewsDetailDrawer } from "@/views/signal/news-detail/drawer";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
-import { cn } from "@/lib/cn";
 import {
   teamPanelClass,
   teamPanelHeadClass,
@@ -15,87 +18,59 @@ import {
 } from "@/views/team/team-detail-ui";
 
 export interface TeamNewsSignalsPanelProps {
-  news: NewsEvent[];
+  items: NewsImpactItem[];
   snapshot: TeamMarketSnapshot;
 }
 
-function SignalMeta({
-  label,
-  value,
-  tone
-}: {
-  label: string;
-  value: string;
-  tone?: "up" | "down";
-}) {
-  return (
-    <div className="flex items-center justify-between gap-2 text-[11px]">
-      <span className="text-prophet-muted">{label}</span>
-      <strong
-        className={cn(
-          "font-[556]",
-          tone === "down" && "text-prophet-red",
-          tone === "up" && "text-prophet-green",
-          !tone && "text-black"
-        )}
-      >
-        {value}
-      </strong>
-    </div>
+export function TeamNewsSignalsPanel({
+  items,
+  snapshot
+}: TeamNewsSignalsPanelProps) {
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  const selectedItem = useMemo(
+    () => items.find((item) => item.id === selectedItemId) ?? null,
+    [items, selectedItemId]
   );
-}
 
-export function TeamNewsSignalsPanel({ news, snapshot }: TeamNewsSignalsPanelProps) {
-  const signals = sortNewsByPublished(news).slice(0, 4);
+  const selectedDetail = useMemo(() => {
+    if (!selectedItem) {
+      return null;
+    }
+
+    return (
+      buildSignalNewsDetailFromImpactItem(selectedItem) ??
+      getSignalNewsDetail(selectedItem.id, selectedItem)
+    );
+  }, [selectedItem]);
+
+  const handleItemSelect = (item: NewsImpactItem) => {
+    setSelectedItemId(item.id);
+  };
 
   return (
-    <section className={teamPanelClass} aria-label="News-to-market signals">
-      <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>News-to-Market Signals</h2>
-      </div>
-      <div className="grid gap-3 p-4 sm:grid-cols-2">
-        {signals.length > 0 ? (
-          signals.map((item) => (
-            <article
-              key={item.id}
-              className="rounded-lg border border-prophet-line bg-white p-3"
-            >
-              <span
-                className={cn(
-                  "mb-2 inline-block size-2 rounded-full",
-                  item.impactScore < 0 ? "bg-prophet-red" : "bg-prophet-green"
-                )}
-                aria-hidden
-              />
-              <h3 className="m-0 text-sm font-[556] leading-snug text-black">
-                {item.headline}
-              </h3>
-              <p className="mt-2 text-xs leading-relaxed text-prophet-muted">
-                {item.summary}
-              </p>
-              <div className="mt-3 grid gap-1">
-                <SignalMeta label="Source" value={item.source} />
-                <SignalMeta
-                  label="Impact"
-                  value={formatImpact(item.impactScore)}
-                  tone={item.impactScore < 0 ? "down" : "up"}
-                />
-                <SignalMeta
-                  label="Published"
-                  value={formatShortDate(item.publishedAt)}
-                />
-              </div>
-            </article>
-          ))
-        ) : (
-          <div className="sm:col-span-2">
+    <>
+      <section className={teamPanelClass} aria-label="News-to-market signals">
+        <div className={teamPanelHeadClass}>
+          <h2 className={teamPanelTitleClass}>News-to-Market Signals</h2>
+        </div>
+        <div className="p-4">
+          {items.length > 0 ? (
+            <NewsList items={items} onItemSelect={handleItemSelect} />
+          ) : (
             <TeamEmptyState
               title="No related news"
-              body={`${snapshot.team.name} has no qualifying GDELT news signal attached right now.`}
+              body={`${snapshot.team.name} has no qualifying news signals attached right now.`}
             />
-          </div>
-        )}
-      </div>
-    </section>
+          )}
+        </div>
+      </section>
+
+      <SignalNewsDetailDrawer
+        open={selectedItemId !== null}
+        detail={selectedDetail}
+        onClose={() => setSelectedItemId(null)}
+      />
+    </>
   );
 }

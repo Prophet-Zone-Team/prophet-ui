@@ -24,6 +24,7 @@ export interface KeyPlayerView {
   position: string;
   club?: string;
   note?: string;
+  logo?: string;
   expectedMinutes: number;
   squadProbability: number;
   formScore: number;
