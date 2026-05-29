@@ -44,7 +44,7 @@ export function AppHeader() {
         "pl-3 pr-3 md:pl-2 md:pr-0"
       )}
     >
-      <div className="w-[1412px] flex items-center justify-between">
+      <div className="w-full md:w-[1412px] flex items-center justify-between">
         <div className="flex items-center gap-[50px]">
           <div className="flex items-center gap-3 shrink-0">
             <Link
