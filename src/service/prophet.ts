@@ -13,6 +13,7 @@ import type {
   ProphetCancelTrackRequest,
   ProphetGetAnalyticsNewsData,
   ProphetGetGamesData,
+  ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
   ProphetLoginData,
   ProphetLoginRequest,
@@ -167,6 +168,25 @@ function unwrapProphetResponse<T>(payload: ProphetApiResponse<T>): T {
   return payload.data;
 }
 
+async function prophetGetRaw<T>(
+  url: string,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const response = await prophetClient.get<T | ProphetApiResponse<T>>(url, config);
+  const payload = response.data;
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "code" in payload &&
+    typeof (payload as ProphetApiResponse<T>).code === "number"
+  ) {
+    return unwrapProphetResponse(payload as ProphetApiResponse<T>);
+  }
+
+  return payload as T;
+}
+
 async function prophetGet<T>(
   url: string,
   config?: AxiosRequestConfig
@@ -191,6 +211,15 @@ async function prophetPost<T>(
 /** GET /v1/games — all Polymarket games, sorted by start_time ascending */
 export async function getProphetGames(): Promise<ProphetGetGamesData> {
   return prophetGet<ProphetGetGamesData>("/v1/games");
+}
+
+/** GET /v1/game — single Polymarket game by slug */
+export async function getProphetGame(
+  slug: string
+): Promise<ProphetPolyMarketGameDetail> {
+  return prophetGet<ProphetPolyMarketGameDetail>("/v1/game", {
+    params: { slug }
+  });
 }
 
 /** POST /v1/login — wallet login; creates account if missing */
@@ -236,7 +265,7 @@ export async function proxyPolymarketGet<T = unknown>(
   targetUrl: string,
   config?: AxiosRequestConfig
 ): Promise<T> {
-  return prophetGet<T>("/v1/polymarket", {
+  return prophetGetRaw<T>("/v1/polymarket", {
     ...config,
     params: {
       ...config?.params,

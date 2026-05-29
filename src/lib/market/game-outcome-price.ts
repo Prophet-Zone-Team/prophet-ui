@@ -35,7 +35,7 @@ export function resolveGameOutcomeTradePrice(
   }
 
   if (tradeSide === "buy") {
-    return 0;
+    return calculateReferencePrice(probability, binarySide);
   }
 
   return calculateReferencePrice(probability, binarySide);

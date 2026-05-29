@@ -48,6 +48,43 @@ export interface ProphetGetGamesData {
   list?: ProphetPolyMarketGameItem[];
 }
 
+/** Full Gamma-compatible market embedded in GET /v1/game events[]. */
+export interface ProphetPolyMarketDetailMarket extends ProphetPolyMarketMarket {
+  acceptingOrders?: boolean;
+  clobTokenIds?: string;
+  conditionId?: string;
+  negRisk?: boolean;
+  volume?: number | string;
+  sportsMarketType?: string;
+  question?: string;
+  oneHourPriceChange?: number | string;
+  oneDayPriceChange?: number | string;
+  oneWeekPriceChange?: number | string;
+  oneMonthPriceChange?: number | string;
+}
+
+/** Parsed sibling event from GET /v1/game `events[]` JSON strings. */
+export interface ProphetPolyMarketEvent {
+  id?: string | number;
+  slug?: string;
+  title?: string;
+  markets?: ProphetPolyMarketDetailMarket[];
+}
+
+/** Single game detail from GET /v1/game */
+export interface ProphetPolyMarketGameDetail extends ProphetPolyMarketGameItem {
+  events?: (string | ProphetPolyMarketEvent)[];
+  tracked?: boolean;
+}
+
+/** Sibling event slugs for client-side trading metadata lazy load. */
+export interface ProphetGameSiblingEventSlugs {
+  main: string;
+  moreMarkets?: string;
+  halftime?: string;
+  exactScore?: string;
+}
+
 export interface ProphetLoginRequest {
   address: string;
 }

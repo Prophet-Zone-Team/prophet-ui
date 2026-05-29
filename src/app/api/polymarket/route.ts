@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { GAMMA_API_BASE } from "@/lib/market/polymarket-gamma";
 import {
   fetchPolymarketGamma,
   PolymarketGammaFetchError,
   PolymarketGammaNotFoundError,
 } from "@/lib/market/polymarket-gamma-fetch";
+import { proxyPolymarketGet } from "@/service/prophet";
 import { getTradingHost } from "@/server/trading/clob-auth";
 import { serverFetch } from "@/server/trading/server-fetch";
 
@@ -39,7 +41,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const payload = await fetchPolymarketGamma(path, params);
+    const payload = await fetchPolymarketViaProphetProxy(path, params);
     return NextResponse.json(payload);
   } catch (error) {
     if (error instanceof PolymarketGammaNotFoundError) {
@@ -104,6 +106,23 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "CLOB proxy request failed.";
     return NextResponse.json({ error: message }, { status: 502 });
+  }
+}
+
+async function fetchPolymarketViaProphetProxy<T>(
+  path: string,
+  params: Record<string, string>,
+): Promise<T> {
+  const gammaUrl = new URL(`${GAMMA_API_BASE}${path}`);
+
+  for (const [key, value] of Object.entries(params)) {
+    gammaUrl.searchParams.set(key, value);
+  }
+
+  try {
+    return await proxyPolymarketGet<T>(gammaUrl.toString());
+  } catch {
+    return fetchPolymarketGamma<T>(path, params);
   }
 }
 

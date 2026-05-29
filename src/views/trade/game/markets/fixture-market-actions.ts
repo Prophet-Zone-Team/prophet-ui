@@ -3,7 +3,10 @@ import {
   getFixtureOutcomesForGroup,
   sortFixtureGroupOutcomes,
 } from "@/lib/market/build-fixture-markets-snapshot";
-import { resolveFixtureBuyAsk } from "@/lib/market/fixture-ask-liquidity";
+import {
+  isValidAskPrice,
+  resolveFixtureBuyAsk,
+} from "@/lib/market/fixture-ask-liquidity";
 import type {
   FixtureMarketGroup,
   FixtureMarketOutcome,
@@ -26,11 +29,52 @@ export function findFixtureGroupByType(
   return groups.find((group) => group.type === type);
 }
 
+function probabilityToAskPrice(probability: number | undefined): number | undefined {
+  if (probability === undefined || !Number.isFinite(probability)) {
+    return undefined;
+  }
+
+  const price = probability / 100;
+  return isValidAskPrice(price) ? price : undefined;
+}
+
+/** Live CLOB ask used for order validation. */
 export function resolveOutcomePrice(
   outcome: FixtureMarketOutcome,
   binarySide: "yes" | "no" = "yes",
 ): number | undefined {
   return resolveFixtureBuyAsk(outcome, binarySide);
+}
+
+/** Display price for market action buttons; falls back to snapshot probability. */
+export function resolveOutcomeDisplayPrice(
+  outcome: FixtureMarketOutcome,
+  binarySide: "yes" | "no" = "yes",
+): number | undefined {
+  const ask = resolveFixtureBuyAsk(outcome, binarySide);
+
+  if (ask !== undefined) {
+    return ask;
+  }
+
+  if (binarySide === "yes") {
+    if (isValidAskPrice(outcome.price)) {
+      return outcome.price;
+    }
+
+    return probabilityToAskPrice(outcome.probability);
+  }
+
+  if (isValidAskPrice(outcome.price)) {
+    const noPrice = 1 - outcome.price;
+    return isValidAskPrice(noPrice) ? noPrice : undefined;
+  }
+
+  if (outcome.probability !== undefined) {
+    return probabilityToAskPrice(100 - outcome.probability);
+  }
+
+  return undefined;
 }
 
 export function isOutcomeBuyable(

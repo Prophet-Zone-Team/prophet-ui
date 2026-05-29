@@ -1,9 +1,6 @@
 import { notFound } from "next/navigation";
 
-import {
-  getFootballMatches,
-  getFootballMatchBySlug
-} from "@/data/providers/football-matches";
+import { getFootballMatches } from "@/data/providers/football-matches";
 import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 import type { WorldCupMarketDataOptions } from "@/data/providers/types";
 import {
@@ -12,13 +9,16 @@ import {
 } from "@/lib/market/game-market-snapshot";
 import { buildFixtureMarketsSnapshot } from "@/lib/market/build-fixture-markets-snapshot";
 import {
+  mapProphetGameDetailToMatch,
+  resolveProphetGameSiblingEventSlugs,
+} from "@/lib/market/prophet-game-detail-mapper";
+import {
   fetchPolymarketGamma,
   PolymarketGammaNotFoundError
 } from "@/lib/market/polymarket-gamma-fetch";
 import type { GammaMarketRecord } from "@/lib/market/polymarket-gamma";
 import { mapGammaMarketToTeamSnapshot } from "@/lib/market/winner-event-mapper";
-import { enrichFootballMatchesWithClobData } from "@/server/market/fixture-clob-enrichment";
-import { enrichMatchWithSiblingFixtureMarkets } from "@/server/market/fixture-sibling-enrichment";
+import { getProphetGame } from "@/service/prophet";
 import type { WorldCupMatch } from "@/types/market";
 import TradeGameView from "@/views/trade/game";
 import TradeTeamView from "@/views/trade/team";
@@ -41,27 +41,29 @@ function resolveGameMarketOptions(
 }
 
 export async function renderGameTradePage(slug: string) {
-  const footballMatch = await getFootballMatchBySlug(slug);
+  let detail;
 
-  if (!footballMatch) {
+  try {
+    detail = await getProphetGame(slug);
+  } catch {
     notFound();
   }
 
+  const match = mapProphetGameDetailToMatch(detail);
+
+  if (!match) {
+    notFound();
+  }
+
+  const siblingEventSlugs = resolveProphetGameSiblingEventSlugs(detail);
   const { matches } = await getFootballMatches();
 
-  const matchWithSiblingMarkets =
-    await enrichMatchWithSiblingFixtureMarkets(footballMatch);
-
-  const [enrichedMatch] = await enrichFootballMatchesWithClobData([
-    matchWithSiblingMarkets
-  ]);
-
   const marketData = await getWorldCupMarketData(
-    resolveGameMarketOptions(enrichedMatch)
+    resolveGameMarketOptions(match)
   );
-  const snapshot = buildGameMarketSnapshot(enrichedMatch, marketData.snapshots);
-  const fixtureMarkets = buildFixtureMarketsSnapshot(enrichedMatch);
-  const relatedMatches = getRelatedMatches(enrichedMatch, matches);
+  const snapshot = buildGameMarketSnapshot(match, marketData.snapshots);
+  const fixtureMarkets = buildFixtureMarketsSnapshot(match);
+  const relatedMatches = getRelatedMatches(match, matches);
   const teamProfiles = Object.fromEntries(
     marketData.footballTeamContext.map((context) => [
       context.profile.teamId,
@@ -71,12 +73,14 @@ export async function renderGameTradePage(slug: string) {
 
   return (
     <TradeGameView
-      match={enrichedMatch}
+      match={match}
       snapshots={marketData.snapshots}
       gameSnapshot={snapshot}
       fixtureMarkets={fixtureMarkets}
+      siblingEventSlugs={siblingEventSlugs}
       teamProfiles={teamProfiles}
       relatedMatches={relatedMatches.length > 0 ? relatedMatches : matches}
+      tracked={detail.tracked}
     />
   );
 }

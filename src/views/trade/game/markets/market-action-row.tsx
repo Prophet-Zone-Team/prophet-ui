@@ -18,7 +18,7 @@ import {
   isOutcomeSelected,
   resolveLineBinarySide,
   resolveMoneylineVariant,
-  resolveOutcomePrice,
+  resolveOutcomeDisplayPrice,
   resolveSpreadVariant,
   resolveTotalVariant
 } from "./fixture-market-actions";
@@ -53,6 +53,7 @@ function OutcomeButtons({
           ? resolveLineBinarySide(outcome, groupType)
           : ("yes" as const);
         const buyable = isOutcomeBuyable(outcome, binarySide);
+        const displayPrice = resolveOutcomeDisplayPrice(outcome, binarySide);
         const variant =
           groupType === "spread"
             ? resolveSpreadVariant(outcome)
@@ -64,9 +65,7 @@ function OutcomeButtons({
           <LineOutcomeButton
             key={outcome.id}
             label={outcome.label}
-            price={
-              buyable ? resolveOutcomePrice(outcome, binarySide) : undefined
-            }
+            price={displayPrice}
             variant={variant}
             active={isOutcomeSelected(
               outcome,

@@ -133,7 +133,7 @@ export function mapGammaEventToMatch(event: GammaEventRecord): WorldCupMatch | u
   const eventId = String(event.id ?? event.slug ?? sides.homeName);
   const slug = event.slug ?? `pm-${eventId}`;
   const moneylineMarkets = getFixtureMoneylineMarkets(event.markets ?? []);
-  const outcomes = buildFixtureMoneylineOutcomes(
+  const outcomes = buildFixtureMoneylineOutcomesFromGammaMarkets(
     moneylineMarkets,
     sides.homeName,
     sides.awayName,
@@ -236,7 +236,7 @@ function isFixtureMoneylineMarket(market: GammaMarketRecord): boolean {
   return parseGammaArrayField(market.clobTokenIds).map(String).filter(Boolean).length >= 2;
 }
 
-function buildFixtureMoneylineOutcomes(
+export function buildFixtureMoneylineOutcomesFromGammaMarkets(
   markets: GammaMarketRecord[],
   homeName: string,
   awayName: string,

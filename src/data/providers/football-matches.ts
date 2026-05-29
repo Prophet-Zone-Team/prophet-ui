@@ -7,11 +7,11 @@ import {
 import { clearFootballMatchesFileFallbackCache } from "@/data/providers/football-matches-fallback";
 import {
   clearPolymarketFootballEventsCache,
-  fetchPolymarketFootballMatchBySlug
 } from "@/data/providers/polymarket-football-events-provider";
+import { mapProphetGameDetailToMatch } from "@/lib/market/prophet-game-detail-mapper";
 import { mapProphetGamesToMatches } from "@/lib/market/prophet-game-mapper";
 import { clearFixtureSiblingMarketsCache } from "@/server/market/fixture-sibling-enrichment";
-import { getProphetGames } from "@/service/prophet";
+import { getProphetGame, getProphetGames } from "@/service/prophet";
 import type { FreshnessMeta, WorldCupMatch } from "@/types/market";
 
 export interface FootballMatchesResult {
@@ -58,7 +58,13 @@ export async function getFootballMatchBySlug(
     return findMatchInList(slug, matches);
   }
 
-  return fetchPolymarketFootballMatchBySlug(slug);
+  try {
+    const detail = await getProphetGame(slug);
+
+    return mapProphetGameDetailToMatch(detail);
+  } catch {
+    return undefined;
+  }
 }
 
 export async function findFootballMatch(

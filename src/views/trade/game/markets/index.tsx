@@ -89,13 +89,15 @@ export interface GameMarketsSectionProps {
   gameSnapshot: GameMarketSnapshot;
   fixtureMarkets: GameFixtureMarketsSnapshot;
   teamSnapshots: TeamMarketSnapshot[];
+  onTabChange?: (tab: GameMarketTabId) => void;
 }
 
 export function GameMarketsSection({
   match,
   gameSnapshot,
   fixtureMarkets,
-  teamSnapshots
+  teamSnapshots,
+  onTabChange
 }: GameMarketsSectionProps) {
   const [tab, setTab] = useState<GameMarketTabId>("moneyline");
   const [totalsLineKey, setTotalsLineKey] = useState<string | undefined>(() =>
@@ -191,6 +193,7 @@ export function GameMarketsSection({
   const handleTabChange = (value: string) => {
     const nextTab = value as GameMarketTabId;
     setTab(nextTab);
+    onTabChange?.(nextTab);
 
     const nextLineKey =
       nextTab === "totals"

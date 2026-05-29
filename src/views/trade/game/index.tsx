@@ -11,9 +11,12 @@ import {
 } from "@/views/trade/game/header";
 import { TradeGameHeaderToolbar } from "@/views/trade/game/header-toolbar";
 import { GameMarketsSection } from "@/views/trade/game/markets";
+import type { GameMarketTabId } from "@/views/trade/game/markets/fixture-market-actions";
 import { RelatedGames } from "@/views/trade/related-games";
 import { gameContentClass } from "@/views/trade/game/ui";
+import { useGameTradingMetadata } from "@/views/trade/game/use-game-trading-metadata";
 import { TradeWidget } from "@/views/trade/trade-widget";
+import type { ProphetGameSiblingEventSlugs } from "@/types/prophet-api";
 import type {
   ApiFootballTeamProfile,
   GameFixtureMarketsSnapshot,
@@ -27,18 +30,46 @@ export type TradeGameViewProps = TradeGameHeaderProps & {
   gameSnapshot: GameMarketSnapshot;
   fixtureMarkets: GameFixtureMarketsSnapshot;
   relatedMatches: WorldCupMatch[];
+  siblingEventSlugs: ProphetGameSiblingEventSlugs;
+  tracked?: boolean;
   teamProfiles?: Partial<Record<string, ApiFootballTeamProfile>>;
 };
 
 export default function TradeGameView({
-  match,
+  match: initialMatch,
   snapshots,
-  gameSnapshot,
-  fixtureMarkets,
+  gameSnapshot: initialGameSnapshot,
+  fixtureMarkets: initialFixtureMarkets,
   relatedMatches,
+  siblingEventSlugs,
   teamProfiles
 }: TradeGameViewProps) {
   const marketWsEnabled = !isMockLiveFixtureEnabled();
+  const [activeMarketTab, setActiveMarketTab] =
+    useState<GameMarketTabId>("moneyline");
+
+  const {
+    match,
+    gameSnapshot,
+    fixtureMarkets,
+    loadingTab,
+    ensureTabTradingData,
+    isTabTradingReady
+  } = useGameTradingMetadata({
+    initialMatch,
+    initialGameSnapshot,
+    initialFixtureMarkets,
+    siblingEventSlugs,
+    teamSnapshots: snapshots
+  });
+
+  const canTrade =
+    isTabTradingReady(activeMarketTab) && loadingTab !== activeMarketTab;
+
+  const handleMarketTabChange = (tab: GameMarketTabId) => {
+    setActiveMarketTab(tab);
+    void ensureTabTradingData(tab);
+  };
 
   const sidebar = useMemo(() => {
     const focalTeamId =
@@ -92,6 +123,7 @@ export default function TradeGameView({
               gameSnapshot={gameSnapshot}
               fixtureMarkets={fixtureMarkets}
               teamSnapshots={snapshots}
+              onTabChange={handleMarketTabChange}
             />
           </div>
           <div className="mt-6 flex flex-col gap-4 w-full md:w-[345px]">
@@ -111,6 +143,7 @@ export default function TradeGameView({
         <button
           type="button"
           className="flex flex-1 h-[46px] justify-center items-center rounded-xl text-lg font-[500] text-white transition-opacity bg-[#65AF14] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!canTrade}
           onClick={() => {
             setTradeDrawerOpen(true);
             setTab("sell");
@@ -121,6 +154,7 @@ export default function TradeGameView({
         <button
           type="button"
           className="flex flex-1 h-[46px] justify-center items-center rounded-xl text-lg font-[500] text-white transition-opacity bg-[#65AF14] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!canTrade}
           onClick={() => {
             setTradeDrawerOpen(true);
             setTab("buy");
