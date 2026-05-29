@@ -3,17 +3,20 @@
 import { cn } from "@/lib/cn";
 
 import { RelatedNewsRow } from "./item";
-import { tradeGameRelatedNewsItems } from "./mock-data";
 import type { RelatedNewsItem } from "./types";
 
 export type RelatedNewsProps = {
   items?: RelatedNewsItem[];
+  isLoading?: boolean;
+  isError?: boolean;
   onItemSelect?: (item: RelatedNewsItem) => void;
   className?: string;
 };
 
 export function RelatedNews({
-  items = tradeGameRelatedNewsItems,
+  items = [],
+  isLoading = false,
+  isError = false,
   onItemSelect,
   className
 }: RelatedNewsProps) {
@@ -31,7 +34,15 @@ export function RelatedNews({
       </h2>
 
       <div className="mt-[12px] flex flex-col gap-[4px]">
-        {items.length === 0 ? (
+        {isLoading ? (
+          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+            Loading...
+          </p>
+        ) : isError ? (
+          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+            Unable to load data.
+          </p>
+        ) : items.length === 0 ? (
           <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
             No related news is available for this fixture yet.
           </p>
