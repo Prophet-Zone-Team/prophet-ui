@@ -1,3 +1,5 @@
+import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { normalizeGammaSearchText } from "@/lib/market/polymarket-gamma";
 import type { MatchOddsOutcome, WorldCupMatch } from "@/types/market";
 
 export interface MatchOutcomeProbabilities {
@@ -80,18 +82,63 @@ function classifyOutcomeSlot(
     return "away";
   }
 
-  const homeNormalized = homeName ? normalizeLabel(homeName) : undefined;
-  const awayNormalized = awayName ? normalizeLabel(awayName) : undefined;
-
-  if (homeNormalized && (label === homeNormalized || label.includes(homeNormalized))) {
+  if (labelMatchesSideName(label, homeName)) {
     return "home";
   }
 
-  if (awayNormalized && (label === awayNormalized || label.includes(awayNormalized))) {
+  if (labelMatchesSideName(label, awayName)) {
     return "away";
   }
 
   return undefined;
+}
+
+function labelMatchesSideName(label: string, sideName?: string): boolean {
+  if (!sideName) {
+    return false;
+  }
+
+  const labelNormalized = normalizeGammaSearchText(label);
+  const sideNormalized = normalizeGammaSearchText(sideName);
+
+  if (!labelNormalized || !sideNormalized) {
+    return false;
+  }
+
+  if (
+    labelNormalized === sideNormalized ||
+    labelNormalized.includes(sideNormalized) ||
+    sideNormalized.includes(labelNormalized)
+  ) {
+    return true;
+  }
+
+  const labelTeam = findWorldCupTeamByLabel(label);
+  const sideTeam = findWorldCupTeamByLabel(sideName);
+
+  return Boolean(labelTeam && sideTeam && labelTeam.id === sideTeam.id);
+}
+
+function findWorldCupTeamByLabel(value: string) {
+  const normalized = normalizeGammaSearchText(value);
+
+  if (!normalized) {
+    return undefined;
+  }
+
+  return worldCupTeams.find((team) => {
+    const candidates = [team.name, team.code, ...(team.aliases ?? [])].map(
+      normalizeGammaSearchText,
+    );
+
+    return candidates.some(
+      (candidate) =>
+        candidate.length > 0 &&
+        (normalized === candidate ||
+          normalized.includes(candidate) ||
+          candidate.includes(normalized)),
+    );
+  });
 }
 
 function getRawImpliedProbability(outcome: MatchOddsOutcome): number | undefined {

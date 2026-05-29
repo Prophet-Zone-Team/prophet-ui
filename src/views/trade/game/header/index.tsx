@@ -223,7 +223,7 @@ export function TradeGameHeader({
           teamId: match.homeTeamId,
           name: sides.home.name,
           code: sides.home.code,
-          logoUrl: homeProfile?.logoUrl
+          logoUrl: sides.home.logoUrl ?? homeProfile?.logoUrl
         }}
         justify="end"
       />
@@ -238,7 +238,7 @@ export function TradeGameHeader({
           teamId: match.awayTeamId,
           name: sides.away.name,
           code: sides.away.code,
-          logoUrl: awayProfile?.logoUrl
+          logoUrl: sides.away.logoUrl ?? awayProfile?.logoUrl
         }}
         justify="start"
       />

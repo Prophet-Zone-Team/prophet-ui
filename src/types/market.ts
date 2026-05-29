@@ -573,6 +573,8 @@ export interface WorldCupMatch {
   awaySeed?: string;
   homeDisplayName?: string;
   awayDisplayName?: string;
+  homeLogoUrl?: string;
+  awayLogoUrl?: string;
   league?: string;
   homeScore?: number;
   awayScore?: number;

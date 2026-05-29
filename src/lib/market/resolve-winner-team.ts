@@ -1,11 +1,46 @@
 import curatedTeams from "@/data/teams/index";
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
 import { normalizeGammaSearchText } from "@/lib/market/polymarket-gamma";
-import type { Team } from "@/types/market";
+import type { Team, TeamRegion } from "@/types/market";
 
 const curatedTeamEntries = Object.entries(curatedTeams) as Array<
   [string, (typeof curatedTeams)[keyof typeof curatedTeams]]
 >;
+
+function curatedTeamKeyToId(key: string): string {
+  return normalizeGammaSearchText(key).replace(/\s+/g, "-");
+}
+
+function mapContinentToRegion(continent: string): TeamRegion {
+  if (continent === "Oceania") {
+    return "Asia";
+  }
+
+  return continent as TeamRegion;
+}
+
+function curatedAbbreviationToCode(abbreviation: string): string {
+  const lower = abbreviation.trim().toLowerCase();
+
+  if (lower === "kr") {
+    return "KOR";
+  }
+
+  return lower.toUpperCase();
+}
+
+function curatedEntryToTeam(
+  key: string,
+  entry: (typeof curatedTeams)[keyof typeof curatedTeams],
+): Team {
+  return {
+    id: curatedTeamKeyToId(key),
+    name: entry.name,
+    code: curatedAbbreviationToCode(entry.abbreviation),
+    region: mapContinentToRegion(entry.continent),
+    logoUrl: entry.logo,
+    qualifiedStatus: "qualified",
+  };
+}
 
 const GROUP_TITLE_ALIASES: Record<string, string> = {
   "united states": "USA",
@@ -33,18 +68,13 @@ const GROUP_TITLE_ALIASES: Record<string, string> = {
 };
 
 export function resolveWorldCupTeamByCuratedKey(indexKey: string): Team | undefined {
-  const worldCupTeam = findWorldCupTeamByName(indexKey);
-
-  if (!worldCupTeam) {
-    return undefined;
-  }
-
   const curated = curatedTeams[indexKey as keyof typeof curatedTeams];
 
-  return {
-    ...worldCupTeam,
-    logoUrl: curated?.logo ?? worldCupTeam.logoUrl,
-  };
+  if (curated) {
+    return curatedEntryToTeam(indexKey, curated);
+  }
+
+  return findCuratedTeamByName(indexKey);
 }
 
 export function resolveWorldCupTeamByGroupItemTitle(groupItemTitle: string): Team | undefined {
@@ -55,28 +85,12 @@ export function resolveWorldCupTeamByGroupItemTitle(groupItemTitle: string): Tea
   }
 
   const curatedKey = resolveCuratedTeamKey(trimmed);
-  const curatedEntry = curatedKey
-    ? curatedTeamEntries.find(([key]) => key === curatedKey)
-    : undefined;
 
-  if (curatedEntry) {
-    return resolveWorldCupTeamByCuratedKey(curatedEntry[0]);
+  if (curatedKey) {
+    return resolveWorldCupTeamByCuratedKey(curatedKey);
   }
 
-  const worldCupTeam = findWorldCupTeamByName(trimmed);
-
-  if (!worldCupTeam) {
-    return undefined;
-  }
-
-  const curated =
-    curatedTeams[worldCupTeam.name as keyof typeof curatedTeams] ??
-    curatedTeamEntries.find(([, value]) => value.name === worldCupTeam.name)?.[1];
-
-  return {
-    ...worldCupTeam,
-    logoUrl: curated?.logo ?? worldCupTeam.logoUrl,
-  };
+  return findCuratedTeamByName(trimmed);
 }
 
 function resolveCuratedTeamKey(label: string): string | undefined {
@@ -99,21 +113,23 @@ function resolveCuratedTeamKey(label: string): string | undefined {
   })?.[0];
 }
 
-function findWorldCupTeamByName(name: string): Team | undefined {
+function findCuratedTeamByName(name: string): Team | undefined {
   const normalized = normalizeGammaSearchText(name);
 
   if (!normalized) {
     return undefined;
   }
 
-  return worldCupTeams.find((team) => {
+  const match = curatedTeamEntries.find(([key, value]) => {
     const candidates = [
-      team.name,
-      team.code,
-      team.id.replace(/-/g, " "),
-      ...(team.aliases ?? []),
+      key,
+      value.name,
+      value.abbreviation,
+      curatedTeamKeyToId(key).replace(/-/g, " "),
     ].map(normalizeGammaSearchText);
 
     return candidates.some((alias) => alias.length > 0 && alias === normalized);
   });
+
+  return match ? curatedEntryToTeam(match[0], match[1]) : undefined;
 }

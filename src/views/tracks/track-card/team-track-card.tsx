@@ -14,17 +14,13 @@ export function TeamTrackCard({
   className
 }: TrackCardTeamProps) {
   const { team, market } = snapshot;
-
   return (
     <TrackCardShell
       className={className}
       ariaLabel={`${team.name} track card`}
       header={
         <>
-          <TeamIdentity
-            team={team}
-            slug={market.polymarket?.slug || ""}
-          />
+          <TeamIdentity team={team} slug={market?.slug || ""} />
           <TeamStatsRow
             probability={market.probability}
             change24h={market.change24h}

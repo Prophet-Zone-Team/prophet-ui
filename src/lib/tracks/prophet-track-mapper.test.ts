@@ -5,6 +5,7 @@ import {
   mapProphetTrackToCardProps,
   mapProphetTracksToCardProps
 } from "@/lib/tracks/prophet-track-mapper";
+import { isTeamFastBidReady } from "@/lib/trading/run-fast-bid";
 import type { ProphetUserTrackItem } from "@/types/prophet-api";
 
 describe("prophet-track-mapper", () => {
@@ -28,6 +29,74 @@ describe("prophet-track-mapper", () => {
     assert.equal(card.snapshot.market.volume, 27_800_000);
     assert.deepEqual(card.signals, { count: 0 });
     assert.deepEqual(card.signalItems, []);
+  });
+
+  it("maps team track fast bid metadata from market clobTokenIds", () => {
+    const item: ProphetUserTrackItem = {
+      category: "team",
+      slug: "england",
+      team_name: "England",
+      probobility: "",
+      team: { code: "ENG", name: "England" },
+      markets: [
+        {
+          slug: "will-england-win-the-2026-fifa-world-cup-937",
+          groupItemTitle: "England",
+          volume: "20869249.763005793",
+          outcomePrices: '["0.1115", "0.8885"]',
+          clobTokenIds:
+            '["115556263888245616435851357148058235707004733438163639091106356867234218207169", "77121637225348873006259930776623502125079210522997384841464684944292365296940"]',
+          acceptingOrders: true,
+          negRisk: true,
+          conditionId:
+            "0x375409bc5eeeff961e82b479caeccc20f33d15738e5bce1186d628aa3d9dfb1f",
+          oneDayPriceChange: "0",
+          oneWeekPriceChange: "-0.001"
+        }
+      ]
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.equal(
+      card.snapshot.market.slug,
+      "will-england-win-the-2026-fifa-world-cup-937"
+    );
+    assert.equal(card.snapshot.market.polymarket?.acceptingOrders, true);
+    assert.equal(card.snapshot.market.polymarket?.negRisk, true);
+    assert.equal(
+      card.snapshot.market.polymarket?.conditionId,
+      "0x375409bc5eeeff961e82b479caeccc20f33d15738e5bce1186d628aa3d9dfb1f"
+    );
+    assert.equal(
+      card.snapshot.market.polymarket?.tokens.yes?.tokenId,
+      "115556263888245616435851357148058235707004733438163639091106356867234218207169"
+    );
+    assert.equal(isTeamFastBidReady(card.snapshot, 10), true);
+  });
+
+  it("maps team track probability from market outcomePrices", () => {
+    const item: ProphetUserTrackItem = {
+      category: "team",
+      slug: "brazil",
+      team_name: "Brazil",
+      probobility: "",
+      team: { code: "BRA", name: "Brazil" },
+      markets: [
+        {
+          slug: "2026-fifa-world-cup-winner-brazil",
+          groupItemTitle: "Brazil",
+          outcomePrices: '["0.182", "0.818"]',
+          oneDayPriceChange: "0.36"
+        }
+      ]
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.equal(card.snapshot.market.probability, 18.2);
   });
 
   it("maps game track fields to GameTrackCard props", () => {

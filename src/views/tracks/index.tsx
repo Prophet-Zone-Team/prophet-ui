@@ -6,8 +6,10 @@ import { useAuth } from "@/context/auth";
 import { mapProphetTracksToCardProps } from "@/lib/tracks/prophet-track-mapper";
 import {
   clearTrackStatus,
-  hydrateTrackStatusFromApiItems
+  hydrateTrackStatusFromApiItems,
+  trackItemMatchesBookmarkTarget
 } from "@/lib/tracks/track-status";
+import type { ProphetBookmarkTarget } from "@/lib/tracks/track-status";
 import {
   getProphetTracks,
   isProphetAuthenticated,
@@ -19,6 +21,7 @@ import type { ProphetUserTrackItem } from "@/types/prophet-api";
 import { TracksEmptyState } from "./empty";
 import TracksTitle from "./title";
 import { TrackCard } from "./track-card";
+import { TracksListProvider } from "./tracks-list-context";
 import { TopAttentionEmptyState } from "./top-attention-empty";
 import TracksTelegramBanner from "./tg";
 import { TracksUnauthenticatedState } from "./unauthenticated";
@@ -96,6 +99,12 @@ export function TracksView() {
     void loadTracks();
   }, [authHydrated, isAuthenticated, loadTracks]);
 
+  const handleUntracked = useCallback((target: ProphetBookmarkTarget) => {
+    setTracks((previous) =>
+      previous.filter((item) => !trackItemMatchesBookmarkTarget(item, target))
+    );
+  }, []);
+
   async function handleConnectWallet() {
     try {
       await openLogin();
@@ -136,18 +145,20 @@ export function TracksView() {
     }
 
     return (
-      <div className="flex flex-col gap-3">
-        {trackCards.map((card) => (
-          <TrackCard
-            key={
-              card.variant === "game"
-                ? card.match.id
-                : card.snapshot.team.id
-            }
-            {...card}
-          />
-        ))}
-      </div>
+      <TracksListProvider onUntracked={handleUntracked}>
+        <div className="flex flex-col gap-3">
+          {trackCards.map((card) => (
+            <TrackCard
+              key={
+                card.variant === "game"
+                  ? card.match.id
+                  : card.snapshot.team.id
+              }
+              {...card}
+            />
+          ))}
+        </div>
+      </TracksListProvider>
     );
   }
 

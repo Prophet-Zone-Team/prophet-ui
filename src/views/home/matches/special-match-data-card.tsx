@@ -17,7 +17,8 @@ import {
 } from "@/lib/market/match-outcome-odds";
 import {
   formatScheduleKickoff,
-  getScheduleRowVariant
+  getScheduleRowVariant,
+  resolveMatchSides
 } from "@/lib/market/schedule-match";
 import { gameTradeHref } from "@/lib/routes/trade";
 import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
@@ -56,20 +57,19 @@ function useSlantOffsetPx(): [number, (node: HTMLDivElement | null) => void] {
 
 export interface SpecialMatchDataCardProps {
   match: WorldCupMatch;
-  home?: TeamMarketSnapshot;
-  away?: TeamMarketSnapshot;
+  snapshots?: TeamMarketSnapshot[];
 }
 
 export function SpecialMatchDataCard({
   match,
-  home,
-  away
+  snapshots = []
 }: SpecialMatchDataCardProps) {
   const router = useRouter();
   const liveMatch = useMatchWithLiveState(match);
+  const sides = resolveMatchSides(liveMatch, snapshots);
   const canNavigate = getScheduleRowVariant(liveMatch.status) !== "ended";
-  const homeName = home?.team.name ?? liveMatch.homeSeed ?? "Home";
-  const awayName = away?.team.name ?? liveMatch.awaySeed ?? "Away";
+  const homeName = sides.home.name;
+  const awayName = sides.away.name;
   const oddsResult = parseMatchOutcomeOdds(liveMatch, homeName, awayName);
   const liveClock = useLiveElapsedClock(
     liveMatch.liveElapsedSeconds,
@@ -118,7 +118,12 @@ export function SpecialMatchDataCard({
       <div className="relative z-10 flex justify-center pt-[50px] px-2 md:px-0">
         <div className="w-full flex justify-center items-center md:w-[568px] h-[138px] rounded-[20px] bg-white px-2 md:px-4 py-3 md:py-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] sm:px-8 sm:py-5">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 relative">
-            <TeamColumn name={homeName} code={home?.team.code} align="start" />
+            <TeamColumn
+              name={homeName}
+              code={sides.home.code}
+              logoUrl={sides.home.logoUrl}
+              align="start"
+            />
 
             <div className="flex min-w-[88px] flex-col items-center text-center">
               {liveMatch.status === "live" ? (
@@ -151,7 +156,12 @@ export function SpecialMatchDataCard({
               )}
             </div>
 
-            <TeamColumn name={awayName} code={away?.team.code} align="end" />
+            <TeamColumn
+              name={awayName}
+              code={sides.away.code}
+              logoUrl={sides.away.logoUrl}
+              align="end"
+            />
           </div>
         </div>
       </div>
@@ -162,10 +172,12 @@ export function SpecialMatchDataCard({
 function TeamColumn({
   name,
   code,
+  logoUrl,
   align
 }: {
   name: string;
   code?: string;
+  logoUrl?: string;
   align: "start" | "end";
 }) {
   return (
@@ -173,6 +185,7 @@ function TeamColumn({
       <TeamFlag
         code={code}
         name={name}
+        logoUrl={logoUrl}
         className="h-[40px] md:h-[50px] w-[40px] md:w-[50px] rounded-[6px] text-[40px] md:text-[50px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
       />
       <strong className="max-w-full truncate text-base md:text-[26px] font-[556] leading-[31px] text-black">

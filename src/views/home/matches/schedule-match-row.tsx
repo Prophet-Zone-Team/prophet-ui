@@ -182,6 +182,7 @@ function UpcomingMatchBody({
           percent={homePct}
           name={sides.home.name}
           code={sides.home.code}
+          logoUrl={sides.home.logoUrl}
         />
         <span className="px-1 text-sm font-normal text-[#909090]">VS</span>
         <TeamPercentSide
@@ -189,6 +190,7 @@ function UpcomingMatchBody({
           percent={awayPct}
           name={sides.away.name}
           code={sides.away.code}
+          logoUrl={sides.away.logoUrl}
         />
       </div>
       {probabilities ? (
@@ -219,6 +221,7 @@ function OngoingMatchBody({
           percent={homePct}
           name={sides.home.name}
           code={sides.home.code}
+          logoUrl={sides.home.logoUrl}
         />
         <strong className="px-1 text-lg font-[556] leading-[21px] text-black">
           {scoreLabel}
@@ -228,6 +231,7 @@ function OngoingMatchBody({
           percent={awayPct}
           name={sides.away.name}
           code={sides.away.code}
+          logoUrl={sides.away.logoUrl}
         />
       </div>
       {probabilities ? (
@@ -263,6 +267,7 @@ function EndedMatchBody({
           outcome={homeOutcome}
           name={sides.home.name}
           code={sides.home.code}
+          logoUrl={sides.home.logoUrl}
         />
         <strong className="px-1 text-lg font-[556] leading-[21px] text-black">
           {scoreLabel}
@@ -272,6 +277,7 @@ function EndedMatchBody({
           outcome={awayOutcome}
           name={sides.away.name}
           code={sides.away.code}
+          logoUrl={sides.away.logoUrl}
         />
       </div>
       <MatchResultBar winner={resultWinner} />
@@ -283,17 +289,20 @@ function TeamPercentSide({
   align,
   percent,
   name,
-  code
+  code,
+  logoUrl
 }: {
   align: "start" | "end";
   percent: string;
   name: string;
   code?: string;
+  logoUrl?: string;
 }) {
   const flag = (
     <TeamFlag
       code={code}
       name={name}
+      logoUrl={logoUrl}
       className="h-5 w-5 md:h-6 md:w-6 shrink-0 rounded-[2px] text-[20px] md:text-[24px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
     />
   );
@@ -326,17 +335,20 @@ function TeamResultSide({
   align,
   outcome,
   name,
-  code
+  code,
+  logoUrl
 }: {
   align: "start" | "end";
   outcome?: TeamMatchOutcome;
   name: string;
   code?: string;
+  logoUrl?: string;
 }) {
   const flag = (
     <TeamFlag
       code={code}
       name={name}
+      logoUrl={logoUrl}
       className="h-6 w-6 shrink-0 rounded-[2px] text-[24px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
     />
   );

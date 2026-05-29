@@ -69,6 +69,20 @@ export function resolveTrackStoreKeyFromApiItem(
   return slug || undefined;
 }
 
+export function trackItemMatchesBookmarkTarget(
+  item: ProphetTrackStatusItem,
+  target: ProphetBookmarkTarget
+): boolean {
+  const itemKey = resolveTrackStoreKeyFromApiItem(item);
+  const targetKey = resolveTrackStoreKeyFromTarget(target);
+
+  return (
+    itemKey !== undefined &&
+    targetKey !== undefined &&
+    itemKey === targetKey
+  );
+}
+
 export function buildTrackStatusMapFromApiItems(
   items: ProphetTrackStatusItem[]
 ): Record<string, boolean> {

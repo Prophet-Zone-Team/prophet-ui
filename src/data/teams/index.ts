@@ -29,12 +29,12 @@ export default {
     abbreviation: "kr",
     continent: "Asia"
   },
-  "Korea Republic": {
-    name: "Korea Republic",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/kr.png",
-    abbreviation: "kr",
-    continent: "Asia"
-  },
+  // "Korea Republic": {
+  //   name: "Korea Republic",
+  //   logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/kr.png",
+  //   abbreviation: "kr",
+  //   continent: "Asia"
+  // },
   Paraguay: {
     name: "Paraguay",
     logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/py.png",
@@ -291,6 +291,18 @@ export default {
     name: "Croatia",
     logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/hr.png",
     abbreviation: "hrv",
+    continent: "Europe"
+  },
+  "Paris Saint-Germain FC": {
+    name: "Paris Saint-Germain FC",
+    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/team_logos/soccer/ucl/ucl_psg_90000600.png",
+    abbreviation: "psg",
+    continent: "Europe"
+  },
+  "Arsenal FC": {
+    name: "Arsenal FC",
+    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/team_logos/soccer/ucl/ucl_ars_90000509.png",
+    abbreviation: "ars",
     continent: "Europe"
   }
 };

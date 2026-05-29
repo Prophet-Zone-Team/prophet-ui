@@ -1,8 +1,10 @@
 import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { extractFastBidPolymarketMetadata } from "@/lib/market/polymarket-fast-bid-metadata";
 import {
   parseGammaArrayField,
   priceToProbability,
-  toGammaNumber
+  toGammaNumber,
+  type GammaMarketRecord
 } from "@/lib/market/polymarket-gamma";
 import { resolveWorldCupTeamByGroupItemTitle } from "@/lib/market/resolve-winner-team";
 import type { ProphetUserTrackItem } from "@/types/prophet-api";
@@ -89,27 +91,33 @@ function resolveGameTrackTeams(
   return { homeTeam, awayTeam };
 }
 
+function resolveTrackProbability(item: ProphetUserTrackItem): number {
+  const fallbackProbability = parseNumericField(item.probobility) ?? 0;
+  const firstMarket = item.markets?.[0];
+
+  if (!firstMarket?.outcomePrices) {
+    return fallbackProbability;
+  }
+
+  const prices = parseGammaArrayField(firstMarket.outcomePrices);
+  const yesPrice = toGammaNumber(prices[0]);
+
+  return priceToProbability(yesPrice) ?? fallbackProbability;
+}
+
 function resolveGameTrackProbability(item: ProphetUserTrackItem): {
   probability: number;
   teamCode: string;
 } {
   const firstMarket = item.markets?.[0];
-  const fallbackProbability = parseNumericField(item.probobility) ?? 0;
-
-  if (!firstMarket) {
-    return { probability: fallbackProbability, teamCode: "" };
-  }
-
-  const prices = parseGammaArrayField(firstMarket.outcomePrices);
-  const yesPrice = toGammaNumber(prices[0]);
-  const probability = priceToProbability(yesPrice) ?? fallbackProbability;
+  const probability = resolveTrackProbability(item);
   const marketTeam = resolveWorldCupTeamByGroupItemTitle(
-    firstMarket.groupItemTitle?.trim() ?? ""
+    firstMarket?.groupItemTitle?.trim() ?? ""
   );
 
   return {
     probability,
-    teamCode: marketTeam?.code ?? firstMarket.groupItemTitle?.trim() ?? ""
+    teamCode: marketTeam?.code ?? firstMarket?.groupItemTitle?.trim() ?? ""
   };
 }
 
@@ -182,7 +190,7 @@ function mapProphetGameTrackToCardProps(
   item: ProphetUserTrackItem
 ): TrackCardGameProps | undefined {
   const teams = resolveGameTrackTeams(item);
-
+  console.log(item, teams);
   if (!teams) {
     return undefined;
   }
@@ -262,10 +270,23 @@ function buildTeamMarketData(
   teamId: Team["id"],
   item: ProphetUserTrackItem
 ): TeamMarketData {
-  const probability = parseNumericField(item.probobility) ?? 0;
-  const change24h = parseNumericField(item.oneDayPriceChange) ?? 0;
-  const change7d = parseNumericField(item.oneWeekPriceChange) ?? 0;
-  const volume = parseNumericField(item.volume) ?? 0;
+  const firstMarket = item.markets?.[0];
+  const probability = resolveTrackProbability(item);
+  const change24h =
+    parseNumericField(firstMarket?.oneDayPriceChange) ??
+    parseNumericField(item.oneDayPriceChange) ??
+    0;
+  const change7d =
+    parseNumericField(firstMarket?.oneWeekPriceChange) ??
+    parseNumericField(item.oneWeekPriceChange) ??
+    0;
+  const volume =
+    parseNumericField(firstMarket?.volume) ??
+    parseNumericField(item.volume) ??
+    0;
+  const polymarket = firstMarket
+    ? extractFastBidPolymarketMetadata(firstMarket as GammaMarketRecord)
+    : undefined;
 
   return {
     teamId,
@@ -277,7 +298,8 @@ function buildTeamMarketData(
       change24h > 0 ? "bullish" : change24h < 0 ? "bearish" : "neutral",
     bookmakerImpliedProbability: probability,
     updatedAt: new Date().toISOString(),
-    slug: item.slug?.trim() ?? ""
+    slug: firstMarket?.slug?.trim() || item.slug?.trim() || "",
+    polymarket
   };
 }
 

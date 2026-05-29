@@ -1,5 +1,10 @@
 import { worldCupTeams } from "@/data/teams/world-cup-teams";
-import { normalizeGammaSearchText } from "@/lib/market/polymarket-gamma";
+import {
+  normalizeGammaSearchText,
+  parseGammaArrayField,
+  toGammaNumber,
+} from "@/lib/market/polymarket-gamma";
+import { resolveWorldCupTeamByGroupItemTitle } from "@/lib/market/resolve-winner-team";
 import type {
   ProphetPolyMarketGameItem,
   ProphetPolyMarketMarket,
@@ -43,16 +48,18 @@ export function mapProphetGameToMatch(
     return undefined;
   }
 
-  const homeTeam = findWorldCupTeamByName(homeName);
-  const awayTeam = findWorldCupTeamByName(awayName);
+  const homeTeam = resolveWorldCupTeamByGroupItemTitle(homeName);
+  const awayTeam = resolveWorldCupTeamByGroupItemTitle(awayName);
   const eventId = game.event_id?.trim() || slug;
   const lastUpdated = game.start_time ?? new Date().toISOString();
   const volume = parseProphetVolume(game.volume);
+  const fixtureAbbrevs = extractFixtureTeamAbbreviations(slug);
   const oddsOutcomes = buildOddsFromProphetMarkets(
     game.markets,
     homeName,
     awayName,
     lastUpdated,
+    fixtureAbbrevs,
   );
 
   return {
@@ -63,6 +70,8 @@ export function mapProphetGameToMatch(
     awayTeamId: awayTeam?.id,
     homeDisplayName: homeName,
     awayDisplayName: awayName,
+    homeLogoUrl: sides.homeLogoUrl,
+    awayLogoUrl: sides.awayLogoUrl,
     homeSeed: homeTeam ? undefined : homeName,
     awaySeed: awayTeam ? undefined : awayName,
     status: mapProphetGameStatus(game),
@@ -97,15 +106,21 @@ export function mapProphetGameToMatch(
 function resolveProphetFixtureSides(game: ProphetPolyMarketGameItem): {
   homeName?: string;
   awayName?: string;
+  homeLogoUrl?: string;
+  awayLogoUrl?: string;
 } {
-  const teamNames = (game.teams ?? [])
-    .map((team) => team.name?.trim())
-    .filter((name): name is string => Boolean(name));
+  const teams = game.teams ?? [];
+  const homeTeam = teams[0];
+  const awayTeam = teams[1];
+  const homeName = homeTeam?.name?.trim();
+  const awayName = awayTeam?.name?.trim();
 
-  if (teamNames.length >= 2) {
+  if (homeName && awayName) {
     return {
-      homeName: teamNames[0],
-      awayName: teamNames[1],
+      homeName,
+      awayName,
+      homeLogoUrl: homeTeam?.logo?.trim() || undefined,
+      awayLogoUrl: awayTeam?.logo?.trim() || undefined,
     };
   }
 
@@ -145,11 +160,30 @@ function mapProphetGameStatus(game: ProphetPolyMarketGameItem): WorldCupMatchSta
   return "scheduled";
 }
 
+export function extractFixtureTeamAbbreviations(fixtureSlug: string): {
+  homeAbbrev?: string;
+  awayAbbrev?: string;
+} {
+  const match = fixtureSlug.match(
+    /^(?:fifwc|ucl)-([^-]+)-([^-]+)-\d{4}-\d{2}-\d{2}$/i,
+  );
+
+  if (!match) {
+    return {};
+  }
+
+  return {
+    homeAbbrev: match[1]?.trim().toLowerCase(),
+    awayAbbrev: match[2]?.trim().toLowerCase(),
+  };
+}
+
 function buildOddsFromProphetMarkets(
   markets: ProphetPolyMarketMarket[] | null | undefined,
   homeName: string,
   awayName: string,
   lastUpdated: string,
+  fixtureAbbrevs: ReturnType<typeof extractFixtureTeamAbbreviations>,
 ): MatchOddsOutcome[] {
   if (!markets?.length) {
     return [];
@@ -158,7 +192,29 @@ function buildOddsFromProphetMarkets(
   const outcomes: MatchOddsOutcome[] = [];
 
   for (const market of markets) {
-    const labels = market.outcomes ?? [];
+    const yesPrice = parseProphetMarketYesPrice(market);
+
+    if (yesPrice !== undefined) {
+      const label = resolveProphetMarketOutcomeLabel(
+        market,
+        homeName,
+        awayName,
+        fixtureAbbrevs,
+      );
+
+      if (!label) {
+        continue;
+      }
+
+      outcomes.push({
+        label,
+        impliedProbability: yesPrice,
+        lastUpdated,
+      });
+      continue;
+    }
+
+    const labels = parseProphetMarketOutcomeLabels(market);
     const prices = market.prices ?? [];
 
     for (let index = 0; index < labels.length; index += 1) {
@@ -183,6 +239,80 @@ function buildOddsFromProphetMarkets(
   }
 
   return outcomes;
+}
+
+function parseProphetMarketYesPrice(
+  market: ProphetPolyMarketMarket,
+): number | undefined {
+  if (!market.outcomePrices) {
+    return undefined;
+  }
+
+  const prices = parseGammaArrayField(market.outcomePrices);
+  const price = toGammaNumber(prices[0]);
+
+  if (price === undefined || !Number.isFinite(price) || price < 0) {
+    return undefined;
+  }
+
+  return price;
+}
+
+function parseProphetMarketOutcomeLabels(
+  market: ProphetPolyMarketMarket,
+): string[] {
+  return parseGammaArrayField(market.outcomes).map(String);
+}
+
+function resolveProphetMarketOutcomeLabel(
+  market: ProphetPolyMarketMarket,
+  homeName: string,
+  awayName: string,
+  fixtureAbbrevs: ReturnType<typeof extractFixtureTeamAbbreviations>,
+): string | undefined {
+  const groupTitle = market.groupItemTitle?.trim();
+
+  if (groupTitle) {
+    return normalizeOutcomeLabel(groupTitle, homeName, awayName);
+  }
+
+  const slug = market.slug?.trim();
+
+  if (!slug) {
+    return undefined;
+  }
+
+  const suffix = extractMarketSlugSuffix(slug);
+
+  if (!suffix) {
+    return undefined;
+  }
+
+  if (suffix === "draw") {
+    return "Draw";
+  }
+
+  if (fixtureAbbrevs.homeAbbrev && suffix === fixtureAbbrevs.homeAbbrev) {
+    return homeName;
+  }
+
+  if (fixtureAbbrevs.awayAbbrev && suffix === fixtureAbbrevs.awayAbbrev) {
+    return awayName;
+  }
+
+  const team = findWorldCupTeamByCode(suffix);
+
+  if (team) {
+    return normalizeOutcomeLabel(team.name, homeName, awayName);
+  }
+
+  return undefined;
+}
+
+function extractMarketSlugSuffix(slug: string): string | undefined {
+  const match = slug.match(/(\d{4}-\d{2}-\d{2})-(.+)$/);
+
+  return match?.[2]?.trim().toLowerCase();
 }
 
 function normalizeOutcomeLabel(
@@ -220,22 +350,10 @@ function parseProphetVolume(volume: string | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function findWorldCupTeamByName(name: string) {
-  const normalized = normalizeGammaSearchText(name);
+function findWorldCupTeamByCode(code: string) {
+  const normalized = code.trim().toLowerCase();
 
-  return worldCupTeams.find((team) => {
-    const aliases = [team.name, team.code, ...(team.aliases ?? [])].map(
-      normalizeGammaSearchText,
-    );
-
-    return aliases.some(
-      (alias) =>
-        alias &&
-        (normalized === alias ||
-          normalized.includes(alias) ||
-          alias.includes(normalized)),
-    );
-  });
+  return worldCupTeams.find((team) => team.code.toLowerCase() === normalized);
 }
 
 function hashFixtureId(value: string): number {

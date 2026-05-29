@@ -12,8 +12,10 @@ export interface ProphetPolyMarketTeam {
 
 export interface ProphetPolyMarketMarket {
   slug?: string;
-  outcomes?: string[];
+  groupItemTitle?: string;
+  outcomes?: string[] | string;
   prices?: string[];
+  outcomePrices?: string;
 }
 
 export interface ProphetWorldCupTeam {
@@ -85,6 +87,10 @@ export interface ProphetUserTrackMarket {
   groupItemTitle?: string;
   volume?: string;
   outcomePrices?: string;
+  clobTokenIds?: string;
+  acceptingOrders?: boolean;
+  negRisk?: boolean;
+  conditionId?: string;
   oneHourPriceChange?: string;
   oneDayPriceChange?: string;
   oneWeekPriceChange?: string;

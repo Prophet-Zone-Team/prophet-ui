@@ -10,7 +10,8 @@ export type { ProphetBookmarkTarget } from "@/lib/tracks/track-status-keys";
 export {
   buildTrackStatusMapFromApiItems,
   resolveTrackStoreKeyFromApiItem,
-  resolveTrackStoreKeyFromTarget
+  resolveTrackStoreKeyFromTarget,
+  trackItemMatchesBookmarkTarget
 } from "@/lib/tracks/track-status-keys";
 
 import type { ProphetBookmarkTarget } from "@/lib/tracks/track-status-keys";

@@ -34,17 +34,25 @@ const TOOLTIP_HIDE_DELAY_MS = 1000;
 
 export type { ProphetBookmarkTarget } from "@/lib/tracks/track-status";
 
-export function useProphetBookmark(target: ProphetBookmarkTarget) {
+export function useProphetBookmark(
+  target: ProphetBookmarkTarget,
+  options?: { onUntracked?: (target: ProphetBookmarkTarget) => void }
+) {
   const { openLogin } = useAuth();
   const storeKey = resolveTrackStoreKeyFromTarget(target);
   const isTracked = useIsTrackKeyTracked(storeKey);
   const setTracked = useTrackStatusStore((state) => state.setTracked);
   const [isLoading, setIsLoading] = useState(false);
   const targetRef = useRef(target);
+  const onUntrackedRef = useRef(options?.onUntracked);
 
   useEffect(() => {
     targetRef.current = target;
   }, [target]);
+
+  useEffect(() => {
+    onUntrackedRef.current = options?.onUntracked;
+  }, [options?.onUntracked]);
 
   const toggle = useCallback(async () => {
     if (isLoading) {
@@ -69,6 +77,7 @@ export function useProphetBookmark(target: ProphetBookmarkTarget) {
         await trackProphet(buildTrackRequest(currentTarget));
       } else {
         await untrackProphet(buildUntrackRequest(currentTarget));
+        onUntrackedRef.current?.(currentTarget);
       }
     } catch (error) {
       setTracked(currentKey, previousTracked);
@@ -94,6 +103,7 @@ export interface BookmarkToggleProps {
   trackedAriaLabel?: string;
   tooltip?: ReactNode;
   className?: string;
+  onUntracked?: (target: ProphetBookmarkTarget) => void;
 }
 
 export function BookmarkToggle({
@@ -101,9 +111,12 @@ export function BookmarkToggle({
   ariaLabel,
   trackedAriaLabel,
   tooltip,
-  className
+  className,
+  onUntracked
 }: BookmarkToggleProps) {
-  const { isTracked, isLoading, toggle } = useProphetBookmark(target);
+  const { isTracked, isLoading, toggle } = useProphetBookmark(target, {
+    onUntracked
+  });
   const rootRef = useRef<HTMLDivElement>(null);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);

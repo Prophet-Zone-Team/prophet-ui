@@ -4,14 +4,31 @@ import { getFifaFlagIconCode } from "@/lib/teams/fifa-flag-icon";
 interface TeamFlagProps {
   code?: string;
   name?: string;
+  logoUrl?: string;
   className?: string;
   noFlagIconCodeClassName?: string;
 }
 
 const defaultFlagClassName = "inline-block h-[23px] w-[23px] shrink-0";
 
-export function TeamFlag({ code, name, className, noFlagIconCodeClassName }: TeamFlagProps) {
+export function TeamFlag({
+  code,
+  name,
+  logoUrl,
+  className,
+  noFlagIconCodeClassName
+}: TeamFlagProps) {
   const flagIconCode = code ? getFifaFlagIconCode(code) : undefined;
+
+  if (logoUrl) {
+    return (
+      <img
+        src={logoUrl}
+        alt={name ?? code ?? "Team logo"}
+        className={cn(defaultFlagClassName, "object-cover", className)}
+      />
+    );
+  }
 
   if (!flagIconCode) {
     return (

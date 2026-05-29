@@ -1,4 +1,3 @@
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
 import {
   firstGammaNumber,
   normalizeGammaSearchText,
@@ -12,11 +11,11 @@ import {
   mapEventSportsMarkets,
 } from "@/lib/market/fixture-markets-mapper";
 import { parseMatchScoreString } from "@/lib/market/parse-match-score";
+import { resolveWorldCupTeamByGroupItemTitle } from "@/lib/market/resolve-winner-team";
 import type {
   MatchOddsOutcome,
   MatchOutcomeSide,
   PolymarketFixtureMetadata,
-  Team,
   WorldCupMatch,
   WorldCupMatchStatus,
 } from "@/types/market";
@@ -129,8 +128,8 @@ export function mapGammaEventToMatch(event: GammaEventRecord): WorldCupMatch | u
     return undefined;
   }
 
-  const homeTeam = findWorldCupTeamByName(sides.homeName);
-  const awayTeam = findWorldCupTeamByName(sides.awayName);
+  const homeTeam = resolveWorldCupTeamByGroupItemTitle(sides.homeName);
+  const awayTeam = resolveWorldCupTeamByGroupItemTitle(sides.awayName);
   const eventId = String(event.id ?? event.slug ?? sides.homeName);
   const slug = event.slug ?? `pm-${eventId}`;
   const moneylineMarkets = getFixtureMoneylineMarkets(event.markets ?? []);
@@ -340,9 +339,9 @@ function classifyTeamSide(
   homeName: string,
   awayName: string,
 ): MatchOutcomeSide | undefined {
-  const homeTeam = findWorldCupTeamByName(homeName);
-  const awayTeam = findWorldCupTeamByName(awayName);
-  const labelTeam = findWorldCupTeamByName(teamLabel);
+  const homeTeam = resolveWorldCupTeamByGroupItemTitle(homeName);
+  const awayTeam = resolveWorldCupTeamByGroupItemTitle(awayName);
+  const labelTeam = resolveWorldCupTeamByGroupItemTitle(teamLabel);
 
   if (labelTeam && homeTeam && labelTeam.id === homeTeam.id) {
     return "home";
@@ -439,21 +438,6 @@ function resolveLeagueLabel(event: GammaEventRecord): string | undefined {
     event.tags?.find((tag) => tag.label)?.label ??
     undefined
   );
-}
-
-function findWorldCupTeamByName(name: string): Team | undefined {
-  const normalized = normalizeGammaSearchText(name);
-
-  return worldCupTeams.find((team) => {
-    const aliases = [team.name, team.code, ...(team.aliases ?? [])].map(normalizeGammaSearchText);
-    return aliases.some(
-      (alias) =>
-        alias &&
-        (normalized === alias ||
-          normalized.includes(alias) ||
-          alias.includes(normalized)),
-    );
-  });
 }
 
 function parseTagIds(tags: string | undefined): string[] {

@@ -54,38 +54,17 @@ export function HomeMatchesSchedulePanel({
     [matches, snapshots, showEnded, sortKey, selectedTeamIds]
   );
 
-  const featuredCard = useMemo(() => {
-    const featuredMatch = findFeaturedScheduleMatch(matches);
-
-    if (!featuredMatch) {
-      return null;
-    }
-
-    return {
-      match: featuredMatch,
-      home: featuredMatch.homeTeamId
-        ? snapshots.find(
-            (snapshot) => snapshot.team.id === featuredMatch.homeTeamId
-          )
-        : undefined,
-      away: featuredMatch.awayTeamId
-        ? snapshots.find(
-            (snapshot) => snapshot.team.id === featuredMatch.awayTeamId
-          )
-        : undefined
-    };
-  }, [matches, snapshots]);
+  const featuredMatch = useMemo(
+    () => findFeaturedScheduleMatch(matches),
+    [matches]
+  );
 
   return (
     <section className="min-w-0" aria-label="Football match schedule">
       <SyncMatchLiveStore matches={matches} />
-      {featuredCard ? (
+      {featuredMatch ? (
         <div className="pb-[20px]">
-          <SpecialMatchDataCard
-            match={featuredCard.match}
-            home={featuredCard.home}
-            away={featuredCard.away}
-          />
+          <SpecialMatchDataCard match={featuredMatch} snapshots={snapshots} />
         </div>
       ) : null}
 

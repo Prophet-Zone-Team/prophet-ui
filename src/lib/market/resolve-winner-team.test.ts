@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import curatedTeams from "@/data/teams/index";
 import { buildStaticWinnerSnapshots } from "@/lib/market/build-static-winner-snapshots";
 import {
   resolveWorldCupTeamByCuratedKey,
@@ -28,9 +29,11 @@ describe("resolve-winner-team", () => {
 
   it("builds a static snapshot for every curated team", () => {
     const snapshots = buildStaticWinnerSnapshots();
-    assert.equal(snapshots.length, 48);
+    const expectedCount = Object.keys(curatedTeams).length;
+
+    assert.equal(snapshots.length, expectedCount);
     assert.ok(snapshots.every((snapshot) => snapshot.team.id.length > 0));
     assert.ok(snapshots.every((snapshot) => snapshot.team.code.length === 3));
-    assert.equal(new Set(snapshots.map((snapshot) => snapshot.team.id)).size, 48);
+    assert.equal(new Set(snapshots.map((snapshot) => snapshot.team.id)).size, expectedCount);
   });
 });

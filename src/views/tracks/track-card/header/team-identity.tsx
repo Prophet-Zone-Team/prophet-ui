@@ -1,6 +1,7 @@
 import { TeamFlag } from "@/components/teams/team-flag";
 import type { Team } from "@/types/market";
 import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-control";
+import { useTracksListOnUntracked } from "@/views/tracks/tracks-list-context";
 
 export type TeamIdentityProps = {
   team: Team;
@@ -8,11 +9,16 @@ export type TeamIdentityProps = {
 };
 
 export function TeamIdentity({ team, slug }: TeamIdentityProps) {
+  const onUntracked = useTracksListOnUntracked();
   const subtitle = `${team.code} / ${team.region}`;
 
   return (
     <div className="flex w-full min-w-0 items-center gap-2 md:w-[38%] md:gap-3">
-      <MarketBookmarkControl slug={slug} teamName={team.name} />
+      <MarketBookmarkControl
+        slug={slug}
+        teamName={team.name}
+        onUntracked={onUntracked}
+      />
       <TeamFlag
         code={team.code}
         name={team.name}

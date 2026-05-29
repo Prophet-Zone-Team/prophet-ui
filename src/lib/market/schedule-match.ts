@@ -13,6 +13,7 @@ export type ScheduleSortKey = "volume" | "time";
 export interface ResolvedMatchTeam {
   name: string;
   code?: string;
+  logoUrl?: string;
   snapshot?: TeamMarketSnapshot;
 }
 
@@ -67,6 +68,12 @@ export function resolveMatchSides(
   const awaySnapshot = match.awayTeamId
     ? snapshots.find((snapshot) => snapshot.team.id === match.awayTeamId)
     : undefined;
+  const homeTeam = match.homeTeamId
+    ? worldCupTeams.find((team) => team.id === match.homeTeamId)
+    : undefined;
+  const awayTeam = match.awayTeamId
+    ? worldCupTeams.find((team) => team.id === match.awayTeamId)
+    : undefined;
 
   return {
     home: {
@@ -75,7 +82,8 @@ export function resolveMatchSides(
         match.homeDisplayName ??
         match.homeSeed ??
         "TBD",
-      code: homeSnapshot?.team.code,
+      code: homeSnapshot?.team.code ?? homeTeam?.code,
+      logoUrl: match.homeLogoUrl ?? homeSnapshot?.team.logoUrl ?? homeTeam?.logoUrl,
       snapshot: homeSnapshot
     },
     away: {
@@ -84,7 +92,8 @@ export function resolveMatchSides(
         match.awayDisplayName ??
         match.awaySeed ??
         "TBD",
-      code: awaySnapshot?.team.code,
+      code: awaySnapshot?.team.code ?? awayTeam?.code,
+      logoUrl: match.awayLogoUrl ?? awaySnapshot?.team.logoUrl ?? awayTeam?.logoUrl,
       snapshot: awaySnapshot
     }
   };
