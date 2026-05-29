@@ -70,11 +70,11 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
             </span>
           </div>
 
-          <h3 className="m-0 mt-1 text-base font-[500] leading-[19px] text-black md:mt-[4px] md:text-[18px] md:leading-[21px]">
+          <h3 className="m-0 mt-1 line-clamp-2 md:line-clamp-1 text-base font-[500] leading-[19px] text-black md:mt-[4px] md:text-[18px] md:leading-[21px]">
             {item.headline}
           </h3>
 
-          <p className="m-0 mt-1 line-clamp-3 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-[4px] md:line-clamp-none">
+          <p className="m-0 mt-1 line-clamp-3 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-[4px] md:line-clamp-2">
             {item.summary}
           </p>
 
