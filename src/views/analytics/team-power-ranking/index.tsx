@@ -1,10 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import {
-  getTeamPowerRankingPreview,
-  teamPowerRankingEntries
-} from "@/views/team-power-ranking/mock-data";
+import { useAnalyticsTeamPowerRankings } from "@/hooks/analytics/use-analytics-team-power-rankings";
+import { getTeamPowerRankingPreview } from "@/views/team-power-ranking/mock-data";
 
 import { RankingHeader } from "./ranking-header";
 import { RankingTable } from "./ranking-table";
@@ -14,7 +12,8 @@ export type TeamPowerRankingProps = {
 };
 
 export function TeamPowerRanking({ className }: TeamPowerRankingProps) {
-  const previewEntries = getTeamPowerRankingPreview(teamPowerRankingEntries);
+  const { entries, isLoading, isError } = useAnalyticsTeamPowerRankings();
+  const previewEntries = getTeamPowerRankingPreview(entries);
 
   return (
     <section
@@ -27,7 +26,17 @@ export function TeamPowerRanking({ className }: TeamPowerRankingProps) {
     >
       <RankingHeader />
       <div className="mt-[16px] min-h-0 flex-1 overflow-hidden px-3 pb-4 md:px-0 md:pb-0">
-        <RankingTable entries={previewEntries} />
+        {isLoading ? (
+          <p className="py-8 text-center text-[14px] text-[#909090]">
+            Loading...
+          </p>
+        ) : isError ? (
+          <p className="py-8 text-center text-[14px] text-[#909090]">
+            Unable to load data.
+          </p>
+        ) : (
+          <RankingTable entries={previewEntries} />
+        )}
       </div>
     </section>
   );

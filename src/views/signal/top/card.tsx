@@ -37,6 +37,7 @@ function SignalTopCardThumbnail({
         alt={alt}
         width={100}
         height={100}
+        unoptimized
         className="size-[72px] shrink-0 rounded-[12px] object-cover md:size-[100px]"
       />
     );

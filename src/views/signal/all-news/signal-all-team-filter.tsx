@@ -19,6 +19,7 @@ export type SignalAllTeamFilterProps = {
   value: SignalAllTeamFilter;
   options: SignalAllTeamOption[];
   onChange: (value: SignalAllTeamFilter) => void;
+  disabled?: boolean;
   className?: string;
 };
 
@@ -26,6 +27,7 @@ export function SignalAllTeamFilterControl({
   value,
   options,
   onChange,
+  disabled = false,
   className
 }: SignalAllTeamFilterProps) {
   const [open, setOpen] = useState(false);
@@ -67,11 +69,19 @@ export function SignalAllTeamFilterControl({
     <div ref={containerRef} className={cn("relative shrink-0", className)}>
       <button
         type="button"
-        className="inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[14px] font-[457] leading-[17px] text-[#909090]"
+        className={cn(
+          "inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[14px] font-[457] leading-[17px] text-[#909090]",
+          disabled && "cursor-not-allowed opacity-50"
+        )}
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-label={`Filter by team: ${selectedLabel}`}
-        onClick={() => setOpen((current) => !current)}
+        disabled={disabled}
+        onClick={() => {
+          if (!disabled) {
+            setOpen((current) => !current);
+          }
+        }}
       >
         <span>{selectedLabel}</span>
         <svg

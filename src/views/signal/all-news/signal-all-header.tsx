@@ -19,6 +19,8 @@ export type SignalAllHeaderProps = {
   onTeamFilterChange: (value: SignalAllTeamFilter) => void;
   sort: SignalAllSortState;
   onSortColumnChange: (column: SignalAllSortColumn) => void;
+  teamFilterDisabled?: boolean;
+  sortDisabled?: boolean;
   className?: string;
 };
 
@@ -28,6 +30,8 @@ export function SignalAllHeader({
   onTeamFilterChange,
   sort,
   onSortColumnChange,
+  teamFilterDisabled = false,
+  sortDisabled = false,
   className
 }: SignalAllHeaderProps) {
   return (
@@ -45,6 +49,7 @@ export function SignalAllHeader({
           value={teamFilter}
           options={teamOptions}
           onChange={onTeamFilterChange}
+          disabled={teamFilterDisabled}
         />
       </div>
 
@@ -60,6 +65,7 @@ export function SignalAllHeader({
           column="teamTime"
           sort={sort}
           onSortColumnChange={onSortColumnChange}
+          disabled={sortDisabled}
           className="w-[110px] shrink-0"
         />
         <span role="columnheader" className="min-w-0 flex-1 text-center">
@@ -70,6 +76,7 @@ export function SignalAllHeader({
           column="impact"
           sort={sort}
           onSortColumnChange={onSortColumnChange}
+          disabled={sortDisabled}
           className="shrink-0 justify-end"
           align="right"
         />
@@ -83,6 +90,7 @@ function SortableColumnHeader({
   column,
   sort,
   onSortColumnChange,
+  disabled = false,
   className,
   align = "left"
 }: {
@@ -90,6 +98,7 @@ function SortableColumnHeader({
   column: SignalAllSortColumn;
   sort: SignalAllSortState;
   onSortColumnChange: (column: SignalAllSortColumn) => void;
+  disabled?: boolean;
   className?: string;
   align?: "left" | "right";
 }) {
@@ -100,6 +109,7 @@ function SortableColumnHeader({
     <button
       type="button"
       role="columnheader"
+      disabled={disabled}
       aria-sort={
         active
           ? sort.direction === "asc"
@@ -108,11 +118,17 @@ function SortableColumnHeader({
           : "none"
       }
       className={cn(
-        "inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[16px] font-[457] leading-[19px] text-[#909090] hover:text-black",
+        "inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[16px] font-[457] leading-[19px] text-[#909090]",
+        !disabled && "hover:text-black",
+        disabled && "cursor-not-allowed opacity-50",
         align === "right" && "justify-end",
         className
       )}
-      onClick={() => onSortColumnChange(column)}
+      onClick={() => {
+        if (!disabled) {
+          onSortColumnChange(column);
+        }
+      }}
     >
       <span>{label}</span>
       <SignalAllSortIcon direction={direction} />

@@ -8,6 +8,7 @@ import type { NewsImpactItem } from "./types";
 
 export type NewsItemProps = {
   item: NewsImpactItem;
+  onSelect?: () => void;
   className?: string;
 };
 
@@ -23,18 +24,27 @@ function SentimentIcon({
   return <PositiveSentimentIcon />;
 }
 
-export function NewsItem({ item, className }: NewsItemProps) {
+export function NewsItem({ item, onSelect, className }: NewsItemProps) {
   const isPositiveImpact = item.impactScore >= 0;
 
   return (
     <article
       className={cn(
-        "rounded-[12px] px-3 py-3 md:px-[12px] md:py-[12px]",
+        "relative rounded-[12px] px-3 py-3 md:px-[12px] md:py-[12px]",
         item.highlighted && "bg-[#F9FAFC]",
+        onSelect && "cursor-pointer transition-colors hover:bg-[#F9FAFC]",
         className
       )}
       aria-label={`${item.teamName}: ${item.headline}. Impact ${formatImpactScore(item.impactScore)}`}
     >
+      {onSelect ? (
+        <button
+          type="button"
+          className="absolute inset-0 z-[1] rounded-[12px] opacity-0"
+          aria-label={`Open details for ${item.headline}`}
+          onClick={onSelect}
+        />
+      ) : null}
       <div className="flex items-start gap-3 md:items-center md:gap-[12px]">
         <NewsItemThumbnail
           alt={item.thumbnailAlt}

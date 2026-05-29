@@ -18,7 +18,7 @@ export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
         <div className="flex items-start gap-5">
           <img
             src="/fifa.png"
-            className="w-[80px] object-top object-contain shrink-0 block md:hidden"
+            className="block md:hidden w-[80px] object-top object-contain shrink-0"
           />
           <div className="flex-1">
             <p className="text-[20px] md:text-[26px]">2026 FIFA World Cup</p>

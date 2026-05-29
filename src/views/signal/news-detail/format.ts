@@ -3,27 +3,33 @@ import type { NewsImpactItem } from "@/views/analytics/news/types";
 import { signalNewsDetailsById } from "./mock-data";
 import type { SignalNewsDetail, SignalNewsDetailBodyBlock } from "./types";
 
-export function getSignalNewsDetail(
-  id: string,
-  listItem?: NewsImpactItem
-): SignalNewsDetail | null {
-  const detail = signalNewsDetailsById[id];
+export function buildSignalNewsDetailFromImpactItem(
+  item: NewsImpactItem
+): SignalNewsDetail {
+  const relatedParts = [
+    ...(item.matchedTeams ?? []),
+    ...(item.matchedPlayers ?? []),
+    item.teamName
+  ].filter(Boolean);
 
-  if (detail) {
-    return detail;
+  const uniqueRelated = [...new Set(relatedParts)];
+
+  const body: SignalNewsDetailBodyBlock[] = [
+    {
+      kind: "paragraph",
+      segments: [{ kind: "text", value: item.summary }]
+    }
+  ];
+
+  if (item.sourceUrl) {
+    body.push({
+      kind: "paragraph",
+      segments: [
+        { kind: "text", value: "Read original source: " },
+        { kind: "link", value: "Source", href: item.sourceUrl }
+      ]
+    });
   }
-
-  if (!listItem) {
-    return null;
-  }
-
-  return buildFallbackDetail(listItem);
-}
-
-function buildFallbackDetail(item: NewsImpactItem): SignalNewsDetail {
-  const relatedParts = [item.teamName, item.thumbnailAlt.split(" ")[0]].filter(
-    Boolean
-  );
 
   return {
     id: item.id,
@@ -33,13 +39,28 @@ function buildFallbackDetail(item: NewsImpactItem): SignalNewsDetail {
     imageAlt: item.thumbnailAlt,
     sentiment: item.sentiment,
     impactScore: item.impactScore,
-    relatedLabel: relatedParts.join(", "),
-    categoryLabel: "General",
-    body: [
-      {
-        kind: "paragraph",
-        segments: [{ kind: "text", value: item.summary }]
-      }
-    ] satisfies SignalNewsDetailBodyBlock[]
+    relatedLabel:
+      uniqueRelated.length > 0 ? uniqueRelated.join(", ") : "World Cup",
+    categoryLabel: item.category
+      ? item.category.charAt(0).toUpperCase() + item.category.slice(1)
+      : "General",
+    body
   };
+}
+
+export function getSignalNewsDetail(
+  id: string,
+  listItem?: NewsImpactItem
+): SignalNewsDetail | null {
+  if (listItem) {
+    return buildSignalNewsDetailFromImpactItem(listItem);
+  }
+
+  const detail = signalNewsDetailsById[id];
+
+  if (detail) {
+    return detail;
+  }
+
+  return null;
 }
