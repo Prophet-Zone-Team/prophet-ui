@@ -10,7 +10,7 @@ import {
 import {
   formatLimitPriceInputValue,
   formatShareSize,
-  formatTradePanelPrice,
+  formatOrderbookPrice,
   parseLimitPriceDisplayValue
 } from "@/lib/market/order-math";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
@@ -148,7 +148,7 @@ export function TradeTicketForm({
         <OutcomeButtonColumn
           side="yes"
           active={outcomeSide === "yes"}
-          priceLabel={formatTradePanelPrice(yesTokenPrice)}
+          priceLabel={formatOrderbookPrice(yesTokenPrice)}
           probabilityLabel={formatProbability(yesProbability)}
           shareCount={tradeSide === "sell" ? yesShares : undefined}
           onSelect={() => onSelectOutcome("yes")}
@@ -156,7 +156,7 @@ export function TradeTicketForm({
         <OutcomeButtonColumn
           side="no"
           active={outcomeSide === "no"}
-          priceLabel={formatTradePanelPrice(noTokenPrice)}
+          priceLabel={formatOrderbookPrice(noTokenPrice)}
           probabilityLabel={formatProbability(noProbability)}
           shareCount={tradeSide === "sell" ? noShares : undefined}
           onSelect={() => onSelectOutcome("no")}
@@ -323,7 +323,7 @@ export function TradeTicketForm({
               {outcomeSummaryLabel}
             </span>
             <span className="text-sm font-[457] leading-[17px] text-prophet-muted">
-              Avg. Price {formatTradePanelPrice(preview.sidePrice)}
+              Avg. Price {formatOrderbookPrice(preview.sidePrice)}
             </span>
           </div>
           <span className="text-[26px] font-[500] leading-[38px] text-[#69C800]">

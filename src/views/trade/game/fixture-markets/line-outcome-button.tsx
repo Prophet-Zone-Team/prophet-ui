@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { formatTradePanelPrice } from "@/lib/market/order-math";
+import { formatOrderbookPrice } from "@/lib/market/order-math";
 import { gameColors } from "@/views/trade/game/ui";
 
 export type LineOutcomeButtonVariant =
@@ -63,14 +63,14 @@ export function LineOutcomeButton({
             : "cursor-default",
         active ? "text-white" : "text-black",
         !disabled &&
-        !active &&
-        onClick &&
-        "hover:bg-[var(--line-outcome-color)] hover:text-white",
+          !active &&
+          onClick &&
+          "hover:bg-[var(--line-outcome-color)] hover:text-white",
         className
       )}
     >
       <span>{label}</span>
-      {price !== undefined ? <span>{formatTradePanelPrice(price)}</span> : null}
+      {price !== undefined ? <span>{formatOrderbookPrice(price)}</span> : null}
     </button>
   );
 }

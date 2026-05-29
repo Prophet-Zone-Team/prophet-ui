@@ -36,12 +36,12 @@ export function formatUnixSeconds(value: number): string {
 }
 
 export function formatSharePrice(price: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 3
-  }).format(price);
+  return (
+    new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 3
+    }).format(price * 100) + "￠"
+  );
 }
 
 export function formatPnlSubline(cashPnl: number, percentPnl: number): string {

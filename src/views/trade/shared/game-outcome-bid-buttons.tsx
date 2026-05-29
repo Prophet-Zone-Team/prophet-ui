@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { formatTradePanelPrice } from "@/lib/market/order-math";
+import { formatOrderbookPrice } from "@/lib/market/order-math";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import {
   useSetTradeMatchOutcomeSide,
@@ -75,7 +75,7 @@ export function GameOutcomeBidButton({
     >
       <span className={sizeClass.title}>{title}</span>
       {price !== undefined ? (
-        <span className={sizeClass.price}>{formatTradePanelPrice(price)}</span>
+        <span className={sizeClass.price}>{formatOrderbookPrice(price)}</span>
       ) : null}
     </button>
   );

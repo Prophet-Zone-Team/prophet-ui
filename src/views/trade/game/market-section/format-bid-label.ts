@@ -9,7 +9,7 @@ import {
 } from "@/lib/market/game-outcome-price";
 import {
   calculateReferencePrice,
-  formatTradePanelPrice
+  formatOrderbookPrice
 } from "@/lib/market/order-math";
 import { buildBidOrderPreview } from "@/lib/market/polymarket-order";
 import type {
@@ -80,11 +80,11 @@ export function formatSimpleOutcomeBidLabel(
   price: number
 ): string {
   const sideLabel = side === "yes" ? "Yes" : "No";
-  return `${sideLabel} ${formatTradePanelPrice(price)}`;
+  return `${sideLabel} ${formatOrderbookPrice(price)}`;
 }
 
 export function formatGameMatchBidLabel(label: string, price: number): string {
-  return `${label} ${formatTradePanelPrice(price)}`;
+  return `${label} ${formatOrderbookPrice(price)}`;
 }
 
 export function formatChangePillLabel(change24h?: number): string | undefined {
