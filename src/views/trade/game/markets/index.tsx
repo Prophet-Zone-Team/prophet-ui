@@ -377,11 +377,7 @@ export function GameMarketsSection({
         />
       ) : null}
 
-      <MarketContextRow
-        match={match}
-        teamSnapshots={teamSnapshots}
-        defaultTeamId={match.homeTeamId}
-      />
+      <MarketContextRow match={match} teamSnapshots={teamSnapshots} />
     </section>
   );
 }
