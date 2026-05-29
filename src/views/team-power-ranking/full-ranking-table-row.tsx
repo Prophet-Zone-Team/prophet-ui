@@ -8,6 +8,7 @@ import { SignalStatusLabel } from "./signal-status-label";
 import { TeamInfo } from "./team-info";
 import { TrendIndicator } from "./trend-indicator";
 import type { TeamPowerRankingEntry } from "./types";
+import { useRouter } from "next/navigation";
 
 export type FullRankingTableRowProps = {
   entry: TeamPowerRankingEntry;
@@ -20,10 +21,13 @@ export function FullRankingDesktopRow({
   titleOddsMax,
   advanceOddsMax
 }: FullRankingTableRowProps) {
+  const router = useRouter();
+
   return (
     <div
       role="row"
-      className={`${fullRankingTableGridClass} items-center py-[10px] text-[16px] font-[457] leading-[19px] text-black`}
+      className={`${fullRankingTableGridClass} items-center py-[10px] text-[16px] font-[457] leading-[19px] text-black cursor-pointer hover:bg-[#EDEDED] duration-150`}
+      onClick={() => router.push(entry.link)}
     >
       <span role="cell">{entry.rank}</span>
       <div role="cell" className="min-w-0">
@@ -74,12 +78,15 @@ export function FullRankingMobileCard({
   advanceOddsMax,
   className
 }: FullRankingTableRowProps & { className?: string }) {
+  const router = useRouter();
+
   return (
     <article
       className={cn(
         "flex flex-col gap-3 rounded-[6px] px-3 py-3 text-[14px] font-[457] leading-[17px] text-black",
         className
       )}
+      onClick={() => router.push(entry.link)}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">

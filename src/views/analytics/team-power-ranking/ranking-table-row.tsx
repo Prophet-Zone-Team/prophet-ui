@@ -19,7 +19,7 @@ export function RankingTableDesktopRow({ entry }: RankingTableRowProps) {
   return (
     <div
       role="row"
-      className={`${rankingPreviewTableGridClass} px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-black cursor-pointer hover:bg-[#F9FAFC] duration-150`}
+      className={`${rankingPreviewTableGridClass} px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-black cursor-pointer hover:bg-[#EDEDED] duration-150`}
       onClick={() => router.push(entry.link)}
     >
       <span role="cell">{entry.rank}</span>
@@ -38,8 +38,13 @@ export function RankingTableDesktopRow({ entry }: RankingTableRowProps) {
 }
 
 export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
+  const router = useRouter();
+
   return (
-    <article className="flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black">
+    <article
+      className="flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black"
+      onClick={() => router.push(entry.link)}
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <span className="w-7 shrink-0 tabular-nums">{entry.rank}</span>

@@ -64,6 +64,7 @@ export function AnalyticsTopSection() {
           teamCode={card.teamCode}
           teamName={card.teamName}
           description={card.description}
+          link={card.link}
         />
       ))}
     </section>

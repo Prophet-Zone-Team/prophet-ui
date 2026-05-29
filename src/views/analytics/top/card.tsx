@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
+import { useRouter } from "next/navigation";
 
 export type TopAnalyticsCardProps = {
   categoryLabel: string;
@@ -11,6 +12,7 @@ export type TopAnalyticsCardProps = {
   icon: ReactNode;
   className?: string;
   ariaLabel?: string;
+  link?: string;
 };
 
 export type TopAnalyticsCardContent = Omit<
@@ -18,6 +20,7 @@ export type TopAnalyticsCardContent = Omit<
   "icon" | "className" | "ariaLabel"
 > & {
   iconKey?: string;
+  link?: string;
 };
 
 export function TopAnalyticsCard({
@@ -27,8 +30,11 @@ export function TopAnalyticsCard({
   description,
   icon,
   className,
-  ariaLabel
+  ariaLabel,
+  link,
 }: TopAnalyticsCardProps) {
+  const router = useRouter();
+
   const resolvedAriaLabel =
     ariaLabel ?? `${categoryLabel}: ${teamName}. ${description}`;
 
@@ -37,9 +43,11 @@ export function TopAnalyticsCard({
       className={cn(
         "box-border flex flex-col md:flex-row md:h-[145px] items-center gap-4 md:gap-[20px] rounded-[12px]",
         "border border-[#EBEBEB] bg-white px-3 md:px-[20px] py-3 md:py-0",
+        "cursor-pointer hover:bg-[#EDEDED] duration-150",
         className
       )}
       aria-label={resolvedAriaLabel}
+      onClick={() => link ? router.push(link) : void 0}
     >
       <div className="flex size-[50px] shrink-0 items-center justify-center">
         {icon}
