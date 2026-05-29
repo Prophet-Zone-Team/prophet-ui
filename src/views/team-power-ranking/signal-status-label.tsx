@@ -8,15 +8,15 @@ export type SignalStatusLabelProps = {
 };
 
 const LABELS: Record<TeamPowerRankingSignalStatus, string> = {
-  positive: "Positive",
-  negative: "Negative",
-  neutral: "Neutral"
+  Positive: "Positive",
+  Negative: "Negative",
+  Neutral: "Neutral"
 };
 
 const STATUS_COLORS: Record<TeamPowerRankingSignalStatus, string> = {
-  positive: "text-[#65AF14]",
-  negative: "text-[#FF674B]",
-  neutral: "text-[#909090]"
+  Positive: "text-[#65AF14]",
+  Negative: "text-[#FF674B]",
+  Neutral: "text-[#909090]"
 };
 
 export function SignalStatusLabel({ status, className }: SignalStatusLabelProps) {

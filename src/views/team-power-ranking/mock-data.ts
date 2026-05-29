@@ -26,9 +26,9 @@ const HARD_PATH_TEAM_IDS = new Set([
 function trendToSignalStatus(
   trend: TeamPowerRankingTrend
 ): TeamPowerRankingSignalStatus {
-  if (trend === "up") return "positive";
-  if (trend === "down") return "negative";
-  return "neutral";
+  if (trend === "up") return "Positive";
+  if (trend === "down") return "Negative";
+  return "Neutral";
 }
 
 type RawEntry = {
@@ -45,14 +45,15 @@ function buildEntry(raw: RawEntry): TeamPowerRankingEntry {
   const pathDifficulty: TeamPowerRankingPathDifficulty = HARD_PATH_TEAM_IDS.has(
     raw.id
   )
-    ? "hard"
-    : "moderate";
+    ? "Hard"
+    : "Medium";
 
   return {
     ...raw,
     group: TEAM_GROUPS[raw.id] ?? "A",
     pathDifficulty,
-    signalStatus: trendToSignalStatus(raw.trend)
+    signalStatus: trendToSignalStatus(raw.trend),
+    link: "",
   };
 }
 

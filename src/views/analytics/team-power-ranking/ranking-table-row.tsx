@@ -1,5 +1,5 @@
 import {
-  formatRoundOf16Probability,
+  formatAdvanceOdds,
   formatTitleProbability
 } from "@/views/team-power-ranking/format";
 import { TeamInfo } from "@/views/team-power-ranking/team-info";
@@ -7,16 +7,20 @@ import { TrendIndicator } from "@/views/team-power-ranking/trend-indicator";
 import type { TeamPowerRankingEntry } from "@/views/team-power-ranking/types";
 
 import { rankingPreviewTableGridClass } from "./table-grid";
+import { useRouter } from "next/navigation";
 
 export type RankingTableRowProps = {
   entry: TeamPowerRankingEntry;
 };
 
 export function RankingTableDesktopRow({ entry }: RankingTableRowProps) {
+  const router = useRouter();
+
   return (
     <div
       role="row"
-      className={`${rankingPreviewTableGridClass} px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-black`}
+      className={`${rankingPreviewTableGridClass} px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-black cursor-pointer hover:bg-[#EDEDED] duration-150`}
+      onClick={() => router.push(entry.link)}
     >
       <span role="cell">{entry.rank}</span>
       <div role="cell" className="min-w-0">
@@ -24,7 +28,7 @@ export function RankingTableDesktopRow({ entry }: RankingTableRowProps) {
       </div>
       <span role="cell">{formatTitleProbability(entry.titleProbability)}</span>
       <span role="cell" className="text-center">
-        {formatRoundOf16Probability(entry.roundOf16Probability)}
+        {formatAdvanceOdds(entry.roundOf16Probability)}
       </span>
       <span role="cell" className="flex justify-center">
         <TrendIndicator trend={entry.trend} />
@@ -34,8 +38,13 @@ export function RankingTableDesktopRow({ entry }: RankingTableRowProps) {
 }
 
 export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
+  const router = useRouter();
+
   return (
-    <article className="flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black">
+    <article
+      className="flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black"
+      onClick={() => router.push(entry.link)}
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <span className="w-7 shrink-0 tabular-nums">{entry.rank}</span>
@@ -62,7 +71,7 @@ export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
             Round of 16
           </span>
           <span className="tabular-nums">
-            {formatRoundOf16Probability(entry.roundOf16Probability)}
+            {formatAdvanceOdds(entry.roundOf16Probability)}
           </span>
         </div>
       </div>

@@ -45,12 +45,12 @@ export function SignalAllHeader({
         <h2 className="m-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
           All Signals &amp; News
         </h2>
-        <SignalAllTeamFilterControl
+        {/* <SignalAllTeamFilterControl
           value={teamFilter}
           options={teamOptions}
           onChange={onTeamFilterChange}
           disabled={teamFilterDisabled}
-        />
+        /> */}
       </div>
 
       <div
@@ -60,18 +60,24 @@ export function SignalAllHeader({
           "mt-4 hidden text-[16px] font-[457] leading-[19px] text-[#909090] md:flex md:mt-[22px]"
         )}
       >
-        <SortableColumnHeader
+        {/* <SortableColumnHeader
           label="Team & Time"
           column="teamTime"
           sort={sort}
           onSortColumnChange={onSortColumnChange}
           disabled={sortDisabled}
           className="w-[110px] shrink-0"
-        />
+        /> */}
+        <span role="columnheader" className="w-[110px] shrink-0">
+          Team & Time
+        </span>
         <span role="columnheader" className="min-w-0 flex-1 text-center">
           News
         </span>
-        <SortableColumnHeader
+        <span role="columnheader" className="shrink-0 justify-end">
+          Impact
+        </span>
+        {/* <SortableColumnHeader
           label="Impact"
           column="impact"
           sort={sort}
@@ -79,7 +85,7 @@ export function SignalAllHeader({
           disabled={sortDisabled}
           className="shrink-0 justify-end"
           align="right"
-        />
+        /> */}
       </div>
     </header>
   );

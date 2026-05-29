@@ -16,8 +16,8 @@ export function FullRankingTableHeader() {
       <span role="columnheader">Rank</span>
       <span role="columnheader">Team</span>
       <span role="columnheader">Group</span>
-      <span role="columnheader">Title Odds</span>
-      <span role="columnheader">Advance Odds</span>
+      <span role="columnheader">Title Probability</span>
+      <span role="columnheader">Round of 16</span>
       <span role="columnheader">Path Difficulty</span>
       <span role="columnheader">Recent Trend</span>
       <span role="columnheader">Signal Status</span>

@@ -7,6 +7,9 @@ import {
   type RecommendCategory
 } from "./config";
 import { resolveTeamCode, type TeamCodeLookup } from "./map-team-power-ranking";
+import { teamDetailHref } from "../routes/team";
+import teamData from "@/data/teams/index";
+import { curatedTeamKeyToId } from "@/data/teams/curated-team-list";
 
 const RECOMMEND_ICON_KEYS: Record<RecommendCategory, string> = {
   mostLikelyChampion: "champion",
@@ -40,6 +43,8 @@ export function mapRecommendsResponse(
       return [];
     }
 
+    const currentTeam = teamData[item.team as keyof typeof teamData];
+    const teamId = curatedTeamKeyToId(currentTeam?.name ?? item.team);
     const teamName = item.team;
 
     return [
@@ -48,7 +53,8 @@ export function mapRecommendsResponse(
         teamCode: resolveTeamCode(teamName, teamCodeLookup),
         teamName,
         description: item.reason ?? "",
-        iconKey: RECOMMEND_ICON_KEYS[category]
+        iconKey: RECOMMEND_ICON_KEYS[category],
+        link: teamDetailHref(teamId),
       }
     ];
   });

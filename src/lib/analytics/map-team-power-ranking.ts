@@ -1,11 +1,16 @@
 import type { ProphetAnalyticsTeamPowerRanking } from "@/types/prophet-api";
 import type {
   TeamPowerRankingEntry,
+  TeamPowerRankingPathDifficulty,
   TeamPowerRankingSignalStatus,
   TeamPowerRankingTrend
 } from "@/views/team-power-ranking/types";
 
 import { extractGroupId } from "./map-competitiveness";
+
+import teamData from "@/data/teams/index";
+import { curatedAbbreviationToCode, curatedTeamKeyToId } from "@/data/teams/curated-team-list";
+import { teamDetailHref } from "../routes/team";
 
 export type TeamCodeLookup = Map<string, string>;
 
@@ -15,8 +20,9 @@ export function buildTeamCodeLookup(
   const lookup = new Map<string, string>();
 
   for (const item of items ?? []) {
-    if (item.team_name && item.team_code) {
-      lookup.set(item.team_name, item.team_code);
+    const currentTeam = teamData[item.team_name as keyof typeof teamData];
+    if (item.team_name && currentTeam) {
+      lookup.set(item.team_name, curatedAbbreviationToCode(currentTeam.abbreviation));
     }
   }
 
@@ -24,8 +30,7 @@ export function buildTeamCodeLookup(
 }
 
 function mapTrendDirection(
-  direction: string | undefined,
-  rankDelta: number | undefined
+  direction: string | undefined
 ): TeamPowerRankingTrend {
   if (direction === "up") {
     return "up";
@@ -39,29 +44,7 @@ function mapTrendDirection(
     return "neutral";
   }
 
-  if (rankDelta !== undefined && rankDelta > 0) {
-    return "up";
-  }
-
-  if (rankDelta !== undefined && rankDelta < 0) {
-    return "down";
-  }
-
-  return "neutral";
-}
-
-function trendToSignalStatus(
-  trend: TeamPowerRankingTrend
-): TeamPowerRankingSignalStatus {
-  if (trend === "up") {
-    return "positive";
-  }
-
-  if (trend === "down") {
-    return "negative";
-  }
-
-  return "neutral";
+  return "new";
 }
 
 function parseProbability(value: string | undefined): number {
@@ -79,8 +62,10 @@ export function mapTeamPowerRankingResponse(
   return [...(items ?? [])]
     .sort((left, right) => (left.rank ?? 0) - (right.rank ?? 0))
     .map((item) => {
-      const trend = mapTrendDirection(item.trend_direction, item.rank_delta);
-      const teamCode = item.team_code ?? "";
+      const currentTeam = teamData[item.team_name as keyof typeof teamData];
+      const trend = mapTrendDirection(item.recent_trend);
+      const teamCode = currentTeam ? curatedAbbreviationToCode(currentTeam.abbreviation) : "";
+      const teamId = curatedTeamKeyToId(currentTeam?.name ?? item.team_name);
       const id =
         item.id !== undefined
           ? String(item.id)
@@ -94,9 +79,10 @@ export function mapTeamPowerRankingResponse(
         group: extractGroupId(item.group_name),
         titleProbability: parseProbability(item.title_probability),
         roundOf16Probability: parseProbability(item.round_of_16_probability),
-        pathDifficulty: "moderate" as const,
+        pathDifficulty: (item.path_difficulty_label ?? "Medium") as TeamPowerRankingPathDifficulty,
         trend,
-        signalStatus: trendToSignalStatus(trend)
+        signalStatus: (item.signal_status ?? "Neutral") as TeamPowerRankingSignalStatus,
+        link: teamDetailHref(teamId),
       };
     });
 }
