@@ -90,8 +90,12 @@ export function useGameTradingMetadata({
   const [match, setMatch] = useState(initialMatch);
   const [gameSnapshot, setGameSnapshot] = useState(initialGameSnapshot);
   const [fixtureMarkets, setFixtureMarkets] = useState(initialFixtureMarkets);
-  const [loadedTabs, setLoadedTabs] = useState<Set<GameMarketTabId>>(
-    () => new Set(),
+  const moneylineReadyInitially = useMemo(
+    () => tabTradingDataLoaded("moneyline", initialMatch, initialFixtureMarkets),
+    [initialFixtureMarkets, initialMatch],
+  );
+  const [loadedTabs, setLoadedTabs] = useState<Set<GameMarketTabId>>(() =>
+    moneylineReadyInitially ? new Set(["moneyline"]) : new Set(),
   );
   const [loadingTab, setLoadingTab] = useState<GameMarketTabId | null>(null);
 
@@ -145,8 +149,12 @@ export function useGameTradingMetadata({
   );
 
   useEffect(() => {
+    if (moneylineReadyInitially) {
+      return;
+    }
+
     void loadTabTradingData("moneyline");
-  }, [loadTabTradingData]);
+  }, [loadTabTradingData, moneylineReadyInitially]);
 
   const ensureTabTradingData = useCallback(
     async (tab: GameMarketTabId) => {

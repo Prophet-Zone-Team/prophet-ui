@@ -4,17 +4,23 @@ import { useMemo, useState } from "react";
 
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 
+import { curatedNationalTeamsList } from "@/data/teams/curated-team-list";
 import {
   buildScheduleDateGroups,
-  buildScheduleFilterTeams,
   buildScheduleMatchList,
   findFeaturedScheduleMatch,
+  type ScheduleFilterTeam,
   type ScheduleSortKey
 } from "@/lib/market/schedule-match";
 import type { Team, TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { ScheduleFilterBar } from "@/views/home/matches/schedule-filter-bar";
 import { ScheduleMatchRow } from "@/views/home/matches/schedule-match-row";
 import { SpecialMatchDataCard } from "@/views/home/matches/special-match-data-card";
+
+const SCHEDULE_FILTER_TEAMS: (ScheduleFilterTeam & { logoUrl?: string })[] =
+  curatedNationalTeamsList
+    .map(({ id, name, code, logoUrl }) => ({ id, name, code, logoUrl }))
+    .sort((left, right) => left.name.localeCompare(right.name));
 
 export interface HomeMatchesSchedulePanelProps {
   matches: WorldCupMatch[];
@@ -28,11 +34,6 @@ export function HomeMatchesSchedulePanel({
   const [sortKey, setSortKey] = useState<ScheduleSortKey>("time");
   const [showEnded, setShowEnded] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<Team["id"][]>([]);
-
-  const filterTeams = useMemo(
-    () => buildScheduleFilterTeams(matches, snapshots),
-    [matches, snapshots]
-  );
 
   const sortedMatches = useMemo(
     () =>
@@ -71,7 +72,7 @@ export function HomeMatchesSchedulePanel({
       <ScheduleFilterBar
         sortKey={sortKey}
         showEnded={showEnded}
-        teams={filterTeams}
+        teams={SCHEDULE_FILTER_TEAMS}
         selectedTeamIds={selectedTeamIds}
         onSortKeyChange={setSortKey}
         onShowEndedChange={setShowEnded}

@@ -1,4 +1,5 @@
 import curatedTeams from "@/data/teams/index";
+import { isCuratedTeamVisible } from "@/data/teams/curated-team-list";
 import { resolveWorldCupTeamByCuratedKey } from "@/lib/market/resolve-winner-team";
 import type { TeamMarketSnapshot } from "@/types/market";
 
@@ -8,6 +9,12 @@ export function buildStaticWinnerSnapshots(): TeamMarketSnapshot[] {
   const snapshotsByTeamId = new Map<string, TeamMarketSnapshot>();
 
   for (const indexKey of Object.keys(curatedTeams)) {
+    const entry = curatedTeams[indexKey as keyof typeof curatedTeams];
+
+    if (!isCuratedTeamVisible(entry)) {
+      continue;
+    }
+
     const team = resolveWorldCupTeamByCuratedKey(indexKey);
 
     if (!team || snapshotsByTeamId.has(team.id)) {

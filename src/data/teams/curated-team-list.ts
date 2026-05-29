@@ -2,9 +2,21 @@ import curatedTeams from "@/data/teams/index";
 import { normalizeGammaSearchText } from "@/lib/market/polymarket-gamma";
 import type { Team, TeamRegion } from "@/types/market";
 
+export type CuratedTeamEntry = {
+  name: string;
+  logo: string;
+  abbreviation: string;
+  continent: string;
+  visible?: boolean;
+};
+
 const curatedTeamEntries = Object.entries(curatedTeams) as Array<
-  [string, (typeof curatedTeams)[keyof typeof curatedTeams]]
+  [string, CuratedTeamEntry]
 >;
+
+export function isCuratedTeamVisible(entry: CuratedTeamEntry): boolean {
+  return entry.visible !== false;
+}
 
 export function curatedTeamKeyToId(key: string): string {
   return normalizeGammaSearchText(key).replace(/\s+/g, "-");
@@ -30,7 +42,7 @@ export function curatedAbbreviationToCode(abbreviation: string): string {
 
 export function curatedEntryToTeam(
   key: string,
-  entry: (typeof curatedTeams)[keyof typeof curatedTeams],
+  entry: CuratedTeamEntry,
 ): Team {
   return {
     id: curatedTeamKeyToId(key),
@@ -50,12 +62,18 @@ function buildCuratedTeamsList(): Team[] {
   return curatedTeamEntries.map(([key, entry]) => curatedEntryToTeam(key, entry));
 }
 
+function buildCuratedVisibleTeamsList(): Team[] {
+  return curatedTeamEntries
+    .filter(([, entry]) => isCuratedTeamVisible(entry))
+    .map(([key, entry]) => curatedEntryToTeam(key, entry));
+}
+
 function buildCuratedNationalTeamsList(): Team[] {
   const teams: Team[] = [];
   const seenAbbreviations = new Set<string>();
 
   for (const [key, entry] of curatedTeamEntries) {
-    if (isClubCuratedKey(key)) {
+    if (!isCuratedTeamVisible(entry) || isClubCuratedKey(key)) {
       continue;
     }
 
@@ -73,8 +91,9 @@ function buildCuratedNationalTeamsList(): Team[] {
 }
 
 export const curatedTeamsList = buildCuratedTeamsList();
+export const curatedVisibleTeamsList = buildCuratedVisibleTeamsList();
 export const curatedNationalTeamsList = buildCuratedNationalTeamsList();
-export const CURATED_TEAM_COUNT = curatedTeamsList.length;
+export const CURATED_TEAM_COUNT = curatedVisibleTeamsList.length;
 export const CURATED_NATIONAL_TEAM_COUNT = curatedNationalTeamsList.length;
 
 export const curatedTeamsById = new Map(

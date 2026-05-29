@@ -1,308 +1,310 @@
 export default {
   Iran: {
     name: "Iran",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/ir.png",
+    logo: "/teams/irn.png",
     abbreviation: "irn",
     continent: "Asia"
   },
   Germany: {
     name: "Germany",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/de.png",
+    logo: "/teams/ger.png",
     abbreviation: "ger",
     continent: "Europe"
   },
   Ghana: {
     name: "Ghana",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/gh.png",
+    logo: "/teams/gha.png",
     abbreviation: "gha",
     continent: "Africa"
   },
   Mexico: {
     name: "Mexico",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/mx.png",
+    logo: "/teams/mex.png",
     abbreviation: "mex",
     continent: "North America"
   },
   "South Korea": {
     name: "South Korea",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/kr.png",
+    logo: "/teams/kr.png",
     abbreviation: "kr",
     continent: "Asia"
   },
   // "Korea Republic": {
   //   name: "Korea Republic",
-  //   logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/kr.png",
+  //   logo: "/teams/kr.png",
   //   abbreviation: "kr",
   //   continent: "Asia"
   // },
   Paraguay: {
     name: "Paraguay",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/py.png",
+    logo: "/teams/par.png",
     abbreviation: "par",
     continent: "South America"
   },
   Switzerland: {
     name: "Switzerland",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/ch.png",
+    logo: "/teams/che.png",
     abbreviation: "che",
     continent: "Europe"
   },
   USA: {
     name: "USA",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/us.png",
+    logo: "/teams/usa.png",
     abbreviation: "usa",
     continent: "North America"
   },
   Qatar: {
     name: "Qatar",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/qa.png",
+    logo: "/teams/qat.png",
     abbreviation: "qat",
     continent: "Asia"
   },
   Egypt: {
     name: "Egypt",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/eg.png",
+    logo: "/teams/egy.png",
     abbreviation: "egy",
     continent: "Africa"
   },
   Ecuador: {
     name: "Ecuador",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/ec.png",
+    logo: "/teams/ecu.png",
     abbreviation: "ecu",
     continent: "South America"
   },
   "New Zealand": {
     name: "New Zealand",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/nz.png",
+    logo: "/teams/nzl.png",
     abbreviation: "nzl",
     continent: "Oceania"
   },
   Jordan: {
     name: "Jordan",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/jo.png",
+    logo: "/teams/jor.png",
     abbreviation: "jor",
     continent: "Asia"
   },
   Panama: {
     name: "Panama",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/pa.png",
+    logo: "/teams/pan.png",
     abbreviation: "pan",
     continent: "North America"
   },
   Senegal: {
     name: "Senegal",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/sn.png",
+    logo: "/teams/sen.png",
     abbreviation: "sen",
     continent: "Africa"
   },
   France: {
     name: "France",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/fr.png",
+    logo: "/teams/fra.png",
     abbreviation: "fra",
     continent: "Europe"
   },
   Spain: {
     name: "Spain",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/es.png",
+    logo: "/teams/esp.png",
     abbreviation: "esp",
     continent: "Europe"
   },
   Sweden: {
     name: "Sweden",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/se.png",
+    logo: "/teams/swe.png",
     abbreviation: "swe",
     continent: "Europe"
   },
   "Congo DR": {
     name: "Congo DR",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/cd.png",
+    logo: "/teams/cdr.png",
     abbreviation: "cdr",
     continent: "Africa"
   },
   Portugal: {
     name: "Portugal",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/pt.png",
+    logo: "/teams/prt.png",
     abbreviation: "prt",
     continent: "Europe"
   },
   Iraq: {
     name: "Iraq",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/iq.png",
+    logo: "/teams/irq.png",
     abbreviation: "irq",
     continent: "Asia"
   },
   Japan: {
     name: "Japan",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/jp.png",
+    logo: "/teams/jpn.png",
     abbreviation: "jpn",
     continent: "Asia"
   },
   England: {
     name: "England",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/eng.png",
+    logo: "/teams/eng.png",
     abbreviation: "eng",
     continent: "Europe"
   },
   Tunisia: {
     name: "Tunisia",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/tn.png",
+    logo: "/teams/tun.png",
     abbreviation: "tun",
     continent: "Africa"
   },
   Turkiye: {
     name: "Turkiye",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/tr.png",
+    logo: "/teams/tur.png",
     abbreviation: "tur",
     continent: "Europe"
   },
   "Saudi Arabia": {
     name: "Saudi Arabia",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/sa.png",
+    logo: "/teams/ksa.png",
     abbreviation: "ksa",
     continent: "Asia"
   },
   Uzbekistan: {
     name: "Uzbekistan",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/uz.png",
+    logo: "/teams/uzb.png",
     abbreviation: "uzb",
     continent: "Asia"
   },
   Netherlands: {
     name: "Netherlands",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/nl.png",
+    logo: "/teams/nld.png",
     abbreviation: "nld",
     continent: "Europe"
   },
   "Ivory Coast": {
     name: "Ivory Coast",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/ci.png",
+    logo: "/teams/civ.png",
     abbreviation: "civ",
     continent: "Africa"
   },
   Scotland: {
     name: "Scotland",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/sco.png",
+    logo: "/teams/sco.png",
     abbreviation: "sco",
     continent: "Europe"
   },
   Morocco: {
     name: "Morocco",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/ma.png",
+    logo: "/teams/mar.png",
     abbreviation: "mar",
     continent: "Africa"
   },
   Uruguay: {
     name: "Uruguay",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/uy.png",
+    logo: "/teams/ury.png",
     abbreviation: "ury",
     continent: "South America"
   },
   Norway: {
     name: "Norway",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/no.png",
+    logo: "/teams/nor.png",
     abbreviation: "nor",
     continent: "Europe"
   },
   "South Africa": {
     name: "South Africa",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/za.png",
+    logo: "/teams/rsa.png",
     abbreviation: "rsa",
     continent: "Africa"
   },
   "Bosnia-Herzegovina": {
     name: "Bosnia-Herzegovina",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/ba.png",
+    logo: "/teams/bih.png",
     abbreviation: "bih",
     continent: "Europe"
   },
   Haiti: {
     name: "Haiti",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/ht.png",
+    logo: "/teams/hai.png",
     abbreviation: "hai",
     continent: "North America"
   },
   Algeria: {
     name: "Algeria",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/dz.png",
+    logo: "/teams/alg.png",
     abbreviation: "alg",
     continent: "Africa"
   },
   Austria: {
     name: "Austria",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/at.png",
+    logo: "/teams/aut.png",
     abbreviation: "aut",
     continent: "Europe"
   },
   Canada: {
     name: "Canada",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/ca.png",
+    logo: "/teams/can.png",
     abbreviation: "can",
     continent: "North America"
   },
   Czechia: {
     name: "Czechia",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/cz.png",
+    logo: "/teams/cze.png",
     abbreviation: "cze",
     continent: "Europe"
   },
   Argentina: {
     name: "Argentina",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/ar.png",
+    logo: "/teams/arg.png",
     abbreviation: "arg",
     continent: "South America"
   },
   Australia: {
     name: "Australia",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/au.png",
+    logo: "/teams/aus.png",
     abbreviation: "aus",
     continent: "Asia"
   },
   Belgium: {
     name: "Belgium",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/be.png",
+    logo: "/teams/bel.png",
     abbreviation: "bel",
     continent: "Europe"
   },
   Brazil: {
     name: "Brazil",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/br.png",
+    logo: "/teams/bra.png",
     abbreviation: "bra",
     continent: "South America"
   },
   "Cape Verde": {
     name: "Cape Verde",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/cv.png",
+    logo: "/teams/cvi.png",
     abbreviation: "cvi",
     continent: "Africa"
   },
   Curaçao: {
     name: "Curaçao",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/cw.png",
-    abbreviation: "kor",
+    logo: "/teams/cw.png",
+    abbreviation: "cw",
     continent: "North America"
   },
   Colombia: {
     name: "Colombia",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/co.png",
+    logo: "/teams/col.png",
     abbreviation: "col",
     continent: "South America"
   },
   Croatia: {
     name: "Croatia",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/country-flags/hr.png",
+    logo: "/teams/hrv.png",
     abbreviation: "hrv",
     continent: "Europe"
   },
   "Paris Saint-Germain FC": {
     name: "Paris Saint-Germain FC",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/team_logos/soccer/ucl/ucl_psg_90000600.png",
+    logo: "/teams/psg.png",
     abbreviation: "psg",
-    continent: "Europe"
+    continent: "Europe",
+    visible: false
   },
   "Arsenal FC": {
     name: "Arsenal FC",
-    logo: "https://polymarket-upload.s3.us-east-2.amazonaws.com/team_logos/soccer/ucl/ucl_ars_90000509.png",
+    logo: "/teams/ars.png",
     abbreviation: "ars",
-    continent: "Europe"
+    continent: "Europe",
+    visible: false
   }
 };

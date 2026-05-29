@@ -5,7 +5,10 @@ import {
   type GammaEventRecord,
   type GammaMarketRecord,
 } from "@/lib/market/polymarket-gamma";
-import { mapProphetGameToMatch } from "@/lib/market/prophet-game-mapper";
+import {
+  buildFixtureMoneylineOutcomesFromProphetMarkets,
+  mapProphetGameToMatch,
+} from "@/lib/market/prophet-game-mapper";
 import type {
   ProphetGameSiblingEventSlugs,
   ProphetPolyMarketEvent,
@@ -131,16 +134,34 @@ export function mapProphetGameDetailToMatch(
 
   const homeName = match.homeDisplayName ?? match.homeSeed ?? "Home";
   const awayName = match.awayDisplayName ?? match.awaySeed ?? "Away";
-  const displayOutcomes = buildDisplayMoneylineOutcomesFromMatch(match);
+  const fixtureSlug = detail.slug?.trim() ?? match.id;
+  const tradingOutcomes = buildFixtureMoneylineOutcomesFromProphetMarkets(
+    detail.markets,
+    homeName,
+    awayName,
+    fixtureSlug,
+  );
+  const moneylineOutcomes =
+    tradingOutcomes.length >= 3
+      ? tradingOutcomes
+      : buildDisplayMoneylineOutcomesFromMatch(match);
+  const acceptingOrders =
+    detail.markets?.some((market) => market.acceptingOrders === true) ??
+    match.polymarket?.moneyline.acceptingOrders ??
+    false;
   const matchWithDisplayOutcomes =
-    displayOutcomes.length > 0 && match.polymarket
+    moneylineOutcomes.length > 0 && match.polymarket
       ? {
           ...match,
           polymarket: {
             ...match.polymarket,
             moneyline: {
               ...match.polymarket.moneyline,
-              outcomes: displayOutcomes,
+              acceptingOrders,
+              conditionId:
+                tradingOutcomes[0]?.conditionId ??
+                match.polymarket.moneyline.conditionId,
+              outcomes: moneylineOutcomes,
             },
           },
         }
@@ -157,7 +178,7 @@ export function mapProphetGameDetailToMatch(
     !fixtureMarkets.lines.length &&
     !fixtureMarkets.exactScores.length &&
     !fixtureMarkets.halftime.length &&
-    displayOutcomes.length === 0
+    moneylineOutcomes.length === 0
   ) {
     return match;
   }

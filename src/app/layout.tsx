@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/auth";
 import { SportsWsProvider } from "@/context/sports-ws";
 import { AppHeader } from "@/layout/header";
-import "flag-icons/css/flag-icons.min.css";
 import "@/app/globals.css";
 import { Metadata } from "@/context/rainbowkit/metadata";
 import RainbowProvider from "@/context/rainbowkit/provider";

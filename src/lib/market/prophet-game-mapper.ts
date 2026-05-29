@@ -2,6 +2,7 @@ import { findCuratedTeamByCode } from "@/data/teams/curated-team-list";
 import {
   normalizeGammaSearchText,
   parseGammaArrayField,
+  priceToProbability,
   toGammaNumber,
 } from "@/lib/market/polymarket-gamma";
 import { resolveWorldCupTeamByGroupItemTitle } from "@/lib/market/resolve-winner-team";
@@ -11,6 +12,8 @@ import type {
 } from "@/types/prophet-api";
 import type {
   MatchOddsOutcome,
+  MatchOutcomeSide,
+  PolymarketFixtureMoneylineOutcome,
   WorldCupMatch,
   WorldCupMatchStatus,
 } from "@/types/market";
@@ -176,6 +179,104 @@ export function extractFixtureTeamAbbreviations(fixtureSlug: string): {
     homeAbbrev: match[1]?.trim().toLowerCase(),
     awayAbbrev: match[2]?.trim().toLowerCase(),
   };
+}
+
+export function buildFixtureMoneylineOutcomesFromProphetMarkets(
+  markets: ProphetPolyMarketMarket[] | null | undefined,
+  homeName: string,
+  awayName: string,
+  fixtureSlug: string,
+): PolymarketFixtureMoneylineOutcome[] {
+  if (!markets?.length) {
+    return [];
+  }
+
+  const fixtureAbbrevs = extractFixtureTeamAbbreviations(fixtureSlug);
+  const outcomes: PolymarketFixtureMoneylineOutcome[] = [];
+
+  for (const market of markets) {
+    const side = resolveProphetMarketOutcomeSide(
+      market,
+      homeName,
+      awayName,
+      fixtureAbbrevs,
+    );
+
+    if (!side) {
+      continue;
+    }
+
+    const tokenIds = parseGammaArrayField(market.clobTokenIds).map(String);
+    const prices = parseGammaArrayField(market.outcomePrices);
+    const probability = priceToProbability(toGammaNumber(prices[0]));
+
+    if (probability === undefined) {
+      continue;
+    }
+
+    outcomes.push({
+      side,
+      label: side === "draw" ? "Draw" : side === "home" ? homeName : awayName,
+      tokenId: tokenIds[0] || undefined,
+      noTokenId: tokenIds[1] || undefined,
+      conditionId: market.conditionId,
+      probability,
+      volume: parseProphetVolume(
+        market.volume === undefined ? undefined : String(market.volume),
+      ) || undefined,
+    });
+  }
+
+  const sideOrder: Record<MatchOutcomeSide, number> = {
+    home: 0,
+    draw: 1,
+    away: 2,
+  };
+
+  return outcomes.sort((left, right) => sideOrder[left.side] - sideOrder[right.side]);
+}
+
+function resolveProphetMarketOutcomeSide(
+  market: ProphetPolyMarketMarket,
+  homeName: string,
+  awayName: string,
+  fixtureAbbrevs: ReturnType<typeof extractFixtureTeamAbbreviations>,
+): MatchOutcomeSide | undefined {
+  const slug = market.slug?.trim();
+  const suffix = slug ? extractMarketSlugSuffix(slug) : undefined;
+
+  if (suffix === "draw") {
+    return "draw";
+  }
+
+  if (fixtureAbbrevs.homeAbbrev && suffix === fixtureAbbrevs.homeAbbrev) {
+    return "home";
+  }
+
+  if (fixtureAbbrevs.awayAbbrev && suffix === fixtureAbbrevs.awayAbbrev) {
+    return "away";
+  }
+
+  const label = resolveProphetMarketOutcomeLabel(
+    market,
+    homeName,
+    awayName,
+    fixtureAbbrevs,
+  );
+
+  if (!label || label === "Draw") {
+    return label === "Draw" ? "draw" : undefined;
+  }
+
+  if (label === homeName) {
+    return "home";
+  }
+
+  if (label === awayName) {
+    return "away";
+  }
+
+  return undefined;
 }
 
 function buildOddsFromProphetMarkets(

@@ -14,3 +14,5 @@ cloudflare-env.d.ts
 .idea/
 .cursor/
 .vscode/
+
+.pnpm-store/

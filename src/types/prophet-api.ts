@@ -16,6 +16,15 @@ export interface ProphetPolyMarketMarket {
   outcomes?: string[] | string;
   prices?: string[];
   outcomePrices?: string;
+  volume?: number | string;
+  clobTokenIds?: string;
+  acceptingOrders?: boolean;
+  negRisk?: boolean;
+  conditionId?: string;
+  oneHourPriceChange?: number | string;
+  oneDayPriceChange?: number | string;
+  oneWeekPriceChange?: number | string;
+  oneMonthPriceChange?: number | string;
 }
 
 export interface ProphetWorldCupTeam {

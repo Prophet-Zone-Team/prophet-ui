@@ -182,7 +182,7 @@ function ScheduleTeamFilterPanelContent({
   selectedTeamIds,
   onToggleTeam
 }: {
-  teams: ScheduleFilterTeam[];
+  teams: (ScheduleFilterTeam & { logoUrl?: string })[];
   selectedTeamIds: Team["id"][];
   onToggleTeam: (teamId: Team["id"]) => void;
 }) {
@@ -219,6 +219,7 @@ function ScheduleTeamFilterPanelContent({
             <TeamFlag
               code={team.code}
               name={team.name}
+              logoUrl={team.logoUrl}
               className="h-[26px] w-[26px] shrink-0 rounded text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
             />
             <span className="truncate text-[14px] font-[556] leading-[17px] text-black">

@@ -152,4 +152,62 @@ describe("prophet-game-detail-mapper", () => {
       3,
     );
   });
+
+  it("maps prophet moneyline trading metadata from detail markets", () => {
+    const detail: ProphetPolyMarketGameDetail = {
+      slug: "ucl-psg-ars-2026-05-30",
+      title: "Paris Saint-Germain FC vs. Arsenal FC",
+      teams: [{ name: "Paris Saint-Germain FC" }, { name: "Arsenal FC" }],
+      markets: [
+        {
+          slug: "ucl-psg-ars-2026-05-30-psg",
+          groupItemTitle: "Paris Saint-Germain FC",
+          outcomePrices: '["0.415", "0.585"]',
+          clobTokenIds:
+            '["19239676013860700691088049092452970929374202302906885826905266414962485495014", "76390033422725593397114214723919940778301596013487841294052189304606101611064"]',
+          conditionId:
+            "0xfef657b2f9ed83dd3db24c61d115203e836f9967289cd3281b6b91dcd7338104",
+          acceptingOrders: true,
+          volume: "1251104.6988679883",
+        },
+        {
+          slug: "ucl-psg-ars-2026-05-30-draw",
+          groupItemTitle: "Draw (Paris Saint-Germain FC vs. Arsenal FC)",
+          outcomePrices: '["0.295", "0.705"]',
+          clobTokenIds:
+            '["83851996047293978711040695609148469340176807181217450343995628690761599071382", "25680259997561378515727123004871172023405352425388257898331862126882947936333"]',
+          conditionId:
+            "0x163dc37103bb0af6e34d46c3b12390790c4210a3df40556620dc7ecd8a1d6d56",
+          acceptingOrders: true,
+        },
+        {
+          slug: "ucl-psg-ars-2026-05-30-ars",
+          groupItemTitle: "Arsenal FC",
+          outcomePrices: '["0.305", "0.695"]',
+          clobTokenIds:
+            '["48266155784016844137166283546442505319002353733298913457784203021568892550163", "17446494501052246971059053978588166916450543663295908526245793646282323329465"]',
+          conditionId:
+            "0x5dc96d5b6d416507a833231f23a08c69cd04592031519e2d225e2d9860e978cf",
+          acceptingOrders: true,
+        },
+      ],
+      events: [],
+    };
+
+    const match = mapProphetGameDetailToMatch(detail);
+
+    assert.ok(match);
+    assert.equal(match?.polymarket?.moneyline.acceptingOrders, true);
+    assert.ok(
+      match?.polymarket?.moneyline.outcomes.every((outcome) => Boolean(outcome.tokenId)),
+    );
+    assert.equal(
+      match?.polymarket?.moneyline.outcomes[0]?.tokenId,
+      "19239676013860700691088049092452970929374202302906885826905266414962485495014",
+    );
+    assert.equal(
+      match?.polymarket?.moneyline.outcomes[0]?.conditionId,
+      "0xfef657b2f9ed83dd3db24c61d115203e836f9967289cd3281b6b91dcd7338104",
+    );
+  });
 });
