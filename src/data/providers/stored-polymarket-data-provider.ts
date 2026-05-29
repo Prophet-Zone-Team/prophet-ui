@@ -1,4 +1,7 @@
-import { WORLD_CUP_TEAM_COUNT, worldCupTeams } from "@/data/teams/world-cup-teams";
+import {
+  CURATED_NATIONAL_TEAM_COUNT,
+  curatedTeamsById,
+} from "@/data/teams/curated-team-list";
 import { getAllTeamFootballMetadata } from "@/data/teams/football-metadata";
 import { getMarketHistoryRepository } from "@/server/market-history/repository";
 import type { StoredMarketDataSource } from "@/server/market-history/types";
@@ -26,7 +29,7 @@ export async function getStoredPolymarketWorldCupData(): Promise<WorldCupMarketD
 
   const latestCapturedAt = latestRecords[0]?.capturedAt ?? "";
 
-  const teamsById = new Map(worldCupTeams.map((team) => [team.id, team]));
+  const teamsById = curatedTeamsById;
   const snapshots: TeamMarketSnapshot[] = latestRecords
     .map((record) => {
       const team = teamsById.get(record.teamId);
@@ -100,7 +103,7 @@ function getLatestCompleteSnapshotBatch<T extends { capturedAt: string; teamId: 
   return [...batches.entries()]
     .sort(([left], [right]) => right.localeCompare(left))
     .map(([, batch]) => batch)
-    .find((batch) => new Set(batch.map((record) => record.teamId)).size >= WORLD_CUP_TEAM_COUNT) ?? [];
+    .find((batch) => new Set(batch.map((record) => record.teamId)).size >= CURATED_NATIONAL_TEAM_COUNT) ?? [];
 }
 
 function isSnapshot(value: TeamMarketSnapshot | undefined): value is TeamMarketSnapshot {

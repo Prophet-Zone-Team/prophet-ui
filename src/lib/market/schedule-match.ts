@@ -1,4 +1,4 @@
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { findCuratedTeamById } from "@/data/teams/curated-team-list";
 import type {
   Team,
   TeamMarketSnapshot,
@@ -69,10 +69,10 @@ export function resolveMatchSides(
     ? snapshots.find((snapshot) => snapshot.team.id === match.awayTeamId)
     : undefined;
   const homeTeam = match.homeTeamId
-    ? worldCupTeams.find((team) => team.id === match.homeTeamId)
+    ? findCuratedTeamById(match.homeTeamId)
     : undefined;
   const awayTeam = match.awayTeamId
-    ? worldCupTeams.find((team) => team.id === match.awayTeamId)
+    ? findCuratedTeamById(match.awayTeamId)
     : undefined;
 
   return {
@@ -210,8 +210,6 @@ export function filterScheduleMatches(
   return matches.filter((match) => !isEndedMatchStatus(match.status));
 }
 
-const worldCupTeamsById = new Map(worldCupTeams.map((team) => [team.id, team]));
-
 function resolveScheduleFilterTeam(
   teamId: Team["id"],
   snapshots: TeamMarketSnapshot[],
@@ -227,13 +225,13 @@ function resolveScheduleFilterTeam(
     };
   }
 
-  const worldCupTeam = worldCupTeamsById.get(teamId);
+  const curatedTeam = findCuratedTeamById(teamId);
 
-  if (worldCupTeam) {
+  if (curatedTeam) {
     return {
       id: teamId,
-      name: worldCupTeam.name,
-      code: worldCupTeam.code
+      name: curatedTeam.name,
+      code: curatedTeam.code
     };
   }
 

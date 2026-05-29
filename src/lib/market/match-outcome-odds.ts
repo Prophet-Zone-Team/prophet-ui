@@ -1,4 +1,4 @@
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { findCuratedTeamByFuzzyLabel } from "@/data/teams/curated-team-list";
 import { normalizeGammaSearchText } from "@/lib/market/polymarket-gamma";
 import type { MatchOddsOutcome, WorldCupMatch } from "@/types/market";
 
@@ -113,32 +113,10 @@ function labelMatchesSideName(label: string, sideName?: string): boolean {
     return true;
   }
 
-  const labelTeam = findWorldCupTeamByLabel(label);
-  const sideTeam = findWorldCupTeamByLabel(sideName);
+  const labelTeam = findCuratedTeamByFuzzyLabel(label);
+  const sideTeam = findCuratedTeamByFuzzyLabel(sideName);
 
   return Boolean(labelTeam && sideTeam && labelTeam.id === sideTeam.id);
-}
-
-function findWorldCupTeamByLabel(value: string) {
-  const normalized = normalizeGammaSearchText(value);
-
-  if (!normalized) {
-    return undefined;
-  }
-
-  return worldCupTeams.find((team) => {
-    const candidates = [team.name, team.code, ...(team.aliases ?? [])].map(
-      normalizeGammaSearchText,
-    );
-
-    return candidates.some(
-      (candidate) =>
-        candidate.length > 0 &&
-        (normalized === candidate ||
-          normalized.includes(candidate) ||
-          candidate.includes(normalized)),
-    );
-  });
 }
 
 function getRawImpliedProbability(outcome: MatchOddsOutcome): number | undefined {

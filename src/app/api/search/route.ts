@@ -5,7 +5,7 @@ import { getNewsArticleSlug } from "@/lib/news/news-slugs";
 import { newsDetailHref } from "@/lib/routes/news";
 import { teamTradeHref, gameTradeHref } from "@/lib/routes/trade";
 import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { curatedTeamsList } from "@/data/teams/curated-team-list";
 import { getSignalDataRepository } from "@/server/signal-data/repository";
 import type { SearchResult, SearchResultType } from "@/types/market";
 
@@ -49,8 +49,8 @@ function searchTeams(q: string, type: SearchResultType | "all"): SearchResult[] 
     return [];
   }
 
-  return worldCupTeams.flatMap((team) => {
-    const text = `${team.name} ${team.code} ${team.region} ${(team.aliases ?? []).join(" ")}`.toLowerCase();
+  return curatedTeamsList.flatMap((team) => {
+    const text = `${team.name} ${team.code} ${team.region}`.toLowerCase();
 
     if (!text.includes(q)) {
       return [];

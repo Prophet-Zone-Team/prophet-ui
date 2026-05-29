@@ -1,4 +1,4 @@
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { findCuratedTeamByCode } from "@/data/teams/curated-team-list";
 import {
   normalizeGammaSearchText,
   parseGammaArrayField,
@@ -300,7 +300,7 @@ function resolveProphetMarketOutcomeLabel(
     return awayName;
   }
 
-  const team = findWorldCupTeamByCode(suffix);
+  const team = findCuratedTeamByCode(suffix);
 
   if (team) {
     return normalizeOutcomeLabel(team.name, homeName, awayName);
@@ -348,12 +348,6 @@ function parseProphetVolume(volume: string | undefined): number {
   const parsed = Number(volume);
 
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function findWorldCupTeamByCode(code: string) {
-  const normalized = code.trim().toLowerCase();
-
-  return worldCupTeams.find((team) => team.code.toLowerCase() === normalized);
 }
 
 function hashFixtureId(value: string): number {

@@ -1,46 +1,14 @@
 import curatedTeams from "@/data/teams/index";
+import {
+  curatedEntryToTeam,
+  findCuratedTeamByName,
+} from "@/data/teams/curated-team-list";
 import { normalizeGammaSearchText } from "@/lib/market/polymarket-gamma";
-import type { Team, TeamRegion } from "@/types/market";
+import type { Team } from "@/types/market";
 
 const curatedTeamEntries = Object.entries(curatedTeams) as Array<
   [string, (typeof curatedTeams)[keyof typeof curatedTeams]]
 >;
-
-function curatedTeamKeyToId(key: string): string {
-  return normalizeGammaSearchText(key).replace(/\s+/g, "-");
-}
-
-function mapContinentToRegion(continent: string): TeamRegion {
-  if (continent === "Oceania") {
-    return "Asia";
-  }
-
-  return continent as TeamRegion;
-}
-
-function curatedAbbreviationToCode(abbreviation: string): string {
-  const lower = abbreviation.trim().toLowerCase();
-
-  if (lower === "kr") {
-    return "KOR";
-  }
-
-  return lower.toUpperCase();
-}
-
-function curatedEntryToTeam(
-  key: string,
-  entry: (typeof curatedTeams)[keyof typeof curatedTeams],
-): Team {
-  return {
-    id: curatedTeamKeyToId(key),
-    name: entry.name,
-    code: curatedAbbreviationToCode(entry.abbreviation),
-    region: mapContinentToRegion(entry.continent),
-    logoUrl: entry.logo,
-    qualifiedStatus: "qualified",
-  };
-}
 
 const GROUP_TITLE_ALIASES: Record<string, string> = {
   "united states": "USA",
@@ -111,25 +79,4 @@ function resolveCuratedTeamKey(label: string): string | undefined {
     const candidates = [key, value.name].map(normalizeGammaSearchText);
     return candidates.some((candidate) => candidate === normalized);
   })?.[0];
-}
-
-function findCuratedTeamByName(name: string): Team | undefined {
-  const normalized = normalizeGammaSearchText(name);
-
-  if (!normalized) {
-    return undefined;
-  }
-
-  const match = curatedTeamEntries.find(([key, value]) => {
-    const candidates = [
-      key,
-      value.name,
-      value.abbreviation,
-      curatedTeamKeyToId(key).replace(/-/g, " "),
-    ].map(normalizeGammaSearchText);
-
-    return candidates.some((alias) => alias.length > 0 && alias === normalized);
-  });
-
-  return match ? curatedEntryToTeam(match[0], match[1]) : undefined;
 }

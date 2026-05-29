@@ -3,7 +3,7 @@
 import { BookmarkToggle } from "@/components/bookmark/bookmark-toggle";
 import type { ProphetBookmarkTarget } from "@/lib/tracks/track-status";
 import { TrackLink, TrackTooltip } from "@/components/bookmark/track-tooltip";
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { findCuratedTeamById } from "@/data/teams/curated-team-list";
 
 export interface MarketBookmarkControlProps {
   slug: string;
@@ -12,7 +12,7 @@ export interface MarketBookmarkControlProps {
 }
 
 function resolveTeamName(teamId: string): string {
-  return worldCupTeams.find((team) => team.id === teamId)?.name ?? teamId;
+  return findCuratedTeamById(teamId)?.name ?? teamId;
 }
 
 export function MarketBookmarkControl({

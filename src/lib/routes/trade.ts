@@ -1,4 +1,4 @@
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { curatedTeamsById } from "@/data/teams/curated-team-list";
 
 export function gameTradeHref(matchId: string) {
   return `/trade/game?slug=${encodeURIComponent(matchId)}`;
@@ -9,7 +9,7 @@ export function teamTradeHref(teamId: string) {
 }
 
 export function resolveTradeHref(slug: string) {
-  if (worldCupTeams.some((team) => team.id === slug)) {
+  if (curatedTeamsById.has(slug)) {
     return teamTradeHref(slug);
   }
 

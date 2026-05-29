@@ -1,4 +1,4 @@
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { curatedNationalTeamsList } from "@/data/teams/curated-team-list";
 import type { ApiFootballDataIssue, ApiFootballTeamContext, Team } from "@/types/market";
 import { getSignalDataRepository } from "@/server/signal-data/repository";
 
@@ -42,12 +42,12 @@ export async function getFootballCoverageReport(now = new Date()): Promise<Footb
   const repository = await getSignalDataRepository();
   const context = await repository.readFootballTeamContext();
   const contextByTeamId = new Map(context.map((teamContext) => [teamContext.profile.teamId, teamContext]));
-  const teams = worldCupTeams.map((team) => mapTeamCoverage(team, contextByTeamId.get(team.id)));
+  const teams = curatedNationalTeamsList.map((team) => mapTeamCoverage(team, contextByTeamId.get(team.id)));
 
   return {
     source: "api-football-cache",
     checkedAt: now.toISOString(),
-    teamCount: worldCupTeams.length,
+    teamCount: curatedNationalTeamsList.length,
     cachedTeamCount: teams.filter((team) => team.cached).length,
     missingTeamCount: teams.filter((team) => !team.cached).length,
     dimensionSummary: getDimensionSummary(teams),

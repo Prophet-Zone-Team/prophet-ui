@@ -1,4 +1,4 @@
-import { WORLD_CUP_TEAM_COUNT } from "@/data/teams/world-cup-teams";
+import { CURATED_NATIONAL_TEAM_COUNT } from "@/data/teams/curated-team-list";
 import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 import type { MarketDataSource } from "@/data/providers/types";
 import { getMarketHistoryRepository } from "@/server/market-history/repository";
@@ -93,13 +93,13 @@ function assertCompletePolymarketCoverage(data: Awaited<ReturnType<typeof getWor
 
   const uniqueTeamCount = new Set(data.snapshots.map((snapshot) => snapshot.team.id)).size;
 
-  if (uniqueTeamCount < WORLD_CUP_TEAM_COUNT) {
-    throw new Error(`Polymarket snapshot coverage is incomplete: ${uniqueTeamCount}/${WORLD_CUP_TEAM_COUNT} teams.`);
+  if (uniqueTeamCount < CURATED_NATIONAL_TEAM_COUNT) {
+    throw new Error(`Polymarket snapshot coverage is incomplete: ${uniqueTeamCount}/${CURATED_NATIONAL_TEAM_COUNT} teams.`);
   }
 
-  if (data.universe && data.universe.trackedMarketCount < WORLD_CUP_TEAM_COUNT) {
+  if (data.universe && data.universe.trackedMarketCount < CURATED_NATIONAL_TEAM_COUNT) {
     throw new Error(
-      `Polymarket universe coverage is incomplete: ${data.universe.trackedMarketCount}/${WORLD_CUP_TEAM_COUNT} tracked markets.`,
+      `Polymarket universe coverage is incomplete: ${data.universe.trackedMarketCount}/${CURATED_NATIONAL_TEAM_COUNT} tracked markets.`,
     );
   }
 }

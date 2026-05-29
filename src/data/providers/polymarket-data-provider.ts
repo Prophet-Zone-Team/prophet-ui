@@ -1,4 +1,8 @@
-import { WORLD_CUP_TEAM_COUNT, worldCupTeams } from "@/data/teams/world-cup-teams";
+import {
+  CURATED_NATIONAL_TEAM_COUNT,
+  curatedNationalTeamsList,
+  curatedTeamsById,
+} from "@/data/teams/curated-team-list";
 import { getAllTeamFootballMetadata } from "@/data/teams/football-metadata";
 import type {
   MarketSentiment,
@@ -16,7 +20,7 @@ import { serverFetch } from "@/server/trading/server-fetch";
 const GAMMA_MARKETS_URL = "https://gamma-api.polymarket.com/markets";
 const CLOB_MARKET_URL = "https://clob.polymarket.com/clob-markets";
 const CLOB_MARKET_BY_TOKEN_URL = "https://clob.polymarket.com/markets-by-token";
-const MIN_WORLD_CUP_MARKETS = WORLD_CUP_TEAM_COUNT;
+const MIN_WORLD_CUP_MARKETS = CURATED_NATIONAL_TEAM_COUNT;
 
 interface GammaMarket {
   id?: string;
@@ -148,7 +152,7 @@ async function mapMarketsToTeamSnapshots(markets: GammaMarket[]): Promise<{
     polymarket?: PolymarketMarketMetadata;
   }> = [];
 
-  for (const team of worldCupTeams) {
+  for (const team of curatedNationalTeamsList) {
     const market = findBestTeamMarket(markets, team, usedMarketIds);
 
     if (!market) {
@@ -216,7 +220,7 @@ function createMarketUniverseMeta(
   matchedMarketKeys: Set<string>,
 ): MarketUniverseMeta {
   const mappedTeamIds = new Set(snapshots.map((snapshot) => snapshot.team.id));
-  const missingTeamIds = worldCupTeams
+  const missingTeamIds = curatedNationalTeamsList
     .map((team) => team.id)
     .filter((teamId) => !mappedTeamIds.has(teamId));
   const unmappedMarketTitles = markets
@@ -228,7 +232,7 @@ function createMarketUniverseMeta(
     provider: "polymarket",
     marketCount: markets.length,
     trackedMarketCount: snapshots.length,
-    canonicalTeamCount: WORLD_CUP_TEAM_COUNT,
+    canonicalTeamCount: CURATED_NATIONAL_TEAM_COUNT,
     totalVolume: sumMarketNumbers(markets, (market) => firstNumber(market.volumeNum, market.volume)),
     volume24h: sumMarketNumbers(markets, (market) => firstNumber(market.volume24hr, market.volume24hrClob)),
     liquidity: sumMarketNumbers(markets, (market) => firstNumber(market.liquidity)),

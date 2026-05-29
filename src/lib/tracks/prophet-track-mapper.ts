@@ -1,4 +1,8 @@
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import {
+  findCuratedTeamByCode,
+  findCuratedTeamById,
+  findCuratedTeamByName,
+} from "@/data/teams/curated-team-list";
 import { extractFastBidPolymarketMetadata } from "@/lib/market/polymarket-fast-bid-metadata";
 import {
   parseGammaArrayField,
@@ -27,10 +31,6 @@ function parseNumericField(value: string | undefined): number | undefined {
   const parsed = Number(value);
 
   return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function normalizeLookupKey(value: string): string {
-  return value.trim().toLowerCase();
 }
 
 function isGameTrack(item: ProphetUserTrackItem): boolean {
@@ -224,9 +224,7 @@ function resolveTeam(item: ProphetUserTrackItem): Team | undefined {
   const prophetTeam = item.team;
 
   if (prophetTeam?.code) {
-    const byCode = worldCupTeams.find(
-      (team) => team.code.toLowerCase() === prophetTeam.code!.toLowerCase()
-    );
+    const byCode = findCuratedTeamByCode(prophetTeam.code);
 
     if (byCode) {
       return byCode;
@@ -240,13 +238,7 @@ function resolveTeam(item: ProphetUserTrackItem): Team | undefined {
   ].filter((value): value is string => Boolean(value?.trim()));
 
   for (const candidate of nameCandidates) {
-    const normalized = normalizeLookupKey(candidate);
-
-    const byName = worldCupTeams.find(
-      (team) =>
-        normalizeLookupKey(team.name) === normalized ||
-        team.aliases?.some((alias) => normalizeLookupKey(alias) === normalized)
-    );
+    const byName = findCuratedTeamByName(candidate);
 
     if (byName) {
       return byName;
@@ -256,7 +248,7 @@ function resolveTeam(item: ProphetUserTrackItem): Team | undefined {
   const slug = item.slug?.trim();
 
   if (slug) {
-    const byId = worldCupTeams.find((team) => team.id === slug);
+    const byId = findCuratedTeamById(slug);
 
     if (byId) {
       return byId;

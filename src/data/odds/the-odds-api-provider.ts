@@ -1,4 +1,4 @@
-import { worldCupTeams } from "@/data/teams/world-cup-teams";
+import { curatedNationalTeamsList } from "@/data/teams/curated-team-list";
 import { getTeamNameAliases, normalizeTeamAlias } from "@/config/team-name-aliases";
 import type { Team } from "@/types/market";
 import type {
@@ -68,7 +68,7 @@ export async function getTheOddsApiWorldCupWinnerOdds(): Promise<WorldCupWinnerO
   try {
     const marketKey = await resolveWorldCupOutrightSportKey(apiKey);
     const events = await fetchWorldCupOutrightOdds(apiKey, marketKey);
-    const odds = mapOddsEvents(events, worldCupTeams);
+    const odds = mapOddsEvents(events, curatedNationalTeamsList);
     const summaries = summarizeBookmakerOdds(odds);
     const lastUpdated = getLatestUpdatedAt(odds);
 
