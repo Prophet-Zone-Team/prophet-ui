@@ -25,7 +25,7 @@ export function calculateBuyOrderCostFromBudget({
   budget,
   price,
   fee,
-  builderTakerFeeRate = 0,
+  builderTakerFeeRate = 0.03
 }: {
   budget: number;
   price: number;
@@ -36,7 +36,11 @@ export function calculateBuyOrderCostFromBudget({
     return 0;
   }
 
-  const feeMultiplier = getBuyTakerFeeMultiplier({ price, fee, builderTakerFeeRate });
+  const feeMultiplier = getBuyTakerFeeMultiplier({
+    price,
+    fee,
+    builderTakerFeeRate
+  });
 
   if (feeMultiplier <= 0) {
     return roundMoney(budget);

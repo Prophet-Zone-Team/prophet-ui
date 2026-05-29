@@ -96,7 +96,9 @@ export function MarketListItem({
       )}
       style={{
         background:
-          "linear-gradient(90deg, rgba(220, 255, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
+          changePercent < 0
+            ? "linear-gradient(90deg, rgba(220, 255, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
+            : "linear-gradient(90deg, rgba(255, 181, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
       }}
     >
       <div className="flex w-full md:w-2/5 items-center gap-[20px]">

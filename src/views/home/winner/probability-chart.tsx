@@ -98,7 +98,7 @@ export function WinnerProbabilityChart({
             data={chartData}
             margin={{ top: 8, right: 0, left: 8, bottom: 0 }}
           >
-            <XAxis dataKey="date" hide />
+            <XAxis dataKey="date" hide padding={{ left: 0, right: 6 }} />
             <YAxis
               orientation="right"
               domain={yAxis.domain}

@@ -36,6 +36,7 @@ function ProbabilityChangeTrendArrow({ isDown }: { isDown: boolean }) {
       viewBox="0 0 10 9"
       fill="none"
       aria-hidden="true"
+      className={isDown ? "rotate-180" : ""}
     >
       <path
         d="M4.03241 0.5C4.41731 -0.166667 5.37956 -0.166667 5.76446 0.5L9.66158 7.25C10.0465 7.91667 9.56535 8.75 8.79555 8.75H1.00132C0.231523 8.75 -0.249602 7.91667 0.135298 7.25L4.03241 0.5Z"

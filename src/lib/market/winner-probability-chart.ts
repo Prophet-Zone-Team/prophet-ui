@@ -33,7 +33,7 @@ const WINNER_CHART_PALETTE = [
   "#4ECDC4"
 ] as const;
 
-const DEFAULT_TOP_TEAM_COUNT = 4;
+const DEFAULT_TOP_TEAM_COUNT = 8;
 
 export interface WinnerChartSeriesConfig {
   teamId: string;

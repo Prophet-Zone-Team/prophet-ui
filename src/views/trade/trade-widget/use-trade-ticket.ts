@@ -846,6 +846,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
       setStatus("submitting");
       setMessage("Submitting signed order to Polymarket CLOB.");
+      console.log("userOrderPreview", {
+        session,
+        preview,
+        orderType,
+        userOrderPreview
+      });
+
+      throw new Error("test");
 
       const result = await submitSignedTradeOrder({
         session,
@@ -1142,6 +1150,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             sidePrice: preview.sidePrice,
             fee
           });
+
+          console.log("availableCash", availableCash, nextAmount);
 
           if (nextAmount > 0) {
             setAmount(formatMarketBuyAmountInput(nextAmount));
