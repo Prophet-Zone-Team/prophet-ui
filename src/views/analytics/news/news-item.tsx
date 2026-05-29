@@ -32,7 +32,7 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
       className={cn(
         "relative rounded-[12px] px-3 py-3 md:px-[12px] md:py-[12px]",
         item.highlighted && "bg-[#F9FAFC]",
-        onSelect && "cursor-pointer transition-colors hover:bg-[#F9FAFC]",
+        onSelect && "cursor-pointer duration-150 hover:bg-[#EDEDED]",
         className
       )}
       aria-label={`${item.teamName}: ${item.headline}. Impact ${formatImpactScore(item.impactScore)}`}

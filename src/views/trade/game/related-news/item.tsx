@@ -62,7 +62,7 @@ export function RelatedNewsRow({
       className={cn(
         "relative flex w-full items-center gap-[12px] rounded-[12px] px-[12px] py-[12px]",
         item.highlighted && "bg-[#F9FAFC]",
-        onSelect && "cursor-pointer transition-colors hover:bg-[#F0F2F5]",
+        onSelect && "cursor-pointer duration-150 hover:bg-[#EDEDED]",
         className
       )}
       aria-label={`${item.teamName}: ${item.headline}`}

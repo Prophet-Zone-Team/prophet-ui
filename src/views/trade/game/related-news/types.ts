@@ -1,9 +1,1 @@
-export type RelatedNewsItem = {
-  id: string;
-  teamCode: string;
-  teamName: string;
-  headline: string;
-  thumbnailUrl?: string;
-  thumbnailAlt: string;
-  highlighted?: boolean;
-};
+export type { NewsImpactItem as RelatedNewsItem } from "@/views/analytics/news/types";
