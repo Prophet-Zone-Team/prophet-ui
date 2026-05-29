@@ -1,39 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
 import { cn } from "@/lib/cn";
 
 import { MatchHistoryDesktopRow, MatchHistoryMobileCard } from "./row";
 import { matchHistoryTableGridClass } from "./table-grid";
-import { MatchHistoryTeamToggle } from "./team-toggle";
-import type { MatchHistoryTeamOption } from "./types";
+import type { MatchHistoryEntry } from "./types";
 
 export type MatchHistoryProps = {
-  teams?: MatchHistoryTeamOption[];
-  defaultTeamId?: string;
+  matches?: MatchHistoryEntry[];
   isLoading?: boolean;
   isError?: boolean;
   className?: string;
 };
 
 export function MatchHistory({
-  teams = [],
-  defaultTeamId,
+  matches = [],
   isLoading = false,
   isError = false,
   className
 }: MatchHistoryProps) {
-  const initialTeamId = defaultTeamId ?? teams[0]?.id ?? "";
-  const [selectedTeamId, setSelectedTeamId] = useState(initialTeamId);
-
-  const selectedTeam = useMemo(
-    () => teams.find((team) => team.id === selectedTeamId) ?? teams[0],
-    [selectedTeamId, teams]
-  );
-
-  const matches = selectedTeam?.matches ?? [];
-
   return (
     <section
       aria-label="Match history"
@@ -43,18 +28,9 @@ export function MatchHistory({
         className
       )}
     >
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
-          Match History
-        </h2>
-        {!isLoading && !isError && teams.length > 0 ? (
-          <MatchHistoryTeamToggle
-            teams={teams}
-            value={selectedTeam?.id ?? initialTeamId}
-            onChange={setSelectedTeamId}
-          />
-        ) : null}
-      </div>
+      <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
+        Match History
+      </h2>
 
       <div className="mt-[12px] flex w-full flex-col">
         {isLoading ? (
@@ -67,13 +43,13 @@ export function MatchHistory({
           </p>
         ) : matches.length === 0 ? (
           <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
-            No match history is available for this team yet.
+            No match history is available yet.
           </p>
         ) : (
           <>
             <div
               role="table"
-              aria-label={`${selectedTeam?.name ?? "Team"} match history`}
+              aria-label="Head-to-head match history"
               className="hidden w-full flex-col md:flex"
             >
               <div
@@ -107,7 +83,7 @@ export function MatchHistory({
 
             <div
               className="flex flex-col gap-2 md:hidden"
-              aria-label={`${selectedTeam?.name ?? "Team"} match history`}
+              aria-label="Head-to-head match history"
             >
               {matches.map((entry, index) => (
                 <MatchHistoryMobileCard

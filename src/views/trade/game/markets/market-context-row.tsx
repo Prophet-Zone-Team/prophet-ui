@@ -12,13 +12,11 @@ import { RelatedNews } from "@/views/trade/game/related-news";
 export type MarketContextRowProps = {
   match: WorldCupMatch;
   teamSnapshots: TeamMarketSnapshot[];
-  defaultTeamId?: string;
 };
 
 export function MarketContextRow({
   match,
-  teamSnapshots,
-  defaultTeamId
+  teamSnapshots
 }: MarketContextRowProps) {
   const sides = useMemo(
     () => resolveMatchSides(match, teamSnapshots),
@@ -37,33 +35,13 @@ export function MarketContextRow({
     awayTeamName
   });
 
-  const homeSide = useMemo(
-    () => ({
-      id: match.homeTeamId ?? "home",
-      name: homeTeamName,
-      code: sides.home.code
-    }),
-    [match.homeTeamId, homeTeamName, sides.home.code]
-  );
-
-  const awaySide = useMemo(
-    () => ({
-      id: match.awayTeamId ?? "away",
-      name: awayTeamName,
-      code: sides.away.code
-    }),
-    [match.awayTeamId, awayTeamName, sides.away.code]
-  );
-
   const {
-    teams: matchHistoryTeams,
+    matches: matchHistoryEntries,
     isLoading: matchHistoryLoading,
     isError: matchHistoryError
   } = useAnalyticsHeadToHeadFixtures({
     teamA: homeTeamName,
-    teamB: awayTeamName,
-    homeSide,
-    awaySide
+    teamB: awayTeamName
   });
 
   return (
@@ -76,8 +54,7 @@ export function MarketContextRow({
       />
       <MatchHistory
         className="min-w-0 flex-1 max-w-none"
-        teams={matchHistoryTeams}
-        defaultTeamId={defaultTeamId}
+        matches={matchHistoryEntries}
         isLoading={matchHistoryLoading}
         isError={matchHistoryError}
       />

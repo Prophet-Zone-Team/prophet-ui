@@ -4,10 +4,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { ANALYTICS_QUERY_STALE_TIME_MS } from "@/lib/analytics/config";
-import {
-  buildMatchHistoryTeamOptions,
-  type MatchHistorySideContext
-} from "@/lib/analytics/map-head-to-head-fixtures";
+import { buildMatchHistoryEntries } from "@/lib/analytics/map-head-to-head-fixtures";
 import { analyticsQueryKeys } from "@/lib/analytics/query-keys";
 import { getAnalyticsHeadToHeadFixtures } from "@/service/prophet";
 
@@ -22,8 +19,6 @@ function isValidTeamName(name: string): boolean {
 export function useAnalyticsHeadToHeadFixtures(params: {
   teamA: string;
   teamB: string;
-  homeSide: MatchHistorySideContext;
-  awaySide: MatchHistorySideContext;
 }) {
   const { teamCodeLookup } = useAnalyticsTeamPowerRankings();
   const enabled =
@@ -40,24 +35,13 @@ export function useAnalyticsHeadToHeadFixtures(params: {
     staleTime: ANALYTICS_QUERY_STALE_TIME_MS
   });
 
-  const teams = useMemo(
-    () =>
-      buildMatchHistoryTeamOptions(
-        query.data?.list,
-        params.homeSide,
-        params.awaySide,
-        teamCodeLookup
-      ),
-    [
-      query.data?.list,
-      params.homeSide,
-      params.awaySide,
-      teamCodeLookup
-    ]
+  const matches = useMemo(
+    () => buildMatchHistoryEntries(query.data?.list, teamCodeLookup),
+    [query.data?.list, teamCodeLookup]
   );
 
   return {
-    teams,
+    matches,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error

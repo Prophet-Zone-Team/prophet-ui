@@ -1,17 +1,10 @@
 import type { ProphetHeadToHeadFixture } from "@/types/prophet-api";
 import type {
   MatchHistoryEntry,
-  MatchHistoryResultKind,
-  MatchHistoryTeamOption
+  MatchHistoryResultKind
 } from "@/views/trade/game/match-history/types";
 
 import { resolveTeamCode, type TeamCodeLookup } from "./map-team-power-ranking";
-
-export type MatchHistorySideContext = {
-  id: string;
-  name: string;
-  code?: string;
-};
 
 function normalizeTeamName(value: string | undefined): string {
   return (value ?? "").trim().toLowerCase();
@@ -92,23 +85,19 @@ export function mapHeadToHeadFixtureToEntry(
   };
 }
 
-export function buildMatchHistoryTeamOptions(
+export function buildMatchHistoryEntries(
   fixtures: ProphetHeadToHeadFixture[] | undefined,
-  homeSide: MatchHistorySideContext,
-  awaySide: MatchHistorySideContext,
   teamCodeLookup?: TeamCodeLookup
-): MatchHistoryTeamOption[] {
+): MatchHistoryEntry[] {
   const list = fixtures ?? [];
 
-  const buildOption = (side: MatchHistorySideContext): MatchHistoryTeamOption => ({
-    id: side.id,
-    code: (side.code ?? resolveTeamCode(side.name, teamCodeLookup)).toUpperCase(),
-    flagCode: resolveTeamCode(side.name, teamCodeLookup),
-    name: side.name,
-    matches: list.filter((fixture) => fixture.home_team_name === side.name).map((fixture) =>
-      mapHeadToHeadFixtureToEntry(fixture, side.name, teamCodeLookup)
+  return list
+    .map((fixture) =>
+      mapHeadToHeadFixtureToEntry(
+        fixture,
+        fixture.home_team_name ?? "",
+        teamCodeLookup
+      )
     )
-  });
-
-  return [buildOption(homeSide), buildOption(awaySide)];
+    .sort((a, b) => b.playedAt.localeCompare(a.playedAt));
 }
