@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 
 import {
   formatProbability,
-  formatRelativeChange,
   formatVolume
 } from "@/components/home/market-formatters";
 import { cn } from "@/lib/cn";
@@ -89,10 +88,7 @@ export function ProbabilitySection({
 
   const change24h = snapshot.market.change24h;
   const change24hPoints = outcomeView === "yes" ? change24h : -change24h;
-  const change24hLabel = formatRelativeChange(
-    displayProbability,
-    change24hPoints
-  );
+  const change24hLabel = change24h;
   const changeTone =
     change24hPoints > 0
       ? "text-[#65AF14]"
@@ -182,7 +178,7 @@ export function ProbabilitySection({
             valueClassName="text-[36px] leading-[43px] text-black"
           />
           <MetricBlock
-            value={change24hLabel}
+            value={change24h.toString()}
             label="24h"
             valueClassName={cn("text-base leading-[19px]", changeTone)}
           />

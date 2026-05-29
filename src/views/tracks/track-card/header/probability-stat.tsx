@@ -1,8 +1,5 @@
 import { ProbabilityChangeTrend } from "@/components/market/probability-change-trend";
-import {
-  formatProbability,
-  getRelativeChangePercent
-} from "@/components/home/market-formatters";
+import { formatProbability } from "@/components/home/market-formatters";
 import {
   trackCardLargeValueClassName,
   trackCardValueClassName
@@ -23,7 +20,7 @@ export function ProbabilityStat({
   teamCode,
   className
 }: ProbabilityStatProps) {
-  const changePercent = getRelativeChangePercent(probability, change24h);
+  const changePercent = change24h;
 
   return (
     <StatColumn label="Probability" className={className}>

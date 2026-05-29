@@ -29,19 +29,8 @@ export function formatChangePercentMagnitude(
   return `${Math.abs(value).toFixed(decimals)}%`;
 }
 
-export function formatRelativeChange(currentProbability: number, changePoints: number): string {
-  return formatProbabilityChangePercent(getRelativeChangePercent(currentProbability, changePoints));
-}
 
-export function getRelativeChangePercent(currentProbability: number, changePoints: number): number {
-  const previousProbability = currentProbability - changePoints;
 
-  if (previousProbability <= 0 || !Number.isFinite(previousProbability)) {
-    return changePoints;
-  }
-
-  return (changePoints / previousProbability) * 100;
-}
 
 export function formatVolume(value: number): string {
   return new Intl.NumberFormat("en", {

@@ -12,8 +12,7 @@ import { teamDetailHref } from "@/lib/routes/team";
 import { teamTradeHref } from "@/lib/routes/trade";
 import {
   formatListProbability,
-  formatVolume,
-  getRelativeChangePercent
+  formatVolume
 } from "@/components/home/market-formatters";
 import { cn } from "@/lib/cn";
 import type { TeamMarketSnapshot } from "@/types/market";
@@ -44,10 +43,7 @@ export function MarketListItem({
   const router = useRouter();
   const { team, market } = snapshot;
   const yesTokenId = snapshot.market.polymarket?.tokens?.yes?.tokenId;
-  const changePercent = getRelativeChangePercent(
-    market.probability,
-    market.change24h
-  );
+  const changePercent = market.change24h;
 
   const tradeHref = teamTradeHref(market?.polymarket?.slug || "");
   const detailHref = teamDetailHref(team.id);
@@ -135,7 +131,7 @@ export function MarketListItem({
                   : "-"}
               </span>
             )}
-            {hasLiveValues ? (
+            {hasLiveValues && !!changePercent ? (
               <ProbabilityChangeTrend
                 changePercent={changePercent}
                 decimals={1}

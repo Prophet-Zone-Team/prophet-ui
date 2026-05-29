@@ -1,4 +1,3 @@
-import { getRelativeChangePercent } from "@/components/home/market-formatters";
 import type {
   MarketDataMeta,
   WorldCupMarketData
@@ -29,15 +28,9 @@ export function computeHomeHeroStats(
   const totalVolume =
     universe?.totalVolume ??
     teams.reduce((sum, snapshot) => sum + snapshot.market.volume, 0);
-  const topMove = [...teams].sort((a, b) => {
-    return (
-      Math.abs(
-        getRelativeChangePercent(b.market.probability, b.market.change24h)
-      ) -
-      Math.abs(
-        getRelativeChangePercent(a.market.probability, a.market.change24h)
-      )
-    );
+
+  const topMove = [...snapshots].sort((a, b) => {
+    return Math.abs(b.market.change24h) - Math.abs(a.market.change24h);
   })[0];
 
   return {

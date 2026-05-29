@@ -2,10 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import {
-  formatVolume,
-  getRelativeChangePercent
-} from "@/components/home/market-formatters";
+import { formatVolume } from "@/components/home/market-formatters";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { ProbabilityChangeTrend } from "@/components/market/probability-change-trend";
 import { HomeHero } from "@/views/home/header";
@@ -23,6 +20,7 @@ const heroStatValueClassName =
 
 export function HomePageShell({ children }: HomePageShellProps) {
   const { snapshots, totalVolume, status, isLoading } = useTeams();
+
   const { topMove } = computeHomeHeroStats(snapshots, {
     source: "polymarket",
     status: status === "ready" ? "live" : "partial",
@@ -47,10 +45,7 @@ export function HomePageShell({ children }: HomePageShellProps) {
       return "-";
     }
 
-    const changePercent = getRelativeChangePercent(
-      topMove.market.probability,
-      topMove.market.change24h
-    );
+    const changePercent = topMove.market.change24h;
 
     if (changePercent === null) {
       return "-";
@@ -65,7 +60,7 @@ export function HomePageShell({ children }: HomePageShellProps) {
           className="rounded-[2px] text-base shadow-[0_0_2px_rgba(0,0,0,0.2)]"
         />
         <span className={heroStatValueClassName}>{topMove.team.code}</span>
-        <ProbabilityChangeTrend changePercent={changePercent} />
+        <ProbabilityChangeTrend changePercent={changePercent} decimals={1} />
       </div>
     );
   })();

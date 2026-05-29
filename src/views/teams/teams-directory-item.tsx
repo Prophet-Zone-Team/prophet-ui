@@ -5,10 +5,7 @@ import { Zap } from "lucide-react";
 import { useState } from "react";
 
 import { TeamFlag } from "@/components/teams/team-flag";
-import {
-  formatProbability,
-  formatRelativeChange
-} from "@/components/home/market-formatters";
+import { formatProbability } from "@/components/home/market-formatters";
 import { teamDetailHref } from "@/lib/routes/team";
 import { teamTradeHref } from "@/lib/routes/trade";
 import { cn } from "@/lib/cn";
@@ -94,8 +91,7 @@ export function TeamsDirectoryItem({
               isDown ? "text-prophet-red" : "text-[#65AF14]"
             )}
           >
-            Market {formatProbability(market.probability)} ·{" "}
-            {formatRelativeChange(market.probability, market.change24h)}
+            Market {formatProbability(market.probability)} · {market.change24h}
           </span>
         </div>
 

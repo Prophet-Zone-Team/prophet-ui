@@ -2,6 +2,7 @@ import {
   extractFastBidPolymarketMetadata,
   extractWinnerProbability,
 } from "@/lib/market/polymarket-fast-bid-metadata";
+import { normalizePriceChange } from "@/lib/market/normalize-price-change";
 import {
   firstGammaNumber,
   isGammaEventRecord,
@@ -180,14 +181,6 @@ function mapGammaMarketToWinnerTeamMarketDynamic(
       polymarket,
     },
   };
-}
-
-function normalizePriceChange(value: number | undefined): number {
-  if (value === undefined) {
-    return 0;
-  }
-
-  return Math.round((Math.abs(value) <= 1 ? value * 100 : value) * 10) / 10;
 }
 
 function deriveSentiment(change24h: number): MarketSentiment {

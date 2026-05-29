@@ -17,7 +17,11 @@ import {
 import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "@/types/market";
 import { PlaceBidButton } from "@/components/trading/place-bid-button";
 import { TeamFlag } from "@/components/teams/team-flag";
-import { formatChange, formatProbability, formatRelativeChange, formatVolume } from "@/components/home/market-formatters";
+import {
+  formatChange,
+  formatProbability,
+  formatVolume
+} from "@/components/home/market-formatters";
 import { PixelBlast } from "@/components/home/pixel-blast";
 
 interface HomePageProps {
@@ -311,10 +315,10 @@ function TeamCard({
         {snapshot.team.name}
       </div>
       <div className="team-value">
-        <span className="percentage">{formatProbability(snapshot.market.probability)}</span>
-        <span className={isDown ? "delta down" : "delta"}>
-          {formatRelativeChange(snapshot.market.probability, snapshot.market.change24h)}
+        <span className="percentage">
+          {formatProbability(snapshot.market.probability)}
         </span>
+        <span className={isDown ? "delta down" : "delta"}></span>
       </div>
     </Link>
   );

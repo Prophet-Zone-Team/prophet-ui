@@ -15,6 +15,7 @@ import type {
 import type { WorldCupMarketData, WorldCupMarketDataProvider } from "@/data/providers/types";
 import { extractFastBidPolymarketMetadata } from "@/lib/market/polymarket-fast-bid-metadata";
 import type { GammaMarketRecord } from "@/lib/market/polymarket-gamma";
+import { normalizePriceChange } from "@/lib/market/normalize-price-change";
 import { serverFetch } from "@/server/trading/server-fetch";
 
 const GAMMA_MARKETS_URL = "https://gamma-api.polymarket.com/markets";
@@ -483,14 +484,6 @@ function toNumber(value: number | string | undefined | unknown): number | undefi
   }
 
   return undefined;
-}
-
-function normalizePriceChange(value: number | undefined): number {
-  if (value === undefined) {
-    return 0;
-  }
-
-  return Math.round((Math.abs(value) <= 1 ? value * 100 : value) * 10) / 10;
 }
 
 function deriveSentiment(change24h: number): MarketSentiment {
