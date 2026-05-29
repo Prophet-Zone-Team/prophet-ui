@@ -101,7 +101,7 @@ export function FullRankingMobileCard({
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[12px] leading-[17px] text-[#909090]">Title Odds</span>
+          <span className="text-[12px] leading-[17px] text-[#909090]">Title Probability</span>
           <span className="shrink-0 tabular-nums text-black">
             {formatTitleProbability(entry.titleProbability)}
           </span>
@@ -116,7 +116,7 @@ export function FullRankingMobileCard({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[12px] leading-[17px] text-[#909090]">
-            Advance Odds
+            Round of 16
           </span>
           <span className="shrink-0 tabular-nums text-black">
             {formatAdvanceOdds(entry.roundOf16Probability)}

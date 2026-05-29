@@ -128,19 +128,16 @@ export interface ProphetAnalyticsRecommend {
 }
 
 export interface ProphetAnalyticsTeamPowerRanking {
-  id?: number;
-  rank?: number;
-  previous_rank?: number;
-  team_code?: string;
-  team_name?: string;
   group_name?: string;
-  title_probability?: string;
-  round_of_32_probability?: string;
+  id?: number;
+  path_difficulty_label?: string;
+  path_difficulty_score?: string;
+  rank?: number;
+  recent_trend?: string;
   round_of_16_probability?: string;
-  trend_direction?: string;
-  rank_delta?: number;
-  title_probability_source?: string;
-  knockout_probability_source?: string;
+  signal_status?: string;
+  team_name?: string;
+  title_probability?: string;
 }
 
 export interface ProphetAnalyticsNewsArticle {

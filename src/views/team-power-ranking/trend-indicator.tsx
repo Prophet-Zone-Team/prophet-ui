@@ -29,6 +29,14 @@ export function TrendIndicator({ trend, className }: TrendIndicatorProps) {
     );
   }
 
+  if (trend === "new") {
+    return (
+      <span className="h-[24px] px-2 text-[#65AF14] text-xs font-[400] bg-[rgba(101,175,20,0.10)] rounded-xl flex justify-center items-center">
+        New
+      </span>
+    );
+  }
+
   const isDown = trend === "down";
 
   return (
