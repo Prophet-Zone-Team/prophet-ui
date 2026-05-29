@@ -81,13 +81,13 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
                 <TeamProbabilityPanel snapshot={snapshot} />
               </div>
 
-              <TeamRecentMatchesPanel matches={data?.recentMatches ?? []} />
-              <TeamLineupPanel squad={[]} injuries={[]} dataIssues={[]} />
-              <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
               <TeamNewsSignalsPanel
                 items={data?.newsItems ?? []}
                 snapshot={snapshot}
               />
+              <TeamLineupPanel squad={[]} injuries={[]} dataIssues={[]} />
+              <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
+              <TeamRecentMatchesPanel matches={data?.recentMatches ?? []} />
             </div>
 
             <aside className={teamSidebarClass}>

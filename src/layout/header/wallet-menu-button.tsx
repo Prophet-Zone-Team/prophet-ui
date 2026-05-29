@@ -132,6 +132,9 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
   }
 
   if (!hydrated || !isAuthenticated || !session) {
+    if (isPrivateMode) {
+      return null;
+    }
     return (
       <div className="relative inline-flex flex-col items-end">
         <WalletLoginButton
