@@ -1,28 +1,34 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { cn } from "@/lib/cn";
 
 import { MatchHistoryDesktopRow, MatchHistoryMobileCard } from "./row";
 import { matchHistoryTableGridClass } from "./table-grid";
 import { MatchHistoryTeamToggle } from "./team-toggle";
-import { tradeGameMatchHistoryTeams } from "./mock-data";
 import type { MatchHistoryTeamOption } from "./types";
 
 export type MatchHistoryProps = {
   teams?: MatchHistoryTeamOption[];
   defaultTeamId?: string;
+  isLoading?: boolean;
+  isError?: boolean;
   className?: string;
 };
 
 export function MatchHistory({
-  teams = tradeGameMatchHistoryTeams,
+  teams = [],
   defaultTeamId,
+  isLoading = false,
+  isError = false,
   className
 }: MatchHistoryProps) {
   const initialTeamId = defaultTeamId ?? teams[0]?.id ?? "";
   const [selectedTeamId, setSelectedTeamId] = useState(initialTeamId);
+
+  console.log("selectedTeamId: %o", selectedTeamId)
+  console.log("teams: %o", teams)
 
   const selectedTeam = useMemo(
     () => teams.find((team) => team.id === selectedTeamId) ?? teams[0],
@@ -44,7 +50,7 @@ export function MatchHistory({
         <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
           Match History
         </h2>
-        {teams.length > 0 ? (
+        {!isLoading && !isError && teams.length > 0 ? (
           <MatchHistoryTeamToggle
             teams={teams}
             value={selectedTeam?.id ?? initialTeamId}
@@ -54,7 +60,15 @@ export function MatchHistory({
       </div>
 
       <div className="mt-[12px] flex w-full flex-col">
-        {matches.length === 0 ? (
+        {isLoading ? (
+          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+            Loading...
+          </p>
+        ) : isError ? (
+          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+            Unable to load data.
+          </p>
+        ) : matches.length === 0 ? (
           <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
             No match history is available for this team yet.
           </p>

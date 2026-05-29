@@ -214,3 +214,22 @@ export interface ProphetGetAnalyticsNewsData {
 export interface ProphetGetLatestAnalyticsNewsData {
   list?: ProphetAnalyticsNewsArticle[];
 }
+
+export interface ProphetGetTeamRelatedNewsData {
+  list?: ProphetAnalyticsNewsArticle[];
+}
+
+export interface ProphetHeadToHeadFixture {
+  fixture_date?: string;
+  home_team_name?: string;
+  away_team_name?: string;
+  home_goals?: number;
+  away_goals?: number;
+  league_name?: string;
+  season?: number;
+  status_short?: string;
+}
+
+export interface ProphetGetHeadToHeadFixturesData {
+  list?: ProphetHeadToHeadFixture[];
+}

@@ -72,7 +72,7 @@ export function RelatedGameCard({
   const statusVariant = getScheduleRowVariant(liveMatch.status);
 
   return (
-    <div className="w-full max-w-[313px] rounded-xl bg-white px-4 py-3 shadow-[0_0_10px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0_0_14px_rgba(0,0,0,0.14)]">
+    <div className="w-full md:max-w-[313px] rounded-xl bg-white px-4 py-3 shadow-[0_0_10px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0_0_14px_rgba(0,0,0,0.14)]">
       <Link href={gameTradeHref(match.id)} className="block">
         <div className="flex items-center justify-between">
           <MatchStatusBadge variant={statusVariant} size="sm" />

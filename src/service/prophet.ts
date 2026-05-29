@@ -13,8 +13,10 @@ import type {
   ProphetCancelTrackRequest,
   ProphetGetAnalyticsNewsData,
   ProphetGetGamesData,
+  ProphetGetHeadToHeadFixturesData,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
+  ProphetGetTeamRelatedNewsData,
   ProphetLoginData,
   ProphetLoginRequest,
   ProphetTrackRequest,
@@ -379,6 +381,36 @@ export async function getAnalyticsNews(params: {
       category: params.category ?? ""
     }
   });
+}
+
+/** GET /v1/analytics/news/team-related */
+export async function getAnalyticsTeamRelatedNews(params: {
+  teams: string;
+}): Promise<ProphetGetTeamRelatedNewsData> {
+  return prophetGet<ProphetGetTeamRelatedNewsData>(
+    "/v1/analytics/news/team-related",
+    {
+      params: {
+        teams: params.teams
+      }
+    }
+  );
+}
+
+/** GET /v1/analytics/fixtures/head-to-head */
+export async function getAnalyticsHeadToHeadFixtures(params: {
+  team_a: string;
+  team_b: string;
+}): Promise<ProphetGetHeadToHeadFixturesData> {
+  return prophetGet<ProphetGetHeadToHeadFixturesData>(
+    "/v1/analytics/fixtures/head-to-head",
+    {
+      params: {
+        team_a: params.team_a,
+        team_b: params.team_b
+      }
+    }
+  );
 }
 
 export { prophetClient };

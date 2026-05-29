@@ -109,7 +109,7 @@ export default function TradeGameView({
       <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2">
         <div className="bg-black h-[228px] md:h-[258px] w-full absolute top-0 left-0" />
         <TradeGameHeaderToolbar />
-        <div className={`${gameContentClass} pb-[110px] md:pb-10 relative z-10`}>
+        <div className={`${gameContentClass} pb-[130px] md:pb-10 relative z-10`}>
           <div className="shrink-0 w-full md:w-[1080px] pt-2">
             <div className="relative">
               <TradeGameHeader
