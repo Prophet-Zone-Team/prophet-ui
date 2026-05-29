@@ -7,6 +7,9 @@ import type {
 
 import { extractGroupId } from "./map-competitiveness";
 
+import teamData from "@/data/teams/index";
+import { curatedAbbreviationToCode } from "@/data/teams/curated-team-list";
+
 export type TeamCodeLookup = Map<string, string>;
 
 export function buildTeamCodeLookup(
@@ -79,8 +82,9 @@ export function mapTeamPowerRankingResponse(
   return [...(items ?? [])]
     .sort((left, right) => (left.rank ?? 0) - (right.rank ?? 0))
     .map((item) => {
+      const currentTeam = teamData[item.team_name as keyof typeof teamData];
       const trend = mapTrendDirection(item.trend_direction, item.rank_delta);
-      const teamCode = item.team_code ?? "";
+      const teamCode = currentTeam ? curatedAbbreviationToCode(currentTeam.abbreviation) : (item.team_code ?? "");
       const id =
         item.id !== undefined
           ? String(item.id)
