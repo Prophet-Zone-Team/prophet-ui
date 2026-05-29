@@ -3,10 +3,13 @@
 import { ArrowRight, ChevronRight } from "lucide-react";
 import Big from "big.js";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import InputNumber from "@/components/input-number";
 import { POLYMARKET_USD } from "@/config/funding";
 import { cn } from "@/lib/cn";
+import { executePrivateBalanceTransfer } from "@/lib/confidential/execute-private-balance-transfer";
+import type { ConfidentialAuthStatus } from "@/types/confidential";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { formatNumber } from "@/utils";
 import {
@@ -19,6 +22,10 @@ import {
   depositSectionLabelClass,
   depositTransferBarClass,
 } from "@/views/portfolio/deposit/deposit-ui";
+import {
+  DepositPrivateTransferStatus,
+  type DepositPrivateTransferPhase,
+} from "@/views/portfolio/deposit/deposit-private-transfer-status";
 import type { PrivateAccountStatus } from "@/views/portfolio/deposit/types";
 import { fundingPrimaryButtonClass } from "@/views/portfolio/shared/funding-modal-shell";
 import { TokenIcon } from "@/views/portfolio/shared/token-icon";
@@ -31,18 +38,35 @@ export interface DepositPrivateBalanceEntryProps {
   status: PrivateAccountStatus;
   privateAccountAddress?: string;
   privateBalanceUsd?: number;
+  confidentialAuthStatus?: ConfidentialAuthStatus;
+  depositWalletDeployed?: boolean;
+  ownerWalletAddress?: string;
+  funderAddress?: string;
+  walletAddress?: string;
   onTopUp?: () => void;
+  onTransferComplete?: () => void | Promise<void>;
 }
 
 export function DepositPrivateBalanceEntry({
   status,
   privateAccountAddress,
   privateBalanceUsd,
+  confidentialAuthStatus,
+  depositWalletDeployed = true,
+  ownerWalletAddress,
+  funderAddress,
+  walletAddress,
   onTopUp,
+  onTransferComplete,
 }: DepositPrivateBalanceEntryProps) {
   const [inputValue, setInputValue] = useState("0");
+  const [transferring, setTransferring] = useState(false);
+  const [transferPhase, setTransferPhase] = useState<DepositPrivateTransferPhase | null>(null);
+  const [transferLabel, setTransferLabel] = useState<string | undefined>();
+  const [transferError, setTransferError] = useState<string | undefined>();
 
-  const isInteractive = status === "funded";
+  const isAuthenticated = confidentialAuthStatus === "authenticated";
+  const isInteractive = status === "funded" && isAuthenticated && depositWalletDeployed;
   const maxBalanceUsd = privateBalanceUsd ?? 0;
 
   const formattedAccountBalance = useMemo(
@@ -54,6 +78,18 @@ export function DepositPrivateBalanceEntry({
     [privateBalanceUsd],
   );
 
+  const amountWithinBalance = useMemo(() => {
+    if (!isInteractive || maxBalanceUsd <= 0) {
+      return false;
+    }
+
+    try {
+      return Big(inputValue || 0).gt(0) && Big(inputValue).lte(maxBalanceUsd);
+    } catch {
+      return false;
+    }
+  }, [inputValue, isInteractive, maxBalanceUsd]);
+
   function handlePercent(percent: number) {
     if (!isInteractive || maxBalanceUsd <= 0) {
       return;
@@ -63,8 +99,74 @@ export function DepositPrivateBalanceEntry({
     setInputValue(nextAmount.toFixed(2, Big.roundDown));
   }
 
+  function resetTransferState() {
+    setTransferPhase(null);
+    setTransferLabel(undefined);
+    setTransferError(undefined);
+  }
+
   const transferEnabled =
-    isInteractive && Big(inputValue || 0).gt(0) && maxBalanceUsd > 0;
+    isInteractive &&
+    !transferring &&
+    Boolean(ownerWalletAddress) &&
+    Boolean(walletAddress) &&
+    Boolean(funderAddress) &&
+    amountWithinBalance;
+
+  async function handleTransfer() {
+    if (!transferEnabled || !ownerWalletAddress || !walletAddress) {
+      return;
+    }
+
+    setTransferring(true);
+    setTransferError(undefined);
+    setTransferPhase("unshielding");
+    setTransferLabel("Unshielding private USDC");
+
+    try {
+      await executePrivateBalanceTransfer({
+        amountUsd: inputValue,
+        ownerWalletAddress,
+        tradingWalletAddress: walletAddress,
+        onPhaseChange: (phase, label) => {
+          setTransferPhase(phase);
+          if (label) {
+            setTransferLabel(label);
+          }
+        },
+      });
+
+      toast.success("Private balance transferred to Prophet");
+      setInputValue("0");
+      await onTransferComplete?.();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setTransferPhase("error");
+      setTransferError(message);
+      toast.error(message);
+    } finally {
+      setTransferring(false);
+    }
+  }
+
+  if (transferPhase) {
+    return (
+      <DepositPrivateTransferStatus
+        phase={transferPhase}
+        statusLabel={transferLabel}
+        ownerWalletAddress={ownerWalletAddress}
+        funderAddress={funderAddress}
+        error={transferError}
+        onRetry={transferPhase === "error" ? resetTransferState : undefined}
+      />
+    );
+  }
+
+  const sessionHint = !isAuthenticated
+    ? "Private account session expired. Return to Prophet and open Private Balance again to sign."
+    : !depositWalletDeployed
+      ? "Polymarket deposit wallet is not ready yet. Complete wallet setup before transferring."
+      : null;
 
   return (
     <div className="flex flex-col gap-4 pb-2">
@@ -119,6 +221,25 @@ export function DepositPrivateBalanceEntry({
           </>
         )}
       </div>
+
+      {sessionHint ? (
+        <p className="m-0 text-xs text-[#909090]">{sessionHint}</p>
+      ) : null}
+
+      {ownerWalletAddress && funderAddress && isInteractive ? (
+        <div className="flex flex-col gap-1 rounded-lg border border-[#EBEBEB] px-3 py-2 text-xs text-[#909090]">
+          <p className="m-0">
+            Owner EOA: <span className="font-[556] text-black">{formatShortWallet(ownerWalletAddress)}</span>
+          </p>
+          <p className="m-0">
+            Polymarket deposit wallet:{" "}
+            <span className="font-[556] text-black">{formatShortWallet(funderAddress)}</span>
+          </p>
+          <p className="m-0">
+            Confirm these addresses before transferring private USDC to Prophet balance.
+          </p>
+        </div>
+      ) : null}
 
       <div
         className={cn(
@@ -175,8 +296,8 @@ export function DepositPrivateBalanceEntry({
                 />
               </div>
               <div className="flex min-w-0 flex-col">
-                <span className="text-sm font-[556] text-black">USDC</span>
-                <span className="text-xs font-[556] text-[#909090]">Private</span>
+                <span className="text-sm font-[556] text-black">Private USDC</span>
+                <span className="text-xs font-[556] text-[#909090]">Confidential</span>
               </div>
             </div>
 
@@ -184,8 +305,8 @@ export function DepositPrivateBalanceEntry({
 
             <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
               <div className="flex min-w-0 flex-col items-end">
-                <span className="text-sm font-[556] text-black">USDC</span>
-                <span className="text-xs font-[556] text-[#909090]">Prophet</span>
+                <span className="text-sm font-[556] text-black">Prophet USDC</span>
+                <span className="text-xs font-[556] text-[#909090]">pUSD after convert</span>
               </div>
               <TokenIcon
                 symbol="USDC"
@@ -205,6 +326,7 @@ export function DepositPrivateBalanceEntry({
             !transferEnabled && "opacity-30",
           )}
           disabled={!transferEnabled}
+          onClick={() => void handleTransfer()}
         >
           Transfer
         </button>

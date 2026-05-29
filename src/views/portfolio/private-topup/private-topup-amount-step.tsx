@@ -49,7 +49,7 @@ export function PrivateTopupAmountStep({
   maxAmount,
   onAmountChange,
 }: PrivateTopupAmountStepProps) {
-  const { topupWalletAddress, privateAccountAddress } = usePrivateTopupContext();
+  const { topupWalletAddress, privateAccountAddress, ownerWalletAddress } = usePrivateTopupContext();
   const prices = usePricesStore((state) => state.prices);
 
   const [inputValue, setInputValue] = useState("0");
@@ -168,7 +168,7 @@ export function PrivateTopupAmountStep({
         />
 
         <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
-          <span className="text-sm font-[457] text-[#909090]">Private Wallet</span>
+          <span className="text-sm font-[457] text-[#909090]">Private Account</span>
           <div className="flex items-center gap-2">
             <div className={privateTopupSecureIconWrapClass}>
               <img
@@ -184,6 +184,11 @@ export function PrivateTopupAmountStep({
                 : "--"}
             </span>
           </div>
+          {ownerWalletAddress ? (
+            <p className="m-0 text-xs text-[#909090]">
+              Owner EOA: {formatShortWallet(ownerWalletAddress)}
+            </p>
+          ) : null}
           <div className="flex items-center gap-2">
             <TokenIcon
               symbol="USDC"

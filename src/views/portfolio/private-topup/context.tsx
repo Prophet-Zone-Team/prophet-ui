@@ -20,9 +20,12 @@ import { getTokenUsdValueForTopup } from "./utils";
 export interface PrivateTopupContextType {
   selectableTokens: PrivateTopupSelectableToken[];
   topupWalletAddress?: string;
+  ownerWalletAddress?: string;
   privateAccountAddress?: string;
+  privateBalanceUsd: number;
   balancesLoading: boolean;
   pricesLoading: boolean;
+  refreshPrivateBalance?: () => Promise<void>;
   getTokenBalance: (token: Pick<FundingToken, "chainId" | "address">) => string;
   getTokenBalanceString: (
     token: Pick<FundingToken, "chainId" | "address" | "decimals">,
@@ -34,6 +37,7 @@ export interface PrivateTopupContextType {
 
 const PrivateTopupContext = createContext<PrivateTopupContextType>({
   selectableTokens: [],
+  privateBalanceUsd: 0,
   balancesLoading: false,
   pricesLoading: false,
   getTokenBalance: () => "0",
@@ -41,6 +45,7 @@ const PrivateTopupContext = createContext<PrivateTopupContextType>({
   getTokenUsdValue: () => 0,
   hasTokenUsdPrice: () => false,
   topupWalletBalanceUsd: 0,
+  refreshPrivateBalance: undefined,
 });
 
 export function PrivateTopupProvider({
@@ -52,9 +57,13 @@ export function PrivateTopupProvider({
     PrivateTopupContextType,
     | "selectableTokens"
     | "topupWalletAddress"
+    | "ownerWalletAddress"
     | "privateAccountAddress"
+    | "privateBalanceUsd"
     | "balancesLoading"
     | "pricesLoading"
+    | "refreshPrivateBalance"
+    | "topupWalletBalanceUsd"
   >;
 }) {
   const evmBalances = useBalancesStore((state) => state.evmBalances);
@@ -85,37 +94,34 @@ export function PrivateTopupProvider({
     [prices],
   );
 
-  const topupWalletBalanceUsd = useMemo(
-    () =>
-      value.selectableTokens.reduce(
-        (total, token) => total + getTokenUsdValue(token),
-        0,
-      ),
-    [getTokenUsdValue, value.selectableTokens],
-  );
-
   const contextValue = useMemo(
     () => ({
       selectableTokens: value.selectableTokens,
       topupWalletAddress: value.topupWalletAddress,
+      ownerWalletAddress: value.ownerWalletAddress,
       privateAccountAddress: value.privateAccountAddress,
+      privateBalanceUsd: value.privateBalanceUsd,
       balancesLoading: value.balancesLoading,
       pricesLoading: value.pricesLoading,
+      refreshPrivateBalance: value.refreshPrivateBalance,
       getTokenBalance,
       getTokenBalanceString,
       getTokenUsdValue,
       hasTokenUsdPrice,
-      topupWalletBalanceUsd,
+      topupWalletBalanceUsd: value.topupWalletBalanceUsd,
     }),
     [
       getTokenBalance,
       getTokenBalanceString,
       getTokenUsdValue,
       hasTokenUsdPrice,
-      topupWalletBalanceUsd,
       value.balancesLoading,
+      value.topupWalletBalanceUsd,
+      value.ownerWalletAddress,
       value.pricesLoading,
       value.privateAccountAddress,
+      value.privateBalanceUsd,
+      value.refreshPrivateBalance,
       value.selectableTokens,
       value.topupWalletAddress,
     ],

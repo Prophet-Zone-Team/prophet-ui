@@ -89,7 +89,7 @@ export interface TradingUserSession {
   userId: string;
   walletAddress: string;
   funderAddress?: string;
-  /** Reserved for future private account API; mirrors funderAddress lifecycle. */
+  /** NEAR Intents confidential account id (`intentsUserId`) derived from walletAddress. */
   privateAccountAddress?: string;
   depositWalletStatus?: DepositWalletStatus;
   depositWalletCheckedAt?: string;

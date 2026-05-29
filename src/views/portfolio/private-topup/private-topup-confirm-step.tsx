@@ -1,106 +1,52 @@
 "use client";
 
-import type { QuoteResponse } from "@stableflow/core";
-import { Loader2 } from "lucide-react";
-import { useMemo } from "react";
-
-import { POLYMARKET_USD } from "@/config/funding";
-import { formatQuoteCheckoutTime } from "@/lib/funding/bridge-quote";
-import {
-  mapStableflowQuoteToBreakdownFees,
-  mapStableflowQuoteToConfirmDisplay,
-  STABLEFLOW_MAX_SLIPPAGE_PERCENT,
-} from "@/lib/funding/stableflow";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { formatNumber } from "@/utils";
 import { depositDetailRowClass } from "@/views/portfolio/deposit/deposit-ui";
-import { TransactionBreakdown } from "@/views/portfolio/deposit/transaction-breakdown";
 import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import type { PrivateTopupSelectableToken } from "@/views/portfolio/private-topup/types";
-import { privateTopupSecureIconWrapClass } from "@/views/portfolio/private-topup/private-topup-ui";
+import { privateTopupInfoBannerClass, privateTopupSecureIconWrapClass } from "@/views/portfolio/private-topup/private-topup-ui";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 export interface PrivateTopupConfirmStepProps {
   topupWalletAddress: string;
+  ownerWalletAddress: string;
   privateAccountAddress: string;
   token: PrivateTopupSelectableToken;
   tokenAmount: string;
   amountUsd: string;
-  stableflowQuote?: QuoteResponse;
-  quoteLoading?: boolean;
-  quoteError?: string;
 }
 
 export function PrivateTopupConfirmStep({
   topupWalletAddress,
+  ownerWalletAddress,
   privateAccountAddress,
   token,
   tokenAmount,
   amountUsd,
-  stableflowQuote,
-  quoteLoading = false,
-  quoteError,
 }: PrivateTopupConfirmStepProps) {
-  const stableflowDisplay = useMemo(
-    () =>
-      stableflowQuote
-        ? mapStableflowQuoteToConfirmDisplay(stableflowQuote)
-        : undefined,
-    [stableflowQuote],
-  );
-
-  const estimatedTime = stableflowDisplay
-    ? formatQuoteCheckoutTime(stableflowDisplay.estCheckoutTimeMs)
-    : quoteLoading
-      ? "…"
-      : "--";
-
-  const receiveAmount = stableflowDisplay?.receiveAmountFormatted ?? "--";
-
-  const breakdownFees = useMemo(() => {
-    if (!stableflowQuote) {
-      return {
-        networkCostUsd: undefined,
-        priceImpactPercent: undefined,
-        maxSlippagePercent: STABLEFLOW_MAX_SLIPPAGE_PERCENT,
-      };
-    }
-
-    const fees = mapStableflowQuoteToBreakdownFees(stableflowQuote);
-
-    return {
-      networkCostUsd: fees.networkCostUsd,
-      priceImpactPercent: fees.priceImpactPercent,
-      maxSlippagePercent: STABLEFLOW_MAX_SLIPPAGE_PERCENT,
-    };
-  }, [stableflowQuote]);
-
   return (
     <div className="flex flex-col gap-4 pb-2">
       <p className="m-0 text-center text-[36px] font-[556] leading-[43px] text-black">
         {formatNumber(amountUsd, 2, true, { prefix: "$", round: 0 })}
       </p>
 
-      {quoteLoading ? (
-        <div className="flex items-center justify-center gap-2 text-sm text-[#909090]">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          <span>Fetching quote…</span>
-        </div>
-      ) : null}
-
-      {quoteError ? (
-        <p className="m-0 text-center text-sm text-prophet-red">{quoteError}</p>
-      ) : null}
+      <p className={privateTopupInfoBannerClass}>
+        Confirm this private account is linked to your Prophet wallet before transferring funds.
+      </p>
 
       <div className="flex flex-col">
-        <DetailRow label="From">
+        <DetailRow label="Funding Wallet">
           <span className="flex items-center gap-2">
             <WalletAvatarIcon address={topupWalletAddress} />
             <span>{formatShortWallet(topupWalletAddress)}</span>
           </span>
         </DetailRow>
-        <DetailRow label="To">
+        <DetailRow label="Owner EOA">
+          <span>{formatShortWallet(ownerWalletAddress)}</span>
+        </DetailRow>
+        <DetailRow label="Private Account">
           <span className="flex items-center gap-2">
             <div className={cn(privateTopupSecureIconWrapClass, "!rounded-[6px] !bg-black")}>
               <img
@@ -110,12 +56,8 @@ export function PrivateTopupConfirmStep({
                 aria-hidden
               />
             </div>
-            <span>Prophet Private</span>
             <span>{formatShortWallet(privateAccountAddress)}</span>
           </span>
-        </DetailRow>
-        <DetailRow label="Est. Time">
-          <span>{estimatedTime}</span>
         </DetailRow>
         <DetailRow label="Send">
           <span className="flex items-center gap-2">
@@ -126,34 +68,13 @@ export function PrivateTopupConfirmStep({
               chainIcon={token.chainIcon}
               size="sm"
             />
-            <span>
-              {formatNumber(tokenAmount, 4, true, { round: 0 })}
-            </span>
+            <span>{formatNumber(tokenAmount, 4, true, { round: 0 })}</span>
           </span>
         </DetailRow>
-        <DetailRow label="Est. Receive">
-          <span className="flex items-center gap-2">
-            <TokenIcon
-              symbol={POLYMARKET_USD.symbol}
-              chainLabel={POLYMARKET_USD.chainName}
-              icon={POLYMARKET_USD.icon}
-              chainIcon={POLYMARKET_USD.chainIcon}
-              size="sm"
-            />
-            <span>
-              {quoteLoading ? "…" : formatNumber(receiveAmount, 4, true, { round: 0 })}
-            </span>
-          </span>
+        <DetailRow label="Receive">
+          <span>Private USDC on Polygon</span>
         </DetailRow>
       </div>
-
-      <TransactionBreakdown
-        loading={quoteLoading}
-        networkCostUsd={breakdownFees.networkCostUsd}
-        priceImpactPercent={breakdownFees.priceImpactPercent}
-        maxSlippagePercent={breakdownFees.maxSlippagePercent}
-        poweredByLogoSrc="/logos/logo-stableflow-full.svg"
-      />
     </div>
   );
 }

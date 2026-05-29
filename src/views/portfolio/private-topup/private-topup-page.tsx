@@ -1,15 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useAccount, useDisconnect } from "wagmi";
 
-import { useAuth } from "@/context/auth";
-import {
-  stableflowTokensToFundingTokens,
-  type StableflowDepositToken,
-} from "@/lib/funding/stableflow";
-import { fetchJson } from "@/lib/team/client-fetch";
-import { useEvmBalances, usePrices } from "@/hooks/funding";
+import { FUNDING_NETWORKS } from "@/config/funding";
+import { MAIN_HOSTNAME } from "@/config/funding";
+import { POLYGON_USDC_NATIVE } from "@/lib/funding/stableflow";
+import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
+import { fetchEvmTokenBalances } from "@/lib/funding/evm-balances";
+import { getTokenUsdValueForTopup } from "@/views/portfolio/private-topup/utils";
+import { usePrivateBalances } from "@/hooks/confidential/use-private-balances";
+import { usePrices } from "@/hooks/funding";
+import { useBalancesStore } from "@/store/use-balances";
+import { usePricesStore } from "@/store/use-prices";
+import { getPrivateFundingConnectGate } from "@/context/private-funding-wallet/connect-gate";
 import { PrivateTopupProvider, usePrivateTopupContext } from "@/views/portfolio/private-topup/context";
 import { HowToUseSection } from "@/views/portfolio/private-topup/how-to-use-section";
 import { PrivateAccountCard } from "@/views/portfolio/private-topup/private-account-card";
@@ -19,95 +24,100 @@ import {
   privateTopupPageClass,
 } from "@/views/portfolio/private-topup/private-topup-ui";
 import { TopupWalletCard } from "@/views/portfolio/private-topup/topup-wallet-card";
-import { MAIN_HOSTNAME } from "@/config/funding";
+import type { PrivateTopupSelectableToken } from "@/views/portfolio/private-topup/types";
+
+const POLYGON_USDC_TOKEN: PrivateTopupSelectableToken = {
+  ...FUNDING_NETWORKS.polygon,
+  assetId: "polygon-usdc",
+  blockchain: "pol",
+  symbol: "USDC",
+  name: "USDC",
+  address: POLYGON_USDC_NATIVE,
+  decimals: 6,
+  icon: "/tokens/usdc.png",
+  minCheckoutUsd: 0,
+  price: 1,
+  chainName: FUNDING_NETWORKS.polygon.chainName,
+  chainIcon: FUNDING_NETWORKS.polygon.chainIcon,
+};
 
 export function PrivateTopupPage() {
-  const { session, openLogin, loginInProgress } = useAuth();
-  const [topupWalletConnected, setTopupWalletConnected] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [stableflowTokens, setStableflowTokens] = useState<
-    StableflowDepositToken[]
-  >([]);
-  const [tokensLoading, setTokensLoading] = useState(false);
+  const [fundingBalanceLoading, setFundingBalanceLoading] = useState(false);
+  const setEvmBalances = useBalancesStore((state) => state.setEvmBalances);
+  const evmBalances = useBalancesStore((state) => state.evmBalances);
+  const prices = usePricesStore((state) => state.prices);
 
-  const topupWalletAddress = topupWalletConnected
-    ? session?.walletAddress
-    : undefined;
-  const privateAccountAddress = session?.funderAddress;
+  const {
+    account,
+    balances,
+    loading: confidentialLoading,
+    error: confidentialError,
+    refresh: refreshPrivateBalances,
+    privateAccountAddress,
+    privateBalanceUsd,
+    ownerWalletAddress,
+  } = usePrivateBalances({ auto: true });
 
-  const stableflowFundingTokens = useMemo(
-    () => stableflowTokensToFundingTokens(stableflowTokens),
-    [stableflowTokens],
-  );
-
-  const loadTokens = useCallback(async () => {
-    setTokensLoading(true);
-
-    try {
-      const payload = await fetchJson<{ tokens: StableflowDepositToken[] }>(
-        "/api/trading/stableflow/tokens",
-      );
-      setStableflowTokens(payload.tokens);
-    } catch {
-      setStableflowTokens([]);
-    } finally {
-      setTokensLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (topupWalletConnected) {
-      void loadTokens();
-    }
-  }, [loadTokens, topupWalletConnected]);
+  const topupWalletAddress = isConnected ? address : undefined;
 
   const { loading: pricesLoading } = usePrices({
-    auto: topupWalletConnected,
-    enabled: topupWalletConnected,
+    auto: Boolean(topupWalletAddress),
+    enabled: Boolean(topupWalletAddress),
   });
 
-  useEvmBalances({
-    auto: topupWalletConnected,
-    enabled: topupWalletConnected && stableflowFundingTokens.length > 0,
-    tokens: stableflowFundingTokens,
-    merge: true,
-  });
-
-  function handleConnectWallet() {
-    void connectTopupWallet();
-  }
-
-  async function connectTopupWallet() {
-    if (loginInProgress) {
+  const loadFundingBalances = useCallback(async () => {
+    if (!topupWalletAddress) {
       return;
     }
 
-    if (!session?.walletAddress) {
-      const result = await openLogin();
+    setFundingBalanceLoading(true);
 
-      if (result?.session.walletAddress) {
-        setTopupWalletConnected(true);
-      }
-
-      return;
+    try {
+      const balances = await fetchEvmTokenBalances(topupWalletAddress, [POLYGON_USDC_TOKEN]);
+      setEvmBalances({ evmBalances: balances });
+    } finally {
+      setFundingBalanceLoading(false);
     }
+  }, [setEvmBalances, topupWalletAddress]);
 
-    setTopupWalletConnected(true);
-  }
+  useEffect(() => {
+    if (topupWalletAddress) {
+      void loadFundingBalances();
+    }
+  }, [loadFundingBalances, topupWalletAddress]);
 
-  function handleDisconnectWallet() {
-    setTopupWalletConnected(false);
+  const topupWalletBalanceUsd = topupWalletAddress
+    ? getTokenUsdValueForTopup(
+        prices,
+        POLYGON_USDC_TOKEN,
+        selectFundingTokenBalanceString(evmBalances, POLYGON_USDC_TOKEN),
+      )
+    : 0;
+
+  const handleConnectWallet = useCallback(async () => {
+    await getPrivateFundingConnectGate().openConnectAndWait();
+  }, []);
+
+  const handleDisconnectWallet = useCallback(async () => {
+    await disconnect();
     setDialogOpen(false);
-  }
+  }, [disconnect]);
 
   return (
     <PrivateTopupProvider
       value={{
-        selectableTokens: stableflowTokens,
+        selectableTokens: [POLYGON_USDC_TOKEN],
         topupWalletAddress,
         privateAccountAddress,
-        balancesLoading: tokensLoading,
+        ownerWalletAddress,
+        privateBalanceUsd,
+        balancesLoading: confidentialLoading || fundingBalanceLoading,
         pricesLoading,
+        refreshPrivateBalance: refreshPrivateBalances,
+        topupWalletBalanceUsd,
       }}
     >
       <div className={privateTopupPageClass}>
@@ -118,16 +128,28 @@ export function PrivateTopupPage() {
             className="h-[52px] w-[70px] object-contain"
           />
 
+          {confidentialError ? (
+            <p className="m-0 text-center text-sm text-prophet-red">{confidentialError}</p>
+          ) : null}
+
+          {!ownerWalletAddress && !confidentialLoading ? (
+            <p className="m-0 max-w-[520px] text-center text-sm text-[#909090]">
+              Private account session expired. Return to Prophet and continue again.
+            </p>
+          ) : null}
+
           <HowToUseSection />
 
           <PrivateTopupCardsRow
-            topupWalletConnected={topupWalletConnected}
+            topupWalletConnected={Boolean(topupWalletAddress)}
             topupWalletAddress={topupWalletAddress}
-            tokensLoading={tokensLoading}
-            onConnect={handleConnectWallet}
-            onDisconnect={handleDisconnectWallet}
             privateAccountAddress={privateAccountAddress}
+            privateBalanceUsd={privateBalanceUsd}
+            accountLoading={confidentialLoading}
+            onConnect={() => void handleConnectWallet()}
+            onDisconnect={() => void handleDisconnectWallet()}
             onTopUp={() => setDialogOpen(true)}
+            onRefreshPrivateBalance={() => void refreshPrivateBalances()}
           />
 
           <Link
@@ -140,11 +162,14 @@ export function PrivateTopupPage() {
         </div>
       </div>
 
-      {topupWalletAddress ? (
+      {topupWalletAddress && ownerWalletAddress && privateAccountAddress ? (
         <PrivateTopupDialog
           open={dialogOpen}
           topupWalletAddress={topupWalletAddress}
+          ownerWalletAddress={ownerWalletAddress}
+          privateAccountAddress={privateAccountAddress}
           onClose={() => setDialogOpen(false)}
+          onSuccess={() => void refreshPrivateBalances()}
         />
       ) : null}
     </PrivateTopupProvider>
@@ -154,24 +179,27 @@ export function PrivateTopupPage() {
 function PrivateTopupCardsRow({
   topupWalletConnected,
   topupWalletAddress,
-  tokensLoading,
+  privateAccountAddress,
+  privateBalanceUsd,
+  accountLoading,
   onConnect,
   onDisconnect,
-  privateAccountAddress,
   onTopUp,
+  onRefreshPrivateBalance,
 }: {
   topupWalletConnected: boolean;
   topupWalletAddress?: string;
-  tokensLoading: boolean;
+  privateAccountAddress?: string;
+  privateBalanceUsd: number;
+  accountLoading: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
-  privateAccountAddress?: string;
   onTopUp: () => void;
+  onRefreshPrivateBalance: () => void;
 }) {
-  const { topupWalletBalanceUsd, balancesLoading, pricesLoading } =
-    usePrivateTopupContext();
+  const { topupWalletBalanceUsd, balancesLoading, pricesLoading } = usePrivateTopupContext();
 
-  const balanceLoading = tokensLoading || balancesLoading || pricesLoading;
+  const balanceLoading = balancesLoading || pricesLoading;
 
   return (
     <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[minmax(0,371px)_1fr]">
@@ -185,9 +213,11 @@ function PrivateTopupCardsRow({
       />
       <PrivateAccountCard
         address={privateAccountAddress}
-        privateBalanceUsd={0}
+        privateBalanceUsd={privateBalanceUsd}
+        balanceLoading={accountLoading}
         topupWalletConnected={topupWalletConnected}
         onTopUp={onTopUp}
+        onRefresh={onRefreshPrivateBalance}
       />
     </div>
   );

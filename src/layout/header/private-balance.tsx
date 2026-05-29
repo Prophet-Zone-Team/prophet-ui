@@ -1,7 +1,23 @@
-import { cn } from "@/lib/cn";
+"use client";
 
-function PrivateBalance(props: any) {
+import { Loader2 } from "lucide-react";
+
+import { usePrivateBalances } from "@/hooks/confidential/use-private-balances";
+import { cn } from "@/lib/cn";
+import { formatNumber } from "@/utils";
+
+function PrivateBalance(props: {
+  onClick?: () => void;
+  className?: string;
+}) {
   const { onClick, className } = props;
+  const { privateBalanceUsd, loading } = usePrivateBalances({ auto: true });
+
+  const formattedBalance = formatNumber(privateBalanceUsd, 2, true, {
+    prefix: "$",
+    round: 0,
+    isZeroPrecision: true,
+  });
 
   return (
     <button
@@ -21,7 +37,13 @@ function PrivateBalance(props: any) {
         />
         <div className="">Private Balance</div>
       </div>
-      <div className="text-black text-base leading-[19px]">$0.00</div>
+      <div className="flex items-center gap-1 text-black text-base leading-[19px]">
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-[#909090]" aria-hidden />
+        ) : (
+          formattedBalance
+        )}
+      </div>
     </button>
   );
 }

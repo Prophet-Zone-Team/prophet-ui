@@ -5,7 +5,8 @@ import { createWalletClient, custom, type Address, type Chain, type WalletClient
 import { disconnect, getAccount } from "wagmi/actions";
 import type { Connector } from "wagmi";
 
-import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+import { wagmiConfig as defaultWagmiConfig } from "@/context/rainbowkit/wagmi-config";
+import type { Config } from "wagmi";
 
 interface WalletClientOptions {
   chainId?: number;
@@ -62,9 +63,10 @@ export function getProviderLabelFromConnectorId(connectorId?: string) {
 
 export async function getWalletClientForAddress(
   walletAddress: string,
-  options?: WalletClientOptions,
+  options?: WalletClientOptions & { wagmiConfig?: Config },
 ): Promise<WalletClient> {
-  const account = getAccount(wagmiConfig);
+  const config = options?.wagmiConfig ?? defaultWagmiConfig;
+  const account = getAccount(config);
 
   if (!account.isConnected || !account.address) {
     throw new Error("No wallet connected. Connect your wallet to continue.");
@@ -77,14 +79,14 @@ export async function getWalletClientForAddress(
   }
 
   const chainId = options?.chainId ?? account.chainId;
-  const connector = resolveLiveConnector(account.connector);
+  const connector = resolveLiveConnector(account.connector, config);
 
   if (!connector) {
     throw new Error("Unable to access the connected wallet connector. Reconnect and try again.");
   }
 
   const provider = await connector.getProvider();
-  const chain = resolveWalletChain(chainId);
+  const chain = resolveWalletChain(chainId, config);
 
   return createWalletClient({
     account: walletAddress as Address,
@@ -96,7 +98,7 @@ export async function getWalletClientForAddress(
 export async function requestWalletRpc(
   walletAddress: string,
   request: WalletRpcRequest,
-  options?: WalletClientOptions,
+  options?: WalletClientOptions & { wagmiConfig?: Config },
 ): Promise<unknown> {
   const client = await getWalletClientForAddress(walletAddress, options);
 
@@ -106,7 +108,9 @@ export async function requestWalletRpc(
   });
 }
 
-export async function getAuthorizedWalletAccounts(): Promise<string[]> {
+export async function getAuthorizedWalletAccounts(
+  wagmiConfig: Config = defaultWagmiConfig,
+): Promise<string[]> {
   const account = getAccount(wagmiConfig);
 
   if (!account.isConnected || !account.address) {
@@ -130,7 +134,10 @@ export function getPrimaryAuthorizedWalletAccount(
   return authorizedAccounts[0];
 }
 
-function resolveLiveConnector(connector: Connector | undefined): Connector | undefined {
+function resolveLiveConnector(
+  connector: Connector | undefined,
+  config: Config,
+): Connector | undefined {
   if (!connector) {
     return undefined;
   }
@@ -139,24 +146,24 @@ function resolveLiveConnector(connector: Connector | undefined): Connector | und
     return connector;
   }
 
-  return wagmiConfig.connectors.find(
+  return config.connectors.find(
     (candidate) => candidate.uid === connector.uid || candidate.id === connector.id,
   );
 }
 
-function resolveWalletChain(chainId?: number): Chain {
+function resolveWalletChain(chainId?: number, config: Config = defaultWagmiConfig): Chain {
   if (chainId) {
-    const chain = wagmiConfig.chains.find((candidate) => candidate.id === chainId);
+    const chain = config.chains.find((candidate) => candidate.id === chainId);
 
     if (chain) {
       return chain;
     }
   }
 
-  const accountChainId = getAccount(wagmiConfig).chainId;
-  const accountChain = wagmiConfig.chains.find((candidate) => candidate.id === accountChainId);
+  const accountChainId = getAccount(config).chainId;
+  const accountChain = config.chains.find((candidate) => candidate.id === accountChainId);
 
-  return accountChain ?? wagmiConfig.chains[0];
+  return accountChain ?? config.chains[0];
 }
 
 function normalizeAddress(address: string) {
@@ -176,8 +183,9 @@ function isSameAddress(left: string, right: string) {
 export async function signMessageWithWallet(
   walletAddress: string,
   message: string,
+  options?: { wagmiConfig?: Config },
 ): Promise<`0x${string}`> {
-  const client = await getWalletClientForAddress(walletAddress);
+  const client = await getWalletClientForAddress(walletAddress, options);
 
   return client.signMessage({
     account: walletAddress as Address,
@@ -185,6 +193,6 @@ export async function signMessageWithWallet(
   });
 }
 
-export async function disconnectWagmiWallet() {
+export async function disconnectWagmiWallet(wagmiConfig: Config = defaultWagmiConfig) {
   await disconnect(wagmiConfig);
 }

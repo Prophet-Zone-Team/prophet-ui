@@ -19,6 +19,7 @@ import {
 
 export interface PrivateTopupGuideDialogProps {
   open: boolean;
+  proceedLoading?: boolean;
   onClose: () => void;
   onProceed: () => void;
   onChangeWallet: () => void;
@@ -26,6 +27,7 @@ export interface PrivateTopupGuideDialogProps {
 
 export function PrivateTopupGuideDialog({
   open,
+  proceedLoading = false,
   onClose,
   onProceed,
   onChangeWallet,
@@ -98,9 +100,10 @@ export function PrivateTopupGuideDialog({
               <button
                 type="button"
                 className={privateTopupGuideFooterProceedClass}
+                disabled={proceedLoading}
                 onClick={onProceed}
               >
-                Proceed
+                {proceedLoading ? "Preparing..." : "Proceed"}
                 <PrivateTopupProceedChevron />
               </button>
             </div>

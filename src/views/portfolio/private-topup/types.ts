@@ -1,26 +1,29 @@
-import type { QuoteResponse } from "@stableflow/core";
-
-import type { StableflowDepositToken } from "@/lib/funding/stableflow";
-import type {
-  DepositStatusPhase,
-  StableflowDepositContext,
-} from "@/views/portfolio/deposit/types";
+import type { FundingAsset } from "@/config/funding";
 
 export type PrivateTopupStep = "tokens" | "amount" | "confirm" | "status";
 
-export type PrivateTopupSelectableToken = StableflowDepositToken;
+export type PrivateTopupSelectableToken = FundingAsset & {
+  assetId: string;
+  blockchain: string;
+  price: number;
+};
 
-export type { DepositStatusPhase, StableflowDepositContext };
+export type PrivateTopupStatusPhase =
+  | "preparing"
+  | "transferring"
+  | "signing"
+  | "shielding"
+  | "refreshing"
+  | "success"
+  | "error";
 
 export interface PrivateTopupAmountState {
   amountUsd: string;
   tokenAmount: string;
 }
 
-export interface PrivateTopupDialogState {
-  step: PrivateTopupStep;
-  selectedToken?: PrivateTopupSelectableToken;
-  amount: PrivateTopupAmountState;
-  stableflowQuote?: QuoteResponse;
-  stableflowExecution?: StableflowDepositContext;
+export interface PrivateShieldExecutionContext {
+  depositAddress: string;
+  depositMemo?: string;
+  txHash?: string;
 }

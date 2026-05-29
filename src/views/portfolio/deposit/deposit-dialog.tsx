@@ -613,7 +613,10 @@ export function DepositDialog({
     }
   };
 
-  const privateAccountStatus = resolvePrivateAccountStatus(session);
+  const privateAccountStatus = resolvePrivateAccountStatus(
+    session,
+    undefined,
+  );
 
   const entryModalMinHeight = useMemo(() => {
     if (isMobile) {
@@ -784,6 +787,18 @@ export function DepositDialog({
               }}
               onSelectStableflow={() => void onSelectStableflow()}
               stableflowLoading={stableflowTokensLoading}
+              onTopUpPrivate={() => {
+                handleClose();
+                onOpenPrivateTopup?.();
+              }}
+              onPrivateTransferComplete={async () => {
+                handleClose();
+                if (onDepositSuccess) {
+                  await onDepositSuccess();
+                } else {
+                  await syncCash();
+                }
+              }}
             />
           ) : null}
 

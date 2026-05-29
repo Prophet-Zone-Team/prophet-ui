@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 
 import { useAuth } from "@/context/auth";
+import { usePrivateBalances } from "@/hooks/confidential/use-private-balances";
 import { formatNumber } from "@/utils";
 import { DepositPrivateBalanceEntry } from "@/views/portfolio/deposit/deposit-private-balance-entry";
 import { DepositSourceTabs } from "@/views/portfolio/deposit/deposit-source-tabs";
@@ -17,6 +18,8 @@ export interface DepositEntryStepProps {
   onSelectConnected: () => void;
   onSelectStableflow: () => void;
   stableflowLoading?: boolean;
+  onTopUpPrivate?: () => void;
+  onPrivateTransferComplete?: () => void | Promise<void>;
 }
 
 export function DepositEntryStep({
@@ -25,8 +28,20 @@ export function DepositEntryStep({
   onSelectConnected,
   onSelectStableflow,
   stableflowLoading = false,
+  onTopUpPrivate,
+  onPrivateTransferComplete,
 }: DepositEntryStepProps) {
-  const { session, openLogin, loginInProgress } = useAuth();
+  const { session, openLogin, loginInProgress, syncCash } = useAuth();
+  const {
+    account,
+    privateAccountAddress,
+    privateBalanceUsd,
+    ownerWalletAddress,
+    refresh: refreshPrivateBalances,
+  } = usePrivateBalances({
+    auto: entryTab === "private_balance",
+    enabled: entryTab === "private_balance",
+  });
   const { connectedWalletBalanceUsd, balancesLoading, pricesLoading } =
     useDepositContext();
 
@@ -46,7 +61,13 @@ export function DepositEntryStep({
   }
 
   const isLoading = balancesLoading || pricesLoading;
-  const privateAccountStatus = resolvePrivateAccountStatus(session);
+  const privateAccountStatus = resolvePrivateAccountStatus(
+    {
+      privateAccountAddress:
+        privateAccountAddress ?? session?.privateAccountAddress,
+    },
+    privateBalanceUsd,
+  );
 
   return (
     <div className="flex min-w-0 flex-col gap-4 pb-10 md:pb-2">
@@ -75,7 +96,21 @@ export function DepositEntryStep({
       {entryTab === "private_balance" ? (
         <DepositPrivateBalanceEntry
           status={privateAccountStatus}
-          privateAccountAddress={session.privateAccountAddress}
+          privateAccountAddress={
+            privateAccountAddress ?? session.privateAccountAddress
+          }
+          privateBalanceUsd={privateBalanceUsd}
+          confidentialAuthStatus={account?.authStatus}
+          depositWalletDeployed={session.depositWalletStatus === "deployed"}
+          ownerWalletAddress={ownerWalletAddress ?? session.walletAddress}
+          funderAddress={session.funderAddress}
+          walletAddress={session.walletAddress}
+          onTopUp={onTopUpPrivate}
+          onTransferComplete={async () => {
+            await refreshPrivateBalances();
+            await syncCash();
+            await onPrivateTransferComplete?.();
+          }}
         />
       ) : null}
     </div>

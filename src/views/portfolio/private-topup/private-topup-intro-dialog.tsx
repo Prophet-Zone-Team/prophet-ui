@@ -24,6 +24,7 @@ export interface PrivateTopupIntroDialogProps {
   open: boolean;
   guideOpen?: boolean;
   walletAddress: string;
+  proceedLoading?: boolean;
   onClose: () => void;
   onProceed: () => void;
   onOpenGuide: () => void;
@@ -34,6 +35,7 @@ export function PrivateTopupIntroDialog({
   open,
   guideOpen = false,
   walletAddress,
+  proceedLoading = false,
   onClose,
   onProceed,
   onOpenGuide,
@@ -160,9 +162,10 @@ export function PrivateTopupIntroDialog({
             <button
               type="button"
               className={privateTopupIntroFooterProceedClass}
+              disabled={proceedLoading}
               onClick={onProceed}
             >
-              Proceed
+              {proceedLoading ? "Preparing..." : "Proceed"}
               <PrivateTopupProceedChevron />
             </button>
           </div>
