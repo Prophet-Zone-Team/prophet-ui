@@ -40,19 +40,20 @@ interface LoginModalProps {
 const SETUP_STEPS = [
   {
     id: "deploy_wallet",
-    label: "Deploy wallet",
-    description: "Prepare your Polymarket deposit wallet before signing in.",
+    label: "Connect wallet",
+    description: "Connect the wallet you want to trade with."
   },
   {
     id: "authorize_tokens",
-    label: "Authorize tokens",
-    description: "Authorize token spending for trading",
+    label: "Approve USDC",
+    description: "Allow your wallet to use USDC when placing orders."
   },
   {
     id: "enable_trading",
-    label: "Enable trading",
-    description: "Sign a message to generate your API key",
-  },
+    label: "Enable orders",
+    description:
+      "Sign a message so Prophet can submit your orders to Polymarket. This does not move funds."
+  }
 ] as const;
 
 const POLYGON_HINT =
@@ -104,23 +105,27 @@ export function LoginModal({ auth }: LoginModalProps) {
       className="w-full max-w-md rounded-xl border border-prophet-line bg-white p-6 shadow-prophet"
     >
       <div className="flex flex-col gap-5">
+        <div>
+          <h2 className="text-[18px] font-[500] leading-[21px] text-black">
+            Welcome to Prophet
+          </h2>
+          <div className="text-[14px] font-[400] leading-[21px] text-[#909090] mt-2">
+            Set up your wallet once to trade{" "}
+            <span className="text-black font-[500]">Polymarket</span> markets
+            through Prophet.
+          </div>
+          <p className="mt-2 text-[12px] font-[400] text-[#3168FF] px-[10px] py-[4px] rounded-[8px] bg-[#E3E9FF]">
+            Market data is informational only and not financial advice. You stay
+            in control of your funds.
+          </p>
+        </div>
         {showRestrictedView ? (
           <RestrictedRegionView
             detail={formatRegionBlockedDetail(eligibilityView)}
             onClose={() => void closeLogin()}
           />
         ) : (
-          <div className="flex flex-col gap-5">
-            <div>
-              <h2 className="text-lg font-extrabold text-prophet-ink">
-                Enable trading
-              </h2>
-              <p className="mt-1 text-sm text-prophet-muted">
-                Complete setup with your own wallet. Market data only — not
-                financial advice.
-              </p>
-            </div>
-
+          <>
             <ol className="flex flex-col gap-0">
               {SETUP_STEPS.map((step, index) => {
                 const state = getSetupStepState(step.id, {
@@ -150,7 +155,12 @@ export function LoginModal({ auth }: LoginModalProps) {
                     </div>
 
                     <div className={cn("min-w-0 flex-1", !isLast && "pb-4")}>
-                      <div className="flex items-start justify-between gap-3">
+                      <div
+                        className={cn(
+                          "flex items-start justify-between gap-3",
+                          index === 0 && "flex-wrap"
+                        )}
+                      >
                         <div className="min-w-0">
                           <p
                             className={cn(
@@ -174,19 +184,23 @@ export function LoginModal({ auth }: LoginModalProps) {
                           </p>
                         </div>
 
-                        <StepAction
-                          stepId={step.id}
-                          state={state}
-                          setupSteps={setupSteps}
-                          loginStep={loginStep}
-                          loginInProgress={loginInProgress}
-                          session={session}
-                          readiness={readiness}
-                          onConnectWallet={() => void connectWallet()}
-                          onSignClob={() => void signClobCredentials()}
-                          onSignTokens={() => void signTokenApprovals()}
-                          onRefresh={() => void refreshSession()}
-                        />
+                        {stepNeedsUserAction(step.id, {
+                          state,
+                          setupSteps,
+                          loginStep,
+                          loginInProgress,
+                          session,
+                        }) ? (
+                          <StepAction
+                            stepId={step.id}
+                            state={state}
+                            loginInProgress={loginInProgress}
+                            onConnectWallet={() => void connectWallet()}
+                            onSignClob={() => void signClobCredentials()}
+                            onSignTokens={() => void signTokenApprovals()}
+                            onRefresh={() => void refreshSession()}
+                          />
+                        ) : null}
                       </div>
                     </div>
                   </li>
@@ -217,11 +231,10 @@ export function LoginModal({ auth }: LoginModalProps) {
                 </button>
               </div>
             ) : null}
-          </div>
+          </>
         )}
-
-        <PoweredByPolymarket />
       </div>
+      <div className="flex flex-col gap-5"></div>
     </Modal>
   );
 }
@@ -351,14 +364,48 @@ function getSetupStepState(
   return "pending";
 }
 
+function stepNeedsUserAction(
+  stepId: SetupStepId,
+  context: {
+    state: StepVisualState;
+    setupSteps: AuthContextValue["setupSteps"];
+    loginStep: TradingLoginStep | undefined;
+    loginInProgress: boolean;
+    session: AuthContextValue["session"];
+  },
+): boolean {
+  const { state, setupSteps, loginStep, loginInProgress, session } = context;
+
+  if (stepId === "deploy_wallet") {
+    if (state === "failed") {
+      return !loginInProgress;
+    }
+
+    return !session && !loginInProgress;
+  }
+
+  if (stepId === "authorize_tokens") {
+    if (
+      setupSteps.tokensAuthorized ||
+      loginStep === "tokens_already_authorized"
+    ) {
+      return false;
+    }
+
+    return setupSteps.walletDeployed && !loginInProgress;
+  }
+
+  if (setupSteps.clobSigned || loginStep === "clob_already_derived") {
+    return false;
+  }
+
+  return setupSteps.walletDeployed && !loginInProgress;
+}
+
 function StepAction({
   stepId,
   state,
-  setupSteps,
-  loginStep,
   loginInProgress,
-  session,
-  readiness,
   onConnectWallet,
   onSignClob,
   onSignTokens,
@@ -366,54 +413,12 @@ function StepAction({
 }: {
   stepId: SetupStepId;
   state: StepVisualState;
-  setupSteps: AuthContextValue["setupSteps"];
-  loginStep: TradingLoginStep | undefined;
   loginInProgress: boolean;
-  session: AuthContextValue["session"];
-  readiness: AuthContextValue["readiness"];
   onConnectWallet: () => void;
   onSignClob: () => void;
   onSignTokens: () => void;
   onRefresh: () => void;
 }) {
-  const showLoading =
-    loginInProgress && isCurrentStepLoading(stepId, state, loginStep, setupSteps);
-
-  if (state === "done") {
-    if (stepId === "deploy_wallet" && !setupSteps.walletDeployed && isDepositWalletStepComplete(loginStep)) {
-      return (
-        <span className="shrink-0 text-sm font-semibold text-[#0d69ff]">Already deployed</span>
-      );
-    }
-
-    if (stepId === "authorize_tokens" && loginStep === "tokens_already_authorized") {
-      return (
-        <span className="shrink-0 text-sm font-semibold text-[#0d69ff]">Already authorized</span>
-      );
-    }
-
-    if (stepId === "enable_trading" && loginStep === "clob_already_derived") {
-      return (
-        <span className="shrink-0 text-sm font-semibold text-[#0d69ff]">Already enabled</span>
-      );
-    }
-
-    return (
-      <span className="shrink-0 text-sm font-semibold text-[#0d69ff]">Done</span>
-    );
-  }
-
-  if (showLoading) {
-    return (
-      <StepLoadingLabel
-        label={getLoadingLabel(stepId, loginStep, state, {
-          session,
-          readiness,
-        })}
-      />
-    );
-  }
-
   if (stepId === "deploy_wallet") {
     if (state === "failed") {
       return (
@@ -428,33 +433,10 @@ function StepAction({
       );
     }
 
-    if (setupSteps.walletDeployed) {
-      return (
-        <span className="shrink-0 text-sm font-semibold text-[#0d69ff]">Done</span>
-      );
-    }
-
-    if (loginStep === "wallet_already_deployed") {
-      return (
-        <span className="shrink-0 text-sm font-semibold text-[#0d69ff]">Already deployed</span>
-      );
-    }
-
-    if (state === "active") {
-      return (
-        <StepLoadingLabel
-          label={getLoadingLabel(stepId, loginStep, state, {
-            session,
-            readiness,
-          })}
-        />
-      );
-    }
-
     return (
       <button
         type="button"
-        className="shrink-0 rounded-lg bg-gradient-to-br from-[#0d69ff] to-[#124cf0] px-3 py-1.5 text-sm font-extrabold text-white disabled:opacity-60"
+        className="shrink-0 rounded-[8px] bg-black w-full h-[50px] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
         disabled={loginInProgress}
         onClick={onConnectWallet}
       >
@@ -464,17 +446,11 @@ function StepAction({
   }
 
   if (stepId === "authorize_tokens") {
-    if (loginStep === "tokens_already_authorized") {
-      return (
-        <span className="shrink-0 text-sm font-semibold text-[#0d69ff]">Already authorized</span>
-      );
-    }
-
     return (
       <button
         type="button"
-        className="shrink-0 rounded-lg bg-gradient-to-br from-[#0d69ff] to-[#124cf0] px-3 py-1.5 text-sm font-extrabold text-white disabled:opacity-60"
-        disabled={loginInProgress || !setupSteps.walletDeployed || setupSteps.tokensAuthorized}
+        className="shrink-0 rounded-[8px] bg-black w-[100px] h-[40px] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
+        disabled={loginInProgress}
         onClick={onSignTokens}
       >
         Sign
@@ -482,166 +458,16 @@ function StepAction({
     );
   }
 
-  if (loginStep === "clob_already_derived") {
-    return (
-      <span className="shrink-0 text-sm font-semibold text-[#0d69ff]">Already enabled</span>
-    );
-  }
-
   return (
     <button
       type="button"
-      className="shrink-0 rounded-lg bg-gradient-to-br from-[#0d69ff] to-[#124cf0] px-3 py-1.5 text-sm font-extrabold text-white disabled:opacity-60"
-      disabled={loginInProgress || !setupSteps.walletDeployed || setupSteps.clobSigned}
+      className="shrink-0 rounded-[8px] bg-black w-[100px] h-[40px] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
+      disabled={loginInProgress}
       onClick={onSignClob}
     >
       Sign
     </button>
   );
-}
-
-function StepLoadingLabel({ label }: { label: string }) {
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-prophet-muted">
-      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-      {label}
-    </span>
-  );
-}
-
-function getLoadingLabel(
-  stepId: SetupStepId,
-  loginStep: TradingLoginStep | undefined,
-  state: StepVisualState,
-  context?: {
-    session: AuthContextValue["session"];
-    readiness: AuthContextValue["readiness"];
-  },
-) {
-  if (stepId === "deploy_wallet") {
-    if (state === "failed") {
-      return "Retrying…";
-    }
-
-    if (loginStep === "requesting_wallet") {
-      return "Connecting…";
-    }
-
-    if (loginStep === "checking_wallet_deployment") {
-      return "Checking deposit wallet…";
-    }
-
-    if (loginStep === "wallet_already_deployed") {
-      return "Already deployed";
-    }
-
-    if (loginStep === "deploying_wallet") {
-      return "Deploying deposit wallet…";
-    }
-
-    if (loginStep === "awaiting_session_signature") {
-      return "Awaiting signature…";
-    }
-
-    if (loginStep === "creating_session") {
-      return "Creating session…";
-    }
-
-    if (loginStep === "verifying_readiness") {
-      return "Verifying readiness…";
-    }
-
-    if (context?.readiness?.session?.depositWalletStatus === "deploying") {
-      return "Deploying deposit wallet…";
-    }
-
-    return "Checking deposit wallet…";
-  }
-
-  if (stepId === "authorize_tokens") {
-    if (loginStep === "checking_token_approval") {
-      return "Checking token approval…";
-    }
-
-    if (loginStep === "tokens_already_authorized") {
-      return "Already authorized";
-    }
-
-    if (loginStep === "submitting_token_approval") {
-      return "Submitting approval…";
-    }
-
-    return "Awaiting signature…";
-  }
-
-  if (stepId === "enable_trading") {
-    if (loginStep === "checking_clob_credentials") {
-      return "Checking credentials…";
-    }
-
-    if (loginStep === "checking_trading_chain") {
-      return "Checking network…";
-    }
-
-    if (loginStep === "switching_trading_chain") {
-      return "Switching to Polygon…";
-    }
-
-    if (loginStep === "clob_already_derived") {
-      return "Already enabled";
-    }
-
-    if (loginStep === "deriving_credentials") {
-      return "Deriving credentials…";
-    }
-
-    return "Awaiting signature…";
-  }
-
-  return "Awaiting signature…";
-}
-
-function isCurrentStepLoading(
-  stepId: SetupStepId,
-  state: StepVisualState,
-  loginStep: TradingLoginStep | undefined,
-  setupSteps: AuthContextValue["setupSteps"],
-) {
-  if (stepId === "deploy_wallet") {
-    if (
-      loginStep === "requesting_wallet" ||
-      loginStep === "checking_wallet_deployment" ||
-      loginStep === "deploying_wallet"
-    ) {
-      return true;
-    }
-
-    if (state === "failed") {
-      return true;
-    }
-
-    return state === "active" && !setupSteps.walletDeployed && !isDepositWalletStepComplete(loginStep);
-  }
-
-  if (stepId === "authorize_tokens") {
-    return (
-      loginStep === "checking_token_approval" ||
-      loginStep === "awaiting_token_approval_signature" ||
-      loginStep === "submitting_token_approval"
-    );
-  }
-
-  if (stepId === "enable_trading") {
-    return (
-      loginStep === "checking_clob_credentials" ||
-      loginStep === "checking_trading_chain" ||
-      loginStep === "switching_trading_chain" ||
-      loginStep === "awaiting_clob_signature" ||
-      loginStep === "deriving_credentials"
-    );
-  }
-
-  return false;
 }
 
 function StepIcon({ state }: { state: StepVisualState }) {
@@ -655,7 +481,7 @@ function StepIcon({ state }: { state: StepVisualState }) {
 
   if (state === "done") {
     return (
-      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0d69ff] text-white">
+      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#65AF14] text-white">
         <Check className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
     );

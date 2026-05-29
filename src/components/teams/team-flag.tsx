@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import teams from "@/data/teams";
 
 interface TeamFlagProps {
   code?: string;
@@ -21,6 +22,18 @@ export function TeamFlag({
     return (
       <img
         src={logoUrl}
+        alt={name ?? code ?? "Team logo"}
+        className={cn(defaultFlagClassName, "object-cover", className)}
+      />
+    );
+  }
+
+  const team = teams[name as keyof typeof teams];
+
+  if (team?.logo) {
+    return (
+      <img
+        src={team.logo}
         alt={name ?? code ?? "Team logo"}
         className={cn(defaultFlagClassName, "object-cover", className)}
       />
