@@ -53,7 +53,7 @@ export function mapProphetGameToMatch(
 
   const homeTeam = resolveWorldCupTeamByGroupItemTitle(homeName);
   const awayTeam = resolveWorldCupTeamByGroupItemTitle(awayName);
-  const eventId = game.event_id?.trim() || slug;
+  const eventId = game.gameId ? String(game.gameId) : slug;
   const lastUpdated = game.start_time ?? new Date().toISOString();
   const volume = parseProphetVolume(game.volume);
   const fixtureAbbrevs = extractFixtureTeamAbbreviations(slug);
@@ -68,7 +68,7 @@ export function mapProphetGameToMatch(
   return {
     id: slug,
     matchId: hashFixtureId(eventId),
-    eventId,
+    eventId: eventId,
     stage: "EXTERNAL",
     homeTeamId: homeTeam?.id,
     awayTeamId: awayTeam?.id,

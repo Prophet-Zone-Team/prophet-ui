@@ -39,6 +39,7 @@ export interface ProphetWorldCupTeam {
 export interface ProphetPolyMarketGameItem {
   id?: number;
   event_id?: string;
+  gameId?: number;
   home_score?: number;
   away_score?: number;
   slug?: string;

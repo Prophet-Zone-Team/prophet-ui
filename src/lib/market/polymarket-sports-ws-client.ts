@@ -8,9 +8,6 @@ import type { PolymarketSportsWsUpdate } from "@/types/polymarket-sports-ws";
 
 export type SportsWsListener = (update: PolymarketSportsWsUpdate) => void;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
 
 function readNonEmptyString(value: unknown): string | undefined {
   if (typeof value !== "string") {
@@ -22,17 +19,11 @@ function readNonEmptyString(value: unknown): string | undefined {
   return trimmed || undefined;
 }
 
-function parseSportsWsUpdate(raw: unknown): PolymarketSportsWsUpdate | undefined {
-  if (!isRecord(raw)) {
-    return undefined;
-  }
-
+function parseSportsWsUpdate(raw: any): PolymarketSportsWsUpdate | undefined {
   const slug = readNonEmptyString(raw.slug);
-  const gameId =
-    readNonEmptyString(raw.gameId) ?? readNonEmptyString(raw.game_id);
-  const eventId = readNonEmptyString(raw.event_id);
+  const gameId = raw.gameId;
 
-  if (!slug && !gameId && !eventId) {
+  if (!gameId) {
     return undefined;
   }
 
@@ -159,13 +150,13 @@ export class PolymarketSportsWsClient {
       }
 
       let parsed: unknown;
-
+      console.log("data", data);
       try {
         parsed = JSON.parse(data);
       } catch {
         return;
       }
-
+      console.log("parsed", parsed);
       const update = parseSportsWsUpdate(parsed);
 
       if (!update) {

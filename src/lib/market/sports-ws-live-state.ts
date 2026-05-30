@@ -54,7 +54,7 @@ export function resolveWsUpdateKey(
   update: PolymarketSportsWsUpdate
 ): string | undefined {
   const slug = update.slug?.trim();
-  const eventId = update.gameId?.trim();
+  const eventId = update.gameId ? String(update.gameId) : undefined;
 
   return slug || eventId || undefined;
 }
