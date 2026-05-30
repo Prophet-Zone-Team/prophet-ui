@@ -104,6 +104,7 @@ describe("prophet-track-mapper", () => {
       category: "game",
       slug: "fifwc-mex-rsa-2026-06-11",
       team_name: "Mexico,South Africa",
+      start_time: "2026-06-11T19:00:00Z",
       volume: "32383.844867000007",
       probobility: "",
       goals: null,
@@ -131,6 +132,28 @@ describe("prophet-track-mapper", () => {
     assert.equal(card.probability, 66.5);
     assert.equal(card.probabilityTeamCode, "MEX");
     assert.equal(card.volume, 32383.844867000007);
+    assert.equal(card.match.kickoffAt, "2026-06-11T19:00:00Z");
+  });
+
+  it("falls back to slug date when game track start_time is missing", () => {
+    const item: ProphetUserTrackItem = {
+      category: "game",
+      slug: "fifwc-mex-rsa-2026-06-11",
+      team_name: "Mexico,South Africa",
+      markets: [
+        {
+          slug: "fifwc-mex-rsa-2026-06-11-mex",
+          groupItemTitle: "Mexico",
+          outcomePrices: '["0.665", "0.335"]'
+        }
+      ]
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.equal(card.variant, "game");
+    assert.equal(card.match.kickoffAt, "2026-06-11T00:00:00.000Z");
   });
 
   it("skips unresolvable teams and game tracks without fixture sides", () => {

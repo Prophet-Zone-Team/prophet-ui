@@ -156,6 +156,7 @@ export interface ProphetUserTrackItem {
   oneDayPriceChange?: string;
   oneWeekPriceChange?: string;
   oneMonthPriceChange?: string;
+  start_time?: string;
   goals?: number[] | null;
   team?: ProphetWorldCupTeam;
   markets?: ProphetUserTrackMarket[];

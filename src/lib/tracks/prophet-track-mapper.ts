@@ -167,7 +167,7 @@ function buildGameMatch(
     homeDisplayName: homeTeam.name,
     awayDisplayName: awayTeam.name,
     status: "scheduled",
-    kickoffAt: parseKickoffFromSlug(slug),
+    kickoffAt: item.start_time?.trim() || parseKickoffFromSlug(slug),
     league: "FIFA World Cup",
     freshness: {
       source: "prophet-api",
@@ -190,7 +190,6 @@ function mapProphetGameTrackToCardProps(
   item: ProphetUserTrackItem
 ): TrackCardGameProps | undefined {
   const teams = resolveGameTrackTeams(item);
-  console.log(item, teams);
   if (!teams) {
     return undefined;
   }

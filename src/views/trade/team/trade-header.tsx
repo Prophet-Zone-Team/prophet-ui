@@ -103,7 +103,6 @@ export function TradeHeader({
 }: TradeHeaderProps) {
   const { team, market } = snapshot;
   const fifaRank = metadata?.fifaRank ?? team.fifaRank;
-  console.log(snapshot);
   return (
     <header className="my-4">
       <div className="flex items-center justify-between">
