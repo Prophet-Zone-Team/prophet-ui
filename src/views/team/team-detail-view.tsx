@@ -91,7 +91,7 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
             </div>
 
             <aside className={teamSidebarClass}>
-              <TeamNextMatchPanel fixture={undefined} snapshot={snapshot} />
+              <TeamNextMatchPanel nextMatch={data?.nextMatch} snapshot={snapshot} />
               <TradeWidget snapshot={snapshot} />
               <TeamMarketIntelligencePanel
                 snapshot={snapshot}

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { TeamFlag } from "@/components/teams/team-flag";
 import type { ApiFootballFixtureContext, TeamMarketSnapshot } from "@/types/market";
-import { formatFixtureDate } from "@/lib/team/team-detail-model";
+import { formatFixtureDate, NextMatchView } from "@/lib/team/team-detail-model";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import { teamOpenTradeButtonClass } from "@/views/team/team-detail-ui";
 import {
@@ -12,21 +12,23 @@ import {
 } from "@/views/team/team-detail-ui";
 
 export interface TeamNextMatchPanelProps {
-  fixture?: ApiFootballFixtureContext;
+  nextMatch?: NextMatchView;
   snapshot: TeamMarketSnapshot;
 }
 
 export function TeamNextMatchPanel({
-  fixture,
+  nextMatch,
   snapshot
 }: TeamNextMatchPanelProps) {
   return (
     <section className={teamPanelClass} aria-label="Next match">
       <div className={teamPanelHeadClass}>
         <h2 className={teamPanelTitleClass}>Next Match</h2>
+        <div className="">
+        </div>
       </div>
       <div className="p-4">
-        {fixture ? (
+        {nextMatch ? (
           <>
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 flex-col items-center gap-1">
@@ -37,25 +39,21 @@ export function TeamNextMatchPanel({
               </div>
               <span className="text-xs font-[556] text-prophet-muted">vs</span>
               <div className="flex min-w-0 flex-col items-center gap-1">
-                {fixture.opponentLogoUrl ? (
-                  <img
-                    src={fixture.opponentLogoUrl}
-                    alt=""
-                    className="size-9 rounded-full object-contain"
-                  />
+                {nextMatch.awayTeamName ? (
+                  <TeamFlag name={nextMatch.awayTeamName} />
                 ) : (
                   <span className="flex size-9 items-center justify-center rounded-full bg-[#f5f9ff] text-xs font-[556]">
-                    {fixture.opponentName.slice(0, 2)}
+                    {nextMatch.awayTeamName.slice(0, 2)}
                   </span>
                 )}
                 <strong className="max-w-full truncate text-xs font-[556]">
-                  {fixture.opponentName}
+                  {nextMatch.awayTeamName}
                 </strong>
               </div>
             </div>
             <p className="mt-3 text-center text-xs text-prophet-muted">
-              {formatFixtureDate(fixture.kickoffAt)}
-              {fixture.venueName ? ` / ${fixture.venueName}` : ""}
+              {formatFixtureDate(nextMatch.fixtureDate)}
+              {nextMatch.leagueName ? ` / ${nextMatch.leagueName}` : ""}
             </p>
             <Link
               href="/fifa/matches"

@@ -42,6 +42,30 @@ export interface RecentMatchView {
   note: string;
 }
 
+export interface NextMatchView {
+  id: number;
+  apiFixtureId: number;
+  referee: string;
+  timezone: string;
+  fixtureDate: string;
+  fixtureTimestamp: number;
+  statusLong: string;
+  statusShort: string;
+  statusElapsed: number;
+  leagueId: number;
+  leagueName: string;
+  leagueCountry: string;
+  season: number;
+  round: string;
+  homeTeamId: number;
+  homeTeamName: string;
+  awayTeamId: number;
+  awayTeamName: string;
+  homeGoals: number;
+  awayGoals: number;
+  updatedAt: string;
+}
+
 type KeyPlayerSource = ApiFootballSquadPlayer & {
   club?: string;
   note?: string;

@@ -302,6 +302,30 @@ export interface ProphetGetTeamDetailPeer {
   name: string;
 }
 
+export interface ProphetGetTeamDetailNextMatch {
+  id: number;
+  api_fixture_id: number;
+  referee: string;
+  timezone: string;
+  fixture_date: string;
+  fixture_timestamp: number;
+  status_long: string;
+  status_short: string;
+  status_elapsed: number;
+  league_id: number;
+  league_name: string;
+  league_country: string;
+  season: number;
+  round: string;
+  home_team_id: number;
+  home_team_name: string;
+  away_team_id: number;
+  away_team_name: string;
+  home_goals: number;
+  away_goals: number;
+  updated_at: string;
+}
+
 export interface ProphetGetTeamDetailData {
   name: string;
   logo: string;
@@ -320,4 +344,6 @@ export interface ProphetGetTeamDetailData {
   team_key_stars: ProphetGetTeamDetailKeyStar[];
   news: ProphetGetTeamDetailNews[];
   team_peers: ProphetGetTeamDetailPeer[];
+  titles: number;
+  next_match: ProphetGetTeamDetailNextMatch;
 }
