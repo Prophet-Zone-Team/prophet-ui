@@ -24,6 +24,7 @@ import type {
   ProphetUserTrackItem,
   ProphetUserTrackListItem
 } from "@/types/prophet-api";
+import type { TelegramLoginAuthData } from "@/types/telegram-widget";
 
 const AUTH_STORAGE_KEY = "prophet_api_token";
 const WALLET_STORAGE_KEY = "prophet_api_wallet";
@@ -293,11 +294,9 @@ export async function proxyPolymarketPost<T = unknown>(
 }
 
 /** POST /v1/user/bind/telegram */
-export async function bindProphetTelegram(
-  request: ProphetBindTelegramRequest
-): Promise<void> {
+export async function bindProphetTelegram(data: TelegramLoginAuthData): Promise<void> {
   requireProphetApiToken();
-  await prophetPost<unknown>("/v1/user/bind/telegram", request);
+  await prophetPost<unknown>("/v1/user/bind/telegram", data);
 }
 
 /** POST /v1/user/track */

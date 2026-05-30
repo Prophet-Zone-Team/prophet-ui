@@ -66,7 +66,7 @@ export default function TracksTelegramBanner() {
           setBindStatus("binding");
 
           try {
-            await bindProphetTelegram({ tg_user_id: data.id });
+            await bindProphetTelegram(data);
             setConnectedAt(new Date().toLocaleDateString());
             setBindStatus("success");
           } catch (error) {
