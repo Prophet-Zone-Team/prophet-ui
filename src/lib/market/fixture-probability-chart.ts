@@ -419,17 +419,17 @@ function mergeFixtureChartPoints(points: GameFixtureChartPoint[]): GameFixtureCh
   for (const point of points) {
     const previous = merged.at(-1);
 
-    if (!previous || previous.label !== point.label) {
+    if (!previous || previous.timestamp !== point.timestamp) {
       merged.push(point);
       continue;
     }
 
     merged[merged.length - 1] = {
       ...previous,
-      timestamp: point.timestamp,
+      label: point.label,
       home: point.home,
       draw: point.draw,
-      away: point.away,
+      away: point.away
     };
   }
 
@@ -536,16 +536,16 @@ function mergeBinaryFixtureChartPoints(
   for (const point of points) {
     const previous = merged.at(-1);
 
-    if (!previous || previous.label !== point.label) {
+    if (!previous || previous.timestamp !== point.timestamp) {
       merged.push(point);
       continue;
     }
 
     merged[merged.length - 1] = {
       ...previous,
-      timestamp: point.timestamp,
+      label: point.label,
       primary: point.primary,
-      secondary: point.secondary,
+      secondary: point.secondary
     };
   }
 

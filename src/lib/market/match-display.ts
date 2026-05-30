@@ -59,3 +59,38 @@ export function formatMatchMinuteAxisLabel(totalSeconds: number): string {
 
   return `${minutes}'`;
 }
+
+const liveChartClockFormatter = new Intl.DateTimeFormat("en", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+export function formatChartTimestampClockLabel(timestamp: string): string {
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) {
+    return timestamp;
+  }
+
+  return liveChartClockFormatter.format(date);
+}
+
+export function formatLiveChartClockLabel(
+  kickoffAt: string | undefined,
+  elapsedSeconds: number,
+): string {
+  if (!kickoffAt) {
+    return "—";
+  }
+
+  const kickoffMs = Date.parse(kickoffAt);
+
+  if (Number.isNaN(kickoffMs)) {
+    return "—";
+  }
+
+  return liveChartClockFormatter.format(
+    new Date(kickoffMs + Math.max(0, Math.floor(elapsedSeconds)) * 1000),
+  );
+}

@@ -14,7 +14,10 @@ import {
 } from "recharts";
 
 import { formatProbability } from "@/components/home/market-formatters";
-import { formatMatchMinuteAxisLabel } from "@/lib/market/match-display";
+import {
+  formatChartTimestampClockLabel,
+  formatLiveChartClockLabel,
+} from "@/lib/market/match-display";
 import {
   formatGameChartXAxisTick,
   getFixtureChartYDomain,
@@ -60,6 +63,7 @@ export interface GameProbabilityChartProps {
   timeRange?: GameFixtureChartTimeRange;
   events?: GameMatchChartEvent[];
   maxElapsedSeconds?: number;
+  kickoffAt?: string;
   homeCode?: string;
   awayCode?: string;
 }
@@ -73,6 +77,7 @@ export function GameProbabilityChart({
   timeRange = "all",
   events = [],
   maxElapsedSeconds = 0,
+  kickoffAt,
   homeCode,
   awayCode,
 }: GameProbabilityChartProps) {
@@ -142,7 +147,8 @@ export function GameProbabilityChart({
                 padding={{ left: 0, right: 32 }}
                 tickFormatter={
                   isLive
-                    ? (value: number) => formatMatchMinuteAxisLabel(value)
+                    ? (value: number) =>
+                        formatLiveChartClockLabel(kickoffAt, value)
                     : (value: string) =>
                         formatGameChartXAxisTick(value, timeRange)
                 }
@@ -161,6 +167,7 @@ export function GameProbabilityChart({
                   <ChartTooltip
                     seriesLabels={seriesLabels}
                     isLive={isLive}
+                    kickoffAt={kickoffAt}
                     timeRange={timeRange}
                   />
                 }
@@ -234,21 +241,24 @@ function ChartTooltip({
   label,
   seriesLabels,
   isLive,
+  kickoffAt,
   timeRange,
 }: TooltipProps<number, string> & {
   seriesLabels: Record<(typeof SERIES)[number]["key"], string>;
   isLive: boolean;
+  kickoffAt?: string;
   timeRange: GameFixtureChartTimeRange;
 }) {
   if (!active || !payload?.length) {
     return null;
   }
 
+  const point = payload[0]?.payload as ChartRow | undefined;
   const timeLabel =
-    typeof label === "number"
-      ? formatMatchMinuteAxisLabel(label)
-      : isLive
-        ? String(label ?? "")
+    isLive && point?.timestamp
+      ? formatChartTimestampClockLabel(point.timestamp)
+      : typeof label === "number"
+        ? formatLiveChartClockLabel(kickoffAt, label)
         : formatGameChartXAxisTick(String(label ?? ""), timeRange);
 
   return (

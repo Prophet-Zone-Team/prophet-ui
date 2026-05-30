@@ -150,13 +150,11 @@ export class PolymarketSportsWsClient {
       }
 
       let parsed: unknown;
-      console.log("data", data);
       try {
         parsed = JSON.parse(data);
       } catch {
         return;
       }
-      console.log("parsed", parsed);
       const update = parseSportsWsUpdate(parsed);
 
       if (!update) {

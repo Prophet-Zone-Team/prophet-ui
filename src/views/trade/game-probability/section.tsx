@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { findGameMarketOutcome } from "@/lib/market/game-outcome-price";
@@ -11,6 +11,12 @@ import {
   filterGameBinaryFixtureChartByRange,
   filterGameFixtureChartByRange,
 } from "@/lib/market/fixture-probability-chart";
+import {
+  filterLiveBinaryFixtureChartByRange,
+  filterLiveFixtureChartByRange,
+  resolveEffectiveKickoffAt,
+  resolveLiveChartMaxElapsed
+} from "@/lib/market/live-fixture-probability-chart";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { useMatchWithLiveState } from "@/store/match-live-store";
@@ -87,11 +93,19 @@ export function GameProbabilitySection({
   binarySecondaryLabel,
 }: GameProbabilitySectionProps) {
   const liveMatch = useMatchWithLiveState(match);
-  const [timeRange, setTimeRange] = useState<GameFixtureChartTimeRange>("all");
+  const isLive = isEffectiveLiveMatch(liveMatch);
+  const [timeRange, setTimeRange] = useState<GameFixtureChartTimeRange>(() =>
+    isLive ? "1H" : "all"
+  );
   const matchOutcomeSide = useTradeMatchOutcomeSide();
   const selectedFixtureOutcome = useSelectedFixtureOutcome();
   const tradeOutcomeSide = useTradeOutcomeSide();
-  const isLive = isEffectiveLiveMatch(liveMatch);
+
+  useEffect(() => {
+    if (isLive) {
+      setTimeRange("1D");
+    }
+  }, [isLive]);
   const liveChartActive =
     isLive && Boolean(chartKind) && Boolean(gameSnapshot && fixtureMarkets);
   const {
@@ -100,28 +114,29 @@ export function GameProbabilitySection({
     chartMode,
     status,
     error,
-    refetch,
+    refetch
   } = useProbabilityChart({
     kind: "fixture",
     match,
     chartKind,
     lineKey,
     pollIntervalMs: 5000,
-    enabled: !liveChartActive,
+    enabled: !liveChartActive
   });
+
   const liveChart = useLiveMatchProbabilityChart({
     match: liveMatch,
     gameSnapshot: gameSnapshot!,
     fixtureMarkets: fixtureMarkets!,
     chartKind: chartKind ?? "moneyline",
     lineKey,
-    enabled: liveChartActive,
+    enabled: liveChartActive
   });
 
   const sides = resolveMatchSides(liveMatch, snapshots);
   const displayScore = {
     homeScore: liveMatch.homeScore,
-    awayScore: liveMatch.awayScore,
+    awayScore: liveMatch.awayScore
   };
   const orderbookEnabled = showOrderbook && Boolean(gameSnapshot);
 
@@ -140,9 +155,9 @@ export function GameProbabilitySection({
         tradeOutcomeSide,
         fallbackOutcome
           ? {
-            tokenId: fallbackOutcome.tokenId,
-            noTokenId: fallbackOutcome.noTokenId
-          }
+              tokenId: fallbackOutcome.tokenId,
+              noTokenId: fallbackOutcome.noTokenId
+            }
           : undefined
       ),
     [fallbackOutcome, selectedFixtureOutcome, tradeOutcomeSide]
@@ -169,17 +184,65 @@ export function GameProbabilitySection({
       : "ternary";
   const filteredPoints = useMemo(
     () => filterGameFixtureChartByRange(rawPoints, timeRange),
-    [rawPoints, timeRange],
+    [rawPoints, timeRange]
   );
   const filteredBinaryPoints = useMemo(
     () => filterGameBinaryFixtureChartByRange(rawBinaryPoints, timeRange),
-    [rawBinaryPoints, timeRange],
+    [rawBinaryPoints, timeRange]
   );
-  const chartPoints = liveChartActive ? liveChart.points : filteredPoints;
+  const liveFilteredPoints = useMemo(
+    () =>
+      filterLiveFixtureChartByRange(
+        liveChart.points,
+        timeRange,
+        liveMatch.liveElapsedSeconds
+      ),
+    [liveChart.points, liveMatch.liveElapsedSeconds, timeRange]
+  );
+  const liveFilteredBinaryPoints = useMemo(
+    () =>
+      filterLiveBinaryFixtureChartByRange(
+        liveChart.binaryPoints,
+        timeRange,
+        liveMatch.liveElapsedSeconds
+      ),
+    [liveChart.binaryPoints, liveMatch.liveElapsedSeconds, timeRange]
+  );
+  const effectiveKickoffAt = useMemo(
+    () => resolveEffectiveKickoffAt(liveMatch),
+    [liveMatch]
+  );
+  const liveMaxElapsedSeconds = useMemo(() => {
+    if (!liveChartActive) {
+      return liveChart.maxElapsedSeconds;
+    }
+
+    const points =
+      effectiveChartMode === "binary"
+        ? liveFilteredBinaryPoints
+        : liveFilteredPoints;
+
+    return resolveLiveChartMaxElapsed(
+      effectiveKickoffAt,
+      points,
+      timeRange,
+      liveMatch.liveElapsedSeconds
+    );
+  }, [
+    effectiveChartMode,
+    effectiveKickoffAt,
+    liveChart.maxElapsedSeconds,
+    liveChartActive,
+    liveFilteredBinaryPoints,
+    liveFilteredPoints,
+    liveMatch.liveElapsedSeconds,
+    timeRange
+  ]);
+  const chartPoints = liveChartActive ? liveFilteredPoints : filteredPoints;
   const chartBinaryPoints = liveChartActive
-    ? liveChart.binaryPoints
+    ? liveFilteredBinaryPoints
     : filteredBinaryPoints;
-  const chartEvents = liveChartActive ? liveChart.events : [];
+
   const chartStatus = liveChartActive ? liveChart.status : status;
 
   return (
@@ -212,7 +275,7 @@ export function GameProbabilitySection({
                 awayName={awayLabel}
                 score={formatMatchScore(
                   displayScore.homeScore,
-                  displayScore.awayScore,
+                  displayScore.awayScore
                 )}
               />
             ) : null}
@@ -278,8 +341,9 @@ export function GameProbabilitySection({
               awayLabel={awayLabel}
               mode={liveChartActive ? "live" : "historical"}
               timeRange={timeRange}
-              events={chartEvents}
-              maxElapsedSeconds={liveChart.maxElapsedSeconds}
+              events={[]}
+              maxElapsedSeconds={liveMaxElapsedSeconds}
+              kickoffAt={liveChartActive ? effectiveKickoffAt : undefined}
               homeCode={sides.home.code}
               awayCode={sides.away.code}
             />
@@ -300,8 +364,9 @@ export function GameProbabilitySection({
               }
               mode={liveChartActive ? "live" : "historical"}
               timeRange={timeRange}
-              events={chartEvents}
-              maxElapsedSeconds={liveChart.maxElapsedSeconds}
+              events={[]}
+              maxElapsedSeconds={liveMaxElapsedSeconds}
+              kickoffAt={liveChartActive ? effectiveKickoffAt : undefined}
               homeCode={sides.home.code}
               awayCode={sides.away.code}
             />

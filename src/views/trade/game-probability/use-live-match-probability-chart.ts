@@ -398,6 +398,8 @@ export function useLiveMatchProbabilityChart({
     return resolveLiveChartMaxElapsed(
       effectiveKickoffAt,
       chartMode === "binary" ? binaryPoints : points,
+      "1D",
+      match.liveElapsedSeconds
     );
   }, [binaryPoints, chartMode, effectiveKickoffAt, enabled, points]);
 

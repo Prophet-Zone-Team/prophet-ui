@@ -1,10 +1,11 @@
-import { formatMatchMinuteAxisLabel } from "@/lib/market/match-display";
+import { formatChartTimestampClockLabel } from "@/lib/market/match-display";
 import { getScheduleRowVariant } from "@/lib/market/schedule-match";
 import type { FixtureHistoryInterval } from "@/server/market/clob-prices-history";
 import type {
   FixtureChartKind,
   GameFixtureBinaryChartPoint,
   GameFixtureChartPoint,
+  GameFixtureChartTimeRange,
   WorldCupMatch
 } from "@/types/market";
 
@@ -168,7 +169,7 @@ export function mapFixturePointsToMatchMinutes(
     mapped.push({
       ...point,
       elapsedSeconds,
-      label: formatMatchMinuteAxisLabel(elapsedSeconds)
+      label: formatChartTimestampClockLabel(new Date(timestampMs).toISOString())
     });
   }
 
@@ -204,7 +205,7 @@ export function mapBinaryFixturePointsToMatchMinutes(
     mapped.push({
       ...point,
       elapsedSeconds,
-      label: formatMatchMinuteAxisLabel(elapsedSeconds)
+      label: formatChartTimestampClockLabel(new Date(timestampMs).toISOString())
     });
   }
 
@@ -213,10 +214,23 @@ export function mapBinaryFixturePointsToMatchMinutes(
   );
 }
 
-/** Default live chart x-axis spans the first half (0' through 60'). */
+/** Baseline live chart x-axis spans 0' through 60'. */
 export const LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS = 60 * 60;
 
+/** Extra x-axis padding after match elapsed exceeds 60 minutes. */
+export const LIVE_MATCH_CHART_OVERTIME_PADDING_SECONDS = 10 * 60;
+
 export const LIVE_MATCH_CHART_AXIS_TICK_STEP_SECONDS = 15 * 60;
+
+export function resolveLiveChartAxisMaxElapsed(
+  matchElapsedSeconds: number
+): number {
+  if (matchElapsedSeconds > LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS) {
+    return matchElapsedSeconds + LIVE_MATCH_CHART_OVERTIME_PADDING_SECONDS;
+  }
+
+  return LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS;
+}
 
 export function resolveLiveChartAxisTicks(maxElapsedSeconds: number): number[] {
   const ticks: number[] = [];
@@ -232,22 +246,177 @@ export function resolveLiveChartAxisTicks(maxElapsedSeconds: number): number[] {
   return ticks;
 }
 
-export function resolveLiveChartMaxElapsed(
-  kickoffAt: string,
-  points: Array<{ elapsedSeconds?: number }> = [],
-  nowMs = Date.now()
+export function resolveLiveChartWindowSeconds(
+  timeRange: GameFixtureChartTimeRange,
+  matchElapsedSeconds: number
+): number | undefined {
+  if (timeRange === "1H") {
+    return resolveLiveChartAxisMaxElapsed(matchElapsedSeconds);
+  }
+
+  return undefined;
+}
+
+function resolveKickoffTimestampFromPoint(point: {
+  timestamp: string;
+  elapsedSeconds?: number;
+}): string {
+  const elapsed = point.elapsedSeconds ?? 0;
+
+  if (elapsed <= 0) {
+    return point.timestamp;
+  }
+
+  const timestampMs = Date.parse(point.timestamp);
+
+  if (Number.isNaN(timestampMs)) {
+    return point.timestamp;
+  }
+
+  return new Date(timestampMs - elapsed * 1000).toISOString();
+}
+
+function ensureLiveTernaryChartLinePoints(
+  points: GameFixtureChartPoint[]
+): GameFixtureChartPoint[] {
+  if (points.length >= 2) {
+    return points;
+  }
+
+  if (points.length === 0) {
+    return points;
+  }
+
+  const only = points[0]!;
+  const elapsed = only.elapsedSeconds ?? 0;
+
+  if (elapsed <= 0) {
+    return points;
+  }
+
+  return [
+    {
+      ...only,
+      elapsedSeconds: 0,
+      timestamp: resolveKickoffTimestampFromPoint(only),
+      label: formatChartTimestampClockLabel(
+        resolveKickoffTimestampFromPoint(only)
+      )
+    },
+    only
+  ];
+}
+
+function ensureLiveBinaryChartLinePoints(
+  points: GameFixtureBinaryChartPoint[]
+): GameFixtureBinaryChartPoint[] {
+  if (points.length >= 2) {
+    return points;
+  }
+
+  if (points.length === 0) {
+    return points;
+  }
+
+  const only = points[0]!;
+  const elapsed = only.elapsedSeconds ?? 0;
+
+  if (elapsed <= 0) {
+    return points;
+  }
+
+  const kickoffTimestamp = resolveKickoffTimestampFromPoint(only);
+
+  return [
+    {
+      ...only,
+      elapsedSeconds: 0,
+      timestamp: kickoffTimestamp,
+      label: formatChartTimestampClockLabel(kickoffTimestamp)
+    },
+    only
+  ];
+}
+
+function resolveLiveChartDataMax(
+  points: Array<{ elapsedSeconds?: number }>,
+  matchElapsedSeconds?: number
 ): number {
-  const kickoffElapsed = resolveKickoffElapsedSeconds(kickoffAt, nowMs) ?? 0;
   const pointMax = points.reduce(
     (max, point) => Math.max(max, point.elapsedSeconds ?? 0),
     0
   );
 
-  return Math.max(
-    kickoffElapsed,
-    pointMax,
-    LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS
-  );
+  return Math.max(matchElapsedSeconds ?? 0, pointMax);
+}
+
+export function filterLiveFixtureChartByRange(
+  points: GameFixtureChartPoint[],
+  timeRange: GameFixtureChartTimeRange,
+  matchElapsedSeconds?: number
+): GameFixtureChartPoint[] {
+  const dataMax = resolveLiveChartDataMax(points, matchElapsedSeconds);
+  const windowSeconds = resolveLiveChartWindowSeconds(timeRange, dataMax);
+  const filtered =
+    windowSeconds === undefined
+      ? points
+      : points.filter((point) => (point.elapsedSeconds ?? 0) <= windowSeconds);
+
+  return ensureLiveTernaryChartLinePoints(filtered);
+}
+
+export function filterLiveBinaryFixtureChartByRange(
+  points: GameFixtureBinaryChartPoint[],
+  timeRange: GameFixtureChartTimeRange,
+  matchElapsedSeconds?: number
+): GameFixtureBinaryChartPoint[] {
+  const dataMax = resolveLiveChartDataMax(points, matchElapsedSeconds);
+  const windowSeconds = resolveLiveChartWindowSeconds(timeRange, dataMax);
+  const filtered =
+    windowSeconds === undefined
+      ? points
+      : points.filter((point) => (point.elapsedSeconds ?? 0) <= windowSeconds);
+
+  return ensureLiveBinaryChartLinePoints(filtered);
+}
+
+export function filterLiveChartEventsByRange<
+  T extends { elapsedSeconds: number }
+>(
+  events: T[],
+  timeRange: GameFixtureChartTimeRange,
+  matchElapsedSeconds?: number
+): T[] {
+  const dataMax = resolveLiveChartDataMax(events, matchElapsedSeconds);
+  const windowSeconds = resolveLiveChartWindowSeconds(timeRange, dataMax);
+
+  if (windowSeconds === undefined) {
+    return events;
+  }
+
+  return events.filter((event) => event.elapsedSeconds <= windowSeconds);
+}
+
+export function resolveLiveChartMaxElapsed(
+  kickoffAt: string | undefined,
+  points: Array<{ elapsedSeconds?: number }> = [],
+  timeRange: GameFixtureChartTimeRange = "1H",
+  liveElapsedSeconds?: number,
+  nowMs = Date.now()
+): number {
+  const elapsedFromKickoff =
+    liveElapsedSeconds ??
+    (kickoffAt ? resolveKickoffElapsedSeconds(kickoffAt, nowMs) : undefined) ??
+    0;
+
+  const dataMax = resolveLiveChartDataMax(points, elapsedFromKickoff);
+  const windowSeconds = resolveLiveChartWindowSeconds(timeRange, dataMax);
+
+  if (windowSeconds !== undefined) {
+    return windowSeconds;
+  }
+
+  return resolveLiveChartAxisMaxElapsed(dataMax);
 }
 
 export interface LiveChartFallbackTernaryValues {
@@ -301,18 +470,22 @@ export function buildLiveChartFallbackPoints(
   const elapsedMarks = currentElapsed > 0 ? [0, currentElapsed] : [0];
 
   if (input.chartMode === "binary" && input.binary) {
-    const binaryPoints = elapsedMarks.map((elapsedSeconds) => ({
-      matchId: input.matchId,
-      timestamp: buildElapsedChartPointTimestamps(
+    const binaryPoints = elapsedMarks.map((elapsedSeconds) => {
+      const timestamp = buildElapsedChartPointTimestamps(
         input.kickoffAt,
         elapsedSeconds,
         nowMs
-      ),
-      label: formatMatchMinuteAxisLabel(elapsedSeconds),
-      elapsedSeconds,
-      primary: input.binary!.primary,
-      secondary: input.binary!.secondary
-    }));
+      );
+
+      return {
+        matchId: input.matchId,
+        timestamp,
+        label: formatChartTimestampClockLabel(timestamp),
+        elapsedSeconds,
+        primary: input.binary!.primary,
+        secondary: input.binary!.secondary
+      };
+    });
 
     return {
       chartMode: "binary",
@@ -322,19 +495,23 @@ export function buildLiveChartFallbackPoints(
   }
 
   const ternary = input.ternary ?? { home: 33.3, draw: 33.3, away: 33.3 };
-  const points = elapsedMarks.map((elapsedSeconds) => ({
-    matchId: input.matchId,
-    timestamp: buildElapsedChartPointTimestamps(
+  const points = elapsedMarks.map((elapsedSeconds) => {
+    const timestamp = buildElapsedChartPointTimestamps(
       input.kickoffAt,
       elapsedSeconds,
       nowMs
-    ),
-    label: formatMatchMinuteAxisLabel(elapsedSeconds),
-    elapsedSeconds,
-    home: ternary.home,
-    draw: ternary.draw,
-    away: ternary.away
-  }));
+    );
+
+    return {
+      matchId: input.matchId,
+      timestamp,
+      label: formatChartTimestampClockLabel(timestamp),
+      elapsedSeconds,
+      home: ternary.home,
+      draw: ternary.draw,
+      away: ternary.away
+    };
+  });
 
   return {
     chartMode: "ternary",
