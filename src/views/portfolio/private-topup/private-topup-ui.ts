@@ -101,6 +101,7 @@ export const privateTopupIntroFooterCancelClass = cn(
 export const privateTopupIntroFooterProceedClass = cn(
   "inline-flex h-[50px] w-[210px] items-center justify-center gap-1 rounded-[8px]",
   "bg-black text-[16px] font-[400] text-white transition-opacity hover:opacity-90",
+  "disabled:opacity-30 disabled:cursor-not-allowed",
 );
 
 export const privateTopupGuideFooterCancelClass = cn(
@@ -112,4 +113,5 @@ export const privateTopupGuideFooterCancelClass = cn(
 export const privateTopupGuideFooterProceedClass = cn(
   "inline-flex h-[38px] min-w-[107px] items-center justify-center gap-1 rounded-[8px]",
   "bg-black px-4 text-[16px] font-[400] text-white transition-opacity hover:opacity-90",
+  "disabled:opacity-30 disabled:cursor-not-allowed",
 );

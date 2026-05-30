@@ -99,8 +99,9 @@ export function PrivateTopupGuideDialog({
                 type="button"
                 className={privateTopupGuideFooterProceedClass}
                 onClick={onProceed}
+                disabled
               >
-                Proceed
+                Coming Soon
                 <PrivateTopupProceedChevron />
               </button>
             </div>

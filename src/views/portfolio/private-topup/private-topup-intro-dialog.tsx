@@ -161,8 +161,9 @@ export function PrivateTopupIntroDialog({
               type="button"
               className={privateTopupIntroFooterProceedClass}
               onClick={onProceed}
+              disabled
             >
-              Proceed
+              Coming Soon
               <PrivateTopupProceedChevron />
             </button>
           </div>
