@@ -1124,7 +1124,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             fee
           });
 
-          console.log("availableCash", availableCash, nextAmount);
+          // console.log("availableCash", availableCash, nextAmount);
 
           if (nextAmount > 0) {
             setAmount(formatMarketBuyAmountInput(nextAmount));
