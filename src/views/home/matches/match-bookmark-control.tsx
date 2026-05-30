@@ -8,14 +8,12 @@ export interface MatchBookmarkControlProps {
   matchId: string;
   homeTeamName: string;
   awayTeamName: string;
-  onUntracked?: (target: ProphetBookmarkTarget) => void;
 }
 
 export function MatchBookmarkControl({
   matchId,
   homeTeamName,
-  awayTeamName,
-  onUntracked
+  awayTeamName
 }: MatchBookmarkControlProps) {
   const target: ProphetBookmarkTarget = {
     category: "game",
@@ -27,7 +25,6 @@ export function MatchBookmarkControl({
   return (
     <BookmarkToggle
       target={target}
-      onUntracked={onUntracked}
       ariaLabel="Add match to Track"
       trackedAriaLabel="Remove match from Track"
       tooltip={

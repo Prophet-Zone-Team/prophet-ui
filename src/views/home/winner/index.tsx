@@ -1,6 +1,5 @@
 "use client";
 
-import { useSyncProphetTrackStatus } from "@/hooks/use-sync-prophet-track-status";
 import {
   useWinnerMarketDataMeta,
   useWinnerSnapshots
@@ -9,8 +8,6 @@ import { HomeWinnerMarketList } from "@/views/home/winner/home-winner-market-lis
 import { WinnerProbabilityChart } from "@/views/home/winner/probability-chart";
 
 export function HomeWinnerPanel() {
-  useSyncProphetTrackStatus();
-
   const teams = useWinnerSnapshots();
   const dataStatus = useWinnerMarketDataMeta();
 

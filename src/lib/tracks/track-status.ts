@@ -1,9 +1,6 @@
-import { useTrackStatusStore } from "@/store/track-status-store";
 import type {
   ProphetCancelTrackRequest,
-  ProphetTrackRequest,
-  ProphetUserTrackItem,
-  ProphetUserTrackListItem
+  ProphetTrackRequest
 } from "@/types/prophet-api";
 
 export type { ProphetBookmarkTarget } from "@/lib/tracks/track-status-keys";
@@ -38,20 +35,4 @@ export function buildUntrackRequest(
   target: ProphetBookmarkTarget
 ): ProphetCancelTrackRequest {
   return { slug: target.slug };
-}
-
-export function hydrateTrackStatusFromApiItems(
-  items: ProphetUserTrackItem[]
-): void {
-  useTrackStatusStore.getState().hydrateFromApiItems(items);
-}
-
-export function hydrateTrackStatusFromListItems(
-  items: ProphetUserTrackListItem[]
-): void {
-  useTrackStatusStore.getState().hydrateFromApiItems(items);
-}
-
-export function clearTrackStatus(): void {
-  useTrackStatusStore.getState().clearAll();
 }

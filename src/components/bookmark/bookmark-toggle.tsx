@@ -14,45 +14,32 @@ import { TrackedBookmarkIcon, UntrackedBookmarkIcon } from "@/components/bookmar
 import { useAuth } from "@/context/auth/use-auth";
 import { cn } from "@/lib/cn";
 import {
-  buildTrackRequest,
-  buildUntrackRequest,
   resolveTrackStoreKeyFromTarget,
   type ProphetBookmarkTarget
 } from "@/lib/tracks/track-status";
+import { isProphetAuthenticated, ProphetApiError } from "@/service/prophet";
 import {
-  isProphetAuthenticated,
-  ProphetApiError,
-  trackProphet,
-  untrackProphet
-} from "@/service/prophet";
-import {
-  useIsTrackKeyTracked,
-  useTrackStatusStore
-} from "@/store/track-status-store";
+  useIsTrackTracked,
+  useTrackPending,
+  useTracksStore
+} from "@/store/tracks-store";
 
 const TOOLTIP_HIDE_DELAY_MS = 1000;
 
 export type { ProphetBookmarkTarget } from "@/lib/tracks/track-status";
 
-export function useProphetBookmark(
-  target: ProphetBookmarkTarget,
-  options?: { onUntracked?: (target: ProphetBookmarkTarget) => void }
-) {
+export function useProphetBookmark(target: ProphetBookmarkTarget) {
   const { openLogin } = useAuth();
   const storeKey = resolveTrackStoreKeyFromTarget(target);
-  const isTracked = useIsTrackKeyTracked(storeKey);
-  const setTracked = useTrackStatusStore((state) => state.setTracked);
-  const [isLoading, setIsLoading] = useState(false);
+  const isTracked = useIsTrackTracked(storeKey);
+  const isLoading = useTrackPending(storeKey);
+  const trackTarget = useTracksStore((state) => state.trackTarget);
+  const untrackTarget = useTracksStore((state) => state.untrackTarget);
   const targetRef = useRef(target);
-  const onUntrackedRef = useRef(options?.onUntracked);
 
   useEffect(() => {
     targetRef.current = target;
   }, [target]);
-
-  useEffect(() => {
-    onUntrackedRef.current = options?.onUntracked;
-  }, [options?.onUntracked]);
 
   const toggle = useCallback(async () => {
     if (isLoading) {
@@ -65,30 +52,19 @@ export function useProphetBookmark(
     }
 
     const currentTarget = targetRef.current;
-    const currentKey = resolveTrackStoreKeyFromTarget(currentTarget);
-    const nextTracked = !isTracked;
-    const previousTracked = isTracked;
-
-    setIsLoading(true);
-    setTracked(currentKey, nextTracked);
 
     try {
-      if (nextTracked) {
-        await trackProphet(buildTrackRequest(currentTarget));
+      if (isTracked) {
+        await untrackTarget(currentTarget);
       } else {
-        await untrackProphet(buildUntrackRequest(currentTarget));
-        onUntrackedRef.current?.(currentTarget);
+        await trackTarget(currentTarget);
       }
     } catch (error) {
-      setTracked(currentKey, previousTracked);
-
       if (error instanceof ProphetApiError && error.code === 401) {
         await openLogin();
       }
-    } finally {
-      setIsLoading(false);
     }
-  }, [isLoading, isTracked, openLogin, setTracked]);
+  }, [isLoading, isTracked, openLogin, trackTarget, untrackTarget]);
 
   return {
     isTracked,
@@ -103,7 +79,6 @@ export interface BookmarkToggleProps {
   trackedAriaLabel?: string;
   tooltip?: ReactNode;
   className?: string;
-  onUntracked?: (target: ProphetBookmarkTarget) => void;
 }
 
 export function BookmarkToggle({
@@ -111,12 +86,9 @@ export function BookmarkToggle({
   ariaLabel,
   trackedAriaLabel,
   tooltip,
-  className,
-  onUntracked
+  className
 }: BookmarkToggleProps) {
-  const { isTracked, isLoading, toggle } = useProphetBookmark(target, {
-    onUntracked
-  });
+  const { isTracked, isLoading, toggle } = useProphetBookmark(target);
   const rootRef = useRef<HTMLDivElement>(null);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);

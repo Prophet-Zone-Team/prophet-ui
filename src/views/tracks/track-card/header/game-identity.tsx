@@ -7,7 +7,6 @@ import {
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import type { Team, WorldCupMatch } from "@/types/market";
 import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-control";
-import { useTracksListOnUntracked } from "@/views/tracks/tracks-list-context";
 
 export type GameIdentityProps = {
   match: WorldCupMatch;
@@ -16,7 +15,6 @@ export type GameIdentityProps = {
 };
 
 export function GameIdentity({ match, homeTeam, awayTeam }: GameIdentityProps) {
-  const onUntracked = useTracksListOnUntracked();
   const liveMatch = useMatchWithLiveState(match);
   const variant = getScheduleRowVariant(liveMatch.status);
   const kickoffLabel = formatScheduleKickoff(liveMatch.kickoffAt);
@@ -28,7 +26,6 @@ export function GameIdentity({ match, homeTeam, awayTeam }: GameIdentityProps) {
         matchId={match.id}
         homeTeamName={homeTeam.name}
         awayTeamName={awayTeam.name}
-        onUntracked={onUntracked}
       />
       <div className="mx-0 flex w-8 shrink-0 items-center md:mx-4 md:w-[32px]">
         <TeamFlag

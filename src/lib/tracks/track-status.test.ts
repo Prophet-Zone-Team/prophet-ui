@@ -3,17 +3,13 @@ import { describe, it } from "node:test";
 
 import {
   buildTrackRequest,
-  buildUntrackRequest,
-  clearTrackStatus,
-  hydrateTrackStatusFromApiItems,
-  hydrateTrackStatusFromListItems
+  buildUntrackRequest
 } from "@/lib/tracks/track-status";
 import {
   buildTrackStatusMapFromApiItems,
   resolveTrackStoreKeyFromApiItem,
   resolveTrackStoreKeyFromTarget
 } from "@/lib/tracks/track-status-keys";
-import { useTrackStatusStore } from "@/store/track-status-store";
 import type {
   ProphetUserTrackItem,
   ProphetUserTrackListItem
@@ -138,38 +134,5 @@ describe("track-status helpers", () => {
         "fifwc-mex-rsa-2026-06-11": true
       }
     );
-  });
-
-  it("hydrates track status store from API items", () => {
-    clearTrackStatus();
-
-    hydrateTrackStatusFromApiItems([
-      { team_name: "Spain", category: "team" },
-      { slug: "game-slug-1", category: "game", goals: [0, 1] }
-    ]);
-
-    const state = useTrackStatusStore.getState().byKey;
-
-    assert.equal(state.Spain, true);
-    assert.equal(state["game-slug-1"], true);
-    assert.equal(state.Brazil, undefined);
-
-    clearTrackStatus();
-  });
-
-  it("hydrates track status store from list API items", () => {
-    clearTrackStatus();
-
-    hydrateTrackStatusFromListItems([
-      { category: "team", slug: "brazil", team_name: "Brazil" },
-      { category: "game", slug: "game-slug-2" }
-    ]);
-
-    const state = useTrackStatusStore.getState().byKey;
-
-    assert.equal(state.Brazil, true);
-    assert.equal(state["game-slug-2"], true);
-
-    clearTrackStatus();
   });
 });

@@ -1,109 +1,51 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { useAuth } from "@/context/auth";
 import { mapProphetTracksToCardProps } from "@/lib/tracks/prophet-track-mapper";
 import {
-  clearTrackStatus,
-  hydrateTrackStatusFromApiItems,
-  trackItemMatchesBookmarkTarget
-} from "@/lib/tracks/track-status";
-import type { ProphetBookmarkTarget } from "@/lib/tracks/track-status";
-import {
-  getProphetTracks,
-  isProphetAuthenticated,
-  ProphetApiError,
-  syncProphetWalletLogin
-} from "@/service/prophet";
+  useTracksHydrated,
+  useTracksItems,
+  useTracksStore
+} from "@/store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
-import type { ProphetUserTrackItem } from "@/types/prophet-api";
 import { TracksEmptyState } from "./empty";
 import TracksTitle from "./title";
 import { TrackCard } from "./track-card";
-import { TracksListProvider } from "./tracks-list-context";
 import { TopAttentionEmptyState } from "./top-attention-empty";
 import TracksTelegramBanner from "./tg";
 import { TracksUnauthenticatedState } from "./unauthenticated";
 
-type TracksLoadStatus = "idle" | "loading" | "ready" | "error";
-
 export function TracksView() {
   const authHydrated = useAuthHydrated();
-  const { isAuthenticated, session, openLogin, loginInProgress } = useAuth();
-  const [tracks, setTracks] = useState<ProphetUserTrackItem[]>([]);
-  const [status, setStatus] = useState<TracksLoadStatus>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | undefined>();
+  const tracksHydrated = useTracksHydrated();
+  const { isAuthenticated, openLogin, loginInProgress } = useAuth();
+  const items = useTracksItems();
+  const status = useTracksStore((state) => state.status);
+  const errorMessage = useTracksStore((state) => state.error);
+  const fetchTracks = useTracksStore((state) => state.fetchTracks);
 
   const trackCards = useMemo(
-    () => mapProphetTracksToCardProps(tracks),
-    [tracks]
+    () => mapProphetTracksToCardProps(items),
+    [items]
   );
 
   const loadTracks = useCallback(async () => {
-    if (!session?.walletAddress) {
-      setTracks([]);
-      clearTrackStatus();
-      setStatus("ready");
-      setErrorMessage(undefined);
-      return;
-    }
-
-    setStatus("loading");
-    setErrorMessage(undefined);
-
-    try {
-      await syncProphetWalletLogin(session.walletAddress);
-
-      if (!isProphetAuthenticated()) {
-        setTracks([]);
-        clearTrackStatus();
-        setStatus("ready");
-        return;
-      }
-
-      const items = await getProphetTracks();
-      setTracks(items ?? []);
-      hydrateTrackStatusFromApiItems(items ?? []);
-      setStatus("ready");
-    } catch (error) {
-      console.warn("[tracks] failed to load user tracks", error);
-      setTracks([]);
-      clearTrackStatus();
-
-      if (error instanceof ProphetApiError) {
-        setErrorMessage(error.message);
-      } else if (error instanceof Error) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("Unable to load tracks.");
-      }
-
-      setStatus("error");
-    }
-  }, [session]);
+    await fetchTracks();
+  }, [fetchTracks]);
 
   useEffect(() => {
-    if (!authHydrated) {
+    if (!authHydrated || !tracksHydrated) {
       return;
     }
 
     if (!isAuthenticated) {
-      setTracks([]);
-      clearTrackStatus();
-      setStatus("ready");
-      setErrorMessage(undefined);
       return;
     }
 
     void loadTracks();
-  }, [authHydrated, isAuthenticated, loadTracks]);
-
-  const handleUntracked = useCallback((target: ProphetBookmarkTarget) => {
-    setTracks((previous) =>
-      previous.filter((item) => !trackItemMatchesBookmarkTarget(item, target))
-    );
-  }, []);
+  }, [authHydrated, tracksHydrated, isAuthenticated, loadTracks]);
 
   async function handleConnectWallet() {
     try {
@@ -115,7 +57,7 @@ export function TracksView() {
   }
 
   function renderMainContent() {
-    if (!authHydrated) {
+    if (!authHydrated || !tracksHydrated) {
       return (
         <p className="py-[60px] text-center text-[16px] text-[#909090]">
           Loading…
@@ -132,7 +74,10 @@ export function TracksView() {
       );
     }
 
-    if (status === "loading" || status === "idle") {
+    const showLoadingState =
+      (status === "loading" || status === "idle") && trackCards.length === 0;
+
+    if (showLoadingState) {
       return (
         <p className="py-[60px] text-center text-[16px] text-[#909090]">
           Loading tracks…
@@ -145,20 +90,16 @@ export function TracksView() {
     }
 
     return (
-      <TracksListProvider onUntracked={handleUntracked}>
-        <div className="flex flex-col gap-3">
-          {trackCards.map((card) => (
-            <TrackCard
-              key={
-                card.variant === "game"
-                  ? card.match.id
-                  : card.snapshot.team.id
-              }
-              {...card}
-            />
-          ))}
-        </div>
-      </TracksListProvider>
+      <div className="flex flex-col gap-3">
+        {trackCards.map((card) => (
+          <TrackCard
+            key={
+              card.variant === "game" ? card.match.id : card.snapshot.team.id
+            }
+            {...card}
+          />
+        ))}
+      </div>
     );
   }
 

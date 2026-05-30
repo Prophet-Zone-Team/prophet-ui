@@ -44,7 +44,7 @@ import {
   syncStandaloneFromSession
 } from "@/lib/trading/trading-eligibility-client";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
-import { clearTrackStatus } from "@/lib/tracks/track-status";
+import { useTracksStore } from "@/store/tracks-store";
 import {
   logoutProphet,
   syncProphetWalletLogin
@@ -148,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       logoutProphet();
-      clearTrackStatus();
+      useTracksStore.getState().reset();
 
       store.clearAuth();
       store.setLoginInProgress(false);
