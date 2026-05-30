@@ -14,9 +14,12 @@ import {
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 
+import { getAppIconUrl, getAppOrigin } from "@/context/rainbowkit/app-url";
 import { Metadata } from "./metadata";
 
 const projectId = process.env.NEXT_PUBLIC_RAINBOWKIT_PROJECT_ID?.trim() ?? "";
+const appOrigin = getAppOrigin();
+const appIconUrl = getAppIconUrl();
 
 if (!projectId && typeof window !== "undefined") {
   console.warn(
@@ -47,9 +50,17 @@ export const wagmiConfig = createConfig({
     {
       appName: Metadata.name,
       appDescription: Metadata.description,
-      appUrl: Metadata.url,
-      appIcon: Metadata.icons[0],
+      appUrl: appOrigin,
+      appIcon: appIconUrl,
       projectId: projectId || "00000000000000000000000000000000",
+      walletConnectParameters: {
+        metadata: {
+          name: Metadata.name,
+          description: Metadata.description,
+          url: appOrigin,
+          icons: [appIconUrl],
+        },
+      },
     },
   ),
   chains: [polygon, arbitrum, bsc, optimism],
