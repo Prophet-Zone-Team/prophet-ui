@@ -358,6 +358,23 @@ export interface PolymarketOutcomeToken {
   price?: number;
 }
 
+export interface MarketTopHolder {
+  proxyWallet: string;
+  amount: number;
+  outcomeIndex: number;
+  asset: string;
+  name?: string;
+  pseudonym?: string;
+  displayUsernamePublic?: boolean;
+  profileImage?: string;
+  profileImageOptimized?: string;
+}
+
+export interface MarketTopHolderGroup {
+  token: string;
+  holders: MarketTopHolder[];
+}
+
 export interface ProbabilityHistoryPoint {
   teamId: Team["id"];
   date: string;

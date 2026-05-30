@@ -4,7 +4,10 @@ import { useState } from "react";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import { PositionsTable } from "@/views/trade/team/positions-table";
-import { TopTradersTable } from "@/views/trade/team/top-traders-table";
+import {
+  TopHoldersTable,
+  TopHoldersTableHeader
+} from "@/views/trade/team/top-holders-table";
 import {
   TradesTable,
   TradesTableHeader
@@ -15,7 +18,7 @@ import type { TeamMarketSnapshot } from "@/types/market";
 const ACTIVITY_TABS = [
   { id: "trades", label: "Trades" },
   { id: "position", label: "Position" },
-  { id: "top-traders", label: "Top Traders" }
+  { id: "top-holders", label: "Top Holders" }
 ] as const;
 
 type ActivityTabId = (typeof ACTIVITY_TABS)[number]["id"];
@@ -28,9 +31,9 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
   const [tab, setTab] = useState<ActivityTabId>("trades");
 
   return (
-    <div className="flex flex-col gap-0">
+    <div className="flex flex-col gap-0 bg-white border-[#EBEBEB] border rounded-[12px]">
       <div className={tradeSectionClass}>
-        <div className="border-b border-prophet-line px-4 pt-3">
+        <div className="border-b border-prophet-line px-4 pt-4">
           <TabSwitcher
             items={[...ACTIVITY_TABS]}
             value={tab}
@@ -52,11 +55,7 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
             <span>Avg</span>
           </div>
         ) : null}
-        {tab === "top-traders" ? (
-          <div className="border-b border-prophet-line px-4 py-2 text-xs text-prophet-muted">
-            Trader leaderboard
-          </div>
-        ) : null}
+        {tab === "top-holders" ? <TopHoldersTableHeader /> : null}
 
         {tab === "trades" ? <TradesTable /> : null}
         {tab === "position" ? (
@@ -64,9 +63,9 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
             <PositionsTable snapshot={snapshot} />
           </div>
         ) : null}
-        {tab === "top-traders" ? (
-          <div aria-label="Top traders">
-            <TopTradersTable />
+        {tab === "top-holders" ? (
+          <div aria-label="Top holders">
+            <TopHoldersTable snapshot={snapshot} />
           </div>
         ) : null}
       </div>
