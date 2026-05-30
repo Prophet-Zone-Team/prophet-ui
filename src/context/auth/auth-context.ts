@@ -7,7 +7,7 @@ import type { TradingEligibilityView } from "@/lib/trading/trading-eligibility-c
 import type { TradingSetupSteps } from "@/lib/trading/trading-setup";
 import type { CashBalanceView, FundingLoadStatus } from "@/types/funding";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
-import type { EligibilityLoadStatus } from "@/store/auth-store";
+export type EligibilityLoadStatus = "idle" | "loading" | "ready";
 
 export interface AuthContextValue {
   session: TradingUserSession | undefined;

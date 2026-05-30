@@ -9,12 +9,13 @@ import {
   showOrderErrorToast
 } from "@/lib/trading/order-toast";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
-import { selectIsRegionBlocked, useAuthStore } from "@/store/auth-store";
+import { useAuth } from "@/context/auth/use-auth";
 import { usePortfolioContext } from "@/views/portfolio/context";
 
 export function useCancelOpenOrder(options?: {
   onOrderCancelled?: (orderId: string) => void;
 }) {
+  const { isRegionBlocked } = useAuth();
   const { removeOpenOrder } = usePortfolioContext();
   const [cancelingOrderId, setCancelingOrderId] = useState<string | null>(null);
 
@@ -22,7 +23,7 @@ export function useCancelOpenOrder(options?: {
 
   const cancelOpenOrder = useCallback(
     async (order: UserOpenOrder) => {
-      if (cancelingOrderId !== null || selectIsRegionBlocked(useAuthStore.getState())) {
+      if (cancelingOrderId !== null || isRegionBlocked) {
         return;
       }
 
@@ -43,7 +44,7 @@ export function useCancelOpenOrder(options?: {
         setCancelingOrderId(null);
       }
     },
-    [cancelingOrderId, onOrderCancelled]
+    [cancelingOrderId, isRegionBlocked, onOrderCancelled]
   );
 
   const isCanceling = useCallback(
