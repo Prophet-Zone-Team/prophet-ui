@@ -32,9 +32,9 @@ export function TeamNextMatchPanel({
           <>
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 flex-col items-center gap-1">
-                <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+                <TeamFlag name={nextMatch.homeTeamName} />
                 <strong className="max-w-full truncate text-xs font-[556]">
-                  {snapshot.team.name}
+                  {nextMatch.homeTeamName}
                 </strong>
               </div>
               <span className="text-xs font-[556] text-prophet-muted">vs</span>
