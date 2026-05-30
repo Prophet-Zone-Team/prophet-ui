@@ -6,6 +6,7 @@ import {
 } from "@/lib/analytics/map-news";
 import type {
   KeyPlayerView,
+  NextMatchView,
   RecentMatchView,
   StrengthMetric
 } from "@/lib/team/team-detail-model";
@@ -17,8 +18,10 @@ import type {
   ProphetGetTeamDetailKeyStar,
   ProphetGetTeamDetailMatch,
   ProphetGetTeamDetailNews,
+  ProphetGetTeamDetailNextMatch,
   ProphetGetTeamDetailPeer
 } from "@/types/prophet-api";
+import { formatNumber } from "@/utils";
 
 export interface TeamDetailGroupPeer {
   code: string;
@@ -33,6 +36,7 @@ export interface TeamDetailHeaderData {
   bestFinish?: string;
   fifaRank?: number;
   groupName?: string;
+  titles?: number;
 }
 
 export interface TeamDetailViewModel {
@@ -46,6 +50,8 @@ export interface TeamDetailViewModel {
   strengthMetrics: StrengthMetric[];
   strengthScore?: number;
   newsItems: NewsImpactItem[];
+  nextMatch: NextMatchView;
+  titles: number;
 }
 
 function normalizeTeamName(value: string): string {
@@ -99,6 +105,34 @@ export function mapRecentMatches(
       score: `${match.home_goals}-${match.away_goals}`,
       note: match.league_name ?? "Match"
     }));
+}
+
+export function mapNextMatch(
+  match: ProphetGetTeamDetailNextMatch
+): NextMatchView {
+  return {
+    id: match.id,
+    apiFixtureId: match.api_fixture_id,
+    referee: match.referee,
+    timezone: match.timezone,
+    fixtureDate: match.fixture_date,
+    fixtureTimestamp: match.fixture_timestamp,
+    statusLong: match.status_long,
+    statusShort: match.status_short,
+    statusElapsed: match.status_elapsed,
+    leagueId: match.league_id,
+    leagueName: match.league_name,
+    leagueCountry: match.league_country,
+    season: match.season,
+    round: match.round,
+    homeTeamId: match.home_team_id,
+    homeTeamName: match.home_team_name,
+    awayTeamId: match.away_team_id,
+    awayTeamName: match.away_team_name,
+    homeGoals: match.home_goals,
+    awayGoals: match.away_goals,
+    updatedAt: match.updated_at,
+  };
 }
 
 export function mapKeyStars(
@@ -159,33 +193,33 @@ export function mapTeamDetailNewsToImpactItems(
   return [...(news ?? [])]
     .sort((a, b) => b.published_at.localeCompare(a.published_at))
     .map((article, index) => {
-    const matchedTeams = parseJsonArrayField(article.matched_teams_json);
-    const matchedPlayers = parseJsonArrayField(article.matched_players_json);
-    const reasons = parseJsonArrayField(article.reasons_json);
-    const apiScore = article.score ?? 0;
-    const { impactScore, sentiment } = computeImpactScore(apiScore);
+      const matchedTeams = parseJsonArrayField(article.matched_teams_json);
+      const matchedPlayers = parseJsonArrayField(article.matched_players_json);
+      const reasons = parseJsonArrayField(article.reasons_json);
+      const apiScore = article.score ?? 0;
+      const { impactScore, sentiment } = computeImpactScore(apiScore);
 
-    return {
-      id: String(article.id),
-      teamCode,
-      teamName,
-      sentiment,
-      headline: article.title,
-      summary: article.description,
-      publishedAtLabel: formatRelativeTime(article.published_at),
-      impactScore,
-      thumbnailUrl: article.url_to_image || undefined,
-      thumbnailAlt: buildThumbnailAlt(matchedPlayers, article.title),
-      highlighted:
-        index === 0 || apiScore >= NEWS_HIGH_IMPACT_THRESHOLD,
-      publishedAt: article.published_at,
-      sourceUrl: article.url,
-      category: article.category,
-      matchedTeams,
-      matchedPlayers,
-      reasons
-    };
-  });
+      return {
+        id: String(article.id),
+        teamCode,
+        teamName,
+        sentiment,
+        headline: article.title,
+        summary: article.description,
+        publishedAtLabel: formatRelativeTime(article.published_at),
+        impactScore,
+        thumbnailUrl: article.url_to_image || undefined,
+        thumbnailAlt: buildThumbnailAlt(matchedPlayers, article.title),
+        highlighted:
+          index === 0 || apiScore >= NEWS_HIGH_IMPACT_THRESHOLD,
+        publishedAt: article.published_at,
+        sourceUrl: article.url,
+        category: article.category,
+        matchedTeams,
+        matchedPlayers,
+        reasons
+      };
+    });
 }
 
 export function mapTeamDetailResponse(
@@ -200,7 +234,8 @@ export function mapTeamDetailResponse(
       logo: data.logo || undefined,
       bestFinish: data.best_finish || undefined,
       fifaRank: data.fifa_rank,
-      groupName: data.group_name || undefined
+      groupName: data.group_name || undefined,
+      titles: data.titles,
     },
     formResults: data.recent_form?.result ?? [],
     latestLabel: data.recent_form?.latest || undefined,
@@ -210,6 +245,8 @@ export function mapTeamDetailResponse(
     keyStars: mapKeyStars(data.team_key_stars),
     strengthMetrics: metrics,
     strengthScore: score,
-    newsItems: mapTeamDetailNewsToImpactItems(data.name, teamCode, data.news)
+    newsItems: mapTeamDetailNewsToImpactItems(data.name, teamCode, data.news),
+    titles: data.titles,
+    nextMatch: mapNextMatch(data.next_match),
   };
 }
