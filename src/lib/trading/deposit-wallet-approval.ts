@@ -5,6 +5,7 @@ import type { TradingUserSession } from "@/types/market";
 
 import { fetchJson } from "@/lib/team/client-fetch";
 import { signTypedData } from "@/lib/trading/wallet-typed-data-sign";
+import { ensureTradingChain } from "@/lib/trading/wallet-trading-chain";
 
 interface ApprovalResponse {
   approval: DepositWalletBatchSignablePayload;
@@ -54,6 +55,8 @@ export async function submitDepositWalletApproval(
   const { approval, sessionSigner } = await fetchJson<ApprovalResponse>(
     `/api/trading/approvals${query}`,
   );
+
+  await ensureTradingChain(session.walletAddress);
   const signature = await signTypedData(session.walletAddress, approval);
   const response = await fetchJson<{ response?: { transactionID?: string; state?: string } }>(
     "/api/trading/approvals",
