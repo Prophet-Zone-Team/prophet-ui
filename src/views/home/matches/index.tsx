@@ -14,6 +14,7 @@ export function HomeMatchesPanel({
   matchesMeta,
   snapshots = []
 }: HomeMatchesPanelProps) {
+
   if (matches.length === 0) {
     return (
       <div className="min-w-0 pb-4">

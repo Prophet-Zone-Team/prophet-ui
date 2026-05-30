@@ -8,7 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
 import {
   formatRegionBlockedDetail,
-  REGION_BLOCKED_LABEL,
+  formatRegionBlockedLabel,
 } from "@/lib/trading/trading-eligibility-client";
 import type { TradingLoginStep } from "@/lib/trading/trading-login";
 import type { AuthContextValue } from "@/context/auth/auth-context";
@@ -122,6 +122,7 @@ export function LoginModal({ auth }: LoginModalProps) {
         {showRestrictedView ? (
           <RestrictedRegionView
             detail={formatRegionBlockedDetail(eligibilityView)}
+            label={formatRegionBlockedLabel(eligibilityView)}
             onClose={() => void closeLogin()}
           />
         ) : (
@@ -250,9 +251,11 @@ function PoweredByPolymarket() {
 
 function RestrictedRegionView({
   detail,
+  label,
   onClose,
 }: {
   detail: string;
+  label: string;
   onClose: () => void;
 }) {
   return (
@@ -267,7 +270,7 @@ function RestrictedRegionView({
       </div>
 
       <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm text-prophet-red">
-        <p className="m-0 font-semibold">{REGION_BLOCKED_LABEL}</p>
+        <p className="m-0 font-semibold">{label}</p>
         <p className="mt-1 m-0 text-prophet-red/90">{detail}</p>
       </div>
 

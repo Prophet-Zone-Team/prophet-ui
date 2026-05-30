@@ -80,6 +80,8 @@ export function mapProphetGameToMatch(
     awaySeed: awayTeam ? undefined : awayName,
     status: mapProphetGameStatus(game),
     kickoffAt: game.start_time,
+    homeScore: game.home_score,
+    awayScore: game.away_score,
     league: "FIFA World Cup",
     odds:
       oddsOutcomes.length >= 3

@@ -4,7 +4,8 @@ import type { ReactElement, ReactNode } from "react";
 import { cloneElement, isValidElement } from "react";
 
 import Popover from "@/components/popover";
-import { REGION_BLOCKED_LABEL } from "@/lib/trading/trading-eligibility-client";
+import { useAuthOptional } from "@/context/auth/use-auth";
+import { formatRegionBlockedLabel } from "@/lib/trading/trading-eligibility-client";
 
 export interface RegionRestrictedControlProps {
   restricted: boolean;
@@ -14,9 +15,12 @@ export interface RegionRestrictedControlProps {
 
 export function RegionRestrictedControl({
   restricted,
-  label = REGION_BLOCKED_LABEL,
+  label,
   children
 }: RegionRestrictedControlProps) {
+  const auth = useAuthOptional();
+  const displayLabel = label ?? formatRegionBlockedLabel(auth?.eligibilityView);
+
   if (!restricted) {
     return children;
   }
@@ -29,7 +33,7 @@ export function RegionRestrictedControl({
       trigger="Hover"
       content={
         <div className="rounded-lg border border-[#EBEBEB] px-3 py-2 text-sm font-[457] bg-white text-black shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
-          {label}
+          {displayLabel}
         </div>
       }
     >

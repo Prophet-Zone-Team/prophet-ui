@@ -5,6 +5,18 @@ import type { TradingEligibilityStatus, TradingUserSession } from "@/types/marke
 
 export const REGION_BLOCKED_LABEL = "Restricted region";
 
+export function formatRegionBlockedLabel(
+  view: TradingEligibilityView | undefined
+) {
+  const location = view?.country;
+
+  if (location) {
+    return `${REGION_BLOCKED_LABEL}(${location})`;
+  }
+
+  return REGION_BLOCKED_LABEL;
+}
+
 export interface TradingEligibilityView {
   status: TradingEligibilityStatus;
   checkedAt?: string;

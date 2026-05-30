@@ -116,6 +116,7 @@ export function normalizeGammaSearchText(value: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/&/g, " and ")
+    .replace("-", " and ")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }

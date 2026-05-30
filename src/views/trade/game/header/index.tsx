@@ -184,6 +184,7 @@ export function TradeGameHeader({
   snapshots,
   teamProfiles
 }: TradeGameHeaderProps) {
+
   const liveMatch = useMatchWithLiveState(match);
   const sides = resolveMatchSides(liveMatch, snapshots);
 
