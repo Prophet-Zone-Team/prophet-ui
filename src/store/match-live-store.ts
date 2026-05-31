@@ -1,9 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
 import { applyScoreChangeToGoalEvents } from "@/lib/market/match-goal-events";
+import { findFeaturedScheduleMatch } from "@/lib/market/schedule-match";
 import {
   loadMatchLiveSession,
   saveMatchLiveSession,
@@ -397,5 +399,33 @@ export function useMatchLiveScore(slug: string | undefined): {
         status: snapshot?.status ?? "unknown",
       };
     })
+  );
+}
+
+export function useScheduleMatchesWithLiveState(
+  matches: WorldCupMatch[]
+): WorldCupMatch[] {
+  const bySlug = useMatchLiveStore((state) => state.bySlug);
+
+  return useMemo(
+    () =>
+      matches.map((match) =>
+        mergeMatchWithLiveSnapshot(
+          match,
+          findSnapshot(bySlug, resolveMatchLiveKeys(match))
+        )
+      ),
+    [matches, bySlug]
+  );
+}
+
+export function useFeaturedScheduleMatch(
+  matches: WorldCupMatch[]
+): WorldCupMatch | undefined {
+  const matchesWithLive = useScheduleMatchesWithLiveState(matches);
+
+  return useMemo(
+    () => findFeaturedScheduleMatch(matchesWithLive, { showEnded: false }),
+    [matchesWithLive]
   );
 }

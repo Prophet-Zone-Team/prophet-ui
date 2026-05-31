@@ -22,7 +22,7 @@ import {
 } from "@/lib/market/schedule-match";
 import { gameTradeHref } from "@/lib/routes/trade";
 import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
-import { useMatchWithLiveState } from "@/store/match-live-store";
+import { useFeaturedScheduleMatch, useMatchWithLiveState } from "@/store/match-live-store";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 
 function useSlantOffsetPx(): [number, (node: HTMLDivElement | null) => void] {
@@ -56,14 +56,32 @@ function useSlantOffsetPx(): [number, (node: HTMLDivElement | null) => void] {
 }
 
 export interface SpecialMatchDataCardProps {
-  match: WorldCupMatch;
+  matches: WorldCupMatch[];
   snapshots?: TeamMarketSnapshot[];
 }
 
 export function SpecialMatchDataCard({
-  match,
+  matches,
   snapshots = []
 }: SpecialMatchDataCardProps) {
+  const featuredMatch = useFeaturedScheduleMatch(matches);
+
+  if (!featuredMatch) {
+    return null;
+  }
+
+  return (
+    <SpecialMatchDataCardContent match={featuredMatch} snapshots={snapshots} />
+  );
+}
+
+function SpecialMatchDataCardContent({
+  match,
+  snapshots = []
+}: {
+  match: WorldCupMatch;
+  snapshots?: TeamMarketSnapshot[];
+}) {
   const router = useRouter();
   const liveMatch = useMatchWithLiveState(match);
   const sides = resolveMatchSides(liveMatch, snapshots);

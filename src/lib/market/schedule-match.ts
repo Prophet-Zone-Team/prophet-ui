@@ -126,10 +126,17 @@ export function getMatchKickoffTime(match: WorldCupMatch): number {
   return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time;
 }
 
+export interface FindFeaturedScheduleMatchOptions {
+  showEnded?: boolean;
+}
+
 export function findFeaturedScheduleMatch(
-  matches: WorldCupMatch[]
+  matches: WorldCupMatch[],
+  options: FindFeaturedScheduleMatchOptions = {}
 ): WorldCupMatch | undefined {
-  const liveMatch = matches.find((match) => match.status === "live");
+  const { showEnded = false } = options;
+  const candidates = filterScheduleMatches(matches, showEnded);
+  const liveMatch = candidates.find((match) => match.status === "live");
 
   if (liveMatch) {
     return liveMatch;
@@ -138,7 +145,7 @@ export function findFeaturedScheduleMatch(
   const now = Date.now();
   let nearest: WorldCupMatch | undefined;
 
-  for (const match of matches) {
+  for (const match of candidates) {
     const kickoff = getMatchKickoffTime(match);
 
     if (kickoff === Number.NEGATIVE_INFINITY) {

@@ -8,10 +8,10 @@ import { curatedNationalTeamsList } from "@/data/teams/curated-team-list";
 import {
   buildScheduleDateGroups,
   buildScheduleMatchList,
-  findFeaturedScheduleMatch,
   type ScheduleFilterTeam,
   type ScheduleSortKey
 } from "@/lib/market/schedule-match";
+import { useScheduleMatchesWithLiveState } from "@/store/match-live-store";
 import type { Team, TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { ScheduleFilterBar } from "@/views/home/matches/schedule-filter-bar";
 import { ScheduleMatchRow } from "@/views/home/matches/schedule-match-row";
@@ -34,40 +34,34 @@ export function HomeMatchesSchedulePanel({
   const [sortKey, setSortKey] = useState<ScheduleSortKey>("time");
   const [showEnded, setShowEnded] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<Team["id"][]>([]);
+  const matchesWithLive = useScheduleMatchesWithLiveState(matches);
 
   const sortedMatches = useMemo(
     () =>
-      buildScheduleMatchList(matches, snapshots, {
+      buildScheduleMatchList(matchesWithLive, snapshots, {
         showEnded,
         sortKey,
         teamIds: selectedTeamIds
       }),
-    [matches, snapshots, showEnded, sortKey, selectedTeamIds]
+    [matchesWithLive, snapshots, showEnded, sortKey, selectedTeamIds]
   );
 
   const dateGroups = useMemo(
     () =>
-      buildScheduleDateGroups(matches, snapshots, {
+      buildScheduleDateGroups(matchesWithLive, snapshots, {
         showEnded,
         sortKey,
         teamIds: selectedTeamIds
       }),
-    [matches, snapshots, showEnded, sortKey, selectedTeamIds]
-  );
-
-  const featuredMatch = useMemo(
-    () => findFeaturedScheduleMatch(matches),
-    [matches]
+    [matchesWithLive, snapshots, showEnded, sortKey, selectedTeamIds]
   );
 
   return (
     <section className="min-w-0" aria-label="Football match schedule">
       <SyncMatchLiveStore matches={matches} />
-      {featuredMatch ? (
-        <div className="pb-[20px]">
-          <SpecialMatchDataCard match={featuredMatch} snapshots={snapshots} />
-        </div>
-      ) : null}
+      <div className="pb-[20px]">
+        <SpecialMatchDataCard matches={matches} snapshots={snapshots} />
+      </div>
 
       <ScheduleFilterBar
         sortKey={sortKey}

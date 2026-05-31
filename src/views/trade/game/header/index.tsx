@@ -184,7 +184,6 @@ export function TradeGameHeader({
   snapshots,
   teamProfiles
 }: TradeGameHeaderProps) {
-
   const liveMatch = useMatchWithLiveState(match);
   const sides = resolveMatchSides(liveMatch, snapshots);
 
@@ -197,7 +196,7 @@ export function TradeGameHeader({
   const effectiveLive = isEffectiveLiveMatch(liveMatch);
   const displayScore = {
     homeScore: liveMatch.homeScore,
-    awayScore: liveMatch.awayScore,
+    awayScore: liveMatch.awayScore
   };
   const liveClock = useLiveElapsedClock(
     liveMatch.liveElapsedSeconds,
