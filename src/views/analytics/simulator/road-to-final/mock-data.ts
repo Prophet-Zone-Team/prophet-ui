@@ -5,55 +5,56 @@ export const ROAD_TO_FINAL_TEAM_COUNT = 32;
 
 const teams = {
   brazil: { id: "brazil", teamCode: "BRA", teamName: "Brazil" },
-  france: { id: "france", teamCode: "FRA", teamName: "France" },
-  spain: { id: "spain", teamCode: "ESP", teamName: "Spain" },
-  england: { id: "england", teamCode: "ENG", teamName: "England" },
-  argentina: { id: "argentina", teamCode: "ARG", teamName: "Argentina" },
-  germany: { id: "germany", teamCode: "GER", teamName: "Germany" },
-  portugal: { id: "portugal", teamCode: "POR", teamName: "Portugal" },
-  netherlands: { id: "netherlands", teamCode: "NED", teamName: "Netherlands" },
-  usa: { id: "usa", teamCode: "USA", teamName: "United States" },
-  mexico: { id: "mexico", teamCode: "MEX", teamName: "Mexico" },
-  japan: { id: "japan", teamCode: "JPN", teamName: "Japan" },
   morocco: { id: "morocco", teamCode: "MAR", teamName: "Morocco" },
-  colombia: { id: "colombia", teamCode: "COL", teamName: "Colombia" },
+  spain: { id: "spain", teamCode: "ESP", teamName: "Spain" },
+  uruguay: { id: "uruguay", teamCode: "URU", teamName: "Uruguay" },
+  france: { id: "france", teamCode: "FRA", teamName: "France" },
+  senegal: { id: "senegal", teamCode: "SEN", teamName: "Senegal" },
+  germany: { id: "germany", teamCode: "GER", teamName: "Germany" },
+  ecuador: { id: "ecuador", teamCode: "ECU", teamName: "Ecuador" },
+  england: { id: "england", teamCode: "ENG", teamName: "England" },
   croatia: { id: "croatia", teamCode: "CRO", teamName: "Croatia" },
-  belgium: { id: "belgium", teamCode: "BEL", teamName: "Belgium" },
-  uruguay: { id: "uruguay", teamCode: "URU", teamName: "Uruguay" }
+  argentina: { id: "argentina", teamCode: "ARG", teamName: "Argentina" },
+  austria: { id: "austria", teamCode: "AUT", teamName: "Austria" },
+  portugal: { id: "portugal", teamCode: "POR", teamName: "Portugal" },
+  colombia: { id: "colombia", teamCode: "COL", teamName: "Colombia" },
+  netherlands: { id: "netherlands", teamCode: "NED", teamName: "Netherlands" },
+  japan: { id: "japan", teamCode: "JPN", teamName: "Japan" }
 } satisfies Record<string, RoadToFinalTeam>;
 
-const empty = null;
-
-/** Mock snapshot: 16 teams in R16, narrowing 16 → 8 → 4 → 2 toward the trophy. */
+/**
+ * Mock snapshot: full 2026 World Cup knockout prediction.
+ * R16 → QF → SF → Final, France beats Argentina in the final.
+ */
 export const roadToFinalBracket: RoadToFinalBracket = {
   r16: [
     teams.brazil,
-    teams.france,
+    teams.morocco,
     teams.spain,
-    empty,
-    teams.england,
-    empty,
-    teams.argentina,
+    teams.uruguay,
+    teams.france,
+    teams.senegal,
     teams.germany,
+    teams.ecuador,
+    teams.england,
+    teams.croatia,
+    teams.argentina,
+    teams.austria,
     teams.portugal,
+    teams.colombia,
     teams.netherlands,
-    empty,
-    teams.usa,
-    teams.mexico,
-    teams.japan,
-    empty,
-    teams.morocco
+    teams.japan
   ],
   qf: [
     teams.brazil,
-    empty,
+    teams.spain,
+    teams.france,
+    teams.germany,
     teams.england,
-    empty,
     teams.argentina,
-    empty,
-    empty,
-    empty
+    teams.portugal,
+    teams.netherlands
   ],
-  sf: [teams.brazil, empty, empty, empty],
-  final: [teams.brazil, empty]
+  sf: [teams.brazil, teams.france, teams.argentina, teams.portugal],
+  final: [teams.france, teams.argentina]
 };
