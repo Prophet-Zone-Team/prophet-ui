@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/auth";
 import { SportsWsProvider } from "@/context/sports-ws";
-import { AppHeader } from "@/layout/header";
+import { AppChrome } from "@/layout/app-chrome";
 import "@/app/globals.css";
 import { Metadata } from "@/context/rainbowkit/metadata";
 import RainbowProvider from "@/context/rainbowkit/provider";
@@ -34,8 +34,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <AuthProvider>
             <SportsWsProvider>
               <main className="min-h-screen overflow-x-hidden font-body">
-                <AppHeader />
-                <div className="pt-[70px]">{children}</div>
+                <AppChrome>{children}</AppChrome>
               </main>
               <Toaster />
             </SportsWsProvider>

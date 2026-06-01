@@ -18,6 +18,10 @@ export function safeNumber(value: number | undefined): number {
   return Number.isFinite(value) ? (value ?? 0) : 0;
 }
 
+export function canRedeemPosition(position: UserPositionRecord): boolean {
+  return position.redeemable && position.size > 0;
+}
+
 export function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }

@@ -13,6 +13,7 @@ import {
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
 import {
+  canRedeemPosition,
   findSnapshotForConditionId,
   findSnapshotForPosition,
   findSnapshotForTokenId,
@@ -24,6 +25,7 @@ import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { useTradeTicketStore } from "@/store/trade-ticket-store";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
+import { PortfolioPositionRedeemDialog } from "@/views/portfolio/portfolio-position-redeem-dialog";
 import { PortfolioPositionSellDialog } from "@/views/portfolio/portfolio-position-sell-dialog";
 import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mobile";
 import {
@@ -51,6 +53,11 @@ type SellTarget = {
   snapshot: TeamMarketSnapshot;
 };
 
+type RedeemTarget = {
+  position: UserPositionRecord;
+  snapshot?: TeamMarketSnapshot;
+};
+
 function PortfolioPositionsTableHeader() {
   return (
     <div className={portfolioPositionsTableHeadClass}>
@@ -59,15 +66,7 @@ function PortfolioPositionsTableHeader() {
       <span>To Win</span>
       <span>Value</span>
       <span>Time</span>
-      <span
-        aria-hidden="true"
-        className={cn(
-          portfolioActionButtonClass,
-          "invisible pointer-events-none justify-self-end"
-        )}
-      >
-        Sell
-      </span>
+      <span className="justify-self-end text-right">Action</span>
     </div>
   );
 }
@@ -120,6 +119,7 @@ export function PortfolioPositionsTable({
   onConnectWallet
 }: PortfolioPositionsTableProps) {
   const [sellTarget, setSellTarget] = useState<SellTarget | null>(null);
+  const [redeemTarget, setRedeemTarget] = useState<RedeemTarget | null>(null);
   const { isRegionBlocked } = useAuth();
   const regionRestricted = isRegionBlocked;
 
@@ -183,6 +183,7 @@ export function PortfolioPositionsTable({
         ? isAuthoritativeSnapshotForPosition(position, snapshot) ||
           Boolean(position.slug || position.conditionId)
         : false);
+    const canRedeem = canRedeemPosition(position);
     const rowKey = `${position.conditionId}:${position.asset}`;
 
     const handleSell = () => {
@@ -192,28 +193,47 @@ export function PortfolioPositionsTable({
       }
     };
 
-    const sellButton = (
-      <RegionRestrictedControl restricted={regionRestricted}>
-        <button
-          type="button"
-          className={cn(
-            portfolioActionButtonClass,
-            "justify-self-end md:justify-self-end",
-            "w-full md:w-auto",
-            "disabled:opacity-50"
-          )}
-          disabled={!canSell || regionRestricted}
-          title={
-            regionRestricted
-              ? undefined
-              : marketClosedReason ??
-                (canSell ? undefined : "Market data unavailable")
-          }
-          onClick={handleSell}
-        >
-          Sell
-        </button>
-      </RegionRestrictedControl>
+    const actionButtons = (
+      <div className="flex w-full flex-col items-stretch justify-end gap-1 md:items-end">
+        {canRedeem ? (
+          <RegionRestrictedControl restricted={regionRestricted}>
+            <button
+              type="button"
+              className={cn(
+                portfolioActionButtonClass,
+                "w-full md:w-auto",
+                "disabled:opacity-50"
+              )}
+              disabled={regionRestricted}
+              onClick={() => setRedeemTarget({ position, snapshot })}
+            >
+              Redeem
+            </button>
+          </RegionRestrictedControl>
+        ) : null}
+        {!canRedeem ? (
+          <RegionRestrictedControl restricted={regionRestricted}>
+            <button
+              type="button"
+              className={cn(
+                portfolioActionButtonClass,
+                "w-full md:w-auto",
+                "disabled:opacity-50"
+              )}
+              disabled={!canSell || regionRestricted}
+              title={
+                regionRestricted
+                  ? undefined
+                  : marketClosedReason ??
+                    (canSell ? undefined : "Market data unavailable")
+              }
+              onClick={handleSell}
+            >
+              Sell
+            </button>
+          </RegionRestrictedControl>
+        ) : null}
+      </div>
     );
 
     desktopRows.push(
@@ -234,7 +254,7 @@ export function PortfolioPositionsTable({
         <span className="text-prophet-muted">
           {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
         </span>
-        {sellButton}
+        {actionButtons}
       </div>
     );
 
@@ -260,7 +280,7 @@ export function PortfolioPositionsTable({
             {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
           </PortfolioTableMobileField>
         </div>
-        {sellButton}
+        {actionButtons}
       </article>
     );
   });
@@ -281,6 +301,15 @@ export function PortfolioPositionsTable({
           position={sellTarget.position}
           snapshot={sellTarget.snapshot}
           onClose={() => setSellTarget(null)}
+        />
+      ) : null}
+
+      {redeemTarget ? (
+        <PortfolioPositionRedeemDialog
+          open
+          position={redeemTarget.position}
+          snapshot={redeemTarget.snapshot}
+          onClose={() => setRedeemTarget(null)}
         />
       ) : null}
     </>

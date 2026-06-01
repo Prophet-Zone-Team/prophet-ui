@@ -1,0 +1,28 @@
+import type { LandingCategory } from "@/types/landing";
+import { CategoryIcon } from "@/views/landing/landing-icons";
+
+interface LandingFooterProps {
+  title: string;
+  highlight: string;
+  categories: LandingCategory[];
+}
+
+export function LandingFooter({ title, highlight, categories }: LandingFooterProps) {
+  return (
+    <footer className="footer">
+      <h2>
+        {title}
+        <br />
+        Global <span>{highlight}</span> next.
+      </h2>
+      <div className="category-row" aria-label="Future market categories">
+        {categories.map((category) => (
+          <div key={category.id} className="category">
+            <CategoryIcon id={category.id} />
+            <span>{category.label}</span>
+          </div>
+        ))}
+      </div>
+    </footer>
+  );
+}
