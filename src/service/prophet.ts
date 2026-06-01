@@ -19,6 +19,7 @@ import type {
   ProphetGetLatestAnalyticsNewsData,
   ProphetGetTeamDetailData,
   ProphetGetTeamRelatedNewsData,
+  ProphetGetTelegramBindStatusData,
   ProphetLoginData,
   ProphetLoginRequest,
   ProphetTrackRequest,
@@ -310,6 +311,14 @@ export async function proxyPolymarketPost<T = unknown>(
 export async function bindProphetTelegram(data: TelegramLoginAuthData): Promise<void> {
   requireProphetApiToken();
   await prophetPost<unknown>("/v1/user/bind/telegram", data);
+}
+
+/** GET /v1/user/bind/telegram/status */
+export async function getProphetTelegramBindStatus(): Promise<ProphetGetTelegramBindStatusData> {
+  requireProphetApiToken();
+  return prophetGet<ProphetGetTelegramBindStatusData>(
+    "/v1/user/bind/telegram/status"
+  );
 }
 
 /** POST /v1/user/track */

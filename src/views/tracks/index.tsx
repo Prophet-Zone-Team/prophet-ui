@@ -14,6 +14,7 @@ import { TracksEmptyState } from "./empty";
 import TracksTitle from "./title";
 import { TrackCard } from "./track-card";
 import { useProphetTopTracks } from "@/hooks/tracks/use-prophet-top-tracks";
+import { useTracksTelegramBind } from "@/hooks/tracks/use-tracks-telegram-bind";
 import { TopAttentionCard } from "./top-attention-card";
 import { TopAttentionEmptyState } from "./top-attention-empty";
 import TracksTelegramBanner from "./tg";
@@ -22,7 +23,16 @@ import { TracksUnauthenticatedState } from "./unauthenticated";
 export function TracksView() {
   const authHydrated = useAuthHydrated();
   const tracksHydrated = useTracksHydrated();
-  const { isAuthenticated, openLogin, loginInProgress } = useAuth();
+  const { isAuthenticated, openLogin, loginInProgress, session } = useAuth();
+  const {
+    bound: telegramBound,
+    loadStatus: telegramLoadStatus,
+    setBoundOptimistic: setTelegramBoundOptimistic
+  } = useTracksTelegramBind({
+    authHydrated,
+    enabled: isAuthenticated,
+    walletAddress: session?.walletAddress
+  });
   const items = useTracksItems();
   const status = useTracksStore((state) => state.status);
   const errorMessage = useTracksStore((state) => state.error);
@@ -165,7 +175,11 @@ export function TracksView() {
           </p>
         ) : null}
         <div className="mt-6">{renderMainContent()}</div>
-        <TracksTelegramBanner />
+        <TracksTelegramBanner
+          telegramBound={telegramBound}
+          telegramLoadStatus={telegramLoadStatus}
+          onTelegramBound={setTelegramBoundOptimistic}
+        />
       </div>
       <div className="mt-3 lg:mt-4">
         <div className="my-5 text-base font-[500] text-black md:mt-4 md:text-[18px]">

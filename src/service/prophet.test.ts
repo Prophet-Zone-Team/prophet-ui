@@ -4,6 +4,7 @@ import { describe, it, beforeEach } from "node:test";
 import {
   ProphetApiError,
   bindProphetTelegram,
+  getProphetTelegramBindStatus,
   getProphetTopTracks,
   getProphetTrackList,
   getProphetTracks,
@@ -84,6 +85,7 @@ describe("prophet auth guards", () => {
     );
     await assertAuthRequired(() => getProphetTracks());
     await assertAuthRequired(() => getProphetTrackList());
+    await assertAuthRequired(() => getProphetTelegramBindStatus());
     await assertAuthRequired(() => untrackProphet({ slug: "brazil" }));
   });
 

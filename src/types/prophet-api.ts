@@ -113,6 +113,12 @@ export interface ProphetBindTelegramRequest {
   tg_user_id: number;
 }
 
+/** GET /v1/user/bind/telegram/status */
+export interface ProphetGetTelegramBindStatusData {
+  bound?: boolean;
+  tg_user_id?: number;
+}
+
 export type ProphetTrackCategory = "team" | "game";
 
 export interface ProphetTrackRequest {

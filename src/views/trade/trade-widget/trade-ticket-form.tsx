@@ -356,7 +356,7 @@ export function TradeTicketForm({
                 : "text-prophet-muted"
             )}
           >
-            {displayMessage}
+            {amount !== "0" ? displayMessage : ""}
           </p>
           {eligibilityRetryAvailable && onRetryEligibility ? (
             <button
@@ -369,7 +369,7 @@ export function TradeTicketForm({
             </button>
           ) : null}
         </div>
-      ) : preview.disabledReason ? (
+      ) : preview.disabledReason && amount !== "0" ? (
         <p className="m-0 text-xs text-prophet-muted">
           {preview.disabledReason}
         </p>

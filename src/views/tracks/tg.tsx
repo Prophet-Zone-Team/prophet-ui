@@ -10,6 +10,7 @@ import {
 } from "@/components/bind-tg";
 import { DEFAULT_BOT_USERNAME } from "@/components/bind-tg/constants";
 import { useAuth } from "@/context/auth/use-auth";
+import type { TracksTelegramBindLoadStatus } from "@/hooks/tracks/use-tracks-telegram-bind";
 import {
   bindProphetTelegram,
   isProphetAuthenticated,
@@ -18,7 +19,17 @@ import {
 
 const TELEGRAM_BOT_URL = `https://t.me/${DEFAULT_BOT_USERNAME}`;
 
-export default function TracksTelegramBanner() {
+export interface TracksTelegramBannerProps {
+  telegramBound?: boolean;
+  telegramLoadStatus: TracksTelegramBindLoadStatus;
+  onTelegramBound: (payload: { bound: boolean; tgUserId?: number }) => void;
+}
+
+export default function TracksTelegramBanner({
+  telegramBound,
+  telegramLoadStatus,
+  onTelegramBound
+}: TracksTelegramBannerProps) {
   const { openLogin } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bindStatus, setBindStatus] = useState<BindTelegramStatus>("unbound");
@@ -32,6 +43,31 @@ export default function TracksTelegramBanner() {
   const closeBindDialog = useCallback(() => {
     setDialogOpen(false);
   }, []);
+
+  const handleTelegramClick = useCallback(async () => {
+    if (telegramLoadStatus === "loading") {
+      return;
+    }
+
+    if (!isProphetAuthenticated()) {
+      try {
+        await openLogin();
+      } catch {
+        return;
+      }
+
+      if (!isProphetAuthenticated()) {
+        return;
+      }
+    }
+
+    if (telegramBound === true && telegramLoadStatus === "ready") {
+      window.open(TELEGRAM_BOT_URL, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    openBindDialog();
+  }, [openBindDialog, openLogin, telegramBound, telegramLoadStatus]);
 
   const handleOpenBot = useCallback(async () => {
     if (isBinding) {
@@ -69,6 +105,7 @@ export default function TracksTelegramBanner() {
             await bindProphetTelegram(data);
             setConnectedAt(new Date().toLocaleDateString());
             setBindStatus("success");
+            onTelegramBound({ bound: true, tgUserId: data.id });
           } catch (error) {
             setBindStatus("unbound");
 
@@ -87,7 +124,7 @@ export default function TracksTelegramBanner() {
         })();
       }
     );
-  }, [isBinding, openLogin]);
+  }, [isBinding, onTelegramBound, openLogin]);
 
   const handleCheckStatus = useCallback(() => {
     setBindStatus((current) => (current === "unbound" ? "binding" : current));
@@ -113,8 +150,9 @@ export default function TracksTelegramBanner() {
           Track on your{" "}
           <button
             type="button"
-            className="border-0 bg-transparent p-0 font-[600] underline cursor-pointer text-inherit"
-            onClick={openBindDialog}
+            className="border-0 bg-transparent p-0 font-[600] underline cursor-pointer text-inherit disabled:cursor-wait disabled:opacity-60"
+            onClick={() => void handleTelegramClick()}
+            disabled={telegramLoadStatus === "loading"}
           >
             Telegram
           </button>{" "}
