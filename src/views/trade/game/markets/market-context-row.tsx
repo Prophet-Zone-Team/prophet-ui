@@ -8,6 +8,7 @@ import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { MatchHistory } from "@/views/trade/game/match-history";
 import { RelatedNews } from "@/views/trade/game/related-news";
+import { GameStatistics } from "@/views/trade/game/statistics";
 
 export type MarketContextRowProps = {
   match: WorldCupMatch;
@@ -45,19 +46,33 @@ export function MarketContextRow({
   });
 
   return (
-    <div className="mt-[8px] flex flex-col gap-4 lg:flex-row lg:items-start">
-      <RelatedNews
-        className="min-w-0 flex-1 max-w-none"
-        items={relatedNewsItems}
-        isLoading={relatedNewsLoading}
-        isError={relatedNewsError}
+    <div className="mt-[8px] flex flex-col gap-4">
+      <GameStatistics
+        homeTeam={{
+          name: homeTeamName,
+          code: sides.home.code,
+          logoUrl: sides.home.logoUrl
+        }}
+        awayTeam={{
+          name: awayTeamName,
+          code: sides.away.code,
+          logoUrl: sides.away.logoUrl
+        }}
       />
-      <MatchHistory
-        className="min-w-0 flex-1 max-w-none"
-        matches={matchHistoryEntries}
-        isLoading={matchHistoryLoading}
-        isError={matchHistoryError}
-      />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <RelatedNews
+          className="min-w-0 flex-1 max-w-none"
+          items={relatedNewsItems}
+          isLoading={relatedNewsLoading}
+          isError={relatedNewsError}
+        />
+        <MatchHistory
+          className="min-w-0 flex-1 max-w-none"
+          matches={matchHistoryEntries}
+          isLoading={matchHistoryLoading}
+          isError={matchHistoryError}
+        />
+      </div>
     </div>
   );
 }

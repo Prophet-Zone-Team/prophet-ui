@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import type { KeyboardEvent } from "react";
 
 import {
   formatProbability,
@@ -104,6 +105,9 @@ const valueClassName =
 const cardClassName =
   "box-border flex h-auto min-h-[214px] w-full max-w-[345px] flex-col rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-3 md:px-4 md:py-4";
 
+const cardInteractiveClassName =
+  "cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]";
+
 function formatAttention(value: number): string {
   return new Intl.NumberFormat("en-US").format(Math.round(value));
 }
@@ -123,15 +127,32 @@ function TopAttentionTeamCard({
   badge,
   className
 }: TopAttentionTeamCardProps) {
+  const router = useRouter();
   const { team, market } = snapshot;
+  const tradeHref = teamTradeHref(team.id);
   const volumeLabel = `$${formatVolume(market.volume)}`;
   const attentionLabel =
     attention !== undefined ? `🔥${formatAttention(attention)}` : undefined;
 
+  function navigateToTrade() {
+    router.push(tradeHref);
+  }
+
+  function handleCardKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      navigateToTrade();
+    }
+  }
+
   return (
     <article
-      className={cn(cardClassName, className)}
-      aria-label={`${team.name} top attention card`}
+      role="link"
+      tabIndex={0}
+      className={cn(cardClassName, cardInteractiveClassName, className)}
+      aria-label={`Open trade page for ${team.name}`}
+      onClick={navigateToTrade}
+      onKeyDown={handleCardKeyDown}
     >
       <div className="flex items-start justify-between gap-3">
         <p className="m-0 text-[12px] font-[400] capitalize leading-[15px] text-[#909090]">
@@ -161,7 +182,11 @@ function TopAttentionTeamCard({
         attention={attentionLabel}
       />
 
-      <div className="grid grid-cols-2 gap-2.5">
+      <div
+        className="grid grid-cols-2 gap-2.5"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
         <OutcomeQuickBidButton snapshot={snapshot} side="yes" />
         <OutcomeQuickBidButton snapshot={snapshot} side="no" />
       </div>
@@ -178,15 +203,33 @@ function TopAttentionMatchCard({
   probability,
   className
 }: TopAttentionMatchCardProps) {
+  const router = useRouter();
   const kickoffLabel = formatScheduleKickoff(match.kickoffAt);
   const volumeLabel = `$${formatVolume(volume)}`;
   const attentionLabel =
     attention !== undefined ? `🔥${formatAttention(attention)}` : undefined;
   const matchTitle = `${homeTeam.name} vs ${awayTeam.name}`;
+  const tradeHref = gameTradeHref(match.id);
+
+  function navigateToTrade() {
+    router.push(tradeHref);
+  }
+
+  function handleCardKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      navigateToTrade();
+    }
+  }
+
   return (
     <article
-      className={cn(cardClassName, className)}
-      aria-label={`${matchTitle} top attention card`}
+      role="link"
+      tabIndex={0}
+      className={cn(cardClassName, cardInteractiveClassName, className)}
+      aria-label={`Open trade page for ${matchTitle}`}
+      onClick={navigateToTrade}
+      onKeyDown={handleCardKeyDown}
     >
       <div className="flex items-start justify-between gap-3">
         <p className="m-0 text-[12px] font-[400] leading-[15px] text-[#909090]">
@@ -223,7 +266,11 @@ function TopAttentionMatchCard({
         attention={attentionLabel}
       />
 
-      <div className="grid grid-cols-3 gap-2">
+      <div
+        className="grid grid-cols-3 gap-2"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
         {(["home", "draw", "away"] as const).map((outcomeSide) => (
           <MatchOutcomeQuickBidButton
             key={outcomeSide}
