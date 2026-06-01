@@ -1,8 +1,8 @@
-import type { LandingMatch } from "@/types/landing";
-import { LandingFlag } from "@/views/landing/primitives/landing-flag";
+import type { ReferralMatch } from "@/types/referral";
+import { ReferralFlag } from "@/views/referral/primitives/referral-flag";
 
 interface MatchCardProps {
-  match: LandingMatch;
+  match: ReferralMatch;
 }
 
 export function MatchCard({ match }: MatchCardProps) {
@@ -10,12 +10,12 @@ export function MatchCard({ match }: MatchCardProps) {
     <article className="match-card">
       <div className="match-teams">
         <div className="match-team">
-          <LandingFlag flag={match.homeFlag} flagKind={match.homeFlagKind} />
+          <ReferralFlag flag={match.homeFlag} flagKind={match.homeFlagKind} />
           {match.home}
         </div>
         <span className="versus">vs</span>
         <div className="match-team">
-          <LandingFlag flag={match.awayFlag} flagKind={match.awayFlagKind} />
+          <ReferralFlag flag={match.awayFlag} flagKind={match.awayFlagKind} />
           {match.away}
         </div>
         <span className="arrow">→</span>

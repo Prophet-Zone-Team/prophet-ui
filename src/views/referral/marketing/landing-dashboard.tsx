@@ -1,16 +1,16 @@
 import Link from "next/link";
 
-import type { LandingMarketingContent } from "@/types/landing";
-import { InfoIcon, LightningIcon } from "@/views/landing/landing-icons";
+import type { ReferralMarketingContent } from "@/types/referral";
+import { InfoIcon, LightningIcon } from "@/views/referral/referral-icons";
 
 import { MoveCard } from "./move-card";
 import { TeamCard } from "./team-card";
 
 interface LandingDashboardProps {
-  teams: LandingMarketingContent["teams"];
+  teams: ReferralMarketingContent["teams"];
   moreTeamsCount: number;
-  footnote: LandingMarketingContent["footnote"];
-  movements: LandingMarketingContent["movements"];
+  footnote: ReferralMarketingContent["footnote"];
+  movements: ReferralMarketingContent["movements"];
 }
 
 export function LandingDashboard({

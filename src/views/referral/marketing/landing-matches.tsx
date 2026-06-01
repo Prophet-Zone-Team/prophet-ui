@@ -1,14 +1,14 @@
 import Link from "next/link";
 
-import type { LandingMatch } from "@/types/landing";
+import type { ReferralMatch } from "@/types/referral";
 
 import { MatchCard } from "./match-card";
 
-interface LandingMatchesProps {
-  matches: LandingMatch[];
+interface ReferralMatchesProps {
+  matches: ReferralMatch[];
 }
 
-export function LandingMatches({ matches }: LandingMatchesProps) {
+export function ReferralMatches({ matches }: ReferralMatchesProps) {
   return (
     <section className="panel matches" aria-labelledby="matches-title">
       <div className="section-head">

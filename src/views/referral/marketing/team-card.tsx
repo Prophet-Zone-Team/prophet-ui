@@ -1,8 +1,8 @@
-import type { LandingTeamCard } from "@/types/landing";
-import { LandingFlag } from "@/views/landing/primitives/landing-flag";
+import type { ReferralTeamCard } from "@/types/referral";
+import { ReferralFlag } from "@/views/referral/primitives/referral-flag";
 
 interface TeamCardProps {
-  team: LandingTeamCard;
+  team: ReferralTeamCard;
 }
 
 export function TeamCard({ team }: TeamCardProps) {
@@ -12,7 +12,7 @@ export function TeamCard({ team }: TeamCardProps) {
     <article className={className}>
       <span className="rank">{team.rank}</span>
       <div className="team-name">
-        <LandingFlag flag={team.flag} flagKind={team.flagKind} />
+        <ReferralFlag flag={team.flag} flagKind={team.flagKind} />
         {team.name}
       </div>
       <div className="team-value">

@@ -1,12 +1,12 @@
-import type { LandingMovementCard } from "@/types/landing";
-import { TrendChartIcon } from "@/views/landing/landing-icons";
-import { LandingFlag } from "@/views/landing/primitives/landing-flag";
+import type { ReferralMovementCard } from "@/types/referral";
+import { TrendChartIcon } from "@/views/referral/referral-icons";
+import { ReferralFlag } from "@/views/referral/primitives/referral-flag";
 
 interface MoveCardProps {
-  movement: LandingMovementCard;
+  movement: ReferralMovementCard;
 }
 
-function ConfidenceBars({ confidence }: { confidence: LandingMovementCard["confidence"] }) {
+function ConfidenceBars({ confidence }: { confidence: ReferralMovementCard["confidence"] }) {
   const barsClass = confidence === "high" ? "bars" : "bars yellow";
   const label = confidence === "high" ? "High confidence" : "Medium confidence";
 
@@ -28,7 +28,7 @@ export function MoveCard({ movement }: MoveCardProps) {
 
   return (
     <article className="move-card">
-      <LandingFlag flag={movement.flag} flagKind={movement.flagKind} />
+      <ReferralFlag flag={movement.flag} flagKind={movement.flagKind} />
       <div>
         <h3 className={titleClass}>{movement.title}</h3>
         <p className="move-copy">

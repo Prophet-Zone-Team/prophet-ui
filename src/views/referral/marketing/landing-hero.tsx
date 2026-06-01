@@ -1,11 +1,11 @@
 import Link from "next/link";
 
-import type { LandingMarketingContent } from "@/types/landing";
-import { ArrowIcon, LightningIcon } from "@/views/landing/landing-icons";
-import { LandingFlag } from "@/views/landing/primitives/landing-flag";
+import type { ReferralMarketingContent } from "@/types/referral";
+import { ArrowIcon, LightningIcon } from "@/views/referral/referral-icons";
+import { ReferralFlag } from "@/views/referral/primitives/referral-flag";
 
 interface LandingHeroProps {
-  hero: LandingMarketingContent["hero"];
+  hero: ReferralMarketingContent["hero"];
 }
 
 export function LandingHero({ hero }: LandingHeroProps) {
@@ -74,7 +74,7 @@ export function LandingHero({ hero }: LandingHeroProps) {
           <div className="signal-hero-card">
             <div className="signal-hero-top">
               <div className="signal-team">
-                <LandingFlag flag={featured.flag} flagKind={featured.flagKind} />
+                <ReferralFlag flag={featured.flag} flagKind={featured.flagKind} />
                 {featured.title}
               </div>
               <div className="signal-score">
@@ -98,7 +98,7 @@ export function LandingHero({ hero }: LandingHeroProps) {
           <div className="terminal-list">
             {rows.map((row) => (
               <article key={row.title} className="terminal-row">
-                <LandingFlag flag={row.flag} flagKind={row.flagKind} />
+                <ReferralFlag flag={row.flag} flagKind={row.flagKind} />
                 <div>
                   <h3>{row.title}</h3>
                   <p>{row.copy}</p>

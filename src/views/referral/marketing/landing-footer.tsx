@@ -1,10 +1,10 @@
-import type { LandingCategory } from "@/types/landing";
-import { CategoryIcon } from "@/views/landing/landing-icons";
+import type { ReferralCategory } from "@/types/referral";
+import { CategoryIcon } from "@/views/referral/referral-icons";
 
 interface LandingFooterProps {
   title: string;
   highlight: string;
-  categories: LandingCategory[];
+  categories: ReferralCategory[];
 }
 
 export function LandingFooter({ title, highlight, categories }: LandingFooterProps) {

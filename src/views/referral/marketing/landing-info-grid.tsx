@@ -1,18 +1,18 @@
-import type { LandingMarketingContent } from "@/types/landing";
+import type { ReferralMarketingContent } from "@/types/referral";
 import {
   MessageStepIcon,
   PlayStepIcon,
   SignalTaxonomyIcon,
   TargetStepIcon,
   WhyItemIcon,
-} from "@/views/landing/landing-icons";
+} from "@/views/referral/referral-icons";
 
 const stepIcons = [TargetStepIcon, MessageStepIcon, PlayStepIcon] as const;
 
 interface LandingInfoGridProps {
-  workSteps: LandingMarketingContent["workSteps"];
-  signalTaxonomy: LandingMarketingContent["signalTaxonomy"];
-  whyItems: LandingMarketingContent["whyItems"];
+  workSteps: ReferralMarketingContent["workSteps"];
+  signalTaxonomy: ReferralMarketingContent["signalTaxonomy"];
+  whyItems: ReferralMarketingContent["whyItems"];
 }
 
 export function LandingInfoGrid({ workSteps, signalTaxonomy, whyItems }: LandingInfoGridProps) {

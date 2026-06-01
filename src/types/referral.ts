@@ -1,12 +1,7 @@
-export type LandingFlagKind = "emoji" | "england";
-
-export interface LandingNavItem {
-  label: string;
-  href: string;
-  active?: boolean;
-}
+export type ReferralFlagKind = "emoji" | "england";
 
 export interface ReferralTab {
+  id: string;
   label: string;
   href: string;
   active?: boolean;
@@ -54,14 +49,14 @@ export interface ReferralActivityRow {
   time: string;
 }
 
-export interface LandingHeroStat {
+export interface ReferralHeroStat {
   value: string;
   label: string;
 }
 
-export interface LandingTerminalSignal {
+export interface ReferralTerminalSignal {
   flag: string;
-  flagKind?: LandingFlagKind;
+  flagKind?: ReferralFlagKind;
   title: string;
   copy: string;
   value: string;
@@ -69,19 +64,19 @@ export interface LandingTerminalSignal {
   deltaDown?: boolean;
 }
 
-export interface LandingTeamCard {
+export interface ReferralTeamCard {
   rank: number;
   name: string;
   flag: string;
-  flagKind?: LandingFlagKind;
+  flagKind?: ReferralFlagKind;
   probability: string;
   delta: string;
   down?: boolean;
 }
 
-export interface LandingMovementCard {
+export interface ReferralMovementCard {
   flag: string;
-  flagKind?: LandingFlagKind;
+  flagKind?: ReferralFlagKind;
   title: string;
   titleDown?: boolean;
   copy: string;
@@ -94,48 +89,48 @@ export interface LandingMovementCard {
   trending?: boolean;
 }
 
-export interface LandingMatchOdd {
+export interface ReferralMatchOdd {
   probability: string;
   label: string;
   price: string;
 }
 
-export interface LandingMatch {
+export interface ReferralMatch {
   home: string;
   homeFlag: string;
   homeCode: string;
   away: string;
   awayFlag: string;
   awayCode: string;
-  homeFlagKind?: LandingFlagKind;
-  awayFlagKind?: LandingFlagKind;
+  homeFlagKind?: ReferralFlagKind;
+  awayFlagKind?: ReferralFlagKind;
   time: string;
-  odds: [LandingMatchOdd, LandingMatchOdd, LandingMatchOdd];
+  odds: [ReferralMatchOdd, ReferralMatchOdd, ReferralMatchOdd];
 }
 
-export interface LandingWorkStep {
+export interface ReferralWorkStep {
   number: number;
   title: string;
   copy: string;
 }
 
-export interface LandingSignalTaxonomy {
+export interface ReferralSignalTaxonomy {
   id: string;
   label: string;
 }
 
-export interface LandingWhyItem {
+export interface ReferralWhyItem {
   id: string;
   title: string;
   copy: string;
 }
 
-export interface LandingCategory {
+export interface ReferralCategory {
   id: string;
   label: string;
 }
 
-export interface LandingReferralContent {
+export interface ReferralContent {
   title: string;
   subtitle: string;
   note: string;
@@ -150,34 +145,33 @@ export interface LandingReferralContent {
   claimMeta: string;
 }
 
-export interface LandingMarketingContent {
+export interface ReferralMarketingContent {
   hero: {
     eyebrow: string;
     titleLine1: string;
     titleHighlight: string;
     subcopy: string;
-    stats: LandingHeroStat[];
+    stats: ReferralHeroStat[];
     terminal: {
-      featured: LandingTerminalSignal;
-      rows: LandingTerminalSignal[];
+      featured: ReferralTerminalSignal;
+      rows: ReferralTerminalSignal[];
       metrics: { value: string; label: string }[];
     };
   };
-  teams: LandingTeamCard[];
+  teams: ReferralTeamCard[];
   moreTeamsCount: number;
   footnote: { left: string; right: string };
-  movements: LandingMovementCard[];
-  matches: LandingMatch[];
-  workSteps: LandingWorkStep[];
-  signalTaxonomy: LandingSignalTaxonomy[];
-  whyItems: LandingWhyItem[];
+  movements: ReferralMovementCard[];
+  matches: ReferralMatch[];
+  workSteps: ReferralWorkStep[];
+  signalTaxonomy: ReferralSignalTaxonomy[];
+  whyItems: ReferralWhyItem[];
   footerTitle: string;
   footerHighlight: string;
-  categories: LandingCategory[];
+  categories: ReferralCategory[];
 }
 
-export interface LandingPageContent {
-  nav: LandingNavItem[];
-  referral: LandingReferralContent;
-  marketing: LandingMarketingContent;
+export interface ReferralPageContent {
+  referral: ReferralContent;
+  marketing: ReferralMarketingContent;
 }

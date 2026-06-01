@@ -1,12 +1,6 @@
-import type { LandingPageContent } from "@/types/landing";
+import type { ReferralPageContent } from "@/types/referral";
 
-export const landingPageContent: LandingPageContent = {
-  nav: [
-    { label: "Markets", href: "/fifa" },
-    { label: "Matches", href: "/fifa/matches" },
-    { label: "Teams", href: "/teams" },
-    { label: "Portfolio", href: "/portfolio", active: true },
-  ],
+export const referralPageContent: ReferralPageContent = {
   referral: {
     title: "Referral Program",
     subtitle: "Invite traders. Earn USDC rewards.",
@@ -15,11 +9,11 @@ export const landingPageContent: LandingPageContent = {
     balanceValue: "1,245.68",
     referralLink: "https://prophet.zone/r/0x8f3a1b2",
     tabs: [
-      { label: "Overview", href: "/portfolio" },
-      { label: "Positions", href: "/portfolio" },
-      { label: "Orders", href: "/portfolio" },
-      { label: "History", href: "/portfolio" },
-      { label: "Referral", href: "/landing", active: true },
+      { id: "overview", label: "Overview", href: "/portfolio" },
+      { id: "positions", label: "Positions", href: "/portfolio" },
+      { id: "orders", label: "Orders", href: "/portfolio" },
+      { id: "history", label: "History", href: "/portfolio" },
+      { id: "referral", label: "Referral", href: "/referral", active: true },
     ],
     metrics: [
       {
