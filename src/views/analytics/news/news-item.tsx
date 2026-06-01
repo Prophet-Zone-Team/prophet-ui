@@ -5,6 +5,7 @@ import { formatImpactScore } from "./format";
 import { NegativeSentimentIcon, PositiveSentimentIcon } from "./icons";
 import { NewsItemThumbnail } from "./news-item-thumbnail";
 import type { NewsImpactItem } from "./types";
+import teams from "@/data/teams";
 
 export type NewsItemProps = {
   item: NewsImpactItem;
@@ -26,6 +27,8 @@ function SentimentIcon({
 
 export function NewsItem({ item, onSelect, className }: NewsItemProps) {
   const isPositiveImpact = item.impactScore >= 0;
+
+  const team = teams[item.teamName as keyof typeof teams];
 
   return (
     <article
@@ -55,11 +58,15 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2 md:justify-start md:gap-[8px]">
             <div className="flex min-w-0 items-center gap-2 md:gap-[8px]">
-              <TeamFlag
-                code={item.teamCode}
-                name={item.teamName}
-                className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] md:h-[20px] md:w-[20px] md:text-[20px]"
-              />
+              {
+                team && (
+                  <TeamFlag
+                    code={item.teamCode}
+                    name={item.teamName}
+                    className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] md:h-[20px] md:w-[20px] md:text-[20px]"
+                  />
+                )
+              }
               <span className="truncate text-base font-[500] leading-[19px] text-black md:text-[18px] md:leading-[21px]">
                 {item.teamName}
               </span>
