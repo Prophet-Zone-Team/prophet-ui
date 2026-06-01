@@ -59,6 +59,7 @@ export function TeamProbabilityPanel({ snapshot }: TeamProbabilityPanelProps) {
             probabilityHistory={probabilityHistory}
             hideTitle
             topTeamCount={1}
+            showAxisTooltip
           />
         )}
       </div>

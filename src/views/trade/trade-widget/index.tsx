@@ -38,7 +38,7 @@ export type TradeWidgetGameProps = {
 
 export type TradeWidgetProps = TradeWidgetTeamProps | TradeWidgetGameProps;
 
-export function TradeWidget(props: TradeWidgetProps & { className?: string; }) {
+export function TradeWidget(props: TradeWidgetProps & { className?: string; outcomeButtonClassName?: string; outcomeButtonContainerClassName?: string; }) {
   const syncForTeamSnapshot = useSyncTradeTeamSnapshot();
   const syncForGameSnapshot = useSyncTradeGameSnapshot();
   const outcomeSide = useTradeOutcomeSide();
@@ -97,9 +97,15 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; }) {
           variant="game"
           gameSnapshot={props.gameSnapshot}
           teamSnapshots={props.teamSnapshots}
+          outcomeButtonClassName={props.outcomeButtonClassName}
+          outcomeButtonContainerClassName={props.outcomeButtonContainerClassName}
         />
       ) : (
-        <ActionPanel snapshot={props.snapshot} />
+        <ActionPanel
+          snapshot={props.snapshot}
+          outcomeButtonClassName={props.outcomeButtonClassName}
+          outcomeButtonContainerClassName={props.outcomeButtonContainerClassName}
+        />
       )}
     </section>
   );

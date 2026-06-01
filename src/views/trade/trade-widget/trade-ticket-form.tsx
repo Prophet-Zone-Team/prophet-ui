@@ -80,6 +80,8 @@ export interface TradeTicketFormProps {
   takeProfitLimitEnabled?: boolean;
   takeProfitLimitDisabled?: boolean;
   takeProfitLimitPrice?: string;
+  outcomeButtonClassName?: string;
+  outcomeButtonContainerClassName?: string;
   onTakeProfitLimitEnabledChange?: (value: boolean) => void;
   onTakeProfitLimitPriceChange?: (value: string) => void;
 }
@@ -126,6 +128,8 @@ export function TradeTicketForm({
   takeProfitLimitEnabled = false,
   takeProfitLimitDisabled = false,
   takeProfitLimitPrice = "0.012",
+  outcomeButtonClassName,
+  outcomeButtonContainerClassName,
   onTakeProfitLimitEnabledChange,
   onTakeProfitLimitPriceChange
 }: TradeTicketFormProps) {
@@ -144,7 +148,7 @@ export function TradeTicketForm({
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-4 pt-4">
-      <div className="grid grid-cols-2 gap-2">
+      <div className={cn("grid grid-cols-2 gap-2", outcomeButtonContainerClassName)}>
         <OutcomeButtonColumn
           side="yes"
           active={outcomeSide === "yes"}
@@ -152,6 +156,7 @@ export function TradeTicketForm({
           probabilityLabel={formatProbability(yesProbability)}
           shareCount={tradeSide === "sell" ? yesShares : undefined}
           onSelect={() => onSelectOutcome("yes")}
+          buttonClassName={outcomeButtonClassName}
         />
         <OutcomeButtonColumn
           side="no"
@@ -160,6 +165,7 @@ export function TradeTicketForm({
           probabilityLabel={formatProbability(noProbability)}
           shareCount={tradeSide === "sell" ? noShares : undefined}
           onSelect={() => onSelectOutcome("no")}
+          buttonClassName={outcomeButtonClassName}
         />
       </div>
 
@@ -295,8 +301,8 @@ export function TradeTicketForm({
       </div>
 
       {!isLimitOrder &&
-      tradeSide === "buy" &&
-      onTakeProfitLimitEnabledChange ? (
+        tradeSide === "buy" &&
+        onTakeProfitLimitEnabledChange ? (
         <TakeProfitLimitRow
           enabled={takeProfitLimitEnabled}
           disabled={takeProfitLimitDisabled}
@@ -458,6 +464,8 @@ function OutcomeButtonColumn({
   priceLabel,
   probabilityLabel,
   shareCount,
+  className,
+  buttonClassName,
   onSelect
 }: {
   side: "yes" | "no";
@@ -465,19 +473,22 @@ function OutcomeButtonColumn({
   priceLabel: string;
   probabilityLabel: string;
   shareCount?: number;
+  className?: string;
+  buttonClassName?: string;
   onSelect: () => void;
 }) {
   const isYes = side === "yes";
   const showShares = shareCount !== undefined && shareCount > 0;
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className={cn("flex flex-col items-center gap-1", className)}>
       <OutcomeButton
         side={side}
         active={active}
         priceLabel={priceLabel}
         probabilityLabel={probabilityLabel}
         onSelect={onSelect}
+        buttonClassName={buttonClassName}
       />
       {showShares ? (
         <span
@@ -498,12 +509,14 @@ function OutcomeButton({
   active,
   priceLabel,
   probabilityLabel,
+  buttonClassName,
   onSelect
 }: {
   side: "yes" | "no";
   active: boolean;
   priceLabel: string;
   probabilityLabel: string;
+  buttonClassName?: string;
   onSelect: () => void;
 }) {
   const isYes = side === "yes";
@@ -520,7 +533,8 @@ function OutcomeButton({
             : "border-[#FF674B] bg-[#FF674B] text-white"
           : isYes
             ? "border-prophet-line bg-white text-[#65AF14] hover:bg-[#fafbfc]"
-            : "border-[#FF674B] bg-white text-[#FF674B] hover:bg-[#fafbfc]"
+            : "border-[#FF674B] bg-white text-[#FF674B] hover:bg-[#fafbfc]",
+        buttonClassName
       )}
     >
       <span className="text-[20px] font-[500] leading-6">

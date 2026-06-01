@@ -90,18 +90,13 @@ function HeroSkeleton() {
 function DossierStripSkeleton() {
   return (
     <section className={teamDossierStripClass} aria-hidden>
-      <DossierPanelSkeleton
-        body={
-          <>
-            <div className="flex flex-wrap gap-1.5">
-              {Array.from({ length: 5 }, (_, index) => (
-                <LoadingBlock key={index} className="size-8 rounded-md" />
-              ))}
-            </div>
-            <LoadingBlock className="h-3 w-[80%]" />
-          </>
-        }
-      />
+      <PanelSkeleton titleWidth="w-48">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {Array.from({ length: 2 }, (_, index) => (
+            <LoadingBlock key={index} className="h-40 w-full rounded-lg" />
+          ))}
+        </div>
+      </PanelSkeleton>
       <DossierPanelSkeleton
         body={
           <>
@@ -198,14 +193,6 @@ function MainColumnSkeleton() {
         <div className="grid gap-3 sm:grid-cols-2">
           {Array.from({ length: 4 }, (_, index) => (
             <LoadingBlock key={index} className="h-36 w-full rounded-lg" />
-          ))}
-        </div>
-      </PanelSkeleton>
-
-      <PanelSkeleton titleWidth="w-48">
-        <div className="grid gap-3 sm:grid-cols-2">
-          {Array.from({ length: 2 }, (_, index) => (
-            <LoadingBlock key={index} className="h-40 w-full rounded-lg" />
           ))}
         </div>
       </PanelSkeleton>

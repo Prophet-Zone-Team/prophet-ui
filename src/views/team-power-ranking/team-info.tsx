@@ -27,8 +27,8 @@ export function TeamInfo({
       />
       <span
         className={cn(
-          "truncate font-[457] text-black",
-          textClassName ?? "text-[16px] leading-[17px]"
+          "truncate font-[400] text-black",
+          textClassName ?? "text-[12px] leading-[14px]"
         )}
       >
         {displayLabel}

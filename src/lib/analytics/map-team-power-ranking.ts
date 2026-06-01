@@ -71,11 +71,18 @@ export function mapTeamPowerRankingResponse(
           ? String(item.id)
           : teamCode.toLowerCase() || (item.team_name ?? "unknown");
 
+      const teamNameMap: Record<string, string> = {
+        "Türkiye": "Turkiye",
+        "Bosnia & Herzegovina": "Bosnia-Herzegovina",
+        "Cape Verde Islands": "Cape Verde",
+      };
+      const teamName = item.team_name ? (teamNameMap[item.team_name] ?? item.team_name) : "";
+
       return {
         id,
         rank: item.rank ?? 0,
         teamCode,
-        teamName: item.team_name ?? "",
+        teamName,
         group: extractGroupId(item.group_name),
         titleProbability: parseProbability(item.title_probability),
         roundOf16Probability: parseProbability(item.round_of_16_probability),
