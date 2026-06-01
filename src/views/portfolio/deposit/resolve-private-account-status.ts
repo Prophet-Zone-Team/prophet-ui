@@ -1,12 +1,14 @@
-import type { TradingUserSession } from "@/types/market";
-
 import type { PrivateAccountStatus } from "./types";
 
+/**
+ * Determine the Private (Confidential) account status from whether a verified
+ * Confidential session exists and the private USDC balance.
+ */
 export function resolvePrivateAccountStatus(
-  session: Pick<TradingUserSession, "privateAccountAddress"> | null | undefined,
+  hasPrivateAccount: boolean,
   privateBalanceUsd?: number,
 ): PrivateAccountStatus {
-  if (!session?.privateAccountAddress) {
+  if (!hasPrivateAccount) {
     return "not_created";
   }
 

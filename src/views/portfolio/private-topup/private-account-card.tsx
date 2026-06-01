@@ -20,14 +20,18 @@ import {
 export interface PrivateAccountCardProps {
   address?: string;
   privateBalanceUsd?: number;
+  privateBalanceLoading?: boolean;
   topupWalletConnected: boolean;
+  onRefresh?: () => void;
   onTopUp: () => void;
 }
 
 export function PrivateAccountCard({
   address,
   privateBalanceUsd = 0,
+  privateBalanceLoading = false,
   topupWalletConnected,
+  onRefresh,
   onTopUp,
 }: PrivateAccountCardProps) {
   const [copied, setCopied] = useState(false);
@@ -48,6 +52,7 @@ export function PrivateAccountCard({
   }
 
   function handleRefresh() {
+    onRefresh?.();
     setRefreshing(true);
     window.setTimeout(() => setRefreshing(false), PRIVATE_BALANCE_REFRESH_MS);
   }
@@ -118,7 +123,7 @@ export function PrivateAccountCard({
                 !topupWalletConnected && "opacity-30",
               )}
             >
-              {refreshing
+              {refreshing || privateBalanceLoading
                 ? "…"
                 : formatNumber(privateBalanceUsd, 2, true, {
                     prefix: "$",

@@ -31,6 +31,8 @@ import { DepositConfirmStep } from "@/views/portfolio/deposit/deposit-confirm-st
 import { DepositEntryStep } from "@/views/portfolio/deposit/deposit-entry-step";
 import { depositPrivateFooterLinkClass } from "@/views/portfolio/deposit/deposit-ui";
 import { resolvePrivateAccountStatus } from "@/views/portfolio/deposit/resolve-private-account-status";
+import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
+import { useConfidentialBalance } from "@/hooks/confidential/use-confidential-balance";
 import {
   DepositStatusStep,
   formatStableflowStatusLabel
@@ -80,6 +82,10 @@ export function DepositDialog({
 }: DepositDialogProps) {
   const { session, syncCash } = useAuth();
   const isMobile = useDevice();
+  const confidentialAccount = useConfidentialAccount();
+  const confidentialBalance = useConfidentialBalance({
+    enabled: confidentialAccount.authenticated,
+  });
 
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
   const [entryTab, setEntryTab] = useState<DepositEntryTab>(INITIAL_ENTRY_TAB);
@@ -613,7 +619,10 @@ export function DepositDialog({
     }
   };
 
-  const privateAccountStatus = resolvePrivateAccountStatus(session);
+  const privateAccountStatus = resolvePrivateAccountStatus(
+    confidentialAccount.verified,
+    confidentialBalance.usdc?.usd,
+  );
 
   const entryModalMinHeight = useMemo(() => {
     if (isMobile) {
@@ -784,6 +793,10 @@ export function DepositDialog({
               }}
               onSelectStableflow={() => void onSelectStableflow()}
               stableflowLoading={stableflowTokensLoading}
+              onOpenPrivateTopup={() => {
+                handleClose();
+                onOpenPrivateTopup?.();
+              }}
             />
           ) : null}
 
