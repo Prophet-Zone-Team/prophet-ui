@@ -49,7 +49,7 @@ export function PortfolioPerformanceChart({ }: PortfolioPerformanceChartProps) {
             <span
               className={cn("text-[32px] font-[556] leading-[38px]", pnlTone)}
             >
-              {formatNumber(unrealizedPnl, 2, true, { round: 0, prefix: !!unrealizedPnl && unrealizedPnl >= 0 ? "+" : "", isZeroPrecision: true })}
+              {formatNumber(unrealizedPnl, 2, true, { round: 0, prefix: !!unrealizedPnl && unrealizedPnl >= 0 ? "+" : "", isZeroPrecision: true, isLessPrecision: false })}
             </span>
             <span
               className={cn(
