@@ -1,3 +1,7 @@
+import {
+  CLOSED_MARKET_DISABLED_REASON,
+  isMarketClosedForTrading
+} from "@/lib/market/trading-market-status";
 import type {
   OrderOutcomeSide,
   TeamMarketSnapshot,
@@ -55,6 +59,37 @@ export function findSnapshotForConditionId(
   return snapshots.find(
     (snapshot) => snapshot.market.polymarket?.conditionId === conditionId
   );
+}
+
+export function isPortfolioMarketClosedForTrading(input: {
+  snapshot?: TeamMarketSnapshot;
+  endDate?: string;
+}): boolean {
+  if (
+    input.snapshot &&
+    isMarketClosedForTrading(input.snapshot.market.polymarket?.closed)
+  ) {
+    return true;
+  }
+
+  if (input.endDate) {
+    const end = new Date(input.endDate);
+
+    if (!Number.isNaN(end.getTime()) && end.getTime() <= Date.now()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function getPortfolioMarketClosedDisabledReason(input: {
+  snapshot?: TeamMarketSnapshot;
+  endDate?: string;
+}): string | undefined {
+  return isPortfolioMarketClosedForTrading(input)
+    ? CLOSED_MARKET_DISABLED_REASON
+    : undefined;
 }
 
 export function isAuthoritativeSnapshotForPosition(

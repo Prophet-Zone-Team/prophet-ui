@@ -16,6 +16,7 @@ import {
   findSnapshotForConditionId,
   findSnapshotForPosition,
   findSnapshotForTokenId,
+  getPortfolioMarketClosedDisabledReason,
   isAuthoritativeSnapshotForPosition
 } from "@/lib/portfolio/portfolio-metrics";
 import { resolveTradeHref } from "@/lib/routes/trade";
@@ -169,9 +170,15 @@ export function PortfolioPositionsTable({
       findSnapshotForPosition(position, snapshots);
     const timeValue = positionTimeMap.get(position.asset);
     const pnlTone = position.cashPnl >= 0 ? "text-prophet-green" : "text-prophet-red";
+    const marketClosedReason = getPortfolioMarketClosedDisabledReason({
+      snapshot,
+      endDate: position.endDate
+    });
+    const marketClosed = Boolean(marketClosedReason);
     const canSell =
       position.size > 0 &&
       Boolean(snapshot) &&
+      !marketClosed &&
       (snapshot
         ? isAuthoritativeSnapshotForPosition(position, snapshot) ||
           Boolean(position.slug || position.conditionId)
@@ -179,7 +186,7 @@ export function PortfolioPositionsTable({
     const rowKey = `${position.conditionId}:${position.asset}`;
 
     const handleSell = () => {
-      if (snapshot && !regionRestricted) {
+      if (snapshot && !regionRestricted && !marketClosed) {
         useTradeTicketStore.getState().syncForPositionSell(snapshot, position);
         setSellTarget({ position, snapshot });
       }
@@ -196,7 +203,12 @@ export function PortfolioPositionsTable({
             "disabled:opacity-50"
           )}
           disabled={!canSell || regionRestricted}
-          title={canSell || regionRestricted ? undefined : "Market data unavailable"}
+          title={
+            regionRestricted
+              ? undefined
+              : marketClosedReason ??
+                (canSell ? undefined : "Market data unavailable")
+          }
           onClick={handleSell}
         >
           Sell

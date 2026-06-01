@@ -6,7 +6,10 @@ import { RegionRestrictedControl } from "@/components/trading/region-restricted-
 import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
-import { findSnapshotForTokenId } from "@/lib/portfolio/portfolio-metrics";
+import {
+  findSnapshotForTokenId,
+  getPortfolioMarketClosedDisabledReason
+} from "@/lib/portfolio/portfolio-metrics";
 import {
   formatSharePrice,
   formatUnixSeconds,
@@ -167,6 +170,10 @@ export function PortfolioOpenOrdersTable({
 
   openOrders.forEach((order) => {
     const snapshot = findSnapshotForTokenId(order.asset_id, snapshots);
+    const marketClosedReason = getPortfolioMarketClosedDisabledReason({
+      snapshot
+    });
+    const marketClosed = Boolean(marketClosedReason);
     const price = Number(order.price);
     const sideLabel = titleCase(order.side);
     const sidePriceLabel = `${sideLabel} ${
@@ -182,9 +189,10 @@ export function PortfolioOpenOrdersTable({
             "w-full md:w-auto md:justify-self-end",
             "disabled:opacity-50"
           )}
-          disabled={regionRestricted}
+          disabled={regionRestricted || marketClosed}
+          title={marketClosedReason}
           onClick={() => {
-            if (!regionRestricted) {
+            if (!regionRestricted && !marketClosed) {
               setCancelTarget({ order, snapshot: snapshot ?? undefined });
             }
           }}
