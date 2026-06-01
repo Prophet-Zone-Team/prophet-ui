@@ -1,16 +1,14 @@
 "use client";
 import type { CSSProperties } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useAnalyticsTeamPathContext } from "@/hooks/analytics/use-analytics-team-path-context";
+import { getTeamPathContextSnapshot } from "@/lib/analytics/map-team-path-context";
 import { cn } from "@/lib/cn";
+import { defaultSimulatorTeamId } from "@/views/road-to-final/lib/teams";
 
-import {
-  defaultSimulatorTeamId,
-  getPathDifficultyColor,
-  getSimulatorSnapshot,
-  simulatorTeams
-} from "./mock-data";
+import { getPathDifficultyColor } from "./mock-data";
 import { TeamSelectModal } from "./team-select-modal";
 
 function InfoRow({
@@ -43,22 +41,52 @@ function InfoRow({
 }
 
 export function Simulator() {
+  const { teams, snapshotsByTeamId, isLoading, isError } =
+    useAnalyticsTeamPathContext();
   const [selectedTeamId, setSelectedTeamId] = useState(defaultSimulatorTeamId);
   const [teamModalOpen, setTeamModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (teams.length === 0) {
+      return;
+    }
+
+    const hasSelection = teams.some((team) => team.id === selectedTeamId);
+
+    if (!hasSelection) {
+      const defaultTeam =
+        teams.find((team) => team.id === defaultSimulatorTeamId) ?? teams[0];
+      setSelectedTeamId(defaultTeam.id);
+    }
+  }, [teams, selectedTeamId]);
+
   const selectedTeam = useMemo(
-    () =>
-      simulatorTeams.find((team) => team.id === selectedTeamId) ??
-      simulatorTeams[0],
-    [selectedTeamId]
+    () => teams.find((team) => team.id === selectedTeamId) ?? teams[0],
+    [teams, selectedTeamId]
   );
 
   const snapshot = useMemo(
-    () => getSimulatorSnapshot(selectedTeamId),
-    [selectedTeamId]
+    () => getTeamPathContextSnapshot(snapshotsByTeamId, selectedTeamId),
+    [snapshotsByTeamId, selectedTeamId]
   );
 
   const pathDifficultyColor = getPathDifficultyColor(snapshot.pathDifficulty);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[300px] w-[327px] shrink-0 items-center justify-center pl-[20px]">
+        <span className="text-[14px] text-[#909090]">Loading...</span>
+      </div>
+    );
+  }
+
+  if (isError || teams.length === 0 || !selectedTeam) {
+    return (
+      <div className="flex h-[300px] w-[327px] shrink-0 items-center justify-center pl-[20px]">
+        <span className="text-[14px] text-[#909090]">Unable to load data.</span>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -73,6 +101,7 @@ export function Simulator() {
           <TeamFlag
             code={selectedTeam.teamCode}
             name={selectedTeam.teamName}
+            logoUrl={selectedTeam.logoUrl}
             className="h-[36px] w-[36px] shrink-0 rounded-[6px] text-[36px]"
           />
           <span className="text-[18px] font-[500] leading-[21px] text-black">
@@ -133,7 +162,7 @@ export function Simulator() {
       <TeamSelectModal
         open={teamModalOpen}
         onClose={() => setTeamModalOpen(false)}
-        teams={simulatorTeams}
+        teams={teams}
         selectedTeamId={selectedTeamId}
         onSelectTeam={setSelectedTeamId}
       />

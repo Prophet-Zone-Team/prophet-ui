@@ -205,6 +205,14 @@ export interface ProphetAnalyticsTeamPowerRanking {
   title_probability?: string;
 }
 
+export interface ProphetAnalyticsTeamPathContext {
+  team_name?: string;
+  current_stage?: string;
+  path_difficulty_label?: string;
+  biggest_opponent_name?: string;
+  biggest_opponent_round?: string;
+}
+
 export interface ProphetAnalyticsNewsArticle {
   id?: number;
   url?: string;
