@@ -23,7 +23,7 @@ import type {
 } from "@/types/market";
 
 const flagClassName =
-  "h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-cover bg-center shadow-[0_0_2px_rgba(0,0,0,0.2)] sm:h-[85px] sm:w-[85px]";
+  "h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-cover bg-center sm:h-[85px] sm:w-[85px]";
 
 export type TradeGameHeaderProps = {
   match: WorldCupMatch;

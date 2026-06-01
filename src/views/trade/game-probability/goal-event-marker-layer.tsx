@@ -131,7 +131,7 @@ export function GoalEventMarkerLayer({
                       <TeamFlag
                         code={teamCode}
                         name={teamName ?? event.side}
-                        className="!h-4 !w-4 rounded-[2px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+                        className="!h-4 !w-4 rounded-[2px]"
                       />
                       <span className="text-[12px] font-[556] leading-[17px] text-[#65AF14]">
                         GOAL!

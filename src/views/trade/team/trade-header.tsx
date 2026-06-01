@@ -35,7 +35,7 @@ function TeamLogo({
       <img
         src={logoUrl}
         alt=""
-        className="h-[40px] w-[40px] shrink-0 rounded-lg object-contain shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="h-[40px] w-[40px] shrink-0 rounded-lg object-contain"
       />
     );
   }
@@ -44,7 +44,7 @@ function TeamLogo({
     <TeamFlag
       code={code}
       name={name}
-      className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+      className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px]"
     />
   );
 }

@@ -185,7 +185,7 @@ function MatchMarkerLayer({
                 <TeamFlag
                   code={annotation.homeCode}
                   name={annotation.homeName}
-                  className="!h-4 !w-4 rounded-[2px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+                  className="!h-4 !w-4 rounded-[2px]"
                 />
                 <span className="text-sm font-[556] leading-[17px] text-[#909090]">
                   {annotation.scoreLabel}
@@ -193,7 +193,7 @@ function MatchMarkerLayer({
                 <TeamFlag
                   code={annotation.awayCode}
                   name={annotation.awayName}
-                  className="!h-4 !w-4 rounded-[2px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+                  className="!h-4 !w-4 rounded-[2px]"
                 />
               </div>
             </div>

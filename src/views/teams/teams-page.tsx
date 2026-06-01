@@ -190,7 +190,7 @@ function FeaturedTeamCard({
         <TeamFlag
           code={team.code}
           name={team.name}
-          className="h-10 w-10 shrink-0 rounded-[2px] text-[40px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-10 w-10 shrink-0 rounded-[2px] text-[40px]"
         />
         <div className="min-w-0">
           <h3 className="m-0 text-lg font-[556] leading-[21px] text-black">{team.name}</h3>

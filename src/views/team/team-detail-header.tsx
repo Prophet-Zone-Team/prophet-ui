@@ -90,13 +90,13 @@ export function TeamDetailHeader({
             <img
               src={logoUrl}
               alt=""
-              className="h-[68px] w-[68px] shrink-0 rounded-lg object-contain shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+              className="h-[68px] w-[68px] shrink-0 rounded-lg object-contain"
             />
           ) : (
             <TeamFlag
               code={team.code}
               name={displayName}
-              className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+              className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px]"
             />
           )}
 
@@ -119,13 +119,11 @@ export function TeamDetailHeader({
               <span className="rounded-full border border-prophet-line px-2 py-0.5 text-[11px] font-[556] text-prophet-muted">
                 {bestFinish ?? "World Cup history pending"}
               </span>
-              {
-                !!titles && (
-                  <span className="rounded-full border border-[rgba(101,175,20,0.30)] px-4 py-0.5 text-[11px] font-[556] text-[#65AF14] bg-[rgba(101,175,20,0.30)]">
-                    {titles} titles
-                  </span>
-                )
-              }
+              {!!titles && (
+                <span className="rounded-full border border-[rgba(101,175,20,0.30)] px-4 py-0.5 text-[11px] font-[556] text-[#65AF14] bg-[rgba(101,175,20,0.30)]">
+                  {titles} titles
+                </span>
+              )}
               <span className="rounded-full border border-prophet-line px-2 py-0.5 text-[11px] font-[556] text-prophet-muted">
                 curated metadata
               </span>
@@ -140,10 +138,7 @@ export function TeamDetailHeader({
               value={fifaRank ? `#${fifaRank}` : "Pending"}
             />
             <HeroMetric label="Squad value" value="-" />
-            <HeroMetric
-              label="Best finish"
-              value={bestFinish ?? "Pending"}
-            />
+            <HeroMetric label="Best finish" value={bestFinish ?? "Pending"} />
             <HeroMetric
               label="Group"
               value={getGroupLabel(detail?.groupName)}

@@ -84,7 +84,7 @@ function PowerRankingTeamEntry({
       <TeamFlag
         code={code}
         name={name}
-        className="h-[16px] w-[16px] shrink-0 rounded-[2px] text-[16px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="h-[16px] w-[16px] shrink-0 rounded-[2px] text-[16px]"
       />
       <span className="text-[16px] font-[400] leading-[20px] text-black">
         #{rank}

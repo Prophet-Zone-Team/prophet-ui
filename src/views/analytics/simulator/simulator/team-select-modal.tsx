@@ -67,7 +67,7 @@ export function TeamSelectModal({
                   <TeamFlag
                     code={team.teamCode}
                     name={team.teamName}
-                    className="h-[28px] w-[28px] shrink-0 rounded-[6px] text-[28px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+                    className="h-[28px] w-[28px] shrink-0 rounded-[6px] text-[28px]"
                   />
                   <span className="min-w-0 flex-1 truncate text-[16px] font-[500] leading-[19px] text-black">
                     {team.teamName}

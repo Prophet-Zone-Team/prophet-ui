@@ -109,7 +109,7 @@ export function MarketListItem({
           code={team.code}
           name={team.name}
           logoUrl={team.logoUrl}
-          className="h-[32px] w-[32px] shrink-0 rounded-[2px] text-[32px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-[32px] w-[32px] shrink-0 rounded-[2px] text-[32px]"
         />
         <div className="min-w-0">
           <h3 className="m-0 text-[18px] font-[556] leading-[21px] text-black">

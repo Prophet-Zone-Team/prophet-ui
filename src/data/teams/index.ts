@@ -246,6 +246,13 @@ export default {
     abbreviation: "cze",
     continent: "Europe"
   },
+  "Czech Republic": {
+    name: "Czechia",
+    logo: "/teams/cze.png",
+    abbreviation: "cze",
+    continent: "Europe",
+    visible: false
+  },
   Argentina: {
     name: "Argentina",
     logo: "/teams/arg.png",

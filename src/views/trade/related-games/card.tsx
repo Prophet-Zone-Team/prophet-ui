@@ -32,7 +32,7 @@ function MatchSide({
       <TeamFlag
         code={code}
         name={name}
-        className="h-[33px] w-[33px] rounded-[6px] text-[33px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="h-[33px] w-[33px] rounded-[6px] text-[33px]"
       />
       <span
         className={cn(

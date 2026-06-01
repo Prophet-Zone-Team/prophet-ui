@@ -170,7 +170,7 @@ function SignalAllTeamFilterOption({
         <TeamFlag
           code={teamCode}
           name={label}
-          className="h-[18px] w-[18px] shrink-0 rounded-[2px] text-[18px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-[18px] w-[18px] shrink-0 rounded-[2px] text-[18px]"
         />
       ) : null}
       <span className="truncate">{label}</span>

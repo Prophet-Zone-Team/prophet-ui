@@ -28,7 +28,7 @@ export function MostAffectedTeamDesktopRow({ entry }: MostAffectedTeamTableRowPr
         <TeamFlag
           code={entry.teamCode}
           name={entry.teamName}
-          className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px]"
         />
         <span>{entry.teamName}</span>
       </div>
@@ -66,7 +66,7 @@ export function MostAffectedTeamMobileCard({
         <TeamFlag
           code={entry.teamCode}
           name={entry.teamName}
-          className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px]"
         />
         <span className="min-w-0 truncate font-[500]">{entry.teamName}</span>
       </div>

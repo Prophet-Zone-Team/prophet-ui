@@ -47,7 +47,7 @@ export function TopAnalyticsCard({
         className
       )}
       aria-label={resolvedAriaLabel}
-      onClick={() => link ? router.push(link) : void 0}
+      onClick={() => (link ? router.push(link) : void 0)}
     >
       <div className="flex size-[50px] shrink-0 items-center justify-center">
         {icon}
@@ -62,7 +62,7 @@ export function TopAnalyticsCard({
           <TeamFlag
             code={teamCode}
             name={teamName}
-            className="h-[26px] w-[26px] shrink-0 rounded-[6px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+            className="h-[26px] w-[26px] shrink-0 rounded-[6px] text-[26px]"
           />
           <h3 className="m-0 truncate text-base md:text-[20px] font-[500] leading-[24px] text-black">
             {teamName}

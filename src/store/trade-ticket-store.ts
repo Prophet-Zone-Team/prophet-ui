@@ -77,7 +77,7 @@ const defaultTicketState = {
   outcomeSide: "yes" as OrderOutcomeSide,
   tab: "buy" as TradeTabId,
   orderMode: "market" as TradeOrderMode,
-  amount: "1",
+  amount: "0",
   limitPrice: "0.010",
   limitExpiration: "never" as LimitExpirationPreset,
   limitExpirationCustom: undefined as string | undefined,
@@ -109,7 +109,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       outcomeSide: "yes",
       tab: "buy",
       orderMode: "market",
-      amount: "1",
+      amount: "0",
       limitPrice: formatDefaultTradeLimitPrice(snapshot, "yes"),
       limitExpiration: "never",
       limitExpirationCustom: undefined,
@@ -153,7 +153,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
 
       if (bidReady && current.tab === "buy" && current.orderMode !== "market") {
         updates.orderMode = "market";
-        updates.amount = "1";
+        updates.amount = "0";
       }
 
       if (Object.keys(updates).length > 0) {
@@ -171,7 +171,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       outcomeSide: defaultBinarySide,
       tab: "buy",
       orderMode: "market",
-      amount: "1",
+      amount: "0",
       limitPrice: defaultLimitPrice,
       limitExpiration: "never",
       limitExpirationCustom: undefined,
@@ -215,7 +215,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       matchOutcomeSide: nextMatchOutcomeSide,
       limitPrice: resolveFixtureSelectionLimitPrice(outcome, binarySide).toFixed(3),
       ...(bidReady && current.tab === "buy"
-        ? { orderMode: "market" as TradeOrderMode, amount: "1" }
+        ? { orderMode: "market" as TradeOrderMode, amount: "0" }
         : {})
     });
   },
@@ -233,7 +233,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
 
     set({
       orderMode,
-      amount: orderMode === "limit" ? "5" : "1",
+      amount: "0",
       limitExpiration: "never",
       limitExpirationCustom: undefined,
       ...resetTakeProfitLimitState()

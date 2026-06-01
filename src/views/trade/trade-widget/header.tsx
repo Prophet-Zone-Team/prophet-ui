@@ -105,7 +105,7 @@ function TradeWidgetHeaderIcon({
   awayName: string;
 }) {
   const flagClassName =
-    "!h-9 !w-9 shrink-0 rounded-md shadow-[0_0_2px_rgba(0,0,0,0.2)]";
+    "!h-9 !w-9 shrink-0 rounded-md";
 
   if (iconKind.kind === "none") {
     return null;
@@ -201,7 +201,7 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
       <TeamFlag
         code={snapshot.team.code}
         name={snapshot.team.name}
-        className="!h-[36px] !w-[36px] shrink-0 rounded-md shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="!h-[36px] !w-[36px] shrink-0 rounded-md"
       />
       <div className="min-w-0 flex-1">
         <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-black">

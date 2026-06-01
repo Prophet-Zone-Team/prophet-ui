@@ -146,7 +146,7 @@ function TopAttentionTeamCard({
         <TeamFlag
           code={team.code}
           name={team.name}
-          className="h-[26px] w-[26px] shrink-0 rounded-[4px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-[26px] w-[26px] shrink-0 rounded-[4px] text-[26px]"
         />
         <h3 className="m-0 truncate text-[16px] font-[500] leading-[20px] text-black">
           {team.name}
@@ -202,12 +202,12 @@ function TopAttentionMatchCard({
           <TeamFlag
             code={homeTeam.code}
             name={homeTeam.name}
-            className="relative z-[1] h-[26px] w-[26px] rounded-[4px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+            className="relative z-[1] h-[26px] w-[26px] rounded-[4px] text-[26px]"
           />
           <TeamFlag
             code={awayTeam.code}
             name={awayTeam.name}
-            className="relative h-[26px] w-[26px] rounded-[4px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+            className="relative h-[26px] w-[26px] rounded-[4px] text-[26px]"
           />
         </div>
         <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-black">

@@ -500,7 +500,7 @@ function LiveScoreBadge({
         <TeamFlag
           code={homeCode}
           name={homeName}
-          className="!h-4 !w-4 rounded-[2px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="!h-4 !w-4 rounded-[2px]"
         />
         {homeScore?.trim() ?? "—"}
       </span>
@@ -509,7 +509,7 @@ function LiveScoreBadge({
         <TeamFlag
           code={awayCode}
           name={awayName}
-          className="!h-4 !w-4 rounded-[2px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="!h-4 !w-4 rounded-[2px]"
         />
         {awayScore?.trim() ?? "—"}
       </span>

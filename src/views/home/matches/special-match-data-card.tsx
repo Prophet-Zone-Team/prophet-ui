@@ -204,7 +204,7 @@ function TeamColumn({
         code={code}
         name={name}
         logoUrl={logoUrl}
-        className="h-[40px] md:h-[50px] w-[40px] md:w-[50px] rounded-[6px] text-[40px] md:text-[50px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="h-[40px] md:h-[50px] w-[40px] md:w-[50px] rounded-[6px] text-[40px] md:text-[50px]"
       />
       <strong className="max-w-full truncate text-base md:text-[26px] font-[556] leading-[31px] text-black">
         {name}

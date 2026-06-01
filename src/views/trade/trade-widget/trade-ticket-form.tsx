@@ -92,7 +92,7 @@ export function TradeTicketForm({
   outcomeSide,
   orderMode,
   tradeSide,
-  amount,
+  amount = "0",
   limitPrice,
   preview,
   yesShares = 0,

@@ -73,7 +73,7 @@ export function Simulator() {
           <TeamFlag
             code={selectedTeam.teamCode}
             name={selectedTeam.teamName}
-            className="h-[36px] w-[36px] shrink-0 rounded-[6px] text-[36px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+            className="h-[36px] w-[36px] shrink-0 rounded-[6px] text-[36px]"
           />
           <span className="text-[18px] font-[500] leading-[21px] text-black">
             {selectedTeam.teamName}

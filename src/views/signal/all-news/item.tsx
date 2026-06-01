@@ -51,7 +51,7 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
           <TeamFlag
             code={item.teamCode}
             name={item.teamName}
-            className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] shadow-[0_0_2px_rgba(0,0,0,0.2)] md:h-[20px] md:w-[20px] md:text-[20px]"
+            className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] md:h-[20px] md:w-[20px] md:text-[20px]"
           />
           <span className="truncate text-[14px] font-[457] leading-[17px] text-black md:text-[16px] md:leading-[19px]">
             {item.teamName}

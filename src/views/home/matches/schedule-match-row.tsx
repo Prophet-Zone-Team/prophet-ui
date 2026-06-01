@@ -303,7 +303,7 @@ function TeamPercentSide({
       code={code}
       name={name}
       logoUrl={logoUrl}
-      className="h-5 w-5 md:h-6 md:w-6 shrink-0 rounded-[2px] text-[20px] md:text-[24px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+      className="h-5 w-5 md:h-6 md:w-6 shrink-0 rounded-[2px] text-[20px] md:text-[24px]"
     />
   );
   const pct = (
@@ -349,7 +349,7 @@ function TeamResultSide({
       code={code}
       name={name}
       logoUrl={logoUrl}
-      className="h-6 w-6 shrink-0 rounded-[2px] text-[24px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+      className="h-6 w-6 shrink-0 rounded-[2px] text-[24px]"
     />
   );
   const pill = outcome ? <OutcomePill outcome={outcome} /> : null;
