@@ -17,7 +17,7 @@ export type ActionPanelGameProps = {
 
 export type ActionPanelProps = ActionPanelTeamProps | ActionPanelGameProps;
 
-export function ActionPanel(props: ActionPanelProps) {
+export function ActionPanel(props: ActionPanelProps & { outcomeButtonClassName?: string; outcomeButtonContainerClassName?: string; }) {
   const ticket = useTradeTicket(
     props.variant === "game"
       ? { variant: "game", gameSnapshot: props.gameSnapshot }
@@ -28,5 +28,11 @@ export function ActionPanel(props: ActionPanelProps) {
     return null;
   }
 
-  return <TradeTicketForm {...ticket.formProps} />;
+  return (
+    <TradeTicketForm
+      {...ticket.formProps}
+      outcomeButtonClassName={props.outcomeButtonClassName}
+      outcomeButtonContainerClassName={props.outcomeButtonContainerClassName}
+    />
+  );
 }

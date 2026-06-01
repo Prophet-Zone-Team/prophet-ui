@@ -89,7 +89,11 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
 
             <aside className={teamSidebarClass}>
               <TeamNextMatchPanel nextMatch={data?.nextMatch} snapshot={snapshot} />
-              <TradeWidget snapshot={snapshot} />
+              <TradeWidget
+                snapshot={snapshot}
+                outcomeButtonClassName="w-full"
+                outcomeButtonContainerClassName="gap-3"
+              />
               <TeamMarketIntelligencePanel
                 snapshot={snapshot}
                 dataStatus={dataStatus}
