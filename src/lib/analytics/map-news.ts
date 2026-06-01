@@ -71,14 +71,14 @@ function buildRelatedLabel(
 export function mapNewsArticleToImpactItem(
   article: ProphetAnalyticsNewsArticle,
   teamCodeLookup?: TeamCodeLookup,
-  options?: { highlighted?: boolean }
+  options?: { highlighted?: boolean; homeTeamName?: string; awayTeamName?: string; }
 ): NewsImpactItem {
   const reasons = parseJsonArrayField(article.reasons_json);
   const matchedTeams = parseJsonArrayField(article.matched_teams_json);
   const matchedPlayers = parseJsonArrayField(article.matched_players_json);
   const category = article.category ?? "";
   const apiScore = article.score ?? 0;
-  const teamName = matchedTeams[0] ?? "World Cup";
+  const teamName = matchedTeams?.find((team) => team.toLowerCase() === options?.homeTeamName?.toLowerCase() || team.toLowerCase() === options?.awayTeamName?.toLowerCase()) ?? "World Cup";
   const publishedAt = article.published_at;
 
   const { impactScore, sentiment } = computeImpactScore(apiScore);

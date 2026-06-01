@@ -6,16 +6,18 @@ import type { TeamCodeLookup } from "./map-team-power-ranking";
 
 export function mapTeamRelatedNewsArticleToItem(
   article: ProphetAnalyticsNewsArticle,
-  teamCodeLookup?: TeamCodeLookup
+  teamCodeLookup?: TeamCodeLookup,
+  options?: { homeTeamName?: string; awayTeamName?: string; }
 ): RelatedNewsItem {
-  return mapNewsArticleToImpactItem(article, teamCodeLookup);
+  return mapNewsArticleToImpactItem(article, teamCodeLookup, options);
 }
 
 export function mapTeamRelatedNewsArticles(
   articles: ProphetAnalyticsNewsArticle[] | undefined,
-  teamCodeLookup?: TeamCodeLookup
+  teamCodeLookup?: TeamCodeLookup,
+  options?: { homeTeamName?: string; awayTeamName?: string; }
 ): RelatedNewsItem[] {
   return (articles ?? []).map((article) =>
-    mapTeamRelatedNewsArticleToItem(article, teamCodeLookup)
+    mapTeamRelatedNewsArticleToItem(article, teamCodeLookup, options)
   );
 }
