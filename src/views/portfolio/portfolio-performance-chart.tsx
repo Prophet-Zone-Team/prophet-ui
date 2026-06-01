@@ -4,12 +4,8 @@ import { useId, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
 
 import { cn } from "@/lib/cn";
-import {
-  formatSignedPercent,
-} from "@/lib/portfolio/portfolio-format";
-import type {
-  PortfolioTimeRange
-} from "@/lib/portfolio/types";
+import { formatSignedPercent } from "@/lib/portfolio/portfolio-format";
+import type { PortfolioTimeRange } from "@/lib/portfolio/types";
 import { portfolioSummaryLabelClass } from "@/views/portfolio/portfolio-ui";
 import { formatNumber } from "@/utils";
 import { usePortfolioContext } from "./context";
@@ -19,10 +15,9 @@ const CHART_FILL_TOP = "rgba(138, 185, 86, 0.3)";
 
 const TIME_RANGES: PortfolioTimeRange[] = ["1H", "1D", "1W", "1M", "All"];
 
-export interface PortfolioPerformanceChartProps {
-}
+export interface PortfolioPerformanceChartProps {}
 
-export function PortfolioPerformanceChart({ }: PortfolioPerformanceChartProps) {
+export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
   const { portfolio } = usePortfolioContext();
   const {
     performanceSeries: series,
