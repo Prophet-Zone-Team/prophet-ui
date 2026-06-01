@@ -83,7 +83,7 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
                 items={data?.newsItems ?? []}
                 snapshot={snapshot}
               />
-              <TeamLineupPanel squad={[]} injuries={[]} dataIssues={[]} />
+              {/* <TeamLineupPanel squad={[]} injuries={[]} dataIssues={[]} /> */}
               <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
             </div>
 
