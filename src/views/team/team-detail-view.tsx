@@ -15,7 +15,6 @@ import { TeamMarketIntelligencePanel } from "@/views/team/team-market-intelligen
 import { TeamNewsSignalsPanel } from "@/views/team/team-news-signals-panel";
 import { TeamNextMatchPanel } from "@/views/team/team-next-match-panel";
 import { TeamProbabilityPanel } from "@/views/team/team-probability-panel";
-import { TeamRecentMatchesPanel } from "@/views/team/team-recent-matches-panel";
 import { TeamStrengthPanel } from "@/views/team/team-strength-panel";
 import {
   teamMainColumnClass,
@@ -64,11 +63,10 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
       ) : (
         <>
           <DossierStrip
-            formResults={data?.formResults ?? []}
-            latestLabel={data?.latestLabel}
             groupLabel={data?.groupLabel}
             peers={data?.groupPeers ?? []}
             keyStars={data?.keyStars ?? []}
+            recentMatches={data?.recentMatches ?? []}
           />
 
           <div className={teamMainGridClass}>
@@ -87,7 +85,6 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
               />
               <TeamLineupPanel squad={[]} injuries={[]} dataIssues={[]} />
               <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
-              <TeamRecentMatchesPanel matches={data?.recentMatches ?? []} />
             </div>
 
             <aside className={teamSidebarClass}>

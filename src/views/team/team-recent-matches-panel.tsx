@@ -19,7 +19,7 @@ export function TeamRecentMatchesPanel({ matches }: TeamRecentMatchesPanelProps)
       <div className="p-4">
         {matches.length > 0 ? (
           <div className="overflow-x-auto">
-            <div className="min-w-[520px]">
+            <div className="min-w-[460px]">
               <div className="grid grid-cols-[80px_1fr_48px_72px_1fr] gap-2 border-b border-prophet-line pb-2 text-[10px] font-[556] uppercase tracking-wide text-prophet-muted">
                 <span>Date</span>
                 <span>Opponent</span>

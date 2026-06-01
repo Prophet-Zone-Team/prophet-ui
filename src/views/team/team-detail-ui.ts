@@ -25,7 +25,7 @@ export const teamHeroMetricsClass =
   "grid grid-cols-2 gap-2 sm:grid-cols-4";
 
 export const teamDossierStripClass =
-  "grid grid-cols-1 gap-3 md:grid-cols-3";
+  "grid grid-cols-1 gap-4 md:grid-cols-[1fr_1fr_345px]";
 
 export const teamMainGridClass =
   "flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_345px] xl:items-start mt-4";
