@@ -54,52 +54,65 @@ interface ChartRow extends GameFixtureChartPoint {
   chartLabel: string;
 }
 
-function renderEndDotWithLabel(
-  dataLength: number,
-  series: (typeof SERIES)[number],
-  outcomeLabel: string
-): (props: {
+type EndDotWithLabelProps = {
   cx?: number;
   cy?: number;
   index?: number;
   value?: number;
   payload?: ChartRow;
-}) => ReactElement<SVGElement> {
-  return function EndDotWithLabel({ cx, cy, index, value, payload }) {
-    if (
-      index !== dataLength - 1 ||
-      cx === undefined ||
-      cy === undefined
-    ) {
-      return <g />;
-    }
+  dataLength: number;
+  series: (typeof SERIES)[number];
+};
 
-    const probability =
-      typeof value === "number" ? value : payload?.[series.key];
-    const probabilityLabel =
-      typeof probability === "number" ? formatProbability(probability) : "—";
+function EndDotWithLabel({
+  cx,
+  cy,
+  index,
+  value,
+  payload,
+  dataLength,
+  series
+}: EndDotWithLabelProps): ReactElement<SVGElement> {
+  if (index !== dataLength - 1 || cx === undefined || cy === undefined) {
+    return <g />;
+  }
 
-    return (
-      <g>
-        <circle
-          cx={cx}
-          cy={cy}
-          r={5}
-          fill={series.color}
-          stroke={`${series.color}33`}
-          strokeWidth={3}
-        />
-        <text x={cx + 10} y={cy - 2} textAnchor="start">
-          <tspan x={cx + 10} dy={0} fill={CHART_COLORS.muted} fontSize={12}>
-            {outcomeLabel}
-          </tspan>
-          <tspan x={cx + 10} dy={14} fill="#000" fontSize={12} fontWeight={556}>
-            {probabilityLabel}
-          </tspan>
-        </text>
-      </g>
-    );
-  };
+  const probability = typeof value === "number" ? value : payload?.[series.key];
+  const hasProbability = typeof probability === "number";
+  const probabilityLabel = hasProbability
+    ? formatProbability(probability)
+    : "—";
+  const numberPart = hasProbability
+    ? probabilityLabel.slice(0, -1)
+    : probabilityLabel;
+
+  const lineTop = cy - 40;
+  const labelX = cx - 10;
+
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={10} fill={series.color} fillOpacity={0.2} />
+      <line
+        x1={cx}
+        y1={lineTop}
+        x2={cx}
+        y2={cy}
+        stroke={series.color}
+        strokeWidth={1.5}
+      />
+      <circle cx={cx} cy={cy} r={5} fill={series.color} />
+      <text
+        x={labelX}
+        y={lineTop + 4}
+        textAnchor="end"
+        dominantBaseline="hanging"
+      >
+        <tspan fill={series.color} fontSize={26} fontWeight={600}>
+          {numberPart}%
+        </tspan>
+      </text>
+    </g>
+  );
 }
 
 export interface GameProbabilityChartProps {
@@ -150,6 +163,7 @@ export function GameProbabilityChart({
   );
 
   const yDomain = useMemo(() => getFixtureChartYDomain(data), [data]);
+  const dataLength = chartData.length;
 
   if (data.length === 0) {
     return null;
@@ -192,7 +206,7 @@ export function GameProbabilityChart({
                 axisLine={false}
                 tickLine={false}
                 minTickGap={24}
-                padding={{ left: 0, right: 88 }}
+                padding={{ left: 0, right: 58 }}
                 tickFormatter={
                   isLive
                     ? (value: number) =>
@@ -226,11 +240,14 @@ export function GameProbabilityChart({
                   type="monotone"
                   dataKey={series.key}
                   stroke={series.color}
-                  strokeWidth={2}
-                  dot={renderEndDotWithLabel(
-                    chartData.length,
-                    series,
-                    seriesLabels[series.key]
+                  strokeWidth={1}
+                  isAnimationActive={false}
+                  dot={(props) => (
+                    <EndDotWithLabel
+                      {...props}
+                      dataLength={dataLength}
+                      series={series}
+                    />
                   )}
                   activeDot={{
                     r: 5,

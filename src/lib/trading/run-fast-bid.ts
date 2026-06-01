@@ -2,6 +2,7 @@
 
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
+import { resolveQuickBidOrderSigner } from "@/components/trading/quick-bid-session-signer";
 import type { AuthContextValue } from "@/context/auth/auth-context";
 import {
   formatOrderToastSummary,
@@ -36,7 +37,9 @@ export interface RunFastBidOptions {
   amount: number;
   auth: AuthContextValue | undefined;
   router: AppRouterInstance;
+  confirmed?: boolean;
   onStatusChange?: (status: FastBidStatus) => void;
+  onComplete?: () => void;
 }
 
 export async function runFastBid({
@@ -44,8 +47,14 @@ export async function runFastBid({
   amount,
   auth,
   router,
-  onStatusChange
+  confirmed = false,
+  onStatusChange,
+  onComplete
 }: RunFastBidOptions): Promise<void> {
+  if (!confirmed) {
+    return;
+  }
+
   if (!Number.isFinite(amount) || amount <= 0) {
     showOrderErrorToast(
       "Set a positive Fast Bid amount from the account menu first."
@@ -84,8 +93,10 @@ export async function runFastBid({
       isRegionBlocked: auth.isRegionBlocked,
       eligibilityNetworkError:
         session?.eligibilityStatus === "error" &&
-        Boolean(session.eligibilityReason?.toLowerCase().includes("timeout") ||
-          session.eligibilityReason?.toLowerCase().includes("network")),
+        Boolean(
+          session.eligibilityReason?.toLowerCase().includes("timeout") ||
+          session.eligibilityReason?.toLowerCase().includes("network")
+        )
     });
 
     if (primaryAction.kind !== "submit") {
@@ -120,7 +131,7 @@ export async function runFastBid({
       openLogin: () => auth.openLogin(),
       signClobCredentials: () => auth.signClobCredentials(),
       signTokenApprovals: () => auth.signTokenApprovals(),
-      refreshSetupReadiness: () => auth.refreshSetupReadiness(),
+      refreshSetupReadiness: () => auth.refreshSetupReadiness()
     });
 
     if (!gate.ok) {
@@ -138,13 +149,25 @@ export async function runFastBid({
       );
     }
 
+    const quickBidSigner = resolveQuickBidOrderSigner(session.walletAddress);
+
+    if (!quickBidSigner) {
+      showOrderErrorToast(
+        "Fast Bid signing is not enabled for this device. Complete trading setup to authorize it."
+      );
+      void auth.ensureFastBidSessionSigner();
+      onStatusChange?.("idle");
+      return;
+    }
+
     onStatusChange?.("submitting");
 
     const result = await submitSignedTradeOrder({
       session,
       preview,
       orderType: FAST_BID_ORDER_TYPE,
-      userOrderPreview: buildTeamUserOrderPreview(snapshot, preview)
+      userOrderPreview: buildTeamUserOrderPreview(snapshot, preview),
+      signer: quickBidSigner.walletClient
     });
 
     showOrderSubmittedToast(
@@ -165,6 +188,7 @@ export async function runFastBid({
     await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
     await auth.refreshSetupReadiness();
     onStatusChange?.("idle");
+    onComplete?.();
   } catch (error) {
     onStatusChange?.("idle");
     showOrderErrorToast(resolveOrderErrorMessage(error));
