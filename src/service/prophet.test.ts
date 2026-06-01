@@ -4,6 +4,7 @@ import { describe, it, beforeEach } from "node:test";
 import {
   ProphetApiError,
   bindProphetTelegram,
+  getProphetTopTracks,
   getProphetTrackList,
   getProphetTracks,
   isProphetAuthenticated,
@@ -94,5 +95,11 @@ describe("prophet auth guards", () => {
 
     assert.equal(isProphetAuthenticated(), false);
     assert.throws(() => requireProphetApiToken());
+  });
+
+  it("getProphetTopTracks does not require authentication token", () => {
+    logoutProphet();
+    assert.equal(isProphetAuthenticated(), false);
+    assert.equal(typeof getProphetTopTracks, "function");
   });
 });

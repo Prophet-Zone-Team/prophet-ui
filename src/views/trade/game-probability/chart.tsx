@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactElement } from "react";
 import {
   CartesianGrid,
   Customized,
@@ -52,6 +52,54 @@ const SERIES = [
 
 interface ChartRow extends GameFixtureChartPoint {
   chartLabel: string;
+}
+
+function renderEndDotWithLabel(
+  dataLength: number,
+  series: (typeof SERIES)[number],
+  outcomeLabel: string
+): (props: {
+  cx?: number;
+  cy?: number;
+  index?: number;
+  value?: number;
+  payload?: ChartRow;
+}) => ReactElement<SVGElement> {
+  return function EndDotWithLabel({ cx, cy, index, value, payload }) {
+    if (
+      index !== dataLength - 1 ||
+      cx === undefined ||
+      cy === undefined
+    ) {
+      return <g />;
+    }
+
+    const probability =
+      typeof value === "number" ? value : payload?.[series.key];
+    const probabilityLabel =
+      typeof probability === "number" ? formatProbability(probability) : "—";
+
+    return (
+      <g>
+        <circle
+          cx={cx}
+          cy={cy}
+          r={5}
+          fill={series.color}
+          stroke={`${series.color}33`}
+          strokeWidth={3}
+        />
+        <text x={cx + 10} y={cy - 2} textAnchor="start">
+          <tspan x={cx + 10} dy={0} fill={CHART_COLORS.muted} fontSize={12}>
+            {outcomeLabel}
+          </tspan>
+          <tspan x={cx + 10} dy={14} fill="#000" fontSize={12} fontWeight={556}>
+            {probabilityLabel}
+          </tspan>
+        </text>
+      </g>
+    );
+  };
 }
 
 export interface GameProbabilityChartProps {
@@ -125,7 +173,7 @@ export function GameProbabilityChart({
               data={chartData}
               margin={{
                 top: 28,
-                right: 12,
+                right: 8,
                 left: 4,
                 bottom: isLive ? 36 : 4
               }}
@@ -144,7 +192,7 @@ export function GameProbabilityChart({
                 axisLine={false}
                 tickLine={false}
                 minTickGap={24}
-                padding={{ left: 0, right: 32 }}
+                padding={{ left: 0, right: 88 }}
                 tickFormatter={
                   isLive
                     ? (value: number) =>
@@ -179,27 +227,11 @@ export function GameProbabilityChart({
                   dataKey={series.key}
                   stroke={series.color}
                   strokeWidth={2}
-                  dot={(props) => {
-                    const { cx, cy, index } = props;
-                    if (
-                      index !== chartData.length - 1 ||
-                      cx === undefined ||
-                      cy === undefined
-                    ) {
-                      return <g />;
-                    }
-
-                    return (
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={5}
-                        fill={series.color}
-                        stroke={`${series.color}33`}
-                        strokeWidth={3}
-                      />
-                    );
-                  }}
+                  dot={renderEndDotWithLabel(
+                    chartData.length,
+                    series,
+                    seriesLabels[series.key]
+                  )}
                   activeDot={{
                     r: 5,
                     fill: series.color,

@@ -22,6 +22,7 @@ import type {
   ProphetLoginData,
   ProphetLoginRequest,
   ProphetTrackRequest,
+  ProphetTopTracksData,
   ProphetUserTrackItem,
   ProphetUserTrackListItem
 } from "@/types/prophet-api";
@@ -331,6 +332,11 @@ export async function getProphetTrackList(): Promise<
 > {
   requireProphetApiToken();
   return prophetGet<ProphetUserTrackListItem[]>("/v1/user/tracks/list");
+}
+
+/** GET /v1/user/tracks/top — most-tracked slugs per category (public) */
+export async function getProphetTopTracks(): Promise<ProphetTopTracksData> {
+  return prophetGet<ProphetTopTracksData>("/v1/user/tracks/top");
 }
 
 /** POST /v1/user/untrack */

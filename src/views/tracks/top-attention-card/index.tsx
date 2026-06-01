@@ -76,7 +76,7 @@ const MATCH_OUTCOME_BUTTON_STYLES: Record<
 export type TopAttentionTeamCardProps = {
   variant?: "team";
   snapshot: TeamMarketSnapshot;
-  attention: number;
+  attention?: number;
   categoryLabel?: string;
   badge?: TopAttentionCardBadge;
   className?: string;
@@ -87,7 +87,7 @@ export type TopAttentionMatchCardProps = {
   match: WorldCupMatch;
   homeTeam: Team;
   awayTeam: Team;
-  attention: number;
+  attention?: number;
   volume: number;
   probability: number;
   className?: string;
@@ -125,7 +125,8 @@ function TopAttentionTeamCard({
 }: TopAttentionTeamCardProps) {
   const { team, market } = snapshot;
   const volumeLabel = `$${formatVolume(market.volume)}`;
-  const attentionLabel = `🔥${formatAttention(attention)}`;
+  const attentionLabel =
+    attention !== undefined ? `🔥${formatAttention(attention)}` : undefined;
 
   return (
     <article
@@ -179,7 +180,8 @@ function TopAttentionMatchCard({
 }: TopAttentionMatchCardProps) {
   const kickoffLabel = formatScheduleKickoff(match.kickoffAt);
   const volumeLabel = `$${formatVolume(volume)}`;
-  const attentionLabel = `🔥${formatAttention(attention)}`;
+  const attentionLabel =
+    attention !== undefined ? `🔥${formatAttention(attention)}` : undefined;
   const matchTitle = `${homeTeam.name} vs ${awayTeam.name}`;
   return (
     <article
@@ -248,13 +250,20 @@ function TopAttentionStatsRow({
 }: {
   probability: string;
   volume: string;
-  attention: string;
+  attention?: string;
 }) {
   return (
-    <div className="mt-6 grid flex-1 grid-cols-3 items-start gap-2">
+    <div
+      className={cn(
+        "mt-6 grid flex-1 items-start gap-2",
+        attention ? "grid-cols-3" : "grid-cols-2"
+      )}
+    >
       <StatColumn label="Probability" value={probability} />
       <StatColumn label="Volume" value={volume} />
-      <StatColumn label="Attention" value={attention} align="center" />
+      {attention ? (
+        <StatColumn label="Attention" value={attention} align="center" />
+      ) : null}
     </div>
   );
 }

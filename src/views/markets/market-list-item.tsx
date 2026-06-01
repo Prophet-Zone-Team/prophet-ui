@@ -92,7 +92,7 @@ export function MarketListItem({
       )}
       style={{
         background:
-          changePercent < 0
+          changePercent >= 0
             ? "linear-gradient(90deg, rgba(220, 255, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
             : "linear-gradient(90deg, rgba(255, 181, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
       }}

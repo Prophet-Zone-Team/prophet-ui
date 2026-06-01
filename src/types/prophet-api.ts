@@ -166,6 +166,12 @@ export interface ProphetUserTrackItem {
   markets?: ProphetUserTrackMarket[];
 }
 
+/** Response from GET /v1/user/tracks/top (public, Redis-cached). */
+export interface ProphetTopTracksData {
+  teams_tracks?: ProphetUserTrackItem[];
+  game_tracks?: ProphetUserTrackItem[];
+}
+
 export interface ProphetAnalyticsCompetitiveness {
   id?: number;
   category?: string;

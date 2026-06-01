@@ -23,12 +23,7 @@ export interface PortfolioPerformanceChartProps {
 }
 
 export function PortfolioPerformanceChart({ }: PortfolioPerformanceChartProps) {
-  const {
-    session,
-    portfolio,
-    status,
-    onConnectWallet
-  } = usePortfolioContext();
+  const { portfolio } = usePortfolioContext();
   const {
     performanceSeries: series,
     unrealizedPnl,
@@ -37,8 +32,9 @@ export function PortfolioPerformanceChart({ }: PortfolioPerformanceChartProps) {
 
   const [range, setRange] = useState<PortfolioTimeRange>("1M");
   const gradientId = useId().replace(/:/g, "");
-  const isPositive = !!unrealizedPnl && unrealizedPnl >= 0;
-  const pnlTone = isPositive ? "text-prophet-green" : "text-prophet-red";
+  const pnl = unrealizedPnl ?? 0;
+  const pnlSign = pnl > 0 ? "+" : pnl < 0 ? "-" : "";
+  const pnlTone = pnl >= 0 ? "text-prophet-green" : "text-prophet-red";
 
   return (
     <div className="flex w-full md:w-1/2 flex-col justify-between gap-4 border-t border-prophet-line pt-6 lg:border-t-0 lg:pl-8 lg:pt-0">
@@ -49,7 +45,11 @@ export function PortfolioPerformanceChart({ }: PortfolioPerformanceChartProps) {
             <span
               className={cn("text-[32px] font-[556] leading-[38px]", pnlTone)}
             >
-              {formatNumber(unrealizedPnl, 2, true, { round: 0, prefix: !!unrealizedPnl && unrealizedPnl >= 0 ? "+" : "", isZeroPrecision: true })}
+              {formatNumber(Math.abs(pnl), 2, true, {
+                round: 0,
+                prefix: pnlSign,
+                isZeroPrecision: true
+              })}
             </span>
             <span
               className={cn(
