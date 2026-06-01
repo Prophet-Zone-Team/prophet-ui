@@ -16,6 +16,8 @@ import type {
   ProphetGetGamesData,
   ProphetGetRelatedGamesData,
   ProphetGetHeadToHeadFixturesData,
+  ProphetGetGameStatisticsData,
+  ProphetGameStatisticsPayload,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
   ProphetGetTeamDetailData,
@@ -228,6 +230,44 @@ export async function getProphetGame(
   return prophetGet<ProphetPolyMarketGameDetail>("/v1/game", {
     params: { slug }
   });
+}
+
+function parseGameStatisticsPayload(
+  raw: ProphetGetGameStatisticsData
+): ProphetGameStatisticsPayload {
+  const json = raw.statistics?.trim();
+
+  if (!json) {
+    return { statistics: [], events: [] };
+  }
+
+  try {
+    const parsed = JSON.parse(json) as Partial<ProphetGameStatisticsPayload>;
+
+    return {
+      statistics: Array.isArray(parsed.statistics) ? parsed.statistics : [],
+      events: Array.isArray(parsed.events) ? parsed.events : []
+    };
+  } catch {
+    throw new ProphetApiError(
+      -1,
+      "Unable to parse game statistics response."
+    );
+  }
+}
+
+/** GET /v1/game/statistics — match statistics and events by slug */
+export async function getProphetGameStatistics(params: {
+  slug: string;
+}): Promise<ProphetGameStatisticsPayload> {
+  const data = await prophetGet<ProphetGetGameStatisticsData>(
+    "/v1/game/statistics",
+    {
+      params: { slug: params.slug }
+    }
+  );
+
+  return parseGameStatisticsPayload(data);
 }
 
 /** GET /v1/related-games — related games for comma-separated team names */

@@ -92,6 +92,44 @@ export interface ProphetPolyMarketGameDetail extends ProphetPolyMarketGameItem {
   tracked?: boolean;
 }
 
+/** GET /v1/game/statistics — raw `data` envelope (statistics is a JSON string). */
+export interface ProphetGetGameStatisticsData {
+  statistics?: string;
+}
+
+export type ProphetGameStatisticValue = number | string | null;
+
+export interface ProphetGameStatisticItem {
+  type: string;
+  value: ProphetGameStatisticValue;
+}
+
+export interface ProphetGameStatisticsTeam {
+  id: number;
+  name: string;
+}
+
+export interface ProphetGameStatisticsTeamBlock {
+  team: ProphetGameStatisticsTeam;
+  statistics: ProphetGameStatisticItem[];
+}
+
+export interface ProphetGameStatisticsEvent {
+  time: {
+    elapsed: number;
+    extra: number | null;
+  };
+  team: ProphetGameStatisticsTeam;
+  type: string;
+  detail: string;
+}
+
+/** Parsed payload from the `statistics` JSON string. */
+export interface ProphetGameStatisticsPayload {
+  statistics: ProphetGameStatisticsTeamBlock[];
+  events: ProphetGameStatisticsEvent[];
+}
+
 /** Sibling event slugs for client-side trading metadata lazy load. */
 export interface ProphetGameSiblingEventSlugs {
   main: string;

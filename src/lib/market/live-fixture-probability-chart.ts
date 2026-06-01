@@ -214,8 +214,8 @@ export function mapBinaryFixturePointsToMatchMinutes(
   );
 }
 
-/** Baseline live chart x-axis spans 0' through 60'. */
-export const LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS = 60 * 60;
+/** Baseline live chart x-axis spans 0' through 90'. */
+export const LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS = 90 * 60;
 
 /** Extra x-axis padding after match elapsed exceeds 60 minutes. */
 export const LIVE_MATCH_CHART_OVERTIME_PADDING_SECONDS = 10 * 60;

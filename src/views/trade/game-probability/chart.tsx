@@ -16,7 +16,8 @@ import {
 import { formatProbability } from "@/components/home/market-formatters";
 import {
   formatChartTimestampClockLabel,
-  formatLiveChartClockLabel,
+  formatGoalEventTime,
+  formatMatchMinuteAxisLabel,
 } from "@/lib/market/match-display";
 import {
   formatGameChartXAxisTick,
@@ -209,8 +210,7 @@ export function GameProbabilityChart({
                 padding={{ left: 0, right: 58 }}
                 tickFormatter={
                   isLive
-                    ? (value: number) =>
-                        formatLiveChartClockLabel(kickoffAt, value)
+                    ? (value: number) => formatMatchMinuteAxisLabel(value)
                     : (value: string) =>
                         formatGameChartXAxisTick(value, timeRange)
                 }
@@ -304,10 +304,10 @@ function ChartTooltip({
 
   const point = payload[0]?.payload as ChartRow | undefined;
   const timeLabel =
-    isLive && point?.timestamp
-      ? formatChartTimestampClockLabel(point.timestamp)
-      : typeof label === "number"
-        ? formatLiveChartClockLabel(kickoffAt, label)
+    isLive && typeof label === "number"
+      ? formatGoalEventTime(label)
+      : isLive && point?.timestamp
+        ? formatChartTimestampClockLabel(point.timestamp)
         : formatGameChartXAxisTick(String(label ?? ""), timeRange);
 
   return (

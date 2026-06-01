@@ -4,6 +4,7 @@ import { useMemo } from "react";
 
 import { useAnalyticsHeadToHeadFixtures } from "@/hooks/analytics/use-analytics-head-to-head-fixtures";
 import { useAnalyticsTeamRelatedNews } from "@/hooks/analytics/use-analytics-team-related-news";
+import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { MatchHistory } from "@/views/trade/game/match-history";
@@ -45,6 +46,16 @@ export function MarketContextRow({
     teamB: awayTeamName
   });
 
+  const {
+    rows: statisticsRows,
+    isLoading: statisticsLoading,
+    isError: statisticsError
+  } = useGameStatistics({
+    match,
+    homeTeamName,
+    awayTeamName
+  });
+
   return (
     <div className="mt-[8px] flex flex-col gap-4">
       <GameStatistics
@@ -58,6 +69,9 @@ export function MarketContextRow({
           code: sides.away.code,
           logoUrl: sides.away.logoUrl
         }}
+        rows={statisticsRows}
+        isLoading={statisticsLoading}
+        isError={statisticsError}
       />
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         <RelatedNews

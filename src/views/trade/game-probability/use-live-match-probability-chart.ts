@@ -22,6 +22,8 @@ import {
   resolveLiveChartModeFromKind,
   resolveLiveChartTimeWindow,
 } from "@/lib/market/live-fixture-probability-chart";
+import { isMockLiveFixtureEnabled } from "@/lib/market/mock-live-fixture-config";
+import { buildMockLiveFixtureProbabilityChart } from "@/data/mock/live-fixture-probability-chart";
 import {
   postPolymarketClob,
   type PolymarketClobBatchPricesHistoryResponse,
@@ -195,6 +197,28 @@ export function useLiveMatchProbabilityChart({
       const currentGameSnapshot = gameSnapshotRef.current;
       const currentFixtureMarkets = fixtureMarketsRef.current;
       const kickoffAt = resolveEffectiveKickoffAt(currentMatch);
+
+      if (isMockLiveFixtureEnabled()) {
+        const mockKickoffAt = kickoffAt ?? new Date().toISOString();
+        const mockChartMode = resolveLiveChartModeFromKind(chartKind);
+        const mock = buildMockLiveFixtureProbabilityChart({
+          matchId: currentMatch.id,
+          kickoffAt: mockKickoffAt,
+          chartMode: mockChartMode,
+          maxElapsedSeconds: currentMatch.liveElapsedSeconds,
+        });
+
+        setPoints(mock.points);
+        setBinaryPoints(mock.binaryPoints);
+        setChartMode(mock.chartMode);
+        setStatus(
+          mock.points.length > 0 || mock.binaryPoints.length > 0
+            ? "ready"
+            : "empty"
+        );
+        setError(undefined);
+        return;
+      }
 
       const applyFallback = (kickoffOverride?: string) => {
         const fallback = buildFallbackChartData({

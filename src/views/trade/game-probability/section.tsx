@@ -17,7 +17,12 @@ import {
   resolveEffectiveKickoffAt,
   resolveLiveChartMaxElapsed
 } from "@/lib/market/live-fixture-probability-chart";
+import {
+  isMockLiveFixtureEnabled,
+  MOCK_LIVE_FIXTURE_ELAPSED_SECONDS
+} from "@/lib/market/mock-live-fixture-config";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
+import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import {
@@ -93,7 +98,15 @@ export function GameProbabilitySection({
   binarySecondaryLabel,
 }: GameProbabilitySectionProps) {
   const liveMatch = useMatchWithLiveState(match);
-  const isLive = isEffectiveLiveMatch(liveMatch);
+  const mockLiveFixture = isMockLiveFixtureEnabled();
+  const isLive = isEffectiveLiveMatch(liveMatch) || mockLiveFixture;
+  const liveMatchForChart = mockLiveFixture
+    ? {
+        ...liveMatch,
+        status: "live" as const,
+        liveElapsedSeconds: MOCK_LIVE_FIXTURE_ELAPSED_SECONDS
+      }
+    : liveMatch;
   const [timeRange, setTimeRange] = useState<GameFixtureChartTimeRange>(() =>
     isLive ? "1H" : "all"
   );
@@ -125,7 +138,7 @@ export function GameProbabilitySection({
   });
 
   const liveChart = useLiveMatchProbabilityChart({
-    match: liveMatch,
+    match: liveMatchForChart,
     gameSnapshot: gameSnapshot!,
     fixtureMarkets: fixtureMarkets!,
     chartKind: chartKind ?? "moneyline",
@@ -165,6 +178,12 @@ export function GameProbabilitySection({
 
   const homeLabel = sides.home.name ?? "Home";
   const awayLabel = sides.away.name ?? "Away";
+  const { goalEvents } = useGameStatistics({
+    match: liveMatch,
+    homeTeamName: homeLabel,
+    awayTeamName: awayLabel,
+    includeGoalEvents: liveChartActive
+  });
   const resolvedSummaryItems = useMemo(
     () =>
       summaryItems ??
@@ -195,22 +214,22 @@ export function GameProbabilitySection({
       filterLiveFixtureChartByRange(
         liveChart.points,
         timeRange,
-        liveMatch.liveElapsedSeconds
+        liveMatchForChart.liveElapsedSeconds
       ),
-    [liveChart.points, liveMatch.liveElapsedSeconds, timeRange]
+    [liveChart.points, liveMatchForChart.liveElapsedSeconds, timeRange]
   );
   const liveFilteredBinaryPoints = useMemo(
     () =>
       filterLiveBinaryFixtureChartByRange(
         liveChart.binaryPoints,
         timeRange,
-        liveMatch.liveElapsedSeconds
+        liveMatchForChart.liveElapsedSeconds
       ),
-    [liveChart.binaryPoints, liveMatch.liveElapsedSeconds, timeRange]
+    [liveChart.binaryPoints, liveMatchForChart.liveElapsedSeconds, timeRange]
   );
   const effectiveKickoffAt = useMemo(
-    () => resolveEffectiveKickoffAt(liveMatch),
-    [liveMatch]
+    () => resolveEffectiveKickoffAt(liveMatchForChart),
+    [liveMatchForChart]
   );
   const liveMaxElapsedSeconds = useMemo(() => {
     if (!liveChartActive) {
@@ -226,7 +245,7 @@ export function GameProbabilitySection({
       effectiveKickoffAt,
       points,
       timeRange,
-      liveMatch.liveElapsedSeconds
+      liveMatchForChart.liveElapsedSeconds
     );
   }, [
     effectiveChartMode,
@@ -235,7 +254,7 @@ export function GameProbabilitySection({
     liveChartActive,
     liveFilteredBinaryPoints,
     liveFilteredPoints,
-    liveMatch.liveElapsedSeconds,
+    liveMatchForChart.liveElapsedSeconds,
     timeRange
   ]);
   const chartPoints = liveChartActive ? liveFilteredPoints : filteredPoints;
@@ -341,7 +360,7 @@ export function GameProbabilitySection({
               awayLabel={awayLabel}
               mode={liveChartActive ? "live" : "historical"}
               timeRange={timeRange}
-              events={[]}
+              events={liveChartActive ? goalEvents : []}
               maxElapsedSeconds={liveMaxElapsedSeconds}
               kickoffAt={liveChartActive ? effectiveKickoffAt : undefined}
               homeCode={sides.home.code}
@@ -364,7 +383,7 @@ export function GameProbabilitySection({
               }
               mode={liveChartActive ? "live" : "historical"}
               timeRange={timeRange}
-              events={[]}
+              events={liveChartActive ? goalEvents : []}
               maxElapsedSeconds={liveMaxElapsedSeconds}
               kickoffAt={liveChartActive ? effectiveKickoffAt : undefined}
               homeCode={sides.home.code}

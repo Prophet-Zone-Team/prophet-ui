@@ -2,20 +2,12 @@
 
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
+import type { GameStatisticsRowData } from "@/lib/market/map-game-statistics";
 
-export const GAME_STATISTIC_LABELS = [
-  "Possession",
-  "Shots",
-  "Shots on Target",
-  "Shots off Target",
-  "Fouls",
-  "Yellow Cards",
-  "Red Cards",
-  "Corners",
-  "Free Kicks"
-] as const;
-
-export type GameStatisticLabel = (typeof GAME_STATISTIC_LABELS)[number];
+export {
+  GAME_STATISTIC_LABELS,
+  type GameStatisticLabel
+} from "@/lib/market/map-game-statistics";
 
 export type GameStatisticsTeam = {
   name: string;
@@ -26,6 +18,9 @@ export type GameStatisticsTeam = {
 export type GameStatisticsProps = {
   homeTeam: GameStatisticsTeam;
   awayTeam: GameStatisticsTeam;
+  rows: GameStatisticsRowData[];
+  isLoading?: boolean;
+  isError?: boolean;
   className?: string;
 };
 
@@ -77,10 +72,11 @@ function StatComparisonBar({
   );
 }
 
-function StatRow({ label }: { label: GameStatisticLabel }) {
-  const homeValue = 0;
-  const awayValue = 0;
-
+function StatRow({
+  label,
+  homeValue,
+  awayValue
+}: GameStatisticsRowData) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_minmax(180px,auto)_minmax(0,1fr)] w-full">
       <div className="flex items-center gap-[10px]">
@@ -144,6 +140,9 @@ function TeamHeaderSide({
 export function GameStatistics({
   homeTeam,
   awayTeam,
+  rows,
+  isLoading = false,
+  isError = false,
   className
 }: GameStatisticsProps) {
   return (
@@ -164,9 +163,17 @@ export function GameStatistics({
       </div>
 
       <div className="mt-6 flex flex-col gap-[30px]">
-        {GAME_STATISTIC_LABELS.map((label: GameStatisticLabel) => (
-          <StatRow key={label} label={label} />
-        ))}
+        {isLoading ? (
+          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+            Loading...
+          </p>
+        ) : isError ? (
+          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+            Unable to load data.
+          </p>
+        ) : (
+          rows.map((row) => <StatRow key={row.label} {...row} />)
+        )}
       </div>
     </section>
   );
