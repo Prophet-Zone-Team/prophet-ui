@@ -7,6 +7,7 @@ import axios, {
 import type {
   ProphetAnalyticsCompetitiveness,
   ProphetAnalyticsRecommend,
+  ProphetAnalyticsTeamPathContext,
   ProphetAnalyticsTeamPowerRanking,
   ProphetApiResponse,
   ProphetBindTelegramRequest,
@@ -378,6 +379,15 @@ export async function getAnalyticsTeamPowerRankings(): Promise<
 > {
   return prophetGet<ProphetAnalyticsTeamPowerRanking[]>(
     "/v1/analytics/team-power-rankings"
+  );
+}
+
+/** GET /v1/analytics/team-path-context */
+export async function getAnalyticsTeamPathContext(): Promise<
+  ProphetAnalyticsTeamPathContext[]
+> {
+  return prophetGet<ProphetAnalyticsTeamPathContext[]>(
+    "/v1/analytics/team-path-context"
   );
 }
 
