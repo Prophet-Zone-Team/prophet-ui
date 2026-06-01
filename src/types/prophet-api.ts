@@ -60,6 +60,9 @@ export interface ProphetGetGamesData {
   list?: ProphetPolyMarketGameItem[];
 }
 
+/** GET /v1/related-games — related Polymarket games for comma-separated team names */
+export type ProphetGetRelatedGamesData = ProphetPolyMarketGameItem[];
+
 /** Full Gamma-compatible market embedded in GET /v1/game events[]. */
 export interface ProphetPolyMarketDetailMarket extends ProphetPolyMarketMarket {
   acceptingOrders?: boolean;

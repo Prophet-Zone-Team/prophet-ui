@@ -11,8 +11,7 @@ import {
 import type {
   ApiFootballTeamProfile,
   TeamFootballMetadata,
-  TeamMarketSnapshot,
-  WorldCupMatch
+  TeamMarketSnapshot
 } from "@/types/market";
 import { ActivityTabs } from "@/views/trade/team/activity-tabs";
 import { TradeHeader } from "@/views/trade/team/trade-header";
@@ -36,7 +35,6 @@ function TradeTeamViewContent({
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
   const allSnapshots = useMemo(() => [snapshot], [snapshot]);
-  const matches = useMemo<WorldCupMatch[]>(() => [], []);
 
   useTeamMarketWsTokens(
     snapshot,
@@ -48,7 +46,7 @@ function TradeTeamViewContent({
 
   return (
     <div className={tradePageClass}>
-      <SyncMatchLiveStore matches={matches} />
+      <SyncMatchLiveStore matches={[]} />
       <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_345px] xl:items-start">
         <div className="order-2 flex min-w-0 flex-col gap-4 xl:order-1">
           <TradeHeader
@@ -68,8 +66,8 @@ function TradeTeamViewContent({
         <aside className="order-1 flex min-w-0 flex-col gap-4 xl:order-2 xl:sticky xl:top-14">
           <TradeWidget snapshot={snapshot} />
           <RelatedGames
-            teamId={snapshot.team.id}
-            matches={matches}
+            teamNames={[snapshot.team.name]}
+            highlightTeamId={snapshot.team.id}
             snapshots={allSnapshots}
           />
         </aside>

@@ -42,7 +42,6 @@ export async function renderGameTradePage(slug: string) {
       gameSnapshot={gameSnapshot}
       fixtureMarkets={fixtureMarkets}
       siblingEventSlugs={siblingEventSlugs}
-      relatedMatches={[]}
       tracked={detail.tracked}
     />
   );

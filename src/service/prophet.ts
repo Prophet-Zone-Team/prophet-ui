@@ -13,6 +13,7 @@ import type {
   ProphetCancelTrackRequest,
   ProphetGetAnalyticsNewsData,
   ProphetGetGamesData,
+  ProphetGetRelatedGamesData,
   ProphetGetHeadToHeadFixturesData,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
@@ -223,6 +224,17 @@ export async function getProphetGame(
 ): Promise<ProphetPolyMarketGameDetail> {
   return prophetGet<ProphetPolyMarketGameDetail>("/v1/game", {
     params: { slug }
+  });
+}
+
+/** GET /v1/related-games — related games for comma-separated team names */
+export async function getProphetRelatedGames(params: {
+  teams: string;
+}): Promise<ProphetGetRelatedGamesData> {
+  return prophetGet<ProphetGetRelatedGamesData>("/v1/related-games", {
+    params: {
+      teams: params.teams
+    }
   });
 }
 

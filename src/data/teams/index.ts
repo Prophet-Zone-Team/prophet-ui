@@ -29,12 +29,13 @@ export default {
     abbreviation: "kr",
     continent: "Asia"
   },
-  // "Korea Republic": {
-  //   name: "Korea Republic",
-  //   logo: "/teams/kr.png",
-  //   abbreviation: "kr",
-  //   continent: "Asia"
-  // },
+  "Korea Republic": {
+    name: "Korea Republic",
+    logo: "/teams/kr.png",
+    abbreviation: "kr",
+    continent: "Asia",
+    visible: false
+  },
   Paraguay: {
     name: "Paraguay",
     logo: "/teams/par.png",

@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
-
-import { getRelatedMatchesForTeam } from "@/lib/team/related-matches";
-import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
+import { useRelatedGames } from "@/hooks/market/use-related-games";
+import { buildRelatedGamesTeamsQuery } from "@/lib/market/related-games-query";
+import type { TeamMarketSnapshot } from "@/types/market";
 import { RelatedGameCard } from "@/views/trade/related-games/card";
 import {
   tradeSectionClass,
@@ -11,33 +10,72 @@ import {
 } from "@/views/trade/trade-widget/trade-ui";
 
 export interface RelatedGamesProps {
-  teamId: string;
-  matches: WorldCupMatch[];
+  teamNames: string[];
+  highlightTeamId: string;
   snapshots: TeamMarketSnapshot[];
+  excludeMatchId?: string;
+}
+
+function LoadingBlock({ className }: { className?: string }) {
+  return (
+    <div
+      className={`animate-pulse rounded-md bg-[#ebebeb]/80 ${className ?? "h-4 w-full"}`}
+      aria-hidden
+    />
+  );
+}
+
+function RelatedGamesLoading() {
+  return (
+    <div className="flex flex-col gap-3 px-3" aria-hidden>
+      {Array.from({ length: 3 }, (_, index) => (
+        <div
+          key={index}
+          className="rounded-xl border border-[#EBEBEB] bg-white p-3"
+        >
+          <LoadingBlock className="mb-2 h-4 w-24" />
+          <LoadingBlock className="h-14 w-full rounded-lg" />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function RelatedGames({
-  teamId,
-  matches,
-  snapshots
+  teamNames,
+  highlightTeamId,
+  snapshots,
+  excludeMatchId
 }: RelatedGamesProps) {
-  const related = useMemo(
-    () => getRelatedMatchesForTeam(teamId, matches).slice(0, 8),
-    [matches, teamId]
-  );
+  const teamsKey = buildRelatedGamesTeamsQuery(teamNames);
+  const { matches, isLoading, isError } = useRelatedGames({
+    teamNames,
+    excludeMatchId,
+    limit: 8
+  });
+
+  if (teamsKey.length === 0) {
+    return null;
+  }
 
   return (
     <section className={tradeSectionClass} aria-label="Related games">
       <h2 className={`${tradePanelTitleClass} px-4 py-3`}>Related Games</h2>
 
-      {related.length > 0 ? (
+      {isLoading ? (
+        <RelatedGamesLoading />
+      ) : isError ? (
+        <p className="px-4 py-8 text-center text-sm text-prophet-muted">
+          Related games are unavailable right now.
+        </p>
+      ) : matches.length > 0 ? (
         <div className="flex flex-col gap-3 px-3">
-          {related.map((match) => (
+          {matches.map((match) => (
             <RelatedGameCard
               key={match.id}
               match={match}
               snapshots={snapshots}
-              highlightTeamId={teamId}
+              highlightTeamId={highlightTeamId}
             />
           ))}
         </div>

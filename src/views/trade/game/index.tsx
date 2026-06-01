@@ -11,6 +11,8 @@ import {
 import { TradeGameHeaderToolbar } from "@/views/trade/game/header-toolbar";
 import { GameMarketsSection } from "@/views/trade/game/markets";
 import type { GameMarketTabId } from "@/views/trade/game/markets/fixture-market-actions";
+import { useRelatedGames } from "@/hooks/market/use-related-games";
+import { buildRelatedGamesTeamsQuery } from "@/lib/market/related-games-query";
 import { RelatedGames } from "@/views/trade/related-games";
 import { gameContentClass } from "@/views/trade/game/ui";
 import { useGameTradingMetadata } from "@/views/trade/game/use-game-trading-metadata";
@@ -33,7 +35,6 @@ import {
 export type TradeGameViewProps = TradeGameHeaderProps & {
   gameSnapshot: GameMarketSnapshot;
   fixtureMarkets: GameFixtureMarketsSnapshot;
-  relatedMatches: WorldCupMatch[];
   siblingEventSlugs: ProphetGameSiblingEventSlugs;
   tracked?: boolean;
   teamProfiles?: Partial<Record<string, ApiFootballTeamProfile>>;
@@ -44,7 +45,6 @@ export default function TradeGameView({
   snapshots,
   gameSnapshot: initialGameSnapshot,
   fixtureMarkets: initialFixtureMarkets,
-  relatedMatches,
   siblingEventSlugs,
   teamProfiles
 }: TradeGameViewProps) {
@@ -76,28 +76,40 @@ export default function TradeGameView({
     void ensureTabTradingData(tab);
   };
 
+  const relatedGameTeamNames = useMemo(
+    () =>
+      [match.homeDisplayName, match.awayDisplayName].filter(
+        (name): name is string => Boolean(name?.trim())
+      ),
+    [match.awayDisplayName, match.homeDisplayName]
+  );
+
+  const relatedGamesTeamsKey = buildRelatedGamesTeamsQuery(relatedGameTeamNames);
+
+  const { matches: relatedMatches } = useRelatedGames({
+    teamNames: relatedGameTeamNames,
+    excludeMatchId: match.id
+  });
+
   const sidebar = useMemo(() => {
     const focalTeamId =
       match.homeTeamId ?? gameSnapshot.homeTeamId ?? snapshots[0]?.team.id;
 
-    if (!focalTeamId) {
-      return {
-        relatedGames: {
-          teamId: snapshots[0]?.team.id ?? "",
-          matches: relatedMatches,
-          snapshots
-        }
-      };
-    }
-
     return {
       relatedGames: {
-        teamId: focalTeamId,
-        matches: relatedMatches,
+        teamNames: relatedGameTeamNames,
+        highlightTeamId: focalTeamId ?? snapshots[0]?.team.id ?? "",
+        excludeMatchId: match.id,
         snapshots
       }
     };
-  }, [gameSnapshot.homeTeamId, match.homeTeamId, relatedMatches, snapshots]);
+  }, [
+    gameSnapshot.homeTeamId,
+    match.homeTeamId,
+    match.id,
+    relatedGameTeamNames,
+    snapshots
+  ]);
 
   const matchesToSync = useMemo(
     () => [match, ...relatedMatches],
@@ -139,7 +151,7 @@ export default function TradeGameView({
               teamSnapshots={snapshots}
               className="hidden md:flex"
             />
-            {sidebar.relatedGames.teamId ? (
+            {relatedGamesTeamsKey.length > 0 ? (
               <RelatedGames {...sidebar.relatedGames} />
             ) : null}
           </div>
