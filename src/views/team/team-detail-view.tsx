@@ -97,7 +97,9 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
               <TeamMarketIntelligencePanel
                 snapshot={snapshot}
                 dataStatus={dataStatus}
-                isEmpty
+                isEmpty={true}
+                history={[]}
+                relatedNewsCount={10}
               />
             </aside>
           </div>
