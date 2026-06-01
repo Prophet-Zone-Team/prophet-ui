@@ -5,8 +5,10 @@ import {
   Line,
   LineChart,
   ResponsiveContainer,
+  Tooltip,
   XAxis,
-  YAxis
+  YAxis,
+  type TooltipProps
 } from "recharts";
 
 import { formatProbability } from "@/components/home/market-formatters";
@@ -14,9 +16,12 @@ import { cn } from "@/lib/cn";
 import {
   buildWinnerChartData,
   filterWinnerChartByRange,
+  formatWinnerChartTooltipDate,
+  formatWinnerChartXAxisTick,
   getLatestSeriesValues,
   getWinnerChartYDomain,
   WINNER_CHART_TIME_RANGES,
+  type WinnerChartSeriesConfig,
   type WinnerChartTimeRange
 } from "@/lib/market/winner-probability-chart";
 import type {
@@ -31,6 +36,8 @@ export interface WinnerProbabilityChartProps {
   /** When true, omit the built-in section title (e.g. parent panel provides the heading). */
   hideTitle?: boolean;
   topTeamCount?: number;
+  /** When true, show x-axis labels and hover tooltip (e.g. team detail panel). */
+  showAxisTooltip?: boolean;
 }
 
 function renderEndDot(
@@ -55,9 +62,13 @@ export function WinnerProbabilityChart({
   teams,
   probabilityHistory,
   hideTitle = false,
-  topTeamCount
+  topTeamCount,
+  showAxisTooltip = false
 }: WinnerProbabilityChartProps) {
   const [timeRange, setTimeRange] = useState<WinnerChartTimeRange>("1M");
+
+  const formatXAxisTick = (value: string) =>
+    formatWinnerChartXAxisTick(value, timeRange);
 
   const { series, points } = useMemo(
     () => buildWinnerChartData(teams, probabilityHistory, topTeamCount),
@@ -111,11 +122,25 @@ export function WinnerProbabilityChart({
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
-            margin={{ top: 8, right: 0, left: 8, bottom: 0 }}
+            margin={{
+              top: 8,
+              right: showAxisTooltip ? 12 : 0,
+              left: 8,
+              bottom: showAxisTooltip ? 8 : 0
+            }}
           >
-            <XAxis dataKey="date" hide padding={{ left: 0, right: 6 }} />
+            <XAxis
+              dataKey="date"
+              hide={!showAxisTooltip}
+              padding={{ left: 0, right: 6 }}
+              tick={{ fill: "#909090", fontSize: 14, dy: showAxisTooltip ? 6 : 0 }}
+              tickLine={false}
+              axisLine={false}
+              minTickGap={showAxisTooltip ? 32 : undefined}
+              tickFormatter={showAxisTooltip ? formatXAxisTick : undefined}
+            />
             <YAxis
-              orientation="right"
+              orientation={showAxisTooltip ? "left" : "right"}
               domain={yAxis.domain}
               ticks={yAxis.ticks}
               tick={{ fill: "#909090", fontSize: 14 }}
@@ -124,6 +149,12 @@ export function WinnerProbabilityChart({
               axisLine={false}
               width={40}
             />
+            {showAxisTooltip ? (
+              <Tooltip
+                cursor={{ stroke: "#EBEBEB", strokeWidth: 1 }}
+                content={<WinnerChartTooltip series={series} />}
+              />
+            ) : null}
             {series.map((item) => (
               <Line
                 key={item.dataKey}
@@ -132,7 +163,16 @@ export function WinnerProbabilityChart({
                 stroke={item.color}
                 strokeWidth={1}
                 dot={renderEndDot(chartData.length, item.color)}
-                activeDot={false}
+                activeDot={
+                  showAxisTooltip
+                    ? {
+                        r: 5,
+                        fill: item.color,
+                        stroke: item.color,
+                        strokeWidth: 1
+                      }
+                    : false
+                }
                 isAnimationActive={false}
               />
             ))}
@@ -189,6 +229,47 @@ function ChartLegend({
       {items.map((item) => (
         <ChartLegendItem key={item.teamId} item={item} />
       ))}
+    </div>
+  );
+}
+
+function WinnerChartTooltip({
+  active,
+  payload,
+  label,
+  series
+}: TooltipProps<number, string> & {
+  series: WinnerChartSeriesConfig[];
+}) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const dateLabel = typeof label === "string" ? label : String(label ?? "");
+
+  return (
+    <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+      <p className="m-0 mb-1 text-sm font-[556] leading-[17px] text-[#909090]">
+        {formatWinnerChartTooltipDate(dateLabel)}
+      </p>
+      {payload.map((entry) => {
+        const item = series.find(
+          (seriesItem) => seriesItem.dataKey === entry.dataKey
+        );
+
+        return (
+          <p
+            key={String(entry.dataKey)}
+            className="m-0 text-sm font-[556] leading-[17px]"
+            style={{ color: entry.color }}
+          >
+            {item?.label ?? entry.dataKey}:{" "}
+            {typeof entry.value === "number"
+              ? formatProbability(entry.value)
+              : "—"}
+          </p>
+        );
+      })}
     </div>
   );
 }

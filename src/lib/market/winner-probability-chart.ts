@@ -226,3 +226,42 @@ export function getLatestSeriesValues(
     value: Number(latest[item.dataKey] ?? 0)
   }));
 }
+
+export function formatWinnerChartXAxisTick(
+  value: string,
+  range: WinnerChartTimeRange
+): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  if (range === "1H" || range === "1D") {
+    return new Intl.DateTimeFormat("en", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).format(date);
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric"
+  }).format(date);
+}
+
+export function formatWinnerChartTooltipDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    weekday: "short",
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  }).format(date);
+}
