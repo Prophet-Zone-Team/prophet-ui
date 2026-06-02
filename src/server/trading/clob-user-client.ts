@@ -308,6 +308,8 @@ export async function fetchUserPositions({
     user: userAddress,
     limit: String(Math.max(1, Math.min(limit, 500))),
     sizeThreshold: "0",
+    sortBy: "CURRENT",
+    sortDirection: "DESC"
   });
 
   if (conditionIds?.length) {
