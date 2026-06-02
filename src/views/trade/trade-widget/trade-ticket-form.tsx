@@ -148,7 +148,12 @@ export function TradeTicketForm({
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-4 pt-4">
-      <div className={cn("grid grid-cols-2 gap-2", outcomeButtonContainerClassName)}>
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-2",
+          outcomeButtonContainerClassName
+        )}
+      >
         <OutcomeButtonColumn
           side="yes"
           active={outcomeSide === "yes"}
@@ -219,7 +224,7 @@ export function TradeTicketForm({
               : "Order amount in USDC"}
           </label>
           <div className="flex flex-1  items-baseline justify-end  text-[26px] font-[500]">
-            <span>$</span>
+            {!isLimitOrder && <span>$</span>}
             <input
               id="trade-amount"
               type="number"
@@ -301,8 +306,8 @@ export function TradeTicketForm({
       </div>
 
       {!isLimitOrder &&
-        tradeSide === "buy" &&
-        onTakeProfitLimitEnabledChange ? (
+      tradeSide === "buy" &&
+      onTakeProfitLimitEnabledChange ? (
         <TakeProfitLimitRow
           enabled={takeProfitLimitEnabled}
           disabled={takeProfitLimitDisabled}
