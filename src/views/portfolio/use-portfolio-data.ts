@@ -9,12 +9,7 @@ import type {
   UserActivityRecord,
   UserOpenOrder
 } from "@/lib/portfolio/types";
-import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
-import type {
-  UserPositionRecord,
-  UserTradingBalancesResponse,
-  UserTradingReadiness,
-} from "@/types/market";
+import type { UserPositionRecord } from "@/types/market";
 
 export type PortfolioLoadOptions = {
   force?: boolean;
@@ -23,7 +18,6 @@ export type PortfolioLoadOptions = {
 
 export interface UsePortfolioDataResult {
   session: ReturnType<typeof useAuth>["session"];
-  readiness: UserTradingReadiness | undefined;
   isAuthenticated: boolean;
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
@@ -41,10 +35,7 @@ export interface UsePortfolioDataResult {
 }
 
 export function usePortfolioData(): UsePortfolioDataResult {
-  const { session, isAuthenticated, openLogin } = useAuth();
-  const [readiness, setReadiness] = useState<
-    UserTradingReadiness | undefined
-  >();
+  const { session, isAuthenticated, openLogin, refreshCash } = useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
   const [activityHistory, setActivityHistory] = useState<UserActivityRecord[]>(
@@ -83,7 +74,6 @@ export function usePortfolioData(): UsePortfolioDataResult {
     try {
       if (!session) {
         setPositions([]);
-        setReadiness(undefined);
         resetTabData();
         coreLoadedRef.current = false;
         setCoreStatus("ready");
@@ -92,31 +82,15 @@ export function usePortfolioData(): UsePortfolioDataResult {
 
       const errors: string[] = [];
 
-      const [positionsPayload, setupPayload, balancesPayload] = await Promise.all([
-        fetchJson<{ positions?: UserPositionRecord[]; error?: string }>(
-          "/api/trading/positions?limit=100"
-        ).catch((error) => {
-          errors.push(error instanceof Error ? error.message : String(error));
-          return undefined;
-        }),
-        fetchJson<UserTradingReadiness>("/api/trading/readiness").catch((error) => {
-          errors.push(error instanceof Error ? error.message : String(error));
-          return undefined;
-        }),
-        fetchJson<UserTradingBalancesResponse>("/api/trading/balances").catch(
-          (error) => {
-            errors.push(error instanceof Error ? error.message : String(error));
-            return undefined;
-          }
-        ),
-      ]);
+      const positionsPayload = await fetchJson<{
+        positions?: UserPositionRecord[];
+        error?: string;
+      }>("/api/trading/positions?limit=100").catch((error) => {
+        errors.push(error instanceof Error ? error.message : String(error));
+        return undefined;
+      });
 
       setPositions(positionsPayload?.positions ?? []);
-      setReadiness(
-        setupPayload
-          ? mergeTradingReadiness(setupPayload, balancesPayload)
-          : undefined
-      );
 
       const apiErrors = [positionsPayload?.error].filter(Boolean);
       const combinedMessage =
@@ -196,7 +170,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
   );
 
   const reload = useCallback(async () => {
-    await loadCore({ force: true });
+    await Promise.all([loadCore({ force: true }), refreshCash()]);
 
     if (openOrdersLoadedRef.current) {
       await loadOpenOrders({ force: true });
@@ -205,7 +179,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     if (historyLoadedRef.current) {
       await loadActivityHistory({ force: true });
     }
-  }, [loadActivityHistory, loadCore, loadOpenOrders]);
+  }, [loadActivityHistory, loadCore, loadOpenOrders, refreshCash]);
 
   useEffect(() => {
     resetTabData();
@@ -231,7 +205,6 @@ export function usePortfolioData(): UsePortfolioDataResult {
 
   return {
     session,
-    readiness,
     isAuthenticated,
     positions,
     openOrders,

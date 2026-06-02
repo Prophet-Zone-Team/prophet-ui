@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import type { MarketDataMeta } from "@/data/providers/types";
+import { useAuth } from "@/context/auth";
 import { buildPortfolioView } from "@/lib/portfolio/portfolio-metrics";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { PortfolioActivityTabs } from "@/views/portfolio/portfolio-activity-tabs";
@@ -17,16 +18,15 @@ export interface PortfolioViewProps {
 }
 
 export function PortfolioView({ snapshots }: PortfolioViewProps) {
+  const { cash } = useAuth();
   const {
     session,
     positions,
     openOrders,
     activityHistory,
-    readiness,
     coreStatus,
     openOrdersStatus,
     historyStatus,
-    message,
     connectWallet,
     reload,
     removeOpenOrder,
@@ -40,10 +40,10 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
       buildPortfolioView({
         positions,
         snapshots,
-        readiness,
+        cash,
         activityHistory
       }),
-    [activityHistory, positions, readiness, snapshots]
+    [activityHistory, cash, positions, snapshots]
   );
 
   return (

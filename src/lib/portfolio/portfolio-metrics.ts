@@ -2,11 +2,11 @@ import {
   CLOSED_MARKET_DISABLED_REASON,
   isMarketClosedForTrading
 } from "@/lib/market/trading-market-status";
+import type { CashBalanceView } from "@/types/funding";
 import type {
   OrderOutcomeSide,
   TeamMarketSnapshot,
-  UserPositionRecord,
-  UserTradingReadiness
+  UserPositionRecord
 } from "@/types/market";
 import type {
   PortfolioSeriesPoint,
@@ -211,18 +211,18 @@ export interface PortfolioViewModel {
 export function buildPortfolioView({
   positions,
   snapshots,
-  readiness,
+  cash,
   activityHistory
 }: {
   positions: UserPositionRecord[];
   snapshots: TeamMarketSnapshot[];
-  readiness?: UserTradingReadiness;
+  cash?: CashBalanceView;
   activityHistory: UserActivityRecord[];
 }): PortfolioViewModel {
   const totalPositionValue = roundMoney(
     positions.reduce((sum, position) => sum + safeNumber(position.currentValue), 0)
   );
-  const availableToTrade = safeNumber(readiness?.balances?.usdcAvailable);
+  const availableToTrade = safeNumber(cash?.available);
   const portfolioValue = roundMoney(totalPositionValue + availableToTrade);
   const unrealizedPnl = roundMoney(
     positions.reduce((sum, position) => sum + safeNumber(position.cashPnl), 0)
