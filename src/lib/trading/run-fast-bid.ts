@@ -2,7 +2,7 @@
 
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
-import { resolveQuickBidOrderSigner } from "@/components/trading/quick-bid-session-signer";
+// import { resolveQuickBidOrderSigner } from "@/components/trading/quick-bid-session-signer";
 import type { AuthContextValue } from "@/context/auth/auth-context";
 import {
   formatOrderToastSummary,
@@ -149,46 +149,51 @@ export async function runFastBid({
       );
     }
 
-    const quickBidSigner = resolveQuickBidOrderSigner(session.walletAddress);
-
-    if (!quickBidSigner) {
-      showOrderErrorToast(
-        "Fast Bid signing is not enabled for this device. Complete trading setup to authorize it."
-      );
-      void auth.ensureFastBidSessionSigner();
-      onStatusChange?.("idle");
-      return;
-    }
-
-    onStatusChange?.("submitting");
-
-    const result = await submitSignedTradeOrder({
-      session,
-      preview,
-      orderType: FAST_BID_ORDER_TYPE,
-      userOrderPreview: buildTeamUserOrderPreview(snapshot, preview),
-      signer: quickBidSigner.walletClient
-    });
-
-    showOrderSubmittedToast(
-      formatOrderToastSummary({
-        tradeSide: preview.tradeSide,
-        outcomeSide: preview.outcomeSide,
-        estimatedTotalCost: preview.estimatedTotalCost,
-        shareSize: preview.shareSize,
-        variant: "team",
-        teamName: snapshot.team.name
-      }),
-      {
-        orderId: result.order?.id,
-        onViewPortfolio: () => router.push("/portfolio")
-      }
+    showOrderErrorToast(
+      "Fast Bid signing is not enabled for this device. Complete trading setup to authorize it."
     );
+    // void auth.ensureFastBidSessionSigner();
+    // onStatusChange?.("idle");
+    return;
+    // const quickBidSigner = resolveQuickBidOrderSigner(session.walletAddress);
+    // if (!quickBidSigner) {
+    //   showOrderErrorToast(
+    //     "Fast Bid signing is not enabled for this device. Complete trading setup to authorize it."
+    //   );
+    //   void auth.ensureFastBidSessionSigner();
+    //   onStatusChange?.("idle");
+    //   return;
+    // }
 
-    await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
-    await auth.refreshSetupReadiness();
-    onStatusChange?.("idle");
-    onComplete?.();
+    // onStatusChange?.("submitting");
+
+    // const result = await submitSignedTradeOrder({
+    //   session,
+    //   preview,
+    //   orderType: FAST_BID_ORDER_TYPE,
+    //   userOrderPreview: buildTeamUserOrderPreview(snapshot, preview),
+    //   signer: quickBidSigner.walletClient
+    // });
+
+    // showOrderSubmittedToast(
+    //   formatOrderToastSummary({
+    //     tradeSide: preview.tradeSide,
+    //     outcomeSide: preview.outcomeSide,
+    //     estimatedTotalCost: preview.estimatedTotalCost,
+    //     shareSize: preview.shareSize,
+    //     variant: "team",
+    //     teamName: snapshot.team.name
+    //   }),
+    //   {
+    //     orderId: result.order?.id,
+    //     onViewPortfolio: () => router.push("/portfolio")
+    //   }
+    // );
+
+    // await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
+    // await auth.refreshSetupReadiness();
+    // onStatusChange?.("idle");
+    // onComplete?.();
   } catch (error) {
     onStatusChange?.("idle");
     showOrderErrorToast(resolveOrderErrorMessage(error));
