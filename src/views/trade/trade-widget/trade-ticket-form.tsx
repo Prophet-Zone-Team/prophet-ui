@@ -224,7 +224,7 @@ export function TradeTicketForm({
               : "Order amount in USDC"}
           </label>
           <div className="flex flex-1  items-baseline justify-end  text-[26px] font-[500]">
-            {!isLimitOrder && <span>$</span>}
+            {!isLimitOrder && tradeSide !== "sell" && <span>$</span>}
             <input
               id="trade-amount"
               type="number"

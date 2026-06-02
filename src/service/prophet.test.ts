@@ -12,6 +12,7 @@ import {
   logoutProphet,
   requireProphetApiToken,
   setProphetApiToken,
+  reportProphetUserTransaction,
   trackProphet,
   untrackProphet
 } from "@/service/prophet";
@@ -87,6 +88,13 @@ describe("prophet auth guards", () => {
     await assertAuthRequired(() => getProphetTrackList());
     await assertAuthRequired(() => getProphetTelegramBindStatus());
     await assertAuthRequired(() => untrackProphet({ slug: "brazil" }));
+    await assertAuthRequired(() =>
+      reportProphetUserTransaction({
+        amount: "10",
+        tx_hash: "order-1",
+        type: "buy"
+      })
+    );
   });
 
   it("logoutProphet clears token and authentication state", () => {

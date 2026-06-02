@@ -60,6 +60,11 @@ import type {
 } from "@/types/market";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
 import {
+  buildReportTransactionMarketFromGame,
+  buildReportTransactionMarketFromTeam,
+  reportTradeOrderTransaction
+} from "@/service/user";
+import {
   buildGameTradePreview,
   buildTeamTradePreview,
   buildGameUserOrderPreview,
@@ -840,6 +845,19 @@ export function useTradeTicket(input: UseTradeTicketInput) {
                 limitExpirationCustom
               )
             : undefined
+      });
+
+      void reportTradeOrderTransaction({
+        userOrderPreview,
+        result,
+        market:
+          input.variant === "team"
+            ? buildReportTransactionMarketFromTeam(input.snapshot, preview)
+            : buildReportTransactionMarketFromGame(
+                input.gameSnapshot,
+                preview,
+                effectiveFixtureOutcome ?? selectedFixtureOutcome
+              )
       });
 
       await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);

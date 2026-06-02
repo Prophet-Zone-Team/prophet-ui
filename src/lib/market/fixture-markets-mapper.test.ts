@@ -15,13 +15,14 @@ function binaryMarket(input: {
   conditionId: string;
   yesPrice: number;
   noPrice: number;
+  acceptingOrders?: boolean;
 }): GammaMarketRecord {
   return {
     sportsMarketType: input.sportsMarketType,
     question: input.question,
     groupItemTitle: input.groupItemTitle,
     conditionId: input.conditionId,
-    acceptingOrders: true,
+    acceptingOrders: input.acceptingOrders ?? true,
     outcomes: '["Yes", "No"]',
     outcomePrices: `[${input.yesPrice}, ${input.noPrice}]`,
     clobTokenIds: '["yes-token", "no-token"]',
@@ -154,5 +155,36 @@ describe("mapEventSportsMarkets", () => {
     );
     assert.equal(totalGroup?.outcomesByLine?.["2.5"]?.[0]?.price, 0.47);
     assert.equal(totalGroup?.outcomesByLine?.["2.5"]?.[1]?.price, 0.54);
+  });
+
+  it("maps closed markets for historical display when acceptingOrders is false", () => {
+    const markets: GammaMarketRecord[] = [
+      binaryMarket({
+        sportsMarketType: "totals",
+        groupItemTitle: "O/U 2.5",
+        question: "Combine to score 2 or more goals",
+        conditionId: "total-ou-closed",
+        yesPrice: 0.99,
+        noPrice: 0.01,
+        acceptingOrders: false,
+      }),
+      binaryMarket({
+        sportsMarketType: "exact_score",
+        groupItemTitle: "2-1",
+        question: "Exact score 2-1",
+        conditionId: "score-2-1-closed",
+        yesPrice: 1,
+        noPrice: 0,
+        acceptingOrders: false,
+      }),
+    ];
+
+    const snapshot = mapEventSportsMarkets(markets, "Mexico", "South Africa", []);
+    const totalGroup = snapshot.lines.find((group) => group.type === "total");
+
+    assert.equal(totalGroup?.outcomes.length, 2);
+    assert.equal(totalGroup?.outcomes[0]?.acceptingOrders, false);
+    assert.equal(snapshot.exactScores[0]?.label, "2-1");
+    assert.equal(snapshot.exactScores[0]?.acceptingOrders, false);
   });
 });

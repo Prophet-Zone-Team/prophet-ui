@@ -301,6 +301,7 @@ function useProbabilityChartFixture(
 
   const fetchHistory = useCallback(
     async (signal?: AbortSignal) => {
+    console.log("fetchHistory", enabled);
       if (!enabled) {
         return false;
       }
@@ -311,6 +312,13 @@ function useProbabilityChartFixture(
         chartKind,
         lineKey,
       );
+
+      console.log("tokenResolution", {
+        tokenResolution,
+        currentMatch,
+        chartKind,
+        lineKey
+      });
 
       if (!tokenResolution) {
         setPoints([]);
@@ -369,6 +377,7 @@ function useProbabilityChartFixture(
   );
 
   const refetch = useCallback(async () => {
+
     if (!enabled) {
       setPoints([]);
       setBinaryPoints([]);

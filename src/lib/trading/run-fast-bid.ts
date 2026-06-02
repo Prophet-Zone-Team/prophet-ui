@@ -1,8 +1,6 @@
 "use client";
 
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-
-// import { resolveQuickBidOrderSigner } from "@/components/trading/quick-bid-session-signer";
 import type { AuthContextValue } from "@/context/auth/auth-context";
 import {
   formatOrderToastSummary,
@@ -11,6 +9,10 @@ import {
   showOrderSubmittedToast
 } from "@/lib/trading/order-toast";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
+import {
+  buildReportTransactionMarketFromTeam,
+  reportTradeOrderTransaction
+} from "@/service/user";
 import {
   resolveTradePrimaryAction,
   runTradePrimaryAction
@@ -37,9 +39,7 @@ export interface RunFastBidOptions {
   amount: number;
   auth: AuthContextValue | undefined;
   router: AppRouterInstance;
-  confirmed?: boolean;
   onStatusChange?: (status: FastBidStatus) => void;
-  onComplete?: () => void;
 }
 
 export async function runFastBid({
@@ -47,14 +47,8 @@ export async function runFastBid({
   amount,
   auth,
   router,
-  confirmed = false,
-  onStatusChange,
-  onComplete
+  onStatusChange
 }: RunFastBidOptions): Promise<void> {
-  if (!confirmed) {
-    return;
-  }
-
   if (!Number.isFinite(amount) || amount <= 0) {
     showOrderErrorToast(
       "Set a positive Fast Bid amount from the account menu first."
@@ -149,51 +143,41 @@ export async function runFastBid({
       );
     }
 
-    showOrderErrorToast(
-      "Fast Bid signing is not enabled for this device. Complete trading setup to authorize it."
+    onStatusChange?.("submitting");
+
+    const userOrderPreview = buildTeamUserOrderPreview(snapshot, preview);
+
+    const result = await submitSignedTradeOrder({
+      session,
+      preview,
+      orderType: FAST_BID_ORDER_TYPE,
+      userOrderPreview
+    });
+
+    void reportTradeOrderTransaction({
+      userOrderPreview,
+      result,
+      market: buildReportTransactionMarketFromTeam(snapshot, preview)
+    });
+
+    showOrderSubmittedToast(
+      formatOrderToastSummary({
+        tradeSide: preview.tradeSide,
+        outcomeSide: preview.outcomeSide,
+        estimatedTotalCost: preview.estimatedTotalCost,
+        shareSize: preview.shareSize,
+        variant: "team",
+        teamName: snapshot.team.name
+      }),
+      {
+        orderId: result.order?.id,
+        onViewPortfolio: () => router.push("/portfolio")
+      }
     );
-    // void auth.ensureFastBidSessionSigner();
-    // onStatusChange?.("idle");
-    return;
-    // const quickBidSigner = resolveQuickBidOrderSigner(session.walletAddress);
-    // if (!quickBidSigner) {
-    //   showOrderErrorToast(
-    //     "Fast Bid signing is not enabled for this device. Complete trading setup to authorize it."
-    //   );
-    //   void auth.ensureFastBidSessionSigner();
-    //   onStatusChange?.("idle");
-    //   return;
-    // }
 
-    // onStatusChange?.("submitting");
-
-    // const result = await submitSignedTradeOrder({
-    //   session,
-    //   preview,
-    //   orderType: FAST_BID_ORDER_TYPE,
-    //   userOrderPreview: buildTeamUserOrderPreview(snapshot, preview),
-    //   signer: quickBidSigner.walletClient
-    // });
-
-    // showOrderSubmittedToast(
-    //   formatOrderToastSummary({
-    //     tradeSide: preview.tradeSide,
-    //     outcomeSide: preview.outcomeSide,
-    //     estimatedTotalCost: preview.estimatedTotalCost,
-    //     shareSize: preview.shareSize,
-    //     variant: "team",
-    //     teamName: snapshot.team.name
-    //   }),
-    //   {
-    //     orderId: result.order?.id,
-    //     onViewPortfolio: () => router.push("/portfolio")
-    //   }
-    // );
-
-    // await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
-    // await auth.refreshSetupReadiness();
-    // onStatusChange?.("idle");
-    // onComplete?.();
+    await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
+    await auth.refreshSetupReadiness();
+    onStatusChange?.("idle");
   } catch (error) {
     onStatusChange?.("idle");
     showOrderErrorToast(resolveOrderErrorMessage(error));

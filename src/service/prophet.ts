@@ -25,6 +25,7 @@ import type {
   ProphetGetTelegramBindStatusData,
   ProphetLoginData,
   ProphetLoginRequest,
+  ProphetReportTransactionRequest,
   ProphetTrackRequest,
   ProphetTopTracksData,
   ProphetUserTrackItem,
@@ -395,6 +396,14 @@ export async function untrackProphet(
 ): Promise<void> {
   requireProphetApiToken();
   await prophetPost<unknown>("/v1/user/untrack", request);
+}
+
+/** POST /v1/user/transaction — report trade; idempotent by tx_hash */
+export async function reportProphetUserTransaction(
+  request: ProphetReportTransactionRequest
+): Promise<void> {
+  requireProphetApiToken();
+  await prophetPost<unknown>("/v1/user/transaction", request);
 }
 
 /** GET /v1/analytics/competitiveness */

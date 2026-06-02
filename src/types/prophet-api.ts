@@ -169,6 +169,29 @@ export interface ProphetCancelTrackRequest {
   slug: string;
 }
 
+export type ProphetReportTransactionType =
+  | "buy"
+  | "sell"
+  | "withdraw"
+  | "deposit";
+
+/** Market context for POST /v1/user/transaction when type is buy or sell. */
+export interface ProphetReportTransactionMarket {
+  marketName?: string;
+  price?: string;
+  side?: string;
+  slug?: string;
+  teamName?: string;
+}
+
+/** POST /v1/user/transaction — report trade; idempotent by tx_hash */
+export interface ProphetReportTransactionRequest {
+  amount: string;
+  tx_hash: string;
+  type: ProphetReportTransactionType;
+  market?: ProphetReportTransactionMarket;
+}
+
 /** Lightweight row from GET /v1/user/tracks/list (bookmark state). */
 export interface ProphetUserTrackListItem {
   id?: number;

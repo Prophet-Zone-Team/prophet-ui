@@ -115,11 +115,16 @@ export function resolveFixtureChartTokens(
 ): FixtureChartTokenResolution | undefined {
   if (chartKind === "moneyline") {
     const tokenOutcomes = (match.polymarket?.moneyline.outcomes ?? []).filter(
-      (outcome): outcome is typeof outcome & { tokenId: string; side: MatchOutcomeSide } =>
+      (
+        outcome
+      ): outcome is typeof outcome & {
+        tokenId: string;
+        side: MatchOutcomeSide;
+      } =>
         Boolean(outcome.tokenId) &&
         (outcome.side === "home" ||
           outcome.side === "draw" ||
-          outcome.side === "away"),
+          outcome.side === "away")
     );
 
     if (tokenOutcomes.length < 3) {
@@ -130,8 +135,8 @@ export function resolveFixtureChartTokens(
       mode: "ternary",
       inputs: tokenOutcomes.map((outcome) => ({
         side: outcome.side,
-        tokenId: outcome.tokenId,
-      })),
+        tokenId: outcome.tokenId
+      }))
     };
   }
 
@@ -142,11 +147,19 @@ export function resolveFixtureChartTokens(
   }
 
   if (chartKind === "total") {
-    return resolveLineGroupTokens(findGroupByType(lines, "total"), lineKey, "total");
+    return resolveLineGroupTokens(
+      findGroupByType(lines, "total"),
+      lineKey,
+      "total"
+    );
   }
 
   if (chartKind === "spread") {
-    return resolveLineGroupTokens(findGroupByType(lines, "spread"), lineKey, "spread");
+    return resolveLineGroupTokens(
+      findGroupByType(lines, "spread"),
+      lineKey,
+      "spread"
+    );
   }
 
   return undefined;

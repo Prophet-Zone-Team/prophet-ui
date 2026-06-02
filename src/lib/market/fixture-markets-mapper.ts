@@ -37,17 +37,15 @@ export function mapEventSportsMarkets(
   markets: GammaMarketRecord[],
   homeName: string,
   awayName: string,
-  moneylineOutcomes: PolymarketFixtureMoneylineOutcome[] = [],
+  moneylineOutcomes: PolymarketFixtureMoneylineOutcome[] = []
 ): PolymarketFixtureMarketsData {
-  const activeMarkets = markets.filter((market) => market.acceptingOrders === true);
-
   const spreadMarkets: SpreadMarketBundle[] = [];
   const totalOutcomes: FixtureMarketOutcome[] = [];
   const bttsOutcomes: FixtureMarketOutcome[] = [];
   const exactScores: FixtureMarketOutcome[] = [];
   const halftime: FixtureMarketOutcome[] = [];
 
-  for (const market of activeMarkets) {
+  for (const market of markets) {
     const marketType = classifySportsMarketType(market);
 
     if (!marketType || marketType === "moneyline") {
@@ -55,12 +53,18 @@ export function mapEventSportsMarkets(
     }
 
     if (marketType === "total") {
-      totalOutcomes.push(...mapTotalMarketToFixtureOutcomes(market, homeName, awayName));
+      totalOutcomes.push(
+        ...mapTotalMarketToFixtureOutcomes(market, homeName, awayName)
+      );
       continue;
     }
 
     if (marketType === "spread") {
-      const spreadMarket = mapSpreadMarketToFixtureOutcomes(market, homeName, awayName);
+      const spreadMarket = mapSpreadMarketToFixtureOutcomes(
+        market,
+        homeName,
+        awayName
+      );
 
       if (spreadMarket) {
         spreadMarkets.push(spreadMarket);
@@ -73,7 +77,7 @@ export function mapEventSportsMarkets(
       market,
       marketType,
       homeName,
-      awayName,
+      awayName
     );
 
     if (!outcome) {
@@ -83,7 +87,10 @@ export function mapEventSportsMarkets(
     switch (marketType) {
       case "btts": {
         const conditionId = market.conditionId;
-        if (conditionId && bttsOutcomes.some((item) => item.conditionId === conditionId)) {
+        if (
+          conditionId &&
+          bttsOutcomes.some((item) => item.conditionId === conditionId)
+        ) {
           break;
         }
         bttsOutcomes.push(outcome);
@@ -102,7 +109,11 @@ export function mapEventSportsMarkets(
 
   const lines: FixtureMarketGroup[] = [];
 
-  const moneylineGroup = buildMoneylineGroup(moneylineOutcomes, homeName, awayName);
+  const moneylineGroup = buildMoneylineGroup(
+    moneylineOutcomes,
+    homeName,
+    awayName
+  );
   if (moneylineGroup) {
     lines.push(moneylineGroup);
   }
@@ -125,7 +136,7 @@ export function mapEventSportsMarkets(
   return {
     lines,
     exactScores: sortExactScores(exactScores),
-    halftime: sortHalftimeOutcomes(halftime, homeName, awayName),
+    halftime: sortHalftimeOutcomes(halftime, homeName, awayName)
   };
 }
 
