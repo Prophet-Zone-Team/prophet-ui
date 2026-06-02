@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Pagination } from "@/components/pagination/pagination";
+import { PORTFOLIO_TABLE_PAGE_SIZE } from "@/lib/portfolio/config";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import type { OpenOrderMarketContext } from "@/lib/portfolio/teams-condition";
 import type {
@@ -71,6 +72,8 @@ export function PortfolioActivityTabs({
   loadActivityHistory
 }: PortfolioActivityTabsProps) {
   const [tab, setTab] = useState<PortfolioTabId>("position");
+  const [positionPage, setPositionPage] = useState(1);
+  const [openOrderPage, setOpenOrderPage] = useState(1);
   const loadedTabsRef = useRef<Set<PortfolioTabId>>(new Set());
 
   useEffect(() => {
@@ -109,8 +112,56 @@ export function PortfolioActivityTabs({
   ]);
 
   const coreLoading = isTabLoading(coreStatus);
+  const openOrdersLoading = sessionConnected && isTabLoading(openOrdersStatus);
   const needsWallet = !sessionConnected && !coreLoading;
   const historyLoading = sessionConnected && isTabLoading(historyStatus);
+
+  const paginatedPositions = useMemo(() => {
+    const start = (positionPage - 1) * PORTFOLIO_TABLE_PAGE_SIZE;
+    return positions.slice(start, start + PORTFOLIO_TABLE_PAGE_SIZE);
+  }, [positionPage, positions]);
+
+  const paginatedOpenOrders = useMemo(() => {
+    const start = (openOrderPage - 1) * PORTFOLIO_TABLE_PAGE_SIZE;
+    return openOrders.slice(start, start + PORTFOLIO_TABLE_PAGE_SIZE);
+  }, [openOrderPage, openOrders]);
+
+  useEffect(() => {
+    const totalPages = Math.max(
+      1,
+      Math.ceil(positions.length / PORTFOLIO_TABLE_PAGE_SIZE)
+    );
+
+    if (positionPage > totalPages) {
+      setPositionPage(totalPages);
+    }
+  }, [positionPage, positions.length]);
+
+  useEffect(() => {
+    const totalPages = Math.max(
+      1,
+      Math.ceil(openOrders.length / PORTFOLIO_TABLE_PAGE_SIZE)
+    );
+
+    if (openOrderPage > totalPages) {
+      setOpenOrderPage(totalPages);
+    }
+  }, [openOrderPage, openOrders.length]);
+
+  const showPositionPagination =
+    tab === "position" &&
+    sessionConnected &&
+    !coreLoading &&
+    coreStatus !== "error" &&
+    positions.length > 0;
+
+  const showOpenOrderPagination =
+    tab === "open-order" &&
+    sessionConnected &&
+    !openOrdersLoading &&
+    openOrdersStatus !== "error" &&
+    openOrders.length > 0;
+
   const showHistoryPagination =
     tab === "history" &&
     sessionConnected &&
@@ -135,25 +186,45 @@ export function PortfolioActivityTabs({
       </div>
 
       {tab === "position" ? (
-        <PortfolioPositionsTable
-          positions={positions}
-          snapshots={snapshots}
-          positionTimeMap={positionTimeMap}
-          needsWallet={needsWallet}
-          loading={coreLoading}
-          onConnectWallet={onConnectWallet}
-        />
+        <>
+          <PortfolioPositionsTable
+            positions={paginatedPositions}
+            snapshots={snapshots}
+            positionTimeMap={positionTimeMap}
+            needsWallet={needsWallet}
+            loading={coreLoading}
+            onConnectWallet={onConnectWallet}
+          />
+          {showPositionPagination ? (
+            <Pagination
+              page={positionPage}
+              pageSize={PORTFOLIO_TABLE_PAGE_SIZE}
+              total={positions.length}
+              onPageChange={setPositionPage}
+            />
+          ) : null}
+        </>
       ) : null}
 
       {tab === "open-order" ? (
-        <PortfolioOpenOrdersTable
-          openOrders={openOrders}
-          openOrderMarketMap={openOrderMarketMap}
-          snapshots={snapshots}
-          needsWallet={needsWallet}
-          loading={sessionConnected && isTabLoading(openOrdersStatus)}
-          onConnectWallet={onConnectWallet}
-        />
+        <>
+          <PortfolioOpenOrdersTable
+            openOrders={paginatedOpenOrders}
+            openOrderMarketMap={openOrderMarketMap}
+            snapshots={snapshots}
+            needsWallet={needsWallet}
+            loading={openOrdersLoading}
+            onConnectWallet={onConnectWallet}
+          />
+          {showOpenOrderPagination ? (
+            <Pagination
+              page={openOrderPage}
+              pageSize={PORTFOLIO_TABLE_PAGE_SIZE}
+              total={openOrders.length}
+              onPageChange={setOpenOrderPage}
+            />
+          ) : null}
+        </>
       ) : null}
 
       {tab === "history" ? (

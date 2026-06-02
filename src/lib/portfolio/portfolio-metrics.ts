@@ -19,7 +19,7 @@ export function safeNumber(value: number | undefined): number {
 }
 
 export function canRedeemPosition(position: UserPositionRecord): boolean {
-  return position.redeemable && position.size > 0;
+  return position.redeemable && position.size > 0 && position.curPrice > 0;
 }
 
 export function roundMoney(value: number): number {
