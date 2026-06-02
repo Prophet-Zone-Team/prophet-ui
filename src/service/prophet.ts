@@ -13,6 +13,7 @@ import type {
   ProphetBindTelegramRequest,
   ProphetCancelTrackRequest,
   ProphetGetAnalyticsNewsData,
+  ProphetGetNewsTopCategoryImpactData,
   ProphetGetGamesData,
   ProphetGetTeamsConditionData,
   ProphetGetRelatedGamesData,
@@ -22,6 +23,7 @@ import type {
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
   ProphetGetTeamDetailData,
+  ProphetGetTeamMarketNewsData,
   ProphetGetTeamRelatedNewsData,
   ProphetGetTelegramBindStatusData,
   ProphetGetUserTransactionsData,
@@ -486,6 +488,17 @@ export async function getAnalyticsTeamDetail(params: {
   });
 }
 
+/** GET /v1/analytics/team-market-news */
+export async function getAnalyticsTeamMarketNews(params: {
+  team_name: string;
+}): Promise<ProphetGetTeamMarketNewsData> {
+  return prophetGet<ProphetGetTeamMarketNewsData>("/v1/analytics/team-market-news", {
+    params: {
+      team_name: params.team_name
+    }
+  });
+}
+
 /** GET /v1/analytics/news/latest */
 export async function getAnalyticsLatestNews(params?: {
   category?: string;
@@ -497,6 +510,13 @@ export async function getAnalyticsLatestNews(params?: {
         category: params?.category ?? ""
       }
     }
+  );
+}
+
+/** GET /v1/analytics/news/top-category-impact */
+export async function getAnalyticsNewsTopCategoryImpact(): Promise<ProphetGetNewsTopCategoryImpactData> {
+  return prophetGet<ProphetGetNewsTopCategoryImpactData>(
+    "/v1/analytics/news/top-category-impact"
   );
 }
 

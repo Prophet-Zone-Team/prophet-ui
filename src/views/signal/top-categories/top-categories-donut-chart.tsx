@@ -3,8 +3,8 @@
 import { Cell, Pie, PieChart } from "recharts";
 
 import {
+  getCategoryColor,
   getCategoryTotal,
-  SIGNAL_CATEGORY_COLORS
 } from "./format";
 import type { SignalCategorySegment } from "./types";
 
@@ -24,7 +24,7 @@ export function TopCategoriesDonutChart({
   const total = getCategoryTotal(categories);
   const chartData: ChartDatum[] = categories.map((category) => ({
     ...category,
-    color: SIGNAL_CATEGORY_COLORS[category.id]
+    color: getCategoryColor(category.id)
   }));
 
   return (

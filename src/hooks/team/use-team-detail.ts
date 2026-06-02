@@ -7,9 +7,8 @@ import { ANALYTICS_QUERY_STALE_TIME_MS } from "@/lib/analytics/config";
 import { analyticsQueryKeys } from "@/lib/analytics/query-keys";
 import { mapTeamDetailResponse } from "@/lib/team/map-team-detail";
 import { getAnalyticsTeamDetail } from "@/service/prophet";
-import type { Team } from "@/types/market";
 
-export function useTeamDetail(teamName: string, teamCode: Team["code"]) {
+export function useTeamDetail(teamName: string) {
   const query = useQuery({
     queryKey: analyticsQueryKeys.teamDetail(teamName),
     queryFn: () => getAnalyticsTeamDetail({ team_name: teamName }),
@@ -20,9 +19,9 @@ export function useTeamDetail(teamName: string, teamCode: Team["code"]) {
   const data = useMemo(
     () =>
       query.data
-        ? mapTeamDetailResponse(query.data, teamCode)
+        ? mapTeamDetailResponse(query.data)
         : undefined,
-    [query.data, teamCode]
+    [query.data]
   );
 
   return {

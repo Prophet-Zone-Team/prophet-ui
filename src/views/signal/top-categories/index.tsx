@@ -9,11 +9,13 @@ import type { TopCategoriesData } from "./types";
 export type TopCategoriesProps = {
   data?: TopCategoriesData;
   className?: string;
+  isLoading?: boolean;
 };
 
 export function TopCategories({
   data = topCategoriesData,
-  className
+  className,
+  isLoading = false
 }: TopCategoriesProps) {
   const percentages = getCategoryPercentages(data.categories);
 
@@ -29,6 +31,10 @@ export function TopCategories({
       <h2 className="m-0 shrink-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
         Today&apos;s Top Categories
       </h2>
+
+      {isLoading ? (
+        <p className="mt-4 text-[14px] text-[#909090]">Loading...</p>
+      ) : null}
 
       <div className="mt-4 flex min-h-0 flex-1 flex-col items-center gap-4 md:mt-5 md:flex-row md:items-center md:justify-between md:gap-5">
         <div className="flex w-full min-w-0 flex-1 flex-col">
