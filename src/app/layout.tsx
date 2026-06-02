@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/auth";
+import { ProphetNotificationWsProvider } from "@/context/prophet-notification-ws";
 import { SportsWsProvider } from "@/context/sports-ws";
 import { AppChrome } from "@/layout/app-chrome";
 import "@/app/globals.css";
@@ -33,10 +34,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <RainbowProvider cookie={cookie}>
           <AuthProvider>
             <SportsWsProvider>
-              <main className="min-h-screen overflow-x-hidden font-body">
-                <AppChrome>{children}</AppChrome>
-              </main>
-              <Toaster />
+              <ProphetNotificationWsProvider>
+                <main className="min-h-screen overflow-x-hidden font-body">
+                  <AppChrome>{children}</AppChrome>
+                </main>
+                <Toaster />
+              </ProphetNotificationWsProvider>
             </SportsWsProvider>
           </AuthProvider>
         </RainbowProvider>
