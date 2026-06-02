@@ -24,6 +24,7 @@ import {
   type SupportedChainOption,
 } from "@/lib/funding/supported-assets";
 import { cn } from "@/lib/cn";
+import { reportFundingTransaction } from "@/lib/portfolio/user";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { ensureTradingChain } from "@/lib/trading/wallet-trading-chain";
@@ -419,22 +420,33 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
 
     try {
       await ensureTradingChain(session.walletAddress);
+      let txHash: string | undefined;
 
       if (isBridge && !("assetId" in selectedToken)) {
-        await executeBridgeWithdraw({
+        const result = await executeBridgeWithdraw({
           toChainId: String(selectedToken.chainId),
           toTokenAddress: selectedToken.address,
           recipientAddr: session.walletAddress,
           amountUsd: amount,
         });
+        txHash = result.txHash;
       } else if (isStableflowWithdrawSelectableToken(selectedToken)) {
-        await executeStableflowWithdraw({
+        const result = await executeStableflowWithdraw({
           amountUsd: amount,
           destinationToken: selectedToken,
           recipient: recipientInput.trim(),
         });
+        txHash = result.txHash;
       } else {
         throw new Error("Selected token is not supported for this withdrawal method.");
+      }
+
+      if (txHash) {
+        void reportFundingTransaction({
+          type: "withdraw",
+          txHash,
+          amount: String(amount)
+        });
       }
 
       toast.success("Withdrawal submitted");

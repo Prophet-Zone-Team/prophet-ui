@@ -130,6 +130,11 @@ function HistoryMarketCell({
   snapshot?: TeamMarketSnapshot;
 }) {
   const outcomeLine = `${transaction.side} ${formatTransactionPrice(transaction.price)}`;
+  const isFundingTransaction = transaction.type === "deposit" || transaction.type === "withdraw";
+
+  if (isFundingTransaction) {
+    return "-";
+  }
 
   return (
     <div className="flex min-w-0 items-center gap-2 md:gap-3">

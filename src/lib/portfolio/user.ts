@@ -19,6 +19,21 @@ function formatTransactionAmount(value: number): string {
   return Number.isFinite(value) ? String(value) : "0";
 }
 
+function normalizeFundingAmount(value: number | string): string {
+  if (typeof value === "number") {
+    return formatTransactionAmount(value);
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return "0";
+  }
+
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? String(parsed) : "0";
+}
+
 function resolveTransactionAmount(preview: UserOrderPreview): string {
   if (preview.side === "buy") {
     return formatTransactionAmount(
@@ -43,6 +58,38 @@ export type ReportTradeOrderTransactionInput = {
       fixtureOutcome?: FixtureMarketOutcome | null;
     }
 );
+
+export type ReportFundingTransactionInput = {
+  type: "deposit" | "withdraw";
+  txHash: string;
+  amount: number | string;
+};
+
+export async function reportFundingTransaction(
+  input: ReportFundingTransactionInput
+): Promise<void> {
+  if (!isProphetAuthenticated()) {
+    return;
+  }
+
+  const txHash = input.txHash.trim();
+
+  if (!txHash) {
+    return;
+  }
+
+  const request: ProphetReportTransactionRequest = {
+    amount: normalizeFundingAmount(input.amount),
+    tx_hash: txHash,
+    type: input.type
+  };
+
+  try {
+    await reportProphetUserTransaction(request);
+  } catch (error) {
+    console.warn("[user.transaction] report failed", error);
+  }
+}
 
 /** Fire-and-forget trade report after a successful primary order submit. */
 export async function reportTradeOrderTransaction(
