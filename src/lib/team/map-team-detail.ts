@@ -1,9 +1,3 @@
-import { NEWS_HIGH_IMPACT_THRESHOLD } from "@/lib/analytics/config";
-import { formatRelativeTime } from "@/lib/analytics/format-relative-time";
-import {
-  computeImpactScore,
-  parseJsonArrayField
-} from "@/lib/analytics/map-news";
 import type {
   KeyPlayerView,
   NextMatchView,
@@ -11,13 +5,10 @@ import type {
   StrengthMetric
 } from "@/lib/team/team-detail-model";
 import { formatShortDate } from "@/lib/team/team-detail-model";
-import type { Team } from "@/types/market";
-import type { NewsImpactItem } from "@/views/analytics/news/types";
 import type {
   ProphetGetTeamDetailData,
   ProphetGetTeamDetailKeyStar,
   ProphetGetTeamDetailMatch,
-  ProphetGetTeamDetailNews,
   ProphetGetTeamDetailNextMatch,
   ProphetGetTeamDetailPeer
 } from "@/types/prophet-api";
@@ -49,7 +40,6 @@ export interface TeamDetailViewModel {
   keyStars: KeyPlayerView[];
   strengthMetrics: StrengthMetric[];
   strengthScore?: number;
-  newsItems: NewsImpactItem[];
   nextMatch: NextMatchView;
   titles: number;
 }
@@ -177,54 +167,8 @@ export function mapGroupPeers(
   }));
 }
 
-function buildThumbnailAlt(matchedPlayers: string[], title: string): string {
-  if (matchedPlayers[0]) {
-    return matchedPlayers[0];
-  }
-
-  return title.split(/\s+/).slice(0, 2).join(" ") || "News";
-}
-
-export function mapTeamDetailNewsToImpactItems(
-  teamName: string,
-  teamCode: Team["code"],
-  news: ProphetGetTeamDetailNews[] | undefined
-): NewsImpactItem[] {
-  return [...(news ?? [])]
-    .sort((a, b) => b.published_at.localeCompare(a.published_at))
-    .map((article, index) => {
-      const matchedTeams = parseJsonArrayField(article.matched_teams_json);
-      const matchedPlayers = parseJsonArrayField(article.matched_players_json);
-      const reasons = parseJsonArrayField(article.reasons_json);
-      const apiScore = article.score ?? 0;
-      const { impactScore, sentiment } = computeImpactScore(apiScore);
-
-      return {
-        id: String(article.id),
-        teamCode,
-        teamName,
-        sentiment,
-        headline: article.title,
-        summary: article.description,
-        publishedAtLabel: formatRelativeTime(article.published_at),
-        impactScore,
-        thumbnailUrl: article.url_to_image || undefined,
-        thumbnailAlt: buildThumbnailAlt(matchedPlayers, article.title),
-        highlighted:
-          index === 0 || apiScore >= NEWS_HIGH_IMPACT_THRESHOLD,
-        publishedAt: article.published_at,
-        sourceUrl: article.url,
-        category: article.category,
-        matchedTeams,
-        matchedPlayers,
-        reasons
-      };
-    });
-}
-
 export function mapTeamDetailResponse(
-  data: ProphetGetTeamDetailData,
-  teamCode: Team["code"]
+  data: ProphetGetTeamDetailData
 ): TeamDetailViewModel {
   const { metrics, score } = mapTeamStrength(data);
 
@@ -245,7 +189,6 @@ export function mapTeamDetailResponse(
     keyStars: mapKeyStars(data.team_key_stars),
     strengthMetrics: metrics,
     strengthScore: score,
-    newsItems: mapTeamDetailNewsToImpactItems(data.name, teamCode, data.news),
     titles: data.titles,
     nextMatch: mapNextMatch(data.next_match),
   };

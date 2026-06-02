@@ -339,6 +339,47 @@ export interface ProphetGetTeamRelatedNewsData {
   list?: ProphetAnalyticsNewsArticle[];
 }
 
+export interface ProphetAnalyticsTeamMarket {
+  slug?: string;
+  groupItemTitle?: string;
+  volume?: string;
+  liquidity?: string;
+  outcomePrices?: string;
+  oneHourPriceChange?: string;
+  oneDayPriceChange?: string;
+  oneWeekPriceChange?: string;
+  oneMonthPriceChange?: string;
+  clobTokenIds?: string;
+  acceptingOrders?: boolean;
+  negRisk?: boolean;
+  conditionId?: string;
+  updatedAt?: string;
+}
+
+export interface ProphetGetTeamMarketNewsData {
+  market?: ProphetAnalyticsTeamMarket;
+  news?: ProphetAnalyticsNewsArticle[];
+  total_news?: number;
+}
+
+export interface ProphetAnalyticsTopCategoryItem {
+  category?: string;
+  total?: number;
+  percent?: number;
+}
+
+export interface ProphetAnalyticsNewsImpact {
+  high_impact?: number;
+  positive?: number;
+  negative?: number;
+  neutral?: number;
+}
+
+export interface ProphetGetNewsTopCategoryImpactData {
+  top_categories?: ProphetAnalyticsTopCategoryItem[];
+  impact?: ProphetAnalyticsNewsImpact;
+}
+
 export interface ProphetHeadToHeadFixture {
   fixture_date?: string;
   home_team_name?: string;

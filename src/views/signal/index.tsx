@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import { PageBack } from "@/components/ui/page-back";
 import { useAnalyticsLatestNews } from "@/hooks/analytics/use-analytics-latest-news";
+import { useAnalyticsNewsTopCategoryImpact } from "@/hooks/analytics/use-analytics-news-top-category-impact";
 import type { NewsImpactItem } from "@/views/analytics/news/types";
 import {
   buildSignalNewsDetailFromImpactItem,
@@ -39,6 +40,12 @@ export function SignalPage({
 }: SignalPageProps) {
   const { items: topImpactItems, isLoading: isTopLoading } =
     useAnalyticsLatestNews("");
+  const {
+    summary,
+    topCategories,
+    impactOverview,
+    isLoading: isImpactLoading
+  } = useAnalyticsNewsTopCategoryImpact();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [listItemsById, setListItemsById] = useState<
     Record<string, NewsImpactItem>
@@ -110,7 +117,7 @@ export function SignalPage({
             <SignalNewsItem
               key={variant}
               variant={variant}
-              count={data.summary[countKey]}
+              count={isImpactLoading ? 0 : summary[countKey] ?? data.summary[countKey]}
             />
           ))}
         </div>
@@ -124,8 +131,15 @@ export function SignalPage({
 
         <div className="flex min-w-0 w-full flex-col gap-5 lg:w-[696px] lg:shrink-0">
           <MostAffectedTeam className="max-w-none" />
-          <TopCategories className="max-w-none" />
-          <ImpactDistributionOverview className="max-w-none" />
+          <TopCategories
+            className="max-w-none"
+            data={topCategories}
+            isLoading={isImpactLoading}
+          />
+          <ImpactDistributionOverview
+            className="max-w-none"
+            data={impactOverview}
+          />
         </div>
       </div>
 

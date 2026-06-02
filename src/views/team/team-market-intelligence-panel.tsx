@@ -2,7 +2,7 @@
 
 import type { MarketDataMeta } from "@/data/providers/types";
 import { getMarketDataSourceLabel } from "@/data/providers/source";
-import type { ProbabilityHistoryPoint, TeamMarketSnapshot } from "@/types/market";
+import type { TeamMarketSnapshot } from "@/types/market";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
   teamMiniGridClass,
@@ -11,34 +11,27 @@ import {
   teamPanelTitleClass
 } from "@/views/team/team-detail-ui";
 import { TeamPanelMetric } from "./team-panel-metric";
-import { formatChange, formatProbability, formatShortDate, getMovementNarrative, resolveChartHistory } from "@/lib/team/team-detail-model";
+import { formatChange, formatProbability, formatShortDate } from "@/lib/team/team-detail-model";
 import { formatVolume, getSentimentLabel } from "@/components/home/market-formatters";
-import { Area, AreaChart, ResponsiveContainer } from "recharts";
-import { useId, useMemo } from "react";
+import type { TeamMarketIntelligenceData } from "@/lib/analytics/map-team-market-news";
 
 export interface TeamMarketIntelligencePanelProps {
   snapshot: TeamMarketSnapshot;
   dataStatus: MarketDataMeta;
+  intelligence: TeamMarketIntelligenceData;
   isEmpty?: boolean;
-  history: ProbabilityHistoryPoint[];
   relatedNewsCount: number;
+  movementNarrative: string;
 }
 
 export function TeamMarketIntelligencePanel({
   snapshot,
   dataStatus,
+  intelligence,
   isEmpty = false,
-  history,
   relatedNewsCount,
+  movementNarrative
 }: TeamMarketIntelligencePanelProps) {
-  const gradientId = useId().replace(/:/g, "");
-  const mismatch =
-    snapshot.market.probability - snapshot.market.bookmakerImpliedProbability;
-  const chartData = useMemo(
-    () => resolveChartHistory(snapshot, history).slice(-12),
-    [history, snapshot]
-  );
-
   return (
     <section className={teamPanelClass} aria-label="Market intelligence">
       <div className={teamPanelHeadClass}>
@@ -55,37 +48,32 @@ export function TeamMarketIntelligencePanel({
             <div className={teamMiniGridClass}>
               <TeamPanelMetric
                 label="Winner probability"
-                value={formatProbability(snapshot.market.probability)}
+                value={formatProbability(intelligence.probability)}
               />
               <TeamPanelMetric
                 label="24h change"
-                value={formatChange(snapshot.market.change24h)}
-                tone={snapshot.market.change24h < 0 ? "down" : "up"}
+                value={formatChange(intelligence.change24h)}
+                tone={intelligence.change24h < 0 ? "down" : "up"}
               />
               <TeamPanelMetric
                 label="7d change"
-                value={formatChange(snapshot.market.change7d)}
-                tone={snapshot.market.change7d < 0 ? "down" : "up"}
+                value={formatChange(intelligence.change7d)}
+                tone={intelligence.change7d < 0 ? "down" : "up"}
               />
               <TeamPanelMetric
                 label="Market volume"
-                value={formatVolume(snapshot.market.volume)} />
+                value={formatVolume(intelligence.volume)} />
               <TeamPanelMetric
                 label="Liquidity"
                 value={
-                  snapshot.market.liquidity
-                    ? formatVolume(snapshot.market.liquidity)
+                  intelligence.liquidity
+                    ? formatVolume(intelligence.liquidity)
                     : "Pending"
                 }
               />
               <TeamPanelMetric
                 label="Sentiment"
-                value={getSentimentLabel(snapshot.market.sentiment)}
-              />
-              <TeamPanelMetric
-                label="Odds spread"
-                value={formatChange(mismatch)}
-                tone={mismatch < 0 ? "down" : "up"}
+                value={getSentimentLabel(intelligence.sentiment)}
               />
               <TeamPanelMetric
                 label="News signals"
@@ -93,27 +81,8 @@ export function TeamMarketIntelligencePanel({
               />
               <TeamPanelMetric
                 label="Updated"
-                value={formatShortDate(dataStatus.lastUpdated)}
+                value={formatShortDate(intelligence.updatedAt ?? dataStatus.lastUpdated)}
               />
-            </div>
-            <div className="h-[72px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="#125afc" stopOpacity={0.15} />
-                      <stop offset="100%" stopColor="#125afc" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <Area
-                    type="monotone"
-                    dataKey="probability"
-                    stroke="#125afc"
-                    strokeWidth={2}
-                    fill={`url(#${gradientId})`}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
             </div>
 
             <div className="rounded-lg border border-prophet-line bg-[#fafbfc] px-3 py-2.5">
@@ -121,7 +90,7 @@ export function TeamMarketIntelligencePanel({
                 Why it moved
               </span>
               <p className="m-0 mt-1 text-xs leading-relaxed text-black">
-                {getMovementNarrative(snapshot, relatedNewsCount)}
+                {movementNarrative}
               </p>
             </div>
           </div>

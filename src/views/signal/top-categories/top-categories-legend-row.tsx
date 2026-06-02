@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 
 import {
   formatCategoryCountWithPercent,
-  SIGNAL_CATEGORY_COLORS
+  getCategoryColor
 } from "./format";
 import type { SignalCategorySegment } from "./types";
 
@@ -19,7 +19,7 @@ export function TopCategoriesLegendRow({
   highlighted = false,
   className
 }: TopCategoriesLegendRowProps) {
-  const color = SIGNAL_CATEGORY_COLORS[category.id];
+  const color = getCategoryColor(category.id);
 
   return (
     <div

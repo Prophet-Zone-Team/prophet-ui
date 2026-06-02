@@ -1,7 +1,9 @@
 "use client";
 
 import type { MarketDataMeta } from "@/data/providers/types";
+import { useAnalyticsTeamMarketNews } from "@/hooks/analytics/use-analytics-team-market-news";
 import { useTeamDetail } from "@/hooks/team/use-team-detail";
+import { getTeamMarketMovementNarrative } from "@/lib/analytics/map-team-market-news";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import { DossierStrip } from "@/views/team/dossier-strip";
@@ -30,10 +32,8 @@ export interface TeamDetailViewProps {
 }
 
 export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
-  const { data, isLoading, isError, refetch } = useTeamDetail(
-    snapshot.team.name,
-    snapshot.team.code
-  );
+  const { data, isLoading, isError, refetch } = useTeamDetail(snapshot.team.name);
+  const marketNews = useAnalyticsTeamMarketNews(snapshot.team.name);
 
   if (isError && !data) {
     return (
@@ -80,7 +80,7 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
               </div>
 
               <TeamNewsSignalsPanel
-                items={data?.newsItems ?? []}
+                items={marketNews.newsItems}
                 snapshot={snapshot}
               />
               {/* <TeamLineupPanel squad={[]} injuries={[]} dataIssues={[]} /> */}
@@ -97,9 +97,14 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
               <TeamMarketIntelligencePanel
                 snapshot={snapshot}
                 dataStatus={dataStatus}
-                isEmpty={true}
-                history={[]}
-                relatedNewsCount={10}
+                intelligence={marketNews.intelligence}
+                isEmpty={!marketNews.hasMarket}
+                relatedNewsCount={marketNews.totalNews}
+                movementNarrative={getTeamMarketMovementNarrative(
+                  snapshot.team.name,
+                  marketNews.intelligence.change24h,
+                  marketNews.totalNews
+                )}
               />
             </aside>
           </div>
