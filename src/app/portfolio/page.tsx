@@ -1,13 +1,5 @@
-import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 import { PortfolioView } from "@/views/portfolio";
 
-export default async function Page() {
-  const marketData = await getWorldCupMarketData({
-    includeNews: false,
-    includeFootballContext: false
-  });
-
-  return (
-    <PortfolioView snapshots={marketData.snapshots} dataStatus={marketData.meta} />
-  );
+export default function Page() {
+  return <PortfolioView />;
 }

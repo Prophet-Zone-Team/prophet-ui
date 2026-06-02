@@ -2,28 +2,21 @@
 
 import { useMemo } from "react";
 
-import type { MarketDataMeta } from "@/data/providers/types";
 import { useAuth } from "@/context/auth";
 import { buildPortfolioView } from "@/lib/portfolio/portfolio-metrics";
-import type { TeamMarketSnapshot } from "@/types/market";
 import { PortfolioActivityTabs } from "@/views/portfolio/portfolio-activity-tabs";
 import { PortfolioSummarySection } from "@/views/portfolio/portfolio-summary-section";
 import { portfolioPageClass } from "@/views/portfolio/portfolio-ui";
 import { usePortfolioData } from "@/views/portfolio/use-portfolio-data";
 import { PortfolioProvider } from "./context";
 
-export interface PortfolioViewProps {
-  snapshots: TeamMarketSnapshot[];
-  dataStatus: MarketDataMeta;
-}
-
-export function PortfolioView({ snapshots }: PortfolioViewProps) {
+export function PortfolioView() {
   const { cash } = useAuth();
   const {
     session,
     positions,
     openOrders,
-    openOrderMarketMap,
+    marketContextMap,
     transactions,
     historyPage,
     historyTotal,
@@ -44,11 +37,10 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
     () =>
       buildPortfolioView({
         positions,
-        snapshots,
         cash,
         transactions
       }),
-    [cash, positions, snapshots, transactions]
+    [cash, positions, transactions]
   );
 
   return (
@@ -68,10 +60,9 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
           <PortfolioSummarySection />
 
           <PortfolioActivityTabs
-            snapshots={snapshots}
+            marketContextMap={marketContextMap}
             positions={positions}
             openOrders={openOrders}
-            openOrderMarketMap={openOrderMarketMap}
             transactions={transactions}
             historyPage={historyPage}
             historyTotal={historyTotal}

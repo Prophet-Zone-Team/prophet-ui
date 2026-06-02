@@ -1,11 +1,7 @@
 import { formatMatchVersusTitle } from "@/lib/market/trade-widget-header";
-import {
-  findSnapshotForConditionId,
-  findSnapshotForTokenId
-} from "@/lib/portfolio/portfolio-metrics";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
 import type { ProphetTeamsConditionTeam } from "@/types/prophet-api";
-import type { TeamMarketSnapshot } from "@/types/market";
+import type { UserPositionRecord } from "@/types/market";
 
 export type OpenOrderMarketContext = {
   title: string;
@@ -45,6 +41,22 @@ export function collectUniqueConditionIds(orders: UserOpenOrder[]): string[] {
   return [...ids];
 }
 
+export function collectUniqueConditionIdsFromPositions(
+  positions: UserPositionRecord[]
+): string[] {
+  const ids = new Set<string>();
+
+  for (const position of positions) {
+    const conditionId = position.conditionId?.trim();
+
+    if (conditionId) {
+      ids.add(conditionId);
+    }
+  }
+
+  return [...ids];
+}
+
 export function buildOpenOrderMarketMap(
   data: Record<string, ProphetTeamsConditionTeam[]>
 ): Record<string, OpenOrderMarketContext> {
@@ -61,75 +73,26 @@ export function buildOpenOrderMarketMap(
   return map;
 }
 
-function findSnapshotForTeamName(
-  teamName: string,
-  snapshots: TeamMarketSnapshot[]
-): TeamMarketSnapshot | undefined {
-  const normalized = teamName.trim().toLowerCase();
+export function resolveTeamForOutcome(
+  teams: ProphetTeamsConditionTeam[],
+  outcome: string
+): ProphetTeamsConditionTeam | undefined {
+  const normalizedOutcome = outcome.trim().toLowerCase();
 
-  if (!normalized) {
+  if (!normalizedOutcome) {
     return undefined;
   }
 
-  return snapshots.find((snapshot) => {
-    const names = [
-      snapshot.team.id,
-      snapshot.team.name,
-      snapshot.team.code,
-      ...(snapshot.team.aliases ?? [])
-    ]
-      .filter(Boolean)
-      .map((value) => value.toLowerCase());
+  const matched = teams.find(
+    (team) => team.name.trim().toLowerCase() === normalizedOutcome
+  );
 
-    return names.some(
-      (name) => name === normalized || normalized.includes(name) || name.includes(normalized)
-    );
-  });
-}
-
-export function findSnapshotForOpenOrder(input: {
-  order: UserOpenOrder;
-  teams: ProphetTeamsConditionTeam[];
-  snapshots: TeamMarketSnapshot[];
-}): TeamMarketSnapshot | undefined {
-  const { order, teams, snapshots } = input;
-
-  const byToken = findSnapshotForTokenId(order.asset_id, snapshots);
-  if (byToken) {
-    return byToken;
-  }
-
-  const byCondition = findSnapshotForConditionId(order.market, snapshots);
-  if (byCondition) {
-    return byCondition;
-  }
-
-  const outcome = order.outcome?.trim();
-  if (outcome) {
-    const matchedTeam = teams.find(
-      (team) => team.name.trim().toLowerCase() === outcome.toLowerCase()
-    );
-
-    if (matchedTeam) {
-      const byTeam = findSnapshotForTeamName(matchedTeam.name, snapshots);
-      if (byTeam) {
-        return byTeam;
-      }
-    }
-
-    const byOutcome = findSnapshotForTeamName(outcome, snapshots);
-    if (byOutcome) {
-      return byOutcome;
-    }
+  if (matched) {
+    return matched;
   }
 
   if (teams.length === 1) {
-    return findSnapshotForTeamName(teams[0].name, snapshots);
-  }
-
-  const homeTeam = teams.find((team) => team.ordering === "home") ?? teams[0];
-  if (homeTeam) {
-    return findSnapshotForTeamName(homeTeam.name, snapshots);
+    return teams[0];
   }
 
   return undefined;

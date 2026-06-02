@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
+import { fetchPositionSellSnapshot } from "@/lib/portfolio/fetch-position-sell-snapshot";
 import {
   formatPortfolioDateTime,
   formatPnlSubline,
@@ -12,12 +15,12 @@ import {
 } from "@/lib/portfolio/portfolio-format";
 import {
   canRedeemPosition,
-  findSnapshotForConditionId,
-  findSnapshotForPosition,
-  findSnapshotForTokenId,
-  getPortfolioMarketClosedDisabledReason,
-  isAuthoritativeSnapshotForPosition
+  getPortfolioMarketClosedDisabledReason
 } from "@/lib/portfolio/portfolio-metrics";
+import {
+  resolveTeamForOutcome,
+  type OpenOrderMarketContext
+} from "@/lib/portfolio/teams-condition";
 import { resolveTradeHref } from "@/lib/routes/trade";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { useTradeTicketStore } from "@/store/trade-ticket-store";
@@ -40,7 +43,7 @@ import {
 
 export interface PortfolioPositionsTableProps {
   positions: UserPositionRecord[];
-  snapshots: TeamMarketSnapshot[];
+  marketContextMap: Record<string, OpenOrderMarketContext>;
   positionTimeMap: Map<string, string>;
   needsWallet: boolean;
   loading: boolean;
@@ -54,7 +57,7 @@ type SellTarget = {
 
 type RedeemTarget = {
   position: UserPositionRecord;
-  snapshot?: TeamMarketSnapshot;
+  teamName?: string;
 };
 
 function PortfolioPositionsTableHeader() {
@@ -72,7 +75,7 @@ function PortfolioPositionsTableHeader() {
 
 export function PortfolioPositionsTable({
   positions,
-  snapshots,
+  marketContextMap,
   positionTimeMap,
   needsWallet,
   loading,
@@ -80,6 +83,7 @@ export function PortfolioPositionsTable({
 }: PortfolioPositionsTableProps) {
   const [sellTarget, setSellTarget] = useState<SellTarget | null>(null);
   const [redeemTarget, setRedeemTarget] = useState<RedeemTarget | null>(null);
+  const [sellingAsset, setSellingAsset] = useState<string | null>(null);
   const { isRegionBlocked } = useAuth();
   const regionRestricted = isRegionBlocked;
 
@@ -124,32 +128,46 @@ export function PortfolioPositionsTable({
   const mobileCards: ReactNode[] = [];
 
   positions.forEach((position) => {
-    const snapshot =
-      findSnapshotForTokenId(position.asset, snapshots) ??
-      findSnapshotForConditionId(position.conditionId, snapshots) ??
-      findSnapshotForPosition(position, snapshots);
+    const marketContext = marketContextMap[position.conditionId];
+    const teamName = resolveTeamForOutcome(
+      marketContext?.teams ?? [],
+      position.outcome
+    )?.name;
+    const marketTitle = marketContext?.title ?? position.title;
     const timeValue = positionTimeMap.get(position.asset);
     const pnlTone = position.cashPnl >= 0 ? "text-prophet-green" : "text-prophet-red";
     const marketClosedReason = getPortfolioMarketClosedDisabledReason({
-      snapshot,
       endDate: position.endDate
     });
     const marketClosed = Boolean(marketClosedReason);
-    const canSell =
-      position.size > 0 &&
-      Boolean(snapshot) &&
-      !marketClosed &&
-      (snapshot
-        ? isAuthoritativeSnapshotForPosition(position, snapshot) ||
-          Boolean(position.slug || position.conditionId)
-        : false);
+    const canSell = position.size > 0 && Boolean(position.slug?.trim()) && !marketClosed;
     const canRedeem = canRedeemPosition(position);
     const rowKey = `${position.conditionId}:${position.asset}`;
+    const isSelling = sellingAsset === position.asset;
 
-    const handleSell = () => {
-      if (snapshot && !regionRestricted && !marketClosed) {
+    const handleSell = async () => {
+      if (!canSell || regionRestricted || marketClosed || isSelling) {
+        return;
+      }
+
+      setSellingAsset(position.asset);
+
+      try {
+        const snapshot = await fetchPositionSellSnapshot(position);
+
+        if (!snapshot) {
+          toast.error("Market data unavailable");
+          return;
+        }
+
         useTradeTicketStore.getState().syncForPositionSell(snapshot, position);
         setSellTarget({ position, snapshot });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Market data unavailable";
+        toast.error(message);
+      } finally {
+        setSellingAsset(null);
       }
     };
 
@@ -165,7 +183,7 @@ export function PortfolioPositionsTable({
                 "disabled:opacity-50"
               )}
               disabled={regionRestricted}
-              onClick={() => setRedeemTarget({ position, snapshot })}
+              onClick={() => setRedeemTarget({ position, teamName })}
             >
               Redeem
             </button>
@@ -180,16 +198,20 @@ export function PortfolioPositionsTable({
                 "w-full md:w-auto",
                 "disabled:opacity-50"
               )}
-              disabled={!canSell || regionRestricted}
+              disabled={!canSell || regionRestricted || isSelling}
               title={
                 regionRestricted
                   ? undefined
                   : marketClosedReason ??
                     (canSell ? undefined : "Market data unavailable")
               }
-              onClick={handleSell}
+              onClick={() => void handleSell()}
             >
-              Sell
+              {isSelling ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                "Sell"
+              )}
             </button>
           </RegionRestrictedControl>
         ) : null}
@@ -199,11 +221,11 @@ export function PortfolioPositionsTable({
     desktopRows.push(
       <div key={rowKey} className={portfolioPositionsTableRowClass}>
         <PortfolioMarketCell
-          title={position.title}
+          title={marketTitle}
           href={resolveTradeHref(position.eventSlug ?? position.slug)}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
-          snapshot={snapshot}
+          teamName={teamName}
         />
         <span className="font-[556]">
           {formatTeamDetailMoney(position.initialValue)}
@@ -227,11 +249,11 @@ export function PortfolioPositionsTable({
     mobileCards.push(
       <article key={`${rowKey}-mobile`} className={portfolioTableMobileCardClass}>
         <PortfolioMarketCell
-          title={position.title}
+          title={marketTitle}
           href={resolveTradeHref(position.eventSlug ?? position.slug)}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
-          snapshot={snapshot}
+          teamName={teamName}
         />
         <div className="grid grid-cols-2 gap-2">
           <PortfolioTableMobileField label="Traded">
@@ -280,7 +302,7 @@ export function PortfolioPositionsTable({
         <PortfolioPositionRedeemDialog
           open
           position={redeemTarget.position}
-          snapshot={redeemTarget.snapshot}
+          teamName={redeemTarget.teamName}
           onClose={() => setRedeemTarget(null)}
         />
       ) : null}

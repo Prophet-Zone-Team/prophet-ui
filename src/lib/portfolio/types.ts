@@ -52,6 +52,7 @@ export interface UserOpenOrder {
 export interface PortfolioSeriesPoint {
   date: string;
   value: number;
+  timestamp?: number;
 }
 
 export type PortfolioLoadStatus = "idle" | "loading" | "ready" | "error";

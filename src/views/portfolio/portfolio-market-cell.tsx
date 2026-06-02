@@ -1,14 +1,13 @@
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { getOutcomeToneClass } from "@/lib/portfolio/portfolio-format";
-import type { TeamMarketSnapshot } from "@/types/market";
 
 export interface PortfolioMarketCellProps {
   title: string;
   href?: string;
   outcome: string;
   priceLabel?: string;
-  snapshot?: TeamMarketSnapshot;
+  teamName?: string;
 }
 
 export function PortfolioMarketCell({
@@ -16,14 +15,14 @@ export function PortfolioMarketCell({
   href,
   outcome,
   priceLabel,
-  snapshot
+  teamName
 }: PortfolioMarketCellProps) {
   const subline = priceLabel ? `${outcome} ${priceLabel}` : outcome;
 
   return (
     <div className="flex min-w-0 items-start gap-2">
-      {snapshot ? (
-        <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+      {teamName ? (
+        <TeamFlag name={teamName} />
       ) : (
         <span
           className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"

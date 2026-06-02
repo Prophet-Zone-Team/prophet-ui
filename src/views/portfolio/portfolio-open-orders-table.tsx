@@ -5,20 +5,17 @@ import { useState, type ReactNode } from "react";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
-import { getPortfolioMarketClosedDisabledReason } from "@/lib/portfolio/portfolio-metrics";
 import {
   formatSharePrice,
   formatUnixSeconds,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
 import {
-  findSnapshotForOpenOrder,
+  resolveTeamForOutcome,
   type OpenOrderMarketContext
 } from "@/lib/portfolio/teams-condition";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
 import { formatShareSize } from "@/lib/market/order-math";
-import { resolveTradeHref } from "@/lib/routes/trade";
-import type { TeamMarketSnapshot } from "@/types/market";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import { PortfolioMarketCell } from "@/views/portfolio/portfolio-market-cell";
 import { PortfolioOpenOrderCancelDialog } from "@/views/portfolio/portfolio-open-order-cancel-dialog";
@@ -36,8 +33,7 @@ import {
 
 export interface PortfolioOpenOrdersTableProps {
   openOrders: UserOpenOrder[];
-  openOrderMarketMap: Record<string, OpenOrderMarketContext>;
-  snapshots: TeamMarketSnapshot[];
+  marketContextMap: Record<string, OpenOrderMarketContext>;
   needsWallet: boolean;
   loading: boolean;
   onConnectWallet: () => void;
@@ -45,8 +41,8 @@ export interface PortfolioOpenOrdersTableProps {
 
 type CancelTarget = {
   order: UserOpenOrder;
-  snapshot?: TeamMarketSnapshot;
   marketTitle: string;
+  teamName?: string;
 };
 
 function getRemainingSize(order: UserOpenOrder): number {
@@ -74,9 +70,9 @@ function getFilledPercent(order: UserOpenOrder): string {
 
 function resolveOpenOrderMarketTitle(
   order: UserOpenOrder,
-  openOrderMarketMap: Record<string, OpenOrderMarketContext>
+  marketContextMap: Record<string, OpenOrderMarketContext>
 ): string {
-  const mappedTitle = openOrderMarketMap[order.market]?.title?.trim();
+  const mappedTitle = marketContextMap[order.market]?.title?.trim();
 
   if (mappedTitle) {
     return mappedTitle;
@@ -108,8 +104,7 @@ function PortfolioOpenOrdersTableHeader() {
 
 export function PortfolioOpenOrdersTable({
   openOrders,
-  openOrderMarketMap,
-  snapshots,
+  marketContextMap,
   needsWallet,
   loading,
   onConnectWallet
@@ -159,19 +154,12 @@ export function PortfolioOpenOrdersTable({
   const mobileCards: ReactNode[] = [];
 
   openOrders.forEach((order) => {
-    const marketContext = openOrderMarketMap[order.market];
-    const snapshot = findSnapshotForOpenOrder({
-      order,
-      teams: marketContext?.teams ?? [],
-      snapshots
-    });
-    const marketTitle = resolveOpenOrderMarketTitle(order, openOrderMarketMap);
-    const slug = snapshot?.market.slug ?? snapshot?.market.polymarket?.slug;
-    const href = slug ? resolveTradeHref(slug) : undefined;
-    const marketClosedReason = getPortfolioMarketClosedDisabledReason({
-      snapshot
-    });
-    const marketClosed = Boolean(marketClosedReason);
+    const marketContext = marketContextMap[order.market];
+    const marketTitle = resolveOpenOrderMarketTitle(order, marketContextMap);
+    const teamName = resolveTeamForOutcome(
+      marketContext?.teams ?? [],
+      order.outcome
+    )?.name;
     const price = Number(order.price);
     const sideLabel = titleCase(order.side);
     const sidePriceLabel = `${sideLabel} ${
@@ -187,14 +175,13 @@ export function PortfolioOpenOrdersTable({
             "w-full md:w-auto md:justify-self-end",
             "disabled:opacity-50"
           )}
-          disabled={regionRestricted || marketClosed}
-          title={marketClosedReason}
+          disabled={regionRestricted}
           onClick={() => {
-            if (!regionRestricted && !marketClosed) {
+            if (!regionRestricted) {
               setCancelTarget({
                 order,
-                snapshot: snapshot ?? undefined,
-                marketTitle
+                marketTitle,
+                teamName
               });
             }
           }}
@@ -207,9 +194,8 @@ export function PortfolioOpenOrdersTable({
     const marketCell = (
       <PortfolioMarketCell
         title={marketTitle}
-        href={href}
         outcome={order.outcome}
-        snapshot={snapshot}
+        teamName={teamName}
       />
     );
 
@@ -264,8 +250,8 @@ export function PortfolioOpenOrdersTable({
         <PortfolioOpenOrderCancelDialog
           open
           order={cancelTarget.order}
-          snapshot={cancelTarget.snapshot}
           marketTitle={cancelTarget.marketTitle}
+          teamName={cancelTarget.teamName}
           onClose={() => setCancelTarget(null)}
         />
       ) : null}

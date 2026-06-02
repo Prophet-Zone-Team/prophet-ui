@@ -13,7 +13,6 @@ import {
 import type { PortfolioTransactionRecord } from "@/lib/portfolio/types";
 import { resolveTradeHref } from "@/lib/routes/trade";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
-import type { TeamMarketSnapshot } from "@/types/market";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import {
   portfolioConnectButtonClass,
@@ -42,44 +41,82 @@ function PortfolioHistoryTableHeader() {
 
 export interface PortfolioHistoryTableProps {
   transactions: PortfolioTransactionRecord[];
-  snapshots: TeamMarketSnapshot[];
   needsWallet: boolean;
   loading: boolean;
   onConnectWallet: () => void;
 }
 
-function findSnapshotForTransaction(
-  transaction: PortfolioTransactionRecord,
-  snapshots: TeamMarketSnapshot[]
-): TeamMarketSnapshot | undefined {
-  if (transaction.slug) {
-    const bySlug = snapshots.find(
-      (snapshot) =>
-        snapshot.market.slug === transaction.slug ||
-        snapshot.market.polymarket?.slug === transaction.slug
-    );
+function HistoryMarketCell({
+  transaction
+}: {
+  transaction: PortfolioTransactionRecord;
+}) {
+  const outcomeLine = `${transaction.side} ${formatTransactionPrice(transaction.price)}`;
+  const isFundingTransaction = transaction.type === "deposit" || transaction.type === "withdraw";
 
-    if (bySlug) {
-      return bySlug;
-    }
+  if (isFundingTransaction) {
+    return "-";
   }
 
-  if (transaction.teamName) {
-    return snapshots.find((snapshot) => {
-      const names = [
-        snapshot.team.name,
-        snapshot.team.code,
-        ...(snapshot.team.aliases ?? [])
-      ]
-        .filter(Boolean)
-        .map((value) => value.toLowerCase());
+  return (
+    <div className="flex min-w-0 items-center gap-2 md:gap-3">
+      {transaction.teamName ? (
+        <TeamFlag
+          name={transaction.teamName}
+          className="size-[30px] shrink-0 rounded-[2px]"
+        />
+      ) : (
+        <span
+          className="flex size-[30px] shrink-0 items-center justify-center rounded-[2px] bg-prophet-line text-[10px] text-prophet-muted"
+          aria-hidden="true"
+        >
+          ?
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className="m-0 truncate text-[14px] font-medium leading-[18px] text-black">
+          {transaction.marketName}
+        </p>
+        <p
+          className={cn(
+            "m-0 mt-0.5 text-[12px] font-normal leading-[15px]",
+            getOutcomeToneClass(transaction.side)
+          )}
+        >
+          {outcomeLine}
+        </p>
+      </div>
+    </div>
+  );
+}
 
-      const team = transaction.teamName.toLowerCase();
-      return names.some((name) => name === team || team.includes(name));
-    });
-  }
+function HistoryRowContent({
+  transaction
+}: {
+  transaction: PortfolioTransactionRecord;
+}) {
+  const actionLabel = titleCase(transaction.type);
 
-  return undefined;
+  return (
+    <>
+      <div className="flex w-[72px] shrink-0 items-center gap-2">
+        <TransactionActionIcon type={transaction.type} />
+        <span className="text-[14px] font-normal leading-[18px] text-black">
+          {actionLabel}
+        </span>
+      </div>
+
+      <HistoryMarketCell transaction={transaction} />
+
+      <span className="hidden text-[14px] font-normal leading-[18px] text-black md:block">
+        {formatTeamDetailMoney(Number(transaction.amount))}
+      </span>
+
+      <span className="hidden text-right text-[14px] font-normal leading-[18px] text-black md:block">
+        {formatPortfolioDateTime(transaction.createdAt)}
+      </span>
+    </>
+  );
 }
 
 function TransactionActionIcon({
@@ -122,87 +159,8 @@ function TransactionActionIcon({
   );
 }
 
-function HistoryMarketCell({
-  transaction,
-  snapshot
-}: {
-  transaction: PortfolioTransactionRecord;
-  snapshot?: TeamMarketSnapshot;
-}) {
-  const outcomeLine = `${transaction.side} ${formatTransactionPrice(transaction.price)}`;
-  const isFundingTransaction = transaction.type === "deposit" || transaction.type === "withdraw";
-
-  if (isFundingTransaction) {
-    return "-";
-  }
-
-  return (
-    <div className="flex min-w-0 items-center gap-2 md:gap-3">
-      {snapshot ? (
-        <TeamFlag
-          code={snapshot.team.code}
-          name={snapshot.team.name}
-          className="size-[30px] shrink-0 rounded-[2px]"
-        />
-      ) : (
-        <span
-          className="flex size-[30px] shrink-0 items-center justify-center rounded-[2px] bg-prophet-line text-[10px] text-prophet-muted"
-          aria-hidden="true"
-        >
-          ?
-        </span>
-      )}
-      <div className="min-w-0">
-        <p className="m-0 truncate text-[14px] font-medium leading-[18px] text-black">
-          {transaction.marketName}
-        </p>
-        <p
-          className={cn(
-            "m-0 mt-0.5 text-[12px] font-normal leading-[15px]",
-            getOutcomeToneClass(transaction.side)
-          )}
-        >
-          {outcomeLine}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function HistoryRowContent({
-  transaction,
-  snapshot
-}: {
-  transaction: PortfolioTransactionRecord;
-  snapshot?: TeamMarketSnapshot;
-}) {
-  const actionLabel = titleCase(transaction.type);
-
-  return (
-    <>
-      <div className="flex w-[72px] shrink-0 items-center gap-2">
-        <TransactionActionIcon type={transaction.type} />
-        <span className="text-[14px] font-normal leading-[18px] text-black">
-          {actionLabel}
-        </span>
-      </div>
-
-      <HistoryMarketCell transaction={transaction} snapshot={snapshot} />
-
-      <span className="hidden text-[14px] font-normal leading-[18px] text-black md:block">
-        {formatTeamDetailMoney(Number(transaction.amount))}
-      </span>
-
-      <span className="hidden text-right text-[14px] font-normal leading-[18px] text-black md:block">
-        {formatPortfolioDateTime(transaction.createdAt)}
-      </span>
-    </>
-  );
-}
-
 function renderHistoryRow(
   transaction: PortfolioTransactionRecord,
-  snapshot: TeamMarketSnapshot | undefined,
   variant: "desktop" | "mobile"
 ): ReactNode {
   const href = transaction.slug ? resolveTradeHref(transaction.slug) : undefined;
@@ -216,7 +174,7 @@ function renderHistoryRow(
             {titleCase(transaction.type)}
           </span>
         </div>
-        <HistoryMarketCell transaction={transaction} snapshot={snapshot} />
+        <HistoryMarketCell transaction={transaction} />
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className={portfolioTableMobileLabelClass}>Value</p>
@@ -245,9 +203,7 @@ function renderHistoryRow(
     return <div key={`${transaction.id}-mobile`}>{card}</div>;
   }
 
-  const row = (
-    <HistoryRowContent transaction={transaction} snapshot={snapshot} />
-  );
+  const row = <HistoryRowContent transaction={transaction} />;
 
   if (href) {
     return (
@@ -270,7 +226,6 @@ function renderHistoryRow(
 
 export function PortfolioHistoryTable({
   transactions,
-  snapshots,
   needsWallet,
   loading,
   onConnectWallet
@@ -318,10 +273,8 @@ export function PortfolioHistoryTable({
   const mobileCards: ReactNode[] = [];
 
   transactions.forEach((transaction) => {
-    const snapshot = findSnapshotForTransaction(transaction, snapshots);
-
-    desktopRows.push(renderHistoryRow(transaction, snapshot, "desktop"));
-    mobileCards.push(renderHistoryRow(transaction, snapshot, "mobile"));
+    desktopRows.push(renderHistoryRow(transaction, "desktop"));
+    mobileCards.push(renderHistoryRow(transaction, "mobile"));
   });
 
   return (

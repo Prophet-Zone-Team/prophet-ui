@@ -6,8 +6,8 @@ import { useAuth } from "@/context/auth";
 import { PORTFOLIO_HISTORY_PAGE_SIZE } from "@/lib/portfolio/config";
 import { mapProphetUserTransactions } from "@/lib/portfolio/map-user-transaction";
 import {
-  buildOpenOrderMarketMap,
   collectUniqueConditionIds,
+  collectUniqueConditionIdsFromPositions,
   type OpenOrderMarketContext
 } from "@/lib/portfolio/teams-condition";
 import type {
@@ -17,10 +17,10 @@ import type {
 } from "@/lib/portfolio/types";
 import { fetchJson } from "@/lib/team/client-fetch";
 import {
-  getProphetTeamsCondition,
   getProphetUserTransactions,
   isProphetAuthenticated
 } from "@/service/prophet";
+import { useTeamsConditionStore } from "@/store/teams-condition-store";
 import type { UserPositionRecord } from "@/types/market";
 
 export type PortfolioLoadOptions = {
@@ -34,7 +34,7 @@ export interface UsePortfolioDataResult {
   isAuthenticated: boolean;
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
-  openOrderMarketMap: Record<string, OpenOrderMarketContext>;
+  marketContextMap: Record<string, OpenOrderMarketContext>;
   transactions: PortfolioTransactionRecord[];
   historyPage: number;
   historyTotal: number;
@@ -56,7 +56,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const { session, isAuthenticated, openLogin, refreshCash } = useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
-  const [openOrderMarketMap, setOpenOrderMarketMap] = useState<
+  const [marketContextMap, setMarketContextMap] = useState<
     Record<string, OpenOrderMarketContext>
   >({});
   const [transactions, setTransactions] = useState<PortfolioTransactionRecord[]>(
@@ -75,9 +75,27 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const historyLoadedPagesRef = useRef<Set<number>>(new Set());
   const historyRequestIdRef = useRef(0);
 
+  const ensureMarketContext = useCallback(
+    async (conditionIds: string[], options?: { force?: boolean }) => {
+      if (conditionIds.length === 0) {
+        return;
+      }
+
+      try {
+        const map = await useTeamsConditionStore
+          .getState()
+          .ensureTeamsCondition(conditionIds, options);
+        setMarketContextMap((prev) => ({ ...prev, ...map }));
+      } catch (error) {
+        console.warn("[portfolio] teams-condition failed", error);
+      }
+    },
+    []
+  );
+
   const resetTabData = useCallback(() => {
     setOpenOrders([]);
-    setOpenOrderMarketMap({});
+    setMarketContextMap({});
     setTransactions([]);
     setHistoryPage(1);
     setHistoryTotal(0);
@@ -118,7 +136,11 @@ export function usePortfolioData(): UsePortfolioDataResult {
         return undefined;
       });
 
-      setPositions(positionsPayload?.positions ?? []);
+      const nextPositions = positionsPayload?.positions ?? [];
+      setPositions(nextPositions);
+
+      const conditionIds = collectUniqueConditionIdsFromPositions(nextPositions);
+      await ensureMarketContext(conditionIds, { force: options?.force });
 
       const apiErrors = [positionsPayload?.error].filter(Boolean);
       const combinedMessage =
@@ -131,7 +153,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
       setCoreStatus("error");
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [resetTabData, session]);
+  }, [ensureMarketContext, resetTabData, session]);
 
   const loadOpenOrders = useCallback(
     async (options?: PortfolioLoadOptions) => {
@@ -157,34 +179,17 @@ export function usePortfolioData(): UsePortfolioDataResult {
         setOpenOrders(orders);
 
         const conditionIds = collectUniqueConditionIds(orders);
-
-        if (conditionIds.length === 0) {
-          setOpenOrderMarketMap({});
-        } else {
-          try {
-            const teamsCondition = await getProphetTeamsCondition({
-              condition_ids: conditionIds.join(",")
-            });
-            setOpenOrderMarketMap(buildOpenOrderMarketMap(teamsCondition));
-          } catch (error) {
-            console.warn(
-              "[portfolio.openOrders] teams-condition failed",
-              error
-            );
-            setOpenOrderMarketMap({});
-          }
-        }
+        await ensureMarketContext(conditionIds, { force: options?.force });
 
         openOrdersLoadedRef.current = true;
         setOpenOrdersStatus(payload?.error ? "error" : "ready");
       } catch {
         openOrdersLoadedRef.current = true;
         setOpenOrders([]);
-        setOpenOrderMarketMap({});
         setOpenOrdersStatus("error");
       }
     },
-    [session]
+    [ensureMarketContext, session]
   );
 
   const loadActivityHistory = useCallback(
@@ -310,7 +315,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     isAuthenticated,
     positions,
     openOrders,
-    openOrderMarketMap,
+    marketContextMap,
     transactions,
     historyPage,
     historyTotal,

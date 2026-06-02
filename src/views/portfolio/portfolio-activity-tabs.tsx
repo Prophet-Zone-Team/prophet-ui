@@ -11,7 +11,7 @@ import type {
   PortfolioTransactionRecord,
   UserOpenOrder
 } from "@/lib/portfolio/types";
-import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
+import type { UserPositionRecord } from "@/types/market";
 import { PortfolioHistoryTable } from "@/views/portfolio/portfolio-history-table";
 import { PortfolioOpenOrdersTable } from "@/views/portfolio/portfolio-open-orders-table";
 import { PortfolioPositionsTable } from "@/views/portfolio/portfolio-positions-table";
@@ -31,10 +31,9 @@ function isTabLoading(status: PortfolioLoadStatus): boolean {
 }
 
 export interface PortfolioActivityTabsProps {
-  snapshots: TeamMarketSnapshot[];
+  marketContextMap: Record<string, OpenOrderMarketContext>;
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
-  openOrderMarketMap: Record<string, OpenOrderMarketContext>;
   transactions: PortfolioTransactionRecord[];
   historyPage: number;
   historyTotal: number;
@@ -52,10 +51,9 @@ export interface PortfolioActivityTabsProps {
 }
 
 export function PortfolioActivityTabs({
-  snapshots,
+  marketContextMap,
   positions,
   openOrders,
-  openOrderMarketMap,
   transactions,
   historyPage,
   historyTotal,
@@ -189,7 +187,7 @@ export function PortfolioActivityTabs({
         <>
           <PortfolioPositionsTable
             positions={paginatedPositions}
-            snapshots={snapshots}
+            marketContextMap={marketContextMap}
             positionTimeMap={positionTimeMap}
             needsWallet={needsWallet}
             loading={coreLoading}
@@ -210,8 +208,7 @@ export function PortfolioActivityTabs({
         <>
           <PortfolioOpenOrdersTable
             openOrders={paginatedOpenOrders}
-            openOrderMarketMap={openOrderMarketMap}
-            snapshots={snapshots}
+            marketContextMap={marketContextMap}
             needsWallet={needsWallet}
             loading={openOrdersLoading}
             onConnectWallet={onConnectWallet}
@@ -231,7 +228,6 @@ export function PortfolioActivityTabs({
         <>
           <PortfolioHistoryTable
             transactions={transactions}
-            snapshots={snapshots}
             needsWallet={needsWallet}
             loading={historyLoading}
             onConnectWallet={onConnectWallet}

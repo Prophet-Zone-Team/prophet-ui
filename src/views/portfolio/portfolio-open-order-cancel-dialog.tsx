@@ -11,7 +11,6 @@ import {
   titleCase
 } from "@/lib/portfolio/portfolio-format";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
-import type { TeamMarketSnapshot } from "@/types/market";
 import { TeamFlag } from "@/components/teams/team-flag";
 import {
   FundingModalShell,
@@ -25,8 +24,8 @@ import { useCancelOpenOrder } from "@/views/portfolio/use-cancel-open-order";
 export interface PortfolioOpenOrderCancelDialogProps {
   open: boolean;
   order: UserOpenOrder;
-  snapshot?: TeamMarketSnapshot;
   marketTitle?: string;
+  teamName?: string;
   onClose: () => void;
 }
 
@@ -70,8 +69,8 @@ function getSideToneClass(side: string): string {
 export function PortfolioOpenOrderCancelDialog({
   open,
   order,
-  snapshot,
   marketTitle,
+  teamName,
   onClose
 }: PortfolioOpenOrderCancelDialogProps) {
   const { removeOpenOrder } = usePortfolioContext();
@@ -103,8 +102,8 @@ export function PortfolioOpenOrderCancelDialog({
       <FundingModalShell title="Cancel order" onClose={onClose}>
         <div className="flex flex-col gap-5 pb-2">
           <div className="flex items-start gap-2.5">
-            {snapshot ? (
-              <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+            {teamName ? (
+              <TeamFlag name={teamName} />
             ) : (
               <span
                 className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"

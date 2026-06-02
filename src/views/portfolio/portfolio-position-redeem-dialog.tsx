@@ -13,7 +13,7 @@ import {
 } from "@/lib/portfolio/portfolio-format";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { executeRedeem } from "@/lib/trading/deposit-wallet-redeem";
-import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
+import type { UserPositionRecord } from "@/types/market";
 import {
   FundingModalShell,
   fundingPrimaryButtonClass
@@ -27,7 +27,7 @@ export const PORTFOLIO_REDEEM_MODAL_WIDTH = PORTFOLIO_SELL_MODAL_WIDTH;
 export interface PortfolioPositionRedeemDialogProps {
   open: boolean;
   position: UserPositionRecord;
-  snapshot?: TeamMarketSnapshot;
+  teamName?: string;
   onClose: () => void;
 }
 
@@ -36,7 +36,7 @@ type RedeemPhase = "idle" | "signing" | "submitting" | "success" | "error";
 export function PortfolioPositionRedeemDialog({
   open,
   position,
-  snapshot,
+  teamName,
   onClose
 }: PortfolioPositionRedeemDialogProps) {
   const { session, syncCash } = useAuth();
@@ -121,8 +121,8 @@ export function PortfolioPositionRedeemDialog({
       <FundingModalShell title="Redeem" onClose={handleClose}>
         <div className="flex flex-col gap-5 pb-2">
           <div className="flex items-start gap-2.5">
-            {snapshot ? (
-              <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+            {teamName ? (
+              <TeamFlag name={teamName} />
             ) : null}
             <div className="min-w-0 flex-1">
               <p className="m-0 line-clamp-2 text-sm font-[556] leading-[17px] text-black">

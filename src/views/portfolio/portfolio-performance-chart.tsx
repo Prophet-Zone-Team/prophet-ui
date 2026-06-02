@@ -1,35 +1,70 @@
 "use client";
 
-import { useId, useState } from "react";
-import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
+import { useEffect, useId, useMemo, useState } from "react";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 
 import { cn } from "@/lib/cn";
-import { formatSignedPercent } from "@/lib/portfolio/portfolio-format";
+import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { PortfolioTimeRange } from "@/lib/portfolio/types";
 import { portfolioSummaryLabelClass } from "@/views/portfolio/portfolio-ui";
-import { formatNumber } from "@/utils";
 import { usePortfolioContext } from "./context";
-
-const CHART_LINE_COLOR = "#65AF14";
-const CHART_FILL_TOP = "rgba(138, 185, 86, 0.3)";
+import { usePortfolioUserPnl } from "./use-portfolio-user-pnl";
 
 const TIME_RANGES: PortfolioTimeRange[] = ["1H", "1D", "1W", "1M", "All"];
+
+const CHART_POSITIVE = {
+  stroke: "#65AF14",
+  fillTop: "rgba(138, 185, 86, 0.3)"
+};
+
+const CHART_NEGATIVE = {
+  stroke: "#E5484D",
+  fillTop: "rgba(229, 72, 77, 0.3)"
+};
 
 export interface PortfolioPerformanceChartProps {}
 
 export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
-  const { portfolio } = usePortfolioContext();
-  const {
-    performanceSeries: series,
-    unrealizedPnl,
-    unrealizedPnlPercent
-  } = portfolio ?? {};
+  const { session } = usePortfolioContext();
+  const polymarketAddress = session?.funderAddress ?? session?.walletAddress;
 
-  const [range, setRange] = useState<PortfolioTimeRange>("1M");
+  const [range, setRange] = useState<PortfolioTimeRange>("All");
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const { series, status } = usePortfolioUserPnl(polymarketAddress, range);
   const gradientId = useId().replace(/:/g, "");
-  const pnl = unrealizedPnl ?? 0;
-  const pnlSign = pnl > 0 ? "+" : pnl < 0 ? "-" : "";
-  const pnlTone = pnl >= 0 ? "text-prophet-green" : "text-prophet-red";
+
+  useEffect(() => {
+    setActiveIndex(null);
+  }, [range, polymarketAddress]);
+
+  const displayIndex = useMemo(() => {
+    if (series.length === 0) {
+      return -1;
+    }
+
+    if (
+      activeIndex != null &&
+      activeIndex >= 0 &&
+      activeIndex < series.length
+    ) {
+      return activeIndex;
+    }
+
+    return series.length - 1;
+  }, [activeIndex, series]);
+
+  const displayPnl = displayIndex >= 0 ? (series[displayIndex]?.value ?? 0) : 0;
+  const chartTone = displayPnl >= 0 ? CHART_POSITIVE : CHART_NEGATIVE;
+  const pnlTone = displayPnl >= 0 ? "text-prophet-green" : "text-prophet-red";
+  const isLoading = status === "loading";
+
+  const handleChartMouseMove = (state: { activeTooltipIndex?: number }) => {
+    const index = state?.activeTooltipIndex;
+
+    if (typeof index === "number" && index >= 0) {
+      setActiveIndex(index);
+    }
+  };
 
   return (
     <div className="flex w-full md:w-1/2 flex-col justify-between gap-4 border-t border-prophet-line pt-6 lg:border-t-0 lg:pl-8 lg:pt-0">
@@ -40,19 +75,7 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
             <span
               className={cn("text-[32px] font-[556] leading-[38px]", pnlTone)}
             >
-              {formatNumber(Math.abs(pnl), 2, true, {
-                round: 0,
-                prefix: pnlSign,
-                isZeroPrecision: true
-              })}
-            </span>
-            <span
-              className={cn(
-                "text-base font-[556] leading-[19px] capitalize",
-                pnlTone
-              )}
-            >
-              {formatSignedPercent(unrealizedPnlPercent)}
+              {formatTeamDetailMoney(displayPnl)}
             </span>
           </div>
         </div>
@@ -81,38 +104,54 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
         </div>
       </div>
 
-      <div className="h-[83px] w-full">
+      <div
+        className={cn(
+          "h-[83px] w-full",
+          isLoading && "animate-pulse opacity-60"
+        )}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={series}
             margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+            onMouseMove={handleChartMouseMove}
+            onMouseLeave={() => setActiveIndex(null)}
           >
             <defs>
               <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor={CHART_FILL_TOP} />
-                <stop offset="100%" stopColor="rgba(138, 185, 86, 0)" />
+                <stop offset="0%" stopColor={chartTone.fillTop} />
+                <stop
+                  offset="100%"
+                  stopColor={
+                    displayPnl >= 0
+                      ? "rgba(138, 185, 86, 0)"
+                      : "rgba(229, 72, 77, 0)"
+                  }
+                />
               </linearGradient>
             </defs>
+            <YAxis hide domain={["dataMin", "dataMax"]} />
             <Tooltip
-              contentStyle={{
-                background: "#fff",
-                border: "1px solid #ebebeb",
-                borderRadius: 8,
-                color: "#000",
-                fontSize: 12
+              cursor={{
+                stroke: "#999999",
+                strokeWidth: 1
               }}
-              formatter={(value: number) => [
-                formatNumber(value, 2, true, { round: 0 }),
-                "Value"
-              ]}
+              content={() => null}
+              isAnimationActive={false}
             />
             <Area
               type="monotone"
               dataKey="value"
-              stroke={CHART_LINE_COLOR}
+              baseValue="dataMin"
+              stroke={chartTone.stroke}
               strokeWidth={1}
               fill={`url(#${gradientId})`}
-              activeDot={{ r: 3, fill: CHART_LINE_COLOR }}
+              activeDot={{
+                r: 4,
+                fill: chartTone.stroke,
+                stroke: "#FFFFFF",
+                strokeWidth: 2
+              }}
             />
           </AreaChart>
         </ResponsiveContainer>

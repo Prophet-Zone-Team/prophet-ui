@@ -9,7 +9,6 @@ import type {
   UserPositionRecord
 } from "@/types/market";
 import type {
-  PortfolioSeriesPoint,
   PortfolioTransactionRecord,
   UserOpenOrder
 } from "@/lib/portfolio/types";
@@ -202,53 +201,19 @@ export function buildPositionTimeMapFromTransactions(
   return map;
 }
 
-export function buildPerformanceSeries(
-  positions: UserPositionRecord[],
-  snapshots: TeamMarketSnapshot[],
-  portfolioValue: number,
-  pnl: number
-): PortfolioSeriesPoint[] {
-  const dates = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - index));
-    return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
-  });
-
-  if (positions.length === 0 || portfolioValue <= 0) {
-    return dates.map((date) => ({ date, value: 0 }));
-  }
-
-  const base = Math.max(0, portfolioValue - pnl);
-  const movementBias = positions.reduce((sum, position) => {
-    const snapshot = findSnapshotForPosition(position, snapshots);
-    return sum + (snapshot?.market.change7d ?? 0) * safeNumber(position.currentValue) * 0.003;
-  }, 0);
-
-  return dates.map((date, index) => {
-    const progress = index / Math.max(1, dates.length - 1);
-    const value = base + pnl * progress + Math.sin(index * 1.7) * movementBias;
-    return { date, value: roundMoney(Math.max(0, value)) };
-  });
-}
-
 export interface PortfolioViewModel {
   portfolioValue: number;
   availableToTrade: number;
   totalPositionValue: number;
-  unrealizedPnl: number;
-  unrealizedPnlPercent: number;
-  performanceSeries: PortfolioSeriesPoint[];
   positionTimeMap: Map<string, string>;
 }
 
 export function buildPortfolioView({
   positions,
-  snapshots,
   cash,
   transactions
 }: {
   positions: UserPositionRecord[];
-  snapshots: TeamMarketSnapshot[];
   cash?: CashBalanceView;
   transactions: PortfolioTransactionRecord[];
 }): PortfolioViewModel {
@@ -257,18 +222,6 @@ export function buildPortfolioView({
   );
   const availableToTrade = safeNumber(cash?.available);
   const portfolioValue = roundMoney(totalPositionValue + availableToTrade);
-  const unrealizedPnl = roundMoney(
-    positions.reduce((sum, position) => sum + safeNumber(position.cashPnl), 0)
-  );
-  const costBasis = totalPositionValue - unrealizedPnl;
-  const unrealizedPnlPercent =
-    costBasis > 0 ? roundMoney((unrealizedPnl / costBasis) * 100) : 0;
-  const performanceSeries = buildPerformanceSeries(
-    positions,
-    snapshots,
-    portfolioValue,
-    unrealizedPnl
-  );
   const positionTimeMap = buildPositionTimeMapFromTransactions(
     transactions,
     positions
@@ -278,9 +231,6 @@ export function buildPortfolioView({
     portfolioValue,
     availableToTrade,
     totalPositionValue,
-    unrealizedPnl,
-    unrealizedPnlPercent,
-    performanceSeries,
     positionTimeMap
   };
 }
