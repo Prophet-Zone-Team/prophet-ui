@@ -7,6 +7,10 @@ interface TeamFlagProps {
   logoUrl?: string;
   className?: string;
   fallbackClassName?: string;
+  /**
+   * Whether to display the fallback icon, defaults to true.
+   */
+  fallback?: boolean;
 }
 
 const defaultFlagClassName = "inline-block h-[23px] w-[23px] shrink-0";
@@ -16,7 +20,8 @@ export function TeamFlag({
   name,
   logoUrl,
   className,
-  fallbackClassName
+  fallbackClassName,
+  fallback = true,
 }: TeamFlagProps) {
   if (logoUrl) {
     return (
@@ -38,6 +43,10 @@ export function TeamFlag({
         className={cn(defaultFlagClassName, "object-cover", className)}
       />
     );
+  }
+
+  if (!fallback) {
+    return null;
   }
 
   return (

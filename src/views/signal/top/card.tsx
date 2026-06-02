@@ -102,6 +102,7 @@ export function SignalTopCard({ item, onSelect, className }: SignalTopCardProps)
               code={item.teamCode}
               name={item.teamName}
               className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] md:h-[20px] md:w-[20px] md:text-[20px]"
+              fallback={false}
             />
             <span className="truncate text-base font-[556] leading-[19px] text-black md:text-[18px] md:leading-[21px]">
               {item.teamName}

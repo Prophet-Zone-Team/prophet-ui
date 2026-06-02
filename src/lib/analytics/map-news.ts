@@ -34,7 +34,7 @@ export function parseJsonArrayField(value: string | undefined): string[] {
 export function computeImpactScore(
   score: number,
 ): { impactScore: number; sentiment: NewsSentiment; } {
-  const magnitude = Math.round(score - 100) / 10;
+  const magnitude = Math.round(score - 50) / 10;
   return {
     impactScore: magnitude,
     sentiment: magnitude < 0 ? "negative" : "positive"
