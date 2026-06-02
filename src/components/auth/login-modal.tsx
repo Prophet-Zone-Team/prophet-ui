@@ -3,8 +3,11 @@
 import { useEffect, useMemo } from "react";
 import { Check, Loader2 } from "lucide-react";
 
+import { ChevronRight } from "lucide-react";
+
 import { PolymarketIcon } from "@/components/icons";
 import { Modal } from "@/components/ui/modal";
+import { PrivyLoginModal } from "@/components/auth/privy-login-modal";
 import { cn } from "@/lib/cn";
 import {
   formatRegionBlockedDetail,
@@ -28,8 +31,12 @@ interface LoginModalProps {
     | "isAuthenticated"
     | "isRegionBlocked"
     | "eligibilityView"
+    | "privyModalOpen"
     | "closeLogin"
     | "connectWallet"
+    | "openPrivyLogin"
+    | "closePrivyLogin"
+    | "setLoginMethod"
     | "signClobCredentials"
     | "signTokenApprovals"
     | "refreshSession"
@@ -72,8 +79,12 @@ export function LoginModal({ auth }: LoginModalProps) {
     isAuthenticated,
     isRegionBlocked,
     eligibilityView,
+    privyModalOpen,
     closeLogin,
     connectWallet,
+    openPrivyLogin,
+    closePrivyLogin,
+    setLoginMethod,
     signClobCredentials,
     signTokenApprovals,
     refreshSession,
@@ -232,10 +243,34 @@ export function LoginModal({ auth }: LoginModalProps) {
                 </button>
               </div>
             ) : null}
+
+            {!isAuthenticated ? (
+              <button
+                type="button"
+                className="flex items-center justify-center gap-1 border-t border-prophet-line pt-4 text-[14px] font-[500] leading-[normal] text-black"
+                onClick={openPrivyLogin}
+              >
+                Or login by Email
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            ) : null}
           </>
         )}
       </div>
-      <div className="flex flex-col gap-5"></div>
+
+      <PrivyLoginModal
+        open={privyModalOpen}
+        onClose={closePrivyLogin}
+        onConnectExtensionWallet={() => {
+          setLoginMethod("wallet");
+          closePrivyLogin();
+          void connectWallet();
+        }}
+        onEmailAuthenticated={() => {
+          setLoginMethod("email");
+          closePrivyLogin();
+        }}
+      />
     </Modal>
   );
 }
