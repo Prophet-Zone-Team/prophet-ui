@@ -5,6 +5,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/auth";
 import { PORTFOLIO_HISTORY_PAGE_SIZE } from "@/lib/portfolio/config";
 import { mapProphetUserTransactions } from "@/lib/portfolio/map-user-transaction";
+import {
+  buildOpenOrderMarketMap,
+  collectUniqueConditionIds,
+  type OpenOrderMarketContext
+} from "@/lib/portfolio/teams-condition";
 import type {
   PortfolioLoadStatus,
   PortfolioTransactionRecord,
@@ -12,6 +17,7 @@ import type {
 } from "@/lib/portfolio/types";
 import { fetchJson } from "@/lib/team/client-fetch";
 import {
+  getProphetTeamsCondition,
   getProphetUserTransactions,
   isProphetAuthenticated
 } from "@/service/prophet";
@@ -28,6 +34,7 @@ export interface UsePortfolioDataResult {
   isAuthenticated: boolean;
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
+  openOrderMarketMap: Record<string, OpenOrderMarketContext>;
   transactions: PortfolioTransactionRecord[];
   historyPage: number;
   historyTotal: number;
@@ -49,6 +56,9 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const { session, isAuthenticated, openLogin, refreshCash } = useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
+  const [openOrderMarketMap, setOpenOrderMarketMap] = useState<
+    Record<string, OpenOrderMarketContext>
+  >({});
   const [transactions, setTransactions] = useState<PortfolioTransactionRecord[]>(
     []
   );
@@ -67,6 +77,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
 
   const resetTabData = useCallback(() => {
     setOpenOrders([]);
+    setOpenOrderMarketMap({});
     setTransactions([]);
     setHistoryPage(1);
     setHistoryTotal(0);
@@ -78,6 +89,15 @@ export function usePortfolioData(): UsePortfolioDataResult {
   }, []);
 
   const loadCore = useCallback(async (options?: PortfolioLoadOptions) => {
+    if (!session) {
+      setPositions([]);
+      resetTabData();
+      coreLoadedRef.current = false;
+      setCoreStatus("ready");
+      setMessage(undefined);
+      return;
+    }
+
     if (coreLoadedRef.current && !options?.force) {
       return;
     }
@@ -88,14 +108,6 @@ export function usePortfolioData(): UsePortfolioDataResult {
     setMessage(undefined);
 
     try {
-      if (!session) {
-        setPositions([]);
-        resetTabData();
-        coreLoadedRef.current = false;
-        setCoreStatus("ready");
-        return;
-      }
-
       const errors: string[] = [];
 
       const positionsPayload = await fetchJson<{
@@ -141,12 +153,34 @@ export function usePortfolioData(): UsePortfolioDataResult {
           error?: string;
         }>("/api/trading/orders/open");
 
-        setOpenOrders(payload?.orders ?? []);
+        const orders = payload?.orders ?? [];
+        setOpenOrders(orders);
+
+        const conditionIds = collectUniqueConditionIds(orders);
+
+        if (conditionIds.length === 0) {
+          setOpenOrderMarketMap({});
+        } else {
+          try {
+            const teamsCondition = await getProphetTeamsCondition({
+              condition_ids: conditionIds.join(",")
+            });
+            setOpenOrderMarketMap(buildOpenOrderMarketMap(teamsCondition));
+          } catch (error) {
+            console.warn(
+              "[portfolio.openOrders] teams-condition failed",
+              error
+            );
+            setOpenOrderMarketMap({});
+          }
+        }
+
         openOrdersLoadedRef.current = true;
         setOpenOrdersStatus(payload?.error ? "error" : "ready");
       } catch {
         openOrdersLoadedRef.current = true;
         setOpenOrders([]);
+        setOpenOrderMarketMap({});
         setOpenOrdersStatus("error");
       }
     },
@@ -166,21 +200,19 @@ export function usePortfolioData(): UsePortfolioDataResult {
         return;
       }
 
+      if (!isProphetAuthenticated()) {
+        setTransactions([]);
+        setHistoryTotal(0);
+        historyLoadedPagesRef.current.add(page);
+        setHistoryStatus("ready");
+        return;
+      }
+
       const requestId = historyRequestIdRef.current + 1;
       historyRequestIdRef.current = requestId;
 
       if (!alreadyLoaded) {
         setHistoryStatus("loading");
-      }
-
-      if (!isProphetAuthenticated()) {
-        if (historyRequestIdRef.current === requestId) {
-          setTransactions([]);
-          setHistoryTotal(0);
-          historyLoadedPagesRef.current.add(page);
-          setHistoryStatus("ready");
-        }
-        return;
       }
 
       try {
@@ -219,6 +251,10 @@ export function usePortfolioData(): UsePortfolioDataResult {
   );
 
   const reload = useCallback(async () => {
+    if (!session) {
+      return;
+    }
+
     await Promise.all([loadCore({ force: true }), refreshCash()]);
 
     if (openOrdersLoadedRef.current) {
@@ -229,12 +265,28 @@ export function usePortfolioData(): UsePortfolioDataResult {
       historyLoadedPagesRef.current.delete(historyPage);
       await loadActivityHistory({ page: historyPage, force: true });
     }
-  }, [historyPage, loadActivityHistory, loadCore, loadOpenOrders, refreshCash]);
+  }, [
+    historyPage,
+    loadActivityHistory,
+    loadCore,
+    loadOpenOrders,
+    refreshCash,
+    session
+  ]);
 
   useEffect(() => {
     resetTabData();
+
+    if (!session) {
+      setPositions([]);
+      coreLoadedRef.current = false;
+      setCoreStatus("ready");
+      setMessage(undefined);
+      return;
+    }
+
     void loadCore();
-  }, [loadCore, resetTabData]);
+  }, [loadCore, resetTabData, session]);
 
   const removeOpenOrder = useCallback((orderId: string) => {
     setOpenOrders((current) => current.filter((order) => order.id !== orderId));
@@ -258,6 +310,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     isAuthenticated,
     positions,
     openOrders,
+    openOrderMarketMap,
     transactions,
     historyPage,
     historyTotal,

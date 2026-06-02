@@ -14,6 +14,7 @@ import type {
   ProphetCancelTrackRequest,
   ProphetGetAnalyticsNewsData,
   ProphetGetGamesData,
+  ProphetGetTeamsConditionData,
   ProphetGetRelatedGamesData,
   ProphetGetHeadToHeadFixturesData,
   ProphetGetGameStatisticsData,
@@ -223,6 +224,17 @@ async function prophetPost<T>(
 /** GET /v1/games — all Polymarket games, sorted by start_time ascending */
 export async function getProphetGames(): Promise<ProphetGetGamesData> {
   return prophetGet<ProphetGetGamesData>("/v1/games");
+}
+
+/** GET /v1/teams-condition — teams for comma-separated condition ids */
+export async function getProphetTeamsCondition(params: {
+  condition_ids: string;
+}): Promise<ProphetGetTeamsConditionData> {
+  return prophetGet<ProphetGetTeamsConditionData>("/v1/teams-condition", {
+    params: {
+      condition_ids: params.condition_ids
+    }
+  });
 }
 
 /** GET /v1/game — single Polymarket game by slug */

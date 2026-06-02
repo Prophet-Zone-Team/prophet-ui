@@ -3,22 +3,24 @@
 import { useState, type ReactNode } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
-import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
-import {
-  findSnapshotForTokenId,
-  getPortfolioMarketClosedDisabledReason
-} from "@/lib/portfolio/portfolio-metrics";
+import { getPortfolioMarketClosedDisabledReason } from "@/lib/portfolio/portfolio-metrics";
 import {
   formatSharePrice,
   formatUnixSeconds,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
+import {
+  findSnapshotForOpenOrder,
+  type OpenOrderMarketContext
+} from "@/lib/portfolio/teams-condition";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
 import { formatShareSize } from "@/lib/market/order-math";
+import { resolveTradeHref } from "@/lib/routes/trade";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
+import { PortfolioMarketCell } from "@/views/portfolio/portfolio-market-cell";
 import { PortfolioOpenOrderCancelDialog } from "@/views/portfolio/portfolio-open-order-cancel-dialog";
 import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mobile";
 import {
@@ -34,6 +36,7 @@ import {
 
 export interface PortfolioOpenOrdersTableProps {
   openOrders: UserOpenOrder[];
+  openOrderMarketMap: Record<string, OpenOrderMarketContext>;
   snapshots: TeamMarketSnapshot[];
   needsWallet: boolean;
   loading: boolean;
@@ -43,6 +46,7 @@ export interface PortfolioOpenOrdersTableProps {
 type CancelTarget = {
   order: UserOpenOrder;
   snapshot?: TeamMarketSnapshot;
+  marketTitle: string;
 };
 
 function getRemainingSize(order: UserOpenOrder): number {
@@ -68,6 +72,19 @@ function getFilledPercent(order: UserOpenOrder): string {
   return `${percent.toFixed(0)}%`;
 }
 
+function resolveOpenOrderMarketTitle(
+  order: UserOpenOrder,
+  openOrderMarketMap: Record<string, OpenOrderMarketContext>
+): string {
+  const mappedTitle = openOrderMarketMap[order.market]?.title?.trim();
+
+  if (mappedTitle) {
+    return mappedTitle;
+  }
+
+  return order.outcome || order.market || order.asset_id;
+}
+
 function PortfolioOpenOrdersTableHeader() {
   return (
     <div className={portfolioOrdersTableHeadClass}>
@@ -89,36 +106,9 @@ function PortfolioOpenOrdersTableHeader() {
   );
 }
 
-function OpenOrderMarketCell({
-  order,
-  snapshot
-}: {
-  order: UserOpenOrder;
-  snapshot?: TeamMarketSnapshot;
-}) {
-  return (
-    <div className="flex min-w-0 items-start gap-2">
-      {snapshot ? (
-        <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
-      ) : (
-        <span
-          className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
-          aria-hidden="true"
-        >
-          ?
-        </span>
-      )}
-      <div className="min-w-0">
-        <p className="m-0 truncate font-[556] text-black">
-          {order.outcome || order.market || order.asset_id}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export function PortfolioOpenOrdersTable({
   openOrders,
+  openOrderMarketMap,
   snapshots,
   needsWallet,
   loading,
@@ -169,7 +159,15 @@ export function PortfolioOpenOrdersTable({
   const mobileCards: ReactNode[] = [];
 
   openOrders.forEach((order) => {
-    const snapshot = findSnapshotForTokenId(order.asset_id, snapshots);
+    const marketContext = openOrderMarketMap[order.market];
+    const snapshot = findSnapshotForOpenOrder({
+      order,
+      teams: marketContext?.teams ?? [],
+      snapshots
+    });
+    const marketTitle = resolveOpenOrderMarketTitle(order, openOrderMarketMap);
+    const slug = snapshot?.market.slug ?? snapshot?.market.polymarket?.slug;
+    const href = slug ? resolveTradeHref(slug) : undefined;
     const marketClosedReason = getPortfolioMarketClosedDisabledReason({
       snapshot
     });
@@ -193,7 +191,11 @@ export function PortfolioOpenOrdersTable({
           title={marketClosedReason}
           onClick={() => {
             if (!regionRestricted && !marketClosed) {
-              setCancelTarget({ order, snapshot: snapshot ?? undefined });
+              setCancelTarget({
+                order,
+                snapshot: snapshot ?? undefined,
+                marketTitle
+              });
             }
           }}
         >
@@ -202,9 +204,18 @@ export function PortfolioOpenOrdersTable({
       </RegionRestrictedControl>
     );
 
+    const marketCell = (
+      <PortfolioMarketCell
+        title={marketTitle}
+        href={href}
+        outcome={order.outcome}
+        snapshot={snapshot}
+      />
+    );
+
     desktopRows.push(
       <div key={order.id} className={portfolioOrdersTableRowClass}>
-        <OpenOrderMarketCell order={order} snapshot={snapshot} />
+        {marketCell}
         <span className="font-[556]">{sidePriceLabel}</span>
         <span>{formatShareSize(getRemainingSize(order))}</span>
         <span className="text-prophet-muted">{getFilledPercent(order)}</span>
@@ -217,7 +228,7 @@ export function PortfolioOpenOrdersTable({
 
     mobileCards.push(
       <article key={`${order.id}-mobile`} className={portfolioTableMobileCardClass}>
-        <OpenOrderMarketCell order={order} snapshot={snapshot} />
+        {marketCell}
         <PortfolioTableMobileField label="Side / Price">{sidePriceLabel}</PortfolioTableMobileField>
         <PortfolioTableMobileField label="Size">
           {formatShareSize(getRemainingSize(order))}
@@ -254,6 +265,7 @@ export function PortfolioOpenOrdersTable({
           open
           order={cancelTarget.order}
           snapshot={cancelTarget.snapshot}
+          marketTitle={cancelTarget.marketTitle}
           onClose={() => setCancelTarget(null)}
         />
       ) : null}

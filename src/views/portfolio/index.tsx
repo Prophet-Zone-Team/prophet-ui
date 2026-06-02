@@ -23,6 +23,7 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
     session,
     positions,
     openOrders,
+    openOrderMarketMap,
     transactions,
     historyPage,
     historyTotal,
@@ -70,6 +71,7 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
             snapshots={snapshots}
             positions={positions}
             openOrders={openOrders}
+            openOrderMarketMap={openOrderMarketMap}
             transactions={transactions}
             historyPage={historyPage}
             historyTotal={historyTotal}

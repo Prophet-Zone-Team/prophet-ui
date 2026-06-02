@@ -26,6 +26,7 @@ export interface PortfolioOpenOrderCancelDialogProps {
   open: boolean;
   order: UserOpenOrder;
   snapshot?: TeamMarketSnapshot;
+  marketTitle?: string;
   onClose: () => void;
 }
 
@@ -70,6 +71,7 @@ export function PortfolioOpenOrderCancelDialog({
   open,
   order,
   snapshot,
+  marketTitle,
   onClose
 }: PortfolioOpenOrderCancelDialogProps) {
   const { removeOpenOrder } = usePortfolioContext();
@@ -83,7 +85,11 @@ export function PortfolioOpenOrderCancelDialog({
 
   const price = Number(order.price);
   const sideLabel = titleCase(order.side);
-  const marketLabel = order.outcome || order.market || order.asset_id;
+  const marketLabel =
+    marketTitle?.trim() ||
+    order.outcome ||
+    order.market ||
+    order.asset_id;
   const isBusy = isCanceling(order.id);
 
   return (

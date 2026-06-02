@@ -3,14 +3,12 @@
 import { useState, type ReactNode } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
-import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import {
   formatPortfolioDateTime,
   formatPnlSubline,
-  formatSharePrice,
-  getOutcomeToneClass
+  formatSharePrice
 } from "@/lib/portfolio/portfolio-format";
 import {
   canRedeemPosition,
@@ -25,6 +23,7 @@ import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { useTradeTicketStore } from "@/store/trade-ticket-store";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
+import { PortfolioMarketCell } from "@/views/portfolio/portfolio-market-cell";
 import { PortfolioPositionRedeemDialog } from "@/views/portfolio/portfolio-position-redeem-dialog";
 import { PortfolioPositionSellDialog } from "@/views/portfolio/portfolio-position-sell-dialog";
 import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mobile";
@@ -67,45 +66,6 @@ function PortfolioPositionsTableHeader() {
       <span>Value</span>
       <span>Time</span>
       <span className="justify-self-end text-right">Action</span>
-    </div>
-  );
-}
-
-function PositionMarketCell({
-  position,
-  snapshot
-}: {
-  position: UserPositionRecord;
-  snapshot?: TeamMarketSnapshot;
-}) {
-  return (
-    <div className="flex min-w-0 items-start gap-2">
-      {snapshot ? (
-        <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
-      ) : (
-        <span
-          className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
-          aria-hidden="true"
-        >
-          ?
-        </span>
-      )}
-      <div className="min-w-0 overflow-hidden text-ellipsis">
-        <a
-          href={resolveTradeHref(position.eventSlug ?? position.slug)}
-          className="m-0 truncate font-[556] text-black hover:underline"
-        >
-          {position.title}
-        </a>
-        <p
-          className={cn(
-            "m-0 mt-0.5 text-xs",
-            getOutcomeToneClass(position.outcome)
-          )}
-        >
-          {position.outcome} {formatSharePrice(position.avgPrice)}
-        </p>
-      </div>
     </div>
   );
 }
@@ -238,7 +198,13 @@ export function PortfolioPositionsTable({
 
     desktopRows.push(
       <div key={rowKey} className={portfolioPositionsTableRowClass}>
-        <PositionMarketCell position={position} snapshot={snapshot} />
+        <PortfolioMarketCell
+          title={position.title}
+          href={resolveTradeHref(position.eventSlug ?? position.slug)}
+          outcome={position.outcome}
+          priceLabel={formatSharePrice(position.avgPrice)}
+          snapshot={snapshot}
+        />
         <span className="font-[556]">
           {formatTeamDetailMoney(position.initialValue)}
         </span>
@@ -260,7 +226,13 @@ export function PortfolioPositionsTable({
 
     mobileCards.push(
       <article key={`${rowKey}-mobile`} className={portfolioTableMobileCardClass}>
-        <PositionMarketCell position={position} snapshot={snapshot} />
+        <PortfolioMarketCell
+          title={position.title}
+          href={resolveTradeHref(position.eventSlug ?? position.slug)}
+          outcome={position.outcome}
+          priceLabel={formatSharePrice(position.avgPrice)}
+          snapshot={snapshot}
+        />
         <div className="grid grid-cols-2 gap-2">
           <PortfolioTableMobileField label="Traded">
             {formatTeamDetailMoney(position.initialValue)}

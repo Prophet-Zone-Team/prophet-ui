@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Pagination } from "@/components/pagination/pagination";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
+import type { OpenOrderMarketContext } from "@/lib/portfolio/teams-condition";
 import type {
   PortfolioLoadStatus,
   PortfolioTransactionRecord,
@@ -32,6 +33,7 @@ export interface PortfolioActivityTabsProps {
   snapshots: TeamMarketSnapshot[];
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
+  openOrderMarketMap: Record<string, OpenOrderMarketContext>;
   transactions: PortfolioTransactionRecord[];
   historyPage: number;
   historyTotal: number;
@@ -52,6 +54,7 @@ export function PortfolioActivityTabs({
   snapshots,
   positions,
   openOrders,
+  openOrderMarketMap,
   transactions,
   historyPage,
   historyTotal,
@@ -145,6 +148,7 @@ export function PortfolioActivityTabs({
       {tab === "open-order" ? (
         <PortfolioOpenOrdersTable
           openOrders={openOrders}
+          openOrderMarketMap={openOrderMarketMap}
           snapshots={snapshots}
           needsWallet={needsWallet}
           loading={sessionConnected && isTabLoading(openOrdersStatus)}
