@@ -6,7 +6,7 @@ import { resolveTeamCode } from "@/lib/analytics/map-team-power-ranking";
 import type { ProphetNotificationData } from "@/types/prophet-notification-ws";
 
 function readDisplayText(data: ProphetNotificationData): string {
-  return data.title?.trim() || data.body?.trim() || data.event_title?.trim() || "";
+  return data.body?.trim() || "";
 }
 
 function resolveMarketTeamName(data: ProphetNotificationData): string {

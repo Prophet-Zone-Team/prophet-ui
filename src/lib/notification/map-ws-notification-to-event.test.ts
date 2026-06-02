@@ -46,7 +46,7 @@ describe("mapWsNotificationToEvent", () => {
     const mapped = mapWsNotificationToEvent(data);
 
     assert.equal(mapped?.level, EventNotificationLevel.Price);
-    assert.equal(mapped?.teams[0]?.event, "Price alert");
+    assert.equal(mapped?.teams[0]?.event, "Price moved");
   });
 
   it("maps all mock samples to event notification options", () => {

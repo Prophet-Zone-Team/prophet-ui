@@ -56,6 +56,7 @@ import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 
 import { cn } from "@/lib/cn";
+import { formatNotificationBodyHtml } from "@/lib/notification/format-notification-body";
 import { TeamFlag } from "../teams/team-flag";
 
 const EVENT_NOTIFICATION_TRANSITION = {
@@ -69,7 +70,7 @@ const EVENT_NOTIFICATION_EXIT_Y = -28;
 
 export function EventNotification(props: EventNotificationProps) {
   const { level, teams, className } = props;
-
+  
   const isNewLevel = isSingleCardNotificationLevel(level);
 
   const levelInfo = EventNotificationLevelMap[level];
@@ -83,7 +84,7 @@ export function EventNotification(props: EventNotificationProps) {
       className={cn(
         "relative overflow-visible w-[352px] rounded-xl bg-white border flex items-center gap-2 font-[Sora] text-base font-[500] text-black",
         isNewLevel
-          ? "h-[90px] px-[25px]"
+          ? "min-h-[90px] px-[25px] py-4"
           : "h-[108px] justify-center pt-[14px]",
         className
       )}
@@ -100,7 +101,12 @@ export function EventNotification(props: EventNotificationProps) {
               name={teams[0].name}
               className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
             /> */}
-          <div className="">{teams[0].event}</div>
+          <div
+            className="w-full text-center text-sm leading-relaxed [&_b]:font-bold"
+            dangerouslySetInnerHTML={{
+              __html: formatNotificationBodyHtml(teams[0].event ?? ""),
+            }}
+          />
         </>
       ) : (
         <>
