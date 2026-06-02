@@ -7,8 +7,7 @@ import { useLoginWithEmail, useLoginWithOAuth } from "@privy-io/react-auth";
 import { Modal } from "@/components/ui/modal";
 import { OtpInput } from "@/components/auth/otp-input";
 import { cn } from "@/lib/cn";
-
-const OAUTH_PENDING_STORAGE_KEY = "prophet_oauth_pending";
+import { markOAuthPending, consumeOAuthPending } from "@/context/privy/privy-oauth";
 const RESEND_COUNTDOWN_SECONDS = 60;
 const OTP_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -114,14 +113,10 @@ export function PrivyLoginModal({
     setErrorMessage(undefined);
 
     try {
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(OAUTH_PENDING_STORAGE_KEY, "google");
-      }
+      markOAuthPending("google");
       await initOAuth({ provider: "google" });
     } catch (error) {
-      if (typeof window !== "undefined") {
-        window.localStorage.removeItem(OAUTH_PENDING_STORAGE_KEY);
-      }
+      consumeOAuthPending();
       setErrorMessage(resolvePrivyError(error));
     }
   }, [initOAuth]);

@@ -247,8 +247,9 @@ export function LoginModal({ auth }: LoginModalProps) {
             {!isAuthenticated ? (
               <button
                 type="button"
-                className="flex items-center justify-center gap-1 border-t border-prophet-line pt-4 text-[14px] font-[500] leading-[normal] text-black"
+                className="flex items-center justify-center gap-1 border-t border-prophet-line pt-4 text-[14px] font-[500] leading-[normal] text-black disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={openPrivyLogin}
+                disabled={loginInProgress}
               >
                 Or login by Email
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />

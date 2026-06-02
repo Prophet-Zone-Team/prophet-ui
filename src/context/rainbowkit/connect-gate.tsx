@@ -8,11 +8,12 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { useConnectWallet } from "@privy-io/react-auth";
+import { useConnectWallet, usePrivy } from "@privy-io/react-auth";
 import { getAccount, watchAccount } from "wagmi/actions";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import { activatePrivyWallet } from "@/context/privy/privy-wallet-bridge";
+import { useAuthStore } from "@/store/auth-store";
 
 export interface OpenConnectOptions {
   expectedAddress?: string;
@@ -45,6 +46,8 @@ function addressesMatch(left: string, right: string) {
 function resolveConnectedAddress(expectedAddress?: string) {
   const account = getAccount(wagmiConfig);
 
+  console.log("resolveConnectedAddress account", account);
+
   if (!account.isConnected || !account.address) {
     return undefined;
   }
@@ -58,6 +61,8 @@ function resolveConnectedAddress(expectedAddress?: string) {
 
 export function RainbowConnectGate({ children }: { children: ReactNode }) {
   const pendingErrorRef = useRef<((error: Error) => void) | null>(null);
+  const loginMethod = useAuthStore((state) => state.loginMethod);
+  const { authenticated: privyAuthenticated } = usePrivy();
 
   const { connectWallet } = useConnectWallet({
     onError: (error) => {
@@ -75,6 +80,8 @@ export function RainbowConnectGate({ children }: { children: ReactNode }) {
     async (options?: OpenConnectOptions) => {
       const existing = resolveConnectedAddress(options?.expectedAddress);
 
+      console.log("existing", existing);
+
       if (existing) {
         return existing;
       }
@@ -83,14 +90,28 @@ export function RainbowConnectGate({ children }: { children: ReactNode }) {
         throw new Error("Wallet connection was cancelled.");
       }
 
-      // Embedded (email/google) wallets are already present in Privy after
-      // authentication. Activate one directly instead of opening a modal.
-      const activated = await activatePrivyWallet(options?.expectedAddress).catch(
-        () => undefined,
-      );
+      const isEmbeddedLogin =
+        privyAuthenticated &&
+        (loginMethod === "email" || loginMethod === "google");
 
-      if (!activated) {
+      console.log("loginMethod", loginMethod);
+
+      // Embedded (email/google) wallets are created after Privy auth. Wait for
+      // them to appear and set the wagmi active wallet — never open the
+      // external-wallet picker in this flow.
+      let activated;
+      if ((loginMethod === "email" || loginMethod === "google")) {
+        activated = await activatePrivyWallet(options?.expectedAddress).catch(
+          () => undefined,
+        );
+      }
+
+      if (!activated && !isEmbeddedLogin) {
         connectWallet();
+      } else if (!activated && isEmbeddedLogin) {
+        throw new Error(
+          "Your embedded wallet is still being created. Please try again in a moment.",
+        );
       }
 
       return new Promise<string>((resolve, reject) => {
@@ -145,10 +166,13 @@ export function RainbowConnectGate({ children }: { children: ReactNode }) {
         }, timeoutMs);
 
         const tryResolve = () => {
+          console.log("tryResolve");
           const address = resolveConnectedAddress(options?.expectedAddress);
+          console.log("tryResolve address", address);
 
           if (address) {
             finish(() => {
+              console.log("finish resolve", address);
               resolve(address);
             });
           }
@@ -163,7 +187,7 @@ export function RainbowConnectGate({ children }: { children: ReactNode }) {
         tryResolve();
       });
     },
-    [connectWallet],
+    [connectWallet, loginMethod, privyAuthenticated],
   );
 
   useEffect(() => {

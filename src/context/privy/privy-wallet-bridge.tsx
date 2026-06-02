@@ -8,16 +8,32 @@ import type { ConnectedWallet } from "@privy-io/react-auth";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 
+const WALLET_POLL_INTERVAL_MS = 200;
+const DEFAULT_WALLET_WAIT_MS = 20_000;
+
 let setActiveWalletRef:
   | ((wallet: ConnectedWallet) => Promise<void>)
   | undefined;
 let connectedWalletsRef: ConnectedWallet[] = [];
+let privyAuthenticatedRef = false;
 
 function addressesMatch(left: string, right: string) {
   return left.toLowerCase() === right.toLowerCase();
 }
 
-export function findPrivyWallet(expectedAddress?: string): ConnectedWallet | undefined {
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+export function isPrivyAuthenticated() {
+  return privyAuthenticatedRef;
+}
+
+export function findPrivyWallet(
+  expectedAddress?: string,
+): ConnectedWallet | undefined {
   if (expectedAddress) {
     const matched = connectedWalletsRef.find((wallet) =>
       addressesMatch(wallet.address, expectedAddress),
@@ -31,10 +47,30 @@ export function findPrivyWallet(expectedAddress?: string): ConnectedWallet | und
   return connectedWalletsRef[0];
 }
 
+export async function waitForPrivyWallet(options?: {
+  expectedAddress?: string;
+  timeoutMs?: number;
+}): Promise<ConnectedWallet | undefined> {
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_WALLET_WAIT_MS;
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const wallet = findPrivyWallet(options?.expectedAddress);
+
+    if (wallet && setActiveWalletRef) {
+      return wallet;
+    }
+
+    await sleep(WALLET_POLL_INTERVAL_MS);
+  }
+
+  return undefined;
+}
+
 export async function activatePrivyWallet(
   expectedAddress?: string,
 ): Promise<string | undefined> {
-  const wallet = findPrivyWallet(expectedAddress);
+  const wallet = await waitForPrivyWallet({ expectedAddress });
 
   if (!wallet || !setActiveWalletRef) {
     return undefined;
@@ -53,6 +89,10 @@ export function PrivyWalletBridge() {
   const { ready, authenticated } = usePrivy();
   const { wallets } = useWallets();
   const { setActiveWallet } = useSetActiveWallet();
+
+  useEffect(() => {
+    privyAuthenticatedRef = ready && authenticated;
+  }, [authenticated, ready]);
 
   useEffect(() => {
     setActiveWalletRef = setActiveWallet;
