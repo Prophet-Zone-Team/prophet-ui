@@ -2,6 +2,7 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { formatImpactScore } from "@/views/analytics/news/format";
 import {
+  HighImpactSentimentIcon,
   NegativeSentimentIcon,
   PositiveSentimentIcon
 } from "@/views/analytics/news/icons";
@@ -22,11 +23,14 @@ function SentimentIcon({
     return <NegativeSentimentIcon />;
   }
 
+  if (sentiment === "neutral") {
+    return <HighImpactSentimentIcon />;
+  }
+
   return <PositiveSentimentIcon />;
 }
 
 export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps) {
-  const isPositiveImpact = item.impactScore >= 0;
 
   return (
     <article
@@ -82,7 +86,9 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
           <span
             className={cn(
               "whitespace-nowrap text-base font-[556] leading-[19px] md:text-[18px] md:leading-[21px]",
-              isPositiveImpact ? "text-[#7BCA25]" : "text-[#FF674B]"
+              item.sentiment === "positive" ? "text-[#7BCA25]" : "",
+              item.sentiment === "negative" ? "text-[#FF674B]" : "",
+              item.sentiment === "neutral" ? "text-[#F4B600]" : "",
             )}
           >
             {formatImpactScore(item.impactScore)}
