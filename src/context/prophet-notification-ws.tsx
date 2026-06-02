@@ -3,6 +3,8 @@
 import { useEffect, type ReactNode } from "react";
 
 import { NotificationQueuePresenter } from "@/components/notification/notification-queue-presenter";
+import { enqueueProphetNotificationSamples } from "@/lib/notification/enqueue-prophet-notification-samples";
+import { isMockProphetNotificationsEnabled } from "@/lib/notification/mock-prophet-notifications-config";
 import { getProphetNotificationWsClient } from "@/lib/notification/prophet-notification-ws-client";
 import {
   getProphetApiToken,
@@ -88,6 +90,14 @@ export function ProphetNotificationWsProvider({
       setConnectionStatus("idle");
     };
   }, [enqueue, setConnectionStatus]);
+
+  useEffect(() => {
+    if (!isMockProphetNotificationsEnabled()) {
+      return;
+    }
+
+    enqueueProphetNotificationSamples();
+  }, []);
 
   return (
     <>

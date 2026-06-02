@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { EventNotificationLevel } from "@/components/notification/event";
+import { buildProphetNotificationSamples } from "@/data/mock/prophet-notifications";
 import {
   buildNotificationDedupeKey,
   mapWsNotificationToEvent,
@@ -46,6 +47,19 @@ describe("mapWsNotificationToEvent", () => {
 
     assert.equal(mapped?.level, EventNotificationLevel.Price);
     assert.equal(mapped?.teams[0]?.event, "Price alert");
+  });
+
+  it("maps all mock samples to event notification options", () => {
+    const samples = buildProphetNotificationSamples(1_710_000_000);
+
+    assert.equal(samples.length, 6);
+
+    for (const sample of samples) {
+      assert.ok(
+        mapWsNotificationToEvent(sample),
+        `expected mappable sample for ${sample.notice_type}`,
+      );
+    }
   });
 
   it("builds stable dedupe keys", () => {

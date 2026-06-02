@@ -50,11 +50,22 @@
  * ```
  */
 
-import { cn } from "@/lib/cn";
-import { TeamFlag } from "../teams/team-flag";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
+
+import { cn } from "@/lib/cn";
+import { TeamFlag } from "../teams/team-flag";
+
+const EVENT_NOTIFICATION_TRANSITION = {
+  duration: 0.28,
+  ease: [0.3, 0, 0.2, 1] as const
+};
+
+/** Enter from above; exit upward (queue handoff). */
+const EVENT_NOTIFICATION_ENTER_Y = -28;
+const EVENT_NOTIFICATION_EXIT_Y = -28;
 
 export function EventNotification(props: EventNotificationProps) {
   const { level, teams, className } = props;
@@ -70,72 +81,78 @@ export function EventNotification(props: EventNotificationProps) {
   return (
     <div
       className={cn(
-        "relative w-[352px] rounded-xl bg-white border flex items-center gap-2 font-[Sora] text-base font-[500] text-black",
-        isNewLevel ? "h-[90px] px-[25px]" : "h-[108px] justify-center pt-[14px]",
-        className,
+        "relative overflow-visible w-[352px] rounded-xl bg-white border flex items-center gap-2 font-[Sora] text-base font-[500] text-black",
+        isNewLevel
+          ? "h-[90px] px-[25px]"
+          : "h-[108px] justify-center pt-[14px]",
+        className
       )}
       style={{
         borderColor: levelInfo.color,
-        boxShadow: `0px 0px 10px 0px ${levelInfo.color}`,
+        boxShadow: `0px 0px 10px 0px ${levelInfo.color}`
       }}
     >
       <EventBadge level={level} />
-      {
-        isNewLevel ? (
-          <>
-            <TeamFlag
+      {isNewLevel ? (
+        <>
+          {/* <TeamFlag
               code={teams[0].code}
               name={teams[0].name}
               className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
-            />
-            <div className="">{teams[0].event}</div>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-col items-center gap-2">
-              <div className="relative">
-                <TeamFlag
+            /> */}
+          <div className="">{teams[0].event}</div>
+        </>
+      ) : (
+        <>
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative">
+              {/* <TeamFlag
                   code={teams[0].code}
                   name={teams[0].name}
                   className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
-                />
-                <IconFoul level={level} event={teams[0].event} />
-              </div>
-              <div className="">{teams[0].name}</div>
+                /> */}
+              <IconFoul level={level} event={teams[0].event} />
             </div>
-            <div className="flex items-center justify-center gap-[2px] text-[26px]">
-              <div
-                className="size-[36px] rounded-xl flex justify-center items-center"
-                style={{
-                  backgroundColor: teams[0].event?.toLowerCase?.() === "goal" ? "#7BCA25" : "white",
-                }}
-              >
-                {teams[0].score}
-              </div>
-              <div className="">-</div>
-              <div
-                className="size-[36px] rounded-xl flex justify-center items-center"
-                style={{
-                  backgroundColor: teams[1].event?.toLowerCase?.() === "goal" ? "#7BCA25" : "white",
-                }}
-              >
-                {teams[1].score}
-              </div>
+            <div className="">{teams[0].name}</div>
+          </div>
+          <div className="flex items-center justify-center gap-[2px] text-[26px]">
+            <div
+              className="size-[36px] rounded-xl flex justify-center items-center"
+              style={{
+                backgroundColor:
+                  teams[0].event?.toLowerCase?.() === "goal"
+                    ? "#7BCA25"
+                    : "white"
+              }}
+            >
+              {teams[0].score}
             </div>
-            <div className="flex flex-col items-center gap-2">
-              <div className="relative">
-                <TeamFlag
-                  code={teams[1].code}
-                  name={teams[1].name}
-                  className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
-                />
-                <IconFoul level={level} event={teams[1].event} />
-              </div>
-              <div className="">{teams[1].name}</div>
+            <div className="">-</div>
+            <div
+              className="size-[36px] rounded-xl flex justify-center items-center"
+              style={{
+                backgroundColor:
+                  teams[1].event?.toLowerCase?.() === "goal"
+                    ? "#7BCA25"
+                    : "white"
+              }}
+            >
+              {teams[1].score}
             </div>
-          </>
-        )
-      }
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <div className="relative">
+              {/* <TeamFlag
+                code={teams[1].code}
+                name={teams[1].name}
+                className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
+              /> */}
+              <IconFoul level={level} event={teams[1].event} />
+            </div>
+            <div className="">{teams[1].name}</div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -286,6 +303,13 @@ const listeners = new Set<() => void>();
 let current: EventNotificationStoreItem | null = null;
 let autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
+type PendingExitDismiss = {
+  id: string;
+  onDismiss?: () => void;
+};
+
+let pendingExitDismiss: PendingExitDismiss | null = null;
+
 function emitStoreChange() {
   for (const listener of listeners) {
     listener();
@@ -320,12 +344,27 @@ function dismissById(targetId?: string) {
     return;
   }
 
-  const onDismiss = current?.props.onDismiss;
+  if (!current) {
+    return;
+  }
+
+  pendingExitDismiss = {
+    id: current.id,
+    onDismiss: current.props.onDismiss
+  };
 
   clearAutoDismissTimer();
   current = null;
   emitStoreChange();
+}
 
+function flushPendingExitDismiss(exitedId: string) {
+  if (!pendingExitDismiss || pendingExitDismiss.id !== exitedId) {
+    return;
+  }
+
+  const onDismiss = pendingExitDismiss.onDismiss;
+  pendingExitDismiss = null;
   onDismiss?.();
 }
 
@@ -341,10 +380,39 @@ function scheduleAutoDismiss(id: string, durationMs: number) {
   }, durationMs);
 }
 
+function EventNotificationAnimatedItem({
+  item
+}: {
+  item: EventNotificationStoreItem;
+}) {
+  const prefersReducedMotion = useReducedMotion();
+  const { onDismiss: _onDismiss, ...notificationProps } = item.props;
+
+  return (
+    <motion.div
+      className="flex justify-center overflow-visible"
+      initial={
+        prefersReducedMotion
+          ? false
+          : { opacity: 0, y: EVENT_NOTIFICATION_ENTER_Y }
+      }
+      animate={{ opacity: 1, y: 0 }}
+      exit={
+        prefersReducedMotion
+          ? undefined
+          : { opacity: 0, y: EVENT_NOTIFICATION_EXIT_Y }
+      }
+      transition={EVENT_NOTIFICATION_TRANSITION}
+    >
+      <EventNotification {...notificationProps} />
+    </motion.div>
+  );
+}
+
 function EventNotificationHost() {
   const item = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  if (!item || typeof document === "undefined") {
+  if (typeof document === "undefined") {
     return null;
   }
 
@@ -353,11 +421,25 @@ function EventNotificationHost() {
       role="region"
       aria-live="polite"
       aria-label="Match event notification"
-      className="pointer-events-none fixed inset-x-0 top-[100px] z-[70] flex justify-center px-4"
+      className="pointer-events-none fixed inset-x-0 top-[100px] z-[70] flex justify-center overflow-visible px-4 pt-5"
     >
-      <EventNotification {...item.props} />
+      <AnimatePresence
+        mode="wait"
+        initial={false}
+        onExitComplete={() => {
+          if (!pendingExitDismiss) {
+            return;
+          }
+
+          flushPendingExitDismiss(pendingExitDismiss.id);
+        }}
+      >
+        {item ? (
+          <EventNotificationAnimatedItem key={item.id} item={item} />
+        ) : null}
+      </AnimatePresence>
     </div>,
-    document.body,
+    document.body
   );
 }
 
