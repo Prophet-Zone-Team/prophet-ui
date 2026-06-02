@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { debounceEffect } from "@/lib/team/debounced-effect";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import type { MarketTopHolder, MarketTopHolderGroup, TeamMarketSnapshot } from "@/types/market";
@@ -84,39 +85,28 @@ export function TopHoldersTable({ snapshot, active }: TopHoldersTableProps) {
   const [rows, setRows] = useState<TopHolderRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasDataRef = useRef(false);
-  const prevActiveRef = useRef(false);
-
-  hasDataRef.current = rows.length > 0;
+  const hasLoadedOnceRef = useRef(false);
 
   const emptyMessage = useMemo(
     () => `No public holder data available for ${snapshot.team.name}.`,
     [snapshot.team.name],
   );
 
-  const outcomeLabels = useMemo(() => {
-    const tokens = snapshot.market.polymarket?.tokens;
-
-    return {
-      yesTokenId: tokens?.yes?.tokenId,
-      noTokenId: tokens?.no?.tokenId,
-      yesLabel: tokens?.yes?.outcome ?? "Yes",
-      noLabel: tokens?.no?.outcome ?? "No",
-    };
-  }, [snapshot.market.polymarket?.tokens]);
+  const yesTokenId = snapshot.market.polymarket?.tokens?.yes?.tokenId;
+  const noTokenId = snapshot.market.polymarket?.tokens?.no?.tokenId;
+  const yesLabel = snapshot.market.polymarket?.tokens?.yes?.outcome ?? "Yes";
+  const noLabel = snapshot.market.polymarket?.tokens?.no?.outcome ?? "No";
 
   useEffect(() => {
     if (!active) {
-      prevActiveRef.current = false;
       return;
     }
-
-    const silent = hasDataRef.current && !prevActiveRef.current;
-    prevActiveRef.current = true;
 
     let ignore = false;
 
     async function load() {
+      const silent = hasLoadedOnceRef.current;
+
       if (!silent) {
         setLoading(true);
         setError(null);
@@ -135,10 +125,10 @@ export function TopHoldersTable({ snapshot, active }: TopHoldersTableProps) {
           `/api/market/holders?market=${encodeURIComponent(conditionId)}&limit=20`,
         );
         const nextRows = flattenTopHolders(payload.holders ?? [], {
-          yesTokenId: outcomeLabels.yesTokenId,
-          noTokenId: outcomeLabels.noTokenId,
-          yesLabel: outcomeLabels.yesLabel,
-          noLabel: outcomeLabels.noLabel,
+          yesTokenId,
+          noTokenId,
+          yesLabel,
+          noLabel,
         });
 
         if (!ignore) {
@@ -156,16 +146,22 @@ export function TopHoldersTable({ snapshot, active }: TopHoldersTableProps) {
       } finally {
         if (!ignore) {
           setLoading(false);
+          hasLoadedOnceRef.current = true;
         }
       }
     }
 
-    void load();
+    const cancelDebounce = debounceEffect(() => {
+      if (!ignore) {
+        void load();
+      }
+    });
 
     return () => {
       ignore = true;
+      cancelDebounce();
     };
-  }, [active, conditionId, outcomeLabels]);
+  }, [active, conditionId, yesTokenId, noTokenId, yesLabel, noLabel]);
 
   const hasData = rows.length > 0;
 
@@ -190,7 +186,11 @@ export function TopHoldersTable({ snapshot, active }: TopHoldersTableProps) {
   }
 
   if (loading && !hasData && !error) {
-    return null;
+    return (
+      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
+        Loading top holders…
+      </p>
+    );
   }
 
   if (!loading && !hasData && !error) {

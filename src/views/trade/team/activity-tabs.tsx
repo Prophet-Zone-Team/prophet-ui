@@ -75,18 +75,33 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
         {tab === "top-holders" ? <TopHoldersTableHeader /> : null}
 
         {visitedTabs.has("trades") ? (
-          <div hidden={tab !== "trades"} aria-label="Market trades">
+          <div
+            hidden={tab !== "trades"}
+            className="min-h-[500px]"
+            aria-label="Market trades"
+          >
             <TradesTable snapshot={snapshot} active={tab === "trades"} />
           </div>
         ) : null}
         {visitedTabs.has("position") ? (
-          <div hidden={tab !== "position"} aria-label="Market positions">
+          <div
+            hidden={tab !== "position"}
+            className="min-h-[500px]"
+            aria-label="Market positions"
+          >
             <PositionsTable snapshot={snapshot} active={tab === "position"} />
           </div>
         ) : null}
         {visitedTabs.has("top-holders") ? (
-          <div hidden={tab !== "top-holders"} aria-label="Top holders">
-            <TopHoldersTable snapshot={snapshot} active={tab === "top-holders"} />
+          <div
+            hidden={tab !== "top-holders"}
+            className="min-h-[500px]"
+            aria-label="Top holders"
+          >
+            <TopHoldersTable
+              snapshot={snapshot}
+              active={tab === "top-holders"}
+            />
           </div>
         ) : null}
       </div>

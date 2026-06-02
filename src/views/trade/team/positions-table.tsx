@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/cn";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
+import { debounceEffect } from "@/lib/team/debounced-effect";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type {
@@ -76,25 +77,26 @@ export function PositionsTable(props: PositionsTableProps) {
   const [positions, setPositions] = useState<MarketPositionRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasDataRef = useRef(false);
-  const prevActiveRef = useRef(false);
+  const hasLoadedOnceRef = useRef(false);
 
-  hasDataRef.current = positions.length > 0;
-
-  const conditionIds = useMemo(() => resolveConditionIds(props), [props]);
+  const conditionIds = useMemo(() => resolveConditionIds(props), [
+    props.variant,
+    props.variant === "game"
+      ? props.gameSnapshot.outcomes.map((outcome) => outcome.conditionId ?? "").join("|")
+      : props.snapshot.market.polymarket?.conditionId ?? "",
+  ]);
+  const conditionIdsKey = conditionIds.join(",");
 
   useEffect(() => {
     if (!active) {
-      prevActiveRef.current = false;
       return;
     }
-
-    const silent = hasDataRef.current && !prevActiveRef.current;
-    prevActiveRef.current = true;
 
     let ignore = false;
 
     async function load() {
+      const silent = hasLoadedOnceRef.current;
+
       if (!silent) {
         setLoading(true);
         setError(null);
@@ -126,16 +128,22 @@ export function PositionsTable(props: PositionsTableProps) {
       } finally {
         if (!ignore) {
           setLoading(false);
+          hasLoadedOnceRef.current = true;
         }
       }
     }
 
-    void load();
+    const cancelDebounce = debounceEffect(() => {
+      if (!ignore) {
+        void load();
+      }
+    });
 
     return () => {
       ignore = true;
+      cancelDebounce();
     };
-  }, [active, conditionIds]);
+  }, [active, conditionIdsKey]);
 
   const hasData = positions.length > 0;
 
@@ -160,7 +168,11 @@ export function PositionsTable(props: PositionsTableProps) {
   }
 
   if (loading && !hasData && !error) {
-    return null;
+    return (
+      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
+        Loading positions…
+      </p>
+    );
   }
 
   if (!loading && !hasData && !error) {

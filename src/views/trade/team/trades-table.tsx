@@ -14,6 +14,7 @@ import {
 import type { MarketTradeRecord, TeamMarketSnapshot } from "@/types/market";
 
 const TRADES_PAGE_SIZE = 20;
+const TRADES_POLL_INTERVAL_MS = 10_000;
 
 interface TradesTableProps {
   snapshot: TeamMarketSnapshot;
@@ -39,11 +40,9 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasDataRef = useRef(false);
+  const hasLoadedOnceRef = useRef(false);
   const prevActiveRef = useRef(false);
   const prevPageRef = useRef(page);
-
-  hasDataRef.current = trades.length > 0;
 
   const emptyMessage = useMemo(
     () => `No recent trades for ${snapshot.team.name}.`,
@@ -103,6 +102,7 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
       } finally {
         if (!ignoreRef.ignore) {
           setLoading(false);
+          hasLoadedOnceRef.current = true;
         }
       }
     },
@@ -115,22 +115,46 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
       return;
     }
 
-    const activeBecameTrue = !prevActiveRef.current;
     const pageChanged = prevPageRef.current !== page;
     prevActiveRef.current = true;
     prevPageRef.current = page;
 
-    const silent = hasDataRef.current && activeBecameTrue && !pageChanged;
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const ignoreRef = { ignore: false };
 
-    void loadTrades(page, {
-      silent,
-      pageChanged,
-      ignoreRef
-    });
+    async function pollLoop(isInitial: boolean) {
+      if (cancelled || ignoreRef.ignore) {
+        return;
+      }
+
+      const silent = isInitial
+        ? hasLoadedOnceRef.current && !pageChanged
+        : true;
+
+      await loadTrades(page, {
+        silent,
+        pageChanged: isInitial && pageChanged,
+        ignoreRef
+      });
+
+      if (cancelled || ignoreRef.ignore) {
+        return;
+      }
+
+      timeoutId = setTimeout(() => {
+        void pollLoop(false);
+      }, TRADES_POLL_INTERVAL_MS);
+    }
+
+    void pollLoop(true);
 
     return () => {
+      cancelled = true;
       ignoreRef.ignore = true;
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [active, loadTrades, page]);
 
@@ -169,7 +193,11 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
   }
 
   if (loading && !hasData && !error) {
-    return null;
+    return (
+      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
+        Loading trades…
+      </p>
+    );
   }
 
   if (!loading && !hasData && !error) {
