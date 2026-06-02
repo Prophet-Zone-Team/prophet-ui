@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useDevice } from "@/hooks/common/use-device";
 import { FundingNetworkType } from "@/config/funding";
 import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
+import { reportFundingTransaction } from "@/lib/portfolio/user";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
 import { selectTokenUsdValue } from "@/lib/funding/price-selectors";
 import {
@@ -502,7 +503,12 @@ export function DepositDialog({
           );
         }
 
-        await depositViaPolygon(amount.tokenAmount, selectedToken);
+        const { txHash } = await depositViaPolygon(amount.tokenAmount, selectedToken);
+        void reportFundingTransaction({
+          type: "deposit",
+          txHash,
+          amount: amount.amountUsd
+        });
         toast.success("Deposit successful");
         handleClose();
         syncCash();
@@ -585,6 +591,13 @@ export function DepositDialog({
       });
 
       setStatusPhase("success");
+      if (stableflowExecution.txHash) {
+        void reportFundingTransaction({
+          type: "deposit",
+          txHash: stableflowExecution.txHash,
+          amount: amount.amountUsd
+        });
+      }
 
       try {
         await syncCash();
