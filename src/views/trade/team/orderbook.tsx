@@ -84,7 +84,7 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
           </div>
         ) : error && !book ? (
           <div className="flex min-h-0 flex-1 items-center justify-center px-1">
-            <p className="text-center text-[#FF674B]">{error}</p>
+            <p className="text-center text-[#909090]">No Data.</p>
           </div>
         ) : (
           <>

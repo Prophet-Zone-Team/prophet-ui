@@ -375,6 +375,35 @@ export interface MarketTopHolderGroup {
   holders: MarketTopHolder[];
 }
 
+export interface MarketTradeRecord {
+  proxyWallet: string;
+  side: "BUY" | "SELL";
+  asset: string;
+  conditionId: string;
+  size: number;
+  price: number;
+  timestamp: number;
+  outcome: string;
+  outcomeIndex: number;
+  name?: string;
+  pseudonym?: string;
+  transactionHash?: string;
+}
+
+export interface MarketPositionRecord {
+  proxyWallet: string;
+  name?: string;
+  asset: string;
+  conditionId: string;
+  avgPrice: number;
+  size: number;
+  currPrice: number;
+  currentValue: number;
+  cashPnl: number;
+  outcome: string;
+  outcomeIndex: number;
+}
+
 export interface ProbabilityHistoryPoint {
   teamId: Team["id"];
   date: string;

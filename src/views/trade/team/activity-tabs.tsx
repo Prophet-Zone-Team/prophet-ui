@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import { PositionsTable } from "@/views/trade/team/positions-table";
@@ -29,6 +29,23 @@ export interface ActivityTabsProps {
 
 export function ActivityTabs({ snapshot }: ActivityTabsProps) {
   const [tab, setTab] = useState<ActivityTabId>("trades");
+  const [visitedTabs, setVisitedTabs] = useState<Set<ActivityTabId>>(
+    () => new Set(["trades"]),
+  );
+
+  const handleTabChange = useCallback((value: string) => {
+    const nextTab = value as ActivityTabId;
+    setTab(nextTab);
+    setVisitedTabs((current) => {
+      if (current.has(nextTab)) {
+        return current;
+      }
+
+      const next = new Set(current);
+      next.add(nextTab);
+      return next;
+    });
+  }, []);
 
   return (
     <div className="flex flex-col gap-0 bg-white border-[#EBEBEB] border rounded-[12px]">
@@ -37,7 +54,7 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
           <TabSwitcher
             items={[...ACTIVITY_TABS]}
             value={tab}
-            onChange={(value) => setTab(value as ActivityTabId)}
+            onChange={handleTabChange}
             aria-label="Market activity"
           />
         </div>
@@ -57,14 +74,18 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
         ) : null}
         {tab === "top-holders" ? <TopHoldersTableHeader /> : null}
 
-        {tab === "trades" ? <TradesTable /> : null}
-        {tab === "position" ? (
-          <div aria-label="Your positions">
+        {visitedTabs.has("trades") ? (
+          <div hidden={tab !== "trades"} aria-label="Market trades">
+            <TradesTable snapshot={snapshot} />
+          </div>
+        ) : null}
+        {visitedTabs.has("position") ? (
+          <div hidden={tab !== "position"} aria-label="Market positions">
             <PositionsTable snapshot={snapshot} />
           </div>
         ) : null}
-        {tab === "top-holders" ? (
-          <div aria-label="Top holders">
+        {visitedTabs.has("top-holders") ? (
+          <div hidden={tab !== "top-holders"} aria-label="Top holders">
             <TopHoldersTable snapshot={snapshot} />
           </div>
         ) : null}
