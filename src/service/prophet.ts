@@ -17,6 +17,7 @@ import type {
   ProphetGetGamesData,
   ProphetGetTeamsConditionData,
   ProphetGetRelatedGamesData,
+  ProphetGetTeamGameResultsData,
   ProphetGetHeadToHeadFixturesData,
   ProphetGetGameStatisticsData,
   ProphetGameStatisticsPayload,
@@ -299,6 +300,17 @@ export async function getProphetRelatedGames(params: {
   return prophetGet<ProphetGetRelatedGamesData>("/v1/related-games", {
     params: {
       teams: params.teams
+    }
+  });
+}
+
+/** GET /v1/games/result — finished games for a team by name */
+export async function getProphetTeamGameResults(params: {
+  team_name: string;
+}): Promise<ProphetGetTeamGameResultsData> {
+  return prophetGet<ProphetGetTeamGameResultsData>("/v1/games/result", {
+    params: {
+      team_name: params.team_name
     }
   });
 }

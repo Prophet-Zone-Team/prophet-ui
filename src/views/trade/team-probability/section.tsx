@@ -17,6 +17,7 @@ import {
   type TeamChartTimeRange
 } from "@/lib/team/probability-history";
 import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
+import { useTeamGameResults } from "@/hooks/market/use-team-game-results";
 import { resolveTeamOrderbookTokenId } from "@/lib/market/resolve-team-orderbook-token";
 import type { TeamMarketSnapshot } from "@/types/market";
 import {
@@ -50,6 +51,10 @@ export function ProbabilitySection({
     pollIntervalMs: 5000,
     enabled: Boolean(yesTokenId)
   });
+  const { matches: teamGameMatches } = useTeamGameResults({
+    teamName: snapshot.team.name,
+    teamId: snapshot.team.id
+  });
   const yesProbability = snapshot.market.probability;
   const noProbability = Math.max(0, 100 - yesProbability);
   const displayProbability =
@@ -73,11 +78,11 @@ export function ProbabilitySection({
     () =>
       buildTeamChartMatchAnnotations({
         teamId: snapshot.team.id,
-        matches: [],
+        matches: teamGameMatches,
         chartData,
         snapshots: [snapshot]
       }),
-    [chartData, snapshot]
+    [chartData, snapshot, teamGameMatches]
   );
 
   const yDomain = useMemo(() => getTeamChartYDomain(chartData), [chartData]);

@@ -43,7 +43,6 @@ function TradeTeamViewContent({
       snapshot.market.polymarket?.tokens.no?.tokenId
     )
   );
-
   return (
     <div className={tradePageClass}>
       <SyncMatchLiveStore matches={[]} />

@@ -63,6 +63,19 @@ export interface ProphetGetGamesData {
 /** GET /v1/related-games — related Polymarket games for comma-separated team names */
 export type ProphetGetRelatedGamesData = ProphetPolyMarketGameItem[];
 
+/** GET /v1/games/result — finished games for a team */
+export interface ProphetTeamGameResult {
+  home_team: string;
+  away_team: string;
+  home_score: number;
+  away_score: number;
+  start_time: number;
+}
+
+export interface ProphetGetTeamGameResultsData {
+  list: ProphetTeamGameResult[] | null;
+}
+
 /** GET /v1/teams-condition — team(s) per Polymarket condition id */
 export interface ProphetTeamsConditionTeam {
   name: string;
