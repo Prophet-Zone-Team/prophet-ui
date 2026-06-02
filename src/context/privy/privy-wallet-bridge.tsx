@@ -16,6 +16,15 @@ let setActiveWalletRef:
   | undefined;
 let connectedWalletsRef: ConnectedWallet[] = [];
 let privyAuthenticatedRef = false;
+let walletSyncSuspendedRef = false;
+
+export function suspendPrivyWalletSync() {
+  walletSyncSuspendedRef = true;
+}
+
+export function resumePrivyWalletSync() {
+  walletSyncSuspendedRef = false;
+}
 
 function addressesMatch(left: string, right: string) {
   return left.toLowerCase() === right.toLowerCase();
@@ -106,7 +115,12 @@ export function PrivyWalletBridge() {
   }, [setActiveWallet, wallets]);
 
   useEffect(() => {
-    if (!ready || !authenticated || wallets.length === 0) {
+    if (
+      walletSyncSuspendedRef ||
+      !ready ||
+      !authenticated ||
+      wallets.length === 0
+    ) {
       return;
     }
 

@@ -61,7 +61,6 @@ import { selectIsAuthenticated, useAuthStore } from "@/store/auth-store";
 import type { AuthLoginMethod } from "@/store/auth-store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
-import { useDisconnect } from "wagmi";
 import {
   useLoginWithOAuth,
   usePrivy,
@@ -75,12 +74,15 @@ import {
   hasOAuthReturnParams,
   OAUTH_PENDING_STORAGE_KEY,
 } from "@/context/privy/privy-oauth";
-import { waitForPrivyWallet } from "@/context/privy/privy-wallet-bridge";
+import {
+  resumePrivyWalletSync,
+  suspendPrivyWalletSync,
+  waitForPrivyWallet,
+} from "@/context/privy/privy-wallet-bridge";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { disconnect: wagmiDisconnect } = useDisconnect();
   const {
     ready: privyReady,
     authenticated: privyAuthenticated,
@@ -806,9 +808,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearAuthState]);
 
   const disconnect = useCallback(async () => {
-    wagmiDisconnect?.();
     const store = useAuthStore.getState();
 
+    suspendPrivyWalletSync();
     loginAbortRef.current = true;
     loginConnectAbortRef.current?.abort();
     walletHandlingRef.current = true;
@@ -823,21 +825,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setLoginMethod("wallet");
 
     try {
-      await clearAuthState({ openModal: false });
+      // Log out Privy first so PrivyWalletBridge stops re-binding wagmi.
       try {
         await privyLogout();
       } catch {
         // ignore privy logout errors during disconnect
       }
+
+      await clearAuthState({ openModal: false });
+
+      // clearAuthState disconnects wagmi; repeat after Privy logout to clear
+      // any stale connector state persisted in wagmi cookie storage.
+      await disconnectWagmiWallet();
       store.setError(undefined);
     } catch (disconnectError) {
       store.setStatus("error");
       store.setError(resolveWalletErrorMessage(disconnectError));
       throw disconnectError;
     } finally {
+      resumePrivyWalletSync();
       walletHandlingRef.current = false;
     }
-  }, [clearAuthState, privyLogout, wagmiDisconnect]);
+  }, [clearAuthState, privyLogout]);
 
   useEffect(() => {
     if (!hydrated || !session?.walletAddress) {
