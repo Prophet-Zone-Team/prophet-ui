@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import type {
@@ -13,6 +13,7 @@ import { PortfolioHistoryTable } from "@/views/portfolio/portfolio-history-table
 import { PortfolioOpenOrdersTable } from "@/views/portfolio/portfolio-open-orders-table";
 import { PortfolioPositionsTable } from "@/views/portfolio/portfolio-positions-table";
 import { portfolioActivityCardClass } from "@/views/portfolio/portfolio-ui";
+import type { PortfolioLoadOptions } from "@/views/portfolio/use-portfolio-data";
 
 const PORTFOLIO_TABS = [
   { id: "position", label: "Position" },
@@ -37,8 +38,9 @@ export interface PortfolioActivityTabsProps {
   openOrdersStatus: PortfolioLoadStatus;
   historyStatus: PortfolioLoadStatus;
   onConnectWallet: () => void;
-  loadOpenOrders: () => Promise<void>;
-  loadActivityHistory: () => Promise<void>;
+  loadCore: (options?: PortfolioLoadOptions) => Promise<void>;
+  loadOpenOrders: (options?: PortfolioLoadOptions) => Promise<void>;
+  loadActivityHistory: (options?: PortfolioLoadOptions) => Promise<void>;
 }
 
 export function PortfolioActivityTabs({
@@ -52,22 +54,36 @@ export function PortfolioActivityTabs({
   openOrdersStatus,
   historyStatus,
   onConnectWallet,
+  loadCore,
   loadOpenOrders,
   loadActivityHistory
 }: PortfolioActivityTabsProps) {
   const [tab, setTab] = useState<PortfolioTabId>("position");
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     if (!sessionConnected) {
       return;
     }
 
-    if (tab === "open-order") {
-      void loadOpenOrders();
-    } else if (tab === "history") {
-      void loadActivityHistory();
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (tab === "open-order") {
+        void loadOpenOrders();
+      } else if (tab === "history") {
+        void loadActivityHistory();
+      }
+      return;
     }
-  }, [loadActivityHistory, loadOpenOrders, sessionConnected, tab]);
+
+    if (tab === "position") {
+      void loadCore({ force: true, silent: true });
+    } else if (tab === "open-order") {
+      void loadOpenOrders({ force: true });
+    } else {
+      void loadActivityHistory({ force: true });
+    }
+  }, [loadActivityHistory, loadCore, loadOpenOrders, sessionConnected, tab]);
 
   const coreLoading = isTabLoading(coreStatus);
   const needsWallet = !sessionConnected && !coreLoading;

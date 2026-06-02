@@ -7,8 +7,9 @@ import type {
   MarketDetails,
   OpenOrder,
   OpenOrdersResponse,
+  PaginationPayload,
   OrderResponse,
-  TickSize,
+  TickSize
 } from "@polymarket/clob-client-v2";
 
 import type { UserActivityRecord } from "@/lib/portfolio/types";
@@ -204,14 +205,26 @@ export async function fetchUserOpenOrders({
     throw new Error(`Unable to fetch open orders: ${await readResponseError(response)}`);
   }
 
-  const payload = (await response.json()) as OpenOrdersResponse | null;
+  const payload = (await response.json()) as
+    | OpenOrdersResponse
+    | PaginationPayload
+    | null;
+
   return normalizeOpenOrdersResponse(payload);
 }
 
 export function normalizeOpenOrdersResponse(
-  payload: OpenOrdersResponse | null | undefined
+  payload: OpenOrdersResponse | PaginationPayload | null | undefined
 ): OpenOrder[] {
-  return Array.isArray(payload) ? payload : [];
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (payload && Array.isArray(payload.data)) {
+    return payload.data as OpenOrder[];
+  }
+
+  return [];
 }
 
 export async function cancelUserOrder({

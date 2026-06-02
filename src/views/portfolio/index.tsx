@@ -30,8 +30,9 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
     connectWallet,
     reload,
     removeOpenOrder,
+    loadCore,
     loadOpenOrders,
-    loadActivityHistory,
+    loadActivityHistory
   } = usePortfolioData();
 
   const portfolio = useMemo(
@@ -54,24 +55,12 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
         onConnectWallet: () => void connectWallet(),
         reload,
         removeOpenOrder,
-        coreStatus,
+        coreStatus
       }}
     >
       <section className={portfolioPageClass}>
         <div className="flex flex-col gap-4">
           <PortfolioSummarySection />
-
-          {message ? (
-            <p
-              className={
-                coreStatus === "error"
-                  ? "m-0 text-sm text-prophet-red"
-                  : "m-0 text-sm text-prophet-muted"
-              }
-            >
-              {message}
-            </p>
-          ) : null}
 
           <PortfolioActivityTabs
             snapshots={snapshots}
@@ -84,6 +73,7 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
             openOrdersStatus={openOrdersStatus}
             historyStatus={historyStatus}
             onConnectWallet={() => void connectWallet()}
+            loadCore={loadCore}
             loadOpenOrders={loadOpenOrders}
             loadActivityHistory={loadActivityHistory}
           />

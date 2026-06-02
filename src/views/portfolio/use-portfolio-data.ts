@@ -16,6 +16,11 @@ import type {
   UserTradingReadiness,
 } from "@/types/market";
 
+export type PortfolioLoadOptions = {
+  force?: boolean;
+  silent?: boolean;
+};
+
 export interface UsePortfolioDataResult {
   session: ReturnType<typeof useAuth>["session"];
   readiness: UserTradingReadiness | undefined;
@@ -28,8 +33,9 @@ export interface UsePortfolioDataResult {
   historyStatus: PortfolioLoadStatus;
   message: string | undefined;
   reload: () => Promise<void>;
-  loadOpenOrders: () => Promise<void>;
-  loadActivityHistory: () => Promise<void>;
+  loadCore: (options?: PortfolioLoadOptions) => Promise<void>;
+  loadOpenOrders: (options?: PortfolioLoadOptions) => Promise<void>;
+  loadActivityHistory: (options?: PortfolioLoadOptions) => Promise<void>;
   removeOpenOrder: (orderId: string) => void;
   connectWallet: () => Promise<void>;
 }
@@ -50,6 +56,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const [historyStatus, setHistoryStatus] =
     useState<PortfolioLoadStatus>("idle");
   const [message, setMessage] = useState<string | undefined>();
+  const coreLoadedRef = useRef(false);
   const openOrdersLoadedRef = useRef(false);
   const historyLoadedRef = useRef(false);
 
@@ -58,12 +65,19 @@ export function usePortfolioData(): UsePortfolioDataResult {
     setActivityHistory([]);
     setOpenOrdersStatus("idle");
     setHistoryStatus("idle");
+    coreLoadedRef.current = false;
     openOrdersLoadedRef.current = false;
     historyLoadedRef.current = false;
   }, []);
 
-  const loadCore = useCallback(async () => {
-    setCoreStatus("loading");
+  const loadCore = useCallback(async (options?: PortfolioLoadOptions) => {
+    if (coreLoadedRef.current && !options?.force) {
+      return;
+    }
+
+    if (!options?.silent) {
+      setCoreStatus("loading");
+    }
     setMessage(undefined);
 
     try {
@@ -71,6 +85,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
         setPositions([]);
         setReadiness(undefined);
         resetTabData();
+        coreLoadedRef.current = false;
         setCoreStatus("ready");
         return;
       }
@@ -107,15 +122,17 @@ export function usePortfolioData(): UsePortfolioDataResult {
       const combinedMessage =
         [...errors, ...apiErrors].join(" ").trim() || undefined;
       setMessage(combinedMessage);
+      coreLoadedRef.current = true;
       setCoreStatus(combinedMessage && !positionsPayload ? "error" : "ready");
     } catch (error) {
+      coreLoadedRef.current = true;
       setCoreStatus("error");
       setMessage(error instanceof Error ? error.message : String(error));
     }
   }, [resetTabData, session]);
 
   const loadOpenOrders = useCallback(
-    async (options?: { force?: boolean }) => {
+    async (options?: PortfolioLoadOptions) => {
       if (!session) {
         return;
       }
@@ -124,7 +141,9 @@ export function usePortfolioData(): UsePortfolioDataResult {
         return;
       }
 
-      setOpenOrdersStatus("loading");
+      if (!openOrdersLoadedRef.current) {
+        setOpenOrdersStatus("loading");
+      }
 
       try {
         const payload = await fetchJson<{
@@ -145,7 +164,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
   );
 
   const loadActivityHistory = useCallback(
-    async (options?: { force?: boolean }) => {
+    async (options?: PortfolioLoadOptions) => {
       if (!session) {
         return;
       }
@@ -154,7 +173,9 @@ export function usePortfolioData(): UsePortfolioDataResult {
         return;
       }
 
-      setHistoryStatus("loading");
+      if (!historyLoadedRef.current) {
+        setHistoryStatus("loading");
+      }
 
       try {
         const payload = await fetchJson<{
@@ -175,7 +196,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
   );
 
   const reload = useCallback(async () => {
-    await loadCore();
+    await loadCore({ force: true });
 
     if (openOrdersLoadedRef.current) {
       await loadOpenOrders({ force: true });
@@ -220,6 +241,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     historyStatus,
     message,
     reload,
+    loadCore,
     loadOpenOrders,
     loadActivityHistory,
     removeOpenOrder,
