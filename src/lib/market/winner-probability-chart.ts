@@ -30,7 +30,9 @@ const WINNER_CHART_PALETTE = [
   "#FF674B",
   "#FDD357",
   "#9B7EDE",
-  "#4ECDC4"
+  "#4ECDC4",
+  "#E879A9",
+  "#FF9500"
 ] as const;
 
 const DEFAULT_TOP_TEAM_COUNT = 8;
@@ -105,21 +107,80 @@ function pivotProbabilityHistory(
   }
 
   const teamIdSet = new Set(teamIds);
-  const byDate = new Map<string, WinnerProbabilityChartPoint>();
+  const historyByTeam = new Map<string, ProbabilityHistoryPoint[]>();
 
   for (const point of history) {
     if (!teamIdSet.has(point.teamId)) {
       continue;
     }
 
-    const existing = byDate.get(point.date) ?? { date: point.date };
-    existing[point.teamId] = point.probability;
-    byDate.set(point.date, existing);
+    const teamHistory = historyByTeam.get(point.teamId) ?? [];
+    teamHistory.push(point);
+    historyByTeam.set(point.teamId, teamHistory);
   }
 
-  return Array.from(byDate.values()).sort(
-    (left, right) => new Date(left.date).getTime() - new Date(right.date).getTime()
+  for (const [teamId, teamHistory] of historyByTeam) {
+    historyByTeam.set(
+      teamId,
+      teamHistory.sort(
+        (left, right) => Date.parse(left.date) - Date.parse(right.date)
+      )
+    );
+  }
+
+  const timestampSet = new Set<number>();
+
+  for (const point of history) {
+    if (!teamIdSet.has(point.teamId)) {
+      continue;
+    }
+
+    const timeMs = Date.parse(point.date);
+
+    if (!Number.isNaN(timeMs)) {
+      timestampSet.add(timeMs);
+    }
+  }
+
+  const sortedTimestamps = Array.from(timestampSet).sort(
+    (left, right) => left - right
   );
+
+  return sortedTimestamps.map((timeMs) => {
+    const row: WinnerProbabilityChartPoint = {
+      date: new Date(timeMs).toISOString()
+    };
+
+    for (const teamId of teamIds) {
+      const teamHistory = historyByTeam.get(teamId);
+
+      if (!teamHistory?.length) {
+        continue;
+      }
+
+      let probability: number | undefined;
+
+      for (const point of teamHistory) {
+        const pointTimeMs = Date.parse(point.date);
+
+        if (Number.isNaN(pointTimeMs)) {
+          continue;
+        }
+
+        if (pointTimeMs <= timeMs) {
+          probability = point.probability;
+        } else {
+          break;
+        }
+      }
+
+      if (probability !== undefined) {
+        row[teamId] = probability;
+      }
+    }
+
+    return row;
+  });
 }
 
 function buildFallbackWinnerChartPoints(

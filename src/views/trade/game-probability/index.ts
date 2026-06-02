@@ -15,5 +15,7 @@ export {
   useProbabilityChart,
   type ProbabilityChartStatus,
   type UseProbabilityChartFixtureOptions,
-  type UseProbabilityChartFixtureResult
+  type UseProbabilityChartFixtureResult,
+  type UseProbabilityChartWinnerOptions,
+  type UseProbabilityChartWinnerResult
 } from "@/hooks/market/use-probability-chart";

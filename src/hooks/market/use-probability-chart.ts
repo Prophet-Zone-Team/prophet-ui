@@ -16,6 +16,7 @@ import {
   postPolymarketClob,
   type PolymarketClobBatchPricesHistoryResponse,
 } from "@/lib/market/polymarket-api-client";
+import { resolveTeamOrderbookTokenId } from "@/lib/market/resolve-team-orderbook-token";
 import {
   buildTeamProbabilityHistoryFromClob,
   DEFAULT_PROBABILITY_CHART_CLOB_INTERVAL,
@@ -26,8 +27,11 @@ import type {
   GameFixtureBinaryChartPoint,
   GameFixtureChartPoint,
   ProbabilityHistoryPoint,
+  TeamMarketSnapshot,
   WorldCupMatch,
 } from "@/types/market";
+
+const DEFAULT_WINNER_CHART_TOP_COUNT = 8;
 
 export type ProbabilityChartStatus = "loading" | "ready" | "empty" | "error";
 
@@ -48,9 +52,18 @@ export interface UseProbabilityChartFixtureOptions {
   pollIntervalMs?: number;
 }
 
+export interface UseProbabilityChartWinnerOptions {
+  kind: "winner";
+  teams: TeamMarketSnapshot[];
+  topCount?: number;
+  enabled?: boolean;
+  pollIntervalMs?: number;
+}
+
 export type UseProbabilityChartOptions =
   | UseProbabilityChartTeamOptions
-  | UseProbabilityChartFixtureOptions;
+  | UseProbabilityChartFixtureOptions
+  | UseProbabilityChartWinnerOptions;
 
 export interface UseProbabilityChartTeamResult {
   kind: "team";
@@ -72,9 +85,19 @@ export interface UseProbabilityChartFixtureResult {
   refetch: () => Promise<void>;
 }
 
+export interface UseProbabilityChartWinnerResult {
+  kind: "winner";
+  points: ProbabilityHistoryPoint[];
+  status: ProbabilityChartStatus;
+  lastUpdated?: string;
+  error?: string;
+  refetch: () => Promise<void>;
+}
+
 export type UseProbabilityChartResult =
   | UseProbabilityChartTeamResult
-  | UseProbabilityChartFixtureResult;
+  | UseProbabilityChartFixtureResult
+  | UseProbabilityChartWinnerResult;
 
 const DISABLED_TEAM_CHART_OPTIONS: UseProbabilityChartTeamOptions = {
   kind: "team",
@@ -94,6 +117,45 @@ const DISABLED_FIXTURE_CHART_OPTIONS: UseProbabilityChartFixtureOptions = {
   },
   enabled: false,
 };
+
+const DISABLED_WINNER_CHART_OPTIONS: UseProbabilityChartWinnerOptions = {
+  kind: "winner",
+  teams: [],
+  enabled: false,
+};
+
+interface WinnerChartTokenTarget {
+  teamId: string;
+  tokenId: string;
+}
+
+function resolveWinnerChartTokenTargets(
+  teams: TeamMarketSnapshot[],
+  topCount: number,
+): WinnerChartTokenTarget[] {
+  return teams.slice(0, topCount).flatMap((snapshot) => {
+    const tokenId = resolveTeamOrderbookTokenId(snapshot, "yes");
+
+    if (!tokenId) {
+      return [];
+    }
+
+    return [{ teamId: snapshot.team.id, tokenId }];
+  });
+}
+
+function buildWinnerChartFetchKey(
+  teams: TeamMarketSnapshot[],
+  topCount: number,
+): string {
+  return teams
+    .slice(0, topCount)
+    .map((snapshot) => {
+      const tokenId = resolveTeamOrderbookTokenId(snapshot, "yes");
+      return `${snapshot.team.id}:${tokenId ?? ""}`;
+    })
+    .join("|");
+}
 
 function historyResponseToMap(
   history: PolymarketClobBatchPricesHistoryResponse["history"],
@@ -118,6 +180,9 @@ export function useProbabilityChart(
   options: UseProbabilityChartFixtureOptions,
 ): UseProbabilityChartFixtureResult;
 export function useProbabilityChart(
+  options: UseProbabilityChartWinnerOptions,
+): UseProbabilityChartWinnerResult;
+export function useProbabilityChart(
   options: UseProbabilityChartOptions,
 ): UseProbabilityChartResult {
   const teamResult = useProbabilityChartTeam(
@@ -126,8 +191,19 @@ export function useProbabilityChart(
   const fixtureResult = useProbabilityChartFixture(
     options.kind === "fixture" ? options : DISABLED_FIXTURE_CHART_OPTIONS,
   );
+  const winnerResult = useProbabilityChartWinner(
+    options.kind === "winner" ? options : DISABLED_WINNER_CHART_OPTIONS,
+  );
 
-  return options.kind === "team" ? teamResult : fixtureResult;
+  if (options.kind === "team") {
+    return teamResult;
+  }
+
+  if (options.kind === "winner") {
+    return winnerResult;
+  }
+
+  return fixtureResult;
 }
 
 function useProbabilityChartTeam(
@@ -478,6 +554,188 @@ function useProbabilityChartFixture(
     points,
     binaryPoints,
     chartMode,
+    status,
+    lastUpdated,
+    error,
+    refetch,
+  };
+}
+
+function useProbabilityChartWinner(
+  options: UseProbabilityChartWinnerOptions,
+): UseProbabilityChartWinnerResult {
+  const {
+    teams,
+    topCount = DEFAULT_WINNER_CHART_TOP_COUNT,
+    enabled = true,
+    pollIntervalMs,
+  } = options;
+
+  const teamsRef = useRef(teams);
+  const fetchKey = buildWinnerChartFetchKey(teams, topCount);
+
+  useEffect(() => {
+    teamsRef.current = teams;
+  }, [teams]);
+
+  const [points, setPoints] = useState<ProbabilityHistoryPoint[]>([]);
+  const [status, setStatus] = useState<ProbabilityChartStatus>("loading");
+  const [lastUpdated, setLastUpdated] = useState<string | undefined>();
+  const [error, setError] = useState<string | undefined>();
+
+  const fetchHistory = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!enabled) {
+        return false;
+      }
+
+      const targets = resolveWinnerChartTokenTargets(
+        teamsRef.current,
+        topCount,
+      );
+
+      if (targets.length === 0) {
+        setPoints([]);
+        setStatus("empty");
+        setLastUpdated(undefined);
+        setError(undefined);
+        return false;
+      }
+
+      const tokenIds = targets.map((target) => target.tokenId);
+      const { startTs, endTs } = resolveProbabilityChartTimeWindow();
+      const payload =
+        await postPolymarketClob<PolymarketClobBatchPricesHistoryResponse>(
+          "/batch-prices-history",
+          {
+            markets: tokenIds,
+            interval: DEFAULT_PROBABILITY_CHART_CLOB_INTERVAL,
+            start_ts: startTs,
+            end_ts: endTs,
+          },
+          { signal },
+        );
+
+      const historyByToken = historyResponseToMap(payload.history);
+      const nextPoints = targets.flatMap((target) =>
+        buildTeamProbabilityHistoryFromClob(
+          target.teamId,
+          historyByToken.get(target.tokenId) ?? [],
+        ),
+      );
+
+      setPoints(nextPoints);
+      setLastUpdated(new Date().toISOString());
+      setStatus(nextPoints.length > 0 ? "ready" : "empty");
+      setError(undefined);
+
+      return true;
+    },
+    [enabled, fetchKey, topCount],
+  );
+
+  const refetch = useCallback(async () => {
+    if (!enabled) {
+      setPoints([]);
+      setStatus("empty");
+      setLastUpdated(undefined);
+      setError(undefined);
+      return;
+    }
+
+    const targets = resolveWinnerChartTokenTargets(teamsRef.current, topCount);
+
+    if (targets.length === 0) {
+      setPoints([]);
+      setStatus("empty");
+      setLastUpdated(undefined);
+      setError(undefined);
+      return;
+    }
+
+    setError(undefined);
+
+    try {
+      await fetchHistory();
+    } catch (fetchError) {
+      setStatus("error");
+      setError(
+        fetchError instanceof Error
+          ? fetchError.message
+          : "Unable to load probability chart history.",
+      );
+    }
+  }, [enabled, fetchHistory, topCount]);
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const targets = resolveWinnerChartTokenTargets(teamsRef.current, topCount);
+
+    if (targets.length === 0) {
+      setPoints([]);
+      setStatus("empty");
+      setLastUpdated(undefined);
+      setError(undefined);
+      return;
+    }
+
+    const controller = new AbortController();
+    let timeoutId: number | undefined;
+    let isInitialFetch = true;
+
+    const poll = async () => {
+      if (isInitialFetch) {
+        setStatus("loading");
+        setError(undefined);
+      }
+
+      try {
+        const success = await fetchHistory(controller.signal);
+
+        if (!success || controller.signal.aborted) {
+          return;
+        }
+
+        isInitialFetch = false;
+
+        if (pollIntervalMs === undefined) {
+          return;
+        }
+
+        timeoutId = window.setTimeout(() => {
+          void poll();
+        }, pollIntervalMs);
+      } catch {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        if (isInitialFetch) {
+          setPoints([]);
+          setStatus("error");
+          setError("Unable to load probability chart history.");
+        }
+
+        isInitialFetch = false;
+      }
+    };
+
+    void poll();
+
+    return () => {
+      controller.abort();
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [enabled, fetchHistory, fetchKey, pollIntervalMs, topCount]);
+
+  return {
+    kind: "winner",
+    points,
     status,
     lastUpdated,
     error,

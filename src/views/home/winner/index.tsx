@@ -13,11 +13,7 @@ export function HomeWinnerPanel() {
 
   return (
     <div className="px-3 md:px-0">
-      <WinnerProbabilityChart
-        className="mb-4"
-        teams={teams}
-        probabilityHistory={[]}
-      />
+      <WinnerProbabilityChart className="mb-4" teams={teams} />
       <HomeWinnerMarketList teams={teams} dataStatus={dataStatus} />
     </div>
   );
