@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { Pagination } from "@/components/pagination/pagination";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import type {
   PortfolioLoadStatus,
-  UserActivityRecord,
+  PortfolioTransactionRecord,
   UserOpenOrder
 } from "@/lib/portfolio/types";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
@@ -31,13 +32,17 @@ export interface PortfolioActivityTabsProps {
   snapshots: TeamMarketSnapshot[];
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
-  activityHistory: UserActivityRecord[];
+  transactions: PortfolioTransactionRecord[];
+  historyPage: number;
+  historyTotal: number;
+  historyPageSize: number;
   positionTimeMap: Map<string, string>;
   sessionConnected: boolean;
   coreStatus: PortfolioLoadStatus;
   openOrdersStatus: PortfolioLoadStatus;
   historyStatus: PortfolioLoadStatus;
   onConnectWallet: () => void;
+  onHistoryPageChange: (page: number) => void;
   loadCore: (options?: PortfolioLoadOptions) => Promise<void>;
   loadOpenOrders: (options?: PortfolioLoadOptions) => Promise<void>;
   loadActivityHistory: (options?: PortfolioLoadOptions) => Promise<void>;
@@ -47,46 +52,68 @@ export function PortfolioActivityTabs({
   snapshots,
   positions,
   openOrders,
-  activityHistory,
+  transactions,
+  historyPage,
+  historyTotal,
+  historyPageSize,
   positionTimeMap,
   sessionConnected,
   coreStatus,
   openOrdersStatus,
   historyStatus,
   onConnectWallet,
+  onHistoryPageChange,
   loadCore,
   loadOpenOrders,
   loadActivityHistory
 }: PortfolioActivityTabsProps) {
   const [tab, setTab] = useState<PortfolioTabId>("position");
-  const isInitialMount = useRef(true);
+  const loadedTabsRef = useRef<Set<PortfolioTabId>>(new Set());
 
   useEffect(() => {
     if (!sessionConnected) {
-      return;
-    }
-
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      if (tab === "open-order") {
-        void loadOpenOrders();
-      } else if (tab === "history") {
-        void loadActivityHistory();
-      }
+      loadedTabsRef.current = new Set();
       return;
     }
 
     if (tab === "position") {
-      void loadCore({ force: true, silent: true });
-    } else if (tab === "open-order") {
-      void loadOpenOrders({ force: true });
-    } else {
-      void loadActivityHistory({ force: true });
+      if (!loadedTabsRef.current.has("position")) {
+        loadedTabsRef.current.add("position");
+        void loadCore({ force: true, silent: true });
+      }
+      return;
     }
-  }, [loadActivityHistory, loadCore, loadOpenOrders, sessionConnected, tab]);
+
+    if (tab === "open-order") {
+      if (!loadedTabsRef.current.has("open-order")) {
+        loadedTabsRef.current.add("open-order");
+        void loadOpenOrders();
+      }
+      return;
+    }
+
+    if (!loadedTabsRef.current.has("history")) {
+      loadedTabsRef.current.add("history");
+      void loadActivityHistory({ page: historyPage });
+    }
+  }, [
+    historyPage,
+    loadActivityHistory,
+    loadCore,
+    loadOpenOrders,
+    sessionConnected,
+    tab
+  ]);
 
   const coreLoading = isTabLoading(coreStatus);
   const needsWallet = !sessionConnected && !coreLoading;
+  const historyLoading = sessionConnected && isTabLoading(historyStatus);
+  const showHistoryPagination =
+    tab === "history" &&
+    sessionConnected &&
+    !historyLoading &&
+    historyStatus !== "error" &&
+    historyTotal > 0;
 
   return (
     <section
@@ -126,13 +153,23 @@ export function PortfolioActivityTabs({
       ) : null}
 
       {tab === "history" ? (
-        <PortfolioHistoryTable
-          activityHistory={activityHistory}
-          snapshots={snapshots}
-          needsWallet={needsWallet}
-          loading={sessionConnected && isTabLoading(historyStatus)}
-          onConnectWallet={onConnectWallet}
-        />
+        <>
+          <PortfolioHistoryTable
+            transactions={transactions}
+            snapshots={snapshots}
+            needsWallet={needsWallet}
+            loading={historyLoading}
+            onConnectWallet={onConnectWallet}
+          />
+          {showHistoryPagination ? (
+            <Pagination
+              page={historyPage}
+              pageSize={historyPageSize}
+              total={historyTotal}
+              onPageChange={onHistoryPageChange}
+            />
+          ) : null}
+        </>
       ) : null}
     </section>
   );

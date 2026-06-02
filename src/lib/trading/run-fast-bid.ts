@@ -9,10 +9,7 @@ import {
   showOrderSubmittedToast
 } from "@/lib/trading/order-toast";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
-import {
-  buildReportTransactionMarketFromTeam,
-  reportTradeOrderTransaction
-} from "@/service/user";
+import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import {
   resolveTradePrimaryAction,
   runTradePrimaryAction
@@ -157,7 +154,9 @@ export async function runFastBid({
     void reportTradeOrderTransaction({
       userOrderPreview,
       result,
-      market: buildReportTransactionMarketFromTeam(snapshot, preview)
+      preview,
+      variant: "team",
+      snapshot
     });
 
     showOrderSubmittedToast(

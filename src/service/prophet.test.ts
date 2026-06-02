@@ -8,6 +8,7 @@ import {
   getProphetTopTracks,
   getProphetTrackList,
   getProphetTracks,
+  getProphetUserTransactions,
   isProphetAuthenticated,
   logoutProphet,
   requireProphetApiToken,
@@ -94,6 +95,9 @@ describe("prophet auth guards", () => {
         tx_hash: "order-1",
         type: "buy"
       })
+    );
+    await assertAuthRequired(() =>
+      getProphetUserTransactions({ page: 1, page_size: 20 })
     );
   });
 

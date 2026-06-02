@@ -23,7 +23,10 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
     session,
     positions,
     openOrders,
-    activityHistory,
+    transactions,
+    historyPage,
+    historyTotal,
+    historyPageSize,
     coreStatus,
     openOrdersStatus,
     historyStatus,
@@ -32,7 +35,8 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
     removeOpenOrder,
     loadCore,
     loadOpenOrders,
-    loadActivityHistory
+    loadActivityHistory,
+    setHistoryPage
   } = usePortfolioData();
 
   const portfolio = useMemo(
@@ -41,9 +45,9 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
         positions,
         snapshots,
         cash,
-        activityHistory
+        transactions
       }),
-    [activityHistory, cash, positions, snapshots]
+    [cash, positions, snapshots, transactions]
   );
 
   return (
@@ -66,13 +70,17 @@ export function PortfolioView({ snapshots }: PortfolioViewProps) {
             snapshots={snapshots}
             positions={positions}
             openOrders={openOrders}
-            activityHistory={activityHistory}
+            transactions={transactions}
+            historyPage={historyPage}
+            historyTotal={historyTotal}
+            historyPageSize={historyPageSize}
             positionTimeMap={portfolio.positionTimeMap}
             sessionConnected={Boolean(session)}
             coreStatus={coreStatus}
             openOrdersStatus={openOrdersStatus}
             historyStatus={historyStatus}
             onConnectWallet={() => void connectWallet()}
+            onHistoryPageChange={setHistoryPage}
             loadCore={loadCore}
             loadOpenOrders={loadOpenOrders}
             loadActivityHistory={loadActivityHistory}

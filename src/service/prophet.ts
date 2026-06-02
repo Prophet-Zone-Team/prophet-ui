@@ -23,6 +23,7 @@ import type {
   ProphetGetTeamDetailData,
   ProphetGetTeamRelatedNewsData,
   ProphetGetTelegramBindStatusData,
+  ProphetGetUserTransactionsData,
   ProphetLoginData,
   ProphetLoginRequest,
   ProphetReportTransactionRequest,
@@ -404,6 +405,22 @@ export async function reportProphetUserTransaction(
 ): Promise<void> {
   requireProphetApiToken();
   await prophetPost<unknown>("/v1/user/transaction", request);
+}
+
+/** GET /v1/user/transactions — paginated user-reported trades, newest first */
+export async function getProphetUserTransactions(params: {
+  page: number;
+  page_size: number;
+  type?: string;
+}): Promise<ProphetGetUserTransactionsData> {
+  requireProphetApiToken();
+  return prophetGet<ProphetGetUserTransactionsData>("/v1/user/transactions", {
+    params: {
+      page: params.page,
+      page_size: params.page_size,
+      ...(params.type ? { type: params.type } : {})
+    }
+  });
 }
 
 /** GET /v1/analytics/competitiveness */

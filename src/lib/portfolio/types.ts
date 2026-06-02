@@ -1,3 +1,18 @@
+export type PortfolioTransactionType = "buy" | "sell" | "deposit" | "withdraw";
+
+export interface PortfolioTransactionRecord {
+  id: string;
+  type: PortfolioTransactionType;
+  side: string;
+  price: string;
+  amount: string;
+  marketName: string;
+  teamName: string;
+  slug: string;
+  createdAt: string;
+  txHash: string;
+}
+
 export type UserActivityType = "TRADE";
 
 export interface UserActivityRecord {

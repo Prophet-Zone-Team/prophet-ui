@@ -59,11 +59,7 @@ import type {
   UserPositionRecord
 } from "@/types/market";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
-import {
-  buildReportTransactionMarketFromGame,
-  buildReportTransactionMarketFromTeam,
-  reportTradeOrderTransaction
-} from "@/service/user";
+import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import {
   buildGameTradePreview,
   buildTeamTradePreview,
@@ -847,18 +843,25 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             : undefined
       });
 
-      void reportTradeOrderTransaction({
-        userOrderPreview,
-        result,
-        market:
-          input.variant === "team"
-            ? buildReportTransactionMarketFromTeam(input.snapshot, preview)
-            : buildReportTransactionMarketFromGame(
-                input.gameSnapshot,
-                preview,
+      void reportTradeOrderTransaction(
+        input.variant === "team"
+          ? {
+              userOrderPreview,
+              result,
+              preview,
+              variant: "team",
+              snapshot: input.snapshot
+            }
+          : {
+              userOrderPreview,
+              result,
+              preview,
+              variant: "game",
+              gameSnapshot: input.gameSnapshot,
+              fixtureOutcome:
                 effectiveFixtureOutcome ?? selectedFixtureOutcome
-              )
-      });
+            }
+      );
 
       await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
       await refreshOutcomeShares();

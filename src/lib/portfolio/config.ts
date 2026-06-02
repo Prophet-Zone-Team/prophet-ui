@@ -1,0 +1,1 @@
+export const PORTFOLIO_HISTORY_PAGE_SIZE = 20;

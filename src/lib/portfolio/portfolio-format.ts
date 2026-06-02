@@ -53,6 +53,21 @@ export function titleCase(value: string): string {
   return value.replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
+export function formatTransactionPrice(price: string): string {
+  const numeric = Number(price);
+
+  if (!Number.isFinite(numeric)) {
+    return price.startsWith("$") ? price : `$${price}`;
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 3
+  }).format(numeric);
+}
+
 export function getOutcomeToneClass(outcome: string): string {
   const normalized = outcome.toLowerCase();
 

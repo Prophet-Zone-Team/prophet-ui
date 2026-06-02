@@ -192,6 +192,27 @@ export interface ProphetReportTransactionRequest {
   market?: ProphetReportTransactionMarket;
 }
 
+/** Row from GET /v1/user/transactions (database.UserTransaction). */
+export interface ProphetUserTransaction {
+  amount?: string;
+  created_at?: string;
+  id?: number;
+  market_name?: string;
+  price?: string;
+  side?: string;
+  slug?: string;
+  team_name?: string;
+  tx_hash?: string;
+  type?: string;
+  user_id?: number;
+}
+
+/** GET /v1/user/transactions — paginated user-reported trades */
+export interface ProphetGetUserTransactionsData {
+  list?: ProphetUserTransaction[];
+  total?: number;
+}
+
 /** Lightweight row from GET /v1/user/tracks/list (bookmark state). */
 export interface ProphetUserTrackListItem {
   id?: number;

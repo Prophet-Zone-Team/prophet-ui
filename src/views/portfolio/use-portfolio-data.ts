@@ -3,17 +3,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
-import { fetchJson } from "@/lib/team/client-fetch";
+import { PORTFOLIO_HISTORY_PAGE_SIZE } from "@/lib/portfolio/config";
+import { mapProphetUserTransactions } from "@/lib/portfolio/map-user-transaction";
 import type {
   PortfolioLoadStatus,
-  UserActivityRecord,
+  PortfolioTransactionRecord,
   UserOpenOrder
 } from "@/lib/portfolio/types";
+import { fetchJson } from "@/lib/team/client-fetch";
+import {
+  getProphetUserTransactions,
+  isProphetAuthenticated
+} from "@/service/prophet";
 import type { UserPositionRecord } from "@/types/market";
 
 export type PortfolioLoadOptions = {
   force?: boolean;
   silent?: boolean;
+  page?: number;
 };
 
 export interface UsePortfolioDataResult {
@@ -21,7 +28,10 @@ export interface UsePortfolioDataResult {
   isAuthenticated: boolean;
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
-  activityHistory: UserActivityRecord[];
+  transactions: PortfolioTransactionRecord[];
+  historyPage: number;
+  historyTotal: number;
+  historyPageSize: number;
   coreStatus: PortfolioLoadStatus;
   openOrdersStatus: PortfolioLoadStatus;
   historyStatus: PortfolioLoadStatus;
@@ -30,6 +40,7 @@ export interface UsePortfolioDataResult {
   loadCore: (options?: PortfolioLoadOptions) => Promise<void>;
   loadOpenOrders: (options?: PortfolioLoadOptions) => Promise<void>;
   loadActivityHistory: (options?: PortfolioLoadOptions) => Promise<void>;
+  setHistoryPage: (page: number) => void;
   removeOpenOrder: (orderId: string) => void;
   connectWallet: () => Promise<void>;
 }
@@ -38,9 +49,11 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const { session, isAuthenticated, openLogin, refreshCash } = useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
-  const [activityHistory, setActivityHistory] = useState<UserActivityRecord[]>(
+  const [transactions, setTransactions] = useState<PortfolioTransactionRecord[]>(
     []
   );
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotal, setHistoryTotal] = useState(0);
   const [coreStatus, setCoreStatus] = useState<PortfolioLoadStatus>("idle");
   const [openOrdersStatus, setOpenOrdersStatus] =
     useState<PortfolioLoadStatus>("idle");
@@ -49,16 +62,19 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const [message, setMessage] = useState<string | undefined>();
   const coreLoadedRef = useRef(false);
   const openOrdersLoadedRef = useRef(false);
-  const historyLoadedRef = useRef(false);
+  const historyLoadedPagesRef = useRef<Set<number>>(new Set());
+  const historyRequestIdRef = useRef(0);
 
   const resetTabData = useCallback(() => {
     setOpenOrders([]);
-    setActivityHistory([]);
+    setTransactions([]);
+    setHistoryPage(1);
+    setHistoryTotal(0);
     setOpenOrdersStatus("idle");
     setHistoryStatus("idle");
     coreLoadedRef.current = false;
     openOrdersLoadedRef.current = false;
-    historyLoadedRef.current = false;
+    historyLoadedPagesRef.current = new Set();
   }, []);
 
   const loadCore = useCallback(async (options?: PortfolioLoadOptions) => {
@@ -143,30 +159,63 @@ export function usePortfolioData(): UsePortfolioDataResult {
         return;
       }
 
-      if (historyLoadedRef.current && !options?.force) {
+      const page = options?.page ?? historyPage;
+      const alreadyLoaded = historyLoadedPagesRef.current.has(page);
+
+      if (alreadyLoaded && !options?.force) {
         return;
       }
 
-      if (!historyLoadedRef.current) {
+      const requestId = historyRequestIdRef.current + 1;
+      historyRequestIdRef.current = requestId;
+
+      if (!alreadyLoaded) {
         setHistoryStatus("loading");
       }
 
-      try {
-        const payload = await fetchJson<{
-          activities?: UserActivityRecord[];
-          error?: string;
-        }>("/api/trading/orders/history?limit=40");
+      if (!isProphetAuthenticated()) {
+        if (historyRequestIdRef.current === requestId) {
+          setTransactions([]);
+          setHistoryTotal(0);
+          historyLoadedPagesRef.current.add(page);
+          setHistoryStatus("ready");
+        }
+        return;
+      }
 
-        setActivityHistory(payload?.activities ?? []);
-        historyLoadedRef.current = true;
-        setHistoryStatus(payload?.error ? "error" : "ready");
+      try {
+        const payload = await getProphetUserTransactions({
+          page,
+          page_size: PORTFOLIO_HISTORY_PAGE_SIZE
+        });
+
+        if (historyRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        setTransactions(mapProphetUserTransactions(payload.list));
+        setHistoryTotal(payload.total ?? 0);
+        historyLoadedPagesRef.current.add(page);
+        setHistoryStatus("ready");
       } catch {
-        historyLoadedRef.current = true;
-        setActivityHistory([]);
+        if (historyRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        historyLoadedPagesRef.current.add(page);
+        setTransactions([]);
         setHistoryStatus("error");
       }
     },
-    [session]
+    [historyPage, session]
+  );
+
+  const setHistoryPageAndLoad = useCallback(
+    (page: number) => {
+      setHistoryPage(page);
+      void loadActivityHistory({ page, force: true });
+    },
+    [loadActivityHistory]
   );
 
   const reload = useCallback(async () => {
@@ -176,10 +225,11 @@ export function usePortfolioData(): UsePortfolioDataResult {
       await loadOpenOrders({ force: true });
     }
 
-    if (historyLoadedRef.current) {
-      await loadActivityHistory({ force: true });
+    if (historyLoadedPagesRef.current.size > 0) {
+      historyLoadedPagesRef.current.delete(historyPage);
+      await loadActivityHistory({ page: historyPage, force: true });
     }
-  }, [loadActivityHistory, loadCore, loadOpenOrders, refreshCash]);
+  }, [historyPage, loadActivityHistory, loadCore, loadOpenOrders, refreshCash]);
 
   useEffect(() => {
     resetTabData();
@@ -208,7 +258,10 @@ export function usePortfolioData(): UsePortfolioDataResult {
     isAuthenticated,
     positions,
     openOrders,
-    activityHistory,
+    transactions,
+    historyPage,
+    historyTotal,
+    historyPageSize: PORTFOLIO_HISTORY_PAGE_SIZE,
     coreStatus,
     openOrdersStatus,
     historyStatus,
@@ -217,6 +270,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     loadCore,
     loadOpenOrders,
     loadActivityHistory,
+    setHistoryPage: setHistoryPageAndLoad,
     removeOpenOrder,
     connectWallet
   };

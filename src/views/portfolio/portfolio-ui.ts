@@ -92,16 +92,29 @@ export const portfolioOrdersTableRowClass = cn(
 );
 
 const portfolioHistoryTableGridColsClass =
-  "grid-cols-[minmax(0,1.5fr)_repeat(5,minmax(0,1fr))]";
+  "grid-cols-[72px_minmax(0,1fr)_5.5rem_9rem]";
+
+export const portfolioHistoryListClass =
+  "flex flex-col gap-1 px-3 py-2 md:px-4";
 
 export const portfolioHistoryTableHeadClass = cn(
-  "hidden min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
+  "mb-1 hidden w-full grid items-center gap-3 px-3 py-2 text-xs text-prophet-muted md:grid md:gap-4 md:px-4",
   portfolioHistoryTableGridColsClass
 );
 
-export const portfolioHistoryTableRowClass = cn(
-  "hidden min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
+export const portfolioHistoryRowClass = cn(
+  "grid min-h-[62px] w-full items-center gap-3 rounded-[12px] bg-white px-3 py-2",
+  "text-left transition-colors hover:bg-[#F9FAFC] md:gap-4 md:px-4",
   portfolioHistoryTableGridColsClass
+);
+
+export const portfolioHistoryRowLinkClass = cn(
+  portfolioHistoryRowClass,
+  "cursor-pointer no-underline text-inherit"
+);
+
+export const portfolioHistoryMobileCardClass = cn(
+  "flex flex-col gap-2.5 rounded-[12px] bg-white px-3 py-3 transition-colors hover:bg-[#F9FAFC]"
 );
 
 export const portfolioActionButtonClass = cn(

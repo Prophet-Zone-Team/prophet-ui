@@ -10,7 +10,7 @@ import type {
 } from "@/types/market";
 import type {
   PortfolioSeriesPoint,
-  UserActivityRecord,
+  PortfolioTransactionRecord,
   UserOpenOrder
 } from "@/lib/portfolio/types";
 
@@ -151,18 +151,51 @@ export function derivePositionSellReceiveAmount(
   return roundMoney(position.currentValue * ratio);
 }
 
-export function buildPositionTimeMap(
-  activityHistory: UserActivityRecord[]
+function transactionMatchesPosition(
+  transaction: PortfolioTransactionRecord,
+  position: UserPositionRecord
+): boolean {
+  if (transaction.slug) {
+    const slugs = [position.slug, position.eventSlug].filter(Boolean);
+
+    if (slugs.some((slug) => slug === transaction.slug)) {
+      return true;
+    }
+  }
+
+  if (transaction.teamName) {
+    const team = transaction.teamName.toLowerCase();
+    const text = `${position.title} ${position.slug}`.toLowerCase();
+
+    if (text.includes(team)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function buildPositionTimeMapFromTransactions(
+  transactions: PortfolioTransactionRecord[],
+  positions: UserPositionRecord[]
 ): Map<string, string> {
   const map = new Map<string, string>();
 
-  for (const activity of activityHistory) {
-    const tokenId = activity.asset;
-    const existing = map.get(tokenId);
-    const activityTime = new Date(activity.timestamp * 1000).toISOString();
+  for (const position of positions) {
+    for (const transaction of transactions) {
+      if (!transactionMatchesPosition(transaction, position)) {
+        continue;
+      }
 
-    if (!existing || new Date(activityTime).getTime() > new Date(existing).getTime()) {
-      map.set(tokenId, activityTime);
+      const existing = map.get(position.asset);
+      const transactionTime = transaction.createdAt;
+
+      if (
+        !existing ||
+        new Date(transactionTime).getTime() > new Date(existing).getTime()
+      ) {
+        map.set(position.asset, transactionTime);
+      }
     }
   }
 
@@ -212,12 +245,12 @@ export function buildPortfolioView({
   positions,
   snapshots,
   cash,
-  activityHistory
+  transactions
 }: {
   positions: UserPositionRecord[];
   snapshots: TeamMarketSnapshot[];
   cash?: CashBalanceView;
-  activityHistory: UserActivityRecord[];
+  transactions: PortfolioTransactionRecord[];
 }): PortfolioViewModel {
   const totalPositionValue = roundMoney(
     positions.reduce((sum, position) => sum + safeNumber(position.currentValue), 0)
@@ -236,7 +269,10 @@ export function buildPortfolioView({
     portfolioValue,
     unrealizedPnl
   );
-  const positionTimeMap = buildPositionTimeMap(activityHistory);
+  const positionTimeMap = buildPositionTimeMapFromTransactions(
+    transactions,
+    positions
+  );
 
   return {
     portfolioValue,
