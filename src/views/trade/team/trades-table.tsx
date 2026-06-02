@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Pagination } from "@/components/pagination/pagination";
 import { cn } from "@/lib/cn";
@@ -17,6 +17,7 @@ const TRADES_PAGE_SIZE = 20;
 
 interface TradesTableProps {
   snapshot: TeamMarketSnapshot;
+  active: boolean;
 }
 
 function resolveTraderLabel(trade: MarketTradeRecord): string {
@@ -31,13 +32,18 @@ function resolveTraderLabel(trade: MarketTradeRecord): string {
   return formatShortWallet(trade.proxyWallet);
 }
 
-export function TradesTable({ snapshot }: TradesTableProps) {
+export function TradesTable({ snapshot, active }: TradesTableProps) {
   const conditionId = snapshot.market.polymarket?.conditionId;
   const [trades, setTrades] = useState<MarketTradeRecord[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasDataRef = useRef(false);
+  const prevActiveRef = useRef(false);
+  const prevPageRef = useRef(page);
+
+  hasDataRef.current = trades.length > 0;
 
   const emptyMessage = useMemo(
     () => `No recent trades for ${snapshot.team.name}.`,
@@ -45,12 +51,27 @@ export function TradesTable({ snapshot }: TradesTableProps) {
   );
 
   const loadTrades = useCallback(
-    async (nextPage: number, signal?: { ignore: boolean }) => {
-      setLoading(true);
-      setError(null);
+    async (
+      nextPage: number,
+      options: { silent: boolean; pageChanged: boolean; ignoreRef: { ignore: boolean } }
+    ) => {
+      const { silent, pageChanged, ignoreRef } = options;
+
+      if (!silent) {
+        setLoading(true);
+      }
+
+      if (!silent) {
+        setError(null);
+      }
+
+      if (pageChanged && !ignoreRef.ignore) {
+        setTrades([]);
+        setHasMore(false);
+      }
 
       if (!conditionId) {
-        if (!signal?.ignore) {
+        if (!ignoreRef.ignore) {
           setTrades([]);
           setHasMore(false);
           setLoading(false);
@@ -65,12 +86,12 @@ export function TradesTable({ snapshot }: TradesTableProps) {
         );
         const nextTrades = payload.trades ?? [];
 
-        if (!signal?.ignore) {
+        if (!ignoreRef.ignore) {
           setTrades(nextTrades);
           setHasMore(nextTrades.length === TRADES_PAGE_SIZE);
         }
       } catch (loadError) {
-        if (!signal?.ignore) {
+        if (!ignoreRef.ignore && !silent) {
           setTrades([]);
           setHasMore(false);
           setError(
@@ -80,7 +101,7 @@ export function TradesTable({ snapshot }: TradesTableProps) {
           );
         }
       } finally {
-        if (!signal?.ignore) {
+        if (!ignoreRef.ignore) {
           setLoading(false);
         }
       }
@@ -89,14 +110,29 @@ export function TradesTable({ snapshot }: TradesTableProps) {
   );
 
   useEffect(() => {
-    const signal = { ignore: false };
+    if (!active) {
+      prevActiveRef.current = false;
+      return;
+    }
 
-    void loadTrades(page, signal);
+    const activeBecameTrue = !prevActiveRef.current;
+    const pageChanged = prevPageRef.current !== page;
+    prevActiveRef.current = true;
+    prevPageRef.current = page;
+
+    const silent = hasDataRef.current && activeBecameTrue && !pageChanged;
+    const ignoreRef = { ignore: false };
+
+    void loadTrades(page, {
+      silent,
+      pageChanged,
+      ignoreRef
+    });
 
     return () => {
-      signal.ignore = true;
+      ignoreRef.ignore = true;
     };
-  }, [loadTrades, page]);
+  }, [active, loadTrades, page]);
 
   const paginationTotal = useMemo(() => {
     if (trades.length === 0 && page === 1) {
@@ -110,13 +146,7 @@ export function TradesTable({ snapshot }: TradesTableProps) {
     setPage(nextPage);
   }, []);
 
-  if (loading) {
-    return (
-      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-        Loading trades…
-      </p>
-    );
-  }
+  const hasData = trades.length > 0;
 
   if (!conditionId) {
     return (
@@ -127,7 +157,7 @@ export function TradesTable({ snapshot }: TradesTableProps) {
     );
   }
 
-  if (error) {
+  if (error && !hasData) {
     return (
       <div className="px-4 py-10 text-center">
         <strong className="block text-sm font-[556] text-black">
@@ -138,12 +168,20 @@ export function TradesTable({ snapshot }: TradesTableProps) {
     );
   }
 
-  if (trades.length === 0) {
+  if (loading && !hasData && !error) {
+    return null;
+  }
+
+  if (!loading && !hasData && !error) {
     return (
       <p className="px-4 py-10 text-center text-sm text-prophet-muted">
         {emptyMessage}
       </p>
     );
+  }
+
+  if (!hasData) {
+    return null;
   }
 
   return (

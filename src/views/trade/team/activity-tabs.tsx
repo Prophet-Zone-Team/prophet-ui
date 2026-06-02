@@ -76,17 +76,17 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
 
         {visitedTabs.has("trades") ? (
           <div hidden={tab !== "trades"} aria-label="Market trades">
-            <TradesTable snapshot={snapshot} />
+            <TradesTable snapshot={snapshot} active={tab === "trades"} />
           </div>
         ) : null}
         {visitedTabs.has("position") ? (
           <div hidden={tab !== "position"} aria-label="Market positions">
-            <PositionsTable snapshot={snapshot} />
+            <PositionsTable snapshot={snapshot} active={tab === "position"} />
           </div>
         ) : null}
         {visitedTabs.has("top-holders") ? (
           <div hidden={tab !== "top-holders"} aria-label="Top holders">
-            <TopHoldersTable snapshot={snapshot} />
+            <TopHoldersTable snapshot={snapshot} active={tab === "top-holders"} />
           </div>
         ) : null}
       </div>

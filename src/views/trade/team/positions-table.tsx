@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/cn";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
@@ -15,12 +15,14 @@ import type {
 export type PositionsTableTeamProps = {
   variant?: "team";
   snapshot: TeamMarketSnapshot;
+  active?: boolean;
 };
 
 export type PositionsTableGameProps = {
   variant: "game";
   gameSnapshot: GameMarketSnapshot;
   teamSnapshots: TeamMarketSnapshot[];
+  active?: boolean;
 };
 
 export type PositionsTableProps =
@@ -70,18 +72,33 @@ async function fetchPositionsForMarkets(
 }
 
 export function PositionsTable(props: PositionsTableProps) {
+  const active = props.active ?? true;
   const [positions, setPositions] = useState<MarketPositionRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasDataRef = useRef(false);
+  const prevActiveRef = useRef(false);
+
+  hasDataRef.current = positions.length > 0;
 
   const conditionIds = useMemo(() => resolveConditionIds(props), [props]);
 
   useEffect(() => {
+    if (!active) {
+      prevActiveRef.current = false;
+      return;
+    }
+
+    const silent = hasDataRef.current && !prevActiveRef.current;
+    prevActiveRef.current = true;
+
     let ignore = false;
 
     async function load() {
-      setLoading(true);
-      setError(null);
+      if (!silent) {
+        setLoading(true);
+        setError(null);
+      }
 
       if (conditionIds.length === 0) {
         if (!ignore) {
@@ -98,7 +115,7 @@ export function PositionsTable(props: PositionsTableProps) {
           setPositions(nextPositions);
         }
       } catch (loadError) {
-        if (!ignore) {
+        if (!ignore && !silent) {
           setPositions([]);
           setError(
             loadError instanceof Error
@@ -118,15 +135,9 @@ export function PositionsTable(props: PositionsTableProps) {
     return () => {
       ignore = true;
     };
-  }, [conditionIds]);
+  }, [active, conditionIds]);
 
-  if (loading) {
-    return (
-      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-        Loading positions…
-      </p>
-    );
-  }
+  const hasData = positions.length > 0;
 
   if (conditionIds.length === 0) {
     return (
@@ -137,7 +148,7 @@ export function PositionsTable(props: PositionsTableProps) {
     );
   }
 
-  if (error) {
+  if (error && !hasData) {
     return (
       <div className="px-4 py-10 text-center">
         <strong className="block text-sm font-[556] text-black">
@@ -148,12 +159,20 @@ export function PositionsTable(props: PositionsTableProps) {
     );
   }
 
-  if (positions.length === 0) {
+  if (loading && !hasData && !error) {
+    return null;
+  }
+
+  if (!loading && !hasData && !error) {
     return (
       <p className="px-4 py-10 text-center text-sm text-prophet-muted">
         {resolveEmptyMessage(props)}
       </p>
     );
+  }
+
+  if (!hasData) {
+    return null;
   }
 
   return (

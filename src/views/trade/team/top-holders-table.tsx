@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { fetchJson } from "@/lib/team/client-fetch";
 import { formatShortWallet } from "@/lib/team/detail-format";
@@ -8,6 +8,7 @@ import type { MarketTopHolder, MarketTopHolderGroup, TeamMarketSnapshot } from "
 
 interface TopHoldersTableProps {
   snapshot: TeamMarketSnapshot;
+  active: boolean;
 }
 
 interface TopHolderRow {
@@ -78,11 +79,15 @@ function flattenTopHolders(
     .sort((left, right) => right.amount - left.amount);
 }
 
-export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
+export function TopHoldersTable({ snapshot, active }: TopHoldersTableProps) {
   const conditionId = snapshot.market.polymarket?.conditionId;
   const [rows, setRows] = useState<TopHolderRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasDataRef = useRef(false);
+  const prevActiveRef = useRef(false);
+
+  hasDataRef.current = rows.length > 0;
 
   const emptyMessage = useMemo(
     () => `No public holder data available for ${snapshot.team.name}.`,
@@ -101,11 +106,21 @@ export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
   }, [snapshot.market.polymarket?.tokens]);
 
   useEffect(() => {
+    if (!active) {
+      prevActiveRef.current = false;
+      return;
+    }
+
+    const silent = hasDataRef.current && !prevActiveRef.current;
+    prevActiveRef.current = true;
+
     let ignore = false;
 
     async function load() {
-      setLoading(true);
-      setError(null);
+      if (!silent) {
+        setLoading(true);
+        setError(null);
+      }
 
       if (!conditionId) {
         if (!ignore) {
@@ -130,7 +145,7 @@ export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
           setRows(nextRows);
         }
       } catch (loadError) {
-        if (!ignore) {
+        if (!ignore && !silent) {
           setRows([]);
           setError(
             loadError instanceof Error
@@ -150,15 +165,9 @@ export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
     return () => {
       ignore = true;
     };
-  }, [conditionId, outcomeLabels]);
+  }, [active, conditionId, outcomeLabels]);
 
-  if (loading) {
-    return (
-      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-        Loading top holders…
-      </p>
-    );
-  }
+  const hasData = rows.length > 0;
 
   if (!conditionId) {
     return (
@@ -169,7 +178,7 @@ export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
     );
   }
 
-  if (error) {
+  if (error && !hasData) {
     return (
       <div className="px-4 py-10 text-center">
         <strong className="block text-sm font-[556] text-black">
@@ -180,12 +189,20 @@ export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
     );
   }
 
-  if (rows.length === 0) {
+  if (loading && !hasData && !error) {
+    return null;
+  }
+
+  if (!loading && !hasData && !error) {
     return (
       <p className="px-4 py-10 text-center text-sm text-prophet-muted">
         {emptyMessage}
       </p>
     );
+  }
+
+  if (!hasData) {
+    return null;
   }
 
   return (
