@@ -59,7 +59,7 @@ import { createRoot } from "react-dom/client";
 export function EventNotification(props: EventNotificationProps) {
   const { level, teams, className } = props;
 
-  const isNewLevel = level === EventNotificationLevel.New;
+  const isNewLevel = isSingleCardNotificationLevel(level);
 
   const levelInfo = EventNotificationLevelMap[level];
 
@@ -160,6 +160,11 @@ export const EventNotificationLevel = {
   Goal: "Goal",
   FoulWarn: "FoulWarn",
   FoulAlert: "FoulAlert",
+  Price: "Price",
+  Volume: "Volume",
+  LargeOrder: "LargeOrder",
+  TopHolders: "TopHolders",
+  News: "News",
 } as const;
 export type EventNotificationLevel = (typeof EventNotificationLevel)[keyof typeof EventNotificationLevel];
 
@@ -168,7 +173,27 @@ export const EventNotificationLevelMap: Record<EventNotificationLevel, { name: s
   [EventNotificationLevel.Goal]: { name: "GOAL!", color: "#7BCA25" },
   [EventNotificationLevel.FoulWarn]: { name: "FOUL!", color: "#FFC51C" },
   [EventNotificationLevel.FoulAlert]: { name: "FOUL!", color: "#FF4242" },
+  [EventNotificationLevel.Price]: { name: "PRICE", color: "#3B82F6" },
+  [EventNotificationLevel.Volume]: { name: "VOLUME", color: "#FFC51C" },
+  [EventNotificationLevel.LargeOrder]: { name: "ORDER", color: "#FF4242" },
+  [EventNotificationLevel.TopHolders]: { name: "HOLDERS", color: "#9D84FF" },
+  [EventNotificationLevel.News]: { name: "NEWS", color: "#6366F1" },
 };
+
+const SINGLE_CARD_NOTIFICATION_LEVELS = new Set<EventNotificationLevel>([
+  EventNotificationLevel.New,
+  EventNotificationLevel.Price,
+  EventNotificationLevel.Volume,
+  EventNotificationLevel.LargeOrder,
+  EventNotificationLevel.TopHolders,
+  EventNotificationLevel.News,
+]);
+
+export function isSingleCardNotificationLevel(
+  level: EventNotificationLevel,
+): boolean {
+  return SINGLE_CARD_NOTIFICATION_LEVELS.has(level);
+}
 
 interface EventBadgeProps {
   level: EventNotificationLevel;
@@ -246,6 +271,8 @@ export interface ShowEventNotificationOptions {
    * - Pass 0 to disable auto-dismiss (manual dismiss required).
    */
   duration?: number;
+  /** Called once when this notification is dismissed (auto or manual). */
+  onDismiss?: () => void;
 }
 
 export type EventNotificationDismiss = () => void;
@@ -293,9 +320,13 @@ function dismissById(targetId?: string) {
     return;
   }
 
+  const onDismiss = current?.props.onDismiss;
+
   clearAutoDismissTimer();
   current = null;
   emitStoreChange();
+
+  onDismiss?.();
 }
 
 function scheduleAutoDismiss(id: string, durationMs: number) {

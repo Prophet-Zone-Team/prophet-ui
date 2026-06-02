@@ -33,6 +33,8 @@ import type {
 import type { TelegramLoginAuthData } from "@/types/telegram-widget";
 
 const AUTH_STORAGE_KEY = "prophet_api_token";
+
+export const PROPHET_API_TOKEN_CHANGED_EVENT = "prophet-api-token-changed";
 const WALLET_STORAGE_KEY = "prophet_api_wallet";
 
 const PROPHET_AUTH_REQUIRED_MESSAGE =
@@ -116,6 +118,10 @@ export function setProphetApiToken(token: string | null): void {
   if (!token) {
     memoryWallet = null;
     writeStoredWallet(null);
+  }
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(PROPHET_API_TOKEN_CHANGED_EVENT));
   }
 }
 
