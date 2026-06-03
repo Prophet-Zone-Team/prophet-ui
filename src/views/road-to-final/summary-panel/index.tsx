@@ -18,18 +18,23 @@ import { InsightItem } from "./insight-item";
 
 export function SummaryPanel({
   advancingThirdGroups,
+  championTeamId,
   finishType,
+  knockoutMethod,
   result,
   teamId,
   thirdPlaceOption
 }: {
   advancingThirdGroups: string[];
+  championTeamId?: string;
   finishType: FinishType;
+  knockoutMethod?: string;
   result?: PathResult;
   teamId: string;
   thirdPlaceOption?: ThirdPlaceAllocationOption;
 }) {
   const selectedTeam = getWorldCupTeamByIdOrCode(teamId);
+  const champion = getWorldCupTeamByIdOrCode(championTeamId ?? "");
   const strongestOpponent = getStrongestOpponent(result);
   const finalPotentialOpponents =
     result?.rounds.find((round) => round.round === "FINAL")?.possibleOpponentTeams.slice(0, 2) ?? [];
@@ -83,6 +88,13 @@ export function SummaryPanel({
               finalPotentialOpponents.map((team) => team.teamName).join(" / ") ||
               "Pending"
             }
+          />
+          {knockoutMethod ? (
+            <SummaryRow label="Knockout basis" value={knockoutMethod} />
+          ) : null}
+          <SummaryRow
+            label="Champion"
+            value={champion?.name ?? "Not selected yet"}
           />
         </dl>
       </Panel>

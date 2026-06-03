@@ -24,7 +24,8 @@ export function GroupPanel({
   onPlacementsChange,
   onSelectTeam,
   onThirdGroupsChange,
-  onKnockoutReset
+  onKnockoutReset,
+  hideToolbar = false
 }: {
   activeGroup: WorldCup2026Group;
   placements: GroupPlacements;
@@ -34,7 +35,39 @@ export function GroupPanel({
   onSelectTeam: (teamId: string) => void;
   onThirdGroupsChange: (groups: string[]) => void;
   onKnockoutReset: () => void;
+  hideToolbar?: boolean;
 }) {
+  const groupGrid = (
+    <div className="grid grid-cols-1 gap-[10px] sm:grid-cols-2">
+      {WORLD_CUP_2026_GROUP_ORDER.map((group) => (
+        <GroupCard
+          key={group}
+          activeGroup={activeGroup}
+          group={group}
+          thirdGroupAdvances={thirdGroups.includes(group)}
+          placements={placements[group]}
+          selectedTeamId={selectedTeamId}
+          onPlacementChange={(placement, nextTeamId) => {
+            onPlacementsChange(
+              updateGroupPlacement(placements, group, placement, nextTeamId)
+            );
+            onSelectTeam(nextTeamId);
+            onKnockoutReset();
+          }}
+          onSelectTeam={onSelectTeam}
+          onToggleThirdGroup={() => {
+            onThirdGroupsChange(toggleThirdGroup(thirdGroups, group));
+            onKnockoutReset();
+          }}
+        />
+      ))}
+    </div>
+  );
+
+  if (hideToolbar) {
+    return groupGrid;
+  }
+
   return (
     <Panel aria-labelledby="group-selector-title" className="flex flex-col">
       <div className="flex gap-[10px]">
@@ -55,30 +88,7 @@ export function GroupPanel({
         </div>
       </div>
 
-      <div className="mt-[16px] grid grid-cols-1 gap-[10px] sm:grid-cols-2">
-        {WORLD_CUP_2026_GROUP_ORDER.map((group) => (
-          <GroupCard
-            key={group}
-            activeGroup={activeGroup}
-            group={group}
-            thirdGroupAdvances={thirdGroups.includes(group)}
-            placements={placements[group]}
-            selectedTeamId={selectedTeamId}
-            onPlacementChange={(placement, nextTeamId) => {
-              onPlacementsChange(
-                updateGroupPlacement(placements, group, placement, nextTeamId)
-              );
-              onSelectTeam(nextTeamId);
-              onKnockoutReset();
-            }}
-            onSelectTeam={onSelectTeam}
-            onToggleThirdGroup={() => {
-              onThirdGroupsChange(toggleThirdGroup(thirdGroups, group));
-              onKnockoutReset();
-            }}
-          />
-        ))}
-      </div>
+      <div className="mt-[16px]">{groupGrid}</div>
 
       <div className="mt-[16px] flex flex-wrap gap-[8px]">
         <button
