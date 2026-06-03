@@ -7,7 +7,12 @@ import { getAccount } from "wagmi/actions";
 import type { ConnectedWallet } from "@privy-io/react-auth";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+import {
+  isExternalWagmiConnector,
+  releaseExternalWalletConnection,
+} from "@/lib/trading/wallet-disconnect";
 import { useAuthStore } from "@/store/auth-store";
+import type { AuthLoginMethod } from "@/store/auth-store";
 
 const WALLET_POLL_INTERVAL_MS = 200;
 const DEFAULT_WALLET_WAIT_MS = 20_000;
@@ -41,9 +46,44 @@ export function isPrivyAuthenticated() {
   return privyAuthenticatedRef;
 }
 
-export function findPrivyWallet(
+export function isPrivyEmbeddedWallet(wallet: ConnectedWallet): boolean {
+  return wallet.walletClientType === "privy" || wallet.connectorType === "embedded";
+}
+
+export function findPrivyEmbeddedWallet(
   expectedAddress?: string,
 ): ConnectedWallet | undefined {
+  const embeddedWallets = connectedWalletsRef.filter(isPrivyEmbeddedWallet);
+
+  if (expectedAddress) {
+    const matched = embeddedWallets.find((wallet) =>
+      addressesMatch(wallet.address, expectedAddress),
+    );
+
+    if (matched) {
+      return matched;
+    }
+  }
+
+  return embeddedWallets[0];
+}
+
+function prefersEmbeddedLogin(loginMethod: AuthLoginMethod | undefined) {
+  return loginMethod === "email" || loginMethod === "google";
+}
+
+export function findPrivyWallet(
+  expectedAddress?: string,
+  options?: { preferEmbedded?: boolean },
+): ConnectedWallet | undefined {
+  if (options?.preferEmbedded) {
+    const embedded = findPrivyEmbeddedWallet(expectedAddress);
+
+    if (embedded) {
+      return embedded;
+    }
+  }
+
   if (expectedAddress) {
     const matched = connectedWalletsRef.find((wallet) =>
       addressesMatch(wallet.address, expectedAddress),
@@ -51,6 +91,14 @@ export function findPrivyWallet(
 
     if (matched) {
       return matched;
+    }
+  }
+
+  if (!options?.preferEmbedded) {
+    const external = connectedWalletsRef.find((wallet) => !isPrivyEmbeddedWallet(wallet));
+
+    if (external) {
+      return external;
     }
   }
 
@@ -77,12 +125,15 @@ export async function waitForPrivySessionReady(options?: {
 export async function waitForPrivyWallet(options?: {
   expectedAddress?: string;
   timeoutMs?: number;
+  preferEmbedded?: boolean;
 }): Promise<ConnectedWallet | undefined> {
   const timeoutMs = options?.timeoutMs ?? DEFAULT_WALLET_WAIT_MS;
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
-    const wallet = findPrivyWallet(options?.expectedAddress);
+    const wallet = findPrivyWallet(options?.expectedAddress, {
+      preferEmbedded: options?.preferEmbedded,
+    });
 
     if (wallet && setActiveWalletRef) {
       return wallet;
@@ -96,8 +147,16 @@ export async function waitForPrivyWallet(options?: {
 
 export async function activatePrivyWallet(
   expectedAddress?: string,
+  options?: { preferEmbedded?: boolean },
 ): Promise<string | undefined> {
-  const wallet = await waitForPrivyWallet({ expectedAddress });
+  const preferEmbedded =
+    options?.preferEmbedded ??
+    prefersEmbeddedLogin(useAuthStore.getState().loginMethod);
+
+  const wallet = await waitForPrivyWallet({
+    expectedAddress,
+    preferEmbedded,
+  });
 
   if (!wallet || !setActiveWalletRef) {
     return undefined;
@@ -142,14 +201,40 @@ export function PrivyWalletBridge() {
       return;
     }
 
+    const store = useAuthStore.getState();
+    const preferEmbedded = prefersEmbeddedLogin(store.loginMethod);
     const account = getAccount(wagmiConfig);
+    const expectedAddress = store.session?.walletAddress;
 
     if (account.isConnected && account.address) {
-      return;
+      if (!preferEmbedded) {
+        return;
+      }
+
+      const embedded = findPrivyEmbeddedWallet(expectedAddress);
+
+      if (embedded && addressesMatch(account.address, embedded.address)) {
+        return;
+      }
+
+      if (isExternalWagmiConnector(account.connector?.id)) {
+        void releaseExternalWalletConnection().then(() => {
+          const wallet =
+            findPrivyWallet(expectedAddress, { preferEmbedded: true }) ??
+            findPrivyEmbeddedWallet(expectedAddress);
+
+          if (wallet) {
+            void setActiveWallet(wallet);
+          }
+        });
+
+        return;
+      }
     }
 
-    const expectedAddress = useAuthStore.getState().session?.walletAddress;
-    const wallet = findPrivyWallet(expectedAddress) ?? wallets[0];
+    const wallet =
+      findPrivyWallet(expectedAddress, { preferEmbedded }) ??
+      (preferEmbedded ? findPrivyEmbeddedWallet() : wallets[0]);
 
     if (wallet) {
       void setActiveWallet(wallet);

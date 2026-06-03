@@ -91,3 +91,43 @@ export const englandFlagClass = cn(
 
 export const emojiFlagClass =
   "inline-grid size-[23px] shrink-0 place-items-center rounded-full bg-white text-xl shadow-[0_1px_5px_rgba(32,72,122,0.14)]";
+
+export const inviteModalShellClass = cn(
+  "w-full max-w-[492px] rounded-[20px] border border-[#EBEBEB] bg-white p-[30px]",
+  "shadow-[0_0_10px_rgba(0,0,0,0.1)]",
+);
+
+export const inviteModalMobileShellClass =
+  "w-full overflow-y-auto px-3 pb-[100px] md:pb-6 pt-[45px]";
+
+export const inviteShareCardOuterClass = cn(
+  "mx-auto box-border w-fit max-w-full overflow-visible p-1.5",
+);
+
+export const inviteShareCardClass = cn(
+  "relative shrink-0 overflow-hidden rounded-[12px]",
+  "shadow-[0_0_10px_rgba(0,0,0,0.2)]",
+);
+
+export const inviteShareCardTitleClass = cn(
+  "bg-gradient-to-b from-white from-[21.825%] to-[#bbd0fd] bg-clip-text text-center text-[32px] font-semibold leading-[normal] text-transparent",
+);
+
+export const inviteShareCardProfitClass = "text-[#bbd0fd]";
+
+export const inviteShareCardFunderClass =
+  "text-center text-[11px] font-semibold leading-[1.3] text-[#7599ff]";
+
+export const inviteShareCardInviteClass =
+  "text-center text-[10px] font-light leading-[1.3] tracking-[-0.7px] text-white";
+
+export const inviteShareCardQrWrapClass =
+  "absolute bottom-[16px] right-[16px] z-20 rounded-[4px] border border-black bg-white p-[2px]";
+
+export const inviteLinkRowShellClass =
+  "rounded-[12px] border border-[#EBEBEB] bg-white px-4 py-4";
+
+export const inviteActionButtonClass = cn(
+  "inline-flex h-[52px] w-full items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white",
+  "text-[#909090] transition-colors hover:bg-[#f5f5f5] focus-visible:bg-[#f5f5f5]",
+);

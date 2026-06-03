@@ -8,19 +8,21 @@ import { COPIED_TOAST_VISIBLE_MS } from "@/lib/referral/config";
 import { copyReferralLink } from "@/lib/referral/copy-referral-link";
 import { cn } from "@/lib/cn";
 
-export type ReferralLinkCopyProps = {
+import { inviteLinkRowShellClass } from "./referral-ui";
+
+export type ReferralInviteLinkRowProps = {
   linkPrefix: string;
   referralCode: string;
   fullLink: string;
   className?: string;
 };
 
-export function ReferralLinkCopy({
+export function ReferralInviteLinkRow({
   linkPrefix,
   referralCode,
   fullLink,
   className,
-}: ReferralLinkCopyProps) {
+}: ReferralInviteLinkRowProps) {
   const [copiedVisible, setCopiedVisible] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -48,12 +50,12 @@ export function ReferralLinkCopy({
   }, [fullLink]);
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", inviteLinkRowShellClass, className)}>
       <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[14px] leading-[normal] text-[#909090]">Referral Link</p>
-        </div>
-        <div className="flex items-center gap-1.5">
+        <span className="shrink-0 text-[14px] leading-[normal] text-[#909090]">
+          Referral Link
+        </span>
+        <div className="flex min-w-0 items-center gap-1.5">
           <p className="truncate text-[16px] leading-[normal] text-black">
             <span className="text-[#909090]">{linkPrefix}</span>
             <span>{referralCode}</span>
@@ -71,7 +73,7 @@ export function ReferralLinkCopy({
 
       <CopiedToast
         visible={copiedVisible}
-        className="absolute right-0 top-0 z-10 -translate-y-[calc(100%+8px)]"
+        className="absolute right-4 top-0 z-10 -translate-y-[calc(100%+8px)]"
       />
     </div>
   );

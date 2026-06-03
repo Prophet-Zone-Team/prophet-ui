@@ -2,10 +2,9 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 
 import { formatImpactScore } from "./format";
-import { HighImpactSentimentIcon, NegativeSentimentIcon, PositiveSentimentIcon } from "./icons";
+import { NegativeSentimentIcon, PositiveSentimentIcon } from "./icons";
 import { NewsItemThumbnail } from "./news-item-thumbnail";
 import type { NewsImpactItem } from "./types";
-import teams from "@/data/teams";
 
 export type NewsItemProps = {
   item: NewsImpactItem;
@@ -20,10 +19,6 @@ function SentimentIcon({
 }) {
   if (sentiment === "negative") {
     return <NegativeSentimentIcon />;
-  }
-
-  if (sentiment === "neutral") {
-    return <HighImpactSentimentIcon />;
   }
 
   return <PositiveSentimentIcon />;
@@ -92,7 +87,6 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
                 "text-base font-[500] leading-[19px]",
                 item.sentiment === "positive" ? "text-[#7BCA25]" : "",
                 item.sentiment === "negative" ? "text-[#FF674B]" : "",
-                item.sentiment === "neutral" ? "text-[#F4B600]" : "",
               )}
             >
               {formatImpactScore(item.impactScore)}
@@ -109,7 +103,6 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
               "mt-[8px] text-[18px] font-[500] leading-[21px]",
               item.sentiment === "positive" ? "text-[#7BCA25]" : "",
               item.sentiment === "negative" ? "text-[#FF674B]" : "",
-              item.sentiment === "neutral" ? "text-[#F4B600]" : "",
             )}
           >
             {formatImpactScore(item.impactScore)}

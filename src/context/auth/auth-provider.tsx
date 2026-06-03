@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation";
 import { LoginModal } from "@/components/auth/login-modal";
 import { disconnectWagmiWallet } from "@/components/trading/wallet-provider";
 import {
+  clearStoredWalletConnectors,
   disconnectTradingSession,
   loadTradingSession
 } from "@/components/trading/trading-wallet-session";
@@ -53,6 +54,7 @@ import {
   type TradingEligibilityView
 } from "@/lib/trading/trading-eligibility-client";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
+import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 import { useTracksStore } from "@/store/tracks-store";
 import {
   logoutProphet,
@@ -110,6 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const oauthAutoConnectRef = useRef(false);
   const privyAutoLoginRef = useRef(false);
   const privyWalletCreatingRef = useRef(false);
+  const pendingPrivyLoginMethodRef = useRef<AuthLoginMethod | undefined>(
+    undefined,
+  );
 
   useLoginWithOAuth({
     onComplete: () => {
@@ -186,10 +191,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
+        await releaseExternalWalletConnection();
+      } catch {
+        // ignore external wallet disconnect errors during cleanup
+      }
+
+      try {
         await disconnectWagmiWallet();
       } catch {
         // ignore wagmi disconnect errors during cleanup
       }
+
+      clearStoredWalletConnectors();
 
       logoutProphet();
       useTracksStore.getState().reset();
@@ -395,9 +408,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshSession = useCallback(async () => {
     const store = useAuthStore.getState();
 
-    store.setLoginInProgress(true);
-    store.setStatus("loading");
-    store.setError(undefined);
     walletHandlingRef.current = true;
 
     try {
@@ -408,9 +418,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.setLoginInProgress(false);
         store.setStatus("ready");
         openSetupModalIfNeeded();
+
+        const loginMethod = store.loginMethod ?? pendingPrivyLoginMethodRef.current;
+
+        if (
+          (loginMethod === "email" || loginMethod === "google") &&
+          privyReady &&
+          privyAuthenticated &&
+          !privyAutoLoginRef.current &&
+          !isRegionBlockedRef.current
+        ) {
+          void startPrivyTradingLoginRef.current(
+            loginMethod === "google" ? "google" : "email",
+          );
+        }
+
+        walletHandlingRef.current = false;
         return;
       }
 
+      store.setLoginInProgress(true);
+      store.setStatus("loading");
+      store.setError(undefined);
       store.setSession(nextSession);
 
       // Embedded wallets (email / google) are reconnected asynchronously by
@@ -526,7 +555,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     handleWalletAccountSwitch,
     openSetupModalIfNeeded,
     privyAuthenticated,
-    refreshReadiness
+    privyReady,
+    refreshReadiness,
   ]);
 
   const syncCash = useCallback(async () => {
@@ -639,6 +669,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       store.setLoginMethod(method);
       store.setLoginModalOpen(true);
+      pendingPrivyLoginMethodRef.current = method;
 
       if (!privyReady || !privyAuthenticated) {
         return;
@@ -648,12 +679,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      pendingPrivyLoginMethodRef.current = undefined;
       privyAutoLoginRef.current = true;
       oauthAutoConnectRef.current = true;
       consumeOAuthPending();
       clearOAuthUrlParams();
 
       try {
+        await releaseExternalWalletConnection();
+
         if (privyWallets.length === 0 && !privyWalletCreatingRef.current) {
           privyWalletCreatingRef.current = true;
 
@@ -665,13 +699,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             privyWalletCreatingRef.current = false;
           }
 
-          await waitForPrivyWallet({ timeoutMs: 15_000 });
+          await waitForPrivyWallet({ timeoutMs: 15_000, preferEmbedded: true });
         }
 
         await runLogin(false);
-      } catch {
+        pendingPrivyLoginMethodRef.current = undefined;
+      } catch (loginError) {
         privyAutoLoginRef.current = false;
         oauthAutoConnectRef.current = false;
+        pendingPrivyLoginMethodRef.current = method;
+
+        const activeStore = useAuthStore.getState();
+        activeStore.setError(resolveWalletErrorMessage(loginError));
+        activeStore.setLoginModalOpen(true);
       }
     },
     [
@@ -806,6 +846,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPrivyModalOpen(false);
   }, []);
 
+  const completePrivyEmailLogin = useCallback(() => {
+    const store = useAuthStore.getState();
+    store.setLoginMethod("email");
+    store.setLoginModalOpen(true);
+    setPrivyModalOpen(false);
+    pendingPrivyLoginMethodRef.current = "email";
+    void startPrivyTradingLogin("email");
+  }, [startPrivyTradingLogin]);
+
   const setLoginMethod = useCallback((method: AuthLoginMethod | undefined) => {
     useAuthStore.getState().setLoginMethod(method);
   }, []);
@@ -837,12 +886,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPrivyModalOpen(false);
     privyAutoLoginRef.current = false;
     oauthAutoConnectRef.current = false;
+    pendingPrivyLoginMethodRef.current = undefined;
     store.setStatus("loading");
     store.setError(undefined);
     store.setLoginInProgress(false);
     store.setLoginStep(undefined);
     store.setLoginModalOpen(false);
-    store.setLoginMethod("wallet");
+    store.setLoginMethod(undefined);
 
     try {
       // Log out Privy first so PrivyWalletBridge stops re-binding wagmi.
@@ -981,7 +1031,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const oauthPending = window.localStorage.getItem(OAUTH_PENDING_STORAGE_KEY);
     const oauthReturnProvider = getOAuthReturnProvider();
+    const pendingMethod = pendingPrivyLoginMethodRef.current;
     const shouldAutoLogin =
+      Boolean(pendingMethod) ||
       Boolean(oauthPending) ||
       oauthReturnProvider === "google" ||
       store.loginMethod === "email" ||
@@ -992,11 +1044,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const method: AuthLoginMethod =
-      oauthPending === "google" ||
+      pendingMethod ??
+      (oauthPending === "google" ||
       oauthReturnProvider === "google" ||
       store.loginMethod === "google"
         ? "google"
-        : "email";
+        : "email");
 
     void startPrivyTradingLogin(method);
   }, [
@@ -1045,6 +1098,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     openLoginModalOnly,
     openPrivyLogin,
     closePrivyLogin,
+    completePrivyEmailLogin,
     setLoginMethod,
     refreshEligibility,
     openLogin,

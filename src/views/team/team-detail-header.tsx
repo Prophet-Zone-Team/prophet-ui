@@ -14,6 +14,7 @@ import {
   teamOpenTradeButtonClass
 } from "@/views/team/team-detail-ui";
 import { PageBack } from "@/components/ui/page-back";
+import { formatNumber } from "@/utils";
 
 export interface TeamDetailHeaderProps {
   snapshot: TeamMarketSnapshot;
@@ -62,11 +63,12 @@ export function TeamDetailHeader({
   detail
 }: TeamDetailHeaderProps) {
   const { team, market } = snapshot;
-  const fifaRank = detail?.fifaRank ?? team.fifaRank;
-  const displayName = detail?.name ?? team.name;
+  const fifaRank = detail?.fifaRank;
+  const displayName = detail?.name;
   const logoUrl = detail?.logo;
   const bestFinish = detail?.bestFinish;
   const titles = detail?.titles;
+  const marketValue = detail?.marketValue;
 
   async function copyPageLink() {
     if (typeof window === "undefined") {
@@ -94,7 +96,6 @@ export function TeamDetailHeader({
             />
           ) : (
             <TeamFlag
-              code={team.code}
               name={displayName}
               className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px]"
             />
@@ -137,7 +138,7 @@ export function TeamDetailHeader({
               label="FIFA rank"
               value={fifaRank ? `#${fifaRank}` : "Pending"}
             />
-            <HeroMetric label="Squad value" value="-" />
+            <HeroMetric label="Squad value" value={marketValue ? formatNumber(marketValue, 2, true, { prefix: "€", isShort: true, isShortUppercase: true }) : "-"} />
             <HeroMetric label="Best finish" value={bestFinish ?? "Pending"} />
             <HeroMetric
               label="Group"
@@ -155,7 +156,7 @@ export function TeamDetailHeader({
             <div className="flex items-center gap-2">
               <BookmarkControl
                 slug={market.polymarket?.slug || ""}
-                teamName={displayName}
+                teamName={displayName ?? ""}
               />
               <button
                 type="button"

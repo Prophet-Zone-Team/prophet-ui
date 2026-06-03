@@ -16,6 +16,7 @@ export interface ModalProps {
   overlayClassName?: string;
   hideCloseButton?: boolean;
   overlayCloseable?: boolean;
+  closeButtonClassName?: string;
 }
 
 export function Modal({
@@ -26,7 +27,8 @@ export function Modal({
   className,
   overlayClassName,
   hideCloseButton = false,
-  overlayCloseable = true
+  overlayCloseable = true,
+  closeButtonClassName,
 }: ModalProps) {
   useEffect(() => {
     if (!open) {
@@ -77,7 +79,7 @@ export function Modal({
         {!hideCloseButton ? (
           <button
             type="button"
-            className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#EBEBEB] bg-white text-[#18110F] transition-colors hover:bg-[#fafbfc]"
+            className={cn("absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#EBEBEB] bg-white text-[#18110F] transition-colors hover:bg-[#fafbfc]", closeButtonClassName)}
             aria-label="Close"
             onClick={onClose}
           >

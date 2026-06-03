@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { TeamDetailPage } from "@/components/team/team-detail-page";
-import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
+import { getTeamMarketSnapshot } from "@/data/providers/world-cup-market-data";
 
 interface TeamPageProps {
   searchParams: Promise<{
@@ -16,16 +16,13 @@ export default async function Page({ searchParams }: TeamPageProps) {
     notFound();
   }
 
-  const marketData = await getWorldCupMarketData({
-    includeFootballContext: false
-  });
-  const snapshot = marketData.snapshots.find((item) => item.team.id === slug);
+  const result = await getTeamMarketSnapshot(slug);
 
-  if (!snapshot) {
+  if (!result) {
     notFound();
   }
 
   return (
-    <TeamDetailPage snapshot={snapshot} dataStatus={marketData.meta} />
+    <TeamDetailPage snapshot={result.snapshot} dataStatus={result.meta} />
   );
 }

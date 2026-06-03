@@ -21,7 +21,7 @@ export function ImpactDistributionOverview({
     <section
       aria-label="Impact distribution overview"
       className={cn(
-        "box-border flex h-auto w-full max-w-none flex-col md:h-[174px] md:max-w-[696px]",
+        "box-border flex h-auto w-full max-w-none flex-col md:h-[174px]",
         "rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-4 md:px-5 md:py-5",
         className
       )}

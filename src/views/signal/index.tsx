@@ -16,7 +16,6 @@ import { SignalNewsDetailDrawer } from "@/views/signal/news-detail/drawer";
 import { SignalAllList } from "./all-news";
 import { SignalNewsItem } from "./signals/item";
 import { MostAffectedTeam } from "./most-affected-team";
-import { ImpactDistributionOverview } from "./overview";
 import { signalPageData } from "./mock-data";
 import type { SignalPageData } from "./mock-data";
 import { SignalTopCard } from "./top/card";
@@ -31,7 +30,6 @@ const SUMMARY_VARIANTS = [
   { variant: "today" as const, countKey: "todaySignal" as const },
   { variant: "positive" as const, countKey: "positive" as const },
   { variant: "negative" as const, countKey: "negative" as const },
-  { variant: "high-impact" as const, countKey: "highImpact" as const }
 ];
 
 export function SignalPage({
@@ -113,7 +111,7 @@ export function SignalPage({
         <h2 className="m-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
           All Signals &amp; News
         </h2>
-        <div className="mt-4 grid grid-cols-2 gap-3 md:mt-[20px] md:grid-cols-4 md:gap-[21px]">
+        <div className="mt-4 grid grid-cols-2 gap-3 md:mt-[20px] md:grid-cols-3 md:gap-[21px]">
           {SUMMARY_VARIANTS.map(({ variant, countKey }) => (
             <SignalNewsItem
               key={variant}
@@ -124,13 +122,13 @@ export function SignalPage({
         </div>
       </section>
 
-      <div className="mt-5 flex flex-col items-stretch gap-5 md:mt-[20px] lg:flex-row lg:gap-[37px]">
+      <div className="mt-5 flex flex-col items-stretch gap-3 md:mt-[20px] lg:flex-row lg:gap-5">
         <SignalAllList
           className="min-w-0 w-full shrink-0 rounded-[12px] border border-[#EBEBEB] bg-white lg:w-[679px]"
           onItemSelect={handleListItemSelect}
         />
 
-        <div className="flex min-w-0 w-full flex-col gap-5 lg:w-[696px] lg:shrink-0">
+        <div className="flex min-w-0 w-full flex-col gap-5 lg:flex-1">
           <MostAffectedTeam
             className="max-w-none"
             data={mostAffectedTeam}
@@ -140,10 +138,6 @@ export function SignalPage({
             className="max-w-none"
             data={topCategories}
             isLoading={isImpactLoading}
-          />
-          <ImpactDistributionOverview
-            className="max-w-none"
-            data={impactOverview}
           />
         </div>
       </div>
