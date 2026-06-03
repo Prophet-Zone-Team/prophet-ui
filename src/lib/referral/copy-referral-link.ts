@@ -1,12 +1,5 @@
-export async function copyReferralLink(url: string): Promise<boolean> {
-  if (!url || typeof navigator === "undefined" || !navigator.clipboard) {
-    return false;
-  }
+import { copyToClipboard } from "@/lib/clipboard/copy-to-clipboard";
 
-  try {
-    await navigator.clipboard.writeText(url);
-    return true;
-  } catch {
-    return false;
-  }
+export async function copyReferralLink(url: string): Promise<boolean> {
+  return copyToClipboard(url);
 }

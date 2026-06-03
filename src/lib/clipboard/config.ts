@@ -1,0 +1,1 @@
+export const COPIED_TOAST_VISIBLE_MS = 2000;

@@ -2,14 +2,14 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useCallback, useState } from "react";
 import {
   PortfolioIcon,
   LogoutIcon,
   FastBidIcon,
   ReferralIcon
 } from "@/layout/header/wallet-menu-icons";
-import { CheckIcon, CopyIcon, RightArrowIcon } from "@/components/icons";
+import { CopyIcon, RightArrowIcon } from "@/components/icons";
+import { CopyButton } from "@/components/feedback/copy-button";
 
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import {
@@ -47,22 +47,11 @@ export function WalletMenuDropdown({
   onOpenFastBid,
   isPrivateMode,
 }: WalletMenuDropdownProps) {
-  const [copied, setCopied] = useState(false);
   const fastBidAmount = useFastBidAmount();
   const hasHydrated = useConfigHydrated();
   const fastBidDisplay = formatFastBidAmountDisplay(
     hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT
   );
-
-  const copyAddress = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(polymarketAddress);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }, [polymarketAddress]);
 
   return (
     <motion.div
@@ -79,15 +68,13 @@ export function WalletMenuDropdown({
         <span className="truncate text-[14px] font-[400] leading-[17px] text-black">
           {formatShortWallet(polymarketAddress)}
         </span>
-        <button
-          type="button"
-          onClick={() => void copyAddress()}
+        <CopyButton
+          text={polymarketAddress}
+          ariaLabel="Copy Polymarket address"
           className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
-          aria-label={copied ? "Copied" : "Copy Polymarket address"}
-          title={copied ? "Copied" : "Copy Polymarket address"}
         >
-          {copied ? <CheckIcon /> : <CopyIcon />}
-        </button>
+          <CopyIcon />
+        </CopyButton>
       </div>
 
       {

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyLinkIcon } from "@/components/icons";
 import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
 import { TeamFlag } from "@/components/teams/team-flag";
@@ -49,16 +50,12 @@ function TeamLogo({
   );
 }
 
-async function copyPageLink() {
+function getPageUrl() {
   if (typeof window === "undefined") {
-    return;
+    return undefined;
   }
 
-  try {
-    await navigator.clipboard.writeText(window.location.href);
-  } catch {
-    // Clipboard unavailable
-  }
+  return window.location.href;
 }
 
 function HeaderControls({
@@ -75,14 +72,13 @@ function HeaderControls({
       <div className="flex items-center gap-3">
         {bookmark}
 
-        <button
-          type="button"
+        <CopyButton
+          text={getPageUrl}
+          ariaLabel="Copy page link"
           className="inline-flex size-11 items-center justify-center rounded-sm text-[#909090] transition-colors hover:text-black"
-          aria-label="Copy page link"
-          onClick={() => void copyPageLink()}
         >
           <CopyLinkIcon />
-        </button>
+        </CopyButton>
       </div>
 
       <OrderbookToggle

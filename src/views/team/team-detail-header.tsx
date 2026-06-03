@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyLinkIcon } from "@/components/icons";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { teamTradeHref } from "@/lib/routes/trade";
@@ -58,6 +59,14 @@ function getGroupLabel(groupName?: string): string {
   return groupName.startsWith("Group") ? groupName : `Group ${groupName}`;
 }
 
+function getPageUrl() {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  return window.location.href;
+}
+
 export function TeamDetailHeader({
   snapshot,
   detail
@@ -69,18 +78,6 @@ export function TeamDetailHeader({
   const bestFinish = detail?.bestFinish;
   const titles = detail?.titles;
   const marketValue = detail?.marketValue;
-
-  async function copyPageLink() {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-    } catch {
-      // Clipboard unavailable
-    }
-  }
 
   return (
     <header className="my-4">
@@ -158,14 +155,13 @@ export function TeamDetailHeader({
                 slug={market.polymarket?.slug || ""}
                 teamName={displayName ?? ""}
               />
-              <button
-                type="button"
+              <CopyButton
+                text={getPageUrl}
+                ariaLabel="Copy page link"
                 className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted hover:text-black"
-                aria-label="Copy page link"
-                onClick={() => void copyPageLink()}
               >
                 <CopyLinkIcon />
-              </button>
+              </CopyButton>
             </div>
           </div>
         </div>

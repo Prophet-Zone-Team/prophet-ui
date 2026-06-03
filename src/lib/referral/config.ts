@@ -21,4 +21,4 @@ export const REFERRAL_TWITTER_SHARE_URL = "";
 /** Placeholder until product provides share URLs. */
 export const REFERRAL_TELEGRAM_SHARE_URL = "";
 
-export const COPIED_TOAST_VISIBLE_MS = 2000;
+export { COPIED_TOAST_VISIBLE_MS } from "@/lib/clipboard/config";

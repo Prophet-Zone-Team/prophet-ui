@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { CheckIcon, CopyIcon } from "@/components/icons";
+import { CopyButton } from "@/components/feedback/copy-button";
+import { CopyIcon } from "@/components/icons";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { usePendingFunderUsdc } from "@/hooks/funding";
@@ -35,7 +36,6 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
   const { session, portfolio, status, onConnectWallet, reload } =
     usePortfolioContext();
 
-  const [copied, setCopied] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
   const [privateTopupIntroOpen, setPrivateTopupIntroOpen] = useState(false);
   const [privateTopupGuideOpen, setPrivateTopupGuideOpen] = useState(false);
@@ -50,20 +50,6 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
     usePendingFunderUsdc({
       enabled: Boolean(session)
     });
-
-  const copyAddress = useCallback(async () => {
-    if (!polymarketAddress) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(polymarketAddress);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }, [polymarketAddress]);
 
   const onConfirmPendingDeposit = async () => {
     try {
@@ -111,15 +97,13 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
             <span className={portfolioWalletAddressClass}>
               {formatShortWallet(polymarketAddress)}
             </span>
-            <button
-              type="button"
-              onClick={() => void copyAddress()}
+            <CopyButton
+              text={polymarketAddress}
+              ariaLabel="Copy Polymarket address"
               className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
-              aria-label={copied ? "Copied" : "Copy Polymarket address"}
-              title={copied ? "Copied" : "Copy Polymarket address"}
             >
-              {copied ? <CheckIcon /> : <CopyIcon />}
-            </button>
+              <CopyIcon />
+            </CopyButton>
           </div>
         ) : (
           <span className="text-[20px] font-[556] leading-6 text-prophet-muted">

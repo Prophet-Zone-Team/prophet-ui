@@ -1,11 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-
 import { CopyIcon } from "@/components/icons";
 import { CopiedToast } from "@/components/feedback/copied-toast";
-import { COPIED_TOAST_VISIBLE_MS } from "@/lib/referral/config";
-import { copyReferralLink } from "@/lib/referral/copy-referral-link";
+import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
 import { cn } from "@/lib/cn";
 
 export type ReferralLinkCopyProps = {
@@ -21,31 +18,7 @@ export function ReferralLinkCopy({
   fullLink,
   className,
 }: ReferralLinkCopyProps) {
-  const [copiedVisible, setCopiedVisible] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  const handleCopy = useCallback(async () => {
-    const ok = await copyReferralLink(fullLink);
-    if (!ok) {
-      return;
-    }
-
-    setCopiedVisible(true);
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      setCopiedVisible(false);
-    }, COPIED_TOAST_VISIBLE_MS);
-  }, [fullLink]);
+  const { copiedVisible, copy } = useCopyWithToast();
 
   return (
     <div className={cn("relative", className)}>
@@ -62,7 +35,7 @@ export function ReferralLinkCopy({
             type="button"
             className="inline-flex shrink-0 items-center justify-center p-1 text-[#909090] transition-opacity hover:opacity-70"
             aria-label="Copy referral link"
-            onClick={() => void handleCopy()}
+            onClick={() => void copy(fullLink)}
           >
             <CopyIcon />
           </button>

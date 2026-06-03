@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
+import { CopyButton } from "@/components/feedback/copy-button";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { PRIVATE_TOPUP_INTRO_MODAL_WIDTH } from "@/views/portfolio/private-topup/config";
@@ -39,18 +38,6 @@ export function PrivateTopupIntroDialog({
   onOpenGuide,
   onChangeWallet,
 }: PrivateTopupIntroDialogProps) {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(walletAddress);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
-
   return (
     <FundingResponsiveOverlay
       open={open}
@@ -118,11 +105,10 @@ export function PrivateTopupIntroDialog({
                     <p className="m-0 truncate text-[16px] font-[556] text-black">
                       {formatShortWallet(walletAddress)}
                     </p>
-                    <button
-                      type="button"
+                    <CopyButton
+                      text={walletAddress}
+                      ariaLabel="Copy wallet address"
                       className="inline-flex shrink-0 border-0 bg-transparent p-0 transition-opacity hover:opacity-70"
-                      aria-label={copied ? "Copied" : "Copy wallet address"}
-                      onClick={() => void handleCopy()}
                     >
                       <img
                         src="/icons/icon-copy.svg"
@@ -130,7 +116,7 @@ export function PrivateTopupIntroDialog({
                         className="size-3"
                         aria-hidden
                       />
-                    </button>
+                    </CopyButton>
                   </div>
                 </div>
               </div>

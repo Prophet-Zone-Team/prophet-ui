@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { CheckIcon, CopyIcon } from "@/components/icons";
+import { CopyButton } from "@/components/feedback/copy-button";
+import { CopyIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { formatNumber } from "@/utils";
@@ -30,22 +31,7 @@ export function PrivateAccountCard({
   topupWalletConnected,
   onTopUp,
 }: PrivateAccountCardProps) {
-  const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  async function handleCopy() {
-    if (!address) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
 
   function handleRefresh() {
     setRefreshing(true);
@@ -74,14 +60,13 @@ export function PrivateAccountCard({
                   <p className="m-0 truncate text-lg font-[556] text-white">
                     {formatShortWallet(address)}
                   </p>
-                  <button
-                    type="button"
+                  <CopyButton
+                    text={address}
+                    ariaLabel="Copy private account address"
                     className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-white/70 transition-colors hover:text-white"
-                    aria-label="Copy private account address"
-                    onClick={() => void handleCopy()}
                   >
-                    {copied ? <CheckIcon /> : <CopyIcon />}
-                  </button>
+                    <CopyIcon />
+                  </CopyButton>
                 </div>
               ) : (
                 <p className="m-0 mt-1 text-lg font-[556] text-white">-</p>

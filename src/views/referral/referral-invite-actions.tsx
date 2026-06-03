@@ -1,14 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useState, type RefObject } from "react";
 
 import { CopiedToast } from "@/components/feedback/copied-toast";
+import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
 import {
-  COPIED_TOAST_VISIBLE_MS,
   REFERRAL_TELEGRAM_SHARE_URL,
   REFERRAL_TWITTER_SHARE_URL,
 } from "@/lib/referral/config";
-import { copyReferralLink } from "@/lib/referral/copy-referral-link";
 import { downloadShareCardPng } from "@/lib/referral/download-share-card";
 import { cn } from "@/lib/cn";
 
@@ -29,26 +28,7 @@ export function ReferralInviteActions({
   className,
 }: ReferralInviteActionsProps) {
   const [downloading, setDownloading] = useState(false);
-  const [copiedVisible, setCopiedVisible] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  const showCopiedToast = useCallback(() => {
-    setCopiedVisible(true);
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      setCopiedVisible(false);
-    }, COPIED_TOAST_VISIBLE_MS);
-  }, []);
+  const { copiedVisible, copy } = useCopyWithToast();
 
   const handleTwitter = useCallback(() => {
     if (!REFERRAL_TWITTER_SHARE_URL) {
@@ -79,11 +59,8 @@ export function ReferralInviteActions({
   }, [downloading, shareCardReady, shareCardRef]);
 
   const handleCopyLink = useCallback(async () => {
-    const ok = await copyReferralLink(fullLink);
-    if (ok) {
-      showCopiedToast();
-    }
-  }, [fullLink, showCopiedToast]);
+    await copy(fullLink);
+  }, [copy, fullLink]);
 
   return (
     <div className={cn("relative grid grid-cols-4 gap-3", className)}>
