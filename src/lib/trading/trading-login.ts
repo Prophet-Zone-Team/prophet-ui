@@ -234,6 +234,8 @@ export async function connectWallet(options?: {
 
   const account = getAccount(wagmiConfig);
 
+  console.log("account", account);
+
   if (account.isConnected && account.address) {
     if (
       !options?.expectedAddress ||

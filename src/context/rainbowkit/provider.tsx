@@ -1,16 +1,19 @@
 "use client";
 
-import React from "react";
-import { polygon } from "viem/chains";
-import { WagmiProvider, cookieToInitialState } from "wagmi";
+import React, { useState } from "react";
+import { cookieToInitialState } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import "@rainbow-me/rainbowkit/styles.css";
+import { PrivyProvider } from "@privy-io/react-auth";
+import { WagmiProvider } from "@privy-io/wagmi";
 
 import { RainbowConnectGate } from "@/context/rainbowkit/connect-gate";
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
-
-const queryClient = new QueryClient();
+import {
+  PRIVY_APP_ID,
+  PRIVY_CLIENT_ID,
+  privyConfig,
+} from "@/context/privy/privy-config";
+import { PrivyWalletBridge } from "@/context/privy/privy-wallet-bridge";
 
 export default function RainbowProvider({
   children,
@@ -19,15 +22,23 @@ export default function RainbowProvider({
   children: React.ReactNode;
   cookie?: string | null;
 }) {
+  const [queryClient] = useState(() => new QueryClient());
   const initialState = cookieToInitialState(wagmiConfig, cookie);
 
+  if (!PRIVY_APP_ID && typeof window !== "undefined") {
+    console.warn(
+      "[privy] NEXT_PUBLIC_PRIVY_APP_ID is not set. Authentication will not work.",
+    );
+  }
+
   return (
-    <WagmiProvider config={wagmiConfig} initialState={initialState}>
+    <PrivyProvider appId={PRIVY_APP_ID} clientId={PRIVY_CLIENT_ID} config={privyConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider initialChain={polygon} modalSize="compact" locale="en-US">
+        <WagmiProvider config={wagmiConfig} initialState={initialState}>
+          <PrivyWalletBridge />
           <RainbowConnectGate>{children}</RainbowConnectGate>
-        </RainbowKitProvider>
+        </WagmiProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </PrivyProvider>
   );
 }

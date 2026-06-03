@@ -53,7 +53,6 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
     error,
     cash,
     cashStatus,
-    openLogin,
     openLoginModalOnly,
     disconnect,
   } = useAuth();
@@ -105,19 +104,9 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
     });
   }, [cash?.available, cashStatus]);
 
-  async function handleLogin() {
+  function handleLogin() {
     setMessage(undefined);
-
-    try {
-      if (isRegionBlocked) {
-        openLoginModalOnly();
-        return;
-      }
-
-      await openLogin();
-    } catch (loginError) {
-      setMessage(loginError instanceof Error ? loginError.message : String(loginError));
-    }
+    openLoginModalOnly();
   }
 
   async function logout() {
@@ -140,7 +129,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
         <WalletLoginButton
           label={loginLabel}
           disabled={!hydrated || loginInProgress}
-          onClick={() => void handleLogin()}
+          onClick={handleLogin}
         />
         {(message ?? error) ? (
           <p className="mt-2 max-w-[220px] text-right text-xs text-prophet-red">
