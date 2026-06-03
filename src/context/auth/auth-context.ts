@@ -7,6 +7,7 @@ import type { TradingEligibilityView } from "@/lib/trading/trading-eligibility-c
 import type { TradingSetupSteps } from "@/lib/trading/trading-setup";
 import type { CashBalanceView, FundingLoadStatus } from "@/types/funding";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
+import type { AuthLoginMethod } from "@/store/auth-store";
 export type EligibilityLoadStatus = "idle" | "loading" | "ready";
 
 export interface AuthContextValue {
@@ -26,7 +27,13 @@ export interface AuthContextValue {
   eligibilityView: TradingEligibilityView | undefined;
   eligibilityLoadStatus: EligibilityLoadStatus;
   isRegionBlocked: boolean;
+  loginMethod: AuthLoginMethod | undefined;
+  privyModalOpen: boolean;
+  privyReady: boolean;
   openLoginModalOnly: () => void;
+  openPrivyLogin: () => void;
+  closePrivyLogin: () => void;
+  setLoginMethod: (method: AuthLoginMethod | undefined) => void;
   refreshEligibility: () => Promise<TradingEligibilityView | undefined>;
   openLogin: () => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
   connectWallet: () => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
