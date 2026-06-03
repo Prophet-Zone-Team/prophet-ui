@@ -262,20 +262,18 @@ function ChartTooltip({
 
   return (
     <div className="min-w-[140px] rounded-xl border border-[#EBEBEB] bg-white p-3 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-      <p className="m-0 text-sm font-[556] leading-[17px] text-[#909090]">
+      <p className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
         {formatTooltipDate(dateLabel)}
       </p>
-      <p className="m-0 mt-2 text-base font-[556] leading-[19px] text-black">
-        {typeof probability === "number"
-          ? formatProbability(probability)
-          : "—"}
+      <p className="m-0 mt-2 text-[16px] font-[500] leading-[19px] text-black">
+        {typeof probability === "number" ? formatProbability(probability) : "—"}
       </p>
       {annotation ? (
         <>
-          <p className="m-0 mt-3 text-sm font-[556] leading-[17px] text-[#909090]">
+          <p className="m-0 mt-3 text-[14px] font-[400] leading-[17px] text-[#909090]">
             Match
           </p>
-          <p className="m-0 mt-1 text-base font-[556] leading-[19px] text-black">
+          <p className="m-0 mt-1 text-[16px] font-[500] leading-[19px] text-black">
             {annotation.matchLabel}
           </p>
         </>
