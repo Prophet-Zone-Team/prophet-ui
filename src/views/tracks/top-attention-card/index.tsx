@@ -153,13 +153,14 @@ function TopAttentionTeamCard({
 }: TopAttentionTeamCardProps) {
   const router = useRouter();
   const { team, market } = snapshot;
-  const tradeHref = teamTradeHref(team.id);
+  const tradeHref = teamTradeHref(market?.slug || "");
   const volumeLabel = `$${formatVolume(market.volume)}`;
+
   const attentionLabel =
     attention !== undefined ? `🔥${formatAttention(attention)}` : undefined;
 
   function navigateToTrade() {
-    router.push(tradeHref);
+   if (market?.slug) router.push(tradeHref);
   }
 
   function handleCardKeyDown(event: KeyboardEvent<HTMLElement>) {
@@ -234,6 +235,7 @@ function TopAttentionMatchCard({
   const attentionLabel =
     attention !== undefined ? `🔥${formatAttention(attention)}` : undefined;
   const matchTitle = `${homeTeam.name} vs ${awayTeam.name}`;
+
   const tradeHref = gameTradeHref(match.id);
 
   function navigateToTrade() {
@@ -329,12 +331,12 @@ function TopAttentionStatsRow({
     <div
       className={cn(
         "mt-6 grid flex-1 items-start gap-2",
-        attention ? "grid-cols-3" : "grid-cols-2"
+        attention !== undefined ? "grid-cols-3" : "grid-cols-2"
       )}
     >
-      <StatColumn label="Probability" value={probability} />
+      <StatColumn label="Net" value={probability} />
       <StatColumn label="Volume" value={volume} />
-      {attention ? (
+      {attention !== undefined ? (
         <StatColumn label="Attention" value={attention} align="center" />
       ) : null}
     </div>

@@ -37,6 +37,34 @@ describe("prophet-top-attention-mapper", () => {
     assert.ok(card.snapshot && card.snapshot.market.probability > 0);
   });
 
+  it("maps team track attention from API item", () => {
+    const item: ProphetUserTrackItem = {
+      category: "Highest Volume",
+      slug: "world-cup-winner",
+      team_name: "Uzbekistan",
+      volume: "55124213.81841756",
+      probobility: "0.0005",
+      attention: 0,
+      markets: [
+        {
+          slug: "will-uzbekistan-win-the-2026-fifa-world-cup-773",
+          groupItemTitle: "Uzbekistan",
+          volume: "55124213.81841756",
+          outcomePrices: '["0.0005", "0.9995"]'
+        }
+      ]
+    };
+
+    const card = mapProphetTopTrackItemToCard(item, "team");
+
+    assert.ok(card);
+    assert.equal(card.variant, undefined);
+    if (card.variant !== "match") {
+      assert.equal(card.attention, 0);
+      assert.equal(card.badge, "Highest Volume");
+    }
+  });
+
   it("maps game track with comma-separated team_name", () => {
     const item: ProphetUserTrackItem = {
       category: "game",

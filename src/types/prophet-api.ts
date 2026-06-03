@@ -276,6 +276,7 @@ export interface ProphetUserTrackItem {
   goals?: number[] | null;
   team?: ProphetWorldCupTeam;
   markets?: ProphetUserTrackMarket[];
+  attention?: number;
 }
 
 /** Response from GET /v1/user/tracks/top (public, Redis-cached). */

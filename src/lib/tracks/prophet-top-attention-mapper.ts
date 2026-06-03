@@ -208,28 +208,48 @@ function prepareTopTrackItem(
 
 function trackCardToTopAttentionCard(
   card: TrackCardProps,
-  badgeLabel?: string
+  badgeLabel?: string,
+  attention?: number
 ): TopAttentionCardProps | undefined {
   if (card.variant === "game") {
-    return mapGameTrackCardToTopAttention(card, badgeLabel);
+    return mapGameTrackCardToTopAttention(card, badgeLabel, attention);
   }
 
-  return mapTeamTrackCardToTopAttention(card as TrackCardTeamProps, badgeLabel);
+  return mapTeamTrackCardToTopAttention(
+    card as TrackCardTeamProps,
+    badgeLabel,
+    attention
+  );
+}
+
+function resolveTrackAttention(
+  item: ProphetUserTrackItem
+): number | undefined {
+  const { attention } = item;
+
+  if (attention === undefined || attention === null) {
+    return undefined;
+  }
+
+  return Number.isFinite(attention) ? attention : undefined;
 }
 
 function mapTeamTrackCardToTopAttention(
   card: TrackCardTeamProps,
-  badgeLabel?: string
+  badgeLabel?: string,
+  attention?: number
 ): TopAttentionCardProps {
   return {
     snapshot: card.snapshot,
-    ...(badgeLabel ? { badge: badgeLabel } : {})
+    ...(badgeLabel ? { badge: badgeLabel } : {}),
+    ...(attention !== undefined ? { attention } : {})
   };
 }
 
 function mapGameTrackCardToTopAttention(
   card: TrackCardGameProps,
-  badgeLabel?: string
+  badgeLabel?: string,
+  attention?: number
 ): TopAttentionCardProps {
   return {
     variant: "match",
@@ -238,7 +258,8 @@ function mapGameTrackCardToTopAttention(
     awayTeam: card.awayTeam,
     probability: card.probability,
     volume: card.volume,
-    ...(badgeLabel ? { badge: badgeLabel } : {})
+    ...(badgeLabel ? { badge: badgeLabel } : {}),
+    ...(attention !== undefined ? { attention } : {})
   };
 }
 
@@ -254,7 +275,8 @@ export function mapProphetTopTrackItemToCard(
     return undefined;
   }
 
-  const topCard = trackCardToTopAttentionCard(trackCard, badgeLabel);
+  const attention = resolveTrackAttention(prepared);
+  const topCard = trackCardToTopAttentionCard(trackCard, badgeLabel, attention);
 
   if (topCard?.variant === "match") {
     return {
