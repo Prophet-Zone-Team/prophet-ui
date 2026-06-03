@@ -7,6 +7,7 @@ import { getAccount } from "wagmi/actions";
 import type { ConnectedWallet } from "@privy-io/react-auth";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+import { useAuthStore } from "@/store/auth-store";
 
 const WALLET_POLL_INTERVAL_MS = 200;
 const DEFAULT_WALLET_WAIT_MS = 20_000;
@@ -54,6 +55,23 @@ export function findPrivyWallet(
   }
 
   return connectedWalletsRef[0];
+}
+
+export async function waitForPrivySessionReady(options?: {
+  timeoutMs?: number;
+}): Promise<boolean> {
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_WALLET_WAIT_MS;
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    if (privyAuthenticatedRef) {
+      return true;
+    }
+
+    await sleep(WALLET_POLL_INTERVAL_MS);
+  }
+
+  return privyAuthenticatedRef;
 }
 
 export async function waitForPrivyWallet(options?: {
@@ -130,7 +148,12 @@ export function PrivyWalletBridge() {
       return;
     }
 
-    void setActiveWallet(wallets[0]);
+    const expectedAddress = useAuthStore.getState().session?.walletAddress;
+    const wallet = findPrivyWallet(expectedAddress) ?? wallets[0];
+
+    if (wallet) {
+      void setActiveWallet(wallet);
+    }
   }, [authenticated, ready, setActiveWallet, wallets]);
 
   return null;

@@ -3,6 +3,10 @@
 import { getAccount, reconnect, watchAccount } from "wagmi/actions";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+import {
+  activatePrivyWallet,
+  waitForPrivySessionReady,
+} from "@/context/privy/privy-wallet-bridge";
 
 import {
   getPrimaryAuthorizedWalletAccount,
@@ -23,6 +27,33 @@ export interface WalletConnectionSnapshot {
 
 const DEBOUNCE_MS = 300;
 const WALLET_RECONNECT_TIMEOUT_MS = 10_000;
+const SESSION_RECONNECT_TIMEOUT_MS = 20_000;
+
+/**
+ * Restores wagmi's active connector after refresh for extension / external wallets
+ * linked through Privy. Must run after Privy has finished booting.
+ */
+export async function ensureTradingWalletReconnected(
+  expectedAddress: string,
+  options?: { timeoutMs?: number },
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const timeoutMs = options?.timeoutMs ?? SESSION_RECONNECT_TIMEOUT_MS;
+
+  await waitForPrivySessionReady({ timeoutMs });
+
+  try {
+    await reconnect(wagmiConfig);
+  } catch {
+    // wagmi may have nothing to reconnect yet; Privy activation handles that case.
+  }
+
+  await activatePrivyWallet(expectedAddress);
+  await waitForWalletReady({ timeoutMs });
+}
 
 function isWalletSettling() {
   const status = getAccount(wagmiConfig).status;
