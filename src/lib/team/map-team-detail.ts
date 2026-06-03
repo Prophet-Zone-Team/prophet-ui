@@ -41,7 +41,7 @@ export interface TeamDetailViewModel {
   keyStars: KeyPlayerView[];
   strengthMetrics: StrengthMetric[];
   strengthScore?: number;
-  nextMatch: NextMatchView;
+  nextMatch?: NextMatchView;
   titles: number;
 }
 
@@ -99,8 +99,12 @@ export function mapRecentMatches(
 }
 
 export function mapNextMatch(
-  match: ProphetGetTeamDetailNextMatch
-): NextMatchView {
+  match: ProphetGetTeamDetailNextMatch | null | undefined
+): NextMatchView | undefined {
+  if (!match) {
+    return undefined;
+  }
+
   return {
     id: match.id,
     apiFixtureId: match.api_fixture_id,

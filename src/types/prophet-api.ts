@@ -533,6 +533,6 @@ export interface ProphetGetTeamDetailData {
   news: ProphetGetTeamDetailNews[];
   team_peers: ProphetGetTeamDetailPeer[];
   titles: number;
-  next_match: ProphetGetTeamDetailNextMatch;
+  next_match: ProphetGetTeamDetailNextMatch | null;
   market_value: string;
 }
