@@ -140,7 +140,7 @@ export function PortfolioPositionsTable({
       endDate: position.endDate
     });
     const marketClosed = Boolean(marketClosedReason);
-    const canSell = position.size > 0 && Boolean(position.slug?.trim()) && !marketClosed;
+    const canSell = position.size > 0 && Boolean(position.slug?.trim());
     const canRedeem = canRedeemPosition(position);
     const rowKey = `${position.conditionId}:${position.asset}`;
     const isSelling = sellingAsset === position.asset;
