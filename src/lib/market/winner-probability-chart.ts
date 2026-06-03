@@ -10,7 +10,6 @@ export const WINNER_CHART_TIME_RANGES: {
   id: WinnerChartTimeRange;
   label: string;
 }[] = [
-  { id: "1H", label: "1H" },
   { id: "1D", label: "1D" },
   { id: "1W", label: "1W" },
   { id: "1M", label: "1M" },
