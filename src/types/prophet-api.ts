@@ -534,4 +534,5 @@ export interface ProphetGetTeamDetailData {
   team_peers: ProphetGetTeamDetailPeer[];
   titles: number;
   next_match: ProphetGetTeamDetailNextMatch;
+  market_value: string;
 }

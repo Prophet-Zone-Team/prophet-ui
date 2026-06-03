@@ -28,6 +28,7 @@ export interface TeamDetailHeaderData {
   fifaRank?: number;
   groupName?: string;
   titles?: number;
+  marketValue?: string;
 }
 
 export interface TeamDetailViewModel {
@@ -180,6 +181,7 @@ export function mapTeamDetailResponse(
       fifaRank: data.fifa_rank,
       groupName: data.group_name || undefined,
       titles: data.titles,
+      marketValue: data.market_value,
     },
     formResults: data.recent_form?.result ?? [],
     latestLabel: data.recent_form?.latest || undefined,

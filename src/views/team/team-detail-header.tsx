@@ -14,6 +14,7 @@ import {
   teamOpenTradeButtonClass
 } from "@/views/team/team-detail-ui";
 import { PageBack } from "@/components/ui/page-back";
+import { formatNumber } from "@/utils";
 
 export interface TeamDetailHeaderProps {
   snapshot: TeamMarketSnapshot;
@@ -67,6 +68,7 @@ export function TeamDetailHeader({
   const logoUrl = detail?.logo;
   const bestFinish = detail?.bestFinish;
   const titles = detail?.titles;
+  const marketValue = detail?.marketValue;
 
   async function copyPageLink() {
     if (typeof window === "undefined") {
@@ -137,7 +139,7 @@ export function TeamDetailHeader({
               label="FIFA rank"
               value={fifaRank ? `#${fifaRank}` : "Pending"}
             />
-            <HeroMetric label="Squad value" value="-" />
+            <HeroMetric label="Squad value" value={marketValue ? formatNumber(marketValue, 2, true, { prefix: "€", isShort: true, isShortUppercase: true }) : "-"} />
             <HeroMetric label="Best finish" value={bestFinish ?? "Pending"} />
             <HeroMetric
               label="Group"
