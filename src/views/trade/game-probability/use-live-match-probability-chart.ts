@@ -17,6 +17,7 @@ import {
   filterPriceHistoryByMatchStart,
   mapBinaryFixturePointsToElapsedFromStartTs,
   mapFixturePointsToElapsedFromStartTs,
+  resolveEffectiveKickoffAt,
   resolveKickoffElapsedSeconds,
   resolveLiveChartClobInterval,
   resolveLiveChartMaxElapsed,
