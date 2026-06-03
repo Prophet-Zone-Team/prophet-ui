@@ -11,6 +11,9 @@ import { getAccount } from "wagmi/actions";
 import { getConnectGate } from "@/context/rainbowkit/connect-gate";
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import { signMessageWithWallet } from "@/components/trading/wallet-provider";
+import { activatePrivyWallet } from "@/context/privy/privy-wallet-bridge";
+import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
+import { useAuthStore } from "@/store/auth-store";
 import { deriveTradingCredentials } from "@/lib/trading/clob-credentials-client";
 import {
   deployDepositWallet,
@@ -232,11 +235,24 @@ export async function connectWallet(options?: {
 }): Promise<string> {
   options?.onStep?.("requesting_wallet");
 
+  const loginMethod = useAuthStore.getState().loginMethod;
+  const preferEmbedded = loginMethod === "email" || loginMethod === "google";
+
+  if (preferEmbedded) {
+    await releaseExternalWalletConnection();
+
+    const embeddedAddress = await activatePrivyWallet(options?.expectedAddress, {
+      preferEmbedded: true,
+    });
+
+    if (embeddedAddress) {
+      return embeddedAddress;
+    }
+  }
+
   const account = getAccount(wagmiConfig);
 
-  console.log("account", account);
-
-  if (account.isConnected && account.address) {
+  if (account.isConnected && account.address && !preferEmbedded) {
     if (
       !options?.expectedAddress ||
       account.address.toLowerCase() === options.expectedAddress.toLowerCase()

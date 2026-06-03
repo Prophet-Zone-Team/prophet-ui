@@ -80,3 +80,23 @@ export function getStoredTradingWalletInfo(walletAddress?: string) {
 function getProviderStorageKey(walletAddress: string) {
   return `${PROVIDER_STORAGE_PREFIX}:${walletAddress.toLowerCase()}`;
 }
+
+export function clearStoredWalletConnectors() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const keysToRemove: string[] = [];
+
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+
+    if (key?.startsWith(`${PROVIDER_STORAGE_PREFIX}:`)) {
+      keysToRemove.push(key);
+    }
+  }
+
+  for (const key of keysToRemove) {
+    window.localStorage.removeItem(key);
+  }
+}

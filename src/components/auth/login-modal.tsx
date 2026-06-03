@@ -36,6 +36,7 @@ interface LoginModalProps {
     | "connectWallet"
     | "openPrivyLogin"
     | "closePrivyLogin"
+    | "completePrivyEmailLogin"
     | "setLoginMethod"
     | "signClobCredentials"
     | "signTokenApprovals"
@@ -84,6 +85,7 @@ export function LoginModal({ auth }: LoginModalProps) {
     connectWallet,
     openPrivyLogin,
     closePrivyLogin,
+    completePrivyEmailLogin,
     setLoginMethod,
     signClobCredentials,
     signTokenApprovals,
@@ -267,10 +269,7 @@ export function LoginModal({ auth }: LoginModalProps) {
           closePrivyLogin();
           void connectWallet();
         }}
-        onEmailAuthenticated={() => {
-          setLoginMethod("email");
-          closePrivyLogin();
-        }}
+        onEmailAuthenticated={completePrivyEmailLogin}
       />
     </Modal>
   );
