@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 
 import { NotificationQueuePresenter } from "@/components/notification/notification-queue-presenter";
+import { useAuth } from "@/context/auth";
 import { enqueueProphetNotificationSamples } from "@/lib/notification/enqueue-prophet-notification-samples";
 import { isMockProphetNotificationsEnabled } from "@/lib/notification/mock-prophet-notifications-config";
 import { getProphetNotificationWsClient } from "@/lib/notification/prophet-notification-ws-client";
@@ -21,6 +22,7 @@ export interface ProphetNotificationWsProviderProps {
 export function ProphetNotificationWsProvider({
   children,
 }: ProphetNotificationWsProviderProps) {
+  const { session, hydrated } = useAuth();
   const enqueue = useNotificationWsStore((state) => state.enqueue);
   const setConnectionStatus = useNotificationWsStore(
     (state) => state.setConnectionStatus,
@@ -29,7 +31,16 @@ export function ProphetNotificationWsProvider({
   useEffect(() => {
     const client = getProphetNotificationWsClient();
 
+    const canSubscribe = () =>
+      hydrated && Boolean(session) && Boolean(getProphetApiToken());
+
     const syncConnection = () => {
+      if (!canSubscribe()) {
+        client.disconnect();
+        setConnectionStatus("idle");
+        return;
+      }
+
       const token = getProphetApiToken();
 
       if (!token) {
@@ -40,6 +51,12 @@ export function ProphetNotificationWsProvider({
 
       client.connect(token);
     };
+
+    if (!canSubscribe()) {
+      client.disconnect();
+      setConnectionStatus("idle");
+      return;
+    }
 
     syncConnection();
 
@@ -63,8 +80,7 @@ export function ProphetNotificationWsProvider({
         return;
       }
 
-      const token = getProphetApiToken();
-      setConnectionStatus(token ? "idle" : "idle");
+      setConnectionStatus("idle");
     });
 
     const handleStorage = (event: StorageEvent) => {
@@ -84,20 +100,20 @@ export function ProphetNotificationWsProvider({
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(
         PROPHET_API_TOKEN_CHANGED_EVENT,
-        syncConnection,
+        syncConnection
       );
       client.disconnect();
       setConnectionStatus("idle");
     };
-  }, [enqueue, setConnectionStatus]);
+  }, [enqueue, hydrated, session, setConnectionStatus]);
 
   useEffect(() => {
-    if (!isMockProphetNotificationsEnabled()) {
+    if (!isMockProphetNotificationsEnabled() || !session) {
       return;
     }
 
     enqueueProphetNotificationSamples();
-  }, []);
+  }, [session]);
 
   return (
     <>

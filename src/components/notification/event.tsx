@@ -427,7 +427,7 @@ function EventNotificationHost() {
       role="region"
       aria-live="polite"
       aria-label="Match event notification"
-      className="pointer-events-none fixed inset-x-0 top-[100px] z-[70] flex justify-center overflow-visible px-4 pt-5"
+      className="pointer-events-none fixed inset-x-0 top-[100px] z-[50] flex justify-center overflow-visible px-4 pt-5"
     >
       <AnimatePresence
         mode="wait"
