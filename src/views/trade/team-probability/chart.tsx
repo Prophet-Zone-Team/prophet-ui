@@ -177,13 +177,13 @@ const MatchMarkerDot = memo(function MatchMarkerDot({
         height={MATCH_LABEL_HEIGHT}
         className="overflow-visible"
       >
-        <div className="flex h-full items-center justify-center gap-1 rounded border border-[#EBEBEB] bg-white px-1.5 py-1 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+        <div className="flex h-full items-center justify-center  gap-1 rounded border border-[#EBEBEB] bg-white px-1.5 py-1 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
           <TeamFlag
             code={annotation.homeCode}
             name={annotation.homeName}
             className="!h-4 !w-4 rounded-[2px]"
           />
-          <span className="text-sm font-[556] leading-[17px] text-[#909090]">
+          <span className="text-sm shrink-0 font-[556] leading-[17px] text-[#909090]">
             {annotation.scoreLabel}
           </span>
           <TeamFlag
