@@ -135,18 +135,15 @@ export function PortfolioPositionsTable({
     )?.name;
     const marketTitle = marketContext?.title ?? position.title;
     const timeValue = positionTimeMap.get(position.asset);
-    const pnlTone = position.cashPnl >= 0 ? "text-prophet-green" : "text-prophet-red";
-    const marketClosedReason = getPortfolioMarketClosedDisabledReason({
-      endDate: position.endDate
-    });
-    const marketClosed = Boolean(marketClosedReason);
+    const pnlTone =
+      position.cashPnl >= 0 ? "text-prophet-green" : "text-prophet-red";
     const canSell = position.size > 0 && Boolean(position.slug?.trim());
     const canRedeem = canRedeemPosition(position);
     const rowKey = `${position.conditionId}:${position.asset}`;
     const isSelling = sellingAsset === position.asset;
 
     const handleSell = async () => {
-      if (!canSell || regionRestricted || marketClosed || isSelling) {
+      if (!canSell || regionRestricted || isSelling) {
         return;
       }
 
@@ -199,16 +196,13 @@ export function PortfolioPositionsTable({
                 "disabled:opacity-50"
               )}
               disabled={!canSell || regionRestricted || isSelling}
-              title={
-                regionRestricted
-                  ? undefined
-                  : marketClosedReason ??
-                    (canSell ? undefined : "Market data unavailable")
-              }
               onClick={() => void handleSell()}
             >
               {isSelling ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                <Loader2
+                  className="h-3.5 w-3.5 animate-spin"
+                  aria-hidden="true"
+                />
               ) : (
                 "Sell"
               )}
