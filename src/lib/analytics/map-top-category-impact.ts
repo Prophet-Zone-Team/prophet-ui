@@ -90,7 +90,7 @@ export function mapTopCategoryImpactToMostAffectedTeams(
         rank: toNumber(item.rank) || index + 1,
         teamCode: resolveTeamCode(teamName, teamCodeLookup),
         teamName,
-        netImpact: parseImpactNumber(item.net),
+        netImpact: parseImpactNumber(item.abs_impact),
         highImpactEventCount: toNumber(item.high_impact)
       };
     })
