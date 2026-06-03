@@ -71,10 +71,10 @@ export function TeamMarketIntelligencePanel({
                     : "Pending"
                 }
               />
-              <TeamPanelMetric
+              {/* <TeamPanelMetric
                 label="Sentiment"
                 value={getSentimentLabel(intelligence.sentiment)}
-              />
+              /> */}
               <TeamPanelMetric
                 label="News signals"
                 value={String(relatedNewsCount)}
