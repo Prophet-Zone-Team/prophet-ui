@@ -56,6 +56,7 @@ import {
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
 import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 import { useTracksStore } from "@/store/tracks-store";
+import { useNotificationWsStore } from "@/store/notification-ws-store";
 import {
   logoutProphet,
   syncProphetWalletLogin
@@ -206,6 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       logoutProphet();
       useTracksStore.getState().reset();
+      useNotificationWsStore.getState().reset();
 
       store.clearAuth();
       store.setLoginInProgress(false);
