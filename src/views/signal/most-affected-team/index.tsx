@@ -7,11 +7,13 @@ import type { MostAffectedTeamData } from "./types";
 export type MostAffectedTeamProps = {
   data?: MostAffectedTeamData;
   className?: string;
+  isLoading?: boolean;
 };
 
 export function MostAffectedTeam({
   data = mostAffectedTeamData,
-  className
+  className,
+  isLoading = false
 }: MostAffectedTeamProps) {
   return (
     <section
@@ -27,7 +29,11 @@ export function MostAffectedTeam({
       </h2>
 
       <div className="mt-4 min-h-0 flex-1 md:mt-[26px]">
-        <MostAffectedTeamTable entries={data.entries} />
+        {isLoading ? (
+          <p className="text-[14px] text-[#909090]">Loading...</p>
+        ) : (
+          <MostAffectedTeamTable entries={data.entries} />
+        )}
       </div>
     </section>
   );

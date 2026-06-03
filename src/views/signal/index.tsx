@@ -44,6 +44,7 @@ export function SignalPage({
     summary,
     topCategories,
     impactOverview,
+    mostAffectedTeam,
     isLoading: isImpactLoading
   } = useAnalyticsNewsTopCategoryImpact();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -130,7 +131,11 @@ export function SignalPage({
         />
 
         <div className="flex min-w-0 w-full flex-col gap-5 lg:w-[696px] lg:shrink-0">
-          <MostAffectedTeam className="max-w-none" />
+          <MostAffectedTeam
+            className="max-w-none"
+            data={mostAffectedTeam}
+            isLoading={isImpactLoading}
+          />
           <TopCategories
             className="max-w-none"
             data={topCategories}

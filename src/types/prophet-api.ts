@@ -388,9 +388,23 @@ export interface ProphetAnalyticsNewsImpact {
   neutral?: number;
 }
 
+export interface ProphetAnalyticsMostAffectedTeamItem {
+  id?: number;
+  rank?: number;
+  team?: string;
+  articles?: number;
+  net?: string;
+  abs_impact?: string;
+  positive?: number;
+  negative?: number;
+  high_impact?: number;
+  updated_at?: string;
+}
+
 export interface ProphetGetNewsTopCategoryImpactData {
   top_categories?: ProphetAnalyticsTopCategoryItem[];
   impact?: ProphetAnalyticsNewsImpact;
+  most_affected_teams?: ProphetAnalyticsMostAffectedTeamItem[];
 }
 
 export interface ProphetHeadToHeadFixture {
