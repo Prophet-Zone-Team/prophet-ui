@@ -15,19 +15,18 @@ import {
   runTradePrimaryAction
 } from "@/lib/trading/trade-primary-action";
 import { useAuthStore } from "@/store/auth-store";
+import type { BidOrderPreview } from "@/lib/market/polymarket-order";
+import { buildTeamMarketBuyPreview } from "@/lib/trading/team-market-buy-preview";
 import type { TeamMarketSnapshot } from "@/types/market";
 import {
-  buildTeamTradePreview,
   buildTeamUserOrderPreview,
   ensureTradingReadyForBid,
   fetchReadinessForPreview,
-  getTeamDefaultLimitPrice,
   submitSignedTradeOrder
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
 
 export type FastBidStatus = "idle" | "checking" | "submitting";
 
-const FAST_BID_OUTCOME_SIDE = "yes" as const;
 const FAST_BID_TRADE_SIDE = "buy" as const;
 const FAST_BID_ORDER_TYPE = "FAK" as const;
 
@@ -183,19 +182,8 @@ export async function runFastBid({
   }
 }
 
-export function buildFastBidPreview(snapshot: TeamMarketSnapshot, amount: number) {
-  return buildTeamTradePreview({
-    snapshot,
-    outcomeSide: FAST_BID_OUTCOME_SIDE,
-    tradeSide: FAST_BID_TRADE_SIDE,
-    amount,
-    limitPrice: getTeamDefaultLimitPrice(
-      snapshot,
-      FAST_BID_OUTCOME_SIDE,
-      FAST_BID_TRADE_SIDE
-    ),
-    orderType: FAST_BID_ORDER_TYPE
-  });
+export function buildFastBidPreview(snapshot: TeamMarketSnapshot, amount: number): BidOrderPreview {
+  return buildTeamMarketBuyPreview(snapshot, amount);
 }
 
 export function isTeamFastBidReady(

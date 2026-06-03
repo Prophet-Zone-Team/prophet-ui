@@ -15,12 +15,14 @@ import type { UserPositionRecord } from "@/types/market";
 import { PortfolioHistoryTable } from "@/views/portfolio/portfolio-history-table";
 import { PortfolioOpenOrdersTable } from "@/views/portfolio/portfolio-open-orders-table";
 import { PortfolioPositionsTable } from "@/views/portfolio/portfolio-positions-table";
+import { PortfolioStrategyList } from "@/views/portfolio/strategy";
 import { portfolioActivityCardClass } from "@/views/portfolio/portfolio-ui";
 import type { PortfolioLoadOptions } from "@/views/portfolio/use-portfolio-data";
 
 const PORTFOLIO_TABS = [
   { id: "position", label: "Position" },
   { id: "open-order", label: "Open Order" },
+  { id: "strategy", label: "Strategy" },
   { id: "history", label: "History" }
 ] as const;
 
@@ -93,6 +95,11 @@ export function PortfolioActivityTabs({
         loadedTabsRef.current.add("open-order");
         void loadOpenOrders();
       }
+      return;
+    }
+
+    if (tab === "strategy") {
+      loadedTabsRef.current.add("strategy");
       return;
     }
 
@@ -223,6 +230,8 @@ export function PortfolioActivityTabs({
           ) : null}
         </>
       ) : null}
+
+      {tab === "strategy" ? <PortfolioStrategyList /> : null}
 
       {tab === "history" ? (
         <>

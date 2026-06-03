@@ -21,6 +21,8 @@ export interface FastBidButtonProps {
   children?: ReactNode;
   showAmount?: boolean;
   amountClassName?: string;
+  /** When set, overrides the configured Fast Bid amount from user settings. */
+  amount?: number;
   disabled?: boolean;
 }
 
@@ -30,6 +32,7 @@ export function FastBidButton({
   children,
   showAmount = true,
   amountClassName,
+  amount: amountOverride,
   disabled = false
 }: FastBidButtonProps) {
   const router = useRouter();
@@ -41,7 +44,8 @@ export function FastBidButton({
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const regionRestricted = isAuthenticated && isRegionBlocked;
 
-  const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
+  const configuredAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
+  const displayAmount = amountOverride ?? configuredAmount;
 
   const buttonLabel = useMemo(() => {
     if (status === "checking") {

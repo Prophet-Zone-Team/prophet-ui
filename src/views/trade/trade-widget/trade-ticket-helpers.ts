@@ -993,6 +993,43 @@ export type SubmitOrderResult = {
   submittedAt?: string;
 };
 
+export type SubmitBatchOrderResultItem = {
+  index: number;
+  success: boolean;
+  order?: UserOrderRecord;
+  error?: string;
+  response?: unknown;
+};
+
+export type SubmitBatchOrderResult = {
+  results: SubmitBatchOrderResultItem[];
+  successCount: number;
+  failureCount: number;
+  submittedAt?: string;
+};
+
+export async function submitSignedTradeOrdersBatch(input: {
+  orders: Array<{
+    signedOrder: Awaited<ReturnType<typeof buildSdkSignedUserOrder>>;
+    userOrderPreview: UserOrderPreview;
+  }>;
+}): Promise<SubmitBatchOrderResult> {
+  if (input.orders.length === 0) {
+    throw new Error("At least one signed order is required.");
+  }
+
+  return fetchJson<SubmitBatchOrderResult>("/api/trading/orders/batch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      orders: input.orders.map(({ signedOrder, userOrderPreview }) => ({
+        ...signedOrder,
+        preview: userOrderPreview
+      }))
+    })
+  });
+}
+
 export async function submitSignedTradeOrder(input: {
   session: TradingUserSession;
   preview: BidOrderPreview;

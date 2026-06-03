@@ -10,8 +10,10 @@ export const FAST_BID_PRESET_AMOUNTS = [5, 10, 100, 1000] as const;
 interface UserConfigState {
   fastBidAmount: number;
   showOrderbook: boolean;
+  showStrategyNotice: boolean;
   setFastBidAmount: (amount: number) => void;
   setShowOrderbook: (value: boolean) => void;
+  dismissStrategyNotice: () => void;
 }
 
 export function normalizeFastBidAmount(amount: number): number {
@@ -37,31 +39,41 @@ export const useUserConfigStore = create<UserConfigState>()(
     (set) => ({
       fastBidAmount: DEFAULT_FAST_BID_AMOUNT,
       showOrderbook: true,
+      showStrategyNotice: true,
       setFastBidAmount: (amount) => {
         set({ fastBidAmount: normalizeFastBidAmount(amount) });
       },
       setShowOrderbook: (value) => {
         set({ showOrderbook: value });
+      },
+      dismissStrategyNotice: () => {
+        set({ showStrategyNotice: false });
       }
     }),
     {
       name: "wc-user-config",
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         fastBidAmount: state.fastBidAmount,
-        showOrderbook: state.showOrderbook
+        showOrderbook: state.showOrderbook,
+        showStrategyNotice: state.showStrategyNotice
       }),
       migrate: (persisted) => {
         const state = persisted as
-          | { fastBidAmount?: number; showOrderbook?: boolean }
+          | {
+              fastBidAmount?: number;
+              showOrderbook?: boolean;
+              showStrategyNotice?: boolean;
+            }
           | undefined;
 
         return {
           fastBidAmount: normalizeFastBidAmount(
             state?.fastBidAmount ?? DEFAULT_FAST_BID_AMOUNT
           ),
-          showOrderbook: state?.showOrderbook ?? true
+          showOrderbook: state?.showOrderbook ?? true,
+          showStrategyNotice: state?.showStrategyNotice ?? true
         };
       }
     }
@@ -82,4 +94,12 @@ export function useShowOrderbook() {
 
 export function useSetShowOrderbook() {
   return useUserConfigStore((state) => state.setShowOrderbook);
+}
+
+export function useShowStrategyNotice() {
+  return useUserConfigStore((state) => state.showStrategyNotice);
+}
+
+export function useDismissStrategyNotice() {
+  return useUserConfigStore((state) => state.dismissStrategyNotice);
 }

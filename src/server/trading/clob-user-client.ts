@@ -373,6 +373,70 @@ export async function postSignedUserOrder({
   return (await response.json()) as OrderResponse;
 }
 
+const MAX_BATCH_ORDERS = 15;
+
+export async function postSignedUserOrders({
+  address,
+  credentials,
+  payloads,
+}: {
+  address: string;
+  credentials: ApiKeyCreds;
+  payloads: SignedUserOrderPayload[];
+}): Promise<unknown[]> {
+  if (payloads.length === 0) {
+    throw new Error("At least one signed order is required.");
+  }
+
+  if (payloads.length > MAX_BATCH_ORDERS) {
+    throw new Error(
+      `Too many orders in payload: ${payloads.length}, max allowed: ${MAX_BATCH_ORDERS}`
+    );
+  }
+
+  const requestPath = "/orders";
+  const bodyItems = payloads.map((payload) => {
+    const signedOrder = normalizeSignedOrderV2(payload.order);
+
+    if (!signedOrder) {
+      throw new Error("Signed order payload is missing required CLOB submission fields.");
+    }
+
+    return orderToJsonV2(
+      signedOrder,
+      credentials.key,
+      payload.orderType as OrderType,
+      payload.postOnly ?? false,
+      payload.deferExec ?? false
+    );
+  });
+  const body = JSON.stringify(bodyItems);
+  const response = await serverFetch(`${getTradingHost()}${requestPath}`, {
+    method: "POST",
+    headers: await createUserL2Headers({
+      address,
+      credentials,
+      method: "POST",
+      requestPath,
+      body,
+    }),
+    body,
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to submit signed user orders: ${await readResponseError(response)}`);
+  }
+
+  const result = (await response.json()) as unknown;
+
+  if (!Array.isArray(result)) {
+    throw new Error("Unexpected batch order response from CLOB.");
+  }
+
+  return result;
+}
+
 export function mapTradeSide(side: BidTradeSide): Side {
   return side === "buy" ? Side.BUY : Side.SELL;
 }

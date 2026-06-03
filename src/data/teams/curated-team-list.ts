@@ -7,7 +7,13 @@ export type CuratedTeamEntry = {
   logo: string;
   abbreviation: string;
   continent: string;
+  /** Polymarket market slug under the world-cup-winner event */
+  slug?: string;
   visible?: boolean;
+  /** Whether the team has begun tournament play. */
+  started?: boolean;
+  /** Whether the team has been eliminated from the tournament. */
+  eliminated?: boolean;
 };
 
 const curatedTeamEntries = Object.entries(curatedTeams) as Array<

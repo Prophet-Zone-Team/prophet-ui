@@ -1,0 +1,43 @@
+import { X } from "lucide-react";
+import type { ReactNode } from "react";
+
+import { cn } from "@/lib/cn";
+import { fundingModalCardClass } from "@/views/portfolio/shared/funding-modal-shell";
+
+export type StrategyBidModalShellProps = {
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+  className?: string;
+};
+
+export function StrategyBidModalShell({
+  onClose,
+  children,
+  footer,
+  className
+}: StrategyBidModalShellProps) {
+  return (
+    <div className={cn(fundingModalCardClass, className)}>
+      <header className="relative flex shrink-0 items-center justify-between px-5 pb-4 pt-5">
+        <h2 className="m-0 font-[Sora] text-xl font-medium leading-[25px] text-black">
+          Join Strategy
+        </h2>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex size-8 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-colors hover:text-black"
+          aria-label="Close"
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+      </header>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-5">{children}</div>
+
+      {footer ? (
+        <footer className="shrink-0 px-5 pb-5 pt-2">{footer}</footer>
+      ) : null}
+    </div>
+  );
+}
