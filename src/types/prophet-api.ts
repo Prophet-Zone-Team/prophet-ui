@@ -196,10 +196,11 @@ export interface ProphetCancelTrackRequest {
 export type ProphetReportTransactionType =
   | "buy"
   | "sell"
+  | "redeem"
   | "withdraw"
   | "deposit";
 
-/** Market context for POST /v1/user/transaction when type is buy or sell. */
+/** Market context for POST /v1/user/transaction when type is buy, sell, or redeem. */
 export interface ProphetReportTransactionMarket {
   marketName?: string;
   price?: string;

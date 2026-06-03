@@ -124,7 +124,7 @@ function TransactionActionIcon({
 }: {
   type: PortfolioTransactionRecord["type"];
 }) {
-  if (type === "sell") {
+  if (type === "sell" || type === "redeem") {
     return (
       <span
         className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#E97864]"

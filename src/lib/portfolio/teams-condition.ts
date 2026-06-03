@@ -161,3 +161,118 @@ export function resolveTeamForOutcome(
 
   return undefined;
 }
+
+function extractSubjectTeamFromTitle(title: string): string | undefined {
+  const match = title.match(/^Will\s+(.+?)\s+win\b/i);
+  return match?.[1]?.trim();
+}
+
+function findTeamByNameFragment(
+  teams: ProphetTeamsConditionTeam[],
+  fragment: string
+): ProphetTeamsConditionTeam | undefined {
+  const normalizedFragment = fragment.trim().toLowerCase();
+
+  if (!normalizedFragment) {
+    return undefined;
+  }
+
+  return teams.find((team) => {
+    const normalizedName = team.name.trim().toLowerCase();
+    return (
+      normalizedName === normalizedFragment ||
+      normalizedName.includes(normalizedFragment) ||
+      normalizedFragment.includes(normalizedName)
+    );
+  });
+}
+
+export function resolvePortfolioTeamName(
+  teams: ProphetTeamsConditionTeam[],
+  position: Pick<UserPositionRecord, "outcome" | "title">
+): string | undefined {
+  const fromOutcome = resolveTeamForOutcome(teams, position.outcome)?.name;
+
+  if (fromOutcome) {
+    return fromOutcome;
+  }
+
+  const normalizedOutcome = position.outcome.trim().toLowerCase();
+
+  if (normalizedOutcome === "yes" || normalizedOutcome === "no") {
+    const subject = extractSubjectTeamFromTitle(position.title);
+
+    if (subject) {
+      return findTeamByNameFragment(teams, subject)?.name ?? subject;
+    }
+  }
+
+  if (teams.length === 1) {
+    return teams[0]?.name;
+  }
+
+  return undefined;
+}
+
+function isGenericReportLabel(label: string): boolean {
+  const normalized = label.trim().toLowerCase();
+
+  return normalized === "yes" || normalized === "no";
+}
+
+export function resolveReportTeamName(input: {
+  candidate?: string;
+  title?: string;
+  outcome?: string;
+  teams?: ProphetTeamsConditionTeam[];
+  homeName?: string;
+  awayName?: string;
+  fixtureSide?: string;
+}): string {
+  const teams = input.teams ?? [];
+
+  if (input.title?.trim() || input.outcome?.trim()) {
+    const fromPortfolio = resolvePortfolioTeamName(teams, {
+      title: input.title?.trim() ?? "",
+      outcome: input.outcome?.trim() ?? ""
+    });
+
+    if (fromPortfolio) {
+      return fromPortfolio;
+    }
+  }
+
+  const candidate = input.candidate?.trim();
+
+  if (candidate && !isGenericReportLabel(candidate)) {
+    const matched = findTeamByNameFragment(teams, candidate);
+
+    if (matched?.name) {
+      return matched.name;
+    }
+
+    if (!candidate.includes(" vs ")) {
+      return candidate;
+    }
+  }
+
+  const side = input.fixtureSide?.trim().toLowerCase();
+
+  if (side === "home" && input.homeName?.trim()) {
+    return input.homeName.trim();
+  }
+
+  if (side === "away" && input.awayName?.trim()) {
+    return input.awayName.trim();
+  }
+
+  if (side === "draw") {
+    return "Draw";
+  }
+
+  if (input.homeName?.trim() && input.awayName?.trim()) {
+    return formatMatchVersusTitle(input.homeName.trim(), input.awayName.trim());
+  }
+
+  return candidate ?? "";
+}

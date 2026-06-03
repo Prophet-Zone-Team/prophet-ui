@@ -67,7 +67,7 @@ export async function ensureTradingChain(
   }
 
   const nextAccount = getAccount(wagmiConfig);
-
+  console.log("nextAccount.chainId", nextAccount.chainId);
   if (nextAccount.chainId !== TRADING_CHAIN_ID) {
     throw new Error(
       `Switch your wallet to Polygon mainnet (chainId ${TRADING_CHAIN_ID}) before signing.`,

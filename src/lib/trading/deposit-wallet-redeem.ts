@@ -79,11 +79,14 @@ export async function executeRedeem({
     throw new Error("Redeem did not return a relayer transaction id.");
   }
 
-  await pollRelayerTransactionShared(transactionId, {
+  const transaction = await pollRelayerTransactionShared(transactionId, {
     statusApiPath: REDEEM_STATUS_PATH,
     onStatus,
     errorPrefix: "Redeem transaction",
   });
 
-  return { transactionId };
+  return {
+    transactionId,
+    txHash: transaction.transactionHash ?? transactionId,
+  };
 }

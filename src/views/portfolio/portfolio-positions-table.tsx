@@ -19,7 +19,7 @@ import {
 } from "@/lib/portfolio/portfolio-metrics";
 import {
   resolvePortfolioMarketIcon,
-  resolveTeamForOutcome,
+  resolvePortfolioTeamName,
   type OpenOrderMarketContext
 } from "@/lib/portfolio/teams-condition";
 import { resolveTradeHref } from "@/lib/routes/trade";
@@ -130,7 +130,7 @@ export function PortfolioPositionsTable({
   positions.forEach((position) => {
     const marketContext = marketContextMap[position.conditionId];
     const teams = marketContext?.teams ?? [];
-    const teamName = resolveTeamForOutcome(teams, position.outcome)?.name;
+    const teamName = resolvePortfolioTeamName(teams, position);
     const marketIcon = resolvePortfolioMarketIcon(teams, position.outcome);
     const marketTitle = marketContext?.title ?? position.title;
     const timeValue = positionTimeMap.get(position.asset);

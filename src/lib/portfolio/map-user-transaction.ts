@@ -7,6 +7,7 @@ import type { ProphetUserTransaction } from "@/types/prophet-api";
 const TRANSACTION_TYPES = new Set<PortfolioTransactionType>([
   "buy",
   "sell",
+  "redeem",
   "deposit",
   "withdraw"
 ]);
@@ -45,7 +46,7 @@ export function mapProphetUserTransaction(
   index = 0
 ): PortfolioTransactionRecord {
   let amount = row.amount?.trim() || "—";
-  if (row.type === "sell") {
+  if (row.type === "sell" || row.type === "redeem") {
     amount = (Number(row.price || "0") * Number(row.amount || "0")).toString();
   }
   return {

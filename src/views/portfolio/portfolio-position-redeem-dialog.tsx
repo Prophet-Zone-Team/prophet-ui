@@ -11,6 +11,7 @@ import {
   formatSharePrice,
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
+import { reportRedeemTransaction } from "@/lib/portfolio/user";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { executeRedeem } from "@/lib/trading/deposit-wallet-redeem";
 import type { UserPositionRecord } from "@/types/market";
@@ -31,7 +32,7 @@ export interface PortfolioPositionRedeemDialogProps {
   onClose: () => void;
 }
 
-type RedeemPhase = "idle" | "signing" | "submitting" | "success" | "error";
+type RedeemPhase = "idle" | "signing" | "submitting" | "error";
 
 export function PortfolioPositionRedeemDialog({
   open,
@@ -78,7 +79,7 @@ export function PortfolioPositionRedeemDialog({
     setStatusMessage("Preparing redeem transaction…");
 
     try {
-      await executeRedeem({
+      const { txHash } = await executeRedeem({
         walletAddress: session.walletAddress,
         conditionId: position.conditionId,
         onStatus: (message) => {
@@ -91,8 +92,7 @@ export function PortfolioPositionRedeemDialog({
         },
       });
 
-      setPhase("success");
-      setStatusMessage(undefined);
+      void reportRedeemTransaction({ position, teamName, txHash });
 
       try {
         await syncCash();
@@ -100,6 +100,8 @@ export function PortfolioPositionRedeemDialog({
         console.warn("[portfolio-position-redeem-dialog] syncCash after redeem failed", syncError);
       }
 
+      resetState();
+      onClose();
       reload();
     } catch (error) {
       setPhase("error");
@@ -158,12 +160,6 @@ export function PortfolioPositionRedeemDialog({
             <p className="m-0 text-sm text-prophet-muted">{statusMessage}</p>
           ) : null}
 
-          {phase === "success" ? (
-            <p className="m-0 text-sm text-prophet-green">
-              Redemption submitted. Your portfolio will refresh shortly.
-            </p>
-          ) : null}
-
           {errorMessage ? (
             <p className="m-0 text-sm text-prophet-red">{errorMessage}</p>
           ) : null}
@@ -176,16 +172,16 @@ export function PortfolioPositionRedeemDialog({
             disabled={isBusy}
             onClick={handleClose}
           >
-            {phase === "success" ? "Close" : "Cancel"}
+            Cancel
           </button>
           <button
             type="button"
             className={cn(fundingPrimaryButtonClass, "inline-flex items-center justify-center")}
-            disabled={isBusy || phase === "success"}
+            disabled={isBusy}
             onClick={() => void handleConfirm()}
           >
             {isBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {phase === "success" ? "Redeemed" : "Confirm redeem"}
+            Confirm redeem
           </button>
         </div>
       </FundingModalShell>

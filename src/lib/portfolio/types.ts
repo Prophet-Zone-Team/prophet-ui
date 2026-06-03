@@ -1,4 +1,9 @@
-export type PortfolioTransactionType = "buy" | "sell" | "deposit" | "withdraw";
+export type PortfolioTransactionType =
+  | "buy"
+  | "sell"
+  | "redeem"
+  | "deposit"
+  | "withdraw";
 
 export interface PortfolioTransactionRecord {
   id: string;
