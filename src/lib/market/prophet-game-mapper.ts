@@ -35,8 +35,12 @@ export function mapProphetGamesToMatches(
 }
 
 export function mapProphetGameToMatch(
-  game: ProphetPolyMarketGameItem
+  game: ProphetPolyMarketGameItem | null | undefined
 ): WorldCupMatch | undefined {
+  if (!game) {
+    return undefined;
+  }
+
   const slug = game.slug?.trim();
 
   if (!slug) {

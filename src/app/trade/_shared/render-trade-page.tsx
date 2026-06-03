@@ -25,6 +25,10 @@ export async function renderGameTradePage(slug: string) {
     notFound();
   }
 
+  if (!detail) {
+    notFound();
+  }
+
   const match = mapProphetGameDetailToMatch(detail);
 
   if (!match) {
