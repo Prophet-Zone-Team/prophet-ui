@@ -6,7 +6,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type FocusEvent,
   type ReactNode
 } from "react";
 
@@ -24,7 +23,7 @@ import {
   useTracksStore
 } from "@/store/tracks-store";
 
-const TOOLTIP_HIDE_DELAY_MS = 1000;
+const TOOLTIP_HIDE_DELAY_MS = 2000;
 
 export type { ProphetBookmarkTarget } from "@/lib/tracks/track-status";
 
@@ -89,8 +88,8 @@ export function BookmarkToggle({
   className
 }: BookmarkToggleProps) {
   const { isTracked, isLoading, toggle } = useProphetBookmark(target);
-  const rootRef = useRef<HTMLDivElement>(null);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingTrackSuccessTooltipRef = useRef(false);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const buttonAriaLabel = isTracked
     ? (trackedAriaLabel ?? ariaLabel)
@@ -103,57 +102,48 @@ export function BookmarkToggle({
     }
   }, []);
 
-  const showTooltip = useCallback(() => {
-    if (isTracked || !tooltip || isLoading) {
-      return;
-    }
-
-    clearHideTimeout();
-    setIsTooltipVisible(true);
-  }, [clearHideTimeout, isLoading, isTracked, tooltip]);
-
   const scheduleHideTooltip = useCallback(() => {
-    if (isTracked || !tooltip) {
-      return;
-    }
-
     clearHideTimeout();
     hideTimeoutRef.current = setTimeout(() => {
       setIsTooltipVisible(false);
       hideTimeoutRef.current = null;
     }, TOOLTIP_HIDE_DELAY_MS);
-  }, [clearHideTimeout, isTracked, tooltip]);
+  }, [clearHideTimeout]);
 
-  const handleFocusOut = useCallback(
-    (event: FocusEvent<HTMLDivElement>) => {
-      const nextTarget = event.relatedTarget;
-
-      if (nextTarget instanceof Node && rootRef.current?.contains(nextTarget)) {
-        return;
-      }
-
-      scheduleHideTooltip();
-    },
-    [scheduleHideTooltip]
-  );
+  const dismissTooltip = useCallback(() => {
+    clearHideTimeout();
+    setIsTooltipVisible(false);
+  }, [clearHideTimeout]);
 
   useEffect(() => {
-    if (isTracked) {
-      clearHideTimeout();
-      setIsTooltipVisible(false);
+    if (!pendingTrackSuccessTooltipRef.current || isLoading) {
+      return;
     }
-  }, [clearHideTimeout, isTracked]);
+
+    pendingTrackSuccessTooltipRef.current = false;
+
+    if (isTracked && tooltip) {
+      setIsTooltipVisible(true);
+      scheduleHideTooltip();
+    }
+  }, [isLoading, isTracked, scheduleHideTooltip, tooltip]);
+
+  useEffect(() => {
+    if (!isTracked && isTooltipVisible) {
+      dismissTooltip();
+    }
+  }, [dismissTooltip, isTracked, isTooltipVisible]);
 
   useEffect(() => clearHideTimeout, [clearHideTimeout]);
 
   return (
     <div
-      ref={rootRef}
       className={cn("relative flex shrink-0 items-center", className)}
-      onMouseEnter={showTooltip}
-      onMouseLeave={scheduleHideTooltip}
-      onFocusCapture={showTooltip}
-      onBlurCapture={handleFocusOut}
+      onMouseLeave={() => {
+        if (isTooltipVisible) {
+          dismissTooltip();
+        }
+      }}
     >
       <button
         type="button"
@@ -164,6 +154,11 @@ export function BookmarkToggle({
         disabled={isLoading}
         onClick={(event) => {
           event.stopPropagation();
+
+          if (!isTracked && !isLoading) {
+            pendingTrackSuccessTooltipRef.current = true;
+          }
+
           void toggle();
         }}
       >
@@ -179,7 +174,7 @@ export function BookmarkToggle({
         )}
       </button>
 
-      {!isTracked && tooltip && isTooltipVisible ? (
+      {isTracked && tooltip && isTooltipVisible ? (
         <div
           role="tooltip"
           className="absolute bottom-full left-0 z-20 w-[min(384px,calc(100vw-2rem))] pb-2 md:left-1/2 md:-translate-x-1/2"
