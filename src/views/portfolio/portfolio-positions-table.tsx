@@ -67,7 +67,6 @@ function PortfolioPositionsTableHeader() {
       <span>Traded</span>
       <span>To Win</span>
       <span>Value</span>
-      <span>Time</span>
       <span className="justify-self-end text-right">Action</span>
     </div>
   );
@@ -224,7 +223,9 @@ export function PortfolioPositionsTable({
         <span className="font-[556]">
           {formatTeamDetailMoney(position.initialValue)}
         </span>
-        <span className="font-[556]">{formatTeamDetailMoney(position.size)}</span>
+        <span className="font-[556]">
+          {formatTeamDetailMoney(position.size)}
+        </span>
         <div className="flex flex-col gap-0.5">
           <span className="font-[556]">
             {formatTeamDetailMoney(position.currentValue)}
@@ -233,9 +234,6 @@ export function PortfolioPositionsTable({
             {formatPnlSubline(position.cashPnl, position.percentPnl)}
           </span>
         </div>
-        <span className="text-prophet-muted">
-          {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
-        </span>
         {actionButtons}
       </div>
     );
