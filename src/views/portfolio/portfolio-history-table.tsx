@@ -124,7 +124,7 @@ function TransactionActionIcon({
 }: {
   type: PortfolioTransactionRecord["type"];
 }) {
-  if (type === "sell" || type === "redeem") {
+  if (type === "sell") {
     return (
       <span
         className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#E97864]"
@@ -132,6 +132,27 @@ function TransactionActionIcon({
       >
         <span className="h-px w-2 rounded-full bg-white" />
       </span>
+    );
+  }
+
+  if (type === "redeem") {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
+        fill="none"
+        className="shrink-0"
+      >
+        <circle cx="10" cy="10" r="10" fill="#C9A227" />
+        <path
+          d="M10 13.5V6M14 9.3094L10 6L6 9.3094"
+          stroke="white"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
     );
   }
 
@@ -150,12 +171,22 @@ function TransactionActionIcon({
   }
 
   return (
-    <span
-      className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#909090]"
-      aria-hidden="true"
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      className="shrink-0"
     >
-      <span className="size-1.5 rounded-full bg-white" />
-    </span>
+      <circle cx="10" cy="10" r="10" fill="#909090" />
+      <path
+        d="M10 13.5V6M14 9.3094L10 6L6 9.3094"
+        stroke="white"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 

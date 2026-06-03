@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
+import { CopyButton } from "@/components/feedback/copy-button";
 import { getWorldCupGroupForTeam, getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { TeamFlag } from "@/components/teams/team-flag";
 import type { PathResult } from "@/types/market";
@@ -33,23 +34,12 @@ export function ResultPanel({
   onBackToKnockout: () => void;
 }) {
   const posterRef = useRef<HTMLElement>(null);
-  const [shareStatus, setShareStatus] = useState<string | null>(null);
   const champion = getWorldCupTeamByIdOrCode(championTeamId ?? "");
   const focusTeam = getWorldCupTeamByIdOrCode(teamId);
   const finalOpponents =
     result?.rounds
       .find((round) => round.round === "FINAL")
       ?.possibleOpponentTeams.slice(0, 2) ?? [];
-
-  const showStatus = (message: string) => {
-    setShareStatus(message);
-    window.setTimeout(() => setShareStatus(null), 3200);
-  };
-
-  const handleCopyLink = async () => {
-    await copyText(shareUrl);
-    showStatus("Share link copied.");
-  };
 
   const handleDownload = () => {
     if (!posterRef.current) {
@@ -62,7 +52,6 @@ export function ResultPanel({
   const handleShareAll = async () => {
     await copyText(shareUrl);
     handleDownload();
-    showStatus("Screenshot downloaded and link copied.");
   };
 
   return (
@@ -108,14 +97,26 @@ export function ResultPanel({
           </div>
 
           <div className="mt-[18px] grid grid-cols-2 gap-[10px] sm:grid-cols-4">
-            <Metric label="Annexe C" value={thirdPlaceOption ? `Option ${thirdPlaceOption.option}` : "Pending"} />
-            <Metric label="Advancing 3rd" value={advancingThirdGroups.join("")} />
+            <Metric
+              label="Annexe C"
+              value={
+                thirdPlaceOption
+                  ? `Option ${thirdPlaceOption.option}`
+                  : "Pending"
+              }
+            />
+            <Metric
+              label="Advancing 3rd"
+              value={advancingThirdGroups.join("")}
+            />
             <Metric label="Focus team" value={focusTeam?.name ?? "-"} />
             <Metric label="Knockout basis" value={knockoutMethod} />
             <Metric label="Group basis" value={sortMethod} />
             <Metric
               label="Final candidates"
-              value={finalOpponents.map((team) => team.teamName).join(" / ") || "-"}
+              value={
+                finalOpponents.map((team) => team.teamName).join(" / ") || "-"
+              }
             />
           </div>
 
@@ -142,13 +143,13 @@ export function ResultPanel({
         </article>
 
         <aside className="flex w-full shrink-0 flex-col gap-[8px] lg:w-[280px]">
-          <button
+          {/* <button
             type="button"
             className="rounded-[8px] bg-[#18110F] px-[14px] py-[10px] text-[13px] text-white"
             onClick={() => void handleShareAll()}
           >
             Share all
-          </button>
+          </button> */}
           <button
             type="button"
             className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
@@ -156,24 +157,19 @@ export function ResultPanel({
           >
             Download screenshot
           </button>
-          <button
-            type="button"
-            className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
-            onClick={() => void handleCopyLink()}
+          <CopyButton
+            text={shareUrl}
+            ariaLabel="Copy share link"
+            className="w-full rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
           >
             Copy share link
-          </button>
-          <textarea
+          </CopyButton>
+          {/* <textarea
             readOnly
             value={shareUrl}
             className="min-h-[96px] w-full resize-y rounded-[8px] border border-[#EBEBEB] bg-[#FAFAFA] p-[10px] text-[12px] text-[#505050]"
             aria-label="Share URL"
-          />
-          {shareStatus ? (
-            <p className="m-0 rounded-[8px] border border-[#BBF7D0] bg-[#F0FDF4] px-[10px] py-[8px] text-[13px] text-[#166534]">
-              {shareStatus}
-            </p>
-          ) : null}
+          /> */}
           <button
             type="button"
             className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
