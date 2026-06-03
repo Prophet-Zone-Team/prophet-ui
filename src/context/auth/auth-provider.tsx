@@ -35,6 +35,7 @@ import {
 } from "@/lib/trading/trading-login";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import {
+  ensureTradingWalletReconnected,
   subscribeWalletConnection,
   inspectWalletConnection
 } from "@/lib/trading/wallet-connection-watch";
@@ -441,6 +442,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      await ensureTradingWalletReconnected(nextSession.walletAddress);
+
       const walletSnapshot = await inspectWalletConnection(
         nextSession.walletAddress,
         {
@@ -449,6 +452,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
 
       if (walletSnapshot.status === "disconnected") {
+        if (privyAuthenticated) {
+          const nextReadiness = await refreshReadiness(nextSession);
+          store.setStatus("ready");
+          store.setLoginStep(undefined);
+          store.setError(
+            "Wallet extension is not connected. Reconnect your wallet to continue."
+          );
+          openSetupModalIfNeeded();
+
+          if (isTradingSetupComplete(nextReadiness)) {
+            store.setLoginModalOpen(true);
+          }
+
+          return;
+        }
+
         await clearAuthState({
           error: "Wallet disconnected. Connect again to continue."
         });
@@ -506,6 +525,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearAuthState,
     handleWalletAccountSwitch,
     openSetupModalIfNeeded,
+    privyAuthenticated,
     refreshReadiness
   ]);
 
@@ -862,7 +882,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return subscribeWalletConnection({
       expectedAddress: session.walletAddress,
-      isPaused: () => walletHandlingRef.current,
+      isPaused: () => walletHandlingRef.current || !privyReady,
       onDisconnected: () => {
         void handleWalletDisconnected();
       },
@@ -875,6 +895,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     handleWalletDisconnected,
     hydrated,
     loginMethod,
+    privyReady,
     session?.walletAddress
   ]);
 
@@ -923,12 +944,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!hydrated) {
+    if (!hydrated || !privyReady) {
       return;
     }
 
     void refreshSession();
-  }, [hydrated, refreshSession]);
+  }, [hydrated, privyReady, privyAuthenticated, refreshSession]);
 
   useEffect(() => {
     if (!hydrated || !privyReady || !privyAuthenticated) {
