@@ -438,6 +438,7 @@ function mergeFixtureChartPoints(points: GameFixtureChartPoint[]): GameFixtureCh
 
 export function getFixtureChartYDomain(
   points: GameFixtureChartPoint[],
+  options?: { endLabelHeadroomPercent?: number }
 ): [number, number] {
   if (points.length === 0) {
     return [0, 100];
@@ -447,8 +448,12 @@ export function getFixtureChartYDomain(
   const min = Math.min(...values);
   const max = Math.max(...values);
   const padding = Math.max(2, (max - min) * 0.2);
+  const headroom = options?.endLabelHeadroomPercent ?? 0;
   const lower = Math.max(0, Math.floor((min - padding) / 5) * 5);
-  const upper = Math.min(100, Math.ceil((max + padding) / 5) * 5);
+  const upper = Math.min(
+    100,
+    Math.ceil((max + padding + headroom) / 5) * 5
+  );
 
   return [lower, Math.max(lower + 10, upper)];
 }

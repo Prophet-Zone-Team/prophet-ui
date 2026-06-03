@@ -1,6 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import {
+  createContext,
+  memo,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { TeamFlag } from "@/components/teams/team-flag";
 import { formatGoalEventTime } from "@/lib/market/match-display";
@@ -15,6 +21,36 @@ interface ChartCustomizedProps {
   };
   width?: number;
   height?: number;
+  xAxisMap?: Record<
+    string,
+    {
+      scale?: (value: number) => number;
+    }
+  >;
+}
+
+function resolveMarkerX(
+  elapsedSeconds: number,
+  xAxisMap: ChartCustomizedProps["xAxisMap"],
+  offset: ChartCustomizedProps["offset"],
+  width: number | undefined,
+  maxElapsedSeconds: number
+): number {
+  const xAxis = xAxisMap ? Object.values(xAxisMap)[0] : undefined;
+
+  if (xAxis?.scale) {
+    const scaled = xAxis.scale(elapsedSeconds);
+
+    if (Number.isFinite(scaled)) {
+      return scaled;
+    }
+  }
+
+  const left = offset?.left ?? 0;
+  const right = offset?.right ?? 0;
+  const plotWidth = (width ?? 0) - left - right;
+
+  return left + (elapsedSeconds / maxElapsedSeconds) * plotWidth;
 }
 
 function SoccerBallIcon({ className }: { className?: string }) {
@@ -56,10 +92,70 @@ export interface GoalEventMarkerLayerProps extends ChartCustomizedProps {
   awayName?: string;
 }
 
-export function GoalEventMarkerLayer({
+type GoalEventMarkerChartConfig = Omit<
+  GoalEventMarkerLayerProps,
+  keyof ChartCustomizedProps
+>;
+
+const GoalEventMarkerChartContext =
+  createContext<GoalEventMarkerChartConfig | null>(null);
+
+export function GoalEventMarkerChartProvider({
+  value,
+  children,
+}: {
+  value: GoalEventMarkerChartConfig;
+  children: ReactNode;
+}) {
+  return (
+    <GoalEventMarkerChartContext.Provider value={value}>
+      {children}
+    </GoalEventMarkerChartContext.Provider>
+  );
+}
+
+/** Stable Recharts Customized component — do not pass an inline render function. */
+export function GoalEventMarkerCustomized(
+  chartProps: Record<string, unknown>
+) {
+  const config = useContext(GoalEventMarkerChartContext);
+
+  if (!config) {
+    return null;
+  }
+
+  return (
+    <GoalEventMarkerLayer
+      offset={chartProps.offset as GoalEventMarkerLayerProps["offset"]}
+      width={chartProps.width as number | undefined}
+      height={chartProps.height as number | undefined}
+      xAxisMap={chartProps.xAxisMap as GoalEventMarkerLayerProps["xAxisMap"]}
+      {...config}
+    />
+  );
+}
+
+function areGoalEventsEqual(
+  left: GameMatchChartEvent[],
+  right: GameMatchChartEvent[]
+): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every(
+    (event, index) =>
+      event.elapsedSeconds === right[index]?.elapsedSeconds &&
+      event.side === right[index]?.side &&
+      event.type === right[index]?.type
+  );
+}
+
+export const GoalEventMarkerLayer = memo(function GoalEventMarkerLayer({
   offset,
   width,
   height,
+  xAxisMap,
   events,
   maxElapsedSeconds,
   homeCode,
@@ -73,10 +169,7 @@ export function GoalEventMarkerLayer({
     return null;
   }
 
-  const left = offset?.left ?? 0;
-  const right = offset?.right ?? 0;
   const bottom = offset?.bottom ?? 0;
-  const plotWidth = width - left - right;
   const markerY = height - bottom + 6;
 
   return (
@@ -89,7 +182,13 @@ export function GoalEventMarkerLayer({
     >
       <div className="relative h-full w-full">
         {events.map((event) => {
-          const x = left + (event.elapsedSeconds / maxElapsedSeconds) * plotWidth;
+          const x = resolveMarkerX(
+            event.elapsedSeconds,
+            xAxisMap,
+            offset,
+            width,
+            maxElapsedSeconds
+          );
 
           const eventKey = `${event.elapsedSeconds}-${event.side}`;
           const isHovered = hoveredEventKey === eventKey;
@@ -150,4 +249,15 @@ export function GoalEventMarkerLayer({
       </div>
     </foreignObject>
   );
-}
+}, (previous, next) => {
+  return (
+    previous.maxElapsedSeconds === next.maxElapsedSeconds &&
+    previous.homeCode === next.homeCode &&
+    previous.homeName === next.homeName &&
+    previous.awayCode === next.awayCode &&
+    previous.awayName === next.awayName &&
+    Math.round(previous.width ?? 0) === Math.round(next.width ?? 0) &&
+    Math.round(previous.height ?? 0) === Math.round(next.height ?? 0) &&
+    areGoalEventsEqual(previous.events, next.events)
+  );
+});

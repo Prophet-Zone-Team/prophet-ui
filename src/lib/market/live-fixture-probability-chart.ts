@@ -43,12 +43,27 @@ export function resolveKickoffAtFromMatchSlug(
   return `${match[1]}T00:00:00.000Z`;
 }
 
-export function resolveEffectiveKickoffAt(
+export function resolveMatchClockElapsedSeconds(
+  liveElapsedSeconds: number | undefined,
+  goalEvents: Array<{ elapsedSeconds: number }> = []
+): number | undefined {
+  const goalMax = goalEvents.reduce(
+    (max, event) => Math.max(max, event.elapsedSeconds),
+    0
+  );
+  const elapsed = Math.max(liveElapsedSeconds ?? 0, goalMax);
+
+  return elapsed > 0 ? elapsed : undefined;
+}
+
+/**
+ * Kickoff for live CLOB `/batch-prices-history` and x-axis elapsed.
+ * Aligns with game `start_time` / `kickoffAt` so point `t` maps to `t - start_ts`.
+ */
+export function resolveLiveChartPriceHistoryKickoffAt(
   match: WorldCupMatch,
   nowMs = Date.now()
 ): string | undefined {
-  const isLive = getScheduleRowVariant(match.status) === "ongoing";
-
   if (match.kickoffAt) {
     const kickoffMs = parseKickoffTimestampMs(match.kickoffAt);
 
@@ -57,12 +72,42 @@ export function resolveEffectiveKickoffAt(
     }
   }
 
-  if (
-    isLive &&
-    match.liveElapsedSeconds !== undefined &&
-    match.liveElapsedSeconds >= 0
-  ) {
-    return new Date(nowMs - match.liveElapsedSeconds * 1000).toISOString();
+  const slugKickoff = resolveKickoffAtFromMatchSlug(
+    match.id || match.polymarket?.slug
+  );
+
+  if (slugKickoff) {
+    const slugKickoffMs = parseKickoffTimestampMs(slugKickoff);
+
+    if (slugKickoffMs !== undefined && slugKickoffMs <= nowMs) {
+      return slugKickoff;
+    }
+  }
+
+  return resolveEffectiveKickoffAt(match, nowMs, match.liveElapsedSeconds);
+}
+
+export function resolveEffectiveKickoffAt(
+  match: WorldCupMatch,
+  nowMs = Date.now(),
+  matchClockElapsedSeconds?: number
+): string | undefined {
+  const isLive = getScheduleRowVariant(match.status) === "ongoing";
+  const elapsedSeconds =
+    matchClockElapsedSeconds ?? match.liveElapsedSeconds;
+
+  // Live charts and statistics goal events use game elapsed time (match clock).
+  // Back-calculate kickoff from match elapsed so x-axis seconds exclude halftime gaps.
+  if (isLive && elapsedSeconds !== undefined && elapsedSeconds >= 0) {
+    return new Date(nowMs - elapsedSeconds * 1000).toISOString();
+  }
+
+  if (match.kickoffAt) {
+    const kickoffMs = parseKickoffTimestampMs(match.kickoffAt);
+
+    if (kickoffMs !== undefined && kickoffMs <= nowMs) {
+      return new Date(kickoffMs).toISOString();
+    }
   }
 
   if (isLive) {
@@ -129,6 +174,27 @@ export function resolveLiveChartClobInterval(
   return "all";
 }
 
+export type ClobPriceHistoryPoint = { t: number; p: number };
+
+/**
+ * Keep only `/batch-prices-history` samples at or after match `start_ts` (kickoff).
+ */
+export function filterPriceHistoryByMatchStart(
+  historyByToken: Map<string, ClobPriceHistoryPoint[]>,
+  matchStartTs: number
+): Map<string, ClobPriceHistoryPoint[]> {
+  const filtered = new Map<string, ClobPriceHistoryPoint[]>();
+
+  for (const [tokenId, points] of historyByToken.entries()) {
+    filtered.set(
+      tokenId,
+      points.filter((point) => point.t >= matchStartTs)
+    );
+  }
+
+  return filtered;
+}
+
 export function resolveKickoffElapsedSeconds(
   kickoffAt: string,
   nowMs = Date.now()
@@ -142,6 +208,61 @@ export function resolveKickoffElapsedSeconds(
   return Math.max(0, Math.floor((nowMs - kickoffMs) / 1000));
 }
 
+export function mapFixturePointsToElapsedFromStartTs(
+  points: GameFixtureChartPoint[],
+  startTs: number
+): GameFixtureChartPoint[] {
+  const mapped: GameFixtureChartPoint[] = [];
+
+  for (const point of points) {
+    const timestampSeconds = Math.floor(Date.parse(point.timestamp) / 1000);
+
+    if (Number.isNaN(timestampSeconds) || timestampSeconds < startTs) {
+      continue;
+    }
+
+    const elapsedSeconds = timestampSeconds - startTs;
+
+    mapped.push({
+      ...point,
+      elapsedSeconds,
+      label: formatChartTimestampClockLabel(point.timestamp),
+    });
+  }
+
+  return mapped.sort(
+    (left, right) => (left.elapsedSeconds ?? 0) - (right.elapsedSeconds ?? 0)
+  );
+}
+
+export function mapBinaryFixturePointsToElapsedFromStartTs(
+  points: GameFixtureBinaryChartPoint[],
+  startTs: number
+): GameFixtureBinaryChartPoint[] {
+  const mapped: GameFixtureBinaryChartPoint[] = [];
+
+  for (const point of points) {
+    const timestampSeconds = Math.floor(Date.parse(point.timestamp) / 1000);
+
+    if (Number.isNaN(timestampSeconds) || timestampSeconds < startTs) {
+      continue;
+    }
+
+    const elapsedSeconds = timestampSeconds - startTs;
+
+    mapped.push({
+      ...point,
+      elapsedSeconds,
+      label: formatChartTimestampClockLabel(point.timestamp),
+    });
+  }
+
+  return mapped.sort(
+    (left, right) => (left.elapsedSeconds ?? 0) - (right.elapsedSeconds ?? 0)
+  );
+}
+
+/** @deprecated Prefer mapFixturePointsToElapsedFromStartTs with API `start_ts`. */
 export function mapFixturePointsToMatchMinutes(
   points: GameFixtureChartPoint[],
   kickoffAt: string
@@ -152,32 +273,13 @@ export function mapFixturePointsToMatchMinutes(
     return [];
   }
 
-  const mapped: GameFixtureChartPoint[] = [];
-
-  for (const point of points) {
-    const timestampMs = Date.parse(point.timestamp);
-
-    if (Number.isNaN(timestampMs) || timestampMs < kickoffMs) {
-      continue;
-    }
-
-    const elapsedSeconds = Math.max(
-      0,
-      Math.floor((timestampMs - kickoffMs) / 1000)
-    );
-
-    mapped.push({
-      ...point,
-      elapsedSeconds,
-      label: formatChartTimestampClockLabel(new Date(timestampMs).toISOString())
-    });
-  }
-
-  return mapped.sort(
-    (left, right) => (left.elapsedSeconds ?? 0) - (right.elapsedSeconds ?? 0)
+  return mapFixturePointsToElapsedFromStartTs(
+    points,
+    Math.floor(kickoffMs / 1000)
   );
 }
 
+/** @deprecated Prefer mapBinaryFixturePointsToElapsedFromStartTs with API `start_ts`. */
 export function mapBinaryFixturePointsToMatchMinutes(
   points: GameFixtureBinaryChartPoint[],
   kickoffAt: string
@@ -188,29 +290,9 @@ export function mapBinaryFixturePointsToMatchMinutes(
     return [];
   }
 
-  const mapped: GameFixtureBinaryChartPoint[] = [];
-
-  for (const point of points) {
-    const timestampMs = Date.parse(point.timestamp);
-
-    if (Number.isNaN(timestampMs) || timestampMs < kickoffMs) {
-      continue;
-    }
-
-    const elapsedSeconds = Math.max(
-      0,
-      Math.floor((timestampMs - kickoffMs) / 1000)
-    );
-
-    mapped.push({
-      ...point,
-      elapsedSeconds,
-      label: formatChartTimestampClockLabel(new Date(timestampMs).toISOString())
-    });
-  }
-
-  return mapped.sort(
-    (left, right) => (left.elapsedSeconds ?? 0) - (right.elapsedSeconds ?? 0)
+  return mapBinaryFixturePointsToElapsedFromStartTs(
+    points,
+    Math.floor(kickoffMs / 1000)
   );
 }
 

@@ -117,12 +117,12 @@ function HeaderMetric({
   value,
   statusVariant,
   subtitle,
-  statusLabel
+  badgeLabel
 }: {
   value: string;
   statusVariant?: ReturnType<typeof getScheduleRowVariant>;
   subtitle?: string;
-  statusLabel?: string;
+  badgeLabel?: string;
 }) {
   return (
     <div className="relative md:w-[453px] h-full">
@@ -136,12 +136,11 @@ function HeaderMetric({
 
         {statusVariant ? (
           <div className="mt-4 flex flex-col items-center gap-1 sm:mt-7">
-            <MatchStatusBadge variant={statusVariant} className="gap-[7px]" />
-            {statusLabel ? (
-              <span className="text-[10px] font-[457] uppercase tracking-wide text-[#909090]">
-                {statusLabel}
-              </span>
-            ) : null}
+            <MatchStatusBadge
+              variant={statusVariant}
+              className="gap-[7px]"
+              label={badgeLabel}
+            />
           </div>
         ) : null}
 
@@ -205,6 +204,10 @@ export function TradeGameHeader({
   const statusVariant = effectiveLive
     ? "ongoing"
     : getScheduleRowVariant(liveMatch.status);
+  const badgeLabel =
+    effectiveLive && liveMatch.period?.trim()
+      ? liveMatch.period.trim()
+      : undefined;
   const subtitle = effectiveLive
     ? liveClock
     : formatScheduleKickoff(liveMatch.kickoffAt);
@@ -224,7 +227,7 @@ export function TradeGameHeader({
         value={formatMatchScore(displayScore.homeScore, displayScore.awayScore)}
         statusVariant={statusVariant}
         subtitle={subtitle}
-        statusLabel={undefined}
+        badgeLabel={badgeLabel}
       />
       <TeamSideColumn
         team={{

@@ -159,7 +159,11 @@ export function buildEmptyGameStatisticsGoalEvents(): GameMatchChartEvent[] {
   return [];
 }
 
-function resolveGoalElapsedSeconds(
+/**
+ * Map statistics event time to chart x-axis seconds (game elapsed since kickoff).
+ * `elapsed` and `extra` are match-clock minutes (API-Football), e.g. 12' → 12, 90+6 → 90 and 6.
+ */
+export function resolveGoalElapsedSeconds(
   elapsed: number,
   extra: number | null | undefined
 ): number {

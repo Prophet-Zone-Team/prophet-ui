@@ -14,8 +14,10 @@ import {
 import {
   filterLiveBinaryFixtureChartByRange,
   filterLiveFixtureChartByRange,
-  resolveEffectiveKickoffAt,
-  resolveLiveChartMaxElapsed
+  resolveKickoffElapsedSeconds,
+  resolveLiveChartMaxElapsed,
+  resolveLiveChartPriceHistoryKickoffAt,
+  resolveMatchClockElapsedSeconds
 } from "@/lib/market/live-fixture-probability-chart";
 import {
   isMockLiveFixtureEnabled,
@@ -121,6 +123,42 @@ export function GameProbabilitySection({
   }, [isLive]);
   const liveChartActive =
     isLive && Boolean(chartKind) && Boolean(gameSnapshot && fixtureMarkets);
+  const sides = resolveMatchSides(liveMatch, snapshots);
+  const homeLabel = sides.home.name ?? "Home";
+  const awayLabel = sides.away.name ?? "Away";
+  const { goalEvents } = useGameStatistics({
+    match: liveMatch,
+    homeTeamName: homeLabel,
+    awayTeamName: awayLabel,
+    includeGoalEvents: liveChartActive
+  });
+  const matchClockElapsedSeconds = useMemo(
+    () =>
+      resolveMatchClockElapsedSeconds(
+        liveMatchForChart.liveElapsedSeconds,
+        goalEvents
+      ),
+    [goalEvents, liveMatchForChart.liveElapsedSeconds]
+  );
+  const priceHistoryKickoffAt = useMemo(
+    () => resolveLiveChartPriceHistoryKickoffAt(liveMatchForChart),
+    [liveMatchForChart]
+  );
+  const elapsedFromStartTime = useMemo(
+    () =>
+      priceHistoryKickoffAt
+        ? resolveKickoffElapsedSeconds(priceHistoryKickoffAt)
+        : undefined,
+    [priceHistoryKickoffAt]
+  );
+  const liveAxisElapsedSeconds = useMemo(
+    () =>
+      Math.max(
+        elapsedFromStartTime ?? 0,
+        matchClockElapsedSeconds ?? 0
+      ) || undefined,
+    [elapsedFromStartTime, matchClockElapsedSeconds]
+  );
   const {
     points: rawPoints,
     binaryPoints: rawBinaryPoints,
@@ -143,10 +181,9 @@ export function GameProbabilitySection({
     fixtureMarkets: fixtureMarkets!,
     chartKind: chartKind ?? "moneyline",
     lineKey,
-    enabled: liveChartActive
+    enabled: liveChartActive,
+    matchClockElapsedSeconds
   });
-
-  const sides = resolveMatchSides(liveMatch, snapshots);
   const displayScore = {
     homeScore: liveMatch.homeScore,
     awayScore: liveMatch.awayScore
@@ -176,14 +213,6 @@ export function GameProbabilitySection({
     [fallbackOutcome, selectedFixtureOutcome, tradeOutcomeSide]
   );
 
-  const homeLabel = sides.home.name ?? "Home";
-  const awayLabel = sides.away.name ?? "Away";
-  const { goalEvents } = useGameStatistics({
-    match: liveMatch,
-    homeTeamName: homeLabel,
-    awayTeamName: awayLabel,
-    includeGoalEvents: liveChartActive
-  });
   const resolvedSummaryItems = useMemo(
     () =>
       summaryItems ??
@@ -214,22 +243,18 @@ export function GameProbabilitySection({
       filterLiveFixtureChartByRange(
         liveChart.points,
         timeRange,
-        liveMatchForChart.liveElapsedSeconds
+        liveAxisElapsedSeconds
       ),
-    [liveChart.points, liveMatchForChart.liveElapsedSeconds, timeRange]
+    [liveChart.points, liveAxisElapsedSeconds, timeRange]
   );
   const liveFilteredBinaryPoints = useMemo(
     () =>
       filterLiveBinaryFixtureChartByRange(
         liveChart.binaryPoints,
         timeRange,
-        liveMatchForChart.liveElapsedSeconds
+        liveAxisElapsedSeconds
       ),
-    [liveChart.binaryPoints, liveMatchForChart.liveElapsedSeconds, timeRange]
-  );
-  const effectiveKickoffAt = useMemo(
-    () => resolveEffectiveKickoffAt(liveMatchForChart),
-    [liveMatchForChart]
+    [liveChart.binaryPoints, liveAxisElapsedSeconds, timeRange]
   );
   const liveMaxElapsedSeconds = useMemo(() => {
     if (!liveChartActive) {
@@ -242,19 +267,19 @@ export function GameProbabilitySection({
         : liveFilteredPoints;
 
     return resolveLiveChartMaxElapsed(
-      effectiveKickoffAt,
+      priceHistoryKickoffAt,
       points,
       timeRange,
-      liveMatchForChart.liveElapsedSeconds
+      liveAxisElapsedSeconds
     );
   }, [
     effectiveChartMode,
-    effectiveKickoffAt,
+    liveAxisElapsedSeconds,
     liveChart.maxElapsedSeconds,
     liveChartActive,
     liveFilteredBinaryPoints,
     liveFilteredPoints,
-    liveMatchForChart.liveElapsedSeconds,
+    priceHistoryKickoffAt,
     timeRange
   ]);
   const chartPoints = liveChartActive ? liveFilteredPoints : filteredPoints;
@@ -362,7 +387,7 @@ export function GameProbabilitySection({
               timeRange={timeRange}
               events={liveChartActive ? goalEvents : []}
               maxElapsedSeconds={liveMaxElapsedSeconds}
-              kickoffAt={liveChartActive ? effectiveKickoffAt : undefined}
+              kickoffAt={liveChartActive ? priceHistoryKickoffAt : undefined}
               homeCode={sides.home.code}
               awayCode={sides.away.code}
             />
@@ -385,7 +410,7 @@ export function GameProbabilitySection({
               timeRange={timeRange}
               events={liveChartActive ? goalEvents : []}
               maxElapsedSeconds={liveMaxElapsedSeconds}
-              kickoffAt={liveChartActive ? effectiveKickoffAt : undefined}
+              kickoffAt={liveChartActive ? priceHistoryKickoffAt : undefined}
               homeCode={sides.home.code}
               awayCode={sides.away.code}
             />

@@ -4,7 +4,8 @@ import { describe, it } from "node:test";
 import {
   mapGameStatisticsGoalEvents,
   mapGameStatisticsRows,
-  parseStatisticValue
+  parseStatisticValue,
+  resolveGoalElapsedSeconds
 } from "@/lib/market/map-game-statistics";
 import type { ProphetGameStatisticsPayload } from "@/types/prophet-api";
 
@@ -104,6 +105,22 @@ describe("map-game-statistics", () => {
     assert.deepEqual(goalEvents, [
       { elapsedSeconds: 360, side: "away", type: "goal" },
       { elapsedSeconds: 3900, side: "home", type: "goal" }
+    ]);
+  });
+
+  it("resolveGoalElapsedSeconds converts match minutes to seconds", () => {
+    assert.equal(resolveGoalElapsedSeconds(12, null), 720);
+    assert.equal(resolveGoalElapsedSeconds(90, 6), 5760);
+  });
+
+  it("maps fif-hai-nzl goal at 12 minutes to 720 elapsedSeconds", () => {
+    const payload = parseGameStatisticsPayload(
+      `{"statistics":[],"events":[{"time":{"elapsed":12,"extra":null},"team":{"id":2386,"name":"Haiti"},"type":"Goal","detail":"Normal Goal"}]}`
+    );
+    const goalEvents = mapGameStatisticsGoalEvents(payload, "Haiti", "New Zealand");
+
+    assert.deepEqual(goalEvents, [
+      { elapsedSeconds: 720, side: "home", type: "goal" }
     ]);
   });
 

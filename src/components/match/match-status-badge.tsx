@@ -35,6 +35,7 @@ export interface MatchStatusBadgeProps {
   variant: ScheduleRowVariant;
   size?: "sm" | "md";
   className?: string;
+  label?: string;
 }
 
 function OngoingStatusDot({ size }: { size: "sm" | "md" }) {
@@ -81,9 +82,11 @@ function StaticStatusDot({
 export function MatchStatusBadge({
   variant,
   size = "md",
-  className
+  className,
+  label
 }: MatchStatusBadgeProps) {
   const config = STATUS_CONFIG[variant];
+  const displayLabel = label ?? config.label;
 
   return (
     <span
@@ -99,7 +102,7 @@ export function MatchStatusBadge({
       ) : (
         <StaticStatusDot dotClass={config.dotClass} size={size} />
       )}
-      {config.label}
+      {displayLabel}
     </span>
   );
 }

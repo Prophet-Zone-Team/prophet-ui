@@ -14,12 +14,14 @@ import {
 } from "@/lib/market/fixture-probability-chart";
 import {
   buildLiveChartFallbackPoints,
-  mapBinaryFixturePointsToMatchMinutes,
-  mapFixturePointsToMatchMinutes,
-  resolveEffectiveKickoffAt,
+  filterPriceHistoryByMatchStart,
+  mapBinaryFixturePointsToElapsedFromStartTs,
+  mapFixturePointsToElapsedFromStartTs,
+  resolveKickoffElapsedSeconds,
   resolveLiveChartClobInterval,
   resolveLiveChartMaxElapsed,
   resolveLiveChartModeFromKind,
+  resolveLiveChartPriceHistoryKickoffAt,
   resolveLiveChartTimeWindow,
 } from "@/lib/market/live-fixture-probability-chart";
 import { isMockLiveFixtureEnabled } from "@/lib/market/mock-live-fixture-config";
@@ -60,6 +62,8 @@ export interface UseLiveMatchProbabilityChartOptions {
   chartKind: FixtureChartKind;
   lineKey?: string;
   enabled: boolean;
+  /** Match-clock seconds (WS + statistics goals) for chart kickoff alignment. */
+  matchClockElapsedSeconds?: number;
   pollIntervalMs?: number;
 }
 
@@ -165,6 +169,7 @@ export function useLiveMatchProbabilityChart({
   chartKind,
   lineKey,
   enabled,
+  matchClockElapsedSeconds,
   pollIntervalMs = 5000,
 }: UseLiveMatchProbabilityChartOptions): UseLiveMatchProbabilityChartResult {
   const matchRef = useRef(match);
@@ -196,7 +201,7 @@ export function useLiveMatchProbabilityChart({
       const currentMatch = matchRef.current;
       const currentGameSnapshot = gameSnapshotRef.current;
       const currentFixtureMarkets = fixtureMarketsRef.current;
-      const kickoffAt = resolveEffectiveKickoffAt(currentMatch);
+      const kickoffAt = resolveLiveChartPriceHistoryKickoffAt(currentMatch);
 
       if (isMockLiveFixtureEnabled()) {
         const mockKickoffAt = kickoffAt ?? new Date().toISOString();
@@ -281,14 +286,20 @@ export function useLiveMatchProbabilityChart({
             { signal },
           );
 
-        const historyByToken = historyResponseToMap(payload.history);
+        const historyByToken = filterPriceHistoryByMatchStart(
+          historyResponseToMap(payload.history),
+          timeWindow.startTs
+        );
 
         if (tokenResolution.mode === "ternary") {
           const rawPoints = buildFixtureChartPoints(
             currentMatch.id,
             attachHistoryToTernaryInputs(tokenResolution.inputs, historyByToken),
           );
-          const nextPoints = mapFixturePointsToMatchMinutes(rawPoints, kickoffAt);
+          const nextPoints = mapFixturePointsToElapsedFromStartTs(
+            rawPoints,
+            timeWindow.startTs
+          );
 
           if (nextPoints.length === 0) {
             applyFallback(kickoffAt);
@@ -304,9 +315,9 @@ export function useLiveMatchProbabilityChart({
             currentMatch.id,
             attachHistoryToBinaryInputs(tokenResolution.inputs, historyByToken),
           );
-          const nextBinaryPoints = mapBinaryFixturePointsToMatchMinutes(
+          const nextBinaryPoints = mapBinaryFixturePointsToElapsedFromStartTs(
             rawBinaryPoints,
-            kickoffAt,
+            timeWindow.startTs
           );
 
           if (nextBinaryPoints.length === 0) {
@@ -403,8 +414,8 @@ export function useLiveMatchProbabilityChart({
     };
   }, [enabled, fetchHistory, fetchKey, pollIntervalMs]);
 
-  const effectiveKickoffAt = useMemo(
-    () => resolveEffectiveKickoffAt(match),
+  const priceHistoryKickoffAt = useMemo(
+    () => resolveLiveChartPriceHistoryKickoffAt(match),
     [
       match.id,
       match.kickoffAt,
@@ -415,17 +426,27 @@ export function useLiveMatchProbabilityChart({
   );
 
   const maxElapsedSeconds = useMemo(() => {
-    if (!enabled || !effectiveKickoffAt) {
+    if (!enabled || !priceHistoryKickoffAt) {
       return 0;
     }
 
+    const elapsedFromStartTime =
+      resolveKickoffElapsedSeconds(priceHistoryKickoffAt) ?? 0;
+
     return resolveLiveChartMaxElapsed(
-      effectiveKickoffAt,
+      priceHistoryKickoffAt,
       chartMode === "binary" ? binaryPoints : points,
       "1D",
-      match.liveElapsedSeconds
+      Math.max(elapsedFromStartTime, matchClockElapsedSeconds ?? 0)
     );
-  }, [binaryPoints, chartMode, effectiveKickoffAt, enabled, points]);
+  }, [
+    binaryPoints,
+    chartMode,
+    enabled,
+    matchClockElapsedSeconds,
+    points,
+    priceHistoryKickoffAt,
+  ]);
 
   if (!enabled) {
     return EMPTY_RESULT;

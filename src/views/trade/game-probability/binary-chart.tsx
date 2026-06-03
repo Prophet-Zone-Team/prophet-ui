@@ -33,8 +33,8 @@ import type {
   GameMatchChartEvent,
 } from "@/types/market";
 import {
-  GoalEventMarkerLayer,
-  type GoalEventMarkerLayerProps,
+  GoalEventMarkerChartProvider,
+  GoalEventMarkerCustomized,
 } from "@/views/trade/game-probability/goal-event-marker-layer";
 
 const CHART_COLORS = {
@@ -98,24 +98,45 @@ export function GameBinaryProbabilityChart({
 
   const yDomain = useMemo(() => getBinaryFixtureChartYDomain(data), [data]);
 
+  const resolvedMaxElapsed = useMemo(() => {
+    if (!isLive) {
+      return 0;
+    }
+
+    if (maxElapsedSeconds > 0) {
+      return maxElapsedSeconds;
+    }
+
+    return Math.max(
+      ...data.map((point) => point.elapsedSeconds ?? 0),
+      LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS
+    );
+  }, [data, isLive, maxElapsedSeconds]);
+
+  const goalMarkerConfig = useMemo(
+    () => ({
+      events,
+      maxElapsedSeconds: resolvedMaxElapsed,
+      homeCode,
+      homeName: primaryLabel,
+      awayCode,
+      awayName: secondaryLabel,
+    }),
+    [
+      awayCode,
+      events,
+      homeCode,
+      primaryLabel,
+      resolvedMaxElapsed,
+      secondaryLabel,
+    ]
+  );
+
   if (data.length === 0) {
     return null;
   }
 
-  const resolvedMaxElapsed = isLive
-    ? maxElapsedSeconds > 0
-      ? maxElapsedSeconds
-      : Math.max(
-          ...data.map((point) => point.elapsedSeconds ?? 0),
-          LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
-        )
-    : 0;
-
-  return (
-    <div className="h-[280px] w-full min-h-[240px] sm:h-[320px] xl:h-[340px]">
-      <div className="flex h-full gap-4">
-        <div className="min-w-0 flex-1">
-          <ResponsiveContainer width="100%" height="100%">
+  const chart = (
             <LineChart
               data={chartData}
               margin={{
@@ -198,24 +219,28 @@ export function GameBinaryProbabilityChart({
                 />
               ))}
               {isLive ? (
-                <Customized
-                  component={(props: Record<string, unknown>) => (
-                    <GoalEventMarkerLayer
-                      offset={props.offset as GoalEventMarkerLayerProps["offset"]}
-                      width={props.width as number | undefined}
-                      height={props.height as number | undefined}
-                      maxElapsedSeconds={resolvedMaxElapsed}
-                      events={events}
-                      homeCode={homeCode}
-                      homeName={primaryLabel}
-                      awayCode={awayCode}
-                      awayName={secondaryLabel}
-                    />
-                  )}
-                />
+                <Customized component={GoalEventMarkerCustomized} />
               ) : null}
             </LineChart>
-          </ResponsiveContainer>
+  );
+
+  const chartBody = (
+    <ResponsiveContainer width="100%" height="100%">
+      {chart}
+    </ResponsiveContainer>
+  );
+
+  return (
+    <div className="h-[280px] w-full min-h-[240px] sm:h-[320px] xl:h-[340px]">
+      <div className="flex h-full gap-4">
+        <div className="min-w-0 flex-1">
+          {isLive ? (
+            <GoalEventMarkerChartProvider value={goalMarkerConfig}>
+              {chartBody}
+            </GoalEventMarkerChartProvider>
+          ) : (
+            chartBody
+          )}
         </div>
       </div>
     </div>

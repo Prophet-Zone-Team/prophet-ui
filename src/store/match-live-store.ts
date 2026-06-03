@@ -51,6 +51,7 @@ function snapshotsEqual(
     left.homeScore === right.homeScore &&
     left.awayScore === right.awayScore &&
     left.status === right.status &&
+    left.period === right.period &&
     left.liveElapsedSeconds === right.liveElapsedSeconds &&
     left.trackedHomeScore === right.trackedHomeScore &&
     left.trackedAwayScore === right.trackedAwayScore &&
