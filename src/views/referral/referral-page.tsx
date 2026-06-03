@@ -1,8 +1,9 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
+import { useAuth } from "@/context/auth/use-auth";
 import {
   referralPageContent,
   referralPageContentEmpty,
@@ -10,14 +11,14 @@ import {
 import { REFERRAL_USE_EMPTY_STATE } from "@/lib/referral/config";
 import { portfolioPageClass } from "@/views/portfolio/portfolio-ui";
 
+import { InviteFriendsModal } from "./invite-friends-modal";
 import { ReferralShell } from "./referral-shell";
-
-function noopInviteFriends() {
-  return undefined;
-}
 
 export function ReferralPage() {
   const searchParams = useSearchParams();
+  const { session } = useAuth();
+  const [inviteOpen, setInviteOpen] = useState(false);
+
   const useEmpty =
     REFERRAL_USE_EMPTY_STATE || searchParams.get("empty") === "1";
 
@@ -26,11 +27,20 @@ export function ReferralPage() {
     [useEmpty],
   );
 
+  const funderAddress = session?.funderAddress;
+
   return (
     <div className={portfolioPageClass}>
       <ReferralShell
         referral={content.referral}
-        onInviteFriends={noopInviteFriends}
+        onInviteFriends={() => setInviteOpen(true)}
+      />
+
+      <InviteFriendsModal
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        kickback={content.referral.kickback}
+        funderAddress={funderAddress}
       />
     </div>
   );
