@@ -85,18 +85,11 @@ export function TeamDetailHeader({
 
       <div className={teamHeroCardClass}>
         <div className="flex min-w-0 items-center gap-3">
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt=""
-              className="h-[68px] w-[68px] shrink-0 rounded-lg object-contain"
-            />
-          ) : (
-            <TeamFlag
-              name={displayName}
-              className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px]"
-            />
-          )}
+          <TeamFlag
+            name={displayName}
+            logoUrl={logoUrl}
+            className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px]"
+          />
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-3">

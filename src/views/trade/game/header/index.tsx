@@ -73,22 +73,15 @@ function TeamSide({
         align === "center" && "items-center"
       )}
     >
-      {logoUrl ? (
-        <img
-          src={logoUrl}
-          alt=""
-          className={cn(flagClassName, "object-cover")}
-        />
-      ) : (
-        <TeamFlag
-          code={code}
-          name={name}
-          className={cn(
-            flagClassName,
-            "!h-16 !w-16 !rounded-xl text-[52px] sm:!h-[85px] sm:!w-[85px] sm:text-[72px]"
-          )}
-        />
-      )}
+      <TeamFlag
+        code={code}
+        name={name}
+        logoUrl={logoUrl}
+        className={cn(
+          flagClassName,
+          "!h-16 !w-16 !rounded-xl text-[52px] sm:!h-[85px] sm:!w-[85px] sm:text-[72px]"
+        )}
+      />
 
       <span className="mt-3 inline-flex max-w-full items-center gap-[8px] sm:mt-[21px] sm:gap-1.5">
         <span className="truncate text-lg font-[400] capitalize leading-6 text-white sm:text-[26px] sm:leading-[31px]">

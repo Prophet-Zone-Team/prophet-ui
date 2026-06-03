@@ -13,7 +13,36 @@ interface TeamFlagProps {
   fallback?: boolean;
 }
 
-const defaultFlagClassName = "inline-block h-[23px] w-[23px] shrink-0";
+const defaultFlagClassName =
+  "inline-block h-[23px] w-[23px] shrink-0 overflow-hidden rounded-sm";
+
+function isImageUrl(value: string): boolean {
+  return (
+    value.startsWith("/") ||
+    value.startsWith("http://") ||
+    value.startsWith("https://")
+  );
+}
+
+function FlagIcon({
+  flagCode,
+  label,
+  className,
+}: {
+  flagCode: string;
+  label: string;
+  className?: string;
+}) {
+  const normalized = flagCode.trim().toLowerCase();
+
+  return (
+    <span
+      className={cn("fi fis", `fi-${normalized}`, defaultFlagClassName, className)}
+      role="img"
+      aria-label={label}
+    />
+  );
+}
 
 export function TeamFlag({
   code,
@@ -23,26 +52,36 @@ export function TeamFlag({
   fallbackClassName,
   fallback = true,
 }: TeamFlagProps) {
+  const label = name ?? code ?? "Team flag";
+
   if (logoUrl) {
-    return (
-      <img
-        src={logoUrl}
-        alt={name ?? code ?? "Team logo"}
-        className={cn(defaultFlagClassName, "object-cover", className)}
-      />
-    );
+    if (isImageUrl(logoUrl)) {
+      return (
+        <img
+          src={logoUrl}
+          alt={label}
+          className={cn(defaultFlagClassName, "object-cover", className)}
+        />
+      );
+    }
+
+    return <FlagIcon flagCode={logoUrl} label={label} className={className} />;
   }
 
   const team = teams[name as keyof typeof teams];
 
   if (team?.logo) {
-    return (
-      <img
-        src={team.logo}
-        alt={name ?? code ?? "Team logo"}
-        className={cn(defaultFlagClassName, "object-cover", className)}
-      />
-    );
+    if (isImageUrl(team.logo)) {
+      return (
+        <img
+          src={team.logo}
+          alt={label}
+          className={cn(defaultFlagClassName, "object-cover", className)}
+        />
+      );
+    }
+
+    return <FlagIcon flagCode={team.logo} label={label} className={className} />;
   }
 
   if (!fallback) {

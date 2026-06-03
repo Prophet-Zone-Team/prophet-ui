@@ -31,21 +31,12 @@ function TeamLogo({
   name: string;
   logoUrl?: string;
 }) {
-  if (logoUrl) {
-    return (
-      <img
-        src={logoUrl}
-        alt=""
-        className="h-[40px] w-[40px] shrink-0 rounded-lg object-contain"
-      />
-    );
-  }
-
   return (
     <TeamFlag
       code={code}
       name={name}
-      className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px]"
+      logoUrl={logoUrl}
+      className="h-[40px] w-[40px] shrink-0 rounded-lg text-[32px]"
     />
   );
 }
