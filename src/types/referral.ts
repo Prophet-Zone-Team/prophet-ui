@@ -37,16 +37,35 @@ export interface ReferralFormulaPart {
 }
 
 export interface ReferralActivityRow {
+  id: string;
   user: string;
-  orderId: string;
+  txId: string;
   market: string;
-  orderType: string;
-  orderVolume: string;
+  value: string;
   prophetFee: string;
-  kickbackRate: string;
-  reward: string;
-  status: string;
+  earnings: string;
   time: string;
+}
+
+export interface ReferralRewards {
+  totalRewardsUsdc: string;
+  claimableUsdc: string;
+}
+
+export interface ReferralKickback {
+  ratePercent: string;
+  description: string;
+  linkPrefix: string;
+  referralCode: string;
+  fullLink: string;
+}
+
+export interface ReferralSummary {
+  myReferrals: string;
+  totalVolume: string;
+  myEarnings: string;
+  toBeClaimed: string;
+  canClaim: boolean;
 }
 
 export interface ReferralHeroStat {
@@ -131,18 +150,11 @@ export interface ReferralCategory {
 }
 
 export interface ReferralContent {
-  title: string;
-  subtitle: string;
-  note: string;
-  balanceLabel: string;
-  balanceValue: string;
-  referralLink: string;
-  tabs: ReferralTab[];
-  metrics: ReferralMetric[];
-  formula: ReferralFormulaPart[];
-  earnFootnote: string;
+  rewards: ReferralRewards;
+  kickback: ReferralKickback;
+  summary: ReferralSummary;
   activityRows: ReferralActivityRow[];
-  claimMeta: string;
+  activityTotalCount: number;
 }
 
 export interface ReferralMarketingContent {

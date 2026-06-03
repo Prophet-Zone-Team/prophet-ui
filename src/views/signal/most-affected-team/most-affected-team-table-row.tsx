@@ -24,13 +24,13 @@ export function MostAffectedTeamDesktopRow({ entry }: MostAffectedTeamTableRowPr
       <span role="cell" className="tabular-nums">
         {entry.rank}
       </span>
-      <div role="cell" className="flex min-w-0 items-center gap-[8px]">
+      <div role="cell" className="flex min-w-0 items-center gap-[8px] overflow-hidden">
         <TeamFlag
           code={entry.teamCode}
           name={entry.teamName}
           className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px]"
         />
-        <span>{entry.teamName}</span>
+        <span className="whitespace-nowrap flex-1 w-0 overflow-hidden text-ellipsis">{entry.teamName}</span>
       </div>
       <span
         role="cell"

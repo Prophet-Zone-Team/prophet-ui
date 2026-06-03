@@ -6,7 +6,8 @@ import { useCallback, useState } from "react";
 import {
   PortfolioIcon,
   LogoutIcon,
-  FastBidIcon
+  FastBidIcon,
+  ReferralIcon
 } from "@/layout/header/wallet-menu-icons";
 import { CheckIcon, CopyIcon, RightArrowIcon } from "@/components/icons";
 
@@ -103,6 +104,21 @@ export function WalletMenuDropdown({
                   <PortfolioIcon />
                 </div>
                 <span className="flex-1">Portfolio</span>
+              </div>
+              <RightArrowIcon />
+            </Link>
+
+            <Link
+              href="/referral"
+              role="menuitem"
+              className={walletMenuItemClass}
+              onClick={onClose}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-[14px]">
+                  <ReferralIcon />
+                </div>
+                <span className="flex-1">Referral</span>
               </div>
               <RightArrowIcon />
             </Link>

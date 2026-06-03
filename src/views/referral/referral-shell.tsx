@@ -1,26 +1,32 @@
 import type { ReferralContent } from "@/types/referral";
 
-import { ReferralActivity } from "./referral-activity";
-import { ReferralEarn } from "./referral-earn";
-import { ReferralHero } from "./referral-hero";
-import { ReferralLinkCard } from "./referral-link-card";
-import { ReferralMetrics } from "./referral-metrics";
-import { ReferralTabs } from "./referral-tabs";
-import { referralShellClass } from "./referral-ui";
+import { ReferralActivityPanel } from "./referral-activity-panel";
+import { ReferralKickbackCard } from "./referral-kickback-card";
+import { ReferralRewardsCard } from "./referral-rewards-card";
+import { referralShellClass, referralTopGridClass } from "./referral-ui";
 
-interface ReferralShellProps {
+export type ReferralShellProps = {
   referral: ReferralContent;
-}
+  onInviteFriends?: () => void;
+};
 
-export function ReferralShell({ referral }: ReferralShellProps) {
+export function ReferralShell({ referral, onInviteFriends }: ReferralShellProps) {
   return (
-    <section className={referralShellClass} aria-labelledby="referral-title">
-      <ReferralHero referral={referral} />
-      <ReferralTabs tabs={referral.tabs} />
-      <ReferralLinkCard referralLink={referral.referralLink} />
-      <ReferralMetrics metrics={referral.metrics} />
-      <ReferralEarn formula={referral.formula} footnote={referral.earnFootnote} />
-      <ReferralActivity rows={referral.activityRows} claimMeta={referral.claimMeta} />
+    <section className={referralShellClass} aria-label="Referral program">
+      <div className={referralTopGridClass}>
+        <ReferralRewardsCard rewards={referral.rewards} />
+        <ReferralKickbackCard
+          kickback={referral.kickback}
+          onInviteFriends={onInviteFriends}
+        />
+      </div>
+
+      <ReferralActivityPanel
+        summary={referral.summary}
+        activityRows={referral.activityRows}
+        activityTotalCount={referral.activityTotalCount}
+        onInviteFriends={onInviteFriends}
+      />
     </section>
   );
 }

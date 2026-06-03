@@ -56,6 +56,7 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
             code={item.teamCode}
             name={item.teamName}
             className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] md:h-[20px] md:w-[20px] md:text-[20px]"
+            fallback={false}
           />
           <span className="truncate text-[14px] font-[457] leading-[17px] text-black md:text-[16px] md:leading-[19px]">
             {item.teamName}

@@ -42,10 +42,11 @@ export function mapTopCategoryImpactToSummary(
 ): SignalSummaryStats {
   const positive = toNumber(impact?.positive);
   const negative = toNumber(impact?.negative);
+  const neutral = toNumber(impact?.neutral);
   const highImpact = toNumber(impact?.high_impact);
 
   return {
-    todaySignal: positive + negative + highImpact,
+    todaySignal: positive + negative + neutral,
     positive,
     negative,
     highImpact
@@ -90,7 +91,7 @@ export function mapTopCategoryImpactToMostAffectedTeams(
         rank: toNumber(item.rank) || index + 1,
         teamCode: resolveTeamCode(teamName, teamCodeLookup),
         teamName,
-        netImpact: parseImpactNumber(item.net),
+        netImpact: parseImpactNumber(item.abs_impact),
         highImpactEventCount: toNumber(item.high_impact)
       };
     })
