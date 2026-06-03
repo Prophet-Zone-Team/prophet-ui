@@ -152,7 +152,7 @@ export function parseTeamsFromTitle(title: string): {
 function mapProphetGameStatus(
   game: ProphetPolyMarketGameItem
 ): WorldCupMatchStatus {
-  if (game.closed === 1) {
+  if (game.closed === 1 || game.status === 2) {
     return "finished";
   }
 
