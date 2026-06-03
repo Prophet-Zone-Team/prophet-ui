@@ -71,6 +71,8 @@ export function usePortfolioData(): UsePortfolioDataResult {
     useState<PortfolioLoadStatus>("idle");
   const [message, setMessage] = useState<string | undefined>();
   const coreLoadedRef = useRef(false);
+  const coreLoadInFlightRef = useRef<Promise<void> | null>(null);
+  const sessionUserIdRef = useRef<string | undefined>(undefined);
   const openOrdersLoadedRef = useRef(false);
   const historyLoadedPagesRef = useRef<Set<number>>(new Set());
   const historyRequestIdRef = useRef(0);
@@ -120,39 +122,56 @@ export function usePortfolioData(): UsePortfolioDataResult {
       return;
     }
 
+    if (!options?.force && coreLoadInFlightRef.current) {
+      return coreLoadInFlightRef.current;
+    }
+
     if (!options?.silent) {
       setCoreStatus("loading");
     }
     setMessage(undefined);
 
-    try {
-      const errors: string[] = [];
+    const loadPromise = (async () => {
+      try {
+        const errors: string[] = [];
 
-      const positionsPayload = await fetchJson<{
-        positions?: UserPositionRecord[];
-        error?: string;
-      }>("/api/trading/positions?limit=100").catch((error) => {
-        errors.push(error instanceof Error ? error.message : String(error));
-        return undefined;
-      });
+        const positionsPayload = await fetchJson<{
+          positions?: UserPositionRecord[];
+          error?: string;
+        }>("/api/trading/positions?limit=100").catch((error) => {
+          errors.push(error instanceof Error ? error.message : String(error));
+          return undefined;
+        });
 
-      const nextPositions = positionsPayload?.positions ?? [];
-      setPositions(nextPositions);
+        const nextPositions = positionsPayload?.positions ?? [];
+        setPositions(nextPositions);
 
-      const conditionIds = collectUniqueConditionIdsFromPositions(nextPositions);
-      await ensureMarketContext(conditionIds, { force: options?.force });
+        const conditionIds =
+          collectUniqueConditionIdsFromPositions(nextPositions);
+        await ensureMarketContext(conditionIds, { force: options?.force });
 
-      const apiErrors = [positionsPayload?.error].filter(Boolean);
-      const combinedMessage =
-        [...errors, ...apiErrors].join(" ").trim() || undefined;
-      setMessage(combinedMessage);
-      coreLoadedRef.current = true;
-      setCoreStatus(combinedMessage && !positionsPayload ? "error" : "ready");
-    } catch (error) {
-      coreLoadedRef.current = true;
-      setCoreStatus("error");
-      setMessage(error instanceof Error ? error.message : String(error));
+        const apiErrors = [positionsPayload?.error].filter(Boolean);
+        const combinedMessage =
+          [...errors, ...apiErrors].join(" ").trim() || undefined;
+        setMessage(combinedMessage);
+        coreLoadedRef.current = true;
+        setCoreStatus(combinedMessage && !positionsPayload ? "error" : "ready");
+      } catch (error) {
+        coreLoadedRef.current = true;
+        setCoreStatus("error");
+        setMessage(error instanceof Error ? error.message : String(error));
+      } finally {
+        if (!options?.force) {
+          coreLoadInFlightRef.current = null;
+        }
+      }
+    })();
+
+    if (!options?.force) {
+      coreLoadInFlightRef.current = loadPromise;
     }
+
+    return loadPromise;
   }, [ensureMarketContext, resetTabData, session]);
 
   const loadOpenOrders = useCallback(
@@ -280,15 +299,25 @@ export function usePortfolioData(): UsePortfolioDataResult {
   ]);
 
   useEffect(() => {
-    resetTabData();
-
     if (!session) {
+      if (sessionUserIdRef.current !== undefined) {
+        resetTabData();
+      }
+      sessionUserIdRef.current = undefined;
+      coreLoadInFlightRef.current = null;
       setPositions([]);
       coreLoadedRef.current = false;
       setCoreStatus("ready");
       setMessage(undefined);
       return;
     }
+
+    if (sessionUserIdRef.current !== session.userId) {
+      resetTabData();
+      coreLoadedRef.current = false;
+      coreLoadInFlightRef.current = null;
+    }
+    sessionUserIdRef.current = session.userId;
 
     void loadCore();
   }, [loadCore, resetTabData, session]);

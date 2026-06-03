@@ -18,6 +18,7 @@ import {
   getPortfolioMarketClosedDisabledReason
 } from "@/lib/portfolio/portfolio-metrics";
 import {
+  resolvePortfolioMarketIcon,
   resolveTeamForOutcome,
   type OpenOrderMarketContext
 } from "@/lib/portfolio/teams-condition";
@@ -128,10 +129,9 @@ export function PortfolioPositionsTable({
 
   positions.forEach((position) => {
     const marketContext = marketContextMap[position.conditionId];
-    const teamName = resolveTeamForOutcome(
-      marketContext?.teams ?? [],
-      position.outcome
-    )?.name;
+    const teams = marketContext?.teams ?? [];
+    const teamName = resolveTeamForOutcome(teams, position.outcome)?.name;
+    const marketIcon = resolvePortfolioMarketIcon(teams, position.outcome);
     const marketTitle = marketContext?.title ?? position.title;
     const timeValue = positionTimeMap.get(position.asset);
     const pnlTone =
@@ -218,7 +218,7 @@ export function PortfolioPositionsTable({
           href={resolveTradeHref(position.eventSlug ?? position.slug)}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
-          teamName={teamName}
+          icon={marketIcon}
         />
         <span className="font-[556]">
           {formatTeamDetailMoney(position.initialValue)}
@@ -245,7 +245,7 @@ export function PortfolioPositionsTable({
           href={resolveTradeHref(position.eventSlug ?? position.slug)}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
-          teamName={teamName}
+          icon={marketIcon}
         />
         <div className="grid grid-cols-2 gap-2">
           <PortfolioTableMobileField label="Traded">

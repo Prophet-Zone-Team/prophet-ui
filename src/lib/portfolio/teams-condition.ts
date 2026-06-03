@@ -73,6 +73,70 @@ export function buildOpenOrderMarketMap(
   return map;
 }
 
+export function resolveMatchSidesFromTeams(
+  teams: ProphetTeamsConditionTeam[]
+): { home: ProphetTeamsConditionTeam; away: ProphetTeamsConditionTeam } | undefined {
+  if (teams.length < 2) {
+    return undefined;
+  }
+
+  const home = teams.find((team) => team.ordering === "home") ?? teams[0];
+  const away =
+    teams.find((team) => team.ordering === "away") ?? teams[1] ?? teams[0];
+
+  if (!home || !away) {
+    return undefined;
+  }
+
+  return { home, away };
+}
+
+export type PortfolioMarketIcon =
+  | { kind: "single"; teamName: string }
+  | { kind: "match"; homeName: string; awayName: string }
+  | { kind: "draw" }
+  | { kind: "placeholder" };
+
+export function resolvePortfolioMarketIcon(
+  teams: ProphetTeamsConditionTeam[],
+  outcome: string
+): PortfolioMarketIcon {
+  const normalizedOutcome = outcome.trim().toLowerCase();
+
+  if (teams.length === 0) {
+    return { kind: "placeholder" };
+  }
+
+  if (teams.length === 1) {
+    const team = resolveTeamForOutcome(teams, outcome);
+    return { kind: "single", teamName: team?.name ?? teams[0]?.name ?? "" };
+  }
+
+  const sides = resolveMatchSidesFromTeams(teams);
+
+  if (!sides) {
+    return { kind: "placeholder" };
+  }
+
+  const matchedTeam = teams.find(
+    (team) => team.name.trim().toLowerCase() === normalizedOutcome
+  );
+
+  if (matchedTeam) {
+    return { kind: "single", teamName: matchedTeam.name };
+  }
+
+  if (normalizedOutcome === "draw") {
+    return { kind: "draw" };
+  }
+
+  return {
+    kind: "match",
+    homeName: sides.home.name,
+    awayName: sides.away.name
+  };
+}
+
 export function resolveTeamForOutcome(
   teams: ProphetTeamsConditionTeam[],
   outcome: string

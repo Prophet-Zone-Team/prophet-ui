@@ -11,6 +11,7 @@ import {
   titleCase
 } from "@/lib/portfolio/portfolio-format";
 import {
+  resolvePortfolioMarketIcon,
   resolveTeamForOutcome,
   type OpenOrderMarketContext
 } from "@/lib/portfolio/teams-condition";
@@ -156,10 +157,9 @@ export function PortfolioOpenOrdersTable({
   openOrders.forEach((order) => {
     const marketContext = marketContextMap[order.market];
     const marketTitle = resolveOpenOrderMarketTitle(order, marketContextMap);
-    const teamName = resolveTeamForOutcome(
-      marketContext?.teams ?? [],
-      order.outcome
-    )?.name;
+    const teams = marketContext?.teams ?? [];
+    const teamName = resolveTeamForOutcome(teams, order.outcome)?.name;
+    const marketIcon = resolvePortfolioMarketIcon(teams, order.outcome);
     const price = Number(order.price);
     const sideLabel = titleCase(order.side);
     const sidePriceLabel = `${sideLabel} ${
@@ -195,7 +195,7 @@ export function PortfolioOpenOrdersTable({
       <PortfolioMarketCell
         title={marketTitle}
         outcome={order.outcome}
-        teamName={teamName}
+        icon={marketIcon}
       />
     );
 

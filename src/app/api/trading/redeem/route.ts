@@ -67,7 +67,7 @@ export async function GET(request: Request) {
     const positions = await fetchUserPositions({
       userAddress: record.session.funderAddress,
       conditionIds: [conditionId],
-      limit: 10,
+      limit: 10
     });
     const redeemablePosition = positions.find(
       (position) =>

@@ -75,18 +75,29 @@ export function PortfolioActivityTabs({
   const [positionPage, setPositionPage] = useState(1);
   const [openOrderPage, setOpenOrderPage] = useState(1);
   const loadedTabsRef = useRef<Set<PortfolioTabId>>(new Set());
+  const prevTabRef = useRef<PortfolioTabId | null>(null);
 
   useEffect(() => {
     if (!sessionConnected) {
       loadedTabsRef.current = new Set();
+      prevTabRef.current = null;
       return;
     }
 
+    const previousTab = prevTabRef.current;
+
     if (tab === "position") {
-      if (!loadedTabsRef.current.has("position")) {
+      const isFirstVisit = !loadedTabsRef.current.has("position");
+      const switchedBackToPosition =
+        previousTab !== null && previousTab !== "position";
+
+      if (isFirstVisit) {
         loadedTabsRef.current.add("position");
+      } else if (switchedBackToPosition) {
         void loadCore({ force: true, silent: true });
       }
+
+      prevTabRef.current = tab;
       return;
     }
 
@@ -95,11 +106,13 @@ export function PortfolioActivityTabs({
         loadedTabsRef.current.add("open-order");
         void loadOpenOrders();
       }
+      prevTabRef.current = tab;
       return;
     }
 
     if (tab === "strategy") {
       loadedTabsRef.current.add("strategy");
+      prevTabRef.current = tab;
       return;
     }
 
@@ -107,6 +120,8 @@ export function PortfolioActivityTabs({
       loadedTabsRef.current.add("history");
       void loadActivityHistory({ page: historyPage });
     }
+
+    prevTabRef.current = tab;
   }, [
     historyPage,
     loadActivityHistory,
