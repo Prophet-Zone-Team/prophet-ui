@@ -60,7 +60,7 @@ export function WalletConnectedBar({
         <PrivateBalance onClick={onPrivateBalanceClick} className="hidden md:flex" />
       </RegionRestrictedControl>
       <div className="hidden md:block h-[31px] w-px shrink-0 bg-prophet-line"></div>
-      <div className="hidden md:flex flex-col justify-center items-end gap-0">
+      <div className="hidden md:flex flex-col justify-center items-end gap-0 cursor-default h-[50px] px-2.5 rounded-lg border border-[#FFFFFF] transition-colors hover:border-[#EBEBEB]">
         <span className={walletBalanceLabelClass}>Balance</span>
         <span className={walletBalanceValueClass}>${balanceDisplay}</span>
       </div>
