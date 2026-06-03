@@ -18,6 +18,7 @@ export function TopCategories({
   isLoading = false
 }: TopCategoriesProps) {
   const percentages = getCategoryPercentages(data.categories);
+  const isEmpty = !isLoading && data.categories.length === 0;
 
   return (
     <section
@@ -33,26 +34,30 @@ export function TopCategories({
       </h2>
 
       {isLoading ? (
-        <p className="mt-4 text-[14px] text-[#909090]">Loading...</p>
-      ) : null}
+        <p className="mt-4 flex-1 text-[14px] text-[#909090]">Loading...</p>
+      ) : isEmpty ? (
+        <p className="mt-4 flex flex-1 items-center justify-center py-8 text-center text-[14px] text-[#909090] md:text-[16px]">
+          No category data available.
+        </p>
+      ) : (
+        <div className="mt-4 flex min-h-0 flex-1 flex-col items-center gap-4 md:mt-5 md:flex-row md:items-center md:justify-between md:gap-5">
+          <div className="flex w-full min-w-0 flex-1 flex-col">
+            {data.categories.map((category, index) => (
+              <TopCategoriesLegendRow
+                key={category.id}
+                category={category}
+                percent={percentages[index] ?? 0}
+                highlighted={index === 0}
+              />
+            ))}
+          </div>
 
-      <div className="mt-4 flex min-h-0 flex-1 flex-col items-center gap-4 md:mt-5 md:flex-row md:items-center md:justify-between md:gap-5">
-        <div className="flex w-full min-w-0 flex-1 flex-col">
-          {data.categories.map((category, index) => (
-            <TopCategoriesLegendRow
-              key={category.id}
-              category={category}
-              percent={percentages[index] ?? 0}
-              highlighted={index === 0}
-            />
-          ))}
+          <TopCategoriesDonutChart
+            categories={data.categories}
+            className="mx-auto shrink-0 md:mx-0"
+          />
         </div>
-
-        <TopCategoriesDonutChart
-          categories={data.categories}
-          className="mx-auto shrink-0 md:mx-0"
-        />
-      </div>
+      )}
     </section>
   );
 }

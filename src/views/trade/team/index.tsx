@@ -63,7 +63,11 @@ function TradeTeamViewContent({
         </div>
 
         <aside className="order-1 flex min-w-0 flex-col gap-4 xl:order-2 xl:sticky xl:top-14">
-          <TradeWidget snapshot={snapshot} />
+          <TradeWidget
+            snapshot={snapshot}
+            outcomeButtonClassName="w-full"
+            outcomeButtonContainerClassName="gap-3"
+          />
           <RelatedGames
             teamNames={[snapshot.team.name]}
             highlightTeamId={snapshot.team.id}
