@@ -88,7 +88,7 @@ export function mapTeamPowerRankingResponse(
         roundOf16Probability: parseProbability(item.round_of_16_probability),
         pathDifficulty: (item.path_difficulty_label ?? "Medium") as TeamPowerRankingPathDifficulty,
         trend,
-        signalStatus: (item.signal_status ?? "Neutral") as TeamPowerRankingSignalStatus,
+        signalStatus: (item.signal_status ?? "Positive") as TeamPowerRankingSignalStatus,
         link: teamDetailHref(teamId),
       };
     });

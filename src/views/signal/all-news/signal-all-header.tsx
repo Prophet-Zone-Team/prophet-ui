@@ -11,7 +11,7 @@ import type {
 } from "./types";
 
 export const signalAllListRowClass =
-  "flex w-full max-w-[679px] items-center gap-[16px]";
+  "flex w-full items-center gap-[16px]";
 
 export type SignalAllHeaderProps = {
   teamFilter: SignalAllTeamFilter;
@@ -37,7 +37,7 @@ export function SignalAllHeader({
   return (
     <header
       className={cn(
-        "flex w-full max-w-none flex-col px-3 pb-0 pt-4 md:max-w-[679px] md:p-5 md:pb-0",
+        "flex w-full max-w-none flex-col px-3 pb-0 pt-4 md:p-5 md:pb-0",
         className
       )}
     >

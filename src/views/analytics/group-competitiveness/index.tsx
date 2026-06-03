@@ -18,7 +18,7 @@ export function GroupCompetitiveness({ className }: GroupCompetitivenessProps) {
     <article
       aria-label="Group competitiveness"
       className={cn(
-        "box-border flex h-auto w-full max-w-none flex-col md:h-[453px] md:max-w-[696px]",
+        "box-border flex h-auto w-full max-w-none flex-col md:h-[453px]",
         "rounded-[12px] border border-[#EBEBEB] bg-white",
         className
       )}

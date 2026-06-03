@@ -19,7 +19,7 @@ export function MostAffectedTeam({
     <section
       aria-label="Most affected team"
       className={cn(
-        "box-border flex h-auto w-full max-w-none flex-col md:h-[564px] md:max-w-[696px]",
+        "box-border flex h-auto w-full max-w-none flex-col md:h-[564px]",
         "rounded-[12px] border border-[#EBEBEB] bg-white px-3 pb-4 pt-4 md:px-5 md:pb-5 md:pt-5",
         className
       )}

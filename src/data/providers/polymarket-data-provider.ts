@@ -365,6 +365,29 @@ function getFirstClobTokenId(market: GammaMarket): string | undefined {
   return parseArrayField(market.clobTokenIds).map(String).find(Boolean);
 }
 
+export async function enrichTeamSnapshotWithClobMetadata(
+  snapshot: TeamMarketSnapshot,
+  gammaMarket: GammaMarketRecord,
+): Promise<TeamMarketSnapshot> {
+  const feeDetails = await fetchClobMarketEnrichment([{ market: gammaMarket as GammaMarket }]);
+  const polymarket = attachClobMarketEnrichment(
+    snapshot.market.polymarket,
+    feeDetails.get(getMarketFeeKey(gammaMarket as GammaMarket)),
+  );
+
+  if (!polymarket) {
+    return snapshot;
+  }
+
+  return {
+    ...snapshot,
+    market: {
+      ...snapshot.market,
+      polymarket,
+    },
+  };
+}
+
 function attachClobMarketEnrichment(
   metadata: PolymarketMarketMetadata | undefined,
   enrichment: ClobMarketEnrichment | undefined,

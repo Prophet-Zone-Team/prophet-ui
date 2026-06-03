@@ -28,7 +28,7 @@ function trendToSignalStatus(
 ): TeamPowerRankingSignalStatus {
   if (trend === "up") return "Positive";
   if (trend === "down") return "Negative";
-  return "Neutral";
+  return "Positive";
 }
 
 type RawEntry = {

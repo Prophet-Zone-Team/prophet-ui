@@ -5,7 +5,6 @@ import { cn } from "@/lib/cn";
 import { formatImpactCountWithPercent } from "./format";
 import {
   NegativeImpactIcon,
-  NeutralImpactIcon,
   PositiveImpactIcon
 } from "./icons";
 import type { ImpactSentiment } from "./types";
@@ -19,13 +18,11 @@ export type ImpactDistributionLegendItemProps = {
 
 const LABELS: Record<ImpactSentiment, string> = {
   positive: "Positive",
-  neutral: "Neutral",
   negative: "Negative"
 };
 
 const ICONS: Record<ImpactSentiment, () => ReactNode> = {
   positive: () => <PositiveImpactIcon />,
-  neutral: () => <NeutralImpactIcon />,
   negative: () => <NegativeImpactIcon />
 };
 

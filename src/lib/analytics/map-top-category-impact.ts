@@ -42,14 +42,11 @@ export function mapTopCategoryImpactToSummary(
 ): SignalSummaryStats {
   const positive = toNumber(impact?.positive);
   const negative = toNumber(impact?.negative);
-  const neutral = toNumber(impact?.neutral);
-  const highImpact = toNumber(impact?.high_impact);
 
   return {
-    todaySignal: positive + negative + neutral,
+    todaySignal: positive + negative,
     positive,
     negative,
-    highImpact
   };
 }
 
@@ -72,8 +69,7 @@ export function mapTopCategoryImpactToOverview(
   return {
     segments: [
       { sentiment: "positive", count: toNumber(impact?.positive) },
-      { sentiment: "neutral", count: toNumber(impact?.neutral) },
-      { sentiment: "negative", count: toNumber(impact?.negative) }
+      { sentiment: "negative", count: toNumber(impact?.negative) },
     ]
   };
 }

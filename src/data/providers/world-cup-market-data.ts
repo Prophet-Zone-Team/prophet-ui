@@ -55,6 +55,9 @@ interface FootballLayer {
   error?: string;
 }
 
+export { getTeamMarketSnapshot } from "@/data/providers/team-market-snapshot";
+export type { TeamMarketSnapshotResult } from "@/data/providers/types";
+
 export async function getWorldCupMarketData(options: WorldCupMarketDataOptions = {}): Promise<WorldCupMarketData> {
   const cacheKey = getMarketDataCacheKey(options);
   const cached = marketDataCache.get(cacheKey);

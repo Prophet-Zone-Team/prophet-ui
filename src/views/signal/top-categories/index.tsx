@@ -24,7 +24,7 @@ export function TopCategories({
     <section
       aria-label="Today's top categories"
       className={cn(
-        "box-border flex h-auto w-full max-w-none flex-col md:h-[277px] md:max-w-[696px]",
+        "box-border flex h-auto w-full max-w-none flex-col md:h-[277px]",
         "rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-4 md:px-5 md:py-5",
         className
       )}

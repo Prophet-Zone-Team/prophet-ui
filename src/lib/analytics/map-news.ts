@@ -8,6 +8,7 @@ import {
   NEWS_IMPACT_POSITIVE_KEYWORDS
 } from "./config";
 import {
+  formatDateMonthAndTime,
   formatRelativeTime,
   publishedAtToOrder
 } from "./format-relative-time";
@@ -34,15 +35,11 @@ export function parseJsonArrayField(value: string | undefined): string[] {
 export function computeImpactScore(
   score: number,
 ): { impactScore: number; sentiment: NewsSentiment; } {
-  // <= 45
-  // > 45 & < 55
   // >= 55
   let sentiment: NewsSentiment = "negative";
   // const magnitude = Math.round(score - 100) / 10;
   const magnitude = score / 10;
-  if (score > 45 && score < 55) {
-    sentiment = "neutral";
-  } else if (score >= 55) {
+  if (score >= 50) {
     sentiment = "positive";
   }
 
@@ -82,15 +79,21 @@ function buildRelatedLabel(
 export function mapNewsArticleToImpactItem(
   article: ProphetAnalyticsNewsArticle,
   teamCodeLookup?: TeamCodeLookup,
-  options?: { highlighted?: boolean; homeTeamName?: string; awayTeamName?: string; }
+  options?: {
+    highlighted?: boolean;
+    homeTeamName?: string;
+    awayTeamName?: string;
+    defaultTeamName?: string;
+  }
 ): NewsImpactItem {
   const reasons = parseJsonArrayField(article.reasons_json);
   const matchedTeams = parseJsonArrayField(article.matched_teams_json);
   const matchedPlayers = parseJsonArrayField(article.matched_players_json);
   const category = article.category ?? "";
   const apiScore = article.score ?? 0;
-  const teamName = matchedTeams?.find((team) => team.toLowerCase() === options?.homeTeamName?.toLowerCase() || team.toLowerCase() === options?.awayTeamName?.toLowerCase()) ?? "World Cup";
+  const teamName = matchedTeams?.find((team) => team.toLowerCase() === options?.homeTeamName?.toLowerCase() || team.toLowerCase() === options?.awayTeamName?.toLowerCase()) ?? options?.defaultTeamName ?? matchedTeams[0] ?? "World Cup";
   const publishedAt = article.published_at;
+  const publishedAtFormatted = formatDateMonthAndTime(publishedAt);
 
   const { impactScore, sentiment } = computeImpactScore(apiScore);
 
@@ -108,6 +111,7 @@ export function mapNewsArticleToImpactItem(
     highlighted:
       options?.highlighted ?? apiScore >= NEWS_HIGH_IMPACT_THRESHOLD,
     publishedAt,
+    publishedAtFormatted,
     sourceUrl: article.url,
     category,
     matchedTeams,

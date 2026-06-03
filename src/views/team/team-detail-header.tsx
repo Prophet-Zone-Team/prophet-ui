@@ -63,8 +63,8 @@ export function TeamDetailHeader({
   detail
 }: TeamDetailHeaderProps) {
   const { team, market } = snapshot;
-  const fifaRank = detail?.fifaRank ?? team.fifaRank;
-  const displayName = detail?.name ?? team.name;
+  const fifaRank = detail?.fifaRank;
+  const displayName = detail?.name;
   const logoUrl = detail?.logo;
   const bestFinish = detail?.bestFinish;
   const titles = detail?.titles;
@@ -96,7 +96,6 @@ export function TeamDetailHeader({
             />
           ) : (
             <TeamFlag
-              code={team.code}
               name={displayName}
               className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px]"
             />
@@ -157,7 +156,7 @@ export function TeamDetailHeader({
             <div className="flex items-center gap-2">
               <BookmarkControl
                 slug={market.polymarket?.slug || ""}
-                teamName={displayName}
+                teamName={displayName ?? ""}
               />
               <button
                 type="button"

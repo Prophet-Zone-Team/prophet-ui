@@ -2,7 +2,6 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { formatImpactScore } from "@/views/analytics/news/format";
 import {
-  HighImpactSentimentIcon,
   NegativeSentimentIcon,
   PositiveSentimentIcon
 } from "@/views/analytics/news/icons";
@@ -23,10 +22,6 @@ function SentimentIcon({
     return <NegativeSentimentIcon />;
   }
 
-  if (sentiment === "neutral") {
-    return <HighImpactSentimentIcon />;
-  }
-
   return <PositiveSentimentIcon />;
 }
 
@@ -35,7 +30,7 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
   return (
     <article
       className={cn(
-        "relative flex w-full max-w-none flex-col gap-2 rounded-[12px] bg-[#F9FAFC] px-3 py-3 transition-colors hover:bg-[#F0F2F5] md:h-[78px] md:max-w-[679px] md:flex-row md:items-center md:gap-4 md:px-5",
+        "relative flex w-full max-w-none flex-col gap-2 rounded-[12px] bg-[#F9FAFC] px-3 py-3 transition-colors hover:bg-[#F0F2F5] md:h-[78px] md:flex-row md:items-center md:gap-4 md:px-5",
         onSelect && "cursor-pointer",
         className
       )}
@@ -51,7 +46,7 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
       ) : null}
 
       <div className="flex w-full shrink-0 items-center justify-between gap-2 md:w-[110px] md:flex-col md:items-start md:gap-1">
-        <div className="flex min-w-0 items-center gap-2 md:gap-[8px]">
+        <div className="flex w-full flex-1 items-center gap-2 md:gap-[8px] overflow-hidden">
           <TeamFlag
             code={item.teamCode}
             name={item.teamName}
@@ -63,7 +58,7 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
           </span>
         </div>
         <span className="shrink-0 whitespace-nowrap text-[12px] font-[457] leading-[14px] text-[#909090] md:mt-1 md:text-[14px] md:leading-[17px]">
-          {item.publishedAtLabel}
+          {item.publishedAtFormatted}
         </span>
       </div>
 
@@ -89,7 +84,6 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
               "whitespace-nowrap text-base font-[556] leading-[19px] md:text-[18px] md:leading-[21px]",
               item.sentiment === "positive" ? "text-[#7BCA25]" : "",
               item.sentiment === "negative" ? "text-[#FF674B]" : "",
-              item.sentiment === "neutral" ? "text-[#F4B600]" : "",
             )}
           >
             {formatImpactScore(item.impactScore)}
