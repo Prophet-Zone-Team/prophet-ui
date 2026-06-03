@@ -860,7 +860,7 @@ export default {
     continent: "North America",
     visible: false
   },
-  "Türkiye": {
+  Türkiye: {
     name: "Turkiye",
     logo: "tr",
     abbreviation: "tur",
@@ -868,6 +868,13 @@ export default {
     visible: false
   },
   "Bosnia and Herzegovina": {
+    name: "Bosnia-Herzegovina",
+    logo: "ba",
+    abbreviation: "bih",
+    continent: "Europe",
+    visible: false
+  },
+  "Bosnia & Herzegovina": {
     name: "Bosnia-Herzegovina",
     logo: "ba",
     abbreviation: "bih",
