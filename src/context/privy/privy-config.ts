@@ -14,7 +14,7 @@ export const privyConfig: PrivyClientConfig = {
     ethereum: {
       createOnLogin: "users-without-wallets",
     },
-    showWalletUIs: false,
+    showWalletUIs: true,
   },
   appearance: {
     walletChainType: "ethereum-only",
