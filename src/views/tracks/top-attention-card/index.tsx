@@ -33,37 +33,58 @@ import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-contro
 import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-control";
 import { gameColors } from "@/views/trade/game/ui";
 
-export type TopAttentionCardBadge =
+type TopAttentionBadgeStyleKey =
   | "most_popular"
   | "highest_volume"
   | "dark_horse"
   | "top_probability";
 
 const TOP_ATTENTION_BADGE_STYLES: Record<
-  TopAttentionCardBadge,
-  { label: string; color: string; backgroundColor: string }
+  TopAttentionBadgeStyleKey,
+  { color: string; backgroundColor: string }
 > = {
   most_popular: {
-    label: "most popular",
     color: "#FF6BBA",
     backgroundColor: "rgba(255, 107, 186, 0.1)"
   },
   highest_volume: {
-    label: "highest volume",
     color: "#3168FF",
     backgroundColor: "rgba(49, 104, 255, 0.1)"
   },
   dark_horse: {
-    label: "dark horse",
     color: "#9D84FF",
     backgroundColor: "rgba(157, 132, 255, 0.1)"
   },
   top_probability: {
-    label: "top probability",
     color: "#65AF14",
     backgroundColor: "rgba(101, 175, 20, 0.1)"
   }
 };
+
+const DEFAULT_TOP_ATTENTION_BADGE_STYLE = {
+  color: "#909090",
+  backgroundColor: "rgba(144, 144, 144, 0.1)"
+};
+
+function resolveTopAttentionBadgeStyleKey(
+  label: string
+): TopAttentionBadgeStyleKey | undefined {
+  const normalized = label.trim().toLowerCase().replace(/\s+/g, "_");
+
+  if (normalized in TOP_ATTENTION_BADGE_STYLES) {
+    return normalized as TopAttentionBadgeStyleKey;
+  }
+
+  return undefined;
+}
+
+function resolveTopAttentionBadgeStyle(label: string) {
+  const key = resolveTopAttentionBadgeStyleKey(label);
+
+  return key
+    ? TOP_ATTENTION_BADGE_STYLES[key]
+    : DEFAULT_TOP_ATTENTION_BADGE_STYLE;
+}
 
 const MATCH_OUTCOME_BUTTON_STYLES: Record<
   MatchOutcomeSide,
@@ -79,7 +100,8 @@ export type TopAttentionTeamCardProps = {
   snapshot: TeamMarketSnapshot;
   attention?: number;
   categoryLabel?: string;
-  badge?: TopAttentionCardBadge;
+  /** Badge label from GET /v1/user/tracks/top `category` (e.g. "Most Popular"). */
+  badge?: string;
   className?: string;
 };
 
@@ -89,6 +111,8 @@ export type TopAttentionMatchCardProps = {
   homeTeam: Team;
   awayTeam: Team;
   attention?: number;
+  /** Badge label from GET /v1/user/tracks/top `category` (e.g. "Most Popular"). */
+  badge?: string;
   volume: number;
   probability: number;
   className?: string;
@@ -173,7 +197,7 @@ function TopAttentionTeamCard({
         <h3 className="m-0 truncate text-[16px] font-[500] leading-[20px] text-black">
           {team.name}
         </h3>
-        {badge ? <TopAttentionBadge badge={badge} /> : null}
+        {badge ? <TopAttentionBadge label={badge} /> : null}
       </div>
 
       <TopAttentionStatsRow
@@ -199,6 +223,7 @@ function TopAttentionMatchCard({
   homeTeam,
   awayTeam,
   attention,
+  badge,
   volume,
   probability,
   className
@@ -258,6 +283,7 @@ function TopAttentionMatchCard({
         <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-black">
           {matchTitle}
         </h3>
+        {badge ? <TopAttentionBadge label={badge} /> : null}
       </div>
 
       <TopAttentionStatsRow
@@ -315,18 +341,18 @@ function TopAttentionStatsRow({
   );
 }
 
-function TopAttentionBadge({ badge }: { badge: TopAttentionCardBadge }) {
-  const style = TOP_ATTENTION_BADGE_STYLES[badge];
+function TopAttentionBadge({ label }: { label: string }) {
+  const style = resolveTopAttentionBadgeStyle(label);
 
   return (
     <span
-      className="shrink-0 rounded-[10px] px-2 py-0.5 text-[12px] font-[400] capitalize leading-[15px]"
+      className="shrink-0 rounded-[10px] px-2 py-0.5 text-[12px] font-[400] leading-[15px]"
       style={{
         color: style.color,
         backgroundColor: style.backgroundColor
       }}
     >
-      {style.label}
+      {label}
     </span>
   );
 }

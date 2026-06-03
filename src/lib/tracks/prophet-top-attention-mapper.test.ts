@@ -112,11 +112,37 @@ describe("prophet-top-attention-mapper", () => {
     }
   });
 
+  it("maps top tracks category to badge label", () => {
+    const item: ProphetUserTrackItem = {
+      category: "Most Popular",
+      slug: "will-spain-win-the-2026-fifa-world-cup-963",
+      team_name: "Spain",
+      volume: "26903285",
+      team: { code: "ESP", name: "Spain" },
+      markets: [
+        {
+          slug: "will-spain-win-the-2026-fifa-world-cup-963",
+          groupItemTitle: "Spain",
+          volume: "26903285",
+          outcomePrices: '["0.1695", "0.8305"]'
+        }
+      ]
+    };
+
+    const card = mapProphetTopTrackItemToCard(item, "team");
+
+    assert.ok(card);
+    assert.equal(card.variant, undefined);
+    if (card.variant !== "match") {
+      assert.equal(card.badge, "Most Popular");
+    }
+  });
+
   it("merges teams_tracks before game_tracks", () => {
     const data: ProphetTopTracksData = {
       teams_tracks: [
         {
-          category: "team",
+          category: "Highest Volume",
           slug: "brazil",
           team_name: "Brazil",
           team: { code: "BRA", name: "Brazil" },
@@ -125,7 +151,7 @@ describe("prophet-top-attention-mapper", () => {
       ],
       game_tracks: [
         {
-          category: "game",
+          category: "Dark Horse",
           slug: "fifwc-mex-rsa-2026-06-11",
           team_name: "Mexico,South Africa",
           volume: "1000",
@@ -148,7 +174,12 @@ describe("prophet-top-attention-mapper", () => {
     assert.ok(first && first.variant !== "match");
     if (first.variant !== "match") {
       assert.equal(first.snapshot.team.id, "brazil");
+      assert.equal(first.badge, "Highest Volume");
     }
-    assert.equal(cards[1]?.variant, "match");
+    const second = cards[1];
+    assert.equal(second?.variant, "match");
+    if (second?.variant === "match") {
+      assert.equal(second.badge, "Dark Horse");
+    }
   });
 });

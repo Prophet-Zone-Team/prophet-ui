@@ -14,6 +14,7 @@ import {
 import { mapProphetTrackToCardProps } from "@/lib/tracks/prophet-track-mapper";
 import type {
   ProphetTopTracksData,
+  ProphetTrackCategory,
   ProphetUserTrackItem,
   ProphetUserTrackMarket
 } from "@/types/prophet-api";
@@ -162,10 +163,37 @@ function resolveGameProbability(item: ProphetUserTrackItem): number {
   return priceToProbability(yesPrice) ?? fallbackProbability;
 }
 
-function prepareTopTrackItem(item: ProphetUserTrackItem): ProphetUserTrackItem {
-  const category = item.category?.trim().toLowerCase();
+function resolveTopAttentionBadgeLabel(
+  item: ProphetUserTrackItem,
+  trackKind?: ProphetTrackCategory
+): string | undefined {
+  const category = item.category?.trim();
 
-  if (category === "game" || item.slug?.match(/^(?:fifwc|ucl)-/i)) {
+  if (!category) {
+    return undefined;
+  }
+
+  if (trackKind !== undefined) {
+    return category;
+  }
+
+  if (category === "team" || category === "game") {
+    return undefined;
+  }
+
+  return category;
+}
+
+function prepareTopTrackItem(
+  item: ProphetUserTrackItem,
+  trackKind?: ProphetTrackCategory
+): ProphetUserTrackItem {
+  const isGame =
+    trackKind === "game" ||
+    (trackKind !== "team" &&
+      (item.category === "game" || Boolean(item.slug?.match(/^(?:fifwc|ucl)-/i))));
+
+  if (isGame) {
     const enriched = enrichGameTrackItem(item);
     const probability = resolveGameProbability(enriched);
 
@@ -179,25 +207,29 @@ function prepareTopTrackItem(item: ProphetUserTrackItem): ProphetUserTrackItem {
 }
 
 function trackCardToTopAttentionCard(
-  card: TrackCardProps
+  card: TrackCardProps,
+  badgeLabel?: string
 ): TopAttentionCardProps | undefined {
   if (card.variant === "game") {
-    return mapGameTrackCardToTopAttention(card);
+    return mapGameTrackCardToTopAttention(card, badgeLabel);
   }
 
-  return mapTeamTrackCardToTopAttention(card as TrackCardTeamProps);
+  return mapTeamTrackCardToTopAttention(card as TrackCardTeamProps, badgeLabel);
 }
 
 function mapTeamTrackCardToTopAttention(
-  card: TrackCardTeamProps
+  card: TrackCardTeamProps,
+  badgeLabel?: string
 ): TopAttentionCardProps {
   return {
-    snapshot: card.snapshot
+    snapshot: card.snapshot,
+    ...(badgeLabel ? { badge: badgeLabel } : {})
   };
 }
 
 function mapGameTrackCardToTopAttention(
-  card: TrackCardGameProps
+  card: TrackCardGameProps,
+  badgeLabel?: string
 ): TopAttentionCardProps {
   return {
     variant: "match",
@@ -205,21 +237,24 @@ function mapGameTrackCardToTopAttention(
     homeTeam: card.homeTeam,
     awayTeam: card.awayTeam,
     probability: card.probability,
-    volume: card.volume
+    volume: card.volume,
+    ...(badgeLabel ? { badge: badgeLabel } : {})
   };
 }
 
 export function mapProphetTopTrackItemToCard(
-  item: ProphetUserTrackItem
+  item: ProphetUserTrackItem,
+  trackKind?: ProphetTrackCategory
 ): TopAttentionCardProps | undefined {
-  const prepared = prepareTopTrackItem(item);
+  const badgeLabel = resolveTopAttentionBadgeLabel(item, trackKind);
+  const prepared = prepareTopTrackItem(item, trackKind);
   const trackCard = mapProphetTrackToCardProps(prepared);
 
   if (!trackCard) {
     return undefined;
   }
 
-  const topCard = trackCardToTopAttentionCard(trackCard);
+  const topCard = trackCardToTopAttentionCard(trackCard, badgeLabel);
 
   if (topCard?.variant === "match") {
     return {
@@ -234,15 +269,18 @@ export function mapProphetTopTrackItemToCard(
 export function mapProphetTopTracksToAttentionCards(
   data: ProphetTopTracksData | undefined
 ): TopAttentionCardProps[] {
-  const items = [
-    ...(data?.teams_tracks ?? []),
-    ...(data?.game_tracks ?? [])
-  ];
-
   const cards: TopAttentionCardProps[] = [];
 
-  for (const item of items) {
-    const card = mapProphetTopTrackItemToCard(item);
+  for (const item of data?.teams_tracks ?? []) {
+    const card = mapProphetTopTrackItemToCard(item, "team");
+
+    if (card) {
+      cards.push(card);
+    }
+  }
+
+  for (const item of data?.game_tracks ?? []) {
+    const card = mapProphetTopTrackItemToCard(item, "game");
 
     if (card) {
       cards.push(card);
