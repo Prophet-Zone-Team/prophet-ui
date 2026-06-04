@@ -9,8 +9,8 @@ import type {
 import { extractGroupId } from "./map-competitiveness";
 
 import teamData from "@/data/teams/index";
-import { curatedAbbreviationToCode, curatedTeamKeyToId } from "@/data/teams/curated-team-list";
-import { teamDetailHref } from "../routes/team";
+import { curatedAbbreviationToCode } from "@/data/teams/curated-team-list";
+import { buildTeamDetailHref } from "../routes/team";
 
 export type TeamCodeLookup = Map<string, string>;
 
@@ -65,7 +65,6 @@ export function mapTeamPowerRankingResponse(
       const currentTeam = teamData[item.team_name as keyof typeof teamData];
       const trend = mapTrendDirection(item.recent_trend);
       const teamCode = currentTeam ? curatedAbbreviationToCode(currentTeam.abbreviation) : "";
-      const teamId = curatedTeamKeyToId(currentTeam?.name ?? item.team_name);
       const id =
         item.id !== undefined
           ? String(item.id)
@@ -77,6 +76,7 @@ export function mapTeamPowerRankingResponse(
         "Cape Verde Islands": "Cape Verde",
       };
       const teamName = item.team_name ? (teamNameMap[item.team_name] ?? item.team_name) : "";
+      const teamLink = buildTeamDetailHref(item.team_name);
 
       return {
         id,
@@ -89,7 +89,7 @@ export function mapTeamPowerRankingResponse(
         pathDifficulty: (item.path_difficulty_label ?? "Medium") as TeamPowerRankingPathDifficulty,
         trend,
         signalStatus: (item.signal_status ?? "Positive") as TeamPowerRankingSignalStatus,
-        link: teamDetailHref(teamId),
+        link: teamLink,
       };
     });
 }

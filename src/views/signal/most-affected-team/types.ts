@@ -5,6 +5,7 @@ export type MostAffectedTeamEntry = {
   teamName: string;
   netImpact: number;
   highImpactEventCount: number;
+  link?: string;
 };
 
 export type MostAffectedTeamData = {

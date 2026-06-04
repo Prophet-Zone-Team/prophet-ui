@@ -11,6 +11,7 @@ import type { SignalSummaryStats } from "@/views/analytics/news/types";
 import type { MostAffectedTeamData } from "@/views/signal/most-affected-team/types";
 import type { ImpactDistributionOverviewData } from "@/views/signal/overview/types";
 import type { TopCategoriesData } from "@/views/signal/top-categories/types";
+import { buildTeamDetailHref } from "../routes/team";
 
 function toNumber(value: number | undefined): number {
   return Number.isFinite(value) ? (value as number) : 0;
@@ -81,6 +82,7 @@ export function mapTopCategoryImpactToMostAffectedTeams(
   const entries = (items ?? [])
     .map((item, index) => {
       const teamName = item.team ?? "";
+      const teamLink = buildTeamDetailHref(item.team);
 
       return {
         id: String(item.id ?? item.rank ?? index),
@@ -88,7 +90,8 @@ export function mapTopCategoryImpactToMostAffectedTeams(
         teamCode: resolveTeamCode(teamName, teamCodeLookup),
         teamName,
         netImpact: parseImpactNumber(item.abs_impact),
-        highImpactEventCount: toNumber(item.high_impact)
+        highImpactEventCount: toNumber(item.high_impact),
+        link: teamLink,
       };
     })
     .sort((a, b) => a.rank - b.rank);

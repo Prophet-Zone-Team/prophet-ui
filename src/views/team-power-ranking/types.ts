@@ -15,7 +15,7 @@ export type TeamPowerRankingEntry = {
   pathDifficulty: TeamPowerRankingPathDifficulty;
   trend: TeamPowerRankingTrend;
   signalStatus: TeamPowerRankingSignalStatus;
-  link: string;
+  link?: string;
 };
 
 export type TeamPowerRankingFilters = {
