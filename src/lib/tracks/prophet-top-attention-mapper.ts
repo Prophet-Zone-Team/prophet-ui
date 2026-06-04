@@ -6,6 +6,7 @@ import {
   extractFixtureTeamAbbreviations,
   parseTeamsFromTitle
 } from "@/lib/market/prophet-game-mapper";
+import type { MatchOutcomeSide } from "@/types/market";
 import {
   parseGammaArrayField,
   priceToProbability,
@@ -149,6 +150,58 @@ function resolveHomeMoneylineMarket(
   });
 }
 
+function parseMarketYesPrice(
+  market: ProphetUserTrackMarket | undefined
+): number | undefined {
+  if (!market?.outcomePrices) {
+    return undefined;
+  }
+
+  const prices = parseGammaArrayField(market.outcomePrices);
+  const price = toGammaNumber(prices[0]);
+
+  if (price === undefined || !Number.isFinite(price) || price < 0) {
+    return undefined;
+  }
+
+  return price;
+}
+
+function resolveMatchOutcomePrices(
+  item: ProphetUserTrackItem
+): Partial<Record<MatchOutcomeSide, number>> {
+  const markets = item.markets ?? [];
+  const fixtureSlug = item.slug?.trim() ?? "";
+  const { homeAbbrev, awayAbbrev } =
+    extractFixtureTeamAbbreviations(fixtureSlug);
+  const prices: Partial<Record<MatchOutcomeSide, number>> = {};
+
+  for (const market of markets) {
+    const slug = market.slug?.trim().toLowerCase() ?? "";
+    const price = parseMarketYesPrice(market);
+
+    if (price === undefined) {
+      continue;
+    }
+
+    if (slug.includes("-draw") || isDrawMarketTitle(market.groupItemTitle)) {
+      prices.draw = price;
+      continue;
+    }
+
+    if (homeAbbrev && slug.endsWith(`-${homeAbbrev.toLowerCase()}`)) {
+      prices.home = price;
+      continue;
+    }
+
+    if (awayAbbrev && slug.endsWith(`-${awayAbbrev.toLowerCase()}`)) {
+      prices.away = price;
+    }
+  }
+
+  return prices;
+}
+
 function resolveGameProbability(item: ProphetUserTrackItem): number {
   const fallbackProbability = parseNumericField(item.probobility) ?? 0;
   const market = resolveHomeMoneylineMarket(item);
@@ -212,7 +265,7 @@ function trackCardToTopAttentionCard(
   attention?: number
 ): TopAttentionCardProps | undefined {
   if (card.variant === "game") {
-    return mapGameTrackCardToTopAttention(card, badgeLabel, attention);
+    return mapGameTrackCardToTopAttention(card, attention);
   }
 
   return mapTeamTrackCardToTopAttention(
@@ -248,7 +301,6 @@ function mapTeamTrackCardToTopAttention(
 
 function mapGameTrackCardToTopAttention(
   card: TrackCardGameProps,
-  badgeLabel?: string,
   attention?: number
 ): TopAttentionCardProps {
   return {
@@ -258,7 +310,6 @@ function mapGameTrackCardToTopAttention(
     awayTeam: card.awayTeam,
     probability: card.probability,
     volume: card.volume,
-    ...(badgeLabel ? { badge: badgeLabel } : {}),
     ...(attention !== undefined ? { attention } : {})
   };
 }
@@ -281,7 +332,8 @@ export function mapProphetTopTrackItemToCard(
   if (topCard?.variant === "match") {
     return {
       ...topCard,
-      probability: resolveGameProbability(prepared)
+      probability: resolveGameProbability(prepared),
+      outcomePrices: resolveMatchOutcomePrices(prepared)
     };
   }
 

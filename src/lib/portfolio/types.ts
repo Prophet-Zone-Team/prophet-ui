@@ -3,7 +3,8 @@ export type PortfolioTransactionType =
   | "sell"
   | "redeem"
   | "deposit"
-  | "withdraw";
+  | "withdraw"
+  | "claim";
 
 export interface PortfolioTransactionRecord {
   id: string;

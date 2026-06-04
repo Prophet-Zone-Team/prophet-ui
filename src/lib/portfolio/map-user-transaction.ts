@@ -9,7 +9,8 @@ const TRANSACTION_TYPES = new Set<PortfolioTransactionType>([
   "sell",
   "redeem",
   "deposit",
-  "withdraw"
+  "withdraw",
+  "claim"
 ]);
 
 function normalizeTransactionType(

@@ -97,6 +97,8 @@ describe("prophet-top-attention-mapper", () => {
       assert.equal(card.awayTeam.name, "South Africa");
       assert.equal(card.match.id, "fifwc-mex-rsa-2026-06-11");
       assert.ok(card.probability > 0);
+      assert.equal(card.outcomePrices?.home, 0.55);
+      assert.equal(card.outcomePrices?.draw, 0.28);
     }
   });
 
@@ -137,6 +139,9 @@ describe("prophet-top-attention-mapper", () => {
       assert.equal(card.homeTeam.id, "usa");
       assert.equal(card.awayTeam.id, "paraguay");
       assert.equal(card.probability, 48.5);
+      assert.equal(card.outcomePrices?.home, 0.485);
+      assert.equal(card.outcomePrices?.draw, 0.275);
+      assert.equal(card.outcomePrices?.away, 0.24);
     }
   });
 
@@ -206,8 +211,5 @@ describe("prophet-top-attention-mapper", () => {
     }
     const second = cards[1];
     assert.equal(second?.variant, "match");
-    if (second?.variant === "match") {
-      assert.equal(second.badge, "Dark Horse");
-    }
   });
 });

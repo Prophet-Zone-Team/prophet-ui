@@ -11,13 +11,10 @@ import { RegionRestrictedControl } from "@/components/trading/region-restricted-
 import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuthOptional } from "@/context/auth";
 import { cn } from "@/lib/cn";
+import { formatOrderbookPrice } from "@/lib/market/order-math";
 import { formatScheduleKickoff } from "@/lib/market/schedule-match";
 import { gameTradeHref, teamTradeHref } from "@/lib/routes/trade";
 import {
-  DEFAULT_FAST_BID_AMOUNT,
-  formatFastBidAmountDisplay,
-  useConfigHydrated,
-  useFastBidAmount,
   useSetTradeOutcomeSide,
   useSyncTradeTicketSnapshot
 } from "@/store";
@@ -32,6 +29,7 @@ import type {
 import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-control";
 import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-control";
 import { gameColors } from "@/views/trade/game/ui";
+import { getTeamSimpleSidePrice } from "@/views/trade/game/market-section/format-bid-label";
 
 type TopAttentionBadgeStyleKey =
   | "most_popular"
@@ -111,10 +109,9 @@ export type TopAttentionMatchCardProps = {
   homeTeam: Team;
   awayTeam: Team;
   attention?: number;
-  /** Badge label from GET /v1/user/tracks/top `category` (e.g. "Most Popular"). */
-  badge?: string;
   volume: number;
   probability: number;
+  outcomePrices?: Partial<Record<MatchOutcomeSide, number>>;
   className?: string;
 };
 
@@ -224,9 +221,9 @@ function TopAttentionMatchCard({
   homeTeam,
   awayTeam,
   attention,
-  badge,
   volume,
   probability,
+  outcomePrices,
   className
 }: TopAttentionMatchCardProps) {
   const router = useRouter();
@@ -285,7 +282,6 @@ function TopAttentionMatchCard({
         <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-black">
           {matchTitle}
         </h3>
-        {badge ? <TopAttentionBadge label={badge} /> : null}
       </div>
 
       <TopAttentionStatsRow
@@ -305,6 +301,7 @@ function TopAttentionMatchCard({
             matchId={match.id}
             outcomeSide={outcomeSide}
             label={resolveMatchOutcomeButtonLabel(outcomeSide)}
+            price={outcomePrices?.[outcomeSide]}
             background={MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].background}
             matchLabel={matchTitle}
           />
@@ -382,27 +379,27 @@ function MatchOutcomeQuickBidButton({
   matchId,
   outcomeSide,
   label,
+  price,
   background,
   matchLabel
 }: {
   matchId: string;
   outcomeSide: MatchOutcomeSide;
   label: string;
+  price?: number;
   background: string;
   matchLabel: string;
 }) {
   const router = useRouter();
   const auth = useAuthOptional();
-  const fastBidAmount = useFastBidAmount();
-  const hasHydrated = useConfigHydrated();
   const setMatchOutcomeSide = useSetTradeMatchOutcomeSide();
   const isRegionBlocked = auth?.isRegionBlocked ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const regionRestricted = isAuthenticated && isRegionBlocked;
-  const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
-  const amountLabel = formatFastBidAmountDisplay(displayAmount);
   const outcomeLabel = MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].label;
-  const buttonLabel = `${label} ${amountLabel}`;
+  const priceLabel =
+    price !== undefined ? formatOrderbookPrice(price) : undefined;
+  const buttonLabel = priceLabel ? `${label} ${priceLabel}` : label;
 
   function handleClick() {
     if (regionRestricted) {
@@ -446,17 +443,16 @@ function OutcomeQuickBidButton({
 }) {
   const router = useRouter();
   const auth = useAuthOptional();
-  const fastBidAmount = useFastBidAmount();
-  const hasHydrated = useConfigHydrated();
   const syncTeamSnapshot = useSyncTradeTicketSnapshot();
   const setOutcomeSide = useSetTradeOutcomeSide();
   const isRegionBlocked = auth?.isRegionBlocked ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const regionRestricted = isAuthenticated && isRegionBlocked;
-  const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
   const isYes = side === "yes";
-  const amountLabel = formatFastBidAmountDisplay(displayAmount);
-  const buttonLabel = `${isYes ? "YES" : "NO"} ${amountLabel}`;
+  const price = getTeamSimpleSidePrice(snapshot, side);
+  const priceLabel = formatOrderbookPrice(price);
+  const sideLabel = isYes ? "YES" : "NO";
+  const buttonLabel = `${sideLabel} ${priceLabel}`;
 
   function handleClick() {
     if (regionRestricted) {
@@ -472,7 +468,7 @@ function OutcomeQuickBidButton({
     <button
       type="button"
       disabled={regionRestricted}
-      aria-label={`${isYes ? "Yes" : "No"} trade ${amountLabel} on ${snapshot.team.name}`}
+      aria-label={`${isYes ? "Yes" : "No"} on ${snapshot.team.name} at ${priceLabel}`}
       onClick={handleClick}
       className={cn(
         "inline-flex h-10 w-full items-center justify-center rounded-[8px]",
