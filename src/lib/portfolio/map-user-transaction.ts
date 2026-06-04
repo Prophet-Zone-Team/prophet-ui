@@ -63,6 +63,7 @@ export function mapProphetUserTransaction(
     marketName: row.market_name?.trim() || "—",
     teamName: row.team_name?.trim() || "",
     slug: row.slug?.trim() || "",
+    source: row.source?.trim() || "",
     createdAt: parseCreatedAt(row.created_at),
     txHash: row.tx_hash?.trim() || ""
   };

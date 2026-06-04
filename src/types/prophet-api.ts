@@ -296,6 +296,7 @@ export interface ProphetUserTransaction {
   price?: string;
   side?: string;
   slug?: string;
+  source?: string;
   team_name?: string;
   tx_hash?: string;
   type?: string;
@@ -376,6 +377,17 @@ export interface ProphetUserTrackMarket {
   oneMonthPriceChange?: string;
 }
 
+export interface ProphetUserTrackLatestNews {
+  title: string;
+  score: number;
+  matched_players: string[];
+}
+
+export interface ProphetUserTrackNewsStat {
+  news_count?: number;
+  latest_news?: ProphetUserTrackLatestNews[] | string;
+}
+
 export interface ProphetUserTrackItem {
   track_id?: number;
   category?: ProphetTrackCategory;
@@ -392,6 +404,8 @@ export interface ProphetUserTrackItem {
   team?: ProphetWorldCupTeam;
   markets?: ProphetUserTrackMarket[];
   attention?: number;
+  fifa_rankings?: number[];
+  team_news_stat?: ProphetUserTrackNewsStat | string;
 }
 
 /** Response from GET /v1/user/tracks/top (public, Redis-cached). */

@@ -49,8 +49,7 @@ export function TeamFlag({
   name,
   logoUrl,
   className,
-  fallbackClassName,
-  fallback = true,
+  fallback = true
 }: TeamFlagProps) {
   const label = name ?? code ?? "Team flag";
 
@@ -81,7 +80,9 @@ export function TeamFlag({
       );
     }
 
-    return <FlagIcon flagCode={team.logo} label={label} className={className} />;
+    return (
+      <FlagIcon flagCode={team.logo} label={label} className={className} />
+    );
   }
 
   if (!fallback) {
@@ -93,7 +94,7 @@ export function TeamFlag({
       className={cn(
         defaultFlagClassName,
         "grid place-items-center text-[10px] font-semibold text-prophet-muted",
-        fallbackClassName
+        className
       )}
       aria-label={name ?? "Unknown team"}
     >

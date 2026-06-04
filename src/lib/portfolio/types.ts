@@ -15,6 +15,7 @@ export interface PortfolioTransactionRecord {
   marketName: string;
   teamName: string;
   slug: string;
+  source: string;
   createdAt: string;
   txHash: string;
 }

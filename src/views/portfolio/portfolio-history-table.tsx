@@ -6,6 +6,7 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import {
   formatPortfolioDateTime,
+  formatPortfolioTransactionMarketName,
   formatTransactionPrice,
   getOutcomeToneClass,
   titleCase
@@ -96,22 +97,24 @@ function HistoryMarketCell({
 
   return (
     <div className="flex min-w-0 items-center gap-2 md:gap-3">
-      {transaction.teamName ? (
-        <TeamFlag
-          name={transaction.teamName}
-          className="size-[30px] shrink-0 rounded-[2px]"
-        />
-      ) : (
-        <span
-          className="flex size-[30px] shrink-0 items-center justify-center rounded-[2px] bg-prophet-line text-[10px] text-prophet-muted"
-          aria-hidden="true"
-        >
-          ?
-        </span>
-      )}
+      <div className="w-[30px]">
+        {transaction.teamName ? (
+          <TeamFlag
+            name={transaction.teamName}
+            className="size-[30px] shrink-0 rounded-[2px]"
+          />
+        ) : (
+          <span
+            className="flex size-[30px] shrink-0 items-center justify-center rounded-[2px] text-[10px] text-prophet-muted"
+            aria-hidden="true"
+          >
+            ?
+          </span>
+        )}
+      </div>
       <div className="min-w-0">
         <p className="m-0 truncate text-[14px] font-medium leading-[18px] text-black">
-          {transaction.marketName}
+          {formatPortfolioTransactionMarketName(transaction)}
         </p>
         <p
           className={cn(

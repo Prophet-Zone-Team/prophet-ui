@@ -40,7 +40,7 @@ function TeamPowerRankingMetric({
       <span className="text-[16px] font-[400] leading-[20px] text-black">
         #{powerRanking.rank}
       </span>
-      <span className={trackCardLabelClassName}>Power Ranking</span>
+      <span className={trackCardLabelClassName}>Fifa Ranking</span>
     </div>
   );
 }
@@ -50,9 +50,7 @@ function GamePowerRankingMetric({
   className
 }: GamePowerRankingMetricProps) {
   return (
-    <div
-      className={cn("flex shrink-0 flex-col gap-1 md:w-[15%]", className)}
-    >
+    <div className={cn("flex shrink-0 flex-col gap-1 md:w-[15%]", className)}>
       <div className="flex min-h-[20px] items-center gap-3">
         <PowerRankingTeamEntry
           code={powerRanking.home.team.code}
@@ -65,7 +63,7 @@ function GamePowerRankingMetric({
           rank={powerRanking.away.rank}
         />
       </div>
-      <span className={trackCardLabelClassName}>Power Ranking</span>
+      <span className={trackCardLabelClassName}>Fifa Ranking</span>
     </div>
   );
 }

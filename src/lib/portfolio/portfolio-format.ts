@@ -1,4 +1,5 @@
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import type { PortfolioTransactionRecord } from "@/lib/portfolio/types";
 
 export function formatSignedPercent(value?: number): string {
   if (!value) {
@@ -66,6 +67,27 @@ export function formatTransactionPrice(price: string): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 3
   }).format(numeric);
+}
+
+export function formatPortfolioTransactionMarketName(
+  transaction: Pick<
+    PortfolioTransactionRecord,
+    "marketName" | "teamName" | "source"
+  >
+): string {
+  const marketName = transaction.marketName.trim();
+
+  if (marketName && marketName !== "—") {
+    return marketName;
+  }
+
+  const teamName = transaction.teamName.trim();
+
+  if (transaction.source === "strategy" && teamName) {
+    return `Will ${teamName} win the 2026 FIFA World Cup?`;
+  }
+
+  return marketName || "—";
 }
 
 export function getOutcomeToneClass(outcome: string): string {

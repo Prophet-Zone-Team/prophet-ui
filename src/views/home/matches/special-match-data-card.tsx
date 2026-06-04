@@ -228,10 +228,6 @@ function ProbabilityStrip({
     probabilities,
     slant
   );
-  const homePct = formatOutcomePercent(probabilities.home);
-  const drawPct = formatOutcomePercent(probabilities.draw);
-  const awayPct = formatOutcomePercent(probabilities.away);
-
   return (
     <div
       ref={setContainerRef}
@@ -247,21 +243,21 @@ function ProbabilityStrip({
       <div className="pointer-events-none absolute inset-0 z-30">
         <ProbabilitySegmentLabel
           label={homeName}
-          percent={homePct}
+          probability={probabilities.home}
           tone="light"
           percentClassName="text-[36px] sm:text-[52px] sm:leading-[62px]"
           align="start"
         />
         <ProbabilitySegmentLabel
           label="Draw"
-          percent={drawPct}
+          probability={probabilities.draw}
           tone="dark"
           align="start"
           contentLeft={`calc(${homeEnd}% + 60px)`}
         />
         <ProbabilitySegmentLabel
           label={awayName}
-          percent={awayPct}
+          probability={probabilities.away}
           tone="dark"
           align="end"
         />
@@ -287,20 +283,21 @@ function ProbabilitySegmentFill({
 
 function ProbabilitySegmentLabel({
   label,
-  percent,
+  probability,
   tone,
   percentClassName,
   align = "start",
   contentLeft
 }: {
   label: string;
-  percent: string;
+  probability: number;
   tone: "light" | "dark";
   percentClassName?: string;
   align?: "start" | "center" | "end";
   contentLeft?: string;
 }) {
   const textColor = tone === "light" ? "text-white" : "text-black";
+  const showPercent = Math.round(probability * 100) >= 10;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-30">
@@ -318,18 +315,22 @@ function ProbabilitySegmentLabel({
         )}
         style={contentLeft ? { left: contentLeft } : undefined}
       >
-        <span className="relative z-30 text-[16px] font-semibold leading-[19px]">
-          {label}
-        </span>
-        <span
-          className={cn(
-            "relative z-30 text-[36px] font-semibold leading-[43px]",
-            percentClassName,
-            textColor
-          )}
-        >
-          {percent}
-        </span>
+        {showPercent ? (
+          <>
+            <span className="relative z-30 text-[16px] font-semibold leading-[19px]">
+              {label}
+            </span>
+            <span
+              className={cn(
+                "relative z-30 text-[36px] font-semibold leading-[43px]",
+                percentClassName,
+                textColor
+              )}
+            >
+              {formatOutcomePercent(probability)}
+            </span>
+          </>
+        ) : null}
       </div>
     </div>
   );
