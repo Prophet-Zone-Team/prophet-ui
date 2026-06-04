@@ -58,6 +58,19 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         id="telegram-widget"
         src="https://telegram.org/js/telegram-widget.js?22"
       />
+
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-G64CF421WK"
+        strategy="afterInteractive"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-G64CF421WK');
+        `}
+      </Script>
       <body className="bg-[#F9FAFC] min-h-screen">
         <RainbowProvider cookie={cookie}>
           <AuthProvider>
