@@ -26,8 +26,12 @@ export function FullRankingDesktopRow({
   return (
     <div
       role="row"
-      className={`${fullRankingTableGridClass} items-center py-[10px] text-[16px] font-[400] leading-[19px] text-black cursor-pointer hover:bg-[#EDEDED] duration-150`}
-      onClick={() => router.push(entry.link)}
+      className={cn(
+        fullRankingTableGridClass,
+        "items-center py-[10px] text-[16px] font-[400] leading-[19px] text-black",
+        entry.link ? "cursor-pointer hover:bg-[#EDEDED] duration-150" : "cursor-default",
+      )}
+      onClick={() => entry.link ? router.push(entry.link) : void 0}
     >
       <span role="cell">{entry.rank}</span>
       <div role="cell" className="min-w-0">
@@ -86,7 +90,7 @@ export function FullRankingMobileCard({
         "flex flex-col gap-3 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black",
         className
       )}
-      onClick={() => router.push(entry.link)}
+      onClick={() => entry.link ? router.push(entry.link) : void 0}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
