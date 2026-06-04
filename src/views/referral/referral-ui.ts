@@ -12,12 +12,12 @@ export const referralRewardsLabelClass =
   "text-[16px] leading-[normal] text-white";
 
 export const referralRewardsAmountClass = cn(
-  "bg-gradient-to-b from-[#fefcef] to-[#ffcf00] bg-clip-text text-[72px] font-semibold leading-none text-transparent",
+  "bg-gradient-to-b from-[#fefcef] to-[#ffcf00] bg-clip-text text-[72px] font-semibold leading-[100%] text-transparent",
   "[text-shadow:0_0_20px_rgba(255,211,80,0.6)]",
 );
 
 export const referralRewardsCurrencyClass = cn(
-  "bg-gradient-to-b from-[#fefcef] to-[#ffcf00] bg-clip-text text-[26px] font-medium leading-none text-transparent",
+  "bg-gradient-to-b leading-[100%] from-[#fefcef] to-[#ffcf00] bg-clip-text text-[26px] font-medium text-transparent",
 );
 
 export const referralRewardsClaimLineClass = "text-[16px] leading-[normal] text-white";

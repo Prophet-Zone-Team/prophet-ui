@@ -30,6 +30,8 @@ import type {
   ProphetGetUserTransactionsData,
   ProphetLoginData,
   ProphetLoginRequest,
+  ProphetApplyReferralRequest,
+  ProphetReferral,
   ProphetReportTransactionRequest,
   ProphetGetUserStrategiesData,
   ProphetSubmitStrategyData,
@@ -37,11 +39,13 @@ import type {
   ProphetTrackRequest,
   ProphetTopTracksData,
   ProphetUserTrackItem,
-  ProphetUserTrackListItem
+  ProphetUserTrackListItem,
+  ProphetLoginReferral
 } from "@/types/prophet-api";
 import type { TelegramLoginAuthData } from "@/types/telegram-widget";
 
 const AUTH_STORAGE_KEY = "prophet_api_token";
+const REFERRAL_STORAGE_KEY = "prophet_api_referral";
 
 export const PROPHET_API_TOKEN_CHANGED_EVENT = "prophet-api-token-changed";
 const WALLET_STORAGE_KEY = "prophet_api_wallet";
@@ -85,6 +89,27 @@ function writeStoredToken(token: string | null): void {
   }
 }
 
+function writeStoredReferral(referral: ProphetLoginReferral | null) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (referral) {
+    window.localStorage.setItem(REFERRAL_STORAGE_KEY, JSON.stringify(referral));
+  } else {
+    window.localStorage.removeItem(REFERRAL_STORAGE_KEY);
+  }
+}
+
+function readStoredReferral(): ProphetLoginReferral | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const referral = window.localStorage.getItem(REFERRAL_STORAGE_KEY);
+  return referral ? JSON.parse(referral) : null;
+}
+
 function readStoredWallet(): string | null {
   if (typeof window === "undefined") {
     return null;
@@ -111,9 +136,14 @@ function normalizeWalletAddress(address: string): string {
 
 let memoryToken: string | null = null;
 let memoryWallet: string | null = null;
+let memoryReferral: ProphetLoginReferral | null = null;
 
 export function getProphetApiToken(): string | null {
   return memoryToken ?? readStoredToken();
+}
+
+export function getProphetReferral(): ProphetLoginReferral | null {
+  return memoryReferral ?? readStoredReferral();
 }
 
 export function getProphetApiWallet(): string | null {
@@ -127,11 +157,61 @@ export function setProphetApiToken(token: string | null): void {
   if (!token) {
     memoryWallet = null;
     writeStoredWallet(null);
+    setProphetReferral(null);
   }
 
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event(PROPHET_API_TOKEN_CHANGED_EVENT));
   }
+}
+
+export function setProphetReferral(referral: ProphetLoginReferral | null) {
+  memoryReferral = referral;
+  writeStoredReferral(referral);
+
+  if (!referral) {
+    memoryReferral = null;
+    writeStoredReferral(null);
+  }
+}
+
+export function patchProphetReferralCache(
+  partial: Partial<ProphetLoginReferral>
+): void {
+  const existing = getProphetReferral();
+
+  if (existing) {
+    setProphetReferral({ ...existing, ...partial });
+    return;
+  }
+
+  if (partial) {
+    setProphetReferral(partial as ProphetLoginReferral);
+  }
+}
+
+function readReferralCodeFromQuery(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const code = new URLSearchParams(window.location.search).get("r")?.trim();
+  return code || null;
+}
+
+function shouldApplyReferralOnCache(
+  code: string | null,
+  referral: ProphetLoginReferral
+): boolean {
+  if (!code) {
+    return false;
+  }
+
+  if (referral.has_bound_referral) {
+    return false;
+  }
+
+  return code.toLowerCase() !== referral.referral_code.toLowerCase();
 }
 
 function setProphetApiWallet(wallet: string | null): void {
@@ -329,11 +409,35 @@ export async function loginProphet(
     setProphetApiWallet(request.address);
   }
 
+  if (data.referral) {
+    setProphetReferral(data.referral);
+  }
+
   return data;
 }
 
 export function logoutProphet(): void {
   setProphetApiToken(null);
+  setProphetReferral(null);
+}
+
+/** GET /v1/user/referral */
+export async function getProphetUserReferral(): Promise<ProphetReferral> {
+  requireProphetApiToken();
+  return prophetGet<ProphetReferral>("/v1/user/referral");
+}
+
+/** POST /v1/user/referral/apply */
+export async function applyProphetReferral(
+  request: ProphetApplyReferralRequest
+): Promise<ProphetReferral> {
+  requireProphetApiToken();
+  const data = await prophetPost<ProphetReferral>(
+    "/v1/user/referral/apply",
+    request
+  );
+  setProphetReferral(data);
+  return data;
 }
 
 /** Sync Prophet session for the connected wallet; never throws. */
@@ -343,13 +447,33 @@ export async function syncProphetWalletLogin(
   const normalizedAddress = normalizeWalletAddress(address);
   const existingToken = getProphetApiToken();
   const existingWallet = getProphetApiWallet();
+  const existingReferral = getProphetReferral();
+  const referralCodeFromQuery = readReferralCodeFromQuery();
 
-  if (existingToken && existingWallet === normalizedAddress) {
-    return { token: existingToken };
+  if (existingToken && existingWallet === normalizedAddress && existingReferral) {
+    if (shouldApplyReferralOnCache(referralCodeFromQuery, existingReferral)) {
+      try {
+        await applyProphetReferral({
+          referral_code: referralCodeFromQuery!
+        });
+      } catch (error) {
+        console.warn("[prophet.referral] apply failed", error);
+      }
+    }
+
+    return {
+      token: existingToken,
+      referral: existingReferral
+    };
   }
 
   try {
-    return await loginProphet({ address: normalizedAddress });
+    return await loginProphet({
+      address: normalizedAddress,
+      ...(referralCodeFromQuery
+        ? { referral_code: referralCodeFromQuery }
+        : {})
+    });
   } catch (error) {
     console.warn("[prophet.login] wallet sync failed", error);
     return null;

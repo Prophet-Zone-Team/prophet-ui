@@ -1,5 +1,11 @@
 import type { BidOrderPreview } from "@/lib/market/polymarket-order";
 import { derivePositionSellReceiveAmount } from "@/lib/portfolio/portfolio-metrics";
+import {
+  resolveReportOrderStatus,
+  resolveReportOrderType,
+  resolveReportOrderValueUsdc,
+  resolveReportReferralCode
+} from "@/lib/portfolio/report-trade-order";
 import { resolveReportTeamName } from "@/lib/portfolio/teams-condition";
 import { formatMatchVersusTitle } from "@/lib/market/trade-widget-header";
 import {
@@ -36,18 +42,6 @@ function normalizeFundingAmount(value: number | string): string {
 
   const parsed = Number(trimmed);
   return Number.isFinite(parsed) ? String(parsed) : "0";
-}
-
-function resolveTransactionAmount(preview: UserOrderPreview): string {
-  if (preview.side === "buy") {
-    return formatTransactionAmount(
-      preview.estimatedTotalCost ?? preview.estimatedCost
-    );
-  }
-
-  return formatTransactionAmount(
-    preview.estimatedProceeds ?? preview.estimatedCost
-  );
 }
 
 export type ReportTradeOrderTransactionInput = {
@@ -208,11 +202,18 @@ export async function reportTradeOrderTransaction(
     };
   }
 
+  const orderValueUsdc = resolveReportOrderValueUsdc(input.userOrderPreview);
+  const referralCode = resolveReportReferralCode();
+
   const request: ProphetReportTransactionRequest = {
-    amount: resolveTransactionAmount(input.userOrderPreview),
+    amount: orderValueUsdc,
     tx_hash: txHash,
     type,
-    market
+    market,
+    order_type: resolveReportOrderType(input.userOrderPreview.orderType),
+    order_status: resolveReportOrderStatus(input.result.order?.status),
+    order_value_usdc: orderValueUsdc,
+    ...(referralCode ? { referral_code: referralCode } : {})
   };
 
   try {

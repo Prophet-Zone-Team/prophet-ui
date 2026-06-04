@@ -164,11 +164,73 @@ export interface ProphetGameSiblingEventSlugs {
 
 export interface ProphetLoginRequest {
   address: string;
+  referral_code?: string;
+}
+
+export interface ProphetApplyReferralRequest {
+  referral_code: string;
+}
+
+export interface ProphetLoginReferral {
+  referral_code: string;
+  referral_link: string;
+  tier: string; // e.g., "standard"
+  kickback_rate: string; // as a decimal string, e.g., "0.1"
+  status: string; // e.g., "active"
+  referred_user_count: number;
+  total_referred_volume_usdc: string;
+  total_referral_earnings_usdc: string;
+  claimable_balance_usdc: string;
+  claimed_balance_usdc: string;
+  has_bound_referral: boolean;
+  bound_referral_code: string;
+}
+
+/**
+ * Why redeclare a ProphetReferral type?
+ * To prevent issues if the login API no longer returns referral details in the future.
+ */
+export interface ProphetReferral extends ProphetLoginReferral {
+}
+
+export type ProphetReferralClaimSummary = ProphetLoginReferral;
+
+export interface ProphetReferralClaimData {
+  amount_usdc: string;
+  claim_id: number;
+  summary: ProphetReferralClaimSummary;
+}
+
+export interface ProphetReferralInviteItem {
+  bound_at: string;
+  claimable_reward_usdc: string;
+  claimed_reward_usdc: string;
+  completed_order_count: number;
+  last_reward_at: string;
+  referral_code: string;
+  referred_address: string;
+  referred_user_id: number;
+  total_order_count: number;
+  total_referral_earnings_usdc: string;
+  total_referred_volume_usdc: string;
+}
+
+export interface ProphetReferralInvitesData {
+  list: ProphetReferralInviteItem[];
+  page: number;
+  page_size: number;
+  total: number;
+}
+
+export interface ProphetReferralInvitesParams {
+  page: number;
+  page_size: number;
 }
 
 export interface ProphetLoginData {
   account_id?: number;
   token?: string;
+  referral?: ProphetLoginReferral;
 }
 
 export interface ProphetBindTelegramRequest {
@@ -200,6 +262,10 @@ export type ProphetReportTransactionType =
   | "withdraw"
   | "deposit";
 
+export type ProphetReportOrderType = "maker" | "taker";
+
+export type ProphetReportOrderStatus = "completed" | "failed" | "cancelled";
+
 /** Market context for POST /v1/user/transaction when type is buy, sell, or redeem. */
 export interface ProphetReportTransactionMarket {
   marketName?: string;
@@ -215,6 +281,10 @@ export interface ProphetReportTransactionRequest {
   tx_hash: string;
   type: ProphetReportTransactionType;
   market?: ProphetReportTransactionMarket;
+  order_type?: ProphetReportOrderType;
+  order_status?: ProphetReportOrderStatus;
+  order_value_usdc?: string;
+  referral_code?: string;
 }
 
 /** Row from GET /v1/user/transactions (database.UserTransaction). */

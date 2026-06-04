@@ -3,11 +3,13 @@ import { describe, it, beforeEach } from "node:test";
 
 import {
   ProphetApiError,
+  applyProphetReferral,
   bindProphetTelegram,
   getProphetTelegramBindStatus,
   getProphetTopTracks,
   getProphetTrackList,
   getProphetTracks,
+  getProphetUserReferral,
   getProphetUserTransactions,
   isProphetAuthenticated,
   logoutProphet,
@@ -93,11 +95,18 @@ describe("prophet auth guards", () => {
       reportProphetUserTransaction({
         amount: "10",
         tx_hash: "order-1",
-        type: "buy"
+        type: "buy",
+        order_type: "taker",
+        order_status: "completed",
+        order_value_usdc: "10"
       })
     );
     await assertAuthRequired(() =>
       getProphetUserTransactions({ page: 1, page_size: 20 })
+    );
+    await assertAuthRequired(() => getProphetUserReferral());
+    await assertAuthRequired(() =>
+      applyProphetReferral({ referral_code: "TESTCODE" })
     );
   });
 

@@ -24,9 +24,9 @@ export function ReferralLinkCopy({
     <div className={cn("relative", className)}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[14px] leading-[normal] text-[#909090]">Referral Link</p>
+          <p className="text-[14px] leading-[normal] text-[#909090] shrink-0">Referral Link</p>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-1 w-0 whitespace-nowrap overflow-hidden text-ellipsis">
           <p className="truncate text-[16px] leading-[normal] text-black">
             <span className="text-[#909090]">{linkPrefix}</span>
             <span>{referralCode}</span>
