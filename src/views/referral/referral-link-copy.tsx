@@ -26,10 +26,13 @@ export function ReferralLinkCopy({
         <div className="min-w-0">
           <p className="text-[14px] leading-[normal] text-[#909090] shrink-0">Referral Link</p>
         </div>
-        <div className="flex items-center gap-1.5 flex-1 w-0 whitespace-nowrap overflow-hidden text-ellipsis">
-          <p className="truncate text-[16px] leading-[normal] text-black">
-            <span className="text-[#909090]">{linkPrefix}</span>
-            <span>{referralCode}</span>
+        <div className="flex items-center gap-1.5 flex-1 w-0 whitespace-nowrap">
+          <p className="truncate text-[16px] leading-[normal] text-black flex items-center flex-nowrap flex-1">
+            <span className="text-[#909090] flex-1 w-0 overflow-hidden text-ellipsis">
+              {linkPrefix.replace(/\?r\=$/, "")}
+            </span>
+            <span className="text-[#909090] shrink-0">?r=</span>
+            <span className="shrink-0">{referralCode}</span>
           </p>
           <button
             type="button"

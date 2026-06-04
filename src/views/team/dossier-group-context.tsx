@@ -5,6 +5,8 @@ import {
   teamPanelHeadClass,
   teamPanelTitleClass
 } from "@/views/team/team-detail-ui";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/cn";
 
 export interface DossierGroupContextProps {
   groupLabel?: string;
@@ -15,6 +17,8 @@ export function DossierGroupContext({
   groupLabel,
   peers
 }: DossierGroupContextProps) {
+  const router = useRouter();
+
   return (
     <section className={teamPanelClass} aria-label="Group context">
       <div className={teamPanelHeadClass}>
@@ -31,7 +35,15 @@ export function DossierGroupContext({
             {peers.slice(0, 4).map((peer) => (
               <span
                 key={peer.code}
-                className="flex items-center gap-2 rounded-md border border-prophet-line px-2 py-1.5 text-xs capitalize text-black"
+                className={cn(
+                  "flex items-center gap-2 rounded-md border border-prophet-line px-2 py-1.5 text-xs capitalize text-black duration-150",
+                  peer.link ? "cursor-pointer hover:bg-[#F0F2F5]" : "cursor-default"
+                )}
+                onClick={() => {
+                  if (peer.link) {
+                    router.push(peer.link);
+                  }
+                }}
               >
                 {peer.logo ? (
                   <img

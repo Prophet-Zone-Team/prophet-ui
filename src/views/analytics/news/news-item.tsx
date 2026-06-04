@@ -74,8 +74,10 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
             {item.headline}
           </h3>
 
-          <p className="m-0 mt-1 line-clamp-3 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-[4px] md:line-clamp-2">
-            {item.summary}
+          <p
+            className="m-0 mt-1 line-clamp-3 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-[4px] md:line-clamp-2"
+            dangerouslySetInnerHTML={{ __html: item.summary }}
+          >
           </p>
 
           <div className="mt-2 flex items-baseline justify-between md:hidden">

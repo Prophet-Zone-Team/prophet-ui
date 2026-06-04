@@ -8,6 +8,7 @@ import type { TeamPowerRankingEntry } from "@/views/team-power-ranking/types";
 
 import { rankingPreviewTableGridClass } from "./table-grid";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/cn";
 
 export type RankingTableRowProps = {
   entry: TeamPowerRankingEntry;
@@ -19,8 +20,12 @@ export function RankingTableDesktopRow({ entry }: RankingTableRowProps) {
   return (
     <div
       role="row"
-      className={`${rankingPreviewTableGridClass} px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-black cursor-pointer hover:bg-[#EDEDED] duration-150`}
-      onClick={() => router.push(entry.link)}
+      className={cn(
+        rankingPreviewTableGridClass,
+        "px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-black",
+        entry.link ? "cursor-pointer hover:bg-[#EDEDED] duration-150" : "cursor-default",
+      )}
+      onClick={() => entry.link ? router.push(entry.link) : void 0}
     >
       <span role="cell">{entry.rank}</span>
       <div role="cell" className="min-w-0">
@@ -43,7 +48,7 @@ export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
   return (
     <article
       className="flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black"
-      onClick={() => router.push(entry.link)}
+      onClick={() => entry.link ? router.push(entry.link) : void 0}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">

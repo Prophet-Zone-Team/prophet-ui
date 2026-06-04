@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 import { formatNetImpact } from "./format";
 import { mostAffectedTeamTableGridClass } from "./most-affected-team-table-header";
 import type { MostAffectedTeamEntry } from "./types";
+import { useRouter } from "next/navigation";
 
 export type MostAffectedTeamTableRowProps = {
   entry: MostAffectedTeamEntry;
@@ -12,14 +13,20 @@ export type MostAffectedTeamTableRowProps = {
 
 export function MostAffectedTeamDesktopRow({ entry }: MostAffectedTeamTableRowProps) {
   const isNegativeImpact = entry.netImpact < 0;
+  const router = useRouter();
 
   return (
     <div
       role="row"
       className={cn(
         mostAffectedTeamTableGridClass,
-        "items-center py-[10px] text-[16px] font-[400] leading-[19px] text-black"
+        "items-center py-[10px] text-[16px] font-[400] leading-[19px] text-black cursor-pointer hover:bg-[#F0F2F5] duration-150"
       )}
+      onClick={() => {
+        if (entry.link) {
+          router.push(entry.link);
+        }
+      }}
     >
       <span role="cell" className="tabular-nums">
         {entry.rank}
@@ -58,6 +65,7 @@ export function MostAffectedTeamMobileCard({
   className
 }: MostAffectedTeamTableRowProps) {
   const isNegativeImpact = entry.netImpact < 0;
+  const router = useRouter();
 
   return (
     <article
@@ -65,6 +73,11 @@ export function MostAffectedTeamMobileCard({
         "flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black",
         className
       )}
+      onClick={() => {
+        if (entry.link) {
+          router.push(entry.link);
+        }
+      }}
     >
       <div className="flex items-center gap-2">
         <span className="w-8 shrink-0 tabular-nums font-[500]">

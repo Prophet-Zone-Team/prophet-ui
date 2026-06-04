@@ -12,13 +12,14 @@ import type {
   ProphetGetTeamDetailNextMatch,
   ProphetGetTeamDetailPeer
 } from "@/types/prophet-api";
-import { formatNumber } from "@/utils";
+import { buildTeamDetailHref } from "../routes/team";
 
 export interface TeamDetailGroupPeer {
   code: string;
   name: string;
   fifaRank: number;
   logo?: string;
+  link?: string;
 }
 
 export interface TeamDetailHeaderData {
@@ -162,14 +163,20 @@ export function mapTeamStrength(data: ProphetGetTeamDetailData): {
 }
 
 export function mapGroupPeers(
-  peers: ProphetGetTeamDetailPeer[] | undefined
+  peers: ProphetGetTeamDetailPeer[] | undefined,
+  teamName: string
 ): TeamDetailGroupPeer[] {
-  return (peers ?? []).map((peer) => ({
-    code: peer.code,
-    name: peer.name,
-    fifaRank: peer.fifaRank,
-    logo: peer.logo || undefined
-  }));
+  return (peers ?? []).map((peer) => {
+    const teamLink = buildTeamDetailHref(peer.name);
+
+    return {
+      code: peer.code,
+      name: peer.name,
+      fifaRank: peer.fifaRank,
+      logo: peer.logo || undefined,
+      link: teamName === peer.name ? undefined : teamLink,
+    };
+  });
 }
 
 export function mapTeamDetailResponse(
@@ -191,7 +198,7 @@ export function mapTeamDetailResponse(
     latestLabel: data.recent_form?.latest || undefined,
     recentMatches: mapRecentMatches(data.name, data.recent_form?.matches),
     groupLabel: data.group_name || undefined,
-    groupPeers: mapGroupPeers(data.team_peers),
+    groupPeers: mapGroupPeers(data.team_peers, data.name),
     keyStars: mapKeyStars(data.team_key_stars),
     strengthMetrics: metrics,
     strengthScore: score,
