@@ -66,8 +66,10 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
         <h3 className="m-0 line-clamp-2 text-base font-[500] leading-[19px] text-black md:truncate md:text-[18px] md:leading-[21px]">
           {item.headline}
         </h3>
-        <p className="m-0 mt-1 line-clamp-2 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-2 md:truncate md:whitespace-nowrap">
-          {item.summary}
+        <p
+          className="m-0 mt-1 line-clamp-2 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-2 md:truncate md:whitespace-nowrap"
+          dangerouslySetInnerHTML={{ __html: item.summary }}
+        >
         </p>
       </div>
 

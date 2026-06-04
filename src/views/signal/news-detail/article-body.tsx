@@ -24,7 +24,7 @@ function renderSegments(segments: SignalNewsDetailTextSegment[]) {
       );
     }
 
-    return <span key={`${segment.value}-${index}`}>{segment.value}</span>;
+    return <span key={`${segment.value}-${index}`} dangerouslySetInnerHTML={{ __html: segment.value }}></span>;
   });
 }
 
