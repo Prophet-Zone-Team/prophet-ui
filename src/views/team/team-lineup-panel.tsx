@@ -34,7 +34,7 @@ function PlayerAvatar({ player }: { player: ApiFootballSquadPlayer }) {
   }
 
   return (
-    <span className="mx-auto flex size-8 items-center justify-center rounded-full bg-white/90 text-[9px] font-[556] text-[#125afc]">
+    <span className="mx-auto flex size-8 items-center justify-center rounded-full bg-white/90 text-[9px] font-[500] text-[#125afc]">
       {getInitials(player.name)}
     </span>
   );
@@ -44,10 +44,12 @@ function MiniPlayerRow({ player }: { player: ApiFootballSquadPlayer }) {
   return (
     <div className="flex items-center gap-2 rounded-md border border-prophet-line px-2 py-1.5 text-xs">
       <span className="w-5 text-prophet-muted">{player.number ?? "-"}</span>
-      <strong className="min-w-0 flex-1 truncate font-[556] text-black">
+      <strong className="min-w-0 flex-1 truncate font-[500] text-black">
         {player.name}
       </strong>
-      <small className="text-prophet-muted">{player.position ?? "Player"}</small>
+      <small className="text-prophet-muted">
+        {player.position ?? "Player"}
+      </small>
     </div>
   );
 }
@@ -89,7 +91,7 @@ export function TeamLineupPanel({
                       className="flex flex-col items-center justify-center text-center"
                     >
                       <PlayerAvatar player={player} />
-                      <strong className="mt-1 max-w-[72px] truncate text-[10px] font-[556] text-black">
+                      <strong className="mt-1 max-w-[72px] truncate text-[10px] font-[500] text-black">
                         {shortenName(player.name)}
                       </strong>
                       <span className="text-[9px] text-prophet-muted">
@@ -103,7 +105,9 @@ export function TeamLineupPanel({
 
             <div className="grid gap-3">
               <div>
-                <h3 className="m-0 mb-2 text-sm font-[556] text-black">Bench</h3>
+                <h3 className="m-0 mb-2 text-sm font-[500] text-black">
+                  Bench
+                </h3>
                 {bench.length > 0 ? (
                   <div className="grid gap-1.5">
                     {bench.map((player) => (
@@ -117,7 +121,7 @@ export function TeamLineupPanel({
                 )}
               </div>
               <div>
-                <h3 className="m-0 mb-2 text-sm font-[556] text-black">
+                <h3 className="m-0 mb-2 text-sm font-[500] text-black">
                   Doubtful / Out
                 </h3>
                 {injuries.length > 0 ? (
@@ -128,7 +132,7 @@ export function TeamLineupPanel({
                         className="flex items-center justify-between gap-2 rounded-md border border-prophet-red/30 bg-[#fff4f6] px-2 py-1.5 text-xs"
                       >
                         <span>{injury.playerName}</span>
-                        <strong className="font-[556] text-prophet-red">
+                        <strong className="font-[500] text-prophet-red">
                           {injury.reason ?? "Injury"}
                         </strong>
                       </div>

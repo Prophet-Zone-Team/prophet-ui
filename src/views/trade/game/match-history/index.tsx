@@ -34,15 +34,15 @@ export function MatchHistory({
 
       <div className="mt-[12px] flex w-full flex-col">
         {isLoading ? (
-          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+          <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
             Loading...
           </p>
         ) : isError ? (
-          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+          <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
             Unable to load data.
           </p>
         ) : matches.length === 0 ? (
-          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+          <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
             No match history is available yet.
           </p>
         ) : (

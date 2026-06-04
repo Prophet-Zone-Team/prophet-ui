@@ -43,7 +43,7 @@ function RelatedNewsThumbnail({
       className={cn(
         "grid size-[72px] shrink-0 place-items-center rounded-[12px]",
         "bg-[linear-gradient(135deg,#E8ECF4_0%,#C5CEDE_100%)]",
-        "text-[18px] font-[556] text-[#5A6478]"
+        "text-[18px] font-[500] text-[#5A6478]"
       )}
       aria-label={alt}
     >

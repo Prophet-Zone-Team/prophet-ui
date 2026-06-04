@@ -123,7 +123,7 @@ function HeaderMetric({
         <Bg />
       </div>
       <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[35px]">
-        <strong className="text-center text-[40px] font-[556] capitalize leading-[48px] text-white sm:text-[60px] sm:leading-[72px]">
+        <strong className="text-center text-[40px] font-[400] capitalize leading-[48px] text-white sm:text-[60px] sm:leading-[72px]">
           {value}
         </strong>
 
@@ -140,7 +140,7 @@ function HeaderMetric({
         {subtitle ? (
           <span
             className={cn(
-              "text-xs font-[556] leading-[17px] text-[#909090] sm:text-sm",
+              "text-xs font-[500] leading-[17px] text-[#909090] sm:text-sm",
               statusVariant ? "mt-5 sm:mt-[33px]" : "mt-4 sm:mt-7"
             )}
           >

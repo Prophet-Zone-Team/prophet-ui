@@ -31,20 +31,29 @@ export function PrivateModeStepCard({
         "relative flex flex-col pl-4 pr-3 py-5",
         isModal ? "min-h-[270px]" : "min-h-[231px]",
         isModal && "w-full min-w-0",
-        className,
+        className
       )}
     >
       <div className="flex items-center gap-1">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-black text-base font-[556] text-white">
-          {
-            step === 1
-              ? (
-                <svg width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1.5 6.5L6 11L15.5 1.5" stroke="#EBEBEB" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-              )
-              : step
-          }
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-black text-base font-[500] text-white">
+          {step === 1 ? (
+            <svg
+              width="17"
+              height="14"
+              viewBox="0 0 17 14"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M1.5 6.5L6 11L15.5 1.5"
+                stroke="#EBEBEB"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
+          ) : (
+            step
+          )}
         </div>
         <h3 className="m-0 text-base font-[400] text-black">{title}</h3>
       </div>

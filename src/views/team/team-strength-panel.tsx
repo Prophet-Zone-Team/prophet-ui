@@ -57,7 +57,7 @@ export function TeamStrengthPanel({
             </div>
             <div className="mt-3 flex items-baseline justify-center gap-1 border-t border-prophet-line pt-3">
               <span className="text-xs text-prophet-muted">Strength Score</span>
-              <strong className="text-2xl font-[556] text-black">
+              <strong className="text-2xl font-[500] text-black">
                 {score ?? "—"}
               </strong>
               <small className="text-xs text-prophet-muted">/100</small>

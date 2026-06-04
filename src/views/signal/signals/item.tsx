@@ -57,11 +57,11 @@ export function SignalNewsItem({
         <span className="shrink-0 [&_svg]:size-[26px]">
           <Icon />
         </span>
-        <span className="truncate text-[16px] font-[556] leading-[19px] text-black">
+        <span className="truncate text-[16px] font-[500] leading-[19px] text-black">
           {label}
         </span>
       </div>
-      <span className="shrink-0 text-[16px] font-[556] leading-[19px] text-black">
+      <span className="shrink-0 text-[16px] font-[500] leading-[19px] text-black">
         {count}
       </span>
     </div>

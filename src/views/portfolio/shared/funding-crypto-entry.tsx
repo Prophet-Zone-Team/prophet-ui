@@ -40,11 +40,16 @@ export function FundingCryptoEntry({
       >
         <span className="flex min-w-0 items-center gap-3">
           <WalletAvatarIcon address={walletAddress} />
-          <span className="truncate text-base font-[556] text-black">
+          <span className="truncate text-base font-[500] text-black">
             {formatShortWallet(walletAddress)}
           </span>
         </span>
-        <span className={cn("shrink-0 text-base font-[556]", connectedBalanceClassName)}>
+        <span
+          className={cn(
+            "shrink-0 text-base font-[500]",
+            connectedBalanceClassName
+          )}
+        >
           {connectedBalance}
         </span>
       </button>
@@ -58,7 +63,10 @@ export function FundingCryptoEntry({
       >
         <span className="flex min-w-0 items-center gap-3">
           {stableflowLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
+            <Loader2
+              className="h-5 w-5 animate-spin text-[#909090]"
+              aria-hidden="true"
+            />
           ) : (
             <img
               src="/logos/logo-stableflow.svg"

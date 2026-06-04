@@ -1,6 +1,7 @@
 import { cn } from "@/lib/cn";
 
-export const depositSectionLabelClass = "text-sm font-[556] leading-[17px] text-black";
+export const depositSectionLabelClass =
+  "text-sm font-[500] leading-[17px] text-black";
 
 export const depositConnectedRowClass = cn(
   "flex w-full cursor-pointer items-center justify-between rounded-[6px] border border-[#EBEBEB]",
@@ -19,11 +20,11 @@ export const depositSourceTabsTrackClass =
 
 export const depositSourceTabActiveClass = cn(
   "flex h-[36px] min-w-0 flex-1 items-center justify-center rounded-[6px] border border-[#ebebeb]",
-  "bg-white px-2 text-sm font-[556] text-black md:flex-none md:px-4 md:text-base"
+  "bg-white px-2 text-sm font-[500] text-black md:flex-none md:px-4 md:text-base"
 );
 
 export const depositSourceTabInactiveClass =
-  "flex h-[36px] min-w-0 flex-1 items-center justify-center bg-transparent px-2 text-sm font-[556] text-black transition-opacity hover:opacity-80 md:px-3 md:text-base";
+  "flex h-[36px] min-w-0 flex-1 items-center justify-center bg-transparent px-2 text-sm font-[500] text-black transition-opacity hover:opacity-80 md:px-3 md:text-base";
 
 export const depositSourceTabDisabledClass =
   "pointer-events-none text-black/50";
@@ -34,10 +35,10 @@ export const depositPrivateAccountRowClass = cn(
 );
 
 export const depositPrivateTopUpLinkClass =
-  "inline-flex items-center gap-1 border-0 bg-transparent p-0 text-sm font-[457] text-[#3168ff] transition-opacity hover:opacity-80";
+  "inline-flex items-center gap-1 border-0 bg-transparent p-0 text-sm font-[400] text-[#3168ff] transition-opacity hover:opacity-80";
 
 export const depositPrivateFooterLinkClass =
-  "inline-flex w-full items-center justify-center gap-1 border-0 bg-transparent p-0 text-base font-[556] text-black transition-opacity hover:opacity-80";
+  "inline-flex w-full items-center justify-center gap-1 border-0 bg-transparent p-0 text-base font-[500] text-black transition-opacity hover:opacity-80";
 
 export const depositPrivatePanelDisabledClass = "pointer-events-none opacity-30";
 
@@ -51,7 +52,7 @@ export const depositTokenRowSelectedClass = "bg-[#f4f4f4]";
 export const depositTokenRowDisabledClass = "cursor-not-allowed opacity-30 hover:bg-transparent";
 
 export const depositAmountInputClass = cn(
-  "w-full border-0 bg-transparent p-0 text-center text-[36px] font-[556] leading-[43px] text-black",
+  "w-full border-0 bg-transparent p-0 text-center text-[36px] font-[500] leading-[43px] text-black",
   "outline-none placeholder:text-[#c8c8c8]"
 );
 
@@ -59,13 +60,13 @@ export const depositModalAmountInputWrapClass =
   "mx-auto flex w-1/2 min-w-[200px] max-w-[250px] items-baseline";
 
 export const depositModalAmountInputClass = cn(
-  "min-w-0 flex-1 border-0 bg-transparent p-0 text-center text-[36px] font-[556] leading-[43px] text-black",
-  "outline-none placeholder:text-[#c8c8c8]",
+  "min-w-0 flex-1 border-0 bg-transparent p-0 text-center text-[36px] font-[500] leading-[43px] text-black",
+  "outline-none placeholder:text-[#c8c8c8]"
 );
 
 export const depositPercentButtonClass = cn(
   "flex h-[30px] min-w-[50px] items-center justify-center rounded-[8px] border border-[#EBEBEB]",
-  "bg-white px-3 text-sm font-[457] text-[#909090] transition-colors hover:border-black hover:text-black"
+  "bg-white px-3 text-sm font-[400] text-[#909090] transition-colors hover:border-black hover:text-black"
 );
 
 export const depositTransferBarClass =

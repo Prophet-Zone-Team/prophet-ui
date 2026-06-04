@@ -89,7 +89,7 @@ export function PortfolioPositionRedeemDialog({
           } else if (/submit|pending|relayer/i.test(message)) {
             setPhase("submitting");
           }
-        },
+        }
       });
 
       void reportRedeemTransaction({ position, teamName, txHash });
@@ -97,7 +97,10 @@ export function PortfolioPositionRedeemDialog({
       try {
         await syncCash();
       } catch (syncError) {
-        console.warn("[portfolio-position-redeem-dialog] syncCash after redeem failed", syncError);
+        console.warn(
+          "[portfolio-position-redeem-dialog] syncCash after redeem failed",
+          syncError
+        );
       }
 
       resetState();
@@ -123,16 +126,14 @@ export function PortfolioPositionRedeemDialog({
       <FundingModalShell title="Redeem" onClose={handleClose}>
         <div className="flex flex-col gap-5 pb-2">
           <div className="flex items-start gap-2.5">
-            {teamName ? (
-              <TeamFlag name={teamName} />
-            ) : null}
+            {teamName ? <TeamFlag name={teamName} /> : null}
             <div className="min-w-0 flex-1">
-              <p className="m-0 line-clamp-2 text-sm font-[556] leading-[17px] text-black">
+              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
                 {position.title}
               </p>
               <p
                 className={cn(
-                  "m-0 mt-1 text-xs font-[556]",
+                  "m-0 mt-1 text-xs font-[500]",
                   getOutcomeToneClass(position.outcome)
                 )}
               >
@@ -144,15 +145,18 @@ export function PortfolioPositionRedeemDialog({
           <div className="flex flex-col gap-1 rounded-lg border border-prophet-line/80 bg-[#FAFAFA] px-3 py-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-prophet-muted">Shares</span>
-              <span className="font-[556] text-black">{formatTeamDetailMoney(position.size)}</span>
+              <span className="font-[500] text-black">
+                {formatTeamDetailMoney(position.size)}
+              </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-prophet-muted">Estimated outcome</span>
-              <span className="font-[556] text-black">{estimatedValue}</span>
+              <span className="font-[500] text-black">{estimatedValue}</span>
             </div>
             <p className="m-0 text-xs text-prophet-muted">
-              Redemption converts resolved outcome tokens into tradable balance on your deposit
-              wallet. Estimated outcome is market data, not a guaranteed return.
+              Redemption converts resolved outcome tokens into tradable balance
+              on your deposit wallet. Estimated outcome is market data, not a
+              guaranteed return.
             </p>
           </div>
 
@@ -176,7 +180,10 @@ export function PortfolioPositionRedeemDialog({
           </button>
           <button
             type="button"
-            className={cn(fundingPrimaryButtonClass, "inline-flex items-center justify-center")}
+            className={cn(
+              fundingPrimaryButtonClass,
+              "inline-flex items-center justify-center"
+            )}
             disabled={isBusy}
             onClick={() => void handleConfirm()}
           >

@@ -99,12 +99,12 @@ function PortfolioPositionSellBody({
         <div className="flex items-start gap-2.5">
           <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
           <div className="min-w-0 flex-1">
-            <p className="m-0 line-clamp-2 text-sm font-[556] leading-[17px] text-black">
+            <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
               {position.title}
             </p>
             <p
               className={cn(
-                "m-0 mt-1 text-xs font-[556]",
+                "m-0 mt-1 text-xs font-[500]",
                 getOutcomeToneClass(position.outcome)
               )}
             >
@@ -115,8 +115,8 @@ function PortfolioPositionSellBody({
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-[556] text-black">Receive Token</span>
-            <span className="text-xl font-[556] text-black">
+            <span className="text-sm font-[500] text-black">Receive Token</span>
+            <span className="text-xl font-[500] text-black">
               {receiveAmount}
             </span>
           </div>

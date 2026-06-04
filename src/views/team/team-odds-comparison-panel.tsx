@@ -55,7 +55,9 @@ export function TeamOddsComparisonPanel({
         <div className={teamMiniGridClass}>
           <TeamPanelMetric
             label="Outright odds implied"
-            value={formatProbability(snapshot.market.bookmakerImpliedProbability)}
+            value={formatProbability(
+              snapshot.market.bookmakerImpliedProbability
+            )}
           />
           <TeamPanelMetric
             label="Market probability"
@@ -84,8 +86,10 @@ export function TeamOddsComparisonPanel({
                 className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-2 rounded-md border border-prophet-line px-3 py-2 text-xs"
               >
                 <span className="text-prophet-muted">{item.bookmaker}</span>
-                <strong className="font-[556] text-black">Winner outright</strong>
-                <b className="font-[556] text-black">
+                <strong className="font-[500] text-black">
+                  Winner outright
+                </strong>
+                <b className="font-[500] text-black">
                   {formatProbability(item.impliedProbability)}
                 </b>
               </div>
@@ -99,10 +103,10 @@ export function TeamOddsComparisonPanel({
                 <span className="text-prophet-muted">
                   {item.bookmaker ?? "Bookmaker"}
                 </span>
-                <strong className="font-[556] text-black">
+                <strong className="font-[500] text-black">
                   {item.selectionName ?? item.marketName ?? "Fixture odds"}
                 </strong>
-                <b className="font-[556] text-black">{item.odd ?? "Pending"}</b>
+                <b className="font-[500] text-black">{item.odd ?? "Pending"}</b>
               </div>
             ))
           ) : (
@@ -114,8 +118,8 @@ export function TeamOddsComparisonPanel({
         </div>
 
         <p className="m-0 text-[11px] leading-relaxed text-prophet-muted">
-          Outright odds are third-party context. Fixture odds depend on available
-          scheduled matches and bookmaker coverage.
+          Outright odds are third-party context. Fixture odds depend on
+          available scheduled matches and bookmaker coverage.
         </p>
       </div>
     </section>

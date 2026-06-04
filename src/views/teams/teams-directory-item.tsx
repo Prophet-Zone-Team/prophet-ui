@@ -51,7 +51,7 @@ export function TeamsDirectoryItem({
             className="h-8 w-8 shrink-0 rounded-[2px] text-[32px]"
           />
           <div className="min-w-0">
-            <h3 className="m-0 text-lg font-[556] leading-[21px] text-black">
+            <h3 className="m-0 text-lg font-[500] leading-[21px] text-black">
               {team.name}
             </h3>
             <p className={cn("m-0 mt-0.5", teamsMetricLabelClass)}>
@@ -75,14 +75,14 @@ export function TeamsDirectoryItem({
         <DirectoryMetric label="Group" value={formatGroup(metadata)} />
 
         <div className="flex flex-col gap-0.5">
-          <strong className="text-sm font-[556] leading-[17px] text-black">
+          <strong className="text-sm font-[500] leading-[17px] text-black">
             {metadata?.keyPlayers[0]?.name ?? "Pending"}
           </strong>
           <span className={teamsMetricLabelClass}>Key player</span>
         </div>
 
         <div className="flex flex-col gap-0.5">
-          <strong className="text-lg font-[556] leading-[21px] text-black">
+          <strong className="text-lg font-[500] leading-[21px] text-black">
             {formatProbability(market.bookmakerImpliedProbability)}
           </strong>
           <span
@@ -150,14 +150,14 @@ function DirectoryMetric({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-0.5">
-        <strong className="text-sm font-[556] leading-[17px] text-black">
+        <strong className="text-sm font-[500] leading-[17px] text-black">
           {value}
         </strong>
         <span className={teamsMetricLabelClass}>{label}</span>
       </div>
       {secondaryLabel && secondaryValue ? (
         <div className="flex flex-col gap-0.5">
-          <strong className="text-sm font-[556] leading-[17px] text-black">
+          <strong className="text-sm font-[500] leading-[17px] text-black">
             {secondaryValue}
           </strong>
           <span className={teamsMetricLabelClass}>{secondaryLabel}</span>
@@ -170,7 +170,7 @@ function DirectoryMetric({
 function FormStrip({ matches }: { matches: ApiFootballFixtureContext[] }) {
   if (matches.length === 0) {
     return (
-      <strong className="text-sm font-[556] text-prophet-muted">
+      <strong className="text-sm font-[500] text-prophet-muted">
         No official data
       </strong>
     );
@@ -186,10 +186,10 @@ function FormStrip({ matches }: { matches: ApiFootballFixtureContext[] }) {
           key={match.fixtureId}
           className={
             match.result === "W"
-              ? "inline-flex size-7 items-center justify-center rounded-md bg-[#f1fdf8] text-xs font-[556] text-prophet-green"
+              ? "inline-flex size-7 items-center justify-center rounded-md bg-[#f1fdf8] text-xs font-[500] text-prophet-green"
               : match.result === "L"
-                ? "inline-flex size-7 items-center justify-center rounded-md bg-[#fff4f6] text-xs font-[556] text-prophet-red"
-                : "inline-flex size-7 items-center justify-center rounded-md bg-[#fafbfc] text-xs font-[556] text-prophet-muted"
+                ? "inline-flex size-7 items-center justify-center rounded-md bg-[#fff4f6] text-xs font-[500] text-prophet-red"
+                : "inline-flex size-7 items-center justify-center rounded-md bg-[#fafbfc] text-xs font-[500] text-prophet-muted"
           }
         >
           {match.result ?? "-"}

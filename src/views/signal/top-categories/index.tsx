@@ -29,7 +29,7 @@ export function TopCategories({
         className
       )}
     >
-      <h2 className="m-0 shrink-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
+      <h2 className="m-0 shrink-0 text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
         Today&apos;s Top Categories
       </h2>
 

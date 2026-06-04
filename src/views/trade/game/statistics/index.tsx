@@ -72,11 +72,7 @@ function StatComparisonBar({
   );
 }
 
-function StatRow({
-  label,
-  homeValue,
-  awayValue
-}: GameStatisticsRowData) {
+function StatRow({ label, homeValue, awayValue }: GameStatisticsRowData) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_minmax(180px,auto)_minmax(0,1fr)] w-full">
       <div className="flex items-center gap-[10px]">
@@ -164,11 +160,11 @@ export function GameStatistics({
 
       <div className="mt-6 flex flex-col gap-[30px]">
         {isLoading ? (
-          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+          <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
             Loading...
           </p>
         ) : isError ? (
-          <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+          <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
             Unable to load data.
           </p>
         ) : (

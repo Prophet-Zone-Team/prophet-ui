@@ -18,13 +18,12 @@ export function TeamPowerRankingPage() {
   const [teamFilter, setTeamFilter] = useState("all");
   const [groupFilter, setGroupFilter] = useState("all");
 
-  const teamOptions = useMemo(
-    () => getTeamFilterOptions(entries),
-    [entries]
-  );
+  const teamOptions = useMemo(() => getTeamFilterOptions(entries), [entries]);
 
   const groupOptions = useMemo(() => {
-    const groups = [...new Set(entries.map((entry) => entry.group).filter(Boolean))].sort();
+    const groups = [
+      ...new Set(entries.map((entry) => entry.group).filter(Boolean))
+    ].sort();
     return [
       { value: "all", label: "All" },
       ...groups.map((group) => ({ value: group, label: group }))
@@ -44,7 +43,7 @@ export function TeamPowerRankingPage() {
     <div className="mx-auto w-full max-w-[1408px] px-3 pb-8 md:px-4">
       <PageBack />
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="m-0 pt-4 text-[22px] font-[457] leading-[26px] text-black md:pt-[20px] md:text-[26px] md:leading-[31px]">
+        <h1 className="m-0 pt-4 text-[22px] font-[400] leading-[26px] text-black md:pt-[20px] md:text-[26px] md:leading-[31px]">
           Team Power Ranking
         </h1>
 

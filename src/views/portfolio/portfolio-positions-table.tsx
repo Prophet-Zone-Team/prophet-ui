@@ -89,7 +89,9 @@ export function PortfolioPositionsTable({
 
   if (loading) {
     return (
-      <p className="px-4 py-8 text-center text-sm text-prophet-muted">Loading positions…</p>
+      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
+        Loading positions…
+      </p>
     );
   }
 
@@ -220,14 +222,14 @@ export function PortfolioPositionsTable({
           priceLabel={formatSharePrice(position.avgPrice)}
           icon={marketIcon}
         />
-        <span className="font-[556]">
+        <span className="font-[500]">
           {formatTeamDetailMoney(position.initialValue)}
         </span>
-        <span className="font-[556]">
+        <span className="font-[500]">
           {formatTeamDetailMoney(position.size)}
         </span>
         <div className="flex flex-col gap-0.5">
-          <span className="font-[556]">
+          <span className="font-[500]">
             {formatTeamDetailMoney(position.currentValue)}
           </span>
           <span className={cn("text-xs", pnlTone)}>
@@ -239,7 +241,10 @@ export function PortfolioPositionsTable({
     );
 
     mobileCards.push(
-      <article key={`${rowKey}-mobile`} className={portfolioTableMobileCardClass}>
+      <article
+        key={`${rowKey}-mobile`}
+        className={portfolioTableMobileCardClass}
+      >
         <PortfolioMarketCell
           title={marketTitle}
           href={resolveTradeHref(position.eventSlug ?? position.slug)}
@@ -262,7 +267,10 @@ export function PortfolioPositionsTable({
               </span>
             </div>
           </PortfolioTableMobileField>
-          <PortfolioTableMobileField label="Time" valueClassName="font-normal text-prophet-muted">
+          <PortfolioTableMobileField
+            label="Time"
+            valueClassName="font-normal text-prophet-muted"
+          >
             {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
           </PortfolioTableMobileField>
         </div>

@@ -105,11 +105,11 @@ export function TradeHeader({
 
             <div className="min-w-0 flex-1 pb-0.5">
               <div className="flex items-center gap-4">
-                <h1 className="m-0 truncate text-[36px] font-[556] capitalize leading-[43px] text-black">
+                <h1 className="m-0 truncate text-[36px] font-[500] capitalize leading-[43px] text-black">
                   {team.name}
                 </h1>
               </div>
-              <p className="m-0 mt-0.5 text-right text-sm font-[556] leading-[17px] text-[#909090] sm:text-left">
+              <p className="m-0 mt-0.5 text-right text-sm font-[500] leading-[17px] text-[#909090] sm:text-left">
                 {fifaRank ? (
                   <>
                     Current{" "}

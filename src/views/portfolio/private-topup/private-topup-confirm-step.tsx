@@ -78,7 +78,7 @@ export function PrivateTopupConfirmStep({
 
   return (
     <div className="flex flex-col gap-4 pb-2">
-      <p className="m-0 text-center text-[36px] font-[556] leading-[43px] text-black">
+      <p className="m-0 text-center text-[36px] font-[500] leading-[43px] text-black">
         {formatNumber(amountUsd, 2, true, { prefix: "$", round: 0 })}
       </p>
 
@@ -102,7 +102,12 @@ export function PrivateTopupConfirmStep({
         </DetailRow>
         <DetailRow label="To">
           <span className="flex items-center gap-2">
-            <div className={cn(privateTopupSecureIconWrapClass, "!rounded-[6px] !bg-black")}>
+            <div
+              className={cn(
+                privateTopupSecureIconWrapClass,
+                "!rounded-[6px] !bg-black"
+              )}
+            >
               <img
                 src="/icons/icon-secure.svg"
                 alt=""
@@ -126,9 +131,7 @@ export function PrivateTopupConfirmStep({
               chainIcon={token.chainIcon}
               size="sm"
             />
-            <span>
-              {formatNumber(tokenAmount, 4, true, { round: 0 })}
-            </span>
+            <span>{formatNumber(tokenAmount, 4, true, { round: 0 })}</span>
           </span>
         </DetailRow>
         <DetailRow label="Est. Receive">
@@ -141,7 +144,9 @@ export function PrivateTopupConfirmStep({
               size="sm"
             />
             <span>
-              {quoteLoading ? "…" : formatNumber(receiveAmount, 4, true, { round: 0 })}
+              {quoteLoading
+                ? "…"
+                : formatNumber(receiveAmount, 4, true, { round: 0 })}
             </span>
           </span>
         </DetailRow>
@@ -169,7 +174,7 @@ function DetailRow({
     <div className={depositDetailRowClass}>
       <span className="text-[#909090]">{label}</span>
       <span className="flex-1 border-t border-[#EBEBEB]/60" />
-      <span className="font-[556] text-black">{children}</span>
+      <span className="font-[500] text-black">{children}</span>
     </div>
   );
 }

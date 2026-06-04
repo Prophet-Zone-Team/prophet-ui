@@ -20,7 +20,7 @@ export function ProbabilityChangeTrend({
       className={cn("inline-flex items-center gap-0.5", trendColor, className)}
     >
       <ProbabilityChangeTrendArrow isDown={isDown} />
-      <span className="text-[14px] font-[556] leading-[17px]">
+      <span className="text-[14px] font-[500] leading-[17px]">
         {formatChangePercentMagnitude(changePercent, decimals)}
       </span>
     </span>

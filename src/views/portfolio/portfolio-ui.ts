@@ -1,6 +1,7 @@
 import { cn } from "@/lib/cn";
 
-export const portfolioPageClass = "mx-auto w-full md:w-[1112px] px-3 md:px-4 py-[20px] sm:px-6";
+export const portfolioPageClass =
+  "mx-auto w-full md:w-[1112px] px-3 md:px-4 py-[20px] sm:px-6";
 
 export const portfolioSummaryCardClass = cn(
   "box-border min-h-[300px] rounded-[20px] border border-prophet-line bg-white p-3 md:p-6 lg:h-[300px]"
@@ -21,26 +22,26 @@ export const portfolioTableMobileCardClass = cn(
 
 export const portfolioTableMobileLabelClass = "text-xs text-prophet-muted";
 
-export const portfolioTableMobileValueClass = "text-sm font-[556] text-black";
+export const portfolioTableMobileValueClass = "text-sm font-[500] text-black";
 
 export const portfolioSummaryLabelClass =
-  "text-[14px] font-[556] leading-[17px] text-[#909090] pb-[10px]";
+  "text-[14px] font-[500] leading-[17px] text-[#909090] pb-[10px]";
 
 export const portfolioSummaryValueLargeClass =
-  "text-[32px] font-[556] leading-[38px] text-black";
+  "text-[32px] font-[500] leading-[38px] text-black";
 
 export const portfolioSummaryValueMediumClass =
-  "text-[32px] md:text-[20px] font-[556] leading-[38px] md:leading-12 text-black mt-2";
+  "text-[32px] md:text-[20px] font-[500] leading-[38px] md:leading-12 text-black mt-2";
 
 export const portfolioPendingDepositButtonClass = cn(
   "inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-black px-2 md:px-3 mt-2",
-  "text-xs font-[556] leading-[14px] text-white transition-opacity hover:opacity-90",
+  "text-xs font-[500] leading-[14px] text-white transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50",
   "md:absolute md:right-0 md:top-[-55px] md:z-10"
 );
 
 export const portfolioWalletAddressClass =
-  "truncate text-[20px] font-[556] leading-6 text-black";
+  "truncate text-[20px] font-[500] leading-6 text-black";
 
 export const portfolioAvatarClass = cn(
   "size-[52px] shrink-0 rounded-full border-4 border-white shadow-[0_0_4px_rgba(0,0,0,0.25)]",
@@ -49,19 +50,19 @@ export const portfolioAvatarClass = cn(
 
 export const portfolioDepositButtonClass = cn(
   "flex h-[55px] w-[235px] items-center justify-center rounded-xl bg-black",
-  "text-base font-[457] leading-[19px] text-white transition-opacity hover:opacity-90",
+  "text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
 export const portfolioWithdrawButtonClass = cn(
   "flex h-[55px] w-full max-w-[235px] items-center justify-center rounded-xl",
-  "border border-prophet-muted bg-white text-base font-[457] leading-[19px] text-black",
+  "border border-prophet-muted bg-white text-base font-[400] leading-[19px] text-black",
   "transition-colors hover:bg-[#fafbfc] disabled:cursor-not-allowed disabled:opacity-50"
 );
 
 export const portfolioConnectButtonClass = cn(
   "flex h-[55px] w-full max-w-[235px] items-center justify-center rounded-xl bg-black",
-  "text-base font-[457] leading-[19px] text-white transition-opacity hover:opacity-90",
+  "text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
@@ -119,13 +120,13 @@ export const portfolioHistoryMobileCardClass = cn(
 
 export const portfolioActionButtonClass = cn(
   "flex h-8 shrink-0 items-center justify-center rounded-md bg-black px-4",
-  "text-sm font-[556] text-white transition-opacity hover:opacity-90",
+  "text-sm font-[500] text-white transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
 export const portfolioSecondaryButtonClass = cn(
   "flex h-[50px] w-full items-center justify-center rounded-[8px] border border-[#909090] bg-white",
-  "text-base font-[457] leading-[19px] text-black transition-colors hover:bg-[#fafbfc]",
+  "text-base font-[400] leading-[19px] text-black transition-colors hover:bg-[#fafbfc]",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 

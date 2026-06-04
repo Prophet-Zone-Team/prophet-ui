@@ -76,12 +76,12 @@ export function PortfolioMarketCell({
         {href ? (
           <a
             href={href}
-            className="m-0 truncate font-[556] text-black hover:underline"
+            className="m-0 truncate font-[500] text-black hover:underline"
           >
             {title}
           </a>
         ) : (
-          <p className="m-0 truncate font-[556] text-black">{title}</p>
+          <p className="m-0 truncate font-[500] text-black">{title}</p>
         )}
         {outcome ? (
           <p className={cn("m-0 mt-0.5 text-xs", getOutcomeToneClass(outcome))}>

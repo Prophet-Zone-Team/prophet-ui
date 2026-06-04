@@ -159,7 +159,7 @@ export function PositionsTable(props: PositionsTableProps) {
   if (error && !hasData) {
     return (
       <div className="px-4 py-10 text-center">
-        <strong className="block text-sm font-[556] text-black">
+        <strong className="block text-sm font-[500] text-black">
           Market positions unavailable
         </strong>
         <p className="m-0 mt-2 text-sm text-prophet-muted">{error}</p>
@@ -194,7 +194,7 @@ export function PositionsTable(props: PositionsTableProps) {
           key={`${position.asset}:${position.proxyWallet}`}
           className="grid grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,1fr))] gap-2 border-b border-prophet-line/60 px-4 py-2.5 text-sm last:border-b-0"
         >
-          <strong className="truncate font-[556]">{position.outcome}</strong>
+          <strong className="truncate font-[500]">{position.outcome}</strong>
           <span className="tabular-nums">{position.size.toFixed(2)}</span>
           <span className="tabular-nums">
             {formatTeamDetailMoney(position.currentValue)}

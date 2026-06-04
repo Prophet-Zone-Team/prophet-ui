@@ -51,7 +51,7 @@ export function PrivateTopupGuideDialog({
               alt="Private mode"
               className="h-[52px] w-[70px] object-contain"
             />
-            <h2 className="m-0 mt-4 text-center text-[26px] font-[556] leading-normal text-black">
+            <h2 className="m-0 mt-4 text-center text-[26px] font-[500] leading-normal text-black">
               How to use Private Mode
             </h2>
           </div>
@@ -82,7 +82,7 @@ export function PrivateTopupGuideDialog({
           <div className="mt-6 flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-center md:gap-4">
             <button
               type="button"
-              className="border-0 bg-transparent p-0 text-left text-[14px] font-[457] text-black transition-opacity hover:opacity-70 md:text-center"
+              className="border-0 bg-transparent p-0 text-left text-[14px] font-[400] text-black transition-opacity hover:opacity-70 md:text-center"
               onClick={onProceed}
             >
               Skip Guide

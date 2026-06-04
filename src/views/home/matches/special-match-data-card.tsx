@@ -161,13 +161,13 @@ function SpecialMatchDataCardContent({
                 </>
               ) : (
                 <>
-                  <div className="text-[14px] text-[#9D84FF] font-[556]">
+                  <div className="text-[14px] text-[#9D84FF] font-[500]">
                     Next Match
                   </div>
-                  <div className="text-[30px] md:text-[36px] text-[#909090] font-[556]">
+                  <div className="text-[30px] md:text-[36px] text-[#909090] font-[500]">
                     VS
                   </div>
-                  <div className="text-sm md:text-[16px] text-[#000] font-[457]">
+                  <div className="text-sm md:text-[16px] text-[#000] font-[400]">
                     Starts {formatScheduleKickoff(liveMatch.kickoffAt)}
                   </div>
                 </>
@@ -206,7 +206,7 @@ function TeamColumn({
         logoUrl={logoUrl}
         className="h-[40px] md:h-[50px] w-[40px] md:w-[50px] rounded-[6px] text-[40px] md:text-[50px]"
       />
-      <strong className="max-w-full truncate text-base md:text-[26px] font-[556] leading-[31px] text-black">
+      <strong className="max-w-full truncate text-base md:text-[26px] font-[500] leading-[31px] text-black">
         {name}
       </strong>
     </div>

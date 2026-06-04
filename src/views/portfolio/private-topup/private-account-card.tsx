@@ -52,12 +52,14 @@ export function PrivateAccountCard({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}>
+              <p
+                className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}
+              >
                 Private Account
               </p>
               {address ? (
                 <div className="mt-1 flex items-center gap-2">
-                  <p className="m-0 truncate text-lg font-[556] text-white">
+                  <p className="m-0 truncate text-lg font-[500] text-white">
                     {formatShortWallet(address)}
                   </p>
                   <CopyButton
@@ -69,7 +71,7 @@ export function PrivateAccountCard({
                   </CopyButton>
                 </div>
               ) : (
-                <p className="m-0 mt-1 text-lg font-[556] text-white">-</p>
+                <p className="m-0 mt-1 text-lg font-[500] text-white">-</p>
               )}
             </div>
           </div>
@@ -84,7 +86,7 @@ export function PrivateAccountCard({
               alt=""
               className={cn(
                 "size-5 object-contain",
-                refreshing && "animate-spin",
+                refreshing && "animate-spin"
               )}
               aria-hidden
             />
@@ -93,14 +95,16 @@ export function PrivateAccountCard({
 
         <div className="mt-auto flex items-end justify-between gap-4 pt-8">
           <div>
-            <p className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}>
+            <p
+              className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}
+            >
               Private Balance
             </p>
             <p
               className={cn(
                 "m-0 mt-2",
                 privateTopupPrivateBalanceLargeClass,
-                !topupWalletConnected && "opacity-30",
+                !topupWalletConnected && "opacity-30"
               )}
             >
               {refreshing
@@ -108,7 +112,7 @@ export function PrivateAccountCard({
                 : formatNumber(privateBalanceUsd, 2, true, {
                     prefix: "$",
                     round: 0,
-                    isZeroPrecision: true,
+                    isZeroPrecision: true
                   })}
             </p>
           </div>
@@ -116,7 +120,7 @@ export function PrivateAccountCard({
             type="button"
             className={cn(
               privateTopupTopUpButtonClass,
-              !topupWalletConnected && privateTopupTopUpButtonDisabledClass,
+              !topupWalletConnected && privateTopupTopUpButtonDisabledClass
             )}
             disabled={!topupWalletConnected}
             onClick={onTopUp}

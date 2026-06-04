@@ -41,13 +41,13 @@ export function ImpactDistributionLegendItem({
         <span className="shrink-0 [&_svg]:size-[26px]">
           <Icon />
         </span>
-        <span className="truncate text-[16px] font-[556] leading-[19px] text-black">
+        <span className="truncate text-[16px] font-[500] leading-[19px] text-black">
           {LABELS[sentiment]}
         </span>
       </div>
-      <span className="mt-[7px] shrink-0 text-[16px] font-[556] leading-[19px] text-right">
+      <span className="mt-[7px] shrink-0 text-[16px] font-[500] leading-[19px] text-right">
         <span className="text-black">{formatted.count}</span>{" "}
-        <span className="text-[#909090] font-[457]">{formatted.percent}</span>
+        <span className="text-[#909090] font-[400]">{formatted.percent}</span>
       </span>
     </div>
   );

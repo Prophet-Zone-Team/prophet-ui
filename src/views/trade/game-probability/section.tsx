@@ -9,7 +9,7 @@ import { formatMatchScore } from "@/lib/market/match-display";
 import { isEffectiveLiveMatch } from "@/lib/market/live-match";
 import {
   filterGameBinaryFixtureChartByRange,
-  filterGameFixtureChartByRange,
+  filterGameFixtureChartByRange
 } from "@/lib/market/fixture-probability-chart";
 import {
   filterLiveBinaryFixtureChartByRange,
@@ -54,7 +54,7 @@ const GAME_PROBABILITY_TIME_RANGES = [
   { id: "1D", label: "1D" },
   { id: "1W", label: "1W" },
   { id: "1M", label: "1M" },
-  { id: "all", label: "All" },
+  { id: "all", label: "All" }
 ] as const satisfies ReadonlyArray<{
   id: GameFixtureChartTimeRange;
   label: string;
@@ -97,7 +97,7 @@ export function GameProbabilitySection({
   summaryMode = "ternary",
   summaryItems,
   binaryPrimaryLabel,
-  binarySecondaryLabel,
+  binarySecondaryLabel
 }: GameProbabilitySectionProps) {
   const liveMatch = useMatchWithLiveState(match);
   const mockLiveFixture = isMockLiveFixtureEnabled();
@@ -153,10 +153,8 @@ export function GameProbabilitySection({
   );
   const liveAxisElapsedSeconds = useMemo(
     () =>
-      Math.max(
-        elapsedFromStartTime ?? 0,
-        matchClockElapsedSeconds ?? 0
-      ) || undefined,
+      Math.max(elapsedFromStartTime ?? 0, matchClockElapsedSeconds ?? 0) ||
+      undefined,
     [elapsedFromStartTime, matchClockElapsedSeconds]
   );
   const {
@@ -337,8 +335,8 @@ export function GameProbabilitySection({
                     className={cn(
                       "border-0 bg-transparent p-0 text-[14px] leading-[17px]",
                       timeRange === range.id
-                        ? "font-[556] text-black"
-                        : "font-[457] text-[#909090]"
+                        ? "font-[500] text-black"
+                        : "font-[400] text-[#909090]"
                     )}
                     onClick={() => setTimeRange(range.id)}
                   >
@@ -473,16 +471,19 @@ function ProbabilitySummaryRow({ items }: { items: ProbabilitySummaryItem[] }) {
   return (
     <div className="w-full mt-3 flex flex-wrap items-center gap-x-2 md:gap-x-6 gap-y-2">
       {items.map((item) => (
-        <div key={item.label} className="inline-flex items-center gap-1 md:gap-2">
+        <div
+          key={item.label}
+          className="inline-flex items-center gap-1 md:gap-2"
+        >
           <span
             className="w-[12px] h-[12px] shrink-0 rounded-full"
             style={{ backgroundColor: item.color ?? gameColors.draw }}
             aria-hidden
           />
-          <span className="text-[12px] font-[457] leading-[17px] text-[#909090]">
+          <span className="text-[12px] font-[400] leading-[17px] text-[#909090]">
             {item.label}
           </span>
-          <span className="text-[12px] font-[556] leading-[17px] text-black">
+          <span className="text-[12px] font-[500] leading-[17px] text-black">
             {Math.round(item.value)}%
           </span>
         </div>
@@ -502,13 +503,13 @@ function ChartStateMessage({
 }) {
   return (
     <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 rounded-[8px] border border-dashed border-[#EBEBEB] px-4 py-8 text-center">
-      <p className="m-0 text-sm font-[457] leading-[17px] text-[#909090]">
+      <p className="m-0 text-sm font-[400] leading-[17px] text-[#909090]">
         {message}
       </p>
       {actionLabel && onAction ? (
         <button
           type="button"
-          className="border-0 bg-transparent p-0 text-sm font-[556] leading-[17px] text-black underline"
+          className="border-0 bg-transparent p-0 text-sm font-[500] leading-[17px] text-black underline"
           onClick={onAction}
         >
           {actionLabel}
@@ -534,7 +535,7 @@ function LiveScoreBadge({
   const [homeScore, awayScore] = score.split("-");
 
   return (
-    <div className="flex items-center gap-3 text-sm font-[556] leading-[17px]">
+    <div className="flex items-center gap-3 text-sm font-[500] leading-[17px]">
       <span className="inline-flex items-center gap-1.5 text-[#65AF14]">
         <span className="size-2 rounded-full bg-[#65AF14]" aria-hidden />
         LIVE

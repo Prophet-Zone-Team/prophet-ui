@@ -5,7 +5,8 @@ import { resolveFixtureBuyAsk } from "@/lib/market/fixture-ask-liquidity";
 import type { FixtureMarketOutcome } from "@/types/market";
 import { LineOutcomeButton } from "@/views/trade/game/fixture-markets/line-outcome-button";
 
-const cardClass = "rounded-[12px] border border-[#EBEBEB] bg-white divide-y divide-[#EBEBEB]";
+const cardClass =
+  "rounded-[12px] border border-[#EBEBEB] bg-white divide-y divide-[#EBEBEB]";
 
 function isOutcomeBuyable(
   outcome: FixtureMarketOutcome,
@@ -44,7 +45,7 @@ export function ExactScorePanel({
   if (!outcomes.length) {
     return (
       <div className="rounded-[12px] border border-dashed border-[#EBEBEB] px-4 py-10 text-center">
-        <p className="m-0 text-sm font-[457] leading-[17px] text-[#909090]">
+        <p className="m-0 text-sm font-[400] leading-[17px] text-[#909090]">
           No exact score markets available for this match.
         </p>
       </div>

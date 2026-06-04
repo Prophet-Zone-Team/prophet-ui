@@ -22,7 +22,7 @@ export interface TakeProfitLimitRowProps {
 
 function TakeProfitLimitTooltip({ message }: { message: string }) {
   return (
-    <div className="rounded-lg border border-[#EBEBEB] bg-white px-3 py-2 text-sm font-[457] text-black shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
+    <div className="rounded-lg border border-[#EBEBEB] bg-white px-3 py-2 text-sm font-[400] text-black shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
       {message}
     </div>
   );

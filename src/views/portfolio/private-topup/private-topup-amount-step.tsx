@@ -136,10 +136,12 @@ export function PrivateTopupAmountStep({
 
       <div className={cn(depositTransferBarClass, "mt-[3.5rem]")}>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <span className="text-sm font-[457] text-[#909090]">Funding Wallet</span>
+          <span className="text-sm font-[400] text-[#909090]">
+            Funding Wallet
+          </span>
           <div className="flex items-center gap-2">
             <WalletAvatarIcon address={topupWalletAddress} className="size-5" />
-            <span className="truncate text-base font-[556] text-black">
+            <span className="truncate text-base font-[500] text-black">
               {topupWalletAddress
                 ? formatShortWallet(topupWalletAddress)
                 : "--"}
@@ -154,8 +156,10 @@ export function PrivateTopupAmountStep({
               size="md"
             />
             <div className="flex min-w-0 flex-col">
-              <span className="text-sm font-[556] text-black">{token.symbol}</span>
-              <span className="text-xs font-[556] text-[#909090]">
+              <span className="text-sm font-[500] text-black">
+                {token.symbol}
+              </span>
+              <span className="text-xs font-[500] text-[#909090]">
                 {token.chainName}
               </span>
             </div>
@@ -168,7 +172,9 @@ export function PrivateTopupAmountStep({
         />
 
         <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
-          <span className="text-sm font-[457] text-[#909090]">Private Wallet</span>
+          <span className="text-sm font-[400] text-[#909090]">
+            Private Wallet
+          </span>
           <div className="flex items-center gap-2">
             <div className={privateTopupSecureIconWrapClass}>
               <img
@@ -178,7 +184,7 @@ export function PrivateTopupAmountStep({
                 aria-hidden
               />
             </div>
-            <span className="truncate text-base font-[556] text-black">
+            <span className="truncate text-base font-[500] text-black">
               {privateAccountAddress
                 ? formatShortWallet(privateAccountAddress)
                 : "--"}
@@ -193,10 +199,10 @@ export function PrivateTopupAmountStep({
               size="md"
             />
             <div className="flex min-w-0 flex-col items-start">
-              <span className="text-sm font-[556] text-black">
+              <span className="text-sm font-[500] text-black">
                 {POLYMARKET_USD.symbol}
               </span>
-              <span className="text-xs font-[556] text-[#909090]">
+              <span className="text-xs font-[500] text-[#909090]">
                 {POLYMARKET_USD.chainName}
               </span>
             </div>

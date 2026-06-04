@@ -85,10 +85,7 @@ export function PortfolioOpenOrderCancelDialog({
   const price = Number(order.price);
   const sideLabel = titleCase(order.side);
   const marketLabel =
-    marketTitle?.trim() ||
-    order.outcome ||
-    order.market ||
-    order.asset_id;
+    marketTitle?.trim() || order.outcome || order.market || order.asset_id;
   const isBusy = isCanceling(order.id);
 
   return (
@@ -113,12 +110,12 @@ export function PortfolioOpenOrderCancelDialog({
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="m-0 line-clamp-2 text-sm font-[556] leading-[17px] text-black">
+              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
                 {marketLabel}
               </p>
               <p
                 className={cn(
-                  "m-0 mt-1 text-xs font-[556]",
+                  "m-0 mt-1 text-xs font-[500]",
                   order.outcome
                     ? getOutcomeToneClass(order.outcome)
                     : getSideToneClass(order.side)
@@ -132,24 +129,26 @@ export function PortfolioOpenOrderCancelDialog({
 
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-[556] text-prophet-muted">
+              <span className="text-sm font-[500] text-prophet-muted">
                 Remaining size
               </span>
-              <span className="text-sm font-[556] text-black">
+              <span className="text-sm font-[500] text-black">
                 {formatShareSize(getRemainingSize(order))}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-[556] text-prophet-muted">Filled</span>
-              <span className="text-sm font-[556] text-black">
+              <span className="text-sm font-[500] text-prophet-muted">
+                Filled
+              </span>
+              <span className="text-sm font-[500] text-black">
                 {getFilledPercent(order)}
               </span>
             </div>
           </div>
 
           <p className="m-0 text-sm text-prophet-muted">
-            This will remove the open order from the book. Any filled portion will
-            remain in your account.
+            This will remove the open order from the book. Any filled portion
+            will remain in your account.
           </p>
         </div>
 

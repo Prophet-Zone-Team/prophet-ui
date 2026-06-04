@@ -1,9 +1,6 @@
 import { cn } from "@/lib/cn";
 
-import {
-  formatCategoryCountWithPercent,
-  getCategoryColor
-} from "./format";
+import { formatCategoryCountWithPercent, getCategoryColor } from "./format";
 import type { SignalCategorySegment } from "./types";
 
 export type TopCategoriesLegendRowProps = {
@@ -35,11 +32,11 @@ export function TopCategoriesLegendRow({
           className="size-[12px] shrink-0 rounded-[4px]"
           style={{ backgroundColor: color }}
         />
-        <span className="truncate text-[16px] font-[457] leading-[19px] text-black">
+        <span className="truncate text-[16px] font-[400] leading-[19px] text-black">
           {category.label}
         </span>
       </div>
-      <span className="shrink-0 text-[16px] font-[457] leading-[19px] text-right text-black tabular-nums">
+      <span className="shrink-0 text-[16px] font-[400] leading-[19px] text-right text-black tabular-nums">
         {formatCategoryCountWithPercent(category.count, percent)}
       </span>
     </div>

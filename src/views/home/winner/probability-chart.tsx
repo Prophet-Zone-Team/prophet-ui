@@ -43,13 +43,13 @@ export interface WinnerProbabilityChartProps {
 function renderEndDot(
   dataLength: number,
   color: string
-): (props: { cx?: number; cy?: number; index?: number }) => ReactElement<SVGElement> {
+): (props: {
+  cx?: number;
+  cy?: number;
+  index?: number;
+}) => ReactElement<SVGElement> {
   return function EndDot({ cx, cy, index }) {
-    if (
-      index !== dataLength - 1 ||
-      cx === undefined ||
-      cy === undefined
-    ) {
+    if (index !== dataLength - 1 || cx === undefined || cy === undefined) {
       return <g />;
     }
 
@@ -220,7 +220,12 @@ function ChartLegend({
   className?: string;
 }) {
   return (
-    <div className={cn("md:flex md:flex-wrap gap-x-8 gap-y-2 grid grid-cols-2", className)}>
+    <div
+      className={cn(
+        "md:flex md:flex-wrap gap-x-8 gap-y-2 grid grid-cols-2",
+        className
+      )}
+    >
       {items.map((item) => (
         <ChartLegendItem key={item.teamId} item={item} />
       ))}
@@ -282,7 +287,7 @@ function ChartLegendItem({
         aria-hidden="true"
       />
       <span className="text-[#909090]">{item.label}</span>
-      <span className="font-[556] text-black">
+      <span className="font-[500] text-black">
         {formatProbability(item.value)}
       </span>
     </div>

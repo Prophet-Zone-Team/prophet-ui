@@ -30,9 +30,9 @@ import { formatNumber } from "@/utils";
 import { usePortfolioContext } from "./context";
 import { cn } from "@/lib/cn";
 
-export interface PortfolioSummarySectionProps { }
+export interface PortfolioSummarySectionProps {}
 
-export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
+export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
   const { session, portfolio, status, onConnectWallet, reload } =
     usePortfolioContext();
 
@@ -64,15 +64,15 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
 
   const portfolioDisplay = session
     ? formatNumber(portfolio?.portfolioValue, 2, true, {
-      round: 0,
-      isZeroPrecision: true
-    })
+        round: 0,
+        isZeroPrecision: true
+      })
     : "—";
   const availableDisplay = session
     ? formatNumber(portfolio?.availableToTrade, 2, true, {
-      round: 0,
-      isZeroPrecision: true
-    })
+        round: 0,
+        isZeroPrecision: true
+      })
     : "—";
 
   return (
@@ -106,7 +106,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
             </CopyButton>
           </div>
         ) : (
-          <span className="text-[20px] font-[556] leading-6 text-prophet-muted">
+          <span className="text-[20px] font-[500] leading-6 text-prophet-muted">
             Wallet not connected
           </span>
         )}

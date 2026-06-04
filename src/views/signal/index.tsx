@@ -79,11 +79,19 @@ export function SignalPage({
   }, [selectedItem]);
 
   return (
-    <div className={cn("mx-auto w-full max-w-[1412px] px-3 pb-8 md:px-4", className)}>
+    <div
+      className={cn(
+        "mx-auto w-full max-w-[1412px] px-3 pb-8 md:px-4",
+        className
+      )}
+    >
       <PageBack />
 
-      <section aria-label="Signal and news impact" className="pt-4 md:pt-[20px]">
-        <h1 className="m-0 text-[22px] font-[457] leading-[26px] text-black md:text-[26px] md:leading-[31px]">
+      <section
+        aria-label="Signal and news impact"
+        className="pt-4 md:pt-[20px]"
+      >
+        <h1 className="m-0 text-[22px] font-[400] leading-[26px] text-black md:text-[26px] md:leading-[31px]">
           Signal &amp; New Impact
         </h1>
         {isTopLoading ? (
@@ -107,8 +115,11 @@ export function SignalPage({
         )}
       </section>
 
-      <section aria-label="All signals and news summary" className="mt-5 md:mt-[20px]">
-        <h2 className="m-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
+      <section
+        aria-label="All signals and news summary"
+        className="mt-5 md:mt-[20px]"
+      >
+        <h2 className="m-0 text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
           All Signals &amp; News
         </h2>
         <div className="mt-4 grid grid-cols-2 gap-3 md:mt-[20px] md:grid-cols-3 md:gap-[21px]">
@@ -116,7 +127,11 @@ export function SignalPage({
             <SignalNewsItem
               key={variant}
               variant={variant}
-              count={isImpactLoading ? 0 : summary[countKey] ?? data.summary[countKey]}
+              count={
+                isImpactLoading
+                  ? 0
+                  : (summary[countKey] ?? data.summary[countKey])
+              }
             />
           ))}
         </div>

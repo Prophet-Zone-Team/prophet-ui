@@ -53,26 +53,26 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
             className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] md:h-[20px] md:w-[20px] md:text-[20px]"
             fallback={false}
           />
-          <span className="truncate text-[14px] font-[457] leading-[17px] text-black md:text-[16px] md:leading-[19px]">
+          <span className="truncate text-[14px] font-[400] leading-[17px] text-black md:text-[16px] md:leading-[19px]">
             {item.teamName}
           </span>
         </div>
-        <span className="shrink-0 whitespace-nowrap text-[12px] font-[457] leading-[14px] text-[#909090] md:mt-1 md:text-[14px] md:leading-[17px]">
+        <span className="shrink-0 whitespace-nowrap text-[12px] font-[400] leading-[14px] text-[#909090] md:mt-1 md:text-[14px] md:leading-[17px]">
           {item.publishedAtFormatted}
         </span>
       </div>
 
       <div className="min-w-0 flex-1">
-        <h3 className="m-0 line-clamp-2 text-base font-[556] leading-[19px] text-black md:truncate md:text-[18px] md:leading-[21px]">
+        <h3 className="m-0 line-clamp-2 text-base font-[500] leading-[19px] text-black md:truncate md:text-[18px] md:leading-[21px]">
           {item.headline}
         </h3>
-        <p className="m-0 mt-1 line-clamp-2 text-[14px] font-[457] leading-[17px] text-[#909090] md:mt-2 md:truncate md:whitespace-nowrap">
+        <p className="m-0 mt-1 line-clamp-2 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-2 md:truncate md:whitespace-nowrap">
           {item.summary}
         </p>
       </div>
 
       <div className="flex shrink-0 items-center justify-between gap-2 md:justify-end md:gap-1">
-        <span className="text-[12px] font-[457] leading-[14px] text-[#909090] md:hidden">
+        <span className="text-[12px] font-[400] leading-[14px] text-[#909090] md:hidden">
           Impact
         </span>
         <div className="flex items-center gap-1 md:gap-[4px]">
@@ -81,9 +81,9 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
           </span>
           <span
             className={cn(
-              "whitespace-nowrap text-base font-[556] leading-[19px] md:text-[18px] md:leading-[21px]",
+              "whitespace-nowrap text-base font-[500] leading-[19px] md:text-[18px] md:leading-[21px]",
               item.sentiment === "positive" ? "text-[#7BCA25]" : "",
-              item.sentiment === "negative" ? "text-[#FF674B]" : "",
+              item.sentiment === "negative" ? "text-[#FF674B]" : ""
             )}
           >
             {formatImpactScore(item.impactScore)}

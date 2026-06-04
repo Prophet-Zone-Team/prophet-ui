@@ -133,7 +133,7 @@ function SortPill({
     <button
       type="button"
       className={cn(
-        "inline-flex h-[34px] items-center gap-1.5 rounded-[20px] border border-[#909090] px-[16px] text-[16px] font-[457] leading-[19px] transition-colors",
+        "inline-flex h-[34px] items-center gap-1.5 rounded-[20px] border border-[#909090] px-[16px] text-[16px] font-[400] leading-[19px] transition-colors",
         active ? "bg-black text-white" : "bg-white text-black",
         className
       )}

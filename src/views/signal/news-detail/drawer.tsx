@@ -112,18 +112,18 @@ export function SignalNewsDetailDrawer({
                   />
                 ) : (
                   <div
-                    className="flex h-[200px] w-full items-center justify-center rounded-[12px] bg-[#F0F2F5] text-[14px] font-[457] text-[#909090] md:h-[338px]"
+                    className="flex h-[200px] w-full items-center justify-center rounded-[12px] bg-[#F0F2F5] text-[14px] font-[400] text-[#909090] md:h-[338px]"
                     aria-hidden="true"
                   >
                     No image available
                   </div>
                 )}
 
-                <h2 className="m-0 mt-[20px] text-[20px] font-[556] leading-[24px] text-black">
+                <h2 className="m-0 mt-[20px] text-[20px] font-[500] leading-[24px] text-black">
                   {detail.title}
                 </h2>
 
-                <p className="m-0 mt-[12px] text-[14px] font-[457] leading-[17px] text-[#909090]">
+                <p className="m-0 mt-[12px] text-[14px] font-[400] leading-[17px] text-[#909090]">
                   {detail.updatedAtLabel}
                 </p>
 

@@ -36,15 +36,15 @@ function HeroMetric({
       <strong
         className={
           tone === "down"
-            ? "block text-base font-[556] text-prophet-red"
+            ? "block text-base font-[500] text-prophet-red"
             : tone === "up"
-              ? "block text-base font-[556] text-prophet-green"
-              : "block text-base font-[556] text-black"
+              ? "block text-base font-[500] text-prophet-green"
+              : "block text-base font-[500] text-black"
         }
       >
         {value}
       </strong>
-      <span className="mt-0.5 block text-[10px] font-[556] uppercase tracking-wide text-prophet-muted">
+      <span className="mt-0.5 block text-[10px] font-[500] uppercase tracking-wide text-prophet-muted">
         {label}
       </span>
     </div>
@@ -93,10 +93,10 @@ export function TeamDetailHeader({
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="m-0 truncate text-2xl font-[556] capitalize text-black sm:text-[32px]">
+              <h1 className="m-0 truncate text-2xl font-[500] capitalize text-black sm:text-[32px]">
                 {displayName}
               </h1>
-              <span className="inline-flex h-[26px] items-center rounded-[14px] border border-[#909090] px-3 text-sm font-[556] text-[#909090]">
+              <span className="inline-flex h-[26px] items-center rounded-[14px] border border-[#909090] px-3 text-sm font-[500] text-[#909090]">
                 Team
               </span>
             </div>
@@ -107,15 +107,15 @@ export function TeamDetailHeader({
                 : " / Group pending"}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              <span className="rounded-full border border-prophet-line px-2 py-0.5 text-[11px] font-[556] text-prophet-muted">
+              <span className="rounded-full border border-prophet-line px-2 py-0.5 text-[11px] font-[500] text-prophet-muted">
                 {bestFinish ?? "World Cup history pending"}
               </span>
               {!!titles && (
-                <span className="rounded-full border border-[rgba(101,175,20,0.30)] px-4 py-0.5 text-[11px] font-[556] text-[#65AF14] bg-[rgba(101,175,20,0.30)]">
+                <span className="rounded-full border border-[rgba(101,175,20,0.30)] px-4 py-0.5 text-[11px] font-[500] text-[#65AF14] bg-[rgba(101,175,20,0.30)]">
                   {titles} titles
                 </span>
               )}
-              <span className="rounded-full border border-prophet-line px-2 py-0.5 text-[11px] font-[556] text-prophet-muted">
+              <span className="rounded-full border border-prophet-line px-2 py-0.5 text-[11px] font-[500] text-prophet-muted">
                 curated metadata
               </span>
             </div>
@@ -128,7 +128,18 @@ export function TeamDetailHeader({
               label="FIFA rank"
               value={fifaRank ? `#${fifaRank}` : "Pending"}
             />
-            <HeroMetric label="Squad value" value={marketValue ? formatNumber(marketValue, 2, true, { prefix: "€", isShort: true, isShortUppercase: true }) : "-"} />
+            <HeroMetric
+              label="Squad value"
+              value={
+                marketValue
+                  ? formatNumber(marketValue, 2, true, {
+                      prefix: "€",
+                      isShort: true,
+                      isShortUppercase: true
+                    })
+                  : "-"
+              }
+            />
             <HeroMetric label="Best finish" value={bestFinish ?? "Pending"} />
             <HeroMetric
               label="Group"

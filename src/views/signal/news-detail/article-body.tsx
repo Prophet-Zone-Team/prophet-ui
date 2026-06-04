@@ -39,7 +39,7 @@ export function SignalNewsDetailArticleBody({
           return (
             <h3
               key={`${block.text}-${index}`}
-              className="m-0 text-[14px] font-[556] leading-[150%] text-black"
+              className="m-0 text-[14px] font-[500] leading-[150%] text-black"
             >
               {block.text}
             </h3>
@@ -49,7 +49,7 @@ export function SignalNewsDetailArticleBody({
         return (
           <p
             key={`paragraph-${index}`}
-            className="m-0 text-[14px] font-[457] leading-[150%] text-black"
+            className="m-0 text-[14px] font-[400] leading-[150%] text-black"
           >
             {renderSegments(block.segments)}
           </p>

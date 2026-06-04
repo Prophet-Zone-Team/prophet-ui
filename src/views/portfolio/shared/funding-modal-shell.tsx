@@ -13,7 +13,7 @@ export const fundingModalCardClass = cn(
 
 export const fundingPrimaryButtonClass = cn(
   "flex h-[50px] w-full items-center justify-center rounded-[8px] bg-black",
-  "text-base font-[457] leading-[19px] text-white transition-opacity hover:opacity-90",
+  "text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
@@ -41,7 +41,8 @@ export function FundingModalShell({
     <div
       className={cn(
         fundingModalCardClass,
-        isDrawer && "h-full max-h-[92dvh] min-h-0 rounded-b-none border-b-0 shadow-none",
+        isDrawer &&
+          "h-full max-h-[92dvh] min-h-0 rounded-b-none border-b-0 shadow-none",
         className
       )}
     >
@@ -56,7 +57,7 @@ export function FundingModalShell({
             <ChevronLeft className="h-5 w-5" aria-hidden="true" />
           </button>
         ) : null}
-        <h2 className="m-0 text-xl font-[556] leading-6 text-black">{title}</h2>
+        <h2 className="m-0 text-xl font-[500] leading-6 text-black">{title}</h2>
         <button
           type="button"
           onClick={onClose}

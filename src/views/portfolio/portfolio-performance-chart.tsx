@@ -73,7 +73,7 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
           <span className={portfolioSummaryLabelClass}>Profit / Loss</span>
           <div className="flex flex-wrap items-baseline gap-2">
             <span
-              className={cn("text-[32px] font-[556] leading-[38px]", pnlTone)}
+              className={cn("text-[32px] font-[500] leading-[38px]", pnlTone)}
             >
               {formatTeamDetailMoney(displayPnl)}
             </span>
@@ -92,7 +92,7 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
               aria-selected={range === item}
               onClick={() => setRange(item)}
               className={cn(
-                "border-0 bg-transparent p-0 text-sm font-[556] leading-[17px] transition-colors",
+                "border-0 bg-transparent p-0 text-sm font-[500] leading-[17px] transition-colors",
                 range === item
                   ? "text-black"
                   : "text-prophet-muted hover:text-black"

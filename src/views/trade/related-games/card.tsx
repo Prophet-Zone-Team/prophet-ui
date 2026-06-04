@@ -87,8 +87,15 @@ export function RelatedGameCard({
             code={sides.home.code}
             emphasized={match.homeTeamId === highlightTeamId}
           />
-          <strong className="text-center text-[26px] font-[500] leading-[31px] text-black">
-            {scoreLabel}
+          <strong
+            className={cn(
+              "text-center font-[500] leading-[31px] pb-[24px]",
+              statusVariant === "upcoming"
+                ? "text-[#909090] text-[16px]"
+                : "text-black text-[26px]"
+            )}
+          >
+            {statusVariant === "upcoming" ? "vs" : scoreLabel}
           </strong>
           <MatchSide
             name={sides.away.name}

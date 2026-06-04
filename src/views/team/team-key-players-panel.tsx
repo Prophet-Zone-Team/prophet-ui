@@ -26,7 +26,7 @@ function PlayerMetric({
       <span className="text-prophet-muted">{label}</span>
       <strong
         className={cn(
-          "font-[556]",
+          "font-[500]",
           tone === "down" && "text-prophet-red",
           tone === "up" && "text-prophet-green",
           !tone && "text-black"
@@ -59,12 +59,12 @@ export function TeamKeyPlayersPanel({ players }: TeamKeyPlayersPanelProps) {
                     className="size-10 shrink-0 rounded-full object-cover"
                   />
                 ) : (
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f5f9ff] text-xs font-[556] text-[#125afc]">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#f5f9ff] text-xs font-[500] text-[#125afc]">
                     {getInitials(player.name)}
                   </span>
                 )}
                 <div className="min-w-0">
-                  <h3 className="m-0 truncate text-sm font-[556] text-black">
+                  <h3 className="m-0 truncate text-sm font-[500] text-black">
                     {player.name}
                   </h3>
                   <p className="m-0 text-xs text-prophet-muted">
@@ -82,7 +82,10 @@ export function TeamKeyPlayersPanel({ players }: TeamKeyPlayersPanelProps) {
                   label="Squad probability"
                   value={`${player.squadProbability}%`}
                 />
-                <PlayerMetric label="Form score" value={String(player.formScore)} />
+                <PlayerMetric
+                  label="Form score"
+                  value={String(player.formScore)}
+                />
                 <PlayerMetric
                   label="Injury status"
                   value={player.injuryStatus}
@@ -93,7 +96,7 @@ export function TeamKeyPlayersPanel({ players }: TeamKeyPlayersPanelProps) {
                 <span className="text-prophet-muted">
                   {player.club ? "Club" : "Profile note"}
                 </span>
-                <strong className="truncate font-[556] text-black">
+                <strong className="truncate font-[500] text-black">
                   {player.club ?? player.note ?? player.topMarket}
                 </strong>
               </div>

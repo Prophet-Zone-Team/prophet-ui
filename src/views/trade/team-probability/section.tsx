@@ -122,7 +122,7 @@ export function ProbabilitySection({
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="m-0 text-[20px] font-[556] leading-6 text-black">
+            <h2 className="m-0 text-[20px] font-[500] leading-6 text-black">
               Probability
             </h2>
             <div
@@ -165,8 +165,8 @@ export function ProbabilitySection({
                 className={cn(
                   "border-0 bg-transparent p-0 text-sm leading-[17px]",
                   timeRange === range.id
-                    ? "font-[556] text-black"
-                    : "font-[457] text-[#909090]"
+                    ? "font-[500] text-black"
+                    : "font-[400] text-[#909090]"
                 )}
                 onClick={() => setTimeRange(range.id)}
               >
@@ -235,13 +235,13 @@ function MetricBlock({
     <div className={className}>
       <p
         className={cn(
-          "m-0 font-[556] text-black",
+          "m-0 font-[500] text-black",
           valueClassName ?? "text-base leading-[19px]"
         )}
       >
         {value}
       </p>
-      <p className="m-0 mt-1 text-sm font-[556] leading-[17px] text-[#909090]">
+      <p className="m-0 mt-1 text-sm font-[500] leading-[17px] text-[#909090]">
         {label}
       </p>
     </div>

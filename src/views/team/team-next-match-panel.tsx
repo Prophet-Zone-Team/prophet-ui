@@ -24,8 +24,7 @@ export function TeamNextMatchPanel({
     <section className={teamPanelClass} aria-label="Next match">
       <div className={teamPanelHeadClass}>
         <h2 className={teamPanelTitleClass}>Next Match</h2>
-        <div className="">
-        </div>
+        <div className=""></div>
       </div>
       <div className="p-4">
         {nextMatch ? (
@@ -33,20 +32,20 @@ export function TeamNextMatchPanel({
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 flex-col items-center gap-1">
                 <TeamFlag name={nextMatch.homeTeamName} />
-                <strong className="max-w-full truncate text-xs font-[556]">
+                <strong className="max-w-full truncate text-xs font-[500]">
                   {nextMatch.homeTeamName}
                 </strong>
               </div>
-              <span className="text-xs font-[556] text-prophet-muted">vs</span>
+              <span className="text-xs font-[500] text-prophet-muted">vs</span>
               <div className="flex min-w-0 flex-col items-center gap-1">
                 {nextMatch.awayTeamName ? (
                   <TeamFlag name={nextMatch.awayTeamName} />
                 ) : (
-                  <span className="flex size-9 items-center justify-center rounded-full bg-[#f5f9ff] text-xs font-[556]">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-[#f5f9ff] text-xs font-[500]">
                     {nextMatch.awayTeamName.slice(0, 2)}
                   </span>
                 )}
-                <strong className="max-w-full truncate text-xs font-[556]">
+                <strong className="max-w-full truncate text-xs font-[500]">
                   {nextMatch.awayTeamName}
                 </strong>
               </div>

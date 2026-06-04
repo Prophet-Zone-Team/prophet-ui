@@ -6,9 +6,7 @@ import { Loader2 } from "lucide-react";
 
 import { formatShortWallet } from "@/lib/team/detail-format";
 import type { PendingDepositConvertMode } from "@/lib/trading/deposit-wallet-convert";
-import {
-  fundingPrimaryButtonClass,
-} from "@/views/portfolio/shared/funding-modal-shell";
+import { fundingPrimaryButtonClass } from "@/views/portfolio/shared/funding-modal-shell";
 import type { DepositStatusPhase } from "@/views/portfolio/deposit/types";
 import { formatNumber } from "@/utils";
 
@@ -35,7 +33,7 @@ export function DepositStatusStep({
   convertStatusLabel,
   error,
   convertLoading = false,
-  onConfirmConvert,
+  onConfirmConvert
 }: DepositStatusStepProps) {
   const isWrapOnly = pendingConvertMode === "wrap-only";
   const readyTitle = isWrapOnly ? "USDC.e received" : "USDC received";
@@ -51,11 +49,15 @@ export function DepositStatusStep({
     const parts: string[] = [];
 
     if (detectedUsdcAmount && Big(detectedUsdcAmount || 0).gt(0)) {
-      parts.push(`USDC: ${formatNumber(detectedUsdcAmount, 4, true, { round: 0 })}`);
+      parts.push(
+        `USDC: ${formatNumber(detectedUsdcAmount, 4, true, { round: 0 })}`
+      );
     }
 
     if (detectedUsdceAmount && Big(detectedUsdceAmount || 0).gt(0)) {
-      parts.push(`USDC.e: ${formatNumber(detectedUsdceAmount, 4, true, { round: 0 })}`);
+      parts.push(
+        `USDC.e: ${formatNumber(detectedUsdceAmount, 4, true, { round: 0 })}`
+      );
     }
 
     return parts.length > 0 ? parts.join(" · ") : undefined;
@@ -83,15 +85,19 @@ export function DepositStatusStep({
 
       {phase === "ready" ? (
         <div className="flex flex-col items-center gap-4 text-center">
-          <p className="m-0 text-xl font-[556] text-black">{readyTitle}</p>
-          <p className="m-0 max-w-sm text-sm text-[#909090]">{readyDescription}</p>
+          <p className="m-0 text-xl font-[500] text-black">{readyTitle}</p>
+          <p className="m-0 max-w-sm text-sm text-[#909090]">
+            {readyDescription}
+          </p>
           <button
             type="button"
             className={fundingPrimaryButtonClass}
             disabled={convertLoading}
             onClick={() => void onConfirmConvert?.()}
           >
-            {convertLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {convertLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
             Confirm pending deposit
           </button>
         </div>
@@ -133,7 +139,7 @@ function StatusBlock({
   description,
   detail,
   loading = false,
-  isError = false,
+  isError = false
 }: {
   title: string;
   description: string;
@@ -143,8 +149,17 @@ function StatusBlock({
 }) {
   return (
     <div className="flex flex-col items-center gap-3 text-center">
-      {loading ? <Loader2 className="h-8 w-8 animate-spin text-[#909090]" aria-hidden="true" /> : null}
-      <p className={`m-0 text-xl font-[556] ${isError ? "text-prophet-red" : "text-black"}`}>{title}</p>
+      {loading ? (
+        <Loader2
+          className="h-8 w-8 animate-spin text-[#909090]"
+          aria-hidden="true"
+        />
+      ) : null}
+      <p
+        className={`m-0 text-xl font-[500] ${isError ? "text-prophet-red" : "text-black"}`}
+      >
+        {title}
+      </p>
       <p className="m-0 max-w-sm text-sm text-[#909090]">{description}</p>
       {detail ? <p className="m-0 text-xs text-[#909090]">{detail}</p> : null}
     </div>

@@ -83,7 +83,7 @@ export function ScheduleTeamFilter({
       role="group"
       aria-label="Filter by team"
     >
-      <span className="hidden md:block shrink-0 text-[16px] font-[556] leading-[19px] text-[#909090]">
+      <span className="hidden md:block shrink-0 text-[16px] font-[500] leading-[19px] text-[#909090]">
         Filter
       </span>
 
@@ -153,7 +153,7 @@ function ScheduleTeamFilterChip({
         name={team.name}
         className="h-[16px] w-[16px] shrink-0 rounded-[2px] text-[16px]"
       />
-      <span className="text-[16px] font-[457] leading-[19px] text-black">
+      <span className="text-[16px] font-[400] leading-[19px] text-black">
         {team.code}
       </span>
       <button
@@ -222,10 +222,10 @@ function ScheduleTeamFilterPanelContent({
               logoUrl={team.logoUrl}
               className="h-[26px] w-[26px] shrink-0 rounded text-[26px]"
             />
-            <span className="truncate text-[14px] font-[556] leading-[17px] text-black">
+            <span className="truncate text-[14px] font-[500] leading-[17px] text-black">
               {team.name}
             </span>
-            <span className="shrink-0 text-[14px] font-[556] leading-[17px] text-[#909090]">
+            <span className="shrink-0 text-[14px] font-[500] leading-[17px] text-[#909090]">
               {team.code}
             </span>
           </button>

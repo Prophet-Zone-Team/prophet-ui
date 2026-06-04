@@ -70,7 +70,7 @@ export function SignalAllTeamFilterControl({
       <button
         type="button"
         className={cn(
-          "inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[14px] font-[457] leading-[17px] text-[#909090]",
+          "inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[14px] font-[400] leading-[17px] text-[#909090]",
           disabled && "cursor-not-allowed opacity-50"
         )}
         aria-expanded={open}
@@ -161,7 +161,7 @@ function SignalAllTeamFilterOption({
       role="option"
       aria-selected={selected}
       className={cn(
-        "flex w-full items-center gap-2 border-0 bg-transparent px-3 py-2 text-left text-[14px] font-[457] leading-[17px]",
+        "flex w-full items-center gap-2 border-0 bg-transparent px-3 py-2 text-left text-[14px] font-[400] leading-[17px]",
         selected ? "text-black" : "text-[#909090] hover:text-black"
       )}
       onClick={onSelect}

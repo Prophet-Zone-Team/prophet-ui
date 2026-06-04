@@ -177,7 +177,7 @@ export function TopHoldersTable({ snapshot, active }: TopHoldersTableProps) {
   if (error && !hasData) {
     return (
       <div className="px-4 py-10 text-center">
-        <strong className="block text-sm font-[556] text-black">
+        <strong className="block text-sm font-[500] text-black">
           Top holders unavailable
         </strong>
         <p className="m-0 mt-2 text-sm text-prophet-muted">{error}</p>
@@ -212,11 +212,11 @@ export function TopHoldersTable({ snapshot, active }: TopHoldersTableProps) {
           key={row.key}
           className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,0.8fr)] gap-2 border-b border-prophet-line/60 px-4 py-2.5 text-sm last:border-b-0"
         >
-          <strong className="truncate font-[556]">{row.label}</strong>
+          <strong className="truncate font-[500]">{row.label}</strong>
           <span className="truncate text-prophet-muted">{row.outcome}</span>
           <span className="tabular-nums">
             {row.amount.toLocaleString(undefined, {
-              maximumFractionDigits: 2,
+              maximumFractionDigits: 2
             })}
           </span>
         </div>

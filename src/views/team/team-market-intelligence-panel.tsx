@@ -62,7 +62,8 @@ export function TeamMarketIntelligencePanel({
               />
               <TeamPanelMetric
                 label="Market volume"
-                value={formatVolume(intelligence.volume)} />
+                value={formatVolume(intelligence.volume)}
+              />
               <TeamPanelMetric
                 label="Liquidity"
                 value={
@@ -81,12 +82,14 @@ export function TeamMarketIntelligencePanel({
               />
               <TeamPanelMetric
                 label="Updated"
-                value={formatShortDate(intelligence.updatedAt ?? dataStatus.lastUpdated)}
+                value={formatShortDate(
+                  intelligence.updatedAt ?? dataStatus.lastUpdated
+                )}
               />
             </div>
 
             <div className="rounded-lg border border-prophet-line bg-[#fafbfc] px-3 py-2.5">
-              <span className="text-[10px] font-[556] uppercase tracking-wide text-prophet-muted">
+              <span className="text-[10px] font-[500] uppercase tracking-wide text-prophet-muted">
                 Why it moved
               </span>
               <p className="m-0 mt-1 text-xs leading-relaxed text-black">

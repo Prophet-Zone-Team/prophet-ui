@@ -28,10 +28,10 @@ export function DossierRecentForm({
                   key={`${result}-${index}`}
                   className={
                     result === "W"
-                      ? "inline-flex size-8 items-center justify-center rounded-md bg-[#f1fdf8] text-sm font-[556] text-prophet-green"
+                      ? "inline-flex size-8 items-center justify-center rounded-md bg-[#f1fdf8] text-sm font-[500] text-prophet-green"
                       : result === "L"
-                        ? "inline-flex size-8 items-center justify-center rounded-md bg-[#fff4f6] text-sm font-[556] text-prophet-red"
-                        : "inline-flex size-8 items-center justify-center rounded-md bg-[#fafbfc] text-sm font-[556] text-prophet-muted"
+                        ? "inline-flex size-8 items-center justify-center rounded-md bg-[#fff4f6] text-sm font-[500] text-prophet-red"
+                        : "inline-flex size-8 items-center justify-center rounded-md bg-[#fafbfc] text-sm font-[500] text-prophet-muted"
                   }
                 >
                   {result}

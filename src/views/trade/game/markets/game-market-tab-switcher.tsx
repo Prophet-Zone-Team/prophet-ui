@@ -1,7 +1,10 @@
 "use client";
 
 import Drawer, { DrawerDirection } from "@/components/drawer";
-import { TabSwitcher, type TabSwitcherItem } from "@/components/ui/tab-switcher";
+import {
+  TabSwitcher,
+  type TabSwitcherItem
+} from "@/components/ui/tab-switcher";
 import { useDevice } from "@/hooks/common/use-device";
 import { cn } from "@/lib/cn";
 import { useEffect, useMemo, useState } from "react";
@@ -71,7 +74,10 @@ export function GameMarketTabSwitcher({
           height="6"
           viewBox="0 0 10 6"
           fill="none"
-          className={cn("shrink-0 transition-transform", drawerOpen && "rotate-180")}
+          className={cn(
+            "shrink-0 transition-transform",
+            drawerOpen && "rotate-180"
+          )}
           aria-hidden
         >
           <path
@@ -104,7 +110,7 @@ export function GameMarketTabSwitcher({
                 role="tab"
                 aria-selected={isActive}
                 className={cn(
-                  "inline-flex h-[44px] w-full items-center justify-center gap-2 rounded-[20px] border border-[#909090] px-4 text-[16px] font-[457] leading-[19px] transition-colors",
+                  "inline-flex h-[44px] w-full items-center justify-center gap-2 rounded-[20px] border border-[#909090] px-4 text-[16px] font-[400] leading-[19px] transition-colors",
                   isActive ? "bg-black text-white" : "bg-white text-black"
                 )}
                 onClick={() => {

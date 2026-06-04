@@ -60,7 +60,7 @@ export function GameOutcomeBidButton({
       disabled={disabled}
       onClick={isInteractive ? onClick : undefined}
       className={cn(
-        "flex w-full items-center justify-center border-0 font-[556] text-white transition-opacity",
+        "flex w-full items-center justify-center border-0 font-[500] text-white transition-opacity",
         sizeClass.button,
         isInteractive ? "cursor-pointer" : "",
         disabled

@@ -56,7 +56,10 @@ export function HalftimePanel({
     return <HalftimeEmptyState />;
   }
 
-  const totalVolume = outcomes.reduce((sum, item) => sum + (item.volume ?? 0), 0);
+  const totalVolume = outcomes.reduce(
+    (sum, item) => sum + (item.volume ?? 0),
+    0
+  );
 
   return (
     <LineMarketCard
@@ -89,7 +92,7 @@ export function HalftimePanel({
 function HalftimeEmptyState() {
   return (
     <div className="rounded-[12px] border border-dashed border-[#EBEBEB] px-4 py-10 text-center">
-      <p className="m-0 text-sm font-[457] leading-[17px] text-[#909090]">
+      <p className="m-0 text-sm font-[400] leading-[17px] text-[#909090]">
         No half-time markets available for this match.
       </p>
     </div>

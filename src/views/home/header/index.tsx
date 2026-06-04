@@ -53,7 +53,7 @@ export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
 }
 
 const heroStatValueClassName =
-  "text-[26px] md:text-[32px] font-[556] leading-[38px] text-black";
+  "text-[26px] md:text-[32px] font-[500] leading-[38px] text-black";
 
 function HomeHeroStat({ label, value }: { label: string; value: ReactNode }) {
   const valueContent =

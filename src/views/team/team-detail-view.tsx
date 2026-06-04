@@ -45,7 +45,7 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
         />
         <button
           type="button"
-          className="mt-4 text-sm font-[556] text-[#125afc] hover:underline"
+          className="mt-4 text-sm font-[500] text-[#125afc] hover:underline"
           onClick={() => void refetch()}
         >
           Retry

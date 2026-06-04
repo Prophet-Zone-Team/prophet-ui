@@ -10,11 +10,9 @@ export const teamPanelClass = cn(
 export const teamPanelHeadClass =
   "flex flex-wrap items-center justify-between gap-2 border-b border-prophet-line px-4 py-3";
 
-export const teamPanelTitleClass =
-  "m-0 text-base font-[556] text-black sm:text-lg";
+export const teamPanelTitleClass = "m-0 text-base font-[500] text-black sm:text-lg";
 
-export const teamPanelBadgeClass =
-  "text-xs font-[556] text-prophet-muted";
+export const teamPanelBadgeClass = "text-xs font-[500] text-prophet-muted";
 
 export const teamHeroCardClass = cn(
   "rounded-[12px] border border-prophet-line bg-gradient-to-br from-[#f5f9ff] to-white p-5 shadow-prophet",
@@ -47,7 +45,7 @@ export const teamMetricToneClass = (tone?: "up" | "down") =>
 
 export const teamMetricValueClass = (tone?: "up" | "down") =>
   cn(
-    "text-sm font-[556] text-black",
+    "text-sm font-[500] text-black",
     tone === "up" && "text-prophet-green",
     tone === "down" && "text-prophet-red"
   );
@@ -56,5 +54,5 @@ export const teamMiniGridClass = "grid grid-cols-2 gap-2 sm:grid-cols-3";
 
 export const teamOpenTradeButtonClass = cn(
   "inline-flex h-9 items-center justify-center rounded-lg border border-prophet-line bg-white px-4",
-  "text-sm font-[556] text-black transition-colors hover:bg-[#fafbfc]"
+  "text-sm font-[500] text-black transition-colors hover:bg-[#fafbfc]"
 );

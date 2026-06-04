@@ -183,7 +183,7 @@ const MatchMarkerDot = memo(function MatchMarkerDot({
             name={annotation.homeName}
             className="!h-4 !w-4 rounded-[2px]"
           />
-          <span className="text-sm shrink-0 font-[556] leading-[17px] text-[#909090]">
+          <span className="text-sm shrink-0 font-[500] leading-[17px] text-[#909090]">
             {annotation.scoreLabel}
           </span>
           <TeamFlag

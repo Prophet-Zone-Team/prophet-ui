@@ -96,7 +96,7 @@ export function LimitExpirationSelect({
                   role="option"
                   aria-selected={isSelected}
                   className={cn(
-                    "block w-full px-3 py-1.5 text-left text-sm font-[556] leading-[17px] transition-colors",
+                    "block w-full px-3 py-1.5 text-left text-sm font-[500] leading-[17px] transition-colors",
                     isSelected
                       ? "bg-[#fafbfc] text-black"
                       : "text-prophet-muted hover:bg-[#fafbfc] hover:text-black"
@@ -117,7 +117,7 @@ export function LimitExpirationSelect({
           aria-label="Custom expiration date and time"
           value={customDate ?? ""}
           onChange={(event) => onCustomDateChange(event.target.value)}
-          className="rounded-md border border-prophet-line px-2 py-1 text-xs font-[457] text-black"
+          className="rounded-md border border-prophet-line px-2 py-1 text-xs font-[400] text-black"
         />
       ) : null}
     </div>

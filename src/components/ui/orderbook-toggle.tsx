@@ -12,7 +12,7 @@ export interface OrderbookToggleProps {
 
 const labelVariantClass = {
   game: "text-[14px] leading-[18px] font-[400]",
-  team: "text-base leading-[19px] font-[457]"
+  team: "text-base leading-[19px] font-[400]"
 } as const;
 
 export function OrderbookToggle({

@@ -38,13 +38,12 @@ export const privateTopupTopUpButtonDisabledClass =
   "pointer-events-none opacity-30";
 
 export const privateTopupBalanceLargeClass =
-  "text-[42px] font-[556] leading-none text-black";
+  "text-[42px] font-[500] leading-none text-black";
 
 export const privateTopupPrivateBalanceLargeClass =
-  "text-[42px] font-[556] leading-none text-white";
+  "text-[42px] font-[500] leading-none text-white";
 
-export const privateTopupSectionLabelClass =
-  "text-sm font-[556] text-[#909090]";
+export const privateTopupSectionLabelClass = "text-sm font-[500] text-[#909090]";
 
 export const privateTopupSecureIconWrapClass = cn(
   "relative flex size-[24px] border-[2px] bg-[#616161] border-white shrink-0 items-center justify-center rounded-full",
@@ -60,11 +59,11 @@ export const privateTopupModalAmountInputWrapClass =
   "mx-auto flex w-1/2 min-w-[200px] max-w-[250px] items-baseline";
 
 export const privateTopupModalAmountPrefixClass =
-  "shrink-0 text-[36px] font-[556] leading-[43px] text-black";
+  "shrink-0 text-[36px] font-[500] leading-[43px] text-black";
 
 export const privateTopupModalAmountInputClass = cn(
-  "min-w-0 flex-1 border-0 bg-transparent p-0 text-center text-[36px] font-[556] leading-[43px] text-black",
-  "outline-none placeholder:text-[#c8c8c8]",
+  "min-w-0 flex-1 border-0 bg-transparent p-0 text-center text-[36px] font-[500] leading-[43px] text-black",
+  "outline-none placeholder:text-[#c8c8c8]"
 );
 
 export const privateTopupGetStartedLinkClass = cn(

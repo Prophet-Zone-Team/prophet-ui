@@ -116,7 +116,9 @@ export function PortfolioOpenOrdersTable({
 
   if (loading) {
     return (
-      <p className="px-4 py-8 text-center text-sm text-prophet-muted">Loading open orders…</p>
+      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
+        Loading open orders…
+      </p>
     );
   }
 
@@ -202,7 +204,7 @@ export function PortfolioOpenOrdersTable({
     desktopRows.push(
       <div key={order.id} className={portfolioOrdersTableRowClass}>
         {marketCell}
-        <span className="font-[556]">{sidePriceLabel}</span>
+        <span className="font-[500]">{sidePriceLabel}</span>
         <span>{formatShareSize(getRemainingSize(order))}</span>
         <span className="text-prophet-muted">{getFilledPercent(order)}</span>
         <span className="text-prophet-muted">
@@ -213,9 +215,14 @@ export function PortfolioOpenOrdersTable({
     );
 
     mobileCards.push(
-      <article key={`${order.id}-mobile`} className={portfolioTableMobileCardClass}>
+      <article
+        key={`${order.id}-mobile`}
+        className={portfolioTableMobileCardClass}
+      >
         {marketCell}
-        <PortfolioTableMobileField label="Side / Price">{sidePriceLabel}</PortfolioTableMobileField>
+        <PortfolioTableMobileField label="Side / Price">
+          {sidePriceLabel}
+        </PortfolioTableMobileField>
         <PortfolioTableMobileField label="Size">
           {formatShareSize(getRemainingSize(order))}
         </PortfolioTableMobileField>

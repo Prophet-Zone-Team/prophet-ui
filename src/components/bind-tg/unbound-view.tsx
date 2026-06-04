@@ -15,7 +15,7 @@ export function UnboundView({ onOpenBot, onCheckStatus }: UnboundViewProps) {
       <div className="flex items-start gap-3">
         <TelegramIcon />
         <div className="min-w-0 flex-1 pt-0.5">
-          <h2 className="m-0 text-lg font-[556] leading-6 text-black">
+          <h2 className="m-0 text-lg font-[500] leading-6 text-black">
             Bind Telegram Bot
           </h2>
           <p className="m-0 mt-1 text-sm font-[400] leading-normal text-[#909090]">

@@ -140,7 +140,7 @@ export function BidButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex h-[58px] w-full items-center justify-center rounded-[12px] border-0 text-xl font-[556] leading-6 text-white transition-opacity",
+        "flex h-[58px] w-full items-center justify-center rounded-[12px] border-0 text-xl font-[500] leading-6 text-white transition-opacity",
         onClick ? "cursor-pointer" : "cursor-default",
         active ? "opacity-100" : "opacity-70 hover:opacity-85"
       )}

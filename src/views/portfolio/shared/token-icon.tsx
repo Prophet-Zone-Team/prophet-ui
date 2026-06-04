@@ -31,92 +31,84 @@ export function TokenIcon({
 
   if (chainOnly) {
     return (
-      <div className={cn("relative shrink-0", dimmed && "opacity-30", className)}>
-        {
-          chainIcon ? (
-            <LazyImage
-              src={chainIcon}
-              alt={chainLabel}
-              containerClassName={cn(
-                "rounded-[4px] border border-white font-[556] text-white",
-                iconSize,
-              )}
-              width={size === "sm" ? 23 : 30}
-              height={size === "sm" ? 23 : 30}
-            />
-          ) : (
-            chainLabel ? (
-              <div
-                className={cn(
-                  "rounded-[4px] border border-white font-[556] text-white",
-                  iconSize,
-                  "bg-[#909090]"
-                )}
-                aria-hidden="true"
-              >
-                {chainLabel.slice(0, 1)}
-              </div>
-            ) : null
-          )
-        }
+      <div
+        className={cn("relative shrink-0", dimmed && "opacity-30", className)}
+      >
+        {chainIcon ? (
+          <LazyImage
+            src={chainIcon}
+            alt={chainLabel}
+            containerClassName={cn(
+              "rounded-[4px] border border-white font-[500] text-white",
+              iconSize
+            )}
+            width={size === "sm" ? 23 : 30}
+            height={size === "sm" ? 23 : 30}
+          />
+        ) : chainLabel ? (
+          <div
+            className={cn(
+              "rounded-[4px] border border-white font-[500] text-white",
+              iconSize,
+              "bg-[#909090]"
+            )}
+            aria-hidden="true"
+          >
+            {chainLabel.slice(0, 1)}
+          </div>
+        ) : null}
       </div>
     );
   }
 
   return (
     <div className={cn("relative shrink-0", dimmed && "opacity-30", className)}>
-      {
-        icon ? (
-          <LazyImage
-            src={icon}
-            alt={symbol}
-            containerClassName={cn(iconSize)}
-            width={size === "sm" ? 23 : 30}
-            height={size === "sm" ? 23 : 30}
-          />
-        ) : (
-          <div
-            className={cn(
-              "flex items-center justify-center rounded-full font-[556] text-white",
-              iconSize,
-              "bg-[#909090]"
-            )}
-            aria-hidden="true"
-          >
-            {symbol.slice(0, 1)}
-          </div>
-        )
-      }
-      {
-        chainIcon ? (
-          <LazyImage
-            src={chainIcon}
-            alt={chainLabel}
-            containerClassName={cn(
-              "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-white font-[556] text-white",
-              badgeSize,
-            )}
-            containerStyle={{
-              position: "absolute",
-            }}
-            width={size === "sm" ? 14 : 16}
-            height={size === "sm" ? 14 : 16}
-          />
-        ) : (
-          chainLabel ? (
-            <div
-              className={cn(
-                "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-white font-[556] text-white",
-                badgeSize,
-                "bg-[#909090]"
-              )}
-              aria-hidden="true"
-            >
-              {chainLabel.slice(0, 1)}
-            </div>
-          ) : null
-        )
-      }
+      {icon ? (
+        <LazyImage
+          src={icon}
+          alt={symbol}
+          containerClassName={cn(iconSize)}
+          width={size === "sm" ? 23 : 30}
+          height={size === "sm" ? 23 : 30}
+        />
+      ) : (
+        <div
+          className={cn(
+            "flex items-center justify-center rounded-full font-[500] text-white",
+            iconSize,
+            "bg-[#909090]"
+          )}
+          aria-hidden="true"
+        >
+          {symbol.slice(0, 1)}
+        </div>
+      )}
+      {chainIcon ? (
+        <LazyImage
+          src={chainIcon}
+          alt={chainLabel}
+          containerClassName={cn(
+            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-white font-[500] text-white",
+            badgeSize
+          )}
+          containerStyle={{
+            position: "absolute"
+          }}
+          width={size === "sm" ? 14 : 16}
+          height={size === "sm" ? 14 : 16}
+        />
+      ) : chainLabel ? (
+        <div
+          className={cn(
+            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-white font-[500] text-white",
+            badgeSize,
+            "bg-[#909090]"
+          )}
+          aria-hidden="true"
+        >
+          {chainLabel.slice(0, 1)}
+        </div>
+      ) : null}
     </div>
   );
 }
