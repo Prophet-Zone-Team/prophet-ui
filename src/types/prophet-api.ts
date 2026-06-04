@@ -262,6 +262,10 @@ export type ProphetReportTransactionType =
   | "withdraw"
   | "deposit";
 
+export type ProphetReportOrderType = "maker" | "taker";
+
+export type ProphetReportOrderStatus = "completed" | "failed" | "cancelled";
+
 /** Market context for POST /v1/user/transaction when type is buy, sell, or redeem. */
 export interface ProphetReportTransactionMarket {
   marketName?: string;
@@ -277,6 +281,10 @@ export interface ProphetReportTransactionRequest {
   tx_hash: string;
   type: ProphetReportTransactionType;
   market?: ProphetReportTransactionMarket;
+  order_type?: ProphetReportOrderType;
+  order_status?: ProphetReportOrderStatus;
+  order_value_usdc?: string;
+  referral_code?: string;
 }
 
 /** Row from GET /v1/user/transactions (database.UserTransaction). */

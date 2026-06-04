@@ -95,7 +95,10 @@ describe("prophet auth guards", () => {
       reportProphetUserTransaction({
         amount: "10",
         tx_hash: "order-1",
-        type: "buy"
+        type: "buy",
+        order_type: "taker",
+        order_status: "completed",
+        order_value_usdc: "10"
       })
     );
     await assertAuthRequired(() =>
