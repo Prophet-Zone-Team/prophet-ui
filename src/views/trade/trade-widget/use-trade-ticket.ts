@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
+import { fireBasicConfettiFromElement } from "@/lib/confetti/fire-basic-cannon";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import {
   resolveTradePrimaryAction,
@@ -103,6 +104,7 @@ import {
   type SellQuickAmountFraction,
   type TradeTicketStatus
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
+import { TRADE_BID_BUTTON_ID } from "@/views/trade/trade-widget/trade-ui";
 
 export type UseTradeTicketTeamInput = {
   variant: "team";
@@ -960,6 +962,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
           orderId: result.order?.id,
           onViewPortfolio: () => router.push("/portfolio")
         }
+      );
+      void fireBasicConfettiFromElement(
+        document.getElementById(TRADE_BID_BUTTON_ID)
       );
       setStatus("idle");
       setMessage(undefined);

@@ -27,7 +27,7 @@ import {
   type TradeTicketStatus
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
 import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-button";
-import { tradeQuickAmountClass } from "@/views/trade/trade-widget/trade-ui";
+import { tradeQuickAmountClass, TRADE_BID_BUTTON_ID } from "@/views/trade/trade-widget/trade-ui";
 
 const QUICK_AMOUNTS = [1, 5, 10, 100] as const;
 const LIMIT_BUY_SHARE_DELTAS = [-100, -10, 10, 100] as const;
@@ -343,19 +343,21 @@ export function TradeTicketForm({
         </div>
       )}
 
-      <TradeAuthActionButton
-        actionLabel={actionLabel}
-        connectLabel="Enable trading"
-        canSubmit={canSubmit && !actionInProgress}
-        connectDisabled={status === "loading"}
-        actionStatus={
-          status === "signing" || status === "submitting" ? status : undefined
-        }
-        onAction={onSubmit}
-        onLoginStart={onLoginStart}
-        onLoginSuccess={onLoginSuccess}
-        onLoginError={onLoginError}
-      />
+      <div id={TRADE_BID_BUTTON_ID} className="w-full">
+        <TradeAuthActionButton
+          actionLabel={actionLabel}
+          connectLabel="Enable trading"
+          canSubmit={canSubmit && !actionInProgress}
+          connectDisabled={status === "loading"}
+          actionStatus={
+            status === "signing" || status === "submitting" ? status : undefined
+          }
+          onAction={onSubmit}
+          onLoginStart={onLoginStart}
+          onLoginSuccess={onLoginSuccess}
+          onLoginError={onLoginError}
+        />
+      </div>
 
       {displayMessage ? (
         <div className="flex flex-col gap-2">
@@ -452,7 +454,6 @@ function LimitOrderSummary({
 
 function OrderBookClearingTip({ kickoffAt }: { kickoffAt: string }) {
   const tip = formatOrderBookClearingTip(kickoffAt);
-  const tooltip = formatOrderBookClearingTooltip(kickoffAt);
 
   return (
     <div className="flex items-center justify-center gap-1 text-center">

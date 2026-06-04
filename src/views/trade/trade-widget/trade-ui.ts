@@ -39,6 +39,8 @@ export const tradeBidButtonClass = cn(
   "bg-[#65AF14] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
 );
 
+export const TRADE_BID_BUTTON_ID = "trade-bid-button";
+
 export const tradeQuickAmountClass = cn(
   "flex h-[30px] items-center justify-center rounded-lg border border-prophet-line bg-white px-3",
   "text-sm font-[400] text-prophet-muted transition-colors hover:bg-[#fafbfc]"
