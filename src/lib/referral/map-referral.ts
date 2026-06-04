@@ -1,9 +1,15 @@
 import Big from "big.js";
 
+import { formatRelativeTime } from "@/lib/analytics/format-relative-time";
 import { REFERRAL_KICKBACK_DESCRIPTION } from "@/lib/referral/config";
+import { formatShortAddress } from "@/lib/referral/format-address";
 import { buildReferralLinkParts } from "@/lib/referral/referral-link";
-import type { ProphetReferral } from "@/types/prophet-api";
-import type { ReferralContent } from "@/types/referral";
+import type {
+  ProphetReferral,
+  ProphetReferralClaimSummary,
+  ProphetReferralInviteItem
+} from "@/types/prophet-api";
+import type { ReferralActivityRow, ReferralContent } from "@/types/referral";
 import { formatNumber } from "@/utils";
 
 function formatKickbackRatePercent(kickbackRate: string): string {
@@ -22,9 +28,33 @@ function formatUsdAmount(value: string): string {
   return formatNumber(value, 2, true, { prefix: "$" }) as string;
 }
 
+export function mapClaimSummaryToProphetReferral(
+  summary: ProphetReferralClaimSummary
+): ProphetReferral {
+  return { ...summary };
+}
+
+export function mapReferralInviteToRow(
+  item: ProphetReferralInviteItem,
+  page: number
+): ReferralActivityRow {
+  const timeSource = item.last_reward_at || item.bound_at;
+
+  return {
+    id: `${item.referred_user_id}-${page}`,
+    user: formatShortAddress(item.referred_address),
+    txId: item.referral_code ? item.referral_code : "—",
+    time: formatRelativeTime(timeSource),
+    market: "—",
+    value: formatUsdAmount(item.total_referred_volume_usdc),
+    prophetFee: "—",
+    earnings: formatUsdAmount(item.total_referral_earnings_usdc)
+  };
+}
+
 export function mapProphetReferralToContent(
   referral: ProphetReferral
-): ReferralContent {
+): Omit<ReferralContent, "activityRows" | "activityTotalCount"> {
   const linkParts = buildReferralLinkParts(referral.referral_code);
   const claimable = referral.claimable_balance_usdc;
 
@@ -59,8 +89,6 @@ export function mapProphetReferralToContent(
       myEarnings: formatUsdAmount(referral.total_referral_earnings_usdc),
       toBeClaimed: formatUsdAmount(claimable),
       canClaim
-    },
-    activityRows: [],
-    activityTotalCount: 0
+    }
   };
 }

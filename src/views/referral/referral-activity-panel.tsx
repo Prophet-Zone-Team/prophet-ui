@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { GridTable } from "@/components/grid-table";
 import type { GridTableColumn } from "@/components/grid-table";
 import { Pagination } from "@/components/pagination/pagination";
+import { useReferralClaim } from "@/hooks/referral/use-referral-claim";
+import { useReferralInvites } from "@/hooks/referral/use-referral-invites";
 import { REFERRAL_ACTIVITY_PAGE_SIZE } from "@/lib/referral/config";
-import type { ReferralActivityRow, ReferralContent } from "@/types/referral";
+import type { ReferralActivityRow, ReferralSummary } from "@/types/referral";
 import { cn } from "@/lib/cn";
 
 import {
@@ -65,6 +67,28 @@ const ACTIVITY_COLUMNS: GridTableColumn<ReferralActivityRow>[] = [
   },
 ];
 
+function LoadingBlock({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "animate-pulse rounded-md bg-[#ebebeb]/80",
+        className ?? "h-4 w-full"
+      )}
+      aria-hidden
+    />
+  );
+}
+
+function ActivityTableSkeleton() {
+  return (
+    <div className="mt-4 flex flex-col gap-3 px-[30px]" aria-hidden>
+      {Array.from({ length: 5 }).map((_, index) => (
+        <LoadingBlock key={index} className="h-10 w-full" />
+      ))}
+    </div>
+  );
+}
+
 function SummaryStat({
   value,
   label,
@@ -90,28 +114,34 @@ function SummaryStat({
 }
 
 export type ReferralActivityPanelProps = {
-  summary: ReferralContent["summary"];
-  activityRows: ReferralActivityRow[];
-  activityTotalCount: number;
+  summary: ReferralSummary;
+  apiEnabled?: boolean;
+  mockActivityRows?: ReferralActivityRow[];
+  mockActivityTotalCount?: number;
   onInviteFriends?: () => void;
 };
 
 export function ReferralActivityPanel({
   summary,
-  activityRows,
-  activityTotalCount,
+  apiEnabled = true,
+  mockActivityRows = [],
+  mockActivityTotalCount = 0,
   onInviteFriends,
 }: ReferralActivityPanelProps) {
   const [page, setPage] = useState(1);
-  const isEmpty = activityRows.length === 0;
+  const { claim, isPending } = useReferralClaim();
+
+  const {
+    rows: apiRows,
+    total: apiTotal,
+    isLoading: invitesLoading,
+  } = useReferralInvites(page, REFERRAL_ACTIVITY_PAGE_SIZE, apiEnabled);
+
+  const activityRows = apiEnabled ? apiRows : mockActivityRows;
+  const activityTotalCount = apiEnabled ? apiTotal : mockActivityTotalCount;
+  const isEmpty = !invitesLoading && activityTotalCount === 0;
   const muted = isEmpty;
-
-  const pagedRows = useMemo(() => {
-    const start = (page - 1) * REFERRAL_ACTIVITY_PAGE_SIZE;
-    return activityRows.slice(start, start + REFERRAL_ACTIVITY_PAGE_SIZE);
-  }, [activityRows, page]);
-
-  const paginationTotal = isEmpty ? 0 : activityTotalCount;
+  const showTableSkeleton = apiEnabled && invitesLoading;
 
   return (
     <section className={referralActivityPanelClass} aria-label="Referral activity">
@@ -138,26 +168,31 @@ export function ReferralActivityPanel({
         />
         <button
           type="button"
-          disabled={!summary.canClaim}
+          disabled={!summary.canClaim || isPending || !apiEnabled}
           className={cn(
             referralClaimButtonClass,
-            !summary.canClaim && referralClaimButtonDisabledClass,
+            (!summary.canClaim || isPending) && referralClaimButtonDisabledClass,
           )}
+          onClick={() => claim()}
         >
-          Claim
+          {isPending ? "Claiming…" : "Claim"}
         </button>
       </div>
 
-      <GridTable
-        columns={ACTIVITY_COLUMNS}
-        rows={isEmpty ? [] : pagedRows}
-        getRowKey={(row) => row.id}
-        gridTemplateColumns={referralGridTemplateColumns}
-        ariaLabel="Referral rewards activity"
-        className="mt-4"
-      />
+      {showTableSkeleton ? (
+        <ActivityTableSkeleton />
+      ) : (
+        <GridTable
+          columns={ACTIVITY_COLUMNS}
+          rows={isEmpty ? [] : activityRows}
+          getRowKey={(row) => row.id}
+          gridTemplateColumns={referralGridTemplateColumns}
+          ariaLabel="Referral rewards activity"
+          className="mt-4"
+        />
+      )}
 
-      {isEmpty ? (
+      {isEmpty && !showTableSkeleton ? (
         <div className={referralEmptyStateClass}>
           <p className={referralEmptyMessageClass}>No rewards found</p>
           <button
@@ -168,14 +203,14 @@ export function ReferralActivityPanel({
             Invite Friends
           </button>
         </div>
-      ) : (
+      ) : !isEmpty && !showTableSkeleton ? (
         <Pagination
           page={page}
           pageSize={REFERRAL_ACTIVITY_PAGE_SIZE}
-          total={paginationTotal}
+          total={activityTotalCount}
           onPageChange={setPage}
         />
-      )}
+      ) : null}
     </section>
   );
 }

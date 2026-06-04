@@ -36,7 +36,10 @@ export function ReferralPage() {
     refetch,
   } = useProphetReferral();
 
-  const referral = useEmpty ? mockContent.referral : apiContent;
+  const apiEnabled = !useEmpty;
+  const rewards = useEmpty ? mockContent.referral.rewards : apiContent?.rewards;
+  const kickback = useEmpty ? mockContent.referral.kickback : apiContent?.kickback;
+  const summary = useEmpty ? mockContent.referral.summary : apiContent?.summary;
   const funderAddress = session?.funderAddress;
 
   if (!useEmpty && isLoading) {
@@ -64,7 +67,7 @@ export function ReferralPage() {
     );
   }
 
-  if (!referral) {
+  if (!rewards || !kickback || !summary) {
     return (
       <div className={portfolioPageClass}>
         <ReferralShellSkeleton />
@@ -75,14 +78,21 @@ export function ReferralPage() {
   return (
     <div className={portfolioPageClass}>
       <ReferralShell
-        referral={referral}
+        rewards={rewards}
+        kickback={kickback}
+        summary={summary}
+        apiEnabled={apiEnabled}
+        mockActivityRows={useEmpty ? mockContent.referral.activityRows : undefined}
+        mockActivityTotalCount={
+          useEmpty ? mockContent.referral.activityTotalCount : undefined
+        }
         onInviteFriends={() => setInviteOpen(true)}
       />
 
       <InviteFriendsModal
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
-        kickback={referral.kickback}
+        kickback={kickback}
         funderAddress={funderAddress}
       />
     </div>

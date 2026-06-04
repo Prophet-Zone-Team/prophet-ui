@@ -193,6 +193,40 @@ export interface ProphetLoginReferral {
 export interface ProphetReferral extends ProphetLoginReferral {
 }
 
+export type ProphetReferralClaimSummary = ProphetLoginReferral;
+
+export interface ProphetReferralClaimData {
+  amount_usdc: string;
+  claim_id: number;
+  summary: ProphetReferralClaimSummary;
+}
+
+export interface ProphetReferralInviteItem {
+  bound_at: string;
+  claimable_reward_usdc: string;
+  claimed_reward_usdc: string;
+  completed_order_count: number;
+  last_reward_at: string;
+  referral_code: string;
+  referred_address: string;
+  referred_user_id: number;
+  total_order_count: number;
+  total_referral_earnings_usdc: string;
+  total_referred_volume_usdc: string;
+}
+
+export interface ProphetReferralInvitesData {
+  list: ProphetReferralInviteItem[];
+  page: number;
+  page_size: number;
+  total: number;
+}
+
+export interface ProphetReferralInvitesParams {
+  page: number;
+  page_size: number;
+}
+
 export interface ProphetLoginData {
   account_id?: number;
   token?: string;
