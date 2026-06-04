@@ -141,10 +141,21 @@ export function RoadWorkbench({
             </div>
 
             <div className="mt-[16px] flex flex-wrap gap-[8px]">
-              <ShortcutButton label="Random fill" onClick={onGroupRandomFill} primary />
+              <ShortcutButton
+                label="Random fill"
+                onClick={onGroupRandomFill}
+                primary
+              />
               <ShortcutButton label="By FIFA rank" onClick={onGroupFifaFill} />
-              <ShortcutButton label="By squad value" onClick={onGroupMarketFill} />
-              <ShortcutButton label="Reset defaults" onClick={onGroupReset} warn />
+              <ShortcutButton
+                label="By squad value"
+                onClick={onGroupMarketFill}
+              />
+              <ShortcutButton
+                label="Reset defaults"
+                onClick={onGroupReset}
+                warn
+              />
             </div>
 
             <div className="mt-[16px] grid grid-cols-2 gap-[10px] sm:grid-cols-4">
@@ -155,7 +166,11 @@ export function RoadWorkbench({
               />
               <Metric
                 label="Annexe C"
-                value={thirdPlaceOption ? `Option ${thirdPlaceOption.option}` : "Pending"}
+                value={
+                  thirdPlaceOption
+                    ? `Option ${thirdPlaceOption.option}`
+                    : "Pending"
+                }
               />
               <Metric label="Shortcut basis" value={sortMethod} />
             </div>
@@ -211,10 +226,23 @@ export function RoadWorkbench({
                 </p>
               </div>
               <div className="flex flex-wrap gap-[8px]">
-                <ShortcutButton label="Random knockout" onClick={onApplyKnockoutRandom} primary />
-                <ShortcutButton label="By FIFA rank" onClick={onApplyKnockoutFifa} />
-                <ShortcutButton label="By squad value" onClick={onApplyKnockoutMarket} />
-                <ShortcutButton label="Clear knockout" onClick={onKnockoutClear} />
+                <ShortcutButton
+                  label="Random knockout"
+                  onClick={onApplyKnockoutRandom}
+                  primary
+                />
+                <ShortcutButton
+                  label="By FIFA rank"
+                  onClick={onApplyKnockoutFifa}
+                />
+                <ShortcutButton
+                  label="By squad value"
+                  onClick={onApplyKnockoutMarket}
+                />
+                <ShortcutButton
+                  label="Clear knockout"
+                  onClick={onKnockoutClear}
+                />
               </div>
             </div>
 
@@ -224,7 +252,7 @@ export function RoadWorkbench({
               </div>
             ) : null}
 
-            <div className="mt-[16px] grid gap-[16px] xl:grid-cols-[minmax(0,2.2fr)_minmax(260px,1fr)]">
+            <div className="mt-[16px]">
               <BracketPanel
                 calculationError={calculationError}
                 finishType={finishType}
@@ -240,18 +268,9 @@ export function RoadWorkbench({
                 viewMode={viewMode}
                 embedded
               />
-              <SummaryPanel
-                advancingThirdGroups={advancingThirdGroups}
-                finishType={finishType}
-                knockoutMethod={knockoutMethod}
-                championTeamId={championTeamId}
-                result={result}
-                teamId={teamId}
-                thirdPlaceOption={thirdPlaceOption}
-              />
             </div>
 
-            <div className="mt-[16px] flex flex-wrap gap-[8px] border-t border-[#EBEBEB] pt-[16px]">
+            <div className="mt-[16px] flex flex-wrap justify-end gap-[8px] border-t border-[#EBEBEB] pt-[16px]">
               <button
                 type="button"
                 className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"

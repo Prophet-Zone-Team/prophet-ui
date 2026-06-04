@@ -96,30 +96,6 @@ export function ResultPanel({
             </div>
           </div>
 
-          <div className="mt-[18px] grid grid-cols-2 gap-[10px] sm:grid-cols-4">
-            <Metric
-              label="Annexe C"
-              value={
-                thirdPlaceOption
-                  ? `Option ${thirdPlaceOption.option}`
-                  : "Pending"
-              }
-            />
-            <Metric
-              label="Advancing 3rd"
-              value={advancingThirdGroups.join("")}
-            />
-            <Metric label="Focus team" value={focusTeam?.name ?? "-"} />
-            <Metric label="Knockout basis" value={knockoutMethod} />
-            <Metric label="Group basis" value={sortMethod} />
-            <Metric
-              label="Final candidates"
-              value={
-                finalOpponents.map((team) => team.teamName).join(" / ") || "-"
-              }
-            />
-          </div>
-
           {result ? (
             <div className="mt-[16px] flex flex-wrap gap-[8px]">
               {result.rounds.map((round) => (
