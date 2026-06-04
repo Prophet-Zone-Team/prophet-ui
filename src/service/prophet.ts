@@ -31,6 +31,9 @@ import type {
   ProphetLoginData,
   ProphetLoginRequest,
   ProphetReportTransactionRequest,
+  ProphetGetUserStrategiesData,
+  ProphetSubmitStrategyData,
+  ProphetSubmitStrategyRequest,
   ProphetTrackRequest,
   ProphetTopTracksData,
   ProphetUserTrackItem,
@@ -437,6 +440,20 @@ export async function reportProphetUserTransaction(
 ): Promise<void> {
   requireProphetApiToken();
   await prophetPost<unknown>("/v1/user/transaction", request);
+}
+
+/** POST /v1/user/strategy — submit strategy and record per-team transactions */
+export async function submitProphetUserStrategy(
+  request: ProphetSubmitStrategyRequest
+): Promise<ProphetSubmitStrategyData> {
+  requireProphetApiToken();
+  return prophetPost<ProphetSubmitStrategyData>("/v1/user/strategy", request);
+}
+
+/** GET /v1/user/strategies — all user strategies, newest first (no pagination) */
+export async function getProphetUserStrategies(): Promise<ProphetGetUserStrategiesData> {
+  requireProphetApiToken();
+  return prophetGet<ProphetGetUserStrategiesData>("/v1/user/strategies");
 }
 
 /** GET /v1/user/transactions — paginated user-reported trades, newest first */

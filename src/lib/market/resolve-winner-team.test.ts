@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import curatedTeams from "@/data/teams/index";
-import { isCuratedTeamVisible } from "@/data/teams/curated-team-list";
+import { isCuratedTeamDisplayed } from "@/data/teams/curated-team-list";
 import { buildStaticWinnerSnapshots } from "@/lib/market/build-static-winner-snapshots";
 import {
   resolveWorldCupTeamByCuratedKey,
@@ -31,7 +31,7 @@ describe("resolve-winner-team", () => {
 
   it("builds a static snapshot for every visible curated team", () => {
     const snapshots = buildStaticWinnerSnapshots();
-    const expectedCount = Object.values(curatedTeams).filter(isCuratedTeamVisible).length;
+    const expectedCount = Object.values(curatedTeams).filter(isCuratedTeamDisplayed).length;
 
     assert.equal(snapshots.length, expectedCount);
     assert.ok(snapshots.every((snapshot) => snapshot.team.id.length > 0));

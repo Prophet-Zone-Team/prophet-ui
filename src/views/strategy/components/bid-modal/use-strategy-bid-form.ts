@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useAuthOptional } from "@/context/auth";
-import { formatStrategyMoney } from "@/lib/strategy/strategy-metrics";
+import {
+  formatStrategyBidAmountInput,
+  formatStrategyBudgetLabel
+} from "@/lib/strategy/strategy-metrics";
 import { isStrategyBidSkipPreValidationEnabled } from "@/lib/strategy/strategy-bid-test-mode";
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
@@ -14,14 +17,6 @@ import type { AvailableStrategyCardData } from "@/views/strategy/lib/map-strateg
 import type { TeamMarketSnapshot } from "@/types/market";
 
 import type { StrategyBidPreview } from "./types";
-
-function formatBidAmountInput(value: number): string {
-  if (!Number.isFinite(value) || value <= 0) {
-    return "0";
-  }
-
-  return String(Math.round(value));
-}
 
 function parseBidAmountInput(value: string): number {
   const parsed = Number.parseFloat(value);
@@ -53,7 +48,7 @@ export function useStrategyBidForm(
       return;
     }
 
-    setBidAmountInput(formatBidAmountInput(strategy.budget));
+    setBidAmountInput(formatStrategyBidAmountInput(strategy.budget));
     setRiskAccepted(false);
   }, [open, strategy?.id, strategy?.budget]);
 
@@ -98,7 +93,7 @@ export function useStrategyBidForm(
       return;
     }
 
-    setBidAmountInput(formatBidAmountInput(balance * fraction));
+    setBidAmountInput(formatStrategyBidAmountInput(balance * fraction));
   }
 
   function handleBidAmountChange(value: string) {
@@ -109,7 +104,7 @@ export function useStrategyBidForm(
   const insufficientFunds = validation?.insufficientFunds ?? false;
   const aggregateError =
     !skipPreValidation && insufficientFunds ? INSUFFICIENT_FUNDS_MESSAGE : undefined;
-  const totalBidLabel = formatStrategyMoney(bidAmount);
+  const totalBidLabel = formatStrategyBudgetLabel(bidAmount);
 
   return {
     bidAmount,

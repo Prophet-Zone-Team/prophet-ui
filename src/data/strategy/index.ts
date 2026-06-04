@@ -84,6 +84,12 @@ export const STRATEGY_DATA: Record<string, StrategyDataEntry> = {
       teams["Germany"],
       teams["Uruguay"]
     ]
+  },
+  test: {
+    name: "Test strategy",
+    description: "Test strategy",
+    budget: 10.5,
+    teams: [teams["Spain"], teams["France"]]
   }
 };
 

@@ -79,12 +79,42 @@ export function computeStrategyAllocation(
   };
 }
 
-export function formatStrategyBudget(budget: number): string {
-  return formatStrategyMoney(budget);
-}
 
 export function formatStrategyMoney(amount: number): string {
   return `$${Math.round(amount).toLocaleString("en-US")}`;
+}
+
+const STRATEGY_BUDGET_FORMAT_OPTIONS: Intl.NumberFormatOptions = {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 10
+};
+
+function formatStrategyBudgetAmount(
+  amount: number,
+  options?: Pick<Intl.NumberFormatOptions, "useGrouping">
+): string {
+  return amount.toLocaleString("en-US", {
+    ...STRATEGY_BUDGET_FORMAT_OPTIONS,
+    useGrouping: options?.useGrouping ?? true
+  });
+}
+
+/** Bid amount input for strategy modals; preserves existing decimal places. */
+export function formatStrategyBidAmountInput(amount: number): string {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return "0";
+  }
+
+  return formatStrategyBudgetAmount(amount, { useGrouping: false });
+}
+
+/** Budget label for strategy cards; preserves existing decimal places. */
+export function formatStrategyBudgetLabel(amount: number): string {
+  if (!Number.isFinite(amount)) {
+    return "—";
+  }
+
+  return `$${formatStrategyBudgetAmount(amount)}`;
 }
 
 export function formatStrategyRoiPercent(ratio: number): string {

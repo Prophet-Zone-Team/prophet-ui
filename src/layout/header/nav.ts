@@ -1,6 +1,7 @@
 export const PRIMARY_NAV = [
   { href: "/fifa/matches", label: "Matches" },
   { href: "/analytics", label: "Analytics" },
+  { href: "/strategy", label: "Strategies" },
   { href: "/tracks", label: "Tracks" },
   { href: "/portfolio", label: "Portfolio" }
 ] as const;

@@ -37,7 +37,8 @@ export default {
     logo: "kr",
     abbreviation: "kr",
     continent: "Asia",
-    slug: "will-south-korea-win-the-2026-fifa-world-cup-485"
+    slug: "will-south-korea-win-the-2026-fifa-world-cup-485",
+    isWorldCupTeam: true
   },
   "Korea Republic": {
     name: "Korea Republic",
@@ -53,7 +54,8 @@ export default {
     logo: "py",
     abbreviation: "par",
     continent: "South America",
-    slug: "will-paraguay-win-the-2026-fifa-world-cup-967"
+    slug: "will-paraguay-win-the-2026-fifa-world-cup-967",
+    isWorldCupTeam: true
   },
   Switzerland: {
     name: "Switzerland",
@@ -68,7 +70,8 @@ export default {
     logo: "us",
     abbreviation: "usa",
     continent: "North America",
-    slug: "will-usa-win-the-2026-fifa-world-cup-467"
+    slug: "will-usa-win-the-2026-fifa-world-cup-467",
+    isWorldCupTeam: true
   },
   Qatar: {
     name: "Qatar",
@@ -886,14 +889,16 @@ export default {
     logo: "cv",
     abbreviation: "cvi",
     continent: "Africa",
-    visible: false
+    visible: false,
+    isWorldCupTeam: false
   },
   "Côte d'Ivoire": {
     name: "Ivory Coast",
     logo: "ci",
     abbreviation: "civ",
     continent: "Africa",
-    visible: false
+    visible: false,
+    isWorldCupTeam: false
   },
   "Paris Saint-Germain FC": {
     name: "Paris Saint-Germain FC",

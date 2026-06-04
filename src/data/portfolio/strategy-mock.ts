@@ -1,7 +1,7 @@
 import teams from "@/data/teams";
 import type { CuratedTeamEntry } from "@/data/teams/curated-team-list";
 import { STRATEGY_DATA } from "@/data/strategy";
-import { getPortfolioStrategyStatusDisplay } from "@/lib/strategy/portfolio-strategy-status";
+import { getPortfolioStrategyStatusDisplayFromCurated } from "@/lib/strategy/portfolio-strategy-status";
 import { mapCuratedTeamToRef } from "@/views/strategy/lib/map-strategy-data";
 import type { PortfolioStrategyRecord } from "@/views/portfolio/strategy/types";
 
@@ -39,7 +39,8 @@ function buildPortfolioStrategyRecord(
   }
 ): PortfolioStrategyRecord {
   const strategyTeams = STRATEGY_DATA[id]?.teams ?? [];
-  const { status, label } = getPortfolioStrategyStatusDisplay(strategyTeams);
+  const { status, label } =
+    getPortfolioStrategyStatusDisplayFromCurated(strategyTeams);
 
   return {
     id,

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/context/auth";
 import type { StrategyBidLeg } from "@/lib/strategy/strategy-bid-validation";
 import {
+  reportStrategyBidSubmission,
   resolveStrategyBidSignError,
   signStrategyBidLeg,
   submitStrategyBidBatch,
@@ -14,7 +15,9 @@ import { ensureTradingReadyForBid } from "@/views/trade/trade-widget/trade-ticke
 
 import type { LegSignStatus, StrategyBidSignLegState } from "../types";
 
-function createInitialLegStates(legs: StrategyBidLeg[]): StrategyBidSignLegState[] {
+function createInitialLegStates(
+  legs: StrategyBidLeg[]
+): StrategyBidSignLegState[] {
   return legs.map((leg) => ({
     leg,
     status: "pending" as LegSignStatus
@@ -25,6 +28,9 @@ export function useStrategyBidSign(input: {
   open: boolean;
   legs: StrategyBidLeg[];
   strategyName: string;
+  bidAmount: number;
+  estimatedRoiLabel: string;
+  hitReturnLabel: string;
   onComplete: () => void;
 }) {
   const auth = useAuth();
@@ -61,7 +67,11 @@ export function useStrategyBidSign(input: {
 
       const current = legStates[index];
 
-      if (!current || current.status === "signing" || current.status === "signed") {
+      if (
+        !current ||
+        current.status === "signing" ||
+        current.status === "signed"
+      ) {
         return;
       }
 
@@ -92,20 +102,29 @@ export function useStrategyBidSign(input: {
                   ...entry,
                   status: "signed",
                   signed,
+                  hasSignedOnce: true,
                   errorMessage: undefined
                 }
               : entry
           )
         );
       } catch (error) {
+        const errorMessage = resolveStrategyBidSignError(error);
+
         setLegStates((previous) =>
           previous.map((entry, entryIndex) =>
             entryIndex === index
-              ? {
-                  ...entry,
-                  status: "sign_failed",
-                  errorMessage: resolveStrategyBidSignError(error)
-                }
+              ? entry.hasSignedOnce
+                ? {
+                    ...entry,
+                    status: "sign_failed",
+                    errorMessage
+                  }
+                : {
+                    ...entry,
+                    status: "pending",
+                    errorMessage
+                  }
               : entry
           )
         );
@@ -121,7 +140,9 @@ export function useStrategyBidSign(input: {
       return;
     }
 
-    const pendingIndex = legStates.findIndex((entry) => entry.status === "pending");
+    const pendingIndex = legStates.findIndex(
+      (entry) => entry.status === "pending" && !entry.errorMessage
+    );
     const isSigning = legStates.some((entry) => entry.status === "signing");
 
     if (pendingIndex >= 0 && !isSigning) {
@@ -129,23 +150,31 @@ export function useStrategyBidSign(input: {
     }
   }, [input.open, isSubmitting, legStates, signLegAtIndex]);
 
-  const signAgain = useCallback(
+  const signLeg = useCallback(
     async (legId: string) => {
-      setLegStates((previous) =>
-        previous.map((entry) =>
-          entry.leg.id === legId
-            ? {
-                ...entry,
-                status: "pending",
-                errorMessage: undefined,
-                signed: undefined
-              }
-            : entry
-        )
-      );
+      const index = legStates.findIndex((entry) => entry.leg.id === legId);
+
+      if (index >= 0) {
+        await signLegAtIndex(index);
+      }
     },
-    []
+    [legStates, signLegAtIndex]
   );
+
+  const signAgain = useCallback(async (legId: string) => {
+    setLegStates((previous) =>
+      previous.map((entry) =>
+        entry.leg.id === legId
+          ? {
+              ...entry,
+              status: "pending",
+              errorMessage: undefined,
+              signed: undefined
+            }
+          : entry
+      )
+    );
+  }, []);
 
   const submitOrders = useCallback(async () => {
     const signedLegs = legStates
@@ -198,7 +227,15 @@ export function useStrategyBidSign(input: {
       summarizeStrategyBidSubmission(result, input.strategyName);
 
       if (result.failureCount === 0) {
-        await auth.refreshSetupReadiness();
+        await reportStrategyBidSubmission({
+          strategyName: input.strategyName,
+          bidAmount: input.bidAmount,
+          estimatedRoiLabel: input.estimatedRoiLabel,
+          hitReturnLabel: input.hitReturnLabel,
+          signedLegs,
+          batchResult: result
+        });
+        await auth.refreshCash();
         input.onComplete();
       }
     } catch (error) {
@@ -213,6 +250,7 @@ export function useStrategyBidSign(input: {
     isSubmitting,
     submitError,
     canSubmitOrders,
+    signLeg,
     signAgain,
     submitOrders
   };

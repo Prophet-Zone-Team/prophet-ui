@@ -21,7 +21,6 @@ import {
   formatWinnerChartXAxisTick,
   getLatestSeriesValues,
   getWinnerChartYDomain,
-  WINNER_CHART_TIME_RANGES,
   type WinnerChartSeriesConfig,
   type WinnerChartTimeRange
 } from "@/lib/market/winner-probability-chart";
@@ -126,16 +125,9 @@ export function WinnerProbabilityChart({
           hideTitle ? "pr-0" : "pr-[6px]"
         )}
       >
-        {hideTitle ? (
-          <TimeRangePicker value={timeRange} onChange={setTimeRange} />
-        ) : (
-          <>
-            <h2 className="text-base md:text-[20px] font-[500] leading-6 text-black">
-              World Cup Winner Probability
-            </h2>
-            <TimeRangePicker value={timeRange} onChange={setTimeRange} />
-          </>
-        )}
+        <h2 className="text-base md:text-[20px] font-[500] leading-6 text-black">
+          World Cup Winner Probability
+        </h2>
       </div>
 
       {showChart ? <ChartLegend items={legendValues} className="mt-3" /> : null}
@@ -217,40 +209,6 @@ export function WinnerProbabilityChart({
         </div>
       )}
     </section>
-  );
-}
-
-function TimeRangePicker({
-  value,
-  onChange
-}: {
-  value: WinnerChartTimeRange;
-  onChange: (value: WinnerChartTimeRange) => void;
-}) {
-  return (
-    <div
-      className="flex flex-wrap items-center gap-4"
-      role="group"
-      aria-label="Probability chart time range"
-    >
-      {WINNER_CHART_TIME_RANGES.map((range) => {
-        const isActive = range.id === value;
-
-        return (
-          <button
-            key={range.id}
-            type="button"
-            onClick={() => onChange(range.id)}
-            className={cn(
-              "border-0 bg-transparent p-0 text-sm leading-[17px]",
-              isActive ? "font-[556] text-black" : "font-[457] text-[#909090]"
-            )}
-          >
-            {range.label}
-          </button>
-        );
-      })}
-    </div>
   );
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Pagination } from "@/components/pagination/pagination";
+import { cn } from "@/lib/cn";
 import { PORTFOLIO_TABLE_PAGE_SIZE } from "@/lib/portfolio/config";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import type { OpenOrderMarketContext } from "@/lib/portfolio/teams-condition";
@@ -246,7 +247,13 @@ export function PortfolioActivityTabs({
         </>
       ) : null}
 
-      {tab === "strategy" ? <PortfolioStrategyList /> : null}
+      <div className={cn(tab !== "strategy" && "hidden")}>
+        <PortfolioStrategyList
+          active={tab === "strategy"}
+          sessionConnected={sessionConnected}
+          onConnectWallet={onConnectWallet}
+        />
+      </div>
 
       {tab === "history" ? (
         <>

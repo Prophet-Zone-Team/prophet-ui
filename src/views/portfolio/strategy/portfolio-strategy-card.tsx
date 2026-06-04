@@ -6,8 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 
-import { STRATEGY_DATA } from "@/data/strategy";
-import { getPortfolioStrategyStatusDisplay } from "@/lib/strategy/portfolio-strategy-status";
+import { PORTFOLIO_STRATEGY_STATUS_CONFIG } from "@/lib/strategy/portfolio-strategy-status";
 
 import { PortfolioStrategyLegsTable } from "./portfolio-strategy-legs-table";
 import type { PortfolioStrategyRecord } from "./types";
@@ -33,8 +32,7 @@ export function PortfolioStrategyCard({
   className
 }: PortfolioStrategyCardProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
-  const strategyTeams = STRATEGY_DATA[strategy.id]?.teams ?? [];
-  const statusDisplay = getPortfolioStrategyStatusDisplay(strategyTeams);
+  const statusDisplay = PORTFOLIO_STRATEGY_STATUS_CONFIG[strategy.status];
 
   return (
     <article
@@ -76,7 +74,7 @@ export function PortfolioStrategyCard({
               {strategy.hitReturnLabel}
             </span>
             <PortfolioStrategyStatus
-              label={statusDisplay.label}
+              label={strategy.statusLabel}
               color={statusDisplay.color}
             />
             <button

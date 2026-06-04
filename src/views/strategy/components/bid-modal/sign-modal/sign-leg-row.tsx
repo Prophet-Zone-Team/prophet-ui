@@ -8,18 +8,29 @@ import { SignLegStatusIcon } from "./sign-leg-status-icon";
 export type SignLegRowProps = {
   entry: StrategyBidSignLegState;
   isLast: boolean;
+  onSign: (legId: string) => void;
   onSignAgain: (legId: string) => void;
 };
 
-export function SignLegRow({ entry, isLast, onSignAgain }: SignLegRowProps) {
-  const showFailedCard =
-    entry.status === "sign_failed" || entry.status === "submit_failed";
+export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowProps) {
+  const showActionCard =
+    entry.status === "sign_failed" ||
+    entry.status === "submit_failed" ||
+    (entry.status === "pending" && Boolean(entry.errorMessage));
 
-  if (showFailedCard) {
+  const isRetry =
+    entry.status === "sign_failed" ||
+    entry.status === "submit_failed" ||
+    entry.hasSignedOnce === true;
+
+  if (showActionCard) {
     return (
       <div className="flex gap-3">
         <div className="flex flex-col items-center">
-          <SignLegStatusIcon status={entry.status} />
+          <SignLegStatusIcon
+            status={entry.status}
+            showError={entry.status === "pending" && Boolean(entry.errorMessage)}
+          />
           {!isLast ? (
             <span className="mt-1 w-px flex-1 min-h-[24px] bg-[#EBEBEB]" aria-hidden />
           ) : null}
@@ -56,10 +67,12 @@ export function SignLegRow({ entry, isLast, onSignAgain }: SignLegRowProps) {
 
           <button
             type="button"
-            onClick={() => onSignAgain(entry.leg.id)}
+            onClick={() =>
+              isRetry ? onSignAgain(entry.leg.id) : onSign(entry.leg.id)
+            }
             className="flex h-[50px] w-full items-center justify-center rounded-xl border border-[#EBEBEB] bg-white font-[Sora] text-base font-normal leading-5 text-black transition-opacity hover:opacity-90"
           >
-            Sign Again
+            {isRetry ? "Sign Again" : "Sign"}
           </button>
         </div>
       </div>

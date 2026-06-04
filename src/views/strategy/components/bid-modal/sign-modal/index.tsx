@@ -2,7 +2,7 @@
 
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
-import { formatStrategyMoney } from "@/lib/strategy/strategy-metrics";
+import { formatStrategyBudgetLabel } from "@/lib/strategy/strategy-metrics";
 import type { StrategyBidLeg } from "@/lib/strategy/strategy-bid-validation";
 
 import { STRATEGY_BID_SIGN_MODAL_WIDTH } from "../constants";
@@ -15,6 +15,8 @@ export type StrategyBidSignModalProps = {
   onClose: () => void;
   strategyName: string;
   bidAmount: number;
+  estimatedRoiLabel: string;
+  hitReturnLabel: string;
   legs: StrategyBidLeg[];
   onComplete: () => void;
 };
@@ -24,6 +26,8 @@ export function StrategyBidSignModal({
   onClose,
   strategyName,
   bidAmount,
+  estimatedRoiLabel,
+  hitReturnLabel,
   legs,
   onComplete
 }: StrategyBidSignModalProps) {
@@ -32,12 +36,16 @@ export function StrategyBidSignModal({
     isSubmitting,
     submitError,
     canSubmitOrders,
+    signLeg,
     signAgain,
     submitOrders
   } = useStrategyBidSign({
     open,
     legs,
     strategyName,
+    bidAmount,
+    estimatedRoiLabel,
+    hitReturnLabel,
     onComplete
   });
 
@@ -81,7 +89,7 @@ export function StrategyBidSignModal({
               Total Bid Value
             </span>
             <span className="font-[Sora] text-sm font-medium leading-[18px] text-black">
-              {formatStrategyMoney(bidAmount)}
+              {formatStrategyBudgetLabel(bidAmount)}
             </span>
           </div>
 
@@ -100,6 +108,7 @@ export function StrategyBidSignModal({
                 key={entry.leg.id}
                 entry={entry}
                 isLast={index === legStates.length - 1}
+                onSign={(legId) => void signLeg(legId)}
                 onSignAgain={signAgain}
               />
             ))}

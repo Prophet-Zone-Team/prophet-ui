@@ -14,6 +14,8 @@ export type CuratedTeamEntry = {
   started?: boolean;
   /** Whether the team has been eliminated from the tournament. */
   eliminated?: boolean;
+  /** Whether the team is in the curated 2026 World Cup participant set. */
+  isWorldCupTeam?: boolean;
 };
 
 const curatedTeamEntries = Object.entries(curatedTeams) as Array<
@@ -22,6 +24,14 @@ const curatedTeamEntries = Object.entries(curatedTeams) as Array<
 
 export function isCuratedTeamVisible(entry: CuratedTeamEntry): boolean {
   return entry.visible !== false;
+}
+
+export function isCuratedWorldCupTeam(entry: CuratedTeamEntry): boolean {
+  return entry.isWorldCupTeam === true;
+}
+
+export function isCuratedTeamDisplayed(entry: CuratedTeamEntry): boolean {
+  return isCuratedTeamVisible(entry) && isCuratedWorldCupTeam(entry);
 }
 
 export function curatedTeamKeyToId(key: string): string {
@@ -70,7 +80,7 @@ function buildCuratedTeamsList(): Team[] {
 
 function buildCuratedVisibleTeamsList(): Team[] {
   return curatedTeamEntries
-    .filter(([, entry]) => isCuratedTeamVisible(entry))
+    .filter(([, entry]) => isCuratedTeamDisplayed(entry))
     .map(([key, entry]) => curatedEntryToTeam(key, entry));
 }
 
@@ -79,7 +89,7 @@ function buildCuratedNationalTeamsList(): Team[] {
   const seenAbbreviations = new Set<string>();
 
   for (const [key, entry] of curatedTeamEntries) {
-    if (!isCuratedTeamVisible(entry) || isClubCuratedKey(key)) {
+    if (!isCuratedTeamDisplayed(entry) || isClubCuratedKey(key)) {
       continue;
     }
 
@@ -137,6 +147,45 @@ export function findCuratedTeamByName(name: string): Team | undefined {
   });
 
   return match ? curatedEntryToTeam(match[0], match[1]) : undefined;
+}
+
+export function findCuratedEntryBySlug(
+  slug: string
+): CuratedTeamEntry | undefined {
+  const normalized = slug.trim().toLowerCase();
+
+  if (!normalized) {
+    return undefined;
+  }
+
+  const match = curatedTeamEntries.find(
+    ([, value]) => value.slug?.trim().toLowerCase() === normalized
+  );
+
+  return match ? match[1] : undefined;
+}
+
+export function findCuratedEntryByName(
+  name: string
+): CuratedTeamEntry | undefined {
+  const normalized = normalizeGammaSearchText(name);
+
+  if (!normalized) {
+    return undefined;
+  }
+
+  const match = curatedTeamEntries.find(([key, value]) => {
+    const candidates = [
+      key,
+      value.name,
+      value.abbreviation,
+      curatedTeamKeyToId(key).replace(/-/g, " ")
+    ].map(normalizeGammaSearchText);
+
+    return candidates.some((alias) => alias.length > 0 && alias === normalized);
+  });
+
+  return match ? match[1] : undefined;
 }
 
 export function findCuratedTeamByFuzzyLabel(value: string): Team | undefined {

@@ -39,6 +39,8 @@ export type StrategyBidSignLegState = {
   status: LegSignStatus;
   errorMessage?: string;
   signed?: SignedStrategyBidLeg;
+  /** True once this leg has completed at least one successful signature. */
+  hasSignedOnce?: boolean;
 };
 
 export type StrategyBidSignState = {

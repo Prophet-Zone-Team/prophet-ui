@@ -3,8 +3,15 @@
 import type { BidOrderPreview } from "@/lib/market/polymarket-order";
 import { buildSdkSignedUserOrder } from "@/lib/market/sdk-user-order";
 import type { SignedUserOrderPayload } from "@/lib/market/user-order";
-import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import type { StrategyBidLeg } from "@/lib/strategy/strategy-bid-validation";
+import {
+  isProphetAuthenticated,
+  submitProphetUserStrategy
+} from "@/service/prophet";
+import type {
+  ProphetStrategyTeamItem,
+  ProphetSubmitStrategyRequest
+} from "@/types/prophet-api";
 import { TEAM_MARKET_BUY_ORDER_TYPE_EXPORT } from "@/lib/trading/team-market-buy-preview";
 import {
   formatOrderToastSummary,
@@ -70,22 +77,6 @@ export async function submitStrategyBidBatch(
     }))
   });
 
-  for (const [index, batchResult] of result.results.entries()) {
-    const leg = signedLegs[index];
-
-    if (!leg || !batchResult.success) {
-      continue;
-    }
-
-    void reportTradeOrderTransaction({
-      userOrderPreview: leg.userOrderPreview,
-      result: { order: batchResult.order, submittedAt: result.submittedAt },
-      preview: leg.preview,
-      variant: "team",
-      snapshot: leg.snapshot
-    });
-  }
-
   const tokenIds = [...new Set(signedLegs.map((leg) => leg.preview.tokenId).filter(Boolean))];
 
   await Promise.all(
@@ -95,6 +86,74 @@ export async function submitStrategyBidBatch(
   );
 
   return result;
+}
+
+function formatStrategyTeamAmount(value: number): string {
+  return Number.isFinite(value) ? String(value) : "0";
+}
+
+function buildStrategyTeamItem(
+  leg: SignedStrategyBidLeg,
+  batchResult: SubmitBatchOrderResult["results"][number]
+): ProphetStrategyTeamItem | null {
+  if (!batchResult.success) {
+    return null;
+  }
+
+  const orderId =
+    batchResult.order?.clobOrderId ?? batchResult.order?.id ?? undefined;
+
+  if (!orderId) {
+    return null;
+  }
+
+  const amount =
+    leg.userOrderPreview.estimatedTotalCost ?? leg.userOrderPreview.estimatedCost;
+
+  return {
+    order_id: orderId,
+    tx_hash: orderId,
+    amount: formatStrategyTeamAmount(amount),
+    name: leg.snapshot.team.name,
+    price: String(leg.preview.sidePrice),
+    slug: leg.snapshot.market.slug ?? leg.snapshot.market.polymarket?.slug,
+    to_win: formatStrategyTeamAmount(leg.userOrderPreview.potentialOutcome)
+  };
+}
+
+export async function reportStrategyBidSubmission(input: {
+  strategyName: string;
+  bidAmount: number;
+  estimatedRoiLabel: string;
+  hitReturnLabel: string;
+  signedLegs: SignedStrategyBidLeg[];
+  batchResult: SubmitBatchOrderResult;
+}): Promise<void> {
+  if (!isProphetAuthenticated()) {
+    return;
+  }
+
+  const teams = input.signedLegs
+    .map((leg, index) => buildStrategyTeamItem(leg, input.batchResult.results[index]))
+    .filter((item): item is ProphetStrategyTeamItem => Boolean(item));
+
+  if (teams.length === 0) {
+    return;
+  }
+
+  const request: ProphetSubmitStrategyRequest = {
+    name: input.strategyName,
+    teams,
+    value: formatStrategyTeamAmount(input.bidAmount),
+    roi: input.estimatedRoiLabel,
+    hit_return: input.hitReturnLabel
+  };
+
+  try {
+    await submitProphetUserStrategy(request);
+  } catch (error) {
+    console.warn("[user.strategy] report failed", error);
+  }
 }
 
 export function summarizeStrategyBidSubmission(

@@ -11,7 +11,7 @@ import {
   computeStrategyAllocation,
   formatLegProfitLabel,
   formatLegStakeLabel,
-  formatStrategyBudget,
+  formatStrategyBudgetLabel,
   type StrategyAllocation,
   type StrategyMetricsInput
 } from "@/lib/strategy/strategy-metrics";
@@ -193,7 +193,7 @@ export function buildAvailableStrategyCards(
       ...entry,
       teamRefs: mapStrategyTeamsToRefs(entry.teams),
       legs: mapStrategyTeamsToLegs(entry.teams, snapshotByTeamId, allocation),
-      budgetLabel: formatStrategyBudget(entry.budget),
+      budgetLabel: formatStrategyBudgetLabel(entry.budget),
       estimatedRoiLabel: calculateEstimatedRoiLabel(metricsInput),
       hitReturnLabel: calculateHitReturnLabel(metricsInput),
       netRoi: allocation?.netRoi
@@ -245,7 +245,7 @@ export function buildEndedStrategyCards(
       winnerTeam,
       teamRefs: mapStrategyTeamsToRefs(entry.teams),
       legs,
-      budgetLabel: formatStrategyBudget(entry.budget),
+      budgetLabel: formatStrategyBudgetLabel(entry.budget),
       estimatedRoiLabel: calculateEstimatedRoiLabel(metricsInput),
       hitReturnLabel: calculateHitReturnLabel(metricsInput)
     };

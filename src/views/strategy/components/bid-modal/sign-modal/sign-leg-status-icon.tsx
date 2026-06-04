@@ -6,10 +6,15 @@ import type { LegSignStatus } from "../types";
 
 export type SignLegStatusIconProps = {
   status: LegSignStatus;
+  showError?: boolean;
   className?: string;
 };
 
-export function SignLegStatusIcon({ status, className }: SignLegStatusIconProps) {
+export function SignLegStatusIcon({
+  status,
+  showError = false,
+  className
+}: SignLegStatusIconProps) {
   if (status === "signed") {
     return (
       <span
@@ -24,7 +29,7 @@ export function SignLegStatusIcon({ status, className }: SignLegStatusIconProps)
     );
   }
 
-  if (status === "sign_failed" || status === "submit_failed") {
+  if (showError || status === "sign_failed" || status === "submit_failed") {
     return (
       <span
         className={cn(

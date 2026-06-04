@@ -173,6 +173,8 @@ export function StrategyBidModal({
         onClose={handleClose}
         strategyName={strategy.name}
         bidAmount={bidAmount}
+        estimatedRoiLabel={preview.estimatedRoiLabel}
+        hitReturnLabel={preview.toWinLabel}
         legs={getStrategyBidSignableLegs(validation.legs, { skipPreValidation })}
         onComplete={handleClose}
       />
