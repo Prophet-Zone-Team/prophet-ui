@@ -19,6 +19,7 @@ export type ReferralInviteActionsProps = {
   shareCardRef: RefObject<HTMLDivElement | null>;
   shareCardReady: boolean;
   className?: string;
+  downloadFilename?: string;
 };
 
 export function ReferralInviteActions({
@@ -26,6 +27,7 @@ export function ReferralInviteActions({
   shareCardRef,
   shareCardReady,
   className,
+  downloadFilename,
 }: ReferralInviteActionsProps) {
   const [downloading, setDownloading] = useState(false);
   const { copiedVisible, copy } = useCopyWithToast();
@@ -52,11 +54,11 @@ export function ReferralInviteActions({
 
     setDownloading(true);
     try {
-      await downloadShareCardPng(element);
+      await downloadShareCardPng(element, downloadFilename);
     } finally {
       setDownloading(false);
     }
-  }, [downloading, shareCardReady, shareCardRef]);
+  }, [downloadFilename, downloading, shareCardReady, shareCardRef]);
 
   const handleCopyLink = useCallback(async () => {
     await copy(fullLink);

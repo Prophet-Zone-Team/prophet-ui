@@ -21,20 +21,29 @@ export function ReferralInviteLinkRow({
   className,
 }: ReferralInviteLinkRowProps) {
   const { copiedVisible, copy } = useCopyWithToast();
+  const displayLink = fullLink.replace(/^https?:\/\//, "");
 
   return (
     <div className={cn("relative", inviteLinkRowShellClass, className)}>
       <div className="flex items-center justify-between gap-3">
         <span className="shrink-0 text-[14px] leading-[normal] text-[#909090]">
-          Referral Link
+          {referralCode ? "Referral Link" : "Invite Link"}
         </span>
         <div className="flex min-w-0 items-center gap-1.5 flex-1">
-          <p className="truncate text-[16px] leading-[normal] text-black flex items-center flex-nowrap flex-1">
-            <span className="text-[#909090] flex-1 w-0 overflow-hidden text-ellipsis">
-              {linkPrefix.replace(/\?r\=$/, "")}
-            </span>
-            <span className="text-[#909090] shrink-0">?r=</span>
-            <span className="shrink-0">{referralCode}</span>
+          <p className="flex flex-1 flex-nowrap items-center truncate text-[16px] leading-[normal] text-black">
+            {referralCode ? (
+              <>
+                <span className="w-0 flex-1 overflow-hidden text-ellipsis text-[#909090]">
+                  {linkPrefix.replace(/\?r\=$/, "")}
+                </span>
+                <span className="shrink-0 text-[#909090]">?r=</span>
+                <span className="shrink-0">{referralCode}</span>
+              </>
+            ) : (
+              <span className="w-0 flex-1 overflow-hidden text-ellipsis text-[#909090]">
+                {displayLink}
+              </span>
+            )}
           </p>
           <button
             type="button"

@@ -1,21 +1,27 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 
 import { CopyButton } from "@/components/feedback/copy-button";
 import { getWorldCupGroupForTeam, getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { TeamFlag } from "@/components/teams/team-flag";
 import type { PathResult } from "@/types/market";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
+import type { ReferralKickback } from "@/types/referral";
 
 import { ROUND_LABELS } from "../lib/format";
-import { copyText, downloadResultPoster } from "../lib/share";
+import { RoadToFinalShareModal } from "../road-to-final-share-modal";
+import type { GroupPlacements, KnockoutWinners } from "../types";
 import { Panel } from "../ui/panel";
 
 export function ResultPanel({
   advancingThirdGroups,
   championTeamId,
+  funderAddress,
+  kickback,
   knockoutMethod,
+  knockoutWinners,
+  placements,
   result,
   shareUrl,
   sortMethod,
@@ -25,7 +31,11 @@ export function ResultPanel({
 }: {
   advancingThirdGroups: string[];
   championTeamId?: string;
+  funderAddress?: string;
+  kickback?: ReferralKickback;
   knockoutMethod: string;
+  knockoutWinners: KnockoutWinners;
+  placements: GroupPlacements;
   result?: PathResult;
   shareUrl: string;
   sortMethod: string;
@@ -33,7 +43,7 @@ export function ResultPanel({
   thirdPlaceOption?: ThirdPlaceAllocationOption;
   onBackToKnockout: () => void;
 }) {
-  const posterRef = useRef<HTMLElement>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const champion = getWorldCupTeamByIdOrCode(championTeamId ?? "");
   const focusTeam = getWorldCupTeamByIdOrCode(teamId);
   const finalOpponents =
@@ -41,26 +51,10 @@ export function ResultPanel({
       .find((round) => round.round === "FINAL")
       ?.possibleOpponentTeams.slice(0, 2) ?? [];
 
-  const handleDownload = () => {
-    if (!posterRef.current) {
-      return;
-    }
-
-    downloadResultPoster(posterRef.current);
-  };
-
-  const handleShareAll = async () => {
-    await copyText(shareUrl);
-    handleDownload();
-  };
-
   return (
     <Panel>
       <div className="flex flex-col gap-[16px] lg:flex-row">
-        <article
-          ref={posterRef}
-          className="flex-1 rounded-[8px] border border-[#EBEBEB] bg-[#FAFAFA] p-[20px]"
-        >
+        <article className="flex-1 rounded-[8px] border border-[#EBEBEB] bg-[#FAFAFA] p-[20px]">
           <p className="m-0 text-[12px] font-[700] uppercase tracking-wide text-[#0F766E]">
             2026 World Cup simulation
           </p>
@@ -119,17 +113,10 @@ export function ResultPanel({
         </article>
 
         <aside className="flex w-full shrink-0 flex-col gap-[8px] lg:w-[280px]">
-          {/* <button
-            type="button"
-            className="rounded-[8px] bg-[#18110F] px-[14px] py-[10px] text-[13px] text-white"
-            onClick={() => void handleShareAll()}
-          >
-            Share all
-          </button> */}
           <button
             type="button"
             className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
-            onClick={handleDownload}
+            onClick={() => setShareOpen(true)}
           >
             Download screenshot
           </button>
@@ -140,12 +127,6 @@ export function ResultPanel({
           >
             Copy share link
           </CopyButton>
-          {/* <textarea
-            readOnly
-            value={shareUrl}
-            className="min-h-[96px] w-full resize-y rounded-[8px] border border-[#EBEBEB] bg-[#FAFAFA] p-[10px] text-[12px] text-[#505050]"
-            aria-label="Share URL"
-          /> */}
           <button
             type="button"
             className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
@@ -155,6 +136,19 @@ export function ResultPanel({
           </button>
         </aside>
       </div>
+
+      <RoadToFinalShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        teamId={teamId}
+        championTeamId={championTeamId}
+        result={result}
+        placements={placements}
+        knockoutWinners={knockoutWinners}
+        thirdPlaceOption={thirdPlaceOption}
+        funderAddress={funderAddress}
+        kickback={kickback}
+      />
     </Panel>
   );
 }
