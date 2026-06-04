@@ -24,6 +24,7 @@ interface LoginModalProps {
     | "loginModalOpen"
     | "loginStep"
     | "loginInProgress"
+    | "privyLoginInProgress"
     | "error"
     | "readiness"
     | "session"
@@ -73,6 +74,7 @@ export function LoginModal({ auth }: LoginModalProps) {
     loginModalOpen,
     loginStep,
     loginInProgress,
+    privyLoginInProgress,
     error,
     readiness,
     session,
@@ -147,6 +149,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                   setupSteps,
                   loginStep,
                   loginInProgress,
+                  privyLoginInProgress,
                   readiness
                 });
                 const isLast = index === SETUP_STEPS.length - 1;
@@ -190,10 +193,10 @@ export function LoginModal({ auth }: LoginModalProps) {
                           <p className="mt-0.5 text-xs text-prophet-muted">
                             {step.id === "deploy_wallet"
                               ? getDeployWalletDescription({
-                                  loginStep,
-                                  readiness,
-                                  session
-                                })
+                                loginStep,
+                                readiness,
+                                session
+                              })
                               : step.description}
                           </p>
                         </div>
@@ -203,6 +206,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                           setupSteps,
                           loginStep,
                           loginInProgress,
+                          privyLoginInProgress,
                           session,
                         }) ? (
                           <StepAction
@@ -332,10 +336,18 @@ function getSetupStepState(
     setupSteps: AuthContextValue["setupSteps"];
     loginStep: TradingLoginStep | undefined;
     loginInProgress: boolean;
+    privyLoginInProgress: boolean;
     readiness: AuthContextValue["readiness"];
   },
 ): StepVisualState {
-  const { session, setupSteps, loginStep, loginInProgress, readiness } = context;
+  const {
+    session,
+    setupSteps,
+    loginStep,
+    loginInProgress,
+    privyLoginInProgress,
+    readiness,
+  } = context;
   const depositStatus = readiness?.session?.depositWalletStatus;
 
   if (stepId === "deploy_wallet") {
@@ -344,10 +356,14 @@ function getSetupStepState(
     }
 
     if (
-      loginInProgress &&
+      privyLoginInProgress || (loginInProgress &&
       (loginStep === "requesting_wallet" ||
         loginStep === "checking_wallet_deployment" ||
-        loginStep === "deploying_wallet")
+        loginStep === "deploying_wallet" ||
+        loginStep === "creating_session" ||
+        loginStep === "verifying_readiness" ||
+        loginStep === "awaiting_session_signature"
+      ))
     ) {
       return "active";
     }
@@ -369,10 +385,14 @@ function getSetupStepState(
     }
 
     if (
-      loginInProgress &&
+      (loginInProgress || privyLoginInProgress) &&
       (loginStep === "checking_token_approval" ||
         loginStep === "awaiting_token_approval_signature" ||
-        loginStep === "submitting_token_approval")
+        loginStep === "submitting_token_approval" ||
+        loginStep === "awaiting_session_signature" ||
+        loginStep === "creating_session" ||
+        loginStep === "verifying_readiness"
+      )
     ) {
       return "active";
     }
@@ -386,12 +406,13 @@ function getSetupStepState(
     }
 
     if (
-      loginInProgress &&
+      (loginInProgress || privyLoginInProgress) &&
       (loginStep === "checking_clob_credentials" ||
         loginStep === "checking_trading_chain" ||
         loginStep === "switching_trading_chain" ||
         loginStep === "awaiting_clob_signature" ||
-        loginStep === "deriving_credentials")
+        loginStep === "deriving_credentials"
+      )
     ) {
       return "active";
     }
@@ -409,17 +430,25 @@ function stepNeedsUserAction(
     setupSteps: AuthContextValue["setupSteps"];
     loginStep: TradingLoginStep | undefined;
     loginInProgress: boolean;
+    privyLoginInProgress: boolean;
     session: AuthContextValue["session"];
   },
 ): boolean {
-  const { state, setupSteps, loginStep, loginInProgress, session } = context;
+  const {
+    state,
+    setupSteps,
+    loginStep,
+    loginInProgress,
+    privyLoginInProgress,
+    session,
+  } = context;
 
   if (stepId === "deploy_wallet") {
     if (state === "failed") {
       return !loginInProgress;
     }
 
-    return !session && !loginInProgress;
+    return !session && !loginInProgress && !privyLoginInProgress;
   }
 
   if (stepId === "authorize_tokens") {
@@ -430,14 +459,14 @@ function stepNeedsUserAction(
       return false;
     }
 
-    return setupSteps.walletDeployed && !loginInProgress;
+    return setupSteps.walletDeployed && !loginInProgress && !privyLoginInProgress;
   }
 
   if (setupSteps.clobSigned || loginStep === "clob_already_derived") {
     return false;
   }
 
-  return setupSteps.walletDeployed && !loginInProgress;
+  return setupSteps.walletDeployed && !loginInProgress && !privyLoginInProgress;
 }
 
 function StepAction({
