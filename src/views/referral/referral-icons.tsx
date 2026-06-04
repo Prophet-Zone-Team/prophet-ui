@@ -218,39 +218,21 @@ export function CategoryIcon({ id }: { id: string }) {
 
 export function XBrandIcon({ className }: { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="12"
-      height="12"
-      viewBox="0 0 12 12"
-      fill="none"
-      className={cn("size-3", className)}
-      aria-hidden="true"
-    >
-      <path
-        d="M7.1428 5.08177L11.6108 0H10.5524L6.6712 4.41152L3.5736 0H0L4.6852 6.67164L0 12H1.0584L5.1544 7.34028L8.4264 12H12M1.4404 0.780949H3.0664L10.5516 11.2574H8.9252"
-        fill="black"
-      />
-    </svg>
+    <img
+      src="/icons/icon-x.svg"
+      alt=""
+      className={cn("size-3 shrink-0 object-center object-contain", className)}
+    />
   );
 }
 
 export function TelegramBrandIcon({ className }: { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="15"
-      height="13"
-      viewBox="0 0 15 13"
-      fill="none"
-      className={cn("w-4 h-3", className)}
-      aria-hidden="true"
-    >
-      <path
-        d="M14.8313 1.13557L12.5868 11.7207C12.4174 12.4678 11.9758 12.6537 11.3483 12.3018L7.92836 9.78166L6.27817 11.3688C6.09555 11.5514 5.94282 11.7041 5.59086 11.7041L5.83657 8.22112L12.175 2.49357C12.4506 2.24787 12.1153 2.11174 11.7467 2.35744L3.91079 7.29143L0.537348 6.23557C-0.196441 6.00647 -0.209722 5.50178 0.690083 5.14983L13.885 0.0664261C14.4959 -0.162675 15.0305 0.202559 14.8313 1.13557Z"
-        fill="black"
-      />
-    </svg>
+    <img
+      src="/icons/icon-telegram.svg"
+      alt=""
+      className={cn("w-4 h-3 shrink-0 object-center object-contain", className)}
+    />
   )
 }
 
