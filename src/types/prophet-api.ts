@@ -164,11 +164,39 @@ export interface ProphetGameSiblingEventSlugs {
 
 export interface ProphetLoginRequest {
   address: string;
+  referral_code?: string;
+}
+
+export interface ProphetApplyReferralRequest {
+  referral_code: string;
+}
+
+export interface ProphetLoginReferral {
+  referral_code: string;
+  referral_link: string;
+  tier: string; // e.g., "standard"
+  kickback_rate: string; // as a decimal string, e.g., "0.1"
+  status: string; // e.g., "active"
+  referred_user_count: number;
+  total_referred_volume_usdc: string;
+  total_referral_earnings_usdc: string;
+  claimable_balance_usdc: string;
+  claimed_balance_usdc: string;
+  has_bound_referral: boolean;
+  bound_referral_code: string;
+}
+
+/**
+ * Why redeclare a ProphetReferral type?
+ * To prevent issues if the login API no longer returns referral details in the future.
+ */
+export interface ProphetReferral extends ProphetLoginReferral {
 }
 
 export interface ProphetLoginData {
   account_id?: number;
   token?: string;
+  referral?: ProphetLoginReferral;
 }
 
 export interface ProphetBindTelegramRequest {

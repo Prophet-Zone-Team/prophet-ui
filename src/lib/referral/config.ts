@@ -1,5 +1,14 @@
 export const REFERRAL_ACTIVITY_PAGE_SIZE = 10;
 
+export const REFERRAL_PATH = "/fifa";
+
+export const REFERRAL_QUERY_PARAM = "r";
+
+export const REFERRAL_STALE_TIME_MS = 60_000;
+
+export const REFERRAL_KICKBACK_DESCRIPTION =
+  "You earn a percentage of Prophet's actual revenue from your referred users' completed orders.";
+
 /** Set to true to render the empty-state referral panel for local QA. */
 export const REFERRAL_USE_EMPTY_STATE = false;
 
