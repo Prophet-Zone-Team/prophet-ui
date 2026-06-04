@@ -73,7 +73,7 @@ export function TeamDetailHeader({
 }: TeamDetailHeaderProps) {
   const { team, market } = snapshot;
   const fifaRank = detail?.fifaRank;
-  const displayName = detail?.name;
+  const displayName = detail?.name || team.name;
   const logoUrl = detail?.logo;
   const bestFinish = detail?.bestFinish;
   const titles = detail?.titles;
