@@ -16,6 +16,7 @@ import {
 } from "@/views/team/team-detail-ui";
 import { PageBack } from "@/components/ui/page-back";
 import { formatNumber } from "@/utils";
+import teamData from "@/data/teams";
 
 export interface TeamDetailHeaderProps {
   snapshot: TeamMarketSnapshot;
@@ -79,6 +80,9 @@ export function TeamDetailHeader({
   const titles = detail?.titles;
   const marketValue = detail?.marketValue;
 
+  const currentTeam = teamData[team.name as keyof typeof teamData];
+  const teamSlug = (currentTeam as unknown as any)?.slug;
+
   return (
     <header className="my-4">
       <PageBack />
@@ -133,10 +137,10 @@ export function TeamDetailHeader({
               value={
                 marketValue
                   ? formatNumber(marketValue, 2, true, {
-                      prefix: "€",
-                      isShort: true,
-                      isShortUppercase: true
-                    })
+                    prefix: "€",
+                    isShort: true,
+                    isShortUppercase: true
+                  })
                   : "-"
               }
             />
@@ -148,12 +152,16 @@ export function TeamDetailHeader({
           </div>
 
           <div className="flex flex-wrap items-center justify-between md:justify-end gap-2">
-            <Link
-              href={teamTradeHref(team.id)}
-              className={teamOpenTradeButtonClass}
-            >
-              Open Trade
-            </Link>
+            {
+              !!teamSlug && (
+                <Link
+                  href={teamTradeHref(teamSlug)}
+                  className={teamOpenTradeButtonClass}
+                >
+                  Open Trade
+                </Link>
+              )
+            }
             <div className="flex items-center gap-2">
               <BookmarkControl
                 slug={market.polymarket?.slug || ""}
