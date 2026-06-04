@@ -22,6 +22,7 @@ interface AuthPersistedState {
 
 interface AuthStore extends AuthPersistedState {
   loginInProgress: boolean;
+  privyLoginInProgress: boolean;
   cash: CashBalanceView | undefined;
   cashStatus: FundingLoadStatus;
   cashError: string | undefined;
@@ -31,6 +32,7 @@ interface AuthStore extends AuthPersistedState {
   setStatus: (status: FundingLoadStatus) => void;
   setLoginModalOpen: (loginModalOpen: boolean) => void;
   setLoginInProgress: (loginInProgress: boolean) => void;
+  setPrivyLoginInProgress: (privyLoginInProgress: boolean) => void;
   setLoginMethod: (loginMethod: AuthLoginMethod | undefined) => void;
   setError: (error: string | undefined) => void;
   setCash: (cash: CashBalanceView | undefined) => void;
@@ -55,6 +57,7 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       ...initialPersistedState,
       loginInProgress: false,
+      privyLoginInProgress: false,
       cash: undefined,
       cashStatus: "idle",
       cashError: undefined,
@@ -64,6 +67,7 @@ export const useAuthStore = create<AuthStore>()(
       setStatus: (status) => set({ status }),
       setLoginModalOpen: (loginModalOpen) => set({ loginModalOpen }),
       setLoginInProgress: (loginInProgress) => set({ loginInProgress }),
+      setPrivyLoginInProgress: (privyLoginInProgress) => set({ privyLoginInProgress }),
       setLoginMethod: (loginMethod) => set({ loginMethod }),
       setError: (error) => set({ error }),
       setCash: (cash) => set({ cash }),

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, Loader2 } from "lucide-react";
-import { useLoginWithEmail, useLoginWithOAuth } from "@privy-io/react-auth";
+import { useLoginWithEmail, useLoginWithOAuth, usePrivy } from "@privy-io/react-auth";
 
 import { Modal } from "@/components/ui/modal";
 import { OtpInput } from "@/components/auth/otp-input";
@@ -35,6 +35,7 @@ export function PrivyLoginModal({
     emailAuthenticatedRef.current = onEmailAuthenticated;
   }, [onEmailAuthenticated]);
 
+  const { ready } = usePrivy();
   const { sendCode, loginWithCode, state } = useLoginWithEmail({
     onComplete: () => {
       emailAuthenticatedRef.current();
@@ -136,10 +137,10 @@ export function PrivyLoginModal({
         <button
           type="button"
           className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[8px] bg-black text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
-          disabled={oauthLoading}
+          disabled={oauthLoading || !ready}
           onClick={() => void handleGoogle()}
         >
-          {oauthLoading ? (
+          {(oauthLoading || !ready) ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
             <GoogleIcon />
@@ -188,10 +189,10 @@ export function PrivyLoginModal({
           <button
             type="button"
             className="flex h-[42px] w-[105px] shrink-0 items-center justify-center rounded-[6px] bg-black text-[14px] font-[500] leading-[18px] text-white disabled:opacity-30"
-            disabled={verifyDisabled}
+            disabled={verifyDisabled || !ready}
             onClick={() => void handleVerify()}
           >
-            {submittingCode ? (
+            {(submittingCode || !ready) ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
               "Verify"

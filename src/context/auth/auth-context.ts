@@ -20,6 +20,7 @@ export interface AuthContextValue {
   loginStep: TradingLoginStep | undefined;
   loginModalOpen: boolean;
   loginInProgress: boolean;
+  privyLoginInProgress: boolean;
   cash: CashBalanceView | undefined;
   cashStatus: FundingLoadStatus;
   error: string | undefined;
