@@ -8,7 +8,6 @@ const referralActivityRowsPageOne: ReferralActivityRow[] = [
     time: "2m ago",
     market: "Will Argentina win the...",
     value: "$100.23",
-    prophetFee: "$1.00",
     earnings: "$0.01",
   },
   {
@@ -18,7 +17,6 @@ const referralActivityRowsPageOne: ReferralActivityRow[] = [
     time: "15m ago",
     market: "Will France win the wo...",
     value: "$49.50",
-    prophetFee: "$0.50",
     earnings: "<$0.01",
   },
   {
@@ -28,7 +26,6 @@ const referralActivityRowsPageOne: ReferralActivityRow[] = [
     time: "1d ago",
     market: "Will France win the wo...",
     value: "$10.00",
-    prophetFee: "$0.10",
     earnings: "<$0.01",
   },
   {
@@ -38,7 +35,6 @@ const referralActivityRowsPageOne: ReferralActivityRow[] = [
     time: "2d ago",
     market: "Will Argentina win the...",
     value: "$1,000.56",
-    prophetFee: "$10.00",
     earnings: "$0.10",
   },
   {
@@ -48,7 +44,6 @@ const referralActivityRowsPageOne: ReferralActivityRow[] = [
     time: "8d ago",
     market: "Brazil vs Argentina Ma...",
     value: "$1,000.56",
-    prophetFee: "$10.00",
     earnings: "$0.10",
   },
   {
@@ -58,7 +53,6 @@ const referralActivityRowsPageOne: ReferralActivityRow[] = [
     time: "12d ago",
     market: "Mbappe top goalsocc...",
     value: "$1,000.56",
-    prophetFee: "$10.00",
     earnings: "$0.10",
   },
   {
@@ -68,7 +62,6 @@ const referralActivityRowsPageOne: ReferralActivityRow[] = [
     time: "32d ago",
     market: "Will Argentina win the...",
     value: "$1,000.56",
-    prophetFee: "$10.00",
     earnings: "$0.10",
   },
   {
@@ -78,7 +71,6 @@ const referralActivityRowsPageOne: ReferralActivityRow[] = [
     time: "35d ago",
     market: "Will Argentina win the...",
     value: "$1,000.56",
-    prophetFee: "$10.00",
     earnings: "$0.10",
   },
   {
@@ -88,7 +80,6 @@ const referralActivityRowsPageOne: ReferralActivityRow[] = [
     time: "32d ago",
     market: "Will Argentina win the...",
     value: "$1,000.56",
-    prophetFee: "$10.00",
     earnings: "$0.10",
   },
   {
@@ -98,7 +89,6 @@ const referralActivityRowsPageOne: ReferralActivityRow[] = [
     time: "35d ago",
     market: "Will Argentina win the...",
     value: "$1,000.56",
-    prophetFee: "$10.00",
     earnings: "$0.10",
   },
 ];
