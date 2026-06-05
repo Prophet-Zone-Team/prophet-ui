@@ -1,3 +1,5 @@
+import { SOCIALS_MAP } from "@/config/social";
+
 export const REFERRAL_ACTIVITY_PAGE_SIZE = 10;
 
 export const REFERRAL_PATH = "/fifa";
@@ -25,9 +27,9 @@ export const REFERRAL_SHARE_CARD_EXPORT_PADDING = 4;
 export const REFERRAL_SHARE_CARD_DOWNLOAD_FILENAME = "prophet-referral-card.png";
 
 /** Placeholder until product provides share URLs. */
-export const REFERRAL_TWITTER_SHARE_URL = "";
+export const REFERRAL_TWITTER_SHARE_URL = SOCIALS_MAP.x.url;
 
 /** Placeholder until product provides share URLs. */
-export const REFERRAL_TELEGRAM_SHARE_URL = "";
+export const REFERRAL_TELEGRAM_SHARE_URL = SOCIALS_MAP.telegram.url;
 
 export { COPIED_TOAST_VISIBLE_MS } from "@/lib/clipboard/config";

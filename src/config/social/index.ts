@@ -1,11 +1,11 @@
 export const SOCIALS_MAP = {
   x: {
-    url: "",
+    url: "https://x.com/Prophetzone",
     icon: "/icons/icon-x.svg",
     label: "X",
   },
   telegram: {
-    url: "",
+    url: "https://t.me/prophet_zone",
     icon: "/icons/icon-telegram.svg",
     label: "Telegram",
   },

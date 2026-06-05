@@ -25,7 +25,9 @@ function AppFooter() {
         }
       </div>
       <div className="flex justify-center md:justify-end items-center gap-10 order-2 md:order-3">
-        <Link
+        <div className="shrink-0">Privacy Policy</div>
+        <div className="shrink-0">Terms of Service</div>
+        {/* <Link
           href="/privacy-policy"
           className="shrink-0 hover:opacity-70 duration-150"
         >
@@ -36,7 +38,7 @@ function AppFooter() {
           className="shrink-0 hover:opacity-70 duration-150"
         >
           Terms of Service
-        </Link>
+        </Link> */}
       </div>
     </footer>
   );
