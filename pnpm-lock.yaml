@@ -33,8 +33,8 @@ importers:
         specifier: ^1.1.2
         version: 1.2.4(@types/react@19.2.15)(react@19.2.6)
       '@stableflow/core':
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: rc
+        version: 3.0.2-rc-36fec61a1f-20260605
       '@tanstack/react-query':
         specifier: ^5.100.14
         version: 5.100.14(react@19.2.6)
@@ -2438,8 +2438,8 @@ packages:
   '@speed-highlight/core@1.2.15':
     resolution: {integrity: sha512-BMq1K3DsElxDWawkX6eLg9+CKJrTVGCBAWVuHXVUV2u0s2711qiChLSId6ikYPfxhdYocLNt3wWwSvDiTvFabw==}
 
-  '@stableflow/core@3.0.0':
-    resolution: {integrity: sha512-BaIBdBcs98X6XNNLSrlb80UHtZGL8mrNcx6sMI1BnGY4uqyyIPhqd21fbpT3EqnctxXjjiQQvNoBbVBQOquXmw==}
+  '@stableflow/core@3.0.2-rc-36fec61a1f-20260605':
+    resolution: {integrity: sha512-ZVajltJGFAgQYSBtqEPymhzus+Fcnq9rk1YFVrbcVciIYPH5486ZFaEVvD7rsV5/tyuFgnHscdR7M2Q2fV7xdA==}
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -9923,7 +9923,7 @@ snapshots:
 
   '@speed-highlight/core@1.2.15': {}
 
-  '@stableflow/core@3.0.0':
+  '@stableflow/core@3.0.2-rc-36fec61a1f-20260605':
     dependencies:
       axios: 1.16.1
       buffer: 6.0.3
