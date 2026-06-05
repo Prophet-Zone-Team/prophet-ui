@@ -34,7 +34,7 @@ export const referralKickbackLinkBarClass =
   "flex items-center justify-between gap-3 rounded-[8px] px-0 py-1";
 
 export const referralPrimaryButtonClass = cn(
-  "inline-flex h-[50px] w-full items-center justify-center rounded-[12px] bg-black text-[16px] font-medium leading-[normal] text-white transition-opacity hover:opacity-90",
+  "inline-flex h-[50px] w-full items-center justify-center rounded-[12px] bg-black text-[16px] font-medium leading-[normal] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-30 hover:opacity-90",
 );
 
 export const referralInviteButtonClass = referralPrimaryButtonClass;
@@ -43,8 +43,6 @@ export const referralClaimButtonClass = cn(
   referralPrimaryButtonClass,
   "w-[152px] shrink-0 max-md:w-full",
 );
-
-export const referralClaimButtonDisabledClass = "opacity-30";
 
 export const referralActivityPanelClass =
   "flex min-h-[608px] flex-col rounded-[12px] border border-[#EBEBEB] bg-white";

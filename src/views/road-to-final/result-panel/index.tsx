@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { CopyButton } from "@/components/feedback/copy-button";
+import { useAuth } from "@/context/auth/use-auth";
 import { getWorldCupGroupForTeam, getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { TeamFlag } from "@/components/teams/team-flag";
 import type { PathResult } from "@/types/market";
@@ -43,6 +44,7 @@ export function ResultPanel({
   thirdPlaceOption?: ThirdPlaceAllocationOption;
   onBackToKnockout: () => void;
 }) {
+  const { isAuthenticated } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
   const champion = getWorldCupTeamByIdOrCode(championTeamId ?? "");
   const focusTeam = getWorldCupTeamByIdOrCode(teamId);
@@ -115,8 +117,20 @@ export function ResultPanel({
         <aside className="flex w-full shrink-0 flex-col gap-[8px] lg:w-[280px]">
           <button
             type="button"
-            className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
-            onClick={() => setShareOpen(true)}
+            className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black disabled:cursor-not-allowed disabled:opacity-30"
+            disabled={!isAuthenticated}
+            title={
+              !isAuthenticated
+                ? "Connect wallet to download screenshot"
+                : undefined
+            }
+            onClick={() => {
+              if (!isAuthenticated) {
+                return;
+              }
+
+              setShareOpen(true);
+            }}
           >
             Download screenshot
           </button>
@@ -138,7 +152,7 @@ export function ResultPanel({
       </div>
 
       <RoadToFinalShareModal
-        open={shareOpen}
+        open={shareOpen && isAuthenticated}
         onClose={() => setShareOpen(false)}
         teamId={teamId}
         championTeamId={championTeamId}

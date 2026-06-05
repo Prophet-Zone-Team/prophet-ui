@@ -14,7 +14,6 @@ import { cn } from "@/lib/cn";
 import {
   referralActivityPanelClass,
   referralClaimButtonClass,
-  referralClaimButtonDisabledClass,
   referralEmptyInviteButtonClass,
   referralEmptyMessageClass,
   referralEmptyStateClass,
@@ -110,18 +109,18 @@ function SummaryStat({
 
 export type ReferralActivityPanelProps = {
   summary: ReferralSummary;
-  apiEnabled?: boolean;
-  mockActivityRows?: ReferralActivityRow[];
-  mockActivityTotalCount?: number;
+  needsWallet?: boolean;
+  loginInProgress?: boolean;
   onInviteFriends?: () => void;
+  onConnectWallet?: () => void;
 };
 
 export function ReferralActivityPanel({
   summary,
-  apiEnabled = true,
-  mockActivityRows = [],
-  mockActivityTotalCount = 0,
+  needsWallet = false,
+  loginInProgress = false,
   onInviteFriends,
+  onConnectWallet,
 }: ReferralActivityPanelProps) {
   const [page, setPage] = useState(1);
   const { claim, isPending } = useReferralClaim();
@@ -130,82 +129,93 @@ export function ReferralActivityPanel({
     rows: apiRows,
     total: apiTotal,
     isLoading: invitesLoading,
-  } = useReferralInvites(page, REFERRAL_ACTIVITY_PAGE_SIZE, apiEnabled);
+  } = useReferralInvites(page, REFERRAL_ACTIVITY_PAGE_SIZE);
 
-  const activityRows = apiEnabled ? apiRows : mockActivityRows;
-  const activityTotalCount = apiEnabled ? apiTotal : mockActivityTotalCount;
+  const activityRows = apiRows;
+  const activityTotalCount = apiTotal;
   const isEmpty = !invitesLoading && activityTotalCount === 0;
   const muted = isEmpty;
-  const showTableSkeleton = apiEnabled && invitesLoading;
 
   return (
-    <section className={referralActivityPanelClass} aria-label="Referral activity">
-      <div className={referralSummaryBarClass}>
-        <SummaryStat
-          value={summary.myReferrals}
-          label="My Referrals"
-          muted={muted}
-        />
-        <SummaryStat
-          value={summary.totalVolume}
-          label="Total Volume"
-          muted={muted}
-        />
-        <SummaryStat
-          value={summary.myEarnings}
-          label="My Earnings"
-          muted={muted}
-        />
-        <SummaryStat
-          value={summary.toBeClaimed}
-          label="To be Claimed"
-          muted={muted}
-        />
-        <button
-          type="button"
-          disabled={!summary.canClaim || isPending || !apiEnabled}
-          className={cn(
-            referralClaimButtonClass,
-            (!summary.canClaim || isPending) && referralClaimButtonDisabledClass,
-          )}
-          onClick={() => claim()}
-        >
-          {isPending ? "Claiming…" : "Claim"}
-        </button>
-      </div>
-
-      {showTableSkeleton ? (
-        <ActivityTableSkeleton />
-      ) : (
-        <GridTable
-          columns={ACTIVITY_COLUMNS}
-          rows={isEmpty ? [] : activityRows}
-          getRowKey={(row) => row.id}
-          gridTemplateColumns={referralGridTemplateColumns}
-          ariaLabel="Referral rewards activity"
-          className="mt-4"
-        />
-      )}
-
-      {isEmpty && !showTableSkeleton ? (
-        <div className={referralEmptyStateClass}>
-          <p className={referralEmptyMessageClass}>No rewards found</p>
+    <>
+      <section className={referralActivityPanelClass} aria-label="Referral activity">
+        <div className={referralSummaryBarClass}>
+          <SummaryStat
+            value={summary.myReferrals}
+            label="My Referrals"
+            muted={muted}
+          />
+          <SummaryStat
+            value={summary.totalVolume}
+            label="Total Volume"
+            muted={muted}
+          />
+          <SummaryStat
+            value={summary.myEarnings}
+            label="My Earnings"
+            muted={muted}
+          />
+          <SummaryStat
+            value={summary.toBeClaimed}
+            label="To be Claimed"
+            muted={muted}
+          />
           <button
             type="button"
-            className={referralEmptyInviteButtonClass}
-            onClick={onInviteFriends}
+            disabled={!summary.canClaim || isPending}
+            className={referralClaimButtonClass}
+            onClick={() => claim()}
           >
-            Invite Friends
+            {isPending ? "Claiming…" : "Claim"}
           </button>
         </div>
-      ) : !isEmpty && !showTableSkeleton ? (
-        <Pagination
-          page={page}
-          pageSize={REFERRAL_ACTIVITY_PAGE_SIZE}
-          total={activityTotalCount}
-          onPageChange={setPage}
-        />
-      ) : null}
-    </section>
+
+        {invitesLoading ? (
+          <ActivityTableSkeleton />
+        ) : (
+          <GridTable
+            columns={ACTIVITY_COLUMNS}
+            rows={isEmpty ? [] : activityRows}
+            getRowKey={(row) => row.id}
+            gridTemplateColumns={referralGridTemplateColumns}
+            ariaLabel="Referral rewards activity"
+            className="mt-4"
+          />
+        )}
+
+        {isEmpty && !invitesLoading && (
+          <div className={referralEmptyStateClass}>
+            <p className={referralEmptyMessageClass}>
+              {needsWallet
+                ? "Connect your wallet to view referral activity."
+                : "No rewards found"}
+            </p>
+            <button
+              type="button"
+              className={referralEmptyInviteButtonClass}
+              disabled={needsWallet && loginInProgress}
+              onClick={needsWallet ? onConnectWallet : onInviteFriends}
+            >
+              {needsWallet
+                ? loginInProgress
+                  ? "Connecting…"
+                  : "Connect Wallet"
+                : "Invite Friends"}
+            </button>
+          </div>
+        )}
+      </section>
+      {
+        !isEmpty && !invitesLoading && (
+          <Pagination
+            page={page}
+            pageSize={REFERRAL_ACTIVITY_PAGE_SIZE}
+            total={activityTotalCount}
+            onPageChange={setPage}
+            className="py-1 px-2"
+          />
+        )
+      }
+    </>
   );
 }

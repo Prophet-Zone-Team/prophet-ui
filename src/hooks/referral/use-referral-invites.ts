@@ -12,7 +12,6 @@ import { isProphetAuthenticated } from "@/service/prophet";
 export function useReferralInvites(
   page: number,
   pageSize: number,
-  apiEnabled: boolean
 ) {
   const query = useQuery({
     queryKey: referralQueryKeys.invites(page, pageSize),
@@ -21,7 +20,7 @@ export function useReferralInvites(
         page,
         page_size: pageSize
       }),
-    enabled: apiEnabled && isProphetAuthenticated(),
+    enabled: isProphetAuthenticated(),
     staleTime: REFERRAL_STALE_TIME_MS
   });
 
