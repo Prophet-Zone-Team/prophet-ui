@@ -123,6 +123,9 @@ export type UseTradeTicketInput =
   | UseTradeTicketTeamInput
   | UseTradeTicketGameInput;
 
+/** Collapse mount-time preview/auth churn into a single balances request. */
+const READINESS_FETCH_DEBOUNCE_MS = 500;
+
 export function useTradeTicket(input: UseTradeTicketInput) {
   const router = useRouter();
   const {
@@ -171,6 +174,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     no: 0
   });
   const readinessFetchGeneration = useRef(0);
+  const authReadinessRef = useRef(authReadiness);
+  authReadinessRef.current = authReadiness;
   const takeProfitPriceTouched = useRef(false);
 
   const orderAmount = parseOrderAmount(amount);
@@ -570,7 +575,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         const nextReadiness = await fetchReadinessForPreview(
           orderPreview,
           tradeSide,
-          authReadiness
+          authReadinessRef.current
         );
 
         if (generation === readinessFetchGeneration.current) {
@@ -587,15 +592,21 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         throw error;
       }
     },
-    [authReadiness, session, tradeSide]
+    [session, tradeSide]
   );
 
   useEffect(() => {
-    if (!preview) {
+    if (!preview?.tokenId) {
       return undefined;
     }
 
-    void applyReadinessFetch(preview);
+    const timeoutId = window.setTimeout(() => {
+      void applyReadinessFetch(preview);
+    }, READINESS_FETCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [
     applyReadinessFetch,
     preview?.estimatedCost,

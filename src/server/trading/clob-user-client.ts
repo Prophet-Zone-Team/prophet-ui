@@ -145,15 +145,6 @@ export async function updateUserBalanceAllowance({
   signatureType: number;
   tokenId?: string;
 }) {
-  await updateBalanceAllowance({
-    address,
-    credentials,
-    signatureType,
-    params: {
-      asset_type: AssetType.COLLATERAL,
-    },
-  });
-
   if (tokenId) {
     await updateBalanceAllowance({
       address,
@@ -161,8 +152,17 @@ export async function updateUserBalanceAllowance({
       signatureType,
       params: {
         asset_type: AssetType.CONDITIONAL,
-        token_id: tokenId,
-      },
+        token_id: tokenId
+      }
+    });
+  } else {
+    await updateBalanceAllowance({
+      address,
+      credentials,
+      signatureType,
+      params: {
+        asset_type: AssetType.COLLATERAL
+      }
     });
   }
 }

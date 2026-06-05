@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { Zap } from "lucide-react";
-
 import { FastBidButton } from "@/components/trading/fast-bid-button";
 import { TeamFlag } from "@/components/teams/team-flag";
 import curatedTeams from "@/data/teams";
@@ -44,7 +42,7 @@ const LEGS_TABLE_HOVER_MUTED_CELL_CLASS =
   "tabular-nums group-hover:text-[#909090]";
 
 const LEGS_TABLE_BID_AGAIN_BUTTON_CLASS =
-  "inline-flex h-[32px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] px-2 text-xs font-medium leading-[15px] text-white disabled:cursor-wait disabled:opacity-70";
+  "inline-flex h-[32px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] px-2 text-xs font-medium leading-[15px] text-white disabled:opacity-70";
 
 export type PortfolioStrategyLegsTableProps = {
   legs: PortfolioStrategyLeg[];
@@ -194,7 +192,8 @@ function PortfolioStrategyLegTimeCell({
   const snapshots = useWinnerSnapshots();
   const fetchEvent = useWinnerTeamsStore((state) => state.fetchEvent);
   const eliminated = isLegTeamEliminated(leg.team.name);
-  const amount = leg.currentValue;
+ 
+  const amount = leg.tradedAmount;
 
   useEffect(() => {
     void fetchEvent();
