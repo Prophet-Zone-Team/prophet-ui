@@ -132,7 +132,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
           onClick={handleLogin}
         />
         {(message ?? error) ? (
-          <p className="mt-2 max-w-[220px] text-right text-xs text-prophet-red">
+          <p className="mt-2 w-[220px] text-right text-xs text-prophet-red absolute right-2 -bottom-2 translate-y-[100%]">
             {message ?? error}
           </p>
         ) : null}
