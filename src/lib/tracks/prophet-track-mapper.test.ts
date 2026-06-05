@@ -204,7 +204,8 @@ describe("prophet-track-mapper", () => {
             title:
               "Liverpool's Hugo Ekitiké ruled out for rest of season and World Cup with France ",
             score: 100,
-            matched_players: []
+            matched_players: [],
+            url_to_image: "https://example.com/news-image.jpg"
           }
         ]
       }
@@ -223,6 +224,10 @@ describe("prophet-track-mapper", () => {
     );
     assert.equal(card.signalItems[0]?.sentiment, "positive");
     assert.equal(card.signalItems[0]?.thumbnailAlt, "Liverpool's Hugo");
+    assert.equal(
+      card.signalItems[0]?.thumbnailUrl,
+      "https://example.com/news-image.jpg"
+    );
   });
 
   it("parses team_news_stat.latest_news when returned as a JSON string", () => {
@@ -295,6 +300,18 @@ describe("prophet-track-mapper", () => {
     assert.equal(card.powerRanking.away.rank, 1);
   });
 
+  it("maps bid_amount to youBid amountLabel", () => {
+    const item: ProphetUserTrackItem = {
+      team: { code: "BRA", name: "Brazil" },
+      bid_amount: "125.5"
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.equal(card.youBid?.amountLabel, "$125.5");
+  });
+
   it("falls back footer props when fifa_rankings and team_news_stat are missing", () => {
     const teamItem: ProphetUserTrackItem = {
       team: { code: "BRA", name: "Brazil" }
@@ -317,12 +334,12 @@ describe("prophet-track-mapper", () => {
 
     assert.ok(teamCard);
     assert.ok(gameCard);
-    assert.deepEqual(teamCard.powerRanking, { rank: 0 });
+    assert.deepEqual(teamCard.powerRanking, { rank: null });
     assert.deepEqual(teamCard.signals, { count: 0 });
     assert.deepEqual(teamCard.signalItems, []);
     assert.equal(gameCard.variant, "game");
-    assert.equal(gameCard.powerRanking.home.rank, 0);
-    assert.equal(gameCard.powerRanking.away.rank, 0);
+    assert.equal(gameCard.powerRanking.home.rank, null);
+    assert.equal(gameCard.powerRanking.away.rank, null);
     assert.deepEqual(gameCard.signals, { count: 0 });
     assert.deepEqual(gameCard.signalItems, []);
   });

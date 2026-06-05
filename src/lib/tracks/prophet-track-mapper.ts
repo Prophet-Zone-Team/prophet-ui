@@ -31,8 +31,10 @@ import type {
   TrackCardGamePowerRanking,
   TrackCardSignalItem,
   TrackCardSignalsSummary,
-  TrackCardTeamPowerRanking
+  TrackCardTeamPowerRanking,
+  TrackCardYouBid
 } from "@/views/tracks/track-card/types";
+import { formatNumber } from "@/utils";
 
 function parseNumericField(value: string | undefined): number | undefined {
   if (value === undefined || value.trim() === "") {
@@ -208,10 +210,16 @@ function normalizeLatestNewsEntry(
         ? Number(rawScore)
         : 0;
 
+  const urlToImage =
+    typeof record.url_to_image === "string" && record.url_to_image.trim()
+      ? record.url_to_image.trim()
+      : undefined;
+
   return {
     title,
     score: Number.isFinite(score) ? score : 0,
-    matched_players: parseMatchedPlayers(record.matched_players)
+    matched_players: parseMatchedPlayers(record.matched_players),
+    url_to_image: urlToImage
   };
 }
 
@@ -248,10 +256,22 @@ function parseTeamNewsStat(
 function resolveFifaRankAtIndex(
   rankings: number[] | undefined,
   index: number
-): number {
+): number | null {
   const value = rankings?.[index];
 
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function mapTrackYouBid(item: ProphetUserTrackItem): TrackCardYouBid | undefined {
+  const amount = parseNumericField(item.bid_amount);
+
+  if (amount === undefined || amount === 0) {
+    return undefined;
+  }
+
+  return {
+    amountLabel: formatNumber(amount, 2, true, { prefix: "$" }) as string
+  };
 }
 
 function mapTrackFifaRankingForTeam(
@@ -297,6 +317,7 @@ function mapLatestNewsToTrackSignalItem(
     id: `${index}-${news.title}`,
     headline: news.title,
     sentiment: news.score >= 50 ? "positive" : "negative",
+    thumbnailUrl: news.url_to_image,
     thumbnailAlt: buildTrackSignalThumbnailAlt(news)
   };
 }
@@ -386,7 +407,8 @@ function mapProphetGameTrackToCardProps(
       teams.awayTeam
     ),
     signals,
-    signalItems
+    signalItems,
+    youBid: mapTrackYouBid(item)
   };
 }
 
@@ -484,7 +506,8 @@ function mapProphetTeamTrackToCardProps(
     snapshot,
     powerRanking: mapTrackFifaRankingForTeam(item),
     signals,
-    signalItems
+    signalItems,
+    youBid: mapTrackYouBid(item)
   };
 }
 

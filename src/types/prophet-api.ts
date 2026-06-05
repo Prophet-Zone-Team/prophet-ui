@@ -398,6 +398,7 @@ export interface ProphetUserTrackLatestNews {
   title: string;
   score: number;
   matched_players: string[];
+  url_to_image?: string;
 }
 
 export interface ProphetUserTrackNewsStat {
@@ -423,6 +424,7 @@ export interface ProphetUserTrackItem {
   attention?: number;
   fifa_rankings?: number[];
   team_news_stat?: ProphetUserTrackNewsStat | string;
+  bid_amount?: string;
 }
 
 /** Response from GET /v1/user/tracks/top (public, Redis-cached). */

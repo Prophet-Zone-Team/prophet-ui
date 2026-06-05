@@ -21,12 +21,12 @@ export type TrackCardYouBid = {
 };
 
 export type TrackCardTeamPowerRanking = {
-  rank: number;
+  rank: number | null;
 };
 
 export type TrackCardGamePowerRanking = {
-  home: { team: Team; rank: number };
-  away: { team: Team; rank: number };
+  home: { team: Team; rank: number | null };
+  away: { team: Team; rank: number | null };
 };
 
 export type TrackCardTeamProps = {

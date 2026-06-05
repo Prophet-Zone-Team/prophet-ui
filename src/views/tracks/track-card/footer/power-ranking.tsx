@@ -31,6 +31,10 @@ export function PowerRankingMetric(props: PowerRankingMetricProps) {
   return <TeamPowerRankingMetric {...props} />;
 }
 
+function formatFifaRank(rank: number | null): string {
+  return rank === null ? "-" : `#${rank}`;
+}
+
 function TeamPowerRankingMetric({
   powerRanking,
   className
@@ -38,7 +42,7 @@ function TeamPowerRankingMetric({
   return (
     <div className={cn("flex shrink-0 flex-col md:w-[15%]", className)}>
       <span className="text-[16px] font-[400] leading-[20px] text-black">
-        #{powerRanking.rank}
+        {formatFifaRank(powerRanking.rank)}
       </span>
       <span className={trackCardLabelClassName}>Fifa Ranking</span>
     </div>
@@ -75,7 +79,7 @@ function PowerRankingTeamEntry({
 }: {
   code: string;
   name: string;
-  rank: number;
+  rank: number | null;
 }) {
   return (
     <span className="inline-flex items-center gap-1">
@@ -85,7 +89,7 @@ function PowerRankingTeamEntry({
         className="h-[16px] w-[16px] shrink-0 rounded-[2px] text-[16px]"
       />
       <span className="text-[16px] font-[400] leading-[20px] text-black">
-        #{rank}
+        {formatFifaRank(rank)}
       </span>
     </span>
   );

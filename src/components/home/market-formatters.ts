@@ -26,7 +26,13 @@ export function formatChangePercentMagnitude(
   value: number,
   decimals = 0
 ): string {
-  return `${Math.abs(value).toFixed(decimals)}%`;
+  const magnitude = Math.abs(value);
+
+  if (magnitude > 0 && magnitude < 1) {
+    return "<1%";
+  }
+
+  return `${magnitude.toFixed(decimals)}%`;
 }
 
 
