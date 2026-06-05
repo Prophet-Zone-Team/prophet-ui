@@ -64,9 +64,9 @@ function CompactPagination({
   const canGoFirst = page > 1;
   const canGoLast = page < totalPages;
 
-  if (total <= pageSize) {
-    return null;
-  }
+  // if (total <= pageSize) {
+  //   return null;
+  // }
 
   return (
     <nav

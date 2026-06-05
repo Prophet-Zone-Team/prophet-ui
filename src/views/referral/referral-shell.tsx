@@ -9,11 +9,8 @@ export type ReferralShellProps = {
   rewards: ReferralContent["rewards"];
   kickback: ReferralContent["kickback"];
   summary: ReferralContent["summary"];
-  apiEnabled?: boolean;
   needsWallet?: boolean;
   loginInProgress?: boolean;
-  mockActivityRows?: ReferralActivityRow[];
-  mockActivityTotalCount?: number;
   onInviteFriends?: () => void;
   onConnectWallet?: () => void;
 };
@@ -22,11 +19,8 @@ export function ReferralShell({
   rewards,
   kickback,
   summary,
-  apiEnabled = true,
   needsWallet = false,
   loginInProgress = false,
-  mockActivityRows,
-  mockActivityTotalCount,
   onInviteFriends,
   onConnectWallet,
 }: ReferralShellProps) {
@@ -45,11 +39,8 @@ export function ReferralShell({
 
       <ReferralActivityPanel
         summary={summary}
-        apiEnabled={apiEnabled}
         needsWallet={needsWallet}
         loginInProgress={loginInProgress}
-        mockActivityRows={mockActivityRows}
-        mockActivityTotalCount={mockActivityTotalCount}
         onInviteFriends={onInviteFriends}
         onConnectWallet={onConnectWallet}
       />
