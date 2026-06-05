@@ -73,7 +73,7 @@ export const referralEmptyInviteButtonClass = cn(
 );
 
 export const referralGridTemplateColumns =
-  "minmax(0,1.1fr) minmax(0,0.9fr) minmax(0,0.7fr) minmax(0,1.4fr) minmax(0,0.8fr) minmax(0,0.8fr) minmax(0,0.7fr)";
+  "minmax(0,1.1fr) minmax(0,0.9fr) minmax(0,0.7fr) minmax(0,1.4fr) minmax(0,0.8fr) minmax(0,0.7fr)";
 
 export const referralEarningsCellClass = "text-prophet-green";
 

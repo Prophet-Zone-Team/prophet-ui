@@ -58,7 +58,7 @@ export type ReportTradeOrderTransactionInput = {
 );
 
 export type ReportFundingTransactionInput = {
-  type: "deposit" | "withdraw";
+  type: "deposit" | "withdraw" | "claim";
   txHash: string;
   amount: number | string;
 };

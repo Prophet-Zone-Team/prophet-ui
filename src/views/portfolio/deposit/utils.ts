@@ -89,11 +89,11 @@ export function usdInputToTokenAmount({
 
   let tokenAmount = usd.div(unitPrice).toFixed(decimals, Big.roundDown);
 
-  if (Big(tokenAmount).gt(maxAmount || 0)) {
-    tokenAmount = removeNumberEndZero(
-      Big(maxAmount || 0).toFixed(decimals, Big.roundDown),
-    );
-  }
+  // if (Big(tokenAmount).gt(maxAmount || 0)) {
+  //   tokenAmount = removeNumberEndZero(
+  //     Big(maxAmount || 0).toFixed(decimals, Big.roundDown),
+  //   );
+  // }
 
   const clampedToMax =
     Big(maxAmount || 0).gt(0) && Big(tokenAmount).eq(maxAmount || 0);
@@ -116,6 +116,10 @@ export function validateDepositAmount(
   maxAmount: string,
   options?: ValidateDepositAmountOptions,
 ): string | undefined {
+  if (maxAmount === undefined || Big(maxAmount).lte(0)) {
+    return "Amount exceeds available balance.";
+  }
+
   if (tokenAmount === undefined || Big(tokenAmount).lte(0)) {
     return "Enter an amount greater than zero.";
   }

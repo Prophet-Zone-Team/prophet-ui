@@ -42,7 +42,6 @@ export interface ReferralActivityRow {
   txId: string;
   market: string;
   value: string;
-  prophetFee: string;
   earnings: string;
   time: string;
 }

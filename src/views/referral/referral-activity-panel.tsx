@@ -53,11 +53,6 @@ const ACTIVITY_COLUMNS: GridTableColumn<ReferralActivityRow>[] = [
     renderCell: (row) => row.value,
   },
   {
-    id: "prophetFee",
-    header: "Prophet Fee",
-    renderCell: (row) => row.prophetFee,
-  },
-  {
     id: "earnings",
     header: "Earnings",
     align: "right",
