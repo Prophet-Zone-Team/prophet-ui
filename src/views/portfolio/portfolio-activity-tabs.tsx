@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Pagination } from "@/components/pagination/pagination";
@@ -28,6 +29,14 @@ const PORTFOLIO_TABS = [
 ] as const;
 
 type PortfolioTabId = (typeof PORTFOLIO_TABS)[number]["id"];
+
+function parsePortfolioTab(value: string | null): PortfolioTabId | null {
+  if (value && PORTFOLIO_TABS.some((item) => item.id === value)) {
+    return value as PortfolioTabId;
+  }
+
+  return null;
+}
 
 function isTabLoading(status: PortfolioLoadStatus): boolean {
   return status === "loading" || status === "idle";
@@ -72,7 +81,10 @@ export function PortfolioActivityTabs({
   loadOpenOrders,
   loadActivityHistory
 }: PortfolioActivityTabsProps) {
-  const [tab, setTab] = useState<PortfolioTabId>("position");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<PortfolioTabId>(
+    () => parsePortfolioTab(searchParams.get("tab")) ?? "position"
+  );
   const [positionPage, setPositionPage] = useState(1);
   const [openOrderPage, setOpenOrderPage] = useState(1);
   const loadedTabsRef = useRef<Set<PortfolioTabId>>(new Set());

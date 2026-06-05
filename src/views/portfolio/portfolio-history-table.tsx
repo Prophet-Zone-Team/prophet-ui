@@ -1,7 +1,7 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
-
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import {
@@ -15,14 +15,13 @@ import type {
   PortfolioTransactionRecord,
   PortfolioTransactionType
 } from "@/lib/portfolio/types";
-import { resolveTradeHref } from "@/lib/routes/trade";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import {
   portfolioConnectButtonClass,
   portfolioHistoryListClass,
   portfolioHistoryMobileCardClass,
-  portfolioHistoryRowLinkClass,
+  portfolioHistoryRowClass,
   portfolioHistoryTableHeadClass,
   portfolioTableMobileLabelClass,
   portfolioTableMobileListClass,
@@ -35,6 +34,36 @@ const NON_MARKET_LABELS: Partial<Record<PortfolioTransactionType, string>> = {
   deposit: "Deposit",
   claim: "Claim Referral Earning"
 };
+
+const STRATEGY_PAGE_HREF = "/strategy/available";
+
+function StrategySourceLabel() {
+  return (
+    <Link
+      href={STRATEGY_PAGE_HREF}
+      className="inline-flex h-6 w-[75px] shrink-0 items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-black to-[#666666] font-[Sora] text-[10px] font-normal leading-[13px] text-white no-underline backdrop-blur-[5px] transition-opacity hover:opacity-90"
+      aria-label="View strategy"
+    >
+      Strategy
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="8"
+        height="8"
+        viewBox="0 0 8 8"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M1.25 6.75L6.75 1.25M6.75 1.25H2.25M6.75 1.25V5.75"
+          stroke="white"
+          strokeWidth="1"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </Link>
+  );
+}
 
 function ProphetTransactionMarkIcon() {
   return (
@@ -136,13 +165,16 @@ function HistoryRowContent({
 }) {
   const actionLabel = titleCase(transaction.type);
 
+  const showStrategyLabel = transaction.source === "strategy";
+
   return (
     <>
-      <div className="flex w-[72px] shrink-0 items-center gap-2">
+      <div className="flex items-center gap-2">
         <TransactionActionIcon type={transaction.type} />
         <span className="text-[14px] font-normal leading-[18px] text-black">
           {actionLabel}
         </span>
+        {showStrategyLabel ? <StrategySourceLabel /> : null}
       </div>
 
       <HistoryMarketCell transaction={transaction} />
@@ -253,16 +285,20 @@ function renderHistoryRow(
   transaction: PortfolioTransactionRecord,
   variant: "desktop" | "mobile"
 ): ReactNode {
-  const href = transaction.slug ? resolveTradeHref(transaction.slug) : undefined;
+  const showStrategyLabel = transaction.source === "strategy";
 
   if (variant === "mobile") {
-    const card = (
-      <article className={portfolioHistoryMobileCardClass}>
-        <div className="flex items-center gap-2">
+    return (
+      <article
+        key={`${transaction.id}-mobile`}
+        className={portfolioHistoryMobileCardClass}
+      >
+        <div className="flex flex-wrap items-center gap-2">
           <TransactionActionIcon type={transaction.type} />
           <span className="text-[14px] font-normal text-black">
             {titleCase(transaction.type)}
           </span>
+          {showStrategyLabel ? <StrategySourceLabel /> : null}
         </div>
         <HistoryMarketCell transaction={transaction} />
         <div className="flex items-center justify-between gap-3">
@@ -281,35 +317,11 @@ function renderHistoryRow(
         </div>
       </article>
     );
-
-    if (href) {
-      return (
-        <a key={`${transaction.id}-mobile`} href={href} className="no-underline text-inherit">
-          {card}
-        </a>
-      );
-    }
-
-    return <div key={`${transaction.id}-mobile`}>{card}</div>;
-  }
-
-  const row = <HistoryRowContent transaction={transaction} />;
-
-  if (href) {
-    return (
-      <a
-        key={transaction.id}
-        href={href}
-        className={portfolioHistoryRowLinkClass}
-      >
-        {row}
-      </a>
-    );
   }
 
   return (
-    <div key={transaction.id} className={portfolioHistoryRowLinkClass}>
-      {row}
+    <div key={transaction.id} className={portfolioHistoryRowClass}>
+      <HistoryRowContent transaction={transaction} />
     </div>
   );
 }
