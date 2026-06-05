@@ -10,6 +10,8 @@ import { ResultPanel } from "./result-panel";
 import { SummaryPanel } from "./summary-panel";
 import type { RoadStep } from "./step-stepper";
 import { StepStepper } from "./step-stepper";
+import type { ReferralKickback } from "@/types/referral";
+
 import type { GroupPlacements, KnockoutWinners } from "./types";
 import { Panel } from "./ui/panel";
 
@@ -19,6 +21,8 @@ export function RoadWorkbench({
   advancingThirdGroups,
   calculationError,
   championTeamId,
+  funderAddress,
+  kickback,
   finishType,
   groupError,
   hasChampion,
@@ -60,6 +64,8 @@ export function RoadWorkbench({
   advancingThirdGroups: string[];
   calculationError?: string;
   championTeamId?: string;
+  funderAddress?: string;
+  kickback?: ReferralKickback;
   finishType: FinishType;
   groupError?: string | null;
   hasChampion: boolean;
@@ -304,7 +310,11 @@ export function RoadWorkbench({
           <ResultPanel
             advancingThirdGroups={advancingThirdGroups}
             championTeamId={championTeamId}
+            funderAddress={funderAddress}
+            kickback={kickback}
             knockoutMethod={knockoutMethod}
+            knockoutWinners={knockoutWinners}
+            placements={placements}
             result={result}
             shareUrl={shareUrl}
             sortMethod={sortMethod}

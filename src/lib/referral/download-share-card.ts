@@ -4,6 +4,7 @@ import { REFERRAL_SHARE_CARD_DOWNLOAD_FILENAME } from "@/lib/referral/config";
 
 export async function downloadShareCardPng(
   element: HTMLElement,
+  filename = REFERRAL_SHARE_CARD_DOWNLOAD_FILENAME,
 ): Promise<boolean> {
   try {
     const width = element.offsetWidth;
@@ -30,7 +31,7 @@ export async function downloadShareCardPng(
     });
 
     const link = document.createElement("a");
-    link.download = REFERRAL_SHARE_CARD_DOWNLOAD_FILENAME;
+    link.download = filename;
     link.href = dataUrl;
     link.click();
     return true;

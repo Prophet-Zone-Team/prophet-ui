@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { useAuth } from "@/context/auth/use-auth";
 import {
   getWorldCupGroupForTeam,
   getWorldCupTeamByIdOrCode
 } from "@/data/world-cup-2026/groups";
+import { useProphetReferral } from "@/hooks/referral/use-prophet-referral";
 
 import { resolveThirdPlaceOption } from "./bracket-graph/bracket-resolver";
 import { deriveBestThirdGroups, sortPlacementsBy } from "./lib/group-shortcuts";
@@ -52,6 +54,10 @@ export function RoadToFinalPage({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { session } = useAuth();
+  const { content: referralContent } = useProphetReferral();
+  const funderAddress = session?.funderAddress;
+  const kickback = referralContent?.kickback;
   const safeInitialTeamId =
     getWorldCupTeamByIdOrCode(initialTeamId)?.id ?? defaultSimulatorTeamId;
 
@@ -292,6 +298,8 @@ export function RoadToFinalPage({
         advancingThirdGroups={advancingThirdGroups}
         calculationError={calculation.error}
         championTeamId={championTeamId}
+        funderAddress={funderAddress}
+        kickback={kickback}
         finishType={finishType}
         groupError={groupError}
         hasChampion={hasChampion}
