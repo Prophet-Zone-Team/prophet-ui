@@ -26,6 +26,7 @@ import {
   LIMIT_BUY_MIN_SHARES,
   resolveMaxSellShares
 } from "@/lib/market/order-math";
+import type { BidOrderPreview } from "@/lib/market/polymarket-order";
 import {
   formatOrderToastSummary,
   resolveOrderErrorMessage,
@@ -41,7 +42,6 @@ import {
   useSetTradeOutcomeSide,
   useSetTradeTakeProfitLimitEnabled,
   useSetTradeTakeProfitLimitPrice,
-  useTradeTicketStore,
   useTradeAmount,
   useTradeLimitExpiration,
   useTradeLimitExpirationCustom,
@@ -63,6 +63,7 @@ import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics
 import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import {
   buildGameTradePreview,
+  buildPreviewBalancesQueryKey,
   buildTeamTradePreview,
   buildGameUserOrderPreview,
   buildTakeProfitOrderBundle,
@@ -133,6 +134,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     isAuthenticated,
     readiness: authReadiness,
     isRegionBlocked,
+    isBuyRestricted,
+    isRegionCloseOnly,
     openLogin,
     signClobCredentials,
     signTokenApprovals,
@@ -174,10 +177,21 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     no: 0
   });
   const readinessFetchGeneration = useRef(0);
+  const lastFetchedReadinessKeyRef = useRef<string | null>(null);
+  const previewForReadinessRef = useRef<BidOrderPreview | undefined>(undefined);
   const authReadinessRef = useRef(authReadiness);
+  const sessionRef = useRef(session);
   useEffect(() => {
     authReadinessRef.current = authReadiness;
   }, [authReadiness]);
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+  useEffect(() => {
+    return () => {
+      lastFetchedReadinessKeyRef.current = null;
+    };
+  }, []);
   const takeProfitPriceTouched = useRef(false);
 
   const orderAmount = parseOrderAmount(amount);
@@ -464,6 +478,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   ]);
 
   const preview = teamDefaults?.preview ?? gameDefaults?.preview;
+  previewForReadinessRef.current = preview;
   const previewCanSubmit = preview?.canSubmitRealOrder ?? false;
   const takeProfitLimitAvailable = isTakeProfitLimitAvailable(
     preview?.shareSize ?? 0
@@ -504,14 +519,18 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       previewCanSubmit,
       previewDisabledReason: preview?.disabledReason,
       expirationError,
-      isRegionBlocked,
+      isBuyRestricted,
+      isRegionFullyBlocked: isRegionBlocked,
+      isRegionCloseOnly,
       eligibilityNetworkError: isEligibilityNetworkFailure(session)
     });
   }, [
     authReadiness,
     expirationError,
     isAuthenticated,
+    isBuyRestricted,
     isRegionBlocked,
+    isRegionCloseOnly,
     preview?.disabledReason,
     previewCanSubmit,
     readiness,
@@ -569,20 +588,55 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     );
   }, [orderMode, preview?.sidePrice, setTakeProfitLimitPrice, tradeSide]);
 
+  const readinessQueryKey = useMemo(() => {
+    if (!preview?.tokenId) {
+      return null;
+    }
+
+    return buildPreviewBalancesQueryKey(preview, tradeSide);
+  }, [
+    preview?.estimatedCost,
+    preview?.estimatedTakerFee,
+    preview?.estimatedTotalCost,
+    preview?.shareSize,
+    preview?.tokenId,
+    tradeSide
+  ]);
+
   const applyReadinessFetch = useCallback(
-    async (orderPreview: NonNullable<typeof preview>) => {
+    async (
+      orderPreview: NonNullable<typeof preview>,
+      options?: { force?: boolean }
+    ) => {
+      const queryKey = buildPreviewBalancesQueryKey(orderPreview, tradeSide);
+
+      if (!queryKey) {
+        return undefined;
+      }
+
+      if (
+        !options?.force &&
+        queryKey === lastFetchedReadinessKeyRef.current
+      ) {
+        return undefined;
+      }
+
       const generation = ++readinessFetchGeneration.current;
 
       try {
         const nextReadiness = await fetchReadinessForPreview(
           orderPreview,
           tradeSide,
-          authReadinessRef.current
+          authReadinessRef.current,
+          options
         );
 
         if (generation === readinessFetchGeneration.current) {
           setReadiness(nextReadiness);
-          setEligibilityRetryAvailable(isEligibilityNetworkFailure(session));
+          setEligibilityRetryAvailable(
+            isEligibilityNetworkFailure(sessionRef.current)
+          );
+          lastFetchedReadinessKeyRef.current = queryKey;
         }
 
         return nextReadiness;
@@ -594,31 +648,32 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         throw error;
       }
     },
-    [session, tradeSide]
+    [tradeSide]
   );
 
   useEffect(() => {
-    if (!preview?.tokenId) {
+    if (!readinessQueryKey) {
       return undefined;
     }
 
     const timeoutId = window.setTimeout(() => {
-      void applyReadinessFetch(preview);
+      if (readinessQueryKey === lastFetchedReadinessKeyRef.current) {
+        return;
+      }
+
+      const orderPreview = previewForReadinessRef.current;
+
+      if (!orderPreview) {
+        return;
+      }
+
+      void applyReadinessFetch(orderPreview);
     }, READINESS_FETCH_DEBOUNCE_MS);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [
-    applyReadinessFetch,
-    preview?.estimatedCost,
-    preview?.estimatedTakerFee,
-    preview?.estimatedTotalCost,
-    preview?.shareSize,
-    preview?.sidePrice,
-    preview?.tokenId,
-    tradeSide
-  ]);
+  }, [applyReadinessFetch, readinessQueryKey]);
 
   const refreshOutcomeShares = useCallback(async () => {
     if (!isAuthenticated || !conditionId) {
@@ -672,38 +727,6 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   ]);
 
   useEffect(() => {
-    if (tradeSide !== "sell" || !sellPosition || input.variant !== "team") {
-      return;
-    }
-
-    let cancelled = false;
-
-    void fetchConditionalTokenBalance(sellPosition.asset).then((balance) => {
-      if (cancelled) {
-        return;
-      }
-
-      const cap = resolveMaxSellShares(sellPosition.size, balance);
-
-      if (cap === undefined || cap <= 0) {
-        return;
-      }
-
-      const currentAmount = parseOrderAmount(
-        useTradeTicketStore.getState().amount
-      );
-
-      if (currentAmount > cap) {
-        setAmount(String(cap));
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [input.variant, sellPosition, setAmount, tradeSide]);
-
-  useEffect(() => {
     if (maxSellShares === undefined || maxSellShares <= 0) {
       return;
     }
@@ -742,12 +765,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [input, isAuthenticated, refreshOutcomeShares, sellPosition, tradeSide]);
 
   const refreshOrderReadiness = useCallback(async () => {
-    if (!preview) {
+    const orderPreview = previewForReadinessRef.current;
+
+    if (!orderPreview) {
       return undefined;
     }
 
-    return applyReadinessFetch(preview);
-  }, [applyReadinessFetch, preview]);
+    return applyReadinessFetch(orderPreview, { force: true });
+  }, [applyReadinessFetch]);
 
   const handleRetryEligibility = useCallback(async () => {
     setStatus("loading");
@@ -788,7 +813,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       orderReadiness: readiness,
       previewCanSubmit,
       previewDisabledReason: preview.disabledReason,
-      isRegionBlocked,
+      tradeSide,
+      isBuyRestricted,
+      isRegionFullyBlocked: isRegionBlocked,
       openLogin,
       signClobCredentials,
       signTokenApprovals,

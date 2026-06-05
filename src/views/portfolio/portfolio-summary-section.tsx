@@ -43,8 +43,8 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
 
   const polymarketAddress = session?.funderAddress ?? session?.walletAddress;
 
-  const { isRegionBlocked } = useAuth();
-  const regionRestricted = Boolean(session && isRegionBlocked);
+  const { isBuyRestricted } = useAuth();
+  const regionRestricted = Boolean(session && isBuyRestricted);
 
   const { hasPendingDeposit, converting, confirmPendingDeposit } =
     usePendingFunderUsdc({

@@ -47,7 +47,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
     session,
     hydrated,
     isAuthenticated,
-    isRegionBlocked,
+    isBuyRestricted,
     loginInProgress,
     loginStep,
     error,
@@ -148,7 +148,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
         polymarketAddress={polymarketAddress}
         balanceDisplay={balanceDisplay}
         isMenuOpen={isOpen}
-        regionRestricted={isRegionBlocked}
+        regionRestricted={isBuyRestricted}
         onDeposit={() => setDepositOpen(true)}
         onPrivateTopup={() => setPrivateTopupIntroOpen(true)}
         onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
@@ -200,7 +200,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
       <MobileDrawer
         open={isMobileDrawerOpen}
         onClose={onMobileDrawerClose}
-        regionRestricted={isRegionBlocked}
+        regionRestricted={isBuyRestricted}
         onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
         balanceDisplay={balanceDisplay}
       />

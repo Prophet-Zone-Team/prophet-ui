@@ -393,9 +393,9 @@ function MatchOutcomeQuickBidButton({
   const router = useRouter();
   const auth = useAuthOptional();
   const setMatchOutcomeSide = useSetTradeMatchOutcomeSide();
-  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isBuyRestricted = auth?.isBuyRestricted ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
-  const regionRestricted = isAuthenticated && isRegionBlocked;
+  const regionRestricted = isAuthenticated && isBuyRestricted;
   const outcomeLabel = MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].label;
   const priceLabel =
     price !== undefined ? formatOrderbookPrice(price) : undefined;
@@ -445,9 +445,9 @@ function OutcomeQuickBidButton({
   const auth = useAuthOptional();
   const syncTeamSnapshot = useSyncTradeTicketSnapshot();
   const setOutcomeSide = useSetTradeOutcomeSide();
-  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isBuyRestricted = auth?.isBuyRestricted ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
-  const regionRestricted = isAuthenticated && isRegionBlocked;
+  const regionRestricted = isAuthenticated && isBuyRestricted;
   const isYes = side === "yes";
   const price = getTeamSimpleSidePrice(snapshot, side);
   const priceLabel = formatOrderbookPrice(price);

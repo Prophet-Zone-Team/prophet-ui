@@ -10,9 +10,13 @@ import {
 import { getClobOrderSubmissionStatus } from "@/server/trading/clob-auth";
 import { postSignedUserOrder, updateUserBalanceAllowance } from "@/server/trading/clob-user-client";
 import {
+  getClientGeoFromRequest,
   refreshSessionEligibilityIfStale,
-  getClientIp
 } from "@/server/trading/eligibility";
+import {
+  assertEligibilityForOrder,
+  signedOrderSideToEligibilitySide,
+} from "@/server/trading/eligibility-order-guard";
 import { recordUserOrderError, recordUserOrderSubmitted } from "@/server/trading/order-store";
 import {
   getSubmittedOrderStatus,
@@ -48,27 +52,8 @@ export async function POST(request: Request) {
 
   const eligibility = await refreshSessionEligibilityIfStale(
     record.session,
-    getClientIp(request)
+    getClientGeoFromRequest(request),
   );
-
-  if (eligibility.eligibilityStatus !== "eligible") {
-    console.warn("[trading.orders] eligibility failed", {
-      userId: record.session.userId,
-      status: eligibility.eligibilityStatus,
-      country: eligibility.eligibilityCountry,
-      region: eligibility.eligibilityRegion,
-      reason: eligibility.eligibilityReason,
-      checkedAt: eligibility.eligibilityCheckedAt,
-    });
-
-    return NextResponse.json(
-      {
-        error: eligibility.eligibilityReason ?? "Trading is not enabled for this session.",
-        eligibilityStatus: eligibility.eligibilityStatus,
-      },
-      { status: 403 },
-    );
-  }
 
   const payload = (await request.json()) as SubmitSignedOrderPayload;
   const validationError = validateSignedOrderPayload(payload);
@@ -90,6 +75,31 @@ export async function POST(request: Request) {
       userId: record.session.userId,
     });
     return NextResponse.json({ error: "Signed order payload is incomplete or malformed." }, { status: 400 });
+  }
+
+  const orderEligibility = assertEligibilityForOrder(
+    eligibility,
+    signedOrderSideToEligibilitySide(orderContext.side),
+  );
+
+  if (!orderEligibility.ok) {
+    console.warn("[trading.orders] eligibility failed", {
+      userId: record.session.userId,
+      status: orderEligibility.status,
+      country: eligibility.eligibilityCountry,
+      region: eligibility.eligibilityRegion,
+      reason: orderEligibility.reason,
+      checkedAt: eligibility.eligibilityCheckedAt,
+      side: orderContext.side,
+    });
+
+    return NextResponse.json(
+      {
+        error: orderEligibility.reason,
+        eligibilityStatus: orderEligibility.status,
+      },
+      { status: 403 },
+    );
   }
 
   const ownershipError = validateSignedOrderOwnership({

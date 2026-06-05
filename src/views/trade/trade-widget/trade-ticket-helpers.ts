@@ -21,7 +21,10 @@ import {
   buildBalancesQuery,
   mergeTradingReadiness,
 } from "@/lib/trading/merge-trading-readiness";
-import { formatRegionBlockedDetail } from "@/lib/trading/trading-eligibility-client";
+import {
+  formatEligibilityRestrictionDetail,
+  formatRegionBlockedDetail,
+} from "@/lib/trading/trading-eligibility-client";
 import type { WalletClient } from "viem";
 import {
   getTradingSetupSteps,
@@ -183,6 +186,11 @@ export function buildTeamTradePreview(input: {
   });
 }
 
+const marketStatusInflight = new Map<
+  string,
+  Promise<boolean | undefined>
+>();
+
 export async function fetchMarketAcceptingOrders(input: {
   slug?: string;
   conditionId?: string;
@@ -197,11 +205,23 @@ export async function fetchMarketAcceptingOrders(input: {
     return undefined;
   }
 
-  const payload = await fetchJson<{ acceptingOrders?: boolean }>(
-    `/api/trading/market-status?${query.toString()}`
-  );
+  const cacheKey = query.toString();
+  const inflight = marketStatusInflight.get(cacheKey);
 
-  return payload.acceptingOrders;
+  if (inflight) {
+    return inflight;
+  }
+
+  const request = fetchJson<{ acceptingOrders?: boolean }>(
+    `/api/trading/market-status?${cacheKey}`
+  )
+    .then((payload) => payload.acceptingOrders)
+    .finally(() => {
+      marketStatusInflight.delete(cacheKey);
+    });
+
+  marketStatusInflight.set(cacheKey, request);
+  return request;
 }
 
 export function buildGameTradePreview(input: {
@@ -286,12 +306,33 @@ export async function fetchConditionalTokenBalance(
   return balances.balances?.conditionalTokenBalance;
 }
 
-export async function fetchReadinessForPreview(
-  preview: OrderPreviewFields,
-  tradeSide: BidTradeSide,
-  setupReadiness?: UserTradingReadiness
-): Promise<UserTradingReadiness> {
-  const query = buildBalancesQuery({
+const PREVIEW_BALANCES_CACHE_MS = 5_000;
+
+const previewBalancesInflight = new Map<
+  string,
+  Promise<UserTradingBalancesResponse>
+>();
+const previewBalancesResolvedCache = new Map<
+  string,
+  { expiresAt: number; value: UserTradingBalancesResponse }
+>();
+
+export function buildPreviewBalancesQueryKey(
+  preview: Pick<
+    OrderPreviewFields,
+    | "tokenId"
+    | "estimatedCost"
+    | "estimatedTakerFee"
+    | "estimatedTotalCost"
+    | "shareSize"
+  >,
+  tradeSide: BidTradeSide
+): string | null {
+  if (!preview.tokenId) {
+    return null;
+  }
+
+  return buildBalancesQuery({
     tradeSide,
     tokenId: preview.tokenId,
     cost: preview.estimatedCost,
@@ -299,12 +340,63 @@ export async function fetchReadinessForPreview(
     totalCost: preview.estimatedTotalCost,
     estimatedTakerFee: preview.estimatedTakerFee,
   });
+}
+
+function fetchPreviewBalances(
+  query: string,
+  options?: { force?: boolean }
+): Promise<UserTradingBalancesResponse> {
+  if (!options?.force) {
+    const cached = previewBalancesResolvedCache.get(query);
+
+    if (cached && cached.expiresAt > Date.now()) {
+      return Promise.resolve(cached.value);
+    }
+
+    const inflight = previewBalancesInflight.get(query);
+
+    if (inflight) {
+      return inflight;
+    }
+  } else {
+    previewBalancesResolvedCache.delete(query);
+  }
+
+  const request = fetchJson<UserTradingBalancesResponse>(
+    `/api/trading/balances?${query}`
+  )
+    .then((response) => {
+      previewBalancesResolvedCache.set(query, {
+        expiresAt: Date.now() + PREVIEW_BALANCES_CACHE_MS,
+        value: response,
+      });
+      return response;
+    })
+    .finally(() => {
+      previewBalancesInflight.delete(query);
+    });
+
+  previewBalancesInflight.set(query, request);
+  return request;
+}
+
+export async function fetchReadinessForPreview(
+  preview: OrderPreviewFields,
+  tradeSide: BidTradeSide,
+  setupReadiness?: UserTradingReadiness,
+  options?: { force?: boolean }
+): Promise<UserTradingReadiness> {
+  const query = buildPreviewBalancesQueryKey(preview, tradeSide);
+
+  if (!query) {
+    throw new Error("Order preview token id is required.");
+  }
 
   const [setup, balances] = await Promise.all([
     setupReadiness
       ? Promise.resolve(setupReadiness)
       : fetchJson<UserTradingReadiness>("/api/trading/readiness"),
-    fetchJson<UserTradingBalancesResponse>(`/api/trading/balances?${query}`),
+    fetchPreviewBalances(query, options),
   ]);
 
   return mergeTradingReadiness(setup, balances, { tradeSide });
@@ -859,27 +951,37 @@ export async function ensureTradingReadyForBid(deps: {
   orderReadiness?: UserTradingReadiness;
   previewCanSubmit: boolean;
   previewDisabledReason?: string;
-  isRegionBlocked?: boolean;
+  tradeSide?: BidTradeSide;
+  isBuyRestricted?: boolean;
+  isRegionFullyBlocked?: boolean;
   openLogin: () => Promise<unknown>;
   signClobCredentials: () => Promise<void>;
   signTokenApprovals: () => Promise<void>;
   refreshSetupReadiness?: () => Promise<UserTradingReadiness | undefined>;
 }): Promise<BidGateResult> {
-  if (deps.isRegionBlocked) {
+  const tradeSide = deps.tradeSide ?? "buy";
+  const eligibilityView = deps.session
+    ? {
+        status: deps.session.eligibilityStatus,
+        checkedAt: deps.session.eligibilityCheckedAt,
+        country: deps.session.eligibilityCountry,
+        region: deps.session.eligibilityRegion,
+        reason: deps.session.eligibilityReason,
+      }
+    : undefined;
+  const isEligibilityBlocked =
+    tradeSide === "buy"
+      ? Boolean(deps.isBuyRestricted)
+      : Boolean(deps.isRegionFullyBlocked);
+
+  if (isEligibilityBlocked) {
     return {
       ok: false,
       action: "show_error",
-      message: formatRegionBlockedDetail(
-        deps.session
-          ? {
-              status: deps.session.eligibilityStatus,
-              checkedAt: deps.session.eligibilityCheckedAt,
-              country: deps.session.eligibilityCountry,
-              region: deps.session.eligibilityRegion,
-              reason: deps.session.eligibilityReason,
-            }
-          : undefined
-      ),
+      message:
+        tradeSide === "buy"
+          ? formatEligibilityRestrictionDetail(eligibilityView)
+          : formatRegionBlockedDetail(eligibilityView),
     };
   }
 

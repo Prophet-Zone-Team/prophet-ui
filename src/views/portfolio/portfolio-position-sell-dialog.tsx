@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 
 import { Modal } from "@/components/ui/modal";
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
@@ -13,7 +13,6 @@ import {
 import { derivePositionSellReceiveAmount } from "@/lib/portfolio/portfolio-metrics";
 import { resolveTradeHref } from "@/lib/routes/trade";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
-import { useSyncForPositionSell } from "@/store/trade-ticket-store";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import { TeamFlag } from "@/components/teams/team-flag";
 import {
@@ -162,6 +161,7 @@ function PortfolioPositionSellBody({
           Edit order
         </button>
         <TradeAuthActionButton
+          tradeSide="sell"
           className={fundingPrimaryButtonClass}
           actionLabel={`Cash out ${receiveAmount}`}
           signingLabel="Waiting for signature…"
@@ -190,16 +190,6 @@ export function PortfolioPositionSellDialog({
   snapshot,
   onClose
 }: PortfolioPositionSellDialogProps) {
-  const syncForPositionSell = useSyncForPositionSell();
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    syncForPositionSell(snapshot, position);
-  }, [open, position, snapshot, syncForPositionSell]);
-
   return (
     <Modal
       open={open}

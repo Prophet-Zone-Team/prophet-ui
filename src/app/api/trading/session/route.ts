@@ -8,7 +8,7 @@ import {
   createTradingSessionCookie,
   getTradingSessionFromCookie,
 } from "@/server/trading/session-store";
-import { checkTradingEligibility, getClientIp } from "@/server/trading/eligibility";
+import { checkTradingEligibility, getClientGeoFromRequest } from "@/server/trading/eligibility";
 import { setupDepositWalletForOwner } from "@/server/trading/deposit-wallet";
 import { recordTradingAuditEvent } from "@/server/trading/order-store";
 import {
@@ -71,7 +71,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const eligibility = await checkTradingEligibility(getClientIp(request));
+  const eligibility = await checkTradingEligibility(getClientGeoFromRequest(request));
+
+  if (eligibility.status === "blocked_region") {
+    return NextResponse.json(
+      {
+        error: eligibility.reason ?? "Trading is unavailable in your region.",
+        eligibilityStatus: eligibility.status,
+      },
+      { status: 403 },
+    );
+  }
+
   const depositWallet = await setupDepositWalletForOwner(payload.walletAddress ?? "");
   const session = createTradingSession({
     walletAddress: payload.walletAddress ?? "",

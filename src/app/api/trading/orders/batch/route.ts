@@ -14,9 +14,13 @@ import {
   updateUserBalanceAllowance
 } from "@/server/trading/clob-user-client";
 import {
-  getClientIp,
-  refreshSessionEligibilityIfStale
+  getClientGeoFromRequest,
+  refreshSessionEligibilityIfStale,
 } from "@/server/trading/eligibility";
+import {
+  assertEligibilityForOrder,
+  signedOrderSideToEligibilitySide,
+} from "@/server/trading/eligibility-order-guard";
 import { recordUserOrderError, recordUserOrderSubmitted } from "@/server/trading/order-store";
 import {
   getSubmittedOrderStatus,
@@ -56,20 +60,8 @@ export async function POST(request: Request) {
 
   const eligibility = await refreshSessionEligibilityIfStale(
     record.session,
-    getClientIp(request)
+    getClientGeoFromRequest(request),
   );
-
-  if (eligibility.eligibilityStatus !== "eligible") {
-    return NextResponse.json(
-      {
-        error:
-          eligibility.eligibilityReason ??
-          "Trading is not enabled for this session.",
-        eligibilityStatus: eligibility.eligibilityStatus
-      },
-      { status: 403 }
-    );
-  }
 
   const payload = (await request.json()) as SubmitSignedOrdersBatchPayload;
   const orders = payload.orders;
@@ -111,6 +103,21 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: `Order ${index + 1}: Signed order payload is incomplete or malformed.` },
         { status: 400 }
+      );
+    }
+
+    const orderEligibility = assertEligibilityForOrder(
+      eligibility,
+      signedOrderSideToEligibilitySide(orderContext.side),
+    );
+
+    if (!orderEligibility.ok) {
+      return NextResponse.json(
+        {
+          error: `Order ${index + 1}: ${orderEligibility.reason}`,
+          eligibilityStatus: orderEligibility.status,
+        },
+        { status: 403 },
       );
     }
 

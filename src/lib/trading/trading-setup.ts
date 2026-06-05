@@ -57,6 +57,7 @@ export function isTradingSetupComplete(
 export function shouldAutoOpenTradingSetupModal(options: {
   session: unknown;
   readiness: UserTradingReadiness | undefined;
+  /** When fully blocked, do not prompt setup. Close-only regions may still set up to sell. */
   isRegionBlocked?: boolean;
 }): boolean {
   if (options.isRegionBlocked) {

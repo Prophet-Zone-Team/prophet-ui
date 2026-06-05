@@ -5,10 +5,13 @@ import type { ReactNode } from "react";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
+import { formatEligibilityRestrictionDetail } from "@/lib/trading/trading-eligibility-client";
+import type { BidTradeSide } from "@/types/market";
 import { tradeBidButtonClass } from "@/views/trade/trade-widget/trade-ui";
 
 export interface TradeAuthActionButtonProps {
   className?: string;
+  tradeSide?: BidTradeSide;
   actionLabel: ReactNode;
   connectLabel?: string;
   connectingLabel?: string;
@@ -25,6 +28,7 @@ export interface TradeAuthActionButtonProps {
 
 export function TradeAuthActionButton({
   className,
+  tradeSide = "buy",
   actionLabel,
   connectLabel = "Connect Wallet",
   connectingLabel = "Connecting…",
@@ -41,11 +45,16 @@ export function TradeAuthActionButton({
   const {
     isAuthenticated,
     isRegionBlocked,
+    isBuyRestricted,
+    eligibilityView,
     openLogin,
     openLoginModalOnly,
     loginInProgress,
   } = useAuth();
   const buttonClass = cn(tradeBidButtonClass, className);
+  const regionRestricted =
+    tradeSide === "buy" ? isBuyRestricted : isRegionBlocked;
+  const restrictionDetail = formatEligibilityRestrictionDetail(eligibilityView);
 
   async function handleConnect() {
     onLoginStart?.();
@@ -89,7 +98,7 @@ export function TradeAuthActionButton({
     <button
       type="button"
       className={buttonClass}
-      disabled={!canSubmit || isRegionBlocked}
+      disabled={!canSubmit || regionRestricted}
       onClick={() => void onAction()}
     >
       {label}
@@ -97,7 +106,10 @@ export function TradeAuthActionButton({
   );
 
   return (
-    <RegionRestrictedControl restricted={isRegionBlocked}>
+    <RegionRestrictedControl
+      restricted={regionRestricted}
+      detail={restrictionDetail}
+    >
       {actionButton}
     </RegionRestrictedControl>
   );

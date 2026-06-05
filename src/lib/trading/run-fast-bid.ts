@@ -67,7 +67,7 @@ export async function runFastBid({
     return;
   }
 
-  if (auth.isRegionBlocked) {
+  if (auth.isBuyRestricted) {
     return;
   }
 
@@ -90,7 +90,9 @@ export async function runFastBid({
       submitLabel: "Bid",
       previewCanSubmit: preview.canSubmitRealOrder,
       previewDisabledReason: preview.disabledReason,
-      isRegionBlocked: auth.isRegionBlocked,
+      isBuyRestricted: auth.isBuyRestricted,
+      isRegionFullyBlocked: auth.isRegionBlocked,
+      isRegionCloseOnly: auth.isRegionCloseOnly,
       eligibilityNetworkError:
         session?.eligibilityStatus === "error" &&
         Boolean(
@@ -127,7 +129,9 @@ export async function runFastBid({
       orderReadiness,
       previewCanSubmit: preview.canSubmitRealOrder,
       previewDisabledReason: preview.disabledReason,
-      isRegionBlocked: auth.isRegionBlocked,
+      tradeSide: FAST_BID_TRADE_SIDE,
+      isBuyRestricted: auth.isBuyRestricted,
+      isRegionFullyBlocked: auth.isRegionBlocked,
       openLogin: () => auth.openLogin(),
       signClobCredentials: () => auth.signClobCredentials(),
       signTokenApprovals: () => auth.signTokenApprovals(),

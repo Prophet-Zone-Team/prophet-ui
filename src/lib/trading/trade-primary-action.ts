@@ -39,7 +39,9 @@ export interface ResolveTradePrimaryActionInput {
   previewCanSubmit: boolean;
   previewDisabledReason?: string;
   expirationError?: string;
-  isRegionBlocked?: boolean;
+  isBuyRestricted?: boolean;
+  isRegionFullyBlocked?: boolean;
+  isRegionCloseOnly?: boolean;
   eligibilityNetworkError?: boolean;
 }
 
@@ -156,11 +158,19 @@ export function resolveTradePrimaryAction(
     };
   }
 
-  if (input.isRegionBlocked) {
+  const isEligibilityBlocked =
+    input.tradeSide === "buy"
+      ? Boolean(input.isBuyRestricted)
+      : Boolean(input.isRegionFullyBlocked);
+
+  if (isEligibilityBlocked) {
     return {
       kind: "eligibility_blocked",
       label: input.submitLabel,
-      hint: "Polymarket reports trading is unavailable in your region.",
+      hint:
+        input.tradeSide === "buy" && input.isRegionCloseOnly
+          ? "New orders and deposits are unavailable in your region. You may still close existing positions or cancel open orders."
+          : "Polymarket reports trading is unavailable in your region.",
     };
   }
 

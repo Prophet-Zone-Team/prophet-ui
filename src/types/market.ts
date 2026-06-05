@@ -35,6 +35,7 @@ export type TradingEligibilityStatus =
   | "unknown"
   | "eligible"
   | "blocked_region"
+  | "close_only_region"
   | "unsupported_account"
   | "needs_wallet"
   | "error";

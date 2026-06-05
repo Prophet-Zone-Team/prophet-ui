@@ -120,10 +120,48 @@ describe("trade primary action classification", () => {
     assert.equal(action.label, "Add funds");
   });
 
-  it("blocks trading when the region is restricted", () => {
+  it("blocks buy when buy is restricted", () => {
     const action = resolveTradePrimaryAction({
       ...baseInput,
-      isRegionBlocked: true,
+      tradeSide: "buy",
+      isBuyRestricted: true,
+      orderReadiness: readinessWithChecks([]),
+    });
+
+    assert.equal(action.kind, "eligibility_blocked");
+  });
+
+  it("allows sell in close-only regions", () => {
+    const action = resolveTradePrimaryAction({
+      ...baseInput,
+      tradeSide: "sell",
+      isBuyRestricted: true,
+      isRegionCloseOnly: true,
+      isRegionFullyBlocked: false,
+      orderReadiness: readinessWithChecks([
+        {
+          id: "balance",
+          label: "USDC balance",
+          status: "pass",
+          detail: "ok",
+        },
+        {
+          id: "allowance",
+          label: "USDC allowance",
+          status: "pass",
+          detail: "ok",
+        },
+      ]),
+    });
+
+    assert.equal(action.kind, "submit");
+  });
+
+  it("blocks sell when the region is fully restricted", () => {
+    const action = resolveTradePrimaryAction({
+      ...baseInput,
+      tradeSide: "sell",
+      isRegionFullyBlocked: true,
       orderReadiness: readinessWithChecks([]),
     });
 

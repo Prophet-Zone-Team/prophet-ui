@@ -50,7 +50,9 @@ import {
 import { fetchJson } from "@/lib/team/client-fetch";
 import {
   fetchTradingEligibility,
+  isBuyRestricted as checkIsBuyRestricted,
   isRegionBlocked as checkIsRegionBlocked,
+  isRegionCloseOnly as checkIsRegionCloseOnly,
   type TradingEligibilityView
 } from "@/lib/trading/trading-eligibility-client";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
@@ -133,6 +135,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
   const [isRegionBlocked, setIsRegionBlocked] = useState(false);
+  const [isBuyRestricted, setIsBuyRestricted] = useState(false);
+  const [isRegionCloseOnly, setIsRegionCloseOnly] = useState(false);
   const [eligibilityView, setEligibilityView] = useState<
     TradingEligibilityView | undefined
   >();
@@ -150,13 +154,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const walletHandlingRef = useRef(false);
   const eligibilityRefreshRef = useRef(false);
   const isRegionBlockedRef = useRef(false);
+  const isBuyRestrictedRef = useRef(false);
+  const isRegionCloseOnlyRef = useRef(false);
   const eligibilityViewRef = useRef<TradingEligibilityView | undefined>(
     undefined
+  );
+
+  const syncEligibilityFlags = useCallback(
+    (eligibility: TradingEligibilityView | undefined) => {
+      const status = eligibility?.status;
+      const fullyBlocked = checkIsRegionBlocked(status);
+      const buyRestricted = checkIsBuyRestricted(status);
+      const closeOnly = checkIsRegionCloseOnly(status);
+
+      setIsRegionBlocked(fullyBlocked);
+      setIsBuyRestricted(buyRestricted);
+      setIsRegionCloseOnly(closeOnly);
+      isRegionBlockedRef.current = fullyBlocked;
+      isBuyRestrictedRef.current = buyRestricted;
+      isRegionCloseOnlyRef.current = closeOnly;
+    },
+    []
   );
 
   useEffect(() => {
     isRegionBlockedRef.current = isRegionBlocked;
   }, [isRegionBlocked]);
+
+  useEffect(() => {
+    isBuyRestrictedRef.current = isBuyRestricted;
+  }, [isBuyRestricted]);
+
+  useEffect(() => {
+    isRegionCloseOnlyRef.current = isRegionCloseOnly;
+  }, [isRegionCloseOnly]);
 
   useEffect(() => {
     eligibilityViewRef.current = eligibilityView;
@@ -173,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const eligibility = await fetchTradingEligibility();
       setEligibilityView(eligibility);
-      setIsRegionBlocked(checkIsRegionBlocked(eligibility.status));
+      syncEligibilityFlags(eligibility);
       setEligibilityLoadStatus("ready");
       return eligibility;
     } catch (refreshError) {
@@ -183,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       eligibilityRefreshRef.current = false;
     }
-  }, []);
+  }, [syncEligibilityFlags]);
 
   const clearAuthState = useCallback(
     async (options?: { error?: string; openModal?: boolean }) => {
@@ -1130,6 +1161,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     eligibilityView,
     eligibilityLoadStatus,
     isRegionBlocked,
+    isBuyRestricted,
+    isRegionCloseOnly,
     loginMethod,
     privyModalOpen,
     privyReady,

@@ -51,9 +51,9 @@ export function FastBidButton({
   const fastBidAmount = useFastBidAmount();
   const hasHydrated = useConfigHydrated();
   const [status, setStatus] = useState<FastBidStatus>("idle");
-  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isBuyRestricted = auth?.isBuyRestricted ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
-  const regionRestricted = isAuthenticated && isRegionBlocked;
+  const regionRestricted = isAuthenticated && isBuyRestricted;
 
   const configuredAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
   const displayAmount = amountOverride ?? configuredAmount;

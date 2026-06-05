@@ -10,6 +10,8 @@ import { Modal } from "@/components/ui/modal";
 import { PrivyLoginModal } from "@/components/auth/privy-login-modal";
 import { cn } from "@/lib/cn";
 import {
+  formatCloseOnlyDetail,
+  formatCloseOnlyLabel,
   formatRegionBlockedDetail,
   formatRegionBlockedLabel,
 } from "@/lib/trading/trading-eligibility-client";
@@ -31,6 +33,7 @@ interface LoginModalProps {
     | "setupSteps"
     | "isAuthenticated"
     | "isRegionBlocked"
+    | "isRegionCloseOnly"
     | "eligibilityView"
     | "privyModalOpen"
     | "closeLogin"
@@ -81,6 +84,7 @@ export function LoginModal({ auth }: LoginModalProps) {
     setupSteps,
     isAuthenticated,
     isRegionBlocked,
+    isRegionCloseOnly,
     eligibilityView,
     privyModalOpen,
     closeLogin,
@@ -105,6 +109,7 @@ export function LoginModal({ auth }: LoginModalProps) {
 
   const showPolygonHint = Boolean(error) && /chainId|137|polygon/i.test(error ?? "");
   const showRestrictedView = isRegionBlocked && !loginInProgress;
+  const showCloseOnlyBanner = isRegionCloseOnly && !showRestrictedView && !loginInProgress;
 
   const pathname = usePathname();
   const isPrivateMode = useMemo(() => {
@@ -134,6 +139,12 @@ export function LoginModal({ auth }: LoginModalProps) {
             in control of your funds.
           </p>
         </div>
+        {showCloseOnlyBanner ? (
+          <p className="text-[12px] font-[400] text-[#3168FF] px-[10px] py-[4px] rounded-[8px] bg-[#E3E9FF]">
+            {formatCloseOnlyLabel(eligibilityView)}:{" "}
+            {formatCloseOnlyDetail(eligibilityView)}
+          </p>
+        ) : null}
         {showRestrictedView ? (
           <RestrictedRegionView
             detail={formatRegionBlockedDetail(eligibilityView)}

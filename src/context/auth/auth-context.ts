@@ -27,7 +27,12 @@ export interface AuthContextValue {
   cashError: string | undefined;
   eligibilityView: TradingEligibilityView | undefined;
   eligibilityLoadStatus: EligibilityLoadStatus;
+  /** Fully blocked: no trading actions including sell/cancel. */
   isRegionBlocked: boolean;
+  /** Buy, deposit, and new setup restricted (fully blocked or close-only). */
+  isBuyRestricted: boolean;
+  /** Close-only region: sell/cancel allowed; buy/deposit blocked. */
+  isRegionCloseOnly: boolean;
   loginMethod: AuthLoginMethod | undefined;
   privyModalOpen: boolean;
   privyReady: boolean;

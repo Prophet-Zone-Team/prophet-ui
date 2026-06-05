@@ -5,21 +5,30 @@ import { cloneElement, isValidElement } from "react";
 
 import Popover from "@/components/popover";
 import { useAuthOptional } from "@/context/auth/use-auth";
-import { formatRegionBlockedLabel } from "@/lib/trading/trading-eligibility-client";
+import {
+  formatEligibilityRestrictionLabel,
+  formatRegionBlockedLabel,
+} from "@/lib/trading/trading-eligibility-client";
 
 export interface RegionRestrictedControlProps {
   restricted: boolean;
   label?: string;
+  detail?: string;
   children: ReactNode;
 }
 
 export function RegionRestrictedControl({
   restricted,
   label,
+  detail,
   children
 }: RegionRestrictedControlProps) {
   const auth = useAuthOptional();
-  const displayLabel = label ?? formatRegionBlockedLabel(auth?.eligibilityView);
+  const displayLabel =
+    detail ??
+    label ??
+    formatEligibilityRestrictionLabel(auth?.eligibilityView) ??
+    formatRegionBlockedLabel(auth?.eligibilityView);
 
   if (!restricted) {
     return children;

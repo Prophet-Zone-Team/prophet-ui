@@ -39,9 +39,9 @@ export function PlaceBidButton({
   const [status, setStatus] = useState<FastBidStatus>("idle");
   const shouldShowAmount = isQuickBidLabel(children);
   const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
-  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isBuyRestricted = auth?.isBuyRestricted ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
-  const regionRestricted = isAuthenticated && isRegionBlocked;
+  const regionRestricted = isAuthenticated && isBuyRestricted;
 
   const buttonText = useMemo(() => {
     if (status === "checking") {
