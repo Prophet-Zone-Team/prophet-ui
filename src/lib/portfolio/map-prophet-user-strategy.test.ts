@@ -156,6 +156,42 @@ describe("portfolio strategy status from API teams", () => {
     assert.equal(status, "not_open");
   });
 
+  it("maps all unstart teams to not open yet", () => {
+    const teamStates = resolveStrategyTeamStates([
+      { order_id: "1", name: "Spain", status: "unstart" },
+      { order_id: "2", name: "France", status: "unstart" }
+    ]);
+
+    assert.equal(resolvePortfolioStrategyStatus(teamStates), "not_open");
+  });
+
+  it("maps mixed ongoing and unstart to not finished", () => {
+    const teamStates = resolveStrategyTeamStates([
+      { order_id: "1", name: "Spain", status: "ongoing" },
+      { order_id: "2", name: "France", status: "unstart" }
+    ]);
+
+    assert.equal(resolvePortfolioStrategyStatus(teamStates), "not_finished");
+  });
+
+  it("maps all lose teams to hit missed", () => {
+    const teamStates = resolveStrategyTeamStates([
+      { order_id: "1", name: "Spain", status: "lose" },
+      { order_id: "2", name: "France", status: "lose" }
+    ]);
+
+    assert.equal(resolvePortfolioStrategyStatus(teamStates), "hit_missed");
+  });
+
+  it("maps any win team to hit succeed", () => {
+    const teamStates = resolveStrategyTeamStates([
+      { order_id: "1", name: "Spain", status: "win" },
+      { order_id: "2", name: "France", status: "lose" }
+    ]);
+
+    assert.equal(resolvePortfolioStrategyStatus(teamStates), "hit_succeed");
+  });
+
   it("maps mixed API team status to not finished", () => {
     const teamStates = resolveStrategyTeamStates([
       { order_id: "1", name: "Spain", status: "started" },

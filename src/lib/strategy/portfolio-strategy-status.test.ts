@@ -29,6 +29,35 @@ describe("parseProphetStrategyTeamStatus", () => {
     });
   });
 
+  it("parses unstart", () => {
+    assert.deepEqual(parseProphetStrategyTeamStatus("unstart"), {
+      started: false,
+      eliminated: false
+    });
+  });
+
+  it("parses ongoing", () => {
+    assert.deepEqual(parseProphetStrategyTeamStatus("ongoing"), {
+      started: true,
+      eliminated: false
+    });
+  });
+
+  it("parses lose", () => {
+    assert.deepEqual(parseProphetStrategyTeamStatus("lose"), {
+      started: true,
+      eliminated: true
+    });
+  });
+
+  it("parses win", () => {
+    assert.deepEqual(parseProphetStrategyTeamStatus("win"), {
+      started: true,
+      eliminated: false,
+      won: true
+    });
+  });
+
   it("parses eliminated", () => {
     assert.deepEqual(parseProphetStrategyTeamStatus("eliminated"), {
       started: true,

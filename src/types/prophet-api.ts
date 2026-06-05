@@ -320,7 +320,7 @@ export interface ProphetStrategyTeamItem {
   name?: string;
   price?: string | string[];
   slug?: string;
-  /** Tournament leg status when provided by the API (e.g. not_started, started, eliminated). */
+  /** Tournament leg status when provided by the API (unstart, ongoing, lose, win). */
   status?: string;
   to_win?: string;
   tx_hash?: string | string[];

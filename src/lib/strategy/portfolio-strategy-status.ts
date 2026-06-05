@@ -12,6 +12,8 @@ export type PortfolioStrategyStatusType =
 export type StrategyTeamTournamentState = {
   started: boolean;
   eliminated: boolean;
+  /** True when the API reports this leg as a tournament winner. */
+  won?: boolean;
 };
 
 export const PORTFOLIO_STRATEGY_STATUS_CONFIG: Record<
@@ -49,6 +51,7 @@ export function parseProphetStrategyTeamStatus(
   }
 
   if (
+    normalized === "unstart" ||
     normalized === "not_started" ||
     normalized === "not_open" ||
     normalized === "pending"
@@ -57,6 +60,7 @@ export function parseProphetStrategyTeamStatus(
   }
 
   if (
+    normalized === "lose" ||
     normalized === "eliminated" ||
     normalized === "out" ||
     normalized === "lost" ||
@@ -66,6 +70,7 @@ export function parseProphetStrategyTeamStatus(
   }
 
   if (
+    normalized === "ongoing" ||
     normalized === "started" ||
     normalized === "active" ||
     normalized === "playing" ||
@@ -76,11 +81,12 @@ export function parseProphetStrategyTeamStatus(
   }
 
   if (
+    normalized === "win" ||
     normalized === "winner" ||
     normalized === "won" ||
     normalized === "champion"
   ) {
-    return { started: true, eliminated: false };
+    return { started: true, eliminated: false, won: true };
   }
 
   return null;
@@ -112,10 +118,18 @@ export function curatedEntryToTournamentState(
   };
 }
 
+function hasTeamWon(state: StrategyTeamTournamentState): boolean {
+  return state.won === true;
+}
+
 export function resolvePortfolioStrategyStatus(
   teamStates: StrategyTeamTournamentState[],
   strategyTeams: CuratedTeamEntry[] = []
 ): PortfolioStrategyStatusType {
+  if (teamStates.some(hasTeamWon)) {
+    return "hit_succeed";
+  }
+
   const winner = getTournamentWinner();
 
   if (
