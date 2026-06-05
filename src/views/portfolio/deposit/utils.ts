@@ -116,6 +116,10 @@ export function validateDepositAmount(
   maxAmount: string,
   options?: ValidateDepositAmountOptions,
 ): string | undefined {
+  if (maxAmount === undefined || Big(maxAmount).lte(0)) {
+    return "Amount exceeds available balance.";
+  }
+
   if (tokenAmount === undefined || Big(tokenAmount).lte(0)) {
     return "Enter an amount greater than zero.";
   }
