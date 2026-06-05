@@ -9,6 +9,7 @@ export function Toaster(props: ToasterProps) {
       position="top-right"
       closeButton
       richColors
+      expand
       toastOptions={{
         classNames: {
           toast:

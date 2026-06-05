@@ -7,6 +7,7 @@ import {
   showOrderErrorToast,
   showOrderSubmittedToast
 } from "@/lib/trading/order-toast";
+import { formatEligibilityRestrictionDetail } from "@/lib/trading/trading-eligibility-client";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import {
@@ -68,9 +69,7 @@ export async function runFastBid({
 
   if (auth.isBuyRestricted) {
     showOrderErrorToast(
-      auth.isRegionCloseOnly
-        ? "New orders and deposits are unavailable in your region. You may still close existing positions or cancel open orders."
-        : "Polymarket reports trading is unavailable in your region."
+      formatEligibilityRestrictionDetail(auth.eligibilityView)
     );
     return;
   }

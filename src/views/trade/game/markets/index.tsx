@@ -117,7 +117,6 @@ export function GameMarketsSection({
     match,
     homeTeamName: sides.home.name,
     awayTeamName: sides.away.name,
-    enabled: true,
   });
 
   const activeLineKey = tab === "totals" ? totalsLineKey : spreadsLineKey;

@@ -2,14 +2,28 @@
 
 import { useEffect } from "react";
 
-import { showEventNotification } from "@/components/notification/event";
+import { showEventNotification, dismissEventNotification } from "@/components/notification/event";
 import { PROPHET_NOTIFICATION_DISPLAY_MS } from "@/config/prophet-ws";
 import { useNotificationWsStore } from "@/store/notification-ws-store";
+
+function shouldPresentQueueItem(
+  item: { source?: "game-statistics" | "ws" },
+  ongoingMatchSlug: string | null,
+): boolean {
+  if (item.source !== "game-statistics") {
+    return true;
+  }
+
+  return ongoingMatchSlug !== null;
+}
 
 export function NotificationQueuePresenter() {
   const headId = useNotificationWsStore((state) => state.queue[0]?.id);
   const queueLength = useNotificationWsStore((state) => state.queue.length);
   const isPresenting = useNotificationWsStore((state) => state.isPresenting);
+  const ongoingMatchSlug = useNotificationWsStore(
+    (state) => state.ongoingMatchSlug,
+  );
   const setPresenting = useNotificationWsStore((state) => state.setPresenting);
   const shiftAfterPresent = useNotificationWsStore(
     (state) => state.shiftAfterPresent,
@@ -23,6 +37,12 @@ export function NotificationQueuePresenter() {
     const item = useNotificationWsStore.getState().queue[0];
 
     if (!item || item.id !== headId) {
+      return;
+    }
+
+    if (!shouldPresentQueueItem(item, ongoingMatchSlug)) {
+      shiftAfterPresent();
+      dismissEventNotification();
       return;
     }
 
@@ -46,6 +66,7 @@ export function NotificationQueuePresenter() {
   }, [
     headId,
     isPresenting,
+    ongoingMatchSlug,
     queueLength,
     setPresenting,
     shiftAfterPresent,

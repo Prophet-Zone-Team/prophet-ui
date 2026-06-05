@@ -50,10 +50,18 @@ export interface TradingEligibilityView {
   reason?: string;
 }
 
+function formatEligibilityLocation(
+  view: TradingEligibilityView | undefined,
+): string | undefined {
+  const location = [view?.country, view?.region].filter(Boolean).join(" / ");
+
+  return location || undefined;
+}
+
 export function formatRegionBlockedLabel(
   view: TradingEligibilityView | undefined,
 ) {
-  const location = view?.country;
+  const location = formatEligibilityLocation(view);
 
   if (location) {
     return `${REGION_BLOCKED_LABEL} (${location})`;
@@ -63,7 +71,7 @@ export function formatRegionBlockedLabel(
 }
 
 export function formatCloseOnlyLabel(view: TradingEligibilityView | undefined) {
-  const location = view?.country;
+  const location = formatEligibilityLocation(view);
 
   if (location) {
     return `${CLOSE_ONLY_LABEL} (${location})`;
@@ -73,7 +81,7 @@ export function formatCloseOnlyLabel(view: TradingEligibilityView | undefined) {
 }
 
 export function formatRegionBlockedDetail(view: TradingEligibilityView | undefined) {
-  const location = [view?.country, view?.region].filter(Boolean).join(" / ");
+  const location = formatEligibilityLocation(view);
   const reason =
     view?.reason ??
     "Polymarket reports order placement is unavailable from this location. Market data remains available for review.";
@@ -86,7 +94,7 @@ export function formatRegionBlockedDetail(view: TradingEligibilityView | undefin
 }
 
 export function formatCloseOnlyDetail(view: TradingEligibilityView | undefined) {
-  const location = [view?.country, view?.region].filter(Boolean).join(" / ");
+  const location = formatEligibilityLocation(view);
   const reason =
     view?.reason ??
     "New orders and deposits are unavailable in your region. You may still close existing positions or cancel open orders.";

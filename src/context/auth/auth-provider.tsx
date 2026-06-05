@@ -49,6 +49,10 @@ import {
 } from "@/lib/trading/trading-setup";
 import { fetchJson } from "@/lib/team/client-fetch";
 import {
+  isTradingEligibilityRestricted,
+  showRegionRestrictionToast,
+} from "@/lib/trading/region-restriction-toast";
+import {
   fetchTradingEligibility,
   isBuyRestricted as checkIsBuyRestricted,
   isRegionBlocked as checkIsRegionBlocked,
@@ -159,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const eligibilityViewRef = useRef<TradingEligibilityView | undefined>(
     undefined
   );
+  const regionRestrictionToastShownRef = useRef(false);
 
   const syncEligibilityFlags = useCallback(
     (eligibility: TradingEligibilityView | undefined) => {
@@ -1014,6 +1019,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     privyReady,
     session?.walletAddress
   ]);
+
+  useEffect(() => {
+    if (
+      !hydrated ||
+      eligibilityLoadStatus !== "ready" ||
+      regionRestrictionToastShownRef.current ||
+      !eligibilityView
+    ) {
+      return;
+    }
+
+    if (!isTradingEligibilityRestricted(eligibilityView)) {
+      return;
+    }
+
+    regionRestrictionToastShownRef.current = true;
+    showRegionRestrictionToast(eligibilityView);
+  }, [eligibilityLoadStatus, eligibilityView, hydrated]);
 
   useEffect(() => {
     if (!hydrated) {

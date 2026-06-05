@@ -1,4 +1,9 @@
 import { showOrderErrorToast } from "@/lib/trading/order-toast";
+import {
+  eligibilityViewFromSession,
+  formatEligibilityRestrictionDetail,
+  formatRegionBlockedDetail,
+} from "@/lib/trading/trading-eligibility-client";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import {
   getTradingSetupSteps,
@@ -164,13 +169,15 @@ export function resolveTradePrimaryAction(
       : Boolean(input.isRegionFullyBlocked);
 
   if (isEligibilityBlocked) {
+    const eligibilityView = eligibilityViewFromSession(input.session);
+
     return {
       kind: "eligibility_blocked",
       label: input.submitLabel,
       hint:
-        input.tradeSide === "buy" && input.isRegionCloseOnly
-          ? "New orders and deposits are unavailable in your region. You may still close existing positions or cancel open orders."
-          : "Polymarket reports trading is unavailable in your region.",
+        input.tradeSide === "buy"
+          ? formatEligibilityRestrictionDetail(eligibilityView)
+          : formatRegionBlockedDetail(eligibilityView),
     };
   }
 

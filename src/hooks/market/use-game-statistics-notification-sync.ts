@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
+import { dismissEventNotification } from "@/components/notification/event";
 import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { mapGameStatisticsEventNotifications } from "@/lib/market/map-game-statistics-event-notifications";
 import { useNotificationWsStore } from "@/store/notification-ws-store";
@@ -35,10 +36,38 @@ export function useGameStatisticsNotificationSync(params: {
   const enqueueEventNotification = useNotificationWsStore(
     (state) => state.enqueueEventNotification,
   );
+  const setOngoingMatchGate = useNotificationWsStore(
+    (state) => state.setOngoingMatchGate,
+  );
+  const removeGameStatisticsNotifications = useNotificationWsStore(
+    (state) => state.removeGameStatisticsNotifications,
+  );
   const syncStateRef = useRef<SyncState>(createEmptySyncState(""));
 
+  const isOngoing = variant === "ongoing";
   const shouldSync =
-    (params.enabled ?? true) && variant === "ongoing" && slug.length > 0;
+    (params.enabled ?? true) && isOngoing && slug.length > 0;
+
+  useEffect(() => {
+    if (shouldSync) {
+      setOngoingMatchGate(slug);
+    } else {
+      setOngoingMatchGate(null);
+      removeGameStatisticsNotifications();
+      dismissEventNotification();
+    }
+
+    return () => {
+      setOngoingMatchGate(null);
+      removeGameStatisticsNotifications();
+      dismissEventNotification();
+    };
+  }, [
+    removeGameStatisticsNotifications,
+    setOngoingMatchGate,
+    shouldSync,
+    slug,
+  ]);
 
   useEffect(() => {
     if (!shouldSync || !payload) {
@@ -72,7 +101,11 @@ export function useGameStatisticsNotificationSync(params: {
       }
 
       syncState.seenDedupeKeys.add(notification.dedupeKey);
-      enqueueEventNotification(notification.options, notification.dedupeKey);
+      enqueueEventNotification(
+        notification.options,
+        notification.dedupeKey,
+        "game-statistics",
+      );
     }
   }, [
     enqueueEventNotification,

@@ -92,7 +92,9 @@ export function formatOrderCancelToastSummary(order: UserOpenOrder): string {
 }
 
 export function showOrderCancelledToast(summary: string): void {
-  toast.success("Order cancelled", { description: summary });
+  toast.success("Order cancelled", {
+    description: summary
+  });
 }
 
 function truncateOrderId(orderId: string): string {

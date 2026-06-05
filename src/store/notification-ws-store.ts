@@ -16,6 +16,7 @@ export interface QueuedEventNotification {
   receivedAt: number;
   dedupeKey: string;
   options: ShowEventNotificationOptions;
+  source?: "game-statistics" | "ws";
 }
 
 /** @deprecated Use QueuedEventNotification */
@@ -29,11 +30,15 @@ interface NotificationWsStore extends NotificationWsPersistedState {
   connectionStatus: ProphetWsConnectionStatus;
   isPresenting: boolean;
   recentDedupeKeys: string[];
+  ongoingMatchSlug: string | null;
   enqueue: (data: ProphetNotificationData) => void;
   enqueueEventNotification: (
     options: ShowEventNotificationOptions,
     dedupeKey: string,
+    source?: QueuedEventNotification["source"],
   ) => void;
+  setOngoingMatchGate: (slug: string | null) => void;
+  removeGameStatisticsNotifications: () => void;
   shiftAfterPresent: () => void;
   setPresenting: (value: boolean) => void;
   setConnectionStatus: (status: ProphetWsConnectionStatus) => void;
@@ -50,12 +55,14 @@ const initialPersistedState: NotificationWsPersistedState = {
 function createQueueItem(
   options: ShowEventNotificationOptions,
   dedupeKey: string,
+  source?: QueuedEventNotification["source"],
 ): QueuedEventNotification {
   return {
     id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
     receivedAt: Date.now(),
     dedupeKey,
     options,
+    source,
   };
 }
 
@@ -68,17 +75,22 @@ function appendToQueue(
   ) => void,
   options: ShowEventNotificationOptions,
   dedupeKey: string,
+  source?: QueuedEventNotification["source"],
 ) {
-  const { recentDedupeKeys, queue } = get();
+  const { recentDedupeKeys, queue, ongoingMatchSlug } = get();
 
   if (recentDedupeKeys.includes(dedupeKey)) {
+    return;
+  }
+
+  if (source === "game-statistics" && !ongoingMatchSlug) {
     return;
   }
 
   const nextRecent = [...recentDedupeKeys, dedupeKey].slice(-DEDUPE_WINDOW_SIZE);
 
   set({
-    queue: [...queue, createQueueItem(options, dedupeKey)],
+    queue: [...queue, createQueueItem(options, dedupeKey, source)],
     recentDedupeKeys: nextRecent,
   });
 }
@@ -107,6 +119,7 @@ export const useNotificationWsStore = create<NotificationWsStore>()(
       connectionStatus: "idle",
       isPresenting: false,
       recentDedupeKeys: [],
+      ongoingMatchSlug: null,
 
       enqueue: (data) => {
         const options = mapWsNotificationToEvent(data);
@@ -115,11 +128,29 @@ export const useNotificationWsStore = create<NotificationWsStore>()(
           return;
         }
 
-        appendToQueue(get, set, options, buildNotificationDedupeKey(data));
+        appendToQueue(
+          get,
+          set,
+          options,
+          buildNotificationDedupeKey(data),
+          "ws",
+        );
       },
 
-      enqueueEventNotification: (options, dedupeKey) => {
-        appendToQueue(get, set, options, dedupeKey);
+      enqueueEventNotification: (options, dedupeKey, source = "game-statistics") => {
+        appendToQueue(get, set, options, dedupeKey, source);
+      },
+
+      setOngoingMatchGate: (slug) => {
+        set({ ongoingMatchSlug: slug });
+      },
+
+      removeGameStatisticsNotifications: () => {
+        const { queue } = get();
+
+        set({
+          queue: queue.filter((item) => item.source !== "game-statistics"),
+        });
       },
 
       shiftAfterPresent: () => {
@@ -150,6 +181,7 @@ export const useNotificationWsStore = create<NotificationWsStore>()(
           connectionStatus: "idle",
           isPresenting: false,
           recentDedupeKeys: [],
+          ongoingMatchSlug: null,
         });
       },
     }),
