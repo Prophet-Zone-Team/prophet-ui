@@ -14,7 +14,6 @@ import { cn } from "@/lib/cn";
 import {
   referralActivityPanelClass,
   referralClaimButtonClass,
-  referralClaimButtonDisabledClass,
   referralEmptyInviteButtonClass,
   referralEmptyMessageClass,
   referralEmptyStateClass,
@@ -164,10 +163,7 @@ export function ReferralActivityPanel({
         <button
           type="button"
           disabled={!summary.canClaim || isPending || !apiEnabled}
-          className={cn(
-            referralClaimButtonClass,
-            (!summary.canClaim || isPending) && referralClaimButtonDisabledClass,
-          )}
+          className={referralClaimButtonClass}
           onClick={() => claim()}
         >
           {isPending ? "Claiming…" : "Claim"}
