@@ -14,6 +14,7 @@ import { reportStrategyLegBidAgain } from "@/lib/strategy/report-strategy-leg-bi
 import { resolveTeamSnapshot } from "@/lib/strategy/strategy-bid-validation";
 import { isTeamFastBidReady } from "@/lib/trading/run-fast-bid";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import { MIN_FAST_BID_AMOUNT } from "@/store/user-config-store";
 import { useWinnerSnapshots, useWinnerTeamsStore } from "@/store";
 import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mobile";
 import {
@@ -233,7 +234,7 @@ function PortfolioStrategyLegTimeCell({
   const fetchEvent = useWinnerTeamsStore((state) => state.fetchEvent);
   const eliminated = isLegTeamEliminated(leg.team.name);
  
-  const amount = leg.tradedAmount;
+  const amount = Math.max(MIN_FAST_BID_AMOUNT, leg.tradedAmount);
 
   useEffect(() => {
     void fetchEvent();
