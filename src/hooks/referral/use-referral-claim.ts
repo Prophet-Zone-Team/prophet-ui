@@ -8,9 +8,11 @@ import { mapClaimSummaryToProphetReferral } from "@/lib/referral/map-referral";
 import { referralQueryKeys } from "@/lib/referral/query-keys";
 import {
   patchProphetReferralCache,
-  ProphetApiError
+  ProphetApiError,
+  getProphetReferral,
 } from "@/service/prophet";
 import { formatNumber } from "@/utils";
+import { reportFundingTransaction } from "@/lib/portfolio/user";
 
 export function useReferralClaim() {
   const queryClient = useQueryClient();
@@ -18,6 +20,13 @@ export function useReferralClaim() {
   const mutation = useMutation({
     mutationFn: fetchReferralClaim,
     onSuccess: (data) => {
+      const prevReferral = getProphetReferral();
+      void reportFundingTransaction({
+        type: "claim",
+        txHash: "",
+        amount: prevReferral?.claimable_balance_usdc || "0",
+      });
+
       patchProphetReferralCache({
         claimable_balance_usdc: data.summary.claimable_balance_usdc,
         claimed_balance_usdc: data.summary.claimed_balance_usdc

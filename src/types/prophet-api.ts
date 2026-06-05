@@ -213,6 +213,8 @@ export interface ProphetReferralInviteItem {
   total_order_count: number;
   total_referral_earnings_usdc: string;
   total_referred_volume_usdc: string;
+  event_slug: string;
+  event_title: string;
 }
 
 export interface ProphetReferralInvitesData {
@@ -260,7 +262,8 @@ export type ProphetReportTransactionType =
   | "sell"
   | "redeem"
   | "withdraw"
-  | "deposit";
+  | "deposit"
+  | "claim";
 
 export type ProphetReportOrderType = "maker" | "taker";
 

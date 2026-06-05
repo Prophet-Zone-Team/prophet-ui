@@ -45,9 +45,8 @@ export function mapReferralInviteToRow(
     user: formatShortAddress(item.referred_address),
     txId: item.referral_code ? item.referral_code : "—",
     time: formatRelativeTime(timeSource),
-    market: "—",
+    market: item.event_title || "-",
     value: formatUsdAmount(item.total_referred_volume_usdc),
-    prophetFee: "—",
     earnings: formatUsdAmount(item.total_referral_earnings_usdc)
   };
 }
