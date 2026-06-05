@@ -1,6 +1,6 @@
 "use client";
 
-import { getAccount, switchChain } from "wagmi/actions";
+import { switchChain } from "wagmi/actions";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 
@@ -9,6 +9,10 @@ import {
   requestWalletRpc,
 } from "@/components/trading/wallet-provider";
 import { POLYGON_NETWORK } from "@/lib/market/deposit-assets";
+import {
+  isWalletOnChain,
+  waitForWalletOnChain,
+} from "@/lib/trading/wallet-chain-sync";
 
 export const TRADING_CHAIN_ID = POLYGON_NETWORK.chainId;
 
@@ -23,9 +27,7 @@ export async function ensureTradingChain(
 ): Promise<void> {
   options?.onChecking?.();
 
-  const account = getAccount(wagmiConfig);
-
-  if (account.chainId === TRADING_CHAIN_ID) {
+  if (await isWalletOnChain(walletAddress, TRADING_CHAIN_ID)) {
     return;
   }
 
@@ -66,9 +68,9 @@ export async function ensureTradingChain(
     }
   }
 
-  const nextAccount = getAccount(wagmiConfig);
-  console.log("nextAccount.chainId", nextAccount.chainId);
-  if (nextAccount.chainId !== TRADING_CHAIN_ID) {
+  try {
+    await waitForWalletOnChain(walletAddress, TRADING_CHAIN_ID);
+  } catch {
     throw new Error(
       `Switch your wallet to Polygon mainnet (chainId ${TRADING_CHAIN_ID}) before signing.`,
     );

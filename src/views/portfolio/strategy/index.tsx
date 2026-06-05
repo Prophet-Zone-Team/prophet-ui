@@ -104,7 +104,13 @@ export function PortfolioStrategyList({
     <div className={portfolioTableScrollClass} aria-label="Your strategies">
       <div className="flex flex-col">
         {enrichedStrategies.map((strategy) => (
-          <PortfolioStrategyCard key={strategy.id} strategy={strategy} />
+          <PortfolioStrategyCard
+            key={strategy.id}
+            strategy={strategy}
+            onStrategyUpdated={() =>
+              void loadStrategies({ force: true, silent: true })
+            }
+          />
         ))}
       </div>
     </div>

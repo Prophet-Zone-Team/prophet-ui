@@ -10,6 +10,7 @@ import {
   formatPnlSubline,
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
+import { reportStrategyLegBidAgain } from "@/lib/strategy/report-strategy-leg-bid-again";
 import { resolveTeamSnapshot } from "@/lib/strategy/strategy-bid-validation";
 import { isTeamFastBidReady } from "@/lib/trading/run-fast-bid";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
@@ -46,11 +47,15 @@ const LEGS_TABLE_BID_AGAIN_BUTTON_CLASS =
 
 export type PortfolioStrategyLegsTableProps = {
   legs: PortfolioStrategyLeg[];
+  strategyId: string;
+  onStrategyUpdated?: () => void;
   className?: string;
 };
 
 export function PortfolioStrategyLegsTable({
   legs,
+  strategyId,
+  onStrategyUpdated,
   className
 }: PortfolioStrategyLegsTableProps) {
   if (legs.length === 0) {
@@ -69,13 +74,23 @@ export function PortfolioStrategyLegsTable({
         </div>
 
         {legs.map((leg) => (
-          <PortfolioStrategyLegRow key={leg.id} leg={leg} />
+          <PortfolioStrategyLegRow
+            key={leg.id}
+            leg={leg}
+            strategyId={strategyId}
+            onStrategyUpdated={onStrategyUpdated}
+          />
         ))}
       </div>
 
       <div className={portfolioTableMobileListClass}>
         {legs.map((leg) => (
-          <PortfolioStrategyLegMobileCard key={`${leg.id}-mobile`} leg={leg} />
+          <PortfolioStrategyLegMobileCard
+            key={`${leg.id}-mobile`}
+            leg={leg}
+            strategyId={strategyId}
+            onStrategyUpdated={onStrategyUpdated}
+          />
         ))}
       </div>
     </div>
@@ -94,7 +109,15 @@ function isLegTeamEliminated(teamName?: string): boolean {
   return entry != null && "eliminated" in entry && entry.eliminated === true;
 }
 
-function PortfolioStrategyLegRow({ leg }: { leg: PortfolioStrategyLeg }) {
+function PortfolioStrategyLegRow({
+  leg,
+  strategyId,
+  onStrategyUpdated
+}: {
+  leg: PortfolioStrategyLeg;
+  strategyId: string;
+  onStrategyUpdated?: () => void;
+}) {
   const pnlTone = leg.cashPnl >= 0 ? "text-[#65AF14]" : "text-[#FF674B]";
   const sideLabel = leg.side === "yes" ? "Yes" : "No";
   const eliminated = isLegTeamEliminated(leg.team.name);
@@ -129,15 +152,23 @@ function PortfolioStrategyLegRow({ leg }: { leg: PortfolioStrategyLeg }) {
           {formatPnlSubline(leg.cashPnl, leg.percentPnl)}
         </span>
       </div>
-      <PortfolioStrategyLegTimeCell leg={leg} />
+      <PortfolioStrategyLegTimeCell
+        leg={leg}
+        strategyId={strategyId}
+        onStrategyUpdated={onStrategyUpdated}
+      />
     </div>
   );
 }
 
 function PortfolioStrategyLegMobileCard({
-  leg
+  leg,
+  strategyId,
+  onStrategyUpdated
 }: {
   leg: PortfolioStrategyLeg;
+  strategyId: string;
+  onStrategyUpdated?: () => void;
 }) {
   const pnlTone = leg.cashPnl >= 0 ? "text-[#65AF14]" : "text-[#FF674B]";
   const sideLabel = leg.side === "yes" ? "Yes" : "No";
@@ -175,7 +206,12 @@ function PortfolioStrategyLegMobileCard({
           label="Time"
           valueClassName="font-normal text-prophet-muted"
         >
-          <PortfolioStrategyLegTimeCell leg={leg} align="end" />
+          <PortfolioStrategyLegTimeCell
+            leg={leg}
+            strategyId={strategyId}
+            onStrategyUpdated={onStrategyUpdated}
+            align="end"
+          />
         </PortfolioTableMobileField>
       </div>
     </article>
@@ -184,9 +220,13 @@ function PortfolioStrategyLegMobileCard({
 
 function PortfolioStrategyLegTimeCell({
   leg,
+  strategyId,
+  onStrategyUpdated,
   align = "start"
 }: {
   leg: PortfolioStrategyLeg;
+  strategyId: string;
+  onStrategyUpdated?: () => void;
   align?: "start" | "end";
 }) {
   const snapshots = useWinnerSnapshots();
@@ -239,6 +279,17 @@ function PortfolioStrategyLegTimeCell({
             disabled={!bidReady}
             className={LEGS_TABLE_BID_AGAIN_BUTTON_CLASS}
             showAmount={false}
+            reportTransaction={false}
+            onSuccess={async ({ result, preview, userOrderPreview }) => {
+              await reportStrategyLegBidAgain({
+                strategyId: Number(strategyId),
+                snapshot,
+                preview,
+                userOrderPreview,
+                result
+              });
+              onStrategyUpdated?.();
+            }}
           >
             Bid Again
           </FastBidButton>

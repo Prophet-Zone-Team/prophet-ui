@@ -36,6 +36,7 @@ import type {
   ProphetGetUserStrategiesData,
   ProphetSubmitStrategyData,
   ProphetSubmitStrategyRequest,
+  ProphetUpdateStrategyTeamRequest,
   ProphetTrackRequest,
   ProphetTopTracksData,
   ProphetUserTrackItem,
@@ -572,6 +573,14 @@ export async function submitProphetUserStrategy(
 ): Promise<ProphetSubmitStrategyData> {
   requireProphetApiToken();
   return prophetPost<ProphetSubmitStrategyData>("/v1/user/strategy", request);
+}
+
+/** POST /v1/user/strategy/item — append order data to an existing strategy team leg */
+export async function updateProphetUserStrategyItem(
+  request: ProphetUpdateStrategyTeamRequest
+): Promise<void> {
+  requireProphetApiToken();
+  await prophetPost<unknown>("/v1/user/strategy/item", request);
 }
 
 /** GET /v1/user/strategies — all user strategies, newest first (no pagination) */

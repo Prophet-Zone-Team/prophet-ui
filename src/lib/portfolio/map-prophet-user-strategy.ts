@@ -24,6 +24,49 @@ function parseDecimal(value: string | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+export function normalizeStrategyStringArray(
+  value?: string | string[]
+): string[] {
+  if (value == null) {
+    return [];
+  }
+
+  const values = Array.isArray(value) ? value : [value];
+
+  return values
+    .map((entry) => entry?.trim() ?? "")
+    .filter((entry) => entry.length > 0);
+}
+
+export function sumLegAmounts(
+  amounts: string[],
+  prices: string[]
+): { tradedAmount: number; totalShares: number } {
+  const pairCount = Math.min(amounts.length, prices.length);
+  let tradedAmount = 0;
+  let totalShares = 0;
+
+  for (let index = 0; index < pairCount; index += 1) {
+    const amount = parseDecimal(amounts[index]);
+    const price = parseDecimal(prices[index]);
+
+    if (amount <= 0 || price <= 0) {
+      continue;
+    }
+
+    tradedAmount += amount;
+    totalShares += amount / price;
+  }
+
+  return { tradedAmount, totalShares };
+}
+
+function resolvePrimaryOrderId(item: ProphetStrategyTeamItem): string | null {
+  const orderId = normalizeStrategyStringArray(item.order_id)[0];
+
+  return orderId ?? null;
+}
+
 export function parseStrategyCurrPrice(raw?: string): number {
   const fromArray = parseGammaArrayField(raw)
     .map((item) => Number(item))
@@ -107,8 +150,7 @@ function resolveLegMarketTitle(item: ProphetStrategyTeamItem): string {
 
 function resolveLegToWinAmount(
   item: ProphetStrategyTeamItem,
-  tradedAmount: number,
-  entryPrice: number
+  totalShares: number
 ): number {
   const apiToWin = parseDecimal(item.to_win);
 
@@ -116,11 +158,7 @@ function resolveLegToWinAmount(
     return apiToWin;
   }
 
-  if (tradedAmount > 0 && entryPrice > 0) {
-    return tradedAmount / entryPrice;
-  }
-
-  return 0;
+  return totalShares > 0 ? totalShares : 0;
 }
 
 export function computeLegPositionMetrics(item: ProphetStrategyTeamItem): {
@@ -129,27 +167,37 @@ export function computeLegPositionMetrics(item: ProphetStrategyTeamItem): {
   currentValue: number;
   cashPnl: number;
   percentPnl: number;
+  totalShares: number;
 } {
-  const tradedAmount = parseDecimal(item.amount);
-  const entryPrice = parseDecimal(item.price);
+  const amounts = normalizeStrategyStringArray(item.amount);
+  const prices = normalizeStrategyStringArray(item.price);
+  const { tradedAmount, totalShares } = sumLegAmounts(amounts, prices);
+  const entryPrice = totalShares > 0 ? tradedAmount / totalShares : 0;
   const currentPrice = parseStrategyCurrPrice(item.curr_price);
 
-  if (tradedAmount <= 0 || entryPrice <= 0 || currentPrice <= 0) {
+  if (tradedAmount <= 0 || totalShares <= 0 || currentPrice <= 0) {
     return {
       tradedAmount,
       entryPrice,
       currentValue: tradedAmount,
       cashPnl: 0,
-      percentPnl: 0
+      percentPnl: 0,
+      totalShares
     };
   }
 
-  const shares = tradedAmount / entryPrice;
-  const currentValue = shares * currentPrice;
+  const currentValue = totalShares * currentPrice;
   const cashPnl = currentValue - tradedAmount;
   const percentPnl = tradedAmount > 0 ? (cashPnl / tradedAmount) * 100 : 0;
 
-  return { tradedAmount, entryPrice, currentValue, cashPnl, percentPnl };
+  return {
+    tradedAmount,
+    entryPrice,
+    currentValue,
+    cashPnl,
+    percentPnl,
+    totalShares
+  };
 }
 
 function mapStrategyLeg(
@@ -157,15 +205,20 @@ function mapStrategyLeg(
   index: number,
   tradedAt: string
 ): PortfolioStrategyLeg | null {
-  const orderId = item.order_id?.trim();
+  const orderId = resolvePrimaryOrderId(item);
 
   if (!orderId) {
     return null;
   }
 
   const curatedTeam = findCuratedEntryForStrategyTeam(item);
-  const { tradedAmount, entryPrice, currentValue, cashPnl, percentPnl } =
-    computeLegPositionMetrics(item);
+  const {
+    tradedAmount,
+    currentValue,
+    cashPnl,
+    percentPnl,
+    totalShares
+  } = computeLegPositionMetrics(item);
 
   return {
     id: orderId || `leg-${index}`,
@@ -179,7 +232,7 @@ function mapStrategyLeg(
     marketTitle: resolveLegMarketTitle(item),
     side: "yes",
     tradedAmount,
-    toWinAmount: resolveLegToWinAmount(item, tradedAmount, entryPrice),
+    toWinAmount: resolveLegToWinAmount(item, totalShares),
     currentValue,
     cashPnl,
     percentPnl,

@@ -311,16 +311,16 @@ export interface ProphetGetUserTransactionsData {
 
 /** Team leg for strategy APIs (database.StrategyTeamItem). */
 export interface ProphetStrategyTeamItem {
-  order_id: string;
-  amount?: string;
+  order_id?: string | string[];
+  amount?: string | string[];
   curr_price?: string;
   name?: string;
-  price?: string;
+  price?: string | string[];
   slug?: string;
   /** Tournament leg status when provided by the API (e.g. not_started, started, eliminated). */
   status?: string;
   to_win?: string;
-  tx_hash?: string;
+  tx_hash?: string | string[];
 }
 
 /** Row from GET /v1/user/strategies (model.StrategyView). */
@@ -351,6 +351,23 @@ export interface ProphetSubmitStrategyRequest {
 /** Response data from POST /v1/user/strategy */
 export interface ProphetSubmitStrategyData {
   strategy_id?: number;
+}
+
+/** Single team leg for POST /v1/user/strategy/item (model.StrategyTeamItemReq). */
+export interface ProphetStrategyTeamItemReq {
+  order_id: string;
+  amount?: string;
+  price?: string;
+  slug?: string;
+  name?: string;
+  tx_hash?: string;
+  curr_price?: string;
+}
+
+/** POST /v1/user/strategy/item — append order data to an existing strategy team leg */
+export interface ProphetUpdateStrategyTeamRequest {
+  strategy_id: number;
+  team: ProphetStrategyTeamItemReq;
 }
 
 /** Lightweight row from GET /v1/user/tracks/list (bookmark state). */

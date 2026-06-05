@@ -17,12 +17,13 @@ import {
 import { useAuthStore } from "@/store/auth-store";
 import type { BidOrderPreview } from "@/lib/market/polymarket-order";
 import { buildTeamMarketBuyPreview } from "@/lib/trading/team-market-buy-preview";
-import type { TeamMarketSnapshot } from "@/types/market";
+import type { TeamMarketSnapshot, UserOrderPreview } from "@/types/market";
 import {
   buildTeamUserOrderPreview,
   ensureTradingReadyForBid,
   fetchReadinessForPreview,
-  submitSignedTradeOrder
+  submitSignedTradeOrder,
+  type SubmitOrderResult
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
 
 export type FastBidStatus = "idle" | "checking" | "submitting";
@@ -36,6 +37,13 @@ export interface RunFastBidOptions {
   auth: AuthContextValue | undefined;
   router: AppRouterInstance;
   onStatusChange?: (status: FastBidStatus) => void;
+  /** When false, skips POST /v1/user/transaction after a successful submit. Defaults to true. */
+  reportTransaction?: boolean;
+  onSuccess?: (input: {
+    result: SubmitOrderResult;
+    preview: BidOrderPreview;
+    userOrderPreview: UserOrderPreview;
+  }) => void | Promise<void>;
 }
 
 export async function runFastBid({
@@ -43,7 +51,9 @@ export async function runFastBid({
   amount,
   auth,
   router,
-  onStatusChange
+  onStatusChange,
+  onSuccess,
+  reportTransaction = true
 }: RunFastBidOptions): Promise<void> {
   if (!Number.isFinite(amount) || amount <= 0) {
     showOrderErrorToast(
@@ -150,13 +160,17 @@ export async function runFastBid({
       userOrderPreview
     });
 
-    void reportTradeOrderTransaction({
-      userOrderPreview,
-      result,
-      preview,
-      variant: "team",
-      snapshot
-    });
+    if (reportTransaction) {
+      void reportTradeOrderTransaction({
+        userOrderPreview,
+        result,
+        preview,
+        variant: "team",
+        snapshot
+      });
+    }
+
+    await onSuccess?.({ result, preview, userOrderPreview });
 
     showOrderSubmittedToast(
       formatOrderToastSummary({

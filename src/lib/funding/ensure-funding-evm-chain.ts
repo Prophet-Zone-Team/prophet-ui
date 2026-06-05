@@ -6,9 +6,13 @@ import {
   getWalletClientForAddress,
   requestWalletRpc,
 } from "@/components/trading/wallet-provider";
-import { getAccount, switchChain } from "wagmi/actions";
+import { switchChain } from "wagmi/actions";
 
 import { type WagmiChainId, wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+import {
+  isWalletOnChain,
+  waitForWalletOnChain,
+} from "@/lib/trading/wallet-chain-sync";
 import {
   FundingNetworkType,
   getFundingNetworkByChainId,
@@ -33,9 +37,7 @@ export async function ensureFundingEvmChain(
     throw new Error(`Chain ${chainId} is not a supported EVM funding network.`);
   }
 
-  const account = getAccount(wagmiConfig);
-
-  if (account.chainId === chainId) {
+  if (await isWalletOnChain(walletAddress, chainId)) {
     return;
   }
 
@@ -84,9 +86,9 @@ export async function ensureFundingEvmChain(
     }
   }
 
-  const nextAccount = getAccount(wagmiConfig);
-
-  if (nextAccount.chainId !== chainId) {
+  try {
+    await waitForWalletOnChain(walletAddress, chainId);
+  } catch {
     throw new Error(
       `Switch your wallet to ${network.chainName} (chainId ${chainId}) before continuing.`,
     );

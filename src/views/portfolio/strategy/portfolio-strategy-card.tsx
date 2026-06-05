@@ -23,12 +23,14 @@ const SUMMARY_VALUE_CLASS =
 export type PortfolioStrategyCardProps = {
   strategy: PortfolioStrategyRecord;
   defaultExpanded?: boolean;
+  onStrategyUpdated?: () => void;
   className?: string;
 };
 
 export function PortfolioStrategyCard({
   strategy,
   defaultExpanded = true,
+  onStrategyUpdated,
   className
 }: PortfolioStrategyCardProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -101,7 +103,13 @@ export function PortfolioStrategyCard({
         </div>
       </div>
 
-      {expanded ? <PortfolioStrategyLegsTable legs={strategy.legs} /> : null}
+      {expanded ? (
+        <PortfolioStrategyLegsTable
+          legs={strategy.legs}
+          strategyId={strategy.id}
+          onStrategyUpdated={onStrategyUpdated}
+        />
+      ) : null}
     </article>
   );
 }

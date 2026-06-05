@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  getPortfolioStrategyStatusDisplay,
   resolvePortfolioStrategyStatus,
   resolveStrategyTeamTournamentState
 } from "@/lib/strategy/portfolio-strategy-status";
@@ -11,8 +10,10 @@ import type { ProphetStrategyTeamItem } from "@/types/prophet-api";
 import {
   computeLegPositionMetrics,
   mapProphetUserStrategy,
+  normalizeStrategyStringArray,
   parseStrategyCurrPrice,
-  resolveStrategyTeamStates
+  resolveStrategyTeamStates,
+  sumLegAmounts
 } from "./map-prophet-user-strategy";
 
 const sampleApiStrategy = {
@@ -24,27 +25,55 @@ const sampleApiStrategy = {
   created_at: "2026-06-04T07:14:19Z",
   teams: [
     {
-      order_id:
-        "0x4a53bad5c610182e8a3fdc98feeccdce6fb0eb210628a4c84985c9bf5398cf80",
+      order_id: [
+        "0x4a53bad5c610182e8a3fdc98feeccdce6fb0eb210628a4c84985c9bf5398cf80"
+      ],
       slug: "will-spain-win-the-2026-fifa-world-cup-963",
-      amount: "4.92",
-      price: "0.16",
+      amount: ["4.92"],
+      price: ["0.16"],
       name: "Spain",
-      to_win: "25.83",
+      tx_hash: [
+        "0x4a53bad5c610182e8a3fdc98feeccdce6fb0eb210628a4c84985c9bf5398cf80"
+      ],
       curr_price: '["0.1595", "0.8405"]'
     },
     {
-      order_id:
-        "0xea046d4f0353930da443cdcd1db6c01f5f8a9930c505474b44be0b0aa0bd5e7e",
+      order_id: [
+        "0xea046d4f0353930da443cdcd1db6c01f5f8a9930c505474b44be0b0aa0bd5e7e"
+      ],
       slug: "will-france-win-the-2026-fifa-world-cup-924",
-      amount: "5.26",
-      price: "0.171",
+      amount: ["5.26"],
+      price: ["0.171"],
       name: "France",
-      to_win: "25.5",
-      curr_price: '["0.1705", "0.8295"]'
+      tx_hash: [
+        "0xea046d4f0353930da443cdcd1db6c01f5a9930c505474b44be0b0aa0bd5e7e"
+      ],
+      curr_price: '["0.1615", "0.8385"]'
     }
   ]
 };
+
+describe("normalizeStrategyStringArray", () => {
+  it("wraps scalar strings in an array", () => {
+    assert.deepEqual(normalizeStrategyStringArray("5.01"), ["5.01"]);
+  });
+
+  it("returns arrays unchanged and filters empty entries", () => {
+    assert.deepEqual(normalizeStrategyStringArray(["5.01", "", " 2.00 "]), [
+      "5.01",
+      "2.00"
+    ]);
+  });
+});
+
+describe("sumLegAmounts", () => {
+  it("sums traded amount and total shares across paired entries", () => {
+    const result = sumLegAmounts(["5.01", "2.00"], ["0.16", "0.20"]);
+
+    assert.equal(result.tradedAmount, 7.01);
+    assert.equal(result.totalShares, 5.01 / 0.16 + 2 / 0.2);
+  });
+});
 
 describe("parseStrategyCurrPrice", () => {
   it("parses JSON array and returns the first price", () => {
@@ -63,9 +92,9 @@ describe("parseStrategyCurrPrice", () => {
 
 describe("computeLegPositionMetrics", () => {
   const baseItem: ProphetStrategyTeamItem = {
-    order_id: "order-1",
-    amount: "10",
-    price: "0.2",
+    order_id: ["order-1"],
+    amount: ["10"],
+    price: ["0.2"],
     curr_price: '["0.25", "0.75"]'
   };
 
@@ -74,9 +103,37 @@ describe("computeLegPositionMetrics", () => {
 
     assert.equal(metrics.tradedAmount, 10);
     assert.equal(metrics.entryPrice, 0.2);
+    assert.equal(metrics.totalShares, 50);
     assert.equal(metrics.currentValue, 12.5);
     assert.equal(metrics.cashPnl, 2.5);
     assert.equal(metrics.percentPnl, 25);
+  });
+
+  it("aggregates multiple orders in amount and price arrays", () => {
+    const metrics = computeLegPositionMetrics({
+      order_id: ["order-1", "order-2"],
+      amount: ["5.01", "2.00"],
+      price: ["0.16", "0.20"],
+      curr_price: '["0.1595", "0.8405"]'
+    });
+
+    const expectedShares = 5.01 / 0.16 + 2 / 0.2;
+
+    assert.equal(metrics.tradedAmount, 7.01);
+    assert.equal(metrics.totalShares, expectedShares);
+    assert.equal(metrics.currentValue, expectedShares * 0.1595);
+  });
+
+  it("supports legacy scalar amount and price fields", () => {
+    const metrics = computeLegPositionMetrics({
+      order_id: "order-1",
+      amount: "10",
+      price: "0.2",
+      curr_price: '["0.25", "0.75"]'
+    });
+
+    assert.equal(metrics.tradedAmount, 10);
+    assert.equal(metrics.currentValue, 12.5);
   });
 
   it("returns zero PnL when prices are missing", () => {
@@ -125,6 +182,17 @@ describe("mapProphetUserStrategy", () => {
     assert.ok(record);
     assert.equal(record.status, "not_open");
     assert.equal(record.statusLabel, "Not open yet");
+    assert.equal(record.legs.length, 2);
+  });
+
+  it("maps array API legs with aggregated traded and to-win amounts", () => {
+    const record = mapProphetUserStrategy(sampleApiStrategy);
+
+    assert.ok(record);
+    assert.equal(record.legs[0]?.tradedAmount, 4.92);
+    assert.equal(record.legs[0]?.toWinAmount, 4.92 / 0.16);
+    assert.equal(record.legs[1]?.tradedAmount, 5.26);
+    assert.equal(record.legs[1]?.toWinAmount, 5.26 / 0.171);
   });
 
   it("maps leg toWin from shares when API to_win is absent", () => {
@@ -133,10 +201,10 @@ describe("mapProphetUserStrategy", () => {
       name: "Test",
       teams: [
         {
-          order_id: "order-1",
+          order_id: ["order-1"],
           name: "Spain",
-          amount: "10",
-          price: "0.25"
+          amount: ["10"],
+          price: ["0.25"]
         }
       ]
     });
@@ -150,15 +218,51 @@ describe("mapProphetUserStrategy", () => {
       id: 2,
       teams: [
         {
-          order_id: "order-2",
+          order_id: ["order-2"],
           name: "Spain",
-          amount: "10",
-          price: "0.25",
+          amount: ["10"],
+          price: ["0.25"],
           to_win: "55"
         }
       ]
     });
 
     assert.equal(record?.legs[0]?.toWinAmount, 55);
+  });
+
+  it("supports legacy scalar order_id and amount fields", () => {
+    const record = mapProphetUserStrategy({
+      id: 3,
+      teams: [
+        {
+          order_id: "order-legacy",
+          name: "Spain",
+          amount: "10",
+          price: "0.25"
+        }
+      ]
+    });
+
+    assert.ok(record);
+    assert.equal(record.legs[0]?.id, "order-legacy");
+    assert.equal(record.legs[0]?.tradedAmount, 10);
+    assert.equal(record.legs[0]?.toWinAmount, 40);
+  });
+
+  it("drops legs without a valid order_id", () => {
+    const record = mapProphetUserStrategy({
+      id: 4,
+      teams: [
+        {
+          order_id: [],
+          name: "Spain",
+          amount: ["10"],
+          price: ["0.25"]
+        }
+      ]
+    });
+
+    assert.ok(record);
+    assert.equal(record.legs.length, 0);
   });
 });
