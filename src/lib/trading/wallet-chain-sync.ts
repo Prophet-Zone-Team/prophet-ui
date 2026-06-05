@@ -1,19 +1,21 @@
 "use client";
 
 import { requestWalletRpc } from "@/components/trading/wallet-provider";
-import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
-import { getAccount, watchAccount } from "wagmi/actions";
+import { type WagmiChainId, wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+import { getAccount, reconnect, switchChain, watchAccount } from "wagmi/actions";
 
 const DEFAULT_CHAIN_SYNC_TIMEOUT_MS = 10_000;
 const CHAIN_SYNC_POLL_MS = 150;
+
+export function isWagmiOnChain(chainId: number): boolean {
+  return getAccount(wagmiConfig).chainId === chainId;
+}
 
 export async function isWalletOnChain(
   walletAddress: string,
   chainId: number,
 ): Promise<boolean> {
-  const account = getAccount(wagmiConfig);
-
-  if (account.chainId === chainId) {
+  if (isWagmiOnChain(chainId)) {
     return true;
   }
 
@@ -29,11 +31,95 @@ export async function waitForWalletOnChain(
     timeoutMs?: number;
   },
 ): Promise<void> {
-  if (await isWalletOnChain(walletAddress, chainId)) {
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_CHAIN_SYNC_TIMEOUT_MS;
+
+  if (isWagmiOnChain(chainId)) {
     return;
   }
 
-  const timeoutMs = options?.timeoutMs ?? DEFAULT_CHAIN_SYNC_TIMEOUT_MS;
+  await waitForWalletChainId(walletAddress, chainId, timeoutMs);
+  await syncWagmiToChain(chainId);
+  await waitForWagmiChain(chainId, timeoutMs);
+}
+
+async function waitForWalletChainId(
+  walletAddress: string,
+  chainId: number,
+  timeoutMs: number,
+): Promise<void> {
+  if ((await readWalletChainId(walletAddress)) === chainId) {
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    let settled = false;
+    let timeoutId: number | undefined;
+    let pollId: number | undefined;
+
+    const cleanup = () => {
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+
+      if (pollId !== undefined) {
+        window.clearInterval(pollId);
+      }
+    };
+
+    const finish = (result: "matched" | "timeout") => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      cleanup();
+
+      if (result === "matched") {
+        resolve();
+        return;
+      }
+
+      reject(new Error("Timed out waiting for the wallet network to update."));
+    };
+
+    const check = async () => {
+      if ((await readWalletChainId(walletAddress)) === chainId) {
+        finish("matched");
+      }
+    };
+
+    void check();
+
+    pollId = window.setInterval(() => {
+      void check();
+    }, CHAIN_SYNC_POLL_MS);
+
+    timeoutId = window.setTimeout(() => {
+      void check().finally(() => finish("timeout"));
+    }, timeoutMs);
+  });
+}
+
+async function syncWagmiToChain(chainId: number): Promise<void> {
+  if (isWagmiOnChain(chainId)) {
+    return;
+  }
+
+  try {
+    await switchChain(wagmiConfig, { chainId: chainId as WagmiChainId });
+  } catch {
+    try {
+      await reconnect(wagmiConfig);
+    } catch {
+      // Reconnect may be unavailable before the first wallet connection settles.
+    }
+  }
+}
+
+async function waitForWagmiChain(chainId: number, timeoutMs: number): Promise<void> {
+  if (isWagmiOnChain(chainId)) {
+    return;
+  }
 
   await new Promise<void>((resolve, reject) => {
     let settled = false;
@@ -66,29 +152,28 @@ export async function waitForWalletOnChain(
         return;
       }
 
-      reject(new Error("Timed out waiting for the wallet network to update."));
+      reject(new Error("Timed out waiting for wagmi to sync the wallet network."));
     };
 
-    const check = async () => {
-      if (await isWalletOnChain(walletAddress, chainId)) {
+    const check = () => {
+      if (isWagmiOnChain(chainId)) {
         finish("matched");
       }
     };
 
     unwatch = watchAccount(wagmiConfig, {
       onChange() {
-        void check();
+        check();
       },
     });
 
-    void check();
+    check();
 
-    pollId = window.setInterval(() => {
-      void check();
-    }, CHAIN_SYNC_POLL_MS);
+    pollId = window.setInterval(check, CHAIN_SYNC_POLL_MS);
 
     timeoutId = window.setTimeout(() => {
-      void check().finally(() => finish("timeout"));
+      check();
+      finish("timeout");
     }, timeoutMs);
   });
 }

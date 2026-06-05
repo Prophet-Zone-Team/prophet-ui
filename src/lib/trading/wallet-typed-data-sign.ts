@@ -10,7 +10,10 @@ import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import { getStoredWalletConnectorId } from "@/components/trading/trading-wallet-session";
 import { prepareWalletSigning } from "@/lib/trading/prepare-wallet-signing";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
-import { TRADING_CHAIN_ID } from "@/lib/trading/wallet-trading-chain";
+import {
+  ensureTradingChain,
+  TRADING_CHAIN_ID,
+} from "@/lib/trading/wallet-trading-chain";
 
 export async function signTypedData(walletAddress: string, typedData: unknown): Promise<string> {
   const connectorId = getStoredWalletConnectorId(walletAddress);
@@ -36,6 +39,7 @@ export async function signTypedData(walletAddress: string, typedData: unknown): 
       throw new Error("Unable to access the connected wallet connector. Reconnect and try again.");
     }
 
+    await ensureTradingChain(walletAddress);
     await prepareWalletSigning({ chainId: TRADING_CHAIN_ID });
 
     const signature = await wagmiSignTypedData(wagmiConfig, {

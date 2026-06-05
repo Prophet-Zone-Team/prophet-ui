@@ -5,9 +5,14 @@ import { privateKeyToAccount } from "viem/accounts";
 import { polygon } from "viem/chains";
 
 import { getWalletClientForAddress } from "@/components/trading/wallet-provider";
-import { TRADING_CHAIN_ID } from "@/lib/trading/wallet-trading-chain";
+import {
+  ensureTradingChain,
+  TRADING_CHAIN_ID,
+} from "@/lib/trading/wallet-trading-chain";
 
 export async function createViemClobWalletClient(walletAddress: string): Promise<WalletClient> {
+  await ensureTradingChain(walletAddress);
+
   return getWalletClientForAddress(walletAddress, { chainId: TRADING_CHAIN_ID });
 }
 

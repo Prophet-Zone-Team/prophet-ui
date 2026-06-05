@@ -10,7 +10,7 @@ import {
 } from "@/components/trading/wallet-provider";
 import { POLYGON_NETWORK } from "@/lib/market/deposit-assets";
 import {
-  isWalletOnChain,
+  isWagmiOnChain,
   waitForWalletOnChain,
 } from "@/lib/trading/wallet-chain-sync";
 
@@ -27,7 +27,7 @@ export async function ensureTradingChain(
 ): Promise<void> {
   options?.onChecking?.();
 
-  if (await isWalletOnChain(walletAddress, TRADING_CHAIN_ID)) {
+  if (isWagmiOnChain(TRADING_CHAIN_ID)) {
     return;
   }
 

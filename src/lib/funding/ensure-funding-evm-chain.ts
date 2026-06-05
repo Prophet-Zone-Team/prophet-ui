@@ -10,7 +10,7 @@ import { switchChain } from "wagmi/actions";
 
 import { type WagmiChainId, wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import {
-  isWalletOnChain,
+  isWagmiOnChain,
   waitForWalletOnChain,
 } from "@/lib/trading/wallet-chain-sync";
 import {
@@ -37,7 +37,7 @@ export async function ensureFundingEvmChain(
     throw new Error(`Chain ${chainId} is not a supported EVM funding network.`);
   }
 
-  if (await isWalletOnChain(walletAddress, chainId)) {
+  if (isWagmiOnChain(chainId)) {
     return;
   }
 
