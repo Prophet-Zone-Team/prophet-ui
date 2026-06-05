@@ -301,26 +301,8 @@ export function DepositDialog({
     setContinueLoading(true);
 
     try {
+      // QA: Do not validate the amount when selecting a token
       const latestBalance = await getTokenBalance(selectedToken);
-      const latestBalanceUsd = selectTokenUsdValue(
-        prices,
-        selectedToken.symbol,
-        latestBalance
-      );
-
-      const effectiveMinUsd = getEffectiveMinDepositUsd(
-        selectedToken.minCheckoutUsd,
-      );
-
-      if (
-        depositMethod === "connected" &&
-        Big(latestBalanceUsd || 0).lt(effectiveMinUsd)
-      ) {
-        toast.error(
-          `${selectedToken.symbol} minimum deposit amount is $${effectiveMinUsd} or higher`,
-        );
-        return;
-      }
 
       if (depositMethod === "connected") {
         setAmount(
@@ -350,14 +332,25 @@ export function DepositDialog({
   };
 
   const onContinueToConfirm = async () => {
+    setContinueLoading(true);
+
     if (!selectedToken) {
+      setContinueLoading(false);
       return false;
     }
+
+    const latestBalance = await getTokenBalance(selectedToken);
 
     const effectiveMinUsd =
       depositMethod === "connected"
         ? getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd)
         : 0;
+
+    if (Big(amount.tokenAmount || 0).gt(latestBalance)) {
+      toast.error("Insufficient balance");
+      setContinueLoading(false);
+      return;
+    }
 
     if (
       depositMethod === "connected" &&
@@ -367,10 +360,9 @@ export function DepositDialog({
       toast.error(
         `${selectedToken.symbol} minimum deposit amount is $${effectiveMinUsd} or higher`,
       );
+      setContinueLoading(false);
       return;
     }
-
-    setContinueLoading(true);
 
     try {
       if (
@@ -464,14 +456,14 @@ export function DepositDialog({
         setStableflowExecution((current) =>
           current
             ? {
-                ...current,
-                expectedAmountBaseUnits: minBaseUnits(
-                  current.expectedAmountBaseUnits,
-                  readyMode === "wrap-only"
-                    ? balancePayload.usdce.balanceBaseUnits
-                    : balancePayload.usdc.balanceBaseUnits
-                )
-              }
+              ...current,
+              expectedAmountBaseUnits: minBaseUnits(
+                current.expectedAmountBaseUnits,
+                readyMode === "wrap-only"
+                  ? balancePayload.usdce.balanceBaseUnits
+                  : balancePayload.usdc.balanceBaseUnits
+              )
+            }
             : current
         );
         setStatusPhase("ready");
@@ -696,24 +688,11 @@ export function DepositDialog({
     }
 
     if (step === "amount" && selectedToken) {
-      const effectiveMinUsd =
-        depositMethod === "stableflow"
-          ? 0
-          : getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd);
-      const canContinue = isDepositAmountValid(
-        amount.tokenAmount,
-        selectedTokenMaxAmount,
-        {
-          minDepositUsd: effectiveMinUsd,
-          amountUsd: amount.amountUsd,
-        },
-      );
-
       return (
         <button
           type="button"
           className={fundingPrimaryButtonClass}
-          disabled={!canContinue || continueLoading}
+          disabled={continueLoading}
           onClick={() => void onContinueToConfirm()}
         >
           {continueLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
