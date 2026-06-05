@@ -11,10 +11,10 @@ interface AppChromeProps {
 
 export function AppChrome({ children }: AppChromeProps) {
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <AppHeader />
-      <div className="pt-[70px]">{children}</div>
+      <div className="pt-[70px] flex-1">{children}</div>
       <AppFooter />
-    </>
+    </div>
   );
 }
