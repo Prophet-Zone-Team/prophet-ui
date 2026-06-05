@@ -389,13 +389,6 @@ function useProbabilityChartFixture(
         lineKey,
       );
 
-      console.log("tokenResolution", {
-        tokenResolution,
-        currentMatch,
-        chartKind,
-        lineKey
-      });
-
       if (!tokenResolution) {
         setPoints([]);
         setBinaryPoints([]);

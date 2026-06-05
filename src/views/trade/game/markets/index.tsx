@@ -9,6 +9,7 @@ import {
   getFixtureOutcomesForGroup,
   sortFixtureGroupOutcomes
 } from "@/lib/market/build-fixture-markets-snapshot";
+import { useGameStatisticsNotificationSync } from "@/hooks/market/use-game-statistics-notification-sync";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import {
   mergeLivePricesIntoFixtureOutcomes,
@@ -111,6 +112,14 @@ export function GameMarketsSection({
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
   const sides = resolveMatchSides(match, teamSnapshots);
+
+  useGameStatisticsNotificationSync({
+    match,
+    homeTeamName: sides.home.name,
+    awayTeamName: sides.away.name,
+    enabled: true,
+  });
+
   const activeLineKey = tab === "totals" ? totalsLineKey : spreadsLineKey;
   const chartKind = resolveTabChartKind(tab);
   const activeTabOutcomes = useMemo(

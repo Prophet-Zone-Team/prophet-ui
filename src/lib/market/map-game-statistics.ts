@@ -67,7 +67,7 @@ export function parseStatisticValue(value: ProphetGameStatisticValue): number {
   return 0;
 }
 
-function resolveTeamSide(
+export function resolveTeamSide(
   teamName: string,
   homeTeamName: string,
   awayTeamName: string

@@ -3,19 +3,26 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import { buildNotificationDedupeKey } from "@/lib/notification/map-ws-notification-to-event";
+import type { ShowEventNotificationOptions } from "@/components/notification/event";
+import {
+  buildNotificationDedupeKey,
+  mapWsNotificationToEvent,
+} from "@/lib/notification/map-ws-notification-to-event";
 import type { ProphetNotificationData } from "@/types/prophet-notification-ws";
 import type { ProphetWsConnectionStatus } from "@/types/prophet-notification-ws";
 
-export interface QueuedProphetNotification {
+export interface QueuedEventNotification {
   id: string;
   receivedAt: number;
   dedupeKey: string;
-  data: ProphetNotificationData;
+  options: ShowEventNotificationOptions;
 }
 
+/** @deprecated Use QueuedEventNotification */
+export type QueuedProphetNotification = QueuedEventNotification;
+
 interface NotificationWsPersistedState {
-  queue: QueuedProphetNotification[];
+  queue: QueuedEventNotification[];
 }
 
 interface NotificationWsStore extends NotificationWsPersistedState {
@@ -23,6 +30,10 @@ interface NotificationWsStore extends NotificationWsPersistedState {
   isPresenting: boolean;
   recentDedupeKeys: string[];
   enqueue: (data: ProphetNotificationData) => void;
+  enqueueEventNotification: (
+    options: ShowEventNotificationOptions,
+    dedupeKey: string,
+  ) => void;
   shiftAfterPresent: () => void;
   setPresenting: (value: boolean) => void;
   setConnectionStatus: (status: ProphetWsConnectionStatus) => void;
@@ -36,13 +47,57 @@ const initialPersistedState: NotificationWsPersistedState = {
   queue: [],
 };
 
-function createQueueItem(data: ProphetNotificationData): QueuedProphetNotification {
+function createQueueItem(
+  options: ShowEventNotificationOptions,
+  dedupeKey: string,
+): QueuedEventNotification {
   return {
     id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
     receivedAt: Date.now(),
-    dedupeKey: buildNotificationDedupeKey(data),
-    data,
+    dedupeKey,
+    options,
   };
+}
+
+function appendToQueue(
+  get: () => NotificationWsStore,
+  set: (
+    partial:
+      | Partial<NotificationWsStore>
+      | ((state: NotificationWsStore) => Partial<NotificationWsStore>),
+  ) => void,
+  options: ShowEventNotificationOptions,
+  dedupeKey: string,
+) {
+  const { recentDedupeKeys, queue } = get();
+
+  if (recentDedupeKeys.includes(dedupeKey)) {
+    return;
+  }
+
+  const nextRecent = [...recentDedupeKeys, dedupeKey].slice(-DEDUPE_WINDOW_SIZE);
+
+  set({
+    queue: [...queue, createQueueItem(options, dedupeKey)],
+    recentDedupeKeys: nextRecent,
+  });
+}
+
+function isQueuedEventNotification(
+  value: unknown,
+): value is QueuedEventNotification {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<QueuedEventNotification>;
+
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.dedupeKey === "string" &&
+    Boolean(candidate.options?.level) &&
+    Array.isArray(candidate.options?.teams)
+  );
 }
 
 export const useNotificationWsStore = create<NotificationWsStore>()(
@@ -54,21 +109,17 @@ export const useNotificationWsStore = create<NotificationWsStore>()(
       recentDedupeKeys: [],
 
       enqueue: (data) => {
-        const dedupeKey = buildNotificationDedupeKey(data);
-        const { recentDedupeKeys, queue } = get();
+        const options = mapWsNotificationToEvent(data);
 
-        if (recentDedupeKeys.includes(dedupeKey)) {
+        if (!options) {
           return;
         }
 
-        const nextRecent = [...recentDedupeKeys, dedupeKey].slice(
-          -DEDUPE_WINDOW_SIZE,
-        );
+        appendToQueue(get, set, options, buildNotificationDedupeKey(data));
+      },
 
-        set({
-          queue: [...queue, createQueueItem(data)],
-          recentDedupeKeys: nextRecent,
-        });
+      enqueueEventNotification: (options, dedupeKey) => {
+        appendToQueue(get, set, options, dedupeKey);
       },
 
       shiftAfterPresent: () => {
@@ -112,10 +163,13 @@ export const useNotificationWsStore = create<NotificationWsStore>()(
         const persistedState = persisted as
           | Partial<NotificationWsPersistedState>
           | undefined;
+        const persistedQueue = Array.isArray(persistedState?.queue)
+          ? persistedState.queue.filter(isQueuedEventNotification)
+          : current.queue;
 
         return {
           ...current,
-          queue: persistedState?.queue ?? current.queue,
+          queue: persistedQueue,
         };
       },
     },

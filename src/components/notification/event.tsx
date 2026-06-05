@@ -56,7 +56,6 @@ import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 
 import { cn } from "@/lib/cn";
-import { formatNotificationBodyHtml } from "@/lib/notification/format-notification-body";
 import { TeamFlag } from "../teams/team-flag";
 
 const EVENT_NOTIFICATION_TRANSITION = {
@@ -70,97 +69,99 @@ const EVENT_NOTIFICATION_EXIT_Y = -28;
 
 export function EventNotification(props: EventNotificationProps) {
   const { level, teams, className } = props;
-  
-  const isNewLevel = isSingleCardNotificationLevel(level);
 
   const levelInfo = EventNotificationLevelMap[level];
 
-  if (!levelInfo || !teams.length) {
+  if (!levelInfo || teams.length < 2) {
     return null;
   }
 
   return (
-    <div
-      className={cn(
-        "relative overflow-visible w-[352px] rounded-xl bg-white border flex items-center gap-2 font-[Sora] text-base font-[500] text-black",
-        isNewLevel
-          ? "min-h-[90px] px-[25px] py-4"
-          : "h-[108px] justify-center pt-[14px]",
-        className
-      )}
-      style={{
-        borderColor: levelInfo.color,
-        boxShadow: `0px 0px 10px 0px ${levelInfo.color}`
-      }}
-    >
-      <EventBadge level={level} />
-      {isNewLevel ? (
-        <>
-          {/* <TeamFlag
-              code={teams[0].code}
-              name={teams[0].name}
-              className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
-            /> */}
-          <div
-            className="w-full text-center text-sm leading-relaxed [&_b]:font-bold"
-            dangerouslySetInnerHTML={{
-              __html: formatNotificationBodyHtml(teams[0].event ?? ""),
-            }}
-          />
-        </>
-      ) : (
-        <>
-          <div className="flex flex-col items-center gap-2">
-            <div className="relative">
-              {/* <TeamFlag
-                  code={teams[0].code}
-                  name={teams[0].name}
-                  className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
-                /> */}
-              <IconFoul level={level} event={teams[0].event} />
-            </div>
-            <div className="">{teams[0].name}</div>
-          </div>
-          <div className="flex items-center justify-center gap-[2px] text-[26px]">
-            <div
-              className="size-[36px] rounded-xl flex justify-center items-center"
-              style={{
-                backgroundColor:
-                  teams[0].event?.toLowerCase?.() === "goal"
-                    ? "#7BCA25"
-                    : "white"
-              }}
-            >
-              {teams[0].score}
-            </div>
-            <div className="">-</div>
-            <div
-              className="size-[36px] rounded-xl flex justify-center items-center"
-              style={{
-                backgroundColor:
-                  teams[1].event?.toLowerCase?.() === "goal"
-                    ? "#7BCA25"
-                    : "white"
-              }}
-            >
-              {teams[1].score}
-            </div>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="relative">
-              {/* <TeamFlag
-                code={teams[1].code}
-                name={teams[1].name}
-                className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
-              /> */}
-              <IconFoul level={level} event={teams[1].event} />
-            </div>
-            <div className="">{teams[1].name}</div>
-          </div>
-        </>
-      )}
+    <div className={cn("relative w-[352px] pt-[19px]", className)}>
+      <div
+        className={cn(
+          "relative flex h-[108px] w-[352px] items-center justify-between rounded-[12px] border bg-white px-6",
+          "font-[Sora] font-medium text-black"
+        )}
+        style={{
+          borderColor: levelInfo.color,
+          boxShadow: `0px 0px 10px 0px ${levelInfo.color}`
+        }}
+      >
+        <EventBadge level={level} />
+        <TeamColumn team={teams[0]} level={level} />
+        <ScoreRow teams={teams} highlightColor={levelInfo.color} />
+        <TeamColumn team={teams[1]} level={level} />
+      </div>
     </div>
   );
+}
+
+function TeamColumn(props: {
+  team: EventNotificationTeam;
+  level: EventNotificationLevel;
+}) {
+  const { team, level } = props;
+
+  return (
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
+      <div className="relative shrink-0">
+        <TeamFlag
+          code={team.code}
+          name={team.name}
+          className="!block size-[36px] min-w-[36px] shrink-0 rounded-[6px] shadow-[0px_0px_2px_rgba(0,0,0,0.2)]"
+        />
+        <IconFoul level={level} event={team.event} />
+      </div>
+      <div className="max-w-[102px] truncate text-center text-[16px] leading-5">
+        {team.name}
+      </div>
+    </div>
+  );
+}
+
+function ScoreRow(props: {
+  teams: EventNotificationTeam[];
+  highlightColor: string;
+}) {
+  const { teams, highlightColor } = props;
+
+  return (
+    <div className="flex shrink-0 items-center justify-center gap-[2px] text-[26px] leading-[33px]">
+      <ScoreDigit
+        score={teams[0]?.score}
+        highlighted={teams[0]?.event?.toLowerCase?.() === "goal"}
+        highlightColor={highlightColor}
+      />
+      <span>-</span>
+      <ScoreDigit
+        score={teams[1]?.score}
+        highlighted={teams[1]?.event?.toLowerCase?.() === "goal"}
+        highlightColor={highlightColor}
+      />
+    </div>
+  );
+}
+
+function ScoreDigit(props: {
+  score?: string;
+  highlighted: boolean;
+  highlightColor: string;
+}) {
+  const { score, highlighted, highlightColor } = props;
+
+  if (highlighted) {
+    return (
+      <div
+        className="flex size-[36px] items-center justify-center rounded-[12px]"
+        style={{ backgroundColor: highlightColor }}
+      >
+        {score}
+      </div>
+    );
+  }
+
+  return <span className="min-w-[20px] text-center">{score}</span>;
 }
 
 export default EventNotification;
@@ -179,44 +180,32 @@ export interface EventNotificationProps {
 }
 
 export const EventNotificationLevel = {
-  New: "New",
   Goal: "Goal",
   FoulWarn: "FoulWarn",
-  FoulAlert: "FoulAlert",
-  Price: "Price",
-  Volume: "Volume",
-  LargeOrder: "LargeOrder",
-  TopHolders: "TopHolders",
-  News: "News",
+  FoulAlert: "FoulAlert"
 } as const;
 export type EventNotificationLevel = (typeof EventNotificationLevel)[keyof typeof EventNotificationLevel];
 
-export const EventNotificationLevelMap: Record<EventNotificationLevel, { name: string; color: string; }> = {
-  [EventNotificationLevel.New]: { name: "NEW", color: "#9D84FF" },
-  [EventNotificationLevel.Goal]: { name: "GOAL!", color: "#7BCA25" },
-  [EventNotificationLevel.FoulWarn]: { name: "FOUL!", color: "#FFC51C" },
-  [EventNotificationLevel.FoulAlert]: { name: "FOUL!", color: "#FF4242" },
-  [EventNotificationLevel.Price]: { name: "PRICE", color: "#3B82F6" },
-  [EventNotificationLevel.Volume]: { name: "VOLUME", color: "#FFC51C" },
-  [EventNotificationLevel.LargeOrder]: { name: "ORDER", color: "#FF4242" },
-  [EventNotificationLevel.TopHolders]: { name: "HOLDERS", color: "#9D84FF" },
-  [EventNotificationLevel.News]: { name: "NEWS", color: "#6366F1" },
+export const EventNotificationLevelMap: Record<
+  EventNotificationLevel,
+  { name: string; color: string; shadowColor: string }
+> = {
+  [EventNotificationLevel.Goal]: {
+    name: "GOAL!",
+    color: "#7BCA25",
+    shadowColor: "#7BCA25"
+  },
+  [EventNotificationLevel.FoulWarn]: {
+    name: "FOUL!",
+    color: "#FFC51C",
+    shadowColor: "#FDD357"
+  },
+  [EventNotificationLevel.FoulAlert]: {
+    name: "FOUL!",
+    color: "#FF4242",
+    shadowColor: "#FDD357"
+  }
 };
-
-const SINGLE_CARD_NOTIFICATION_LEVELS = new Set<EventNotificationLevel>([
-  EventNotificationLevel.New,
-  EventNotificationLevel.Price,
-  EventNotificationLevel.Volume,
-  EventNotificationLevel.LargeOrder,
-  EventNotificationLevel.TopHolders,
-  EventNotificationLevel.News,
-]);
-
-export function isSingleCardNotificationLevel(
-  level: EventNotificationLevel,
-): boolean {
-  return SINGLE_CARD_NOTIFICATION_LEVELS.has(level);
-}
 
 interface EventBadgeProps {
   level: EventNotificationLevel;
@@ -235,12 +224,12 @@ function EventBadge(props: EventBadgeProps) {
   return (
     <div
       className={cn(
-        "absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 z-1",
-        "text-white font-[Sora] text-lg font-[700] flex justify-center items-center h-[38px] rounded-xl w-[100px]",
-        className,
+        "absolute left-1/2 top-0 z-1 flex h-[37px] w-[98px] -translate-x-1/2 -translate-y-1/2 items-center justify-center",
+        "rounded-[12px] font-[Sora] text-[18px] font-bold leading-[23px] text-white",
+        className
       )}
       style={{
-        backgroundColor: levelInfo.color,
+        backgroundColor: levelInfo.color
       }}
     >
       {levelInfo.name}

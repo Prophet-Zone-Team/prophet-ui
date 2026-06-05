@@ -31,7 +31,7 @@ describe("mapWsNotificationToEvent", () => {
     assert.equal(mapped?.teams[1]?.score, "1");
   });
 
-  it("maps price notifications to Price single-card layout", () => {
+  it("does not map price notifications to event notification options", () => {
     const data: ProphetNotificationData = {
       notice_type: "price",
       event_title: "World Cup Final",
@@ -45,20 +45,22 @@ describe("mapWsNotificationToEvent", () => {
 
     const mapped = mapWsNotificationToEvent(data);
 
-    assert.equal(mapped?.level, EventNotificationLevel.Price);
-    assert.equal(mapped?.teams[0]?.event, "Price moved");
+    assert.equal(mapped, undefined);
   });
 
-  it("maps all mock samples to event notification options", () => {
+  it("maps only score samples from mock notifications", () => {
     const samples = buildProphetNotificationSamples(1_710_000_000);
 
     assert.equal(samples.length, 6);
 
     for (const sample of samples) {
-      assert.ok(
-        mapWsNotificationToEvent(sample),
-        `expected mappable sample for ${sample.notice_type}`,
-      );
+      const mapped = mapWsNotificationToEvent(sample);
+
+      if (sample.notice_type === "score") {
+        assert.ok(mapped, "expected score sample to map");
+      } else {
+        assert.equal(mapped, undefined, `expected ${sample.notice_type} to skip`);
+      }
     }
   });
 

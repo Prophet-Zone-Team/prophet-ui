@@ -4,7 +4,6 @@ import { useEffect } from "react";
 
 import { showEventNotification } from "@/components/notification/event";
 import { PROPHET_NOTIFICATION_DISPLAY_MS } from "@/config/prophet-ws";
-import { mapWsNotificationToEvent } from "@/lib/notification/map-ws-notification-to-event";
 import { useNotificationWsStore } from "@/store/notification-ws-store";
 
 export function NotificationQueuePresenter() {
@@ -27,17 +26,10 @@ export function NotificationQueuePresenter() {
       return;
     }
 
-    const options = mapWsNotificationToEvent(item.data);
-
-    if (!options) {
-      shiftAfterPresent();
-      return;
-    }
-
     setPresenting(true);
 
     showEventNotification({
-      ...options,
+      ...item.options,
       duration: PROPHET_NOTIFICATION_DISPLAY_MS,
       onDismiss: () => {
         const state = useNotificationWsStore.getState();

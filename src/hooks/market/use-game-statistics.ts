@@ -34,7 +34,9 @@ export function useGameStatistics(params: {
     queryFn: () => getProphetGameStatistics({ slug }),
     enabled,
     staleTime:
-      variant === "ended" ? Number.POSITIVE_INFINITY : GAME_STATISTICS_POLL_INTERVAL_MS,
+      variant === "ended"
+        ? Number.POSITIVE_INFINITY
+        : GAME_STATISTICS_POLL_INTERVAL_MS,
     refetchInterval:
       variant === "ongoing" ? GAME_STATISTICS_POLL_INTERVAL_MS : false
   });
@@ -75,6 +77,9 @@ export function useGameStatistics(params: {
   return {
     rows,
     goalEvents,
+    payload: query.data,
+    slug,
+    variant,
     isLoading: enabled && query.isLoading,
     isError: enabled && query.isError,
     error: query.error

@@ -5,53 +5,6 @@ import {
 import { resolveTeamCode } from "@/lib/analytics/map-team-power-ranking";
 import type { ProphetNotificationData } from "@/types/prophet-notification-ws";
 
-function readDisplayText(data: ProphetNotificationData): string {
-  return data.body?.trim() || "";
-}
-
-function resolveMarketTeamName(data: ProphetNotificationData): string {
-  if (data.notice_type === "news") {
-    const payload = data.payload;
-    return (
-      payload.matched_team?.trim() ||
-      payload.team_a?.trim() ||
-      data.event_title?.trim() ||
-      "News"
-    );
-  }
-
-  return (
-    data.outcome?.trim() ||
-    data.market_name?.trim() ||
-    data.event_title?.trim() ||
-    "Market"
-  );
-}
-
-function resolveMarketTeamCode(data: ProphetNotificationData): string {
-  const name = resolveMarketTeamName(data);
-  return resolveTeamCode(name);
-}
-
-function mapMarketNoticeLevel(
-  data: ProphetNotificationData,
-): EventNotificationLevel | undefined {
-  switch (data.notice_type) {
-    case "price":
-      return EventNotificationLevel.Price;
-    case "volume":
-      return EventNotificationLevel.Volume;
-    case "large_order":
-      return EventNotificationLevel.LargeOrder;
-    case "top_holders":
-      return EventNotificationLevel.TopHolders;
-    case "news":
-      return EventNotificationLevel.News;
-    default:
-      return undefined;
-  }
-}
-
 function mapScoreNotification(
   data: ProphetNotificationData,
 ): ShowEventNotificationOptions | undefined {
@@ -94,43 +47,10 @@ function mapScoreNotification(
   };
 }
 
-function mapSingleCardNotification(
-  data: ProphetNotificationData,
-): ShowEventNotificationOptions | undefined {
-  const level = mapMarketNoticeLevel(data);
-
-  if (!level) {
-    return undefined;
-  }
-
-  const displayText = readDisplayText(data);
-
-  if (!displayText) {
-    return undefined;
-  }
-
-  const name = resolveMarketTeamName(data);
-
-  return {
-    level,
-    teams: [
-      {
-        code: resolveMarketTeamCode(data),
-        name,
-        event: displayText,
-      },
-    ],
-  };
-}
-
 export function mapWsNotificationToEvent(
   data: ProphetNotificationData,
 ): ShowEventNotificationOptions | undefined {
-  if (data.notice_type === "score") {
-    return mapScoreNotification(data);
-  }
-
-  return mapSingleCardNotification(data);
+  return mapScoreNotification(data);
 }
 
 export function buildNotificationDedupeKey(data: ProphetNotificationData): string {
