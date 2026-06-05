@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { ShareInviteModal } from "@/components/share/share-invite-modal";
 import { ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME } from "@/lib/road-to-final/share-card-config";
@@ -41,6 +41,9 @@ export function RoadToFinalShareModal({
   funderAddress,
   kickback,
 }: RoadToFinalShareModalProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [shareCardReady, setShareCardReady] = useState(false);
+
   const inviteLink = useMemo(
     () => resolveShareInviteLink(kickback),
     [kickback],
@@ -74,13 +77,17 @@ export function RoadToFinalShareModal({
       referralCode={inviteLink.referralCode}
       fullLink={inviteLink.fullLink}
       downloadFilename={ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME}
+      shareCardReady={shareCardReady}
+      cardRef={cardRef}
     >
       <RoadToFinalShareCard
+        ref={cardRef}
         stages={stages}
         champion={champion}
         fullLink={inviteLink.fullLink}
         displayLink={inviteLink.displayLink}
         funderAddress={funderAddress}
+        onBackgroundReady={() => setShareCardReady(true)}
       />
     </ShareInviteModal>
   );

@@ -1,12 +1,7 @@
 "use client";
 
 import {
-  cloneElement,
-  isValidElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
+  RefObject,
   type ReactElement,
   type Ref,
 } from "react";
@@ -38,6 +33,8 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
     onBackgroundReady?: () => void;
   }>;
   downloadFilename?: string;
+  shareCardReady: boolean;
+  cardRef: RefObject<HTMLDivElement | null>;
 };
 
 export function ShareInviteModal({
@@ -49,27 +46,10 @@ export function ShareInviteModal({
   fullLink,
   children,
   downloadFilename,
+  shareCardReady,
+  cardRef,
 }: ShareInviteModalProps) {
   const isMobile = useDevice();
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [shareCardReady, setShareCardReady] = useState(false);
-
-  const handleBackgroundReady = useCallback(() => {
-    setShareCardReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!open) {
-      setShareCardReady(false);
-    }
-  }, [open]);
-
-  const shareCard = isValidElement(children)
-    ? cloneElement(children, {
-        ref: cardRef,
-        onBackgroundReady: handleBackgroundReady,
-      })
-    : children;
 
   return (
     <FundingResponsiveOverlay
@@ -99,7 +79,7 @@ export function ShareInviteModal({
         ) : null}
 
         <div className="flex flex-col gap-5">
-          {shareCard}
+          {children}
 
           <ReferralInviteLinkRow
             linkPrefix={linkPrefix}
