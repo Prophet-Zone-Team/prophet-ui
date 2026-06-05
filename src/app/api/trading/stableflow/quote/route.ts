@@ -49,9 +49,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ quote });
   } catch (error) {
+    let errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes("Failed to get quote")) {
+      errorMessage = "Insufficient liquidity";
+    }
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
       },
       { status: 502 },
     );

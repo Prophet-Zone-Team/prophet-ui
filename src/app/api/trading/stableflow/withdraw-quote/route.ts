@@ -40,9 +40,7 @@ export async function POST(request: Request) {
       recipient: payload.recipient!,
       dry: payload.dry ?? false,
     });
-    console.log("quoteRequest", quoteRequest);
     const quote = await getStableflowQuote(quoteRequest);
-    console.log("quote: %o", quote)
 
     if (!payload.dry && !quote.quote.depositAddress) {
       return NextResponse.json({ error: "Stableflow quote did not return a deposit address." }, { status: 502 });
@@ -50,10 +48,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ quote });
   } catch (error) {
-    console.log("error: %o", error)
+    let errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes("Failed to get quote")) {
+      errorMessage = "Insufficient liquidity";
+    }
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
       },
       { status: 502 },
     );

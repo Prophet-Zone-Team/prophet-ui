@@ -29,7 +29,7 @@
     "@privy-io/react-auth": "^3.28.0",
     "@privy-io/wagmi": "^4.0.10",
     "@radix-ui/react-slot": "^1.1.2",
-    "@stableflow/core": "^3.0.0",
+    "@stableflow/core": "rc",
     "@tanstack/react-query": "^5.100.14",
     "axios": "^1.16.1",
     "big.js": "^7.0.1",
