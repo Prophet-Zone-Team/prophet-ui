@@ -110,17 +110,23 @@ function SummaryStat({
 export type ReferralActivityPanelProps = {
   summary: ReferralSummary;
   apiEnabled?: boolean;
+  needsWallet?: boolean;
+  loginInProgress?: boolean;
   mockActivityRows?: ReferralActivityRow[];
   mockActivityTotalCount?: number;
   onInviteFriends?: () => void;
+  onConnectWallet?: () => void;
 };
 
 export function ReferralActivityPanel({
   summary,
   apiEnabled = true,
+  needsWallet = false,
+  loginInProgress = false,
   mockActivityRows = [],
   mockActivityTotalCount = 0,
   onInviteFriends,
+  onConnectWallet,
 }: ReferralActivityPanelProps) {
   const [page, setPage] = useState(1);
   const { claim, isPending } = useReferralClaim();
@@ -185,13 +191,22 @@ export function ReferralActivityPanel({
 
       {isEmpty && !showTableSkeleton ? (
         <div className={referralEmptyStateClass}>
-          <p className={referralEmptyMessageClass}>No rewards found</p>
+          <p className={referralEmptyMessageClass}>
+            {needsWallet
+              ? "Connect your wallet to view referral activity."
+              : "No rewards found"}
+          </p>
           <button
             type="button"
             className={referralEmptyInviteButtonClass}
-            onClick={onInviteFriends}
+            disabled={needsWallet && loginInProgress}
+            onClick={needsWallet ? onConnectWallet : onInviteFriends}
           >
-            Invite Friends
+            {needsWallet
+              ? loginInProgress
+                ? "Connecting…"
+                : "Connect Wallet"
+              : "Invite Friends"}
           </button>
         </div>
       ) : !isEmpty && !showTableSkeleton ? (

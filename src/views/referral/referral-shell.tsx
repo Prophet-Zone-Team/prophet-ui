@@ -10,9 +10,12 @@ export type ReferralShellProps = {
   kickback: ReferralContent["kickback"];
   summary: ReferralContent["summary"];
   apiEnabled?: boolean;
+  needsWallet?: boolean;
+  loginInProgress?: boolean;
   mockActivityRows?: ReferralActivityRow[];
   mockActivityTotalCount?: number;
   onInviteFriends?: () => void;
+  onConnectWallet?: () => void;
 };
 
 export function ReferralShell({
@@ -20,9 +23,12 @@ export function ReferralShell({
   kickback,
   summary,
   apiEnabled = true,
+  needsWallet = false,
+  loginInProgress = false,
   mockActivityRows,
   mockActivityTotalCount,
   onInviteFriends,
+  onConnectWallet,
 }: ReferralShellProps) {
   return (
     <section className={referralShellClass} aria-label="Referral program">
@@ -30,16 +36,22 @@ export function ReferralShell({
         <ReferralRewardsCard rewards={rewards} />
         <ReferralKickbackCard
           kickback={kickback}
+          needsWallet={needsWallet}
+          loginInProgress={loginInProgress}
           onInviteFriends={onInviteFriends}
+          onConnectWallet={onConnectWallet}
         />
       </div>
 
       <ReferralActivityPanel
         summary={summary}
         apiEnabled={apiEnabled}
+        needsWallet={needsWallet}
+        loginInProgress={loginInProgress}
         mockActivityRows={mockActivityRows}
         mockActivityTotalCount={mockActivityTotalCount}
         onInviteFriends={onInviteFriends}
+        onConnectWallet={onConnectWallet}
       />
     </section>
   );

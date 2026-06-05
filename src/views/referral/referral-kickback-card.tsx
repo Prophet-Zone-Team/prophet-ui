@@ -9,15 +9,22 @@ import {
   referralKickbackFooterClass,
   referralKickbackLinkBarClass,
 } from "./referral-ui";
+import { cn } from "@/lib/cn";
 
 export type ReferralKickbackCardProps = {
   kickback: ReferralKickback;
+  needsWallet?: boolean;
+  loginInProgress?: boolean;
   onInviteFriends?: () => void;
+  onConnectWallet?: () => void;
 };
 
 export function ReferralKickbackCard({
   kickback,
+  needsWallet = false,
+  loginInProgress = false,
   onInviteFriends,
+  onConnectWallet,
 }: ReferralKickbackCardProps) {
   return (
     <section
@@ -40,21 +47,34 @@ export function ReferralKickbackCard({
 
       <div className={referralKickbackFooterClass}>
         <div className="relative z-10 flex flex-col gap-4">
-          <div className={referralKickbackLinkBarClass}>
-            <ReferralLinkCopy
-              linkPrefix={kickback.linkPrefix}
-              referralCode={kickback.referralCode}
-              fullLink={kickback.fullLink}
-              className="w-full"
-            />
-          </div>
-          <button
-            type="button"
-            className={referralInviteButtonClass}
-            onClick={onInviteFriends}
-          >
-            Invite Friends
-          </button>
+          {needsWallet ? (
+            <button
+              type="button"
+              className={cn(referralInviteButtonClass, "mt-6")}
+              disabled={loginInProgress}
+              onClick={onConnectWallet}
+            >
+              {loginInProgress ? "Connecting…" : "Connect Wallet"}
+            </button>
+          ) : (
+            <>
+              <div className={referralKickbackLinkBarClass}>
+                <ReferralLinkCopy
+                  linkPrefix={kickback.linkPrefix}
+                  referralCode={kickback.referralCode}
+                  fullLink={kickback.fullLink}
+                  className="w-full"
+                />
+              </div>
+              <button
+                type="button"
+                className={referralInviteButtonClass}
+                onClick={onInviteFriends}
+              >
+                Invite Friends
+              </button>
+            </>
+          )}
         </div>
       </div>
     </section>

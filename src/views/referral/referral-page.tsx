@@ -1,7 +1,7 @@
 "use client";
 
+import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
 
 import { useAuth } from "@/context/auth/use-auth";
 import {
@@ -9,7 +9,9 @@ import {
   referralPageContentEmpty,
 } from "@/data/mock/referral";
 import { useProphetReferral } from "@/hooks/referral/use-prophet-referral";
+import { referralGuestContent } from "@/lib/referral/guest-content";
 import { REFERRAL_USE_EMPTY_STATE } from "@/lib/referral/config";
+import { useAuthHydrated } from "@/store/use-auth-hydrated";
 import { portfolioPageClass } from "@/views/portfolio/portfolio-ui";
 
 import { InviteFriendsModal } from "./invite-friends-modal";
@@ -18,7 +20,8 @@ import { ReferralShellSkeleton } from "./referral-shell-skeleton";
 
 export function ReferralPage() {
   const searchParams = useSearchParams();
-  const { session } = useAuth();
+  const authHydrated = useAuthHydrated();
+  const { session, isAuthenticated, openLogin, loginInProgress } = useAuth();
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const useEmpty =
@@ -26,7 +29,7 @@ export function ReferralPage() {
 
   const mockContent = useMemo(
     () => (useEmpty ? referralPageContentEmpty : referralPageContent),
-    [useEmpty]
+    [useEmpty],
   );
 
   const {
@@ -35,6 +38,36 @@ export function ReferralPage() {
     isError,
     refetch,
   } = useProphetReferral();
+
+  const needsWallet = authHydrated && !useEmpty && !isAuthenticated;
+
+  const handleConnectWallet = useCallback(async () => {
+    await openLogin();
+  }, [openLogin]);
+
+  if (!useEmpty && !authHydrated) {
+    return (
+      <div className={portfolioPageClass}>
+        <ReferralShellSkeleton />
+      </div>
+    );
+  }
+
+  if (needsWallet) {
+    return (
+      <div className={portfolioPageClass}>
+        <ReferralShell
+          rewards={referralGuestContent.rewards}
+          kickback={referralGuestContent.kickback}
+          summary={referralGuestContent.summary}
+          needsWallet
+          apiEnabled={false}
+          loginInProgress={loginInProgress}
+          onConnectWallet={() => void handleConnectWallet()}
+        />
+      </div>
+    );
+  }
 
   const apiEnabled = !useEmpty;
   const rewards = useEmpty ? mockContent.referral.rewards : apiContent?.rewards;
