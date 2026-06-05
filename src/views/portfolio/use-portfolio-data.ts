@@ -143,7 +143,9 @@ export function usePortfolioData(): UsePortfolioDataResult {
           return undefined;
         });
 
-        const nextPositions = positionsPayload?.positions ?? [];
+        const nextPositions = (positionsPayload?.positions ?? []).filter(
+          (position) => position.currentValue !== 0
+        );
         setPositions(nextPositions);
 
         const conditionIds =

@@ -13,10 +13,7 @@ import {
   formatPnlSubline,
   formatSharePrice
 } from "@/lib/portfolio/portfolio-format";
-import {
-  canRedeemPosition,
-  getPortfolioMarketClosedDisabledReason
-} from "@/lib/portfolio/portfolio-metrics";
+import { canRedeemPosition } from "@/lib/portfolio/portfolio-metrics";
 import {
   resolvePortfolioMarketIcon,
   resolvePortfolioTeamName,
