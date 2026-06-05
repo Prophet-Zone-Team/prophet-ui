@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useState, type MutableRefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MutableRefObject
+} from "react";
 
 import { mapProphetUserStrategies } from "@/lib/portfolio/map-prophet-user-strategy";
 import type { PortfolioLoadStatus } from "@/lib/portfolio/types";
@@ -32,12 +38,23 @@ export function usePortfolioStrategies(
   const loadedRef = useRef(false);
   const requestIdRef = useRef(0);
 
+  const clearStrategies = useCallback(() => {
+    requestIdRef.current += 1;
+    setStrategies([]);
+    loadedRef.current = false;
+    setStatus("ready");
+  }, []);
+
+  useEffect(() => {
+    if (!sessionConnected) {
+      clearStrategies();
+    }
+  }, [clearStrategies, sessionConnected]);
+
   const loadStrategies = useCallback(
     async (options?: PortfolioStrategiesLoadOptions) => {
       if (!sessionConnected) {
-        setStrategies([]);
-        loadedRef.current = false;
-        setStatus("ready");
+        clearStrategies();
         return;
       }
 
@@ -79,7 +96,7 @@ export function usePortfolioStrategies(
         setStatus("error");
       }
     },
-    [sessionConnected]
+    [clearStrategies, sessionConnected]
   );
 
   return {
