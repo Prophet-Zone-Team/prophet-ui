@@ -478,7 +478,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   ]);
 
   const preview = teamDefaults?.preview ?? gameDefaults?.preview;
-  previewForReadinessRef.current = preview;
+  useEffect(() => {
+    previewForReadinessRef.current = preview;
+  }, [preview]);
   const previewCanSubmit = preview?.canSubmitRealOrder ?? false;
   const takeProfitLimitAvailable = isTakeProfitLimitAvailable(
     preview?.shareSize ?? 0
