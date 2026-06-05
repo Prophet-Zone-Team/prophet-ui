@@ -4,7 +4,6 @@ import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.
 import type { AuthContextValue } from "@/context/auth/auth-context";
 import {
   formatOrderToastSummary,
-  resolveOrderErrorMessage,
   showOrderErrorToast,
   showOrderSubmittedToast
 } from "@/lib/trading/order-toast";
@@ -68,6 +67,11 @@ export async function runFastBid({
   }
 
   if (auth.isBuyRestricted) {
+    showOrderErrorToast(
+      auth.isRegionCloseOnly
+        ? "New orders and deposits are unavailable in your region. You may still close existing positions or cancel open orders."
+        : "Polymarket reports trading is unavailable in your region."
+    );
     return;
   }
 
@@ -196,7 +200,7 @@ export async function runFastBid({
     onStatusChange?.("idle");
   } catch (error) {
     onStatusChange?.("idle");
-    showOrderErrorToast(resolveOrderErrorMessage(error));
+    showOrderErrorToast(error);
   }
 }
 

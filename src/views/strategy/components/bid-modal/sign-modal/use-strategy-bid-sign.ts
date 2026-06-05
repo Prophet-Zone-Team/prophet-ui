@@ -11,6 +11,7 @@ import {
   submitStrategyBidBatch,
   summarizeStrategyBidSubmission
 } from "@/lib/strategy/run-strategy-bid";
+import { showOrderErrorToast } from "@/lib/trading/order-toast";
 import { ensureTradingReadyForBid } from "@/views/trade/trade-widget/trade-ticket-helpers";
 
 import type { LegSignStatus, StrategyBidSignLegState } from "../types";
@@ -110,6 +111,7 @@ export function useStrategyBidSign(input: {
         );
       } catch (error) {
         const errorMessage = resolveStrategyBidSignError(error);
+        showOrderErrorToast(errorMessage);
 
         setLegStates((previous) =>
           previous.map((entry, entryIndex) =>
@@ -182,7 +184,9 @@ export function useStrategyBidSign(input: {
       .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
 
     if (signedLegs.length !== legStates.length) {
-      setSubmitError("All legs must be signed before submitting orders.");
+      const message = "All legs must be signed before submitting orders.";
+      setSubmitError(message);
+      showOrderErrorToast(message);
       return;
     }
 
@@ -241,7 +245,9 @@ export function useStrategyBidSign(input: {
         input.onComplete();
       }
     } catch (error) {
-      setSubmitError(resolveStrategyBidSignError(error));
+      const errorMessage = resolveStrategyBidSignError(error);
+      setSubmitError(errorMessage);
+      showOrderErrorToast(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

@@ -70,7 +70,9 @@ export function showOrderSubmittedToast(
 }
 
 export function showOrderErrorToast(error: unknown): void {
-  toast.error(resolveOrderErrorMessage(error));
+  toast.error("Order failed", {
+    description: resolveOrderErrorMessage(error)
+  });
 }
 
 export function formatOrderCancelToastSummary(order: UserOpenOrder): string {
