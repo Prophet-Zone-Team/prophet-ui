@@ -175,7 +175,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   });
   const readinessFetchGeneration = useRef(0);
   const authReadinessRef = useRef(authReadiness);
-  authReadinessRef.current = authReadiness;
+  useEffect(() => {
+    authReadinessRef.current = authReadiness;
+  }, [authReadiness]);
   const takeProfitPriceTouched = useRef(false);
 
   const orderAmount = parseOrderAmount(amount);
