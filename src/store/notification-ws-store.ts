@@ -4,10 +4,9 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { ShowEventNotificationOptions } from "@/components/notification/event";
-import {
-  buildNotificationDedupeKey,
-  mapWsNotificationToEvent,
-} from "@/lib/notification/map-ws-notification-to-event";
+import { formatProphetNotificationToast } from "@/lib/notification/format-prophet-notification-toast";
+import { buildNotificationDedupeKey } from "@/lib/notification/map-ws-notification-to-event";
+import { showProphetNotificationToast } from "@/lib/notification/show-prophet-notification-toast";
 import type { ProphetNotificationData } from "@/types/prophet-notification-ws";
 import type { ProphetWsConnectionStatus } from "@/types/prophet-notification-ws";
 
@@ -122,19 +121,26 @@ export const useNotificationWsStore = create<NotificationWsStore>()(
       ongoingMatchSlug: null,
 
       enqueue: (data) => {
-        const options = mapWsNotificationToEvent(data);
+        const content = formatProphetNotificationToast(data);
 
-        if (!options) {
+        if (!content) {
           return;
         }
 
-        appendToQueue(
-          get,
-          set,
-          options,
-          buildNotificationDedupeKey(data),
-          "ws",
-        );
+        const dedupeKey = buildNotificationDedupeKey(data);
+        const { recentDedupeKeys } = get();
+
+        if (recentDedupeKeys.includes(dedupeKey)) {
+          return;
+        }
+
+        showProphetNotificationToast(data, content);
+
+        set({
+          recentDedupeKeys: [...recentDedupeKeys, dedupeKey].slice(
+            -DEDUPE_WINDOW_SIZE,
+          ),
+        });
       },
 
       enqueueEventNotification: (options, dedupeKey, source = "game-statistics") => {

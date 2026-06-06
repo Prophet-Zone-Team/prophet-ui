@@ -51,16 +51,16 @@ describe("mapWsNotificationToEvent", () => {
   it("maps only score samples from mock notifications", () => {
     const samples = buildProphetNotificationSamples(1_710_000_000);
 
-    assert.equal(samples.length, 6);
+    assert.equal(samples.length, 4);
 
     for (const sample of samples) {
       const mapped = mapWsNotificationToEvent(sample);
 
-      if (sample.notice_type === "score") {
-        assert.ok(mapped, "expected score sample to map");
-      } else {
-        assert.equal(mapped, undefined, `expected ${sample.notice_type} to skip`);
-      }
+      assert.equal(
+        mapped,
+        undefined,
+        `expected ${sample.notice_type} to skip event overlay mapping`,
+      );
     }
   });
 

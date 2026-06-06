@@ -1,10 +1,10 @@
 import type { ProphetNotificationData } from "@/types/prophet-notification-ws";
 
-const MOCK_EVENT_SLUG = "world-cup-final-mock";
-const MOCK_EVENT_TITLE = "World Cup Final";
+const MOCK_EVENT_SLUG = "world-cup-winner";
+const MOCK_EVENT_TITLE = "World Cup Winner";
 
 /**
- * One sample notification per `notice_type`, aligned with the Prophet WS doc.
+ * One sample notification per WS toast `notice_type`, aligned with the Prophet WS doc.
  * Timestamps are offset from `baseTimestamp` so batch enqueue passes dedupe.
  */
 export function buildProphetNotificationSamples(
@@ -13,22 +13,68 @@ export function buildProphetNotificationSamples(
   return [
     {
       source: "polymarket",
+      notice_type: "match_preview",
+      event_slug: MOCK_EVENT_SLUG,
+      event_title: MOCK_EVENT_TITLE,
+      title: "Match Preview · World Cup Winner",
+      body: "Kickoff: 17:00 UTC",
+      timestamp: baseTimestamp,
+      payload: {
+        team_a: "Brazil",
+        team_b: "Argentina",
+        match_start: "2026-06-11T17:00:00Z",
+        match_end: "2026-06-11T20:00:00Z",
+        markets: [
+          {
+            market_id: "sample-market-brazil",
+            market_name: "Brazil",
+            odds: [
+              { outcome: "Yes", price: "0.45" },
+              { outcome: "No", price: "0.55" },
+            ],
+          },
+          {
+            market_id: "sample-market-draw",
+            market_name: "Draw",
+            odds: [
+              { outcome: "Yes", price: "0.25" },
+              { outcome: "No", price: "0.75" },
+            ],
+          },
+          {
+            market_id: "sample-market-argentina",
+            market_name: "Argentina",
+            odds: [
+              { outcome: "Yes", price: "0.30" },
+              { outcome: "No", price: "0.70" },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      source: "polymarket",
       notice_type: "price",
       event_slug: MOCK_EVENT_SLUG,
       event_title: MOCK_EVENT_TITLE,
-      market_id: "market-123",
-      market_name: "Winner",
-      outcome: "Argentina",
-      title: "Polymarket price alert: World Cup Final",
-      body: "Price moved from 0.42 to 0.58.",
-      timestamp: baseTimestamp,
+      market_id: "sample-market-argentina",
+      market_name: "Argentina",
+      outcome: "YES",
+      title: "Price · Argentina",
+      body: "YES 42% → 58% (+16pp)",
+      timestamp: baseTimestamp + 1,
       payload: {
-        token_id: "token-123",
         baseline: "0.42",
-        current: "0.58",
+        baseline_display: "42%",
         change_abs: "0.16",
+        change_abs_display: "+16pp",
+        change_pct: "38.10",
+        current: "0.58",
+        current_display: "58%",
         threshold_abs: "0.10",
-        window: "pre_match",
+        threshold_abs_display: "10%",
+        token_id: "sample-token-arg-yes",
+        window: "in_match",
       },
     },
     {
@@ -36,14 +82,19 @@ export function buildProphetNotificationSamples(
       notice_type: "volume",
       event_slug: MOCK_EVENT_SLUG,
       event_title: MOCK_EVENT_TITLE,
-      title: "Polymarket volume alert: World Cup Final",
-      body: "Volume increased from $120K to $250K.",
-      timestamp: baseTimestamp + 1,
+      title: "Volume · World Cup Winner",
+      body: "+130K (120K → 250K)",
+      timestamp: baseTimestamp + 2,
       payload: {
-        previous_volume_usd: "120000",
+        change_pct: "108.33",
         current_volume_usd: "250000",
+        current_volume_usd_display: "250K",
         delta_usd: "130000",
+        delta_usd_display: "130K",
+        previous_volume_usd: "120000",
+        previous_volume_usd_display: "120K",
         threshold_usd: "100000",
+        threshold_usd_display: "100K",
       },
     },
     {
@@ -51,78 +102,21 @@ export function buildProphetNotificationSamples(
       notice_type: "large_order",
       event_slug: MOCK_EVENT_SLUG,
       event_title: MOCK_EVENT_TITLE,
-      market_id: "market-123",
-      market_name: "Winner",
-      outcome: "Argentina",
-      title: "Polymarket large order: World Cup Final",
-      body: "Large BUY order detected.",
-      timestamp: baseTimestamp + 2,
-      payload: {
-        token_id: "token-123",
-        side: "BUY",
-        price: "0.58",
-        size: "10000",
-        notional_usd: "5800",
-        threshold_usd: "5000",
-      },
-    },
-    {
-      source: "polymarket",
-      notice_type: "top_holders",
-      event_slug: MOCK_EVENT_SLUG,
-      event_title: MOCK_EVENT_TITLE,
-      title: "Polymarket top holders alert: World Cup Final",
-      body: "Top holder positions changed.",
+      market_id: "sample-market-brazil",
+      market_name: "Brazil",
+      outcome: "YES",
+      title: "Large Order · Brazil",
+      body: "YES · BUY 5.8K @ 0.58",
       timestamp: baseTimestamp + 3,
       payload: {
-        alert_count: 2,
-        threshold_shares: "10000",
-        lines: [
-          "0xabc increased YES by 12000 shares",
-          "0xdef decreased NO by 15000 shares",
-        ],
-      },
-    },
-    {
-      source: "polymarket",
-      notice_type: "news",
-      event_slug: MOCK_EVENT_SLUG,
-      event_title: MOCK_EVENT_TITLE,
-      title: "Polymarket news: World Cup Final",
-      body: "New related news detected.",
-      timestamp: baseTimestamp + 4,
-      payload: {
-        article_id: 123,
-        url: "https://example.com/news/123",
-        source_name: "Example News",
-        published_at: "2026-06-01T12:00:00Z",
-        matched_teams: ["Argentina", "France"],
-        matched_team: "Argentina",
-        team_a: "Argentina",
-        team_b: "France",
-        category: "sports",
-        score: 85,
-        matched_players_json: "[]",
-      },
-    },
-    {
-      source: "polymarket",
-      notice_type: "score",
-      event_slug: MOCK_EVENT_SLUG,
-      event_title: MOCK_EVENT_TITLE,
-      title: "Score Update: Argentina 2-1 France",
-      body: "Argentina 2-1 France. Match status: live.",
-      timestamp: baseTimestamp + 5,
-      payload: {
-        team_a_name: "Argentina",
-        team_a_score: 2,
-        team_b_name: "France",
-        team_b_score: 1,
-        match_status: "live",
-        score_update: 123,
-        score_source: "manual",
-        score_pushed: null,
-        attempt_count: 0,
+        notional_usd: "5800",
+        notional_usd_display: "5.8K",
+        price: "0.58",
+        side: "BUY",
+        size: "10000",
+        threshold_usd: "5000",
+        threshold_usd_display: "5K",
+        token_id: "sample-token-bra-yes",
       },
     },
   ];

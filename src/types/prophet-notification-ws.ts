@@ -1,4 +1,5 @@
 export const PROPHET_NOTICE_TYPES = [
+  "match_preview",
   "price",
   "volume",
   "large_order",
@@ -9,20 +10,59 @@ export const PROPHET_NOTICE_TYPES = [
 
 export type ProphetNoticeType = (typeof PROPHET_NOTICE_TYPES)[number];
 
+export const PROPHET_TOAST_NOTICE_TYPES = [
+  "match_preview",
+  "price",
+  "volume",
+  "large_order",
+] as const;
+
+export type ProphetToastNoticeType =
+  (typeof PROPHET_TOAST_NOTICE_TYPES)[number];
+
+export interface ProphetNotificationMatchPreviewMarketOdd {
+  outcome?: string;
+  price?: string;
+}
+
+export interface ProphetNotificationMatchPreviewMarket {
+  market_id?: string;
+  market_name?: string;
+  odds?: ProphetNotificationMatchPreviewMarketOdd[];
+}
+
+export interface ProphetNotificationMatchPreviewPayload {
+  team_a?: string;
+  team_b?: string;
+  match_start?: string;
+  match_end?: string;
+  markets?: ProphetNotificationMatchPreviewMarket[];
+}
+
 export interface ProphetNotificationPricePayload {
   token_id?: string;
   baseline?: string;
+  baseline_display?: string;
   current?: string;
+  current_display?: string;
   change_abs?: string;
+  change_abs_display?: string;
+  change_pct?: string;
   threshold_abs?: string;
+  threshold_abs_display?: string;
   window?: string;
 }
 
 export interface ProphetNotificationVolumePayload {
   previous_volume_usd?: string;
+  previous_volume_usd_display?: string;
   current_volume_usd?: string;
+  current_volume_usd_display?: string;
   delta_usd?: string;
+  delta_usd_display?: string;
   threshold_usd?: string;
+  threshold_usd_display?: string;
+  change_pct?: string;
 }
 
 export interface ProphetNotificationLargeOrderPayload {
@@ -31,7 +71,9 @@ export interface ProphetNotificationLargeOrderPayload {
   price?: string;
   size?: string;
   notional_usd?: string;
+  notional_usd_display?: string;
   threshold_usd?: string;
+  threshold_usd_display?: string;
 }
 
 export interface ProphetNotificationTopHoldersPayload {
@@ -79,6 +121,12 @@ export interface ProphetNotificationDataBase {
   timestamp?: number;
 }
 
+export interface ProphetNotificationMatchPreviewData
+  extends ProphetNotificationDataBase {
+  notice_type: "match_preview";
+  payload: ProphetNotificationMatchPreviewPayload;
+}
+
 export interface ProphetNotificationPriceData extends ProphetNotificationDataBase {
   notice_type: "price";
   payload: ProphetNotificationPricePayload;
@@ -89,12 +137,14 @@ export interface ProphetNotificationVolumeData extends ProphetNotificationDataBa
   payload: ProphetNotificationVolumePayload;
 }
 
-export interface ProphetNotificationLargeOrderData extends ProphetNotificationDataBase {
+export interface ProphetNotificationLargeOrderData
+  extends ProphetNotificationDataBase {
   notice_type: "large_order";
   payload: ProphetNotificationLargeOrderPayload;
 }
 
-export interface ProphetNotificationTopHoldersData extends ProphetNotificationDataBase {
+export interface ProphetNotificationTopHoldersData
+  extends ProphetNotificationDataBase {
   notice_type: "top_holders";
   payload: ProphetNotificationTopHoldersPayload;
 }
@@ -110,6 +160,7 @@ export interface ProphetNotificationScoreData extends ProphetNotificationDataBas
 }
 
 export type ProphetNotificationData =
+  | ProphetNotificationMatchPreviewData
   | ProphetNotificationPriceData
   | ProphetNotificationVolumeData
   | ProphetNotificationLargeOrderData

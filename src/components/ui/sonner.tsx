@@ -10,6 +10,7 @@ export function Toaster(props: ToasterProps) {
       closeButton
       richColors
       expand
+      visibleToasts={5}
       toastOptions={{
         classNames: {
           toast:

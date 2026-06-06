@@ -17,6 +17,7 @@ function shouldPresentQueueItem(
   return ongoingMatchSlug !== null;
 }
 
+/** Presents game-statistics score overlays from the queue. WS market toasts render immediately via sonner. */
 export function NotificationQueuePresenter() {
   const headId = useNotificationWsStore((state) => state.queue[0]?.id);
   const queueLength = useNotificationWsStore((state) => state.queue.length);

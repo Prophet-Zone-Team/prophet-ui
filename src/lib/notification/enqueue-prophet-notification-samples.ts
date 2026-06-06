@@ -2,7 +2,7 @@ import { buildProphetNotificationSamples } from "@/data/mock/prophet-notificatio
 import { useNotificationWsStore } from "@/store/notification-ws-store";
 
 /**
- * Enqueues one mock notification per `notice_type` into the presentation queue.
+ * Enqueues one mock notification per WS toast notice_type for local preview.
  */
 export function enqueueProphetNotificationSamples(): void {
   const samples = buildProphetNotificationSamples();

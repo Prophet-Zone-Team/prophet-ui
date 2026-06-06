@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { NotificationQueuePresenter } from "@/components/notification/notification-queue-presenter";
 import { useAuth } from "@/context/auth";
@@ -23,97 +23,104 @@ export function ProphetNotificationWsProvider({
   children,
 }: ProphetNotificationWsProviderProps) {
   const { session, hydrated } = useAuth();
-  const enqueue = useNotificationWsStore((state) => state.enqueue);
-  const setConnectionStatus = useNotificationWsStore(
-    (state) => state.setConnectionStatus
-  );
+  const mockSamplesEnqueuedRef = useRef(false);
 
-  // useEffect(() => {
-  //   const client = getProphetNotificationWsClient();
+  const walletAddress = session?.walletAddress ?? null;
+  const apiToken = hydrated && walletAddress ? getProphetApiToken() : null;
 
-  //   const canSubscribe = () =>
-  //     hydrated && Boolean(session) && Boolean(getProphetApiToken());
+  useEffect(() => {
+    const client = getProphetNotificationWsClient();
 
-  //   const syncConnection = () => {
-  //     if (!canSubscribe()) {
-  //       client.disconnect();
-  //       setConnectionStatus("idle");
-  //       return;
-  //     }
+    const unsubscribeMessages = client.subscribe((data) => {
+      useNotificationWsStore.getState().enqueue(data);
+    });
 
-  //     const token = getProphetApiToken();
+    const unsubscribeStatus = client.subscribeStatus((status) => {
+      const setConnectionStatus =
+        useNotificationWsStore.getState().setConnectionStatus;
 
-  //     if (!token) {
-  //       client.disconnect();
-  //       setConnectionStatus("idle");
-  //       return;
-  //     }
+      if (status === "connecting") {
+        setConnectionStatus("connecting");
+        return;
+      }
 
-  //     client.connect(token);
-  //   };
+      if (status === "open") {
+        setConnectionStatus("open");
+        return;
+      }
 
-  //   if (!canSubscribe()) {
-  //     client.disconnect();
-  //     setConnectionStatus("idle");
-  //     return;
-  //   }
+      if (status === "error") {
+        setConnectionStatus("error");
+        return;
+      }
 
-  //   syncConnection();
+      setConnectionStatus("idle");
+    });
 
-  //   const unsubscribeMessages = client.subscribe((data) => {
-  //     enqueue(data);
-  //   });
+    return () => {
+      unsubscribeMessages();
+      unsubscribeStatus();
+    };
+  }, []);
 
-  //   const unsubscribeStatus = client.subscribeStatus((status) => {
-  //     if (status === "connecting") {
-  //       setConnectionStatus("connecting");
-  //       return;
-  //     }
+  useEffect(() => {
+    const client = getProphetNotificationWsClient();
+    const setConnectionStatus =
+      useNotificationWsStore.getState().setConnectionStatus;
 
-  //     if (status === "open") {
-  //       setConnectionStatus("open");
-  //       return;
-  //     }
+    const syncConnection = () => {
+      const token = getProphetApiToken();
 
-  //     if (status === "error") {
-  //       setConnectionStatus("error");
-  //       return;
-  //     }
+      if (!hydrated || !walletAddress || !token) {
+        client.disconnect();
+        setConnectionStatus("idle");
+        return;
+      }
 
-  //     setConnectionStatus("idle");
-  //   });
+      client.connect(token);
+    };
 
-  //   const handleStorage = (event: StorageEvent) => {
-  //     if (event.key !== AUTH_STORAGE_KEY) {
-  //       return;
-  //     }
+    if (!apiToken) {
+      client.disconnect();
+      setConnectionStatus("idle");
+    } else {
+      client.connect(apiToken);
+    }
 
-  //     syncConnection();
-  //   };
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== AUTH_STORAGE_KEY) {
+        return;
+      }
 
-  //   window.addEventListener("storage", handleStorage);
-  //   window.addEventListener(PROPHET_API_TOKEN_CHANGED_EVENT, syncConnection);
+      syncConnection();
+    };
 
-  //   return () => {
-  //     unsubscribeMessages();
-  //     unsubscribeStatus();
-  //     window.removeEventListener("storage", handleStorage);
-  //     window.removeEventListener(
-  //       PROPHET_API_TOKEN_CHANGED_EVENT,
-  //       syncConnection
-  //     );
-  //     client.disconnect();
-  //     setConnectionStatus("idle");
-  //   };
-  // }, [enqueue, hydrated, session, setConnectionStatus]);
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener(PROPHET_API_TOKEN_CHANGED_EVENT, syncConnection);
 
-  // useEffect(() => {
-  //   if (!isMockProphetNotificationsEnabled() || !session) {
-  //     return;
-  //   }
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener(
+        PROPHET_API_TOKEN_CHANGED_EVENT,
+        syncConnection
+      );
+      client.disconnect();
+      setConnectionStatus("idle");
+    };
+  }, [apiToken, hydrated, walletAddress]);
 
-  //   enqueueProphetNotificationSamples();
-  // }, [session]);
+  useEffect(() => {
+    if (!isMockProphetNotificationsEnabled() || !session) {
+      return;
+    }
+
+    if (mockSamplesEnqueuedRef.current) {
+      return;
+    }
+
+    mockSamplesEnqueuedRef.current = true;
+    enqueueProphetNotificationSamples();
+  }, [session]);
 
   return (
     <>
