@@ -117,6 +117,7 @@ export type UseTradeTicketTeamInput = {
 export type UseTradeTicketGameInput = {
   variant: "game";
   gameSnapshot: GameMarketSnapshot;
+  sellPosition?: UserPositionRecord;
   onOrderSuccess?: () => void | Promise<void>;
 };
 
@@ -279,8 +280,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     teamWsEnabled ? [yesTokenId, noTokenId] : []
   );
 
-  const sellPosition =
-    input.variant === "team" ? input.sellPosition : undefined;
+  const sellPosition = input.sellPosition;
 
   const maxSellShares = useMemo(() => {
     if (tradeSide !== "sell") {
@@ -312,12 +312,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       : orderAmount;
 
   const sellAcceptingOrders = useMemo(() => {
-    if (!sellPosition || tradeSide !== "sell" || input.variant !== "team") {
+    if (!sellPosition || tradeSide !== "sell") {
       return undefined;
     }
 
     return positionAcceptingOrders;
-  }, [input.variant, positionAcceptingOrders, sellPosition, tradeSide]);
+  }, [positionAcceptingOrders, sellPosition, tradeSide]);
 
   const limitPriceContextKey =
     input.variant === "team"
@@ -702,7 +702,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [conditionId, isAuthenticated, noTokenId, yesTokenId]);
 
   useEffect(() => {
-    if (!sellPosition || input.variant !== "team") {
+    if (!sellPosition) {
       setPositionAcceptingOrders(undefined);
       return;
     }
@@ -721,12 +721,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     return () => {
       cancelled = true;
     };
-  }, [
-    input.variant,
-    sellPosition?.asset,
-    sellPosition?.conditionId,
-    sellPosition?.slug
-  ]);
+  }, [sellPosition?.asset, sellPosition?.conditionId, sellPosition?.slug]);
 
   useEffect(() => {
     if (maxSellShares === undefined || maxSellShares <= 0) {
@@ -739,11 +734,28 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [amount, maxSellShares, setAmount]);
 
   useEffect(() => {
-    if (sellPosition && tradeSide === "sell" && input.variant === "team") {
-      const side = resolveOutcomeSideForPosition(sellPosition, input.snapshot);
+    if (sellPosition && tradeSide === "sell") {
+      if (input.variant === "team") {
+        const side = resolveOutcomeSideForPosition(
+          sellPosition,
+          input.snapshot
+        );
+        const nextShares = {
+          yes: side === "yes" ? sellPosition.size : 0,
+          no: side === "no" ? sellPosition.size : 0
+        };
+
+        setOutcomeShares((current) =>
+          current.yes === nextShares.yes && current.no === nextShares.no
+            ? current
+            : nextShares
+        );
+        return;
+      }
+
       const nextShares = {
-        yes: side === "yes" ? sellPosition.size : 0,
-        no: side === "no" ? sellPosition.size : 0
+        yes: outcomeSide === "yes" ? sellPosition.size : 0,
+        no: outcomeSide === "no" ? sellPosition.size : 0
       };
 
       setOutcomeShares((current) =>
@@ -764,7 +776,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     if (tradeSide === "sell") {
       void refreshOutcomeShares();
     }
-  }, [input, isAuthenticated, refreshOutcomeShares, sellPosition, tradeSide]);
+  }, [
+    input,
+    isAuthenticated,
+    outcomeSide,
+    refreshOutcomeShares,
+    sellPosition,
+    tradeSide
+  ]);
 
   const refreshOrderReadiness = useCallback(async () => {
     const orderPreview = previewForReadinessRef.current;

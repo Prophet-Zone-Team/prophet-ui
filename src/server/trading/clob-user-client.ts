@@ -1,6 +1,11 @@
 import "server-only";
 
-import { AssetType, OrderType, orderToJsonV2, Side } from "@polymarket/clob-client-v2";
+import {
+  AssetType,
+  OrderType,
+  orderToJsonV2,
+  Side
+} from "@polymarket/clob-client-v2";
 import type {
   ApiKeyCreds,
   BalanceAllowanceResponse,
@@ -13,7 +18,11 @@ import type {
 } from "@polymarket/clob-client-v2";
 
 import type { UserActivityRecord } from "@/lib/portfolio/types";
-import type { BidTradeSide, TradingOrderType, UserPositionRecord } from "@/types/market";
+import type {
+  BidTradeSide,
+  TradingOrderType,
+  UserPositionRecord
+} from "@/types/market";
 import { getTradingHost } from "@/server/trading/clob-auth";
 import { serverFetch } from "@/server/trading/server-fetch";
 
@@ -50,40 +59,64 @@ export interface ClobBestPrices {
   bestAsk?: number;
 }
 
-export async function fetchClobMarketDetails(tokenId: string): Promise<MarketDetails | undefined> {
-  const marketByTokenResponse = await serverFetch(`${getTradingHost()}/markets-by-token/${encodeURIComponent(tokenId)}`, {
-    cache: "no-store",
-  });
+export async function fetchClobMarketDetails(
+  tokenId: string
+): Promise<MarketDetails | undefined> {
+  const marketByTokenResponse = await serverFetch(
+    `${getTradingHost()}/markets-by-token/${encodeURIComponent(tokenId)}`,
+    {
+      cache: "no-store"
+    }
+  );
 
   if (!marketByTokenResponse.ok) {
-    throw new Error(`Unable to fetch CLOB market by token: ${await readResponseError(marketByTokenResponse)}`);
+    throw new Error(
+      `Unable to fetch CLOB market by token: ${await readResponseError(marketByTokenResponse)}`
+    );
   }
 
-  const marketByToken = (await marketByTokenResponse.json()) as { condition_id?: unknown; c?: unknown };
-  const conditionId = parseConditionId(marketByToken.condition_id) ?? parseConditionId(marketByToken.c);
+  const marketByToken = (await marketByTokenResponse.json()) as {
+    condition_id?: unknown;
+    c?: unknown;
+  };
+  const conditionId =
+    parseConditionId(marketByToken.condition_id) ??
+    parseConditionId(marketByToken.c);
 
   if (!conditionId) {
     return undefined;
   }
 
-  const marketResponse = await serverFetch(`${getTradingHost()}/clob-markets/${encodeURIComponent(conditionId)}`, {
-    cache: "no-store",
-  });
+  const marketResponse = await serverFetch(
+    `${getTradingHost()}/clob-markets/${encodeURIComponent(conditionId)}`,
+    {
+      cache: "no-store"
+    }
+  );
 
   if (!marketResponse.ok) {
-    throw new Error(`Unable to fetch CLOB market details: ${await readResponseError(marketResponse)}`);
+    throw new Error(
+      `Unable to fetch CLOB market details: ${await readResponseError(marketResponse)}`
+    );
   }
 
   return (await marketResponse.json()) as MarketDetails;
 }
 
-export async function fetchClobBestPrices(tokenId: string): Promise<ClobBestPrices> {
-  const response = await serverFetch(`${getTradingHost()}/book?token_id=${encodeURIComponent(tokenId)}`, {
-    cache: "no-store",
-  });
+export async function fetchClobBestPrices(
+  tokenId: string
+): Promise<ClobBestPrices> {
+  const response = await serverFetch(
+    `${getTradingHost()}/book?token_id=${encodeURIComponent(tokenId)}`,
+    {
+      cache: "no-store"
+    }
+  );
 
   if (!response.ok) {
-    throw new Error(`Unable to fetch CLOB order book: ${await readResponseError(response)}`);
+    throw new Error(
+      `Unable to fetch CLOB order book: ${await readResponseError(response)}`
+    );
   }
 
   const book = (await response.json()) as {
@@ -93,7 +126,7 @@ export async function fetchClobBestPrices(tokenId: string): Promise<ClobBestPric
 
   return {
     bestBid: maxPrice(book.bids),
-    bestAsk: minPrice(book.asks),
+    bestAsk: minPrice(book.asks)
   };
 }
 
@@ -101,7 +134,7 @@ export async function fetchUserBalanceAllowance({
   address,
   credentials,
   signatureType,
-  tokenId,
+  tokenId
 }: {
   address: string;
   credentials: ApiKeyCreds;
@@ -113,8 +146,8 @@ export async function fetchUserBalanceAllowance({
     credentials,
     signatureType,
     params: {
-      asset_type: AssetType.COLLATERAL,
-    },
+      asset_type: AssetType.COLLATERAL
+    }
   });
   const conditional = tokenId
     ? await getBalanceAllowance({
@@ -123,14 +156,14 @@ export async function fetchUserBalanceAllowance({
         signatureType,
         params: {
           asset_type: AssetType.CONDITIONAL,
-          token_id: tokenId,
-        },
+          token_id: tokenId
+        }
       })
     : undefined;
 
   return {
     collateral,
-    conditional,
+    conditional
   };
 }
 
@@ -138,7 +171,7 @@ export async function updateUserBalanceAllowance({
   address,
   credentials,
   signatureType,
-  tokenId,
+  tokenId
 }: {
   address: string;
   credentials: ApiKeyCreds;
@@ -171,7 +204,7 @@ export async function fetchUserOpenOrders({
   address,
   credentials,
   market,
-  tokenId,
+  tokenId
 }: {
   address: string;
   credentials: ApiKeyCreds;
@@ -189,20 +222,25 @@ export async function fetchUserOpenOrders({
     params.set("asset_id", tokenId);
   }
 
-  const url = params.size > 0 ? `${getTradingHost()}${requestPath}?${params.toString()}` : `${getTradingHost()}${requestPath}`;
+  const url =
+    params.size > 0
+      ? `${getTradingHost()}${requestPath}?${params.toString()}`
+      : `${getTradingHost()}${requestPath}`;
   const response = await serverFetch(url, {
     method: "GET",
     headers: await createUserL2Headers({
       address,
       credentials,
       method: "GET",
-      requestPath,
+      requestPath
     }),
-    cache: "no-store",
+    cache: "no-store"
   });
 
   if (!response.ok) {
-    throw new Error(`Unable to fetch open orders: ${await readResponseError(response)}`);
+    throw new Error(
+      `Unable to fetch open orders: ${await readResponseError(response)}`
+    );
   }
 
   const payload = (await response.json()) as
@@ -230,7 +268,7 @@ export function normalizeOpenOrdersResponse(
 export async function cancelUserOrder({
   address,
   credentials,
-  orderId,
+  orderId
 }: {
   address: string;
   credentials: ApiKeyCreds;
@@ -238,7 +276,7 @@ export async function cancelUserOrder({
 }): Promise<unknown> {
   const requestPath = "/order";
   const body = JSON.stringify({
-    orderID: orderId,
+    orderID: orderId
   });
   const response = await serverFetch(`${getTradingHost()}${requestPath}`, {
     method: "DELETE",
@@ -247,14 +285,16 @@ export async function cancelUserOrder({
       credentials,
       method: "DELETE",
       requestPath,
-      body,
+      body
     }),
     body,
-    cache: "no-store",
+    cache: "no-store"
   });
 
   if (!response.ok) {
-    throw new Error(`Unable to cancel order: ${await readResponseError(response)}`);
+    throw new Error(
+      `Unable to cancel order: ${await readResponseError(response)}`
+    );
   }
 
   return response.json();
@@ -263,7 +303,7 @@ export async function cancelUserOrder({
 export async function fetchUserActivity({
   userAddress,
   limit = 25,
-  offset = 0,
+  offset = 0
 }: {
   userAddress: string;
   limit?: number;
@@ -275,30 +315,34 @@ export async function fetchUserActivity({
     limit: String(Math.max(1, Math.min(limit, 500))),
     offset: String(Math.max(0, Math.min(offset, 10000))),
     sortBy: "TIMESTAMP",
-    sortDirection: "DESC",
+    sortDirection: "DESC"
   });
 
   const response = await serverFetch(
     `https://data-api.polymarket.com/activity?${params.toString()}`,
     {
-      cache: "no-store",
-    },
+      cache: "no-store"
+    }
   );
 
   if (!response.ok) {
-    throw new Error(`Unable to fetch user activity: ${await readResponseError(response)}`);
+    throw new Error(
+      `Unable to fetch user activity: ${await readResponseError(response)}`
+    );
   }
 
   const payload = (await response.json()) as unknown;
   return Array.isArray(payload)
-    ? payload.filter(isPolymarketActivityRecord).map(normalizeUserActivityRecord)
+    ? payload
+        .filter(isPolymarketActivityRecord)
+        .map(normalizeUserActivityRecord)
     : [];
 }
 
 export async function fetchUserPositions({
   userAddress,
   conditionIds,
-  limit = 100,
+  limit = 100
 }: {
   userAddress: string;
   conditionIds?: string[];
@@ -316,12 +360,17 @@ export async function fetchUserPositions({
     params.set("market", conditionIds.join(","));
   }
 
-  const response = await serverFetch(`https://data-api.polymarket.com/positions?${params.toString()}`, {
-    cache: "no-store",
-  });
+  const response = await serverFetch(
+    `https://data-api.polymarket.com/positions?${params.toString()}`,
+    {
+      cache: "no-store"
+    }
+  );
 
   if (!response.ok) {
-    throw new Error(`Unable to fetch user positions: ${await readResponseError(response)}`);
+    throw new Error(
+      `Unable to fetch user positions: ${await readResponseError(response)}`
+    );
   }
 
   const payload = (await response.json()) as unknown;
@@ -331,7 +380,7 @@ export async function fetchUserPositions({
 export async function postSignedUserOrder({
   address,
   credentials,
-  payload,
+  payload
 }: {
   address: string;
   credentials: ApiKeyCreds;
@@ -341,7 +390,9 @@ export async function postSignedUserOrder({
   const signedOrder = normalizeSignedOrderV2(payload.order);
 
   if (!signedOrder) {
-    throw new Error("Signed order payload is missing required CLOB submission fields.");
+    throw new Error(
+      "Signed order payload is missing required CLOB submission fields."
+    );
   }
 
   const body = JSON.stringify(
@@ -350,8 +401,8 @@ export async function postSignedUserOrder({
       credentials.key,
       payload.orderType as OrderType,
       payload.postOnly ?? false,
-      payload.deferExec ?? false,
-    ),
+      payload.deferExec ?? false
+    )
   );
   const response = await serverFetch(`${getTradingHost()}${requestPath}`, {
     method: "POST",
@@ -360,14 +411,16 @@ export async function postSignedUserOrder({
       credentials,
       method: "POST",
       requestPath,
-      body,
+      body
     }),
     body,
-    cache: "no-store",
+    cache: "no-store"
   });
 
   if (!response.ok) {
-    throw new Error(`Unable to submit signed user order: ${await readResponseError(response)}`);
+    throw new Error(
+      `Unable to submit signed user order: ${await readResponseError(response)}`
+    );
   }
 
   return (await response.json()) as OrderResponse;
@@ -378,7 +431,7 @@ const MAX_BATCH_ORDERS = 15;
 export async function postSignedUserOrders({
   address,
   credentials,
-  payloads,
+  payloads
 }: {
   address: string;
   credentials: ApiKeyCreds;
@@ -399,7 +452,9 @@ export async function postSignedUserOrders({
     const signedOrder = normalizeSignedOrderV2(payload.order);
 
     if (!signedOrder) {
-      throw new Error("Signed order payload is missing required CLOB submission fields.");
+      throw new Error(
+        "Signed order payload is missing required CLOB submission fields."
+      );
     }
 
     return orderToJsonV2(
@@ -418,14 +473,16 @@ export async function postSignedUserOrders({
       credentials,
       method: "POST",
       requestPath,
-      body,
+      body
     }),
     body,
-    cache: "no-store",
+    cache: "no-store"
   });
 
   if (!response.ok) {
-    throw new Error(`Unable to submit signed user orders: ${await readResponseError(response)}`);
+    throw new Error(
+      `Unable to submit signed user orders: ${await readResponseError(response)}`
+    );
   }
 
   const result = (await response.json()) as unknown;
@@ -441,12 +498,19 @@ export function mapTradeSide(side: BidTradeSide): Side {
   return side === "buy" ? Side.BUY : Side.SELL;
 }
 
-export function isSupportedOrderType(value: unknown): value is TradingOrderType {
+export function isSupportedOrderType(
+  value: unknown
+): value is TradingOrderType {
   return value === "GTC" || value === "FOK" || value === "FAK";
 }
 
 export function isSupportedTickSize(value: unknown): value is TickSize {
-  return value === "0.1" || value === "0.01" || value === "0.001" || value === "0.0001";
+  return (
+    value === "0.1" ||
+    value === "0.01" ||
+    value === "0.001" ||
+    value === "0.0001"
+  );
 }
 
 export interface ClobTokenSigningMeta {
@@ -456,24 +520,40 @@ export interface ClobTokenSigningMeta {
   bestBid?: number;
 }
 
-export async function fetchClobTokenSigningMeta(tokenId: string): Promise<ClobTokenSigningMeta> {
+export async function fetchClobTokenSigningMeta(
+  tokenId: string
+): Promise<ClobTokenSigningMeta> {
   const [negRiskResponse, tickSizeResponse, bookPrices] = await Promise.all([
-    serverFetch(`${getTradingHost()}/neg-risk?token_id=${encodeURIComponent(tokenId)}`, {
-      cache: "no-store",
-      headers: { accept: "application/json" },
-    }),
-    serverFetch(`${getTradingHost()}/tick-size?token_id=${encodeURIComponent(tokenId)}`, {
-      cache: "no-store",
-      headers: { accept: "application/json" },
-    }),
-    fetchClobBestPrices(tokenId).catch(() => ({ bestAsk: undefined, bestBid: undefined })),
+    serverFetch(
+      `${getTradingHost()}/neg-risk?token_id=${encodeURIComponent(tokenId)}`,
+      {
+        cache: "no-store",
+        headers: { accept: "application/json" }
+      }
+    ),
+    serverFetch(
+      `${getTradingHost()}/tick-size?token_id=${encodeURIComponent(tokenId)}`,
+      {
+        cache: "no-store",
+        headers: { accept: "application/json" }
+      }
+    ),
+    fetchClobBestPrices(tokenId).catch(() => ({
+      bestAsk: undefined,
+      bestBid: undefined
+    }))
   ]);
 
   let negRisk = negRiskResponse.ok
-    ? parseNegRiskValue((await negRiskResponse.json()) as { neg_risk?: unknown })
+    ? parseNegRiskValue(
+        (await negRiskResponse.json()) as { neg_risk?: unknown }
+      )
     : undefined;
   let tickSize = tickSizeResponse.ok
-    ? normalizeClobTickSize(((await tickSizeResponse.json()) as { minimum_tick_size?: unknown }).minimum_tick_size)
+    ? normalizeClobTickSize(
+        ((await tickSizeResponse.json()) as { minimum_tick_size?: unknown })
+          .minimum_tick_size
+      )
     : undefined;
 
   if (negRisk === undefined || tickSize === undefined) {
@@ -493,57 +573,72 @@ export async function fetchClobTokenSigningMeta(tokenId: string): Promise<ClobTo
   }
 
   if (tickSize === undefined) {
-    throw new Error(`Unable to resolve tick size metadata for token ${tokenId}.`);
+    throw new Error(
+      `Unable to resolve tick size metadata for token ${tokenId}.`
+    );
   }
 
   return {
     negRisk,
     tickSize,
     bestAsk: bookPrices.bestAsk,
-    bestBid: bookPrices.bestBid,
+    bestBid: bookPrices.bestBid
   };
 }
 
 async function fetchClobMarketMetaFallback(
-  tokenId: string,
+  tokenId: string
 ): Promise<{ negRisk?: boolean; tickSize?: TickSize }> {
   const marketByTokenResponse = await serverFetch(
     `${getTradingHost()}/markets-by-token/${encodeURIComponent(tokenId)}`,
     {
       cache: "no-store",
-      headers: { accept: "application/json" },
-    },
+      headers: { accept: "application/json" }
+    }
   );
 
   if (!marketByTokenResponse.ok) {
     return {};
   }
 
-  const marketByToken = (await marketByTokenResponse.json()) as { condition_id?: unknown; c?: unknown };
-  const conditionId = parseConditionId(marketByToken.condition_id) ?? parseConditionId(marketByToken.c);
+  const marketByToken = (await marketByTokenResponse.json()) as {
+    condition_id?: unknown;
+    c?: unknown;
+  };
+  const conditionId =
+    parseConditionId(marketByToken.condition_id) ??
+    parseConditionId(marketByToken.c);
 
   if (!conditionId) {
     return {};
   }
 
-  const marketResponse = await serverFetch(`${getTradingHost()}/clob-markets/${encodeURIComponent(conditionId)}`, {
-    cache: "no-store",
-    headers: { accept: "application/json" },
-  });
+  const marketResponse = await serverFetch(
+    `${getTradingHost()}/clob-markets/${encodeURIComponent(conditionId)}`,
+    {
+      cache: "no-store",
+      headers: { accept: "application/json" }
+    }
+  );
 
   if (!marketResponse.ok) {
     return {};
   }
 
-  const payload = (await marketResponse.json()) as { nr?: unknown; mts?: unknown };
+  const payload = (await marketResponse.json()) as {
+    nr?: unknown;
+    mts?: unknown;
+  };
 
   return {
     negRisk: parseNegRiskValue({ neg_risk: payload.nr }),
-    tickSize: normalizeClobTickSize(payload.mts),
+    tickSize: normalizeClobTickSize(payload.mts)
   };
 }
 
-function parseNegRiskValue(payload: { neg_risk?: unknown }): boolean | undefined {
+function parseNegRiskValue(payload: {
+  neg_risk?: unknown;
+}): boolean | undefined {
   if (payload.neg_risk === true || payload.neg_risk === "true") {
     return true;
   }
@@ -556,7 +651,12 @@ function parseNegRiskValue(payload: { neg_risk?: unknown }): boolean | undefined
 }
 
 function normalizeClobTickSize(value: unknown): TickSize | undefined {
-  const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
 
   if (parsed === 0.1) {
     return "0.1";
@@ -597,11 +697,13 @@ function normalizeSignedOrderV2(order: unknown) {
     expiration: serialized.expiration,
     metadata: serialized.metadata,
     builder: serialized.builder,
-    signature: serialized.signature,
+    signature: serialized.signature
   };
 }
 
-export function serializeSignedOrderForClob(order: unknown): ClobSignedOrderPayload | undefined {
+export function serializeSignedOrderForClob(
+  order: unknown
+): ClobSignedOrderPayload | undefined {
   if (!order || typeof order !== "object") {
     return undefined;
   }
@@ -652,7 +754,7 @@ export function serializeSignedOrderForClob(order: unknown): ClobSignedOrderPayl
     expiration,
     metadata,
     builder,
-    signature,
+    signature
   };
 }
 
@@ -660,7 +762,7 @@ async function getBalanceAllowance({
   address,
   credentials,
   signatureType,
-  params,
+  params
 }: {
   address: string;
   credentials: ApiKeyCreds;
@@ -673,26 +775,31 @@ async function getBalanceAllowance({
   const requestPath = "/balance-allowance";
   const searchParams = new URLSearchParams({
     asset_type: params.asset_type,
-    signature_type: signatureType.toString(),
+    signature_type: signatureType.toString()
   });
 
   if (params.token_id) {
     searchParams.set("token_id", params.token_id);
   }
 
-  const response = await serverFetch(`${getTradingHost()}${requestPath}?${searchParams.toString()}`, {
-    method: "GET",
-    headers: await createUserL2Headers({
-      address,
-      credentials,
+  const response = await serverFetch(
+    `${getTradingHost()}${requestPath}?${searchParams.toString()}`,
+    {
       method: "GET",
-      requestPath,
-    }),
-    cache: "no-store",
-  });
+      headers: await createUserL2Headers({
+        address,
+        credentials,
+        method: "GET",
+        requestPath
+      }),
+      cache: "no-store"
+    }
+  );
 
   if (!response.ok) {
-    throw new Error(`Unable to fetch balance/allowance: ${await readResponseError(response)}`);
+    throw new Error(
+      `Unable to fetch balance/allowance: ${await readResponseError(response)}`
+    );
   }
 
   return (await response.json()) as BalanceAllowanceResponse;
@@ -702,7 +809,7 @@ async function updateBalanceAllowance({
   address,
   credentials,
   signatureType,
-  params,
+  params
 }: {
   address: string;
   credentials: ApiKeyCreds;
@@ -715,33 +822,43 @@ async function updateBalanceAllowance({
   const requestPath = "/balance-allowance/update";
   const searchParams = new URLSearchParams({
     asset_type: params.asset_type,
-    signature_type: signatureType.toString(),
+    signature_type: signatureType.toString()
   });
 
   if (params.token_id) {
     searchParams.set("token_id", params.token_id);
   }
 
-  const response = await serverFetch(`${getTradingHost()}${requestPath}?${searchParams.toString()}`, {
-    method: "GET",
-    headers: await createUserL2Headers({
-      address,
-      credentials,
+  const response = await serverFetch(
+    `${getTradingHost()}${requestPath}?${searchParams.toString()}`,
+    {
       method: "GET",
-      requestPath,
-    }),
-    cache: "no-store",
-  });
+      headers: await createUserL2Headers({
+        address,
+        credentials,
+        method: "GET",
+        requestPath
+      }),
+      cache: "no-store"
+    }
+  );
 
   if (!response.ok) {
-    throw new Error(`Unable to update balance/allowance cache: ${await readResponseError(response)}`);
+    throw new Error(
+      `Unable to update balance/allowance cache: ${await readResponseError(response)}`
+    );
   }
 }
 
 function parseSafeInteger(value: unknown): number | undefined {
-  const parsed = typeof value === "string" && value.trim() ? Number(value) : value;
+  const parsed =
+    typeof value === "string" && value.trim() ? Number(value) : value;
 
-  if (typeof parsed !== "number" || !Number.isSafeInteger(parsed) || parsed < 0) {
+  if (
+    typeof parsed !== "number" ||
+    !Number.isSafeInteger(parsed) ||
+    parsed < 0
+  ) {
     return undefined;
   }
 
@@ -756,13 +873,17 @@ function parseIntegerString(value: unknown): string | undefined {
   return value;
 }
 
-function minPrice(levels: Array<{ price?: unknown }> | undefined): number | undefined {
+function minPrice(
+  levels: Array<{ price?: unknown }> | undefined
+): number | undefined {
   const prices = parsePrices(levels);
 
   return prices.length > 0 ? Math.min(...prices) : undefined;
 }
 
-function maxPrice(levels: Array<{ price?: unknown }> | undefined): number | undefined {
+function maxPrice(
+  levels: Array<{ price?: unknown }> | undefined
+): number | undefined {
   const prices = parsePrices(levels);
 
   return prices.length > 0 ? Math.max(...prices) : undefined;
@@ -770,7 +891,11 @@ function maxPrice(levels: Array<{ price?: unknown }> | undefined): number | unde
 
 function parsePrices(levels: Array<{ price?: unknown }> | undefined): number[] {
   return (levels ?? [])
-    .map((level) => (typeof level.price === "string" || typeof level.price === "number" ? Number(level.price) : Number.NaN))
+    .map((level) =>
+      typeof level.price === "string" || typeof level.price === "number"
+        ? Number(level.price)
+        : Number.NaN
+    )
     .filter((price) => Number.isFinite(price) && price > 0 && price < 1);
 }
 
@@ -825,7 +950,9 @@ interface PolymarketActivityRecord {
   outcome: string;
 }
 
-function isPolymarketActivityRecord(value: unknown): value is PolymarketActivityRecord {
+function isPolymarketActivityRecord(
+  value: unknown
+): value is PolymarketActivityRecord {
   if (!value || typeof value !== "object") {
     return false;
   }
@@ -850,7 +977,9 @@ function isPolymarketActivityRecord(value: unknown): value is PolymarketActivity
   );
 }
 
-function normalizeUserActivityRecord(record: PolymarketActivityRecord): UserActivityRecord {
+function normalizeUserActivityRecord(
+  record: PolymarketActivityRecord
+): UserActivityRecord {
   return {
     id: `${record.transactionHash}:${record.asset}:${record.side}:${record.timestamp}`,
     proxyWallet: record.proxyWallet,
@@ -868,7 +997,7 @@ function normalizeUserActivityRecord(record: PolymarketActivityRecord): UserActi
     slug: record.slug,
     icon: record.icon,
     eventSlug: record.eventSlug,
-    outcome: record.outcome,
+    outcome: record.outcome
   };
 }
 
@@ -896,7 +1025,7 @@ async function createUserL2Headers({
   credentials,
   method,
   requestPath,
-  body,
+  body
 }: {
   address: string;
   credentials: ApiKeyCreds;
@@ -916,11 +1045,14 @@ async function createUserL2Headers({
     POLY_SIGNATURE: await createHmacSignature(credentials.secret, message),
     POLY_TIMESTAMP: timestamp,
     POLY_API_KEY: credentials.key,
-    POLY_PASSPHRASE: credentials.passphrase,
+    POLY_PASSPHRASE: credentials.passphrase
   };
 }
 
-async function createHmacSignature(secret: string, message: string): Promise<string> {
+async function createHmacSignature(
+  secret: string,
+  message: string
+): Promise<string> {
   if (!globalThis.crypto?.subtle) {
     throw new Error("Web Crypto is required to sign Polymarket L2 requests.");
   }
@@ -930,12 +1062,16 @@ async function createHmacSignature(secret: string, message: string): Promise<str
     decodeBase64Url(secret).buffer as ArrayBuffer,
     {
       name: "HMAC",
-      hash: "SHA-256",
+      hash: "SHA-256"
     },
     false,
-    ["sign"],
+    ["sign"]
   );
-  const signature = await globalThis.crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
+  const signature = await globalThis.crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(message)
+  );
 
   return bytesToBase64Url(new Uint8Array(signature));
 }
@@ -965,8 +1101,17 @@ function bytesToBase64Url(bytes: Uint8Array): string {
 
 async function readResponseError(response: Response): Promise<string> {
   try {
-    const payload = (await response.json()) as { error?: string; errorMsg?: string; message?: string };
-    return payload.error ?? payload.errorMsg ?? payload.message ?? `${response.status} ${response.statusText}`;
+    const payload = (await response.json()) as {
+      error?: string;
+      errorMsg?: string;
+      message?: string;
+    };
+    return (
+      payload.error ??
+      payload.errorMsg ??
+      payload.message ??
+      `${response.status} ${response.statusText}`
+    );
   } catch {
     return `${response.status} ${response.statusText}`;
   }

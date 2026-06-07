@@ -8,6 +8,8 @@ import { RegionRestrictedControl } from "@/components/trading/region-restricted-
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { fetchPositionSellSnapshot } from "@/lib/portfolio/fetch-position-sell-snapshot";
+import { fetchPositionGameSellContext } from "@/lib/portfolio/fetch-position-game-sell-context";
+import type { PositionGameSellContext } from "@/lib/portfolio/resolve-position-game-sell-context";
 import {
   formatPortfolioDateTime,
   formatPnlSubline,
@@ -48,10 +50,17 @@ export interface PortfolioPositionsTableProps {
   onConnectWallet: () => void;
 }
 
-type SellTarget = {
-  position: UserPositionRecord;
-  snapshot: TeamMarketSnapshot;
-};
+type SellTarget =
+  | {
+      variant: "team";
+      position: UserPositionRecord;
+      snapshot: TeamMarketSnapshot;
+    }
+  | {
+      variant: "game";
+      position: UserPositionRecord;
+      context: PositionGameSellContext;
+    };
 
 type RedeemTarget = {
   position: UserPositionRecord;
@@ -148,15 +157,29 @@ export function PortfolioPositionsTable({
       setSellingAsset(position.asset);
 
       try {
-        const snapshot = await fetchPositionSellSnapshot(position);
+        const teamSnapshot = await fetchPositionSellSnapshot(position);
 
-        if (!snapshot) {
+        if (teamSnapshot) {
+          useTradeTicketStore.getState().syncForPositionSell(
+            teamSnapshot,
+            position
+          );
+          setSellTarget({ variant: "team", position, snapshot: teamSnapshot });
+          return;
+        }
+
+        const gameContext = await fetchPositionGameSellContext(position);
+
+        if (!gameContext) {
           toast.error("Market data unavailable");
           return;
         }
 
-        useTradeTicketStore.getState().syncForPositionSell(snapshot, position);
-        setSellTarget({ position, snapshot });
+        useTradeTicketStore.getState().syncForGamePositionSell(
+          gameContext,
+          position
+        );
+        setSellTarget({ variant: "game", position, context: gameContext });
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Market data unavailable";
@@ -286,11 +309,22 @@ export function PortfolioPositionsTable({
         <div className={portfolioTableMobileListClass}>{mobileCards}</div>
       </div>
 
-      {sellTarget ? (
+      {sellTarget?.variant === "team" ? (
         <PortfolioPositionSellDialog
           open
+          variant="team"
           position={sellTarget.position}
           snapshot={sellTarget.snapshot}
+          onClose={() => setSellTarget(null)}
+        />
+      ) : null}
+
+      {sellTarget?.variant === "game" ? (
+        <PortfolioPositionSellDialog
+          open
+          variant="game"
+          position={sellTarget.position}
+          context={sellTarget.context}
           onClose={() => setSellTarget(null)}
         />
       ) : null}

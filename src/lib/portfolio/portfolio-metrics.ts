@@ -8,6 +8,13 @@ import type {
   TeamMarketSnapshot,
   UserPositionRecord
 } from "@/types/market";
+
+export interface GamePositionTokenMatch {
+  yesTokenId?: string;
+  noTokenId?: string;
+  yesOutcome?: string;
+  noOutcome?: string;
+}
 import type {
   PortfolioTransactionRecord,
   UserOpenOrder
@@ -131,6 +138,37 @@ export function resolveOutcomeSideForPosition(
   if (
     tokens?.no?.outcome &&
     tokens.no.outcome.trim().toLowerCase() === normalizedOutcome
+  ) {
+    return "no";
+  }
+
+  return position.outcomeIndex === 0 ? "yes" : "no";
+}
+
+export function resolveOutcomeSideForGamePosition(
+  position: UserPositionRecord,
+  tokens: GamePositionTokenMatch
+): OrderOutcomeSide {
+  if (tokens.yesTokenId && tokens.yesTokenId === position.asset) {
+    return "yes";
+  }
+
+  if (tokens.noTokenId && tokens.noTokenId === position.asset) {
+    return "no";
+  }
+
+  const normalizedOutcome = position.outcome.trim().toLowerCase();
+
+  if (
+    tokens.yesOutcome &&
+    tokens.yesOutcome.trim().toLowerCase() === normalizedOutcome
+  ) {
+    return "yes";
+  }
+
+  if (
+    tokens.noOutcome &&
+    tokens.noOutcome.trim().toLowerCase() === normalizedOutcome
   ) {
     return "no";
   }

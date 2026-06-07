@@ -1,11 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 
 import { Modal } from "@/components/ui/modal";
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
+import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
+import type { PositionGameSellContext } from "@/lib/portfolio/resolve-position-game-sell-context";
 import {
   formatSharePrice,
   getOutcomeToneClass
@@ -14,7 +17,6 @@ import { derivePositionSellReceiveAmount } from "@/lib/portfolio/portfolio-metri
 import { resolveTradeHref } from "@/lib/routes/trade";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
-import { TeamFlag } from "@/components/teams/team-flag";
 import {
   FundingModalShell,
   fundingPrimaryButtonClass
@@ -34,38 +36,36 @@ const SELL_QUICK_FRACTIONS = [
 
 export const PORTFOLIO_SELL_MODAL_WIDTH = "w-[492px]";
 
-export interface PortfolioPositionSellDialogProps {
-  open: boolean;
+export type PortfolioPositionSellDialogProps =
+  | {
+      open: boolean;
+      variant: "team";
+      position: UserPositionRecord;
+      snapshot: TeamMarketSnapshot;
+      onClose: () => void;
+    }
+  | {
+      open: boolean;
+      variant: "game";
+      position: UserPositionRecord;
+      context: PositionGameSellContext;
+      onClose: () => void;
+    };
+
+interface PortfolioPositionSellSharedBodyProps {
   position: UserPositionRecord;
-  snapshot: TeamMarketSnapshot;
+  headerIcon: ReactNode;
   onClose: () => void;
+  ticket: ReturnType<typeof useTradeTicket> | null;
 }
 
-interface PortfolioPositionSellBodyProps {
-  position: UserPositionRecord;
-  snapshot: TeamMarketSnapshot;
-  onClose: () => void;
-}
-
-function PortfolioPositionSellBody({
+function PortfolioPositionSellSharedBody({
   position,
-  snapshot,
-  onClose
-}: PortfolioPositionSellBodyProps) {
+  headerIcon,
+  onClose,
+  ticket
+}: PortfolioPositionSellSharedBodyProps) {
   const router = useRouter();
-  const { reload } = usePortfolioContext();
-
-  const handleOrderSuccess = useCallback(async () => {
-    onClose();
-    reload();
-  }, [onClose, reload]);
-
-  const ticket = useTradeTicket({
-    variant: "team",
-    snapshot,
-    sellPosition: position,
-    onOrderSuccess: handleOrderSuccess
-  });
 
   if (!ticket) {
     return (
@@ -96,7 +96,7 @@ function PortfolioPositionSellBody({
     <>
       <div className="flex flex-col gap-5 pb-2">
         <div className="flex items-start gap-2.5">
-          <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+          {headerIcon}
           <div className="min-w-0 flex-1">
             <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
               {position.title}
@@ -184,12 +184,98 @@ function PortfolioPositionSellBody({
   );
 }
 
-export function PortfolioPositionSellDialog({
-  open,
+function PortfolioPositionGameIcon({ position }: { position: UserPositionRecord }) {
+  if (position.icon) {
+    return (
+      <Image
+        src={position.icon}
+        alt=""
+        width={20}
+        height={20}
+        className="h-5 w-5 shrink-0 rounded-[2px] object-cover"
+      />
+    );
+  }
+
+  return (
+    <div
+      className="h-5 w-5 shrink-0 rounded-[2px] bg-[#E8E8E8]"
+      aria-hidden
+    />
+  );
+}
+
+function PortfolioPositionTeamSellBody({
   position,
   snapshot,
   onClose
-}: PortfolioPositionSellDialogProps) {
+}: {
+  position: UserPositionRecord;
+  snapshot: TeamMarketSnapshot;
+  onClose: () => void;
+}) {
+  const { reload } = usePortfolioContext();
+
+  const handleOrderSuccess = useCallback(async () => {
+    onClose();
+    reload();
+  }, [onClose, reload]);
+
+  const ticket = useTradeTicket({
+    variant: "team",
+    snapshot,
+    sellPosition: position,
+    onOrderSuccess: handleOrderSuccess
+  });
+
+  return (
+    <PortfolioPositionSellSharedBody
+      position={position}
+      headerIcon={
+        <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+      }
+      onClose={onClose}
+      ticket={ticket}
+    />
+  );
+}
+
+function PortfolioPositionGameSellBody({
+  position,
+  context,
+  onClose
+}: {
+  position: UserPositionRecord;
+  context: PositionGameSellContext;
+  onClose: () => void;
+}) {
+  const { reload } = usePortfolioContext();
+
+  const handleOrderSuccess = useCallback(async () => {
+    onClose();
+    reload();
+  }, [onClose, reload]);
+
+  const ticket = useTradeTicket({
+    variant: "game",
+    gameSnapshot: context.gameSnapshot,
+    sellPosition: position,
+    onOrderSuccess: handleOrderSuccess
+  });
+
+  return (
+    <PortfolioPositionSellSharedBody
+      position={position}
+      headerIcon={<PortfolioPositionGameIcon position={position} />}
+      onClose={onClose}
+      ticket={ticket}
+    />
+  );
+}
+
+export function PortfolioPositionSellDialog(props: PortfolioPositionSellDialogProps) {
+  const { open, position, onClose } = props;
+
   return (
     <Modal
       open={open}
@@ -199,11 +285,19 @@ export function PortfolioPositionSellDialog({
       hideCloseButton
     >
       <FundingModalShell title="Sell" onClose={onClose}>
-        <PortfolioPositionSellBody
-          position={position}
-          snapshot={snapshot}
-          onClose={onClose}
-        />
+        {props.variant === "team" ? (
+          <PortfolioPositionTeamSellBody
+            position={position}
+            snapshot={props.snapshot}
+            onClose={onClose}
+          />
+        ) : (
+          <PortfolioPositionGameSellBody
+            position={position}
+            context={props.context}
+            onClose={onClose}
+          />
+        )}
       </FundingModalShell>
     </Modal>
   );
