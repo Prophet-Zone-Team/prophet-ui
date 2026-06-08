@@ -117,15 +117,20 @@ function HeaderMetric({
   subtitle?: string;
   badgeLabel?: string;
 }) {
+  console.log("statusVariant", statusVariant);
   return (
     <div className="relative md:w-[453px] h-full">
       <div className="absolute top-[-14px] h-full hidden md:block">
         <Bg />
       </div>
       <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[35px]">
-        <strong className="text-center text-[40px] font-[400] capitalize leading-[48px] text-white sm:text-[60px] sm:leading-[72px]">
-          {value}
-        </strong>
+        {statusVariant === "upcoming" ? (
+          <span className="text-[#909090] text-[36px] font-[500]">VS</span>
+        ) : (
+          <strong className="text-center text-[40px] font-[400] capitalize leading-[48px] text-white sm:text-[60px] sm:leading-[72px]">
+            {value}
+          </strong>
+        )}
 
         {statusVariant ? (
           <div className="mt-4 flex flex-col items-center gap-1 sm:mt-7">

@@ -29,7 +29,7 @@ export interface TabSwitcherProps {
 }
 
 const tabLabelSizeClass = {
-  default: "text-[16px] md:text-[18px] leading-[21px] font-[400] pb-[8px]",
+  default: "text-[16px] leading-[21px] font-[400] pb-[8px]",
   compact: "text-sm md:text-base leading-[19px] font-[300] pb-[4px]"
 } as const;
 

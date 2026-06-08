@@ -1,7 +1,7 @@
 import "server-only";
 
 import { fetchClobBestPrices } from "@/server/trading/clob-user-client";
-import { ZERO_ORDER_BUILDER_CODE } from "@/server/trading/builder-code";
+// import { ZERO_ORDER_BUILDER_CODE } from "@/server/trading/builder-code";
 import type { SignedOrderContext } from "@/server/trading/balances";
 import type { UserOrderPreview, UserOrderStatus } from "@/types/market";
 
@@ -64,9 +64,9 @@ export function validateSignedOrderOwnership({
     return "Only open CLOB limit orders with the zero taker address are supported.";
   }
 
-  if (order.builder.toLowerCase() !== ZERO_ORDER_BUILDER_CODE) {
-    return "Signed user orders must use a zero builder code.";
-  }
+  // if (order.builder.toLowerCase() !== ZERO_ORDER_BUILDER_CODE) {
+  //   return "Signed user orders must use a zero builder code.";
+  // }
 
   return undefined;
 }
