@@ -25,7 +25,7 @@ function formatKickbackRatePercent(kickbackRate: string): string {
 }
 
 function formatUsdAmount(value: string): string {
-  return formatNumber(value, 2, true, { prefix: "$" }) as string;
+  return formatNumber(value, 2, true, { prefix: "$", round: 0 }) as string;
 }
 
 export function mapClaimSummaryToProphetReferral(
