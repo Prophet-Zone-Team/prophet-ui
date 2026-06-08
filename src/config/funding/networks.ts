@@ -1,3 +1,5 @@
+import { getStableflowChainLogo } from "@/utils/logo";
+
 export enum FundingNetworkType {
   EVM = "evm",
   SVM = "svm",
@@ -16,35 +18,35 @@ export const FUNDING_NETWORKS: Record<string, FundingNetwork> = {
   arbitrum: {
     chainId: 42161,
     chainName: "Arbitrum",
-    chainIcon: "/networks/arbitrum.png",
+    chainIcon: getStableflowChainLogo("arbitrum"),
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://arb1.arbitrum.io/rpc",
   },
   optimism: {
     chainId: 10,
     chainName: "Optimism",
-    chainIcon: "/networks/optimism.png",
+    chainIcon: getStableflowChainLogo("optimism"),
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://mainnet.optimism.io",
   },
   bsc: {
     chainId: 56,
     chainName: "BNB Smart Chain",
-    chainIcon: "/networks/bsc.png",
+    chainIcon: getStableflowChainLogo("bsc"),
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://56.rpc.thirdweb.com",
   },
   polygon: {
     chainId: 137,
     chainName: "Polygon",
-    chainIcon: "/networks/polygon.png",
+    chainIcon: getStableflowChainLogo("polygon"),
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://polygon.drpc.org",
   },
   ethereum: {
     chainId: 1,
     chainName: "Ethereum",
-    chainIcon: "/networks/ethereum.png",
+    chainIcon: getStableflowChainLogo("ethereum"),
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://0xrpc.io/eth",
   },
@@ -58,7 +60,7 @@ export const FUNDING_NETWORKS: Record<string, FundingNetwork> = {
   base: {
     chainId: 8453,
     chainName: "Base",
-    chainIcon: "/networks/base.png",
+    chainIcon: getStableflowChainLogo("base"),
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://mainnet.base.org",
   },
@@ -68,6 +70,55 @@ export const FUNDING_NETWORKS: Record<string, FundingNetwork> = {
     chainIcon: "/networks/hyperevm.png",
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://rpc.hyperliquid.xyz/evm",
+  },
+  abstract: {
+    chainId: 2_741,
+    chainName: "Abstract",
+    chainIcon: "/networks/abstract.png",
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://api.mainnet.abs.xyz",
+  },
+  avalanche: {
+    chainId: 43_114,
+    chainName: "Avalanche",
+    chainIcon: getStableflowChainLogo("avalanche"),
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://api.avax.network/ext/bc/C/rpc",
+  },
+  berachain: {
+    chainId: 80094,
+    chainName: "Berachain",
+    chainIcon: getStableflowChainLogo("berachain"),
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://rpc.berachain.com",
+  },
+  gnosis: {
+    chainId: 100,
+    chainName: "Gnosis",
+    chainIcon: getStableflowChainLogo("gnosis"),
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://rpc.gnosischain.com",
+  },
+  plasma: {
+    chainId: 9745,
+    chainName: "Plasma",
+    chainIcon: getStableflowChainLogo("plasma"),
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://rpc.plasma.to",
+  },
+  scroll: {
+    chainId: 534_352,
+    chainName: "Scroll",
+    chainIcon: "/networks/scroll.png",
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://rpc.scroll.io",
+  },
+  xlayer: {
+    chainId: 196,
+    chainName: "XLayer",
+    chainIcon: getStableflowChainLogo("xlayer"),
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://xlayerrpc.okx.com",
   },
 };
 

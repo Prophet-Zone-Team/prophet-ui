@@ -7,6 +7,14 @@ import {
   monad,
   base,
   hyperEvm,
+  abstract,
+  adi,
+  avalanche,
+  berachain,
+  gnosis,
+  plasma,
+  scroll,
+  xLayer,
 } from "viem/chains";
 import { cookieStorage, createStorage, http } from "wagmi";
 import { createConfig } from "@privy-io/wagmi";

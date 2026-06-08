@@ -83,7 +83,7 @@ export function DepositTokenStep({
     getTokenUsdValue,
   ]);
 
-  const loading = balancesLoading || pricesLoading;
+  const loading = balancesLoading;
 
   return (
     <div className="flex max-h-[340px] flex-col gap-0.5 overflow-y-auto pb-2">
@@ -92,14 +92,21 @@ export function DepositTokenStep({
           selectedToken?.chainId === token.chainId &&
           selectedToken?.address === token.address;
         const isDisabled = false;
-        const usdDisplay =
-          token.usdValue > 0 || hasTokenUsdPrice(token.symbol)
-            ? formatNumber(token.usdValue, 2, true, {
+        const usdDisplay = depositMethod === "stableflow"
+          ? formatNumber(token.usdValue, 2, true, {
+            prefix: "$",
+            round: 0,
+            isZeroPrecision: true
+          })
+          : (
+            token.usdValue > 0 || hasTokenUsdPrice(token.symbol)
+              ? formatNumber(token.usdValue, 2, true, {
                 prefix: "$",
                 round: 0,
                 isZeroPrecision: true
               })
-            : "--";
+              : "--"
+          );
 
         return (
           <button

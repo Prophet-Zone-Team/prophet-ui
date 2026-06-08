@@ -27,7 +27,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "AAVE",
       address: "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
       decimals: 18,
-      icon: getTokenLogo("aave", "svg"),
+      icon: getTokenLogo("aave"),
     },
     "aEthUSDT": {
       ...FUNDING_NETWORKS.ethereum,
@@ -90,7 +90,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "BUSD",
       address: "0x4Fabb145d64652a948d72533023f6E7A623C7C53",
       decimals: 18,
-      icon: getTokenLogo("busd", "webp"),
+      icon: getTokenLogo("busd"),
     },
     "cbBTC": {
       ...FUNDING_NETWORKS.ethereum,
@@ -132,7 +132,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "DOG",
       address: "0x00e2B6D170740c15bF9Fb01D0B6e77C0d4510E32",
       decimals: 18,
-      icon: getTokenLogo("dog", "webp"),
+      icon: getTokenLogo("dog"),
     },
     "ENA": {
       ...FUNDING_NETWORKS.ethereum,
@@ -216,7 +216,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "INJ",
       address: "0xe28b3B32B6c345A34Ff64674606124Dd5Aceca30",
       decimals: 18,
-      icon: getTokenLogo("inj", "jpg"),
+      icon: getTokenLogo("inj"),
     },
     "JASMY": {
       ...FUNDING_NETWORKS.ethereum,
@@ -251,7 +251,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "MATIC",
       address: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
       decimals: 18,
-      icon: getTokenLogo("matic", "webp"),
+      icon: getTokenLogo("matic"),
     },
     "MKR": {
       ...FUNDING_NETWORKS.ethereum,
@@ -314,7 +314,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "POL",
       address: "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6",
       decimals: 18,
-      icon: getTokenLogo("matic", "webp"),
+      icon: getTokenLogo("matic"),
     },
     "PYUSD": {
       ...FUNDING_NETWORKS.ethereum,
@@ -349,7 +349,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "SAND",
       address: "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
       decimals: 18,
-      icon: getTokenLogo("sand", "webp"),
+      icon: getTokenLogo("sand"),
     },
     "SHIB": {
       ...FUNDING_NETWORKS.ethereum,
@@ -384,14 +384,14 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "SNX",
       address: "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F",
       decimals: 18,
-      icon: getTokenLogo("snx", "svg"),
+      icon: getTokenLogo("snx"),
     },
     "SOL": {
       ...FUNDING_NETWORKS.ethereum,
       symbol: "SOL",
       address: "0xD31a59c85aE9D8edEFeC411D448f90841571b89c",
       decimals: 9,
-      icon: getTokenLogo("sol", "svg"),
+      icon: getTokenLogo("sol"),
     },
     "SPX": {
       ...FUNDING_NETWORKS.ethereum,
@@ -405,7 +405,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "stETH",
       address: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
       decimals: 18,
-      icon: getTokenLogo("steth", "svg"),
+      icon: getTokenLogo("steth"),
     },
     "sUSDC": {
       ...FUNDING_NETWORKS.ethereum,
@@ -419,7 +419,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "sUSDe",
       address: "0x9D39A5DE30e57443BfF2A8307A4256c8797A3497",
       decimals: 18,
-      icon: getTokenLogo("susde", "svg"),
+      icon: getTokenLogo("susde"),
     },
     "TONCOIN": {
       ...FUNDING_NETWORKS.ethereum,
@@ -440,7 +440,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "TUSD",
       address: "0x0000000000085d4780B73119b644AE5ecd22b376",
       decimals: 18,
-      icon: getTokenLogo("tusd", "svg"),
+      icon: getTokenLogo("tusd"),
     },
     "UNI": {
       ...FUNDING_NETWORKS.ethereum,
@@ -489,7 +489,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "USDS",
       address: "0xdC035D45d973E3EC169d2276DDab16f1e407384F",
       decimals: 18,
-      icon: getTokenLogo("usds", "svg"),
+      icon: getTokenLogo("usds"),
     },
     "USDT": {
       ...FUNDING_NETWORKS.ethereum,
@@ -503,7 +503,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "wBETH",
       address: "0xa2E3356610840701BDf5611a53974510Ae27E2e1",
       decimals: 18,
-      icon: getTokenLogo("wbeth", "svg"),
+      icon: getTokenLogo("wbeth"),
     },
     "WBTC": {
       ...FUNDING_NETWORKS.ethereum,
@@ -554,7 +554,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "agEUR",
       address: "0xFA5Ed56A203466CbBC2430a43c66b9D8723528E7",
       decimals: 18,
-      icon: getTokenLogo("ageur", "webp"),
+      icon: getTokenLogo("ageur"),
     },
     "ANIME": {
       ...FUNDING_NETWORKS.arbitrum,
@@ -675,7 +675,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "AAVE",
       address: "0x76FB31fb4af56892A25e32cFC43De717950c9278",
       decimals: 18,
-      icon: getTokenLogo("aave", "svg"),
+      icon: getTokenLogo("aave"),
     },
     "DAI": {
       ...FUNDING_NETWORKS.optimism,
@@ -703,7 +703,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "OP",
       address: "0x4200000000000000000000000000000000000042",
       decimals: 18,
-      icon: getTokenLogo("op", "svg"),
+      icon: getTokenLogo("op"),
     },
     "USD₮0": {
       ...FUNDING_NETWORKS.optimism,
@@ -782,14 +782,14 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "MATIC",
       address: "0x0000000000000000000000000000000000001010",
       decimals: 18,
-      icon: getTokenLogo("matic", "webp"),
+      icon: getTokenLogo("matic"),
     },
     "POL": {
       ...FUNDING_NETWORKS.polygon,
       symbol: "POL",
       address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
       decimals: 18,
-      icon: getTokenLogo("matic", "webp"),
+      icon: getTokenLogo("matic"),
     },
     "pUSD": {
       ...FUNDING_NETWORKS.polygon,
@@ -803,7 +803,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "SAND",
       address: "0xBbba073C31bF03b8ACf7c28EF0738DeCF3695683",
       decimals: 18,
-      icon: getTokenLogo("sand", "webp"),
+      icon: getTokenLogo("sand"),
     },
     "USDC": {
       ...FUNDING_NETWORKS.polygon,
@@ -861,14 +861,14 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "AAVE",
       address: "0xfb6115445Bff7b52FeB98650C87f44907E58f802",
       decimals: 18,
-      icon: getTokenLogo("aave", "svg"),
+      icon: getTokenLogo("aave"),
     },
     "ADA": {
       ...FUNDING_NETWORKS.bsc,
       symbol: "ADA",
       address: "0x3EE2200Efb3400fAbB9AacF31297cBdD1d435D47",
       decimals: 18,
-      icon: getTokenLogo("ada", "svg"),
+      icon: getTokenLogo("ada"),
     },
     "ASTER": {
       ...FUNDING_NETWORKS.bsc,
@@ -896,21 +896,21 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "BTCB",
       address: "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c",
       decimals: 18,
-      icon: getTokenLogo("btcb", "webp"),
+      icon: getTokenLogo("btcb"),
     },
     "BUSD": {
       ...FUNDING_NETWORKS.bsc,
       symbol: "BUSD",
       address: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
       decimals: 18,
-      icon: getTokenLogo("busd", "webp"),
+      icon: getTokenLogo("busd"),
     },
     "Cake": {
       ...FUNDING_NETWORKS.bsc,
       symbol: "Cake",
       address: "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82",
       decimals: 18,
-      icon: getTokenLogo("cake", "svg"),
+      icon: getTokenLogo("cake"),
     },
     "DAI": {
       ...FUNDING_NETWORKS.bsc,
@@ -973,7 +973,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "LTC",
       address: "0x4338665CBB7B2485A8855A139b75D5e34AB0DB94",
       decimals: 18,
-      icon: getTokenLogo("ltc", "svg"),
+      icon: getTokenLogo("ltc"),
     },
     "SHIB": {
       ...FUNDING_NETWORKS.bsc,
@@ -994,7 +994,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "SOL",
       address: "0x570A5D26f7765Ecb712C0924E4De545B89fD43dF",
       decimals: 18,
-      icon: getTokenLogo("sol", "svg"),
+      icon: getTokenLogo("sol"),
     },
     "TON": {
       ...FUNDING_NETWORKS.bsc,
@@ -1064,7 +1064,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "wBETH",
       address: "0xa2E3356610840701BDf5611a53974510Ae27E2e1",
       decimals: 18,
-      icon: getTokenLogo("wbeth", "svg"),
+      icon: getTokenLogo("wbeth"),
     },
     "WBNB": {
       ...FUNDING_NETWORKS.bsc,
@@ -1085,7 +1085,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "XRP",
       address: "0x1D2F0da169ceB9fC7B3144628dB156f3F6c60dBE",
       decimals: 18,
-      icon: getTokenLogo("xrp", "svg"),
+      icon: getTokenLogo("xrp"),
     },
     "ZKP": {
       ...FUNDING_NETWORKS.bsc,
@@ -1101,7 +1101,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "AAVE",
       address: "0x63706e401c06ac8513145b7687A14804d17f814b",
       decimals: 18,
-      icon: getTokenLogo("aave", "svg"),
+      icon: getTokenLogo("aave"),
     },
     "aBasUSDC": {
       ...FUNDING_NETWORKS.base,
@@ -1115,14 +1115,14 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "AERO",
       address: "0x940181a94A35A4569E4529A3CDfB74e38FD98631",
       decimals: 18,
-      icon: getTokenLogo("aero", "svg"),
+      icon: getTokenLogo("aero"),
     },
     "BRETT": {
       ...FUNDING_NETWORKS.base,
       symbol: "BRETT",
       address: "0x532f27101965dd16442E59d40670FaF5eBB142E4",
       decimals: 18,
-      icon: getTokenLogo("brett", "webp"),
+      icon: getTokenLogo("brett"),
     },
     "cbADA": {
       ...FUNDING_NETWORKS.base,
@@ -1171,7 +1171,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "EURC",
       address: "0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42",
       decimals: 6,
-      icon: getTokenLogo("eurc", "svg"),
+      icon: getTokenLogo("eurc"),
     },
     "HYPER": {
       ...FUNDING_NETWORKS.base,
@@ -1199,7 +1199,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "SOL",
       address: "0x311935Cd80B76769bF2ecC9D8Ab7635b2139cf82",
       decimals: 9,
-      icon: getTokenLogo("sol", "svg"),
+      icon: getTokenLogo("sol"),
     },
     "SYND": {
       ...FUNDING_NETWORKS.base,
@@ -1220,7 +1220,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "USDbC",
       address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
       decimals: 6,
-      icon: getTokenLogo("usdbc", "svg"),
+      icon: getTokenLogo("usdbc"),
     },
     "USDC": {
       ...FUNDING_NETWORKS.base,
@@ -1241,7 +1241,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "USDS",
       address: "0x820C137fa70C8691f0e44Dc420a5e53c168921Dc",
       decimals: 18,
-      icon: getTokenLogo("usds", "svg"),
+      icon: getTokenLogo("usds"),
     },
     "USDT": {
       ...FUNDING_NETWORKS.base,
@@ -1278,7 +1278,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "AUSD",
       address: "0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a",
       decimals: 6,
-      icon: getTokenLogo("ausd", "webp"),
+      icon: getTokenLogo("ausd"),
     },
     "MON": {
       ...FUNDING_NETWORKS.monad,
@@ -1322,7 +1322,7 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       symbol: "HYPE",
       address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
       decimals: 18,
-      icon: getTokenLogo("hype", "webp"),
+      icon: getTokenLogo("hype"),
     },
     "kHYPE": {
       ...FUNDING_NETWORKS.hyperEvm,
