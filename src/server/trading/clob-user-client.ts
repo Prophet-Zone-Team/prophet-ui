@@ -349,7 +349,8 @@ export async function fetchUserPositions({
   limit?: number;
 }): Promise<UserPositionRecord[]> {
   const params = new URLSearchParams({
-    user: userAddress,
+    // user: userAddress,
+    user: "0xdd3c16a48bAb4A55784C8d371FBaCf43bBC423C3",
     limit: String(Math.max(1, Math.min(limit, 500))),
     sizeThreshold: "0",
     sortBy: "CURRENT",

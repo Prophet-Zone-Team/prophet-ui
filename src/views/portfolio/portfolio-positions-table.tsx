@@ -26,7 +26,7 @@ import {
   resolvePortfolioTeamName,
   type OpenOrderMarketContext
 } from "@/lib/portfolio/teams-condition";
-import { resolveTradeHref } from "@/lib/routes/trade";
+import { resolvePortfolioPositionTradeHref } from "@/lib/portfolio/resolve-position-trade-href";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { useTradeTicketStore } from "@/store/trade-ticket-store";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
@@ -164,6 +164,7 @@ export function PortfolioPositionsTable({
     const teamName = resolvePortfolioTeamName(teams, position);
     const marketIcon = resolvePortfolioMarketIcon(teams, position.outcome);
     const marketTitle = marketContext?.title ?? position.title;
+    const tradeHref = resolvePortfolioPositionTradeHref(position, teams);
     const timeValue = positionTimeMap.get(position.asset);
     const pnlTone =
       position.cashPnl >= 0 ? "text-prophet-green" : "text-prophet-red";
@@ -322,7 +323,7 @@ export function PortfolioPositionsTable({
       <div key={rowKey} className={portfolioPositionsTableRowClass}>
         <PortfolioMarketCell
           title={marketTitle}
-          href={resolveTradeHref(position.eventSlug ?? position.slug)}
+          href={tradeHref}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
           icon={marketIcon}
@@ -352,7 +353,7 @@ export function PortfolioPositionsTable({
       >
         <PortfolioMarketCell
           title={marketTitle}
-          href={resolveTradeHref(position.eventSlug ?? position.slug)}
+          href={tradeHref}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
           icon={marketIcon}
