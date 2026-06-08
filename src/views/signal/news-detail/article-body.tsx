@@ -18,6 +18,8 @@ function renderSegments(segments: SignalNewsDetailTextSegment[]) {
           key={`${segment.value}-${index}`}
           href={segment.href}
           className="text-black underline decoration-black underline-offset-2"
+          target="_blank"
+          rel="noreferrer"
         >
           {segment.value}
         </a>
