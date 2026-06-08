@@ -6,10 +6,12 @@ import {
   PortfolioIcon,
   LogoutIcon,
   FastBidIcon,
+  NotificationIcon,
   ReferralIcon
 } from "@/layout/header/wallet-menu-icons";
 import { CopyIcon, RightArrowIcon } from "@/components/icons";
 import { CopyButton } from "@/components/feedback/copy-button";
+import { Switch } from "@/components/ui/switch";
 
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import {
@@ -22,7 +24,9 @@ import {
   DEFAULT_FAST_BID_AMOUNT,
   formatFastBidAmountDisplay,
   useConfigHydrated,
-  useFastBidAmount
+  useFastBidAmount,
+  useNotificationsEnabled,
+  useSetNotificationsEnabled
 } from "@/store";
 
 const WALLET_MENU_DROPDOWN_TRANSITION = {
@@ -48,6 +52,8 @@ export function WalletMenuDropdown({
   isPrivateMode,
 }: WalletMenuDropdownProps) {
   const fastBidAmount = useFastBidAmount();
+  const notificationsEnabled = useNotificationsEnabled();
+  const setNotificationsEnabled = useSetNotificationsEnabled();
   const hasHydrated = useConfigHydrated();
   const fastBidDisplay = formatFastBidAmountDisplay(
     hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT
@@ -130,6 +136,29 @@ export function WalletMenuDropdown({
                 <RightArrowIcon />
               </div>
             </button>
+
+            <div
+              role="menuitem"
+              className={walletMenuItemClass}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-[14px]">
+                  <NotificationIcon />
+                </div>
+                <span>Notification</span>
+              </div>
+              <span
+                className="shrink-0"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <Switch
+                  checked={notificationsEnabled}
+                  onCheckedChange={setNotificationsEnabled}
+                  aria-label="Toggle notifications"
+                />
+              </span>
+            </div>
           </>
         )
       }

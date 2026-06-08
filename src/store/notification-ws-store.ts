@@ -7,6 +7,7 @@ import type { ShowEventNotificationOptions } from "@/components/notification/eve
 import { formatProphetNotificationToast } from "@/lib/notification/format-prophet-notification-toast";
 import { buildNotificationDedupeKey } from "@/lib/notification/map-ws-notification-to-event";
 import { showProphetNotificationToast } from "@/lib/notification/show-prophet-notification-toast";
+import { useUserConfigStore } from "@/store/user-config-store";
 import type { ProphetNotificationData } from "@/types/prophet-notification-ws";
 import type { ProphetWsConnectionStatus } from "@/types/prophet-notification-ws";
 
@@ -121,6 +122,10 @@ export const useNotificationWsStore = create<NotificationWsStore>()(
       ongoingMatchSlug: null,
 
       enqueue: (data) => {
+        if (!useUserConfigStore.getState().notificationsEnabled) {
+          return;
+        }
+
         const content = formatProphetNotificationToast(data);
 
         if (!content) {

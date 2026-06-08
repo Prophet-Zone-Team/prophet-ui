@@ -61,7 +61,7 @@ export function TakeProfitLimitRow({
         </label>
         <div className="flex min-w-0 items-baseline justify-end gap-0.5">
           <span className="text-sm font-[400] leading-[18px] text-black">
-            $
+            ￠
           </span>
           <input
             id="take-profit-limit-price"

@@ -11,9 +11,11 @@ interface UserConfigState {
   fastBidAmount: number;
   showOrderbook: boolean;
   showStrategyNotice: boolean;
+  notificationsEnabled: boolean;
   setFastBidAmount: (amount: number) => void;
   setShowOrderbook: (value: boolean) => void;
   dismissStrategyNotice: () => void;
+  setNotificationsEnabled: (value: boolean) => void;
 }
 
 export function normalizeFastBidAmount(amount: number): number {
@@ -40,6 +42,7 @@ export const useUserConfigStore = create<UserConfigState>()(
       fastBidAmount: DEFAULT_FAST_BID_AMOUNT,
       showOrderbook: true,
       showStrategyNotice: true,
+      notificationsEnabled: true,
       setFastBidAmount: (amount) => {
         set({ fastBidAmount: normalizeFastBidAmount(amount) });
       },
@@ -48,16 +51,20 @@ export const useUserConfigStore = create<UserConfigState>()(
       },
       dismissStrategyNotice: () => {
         set({ showStrategyNotice: false });
+      },
+      setNotificationsEnabled: (value) => {
+        set({ notificationsEnabled: value });
       }
     }),
     {
       name: "wc-user-config",
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         fastBidAmount: state.fastBidAmount,
         showOrderbook: state.showOrderbook,
-        showStrategyNotice: state.showStrategyNotice
+        showStrategyNotice: state.showStrategyNotice,
+        notificationsEnabled: state.notificationsEnabled
       }),
       migrate: (persisted) => {
         const state = persisted as
@@ -65,6 +72,7 @@ export const useUserConfigStore = create<UserConfigState>()(
               fastBidAmount?: number;
               showOrderbook?: boolean;
               showStrategyNotice?: boolean;
+              notificationsEnabled?: boolean;
             }
           | undefined;
 
@@ -73,7 +81,8 @@ export const useUserConfigStore = create<UserConfigState>()(
             state?.fastBidAmount ?? DEFAULT_FAST_BID_AMOUNT
           ),
           showOrderbook: state?.showOrderbook ?? true,
-          showStrategyNotice: state?.showStrategyNotice ?? true
+          showStrategyNotice: state?.showStrategyNotice ?? true,
+          notificationsEnabled: state?.notificationsEnabled ?? true
         };
       }
     }
@@ -102,4 +111,12 @@ export function useShowStrategyNotice() {
 
 export function useDismissStrategyNotice() {
   return useUserConfigStore((state) => state.dismissStrategyNotice);
+}
+
+export function useNotificationsEnabled() {
+  return useUserConfigStore((state) => state.notificationsEnabled);
+}
+
+export function useSetNotificationsEnabled() {
+  return useUserConfigStore((state) => state.setNotificationsEnabled);
 }

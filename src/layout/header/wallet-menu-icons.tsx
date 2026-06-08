@@ -49,6 +49,23 @@ export function FastBidIcon() {
   );
 }
 
+export function NotificationIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="12"
+      height="14"
+      viewBox="0 0 12 14"
+      fill="none"
+    >
+      <path
+        d="M6 0C3.79086 0 2 1.79086 2 4V6.53516C2 7.47461 1.55273 8.35742 0.796875 8.93359L0 9.53516V10.5H12V9.53516L11.2031 8.93359C10.4473 8.35742 10 7.47461 10 6.53516V4C10 1.79086 8.20914 0 6 0ZM4.5 11.5C4.77614 12.3284 5.32843 13 6 13C6.67157 13 7.22386 12.3284 7.5 11.5H4.5Z"
+        fill="#909090"
+      />
+    </svg>
+  );
+}
+
 export function ReferralIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">
