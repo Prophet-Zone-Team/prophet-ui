@@ -10,7 +10,7 @@ import {
 import { TokenIcon } from "@/views/portfolio/shared/token-icon";
 import { useDepositContext } from "./context";
 import type { DepositSelectableToken } from "./types";
-import { getEffectiveMinDepositUsd } from "./utils";
+import { getDefaultDepositTokenSortIndex, getEffectiveMinDepositUsd } from "./utils";
 import { useMemo } from "react";
 import Big from "big.js";
 import { Loader2 } from "lucide-react";
@@ -57,6 +57,16 @@ export function DepositTokenStep({
         return token;
       })
       .sort((a, b) => {
+        if (balancesLoading) {
+          const orderDiff =
+            getDefaultDepositTokenSortIndex(a) -
+            getDefaultDepositTokenSortIndex(b);
+          if (orderDiff !== 0) {
+            return orderDiff;
+          }
+          return a.symbol.localeCompare(b.symbol);
+        }
+
         if (a.isLowBalance && !b.isLowBalance) {
           return 1;
         }
@@ -65,7 +75,13 @@ export function DepositTokenStep({
         }
         return b.usdValue - a.usdValue;
       });
-  }, [depositMethod, selectableTokens, getTokenBalance, getTokenUsdValue]);
+  }, [
+    balancesLoading,
+    depositMethod,
+    selectableTokens,
+    getTokenBalance,
+    getTokenUsdValue,
+  ]);
 
   const loading = balancesLoading || pricesLoading;
 

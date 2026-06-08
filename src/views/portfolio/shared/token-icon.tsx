@@ -67,7 +67,7 @@ export function TokenIcon({
         <LazyImage
           src={icon}
           alt={symbol}
-          containerClassName={cn(iconSize)}
+          containerClassName={cn(iconSize, "rounded-full overflow-hidden")}
           width={size === "sm" ? 23 : 30}
           height={size === "sm" ? 23 : 30}
         />

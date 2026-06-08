@@ -41,6 +41,34 @@ export const FUNDING_NETWORKS: Record<string, FundingNetwork> = {
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://polygon.drpc.org",
   },
+  ethereum: {
+    chainId: 1,
+    chainName: "Ethereum",
+    chainIcon: "/networks/ethereum.png",
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://0xrpc.io/eth",
+  },
+  monad: {
+    chainId: 143,
+    chainName: "Monad",
+    chainIcon: "/networks/monad.png",
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://rpc.monad.xyz",
+  },
+  base: {
+    chainId: 8453,
+    chainName: "Base",
+    chainIcon: "/networks/base.png",
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://mainnet.base.org",
+  },
+  hyperEvm: {
+    chainId: 999,
+    chainName: "HyperEVM",
+    chainIcon: "/networks/hyperevm.png",
+    chainType: FundingNetworkType.EVM,
+    defaultRpcUrl: "https://rpc.hyperliquid.xyz/evm",
+  },
 };
 
 const RPC_ENV_BY_CHAIN_ID: Record<number, string> = {
