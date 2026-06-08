@@ -13,6 +13,7 @@ import { cn } from "@/lib/cn";
 
 import { inviteActionButtonClass } from "./referral-ui";
 import { DownloadIcon, LinkIcon, TelegramBrandIcon, XBrandIcon } from "./referral-icons";
+import { shareToX } from "@/utils/x";
 
 export type ReferralInviteActionsProps = {
   fullLink: string;
@@ -33,11 +34,15 @@ export function ReferralInviteActions({
   const { copiedVisible, copy } = useCopyWithToast();
 
   const handleTwitter = useCallback(() => {
-    if (!REFERRAL_TWITTER_SHARE_URL) {
-      return;
-    }
-    window.open(REFERRAL_TWITTER_SHARE_URL, "_blank", "noopener,noreferrer");
-  }, []);
+    const tweetText = `The World Cup markets are coming.
+
+Track signals. Trade smarter.
+
+Join Prophet 👇
+
+`;
+    shareToX(tweetText, `${fullLink}\n\n`, { hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket" });
+  }, [fullLink]);
 
   const handleTelegram = useCallback(() => {
     if (!REFERRAL_TELEGRAM_SHARE_URL) {
