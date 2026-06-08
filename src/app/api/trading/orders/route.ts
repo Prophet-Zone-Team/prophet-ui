@@ -177,6 +177,7 @@ export async function POST(request: Request) {
     session: record.session,
     credentials: record.credentials,
     tokenId: orderContext.tokenId,
+    includeOnchain: true,
   });
   const funding = checkOrderFunding({
     balances,

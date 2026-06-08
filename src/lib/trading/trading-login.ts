@@ -21,14 +21,16 @@ import {
   pollDepositWalletUntilDeployed,
 } from "@/lib/trading/deposit-wallet-client";
 import { submitDepositWalletApproval } from "@/lib/trading/deposit-wallet-approval";
-import { fetchJson } from "@/lib/team/client-fetch";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
+import {
+  fetchTradingBalancesWithOnchain,
+  fetchTradingReadinessWithOnchain,
+} from "@/lib/trading/trading-balances-client";
 import { isSetupStepComplete } from "@/lib/trading/trading-setup";
 import { ensureTradingChain } from "@/lib/trading/wallet-trading-chain";
 import type {
   DepositWalletCheckResponse,
   TradingUserSession,
-  UserTradingBalancesResponse,
   UserTradingReadiness,
 } from "@/types/market";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
@@ -212,11 +214,13 @@ export async function ensureTokenApprovals(
 }
 
 async function fetchTradingReadiness() {
-  return fetchJson<UserTradingReadiness>("/api/trading/readiness");
+  return fetchTradingReadinessWithOnchain();
 }
 
 export async function fetchTradingBalances() {
-  return fetchJson<UserTradingBalancesResponse>("/api/trading/balances");
+  const session = useAuthStore.getState().session;
+
+  return fetchTradingBalancesWithOnchain(session);
 }
 
 export async function fetchTradingReadinessWithBalances() {

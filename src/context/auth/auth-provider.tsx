@@ -28,6 +28,7 @@ import {
   fetchTradingBalances,
   fetchTradingReadinessWithBalances,
 } from "@/lib/trading/trading-login";
+import { fetchTradingReadinessWithOnchain, enrichSetupReadinessWithOnchain } from "@/lib/trading/trading-balances-client";
 import {
   completeTradingLogin,
   ensureClobCredentials,
@@ -293,9 +294,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const balances = await fetchTradingBalances();
-      const setup =
-        store.readiness ??
-        (await fetchJson<UserTradingReadiness>("/api/trading/readiness"));
+      const setup = store.readiness
+        ? await enrichSetupReadinessWithOnchain(store.readiness)
+        : await fetchTradingReadinessWithOnchain();
       const nextReadiness = mergeTradingReadiness(setup, balances);
       store.setReadiness(nextReadiness);
       store.setCash(

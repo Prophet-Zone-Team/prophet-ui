@@ -3,15 +3,13 @@ import "server-only";
 import type { AccountReadinessCheck, TradingUserSession, UserTradingReadiness } from "@/types/market";
 import type { TradingSessionRecord } from "@/server/trading/session-store";
 import { refreshDepositWalletDeployment } from "@/server/trading/deposit-wallet";
-import {
-  fetchOnchainCollateralSnapshot,
-  type OnchainCollateralSnapshot,
-} from "@/server/trading/onchain-balances";
 import { getTradingCredentialStatus, updateTradingSession } from "@/server/trading/session-store";
-import { isTradingTokenAllowanceAuthorized } from "@/lib/trading/trading-allowance-setup";
+import {
+  getReadableSetupAllowanceDetailForSession,
+  getSetupAllowanceCheckStatusForSession,
+} from "@/lib/trading/setup-allowance-readiness";
 import {
   isSetupAllowanceCacheFresh,
-  withSetupAllowanceCache,
 } from "@/lib/trading/setup-allowance-cache";
 
 export async function buildUserTradingReadiness({
@@ -22,16 +20,16 @@ export async function buildUserTradingReadiness({
   const refreshedRecord = record ? await refreshDepositWalletSession(record) : undefined;
   const credentials = getTradingCredentialStatus(record?.session.userId, record?.session.sessionId);
   const session = refreshedRecord?.session;
-  const { session: sessionWithAllowances, onchainAllowances } = await resolveSetupOnchainAllowances(session);
+  const onchainAllowances = resolveCachedSetupAllowances(session);
   const checks = createSetupChecks({
-    session: sessionWithAllowances,
+    session,
     hasCredentials: credentials.hasClobCredentials,
     onchainAllowances,
   });
 
   return {
     ready: checks.every((check) => check.status === "pass"),
-    session: sessionWithAllowances,
+    session,
     credentials,
     checks,
     updatedAt: new Date().toISOString(),
@@ -45,9 +43,9 @@ function createSetupChecks({
 }: {
   session?: TradingUserSession;
   hasCredentials: boolean;
-  onchainAllowances?: OnchainCollateralSnapshot["allowances"];
+  onchainAllowances?: TradingUserSession["setupAllowances"];
 }): AccountReadinessCheck[] {
-  const setupAllowanceStatus = getSetupAllowanceCheckStatus({
+  const setupAllowanceStatus = getSetupAllowanceCheckStatusForSession({
     onchainAllowances,
     hasCredentials,
     session,
@@ -88,129 +86,21 @@ function createSetupChecks({
       id: "allowance",
       label: "Allowance",
       status: setupAllowanceStatus,
-      detail: getReadableSetupAllowanceDetail({ onchainAllowances, hasCredentials, session }),
+      detail: getReadableSetupAllowanceDetailForSession({ onchainAllowances, hasCredentials, session }),
     },
   ];
 }
 
-async function resolveSetupOnchainAllowances(session: TradingUserSession | undefined): Promise<{
-  session?: TradingUserSession;
-  onchainAllowances?: OnchainCollateralSnapshot["allowances"];
-}> {
+function resolveCachedSetupAllowances(session: TradingUserSession | undefined) {
   if (!session?.funderAddress || session.depositWalletStatus !== "deployed") {
-    return { session };
+    return undefined;
   }
 
   if (isSetupAllowanceCacheFresh(session) && session.setupAllowances) {
-    return {
-      session,
-      onchainAllowances: session.setupAllowances,
-    };
+    return session.setupAllowances;
   }
 
-  const snapshot = await fetchOnchainCollateralSnapshot(session.funderAddress);
-  const allowances = snapshot.allowances;
-
-  if (!allowances) {
-    return { session, onchainAllowances: allowances };
-  }
-
-  const updatedSession = withSetupAllowanceCache(
-    session,
-    allowances,
-    snapshot.updatedAt,
-  );
-  updateTradingSession(updatedSession);
-
-  return {
-    session: updatedSession,
-    onchainAllowances: allowances,
-  };
-}
-
-function getSetupAllowanceCheckStatus({
-  onchainAllowances,
-  hasCredentials,
-  session,
-}: {
-  onchainAllowances?: OnchainCollateralSnapshot["allowances"];
-  hasCredentials: boolean;
-  session?: TradingUserSession;
-}): AccountReadinessCheck["status"] {
-  if (isTradingTokenAllowanceAuthorized(onchainAllowances)) {
-    return "pass";
-  }
-
-  if (onchainAllowances) {
-    return "fail";
-  }
-
-  if (session?.depositWalletStatus === "deployed") {
-    return "unknown";
-  }
-
-  return hasCredentials || session ? "fail" : "unknown";
-}
-
-function getReadableSetupAllowanceDetail({
-  onchainAllowances,
-  hasCredentials,
-  session,
-}: {
-  onchainAllowances?: OnchainCollateralSnapshot["allowances"];
-  hasCredentials: boolean;
-  session?: TradingUserSession;
-}) {
-  if (isTradingTokenAllowanceAuthorized(onchainAllowances)) {
-    return "Required USDC allowances are approved on-chain for trading.";
-  }
-
-  if (onchainAllowances) {
-    const missing = [
-      onchainAllowances.conditionalTokens === undefined || onchainAllowances.conditionalTokens <= 0
-        ? "conditional tokens"
-        : undefined,
-      onchainAllowances.exchange === undefined || onchainAllowances.exchange <= 0 ? "exchange" : undefined,
-      onchainAllowances.negRiskExchange === undefined || onchainAllowances.negRiskExchange <= 0
-        ? "neg-risk exchange"
-        : undefined,
-      onchainAllowances.negRiskAdapter === undefined || onchainAllowances.negRiskAdapter <= 0
-        ? "neg-risk adapter"
-        : undefined,
-    ].filter(Boolean);
-
-    return missing.length > 0
-      ? `Missing on-chain USDC allowance for ${missing.join(", ")}.`
-      : "Required USDC allowances are not approved yet.";
-  }
-
-  if (session?.depositWalletStatus !== "deployed") {
-    return "Deploy the deposit wallet before checking token allowances.";
-  }
-
-  return hasCredentials ? "Allowance could not be read." : "Allowance requires a deployed deposit wallet.";
-}
-
-async function refreshDepositWalletSession(record: TradingSessionRecord): Promise<TradingSessionRecord> {
-  const status = record.session.depositWalletStatus;
-
-  if (!record.session.funderAddress || status === "deployed" || status === "relayer_unconfigured") {
-    return record;
-  }
-
-  const refresh = await refreshDepositWalletDeployment(record.session);
-  const session = updateTradingSession({
-    ...record.session,
-    depositWalletStatus: refresh.status,
-    depositWalletCheckedAt: refresh.checkedAt,
-    depositWalletTransactionHash: refresh.transactionHash ?? record.session.depositWalletTransactionHash,
-    depositWalletError: refresh.error,
-  });
-
-  return {
-    ...record,
-    session,
-  };
+  return undefined;
 }
 
 function getDepositWalletCheckStatus(session: TradingUserSession | undefined): AccountReadinessCheck["status"] {
@@ -257,4 +147,26 @@ function getDepositWalletDetail(session: TradingUserSession | undefined): string
   }
 
   return "Deposit wallet has not been derived.";
+}
+
+async function refreshDepositWalletSession(record: TradingSessionRecord): Promise<TradingSessionRecord> {
+  const status = record.session.depositWalletStatus;
+
+  if (!record.session.funderAddress || status === "deployed" || status === "relayer_unconfigured") {
+    return record;
+  }
+
+  const refresh = await refreshDepositWalletDeployment(record.session);
+  const session = updateTradingSession({
+    ...record.session,
+    depositWalletStatus: refresh.status,
+    depositWalletCheckedAt: refresh.checkedAt,
+    depositWalletTransactionHash: refresh.transactionHash ?? record.session.depositWalletTransactionHash,
+    depositWalletError: refresh.error,
+  });
+
+  return {
+    ...record,
+    session,
+  };
 }

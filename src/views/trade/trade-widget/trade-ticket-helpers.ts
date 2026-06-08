@@ -22,6 +22,12 @@ import {
   mergeTradingReadiness,
 } from "@/lib/trading/merge-trading-readiness";
 import {
+  fetchTradingBalancesWithOnchain,
+  fetchTradingReadinessWithOnchain,
+  enrichSetupReadinessWithOnchain,
+} from "@/lib/trading/trading-balances-client";
+import { useAuthStore } from "@/store/auth-store";
+import {
   formatEligibilityRestrictionDetail,
   formatRegionBlockedDetail,
 } from "@/lib/trading/trading-eligibility-client";
@@ -299,8 +305,11 @@ export async function fetchConditionalTokenBalance(
     estimatedTakerFee: 0,
   });
 
-  const balances = await fetchJson<UserTradingBalancesResponse>(
-    `/api/trading/balances?${query}`
+  const session = useAuthStore.getState().session;
+  const balances = await fetchTradingBalancesWithOnchain(
+    session,
+    `/api/trading/balances?${query}`,
+    { fundingQuery: query },
   );
 
   return balances.balances?.conditionalTokenBalance;
@@ -362,8 +371,11 @@ function fetchPreviewBalances(
     previewBalancesResolvedCache.delete(query);
   }
 
-  const request = fetchJson<UserTradingBalancesResponse>(
-    `/api/trading/balances?${query}`
+  const session = useAuthStore.getState().session;
+  const request = fetchTradingBalancesWithOnchain(
+    session,
+    `/api/trading/balances?${query}`,
+    { fundingQuery: query },
   )
     .then((response) => {
       previewBalancesResolvedCache.set(query, {
@@ -394,8 +406,8 @@ export async function fetchReadinessForPreview(
 
   const [setup, balances] = await Promise.all([
     setupReadiness
-      ? Promise.resolve(setupReadiness)
-      : fetchJson<UserTradingReadiness>("/api/trading/readiness"),
+      ? enrichSetupReadinessWithOnchain(setupReadiness)
+      : fetchTradingReadinessWithOnchain(),
     fetchPreviewBalances(query, options),
   ]);
 

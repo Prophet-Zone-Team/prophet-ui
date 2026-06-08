@@ -202,7 +202,8 @@ export async function POST(request: Request) {
   const balances = await fetchUserBalanceSnapshot({
     session: record.session,
     credentials: record.credentials,
-    tokenId: primaryTokenId
+    tokenId: primaryTokenId,
+    includeOnchain: true,
   });
   const funding = checkOrderFunding({
     balances,
