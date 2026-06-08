@@ -11,8 +11,6 @@ import { serverFetch } from "@/server/trading/server-fetch";
 
 const DEFAULT_GEOBLOCK_URL = "https://polymarket.com/api/geoblock";
 const GEOBLOCK_TIMEOUT_MS = 8000;
-const ELIGIBILITY_FRESH_MS = 1000 * 60 * 5;
-const ELIGIBILITY_ERROR_GRACE_MS = 1000 * 60 * 30;
 
 export interface TradingEligibilityResult {
   status: TradingEligibilityStatus;
@@ -194,38 +192,7 @@ export async function refreshSessionEligibilityIfStale(
   session: TradingUserSession,
   clientGeo?: ClientGeoHeaders,
 ): Promise<TradingUserSession> {
-  if (isFreshEligibleSession(session)) {
-    return session;
-  }
-
-  const eligibility = await checkTradingEligibility(clientGeo);
-
-  if (eligibility.status === "error" && isEligibleSessionWithin(session, ELIGIBILITY_ERROR_GRACE_MS)) {
-    console.warn("[trading.eligibility] geoblock refresh failed; using cached eligible session", {
-      userId: session.userId,
-      checkedAt: session.eligibilityCheckedAt,
-      refreshReason: eligibility.reason,
-      refreshCheckedAt: eligibility.checkedAt,
-    });
-
-    return session;
-  }
-
-  return updateTradingSession(withEligibility(session, eligibility));
-}
-
-function isFreshEligibleSession(session: TradingUserSession) {
-  return isEligibleSessionWithin(session, ELIGIBILITY_FRESH_MS);
-}
-
-function isEligibleSessionWithin(session: TradingUserSession, maxAgeMs: number) {
-  if (session.eligibilityStatus !== "eligible" || !session.eligibilityCheckedAt) {
-    return false;
-  }
-
-  const checkedAt = Date.parse(session.eligibilityCheckedAt);
-
-  return Number.isFinite(checkedAt) && Date.now() - checkedAt <= maxAgeMs;
+  return refreshSessionEligibility(session, clientGeo);
 }
 
 function withEligibility(

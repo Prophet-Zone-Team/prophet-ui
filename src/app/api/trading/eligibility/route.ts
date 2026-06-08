@@ -12,7 +12,6 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const record = getTradingSessionFromCookie(request.headers.get("cookie"));
-
   if (record) {
     const session = await refreshSessionEligibilityIfStale(
       record.session,
