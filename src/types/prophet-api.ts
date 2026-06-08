@@ -281,9 +281,10 @@ export interface ProphetReportTransactionMarket {
 /** POST /v1/user/transaction — report trade; idempotent by tx_hash */
 export interface ProphetReportTransactionRequest {
   amount: string;
-  tx_hash: string;
+  tx_hash?: string;
   type: ProphetReportTransactionType;
   market?: ProphetReportTransactionMarket;
+  order_id?: string;
   order_type?: ProphetReportOrderType;
   order_status?: ProphetReportOrderStatus;
   order_value_usdc?: string;

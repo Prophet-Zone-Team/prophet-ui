@@ -29,6 +29,25 @@ function formatTransactionAmount(value: number): string {
   return Number.isFinite(value) ? String(value) : "0";
 }
 
+function resolveTradeOrderReportTxHash(
+  result: SubmitOrderResult
+): string | undefined {
+  const response = result.response ?? result.order?.response;
+
+  if (!response || typeof response !== "object") {
+    return undefined;
+  }
+
+  const hashes = (response as { transactionsHashes?: unknown })
+    .transactionsHashes;
+
+  if (!Array.isArray(hashes)) {
+    return undefined;
+  }
+
+  return hashes.join(",");
+}
+
 function normalizeFundingAmount(value: number | string): string {
   if (typeof value === "number") {
     return formatTransactionAmount(value);
@@ -147,8 +166,7 @@ export async function reportTradeOrderTransaction(
     return;
   }
 
-  const txHash =
-    input.result.order?.clobOrderId ?? input.result.order?.id ?? undefined;
+  const txHash = resolveTradeOrderReportTxHash(input.result);
 
   if (!txHash) {
     return;
@@ -204,12 +222,14 @@ export async function reportTradeOrderTransaction(
 
   const orderValueUsdc = resolveReportOrderValueUsdc(input.userOrderPreview);
   const referralCode = resolveReportReferralCode();
+  const orderId = input.result.order?.clobOrderId?.trim();
 
   const request: ProphetReportTransactionRequest = {
     amount: orderValueUsdc,
     tx_hash: txHash,
     type,
     market,
+    ...(orderId ? { order_id: orderId } : {}),
     order_type: resolveReportOrderType(input.userOrderPreview.orderType),
     order_status: resolveReportOrderStatus(input.result.order?.status),
     order_value_usdc: orderValueUsdc,

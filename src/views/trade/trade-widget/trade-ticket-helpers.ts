@@ -1103,6 +1103,7 @@ export async function ensureTradingReadyForBid(deps: {
 }
 
 export type SubmitOrderResult = {
+  response?: unknown;
   order?: UserOrderRecord;
   submittedAt?: string;
 };

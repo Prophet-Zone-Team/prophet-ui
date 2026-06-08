@@ -1024,9 +1024,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
           onViewPortfolio: () => router.push("/portfolio")
         }
       );
-      void fireBasicConfettiFromElement(
-        document.getElementById(TRADE_BID_BUTTON_ID)
-      );
+     if (TRADE_BID_BUTTON_ID) {
+       void fireBasicConfettiFromElement(
+         document.getElementById(TRADE_BID_BUTTON_ID)
+       );
+     }
       setStatus("idle");
       setMessage(undefined);
 
