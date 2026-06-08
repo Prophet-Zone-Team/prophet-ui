@@ -3,11 +3,15 @@ import "server-only";
 import { fetchClobBestPrices } from "@/server/trading/clob-user-client";
 // import { ZERO_ORDER_BUILDER_CODE } from "@/server/trading/builder-code";
 import type { SignedOrderContext } from "@/server/trading/balances";
-import type { UserOrderPreview, UserOrderStatus } from "@/types/market";
+import type {
+  TradingOrderType,
+  UserOrderPreview,
+  UserOrderStatus
+} from "@/types/market";
 
 export type SubmitSignedOrderPayload = {
   order?: unknown;
-  orderType?: "FAK" | "GTC";
+  orderType?: TradingOrderType;
   postOnly?: boolean;
   deferExec?: boolean;
   preview?: UserOrderPreview;
@@ -22,8 +26,13 @@ export function validateSignedOrderPayload(
 
   const orderType = payload.orderType ?? "FAK";
 
-  if (orderType !== "FAK" && orderType !== "GTC") {
-    return "Only FAK and GTC orders are supported by this user flow.";
+  if (
+    orderType !== "FAK" &&
+    orderType !== "GTC" &&
+    orderType !== "GTD" &&
+    orderType !== "FOK"
+  ) {
+    return "Only FAK, FOK, GTC, and GTD orders are supported by this user flow.";
   }
 
   return undefined;
@@ -74,7 +83,7 @@ export function validateSignedOrderOwnership({
 export function validateSignedOrderPreview(
   preview: UserOrderPreview | undefined,
   order: SignedOrderContext,
-  orderType: "FAK" | "GTC"
+  orderType: TradingOrderType
 ): string | undefined {
   if (!preview) {
     return "Missing safe order preview metadata.";

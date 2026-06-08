@@ -13,6 +13,7 @@ import type { BidOrderPreview } from "@/lib/market/polymarket-order";
 import type { SignedUserOrderPayload } from "@/lib/market/user-order";
 import { createViemClobWalletClient } from "@/lib/trading/viem-clob-signer";
 import type { WalletClient } from "viem";
+import { isLimitOrderType } from "@/lib/market/order-math";
 import type { TradingOrderType } from "@/types/market";
 
 const POLYGON_CHAIN_ID = 137;
@@ -105,8 +106,7 @@ export async function buildSdkSignedUserOrder({
     ? { builderCode: resolvedBuilderCode }
     : {};
 
-  const signedOrder =
-    orderType === "GTC"
+  const signedOrder = isLimitOrderType(orderType)
       ? await orderBuilder.buildOrder(
           {
             tokenID: preview.tokenId,
@@ -249,7 +249,7 @@ function resolveMarketOrderPrice(
   orderType: TradingOrderType,
   signingMeta: ClobSigningMeta
 ): number {
-  if (orderType === "GTC") {
+  if (isLimitOrderType(orderType)) {
     return preview.sidePrice;
   }
 

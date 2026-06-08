@@ -98,8 +98,19 @@ export function resolveTradeSide(tab: TradeTabId): BidTradeSide {
   return tab === "sell" ? "sell" : "buy";
 }
 
-export function resolveOrderType(orderMode: TradeOrderMode): TradingOrderType {
-  return orderMode === "market" ? "FAK" : "GTC";
+export function resolveOrderType(
+  orderMode: TradeOrderMode,
+  expiration?: string
+): TradingOrderType {
+  if (orderMode === "market") {
+    return "FAK";
+  }
+
+  if (expiration && expiration !== "0") {
+    return "GTD";
+  }
+
+  return "GTC";
 }
 
 export function parseOrderAmount(amount: string): number {
@@ -582,6 +593,8 @@ export function getLimitExpirationLabel(
   );
 }
 
+const GTD_SECURITY_THRESHOLD_SECONDS = 60;
+
 export function resolveLimitExpirationTimestamp(
   preset: LimitExpirationPreset,
   customDate?: string,
@@ -591,24 +604,31 @@ export function resolveLimitExpirationTimestamp(
     return "0";
   }
 
-  let expirationDate: Date;
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+  const minimumExpiration = nowSeconds + GTD_SECURITY_THRESHOLD_SECONDS;
+  let expirationSeconds: number | undefined;
 
   switch (preset) {
     case "5m":
-      expirationDate = new Date(now.getTime() + 5 * 60 * 1000);
+      expirationSeconds =
+        nowSeconds + GTD_SECURITY_THRESHOLD_SECONDS + 5 * 60;
       break;
     case "1h":
-      expirationDate = new Date(now.getTime() + 60 * 60 * 1000);
+      expirationSeconds =
+        nowSeconds + GTD_SECURITY_THRESHOLD_SECONDS + 60 * 60;
       break;
     case "12h":
-      expirationDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+      expirationSeconds =
+        nowSeconds + GTD_SECURITY_THRESHOLD_SECONDS + 12 * 60 * 60;
       break;
     case "24h":
-      expirationDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      expirationSeconds =
+        nowSeconds + GTD_SECURITY_THRESHOLD_SECONDS + 24 * 60 * 60;
       break;
     case "end_of_day": {
-      expirationDate = new Date(now);
+      const expirationDate = new Date(now);
       expirationDate.setHours(23, 59, 59, 999);
+      expirationSeconds = Math.floor(expirationDate.getTime() / 1000);
       break;
     }
     case "custom": {
@@ -616,7 +636,7 @@ export function resolveLimitExpirationTimestamp(
         return "0";
       }
 
-      expirationDate = new Date(customDate);
+      const expirationDate = new Date(customDate);
 
       if (
         Number.isNaN(expirationDate.getTime()) ||
@@ -625,13 +645,18 @@ export function resolveLimitExpirationTimestamp(
         return "0";
       }
 
+      expirationSeconds = Math.floor(expirationDate.getTime() / 1000);
       break;
     }
     default:
       return "0";
   }
 
-  return String(Math.floor(expirationDate.getTime() / 1000));
+  if (expirationSeconds === undefined) {
+    return "0";
+  }
+
+  return String(Math.max(expirationSeconds, minimumExpiration));
 }
 
 export function validateLimitExpirationCustom(

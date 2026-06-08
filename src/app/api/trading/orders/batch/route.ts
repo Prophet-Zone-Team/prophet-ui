@@ -34,6 +34,7 @@ import {
   createTradingSessionCookie,
   getTradingSessionFromCookie
 } from "@/server/trading/session-store";
+import type { TradingOrderType } from "@/types/market";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
 
   const validatedOrders: Array<{
     payload: SubmitSignedOrderPayload;
-    orderType: "FAK" | "GTC";
+    orderType: TradingOrderType;
     fundingRequirement: OrderFundingRequirement;
     tokenId: string;
   }> = [];

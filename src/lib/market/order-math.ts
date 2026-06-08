@@ -9,6 +9,10 @@ const MAX_PRICE = 0.99;
 
 export const LIMIT_BUY_MIN_SHARES = 5;
 
+export function isLimitOrderType(orderType: TradingOrderType): boolean {
+  return orderType === "GTC" || orderType === "GTD";
+}
+
 export function isTakeProfitLimitAvailable(shareSize: number): boolean {
   return Number.isFinite(shareSize) && shareSize >= LIMIT_BUY_MIN_SHARES;
 }
@@ -87,7 +91,7 @@ export function formatTakeProfitLimitPriceString(purchasePrice: number): string 
 export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate {
   const sidePrice = normalizeLimitPrice(input.limitPrice ?? calculateReferencePrice(input.probability, input.side));
   const tradeSide = input.tradeSide ?? "buy";
-  const isLimitOrder = input.orderType === "GTC";
+  const isLimitOrder = isLimitOrderType(input.orderType);
 
   if (isLimitOrder) {
     let shareSize = roundShares(Math.max(0, input.amount));
@@ -288,7 +292,7 @@ export function validateOrderAmount(input: {
     return "Enter a positive amount.";
   }
 
-  if (input.orderType === "GTC" && input.tradeSide === "buy") {
+  if (isLimitOrderType(input.orderType) && input.tradeSide === "buy") {
     if (input.amount < LIMIT_BUY_MIN_SHARES) {
       return `Limit buy orders must be at least ${LIMIT_BUY_MIN_SHARES} shares.`;
     }
@@ -296,7 +300,7 @@ export function validateOrderAmount(input: {
     return undefined;
   }
 
-  if (input.orderType !== "GTC" && input.tradeSide === "buy") {
+  if (!isLimitOrderType(input.orderType) && input.tradeSide === "buy") {
     if (input.minOrderSize !== undefined && input.amount < input.minOrderSize) {
       return `Amount must be at least $${input.minOrderSize}.`;
     }

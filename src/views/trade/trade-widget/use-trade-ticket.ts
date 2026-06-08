@@ -196,7 +196,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const takeProfitPriceTouched = useRef(false);
 
   const orderAmount = parseOrderAmount(amount);
-  const orderType = resolveOrderType(orderMode);
+  const limitExpirationTimestamp =
+    orderMode === "limit"
+      ? resolveLimitExpirationTimestamp(limitExpiration, limitExpirationCustom)
+      : undefined;
+  const orderType = resolveOrderType(orderMode, limitExpirationTimestamp);
 
   const marketTokenDeps =
     input.variant === "team"
@@ -897,13 +901,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         preview,
         orderType,
         userOrderPreview,
-        expiration:
-          orderMode === "limit"
-            ? resolveLimitExpirationTimestamp(
-                limitExpiration,
-                limitExpirationCustom
-              )
-            : undefined
+        expiration: limitExpirationTimestamp
       });
 
       void reportTradeOrderTransaction(

@@ -13,7 +13,7 @@ function formatTransactionAmount(value: number): string {
 export function resolveReportOrderType(
   orderType: TradingOrderType
 ): ProphetReportOrderType {
-  return orderType === "GTC" ? "maker" : "taker";
+  return orderType === "GTC" || orderType === "GTD" ? "maker" : "taker";
 }
 
 export function resolveReportOrderStatus(

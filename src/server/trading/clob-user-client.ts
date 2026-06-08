@@ -501,7 +501,7 @@ export function mapTradeSide(side: BidTradeSide): Side {
 export function isSupportedOrderType(
   value: unknown
 ): value is TradingOrderType {
-  return value === "GTC" || value === "FOK" || value === "FAK";
+  return value === "GTC" || value === "GTD" || value === "FOK" || value === "FAK";
 }
 
 export function isSupportedTickSize(value: unknown): value is TickSize {

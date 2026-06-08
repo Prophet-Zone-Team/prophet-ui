@@ -52,8 +52,9 @@ function buildReferral(
 }
 
 describe("report-trade-order", () => {
-  it("maps GTC to maker and FAK/FOK to taker", () => {
+  it("maps GTC/GTD to maker and FAK/FOK to taker", () => {
     assert.equal(resolveReportOrderType("GTC"), "maker");
+    assert.equal(resolveReportOrderType("GTD"), "maker");
     assert.equal(resolveReportOrderType("FAK"), "taker");
     assert.equal(resolveReportOrderType("FOK"), "taker");
   });

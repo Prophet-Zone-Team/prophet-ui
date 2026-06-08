@@ -29,7 +29,7 @@ export type TradeEntityType = "team" | "game";
 
 export type BidTradeSide = "buy" | "sell";
 
-export type TradingOrderType = "GTC" | "FOK" | "FAK";
+export type TradingOrderType = "GTC" | "GTD" | "FOK" | "FAK";
 
 export type TradingEligibilityStatus =
   | "unknown"
