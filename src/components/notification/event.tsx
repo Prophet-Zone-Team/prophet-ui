@@ -55,6 +55,7 @@ import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 
+import { TOAST_TOP_OFFSET_PX } from "@/config/toast-layout";
 import { cn } from "@/lib/cn";
 import { TeamFlag } from "../teams/team-flag";
 
@@ -416,7 +417,8 @@ function EventNotificationHost() {
       role="region"
       aria-live="polite"
       aria-label="Match event notification"
-      className="pointer-events-none fixed inset-x-0 top-[100px] z-[50] flex justify-center overflow-visible px-4 pt-5"
+      className="pointer-events-none fixed inset-x-0 z-[50] flex justify-center overflow-visible px-4 pt-5"
+      style={{ top: TOAST_TOP_OFFSET_PX }}
     >
       <AnimatePresence
         mode="wait"
