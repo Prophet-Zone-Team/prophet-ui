@@ -7,6 +7,11 @@ import { toast } from "sonner";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
+import {
+  evaluateGamePositionSellReadiness,
+  evaluatePositionRedeemReadiness,
+  evaluateTeamPositionSellReadiness,
+} from "@/lib/portfolio/evaluate-position-sell-readiness";
 import { fetchPositionSellSnapshot } from "@/lib/portfolio/fetch-position-sell-snapshot";
 import { fetchPositionGameSellContext } from "@/lib/portfolio/fetch-position-game-sell-context";
 import type { PositionGameSellContext } from "@/lib/portfolio/resolve-position-game-sell-context";
@@ -89,9 +94,27 @@ export function PortfolioPositionsTable({
 }: PortfolioPositionsTableProps) {
   const [sellTarget, setSellTarget] = useState<SellTarget | null>(null);
   const [redeemTarget, setRedeemTarget] = useState<RedeemTarget | null>(null);
-  const [sellingAsset, setSellingAsset] = useState<string | null>(null);
-  const { isRegionBlocked } = useAuth();
+  const [actionLoadingAsset, setActionLoadingAsset] = useState<string | null>(
+    null
+  );
+  const {
+    isRegionBlocked,
+    isBuyRestricted,
+    isRegionCloseOnly,
+    isAuthenticated,
+    session,
+    readiness,
+    refreshSetupReadiness,
+  } = useAuth();
   const regionRestricted = isRegionBlocked;
+  const sellReadinessInput = {
+    isAuthenticated,
+    session,
+    authReadiness: readiness,
+    isRegionBlocked,
+    isBuyRestricted,
+    isRegionCloseOnly,
+  };
 
   if (loading) {
     return (
@@ -147,19 +170,32 @@ export function PortfolioPositionsTable({
     const canSell = position.size > 0 && Boolean(position.slug?.trim());
     const canRedeem = canRedeemPosition(position);
     const rowKey = `${position.conditionId}:${position.asset}`;
-    const isSelling = sellingAsset === position.asset;
+    const isActionLoading = actionLoadingAsset === position.asset;
 
     const handleSell = async () => {
-      if (!canSell || regionRestricted || isSelling) {
+      if (!canSell || regionRestricted || isActionLoading) {
         return;
       }
 
-      setSellingAsset(position.asset);
+      setActionLoadingAsset(position.asset);
 
       try {
         const teamSnapshot = await fetchPositionSellSnapshot(position);
 
         if (teamSnapshot) {
+          const readinessResult = await evaluateTeamPositionSellReadiness(
+            teamSnapshot,
+            { position, ...sellReadinessInput }
+          );
+
+          if (!readinessResult.ok) {
+            toast.error(
+              readinessResult.message ??
+                "This position is not available to sell right now."
+            );
+            return;
+          }
+
           useTradeTicketStore.getState().syncForPositionSell(
             teamSnapshot,
             position
@@ -175,6 +211,19 @@ export function PortfolioPositionsTable({
           return;
         }
 
+        const readinessResult = await evaluateGamePositionSellReadiness(
+          gameContext,
+          { position, ...sellReadinessInput }
+        );
+
+        if (!readinessResult.ok) {
+          toast.error(
+            readinessResult.message ??
+              "This position is not available to sell right now."
+          );
+          return;
+        }
+
         useTradeTicketStore.getState().syncForGamePositionSell(
           gameContext,
           position
@@ -185,7 +234,36 @@ export function PortfolioPositionsTable({
           error instanceof Error ? error.message : "Market data unavailable";
         toast.error(message);
       } finally {
-        setSellingAsset(null);
+        setActionLoadingAsset(null);
+      }
+    };
+
+    const handleRedeem = async () => {
+      if (regionRestricted || isActionLoading) {
+        return;
+      }
+
+      setActionLoadingAsset(position.asset);
+
+      try {
+        const latestReadiness =
+          (await refreshSetupReadiness()) ?? readiness;
+        const readinessResult = evaluatePositionRedeemReadiness({
+          session,
+          readiness: latestReadiness,
+        });
+
+        if (!readinessResult.ok) {
+          toast.error(
+            readinessResult.message ??
+              "This position is not available to redeem right now."
+          );
+          return;
+        }
+
+        setRedeemTarget({ position, teamName });
+      } finally {
+        setActionLoadingAsset(null);
       }
     };
 
@@ -200,10 +278,17 @@ export function PortfolioPositionsTable({
                 "w-full md:w-auto",
                 "disabled:opacity-50"
               )}
-              disabled={regionRestricted}
-              onClick={() => setRedeemTarget({ position, teamName })}
+              disabled={regionRestricted || isActionLoading}
+              onClick={() => void handleRedeem()}
             >
-              Redeem
+              {isActionLoading ? (
+                <Loader2
+                  className="h-3.5 w-3.5 animate-spin"
+                  aria-hidden="true"
+                />
+              ) : (
+                "Redeem"
+              )}
             </button>
           </RegionRestrictedControl>
         ) : null}
@@ -216,10 +301,10 @@ export function PortfolioPositionsTable({
                 "w-full md:w-auto",
                 "disabled:opacity-50"
               )}
-              disabled={!canSell || regionRestricted || isSelling}
+              disabled={!canSell || regionRestricted || isActionLoading}
               onClick={() => void handleSell()}
             >
-              {isSelling ? (
+              {isActionLoading ? (
                 <Loader2
                   className="h-3.5 w-3.5 animate-spin"
                   aria-hidden="true"
