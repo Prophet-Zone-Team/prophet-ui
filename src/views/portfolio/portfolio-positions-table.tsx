@@ -164,7 +164,10 @@ export function PortfolioPositionsTable({
     const teamName = resolvePortfolioTeamName(teams, position);
     const marketIcon = resolvePortfolioMarketIcon(teams, position.outcome);
     const marketTitle = marketContext?.title ?? position.title;
-    const tradeHref = resolvePortfolioPositionTradeHref(position, teams);
+    const tradeHref = resolvePortfolioPositionTradeHref(
+      { slug: position.slug?.trim() || marketContext?.slug || "" },
+      teams
+    );
     const timeValue = positionTimeMap.get(position.asset);
     const pnlTone =
       position.cashPnl >= 0 ? "text-prophet-green" : "text-prophet-red";

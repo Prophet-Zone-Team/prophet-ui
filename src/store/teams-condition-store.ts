@@ -8,10 +8,13 @@ import {
   type OpenOrderMarketContext
 } from "@/lib/portfolio/teams-condition";
 import { getProphetTeamsCondition } from "@/service/prophet";
-import type { ProphetTeamsConditionTeam } from "@/types/prophet-api";
+import type {
+  ProphetTeamsConditionEntry,
+  ProphetTeamsConditionTeam
+} from "@/types/prophet-api";
 
 interface TeamsConditionState {
-  byConditionId: Record<string, ProphetTeamsConditionTeam[]>;
+  byConditionId: Record<string, ProphetTeamsConditionEntry>;
   ensureTeamsCondition: (
     conditionIds: string[],
     options?: { force?: boolean }
@@ -37,21 +40,84 @@ function normalizeConditionIds(conditionIds: string[]): string[] {
   return [...ids];
 }
 
+function needsTeamsConditionFetch(
+  entry: ProphetTeamsConditionEntry | undefined
+): boolean {
+  if (!entry) {
+    return true;
+  }
+
+  const hasTeams = Array.isArray(entry.teams) && entry.teams.length > 0;
+
+  if (!hasTeams) {
+    return true;
+  }
+
+  return !entry.slug?.trim();
+}
+
 function buildContextMapForIds(
-  byConditionId: Record<string, ProphetTeamsConditionTeam[]>,
+  byConditionId: Record<string, ProphetTeamsConditionEntry>,
   conditionIds: string[]
 ): Record<string, OpenOrderMarketContext> {
-  const raw: Record<string, ProphetTeamsConditionTeam[]> = {};
+  const raw: Record<string, ProphetTeamsConditionEntry> = {};
 
   for (const id of conditionIds) {
-    const teams = byConditionId[id];
+    const entry = byConditionId[id];
 
-    if (teams) {
-      raw[id] = teams;
+    if (entry) {
+      raw[id] = entry;
     }
   }
 
   return buildOpenOrderMarketMap(raw);
+}
+
+function migrateTeamsConditionEntry(
+  value: unknown
+): ProphetTeamsConditionEntry | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (Array.isArray(value)) {
+    return {
+      teams: value as ProphetTeamsConditionTeam[],
+      slug: ""
+    };
+  }
+
+  if (typeof value === "object") {
+    const entry = value as Partial<ProphetTeamsConditionEntry>;
+    const teams = Array.isArray(entry.teams) ? entry.teams : [];
+
+    return {
+      teams,
+      slug: typeof entry.slug === "string" ? entry.slug : ""
+    };
+  }
+
+  return undefined;
+}
+
+function migrateByConditionId(
+  byConditionId: unknown
+): Record<string, ProphetTeamsConditionEntry> {
+  if (!byConditionId || typeof byConditionId !== "object") {
+    return {};
+  }
+
+  const migrated: Record<string, ProphetTeamsConditionEntry> = {};
+
+  for (const [conditionId, value] of Object.entries(byConditionId)) {
+    const entry = migrateTeamsConditionEntry(value);
+
+    if (entry) {
+      migrated[conditionId] = entry;
+    }
+  }
+
+  return migrated;
 }
 
 export const useTeamsConditionStore = create<TeamsConditionState>()(
@@ -69,7 +135,9 @@ export const useTeamsConditionStore = create<TeamsConditionState>()(
         const { byConditionId } = get();
         const missingIds = options?.force
           ? normalizedIds
-          : normalizedIds.filter((id) => !byConditionId[id]);
+          : normalizedIds.filter((id) =>
+              needsTeamsConditionFetch(byConditionId[id])
+            );
 
         if (missingIds.length === 0) {
           return buildContextMapForIds(byConditionId, normalizedIds);
@@ -109,10 +177,29 @@ export const useTeamsConditionStore = create<TeamsConditionState>()(
     }),
     {
       name: "wc-teams-condition",
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         byConditionId: state.byConditionId
-      })
+      }),
+      migrate: (persisted, version) => {
+        const state = persisted as { byConditionId?: unknown } | undefined;
+        const migrated = migrateByConditionId(state?.byConditionId);
+
+        if (version < 2) {
+          const withSlug: Record<string, ProphetTeamsConditionEntry> = {};
+
+          for (const [conditionId, entry] of Object.entries(migrated)) {
+            if (entry.slug?.trim()) {
+              withSlug[conditionId] = entry;
+            }
+          }
+
+          return { byConditionId: withSlug };
+        }
+
+        return { byConditionId: migrated };
+      }
     }
   )
 );

@@ -10,6 +10,7 @@ import {
   formatUnixSeconds,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
+import { resolvePortfolioPositionTradeHref } from "@/lib/portfolio/resolve-position-trade-href";
 import {
   resolvePortfolioMarketIcon,
   resolveTeamForOutcome,
@@ -160,6 +161,10 @@ export function PortfolioOpenOrdersTable({
     const marketContext = marketContextMap[order.market];
     const marketTitle = resolveOpenOrderMarketTitle(order, marketContextMap);
     const teams = marketContext?.teams ?? [];
+    const tradeHref = resolvePortfolioPositionTradeHref(
+      { slug: marketContext?.slug || "" },
+      teams
+    );
     const teamName = resolveTeamForOutcome(teams, order.outcome)?.name;
     const marketIcon = resolvePortfolioMarketIcon(teams, order.outcome);
     const price = Number(order.price);
@@ -192,10 +197,10 @@ export function PortfolioOpenOrdersTable({
         </button>
       </RegionRestrictedControl>
     );
-
     const marketCell = (
       <PortfolioMarketCell
         title={marketTitle}
+        href={tradeHref}
         outcome={order.outcome}
         icon={marketIcon}
       />

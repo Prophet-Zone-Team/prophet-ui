@@ -78,13 +78,20 @@ export interface ProphetGetTeamGameResultsData {
 
 /** GET /v1/teams-condition — team(s) per Polymarket condition id */
 export interface ProphetTeamsConditionTeam {
+  id?: number;
   name: string;
+  logo?: string;
   ordering?: string;
+}
+
+export interface ProphetTeamsConditionEntry {
+  teams: ProphetTeamsConditionTeam[];
+  slug: string;
 }
 
 export type ProphetGetTeamsConditionData = Record<
   string,
-  ProphetTeamsConditionTeam[]
+  ProphetTeamsConditionEntry
 >;
 
 /** Full Gamma-compatible market embedded in GET /v1/game events[]. */

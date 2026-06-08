@@ -8,5 +8,5 @@ export const BIND_TG_STEPS = [
 ] as const;
 
 export const DEFAULT_BOT_USERNAME =
-  process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "WCNoticeTestBot";
+  process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "prophet_stg_bot";
 export const DEFAULT_POLL_INTERVAL_SECONDS = 3;

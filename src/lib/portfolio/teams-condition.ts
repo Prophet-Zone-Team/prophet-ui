@@ -1,11 +1,15 @@
 import { formatMatchVersusTitle } from "@/lib/market/trade-widget-header";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
-import type { ProphetTeamsConditionTeam } from "@/types/prophet-api";
+import type {
+  ProphetTeamsConditionEntry,
+  ProphetTeamsConditionTeam
+} from "@/types/prophet-api";
 import type { UserPositionRecord } from "@/types/market";
 
 export type OpenOrderMarketContext = {
   title: string;
   teams: ProphetTeamsConditionTeam[];
+  slug?: string;
 };
 
 export function formatTeamsConditionTitle(
@@ -58,15 +62,16 @@ export function collectUniqueConditionIdsFromPositions(
 }
 
 export function buildOpenOrderMarketMap(
-  data: Record<string, ProphetTeamsConditionTeam[]>
+  data: Record<string, ProphetTeamsConditionEntry>
 ): Record<string, OpenOrderMarketContext> {
   const map: Record<string, OpenOrderMarketContext> = {};
 
-  for (const [conditionId, teams] of Object.entries(data)) {
-    const safeTeams = Array.isArray(teams) ? teams : [];
+  for (const [conditionId, entry] of Object.entries(data)) {
+    const safeTeams = Array.isArray(entry?.teams) ? entry.teams : [];
     map[conditionId] = {
       title: formatTeamsConditionTitle(safeTeams),
-      teams: safeTeams
+      teams: safeTeams,
+      slug: entry?.slug?.trim() || undefined
     };
   }
 
