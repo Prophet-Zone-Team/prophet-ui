@@ -29,7 +29,7 @@ export function SignalNewsDetailMetadataRow({
   categoryLabel,
   className
 }: SignalNewsDetailMetadataRowProps) {
-  const isPositiveImpact = impactScore >= 5;
+  const isPositiveImpact = sentiment === "positive";
 
   return (
     <dl
