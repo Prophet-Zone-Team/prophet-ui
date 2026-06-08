@@ -38,8 +38,9 @@ export function computeImpactScore(
   // >= 55
   let sentiment: NewsSentiment = "negative";
   // const magnitude = Math.round(score - 100) / 10;
-  const magnitude = score / 10;
-  if (score >= 50) {
+  // const magnitude = score / 10;
+  const magnitude = Math.round(score - 50) / 10;
+  if (magnitude >= 0) {
     sentiment = "positive";
   }
 

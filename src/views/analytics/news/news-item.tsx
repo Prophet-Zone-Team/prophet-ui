@@ -25,7 +25,6 @@ function SentimentIcon({
 }
 
 export function NewsItem({ item, onSelect, className }: NewsItemProps) {
-
   return (
     <article
       className={cn(
