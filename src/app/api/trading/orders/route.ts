@@ -6,25 +6,30 @@ import {
   getOrderFundingRequirementFromSignedOrder,
   getSignedOrderContext,
   resolveOrderFundingRequirementWithFees,
-  type SignedOrderContext,
-} from "../../../../server/trading/balances";
-import { getOrderBuilderCode } from "../../../../server/trading/builderCode";
-import { fetchClobBestPrices, postSignedUserOrder, updateUserBalanceAllowance } from "../../../../server/trading/clobUserClient";
-import { refreshSessionEligibilityIfStale } from "../../../../server/trading/eligibility";
-import { recordUserOrderError, recordUserOrderSubmitted } from "../../../../server/trading/orderStore";
-import { createTradingSessionCookie, getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
-import type { UserOrderPreview, UserOrderStatus } from "../../../../types/market";
+} from "@/server/trading/balances";
+import { getClobOrderSubmissionStatus } from "@/server/trading/clob-auth";
+import { postSignedUserOrder, updateUserBalanceAllowance } from "@/server/trading/clob-user-client";
+import {
+  getClientGeoFromRequest,
+  refreshSessionEligibilityIfStale,
+} from "@/server/trading/eligibility";
+import {
+  assertEligibilityForOrder,
+  signedOrderSideToEligibilitySide,
+} from "@/server/trading/eligibility-order-guard";
+import { recordUserOrderError, recordUserOrderSubmitted } from "@/server/trading/order-store";
+import {
+  getSubmittedOrderStatus,
+  validateSignedOrderExecutionPrice,
+  validateSignedOrderOwnership,
+  validateSignedOrderPayload,
+  validateSignedOrderPreview,
+  type SubmitSignedOrderPayload
+} from "@/server/trading/signed-order-validation";
+import { createTradingSessionCookie, getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-interface SubmitSignedOrderPayload {
-  order?: unknown;
-  orderType?: "FAK";
-  postOnly?: boolean;
-  deferExec?: boolean;
-  preview?: UserOrderPreview;
-}
 
 export async function POST(request: Request) {
   const record = getTradingSessionFromCookie(request.headers.get("cookie"));
@@ -45,29 +50,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "User CLOB credentials are required before order submission." }, { status: 409 });
   }
 
-  const eligibility = await refreshSessionEligibilityIfStale(record.session);
-
-  if (eligibility.eligibilityStatus !== "eligible") {
-    console.warn("[trading.orders] eligibility failed", {
-      userId: record.session.userId,
-      status: eligibility.eligibilityStatus,
-      country: eligibility.eligibilityCountry,
-      region: eligibility.eligibilityRegion,
-      reason: eligibility.eligibilityReason,
-      checkedAt: eligibility.eligibilityCheckedAt,
-    });
-
-    return NextResponse.json(
-      {
-        error: eligibility.eligibilityReason ?? "Trading is not enabled for this session.",
-        eligibilityStatus: eligibility.eligibilityStatus,
-      },
-      { status: 403 },
-    );
-  }
+  const eligibility = await refreshSessionEligibilityIfStale(
+    record.session,
+    getClientGeoFromRequest(request),
+  );
 
   const payload = (await request.json()) as SubmitSignedOrderPayload;
-  const validationError = validatePayload(payload);
+  const validationError = validateSignedOrderPayload(payload);
 
   if (validationError) {
     console.warn("[trading.orders] validation failed", {
@@ -76,6 +65,8 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
+
+  const orderType = payload.orderType ?? "FAK";
 
   const orderContext = getSignedOrderContext(payload);
 
@@ -86,11 +77,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Signed order payload is incomplete or malformed." }, { status: 400 });
   }
 
+  const orderEligibility = assertEligibilityForOrder(
+    eligibility,
+    signedOrderSideToEligibilitySide(orderContext.side),
+  );
+
+  if (!orderEligibility.ok) {
+    console.warn("[trading.orders] eligibility failed", {
+      userId: record.session.userId,
+      status: orderEligibility.status,
+      country: eligibility.eligibilityCountry,
+      region: eligibility.eligibilityRegion,
+      reason: orderEligibility.reason,
+      checkedAt: eligibility.eligibilityCheckedAt,
+      side: orderContext.side,
+    });
+
+    return NextResponse.json(
+      {
+        error: orderEligibility.reason,
+        eligibilityStatus: orderEligibility.status,
+      },
+      { status: 403 },
+    );
+  }
+
   const ownershipError = validateSignedOrderOwnership({
     order: orderContext,
     funderAddress: record.session.funderAddress,
     signatureType: record.session.signatureType,
-    builderCode: getOrderBuilderCode(),
   });
 
   if (ownershipError) {
@@ -105,7 +120,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: ownershipError }, { status: 400 });
   }
 
-  const previewError = validatePreview(payload.preview, orderContext);
+  const previewError = validateSignedOrderPreview(
+    payload.preview,
+    orderContext,
+    orderType
+  );
 
   if (previewError) {
     console.warn("[trading.orders] preview validation failed", {
@@ -116,7 +135,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: previewError }, { status: 400 });
   }
 
-  const executionPriceError = await validateExecutionPrice(orderContext);
+  const executionPriceError =
+    orderType === "FAK"
+      ? await validateSignedOrderExecutionPrice(orderContext)
+      : undefined;
 
   if (executionPriceError) {
     console.warn("[trading.orders] execution price guard failed", {
@@ -155,6 +177,7 @@ export async function POST(request: Request) {
     session: record.session,
     credentials: record.credentials,
     tokenId: orderContext.tokenId,
+    includeOnchain: true,
   });
   const funding = checkOrderFunding({
     balances,
@@ -245,176 +268,7 @@ export async function POST(request: Request) {
       {
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 502 },
+      { status: getClobOrderSubmissionStatus(error) },
     );
   }
-}
-
-function validatePayload(payload: SubmitSignedOrderPayload): string | undefined {
-  if (!payload.order || typeof payload.order !== "object") {
-    return "Missing signed order payload.";
-  }
-
-  if (payload.orderType !== "FAK") {
-    return "Only FAK orders are supported by this user flow.";
-  }
-
-  return undefined;
-}
-
-function validateSignedOrderOwnership({
-  order,
-  funderAddress,
-  signatureType,
-  builderCode,
-}: {
-  order: SignedOrderContext;
-  funderAddress?: string;
-  signatureType: number;
-  builderCode: string;
-}): string | undefined {
-  if (signatureType !== 3 || order.signatureType !== 3) {
-    return "This trading flow only accepts signature type 3 deposit-wallet orders.";
-  }
-
-  const normalizedFunder = normalizeAddress(funderAddress);
-
-  if (!normalizedFunder) {
-    return "Trading session is missing a deposit wallet / funder address.";
-  }
-
-  if (normalizeAddress(order.maker) !== normalizedFunder || normalizeAddress(order.signer) !== normalizedFunder) {
-    return "Signed order maker and signer must match the session deposit wallet / funder address.";
-  }
-
-  const normalizedTaker = normalizeAddress(order.taker);
-
-  if (normalizedTaker && normalizedTaker !== "0x0000000000000000000000000000000000000000") {
-    return "Only open CLOB limit orders with the zero taker address are supported.";
-  }
-
-  if (order.builder.toLowerCase() !== builderCode.toLowerCase()) {
-    return "Signed order builder code does not match the configured product builder code.";
-  }
-
-  return undefined;
-}
-
-function validatePreview(preview: UserOrderPreview | undefined, order: SignedOrderContext): string | undefined {
-  if (!preview) {
-    return "Missing safe order preview metadata.";
-  }
-
-  if (preview.tokenId !== order.tokenId) {
-    return "Order preview token does not match signed order token.";
-  }
-
-  if (preview.orderType !== "FAK") {
-    return "Only FAK order previews are supported.";
-  }
-
-  if (!Number.isFinite(preview.limitPrice) || preview.limitPrice <= 0 || preview.limitPrice >= 1) {
-    return "Order preview limit price is invalid.";
-  }
-
-  if (!Number.isFinite(preview.size) || preview.size <= 0) {
-    return "Order preview size is invalid.";
-  }
-
-  if (!preview.teamId || !["yes", "no"].includes(preview.outcome) || !["buy", "sell"].includes(preview.side)) {
-    return "Order preview metadata is incomplete.";
-  }
-
-  return undefined;
-}
-
-async function validateExecutionPrice(order: SignedOrderContext): Promise<string | undefined> {
-  const orderPrice = getSignedOrderPrice(order);
-
-  if (orderPrice === undefined) {
-    return "Unable to derive signed order price.";
-  }
-
-  try {
-    const prices = await fetchClobBestPrices(order.tokenId);
-    const tolerance = 0.02;
-
-    if (order.side === "BUY" && prices.bestAsk === undefined) {
-      return "No current ask liquidity is available for this token. Refresh the market before submitting.";
-    }
-
-    if (order.side === "SELL" && prices.bestBid === undefined) {
-      return "No current bid liquidity is available for this token. Refresh the market before submitting.";
-    }
-
-    if (order.side === "BUY" && prices.bestAsk !== undefined && orderPrice > prices.bestAsk + tolerance) {
-      return `Order price ${(orderPrice * 100).toFixed(1)}c is far above the current best ask ${(prices.bestAsk * 100).toFixed(
-        1,
-      )}c. Refresh the ticket before submitting.`;
-    }
-
-    if (order.side === "SELL" && prices.bestBid !== undefined && orderPrice < prices.bestBid - tolerance) {
-      return `Order price ${(orderPrice * 100).toFixed(1)}c is far below the current best bid ${(prices.bestBid * 100).toFixed(
-        1,
-      )}c. Refresh the ticket before submitting.`;
-    }
-  } catch (error) {
-    return `Unable to verify the current CLOB order book before submission: ${
-      error instanceof Error ? error.message : String(error)
-    }`;
-  }
-
-  return undefined;
-}
-
-function getSignedOrderPrice(order: SignedOrderContext): number | undefined {
-  if (order.makerAmount <= 0 || order.takerAmount <= 0) {
-    return undefined;
-  }
-
-  return order.side === "BUY" ? order.makerAmount / order.takerAmount : order.takerAmount / order.makerAmount;
-}
-
-function getSubmittedOrderStatus(response: unknown): UserOrderStatus {
-  if (!response || typeof response !== "object") {
-    return "submitted";
-  }
-
-  const responseObject = response as { success?: unknown; status?: unknown; errorMsg?: unknown };
-
-  if (responseObject.success === false) {
-    return "rejected";
-  }
-
-  if (typeof responseObject.status !== "string") {
-    return "submitted";
-  }
-
-  const status = responseObject.status.toLowerCase();
-
-  if (status.includes("matched") || status.includes("fill")) {
-    return "filled";
-  }
-
-  if (status.includes("open") || status.includes("live")) {
-    return "open";
-  }
-
-  if (status.includes("cancel")) {
-    return "cancelled";
-  }
-
-  if (status.includes("reject") || status.includes("fail")) {
-    return "rejected";
-  }
-
-  return "submitted";
-}
-
-function normalizeAddress(address: string | undefined) {
-  if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
-    return undefined;
-  }
-
-  return address.toLowerCase();
 }

@@ -1,7 +1,5 @@
-import { TeamsPage } from "../../components/teams-list/TeamsPage";
-import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
-
-export const dynamic = "force-dynamic";
+import { TeamsPage } from "@/views/teams";
+import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
 
 export default async function Page() {
   const marketData = await getWorldCupMarketData({

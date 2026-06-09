@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getFootballCoverageReport } from "../../../../server/signal-data/footballCoverage";
+import { getFootballCoverageReport } from "@/server/signal-data/football-coverage";
 
 export const dynamic = "force-dynamic";
 

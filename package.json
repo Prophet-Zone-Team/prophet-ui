@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "lint": "eslint . --max-warnings=0",
+    "cf:build": "opennextjs-cloudflare build",
+    "lint": "eslint . --quiet",
+    "lint:strict": "eslint . --max-warnings=0",
     "check:trading-safety": "node scripts/check-trading-safety.mjs",
     "smoke:trading:prod": "node scripts/smoke-trading-production.mjs",
     "start": "next start",
@@ -22,21 +24,38 @@
   "dependencies": {
     "@lucide/lab": "^0.1.2",
     "@polymarket/builder-relayer-client": "^0.0.9",
+    "@polymarket/builder-signing-sdk": "^0.0.8",
     "@polymarket/clob-client-v2": "^1.0.6",
+    "@privy-io/react-auth": "^3.28.0",
+    "@privy-io/wagmi": "^4.0.10",
     "@radix-ui/react-slot": "^1.1.2",
+    "@stableflow/core": "rc",
+    "@tanstack/react-query": "^5.100.14",
+    "axios": "^1.16.1",
+    "big.js": "^7.0.1",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "flag-icons": "^7.5.0",
     "framer-motion": "^12.0.0",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.475.0",
     "next": "^15.1.7",
+    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.0.1",
-    "viem": "^2.48.11"
+    "undici": "^8.3.0",
+    "viem": "^2.48.11",
+    "wagmi": "^2.19.5",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.8.0",
+    "@types/big.js": "^7.0.0",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.13.1",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
@@ -47,5 +66,10 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
     "wrangler": "^4.68.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "qr": "~0.5.5"
+    }
   }
 }

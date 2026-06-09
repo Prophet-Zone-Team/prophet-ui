@@ -1,24 +1,21 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "main": "worker.mjs",
-  "name": "world-cup-prediction-terminal",
+  "name": "prophet-ui-dev",
   "workers_dev": false,
   "preview_urls": false,
   "compatibility_date": "2026-05-12",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
+  "keep_vars": true,
+  "alias": {
+    "server-only": "./scripts/server-only-stub.mjs"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
   "observability": {
     "enabled": true
-  },
-  "vars": {
-    "THE_ODDS_API_WORLD_CUP_SPORT_KEY": "soccer_fifa_world_cup_winner",
-    "THE_ODDS_API_REGIONS": "us,uk,eu",
-    "ENABLE_REAL_POLYMARKET_ORDERS": "false"
   },
   "d1_databases": [
     {
@@ -27,16 +24,7 @@
       "database_id": "674ada08-ce93-4076-ac06-4b61d1d2b4bf"
     }
   ],
-  "routes": [
-    {
-      "pattern": "wc.dolla.market",
-      "zone_name": "dolla.market",
-      "custom_domain": true
-    }
-  ],
   "triggers": {
-    "crons": [
-      "*/10 * * * *"
-    ]
+    "crons": ["*/10 * * * *"]
   }
 }

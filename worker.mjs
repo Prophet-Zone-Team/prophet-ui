@@ -8,7 +8,7 @@ import {
   createScheduledCollectionAlert,
   getScheduledCollectionIssues,
   sendCronAlert,
-} from "./src/server/ops/cronAlerts.ts";
+} from "./src/server/ops/cron-alerts.ts";
 import { collectAllSignalData } from "./src/server/signal-data/collector.ts";
 
 export default {

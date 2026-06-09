@@ -1,5 +1,5 @@
-import type { MarketDataSource } from "../../data/providers/types";
-import type { MarketSentiment, MarketUniverseMeta, Team } from "../../types/market";
+import type { MarketDataSource } from "@/data/providers/types";
+import type { MarketSentiment, MarketUniverseMeta, Team } from "@/types/market";
 
 export type StoredMarketDataSource = Exclude<MarketDataSource, "mock">;
 

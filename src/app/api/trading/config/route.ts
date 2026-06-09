@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getBuilderTakerFeeRate, getOrderBuilderCode } from "../../../../server/trading/builderCode";
+import { getBuilderTakerFeeRate, getOrderBuilderCode } from "@/server/trading/builder-code";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

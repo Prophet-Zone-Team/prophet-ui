@@ -18,6 +18,10 @@
     "allowJs": true,
     "incremental": true,
     "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "plugins": [
       {
         "name": "next"
@@ -29,6 +33,7 @@
     "*.mts",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "src/**/*.d.ts",
     "cloudflare-env.d.ts",
     ".next/types/**/*.ts"
   ],

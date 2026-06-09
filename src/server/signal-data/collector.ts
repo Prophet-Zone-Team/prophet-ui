@@ -1,14 +1,17 @@
-import { apiFootballTeamConfig } from "../../config/api-football-team-config";
+import { apiFootballTeamConfig } from "@/config/api-football-team-config";
 import {
   WORLD_CUP_CONTEXT_KEYWORDS,
   getTeamNewsQueryConfig,
-} from "../../config/team-news-query-config";
-import { worldCupTeams } from "../../data/teams/worldCupTeams";
-import { getApiFootballTeamContext } from "../../data/football/apiFootballProvider";
-import { gdeltNewsProvider } from "../../data/news/gdeltNewsProvider";
-import type { TeamNewsQuery } from "../../data/news/types";
-import type { ApiFootballTeamContext, NewsArticle, Team } from "../../types/market";
-import { getSignalDataRepository } from "./repository";
+} from "@/config/team-news-query-config";
+import {
+  curatedNationalTeamsList,
+  findCuratedTeamById,
+} from "@/data/teams/curated-team-list";
+import { getApiFootballTeamContext } from "@/data/football/api-football-provider";
+import { gdeltNewsProvider } from "@/data/news/gdelt-news-provider";
+import type { TeamNewsQuery } from "@/data/news/types";
+import type { ApiFootballTeamContext, NewsArticle, Team } from "@/types/market";
+import { getSignalDataRepository } from "@/server/signal-data/repository";
 
 const NEWS_LOOKBACK_DAYS = 30;
 const MAX_ARTICLES_PER_TEAM = 12;
@@ -52,7 +55,7 @@ export async function collectGdeltNewsSignals(): Promise<SignalDataCollectionRes
     };
   }
 
-  const queries = worldCupTeams.map(createExpandedTeamNewsQuery).filter(isTeamNewsQuery);
+  const queries = curatedNationalTeamsList.map(createExpandedTeamNewsQuery).filter(isTeamNewsQuery);
   const { articles, errors } = await collectGdeltArticlesInBatches(queries);
   const cappedArticles = capArticlesPerTeam(articles);
   const status = getCollectionRunStatus(cappedArticles.length, errors);
@@ -132,7 +135,7 @@ export async function collectApiFootballSignals(): Promise<SignalDataCollectionR
   const selectedConfigs = getApiFootballBatch(collectedAt);
 
   for (const config of selectedConfigs) {
-    const team = worldCupTeams.find((item) => item.id === config.teamId);
+    const team = findCuratedTeamById(config.teamId);
 
     if (!team) {
       continue;
@@ -212,7 +215,7 @@ function createExpandedTeamNewsQuery(team: Team): TeamNewsQuery | undefined {
 }
 
 function getApiFootballBatch(collectedAt: string): typeof apiFootballTeamConfig {
-  const teamIds = new Set(worldCupTeams.map((team) => team.id));
+  const teamIds = new Set(curatedNationalTeamsList.map((team) => team.id));
   const activeConfigs = apiFootballTeamConfig.filter((config) => teamIds.has(config.teamId));
 
   return getRotatingBatch(activeConfigs, collectedAt, API_FOOTBALL_TEAMS_PER_RUN, 1);

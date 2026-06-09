@@ -1,4 +1,4 @@
-import type { Team } from "../types/market";
+import type { Team } from "@/types/market";
 
 export interface TeamNewsQueryConfig {
   teamId: Team["id"];

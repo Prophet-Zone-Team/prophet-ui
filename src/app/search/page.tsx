@@ -1,4 +1,4 @@
-import { SearchPage } from "../../components/search/SearchPage";
+import { SearchPage } from "@/components/search/search-page";
 
 interface PageProps {
   searchParams: Promise<{

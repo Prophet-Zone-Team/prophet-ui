@@ -6,19 +6,24 @@ import {
   clearTradingCredentialsCookie,
   createTradingSession,
   createTradingSessionCookie,
-  createTradingCredentialsCookie,
   getTradingSessionFromCookie,
-  getTradingSession,
-} from "../../../../server/trading/sessionStore";
-import { checkTradingEligibility, getClientIp } from "../../../../server/trading/eligibility";
-import { setupDepositWalletForOwner } from "../../../../server/trading/depositWallet";
-import { recordTradingAuditEvent } from "../../../../server/trading/orderStore";
+} from "@/server/trading/session-store";
+import { checkTradingEligibility, getClientGeoFromRequest } from "@/server/trading/eligibility";
+import { setupDepositWalletForOwner } from "@/server/trading/deposit-wallet";
+import { recordTradingAuditEvent } from "@/server/trading/order-store";
+import {
+  createTradingSessionChallenge,
+  verifyTradingSessionChallenge,
+} from "@/server/trading/session-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 interface CreateSessionPayload {
   walletAddress?: string;
+  mode?: "challenge" | "create";
+  token?: string;
+  signature?: string;
   signatureType?: number;
 }
 
@@ -32,17 +37,52 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as CreateSessionPayload;
-  const validationError = validatePayload(payload);
+
+  if (payload.mode === "challenge") {
+    const challengeError = validateChallengePayload(payload);
+
+    if (challengeError) {
+      return NextResponse.json({ error: challengeError }, { status: 400 });
+    }
+
+    return NextResponse.json({
+      challenge: createTradingSessionChallenge(payload.walletAddress ?? ""),
+    });
+  }
+
+  const validationError = validateCreatePayload(payload);
 
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
-  const userId = `wallet:${(payload.walletAddress ?? "").toLowerCase()}`;
-  const existingCookieRecord = getTradingSessionFromCookie(request.headers.get("cookie"));
-  const existingRecord =
-    existingCookieRecord?.session.userId === userId ? existingCookieRecord : getTradingSession(userId);
-  const eligibility = await checkTradingEligibility(getClientIp(request));
+  try {
+    await verifyTradingSessionChallenge({
+      walletAddress: payload.walletAddress ?? "",
+      token: payload.token ?? "",
+      signature: payload.signature ?? "",
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 401 },
+    );
+  }
+
+  const eligibility = await checkTradingEligibility(getClientGeoFromRequest(request));
+
+  if (eligibility.status === "blocked_region") {
+    return NextResponse.json(
+      {
+        error: eligibility.reason ?? "Trading is unavailable in your region.",
+        eligibilityStatus: eligibility.status,
+      },
+      { status: 403 },
+    );
+  }
+
   const depositWallet = await setupDepositWalletForOwner(payload.walletAddress ?? "");
   const session = createTradingSession({
     walletAddress: payload.walletAddress ?? "",
@@ -73,16 +113,7 @@ export async function POST(request: Request) {
   const response = NextResponse.json({ session });
 
   response.headers.append("Set-Cookie", createTradingSessionCookie(session));
-
-  if (existingRecord?.credentials) {
-    response.headers.append(
-      "Set-Cookie",
-      createTradingCredentialsCookie({
-        userId: session.userId,
-        credentials: existingRecord.credentials,
-      }),
-    );
-  }
+  response.headers.append("Set-Cookie", clearTradingCredentialsCookie());
 
   return response;
 }
@@ -101,9 +132,27 @@ export async function DELETE(request: Request) {
   return response;
 }
 
-function validatePayload(payload: CreateSessionPayload): string | undefined {
+function validateChallengePayload(payload: CreateSessionPayload): string | undefined {
   if (!payload.walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(payload.walletAddress)) {
     return "walletAddress must be a valid EVM address.";
+  }
+
+  return undefined;
+}
+
+function validateCreatePayload(payload: CreateSessionPayload): string | undefined {
+  const walletError = validateChallengePayload(payload);
+
+  if (walletError) {
+    return walletError;
+  }
+
+  if (!payload.token || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(payload.token)) {
+    return "Missing or invalid trading session challenge token.";
+  }
+
+  if (!payload.signature || !/^0x[a-fA-F0-9]+$/.test(payload.signature)) {
+    return "Missing or invalid trading session signature.";
   }
 
   if (payload.signatureType !== undefined && payload.signatureType !== 3) {

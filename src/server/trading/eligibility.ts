@@ -1,12 +1,16 @@
 import "server-only";
 
-import type { TradingEligibilityStatus, TradingUserSession } from "../../types/market";
-import { updateTradingSession } from "./sessionStore";
+import {
+  defaultReasonForKind,
+  mergeGeoblockWithLocalRules,
+} from "@/lib/trading/geo-restrictions";
+import { resolveEligibilityFromLocalFallback } from "@/lib/trading/eligibility-fallback";
+import type { TradingEligibilityStatus, TradingUserSession } from "@/types/market";
+import { updateTradingSession } from "@/server/trading/session-store";
+import { serverFetch } from "@/server/trading/server-fetch";
 
 const DEFAULT_GEOBLOCK_URL = "https://polymarket.com/api/geoblock";
 const GEOBLOCK_TIMEOUT_MS = 8000;
-const ELIGIBILITY_FRESH_MS = 1000 * 60 * 5;
-const ELIGIBILITY_ERROR_GRACE_MS = 1000 * 60 * 30;
 
 export interface TradingEligibilityResult {
   status: TradingEligibilityStatus;
@@ -25,17 +29,36 @@ interface PolymarketGeoblockResponse {
   error?: string;
 }
 
-export async function checkTradingEligibility(clientIp?: string): Promise<TradingEligibilityResult> {
+export interface ClientGeoHeaders {
+  ip?: string;
+  country?: string;
+  region?: string;
+}
+
+export async function checkTradingEligibility(
+  clientGeo?: ClientGeoHeaders,
+): Promise<TradingEligibilityResult> {
   const checkedAt = new Date().toISOString();
+
+  const isForceEligible = process.env.ELIGIBILITY_FORCE_ELIGIBLE === "true";
+  if (isForceEligible) {
+    return {
+      status: "eligible",
+      checkedAt,
+      country: undefined,
+      region: undefined,
+      reason: undefined,
+    };
+  }
 
   try {
     const headers: Record<string, string> = { Accept: "application/json" };
 
-    if (clientIp) {
-      headers["X-Forwarded-For"] = clientIp;
+    if (clientGeo?.ip) {
+      headers["X-Forwarded-For"] = clientGeo.ip;
     }
 
-    const response = await fetch(getGeoblockUrl(), {
+    const response = await serverFetch(getGeoblockUrl(), {
       method: "GET",
       headers,
       cache: "no-store",
@@ -43,83 +66,139 @@ export async function checkTradingEligibility(clientIp?: string): Promise<Tradin
     });
 
     if (!response.ok) {
-      return {
-        status: "error",
+      return resolveEligibilityFromLocalFallback({
         checkedAt,
-        reason: `Polymarket geoblock check returned ${response.status}.`,
-      };
+        clientGeo,
+        apiFailureReason: `Polymarket geoblock check returned ${response.status}.`,
+      });
     }
 
     const payload = (await response.json()) as PolymarketGeoblockResponse;
-
-    if (payload.blocked === true) {
-      return {
-        status: "blocked_region",
-        checkedAt,
-        country: payload.country,
-        region: payload.region,
-        reason: payload.error ?? "Polymarket reports this region is blocked.",
-      };
-    }
-
-    return {
-      status: "eligible",
-      checkedAt,
-      country: payload.country,
-      region: payload.region,
-      reason: payload.proxy || payload.vpn ? "Geoblock returned eligible with proxy/VPN signal present." : undefined,
-    };
-  } catch (error) {
-    return {
-      status: "error",
-      checkedAt,
-      reason: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
-export async function refreshSessionEligibility(session: TradingUserSession, clientIp?: string): Promise<TradingUserSession> {
-  const eligibility = await checkTradingEligibility(clientIp);
-
-  return updateTradingSession(withEligibility(session, eligibility));
-}
-
-export async function refreshSessionEligibilityIfStale(session: TradingUserSession, clientIp?: string): Promise<TradingUserSession> {
-  if (isFreshEligibleSession(session)) {
-    return session;
-  }
-
-  const eligibility = await checkTradingEligibility(clientIp);
-
-  if (eligibility.status === "error" && isEligibleSessionWithin(session, ELIGIBILITY_ERROR_GRACE_MS)) {
-    console.warn("[trading.eligibility] geoblock refresh failed; using cached eligible session", {
-      userId: session.userId,
-      checkedAt: session.eligibilityCheckedAt,
-      refreshReason: eligibility.reason,
-      refreshCheckedAt: eligibility.checkedAt,
+    const merged = mergeGeoblockWithLocalRules({
+      apiBlocked: payload.blocked === true,
+      country: payload.country ?? clientGeo?.country,
+      region: payload.region ?? clientGeo?.region,
+      apiError: payload.error,
     });
 
-    return session;
+    const proxyHint =
+      payload.proxy || payload.vpn
+        ? " Geoblock returned eligible with proxy/VPN signal present."
+        : "";
+
+    return {
+      status: merged.status,
+      checkedAt,
+      country: payload.country ?? clientGeo?.country,
+      region: payload.region ?? clientGeo?.region,
+      reason: merged.reason
+        ? `${merged.reason}${proxyHint}`.trim()
+        : proxyHint || undefined,
+    };
+  } catch (error) {
+    return resolveEligibilityFromLocalFallback({
+      checkedAt,
+      clientGeo,
+      apiFailureReason: formatGeoblockFetchError(error),
+    });
   }
-
-  return updateTradingSession(withEligibility(session, eligibility));
 }
 
-function isFreshEligibleSession(session: TradingUserSession) {
-  return isEligibleSessionWithin(session, ELIGIBILITY_FRESH_MS);
-}
-
-function isEligibleSessionWithin(session: TradingUserSession, maxAgeMs: number) {
-  if (session.eligibilityStatus !== "eligible" || !session.eligibilityCheckedAt) {
+export function isGeoblockNetworkError(reason: string | undefined) {
+  if (!reason) {
     return false;
   }
 
-  const checkedAt = Date.parse(session.eligibilityCheckedAt);
+  const normalized = reason.toLowerCase();
 
-  return Number.isFinite(checkedAt) && Date.now() - checkedAt <= maxAgeMs;
+  return (
+    normalized.includes("timeout") ||
+    normalized.includes("aborted") ||
+    normalized.includes("fetch failed") ||
+    normalized.includes("network") ||
+    normalized.includes("econnrefused") ||
+    normalized.includes("enotfound") ||
+    normalized.includes("unreachable")
+  );
 }
 
-function withEligibility(session: TradingUserSession, eligibility: TradingEligibilityResult): TradingUserSession {
+export function formatGeoblockFetchError(error: unknown) {
+  const detail = error instanceof Error ? error.message : String(error);
+
+  if (isGeoblockNetworkError(detail)) {
+    return formatGeoblockNetworkErrorMessage();
+  }
+
+  return detail;
+}
+
+export function formatGeoblockNetworkErrorMessage() {
+  const proxyHint =
+    process.env.NODE_ENV === "development" && !hasDevelopmentProxyConfigured()
+      ? " In development, set HTTPS_PROXY if Polymarket APIs require a local proxy."
+      : "";
+
+  return `Polymarket geoblock check timed out or is unreachable.${proxyHint} Retry the eligibility check or verify server network access.`;
+}
+
+export function formatEligibilityErrorDetail(reason: string | undefined) {
+  if (isGeoblockNetworkError(reason)) {
+    return formatGeoblockNetworkErrorMessage();
+  }
+
+  return reason ?? "Polymarket geoblock check failed.";
+}
+
+export function formatEligibilityRestrictionReason(
+  status: TradingEligibilityStatus,
+  country?: string,
+  region?: string,
+  reason?: string,
+) {
+  if (reason?.trim()) {
+    return reason;
+  }
+
+  if (status === "blocked_region") {
+    return defaultReasonForKind("blocked", country, region);
+  }
+
+  if (status === "close_only_region") {
+    return defaultReasonForKind("close_only", country, region);
+  }
+
+  return reason;
+}
+
+function hasDevelopmentProxyConfigured() {
+  return Boolean(
+    process.env.HTTPS_PROXY?.trim() ||
+    process.env.https_proxy?.trim() ||
+    process.env.HTTP_PROXY?.trim() ||
+    process.env.http_proxy?.trim(),
+  );
+}
+
+export async function refreshSessionEligibility(
+  session: TradingUserSession,
+  clientGeo?: ClientGeoHeaders,
+): Promise<TradingUserSession> {
+  const eligibility = await checkTradingEligibility(clientGeo);
+
+  return updateTradingSession(withEligibility(session, eligibility));
+}
+
+export async function refreshSessionEligibilityIfStale(
+  session: TradingUserSession,
+  clientGeo?: ClientGeoHeaders,
+): Promise<TradingUserSession> {
+  return refreshSessionEligibility(session, clientGeo);
+}
+
+function withEligibility(
+  session: TradingUserSession,
+  eligibility: TradingEligibilityResult,
+): TradingUserSession {
   return {
     ...session,
     eligibilityStatus: eligibility.status,
@@ -127,6 +206,14 @@ function withEligibility(session: TradingUserSession, eligibility: TradingEligib
     eligibilityCountry: eligibility.country,
     eligibilityRegion: eligibility.region,
     eligibilityReason: eligibility.reason,
+  };
+}
+
+export function getClientGeoFromRequest(request: Request): ClientGeoHeaders {
+  return {
+    ip: getClientIp(request),
+    country: getClientCountry(request),
+    region: getClientRegion(request),
   };
 }
 
@@ -150,6 +237,18 @@ export function getClientIp(request: Request): string | undefined {
   }
 
   return undefined;
+}
+
+function getClientCountry(request: Request): string | undefined {
+  return request.headers.get("cf-ipcountry")?.trim() || undefined;
+}
+
+function getClientRegion(request: Request): string | undefined {
+  return (
+    request.headers.get("cf-region")?.trim() ||
+    request.headers.get("cf-region-code")?.trim() ||
+    undefined
+  );
 }
 
 function getGeoblockUrl() {

@@ -23,14 +23,19 @@ export type SignalType =
 
 export type OrderOutcomeSide = "yes" | "no";
 
+export type MatchOutcomeSide = "home" | "draw" | "away";
+
+export type TradeEntityType = "team" | "game";
+
 export type BidTradeSide = "buy" | "sell";
 
-export type TradingOrderType = "GTC" | "FOK" | "FAK";
+export type TradingOrderType = "GTC" | "GTD" | "FOK" | "FAK";
 
 export type TradingEligibilityStatus =
   | "unknown"
   | "eligible"
   | "blocked_region"
+  | "close_only_region"
   | "unsupported_account"
   | "needs_wallet"
   | "error";
@@ -45,6 +50,31 @@ export type DepositWalletStatus =
   | "relayer_unconfigured"
   | "error";
 
+export interface DepositWalletCheckResponse {
+  walletAddress: string;
+  deployed: boolean;
+  status: Extract<DepositWalletStatus, "deployed" | "derived" | "error">;
+  checkedAt: string;
+  error?: string;
+  source?: "relayer" | "onchain";
+}
+
+export interface DepositWalletDeployResponse {
+  walletAddress: string;
+  status: DepositWalletStatus;
+  checkedAt: string;
+  transactionId?: string;
+  transactionHash?: string;
+  error?: string;
+}
+
+export interface ClobHealthResponse {
+  reachable: boolean;
+  host: string;
+  checkedAt: string;
+  error?: string;
+}
+
 export type UserOrderStatus =
   | "previewed"
   | "submitted"
@@ -56,9 +86,12 @@ export type UserOrderStatus =
   | "error";
 
 export interface TradingUserSession {
+  sessionId?: string;
   userId: string;
   walletAddress: string;
   funderAddress?: string;
+  /** Reserved for future private account API; mirrors funderAddress lifecycle. */
+  privateAccountAddress?: string;
   depositWalletStatus?: DepositWalletStatus;
   depositWalletCheckedAt?: string;
   depositWalletTransactionId?: string;
@@ -70,8 +103,18 @@ export interface TradingUserSession {
   eligibilityCountry?: string;
   eligibilityRegion?: string;
   eligibilityReason?: string;
+  setupAllowances?: TradingSetupAllowances;
+  setupAllowancesCheckedAt?: string;
+  authenticatedAt?: string;
   createdAt: string;
   expiresAt?: string;
+}
+
+export interface TradingSetupAllowances {
+  conditionalTokens?: number;
+  exchange?: number;
+  negRiskExchange?: number;
+  negRiskAdapter?: number;
 }
 
 export interface UserTradingCredentialStatus {
@@ -111,6 +154,20 @@ export interface AccountReadinessCheck {
   detail: string;
 }
 
+export interface UserOrderFundingCheck {
+  balance: "pass" | "fail" | "unknown";
+  allowance: "pass" | "fail" | "unknown";
+  balanceDetail: string;
+  allowanceDetail: string;
+}
+
+export interface UserTradingBalancesResponse {
+  balances?: UserBalanceSnapshot;
+  funding?: UserOrderFundingCheck;
+  updatedAt: string;
+}
+
+/** Setup-only readiness; balances come from `/api/trading/balances`. */
 export interface UserTradingReadiness {
   ready: boolean;
   session?: TradingUserSession;
@@ -211,6 +268,7 @@ export interface Team {
   qualifiedStatus?: "qualified" | "candidate" | "playoff_pending";
   apiFootballTeamId?: number;
   polymarketMarketSlug?: string;
+  logoUrl?: string;
 }
 
 export type TeamFootballMetadataStatus = "curated" | "partial" | "pending";
@@ -251,6 +309,8 @@ export interface TeamMarketData {
   sentiment: MarketSentiment;
   bookmakerImpliedProbability: number;
   updatedAt: string;
+  /** Polymarket event/market slug for trade deep links. */
+  slug?: string;
   polymarket?: PolymarketMarketMetadata;
 }
 
@@ -272,10 +332,13 @@ export interface PolymarketMarketMetadata {
   question?: string;
   slug?: string;
   acceptingOrders: boolean;
+  closed?: boolean;
   negRisk: boolean;
   tickSize: "0.1" | "0.01" | "0.001" | "0.0001";
   minOrderSize?: number;
   fee?: PolymarketFeeDetails;
+  fixtureEventSlug?: string;
+  marketKind?: "outright" | "moneyline";
   tokens: {
     yes?: PolymarketOutcomeToken;
     no?: PolymarketOutcomeToken;
@@ -294,6 +357,52 @@ export interface PolymarketOutcomeToken {
   tokenId: string;
   outcome: string;
   price?: number;
+}
+
+export interface MarketTopHolder {
+  proxyWallet: string;
+  amount: number;
+  outcomeIndex: number;
+  asset: string;
+  name?: string;
+  pseudonym?: string;
+  displayUsernamePublic?: boolean;
+  profileImage?: string;
+  profileImageOptimized?: string;
+}
+
+export interface MarketTopHolderGroup {
+  token: string;
+  holders: MarketTopHolder[];
+}
+
+export interface MarketTradeRecord {
+  proxyWallet: string;
+  side: "BUY" | "SELL";
+  asset: string;
+  conditionId: string;
+  size: number;
+  price: number;
+  timestamp: number;
+  outcome: string;
+  outcomeIndex: number;
+  name?: string;
+  pseudonym?: string;
+  transactionHash?: string;
+}
+
+export interface MarketPositionRecord {
+  proxyWallet: string;
+  name?: string;
+  asset: string;
+  conditionId: string;
+  avgPrice: number;
+  size: number;
+  currPrice: number;
+  currentValue: number;
+  cashPnl: number;
+  outcome: string;
+  outcomeIndex: number;
 }
 
 export interface ProbabilityHistoryPoint {
@@ -389,7 +498,7 @@ export interface MatchOddsOutcome {
 }
 
 export interface MatchOddsSummary {
-  source: "api-football" | "the-odds-api" | "none";
+  source: "api-football" | "the-odds-api" | "polymarket" | "none";
   status: "live" | "cached" | "unavailable";
   outcomes: MatchOddsOutcome[];
   lastUpdated?: string;
@@ -402,15 +511,129 @@ export interface FreshnessMeta {
   ageMinutes?: number;
 }
 
+export interface PolymarketFixtureMoneylineOutcome {
+  side: MatchOutcomeSide;
+  label: string;
+  tokenId?: string;
+  noTokenId?: string;
+  conditionId?: string;
+  probability: number;
+  volume?: number;
+  yesAsk?: number;
+  yesBid?: number;
+  noAsk?: number;
+  noBid?: number;
+  fee?: PolymarketFeeDetails;
+}
+
+export type FixtureMarketCategory = "lines" | "exact_score" | "halftime";
+
+export type FixtureSportsMarketType =
+  | "moneyline"
+  | "spread"
+  | "total"
+  | "btts"
+  | "exact_score"
+  | "halftime";
+
+export type FixtureOutcomeSide =
+  | MatchOutcomeSide
+  | "over"
+  | "under"
+  | "yes"
+  | "no";
+
+export interface FixtureMarketOutcome {
+  id: string;
+  marketType: FixtureSportsMarketType;
+  category: FixtureMarketCategory;
+  label: string;
+  side?: FixtureOutcomeSide;
+  line?: number;
+  probability: number;
+  price: number;
+  volume?: number;
+  tokenId?: string;
+  noTokenId?: string;
+  conditionId?: string;
+  yesAsk?: number;
+  yesBid?: number;
+  noAsk?: number;
+  noBid?: number;
+  fee?: PolymarketFeeDetails;
+  acceptingOrders?: boolean;
+}
+
+export interface FixtureLineOption {
+  key: string;
+  label: number;
+}
+
+export interface FixtureMarketGroup {
+  type: FixtureSportsMarketType;
+  title: string;
+  volume?: number;
+  /** Display labels for line tabs. Prefer `lineOptionKeys` when keys must be unique. */
+  lineOptions?: number[];
+  lineOptionKeys?: FixtureLineOption[];
+  defaultLine?: number;
+  defaultLineKey?: string;
+  outcomesByLine?: Record<string, FixtureMarketOutcome[]>;
+  outcomes: FixtureMarketOutcome[];
+}
+
+export interface PolymarketFixtureMarketsData {
+  lines: FixtureMarketGroup[];
+  exactScores: FixtureMarketOutcome[];
+  halftime: FixtureMarketOutcome[];
+}
+
+export interface GameFixtureMarketsSnapshot {
+  matchId: string;
+  lines: FixtureMarketGroup[];
+  exactScores: FixtureMarketOutcome[];
+  halftime: FixtureMarketOutcome[];
+  freshness: FreshnessMeta;
+}
+
+export interface PolymarketFixtureMetadata {
+  eventId: string;
+  slug: string;
+  league?: string;
+  volume: number;
+  volume24hr?: number;
+  closed?: boolean;
+  moneyline: {
+    conditionId?: string;
+    acceptingOrders: boolean;
+    outcomes: PolymarketFixtureMoneylineOutcome[];
+  };
+  fixtureMarkets?: PolymarketFixtureMarketsData;
+}
+
 export interface WorldCupMatch {
   id: string;
-  matchId: number;
-  stage: "GROUP" | "R32" | "R16" | "QF" | "SF" | "THIRD_PLACE" | "FINAL";
+  matchId?: number;
+  eventId?: string;
+  stage:
+    | "GROUP"
+    | "R32"
+    | "R16"
+    | "QF"
+    | "SF"
+    | "THIRD_PLACE"
+    | "FINAL"
+    | "EXTERNAL";
   group?: string;
   homeTeamId?: Team["id"];
   awayTeamId?: Team["id"];
   homeSeed?: string;
   awaySeed?: string;
+  homeDisplayName?: string;
+  awayDisplayName?: string;
+  homeLogoUrl?: string;
+  awayLogoUrl?: string;
+  league?: string;
   homeScore?: number;
   awayScore?: number;
   status: WorldCupMatchStatus;
@@ -419,7 +642,88 @@ export interface WorldCupMatch {
   city?: string;
   marketMove?: number;
   odds?: MatchOddsSummary;
+  /** Elapsed match time in seconds (API-Football live clock baseline for client timer). */
+  liveElapsedSeconds?: number;
+  /** Current match period from Polymarket sports WS (e.g. "1H", "2H", "HT"). */
+  period?: string;
   freshness: FreshnessMeta;
+  polymarket?: PolymarketFixtureMetadata;
+}
+
+export interface GameMarketOutcome {
+  side: MatchOutcomeSide;
+  label: string;
+  probability: number;
+  change24h?: number;
+  volume?: number;
+  tokenId?: string;
+  noTokenId?: string;
+  conditionId?: string;
+  yesAsk?: number;
+  yesBid?: number;
+  noAsk?: number;
+  noBid?: number;
+  fee?: PolymarketFeeDetails;
+}
+
+export interface GameMarketSnapshot {
+  match: WorldCupMatch;
+  homeTeamId?: Team["id"];
+  awayTeamId?: Team["id"];
+  outcomes: GameMarketOutcome[];
+  market: {
+    volume: number;
+    acceptingOrders: boolean;
+    closed?: boolean;
+    source: string;
+    freshness: FreshnessMeta;
+  };
+}
+
+export interface GameProbabilityHistoryPoint {
+  matchId: string;
+  outcome: MatchOutcomeSide;
+  timestamp: string;
+  probability: number;
+}
+
+export interface GameMatchMinuteHistoryPoint {
+  matchId: string;
+  minute: number;
+  minuteLabel: string;
+  elapsedSeconds?: number;
+  home: number;
+  draw: number;
+  away: number;
+}
+
+export interface GameFixtureChartPoint {
+  matchId: string;
+  timestamp: string;
+  label: string;
+  elapsedSeconds?: number;
+  home: number;
+  draw: number;
+  away: number;
+}
+
+export interface GameFixtureBinaryChartPoint {
+  matchId: string;
+  timestamp: string;
+  label: string;
+  elapsedSeconds?: number;
+  primary: number;
+  secondary: number;
+}
+
+export type GameFixtureChartTimeRange = "1H" | "1D" | "1W" | "1M" | "all";
+
+export type FixtureChartKind = "moneyline" | "halftime" | "total" | "spread";
+
+export interface GameMatchChartEvent {
+  elapsedSeconds: number;
+  side: "home" | "away";
+  type: "goal";
 }
 
 export type SearchResultType = "team" | "match" | "news" | "market" | "path";
@@ -538,6 +842,8 @@ export interface ApiFootballFixtureContext {
   goalsAgainst?: number;
   result?: "W" | "D" | "L";
   isWorldCupFixture?: boolean;
+  /** Elapsed minutes from API-Football fixture.status.elapsed when live. */
+  elapsedMinutes?: number;
   updatedAt: string;
 }
 

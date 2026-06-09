@@ -31,6 +31,42 @@ Current Workers fallback URL:
 https://world-cup-prediction-terminal.aidai524.workers.dev
 ```
 
+## Deploy (OpenNext on Workers)
+
+This app targets **Cloudflare Workers** via [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare), not Cloudflare Pages with `@cloudflare/next-on-pages`.
+
+Do **not** use the Pages framework preset **Next.js** (`npx @cloudflare/next-on-pages@1`). That adapter is deprecated and requires `export const runtime = 'edge'` on every dynamic route. This project intentionally uses the Next.js **Node.js** runtime (`export const runtime = "nodejs"` on trading APIs) with `nodejs_compat` in `wrangler.jsonc`.
+
+### Workers Builds (Git-connected)
+
+In the Worker **Settings → Build**:
+
+| Setting        | Value                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| Build command  | `npm run cf:build` (runs `opennextjs-cloudflare build`, which invokes `next build` first) |
+| Deploy command | `npm run deploy` (or `opennextjs-cloudflare build && opennextjs-cloudflare deploy`)       |
+
+Copy required env vars from `.env.example` into **Build variables and secrets** and **Variables & secrets** so `next build` and runtime handlers can reach Polymarket, D1, and odds providers.
+
+### Local / CLI
+
+```bash
+npm run cf:build    # produce .open-next output only
+npm run deploy      # build + wrangler deploy
+npm run preview     # build + local worker preview (after d1:schema:local)
+```
+
+### If the build log shows next-on-pages / Edge Runtime errors
+
+Example:
+
+```text
+The following routes were not configured to run with the Edge Runtime
+Please make sure that all your non-static routes export: export const runtime = 'edge';
+```
+
+You are on the wrong Cloudflare product or preset. Switch to a **Worker** connected to this repo (or update build settings as above). Do not add `runtime = 'edge'` across the codebase to satisfy next-on-pages; trading and D1 code depend on the Node.js runtime on Workers.
+
 ## Schema
 
 Apply the schema in `db/d1/schema.sql` to the D1 database before enabling collection:

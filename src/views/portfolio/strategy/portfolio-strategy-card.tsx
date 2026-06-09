@@ -1,0 +1,172 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
+
+import { cn } from "@/lib/cn";
+import {
+  canPortfolioStrategyBidAgain,
+  resolveAvailableStrategyForPortfolio
+} from "@/lib/strategy/resolve-portfolio-strategy-bid";
+import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import { useWinnerSnapshots, useWinnerTeamsStore } from "@/store";
+import { StrategyBidModal } from "@/views/strategy/components/bid-modal";
+
+import { PORTFOLIO_STRATEGY_STATUS_CONFIG } from "@/lib/strategy/portfolio-strategy-status";
+
+import { PortfolioStrategyLegsTable } from "./portfolio-strategy-legs-table";
+import type { PortfolioStrategyRecord } from "./types";
+
+const SUMMARY_GRID =
+  "grid w-full grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))_auto] items-center gap-x-3";
+
+const SUMMARY_LABEL_CLASS =
+  "font-[Sora] text-sm font-normal leading-normal text-[#909090]";
+
+const SUMMARY_VALUE_CLASS =
+  "font-[Sora] text-base font-normal capitalize leading-5 text-black";
+
+const BID_AGAIN_BUTTON_CLASS =
+  "inline-flex h-[32px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] px-2 text-xs font-medium leading-[15px] text-white transition-opacity hover:opacity-90";
+
+export type PortfolioStrategyCardProps = {
+  strategy: PortfolioStrategyRecord;
+  defaultExpanded?: boolean;
+  onStrategyUpdated?: () => void;
+  className?: string;
+};
+
+export function PortfolioStrategyCard({
+  strategy,
+  defaultExpanded = true,
+  onStrategyUpdated,
+  className
+}: PortfolioStrategyCardProps) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [bidModalOpen, setBidModalOpen] = useState(false);
+  const snapshots = useWinnerSnapshots();
+  const fetchEvent = useWinnerTeamsStore((state) => state.fetchEvent);
+  const statusDisplay = PORTFOLIO_STRATEGY_STATUS_CONFIG[strategy.status];
+
+  useEffect(() => {
+    void fetchEvent();
+  }, [fetchEvent]);
+
+  const bidStrategy = useMemo(
+    () => resolveAvailableStrategyForPortfolio(strategy, snapshots),
+    [strategy, snapshots]
+  );
+  const showBidAgain = canPortfolioStrategyBidAgain(strategy);
+
+  const handleBidModalClose = () => {
+    setBidModalOpen(false);
+    onStrategyUpdated?.();
+  };
+
+  return (
+    <>
+      <article
+        className={cn("overflow-hidden border-b border-[#EBEBEB]", className)}
+        aria-label={strategy.name}
+      >
+        <div className="overflow-x-auto">
+          <div className={cn(SUMMARY_GRID, "min-w-[720px] bg-white px-4 pb-4 pt-4")}>
+            <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
+              Strategy
+            </span>
+            <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
+              ROI
+            </span>
+            <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
+              Value
+            </span>
+            <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
+              Hit Return
+            </span>
+            <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
+              Status
+            </span>
+            <div className="pb-2" aria-hidden />
+            <h3 className="m-0 min-w-0 truncate font-[Sora] text-base font-semibold capitalize leading-5 text-black">
+              {strategy.name}
+            </h3>
+            <span className={cn(SUMMARY_VALUE_CLASS, "min-w-0 truncate")}>
+              {strategy.roiLabel}
+            </span>
+            <span className={cn(SUMMARY_VALUE_CLASS, "min-w-0 truncate tabular-nums")}>
+              {formatTeamDetailMoney(strategy.value)}
+            </span>
+            <span className={cn(SUMMARY_VALUE_CLASS, "min-w-0 truncate tabular-nums")}>
+              {strategy.hitReturnLabel}
+            </span>
+            <PortfolioStrategyStatus
+              label={strategy.statusLabel}
+              color={statusDisplay.color}
+            />
+            <div className="flex shrink-0 items-center justify-end gap-2 self-center">
+              {showBidAgain ? (
+                <button
+                  type="button"
+                  className={BID_AGAIN_BUTTON_CLASS}
+                  onClick={() => setBidModalOpen(true)}
+                >
+                  Bid Again
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setExpanded((value) => !value)}
+                aria-expanded={expanded}
+                aria-label={
+                  expanded ? "Collapse strategy legs" : "Expand strategy legs"
+                }
+                className={cn(
+                  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
+                  "border border-[#EBEBEB] bg-white text-black transition-colors hover:bg-[#fafafa]"
+                )}
+              >
+                <ChevronDown
+                  className={cn(
+                    "size-4 shrink-0 transition-transform duration-200",
+                    expanded && "rotate-180"
+                  )}
+                  aria-hidden
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {expanded ? (
+          <PortfolioStrategyLegsTable legs={strategy.legs} />
+        ) : null}
+      </article>
+
+      <StrategyBidModal
+        open={bidModalOpen}
+        onClose={handleBidModalClose}
+        strategy={bidStrategy}
+        snapshots={snapshots}
+      />
+    </>
+  );
+}
+
+function PortfolioStrategyStatus({
+  label,
+  color
+}: {
+  label: string;
+  color: string;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-1.5">
+      <span
+        className="font-[Sora] text-base font-normal capitalize leading-5"
+        style={{ color }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}

@@ -1,6 +1,6 @@
-import { getCloudflareD1Database } from "../cloudflare/d1";
-import { createD1SignalDataRepository } from "./d1SignalDataRepository";
-import type { SignalDataRepository } from "./types";
+import { getCloudflareD1Database } from "@/server/cloudflare/d1";
+import { createD1SignalDataRepository } from "@/server/signal-data/d1-signal-data-repository";
+import type { SignalDataRepository } from "@/server/signal-data/types";
 
 export async function getSignalDataRepository(): Promise<SignalDataRepository> {
   const database = await getCloudflareD1Database();
@@ -9,10 +9,10 @@ export async function getSignalDataRepository(): Promise<SignalDataRepository> {
     return createD1SignalDataRepository(database);
   }
 
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
     throw new Error("Missing Cloudflare D1 binding MARKET_HISTORY_DB for signal data storage.");
   }
 
-  const { fileSignalDataRepository } = await import("./fileSignalDataRepository");
+  const { fileSignalDataRepository } = await import("./file-signal-data-repository");
   return fileSignalDataRepository;
 }

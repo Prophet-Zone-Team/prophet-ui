@@ -1,0 +1,426 @@
+"use client";
+
+import type { OneClickStatus, QuoteResponse } from "@stableflow/core";
+import { useCallback, useRef, useState } from "react";
+import { parseUnits } from "viem";
+
+import { useAuth } from "@/context/auth";
+import type { FundingAsset } from "@/config/funding";
+import { useSupportedAssets } from "@/hooks/funding/use-supported-assets";
+import {
+  isPolygonNativeUsdcToken,
+  type StableflowDepositToken,
+} from "@/lib/funding/stableflow";
+import { isTerminalBridgeStatus, pollBridgeAddress } from "@/lib/trading/bridge-status";
+import {
+  fetchFunderCollateralBalances,
+  resolvePendingDepositConvertMode,
+  type FunderCollateralBalances,
+} from "@/lib/trading/deposit-wallet-convert";
+import {
+  isStableflowSuccessStatus,
+  isStableflowTerminalFailureStatus,
+  pollStableflowExecution,
+} from "@/lib/trading/stableflow-bridge-status";
+import { transferCollateralFromConnectedWallet } from "@/lib/trading/polygon-collateral-transfer";
+import { fetchJson } from "@/lib/team/client-fetch";
+import type {
+  BridgeAggregateStatus,
+  BridgeFlowStatus,
+  BridgeStatusResponse,
+  BridgeTransactionRecord,
+  DepositAddressesPayload,
+} from "@/types/funding";
+import type { StableflowDepositContext } from "@/views/portfolio/deposit/types";
+
+export interface UseDepositResult {
+  status: BridgeFlowStatus;
+  bridgeStatus: BridgeAggregateStatus;
+  transactions: BridgeTransactionRecord[];
+  error: string | undefined;
+  getBridgeDepositAddresses: () => Promise<DepositAddressesPayload>;
+  depositViaPolygon: (amountUsd: string, token: FundingAsset) => Promise<{ txHash: string; statusAddress: string }>;
+  depositViaStableflow: (
+    amount: string,
+    token: StableflowDepositToken,
+    funderAddress: string,
+    polygonUsdcDestinationAssetId: string,
+  ) => Promise<StableflowDepositContext>;
+  pollStableflowBridge: (
+    depositAddress: string,
+    depositMemo: string | undefined,
+    onUpdate?: (status: OneClickStatus) => void,
+  ) => Promise<OneClickStatus>;
+  pollFunderCollateralBalances: (
+    onUpdate?: (balances: FunderCollateralBalances) => void,
+  ) => Promise<FunderCollateralBalances>;
+  startStatusPoll: (statusAddress: string) => Promise<BridgeAggregateStatus>;
+  stopStatusPoll: () => void;
+  supportedAssets: FundingAsset[];
+}
+
+export function useDeposit(): UseDepositResult {
+  const { session, syncCash } = useAuth();
+  const [status, setStatus] = useState<BridgeFlowStatus>("idle");
+  const [bridgeStatus, setBridgeStatus] = useState<BridgeAggregateStatus>("pending");
+  const [transactions, setTransactions] = useState<BridgeTransactionRecord[]>([]);
+  const [error, setError] = useState<string | undefined>();
+  const pollAbortRef = useRef<AbortController | undefined>(undefined);
+  const stableflowPollAbortRef = useRef<AbortController | undefined>(undefined);
+  const funderBalancePollAbortRef = useRef<AbortController | undefined>(undefined);
+  const { supportedAssets } = useSupportedAssets();
+
+  const fetchDepositStatus = useCallback(async (statusAddress: string) => {
+    const payload = await fetchJson<{ status: BridgeStatusResponse }>(
+      `/api/trading/deposit?statusAddress=${encodeURIComponent(statusAddress)}`,
+    );
+
+    return payload.status;
+  }, []);
+
+  const stopStatusPoll = useCallback(() => {
+    pollAbortRef.current?.abort();
+    pollAbortRef.current = undefined;
+    stableflowPollAbortRef.current?.abort();
+    stableflowPollAbortRef.current = undefined;
+    funderBalancePollAbortRef.current?.abort();
+    funderBalancePollAbortRef.current = undefined;
+  }, []);
+
+  const finalizeIfCompleted = useCallback(
+    async (aggregateStatus: BridgeAggregateStatus) => {
+      if (aggregateStatus !== "completed") {
+        return aggregateStatus;
+      }
+
+      setStatus("syncing");
+
+      try {
+        await syncCash();
+        setStatus("success");
+      } catch (syncError) {
+        const message = syncError instanceof Error ? syncError.message : String(syncError);
+        const missingClobCredentials = /CLOB credentials are required/i.test(message);
+
+        if (missingClobCredentials) {
+          setStatus("success");
+          setError(
+            "Deposit completed. Complete Step 2 in the Enable trading dialog to sync your tradable balance.",
+          );
+          return aggregateStatus;
+        }
+
+        setStatus("error");
+        setError(message);
+      }
+
+      return aggregateStatus;
+    },
+    [syncCash],
+  );
+
+  const startStatusPoll = useCallback(
+    async (statusAddress: string) => {
+      stopStatusPoll();
+      const controller = new AbortController();
+      pollAbortRef.current = controller;
+
+      setStatus("polling");
+      setError(undefined);
+      setBridgeStatus("pending");
+
+      try {
+        const result = await pollBridgeAddress({
+          fetchStatus: fetchDepositStatus,
+          statusAddress,
+          signal: controller.signal,
+          onUpdate: ({ status: nextStatus, response }) => {
+            setBridgeStatus(nextStatus);
+            setTransactions((response.transactions ?? []) as BridgeTransactionRecord[]);
+          },
+        });
+
+        setBridgeStatus(result.status);
+        setTransactions((result.response.transactions ?? []) as BridgeTransactionRecord[]);
+
+        if (result.status === "failed") {
+          setStatus("error");
+          setError("Bridge deposit did not complete successfully.");
+          return result.status;
+        }
+
+        await finalizeIfCompleted(result.status);
+        return result.status;
+      } catch (pollError) {
+        if (controller.signal.aborted) {
+          return bridgeStatus;
+        }
+
+        setStatus("error");
+        setError(pollError instanceof Error ? pollError.message : String(pollError));
+        throw pollError;
+      } finally {
+        if (pollAbortRef.current === controller) {
+          pollAbortRef.current = undefined;
+        }
+      }
+    },
+    [bridgeStatus, fetchDepositStatus, finalizeIfCompleted, stopStatusPoll],
+  );
+
+  const getBridgeDepositAddresses = useCallback(async () => {
+    setStatus("preparing");
+    setError(undefined);
+
+    try {
+      const payload = await fetchJson<DepositAddressesPayload>("/api/trading/deposit");
+      setStatus("idle");
+      return payload;
+    } catch (prepareError) {
+      setStatus("error");
+      setError(prepareError instanceof Error ? prepareError.message : String(prepareError));
+      throw prepareError;
+    }
+  }, []);
+
+  const depositViaPolygon = async (amountUsd: string, token: FundingAsset) => {
+    if (!session?.walletAddress) {
+      throw new Error("Connect a wallet before depositing funds.");
+    }
+
+    setStatus("preparing");
+    setError(undefined);
+
+    try {
+      const addresses = await getBridgeDepositAddresses();
+      const bridgeEvm = addresses.deposit.address.evm;
+
+      if (!bridgeEvm) {
+        throw new Error("Bridge did not return an EVM deposit address.");
+      }
+
+      setStatus("awaiting_wallet");
+      const { txHash } = await transferCollateralFromConnectedWallet({
+        walletAddress: session.walletAddress,
+        tokenAddress: token.address,
+        toAddress: bridgeEvm,
+        amountUsd,
+        tokenDecimals: token.decimals,
+        chainId: token.chainId,
+      });
+
+      const aggregateStatus = await startStatusPoll(bridgeEvm);
+
+      if (!isTerminalBridgeStatus(aggregateStatus)) {
+        throw new Error("Deposit status polling ended before completion.");
+      }
+
+      return { txHash, statusAddress: bridgeEvm };
+    } catch (depositError) {
+      if (status !== "syncing") {
+        setStatus("error");
+      }
+
+      setError(depositError instanceof Error ? depositError.message : String(depositError));
+      throw depositError;
+    }
+  };
+
+  const depositViaStableflow = async (
+    amount: string,
+    token: StableflowDepositToken,
+    funderAddress: string,
+    polygonUsdcDestinationAssetId: string,
+  ): Promise<StableflowDepositContext> => {
+    if (!session?.walletAddress) {
+      throw new Error("Connect a wallet before depositing funds.");
+    }
+
+    setStatus("preparing");
+    setError(undefined);
+
+    const amountBaseUnits = parseUnits(amount, token.decimals).toString();
+
+    if (isPolygonNativeUsdcToken(token)) {
+      setStatus("awaiting_wallet");
+      const { txHash } = await transferCollateralFromConnectedWallet({
+        walletAddress: session.walletAddress,
+        tokenAddress: token.address,
+        toAddress: funderAddress,
+        amountUsd: amount,
+        tokenDecimals: token.decimals,
+        chainId: token.chainId,
+      });
+
+      setStatus("idle");
+
+      return {
+        skipBridgePoll: true,
+        txHash,
+        expectedAmountBaseUnits: amountBaseUnits,
+      };
+    }
+
+    const { quote } = await fetchJson<{ quote: QuoteResponse }>("/api/trading/stableflow/quote", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        originAssetId: token.assetId,
+        destinationAssetId: polygonUsdcDestinationAssetId,
+        amountBaseUnits,
+        refundTo: session.walletAddress,
+        recipient: funderAddress,
+      }),
+    });
+
+    const depositAddress = quote.quote.depositAddress;
+
+    if (!depositAddress) {
+      throw new Error("Stableflow quote did not return a deposit address.");
+    }
+
+    setStatus("awaiting_wallet");
+    const { txHash } = await transferCollateralFromConnectedWallet({
+      walletAddress: session.walletAddress,
+      tokenAddress: token.address,
+      toAddress: depositAddress,
+      amountUsd: amount,
+      tokenDecimals: token.decimals,
+      chainId: token.chainId,
+    });
+
+    await fetchJson("/api/trading/stableflow/submit-tx", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        txHash,
+        depositAddress,
+      }),
+    });
+
+    setStatus("idle");
+
+    return {
+      quote,
+      depositAddress,
+      depositMemo: quote.quote.depositMemo,
+      txHash,
+      expectedAmountBaseUnits: amountBaseUnits,
+    };
+  };
+
+  const pollStableflowBridge = useCallback(
+    async (
+      depositAddress: string,
+      depositMemo: string | undefined,
+      onUpdate?: (status: OneClickStatus) => void,
+    ) => {
+      stableflowPollAbortRef.current?.abort();
+      const controller = new AbortController();
+      stableflowPollAbortRef.current = controller;
+
+      const fetchStatus = async (address: string, memo?: string) => {
+        const search = new URLSearchParams({ depositAddress: address });
+
+        if (memo) {
+          search.set("depositMemo", memo);
+        }
+
+        const payload = await fetchJson<{ status: { status: OneClickStatus } }>(
+          `/api/trading/stableflow/status?${search.toString()}`,
+          { signal: controller.signal },
+        );
+
+        return payload.status;
+      };
+
+      const finalStatus = await pollStableflowExecution({
+        fetchStatus,
+        depositAddress,
+        depositMemo,
+        signal: controller.signal,
+        onUpdate,
+      });
+
+      if (isStableflowTerminalFailureStatus(finalStatus)) {
+        throw new Error(`Stableflow bridge did not complete successfully (${finalStatus}).`);
+      }
+
+      if (!isStableflowSuccessStatus(finalStatus)) {
+        throw new Error(`Stableflow bridge ended in unexpected status (${finalStatus}).`);
+      }
+
+      return finalStatus;
+    },
+    [],
+  );
+
+  const pollFunderCollateralBalances = useCallback(
+    async (onUpdate?: (balances: FunderCollateralBalances) => void) => {
+      funderBalancePollAbortRef.current?.abort();
+      const controller = new AbortController();
+      funderBalancePollAbortRef.current = controller;
+
+      const maxAttempts = 120;
+      const intervalMs = 5000;
+
+      for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+        if (controller.signal.aborted) {
+          throw new DOMException("Funder balance polling aborted.", "AbortError");
+        }
+
+        const payload = await fetchFunderCollateralBalances();
+        onUpdate?.(payload);
+
+        if (resolvePendingDepositConvertMode(payload)) {
+          return payload;
+        }
+
+        await delay(intervalMs, controller.signal);
+      }
+
+      throw new Error("Timed out waiting for USDC or USDC.e to arrive in the deposit wallet.");
+    },
+    [],
+  );
+
+  return {
+    status,
+    bridgeStatus,
+    transactions,
+    error,
+    getBridgeDepositAddresses,
+    depositViaPolygon,
+    depositViaStableflow,
+    pollStableflowBridge,
+    pollFunderCollateralBalances,
+    startStatusPoll,
+    stopStatusPoll,
+    supportedAssets,
+  };
+}
+
+function delay(ms: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException("Polling aborted.", "AbortError"));
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+
+    const onAbort = () => {
+      window.clearTimeout(timer);
+      reject(new DOMException("Polling aborted.", "AbortError"));
+    };
+
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}

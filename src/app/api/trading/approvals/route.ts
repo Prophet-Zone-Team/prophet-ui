@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
 import { recoverTypedDataAddress } from "viem";
 
-import { buildTradingApprovalBatch, type DepositWalletBatchSignablePayload } from "../../../../lib/market/depositWalletBatch";
-import { getTradingChainId } from "../../../../server/trading/clobAuth";
+import { buildTradingApprovalBatch, type DepositWalletBatchSignablePayload } from "@/lib/market/deposit-wallet-batch";
+import { getTradingChainId } from "@/server/trading/clob-auth";
 import {
   buildDepositWalletBatchRequest,
   fetchRelayerTransaction,
   fetchRelayerNonce,
   submitRelayerTransaction,
-} from "../../../../server/trading/depositWallet";
-import { getTradingContractAddresses } from "../../../../server/trading/contracts";
-import { getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
+} from "@/server/trading/deposit-wallet";
+import { getTradingContractAddresses } from "@/server/trading/contracts";
+import { invalidateSetupAllowanceCache } from "@/lib/trading/setup-allowance-cache";
+import {
+  getTradingSessionFromCookie,
+  updateTradingSession,
+  createTradingSessionCookie,
+} from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,8 +24,13 @@ interface ApprovalSubmitPayload {
   signature?: string;
   nonce?: string;
   deadline?: string;
+  sessionSignerAddress?: string;
+  sessionSignerValidUntil?: string;
   approval?: DepositWalletBatchSignablePayload;
 }
+
+const DEFAULT_SESSION_SIGNER_VALIDITY_SECONDS = 60 * 60 * 24 * 7;
+const MAX_SESSION_SIGNER_VALIDITY_SECONDS = 60 * 60 * 24 * 30;
 
 export async function GET(request: Request) {
   const record = getTradingSessionFromCookie(request.headers.get("cookie"));
@@ -57,6 +67,12 @@ export async function GET(request: Request) {
       });
     }
 
+    const sessionSignerOptions = getSessionSignerOptionsFromSearch(url.searchParams);
+
+    if (sessionSignerOptions.error) {
+      return NextResponse.json({ error: sessionSignerOptions.error }, { status: 400 });
+    }
+
     const nonce = await fetchRelayerNonce(record.session.walletAddress);
     const deadline = Math.floor(Date.now() / 1000 + 900).toString();
 
@@ -66,8 +82,10 @@ export async function GET(request: Request) {
         walletAddress: record.session.funderAddress,
         nonce,
         deadline,
+        ...sessionSignerOptions.value,
         ...getTradingContractAddresses(),
       }),
+      sessionSigner: sessionSignerOptions.value,
     });
   } catch (error) {
     console.warn("[trading.approvals] submit failed", {
@@ -114,12 +132,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
+  const sessionSignerError = validateSessionSignerPayload(payload);
+
+  if (sessionSignerError) {
+    return NextResponse.json({ error: sessionSignerError }, { status: 400 });
+  }
+
   try {
     const expectedApproval = buildTradingApprovalBatch({
       chainId: getTradingChainId(),
       walletAddress: record.session.funderAddress,
       nonce: payload.nonce ?? "",
       deadline: payload.deadline ?? "",
+      sessionSignerAddress: payload.sessionSignerAddress,
+      sessionSignerValidUntil: payload.sessionSignerValidUntil,
       ...getTradingContractAddresses(),
     });
     const submittedApproval = payload.approval;
@@ -157,11 +183,19 @@ export async function POST(request: Request) {
       }),
     );
     const response = await submitRelayerTransaction(requestBody, "Unable to submit deposit wallet approvals");
+    const session = updateTradingSession(invalidateSetupAllowanceCache(record.session));
 
-    return NextResponse.json({
-      response,
-      submittedAt: new Date().toISOString(),
-    });
+    return NextResponse.json(
+      {
+        response,
+        submittedAt: new Date().toISOString(),
+      },
+      {
+        headers: {
+          "Set-Cookie": createTradingSessionCookie(session),
+        },
+      },
+    );
   } catch (error) {
     return NextResponse.json(
       {
@@ -188,6 +222,77 @@ function validatePayload(payload: ApprovalSubmitPayload): string | undefined {
   return undefined;
 }
 
+function getSessionSignerOptionsFromSearch(searchParams: URLSearchParams):
+  | {
+      value: {
+        sessionSignerAddress?: string;
+        sessionSignerValidUntil?: string;
+      };
+      error?: undefined;
+    }
+  | { value?: undefined; error: string } {
+  const sessionSignerAddress = searchParams.get("sessionSigner") ?? searchParams.get("sessionSignerAddress") ?? undefined;
+  const requestedValidUntil = searchParams.get("sessionSignerValidUntil") ?? undefined;
+
+  if (!sessionSignerAddress) {
+    return { value: {} };
+  }
+
+  if (!/^0x[a-fA-F0-9]{40}$/.test(sessionSignerAddress)) {
+    return { error: "sessionSigner must be a valid EVM address." };
+  }
+
+  const sessionSignerValidUntil =
+    requestedValidUntil ?? Math.floor(Date.now() / 1000 + DEFAULT_SESSION_SIGNER_VALIDITY_SECONDS).toString();
+  const expiryError = validateSessionSignerExpiry(sessionSignerValidUntil);
+
+  if (expiryError) {
+    return { error: expiryError };
+  }
+
+  return {
+    value: {
+      sessionSignerAddress,
+      sessionSignerValidUntil,
+    },
+  };
+}
+
+function validateSessionSignerPayload(payload: ApprovalSubmitPayload): string | undefined {
+  if (!payload.sessionSignerAddress && !payload.sessionSignerValidUntil) {
+    return undefined;
+  }
+
+  if (!payload.sessionSignerAddress || !/^0x[a-fA-F0-9]{40}$/.test(payload.sessionSignerAddress)) {
+    return "sessionSignerAddress must be a valid EVM address.";
+  }
+
+  if (!payload.sessionSignerValidUntil) {
+    return "sessionSignerValidUntil is required when authorizing a Quick Bid session signer.";
+  }
+
+  return validateSessionSignerExpiry(payload.sessionSignerValidUntil);
+}
+
+function validateSessionSignerExpiry(value: string): string | undefined {
+  if (!/^\d+$/.test(value)) {
+    return "sessionSignerValidUntil must be a unix timestamp.";
+  }
+
+  const parsed = Number(value);
+  const now = Math.floor(Date.now() / 1000);
+
+  if (!Number.isSafeInteger(parsed) || parsed <= now + 60) {
+    return "sessionSignerValidUntil must be at least 60 seconds in the future.";
+  }
+
+  if (parsed > now + MAX_SESSION_SIGNER_VALIDITY_SECONDS) {
+    return "Quick Bid session signer authorization cannot exceed 30 days.";
+  }
+
+  return undefined;
+}
+
 function validateSubmittedApproval(
   submittedApproval: DepositWalletBatchSignablePayload | undefined,
   expectedApproval: DepositWalletBatchSignablePayload,
@@ -196,31 +301,30 @@ function validateSubmittedApproval(
     return "Missing signed approval payload.";
   }
 
-  if (submittedApproval.walletAddress.toLowerCase() !== expectedApproval.walletAddress.toLowerCase()) {
+  if (
+    submittedApproval.message.wallet.toLowerCase() !== expectedApproval.message.wallet.toLowerCase()
+  ) {
     return "Signed approval wallet does not match the current session deposit wallet.";
   }
 
-  if (submittedApproval.nonce !== expectedApproval.nonce || submittedApproval.deadline !== expectedApproval.deadline) {
+  if (
+    submittedApproval.message.nonce !== expectedApproval.message.nonce ||
+    submittedApproval.message.deadline !== expectedApproval.message.deadline
+  ) {
     return "Signed approval nonce or deadline changed. Refresh and approve trading again.";
   }
 
-  if (normalizeApprovalCalls(submittedApproval.calls) !== normalizeApprovalCalls(expectedApproval.calls)) {
-    return "Signed approval calls changed. Refresh and approve trading again.";
-  }
-
   if (
-    submittedApproval.message.wallet.toLowerCase() !== submittedApproval.walletAddress.toLowerCase() ||
-    submittedApproval.message.nonce !== submittedApproval.nonce ||
-    submittedApproval.message.deadline !== submittedApproval.deadline ||
-    normalizeApprovalCalls(submittedApproval.message.calls) !== normalizeApprovalCalls(submittedApproval.calls)
+    normalizeApprovalCalls(submittedApproval.message.calls) !==
+    normalizeApprovalCalls(expectedApproval.message.calls)
   ) {
-    return "Signed approval message does not match approval payload. Refresh and approve trading again.";
+    return "Signed approval calls changed. Refresh and approve trading again.";
   }
 
   return undefined;
 }
 
-function normalizeApprovalCalls(calls: DepositWalletBatchSignablePayload["calls"]) {
+function normalizeApprovalCalls(calls: DepositWalletBatchSignablePayload["message"]["calls"]) {
   return JSON.stringify(
     calls.map((call) => ({
       target: call.target.toLowerCase(),

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { calculateWorldCupPath } from "../../../../lib/world-cup-path/calculatePath";
-import type { FinishType } from "../../../../types/market";
+import { calculateWorldCupPath } from "@/lib/world-cup-path/calculate-path";
+import type { FinishType } from "@/types/market";
 
 export const dynamic = "force-dynamic";
 

@@ -1,4 +1,4 @@
-import type { D1Database } from "../market-history/types";
+import type { D1Database } from "@/server/market-history/types";
 
 const D1_BINDING_NAME = "MARKET_HISTORY_DB";
 

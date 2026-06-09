@@ -1,4 +1,4 @@
-import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "../../types/market";
+import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "@/types/market";
 
 const DEFAULT_LIMIT = 5;
 const ODDS_MISMATCH_THRESHOLD = 1.2;

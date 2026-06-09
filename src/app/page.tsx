@@ -1,17 +1,15 @@
-import { getWorldCupMarketData } from "../data/providers/worldCupMarketData";
-import { HomePage } from "../components/home/HomePage";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
+import { isPrivateModeHost } from "@/config/funding";
 
-export default async function Page() {
-  const marketData = await getWorldCupMarketData({ includeFootballContext: false });
+export default async function RootPage() {
+  const hostHeader = (await headers()).get("host") ?? "";
+  const hostname = hostHeader.split(":")[0] ?? "";
 
-  return (
-    <HomePage
-      snapshots={marketData.snapshots}
-      newsEvents={marketData.newsEvents}
-      dataStatus={marketData.meta}
-      universe={marketData.universe}
-    />
-  );
+  if (isPrivateModeHost(hostname)) {
+    redirect("/private");
+  }
+
+  redirect("/fifa");
 }

@@ -1,4 +1,4 @@
-import type { Team } from "../../types/market";
+import type { Team } from "@/types/market";
 
 export type OddsDataSource = "the-odds-api" | "none";
 

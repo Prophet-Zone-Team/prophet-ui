@@ -1,4 +1,4 @@
-import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "../../types/market";
+import type { MarketSignal, NewsEvent, SignalSeverity, TeamMarketSnapshot } from "@/types/market";
 
 export interface WatchlistAlert {
   id: string;

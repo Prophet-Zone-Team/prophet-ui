@@ -1,7 +1,25 @@
-import type { MarketSentiment } from "../../types/market";
+import type { MarketSentiment } from "@/types/market";
 
 export function formatProbability(value: number): string {
   return `${value.toFixed(1)}%`;
+}
+
+/** Truncates to one decimal place; shows "<0.1%" for small positive values. */
+export function formatChartProbability(value: number): string {
+  if (value > 0 && value < 0.1) {
+    return "<0.1%";
+  }
+
+  const truncated = Math.floor(value * 10) / 10;
+  return `${truncated.toFixed(1)}%`;
+}
+
+export function formatListProbability(value: number): string {
+  if (value > 0 && value < 1) {
+    return "<1%";
+  }
+
+  return formatProbability(value);
 }
 
 export function formatChange(value: number): string {
@@ -9,19 +27,26 @@ export function formatChange(value: number): string {
   return `${sign}${value.toFixed(1)} pts`;
 }
 
-export function formatRelativeChange(currentProbability: number, changePoints: number): string {
-  return formatProbabilityChangePercent(getRelativeChangePercent(currentProbability, changePoints));
+export function formatChangePercent(value: number): string {
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(1)}%`;
 }
 
-export function getRelativeChangePercent(currentProbability: number, changePoints: number): number {
-  const previousProbability = currentProbability - changePoints;
+export function formatChangePercentMagnitude(
+  value: number,
+  decimals = 0
+): string {
+  const magnitude = Math.abs(value);
 
-  if (previousProbability <= 0 || !Number.isFinite(previousProbability)) {
-    return changePoints;
+  if (magnitude > 0 && magnitude < 1) {
+    return "<1%";
   }
 
-  return (changePoints / previousProbability) * 100;
+  return `${magnitude.toFixed(decimals)}%`;
 }
+
+
+
 
 export function formatVolume(value: number): string {
   return new Intl.NumberFormat("en", {

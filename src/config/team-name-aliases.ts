@@ -1,4 +1,4 @@
-import type { Team } from "../types/market";
+import type { Team } from "@/types/market";
 
 const teamAliases: Record<string, string[]> = {
   argentina: ["argentina", "argentine republic", "arg"],

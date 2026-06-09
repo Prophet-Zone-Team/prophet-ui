@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 
 import {
   createBridgeDepositAddresses,
-  fetchBridgeDepositStatus,
-} from "../../../../server/trading/bridge";
-import { getTradingSessionFromCookie } from "../../../../server/trading/sessionStore";
+  fetchBridgeTransactionStatus,
+} from "@/server/trading/bridge";
+import { getTradingChainId } from "@/server/trading/clob-auth";
+import { getTradingContractAddresses } from "@/server/trading/contracts";
+import {
+  getClientGeoFromRequest,
+  refreshSessionEligibilityIfStale,
+} from "@/server/trading/eligibility";
+import { assertEligibilityForBuySetup } from "@/server/trading/eligibility-order-guard";
+import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,13 +37,33 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.json({
-        status: await fetchBridgeDepositStatus(statusAddress),
+        status: await fetchBridgeTransactionStatus(statusAddress),
       });
     }
+
+    const eligibility = await refreshSessionEligibilityIfStale(
+      record.session,
+      getClientGeoFromRequest(request),
+    );
+    const depositEligibility = assertEligibilityForBuySetup(eligibility);
+
+    if (!depositEligibility.ok) {
+      return NextResponse.json(
+        {
+          error: depositEligibility.reason,
+          eligibilityStatus: depositEligibility.status,
+        },
+        { status: 403 },
+      );
+    }
+
+    const contracts = getTradingContractAddresses();
 
     return NextResponse.json({
       deposit: await createBridgeDepositAddresses(record.session.funderAddress),
       funderAddress: record.session.funderAddress,
+      chainId: getTradingChainId(),
+      collateralToken: contracts.collateralToken,
     });
   } catch (error) {
     return NextResponse.json(

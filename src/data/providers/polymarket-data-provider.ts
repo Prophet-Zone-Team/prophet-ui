@@ -1,0 +1,544 @@
+import {
+  CURATED_NATIONAL_TEAM_COUNT,
+  curatedNationalTeamsList,
+  curatedTeamsById,
+} from "@/data/teams/curated-team-list";
+import { getAllTeamFootballMetadata } from "@/data/teams/football-metadata";
+import type {
+  MarketSentiment,
+  MarketUniverseMeta,
+  PolymarketFeeDetails,
+  PolymarketMarketMetadata,
+  Team,
+  TeamMarketSnapshot,
+} from "@/types/market";
+import type { WorldCupMarketData, WorldCupMarketDataProvider } from "@/data/providers/types";
+import { extractFastBidPolymarketMetadata } from "@/lib/market/polymarket-fast-bid-metadata";
+import type { GammaMarketRecord } from "@/lib/market/polymarket-gamma";
+import { normalizePriceChange } from "@/lib/market/normalize-price-change";
+import { serverFetch } from "@/server/trading/server-fetch";
+
+const GAMMA_MARKETS_URL = "https://gamma-api.polymarket.com/markets";
+const CLOB_MARKET_URL = "https://clob.polymarket.com/clob-markets";
+const CLOB_MARKET_BY_TOKEN_URL = "https://clob.polymarket.com/markets-by-token";
+const MIN_WORLD_CUP_MARKETS = CURATED_NATIONAL_TEAM_COUNT;
+
+interface GammaMarket {
+  id?: string;
+  slug?: string;
+  question?: string;
+  title?: string;
+  description?: string;
+  outcomes?: string[] | string;
+  outcomePrices?: number[] | string;
+  clobTokenIds?: string[] | string;
+  lastTradePrice?: number | string;
+  volume?: number | string;
+  volumeNum?: number | string;
+  volume24hr?: number | string;
+  volume24hrClob?: number | string;
+  liquidity?: number | string;
+  conditionId?: string;
+  orderPriceMinTickSize?: number | string;
+  orderMinSize?: number | string;
+  acceptingOrders?: boolean;
+  closed?: boolean;
+  negRisk?: boolean;
+  oneDayPriceChange?: number | string;
+  oneWeekPriceChange?: number | string;
+  priceChange24h?: number | string;
+  priceChange7d?: number | string;
+  updatedAt?: string;
+  createdAt?: string;
+}
+
+interface ClobMarketDetails {
+  c?: string;
+  nr?: boolean;
+  mts?: number | string;
+  fd?: {
+    r?: number;
+    e?: number;
+    to?: boolean;
+  };
+  mbf?: number;
+  tbf?: number;
+}
+
+interface ClobMarketEnrichment {
+  fee?: PolymarketFeeDetails;
+  negRisk?: boolean;
+  tickSize?: PolymarketMarketMetadata["tickSize"];
+}
+
+export const polymarketDataProvider: WorldCupMarketDataProvider = {
+  async getWorldCupMarketData(): Promise<WorldCupMarketData> {
+    const markets = await fetchWorldCupMarkets();
+
+    const worldCupMarkets = markets.filter(isWorldCupWinnerMarket);
+    const { snapshots, matchedMarketKeys } =
+      await mapMarketsToTeamSnapshots(worldCupMarkets);
+    const universe = createMarketUniverseMeta(
+      worldCupMarkets,
+      snapshots,
+      matchedMarketKeys
+    );
+
+    if (snapshots.length < MIN_WORLD_CUP_MARKETS) {
+      throw new Error(
+        `Polymarket returned ${snapshots.length} matching World Cup team markets.`
+      );
+    }
+
+    const lastUpdated = snapshots.reduce((latest, snapshot) => {
+      return snapshot.market.updatedAt > latest
+        ? snapshot.market.updatedAt
+        : latest;
+    }, snapshots[0]?.market.updatedAt ?? new Date().toISOString());
+
+    return {
+      snapshots,
+      newsEvents: [],
+      probabilityHistory: [],
+      footballContext: [],
+      footballTeamContext: [],
+      footballMetadata: getAllTeamFootballMetadata(),
+      universe,
+      meta: {
+        source: "polymarket",
+        status: "live",
+        lastUpdated,
+        stale: false
+      }
+    };
+  },
+};
+
+async function fetchWorldCupMarkets(): Promise<GammaMarket[]> {
+  const url = new URL(GAMMA_MARKETS_URL);
+  url.searchParams.set("active", "true");
+  url.searchParams.set("closed", "false");
+  url.searchParams.set("limit", "200");
+  url.searchParams.set("order", "volume_24hr");
+  url.searchParams.set("ascending", "false");
+
+  const response = await serverFetch(url, {
+    cache: "no-store",
+    headers: {
+      accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Polymarket Gamma API returned HTTP ${response.status}.`);
+  }
+
+  const data = (await response.json()) as unknown;
+
+  if (!Array.isArray(data)) {
+    throw new Error("Polymarket Gamma API returned an unexpected market payload.");
+  }
+
+  return data.filter(isGammaMarket);
+}
+
+async function mapMarketsToTeamSnapshots(markets: GammaMarket[]): Promise<{
+  snapshots: TeamMarketSnapshot[];
+  matchedMarketKeys: Set<string>;
+}> {
+  const usedMarketIds = new Set<string>();
+  const selectedMarkets: Array<{
+    team: Team;
+    market: GammaMarket;
+    probability: number;
+    polymarket?: PolymarketMarketMetadata;
+  }> = [];
+
+  for (const team of curatedNationalTeamsList) {
+    const market = findBestTeamMarket(markets, team, usedMarketIds);
+
+    if (!market) {
+      continue;
+    }
+
+    const probability = extractYesProbability(market);
+    const polymarket = extractPolymarketMetadata(market);
+
+    if (probability === undefined) {
+      continue;
+    }
+
+    usedMarketIds.add(getMarketIdentity(market, team.id));
+    selectedMarkets.push({ team, market, probability, polymarket });
+  }
+
+  const feeDetails = await fetchClobMarketEnrichment(selectedMarkets);
+
+  const snapshots = selectedMarkets
+    .map(({ team, market, probability, polymarket }): TeamMarketSnapshot => ({
+      team,
+      market: {
+        teamId: team.id,
+        probability,
+        change24h: normalizePriceChange(firstNumber(market.oneDayPriceChange, market.priceChange24h)),
+        change7d: normalizePriceChange(firstNumber(market.oneWeekPriceChange, market.priceChange7d)),
+        volume: firstNumber(market.volumeNum, market.volume, market.volume24hr, market.liquidity) ?? 0,
+        volume24h: firstNumber(market.volume24hr, market.volume24hrClob),
+        liquidity: firstNumber(market.liquidity),
+        sentiment: deriveSentiment(normalizePriceChange(firstNumber(market.oneDayPriceChange, market.priceChange24h))),
+        bookmakerImpliedProbability: probability,
+        updatedAt: market.updatedAt ?? market.createdAt ?? new Date().toISOString(),
+        polymarket: attachClobMarketEnrichment(polymarket, feeDetails.get(getMarketFeeKey(market))),
+      },
+    }))
+    .sort((a, b) => b.market.volume - a.market.volume);
+
+  return {
+    snapshots,
+    matchedMarketKeys: usedMarketIds,
+  };
+}
+
+function findBestTeamMarket(
+  markets: GammaMarket[],
+  team: Team,
+  usedMarketIds: Set<string>,
+): GammaMarket | undefined {
+  return markets
+    .filter((market) => {
+      const id = getMarketIdentity(market, team.id);
+      const text = getMarketSearchText(market);
+      const aliases = getTeamSearchAliases(team);
+      const isTeamMarket = containsSearchAlias(text, aliases);
+
+      return !usedMarketIds.has(id) && isWorldCupWinnerMarket(market) && isTeamMarket;
+    })
+    .sort((a, b) => (firstNumber(b.volumeNum, b.volume, b.volume24hr) ?? 0) - (firstNumber(a.volumeNum, a.volume, a.volume24hr) ?? 0))[0];
+}
+
+function createMarketUniverseMeta(
+  markets: GammaMarket[],
+  snapshots: TeamMarketSnapshot[],
+  matchedMarketKeys: Set<string>,
+): MarketUniverseMeta {
+  const mappedTeamIds = new Set(snapshots.map((snapshot) => snapshot.team.id));
+  const missingTeamIds = curatedNationalTeamsList
+    .map((team) => team.id)
+    .filter((teamId) => !mappedTeamIds.has(teamId));
+  const unmappedMarketTitles = markets
+    .filter((market) => !matchedMarketKeys.has(getMarketIdentity(market)))
+    .map((market) => market.question ?? market.title ?? market.slug ?? market.id ?? "Untitled market")
+    .slice(0, 20);
+
+  return {
+    provider: "polymarket",
+    marketCount: markets.length,
+    trackedMarketCount: snapshots.length,
+    canonicalTeamCount: CURATED_NATIONAL_TEAM_COUNT,
+    totalVolume: sumMarketNumbers(markets, (market) => firstNumber(market.volumeNum, market.volume)),
+    volume24h: sumMarketNumbers(markets, (market) => firstNumber(market.volume24hr, market.volume24hrClob)),
+    liquidity: sumMarketNumbers(markets, (market) => firstNumber(market.liquidity)),
+    missingTeamIds,
+    unmappedMarketTitles,
+  };
+}
+
+function isWorldCupWinnerMarket(market: GammaMarket): boolean {
+  const text = getMarketSearchText(market);
+  return (
+    text.includes("world cup") &&
+    text.includes("win") &&
+    (text.includes("2026") || text.includes("fifa"))
+  );
+}
+
+function getMarketSearchText(market: GammaMarket): string {
+  return normalizeSearchText(`${market.question ?? ""} ${market.title ?? ""} ${market.description ?? ""} ${market.slug ?? ""}`);
+}
+
+function getTeamSearchAliases(team: Team): string[] {
+  return [team.name, team.code, team.id, ...(team.aliases ?? [])]
+    .map(normalizeSearchText)
+    .filter(Boolean);
+}
+
+function containsSearchAlias(text: string, aliases: string[]): boolean {
+  const paddedText = ` ${text} `;
+  return aliases.some((alias) => paddedText.includes(` ${alias} `));
+}
+
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function getMarketIdentity(market: GammaMarket, fallback = "market"): string {
+  return market.id ?? market.slug ?? `${fallback}-${market.question}`;
+}
+
+function sumMarketNumbers(markets: GammaMarket[], getValue: (market: GammaMarket) => number | undefined): number {
+  return markets.reduce((sum, market) => sum + (getValue(market) ?? 0), 0);
+}
+
+function extractPolymarketMetadata(market: GammaMarket): PolymarketMarketMetadata | undefined {
+  return extractFastBidPolymarketMetadata(market as GammaMarketRecord);
+}
+
+async function fetchClobMarketEnrichment(
+  markets: Array<{ market: GammaMarket }>,
+): Promise<Map<string, ClobMarketEnrichment>> {
+  const marketRefs = [
+    ...new Map(
+      markets
+        .map(({ market }) => ({ key: getMarketFeeKey(market), conditionId: market.conditionId, tokenId: getFirstClobTokenId(market) }))
+        .filter((item) => item.conditionId || item.tokenId)
+        .map((item) => [item.key, item]),
+    ).values(),
+  ];
+  const entries = await Promise.all(
+    marketRefs.map(async ({ key, conditionId, tokenId }) => {
+      try {
+        const resolvedConditionId = conditionId ?? (tokenId ? await fetchConditionIdByToken(tokenId) : undefined);
+
+        if (!resolvedConditionId) {
+          return undefined;
+        }
+
+        const response = await serverFetch(`${CLOB_MARKET_URL}/${resolvedConditionId}`, {
+          cache: "no-store",
+          headers: {
+            accept: "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          return undefined;
+        }
+
+        const payload = (await response.json()) as ClobMarketDetails;
+
+        return [key, toClobMarketEnrichment(payload)] as const;
+      } catch {
+        return undefined;
+      }
+    }),
+  );
+  const enrichmentByConditionId = new Map<string, ClobMarketEnrichment>();
+
+  for (const entry of entries) {
+    if (entry?.[1]) {
+      enrichmentByConditionId.set(entry[0], entry[1]);
+    }
+  }
+
+  return enrichmentByConditionId;
+}
+
+async function fetchConditionIdByToken(tokenId: string): Promise<string | undefined> {
+  const response = await serverFetch(`${CLOB_MARKET_BY_TOKEN_URL}/${encodeURIComponent(tokenId)}`, {
+    cache: "no-store",
+    headers: {
+      accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    return undefined;
+  }
+
+  const payload = (await response.json()) as { condition_id?: unknown; c?: unknown };
+  const conditionId = typeof payload.condition_id === "string" ? payload.condition_id : payload.c;
+
+  return typeof conditionId === "string" && /^0x[a-fA-F0-9]{64}$/.test(conditionId) ? conditionId : undefined;
+}
+
+function getMarketFeeKey(market: GammaMarket): string {
+  return market.conditionId ?? getFirstClobTokenId(market) ?? market.id ?? market.slug ?? "";
+}
+
+function getFirstClobTokenId(market: GammaMarket): string | undefined {
+  return parseArrayField(market.clobTokenIds).map(String).find(Boolean);
+}
+
+export async function enrichTeamSnapshotWithClobMetadata(
+  snapshot: TeamMarketSnapshot,
+  gammaMarket: GammaMarketRecord,
+): Promise<TeamMarketSnapshot> {
+  const feeDetails = await fetchClobMarketEnrichment([{ market: gammaMarket as GammaMarket }]);
+  const polymarket = attachClobMarketEnrichment(
+    snapshot.market.polymarket,
+    feeDetails.get(getMarketFeeKey(gammaMarket as GammaMarket)),
+  );
+
+  if (!polymarket) {
+    return snapshot;
+  }
+
+  return {
+    ...snapshot,
+    market: {
+      ...snapshot.market,
+      polymarket,
+    },
+  };
+}
+
+function attachClobMarketEnrichment(
+  metadata: PolymarketMarketMetadata | undefined,
+  enrichment: ClobMarketEnrichment | undefined,
+): PolymarketMarketMetadata | undefined {
+  if (!metadata || !enrichment) {
+    return metadata;
+  }
+
+  return {
+    ...metadata,
+    ...(enrichment.fee ? { fee: enrichment.fee } : {}),
+    ...(enrichment.negRisk !== undefined ? { negRisk: enrichment.negRisk } : {}),
+    ...(enrichment.tickSize ? { tickSize: enrichment.tickSize } : {}),
+  };
+}
+
+function toClobMarketEnrichment(payload: ClobMarketDetails): ClobMarketEnrichment | undefined {
+  const fee = toPolymarketFeeDetails(payload);
+  const negRisk = payload.nr === true ? true : payload.nr === false ? false : undefined;
+  const tickSize = normalizeTickSize(payload.mts);
+
+  if (!fee && negRisk === undefined && !tickSize) {
+    return undefined;
+  }
+
+  return {
+    fee,
+    negRisk,
+    tickSize,
+  };
+}
+
+function toPolymarketFeeDetails(payload: ClobMarketDetails): PolymarketFeeDetails | undefined {
+  const rate = toNumber(payload.fd?.r);
+  const exponent = toNumber(payload.fd?.e);
+
+  if (rate === undefined || exponent === undefined) {
+    return undefined;
+  }
+
+  return {
+    rate,
+    exponent,
+    takerOnly: payload.fd?.to === true,
+    makerBaseFee: toNumber(payload.mbf),
+    takerBaseFee: toNumber(payload.tbf),
+  };
+}
+
+function normalizeTickSize(value: number | string | undefined): PolymarketMarketMetadata["tickSize"] {
+  const parsed = toNumber(value);
+
+  if (parsed === 0.1) {
+    return "0.1";
+  }
+
+  if (parsed === 0.001) {
+    return "0.001";
+  }
+
+  if (parsed === 0.0001) {
+    return "0.0001";
+  }
+
+  return "0.01";
+}
+
+function extractYesProbability(market: GammaMarket): number | undefined {
+  const outcomePrices = parseArrayField(market.outcomePrices);
+  const outcomes = parseArrayField(market.outcomes).map(String);
+  const yesIndex = Math.max(0, outcomes.findIndex((outcome) => outcome.toLowerCase() === "yes"));
+  const yesPrice = toNumber(outcomePrices[yesIndex]) ?? toNumber(market.lastTradePrice);
+
+  if (yesPrice === undefined) {
+    return undefined;
+  }
+
+  return clampProbability(yesPrice <= 1 ? yesPrice * 100 : yesPrice);
+}
+
+function parseArrayField(value: GammaMarket["outcomePrices"] | GammaMarket["outcomes"]): unknown[] {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function firstNumber(...values: Array<number | string | undefined>): number | undefined {
+  for (const value of values) {
+    const parsed = toNumber(value);
+
+    if (parsed !== undefined) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+}
+
+function toNumber(value: number | string | undefined | unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  return undefined;
+}
+
+function deriveSentiment(change24h: number): MarketSentiment {
+  if (change24h >= 1) {
+    return "bullish";
+  }
+
+  if (change24h <= -1) {
+    return "bearish";
+  }
+
+  if (Math.abs(change24h) >= 0.4) {
+    return "volatile";
+  }
+
+  return "neutral";
+}
+
+function clampProbability(value: number): number {
+  return Math.round(Math.max(0.1, Math.min(99.9, value)) * 10) / 10;
+}
+
+function isGammaMarket(value: unknown): value is GammaMarket {
+  return typeof value === "object" && value !== null;
+}
+
+function isSnapshot(value: unknown): value is TeamMarketSnapshot {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "team" in value &&
+    "market" in value
+  );
+}

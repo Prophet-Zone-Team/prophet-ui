@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { DEFAULT_MARKET_DATA_SOURCE } from "../../../../../data/providers/source";
-import { collectMarketSnapshots } from "../../../../../server/market-history/collector";
+import { DEFAULT_MARKET_DATA_SOURCE } from "@/data/providers/source";
+import { collectMarketSnapshots } from "@/server/market-history/collector";
 
 export const dynamic = "force-dynamic";
 

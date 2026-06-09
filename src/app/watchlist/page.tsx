@@ -1,7 +1,5 @@
-import { getWorldCupMarketData } from "../../data/providers/worldCupMarketData";
-import { WatchlistPage } from "../../components/watchlist/WatchlistPage";
-
-export const dynamic = "force-dynamic";
+import { getWorldCupMarketData } from "@/data/providers/world-cup-market-data";
+import { WatchlistPage } from "@/components/watchlist/watchlist-page";
 
 export default async function Page() {
   const marketData = await getWorldCupMarketData({

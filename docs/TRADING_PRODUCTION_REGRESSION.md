@@ -15,7 +15,7 @@ npm run smoke:trading:prod
 The smoke script checks:
 
 - `/bid` returns `200`.
-- `/api/trading/orders/history` returns `401` without a trading session.
+- `/api/trading/orders/history` returns `401` without a trading session and proxies Polymarket TRADE activity for the connected deposit wallet when authenticated.
 - `/api/trading/positions` returns `401` without a trading session.
 - `/api/trading/config` can read Builder configuration.
 - Remote D1 contains `user_trading_orders` and `user_trading_audit_events`.
@@ -48,10 +48,10 @@ Steps:
 8. Choose a low-risk World Cup market/outcome and verify the ticket shows side, price, size, estimated total, potential outcome, token id, and order type.
 9. Submit the order only after confirming the wallet signature request matches the selected ticket.
 10. Confirm the UI shows the submitted timestamp.
-11. Refresh recent orders and persisted history.
-12. If an open order remains, cancel it and confirm persisted history updates to `cancelled`.
+11. Open `/portfolio` and confirm History shows TRADE activity from the connected deposit wallet via Polymarket Data API.
+12. If an open order remains, cancel it and confirm Open Order refreshes without the cancelled row.
 13. Refresh positions and confirm any current position is shown without advisory language.
-14. Query D1 to confirm one safe order row and matching audit events were written.
+14. Query D1 to confirm one safe order row and matching audit events were written for in-app submissions.
 
 Expected D1 artifacts:
 

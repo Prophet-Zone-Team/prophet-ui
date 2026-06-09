@@ -1,11 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getNewsArticleSlug } from "../../../lib/news/newsSlugs";
-import { getStaticWorldCupMatches } from "../../../data/world-cup-2026/matches";
-import { getWorldCupTeamByIdOrCode } from "../../../data/world-cup-2026/groups";
-import { worldCupTeams } from "../../../data/teams/worldCupTeams";
-import { getSignalDataRepository } from "../../../server/signal-data/repository";
-import type { SearchResult, SearchResultType } from "../../../types/market";
+import { getFootballMatches } from "@/data/providers/football-matches";
+import { getNewsArticleSlug } from "@/lib/news/news-slugs";
+import { newsDetailHref } from "@/lib/routes/news";
+import { teamTradeHref, gameTradeHref } from "@/lib/routes/trade";
+import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
+import { curatedVisibleTeamsList } from "@/data/teams/curated-team-list";
+import { getSignalDataRepository } from "@/server/signal-data/repository";
+import type { SearchResult, SearchResultType } from "@/types/market";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +20,14 @@ export async function GET(request: NextRequest) {
   }
 
   const normalized = q.toLowerCase();
-  const [newsResults, footballContext] = await Promise.all([
+  const [{ matches }, newsResults, footballContext] = await Promise.all([
+    getFootballMatches(),
     searchNews(normalized, type),
     searchFootballContext(normalized, type),
   ]);
   const results = [
     ...searchTeams(normalized, type),
-    ...searchMatches(normalized, type),
+    ...searchMatches(normalized, type, matches),
     ...newsResults,
     ...footballContext,
   ]
@@ -46,8 +49,8 @@ function searchTeams(q: string, type: SearchResultType | "all"): SearchResult[] 
     return [];
   }
 
-  return worldCupTeams.flatMap((team) => {
-    const text = `${team.name} ${team.code} ${team.region} ${(team.aliases ?? []).join(" ")}`.toLowerCase();
+  return curatedVisibleTeamsList.flatMap((team) => {
+    const text = `${team.name} ${team.code} ${team.region}`.toLowerCase();
 
     if (!text.includes(q)) {
       return [];
@@ -62,15 +65,15 @@ function searchTeams(q: string, type: SearchResultType | "all"): SearchResult[] 
         type: "team",
         title: team.name,
         subtitle: `${team.code} / ${team.region}`,
-        href: `/team/${team.id}`,
+        href: teamTradeHref(team.id),
         score: baseScore,
       },
       {
         id: `market:${team.id}`,
         type: "market",
         title: `${team.name} winner market`,
-        subtitle: "Open team market and bid ticket",
-        href: `/team/${team.id}#trade`,
+        subtitle: "Open team market trade ticket",
+        href: teamTradeHref(team.id),
         score: baseScore - 5,
       },
       {
@@ -85,15 +88,21 @@ function searchTeams(q: string, type: SearchResultType | "all"): SearchResult[] 
   }).filter((result) => type === "all" || result.type === type);
 }
 
-function searchMatches(q: string, type: SearchResultType | "all"): SearchResult[] {
+function searchMatches(
+  q: string,
+  type: SearchResultType | "all",
+  matches: Awaited<ReturnType<typeof getFootballMatches>>["matches"],
+): SearchResult[] {
   if (type !== "all" && type !== "match") {
     return [];
   }
 
-  return getStaticWorldCupMatches().flatMap((match) => {
+  return matches.flatMap((match) => {
     const home = match.homeTeamId ? getWorldCupTeamByIdOrCode(match.homeTeamId) : undefined;
     const away = match.awayTeamId ? getWorldCupTeamByIdOrCode(match.awayTeamId) : undefined;
-    const text = `${match.matchId} ${match.group ?? ""} ${match.stage} ${home?.name ?? match.homeSeed ?? ""} ${away?.name ?? match.awaySeed ?? ""}`.toLowerCase();
+    const homeName = home?.name ?? match.homeDisplayName ?? match.homeSeed ?? "";
+    const awayName = away?.name ?? match.awayDisplayName ?? match.awaySeed ?? "";
+    const text = `${match.matchId} ${match.group ?? ""} ${match.stage} ${match.league ?? ""} ${homeName} ${awayName}`.toLowerCase();
 
     if (!text.includes(q)) {
       return [];
@@ -102,9 +111,9 @@ function searchMatches(q: string, type: SearchResultType | "all"): SearchResult[
     return {
       id: `match:${match.id}`,
       type: "match",
-      title: home && away ? `${home.name} vs ${away.name}` : `Match ${match.matchId}`,
-      subtitle: `${match.stage}${match.group ? ` / Group ${match.group}` : ""}`,
-      href: `/matches#${match.id}`,
+      title: homeName && awayName ? `${homeName} vs ${awayName}` : `Match ${match.matchId}`,
+      subtitle: match.league ?? `${match.stage}${match.group ? ` / Group ${match.group}` : ""}`,
+      href: gameTradeHref(match.id),
       score: 70,
     } satisfies SearchResult;
   });
@@ -130,7 +139,7 @@ async function searchNews(q: string, type: SearchResultType | "all"): Promise<Se
       type: "news",
       title: article.title,
       subtitle: article.source ?? "World Cup news",
-      href: `/news/${getNewsArticleSlug(article)}`,
+      href: newsDetailHref(getNewsArticleSlug(article)),
       score: 60,
     } satisfies SearchResult;
   });
@@ -159,7 +168,7 @@ async function searchFootballContext(q: string, type: SearchResultType | "all"):
       type: "team",
       title: `${context.profile.name} squad context`,
       subtitle: `Club match: ${clubHits.slice(0, 2).map((player) => player.name).join(", ")}`,
-      href: `/team/${context.profile.teamId}`,
+      href: teamTradeHref(context.profile.teamId),
       score: 45,
     } satisfies SearchResult;
   });

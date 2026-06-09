@@ -1,75 +1,54 @@
 import "server-only";
 
-import type {
-  AccountReadinessCheck,
-  BidTradeSide,
-  TradingUserSession,
-  UserBalanceSnapshot,
-  UserTradingReadiness,
-} from "../../types/market";
-import type { TradingSessionRecord } from "./sessionStore";
+import type { AccountReadinessCheck, TradingUserSession, UserTradingReadiness } from "@/types/market";
+import type { TradingSessionRecord } from "@/server/trading/session-store";
+import { refreshDepositWalletDeployment } from "@/server/trading/deposit-wallet";
+import { getTradingCredentialStatus, updateTradingSession } from "@/server/trading/session-store";
 import {
-  checkOrderFunding,
-  fetchUserBalanceSnapshot,
-  resolveOrderFundingRequirementWithFees,
-  type OrderFundingRequirement,
-} from "./balances";
-import { refreshDepositWalletDeployment } from "./depositWallet";
-import { getTradingCredentialStatus, updateTradingSession } from "./sessionStore";
+  getReadableSetupAllowanceDetailForSession,
+  getSetupAllowanceCheckStatusForSession,
+} from "@/lib/trading/setup-allowance-readiness";
+import {
+  isSetupAllowanceCacheFresh,
+} from "@/lib/trading/setup-allowance-cache";
 
 export async function buildUserTradingReadiness({
   record,
-  tokenId,
-  fundingRequirement,
 }: {
   record?: TradingSessionRecord;
-  tokenId?: string;
-  fundingRequirement?: OrderFundingRequirement;
 }): Promise<UserTradingReadiness> {
   const refreshedRecord = record ? await refreshDepositWalletSession(record) : undefined;
-  const credentials = getTradingCredentialStatus(record?.session.userId);
-  const balances = refreshedRecord?.credentials
-    ? await fetchUserBalanceSnapshot({
-        session: refreshedRecord.session,
-        credentials: refreshedRecord.credentials,
-        tokenId,
-      })
-    : undefined;
-  const resolvedFundingRequirement =
-    fundingRequirement && tokenId
-      ? await resolveOrderFundingRequirementWithFees(fundingRequirement, tokenId)
-      : fundingRequirement;
-  const checks = createChecks({
-    session: refreshedRecord?.session,
+  const credentials = getTradingCredentialStatus(record?.session.userId, record?.session.sessionId);
+  const session = refreshedRecord?.session;
+  const onchainAllowances = resolveCachedSetupAllowances(session);
+  const checks = createSetupChecks({
+    session,
     hasCredentials: credentials.hasClobCredentials,
-    balances,
-    fundingRequirement: resolvedFundingRequirement,
+    onchainAllowances,
   });
 
   return {
     ready: checks.every((check) => check.status === "pass"),
-    session: refreshedRecord?.session,
+    session,
     credentials,
-    balances,
     checks,
     updatedAt: new Date().toISOString(),
   };
 }
 
-function createChecks({
+function createSetupChecks({
   session,
   hasCredentials,
-  balances,
-  fundingRequirement,
+  onchainAllowances,
 }: {
   session?: TradingUserSession;
   hasCredentials: boolean;
-  balances?: UserBalanceSnapshot;
-  fundingRequirement?: OrderFundingRequirement;
+  onchainAllowances?: TradingUserSession["setupAllowances"];
 }): AccountReadinessCheck[] {
-  const funding = checkOrderFunding({
-    balances,
-    requirement: fundingRequirement,
+  const setupAllowanceStatus = getSetupAllowanceCheckStatusForSession({
+    onchainAllowances,
+    hasCredentials,
+    session,
   });
 
   return [
@@ -78,12 +57,6 @@ function createChecks({
       label: "Wallet connected",
       status: session ? "pass" : "fail",
       detail: session ? session.walletAddress : "Connect a Polymarket-compatible wallet.",
-    },
-    {
-      id: "eligibility",
-      label: "Eligibility checked",
-      status: getEligibilityCheckStatus(session),
-      detail: getEligibilityDetail(session),
     },
     {
       id: "signature_type",
@@ -110,40 +83,24 @@ function createChecks({
       detail: hasCredentials ? "User-specific credentials are held in this server session." : "Derive credentials from user L1 auth.",
     },
     {
-      id: "balance",
-      label: getBalanceLabel(fundingRequirement?.tradeSide),
-      status: funding?.balance ?? (balances?.usdcAvailable !== undefined ? "pass" : hasCredentials ? "fail" : "unknown"),
-      detail: funding?.balanceDetail ?? getReadableBalanceDetail({ balances, hasCredentials }),
-    },
-    {
       id: "allowance",
-      label: getAllowanceLabel(fundingRequirement?.tradeSide),
-      status: funding?.allowance ?? (balances?.usdcAllowance !== undefined ? "pass" : hasCredentials ? "fail" : "unknown"),
-      detail: funding?.allowanceDetail ?? getReadableAllowanceDetail({ balances, hasCredentials }),
+      label: "Allowance",
+      status: setupAllowanceStatus,
+      detail: getReadableSetupAllowanceDetailForSession({ onchainAllowances, hasCredentials, session }),
     },
   ];
 }
 
-async function refreshDepositWalletSession(record: TradingSessionRecord): Promise<TradingSessionRecord> {
-  const status = record.session.depositWalletStatus;
-
-  if (!record.session.funderAddress || status === "deployed" || status === "relayer_unconfigured") {
-    return record;
+function resolveCachedSetupAllowances(session: TradingUserSession | undefined) {
+  if (!session?.funderAddress || session.depositWalletStatus !== "deployed") {
+    return undefined;
   }
 
-  const refresh = await refreshDepositWalletDeployment(record.session);
-  const session = updateTradingSession({
-    ...record.session,
-    depositWalletStatus: refresh.status,
-    depositWalletCheckedAt: refresh.checkedAt,
-    depositWalletTransactionHash: refresh.transactionHash ?? record.session.depositWalletTransactionHash,
-    depositWalletError: refresh.error,
-  });
+  if (isSetupAllowanceCacheFresh(session) && session.setupAllowances) {
+    return session.setupAllowances;
+  }
 
-  return {
-    ...record,
-    session,
-  };
+  return undefined;
 }
 
 function getDepositWalletCheckStatus(session: TradingUserSession | undefined): AccountReadinessCheck["status"] {
@@ -192,131 +149,24 @@ function getDepositWalletDetail(session: TradingUserSession | undefined): string
   return "Deposit wallet has not been derived.";
 }
 
-function getEligibilityCheckStatus(session: TradingUserSession | undefined): AccountReadinessCheck["status"] {
-  if (!session) {
-    return "fail";
+async function refreshDepositWalletSession(record: TradingSessionRecord): Promise<TradingSessionRecord> {
+  const status = record.session.depositWalletStatus;
+
+  if (!record.session.funderAddress || status === "deployed" || status === "relayer_unconfigured") {
+    return record;
   }
 
-  if (session.eligibilityStatus === "eligible") {
-    return "pass";
-  }
+  const refresh = await refreshDepositWalletDeployment(record.session);
+  const session = updateTradingSession({
+    ...record.session,
+    depositWalletStatus: refresh.status,
+    depositWalletCheckedAt: refresh.checkedAt,
+    depositWalletTransactionHash: refresh.transactionHash ?? record.session.depositWalletTransactionHash,
+    depositWalletError: refresh.error,
+  });
 
-  if (session.eligibilityStatus === "unknown") {
-    return "unknown";
-  }
-
-  return "fail";
-}
-
-function getBalanceLabel(tradeSide: BidTradeSide | undefined) {
-  if (tradeSide === "sell") {
-    return "Token balance";
-  }
-
-  if (tradeSide === "buy") {
-    return "USDC balance";
-  }
-
-  return "USDC balance";
-}
-
-function getAllowanceLabel(tradeSide: BidTradeSide | undefined) {
-  if (tradeSide === "sell") {
-    return "Token allowance";
-  }
-
-  if (tradeSide === "buy") {
-    return "USDC allowance";
-  }
-
-  return "Allowance";
-}
-
-function getReadableBalanceDetail({
-  balances,
-  hasCredentials,
-}: {
-  balances?: UserBalanceSnapshot;
-  hasCredentials: boolean;
-}) {
-  if (balances?.usdcAvailable !== undefined) {
-    return formatBalanceSourceDetail({
-      value: balances.usdcAvailable,
-      label: "USDC available",
-      clobValue: balances.clobUsdcAvailable,
-      onchainValue: balances.onchainUsdcAvailable,
-      source: balances.balanceSource,
-    });
-  }
-
-  return balances?.error ?? (hasCredentials ? "USDC balance could not be read." : "Balance requires user CLOB credentials.");
-}
-
-function getReadableAllowanceDetail({
-  balances,
-  hasCredentials,
-}: {
-  balances?: UserBalanceSnapshot;
-  hasCredentials: boolean;
-}) {
-  if (balances?.usdcAllowance !== undefined) {
-    return formatBalanceSourceDetail({
-      value: balances.usdcAllowance,
-      label: "USDC allowance observed",
-      clobValue: balances.clobUsdcAllowance,
-      onchainValue: balances.onchainUsdcAllowance,
-      source: balances.balanceSource,
-    });
-  }
-
-  return balances?.error ?? (hasCredentials ? "Allowance could not be read." : "Allowance requires user CLOB credentials.");
-}
-
-function formatBalanceSourceDetail({
-  value,
-  label,
-  clobValue,
-  onchainValue,
-  source,
-}: {
-  value: number;
-  label: string;
-  clobValue?: number;
-  onchainValue?: number;
-  source?: UserBalanceSnapshot["balanceSource"];
-}) {
-  const base = `${value.toFixed(2)} ${label}.`;
-
-  if (source === "onchain") {
-    return `${base} On-chain deposit wallet value is newer than the CLOB cache; sync may still be settling.`;
-  }
-
-  if (source === "mixed" && clobValue !== undefined && onchainValue !== undefined && clobValue !== onchainValue) {
-    return `${base} CLOB cache: ${clobValue.toFixed(2)}; on-chain: ${onchainValue.toFixed(2)}.`;
-  }
-
-  return base;
-}
-
-function getEligibilityDetail(session: TradingUserSession | undefined): string {
-  if (!session) {
-    return "Connect a wallet before checking eligibility.";
-  }
-
-  const location = [session.eligibilityCountry, session.eligibilityRegion].filter(Boolean).join(" / ");
-  const suffix = session.eligibilityCheckedAt ? ` Checked at ${session.eligibilityCheckedAt}.` : "";
-
-  if (session.eligibilityStatus === "eligible") {
-    return `${location || "Polymarket geoblock check passed."}${suffix}`;
-  }
-
-  if (session.eligibilityStatus === "blocked_region") {
-    return `${session.eligibilityReason ?? "Polymarket reports this region is blocked."}${location ? ` ${location}.` : ""}${suffix}`;
-  }
-
-  if (session.eligibilityStatus === "error") {
-    return `${session.eligibilityReason ?? "Polymarket geoblock check failed."}${suffix}`;
-  }
-
-  return `Eligibility is ${session.eligibilityStatus}.${suffix}`;
+  return {
+    ...record,
+    session,
+  };
 }
