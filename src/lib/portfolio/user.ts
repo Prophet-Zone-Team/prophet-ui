@@ -168,9 +168,9 @@ export async function reportTradeOrderTransaction(
 
   const txHash = resolveTradeOrderReportTxHash(input.result);
 
-  if (!txHash) {
-    return;
-  }
+  // if (!txHash) {
+  //   return;
+  // }
 
   const type = input.userOrderPreview.side;
 
@@ -185,8 +185,7 @@ export async function reportTradeOrderTransaction(
 
     market = {
       slug:
-        input.snapshot.market.slug ??
-        input.snapshot.market.polymarket?.slug,
+        input.snapshot.market.slug ?? input.snapshot.market.polymarket?.slug,
       teamName: resolveReportTeamName({
         candidate: input.snapshot.team.name,
         title: question,
