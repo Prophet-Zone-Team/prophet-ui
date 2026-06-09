@@ -43,6 +43,7 @@ import type {
   ProphetUserTrackListItem,
   ProphetLoginReferral
 } from "@/types/prophet-api";
+import type { TokenPricesBySymbol } from "@/types/funding";
 import type { TelegramLoginAuthData } from "@/types/telegram-widget";
 
 const AUTH_STORAGE_KEY = "prophet_api_token";
@@ -312,6 +313,13 @@ async function prophetPost<T>(
     config
   );
   return unwrapProphetResponse(response.data);
+}
+
+/** GET /v1/token/price — symbol to USD price map */
+export async function getProphetTokenPrices(
+  signal?: AbortSignal,
+): Promise<TokenPricesBySymbol> {
+  return prophetGet<TokenPricesBySymbol>("/v1/token/price", { signal });
 }
 
 /** GET /v1/games — all Polymarket games, sorted by start_time ascending */
