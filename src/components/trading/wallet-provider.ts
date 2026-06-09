@@ -93,11 +93,13 @@ export async function getWalletClientForAddress(
 
   await prepareWalletSigning({ chainId });
 
-  return getWalletClient(wagmiConfig, {
+  const client = await getWalletClient(wagmiConfig, {
     account: walletAddress as Address,
     chainId,
     connector,
   });
+
+  return client as WalletClient;
 }
 
 export async function requestWalletRpc(
