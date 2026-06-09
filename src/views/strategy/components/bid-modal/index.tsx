@@ -43,9 +43,11 @@ export function StrategyBidModal({
     insufficientFunds,
     skipPreValidation,
     aggregateError,
+    minBidLabel,
     setRiskAccepted,
     handleBidAmountChange,
-    applyBalanceFraction
+    applyBalanceFraction,
+    applyMinBidAmount
   } = useStrategyBidForm(open, strategy, snapshots);
 
   useEffect(() => {
@@ -151,10 +153,12 @@ export function StrategyBidModal({
             <BidValueSection
               bidAmountInput={bidAmountInput}
               balanceLabel={balanceLabel}
+              minBidLabel={minBidLabel}
               insufficientFunds={insufficientFunds}
               aggregateError={aggregateError}
               onBidAmountChange={handleBidAmountChange}
               onApplyBalanceFraction={applyBalanceFraction}
+              onApplyMinBidAmount={applyMinBidAmount}
             />
 
             <MarketBreakdownTable

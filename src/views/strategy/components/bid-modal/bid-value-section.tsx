@@ -6,24 +6,43 @@ import { STRATEGY_BID_INVALID_SURFACE_CLASS, STRATEGY_BID_QUICK_FRACTIONS } from
 export type BidValueSectionProps = {
   bidAmountInput: string;
   balanceLabel: string;
+  minBidLabel?: string;
   insufficientFunds?: boolean;
   aggregateError?: string;
   onBidAmountChange: (value: string) => void;
   onApplyBalanceFraction: (fraction: number) => void;
+  onApplyMinBidAmount?: () => void;
   className?: string;
 };
 
 export function BidValueSection({
   bidAmountInput,
   balanceLabel,
+  minBidLabel,
   insufficientFunds = false,
   aggregateError,
   onBidAmountChange,
   onApplyBalanceFraction,
+  onApplyMinBidAmount,
   className
 }: BidValueSectionProps) {
   return (
     <div className={cn("flex flex-col gap-3", className)}>
+      {minBidLabel ? (
+        <div className="flex items-center justify-end gap-1">
+          <span className="font-[Sora] text-sm font-light leading-[18px] text-[#909090]">
+            Min. bid value:
+          </span>
+          <button
+            type="button"
+            onClick={onApplyMinBidAmount}
+            className="font-[Sora] text-sm font-normal leading-[18px] text-black underline"
+          >
+            {minBidLabel}
+          </button>
+        </div>
+      ) : null}
+
       <div
         className={cn(
           "flex h-[57px] items-center justify-between rounded-md border bg-white px-4",
@@ -56,7 +75,9 @@ export function BidValueSection({
       </div>
 
       {aggregateError ? (
-        <p className="m-0 text-sm leading-[18px] text-[#FF674B]">{aggregateError}</p>
+        <p className="m-0 text-sm leading-[18px] text-[#FF674B]">
+          {aggregateError}
+        </p>
       ) : null}
 
       <div className="flex items-center justify-between gap-3">

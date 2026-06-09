@@ -14,7 +14,7 @@ export type StrategyTeamFlagsStackProps = {
 };
 
 const flagClassName =
-  "size-[26px] rounded-[4px] border border-white shadow-[0_0_2px_rgba(0,0,0,0.2)] object-cover";
+  "h-[26px] text-[26px] shrink-0 rounded-[4px] border border-white shadow-[0_0_2px_rgba(0,0,0,0.2)] object-cover";
 
 export function StrategyTeamFlagsStack({
   teams,

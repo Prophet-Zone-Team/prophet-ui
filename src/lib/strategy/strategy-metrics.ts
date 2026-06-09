@@ -21,10 +21,41 @@ export type StrategyAllocation = {
   stakeByIndex: Map<number, number>;
 };
 
+export const MIN_STRATEGY_LEG_STAKE = 5;
+
 function hasValidProbability(
   probability: number | undefined
 ): probability is number {
   return probability !== undefined && probability > 0;
+}
+
+/** Minimum total bid so every leg stake is at least MIN_STRATEGY_LEG_STAKE. */
+export function calculateMinStrategyBidAmount(
+  input: Omit<StrategyMetricsInput, "budget">
+): number | undefined {
+  const validProbabilities = input.probabilities.filter(hasValidProbability);
+
+  if (validProbabilities.length === 0) {
+    return undefined;
+  }
+
+  const totalProbabilityPercent = validProbabilities.reduce(
+    (sum, probability) => sum + probability,
+    0
+  );
+
+  if (totalProbabilityPercent <= 0) {
+    return undefined;
+  }
+
+  const minBudget = Math.max(
+    ...validProbabilities.map(
+      (probability) =>
+        (MIN_STRATEGY_LEG_STAKE * totalProbabilityPercent) / probability
+    )
+  );
+
+  return Math.ceil(minBudget * 100) / 100;
 }
 
 export function computeStrategyAllocation(
@@ -81,7 +112,20 @@ export function computeStrategyAllocation(
 
 
 export function formatStrategyMoney(amount: number): string {
-  return `$${Math.round(amount).toLocaleString("en-US")}`;
+  if (!Number.isFinite(amount)) {
+    return "—";
+  }
+
+  const truncatedCents = Math.trunc(amount * 100);
+  const truncated = truncatedCents / 100;
+  const hasFraction = truncatedCents % 100 !== 0;
+
+  const formatted = truncated.toLocaleString("en-US", {
+    minimumFractionDigits: hasFraction ? 2 : 0,
+    maximumFractionDigits: hasFraction ? 2 : 0
+  });
+
+  return `$${formatted}`;
 }
 
 const STRATEGY_BUDGET_FORMAT_OPTIONS: Intl.NumberFormatOptions = {

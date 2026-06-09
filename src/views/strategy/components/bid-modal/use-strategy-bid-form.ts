@@ -4,9 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useAuthOptional } from "@/context/auth";
 import {
+  calculateMinStrategyBidAmount,
   formatStrategyBidAmountInput,
   formatStrategyBudgetLabel
 } from "@/lib/strategy/strategy-metrics";
+import { buildStrategyMetricsInput } from "@/views/strategy/lib/map-strategy-data";
 import { isStrategyBidSkipPreValidationEnabled } from "@/lib/strategy/strategy-bid-test-mode";
 import {
   INSUFFICIENT_FUNDS_MESSAGE,
@@ -55,6 +57,24 @@ export function useStrategyBidForm(
   const bidAmount = parseBidAmountInput(bidAmountInput);
   const skipPreValidation = isStrategyBidSkipPreValidationEnabled();
 
+  const minBidAmount = useMemo(() => {
+    if (!strategy) {
+      return undefined;
+    }
+
+    const { budget: _budget, ...metricsInput } = buildStrategyMetricsInput(
+      strategy,
+      snapshots
+    );
+
+    return calculateMinStrategyBidAmount(metricsInput);
+  }, [snapshots, strategy]);
+
+  const minBidLabel =
+    minBidAmount !== undefined
+      ? formatStrategyBudgetLabel(minBidAmount)
+      : undefined;
+
   const validation = useMemo(() => {
     if (!strategy) {
       return null;
@@ -100,6 +120,14 @@ export function useStrategyBidForm(
     setBidAmountInput(value);
   }
 
+  function applyMinBidAmount() {
+    if (minBidAmount === undefined) {
+      return;
+    }
+
+    setBidAmountInput(formatStrategyBidAmountInput(minBidAmount));
+  }
+
   const canProceedToSign = validation?.canProceedToSign ?? false;
   const insufficientFunds = validation?.insufficientFunds ?? false;
   const aggregateError =
@@ -119,8 +147,10 @@ export function useStrategyBidForm(
     skipPreValidation,
     aggregateError,
     totalBidLabel,
+    minBidLabel,
     setRiskAccepted,
     handleBidAmountChange,
-    applyBalanceFraction
+    applyBalanceFraction,
+    applyMinBidAmount
   };
 }

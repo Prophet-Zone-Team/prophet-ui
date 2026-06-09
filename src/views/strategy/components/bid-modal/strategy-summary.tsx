@@ -26,13 +26,10 @@ export function StrategySummary({
         {name}
       </h3>
 
-      <div className="flex items-end justify-between gap-6 px-1">
+      <div className="flex items-end justify-between gap-6 px-4">
         <div className="flex flex-col items-center text-center">
           <span
-            className={cn(
-              strategyCardMetricValueClassName,
-              "text-[#65AF14]"
-            )}
+            className={cn(strategyCardMetricValueClassName, "text-[#65AF14]")}
           >
             {estimatedRoiLabel}
           </span>
