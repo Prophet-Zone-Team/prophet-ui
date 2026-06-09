@@ -27,7 +27,7 @@ describe("mergeGeoblockWithLocalRules eligibility integration", () => {
 });
 
 describe("resolveEligibilityFromLocalFallback", () => {
-  it("applies local rules when geoblock API fails and CF country is present", () => {
+  it("applies local blocked rules when geoblock API fails and CF country is present", () => {
     const result = resolveEligibilityFromLocalFallback({
       checkedAt: new Date().toISOString(),
       clientGeo: { country: "US" },
@@ -36,6 +36,18 @@ describe("resolveEligibilityFromLocalFallback", () => {
 
     assert.equal(result.status, "blocked_region");
     assert.equal(result.country, "US");
+    assert.match(result.reason ?? "", /Applied local geographic rules|unavailable from this location/);
+  });
+
+  it("applies local eligible rules when geoblock API fails and CF country is eligible", () => {
+    const result = resolveEligibilityFromLocalFallback({
+      checkedAt: new Date().toISOString(),
+      clientGeo: { country: "JP" },
+      apiFailureReason: "Polymarket geoblock check returned 404.",
+    });
+
+    assert.equal(result.status, "eligible");
+    assert.equal(result.country, "JP");
     assert.match(result.reason ?? "", /Applied local geographic rules/);
   });
 
