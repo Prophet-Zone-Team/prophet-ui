@@ -1,13 +1,38 @@
 "use client";
 
-import { CopyButton } from "@/components/feedback/copy-button";
-import { CopyIcon } from "@/components/icons";
+import type { ReactNode } from "react";
+
 import { Modal } from "@/components/ui/modal";
 import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
-import { POLYGON_ACCEPTED_USDC_TOKENS } from "@/lib/funding/polygon-usdc-tokens";
 import { cn } from "@/lib/cn";
 import { fundingPrimaryButtonClass } from "@/views/portfolio/shared/funding-modal-shell";
 import { portfolioSecondaryButtonClass } from "@/views/portfolio/portfolio-ui";
+
+const DEPOSIT_ADDRESS_STEPS: Array<{
+  title: ReactNode;
+  description: ReactNode;
+}> = [
+  {
+    title: "Copy deposit address",
+    description: "Copy your Polymarket deposit address using the button below."
+  },
+  {
+    title: <>Transfer on Polygon</>,
+    description: (
+      <>
+        Send only <strong className="font-[600] text-black">USDC</strong> or{" "}
+        <strong className="font-[600] text-black">USDC.e</strong> on{" "}
+        <strong className="font-[600] text-black">Polygon</strong> to this
+        address.
+      </>
+    )
+  },
+  {
+    title: "Convert on Portfolio",
+    description:
+      "After the transfer completes, go to Portfolio to convert the tokens."
+  }
+];
 
 export interface PolymarketAddressCopyConfirmDialogProps {
   open: boolean;
@@ -44,33 +69,39 @@ export function PolymarketAddressCopyConfirmDialog({
           Copy deposit address
         </h2>
 
-        <p className="m-0 mt-4 text-sm leading-normal text-black">
-          This address only accepts USDC / USDC.e transfers.
-        </p>
+        <ol className="m-0 mt-5 flex list-none flex-col p-0">
+          {DEPOSIT_ADDRESS_STEPS.map((step, index) => {
+            const isLast = index === DEPOSIT_ADDRESS_STEPS.length - 1;
 
-        <div className="mt-4 flex flex-col gap-3">
-          {POLYGON_ACCEPTED_USDC_TOKENS.map((token) => (
-            <div
-              key={token.symbol}
-              className="relative flex min-w-0 items-start gap-2 rounded-[8px] border border-[#EBEBEB] bg-[#fafbfc] px-3 py-2.5"
-            >
-              <span className="shrink-0 text-sm font-[500] text-black">
-                {token.symbol}
-              </span>
-              <span className="min-w-0 flex-1 break-all font-mono text-xs leading-normal text-[#909090]">
-                {token.address}
-              </span>
-              <CopyButton
-                text={token.address}
-                ariaLabel={`Copy ${token.symbol} token address`}
-                className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
-                toastClassName="left-auto right-0 bottom-full mb-2 translate-x-0"
-              >
-                <CopyIcon />
-              </CopyButton>
-            </div>
-          ))}
-        </div>
+            return (
+              <li key={index} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <span
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#F5F5F5] text-sm font-[500] text-black"
+                    aria-hidden="true"
+                  >
+                    {index + 1}
+                  </span>
+                  {!isLast ? (
+                    <span
+                      className="my-1 w-px flex-1 min-h-6 bg-prophet-line"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </div>
+
+                <div className={cn("min-w-0 flex-1", !isLast && "pb-4")}>
+                  <p className="m-0 text-sm font-[500] leading-normal text-black">
+                    {step.title}
+                  </p>
+                  <p className="m-0 mt-1 text-sm font-[400] leading-normal text-[#909090]">
+                    {step.description}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button
