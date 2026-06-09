@@ -28,6 +28,48 @@ export function isStableflowTerminalStatus(status: OneClickStatus): boolean {
   return isStableflowSuccessStatus(status) || isStableflowTerminalFailureStatus(status);
 }
 
+export function isStableflowAwaitingDepositStatus(status: OneClickStatus): boolean {
+  return (
+    status === OneClickStatus.PENDING_DEPOSIT ||
+    status === OneClickStatus.INCOMPLETE_DEPOSIT
+  );
+}
+
+export async function pollStableflowUntilDepositDetected({
+  fetchStatus,
+  depositAddress,
+  depositMemo,
+  signal,
+  intervalMs = 5000,
+  maxAttempts = 120,
+  onUpdate,
+}: {
+  fetchStatus: (depositAddress: string, depositMemo?: string) => Promise<{ status: OneClickStatus }>;
+  depositAddress: string;
+  depositMemo?: string;
+  signal?: AbortSignal;
+  intervalMs?: number;
+  maxAttempts?: number;
+  onUpdate?: (status: OneClickStatus) => void;
+}): Promise<OneClickStatus> {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    if (signal?.aborted) {
+      throw new DOMException("Stableflow status polling aborted.", "AbortError");
+    }
+
+    const payload = await fetchStatus(depositAddress, depositMemo);
+    onUpdate?.(payload.status);
+
+    if (!isStableflowAwaitingDepositStatus(payload.status)) {
+      return payload.status;
+    }
+
+    await delay(intervalMs, signal);
+  }
+
+  throw new Error("Stableflow deposit detection polling timed out.");
+}
+
 export async function pollStableflowExecution({
   fetchStatus,
   depositAddress,

@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { cn } from "@/lib/cn";
@@ -12,8 +12,10 @@ import {
   depositSectionLabelClass,
 } from "@/views/portfolio/deposit/deposit-ui";
 import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
+import { useAuthStore } from "@/store";
 
 export interface FundingCryptoEntryProps {
+  reference: "deposit" | "withdraw";
   walletAddress: string;
   connectedBalance: ReactNode;
   connectedBalanceClassName?: string;
@@ -23,6 +25,7 @@ export interface FundingCryptoEntryProps {
 }
 
 export function FundingCryptoEntry({
+  reference,
   walletAddress,
   connectedBalance,
   connectedBalanceClassName = "text-black",
@@ -30,29 +33,43 @@ export function FundingCryptoEntry({
   onSelectStableflow,
   stableflowLoading = false,
 }: FundingCryptoEntryProps) {
+  const loginMethod = useAuthStore((state) => state.loginMethod);
+  const isConnectedBridge = useMemo(() => {
+    if (reference === "deposit") {
+      return loginMethod === "wallet";
+    }
+    return true;
+  }, [reference, loginMethod]);
+
   return (
     <div className="flex flex-col gap-3">
-      <span className={depositSectionLabelClass}>Connected</span>
-      <button
-        type="button"
-        className={depositConnectedRowHighlightedClass}
-        onClick={onSelectConnected}
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          <WalletAvatarIcon address={walletAddress} />
-          <span className="truncate text-base font-[500] text-black">
-            {formatShortWallet(walletAddress)}
-          </span>
-        </span>
-        <span
-          className={cn(
-            "shrink-0 text-base font-[500]",
-            connectedBalanceClassName
-          )}
-        >
-          {connectedBalance}
-        </span>
-      </button>
+      {
+        isConnectedBridge && (
+          <>
+            <span className={depositSectionLabelClass}>Connected</span>
+            <button
+              type="button"
+              className={depositConnectedRowHighlightedClass}
+              onClick={onSelectConnected}
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                <WalletAvatarIcon address={walletAddress} />
+                <span className="truncate text-base font-[500] text-black">
+                  {formatShortWallet(walletAddress)}
+                </span>
+              </span>
+              <span
+                className={cn(
+                  "shrink-0 text-base font-[500]",
+                  connectedBalanceClassName
+                )}
+              >
+                {connectedBalance}
+              </span>
+            </button>
+          </>
+        )
+      }
 
       <span className={depositSectionLabelClass}>Others</span>
       <button

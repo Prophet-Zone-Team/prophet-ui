@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { buildStableflowQuoteRequest } from "@/lib/funding/stableflow";
 import { getStableflowQuote } from "@/server/trading/stableflow";
 import { getTradingSessionFromCookie } from "@/server/trading/session-store";
+import { QuoteRequest } from "@stableflow/core";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ interface StableflowQuotePayload {
   amountBaseUnits?: string;
   refundTo?: string;
   recipient?: string;
+  swapType?: QuoteRequest.swapType;
 }
 
 export async function POST(request: Request) {
@@ -40,6 +42,7 @@ export async function POST(request: Request) {
       amountBaseUnits: payload.amountBaseUnits!,
       refundTo: payload.refundTo!,
       recipient: payload.recipient!,
+      swapType: payload.swapType,
     });
     const quote = await getStableflowQuote(quoteRequest);
 

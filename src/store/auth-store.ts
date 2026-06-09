@@ -68,19 +68,23 @@ export const useAuthStore = create<AuthStore>()(
       setLoginModalOpen: (loginModalOpen) => set({ loginModalOpen }),
       setLoginInProgress: (loginInProgress) => set({ loginInProgress }),
       setPrivyLoginInProgress: (privyLoginInProgress) => set({ privyLoginInProgress }),
-      setLoginMethod: (loginMethod) => set({ loginMethod }),
+      setLoginMethod: (loginMethod) => {
+        console.log("%c setLoginMethod on store: %o", "background: red; color: white;", loginMethod)
+        return set({ loginMethod });
+      },
       setError: (error) => set({ error }),
       setCash: (cash) => set({ cash }),
       setCashStatus: (cashStatus) => set({ cashStatus }),
       setCashError: (cashError) => set({ cashError }),
       clearAuth: () =>
-        set({
+        set((state) => ({
           ...initialPersistedState,
+          loginMethod: state.loginMethod,
           loginInProgress: false,
           cash: undefined,
           cashStatus: "ready",
           cashError: undefined,
-        }),
+        })),
       clearCash: () =>
         set({
           cash: undefined,

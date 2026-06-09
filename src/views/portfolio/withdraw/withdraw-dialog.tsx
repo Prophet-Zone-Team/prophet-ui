@@ -14,6 +14,7 @@ import {
   buildWithdrawQuoteRequest,
   formatQuoteTokenAmount,
   mapQuoteToBreakdown,
+  mapStableflowQuoteToBreakdown,
 } from "@/lib/funding/bridge-quote";
 import { mapStableflowQuoteToConfirmDisplay } from "@/lib/funding/stableflow";
 import type { StableflowWithdrawToken } from "@/lib/funding/stableflow-withdraw";
@@ -222,10 +223,10 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     () =>
       isBridge && selectedToken && !("assetId" in selectedToken) && session?.walletAddress
         ? buildWithdrawQuoteRequest({
-            token: selectedToken,
-            amount: amountInput,
-            recipientAddress: session.walletAddress,
-          })
+          token: selectedToken,
+          amount: amountInput,
+          recipientAddress: session.walletAddress,
+        })
         : undefined,
     [amountInput, isBridge, selectedToken, session],
   );
@@ -287,7 +288,12 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     [stableflowQuote],
   );
 
-  const breakdown = bridgeQuote ? mapQuoteToBreakdown(bridgeQuote) : undefined;
+  const breakdown = useMemo(() => {
+    if (isBridge) {
+      return bridgeQuote ? mapQuoteToBreakdown(bridgeQuote) : undefined;
+    }
+    return stableflowQuote ? mapStableflowQuoteToBreakdown(stableflowQuote) : undefined;
+  }, [bridgeQuote, isBridge, stableflowQuote]);
 
   const receiveTokenAmount = isBridge
     ? bridgeQuote
@@ -640,7 +646,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                       depositTokenRowClass,
                       "w-full",
                       selectedChain?.chainId === chain.chainId &&
-                        depositTokenRowSelectedClass
+                      depositTokenRowSelectedClass
                     )}
                     onClick={() => handleChainSelect(chain)}
                   >
@@ -695,8 +701,8 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                       depositTokenRowClass,
                       "w-full",
                       selectedToken?.chainId === token.chainId &&
-                        selectedToken?.address === token.address &&
-                        depositTokenRowSelectedClass
+                      selectedToken?.address === token.address &&
+                      depositTokenRowSelectedClass
                     )}
                     onClick={() => handleTokenSelect(token)}
                   >
@@ -735,7 +741,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
             </div>
 
             <TransactionBreakdown
-              loading={quoteLoading && quoteEnabled && isBridge}
+              loading={(quoteLoading || stableflowQuoteLoading) && quoteEnabled}
               networkCostUsd={breakdown?.networkCost}
               priceImpactPercent={breakdown?.priceImpactPercent}
               maxSlippagePercent={breakdown?.maxSlippagePercent}

@@ -9,7 +9,13 @@ export type DepositEntryTab = "crypto" | "private_balance" | "cash";
 
 export type PrivateAccountStatus = "not_created" | "created_empty" | "funded";
 
-export type DepositStep = "entry" | "tokens" | "amount" | "confirm" | "status";
+export type DepositStep =
+  | "entry"
+  | "tokens"
+  | "amount"
+  | "confirm"
+  | "status"
+  | "stableflow_qr";
 
 export type DepositStatusPhase =
   | "bridging"

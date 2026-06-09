@@ -4,6 +4,8 @@ import type { FundingAsset } from "@/config/funding";
 import { POLYMARKET_USD } from "@/config/funding";
 import { fetchJson } from "@/lib/team/client-fetch";
 import type { BridgeQuoteRequest, BridgeQuoteResponse } from "@/types/funding";
+import { QuoteResponse } from "@stableflow/core";
+import Big from "big.js";
 
 export const DEFAULT_DEPOSIT_QUOTE_RECIPIENT = "0x17eC161f126e82A8ba337f4022d574DBEaFef575";
 
@@ -133,5 +135,26 @@ export function mapQuoteToBreakdown(quote: BridgeQuoteResponse): QuoteBreakdownD
     networkCost: breakdown.gasUsd ?? 0,
     priceImpactPercent: breakdown.totalImpact ?? breakdown.swapImpact ?? 0,
     maxSlippagePercent: breakdown.maxSlippage ?? 0,
+  };
+}
+
+export function mapStableflowQuoteToBreakdown(quote: QuoteResponse): QuoteBreakdownDisplay {
+  const { quote: data, quoteRequest } = quote;
+
+  const { amountOutUsd, amountInUsd } = data;
+  const { slippageTolerance } = quoteRequest;
+
+  const priceImpactPercent = Big(amountInUsd || 0)
+    .minus(amountOutUsd || 0)
+    .div(amountInUsd || 0)
+    .times(100)
+    .toNumber();
+  const maxSlippagePercent = slippageTolerance ? Big(slippageTolerance).div(100).toNumber() : 0;
+  const networkCost = amountInUsd ? Big(amountInUsd).minus(amountOutUsd).toNumber() : 0;
+
+  return {
+    networkCost,
+    priceImpactPercent,
+    maxSlippagePercent,
   };
 }
