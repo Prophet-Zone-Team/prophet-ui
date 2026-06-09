@@ -117,7 +117,6 @@ function HeaderMetric({
   subtitle?: string;
   badgeLabel?: string;
 }) {
-  console.log("statusVariant", statusVariant);
   return (
     <div className="relative md:w-[453px] h-full">
       <div className="absolute top-[-14px] h-full hidden md:block">

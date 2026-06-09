@@ -11,6 +11,7 @@ import {
 import {
   buildBinaryFixtureChartPoints,
   buildFixtureChartPoints,
+  resolveFixtureChartHistoryRequest,
 } from "@/lib/market/fixture-probability-chart";
 import {
   postPolymarketClob,
@@ -26,6 +27,7 @@ import type {
   FixtureChartKind,
   GameFixtureBinaryChartPoint,
   GameFixtureChartPoint,
+  GameFixtureChartTimeRange,
   ProbabilityHistoryPoint,
   TeamMarketSnapshot,
   WorldCupMatch,
@@ -48,6 +50,7 @@ export interface UseProbabilityChartFixtureOptions {
   match: WorldCupMatch;
   chartKind?: FixtureChartKind;
   lineKey?: string;
+  timeRange?: GameFixtureChartTimeRange;
   enabled?: boolean;
   pollIntervalMs?: number;
 }
@@ -355,16 +358,22 @@ function useProbabilityChartFixture(
     match,
     chartKind = "moneyline",
     lineKey,
+    timeRange = "all",
     enabled = true,
     pollIntervalMs,
   } = options;
 
   const matchRef = useRef(match);
-  const fetchKey = buildFixtureChartFetchKey(match, chartKind, lineKey);
+  const timeRangeRef = useRef(timeRange);
+  const fetchKey = `${buildFixtureChartFetchKey(match, chartKind, lineKey)}|${timeRange}`;
 
   useEffect(() => {
     matchRef.current = match;
   }, [match]);
+
+  useEffect(() => {
+    timeRangeRef.current = timeRange;
+  }, [timeRange]);
 
   const [points, setPoints] = useState<GameFixtureChartPoint[]>([]);
   const [binaryPoints, setBinaryPoints] = useState<GameFixtureBinaryChartPoint[]>(
@@ -377,7 +386,6 @@ function useProbabilityChartFixture(
 
   const fetchHistory = useCallback(
     async (signal?: AbortSignal) => {
-    console.log("fetchHistory", enabled);
       if (!enabled) {
         return false;
       }
@@ -386,7 +394,7 @@ function useProbabilityChartFixture(
       const tokenResolution = resolveFixtureChartTokens(
         currentMatch,
         chartKind,
-        lineKey,
+        lineKey
       );
 
       if (!tokenResolution) {
@@ -400,25 +408,38 @@ function useProbabilityChartFixture(
       }
 
       const tokenIds = tokenResolution.inputs.map((input) => input.tokenId);
-      const { startTs, endTs } = resolveProbabilityChartTimeWindow();
+      const requestedTimeRange = timeRangeRef.current;
+      const historyRequest =
+        resolveFixtureChartHistoryRequest(requestedTimeRange);
       const payload =
         await postPolymarketClob<PolymarketClobBatchPricesHistoryResponse>(
           "/batch-prices-history",
           {
             markets: tokenIds,
-            interval: DEFAULT_PROBABILITY_CHART_CLOB_INTERVAL,
-            start_ts: startTs,
-            end_ts: endTs,
+            interval: historyRequest.interval,
+            ...(historyRequest.start_ts !== undefined
+              ? { start_ts: historyRequest.start_ts }
+              : {}),
+            ...(historyRequest.end_ts !== undefined
+              ? { end_ts: historyRequest.end_ts }
+              : {}),
           },
-          { signal },
+          { signal }
         );
+
+      if (
+        signal?.aborted ||
+        requestedTimeRange !== timeRangeRef.current
+      ) {
+        return false;
+      }
 
       const historyByToken = historyResponseToMap(payload.history);
 
       if (tokenResolution.mode === "ternary") {
         const nextPoints = buildFixtureChartPoints(
           currentMatch.id,
-          attachHistoryToTernaryInputs(tokenResolution.inputs, historyByToken),
+          attachHistoryToTernaryInputs(tokenResolution.inputs, historyByToken)
         );
 
         setPoints(nextPoints);
@@ -428,7 +449,7 @@ function useProbabilityChartFixture(
       } else {
         const nextBinaryPoints = buildBinaryFixtureChartPoints(
           currentMatch.id,
-          attachHistoryToBinaryInputs(tokenResolution.inputs, historyByToken),
+          attachHistoryToBinaryInputs(tokenResolution.inputs, historyByToken)
         );
 
         setPoints([]);
@@ -442,11 +463,10 @@ function useProbabilityChartFixture(
 
       return true;
     },
-    [chartKind, enabled, fetchKey, lineKey],
+    [chartKind, enabled, fetchKey, lineKey]
   );
 
   const refetch = useCallback(async () => {
-
     if (!enabled) {
       setPoints([]);
       setBinaryPoints([]);
@@ -491,10 +511,18 @@ function useProbabilityChartFixture(
     }
 
     const controller = new AbortController();
+    const pollTimeRange = timeRange;
     let timeoutId: number | undefined;
     let isInitialFetch = true;
 
     const poll = async () => {
+      if (
+        controller.signal.aborted ||
+        timeRangeRef.current !== pollTimeRange
+      ) {
+        return;
+      }
+
       if (isInitialFetch) {
         setStatus("loading");
         setError(undefined);
@@ -503,7 +531,11 @@ function useProbabilityChartFixture(
       try {
         const success = await fetchHistory(controller.signal);
 
-        if (!success || controller.signal.aborted) {
+        if (
+          !success ||
+          controller.signal.aborted ||
+          timeRangeRef.current !== pollTimeRange
+        ) {
           return;
         }
 
@@ -514,10 +546,20 @@ function useProbabilityChartFixture(
         }
 
         timeoutId = window.setTimeout(() => {
+          if (
+            controller.signal.aborted ||
+            timeRangeRef.current !== pollTimeRange
+          ) {
+            return;
+          }
+
           void poll();
         }, pollIntervalMs);
       } catch {
-        if (controller.signal.aborted) {
+        if (
+          controller.signal.aborted ||
+          timeRangeRef.current !== pollTimeRange
+        ) {
           return;
         }
 
@@ -540,7 +582,7 @@ function useProbabilityChartFixture(
         window.clearTimeout(timeoutId);
       }
     };
-  }, [enabled, fetchHistory, fetchKey, pollIntervalMs]);
+  }, [enabled, fetchHistory, fetchKey, pollIntervalMs, timeRange]);
 
   return {
     kind: "fixture",

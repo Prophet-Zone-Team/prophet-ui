@@ -1,4 +1,8 @@
-import { PROBABILITY_CHART_HISTORY_WINDOW_SECONDS } from "@/lib/team/probability-history";
+import {
+  DEFAULT_PROBABILITY_CHART_CLOB_INTERVAL,
+  PROBABILITY_CHART_HISTORY_WINDOW_SECONDS,
+  resolveProbabilityChartTimeWindow,
+} from "@/lib/team/probability-history";
 import type { FixtureHistoryInterval } from "@/server/market/clob-prices-history";
 import type {
   GameFixtureBinaryChartPoint,
@@ -41,6 +45,29 @@ export function mapUiRangeToClobInterval(
     case "all":
       return "max";
   }
+}
+
+export function resolveFixtureChartHistoryRequest(
+  timeRange: GameFixtureChartTimeRange,
+  nowMs = Date.now(),
+): {
+  interval: FixtureHistoryInterval;
+  start_ts?: number;
+  end_ts?: number;
+} {
+  if (timeRange === "all") {
+    const { startTs, endTs } = resolveProbabilityChartTimeWindow(nowMs);
+
+    return {
+      interval: DEFAULT_PROBABILITY_CHART_CLOB_INTERVAL,
+      start_ts: startTs,
+      end_ts: endTs,
+    };
+  }
+
+  return {
+    interval: mapUiRangeToClobInterval(timeRange),
+  };
 }
 
 const GAME_RANGE_POINT_LIMIT: Record<

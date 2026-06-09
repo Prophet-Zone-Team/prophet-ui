@@ -23,7 +23,10 @@ import {
   isMockLiveFixtureEnabled,
   MOCK_LIVE_FIXTURE_ELAPSED_SECONDS
 } from "@/lib/market/mock-live-fixture-config";
-import { resolveMatchSides } from "@/lib/market/schedule-match";
+import {
+  isEndedMatchStatus,
+  resolveMatchSides
+} from "@/lib/market/schedule-match";
 import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { useMatchWithLiveState } from "@/store/match-live-store";
@@ -123,6 +126,9 @@ export function GameProbabilitySection({
   }, [isLive]);
   const liveChartActive =
     isLive && Boolean(chartKind) && Boolean(gameSnapshot && fixtureMarkets);
+  const chartPollIntervalMs = isEndedMatchStatus(liveMatch.status)
+    ? undefined
+    : 5000;
   const sides = resolveMatchSides(liveMatch, snapshots);
   const homeLabel = sides.home.name ?? "Home";
   const awayLabel = sides.away.name ?? "Away";
@@ -169,7 +175,8 @@ export function GameProbabilitySection({
     match,
     chartKind,
     lineKey,
-    pollIntervalMs: 5000,
+    timeRange,
+    pollIntervalMs: chartPollIntervalMs,
     enabled: !liveChartActive
   });
 
@@ -180,7 +187,8 @@ export function GameProbabilitySection({
     chartKind: chartKind ?? "moneyline",
     lineKey,
     enabled: liveChartActive,
-    matchClockElapsedSeconds
+    matchClockElapsedSeconds,
+    pollIntervalMs: chartPollIntervalMs
   });
   const displayScore = {
     homeScore: liveMatch.homeScore,

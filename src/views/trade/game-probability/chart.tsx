@@ -19,7 +19,7 @@ import {
   type TooltipProps
 } from "recharts";
 
-import { formatProbability } from "@/components/home/market-formatters";
+import { formatChartProbability } from "@/components/home/market-formatters";
 import {
   formatChartTimestampClockLabel,
   formatGoalEventTime,
@@ -146,7 +146,7 @@ function EndLabelMarker({
   series: (typeof SERIES)[number];
 }): ReactElement<SVGElement> {
   const probabilityLabel =
-    typeof probability === "number" ? formatProbability(probability) : "—";
+    typeof probability === "number" ? formatChartProbability(probability) : "—";
   const nameY = slotY - 14;
   const valueY = slotY + 14;
 
@@ -489,7 +489,7 @@ function ChartTooltip({
           >
             {series ? seriesLabels[series.key] : entry.dataKey}:{" "}
             {typeof entry.value === "number"
-              ? formatProbability(entry.value)
+              ? formatChartProbability(entry.value)
               : "—"}
           </p>
         );
