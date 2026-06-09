@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { CopyButton } from "@/components/feedback/copy-button";
+import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
 import { CopyIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { formatShortWallet } from "@/lib/team/detail-format";
@@ -62,13 +62,13 @@ export function PrivateAccountCard({
                   <p className="m-0 truncate text-lg font-[500] text-white">
                     {formatShortWallet(address)}
                   </p>
-                  <CopyButton
-                    text={address}
+                  <PolymarketAddressCopyButton
+                    address={address}
                     ariaLabel="Copy private account address"
                     className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-white/70 transition-colors hover:text-white"
                   >
                     <CopyIcon />
-                  </CopyButton>
+                  </PolymarketAddressCopyButton>
                 </div>
               ) : (
                 <p className="m-0 mt-1 text-lg font-[500] text-white">-</p>

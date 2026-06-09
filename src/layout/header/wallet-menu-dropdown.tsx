@@ -10,7 +10,7 @@ import {
   ReferralIcon
 } from "@/layout/header/wallet-menu-icons";
 import { CopyIcon, RightArrowIcon } from "@/components/icons";
-import { CopyButton } from "@/components/feedback/copy-button";
+import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
 import { Switch } from "@/components/ui/switch";
 
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
@@ -74,13 +74,13 @@ export function WalletMenuDropdown({
         <span className="truncate text-[14px] font-[400] leading-[17px] text-black">
           {formatShortWallet(polymarketAddress)}
         </span>
-        <CopyButton
-          text={polymarketAddress}
+        <PolymarketAddressCopyButton
+          address={polymarketAddress}
           ariaLabel="Copy Polymarket address"
           className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
         >
           <CopyIcon />
-        </CopyButton>
+        </PolymarketAddressCopyButton>
       </div>
 
       {

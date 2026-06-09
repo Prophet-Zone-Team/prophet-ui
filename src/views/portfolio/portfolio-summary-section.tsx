@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { CopyButton } from "@/components/feedback/copy-button";
+import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
 import { CopyIcon } from "@/components/icons";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
@@ -97,13 +97,13 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
             <span className={portfolioWalletAddressClass}>
               {formatShortWallet(polymarketAddress)}
             </span>
-            <CopyButton
-              text={polymarketAddress}
+            <PolymarketAddressCopyButton
+              address={polymarketAddress}
               ariaLabel="Copy Polymarket address"
               className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
             >
               <CopyIcon />
-            </CopyButton>
+            </PolymarketAddressCopyButton>
           </div>
         ) : (
           <span className="text-[20px] font-[500] leading-6 text-prophet-muted">
