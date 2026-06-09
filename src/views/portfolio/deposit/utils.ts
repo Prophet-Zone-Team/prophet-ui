@@ -4,8 +4,25 @@ import { selectTokenPrice } from "@/lib/funding/price-selectors";
 import type { TokenPricesBySymbol } from "@/types/funding";
 import { removeNumberEndZero } from "@/utils";
 
+import { DEFAULT_DEPOSIT_TOKEN_ORDER } from "./config";
 import type { DepositSelectableToken } from "./types";
 import { isStableflowDepositToken } from "./types";
+
+const DEFAULT_DEPOSIT_TOKEN_SORT_INDEX = new Map(
+  DEFAULT_DEPOSIT_TOKEN_ORDER.map((entry, index) => [
+    `${entry.chainId}:${entry.symbol}`,
+    index,
+  ]),
+);
+
+export function getDefaultDepositTokenSortIndex(
+  token: Pick<DepositSelectableToken, "chainId" | "symbol">,
+): number {
+  return (
+    DEFAULT_DEPOSIT_TOKEN_SORT_INDEX.get(`${token.chainId}:${token.symbol}`) ??
+    DEFAULT_DEPOSIT_TOKEN_ORDER.length
+  );
+}
 
 export function getEffectiveMinDepositUsd(minCheckoutUsd: number): number {
   return Math.ceil(minCheckoutUsd);

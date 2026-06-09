@@ -652,16 +652,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (!store.loginMethod) {
+        console.log("%c runLogin [no] loginMethod: %o", "background: red; color: white;", store.loginMethod);
         store.setLoginMethod("wallet");
         store.setPrivyLoginInProgress(false);
       }
+
+      console.log("%c runLogin loginMethod: %o", "background: red; color: white;", store.loginMethod);
 
       try {
         const result = await completeTradingLogin({
           resume,
           connectSignal: loginConnectAbortRef.current.signal,
           onStep: (step) => {
-            console.log(">>>>> runLogin completeTradingLogin onStep: %o", step)
+            console.log("%c runLogin completeTradingLogin onStep: %o", "background: red; color: white;", step)
             if (!loginAbortRef.current) {
               store.setLoginStep(step);
             }
@@ -712,18 +715,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const store = useAuthStore.getState();
       store.setPrivyLoginInProgress(true);
 
-      console.log("startPrivyTradingLogin store.session: %o", store.session);
-      console.log("startPrivyTradingLogin isRegionBlockedRef.current: %o", isRegionBlockedRef.current);
-      console.log("startPrivyTradingLogin is clearOAuthUrlParams: %o", store.session || isRegionBlockedRef.current);
-
       if (store.session || isRegionBlockedRef.current) {
         consumeOAuthPending();
         clearOAuthUrlParams();
         store.setPrivyLoginInProgress(false);
         return;
       }
-
-      console.log("startPrivyTradingLogin privyAutoLoginRef.current: %o", privyAutoLoginRef.current);
 
       if (privyAutoLoginRef.current) {
         store.setPrivyLoginInProgress(false);
@@ -734,16 +731,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setLoginModalOpen(true);
       pendingPrivyLoginMethodRef.current = method;
 
-      console.log("startPrivyTradingLogin privyReady: %o", privyReady);
-      console.log("startPrivyTradingLogin privyAuthenticated: %o", privyAuthenticated);
-      console.log("startPrivyTradingLogin !privyReady || !privyAuthenticated: %o", !privyReady || !privyAuthenticated);
-
       if (!privyReady || !privyAuthenticated) {
         store.setPrivyLoginInProgress(false);
         return;
       }
-
-      console.log("startPrivyTradingLogin store.loginInProgress: %o", store.loginInProgress);
 
       if (store.loginInProgress) {
         store.setPrivyLoginInProgress(false);
@@ -886,6 +877,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const openLogin = useCallback(async () => {
     const store = useAuthStore.getState();
 
+    try {
+      await privyLogout();
+    } catch { }
+    store.setLoginMethod("wallet");
+
     if (isRegionBlockedRef.current) {
       openLoginModalOnly();
       return undefined;
@@ -908,9 +904,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await runSignStep("tokens");
   }, [runSignStep]);
 
-  const openPrivyLogin = useCallback(() => {
+  const openPrivyLogin = useCallback(async () => {
     const store = useAuthStore.getState();
     store.setError(undefined);
+    try {
+      await privyLogout();
+    } catch { }
     setPrivyModalOpen(true);
   }, []);
 

@@ -18,6 +18,14 @@ export const privyConfig: PrivyClientConfig = {
   },
   appearance: {
     walletChainType: "ethereum-only",
+    walletList: [
+      "okx_wallet",
+      "metamask",
+      "bitget_wallet",
+      "binance",
+      "wallet_connect_qr",
+      "detected_ethereum_wallets",
+    ],
   },
   defaultChain: polygon,
   supportedChains: [polygon, arbitrum, bsc, optimism],

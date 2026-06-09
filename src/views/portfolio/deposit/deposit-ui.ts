@@ -4,7 +4,7 @@ export const depositSectionLabelClass =
   "text-sm font-[500] leading-[17px] text-black";
 
 export const depositConnectedRowClass = cn(
-  "flex w-full cursor-pointer items-center justify-between rounded-[6px] border border-[#EBEBEB]",
+  "flex w-full h-[58px] cursor-pointer items-center justify-between rounded-[6px] border border-[#EBEBEB]",
   "bg-white px-4 py-4 text-left transition-colors hover:bg-[#fafbfc]"
 );
 

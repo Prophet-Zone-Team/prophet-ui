@@ -59,6 +59,9 @@ export function usePrices(options: UsePricesOptions = {}): UsePricesResult {
         return;
       }
 
+      nextPrices['USD₮0'] = nextPrices['USDT0'];
+      nextPrices['MATIC'] = nextPrices['POL'];
+
       setPrices({
         prices: nextPrices,
         updatedAt: new Date().toISOString(),

@@ -3,6 +3,7 @@ import Big from "big.js";
 
 import { FUNDING_NETWORKS, FundingNetworkType, type FundingNetwork } from "@/config/funding/networks";
 import type { FundingAsset } from "@/config/funding/tokens";
+import { getTokenLogo } from "@/utils/logo";
 
 export const POLYGON_USDC_NATIVE = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359";
 
@@ -11,6 +12,17 @@ export const STABLEFLOW_BLOCKCHAIN_TO_CHAIN_ID: Record<string, number> = {
   arb: FUNDING_NETWORKS.arbitrum.chainId,
   op: FUNDING_NETWORKS.optimism.chainId,
   bsc: FUNDING_NETWORKS.bsc.chainId,
+  eth: FUNDING_NETWORKS.ethereum.chainId,
+  monad: FUNDING_NETWORKS.monad.chainId,
+  base: FUNDING_NETWORKS.base.chainId,
+  hypercore: FUNDING_NETWORKS.hyperEvm.chainId,
+  abs: FUNDING_NETWORKS.abstract.chainId,
+  avax: FUNDING_NETWORKS.avalanche.chainId,
+  bera: FUNDING_NETWORKS.berachain.chainId,
+  gnosis: FUNDING_NETWORKS.gnosis.chainId,
+  plasma: FUNDING_NETWORKS.plasma.chainId,
+  scroll: FUNDING_NETWORKS.scroll.chainId,
+  xlayer: FUNDING_NETWORKS.xlayer.chainId,
 };
 
 export interface StableflowDepositToken extends FundingAsset {
@@ -66,7 +78,7 @@ export function mapStableflowTokenToDepositToken(token: TokenResponse): Stablefl
     return undefined;
   }
 
-  const icon = `/tokens/${token.symbol.toLowerCase()}.png`;
+  const icon = getTokenLogo(token.symbol);
 
   return {
     ...network,

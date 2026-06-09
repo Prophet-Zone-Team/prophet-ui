@@ -1,3 +1,4 @@
+import { getTokenLogo } from "@/utils/logo";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 export const LazyImage = (props: Props) => {
@@ -27,7 +28,7 @@ export const LazyImage = (props: Props) => {
     if (fallbackSrc) {
       return <>{fallbackSrc}</>;
     }
-    return <img src="/tokens/default-token.png" alt={alt ?? ''} style={style} />;
+    return <img src={getTokenLogo("default_icon")} alt={alt ?? ''} style={style} />;
   }, [alt, fallbackSrc, style]);
 
   useEffect(() => {
@@ -68,7 +69,7 @@ export const LazyImage = (props: Props) => {
             transitionTimingFunction: "ease-in-out",
             transitionDelay: `${delay}s`,
           }}
-          className={`real-image w-full h-full ${className} ${isLoaded && !isError ? "opacity-100" : "opacity-0"}`}
+          className={`real-image w-full h-full object-contain origin-center ${className} ${isLoaded && !isError ? "opacity-100" : "opacity-0"}`}
           onLoad={() => {
             setLoaded(true);
           }}
