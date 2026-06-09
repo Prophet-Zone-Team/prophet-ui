@@ -7,7 +7,53 @@ import {
 const MIN_PRICE = 0.01;
 const MAX_PRICE = 0.99;
 
+export type MarketTickSize = "0.1" | "0.01" | "0.001" | "0.0001";
+
+export const DEFAULT_MARKET_TICK_SIZE: MarketTickSize = "0.01";
+
+const TICK_PRICE_DECIMALS: Record<MarketTickSize, number> = {
+  "0.1": 1,
+  "0.01": 2,
+  "0.001": 3,
+  "0.0001": 4,
+};
+
 export const LIMIT_BUY_MIN_SHARES = 5;
+
+export function isMarketTickSize(value: unknown): value is MarketTickSize {
+  return (
+    value === "0.1" ||
+    value === "0.01" ||
+    value === "0.001" ||
+    value === "0.0001"
+  );
+}
+
+export function resolveTickPriceDecimalPlaces(
+  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE,
+): number {
+  if (isMarketTickSize(tickSize)) {
+    return TICK_PRICE_DECIMALS[tickSize];
+  }
+
+  return TICK_PRICE_DECIMALS[DEFAULT_MARKET_TICK_SIZE];
+}
+
+/** Aligns CLOB prices to the market tick precision (matches Polymarket ROUNDING_CONFIG). */
+export function roundPriceToTick(
+  price: number,
+  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE,
+): number {
+  if (!Number.isFinite(price)) {
+    return price;
+  }
+
+  const clamped = clamp(price, MIN_PRICE, MAX_PRICE);
+  const decimals = resolveTickPriceDecimalPlaces(tickSize);
+  const factor = 10 ** decimals;
+
+  return Math.round((clamped + Number.EPSILON) * factor) / factor;
+}
 
 export function isLimitOrderType(orderType: TradingOrderType): boolean {
   return orderType === "GTC" || orderType === "GTD";

@@ -4,6 +4,7 @@ import {
   type OrderbookLevel,
   parseLevels,
   parseOptionalPrice,
+  parseOrderbookPrice,
   resolveMarketPrice,
 } from "@/lib/market/orderbook-levels";
 import type {
@@ -46,12 +47,13 @@ function applySinglePriceChange(
   book: MarketOrderbook,
   change: PriceChangeMessage
 ): MarketOrderbook {
-  const price = Number(change.price);
-  const size = Number(change.size);
+  const price = parseOrderbookPrice(change.price);
 
-  if (!Number.isFinite(price) || price <= 0 || price >= 1) {
+  if (price === undefined) {
     return book;
   }
+
+  const size = Number(change.size);
 
   const bids =
     change.side === "BUY"

@@ -18,6 +18,7 @@ import type {
 } from "@polymarket/clob-client-v2";
 
 import type { UserActivityRecord } from "@/lib/portfolio/types";
+import { roundPriceToTick } from "@/lib/market/order-math";
 import type {
   BidTradeSide,
   TradingOrderType,
@@ -619,8 +620,14 @@ export async function fetchClobTokenSigningMeta(
   return {
     negRisk,
     tickSize,
-    bestAsk: bookPrices.bestAsk,
-    bestBid: bookPrices.bestBid
+    bestAsk:
+      bookPrices.bestAsk !== undefined
+        ? roundPriceToTick(bookPrices.bestAsk, tickSize)
+        : undefined,
+    bestBid:
+      bookPrices.bestBid !== undefined
+        ? roundPriceToTick(bookPrices.bestBid, tickSize)
+        : undefined,
   };
 }
 
@@ -927,11 +934,14 @@ function maxPrice(
   return prices.length > 0 ? Math.max(...prices) : undefined;
 }
 
-function parsePrices(levels: Array<{ price?: unknown }> | undefined): number[] {
+function parsePrices(
+  levels: Array<{ price?: unknown }> | undefined,
+  tickSize: TickSize = "0.01",
+): number[] {
   return (levels ?? [])
     .map((level) =>
       typeof level.price === "string" || typeof level.price === "number"
-        ? Number(level.price)
+        ? roundPriceToTick(Number(level.price), tickSize)
         : Number.NaN
     )
     .filter((price) => Number.isFinite(price) && price > 0 && price < 1);
