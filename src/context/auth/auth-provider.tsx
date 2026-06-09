@@ -103,8 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = usePrivy();
   const { disconnectAsync: wagmiDisconnect } = useDisconnect();
   const { wallets: privyWallets } = useWallets();
-  const startPrivyTradingLoginRef =
-    useRef<(method: AuthLoginMethod) => Promise<void>>(async () => { });
   const hydrated = useAuthHydrated();
   const pathname = usePathname();
   const session = useAuthStore((state) => state.session);
@@ -129,10 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useLoginWithOAuth({
     onComplete: (params) => {
+      console.log("useLoginWithOAuth: %o", params);
       if (!params.loginAccount || params.loginMethod !== "google") {
         return;
       }
-      void startPrivyTradingLoginRef.current("google");
+      void startPrivyTradingLogin("google");
     },
     onError: () => {
       consumeOAuthPending();
@@ -464,20 +463,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.setStatus("ready");
         openSetupModalIfNeeded();
 
-        const loginMethod = store.loginMethod ?? pendingPrivyLoginMethodRef.current;
-
-        if (
-          (loginMethod === "email" || loginMethod === "google") &&
-          privyReady &&
-          privyAuthenticated &&
-          !privyAutoLoginRef.current &&
-          !isRegionBlockedRef.current
-        ) {
-          void startPrivyTradingLoginRef.current(
-            loginMethod === "google" ? "google" : "email",
-          );
-        }
-
         walletHandlingRef.current = false;
         return;
       }
@@ -491,8 +476,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Privy + PrivyWalletBridge. Trust the persisted Privy + server session
       // instead of the injected-wallet connection snapshot, so refreshes do
       // not wrongly clear the session before wagmi rehydrates.
-      const embeddedLoginMethod =
-        store.loginMethod === "email" || store.loginMethod === "google";
+      const embeddedLoginMethod = store.loginMethod === "email" || store.loginMethod === "google";
 
       if (embeddedLoginMethod) {
         if (nextSession.depositWalletStatus !== "deployed") {
@@ -734,7 +718,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setLoginModalOpen(true);
       pendingPrivyLoginMethodRef.current = method;
 
-      if (!privyReady || !privyAuthenticated) {
+      console.log("privyReady: %o", privyReady);
+      if (!privyReady) {
         store.setPrivyLoginInProgress(false);
         return;
       }
@@ -752,6 +737,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         await releaseExternalWalletConnection();
+        console.log("privyWallets: %o", privyWallets);
 
         if (privyWallets.length === 0 && !privyWalletCreatingRef.current) {
           privyWalletCreatingRef.current = true;
@@ -788,10 +774,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       runLogin,
     ],
   );
-
-  useEffect(() => {
-    startPrivyTradingLoginRef.current = startPrivyTradingLogin;
-  }, [startPrivyTradingLogin]);
 
   const refreshSetupReadiness = useCallback(async () => {
     const store = useAuthStore.getState();
