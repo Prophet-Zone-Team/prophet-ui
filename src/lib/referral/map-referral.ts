@@ -59,7 +59,7 @@ export function mapProphetReferralToContent(
 
   let canClaim = false;
   try {
-    canClaim = Big(claimable).gt(0);
+    canClaim = Big(claimable).gt(100);
   } catch {
     canClaim = false;
   }
