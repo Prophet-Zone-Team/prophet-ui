@@ -1242,6 +1242,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }
 
   function selectOutcome(side: typeof outcomeSide) {
+    if (side === outcomeSide) {
+      return;
+    }
+
     setOutcomeSide(side);
     setMessage(undefined);
     setEligibilityRetryAvailable(false);

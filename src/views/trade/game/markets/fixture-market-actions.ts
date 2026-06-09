@@ -127,14 +127,12 @@ export function resolveLineBinarySide(
 
 export function isOutcomeSelected(
   outcome: FixtureMarketOutcome,
-  binarySide: "yes" | "no",
+  _binarySide: "yes" | "no",
   selectedOutcomeId?: string,
-  selectedBinarySide?: "yes" | "no",
+  _selectedBinarySide?: "yes" | "no",
 ): boolean {
-  return (
-    selectedOutcomeId === outcome.id &&
-    (binarySide === undefined || selectedBinarySide === binarySide)
-  );
+  // Trade-ticket Yes/No only switches token side; market row stays on the fixture outcome.
+  return selectedOutcomeId === outcome.id;
 }
 
 export function outcomeBelongsToTab(
