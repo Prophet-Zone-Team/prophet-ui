@@ -8,6 +8,7 @@ export interface PortfolioMarketCellProps {
   href?: string;
   outcome: string;
   priceLabel?: string;
+  shares?: number;
   icon?: PortfolioMarketIcon;
 }
 
@@ -65,9 +66,14 @@ export function PortfolioMarketCell({
   href,
   outcome,
   priceLabel,
+  shares,
   icon = { kind: "placeholder" }
 }: PortfolioMarketCellProps) {
   const subline = priceLabel ? `${outcome} ${priceLabel}` : outcome;
+  const sharesLabel =
+    shares != null && Number.isFinite(shares)
+      ? `${shares.toFixed(1)} shares`
+      : null;
 
   return (
     <div className="flex min-w-0 items-start gap-2">
@@ -86,6 +92,9 @@ export function PortfolioMarketCell({
         {outcome ? (
           <p className={cn("m-0 mt-0.5 text-xs", getOutcomeToneClass(outcome))}>
             {subline}
+            {sharesLabel ? (
+              <span className="text-prophet-muted ml-1"> {sharesLabel}</span>
+            ) : null}
           </p>
         ) : null}
       </div>

@@ -328,6 +328,7 @@ export function PortfolioPositionsTable({
           href={tradeHref}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
+          shares={position.size}
           icon={marketIcon}
         />
         <span className="font-[500]">
@@ -358,6 +359,7 @@ export function PortfolioPositionsTable({
           href={tradeHref}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
+          shares={position.size}
           icon={marketIcon}
         />
         <div className="grid grid-cols-2 gap-2">
