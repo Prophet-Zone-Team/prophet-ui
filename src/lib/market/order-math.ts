@@ -59,6 +59,38 @@ export function isLimitOrderType(orderType: TradingOrderType): boolean {
   return orderType === "GTC" || orderType === "GTD";
 }
 
+/** Slippage buffer for FAK/FOK worst-price limits (Polymarket market order behavior). */
+export const MARKET_ORDER_SLIPPAGE_BPS = 200;
+
+export interface ResolveMarketOrderWorstPriceInput {
+  tradeSide: BidTradeSide;
+  sidePrice: number;
+  bestAsk?: number;
+  bestBid?: number;
+  tickSize?: MarketTickSize | string;
+}
+
+/**
+ * Worst acceptable price for FAK/FOK orders. CLOB treats this as slippage protection,
+ * not the target fill price. Uses the higher of ticket and book prices for buys, then
+ * applies a small upward buffer so stale REST quotes cannot under-sign market orders.
+ */
+export function resolveMarketOrderWorstPrice(
+  input: ResolveMarketOrderWorstPriceInput,
+): number {
+  const tickSize = input.tickSize ?? DEFAULT_MARKET_TICK_SIZE;
+  const slippageFactor =
+    input.tradeSide === "buy"
+      ? 1 + MARKET_ORDER_SLIPPAGE_BPS / 10_000
+      : 1 - MARKET_ORDER_SLIPPAGE_BPS / 10_000;
+  const executableBase =
+    input.tradeSide === "buy"
+      ? Math.max(input.sidePrice, input.bestAsk ?? input.sidePrice)
+      : Math.min(input.sidePrice, input.bestBid ?? input.sidePrice);
+
+  return roundPriceToTick(executableBase * slippageFactor, tickSize);
+}
+
 export function isTakeProfitLimitAvailable(shareSize: number): boolean {
   return Number.isFinite(shareSize) && shareSize >= LIMIT_BUY_MIN_SHARES;
 }
