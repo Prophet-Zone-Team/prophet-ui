@@ -95,11 +95,7 @@ export async function reportFundingTransaction(
     return;
   }
 
-  const txHash = input.txHash.trim();
-
-  if (!txHash) {
-    return;
-  }
+  const txHash = input.txHash?.trim() ?? "";
 
   const request: ProphetReportTransactionRequest = {
     amount: normalizeFundingAmount(input.amount),

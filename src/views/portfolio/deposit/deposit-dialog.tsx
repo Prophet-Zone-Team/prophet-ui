@@ -872,13 +872,13 @@ export function DepositDialog({
       });
 
       setStatusPhase("success");
-      if (stableflowExecution.txHash) {
+      try {
         void reportFundingTransaction({
           type: "deposit",
-          txHash: stableflowExecution.txHash,
+          txHash: stableflowExecution.txHash ?? "",
           amount: amount.amountUsd
         });
-      }
+      } catch { }
 
       try {
         await syncCash();
