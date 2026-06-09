@@ -4,8 +4,16 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { formatOrderbookPrice, formatShareSize } from "@/lib/market/order-math";
+import {
+  formatOrderbookPrice,
+  formatShareSize,
+  normalizeLimitPrice
+} from "@/lib/market/order-math";
 import { useMarketOrderbook } from "@/hooks/market/use-market-orderbook";
+import {
+  useSetTradeLimitPrice,
+  useSetTradeOrderMode
+} from "@/store/trade-ticket-store";
 
 const MAX_ASK_ROWS = 8;
 const MAX_BID_ROWS = 8;
@@ -17,6 +25,13 @@ export interface OrderbookProps {
 
 export function Orderbook({ tokenId, className }: OrderbookProps) {
   const { book, loading, error } = useMarketOrderbook(tokenId);
+  const setLimitPrice = useSetTradeLimitPrice();
+  const setOrderMode = useSetTradeOrderMode();
+
+  const handlePriceSelect = (price: number) => {
+    setLimitPrice(normalizeLimitPrice(price).toFixed(3));
+    setOrderMode("limit");
+  };
 
   const asksScrollRef = useRef<HTMLDivElement>(null);
 
@@ -98,6 +113,7 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
                   price={level.price}
                   size={level.size}
                   side="ask"
+                  onSelect={handlePriceSelect}
                 />
               ))}
             </div>
@@ -120,6 +136,7 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
                   price={level.price}
                   size={level.size}
                   side="bid"
+                  onSelect={handlePriceSelect}
                 />
               ))}
             </div>
@@ -133,25 +150,39 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
 function OrderbookRow({
   price,
   size,
-  side
+  side,
+  onSelect
 }: {
   price: number;
   size: number;
   side: "ask" | "bid";
+  onSelect: (price: number) => void;
 }) {
+  const priceLabel = formatOrderbookPrice(price);
+
   return (
-    <div className="grid grid-cols-2 gap-2 px-1 py-0.5 leading-[17px]">
+    <button
+      type="button"
+      onClick={() => onSelect(price)}
+      className={cn(
+        "grid w-full grid-cols-2 gap-2 rounded px-1 py-0.5 text-left leading-[17px] transition-colors",
+        side === "ask"
+          ? "hover:bg-[#FF674B]/10 active:bg-[#FF674B]/15"
+          : "hover:bg-[#65AF14]/10 active:bg-[#65AF14]/15"
+      )}
+      aria-label={`Set limit price to ${priceLabel}`}
+    >
       <span
         className={cn(
           "font-[400]",
           side === "ask" ? "text-[#FF674B]" : "text-[#65AF14]"
         )}
       >
-        {formatOrderbookPrice(price)}
+        {priceLabel}
       </span>
       <span className="text-right font-[400] text-black">
         {formatShareSize(size)}
       </span>
-    </div>
+    </button>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { formatProbability } from "@/components/home/market-formatters";
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
 import { cn } from "@/lib/cn";
@@ -11,7 +12,9 @@ import {
   formatLimitPriceInputValue,
   formatShareSize,
   formatOrderbookPrice,
-  parseLimitPriceDisplayValue
+  isCompleteLimitPriceDisplayValue,
+  parseLimitPriceDisplayValue,
+  sanitizeLimitPriceDisplayInput
 } from "@/lib/market/order-math";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { BidTradeSide } from "@/types/market";
@@ -182,24 +185,12 @@ export function TradeTicketForm({
           <label className="sr-only" htmlFor="trade-limit-price">
             Limit price
           </label>
-          <div className="flex min-w-0 items-baseline justify-end">
-            <input
-              id="trade-limit-price"
-              type="text"
-              inputMode="decimal"
-              value={formatLimitPriceInputValue(limitPrice)}
-              onChange={(event) => {
-                onLimitPriceChange(
-                  parseLimitPriceDisplayValue(
-                    event.target.value,
-                    preview.sidePrice
-                  )
-                );
-                onAmountMessageClear();
-              }}
-              className="min-w-[4ch] max-w-[8ch] flex-1 border-0 bg-transparent p-0 text-right text-[32px] font-[500] leading-[38px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
-          </div>
+          <LimitPriceInput
+            limitPrice={limitPrice}
+            sidePrice={preview.sidePrice}
+            onLimitPriceChange={onLimitPriceChange}
+            onAmountMessageClear={onAmountMessageClear}
+          />
         </div>
       ) : null}
 
@@ -389,6 +380,64 @@ export function TradeTicketForm({
       {showClearingTip && kickoffAt ? (
         <OrderBookClearingTip kickoffAt={kickoffAt} />
       ) : null}
+    </div>
+  );
+}
+
+function LimitPriceInput({
+  limitPrice,
+  sidePrice,
+  onLimitPriceChange,
+  onAmountMessageClear
+}: {
+  limitPrice: string;
+  sidePrice: number;
+  onLimitPriceChange: (value: string) => void;
+  onAmountMessageClear: () => void;
+}) {
+  const [displayValue, setDisplayValue] = useState(() =>
+    formatLimitPriceInputValue(limitPrice)
+  );
+  const lastEmittedLimitPriceRef = useRef(limitPrice);
+
+  useEffect(() => {
+    if (limitPrice === lastEmittedLimitPriceRef.current) {
+      return;
+    }
+
+    lastEmittedLimitPriceRef.current = limitPrice;
+    setDisplayValue(formatLimitPriceInputValue(limitPrice));
+  }, [limitPrice]);
+
+  return (
+    <div className="flex min-w-0 items-baseline justify-end">
+      <input
+        id="trade-limit-price"
+        type="text"
+        inputMode="decimal"
+        value={displayValue}
+        onChange={(event) => {
+          const sanitized = sanitizeLimitPriceDisplayInput(event.target.value);
+          setDisplayValue(sanitized);
+
+          if (sanitized === "") {
+            lastEmittedLimitPriceRef.current = "";
+            onLimitPriceChange("");
+            onAmountMessageClear();
+            return;
+          }
+
+          if (!isCompleteLimitPriceDisplayValue(sanitized)) {
+            return;
+          }
+
+          const parsed = parseLimitPriceDisplayValue(sanitized, sidePrice);
+          lastEmittedLimitPriceRef.current = parsed;
+          onLimitPriceChange(parsed);
+          onAmountMessageClear();
+        }}
+        className="min-w-[4ch] max-w-[8ch] flex-1 border-0 bg-transparent p-0 text-right text-[32px] font-[500] leading-[38px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
     </div>
   );
 }

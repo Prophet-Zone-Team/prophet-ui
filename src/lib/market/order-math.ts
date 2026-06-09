@@ -178,6 +178,45 @@ export function formatLimitPriceInputValue(price: string | number): string {
   return Number.isInteger(cents) ? String(cents) : cents.toFixed(1);
 }
 
+/** Cents-denominated limit price display: up to 2 integer digits and 1 decimal place. */
+export function sanitizeLimitPriceDisplayInput(value: string): string {
+  let result = "";
+  let hasDot = false;
+
+  for (const char of value) {
+    if (char >= "0" && char <= "9") {
+      if (hasDot) {
+        const fractionLength = result.length - result.indexOf(".") - 1;
+
+        if (fractionLength >= 1) {
+          continue;
+        }
+      } else if (result.length >= 2) {
+        continue;
+      }
+
+      result += char;
+    } else if (char === "." && !hasDot && result.length > 0) {
+      hasDot = true;
+      result += char;
+    }
+  }
+
+  return result;
+}
+
+export function isCompleteLimitPriceDisplayValue(value: string): boolean {
+  const trimmed = value.trim();
+
+  if (!trimmed || trimmed.endsWith(".")) {
+    return false;
+  }
+
+  const cents = Number(trimmed);
+
+  return Number.isFinite(cents) && cents > 0 && cents < 100;
+}
+
 /** Parse cents-denominated limit price input back to 0–1 scale string. */
 export function parseLimitPriceDisplayValue(
   displayValue: string,
