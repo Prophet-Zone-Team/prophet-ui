@@ -185,10 +185,7 @@ export function TradeTicketForm({
           <div className="flex min-w-0 items-baseline justify-end">
             <input
               id="trade-limit-price"
-              type="number"
-              min={1}
-              max={99}
-              step={0.1}
+              type="text"
               inputMode="decimal"
               value={formatLimitPriceInputValue(limitPrice)}
               onChange={(event) => {

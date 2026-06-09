@@ -34,9 +34,12 @@ export function PolymarketAddressCopyConfirmDialog({
       open={open}
       onClose={onClose}
       ariaLabel="Copy deposit address"
-      className="w-full max-w-[472px]"
+      className="w-full min-w-0 max-w-[472px] overflow-x-hidden"
     >
-      <div className="rounded-[20px] border border-[#EBEBEB] bg-white p-5 shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]">
+      <div
+        data-polymarket-address-copy-dialog
+        className="min-w-0 rounded-[20px] border border-[#EBEBEB] bg-white p-5 shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]"
+      >
         <h2 className="m-0 pr-8 text-xl font-[500] leading-6 text-black">
           Copy deposit address
         </h2>
@@ -49,7 +52,7 @@ export function PolymarketAddressCopyConfirmDialog({
           {POLYGON_ACCEPTED_USDC_TOKENS.map((token) => (
             <div
               key={token.symbol}
-              className="flex items-start gap-2 rounded-[8px] border border-[#EBEBEB] bg-[#fafbfc] px-3 py-2.5"
+              className="relative flex min-w-0 items-start gap-2 rounded-[8px] border border-[#EBEBEB] bg-[#fafbfc] px-3 py-2.5"
             >
               <span className="shrink-0 text-sm font-[500] text-black">
                 {token.symbol}
@@ -61,6 +64,7 @@ export function PolymarketAddressCopyConfirmDialog({
                 text={token.address}
                 ariaLabel={`Copy ${token.symbol} token address`}
                 className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
+                toastClassName="left-auto right-0 bottom-full mb-2 translate-x-0"
               >
                 <CopyIcon />
               </CopyButton>

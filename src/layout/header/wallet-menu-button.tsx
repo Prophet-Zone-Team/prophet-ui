@@ -69,9 +69,19 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
     }
 
     function handlePointerDown(event: PointerEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        setIsOpen(false);
+      const target = event.target as Node;
+      if (menuRef.current?.contains(target)) {
+        return;
       }
+
+      if (
+        target instanceof Element &&
+        target.closest("[data-polymarket-address-copy-dialog]")
+      ) {
+        return;
+      }
+
+      setIsOpen(false);
     }
 
     document.addEventListener("pointerdown", handlePointerDown);

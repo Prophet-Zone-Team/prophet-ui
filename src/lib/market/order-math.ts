@@ -163,6 +163,10 @@ export function formatPriceCents(price: number): string {
 
 /** Limit price stored on 0–1 scale, displayed as cents (e.g. 0.50 → "50"). */
 export function formatLimitPriceInputValue(price: string | number): string {
+  if (typeof price === "string" && price.trim() === "") {
+    return "";
+  }
+
   const numeric = typeof price === "string" ? Number(price) : price;
 
   if (!Number.isFinite(numeric)) {
@@ -182,7 +186,7 @@ export function parseLimitPriceDisplayValue(
   const trimmed = displayValue.trim();
 
   if (!trimmed) {
-    return normalizeLimitPrice(fallback).toFixed(3);
+    return "";
   }
 
   const cents = Number(trimmed);
