@@ -156,6 +156,7 @@ export function ResultPanel({
         onClose={() => setShareOpen(false)}
         teamId={teamId}
         championTeamId={championTeamId}
+        advancingThirdGroups={advancingThirdGroups}
         result={result}
         placements={placements}
         knockoutWinners={knockoutWinners}

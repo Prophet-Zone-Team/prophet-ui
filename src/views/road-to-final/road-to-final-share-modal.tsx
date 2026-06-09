@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ShareInviteModal } from "@/components/share/share-invite-modal";
 import { ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME } from "@/lib/road-to-final/share-card-config";
@@ -12,6 +12,7 @@ import type { ReferralKickback } from "@/types/referral";
 import {
   buildShareCardChampion,
   buildShareCardStages,
+  resolveShareCardPathResult,
 } from "./lib/build-share-card-stages";
 import type { GroupPlacements, KnockoutWinners } from "./types";
 import { RoadToFinalShareCard } from "./road-to-final-share-card";
@@ -21,6 +22,7 @@ export type RoadToFinalShareModalProps = {
   onClose: () => void;
   teamId: string;
   championTeamId?: string;
+  advancingThirdGroups: string[];
   result?: PathResult;
   placements: GroupPlacements;
   knockoutWinners: KnockoutWinners;
@@ -34,6 +36,7 @@ export function RoadToFinalShareModal({
   onClose,
   teamId,
   championTeamId,
+  advancingThirdGroups,
   result,
   placements,
   knockoutWinners,
@@ -49,24 +52,46 @@ export function RoadToFinalShareModal({
     [kickback],
   );
 
+  const { simulationTeamId, simulationResult } = useMemo(
+    () =>
+      resolveShareCardPathResult({
+        teamId,
+        championTeamId,
+        result,
+        placements,
+        advancingThirdGroups,
+      }),
+    [advancingThirdGroups, championTeamId, placements, result, teamId],
+  );
+
   const stages = useMemo(() => {
-    if (!result) {
+    if (!simulationResult) {
       return [];
     }
 
     return buildShareCardStages({
-      teamId,
-      result,
+      teamId: simulationTeamId,
+      result: simulationResult,
       placements,
       knockoutWinners,
       thirdPlaceOption,
     });
-  }, [knockoutWinners, placements, result, teamId, thirdPlaceOption]);
+  }, [
+    knockoutWinners,
+    placements,
+    simulationResult,
+    simulationTeamId,
+    thirdPlaceOption,
+  ]);
 
   const champion = useMemo(
     () => buildShareCardChampion(championTeamId),
     [championTeamId],
   );
+
+  useEffect(() => {
+    setShareCardReady(false);
+  }, [champion, stages]);
 
   return (
     <ShareInviteModal

@@ -7,7 +7,9 @@ import type { KnockoutRound, PathResult } from "@/types/market";
 
 import { getMatchCandidateTeams } from "../bracket-graph/bracket-resolver";
 import { MATCH_LOOKUP } from "./bracket-config";
+import { safeCalculatePath } from "./calculate-path";
 import { ROUND_LABELS } from "./format";
+import { getFinishForTeam } from "./placements";
 import type { GroupPlacements, KnockoutWinners, Placement } from "../types";
 
 export type ShareCardTeam = {
@@ -200,4 +202,46 @@ export function buildShareCardChampion(
   }
 
   return toShareCardTeam(championTeamId);
+}
+
+export function resolveShareCardPathResult({
+  teamId,
+  championTeamId,
+  result,
+  placements,
+  advancingThirdGroups,
+}: {
+  teamId: string;
+  championTeamId?: string;
+  result?: PathResult;
+  placements: GroupPlacements;
+  advancingThirdGroups: string[];
+}): { simulationTeamId: string; simulationResult?: PathResult } {
+  const simulationTeamId = championTeamId ?? teamId;
+
+  if (!result) {
+    return { simulationTeamId, simulationResult: undefined };
+  }
+
+  if (simulationTeamId === result.teamId) {
+    return { simulationTeamId, simulationResult: result };
+  }
+
+  const finishType = getFinishForTeam(placements, simulationTeamId);
+
+  if (!finishType) {
+    return { simulationTeamId, simulationResult: result };
+  }
+
+  const calculation = safeCalculatePath({
+    teamId: simulationTeamId,
+    finishType,
+    thirdGroups: advancingThirdGroups,
+    placements,
+  });
+
+  return {
+    simulationTeamId,
+    simulationResult: calculation.result ?? result,
+  };
 }
