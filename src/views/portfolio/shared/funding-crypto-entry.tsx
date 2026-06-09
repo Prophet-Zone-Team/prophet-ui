@@ -12,6 +12,7 @@ import {
   depositSectionLabelClass,
 } from "@/views/portfolio/deposit/deposit-ui";
 import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
+import { useAuthStore } from "@/store";
 
 export interface FundingCryptoEntryProps {
   walletAddress: string;
@@ -30,29 +31,37 @@ export function FundingCryptoEntry({
   onSelectStableflow,
   stableflowLoading = false,
 }: FundingCryptoEntryProps) {
+  const loginMethod = useAuthStore((state) => state.loginMethod);
+
   return (
     <div className="flex flex-col gap-3">
-      <span className={depositSectionLabelClass}>Connected</span>
-      <button
-        type="button"
-        className={depositConnectedRowHighlightedClass}
-        onClick={onSelectConnected}
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          <WalletAvatarIcon address={walletAddress} />
-          <span className="truncate text-base font-[500] text-black">
-            {formatShortWallet(walletAddress)}
-          </span>
-        </span>
-        <span
-          className={cn(
-            "shrink-0 text-base font-[500]",
-            connectedBalanceClassName
-          )}
-        >
-          {connectedBalance}
-        </span>
-      </button>
+      {
+        loginMethod === "wallet" && (
+          <>
+            <span className={depositSectionLabelClass}>Connected</span>
+            <button
+              type="button"
+              className={depositConnectedRowHighlightedClass}
+              onClick={onSelectConnected}
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                <WalletAvatarIcon address={walletAddress} />
+                <span className="truncate text-base font-[500] text-black">
+                  {formatShortWallet(walletAddress)}
+                </span>
+              </span>
+              <span
+                className={cn(
+                  "shrink-0 text-base font-[500]",
+                  connectedBalanceClassName
+                )}
+              >
+                {connectedBalance}
+              </span>
+            </button>
+          </>
+        )
+      }
 
       <span className={depositSectionLabelClass}>Others</span>
       <button

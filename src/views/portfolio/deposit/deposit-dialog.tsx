@@ -277,7 +277,7 @@ export function DepositDialog({
     }
   }
 
-  const showBack = !["entry", "tokens"].includes(step);
+  const showBack = !["entry"].includes(step);
 
   const onSelectStableflow = async () => {
     try {

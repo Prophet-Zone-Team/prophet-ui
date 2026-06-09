@@ -630,8 +630,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshCash]);
 
   const runLogin = useCallback(
-    async (resume: boolean) => {
+    async (resume: boolean, method?: AuthLoginMethod) => {
       const store = useAuthStore.getState();
+      const _loginMethod = method ?? store.loginMethod;
 
       if (isRegionBlockedRef.current) {
         store.setLoginModalOpen(true);
@@ -647,17 +648,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setStatus("loading");
       store.setError(undefined);
       store.setLoginStep(undefined);
-      if (store.loginMethod === "email" || store.loginMethod === "google") {
+      if (_loginMethod === "email" || _loginMethod === "google") {
         store.setPrivyLoginInProgress(true);
       }
 
-      if (!store.loginMethod) {
-        console.log("%c runLogin [no] loginMethod: %o", "background: red; color: white;", store.loginMethod);
+      if (!_loginMethod) {
+        console.log("%c runLogin [no] loginMethod: %o", "background: red; color: white;", _loginMethod);
         store.setLoginMethod("wallet");
         store.setPrivyLoginInProgress(false);
       }
 
-      console.log("%c runLogin loginMethod: %o", "background: red; color: white;", store.loginMethod);
+      console.log("%c runLogin loginMethod: %o", "background: red; color: white;", _loginMethod);
 
       try {
         const result = await completeTradingLogin({
@@ -764,7 +765,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await waitForPrivyWallet({ timeoutMs: 15_000, preferEmbedded: true });
         }
 
-        await runLogin(false);
+        await runLogin(false, method);
         pendingPrivyLoginMethodRef.current = undefined;
       } catch (loginError) {
         privyAutoLoginRef.current = false;
@@ -887,7 +888,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return undefined;
     }
 
-    return runLogin(Boolean(store.session));
+    return runLogin(Boolean(store.session), "wallet");
   }, [openLoginModalOnly, runLogin]);
 
   const connectWallet = openLogin;
