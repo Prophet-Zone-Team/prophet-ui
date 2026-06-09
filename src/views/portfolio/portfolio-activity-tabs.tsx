@@ -116,10 +116,17 @@ export function PortfolioActivityTabs({
     }
 
     if (tab === "open-order") {
-      if (!loadedTabsRef.current.has("open-order")) {
+      const isFirstVisit = !loadedTabsRef.current.has("open-order");
+      const switchedBackToOpenOrder =
+        previousTab !== null && previousTab !== "open-order";
+
+      if (isFirstVisit) {
         loadedTabsRef.current.add("open-order");
         void loadOpenOrders();
+      } else if (switchedBackToOpenOrder) {
+        void loadOpenOrders({ force: true, silent: true });
       }
+
       prevTabRef.current = tab;
       return;
     }

@@ -188,7 +188,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
         return;
       }
 
-      if (!openOrdersLoadedRef.current) {
+      if (!options?.silent && !openOrdersLoadedRef.current) {
         setOpenOrdersStatus("loading");
       }
 
