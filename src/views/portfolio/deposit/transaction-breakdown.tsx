@@ -5,6 +5,7 @@ import {
   depositBreakdownBoxClass,
   depositBreakdownRowClass,
 } from "@/views/portfolio/deposit/deposit-ui";
+import { Loader2 } from "lucide-react";
 
 export interface TransactionBreakdownProps {
   loading?: boolean;
@@ -49,15 +50,15 @@ export function TransactionBreakdown({
       </div>
       <div className={depositBreakdownRowClass}>
         <span>Network cost</span>
-        <span>{networkDisplay}</span>
+        <span>{loading ? (<Loader2 className="h-4 w-4 animate-spin" />) : networkDisplay}</span>
       </div>
       <div className={depositBreakdownRowClass}>
         <span>Price impact</span>
-        <span>{priceImpactDisplay}</span>
+        <span>{loading ? (<Loader2 className="h-4 w-4 animate-spin" />) : priceImpactDisplay}</span>
       </div>
       <div className={depositBreakdownRowClass}>
         <span>Max slippage</span>
-        <span>{slippageDisplay}</span>
+        <span>{loading ? (<Loader2 className="h-4 w-4 animate-spin" />) : slippageDisplay}</span>
       </div>
     </div>
   );
