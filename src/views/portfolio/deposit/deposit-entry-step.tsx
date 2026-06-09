@@ -54,6 +54,7 @@ export function DepositEntryStep({
 
       {entryTab === "crypto" ? (
         <FundingCryptoEntry
+          reference="deposit"
           walletAddress={session.walletAddress}
           connectedBalance={
             isLoading ? (

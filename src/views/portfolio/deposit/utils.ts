@@ -1,5 +1,9 @@
 import Big from "big.js";
 
+import {
+  STABLEFLOW_QR_MIN_DEPOSIT_USD,
+  type StableflowDepositToken,
+} from "@/lib/funding/stableflow";
 import { selectTokenPrice } from "@/lib/funding/price-selectors";
 import type { TokenPricesBySymbol } from "@/types/funding";
 import { removeNumberEndZero } from "@/utils";
@@ -7,6 +11,7 @@ import { removeNumberEndZero } from "@/utils";
 import { DEFAULT_DEPOSIT_TOKEN_ORDER } from "./config";
 import type { DepositSelectableToken } from "./types";
 import { isStableflowDepositToken } from "./types";
+import { STABLECOIN_SYMBOLS } from "@/config/funding";
 
 const DEFAULT_DEPOSIT_TOKEN_SORT_INDEX = new Map(
   DEFAULT_DEPOSIT_TOKEN_ORDER.map((entry, index) => [
@@ -48,6 +53,10 @@ export function selectDepositTokenUnitPrice(
   prices: TokenPricesBySymbol,
   token: DepositSelectableToken,
 ): string | undefined {
+  if (STABLECOIN_SYMBOLS.has(token.symbol)) {
+    return "1";
+  }
+
   if (isStableflowDepositToken(token) && token.price > 0) {
     return String(token.price);
   }
@@ -112,8 +121,8 @@ export function usdInputToTokenAmount({
   //   );
   // }
 
-  const clampedToMax =
-    Big(maxAmount || 0).gt(0) && Big(tokenAmount).eq(maxAmount || 0);
+  const clampedToMax = Big(maxAmount || 0).gt(0)
+    && Big(tokenAmount).eq(maxAmount || 0);
 
   return {
     tokenAmount,
@@ -187,6 +196,33 @@ export function buildDepositAmountFromMinUsd(
     price,
     decimals: token.decimals,
   });
+}
+
+export function buildStableflowQrQuoteAmount(
+  token: StableflowDepositToken,
+  prices: TokenPricesBySymbol,
+): { tokenAmount: string; amountUsd: string; amountBaseUnits: string } {
+  const price = selectDepositTokenUnitPrice(prices, token);
+
+  const unitPrice =
+    price && Big(price).gt(0)
+      ? price
+      : token.price > 0
+        ? String(token.price)
+        : "1";
+
+  const { tokenAmount, amountUsd } = usdInputToTokenAmount({
+    usdInput: String(STABLEFLOW_QR_MIN_DEPOSIT_USD),
+    maxAmount: "999999",
+    price: unitPrice,
+    decimals: token.decimals,
+  });
+
+  const amountBaseUnits = Big(tokenAmount)
+    .times(10 ** token.decimals)
+    .toFixed(0, 0);
+
+  return { tokenAmount, amountUsd, amountBaseUnits };
 }
 
 export function buildDepositAmountFromMaxBalance(

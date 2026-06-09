@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { cn } from "@/lib/cn";
@@ -15,6 +15,7 @@ import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import { useAuthStore } from "@/store";
 
 export interface FundingCryptoEntryProps {
+  reference: "deposit" | "withdraw";
   walletAddress: string;
   connectedBalance: ReactNode;
   connectedBalanceClassName?: string;
@@ -24,6 +25,7 @@ export interface FundingCryptoEntryProps {
 }
 
 export function FundingCryptoEntry({
+  reference,
   walletAddress,
   connectedBalance,
   connectedBalanceClassName = "text-black",
@@ -32,11 +34,17 @@ export function FundingCryptoEntry({
   stableflowLoading = false,
 }: FundingCryptoEntryProps) {
   const loginMethod = useAuthStore((state) => state.loginMethod);
+  const isConnectedBridge = useMemo(() => {
+    if (reference === "deposit") {
+      return loginMethod === "wallet";
+    }
+    return true;
+  }, [reference, loginMethod]);
 
   return (
     <div className="flex flex-col gap-3">
       {
-        loginMethod === "wallet" && (
+        isConnectedBridge && (
           <>
             <span className={depositSectionLabelClass}>Connected</span>
             <button

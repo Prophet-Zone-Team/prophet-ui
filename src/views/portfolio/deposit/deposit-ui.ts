@@ -79,3 +79,27 @@ export const depositBreakdownBoxClass = "rounded-[6px] bg-[#f4f4f4] p-4";
 
 export const depositBreakdownRowClass =
   "flex items-center justify-between py-1 text-sm text-[#909090]";
+
+export const depositStableflowQrMinLabelClass =
+  "text-sm font-[500] text-[#909090] absolute right-0 -top-6";
+
+export const depositStableflowQrWrapClass =
+  "relative mx-auto flex items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white p-4";
+
+export const depositStableflowQrSkeletonClass =
+  "mx-auto h-[200px] w-[200px] rounded-[12px] bg-[#f4f4f4] animate-pulse";
+
+export const depositStableflowAddressBoxClass =
+  "rounded-[6px] border border-[#EBEBEB] bg-white";
+
+export const depositStableflowAddressTextClass =
+  "m-0 break-all px-4 py-3 text-center text-sm font-[500] text-black";
+
+export const depositStableflowCopyButtonClass = cn(
+  "flex w-full items-center justify-center gap-2 border-0 border-t border-[#EBEBEB] bg-transparent",
+  "px-4 py-3 text-sm font-[500] text-black transition-opacity hover:opacity-80",
+  "disabled:cursor-not-allowed disabled:opacity-50"
+);
+
+export const depositStableflowAddressSkeletonClass =
+  "mx-4 my-3 h-5 rounded-[4px] bg-[#f4f4f4] animate-pulse";
