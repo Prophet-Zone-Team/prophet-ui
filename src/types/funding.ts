@@ -155,11 +155,6 @@ export interface EvmBalancesSnapshot {
 /** symbol -> USD price string */
 export type TokenPricesBySymbol = Record<string, string>;
 
-export interface TokenPriceApiResponse {
-  code: number;
-  data: TokenPricesBySymbol;
-}
-
 export interface CreateDepositAddressesPayload {
   note: string;
   address: {
