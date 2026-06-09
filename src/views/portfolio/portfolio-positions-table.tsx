@@ -163,7 +163,6 @@ export function PortfolioPositionsTable({
     const teams = marketContext?.teams ?? [];
     const teamName = resolvePortfolioTeamName(teams, position);
     const marketIcon = resolvePortfolioMarketIcon(teams, position.outcome);
-    const marketTitle = marketContext?.title ?? position.title;
     const tradeHref = resolvePortfolioPositionTradeHref(
       { slug: position.slug?.trim() || marketContext?.slug || "" },
       teams
@@ -325,7 +324,7 @@ export function PortfolioPositionsTable({
     desktopRows.push(
       <div key={rowKey} className={portfolioPositionsTableRowClass}>
         <PortfolioMarketCell
-          title={marketTitle}
+          title={position.title}
           href={tradeHref}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
@@ -355,7 +354,7 @@ export function PortfolioPositionsTable({
         className={portfolioTableMobileCardClass}
       >
         <PortfolioMarketCell
-          title={marketTitle}
+          title={position.title}
           href={tradeHref}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
