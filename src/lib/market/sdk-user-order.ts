@@ -13,7 +13,10 @@ import type { BidOrderPreview } from "@/lib/market/polymarket-order";
 import type { SignedUserOrderPayload } from "@/lib/market/user-order";
 import { createViemClobWalletClient } from "@/lib/trading/viem-clob-signer";
 import type { WalletClient } from "viem";
-import { isLimitOrderType, roundPriceToTick } from "@/lib/market/order-math";
+import {
+  isLimitOrderType,
+  resolveMarketOrderWorstPrice,
+} from "@/lib/market/order-math";
 import type { TradingOrderType } from "@/types/market";
 
 const POLYGON_CHAIN_ID = 137;
@@ -255,13 +258,13 @@ function resolveMarketOrderPrice(
     return preview.sidePrice;
   }
 
-  if (preview.tradeSide === "buy") {
-    const price = signingMeta.bestAsk ?? preview.sidePrice;
-    return roundPriceToTick(price, tickSize);
-  }
-
-  const price = signingMeta.bestBid ?? preview.sidePrice;
-  return roundPriceToTick(price, tickSize);
+  return resolveMarketOrderWorstPrice({
+    tradeSide: preview.tradeSide,
+    sidePrice: preview.sidePrice,
+    bestAsk: signingMeta.bestAsk,
+    bestBid: signingMeta.bestBid,
+    tickSize,
+  });
 }
 
 function toSupportedTickSize(tickSize: BidOrderPreview["tickSize"]): TickSize {
