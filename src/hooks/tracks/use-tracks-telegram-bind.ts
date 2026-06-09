@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   getProphetTelegramBindStatus,
-  isProphetAuthenticated,
-  syncProphetWalletLogin
+  isProphetAuthenticated
 } from "@/service/prophet";
+import { useTracksStore } from "@/store/tracks-store";
 
 export type TracksTelegramBindLoadStatus =
   | "idle"
@@ -52,7 +52,7 @@ export function useTracksTelegramBind(options: {
     setLoadStatus("loading");
 
     try {
-      await syncProphetWalletLogin(walletAddress);
+      await useTracksStore.getState().initializeForAccount(walletAddress);
 
       if (!isProphetAuthenticated()) {
         reset();

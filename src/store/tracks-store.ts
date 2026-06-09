@@ -124,8 +124,6 @@ export const useTracksStore = create<TracksStore>()(
         set({ status: "loading", error: undefined });
 
         try {
-          await syncProphetWalletLogin(walletAddress);
-
           if (!isProphetAuthenticated()) {
             set({ items: [], byKey: {}, status: "ready", error: undefined });
             return;
