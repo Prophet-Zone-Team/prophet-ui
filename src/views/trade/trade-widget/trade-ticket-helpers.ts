@@ -801,6 +801,43 @@ export function resolveSellQuickAmount(
   return amount > 0 ? String(amount) : undefined;
 }
 
+export type SellQuickAmountButtonValue = 0.25 | 0.5 | 0.75 | "all";
+
+const SELL_QUICK_AMOUNT_BUTTON_FRACTIONS: Array<{
+  value: SellQuickAmountButtonValue;
+  fraction: SellQuickAmountFraction;
+}> = [
+  { value: 0.25, fraction: 0.25 },
+  { value: 0.5, fraction: 0.5 },
+  { value: 0.75, fraction: 0.75 },
+  { value: "all", fraction: "max" }
+];
+
+export function resolveSelectedSellQuickAmount(
+  availableShares: number | undefined,
+  amount: string
+): SellQuickAmountButtonValue | undefined {
+  if (availableShares === undefined || availableShares <= 0) {
+    return undefined;
+  }
+
+  const current = parseOrderAmount(amount);
+
+  if (current <= 0) {
+    return undefined;
+  }
+
+  for (const { value, fraction } of SELL_QUICK_AMOUNT_BUTTON_FRACTIONS) {
+    const resolved = resolveSellQuickAmount(availableShares, fraction);
+
+    if (resolved && parseOrderAmount(resolved) === current) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
 export function resolveQuickAmountAllBalance(
   readiness: UserTradingReadiness | undefined,
   tradeSide: BidTradeSide,

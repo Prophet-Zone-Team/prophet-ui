@@ -24,8 +24,14 @@ import {
 import { usePortfolioContext } from "@/views/portfolio/context";
 import { portfolioSecondaryButtonClass } from "@/views/portfolio/portfolio-ui";
 import { useTradeTicket } from "@/views/trade/trade-widget/use-trade-ticket";
-import { parseOrderAmount } from "@/views/trade/trade-widget/trade-ticket-helpers";
-import { tradeQuickAmountClass } from "@/views/trade/trade-widget/trade-ui";
+import {
+  parseOrderAmount,
+  resolveSelectedSellQuickAmount
+} from "@/views/trade/trade-widget/trade-ticket-helpers";
+import {
+  tradeQuickAmountClass,
+  tradeQuickAmountSelectedClass
+} from "@/views/trade/trade-widget/trade-ui";
 
 const SELL_QUICK_FRACTIONS = [
   { label: "25%", value: 0.25 as const },
@@ -82,6 +88,10 @@ function PortfolioPositionSellSharedBody({
   );
 
   const sellQuickDisabled = position.size <= 0;
+  const selectedQuickAmount = resolveSelectedSellQuickAmount(
+    formProps.availableShares,
+    formProps.amount
+  );
   const isBusy = formProps.actionInProgress;
 
   function handleEditOrder() {
@@ -124,8 +134,10 @@ function PortfolioPositionSellSharedBody({
               <button
                 key={label}
                 type="button"
+                aria-pressed={selectedQuickAmount === value}
                 className={cn(
                   tradeQuickAmountClass,
+                  selectedQuickAmount === value && tradeQuickAmountSelectedClass,
                   "disabled:cursor-not-allowed disabled:opacity-50"
                 )}
                 disabled={sellQuickDisabled}
