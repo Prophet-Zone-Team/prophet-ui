@@ -77,11 +77,10 @@ export function findPrivyWallet(
   options?: { preferEmbedded?: boolean },
 ): ConnectedWallet | undefined {
   if (options?.preferEmbedded) {
-    const embedded = findPrivyEmbeddedWallet(expectedAddress);
-
-    if (embedded) {
-      return embedded;
-    }
+    // Embedded (email/google) logins must never fall back to an injected
+    // external wallet (e.g. a still-connected OKX extension). Return the
+    // embedded wallet or undefined so callers can keep waiting for it to load.
+    return findPrivyEmbeddedWallet(expectedAddress);
   }
 
   if (expectedAddress) {
@@ -94,12 +93,10 @@ export function findPrivyWallet(
     }
   }
 
-  if (!options?.preferEmbedded) {
-    const external = connectedWalletsRef.find((wallet) => !isPrivyEmbeddedWallet(wallet));
+  const external = connectedWalletsRef.find((wallet) => !isPrivyEmbeddedWallet(wallet));
 
-    if (external) {
-      return external;
-    }
+  if (external) {
+    return external;
   }
 
   return connectedWalletsRef[0];

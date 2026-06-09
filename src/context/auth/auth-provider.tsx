@@ -86,6 +86,7 @@ import {
   OAUTH_PENDING_STORAGE_KEY,
 } from "@/context/privy/privy-oauth";
 import {
+  isPrivyEmbeddedWallet,
   resumePrivyWalletSync,
   suspendPrivyWalletSync,
   waitForPrivyWallet,
@@ -127,7 +128,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useLoginWithOAuth({
     onComplete: (params) => {
-      console.log("useLoginWithOAuth: %o", params);
       if (!params.loginAccount || params.loginMethod !== "google") {
         return;
       }
@@ -639,19 +639,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (!_loginMethod) {
-        console.log("%c runLogin [no] loginMethod: %o", "background: red; color: white;", _loginMethod);
         store.setLoginMethod("wallet");
         store.setPrivyLoginInProgress(false);
       }
-
-      console.log("%c runLogin loginMethod: %o", "background: red; color: white;", _loginMethod);
 
       try {
         const result = await completeTradingLogin({
           resume,
           connectSignal: loginConnectAbortRef.current.signal,
           onStep: (step) => {
-            console.log("%c runLogin completeTradingLogin onStep: %o", "background: red; color: white;", step)
             if (!loginAbortRef.current) {
               store.setLoginStep(step);
             }
@@ -718,7 +714,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setLoginModalOpen(true);
       pendingPrivyLoginMethodRef.current = method;
 
-      console.log("privyReady: %o", privyReady);
       if (!privyReady) {
         store.setPrivyLoginInProgress(false);
         return;
@@ -737,9 +732,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         await releaseExternalWalletConnection();
-        console.log("privyWallets: %o", privyWallets);
 
-        if (privyWallets.length === 0 && !privyWalletCreatingRef.current) {
+        const hasEmbeddedWallet = privyWallets.some(isPrivyEmbeddedWallet);
+
+        if (!hasEmbeddedWallet && !privyWalletCreatingRef.current) {
           privyWalletCreatingRef.current = true;
 
           try {
