@@ -1,14 +1,10 @@
 import type { ReactNode } from "react";
 import { headers } from "next/headers";
 
-import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/context/auth";
-import { ProphetNotificationWsProvider } from "@/context/prophet-notification-ws";
-import { SportsWsProvider } from "@/context/sports-ws";
-import { AppChrome } from "@/layout/app-chrome";
+import { AppRoot } from "@/components/runtime/app-root";
 import "@/app/globals.css";
 import { Metadata } from "@/context/rainbowkit/metadata";
-import RainbowProvider from "@/context/rainbowkit/provider";
+import { isSecureFromHeaders } from "@/lib/runtime/is-secure-app-context";
 import Script from "next/script";
 
 export const metadata = {
@@ -22,7 +18,9 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const cookie = (await headers()).get("cookie");
+  const requestHeaders = await headers();
+  const cookie = requestHeaders.get("cookie");
+  const initialSecure = isSecureFromHeaders(requestHeaders);
 
   return (
     <html lang="en">
@@ -57,18 +55,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         </Script>
       </head>
       <body className="bg-[#F9FAFC] min-h-screen">
-        <RainbowProvider cookie={cookie}>
-          <AuthProvider>
-            <SportsWsProvider>
-              <ProphetNotificationWsProvider>
-                <main className="min-h-screen overflow-x-hidden font-body">
-                  <AppChrome>{children}</AppChrome>
-                </main>
-                <Toaster />
-              </ProphetNotificationWsProvider>
-            </SportsWsProvider>
-          </AuthProvider>
-        </RainbowProvider>
+        <AppRoot initialSecure={initialSecure} cookie={cookie}>
+          {children}
+        </AppRoot>
         <Script
           id="telegram-widget"
           src="https://telegram.org/js/telegram-widget.js?22"
