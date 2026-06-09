@@ -27,6 +27,8 @@ export function PortfolioView() {
     connectWallet,
     reload,
     removeOpenOrder,
+    removeOpenOrders,
+    removeOpenOrdersByMarket,
     loadCore,
     loadOpenOrders,
     loadActivityHistory,
@@ -52,6 +54,8 @@ export function PortfolioView() {
         onConnectWallet: () => void connectWallet(),
         reload,
         removeOpenOrder,
+        removeOpenOrders,
+        removeOpenOrdersByMarket,
         coreStatus
       }}
     >

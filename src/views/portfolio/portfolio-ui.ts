@@ -92,6 +92,19 @@ export const portfolioOrdersTableRowClass = cn(
   portfolioOrdersTableGridColsClass
 );
 
+const portfolioOpenOrderRowsGridColsClass =
+  "grid-cols-[repeat(4,minmax(0,1fr))_5.5rem]";
+
+export const portfolioOpenOrderRowsHeadClass = cn(
+  "hidden min-w-[640px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
+  portfolioOpenOrderRowsGridColsClass
+);
+
+export const portfolioOpenOrderRowsRowClass = cn(
+  "hidden min-w-[640px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
+  portfolioOpenOrderRowsGridColsClass
+);
+
 const portfolioHistoryTableGridColsClass =
   "grid-cols-[140px_minmax(0,1fr)_5.5rem_9rem]";
 

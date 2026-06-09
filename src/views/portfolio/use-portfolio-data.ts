@@ -49,6 +49,8 @@ export interface UsePortfolioDataResult {
   loadActivityHistory: (options?: PortfolioLoadOptions) => Promise<void>;
   setHistoryPage: (page: number) => void;
   removeOpenOrder: (orderId: string) => void;
+  removeOpenOrders: (orderIds: string[]) => void;
+  removeOpenOrdersByMarket: (marketId: string) => void;
   connectWallet: () => Promise<void>;
 }
 
@@ -324,8 +326,26 @@ export function usePortfolioData(): UsePortfolioDataResult {
     void loadCore();
   }, [loadCore, resetTabData, session]);
 
-  const removeOpenOrder = useCallback((orderId: string) => {
-    setOpenOrders((current) => current.filter((order) => order.id !== orderId));
+  const removeOpenOrders = useCallback((orderIds: string[]) => {
+    if (orderIds.length === 0) {
+      return;
+    }
+
+    const idSet = new Set(orderIds);
+    setOpenOrders((current) => current.filter((order) => !idSet.has(order.id)));
+  }, []);
+
+  const removeOpenOrder = useCallback(
+    (orderId: string) => {
+      removeOpenOrders([orderId]);
+    },
+    [removeOpenOrders]
+  );
+
+  const removeOpenOrdersByMarket = useCallback((marketId: string) => {
+    setOpenOrders((current) =>
+      current.filter((order) => order.market !== marketId)
+    );
   }, []);
 
   const connectWallet = useCallback(async () => {
@@ -361,6 +381,8 @@ export function usePortfolioData(): UsePortfolioDataResult {
     loadActivityHistory,
     setHistoryPage: setHistoryPageAndLoad,
     removeOpenOrder,
+    removeOpenOrders,
+    removeOpenOrdersByMarket,
     connectWallet
   };
 }

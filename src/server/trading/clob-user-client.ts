@@ -300,6 +300,44 @@ export async function cancelUserOrder({
   return response.json();
 }
 
+export type CancelOrdersResponse = {
+  canceled?: string[];
+  not_canceled?: Record<string, string>;
+};
+
+export async function cancelUserMarketOrders({
+  address,
+  credentials,
+  market
+}: {
+  address: string;
+  credentials: ApiKeyCreds;
+  market: string;
+}): Promise<CancelOrdersResponse> {
+  const requestPath = "/cancel-market-orders";
+  const body = JSON.stringify({ market });
+  const response = await serverFetch(`${getTradingHost()}${requestPath}`, {
+    method: "DELETE",
+    headers: await createUserL2Headers({
+      address,
+      credentials,
+      method: "DELETE",
+      requestPath,
+      body
+    }),
+    body,
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Unable to cancel market orders: ${await readResponseError(response)}`
+    );
+  }
+
+  return (await response.json()) as CancelOrdersResponse;
+}
+
 export async function fetchUserActivity({
   userAddress,
   limit = 25,

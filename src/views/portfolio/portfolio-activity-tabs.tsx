@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Pagination } from "@/components/pagination/pagination";
 import { cn } from "@/lib/cn";
 import { PORTFOLIO_TABLE_PAGE_SIZE } from "@/lib/portfolio/config";
+import { groupOpenOrdersByMarket } from "@/lib/portfolio/group-open-orders";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import type { OpenOrderMarketContext } from "@/lib/portfolio/teams-condition";
 import type {
@@ -154,10 +155,18 @@ export function PortfolioActivityTabs({
     return positions.slice(start, start + PORTFOLIO_TABLE_PAGE_SIZE);
   }, [positionPage, positions]);
 
-  const paginatedOpenOrders = useMemo(() => {
+  const openOrderMarketGroups = useMemo(
+    () => groupOpenOrdersByMarket(openOrders),
+    [openOrders]
+  );
+
+  const paginatedOpenOrderGroups = useMemo(() => {
     const start = (openOrderPage - 1) * PORTFOLIO_TABLE_PAGE_SIZE;
-    return openOrders.slice(start, start + PORTFOLIO_TABLE_PAGE_SIZE);
-  }, [openOrderPage, openOrders]);
+    return openOrderMarketGroups.slice(
+      start,
+      start + PORTFOLIO_TABLE_PAGE_SIZE
+    );
+  }, [openOrderMarketGroups, openOrderPage]);
 
   useEffect(() => {
     const totalPages = Math.max(
@@ -173,13 +182,13 @@ export function PortfolioActivityTabs({
   useEffect(() => {
     const totalPages = Math.max(
       1,
-      Math.ceil(openOrders.length / PORTFOLIO_TABLE_PAGE_SIZE)
+      Math.ceil(openOrderMarketGroups.length / PORTFOLIO_TABLE_PAGE_SIZE)
     );
 
     if (openOrderPage > totalPages) {
       setOpenOrderPage(totalPages);
     }
-  }, [openOrderPage, openOrders.length]);
+  }, [openOrderMarketGroups.length, openOrderPage]);
 
   const showPositionPagination =
     tab === "position" &&
@@ -193,7 +202,7 @@ export function PortfolioActivityTabs({
     sessionConnected &&
     !openOrdersLoading &&
     openOrdersStatus !== "error" &&
-    openOrders.length > 0;
+    openOrderMarketGroups.length > 0;
 
   const showHistoryPagination =
     tab === "history" &&
@@ -242,7 +251,7 @@ export function PortfolioActivityTabs({
       {tab === "open-order" ? (
         <>
           <PortfolioOpenOrdersTable
-            openOrders={paginatedOpenOrders}
+            marketGroups={paginatedOpenOrderGroups}
             marketContextMap={marketContextMap}
             needsWallet={needsWallet}
             loading={openOrdersLoading}
@@ -252,7 +261,7 @@ export function PortfolioActivityTabs({
             <Pagination
               page={openOrderPage}
               pageSize={PORTFOLIO_TABLE_PAGE_SIZE}
-              total={openOrders.length}
+              total={openOrderMarketGroups.length}
               onPageChange={setOpenOrderPage}
             />
           ) : null}
