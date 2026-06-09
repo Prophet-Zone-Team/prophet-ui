@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import {
   filterUserPnlToYtd,
   mapPortfolioRangeToPnlParams,
-  mapUserPnlToSeries
+  mapUserPnlToSeries,
+  normalizeUserPnlToRangeDelta
 } from "@/lib/portfolio/fetch-user-pnl";
 import { fetchUserPnlFromUpstream } from "@/server/portfolio/user-pnl-upstream";
 import type { PortfolioTimeRange } from "@/lib/portfolio/types";
@@ -67,6 +68,8 @@ export async function GET(request: Request) {
 
     if (range === "YTD") {
       points = filterUserPnlToYtd(points);
+    } else if (range !== "All") {
+      points = normalizeUserPnlToRangeDelta(points);
     }
 
     return NextResponse.json(mapUserPnlToSeries(points, range));

@@ -41,6 +41,22 @@ export function getYearStartUnixSeconds(referenceDate = new Date()): number {
   );
 }
 
+export function normalizeUserPnlToRangeDelta(
+  points: UserPnlApiPoint[]
+): UserPnlApiPoint[] {
+  if (!Array.isArray(points) || points.length === 0) {
+    return [];
+  }
+
+  const sorted = [...points].sort((left, right) => left.t - right.t);
+  const baseline = Number.isFinite(sorted[0]?.p) ? sorted[0].p : 0;
+
+  return sorted.map((point) => ({
+    t: point.t,
+    p: (Number.isFinite(point.p) ? point.p : 0) - baseline
+  }));
+}
+
 export function filterUserPnlToYtd(points: UserPnlApiPoint[]): UserPnlApiPoint[] {
   if (!Array.isArray(points) || points.length === 0) {
     return [];
