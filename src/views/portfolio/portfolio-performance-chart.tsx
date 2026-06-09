@@ -4,13 +4,17 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 
 import { cn } from "@/lib/cn";
+import {
+  formatPortfolioPnlHoverTime,
+  getPortfolioPnlPeriodLabel
+} from "@/lib/portfolio/portfolio-format";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { PortfolioTimeRange } from "@/lib/portfolio/types";
 import { portfolioSummaryLabelClass } from "@/views/portfolio/portfolio-ui";
 import { usePortfolioContext } from "./context";
 import { usePortfolioUserPnl } from "./use-portfolio-user-pnl";
 
-const TIME_RANGES: PortfolioTimeRange[] = ["1H", "1D", "1W", "1M", "All"];
+const TIME_RANGES: PortfolioTimeRange[] = ["1D", "1W", "1M", "YTD", "All"];
 
 const CHART_POSITIVE = {
   stroke: "#65AF14",
@@ -54,9 +58,14 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
   }, [activeIndex, series]);
 
   const displayPnl = displayIndex >= 0 ? (series[displayIndex]?.value ?? 0) : 0;
+  const displayTimestamp = series[displayIndex]?.timestamp;
   const chartTone = displayPnl >= 0 ? CHART_POSITIVE : CHART_NEGATIVE;
   const pnlTone = displayPnl >= 0 ? "text-prophet-green" : "text-prophet-red";
   const isLoading = status === "loading";
+  const timeLabel =
+    activeIndex != null
+      ? formatPortfolioPnlHoverTime(displayTimestamp)
+      : getPortfolioPnlPeriodLabel(range);
 
   const handleChartMouseMove = (state: { activeTooltipIndex?: number }) => {
     const index = state?.activeTooltipIndex;
@@ -71,12 +80,13 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <span className={portfolioSummaryLabelClass}>Profit / Loss</span>
-          <div className="flex flex-wrap items-baseline gap-2">
+          <div className="flex flex-col gap-1">
             <span
               className={cn("text-[32px] font-[500] leading-[38px]", pnlTone)}
             >
               {formatTeamDetailMoney(displayPnl)}
             </span>
+            <span className="text-sm text-[#909090]">{timeLabel}</span>
           </div>
         </div>
         <div

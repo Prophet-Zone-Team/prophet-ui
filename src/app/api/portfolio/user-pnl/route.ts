@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  filterUserPnlToYtd,
   mapPortfolioRangeToPnlParams,
   mapUserPnlToSeries
 } from "@/lib/portfolio/fetch-user-pnl";
@@ -11,7 +12,14 @@ import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const VALID_RANGES: PortfolioTimeRange[] = ["1H", "1D", "1W", "1M", "All"];
+const VALID_RANGES: PortfolioTimeRange[] = [
+  "1H",
+  "1D",
+  "1W",
+  "1M",
+  "YTD",
+  "All"
+];
 
 function parseRange(value: string | null): PortfolioTimeRange | undefined {
   if (!value?.trim()) {
@@ -47,13 +55,19 @@ export async function GET(request: Request) {
 
   if (!range) {
     return NextResponse.json(
-      { error: "Invalid or missing range. Expected 1H, 1D, 1W, 1M, or All." },
+      {
+        error: "Invalid or missing range. Expected 1H, 1D, 1W, 1M, YTD, or All."
+      },
       { status: 400 }
     );
   }
 
   try {
-    const points = await fetchUserPnlFromUpstream(userAddress, range);
+    let points = await fetchUserPnlFromUpstream(userAddress, range);
+
+    if (range === "YTD") {
+      points = filterUserPnlToYtd(points);
+    }
 
     return NextResponse.json(mapUserPnlToSeries(points, range));
   } catch (error) {

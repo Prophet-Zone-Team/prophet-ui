@@ -1,5 +1,29 @@
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
-import type { PortfolioTransactionRecord } from "@/lib/portfolio/types";
+import type {
+  PortfolioTimeRange,
+  PortfolioTransactionRecord
+} from "@/lib/portfolio/types";
+
+const PORTFOLIO_PNL_PERIOD_LABELS: Record<PortfolioTimeRange, string> = {
+  "1H": "Past hour",
+  "1D": "Past 24 hours",
+  "1W": "Past week",
+  "1M": "Past month",
+  YTD: "Year to date",
+  All: "All time"
+};
+
+export function getPortfolioPnlPeriodLabel(range: PortfolioTimeRange): string {
+  return PORTFOLIO_PNL_PERIOD_LABELS[range];
+}
+
+export function formatPortfolioPnlHoverTime(timestamp?: number): string {
+  if (timestamp == null) {
+    return "—";
+  }
+
+  return formatUnixSeconds(timestamp);
+}
 
 export function formatSignedPercent(value?: number): string {
   if (!value) {

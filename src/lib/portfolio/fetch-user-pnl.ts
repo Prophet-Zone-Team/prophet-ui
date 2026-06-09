@@ -19,12 +19,13 @@ export interface UserPnlQueryParams {
 export function mapPortfolioRangeToPnlParams(
   range: PortfolioTimeRange
 ): UserPnlQueryParams {
-  const fidelity = range === "All" ? "1d" : "3h";
+  const fidelity = range === "All" || range === "YTD" ? "1d" : "3h";
   const intervalByRange: Record<PortfolioTimeRange, string> = {
     "1H": "1h",
     "1D": "1d",
     "1W": "1w",
     "1M": "1m",
+    YTD: "all",
     All: "all"
   };
 
@@ -32,6 +33,36 @@ export function mapPortfolioRangeToPnlParams(
     interval: intervalByRange[range],
     fidelity
   };
+}
+
+export function getYearStartUnixSeconds(referenceDate = new Date()): number {
+  return Math.floor(
+    Date.UTC(referenceDate.getUTCFullYear(), 0, 1) / 1000
+  );
+}
+
+export function filterUserPnlToYtd(points: UserPnlApiPoint[]): UserPnlApiPoint[] {
+  if (!Array.isArray(points) || points.length === 0) {
+    return [];
+  }
+
+  const yearStart = getYearStartUnixSeconds();
+  const sorted = [...points].sort((left, right) => left.t - right.t);
+  const beforeYearStart = sorted.filter((point) => point.t < yearStart);
+  const baseline =
+    beforeYearStart.length > 0
+      ? beforeYearStart[beforeYearStart.length - 1]?.p ?? 0
+      : 0;
+  const ytdPoints = sorted.filter((point) => point.t >= yearStart);
+
+  if (ytdPoints.length === 0) {
+    return [];
+  }
+
+  return ytdPoints.map((point) => ({
+    t: point.t,
+    p: (Number.isFinite(point.p) ? point.p : 0) - baseline
+  }));
 }
 
 function formatSeriesDate(

@@ -64,4 +64,4 @@ export interface PortfolioSeriesPoint {
 
 export type PortfolioLoadStatus = "idle" | "loading" | "ready" | "error";
 
-export type PortfolioTimeRange = "1H" | "1D" | "1W" | "1M" | "All";
+export type PortfolioTimeRange = "1H" | "1D" | "1W" | "1M" | "YTD" | "All";
