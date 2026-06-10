@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isMarketOrderType } from "@/lib/market/order-math";
 import {
   checkOrderFunding,
   fetchUserBalanceSnapshot,
@@ -149,8 +150,12 @@ export async function POST(request: Request) {
     }
 
     const executionPriceError =
-      orderType === "FAK"
-        ? await validateSignedOrderExecutionPrice(orderContext)
+      isMarketOrderType(orderType)
+        ? await validateSignedOrderExecutionPrice(
+            orderContext,
+            orderPayload.preview!,
+            orderType,
+          )
         : undefined;
 
     if (executionPriceError) {

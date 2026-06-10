@@ -91,6 +91,44 @@ export function resolveMarketOrderWorstPrice(
   return roundPriceToTick(executableBase * slippageFactor, tickSize);
 }
 
+export function isMarketOrderType(orderType: TradingOrderType): boolean {
+  return orderType === "FAK" || orderType === "FOK";
+}
+
+function resolveMarketOrderPriceGuardTolerance(
+  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE,
+): number {
+  const resolvedTickSize = isMarketTickSize(tickSize)
+    ? tickSize
+    : DEFAULT_MARKET_TICK_SIZE;
+
+  return Number(resolvedTickSize);
+}
+
+export function isSignedMarketOrderPriceWithinGuard(input: {
+  orderPrice: number;
+  tradeSide: BidTradeSide;
+  sidePrice: number;
+  bestAsk?: number;
+  bestBid?: number;
+  tickSize?: MarketTickSize | string;
+}): boolean {
+  const tolerance = resolveMarketOrderPriceGuardTolerance(input.tickSize);
+  const guardedPrice = resolveMarketOrderWorstPrice({
+    tradeSide: input.tradeSide,
+    sidePrice: input.sidePrice,
+    bestAsk: input.bestAsk,
+    bestBid: input.bestBid,
+    tickSize: input.tickSize,
+  });
+
+  if (input.tradeSide === "buy") {
+    return input.orderPrice <= guardedPrice + tolerance;
+  }
+
+  return input.orderPrice >= guardedPrice - tolerance;
+}
+
 export function isTakeProfitLimitAvailable(shareSize: number): boolean {
   return Number.isFinite(shareSize) && shareSize >= LIMIT_BUY_MIN_SHARES;
 }

@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  isMarketOrderType,
+  isSignedMarketOrderPriceWithinGuard,
+} from "@/lib/market/order-math";
 import { fetchClobBestPrices } from "@/server/trading/clob-user-client";
 // import { ZERO_ORDER_BUILDER_CODE } from "@/server/trading/builder-code";
 import type { SignedOrderContext } from "@/server/trading/balances";
@@ -127,7 +131,9 @@ export function validateSignedOrderPreview(
 }
 
 export async function validateSignedOrderExecutionPrice(
-  order: SignedOrderContext
+  order: SignedOrderContext,
+  preview: UserOrderPreview,
+  orderType: TradingOrderType,
 ): Promise<string | undefined> {
   const orderPrice = getSignedOrderPrice(order);
 
@@ -137,7 +143,6 @@ export async function validateSignedOrderExecutionPrice(
 
   try {
     const prices = await fetchClobBestPrices(order.tokenId);
-    const tolerance = 0.02;
 
     if (order.side === "BUY" && prices.bestAsk === undefined) {
       return "No current ask liquidity is available for this token. Refresh the market before submitting.";
@@ -146,6 +151,31 @@ export async function validateSignedOrderExecutionPrice(
     if (order.side === "SELL" && prices.bestBid === undefined) {
       return "No current bid liquidity is available for this token. Refresh the market before submitting.";
     }
+
+    if (isMarketOrderType(orderType)) {
+      const withinGuard = isSignedMarketOrderPriceWithinGuard({
+        orderPrice,
+        tradeSide: preview.side,
+        sidePrice: preview.limitPrice,
+        bestAsk: prices.bestAsk,
+        bestBid: prices.bestBid,
+        tickSize: preview.tickSize,
+      });
+
+      if (!withinGuard) {
+        if (order.side === "BUY" && prices.bestAsk !== undefined) {
+          return `Order price ${(orderPrice * 100).toFixed(1)}c is far above the current best ask ${(prices.bestAsk * 100).toFixed(1)}c. Refresh the ticket before submitting.`;
+        }
+
+        if (order.side === "SELL" && prices.bestBid !== undefined) {
+          return `Order price ${(orderPrice * 100).toFixed(1)}c is far below the current best bid ${(prices.bestBid * 100).toFixed(1)}c. Refresh the ticket before submitting.`;
+        }
+      }
+
+      return undefined;
+    }
+
+    const tolerance = 0.02;
 
     if (
       order.side === "BUY" &&
