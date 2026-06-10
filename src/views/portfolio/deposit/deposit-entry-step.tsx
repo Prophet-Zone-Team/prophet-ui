@@ -2,10 +2,12 @@
 
 import { Loader2 } from "lucide-react";
 
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { formatNumber } from "@/utils";
 import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
 import { useConfidentialBalance } from "@/hooks/confidential/use-confidential-balance";
+import { depositPendingConfirmButtonClass } from "@/views/portfolio/deposit/deposit-ui";
 import { DepositPrivateBalanceEntry } from "@/views/portfolio/deposit/deposit-private-balance-entry";
 import { DepositSourceTabs } from "@/views/portfolio/deposit/deposit-source-tabs";
 import { resolvePrivateAccountStatus } from "@/views/portfolio/deposit/resolve-private-account-status";
@@ -30,9 +32,16 @@ export function DepositEntryStep({
   stableflowLoading = false,
   onOpenPrivateTopup,
 }: DepositEntryStepProps) {
-  const { session, openLogin, loginInProgress } = useAuth();
-  const { connectedWalletBalanceUsd, balancesLoading, pricesLoading } =
-    useDepositContext();
+  const { session, openLogin, loginInProgress, isBuyRestricted } = useAuth();
+  const {
+    connectedWalletBalanceUsd,
+    balancesLoading,
+    pricesLoading,
+    hasPendingDeposit,
+    converting,
+    onConfirmPendingDeposit,
+  } = useDepositContext();
+  const regionRestricted = Boolean(isBuyRestricted);
   const confidentialAccount = useConfidentialAccount();
   const confidentialBalance = useConfidentialBalance({
     enabled: confidentialAccount.authenticated,
@@ -95,6 +104,25 @@ export function DepositEntryStep({
           onTopUp={onOpenPrivateTopup}
           onTransferred={() => void confidentialBalance.refetch()}
         />
+      ) : null}
+
+      {hasPendingDeposit ? (
+        <RegionRestrictedControl restricted={regionRestricted}>
+          <button
+            type="button"
+            className={depositPendingConfirmButtonClass}
+            disabled={converting || regionRestricted}
+            onClick={() => void onConfirmPendingDeposit()}
+          >
+            {converting ? (
+              <Loader2
+                className="mr-1.5 h-3.5 w-3.5 animate-spin"
+                aria-hidden="true"
+              />
+            ) : null}
+            Confirm pending deposit
+          </button>
+        </RegionRestrictedControl>
       ) : null}
     </div>
   );
