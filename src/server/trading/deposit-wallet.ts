@@ -1,19 +1,38 @@
 import "server-only";
 
-import { deriveDepositWallet, TransactionType } from "@polymarket/builder-relayer-client";
+import {
+  deriveBeaconDepositWallet,
+  deriveUupsDepositWallet,
+} from "@/lib/trading/deposit-wallet-address";
+import { TransactionType } from "@polymarket/builder-relayer-client";
 import { BuilderConfig } from "@polymarket/builder-signing-sdk";
+import {
+  BaseError,
+  ContractFunctionRevertedError,
+  ExecutionRevertedError,
+  RawContractError,
+  type Address,
+  zeroAddress,
+} from "viem";
 
 import type {
   DepositWalletCheckResponse,
   DepositWalletStatus,
   TradingUserSession,
 } from "@/types/market";
+import { getFundingPublicClient } from "@/lib/funding/funding-chain-client";
 import { getTradingChainId } from "@/server/trading/clob-auth";
-import { isContractDeployedOnPolygon } from "@/server/trading/onchain-balances";
 import { serverFetch } from "@/server/trading/server-fetch";
 
 const DEFAULT_RELAYER_URL = "https://relayer-v2.polymarket.com";
 const RELAYER_TIMEOUT_MS = 8000;
+const DEPOSIT_WALLET_RELAYER_CONFIRMED_STATES = new Set([
+  "STATE_MINED",
+  "STATE_CONFIRMED",
+  "STATE_EXECUTED",
+]);
+const DEPOSIT_WALLET_RELAYER_FAILED_STATES = new Set(["STATE_FAILED", "STATE_INVALID"]);
+const FACTORY_BEACON_SELECTOR = "0x49493a4d";
 const DEPOSIT_WALLET_CONTRACTS = {
   137: {
     factory: "0x00000000000Fb5C9ADea0298D729A0CB3823Cc07",
@@ -63,7 +82,7 @@ interface RelayerTransactionRecord {
 export async function checkDepositWalletForOwner(
   ownerAddress: string,
 ): Promise<DepositWalletCheckResponse> {
-  const walletAddress = deriveDepositWalletForOwner(ownerAddress);
+  const walletAddress = await deriveDepositWalletForOwner(ownerAddress);
   const checkedAt = new Date().toISOString();
 
   try {
@@ -88,7 +107,7 @@ export async function checkDepositWalletForOwner(
 }
 
 export async function setupDepositWalletForOwner(ownerAddress: string): Promise<DepositWalletSetupResult> {
-  const walletAddress = deriveDepositWalletForOwner(ownerAddress);
+  const walletAddress = await deriveDepositWalletForOwner(ownerAddress);
   const checkedAt = new Date().toISOString();
 
   try {
@@ -110,6 +129,16 @@ export async function setupDepositWalletForOwner(ownerAddress: string): Promise<
         status: "relayer_unconfigured",
         checkedAt,
         error: relayerStatus.error ?? "Polymarket relayer credentials are not configured.",
+      };
+    }
+
+    const onchainDeployed = await isContractDeployedOnTradingChain(walletAddress);
+
+    if (onchainDeployed) {
+      return {
+        walletAddress,
+        status: "deploying",
+        checkedAt,
       };
     }
 
@@ -164,6 +193,15 @@ export async function refreshDepositWalletDeployment(session: TradingUserSession
         };
       }
 
+      const onchainDeployed = await isContractDeployedOnTradingChain(session.funderAddress);
+
+      if (onchainDeployed) {
+        return {
+          status: "deploying",
+          checkedAt,
+        };
+      }
+
       return {
         status: "derived",
         checkedAt,
@@ -173,15 +211,17 @@ export async function refreshDepositWalletDeployment(session: TradingUserSession
     const transaction = await fetchRelayerTransaction(session.depositWalletTransactionId);
     const state = transaction?.state;
 
-    if (state === "STATE_MINED" || state === "STATE_CONFIRMED" || state === "STATE_EXECUTED") {
+    if (state && DEPOSIT_WALLET_RELAYER_CONFIRMED_STATES.has(state)) {
+      const relayerReady = await fetchDepositWalletDeployed(session.funderAddress);
+
       return {
-        status: "deployed",
+        status: relayerReady.deployed ? "deployed" : "deploying",
         checkedAt,
         transactionHash: transaction?.transactionHash,
       };
     }
 
-    if (state === "STATE_FAILED" || state === "STATE_INVALID") {
+    if (state && DEPOSIT_WALLET_RELAYER_FAILED_STATES.has(state)) {
       return {
         status: "error",
         checkedAt,
@@ -204,10 +244,24 @@ export async function refreshDepositWalletDeployment(session: TradingUserSession
   }
 }
 
-export function deriveDepositWalletForOwner(ownerAddress: string) {
+export async function deriveDepositWalletForOwner(ownerAddress: string) {
   const config = getDepositWalletContractConfig();
+  const uupsAddress = deriveUupsDepositWallet(
+    ownerAddress,
+    config.factory,
+    config.implementation,
+  );
+  const beacon = await fetchDepositWalletFactoryBeacon(config.factory);
 
-  return deriveDepositWallet(ownerAddress, config.factory, config.implementation);
+  if (beacon.toLowerCase() === zeroAddress.toLowerCase()) {
+    return uupsAddress;
+  }
+
+  if (await isContractDeployedOnTradingChain(uupsAddress)) {
+    return uupsAddress;
+  }
+
+  return deriveBeaconDepositWallet(ownerAddress, config.factory, beacon);
 }
 
 export function getRelayerConfigStatus() {
@@ -254,23 +308,61 @@ export async function fetchRelayerNonce(ownerAddress: string, signerType: Transa
   return payload.nonce;
 }
 
-async function fetchDepositWalletDeployed(walletAddress: string) {
+async function fetchDepositWalletFactoryBeacon(factory: string) {
   try {
-    const onchainDeployed = await isContractDeployedOnPolygon(walletAddress);
-
-    return {
-      deployed: onchainDeployed,
-      source: "onchain" as const,
-    };
-  } catch (onchainError) {
-    const onchainMessage = onchainError instanceof Error ? onchainError.message : String(onchainError);
-
-    console.warn("[deposit-wallet] on-chain deployed check failed; falling back to relayer", {
-      walletAddress,
-      error: onchainMessage,
+    const client = getTradingPublicClient();
+    const { data } = await client.call({
+      to: factory as Address,
+      data: FACTORY_BEACON_SELECTOR,
     });
+
+    return decodeAddressReturnData(data);
+  } catch (error) {
+    if (isContractRevert(error)) {
+      return zeroAddress;
+    }
+
+    throw error;
+  }
+}
+
+async function isContractDeployedOnTradingChain(address: string) {
+  const client = getTradingPublicClient();
+  const bytecode = await client.getBytecode({
+    address: address as Address,
+  });
+
+  return Boolean(bytecode && bytecode !== "0x");
+}
+
+function getTradingPublicClient() {
+  return getFundingPublicClient(getTradingChainId());
+}
+
+function decodeAddressReturnData(data: `0x${string}` | undefined) {
+  if (data === undefined || data.length < 66) {
+    return zeroAddress;
   }
 
+  return `0x${data.slice(-40)}` as Address;
+}
+
+function isContractRevert(error: unknown) {
+  if (!(error instanceof BaseError)) {
+    return false;
+  }
+
+  return (
+    error.walk(
+      (err) =>
+        err instanceof ContractFunctionRevertedError ||
+        err instanceof ExecutionRevertedError ||
+        (err instanceof RawContractError && err.code === 3),
+    ) !== null
+  );
+}
+
+async function fetchDepositWalletDeployed(walletAddress: string) {
   try {
     const relayerDeployed = await fetchDepositWalletDeployedFromRelayer(walletAddress);
 
@@ -281,10 +373,30 @@ async function fetchDepositWalletDeployed(walletAddress: string) {
   } catch (relayerError) {
     const relayerMessage = relayerError instanceof Error ? relayerError.message : String(relayerError);
 
+    console.warn("[deposit-wallet] relayer deployed check failed; falling back to on-chain", {
+      walletAddress,
+      error: relayerMessage,
+    });
+  }
+
+  try {
+    const onchainDeployed = await isContractDeployedOnTradingChain(walletAddress);
+
+    return {
+      deployed: onchainDeployed,
+      source: "onchain" as const,
+    };
+  } catch (onchainError) {
+    const onchainMessage = onchainError instanceof Error ? onchainError.message : String(onchainError);
+
     throw new Error(
-      `Unable to check deposit wallet deployment: on-chain and relayer checks failed (${relayerMessage}).`,
+      `Unable to check deposit wallet deployment: relayer and on-chain checks failed (${onchainMessage}).`,
     );
   }
+}
+
+export async function fetchDepositWalletRelayerReady(walletAddress: string) {
+  return fetchDepositWalletDeployedFromRelayer(walletAddress);
 }
 
 async function fetchDepositWalletDeployedFromRelayer(walletAddress: string) {

@@ -420,6 +420,8 @@ export interface ProphetUserTrackNewsStat {
 export interface ProphetUserTrackItem {
   track_id?: number;
   category?: ProphetTrackCategory;
+  /** Top-attention ranking labels from GET /v1/user/tracks/top (e.g. "Most Popular"). */
+  categories?: string[] | null;
   slug?: string;
   team_name?: string;
   volume?: string;

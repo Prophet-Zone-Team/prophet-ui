@@ -2,7 +2,7 @@ import { fetchJson } from "@/lib/team/client-fetch";
 import type { DepositWalletCheckResponse, DepositWalletDeployResponse } from "@/types/market";
 
 const DEPOSIT_WALLET_POLL_INTERVAL_MS = 2000;
-const DEPOSIT_WALLET_POLL_MAX_MS = 30000;
+const DEPOSIT_WALLET_POLL_MAX_MS = 120_000;
 
 export async function fetchDepositWalletStatus(
   walletAddress: string,
@@ -42,7 +42,9 @@ export async function pollDepositWalletUntilDeployed(walletAddress: string) {
     }
 
     if (Date.now() - startedAt >= DEPOSIT_WALLET_POLL_MAX_MS) {
-      throw new Error("Deposit wallet deployment is still pending. Retry in a moment.");
+      throw new Error(
+        "Deposit wallet deployment is still pending on the Polymarket relayer. Wait a minute and retry.",
+      );
     }
 
     await delay(DEPOSIT_WALLET_POLL_INTERVAL_MS);
