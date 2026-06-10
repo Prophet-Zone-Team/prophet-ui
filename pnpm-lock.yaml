@@ -15,8 +15,8 @@ importers:
         specifier: ^0.1.2
         version: 0.1.2
       '@polymarket/builder-relayer-client':
-        specifier: ^0.0.9
-        version: 0.0.9(bufferutil@4.1.0)(utf-8-validate@5.0.10)(zod@4.4.3)
+        specifier: ^0.0.10
+        version: 0.0.10(bufferutil@4.1.0)(utf-8-validate@5.0.10)(zod@4.4.3)
       '@polymarket/builder-signing-sdk':
         specifier: ^0.0.8
         version: 0.0.8
@@ -1667,8 +1667,8 @@ packages:
   '@polymarket/builder-abstract-signer@0.0.1':
     resolution: {integrity: sha512-XuuxQQcXYtqQce8slhqiJQti1lVPr+xXC7M3lbetmNnsc9tlYdYRnojE+tcniCHg7VQ6dokcIu0eLYDtM5vdvQ==}
 
-  '@polymarket/builder-relayer-client@0.0.9':
-    resolution: {integrity: sha512-7i5LSSpSFZiNuoLY623krWWEiT/jkxv76tueGTNOVy3ZND+2sJvOJk5+PQFgiws+LNa476UFOodkMEgqH5lSqw==}
+  '@polymarket/builder-relayer-client@0.0.10':
+    resolution: {integrity: sha512-TarpcWWHI+wiqz5MYxqL3NawCs2gEPSZNFfLmWZ6EYxXvmi2RYgGNYXObo9AsC97J95dZ9+9RGNF/V2QZ59+Rg==}
 
   '@polymarket/builder-signing-sdk@0.0.8':
     resolution: {integrity: sha512-rZLCFxEdYahl5FiJmhe22RDXysS1ibFJlWz4NT0s3itJRYq3XJzXXHXEZkAQplU+nIS1IlbbKjA4zDQaeCyYtg==}
@@ -8201,8 +8201,10 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@polymarket/builder-relayer-client@0.0.9(bufferutil@4.1.0)(utf-8-validate@5.0.10)(zod@4.4.3)':
+  '@polymarket/builder-relayer-client@0.0.10(bufferutil@4.1.0)(utf-8-validate@5.0.10)(zod@4.4.3)':
     dependencies:
+      '@ethersproject/providers': 5.8.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      '@ethersproject/wallet': 5.8.0
       '@polymarket/builder-abstract-signer': 0.0.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)(zod@4.4.3)
       '@polymarket/builder-signing-sdk': 0.0.8
       axios: 0.27.2
