@@ -1,14 +1,19 @@
 "use client";
 
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight, Loader2 } from "lucide-react";
 import Big from "big.js";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import InputNumber from "@/components/input-number";
 import { POLYMARKET_USD } from "@/config/funding";
 import { cn } from "@/lib/cn";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { formatNumber } from "@/utils";
+import {
+  useConfidentialUnshield,
+  type UnshieldPhase,
+} from "@/hooks/confidential/use-confidential-unshield";
 import {
   depositModalAmountInputClass,
   depositModalAmountInputWrapClass,
@@ -30,20 +35,40 @@ const USDC_TOKEN = POLYMARKET_USD.underlyingToken;
 export interface DepositPrivateBalanceEntryProps {
   status: PrivateAccountStatus;
   privateAccountAddress?: string;
+  privateAccountEoaAddress?: string;
   privateBalanceUsd?: number;
+  walletAddress?: string;
   onTopUp?: () => void;
+  onTransferred?: () => void;
 }
+
+const UNSHIELD_PHASE_LABEL: Record<UnshieldPhase, string> = {
+  idle: "",
+  quoting: "Preparing transfer…",
+  signing: "Confirm in your wallet…",
+  submitting: "Submitting…",
+  awaiting_funds: "Waiting for funds…",
+  converting: "Converting to pUSD…",
+  success: "",
+  error: "",
+};
 
 export function DepositPrivateBalanceEntry({
   status,
   privateAccountAddress,
+  privateAccountEoaAddress,
   privateBalanceUsd,
-  onTopUp
+  walletAddress,
+  onTopUp,
+  onTransferred,
 }: DepositPrivateBalanceEntryProps) {
   const [inputValue, setInputValue] = useState("0");
+  const [phase, setPhase] = useState<UnshieldPhase>("idle");
+  const { unshield } = useConfidentialUnshield();
 
   const isInteractive = status === "funded";
   const maxBalanceUsd = privateBalanceUsd ?? 0;
+  const transferring = phase !== "idle" && phase !== "success" && phase !== "error";
 
   const formattedAccountBalance = useMemo(
     () =>
@@ -64,7 +89,34 @@ export function DepositPrivateBalanceEntry({
   }
 
   const transferEnabled =
-    isInteractive && Big(inputValue || 0).gt(0) && maxBalanceUsd > 0;
+    isInteractive &&
+    Big(inputValue || 0).gt(0) &&
+    Big(inputValue || 0).lte(maxBalanceUsd) &&
+    maxBalanceUsd > 0 &&
+    Boolean(walletAddress) &&
+    !transferring;
+
+  async function handleTransfer() {
+    if (!transferEnabled || !walletAddress) {
+      return;
+    }
+
+    try {
+      await unshield({
+        amountUsd: inputValue,
+        eoaAddress: walletAddress,
+        onPhase: setPhase,
+      });
+      toast.success("Transfer complete");
+      setInputValue("0");
+      onTransferred?.();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message);
+    } finally {
+      setPhase("idle");
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4 pb-2">
@@ -205,6 +257,12 @@ export function DepositPrivateBalanceEntry({
           </div>
         </div>
 
+        {isInteractive && privateAccountEoaAddress ? (
+          <p className="m-0 text-center text-xs font-[400] text-[#909090]">
+            Linked to {formatShortWallet(privateAccountEoaAddress)}
+          </p>
+        ) : null}
+
         <button
           type="button"
           className={cn(
@@ -212,8 +270,16 @@ export function DepositPrivateBalanceEntry({
             !transferEnabled && "opacity-30"
           )}
           disabled={!transferEnabled}
+          onClick={() => void handleTransfer()}
         >
-          Transfer
+          {transferring ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              {UNSHIELD_PHASE_LABEL[phase] || "Transferring…"}
+            </>
+          ) : (
+            "Transfer"
+          )}
         </button>
       </div>
     </div>

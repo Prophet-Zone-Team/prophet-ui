@@ -4,6 +4,8 @@ import { Loader2 } from "lucide-react";
 
 import { useAuth } from "@/context/auth";
 import { formatNumber } from "@/utils";
+import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
+import { useConfidentialBalance } from "@/hooks/confidential/use-confidential-balance";
 import { DepositPrivateBalanceEntry } from "@/views/portfolio/deposit/deposit-private-balance-entry";
 import { DepositSourceTabs } from "@/views/portfolio/deposit/deposit-source-tabs";
 import { resolvePrivateAccountStatus } from "@/views/portfolio/deposit/resolve-private-account-status";
@@ -17,6 +19,7 @@ export interface DepositEntryStepProps {
   onSelectConnected: () => void;
   onSelectStableflow: () => void;
   stableflowLoading?: boolean;
+  onOpenPrivateTopup?: () => void;
 }
 
 export function DepositEntryStep({
@@ -25,10 +28,15 @@ export function DepositEntryStep({
   onSelectConnected,
   onSelectStableflow,
   stableflowLoading = false,
+  onOpenPrivateTopup,
 }: DepositEntryStepProps) {
   const { session, openLogin, loginInProgress } = useAuth();
   const { connectedWalletBalanceUsd, balancesLoading, pricesLoading } =
     useDepositContext();
+  const confidentialAccount = useConfidentialAccount();
+  const confidentialBalance = useConfidentialBalance({
+    enabled: confidentialAccount.authenticated,
+  });
 
   if (!session) {
     return (
@@ -46,7 +54,11 @@ export function DepositEntryStep({
   }
 
   const isLoading = balancesLoading || pricesLoading;
-  const privateAccountStatus = resolvePrivateAccountStatus(session);
+  const privateBalanceUsd = confidentialBalance.usdc?.usd;
+  const privateAccountStatus = resolvePrivateAccountStatus(
+    confidentialAccount.verified,
+    privateBalanceUsd,
+  );
 
   return (
     <div className="flex min-w-0 flex-col gap-4 pb-10 md:pb-2">
@@ -76,7 +88,12 @@ export function DepositEntryStep({
       {entryTab === "private_balance" ? (
         <DepositPrivateBalanceEntry
           status={privateAccountStatus}
-          privateAccountAddress={session.privateAccountAddress}
+          privateAccountAddress={confidentialAccount.intentsUserId}
+          privateAccountEoaAddress={confidentialAccount.eoaAddress}
+          privateBalanceUsd={privateBalanceUsd}
+          walletAddress={session.walletAddress}
+          onTopUp={onOpenPrivateTopup}
+          onTransferred={() => void confidentialBalance.refetch()}
         />
       ) : null}
     </div>
