@@ -2,13 +2,14 @@
 
 import { createContext } from "react";
 
-import type { ConfidentialBalanceView } from "@/lib/confidential/types";
+import type { ConfidentialBalanceView, ConfidentialSessionView } from "@/lib/confidential/types";
 import type { TradingLoginStep } from "@/lib/trading/trading-login";
 import type { TradingEligibilityView } from "@/lib/trading/trading-eligibility-client";
 import type { TradingSetupSteps } from "@/lib/trading/trading-setup";
 import type { CashBalanceView, FundingLoadStatus } from "@/types/funding";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
 import type { AuthLoginMethod } from "@/store/auth-store";
+import { UseConfidentialAccountResult } from "@/hooks/confidential/use-confidential-account";
 export type EligibilityLoadStatus = "idle" | "loading" | "ready";
 
 export interface AuthContextValue {
@@ -58,6 +59,8 @@ export interface AuthContextValue {
   refreshSetupReadiness: () => Promise<UserTradingReadiness | undefined>;
   refreshCash: () => Promise<void>;
   refreshPrivateBalance: () => Promise<void>;
+  onAuthenticateConfidential: () => Promise<ConfidentialSessionView>;
+  confidentialAccount: UseConfidentialAccountResult;
   syncCash: () => Promise<void>;
 }
 

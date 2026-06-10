@@ -6,7 +6,6 @@ import { useEffect } from "react";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { formatNumber } from "@/utils";
-import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
 import { depositPendingConfirmButtonClass } from "@/views/portfolio/deposit/deposit-ui";
 import { DepositPrivateBalanceEntry } from "@/views/portfolio/deposit/deposit-private-balance-entry";
 import { DepositSourceTabs } from "@/views/portfolio/deposit/deposit-source-tabs";
@@ -32,7 +31,16 @@ export function DepositEntryStep({
   stableflowLoading = false,
   onOpenPrivateTopup,
 }: DepositEntryStepProps) {
-  const { session, openLogin, loginInProgress, isBuyRestricted, privateBalance, privateBalanceStatus, refreshPrivateBalance } = useAuth();
+  const {
+    session,
+    openLogin,
+    loginInProgress,
+    isBuyRestricted,
+    privateBalance,
+    privateBalanceStatus,
+    refreshPrivateBalance,
+    confidentialAccount,
+  } = useAuth();
   const {
     connectedWalletBalanceUsd,
     balancesLoading,
@@ -42,7 +50,6 @@ export function DepositEntryStep({
     onConfirmPendingDeposit,
   } = useDepositContext();
   const regionRestricted = Boolean(isBuyRestricted);
-  const confidentialAccount = useConfidentialAccount();
 
   useEffect(() => {
     if (confidentialAccount.authenticated && privateBalanceStatus === "idle") {

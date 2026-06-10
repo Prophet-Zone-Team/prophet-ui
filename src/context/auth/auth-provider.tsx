@@ -22,7 +22,13 @@ import {
   type AuthContextValue,
   type EligibilityLoadStatus
 } from "@/context/auth/auth-context";
-import { getConfidentialBalances } from "@/lib/confidential/client";
+import {
+  authenticateConfidential,
+  clearConfidentialSession,
+  getConfidentialBalances,
+  getConfidentialSession,
+  requestConfidentialChallenge,
+} from "@/lib/confidential/client";
 import { mapBalanceSnapshotToCash } from "@/lib/trading/cash-balance-model";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
 import {
@@ -89,6 +95,8 @@ import {
   waitForPrivyWallet,
 } from "@/context/privy/privy-wallet-bridge";
 import { useDisconnect } from "wagmi";
+import { signConfidentialMessage } from "@/lib/confidential/sign-message";
+import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
@@ -127,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pendingPrivyLoginMethodRef = useRef<AuthLoginMethod | undefined>(
     undefined
   );
+  const confidentialAccount = useConfidentialAccount();
 
   useLoginWithOAuth({
     onComplete: (params) => {
@@ -234,6 +243,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await disconnectTradingSession();
       } catch {
         // ignore disconnect errors during cleanup
+      }
+
+      try {
+        await clearConfidentialSession();
+      } catch {
+        // ignore confidential session clear errors during cleanup
       }
 
       try {
@@ -889,9 +904,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const openLogin = useCallback(async () => {
     const store = useAuthStore.getState();
 
+    debugger
+
     try {
       await wagmiDisconnect();
-    } catch {}
+    } catch { }
     store.setLoginMethod("wallet");
 
     if (isRegionBlockedRef.current) {
@@ -921,7 +938,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setError(undefined);
     try {
       await wagmiDisconnect();
-    } catch {}
+    } catch { }
     setPrivyModalOpen(true);
   }, [wagmiDisconnect]);
 
@@ -986,7 +1003,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       try {
         await wagmiDisconnect();
-      } catch {}
+      } catch { }
 
       await clearAuthState({ openModal: false });
 
@@ -1003,6 +1020,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       walletHandlingRef.current = false;
     }
   }, [clearAuthState, privyLogout, wagmiDisconnect]);
+
+  const onAuthenticateConfidential = async () => {
+    if (!session) {
+      throw new Error("No session found");
+    }
+
+    try {
+      const confidentialSession = await getConfidentialSession();
+
+      if (
+        confidentialSession.authenticated &&
+        confidentialSession.eoaAddress?.toLowerCase() === session.walletAddress.toLowerCase()
+      ) {
+        return confidentialSession;
+      }
+
+      const challenge = await requestConfidentialChallenge(session.walletAddress);
+      const signature = await signConfidentialMessage(session.walletAddress, challenge.message);
+      const authenticateConfidentialRes = await authenticateConfidential({
+        eoaAddress: session.walletAddress,
+        message: challenge.message,
+        signature,
+      });
+      return {
+        authenticated: true,
+        eoaAddress: session.walletAddress,
+        intentsUserId: authenticateConfidentialRes.intentsUserId,
+      };
+    } catch (error) {
+      throw error;
+    }
+  };
 
   useEffect(() => {
     if (!hydrated || !session?.walletAddress) {
@@ -1215,6 +1264,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshSetupReadiness,
     refreshCash,
     refreshPrivateBalance,
+    onAuthenticateConfidential,
+    confidentialAccount,
     syncCash
   };
 

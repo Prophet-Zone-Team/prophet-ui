@@ -6,12 +6,6 @@ import { useAuth } from "@/context/auth";
 import { PrivateTopupGuideDialog } from "@/views/portfolio/private-topup/private-topup-guide-dialog";
 import { PrivateTopupIntroDialog } from "@/views/portfolio/private-topup/private-topup-intro-dialog";
 import { PRIVATE_MODE_HOSTNAME } from "@/config/funding";
-import {
-  authenticateConfidential,
-  getConfidentialSession,
-  requestConfidentialChallenge,
-} from "@/lib/confidential/client";
-import { signConfidentialMessage } from "@/lib/confidential/sign-message";
 
 export interface PrivateTopupOnboardingProps {
   introOpen: boolean;
@@ -28,7 +22,7 @@ export function PrivateTopupOnboarding({
   onIntroOpenChange,
   onGuideOpenChange,
 }: PrivateTopupOnboardingProps) {
-  const { disconnect, openLogin } = useAuth();
+  const { disconnect, openLogin, onAuthenticateConfidential } = useAuth();
   const [proceeding, setProceeding] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
@@ -51,24 +45,7 @@ export function PrivateTopupOnboarding({
     setError(undefined);
 
     try {
-      const session = await getConfidentialSession();
-
-      if (
-        session.authenticated &&
-        session.eoaAddress?.toLowerCase() === walletAddress.toLowerCase()
-      ) {
-        closeAll();
-        redirectToPrivate();
-        return;
-      }
-
-      const challenge = await requestConfidentialChallenge(walletAddress);
-      const signature = await signConfidentialMessage(walletAddress, challenge.message);
-      await authenticateConfidential({
-        eoaAddress: walletAddress,
-        message: challenge.message,
-        signature,
-      });
+      await onAuthenticateConfidential();
 
       closeAll();
       redirectToPrivate();
