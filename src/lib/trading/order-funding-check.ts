@@ -17,6 +17,25 @@ export interface OrderFundingCheck {
   allowanceDetail: string;
 }
 
+export function formatOrderFundingFailureMessage(
+  funding: Pick<
+    OrderFundingCheck,
+    "balance" | "allowance" | "balanceDetail" | "allowanceDetail"
+  >
+): string {
+  const parts: string[] = [];
+
+  if (funding.balance === "fail" && funding.balanceDetail) {
+    parts.push(funding.balanceDetail);
+  }
+
+  if (funding.allowance === "fail" && funding.allowanceDetail) {
+    parts.push(funding.allowanceDetail);
+  }
+
+  return parts.join("\n");
+}
+
 export function checkOrderFunding({
   balances,
   requirement,

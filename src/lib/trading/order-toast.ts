@@ -4,9 +4,15 @@ import { toast } from "sonner";
 
 import { formatShareSize } from "@/lib/market/order-math";
 import { formatSharePrice } from "@/lib/portfolio/portfolio-format";
+import { formatOrderFundingFailureMessage } from "@/lib/trading/order-funding-check";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
+import { FetchJsonError } from "@/lib/team/client-fetch";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
-import type { BidTradeSide, OrderOutcomeSide } from "@/types/market";
+import type {
+  BidTradeSide,
+  OrderOutcomeSide,
+  UserOrderFundingCheck
+} from "@/types/market";
 
 export interface OrderToastSummaryInput {
   tradeSide: BidTradeSide;
@@ -36,6 +42,14 @@ export function formatOrderToastSummary(input: OrderToastSummaryInput): string {
 export function resolveOrderErrorMessage(error: unknown): string {
   if (isUserRejectedRequest(error)) {
     return WALLET_REJECTION_MESSAGE;
+  }
+
+  const funding = extractOrderFundingFromError(error);
+  if (funding) {
+    const fundingMessage = formatOrderFundingFailureMessage(funding);
+    if (fundingMessage) {
+      return fundingMessage;
+    }
   }
 
   const message = error instanceof Error ? error.message : String(error);
@@ -127,6 +141,30 @@ function truncateOrderId(orderId: string): string {
   }
 
   return `${orderId.slice(0, 8)}…`;
+}
+
+function extractOrderFundingFromError(
+  error: unknown
+): UserOrderFundingCheck | undefined {
+  if (!(error instanceof FetchJsonError)) {
+    return undefined;
+  }
+
+  if (!error.payload || typeof error.payload !== "object") {
+    return undefined;
+  }
+
+  const funding = (error.payload as { funding?: UserOrderFundingCheck }).funding;
+
+  if (
+    !funding ||
+    typeof funding.balance !== "string" ||
+    typeof funding.allowance !== "string"
+  ) {
+    return undefined;
+  }
+
+  return funding;
 }
 
 function isUserRejectedRequest(error: unknown): boolean {

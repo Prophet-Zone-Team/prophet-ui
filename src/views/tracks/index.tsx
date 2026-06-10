@@ -49,6 +49,16 @@ export function TracksView() {
     [items]
   );
 
+  const topAttentionTeamCards = useMemo(
+    () => topAttentionCards.filter((card) => card.variant !== "match"),
+    [topAttentionCards]
+  );
+
+  const topAttentionMatchCards = useMemo(
+    () => topAttentionCards.filter((card) => card.variant === "match"),
+    [topAttentionCards]
+  );
+
   const loadTracks = useCallback(async () => {
     await fetchTracks();
   }, [fetchTracks]);
@@ -152,15 +162,24 @@ export function TracksView() {
     }
 
     return (
-      <div className="flex flex-wrap gap-[4px]">
-        {topAttentionCards.map((card) => (
-          <TopAttentionCard
-            key={
-              card.variant === "match" ? card.match.id : card.snapshot.team.id
-            }
-            {...card}
-          />
-        ))}
+      <div className="flex flex-col gap-[4px]">
+        {topAttentionTeamCards.length > 0 ? (
+          <div className="flex flex-wrap gap-[4px]">
+            {topAttentionTeamCards.map((card) => (
+              <TopAttentionCard
+                key={card.snapshot.team.id}
+                {...card}
+              />
+            ))}
+          </div>
+        ) : null}
+        {topAttentionMatchCards.length > 0 ? (
+          <div className="flex flex-wrap gap-[4px]">
+            {topAttentionMatchCards.map((card) => (
+              <TopAttentionCard key={card.match.id} {...card} />
+            ))}
+          </div>
+        ) : null}
       </div>
     );
   }

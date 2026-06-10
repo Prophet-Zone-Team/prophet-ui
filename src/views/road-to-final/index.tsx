@@ -288,8 +288,8 @@ export function RoadToFinalPage({
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-[1600px] px-4 pb-8 pt-[30px]">
-      <div className="absolute left-[-60px] top-[10px]">
+    <div className="relative mx-auto w-full max-w-[1600px] px-4 pb-8 pt-[10px]">
+      <div className="pb-[10px]">
         <PageBack />
       </div>
       <RoadWorkbench
@@ -312,22 +312,22 @@ export function RoadToFinalPage({
         onApplyKnockoutMarket={() =>
           applyKnockoutFill("Squad value ranking", "market")
         }
-        onApplyKnockoutRandom={() =>
-          applyKnockoutFill("Random fill", "random")
-        }
+        onApplyKnockoutRandom={() => applyKnockoutFill("Random fill", "random")}
         onBackToStep1={() => stepTo(1)}
         onBackToStep2={() => stepTo(2)}
         onCopyCurrentLink={() => void copyText(shareUrl)}
         onGoToStep2={() => stepTo(2)}
         onGoToStep3={() => stepTo(3)}
         onGroupFifaFill={() =>
-          applyGroupSort("FIFA rank 2026-04-01", (a, b) =>
-            getFifaRank(a.id) - getFifaRank(b.id)
+          applyGroupSort(
+            "FIFA rank 2026-04-01",
+            (a, b) => getFifaRank(a.id) - getFifaRank(b.id)
           )
         }
         onGroupMarketFill={() =>
-          applyGroupSort("Squad value ranking", (a, b) =>
-            getSquadValue(b.id) - getSquadValue(a.id)
+          applyGroupSort(
+            "Squad value ranking",
+            (a, b) => getSquadValue(b.id) - getSquadValue(a.id)
           )
         }
         onGroupRandomFill={() =>

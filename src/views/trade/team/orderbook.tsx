@@ -4,11 +4,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import {
-  formatOrderbookPrice,
-  formatShareSize,
-  normalizeLimitPrice
-} from "@/lib/market/order-math";
+import { formatShareSize, normalizeLimitPrice } from "@/lib/market/order-math";
 import { useMarketOrderbook } from "@/hooks/market/use-market-orderbook";
 import {
   useSetTradeLimitPrice,
@@ -17,6 +13,15 @@ import {
 
 const MAX_ASK_ROWS = 8;
 const MAX_BID_ROWS = 8;
+
+function formatOrderbookDisplayPrice(price: number): string {
+  return (
+    new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    }).format(normalizeLimitPrice(price) * 100) + "￠"
+  );
+}
 
 export interface OrderbookProps {
   tokenId?: string;
@@ -121,7 +126,7 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
             <div className="mx-[-4px] flex h-8 shrink-0 items-center justify-between bg-[#EBEBEB] px-2">
               <span className="font-[400] leading-[17px] text-black">
                 {marketPrice !== undefined
-                  ? formatOrderbookPrice(marketPrice)
+                  ? formatOrderbookDisplayPrice(marketPrice)
                   : "—"}
               </span>
               <span className="font-[400] leading-[17px] text-[#909090]">
@@ -158,7 +163,7 @@ function OrderbookRow({
   side: "ask" | "bid";
   onSelect: (price: number) => void;
 }) {
-  const priceLabel = formatOrderbookPrice(price);
+  const priceLabel = formatOrderbookDisplayPrice(price);
 
   return (
     <button
