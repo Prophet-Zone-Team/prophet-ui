@@ -22,6 +22,13 @@ import {
   type AuthContextValue,
   type EligibilityLoadStatus
 } from "@/context/auth/auth-context";
+import {
+  authenticateConfidential,
+  clearConfidentialSession,
+  getConfidentialBalances,
+  getConfidentialSession,
+  requestConfidentialChallenge,
+} from "@/lib/confidential/client";
 import { mapBalanceSnapshotToCash } from "@/lib/trading/cash-balance-model";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
 import {
@@ -88,6 +95,8 @@ import {
   waitForPrivyWallet,
 } from "@/context/privy/privy-wallet-bridge";
 import { useDisconnect } from "wagmi";
+import { signConfidentialMessage } from "@/lib/confidential/sign-message";
+import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
@@ -113,6 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const cash = useAuthStore((state) => state.cash);
   const cashStatus = useAuthStore((state) => state.cashStatus);
+  const privateBalance = useAuthStore((state) => state.privateBalance);
+  const privateBalanceStatus = useAuthStore((state) => state.privateBalanceStatus);
+  const privateBalanceError = useAuthStore((state) => state.privateBalanceError);
   const error = useAuthStore((state) => state.error);
   const cashError = useAuthStore((state) => state.cashError);
   const loginMethod = useAuthStore((state) => state.loginMethod);
@@ -123,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pendingPrivyLoginMethodRef = useRef<AuthLoginMethod | undefined>(
     undefined
   );
+  const confidentialAccount = useConfidentialAccount();
 
   useLoginWithOAuth({
     onComplete: (params) => {
@@ -153,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const syncingRef = useRef(false);
+  const privateBalanceRefreshingRef = useRef(false);
   const loginAbortRef = useRef(false);
   const loginConnectAbortRef = useRef<AbortController | undefined>(undefined);
   const walletHandlingRef = useRef(false);
@@ -232,6 +246,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
+        await clearConfidentialSession();
+      } catch {
+        // ignore confidential session clear errors during cleanup
+      }
+
+      try {
         await releaseExternalWalletConnection();
       } catch {
         // ignore external wallet disconnect errors during cleanup
@@ -307,6 +327,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (refreshError) {
       store.setCashStatus("error");
       store.setCashError(resolveWalletErrorMessage(refreshError));
+    }
+  }, []);
+
+  const refreshPrivateBalance = useCallback(async () => {
+    const store = useAuthStore.getState();
+    const currentSession = store.session;
+
+    if (!currentSession) {
+      store.clearPrivateBalance();
+      return;
+    }
+
+    if (privateBalanceRefreshingRef.current) {
+      return;
+    }
+
+    privateBalanceRefreshingRef.current = true;
+    store.setPrivateBalanceStatus("loading");
+    store.setPrivateBalanceError(undefined);
+
+    try {
+      const payload = await getConfidentialBalances();
+      store.setPrivateBalance(payload.usdc);
+      store.setPrivateBalanceStatus("ready");
+    } catch (refreshError) {
+      store.setPrivateBalanceStatus("error");
+      store.setPrivateBalanceError(resolveWalletErrorMessage(refreshError));
+    } finally {
+      privateBalanceRefreshingRef.current = false;
     }
   }, []);
 
@@ -855,9 +904,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const openLogin = useCallback(async () => {
     const store = useAuthStore.getState();
 
+    debugger
+
     try {
       await wagmiDisconnect();
-    } catch {}
+    } catch { }
     store.setLoginMethod("wallet");
 
     if (isRegionBlockedRef.current) {
@@ -887,7 +938,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setError(undefined);
     try {
       await wagmiDisconnect();
-    } catch {}
+    } catch { }
     setPrivyModalOpen(true);
   }, [wagmiDisconnect]);
 
@@ -952,7 +1003,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       try {
         await wagmiDisconnect();
-      } catch {}
+      } catch { }
 
       await clearAuthState({ openModal: false });
 
@@ -969,6 +1020,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       walletHandlingRef.current = false;
     }
   }, [clearAuthState, privyLogout, wagmiDisconnect]);
+
+  const onAuthenticateConfidential = async () => {
+    if (!session) {
+      throw new Error("No session found");
+    }
+
+    try {
+      const confidentialSession = await getConfidentialSession();
+
+      if (
+        confidentialSession.authenticated &&
+        confidentialSession.eoaAddress?.toLowerCase() === session.walletAddress.toLowerCase()
+      ) {
+        return confidentialSession;
+      }
+
+      const challenge = await requestConfidentialChallenge(session.walletAddress);
+      const signature = await signConfidentialMessage(session.walletAddress, challenge.message);
+      const authenticateConfidentialRes = await authenticateConfidential({
+        eoaAddress: session.walletAddress,
+        message: challenge.message,
+        signature,
+      });
+      return {
+        authenticated: true,
+        eoaAddress: session.walletAddress,
+        intentsUserId: authenticateConfidentialRes.intentsUserId,
+      };
+    } catch (error) {
+      throw error;
+    }
+  };
 
   useEffect(() => {
     if (!hydrated || !session?.walletAddress) {
@@ -1135,8 +1218,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (session && status === "ready" && setupSteps.clobSigned) {
       void refreshCash();
+      void refreshPrivateBalance();
     }
-  }, [session, setupSteps.clobSigned, status, refreshCash]);
+  }, [session, setupSteps.clobSigned, status, refreshCash, refreshPrivateBalance]);
   const value: AuthContextValue = {
     session,
     readiness,
@@ -1150,6 +1234,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     privyLoginInProgress,
     cash,
     cashStatus,
+    privateBalance,
+    privateBalanceStatus,
+    privateBalanceError,
     error,
     cashError,
     eligibilityView,
@@ -1176,6 +1263,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshSession,
     refreshSetupReadiness,
     refreshCash,
+    refreshPrivateBalance,
+    onAuthenticateConfidential,
+    confidentialAccount,
     syncCash
   };
 

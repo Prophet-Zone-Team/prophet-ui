@@ -1,12 +1,11 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { formatNumber } from "@/utils";
-import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
-import { useConfidentialBalance } from "@/hooks/confidential/use-confidential-balance";
 import { depositPendingConfirmButtonClass } from "@/views/portfolio/deposit/deposit-ui";
 import { DepositPrivateBalanceEntry } from "@/views/portfolio/deposit/deposit-private-balance-entry";
 import { DepositSourceTabs } from "@/views/portfolio/deposit/deposit-source-tabs";
@@ -32,7 +31,16 @@ export function DepositEntryStep({
   stableflowLoading = false,
   onOpenPrivateTopup,
 }: DepositEntryStepProps) {
-  const { session, openLogin, loginInProgress, isBuyRestricted } = useAuth();
+  const {
+    session,
+    openLogin,
+    loginInProgress,
+    isBuyRestricted,
+    privateBalance,
+    privateBalanceStatus,
+    refreshPrivateBalance,
+    confidentialAccount,
+  } = useAuth();
   const {
     connectedWalletBalanceUsd,
     balancesLoading,
@@ -42,10 +50,12 @@ export function DepositEntryStep({
     onConfirmPendingDeposit,
   } = useDepositContext();
   const regionRestricted = Boolean(isBuyRestricted);
-  const confidentialAccount = useConfidentialAccount();
-  const confidentialBalance = useConfidentialBalance({
-    enabled: confidentialAccount.authenticated,
-  });
+
+  useEffect(() => {
+    if (confidentialAccount.authenticated && privateBalanceStatus === "idle") {
+      void refreshPrivateBalance();
+    }
+  }, [confidentialAccount.authenticated, privateBalanceStatus, refreshPrivateBalance]);
 
   if (!session) {
     return (
@@ -63,7 +73,7 @@ export function DepositEntryStep({
   }
 
   const isLoading = balancesLoading || pricesLoading;
-  const privateBalanceUsd = confidentialBalance.usdc?.usd;
+  const privateBalanceUsd = privateBalance?.usd;
   const privateAccountStatus = resolvePrivateAccountStatus(
     confidentialAccount.verified,
     privateBalanceUsd,
@@ -102,11 +112,10 @@ export function DepositEntryStep({
           privateBalanceUsd={privateBalanceUsd}
           walletAddress={session.walletAddress}
           onTopUp={onOpenPrivateTopup}
-          onTransferred={() => void confidentialBalance.refetch()}
         />
       ) : null}
 
-      {hasPendingDeposit ? (
+      {(hasPendingDeposit && entryTab === "crypto") ? (
         <RegionRestrictedControl restricted={regionRestricted}>
           <button
             type="button"

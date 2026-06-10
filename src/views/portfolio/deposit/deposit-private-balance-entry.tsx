@@ -2,7 +2,7 @@
 
 import { ArrowRight, ChevronRight, Loader2 } from "lucide-react";
 import Big from "big.js";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import InputNumber from "@/components/input-number";
@@ -40,7 +40,6 @@ export interface DepositPrivateBalanceEntryProps {
   privateBalanceUsd?: number;
   walletAddress?: string;
   onTopUp?: () => void;
-  onTransferred?: () => void;
 }
 
 const UNSHIELD_PHASE_LABEL: Record<UnshieldPhase, string> = {
@@ -61,12 +60,11 @@ export function DepositPrivateBalanceEntry({
   privateBalanceUsd,
   walletAddress,
   onTopUp,
-  onTransferred,
 }: DepositPrivateBalanceEntryProps) {
   const [inputValue, setInputValue] = useState("0");
   const [phase, setPhase] = useState<UnshieldPhase>("idle");
   const { unshield } = useConfidentialUnshield();
-  const { syncCash } = useAuth();
+  const { syncCash, refreshPrivateBalance } = useAuth();
 
   const isInteractive = status === "funded";
   const maxBalanceUsd = privateBalanceUsd ?? 0;
@@ -111,8 +109,14 @@ export function DepositPrivateBalanceEntry({
       });
       toast.success("Transfer complete");
       setInputValue("0");
-      onTransferred?.();
-      syncCash();
+      try {
+        await Promise.all([refreshPrivateBalance(), syncCash()]);
+      } catch (refreshError) {
+        console.warn(
+          "[deposit-private-balance-entry] refresh after transfer failed",
+          refreshError,
+        );
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       toast.error(message);
@@ -120,6 +124,10 @@ export function DepositPrivateBalanceEntry({
       setPhase("idle");
     }
   }
+
+  useEffect(() => {
+    refreshPrivateBalance();
+  }, []);
 
   return (
     <div className="flex flex-col gap-4 pb-2">

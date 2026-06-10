@@ -10,8 +10,6 @@ import {
 import { fetchEvmTokenBalances } from "@/lib/funding/evm-balances";
 import { getConfidentialTokens } from "@/lib/confidential/client";
 import { usePrices } from "@/hooks/funding";
-import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
-import { useConfidentialBalance } from "@/hooks/confidential/use-confidential-balance";
 import { useFundingWallet } from "@/hooks/confidential/use-funding-wallet";
 import { useBalancesStore } from "@/store/use-balances";
 import { formatShortWallet } from "@/lib/team/detail-format";
@@ -27,22 +25,22 @@ import {
 } from "@/views/portfolio/private-topup/private-topup-ui";
 import { TopupWalletCard } from "@/views/portfolio/private-topup/topup-wallet-card";
 import { MAIN_HOSTNAME } from "@/config/funding";
+import { useAuth } from "@/context/auth";
 
 export function PrivateTopupPage() {
   const fundingWallet = useFundingWallet();
-  const account = useConfidentialAccount();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [stableflowTokens, setStableflowTokens] = useState<StableflowDepositToken[]>([]);
   const [tokensLoading, setTokensLoading] = useState(false);
   const setEvmBalances = useBalancesStore((state) => state.setEvmBalances);
   const clearEvmBalances = useBalancesStore((state) => state.clearEvmBalances);
+  const { refreshPrivateBalance, privateBalance, privateBalanceStatus, confidentialAccount } = useAuth();
 
   const topupWalletConnected = fundingWallet.connected;
   const topupWalletAddress = fundingWallet.address;
-  const privateAccountAddress = account.intentsUserId;
+  const privateAccountAddress = confidentialAccount.intentsUserId;
 
-  const balance = useConfidentialBalance({ enabled: account.authenticated });
-  const privateBalanceUsd = balance.usdc?.usd ?? 0;
+  const privateBalanceUsd = privateBalance?.usd ?? 0;
 
   const stableflowFundingTokens = useMemo(
     () => stableflowTokensToFundingTokens(stableflowTokens),
@@ -104,9 +102,9 @@ export function PrivateTopupPage() {
   }
 
   const handleTopupSuccess = useCallback(async () => {
-    await balance.refetch();
+    await refreshPrivateBalance();
     await loadFundingBalances();
-  }, [balance, loadFundingBalances]);
+  }, [refreshPrivateBalance, loadFundingBalances]);
 
   return (
     <PrivateTopupProvider
@@ -128,12 +126,12 @@ export function PrivateTopupPage() {
 
           <HowToUseSection />
 
-          {account.authenticated && account.eoaAddress ? (
+          {confidentialAccount.authenticated && confidentialAccount.eoaAddress ? (
             <p className={`${privateTopupInfoBannerClass} w-full`}>
-              This Private Account is linked to your wallet {formatShortWallet(account.eoaAddress)}.
+              This Private Account is linked to your wallet {formatShortWallet(confidentialAccount.eoaAddress)}.
               Confirm this is correct before funding.
             </p>
-          ) : !account.loading ? (
+          ) : !confidentialAccount.loading ? (
             <div className={`${privateTopupWarningBannerClass} w-full justify-center`}>
               <span>
                 No verified Private Account found. Start Private Mode from the main site to continue.
@@ -149,8 +147,8 @@ export function PrivateTopupPage() {
             onDisconnect={handleDisconnectWallet}
             privateAccountAddress={privateAccountAddress}
             privateBalanceUsd={privateBalanceUsd}
-            privateBalanceLoading={balance.loading}
-            onRefreshPrivateBalance={() => void balance.refetch()}
+            privateBalanceLoading={privateBalanceStatus === "loading"}
+            onRefreshPrivateBalance={() => refreshPrivateBalance()}
             onTopUp={() => setDialogOpen(true)}
           />
 
@@ -169,7 +167,7 @@ export function PrivateTopupPage() {
           open={dialogOpen}
           topupWalletAddress={topupWalletAddress}
           privateAccountAddress={privateAccountAddress}
-          privateAccountEoaAddress={account.eoaAddress}
+          privateAccountEoaAddress={confidentialAccount.eoaAddress}
           onClose={() => setDialogOpen(false)}
           onSuccess={handleTopupSuccess}
         />

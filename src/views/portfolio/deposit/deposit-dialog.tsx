@@ -39,8 +39,6 @@ import { DepositConfirmStep } from "@/views/portfolio/deposit/deposit-confirm-st
 import { DepositEntryStep } from "@/views/portfolio/deposit/deposit-entry-step";
 import { depositPrivateFooterLinkClass } from "@/views/portfolio/deposit/deposit-ui";
 import { resolvePrivateAccountStatus } from "@/views/portfolio/deposit/resolve-private-account-status";
-import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
-import { useConfidentialBalance } from "@/hooks/confidential/use-confidential-balance";
 import {
   DepositStatusStep,
   formatStableflowStatusLabel
@@ -91,14 +89,17 @@ export function DepositDialog({
   onOpenPrivateTopup,
   onPendingDepositChange,
 }: DepositDialogProps) {
-  const { session, syncCash } = useAuth();
+  const {
+    session,
+    syncCash,
+    refreshPrivateBalance,
+    privateBalance,
+    onAuthenticateConfidential,
+    confidentialAccount,
+  } = useAuth();
   const loginMethod = useAuthStore((state) => state.loginMethod);
   const isSocialLogin = loginMethod === "email" || loginMethod === "google";
   const isMobile = useDevice();
-  const confidentialAccount = useConfidentialAccount();
-  const confidentialBalance = useConfidentialBalance({
-    enabled: confidentialAccount.authenticated,
-  });
 
   const shouldPollPendingDeposit = Boolean(
     session?.funderAddress && session.depositWalletStatus === "deployed",
@@ -275,7 +276,9 @@ export function DepositDialog({
   useEffect(() => {
     if (!open) {
       reset();
+      return;
     }
+    refreshPrivateBalance();
   }, [open, reset]);
 
   const loadStableflowTokens = useCallback(async () => {
@@ -951,9 +954,21 @@ export function DepositDialog({
     }
   };
 
+  const handleEntryTabChange = async (nextTab: DepositEntryTab) => {
+    setEntryTab(nextTab);
+
+    if (nextTab === "private_balance") {
+      try {
+        await onAuthenticateConfidential();
+        await confidentialAccount.refetch();
+        await refreshPrivateBalance();
+      } catch { }
+    }
+  };
+
   const privateAccountStatus = resolvePrivateAccountStatus(
     confidentialAccount.verified,
-    confidentialBalance.usdc?.usd,
+    privateBalance?.usd,
   );
 
   const entryModalMinHeight = useMemo(() => {
@@ -1130,7 +1145,7 @@ export function DepositDialog({
           {step === "entry" ? (
             <DepositEntryStep
               entryTab={entryTab}
-              onEntryTabChange={setEntryTab}
+              onEntryTabChange={handleEntryTabChange}
               onSelectConnected={() => {
                 setDepositMethod("connected");
                 setStep("tokens");

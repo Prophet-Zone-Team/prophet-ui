@@ -167,6 +167,10 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
 
   const polymarketAddress = session.funderAddress ?? session.walletAddress;
 
+  const handlePrivateBalanceClick = async () => {
+    setPrivateTopupIntroOpen(true);
+  };
+
   return (
     <div ref={menuRef} className="relative inline-flex flex-col items-end">
       <WalletConnectedBar
@@ -177,7 +181,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
         showDepositPendingIndicator={hasPendingDeposit}
         onDeposit={() => openDepositDialog()}
         onPrivateTopup={() => setPrivateTopupIntroOpen(true)}
-        onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
+        onPrivateBalanceClick={() => handlePrivateBalanceClick()}
         onToggleMenu={() => setIsOpen((value) => !value)}
         isPrivateMode={isPrivateMode}
       />

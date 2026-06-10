@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     const balance = Big(balanceBaseUnits)
       .div(Big(10).pow(polygonUsdc.decimals))
       .toString();
-    const usd = Big(balance).times(polygonUsdc.price ?? 1).toNumber();
+    const usd = Big(balance).times(1).toNumber();
 
     return applyRefreshedCookie(
       NextResponse.json({

@@ -1,7 +1,6 @@
 "use client";
 
-import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
-import { useConfidentialBalance } from "@/hooks/confidential/use-confidential-balance";
+import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/utils";
 
@@ -11,19 +10,16 @@ export interface PrivateBalanceProps {
 }
 
 function PrivateBalance({ onClick, className }: PrivateBalanceProps) {
-  const account = useConfidentialAccount();
-  const balance = useConfidentialBalance({
-    enabled: account.authenticated && !account.loading,
-  });
+  const { privateBalance, confidentialAccount } = useAuth();
 
   const balanceDisplay =
-    account.loading || balance.loading
+    confidentialAccount.loading
       ? "$0.00"
-      : formatNumber(balance.usdc?.usd ?? 0, 2, true, {
-          prefix: "$",
-          round: 0,
-          isZeroPrecision: true,
-        });
+      : formatNumber(privateBalance?.usd, 2, true, {
+        prefix: "$",
+        round: 0,
+        isZeroPrecision: true,
+      });
 
   return (
     <button
