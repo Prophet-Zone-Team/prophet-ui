@@ -31,6 +31,9 @@ export interface DepositContextType {
   hasTokenUsdPrice: (symbol: string) => boolean;
   connectedWalletBalanceUsd: number;
   stableflowBalanceUsd: number;
+  hasPendingDeposit: boolean;
+  converting: boolean;
+  onConfirmPendingDeposit: () => void | Promise<void>;
 }
 
 const DepositContext = createContext<DepositContextType>({
@@ -45,6 +48,9 @@ const DepositContext = createContext<DepositContextType>({
   hasTokenUsdPrice: () => false,
   connectedWalletBalanceUsd: 0,
   stableflowBalanceUsd: 0,
+  hasPendingDeposit: false,
+  converting: false,
+  onConfirmPendingDeposit: () => {},
 });
 
 export function DepositProvider({
@@ -60,6 +66,9 @@ export function DepositProvider({
     | "supportedAssets"
     | "balancesLoading"
     | "pricesLoading"
+    | "hasPendingDeposit"
+    | "converting"
+    | "onConfirmPendingDeposit"
   >;
 }) {
   const evmBalances = useBalancesStore((state) => state.evmBalances);
@@ -127,6 +136,9 @@ export function DepositProvider({
       hasTokenUsdPrice,
       connectedWalletBalanceUsd,
       stableflowBalanceUsd,
+      hasPendingDeposit: value.hasPendingDeposit,
+      converting: value.converting,
+      onConfirmPendingDeposit: value.onConfirmPendingDeposit,
     }),
     [
       connectedWalletBalanceUsd,
@@ -136,8 +148,11 @@ export function DepositProvider({
       hasTokenUsdPrice,
       stableflowBalanceUsd,
       value.balancesLoading,
+      value.converting,
       value.depositMethod,
       value.funderAddress,
+      value.hasPendingDeposit,
+      value.onConfirmPendingDeposit,
       value.pricesLoading,
       value.selectableTokens,
       value.supportedAssets,

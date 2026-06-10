@@ -103,3 +103,9 @@ export const depositStableflowCopyButtonClass = cn(
 
 export const depositStableflowAddressSkeletonClass =
   "mx-4 my-3 h-5 rounded-[4px] bg-[#f4f4f4] animate-pulse";
+
+export const depositPendingConfirmButtonClass = cn(
+  "flex h-[50px] w-full items-center justify-center rounded-[8px] bg-black",
+  "text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90",
+  "disabled:cursor-not-allowed disabled:opacity-50"
+);

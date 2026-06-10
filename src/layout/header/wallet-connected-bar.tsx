@@ -20,6 +20,7 @@ export interface WalletConnectedBarProps {
   isMenuOpen: boolean;
   regionRestricted?: boolean;
   isPrivateMode?: boolean;
+  showDepositPendingIndicator?: boolean;
   onDeposit: () => void;
   onPrivateTopup: () => void;
   onPrivateBalanceClick: () => void;
@@ -35,7 +36,8 @@ export function WalletConnectedBar({
   onPrivateTopup,
   onPrivateBalanceClick,
   onToggleMenu,
-  isPrivateMode
+  isPrivateMode,
+  showDepositPendingIndicator = false,
 }: WalletConnectedBarProps) {
   const popoverRef = useRef<any>(null);
 
@@ -49,6 +51,11 @@ export function WalletConnectedBar({
       }}
     >
       Deposit
+      {showDepositPendingIndicator ? (
+        <div
+          className="absolute block z-[100] left-0.5 border border-red-500 top-0 size-2 rounded-full bg-[#FF3B30]"
+        />
+      ) : null}
     </button>
   );
 
