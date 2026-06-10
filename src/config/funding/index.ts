@@ -8,3 +8,4 @@ export const MAIN_HOSTNAME = "dev.prophet.zone";
 export function isPrivateModeHost(hostname: string): boolean {
   return PRIVATE_MODE_HOSTNAME === hostname;
 }
+
