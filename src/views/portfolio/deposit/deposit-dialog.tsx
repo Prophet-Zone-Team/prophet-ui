@@ -315,7 +315,11 @@ export function DepositDialog({
     }
 
     if (step === "status") {
-      setStep("confirm");
+      if (isSocialLogin) {
+        setStep("stableflow_qr");
+      } else {
+        setStep("confirm");
+      }
       statusPollAbortRef.current?.abort();
       statusPollAbortRef.current = undefined;
     }
