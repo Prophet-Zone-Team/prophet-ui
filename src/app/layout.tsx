@@ -72,7 +72,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-G64CF421WK');
+            gtag('config', 'G-61KQ9XX9HM');
           `}
         </Script>
       </body>
