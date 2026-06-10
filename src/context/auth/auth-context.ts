@@ -2,6 +2,7 @@
 
 import { createContext } from "react";
 
+import type { ConfidentialBalanceView } from "@/lib/confidential/types";
 import type { TradingLoginStep } from "@/lib/trading/trading-login";
 import type { TradingEligibilityView } from "@/lib/trading/trading-eligibility-client";
 import type { TradingSetupSteps } from "@/lib/trading/trading-setup";
@@ -23,6 +24,9 @@ export interface AuthContextValue {
   privyLoginInProgress: boolean;
   cash: CashBalanceView | undefined;
   cashStatus: FundingLoadStatus;
+  privateBalance: ConfidentialBalanceView | undefined;
+  privateBalanceStatus: FundingLoadStatus;
+  privateBalanceError: string | undefined;
   error: string | undefined;
   cashError: string | undefined;
   eligibilityView: TradingEligibilityView | undefined;
@@ -53,6 +57,7 @@ export interface AuthContextValue {
   refreshSession: () => Promise<void>;
   refreshSetupReadiness: () => Promise<UserTradingReadiness | undefined>;
   refreshCash: () => Promise<void>;
+  refreshPrivateBalance: () => Promise<void>;
   syncCash: () => Promise<void>;
 }
 

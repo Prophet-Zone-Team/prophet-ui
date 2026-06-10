@@ -22,6 +22,7 @@ import {
   type AuthContextValue,
   type EligibilityLoadStatus
 } from "@/context/auth/auth-context";
+import { getConfidentialBalances } from "@/lib/confidential/client";
 import { mapBalanceSnapshotToCash } from "@/lib/trading/cash-balance-model";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
 import {
@@ -113,6 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const cash = useAuthStore((state) => state.cash);
   const cashStatus = useAuthStore((state) => state.cashStatus);
+  const privateBalance = useAuthStore((state) => state.privateBalance);
+  const privateBalanceStatus = useAuthStore((state) => state.privateBalanceStatus);
+  const privateBalanceError = useAuthStore((state) => state.privateBalanceError);
   const error = useAuthStore((state) => state.error);
   const cashError = useAuthStore((state) => state.cashError);
   const loginMethod = useAuthStore((state) => state.loginMethod);
@@ -153,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const syncingRef = useRef(false);
+  const privateBalanceRefreshingRef = useRef(false);
   const loginAbortRef = useRef(false);
   const loginConnectAbortRef = useRef<AbortController | undefined>(undefined);
   const walletHandlingRef = useRef(false);
@@ -307,6 +312,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (refreshError) {
       store.setCashStatus("error");
       store.setCashError(resolveWalletErrorMessage(refreshError));
+    }
+  }, []);
+
+  const refreshPrivateBalance = useCallback(async () => {
+    const store = useAuthStore.getState();
+    const currentSession = store.session;
+
+    if (!currentSession) {
+      store.clearPrivateBalance();
+      return;
+    }
+
+    if (privateBalanceRefreshingRef.current) {
+      return;
+    }
+
+    privateBalanceRefreshingRef.current = true;
+    store.setPrivateBalanceStatus("loading");
+    store.setPrivateBalanceError(undefined);
+
+    try {
+      const payload = await getConfidentialBalances();
+      store.setPrivateBalance(payload.usdc);
+      store.setPrivateBalanceStatus("ready");
+    } catch (refreshError) {
+      store.setPrivateBalanceStatus("error");
+      store.setPrivateBalanceError(resolveWalletErrorMessage(refreshError));
+    } finally {
+      privateBalanceRefreshingRef.current = false;
     }
   }, []);
 
@@ -1135,8 +1169,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (session && status === "ready" && setupSteps.clobSigned) {
       void refreshCash();
+      void refreshPrivateBalance();
     }
-  }, [session, setupSteps.clobSigned, status, refreshCash]);
+  }, [session, setupSteps.clobSigned, status, refreshCash, refreshPrivateBalance]);
   const value: AuthContextValue = {
     session,
     readiness,
@@ -1150,6 +1185,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     privyLoginInProgress,
     cash,
     cashStatus,
+    privateBalance,
+    privateBalanceStatus,
+    privateBalanceError,
     error,
     cashError,
     eligibilityView,
@@ -1176,6 +1214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshSession,
     refreshSetupReadiness,
     refreshCash,
+    refreshPrivateBalance,
     syncCash
   };
 

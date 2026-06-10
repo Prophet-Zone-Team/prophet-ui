@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import type { ConfidentialBalanceView } from "@/lib/confidential/types";
 import type { TradingLoginStep } from "@/lib/trading/trading-login";
 import { isTradingSetupComplete } from "@/lib/trading/trading-setup";
 import type { CashBalanceView, FundingLoadStatus } from "@/types/funding";
@@ -26,6 +27,9 @@ interface AuthStore extends AuthPersistedState {
   cash: CashBalanceView | undefined;
   cashStatus: FundingLoadStatus;
   cashError: string | undefined;
+  privateBalance: ConfidentialBalanceView | undefined;
+  privateBalanceStatus: FundingLoadStatus;
+  privateBalanceError: string | undefined;
   setSession: (session: TradingUserSession | undefined) => void;
   setReadiness: (readiness: UserTradingReadiness | undefined) => void;
   setLoginStep: (loginStep: TradingLoginStep | undefined) => void;
@@ -38,8 +42,12 @@ interface AuthStore extends AuthPersistedState {
   setCash: (cash: CashBalanceView | undefined) => void;
   setCashStatus: (cashStatus: FundingLoadStatus) => void;
   setCashError: (cashError: string | undefined) => void;
+  setPrivateBalance: (privateBalance: ConfidentialBalanceView | undefined) => void;
+  setPrivateBalanceStatus: (privateBalanceStatus: FundingLoadStatus) => void;
+  setPrivateBalanceError: (privateBalanceError: string | undefined) => void;
   clearAuth: () => void;
   clearCash: () => void;
+  clearPrivateBalance: () => void;
 }
 
 const initialPersistedState: AuthPersistedState = {
@@ -61,6 +69,9 @@ export const useAuthStore = create<AuthStore>()(
       cash: undefined,
       cashStatus: "idle",
       cashError: undefined,
+      privateBalance: undefined,
+      privateBalanceStatus: "idle",
+      privateBalanceError: undefined,
       setSession: (session) => set({ session }),
       setReadiness: (readiness) => set({ readiness }),
       setLoginStep: (loginStep) => set({ loginStep }),
@@ -76,6 +87,9 @@ export const useAuthStore = create<AuthStore>()(
       setCash: (cash) => set({ cash }),
       setCashStatus: (cashStatus) => set({ cashStatus }),
       setCashError: (cashError) => set({ cashError }),
+      setPrivateBalance: (privateBalance) => set({ privateBalance }),
+      setPrivateBalanceStatus: (privateBalanceStatus) => set({ privateBalanceStatus }),
+      setPrivateBalanceError: (privateBalanceError) => set({ privateBalanceError }),
       clearAuth: () =>
         set((state) => ({
           ...initialPersistedState,
@@ -84,12 +98,21 @@ export const useAuthStore = create<AuthStore>()(
           cash: undefined,
           cashStatus: "ready",
           cashError: undefined,
+          privateBalance: undefined,
+          privateBalanceStatus: "idle",
+          privateBalanceError: undefined,
         })),
       clearCash: () =>
         set({
           cash: undefined,
           cashStatus: "ready",
           cashError: undefined,
+        }),
+      clearPrivateBalance: () =>
+        set({
+          privateBalance: undefined,
+          privateBalanceStatus: "idle",
+          privateBalanceError: undefined,
         }),
     }),
     {
