@@ -106,7 +106,7 @@ export function DepositEntryStep({
         />
       ) : null}
 
-      {hasPendingDeposit ? (
+      {(hasPendingDeposit && entryTab === "crypto") ? (
         <RegionRestrictedControl restricted={regionRestricted}>
           <button
             type="button"
