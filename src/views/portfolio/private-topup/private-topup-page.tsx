@@ -199,8 +199,11 @@ function PrivateTopupCardsRow({
   onRefreshPrivateBalance: () => void;
   onTopUp: () => void;
 }) {
-  const { topupWalletBalanceUsd, balancesLoading, pricesLoading } =
-    usePrivateTopupContext();
+  const {
+    topupWalletBalanceUsd,
+    balancesLoading,
+    pricesLoading
+  } = usePrivateTopupContext();
 
   const balanceLoading = tokensLoading || balancesLoading || pricesLoading;
 
