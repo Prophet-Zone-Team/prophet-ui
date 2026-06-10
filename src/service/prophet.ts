@@ -20,6 +20,7 @@ import type {
   ProphetGetTeamGameResultsData,
   ProphetGetHeadToHeadFixturesData,
   ProphetGetGameStatisticsData,
+  ProphetGetGameOddsData,
   ProphetGameStatisticsPayload,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
@@ -369,6 +370,17 @@ function parseGameStatisticsPayload(
       "Unable to parse game statistics response."
     );
   }
+}
+
+/** GET /v1/game/odds — bookmaker odds by market category */
+export async function getProphetGameOdds(params: {
+  slug: string;
+  signal?: AbortSignal;
+}): Promise<ProphetGetGameOddsData> {
+  return prophetGet<ProphetGetGameOddsData>("/v1/game/odds", {
+    params: { slug: params.slug },
+    signal: params.signal
+  });
 }
 
 /** GET /v1/game/statistics — match statistics and events by slug */

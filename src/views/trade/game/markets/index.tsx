@@ -10,6 +10,8 @@ import {
   sortFixtureGroupOutcomes
 } from "@/lib/market/build-fixture-markets-snapshot";
 import { useGameStatisticsNotificationSync } from "@/hooks/market/use-game-statistics-notification-sync";
+import { useGameOdds } from "@/hooks/market/use-game-odds";
+import { mapGameOddsToOtherSources } from "@/lib/market/map-game-odds-other-sources";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import {
   mergeLivePricesIntoFixtureOutcomes,
@@ -112,6 +114,28 @@ export function GameMarketsSection({
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
   const sides = resolveMatchSides(match, teamSnapshots);
+  const gameSlug = match.polymarket?.slug?.trim() ?? "";
+  const { odds: gameOdds } = useGameOdds({ slug: gameSlug });
+
+  const otherSources = useMemo(
+    () =>
+      mapGameOddsToOtherSources({
+        odds: gameOdds,
+        tab,
+        selectedOutcome: selectedOutcome ?? undefined,
+        selectedBinarySide,
+        homeTeamName: sides.home.name,
+        awayTeamName: sides.away.name
+      }),
+    [
+      gameOdds,
+      selectedBinarySide,
+      selectedOutcome,
+      sides.away.name,
+      sides.home.name,
+      tab
+    ]
+  );
 
   useGameStatisticsNotificationSync({
     match,
@@ -294,6 +318,7 @@ export function GameMarketsSection({
           outcomesOverride={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
+          otherSources={otherSources}
           onSelect={handleSelect}
         />
       ) : null}
@@ -307,6 +332,7 @@ export function GameMarketsSection({
           outcomesOverride={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
+          otherSources={otherSources}
           onSelect={handleSelect}
         />
       ) : null}
@@ -320,6 +346,7 @@ export function GameMarketsSection({
           outcomesOverride={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
+          otherSources={otherSources}
           onSelect={handleSelect}
         />
       ) : null}
@@ -329,6 +356,7 @@ export function GameMarketsSection({
           outcomes={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
+          otherSources={otherSources}
           onSelect={handleSelect}
         />
       ) : null}
@@ -338,6 +366,7 @@ export function GameMarketsSection({
           outcomes={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
+          otherSources={otherSources}
           onSelect={handleSelect}
         />
       ) : null}
