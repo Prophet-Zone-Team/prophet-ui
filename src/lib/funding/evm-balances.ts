@@ -40,60 +40,69 @@ export async function fetchEvmTokenBalances(
       }
 
       const chainId = Number(chainIdKey);
-      const client = getFundingPublicClient(chainId);
       const chainBalances: Record<string, string> = {};
 
-      const erc20Tokens = chainTokens.filter((token) => !isNativeFundingToken(token.address));
-      const nativeTokens = chainTokens.filter((token) => isNativeFundingToken(token.address));
+      try {
+        const client = getFundingPublicClient(chainId);
 
-      if (erc20Tokens.length > 0) {
-        const results = await client.multicall({
-          contracts: erc20Tokens.map((token) => ({
-            address: token.address as Address,
-            abi: erc20Abi,
-            functionName: "balanceOf",
-            args: [owner],
-          })),
-          allowFailure: true,
-        });
+        const erc20Tokens = chainTokens.filter((token) => !isNativeFundingToken(token.address));
+        const nativeTokens = chainTokens.filter((token) => isNativeFundingToken(token.address));
 
-        for (let index = 0; index < erc20Tokens.length; index += 1) {
-          const token = erc20Tokens[index];
-          const result = results[index];
+        if (erc20Tokens.length > 0) {
+          const results = await client.multicall({
+            contracts: erc20Tokens.map((token) => ({
+              address: token.address as Address,
+              abi: erc20Abi,
+              functionName: "balanceOf",
+              args: [owner],
+            })),
+            allowFailure: true,
+          });
 
-          if (result.status === "success") {
-            const rawBalance =
-              typeof result.result === "bigint" ? result.result : BigInt(String(result.result));
+          for (let index = 0; index < erc20Tokens.length; index += 1) {
+            const token = erc20Tokens[index];
+            const result = results[index];
 
-            chainBalances[normalizeTokenAddress(token.address)] = atomicBalanceToDecimal(
-              rawBalance,
-              token.decimals,
-            );
-          } else {
-            console.warn("[fetchEvmTokenBalances] ERC20 balance failed", {
-              chainId,
-              address: token.address,
-              symbol: token.symbol,
-            });
-            chainBalances[normalizeTokenAddress(token.address)] = "0";
+            if (result.status === "success") {
+              const rawBalance =
+                typeof result.result === "bigint" ? result.result : BigInt(String(result.result));
+
+              chainBalances[normalizeTokenAddress(token.address)] = atomicBalanceToDecimal(
+                rawBalance,
+                token.decimals,
+              );
+            } else {
+              console.warn("[fetchEvmTokenBalances] ERC20 balance failed", {
+                chainId,
+                address: token.address,
+                symbol: token.symbol,
+              });
+              chainBalances[normalizeTokenAddress(token.address)] = "0";
+            }
           }
         }
-      }
 
-      if (nativeTokens.length > 0) {
-        try {
-          const nativeBalance = await client.getBalance({ address: owner });
-          const formatted = atomicBalanceToDecimal(nativeBalance, nativeTokens[0].decimals);
+        if (nativeTokens.length > 0) {
+          try {
+            const nativeBalance = await client.getBalance({ address: owner });
+            const formatted = atomicBalanceToDecimal(nativeBalance, nativeTokens[0].decimals);
 
-          for (const token of nativeTokens) {
-            chainBalances[normalizeTokenAddress(token.address)] = formatted;
+            for (const token of nativeTokens) {
+              chainBalances[normalizeTokenAddress(token.address)] = formatted;
+            }
+          } catch (error) {
+            console.warn("[fetchEvmTokenBalances] native balance failed", { chainId, error });
+
+            for (const token of nativeTokens) {
+              chainBalances[normalizeTokenAddress(token.address)] = "0";
+            }
           }
-        } catch (error) {
-          console.warn("[fetchEvmTokenBalances] native balance failed", { chainId, error });
+        }
+      } catch (error) {
+        console.warn("[fetchEvmTokenBalances] chain fetch failed", { chainId, error });
 
-          for (const token of nativeTokens) {
-            chainBalances[normalizeTokenAddress(token.address)] = "0";
-          }
+        for (const token of chainTokens) {
+          chainBalances[normalizeTokenAddress(token.address)] = "0";
         }
       }
 

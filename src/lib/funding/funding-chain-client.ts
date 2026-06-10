@@ -1,51 +1,31 @@
 import { createPublicClient, http } from "viem";
-import { arbitrum, bsc, optimism, polygon } from "viem/chains";
 
+import { getFundingEvmChain } from "@/config/funding/evm-chains";
 import { getFundingRpcUrl } from "@/config/funding/networks";
 
-function createArbitrumFundingClient() {
-  return createPublicClient({
-    chain: arbitrum,
-    transport: http(getFundingRpcUrl(arbitrum.id)),
-  });
-}
+export type FundingPublicClient = ReturnType<typeof createPublicClient>;
 
-export type FundingPublicClient = ReturnType<typeof createArbitrumFundingClient>;
-
-let arbitrumClient: FundingPublicClient | undefined;
-let optimismClient: FundingPublicClient | undefined;
-let bscClient: FundingPublicClient | undefined;
-let polygonClient: FundingPublicClient | undefined;
+const clientCache = new Map<number, FundingPublicClient>();
 
 export function getFundingPublicClient(chainId: number): FundingPublicClient {
-  if (chainId === arbitrum.id) {
-    arbitrumClient ??= createArbitrumFundingClient();
-    return arbitrumClient;
+  const cached = clientCache.get(chainId);
+
+  if (cached) {
+    return cached;
   }
 
-  if (chainId === optimism.id) {
-    optimismClient ??= createPublicClient({
-      chain: optimism,
-      transport: http(getFundingRpcUrl(optimism.id)),
-    }) as unknown as FundingPublicClient;
-    return optimismClient;
+  const chain = getFundingEvmChain(chainId);
+
+  if (!chain) {
+    throw new Error(`No viem chain configured for funding chainId: ${chainId}`);
   }
 
-  if (chainId === bsc.id) {
-    bscClient ??= createPublicClient({
-      chain: bsc,
-      transport: http(getFundingRpcUrl(bsc.id)),
-    }) as unknown as FundingPublicClient;
-    return bscClient;
-  }
+  const client = createPublicClient({
+    chain,
+    transport: http(getFundingRpcUrl(chainId)),
+  });
 
-  if (chainId === polygon.id) {
-    polygonClient ??= createPublicClient({
-      chain: polygon,
-      transport: http(getFundingRpcUrl(polygon.id)),
-    }) as unknown as FundingPublicClient;
-    return polygonClient;
-  }
+  clientCache.set(chainId, client);
 
-  throw new Error(`No viem chain configured for funding chainId: ${chainId}`);
+  return client;
 }
