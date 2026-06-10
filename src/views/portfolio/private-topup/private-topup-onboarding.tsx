@@ -38,8 +38,8 @@ export function PrivateTopupOnboarding({
   }, [onGuideOpenChange, onIntroOpenChange]);
 
   const redirectToPrivate = useCallback(() => {
-    // window.location.href = `https://${PRIVATE_MODE_HOSTNAME}/private`;
-    window.location.href = `/private`;
+    window.location.href = `https://${PRIVATE_MODE_HOSTNAME}/private`;
+    // window.location.href = `/private`;
   }, []);
 
   const handleProceed = useCallback(async () => {
