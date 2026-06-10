@@ -2,12 +2,15 @@
 
 import { createContext } from "react";
 
+import type { ConfidentialBalanceView, ConfidentialSessionView } from "@/lib/confidential/types";
 import type { TradingLoginStep } from "@/lib/trading/trading-login";
 import type { TradingEligibilityView } from "@/lib/trading/trading-eligibility-client";
 import type { TradingSetupSteps } from "@/lib/trading/trading-setup";
 import type { CashBalanceView, FundingLoadStatus } from "@/types/funding";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
 import type { AuthLoginMethod } from "@/store/auth-store";
+import { UseConfidentialAccountResult } from "@/hooks/confidential/use-confidential-account";
+import { UsePendingFunderUsdcResult } from "@/hooks/funding";
 export type EligibilityLoadStatus = "idle" | "loading" | "ready";
 
 export interface AuthContextValue {
@@ -23,6 +26,9 @@ export interface AuthContextValue {
   privyLoginInProgress: boolean;
   cash: CashBalanceView | undefined;
   cashStatus: FundingLoadStatus;
+  privateBalance: ConfidentialBalanceView | undefined;
+  privateBalanceStatus: FundingLoadStatus;
+  privateBalanceError: string | undefined;
   error: string | undefined;
   cashError: string | undefined;
   eligibilityView: TradingEligibilityView | undefined;
@@ -53,6 +59,10 @@ export interface AuthContextValue {
   refreshSession: () => Promise<void>;
   refreshSetupReadiness: () => Promise<UserTradingReadiness | undefined>;
   refreshCash: () => Promise<void>;
+  refreshPrivateBalance: (params?: { requiredSession?: boolean; }) => Promise<void>;
+  onAuthenticateConfidential: () => Promise<ConfidentialSessionView>;
+  confidentialAccount: UseConfidentialAccountResult;
+  confirmPendingDeposit: UsePendingFunderUsdcResult;
   syncCash: () => Promise<void>;
 }
 

@@ -16,7 +16,7 @@ export const walletBalanceValueClass =
   "text-[16px] font-[400] leading-[19px] text-black";
 
 export const walletDepositButtonClass = cn(
-  "inline-flex h-[40px] min-w-[88px] items-center justify-center rounded-[20px] bg-black text-center",
+  "relative inline-flex h-[40px] min-w-[88px] items-center justify-center rounded-[20px] bg-black text-center",
   "text-[14px] font-[400] leading-[17px] text-white transition-opacity hover:opacity-90"
 );
 

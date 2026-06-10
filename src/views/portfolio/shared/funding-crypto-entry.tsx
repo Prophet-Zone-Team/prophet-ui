@@ -36,7 +36,7 @@ export function FundingCryptoEntry({
   const loginMethod = useAuthStore((state) => state.loginMethod);
   const isConnectedBridge = useMemo(() => {
     if (reference === "deposit") {
-      return loginMethod === "wallet";
+      return loginMethod !== "email" && loginMethod !== "google";
     }
     return true;
   }, [reference, loginMethod]);

@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import { useAuth } from "@/context/auth";
 import { PrivateTopupGuideDialog } from "@/views/portfolio/private-topup/private-topup-guide-dialog";
@@ -23,18 +22,39 @@ export function PrivateTopupOnboarding({
   onIntroOpenChange,
   onGuideOpenChange,
 }: PrivateTopupOnboardingProps) {
-  const router = useRouter();
-  const { disconnect, openLogin } = useAuth();
+  const { disconnect, openLogin, onAuthenticateConfidential } = useAuth();
+  const [proceeding, setProceeding] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
 
   const closeAll = useCallback(() => {
     onGuideOpenChange(false);
     onIntroOpenChange(false);
   }, [onGuideOpenChange, onIntroOpenChange]);
 
-  const handleProceed = useCallback(() => {
-    closeAll();
-    // window.location.href = `https://${PRIVATE_MODE_HOSTNAME}/private`;
-  }, [closeAll, router]);
+  const redirectToPrivate = useCallback(() => {
+    window.location.href = `https://${PRIVATE_MODE_HOSTNAME}/private`;
+    // window.location.href = `/private`;
+  }, []);
+
+  const handleProceed = useCallback(async () => {
+    if (proceeding) {
+      return;
+    }
+
+    setProceeding(true);
+    setError(undefined);
+
+    try {
+      await onAuthenticateConfidential();
+
+      closeAll();
+      redirectToPrivate();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to enter Private Mode.");
+    } finally {
+      setProceeding(false);
+    }
+  }, [closeAll, proceeding, redirectToPrivate, walletAddress]);
 
   const handleChangeWallet = useCallback(async () => {
     try {
@@ -51,19 +71,27 @@ export function PrivateTopupOnboarding({
         open={introOpen}
         guideOpen={guideOpen}
         walletAddress={walletAddress}
+        proceeding={proceeding}
+        error={error}
         onClose={() => {
-          if (!guideOpen) {
+          if (!guideOpen && !proceeding) {
             onIntroOpenChange(false);
           }
         }}
-        onProceed={handleProceed}
+        onProceed={() => void handleProceed()}
         onOpenGuide={() => onGuideOpenChange(true)}
         onChangeWallet={() => void handleChangeWallet()}
       />
       <PrivateTopupGuideDialog
         open={guideOpen}
-        onClose={() => onGuideOpenChange(false)}
-        onProceed={handleProceed}
+        proceeding={proceeding}
+        error={error}
+        onClose={() => {
+          if (!proceeding) {
+            onGuideOpenChange(false);
+          }
+        }}
+        onProceed={() => void handleProceed()}
         onChangeWallet={() => void handleChangeWallet()}
       />
     </>

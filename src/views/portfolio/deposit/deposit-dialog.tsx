@@ -10,7 +10,6 @@ import { FundingNetworkType } from "@/config/funding";
 import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import { reportFundingTransaction } from "@/lib/portfolio/user";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
-import { selectTokenUsdValue } from "@/lib/funding/price-selectors";
 import type { SupportedChainOption } from "@/lib/funding/supported-assets";
 import {
   getStableflowTokensForChain,
@@ -73,6 +72,7 @@ export interface DepositDialogProps {
   onClose: () => void;
   onDepositSuccess?: () => void | Promise<void>;
   onOpenPrivateTopup?: () => void;
+  onPendingDepositChange?: (hasPending: boolean) => void;
 }
 
 const INITIAL_STEP: DepositStep = "entry";
@@ -86,11 +86,46 @@ export function DepositDialog({
   onClose,
   onDepositSuccess,
   onOpenPrivateTopup,
+  onPendingDepositChange,
 }: DepositDialogProps) {
-  const { session, syncCash } = useAuth();
+  const {
+    session,
+    syncCash,
+    refreshPrivateBalance,
+    privateBalance,
+    onAuthenticateConfidential,
+    confidentialAccount,
+    confirmPendingDeposit,
+  } = useAuth();
   const loginMethod = useAuthStore((state) => state.loginMethod);
   const isSocialLogin = loginMethod === "email" || loginMethod === "google";
   const isMobile = useDevice();
+
+  const {
+    hasPendingDeposit,
+    converting: pendingConverting,
+    confirmPendingDeposit: onConfirmPendingDeposit,
+  } = confirmPendingDeposit;
+
+  useEffect(() => {
+    onPendingDepositChange?.(hasPendingDeposit);
+  }, [hasPendingDeposit, onPendingDepositChange]);
+
+  const onConfirmPendingDepositFromEntry = useCallback(async () => {
+    try {
+      await onConfirmPendingDeposit();
+      toast.success("Deposit successful");
+
+      if (onDepositSuccess) {
+        await onDepositSuccess();
+      } else {
+        await syncCash();
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message);
+    }
+  }, [onConfirmPendingDeposit, onDepositSuccess, syncCash]);
 
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
   const [entryTab, setEntryTab] = useState<DepositEntryTab>(INITIAL_ENTRY_TAB);
@@ -235,7 +270,9 @@ export function DepositDialog({
   useEffect(() => {
     if (!open) {
       reset();
+      return;
     }
+    refreshPrivateBalance();
   }, [open, reset]);
 
   const loadStableflowTokens = useCallback(async () => {
@@ -315,7 +352,11 @@ export function DepositDialog({
     }
 
     if (step === "status") {
-      setStep("confirm");
+      if (isSocialLogin) {
+        setStep("stableflow_qr");
+      } else {
+        setStep("confirm");
+      }
       statusPollAbortRef.current?.abort();
       statusPollAbortRef.current = undefined;
     }
@@ -907,7 +948,22 @@ export function DepositDialog({
     }
   };
 
-  const privateAccountStatus = resolvePrivateAccountStatus(session);
+  const handleEntryTabChange = async (nextTab: DepositEntryTab) => {
+    setEntryTab(nextTab);
+
+    if (nextTab === "private_balance") {
+      try {
+        await onAuthenticateConfidential();
+        await confidentialAccount.refetch();
+        await refreshPrivateBalance();
+      } catch { }
+    }
+  };
+
+  const privateAccountStatus = resolvePrivateAccountStatus(
+    confidentialAccount.verified,
+    privateBalance?.usd,
+  );
 
   const entryModalMinHeight = useMemo(() => {
     if (isMobile) {
@@ -1057,7 +1113,10 @@ export function DepositDialog({
           funderAddress: session?.funderAddress,
           supportedAssets: selectableTokens,
           balancesLoading,
-          pricesLoading
+          pricesLoading,
+          hasPendingDeposit,
+          converting: pendingConverting,
+          onConfirmPendingDeposit: onConfirmPendingDepositFromEntry,
         }}
       >
         <FundingModalShell
@@ -1080,13 +1139,17 @@ export function DepositDialog({
           {step === "entry" ? (
             <DepositEntryStep
               entryTab={entryTab}
-              onEntryTabChange={setEntryTab}
+              onEntryTabChange={handleEntryTabChange}
               onSelectConnected={() => {
                 setDepositMethod("connected");
                 setStep("tokens");
               }}
               onSelectStableflow={() => void onSelectStableflow()}
               stableflowLoading={stableflowTokensLoading}
+              onOpenPrivateTopup={() => {
+                handleClose();
+                onOpenPrivateTopup?.();
+              }}
             />
           ) : null}
 

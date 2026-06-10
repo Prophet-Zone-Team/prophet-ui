@@ -22,6 +22,10 @@
     "d1:schema:remote": "npx wrangler d1 execute world-cup-market-history --remote --file=db/d1/schema.sql"
   },
   "dependencies": {
+    "@defuse-protocol/contract-types": "^0.6.4",
+    "@defuse-protocol/intents-sdk": "^0.68.0",
+    "@defuse-protocol/internal-utils": "^0.35.0",
+    "@defuse-protocol/one-click-sdk-typescript": "^0.1.24",
     "@lucide/lab": "^0.1.2",
     "@polymarket/builder-relayer-client": "^0.0.10",
     "@polymarket/builder-signing-sdk": "^0.0.8",
@@ -29,6 +33,7 @@
     "@privy-io/react-auth": "^3.28.0",
     "@privy-io/wagmi": "^4.0.10",
     "@radix-ui/react-slot": "^1.1.2",
+    "@scure/base": "^2.2.0",
     "@stableflow/core": "rc",
     "@tanstack/react-query": "^5.100.14",
     "axios": "^1.16.1",
@@ -39,6 +44,7 @@
     "flag-icons": "^7.5.0",
     "framer-motion": "^12.0.0",
     "html-to-image": "^1.11.13",
+    "jose": "^6.2.3",
     "lucide-react": "^0.475.0",
     "next": "^15.1.7",
     "qrcode.react": "^4.2.0",

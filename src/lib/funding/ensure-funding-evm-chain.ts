@@ -1,31 +1,25 @@
 "use client";
 
 import type { Chain } from "viem";
-import { arbitrum, bsc, optimism, polygon } from "viem/chains";
 import {
   getWalletClientForAddress,
   requestWalletRpc,
 } from "@/components/trading/wallet-provider";
 import { switchChain } from "wagmi/actions";
 
+import { getFundingEvmChain } from "@/config/funding/evm-chains";
+import {
+  FundingNetworkType,
+  getFundingNetworkByChainId,
+  getFundingRpcUrl,
+} from "@/config/funding/networks";
 import { type WagmiChainId, wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import {
   isWagmiOnChain,
   waitForWalletOnChain,
 } from "@/lib/trading/wallet-chain-sync";
-import {
-  FundingNetworkType,
-  getFundingNetworkByChainId,
-} from "@/config/funding/networks";
 
 const CHAIN_NOT_ADDED_ERROR_CODE = 4902;
-
-const VIEM_CHAIN_BY_ID: Record<number, Chain> = {
-  [arbitrum.id]: arbitrum,
-  [optimism.id]: optimism,
-  [bsc.id]: bsc,
-  [polygon.id]: polygon,
-};
 
 export async function ensureFundingEvmChain(
   walletAddress: string,
@@ -58,11 +52,7 @@ export async function ensureFundingEvmChain(
       await client.switchChain({ id: chainId });
     } catch (switchError) {
       if (isChainNotAddedError(switchError)) {
-        const rpcUrl = targetChain.rpcUrls.default.http[0];
-
-        if (!rpcUrl) {
-          throw new Error(`No default RPC URL configured for chainId ${chainId}.`);
-        }
+        const rpcUrl = getFundingRpcUrl(chainId);
 
         await requestWalletRpc(walletAddress, {
           method: "wallet_addEthereumChain",
@@ -96,7 +86,7 @@ export async function ensureFundingEvmChain(
 }
 
 function getViemChain(chainId: number): Chain {
-  const chain = VIEM_CHAIN_BY_ID[chainId];
+  const chain = getFundingEvmChain(chainId);
 
   if (!chain) {
     throw new Error(`No wallet chain configuration for chainId ${chainId}.`);

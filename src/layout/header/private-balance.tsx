@@ -1,7 +1,25 @@
-import { cn } from "@/lib/cn";
+"use client";
 
-function PrivateBalance(props: any) {
-  const { onClick, className } = props;
+import { useAuth } from "@/context/auth";
+import { cn } from "@/lib/cn";
+import { formatNumber } from "@/utils";
+
+export interface PrivateBalanceProps {
+  onClick?: () => void;
+  className?: string;
+}
+
+function PrivateBalance({ onClick, className }: PrivateBalanceProps) {
+  const { privateBalance, confidentialAccount } = useAuth();
+
+  const balanceDisplay =
+    confidentialAccount.loading
+      ? "$0.00"
+      : formatNumber(privateBalance?.usd, 2, true, {
+        prefix: "$",
+        round: 0,
+        isZeroPrecision: true,
+      });
 
   return (
     <button
@@ -21,7 +39,7 @@ function PrivateBalance(props: any) {
         />
         <div className="">Private Balance</div>
       </div>
-      <div className="text-black text-base leading-[19px]">$0.00</div>
+      <div className="text-black text-base leading-[19px]">{balanceDisplay}</div>
     </button>
   );
 }

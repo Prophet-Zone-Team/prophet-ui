@@ -1,13 +1,14 @@
 "use client";
 
 import { AnimatePresence } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
 import { WalletConnectedBar } from "@/layout/header/wallet-connected-bar";
 import { WalletLoginButton } from "@/layout/header/wallet-login-button";
 import { WalletMenuDropdown } from "@/layout/header/wallet-menu-dropdown";
 import { FastBidSettingDialog } from "@/layout/header/fast-bid-setting-dialog";
+import { useDepositDialogStore } from "@/store/use-deposit-dialog";
 import { DepositDialog } from "@/views/portfolio/deposit";
 import { PrivateTopupOnboarding } from "@/views/portfolio/private-topup/private-topup-onboarding";
 import { formatNumber } from "@/utils";
@@ -57,8 +58,14 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
     disconnect,
   } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [depositOpen, setDepositOpen] = useState(false);
+  const [hasPendingDeposit, setHasPendingDeposit] = useState(false);
   const [fastBidOpen, setFastBidOpen] = useState(false);
+  const depositDialogOpen = useDepositDialogStore((state) => state.isOpen);
+  const openDepositDialog = useDepositDialogStore((state) => state.open);
+  const closeDepositDialog = useDepositDialogStore((state) => state.close);
+  const consumeDepositOnSuccess = useDepositDialogStore(
+    (state) => state.consumeOnSuccess,
+  );
   const [privateTopupIntroOpen, setPrivateTopupIntroOpen] = useState(false);
   const [privateTopupGuideOpen, setPrivateTopupGuideOpen] = useState(false);
   const [message, setMessage] = useState<string | undefined>();
@@ -114,6 +121,14 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
     });
   }, [cash?.available, cashStatus]);
 
+  const handleDepositSuccess = useCallback(async () => {
+    const onSuccess = consumeDepositOnSuccess();
+
+    if (onSuccess) {
+      await onSuccess();
+    }
+  }, [consumeDepositOnSuccess]);
+
   function handleLogin() {
     setMessage(undefined);
     openLoginModalOnly();
@@ -152,6 +167,10 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
 
   const polymarketAddress = session.funderAddress ?? session.walletAddress;
 
+  const handlePrivateBalanceClick = async () => {
+    setPrivateTopupIntroOpen(true);
+  };
+
   return (
     <div ref={menuRef} className="relative inline-flex flex-col items-end">
       <WalletConnectedBar
@@ -159,9 +178,10 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
         balanceDisplay={balanceDisplay}
         isMenuOpen={isOpen}
         regionRestricted={isBuyRestricted}
-        onDeposit={() => setDepositOpen(true)}
+        showDepositPendingIndicator={hasPendingDeposit}
+        onDeposit={() => openDepositDialog()}
         onPrivateTopup={() => setPrivateTopupIntroOpen(true)}
-        onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
+        onPrivateBalanceClick={() => handlePrivateBalanceClick()}
         onToggleMenu={() => setIsOpen((value) => !value)}
         isPrivateMode={isPrivateMode}
       />
@@ -180,10 +200,12 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
       </AnimatePresence>
 
       <DepositDialog
-        open={depositOpen}
-        onClose={() => setDepositOpen(false)}
+        open={depositDialogOpen}
+        onClose={closeDepositDialog}
+        onDepositSuccess={handleDepositSuccess}
+        onPendingDepositChange={setHasPendingDeposit}
         onOpenPrivateTopup={() => {
-          setDepositOpen(false);
+          closeDepositDialog();
           setPrivateTopupIntroOpen(true);
         }}
       />

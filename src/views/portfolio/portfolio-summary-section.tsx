@@ -1,24 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
 import { CopyIcon } from "@/components/icons";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
-import { usePendingFunderUsdc } from "@/hooks/funding";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
-import { DepositDialog } from "@/views/portfolio/deposit";
+import { useDepositDialogStore } from "@/store/use-deposit-dialog";
 import { PrivateTopupOnboarding } from "@/views/portfolio/private-topup/private-topup-onboarding";
 import { PortfolioPerformanceChart } from "@/views/portfolio/portfolio-performance-chart";
 import { WithdrawDialog } from "@/views/portfolio/withdraw";
 import {
   portfolioConnectButtonClass,
   portfolioDepositButtonClass,
-  portfolioPendingDepositButtonClass,
   portfolioSummaryCardClass,
   portfolioSummaryLabelClass,
   portfolioSummaryValueLargeClass,
@@ -29,50 +25,41 @@ import {
 import { formatNumber } from "@/utils";
 import { usePortfolioContext } from "./context";
 import { cn } from "@/lib/cn";
+import { depositPendingConfirmButtonClass } from "./deposit/deposit-ui";
+import { Loader2 } from "lucide-react";
 
-export interface PortfolioSummarySectionProps {}
+export interface PortfolioSummarySectionProps { }
 
-export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
-  const { session, portfolio, status, onConnectWallet, reload } =
-    usePortfolioContext();
+export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
+  const {
+    session,
+    portfolio,
+    status,
+    onConnectWallet,
+    reload
+  } = usePortfolioContext();
 
-  const [depositOpen, setDepositOpen] = useState(false);
   const [privateTopupIntroOpen, setPrivateTopupIntroOpen] = useState(false);
   const [privateTopupGuideOpen, setPrivateTopupGuideOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const openDepositDialog = useDepositDialogStore((state) => state.open);
 
   const polymarketAddress = session?.funderAddress ?? session?.walletAddress;
 
-  const { isBuyRestricted } = useAuth();
+  const { isBuyRestricted, confirmPendingDeposit } = useAuth();
   const regionRestricted = Boolean(session && isBuyRestricted);
-
-  const { hasPendingDeposit, converting, confirmPendingDeposit } =
-    usePendingFunderUsdc({
-      enabled: Boolean(session)
-    });
-
-  const onConfirmPendingDeposit = async () => {
-    try {
-      await confirmPendingDeposit();
-      toast.success("Deposit successful");
-      reload();
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(message);
-    }
-  };
 
   const portfolioDisplay = session
     ? formatNumber(portfolio?.portfolioValue, 2, true, {
-        round: 0,
-        isZeroPrecision: true
-      })
+      round: 0,
+      isZeroPrecision: true
+    })
     : "—";
   const availableDisplay = session
     ? formatNumber(portfolio?.availableToTrade, 2, true, {
-        round: 0,
-        isZeroPrecision: true
-      })
+      round: 0,
+      isZeroPrecision: true
+    })
     : "—";
 
   return (
@@ -110,6 +97,24 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
             Wallet not connected
           </span>
         )}
+        {confirmPendingDeposit.hasPendingDeposit ? (
+          <RegionRestrictedControl restricted={regionRestricted}>
+            <button
+              type="button"
+              className={cn(depositPendingConfirmButtonClass, "flex-grow-0 w-[230px] h-[42px] text-sm")}
+              disabled={confirmPendingDeposit.converting || regionRestricted}
+              onClick={() => void confirmPendingDeposit.confirmPendingDeposit()}
+            >
+              {confirmPendingDeposit.converting ? (
+                <Loader2
+                  className="mr-1.5 h-3.5 w-3.5 animate-spin"
+                  aria-hidden="true"
+                />
+              ) : null}
+              Confirm pending deposit
+            </button>
+          </RegionRestrictedControl>
+        ) : null}
       </div>
 
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
@@ -132,24 +137,6 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
               </strong>
             </div>
           </div>
-          {session && hasPendingDeposit ? (
-            <RegionRestrictedControl restricted={regionRestricted}>
-              <button
-                type="button"
-                className={portfolioPendingDepositButtonClass}
-                disabled={converting || regionRestricted}
-                onClick={() => void onConfirmPendingDeposit()}
-              >
-                {converting ? (
-                  <Loader2
-                    className="mr-1.5 h-3.5 w-3.5 animate-spin"
-                    aria-hidden="true"
-                  />
-                ) : null}
-                Confirm pending deposit
-              </button>
-            </RegionRestrictedControl>
-          ) : null}
           <div className="flex gap-3 mt-[20px]">
             {!session ? (
               <button
@@ -167,7 +154,7 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
                     type="button"
                     className={cn(portfolioDepositButtonClass, "flex-1")}
                     disabled={regionRestricted}
-                    onClick={() => setDepositOpen(true)}
+                    onClick={() => openDepositDialog({ onSuccess: reload })}
                   >
                     Deposit
                   </button>
@@ -194,15 +181,6 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
 
       {session ? (
         <>
-          <DepositDialog
-            open={depositOpen}
-            onClose={() => setDepositOpen(false)}
-            onDepositSuccess={reload}
-            onOpenPrivateTopup={() => {
-              setDepositOpen(false);
-              setPrivateTopupIntroOpen(true);
-            }}
-          />
           <PrivateTopupOnboarding
             introOpen={privateTopupIntroOpen}
             guideOpen={privateTopupGuideOpen}

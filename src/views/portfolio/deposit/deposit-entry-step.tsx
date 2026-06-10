@@ -1,9 +1,12 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { formatNumber } from "@/utils";
+import { depositPendingConfirmButtonClass } from "@/views/portfolio/deposit/deposit-ui";
 import { DepositPrivateBalanceEntry } from "@/views/portfolio/deposit/deposit-private-balance-entry";
 import { DepositSourceTabs } from "@/views/portfolio/deposit/deposit-source-tabs";
 import { resolvePrivateAccountStatus } from "@/views/portfolio/deposit/resolve-private-account-status";
@@ -17,6 +20,7 @@ export interface DepositEntryStepProps {
   onSelectConnected: () => void;
   onSelectStableflow: () => void;
   stableflowLoading?: boolean;
+  onOpenPrivateTopup?: () => void;
 }
 
 export function DepositEntryStep({
@@ -25,10 +29,33 @@ export function DepositEntryStep({
   onSelectConnected,
   onSelectStableflow,
   stableflowLoading = false,
+  onOpenPrivateTopup,
 }: DepositEntryStepProps) {
-  const { session, openLogin, loginInProgress } = useAuth();
-  const { connectedWalletBalanceUsd, balancesLoading, pricesLoading } =
-    useDepositContext();
+  const {
+    session,
+    openLogin,
+    loginInProgress,
+    isBuyRestricted,
+    privateBalance,
+    privateBalanceStatus,
+    refreshPrivateBalance,
+    confidentialAccount,
+  } = useAuth();
+  const {
+    connectedWalletBalanceUsd,
+    balancesLoading,
+    pricesLoading,
+    hasPendingDeposit,
+    converting,
+    onConfirmPendingDeposit,
+  } = useDepositContext();
+  const regionRestricted = Boolean(isBuyRestricted);
+
+  useEffect(() => {
+    if (confidentialAccount.authenticated && privateBalanceStatus === "idle") {
+      void refreshPrivateBalance();
+    }
+  }, [confidentialAccount.authenticated, privateBalanceStatus, refreshPrivateBalance]);
 
   if (!session) {
     return (
@@ -46,7 +73,11 @@ export function DepositEntryStep({
   }
 
   const isLoading = balancesLoading || pricesLoading;
-  const privateAccountStatus = resolvePrivateAccountStatus(session);
+  const privateBalanceUsd = privateBalance?.usd;
+  const privateAccountStatus = resolvePrivateAccountStatus(
+    confidentialAccount.verified,
+    privateBalanceUsd,
+  );
 
   return (
     <div className="flex min-w-0 flex-col gap-4 pb-10 md:pb-2">
@@ -76,8 +107,31 @@ export function DepositEntryStep({
       {entryTab === "private_balance" ? (
         <DepositPrivateBalanceEntry
           status={privateAccountStatus}
-          privateAccountAddress={session.privateAccountAddress}
+          privateAccountAddress={confidentialAccount.intentsUserId}
+          privateAccountEoaAddress={confidentialAccount.eoaAddress}
+          privateBalanceUsd={privateBalanceUsd}
+          walletAddress={session.walletAddress}
+          onTopUp={onOpenPrivateTopup}
         />
+      ) : null}
+
+      {(hasPendingDeposit && entryTab === "crypto") ? (
+        <RegionRestrictedControl restricted={regionRestricted}>
+          <button
+            type="button"
+            className={depositPendingConfirmButtonClass}
+            disabled={converting || regionRestricted}
+            onClick={() => void onConfirmPendingDeposit()}
+          >
+            {converting ? (
+              <Loader2
+                className="mr-1.5 h-3.5 w-3.5 animate-spin"
+                aria-hidden="true"
+              />
+            ) : null}
+            Confirm pending deposit
+          </button>
+        </RegionRestrictedControl>
       ) : null}
     </div>
   );
