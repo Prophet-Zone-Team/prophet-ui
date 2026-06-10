@@ -2,8 +2,10 @@
 
 import { Loader2 } from "lucide-react";
 
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
 import { formatNumber } from "@/utils";
+import { depositPendingConfirmButtonClass } from "@/views/portfolio/deposit/deposit-ui";
 import { DepositPrivateBalanceEntry } from "@/views/portfolio/deposit/deposit-private-balance-entry";
 import { DepositSourceTabs } from "@/views/portfolio/deposit/deposit-source-tabs";
 import { resolvePrivateAccountStatus } from "@/views/portfolio/deposit/resolve-private-account-status";
@@ -26,9 +28,16 @@ export function DepositEntryStep({
   onSelectStableflow,
   stableflowLoading = false,
 }: DepositEntryStepProps) {
-  const { session, openLogin, loginInProgress } = useAuth();
-  const { connectedWalletBalanceUsd, balancesLoading, pricesLoading } =
-    useDepositContext();
+  const { session, openLogin, loginInProgress, isBuyRestricted } = useAuth();
+  const {
+    connectedWalletBalanceUsd,
+    balancesLoading,
+    pricesLoading,
+    hasPendingDeposit,
+    converting,
+    onConfirmPendingDeposit,
+  } = useDepositContext();
+  const regionRestricted = Boolean(isBuyRestricted);
 
   if (!session) {
     return (
@@ -78,6 +87,25 @@ export function DepositEntryStep({
           status={privateAccountStatus}
           privateAccountAddress={session.privateAccountAddress}
         />
+      ) : null}
+
+      {hasPendingDeposit ? (
+        <RegionRestrictedControl restricted={regionRestricted}>
+          <button
+            type="button"
+            className={depositPendingConfirmButtonClass}
+            disabled={converting || regionRestricted}
+            onClick={() => void onConfirmPendingDeposit()}
+          >
+            {converting ? (
+              <Loader2
+                className="mr-1.5 h-3.5 w-3.5 animate-spin"
+                aria-hidden="true"
+              />
+            ) : null}
+            Confirm pending deposit
+          </button>
+        </RegionRestrictedControl>
       ) : null}
     </div>
   );
