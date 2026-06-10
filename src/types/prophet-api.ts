@@ -87,6 +87,9 @@ export interface ProphetTeamsConditionTeam {
 export interface ProphetTeamsConditionEntry {
   teams: ProphetTeamsConditionTeam[];
   slug: string;
+  question?: string;
+  main_event_title?: string;
+  event_title?: string;
 }
 
 export type ProphetGetTeamsConditionData = Record<

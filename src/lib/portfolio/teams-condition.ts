@@ -69,7 +69,8 @@ export function buildOpenOrderMarketMap(
   for (const [conditionId, entry] of Object.entries(data)) {
     const safeTeams = Array.isArray(entry?.teams) ? entry.teams : [];
     map[conditionId] = {
-      title: formatTeamsConditionTitle(safeTeams),
+      title:
+        entry?.question?.trim() || formatTeamsConditionTitle(safeTeams),
       teams: safeTeams,
       slug: entry?.slug?.trim() || undefined
     };

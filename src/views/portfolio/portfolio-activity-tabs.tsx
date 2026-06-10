@@ -1,7 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Pagination } from "@/components/pagination/pagination";
 import { cn } from "@/lib/cn";
@@ -82,14 +82,38 @@ export function PortfolioActivityTabs({
   loadOpenOrders,
   loadActivityHistory
 }: PortfolioActivityTabsProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState<PortfolioTabId>(
-    () => parsePortfolioTab(searchParams.get("tab")) ?? "position"
-  );
+  const tab = parsePortfolioTab(searchParams.get("tab")) ?? "position";
   const [positionPage, setPositionPage] = useState(1);
   const [openOrderPage, setOpenOrderPage] = useState(1);
   const loadedTabsRef = useRef<Set<PortfolioTabId>>(new Set());
   const prevTabRef = useRef<PortfolioTabId | null>(null);
+
+  const handleTabChange = useCallback(
+    (value: string) => {
+      const nextTab = parsePortfolioTab(value);
+
+      if (!nextTab) {
+        return;
+      }
+
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (nextTab === "position") {
+        params.delete("tab");
+      } else {
+        params.set("tab", nextTab);
+      }
+
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false
+      });
+    },
+    [pathname, router, searchParams]
+  );
 
   useEffect(() => {
     if (!sessionConnected) {
@@ -227,7 +251,7 @@ export function PortfolioActivityTabs({
         <TabSwitcher
           items={[...PORTFOLIO_TABS]}
           value={tab}
-          onChange={(value) => setTab(value as PortfolioTabId)}
+          onChange={handleTabChange}
           aria-label="Portfolio activity"
           size="compact"
           className="min-w-max gap-4 md:gap-6"

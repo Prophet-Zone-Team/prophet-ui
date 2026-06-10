@@ -70,7 +70,7 @@ const portfolioPositionsTableGridColsClass =
   "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_5.5rem]";
 
 const portfolioOrdersTableGridColsClass =
-  "grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))_5.5rem]";
+  "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_7.5rem]";
 
 export const portfolioPositionsTableHeadClass = cn(
   "hidden min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
@@ -83,12 +83,12 @@ export const portfolioPositionsTableRowClass = cn(
 );
 
 export const portfolioOrdersTableHeadClass = cn(
-  "hidden min-w-[680px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
+  "hidden min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
   portfolioOrdersTableGridColsClass
 );
 
 export const portfolioOrdersTableRowClass = cn(
-  "hidden min-w-[680px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
+  "hidden min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
   portfolioOrdersTableGridColsClass
 );
 
