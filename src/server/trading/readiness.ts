@@ -2,7 +2,7 @@ import "server-only";
 
 import type { AccountReadinessCheck, TradingUserSession, UserTradingReadiness } from "@/types/market";
 import type { TradingSessionRecord } from "@/server/trading/session-store";
-import { refreshDepositWalletDeployment } from "@/server/trading/deposit-wallet";
+import { refreshDepositWalletDeployment, fetchDepositWalletRelayerReady } from "@/server/trading/deposit-wallet";
 import { getTradingCredentialStatus, updateTradingSession } from "@/server/trading/session-store";
 import {
   getReadableSetupAllowanceDetailForSession,
@@ -152,8 +152,20 @@ function getDepositWalletDetail(session: TradingUserSession | undefined): string
 async function refreshDepositWalletSession(record: TradingSessionRecord): Promise<TradingSessionRecord> {
   const status = record.session.depositWalletStatus;
 
-  if (!record.session.funderAddress || status === "deployed" || status === "relayer_unconfigured") {
+  if (!record.session.funderAddress || status === "relayer_unconfigured") {
     return record;
+  }
+
+  if (status === "deployed") {
+    try {
+      const deployment = await fetchDepositWalletRelayerReady(record.session.funderAddress);
+
+      if (deployment) {
+        return record;
+      }
+    } catch {
+      return record;
+    }
   }
 
   const refresh = await refreshDepositWalletDeployment(record.session);
