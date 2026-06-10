@@ -1,8 +1,7 @@
 import {
   clearMockScheduleMatchesCache,
   getMockScheduleMatchesFromFile,
-  getMockScheduleMatchesMeta,
-  USE_MOCK_SCHEDULE_MATCHES
+  getMockScheduleMatchesMeta
 } from "@/data/mock/schedule-matches";
 import { clearFootballMatchesFileFallbackCache } from "@/data/providers/football-matches-fallback";
 import {
@@ -41,23 +40,9 @@ export async function getFootballMatches(): Promise<FootballMatchesResult> {
   return result;
 }
 
-function findMatchInList(
-  slug: string,
-  matches: WorldCupMatch[],
-): WorldCupMatch | undefined {
-  return matches.find(
-    (match) => match.id === slug || match.polymarket?.slug === slug,
-  );
-}
-
 export async function getFootballMatchBySlug(
-  slug: string,
+  slug: string
 ): Promise<WorldCupMatch | undefined> {
-  if (USE_MOCK_SCHEDULE_MATCHES) {
-    const matches = await getMockScheduleMatchesFromFile();
-    return findMatchInList(slug, matches);
-  }
-
   try {
     const detail = await getProphetGame(slug);
 
@@ -65,12 +50,6 @@ export async function getFootballMatchBySlug(
   } catch {
     return undefined;
   }
-}
-
-export async function findFootballMatch(
-  matchId: string,
-): Promise<WorldCupMatch | undefined> {
-  return getFootballMatchBySlug(matchId);
 }
 
 async function fetchProphetFootballMatches(): Promise<FootballMatchesResult> {

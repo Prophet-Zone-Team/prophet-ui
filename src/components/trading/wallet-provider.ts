@@ -7,6 +7,7 @@ import type { Connector } from "wagmi";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import { prepareWalletSigning } from "@/lib/trading/prepare-wallet-signing";
+import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 
 interface WalletClientOptions {
   chainId?: number;
@@ -92,11 +93,13 @@ export async function getWalletClientForAddress(
 
   await prepareWalletSigning({ chainId });
 
-  return getWalletClient(wagmiConfig, {
+  const client = await getWalletClient(wagmiConfig, {
     account: walletAddress as Address,
     chainId,
     connector,
   });
+
+  return client as WalletClient;
 }
 
 export async function requestWalletRpc(
@@ -180,5 +183,6 @@ export async function signMessageWithWallet(
 }
 
 export async function disconnectWagmiWallet() {
+  await releaseExternalWalletConnection();
   await disconnect(wagmiConfig);
 }

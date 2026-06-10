@@ -29,7 +29,7 @@ function PrivateBalance({ onClick, className }: PrivateBalanceProps) {
     <button
       type="button"
       className={cn(
-        "cursor-pointer text-[#909090] text-sm font-[400] px-2.5 rounded-lg border border-[#EBEBEB] h-[50px] flex flex-col items-end justify-center gap-0 transition-colors hover:border-[#d0d0d0]",
+        "cursor-pointer text-[#909090] text-sm font-[400] px-2.5 rounded-lg border border-[#FFFFFF] h-[50px] flex flex-col items-end justify-center gap-0 transition-colors hover:border-[#EBEBEB]",
         className,
       )}
       onClick={onClick}

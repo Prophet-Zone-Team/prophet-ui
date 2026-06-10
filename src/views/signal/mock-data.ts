@@ -13,7 +13,6 @@ export const signalPageData: SignalPageData = {
     todaySignal: 12,
     positive: 7,
     negative: 3,
-    highImpact: 2
   },
   topImpactItems: [
     {

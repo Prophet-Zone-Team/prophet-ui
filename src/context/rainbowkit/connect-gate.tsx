@@ -5,13 +5,19 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   type ReactNode,
 } from "react";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useConnectWallet, usePrivy } from "@privy-io/react-auth";
 import { getAccount, watchAccount } from "wagmi/actions";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
-
+import {
+  activatePrivyWallet,
+  findPrivyEmbeddedWallet,
+} from "@/context/privy/privy-wallet-bridge";
+import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
+import { useAuthStore } from "@/store/auth-store";
 
 export interface OpenConnectOptions {
   expectedAddress?: string;
@@ -41,11 +47,22 @@ function addressesMatch(left: string, right: string) {
   return left.toLowerCase() === right.toLowerCase();
 }
 
-function resolveConnectedAddress(expectedAddress?: string) {
+function resolveConnectedAddress(
+  expectedAddress?: string,
+  options?: { embeddedOnly?: boolean },
+) {
   const account = getAccount(wagmiConfig);
 
   if (!account.isConnected || !account.address) {
     return undefined;
+  }
+
+  if (options?.embeddedOnly) {
+    const embedded = findPrivyEmbeddedWallet(expectedAddress);
+
+    if (!embedded || !addressesMatch(account.address, embedded.address)) {
+      return undefined;
+    }
   }
 
   if (expectedAddress && !addressesMatch(account.address, expectedAddress)) {
@@ -56,82 +73,136 @@ function resolveConnectedAddress(expectedAddress?: string) {
 }
 
 export function RainbowConnectGate({ children }: { children: ReactNode }) {
-  const { openConnectModal } = useConnectModal();
+  const pendingErrorRef = useRef<((error: Error) => void) | null>(null);
+  const loginMethod = useAuthStore((state) => state.loginMethod);
+  const { authenticated: privyAuthenticated } = usePrivy();
 
-  const openConnectAndWait = useCallback(async (options?: OpenConnectOptions) => {
-    const existing = resolveConnectedAddress(options?.expectedAddress);
+  const { connectWallet } = useConnectWallet({
+    onError: (error) => {
+      pendingErrorRef.current?.(
+        new Error(
+          typeof error === "string"
+            ? `Wallet connection failed: ${error}`
+            : "Wallet connection failed.",
+        ),
+      );
+    },
+  });
 
-    if (existing) {
-      return existing;
-    }
+  const openConnectAndWait = useCallback(
+    async (options?: OpenConnectOptions) => {
+      const isEmbeddedLogin =
+        privyAuthenticated &&
+        (loginMethod === "email" || loginMethod === "google");
 
-    if (options?.signal?.aborted) {
-      throw new Error("Wallet connection was cancelled.");
-    }
-
-    if (!openConnectModal) {
-      throw new Error("Wallet connect modal is not available.");
-    }
-
-    openConnectModal();
-
-    return new Promise<string>((resolve, reject) => {
-      const timeoutMs = options?.timeoutMs ?? 120_000;
-      let settled = false;
-      let timeoutId: number | undefined;
-      let unwatch: (() => void) | undefined;
-
-      const finish = (handler: () => void) => {
-        if (settled) {
-          return;
-        }
-
-        settled = true;
-
-        if (timeoutId !== undefined) {
-          window.clearTimeout(timeoutId);
-        }
-
-        unwatch?.();
-        options?.signal?.removeEventListener("abort", onAbort);
-        handler();
-      };
-
-      const onAbort = () => {
-        finish(() => {
-          reject(new Error("Wallet connection was cancelled."));
-        });
-      };
-
-      if (options?.signal) {
-        options.signal.addEventListener("abort", onAbort);
+      if (isEmbeddedLogin) {
+        await releaseExternalWalletConnection();
       }
 
-      timeoutId = window.setTimeout(() => {
-        finish(() => {
-          reject(new Error("Wallet connection timed out. Try again."));
-        });
-      }, timeoutMs);
-
-      const tryResolve = () => {
-        const address = resolveConnectedAddress(options?.expectedAddress);
-
-        if (address) {
-          finish(() => {
-            resolve(address);
-          });
-        }
-      };
-
-      unwatch = watchAccount(wagmiConfig, {
-        onChange() {
-          tryResolve();
-        },
+      const existing = resolveConnectedAddress(options?.expectedAddress, {
+        embeddedOnly: isEmbeddedLogin,
       });
 
-      tryResolve();
-    });
-  }, [openConnectModal]);
+      if (existing) {
+        return existing;
+      }
+
+      if (options?.signal?.aborted) {
+        throw new Error("Wallet connection was cancelled.");
+      }
+
+      // Embedded (email/google) wallets are created after Privy auth. Wait for
+      // them to appear and set the wagmi active wallet — never open the
+      // external-wallet picker in this flow.
+      let activated;
+      if (isEmbeddedLogin) {
+        activated = await activatePrivyWallet(options?.expectedAddress, {
+          preferEmbedded: true,
+        }).catch(() => undefined);
+      }
+
+      if (!activated && !isEmbeddedLogin) {
+        connectWallet();
+      } else if (!activated && isEmbeddedLogin) {
+        throw new Error(
+          "Your embedded wallet is still being created. Please try again in a moment.",
+        );
+      }
+
+      return new Promise<string>((resolve, reject) => {
+        const timeoutMs = options?.timeoutMs ?? 120_000;
+        let settled = false;
+        let timeoutId: number | undefined;
+        let unwatch: (() => void) | undefined;
+
+        const finish = (handler: () => void) => {
+          if (settled) {
+            return;
+          }
+
+          settled = true;
+
+          if (timeoutId !== undefined) {
+            window.clearTimeout(timeoutId);
+          }
+
+          unwatch?.();
+          options?.signal?.removeEventListener("abort", onAbort);
+
+          if (pendingErrorRef.current === onConnectError) {
+            pendingErrorRef.current = null;
+          }
+
+          handler();
+        };
+
+        const onAbort = () => {
+          finish(() => {
+            reject(new Error("Wallet connection was cancelled."));
+          });
+        };
+
+        const onConnectError = (error: Error) => {
+          finish(() => {
+            reject(error);
+          });
+        };
+
+        pendingErrorRef.current = onConnectError;
+
+        if (options?.signal) {
+          options.signal.addEventListener("abort", onAbort);
+        }
+
+        timeoutId = window.setTimeout(() => {
+          finish(() => {
+            reject(new Error("Wallet connection timed out. Try again."));
+          });
+        }, timeoutMs);
+
+        const tryResolve = () => {
+          const address = resolveConnectedAddress(options?.expectedAddress, {
+            embeddedOnly: isEmbeddedLogin,
+          });
+
+          if (address) {
+            finish(() => {
+              resolve(address);
+            });
+          }
+        };
+
+        unwatch = watchAccount(wagmiConfig, {
+          onChange() {
+            tryResolve();
+          },
+        });
+
+        tryResolve();
+      });
+    },
+    [connectWallet, loginMethod, privyAuthenticated],
+  );
 
   useEffect(() => {
     const api: ConnectGateApi = { openConnectAndWait };

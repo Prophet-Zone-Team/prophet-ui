@@ -70,7 +70,9 @@ export function showOrderSubmittedToast(
 }
 
 export function showOrderErrorToast(error: unknown): void {
-  toast.error(resolveOrderErrorMessage(error));
+  toast.error("Order failed", {
+    description: resolveOrderErrorMessage(error)
+  });
 }
 
 export function formatOrderCancelToastSummary(order: UserOpenOrder): string {
@@ -90,7 +92,33 @@ export function formatOrderCancelToastSummary(order: UserOpenOrder): string {
 }
 
 export function showOrderCancelledToast(summary: string): void {
-  toast.success("Order cancelled", { description: summary });
+  toast.success("Order cancelled", {
+    description: summary
+  });
+}
+
+export function formatMarketCancelToastSummary(
+  marketTitle: string,
+  count: number
+): string {
+  const orderLabel = count === 1 ? "order" : "orders";
+
+  return `${marketTitle} · ${count} ${orderLabel}`;
+}
+
+export function showMarketOrdersCancelledToast(summary: string): void {
+  toast.success("Orders cancelled", {
+    description: summary
+  });
+}
+
+export function showPartialMarketCancelToast(
+  cancelledCount: number,
+  failedCount: number
+): void {
+  toast.warning("Some orders were not cancelled", {
+    description: `${cancelledCount} cancelled, ${failedCount} failed`
+  });
 }
 
 function truncateOrderId(orderId: string): string {

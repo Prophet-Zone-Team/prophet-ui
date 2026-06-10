@@ -17,6 +17,7 @@ import {
   type TeamChartTimeRange
 } from "@/lib/team/probability-history";
 import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
+import { useTeamGameResults } from "@/hooks/market/use-team-game-results";
 import { resolveTeamOrderbookTokenId } from "@/lib/market/resolve-team-orderbook-token";
 import type { TeamMarketSnapshot } from "@/types/market";
 import {
@@ -50,6 +51,10 @@ export function ProbabilitySection({
     pollIntervalMs: 5000,
     enabled: Boolean(yesTokenId)
   });
+  const { matches: teamGameMatches } = useTeamGameResults({
+    teamName: snapshot.team.name,
+    teamId: snapshot.team.id
+  });
   const yesProbability = snapshot.market.probability;
   const noProbability = Math.max(0, 100 - yesProbability);
   const displayProbability =
@@ -73,11 +78,11 @@ export function ProbabilitySection({
     () =>
       buildTeamChartMatchAnnotations({
         teamId: snapshot.team.id,
-        matches: [],
+        matches: teamGameMatches,
         chartData,
         snapshots: [snapshot]
       }),
-    [chartData, snapshot]
+    [chartData, snapshot, teamGameMatches]
   );
 
   const yDomain = useMemo(() => getTeamChartYDomain(chartData), [chartData]);
@@ -117,7 +122,7 @@ export function ProbabilitySection({
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="m-0 text-[20px] font-[556] leading-6 text-black">
+            <h2 className="m-0 text-[20px] font-[500] leading-6 text-black">
               Probability
             </h2>
             <div
@@ -160,8 +165,8 @@ export function ProbabilitySection({
                 className={cn(
                   "border-0 bg-transparent p-0 text-sm leading-[17px]",
                   timeRange === range.id
-                    ? "font-[556] text-black"
-                    : "font-[457] text-[#909090]"
+                    ? "font-[500] text-black"
+                    : "font-[400] text-[#909090]"
                 )}
                 onClick={() => setTimeRange(range.id)}
               >
@@ -230,13 +235,13 @@ function MetricBlock({
     <div className={className}>
       <p
         className={cn(
-          "m-0 font-[556] text-black",
+          "m-0 font-[500] text-black",
           valueClassName ?? "text-base leading-[19px]"
         )}
       >
         {value}
       </p>
-      <p className="m-0 mt-1 text-sm font-[556] leading-[17px] text-[#909090]">
+      <p className="m-0 mt-1 text-sm font-[500] leading-[17px] text-[#909090]">
         {label}
       </p>
     </div>

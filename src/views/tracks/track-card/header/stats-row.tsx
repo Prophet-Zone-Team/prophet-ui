@@ -29,7 +29,7 @@ export function TeamStatsRow({
       <ProbabilityStat probability={probability} change24h={change24h} />
       <VolumeStat volumeLabel={`$${formatVolume(volume)}`} />
       <YouBidStat
-        amountLabel={youBid?.amountLabel ?? "$0"}
+        amountLabel={youBid?.amountLabel ?? "-"}
         outcomeSide={youBid?.outcomeSide}
       />
     </div>
@@ -50,7 +50,7 @@ export function GameStatsRow({
         teamCode={probabilityTeamCode}
       />
       <VolumeStat volumeLabel={`$${formatVolume(volume)}`} />
-      <YouBidStat amountLabel={youBid?.amountLabel ?? "$0"} />
+      <YouBidStat amountLabel={youBid?.amountLabel ?? "-"} />
     </div>
   );
 }

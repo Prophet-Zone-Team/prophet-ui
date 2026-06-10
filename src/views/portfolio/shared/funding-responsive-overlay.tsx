@@ -24,6 +24,7 @@ export interface FundingResponsiveOverlayProps {
   overlayClassName?: string;
   hideCloseButton?: boolean;
   overlayCloseable?: boolean;
+  closeButtonClassName?: string;
 }
 
 export function FundingResponsiveOverlay({
@@ -35,6 +36,7 @@ export function FundingResponsiveOverlay({
   overlayClassName,
   hideCloseButton = false,
   overlayCloseable = true,
+  closeButtonClassName,
 }: FundingResponsiveOverlayProps) {
   const isMobile = useDevice();
 
@@ -67,6 +69,7 @@ export function FundingResponsiveOverlay({
           overlayClassName={overlayClassName}
           hideCloseButton={hideCloseButton}
           overlayCloseable={overlayCloseable}
+          closeButtonClassName={closeButtonClassName}
         >
           {children}
         </Modal>

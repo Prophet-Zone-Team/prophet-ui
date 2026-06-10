@@ -189,4 +189,158 @@ describe("prophet-track-mapper", () => {
     assert.equal(cards[0].snapshot.team.id, "spain");
     assert.equal(cards[1].snapshot.team.id, "france");
   });
+
+  it("maps team track fifa_rankings and team_news_stat to footer props", () => {
+    const item: ProphetUserTrackItem = {
+      category: "team",
+      slug: "france",
+      team_name: "France",
+      team: { code: "FRA", name: "France" },
+      fifa_rankings: [3],
+      team_news_stat: {
+        news_count: 5,
+        latest_news: [
+          {
+            title:
+              "Liverpool's Hugo Ekitiké ruled out for rest of season and World Cup with France ",
+            score: 100,
+            matched_players: [],
+            url_to_image: "https://example.com/news-image.jpg"
+          }
+        ]
+      }
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.equal(card.variant, undefined);
+    assert.deepEqual(card.powerRanking, { rank: 3 });
+    assert.deepEqual(card.signals, { count: 5 });
+    assert.equal(card.signalItems.length, 1);
+    assert.equal(
+      card.signalItems[0]?.headline,
+      "Liverpool's Hugo Ekitiké ruled out for rest of season and World Cup with France "
+    );
+    assert.equal(card.signalItems[0]?.sentiment, "positive");
+    assert.equal(card.signalItems[0]?.thumbnailAlt, "Liverpool's Hugo");
+    assert.equal(
+      card.signalItems[0]?.thumbnailUrl,
+      "https://example.com/news-image.jpg"
+    );
+  });
+
+  it("parses team_news_stat.latest_news when returned as a JSON string", () => {
+    const item: ProphetUserTrackItem = {
+      category: "game",
+      slug: "fifwc-mex-rsa-2026-06-11",
+      team_name: "Mexico,South Africa",
+      team_news_stat: {
+        news_count: 2,
+        latest_news:
+          '[{"title":"Mexico squad update","score":100,"matched_players":[]},{"title":"Injury report","score":30,"matched_players":["Player A"]}]'
+      },
+      markets: [
+        {
+          slug: "fifwc-mex-rsa-2026-06-11-mex",
+          groupItemTitle: "Mexico",
+          outcomePrices: '["0.665", "0.335"]'
+        }
+      ]
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.equal(card.variant, "game");
+    assert.deepEqual(card.signals, { count: 2 });
+    assert.equal(card.signalItems.length, 2);
+    assert.equal(card.signalItems[0]?.headline, "Mexico squad update");
+    assert.equal(card.signalItems[0]?.sentiment, "positive");
+    assert.equal(card.signalItems[1]?.headline, "Injury report");
+    assert.equal(card.signalItems[1]?.sentiment, "negative");
+    assert.equal(card.signalItems[1]?.thumbnailAlt, "Player A");
+  });
+
+  it("parses team_news_stat when the whole field is a JSON string", () => {
+    const item: ProphetUserTrackItem = {
+      team: { code: "BRA", name: "Brazil" },
+      team_news_stat:
+        '{"news_count":1,"latest_news":[{"title":"Brazil training camp","score":80,"matched_players":[]}]}'
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.deepEqual(card.signals, { count: 1 });
+    assert.equal(card.signalItems.length, 1);
+    assert.equal(card.signalItems[0]?.headline, "Brazil training camp");
+  });
+
+  it("maps game track fifa_rankings by array order", () => {
+    const item: ProphetUserTrackItem = {
+      category: "game",
+      slug: "fifwc-mex-rsa-2026-06-11",
+      team_name: "Mexico,South Africa",
+      fifa_rankings: [31, 1],
+      markets: [
+        {
+          slug: "fifwc-mex-rsa-2026-06-11-mex",
+          groupItemTitle: "Mexico",
+          outcomePrices: '["0.665", "0.335"]'
+        }
+      ]
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.equal(card.variant, "game");
+    assert.equal(card.powerRanking.home.rank, 31);
+    assert.equal(card.powerRanking.away.rank, 1);
+  });
+
+  it("maps bid_amount to youBid amountLabel", () => {
+    const item: ProphetUserTrackItem = {
+      team: { code: "BRA", name: "Brazil" },
+      bid_amount: "125.5"
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.equal(card.youBid?.amountLabel, "$125.5");
+  });
+
+  it("falls back footer props when fifa_rankings and team_news_stat are missing", () => {
+    const teamItem: ProphetUserTrackItem = {
+      team: { code: "BRA", name: "Brazil" }
+    };
+    const gameItem: ProphetUserTrackItem = {
+      category: "game",
+      slug: "fifwc-mex-rsa-2026-06-11",
+      team_name: "Mexico,South Africa",
+      markets: [
+        {
+          slug: "fifwc-mex-rsa-2026-06-11-mex",
+          groupItemTitle: "Mexico",
+          outcomePrices: '["0.665", "0.335"]'
+        }
+      ]
+    };
+
+    const teamCard = mapProphetTrackToCardProps(teamItem);
+    const gameCard = mapProphetTrackToCardProps(gameItem);
+
+    assert.ok(teamCard);
+    assert.ok(gameCard);
+    assert.deepEqual(teamCard.powerRanking, { rank: null });
+    assert.deepEqual(teamCard.signals, { count: 0 });
+    assert.deepEqual(teamCard.signalItems, []);
+    assert.equal(gameCard.variant, "game");
+    assert.equal(gameCard.powerRanking.home.rank, null);
+    assert.equal(gameCard.powerRanking.away.rank, null);
+    assert.deepEqual(gameCard.signals, { count: 0 });
+    assert.deepEqual(gameCard.signalItems, []);
+  });
 });

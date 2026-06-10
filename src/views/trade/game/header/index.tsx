@@ -23,7 +23,7 @@ import type {
 } from "@/types/market";
 
 const flagClassName =
-  "h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-cover bg-center shadow-[0_0_2px_rgba(0,0,0,0.2)] sm:h-[85px] sm:w-[85px]";
+  "h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-cover bg-center sm:h-[85px] sm:w-[85px]";
 
 export type TradeGameHeaderProps = {
   match: WorldCupMatch;
@@ -73,22 +73,15 @@ function TeamSide({
         align === "center" && "items-center"
       )}
     >
-      {logoUrl ? (
-        <img
-          src={logoUrl}
-          alt=""
-          className={cn(flagClassName, "object-cover")}
-        />
-      ) : (
-        <TeamFlag
-          code={code}
-          name={name}
-          className={cn(
-            flagClassName,
-            "!h-16 !w-16 !rounded-xl text-[52px] sm:!h-[85px] sm:!w-[85px] sm:text-[72px]"
-          )}
-        />
-      )}
+      <TeamFlag
+        code={code}
+        name={name}
+        logoUrl={logoUrl}
+        className={cn(
+          flagClassName,
+          "!h-16 !w-16 !rounded-xl text-[52px] sm:!h-[85px] sm:!w-[85px] sm:text-[72px]"
+        )}
+      />
 
       <span className="mt-3 inline-flex max-w-full items-center gap-[8px] sm:mt-[21px] sm:gap-1.5">
         <span className="truncate text-lg font-[400] capitalize leading-6 text-white sm:text-[26px] sm:leading-[31px]">
@@ -117,12 +110,12 @@ function HeaderMetric({
   value,
   statusVariant,
   subtitle,
-  statusLabel
+  badgeLabel
 }: {
   value: string;
   statusVariant?: ReturnType<typeof getScheduleRowVariant>;
   subtitle?: string;
-  statusLabel?: string;
+  badgeLabel?: string;
 }) {
   return (
     <div className="relative md:w-[453px] h-full">
@@ -130,25 +123,28 @@ function HeaderMetric({
         <Bg />
       </div>
       <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[35px]">
-        <strong className="text-center text-[40px] font-[556] capitalize leading-[48px] text-white sm:text-[60px] sm:leading-[72px]">
-          {value}
-        </strong>
+        {statusVariant === "upcoming" ? (
+          <span className="text-[#909090] text-[36px] font-[500]">VS</span>
+        ) : (
+          <strong className="text-center text-[40px] font-[400] capitalize leading-[48px] text-white sm:text-[60px] sm:leading-[72px]">
+            {value}
+          </strong>
+        )}
 
         {statusVariant ? (
           <div className="mt-4 flex flex-col items-center gap-1 sm:mt-7">
-            <MatchStatusBadge variant={statusVariant} className="gap-[7px]" />
-            {statusLabel ? (
-              <span className="text-[10px] font-[457] uppercase tracking-wide text-[#909090]">
-                {statusLabel}
-              </span>
-            ) : null}
+            <MatchStatusBadge
+              variant={statusVariant}
+              className="gap-[7px]"
+              label={badgeLabel}
+            />
           </div>
         ) : null}
 
         {subtitle ? (
           <span
             className={cn(
-              "text-xs font-[556] leading-[17px] text-[#909090] sm:text-sm",
+              "text-xs font-[500] leading-[17px] text-[#909090] sm:text-sm",
               statusVariant ? "mt-5 sm:mt-[33px]" : "mt-4 sm:mt-7"
             )}
           >
@@ -205,6 +201,10 @@ export function TradeGameHeader({
   const statusVariant = effectiveLive
     ? "ongoing"
     : getScheduleRowVariant(liveMatch.status);
+  const badgeLabel =
+    effectiveLive && liveMatch.period?.trim()
+      ? liveMatch.period.trim()
+      : undefined;
   const subtitle = effectiveLive
     ? liveClock
     : formatScheduleKickoff(liveMatch.kickoffAt);
@@ -224,7 +224,7 @@ export function TradeGameHeader({
         value={formatMatchScore(displayScore.homeScore, displayScore.awayScore)}
         statusVariant={statusVariant}
         subtitle={subtitle}
-        statusLabel={undefined}
+        badgeLabel={badgeLabel}
       />
       <TeamSideColumn
         team={{

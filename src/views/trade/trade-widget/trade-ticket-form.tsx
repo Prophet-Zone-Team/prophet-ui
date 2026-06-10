@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { formatProbability } from "@/components/home/market-formatters";
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
 import { cn } from "@/lib/cn";
@@ -11,7 +12,9 @@ import {
   formatLimitPriceInputValue,
   formatShareSize,
   formatOrderbookPrice,
-  parseLimitPriceDisplayValue
+  isCompleteLimitPriceDisplayValue,
+  parseLimitPriceDisplayValue,
+  sanitizeLimitPriceDisplayInput
 } from "@/lib/market/order-math";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { BidTradeSide } from "@/types/market";
@@ -27,7 +30,7 @@ import {
   type TradeTicketStatus
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
 import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-button";
-import { tradeQuickAmountClass } from "@/views/trade/trade-widget/trade-ui";
+import { tradeQuickAmountClass, TRADE_BID_BUTTON_ID } from "@/views/trade/trade-widget/trade-ui";
 
 const QUICK_AMOUNTS = [1, 5, 10, 100] as const;
 const LIMIT_BUY_SHARE_DELTAS = [-100, -10, 10, 100] as const;
@@ -80,6 +83,8 @@ export interface TradeTicketFormProps {
   takeProfitLimitEnabled?: boolean;
   takeProfitLimitDisabled?: boolean;
   takeProfitLimitPrice?: string;
+  outcomeButtonClassName?: string;
+  outcomeButtonContainerClassName?: string;
   onTakeProfitLimitEnabledChange?: (value: boolean) => void;
   onTakeProfitLimitPriceChange?: (value: string) => void;
 }
@@ -92,7 +97,7 @@ export function TradeTicketForm({
   outcomeSide,
   orderMode,
   tradeSide,
-  amount,
+  amount = "0",
   limitPrice,
   preview,
   yesShares = 0,
@@ -126,6 +131,8 @@ export function TradeTicketForm({
   takeProfitLimitEnabled = false,
   takeProfitLimitDisabled = false,
   takeProfitLimitPrice = "0.012",
+  outcomeButtonClassName,
+  outcomeButtonContainerClassName,
   onTakeProfitLimitEnabledChange,
   onTakeProfitLimitPriceChange
 }: TradeTicketFormProps) {
@@ -144,7 +151,12 @@ export function TradeTicketForm({
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-4 pt-4">
-      <div className="grid grid-cols-2 gap-2">
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-2",
+          outcomeButtonContainerClassName
+        )}
+      >
         <OutcomeButtonColumn
           side="yes"
           active={outcomeSide === "yes"}
@@ -152,6 +164,7 @@ export function TradeTicketForm({
           probabilityLabel={formatProbability(yesProbability)}
           shareCount={tradeSide === "sell" ? yesShares : undefined}
           onSelect={() => onSelectOutcome("yes")}
+          buttonClassName={outcomeButtonClassName}
         />
         <OutcomeButtonColumn
           side="no"
@@ -160,49 +173,35 @@ export function TradeTicketForm({
           probabilityLabel={formatProbability(noProbability)}
           shareCount={tradeSide === "sell" ? noShares : undefined}
           onSelect={() => onSelectOutcome("no")}
+          buttonClassName={outcomeButtonClassName}
         />
       </div>
 
       {isLimitOrder ? (
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-[556] leading-[17px] text-black">
+          <span className="text-sm font-[500] leading-[17px] text-black">
             Limit Price
           </span>
           <label className="sr-only" htmlFor="trade-limit-price">
             Limit price
           </label>
-          <div className="flex min-w-0 items-baseline justify-end">
-            <input
-              id="trade-limit-price"
-              type="number"
-              min={1}
-              max={99}
-              step={0.1}
-              inputMode="decimal"
-              value={formatLimitPriceInputValue(limitPrice)}
-              onChange={(event) => {
-                onLimitPriceChange(
-                  parseLimitPriceDisplayValue(
-                    event.target.value,
-                    preview.sidePrice
-                  )
-                );
-                onAmountMessageClear();
-              }}
-              className="min-w-[4ch] max-w-[8ch] flex-1 border-0 bg-transparent p-0 text-right text-[32px] font-[556] leading-[38px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
-          </div>
+          <LimitPriceInput
+            limitPrice={limitPrice}
+            sidePrice={preview.sidePrice}
+            onLimitPriceChange={onLimitPriceChange}
+            onAmountMessageClear={onAmountMessageClear}
+          />
         </div>
       ) : null}
 
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-[556] leading-[17px] text-black">
+            <span className="text-sm font-[500] leading-[17px] text-black">
               {amountInputLabel}
             </span>
             {showCashBalance ? (
-              <span className="text-xs font-[457] leading-4 text-prophet-muted">
+              <span className="text-xs font-[400] leading-4 text-prophet-muted">
                 {formatTeamDetailMoney(availableCash)} cash
               </span>
             ) : null}
@@ -213,7 +212,7 @@ export function TradeTicketForm({
               : "Order amount in USDC"}
           </label>
           <div className="flex flex-1  items-baseline justify-end  text-[26px] font-[500]">
-            <span>$</span>
+            {!isLimitOrder && tradeSide !== "sell" && <span>$</span>}
             <input
               id="trade-amount"
               type="number"
@@ -322,7 +321,7 @@ export function TradeTicketForm({
             <span className="text-[14px] font-[400] leading-[17px] text-black">
               {outcomeSummaryLabel}
             </span>
-            <span className="text-sm font-[457] leading-[17px] text-prophet-muted">
+            <span className="text-sm font-[400] leading-[17px] text-prophet-muted">
               Avg. Price {formatOrderbookPrice(preview.sidePrice)}
             </span>
           </div>
@@ -332,19 +331,22 @@ export function TradeTicketForm({
         </div>
       )}
 
-      <TradeAuthActionButton
-        actionLabel={actionLabel}
-        connectLabel="Enable trading"
-        canSubmit={canSubmit && !actionInProgress}
-        connectDisabled={status === "loading"}
-        actionStatus={
-          status === "signing" || status === "submitting" ? status : undefined
-        }
-        onAction={onSubmit}
-        onLoginStart={onLoginStart}
-        onLoginSuccess={onLoginSuccess}
-        onLoginError={onLoginError}
-      />
+      <div id={TRADE_BID_BUTTON_ID} className="w-full">
+        <TradeAuthActionButton
+          tradeSide={tradeSide}
+          actionLabel={actionLabel}
+          connectLabel="Enable trading"
+          canSubmit={canSubmit && !actionInProgress}
+          connectDisabled={status === "loading"}
+          actionStatus={
+            status === "signing" || status === "submitting" ? status : undefined
+          }
+          onAction={onSubmit}
+          onLoginStart={onLoginStart}
+          onLoginSuccess={onLoginSuccess}
+          onLoginError={onLoginError}
+        />
+      </div>
 
       {displayMessage ? (
         <div className="flex flex-col gap-2">
@@ -356,12 +358,12 @@ export function TradeTicketForm({
                 : "text-prophet-muted"
             )}
           >
-            {displayMessage}
+            {amount !== "0" ? displayMessage : ""}
           </p>
           {eligibilityRetryAvailable && onRetryEligibility ? (
             <button
               type="button"
-              className="self-start text-xs font-[556] text-black underline underline-offset-2 disabled:opacity-50"
+              className="self-start text-xs font-[500] text-black underline underline-offset-2 disabled:opacity-50"
               disabled={actionInProgress || status === "loading"}
               onClick={() => void onRetryEligibility()}
             >
@@ -369,7 +371,7 @@ export function TradeTicketForm({
             </button>
           ) : null}
         </div>
-      ) : preview.disabledReason ? (
+      ) : preview.disabledReason && amount !== "0" ? (
         <p className="m-0 text-xs text-prophet-muted">
           {preview.disabledReason}
         </p>
@@ -378,6 +380,64 @@ export function TradeTicketForm({
       {showClearingTip && kickoffAt ? (
         <OrderBookClearingTip kickoffAt={kickoffAt} />
       ) : null}
+    </div>
+  );
+}
+
+function LimitPriceInput({
+  limitPrice,
+  sidePrice,
+  onLimitPriceChange,
+  onAmountMessageClear
+}: {
+  limitPrice: string;
+  sidePrice: number;
+  onLimitPriceChange: (value: string) => void;
+  onAmountMessageClear: () => void;
+}) {
+  const [displayValue, setDisplayValue] = useState(() =>
+    formatLimitPriceInputValue(limitPrice)
+  );
+  const lastEmittedLimitPriceRef = useRef(limitPrice);
+
+  useEffect(() => {
+    if (limitPrice === lastEmittedLimitPriceRef.current) {
+      return;
+    }
+
+    lastEmittedLimitPriceRef.current = limitPrice;
+    setDisplayValue(formatLimitPriceInputValue(limitPrice));
+  }, [limitPrice]);
+
+  return (
+    <div className="flex min-w-0 items-baseline justify-end">
+      <input
+        id="trade-limit-price"
+        type="text"
+        inputMode="decimal"
+        value={displayValue}
+        onChange={(event) => {
+          const sanitized = sanitizeLimitPriceDisplayInput(event.target.value);
+          setDisplayValue(sanitized);
+
+          if (sanitized === "") {
+            lastEmittedLimitPriceRef.current = "";
+            onLimitPriceChange("");
+            onAmountMessageClear();
+            return;
+          }
+
+          if (!isCompleteLimitPriceDisplayValue(sanitized)) {
+            return;
+          }
+
+          const parsed = parseLimitPriceDisplayValue(sanitized, sidePrice);
+          lastEmittedLimitPriceRef.current = parsed;
+          onLimitPriceChange(parsed);
+          onAmountMessageClear();
+        }}
+        className="min-w-[4ch] max-w-[8ch] flex-1 border-0 bg-transparent p-0 text-right text-[32px] font-[500] leading-[38px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
     </div>
   );
 }
@@ -403,7 +463,7 @@ function LimitOrderSummary({
   return (
     <div className="flex flex-col gap-3 border-t border-prophet-line pt-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-[556] leading-[17px] text-black">
+        <span className="text-sm font-[500] leading-[17px] text-black">
           Expiration
         </span>
         <LimitExpirationSelect
@@ -416,10 +476,10 @@ function LimitOrderSummary({
 
       {tradeSide === "buy" ? (
         <div className="flex items-center justify-between gap-2 border-t border-prophet-line/60 pt-3">
-          <span className="text-sm font-[556] leading-[17px] text-black">
+          <span className="text-sm font-[500] leading-[17px] text-black">
             Total
           </span>
-          <span className="text-sm font-[556] leading-[17px] text-[#0d69ff]">
+          <span className="text-sm font-[500] leading-[17px] text-[#0d69ff]">
             {formatTeamDetailMoney(deriveLimitBuyTotal(preview))}
           </span>
         </div>
@@ -427,11 +487,11 @@ function LimitOrderSummary({
 
       <div className="flex items-center justify-between gap-2 border-t border-prophet-line/60 pt-3">
         <div className="flex items-center gap-1">
-          <span className="text-sm font-[556] leading-[17px] text-black">
+          <span className="text-sm font-[500] leading-[17px] text-black">
             {outcomeSummaryLabel}
           </span>
         </div>
-        <span className="text-sm font-[556] leading-[17px] text-[#69C800]">
+        <span className="text-sm font-[500] leading-[17px] text-[#69C800]">
           {formatTeamDetailMoney(summaryValue)}
         </span>
       </div>
@@ -441,11 +501,10 @@ function LimitOrderSummary({
 
 function OrderBookClearingTip({ kickoffAt }: { kickoffAt: string }) {
   const tip = formatOrderBookClearingTip(kickoffAt);
-  const tooltip = formatOrderBookClearingTooltip(kickoffAt);
 
   return (
     <div className="flex items-center justify-center gap-1 text-center">
-      <span className="text-xs font-[457] leading-4 text-prophet-muted">
+      <span className="text-xs font-[400] leading-4 text-prophet-muted">
         {tip}
       </span>
     </div>
@@ -458,6 +517,8 @@ function OutcomeButtonColumn({
   priceLabel,
   probabilityLabel,
   shareCount,
+  className,
+  buttonClassName,
   onSelect
 }: {
   side: "yes" | "no";
@@ -465,24 +526,27 @@ function OutcomeButtonColumn({
   priceLabel: string;
   probabilityLabel: string;
   shareCount?: number;
+  className?: string;
+  buttonClassName?: string;
   onSelect: () => void;
 }) {
   const isYes = side === "yes";
   const showShares = shareCount !== undefined && shareCount > 0;
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className={cn("flex flex-col items-center gap-1", className)}>
       <OutcomeButton
         side={side}
         active={active}
         priceLabel={priceLabel}
         probabilityLabel={probabilityLabel}
         onSelect={onSelect}
+        buttonClassName={buttonClassName}
       />
       {showShares ? (
         <span
           className={cn(
-            "text-xs font-[556] leading-4",
+            "text-xs font-[500] leading-4",
             isYes ? "text-[#65AF14]" : "text-[#FF674B]"
           )}
         >
@@ -498,12 +562,14 @@ function OutcomeButton({
   active,
   priceLabel,
   probabilityLabel,
+  buttonClassName,
   onSelect
 }: {
   side: "yes" | "no";
   active: boolean;
   priceLabel: string;
   probabilityLabel: string;
+  buttonClassName?: string;
   onSelect: () => void;
 }) {
   const isYes = side === "yes";
@@ -520,7 +586,8 @@ function OutcomeButton({
             : "border-[#FF674B] bg-[#FF674B] text-white"
           : isYes
             ? "border-prophet-line bg-white text-[#65AF14] hover:bg-[#fafbfc]"
-            : "border-[#FF674B] bg-white text-[#FF674B] hover:bg-[#fafbfc]"
+            : "border-[#FF674B] bg-white text-[#FF674B] hover:bg-[#fafbfc]",
+        buttonClassName
       )}
     >
       <span className="text-[20px] font-[500] leading-6">

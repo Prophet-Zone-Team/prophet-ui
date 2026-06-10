@@ -3,10 +3,15 @@
 import { useEffect, useMemo } from "react";
 import { Check, Loader2 } from "lucide-react";
 
+import { ChevronRight } from "lucide-react";
+
 import { PolymarketIcon } from "@/components/icons";
 import { Modal } from "@/components/ui/modal";
+import { PrivyLoginModal } from "@/components/auth/privy-login-modal";
 import { cn } from "@/lib/cn";
 import {
+  formatCloseOnlyDetail,
+  formatCloseOnlyLabel,
   formatRegionBlockedDetail,
   formatRegionBlockedLabel,
 } from "@/lib/trading/trading-eligibility-client";
@@ -21,15 +26,22 @@ interface LoginModalProps {
     | "loginModalOpen"
     | "loginStep"
     | "loginInProgress"
+    | "privyLoginInProgress"
     | "error"
     | "readiness"
     | "session"
     | "setupSteps"
     | "isAuthenticated"
     | "isRegionBlocked"
+    | "isRegionCloseOnly"
     | "eligibilityView"
+    | "privyModalOpen"
     | "closeLogin"
     | "connectWallet"
+    | "openPrivyLogin"
+    | "closePrivyLogin"
+    | "completePrivyEmailLogin"
+    | "setLoginMethod"
     | "signClobCredentials"
     | "signTokenApprovals"
     | "refreshSession"
@@ -65,15 +77,22 @@ export function LoginModal({ auth }: LoginModalProps) {
     loginModalOpen,
     loginStep,
     loginInProgress,
+    privyLoginInProgress,
     error,
     readiness,
     session,
     setupSteps,
     isAuthenticated,
     isRegionBlocked,
+    isRegionCloseOnly,
     eligibilityView,
+    privyModalOpen,
     closeLogin,
     connectWallet,
+    openPrivyLogin,
+    closePrivyLogin,
+    completePrivyEmailLogin,
+    setLoginMethod,
     signClobCredentials,
     signTokenApprovals,
     refreshSession,
@@ -90,6 +109,7 @@ export function LoginModal({ auth }: LoginModalProps) {
 
   const showPolygonHint = Boolean(error) && /chainId|137|polygon/i.test(error ?? "");
   const showRestrictedView = isRegionBlocked && !loginInProgress;
+  const showCloseOnlyBanner = isRegionCloseOnly && !showRestrictedView && !loginInProgress;
 
   const pathname = usePathname();
   const isPrivateMode = useMemo(() => {
@@ -119,6 +139,12 @@ export function LoginModal({ auth }: LoginModalProps) {
             in control of your funds.
           </p>
         </div>
+        {showCloseOnlyBanner ? (
+          <p className="text-[12px] font-[400] text-[#3168FF] px-[10px] py-[4px] rounded-[8px] bg-[#E3E9FF]">
+            {formatCloseOnlyLabel(eligibilityView)}:{" "}
+            {formatCloseOnlyDetail(eligibilityView)}
+          </p>
+        ) : null}
         {showRestrictedView ? (
           <RestrictedRegionView
             detail={formatRegionBlockedDetail(eligibilityView)}
@@ -134,6 +160,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                   setupSteps,
                   loginStep,
                   loginInProgress,
+                  privyLoginInProgress,
                   readiness
                 });
                 const isLast = index === SETUP_STEPS.length - 1;
@@ -177,10 +204,10 @@ export function LoginModal({ auth }: LoginModalProps) {
                           <p className="mt-0.5 text-xs text-prophet-muted">
                             {step.id === "deploy_wallet"
                               ? getDeployWalletDescription({
-                                  loginStep,
-                                  readiness,
-                                  session
-                                })
+                                loginStep,
+                                readiness,
+                                session
+                              })
                               : step.description}
                           </p>
                         </div>
@@ -190,6 +217,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                           setupSteps,
                           loginStep,
                           loginInProgress,
+                          privyLoginInProgress,
                           session,
                         }) ? (
                           <StepAction
@@ -232,10 +260,32 @@ export function LoginModal({ auth }: LoginModalProps) {
                 </button>
               </div>
             ) : null}
+
+            {!isAuthenticated ? (
+              <button
+                type="button"
+                className="flex items-center justify-center gap-1 border-t border-prophet-line pt-4 text-[14px] font-[500] leading-[normal] text-black disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={openPrivyLogin}
+                disabled={loginInProgress || privyLoginInProgress}
+              >
+                Or login by Email
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            ) : null}
           </>
         )}
       </div>
-      <div className="flex flex-col gap-5"></div>
+
+      <PrivyLoginModal
+        open={privyModalOpen}
+        onClose={closePrivyLogin}
+        onConnectExtensionWallet={() => {
+          setLoginMethod("wallet");
+          closePrivyLogin();
+          void connectWallet();
+        }}
+        onEmailAuthenticated={completePrivyEmailLogin}
+      />
     </Modal>
   );
 }
@@ -297,10 +347,18 @@ function getSetupStepState(
     setupSteps: AuthContextValue["setupSteps"];
     loginStep: TradingLoginStep | undefined;
     loginInProgress: boolean;
+    privyLoginInProgress: boolean;
     readiness: AuthContextValue["readiness"];
   },
 ): StepVisualState {
-  const { session, setupSteps, loginStep, loginInProgress, readiness } = context;
+  const {
+    session,
+    setupSteps,
+    loginStep,
+    loginInProgress,
+    privyLoginInProgress,
+    readiness,
+  } = context;
   const depositStatus = readiness?.session?.depositWalletStatus;
 
   if (stepId === "deploy_wallet") {
@@ -309,10 +367,14 @@ function getSetupStepState(
     }
 
     if (
-      loginInProgress &&
+      privyLoginInProgress || (loginInProgress &&
       (loginStep === "requesting_wallet" ||
         loginStep === "checking_wallet_deployment" ||
-        loginStep === "deploying_wallet")
+        loginStep === "deploying_wallet" ||
+        loginStep === "creating_session" ||
+        loginStep === "verifying_readiness" ||
+        loginStep === "awaiting_session_signature"
+      ))
     ) {
       return "active";
     }
@@ -334,10 +396,14 @@ function getSetupStepState(
     }
 
     if (
-      loginInProgress &&
+      (loginInProgress || privyLoginInProgress) &&
       (loginStep === "checking_token_approval" ||
         loginStep === "awaiting_token_approval_signature" ||
-        loginStep === "submitting_token_approval")
+        loginStep === "submitting_token_approval" ||
+        loginStep === "awaiting_session_signature" ||
+        loginStep === "creating_session" ||
+        loginStep === "verifying_readiness"
+      )
     ) {
       return "active";
     }
@@ -351,12 +417,13 @@ function getSetupStepState(
     }
 
     if (
-      loginInProgress &&
+      (loginInProgress || privyLoginInProgress) &&
       (loginStep === "checking_clob_credentials" ||
         loginStep === "checking_trading_chain" ||
         loginStep === "switching_trading_chain" ||
         loginStep === "awaiting_clob_signature" ||
-        loginStep === "deriving_credentials")
+        loginStep === "deriving_credentials"
+      )
     ) {
       return "active";
     }
@@ -374,17 +441,25 @@ function stepNeedsUserAction(
     setupSteps: AuthContextValue["setupSteps"];
     loginStep: TradingLoginStep | undefined;
     loginInProgress: boolean;
+    privyLoginInProgress: boolean;
     session: AuthContextValue["session"];
   },
 ): boolean {
-  const { state, setupSteps, loginStep, loginInProgress, session } = context;
+  const {
+    state,
+    setupSteps,
+    loginStep,
+    loginInProgress,
+    privyLoginInProgress,
+    session,
+  } = context;
 
   if (stepId === "deploy_wallet") {
     if (state === "failed") {
       return !loginInProgress;
     }
 
-    return !session && !loginInProgress;
+    return !session && !loginInProgress && !privyLoginInProgress;
   }
 
   if (stepId === "authorize_tokens") {
@@ -395,14 +470,14 @@ function stepNeedsUserAction(
       return false;
     }
 
-    return setupSteps.walletDeployed && !loginInProgress;
+    return setupSteps.walletDeployed && !loginInProgress && !privyLoginInProgress;
   }
 
   if (setupSteps.clobSigned || loginStep === "clob_already_derived") {
     return false;
   }
 
-  return setupSteps.walletDeployed && !loginInProgress;
+  return setupSteps.walletDeployed && !loginInProgress && !privyLoginInProgress;
 }
 
 function StepAction({

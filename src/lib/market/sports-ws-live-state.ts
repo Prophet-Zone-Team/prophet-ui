@@ -10,6 +10,8 @@ export interface MatchLiveSnapshot {
   homeScore?: number;
   awayScore?: number;
   status: WorldCupMatchStatus;
+  /** Current match period from Polymarket sports WS (e.g. "1H", "2H", "HT"). */
+  period?: string;
   liveElapsedSeconds?: number;
   goalEvents?: GameMatchChartEvent[];
   /** Last score used for goal-increment detection; seeded from REST. */
@@ -69,6 +71,7 @@ export function worldCupMatchToLiveSnapshot(
     homeScore: match.homeScore,
     awayScore: match.awayScore,
     status: match.status,
+    period: match.period,
     liveElapsedSeconds: match.liveElapsedSeconds,
     goalEvents: [],
     trackedHomeScore: homeScore,
@@ -170,6 +173,12 @@ export function polymarketSportsWsUpdateToLivePatch(
     patch.liveElapsedSeconds = elapsedSeconds;
   }
 
+  const period = update.period?.trim();
+
+  if (period) {
+    patch.period = period;
+  }
+
   return patch;
 }
 
@@ -185,6 +194,7 @@ export function mergeLiveSnapshot(
     homeScore: patch.homeScore ?? current?.homeScore,
     awayScore: patch.awayScore ?? current?.awayScore,
     status: patch.status ?? current?.status ?? "unknown",
+    period: patch.period ?? current?.period,
     liveElapsedSeconds:
       patch.liveElapsedSeconds ?? current?.liveElapsedSeconds,
     goalEvents: current?.goalEvents ?? [],
@@ -206,6 +216,7 @@ export function mergeMatchWithLiveSnapshot(
     homeScore: snapshot.homeScore ?? match.homeScore,
     awayScore: snapshot.awayScore ?? match.awayScore,
     status: snapshot.status,
+    period: snapshot.period ?? match.period,
     liveElapsedSeconds:
       snapshot.liveElapsedSeconds ?? match.liveElapsedSeconds,
   };

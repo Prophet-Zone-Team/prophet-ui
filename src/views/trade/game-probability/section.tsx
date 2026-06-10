@@ -9,15 +9,25 @@ import { formatMatchScore } from "@/lib/market/match-display";
 import { isEffectiveLiveMatch } from "@/lib/market/live-match";
 import {
   filterGameBinaryFixtureChartByRange,
-  filterGameFixtureChartByRange,
+  filterGameFixtureChartByRange
 } from "@/lib/market/fixture-probability-chart";
 import {
   filterLiveBinaryFixtureChartByRange,
   filterLiveFixtureChartByRange,
-  resolveEffectiveKickoffAt,
-  resolveLiveChartMaxElapsed
+  resolveKickoffElapsedSeconds,
+  resolveLiveChartMaxElapsed,
+  resolveLiveChartPriceHistoryKickoffAt,
+  resolveMatchClockElapsedSeconds
 } from "@/lib/market/live-fixture-probability-chart";
-import { resolveMatchSides } from "@/lib/market/schedule-match";
+import {
+  isMockLiveFixtureEnabled,
+  MOCK_LIVE_FIXTURE_ELAPSED_SECONDS
+} from "@/lib/market/mock-live-fixture-config";
+import {
+  isEndedMatchStatus,
+  resolveMatchSides
+} from "@/lib/market/schedule-match";
+import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import {
@@ -47,7 +57,7 @@ const GAME_PROBABILITY_TIME_RANGES = [
   { id: "1D", label: "1D" },
   { id: "1W", label: "1W" },
   { id: "1M", label: "1M" },
-  { id: "all", label: "All" },
+  { id: "all", label: "All" }
 ] as const satisfies ReadonlyArray<{
   id: GameFixtureChartTimeRange;
   label: string;
@@ -90,10 +100,18 @@ export function GameProbabilitySection({
   summaryMode = "ternary",
   summaryItems,
   binaryPrimaryLabel,
-  binarySecondaryLabel,
+  binarySecondaryLabel
 }: GameProbabilitySectionProps) {
   const liveMatch = useMatchWithLiveState(match);
-  const isLive = isEffectiveLiveMatch(liveMatch);
+  const mockLiveFixture = isMockLiveFixtureEnabled();
+  const isLive = isEffectiveLiveMatch(liveMatch) || mockLiveFixture;
+  const liveMatchForChart = mockLiveFixture
+    ? {
+        ...liveMatch,
+        status: "live" as const,
+        liveElapsedSeconds: MOCK_LIVE_FIXTURE_ELAPSED_SECONDS
+      }
+    : liveMatch;
   const [timeRange, setTimeRange] = useState<GameFixtureChartTimeRange>(() =>
     isLive ? "1H" : "all"
   );
@@ -108,6 +126,43 @@ export function GameProbabilitySection({
   }, [isLive]);
   const liveChartActive =
     isLive && Boolean(chartKind) && Boolean(gameSnapshot && fixtureMarkets);
+  const chartPollIntervalMs = isEndedMatchStatus(liveMatch.status)
+    ? undefined
+    : 5000;
+  const sides = resolveMatchSides(liveMatch, snapshots);
+  const homeLabel = sides.home.name ?? "Home";
+  const awayLabel = sides.away.name ?? "Away";
+  const { goalEvents } = useGameStatistics({
+    match: liveMatch,
+    homeTeamName: homeLabel,
+    awayTeamName: awayLabel,
+    includeGoalEvents: liveChartActive
+  });
+  const matchClockElapsedSeconds = useMemo(
+    () =>
+      resolveMatchClockElapsedSeconds(
+        liveMatchForChart.liveElapsedSeconds,
+        goalEvents
+      ),
+    [goalEvents, liveMatchForChart.liveElapsedSeconds]
+  );
+  const priceHistoryKickoffAt = useMemo(
+    () => resolveLiveChartPriceHistoryKickoffAt(liveMatchForChart),
+    [liveMatchForChart]
+  );
+  const elapsedFromStartTime = useMemo(
+    () =>
+      priceHistoryKickoffAt
+        ? resolveKickoffElapsedSeconds(priceHistoryKickoffAt)
+        : undefined,
+    [priceHistoryKickoffAt]
+  );
+  const liveAxisElapsedSeconds = useMemo(
+    () =>
+      Math.max(elapsedFromStartTime ?? 0, matchClockElapsedSeconds ?? 0) ||
+      undefined,
+    [elapsedFromStartTime, matchClockElapsedSeconds]
+  );
   const {
     points: rawPoints,
     binaryPoints: rawBinaryPoints,
@@ -120,20 +175,21 @@ export function GameProbabilitySection({
     match,
     chartKind,
     lineKey,
-    pollIntervalMs: 5000,
+    timeRange,
+    pollIntervalMs: chartPollIntervalMs,
     enabled: !liveChartActive
   });
 
   const liveChart = useLiveMatchProbabilityChart({
-    match: liveMatch,
+    match: liveMatchForChart,
     gameSnapshot: gameSnapshot!,
     fixtureMarkets: fixtureMarkets!,
     chartKind: chartKind ?? "moneyline",
     lineKey,
-    enabled: liveChartActive
+    enabled: liveChartActive,
+    matchClockElapsedSeconds,
+    pollIntervalMs: chartPollIntervalMs
   });
-
-  const sides = resolveMatchSides(liveMatch, snapshots);
   const displayScore = {
     homeScore: liveMatch.homeScore,
     awayScore: liveMatch.awayScore
@@ -163,8 +219,6 @@ export function GameProbabilitySection({
     [fallbackOutcome, selectedFixtureOutcome, tradeOutcomeSide]
   );
 
-  const homeLabel = sides.home.name ?? "Home";
-  const awayLabel = sides.away.name ?? "Away";
   const resolvedSummaryItems = useMemo(
     () =>
       summaryItems ??
@@ -195,22 +249,18 @@ export function GameProbabilitySection({
       filterLiveFixtureChartByRange(
         liveChart.points,
         timeRange,
-        liveMatch.liveElapsedSeconds
+        liveAxisElapsedSeconds
       ),
-    [liveChart.points, liveMatch.liveElapsedSeconds, timeRange]
+    [liveChart.points, liveAxisElapsedSeconds, timeRange]
   );
   const liveFilteredBinaryPoints = useMemo(
     () =>
       filterLiveBinaryFixtureChartByRange(
         liveChart.binaryPoints,
         timeRange,
-        liveMatch.liveElapsedSeconds
+        liveAxisElapsedSeconds
       ),
-    [liveChart.binaryPoints, liveMatch.liveElapsedSeconds, timeRange]
-  );
-  const effectiveKickoffAt = useMemo(
-    () => resolveEffectiveKickoffAt(liveMatch),
-    [liveMatch]
+    [liveChart.binaryPoints, liveAxisElapsedSeconds, timeRange]
   );
   const liveMaxElapsedSeconds = useMemo(() => {
     if (!liveChartActive) {
@@ -223,19 +273,19 @@ export function GameProbabilitySection({
         : liveFilteredPoints;
 
     return resolveLiveChartMaxElapsed(
-      effectiveKickoffAt,
+      priceHistoryKickoffAt,
       points,
       timeRange,
-      liveMatch.liveElapsedSeconds
+      liveAxisElapsedSeconds
     );
   }, [
     effectiveChartMode,
-    effectiveKickoffAt,
+    liveAxisElapsedSeconds,
     liveChart.maxElapsedSeconds,
     liveChartActive,
     liveFilteredBinaryPoints,
     liveFilteredPoints,
-    liveMatch.liveElapsedSeconds,
+    priceHistoryKickoffAt,
     timeRange
   ]);
   const chartPoints = liveChartActive ? liveFilteredPoints : filteredPoints;
@@ -293,8 +343,8 @@ export function GameProbabilitySection({
                     className={cn(
                       "border-0 bg-transparent p-0 text-[14px] leading-[17px]",
                       timeRange === range.id
-                        ? "font-[556] text-black"
-                        : "font-[457] text-[#909090]"
+                        ? "font-[500] text-black"
+                        : "font-[400] text-[#909090]"
                     )}
                     onClick={() => setTimeRange(range.id)}
                   >
@@ -341,9 +391,9 @@ export function GameProbabilitySection({
               awayLabel={awayLabel}
               mode={liveChartActive ? "live" : "historical"}
               timeRange={timeRange}
-              events={[]}
+              events={liveChartActive ? goalEvents : []}
               maxElapsedSeconds={liveMaxElapsedSeconds}
-              kickoffAt={liveChartActive ? effectiveKickoffAt : undefined}
+              kickoffAt={liveChartActive ? priceHistoryKickoffAt : undefined}
               homeCode={sides.home.code}
               awayCode={sides.away.code}
             />
@@ -364,9 +414,9 @@ export function GameProbabilitySection({
               }
               mode={liveChartActive ? "live" : "historical"}
               timeRange={timeRange}
-              events={[]}
+              events={liveChartActive ? goalEvents : []}
               maxElapsedSeconds={liveMaxElapsedSeconds}
-              kickoffAt={liveChartActive ? effectiveKickoffAt : undefined}
+              kickoffAt={liveChartActive ? priceHistoryKickoffAt : undefined}
               homeCode={sides.home.code}
               awayCode={sides.away.code}
             />
@@ -429,16 +479,19 @@ function ProbabilitySummaryRow({ items }: { items: ProbabilitySummaryItem[] }) {
   return (
     <div className="w-full mt-3 flex flex-wrap items-center gap-x-2 md:gap-x-6 gap-y-2">
       {items.map((item) => (
-        <div key={item.label} className="inline-flex items-center gap-1 md:gap-2">
+        <div
+          key={item.label}
+          className="inline-flex items-center gap-1 md:gap-2"
+        >
           <span
             className="w-[12px] h-[12px] shrink-0 rounded-full"
             style={{ backgroundColor: item.color ?? gameColors.draw }}
             aria-hidden
           />
-          <span className="text-[12px] font-[457] leading-[17px] text-[#909090]">
+          <span className="text-[12px] font-[400] leading-[17px] text-[#909090]">
             {item.label}
           </span>
-          <span className="text-[12px] font-[556] leading-[17px] text-black">
+          <span className="text-[12px] font-[500] leading-[17px] text-black">
             {Math.round(item.value)}%
           </span>
         </div>
@@ -458,13 +511,13 @@ function ChartStateMessage({
 }) {
   return (
     <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 rounded-[8px] border border-dashed border-[#EBEBEB] px-4 py-8 text-center">
-      <p className="m-0 text-sm font-[457] leading-[17px] text-[#909090]">
+      <p className="m-0 text-sm font-[400] leading-[17px] text-[#909090]">
         {message}
       </p>
       {actionLabel && onAction ? (
         <button
           type="button"
-          className="border-0 bg-transparent p-0 text-sm font-[556] leading-[17px] text-black underline"
+          className="border-0 bg-transparent p-0 text-sm font-[500] leading-[17px] text-black underline"
           onClick={onAction}
         >
           {actionLabel}
@@ -490,7 +543,7 @@ function LiveScoreBadge({
   const [homeScore, awayScore] = score.split("-");
 
   return (
-    <div className="flex items-center gap-3 text-sm font-[556] leading-[17px]">
+    <div className="flex items-center gap-3 text-sm font-[500] leading-[17px]">
       <span className="inline-flex items-center gap-1.5 text-[#65AF14]">
         <span className="size-2 rounded-full bg-[#65AF14]" aria-hidden />
         LIVE
@@ -500,7 +553,7 @@ function LiveScoreBadge({
         <TeamFlag
           code={homeCode}
           name={homeName}
-          className="!h-4 !w-4 rounded-[2px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="!h-4 !w-4 rounded-[2px]"
         />
         {homeScore?.trim() ?? "—"}
       </span>
@@ -509,7 +562,7 @@ function LiveScoreBadge({
         <TeamFlag
           code={awayCode}
           name={awayName}
-          className="!h-4 !w-4 rounded-[2px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="!h-4 !w-4 rounded-[2px]"
         />
         {awayScore?.trim() ?? "—"}
       </span>

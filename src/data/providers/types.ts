@@ -61,3 +61,8 @@ export interface WorldCupMarketDataOptions {
 export interface WorldCupMarketDataProvider {
   getWorldCupMarketData(): Promise<WorldCupMarketData>;
 }
+
+export interface TeamMarketSnapshotResult {
+  snapshot: TeamMarketSnapshot;
+  meta: MarketDataMeta;
+}

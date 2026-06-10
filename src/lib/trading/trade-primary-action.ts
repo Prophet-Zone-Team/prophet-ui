@@ -1,4 +1,9 @@
 import { showOrderErrorToast } from "@/lib/trading/order-toast";
+import {
+  eligibilityViewFromSession,
+  formatEligibilityRestrictionDetail,
+  formatRegionBlockedDetail,
+} from "@/lib/trading/trading-eligibility-client";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import {
   getTradingSetupSteps,
@@ -39,7 +44,9 @@ export interface ResolveTradePrimaryActionInput {
   previewCanSubmit: boolean;
   previewDisabledReason?: string;
   expirationError?: string;
-  isRegionBlocked?: boolean;
+  isBuyRestricted?: boolean;
+  isRegionFullyBlocked?: boolean;
+  isRegionCloseOnly?: boolean;
   eligibilityNetworkError?: boolean;
 }
 
@@ -156,11 +163,21 @@ export function resolveTradePrimaryAction(
     };
   }
 
-  if (input.isRegionBlocked) {
+  const isEligibilityBlocked =
+    input.tradeSide === "buy"
+      ? Boolean(input.isBuyRestricted)
+      : Boolean(input.isRegionFullyBlocked);
+
+  if (isEligibilityBlocked) {
+    const eligibilityView = eligibilityViewFromSession(input.session);
+
     return {
       kind: "eligibility_blocked",
       label: input.submitLabel,
-      hint: "Polymarket reports trading is unavailable in your region.",
+      hint:
+        input.tradeSide === "buy"
+          ? formatEligibilityRestrictionDetail(eligibilityView)
+          : formatRegionBlockedDetail(eligibilityView),
     };
   }
 

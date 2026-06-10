@@ -14,6 +14,7 @@ import {
   buildWithdrawQuoteRequest,
   formatQuoteTokenAmount,
   mapQuoteToBreakdown,
+  mapStableflowQuoteToBreakdown,
 } from "@/lib/funding/bridge-quote";
 import { mapStableflowQuoteToConfirmDisplay } from "@/lib/funding/stableflow";
 import type { StableflowWithdrawToken } from "@/lib/funding/stableflow-withdraw";
@@ -24,6 +25,7 @@ import {
   type SupportedChainOption,
 } from "@/lib/funding/supported-assets";
 import { cn } from "@/lib/cn";
+import { reportFundingTransaction } from "@/lib/portfolio/user";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { ensureTradingChain } from "@/lib/trading/wallet-trading-chain";
@@ -221,10 +223,10 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     () =>
       isBridge && selectedToken && !("assetId" in selectedToken) && session?.walletAddress
         ? buildWithdrawQuoteRequest({
-            token: selectedToken,
-            amount: amountInput,
-            recipientAddress: session.walletAddress,
-          })
+          token: selectedToken,
+          amount: amountInput,
+          recipientAddress: session.walletAddress,
+        })
         : undefined,
     [amountInput, isBridge, selectedToken, session],
   );
@@ -286,7 +288,12 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     [stableflowQuote],
   );
 
-  const breakdown = bridgeQuote ? mapQuoteToBreakdown(bridgeQuote) : undefined;
+  const breakdown = useMemo(() => {
+    if (isBridge) {
+      return bridgeQuote ? mapQuoteToBreakdown(bridgeQuote) : undefined;
+    }
+    return stableflowQuote ? mapStableflowQuoteToBreakdown(stableflowQuote) : undefined;
+  }, [bridgeQuote, isBridge, stableflowQuote]);
 
   const receiveTokenAmount = isBridge
     ? bridgeQuote
@@ -419,22 +426,33 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
 
     try {
       await ensureTradingChain(session.walletAddress);
+      let txHash: string | undefined;
 
       if (isBridge && !("assetId" in selectedToken)) {
-        await executeBridgeWithdraw({
+        const result = await executeBridgeWithdraw({
           toChainId: String(selectedToken.chainId),
           toTokenAddress: selectedToken.address,
           recipientAddr: session.walletAddress,
           amountUsd: amount,
         });
+        txHash = result.txHash;
       } else if (isStableflowWithdrawSelectableToken(selectedToken)) {
-        await executeStableflowWithdraw({
+        const result = await executeStableflowWithdraw({
           amountUsd: amount,
           destinationToken: selectedToken,
           recipient: recipientInput.trim(),
         });
+        txHash = result.txHash;
       } else {
         throw new Error("Selected token is not supported for this withdrawal method.");
+      }
+
+      if (txHash) {
+        void reportFundingTransaction({
+          type: "withdraw",
+          txHash,
+          amount: String(amount)
+        });
       }
 
       toast.success("Withdrawal submitted");
@@ -532,11 +550,13 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                 <div className={withdrawInputBoxClass}>
                   <span className="flex min-w-0 items-center gap-2">
                     <WalletAvatarIcon address={session?.walletAddress} />
-                    <span className="truncate text-base font-[556] text-black">
+                    <span className="truncate text-base font-[500] text-black">
                       {formatShortWallet(session?.walletAddress)}
                     </span>
                   </span>
-                  <span className="shrink-0 text-base font-[556] text-[#909090]">Connected</span>
+                  <span className="shrink-0 text-base font-[500] text-[#909090]">
+                    Connected
+                  </span>
                 </div>
               ) : (
                 <div className={withdrawInputBoxClass}>
@@ -569,10 +589,14 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                   aria-label="Withdraw amount"
                 />
                 <span className="flex shrink-0 items-center gap-3">
-                  <span className="text-base font-[556] text-[#909090]">
+                  <span className="text-base font-[500] text-[#909090]">
                     {WITHDRAW_SOURCE_TOKEN_LABEL}
                   </span>
-                  <button type="button" className={withdrawMaxButtonClass} onClick={handleMax}>
+                  <button
+                    type="button"
+                    className={withdrawMaxButtonClass}
+                    onClick={handleMax}
+                  >
                     Max
                   </button>
                 </span>
@@ -588,7 +612,10 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <FundingSelectorDropdown
                 label="Receive Chain"
-                triggerLabel={selectedChain?.chainName ?? (assetsLoadingForMethod ? "Loading…" : "Select chain")}
+                triggerLabel={
+                  selectedChain?.chainName ??
+                  (assetsLoadingForMethod ? "Loading…" : "Select chain")
+                }
                 disabled={assetsLoadingForMethod || chainOptions.length === 0}
                 open={chainDropdownOpen}
                 onOpenChange={(next) => {
@@ -618,7 +645,8 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                     className={cn(
                       depositTokenRowClass,
                       "w-full",
-                      selectedChain?.chainId === chain.chainId && depositTokenRowSelectedClass,
+                      selectedChain?.chainId === chain.chainId &&
+                      depositTokenRowSelectedClass
                     )}
                     onClick={() => handleChainSelect(chain)}
                   >
@@ -629,14 +657,19 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                       size="sm"
                       chainOnly
                     />
-                    <span className="text-sm font-[556] text-black">{chain.chainName}</span>
+                    <span className="text-sm font-[500] text-black">
+                      {chain.chainName}
+                    </span>
                   </button>
                 ))}
               </FundingSelectorDropdown>
 
               <FundingSelectorDropdown
                 label="Receive Token"
-                triggerLabel={selectedToken?.symbol ?? (assetsLoadingForMethod ? "Loading…" : "Select token")}
+                triggerLabel={
+                  selectedToken?.symbol ??
+                  (assetsLoadingForMethod ? "Loading…" : "Select token")
+                }
                 disabled={assetsLoadingForMethod || tokensForChain.length === 0}
                 open={tokenDropdownOpen}
                 onOpenChange={(next) => {
@@ -647,7 +680,11 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                 }}
                 triggerIcon={
                   selectedToken ? (
-                    <TokenIcon symbol={selectedToken.symbol} icon={selectedToken.icon} size="sm" />
+                    <TokenIcon
+                      symbol={selectedToken.symbol}
+                      icon={selectedToken.icon}
+                      size="sm"
+                    />
                   ) : null
                 }
               >
@@ -664,8 +701,8 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                       depositTokenRowClass,
                       "w-full",
                       selectedToken?.chainId === token.chainId &&
-                        selectedToken?.address === token.address &&
-                        depositTokenRowSelectedClass,
+                      selectedToken?.address === token.address &&
+                      depositTokenRowSelectedClass
                     )}
                     onClick={() => handleTokenSelect(token)}
                   >
@@ -676,7 +713,9 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                       chainIcon={token.chainIcon}
                       size="sm"
                     />
-                    <span className="text-sm font-[556] text-black">{token.symbol}</span>
+                    <span className="text-sm font-[500] text-black">
+                      {token.symbol}
+                    </span>
                   </button>
                 ))}
               </FundingSelectorDropdown>
@@ -686,8 +725,12 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
               <div className="flex items-center justify-between">
                 <span className={withdrawFieldLabelClass}>Est. Receive</span>
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-base font-[556] text-black">{receiveLabel}</span>
-                  <span className="text-base font-[556] text-[#909090]">{fiatLabel}</span>
+                  <span className="text-base font-[500] text-black">
+                    {receiveLabel}
+                  </span>
+                  <span className="text-base font-[500] text-[#909090]">
+                    {fiatLabel}
+                  </span>
                 </div>
               </div>
               {quoteError ? (
@@ -698,7 +741,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
             </div>
 
             <TransactionBreakdown
-              loading={quoteLoading && quoteEnabled && isBridge}
+              loading={(quoteLoading || stableflowQuoteLoading) && quoteEnabled}
               networkCostUsd={breakdown?.networkCost}
               priceImpactPercent={breakdown?.priceImpactPercent}
               maxSlippagePercent={breakdown?.maxSlippagePercent}

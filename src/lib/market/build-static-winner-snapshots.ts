@@ -1,5 +1,5 @@
 import curatedTeams from "@/data/teams/index";
-import { isCuratedTeamVisible } from "@/data/teams/curated-team-list";
+import { isCuratedTeamDisplayed } from "@/data/teams/curated-team-list";
 import { resolveWorldCupTeamByCuratedKey } from "@/lib/market/resolve-winner-team";
 import type { TeamMarketSnapshot } from "@/types/market";
 
@@ -11,7 +11,7 @@ export function buildStaticWinnerSnapshots(): TeamMarketSnapshot[] {
   for (const indexKey of Object.keys(curatedTeams)) {
     const entry = curatedTeams[indexKey as keyof typeof curatedTeams];
 
-    if (!isCuratedTeamVisible(entry)) {
+    if (!isCuratedTeamDisplayed(entry)) {
       continue;
     }
 

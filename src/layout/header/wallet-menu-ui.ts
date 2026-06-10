@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 export const walletLoginButtonClass = cn(
   "inline-flex h-10 min-w-[103px] items-center justify-center gap-2 rounded-[20px]",
   "border border-prophet-line bg-white px-4",
-  "text-sm font-[457] leading-[17px] text-black",
+  "text-sm font-[400] leading-[17px] text-black",
   "transition-opacity disabled:cursor-wait disabled:opacity-70"
 );
 

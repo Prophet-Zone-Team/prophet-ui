@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyLinkIcon } from "@/components/icons";
 import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
 import { TeamFlag } from "@/components/teams/team-flag";
@@ -30,35 +31,22 @@ function TeamLogo({
   name: string;
   logoUrl?: string;
 }) {
-  if (logoUrl) {
-    return (
-      <img
-        src={logoUrl}
-        alt=""
-        className="h-[40px] w-[40px] shrink-0 rounded-lg object-contain shadow-[0_0_2px_rgba(0,0,0,0.2)]"
-      />
-    );
-  }
-
   return (
     <TeamFlag
       code={code}
       name={name}
-      className="h-[68px] w-[68px] shrink-0 rounded-lg text-[56px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+      logoUrl={logoUrl}
+      className="h-[40px] w-[40px] shrink-0 rounded-lg text-[32px]"
     />
   );
 }
 
-async function copyPageLink() {
+function getPageUrl() {
   if (typeof window === "undefined") {
-    return;
+    return undefined;
   }
 
-  try {
-    await navigator.clipboard.writeText(window.location.href);
-  } catch {
-    // Clipboard unavailable
-  }
+  return window.location.href;
 }
 
 function HeaderControls({
@@ -75,14 +63,13 @@ function HeaderControls({
       <div className="flex items-center gap-3">
         {bookmark}
 
-        <button
-          type="button"
+        <CopyButton
+          text={getPageUrl}
+          ariaLabel="Copy page link"
           className="inline-flex size-11 items-center justify-center rounded-sm text-[#909090] transition-colors hover:text-black"
-          aria-label="Copy page link"
-          onClick={() => void copyPageLink()}
         >
           <CopyLinkIcon />
-        </button>
+        </CopyButton>
       </div>
 
       <OrderbookToggle
@@ -118,11 +105,11 @@ export function TradeHeader({
 
             <div className="min-w-0 flex-1 pb-0.5">
               <div className="flex items-center gap-4">
-                <h1 className="m-0 truncate text-[36px] font-[556] capitalize leading-[43px] text-black">
+                <h1 className="m-0 truncate text-[36px] font-[500] capitalize leading-[43px] text-black">
                   {team.name}
                 </h1>
               </div>
-              <p className="m-0 mt-0.5 text-right text-sm font-[556] leading-[17px] text-[#909090] sm:text-left">
+              <p className="m-0 mt-0.5 text-right text-sm font-[500] leading-[17px] text-[#909090] sm:text-left">
                 {fifaRank ? (
                   <>
                     Current{" "}

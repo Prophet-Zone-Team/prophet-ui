@@ -30,9 +30,11 @@ export function DossierNextFixture({ fixture, snapshot }: DossierNextFixtureProp
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
               <div className="flex flex-col items-center gap-1">
                 <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
-                <strong className="text-xs font-[556]">{snapshot.team.code}</strong>
+                <strong className="text-xs font-[500]">
+                  {snapshot.team.code}
+                </strong>
               </div>
-              <span className="text-[10px] font-[556] uppercase text-prophet-muted">
+              <span className="text-[10px] font-[500] uppercase text-prophet-muted">
                 {fixture.homeAway === "away" ? "at" : "vs"}
               </span>
               <div className="flex flex-col items-center gap-1">
@@ -43,11 +45,11 @@ export function DossierNextFixture({ fixture, snapshot }: DossierNextFixtureProp
                     className="size-9 rounded-full object-contain"
                   />
                 ) : (
-                  <span className="flex size-9 items-center justify-center rounded-full bg-[#f5f9ff] text-xs font-[556] text-[#125afc]">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-[#f5f9ff] text-xs font-[500] text-[#125afc]">
                     {fixture.opponentName.slice(0, 3)}
                   </span>
                 )}
-                <strong className="max-w-full truncate text-xs font-[556]">
+                <strong className="max-w-full truncate text-xs font-[500]">
                   {fixture.opponentName}
                 </strong>
               </div>

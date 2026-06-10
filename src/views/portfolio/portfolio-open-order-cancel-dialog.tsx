@@ -11,7 +11,6 @@ import {
   titleCase
 } from "@/lib/portfolio/portfolio-format";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
-import type { TeamMarketSnapshot } from "@/types/market";
 import { TeamFlag } from "@/components/teams/team-flag";
 import {
   FundingModalShell,
@@ -25,7 +24,8 @@ import { useCancelOpenOrder } from "@/views/portfolio/use-cancel-open-order";
 export interface PortfolioOpenOrderCancelDialogProps {
   open: boolean;
   order: UserOpenOrder;
-  snapshot?: TeamMarketSnapshot;
+  marketTitle?: string;
+  teamName?: string;
   onClose: () => void;
 }
 
@@ -69,7 +69,8 @@ function getSideToneClass(side: string): string {
 export function PortfolioOpenOrderCancelDialog({
   open,
   order,
-  snapshot,
+  marketTitle,
+  teamName,
   onClose
 }: PortfolioOpenOrderCancelDialogProps) {
   const { removeOpenOrder } = usePortfolioContext();
@@ -83,7 +84,8 @@ export function PortfolioOpenOrderCancelDialog({
 
   const price = Number(order.price);
   const sideLabel = titleCase(order.side);
-  const marketLabel = order.outcome || order.market || order.asset_id;
+  const marketLabel =
+    marketTitle?.trim() || order.outcome || order.market || order.asset_id;
   const isBusy = isCanceling(order.id);
 
   return (
@@ -97,8 +99,8 @@ export function PortfolioOpenOrderCancelDialog({
       <FundingModalShell title="Cancel order" onClose={onClose}>
         <div className="flex flex-col gap-5 pb-2">
           <div className="flex items-start gap-2.5">
-            {snapshot ? (
-              <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
+            {teamName ? (
+              <TeamFlag name={teamName} />
             ) : (
               <span
                 className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
@@ -108,12 +110,12 @@ export function PortfolioOpenOrderCancelDialog({
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="m-0 line-clamp-2 text-sm font-[556] leading-[17px] text-black">
+              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
                 {marketLabel}
               </p>
               <p
                 className={cn(
-                  "m-0 mt-1 text-xs font-[556]",
+                  "m-0 mt-1 text-xs font-[500]",
                   order.outcome
                     ? getOutcomeToneClass(order.outcome)
                     : getSideToneClass(order.side)
@@ -127,24 +129,26 @@ export function PortfolioOpenOrderCancelDialog({
 
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-[556] text-prophet-muted">
+              <span className="text-sm font-[500] text-prophet-muted">
                 Remaining size
               </span>
-              <span className="text-sm font-[556] text-black">
+              <span className="text-sm font-[500] text-black">
                 {formatShareSize(getRemainingSize(order))}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-[556] text-prophet-muted">Filled</span>
-              <span className="text-sm font-[556] text-black">
+              <span className="text-sm font-[500] text-prophet-muted">
+                Filled
+              </span>
+              <span className="text-sm font-[500] text-black">
                 {getFilledPercent(order)}
               </span>
             </div>
           </div>
 
           <p className="m-0 text-sm text-prophet-muted">
-            This will remove the open order from the book. Any filled portion will
-            remain in your account.
+            This will remove the open order from the book. Any filled portion
+            will remain in your account.
           </p>
         </div>
 

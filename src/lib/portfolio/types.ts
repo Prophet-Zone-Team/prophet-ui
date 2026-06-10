@@ -1,3 +1,25 @@
+export type PortfolioTransactionType =
+  | "buy"
+  | "sell"
+  | "redeem"
+  | "deposit"
+  | "withdraw"
+  | "claim";
+
+export interface PortfolioTransactionRecord {
+  id: string;
+  type: PortfolioTransactionType;
+  side: string;
+  price: string;
+  amount: string;
+  marketName: string;
+  teamName: string;
+  slug: string;
+  source: string;
+  createdAt: string;
+  txHash: string;
+}
+
 export type UserActivityType = "TRADE";
 
 export interface UserActivityRecord {
@@ -37,8 +59,9 @@ export interface UserOpenOrder {
 export interface PortfolioSeriesPoint {
   date: string;
   value: number;
+  timestamp?: number;
 }
 
 export type PortfolioLoadStatus = "idle" | "loading" | "ready" | "error";
 
-export type PortfolioTimeRange = "1H" | "1D" | "1W" | "1M" | "All";
+export type PortfolioTimeRange = "1H" | "1D" | "1W" | "1M" | "YTD" | "All";

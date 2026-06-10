@@ -7,6 +7,7 @@ import type { TradingEligibilityView } from "@/lib/trading/trading-eligibility-c
 import type { TradingSetupSteps } from "@/lib/trading/trading-setup";
 import type { CashBalanceView, FundingLoadStatus } from "@/types/funding";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
+import type { AuthLoginMethod } from "@/store/auth-store";
 export type EligibilityLoadStatus = "idle" | "loading" | "ready";
 
 export interface AuthContextValue {
@@ -19,14 +20,28 @@ export interface AuthContextValue {
   loginStep: TradingLoginStep | undefined;
   loginModalOpen: boolean;
   loginInProgress: boolean;
+  privyLoginInProgress: boolean;
   cash: CashBalanceView | undefined;
   cashStatus: FundingLoadStatus;
   error: string | undefined;
   cashError: string | undefined;
   eligibilityView: TradingEligibilityView | undefined;
   eligibilityLoadStatus: EligibilityLoadStatus;
+  /** Fully blocked: no trading actions including sell/cancel. */
   isRegionBlocked: boolean;
+  /** Buy, deposit, and new setup restricted (fully blocked or close-only). */
+  isBuyRestricted: boolean;
+  /** Close-only region: sell/cancel allowed; buy/deposit blocked. */
+  isRegionCloseOnly: boolean;
+  loginMethod: AuthLoginMethod | undefined;
+  privyModalOpen: boolean;
+  privyReady: boolean;
   openLoginModalOnly: () => void;
+  openPrivyLogin: () => void;
+  closePrivyLogin: () => void;
+  /** Call after Privy email OTP succeeds to start the trading setup flow. */
+  completePrivyEmailLogin: () => void;
+  setLoginMethod: (method: AuthLoginMethod | undefined) => void;
   refreshEligibility: () => Promise<TradingEligibilityView | undefined>;
   openLogin: () => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
   connectWallet: () => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;

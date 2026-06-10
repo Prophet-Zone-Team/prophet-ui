@@ -11,11 +11,11 @@ import {
   depositModalAmountInputClass,
   depositModalAmountInputWrapClass,
   depositPercentButtonClass,
-  depositTransferBarClass,
+  depositTransferBarClass
 } from "@/views/portfolio/deposit/deposit-ui";
 import type {
   DepositAmountState,
-  DepositSelectableToken,
+  DepositSelectableToken
 } from "@/views/portfolio/deposit/types";
 import {
   applyTokenBalancePercent,
@@ -23,7 +23,7 @@ import {
   parseUsdInput,
   selectDepositTokenUnitPrice,
   usdInputToTokenAmount,
-  validateDepositAmount,
+  validateDepositAmount
 } from "@/views/portfolio/deposit/utils";
 import { TokenIcon } from "@/views/portfolio/shared/token-icon";
 
@@ -42,21 +42,21 @@ export function DepositAmountStep({
   amount,
   maxAmount,
   minDepositUsd,
-  onAmountChange,
+  onAmountChange
 }: DepositAmountStepProps) {
   const prices = usePricesStore((state) => state.prices);
 
   const [inputValue, setInputValue] = useState(() =>
-    Big(amount.amountUsd || 0).gt(0) ? amount.amountUsd : "0",
+    Big(amount.amountUsd || 0).gt(0) ? amount.amountUsd : "0"
   );
 
   const validationError = useMemo(
     () =>
       validateDepositAmount(amount.tokenAmount, maxAmount, {
         minDepositUsd,
-        amountUsd: amount.amountUsd,
+        amountUsd: amount.amountUsd
       }),
-    [amount.amountUsd, amount.tokenAmount, maxAmount, minDepositUsd],
+    [amount.amountUsd, amount.tokenAmount, maxAmount, minDepositUsd]
   );
 
   const unitPrice = selectDepositTokenUnitPrice(prices, token);
@@ -86,7 +86,7 @@ export function DepositAmountStep({
       usdInput: parsedUsd,
       maxAmount,
       price: unitPrice,
-      decimals: token.decimals,
+      decimals: token.decimals
     });
 
     onAmountChange({ tokenAmount, amountUsd });
@@ -96,7 +96,7 @@ export function DepositAmountStep({
     const tokenAmount = applyTokenBalancePercent(
       maxAmount,
       percent,
-      token.decimals,
+      token.decimals
     );
     syncFromTokenAmount(tokenAmount);
   }
@@ -134,8 +134,8 @@ export function DepositAmountStep({
 
       <div className="mt-20">
         <div className="flex items-center justify-between gap-1 px-4 py-3">
-          <span className="text-sm font-[556] text-[#909090]">Send</span>
-          <span className="text-sm font-[556] text-[#909090]">Receive</span>
+          <span className="text-sm font-[500] text-[#909090]">Send</span>
+          <span className="text-sm font-[500] text-[#909090]">Receive</span>
         </div>
         <div className={depositTransferBarClass}>
           <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -148,23 +148,28 @@ export function DepositAmountStep({
                 size="md"
               />
               <div className="flex min-w-0 flex-col">
-                <span className="text-sm font-[556] text-black">{token.symbol}</span>
-                <span className="text-xs font-[556] text-[#909090]">
+                <span className="text-sm font-[500] text-black">
+                  {token.symbol}
+                </span>
+                <span className="text-xs font-[500] text-[#909090]">
                   {token.chainName}
                 </span>
               </div>
             </div>
           </div>
 
-          <ArrowRight className="h-4 w-4 shrink-0 text-[#909090]" aria-hidden="true" />
+          <ArrowRight
+            className="h-4 w-4 shrink-0 text-[#909090]"
+            aria-hidden="true"
+          />
 
           <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
             <div className="flex items-center gap-2">
               <div className="flex min-w-0 flex-col items-end">
-                <span className="text-sm font-[556] text-black">
+                <span className="text-sm font-[500] text-black">
                   {POLYMARKET_USD.symbol}
                 </span>
-                <span className="text-xs font-[556] text-[#909090]">
+                <span className="text-xs font-[500] text-[#909090]">
                   {POLYMARKET_USD.chainName}
                 </span>
               </div>

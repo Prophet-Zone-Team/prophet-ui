@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-
-import { CheckIcon, CopyIcon } from "@/components/icons";
+import { CopyButton } from "@/components/feedback/copy-button";
+import { CopyIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { formatNumber } from "@/utils";
@@ -32,22 +31,6 @@ export function TopupWalletCard({
   onConnect,
   onDisconnect,
 }: TopupWalletCardProps) {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    if (!address) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
-
   return (
     <div className={privateTopupWalletCardClass}>
       <div className="flex items-start justify-between gap-3">
@@ -61,23 +44,24 @@ export function TopupWalletCard({
             />
           )}
           <div className="min-w-0 flex-1">
-            <p className={`m-0 ${privateTopupSectionLabelClass}`}>Funding Wallet</p>
+            <p className={`m-0 ${privateTopupSectionLabelClass}`}>
+              Funding Wallet
+            </p>
             {connected && address ? (
               <div className="mt-1 flex items-center gap-2">
-                <p className="m-0 truncate text-lg font-[556] text-black">
+                <p className="m-0 truncate text-lg font-[500] text-black">
                   {formatShortWallet(address)}
                 </p>
-                <button
-                  type="button"
+                <CopyButton
+                  text={address}
+                  ariaLabel="Copy wallet address"
                   className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-colors hover:text-black"
-                  aria-label="Copy wallet address"
-                  onClick={() => void handleCopy()}
                 >
-                  {copied ? <CheckIcon /> : <CopyIcon />}
-                </button>
+                  <CopyIcon />
+                </CopyButton>
               </div>
             ) : (
-              <p className="m-0 mt-1 text-lg font-[556] text-black">-</p>
+              <p className="m-0 mt-1 text-lg font-[500] text-black">-</p>
             )}
           </div>
         </div>
@@ -108,7 +92,7 @@ export function TopupWalletCard({
               : formatNumber(balanceUsd, 2, true, {
                   prefix: "$",
                   round: 0,
-                  isZeroPrecision: true,
+                  isZeroPrecision: true
                 })}
           </p>
         </div>

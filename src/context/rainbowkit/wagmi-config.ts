@@ -3,67 +3,39 @@ import {
   arbitrum,
   bsc,
   optimism,
+  mainnet,
+  monad,
+  base,
+  hyperEvm,
+  abstract,
+  avalanche,
+  berachain,
+  gnosis,
+  plasma,
+  scroll,
+  xLayer,
 } from "viem/chains";
-import { createConfig, cookieStorage, createStorage, http } from "wagmi";
-import { connectorsForWallets } from "@rainbow-me/rainbowkit";
-import {
-  metaMaskWallet,
-  okxWallet,
-  bitgetWallet,
-  binanceWallet,
-  walletConnectWallet,
-} from "@rainbow-me/rainbowkit/wallets";
-
-import { getAppIconUrl, getAppOrigin } from "@/context/rainbowkit/app-url";
-import { Metadata } from "./metadata";
-
-const projectId = process.env.NEXT_PUBLIC_RAINBOWKIT_PROJECT_ID?.trim() ?? "";
-const appOrigin = getAppOrigin();
-const appIconUrl = getAppIconUrl();
-
-if (!projectId && typeof window !== "undefined") {
-  console.warn(
-    "[wagmi] NEXT_PUBLIC_RAINBOWKIT_PROJECT_ID is not set. WalletConnect may not work.",
-  );
-}
-
-if (!projectId && process.env.NODE_ENV === "development") {
-  console.warn(
-    "[wagmi] Set NEXT_PUBLIC_RAINBOWKIT_PROJECT_ID in .env.local for WalletConnect support.",
-  );
-}
+import { cookieStorage, createStorage, http } from "wagmi";
+import { createConfig } from "@privy-io/wagmi";
 
 export const wagmiConfig = createConfig({
-  connectors: connectorsForWallets(
-    [
-      {
-        groupName: "Recommended",
-        wallets: [
-          okxWallet,
-          metaMaskWallet,
-          bitgetWallet,
-          binanceWallet,
-          walletConnectWallet,
-        ],
-      },
-    ],
-    {
-      appName: Metadata.name,
-      appDescription: Metadata.description,
-      appUrl: appOrigin,
-      appIcon: appIconUrl,
-      projectId: projectId || "00000000000000000000000000000000",
-      walletConnectParameters: {
-        metadata: {
-          name: Metadata.name,
-          description: Metadata.description,
-          url: appOrigin,
-          icons: [appIconUrl],
-        },
-      },
-    },
-  ),
-  chains: [polygon, arbitrum, bsc, optimism],
+  chains: [
+    polygon,
+    arbitrum,
+    bsc,
+    optimism,
+    mainnet,
+    monad,
+    base,
+    hyperEvm,
+    abstract,
+    avalanche,
+    berachain,
+    gnosis,
+    plasma,
+    scroll,
+    xLayer,
+  ],
   ssr: true,
   storage: createStorage({
     storage: cookieStorage,
@@ -73,6 +45,17 @@ export const wagmiConfig = createConfig({
     [arbitrum.id]: http(),
     [bsc.id]: http(),
     [optimism.id]: http(),
+    [mainnet.id]: http(),
+    [monad.id]: http(),
+    [base.id]: http(),
+    [hyperEvm.id]: http(),
+    [abstract.id]: http(),
+    [avalanche.id]: http(),
+    [berachain.id]: http(),
+    [gnosis.id]: http(),
+    [plasma.id]: http(),
+    [scroll.id]: http(),
+    [xLayer.id]: http(),
   },
 });
 

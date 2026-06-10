@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import {
   checkTradingEligibility,
-  getClientIp,
+  getClientGeoFromRequest,
   refreshSessionEligibilityIfStale,
 } from "@/server/trading/eligibility";
 import { createTradingSessionCookie, getTradingSessionFromCookie } from "@/server/trading/session-store";
@@ -12,9 +12,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const record = getTradingSessionFromCookie(request.headers.get("cookie"));
-
   if (record) {
-    const session = await refreshSessionEligibilityIfStale(record.session, getClientIp(request));
+    const session = await refreshSessionEligibilityIfStale(
+      record.session,
+      getClientGeoFromRequest(request),
+    );
 
     return NextResponse.json(
       {
@@ -34,7 +36,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const eligibility = await checkTradingEligibility(getClientIp(request));
+  const eligibility = await checkTradingEligibility(getClientGeoFromRequest(request));
 
   return NextResponse.json({
     eligibility,

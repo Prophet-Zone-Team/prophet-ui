@@ -74,20 +74,20 @@ export function PrivateTopupTokenStep({
         <div className={privateTopupFundingWalletRowClass}>
           <span className="flex min-w-0 items-center gap-2">
             <WalletAvatarIcon address={topupWalletAddress} className="size-5" />
-            <span className="text-base font-[556] text-black">
+            <span className="text-base font-[500] text-black">
               {topupWalletAddress
                 ? formatShortWallet(topupWalletAddress)
                 : "--"}
             </span>
           </span>
-          <span className="shrink-0 text-base font-[556] text-black">
+          <span className="shrink-0 text-base font-[500] text-black">
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
               formatNumber(topupWalletBalanceUsd, 2, true, {
                 prefix: "$",
                 round: 0,
-                isZeroPrecision: true,
+                isZeroPrecision: true
               })
             )}
           </span>
@@ -95,7 +95,9 @@ export function PrivateTopupTokenStep({
       </div>
 
       <div>
-        <p className={`m-0 mb-2 ${privateTopupSectionLabelClass}`}>Select Asset</p>
+        <p className={`m-0 mb-2 ${privateTopupSectionLabelClass}`}>
+          Select Asset
+        </p>
         <div className="flex max-h-[340px] flex-col gap-0.5 overflow-y-auto">
           {sortedTokens.map((token) => {
             const isSelected =
@@ -106,7 +108,7 @@ export function PrivateTopupTokenStep({
                 ? formatNumber(token.usdValue, 2, true, {
                     prefix: "$",
                     round: 0,
-                    isZeroPrecision: true,
+                    isZeroPrecision: true
                   })
                 : "--";
 
@@ -116,7 +118,7 @@ export function PrivateTopupTokenStep({
                 type="button"
                 className={cn(
                   depositTokenRowClass,
-                  isSelected && depositTokenRowSelectedClass,
+                  isSelected && depositTokenRowSelectedClass
                 )}
                 onClick={() => onSelectToken(token)}
               >
@@ -127,13 +129,13 @@ export function PrivateTopupTokenStep({
                   chainIcon={token.chainIcon}
                 />
                 <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-                  <span className="text-sm font-[556] text-black">
+                  <span className="text-sm font-[500] text-black">
                     {token.symbol}
                   </span>
-                  <span className="text-xs font-[556] text-[#909090]">
+                  <span className="text-xs font-[500] text-[#909090]">
                     {formatNumber(token.balance, 4, true, {
                       round: 0,
-                      isZeroPrecision: true,
+                      isZeroPrecision: true
                     })}
                   </span>
                 </span>
@@ -141,7 +143,7 @@ export function PrivateTopupTokenStep({
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <span className="text-sm font-[556] text-black">
+                    <span className="text-sm font-[500] text-black">
                       {usdDisplay}
                     </span>
                   )}

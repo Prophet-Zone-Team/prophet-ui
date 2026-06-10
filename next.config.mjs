@@ -34,6 +34,16 @@ const nextConfig = {
         source: "/trade/game/:slug",
         destination: "/trade/game?slug=:slug",
         permanent: true
+      },
+      {
+        source: "/landing",
+        destination: "/referral",
+        permanent: true
+      },
+      {
+        source: "/landing/:path*",
+        destination: "/referral/:path*",
+        permanent: true
       }
     ];
   }

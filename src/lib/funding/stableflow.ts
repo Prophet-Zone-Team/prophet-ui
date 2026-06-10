@@ -3,6 +3,12 @@ import Big from "big.js";
 
 import { FUNDING_NETWORKS, FundingNetworkType, type FundingNetwork } from "@/config/funding/networks";
 import type { FundingAsset } from "@/config/funding/tokens";
+import {
+  getTokensForChain,
+  getUniqueChainsFromAssets,
+  type SupportedChainOption,
+} from "@/lib/funding/supported-assets";
+import { getTokenLogo } from "@/utils/logo";
 
 export const POLYGON_USDC_NATIVE = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359";
 
@@ -11,6 +17,17 @@ export const STABLEFLOW_BLOCKCHAIN_TO_CHAIN_ID: Record<string, number> = {
   arb: FUNDING_NETWORKS.arbitrum.chainId,
   op: FUNDING_NETWORKS.optimism.chainId,
   bsc: FUNDING_NETWORKS.bsc.chainId,
+  eth: FUNDING_NETWORKS.ethereum.chainId,
+  monad: FUNDING_NETWORKS.monad.chainId,
+  base: FUNDING_NETWORKS.base.chainId,
+  hypercore: FUNDING_NETWORKS.hyperEvm.chainId,
+  abs: FUNDING_NETWORKS.abstract.chainId,
+  avax: FUNDING_NETWORKS.avalanche.chainId,
+  bera: FUNDING_NETWORKS.berachain.chainId,
+  gnosis: FUNDING_NETWORKS.gnosis.chainId,
+  plasma: FUNDING_NETWORKS.plasma.chainId,
+  scroll: FUNDING_NETWORKS.scroll.chainId,
+  xlayer: FUNDING_NETWORKS.xlayer.chainId,
 };
 
 export interface StableflowDepositToken extends FundingAsset {
@@ -31,6 +48,8 @@ export interface StableflowQuoteDisplay {
 export const STABLEFLOW_NETWORK_COST_RATE = 0.0001;
 
 export const STABLEFLOW_MAX_SLIPPAGE_PERCENT = 0.5;
+
+export const STABLEFLOW_QR_MIN_DEPOSIT_USD = 1;
 
 export interface StableflowQuoteBreakdownFees {
   networkCostUsd: number;
@@ -66,7 +85,7 @@ export function mapStableflowTokenToDepositToken(token: TokenResponse): Stablefl
     return undefined;
   }
 
-  const icon = `/tokens/${token.symbol.toLowerCase()}.png`;
+  const icon = getTokenLogo(token.symbol);
 
   return {
     ...network,
@@ -101,16 +120,18 @@ export function buildStableflowQuoteRequest({
   amountBaseUnits,
   refundTo,
   recipient,
+  swapType,
 }: {
   originAssetId: string;
   destinationAssetId: string;
   amountBaseUnits: string;
   refundTo: string;
   recipient: string;
+  swapType?: QuoteRequest.swapType;
 }): QuoteRequest {
   return {
     dry: false,
-    swapType: QuoteRequest.swapType.EXACT_INPUT,
+    swapType: swapType ?? QuoteRequest.swapType.EXACT_INPUT,
     slippageTolerance: 50,
     originAsset: originAssetId,
     destinationAsset: destinationAssetId,
@@ -158,4 +179,49 @@ export function mapStableflowQuoteToBreakdownFees(
 
 export function stableflowTokensToFundingTokens(tokens: StableflowDepositToken[]): FundingAsset[] {
   return tokens.map(({ assetId: _assetId, blockchain: _blockchain, price: _price, ...funding }) => funding);
+}
+
+export function getStableflowChainOptions(tokens: StableflowDepositToken[]): SupportedChainOption[] {
+  return getUniqueChainsFromAssets(tokens);
+}
+
+export function getStableflowTokensForChain(
+  tokens: StableflowDepositToken[],
+  chainId: number,
+): StableflowDepositToken[] {
+  return getTokensForChain(tokens, chainId) as StableflowDepositToken[];
+}
+
+export function resolveDefaultStableflowQrSelection(
+  tokens: StableflowDepositToken[],
+): { chain: SupportedChainOption; token: StableflowDepositToken } | undefined {
+  if (tokens.length === 0) {
+    return undefined;
+  }
+
+  const chainOptions = getStableflowChainOptions(tokens);
+  const bscChainId = FUNDING_NETWORKS.bsc.chainId;
+  const chain = chainOptions.find((option) => option.chainId === bscChainId) ?? chainOptions[0];
+  const tokensOnChain = getStableflowTokensForChain(tokens, chain.chainId);
+  const token =
+    tokensOnChain.find((entry) => entry.symbol === "USDC") ?? tokensOnChain[0];
+
+  if (!token) {
+    return undefined;
+  }
+
+  return { chain, token };
+}
+
+export function sumStableflowChainBalanceUsd(
+  tokens: StableflowDepositToken[],
+  chainId: number,
+  getTokenUsdValue: (
+    token: Pick<StableflowDepositToken, "symbol" | "chainId" | "address">,
+  ) => number,
+): number {
+  return getStableflowTokensForChain(tokens, chainId).reduce(
+    (total, token) => total + getTokenUsdValue(token),
+    0,
+  );
 }

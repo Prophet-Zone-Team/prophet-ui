@@ -30,12 +30,12 @@ export function DossierKeyStars({ players }: DossierKeyStarsProps) {
                   className="size-8 shrink-0 rounded-full object-cover"
                 />
               ) : (
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f5f9ff] text-[10px] font-[556] text-[#125afc]">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f5f9ff] text-[10px] font-[500] text-[#125afc]">
                   {getInitials(player.name)}
                 </span>
               )}
               <div className="min-w-0">
-                <strong className="block truncate text-xs font-[556] text-black">
+                <strong className="block truncate text-xs font-[500] text-black">
                   {player.name}
                 </strong>
                 <span className="block truncate text-[10px] text-prophet-muted">

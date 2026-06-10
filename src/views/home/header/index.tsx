@@ -10,7 +10,10 @@ export interface HomeHeroProps {
 }
 
 export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
-  const kickoffLabel = formatKickoffCountdown(WORLD_CUP_2026_KICKOFF);
+  const showKickoffCountdown = Date.now() < WORLD_CUP_2026_KICKOFF.getTime();
+  const kickoffLabel = showKickoffCountdown
+    ? formatKickoffCountdown(WORLD_CUP_2026_KICKOFF)
+    : null;
 
   return (
     <section className="flex justify-between py-8">
@@ -41,7 +44,9 @@ export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
           <HomeHeroStat label="Teams Listed" value={48} />
           <HomeHeroStat label="Total Volume" value={totalVolumeLabel} />
           <HomeHeroStat label="24h Changes" value={topMoveValue} />
-          <HomeHeroStat label="Starts in" value={kickoffLabel} />
+          {showKickoffCountdown ? (
+            <HomeHeroStat label="Starts in" value={kickoffLabel} />
+          ) : null}
         </div>
       </div>
       <img
@@ -53,7 +58,7 @@ export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
 }
 
 const heroStatValueClassName =
-  "text-[26px] md:text-[32px] font-[556] leading-[38px] text-black";
+  "text-[26px] md:text-[32px] font-[500] leading-[38px] text-black";
 
 function HomeHeroStat({ label, value }: { label: string; value: ReactNode }) {
   const valueContent =

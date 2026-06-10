@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
+import { fireBasicConfettiFromElement } from "@/lib/confetti/fire-basic-cannon";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import {
   resolveTradePrimaryAction,
@@ -25,6 +26,7 @@ import {
   LIMIT_BUY_MIN_SHARES,
   resolveMaxSellShares
 } from "@/lib/market/order-math";
+import type { BidOrderPreview } from "@/lib/market/polymarket-order";
 import {
   formatOrderToastSummary,
   resolveOrderErrorMessage,
@@ -40,7 +42,6 @@ import {
   useSetTradeOutcomeSide,
   useSetTradeTakeProfitLimitEnabled,
   useSetTradeTakeProfitLimitPrice,
-  useTradeTicketStore,
   useTradeAmount,
   useTradeLimitExpiration,
   useTradeLimitExpirationCustom,
@@ -59,8 +60,10 @@ import type {
   UserPositionRecord
 } from "@/types/market";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
+import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import {
   buildGameTradePreview,
+  buildPreviewBalancesQueryKey,
   buildTeamTradePreview,
   buildGameUserOrderPreview,
   buildTakeProfitOrderBundle,
@@ -102,6 +105,7 @@ import {
   type SellQuickAmountFraction,
   type TradeTicketStatus
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
+import { TRADE_BID_BUTTON_ID } from "@/views/trade/trade-widget/trade-ui";
 
 export type UseTradeTicketTeamInput = {
   variant: "team";
@@ -113,12 +117,16 @@ export type UseTradeTicketTeamInput = {
 export type UseTradeTicketGameInput = {
   variant: "game";
   gameSnapshot: GameMarketSnapshot;
+  sellPosition?: UserPositionRecord;
   onOrderSuccess?: () => void | Promise<void>;
 };
 
 export type UseTradeTicketInput =
   | UseTradeTicketTeamInput
   | UseTradeTicketGameInput;
+
+/** Collapse mount-time preview/auth churn into a single balances request. */
+const READINESS_FETCH_DEBOUNCE_MS = 500;
 
 export function useTradeTicket(input: UseTradeTicketInput) {
   const router = useRouter();
@@ -127,6 +135,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     isAuthenticated,
     readiness: authReadiness,
     isRegionBlocked,
+    isBuyRestricted,
+    isRegionCloseOnly,
     openLogin,
     signClobCredentials,
     signTokenApprovals,
@@ -168,10 +178,29 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     no: 0
   });
   const readinessFetchGeneration = useRef(0);
+  const lastFetchedReadinessKeyRef = useRef<string | null>(null);
+  const previewForReadinessRef = useRef<BidOrderPreview | undefined>(undefined);
+  const authReadinessRef = useRef(authReadiness);
+  const sessionRef = useRef(session);
+  useEffect(() => {
+    authReadinessRef.current = authReadiness;
+  }, [authReadiness]);
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+  useEffect(() => {
+    return () => {
+      lastFetchedReadinessKeyRef.current = null;
+    };
+  }, []);
   const takeProfitPriceTouched = useRef(false);
 
   const orderAmount = parseOrderAmount(amount);
-  const orderType = resolveOrderType(orderMode);
+  const limitExpirationTimestamp =
+    orderMode === "limit"
+      ? resolveLimitExpirationTimestamp(limitExpiration, limitExpirationCustom)
+      : undefined;
+  const orderType = resolveOrderType(orderMode, limitExpirationTimestamp);
 
   const marketTokenDeps =
     input.variant === "team"
@@ -255,8 +284,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     teamWsEnabled ? [yesTokenId, noTokenId] : []
   );
 
-  const sellPosition =
-    input.variant === "team" ? input.sellPosition : undefined;
+  const sellPosition = input.sellPosition;
 
   const maxSellShares = useMemo(() => {
     if (tradeSide !== "sell") {
@@ -288,12 +316,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       : orderAmount;
 
   const sellAcceptingOrders = useMemo(() => {
-    if (!sellPosition || tradeSide !== "sell" || input.variant !== "team") {
+    if (!sellPosition || tradeSide !== "sell") {
       return undefined;
     }
 
     return positionAcceptingOrders;
-  }, [input.variant, positionAcceptingOrders, sellPosition, tradeSide]);
+  }, [positionAcceptingOrders, sellPosition, tradeSide]);
 
   const limitPriceContextKey =
     input.variant === "team"
@@ -454,6 +482,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   ]);
 
   const preview = teamDefaults?.preview ?? gameDefaults?.preview;
+  useEffect(() => {
+    previewForReadinessRef.current = preview;
+  }, [preview]);
   const previewCanSubmit = preview?.canSubmitRealOrder ?? false;
   const takeProfitLimitAvailable = isTakeProfitLimitAvailable(
     preview?.shareSize ?? 0
@@ -494,14 +525,18 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       previewCanSubmit,
       previewDisabledReason: preview?.disabledReason,
       expirationError,
-      isRegionBlocked,
+      isBuyRestricted,
+      isRegionFullyBlocked: isRegionBlocked,
+      isRegionCloseOnly,
       eligibilityNetworkError: isEligibilityNetworkFailure(session)
     });
   }, [
     authReadiness,
     expirationError,
     isAuthenticated,
+    isBuyRestricted,
     isRegionBlocked,
+    isRegionCloseOnly,
     preview?.disabledReason,
     previewCanSubmit,
     readiness,
@@ -559,20 +594,55 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     );
   }, [orderMode, preview?.sidePrice, setTakeProfitLimitPrice, tradeSide]);
 
+  const readinessQueryKey = useMemo(() => {
+    if (!preview?.tokenId) {
+      return null;
+    }
+
+    return buildPreviewBalancesQueryKey(preview, tradeSide);
+  }, [
+    preview?.estimatedCost,
+    preview?.estimatedTakerFee,
+    preview?.estimatedTotalCost,
+    preview?.shareSize,
+    preview?.tokenId,
+    tradeSide
+  ]);
+
   const applyReadinessFetch = useCallback(
-    async (orderPreview: NonNullable<typeof preview>) => {
+    async (
+      orderPreview: NonNullable<typeof preview>,
+      options?: { force?: boolean }
+    ) => {
+      const queryKey = buildPreviewBalancesQueryKey(orderPreview, tradeSide);
+
+      if (!queryKey) {
+        return undefined;
+      }
+
+      if (
+        !options?.force &&
+        queryKey === lastFetchedReadinessKeyRef.current
+      ) {
+        return undefined;
+      }
+
       const generation = ++readinessFetchGeneration.current;
 
       try {
         const nextReadiness = await fetchReadinessForPreview(
           orderPreview,
           tradeSide,
-          authReadiness
+          authReadinessRef.current,
+          options
         );
 
         if (generation === readinessFetchGeneration.current) {
           setReadiness(nextReadiness);
-          setEligibilityRetryAvailable(isEligibilityNetworkFailure(session));
+          setEligibilityRetryAvailable(
+            isEligibilityNetworkFailure(sessionRef.current)
+          );
+          lastFetchedReadinessKeyRef.current = queryKey;
         }
 
         return nextReadiness;
@@ -584,25 +654,32 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         throw error;
       }
     },
-    [authReadiness, session, tradeSide]
+    [tradeSide]
   );
 
   useEffect(() => {
-    if (!preview) {
+    if (!readinessQueryKey) {
       return undefined;
     }
 
-    void applyReadinessFetch(preview);
-  }, [
-    applyReadinessFetch,
-    preview?.estimatedCost,
-    preview?.estimatedTakerFee,
-    preview?.estimatedTotalCost,
-    preview?.shareSize,
-    preview?.sidePrice,
-    preview?.tokenId,
-    tradeSide
-  ]);
+    const timeoutId = window.setTimeout(() => {
+      if (readinessQueryKey === lastFetchedReadinessKeyRef.current) {
+        return;
+      }
+
+      const orderPreview = previewForReadinessRef.current;
+
+      if (!orderPreview) {
+        return;
+      }
+
+      void applyReadinessFetch(orderPreview);
+    }, READINESS_FETCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [applyReadinessFetch, readinessQueryKey]);
 
   const refreshOutcomeShares = useCallback(async () => {
     if (!isAuthenticated || !conditionId) {
@@ -629,7 +706,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [conditionId, isAuthenticated, noTokenId, yesTokenId]);
 
   useEffect(() => {
-    if (!sellPosition || input.variant !== "team") {
+    if (!sellPosition) {
       setPositionAcceptingOrders(undefined);
       return;
     }
@@ -648,44 +725,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     return () => {
       cancelled = true;
     };
-  }, [
-    input.variant,
-    sellPosition?.asset,
-    sellPosition?.conditionId,
-    sellPosition?.slug
-  ]);
-
-  useEffect(() => {
-    if (tradeSide !== "sell" || !sellPosition || input.variant !== "team") {
-      return;
-    }
-
-    let cancelled = false;
-
-    void fetchConditionalTokenBalance(sellPosition.asset).then((balance) => {
-      if (cancelled) {
-        return;
-      }
-
-      const cap = resolveMaxSellShares(sellPosition.size, balance);
-
-      if (cap === undefined || cap <= 0) {
-        return;
-      }
-
-      const currentAmount = parseOrderAmount(
-        useTradeTicketStore.getState().amount
-      );
-
-      if (currentAmount > cap) {
-        setAmount(String(cap));
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [input.variant, sellPosition, setAmount, tradeSide]);
+  }, [sellPosition?.asset, sellPosition?.conditionId, sellPosition?.slug]);
 
   useEffect(() => {
     if (maxSellShares === undefined || maxSellShares <= 0) {
@@ -698,11 +738,28 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [amount, maxSellShares, setAmount]);
 
   useEffect(() => {
-    if (sellPosition && tradeSide === "sell" && input.variant === "team") {
-      const side = resolveOutcomeSideForPosition(sellPosition, input.snapshot);
+    if (sellPosition && tradeSide === "sell") {
+      if (input.variant === "team") {
+        const side = resolveOutcomeSideForPosition(
+          sellPosition,
+          input.snapshot
+        );
+        const nextShares = {
+          yes: side === "yes" ? sellPosition.size : 0,
+          no: side === "no" ? sellPosition.size : 0
+        };
+
+        setOutcomeShares((current) =>
+          current.yes === nextShares.yes && current.no === nextShares.no
+            ? current
+            : nextShares
+        );
+        return;
+      }
+
       const nextShares = {
-        yes: side === "yes" ? sellPosition.size : 0,
-        no: side === "no" ? sellPosition.size : 0
+        yes: outcomeSide === "yes" ? sellPosition.size : 0,
+        no: outcomeSide === "no" ? sellPosition.size : 0
       };
 
       setOutcomeShares((current) =>
@@ -723,15 +780,24 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     if (tradeSide === "sell") {
       void refreshOutcomeShares();
     }
-  }, [input, isAuthenticated, refreshOutcomeShares, sellPosition, tradeSide]);
+  }, [
+    input,
+    isAuthenticated,
+    outcomeSide,
+    refreshOutcomeShares,
+    sellPosition,
+    tradeSide
+  ]);
 
   const refreshOrderReadiness = useCallback(async () => {
-    if (!preview) {
+    const orderPreview = previewForReadinessRef.current;
+
+    if (!orderPreview) {
       return undefined;
     }
 
-    return applyReadinessFetch(preview);
-  }, [applyReadinessFetch, preview]);
+    return applyReadinessFetch(orderPreview, { force: true });
+  }, [applyReadinessFetch]);
 
   const handleRetryEligibility = useCallback(async () => {
     setStatus("loading");
@@ -772,7 +838,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       orderReadiness: readiness,
       previewCanSubmit,
       previewDisabledReason: preview.disabledReason,
-      isRegionBlocked,
+      tradeSide,
+      isBuyRestricted,
+      isRegionFullyBlocked: isRegionBlocked,
       openLogin,
       signClobCredentials,
       signTokenApprovals,
@@ -833,14 +901,28 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         preview,
         orderType,
         userOrderPreview,
-        expiration:
-          orderMode === "limit"
-            ? resolveLimitExpirationTimestamp(
-                limitExpiration,
-                limitExpirationCustom
-              )
-            : undefined
+        expiration: limitExpirationTimestamp
       });
+
+      void reportTradeOrderTransaction(
+        input.variant === "team"
+          ? {
+              userOrderPreview,
+              result,
+              preview,
+              variant: "team",
+              snapshot: input.snapshot
+            }
+          : {
+              userOrderPreview,
+              result,
+              preview,
+              variant: "game",
+              gameSnapshot: input.gameSnapshot,
+              fixtureOutcome:
+                effectiveFixtureOutcome ?? selectedFixtureOutcome
+            }
+      );
 
       await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
       await refreshOutcomeShares();
@@ -940,6 +1022,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
           onViewPortfolio: () => router.push("/portfolio")
         }
       );
+     if (TRADE_BID_BUTTON_ID) {
+       void fireBasicConfettiFromElement(
+         document.getElementById(TRADE_BID_BUTTON_ID)
+       );
+     }
       setStatus("idle");
       setMessage(undefined);
 
@@ -1155,6 +1242,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }
 
   function selectOutcome(side: typeof outcomeSide) {
+    if (side === outcomeSide) {
+      return;
+    }
+
     setOutcomeSide(side);
     setMessage(undefined);
     setEligibilityRetryAvailable(false);

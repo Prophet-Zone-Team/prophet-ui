@@ -16,3 +16,5 @@ cloudflare-env.d.ts
 .vscode/
 
 .pnpm-store/
+
+standalone/

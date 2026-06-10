@@ -33,7 +33,7 @@ export function useAnalyticsTeamRelatedNews(params: {
   });
 
   const items = useMemo(
-    () => mapTeamRelatedNewsArticles(query.data?.list, teamCodeLookup),
+    () => mapTeamRelatedNewsArticles(query.data?.list, teamCodeLookup, { homeTeamName: params.homeTeamName, awayTeamName: params.awayTeamName }),
     [query.data?.list, teamCodeLookup]
   );
 

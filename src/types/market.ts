@@ -29,12 +29,13 @@ export type TradeEntityType = "team" | "game";
 
 export type BidTradeSide = "buy" | "sell";
 
-export type TradingOrderType = "GTC" | "FOK" | "FAK";
+export type TradingOrderType = "GTC" | "GTD" | "FOK" | "FAK";
 
 export type TradingEligibilityStatus =
   | "unknown"
   | "eligible"
   | "blocked_region"
+  | "close_only_region"
   | "unsupported_account"
   | "needs_wallet"
   | "error";
@@ -375,6 +376,35 @@ export interface MarketTopHolderGroup {
   holders: MarketTopHolder[];
 }
 
+export interface MarketTradeRecord {
+  proxyWallet: string;
+  side: "BUY" | "SELL";
+  asset: string;
+  conditionId: string;
+  size: number;
+  price: number;
+  timestamp: number;
+  outcome: string;
+  outcomeIndex: number;
+  name?: string;
+  pseudonym?: string;
+  transactionHash?: string;
+}
+
+export interface MarketPositionRecord {
+  proxyWallet: string;
+  name?: string;
+  asset: string;
+  conditionId: string;
+  avgPrice: number;
+  size: number;
+  currPrice: number;
+  currentValue: number;
+  cashPnl: number;
+  outcome: string;
+  outcomeIndex: number;
+}
+
 export interface ProbabilityHistoryPoint {
   teamId: Team["id"];
   date: string;
@@ -614,6 +644,8 @@ export interface WorldCupMatch {
   odds?: MatchOddsSummary;
   /** Elapsed match time in seconds (API-Football live clock baseline for client timer). */
   liveElapsedSeconds?: number;
+  /** Current match period from Polymarket sports WS (e.g. "1H", "2H", "HT"). */
+  period?: string;
   freshness: FreshnessMeta;
   polymarket?: PolymarketFixtureMetadata;
 }

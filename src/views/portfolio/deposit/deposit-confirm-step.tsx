@@ -10,18 +10,21 @@ import {
   buildDepositQuoteRequest,
   formatQuoteCheckoutTime,
   formatQuoteTokenAmount,
-  mapQuoteToBreakdown,
+  mapQuoteToBreakdown
 } from "@/lib/funding/bridge-quote";
 import {
   mapStableflowQuoteToBreakdownFees,
   mapStableflowQuoteToConfirmDisplay,
-  STABLEFLOW_MAX_SLIPPAGE_PERCENT,
+  STABLEFLOW_MAX_SLIPPAGE_PERCENT
 } from "@/lib/funding/stableflow";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { depositDetailRowClass } from "@/views/portfolio/deposit/deposit-ui";
 import { TransactionBreakdown } from "@/views/portfolio/deposit/transaction-breakdown";
 import type { DepositSelectableToken } from "@/views/portfolio/deposit/types";
-import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
+import {
+  TokenIcon,
+  WalletAvatarIcon
+} from "@/views/portfolio/shared/token-icon";
 import { formatNumber } from "@/utils";
 
 export interface DepositConfirmStepProps {
@@ -41,21 +44,31 @@ export function DepositConfirmStep({
   amountUsd,
   quoteMode = "bridge",
   stableflowQuote,
-  recipientAddress,
+  recipientAddress
 }: DepositConfirmStepProps) {
   const quoteRequest = useMemo(
-    () => (quoteMode === "bridge" ? buildDepositQuoteRequest({ token, amount }) : undefined),
-    [amount, quoteMode, token],
+    () =>
+      quoteMode === "bridge"
+        ? buildDepositQuoteRequest({ token, amount })
+        : undefined,
+    [amount, quoteMode, token]
   );
 
-  const { quote, loading: quoteLoading, error: quoteError } = useBridgeQuote({
+  const {
+    quote,
+    loading: quoteLoading,
+    error: quoteError
+  } = useBridgeQuote({
     request: quoteRequest,
-    enabled: quoteMode === "bridge" && Boolean(quoteRequest),
+    enabled: quoteMode === "bridge" && Boolean(quoteRequest)
   });
 
   const stableflowDisplay = useMemo(
-    () => (stableflowQuote ? mapStableflowQuoteToConfirmDisplay(stableflowQuote) : undefined),
-    [stableflowQuote],
+    () =>
+      stableflowQuote
+        ? mapStableflowQuoteToConfirmDisplay(stableflowQuote)
+        : undefined,
+    [stableflowQuote]
   );
 
   const breakdown = quote ? mapQuoteToBreakdown(quote) : undefined;
@@ -65,7 +78,7 @@ export function DepositConfirmStep({
       return {
         networkCostUsd: undefined,
         priceImpactPercent: undefined,
-        maxSlippagePercent: STABLEFLOW_MAX_SLIPPAGE_PERCENT,
+        maxSlippagePercent: STABLEFLOW_MAX_SLIPPAGE_PERCENT
       };
     }
 
@@ -74,7 +87,7 @@ export function DepositConfirmStep({
     return {
       networkCostUsd: fees.networkCostUsd,
       priceImpactPercent: fees.priceImpactPercent,
-      maxSlippagePercent: STABLEFLOW_MAX_SLIPPAGE_PERCENT,
+      maxSlippagePercent: STABLEFLOW_MAX_SLIPPAGE_PERCENT
     };
   }, [stableflowQuote]);
 
@@ -91,7 +104,10 @@ export function DepositConfirmStep({
     quoteMode === "stableflow" && stableflowDisplay
       ? stableflowDisplay.receiveAmountFormatted
       : quote
-        ? formatQuoteTokenAmount(quote.estToTokenBaseUnit, POLYMARKET_USD.decimals)
+        ? formatQuoteTokenAmount(
+            quote.estToTokenBaseUnit,
+            POLYMARKET_USD.decimals
+          )
         : amount;
 
   const toAddress = recipientAddress ?? walletAddress;
@@ -101,7 +117,7 @@ export function DepositConfirmStep({
 
   return (
     <div className="flex flex-col gap-4 pb-2">
-      <p className="m-0 text-center text-[36px] font-[556] leading-[43px] text-black">
+      <p className="m-0 text-center text-[36px] font-[500] leading-[43px] text-black">
         {formatNumber(amountUsd, 2, true, { prefix: "$", round: 0 })}
       </p>
 
@@ -113,7 +129,9 @@ export function DepositConfirmStep({
       ) : null}
 
       {showQuoteError ? (
-        <p className="m-0 text-center text-sm text-prophet-red">{showQuoteError}</p>
+        <p className="m-0 text-center text-sm text-prophet-red">
+          {showQuoteError}
+        </p>
       ) : null}
 
       <div className="flex flex-col">
@@ -195,7 +213,7 @@ export function DepositConfirmStep({
 
 function DetailRow({
   label,
-  children,
+  children
 }: {
   label: string;
   children: ReactNode;
@@ -204,7 +222,7 @@ function DetailRow({
     <div className={depositDetailRowClass}>
       <span className="text-[#909090]">{label}</span>
       <span className="flex-1 border-t border-[#EBEBEB]/60"></span>
-      <span className="font-[556] text-black">{children}</span>
+      <span className="font-[500] text-black">{children}</span>
     </div>
   );
 }

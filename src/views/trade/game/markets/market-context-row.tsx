@@ -4,10 +4,12 @@ import { useMemo } from "react";
 
 import { useAnalyticsHeadToHeadFixtures } from "@/hooks/analytics/use-analytics-head-to-head-fixtures";
 import { useAnalyticsTeamRelatedNews } from "@/hooks/analytics/use-analytics-team-related-news";
+import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { MatchHistory } from "@/views/trade/game/match-history";
 import { RelatedNews } from "@/views/trade/game/related-news";
+import { GameStatistics } from "@/views/trade/game/statistics";
 
 export type MarketContextRowProps = {
   match: WorldCupMatch;
@@ -44,20 +46,47 @@ export function MarketContextRow({
     teamB: awayTeamName
   });
 
+  const {
+    rows: statisticsRows,
+    isLoading: statisticsLoading,
+    isError: statisticsError
+  } = useGameStatistics({
+    match,
+    homeTeamName,
+    awayTeamName
+  });
+
   return (
-    <div className="mt-[8px] flex flex-col gap-4 lg:flex-row lg:items-start">
-      <RelatedNews
-        className="min-w-0 flex-1 max-w-none"
-        items={relatedNewsItems}
-        isLoading={relatedNewsLoading}
-        isError={relatedNewsError}
+    <div className="mt-[8px] flex flex-col gap-4">
+      <GameStatistics
+        homeTeam={{
+          name: homeTeamName,
+          code: sides.home.code,
+          logoUrl: sides.home.logoUrl
+        }}
+        awayTeam={{
+          name: awayTeamName,
+          code: sides.away.code,
+          logoUrl: sides.away.logoUrl
+        }}
+        rows={statisticsRows}
+        isLoading={statisticsLoading}
+        isError={statisticsError}
       />
-      <MatchHistory
-        className="min-w-0 flex-1 max-w-none"
-        matches={matchHistoryEntries}
-        isLoading={matchHistoryLoading}
-        isError={matchHistoryError}
-      />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <RelatedNews
+          className="min-w-0 flex-1 max-w-none"
+          items={relatedNewsItems}
+          isLoading={relatedNewsLoading}
+          isError={relatedNewsError}
+        />
+        <MatchHistory
+          className="min-w-0 flex-1 max-w-none"
+          matches={matchHistoryEntries}
+          isLoading={matchHistoryLoading}
+          isError={matchHistoryError}
+        />
+      </div>
     </div>
   );
 }

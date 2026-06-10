@@ -2,10 +2,7 @@
 
 import { Cell, Pie, PieChart } from "recharts";
 
-import {
-  getCategoryTotal,
-  SIGNAL_CATEGORY_COLORS
-} from "./format";
+import { getCategoryColor, getCategoryTotal } from "./format";
 import type { SignalCategorySegment } from "./types";
 
 export type TopCategoriesDonutChartProps = {
@@ -24,7 +21,7 @@ export function TopCategoriesDonutChart({
   const total = getCategoryTotal(categories);
   const chartData: ChartDatum[] = categories.map((category) => ({
     ...category,
-    color: SIGNAL_CATEGORY_COLORS[category.id]
+    color: getCategoryColor(category.id)
   }));
 
   return (
@@ -55,10 +52,10 @@ export function TopCategoriesDonutChart({
         </PieChart>
 
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[16px] font-[457] leading-[19px] text-[#909090]">
+          <span className="text-[16px] font-[400] leading-[19px] text-[#909090]">
             Total
           </span>
-          <span className="text-[20px] font-[457] leading-[24px] text-black tabular-nums">
+          <span className="text-[20px] font-[400] leading-[24px] text-black tabular-nums">
             {total}
           </span>
         </div>

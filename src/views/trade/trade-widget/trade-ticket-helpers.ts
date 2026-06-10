@@ -21,7 +21,16 @@ import {
   buildBalancesQuery,
   mergeTradingReadiness,
 } from "@/lib/trading/merge-trading-readiness";
-import { formatRegionBlockedDetail } from "@/lib/trading/trading-eligibility-client";
+import {
+  fetchTradingBalancesWithOnchain,
+  fetchTradingReadinessWithOnchain,
+  enrichSetupReadinessWithOnchain,
+} from "@/lib/trading/trading-balances-client";
+import { useAuthStore } from "@/store/auth-store";
+import {
+  formatEligibilityRestrictionDetail,
+  formatRegionBlockedDetail,
+} from "@/lib/trading/trading-eligibility-client";
 import type { WalletClient } from "viem";
 import {
   getTradingSetupSteps,
@@ -89,8 +98,19 @@ export function resolveTradeSide(tab: TradeTabId): BidTradeSide {
   return tab === "sell" ? "sell" : "buy";
 }
 
-export function resolveOrderType(orderMode: TradeOrderMode): TradingOrderType {
-  return orderMode === "market" ? "FAK" : "GTC";
+export function resolveOrderType(
+  orderMode: TradeOrderMode,
+  expiration?: string
+): TradingOrderType {
+  if (orderMode === "market") {
+    return "FAK";
+  }
+
+  if (expiration && expiration !== "0") {
+    return "GTD";
+  }
+
+  return "GTC";
 }
 
 export function parseOrderAmount(amount: string): number {
@@ -183,6 +203,11 @@ export function buildTeamTradePreview(input: {
   });
 }
 
+const marketStatusInflight = new Map<
+  string,
+  Promise<boolean | undefined>
+>();
+
 export async function fetchMarketAcceptingOrders(input: {
   slug?: string;
   conditionId?: string;
@@ -197,11 +222,23 @@ export async function fetchMarketAcceptingOrders(input: {
     return undefined;
   }
 
-  const payload = await fetchJson<{ acceptingOrders?: boolean }>(
-    `/api/trading/market-status?${query.toString()}`
-  );
+  const cacheKey = query.toString();
+  const inflight = marketStatusInflight.get(cacheKey);
 
-  return payload.acceptingOrders;
+  if (inflight) {
+    return inflight;
+  }
+
+  const request = fetchJson<{ acceptingOrders?: boolean }>(
+    `/api/trading/market-status?${cacheKey}`
+  )
+    .then((payload) => payload.acceptingOrders)
+    .finally(() => {
+      marketStatusInflight.delete(cacheKey);
+    });
+
+  marketStatusInflight.set(cacheKey, request);
+  return request;
 }
 
 export function buildGameTradePreview(input: {
@@ -279,19 +316,43 @@ export async function fetchConditionalTokenBalance(
     estimatedTakerFee: 0,
   });
 
-  const balances = await fetchJson<UserTradingBalancesResponse>(
-    `/api/trading/balances?${query}`
+  const session = useAuthStore.getState().session;
+  const balances = await fetchTradingBalancesWithOnchain(
+    session,
+    `/api/trading/balances?${query}`,
+    { fundingQuery: query },
   );
 
   return balances.balances?.conditionalTokenBalance;
 }
 
-export async function fetchReadinessForPreview(
-  preview: OrderPreviewFields,
-  tradeSide: BidTradeSide,
-  setupReadiness?: UserTradingReadiness
-): Promise<UserTradingReadiness> {
-  const query = buildBalancesQuery({
+const PREVIEW_BALANCES_CACHE_MS = 5_000;
+
+const previewBalancesInflight = new Map<
+  string,
+  Promise<UserTradingBalancesResponse>
+>();
+const previewBalancesResolvedCache = new Map<
+  string,
+  { expiresAt: number; value: UserTradingBalancesResponse }
+>();
+
+export function buildPreviewBalancesQueryKey(
+  preview: Pick<
+    OrderPreviewFields,
+    | "tokenId"
+    | "estimatedCost"
+    | "estimatedTakerFee"
+    | "estimatedTotalCost"
+    | "shareSize"
+  >,
+  tradeSide: BidTradeSide
+): string | null {
+  if (!preview.tokenId) {
+    return null;
+  }
+
+  return buildBalancesQuery({
     tradeSide,
     tokenId: preview.tokenId,
     cost: preview.estimatedCost,
@@ -299,12 +360,66 @@ export async function fetchReadinessForPreview(
     totalCost: preview.estimatedTotalCost,
     estimatedTakerFee: preview.estimatedTakerFee,
   });
+}
+
+function fetchPreviewBalances(
+  query: string,
+  options?: { force?: boolean }
+): Promise<UserTradingBalancesResponse> {
+  if (!options?.force) {
+    const cached = previewBalancesResolvedCache.get(query);
+
+    if (cached && cached.expiresAt > Date.now()) {
+      return Promise.resolve(cached.value);
+    }
+
+    const inflight = previewBalancesInflight.get(query);
+
+    if (inflight) {
+      return inflight;
+    }
+  } else {
+    previewBalancesResolvedCache.delete(query);
+  }
+
+  const session = useAuthStore.getState().session;
+  const request = fetchTradingBalancesWithOnchain(
+    session,
+    `/api/trading/balances?${query}`,
+    { fundingQuery: query },
+  )
+    .then((response) => {
+      previewBalancesResolvedCache.set(query, {
+        expiresAt: Date.now() + PREVIEW_BALANCES_CACHE_MS,
+        value: response,
+      });
+      return response;
+    })
+    .finally(() => {
+      previewBalancesInflight.delete(query);
+    });
+
+  previewBalancesInflight.set(query, request);
+  return request;
+}
+
+export async function fetchReadinessForPreview(
+  preview: OrderPreviewFields,
+  tradeSide: BidTradeSide,
+  setupReadiness?: UserTradingReadiness,
+  options?: { force?: boolean }
+): Promise<UserTradingReadiness> {
+  const query = buildPreviewBalancesQueryKey(preview, tradeSide);
+
+  if (!query) {
+    throw new Error("Order preview token id is required.");
+  }
 
   const [setup, balances] = await Promise.all([
     setupReadiness
-      ? Promise.resolve(setupReadiness)
-      : fetchJson<UserTradingReadiness>("/api/trading/readiness"),
-    fetchJson<UserTradingBalancesResponse>(`/api/trading/balances?${query}`),
+      ? enrichSetupReadinessWithOnchain(setupReadiness)
+      : fetchTradingReadinessWithOnchain(),
+    fetchPreviewBalances(query, options),
   ]);
 
   return mergeTradingReadiness(setup, balances, { tradeSide });
@@ -478,6 +593,8 @@ export function getLimitExpirationLabel(
   );
 }
 
+const GTD_SECURITY_THRESHOLD_SECONDS = 60;
+
 export function resolveLimitExpirationTimestamp(
   preset: LimitExpirationPreset,
   customDate?: string,
@@ -487,24 +604,31 @@ export function resolveLimitExpirationTimestamp(
     return "0";
   }
 
-  let expirationDate: Date;
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+  const minimumExpiration = nowSeconds + GTD_SECURITY_THRESHOLD_SECONDS;
+  let expirationSeconds: number | undefined;
 
   switch (preset) {
     case "5m":
-      expirationDate = new Date(now.getTime() + 5 * 60 * 1000);
+      expirationSeconds =
+        nowSeconds + GTD_SECURITY_THRESHOLD_SECONDS + 5 * 60;
       break;
     case "1h":
-      expirationDate = new Date(now.getTime() + 60 * 60 * 1000);
+      expirationSeconds =
+        nowSeconds + GTD_SECURITY_THRESHOLD_SECONDS + 60 * 60;
       break;
     case "12h":
-      expirationDate = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+      expirationSeconds =
+        nowSeconds + GTD_SECURITY_THRESHOLD_SECONDS + 12 * 60 * 60;
       break;
     case "24h":
-      expirationDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      expirationSeconds =
+        nowSeconds + GTD_SECURITY_THRESHOLD_SECONDS + 24 * 60 * 60;
       break;
     case "end_of_day": {
-      expirationDate = new Date(now);
+      const expirationDate = new Date(now);
       expirationDate.setHours(23, 59, 59, 999);
+      expirationSeconds = Math.floor(expirationDate.getTime() / 1000);
       break;
     }
     case "custom": {
@@ -512,7 +636,7 @@ export function resolveLimitExpirationTimestamp(
         return "0";
       }
 
-      expirationDate = new Date(customDate);
+      const expirationDate = new Date(customDate);
 
       if (
         Number.isNaN(expirationDate.getTime()) ||
@@ -521,13 +645,18 @@ export function resolveLimitExpirationTimestamp(
         return "0";
       }
 
+      expirationSeconds = Math.floor(expirationDate.getTime() / 1000);
       break;
     }
     default:
       return "0";
   }
 
-  return String(Math.floor(expirationDate.getTime() / 1000));
+  if (expirationSeconds === undefined) {
+    return "0";
+  }
+
+  return String(Math.max(expirationSeconds, minimumExpiration));
 }
 
 export function validateLimitExpirationCustom(
@@ -670,6 +799,43 @@ export function resolveSellQuickAmount(
   const amount = Math.floor(availableShares * fraction * 10000) / 10000;
 
   return amount > 0 ? String(amount) : undefined;
+}
+
+export type SellQuickAmountButtonValue = 0.25 | 0.5 | 0.75 | "all";
+
+const SELL_QUICK_AMOUNT_BUTTON_FRACTIONS: Array<{
+  value: SellQuickAmountButtonValue;
+  fraction: SellQuickAmountFraction;
+}> = [
+  { value: 0.25, fraction: 0.25 },
+  { value: 0.5, fraction: 0.5 },
+  { value: 0.75, fraction: 0.75 },
+  { value: "all", fraction: "max" }
+];
+
+export function resolveSelectedSellQuickAmount(
+  availableShares: number | undefined,
+  amount: string
+): SellQuickAmountButtonValue | undefined {
+  if (availableShares === undefined || availableShares <= 0) {
+    return undefined;
+  }
+
+  const current = parseOrderAmount(amount);
+
+  if (current <= 0) {
+    return undefined;
+  }
+
+  for (const { value, fraction } of SELL_QUICK_AMOUNT_BUTTON_FRACTIONS) {
+    const resolved = resolveSellQuickAmount(availableShares, fraction);
+
+    if (resolved && parseOrderAmount(resolved) === current) {
+      return value;
+    }
+  }
+
+  return undefined;
 }
 
 export function resolveQuickAmountAllBalance(
@@ -859,27 +1025,37 @@ export async function ensureTradingReadyForBid(deps: {
   orderReadiness?: UserTradingReadiness;
   previewCanSubmit: boolean;
   previewDisabledReason?: string;
-  isRegionBlocked?: boolean;
+  tradeSide?: BidTradeSide;
+  isBuyRestricted?: boolean;
+  isRegionFullyBlocked?: boolean;
   openLogin: () => Promise<unknown>;
   signClobCredentials: () => Promise<void>;
   signTokenApprovals: () => Promise<void>;
   refreshSetupReadiness?: () => Promise<UserTradingReadiness | undefined>;
 }): Promise<BidGateResult> {
-  if (deps.isRegionBlocked) {
+  const tradeSide = deps.tradeSide ?? "buy";
+  const eligibilityView = deps.session
+    ? {
+        status: deps.session.eligibilityStatus,
+        checkedAt: deps.session.eligibilityCheckedAt,
+        country: deps.session.eligibilityCountry,
+        region: deps.session.eligibilityRegion,
+        reason: deps.session.eligibilityReason,
+      }
+    : undefined;
+  const isEligibilityBlocked =
+    tradeSide === "buy"
+      ? Boolean(deps.isBuyRestricted)
+      : Boolean(deps.isRegionFullyBlocked);
+
+  if (isEligibilityBlocked) {
     return {
       ok: false,
       action: "show_error",
-      message: formatRegionBlockedDetail(
-        deps.session
-          ? {
-              status: deps.session.eligibilityStatus,
-              checkedAt: deps.session.eligibilityCheckedAt,
-              country: deps.session.eligibilityCountry,
-              region: deps.session.eligibilityRegion,
-              reason: deps.session.eligibilityReason,
-            }
-          : undefined
-      ),
+      message:
+        tradeSide === "buy"
+          ? formatEligibilityRestrictionDetail(eligibilityView)
+          : formatRegionBlockedDetail(eligibilityView),
     };
   }
 
@@ -989,9 +1165,47 @@ export async function ensureTradingReadyForBid(deps: {
 }
 
 export type SubmitOrderResult = {
+  response?: unknown;
   order?: UserOrderRecord;
   submittedAt?: string;
 };
+
+export type SubmitBatchOrderResultItem = {
+  index: number;
+  success: boolean;
+  order?: UserOrderRecord;
+  error?: string;
+  response?: unknown;
+};
+
+export type SubmitBatchOrderResult = {
+  results: SubmitBatchOrderResultItem[];
+  successCount: number;
+  failureCount: number;
+  submittedAt?: string;
+};
+
+export async function submitSignedTradeOrdersBatch(input: {
+  orders: Array<{
+    signedOrder: Awaited<ReturnType<typeof buildSdkSignedUserOrder>>;
+    userOrderPreview: UserOrderPreview;
+  }>;
+}): Promise<SubmitBatchOrderResult> {
+  if (input.orders.length === 0) {
+    throw new Error("At least one signed order is required.");
+  }
+
+  return fetchJson<SubmitBatchOrderResult>("/api/trading/orders/batch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      orders: input.orders.map(({ signedOrder, userOrderPreview }) => ({
+        ...signedOrder,
+        preview: userOrderPreview
+      }))
+    })
+  });
+}
 
 export async function submitSignedTradeOrder(input: {
   session: TradingUserSession;

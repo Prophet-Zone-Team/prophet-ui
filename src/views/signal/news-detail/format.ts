@@ -40,7 +40,7 @@ export function buildSignalNewsDetailFromImpactItem(
     sentiment: item.sentiment,
     impactScore: item.impactScore,
     relatedLabel:
-      uniqueRelated.length > 0 ? uniqueRelated.join(", ") : "World Cup",
+      uniqueRelated.length > 1 ? "World Cup" : uniqueRelated[0],
     categoryLabel: item.category
       ? item.category.charAt(0).toUpperCase() + item.category.slice(1)
       : "General",

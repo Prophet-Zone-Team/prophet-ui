@@ -35,12 +35,6 @@ export function SignalSummaryBar({ summary, className }: SignalSummaryBarProps) 
         tone="negative"
         icon={<NegativeSentimentIcon />}
       />
-      <SignalSummaryTag
-        label="High Impact"
-        count={summary.highImpact}
-        tone="high-impact"
-        icon={<HighImpactSentimentIcon />}
-      />
     </div>
   );
 }

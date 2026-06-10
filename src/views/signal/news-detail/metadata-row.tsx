@@ -29,7 +29,7 @@ export function SignalNewsDetailMetadataRow({
   categoryLabel,
   className
 }: SignalNewsDetailMetadataRowProps) {
-  const isPositiveImpact = impactScore >= 0;
+  const isPositiveImpact = sentiment === "positive";
 
   return (
     <dl
@@ -39,7 +39,7 @@ export function SignalNewsDetailMetadataRow({
       )}
     >
       <div className="flex items-center gap-[8px]">
-        <dt className="m-0 text-[14px] font-[457] leading-[17px] text-[#909090]">
+        <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
           Impact
         </dt>
         <dd className="m-0 flex items-center gap-[4px]">
@@ -48,7 +48,7 @@ export function SignalNewsDetailMetadataRow({
           </span>
           <span
             className={cn(
-              "text-[14px] font-[556] leading-[17px]",
+              "text-[14px] font-[500] leading-[17px]",
               isPositiveImpact ? "text-[#7BCA25]" : "text-[#FF674B]"
             )}
           >
@@ -58,19 +58,19 @@ export function SignalNewsDetailMetadataRow({
       </div>
 
       <div className="flex items-center gap-[8px]">
-        <dt className="m-0 text-[14px] font-[457] leading-[17px] text-[#909090]">
+        <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
           Related
         </dt>
-        <dd className="m-0 text-[14px] font-[457] leading-[17px] text-black">
+        <dd className="m-0 text-[14px] font-[400] leading-[17px] text-black">
           {relatedLabel}
         </dd>
       </div>
 
       <div className="flex items-center gap-[8px]">
-        <dt className="m-0 text-[14px] font-[457] leading-[17px] text-[#909090]">
+        <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
           Categories
         </dt>
-        <dd className="m-0 text-[14px] font-[457] leading-[17px] text-black">
+        <dd className="m-0 text-[14px] font-[400] leading-[17px] text-black">
           {categoryLabel}
         </dd>
       </div>

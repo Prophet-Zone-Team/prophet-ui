@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { RoadToFinalPage } from "@/views/road-to-final";
 import {
   defaultSimulatorTeamId,
@@ -16,5 +18,9 @@ export default async function Page({ searchParams }: PageProps) {
     params.team ?? defaultSimulatorTeamId
   );
 
-  return <RoadToFinalPage initialTeamId={teamId} />;
+  return (
+    <Suspense fallback={null}>
+      <RoadToFinalPage initialTeamId={teamId} />
+    </Suspense>
+  );
 }

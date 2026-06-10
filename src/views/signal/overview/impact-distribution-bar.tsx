@@ -12,7 +12,6 @@ export type ImpactDistributionBarProps = {
 
 const SEGMENT_COLORS: Record<ImpactSentiment, string> = {
   positive: "bg-[#65AF14]",
-  neutral: "bg-[#F4B600]",
   negative: "bg-[#FF674B]"
 };
 

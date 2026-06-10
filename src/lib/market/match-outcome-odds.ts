@@ -60,7 +60,14 @@ export function parseMatchOutcomeOdds(
 }
 
 export function formatOutcomePercent(probability: number): string {
-  return `${Math.round(probability * 100)}%`;
+  const percent = probability * 100;
+
+  if (percent > 0 && percent < 0.1) {
+    return "<0.1%";
+  }
+
+  const truncated = Math.floor(percent * 10) / 10;
+  return `${truncated.toFixed(1)}%`;
 }
 
 function classifyOutcomeSlot(

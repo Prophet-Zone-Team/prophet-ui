@@ -14,6 +14,7 @@ import {
 import {
   buildDepositWalletBatchRequest,
   fetchRelayerNonce,
+  fetchRelayerTransaction,
   submitRelayerTransaction,
 } from "@/server/trading/deposit-wallet";
 import { getTradingSessionFromCookie } from "@/server/trading/session-store";
@@ -53,8 +54,22 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const statusAddress = url.searchParams.get("statusAddress");
+  const transactionId = url.searchParams.get("transactionId")?.trim();
 
   try {
+    if (transactionId) {
+      if (!/^[A-Za-z0-9_-]+$/.test(transactionId)) {
+        return NextResponse.json(
+          { error: "transactionId is invalid." },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json({
+        transaction: await fetchRelayerTransaction(transactionId)
+      });
+    }
+
     if (statusAddress) {
       if (!/^0x[a-fA-F0-9]{40}$/.test(statusAddress)) {
         return NextResponse.json({ error: "statusAddress must be an EVM address." }, { status: 400 });

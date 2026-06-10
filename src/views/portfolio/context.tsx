@@ -10,6 +10,8 @@ export interface PortfolioContextType {
   onConnectWallet: () => void;
   reload: () => void;
   removeOpenOrder: (orderId: string) => void;
+  removeOpenOrders: (orderIds: string[]) => void;
+  removeOpenOrdersByMarket: (marketId: string) => void;
   coreStatus: PortfolioLoadStatus;
 }
 
@@ -20,6 +22,8 @@ const PortfolioContext = createContext<PortfolioContextType>({
   onConnectWallet: () => { },
   reload: () => { },
   removeOpenOrder: () => { },
+  removeOpenOrders: () => { },
+  removeOpenOrdersByMarket: () => { },
   coreStatus: "idle",
 });
 

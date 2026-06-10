@@ -47,13 +47,12 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
     session,
     hydrated,
     isAuthenticated,
-    isRegionBlocked,
+    isBuyRestricted,
     loginInProgress,
     loginStep,
     error,
     cash,
     cashStatus,
-    openLogin,
     openLoginModalOnly,
     disconnect,
   } = useAuth();
@@ -70,9 +69,19 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
     }
 
     function handlePointerDown(event: PointerEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        setIsOpen(false);
+      const target = event.target as Node;
+      if (menuRef.current?.contains(target)) {
+        return;
       }
+
+      if (
+        target instanceof Element &&
+        target.closest("[data-polymarket-address-copy-dialog]")
+      ) {
+        return;
+      }
+
+      setIsOpen(false);
     }
 
     document.addEventListener("pointerdown", handlePointerDown);
@@ -105,19 +114,9 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
     });
   }, [cash?.available, cashStatus]);
 
-  async function handleLogin() {
+  function handleLogin() {
     setMessage(undefined);
-
-    try {
-      if (isRegionBlocked) {
-        openLoginModalOnly();
-        return;
-      }
-
-      await openLogin();
-    } catch (loginError) {
-      setMessage(loginError instanceof Error ? loginError.message : String(loginError));
-    }
+    openLoginModalOnly();
   }
 
   async function logout() {
@@ -140,10 +139,10 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
         <WalletLoginButton
           label={loginLabel}
           disabled={!hydrated || loginInProgress}
-          onClick={() => void handleLogin()}
+          onClick={handleLogin}
         />
         {(message ?? error) ? (
-          <p className="mt-2 max-w-[220px] text-right text-xs text-prophet-red">
+          <p className="mt-2 w-[220px] text-right text-xs text-prophet-red absolute right-2 -bottom-2 translate-y-[100%]">
             {message ?? error}
           </p>
         ) : null}
@@ -159,7 +158,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
         polymarketAddress={polymarketAddress}
         balanceDisplay={balanceDisplay}
         isMenuOpen={isOpen}
-        regionRestricted={isRegionBlocked}
+        regionRestricted={isBuyRestricted}
         onDeposit={() => setDepositOpen(true)}
         onPrivateTopup={() => setPrivateTopupIntroOpen(true)}
         onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
@@ -211,7 +210,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
       <MobileDrawer
         open={isMobileDrawerOpen}
         onClose={onMobileDrawerClose}
-        regionRestricted={isRegionBlocked}
+        regionRestricted={isBuyRestricted}
         onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
         balanceDisplay={balanceDisplay}
       />

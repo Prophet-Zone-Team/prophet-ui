@@ -35,7 +35,7 @@ function MatchHistoryResult({ entry }: { entry: MatchHistoryEntry }) {
   }
 
   return (
-    <span className="text-[14px] font-[457] leading-[17px] text-[#909090]">
+    <span className="text-[14px] font-[400] leading-[17px] text-[#909090]">
       Draw
     </span>
   );
@@ -123,7 +123,9 @@ export function MatchHistoryMobileCard({
       </div>
 
       <div className="flex items-start justify-between gap-3 border-t border-[#EBEBEB] pt-2">
-        <span className="text-[12px] leading-[17px] text-[#909090]">Result</span>
+        <span className="text-[12px] leading-[17px] text-[#909090]">
+          Result
+        </span>
         <MatchHistoryResult entry={entry} />
       </div>
     </article>

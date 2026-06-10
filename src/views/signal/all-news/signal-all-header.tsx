@@ -11,7 +11,7 @@ import type {
 } from "./types";
 
 export const signalAllListRowClass =
-  "flex w-full max-w-[679px] items-center gap-[16px]";
+  "flex w-full items-center gap-[16px]";
 
 export type SignalAllHeaderProps = {
   teamFilter: SignalAllTeamFilter;
@@ -37,12 +37,12 @@ export function SignalAllHeader({
   return (
     <header
       className={cn(
-        "flex w-full max-w-none flex-col px-3 pb-0 pt-4 md:max-w-[679px] md:p-5 md:pb-0",
+        "flex w-full max-w-none flex-col px-3 pb-0 pt-4 md:p-5 md:pb-0",
         className
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 className="m-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
+        <h2 className="m-0 text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
           All Signals &amp; News
         </h2>
         {/* <SignalAllTeamFilterControl
@@ -57,7 +57,7 @@ export function SignalAllHeader({
         role="row"
         className={cn(
           signalAllListRowClass,
-          "mt-4 hidden text-[16px] font-[457] leading-[19px] text-[#909090] md:flex md:mt-[22px]"
+          "mt-4 hidden text-[16px] font-[400] leading-[19px] text-[#909090] md:flex md:mt-[22px]"
         )}
       >
         {/* <SortableColumnHeader
@@ -124,7 +124,7 @@ function SortableColumnHeader({
           : "none"
       }
       className={cn(
-        "inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[16px] font-[457] leading-[19px] text-[#909090]",
+        "inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[16px] font-[400] leading-[19px] text-[#909090]",
         !disabled && "hover:text-black",
         disabled && "cursor-not-allowed opacity-50",
         align === "right" && "justify-end",

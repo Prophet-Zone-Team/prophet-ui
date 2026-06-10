@@ -50,94 +50,119 @@
  * ```
  */
 
-import { cn } from "@/lib/cn";
-import { TeamFlag } from "../teams/team-flag";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 
+import { TOAST_TOP_OFFSET_PX } from "@/config/toast-layout";
+import { cn } from "@/lib/cn";
+import { TeamFlag } from "../teams/team-flag";
+
+const EVENT_NOTIFICATION_TRANSITION = {
+  duration: 0.28,
+  ease: [0.3, 0, 0.2, 1] as const
+};
+
+/** Enter from above; exit upward (queue handoff). */
+const EVENT_NOTIFICATION_ENTER_Y = -28;
+const EVENT_NOTIFICATION_EXIT_Y = -28;
+
 export function EventNotification(props: EventNotificationProps) {
   const { level, teams, className } = props;
 
-  const isNewLevel = level === EventNotificationLevel.New;
-
   const levelInfo = EventNotificationLevelMap[level];
 
-  if (!levelInfo || !teams.length) {
+  if (!levelInfo || teams.length < 2) {
     return null;
   }
 
   return (
-    <div
-      className={cn(
-        "relative w-[352px] rounded-xl bg-white border flex items-center gap-2 font-[Sora] text-base font-[500] text-black",
-        isNewLevel ? "h-[90px] px-[25px]" : "h-[108px] justify-center pt-[14px]",
-        className,
-      )}
-      style={{
-        borderColor: levelInfo.color,
-        boxShadow: `0px 0px 10px 0px ${levelInfo.color}`,
-      }}
-    >
-      <EventBadge level={level} />
-      {
-        isNewLevel ? (
-          <>
-            <TeamFlag
-              code={teams[0].code}
-              name={teams[0].name}
-              className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
-            />
-            <div className="">{teams[0].event}</div>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-col items-center gap-2">
-              <div className="relative">
-                <TeamFlag
-                  code={teams[0].code}
-                  name={teams[0].name}
-                  className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
-                />
-                <IconFoul level={level} event={teams[0].event} />
-              </div>
-              <div className="">{teams[0].name}</div>
-            </div>
-            <div className="flex items-center justify-center gap-[2px] text-[26px]">
-              <div
-                className="size-[36px] rounded-xl flex justify-center items-center"
-                style={{
-                  backgroundColor: teams[0].event?.toLowerCase?.() === "goal" ? "#7BCA25" : "white",
-                }}
-              >
-                {teams[0].score}
-              </div>
-              <div className="">-</div>
-              <div
-                className="size-[36px] rounded-xl flex justify-center items-center"
-                style={{
-                  backgroundColor: teams[1].event?.toLowerCase?.() === "goal" ? "#7BCA25" : "white",
-                }}
-              >
-                {teams[1].score}
-              </div>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <div className="relative">
-                <TeamFlag
-                  code={teams[1].code}
-                  name={teams[1].name}
-                  className="size-[36px] min-w-[36px] shrink-0 !block rounded-md"
-                />
-                <IconFoul level={level} event={teams[1].event} />
-              </div>
-              <div className="">{teams[1].name}</div>
-            </div>
-          </>
-        )
-      }
+    <div className={cn("relative w-[352px] pt-[19px]", className)}>
+      <div
+        className={cn(
+          "relative flex h-[108px] w-[352px] items-center justify-between rounded-[12px] border bg-white px-6",
+          "font-[Sora] font-medium text-black"
+        )}
+        style={{
+          borderColor: levelInfo.color,
+          boxShadow: `0px 0px 10px 0px ${levelInfo.color}`
+        }}
+      >
+        <EventBadge level={level} />
+        <TeamColumn team={teams[0]} level={level} />
+        <ScoreRow teams={teams} highlightColor={levelInfo.color} />
+        <TeamColumn team={teams[1]} level={level} />
+      </div>
     </div>
   );
+}
+
+function TeamColumn(props: {
+  team: EventNotificationTeam;
+  level: EventNotificationLevel;
+}) {
+  const { team, level } = props;
+
+  return (
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-2">
+      <div className="relative shrink-0">
+        <TeamFlag
+          code={team.code}
+          name={team.name}
+          className="!block size-[36px] min-w-[36px] shrink-0 rounded-[6px] shadow-[0px_0px_2px_rgba(0,0,0,0.2)]"
+        />
+        <IconFoul level={level} event={team.event} />
+      </div>
+      <div className="max-w-[102px] truncate text-center text-[16px] leading-5">
+        {team.name}
+      </div>
+    </div>
+  );
+}
+
+function ScoreRow(props: {
+  teams: EventNotificationTeam[];
+  highlightColor: string;
+}) {
+  const { teams, highlightColor } = props;
+
+  return (
+    <div className="flex shrink-0 items-center justify-center gap-[2px] text-[26px] leading-[33px]">
+      <ScoreDigit
+        score={teams[0]?.score}
+        highlighted={teams[0]?.event?.toLowerCase?.() === "goal"}
+        highlightColor={highlightColor}
+      />
+      <span>-</span>
+      <ScoreDigit
+        score={teams[1]?.score}
+        highlighted={teams[1]?.event?.toLowerCase?.() === "goal"}
+        highlightColor={highlightColor}
+      />
+    </div>
+  );
+}
+
+function ScoreDigit(props: {
+  score?: string;
+  highlighted: boolean;
+  highlightColor: string;
+}) {
+  const { score, highlighted, highlightColor } = props;
+
+  if (highlighted) {
+    return (
+      <div
+        className="flex size-[36px] items-center justify-center rounded-[12px]"
+        style={{ backgroundColor: highlightColor }}
+      >
+        {score}
+      </div>
+    );
+  }
+
+  return <span className="min-w-[20px] text-center">{score}</span>;
 }
 
 export default EventNotification;
@@ -156,18 +181,31 @@ export interface EventNotificationProps {
 }
 
 export const EventNotificationLevel = {
-  New: "New",
   Goal: "Goal",
   FoulWarn: "FoulWarn",
-  FoulAlert: "FoulAlert",
+  FoulAlert: "FoulAlert"
 } as const;
 export type EventNotificationLevel = (typeof EventNotificationLevel)[keyof typeof EventNotificationLevel];
 
-export const EventNotificationLevelMap: Record<EventNotificationLevel, { name: string; color: string; }> = {
-  [EventNotificationLevel.New]: { name: "NEW", color: "#9D84FF" },
-  [EventNotificationLevel.Goal]: { name: "GOAL!", color: "#7BCA25" },
-  [EventNotificationLevel.FoulWarn]: { name: "FOUL!", color: "#FFC51C" },
-  [EventNotificationLevel.FoulAlert]: { name: "FOUL!", color: "#FF4242" },
+export const EventNotificationLevelMap: Record<
+  EventNotificationLevel,
+  { name: string; color: string; shadowColor: string }
+> = {
+  [EventNotificationLevel.Goal]: {
+    name: "GOAL!",
+    color: "#7BCA25",
+    shadowColor: "#7BCA25"
+  },
+  [EventNotificationLevel.FoulWarn]: {
+    name: "FOUL!",
+    color: "#FFC51C",
+    shadowColor: "#FDD357"
+  },
+  [EventNotificationLevel.FoulAlert]: {
+    name: "FOUL!",
+    color: "#FF4242",
+    shadowColor: "#FDD357"
+  }
 };
 
 interface EventBadgeProps {
@@ -187,12 +225,12 @@ function EventBadge(props: EventBadgeProps) {
   return (
     <div
       className={cn(
-        "absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 z-1",
-        "text-white font-[Sora] text-lg font-[700] flex justify-center items-center h-[38px] rounded-xl w-[100px]",
-        className,
+        "absolute left-1/2 top-0 z-1 flex h-[37px] w-[98px] -translate-x-1/2 -translate-y-1/2 items-center justify-center",
+        "rounded-[12px] font-[Sora] text-[18px] font-bold leading-[23px] text-white",
+        className
       )}
       style={{
-        backgroundColor: levelInfo.color,
+        backgroundColor: levelInfo.color
       }}
     >
       {levelInfo.name}
@@ -246,6 +284,8 @@ export interface ShowEventNotificationOptions {
    * - Pass 0 to disable auto-dismiss (manual dismiss required).
    */
   duration?: number;
+  /** Called once when this notification is dismissed (auto or manual). */
+  onDismiss?: () => void;
 }
 
 export type EventNotificationDismiss = () => void;
@@ -258,6 +298,13 @@ type EventNotificationStoreItem = {
 const listeners = new Set<() => void>();
 let current: EventNotificationStoreItem | null = null;
 let autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+
+type PendingExitDismiss = {
+  id: string;
+  onDismiss?: () => void;
+};
+
+let pendingExitDismiss: PendingExitDismiss | null = null;
 
 function emitStoreChange() {
   for (const listener of listeners) {
@@ -293,9 +340,28 @@ function dismissById(targetId?: string) {
     return;
   }
 
+  if (!current) {
+    return;
+  }
+
+  pendingExitDismiss = {
+    id: current.id,
+    onDismiss: current.props.onDismiss
+  };
+
   clearAutoDismissTimer();
   current = null;
   emitStoreChange();
+}
+
+function flushPendingExitDismiss(exitedId: string) {
+  if (!pendingExitDismiss || pendingExitDismiss.id !== exitedId) {
+    return;
+  }
+
+  const onDismiss = pendingExitDismiss.onDismiss;
+  pendingExitDismiss = null;
+  onDismiss?.();
 }
 
 function scheduleAutoDismiss(id: string, durationMs: number) {
@@ -310,10 +376,39 @@ function scheduleAutoDismiss(id: string, durationMs: number) {
   }, durationMs);
 }
 
+function EventNotificationAnimatedItem({
+  item
+}: {
+  item: EventNotificationStoreItem;
+}) {
+  const prefersReducedMotion = useReducedMotion();
+  const { onDismiss: _onDismiss, ...notificationProps } = item.props;
+
+  return (
+    <motion.div
+      className="flex justify-center overflow-visible"
+      initial={
+        prefersReducedMotion
+          ? false
+          : { opacity: 0, y: EVENT_NOTIFICATION_ENTER_Y }
+      }
+      animate={{ opacity: 1, y: 0 }}
+      exit={
+        prefersReducedMotion
+          ? undefined
+          : { opacity: 0, y: EVENT_NOTIFICATION_EXIT_Y }
+      }
+      transition={EVENT_NOTIFICATION_TRANSITION}
+    >
+      <EventNotification {...notificationProps} />
+    </motion.div>
+  );
+}
+
 function EventNotificationHost() {
   const item = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  if (!item || typeof document === "undefined") {
+  if (typeof document === "undefined") {
     return null;
   }
 
@@ -322,11 +417,26 @@ function EventNotificationHost() {
       role="region"
       aria-live="polite"
       aria-label="Match event notification"
-      className="pointer-events-none fixed inset-x-0 top-[100px] z-[70] flex justify-center px-4"
+      className="pointer-events-none fixed inset-x-0 z-[50] flex justify-center overflow-visible px-4 pt-5"
+      style={{ top: TOAST_TOP_OFFSET_PX }}
     >
-      <EventNotification {...item.props} />
+      <AnimatePresence
+        mode="wait"
+        initial={false}
+        onExitComplete={() => {
+          if (!pendingExitDismiss) {
+            return;
+          }
+
+          flushPendingExitDismiss(pendingExitDismiss.id);
+        }}
+      >
+        {item ? (
+          <EventNotificationAnimatedItem key={item.id} item={item} />
+        ) : null}
+      </AnimatePresence>
     </div>,
-    document.body,
+    document.body
   );
 }
 

@@ -9,8 +9,8 @@ import type {
 import { extractGroupId } from "./map-competitiveness";
 
 import teamData from "@/data/teams/index";
-import { curatedAbbreviationToCode, curatedTeamKeyToId } from "@/data/teams/curated-team-list";
-import { teamDetailHref } from "../routes/team";
+import { curatedAbbreviationToCode } from "@/data/teams/curated-team-list";
+import { buildTeamDetailHref } from "../routes/team";
 
 export type TeamCodeLookup = Map<string, string>;
 
@@ -65,24 +65,31 @@ export function mapTeamPowerRankingResponse(
       const currentTeam = teamData[item.team_name as keyof typeof teamData];
       const trend = mapTrendDirection(item.recent_trend);
       const teamCode = currentTeam ? curatedAbbreviationToCode(currentTeam.abbreviation) : "";
-      const teamId = curatedTeamKeyToId(currentTeam?.name ?? item.team_name);
       const id =
         item.id !== undefined
           ? String(item.id)
           : teamCode.toLowerCase() || (item.team_name ?? "unknown");
 
+      const teamNameMap: Record<string, string> = {
+        "Türkiye": "Turkiye",
+        "Bosnia & Herzegovina": "Bosnia-Herzegovina",
+        "Cape Verde Islands": "Cape Verde",
+      };
+      const teamName = item.team_name ? (teamNameMap[item.team_name] ?? item.team_name) : "";
+      const teamLink = buildTeamDetailHref(item.team_name);
+
       return {
         id,
         rank: item.rank ?? 0,
         teamCode,
-        teamName: item.team_name ?? "",
+        teamName,
         group: extractGroupId(item.group_name),
         titleProbability: parseProbability(item.title_probability),
         roundOf16Probability: parseProbability(item.round_of_16_probability),
         pathDifficulty: (item.path_difficulty_label ?? "Medium") as TeamPowerRankingPathDifficulty,
         trend,
-        signalStatus: (item.signal_status ?? "Neutral") as TeamPowerRankingSignalStatus,
-        link: teamDetailHref(teamId),
+        signalStatus: (item.signal_status ?? "Positive") as TeamPowerRankingSignalStatus,
+        link: teamLink,
       };
     });
 }

@@ -25,16 +25,16 @@ export const teamsDirectoryGridClass =
   "grid items-center gap-x-4 gap-y-3 max-xl:grid-cols-1 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.65fr)_minmax(0,0.85fr)_minmax(0,0.95fr)_auto]";
 
 export const teamsDirectoryHeadClass =
-  "hidden gap-x-4 px-4 pb-2 text-[10px] font-[556] uppercase tracking-wide text-prophet-muted xl:grid xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.65fr)_minmax(0,0.85fr)_minmax(0,0.95fr)_auto]";
+  "hidden gap-x-4 px-4 pb-2 text-[10px] font-[500] uppercase tracking-wide text-prophet-muted xl:grid xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.75fr)_minmax(0,0.65fr)_minmax(0,0.85fr)_minmax(0,0.95fr)_auto]";
 
 export const teamsMetricLabelClass = "text-xs font-normal leading-[14px] text-[#909090]";
 
 export const teamsDetailButtonClass = cn(
   "inline-flex h-9 w-[83px] items-center justify-center rounded-lg border border-[#909090]",
-  "bg-white text-sm font-[556] leading-[17px] text-[#18110F] transition-colors hover:bg-[#fafbfc]"
+  "bg-white text-sm font-[500] leading-[17px] text-[#18110F] transition-colors hover:bg-[#fafbfc]"
 );
 
 export const teamsBidButtonClass = cn(
   "inline-flex h-9 w-[83px] items-center justify-center gap-1 rounded-lg bg-[#18110F]",
-  "text-sm font-[556] leading-[17px] text-white transition-opacity hover:opacity-90"
+  "text-sm font-[500] leading-[17px] text-white transition-opacity hover:opacity-90"
 );

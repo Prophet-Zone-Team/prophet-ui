@@ -161,13 +161,13 @@ function SpecialMatchDataCardContent({
                 </>
               ) : (
                 <>
-                  <div className="text-[14px] text-[#9D84FF] font-[556]">
+                  <div className="text-[14px] text-[#9D84FF] font-[500]">
                     Next Match
                   </div>
-                  <div className="text-[30px] md:text-[36px] text-[#909090] font-[556]">
+                  <div className="text-[30px] md:text-[36px] text-[#909090] font-[500]">
                     VS
                   </div>
-                  <div className="text-sm md:text-[16px] text-[#000] font-[457]">
+                  <div className="text-sm md:text-[16px] text-[#000] font-[400]">
                     Starts {formatScheduleKickoff(liveMatch.kickoffAt)}
                   </div>
                 </>
@@ -204,9 +204,9 @@ function TeamColumn({
         code={code}
         name={name}
         logoUrl={logoUrl}
-        className="h-[40px] md:h-[50px] w-[40px] md:w-[50px] rounded-[6px] text-[40px] md:text-[50px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="h-[40px] md:h-[50px] w-[40px] md:w-[50px] rounded-[6px] text-[40px] md:text-[50px]"
       />
-      <strong className="max-w-full truncate text-base md:text-[26px] font-[556] leading-[31px] text-black">
+      <strong className="max-w-full truncate text-base md:text-[26px] font-[500] leading-[31px] text-black">
         {name}
       </strong>
     </div>
@@ -228,10 +228,6 @@ function ProbabilityStrip({
     probabilities,
     slant
   );
-  const homePct = formatOutcomePercent(probabilities.home);
-  const drawPct = formatOutcomePercent(probabilities.draw);
-  const awayPct = formatOutcomePercent(probabilities.away);
-
   return (
     <div
       ref={setContainerRef}
@@ -247,21 +243,21 @@ function ProbabilityStrip({
       <div className="pointer-events-none absolute inset-0 z-30">
         <ProbabilitySegmentLabel
           label={homeName}
-          percent={homePct}
+          probability={probabilities.home}
           tone="light"
           percentClassName="text-[36px] sm:text-[52px] sm:leading-[62px]"
           align="start"
         />
         <ProbabilitySegmentLabel
           label="Draw"
-          percent={drawPct}
+          probability={probabilities.draw}
           tone="dark"
           align="start"
           contentLeft={`calc(${homeEnd}% + 60px)`}
         />
         <ProbabilitySegmentLabel
           label={awayName}
-          percent={awayPct}
+          probability={probabilities.away}
           tone="dark"
           align="end"
         />
@@ -287,20 +283,21 @@ function ProbabilitySegmentFill({
 
 function ProbabilitySegmentLabel({
   label,
-  percent,
+  probability,
   tone,
   percentClassName,
   align = "start",
   contentLeft
 }: {
   label: string;
-  percent: string;
+  probability: number;
   tone: "light" | "dark";
   percentClassName?: string;
   align?: "start" | "center" | "end";
   contentLeft?: string;
 }) {
   const textColor = tone === "light" ? "text-white" : "text-black";
+  const showPercent = Math.round(probability * 100) >= 10;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-30">
@@ -318,18 +315,22 @@ function ProbabilitySegmentLabel({
         )}
         style={contentLeft ? { left: contentLeft } : undefined}
       >
-        <span className="relative z-30 text-[16px] font-semibold leading-[19px]">
-          {label}
-        </span>
-        <span
-          className={cn(
-            "relative z-30 text-[36px] font-semibold leading-[43px]",
-            percentClassName,
-            textColor
-          )}
-        >
-          {percent}
-        </span>
+        {showPercent ? (
+          <>
+            <span className="relative z-30 text-[16px] font-semibold leading-[19px]">
+              {label}
+            </span>
+            <span
+              className={cn(
+                "relative z-30 text-[36px] font-semibold leading-[43px]",
+                percentClassName,
+                textColor
+              )}
+            >
+              {formatOutcomePercent(probability)}
+            </span>
+          </>
+        ) : null}
       </div>
     </div>
   );

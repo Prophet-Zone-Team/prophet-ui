@@ -10,8 +10,7 @@ import {
   type GameOutcomeBidButtonSize
 } from "@/views/trade/shared/game-outcome-bid-buttons";
 
-const cardClass =
-  "rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
+const cardClass = "rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
 
 export function MarketCard({
   title,
@@ -41,9 +40,11 @@ function MarketCardHeader({
 }) {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h3 className="m-0 text-base font-[556] leading-[19px] text-black">{title}</h3>
+      <h3 className="m-0 text-base font-[500] leading-[19px] text-black">
+        {title}
+      </h3>
       {volumeLabel ? (
-        <p className="m-0 text-sm font-[457] leading-[17px] text-[#909090]">
+        <p className="m-0 text-sm font-[400] leading-[17px] text-[#909090]">
           {volumeLabel} Vol.
         </p>
       ) : null}

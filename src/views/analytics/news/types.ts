@@ -4,7 +4,6 @@ export type SignalSummaryStats = {
   todaySignal: number;
   positive: number;
   negative: number;
-  highImpact: number;
 };
 
 export type NewsImpactItem = {
@@ -20,6 +19,7 @@ export type NewsImpactItem = {
   thumbnailAlt: string;
   highlighted?: boolean;
   publishedAt?: string;
+  publishedAtFormatted?: string;
   sourceUrl?: string;
   category?: string;
   matchedTeams?: string[];

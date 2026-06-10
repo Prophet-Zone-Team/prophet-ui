@@ -1,4 +1,8 @@
-import { PROBABILITY_CHART_HISTORY_WINDOW_SECONDS } from "@/lib/team/probability-history";
+import {
+  DEFAULT_PROBABILITY_CHART_CLOB_INTERVAL,
+  PROBABILITY_CHART_HISTORY_WINDOW_SECONDS,
+  resolveProbabilityChartTimeWindow,
+} from "@/lib/team/probability-history";
 import type { FixtureHistoryInterval } from "@/server/market/clob-prices-history";
 import type {
   GameFixtureBinaryChartPoint,
@@ -41,6 +45,29 @@ export function mapUiRangeToClobInterval(
     case "all":
       return "max";
   }
+}
+
+export function resolveFixtureChartHistoryRequest(
+  timeRange: GameFixtureChartTimeRange,
+  nowMs = Date.now(),
+): {
+  interval: FixtureHistoryInterval;
+  start_ts?: number;
+  end_ts?: number;
+} {
+  if (timeRange === "all") {
+    const { startTs, endTs } = resolveProbabilityChartTimeWindow(nowMs);
+
+    return {
+      interval: DEFAULT_PROBABILITY_CHART_CLOB_INTERVAL,
+      start_ts: startTs,
+      end_ts: endTs,
+    };
+  }
+
+  return {
+    interval: mapUiRangeToClobInterval(timeRange),
+  };
 }
 
 const GAME_RANGE_POINT_LIMIT: Record<
@@ -438,6 +465,7 @@ function mergeFixtureChartPoints(points: GameFixtureChartPoint[]): GameFixtureCh
 
 export function getFixtureChartYDomain(
   points: GameFixtureChartPoint[],
+  options?: { endLabelHeadroomPercent?: number }
 ): [number, number] {
   if (points.length === 0) {
     return [0, 100];
@@ -447,8 +475,12 @@ export function getFixtureChartYDomain(
   const min = Math.min(...values);
   const max = Math.max(...values);
   const padding = Math.max(2, (max - min) * 0.2);
+  const headroom = options?.endLabelHeadroomPercent ?? 0;
   const lower = Math.max(0, Math.floor((min - padding) / 5) * 5);
-  const upper = Math.min(100, Math.ceil((max + padding) / 5) * 5);
+  const upper = Math.min(
+    100,
+    Math.ceil((max + padding + headroom) / 5) * 5
+  );
 
   return [lower, Math.max(lower + 10, upper)];
 }

@@ -11,6 +11,7 @@ import {
 } from "@/lib/market/trade-ticket";
 import { resolveMaxSellShares } from "@/lib/market/order-math";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
+import type { PositionGameSellContext } from "@/lib/portfolio/resolve-position-game-sell-context";
 import type {
   FixtureMarketOutcome,
   GameMarketSnapshot,
@@ -53,6 +54,10 @@ interface TradeTicketState {
     snapshot: TeamMarketSnapshot,
     position: UserPositionRecord
   ) => void;
+  syncForGamePositionSell: (
+    context: PositionGameSellContext,
+    position: UserPositionRecord
+  ) => void;
   setOutcomeSide: (side: OrderOutcomeSide) => void;
   setMatchOutcomeSide: (side: MatchOutcomeSide) => void;
   selectFixtureOutcome: (
@@ -77,7 +82,7 @@ const defaultTicketState = {
   outcomeSide: "yes" as OrderOutcomeSide,
   tab: "buy" as TradeTabId,
   orderMode: "market" as TradeOrderMode,
-  amount: "1",
+  amount: "0",
   limitPrice: "0.010",
   limitExpiration: "never" as LimitExpirationPreset,
   limitExpirationCustom: undefined as string | undefined,
@@ -109,7 +114,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       outcomeSide: "yes",
       tab: "buy",
       orderMode: "market",
-      amount: "1",
+      amount: "0",
       limitPrice: formatDefaultTradeLimitPrice(snapshot, "yes"),
       limitExpiration: "never",
       limitExpirationCustom: undefined,
@@ -153,7 +158,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
 
       if (bidReady && current.tab === "buy" && current.orderMode !== "market") {
         updates.orderMode = "market";
-        updates.amount = "1";
+        updates.amount = "0";
       }
 
       if (Object.keys(updates).length > 0) {
@@ -171,7 +176,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       outcomeSide: defaultBinarySide,
       tab: "buy",
       orderMode: "market",
-      amount: "1",
+      amount: "0",
       limitPrice: defaultLimitPrice,
       limitExpiration: "never",
       limitExpirationCustom: undefined,
@@ -196,6 +201,32 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       ...resetTakeProfitLimitState()
     });
   },
+  syncForGamePositionSell: (context, position) => {
+    const { gameSnapshot, matchOutcomeSide, fixtureOutcome, outcomeSide } =
+      context;
+    const limitPrice = fixtureOutcome
+      ? resolveFixtureSelectionLimitPrice(fixtureOutcome, outcomeSide).toFixed(3)
+      : formatDefaultGameTradeLimitPrice(
+          gameSnapshot,
+          matchOutcomeSide,
+          outcomeSide
+        );
+
+    set({
+      marketKey: gameSnapshot.match.id,
+      entityType: "game",
+      matchOutcomeSide,
+      selectedFixtureOutcome: fixtureOutcome,
+      outcomeSide,
+      tab: "sell",
+      orderMode: "market",
+      amount: String(resolveMaxSellShares(position.size) ?? position.size),
+      limitPrice,
+      limitExpiration: "never",
+      limitExpirationCustom: undefined,
+      ...resetTakeProfitLimitState()
+    });
+  },
   setOutcomeSide: (side) => set({ outcomeSide: side }),
   setMatchOutcomeSide: (side) => set({ matchOutcomeSide: side, outcomeSide: "yes" }),
   selectFixtureOutcome: (outcome, binarySide = "yes") => {
@@ -215,7 +246,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       matchOutcomeSide: nextMatchOutcomeSide,
       limitPrice: resolveFixtureSelectionLimitPrice(outcome, binarySide).toFixed(3),
       ...(bidReady && current.tab === "buy"
-        ? { orderMode: "market" as TradeOrderMode, amount: "1" }
+        ? { orderMode: "market" as TradeOrderMode, amount: "0" }
         : {})
     });
   },
@@ -233,7 +264,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
 
     set({
       orderMode,
-      amount: orderMode === "limit" ? "5" : "1",
+      amount: "0",
       limitExpiration: "never",
       limitExpirationCustom: undefined,
       ...resetTakeProfitLimitState()
@@ -357,6 +388,10 @@ export function useSyncTradeGameSnapshot() {
 
 export function useSyncForPositionSell() {
   return useTradeTicketStore((state) => state.syncForPositionSell);
+}
+
+export function useSyncForGamePositionSell() {
+  return useTradeTicketStore((state) => state.syncForGamePositionSell);
 }
 
 /** @deprecated Use useSyncTradeTeamSnapshot instead. */

@@ -1,6 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  type ReactElement,
+  type ReactNode
+} from "react";
 import {
   CartesianGrid,
   Customized,
@@ -13,10 +19,11 @@ import {
   type TooltipProps
 } from "recharts";
 
-import { formatProbability } from "@/components/home/market-formatters";
+import { formatChartProbability } from "@/components/home/market-formatters";
 import {
   formatChartTimestampClockLabel,
-  formatLiveChartClockLabel,
+  formatGoalEventTime,
+  formatMatchMinuteAxisLabel,
 } from "@/lib/market/match-display";
 import {
   formatGameChartXAxisTick,
@@ -32,8 +39,8 @@ import type {
   GameMatchChartEvent,
 } from "@/types/market";
 import {
-  GoalEventMarkerLayer,
-  type GoalEventMarkerLayerProps,
+  GoalEventMarkerChartProvider,
+  GoalEventMarkerCustomized,
 } from "@/views/trade/game-probability/goal-event-marker-layer";
 
 const CHART_COLORS = {
@@ -48,10 +55,204 @@ const SERIES = [
   { key: "home" as const, color: CHART_COLORS.home, label: "Home" },
   { key: "draw" as const, color: CHART_COLORS.draw, label: "Draw" },
   { key: "away" as const, color: CHART_COLORS.away, label: "Away" }
-];
+] as const;
+
+const END_LABEL_RIGHT_INSET = 10;
+const END_LABEL_ESTIMATED_WIDTH = 130;
+const END_LABEL_GUTTER = END_LABEL_RIGHT_INSET + END_LABEL_ESTIMATED_WIDTH + 8;
+const END_LABEL_SLOT_FRACTIONS: Record<(typeof SERIES)[number]["key"], number> =
+  {
+    home: 1 / 6,
+    draw: 1 / 2,
+    away: 5 / 6
+  };
 
 interface ChartRow extends GameFixtureChartPoint {
   chartLabel: string;
+}
+
+interface ChartCustomizedProps {
+  offset?: {
+    left?: number;
+    right?: number;
+    top?: number;
+    bottom?: number;
+  };
+  width?: number;
+  height?: number;
+}
+
+type EndLabelChartConfig = {
+  chartData: ChartRow[];
+  seriesLabels: Record<(typeof SERIES)[number]["key"], string>;
+};
+
+const EndLabelChartContext = createContext<EndLabelChartConfig | null>(null);
+
+function EndLabelChartProvider({
+  value,
+  children
+}: {
+  value: EndLabelChartConfig;
+  children: ReactNode;
+}) {
+  return (
+    <EndLabelChartContext.Provider value={value}>
+      {children}
+    </EndLabelChartContext.Provider>
+  );
+}
+
+function resolvePlotRightAnchorX(
+  width: number | undefined,
+  offset: ChartCustomizedProps["offset"]
+): number | undefined {
+  if (!width) {
+    return undefined;
+  }
+
+  const plotRight = width - (offset?.right ?? 0);
+  return plotRight - END_LABEL_RIGHT_INSET;
+}
+
+function resolveFixedLabelSlotY(
+  seriesKey: (typeof SERIES)[number]["key"],
+  offset: ChartCustomizedProps["offset"],
+  height: number | undefined
+): number | undefined {
+  if (!height) {
+    return undefined;
+  }
+
+  const top = offset?.top ?? 0;
+  const bottom = offset?.bottom ?? 0;
+  const plotHeight = height - top - bottom;
+  const fraction = END_LABEL_SLOT_FRACTIONS[seriesKey];
+
+  return top + plotHeight * fraction;
+}
+
+function EndLabelMarker({
+  anchorX,
+  slotY,
+  name,
+  probability,
+  series
+}: {
+  anchorX: number;
+  slotY: number;
+  name: string;
+  probability: number | undefined;
+  series: (typeof SERIES)[number];
+}): ReactElement<SVGElement> {
+  const probabilityLabel =
+    typeof probability === "number" ? formatChartProbability(probability) : "—";
+  const nameY = slotY - 14;
+  const valueY = slotY + 14;
+
+  return (
+    <text textAnchor="end">
+      <tspan
+        x={anchorX}
+        y={nameY}
+        fill={series.color}
+        fontSize={14}
+        fontWeight={400}
+      >
+        {name}
+      </tspan>
+      <tspan
+        x={anchorX}
+        y={valueY}
+        fill={series.color}
+        fontSize={26}
+        fontWeight={600}
+      >
+        {probabilityLabel}
+      </tspan>
+    </text>
+  );
+}
+
+function EndLineDot({
+  cx,
+  cy,
+  index,
+  dataLength,
+  series
+}: {
+  cx?: number;
+  cy?: number;
+  index?: number;
+  dataLength: number;
+  series: (typeof SERIES)[number];
+}): ReactElement<SVGElement> {
+  if (index !== dataLength - 1 || cx === undefined || cy === undefined) {
+    return <g />;
+  }
+
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={10} fill={series.color} fillOpacity={0.2} />
+      <circle cx={cx} cy={cy} r={5} fill={series.color} />
+    </g>
+  );
+}
+
+function EndLabelLayer({
+  offset,
+  width,
+  height,
+  chartData,
+  seriesLabels
+}: ChartCustomizedProps & EndLabelChartConfig) {
+  const anchorX = resolvePlotRightAnchorX(width, offset);
+  const latestRow = chartData.at(-1);
+
+  if (anchorX === undefined || !latestRow) {
+    return null;
+  }
+
+  return (
+    <g className="pointer-events-none">
+      {SERIES.map((series) => {
+        const slotY = resolveFixedLabelSlotY(series.key, offset, height);
+
+        if (slotY === undefined || !Number.isFinite(slotY)) {
+          return null;
+        }
+
+        return (
+          <EndLabelMarker
+            key={series.key}
+            anchorX={anchorX}
+            slotY={slotY}
+            name={seriesLabels[series.key]}
+            probability={latestRow[series.key]}
+            series={series}
+          />
+        );
+      })}
+    </g>
+  );
+}
+
+/** Stable Recharts Customized component — do not pass an inline render function. */
+function EndLabelCustomized(chartProps: Record<string, unknown>) {
+  const config = useContext(EndLabelChartContext);
+
+  if (!config) {
+    return null;
+  }
+
+  return (
+    <EndLabelLayer
+      offset={chartProps.offset as ChartCustomizedProps["offset"]}
+      width={chartProps.width as number | undefined}
+      height={chartProps.height as number | undefined}
+      {...config}
+    />
+  );
 }
 
 export interface GameProbabilityChartProps {
@@ -102,133 +303,144 @@ export function GameProbabilityChart({
   );
 
   const yDomain = useMemo(() => getFixtureChartYDomain(data), [data]);
+  const endLabelChartConfig = useMemo(
+    () => ({
+      chartData,
+      seriesLabels
+    }),
+    [chartData, seriesLabels]
+  );
+  const dataLength = chartData.length;
+
+  const resolvedMaxElapsed = useMemo(() => {
+    if (!isLive) {
+      return 0;
+    }
+
+    if (maxElapsedSeconds > 0) {
+      return maxElapsedSeconds;
+    }
+
+    return Math.max(
+      ...data.map((point) => point.elapsedSeconds ?? 0),
+      LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS
+    );
+  }, [data, isLive, maxElapsedSeconds]);
+
+  const goalMarkerConfig = useMemo(
+    () => ({
+      events,
+      maxElapsedSeconds: resolvedMaxElapsed,
+      homeCode,
+      homeName: homeLabel,
+      awayCode,
+      awayName: awayLabel,
+    }),
+    [
+      awayCode,
+      awayLabel,
+      events,
+      homeCode,
+      homeLabel,
+      resolvedMaxElapsed,
+    ]
+  );
 
   if (data.length === 0) {
     return null;
   }
 
-  const resolvedMaxElapsed = isLive
-    ? maxElapsedSeconds > 0
-      ? maxElapsedSeconds
-      : Math.max(
-          ...data.map((point) => point.elapsedSeconds ?? 0),
-          LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS
-        )
-    : 0;
+  const chart = (
+    <LineChart
+      data={chartData}
+      margin={{
+        top: 56,
+        right: 8,
+        left: 4,
+        bottom: isLive ? 36 : 4
+      }}
+    >
+      <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
+      <XAxis
+        type={isLive ? "number" : "category"}
+        dataKey={isLive ? "elapsedSeconds" : "timestamp"}
+        domain={isLive ? [0, resolvedMaxElapsed] : undefined}
+        ticks={
+          isLive ? resolveLiveChartAxisTicks(resolvedMaxElapsed) : undefined
+        }
+        tick={{ fill: CHART_COLORS.muted, fontSize: 14, dy: 6 }}
+        axisLine={false}
+        tickLine={false}
+        minTickGap={24}
+        padding={{ left: 0, right: END_LABEL_GUTTER }}
+        tickFormatter={
+          isLive
+            ? (value: number) => formatMatchMinuteAxisLabel(value)
+            : (value: string) => formatGameChartXAxisTick(value, timeRange)
+        }
+      />
+      <YAxis
+        domain={yDomain}
+        orientation="right"
+        tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
+        axisLine={false}
+        tickLine={false}
+        tickFormatter={(value: number) => `${value}%`}
+        width={44}
+      />
+      <Tooltip
+        content={
+          <ChartTooltip
+            seriesLabels={seriesLabels}
+            isLive={isLive}
+            kickoffAt={kickoffAt}
+            timeRange={timeRange}
+          />
+        }
+      />
+      {SERIES.map((series) => (
+        <Line
+          key={series.key}
+          type="monotone"
+          dataKey={series.key}
+          stroke={series.color}
+          strokeWidth={1}
+          isAnimationActive={false}
+          dot={(props) => (
+            <EndLineDot {...props} dataLength={dataLength} series={series} />
+          )}
+          activeDot={{
+            r: 5,
+            fill: series.color,
+            stroke: `${series.color}33`,
+            strokeWidth: 3
+          }}
+        />
+      ))}
+      <Customized component={EndLabelCustomized} />
+      {isLive ? <Customized component={GoalEventMarkerCustomized} /> : null}
+    </LineChart>
+  );
+
+  const chartBody = (
+    <ResponsiveContainer width="100%" height="100%">
+      {chart}
+    </ResponsiveContainer>
+  );
 
   return (
     <div className="h-[280px] w-full min-h-[240px] sm:h-[320px] xl:h-[340px]">
       <div className="flex h-full gap-4">
         <div className="min-w-0 flex-1">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={chartData}
-              margin={{
-                top: 28,
-                right: 12,
-                left: 4,
-                bottom: isLive ? 36 : 4
-              }}
-            >
-              <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
-              <XAxis
-                type={isLive ? "number" : "category"}
-                dataKey={isLive ? "elapsedSeconds" : "timestamp"}
-                domain={isLive ? [0, resolvedMaxElapsed] : undefined}
-                ticks={
-                  isLive
-                    ? resolveLiveChartAxisTicks(resolvedMaxElapsed)
-                    : undefined
-                }
-                tick={{ fill: CHART_COLORS.muted, fontSize: 14, dy: 6 }}
-                axisLine={false}
-                tickLine={false}
-                minTickGap={24}
-                padding={{ left: 0, right: 32 }}
-                tickFormatter={
-                  isLive
-                    ? (value: number) =>
-                        formatLiveChartClockLabel(kickoffAt, value)
-                    : (value: string) =>
-                        formatGameChartXAxisTick(value, timeRange)
-                }
-              />
-              <YAxis
-                domain={yDomain}
-                orientation="right"
-                tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(value: number) => `${value}%`}
-                width={44}
-              />
-              <Tooltip
-                content={
-                  <ChartTooltip
-                    seriesLabels={seriesLabels}
-                    isLive={isLive}
-                    kickoffAt={kickoffAt}
-                    timeRange={timeRange}
-                  />
-                }
-              />
-              {SERIES.map((series) => (
-                <Line
-                  key={series.key}
-                  type="monotone"
-                  dataKey={series.key}
-                  stroke={series.color}
-                  strokeWidth={2}
-                  dot={(props) => {
-                    const { cx, cy, index } = props;
-                    if (
-                      index !== chartData.length - 1 ||
-                      cx === undefined ||
-                      cy === undefined
-                    ) {
-                      return <g />;
-                    }
-
-                    return (
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={5}
-                        fill={series.color}
-                        stroke={`${series.color}33`}
-                        strokeWidth={3}
-                      />
-                    );
-                  }}
-                  activeDot={{
-                    r: 5,
-                    fill: series.color,
-                    stroke: `${series.color}33`,
-                    strokeWidth: 3
-                  }}
-                />
-              ))}
-              {isLive ? (
-                <Customized
-                  component={(props: Record<string, unknown>) => (
-                    <GoalEventMarkerLayer
-                      offset={
-                        props.offset as GoalEventMarkerLayerProps["offset"]
-                      }
-                      width={props.width as number | undefined}
-                      height={props.height as number | undefined}
-                      maxElapsedSeconds={resolvedMaxElapsed}
-                      events={events}
-                      homeCode={homeCode}
-                      homeName={homeLabel}
-                      awayCode={awayCode}
-                      awayName={awayLabel}
-                    />
-                  )}
-                />
-              ) : null}
-            </LineChart>
-          </ResponsiveContainer>
+          <EndLabelChartProvider value={endLabelChartConfig}>
+            {isLive ? (
+              <GoalEventMarkerChartProvider value={goalMarkerConfig}>
+                {chartBody}
+              </GoalEventMarkerChartProvider>
+            ) : (
+              chartBody
+            )}
+          </EndLabelChartProvider>
         </div>
       </div>
     </div>
@@ -255,10 +467,10 @@ function ChartTooltip({
 
   const point = payload[0]?.payload as ChartRow | undefined;
   const timeLabel =
-    isLive && point?.timestamp
-      ? formatChartTimestampClockLabel(point.timestamp)
-      : typeof label === "number"
-        ? formatLiveChartClockLabel(kickoffAt, label)
+    isLive && typeof label === "number"
+      ? formatGoalEventTime(label)
+      : isLive && point?.timestamp
+        ? formatChartTimestampClockLabel(point.timestamp)
         : formatGameChartXAxisTick(String(label ?? ""), timeRange);
 
   return (
@@ -277,7 +489,7 @@ function ChartTooltip({
           >
             {series ? seriesLabels[series.key] : entry.dataKey}:{" "}
             {typeof entry.value === "number"
-              ? formatProbability(entry.value)
+              ? formatChartProbability(entry.value)
               : "—"}
           </p>
         );

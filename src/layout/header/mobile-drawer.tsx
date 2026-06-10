@@ -49,7 +49,7 @@ function MobileDrawer(props: any) {
               className="!items-start"
             />
           </RegionRestrictedControl>
-          <div className="flex flex-col justify-center items-start gap-0 rounded-lg border border-[#EBEBEB] h-[50px] px-2.5 min-w-[150px]">
+          <div className="flex flex-col justify-center items-start gap-0 rounded-lg border border-[#FFFFFF] h-[50px] px-2.5 min-w-[150px]">
             <span className={walletBalanceLabelClass}>Balance</span>
             <span className={cn(walletBalanceValueClass, "text-black !text-base")}>${balanceDisplay}</span>
           </div>

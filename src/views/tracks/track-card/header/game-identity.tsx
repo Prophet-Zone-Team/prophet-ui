@@ -32,13 +32,13 @@ export function GameIdentity({ match, homeTeam, awayTeam }: GameIdentityProps) {
           code={homeTeam.code}
           name={homeTeam.name}
           logoUrl={match.homeLogoUrl ?? homeTeam.logoUrl}
-          className="relative top-[-8px] z-[1] h-[22px] w-[22px] rounded-[2px] text-[22px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="relative top-[-8px] z-[1] h-[22px] w-[22px] rounded-[2px] text-[22px]"
         />
         <TeamFlag
           code={awayTeam.code}
           name={awayTeam.name}
           logoUrl={match.awayLogoUrl ?? awayTeam.logoUrl}
-          className="relative left-[-10px] h-[22px] w-[22px] rounded-[2px] text-[22px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="relative left-[-10px] h-[22px] w-[22px] rounded-[2px] text-[22px]"
         />
       </div>
       <div className="min-w-0">

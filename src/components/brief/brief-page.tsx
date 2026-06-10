@@ -11,6 +11,7 @@ import { createDailyBriefMarkdown, createWatchlistAlerts } from "@/lib/market/br
 import type { WatchlistAlert } from "@/lib/market/brief";
 import type { MarketSignal, NewsEvent, TeamMarketSnapshot, UserFavourite } from "@/types/market";
 import { DataStatusBanner, SourceDisclosure } from "@/components/data/data-status-banner";
+import { CopyButton } from "@/components/feedback/copy-button";
 import { formatChange, formatProbability, formatVolume, getChangeTone } from "@/components/home/market-formatters";
 import { useAuthOptional } from "@/context/auth";
 import { fetchJson } from "@/lib/team/client-fetch";
@@ -76,12 +77,6 @@ export function BriefPage({ snapshots, newsEvents, dataStatus }: BriefPageProps)
     };
   }, [auth?.session?.walletAddress]);
 
-  async function exportMarkdown() {
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(markdown);
-    }
-  }
-
   return (
     <main className="terminal-grid min-h-screen px-5 py-8 sm:px-8 lg:px-10">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:gap-10">
@@ -143,13 +138,13 @@ export function BriefPage({ snapshots, newsEvents, dataStatus }: BriefPageProps)
                 Copy a neutral market-context summary for notes, newsletters, or internal review.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={exportMarkdown}
+            <CopyButton
+              text={markdown}
+              ariaLabel="Copy markdown brief"
               className="rounded border border-terminal-green/60 bg-terminal-green/10 px-4 py-3 text-sm font-semibold text-terminal-green transition hover:bg-terminal-green/20"
             >
               Copy Markdown
-            </button>
+            </CopyButton>
           </div>
           <pre className="mt-6 max-h-[360px] overflow-auto rounded-lg border border-terminal-line bg-black/35 p-4 text-xs leading-5 text-terminal-muted">
             {markdown}

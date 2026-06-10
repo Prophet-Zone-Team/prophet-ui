@@ -13,7 +13,9 @@ import {
   useConfigHydrated,
   useFastBidAmount
 } from "@/store";
-import type { TeamMarketSnapshot } from "@/types/market";
+import type { BidOrderPreview } from "@/lib/market/polymarket-order";
+import type { TeamMarketSnapshot, UserOrderPreview } from "@/types/market";
+import type { SubmitOrderResult } from "@/views/trade/trade-widget/trade-ticket-helpers";
 
 export interface FastBidButtonProps {
   snapshot: TeamMarketSnapshot;
@@ -21,7 +23,16 @@ export interface FastBidButtonProps {
   children?: ReactNode;
   showAmount?: boolean;
   amountClassName?: string;
+  /** When set, overrides the configured Fast Bid amount from user settings. */
+  amount?: number;
   disabled?: boolean;
+  /** When false, skips POST /v1/user/transaction after a successful submit. Defaults to true. */
+  reportTransaction?: boolean;
+  onSuccess?: (input: {
+    result: SubmitOrderResult;
+    preview: BidOrderPreview;
+    userOrderPreview: UserOrderPreview;
+  }) => void | Promise<void>;
 }
 
 export function FastBidButton({
@@ -30,18 +41,22 @@ export function FastBidButton({
   children,
   showAmount = true,
   amountClassName,
-  disabled = false
+  amount: amountOverride,
+  disabled = false,
+  reportTransaction = true,
+  onSuccess
 }: FastBidButtonProps) {
   const router = useRouter();
   const auth = useAuthOptional();
   const fastBidAmount = useFastBidAmount();
   const hasHydrated = useConfigHydrated();
   const [status, setStatus] = useState<FastBidStatus>("idle");
-  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isBuyRestricted = auth?.isBuyRestricted ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
-  const regionRestricted = isAuthenticated && isRegionBlocked;
+  const regionRestricted = isAuthenticated && isBuyRestricted;
 
-  const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
+  const configuredAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
+  const displayAmount = amountOverride ?? configuredAmount;
 
   const buttonLabel = useMemo(() => {
     if (status === "checking") {
@@ -70,7 +85,9 @@ export function FastBidButton({
       amount: displayAmount,
       auth,
       router,
-      onStatusChange: setStatus
+      onStatusChange: setStatus,
+      reportTransaction,
+      onSuccess
     });
   }
 

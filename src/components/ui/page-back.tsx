@@ -9,7 +9,7 @@ export function PageBack({ className }: { className?: string }) {
       type="button"
       onClick={() => router.back()}
       className={cn(
-        "mb-3 inline-flex items-center gap-1.5 text-sm font-[556] leading-[17px] text-black hover:opacity-80",
+        "mb-3 inline-flex items-center gap-1.5 text-sm font-[500] leading-[17px] text-black hover:opacity-80",
         className
       )}
     >

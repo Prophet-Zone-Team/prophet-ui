@@ -3,13 +3,19 @@ import { describe, it, beforeEach } from "node:test";
 
 import {
   ProphetApiError,
+  applyProphetReferral,
   bindProphetTelegram,
+  getProphetTelegramBindStatus,
+  getProphetTopTracks,
   getProphetTrackList,
   getProphetTracks,
+  getProphetUserReferral,
+  getProphetUserTransactions,
   isProphetAuthenticated,
   logoutProphet,
   requireProphetApiToken,
   setProphetApiToken,
+  reportProphetUserTransaction,
   trackProphet,
   untrackProphet
 } from "@/service/prophet";
@@ -83,7 +89,25 @@ describe("prophet auth guards", () => {
     );
     await assertAuthRequired(() => getProphetTracks());
     await assertAuthRequired(() => getProphetTrackList());
+    await assertAuthRequired(() => getProphetTelegramBindStatus());
     await assertAuthRequired(() => untrackProphet({ slug: "brazil" }));
+    await assertAuthRequired(() =>
+      reportProphetUserTransaction({
+        amount: "10",
+        tx_hash: "order-1",
+        type: "buy",
+        order_type: "taker",
+        order_status: "completed",
+        order_value_usdc: "10"
+      })
+    );
+    await assertAuthRequired(() =>
+      getProphetUserTransactions({ page: 1, page_size: 20 })
+    );
+    await assertAuthRequired(() => getProphetUserReferral());
+    await assertAuthRequired(() =>
+      applyProphetReferral({ referral_code: "TESTCODE" })
+    );
   });
 
   it("logoutProphet clears token and authentication state", () => {
@@ -94,5 +118,11 @@ describe("prophet auth guards", () => {
 
     assert.equal(isProphetAuthenticated(), false);
     assert.throws(() => requireProphetApiToken());
+  });
+
+  it("getProphetTopTracks does not require authentication token", () => {
+    logoutProphet();
+    assert.equal(isProphetAuthenticated(), false);
+    assert.equal(typeof getProphetTopTracks, "function");
   });
 });

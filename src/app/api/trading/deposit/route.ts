@@ -6,6 +6,11 @@ import {
 } from "@/server/trading/bridge";
 import { getTradingChainId } from "@/server/trading/clob-auth";
 import { getTradingContractAddresses } from "@/server/trading/contracts";
+import {
+  getClientGeoFromRequest,
+  refreshSessionEligibilityIfStale,
+} from "@/server/trading/eligibility";
+import { assertEligibilityForBuySetup } from "@/server/trading/eligibility-order-guard";
 import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
@@ -34,6 +39,22 @@ export async function GET(request: Request) {
       return NextResponse.json({
         status: await fetchBridgeTransactionStatus(statusAddress),
       });
+    }
+
+    const eligibility = await refreshSessionEligibilityIfStale(
+      record.session,
+      getClientGeoFromRequest(request),
+    );
+    const depositEligibility = assertEligibilityForBuySetup(eligibility);
+
+    if (!depositEligibility.ok) {
+      return NextResponse.json(
+        {
+          error: depositEligibility.reason,
+          eligibilityStatus: depositEligibility.status,
+        },
+        { status: 403 },
+      );
     }
 
     const contracts = getTradingContractAddresses();

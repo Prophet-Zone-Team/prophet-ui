@@ -11,7 +11,12 @@ import {
   type GammaMarketRecord
 } from "@/lib/market/polymarket-gamma";
 import { resolveWorldCupTeamByGroupItemTitle } from "@/lib/market/resolve-winner-team";
-import type { ProphetUserTrackItem } from "@/types/prophet-api";
+import { parseJsonArrayField } from "@/lib/analytics/map-news";
+import type {
+  ProphetUserTrackItem,
+  ProphetUserTrackLatestNews,
+  ProphetUserTrackNewsStat
+} from "@/types/prophet-api";
 import type {
   Team,
   TeamMarketData,
@@ -22,6 +27,14 @@ import type {
   TrackCardGameProps,
   TrackCardProps
 } from "@/views/tracks/track-card";
+import type {
+  TrackCardGamePowerRanking,
+  TrackCardSignalItem,
+  TrackCardSignalsSummary,
+  TrackCardTeamPowerRanking,
+  TrackCardYouBid
+} from "@/views/tracks/track-card/types";
+import { formatNumber } from "@/utils";
 
 function parseNumericField(value: string | undefined): number | undefined {
   if (value === undefined || value.trim() === "") {
@@ -145,6 +158,183 @@ function hashFixtureId(value: string): number {
   return hash % 1_000_000 || 1;
 }
 
+function parseUnknownJsonField(value: unknown): unknown {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return undefined;
+  }
+}
+
+function parseMatchedPlayers(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((entry): entry is string => typeof entry === "string");
+  }
+
+  if (typeof value === "string") {
+    return parseJsonArrayField(value);
+  }
+
+  return [];
+}
+
+function normalizeLatestNewsEntry(
+  entry: unknown
+): ProphetUserTrackLatestNews | undefined {
+  if (!entry || typeof entry !== "object") {
+    return undefined;
+  }
+
+  const record = entry as Record<string, unknown>;
+  const title = typeof record.title === "string" ? record.title : undefined;
+
+  if (!title) {
+    return undefined;
+  }
+
+  const rawScore = record.score;
+  const score =
+    typeof rawScore === "number"
+      ? rawScore
+      : typeof rawScore === "string"
+        ? Number(rawScore)
+        : 0;
+
+  const urlToImage =
+    typeof record.url_to_image === "string" && record.url_to_image.trim()
+      ? record.url_to_image.trim()
+      : undefined;
+
+  return {
+    title,
+    score: Number.isFinite(score) ? score : 0,
+    matched_players: parseMatchedPlayers(record.matched_players),
+    url_to_image: urlToImage
+  };
+}
+
+function parseTrackLatestNews(value: unknown): ProphetUserTrackLatestNews[] {
+  const parsed = parseUnknownJsonField(value);
+
+  if (!parsed) {
+    return [];
+  }
+
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+
+  return parsed
+    .map(normalizeLatestNewsEntry)
+    .filter(
+      (entry): entry is ProphetUserTrackLatestNews => entry !== undefined
+    );
+}
+
+function parseTeamNewsStat(
+  value: ProphetUserTrackItem["team_news_stat"]
+): ProphetUserTrackNewsStat | undefined {
+  const parsed = parseUnknownJsonField(value);
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return undefined;
+  }
+
+  return parsed as ProphetUserTrackNewsStat;
+}
+
+function resolveFifaRankAtIndex(
+  rankings: number[] | undefined,
+  index: number
+): number | null {
+  const value = rankings?.[index];
+
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function mapTrackYouBid(item: ProphetUserTrackItem): TrackCardYouBid | undefined {
+  const amount = parseNumericField(item.bid_amount);
+
+  if (amount === undefined || amount === 0) {
+    return undefined;
+  }
+
+  return {
+    amountLabel: formatNumber(amount, 2, true, { prefix: "$" }) as string
+  };
+}
+
+function mapTrackFifaRankingForTeam(
+  item: ProphetUserTrackItem
+): TrackCardTeamPowerRanking {
+  return { rank: resolveFifaRankAtIndex(item.fifa_rankings, 0) };
+}
+
+function mapTrackFifaRankingForGame(
+  item: ProphetUserTrackItem,
+  homeTeam: Team,
+  awayTeam: Team
+): TrackCardGamePowerRanking {
+  const rankings = item.fifa_rankings;
+
+  return {
+    home: {
+      team: homeTeam,
+      rank: resolveFifaRankAtIndex(rankings, 0)
+    },
+    away: {
+      team: awayTeam,
+      rank: resolveFifaRankAtIndex(rankings, 1)
+    }
+  };
+}
+
+function buildTrackSignalThumbnailAlt(
+  news: ProphetUserTrackLatestNews
+): string {
+  if (news.matched_players[0]?.trim()) {
+    return news.matched_players[0].trim();
+  }
+
+  return news.title.split(/\s+/).slice(0, 2).join(" ") || "News";
+}
+
+function mapLatestNewsToTrackSignalItem(
+  news: ProphetUserTrackLatestNews,
+  index: number
+): TrackCardSignalItem {
+  return {
+    id: `${index}-${news.title}`,
+    headline: news.title,
+    sentiment: news.score >= 50 ? "positive" : "negative",
+    thumbnailUrl: news.url_to_image,
+    thumbnailAlt: buildTrackSignalThumbnailAlt(news)
+  };
+}
+
+function mapTrackNewsStat(item: ProphetUserTrackItem): {
+  signals: TrackCardSignalsSummary;
+  signalItems: TrackCardSignalItem[];
+} {
+  const newsStat = parseTeamNewsStat(item.team_news_stat);
+  const latestNews = parseTrackLatestNews(newsStat?.latest_news);
+
+  return {
+    signals: { count: newsStat?.news_count ?? 0 },
+    signalItems: latestNews.map(mapLatestNewsToTrackSignalItem)
+  };
+}
+
 function buildGameMatch(
   item: ProphetUserTrackItem,
   homeTeam: Team,
@@ -201,6 +391,7 @@ function mapProphetGameTrackToCardProps(
   }
 
   const { probability, teamCode } = resolveGameTrackProbability(item);
+  const { signals, signalItems } = mapTrackNewsStat(item);
 
   return {
     variant: "game",
@@ -210,12 +401,14 @@ function mapProphetGameTrackToCardProps(
     probability,
     probabilityTeamCode: teamCode,
     volume: parseNumericField(item.volume) ?? 0,
-    powerRanking: {
-      home: { team: teams.homeTeam, rank: 0 },
-      away: { team: teams.awayTeam, rank: 0 }
-    },
-    signals: { count: 0 },
-    signalItems: []
+    powerRanking: mapTrackFifaRankingForGame(
+      item,
+      teams.homeTeam,
+      teams.awayTeam
+    ),
+    signals,
+    signalItems,
+    youBid: mapTrackYouBid(item)
   };
 }
 
@@ -307,12 +500,14 @@ function mapProphetTeamTrackToCardProps(
     team,
     market: buildTeamMarketData(team.id, item)
   };
+  const { signals, signalItems } = mapTrackNewsStat(item);
 
   return {
     snapshot,
-    powerRanking: { rank: 0 },
-    signals: { count: 0 },
-    signalItems: []
+    powerRanking: mapTrackFifaRankingForTeam(item),
+    signals,
+    signalItems,
+    youBid: mapTrackYouBid(item)
   };
 }
 

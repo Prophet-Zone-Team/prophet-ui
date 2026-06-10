@@ -1,17 +1,31 @@
+import {
+  CLOSED_MARKET_DISABLED_REASON,
+  isMarketClosedForTrading
+} from "@/lib/market/trading-market-status";
+import type { CashBalanceView } from "@/types/funding";
 import type {
   OrderOutcomeSide,
   TeamMarketSnapshot,
-  UserPositionRecord,
-  UserTradingReadiness
+  UserPositionRecord
 } from "@/types/market";
+
+export interface GamePositionTokenMatch {
+  yesTokenId?: string;
+  noTokenId?: string;
+  yesOutcome?: string;
+  noOutcome?: string;
+}
 import type {
-  PortfolioSeriesPoint,
-  UserActivityRecord,
+  PortfolioTransactionRecord,
   UserOpenOrder
 } from "@/lib/portfolio/types";
 
 export function safeNumber(value: number | undefined): number {
   return Number.isFinite(value) ? (value ?? 0) : 0;
+}
+
+export function canRedeemPosition(position: UserPositionRecord): boolean {
+  return position.redeemable && position.size > 0 && position.curPrice > 0;
 }
 
 export function roundMoney(value: number): number {
@@ -57,6 +71,37 @@ export function findSnapshotForConditionId(
   );
 }
 
+export function isPortfolioMarketClosedForTrading(input: {
+  snapshot?: TeamMarketSnapshot;
+  endDate?: string;
+}): boolean {
+  if (
+    input.snapshot &&
+    isMarketClosedForTrading(input.snapshot.market.polymarket?.closed)
+  ) {
+    return true;
+  }
+
+  if (input.endDate) {
+    const end = new Date(input.endDate);
+
+    if (!Number.isNaN(end.getTime()) && end.getTime() <= Date.now()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function getPortfolioMarketClosedDisabledReason(input: {
+  snapshot?: TeamMarketSnapshot;
+  endDate?: string;
+}): string | undefined {
+  return isPortfolioMarketClosedForTrading(input)
+    ? CLOSED_MARKET_DISABLED_REASON
+    : undefined;
+}
+
 export function isAuthoritativeSnapshotForPosition(
   position: UserPositionRecord,
   snapshot: TeamMarketSnapshot
@@ -100,6 +145,37 @@ export function resolveOutcomeSideForPosition(
   return position.outcomeIndex === 0 ? "yes" : "no";
 }
 
+export function resolveOutcomeSideForGamePosition(
+  position: UserPositionRecord,
+  tokens: GamePositionTokenMatch
+): OrderOutcomeSide {
+  if (tokens.yesTokenId && tokens.yesTokenId === position.asset) {
+    return "yes";
+  }
+
+  if (tokens.noTokenId && tokens.noTokenId === position.asset) {
+    return "no";
+  }
+
+  const normalizedOutcome = position.outcome.trim().toLowerCase();
+
+  if (
+    tokens.yesOutcome &&
+    tokens.yesOutcome.trim().toLowerCase() === normalizedOutcome
+  ) {
+    return "yes";
+  }
+
+  if (
+    tokens.noOutcome &&
+    tokens.noOutcome.trim().toLowerCase() === normalizedOutcome
+  ) {
+    return "no";
+  }
+
+  return position.outcomeIndex === 0 ? "yes" : "no";
+}
+
 export function derivePositionSellReceiveAmount(
   position: UserPositionRecord,
   selectedShares: number
@@ -112,100 +188,87 @@ export function derivePositionSellReceiveAmount(
   return roundMoney(position.currentValue * ratio);
 }
 
-export function buildPositionTimeMap(
-  activityHistory: UserActivityRecord[]
+function transactionMatchesPosition(
+  transaction: PortfolioTransactionRecord,
+  position: UserPositionRecord
+): boolean {
+  if (transaction.slug) {
+    const slugs = [position.slug, position.eventSlug].filter(Boolean);
+
+    if (slugs.some((slug) => slug === transaction.slug)) {
+      return true;
+    }
+  }
+
+  if (transaction.teamName) {
+    const team = transaction.teamName.toLowerCase();
+    const text = `${position.title} ${position.slug}`.toLowerCase();
+
+    if (text.includes(team)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function buildPositionTimeMapFromTransactions(
+  transactions: PortfolioTransactionRecord[],
+  positions: UserPositionRecord[]
 ): Map<string, string> {
   const map = new Map<string, string>();
 
-  for (const activity of activityHistory) {
-    const tokenId = activity.asset;
-    const existing = map.get(tokenId);
-    const activityTime = new Date(activity.timestamp * 1000).toISOString();
+  for (const position of positions) {
+    for (const transaction of transactions) {
+      if (!transactionMatchesPosition(transaction, position)) {
+        continue;
+      }
 
-    if (!existing || new Date(activityTime).getTime() > new Date(existing).getTime()) {
-      map.set(tokenId, activityTime);
+      const existing = map.get(position.asset);
+      const transactionTime = transaction.createdAt;
+
+      if (
+        !existing ||
+        new Date(transactionTime).getTime() > new Date(existing).getTime()
+      ) {
+        map.set(position.asset, transactionTime);
+      }
     }
   }
 
   return map;
 }
 
-export function buildPerformanceSeries(
-  positions: UserPositionRecord[],
-  snapshots: TeamMarketSnapshot[],
-  portfolioValue: number,
-  pnl: number
-): PortfolioSeriesPoint[] {
-  const dates = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - index));
-    return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
-  });
-
-  if (positions.length === 0 || portfolioValue <= 0) {
-    return dates.map((date) => ({ date, value: 0 }));
-  }
-
-  const base = Math.max(0, portfolioValue - pnl);
-  const movementBias = positions.reduce((sum, position) => {
-    const snapshot = findSnapshotForPosition(position, snapshots);
-    return sum + (snapshot?.market.change7d ?? 0) * safeNumber(position.currentValue) * 0.003;
-  }, 0);
-
-  return dates.map((date, index) => {
-    const progress = index / Math.max(1, dates.length - 1);
-    const value = base + pnl * progress + Math.sin(index * 1.7) * movementBias;
-    return { date, value: roundMoney(Math.max(0, value)) };
-  });
-}
-
 export interface PortfolioViewModel {
   portfolioValue: number;
   availableToTrade: number;
   totalPositionValue: number;
-  unrealizedPnl: number;
-  unrealizedPnlPercent: number;
-  performanceSeries: PortfolioSeriesPoint[];
   positionTimeMap: Map<string, string>;
 }
 
 export function buildPortfolioView({
   positions,
-  snapshots,
-  readiness,
-  activityHistory
+  cash,
+  transactions
 }: {
   positions: UserPositionRecord[];
-  snapshots: TeamMarketSnapshot[];
-  readiness?: UserTradingReadiness;
-  activityHistory: UserActivityRecord[];
+  cash?: CashBalanceView;
+  transactions: PortfolioTransactionRecord[];
 }): PortfolioViewModel {
   const totalPositionValue = roundMoney(
     positions.reduce((sum, position) => sum + safeNumber(position.currentValue), 0)
   );
-  const availableToTrade = safeNumber(readiness?.balances?.usdcAvailable);
+  const availableToTrade = safeNumber(cash?.available);
   const portfolioValue = roundMoney(totalPositionValue + availableToTrade);
-  const unrealizedPnl = roundMoney(
-    positions.reduce((sum, position) => sum + safeNumber(position.cashPnl), 0)
+  const positionTimeMap = buildPositionTimeMapFromTransactions(
+    transactions,
+    positions
   );
-  const costBasis = totalPositionValue - unrealizedPnl;
-  const unrealizedPnlPercent =
-    costBasis > 0 ? roundMoney((unrealizedPnl / costBasis) * 100) : 0;
-  const performanceSeries = buildPerformanceSeries(
-    positions,
-    snapshots,
-    portfolioValue,
-    unrealizedPnl
-  );
-  const positionTimeMap = buildPositionTimeMap(activityHistory);
 
   return {
     portfolioValue,
     availableToTrade,
     totalPositionValue,
-    unrealizedPnl,
-    unrealizedPnlPercent,
-    performanceSeries,
     positionTimeMap
   };
 }

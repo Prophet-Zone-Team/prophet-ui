@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
+import { CopyButton } from "@/components/feedback/copy-button";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { PRIVATE_TOPUP_INTRO_MODAL_WIDTH } from "@/views/portfolio/private-topup/config";
@@ -43,18 +42,6 @@ export function PrivateTopupIntroDialog({
   onOpenGuide,
   onChangeWallet,
 }: PrivateTopupIntroDialogProps) {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(walletAddress);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
-
   return (
     <FundingResponsiveOverlay
       open={open}
@@ -70,7 +57,7 @@ export function PrivateTopupIntroDialog({
         <div className="relative px-5 pb-10 md:pb-5 pt-5">
           <button
             type="button"
-            className="absolute left-5 top-5 border-0 bg-transparent p-0 text-[16px] font-[457] text-[#3168ff] transition-opacity hover:opacity-80"
+            className="absolute left-5 top-5 border-0 bg-transparent p-0 text-[16px] font-[400] text-[#3168ff] transition-opacity hover:opacity-80"
             onClick={() => {
               // onClose();
               onOpenGuide();
@@ -86,18 +73,22 @@ export function PrivateTopupIntroDialog({
               alt="Private mode"
               className="h-[52px] w-[70px] object-contain"
             />
-            <h2 className="m-0 mt-4 text-center text-[26px] font-[556] leading-normal text-black">
+            <h2 className="m-0 mt-4 text-center text-[26px] font-[500] leading-normal text-black">
               Private Balance
             </h2>
             <p className="m-0 mt-4 max-w-[416px] text-center text-[16px] font-[400] leading-normal text-black">
               Trade on Prophet with stronger onchain privacy.
               <br />
               <br />
-              For better privacy, make sure your connected wallet has no past activity linked to known wallets, exchanges, or your main account. You can also create a new wallet before using Private Top-Up.
+              For better privacy, make sure your connected wallet has no past
+              activity linked to known wallets, exchanges, or your main account.
+              You can also create a new wallet before using Private Top-Up.
             </p>
           </div>
 
-          <div className={`${privateTopupIntroConnectedCardClass} relative mt-6 p-3`}>
+          <div
+            className={`${privateTopupIntroConnectedCardClass} relative mt-6 p-3`}
+          >
             <div className={privateTopupWarningBannerClass}>
               <img
                 src="/icons/icon-info.svg"
@@ -110,23 +101,19 @@ export function PrivateTopupIntroDialog({
 
             <div className="mt-3 flex items-start justify-between gap-3">
               <div className="flex min-w-0 flex-1 items-center gap-3">
-                <WalletAvatar
-                  address={walletAddress}
-                  className="size-[34px]"
-                />
+                <WalletAvatar address={walletAddress} className="size-[34px]" />
                 <div className="min-w-0">
-                  <p className="m-0 text-[14px] font-[556] text-[#909090]">
+                  <p className="m-0 text-[14px] font-[500] text-[#909090]">
                     Connected Account
                   </p>
                   <div className="mt-0.5 flex items-center gap-2">
-                    <p className="m-0 truncate text-[16px] font-[556] text-black">
+                    <p className="m-0 truncate text-[16px] font-[500] text-black">
                       {formatShortWallet(walletAddress)}
                     </p>
-                    <button
-                      type="button"
+                    <CopyButton
+                      text={walletAddress}
+                      ariaLabel="Copy wallet address"
                       className="inline-flex shrink-0 border-0 bg-transparent p-0 transition-opacity hover:opacity-70"
-                      aria-label={copied ? "Copied" : "Copy wallet address"}
-                      onClick={() => void handleCopy()}
                     >
                       <img
                         src="/icons/icon-copy.svg"
@@ -134,7 +121,7 @@ export function PrivateTopupIntroDialog({
                         className="size-3"
                         aria-hidden
                       />
-                    </button>
+                    </CopyButton>
                   </div>
                 </div>
               </div>
@@ -149,8 +136,8 @@ export function PrivateTopupIntroDialog({
           </div>
 
           <p className={`${privateTopupInfoBannerClass} mt-4`}>
-            Top up your private balance first, then withdraw only the amount you need to use on Prophet.
-            Your funds always remain under your custody.
+            Top up your private balance first, then withdraw only the amount you
+            need to use on Prophet. Your funds always remain under your custody.
           </p>
 
           {error ? (

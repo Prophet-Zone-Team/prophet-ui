@@ -1,6 +1,15 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { cn } from "@/lib/cn";
+
+import {
+  PaginationFirstIcon,
+  PaginationLastIcon,
+  PaginationNextIcon,
+  PaginationPreviousIcon,
+} from "./pagination-icons";
 
 export type PaginationProps = {
   page: number;
@@ -10,60 +19,104 @@ export type PaginationProps = {
   className?: string;
 };
 
-export function Pagination({
+function PaginationNavButton({
+  label,
+  disabled,
+  onClick,
+  children,
+  className,
+}: {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center justify-center text-[#909090] transition-opacity",
+        disabled
+          ? "cursor-not-allowed opacity-40"
+          : "hover:opacity-70",
+        className,
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function CompactPagination({
   page,
   pageSize,
   total,
   onPageChange,
-  className
+  className,
 }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const canGoPrevious = page > 1;
   const canGoNext = page < totalPages;
+  const canGoFirst = page > 1;
+  const canGoLast = page < totalPages;
 
-  if (total <= pageSize) {
-    return null;
-  }
+  // if (total <= pageSize) {
+  //   return null;
+  // }
 
   return (
     <nav
       aria-label="Pagination"
       className={cn(
-        "flex flex-wrap items-center justify-between gap-3 px-3 py-4 md:px-5",
-        className
+        "flex items-center justify-end gap-3 px-[30px] py-4",
+        className,
       )}
     >
-      <button
-        type="button"
-        className={cn(
-          "rounded-[8px] border border-[#EBEBEB] bg-white px-3 py-2 text-[14px] font-[457] leading-[17px] text-black transition-colors",
-          canGoPrevious
-            ? "hover:border-[#D8D8D8]"
-            : "cursor-not-allowed text-[#C0C0C0]"
-        )}
+      <PaginationNavButton
+        label="First page"
+        disabled={!canGoFirst}
+        onClick={() => onPageChange(1)}
+      >
+        <PaginationFirstIcon />
+      </PaginationNavButton>
+
+      <PaginationNavButton
+        label="Previous page"
         disabled={!canGoPrevious}
         onClick={() => onPageChange(page - 1)}
       >
-        Previous
-      </button>
+        <PaginationPreviousIcon />
+      </PaginationNavButton>
 
-      <span className="text-[14px] font-[457] leading-[17px] text-[#909090]">
-        Page {page} of {totalPages}
+      <span className="text-[12px] leading-[normal] text-[#909090]">
+        Page {page} / {totalPages}
       </span>
 
-      <button
-        type="button"
-        className={cn(
-          "rounded-[8px] border border-[#EBEBEB] bg-white px-3 py-2 text-[14px] font-[457] leading-[17px] text-black transition-colors",
-          canGoNext
-            ? "hover:border-[#D8D8D8]"
-            : "cursor-not-allowed text-[#C0C0C0]"
-        )}
+      <PaginationNavButton
+        label="Next page"
         disabled={!canGoNext}
         onClick={() => onPageChange(page + 1)}
       >
-        Next
-      </button>
+        <PaginationNextIcon />
+      </PaginationNavButton>
+
+      <PaginationNavButton
+        label="Last page"
+        disabled={!canGoLast}
+        onClick={() => onPageChange(totalPages)}
+      >
+        <PaginationLastIcon />
+      </PaginationNavButton>
     </nav>
   );
+}
+
+export function Pagination({
+  ...props
+}: PaginationProps) {
+  return <CompactPagination {...props} />;
 }

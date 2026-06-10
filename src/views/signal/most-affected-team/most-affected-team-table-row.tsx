@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 import { formatNetImpact } from "./format";
 import { mostAffectedTeamTableGridClass } from "./most-affected-team-table-header";
 import type { MostAffectedTeamEntry } from "./types";
+import { useRouter } from "next/navigation";
 
 export type MostAffectedTeamTableRowProps = {
   entry: MostAffectedTeamEntry;
@@ -12,25 +13,36 @@ export type MostAffectedTeamTableRowProps = {
 
 export function MostAffectedTeamDesktopRow({ entry }: MostAffectedTeamTableRowProps) {
   const isNegativeImpact = entry.netImpact < 0;
+  const router = useRouter();
 
   return (
     <div
       role="row"
       className={cn(
         mostAffectedTeamTableGridClass,
-        "items-center py-[10px] text-[16px] font-[457] leading-[19px] text-black"
+        "items-center py-[10px] text-[16px] font-[400] leading-[19px] text-black cursor-pointer hover:bg-[#F0F2F5] duration-150"
       )}
+      onClick={() => {
+        if (entry.link) {
+          router.push(entry.link);
+        }
+      }}
     >
       <span role="cell" className="tabular-nums">
         {entry.rank}
       </span>
-      <div role="cell" className="flex min-w-0 items-center gap-[8px]">
+      <div
+        role="cell"
+        className="flex min-w-0 items-center gap-[8px] overflow-hidden"
+      >
         <TeamFlag
           code={entry.teamCode}
           name={entry.teamName}
-          className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px]"
         />
-        <span>{entry.teamName}</span>
+        <span className="whitespace-nowrap flex-1 w-0 overflow-hidden text-ellipsis">
+          {entry.teamName}
+        </span>
       </div>
       <span
         role="cell"
@@ -53,20 +65,28 @@ export function MostAffectedTeamMobileCard({
   className
 }: MostAffectedTeamTableRowProps) {
   const isNegativeImpact = entry.netImpact < 0;
+  const router = useRouter();
 
   return (
     <article
       className={cn(
-        "flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[457] leading-[17px] text-black",
+        "flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black",
         className
       )}
+      onClick={() => {
+        if (entry.link) {
+          router.push(entry.link);
+        }
+      }}
     >
       <div className="flex items-center gap-2">
-        <span className="w-8 shrink-0 tabular-nums font-[500]">{entry.rank}</span>
+        <span className="w-8 shrink-0 tabular-nums font-[500]">
+          {entry.rank}
+        </span>
         <TeamFlag
           code={entry.teamCode}
           name={entry.teamName}
-          className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px]"
         />
         <span className="min-w-0 truncate font-[500]">{entry.teamName}</span>
       </div>

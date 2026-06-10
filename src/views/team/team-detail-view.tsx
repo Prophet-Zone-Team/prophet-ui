@@ -1,7 +1,9 @@
 "use client";
 
 import type { MarketDataMeta } from "@/data/providers/types";
+import { useAnalyticsTeamMarketNews } from "@/hooks/analytics/use-analytics-team-market-news";
 import { useTeamDetail } from "@/hooks/team/use-team-detail";
+import { getTeamMarketMovementNarrative } from "@/lib/analytics/map-team-market-news";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import { DossierStrip } from "@/views/team/dossier-strip";
@@ -15,7 +17,6 @@ import { TeamMarketIntelligencePanel } from "@/views/team/team-market-intelligen
 import { TeamNewsSignalsPanel } from "@/views/team/team-news-signals-panel";
 import { TeamNextMatchPanel } from "@/views/team/team-next-match-panel";
 import { TeamProbabilityPanel } from "@/views/team/team-probability-panel";
-import { TeamRecentMatchesPanel } from "@/views/team/team-recent-matches-panel";
 import { TeamStrengthPanel } from "@/views/team/team-strength-panel";
 import {
   teamMainColumnClass,
@@ -31,10 +32,8 @@ export interface TeamDetailViewProps {
 }
 
 export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
-  const { data, isLoading, isError, refetch } = useTeamDetail(
-    snapshot.team.name,
-    snapshot.team.code
-  );
+  const { data, isLoading, isError, refetch } = useTeamDetail(snapshot.team.name);
+  const marketNews = useAnalyticsTeamMarketNews(snapshot.team.name);
 
   if (isError && !data) {
     return (
@@ -46,7 +45,7 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
         />
         <button
           type="button"
-          className="mt-4 text-sm font-[556] text-[#125afc] hover:underline"
+          className="mt-4 text-sm font-[500] text-[#125afc] hover:underline"
           onClick={() => void refetch()}
         >
           Retry
@@ -64,11 +63,10 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
       ) : (
         <>
           <DossierStrip
-            formResults={data?.formResults ?? []}
-            latestLabel={data?.latestLabel}
             groupLabel={data?.groupLabel}
             peers={data?.groupPeers ?? []}
             keyStars={data?.keyStars ?? []}
+            recentMatches={data?.recentMatches ?? []}
           />
 
           <div className={teamMainGridClass}>
@@ -82,21 +80,31 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
               </div>
 
               <TeamNewsSignalsPanel
-                items={data?.newsItems ?? []}
+                items={marketNews.newsItems}
                 snapshot={snapshot}
               />
-              <TeamLineupPanel squad={[]} injuries={[]} dataIssues={[]} />
+              {/* <TeamLineupPanel squad={[]} injuries={[]} dataIssues={[]} /> */}
               <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
-              <TeamRecentMatchesPanel matches={data?.recentMatches ?? []} />
             </div>
 
             <aside className={teamSidebarClass}>
               <TeamNextMatchPanel nextMatch={data?.nextMatch} snapshot={snapshot} />
-              <TradeWidget snapshot={snapshot} />
+              <TradeWidget
+                snapshot={snapshot}
+                outcomeButtonClassName="w-full"
+                outcomeButtonContainerClassName="gap-3"
+              />
               <TeamMarketIntelligencePanel
                 snapshot={snapshot}
                 dataStatus={dataStatus}
-                isEmpty
+                intelligence={marketNews.intelligence}
+                isEmpty={!marketNews.hasMarket}
+                relatedNewsCount={marketNews.totalNews}
+                movementNarrative={getTeamMarketMovementNarrative(
+                  snapshot.team.name,
+                  marketNews.intelligence.change24h,
+                  marketNews.totalNews
+                )}
               />
             </aside>
           </div>

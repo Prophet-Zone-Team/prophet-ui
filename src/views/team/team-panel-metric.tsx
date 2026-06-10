@@ -9,7 +9,7 @@ export interface TeamPanelMetricProps {
 export function TeamPanelMetric({ label, value, tone }: TeamPanelMetricProps) {
   return (
     <div className={teamMetricToneClass(tone)}>
-      <span className="text-[10px] font-[556] uppercase tracking-wide text-prophet-muted">
+      <span className="text-[10px] font-[500] uppercase tracking-wide text-prophet-muted">
         {label}
       </span>
       <strong className={teamMetricValueClass(tone)}>{value}</strong>

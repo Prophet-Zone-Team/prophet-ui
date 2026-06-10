@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import type { KeyboardEvent } from "react";
 
 import {
   formatProbability,
@@ -10,13 +11,10 @@ import { RegionRestrictedControl } from "@/components/trading/region-restricted-
 import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuthOptional } from "@/context/auth";
 import { cn } from "@/lib/cn";
+import { formatOrderbookPrice } from "@/lib/market/order-math";
 import { formatScheduleKickoff } from "@/lib/market/schedule-match";
 import { gameTradeHref, teamTradeHref } from "@/lib/routes/trade";
 import {
-  DEFAULT_FAST_BID_AMOUNT,
-  formatFastBidAmountDisplay,
-  useConfigHydrated,
-  useFastBidAmount,
   useSetTradeOutcomeSide,
   useSyncTradeTicketSnapshot
 } from "@/store";
@@ -31,38 +29,60 @@ import type {
 import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-control";
 import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-control";
 import { gameColors } from "@/views/trade/game/ui";
+import { getTeamSimpleSidePrice } from "@/views/trade/game/market-section/format-bid-label";
 
-export type TopAttentionCardBadge =
+type TopAttentionBadgeStyleKey =
   | "most_popular"
   | "highest_volume"
   | "dark_horse"
   | "top_probability";
 
 const TOP_ATTENTION_BADGE_STYLES: Record<
-  TopAttentionCardBadge,
-  { label: string; color: string; backgroundColor: string }
+  TopAttentionBadgeStyleKey,
+  { color: string; backgroundColor: string }
 > = {
   most_popular: {
-    label: "most popular",
     color: "#FF6BBA",
     backgroundColor: "rgba(255, 107, 186, 0.1)"
   },
   highest_volume: {
-    label: "highest volume",
     color: "#3168FF",
     backgroundColor: "rgba(49, 104, 255, 0.1)"
   },
   dark_horse: {
-    label: "dark horse",
     color: "#9D84FF",
     backgroundColor: "rgba(157, 132, 255, 0.1)"
   },
   top_probability: {
-    label: "top probability",
     color: "#65AF14",
     backgroundColor: "rgba(101, 175, 20, 0.1)"
   }
 };
+
+const DEFAULT_TOP_ATTENTION_BADGE_STYLE = {
+  color: "#909090",
+  backgroundColor: "rgba(144, 144, 144, 0.1)"
+};
+
+function resolveTopAttentionBadgeStyleKey(
+  label: string
+): TopAttentionBadgeStyleKey | undefined {
+  const normalized = label.trim().toLowerCase().replace(/\s+/g, "_");
+
+  if (normalized in TOP_ATTENTION_BADGE_STYLES) {
+    return normalized as TopAttentionBadgeStyleKey;
+  }
+
+  return undefined;
+}
+
+function resolveTopAttentionBadgeStyle(label: string) {
+  const key = resolveTopAttentionBadgeStyleKey(label);
+
+  return key
+    ? TOP_ATTENTION_BADGE_STYLES[key]
+    : DEFAULT_TOP_ATTENTION_BADGE_STYLE;
+}
 
 const MATCH_OUTCOME_BUTTON_STYLES: Record<
   MatchOutcomeSide,
@@ -76,9 +96,10 @@ const MATCH_OUTCOME_BUTTON_STYLES: Record<
 export type TopAttentionTeamCardProps = {
   variant?: "team";
   snapshot: TeamMarketSnapshot;
-  attention: number;
+  attention?: number;
   categoryLabel?: string;
-  badge?: TopAttentionCardBadge;
+  /** Badge label from GET /v1/user/tracks/top `category` (e.g. "Most Popular"). */
+  badge?: string;
   className?: string;
 };
 
@@ -87,9 +108,10 @@ export type TopAttentionMatchCardProps = {
   match: WorldCupMatch;
   homeTeam: Team;
   awayTeam: Team;
-  attention: number;
+  attention?: number;
   volume: number;
   probability: number;
+  outcomePrices?: Partial<Record<MatchOutcomeSide, number>>;
   className?: string;
 };
 
@@ -103,6 +125,9 @@ const valueClassName =
 
 const cardClassName =
   "box-border flex h-auto min-h-[214px] w-full max-w-[345px] flex-col rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-3 md:px-4 md:py-4";
+
+const cardInteractiveClassName =
+  "cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]";
 
 function formatAttention(value: number): string {
   return new Intl.NumberFormat("en-US").format(Math.round(value));
@@ -123,14 +148,33 @@ function TopAttentionTeamCard({
   badge,
   className
 }: TopAttentionTeamCardProps) {
+  const router = useRouter();
   const { team, market } = snapshot;
+  const tradeHref = teamTradeHref(market?.slug || "");
   const volumeLabel = `$${formatVolume(market.volume)}`;
-  const attentionLabel = `🔥${formatAttention(attention)}`;
+
+  const attentionLabel =
+    attention !== undefined ? `🔥${formatAttention(attention)}` : undefined;
+
+  function navigateToTrade() {
+   if (market?.slug) router.push(tradeHref);
+  }
+
+  function handleCardKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      navigateToTrade();
+    }
+  }
 
   return (
     <article
-      className={cn(cardClassName, className)}
-      aria-label={`${team.name} top attention card`}
+      role="link"
+      tabIndex={0}
+      className={cn(cardClassName, cardInteractiveClassName, className)}
+      aria-label={`Open trade page for ${team.name}`}
+      onClick={navigateToTrade}
+      onKeyDown={handleCardKeyDown}
     >
       <div className="flex items-start justify-between gap-3">
         <p className="m-0 text-[12px] font-[400] capitalize leading-[15px] text-[#909090]">
@@ -146,12 +190,12 @@ function TopAttentionTeamCard({
         <TeamFlag
           code={team.code}
           name={team.name}
-          className="h-[26px] w-[26px] shrink-0 rounded-[4px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-[26px] w-[26px] shrink-0 rounded-[4px] text-[26px]"
         />
         <h3 className="m-0 truncate text-[16px] font-[500] leading-[20px] text-black">
           {team.name}
         </h3>
-        {badge ? <TopAttentionBadge badge={badge} /> : null}
+        {badge ? <TopAttentionBadge label={badge} /> : null}
       </div>
 
       <TopAttentionStatsRow
@@ -160,7 +204,11 @@ function TopAttentionTeamCard({
         attention={attentionLabel}
       />
 
-      <div className="grid grid-cols-2 gap-2.5">
+      <div
+        className="grid grid-cols-2 gap-2.5"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
         <OutcomeQuickBidButton snapshot={snapshot} side="yes" />
         <OutcomeQuickBidButton snapshot={snapshot} side="no" />
       </div>
@@ -175,16 +223,37 @@ function TopAttentionMatchCard({
   attention,
   volume,
   probability,
+  outcomePrices,
   className
 }: TopAttentionMatchCardProps) {
+  const router = useRouter();
   const kickoffLabel = formatScheduleKickoff(match.kickoffAt);
   const volumeLabel = `$${formatVolume(volume)}`;
-  const attentionLabel = `🔥${formatAttention(attention)}`;
+  const attentionLabel =
+    attention !== undefined ? `🔥${formatAttention(attention)}` : undefined;
   const matchTitle = `${homeTeam.name} vs ${awayTeam.name}`;
+
+  const tradeHref = gameTradeHref(match.id);
+
+  function navigateToTrade() {
+    router.push(tradeHref);
+  }
+
+  function handleCardKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      navigateToTrade();
+    }
+  }
+
   return (
     <article
-      className={cn(cardClassName, className)}
-      aria-label={`${matchTitle} top attention card`}
+      role="link"
+      tabIndex={0}
+      className={cn(cardClassName, cardInteractiveClassName, className)}
+      aria-label={`Open trade page for ${matchTitle}`}
+      onClick={navigateToTrade}
+      onKeyDown={handleCardKeyDown}
     >
       <div className="flex items-start justify-between gap-3">
         <p className="m-0 text-[12px] font-[400] leading-[15px] text-[#909090]">
@@ -202,12 +271,12 @@ function TopAttentionMatchCard({
           <TeamFlag
             code={homeTeam.code}
             name={homeTeam.name}
-            className="relative z-[1] h-[26px] w-[26px] rounded-[4px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+            className="relative z-[1] h-[26px] w-[26px] rounded-[4px] text-[26px]"
           />
           <TeamFlag
             code={awayTeam.code}
             name={awayTeam.name}
-            className="relative h-[26px] w-[26px] rounded-[4px] text-[26px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+            className="relative h-[26px] w-[26px] rounded-[4px] text-[26px]"
           />
         </div>
         <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-black">
@@ -221,13 +290,18 @@ function TopAttentionMatchCard({
         attention={attentionLabel}
       />
 
-      <div className="grid grid-cols-3 gap-2">
+      <div
+        className="grid grid-cols-3 gap-2"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
         {(["home", "draw", "away"] as const).map((outcomeSide) => (
           <MatchOutcomeQuickBidButton
             key={outcomeSide}
             matchId={match.id}
             outcomeSide={outcomeSide}
             label={resolveMatchOutcomeButtonLabel(outcomeSide)}
+            price={outcomePrices?.[outcomeSide]}
             background={MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].background}
             matchLabel={matchTitle}
           />
@@ -248,29 +322,36 @@ function TopAttentionStatsRow({
 }: {
   probability: string;
   volume: string;
-  attention: string;
+  attention?: string;
 }) {
   return (
-    <div className="mt-6 grid flex-1 grid-cols-3 items-start gap-2">
-      <StatColumn label="Probability" value={probability} />
+    <div
+      className={cn(
+        "mt-6 grid flex-1 items-start gap-2",
+        attention !== undefined ? "grid-cols-3" : "grid-cols-2"
+      )}
+    >
+      <StatColumn label="Net" value={probability} />
       <StatColumn label="Volume" value={volume} />
-      <StatColumn label="Attention" value={attention} align="center" />
+      {attention !== undefined ? (
+        <StatColumn label="Attention" value={attention} align="center" />
+      ) : null}
     </div>
   );
 }
 
-function TopAttentionBadge({ badge }: { badge: TopAttentionCardBadge }) {
-  const style = TOP_ATTENTION_BADGE_STYLES[badge];
+function TopAttentionBadge({ label }: { label: string }) {
+  const style = resolveTopAttentionBadgeStyle(label);
 
   return (
     <span
-      className="shrink-0 rounded-[10px] px-2 py-0.5 text-[12px] font-[400] capitalize leading-[15px]"
+      className="shrink-0 rounded-[10px] px-2 py-0.5 text-[12px] font-[400] leading-[15px]"
       style={{
         color: style.color,
         backgroundColor: style.backgroundColor
       }}
     >
-      {style.label}
+      {label}
     </span>
   );
 }
@@ -298,27 +379,27 @@ function MatchOutcomeQuickBidButton({
   matchId,
   outcomeSide,
   label,
+  price,
   background,
   matchLabel
 }: {
   matchId: string;
   outcomeSide: MatchOutcomeSide;
   label: string;
+  price?: number;
   background: string;
   matchLabel: string;
 }) {
   const router = useRouter();
   const auth = useAuthOptional();
-  const fastBidAmount = useFastBidAmount();
-  const hasHydrated = useConfigHydrated();
   const setMatchOutcomeSide = useSetTradeMatchOutcomeSide();
-  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isBuyRestricted = auth?.isBuyRestricted ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
-  const regionRestricted = isAuthenticated && isRegionBlocked;
-  const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
-  const amountLabel = formatFastBidAmountDisplay(displayAmount);
+  const regionRestricted = isAuthenticated && isBuyRestricted;
   const outcomeLabel = MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].label;
-  const buttonLabel = `${label} ${amountLabel}`;
+  const priceLabel =
+    price !== undefined ? formatOrderbookPrice(price) : undefined;
+  const buttonLabel = priceLabel ? `${label} ${priceLabel}` : label;
 
   function handleClick() {
     if (regionRestricted) {
@@ -362,17 +443,16 @@ function OutcomeQuickBidButton({
 }) {
   const router = useRouter();
   const auth = useAuthOptional();
-  const fastBidAmount = useFastBidAmount();
-  const hasHydrated = useConfigHydrated();
   const syncTeamSnapshot = useSyncTradeTicketSnapshot();
   const setOutcomeSide = useSetTradeOutcomeSide();
-  const isRegionBlocked = auth?.isRegionBlocked ?? false;
+  const isBuyRestricted = auth?.isBuyRestricted ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
-  const regionRestricted = isAuthenticated && isRegionBlocked;
-  const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
+  const regionRestricted = isAuthenticated && isBuyRestricted;
   const isYes = side === "yes";
-  const amountLabel = formatFastBidAmountDisplay(displayAmount);
-  const buttonLabel = `${isYes ? "YES" : "NO"} ${amountLabel}`;
+  const price = getTeamSimpleSidePrice(snapshot, side);
+  const priceLabel = formatOrderbookPrice(price);
+  const sideLabel = isYes ? "YES" : "NO";
+  const buttonLabel = `${sideLabel} ${priceLabel}`;
 
   function handleClick() {
     if (regionRestricted) {
@@ -388,7 +468,7 @@ function OutcomeQuickBidButton({
     <button
       type="button"
       disabled={regionRestricted}
-      aria-label={`${isYes ? "Yes" : "No"} trade ${amountLabel} on ${snapshot.team.name}`}
+      aria-label={`${isYes ? "Yes" : "No"} on ${snapshot.team.name} at ${priceLabel}`}
       onClick={handleClick}
       className={cn(
         "inline-flex h-10 w-full items-center justify-center rounded-[8px]",

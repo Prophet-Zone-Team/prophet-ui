@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { CheckIcon, CopyIcon } from "@/components/icons";
+import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
+import { CopyIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { formatNumber } from "@/utils";
@@ -34,22 +35,7 @@ export function PrivateAccountCard({
   onRefresh,
   onTopUp,
 }: PrivateAccountCardProps) {
-  const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  async function handleCopy() {
-    if (!address) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
 
   function handleRefresh() {
     onRefresh?.();
@@ -71,25 +57,26 @@ export function PrivateAccountCard({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}>
+              <p
+                className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}
+              >
                 Private Account
               </p>
               {address ? (
                 <div className="mt-1 flex items-center gap-2">
-                  <p className="m-0 truncate text-lg font-[556] text-white">
+                  <p className="m-0 truncate text-lg font-[500] text-white">
                     {formatShortWallet(address)}
                   </p>
-                  <button
-                    type="button"
+                  <PolymarketAddressCopyButton
+                    address={address}
+                    ariaLabel="Copy private account address"
                     className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-white/70 transition-colors hover:text-white"
-                    aria-label="Copy private account address"
-                    onClick={() => void handleCopy()}
                   >
-                    {copied ? <CheckIcon /> : <CopyIcon />}
-                  </button>
+                    <CopyIcon />
+                  </PolymarketAddressCopyButton>
                 </div>
               ) : (
-                <p className="m-0 mt-1 text-lg font-[556] text-white">-</p>
+                <p className="m-0 mt-1 text-lg font-[500] text-white">-</p>
               )}
             </div>
           </div>
@@ -104,7 +91,7 @@ export function PrivateAccountCard({
               alt=""
               className={cn(
                 "size-5 object-contain",
-                refreshing && "animate-spin",
+                refreshing && "animate-spin"
               )}
               aria-hidden
             />
@@ -113,14 +100,16 @@ export function PrivateAccountCard({
 
         <div className="mt-auto flex items-end justify-between gap-4 pt-8">
           <div>
-            <p className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}>
+            <p
+              className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}
+            >
               Private Balance
             </p>
             <p
               className={cn(
                 "m-0 mt-2",
                 privateTopupPrivateBalanceLargeClass,
-                !topupWalletConnected && "opacity-30",
+                !topupWalletConnected && "opacity-30"
               )}
             >
               {refreshing || privateBalanceLoading
@@ -128,7 +117,7 @@ export function PrivateAccountCard({
                 : formatNumber(privateBalanceUsd, 2, true, {
                     prefix: "$",
                     round: 0,
-                    isZeroPrecision: true,
+                    isZeroPrecision: true
                   })}
             </p>
           </div>
@@ -136,7 +125,7 @@ export function PrivateAccountCard({
             type="button"
             className={cn(
               privateTopupTopUpButtonClass,
-              !topupWalletConnected && privateTopupTopUpButtonDisabledClass,
+              !topupWalletConnected && privateTopupTopUpButtonDisabledClass
             )}
             disabled={!topupWalletConnected}
             onClick={onTopUp}

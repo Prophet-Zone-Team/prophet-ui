@@ -35,8 +35,12 @@ export function mapProphetGamesToMatches(
 }
 
 export function mapProphetGameToMatch(
-  game: ProphetPolyMarketGameItem
+  game: ProphetPolyMarketGameItem | null | undefined
 ): WorldCupMatch | undefined {
+  if (!game) {
+    return undefined;
+  }
+
   const slug = game.slug?.trim();
 
   if (!slug) {
@@ -152,7 +156,7 @@ export function parseTeamsFromTitle(title: string): {
 function mapProphetGameStatus(
   game: ProphetPolyMarketGameItem
 ): WorldCupMatchStatus {
-  if (game.closed === 1) {
+  if (game.closed === 1 || game.status === 2) {
     return "finished";
   }
 

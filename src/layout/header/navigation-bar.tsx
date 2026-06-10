@@ -25,11 +25,9 @@ function NavBar(props: any) {
             key={href}
             href={href}
             className={cn(
-              "group relative text-[18px] inline-flex h-[40px] items-center rounded-[40px] px-[20px] transition-colors duration-200",
-              active
-                ? "text-white"
-                : "text-prophet-nav hover:text-[#14203a]",
-              navClassName,
+              "group relative text-[16px] inline-flex h-[40px] items-center rounded-[40px] px-[20px] transition-colors duration-200",
+              active ? "text-white" : "text-prophet-nav hover:text-[#14203a]",
+              navClassName
             )}
             aria-current={active ? "page" : undefined}
             onClick={onClick}
@@ -39,7 +37,7 @@ function NavBar(props: any) {
                 layoutId="header-nav-pill"
                 className={cn(
                   "absolute inset-0 rounded-[40px] bg-black",
-                  activeClassName,
+                  activeClassName
                 )}
                 transition={NAV_PILL_TRANSITION}
                 aria-hidden
@@ -48,7 +46,7 @@ function NavBar(props: any) {
               <span
                 className={cn(
                   "pointer-events-none absolute inset-0 rounded-[40px] bg-black/0 transition-colors duration-200 group-hover:bg-black/[0.07]",
-                  activeClassName,
+                  activeClassName
                 )}
                 aria-hidden
               />

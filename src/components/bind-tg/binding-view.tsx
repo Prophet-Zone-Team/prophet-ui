@@ -19,7 +19,7 @@ export function BindingView({
     <div className="flex h-full flex-col items-center text-center">
       <TelegramIcon variant="glow" />
 
-      <h2 className="m-0 mt-6 text-lg font-[556] leading-6 text-black">
+      <h2 className="m-0 mt-6 text-lg font-[500] leading-6 text-black">
         Waiting for confirmation
       </h2>
       <p className="m-0 mt-2 max-w-[300px] text-sm font-[400] leading-normal text-[#909090]">
@@ -32,7 +32,7 @@ export function BindingView({
           className="size-2 shrink-0 rounded-full bg-[#FFCC00]"
           aria-hidden="true"
         />
-        <span className="text-sm font-[556] text-black">Not connect yet</span>
+        <span className="text-sm font-[500] text-black">Not connect yet</span>
       </div>
       <p className="m-0 mt-2 text-xs font-[400] text-[#909090]">
         Checking every {pollIntervalSeconds} seconds

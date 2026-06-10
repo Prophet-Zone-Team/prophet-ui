@@ -8,6 +8,7 @@ import {
   NEWS_IMPACT_POSITIVE_KEYWORDS
 } from "./config";
 import {
+  formatDateMonthAndTime,
   formatRelativeTime,
   publishedAtToOrder
 } from "./format-relative-time";
@@ -34,10 +35,18 @@ export function parseJsonArrayField(value: string | undefined): string[] {
 export function computeImpactScore(
   score: number,
 ): { impactScore: number; sentiment: NewsSentiment; } {
-  const magnitude = Math.round(score - 100) / 10;
+  // >= 55
+  let sentiment: NewsSentiment = "negative";
+  // const magnitude = Math.round(score - 100) / 10;
+  // const magnitude = score / 10;
+  const magnitude = Math.round(score - 50) / 10;
+  if (magnitude >= 0) {
+    sentiment = "positive";
+  }
+
   return {
     impactScore: magnitude,
-    sentiment: magnitude < 0 ? "negative" : "positive"
+    sentiment,
   };
 }
 
@@ -71,15 +80,21 @@ function buildRelatedLabel(
 export function mapNewsArticleToImpactItem(
   article: ProphetAnalyticsNewsArticle,
   teamCodeLookup?: TeamCodeLookup,
-  options?: { highlighted?: boolean }
+  options?: {
+    highlighted?: boolean;
+    homeTeamName?: string;
+    awayTeamName?: string;
+    defaultTeamName?: string;
+  }
 ): NewsImpactItem {
   const reasons = parseJsonArrayField(article.reasons_json);
   const matchedTeams = parseJsonArrayField(article.matched_teams_json);
   const matchedPlayers = parseJsonArrayField(article.matched_players_json);
   const category = article.category ?? "";
   const apiScore = article.score ?? 0;
-  const teamName = matchedTeams[0] ?? "World Cup";
+  const teamName = matchedTeams?.find((team) => team.toLowerCase() === options?.homeTeamName?.toLowerCase() || team.toLowerCase() === options?.awayTeamName?.toLowerCase()) ?? options?.defaultTeamName ?? matchedTeams[0] ?? "World Cup";
   const publishedAt = article.published_at;
+  const publishedAtFormatted = formatDateMonthAndTime(publishedAt);
 
   const { impactScore, sentiment } = computeImpactScore(apiScore);
 
@@ -97,6 +112,7 @@ export function mapNewsArticleToImpactItem(
     highlighted:
       options?.highlighted ?? apiScore >= NEWS_HIGH_IMPACT_THRESHOLD,
     publishedAt,
+    publishedAtFormatted,
     sourceUrl: article.url,
     category,
     matchedTeams,

@@ -7,7 +7,127 @@ import {
 const MIN_PRICE = 0.01;
 const MAX_PRICE = 0.99;
 
+export type MarketTickSize = "0.1" | "0.01" | "0.001" | "0.0001";
+
+export const DEFAULT_MARKET_TICK_SIZE: MarketTickSize = "0.01";
+
+const TICK_PRICE_DECIMALS: Record<MarketTickSize, number> = {
+  "0.1": 1,
+  "0.01": 2,
+  "0.001": 3,
+  "0.0001": 4,
+};
+
 export const LIMIT_BUY_MIN_SHARES = 5;
+
+export function isMarketTickSize(value: unknown): value is MarketTickSize {
+  return (
+    value === "0.1" ||
+    value === "0.01" ||
+    value === "0.001" ||
+    value === "0.0001"
+  );
+}
+
+export function resolveTickPriceDecimalPlaces(
+  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE,
+): number {
+  if (isMarketTickSize(tickSize)) {
+    return TICK_PRICE_DECIMALS[tickSize];
+  }
+
+  return TICK_PRICE_DECIMALS[DEFAULT_MARKET_TICK_SIZE];
+}
+
+/** Aligns CLOB prices to the market tick precision (matches Polymarket ROUNDING_CONFIG). */
+export function roundPriceToTick(
+  price: number,
+  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE,
+): number {
+  if (!Number.isFinite(price)) {
+    return price;
+  }
+
+  const clamped = clamp(price, MIN_PRICE, MAX_PRICE);
+  const decimals = resolveTickPriceDecimalPlaces(tickSize);
+  const factor = 10 ** decimals;
+
+  return Math.round((clamped + Number.EPSILON) * factor) / factor;
+}
+
+export function isLimitOrderType(orderType: TradingOrderType): boolean {
+  return orderType === "GTC" || orderType === "GTD";
+}
+
+/** Slippage buffer for FAK/FOK worst-price limits (Polymarket market order behavior). */
+export const MARKET_ORDER_SLIPPAGE_BPS = 200;
+
+export interface ResolveMarketOrderWorstPriceInput {
+  tradeSide: BidTradeSide;
+  sidePrice: number;
+  bestAsk?: number;
+  bestBid?: number;
+  tickSize?: MarketTickSize | string;
+}
+
+/**
+ * Worst acceptable price for FAK/FOK orders. CLOB treats this as slippage protection,
+ * not the target fill price. Uses the higher of ticket and book prices for buys, then
+ * applies a small upward buffer so stale REST quotes cannot under-sign market orders.
+ */
+export function resolveMarketOrderWorstPrice(
+  input: ResolveMarketOrderWorstPriceInput,
+): number {
+  const tickSize = input.tickSize ?? DEFAULT_MARKET_TICK_SIZE;
+  const slippageFactor =
+    input.tradeSide === "buy"
+      ? 1 + MARKET_ORDER_SLIPPAGE_BPS / 10_000
+      : 1 - MARKET_ORDER_SLIPPAGE_BPS / 10_000;
+  const executableBase =
+    input.tradeSide === "buy"
+      ? Math.max(input.sidePrice, input.bestAsk ?? input.sidePrice)
+      : Math.min(input.sidePrice, input.bestBid ?? input.sidePrice);
+
+  return roundPriceToTick(executableBase * slippageFactor, tickSize);
+}
+
+export function isMarketOrderType(orderType: TradingOrderType): boolean {
+  return orderType === "FAK" || orderType === "FOK";
+}
+
+function resolveMarketOrderPriceGuardTolerance(
+  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE,
+): number {
+  const resolvedTickSize = isMarketTickSize(tickSize)
+    ? tickSize
+    : DEFAULT_MARKET_TICK_SIZE;
+
+  return Number(resolvedTickSize);
+}
+
+export function isSignedMarketOrderPriceWithinGuard(input: {
+  orderPrice: number;
+  tradeSide: BidTradeSide;
+  sidePrice: number;
+  bestAsk?: number;
+  bestBid?: number;
+  tickSize?: MarketTickSize | string;
+}): boolean {
+  const tolerance = resolveMarketOrderPriceGuardTolerance(input.tickSize);
+  const guardedPrice = resolveMarketOrderWorstPrice({
+    tradeSide: input.tradeSide,
+    sidePrice: input.sidePrice,
+    bestAsk: input.bestAsk,
+    bestBid: input.bestBid,
+    tickSize: input.tickSize,
+  });
+
+  if (input.tradeSide === "buy") {
+    return input.orderPrice <= guardedPrice + tolerance;
+  }
+
+  return input.orderPrice >= guardedPrice - tolerance;
+}
 
 export function isTakeProfitLimitAvailable(shareSize: number): boolean {
   return Number.isFinite(shareSize) && shareSize >= LIMIT_BUY_MIN_SHARES;
@@ -87,7 +207,7 @@ export function formatTakeProfitLimitPriceString(purchasePrice: number): string 
 export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate {
   const sidePrice = normalizeLimitPrice(input.limitPrice ?? calculateReferencePrice(input.probability, input.side));
   const tradeSide = input.tradeSide ?? "buy";
-  const isLimitOrder = input.orderType === "GTC";
+  const isLimitOrder = isLimitOrderType(input.orderType);
 
   if (isLimitOrder) {
     let shareSize = roundShares(Math.max(0, input.amount));
@@ -159,6 +279,10 @@ export function formatPriceCents(price: number): string {
 
 /** Limit price stored on 0–1 scale, displayed as cents (e.g. 0.50 → "50"). */
 export function formatLimitPriceInputValue(price: string | number): string {
+  if (typeof price === "string" && price.trim() === "") {
+    return "";
+  }
+
   const numeric = typeof price === "string" ? Number(price) : price;
 
   if (!Number.isFinite(numeric)) {
@@ -170,6 +294,45 @@ export function formatLimitPriceInputValue(price: string | number): string {
   return Number.isInteger(cents) ? String(cents) : cents.toFixed(1);
 }
 
+/** Cents-denominated limit price display: up to 2 integer digits and 1 decimal place. */
+export function sanitizeLimitPriceDisplayInput(value: string): string {
+  let result = "";
+  let hasDot = false;
+
+  for (const char of value) {
+    if (char >= "0" && char <= "9") {
+      if (hasDot) {
+        const fractionLength = result.length - result.indexOf(".") - 1;
+
+        if (fractionLength >= 1) {
+          continue;
+        }
+      } else if (result.length >= 2) {
+        continue;
+      }
+
+      result += char;
+    } else if (char === "." && !hasDot && result.length > 0) {
+      hasDot = true;
+      result += char;
+    }
+  }
+
+  return result;
+}
+
+export function isCompleteLimitPriceDisplayValue(value: string): boolean {
+  const trimmed = value.trim();
+
+  if (!trimmed || trimmed.endsWith(".")) {
+    return false;
+  }
+
+  const cents = Number(trimmed);
+
+  return Number.isFinite(cents) && cents > 0 && cents < 100;
+}
+
 /** Parse cents-denominated limit price input back to 0–1 scale string. */
 export function parseLimitPriceDisplayValue(
   displayValue: string,
@@ -178,7 +341,7 @@ export function parseLimitPriceDisplayValue(
   const trimmed = displayValue.trim();
 
   if (!trimmed) {
-    return normalizeLimitPrice(fallback).toFixed(3);
+    return "";
   }
 
   const cents = Number(trimmed);
@@ -288,7 +451,7 @@ export function validateOrderAmount(input: {
     return "Enter a positive amount.";
   }
 
-  if (input.orderType === "GTC" && input.tradeSide === "buy") {
+  if (isLimitOrderType(input.orderType) && input.tradeSide === "buy") {
     if (input.amount < LIMIT_BUY_MIN_SHARES) {
       return `Limit buy orders must be at least ${LIMIT_BUY_MIN_SHARES} shares.`;
     }
@@ -296,7 +459,7 @@ export function validateOrderAmount(input: {
     return undefined;
   }
 
-  if (input.orderType !== "GTC" && input.tradeSide === "buy") {
+  if (!isLimitOrderType(input.orderType) && input.tradeSide === "buy") {
     if (input.minOrderSize !== undefined && input.amount < input.minOrderSize) {
       return `Amount must be at least $${input.minOrderSize}.`;
     }

@@ -19,7 +19,7 @@ export async function fetchMarketOrderbook(
   );
 
   if (!response.ok) {
-    throw new Error(`Unable to fetch order book: ${response.status}`);
+    throw new Error(`Unable to fetch order book`);
   }
 
   const book = (await response.json()) as {

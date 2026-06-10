@@ -1,6 +1,7 @@
 "use client";
 
 import Drawer, { DrawerDirection } from "@/components/drawer";
+import { Switch } from "@/components/ui/switch";
 import { useDevice } from "@/hooks/common/use-device";
 import { cn } from "@/lib/cn";
 import type {
@@ -104,25 +105,11 @@ export function ScheduleFilterBar({
       </div>
 
       <label className="flex shrink-0 cursor-pointer items-center gap-2">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={showEnded}
+        <Switch
+          checked={showEnded}
+          onCheckedChange={onShowEndedChange}
           aria-label="Show ended matches"
-          className={cn(
-            "relative h-4 w-[29px] shrink-0 rounded-lg border border-[#EAEAEA] transition-colors",
-            showEnded ? "bg-[#909090]" : "bg-[#EBEBEB]"
-          )}
-          onClick={() => onShowEndedChange(!showEnded)}
-        >
-          <span
-            className={cn(
-              "absolute top-1/2 size-3 -translate-y-1/2 rounded-lg border border-[#EAEAEA] bg-white transition-[left]",
-              showEnded ? "left-[calc(100%-14px)]" : "left-0.5"
-            )}
-            aria-hidden
-          />
-        </button>
+        />
         <span className="whitespace-nowrap text-sm md:text-[16px] font-normal leading-[19px] text-black">
           Show Ended
         </span>
@@ -146,7 +133,7 @@ function SortPill({
     <button
       type="button"
       className={cn(
-        "inline-flex h-[34px] items-center gap-1.5 rounded-[20px] border border-[#909090] px-[16px] text-[16px] font-[457] leading-[19px] transition-colors",
+        "inline-flex h-[34px] items-center gap-1.5 rounded-[20px] border border-[#909090] px-[16px] text-[16px] font-[400] leading-[19px] transition-colors",
         active ? "bg-black text-white" : "bg-white text-black",
         className
       )}

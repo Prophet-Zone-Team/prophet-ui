@@ -21,12 +21,12 @@ export function ImpactDistributionOverview({
     <section
       aria-label="Impact distribution overview"
       className={cn(
-        "box-border flex h-auto w-full max-w-none flex-col md:h-[174px] md:max-w-[696px]",
+        "box-border flex h-auto w-full max-w-none flex-col md:h-[174px]",
         "rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-4 md:px-5 md:py-5",
         className
       )}
     >
-      <h2 className="m-0 text-lg font-[457] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
+      <h2 className="m-0 text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
         Impact Distribution Overview
       </h2>
 

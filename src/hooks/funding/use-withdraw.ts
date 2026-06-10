@@ -10,6 +10,7 @@ import {
   type StableflowWithdrawToken,
 } from "@/lib/funding/stableflow-withdraw";
 import { resolveBridgeWithdrawDepositAddress } from "@/lib/market/deposit-wallet-batch";
+import { pollRelayerTransaction } from "@/lib/trading/deposit-wallet-relayer";
 import { isTerminalBridgeStatus, pollBridgeAddress } from "@/lib/trading/bridge-status";
 import { fetchJson } from "@/lib/team/client-fetch";
 import {
@@ -46,16 +47,16 @@ export interface UseWithdrawResult {
   operationPhase: WithdrawOperationPhase;
   operationDetail: string | undefined;
   prepareWithdraw: (params: BridgeWithdrawParams & { amountUsd: number }) => Promise<WithdrawPreparePayload>;
-  signAndSubmitWithdraw: (payload: WithdrawPreparePayload) => Promise<{ statusAddress: string }>;
-  executeBridgeWithdraw: (params: BridgeWithdrawParams & { amountUsd: number }) => Promise<BridgeAggregateStatus>;
+  signAndSubmitWithdraw: (payload: WithdrawPreparePayload) => Promise<{ statusAddress: string; txHash?: string }>;
+  executeBridgeWithdraw: (params: BridgeWithdrawParams & { amountUsd: number }) => Promise<{ txHash?: string }>;
   fetchStableflowWithdrawQuote: (
     params: StableflowWithdrawParams & { dry?: boolean },
   ) => Promise<QuoteResponse>;
-  executeStableflowWithdraw: (params: StableflowWithdrawParams) => Promise<void>;
+  executeStableflowWithdraw: (params: StableflowWithdrawParams) => Promise<{ txHash: string }>;
   startStatusPoll: (statusAddress: string) => Promise<BridgeAggregateStatus>;
   stopStatusPoll: () => void;
   /** @deprecated Use executeBridgeWithdraw */
-  executeWithdraw: (params: BridgeWithdrawParams & { amountUsd: number }) => Promise<BridgeAggregateStatus>;
+  executeWithdraw: (params: BridgeWithdrawParams & { amountUsd: number }) => Promise<{ txHash?: string }>;
 }
 
 export function useWithdraw(): UseWithdrawResult {
@@ -198,7 +199,9 @@ export function useWithdraw(): UseWithdrawResult {
       setError(undefined);
 
       const signature = await signTypedData(session.walletAddress, payload.transfer);
-      await fetchJson<{ response?: unknown }>("/api/trading/withdraw", {
+      const submitted = await fetchJson<{
+        response?: { transactionID?: string; transactionHash?: string; hash?: string };
+      }>("/api/trading/withdraw", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -212,8 +215,21 @@ export function useWithdraw(): UseWithdrawResult {
       });
 
       const statusAddress = resolveBridgeWithdrawDepositAddress(payload.withdrawal.address);
+      const transactionId = submitted.response?.transactionID;
+      let txHash =
+        submitted.response?.transactionHash ??
+        submitted.response?.hash ??
+        undefined;
 
-      return { statusAddress };
+      if (transactionId && !txHash) {
+        const transaction = await pollRelayerTransaction(transactionId, {
+          statusApiPath: "/api/trading/withdraw",
+          errorPrefix: "Withdraw relayer transaction"
+        });
+        txHash = transaction.transactionHash;
+      }
+
+      return { statusAddress, txHash };
     },
     [session],
   );
@@ -223,14 +239,28 @@ export function useWithdraw(): UseWithdrawResult {
       try {
         setOperationPhase("polling_bridge");
         const prepared = await prepareWithdraw(params);
-        const { statusAddress } = await signAndSubmitWithdraw(prepared);
+        const { statusAddress, txHash: relayerTxHash } =
+          await signAndSubmitWithdraw(prepared);
         const aggregateStatus = await startStatusPoll(statusAddress);
 
         if (!isTerminalBridgeStatus(aggregateStatus)) {
           throw new Error("Withdrawal status polling ended before completion.");
         }
 
-        return aggregateStatus;
+        if (aggregateStatus !== "completed") {
+          return {};
+        }
+
+        if (relayerTxHash) {
+          return { txHash: relayerTxHash };
+        }
+
+        const latestStatus = await fetchWithdrawStatus(statusAddress);
+        return {
+          txHash: resolveReportTxHash(
+            (latestStatus.transactions ?? []) as BridgeTransactionRecord[]
+          )
+        };
       } catch (withdrawError) {
         if (status !== "syncing" && operationPhase !== "syncing") {
           setStatus("error");
@@ -241,7 +271,14 @@ export function useWithdraw(): UseWithdrawResult {
         throw withdrawError;
       }
     },
-    [operationPhase, prepareWithdraw, signAndSubmitWithdraw, startStatusPoll, status],
+    [
+      fetchWithdrawStatus,
+      operationPhase,
+      prepareWithdraw,
+      signAndSubmitWithdraw,
+      startStatusPoll,
+      status
+    ],
   );
 
   const fetchStableflowWithdrawQuote = useCallback(
@@ -396,6 +433,7 @@ export function useWithdraw(): UseWithdrawResult {
         setStatus("success");
         setOperationPhase("success");
         setOperationDetail(undefined);
+        return { txHash };
       } catch (withdrawError) {
         setStatus("error");
         setOperationPhase("error");
@@ -422,4 +460,18 @@ export function useWithdraw(): UseWithdrawResult {
     stopStatusPoll,
     executeWithdraw: executeBridgeWithdraw,
   };
+}
+
+function resolveReportTxHash(
+  transactions: BridgeTransactionRecord[]
+): string | undefined {
+  const completed = transactions.find(
+    (transaction) => transaction.status === "COMPLETED" && transaction.txHash
+  );
+
+  if (completed?.txHash) {
+    return completed.txHash;
+  }
+
+  return transactions.find((transaction) => transaction.txHash)?.txHash;
 }

@@ -82,14 +82,11 @@ function resolveLineBinarySide(
 
 function isOutcomeSelected(
   outcome: FixtureMarketOutcome,
-  binarySide: "yes" | "no",
+  _binarySide: "yes" | "no",
   selectedOutcomeId?: string,
-  selectedBinarySide?: "yes" | "no"
+  _selectedBinarySide?: "yes" | "no"
 ): boolean {
-  return (
-    selectedOutcomeId === outcome.id &&
-    (binarySide === undefined || selectedBinarySide === binarySide)
-  );
+  return selectedOutcomeId === outcome.id;
 }
 
 function EmptyActions() {

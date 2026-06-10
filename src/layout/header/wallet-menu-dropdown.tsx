@@ -2,13 +2,16 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useCallback, useState } from "react";
 import {
   PortfolioIcon,
   LogoutIcon,
-  FastBidIcon
+  FastBidIcon,
+  NotificationIcon,
+  ReferralIcon
 } from "@/layout/header/wallet-menu-icons";
-import { CheckIcon, CopyIcon, RightArrowIcon } from "@/components/icons";
+import { CopyIcon, RightArrowIcon } from "@/components/icons";
+import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
+import { Switch } from "@/components/ui/switch";
 
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import {
@@ -21,7 +24,9 @@ import {
   DEFAULT_FAST_BID_AMOUNT,
   formatFastBidAmountDisplay,
   useConfigHydrated,
-  useFastBidAmount
+  useFastBidAmount,
+  useNotificationsEnabled,
+  useSetNotificationsEnabled
 } from "@/store";
 
 const WALLET_MENU_DROPDOWN_TRANSITION = {
@@ -46,22 +51,13 @@ export function WalletMenuDropdown({
   onOpenFastBid,
   isPrivateMode,
 }: WalletMenuDropdownProps) {
-  const [copied, setCopied] = useState(false);
   const fastBidAmount = useFastBidAmount();
+  const notificationsEnabled = useNotificationsEnabled();
+  const setNotificationsEnabled = useSetNotificationsEnabled();
   const hasHydrated = useConfigHydrated();
   const fastBidDisplay = formatFastBidAmountDisplay(
     hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT
   );
-
-  const copyAddress = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(polymarketAddress);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }, [polymarketAddress]);
 
   return (
     <motion.div
@@ -78,15 +74,13 @@ export function WalletMenuDropdown({
         <span className="truncate text-[14px] font-[400] leading-[17px] text-black">
           {formatShortWallet(polymarketAddress)}
         </span>
-        <button
-          type="button"
-          onClick={() => void copyAddress()}
+        <PolymarketAddressCopyButton
+          address={polymarketAddress}
+          ariaLabel="Copy Polymarket address"
           className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
-          aria-label={copied ? "Copied" : "Copy Polymarket address"}
-          title={copied ? "Copied" : "Copy Polymarket address"}
         >
-          {copied ? <CheckIcon /> : <CopyIcon />}
-        </button>
+          <CopyIcon />
+        </PolymarketAddressCopyButton>
       </div>
 
       {
@@ -103,6 +97,21 @@ export function WalletMenuDropdown({
                   <PortfolioIcon />
                 </div>
                 <span className="flex-1">Portfolio</span>
+              </div>
+              <RightArrowIcon />
+            </Link>
+
+            <Link
+              href="/referral"
+              role="menuitem"
+              className={walletMenuItemClass}
+              onClick={onClose}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-[14px]">
+                  <ReferralIcon />
+                </div>
+                <span className="flex-1">Referral</span>
               </div>
               <RightArrowIcon />
             </Link>
@@ -127,6 +136,29 @@ export function WalletMenuDropdown({
                 <RightArrowIcon />
               </div>
             </button>
+
+            <div
+              role="menuitem"
+              className={walletMenuItemClass}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-[14px]">
+                  <NotificationIcon />
+                </div>
+                <span>Notification</span>
+              </div>
+              <span
+                className="shrink-0"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <Switch
+                  checked={notificationsEnabled}
+                  onCheckedChange={setNotificationsEnabled}
+                  aria-label="Toggle notifications"
+                />
+              </span>
+            </div>
           </>
         )
       }

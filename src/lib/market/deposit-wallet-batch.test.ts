@@ -35,6 +35,8 @@ const TRADING_APPROVAL_CONTRACTS = {
   exchange: "0xE111180000d2663C0091e4f400237545B87B996B",
   negRiskExchange: "0xe2222d279d744050d28e00520010520000310F59",
   negRiskAdapter: "0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296",
+  ctfCollateralAdapter: POLYGON_COLLATERAL_CONTRACTS.ctfCollateralAdapter,
+  negRiskCtfCollateralAdapter: POLYGON_COLLATERAL_CONTRACTS.negRiskCtfCollateralAdapter,
 };
 
 const ERC20_APPROVE_ABI = [
@@ -114,7 +116,7 @@ describe("buildTradingApprovalBatch", () => {
       ...TRADING_APPROVAL_CONTRACTS,
     });
 
-    assert.equal(batch.message.calls.length, 7);
+    assert.equal(batch.message.calls.length, 9);
 
     const erc20Approves = batch.message.calls
       .filter((call) => getAddress(call.target) === getAddress(TRADING_APPROVAL_CONTRACTS.collateralToken))
@@ -141,10 +143,23 @@ describe("buildTradingApprovalBatch", () => {
         }),
       );
 
-    assert.equal(erc1155Approves.length, 3);
+    assert.equal(erc1155Approves.length, 5);
     assert.ok(
       erc1155Approves.some(
         (decoded) => getAddress(decoded.args[0]) === getAddress(TRADING_APPROVAL_CONTRACTS.negRiskAdapter),
+      ),
+    );
+    assert.ok(
+      erc1155Approves.some(
+        (decoded) =>
+          getAddress(decoded.args[0]) === getAddress(TRADING_APPROVAL_CONTRACTS.ctfCollateralAdapter),
+      ),
+    );
+    assert.ok(
+      erc1155Approves.some(
+        (decoded) =>
+          getAddress(decoded.args[0]) ===
+          getAddress(TRADING_APPROVAL_CONTRACTS.negRiskCtfCollateralAdapter),
       ),
     );
     assert.equal(erc1155Approves.find(

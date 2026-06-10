@@ -223,7 +223,7 @@ function OngoingMatchBody({
           code={sides.home.code}
           logoUrl={sides.home.logoUrl}
         />
-        <strong className="px-1 text-lg font-[556] leading-[21px] text-black">
+        <strong className="px-1 text-lg font-[500] leading-[21px] text-black">
           {scoreLabel}
         </strong>
         <TeamPercentSide
@@ -269,7 +269,7 @@ function EndedMatchBody({
           code={sides.home.code}
           logoUrl={sides.home.logoUrl}
         />
-        <strong className="px-1 text-lg font-[556] leading-[21px] text-black">
+        <strong className="px-1 text-lg font-[500] leading-[21px] text-black">
           {scoreLabel}
         </strong>
         <TeamResultSide
@@ -303,16 +303,16 @@ function TeamPercentSide({
       code={code}
       name={name}
       logoUrl={logoUrl}
-      className="h-5 w-5 md:h-6 md:w-6 shrink-0 rounded-[2px] text-[20px] md:text-[24px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+      className="h-5 w-5 md:h-6 md:w-6 shrink-0 rounded-[2px] text-[20px] md:text-[24px]"
     />
   );
   const pct = (
-    <span className="text-sm md:text-[18px] font-[556] leading-[19px] text-black w-[60px]">
+    <span className="text-sm md:text-[18px] font-[500] leading-[19px] text-black w-[60px]">
       {percent}
     </span>
   );
   const label = (
-    <span className="truncate text-sm md:text-[18px] font-[556] leading-[19px] text-black">
+    <span className="truncate text-sm md:text-[18px] font-[500] leading-[19px] text-black">
       {name}
     </span>
   );
@@ -349,12 +349,12 @@ function TeamResultSide({
       code={code}
       name={name}
       logoUrl={logoUrl}
-      className="h-6 w-6 shrink-0 rounded-[2px] text-[24px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+      className="h-6 w-6 shrink-0 rounded-[2px] text-[24px]"
     />
   );
   const pill = outcome ? <OutcomePill outcome={outcome} /> : null;
   const label = (
-    <span className="truncate text-base font-[556] leading-[19px] text-black">
+    <span className="truncate text-base font-[500] leading-[19px] text-black">
       {name}
     </span>
   );
@@ -378,7 +378,7 @@ function OutcomePill({ outcome }: { outcome: TeamMatchOutcome }) {
 
   return (
     <span
-      className="inline-flex shrink-0 items-center rounded-full px-[18px] h-[34px] text-[14px] font-[556] leading-[14px]"
+      className="inline-flex shrink-0 items-center rounded-full px-[18px] h-[34px] text-[14px] font-[500] leading-[14px]"
       style={{ background: styles.background, color: styles.color }}
     >
       {getOutcomePillLabel(outcome)}
@@ -389,7 +389,7 @@ function OutcomePill({ outcome }: { outcome: TeamMatchOutcome }) {
 function VolumeColumn({ amount }: { amount: string }) {
   return (
     <div className="flex flex-1 md:flex-grow-0 md:w-full shrink-0 flex-col items-end sm:w-[88px]">
-      <strong className="text-lg font-[556] leading-[21px] text-black">
+      <strong className="text-lg font-[500] leading-[21px] text-black">
         {amount}
       </strong>
       <span className="text-xs font-normal leading-[14px] text-[#909090]">

@@ -4,7 +4,9 @@ import { erc20Abi, parseUnits, type Address, type Chain, type Hex } from "viem";
 import { arbitrum, bsc, optimism, polygon } from "viem/chains";
 
 import { getWalletClientForAddress } from "@/components/trading/wallet-provider";
+import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import { isNativeFundingToken } from "@/lib/funding/evm-balances";
+import { isWagmiOnChain } from "@/lib/trading/wallet-chain-sync";
 import Big from "big.js";
 
 const VIEM_CHAIN_BY_ID: Record<number, Chain> = {
@@ -77,11 +79,13 @@ export async function transferCollateralFromConnectedWallet({
     throw new Error(`Transfers are not configured for chainId ${chainId}.`);
   }
 
-  const walletClient = await getWalletClientForAddress(walletAddress, { chainId });
+  await ensureFundingEvmChain(walletAddress, chainId);
 
-  if (walletClient.chain?.id !== chainId) {
+  if (!isWagmiOnChain(chainId)) {
     throw new Error(`Switch your wallet to ${chain.name} (chainId ${chainId}) before transferring.`);
   }
+
+  const walletClient = await getWalletClientForAddress(walletAddress, { chainId });
 
   const transferClient: CollateralTransferWalletClient = {
     sendTransaction: (request) =>

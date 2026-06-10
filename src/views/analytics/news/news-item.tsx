@@ -25,8 +25,6 @@ function SentimentIcon({
 }
 
 export function NewsItem({ item, onSelect, className }: NewsItemProps) {
-  const isPositiveImpact = item.impactScore >= 0;
-
   return (
     <article
       className={cn(
@@ -58,7 +56,8 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
               <TeamFlag
                 code={item.teamCode}
                 name={item.teamName}
-                className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] shadow-[0_0_2px_rgba(0,0,0,0.2)] md:h-[20px] md:w-[20px] md:text-[20px]"
+                className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] md:h-[20px] md:w-[20px] md:text-[20px]"
+                fallback={false}
               />
               <span className="truncate text-base font-[500] leading-[19px] text-black md:text-[18px] md:leading-[21px]">
                 {item.teamName}
@@ -74,8 +73,10 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
             {item.headline}
           </h3>
 
-          <p className="m-0 mt-1 line-clamp-3 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-[4px] md:line-clamp-2">
-            {item.summary}
+          <p
+            className="m-0 mt-1 line-clamp-3 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-[4px] md:line-clamp-2"
+            dangerouslySetInnerHTML={{ __html: item.summary }}
+          >
           </p>
 
           <div className="mt-2 flex items-baseline justify-between md:hidden">
@@ -85,7 +86,8 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
             <span
               className={cn(
                 "text-base font-[500] leading-[19px]",
-                isPositiveImpact ? "text-[#7BCA25]" : "text-[#FF674B]"
+                item.sentiment === "positive" ? "text-[#7BCA25]" : "",
+                item.sentiment === "negative" ? "text-[#FF674B]" : "",
               )}
             >
               {formatImpactScore(item.impactScore)}
@@ -100,7 +102,8 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
           <span
             className={cn(
               "mt-[8px] text-[18px] font-[500] leading-[21px]",
-              isPositiveImpact ? "text-[#7BCA25]" : "text-[#FF674B]"
+              item.sentiment === "positive" ? "text-[#7BCA25]" : "",
+              item.sentiment === "negative" ? "text-[#FF674B]" : "",
             )}
           >
             {formatImpactScore(item.impactScore)}

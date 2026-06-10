@@ -1,9 +1,3 @@
-import { NEWS_HIGH_IMPACT_THRESHOLD } from "@/lib/analytics/config";
-import { formatRelativeTime } from "@/lib/analytics/format-relative-time";
-import {
-  computeImpactScore,
-  parseJsonArrayField
-} from "@/lib/analytics/map-news";
 import type {
   KeyPlayerView,
   NextMatchView,
@@ -11,23 +5,21 @@ import type {
   StrengthMetric
 } from "@/lib/team/team-detail-model";
 import { formatShortDate } from "@/lib/team/team-detail-model";
-import type { Team } from "@/types/market";
-import type { NewsImpactItem } from "@/views/analytics/news/types";
 import type {
   ProphetGetTeamDetailData,
   ProphetGetTeamDetailKeyStar,
   ProphetGetTeamDetailMatch,
-  ProphetGetTeamDetailNews,
   ProphetGetTeamDetailNextMatch,
   ProphetGetTeamDetailPeer
 } from "@/types/prophet-api";
-import { formatNumber } from "@/utils";
+import { buildTeamDetailHref } from "../routes/team";
 
 export interface TeamDetailGroupPeer {
   code: string;
   name: string;
   fifaRank: number;
   logo?: string;
+  link?: string;
 }
 
 export interface TeamDetailHeaderData {
@@ -37,6 +29,7 @@ export interface TeamDetailHeaderData {
   fifaRank?: number;
   groupName?: string;
   titles?: number;
+  marketValue?: string;
 }
 
 export interface TeamDetailViewModel {
@@ -49,8 +42,7 @@ export interface TeamDetailViewModel {
   keyStars: KeyPlayerView[];
   strengthMetrics: StrengthMetric[];
   strengthScore?: number;
-  newsItems: NewsImpactItem[];
-  nextMatch: NextMatchView;
+  nextMatch?: NextMatchView;
   titles: number;
 }
 
@@ -108,8 +100,12 @@ export function mapRecentMatches(
 }
 
 export function mapNextMatch(
-  match: ProphetGetTeamDetailNextMatch
-): NextMatchView {
+  match: ProphetGetTeamDetailNextMatch | null | undefined
+): NextMatchView | undefined {
+  if (!match) {
+    return undefined;
+  }
+
   return {
     id: match.id,
     apiFixtureId: match.api_fixture_id,
@@ -167,64 +163,24 @@ export function mapTeamStrength(data: ProphetGetTeamDetailData): {
 }
 
 export function mapGroupPeers(
-  peers: ProphetGetTeamDetailPeer[] | undefined
+  peers: ProphetGetTeamDetailPeer[] | undefined,
+  teamName: string
 ): TeamDetailGroupPeer[] {
-  return (peers ?? []).map((peer) => ({
-    code: peer.code,
-    name: peer.name,
-    fifaRank: peer.fifaRank,
-    logo: peer.logo || undefined
-  }));
-}
+  return (peers ?? []).map((peer) => {
+    const teamLink = buildTeamDetailHref(peer.name);
 
-function buildThumbnailAlt(matchedPlayers: string[], title: string): string {
-  if (matchedPlayers[0]) {
-    return matchedPlayers[0];
-  }
-
-  return title.split(/\s+/).slice(0, 2).join(" ") || "News";
-}
-
-export function mapTeamDetailNewsToImpactItems(
-  teamName: string,
-  teamCode: Team["code"],
-  news: ProphetGetTeamDetailNews[] | undefined
-): NewsImpactItem[] {
-  return [...(news ?? [])]
-    .sort((a, b) => b.published_at.localeCompare(a.published_at))
-    .map((article, index) => {
-      const matchedTeams = parseJsonArrayField(article.matched_teams_json);
-      const matchedPlayers = parseJsonArrayField(article.matched_players_json);
-      const reasons = parseJsonArrayField(article.reasons_json);
-      const apiScore = article.score ?? 0;
-      const { impactScore, sentiment } = computeImpactScore(apiScore);
-
-      return {
-        id: String(article.id),
-        teamCode,
-        teamName,
-        sentiment,
-        headline: article.title,
-        summary: article.description,
-        publishedAtLabel: formatRelativeTime(article.published_at),
-        impactScore,
-        thumbnailUrl: article.url_to_image || undefined,
-        thumbnailAlt: buildThumbnailAlt(matchedPlayers, article.title),
-        highlighted:
-          index === 0 || apiScore >= NEWS_HIGH_IMPACT_THRESHOLD,
-        publishedAt: article.published_at,
-        sourceUrl: article.url,
-        category: article.category,
-        matchedTeams,
-        matchedPlayers,
-        reasons
-      };
-    });
+    return {
+      code: peer.code,
+      name: peer.name,
+      fifaRank: peer.fifaRank,
+      logo: peer.logo || undefined,
+      link: teamName === peer.name ? undefined : teamLink,
+    };
+  });
 }
 
 export function mapTeamDetailResponse(
-  data: ProphetGetTeamDetailData,
-  teamCode: Team["code"]
+  data: ProphetGetTeamDetailData
 ): TeamDetailViewModel {
   const { metrics, score } = mapTeamStrength(data);
 
@@ -236,16 +192,16 @@ export function mapTeamDetailResponse(
       fifaRank: data.fifa_rank,
       groupName: data.group_name || undefined,
       titles: data.titles,
+      marketValue: data.market_value,
     },
     formResults: data.recent_form?.result ?? [],
     latestLabel: data.recent_form?.latest || undefined,
     recentMatches: mapRecentMatches(data.name, data.recent_form?.matches),
     groupLabel: data.group_name || undefined,
-    groupPeers: mapGroupPeers(data.team_peers),
+    groupPeers: mapGroupPeers(data.team_peers, data.name),
     keyStars: mapKeyStars(data.team_key_stars),
     strengthMetrics: metrics,
     strengthScore: score,
-    newsItems: mapTeamDetailNewsToImpactItems(data.name, teamCode, data.news),
     titles: data.titles,
     nextMatch: mapNextMatch(data.next_match),
   };

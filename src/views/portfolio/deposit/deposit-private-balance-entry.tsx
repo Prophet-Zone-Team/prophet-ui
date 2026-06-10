@@ -22,7 +22,7 @@ import {
   depositPrivatePanelDisabledClass,
   depositPrivateTopUpLinkClass,
   depositSectionLabelClass,
-  depositTransferBarClass,
+  depositTransferBarClass
 } from "@/views/portfolio/deposit/deposit-ui";
 import type { PrivateAccountStatus } from "@/views/portfolio/deposit/types";
 import { fundingPrimaryButtonClass } from "@/views/portfolio/shared/funding-modal-shell";
@@ -74,9 +74,9 @@ export function DepositPrivateBalanceEntry({
     () =>
       formatNumber(privateBalanceUsd ?? 0, 2, true, {
         round: 0,
-        isZeroPrecision: true,
+        isZeroPrecision: true
       }),
-    [privateBalanceUsd],
+    [privateBalanceUsd]
   );
 
   function handlePercent(percent: number) {
@@ -146,7 +146,7 @@ export function DepositPrivateBalanceEntry({
               />
             </div>
 
-            <span className="text-base font-[556] text-black">Not Created</span>
+            <span className="text-base font-[500] text-black">Not Created</span>
           </span>
         ) : (
           <>
@@ -159,13 +159,13 @@ export function DepositPrivateBalanceEntry({
                   aria-hidden="true"
                 />
               </span>
-              <span className="truncate text-base font-[556] text-black">
+              <span className="truncate text-base font-[500] text-black">
                 {privateAccountAddress
                   ? formatShortWallet(privateAccountAddress)
                   : "—"}
               </span>
             </span>
-            <span className="shrink-0 text-base font-[556] text-black">
+            <span className="shrink-0 text-base font-[500] text-black">
               {formattedAccountBalance}
             </span>
           </>
@@ -175,7 +175,7 @@ export function DepositPrivateBalanceEntry({
       <div
         className={cn(
           "flex flex-col gap-4 pt-2",
-          !isInteractive && depositPrivatePanelDisabledClass,
+          !isInteractive && depositPrivatePanelDisabledClass
         )}
       >
         <div className="flex flex-col items-center gap-4">
@@ -207,8 +207,8 @@ export function DepositPrivateBalanceEntry({
 
         <div>
           <div className="flex items-center justify-between gap-1 px-4 py-3">
-            <span className="text-sm font-[556] text-[#909090]">From</span>
-            <span className="text-sm font-[556] text-[#909090]">To</span>
+            <span className="text-sm font-[500] text-[#909090]">From</span>
+            <span className="text-sm font-[500] text-[#909090]">To</span>
           </div>
           <div className={depositTransferBarClass}>
             <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -227,17 +227,24 @@ export function DepositPrivateBalanceEntry({
                 />
               </div>
               <div className="flex min-w-0 flex-col">
-                <span className="text-sm font-[556] text-black">USDC</span>
-                <span className="text-xs font-[556] text-[#909090]">Private</span>
+                <span className="text-sm font-[500] text-black">USDC</span>
+                <span className="text-xs font-[500] text-[#909090]">
+                  Private
+                </span>
               </div>
             </div>
 
-            <ArrowRight className="h-4 w-4 shrink-0 text-[#909090]" aria-hidden="true" />
+            <ArrowRight
+              className="h-4 w-4 shrink-0 text-[#909090]"
+              aria-hidden="true"
+            />
 
             <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
               <div className="flex min-w-0 flex-col items-end">
-                <span className="text-sm font-[556] text-black">USDC</span>
-                <span className="text-xs font-[556] text-[#909090]">Prophet</span>
+                <span className="text-sm font-[500] text-black">USDC</span>
+                <span className="text-xs font-[500] text-[#909090]">
+                  Prophet
+                </span>
               </div>
               <TokenIcon
                 symbol="USDC"
@@ -260,7 +267,7 @@ export function DepositPrivateBalanceEntry({
           type="button"
           className={cn(
             fundingPrimaryButtonClass,
-            !transferEnabled && "opacity-30",
+            !transferEnabled && "opacity-30"
           )}
           disabled={!transferEnabled}
           onClick={() => void handleTransfer()}

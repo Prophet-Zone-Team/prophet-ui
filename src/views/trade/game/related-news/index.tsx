@@ -60,21 +60,21 @@ export function RelatedNews({
           className
         )}
       >
-        <h2 className="m-0 text-[18px] font-[556] leading-[21px] text-black">
+        <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
           Related News
         </h2>
 
         <div className="mt-[12px] flex flex-col gap-[4px]">
           {isLoading ? (
-            <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+            <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
               Loading...
             </p>
           ) : isError ? (
-            <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+            <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
               Unable to load data.
             </p>
           ) : items.length === 0 ? (
-            <p className="py-6 text-center text-[14px] font-[457] leading-[17px] text-[#909090]">
+            <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
               No related news is available for this fixture yet.
             </p>
           ) : (

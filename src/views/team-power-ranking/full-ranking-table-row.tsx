@@ -26,8 +26,12 @@ export function FullRankingDesktopRow({
   return (
     <div
       role="row"
-      className={`${fullRankingTableGridClass} items-center py-[10px] text-[16px] font-[457] leading-[19px] text-black cursor-pointer hover:bg-[#EDEDED] duration-150`}
-      onClick={() => router.push(entry.link)}
+      className={cn(
+        fullRankingTableGridClass,
+        "items-center py-[10px] text-[16px] font-[400] leading-[19px] text-black",
+        entry.link ? "cursor-pointer hover:bg-[#EDEDED] duration-150" : "cursor-default",
+      )}
+      onClick={() => entry.link ? router.push(entry.link) : void 0}
     >
       <span role="cell">{entry.rank}</span>
       <div role="cell" className="min-w-0">
@@ -83,10 +87,10 @@ export function FullRankingMobileCard({
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-[6px] px-3 py-3 text-[14px] font-[457] leading-[17px] text-black",
+        "flex flex-col gap-3 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black",
         className
       )}
-      onClick={() => router.push(entry.link)}
+      onClick={() => entry.link ? router.push(entry.link) : void 0}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
@@ -108,7 +112,9 @@ export function FullRankingMobileCard({
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[12px] leading-[17px] text-[#909090]">Title Probability</span>
+          <span className="text-[12px] leading-[17px] text-[#909090]">
+            Title Probability
+          </span>
           <span className="shrink-0 tabular-nums text-black">
             {formatTitleProbability(entry.titleProbability)}
           </span>
@@ -138,15 +144,21 @@ export function FullRankingMobileCard({
 
       <div className="grid grid-cols-3 gap-2 border-t border-[#EBEBEB] pt-2">
         <div className="flex min-w-0 flex-col items-start gap-1">
-          <span className="text-[12px] leading-[17px] text-[#909090]">Path</span>
+          <span className="text-[12px] leading-[17px] text-[#909090]">
+            Path
+          </span>
           <PathDifficultyLabel difficulty={entry.pathDifficulty} />
         </div>
         <div className="flex flex-col items-center gap-1">
-          <span className="text-[12px] leading-[17px] text-[#909090]">Trend</span>
+          <span className="text-[12px] leading-[17px] text-[#909090]">
+            Trend
+          </span>
           <TrendIndicator trend={entry.trend} />
         </div>
         <div className="flex min-w-0 flex-col items-end gap-1">
-          <span className="text-[12px] leading-[17px] text-[#909090]">Signal</span>
+          <span className="text-[12px] leading-[17px] text-[#909090]">
+            Signal
+          </span>
           <SignalStatusLabel status={entry.signalStatus} />
         </div>
       </div>

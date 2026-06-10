@@ -1,33 +1,33 @@
 "use client";
 
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-
 import type { AuthContextValue } from "@/context/auth/auth-context";
 import {
   formatOrderToastSummary,
-  resolveOrderErrorMessage,
   showOrderErrorToast,
   showOrderSubmittedToast
 } from "@/lib/trading/order-toast";
+import { formatEligibilityRestrictionDetail } from "@/lib/trading/trading-eligibility-client";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
+import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import {
   resolveTradePrimaryAction,
   runTradePrimaryAction
 } from "@/lib/trading/trade-primary-action";
 import { useAuthStore } from "@/store/auth-store";
-import type { TeamMarketSnapshot } from "@/types/market";
+import type { BidOrderPreview } from "@/lib/market/polymarket-order";
+import { buildTeamMarketBuyPreview } from "@/lib/trading/team-market-buy-preview";
+import type { TeamMarketSnapshot, UserOrderPreview } from "@/types/market";
 import {
-  buildTeamTradePreview,
   buildTeamUserOrderPreview,
   ensureTradingReadyForBid,
   fetchReadinessForPreview,
-  getTeamDefaultLimitPrice,
-  submitSignedTradeOrder
+  submitSignedTradeOrder,
+  type SubmitOrderResult
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
 
 export type FastBidStatus = "idle" | "checking" | "submitting";
 
-const FAST_BID_OUTCOME_SIDE = "yes" as const;
 const FAST_BID_TRADE_SIDE = "buy" as const;
 const FAST_BID_ORDER_TYPE = "FAK" as const;
 
@@ -37,6 +37,13 @@ export interface RunFastBidOptions {
   auth: AuthContextValue | undefined;
   router: AppRouterInstance;
   onStatusChange?: (status: FastBidStatus) => void;
+  /** When false, skips POST /v1/user/transaction after a successful submit. Defaults to true. */
+  reportTransaction?: boolean;
+  onSuccess?: (input: {
+    result: SubmitOrderResult;
+    preview: BidOrderPreview;
+    userOrderPreview: UserOrderPreview;
+  }) => void | Promise<void>;
 }
 
 export async function runFastBid({
@@ -44,7 +51,9 @@ export async function runFastBid({
   amount,
   auth,
   router,
-  onStatusChange
+  onStatusChange,
+  onSuccess,
+  reportTransaction = true
 }: RunFastBidOptions): Promise<void> {
   if (!Number.isFinite(amount) || amount <= 0) {
     showOrderErrorToast(
@@ -58,7 +67,10 @@ export async function runFastBid({
     return;
   }
 
-  if (auth.isRegionBlocked) {
+  if (auth.isBuyRestricted) {
+    showOrderErrorToast(
+      formatEligibilityRestrictionDetail(auth.eligibilityView)
+    );
     return;
   }
 
@@ -81,11 +93,15 @@ export async function runFastBid({
       submitLabel: "Bid",
       previewCanSubmit: preview.canSubmitRealOrder,
       previewDisabledReason: preview.disabledReason,
-      isRegionBlocked: auth.isRegionBlocked,
+      isBuyRestricted: auth.isBuyRestricted,
+      isRegionFullyBlocked: auth.isRegionBlocked,
+      isRegionCloseOnly: auth.isRegionCloseOnly,
       eligibilityNetworkError:
         session?.eligibilityStatus === "error" &&
-        Boolean(session.eligibilityReason?.toLowerCase().includes("timeout") ||
-          session.eligibilityReason?.toLowerCase().includes("network")),
+        Boolean(
+          session.eligibilityReason?.toLowerCase().includes("timeout") ||
+          session.eligibilityReason?.toLowerCase().includes("network")
+        )
     });
 
     if (primaryAction.kind !== "submit") {
@@ -116,11 +132,13 @@ export async function runFastBid({
       orderReadiness,
       previewCanSubmit: preview.canSubmitRealOrder,
       previewDisabledReason: preview.disabledReason,
-      isRegionBlocked: auth.isRegionBlocked,
+      tradeSide: FAST_BID_TRADE_SIDE,
+      isBuyRestricted: auth.isBuyRestricted,
+      isRegionFullyBlocked: auth.isRegionBlocked,
       openLogin: () => auth.openLogin(),
       signClobCredentials: () => auth.signClobCredentials(),
       signTokenApprovals: () => auth.signTokenApprovals(),
-      refreshSetupReadiness: () => auth.refreshSetupReadiness(),
+      refreshSetupReadiness: () => auth.refreshSetupReadiness()
     });
 
     if (!gate.ok) {
@@ -140,12 +158,26 @@ export async function runFastBid({
 
     onStatusChange?.("submitting");
 
+    const userOrderPreview = buildTeamUserOrderPreview(snapshot, preview);
+
     const result = await submitSignedTradeOrder({
       session,
       preview,
       orderType: FAST_BID_ORDER_TYPE,
-      userOrderPreview: buildTeamUserOrderPreview(snapshot, preview)
+      userOrderPreview
     });
+
+    if (reportTransaction) {
+      void reportTradeOrderTransaction({
+        userOrderPreview,
+        result,
+        preview,
+        variant: "team",
+        snapshot
+      });
+    }
+
+    await onSuccess?.({ result, preview, userOrderPreview });
 
     showOrderSubmittedToast(
       formatOrderToastSummary({
@@ -167,23 +199,12 @@ export async function runFastBid({
     onStatusChange?.("idle");
   } catch (error) {
     onStatusChange?.("idle");
-    showOrderErrorToast(resolveOrderErrorMessage(error));
+    showOrderErrorToast(error);
   }
 }
 
-export function buildFastBidPreview(snapshot: TeamMarketSnapshot, amount: number) {
-  return buildTeamTradePreview({
-    snapshot,
-    outcomeSide: FAST_BID_OUTCOME_SIDE,
-    tradeSide: FAST_BID_TRADE_SIDE,
-    amount,
-    limitPrice: getTeamDefaultLimitPrice(
-      snapshot,
-      FAST_BID_OUTCOME_SIDE,
-      FAST_BID_TRADE_SIDE
-    ),
-    orderType: FAST_BID_ORDER_TYPE
-  });
+export function buildFastBidPreview(snapshot: TeamMarketSnapshot, amount: number): BidOrderPreview {
+  return buildTeamMarketBuyPreview(snapshot, amount);
 }
 
 export function isTeamFastBidReady(

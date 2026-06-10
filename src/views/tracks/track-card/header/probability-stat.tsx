@@ -31,9 +31,9 @@ export function ProbabilityStat({
         <span className="text-[14px] font-[500] leading-[18px] text-[#3168FF]">
           {teamCode}
         </span>
-      ) : (
-        <ProbabilityChangeTrend changePercent={changePercent} decimals={0} />
-      )}
+      ) : changePercent !== 0 ? (
+        <ProbabilityChangeTrend changePercent={changePercent} decimals={1} />
+      ) : null}
     </StatColumn>
   );
 }

@@ -7,7 +7,7 @@ let tokenConfigured = false;
 function ensureStableflowConfigured() {
   const jwt = process.env.STABLEFLOW_JWT_TOKEN?.trim();
 
-  OpenAPI.DEBUG = true;
+  OpenAPI.DEBUG = false;
 
   if (!jwt) {
     throw new Error("STABLEFLOW_JWT_TOKEN is not configured.");

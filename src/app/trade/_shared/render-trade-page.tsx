@@ -25,6 +25,10 @@ export async function renderGameTradePage(slug: string) {
     notFound();
   }
 
+  if (!detail) {
+    notFound();
+  }
+
   const match = mapProphetGameDetailToMatch(detail);
 
   if (!match) {
@@ -42,7 +46,6 @@ export async function renderGameTradePage(slug: string) {
       gameSnapshot={gameSnapshot}
       fixtureMarkets={fixtureMarkets}
       siblingEventSlugs={siblingEventSlugs}
-      relatedMatches={[]}
       tracked={detail.tracked}
     />
   );

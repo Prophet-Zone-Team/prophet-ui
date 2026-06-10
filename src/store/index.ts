@@ -31,7 +31,9 @@ export {
   FAST_BID_PRESET_AMOUNTS,
   formatFastBidAmountDisplay,
   useFastBidAmount,
+  useNotificationsEnabled,
   useSetFastBidAmount,
+  useSetNotificationsEnabled,
   useUserConfigStore
 } from "@/store/user-config-store";
 export { useConfigHydrated } from "@/store/use-config-hydrated";

@@ -49,6 +49,7 @@ export function WithdrawEntryStep({
   return (
     <div className="flex flex-col gap-3 pb-10 md:pb-2">
       <FundingCryptoEntry
+        reference="withdraw"
         walletAddress={session.walletAddress}
         connectedBalance={
           coreStatus === "loading" ? (

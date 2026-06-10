@@ -1,6 +1,7 @@
 "use client";
 
 import Popover from "@/components/popover";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/cn";
 import {
   formatLimitPriceInputValue,
@@ -21,7 +22,7 @@ export interface TakeProfitLimitRowProps {
 
 function TakeProfitLimitTooltip({ message }: { message: string }) {
   return (
-    <div className="rounded-lg border border-[#EBEBEB] bg-white px-3 py-2 text-sm font-[457] text-black shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
+    <div className="rounded-lg border border-[#EBEBEB] bg-white px-3 py-2 text-sm font-[400] text-black shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
       {message}
     </div>
   );
@@ -43,31 +44,12 @@ export function TakeProfitLimitRow({
         <span className="text-sm font-[500] leading-[18px] text-black">
           Take Profit Limit
         </span>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={enabled}
-          aria-disabled={disabled}
+        <Switch
+          checked={enabled}
+          onCheckedChange={onEnabledChange}
           aria-label="Take profit limit"
           disabled={disabled}
-          onClick={() => {
-            if (!disabled) {
-              onEnabledChange(!enabled);
-            }
-          }}
-          className={cn(
-            "relative h-4 w-[29px] shrink-0 rounded-lg border border-[#EAEAEA] transition-colors",
-            disabled ? "cursor-not-allowed bg-[#EBEBEB]" : "bg-black"
-          )}
-        >
-          <span
-            className={cn(
-              "absolute top-1/2 size-3 -translate-y-1/2 rounded-lg border border-[#EAEAEA] bg-white transition-[left]",
-              enabled && !disabled ? "left-[calc(100%-14px)]" : "left-0.5"
-            )}
-            aria-hidden
-          />
-        </button>
+        />
       </div>
 
       <div className="flex h-[46px] items-center justify-between gap-2 rounded-lg border border-[#EBEBEB] bg-white px-3">
@@ -79,7 +61,7 @@ export function TakeProfitLimitRow({
         </label>
         <div className="flex min-w-0 items-baseline justify-end gap-0.5">
           <span className="text-sm font-[400] leading-[18px] text-black">
-            $
+            ￠
           </span>
           <input
             id="take-profit-limit-price"

@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { debounceEffect } from "@/lib/team/debounced-effect";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import type { MarketTopHolder, MarketTopHolderGroup, TeamMarketSnapshot } from "@/types/market";
 
 interface TopHoldersTableProps {
   snapshot: TeamMarketSnapshot;
+  active: boolean;
 }
 
 interface TopHolderRow {
@@ -78,34 +80,37 @@ function flattenTopHolders(
     .sort((left, right) => right.amount - left.amount);
 }
 
-export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
+export function TopHoldersTable({ snapshot, active }: TopHoldersTableProps) {
   const conditionId = snapshot.market.polymarket?.conditionId;
   const [rows, setRows] = useState<TopHolderRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedOnceRef = useRef(false);
 
   const emptyMessage = useMemo(
     () => `No public holder data available for ${snapshot.team.name}.`,
     [snapshot.team.name],
   );
 
-  const outcomeLabels = useMemo(() => {
-    const tokens = snapshot.market.polymarket?.tokens;
-
-    return {
-      yesTokenId: tokens?.yes?.tokenId,
-      noTokenId: tokens?.no?.tokenId,
-      yesLabel: tokens?.yes?.outcome ?? "Yes",
-      noLabel: tokens?.no?.outcome ?? "No",
-    };
-  }, [snapshot.market.polymarket?.tokens]);
+  const yesTokenId = snapshot.market.polymarket?.tokens?.yes?.tokenId;
+  const noTokenId = snapshot.market.polymarket?.tokens?.no?.tokenId;
+  const yesLabel = snapshot.market.polymarket?.tokens?.yes?.outcome ?? "Yes";
+  const noLabel = snapshot.market.polymarket?.tokens?.no?.outcome ?? "No";
 
   useEffect(() => {
+    if (!active) {
+      return;
+    }
+
     let ignore = false;
 
     async function load() {
-      setLoading(true);
-      setError(null);
+      const silent = hasLoadedOnceRef.current;
+
+      if (!silent) {
+        setLoading(true);
+        setError(null);
+      }
 
       if (!conditionId) {
         if (!ignore) {
@@ -120,17 +125,17 @@ export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
           `/api/market/holders?market=${encodeURIComponent(conditionId)}&limit=20`,
         );
         const nextRows = flattenTopHolders(payload.holders ?? [], {
-          yesTokenId: outcomeLabels.yesTokenId,
-          noTokenId: outcomeLabels.noTokenId,
-          yesLabel: outcomeLabels.yesLabel,
-          noLabel: outcomeLabels.noLabel,
+          yesTokenId,
+          noTokenId,
+          yesLabel,
+          noLabel,
         });
 
         if (!ignore) {
           setRows(nextRows);
         }
       } catch (loadError) {
-        if (!ignore) {
+        if (!ignore && !silent) {
           setRows([]);
           setError(
             loadError instanceof Error
@@ -141,24 +146,24 @@ export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
       } finally {
         if (!ignore) {
           setLoading(false);
+          hasLoadedOnceRef.current = true;
         }
       }
     }
 
-    void load();
+    const cancelDebounce = debounceEffect(() => {
+      if (!ignore) {
+        void load();
+      }
+    });
 
     return () => {
       ignore = true;
+      cancelDebounce();
     };
-  }, [conditionId, outcomeLabels]);
+  }, [active, conditionId, yesTokenId, noTokenId, yesLabel, noLabel]);
 
-  if (loading) {
-    return (
-      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-        Loading top holders…
-      </p>
-    );
-  }
+  const hasData = rows.length > 0;
 
   if (!conditionId) {
     return (
@@ -169,10 +174,10 @@ export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
     );
   }
 
-  if (error) {
+  if (error && !hasData) {
     return (
       <div className="px-4 py-10 text-center">
-        <strong className="block text-sm font-[556] text-black">
+        <strong className="block text-sm font-[500] text-black">
           Top holders unavailable
         </strong>
         <p className="m-0 mt-2 text-sm text-prophet-muted">{error}</p>
@@ -180,12 +185,24 @@ export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
     );
   }
 
-  if (rows.length === 0) {
+  if (loading && !hasData && !error) {
+    return (
+      <p className="px-4 py-8 text-center text-sm text-prophet-muted">
+        Loading top holders…
+      </p>
+    );
+  }
+
+  if (!loading && !hasData && !error) {
     return (
       <p className="px-4 py-10 text-center text-sm text-prophet-muted">
         {emptyMessage}
       </p>
     );
+  }
+
+  if (!hasData) {
+    return null;
   }
 
   return (
@@ -195,11 +212,11 @@ export function TopHoldersTable({ snapshot }: TopHoldersTableProps) {
           key={row.key}
           className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,0.8fr)] gap-2 border-b border-prophet-line/60 px-4 py-2.5 text-sm last:border-b-0"
         >
-          <strong className="truncate font-[556]">{row.label}</strong>
+          <strong className="truncate font-[500]">{row.label}</strong>
           <span className="truncate text-prophet-muted">{row.outcome}</span>
           <span className="tabular-nums">
             {row.amount.toLocaleString(undefined, {
-              maximumFractionDigits: 2,
+              maximumFractionDigits: 2
             })}
           </span>
         </div>

@@ -31,14 +31,11 @@ function isOutcomeBuyable(
 
 function isOutcomeSelected(
   outcome: FixtureMarketOutcome,
-  binarySide: "yes" | "no",
+  _binarySide: "yes" | "no",
   selectedOutcomeId?: string,
-  selectedBinarySide?: "yes" | "no"
+  _selectedBinarySide?: "yes" | "no"
 ): boolean {
-  return (
-    selectedOutcomeId === outcome.id &&
-    (binarySide === undefined || selectedBinarySide === binarySide)
-  );
+  return selectedOutcomeId === outcome.id;
 }
 
 export function HalftimePanel({
@@ -56,7 +53,10 @@ export function HalftimePanel({
     return <HalftimeEmptyState />;
   }
 
-  const totalVolume = outcomes.reduce((sum, item) => sum + (item.volume ?? 0), 0);
+  const totalVolume = outcomes.reduce(
+    (sum, item) => sum + (item.volume ?? 0),
+    0
+  );
 
   return (
     <LineMarketCard
@@ -89,7 +89,7 @@ export function HalftimePanel({
 function HalftimeEmptyState() {
   return (
     <div className="rounded-[12px] border border-dashed border-[#EBEBEB] px-4 py-10 text-center">
-      <p className="m-0 text-sm font-[457] leading-[17px] text-[#909090]">
+      <p className="m-0 text-sm font-[400] leading-[17px] text-[#909090]">
         No half-time markets available for this match.
       </p>
     </div>

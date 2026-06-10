@@ -16,7 +16,8 @@ import {
 import { formatProbability } from "@/components/home/market-formatters";
 import {
   formatChartTimestampClockLabel,
-  formatLiveChartClockLabel,
+  formatGoalEventTime,
+  formatMatchMinuteAxisLabel,
 } from "@/lib/market/match-display";
 import {
   formatGameChartXAxisTick,
@@ -32,8 +33,8 @@ import type {
   GameMatchChartEvent,
 } from "@/types/market";
 import {
-  GoalEventMarkerLayer,
-  type GoalEventMarkerLayerProps,
+  GoalEventMarkerChartProvider,
+  GoalEventMarkerCustomized,
 } from "@/views/trade/game-probability/goal-event-marker-layer";
 
 const CHART_COLORS = {
@@ -97,24 +98,45 @@ export function GameBinaryProbabilityChart({
 
   const yDomain = useMemo(() => getBinaryFixtureChartYDomain(data), [data]);
 
+  const resolvedMaxElapsed = useMemo(() => {
+    if (!isLive) {
+      return 0;
+    }
+
+    if (maxElapsedSeconds > 0) {
+      return maxElapsedSeconds;
+    }
+
+    return Math.max(
+      ...data.map((point) => point.elapsedSeconds ?? 0),
+      LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS
+    );
+  }, [data, isLive, maxElapsedSeconds]);
+
+  const goalMarkerConfig = useMemo(
+    () => ({
+      events,
+      maxElapsedSeconds: resolvedMaxElapsed,
+      homeCode,
+      homeName: primaryLabel,
+      awayCode,
+      awayName: secondaryLabel,
+    }),
+    [
+      awayCode,
+      events,
+      homeCode,
+      primaryLabel,
+      resolvedMaxElapsed,
+      secondaryLabel,
+    ]
+  );
+
   if (data.length === 0) {
     return null;
   }
 
-  const resolvedMaxElapsed = isLive
-    ? maxElapsedSeconds > 0
-      ? maxElapsedSeconds
-      : Math.max(
-          ...data.map((point) => point.elapsedSeconds ?? 0),
-          LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
-        )
-    : 0;
-
-  return (
-    <div className="h-[280px] w-full min-h-[240px] sm:h-[320px] xl:h-[340px]">
-      <div className="flex h-full gap-4">
-        <div className="min-w-0 flex-1">
-          <ResponsiveContainer width="100%" height="100%">
+  const chart = (
             <LineChart
               data={chartData}
               margin={{
@@ -137,8 +159,7 @@ export function GameBinaryProbabilityChart({
                 padding={{ left: 0, right: 32 }}
                 tickFormatter={
                   isLive
-                    ? (value: number) =>
-                        formatLiveChartClockLabel(kickoffAt, value)
+                    ? (value: number) => formatMatchMinuteAxisLabel(value)
                     : (value: string) => formatGameChartXAxisTick(value, timeRange)
                 }
               />
@@ -198,24 +219,28 @@ export function GameBinaryProbabilityChart({
                 />
               ))}
               {isLive ? (
-                <Customized
-                  component={(props: Record<string, unknown>) => (
-                    <GoalEventMarkerLayer
-                      offset={props.offset as GoalEventMarkerLayerProps["offset"]}
-                      width={props.width as number | undefined}
-                      height={props.height as number | undefined}
-                      maxElapsedSeconds={resolvedMaxElapsed}
-                      events={events}
-                      homeCode={homeCode}
-                      homeName={primaryLabel}
-                      awayCode={awayCode}
-                      awayName={secondaryLabel}
-                    />
-                  )}
-                />
+                <Customized component={GoalEventMarkerCustomized} />
               ) : null}
             </LineChart>
-          </ResponsiveContainer>
+  );
+
+  const chartBody = (
+    <ResponsiveContainer width="100%" height="100%">
+      {chart}
+    </ResponsiveContainer>
+  );
+
+  return (
+    <div className="h-[280px] w-full min-h-[240px] sm:h-[320px] xl:h-[340px]">
+      <div className="flex h-full gap-4">
+        <div className="min-w-0 flex-1">
+          {isLive ? (
+            <GoalEventMarkerChartProvider value={goalMarkerConfig}>
+              {chartBody}
+            </GoalEventMarkerChartProvider>
+          ) : (
+            chartBody
+          )}
         </div>
       </div>
     </div>
@@ -242,24 +267,26 @@ function BinaryChartTooltip({
 
   const point = payload[0]?.payload as ChartRow | undefined;
   const timeLabel =
-    isLive && point?.timestamp
-      ? formatChartTimestampClockLabel(point.timestamp)
-      : typeof label === "number"
-        ? formatLiveChartClockLabel(kickoffAt, label)
+    isLive && typeof label === "number"
+      ? formatGoalEventTime(label)
+      : isLive && point?.timestamp
+        ? formatChartTimestampClockLabel(point.timestamp)
         : formatGameChartXAxisTick(String(label ?? ""), timeRange);
 
   return (
     <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-      <p className="m-0 mb-1 text-sm font-[556] leading-[17px] text-[#909090]">
+      <p className="m-0 mb-1 text-sm font-[500] leading-[17px] text-[#909090]">
         {timeLabel}
       </p>
       {payload.map((entry) => {
-        const item = series.find((seriesItem) => seriesItem.key === entry.dataKey);
+        const item = series.find(
+          (seriesItem) => seriesItem.key === entry.dataKey
+        );
 
         return (
           <p
             key={String(entry.dataKey)}
-            className="m-0 text-sm font-[556] leading-[17px]"
+            className="m-0 text-sm font-[500] leading-[17px]"
             style={{ color: entry.color }}
           >
             {item?.label ?? entry.dataKey}:{" "}

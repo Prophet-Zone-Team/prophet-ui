@@ -42,7 +42,7 @@ export function GameMarketSection({
     <section className="flex flex-col gap-2 py-6">
       <div className="flex justify-between items-center relative">
         <div>
-          <p className="text-[60px] font-[556] capitalize leading-[72px]">
+          <p className="text-[60px] font-[500] capitalize leading-[72px]">
             {Math.round(homeProb)}%
           </p>
           <div className="flex min-w-0 items-center gap-2">
@@ -60,7 +60,7 @@ export function GameMarketSection({
             left: Math.round(homeProb) + "%"
           }}
         >
-          <p className="text-xl font-[556] capitalize leading-6">
+          <p className="text-xl font-[500] capitalize leading-6">
             {Math.round(drawProb)}%
           </p>
           <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export function GameMarketSection({
           </div>
         </div>
         <div>
-          <p className="text-right text-[60px] font-[556] capitalize leading-[72px]">
+          <p className="text-right text-[60px] font-[500] capitalize leading-[72px]">
             {Math.round(awayProb)}%
           </p>
           <div className="flex min-w-0 items-center justify-end gap-2">

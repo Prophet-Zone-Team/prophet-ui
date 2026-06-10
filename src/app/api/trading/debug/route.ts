@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { fetchOnchainCollateralSnapshot } from "@/server/trading/onchain-balances";
+import { fetchOnchainCollateralSnapshot } from "@/lib/trading/onchain-collateral";
 import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";

@@ -56,11 +56,17 @@ export function FundingSelectorDropdown({
   }, [onOpenChange, open]);
 
   return (
-    <div ref={containerRef} className={cn("relative flex flex-col gap-2", className)}>
+    <div
+      ref={containerRef}
+      className={cn("relative flex flex-col gap-2", className)}
+    >
       <span className={withdrawFieldLabelClass}>{label}</span>
       <button
         type="button"
-        className={cn(withdrawSelectorBoxClass, disabled && "cursor-not-allowed opacity-50")}
+        className={cn(
+          withdrawSelectorBoxClass,
+          disabled && "cursor-not-allowed opacity-50"
+        )}
         onClick={() => {
           if (!disabled) {
             onOpenChange(!open);
@@ -72,10 +78,15 @@ export function FundingSelectorDropdown({
       >
         <span className="flex items-center gap-2">
           {triggerIcon}
-          <span className="text-base font-[556] text-black">{triggerLabel}</span>
+          <span className="text-base font-[500] text-black">
+            {triggerLabel}
+          </span>
         </span>
         <ChevronDown
-          className={cn("h-4 w-4 shrink-0 text-[#909090] transition-transform", open && "rotate-180")}
+          className={cn(
+            "h-4 w-4 shrink-0 text-[#909090] transition-transform",
+            open && "rotate-180"
+          )}
           aria-hidden="true"
         />
       </button>

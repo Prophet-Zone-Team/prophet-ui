@@ -2,13 +2,21 @@
 
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
+import { getToastTopOffset } from "@/config/toast-layout";
+
 export function Toaster(props: ToasterProps) {
+  const topOffset = getToastTopOffset();
+
   return (
     <Sonner
       theme="light"
       position="top-right"
+      offset={{ top: topOffset }}
+      mobileOffset={{ top: topOffset }}
       closeButton
       richColors
+      expand
+      visibleToasts={5}
       toastOptions={{
         classNames: {
           toast:

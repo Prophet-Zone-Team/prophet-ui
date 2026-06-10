@@ -26,7 +26,7 @@ export function RankingFilterPill({
   return (
     <label
       className={cn(
-        "relative inline-flex h-[34px] max-w-full cursor-pointer items-center text-[14px] font-[457] md:text-[16px]",
+        "relative inline-flex h-[34px] max-w-full cursor-pointer items-center text-[14px] font-[400] md:text-[16px]",
         "rounded-[20px] border border-[#909090] px-3 gap-3 md:px-[12px] md:gap-[18px]",
         className
       )}

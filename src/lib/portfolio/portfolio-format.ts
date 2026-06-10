@@ -1,4 +1,29 @@
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import type {
+  PortfolioTimeRange,
+  PortfolioTransactionRecord
+} from "@/lib/portfolio/types";
+
+const PORTFOLIO_PNL_PERIOD_LABELS: Record<PortfolioTimeRange, string> = {
+  "1H": "Past hour",
+  "1D": "Past 24 hours",
+  "1W": "Past week",
+  "1M": "Past month",
+  YTD: "Year to date",
+  All: "All time"
+};
+
+export function getPortfolioPnlPeriodLabel(range: PortfolioTimeRange): string {
+  return PORTFOLIO_PNL_PERIOD_LABELS[range];
+}
+
+export function formatPortfolioPnlHoverTime(timestamp?: number): string {
+  if (timestamp == null) {
+    return "—";
+  }
+
+  return formatUnixSeconds(timestamp);
+}
 
 export function formatSignedPercent(value?: number): string {
   if (!value) {
@@ -51,6 +76,42 @@ export function formatPnlSubline(cashPnl: number, percentPnl: number): string {
 
 export function titleCase(value: string): string {
   return value.replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+export function formatTransactionPrice(price: string): string {
+  const numeric = Number(price);
+
+  if (!Number.isFinite(numeric)) {
+    return price.startsWith("$") ? price : `$${price}`;
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 3
+  }).format(numeric);
+}
+
+export function formatPortfolioTransactionMarketName(
+  transaction: Pick<
+    PortfolioTransactionRecord,
+    "marketName" | "teamName" | "source"
+  >
+): string {
+  const marketName = transaction.marketName.trim();
+
+  if (marketName && marketName !== "—") {
+    return marketName;
+  }
+
+  const teamName = transaction.teamName.trim();
+
+  if (transaction.source === "strategy" && teamName) {
+    return `Will ${teamName} win the 2026 FIFA World Cup?`;
+  }
+
+  return marketName || "—";
 }
 
 export function getOutcomeToneClass(outcome: string): string {

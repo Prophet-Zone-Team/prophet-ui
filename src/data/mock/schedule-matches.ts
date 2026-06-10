@@ -3,8 +3,7 @@ import { join } from "node:path";
 
 import type { FreshnessMeta, WorldCupMatch } from "@/types/market";
 
-/** Flip to true for local schedule UI testing (5 mock fixtures). */
-export const USE_MOCK_SCHEDULE_MATCHES = false;
+
 
 const MOCK_MATCH_ID_PREFIX = "mock-";
 

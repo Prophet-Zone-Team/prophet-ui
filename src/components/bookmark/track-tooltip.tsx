@@ -16,7 +16,7 @@ export function TrackLink() {
   return (
     <Link
       href="/tracks"
-      className="pointer-events-auto font-[556] underline-offset-2 hover:underline"
+      className="pointer-events-auto font-[500] underline-offset-2 hover:underline"
     >
       [Tracks]
     </Link>

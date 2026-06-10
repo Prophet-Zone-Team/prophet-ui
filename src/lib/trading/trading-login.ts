@@ -11,6 +11,9 @@ import { getAccount } from "wagmi/actions";
 import { getConnectGate } from "@/context/rainbowkit/connect-gate";
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import { signMessageWithWallet } from "@/components/trading/wallet-provider";
+import { activatePrivyWallet } from "@/context/privy/privy-wallet-bridge";
+import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
+import { useAuthStore } from "@/store/auth-store";
 import { deriveTradingCredentials } from "@/lib/trading/clob-credentials-client";
 import {
   deployDepositWallet,
@@ -18,14 +21,16 @@ import {
   pollDepositWalletUntilDeployed,
 } from "@/lib/trading/deposit-wallet-client";
 import { submitDepositWalletApproval } from "@/lib/trading/deposit-wallet-approval";
-import { fetchJson } from "@/lib/team/client-fetch";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
+import {
+  fetchTradingBalancesWithOnchain,
+  fetchTradingReadinessWithOnchain,
+} from "@/lib/trading/trading-balances-client";
 import { isSetupStepComplete } from "@/lib/trading/trading-setup";
 import { ensureTradingChain } from "@/lib/trading/wallet-trading-chain";
 import type {
   DepositWalletCheckResponse,
   TradingUserSession,
-  UserTradingBalancesResponse,
   UserTradingReadiness,
 } from "@/types/market";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
@@ -209,11 +214,13 @@ export async function ensureTokenApprovals(
 }
 
 async function fetchTradingReadiness() {
-  return fetchJson<UserTradingReadiness>("/api/trading/readiness");
+  return fetchTradingReadinessWithOnchain();
 }
 
 export async function fetchTradingBalances() {
-  return fetchJson<UserTradingBalancesResponse>("/api/trading/balances");
+  const session = useAuthStore.getState().session;
+
+  return fetchTradingBalancesWithOnchain(session);
 }
 
 export async function fetchTradingReadinessWithBalances() {
@@ -232,9 +239,24 @@ export async function connectWallet(options?: {
 }): Promise<string> {
   options?.onStep?.("requesting_wallet");
 
+  const loginMethod = useAuthStore.getState().loginMethod;
+  const preferEmbedded = loginMethod === "email" || loginMethod === "google";
+
+  if (preferEmbedded) {
+    await releaseExternalWalletConnection();
+
+    const embeddedAddress = await activatePrivyWallet(options?.expectedAddress, {
+      preferEmbedded: true,
+    });
+
+    if (embeddedAddress) {
+      return embeddedAddress;
+    }
+  }
+
   const account = getAccount(wagmiConfig);
 
-  if (account.isConnected && account.address) {
+  if (account.isConnected && account.address && !preferEmbedded) {
     if (
       !options?.expectedAddress ||
       account.address.toLowerCase() === options.expectedAddress.toLowerCase()

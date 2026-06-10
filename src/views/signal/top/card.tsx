@@ -48,7 +48,7 @@ function SignalTopCardThumbnail({
       className={cn(
         "grid size-[72px] shrink-0 place-items-center rounded-[12px] md:size-[100px]",
         "bg-[linear-gradient(135deg,#E8ECF4_0%,#C5CEDE_100%)]",
-        "text-[24px] font-[556] text-[#5A6478]"
+        "text-[24px] font-[500] text-[#5A6478]"
       )}
       aria-label={alt}
     >
@@ -69,7 +69,11 @@ function SentimentIcon({
   return <PositiveSentimentIcon />;
 }
 
-export function SignalTopCard({ item, onSelect, className }: SignalTopCardProps) {
+export function SignalTopCard({
+  item,
+  onSelect,
+  className
+}: SignalTopCardProps) {
   const isPositiveImpact = item.impactScore >= 0;
 
   return (
@@ -101,35 +105,36 @@ export function SignalTopCard({ item, onSelect, className }: SignalTopCardProps)
             <TeamFlag
               code={item.teamCode}
               name={item.teamName}
-              className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] shadow-[0_0_2px_rgba(0,0,0,0.2)] md:h-[20px] md:w-[20px] md:text-[20px]"
+              className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] md:h-[20px] md:w-[20px] md:text-[20px]"
+              fallback={false}
             />
-            <span className="truncate text-base font-[556] leading-[19px] text-black md:text-[18px] md:leading-[21px]">
+            <span className="truncate text-base font-[500] leading-[19px] text-black md:text-[18px] md:leading-[21px]">
               {item.teamName}
             </span>
             <span className="shrink-0 [&_svg]:size-[18px]">
               <SentimentIcon sentiment={item.sentiment} />
             </span>
           </div>
-          <span className="shrink-0 whitespace-nowrap text-[12px] font-[457] leading-[14px] text-[#909090] md:hidden">
+          <span className="shrink-0 whitespace-nowrap text-[12px] font-[400] leading-[14px] text-[#909090] md:hidden">
             {item.publishedAtLabel}
           </span>
         </div>
 
-        <h3 className="m-0 mt-1 line-clamp-2 text-base font-[556] leading-[19px] text-black md:mt-[8px] md:line-clamp-1 md:text-[18px] md:leading-[21px]">
+        <h3 className="m-0 mt-1 line-clamp-2 text-base font-[500] leading-[19px] text-black md:mt-[8px] md:line-clamp-1 md:text-[18px] md:leading-[21px]">
           {item.headline}
         </h3>
 
-        <p className="m-0 mt-1 line-clamp-2 text-[14px] font-[457] leading-[17px] text-[#909090] md:mt-[6px]">
+        <p className="m-0 mt-1 line-clamp-2 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-[6px]">
           {item.summary}
         </p>
 
         <div className="mt-2 flex items-baseline justify-between md:hidden">
-          <span className="text-[12px] font-[457] leading-[14px] text-[#909090]">
+          <span className="text-[12px] font-[400] leading-[14px] text-[#909090]">
             Impact
           </span>
           <span
             className={cn(
-              "text-base font-[556] leading-[19px]",
+              "text-base font-[500] leading-[19px]",
               isPositiveImpact ? "text-[#7BCA25]" : "text-[#FF674B]"
             )}
           >
@@ -139,18 +144,18 @@ export function SignalTopCard({ item, onSelect, className }: SignalTopCardProps)
       </div>
 
       <div className="hidden w-[52px] shrink-0 flex-col items-end pb-[18px] md:flex">
-        <span className="whitespace-nowrap text-[12px] font-[457] leading-[14px] text-[#909090]">
+        <span className="whitespace-nowrap text-[12px] font-[400] leading-[14px] text-[#909090]">
           {item.publishedAtLabel}
         </span>
         <span
           className={cn(
-            "mt-[10px] text-[18px] font-[556] leading-[21px]",
+            "mt-[10px] text-[18px] font-[500] leading-[21px]",
             isPositiveImpact ? "text-[#7BCA25]" : "text-[#FF674B]"
           )}
         >
           {formatImpactScore(item.impactScore)}
         </span>
-        <span className="mt-[8px] text-[12px] font-[457] leading-[14px] text-[#909090]">
+        <span className="mt-[8px] text-[12px] font-[400] leading-[14px] text-[#909090]">
           Impact
         </span>
       </div>

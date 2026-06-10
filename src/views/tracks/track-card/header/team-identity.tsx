@@ -16,7 +16,7 @@ export function TeamIdentity({ team, slug }: TeamIdentityProps) {
       <TeamFlag
         code={team.code}
         name={team.name}
-        className="mx-0 h-7 w-7 shrink-0 rounded-[2px] text-[28px] shadow-[0_0_2px_rgba(0,0,0,0.2)] md:mx-4 md:h-[32px] md:w-[32px] md:text-[32px]"
+        className="mx-0 h-7 w-7 shrink-0 rounded-[2px] text-[28px] md:mx-4 md:h-[32px] md:w-[32px] md:text-[32px]"
       />
       <div className="min-w-0">
         <h3 className="m-0 truncate text-[18px] font-[500] leading-[23px] text-black">

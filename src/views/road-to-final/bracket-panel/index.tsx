@@ -21,6 +21,7 @@ import { PathList } from "./path-list";
 
 export function BracketPanel({
   calculationError,
+  embedded = false,
   finishType,
   knockoutWinners,
   onKnockoutWinnersChange,
@@ -34,6 +35,7 @@ export function BracketPanel({
   viewMode
 }: {
   calculationError?: string;
+  embedded?: boolean;
   finishType: FinishType;
   knockoutWinners: KnockoutWinners;
   onKnockoutWinnersChange: (winners: KnockoutWinners) => void;
@@ -46,19 +48,21 @@ export function BracketPanel({
   thirdPlaceOption?: ThirdPlaceAllocationOption;
   viewMode: "graph" | "list";
 }) {
-  return (
-    <Panel className="flex min-w-0 flex-col" aria-labelledby="road-bracket-title">
-      <div>
-        <span className="text-[12px] font-[300] uppercase tracking-wide text-[#909090]">
-          Road to Final
-        </span>
-        <h2
-          id="road-bracket-title"
-          className="m-0 mt-[4px] text-[18px] font-[400] text-black"
-        >
-          Knockout Path
-        </h2>
-      </div>
+  const body = (
+    <>
+      {!embedded ? (
+        <div>
+          <span className="text-[12px] font-[300] uppercase tracking-wide text-[#909090]">
+            Road to Final
+          </span>
+          <h2
+            id="road-bracket-title"
+            className="m-0 mt-[4px] text-[18px] font-[400] text-black"
+          >
+            Knockout Path
+          </h2>
+        </div>
+      ) : null}
 
       <div className="mt-[16px] flex flex-wrap items-end justify-between gap-[12px]">
         <div className="flex flex-wrap gap-[12px]">
@@ -154,6 +158,16 @@ export function BracketPanel({
           )}
         </div>
       ) : null}
+    </>
+  );
+
+  if (embedded) {
+    return <div className="flex min-w-0 flex-col">{body}</div>;
+  }
+
+  return (
+    <Panel className="flex min-w-0 flex-col" aria-labelledby="road-bracket-title">
+      {body}
     </Panel>
   );
 }

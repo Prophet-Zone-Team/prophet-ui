@@ -16,7 +16,7 @@ export interface HomePageShellProps {
 }
 
 const heroStatValueClassName =
-  "text-[26px] md:text-[32px] font-[556] leading-[38px] text-black";
+  "text-[26px] md:text-[32px] font-[500] leading-[38px] text-black";
 
 export function HomePageShell({ children }: HomePageShellProps) {
   const { snapshots, totalVolume, status, isLoading } = useTeams();
@@ -57,7 +57,7 @@ export function HomePageShell({ children }: HomePageShellProps) {
           code={topMove.team.code}
           name={topMove.team.name}
           logoUrl={topMove.team.logoUrl}
-          className="rounded-[2px] text-base shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="rounded-[2px] text-base"
         />
         <span className={heroStatValueClassName}>{topMove.team.code}</span>
         <ProbabilityChangeTrend changePercent={changePercent} decimals={1} />

@@ -4,6 +4,16 @@ export function formatProbability(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
+/** Truncates to one decimal place; shows "<0.1%" for small positive values. */
+export function formatChartProbability(value: number): string {
+  if (value > 0 && value < 0.1) {
+    return "<0.1%";
+  }
+
+  const truncated = Math.floor(value * 10) / 10;
+  return `${truncated.toFixed(1)}%`;
+}
+
 export function formatListProbability(value: number): string {
   if (value > 0 && value < 1) {
     return "<1%";
@@ -26,7 +36,13 @@ export function formatChangePercentMagnitude(
   value: number,
   decimals = 0
 ): string {
-  return `${Math.abs(value).toFixed(decimals)}%`;
+  const magnitude = Math.abs(value);
+
+  if (magnitude > 0 && magnitude < 1) {
+    return "<1%";
+  }
+
+  return `${magnitude.toFixed(decimals)}%`;
 }
 
 

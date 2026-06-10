@@ -43,7 +43,7 @@ interface TeamDirectoryRow {
 }
 
 const heroStatValueClassName =
-  "block text-[32px] font-[556] leading-[38px] text-black";
+  "block text-[32px] font-[500] leading-[38px] text-black";
 
 export function TeamsPage({
   snapshots,
@@ -75,15 +75,16 @@ export function TeamsPage({
   return (
     <section className={teamsPageClass}>
       <header className="pb-8">
-        <p className="text-sm font-[556] uppercase tracking-[0.18em] text-prophet-muted">
+        <p className="text-sm font-[500] uppercase tracking-[0.18em] text-prophet-muted">
           Team directory
         </p>
         <h1 id="teams-page-title" className={cn("mt-2", teamsHeroTitleClass)}>
           World Cup team dossiers
         </h1>
         <p className={cn("mt-4", teamsHeroCopyClass)}>
-          Scan national teams by rank, squad value, recent form, group context, key players,
-          news, and third-party odds. Market probability remains a secondary comparison layer.
+          Scan national teams by rank, squad value, recent form, group context,
+          key players, news, and third-party odds. Market probability remains a
+          secondary comparison layer.
         </p>
         <div
           className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
@@ -106,15 +107,30 @@ export function TeamsPage({
         className="mb-6 grid gap-4 lg:grid-cols-3"
         aria-label="Featured football team data"
       >
-        <FeaturedTeamCard title="Top FIFA Rank" row={topRankedTeam} metric="rank" />
-        <FeaturedTeamCard title="Squad Value" row={mostValuableTeam} metric="value" />
-        <FeaturedTeamCard title="Recent Form" row={bestFormTeam ?? rows[0]} metric="form" />
+        <FeaturedTeamCard
+          title="Top FIFA Rank"
+          row={topRankedTeam}
+          metric="rank"
+        />
+        <FeaturedTeamCard
+          title="Squad Value"
+          row={mostValuableTeam}
+          metric="value"
+        />
+        <FeaturedTeamCard
+          title="Recent Form"
+          row={bestFormTeam ?? rows[0]}
+          metric="form"
+        />
       </section>
 
-      <section className={teamsPanelClass} aria-label="World Cup team directory">
+      <section
+        className={teamsPanelClass}
+        aria-label="World Cup team directory"
+      >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="m-0 text-lg font-[556] text-black">Teams directory</h2>
-          <span className="text-xs font-[556] text-prophet-muted">
+          <h2 className="m-0 text-lg font-[500] text-black">Teams directory</h2>
+          <span className="text-xs font-[500] text-prophet-muted">
             {getFootballStatusCopy(dataStatus, universe)}
           </span>
         </div>
@@ -142,10 +158,12 @@ export function TeamsPage({
 
         <footer className="mt-5 flex flex-col gap-1 text-xs text-prophet-muted sm:flex-row sm:justify-between">
           <span>
-            Squad values, honors, and key stars are curated metadata with source timestamps.
+            Squad values, honors, and key stars are curated metadata with source
+            timestamps.
           </span>
           <span>
-            Bid opens your own Polymarket order preview with user-owned wallet signing.
+            Bid opens your own Polymarket order preview with user-owned wallet
+            signing.
           </span>
         </footer>
       </section>
@@ -181,19 +199,23 @@ function FeaturedTeamCard({
   return (
     <article className={teamsFeaturedCardClass}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-[556] uppercase tracking-wide text-prophet-muted">
+        <span className="text-xs font-[500] uppercase tracking-wide text-prophet-muted">
           {title}
         </span>
-        <strong className="text-sm font-[556] text-black">{featured.badge}</strong>
+        <strong className="text-sm font-[500] text-black">
+          {featured.badge}
+        </strong>
       </div>
       <div className="flex items-center gap-3">
         <TeamFlag
           code={team.code}
           name={team.name}
-          className="h-10 w-10 shrink-0 rounded-[2px] text-[40px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-10 w-10 shrink-0 rounded-[2px] text-[40px]"
         />
         <div className="min-w-0">
-          <h3 className="m-0 text-lg font-[556] leading-[21px] text-black">{team.name}</h3>
+          <h3 className="m-0 text-lg font-[500] leading-[21px] text-black">
+            {team.name}
+          </h3>
           <p className={cn("m-0 mt-0.5", teamsMetricLabelClass)}>
             {team.code} / {team.region}
             {row.metadata?.group ? ` / Group ${row.metadata.group}` : ""}
@@ -201,10 +223,18 @@ function FeaturedTeamCard({
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <FeaturedMetric label={featured.primaryLabel} value={featured.primaryValue} />
-        <FeaturedMetric label={featured.secondaryLabel} value={featured.secondaryValue} />
+        <FeaturedMetric
+          label={featured.primaryLabel}
+          value={featured.primaryValue}
+        />
+        <FeaturedMetric
+          label={featured.secondaryLabel}
+          value={featured.secondaryValue}
+        />
       </div>
-      <p className="m-0 text-xs leading-relaxed text-prophet-muted">{featured.copy}</p>
+      <p className="m-0 text-xs leading-relaxed text-prophet-muted">
+        {featured.copy}
+      </p>
       <div className="flex flex-wrap gap-2">
         <Link className={teamsDetailButtonClass} href={teamDetailHref(team.id)}>
           View dossier
@@ -220,8 +250,8 @@ function FeaturedTeamCard({
 function FeaturedMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-prophet-line/80 bg-white/80 px-3 py-2">
-      <strong className="block text-sm font-[556] text-black">{value}</strong>
-      <span className="mt-0.5 block text-[10px] font-[556] uppercase tracking-wide text-prophet-muted">
+      <strong className="block text-sm font-[500] text-black">{value}</strong>
+      <span className="mt-0.5 block text-[10px] font-[500] uppercase tracking-wide text-prophet-muted">
         {label}
       </span>
     </div>

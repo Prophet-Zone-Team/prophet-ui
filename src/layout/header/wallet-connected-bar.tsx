@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import {
@@ -33,7 +35,7 @@ export function WalletConnectedBar({
   onPrivateTopup,
   onPrivateBalanceClick,
   onToggleMenu,
-  isPrivateMode,
+  isPrivateMode
 }: WalletConnectedBarProps) {
   const popoverRef = useRef<any>(null);
 
@@ -57,16 +59,25 @@ export function WalletConnectedBar({
   return (
     <div className={walletConnectedBarClass}>
       <RegionRestrictedControl restricted={regionRestricted}>
-        <PrivateBalance onClick={onPrivateBalanceClick} className="hidden md:flex" />
+        <PrivateBalance
+          onClick={onPrivateBalanceClick}
+          className="hidden md:flex"
+        />
       </RegionRestrictedControl>
       <div className="hidden md:block h-[31px] w-px shrink-0 bg-prophet-line"></div>
-      <div className="hidden md:flex flex-col justify-center items-end gap-0">
+      <Link
+        href="/portfolio"
+        className="hidden md:flex flex-col justify-center items-end gap-0 cursor-pointer h-[50px] px-2.5 rounded-lg border border-[#FFFFFF] transition-colors hover:border-[#EBEBEB]"
+        aria-label="Open Portfolio"
+      >
         <span className={walletBalanceLabelClass}>Balance</span>
         <span className={walletBalanceValueClass}>${balanceDisplay}</span>
-      </div>
+      </Link>
 
       {regionRestricted ? (
-        <RegionRestrictedControl restricted>{depositButton}</RegionRestrictedControl>
+        <RegionRestrictedControl restricted>
+          {depositButton}
+        </RegionRestrictedControl>
       ) : (
         // <Popover
         //   ref={popoverRef}

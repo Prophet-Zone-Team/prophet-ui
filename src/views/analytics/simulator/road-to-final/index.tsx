@@ -16,7 +16,7 @@ import type { RoadToFinalBracket } from "./types";
 
 const ROUND_HEADERS = [
   { key: "r16", label: "Round of 16", width: BRACKET_SLOT_WIDTH + 10 },
-  { key: "r16-gap", label: "", width: 25 },
+  { key: "r16-gap", label: "", width: 20 },
   { key: "qf", label: "Quater Finals", width: BRACKET_SLOT_WIDTH + 10 },
   { key: "qf-gap", label: "", width: 20 },
   { key: "sf", label: "Semi Finals", width: BRACKET_SLOT_WIDTH + 10 },
@@ -47,7 +47,7 @@ export function RoadToFinal({
         {ROUND_HEADERS.map((round) => (
           <span
             key={round.key}
-            className="shrink-0 text-[12px] font-[400] leading-[17px] text-[#909090]"
+            className="shrink-0 text-[12px] font-[400] leading-[17px] text-[#909090] whitespace-nowrap"
             style={{ width: round.width }}
             aria-hidden={round.label ? undefined : true}
           >

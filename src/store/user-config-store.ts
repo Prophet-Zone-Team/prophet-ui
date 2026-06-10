@@ -10,8 +10,12 @@ export const FAST_BID_PRESET_AMOUNTS = [5, 10, 100, 1000] as const;
 interface UserConfigState {
   fastBidAmount: number;
   showOrderbook: boolean;
+  showStrategyNotice: boolean;
+  notificationsEnabled: boolean;
   setFastBidAmount: (amount: number) => void;
   setShowOrderbook: (value: boolean) => void;
+  dismissStrategyNotice: () => void;
+  setNotificationsEnabled: (value: boolean) => void;
 }
 
 export function normalizeFastBidAmount(amount: number): number {
@@ -37,31 +41,48 @@ export const useUserConfigStore = create<UserConfigState>()(
     (set) => ({
       fastBidAmount: DEFAULT_FAST_BID_AMOUNT,
       showOrderbook: true,
+      showStrategyNotice: true,
+      notificationsEnabled: true,
       setFastBidAmount: (amount) => {
         set({ fastBidAmount: normalizeFastBidAmount(amount) });
       },
       setShowOrderbook: (value) => {
         set({ showOrderbook: value });
+      },
+      dismissStrategyNotice: () => {
+        set({ showStrategyNotice: false });
+      },
+      setNotificationsEnabled: (value) => {
+        set({ notificationsEnabled: value });
       }
     }),
     {
       name: "wc-user-config",
-      version: 2,
+      version: 4,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         fastBidAmount: state.fastBidAmount,
-        showOrderbook: state.showOrderbook
+        showOrderbook: state.showOrderbook,
+        showStrategyNotice: state.showStrategyNotice,
+        notificationsEnabled: state.notificationsEnabled
       }),
       migrate: (persisted) => {
         const state = persisted as
-          | { fastBidAmount?: number; showOrderbook?: boolean }
+          | {
+              fastBidAmount?: number;
+              showOrderbook?: boolean;
+              showStrategyNotice?: boolean;
+              notificationsEnabled?: boolean;
+            }
           | undefined;
 
         return {
           fastBidAmount: normalizeFastBidAmount(
             state?.fastBidAmount ?? DEFAULT_FAST_BID_AMOUNT
           ),
-          showOrderbook: state?.showOrderbook ?? true
+          showOrderbook: state?.showOrderbook ?? true,
+          showStrategyNotice: state?.showStrategyNotice ?? true,
+          notificationsEnabled: state?.notificationsEnabled ?? true
         };
       }
     }
@@ -82,4 +103,20 @@ export function useShowOrderbook() {
 
 export function useSetShowOrderbook() {
   return useUserConfigStore((state) => state.setShowOrderbook);
+}
+
+export function useShowStrategyNotice() {
+  return useUserConfigStore((state) => state.showStrategyNotice);
+}
+
+export function useDismissStrategyNotice() {
+  return useUserConfigStore((state) => state.dismissStrategyNotice);
+}
+
+export function useNotificationsEnabled() {
+  return useUserConfigStore((state) => state.notificationsEnabled);
+}
+
+export function useSetNotificationsEnabled() {
+  return useUserConfigStore((state) => state.setNotificationsEnabled);
 }

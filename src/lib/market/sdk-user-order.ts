@@ -13,12 +13,24 @@ import type { BidOrderPreview } from "@/lib/market/polymarket-order";
 import type { SignedUserOrderPayload } from "@/lib/market/user-order";
 import { createViemClobWalletClient } from "@/lib/trading/viem-clob-signer";
 import type { WalletClient } from "viem";
+import {
+  isLimitOrderType,
+  resolveMarketOrderWorstPrice,
+} from "@/lib/market/order-math";
 import type { TradingOrderType } from "@/types/market";
 
 const POLYGON_CHAIN_ID = 137;
 const ZERO_TAKER = "0x0000000000000000000000000000000000000000" as const;
 const EXCHANGE_V2 = "0xE111180000d2663C0091e4f400237545B87B996B";
 const NEG_RISK_EXCHANGE_V2 = "0xe2222d279d744050d28e00520010520000310F59";
+const BUILDER_CODE_PATTERN = /^0x[a-fA-F0-9]{64}$/;
+
+interface TradingConfigResponse {
+  builderCode?: string;
+}
+
+let cachedBuilderCode: string | undefined;
+let builderCodeRequest: Promise<string | undefined> | null = null;
 
 interface SdkSignedOrderV2 {
   salt: string;
@@ -50,7 +62,8 @@ export async function buildSdkSignedUserOrder({
   funderAddress,
   orderType,
   expiration,
-  signer
+  signer,
+  builderCode
 }: {
   preview: BidOrderPreview;
   walletAddress: string;
@@ -58,6 +71,7 @@ export async function buildSdkSignedUserOrder({
   orderType: TradingOrderType;
   expiration?: string;
   signer?: WalletClient;
+  builderCode?: string;
 }): Promise<SignedUserOrderPayload> {
   if (!preview.tokenId) {
     throw new Error(
@@ -73,27 +87,38 @@ export async function buildSdkSignedUserOrder({
     SignatureTypeV2.POLY_1271,
     funderAddress
   );
-  const signingMeta = await resolveSigningOptions(preview);
+  const [signingMeta, resolvedBuilderCode] = await Promise.all([
+    resolveSigningOptions(preview),
+    resolveOrderBuilderCode(builderCode)
+  ]);
   const options = {
     tickSize: signingMeta.tickSize,
     negRisk: signingMeta.negRisk
   };
   const side = preview.tradeSide === "buy" ? Side.BUY : Side.SELL;
-  const marketOrderPrice = resolveMarketOrderPrice(preview, orderType, signingMeta);
+  const marketOrderPrice = resolveMarketOrderPrice(
+    preview,
+    orderType,
+    signingMeta
+  );
   const limitExpiration =
     expiration !== undefined && expiration !== "0"
       ? Number(expiration)
       : undefined;
+  const builderCodeField = resolvedBuilderCode
+    ? { builderCode: resolvedBuilderCode }
+    : {};
 
-  const signedOrder =
-    orderType === "GTC"
+  const signedOrder = isLimitOrderType(orderType)
       ? await orderBuilder.buildOrder(
           {
             tokenID: preview.tokenId,
             price: preview.sidePrice,
             size: preview.shareSize,
             side,
-            ...(limitExpiration !== undefined && Number.isFinite(limitExpiration)
+            ...builderCodeField,
+            ...(limitExpiration !== undefined &&
+            Number.isFinite(limitExpiration)
               ? { expiration: limitExpiration }
               : {})
           },
@@ -106,7 +131,8 @@ export async function buildSdkSignedUserOrder({
             amount: resolveMarketOrderAmount(preview),
             price: marketOrderPrice,
             side,
-            orderType: orderType === "FOK" ? OrderType.FOK : OrderType.FAK
+            orderType: orderType === "FOK" ? OrderType.FOK : OrderType.FAK,
+            ...builderCodeField
           },
           options,
           2
@@ -166,6 +192,40 @@ function toSignedUserOrderPayload(
   };
 }
 
+function isValidBuilderCode(value: string | undefined): value is string {
+  return Boolean(value && BUILDER_CODE_PATTERN.test(value));
+}
+
+async function resolveOrderBuilderCode(
+  builderCode?: string
+): Promise<string | undefined> {
+  if (isValidBuilderCode(builderCode)) {
+    return builderCode;
+  }
+
+  if (cachedBuilderCode) {
+    return cachedBuilderCode;
+  }
+
+  if (!builderCodeRequest) {
+    builderCodeRequest = fetchJson<TradingConfigResponse>("/api/trading/config")
+      .then((config) => {
+        if (isValidBuilderCode(config.builderCode)) {
+          cachedBuilderCode = config.builderCode;
+          return config.builderCode;
+        }
+
+        return undefined;
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        builderCodeRequest = null;
+      });
+  }
+
+  return builderCodeRequest;
+}
+
 async function resolveSigningOptions(preview: BidOrderPreview): Promise<ClobSigningMeta> {
   const previewNegRisk = preview.negRisk ?? false;
 
@@ -192,15 +252,19 @@ function resolveMarketOrderPrice(
   orderType: TradingOrderType,
   signingMeta: ClobSigningMeta
 ): number {
-  if (orderType === "GTC") {
+  const tickSize = signingMeta.tickSize ?? toSupportedTickSize(preview.tickSize);
+
+  if (isLimitOrderType(orderType)) {
     return preview.sidePrice;
   }
 
-  if (preview.tradeSide === "buy") {
-    return signingMeta.bestAsk ?? preview.sidePrice;
-  }
-
-  return signingMeta.bestBid ?? preview.sidePrice;
+  return resolveMarketOrderWorstPrice({
+    tradeSide: preview.tradeSide,
+    sidePrice: preview.sidePrice,
+    bestAsk: signingMeta.bestAsk,
+    bestBid: signingMeta.bestBid,
+    tickSize,
+  });
 }
 
 function toSupportedTickSize(tickSize: BidOrderPreview["tickSize"]): TickSize {

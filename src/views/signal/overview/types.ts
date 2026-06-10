@@ -1,4 +1,4 @@
-export type ImpactSentiment = "positive" | "neutral" | "negative";
+export type ImpactSentiment = "positive" | "negative";
 
 export type ImpactDistributionSegment = {
   sentiment: ImpactSentiment;

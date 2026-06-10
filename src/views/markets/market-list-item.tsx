@@ -28,10 +28,10 @@ export interface MarketListItemProps {
   navigationDisabled?: boolean;
 }
 
-const rowLabelClassName = "text-[12px] font-[457] text-[#909090]";
+const rowLabelClassName = "text-[12px] font-[400] text-[#909090]";
 
 const bidButtonClassName =
-  "inline-flex h-[36px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] px-2 text-[14px] font-[556] leading-[17px] text-white disabled:cursor-wait disabled:opacity-70";
+  "inline-flex h-[36px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] px-2 text-[14px] font-[500] leading-[17px] text-white disabled:cursor-wait disabled:opacity-70";
 
 export function MarketListItem({
   snapshot,
@@ -92,7 +92,7 @@ export function MarketListItem({
       )}
       style={{
         background:
-          changePercent < 0
+          changePercent >= 0
             ? "linear-gradient(90deg, rgba(220, 255, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
             : "linear-gradient(90deg, rgba(255, 181, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
       }}
@@ -102,17 +102,17 @@ export function MarketListItem({
           slug={market.polymarket?.slug || ""}
           teamName={team.name}
         />
-        <span className="w-[18px] shrink-0 text-center text-[18px] font-[556] leading-[21px] text-black">
+        <span className="w-[18px] shrink-0 text-center text-[18px] font-[500] leading-[21px] text-black">
           {rank}
         </span>
         <TeamFlag
           code={team.code}
           name={team.name}
           logoUrl={team.logoUrl}
-          className="h-[32px] w-[32px] shrink-0 rounded-[2px] text-[32px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+          className="h-[32px] w-[32px] shrink-0 rounded-[2px] text-[32px]"
         />
         <div className="min-w-0">
-          <h3 className="m-0 text-[18px] font-[556] leading-[21px] text-black">
+          <h3 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
             {team.name}
           </h3>
           <p className={cn("m-0 mt-0.5", rowLabelClassName)}>{subtitle}</p>
@@ -125,7 +125,7 @@ export function MarketListItem({
             {isLoading ? (
               <MarketListMetricLoading variant="probability" />
             ) : (
-              <span className="text-[24px] font-[556] leading-[29px] text-black">
+              <span className="text-[24px] font-[500] leading-[29px] text-black">
                 {hasLiveValues
                   ? formatListProbability(market.probability)
                   : "-"}
@@ -145,7 +145,7 @@ export function MarketListItem({
           {isLoading ? (
             <MarketListMetricLoading variant="volume" />
           ) : (
-            <strong className="text-lg font-[556] leading-[21px] text-black">
+            <strong className="text-lg font-[500] leading-[21px] text-black">
               {hasLiveValues ? `$${formatVolume(market.volume)}` : "-"}
             </strong>
           )}
@@ -172,7 +172,7 @@ export function MarketListItem({
           </>
         </FastBidButton>
         <Link
-          className="flex-1 md:flex-grow-0 px-2 inline-flex h-[36px] w-[83px] items-center justify-center rounded-lg border border-[#909090] bg-white text-[14px] font-[556] leading-[17px] text-[#18110F]"
+          className="flex-1 md:flex-grow-0 px-2 inline-flex h-[36px] w-[83px] items-center justify-center rounded-lg border border-[#909090] bg-white text-[14px] font-[500] leading-[17px] text-[#18110F]"
           href={detailHref}
         >
           Details
