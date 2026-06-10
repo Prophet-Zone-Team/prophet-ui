@@ -8,6 +8,11 @@ import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import type { OpenOrderMarketGroup } from "@/lib/portfolio/group-open-orders";
 import { resolveOpenOrderMarketTitle } from "@/lib/portfolio/group-open-orders";
+import {
+  formatOpenOrderExpiration,
+  formatOpenOrderFilled,
+  formatOpenOrderTotal
+} from "@/lib/portfolio/open-order-format";
 import { resolvePortfolioPositionTradeHref } from "@/lib/portfolio/resolve-position-trade-href";
 import {
   resolvePortfolioMarketIcon,
@@ -15,18 +20,26 @@ import {
 } from "@/lib/portfolio/teams-condition";
 import { PortfolioMarketCell } from "@/views/portfolio/portfolio-market-cell";
 import { PortfolioOpenOrderCancelAllDialog } from "@/views/portfolio/portfolio-open-order-cancel-all-dialog";
-import { PortfolioOpenOrderRows } from "@/views/portfolio/portfolio-open-order-rows";
-import { portfolioActionButtonClass } from "@/views/portfolio/portfolio-ui";
-
-const SUMMARY_GRID =
-  "grid w-full grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto] items-center gap-x-3";
-
-const SUMMARY_LABEL_CLASS =
-  "font-[Sora] text-sm font-normal leading-normal text-[#909090]";
+import { PortfolioOpenOrderCancelDialog } from "@/views/portfolio/portfolio-open-order-cancel-dialog";
+import {
+  PortfolioOpenOrderCancelButton,
+  PortfolioOpenOrderChildDesktopRow,
+  PortfolioOpenOrderChildMobileCard,
+  PortfolioOpenOrderDataCells,
+  PortfolioOpenOrderSingleMarketCell
+} from "@/views/portfolio/portfolio-open-order-rows";
+import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mobile";
+import {
+  portfolioActionButtonClass,
+  portfolioOrdersTableRowClass,
+  portfolioTableMobileCardClass
+} from "@/views/portfolio/portfolio-ui";
+import type { UserOpenOrder } from "@/lib/portfolio/types";
 
 export type PortfolioOpenOrderMarketCardProps = {
   group: OpenOrderMarketGroup;
   marketContextMap: Record<string, OpenOrderMarketContext>;
+  layout: "desktop" | "mobile";
   defaultExpanded?: boolean;
   className?: string;
 };
@@ -34,11 +47,16 @@ export type PortfolioOpenOrderMarketCardProps = {
 export function PortfolioOpenOrderMarketCard({
   group,
   marketContextMap,
-  defaultExpanded = true,
+  layout,
+  defaultExpanded = false,
   className
 }: PortfolioOpenOrderMarketCardProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [cancelAllOpen, setCancelAllOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<{
+    order: UserOpenOrder;
+    marketTitle: string;
+  } | null>(null);
   const { isRegionBlocked } = useAuth();
   const regionRestricted = isRegionBlocked;
 
@@ -66,82 +84,264 @@ export function PortfolioOpenOrderMarketCard({
 
     return resolvePortfolioMarketIcon(teams, firstOrder.outcome);
   }, [group.orders, teams]);
+
   const orderCount = group.orders.length;
-  const orderLabel = orderCount === 1 ? "order" : "orders";
+  const isSingleOrder = orderCount === 1;
+  const singleOrder = group.orders[0];
+
+  if (!singleOrder && orderCount === 0) {
+    return null;
+  }
+
+  const handleCancelOrder = (order: UserOpenOrder) => {
+    setCancelTarget({ order, marketTitle });
+  };
+
+  if (layout === "desktop") {
+    if (isSingleOrder && singleOrder) {
+      return (
+        <>
+          <div className={cn(portfolioOrdersTableRowClass, className)} role="row">
+            <div role="cell" className="min-w-0">
+              <PortfolioOpenOrderSingleMarketCell
+                title={marketTitle}
+                href={tradeHref}
+                icon={marketIcon}
+                order={singleOrder}
+              />
+            </div>
+            <PortfolioOpenOrderDataCells order={singleOrder} />
+            <PortfolioOpenOrderCancelButton
+              regionRestricted={regionRestricted}
+              onCancel={() => handleCancelOrder(singleOrder)}
+            />
+          </div>
+          {cancelTarget ? (
+            <PortfolioOpenOrderCancelDialog
+              open
+              order={cancelTarget.order}
+              marketTitle={cancelTarget.marketTitle}
+              onClose={() => setCancelTarget(null)}
+            />
+          ) : null}
+        </>
+      );
+    }
+
+    return (
+      <>
+        <div className={cn(portfolioOrdersTableRowClass, className)} role="row">
+          <div role="cell" className="min-w-0">
+            <PortfolioMarketCell
+              title={marketTitle}
+              href={tradeHref}
+              outcome=""
+              icon={marketIcon}
+            />
+            <button
+              type="button"
+              onClick={() => setExpanded((value) => !value)}
+              aria-expanded={expanded}
+              aria-label={
+                expanded ? "Collapse market orders" : "Expand market orders"
+              }
+              className="mt-0.5 inline-flex items-center gap-1 text-left"
+            >
+              <span className="font-[Sora] text-xs font-normal text-[#909090]">
+                {orderCount} orders
+              </span>
+              <ChevronDown
+                className={cn(
+                  "size-3.5 shrink-0 text-[#909090] transition-transform duration-200",
+                  expanded && "rotate-180"
+                )}
+                aria-hidden
+              />
+            </button>
+          </div>
+          <span role="cell" className="text-prophet-muted">
+            —
+          </span>
+          <span role="cell" className="text-prophet-muted">
+            —
+          </span>
+          <span role="cell" className="text-prophet-muted">
+            —
+          </span>
+          <RegionRestrictedControl restricted={regionRestricted}>
+            <button
+              type="button"
+              role="cell"
+              className={cn(
+                portfolioActionButtonClass,
+                "justify-self-end whitespace-nowrap",
+                "disabled:opacity-50"
+              )}
+              disabled={regionRestricted}
+              onClick={() => {
+                if (!regionRestricted) {
+                  setCancelAllOpen(true);
+                }
+              }}
+            >
+              Cancel All
+            </button>
+          </RegionRestrictedControl>
+        </div>
+
+        {expanded
+          ? group.orders.map((order) => (
+              <PortfolioOpenOrderChildDesktopRow
+                key={order.id}
+                order={order}
+                regionRestricted={regionRestricted}
+                onCancel={() => handleCancelOrder(order)}
+              />
+            ))
+          : null}
+
+        {cancelTarget ? (
+          <PortfolioOpenOrderCancelDialog
+            open
+            order={cancelTarget.order}
+            marketTitle={cancelTarget.marketTitle}
+            onClose={() => setCancelTarget(null)}
+          />
+        ) : null}
+
+        {cancelAllOpen ? (
+          <PortfolioOpenOrderCancelAllDialog
+            open
+            marketId={group.marketId}
+            marketTitle={marketTitle}
+            orders={group.orders}
+            onClose={() => setCancelAllOpen(false)}
+          />
+        ) : null}
+      </>
+    );
+  }
+
+  if (isSingleOrder && singleOrder) {
+    return (
+      <>
+        <article className={cn(portfolioTableMobileCardClass, className)}>
+          <PortfolioOpenOrderSingleMarketCell
+            title={marketTitle}
+            href={tradeHref}
+            icon={marketIcon}
+            order={singleOrder}
+          />
+          <PortfolioTableMobileField label="Filled">
+            {formatOpenOrderFilled(singleOrder)}
+          </PortfolioTableMobileField>
+          <PortfolioTableMobileField label="Total">
+            {formatOpenOrderTotal(singleOrder)}
+          </PortfolioTableMobileField>
+          <PortfolioTableMobileField
+            label="Expiration"
+            valueClassName="font-normal text-prophet-muted"
+          >
+            {formatOpenOrderExpiration(singleOrder)}
+          </PortfolioTableMobileField>
+          <PortfolioOpenOrderCancelButton
+            regionRestricted={regionRestricted}
+            onCancel={() => handleCancelOrder(singleOrder)}
+            className="w-full"
+          />
+        </article>
+        {cancelTarget ? (
+          <PortfolioOpenOrderCancelDialog
+            open
+            order={cancelTarget.order}
+            marketTitle={cancelTarget.marketTitle}
+            onClose={() => setCancelTarget(null)}
+          />
+        ) : null}
+      </>
+    );
+  }
 
   return (
     <>
-      <article
-        className={cn("overflow-hidden border-b border-[#EBEBEB]", className)}
-        aria-label={marketTitle}
-      >
-        <div className="overflow-x-auto">
-          <div
+      <article className={cn(portfolioTableMobileCardClass, className)}>
+        <PortfolioMarketCell
+          title={marketTitle}
+          href={tradeHref}
+          outcome=""
+          icon={marketIcon}
+        />
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          aria-expanded={expanded}
+          aria-label={
+            expanded ? "Collapse market orders" : "Expand market orders"
+          }
+          className="inline-flex items-center gap-1 text-left"
+        >
+          <span className="font-[Sora] text-xs font-normal text-[#909090]">
+            {orderCount} orders
+          </span>
+          <ChevronDown
             className={cn(
-              SUMMARY_GRID,
-              "min-w-[640px] bg-white px-4 pb-4 pt-4"
+              "size-3.5 shrink-0 text-[#909090] transition-transform duration-200",
+              expanded && "rotate-180"
             )}
-          >
-            <div className="min-w-0">
-              <PortfolioMarketCell
-                title={marketTitle}
-                href={tradeHref}
-                outcome=""
-                icon={marketIcon}
-              />
-            </div>
-            <span className="font-[Sora] text-base font-normal leading-5 text-black tabular-nums">
-              {orderCount} {orderLabel}
-            </span>
-            <div className="flex shrink-0 items-center justify-end gap-2 self-center">
-              <RegionRestrictedControl restricted={regionRestricted}>
-                <button
-                  type="button"
-                  className={cn(
-                    portfolioActionButtonClass,
-                    "disabled:opacity-50"
-                  )}
-                  disabled={regionRestricted}
-                  onClick={() => {
-                    if (!regionRestricted) {
-                      setCancelAllOpen(true);
-                    }
-                  }}
-                >
-                  Cancel All
-                </button>
-              </RegionRestrictedControl>
-              <button
-                type="button"
-                onClick={() => setExpanded((value) => !value)}
-                aria-expanded={expanded}
-                aria-label={
-                  expanded ? "Collapse market orders" : "Expand market orders"
-                }
-                className={cn(
-                  "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
-                  "border border-[#EBEBEB] bg-white text-black transition-colors hover:bg-[#fafafa]"
-                )}
-              >
-                <ChevronDown
-                  className={cn(
-                    "size-4 shrink-0 transition-transform duration-200",
-                    expanded && "rotate-180"
-                  )}
-                  aria-hidden
-                />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {expanded ? (
-          <PortfolioOpenOrderRows
-            orders={group.orders}
-            marketTitle={marketTitle}
+            aria-hidden
           />
-        ) : null}
+        </button>
+        <PortfolioTableMobileField label="Filled" valueClassName="text-prophet-muted">
+          —
+        </PortfolioTableMobileField>
+        <PortfolioTableMobileField label="Total" valueClassName="text-prophet-muted">
+          —
+        </PortfolioTableMobileField>
+        <PortfolioTableMobileField
+          label="Expiration"
+          valueClassName="font-normal text-prophet-muted"
+        >
+          —
+        </PortfolioTableMobileField>
+        <RegionRestrictedControl restricted={regionRestricted}>
+          <button
+            type="button"
+            className={cn(
+              portfolioActionButtonClass,
+              "w-full",
+              "disabled:opacity-50"
+            )}
+            disabled={regionRestricted}
+            onClick={() => {
+              if (!regionRestricted) {
+                setCancelAllOpen(true);
+              }
+            }}
+          >
+            Cancel All
+          </button>
+        </RegionRestrictedControl>
       </article>
+
+      {expanded
+        ? group.orders.map((order) => (
+            <PortfolioOpenOrderChildMobileCard
+              key={`${order.id}-mobile`}
+              order={order}
+              regionRestricted={regionRestricted}
+              onCancel={() => handleCancelOrder(order)}
+            />
+          ))
+        : null}
+
+      {cancelTarget ? (
+        <PortfolioOpenOrderCancelDialog
+          open
+          order={cancelTarget.order}
+          marketTitle={cancelTarget.marketTitle}
+          onClose={() => setCancelTarget(null)}
+        />
+      ) : null}
 
       {cancelAllOpen ? (
         <PortfolioOpenOrderCancelAllDialog
