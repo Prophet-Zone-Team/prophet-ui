@@ -6,6 +6,9 @@ import { PortfolioEmptyState } from "@/views/portfolio/portfolio-empty-state";
 import { PortfolioOpenOrderMarketCard } from "@/views/portfolio/portfolio-open-order-market-card";
 import {
   portfolioConnectButtonClass,
+  portfolioOrdersTableHeadClass,
+  portfolioTableDesktopScrollClass,
+  portfolioTableMobileListClass,
   portfolioTableScrollClass
 } from "@/views/portfolio/portfolio-ui";
 
@@ -15,6 +18,18 @@ export interface PortfolioOpenOrdersTableProps {
   needsWallet: boolean;
   loading: boolean;
   onConnectWallet: () => void;
+}
+
+function PortfolioOpenOrdersTableHeader() {
+  return (
+    <div className={portfolioOrdersTableHeadClass}>
+      <span>Market</span>
+      <span>Filled</span>
+      <span>Total</span>
+      <span>Expiration</span>
+      <span className="justify-self-end text-right">Action</span>
+    </div>
+  );
 }
 
 export function PortfolioOpenOrdersTable({
@@ -52,6 +67,9 @@ export function PortfolioOpenOrdersTable({
   if (marketGroups.length === 0) {
     return (
       <div className={portfolioTableScrollClass} aria-label="Open orders">
+        <div className={portfolioTableDesktopScrollClass}>
+          <PortfolioOpenOrdersTableHeader />
+        </div>
         <PortfolioEmptyState
           title="No open orders"
           body="No open CLOB orders were returned for the connected account."
@@ -62,12 +80,24 @@ export function PortfolioOpenOrdersTable({
 
   return (
     <div className={portfolioTableScrollClass} aria-label="Open orders">
-      <div className="flex flex-col">
+      <div className={portfolioTableDesktopScrollClass}>
+        <PortfolioOpenOrdersTableHeader />
         {marketGroups.map((group) => (
           <PortfolioOpenOrderMarketCard
             key={group.marketId}
             group={group}
             marketContextMap={marketContextMap}
+            layout="desktop"
+          />
+        ))}
+      </div>
+      <div className={portfolioTableMobileListClass}>
+        {marketGroups.map((group) => (
+          <PortfolioOpenOrderMarketCard
+            key={`${group.marketId}-mobile`}
+            group={group}
+            marketContextMap={marketContextMap}
+            layout="mobile"
           />
         ))}
       </div>
