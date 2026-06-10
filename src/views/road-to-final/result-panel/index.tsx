@@ -44,15 +44,9 @@ export function ResultPanel({
   thirdPlaceOption?: ThirdPlaceAllocationOption;
   onBackToKnockout: () => void;
 }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loginInProgress, openLogin } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
   const champion = getWorldCupTeamByIdOrCode(championTeamId ?? "");
-  const focusTeam = getWorldCupTeamByIdOrCode(teamId);
-  const finalOpponents =
-    result?.rounds
-      .find((round) => round.round === "FINAL")
-      ?.possibleOpponentTeams.slice(0, 2) ?? [];
-
   return (
     <Panel>
       <div className="flex flex-col gap-[16px] lg:flex-row">
@@ -115,25 +109,24 @@ export function ResultPanel({
         </article>
 
         <aside className="flex w-full shrink-0 flex-col gap-[8px] lg:w-[280px]">
-          <button
-            type="button"
-            className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black disabled:cursor-not-allowed disabled:opacity-30"
-            disabled={!isAuthenticated}
-            title={
-              !isAuthenticated
-                ? "Connect wallet to download screenshot"
-                : undefined
-            }
-            onClick={() => {
-              if (!isAuthenticated) {
-                return;
-              }
-
-              setShareOpen(true);
-            }}
-          >
-            Download screenshot
-          </button>
+          {isAuthenticated ? (
+            <button
+              type="button"
+              className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
+              onClick={() => setShareOpen(true)}
+            >
+              Download screenshot
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black disabled:cursor-wait disabled:opacity-70"
+              disabled={loginInProgress}
+              onClick={() => void openLogin()}
+            >
+              {loginInProgress ? "Connecting..." : "Connect wallet"}
+            </button>
+          )}
           <CopyButton
             text={shareUrl}
             ariaLabel="Copy share link"
