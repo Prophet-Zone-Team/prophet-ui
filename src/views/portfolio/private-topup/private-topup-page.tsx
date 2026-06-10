@@ -106,6 +106,10 @@ export function PrivateTopupPage() {
     await loadFundingBalances();
   }, [refreshPrivateBalance, loadFundingBalances]);
 
+  useEffect(() => {
+    void refreshPrivateBalance({ requiredSession: false });
+  }, [refreshPrivateBalance]);
+
   return (
     <PrivateTopupProvider
       value={{
@@ -148,7 +152,7 @@ export function PrivateTopupPage() {
             privateAccountAddress={privateAccountAddress}
             privateBalanceUsd={privateBalanceUsd}
             privateBalanceLoading={privateBalanceStatus === "loading"}
-            onRefreshPrivateBalance={() => refreshPrivateBalance()}
+            onRefreshPrivateBalance={() => refreshPrivateBalance({ requiredSession: false })}
             onTopUp={() => setDialogOpen(true)}
           />
 
