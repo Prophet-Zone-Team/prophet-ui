@@ -19,7 +19,6 @@ import { TeamStrengthPanel } from "@/views/team/team-strength-panel";
 import { teamPageClass } from "@/views/team/team-detail-ui";
 import { TeamRecentMatchesPanel } from "./team-recent-matches-panel";
 import { DossierGroupContext } from "./dossier-group-context";
-import { DossierKeyStars } from "./dossier-key-stars";
 
 export interface TeamDetailViewProps {
   snapshot: TeamMarketSnapshot;
@@ -67,11 +66,11 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
               />
               <TeamProbabilityPanel snapshot={snapshot} />
               <div className="grid gird-cols-1 gap-4 col-span-2">
+                <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
                 <TeamNewsSignalsPanel
                   items={marketNews.newsItems}
                   snapshot={snapshot}
                 />
-                <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
               </div>
             </div>
             <div className="grid gird-cols-1 gap-4">
@@ -81,7 +80,6 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
                 outcomeButtonContainerClassName="gap-3"
               />
               <TeamNextMatchPanel nextMatch={data?.nextMatch} snapshot={snapshot} />
-              <DossierKeyStars players={data?.keyStars ?? []} />
               <TeamMarketIntelligencePanel
                 snapshot={snapshot}
                 dataStatus={dataStatus}
