@@ -27,6 +27,7 @@ import {
 import type { PrivateAccountStatus } from "@/views/portfolio/deposit/types";
 import { fundingPrimaryButtonClass } from "@/views/portfolio/shared/funding-modal-shell";
 import { TokenIcon } from "@/views/portfolio/shared/token-icon";
+import { useAuth } from "@/context/auth";
 
 const PERCENT_OPTIONS = [25, 50, 75, 100] as const;
 
@@ -65,6 +66,7 @@ export function DepositPrivateBalanceEntry({
   const [inputValue, setInputValue] = useState("0");
   const [phase, setPhase] = useState<UnshieldPhase>("idle");
   const { unshield } = useConfidentialUnshield();
+  const { syncCash } = useAuth();
 
   const isInteractive = status === "funded";
   const maxBalanceUsd = privateBalanceUsd ?? 0;
@@ -110,6 +112,7 @@ export function DepositPrivateBalanceEntry({
       toast.success("Transfer complete");
       setInputValue("0");
       onTransferred?.();
+      syncCash();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       toast.error(message);
