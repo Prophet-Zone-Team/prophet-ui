@@ -1,20 +1,13 @@
 "use client";
 
 import { erc20Abi, parseUnits, type Address, type Chain, type Hex } from "viem";
-import { arbitrum, bsc, optimism, polygon } from "viem/chains";
 
 import { getWalletClientForAddress } from "@/components/trading/wallet-provider";
 import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import { isNativeFundingToken } from "@/lib/funding/evm-balances";
 import { isWagmiOnChain } from "@/lib/trading/wallet-chain-sync";
 import Big from "big.js";
-
-const VIEM_CHAIN_BY_ID: Record<number, Chain> = {
-  [arbitrum.id]: arbitrum,
-  [optimism.id]: optimism,
-  [bsc.id]: bsc,
-  [polygon.id]: polygon,
-};
+import { getFundingEvmChain } from "@/config/funding/evm-chains";
 
 export interface CollateralTransferParams {
   tokenAddress: string;
@@ -73,7 +66,7 @@ export async function transferCollateralFromConnectedWallet({
   walletAddress: string;
   chainId: number;
 }): Promise<{ txHash: Hex }> {
-  const chain = VIEM_CHAIN_BY_ID[chainId];
+  const chain = getFundingEvmChain(chainId);
 
   if (!chain) {
     throw new Error(`Transfers are not configured for chainId ${chainId}.`);
