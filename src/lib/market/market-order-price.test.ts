@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { resolveMarketOrderWorstPrice } from "@/lib/market/order-math";
+import {
+  isSignedMarketOrderPriceWithinGuard,
+  resolveMarketOrderWorstPrice,
+} from "@/lib/market/order-math";
 
 describe("resolveMarketOrderWorstPrice", () => {
   it("uses the ticket price when REST best ask is stale and lower", () => {
@@ -45,5 +48,43 @@ describe("resolveMarketOrderWorstPrice", () => {
     });
 
     assert.equal(price, 0.055);
+  });
+});
+
+describe("isSignedMarketOrderPriceWithinGuard", () => {
+  it("allows SDK rounding above the guarded buy price for high-probability markets", () => {
+    const withinGuard = isSignedMarketOrderPriceWithinGuard({
+      orderPrice: 5_000_000 / 5_681_818,
+      tradeSide: "buy",
+      sidePrice: 0.86,
+      bestAsk: 0.86,
+      tickSize: "0.01",
+    });
+
+    assert.equal(withinGuard, true);
+  });
+
+  it("allows ticket prices above the current best ask when slippage is applied", () => {
+    const withinGuard = isSignedMarketOrderPriceWithinGuard({
+      orderPrice: 0.9,
+      tradeSide: "buy",
+      sidePrice: 0.88,
+      bestAsk: 0.86,
+      tickSize: "0.01",
+    });
+
+    assert.equal(withinGuard, true);
+  });
+
+  it("rejects buy orders that are materially above the guarded price", () => {
+    const withinGuard = isSignedMarketOrderPriceWithinGuard({
+      orderPrice: 0.95,
+      tradeSide: "buy",
+      sidePrice: 0.88,
+      bestAsk: 0.86,
+      tickSize: "0.01",
+    });
+
+    assert.equal(withinGuard, false);
   });
 });
