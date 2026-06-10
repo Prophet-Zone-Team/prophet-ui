@@ -334,6 +334,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
     const currentSession = store.session;
 
+    console.log("currentSession", currentSession);
+
     if (!currentSession) {
       store.clearPrivateBalance();
       return;
