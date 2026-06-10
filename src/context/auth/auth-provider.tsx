@@ -330,13 +330,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const refreshPrivateBalance = useCallback(async () => {
+  const refreshPrivateBalance = useCallback(async (params?: { requiredSession?: boolean; }) => {
+    const { requiredSession = true } = params ?? {};
+
     const store = useAuthStore.getState();
     const currentSession = store.session;
 
-    console.log("currentSession", currentSession);
-
-    if (!currentSession) {
+    if (!currentSession && requiredSession) {
       store.clearPrivateBalance();
       return;
     }
