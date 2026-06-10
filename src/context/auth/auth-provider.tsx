@@ -910,8 +910,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const openLogin = useCallback(async () => {
     const store = useAuthStore.getState();
 
-    debugger
-
     try {
       await wagmiDisconnect();
     } catch { }
