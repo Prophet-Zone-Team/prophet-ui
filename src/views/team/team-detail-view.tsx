@@ -6,25 +6,20 @@ import { useTeamDetail } from "@/hooks/team/use-team-detail";
 import { getTeamMarketMovementNarrative } from "@/lib/analytics/map-team-market-news";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { TradeWidget } from "@/views/trade/trade-widget";
-import { DossierStrip } from "@/views/team/dossier-strip";
 import { TeamDetailFootnote } from "@/views/team/team-detail-footnote";
 import { TeamDetailHeader } from "@/views/team/team-detail-header";
 import { TeamDetailBodySkeleton } from "@/views/team/team-detail-loading";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import { TeamKeyPlayersPanel } from "@/views/team/team-key-players-panel";
-import { TeamLineupPanel } from "@/views/team/team-lineup-panel";
 import { TeamMarketIntelligencePanel } from "@/views/team/team-market-intelligence-panel";
 import { TeamNewsSignalsPanel } from "@/views/team/team-news-signals-panel";
 import { TeamNextMatchPanel } from "@/views/team/team-next-match-panel";
 import { TeamProbabilityPanel } from "@/views/team/team-probability-panel";
 import { TeamStrengthPanel } from "@/views/team/team-strength-panel";
-import {
-  teamMainColumnClass,
-  teamMainGridClass,
-  teamPageClass,
-  teamSidebarClass,
-  teamTwoUpClass
-} from "@/views/team/team-detail-ui";
+import { teamPageClass } from "@/views/team/team-detail-ui";
+import { TeamRecentMatchesPanel } from "./team-recent-matches-panel";
+import { DossierGroupContext } from "./dossier-group-context";
+import { DossierKeyStars } from "./dossier-key-stars";
 
 export interface TeamDetailViewProps {
   snapshot: TeamMarketSnapshot;
@@ -62,38 +57,31 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
         <TeamDetailBodySkeleton />
       ) : (
         <>
-          <DossierStrip
-            groupLabel={data?.groupLabel}
-            peers={data?.groupPeers ?? []}
-            keyStars={data?.keyStars ?? []}
-            recentMatches={data?.recentMatches ?? []}
-          />
-
-          <div className={teamMainGridClass}>
-            <div className={teamMainColumnClass}>
-              <div className={teamTwoUpClass}>
-                <TeamStrengthPanel
-                  metrics={data?.strengthMetrics ?? []}
-                  overallScore={data?.strengthScore}
-                />
-                <TeamProbabilityPanel snapshot={snapshot} />
-              </div>
-
-              <TeamNewsSignalsPanel
-                items={marketNews.newsItems}
-                snapshot={snapshot}
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_345px] gap-4">
+            <div className="md:grid md:grid-cols-2 flex flex-col gap-4">
+              <TeamRecentMatchesPanel matches={data?.recentMatches ?? []} />
+              <DossierGroupContext groupLabel={data?.groupLabel} peers={data?.groupPeers ?? []} />
+              <TeamStrengthPanel
+                metrics={data?.strengthMetrics ?? []}
+                overallScore={data?.strengthScore}
               />
-              {/* <TeamLineupPanel squad={[]} injuries={[]} dataIssues={[]} /> */}
-              <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
+              <TeamProbabilityPanel snapshot={snapshot} />
+              <div className="grid gird-cols-1 gap-4 col-span-2">
+                <TeamNewsSignalsPanel
+                  items={marketNews.newsItems}
+                  snapshot={snapshot}
+                />
+                <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
+              </div>
             </div>
-
-            <aside className={teamSidebarClass}>
-              <TeamNextMatchPanel nextMatch={data?.nextMatch} snapshot={snapshot} />
+            <div className="grid gird-cols-1 gap-4">
               <TradeWidget
                 snapshot={snapshot}
                 outcomeButtonClassName="w-full"
                 outcomeButtonContainerClassName="gap-3"
               />
+              <TeamNextMatchPanel nextMatch={data?.nextMatch} snapshot={snapshot} />
+              <DossierKeyStars players={data?.keyStars ?? []} />
               <TeamMarketIntelligencePanel
                 snapshot={snapshot}
                 dataStatus={dataStatus}
@@ -106,7 +94,7 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
                   marketNews.totalNews
                 )}
               />
-            </aside>
+            </div>
           </div>
 
           <TeamDetailFootnote dataStatus={dataStatus} />
