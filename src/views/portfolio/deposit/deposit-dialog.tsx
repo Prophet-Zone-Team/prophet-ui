@@ -10,7 +10,6 @@ import { FundingNetworkType } from "@/config/funding";
 import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import { reportFundingTransaction } from "@/lib/portfolio/user";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
-import { selectTokenUsdValue } from "@/lib/funding/price-selectors";
 import type { SupportedChainOption } from "@/lib/funding/supported-assets";
 import {
   getStableflowTokensForChain,
@@ -27,7 +26,7 @@ import {
   resolvePendingDepositConvertMode,
   type FunderCollateralBalances
 } from "@/lib/trading/deposit-wallet-convert";
-import { useDeposit, useEvmBalances, usePendingFunderUsdc, usePrices } from "@/hooks/funding";
+import { useDeposit, useEvmBalances, usePrices } from "@/hooks/funding";
 import { useAuth } from "@/context/auth";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { useAuthStore } from "@/store";
@@ -96,22 +95,17 @@ export function DepositDialog({
     privateBalance,
     onAuthenticateConfidential,
     confidentialAccount,
+    confirmPendingDeposit,
   } = useAuth();
   const loginMethod = useAuthStore((state) => state.loginMethod);
   const isSocialLogin = loginMethod === "email" || loginMethod === "google";
   const isMobile = useDevice();
 
-  const shouldPollPendingDeposit = Boolean(
-    session?.funderAddress && session.depositWalletStatus === "deployed",
-  );
-
   const {
     hasPendingDeposit,
     converting: pendingConverting,
-    confirmPendingDeposit,
-  } = usePendingFunderUsdc({
-    enabled: shouldPollPendingDeposit,
-  });
+    confirmPendingDeposit: onConfirmPendingDeposit,
+  } = confirmPendingDeposit;
 
   useEffect(() => {
     onPendingDepositChange?.(hasPendingDeposit);
@@ -119,7 +113,7 @@ export function DepositDialog({
 
   const onConfirmPendingDepositFromEntry = useCallback(async () => {
     try {
-      await confirmPendingDeposit();
+      await onConfirmPendingDeposit();
       toast.success("Deposit successful");
 
       if (onDepositSuccess) {
@@ -131,7 +125,7 @@ export function DepositDialog({
       const message = error instanceof Error ? error.message : String(error);
       toast.error(message);
     }
-  }, [confirmPendingDeposit, onDepositSuccess, syncCash]);
+  }, [onConfirmPendingDeposit, onDepositSuccess, syncCash]);
 
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
   const [entryTab, setEntryTab] = useState<DepositEntryTab>(INITIAL_ENTRY_TAB);

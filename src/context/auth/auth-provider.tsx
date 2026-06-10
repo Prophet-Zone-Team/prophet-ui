@@ -97,6 +97,7 @@ import {
 import { useDisconnect } from "wagmi";
 import { signConfidentialMessage } from "@/lib/confidential/sign-message";
 import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
+import { usePendingFunderUsdc } from "@/hooks/funding";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
@@ -136,6 +137,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     undefined
   );
   const confidentialAccount = useConfidentialAccount();
+  const confirmPendingDeposit = usePendingFunderUsdc({
+    enabled: Boolean(session?.funderAddress && session.depositWalletStatus === "deployed"),
+  });
 
   useLoginWithOAuth({
     onComplete: (params) => {
@@ -1268,6 +1272,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshPrivateBalance,
     onAuthenticateConfidential,
     confidentialAccount,
+    confirmPendingDeposit,
     syncCash
   };
 
