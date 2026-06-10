@@ -71,9 +71,9 @@ export const STRATEGY_DATA: Record<string, StrategyDataEntry> = {
     ]
   },
   "cross-continental": {
-    name: "Cross-continental combination",
+    name: "No New Champion Basket",
     description:
-      "Pairs Europe and South America leaders for broad regional winner-market coverage.",
+      "Backs every available former World Cup winner, betting that the 2026 champion will come from football’s historic elite rather than a first-time winner.",
     budget: 1000,
     teams: [
       teams["Spain"],
@@ -84,12 +84,6 @@ export const STRATEGY_DATA: Record<string, StrategyDataEntry> = {
       teams["Germany"],
       teams["Uruguay"]
     ]
-  },
-  test: {
-    name: "Test strategy",
-    description: "Test strategy",
-    budget: 10.5,
-    teams: [teams["Spain"], teams["France"]]
   }
 };
 
