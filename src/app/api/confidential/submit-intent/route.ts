@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   try {
     const signedData = buildAuthSignedData(auth.access.session.eoaAddress, message, signature);
     const result = await submitConfidentialIntent(
-      { type: "SWAP_TRANSFER", signedData },
+      { type: "swap_transfer", signedData },
       auth.access.accessToken,
     );
 

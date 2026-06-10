@@ -15,7 +15,7 @@ export function getConfidentialEnv(): ConfidentialEnv {
     return cached;
   }
 
-  const oneClickUrl = process.env.ONE_CLICK_URL?.trim();
+  const oneClickUrl = "https://1click.chaindefuser.com";
   const oneClickApiKey = process.env.ONE_CLICK_API_KEY?.trim();
 
   if (!oneClickUrl) {

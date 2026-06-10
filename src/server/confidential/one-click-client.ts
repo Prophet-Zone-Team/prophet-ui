@@ -50,7 +50,7 @@ export interface OneClickBalancesResponse {
 }
 
 export interface GenerateIntentRequest {
-  type: "SWAP_TRANSFER";
+  type: "swap_transfer";
   standard: string;
   depositAddress: string;
   signerId: string;
@@ -66,7 +66,7 @@ export interface ConfidentialMultiPayload {
 }
 
 export interface SubmitIntentRequest {
-  type: "SWAP_TRANSFER";
+  type: "swap_transfer";
   signedData: unknown;
 }
 

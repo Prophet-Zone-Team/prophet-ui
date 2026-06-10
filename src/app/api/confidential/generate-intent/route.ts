@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   try {
     const result = await generateConfidentialIntent(
       {
-        type: "SWAP_TRANSFER",
+        type: "swap_transfer",
         standard: EVM_INTENT_STANDARD,
         depositAddress,
         signerId: auth.access.session.intentsUserId,
