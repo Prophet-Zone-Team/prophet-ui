@@ -27,7 +27,7 @@ import {
   resolvePendingDepositConvertMode,
   type FunderCollateralBalances
 } from "@/lib/trading/deposit-wallet-convert";
-import { useDeposit, useEvmBalances, usePrices } from "@/hooks/funding";
+import { useDeposit, useEvmBalances, usePendingFunderUsdc, usePrices } from "@/hooks/funding";
 import { useAuth } from "@/context/auth";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { useAuthStore } from "@/store";
@@ -75,6 +75,7 @@ export interface DepositDialogProps {
   onClose: () => void;
   onDepositSuccess?: () => void | Promise<void>;
   onOpenPrivateTopup?: () => void;
+  onPendingDepositChange?: (hasPending: boolean) => void;
 }
 
 const INITIAL_STEP: DepositStep = "entry";
@@ -88,6 +89,7 @@ export function DepositDialog({
   onClose,
   onDepositSuccess,
   onOpenPrivateTopup,
+  onPendingDepositChange,
 }: DepositDialogProps) {
   const { session, syncCash } = useAuth();
   const loginMethod = useAuthStore((state) => state.loginMethod);
@@ -97,6 +99,38 @@ export function DepositDialog({
   const confidentialBalance = useConfidentialBalance({
     enabled: confidentialAccount.authenticated,
   });
+
+  const shouldPollPendingDeposit = Boolean(
+    session?.funderAddress && session.depositWalletStatus === "deployed",
+  );
+
+  const {
+    hasPendingDeposit,
+    converting: pendingConverting,
+    confirmPendingDeposit,
+  } = usePendingFunderUsdc({
+    enabled: shouldPollPendingDeposit,
+  });
+
+  useEffect(() => {
+    onPendingDepositChange?.(hasPendingDeposit);
+  }, [hasPendingDeposit, onPendingDepositChange]);
+
+  const onConfirmPendingDepositFromEntry = useCallback(async () => {
+    try {
+      await confirmPendingDeposit();
+      toast.success("Deposit successful");
+
+      if (onDepositSuccess) {
+        await onDepositSuccess();
+      } else {
+        await syncCash();
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message);
+    }
+  }, [confirmPendingDeposit, onDepositSuccess, syncCash]);
 
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
   const [entryTab, setEntryTab] = useState<DepositEntryTab>(INITIAL_ENTRY_TAB);
@@ -321,7 +355,11 @@ export function DepositDialog({
     }
 
     if (step === "status") {
-      setStep("confirm");
+      if (isSocialLogin) {
+        setStep("stableflow_qr");
+      } else {
+        setStep("confirm");
+      }
       statusPollAbortRef.current?.abort();
       statusPollAbortRef.current = undefined;
     }
@@ -1066,7 +1104,10 @@ export function DepositDialog({
           funderAddress: session?.funderAddress,
           supportedAssets: selectableTokens,
           balancesLoading,
-          pricesLoading
+          pricesLoading,
+          hasPendingDeposit,
+          converting: pendingConverting,
+          onConfirmPendingDeposit: onConfirmPendingDepositFromEntry,
         }}
       >
         <FundingModalShell
