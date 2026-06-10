@@ -25,12 +25,19 @@ import {
 import { formatNumber } from "@/utils";
 import { usePortfolioContext } from "./context";
 import { cn } from "@/lib/cn";
+import { depositPendingConfirmButtonClass } from "./deposit/deposit-ui";
+import { Loader2 } from "lucide-react";
 
-export interface PortfolioSummarySectionProps {}
+export interface PortfolioSummarySectionProps { }
 
-export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
-  const { session, portfolio, status, onConnectWallet, reload } =
-    usePortfolioContext();
+export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
+  const {
+    session,
+    portfolio,
+    status,
+    onConnectWallet,
+    reload
+  } = usePortfolioContext();
 
   const [privateTopupIntroOpen, setPrivateTopupIntroOpen] = useState(false);
   const [privateTopupGuideOpen, setPrivateTopupGuideOpen] = useState(false);
@@ -39,20 +46,20 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
 
   const polymarketAddress = session?.funderAddress ?? session?.walletAddress;
 
-  const { isBuyRestricted } = useAuth();
+  const { isBuyRestricted, confirmPendingDeposit } = useAuth();
   const regionRestricted = Boolean(session && isBuyRestricted);
 
   const portfolioDisplay = session
     ? formatNumber(portfolio?.portfolioValue, 2, true, {
-        round: 0,
-        isZeroPrecision: true
-      })
+      round: 0,
+      isZeroPrecision: true
+    })
     : "—";
   const availableDisplay = session
     ? formatNumber(portfolio?.availableToTrade, 2, true, {
-        round: 0,
-        isZeroPrecision: true
-      })
+      round: 0,
+      isZeroPrecision: true
+    })
     : "—";
 
   return (
@@ -90,6 +97,24 @@ export function PortfolioSummarySection({}: PortfolioSummarySectionProps) {
             Wallet not connected
           </span>
         )}
+        {confirmPendingDeposit.hasPendingDeposit ? (
+          <RegionRestrictedControl restricted={regionRestricted}>
+            <button
+              type="button"
+              className={cn(depositPendingConfirmButtonClass, "flex-grow-0 w-[230px] h-[42px] text-sm")}
+              disabled={confirmPendingDeposit.converting || regionRestricted}
+              onClick={() => void confirmPendingDeposit.confirmPendingDeposit()}
+            >
+              {confirmPendingDeposit.converting ? (
+                <Loader2
+                  className="mr-1.5 h-3.5 w-3.5 animate-spin"
+                  aria-hidden="true"
+                />
+              ) : null}
+              Confirm pending deposit
+            </button>
+          </RegionRestrictedControl>
+        ) : null}
       </div>
 
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">

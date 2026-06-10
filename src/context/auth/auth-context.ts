@@ -10,6 +10,7 @@ import type { CashBalanceView, FundingLoadStatus } from "@/types/funding";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
 import type { AuthLoginMethod } from "@/store/auth-store";
 import { UseConfidentialAccountResult } from "@/hooks/confidential/use-confidential-account";
+import { UsePendingFunderUsdcResult } from "@/hooks/funding";
 export type EligibilityLoadStatus = "idle" | "loading" | "ready";
 
 export interface AuthContextValue {
@@ -61,6 +62,7 @@ export interface AuthContextValue {
   refreshPrivateBalance: (params?: { requiredSession?: boolean; }) => Promise<void>;
   onAuthenticateConfidential: () => Promise<ConfidentialSessionView>;
   confidentialAccount: UseConfidentialAccountResult;
+  confirmPendingDeposit: UsePendingFunderUsdcResult;
   syncCash: () => Promise<void>;
 }
 
