@@ -19,6 +19,8 @@ import {
 
 export interface PrivateTopupGuideDialogProps {
   open: boolean;
+  proceeding?: boolean;
+  error?: string;
   onClose: () => void;
   onProceed: () => void;
   onChangeWallet: () => void;
@@ -26,6 +28,8 @@ export interface PrivateTopupGuideDialogProps {
 
 export function PrivateTopupGuideDialog({
   open,
+  proceeding = false,
+  error,
   onClose,
   onProceed,
   onChangeWallet,
@@ -88,10 +92,14 @@ export function PrivateTopupGuideDialog({
               Skip Guide
             </button>
             <div className="flex items-center justify-end gap-3">
+              {error ? (
+                <span className="text-[13px] font-[400] text-[#e5484d]">{error}</span>
+              ) : null}
               <button
                 type="button"
                 className={privateTopupGuideFooterCancelClass}
                 onClick={onClose}
+                disabled={proceeding}
               >
                 Cancel
               </button>
@@ -99,9 +107,9 @@ export function PrivateTopupGuideDialog({
                 type="button"
                 className={privateTopupGuideFooterProceedClass}
                 onClick={onProceed}
-                disabled
+                disabled={proceeding}
               >
-                Coming Soon
+                {proceeding ? "Verifying…" : "Proceed"}
                 <PrivateTopupProceedChevron />
               </button>
             </div>

@@ -23,6 +23,8 @@ export interface PrivateTopupIntroDialogProps {
   open: boolean;
   guideOpen?: boolean;
   walletAddress: string;
+  proceeding?: boolean;
+  error?: string;
   onClose: () => void;
   onProceed: () => void;
   onOpenGuide: () => void;
@@ -33,6 +35,8 @@ export function PrivateTopupIntroDialog({
   open,
   guideOpen = false,
   walletAddress,
+  proceeding = false,
+  error,
   onClose,
   onProceed,
   onOpenGuide,
@@ -136,11 +140,18 @@ export function PrivateTopupIntroDialog({
             need to use on Prophet. Your funds always remain under your custody.
           </p>
 
+          {error ? (
+            <p className="mt-4 text-center text-[14px] font-[400] text-[#e5484d]">
+              {error}
+            </p>
+          ) : null}
+
           <div className="mt-6 flex items-center justify-center gap-3">
             <button
               type="button"
               className={privateTopupIntroFooterCancelClass}
               onClick={onClose}
+              disabled={proceeding}
             >
               Cancel
             </button>
@@ -148,9 +159,9 @@ export function PrivateTopupIntroDialog({
               type="button"
               className={privateTopupIntroFooterProceedClass}
               onClick={onProceed}
-              disabled
+              disabled={proceeding}
             >
-              Coming Soon
+              {proceeding ? "Verifying…" : "Proceed"}
               <PrivateTopupProceedChevron />
             </button>
           </div>

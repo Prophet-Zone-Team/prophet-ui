@@ -3,37 +3,46 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useAuth } from "@/context/auth";
 import {
   stableflowTokensToFundingTokens,
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
-import { fetchJson } from "@/lib/team/client-fetch";
-import { useEvmBalances, usePrices } from "@/hooks/funding";
+import { fetchEvmTokenBalances } from "@/lib/funding/evm-balances";
+import { getConfidentialTokens } from "@/lib/confidential/client";
+import { usePrices } from "@/hooks/funding";
+import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
+import { useConfidentialBalance } from "@/hooks/confidential/use-confidential-balance";
+import { useFundingWallet } from "@/hooks/confidential/use-funding-wallet";
+import { useBalancesStore } from "@/store/use-balances";
+import { formatShortWallet } from "@/lib/team/detail-format";
 import { PrivateTopupProvider, usePrivateTopupContext } from "@/views/portfolio/private-topup/context";
 import { HowToUseSection } from "@/views/portfolio/private-topup/how-to-use-section";
 import { PrivateAccountCard } from "@/views/portfolio/private-topup/private-account-card";
 import { PrivateTopupDialog } from "@/views/portfolio/private-topup/private-topup-dialog";
 import {
   privateTopupGetStartedLinkClass,
+  privateTopupInfoBannerClass,
   privateTopupPageClass,
+  privateTopupWarningBannerClass,
 } from "@/views/portfolio/private-topup/private-topup-ui";
 import { TopupWalletCard } from "@/views/portfolio/private-topup/topup-wallet-card";
 import { MAIN_HOSTNAME } from "@/config/funding";
 
 export function PrivateTopupPage() {
-  const { session, openLogin, loginInProgress } = useAuth();
-  const [topupWalletConnected, setTopupWalletConnected] = useState(false);
+  const fundingWallet = useFundingWallet();
+  const account = useConfidentialAccount();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [stableflowTokens, setStableflowTokens] = useState<
-    StableflowDepositToken[]
-  >([]);
+  const [stableflowTokens, setStableflowTokens] = useState<StableflowDepositToken[]>([]);
   const [tokensLoading, setTokensLoading] = useState(false);
+  const setEvmBalances = useBalancesStore((state) => state.setEvmBalances);
+  const clearEvmBalances = useBalancesStore((state) => state.clearEvmBalances);
 
-  const topupWalletAddress = topupWalletConnected
-    ? session?.walletAddress
-    : undefined;
-  const privateAccountAddress = session?.funderAddress;
+  const topupWalletConnected = fundingWallet.connected;
+  const topupWalletAddress = fundingWallet.address;
+  const privateAccountAddress = account.intentsUserId;
+
+  const balance = useConfidentialBalance({ enabled: account.authenticated });
+  const privateBalanceUsd = balance.usdc?.usd ?? 0;
 
   const stableflowFundingTokens = useMemo(
     () => stableflowTokensToFundingTokens(stableflowTokens),
@@ -44,9 +53,7 @@ export function PrivateTopupPage() {
     setTokensLoading(true);
 
     try {
-      const payload = await fetchJson<{ tokens: StableflowDepositToken[] }>(
-        "/api/trading/stableflow/tokens",
-      );
+      const payload = await getConfidentialTokens();
       setStableflowTokens(payload.tokens);
     } catch {
       setStableflowTokens([]);
@@ -66,39 +73,40 @@ export function PrivateTopupPage() {
     enabled: topupWalletConnected,
   });
 
-  useEvmBalances({
-    auto: topupWalletConnected,
-    enabled: topupWalletConnected && stableflowFundingTokens.length > 0,
-    tokens: stableflowFundingTokens,
-    merge: true,
-  });
+  const loadFundingBalances = useCallback(async () => {
+    if (!topupWalletAddress || stableflowFundingTokens.length === 0) {
+      return;
+    }
+
+    try {
+      const byChain = await fetchEvmTokenBalances(topupWalletAddress, stableflowFundingTokens);
+      setEvmBalances({ evmBalances: byChain });
+    } catch {
+      // Balance fetch is best-effort; the UI shows "--" on failure.
+    }
+  }, [setEvmBalances, stableflowFundingTokens, topupWalletAddress]);
+
+  useEffect(() => {
+    if (topupWalletConnected && topupWalletAddress) {
+      void loadFundingBalances();
+    } else if (!topupWalletConnected) {
+      clearEvmBalances();
+    }
+  }, [clearEvmBalances, loadFundingBalances, topupWalletAddress, topupWalletConnected]);
 
   function handleConnectWallet() {
-    void connectTopupWallet();
-  }
-
-  async function connectTopupWallet() {
-    if (loginInProgress) {
-      return;
-    }
-
-    if (!session?.walletAddress) {
-      const result = await openLogin();
-
-      if (result?.session.walletAddress) {
-        setTopupWalletConnected(true);
-      }
-
-      return;
-    }
-
-    setTopupWalletConnected(true);
+    void fundingWallet.connect();
   }
 
   function handleDisconnectWallet() {
-    setTopupWalletConnected(false);
+    void fundingWallet.disconnect();
     setDialogOpen(false);
   }
+
+  const handleTopupSuccess = useCallback(async () => {
+    await balance.refetch();
+    await loadFundingBalances();
+  }, [balance, loadFundingBalances]);
 
   return (
     <PrivateTopupProvider
@@ -120,6 +128,19 @@ export function PrivateTopupPage() {
 
           <HowToUseSection />
 
+          {account.authenticated && account.eoaAddress ? (
+            <p className={`${privateTopupInfoBannerClass} w-full`}>
+              This Private Account is linked to your wallet {formatShortWallet(account.eoaAddress)}.
+              Confirm this is correct before funding.
+            </p>
+          ) : !account.loading ? (
+            <div className={`${privateTopupWarningBannerClass} w-full justify-center`}>
+              <span>
+                No verified Private Account found. Start Private Mode from the main site to continue.
+              </span>
+            </div>
+          ) : null}
+
           <PrivateTopupCardsRow
             topupWalletConnected={topupWalletConnected}
             topupWalletAddress={topupWalletAddress}
@@ -127,6 +148,9 @@ export function PrivateTopupPage() {
             onConnect={handleConnectWallet}
             onDisconnect={handleDisconnectWallet}
             privateAccountAddress={privateAccountAddress}
+            privateBalanceUsd={privateBalanceUsd}
+            privateBalanceLoading={balance.loading}
+            onRefreshPrivateBalance={() => void balance.refetch()}
             onTopUp={() => setDialogOpen(true)}
           />
 
@@ -140,11 +164,14 @@ export function PrivateTopupPage() {
         </div>
       </div>
 
-      {topupWalletAddress ? (
+      {topupWalletAddress && privateAccountAddress ? (
         <PrivateTopupDialog
           open={dialogOpen}
           topupWalletAddress={topupWalletAddress}
+          privateAccountAddress={privateAccountAddress}
+          privateAccountEoaAddress={account.eoaAddress}
           onClose={() => setDialogOpen(false)}
+          onSuccess={handleTopupSuccess}
         />
       ) : null}
     </PrivateTopupProvider>
@@ -158,6 +185,9 @@ function PrivateTopupCardsRow({
   onConnect,
   onDisconnect,
   privateAccountAddress,
+  privateBalanceUsd,
+  privateBalanceLoading,
+  onRefreshPrivateBalance,
   onTopUp,
 }: {
   topupWalletConnected: boolean;
@@ -166,6 +196,9 @@ function PrivateTopupCardsRow({
   onConnect: () => void;
   onDisconnect: () => void;
   privateAccountAddress?: string;
+  privateBalanceUsd: number;
+  privateBalanceLoading: boolean;
+  onRefreshPrivateBalance: () => void;
   onTopUp: () => void;
 }) {
   const { topupWalletBalanceUsd, balancesLoading, pricesLoading } =
@@ -185,8 +218,10 @@ function PrivateTopupCardsRow({
       />
       <PrivateAccountCard
         address={privateAccountAddress}
-        privateBalanceUsd={0}
+        privateBalanceUsd={privateBalanceUsd}
+        privateBalanceLoading={privateBalanceLoading}
         topupWalletConnected={topupWalletConnected}
+        onRefresh={onRefreshPrivateBalance}
         onTopUp={onTopUp}
       />
     </div>
