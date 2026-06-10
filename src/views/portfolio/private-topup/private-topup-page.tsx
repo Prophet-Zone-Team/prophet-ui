@@ -102,7 +102,7 @@ export function PrivateTopupPage() {
   }
 
   const handleTopupSuccess = useCallback(async () => {
-    await refreshPrivateBalance();
+    await refreshPrivateBalance({ requiredSession: false });
     await loadFundingBalances();
   }, [refreshPrivateBalance, loadFundingBalances]);
 

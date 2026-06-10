@@ -58,7 +58,7 @@ export interface AuthContextValue {
   refreshSession: () => Promise<void>;
   refreshSetupReadiness: () => Promise<UserTradingReadiness | undefined>;
   refreshCash: () => Promise<void>;
-  refreshPrivateBalance: () => Promise<void>;
+  refreshPrivateBalance: (params?: { requiredSession?: boolean; }) => Promise<void>;
   onAuthenticateConfidential: () => Promise<ConfidentialSessionView>;
   confidentialAccount: UseConfidentialAccountResult;
   syncCash: () => Promise<void>;
