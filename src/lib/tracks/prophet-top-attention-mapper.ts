@@ -216,25 +216,19 @@ function resolveGameProbability(item: ProphetUserTrackItem): number {
   return priceToProbability(yesPrice) ?? fallbackProbability;
 }
 
-function resolveTopAttentionBadgeLabel(
-  item: ProphetUserTrackItem,
-  trackKind?: ProphetTrackCategory
-): string | undefined {
-  const category = item.category?.trim();
+function resolveTopAttentionCategoryLabels(
+  item: ProphetUserTrackItem
+): string[] {
+  const rawLabels =
+    item.categories != null && item.categories.length > 0
+      ? item.categories
+      : item.category
+        ? [item.category]
+        : [];
 
-  if (!category) {
-    return undefined;
-  }
-
-  if (trackKind !== undefined) {
-    return category;
-  }
-
-  if (category === "team" || category === "game") {
-    return undefined;
-  }
-
-  return category;
+  return rawLabels
+    .map((label) => label.trim())
+    .filter((label) => label && label !== "team" && label !== "game");
 }
 
 function prepareTopTrackItem(
@@ -261,7 +255,7 @@ function prepareTopTrackItem(
 
 function trackCardToTopAttentionCard(
   card: TrackCardProps,
-  badgeLabel?: string,
+  badgeLabels: string[],
   attention?: number
 ): TopAttentionCardProps | undefined {
   if (card.variant === "game") {
@@ -270,7 +264,7 @@ function trackCardToTopAttentionCard(
 
   return mapTeamTrackCardToTopAttention(
     card as TrackCardTeamProps,
-    badgeLabel,
+    badgeLabels,
     attention
   );
 }
@@ -289,12 +283,12 @@ function resolveTrackAttention(
 
 function mapTeamTrackCardToTopAttention(
   card: TrackCardTeamProps,
-  badgeLabel?: string,
+  badgeLabels: string[],
   attention?: number
 ): TopAttentionCardProps {
   return {
     snapshot: card.snapshot,
-    ...(badgeLabel ? { badge: badgeLabel } : {}),
+    ...(badgeLabels.length > 0 ? { badges: badgeLabels } : {}),
     ...(attention !== undefined ? { attention } : {})
   };
 }
@@ -318,7 +312,7 @@ export function mapProphetTopTrackItemToCard(
   item: ProphetUserTrackItem,
   trackKind?: ProphetTrackCategory
 ): TopAttentionCardProps | undefined {
-  const badgeLabel = resolveTopAttentionBadgeLabel(item, trackKind);
+  const badgeLabels = resolveTopAttentionCategoryLabels(item);
   const prepared = prepareTopTrackItem(item, trackKind);
   const trackCard = mapProphetTrackToCardProps(prepared);
 
@@ -327,7 +321,7 @@ export function mapProphetTopTrackItemToCard(
   }
 
   const attention = resolveTrackAttention(prepared);
-  const topCard = trackCardToTopAttentionCard(trackCard, badgeLabel, attention);
+  const topCard = trackCardToTopAttentionCard(trackCard, badgeLabels, attention);
 
   if (topCard?.variant === "match") {
     return {

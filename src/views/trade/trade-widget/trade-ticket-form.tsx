@@ -112,7 +112,6 @@ export function TradeTicketForm({
   actionLabel,
   canSubmit,
   actionInProgress,
-  isAuthenticated,
   status,
   message,
   eligibilityRetryAvailable = false,
@@ -352,7 +351,7 @@ export function TradeTicketForm({
         <div className="flex flex-col gap-2">
           <p
             className={cn(
-              "m-0 text-xs",
+              "m-0 whitespace-pre-line text-xs",
               status === "error" || displayMessageIsError
                 ? "text-prophet-red"
                 : "text-prophet-muted"

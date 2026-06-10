@@ -98,8 +98,8 @@ export type TopAttentionTeamCardProps = {
   snapshot: TeamMarketSnapshot;
   attention?: number;
   categoryLabel?: string;
-  /** Badge label from GET /v1/user/tracks/top `category` (e.g. "Most Popular"). */
-  badge?: string;
+  /** Badge labels from GET /v1/user/tracks/top `categories` (e.g. "Most Popular"). */
+  badges?: string[];
   className?: string;
 };
 
@@ -145,7 +145,7 @@ function TopAttentionTeamCard({
   snapshot,
   attention,
   categoryLabel = "FIFA World Cup",
-  badge,
+  badges,
   className
 }: TopAttentionTeamCardProps) {
   const router = useRouter();
@@ -186,16 +186,18 @@ function TopAttentionTeamCard({
         />
       </div>
 
-      <div className="mt-2 flex min-w-0 items-center gap-2">
+      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
         <TeamFlag
           code={team.code}
           name={team.name}
           className="h-[26px] w-[26px] shrink-0 rounded-[4px] text-[26px]"
         />
-        <h3 className="m-0 truncate text-[16px] font-[500] leading-[20px] text-black">
+        <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-black">
           {team.name}
         </h3>
-        {badge ? <TopAttentionBadge label={badge} /> : null}
+        {badges?.map((label) => (
+          <TopAttentionBadge key={label} label={label} />
+        ))}
       </div>
 
       <TopAttentionStatsRow

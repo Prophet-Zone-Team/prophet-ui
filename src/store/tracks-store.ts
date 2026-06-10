@@ -36,6 +36,8 @@ const initialState = {
   pendingKeys: {} as Record<string, boolean>
 };
 
+let fetchTracksInFlight: Promise<void> | undefined;
+
 interface TracksStore {
   items: ProphetUserTrackItem[];
   byKey: Record<string, boolean>;
@@ -121,37 +123,50 @@ export const useTracksStore = create<TracksStore>()(
           return;
         }
 
-        set({ status: "loading", error: undefined });
+        if (!fetchTracksInFlight) {
+          fetchTracksInFlight = (async () => {
+            set({ status: "loading", error: undefined });
 
-        try {
-          if (!isProphetAuthenticated()) {
-            set({ items: [], byKey: {}, status: "ready", error: undefined });
-            return;
-          }
+            try {
+              if (!isProphetAuthenticated()) {
+                set({
+                  items: [],
+                  byKey: {},
+                  status: "ready",
+                  error: undefined
+                });
+                return;
+              }
 
-          const items = await getProphetTracks();
+              const items = await getProphetTracks();
 
-          set({
-            items: items ?? [],
-            byKey: buildTrackStatusMapFromApiItems(items ?? []),
-            status: "ready",
-            error: undefined
-          });
-        } catch (error) {
-          console.warn("[tracks] failed to load user tracks", error);
+              set({
+                items: items ?? [],
+                byKey: buildTrackStatusMapFromApiItems(items ?? []),
+                status: "ready",
+                error: undefined
+              });
+            } catch (error) {
+              console.warn("[tracks] failed to load user tracks", error);
 
-          set({
-            items: [],
-            byKey: {},
-            status: "error",
-            error:
-              error instanceof ProphetApiError
-                ? error.message
-                : error instanceof Error
-                  ? error.message
-                  : "Unable to load tracks."
+              set({
+                items: [],
+                byKey: {},
+                status: "error",
+                error:
+                  error instanceof ProphetApiError
+                    ? error.message
+                    : error instanceof Error
+                      ? error.message
+                      : "Unable to load tracks."
+              });
+            }
+          })().finally(() => {
+            fetchTracksInFlight = undefined;
           });
         }
+
+        await fetchTracksInFlight;
       },
 
       syncBookmarkStatus: async () => {
