@@ -11,6 +11,7 @@ import {
   isExternalWagmiConnector,
   releaseExternalWalletConnection,
 } from "@/lib/trading/wallet-disconnect";
+import { resolvePrivyLoginEmail } from "@/context/privy/resolve-privy-login-email";
 import { useAuthStore } from "@/store/auth-store";
 import type { AuthLoginMethod } from "@/store/auth-store";
 
@@ -22,6 +23,7 @@ let setActiveWalletRef:
   | undefined;
 let connectedWalletsRef: ConnectedWallet[] = [];
 let privyAuthenticatedRef = false;
+let privyLoginEmailRef: string | undefined;
 let walletSyncSuspendedRef = false;
 
 export function suspendPrivyWalletSync() {
@@ -44,6 +46,10 @@ function sleep(ms: number) {
 
 export function isPrivyAuthenticated() {
   return privyAuthenticatedRef;
+}
+
+export function getPrivyLoginEmail() {
+  return privyLoginEmailRef;
 }
 
 export function isPrivyEmbeddedWallet(wallet: ConnectedWallet): boolean {
@@ -169,13 +175,18 @@ export async function activatePrivyWallet(
  * wagmi-based trading flow keeps working for embedded and external wallets.
  */
 export function PrivyWalletBridge() {
-  const { ready, authenticated } = usePrivy();
+  const { ready, authenticated, user } = usePrivy();
   const { wallets } = useWallets();
   const { setActiveWallet } = useSetActiveWallet();
 
   useEffect(() => {
     privyAuthenticatedRef = ready && authenticated;
   }, [authenticated, ready]);
+
+  useEffect(() => {
+    privyLoginEmailRef =
+      authenticated && user ? resolvePrivyLoginEmail(user) : undefined;
+  }, [authenticated, user]);
 
   useEffect(() => {
     setActiveWalletRef = setActiveWallet;

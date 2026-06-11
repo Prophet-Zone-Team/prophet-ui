@@ -463,7 +463,8 @@ export async function applyProphetReferral(
 
 /** Sync Prophet session for the connected wallet; never throws. */
 export async function syncProphetWalletLogin(
-  address: string
+  address: string,
+  options?: { email?: string }
 ): Promise<ProphetLoginData | null> {
   const normalizedAddress = normalizeWalletAddress(address);
   const existingToken = getProphetApiToken();
@@ -491,6 +492,7 @@ export async function syncProphetWalletLogin(
   try {
     return await loginProphet({
       address: normalizedAddress,
+      ...(options?.email ? { email: options.email } : {}),
       ...(referralCodeFromQuery
         ? { referral_code: referralCodeFromQuery }
         : {})
