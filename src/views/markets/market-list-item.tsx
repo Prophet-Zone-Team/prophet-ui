@@ -5,9 +5,15 @@ import { useRouter } from "next/navigation";
 import { Zap } from "lucide-react";
 import type { KeyboardEvent } from "react";
 
+import { useAnalyticsImpression } from "@/hooks/analytics/use-analytics-impression";
+
 import { FastBidButton } from "@/components/trading/fast-bid-button";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { ProbabilityChangeTrend } from "@/components/market/probability-change-trend";
+import {
+  trackDetailsClicked,
+  trackTeamDetailClicked
+} from "@/lib/analytics/tracking";
 import { teamDetailHref } from "@/lib/routes/team";
 import { teamTradeHref } from "@/lib/routes/trade";
 import {
@@ -52,11 +58,31 @@ export function MarketListItem({
     !navigationDisabled &&
     Boolean(yesTokenId) &&
     snapshot.market.polymarket?.acceptingOrders !== false;
+  const impressionRef = useAnalyticsImpression<HTMLElement>({
+    eventName: "team_card_impressed",
+    dedupeKey: `team_list:${team.id}`,
+    payload: {
+      teamId: team.id,
+      teamName: team.name,
+      teamCode: team.code,
+      itemPosition: rank,
+      listName: "team_list"
+    }
+  });
 
   function navigateToTrade() {
     if (!canNavigate) {
       return;
     }
+
+    trackTeamDetailClicked({
+      teamId: team.id,
+      teamName: team.name,
+      teamCode: team.code,
+      entrySource: "home_team_list",
+      itemPosition: rank,
+      listName: "team_list"
+    });
 
     router.push(tradeHref);
   }
@@ -74,6 +100,7 @@ export function MarketListItem({
 
   return (
     <article
+      ref={impressionRef}
       role={canNavigate ? "link" : undefined}
       tabIndex={canNavigate ? 0 : undefined}
       aria-label={
@@ -174,6 +201,17 @@ export function MarketListItem({
         <Link
           className="flex-1 md:flex-grow-0 px-2 inline-flex h-[36px] w-[83px] items-center justify-center rounded-lg border border-[#909090] bg-white text-[14px] font-[500] leading-[17px] text-[#18110F]"
           href={detailHref}
+          onClick={() =>
+            trackDetailsClicked({
+              teamId: team.id,
+              teamName: team.name,
+              teamCode: team.code,
+              entrySource: "home_team_list",
+              itemPosition: rank,
+              listName: "team_list",
+              target: "team_detail"
+            })
+          }
         >
           Details
         </Link>

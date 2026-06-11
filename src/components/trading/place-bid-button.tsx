@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuthOptional } from "@/context/auth";
+import { trackQuickBidClicked } from "@/lib/analytics/tracking";
 import { teamTradeHref } from "@/lib/routes/trade";
 import { runFastBid, type FastBidStatus } from "@/lib/trading/run-fast-bid";
 import {
@@ -66,6 +67,17 @@ export function PlaceBidButton({
     if (status === "checking" || status === "submitting" || regionRestricted) {
       return;
     }
+
+    trackQuickBidClicked({
+      teamId: snapshot.team.id,
+      teamName: snapshot.team.name,
+      teamCode: snapshot.team.code,
+      marketId: snapshot.market.polymarket?.conditionId,
+      outcomeId: snapshot.market.polymarket?.tokens?.yes?.tokenId,
+      side: "buy",
+      price: snapshot.market.probability,
+      entrySource: "place_bid_button"
+    });
 
     await runFastBid({
       snapshot,

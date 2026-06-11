@@ -2,7 +2,13 @@
 
 import { useEffect } from "react";
 
+import { useAnalyticsImpression } from "@/hooks/analytics/use-analytics-impression";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
+import {
+  trackMarketTabChanged,
+  trackOrderTicketOpened
+} from "@/lib/analytics/tracking";
+import { resolveTradeAnalyticsContext } from "@/lib/analytics/tracking/resolve-trade-context";
 import {
   useSetTradeOrderMode,
   useSetTradeTab,
@@ -48,6 +54,34 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
   const setTab = useSetTradeTab();
   const setOrderMode = useSetTradeOrderMode();
 
+  const teamSnapshot = props.variant === "game" ? undefined : props.snapshot;
+  const bidAreaRef = useAnalyticsImpression<HTMLElement>({
+    eventName: "bid_area_viewed",
+    dedupeKey:
+      props.variant === "game"
+        ? `bid_area:game:${props.gameSnapshot.match.id}`
+        : `bid_area:team:${props.snapshot.team.id}`,
+    payload: {
+      teamId: teamSnapshot?.team.id,
+      teamName: teamSnapshot?.team.name,
+      marketId: teamSnapshot?.market.polymarket?.conditionId
+    }
+  });
+
+  useEffect(() => {
+    trackOrderTicketOpened(
+      props.variant === "game"
+        ? resolveTradeAnalyticsContext({
+            variant: "game",
+            gameSnapshot: props.gameSnapshot
+          })
+        : resolveTradeAnalyticsContext({
+            variant: "team",
+            snapshot: props.snapshot
+          })
+    );
+  }, [props.variant, props.variant === "game" ? props.gameSnapshot.match.id : props.snapshot.team.id]);
+
   useEffect(() => {
     if (props.variant === "game") {
       syncForGameSnapshot(props.gameSnapshot);
@@ -63,7 +97,11 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
   ]);
 
   return (
-    <section className={cn(tradePanelClass, props.className)} aria-label="Place order">
+    <section
+      ref={bidAreaRef}
+      className={cn(tradePanelClass, props.className)}
+      aria-label="Place order"
+    >
       {props.variant === "game" ? (
         <TradeWidgetHeader
           variant="game"
@@ -83,7 +121,16 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
           <TabSwitcher
             items={[...TRADE_TABS]}
             value={tab}
-            onChange={(value) => setTab(value as typeof tab)}
+            onChange={(value) => {
+              trackMarketTabChanged({
+                fromRange: tab,
+                toRange: value,
+                target: value,
+                label: TRADE_TABS.find((item) => item.id === value)?.label,
+                section: "trade_widget_tabs"
+              });
+              setTab(value as typeof tab);
+            }}
             size="compact"
             aria-label="Trade side"
             className="h-[25px]"

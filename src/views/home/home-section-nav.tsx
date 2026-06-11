@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
+import { trackMarketTabChanged } from "@/lib/analytics/tracking";
 
 const HOME_SECTIONS = [
   { href: "/fifa", label: "World Cup Winner" },
@@ -32,7 +33,16 @@ export function HomeSectionNav() {
         label: section.label
       }))}
       value={activeHref}
-      onChange={(href) => router.push(href)}
+      onChange={(href) => {
+        trackMarketTabChanged({
+          fromRange: activeHref,
+          toRange: href,
+          target: href,
+          label: HOME_SECTIONS.find((section) => section.href === href)?.label,
+          section: "home_market_tabs"
+        });
+        router.push(href);
+      }}
       aria-label="World Cup market views"
       className="md:pl-[40px] mb-[-4px] justify-center md:justify-start"
     />

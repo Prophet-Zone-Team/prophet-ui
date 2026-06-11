@@ -10,6 +10,7 @@ import {
 } from "@/lib/referral/config";
 import { downloadShareCardPng } from "@/lib/referral/download-share-card";
 import { cn } from "@/lib/cn";
+import { trackCopyLinkClicked, trackShareClicked } from "@/lib/analytics/tracking";
 
 import { inviteActionButtonClass } from "./referral-ui";
 import { DownloadIcon, LinkIcon, TelegramBrandIcon, XBrandIcon } from "./referral-icons";
@@ -41,6 +42,11 @@ Track signals. Trade smarter.
 Join Prophet 👇
 
 `;
+    trackShareClicked({
+      target: "x",
+      label: "Share on X",
+      entrySource: "referral_invite_modal"
+    });
     shareToX(tweetText, `${fullLink}\n\n`, { hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket" });
   }, [fullLink]);
 
@@ -48,6 +54,11 @@ Join Prophet 👇
     if (!REFERRAL_TELEGRAM_SHARE_URL) {
       return;
     }
+    trackShareClicked({
+      target: "telegram",
+      label: "Share on Telegram",
+      entrySource: "referral_invite_modal"
+    });
     window.open(REFERRAL_TELEGRAM_SHARE_URL, "_blank", "noopener,noreferrer");
   }, []);
 
@@ -66,6 +77,11 @@ Join Prophet 👇
   }, [downloadFilename, downloading, shareCardReady, shareCardRef]);
 
   const handleCopyLink = useCallback(async () => {
+    trackCopyLinkClicked({
+      target: "referral_link",
+      label: "Copy referral link",
+      entrySource: "referral_invite_modal"
+    });
     await copy(fullLink);
   }, [copy, fullLink]);
 

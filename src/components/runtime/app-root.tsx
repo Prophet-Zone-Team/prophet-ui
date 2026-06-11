@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
 import { HttpsRequiredPage } from "@/components/runtime/https-required-page";
+import { AnalyticsProvider } from "@/context/analytics";
 import { AuthProvider } from "@/context/auth";
 import { ProphetNotificationWsProvider } from "@/context/prophet-notification-ws";
 import { SportsWsProvider } from "@/context/sports-ws";
@@ -27,16 +28,18 @@ export function AppRoot({ initialSecure, cookie, children }: AppRootProps) {
 
   return (
     <RainbowProvider cookie={cookie}>
-      <AuthProvider>
-        <SportsWsProvider>
-          <ProphetNotificationWsProvider>
-            <main className="min-h-screen overflow-x-hidden font-body">
-              <AppChrome>{children}</AppChrome>
-            </main>
-            <Toaster />
-          </ProphetNotificationWsProvider>
-        </SportsWsProvider>
-      </AuthProvider>
+      <AnalyticsProvider>
+        <AuthProvider>
+          <SportsWsProvider>
+            <ProphetNotificationWsProvider>
+              <main className="min-h-screen overflow-x-hidden font-body">
+                <AppChrome>{children}</AppChrome>
+              </main>
+              <Toaster />
+            </ProphetNotificationWsProvider>
+          </SportsWsProvider>
+        </AuthProvider>
+      </AnalyticsProvider>
     </RainbowProvider>
   );
 }
