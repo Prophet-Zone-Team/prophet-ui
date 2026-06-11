@@ -137,9 +137,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     undefined
   );
   const confidentialAccount = useConfidentialAccount();
-  const confirmPendingDeposit = usePendingFunderUsdc({
-    enabled: Boolean(session?.funderAddress && session.depositWalletStatus === "deployed"),
-  });
 
   useLoginWithOAuth({
     onComplete: (params) => {
@@ -1056,6 +1053,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   };
+
+  const confirmPendingDeposit = usePendingFunderUsdc({
+    enabled: true,
+    session,
+    syncCash,
+  });
 
   useEffect(() => {
     if (!hydrated || !session?.walletAddress) {
