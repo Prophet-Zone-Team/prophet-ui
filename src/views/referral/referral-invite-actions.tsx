@@ -14,6 +14,7 @@ import { cn } from "@/lib/cn";
 import { inviteActionButtonClass } from "./referral-ui";
 import { DownloadIcon, LinkIcon, TelegramBrandIcon, XBrandIcon } from "./referral-icons";
 import { shareToX } from "@/utils/x";
+import { resolveOrigin } from "@/lib/referral/referral-link";
 
 export type ReferralInviteActionsProps = {
   fullLink: string;
@@ -40,8 +41,13 @@ Track signals. Trade smarter.
 
 Join Prophet 👇
 
+${fullLink}
+
 `;
-    shareToX(tweetText, `${fullLink}\n\n`, { hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket" });
+    const origin = resolveOrigin();
+    const imgUrl = `${origin}/analytics/share-card.png`;
+    const tweetUrl = `${origin}/api/twitter?img=${encodeURIComponent(imgUrl)}`;
+    shareToX(tweetText, `${tweetUrl}\n\n`, { hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket" });
   }, [fullLink]);
 
   const handleTelegram = useCallback(() => {
