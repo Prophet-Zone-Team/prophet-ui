@@ -5,6 +5,7 @@ import type {
 } from "@/types/prophet-api";
 
 export const ANALYTICS_TRACK_BATCH_SIZE = 5;
+export const ANALYTICS_FLUSH_INTERVAL_MS = 10_000;
 
 const ANALYTICS_TRACK_PATH = "/v1/analytics/track";
 
@@ -14,7 +15,7 @@ function resolveAnalyticsTrackUrl(): string {
 
 const pendingEvents: ProphetAnalyticsTrackRequest[] = [];
 let isProcessing = false;
-let drainScheduled = false;
+let flushTimerId: ReturnType<typeof setTimeout> | null = null;
 
 async function postAnalyticsBatch(batch: ProphetAnalyticsTrackRequest[]): Promise<void> {
   if (batch.length === 0) {
@@ -33,20 +34,32 @@ async function postAnalyticsBatch(batch: ProphetAnalyticsTrackRequest[]): Promis
   }
 }
 
-function scheduleAnalyticsTransportDrain(): void {
-  if (isProcessing || drainScheduled) {
+function clearAnalyticsFlushTimer(): void {
+  if (flushTimerId === null) {
     return;
   }
 
-  drainScheduled = true;
-  queueMicrotask(() => {
-    drainScheduled = false;
+  clearTimeout(flushTimerId);
+  flushTimerId = null;
+}
+
+function scheduleAnalyticsFlush(): void {
+  if (flushTimerId !== null || isProcessing) {
+    return;
+  }
+
+  flushTimerId = setTimeout(() => {
+    flushTimerId = null;
     void drainAnalyticsTransportQueue();
-  });
+  }, ANALYTICS_FLUSH_INTERVAL_MS);
 }
 
 async function drainAnalyticsTransportQueue(): Promise<void> {
   if (isProcessing) {
+    return;
+  }
+
+  if (pendingEvents.length === 0) {
     return;
   }
 
@@ -60,7 +73,7 @@ async function drainAnalyticsTransportQueue(): Promise<void> {
   isProcessing = false;
 
   if (pendingEvents.length > 0) {
-    scheduleAnalyticsTransportDrain();
+    scheduleAnalyticsFlush();
   }
 }
 
@@ -70,7 +83,16 @@ export function enqueueAnalyticsTransport(payload: ProphetAnalyticsTrackRequest)
   }
 
   pendingEvents.push(payload);
-  scheduleAnalyticsTransportDrain();
+  scheduleAnalyticsFlush();
+}
+
+export async function flushAnalyticsTransportQueueForTests(): Promise<void> {
+  clearAnalyticsFlushTimer();
+  await drainAnalyticsTransportQueue();
+}
+
+export function isAnalyticsFlushScheduledForTests(): boolean {
+  return flushTimerId !== null;
 }
 
 export function getAnalyticsTransportQueueDepthForTests(): number {
@@ -82,7 +104,7 @@ export function isAnalyticsTransportProcessingForTests(): boolean {
 }
 
 export function resetAnalyticsTransportQueueForTests(): void {
+  clearAnalyticsFlushTimer();
   pendingEvents.length = 0;
   isProcessing = false;
-  drainScheduled = false;
 }

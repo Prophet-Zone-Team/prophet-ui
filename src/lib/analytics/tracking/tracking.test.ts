@@ -24,7 +24,9 @@ import {
 } from "@/lib/analytics/tracking/event-throttle";
 import {
   ANALYTICS_TRACK_BATCH_SIZE,
+  flushAnalyticsTransportQueueForTests,
   getAnalyticsTransportQueueDepthForTests,
+  isAnalyticsFlushScheduledForTests,
   isAnalyticsTransportProcessingForTests
 } from "@/lib/analytics/tracking/transport-queue";
 import { trackOrderInputChanged } from "@/lib/analytics/tracking/trade-events";
@@ -270,6 +272,34 @@ describe("analytics tracking", () => {
     assert.equal(shouldSkipThrottledAnalyticsEvent(keyB), false);
   });
 
+  it("waits for the flush interval before sending queued analytics events", async () => {
+    const originalWindow = globalThis.window;
+
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: {
+        location: { pathname: "/fifa", search: "", hostname: "localhost" },
+        localStorage: new MemoryStorage(),
+        sessionStorage: new MemoryStorage()
+      }
+    });
+
+    try {
+      trackAnalyticsEvent({
+        eventName: "page_viewed",
+        eventId: "event-1"
+      });
+
+      assert.equal(getAnalyticsTransportQueueDepthForTests(), 1);
+      assert.equal(isAnalyticsFlushScheduledForTests(), true);
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: originalWindow
+      });
+    }
+  });
+
   it("batches queued analytics events up to five per request", async () => {
     const originalWindow = globalThis.window;
     const originalFetch = globalThis.fetch;
@@ -321,7 +351,7 @@ describe("analytics tracking", () => {
         eventId: "event-3"
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await flushAnalyticsTransportQueueForTests();
 
       assert.equal(maxConcurrentRequests, 1);
       assert.equal(requestBodies.length, 1);
@@ -390,7 +420,7 @@ describe("analytics tracking", () => {
         });
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await flushAnalyticsTransportQueueForTests();
 
       assert.deepEqual(batchSizes, [ANALYTICS_TRACK_BATCH_SIZE, 1]);
       assert.equal(getAnalyticsTransportQueueDepthForTests(), 0);
