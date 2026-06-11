@@ -3,10 +3,7 @@ import Image from "next/image";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { formatImpactScore } from "@/views/analytics/news/format";
-import {
-  NegativeSentimentIcon,
-  PositiveSentimentIcon
-} from "@/views/analytics/news/icons";
+import { SentimentColor, SentimentIcon } from "@/views/analytics/news/icons";
 import type { NewsImpactItem } from "@/views/analytics/news/types";
 
 export type SignalTopCardProps = {
@@ -57,25 +54,11 @@ function SignalTopCardThumbnail({
   );
 }
 
-function SentimentIcon({
-  sentiment
-}: {
-  sentiment: NewsImpactItem["sentiment"];
-}) {
-  if (sentiment === "negative") {
-    return <NegativeSentimentIcon />;
-  }
-
-  return <PositiveSentimentIcon />;
-}
-
 export function SignalTopCard({
   item,
   onSelect,
   className
 }: SignalTopCardProps) {
-  const isPositiveImpact = item.impactScore >= 0;
-
   return (
     <article
       className={cn(
@@ -135,7 +118,7 @@ export function SignalTopCard({
           <span
             className={cn(
               "text-base font-[500] leading-[19px]",
-              isPositiveImpact ? "text-[#7BCA25]" : "text-[#FF674B]"
+              SentimentColor({ sentiment: item.sentiment }),
             )}
           >
             {formatImpactScore(item.impactScore)}
@@ -150,7 +133,7 @@ export function SignalTopCard({
         <span
           className={cn(
             "mt-[10px] text-[18px] font-[500] leading-[21px]",
-            isPositiveImpact ? "text-[#7BCA25]" : "text-[#FF674B]"
+            SentimentColor({ sentiment: item.sentiment }),
           )}
         >
           {formatImpactScore(item.impactScore)}

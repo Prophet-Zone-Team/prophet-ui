@@ -8,6 +8,7 @@ import {
   getConfidentialQuote,
   getConfidentialTokens,
 } from "@/server/confidential/one-click-client";
+import { formatConfidentialApiErrorMessage } from "@/server/confidential/error-messages";
 import {
   applyRefreshedCookie,
   requireConfidentialAccess,
@@ -76,8 +77,11 @@ export async function POST(request: Request) {
 
     return applyRefreshedCookie(NextResponse.json({ quote }), auth.access);
   } catch (error) {
+    const errorMessage = formatConfidentialApiErrorMessage(
+      error instanceof Error ? error.message : String(error),
+    );
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      { error: errorMessage },
       { status: 502 },
     );
   }
