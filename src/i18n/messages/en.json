@@ -78,7 +78,17 @@
     "depositWalletDeployedAt": "Deposit wallet already deployed at {address}.",
     "depositWalletAlreadyDeployed": "Your Polymarket deposit wallet is already deployed.",
     "deployingDepositWallet": "Deploying your Polymarket deposit wallet.",
-    "prepareDepositWallet": "Prepare your Polymarket deposit wallet before signing in."
+    "prepareDepositWallet": "Prepare your Polymarket deposit wallet before signing in.",
+    "loginByEmail": "Login by Email",
+    "continueWithGoogle": "Continue with Google",
+    "orOtherEmail": "Or other email",
+    "emailAddress": "Email address",
+    "sendCode": "Send Code",
+    "resendCountdown": "{count}s",
+    "verify": "Verify",
+    "connectWithExtensionWallet": "Connect with extension wallet",
+    "somethingWentWrongPleaseRetry": "Something went wrong. Please try again.",
+    "verificationCodeDigit": "Verification code digit {index}"
   },
   "common": {
     "loading": "Loading...",

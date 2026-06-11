@@ -290,14 +290,6 @@ export function LoginModal({ auth }: LoginModalProps) {
   );
 }
 
-function PoweredByPolymarket() {
-  return (
-    <div className="flex items-center justify-center gap-1.5 border-t border-prophet-line pt-4">
-      <span className="text-xs text-prophet-muted">Powered by</span>
-      <PolymarketIcon />
-    </div>
-  );
-}
 
 function RestrictedRegionView({
   detail,
