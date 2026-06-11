@@ -29,6 +29,11 @@ import {
   getConfidentialSession,
   requestConfidentialChallenge,
 } from "@/lib/confidential/client";
+import {
+  trackWalletConnectFailed,
+  trackWalletConnected,
+  trackWalletConnectStarted
+} from "@/lib/analytics/tracking";
 import { mapBalanceSnapshotToCash } from "@/lib/trading/cash-balance-model";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
 import {
@@ -705,6 +710,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.setPrivyLoginInProgress(false);
       }
 
+      trackWalletConnectStarted({
+        walletType: _loginMethod ?? "wallet"
+      });
+
       try {
         const result = await completeTradingLogin({
           resume,
@@ -728,6 +737,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         maybeCloseSetupModal(result.readiness);
         store.setPrivyLoginInProgress(false);
 
+        void trackWalletConnected({
+          walletAddress: result.session.walletAddress,
+          userId: result.session.walletAddress,
+          walletType: _loginMethod ?? "wallet"
+        });
+
         return result;
       } catch (loginError) {
         if (loginAbortRef.current) {
@@ -743,6 +758,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         privyAutoLoginRef.current = false;
         oauthAutoConnectRef.current = false;
         store.setPrivyLoginInProgress(false);
+
+        trackWalletConnectFailed({
+          failureReason: "wallet_rejected",
+          errorCode: "WALLET_CONNECT_FAILED",
+          walletType: _loginMethod ?? "wallet"
+        });
+
         throw loginError;
       } finally {
         if (!loginAbortRef.current) {

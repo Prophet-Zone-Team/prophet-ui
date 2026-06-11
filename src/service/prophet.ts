@@ -9,6 +9,8 @@ import type {
   ProphetAnalyticsRecommend,
   ProphetAnalyticsTeamPathContext,
   ProphetAnalyticsTeamPowerRanking,
+  ProphetAnalyticsTrackData,
+  ProphetAnalyticsTrackRequest,
   ProphetApiResponse,
   ProphetBindTelegramRequest,
   ProphetCancelTrackRequest,
@@ -65,7 +67,13 @@ export class ProphetApiError extends Error {
   }
 }
 
-function resolveBaseUrl(): string {
+export function getProphetApiBaseUrl(): string {
+  const override = process.env.NEXT_PUBLIC_PROPHET_API_URL?.trim();
+
+  if (override) {
+    return override.replace(/\/$/, "");
+  }
+
   return process.env.NEXT_PUBLIC_ENV === "production"
     ? "https://api.prophet.zone"
     : "https://api_stg.prophet.zone";
@@ -249,7 +257,7 @@ function attachAuthHeader(
 
 function createProphetClient(): AxiosInstance {
   const client = axios.create({
-    baseURL: resolveBaseUrl(),
+    baseURL: getProphetApiBaseUrl(),
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json"
@@ -613,6 +621,16 @@ export async function getProphetUserTransactions(params: {
       ...(params.type ? { type: params.type } : {})
     }
   });
+}
+
+/** POST /v1/analytics/track — product analytics event; no auth required */
+export async function trackProphetAnalyticsEvent(
+  request: ProphetAnalyticsTrackRequest
+): Promise<ProphetAnalyticsTrackData> {
+  return prophetPost<ProphetAnalyticsTrackData>(
+    "/v1/analytics/track",
+    request
+  );
 }
 
 /** GET /v1/analytics/competitiveness */

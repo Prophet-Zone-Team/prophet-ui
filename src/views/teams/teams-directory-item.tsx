@@ -6,6 +6,11 @@ import { useState } from "react";
 
 import { TeamFlag } from "@/components/teams/team-flag";
 import { formatProbability } from "@/components/home/market-formatters";
+import {
+  trackDetailsClicked,
+  trackQuickBidClicked,
+  trackTeamDetailClicked
+} from "@/lib/analytics/tracking";
 import { teamDetailHref } from "@/lib/routes/team";
 import { teamTradeHref } from "@/lib/routes/trade";
 import { cn } from "@/lib/cn";
@@ -44,6 +49,15 @@ export function TeamsDirectoryItem({
         <Link
           href={teamDetailHref(team.id)}
           className="flex min-w-0 items-center gap-3"
+          onClick={() =>
+            trackTeamDetailClicked({
+              teamId: team.id,
+              teamName: team.name,
+              teamCode: team.code,
+              entrySource: "teams_directory",
+              listName: "teams_directory"
+            })
+          }
         >
           <TeamFlag
             code={team.code}
@@ -104,7 +118,19 @@ export function TeamsDirectoryItem({
             type="button"
             className={teamsBidButtonClass}
             aria-label={`Bid on ${team.name}`}
-            onClick={() => setBidOpen(true)}
+            onClick={() => {
+              trackQuickBidClicked({
+                teamId: team.id,
+                teamName: team.name,
+                teamCode: team.code,
+                marketId: market.polymarket?.conditionId,
+                outcomeId: market.polymarket?.tokens?.yes?.tokenId,
+                side: "buy",
+                price: market.probability,
+                entrySource: "teams_directory"
+              });
+              setBidOpen(true);
+            }}
           >
             <Zap
               className="h-3.5 w-2.5 shrink-0 fill-white stroke-white"
@@ -115,6 +141,16 @@ export function TeamsDirectoryItem({
           <Link
             className={teamsDetailButtonClass}
             href={teamDetailHref(team.id)}
+            onClick={() =>
+              trackDetailsClicked({
+                teamId: team.id,
+                teamName: team.name,
+                teamCode: team.code,
+                entrySource: "teams_directory",
+                listName: "teams_directory",
+                target: "team_detail"
+              })
+            }
           >
             Details
           </Link>

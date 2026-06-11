@@ -7,6 +7,7 @@ import { useLoginWithEmail, useLoginWithOAuth, usePrivy } from "@privy-io/react-
 import { Modal } from "@/components/ui/modal";
 import { OtpInput } from "@/components/auth/otp-input";
 import { cn } from "@/lib/cn";
+import { trackLoginClicked } from "@/lib/analytics/tracking";
 import { markOAuthPending, consumeOAuthPending } from "@/context/privy/privy-oauth";
 import { resolvePrivyLoginEmail } from "@/context/privy/resolve-privy-login-email";
 const RESEND_COUNTDOWN_SECONDS = 60;
@@ -219,7 +220,13 @@ export function PrivyLoginModal({
             "flex items-center justify-center gap-1 border-t border-[#ebebeb] pt-4",
             "text-[14px] font-[500] leading-[normal] text-black",
           )}
-          onClick={onConnectExtensionWallet}
+          onClick={() => {
+            trackLoginClicked({
+              entrySource: "privy_login_modal",
+              label: "Connect with extension wallet"
+            });
+            onConnectExtensionWallet();
+          }}
         >
           Connect with extension wallet
           <ChevronRight className="h-4 w-4" aria-hidden="true" />

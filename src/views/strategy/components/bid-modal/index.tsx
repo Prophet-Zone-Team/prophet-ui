@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { getStrategyBidSignableLegs } from "@/lib/strategy/strategy-bid-validation";
+import { trackOrderTicketOpened } from "@/lib/analytics/tracking";
 import { ensureTradingReadyForBid } from "@/views/trade/trade-widget/trade-ticket-helpers";
 
 import { BidValueSection } from "./bid-value-section";
@@ -55,7 +56,12 @@ export function StrategyBidModal({
       setStep("confirm");
       setMessage(undefined);
       setIsProceeding(false);
+      return;
     }
+
+    trackOrderTicketOpened({
+      entrySource: "strategy_bid_modal"
+    });
   }, [open]);
 
   const handleClose = useCallback(() => {

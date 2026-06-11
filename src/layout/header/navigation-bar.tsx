@@ -1,4 +1,6 @@
 import { usePathname } from "next/navigation";
+
+import { trackNavClicked } from "@/lib/analytics/tracking";
 import { isNavActive, PRIMARY_NAV } from "./nav";
 import { cn } from "@/lib/cn";
 import { motion } from "framer-motion";
@@ -30,7 +32,13 @@ function NavBar(props: any) {
               navClassName
             )}
             aria-current={active ? "page" : undefined}
-            onClick={onClick}
+            onClick={(event) => {
+              trackNavClicked({
+                target: href,
+                label
+              });
+              onClick?.(event);
+            }}
           >
             {active ? (
               <motion.span

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 
+import { trackTrackPageViewed } from "@/lib/analytics/tracking";
+
 import { useAuth } from "@/context/auth";
 import { mapProphetTracksToCardProps } from "@/lib/tracks/prophet-track-mapper";
 import {
@@ -21,6 +23,10 @@ import TracksTelegramBanner from "./tg";
 import { TracksUnauthenticatedState } from "./unauthenticated";
 
 export function TracksView() {
+  useEffect(() => {
+    trackTrackPageViewed();
+  }, []);
+
   const authHydrated = useAuthHydrated();
   const tracksHydrated = useTracksHydrated();
   const { isAuthenticated, openLogin, loginInProgress, session } = useAuth();

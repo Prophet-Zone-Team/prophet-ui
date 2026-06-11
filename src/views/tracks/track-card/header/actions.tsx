@@ -7,6 +7,7 @@ import { Zap } from "lucide-react";
 import { useMemo } from "react";
 
 import { FastBidButton } from "@/components/trading/fast-bid-button";
+import { trackDetailsClicked } from "@/lib/analytics/tracking";
 import { teamDetailHref } from "@/lib/routes/team";
 import { gameTradeHref, teamTradeHref } from "@/lib/routes/trade";
 import { isTeamFastBidReady } from "@/lib/trading/run-fast-bid";
@@ -79,7 +80,20 @@ function TrackCardTeamActions({ snapshot }: TrackCardTeamActionsProps) {
       <Link href={tradeHref} className={trackCardOutlineButtonClassName}>
         Trade
       </Link>
-      <Link href={detailHref} className={trackCardOutlineButtonClassName}>
+      <Link
+        href={detailHref}
+        className={trackCardOutlineButtonClassName}
+        onClick={() =>
+          trackDetailsClicked({
+            teamId: snapshot.team.id,
+            teamName: snapshot.team.name,
+            teamCode: snapshot.team.code,
+            entrySource: "tracks_card",
+            listName: "tracks_list",
+            target: "team_detail"
+          })
+        }
+      >
         Details
       </Link>
     </div>
