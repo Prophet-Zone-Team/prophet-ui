@@ -70,7 +70,7 @@ import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
 import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 import { useTracksStore } from "@/store/tracks-store";
 import { useNotificationWsStore } from "@/store/notification-ws-store";
-import { logoutProphet } from "@/service/prophet";
+import { logoutProphet, syncProphetWalletLogin } from "@/service/prophet";
 import { selectIsAuthenticated, useAuthStore } from "@/store/auth-store";
 import type { AuthLoginMethod } from "@/store/auth-store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useLoginWithOAuth({
     onComplete: (params) => {
-      if (!params.loginAccount || params.loginMethod !== "google") {
+      if (params.loginMethod !== "google") {
         return;
       }
 
@@ -922,15 +922,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await wagmiDisconnect();
     } catch { }
-    store.setLoginMethod("wallet");
+
+    const preserveEmbeddedLogin =
+      store.loginMethod === "email" ||
+      store.loginMethod === "google" ||
+      Boolean(resolvePrivyLoginEmail(privyUser));
+
+    if (!preserveEmbeddedLogin) {
+      store.setLoginMethod("wallet");
+    }
 
     if (isRegionBlockedRef.current) {
       openLoginModalOnly();
       return undefined;
     }
 
-    return runLogin(Boolean(store.session), "wallet");
-  }, [openLoginModalOnly, runLogin, wagmiDisconnect]);
+    const loginMethodForRun =
+      preserveEmbeddedLogin && store.loginMethod
+        ? store.loginMethod
+        : "wallet";
+
+    return runLogin(Boolean(store.session), loginMethodForRun);
+  }, [openLoginModalOnly, privyUser, runLogin, wagmiDisconnect]);
 
   const connectWallet = openLogin;
 
@@ -1176,7 +1189,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const store = useAuthStore.getState();
 
-    if (store.loginMethod !== "email" && store.loginMethod !== "google") {
+    const emailFromPrivy = resolvePrivyLoginEmail(privyUser);
+    const isEmbeddedLogin =
+      store.loginMethod === "email" ||
+      store.loginMethod === "google" ||
+      Boolean(emailFromPrivy);
+
+    if (!isEmbeddedLogin) {
       return;
     }
 
@@ -1184,10 +1203,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const email = resolvePrivyLoginEmail(privyUser);
+    const email = emailFromPrivy;
 
-    if (email) {
-      store.setLoginEmail(email);
+    if (!email) {
+      return;
+    }
+
+    store.setLoginEmail(email);
+
+    const walletAddress = store.session?.walletAddress;
+
+    if (walletAddress) {
+      void syncProphetWalletLogin(walletAddress, { email });
     }
   }, [loginMethod, privyAuthenticated, privyUser]);
 
