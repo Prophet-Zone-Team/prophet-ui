@@ -5,8 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 
 const HOME_SECTIONS = [
-  { href: "/fifa", label: "World Cup Winner" },
-  { href: "/fifa/matches", label: "Matches" }
+  { href: "/fifa", label: "Matches" },
+  { href: "/fifa/winner", label: "World Cup Winner" }
 ] as const;
 
 function isSectionActive(pathname: string, href: string): boolean {
