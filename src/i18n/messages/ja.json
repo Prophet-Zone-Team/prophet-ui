@@ -991,7 +991,7 @@
     "shareCardTitle": "Prophetを使って、",
     "shareCardProfit": "利益を得よう！",
     "shareCardInvite": "がProphetへの参加を招待しています",
-    "shareTweetIntro": "ワールドカップ市場が始まります。\n\nシグナルを追跡。より賢く取引。\n\nProphetに参加 👇\n\n",
+    "shareTweetIntro": "ワールドカップ市場が始まります。\n\nシグナルを追跡。より賢く取引。\n\nProphetに参加 👇\n\n{link}\n\n",
     "claimSuccess": "{amount} USDCを受け取りました",
     "claimError": "紹介リワードを受け取れません。"
   },
