@@ -57,6 +57,13 @@ const END_LABEL_RIGHT_INSET = 10;
 const END_LABEL_ESTIMATED_WIDTH = 100;
 const END_LABEL_GUTTER = END_LABEL_RIGHT_INSET + END_LABEL_ESTIMATED_WIDTH + 8;
 
+type BinarySeriesKey = "primary" | "secondary";
+
+const END_LABEL_SLOT_FRACTIONS: Record<BinarySeriesKey, number> = {
+  primary: 1 / 3,
+  secondary: 2 / 3
+};
+
 interface ChartRow extends GameFixtureBinaryChartPoint {
   chartLabel: string;
 }
@@ -72,8 +79,6 @@ interface ChartCustomizedProps {
   height?: number;
 }
 
-type BinarySeriesKey = "primary" | "secondary";
-
 type BinarySeriesItem = {
   key: BinarySeriesKey;
   color: string;
@@ -83,7 +88,6 @@ type BinarySeriesItem = {
 type EndLabelChartConfig = {
   chartData: ChartRow[];
   series: BinarySeriesItem[];
-  yDomain: [number, number];
 };
 
 const EndLabelChartContext = createContext<EndLabelChartConfig | null>(null);
@@ -114,27 +118,21 @@ function resolvePlotRightAnchorX(
   return plotRight - END_LABEL_RIGHT_INSET;
 }
 
-function resolveValuePlotY(
-  value: number | undefined,
-  yDomain: [number, number],
+function resolveFixedLabelSlotY(
+  seriesKey: BinarySeriesKey,
   offset: ChartCustomizedProps["offset"],
   height: number | undefined
 ): number | undefined {
-  if (value === undefined || !height || !Number.isFinite(value)) {
+  if (!height) {
     return undefined;
   }
 
   const top = offset?.top ?? 0;
   const bottom = offset?.bottom ?? 0;
   const plotHeight = height - top - bottom;
-  const [min, max] = yDomain;
+  const fraction = END_LABEL_SLOT_FRACTIONS[seriesKey];
 
-  if (plotHeight <= 0 || max === min) {
-    return top + plotHeight / 2;
-  }
-
-  const ratio = (value - min) / (max - min);
-  return top + plotHeight * (1 - ratio);
+  return top + plotHeight * fraction;
 }
 
 function EndLabelMarker({
@@ -209,8 +207,7 @@ function EndLabelLayer({
   width,
   height,
   chartData,
-  series,
-  yDomain
+  series
 }: ChartCustomizedProps & EndLabelChartConfig) {
   const anchorX = resolvePlotRightAnchorX(width, offset);
   const latestRow = chartData.at(-1);
@@ -222,12 +219,7 @@ function EndLabelLayer({
   return (
     <g className="pointer-events-none">
       {series.map((item) => {
-        const slotY = resolveValuePlotY(
-          latestRow[item.key],
-          yDomain,
-          offset,
-          height
-        );
+        const slotY = resolveFixedLabelSlotY(item.key, offset, height);
 
         if (slotY === undefined || !Number.isFinite(slotY)) {
           return null;
@@ -318,10 +310,9 @@ export function GameBinaryProbabilityChart({
   const endLabelChartConfig = useMemo(
     () => ({
       chartData,
-      series,
-      yDomain
+      series
     }),
-    [chartData, series, yDomain]
+    [chartData, series]
   );
   const dataLength = chartData.length;
 
