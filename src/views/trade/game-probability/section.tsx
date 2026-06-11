@@ -45,6 +45,7 @@ import type {
   TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
+import { resolveFixtureOutcomeDisplayProbability } from "@/lib/market/merge-live-outcome-prices";
 import { resolveOrderbookTokenId } from "@/views/trade/game/markets/fixture-market-actions";
 import { gameColors } from "@/views/trade/game/ui";
 import { GameBinaryProbabilityChart } from "@/views/trade/game-probability/binary-chart";
@@ -617,12 +618,12 @@ export function buildBinarySummaryFromOutcomes(
   return [
     {
       label: primaryLabel,
-      value: primary?.probability ?? 0,
+      value: resolveFixtureOutcomeDisplayProbability(primary),
       color: gameColors.home
     },
     {
       label: secondaryLabel,
-      value: secondary?.probability ?? 0,
+      value: resolveFixtureOutcomeDisplayProbability(secondary),
       color: gameColors.awayBar
     }
   ];
