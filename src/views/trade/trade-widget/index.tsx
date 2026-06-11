@@ -141,7 +141,7 @@ export function TradeWidget(
                 fromRange: tab,
                 toRange: value,
                 target: value,
-                label: TRADE_TABS.find((item) => item.id === value)?.label,
+                label: tradeTabs.find((item) => item.id === value)?.label,
                 section: "trade_widget_tabs"
               });
               setTab(value as typeof tab);

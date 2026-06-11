@@ -34,7 +34,7 @@ function NavBar(props: any) {
             onClick={(event) => {
               trackNavClicked({
                 target: href,
-                label
+                label: t(labelKey)
               });
               onClick?.(event);
             }}

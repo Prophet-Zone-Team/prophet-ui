@@ -36,11 +36,12 @@ export function HomeSectionNav() {
       }))}
       value={activeHref}
       onChange={(href) => {
+        const section = HOME_SECTIONS.find((item) => item.href === href);
         trackMarketTabChanged({
           fromRange: activeHref,
           toRange: href,
           target: href,
-          label: HOME_SECTIONS.find((section) => section.href === href)?.label,
+          label: section ? t(section.labelKey) : undefined,
           section: "home_market_tabs"
         });
         router.push(href);

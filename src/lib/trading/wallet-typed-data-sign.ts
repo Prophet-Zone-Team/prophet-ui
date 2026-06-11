@@ -9,7 +9,7 @@ import { getProviderLabelFromConnectorId } from "@/components/trading/wallet-pro
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import { getStoredWalletConnectorId } from "@/components/trading/trading-wallet-session";
 import { prepareWalletSigning } from "@/lib/trading/prepare-wallet-signing";
-import { resolveWalletErrorMessage, WALLET_USER_REJECTION_MESSAGE } from "@/lib/trading/wallet-error-message";
+import { isUserRejectedRequest, resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
 import {
   ensureTradingChain,
   TRADING_CHAIN_ID,
@@ -73,7 +73,7 @@ export async function signTypedData(walletAddress: string, typedData: unknown): 
     );
   } catch (error) {
     const errorMessage = resolveWalletErrorMessage(error);
-    if (errorMessage === WALLET_USER_REJECTION_MESSAGE) {
+    if (isUserRejectedRequest(error)) {
       throw new Error(errorMessage);
     }
     throw new Error(
