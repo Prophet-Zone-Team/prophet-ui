@@ -463,7 +463,8 @@ export async function applyProphetReferral(
 
 /** Sync Prophet session for the connected wallet; never throws. */
 export async function syncProphetWalletLogin(
-  address: string
+  address: string,
+  options?: { email?: string }
 ): Promise<ProphetLoginData | null> {
   const normalizedAddress = normalizeWalletAddress(address);
   const existingToken = getProphetApiToken();
@@ -471,7 +472,14 @@ export async function syncProphetWalletLogin(
   const existingReferral = getProphetReferral();
   const referralCodeFromQuery = readReferralCodeFromQuery();
 
-  if (existingToken && existingWallet === normalizedAddress && existingReferral) {
+  // Re-login when email is available so returning Privy users can still
+  // associate email after an earlier login raced without it.
+  if (
+    existingToken &&
+    existingWallet === normalizedAddress &&
+    existingReferral &&
+    !options?.email
+  ) {
     if (shouldApplyReferralOnCache(referralCodeFromQuery, existingReferral)) {
       try {
         await applyProphetReferral({
@@ -491,6 +499,7 @@ export async function syncProphetWalletLogin(
   try {
     return await loginProphet({
       address: normalizedAddress,
+      ...(options?.email ? { email: options.email } : {}),
       ...(referralCodeFromQuery
         ? { referral_code: referralCodeFromQuery }
         : {})

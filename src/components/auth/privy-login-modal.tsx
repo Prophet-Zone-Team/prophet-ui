@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { OtpInput } from "@/components/auth/otp-input";
 import { cn } from "@/lib/cn";
 import { markOAuthPending, consumeOAuthPending } from "@/context/privy/privy-oauth";
+import { resolvePrivyLoginEmail } from "@/context/privy/resolve-privy-login-email";
 const RESEND_COUNTDOWN_SECONDS = 60;
 const OTP_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -16,7 +17,7 @@ interface PrivyLoginModalProps {
   open: boolean;
   onClose: () => void;
   onConnectExtensionWallet: () => void;
-  onEmailAuthenticated: () => void;
+  onEmailAuthenticated: (email: string) => void;
 }
 
 export function PrivyLoginModal({
@@ -30,15 +31,35 @@ export function PrivyLoginModal({
   const [countdown, setCountdown] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const emailAuthenticatedRef = useRef(onEmailAuthenticated);
+  const emailLoginHandledRef = useRef(false);
 
   useEffect(() => {
     emailAuthenticatedRef.current = onEmailAuthenticated;
   }, [onEmailAuthenticated]);
 
+  const handleEmailAuthenticated = useCallback((resolvedEmail: string) => {
+    if (emailLoginHandledRef.current) {
+      return;
+    }
+
+    emailLoginHandledRef.current = true;
+    emailAuthenticatedRef.current(resolvedEmail);
+  }, []);
+
   const { ready } = usePrivy();
   const { sendCode, loginWithCode, state } = useLoginWithEmail({
-    onComplete: () => {
-      emailAuthenticatedRef.current();
+    onComplete: (params) => {
+      if (params.wasAlreadyAuthenticated) {
+        return;
+      }
+
+      const resolvedEmail =
+        resolvePrivyLoginEmail(params.user, params.loginAccount) ??
+        email.trim();
+
+      if (resolvedEmail) {
+        handleEmailAuthenticated(resolvedEmail);
+      }
     },
     onError: (error) => {
       setErrorMessage(resolvePrivyError(error));
@@ -67,6 +88,7 @@ export function PrivyLoginModal({
       setCode("");
       setCountdown(0);
       setErrorMessage(undefined);
+      emailLoginHandledRef.current = false;
     }
   }, [open]);
 
@@ -105,10 +127,18 @@ export function PrivyLoginModal({
 
     try {
       await loginWithCode({ code });
+
+      // Returning Privy users may already be authenticated, so onComplete
+      // does not fire again after OTP verification.
+      const resolvedEmail = email.trim();
+
+      if (resolvedEmail) {
+        handleEmailAuthenticated(resolvedEmail);
+      }
     } catch (error) {
       setErrorMessage(resolvePrivyError(error));
     }
-  }, [code, loginWithCode, verifyDisabled]);
+  }, [code, email, handleEmailAuthenticated, loginWithCode, verifyDisabled]);
 
   const handleGoogle = useCallback(async () => {
     setErrorMessage(undefined);

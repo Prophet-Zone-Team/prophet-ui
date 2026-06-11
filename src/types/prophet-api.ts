@@ -202,6 +202,8 @@ export interface ProphetGameSiblingEventSlugs {
 
 export interface ProphetLoginRequest {
   address: string;
+  /** Required when logging in via Privy email or Google. */
+  email?: string;
   referral_code?: string;
 }
 
