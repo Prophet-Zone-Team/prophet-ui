@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAnalyticsRecommends } from "@/hooks/analytics/use-analytics-recommends";
 
@@ -20,12 +21,13 @@ const ICON_BY_KEY: Record<string, ReactNode> = {
 };
 
 export function AnalyticsTopSection() {
+  const t = useTranslations("analytics");
   const { cards, isLoading, isError } = useAnalyticsRecommends();
 
   if (isLoading) {
     return (
       <section
-        aria-label="Top analytics highlights"
+        aria-label={t("topHighlights")}
         className="grid grid-cols-2 gap-4 md:grid-cols-4"
       >
         {Array.from({ length: 4 }).map((_, index) => (
@@ -33,7 +35,7 @@ export function AnalyticsTopSection() {
             key={index}
             className="box-border flex h-[145px] items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white"
           >
-            <span className="text-[14px] text-[#909090]">Loading...</span>
+            <span className="text-[14px] text-[#909090]">{t("loading")}</span>
           </div>
         ))}
       </section>
@@ -43,17 +45,17 @@ export function AnalyticsTopSection() {
   if (isError || cards.length === 0) {
     return (
       <section
-        aria-label="Top analytics highlights"
+        aria-label={t("topHighlights")}
         className="rounded-[12px] border border-[#EBEBEB] bg-white px-4 py-8 text-center text-[14px] text-[#909090]"
       >
-        Unable to load data.
+        {t("unableToLoadData")}
       </section>
     );
   }
 
   return (
     <section
-      aria-label="Top analytics highlights"
+      aria-label={t("topHighlights")}
       className="grid grid-cols-2 gap-4 md:grid-cols-4"
     >
       {cards.map((card) => (

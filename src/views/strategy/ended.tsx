@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
 
 import { getTournamentWinner, hasTournamentWinner } from "@/data/strategy";
@@ -17,6 +18,7 @@ import {
 import { buildEndedStrategyCards } from "./lib/map-strategy-data";
 
 export function StrategyEnded() {
+  const t = useTranslations("strategy");
   const fetchEvent = useWinnerTeamsStore((state) => state.fetchEvent);
   const snapshots = useWinnerSnapshots();
   const status = useWinnerTeamsStatus();
@@ -37,9 +39,9 @@ export function StrategyEnded() {
 
   if (!hasTournamentWinner() || endedStrategies.length === 0) {
     return (
-      <section aria-label="Ended strategies">
+      <section aria-label={t("endedStrategies")}>
         <p className="py-8 text-center text-sm text-[#909090] md:py-12">
-          No ended strategies yet.
+          {t("noEndedStrategies")}
         </p>
       </section>
     );
@@ -47,7 +49,7 @@ export function StrategyEnded() {
 
   return (
     <section
-      aria-label="Ended strategies"
+      aria-label={t("endedStrategies")}
       className="flex flex-col gap-3 md:gap-4"
     >
       {endedStrategies.map((strategy) => (

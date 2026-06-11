@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Drawer, { DrawerDirection } from "@/components/drawer";
 import {
   TabSwitcher,
@@ -22,6 +23,7 @@ export function GameMarketTabSwitcher({
   onChange,
   "aria-label": ariaLabel
 }: GameMarketTabSwitcherProps) {
+  const t = useTranslations("trade");
   const isMobile = useDevice();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const currentTab = useMemo(
@@ -91,7 +93,7 @@ export function GameMarketTabSwitcher({
       <Drawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title="Market categories"
+        title={t("marketCategories")}
         direction={DrawerDirection.Bottom}
         className="!h-auto max-h-[70dvh]"
       >

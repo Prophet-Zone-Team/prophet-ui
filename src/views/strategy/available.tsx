@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -20,6 +21,7 @@ import {
 } from "./lib/map-strategy-data";
 
 export function StrategyAvailable() {
+  const t = useTranslations("strategy");
   const fetchEvent = useWinnerTeamsStore((state) => state.fetchEvent);
   const snapshots = useWinnerSnapshots();
   const status = useWinnerTeamsStatus();
@@ -38,9 +40,9 @@ export function StrategyAvailable() {
 
   if (availableStrategies.length === 0) {
     return (
-      <section aria-label="Available strategies">
+      <section aria-label={t("availableStrategies")}>
         <p className="py-8 text-center text-sm text-[#909090] md:py-12">
-          No available strategies at the moment.
+          {t("noAvailableStrategies")}
         </p>
       </section>
     );
@@ -49,7 +51,7 @@ export function StrategyAvailable() {
   return (
     <>
       <section
-        aria-label="Available strategies"
+        aria-label={t("availableStrategies")}
         className="flex flex-col gap-3 md:gap-4"
       >
         {availableStrategies.map((strategy) => (

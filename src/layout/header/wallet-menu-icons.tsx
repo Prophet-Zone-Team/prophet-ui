@@ -66,6 +66,30 @@ export function NotificationIcon() {
   );
 }
 
+export function LanguageIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+    >
+      <path
+        d="M7 13C10.3137 13 13 10.3137 13 7C13 3.68629 10.3137 1 7 1C3.68629 1 1 3.68629 1 7C1 10.3137 3.68629 13 7 13Z"
+        stroke="#909090"
+        strokeWidth="1.2"
+      />
+      <path
+        d="M1 7H13M7 1C5.5 3 4.75 5 4.75 7C4.75 9 5.5 11 7 13C8.5 11 9.25 9 9.25 7C9.25 5 8.5 3 7 1Z"
+        stroke="#909090"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function ReferralIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">

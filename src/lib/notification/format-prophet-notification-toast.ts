@@ -1,3 +1,4 @@
+import { getRuntimeTranslator } from "@/lib/i18n/runtime-messages";
 import type {
   ProphetNotificationData,
   ProphetToastNoticeType,
@@ -35,7 +36,24 @@ const TOAST_DURATION_MS: Record<ProphetToastNoticeType, number> = {
   large_order: 6_000,
 };
 
-const WORLD_CUP_EVENT_LABEL = "2026 FIFA World Cup";
+const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+] as const;
+
+function getNotificationTranslator() {
+  return getRuntimeTranslator("notification");
+}
 
 function readNonEmptyString(value: unknown): string | undefined {
   if (typeof value !== "string") {
@@ -159,27 +177,15 @@ function resolveTeamNamesForMarket(marketName: string | undefined): string[] {
 }
 
 function formatMarketQuestionTitle(marketName: string): string {
+  const t = getNotificationTranslator();
+  const event = t("worldCupEventLabel");
+
   if (marketName.toLowerCase() === "draw") {
-    return `Will this match end in a draw at the ${WORLD_CUP_EVENT_LABEL}?`;
+    return t("drawQuestionTitle", { event });
   }
 
-  return `Will ${marketName} win the ${WORLD_CUP_EVENT_LABEL}?`;
+  return t("winQuestionTitle", { teamName: marketName, event });
 }
-
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-] as const;
 
 function pad2(value: number): string {
   return value.toString().padStart(2, "0");
@@ -189,13 +195,14 @@ function formatLocalKickoffLabel(
   matchStart: string | undefined,
   body: string | undefined,
 ): string {
+  const t = getNotificationTranslator();
   const iso = readNonEmptyString(matchStart);
 
   if (iso) {
     const date = new Date(iso);
 
     if (!Number.isNaN(date.getTime())) {
-      const month = MONTH_LABELS[date.getMonth()];
+      const month = t(`months.${MONTH_KEYS[date.getMonth()]}`);
       const day = date.getDate();
       const hh = pad2(date.getHours());
       const min = pad2(date.getMinutes());
@@ -208,7 +215,13 @@ function formatLocalKickoffLabel(
   const bodyText = readNonEmptyString(body);
 
   if (bodyText) {
-    return bodyText.replace(/^Kickoff:\s*/i, "");
+    const kickoffPrefix = t("kickoffPrefix");
+    const prefixPattern = new RegExp(
+      `^${kickoffPrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*`,
+      "i",
+    );
+
+    return bodyText.replace(prefixPattern, "");
   }
 
   return "—";
@@ -226,11 +239,12 @@ function formatMatchPreviewToast(
     return undefined;
   }
 
-  const description = `will start on ${kickoff}`;
+  const t = getNotificationTranslator();
+  const description = t("matchPreviewStart", { kickoff });
 
   return {
     variant: "match_preview",
-    title: `${teamA} VS ${teamB}`,
+    title: `${teamA} ${t("matchVs")} ${teamB}`,
     description,
     teamNames: [teamA, teamB],
     titleLayout: "match_vs",
@@ -255,8 +269,9 @@ function resolveOutcomeTone(
 function formatPriceToast(
   data: Extract<ProphetNotificationData, { notice_type: "price" }>,
 ): ProphetNotificationToastContent | undefined {
+  const t = getNotificationTranslator();
   const payload = data.payload;
-  const marketName = readNonEmptyString(data.market_name) ?? "Market";
+  const marketName = readNonEmptyString(data.market_name) ?? t("defaultMarket");
   const outcome = formatOutcomeLabel(data.outcome);
   const baselineDisplay = formatProbabilityDisplay(
     payload.baseline,
@@ -298,8 +313,10 @@ function formatPriceToast(
 function formatVolumeToast(
   data: Extract<ProphetNotificationData, { notice_type: "volume" }>,
 ): ProphetNotificationToastContent | undefined {
+  const t = getNotificationTranslator();
   const payload = data.payload;
-  const eventTitle = readNonEmptyString(data.event_title) ?? "this market";
+  const eventTitle =
+    readNonEmptyString(data.event_title) ?? t("defaultEventTitle");
   const deltaDisplay = formatCompactUsdDisplay(
     payload.delta_usd,
     payload.delta_usd_display,
@@ -312,7 +329,7 @@ function formatVolumeToast(
     payload.current_volume_usd,
     payload.current_volume_usd_display,
   );
-  const title = `Trading picked up on ${eventTitle}`;
+  const title = t("volumeTitle", { eventTitle });
 
   if (!deltaDisplay || !previousDisplay || !currentDisplay) {
     const body = readNonEmptyString(data.body);
@@ -353,8 +370,9 @@ function formatVolumeToast(
 function formatLargeOrderToast(
   data: Extract<ProphetNotificationData, { notice_type: "large_order" }>,
 ): ProphetNotificationToastContent | undefined {
+  const t = getNotificationTranslator();
   const payload = data.payload;
-  const marketName = readNonEmptyString(data.market_name) ?? "Market";
+  const marketName = readNonEmptyString(data.market_name) ?? t("defaultMarket");
   const outcome = formatOutcomeLabel(data.outcome);
   const side = readNonEmptyString(payload.side)?.toUpperCase() ?? "—";
   const notionalDisplay =

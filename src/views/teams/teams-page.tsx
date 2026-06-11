@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import type { MarketDataMeta, WorldCupMarketData } from "@/data/providers/types";
 import { TeamFlag } from "@/components/teams/team-flag";
@@ -53,6 +56,7 @@ export function TeamsPage({
   dataStatus,
   universe
 }: TeamsPageProps) {
+  const t = useTranslations("teams");
   const rows = buildTeamRows(
     snapshots,
     newsEvents,
@@ -76,28 +80,26 @@ export function TeamsPage({
     <section className={teamsPageClass}>
       <header className="pb-8">
         <p className="text-sm font-[500] uppercase tracking-[0.18em] text-prophet-muted">
-          Team directory
+          {t("teamDirectory")}
         </p>
         <h1 id="teams-page-title" className={cn("mt-2", teamsHeroTitleClass)}>
-          World Cup team dossiers
+          {t("pageTitle")}
         </h1>
         <p className={cn("mt-4", teamsHeroCopyClass)}>
-          Scan national teams by rank, squad value, recent form, group context,
-          key players, news, and third-party odds. Market probability remains a
-          secondary comparison layer.
+          {t("pageDescription")}
         </p>
         <div
           className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
-          aria-label="Teams summary"
+          aria-label={t("teamsSummary")}
         >
-          <HeroStat label="Teams tracked" value={String(rows.length)} />
-          <HeroStat label="Regions" value={String(regions.size)} />
+          <HeroStat label={t("teamsTracked")} value={String(rows.length)} />
+          <HeroStat label={t("regions")} value={String(regions.size)} />
           <HeroStat
-            label="Curated profiles"
+            label={t("curatedProfiles")}
             value={`${metadataReadyCount}/${rows.length}`}
           />
           <HeroStat
-            label="API-Football profiles"
+            label={t("apiFootballProfiles")}
             value={`${contextReadyCount}/${rows.length}`}
           />
         </div>
@@ -105,44 +107,49 @@ export function TeamsPage({
 
       <section
         className="mb-6 grid gap-4 lg:grid-cols-3"
-        aria-label="Featured football team data"
+        aria-label={t("featuredFootballTeamData")}
       >
         <FeaturedTeamCard
-          title="Top FIFA Rank"
+          title={t("topFifaRank")}
           row={topRankedTeam}
           metric="rank"
+          t={t}
         />
         <FeaturedTeamCard
-          title="Squad Value"
+          title={t("squadValue")}
           row={mostValuableTeam}
           metric="value"
+          t={t}
         />
         <FeaturedTeamCard
-          title="Recent Form"
+          title={t("recentForm")}
           row={bestFormTeam ?? rows[0]}
           metric="form"
+          t={t}
         />
       </section>
 
       <section
         className={teamsPanelClass}
-        aria-label="World Cup team directory"
+        aria-label={t("worldCupTeamDirectory")}
       >
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="m-0 text-lg font-[500] text-black">Teams directory</h2>
+          <h2 className="m-0 text-lg font-[500] text-black">
+            {t("teamsDirectory")}
+          </h2>
           <span className="text-xs font-[500] text-prophet-muted">
-            {getFootballStatusCopy(dataStatus, universe)}
+            {getFootballStatusCopy(dataStatus, universe, t)}
           </span>
         </div>
 
         <div className={teamsDirectoryHeadClass} aria-hidden="true">
-          <span>Team</span>
-          <span>Rank / value</span>
-          <span>Form</span>
-          <span>Group</span>
-          <span>Key player</span>
-          <span>Odds / market</span>
-          <span>Actions</span>
+          <span>{t("tableTeam")}</span>
+          <span>{t("tableRankValue")}</span>
+          <span>{t("tableForm")}</span>
+          <span>{t("tableGroup")}</span>
+          <span>{t("tableKeyPlayer")}</span>
+          <span>{t("tableOddsMarket")}</span>
+          <span>{t("tableActions")}</span>
         </div>
 
         <div className="grid gap-2">
@@ -157,14 +164,8 @@ export function TeamsPage({
         </div>
 
         <footer className="mt-5 flex flex-col gap-1 text-xs text-prophet-muted sm:flex-row sm:justify-between">
-          <span>
-            Squad values, honors, and key stars are curated metadata with source
-            timestamps.
-          </span>
-          <span>
-            Bid opens your own Polymarket order preview with user-owned wallet
-            signing.
-          </span>
+          <span>{t("directoryFooterMetadata")}</span>
+          <span>{t("directoryFooterBid")}</span>
         </footer>
       </section>
     </section>
@@ -180,21 +181,25 @@ function HeroStat({ label, value }: { label: string; value: string }) {
   );
 }
 
+type TeamsTranslator = ReturnType<typeof useTranslations<"teams">>;
+
 function FeaturedTeamCard({
   title,
   row,
-  metric
+  metric,
+  t
 }: {
   title: string;
   row: TeamDirectoryRow | undefined;
   metric: "rank" | "value" | "form";
+  t: TeamsTranslator;
 }) {
   if (!row) {
     return null;
   }
 
   const { team } = row.snapshot;
-  const featured = getFeaturedMetric(row, metric);
+  const featured = getFeaturedMetric(row, metric, t);
 
   return (
     <article className={teamsFeaturedCardClass}>
@@ -218,7 +223,9 @@ function FeaturedTeamCard({
           </h3>
           <p className={cn("m-0 mt-0.5", teamsMetricLabelClass)}>
             {team.code} / {team.region}
-            {row.metadata?.group ? ` / Group ${row.metadata.group}` : ""}
+            {row.metadata?.group
+              ? ` / ${t("groupLabel", { group: row.metadata.group })}`
+              : ""}
           </p>
         </div>
       </div>
@@ -237,10 +244,10 @@ function FeaturedTeamCard({
       </p>
       <div className="flex flex-wrap gap-2">
         <Link className={teamsDetailButtonClass} href={teamDetailHref(team.id)}>
-          View dossier
+          {t("viewDossier")}
         </Link>
         <Link className={teamsDetailButtonClass} href={teamTradeHref(team.id)}>
-          Open trade
+          {t("openTrade")}
         </Link>
       </div>
     </article>
@@ -350,36 +357,42 @@ function getRecentMatches(
     .slice(0, 5);
 }
 
-function getFeaturedMetric(row: TeamDirectoryRow, metric: "rank" | "value" | "form") {
+function getFeaturedMetric(
+  row: TeamDirectoryRow,
+  metric: "rank" | "value" | "form",
+  t: TeamsTranslator
+) {
   switch (metric) {
     case "rank":
       return {
-        badge: getTeamRank(row) ? `#${getTeamRank(row)}` : "Rank",
-        primaryLabel: "FIFA rank",
-        primaryValue: getTeamRank(row) ? `#${getTeamRank(row)}` : "Pending",
-        secondaryLabel: "Best WC finish",
-        secondaryValue: row.metadata?.worldCupBestFinish ?? "Pending",
-        copy: `${row.snapshot.team.name} sits highest in the current curated team directory.`
+        badge: getTeamRank(row) ? `#${getTeamRank(row)}` : t("rank"),
+        primaryLabel: t("fifaRank"),
+        primaryValue: getTeamRank(row) ? `#${getTeamRank(row)}` : t("pending"),
+        secondaryLabel: t("bestWcFinish"),
+        secondaryValue: row.metadata?.worldCupBestFinish ?? t("pending"),
+        copy: t("featuredRankCopy", { teamName: row.snapshot.team.name })
       };
     case "value":
       return {
-        badge: "Value",
-        primaryLabel: "Squad value",
-        primaryValue: formatSquadValue(row.metadata),
-        secondaryLabel: "Key player",
-        secondaryValue: row.metadata?.keyPlayers[0]?.name ?? "Pending",
-        copy: "Squad value is curated metadata and should be reviewed periodically against the chosen source."
+        badge: t("value"),
+        primaryLabel: t("squadValue"),
+        primaryValue: formatSquadValue(row.metadata, t),
+        secondaryLabel: t("keyPlayer"),
+        secondaryValue: row.metadata?.keyPlayers[0]?.name ?? t("pending"),
+        copy: t("featuredValueCopy")
       };
     case "form":
       return {
-        badge: row.recentMatches.length ? `${getFormScore(row.recentMatches)} pts` : "Pending",
-        primaryLabel: "Recent form",
-        primaryValue: formatFormText(row.recentMatches),
-        secondaryLabel: "Group",
-        secondaryValue: formatGroup(row.metadata),
+        badge: row.recentMatches.length
+          ? t("formPoints", { points: getFormScore(row.recentMatches) })
+          : t("pending"),
+        primaryLabel: t("recentForm"),
+        primaryValue: formatFormText(row.recentMatches, t),
+        secondaryLabel: t("group"),
+        secondaryValue: formatGroup(row.metadata, t),
         copy: row.recentMatches.length
-          ? "Recent form uses real finished fixtures from API-Football."
-          : "Recent match result data is not available for this team yet."
+          ? t("featuredFormCopyWithData")
+          : t("featuredFormCopyNoData")
       };
   }
 }
@@ -409,17 +422,23 @@ function getFormScore(matches: ApiFootballFixtureContext[]): number {
   }, 0);
 }
 
-function formatFormText(matches: ApiFootballFixtureContext[]): string {
+function formatFormText(
+  matches: ApiFootballFixtureContext[],
+  t: TeamsTranslator
+): string {
   if (matches.length === 0) {
-    return "No official data";
+    return t("noOfficialData");
   }
 
   return matches.map((match) => match.result ?? "-").join("");
 }
 
-function formatSquadValue(metadata: TeamFootballMetadata | undefined): string {
+function formatSquadValue(
+  metadata: TeamFootballMetadata | undefined,
+  t: TeamsTranslator
+): string {
   if (!metadata?.squadValue) {
-    return "Pending";
+    return t("pending");
   }
 
   const value = metadata.squadValue;
@@ -432,25 +451,29 @@ function formatSquadValue(metadata: TeamFootballMetadata | undefined): string {
   return `${currency}${Math.round(value / 1_000_000)}M`;
 }
 
-function formatGroup(metadata: TeamFootballMetadata | undefined): string {
+function formatGroup(
+  metadata: TeamFootballMetadata | undefined,
+  t: TeamsTranslator
+): string {
   if (!metadata?.group || metadata.group === "Pending") {
-    return "Pending";
+    return t("pending");
   }
 
-  return `Group ${metadata.group}`;
+  return t("groupLabel", { group: metadata.group });
 }
 
 function getFootballStatusCopy(
   meta: MarketDataMeta,
-  universe: WorldCupMarketData["universe"] | undefined
+  universe: WorldCupMarketData["universe"] | undefined,
+  t: TeamsTranslator
 ): string {
   if (meta.football?.status === "live") {
-    return `${meta.football.teamCount} football profiles`;
+    return t("footballProfiles", { count: meta.football.teamCount });
   }
 
   if (universe?.canonicalTeamCount) {
-    return `${universe.canonicalTeamCount} teams`;
+    return t("teamsCount", { count: universe.canonicalTeamCount });
   }
 
-  return "Directory";
+  return t("directory");
 }

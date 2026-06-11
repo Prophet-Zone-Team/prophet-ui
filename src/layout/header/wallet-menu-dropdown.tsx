@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   PortfolioIcon,
   LogoutIcon,
@@ -9,6 +10,7 @@ import {
   NotificationIcon,
   ReferralIcon
 } from "@/layout/header/wallet-menu-icons";
+import { WalletLanguageMenuItem } from "@/layout/header/wallet-language-menu-item";
 import { CopyIcon, RightArrowIcon } from "@/components/icons";
 import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
 import { Switch } from "@/components/ui/switch";
@@ -51,6 +53,7 @@ export function WalletMenuDropdown({
   onOpenFastBid,
   isPrivateMode,
 }: WalletMenuDropdownProps) {
+  const t = useTranslations("wallet");
   const fastBidAmount = useFastBidAmount();
   const notificationsEnabled = useNotificationsEnabled();
   const setNotificationsEnabled = useSetNotificationsEnabled();
@@ -76,7 +79,7 @@ export function WalletMenuDropdown({
         </span>
         <PolymarketAddressCopyButton
           address={polymarketAddress}
-          ariaLabel="Copy Polymarket address"
+          ariaLabel={t("copyPolymarketAddress")}
           className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
         >
           <CopyIcon />
@@ -96,7 +99,7 @@ export function WalletMenuDropdown({
                 <div className="w-[14px]">
                   <PortfolioIcon />
                 </div>
-                <span className="flex-1">Portfolio</span>
+                <span className="flex-1">{t("portfolio")}</span>
               </div>
               <RightArrowIcon />
             </Link>
@@ -111,7 +114,7 @@ export function WalletMenuDropdown({
                 <div className="w-[14px]">
                   <ReferralIcon />
                 </div>
-                <span className="flex-1">Referral</span>
+                <span className="flex-1">{t("referral")}</span>
               </div>
               <RightArrowIcon />
             </Link>
@@ -129,7 +132,7 @@ export function WalletMenuDropdown({
                 <div className="w-[14px]">
                   <FastBidIcon />
                 </div>
-                <span>Fast Bid</span>
+                <span>{t("fastBid")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="shrink-0 text-sm text-black">{fastBidDisplay}</span>
@@ -146,7 +149,7 @@ export function WalletMenuDropdown({
                 <div className="w-[14px]">
                   <NotificationIcon />
                 </div>
-                <span>Notification</span>
+                <span>{t("notification")}</span>
               </div>
               <span
                 className="shrink-0"
@@ -155,13 +158,15 @@ export function WalletMenuDropdown({
                 <Switch
                   checked={notificationsEnabled}
                   onCheckedChange={setNotificationsEnabled}
-                  aria-label="Toggle notifications"
+                  aria-label={t("toggleNotifications")}
                 />
               </span>
             </div>
           </>
         )
       }
+
+      <WalletLanguageMenuItem onSelect={onClose} />
 
       <button
         type="button"
@@ -170,7 +175,7 @@ export function WalletMenuDropdown({
         onClick={() => void onLogout()}
       >
         <LogoutIcon />
-        <span>Logout</span>
+        <span>{t("logout")}</span>
       </button>
     </motion.div>
   );

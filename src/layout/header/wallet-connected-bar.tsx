@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
@@ -39,6 +42,7 @@ export function WalletConnectedBar({
   isPrivateMode,
   showDepositPendingIndicator = false,
 }: WalletConnectedBarProps) {
+  const t = useTranslations("wallet");
   const popoverRef = useRef<any>(null);
 
   const depositButton = (
@@ -50,7 +54,7 @@ export function WalletConnectedBar({
         popoverRef.current?.onClose?.();
       }}
     >
-      Deposit
+      {t("deposit")}
       {showDepositPendingIndicator ? (
         <div
           className="absolute overflow-hidden z-[100] right-0.5 flex justify-center items-center border border-red-500 text-white -top-0.5 size-4 rounded-full bg-[#FF3B30]"
@@ -91,9 +95,9 @@ export function WalletConnectedBar({
       <Link
         href="/portfolio"
         className="hidden md:flex flex-col justify-center items-end gap-0 cursor-pointer h-[50px] px-2.5 rounded-lg border border-[#FFFFFF] transition-colors hover:border-[#EBEBEB]"
-        aria-label="Open Portfolio"
+        aria-label={t("openPortfolio")}
       >
-        <span className={walletBalanceLabelClass}>Balance</span>
+        <span className={walletBalanceLabelClass}>{t("balance")}</span>
         <span className={walletBalanceValueClass}>${balanceDisplay}</span>
       </Link>
 
