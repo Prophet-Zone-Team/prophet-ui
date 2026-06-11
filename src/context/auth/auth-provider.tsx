@@ -693,12 +693,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setStatus("loading");
       store.setError(undefined);
       store.setLoginStep(undefined);
-      if (_loginMethod === "email" || _loginMethod === "google") {
-        store.setPrivyLoginInProgress(true);
+      if (method) {
+        store.setLoginMethod(method);
+      } else if (!_loginMethod) {
+        store.setLoginMethod("wallet");
       }
 
-      if (!_loginMethod) {
-        store.setLoginMethod("wallet");
+      if (_loginMethod === "email" || _loginMethod === "google") {
+        store.setPrivyLoginInProgress(true);
+      } else {
         store.setPrivyLoginInProgress(false);
       }
 
@@ -919,28 +922,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await wagmiDisconnect();
     } catch { }
-
-    const preserveEmbeddedLogin =
-      store.loginMethod === "email" ||
-      store.loginMethod === "google" ||
-      Boolean(resolvePrivyLoginEmail(privyUser));
-
-    if (!preserveEmbeddedLogin) {
-      store.setLoginMethod("wallet");
-    }
+    store.setLoginMethod("wallet");
 
     if (isRegionBlockedRef.current) {
       openLoginModalOnly();
       return undefined;
     }
 
-    const loginMethodForRun =
-      preserveEmbeddedLogin && store.loginMethod
-        ? store.loginMethod
-        : "wallet";
-
-    return runLogin(Boolean(store.session), loginMethodForRun);
-  }, [openLoginModalOnly, privyUser, runLogin, wagmiDisconnect]);
+    return runLogin(Boolean(store.session), "wallet");
+  }, [openLoginModalOnly, runLogin, wagmiDisconnect]);
 
   const connectWallet = openLogin;
 
@@ -1192,13 +1182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const store = useAuthStore.getState();
 
-    const emailFromPrivy = resolvePrivyLoginEmail(privyUser);
-    const isEmbeddedLogin =
-      store.loginMethod === "email" ||
-      store.loginMethod === "google" ||
-      Boolean(emailFromPrivy);
-
-    if (!isEmbeddedLogin) {
+    if (store.loginMethod !== "email" && store.loginMethod !== "google") {
       return;
     }
 
@@ -1206,7 +1190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const email = emailFromPrivy;
+    const email = resolvePrivyLoginEmail(privyUser);
 
     if (!email) {
       return;
