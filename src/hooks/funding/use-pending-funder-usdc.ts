@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useAuthOptional } from "@/context/auth";
 import {
   executePendingDepositConvert,
   fetchFunderCollateralBalances,
@@ -11,12 +10,15 @@ import {
   type FunderCollateralBalances,
   type PendingDepositConvertMode,
 } from "@/lib/trading/deposit-wallet-convert";
+import { TradingUserSession } from "@/types/market";
 
 const DEFAULT_POLL_INTERVAL_MS = 15_000;
 
 export interface UsePendingFunderUsdcOptions {
   enabled?: boolean;
   pollIntervalMs?: number;
+  syncCash?: () => Promise<void>;
+  session?: TradingUserSession;
 }
 
 export interface UsePendingFunderUsdcResult {
@@ -33,9 +35,12 @@ export interface UsePendingFunderUsdcResult {
 export function usePendingFunderUsdc(
   options: UsePendingFunderUsdcOptions = {},
 ): UsePendingFunderUsdcResult {
-  const { enabled = true, pollIntervalMs = DEFAULT_POLL_INTERVAL_MS } = options;
-  const auth = useAuthOptional();
-  const session = auth?.session;
+  const {
+    enabled = true,
+    pollIntervalMs = DEFAULT_POLL_INTERVAL_MS,
+    syncCash,
+    session
+  } = options;
 
   const shouldPoll =
     enabled &&
@@ -116,7 +121,7 @@ export function usePendingFunderUsdc(
       });
 
       try {
-        await auth?.syncCash();
+        await syncCash?.();
       } catch (syncError) {
         console.warn("[usePendingFunderUsdc] syncCash after convert failed", syncError);
       }
@@ -126,7 +131,7 @@ export function usePendingFunderUsdc(
       setConverting(false);
     }
   }, [
-    auth,
+    syncCash,
     collateralBalances,
     converting,
     pendingConvertMode,
