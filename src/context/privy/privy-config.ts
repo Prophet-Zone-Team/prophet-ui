@@ -1,3 +1,4 @@
+import { FUNDING_EVM_CHAINS } from "@/config/funding/evm-chains";
 import type { PrivyClientConfig } from "@privy-io/react-auth";
 import { arbitrum, bsc, optimism, polygon } from "viem/chains";
 
@@ -25,9 +26,10 @@ export const privyConfig: PrivyClientConfig = {
       "binance",
       "wallet_connect_qr",
       "detected_ethereum_wallets",
+      "wallet_connect",
     ],
   },
   defaultChain: polygon,
-  supportedChains: [polygon, arbitrum, bsc, optimism],
+  supportedChains: [...FUNDING_EVM_CHAINS],
   walletConnectCloudProjectId,
 };
