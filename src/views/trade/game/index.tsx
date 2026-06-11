@@ -22,8 +22,7 @@ import type { ProphetGameSiblingEventSlugs } from "@/types/prophet-api";
 import type {
   ApiFootballTeamProfile,
   GameFixtureMarketsSnapshot,
-  GameMarketSnapshot,
-  WorldCupMatch
+  GameMarketSnapshot
 } from "@/types/market";
 import Drawer from "@/components/drawer";
 import {

@@ -4,6 +4,10 @@ import { formatCompactVolume } from "@/lib/formatters/volume";
 import { resolveFixtureBuyAsk } from "@/lib/market/fixture-ask-liquidity";
 import type { FixtureMarketOutcome } from "@/types/market";
 import { LineOutcomeButton } from "@/views/trade/game/fixture-markets/line-outcome-button";
+import {
+  MarketOtherSources,
+  type MarketOtherSourceItem
+} from "@/views/trade/game/markets/market-other-sources";
 
 const cardClass =
   "rounded-[12px] border border-[#EBEBEB] bg-white divide-y divide-[#EBEBEB]";
@@ -17,11 +21,14 @@ function isOutcomeBuyable(
 
 function isOutcomeSelected(
   outcome: FixtureMarketOutcome,
-  _binarySide: "yes" | "no",
+  binarySide: "yes" | "no",
   selectedOutcomeId?: string,
-  _selectedBinarySide?: "yes" | "no"
+  selectedBinarySide?: "yes" | "no"
 ): boolean {
-  return selectedOutcomeId === outcome.id;
+  return (
+    selectedOutcomeId === outcome.id &&
+    (selectedBinarySide ?? "yes") === binarySide
+  );
 }
 
 function formatOutcomeVolume(volume: number | undefined): string {
@@ -32,11 +39,13 @@ export function ExactScorePanel({
   outcomes,
   selectedOutcomeId,
   selectedBinarySide,
+  otherSources,
   onSelect
 }: {
   outcomes: FixtureMarketOutcome[];
   selectedOutcomeId?: string;
   selectedBinarySide?: "yes" | "no";
+  otherSources?: MarketOtherSourceItem[];
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
 }) {
   if (!outcomes.length) {
@@ -51,51 +60,61 @@ export function ExactScorePanel({
 
   return (
     <div className={cardClass}>
-      {outcomes.map((outcome) => (
-        <div
-          key={outcome.id}
-          className="flex flex-col md:flex-row flex-wrap items-stretch md:items-center justify-between gap-4 p-[16px] transition-colors hover:bg-[#F5F5F5]"
-        >
-          <div className="min-w-0 shrink-0">
-            <h3 className="m-0 text-[18px] font-[500] leading-6 text-black">
-              Exact Score: {outcome.label}
-            </h3>
-            <p className="m-0 mt-[6px] text-[14px] font-[500] leading-[17px] text-[#909090]">
-              {formatOutcomeVolume(outcome.volume)}
-            </p>
-          </div>
+      {outcomes.map((outcome) => {
+        const isSelectedRow = selectedOutcomeId === outcome.id;
 
-          <div className="flex shrink-0 flex-wrap items-center justify-between md:justify-end gap-2">
-            {(["yes", "no"] as const).map((binarySide) => {
-              const buyable = isOutcomeBuyable(outcome, binarySide);
+        return (
+          <div key={outcome.id}>
+            <div className="flex flex-col flex-wrap items-stretch justify-between gap-4 p-[16px] transition-colors hover:bg-[#F5F5F5] md:flex-row md:items-center">
+              <div className="min-w-0 shrink-0">
+                <h3 className="m-0 text-[18px] font-[500] leading-6 text-black">
+                  Exact Score: {outcome.label}
+                </h3>
+                <p className="m-0 mt-[6px] text-[14px] font-[500] leading-[17px] text-[#909090]">
+                  {formatOutcomeVolume(outcome.volume)}
+                </p>
+              </div>
 
-              return (
-                <LineOutcomeButton
-                  key={binarySide}
-                  label={binarySide === "yes" ? "Yes" : "No"}
-                  price={
-                    buyable
-                      ? resolveFixtureBuyAsk(outcome, binarySide)
-                      : undefined
-                  }
-                  variant={binarySide}
-                  active={isOutcomeSelected(
-                    outcome,
-                    binarySide,
-                    selectedOutcomeId,
-                    selectedBinarySide
-                  )}
-                  disabled={!buyable}
-                  onClick={
-                    buyable ? () => onSelect(outcome, binarySide) : undefined
-                  }
-                  className="flex-1 md:flex-grow-0"
-                />
-              );
-            })}
+              <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 md:justify-end">
+                {(["yes", "no"] as const).map((binarySide) => {
+                  const buyable = isOutcomeBuyable(outcome, binarySide);
+
+                  return (
+                    <LineOutcomeButton
+                      key={binarySide}
+                      label={binarySide === "yes" ? "Yes" : "No"}
+                      price={
+                        buyable
+                          ? resolveFixtureBuyAsk(outcome, binarySide)
+                          : undefined
+                      }
+                      variant={binarySide}
+                      active={isOutcomeSelected(
+                        outcome,
+                        binarySide,
+                        selectedOutcomeId,
+                        selectedBinarySide
+                      )}
+                      disabled={!buyable}
+                      onClick={
+                        buyable ? () => onSelect(outcome, binarySide) : undefined
+                      }
+                      className="flex-1 md:flex-grow-0"
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            {isSelectedRow ? (
+              <MarketOtherSources
+                sources={otherSources ?? []}
+                className="border-t border-[#EBEBEB] p-3 md:p-[16px]"
+              />
+            ) : null}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
