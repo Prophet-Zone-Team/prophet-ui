@@ -1399,12 +1399,12 @@ export const POLYMARKET_USD: FundingToken & { underlyingToken: FundingToken; } =
   symbol: "USDC (Prophet)",
   address: "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB",
   decimals: 6,
-  icon: getTokenLogo("usdc (prophet)"),
+  icon: getTokenLogo("usdc"),
   underlyingToken: {
     ...FUNDING_NETWORKS.polygon,
-    symbol: "USDC.e",
-    address: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+    symbol: "USDC",
+    address: "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
     decimals: 6,
-    icon: getTokenLogo("usde"),
+    icon: getTokenLogo("usdc"),
   },
 };
