@@ -54,7 +54,7 @@ export function ReferralInviteActions({
     });
     const origin = resolveOrigin();
     const imgUrl = `${origin}/analytics/share-card.png`;
-    const tweetUrl = `${origin}/api/twitter?img=${encodeURIComponent(imgUrl)}`;
+    const tweetUrl = `${origin}/api/twitter?img=${encodeURIComponent(imgUrl)}&link=${encodeURIComponent(fullLink)}`;
     shareToX(tweetText, `${tweetUrl}\n\n`, {
       hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket"
     });

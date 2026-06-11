@@ -32,7 +32,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <head>
         <meta name="twitter:site" content="@prophet" />
         <meta name="twitter:card" content="summary_large_image"></meta>
-        <meta name="twitter:title" content="Track signals. Trade smarter."></meta>
+        <meta name="twitter:title" content="Prophet"></meta>
         <Script id="crypto-randomuuid-polyfill" strategy="beforeInteractive">
           {`
             (function () {
