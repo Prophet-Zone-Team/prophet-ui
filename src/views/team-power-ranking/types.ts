@@ -2,7 +2,7 @@ export type TeamPowerRankingTrend = "up" | "down" | "neutral" | "new";
 
 export type TeamPowerRankingPathDifficulty = "Medium" | "Hard";
 
-export type TeamPowerRankingSignalStatus = "Positive" | "Negative";
+export type TeamPowerRankingSignalStatus = "Positive" | "Negative" | "Neutral";
 
 export type TeamPowerRankingEntry = {
   id: string;
