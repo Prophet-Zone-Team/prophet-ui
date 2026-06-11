@@ -23,7 +23,7 @@ export function SignalNewsDetailMetadataRow({
   className
 }: SignalNewsDetailMetadataRowProps) {
   const t = useTranslations("signal");
-  const isPositiveImpact = sentiment === "positive";
+ 
 
   return (
     <dl
@@ -43,6 +43,7 @@ export function SignalNewsDetailMetadataRow({
           <span
             className={cn(
               "text-[14px] font-[500] leading-[17px]",
+              SentimentColor({ sentiment })
               SentimentColor({ sentiment })
             )}
           >

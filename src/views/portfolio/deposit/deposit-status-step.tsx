@@ -41,6 +41,7 @@ export function DepositStatusStep({
 }: DepositStatusStepProps) {
   const tDeposit = useTranslations("portfolio.deposit");
   const tPortfolio = useTranslations("portfolio");
+  const tAuth = useTranslations("auth");
   const isWrapOnly = pendingConvertMode === "wrap-only";
 
   const readyTitle = isWrapOnly
@@ -158,7 +159,7 @@ export function DepositStatusStep({
               onClose?.();
             }}
           >
-            Done
+            {tAuth("done")}
           </button>
         </>
       ) : null}
