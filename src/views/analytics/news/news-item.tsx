@@ -8,7 +8,7 @@ import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 
 import { formatImpactScore } from "./format";
-import { NegativeSentimentIcon, PositiveSentimentIcon } from "./icons";
+import { SentimentColor, SentimentIcon } from "./icons";
 import { NewsItemThumbnail } from "./news-item-thumbnail";
 import type { NewsImpactItem } from "./types";
 
@@ -17,18 +17,6 @@ export type NewsItemProps = {
   onSelect?: () => void;
   className?: string;
 };
-
-function SentimentIcon({
-  sentiment
-}: {
-  sentiment: NewsImpactItem["sentiment"];
-}) {
-  if (sentiment === "negative") {
-    return <NegativeSentimentIcon />;
-  }
-
-  return <PositiveSentimentIcon />;
-}
 
 export function NewsItem({ item, onSelect, className }: NewsItemProps) {
   const t = useTranslations("signal");
@@ -100,8 +88,7 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
             <span
               className={cn(
                 "text-base font-[500] leading-[19px]",
-                item.sentiment === "positive" ? "text-[#7BCA25]" : "",
-                item.sentiment === "negative" ? "text-[#FF674B]" : ""
+                SentimentColor({ sentiment: item.sentiment })
               )}
             >
               {impactLabel}
@@ -116,8 +103,7 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
           <span
             className={cn(
               "mt-[8px] text-[18px] font-[500] leading-[21px]",
-              item.sentiment === "positive" ? "text-[#7BCA25]" : "",
-              item.sentiment === "negative" ? "text-[#FF674B]" : ""
+              SentimentColor({ sentiment: item.sentiment })
             )}
           >
             {impactLabel}

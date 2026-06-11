@@ -4,7 +4,6 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 
 import {
-  HighImpactSentimentIcon,
   NegativeSentimentIcon,
   PositiveSentimentIcon
 } from "./icons";

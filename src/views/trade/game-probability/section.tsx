@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import { formatChartProbability } from "@/components/home/market-formatters";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { findGameMarketOutcome } from "@/lib/market/game-outcome-price";
@@ -39,6 +40,8 @@ import {
 import type {
   FixtureChartKind,
   FixtureMarketOutcome,
+  GameFixtureBinaryChartPoint,
+  GameFixtureChartPoint,
   GameFixtureChartTimeRange,
   GameFixtureMarketsSnapshot,
   GameMarketOutcome,
@@ -46,6 +49,7 @@ import type {
   TeamMarketSnapshot,
   WorldCupMatch
 } from "@/types/market";
+import { resolveFixtureOutcomeDisplayProbability } from "@/lib/market/merge-live-outcome-prices";
 import { resolveOrderbookTokenId } from "@/views/trade/game/markets/fixture-market-actions";
 import { gameColors } from "@/views/trade/game/ui";
 import { GameBinaryProbabilityChart } from "@/views/trade/game-probability/binary-chart";
@@ -319,6 +323,24 @@ export function GameProbabilitySection({
     [t]
   );
 
+  const displaySummaryItems = useMemo(
+    () =>
+      applyLatestChartValuesToSummaryItems(
+        resolvedSummaryItems,
+        effectiveChartMode,
+        chartStatus,
+        chartPoints,
+        chartBinaryPoints
+      ),
+    [
+      chartBinaryPoints,
+      chartPoints,
+      chartStatus,
+      effectiveChartMode,
+      resolvedSummaryItems
+    ]
+  );
+
   return (
     <section
       className={cn(
@@ -380,8 +402,8 @@ export function GameProbabilitySection({
           </div>
         </div>
         <div className="">
-          {resolvedSummaryItems.length ? (
-            <ProbabilitySummaryRow items={resolvedSummaryItems} />
+          {displaySummaryItems.length ? (
+            <ProbabilitySummaryRow items={displaySummaryItems} />
           ) : null}
         </div>
 
@@ -439,15 +461,13 @@ export function GameProbabilitySection({
           {chartStatus === "ready" && effectiveChartMode === "binary" ? (
             <GameBinaryProbabilityChart
               data={chartBinaryPoints}
-              primaryLabel={
-                binaryPrimaryLabel ?? resolvedSummaryItems[0]?.label
-              }
+              primaryLabel={binaryPrimaryLabel ?? displaySummaryItems[0]?.label}
               secondaryLabel={
-                binarySecondaryLabel ?? resolvedSummaryItems[1]?.label
+                binarySecondaryLabel ?? displaySummaryItems[1]?.label
               }
-              primaryColor={resolvedSummaryItems[0]?.color ?? gameColors.home}
+              primaryColor={displaySummaryItems[0]?.color ?? gameColors.home}
               secondaryColor={
-                resolvedSummaryItems[1]?.color ?? gameColors.awayBar
+                displaySummaryItems[1]?.color ?? gameColors.awayBar
               }
               mode={liveChartActive ? "live" : "historical"}
               timeRange={timeRange}
@@ -468,6 +488,49 @@ export function GameProbabilitySection({
       />
     </section>
   );
+}
+
+function applyLatestChartValuesToSummaryItems(
+  items: ProbabilitySummaryItem[],
+  chartMode: "ternary" | "binary",
+  chartStatus: "loading" | "ready" | "empty" | "error",
+  chartPoints: GameFixtureChartPoint[],
+  chartBinaryPoints: GameFixtureBinaryChartPoint[]
+): ProbabilitySummaryItem[] {
+  if (chartStatus !== "ready" || items.length === 0) {
+    return items;
+  }
+
+  if (chartMode === "binary") {
+    const latest = chartBinaryPoints.at(-1);
+
+    if (!latest) {
+      return items;
+    }
+
+    return items.map((item, index) => ({
+      ...item,
+      value:
+        index === 0
+          ? latest.primary
+          : index === 1
+            ? latest.secondary
+            : item.value
+    }));
+  }
+
+  const latest = chartPoints.at(-1);
+
+  if (!latest) {
+    return items;
+  }
+
+  const keys = ["home", "draw", "away"] as const;
+
+  return items.map((item, index) => ({
+    ...item,
+    value: keys[index] !== undefined ? latest[keys[index]] : item.value
+  }));
 }
 
 function buildDefaultSummaryItems({
@@ -548,7 +611,7 @@ function ProbabilitySummaryRow({ items }: { items: ProbabilitySummaryItem[] }) {
           />
           <ProbabilitySummaryItemLabel code={item.code} label={item.label} />
           <span className="text-[12px] font-[500] leading-[17px] text-black">
-            {Math.round(item.value)}%
+            {formatChartProbability(item.value)}
           </span>
         </div>
       ))}
@@ -677,13 +740,13 @@ export function buildBinarySummaryFromOutcomes(
   return [
     {
       label: primaryLabel,
-      value: primary?.probability ?? 0,
+      value: resolveFixtureOutcomeDisplayProbability(primary),
       color: gameColors.home,
       code: primaryCode
     },
     {
       label: secondaryLabel,
-      value: secondary?.probability ?? 0,
+      value: resolveFixtureOutcomeDisplayProbability(secondary),
       color: gameColors.awayBar,
       code: secondaryCode
     }

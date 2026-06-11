@@ -43,9 +43,10 @@ export function mapTopCategoryImpactToSummary(
 ): SignalSummaryStats {
   const positive = toNumber(impact?.positive);
   const negative = toNumber(impact?.negative);
+  const today_signal = toNumber(impact?.today_signal);
 
   return {
-    todaySignal: positive + negative,
+    todaySignal: today_signal,
     positive,
     negative,
   };

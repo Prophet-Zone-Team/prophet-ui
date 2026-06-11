@@ -10,6 +10,7 @@ import type { PendingDepositConvertMode } from "@/lib/trading/deposit-wallet-con
 import { fundingPrimaryButtonClass } from "@/views/portfolio/shared/funding-modal-shell";
 import type { DepositStatusPhase } from "@/views/portfolio/deposit/types";
 import { formatNumber } from "@/utils";
+import { cn } from "@/lib/cn";
 
 export interface DepositStatusStepProps {
   phase: DepositStatusPhase;
@@ -22,6 +23,7 @@ export interface DepositStatusStepProps {
   error?: string;
   convertLoading?: boolean;
   onConfirmConvert?: () => void;
+  onClose?: () => void;
 }
 
 export function DepositStatusStep({
@@ -34,10 +36,12 @@ export function DepositStatusStep({
   convertStatusLabel,
   error,
   convertLoading = false,
-  onConfirmConvert
+  onConfirmConvert,
+  onClose
 }: DepositStatusStepProps) {
   const tDeposit = useTranslations("portfolio.deposit");
   const tPortfolio = useTranslations("portfolio");
+  const tAuth = useTranslations("auth");
   const isWrapOnly = pendingConvertMode === "wrap-only";
 
   const readyTitle = isWrapOnly
@@ -48,7 +52,7 @@ export function DepositStatusStep({
     if (isWrapOnly) {
       if (detectedUsdceAmount) {
         return tDeposit("statusUsdceReadyWithAmount", {
-          amount: formatNumber(detectedUsdceAmount, 4, true, { round: 0 }),
+          amount: formatNumber(detectedUsdceAmount, 4, true, { round: 0 })
         });
       }
       return tDeposit("statusUsdceReady");
@@ -56,7 +60,7 @@ export function DepositStatusStep({
 
     if (detectedUsdcAmount) {
       return tDeposit("statusUsdcReadyWithAmount", {
-        amount: formatNumber(detectedUsdcAmount, 4, true, { round: 0 }),
+        amount: formatNumber(detectedUsdcAmount, 4, true, { round: 0 })
       });
     }
     return tDeposit("statusUsdcReady");
@@ -68,7 +72,7 @@ export function DepositStatusStep({
     if (detectedUsdcAmount && Big(detectedUsdcAmount || 0).gt(0)) {
       parts.push(
         tDeposit("usdcDetected", {
-          amount: formatNumber(detectedUsdcAmount, 4, true, { round: 0 }),
+          amount: formatNumber(detectedUsdcAmount, 4, true, { round: 0 })
         })
       );
     }
@@ -76,7 +80,7 @@ export function DepositStatusStep({
     if (detectedUsdceAmount && Big(detectedUsdceAmount || 0).gt(0)) {
       parts.push(
         tDeposit("usdceDetected", {
-          amount: formatNumber(detectedUsdceAmount, 4, true, { round: 0 }),
+          amount: formatNumber(detectedUsdceAmount, 4, true, { round: 0 })
         })
       );
     }
@@ -99,7 +103,7 @@ export function DepositStatusStep({
         <StatusBlock
           title={tDeposit("statusAwaitingTitle")}
           description={tDeposit("statusAwaitingDescription", {
-            address: formatShortWallet(funderAddress),
+            address: formatShortWallet(funderAddress)
           })}
           detail={awaitingDetail}
           loading
@@ -140,10 +144,24 @@ export function DepositStatusStep({
       ) : null}
 
       {phase === "success" ? (
-        <StatusBlock
-          title={tDeposit("statusSuccessTitle")}
-          description={tDeposit("statusSuccessDescription")}
-        />
+        <>
+          <StatusBlock
+            title={tDeposit("statusSuccessTitle")}
+            description={tDeposit("statusSuccessDescription")}
+          />
+          <button
+            type="button"
+            className={cn(
+              fundingPrimaryButtonClass,
+              "absolute left-5 bottom-10 md:bottom-5 w-[calc(100%_-_40px)]"
+            )}
+            onClick={() => {
+              onClose?.();
+            }}
+          >
+            {tAuth("done")}
+          </button>
+        </>
       ) : null}
 
       {phase === "error" ? (
@@ -191,7 +209,7 @@ function StatusBlock({
 
 export function formatStableflowStatusLabel(
   status: OneClickStatus,
-  translate: (key: "bridgeStatus", values: { status: string }) => string,
+  translate: (key: "bridgeStatus", values: { status: string }) => string
 ): string {
   return translate("bridgeStatus", { status });
 }

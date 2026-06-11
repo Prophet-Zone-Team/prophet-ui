@@ -6,8 +6,8 @@ import { useTranslations } from "next-intl";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 
 const HOME_SECTIONS = [
-  { href: "/fifa", labelKey: "worldCupWinner" },
-  { href: "/fifa/matches", labelKey: "matches" }
+  { href: "/fifa", labelKey: "matches" },
+  { href: "/fifa/winner", labelKey: "worldCupWinner" }
 ] as const;
 
 function isSectionActive(pathname: string, href: string): boolean {

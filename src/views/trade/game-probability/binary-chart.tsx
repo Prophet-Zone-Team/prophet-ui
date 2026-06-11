@@ -1,7 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  type ReactElement,
+  type ReactNode
+} from "react";
 import {
   CartesianGrid,
   Customized,
@@ -14,27 +20,30 @@ import {
   type TooltipProps
 } from "recharts";
 
-import { formatProbability } from "@/components/home/market-formatters";
+import {
+  formatChartProbability,
+  formatProbability
+} from "@/components/home/market-formatters";
 import {
   formatChartTimestampClockLabel,
-  formatGoalEventTime,
+  formatGoalEventTime
 } from "@/lib/market/match-display";
 import {
   formatGameChartXAxisTick,
-  getBinaryFixtureChartYDomain,
+  getBinaryFixtureChartYDomain
 } from "@/lib/market/fixture-probability-chart";
 import {
   LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
-  resolveLiveChartAxisTicks,
+  resolveLiveChartAxisTicks
 } from "@/lib/market/live-fixture-probability-chart";
 import type {
   GameFixtureBinaryChartPoint,
   GameFixtureChartTimeRange,
-  GameMatchChartEvent,
+  GameMatchChartEvent
 } from "@/types/market";
 import {
   GoalEventMarkerChartProvider,
-  GoalEventMarkerCustomized,
+  GoalEventMarkerCustomized
 } from "@/views/trade/game-probability/goal-event-marker-layer";
 
 const CHART_COLORS = {
@@ -44,8 +53,209 @@ const CHART_COLORS = {
   muted: "#909090"
 } as const;
 
+const END_LABEL_RIGHT_INSET = 10;
+const END_LABEL_ESTIMATED_WIDTH = 100;
+const END_LABEL_GUTTER = END_LABEL_RIGHT_INSET + END_LABEL_ESTIMATED_WIDTH + 8;
+
+type BinarySeriesKey = "primary" | "secondary";
+
+const END_LABEL_SLOT_FRACTIONS: Record<BinarySeriesKey, number> = {
+  primary: 1 / 3,
+  secondary: 2 / 3
+};
+
 interface ChartRow extends GameFixtureBinaryChartPoint {
   chartLabel: string;
+}
+
+interface ChartCustomizedProps {
+  offset?: {
+    left?: number;
+    right?: number;
+    top?: number;
+    bottom?: number;
+  };
+  width?: number;
+  height?: number;
+}
+
+type BinarySeriesItem = {
+  key: BinarySeriesKey;
+  color: string;
+  label: string;
+};
+
+type EndLabelChartConfig = {
+  chartData: ChartRow[];
+  series: BinarySeriesItem[];
+};
+
+const EndLabelChartContext = createContext<EndLabelChartConfig | null>(null);
+
+function EndLabelChartProvider({
+  value,
+  children
+}: {
+  value: EndLabelChartConfig;
+  children: ReactNode;
+}) {
+  return (
+    <EndLabelChartContext.Provider value={value}>
+      {children}
+    </EndLabelChartContext.Provider>
+  );
+}
+
+function resolvePlotRightAnchorX(
+  width: number | undefined,
+  offset: ChartCustomizedProps["offset"]
+): number | undefined {
+  if (!width) {
+    return undefined;
+  }
+
+  const plotRight = width - (offset?.right ?? 0);
+  return plotRight - END_LABEL_RIGHT_INSET;
+}
+
+function resolveFixedLabelSlotY(
+  seriesKey: BinarySeriesKey,
+  offset: ChartCustomizedProps["offset"],
+  height: number | undefined
+): number | undefined {
+  if (!height) {
+    return undefined;
+  }
+
+  const top = offset?.top ?? 0;
+  const bottom = offset?.bottom ?? 0;
+  const plotHeight = height - top - bottom;
+  const fraction = END_LABEL_SLOT_FRACTIONS[seriesKey];
+
+  return top + plotHeight * fraction;
+}
+
+function EndLabelMarker({
+  anchorX,
+  slotY,
+  name,
+  probability,
+  series
+}: {
+  anchorX: number;
+  slotY: number;
+  name: string;
+  probability: number | undefined;
+  series: BinarySeriesItem;
+}): ReactElement<SVGElement> {
+  const probabilityLabel =
+    typeof probability === "number" ? formatChartProbability(probability) : "—";
+  const nameY = slotY - 14;
+  const valueY = slotY + 14;
+
+  return (
+    <text textAnchor="end">
+      <tspan
+        x={anchorX}
+        y={nameY}
+        fill={series.color}
+        fontSize={14}
+        fontWeight={400}
+      >
+        {name}
+      </tspan>
+      <tspan
+        x={anchorX}
+        y={valueY}
+        fill={series.color}
+        fontSize={26}
+        fontWeight={600}
+      >
+        {probabilityLabel}
+      </tspan>
+    </text>
+  );
+}
+
+function EndLineDot({
+  cx,
+  cy,
+  index,
+  dataLength,
+  series
+}: {
+  cx?: number;
+  cy?: number;
+  index?: number;
+  dataLength: number;
+  series: BinarySeriesItem;
+}): ReactElement<SVGElement> {
+  if (index !== dataLength - 1 || cx === undefined || cy === undefined) {
+    return <g />;
+  }
+
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={10} fill={series.color} fillOpacity={0.2} />
+      <circle cx={cx} cy={cy} r={5} fill={series.color} />
+    </g>
+  );
+}
+
+function EndLabelLayer({
+  offset,
+  width,
+  height,
+  chartData,
+  series
+}: ChartCustomizedProps & EndLabelChartConfig) {
+  const anchorX = resolvePlotRightAnchorX(width, offset);
+  const latestRow = chartData.at(-1);
+
+  if (anchorX === undefined || !latestRow) {
+    return null;
+  }
+
+  return (
+    <g className="pointer-events-none">
+      {series.map((item) => {
+        const slotY = resolveFixedLabelSlotY(item.key, offset, height);
+
+        if (slotY === undefined || !Number.isFinite(slotY)) {
+          return null;
+        }
+
+        return (
+          <EndLabelMarker
+            key={item.key}
+            anchorX={anchorX}
+            slotY={slotY}
+            name={item.label}
+            probability={latestRow[item.key]}
+            series={item}
+          />
+        );
+      })}
+    </g>
+  );
+}
+
+/** Stable Recharts Customized component — do not pass an inline render function. */
+function EndLabelCustomized(chartProps: Record<string, unknown>) {
+  const config = useContext(EndLabelChartContext);
+
+  if (!config) {
+    return null;
+  }
+
+  return (
+    <EndLabelLayer
+      offset={chartProps.offset as ChartCustomizedProps["offset"]}
+      width={chartProps.width as number | undefined}
+      height={chartProps.height as number | undefined}
+      {...config}
+    />
+  );
 }
 
 export interface GameBinaryProbabilityChartProps {
@@ -75,7 +285,7 @@ export function GameBinaryProbabilityChart({
   maxElapsedSeconds = 0,
   kickoffAt,
   homeCode,
-  awayCode,
+  awayCode
 }: GameBinaryProbabilityChartProps) {
   const t = useTranslations("trade");
   const isLive = mode === "live";
@@ -93,7 +303,11 @@ export function GameBinaryProbabilityChart({
   const series = useMemo(
     () => [
       { key: "primary" as const, color: primaryColor, label: primaryLabel },
-      { key: "secondary" as const, color: secondaryColor, label: secondaryLabel }
+      {
+        key: "secondary" as const,
+        color: secondaryColor,
+        label: secondaryLabel
+      }
     ],
     [primaryColor, primaryLabel, secondaryColor, secondaryLabel]
   );
@@ -108,6 +322,14 @@ export function GameBinaryProbabilityChart({
   );
 
   const yDomain = useMemo(() => getBinaryFixtureChartYDomain(data), [data]);
+  const endLabelChartConfig = useMemo(
+    () => ({
+      chartData,
+      series
+    }),
+    [chartData, series]
+  );
+  const dataLength = chartData.length;
 
   const resolvedMaxElapsed = useMemo(() => {
     if (!isLive) {
@@ -131,7 +353,7 @@ export function GameBinaryProbabilityChart({
       homeCode,
       homeName: primaryLabel,
       awayCode,
-      awayName: secondaryLabel,
+      awayName: secondaryLabel
     }),
     [
       awayCode,
@@ -139,7 +361,7 @@ export function GameBinaryProbabilityChart({
       homeCode,
       primaryLabel,
       resolvedMaxElapsed,
-      secondaryLabel,
+      secondaryLabel
     ]
   );
 
@@ -148,91 +370,75 @@ export function GameBinaryProbabilityChart({
   }
 
   const chart = (
-            <LineChart
-              data={chartData}
-              margin={{
-                top: 28,
-                right: 12,
-                left: 4,
-                bottom: isLive ? 36 : 4,
-              }}
-            >
-              <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
-              <XAxis
-                type={isLive ? "number" : "category"}
-                dataKey={isLive ? "elapsedSeconds" : "timestamp"}
-                domain={isLive ? [0, resolvedMaxElapsed] : undefined}
-                ticks={isLive ? resolveLiveChartAxisTicks(resolvedMaxElapsed) : undefined}
-                tick={{ fill: CHART_COLORS.muted, fontSize: 14, dy: 6 }}
-                axisLine={false}
-                tickLine={false}
-                minTickGap={24}
-                padding={{ left: 0, right: 32 }}
-                tickFormatter={
-                  isLive
-                    ? formatLiveAxisTick
-                    : (value: string) => formatGameChartXAxisTick(value, timeRange)
-                }
-              />
-              <YAxis
-                domain={yDomain}
-                orientation="right"
-                tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(value: number) => `${value}%`}
-                width={44}
-              />
-              <Tooltip
-                content={
-                  <BinaryChartTooltip
-                    series={series}
-                    isLive={isLive}
-                    kickoffAt={kickoffAt}
-                    timeRange={timeRange}
-                  />
-                }
-              />
-              {series.map((item) => (
-                <Line
-                  key={item.key}
-                  type="monotone"
-                  dataKey={item.key}
-                  stroke={item.color}
-                  strokeWidth={2}
-                  dot={(props) => {
-                    const { cx, cy, index } = props;
-                    if (
-                      index !== chartData.length - 1 ||
-                      cx === undefined ||
-                      cy === undefined
-                    ) {
-                      return <g />;
-                    }
-
-                    return (
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={5}
-                        fill={item.color}
-                        stroke={`${item.color}33`}
-                        strokeWidth={3}
-                      />
-                    );
-                  }}
-                  activeDot={{
-                    r: 5,
-                    fill: item.color,
-                    stroke: `${item.color}33`,
-                    strokeWidth: 3
-                  }}
-                />
-              ))}
-              {isLive ? (
-                <Customized component={GoalEventMarkerCustomized} />
-              ) : null}
-            </LineChart>
+    <LineChart
+      data={chartData}
+      margin={{
+        top: 56,
+        right: 8,
+        left: 4,
+        bottom: isLive ? 36 : 4
+      }}
+    >
+      <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
+      <XAxis
+        type={isLive ? "number" : "category"}
+        dataKey={isLive ? "elapsedSeconds" : "timestamp"}
+        domain={isLive ? [0, resolvedMaxElapsed] : undefined}
+        ticks={
+          isLive ? resolveLiveChartAxisTicks(resolvedMaxElapsed) : undefined
+        }
+        tick={{ fill: CHART_COLORS.muted, fontSize: 14, dy: 6 }}
+        axisLine={false}
+        tickLine={false}
+        minTickGap={24}
+        padding={{ left: 0, right: END_LABEL_GUTTER }}
+        tickFormatter={
+          isLive
+            ? formatLiveAxisTick
+            : (value: string) => formatGameChartXAxisTick(value, timeRange)
+        }
+      />
+      <YAxis
+        domain={yDomain}
+        orientation="right"
+        tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
+        axisLine={false}
+        tickLine={false}
+        tickFormatter={(value: number) => `${value}%`}
+        width={44}
+      />
+      <Tooltip
+        content={
+          <BinaryChartTooltip
+            series={series}
+            isLive={isLive}
+            kickoffAt={kickoffAt}
+            timeRange={timeRange}
+          />
+        }
+      />
+      {series.map((item) => (
+        <Line
+          key={item.key}
+          type="monotone"
+          dataKey={item.key}
+          stroke={item.color}
+          strokeWidth={2}
+          isAnimationActive={false}
+          dot={(props) => (
+            <EndLineDot {...props} dataLength={dataLength} series={item} />
+          )}
+          activeDot={{
+            r: 5,
+            fill: item.color,
+            stroke: `${item.color}33`,
+            strokeWidth: 3
+          }}
+        />
+      ))}
+      <Customized component={EndLabelCustomized} />
+      {isLive ? <Customized component={GoalEventMarkerCustomized} /> : null}
+    </LineChart>
   );
 
   const chartBody = (
@@ -245,13 +451,15 @@ export function GameBinaryProbabilityChart({
     <div className="h-[280px] w-full min-h-[240px] sm:h-[320px] xl:h-[340px]">
       <div className="flex h-full gap-4">
         <div className="min-w-0 flex-1">
-          {isLive ? (
-            <GoalEventMarkerChartProvider value={goalMarkerConfig}>
-              {chartBody}
-            </GoalEventMarkerChartProvider>
-          ) : (
-            chartBody
-          )}
+          <EndLabelChartProvider value={endLabelChartConfig}>
+            {isLive ? (
+              <GoalEventMarkerChartProvider value={goalMarkerConfig}>
+                {chartBody}
+              </GoalEventMarkerChartProvider>
+            ) : (
+              chartBody
+            )}
+          </EndLabelChartProvider>
         </div>
       </div>
     </div>
@@ -265,7 +473,7 @@ function BinaryChartTooltip({
   series,
   isLive,
   kickoffAt,
-  timeRange,
+  timeRange
 }: TooltipProps<number, string> & {
   series: Array<{ key: "primary" | "secondary"; color: string; label: string }>;
   isLive: boolean;

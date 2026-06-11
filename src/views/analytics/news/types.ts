@@ -1,4 +1,4 @@
-export type NewsSentiment = "positive" | "negative";
+export type NewsSentiment = "positive" | "negative" | "neutral";
 
 export type SignalSummaryStats = {
   todaySignal: number;

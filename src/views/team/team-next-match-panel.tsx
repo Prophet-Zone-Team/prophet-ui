@@ -62,7 +62,7 @@ export function TeamNextMatchPanel({
               {nextMatch.leagueName ? ` / ${nextMatch.leagueName}` : ""}
             </p>
             <Link
-              href="/fifa/matches"
+              href="/fifa"
               className={`${teamOpenTradeButtonClass} mt-4 w-full`}
             >
               {t("viewMatch")}

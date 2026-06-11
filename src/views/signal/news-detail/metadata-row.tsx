@@ -4,10 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { formatImpactScore } from "@/views/analytics/news/format";
-import {
-  NegativeSentimentIcon,
-  PositiveSentimentIcon
-} from "@/views/analytics/news/icons";
+import { SentimentColor, SentimentIcon } from "@/views/analytics/news/icons";
 import type { NewsSentiment } from "@/views/analytics/news/types";
 
 export type SignalNewsDetailMetadataRowProps = {
@@ -18,14 +15,6 @@ export type SignalNewsDetailMetadataRowProps = {
   className?: string;
 };
 
-function SentimentIcon({ sentiment }: { sentiment: NewsSentiment }) {
-  if (sentiment === "negative") {
-    return <NegativeSentimentIcon />;
-  }
-
-  return <PositiveSentimentIcon />;
-}
-
 export function SignalNewsDetailMetadataRow({
   sentiment,
   impactScore,
@@ -34,7 +23,6 @@ export function SignalNewsDetailMetadataRow({
   className
 }: SignalNewsDetailMetadataRowProps) {
   const t = useTranslations("signal");
-  const isPositiveImpact = sentiment === "positive";
 
   return (
     <dl
@@ -54,7 +42,7 @@ export function SignalNewsDetailMetadataRow({
           <span
             className={cn(
               "text-[14px] font-[500] leading-[17px]",
-              isPositiveImpact ? "text-[#7BCA25]" : "text-[#FF674B]"
+              SentimentColor({ sentiment })
             )}
           >
             {formatImpactScore(impactScore)}

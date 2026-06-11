@@ -9,7 +9,7 @@ import {
   calculateEstimatedRoiLabel,
   calculateHitReturnLabel,
   computeStrategyAllocation,
-  formatLegProfitLabel,
+  formatLegHitReturnLabel,
   formatLegStakeLabel,
   formatStrategyBudgetLabel,
   type StrategyAllocation,
@@ -117,7 +117,7 @@ export function mapStrategyTeamsToLegs(
       valueLabel: formatLegStakeLabel(allocation, index),
       probabilityLabel:
         probability !== undefined ? formatProbability(probability) : "—",
-      hitReturnLabel: formatLegProfitLabel(allocation, hasTeamProbability)
+      hitReturnLabel: formatLegHitReturnLabel(allocation, hasTeamProbability)
     };
   });
 }

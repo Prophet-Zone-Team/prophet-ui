@@ -1,5 +1,5 @@
 export const PRIMARY_NAV = [
-  { href: "/fifa/matches", labelKey: "matches" as const },
+  { href: "/fifa", labelKey: "matches" as const },
   { href: "/analytics", labelKey: "analytics" as const },
   { href: "/strategy", labelKey: "strategies" as const },
   { href: "/tracks", labelKey: "tracks" as const },
@@ -8,7 +8,7 @@ export const PRIMARY_NAV = [
 
 export function isNavActive(pathname: string, href: string): boolean {
   if (href === "/fifa") {
-    return pathname === "/fifa" || pathname.startsWith("/fifa/");
+    return pathname === "/fifa" || pathname === "/fifa/matches";
   }
 
   if (href === "/portfolio") {
