@@ -84,7 +84,13 @@ export const useAuthStore = create<AuthStore>()(
       setPrivyLoginInProgress: (privyLoginInProgress) => set({ privyLoginInProgress }),
       setLoginMethod: (loginMethod) => {
         console.log("%c setLoginMethod on store: %o", "background: red; color: white;", loginMethod)
-        return set({ loginMethod });
+        return set((state) => ({
+          loginMethod,
+          loginEmail:
+            loginMethod === "email" || loginMethod === "google"
+              ? state.loginEmail
+              : undefined,
+        }));
       },
       setLoginEmail: (loginEmail) => set({ loginEmail }),
       setError: (error) => set({ error }),

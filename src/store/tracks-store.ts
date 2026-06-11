@@ -24,7 +24,6 @@ import {
 } from "@/service/prophet";
 import {
   getPrivyLoginEmail,
-  isPrivyAuthenticated,
   waitForPrivyLoginEmail
 } from "@/context/privy/privy-wallet-bridge";
 import { useAuthStore } from "@/store/auth-store";
@@ -32,6 +31,10 @@ import type { ProphetUserTrackItem } from "@/types/prophet-api";
 
 async function resolveProphetLoginEmail(): Promise<string | undefined> {
   const { loginMethod, loginEmail } = useAuthStore.getState();
+
+  if (loginMethod !== "email" && loginMethod !== "google") {
+    return undefined;
+  }
 
   if (loginEmail) {
     return loginEmail;
@@ -41,15 +44,6 @@ async function resolveProphetLoginEmail(): Promise<string | undefined> {
 
   if (privyEmail) {
     return privyEmail;
-  }
-
-  const shouldWait =
-    loginMethod === "email" ||
-    loginMethod === "google" ||
-    isPrivyAuthenticated();
-
-  if (!shouldWait) {
-    return undefined;
   }
 
   return waitForPrivyLoginEmail({ timeoutMs: 5_000 });
