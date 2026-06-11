@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { HttpsRequiredPage } from "@/components/runtime/https-required-page";
 import { AnalyticsProvider } from "@/context/analytics";
 import { AuthProvider } from "@/context/auth";
+import RainbowProvider from "@/context/rainbowkit/provider";
 import { ProphetNotificationWsProvider } from "@/context/prophet-notification-ws";
 import { SportsWsProvider } from "@/context/sports-ws";
 import { LocaleProvider } from "@/components/runtime/locale-provider";
@@ -48,16 +49,18 @@ export function AppRoot({
       initialMessages={initialMessages}
     >
       <AnalyticsProvider>
-        <AuthProvider>
-          <SportsWsProvider>
-            <ProphetNotificationWsProvider>
-              <main className="min-h-screen overflow-x-hidden font-body">
-                <AppChrome>{children}</AppChrome>
-              </main>
-              <Toaster />
-            </ProphetNotificationWsProvider>
-          </SportsWsProvider>
-        </AuthProvider>
+        <RainbowProvider cookie={cookie}>
+          <AuthProvider>
+            <SportsWsProvider>
+              <ProphetNotificationWsProvider>
+                <main className="min-h-screen overflow-x-hidden font-body">
+                  <AppChrome>{children}</AppChrome>
+                </main>
+                <Toaster />
+              </ProphetNotificationWsProvider>
+            </SportsWsProvider>
+          </AuthProvider>
+        </RainbowProvider>
       </AnalyticsProvider>
     </LocaleProvider>
   );
