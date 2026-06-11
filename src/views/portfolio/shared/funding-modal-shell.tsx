@@ -68,7 +68,7 @@ export function FundingModalShell({
         </button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5">{children}</div>
+      <div className="relative min-h-0 flex-1 overflow-y-auto px-5">{children}</div>
 
       {footer ? (
         <footer className="shrink-0 px-5 pb-10 md:pb-5 pt-2">{footer}</footer>

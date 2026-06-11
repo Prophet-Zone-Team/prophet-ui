@@ -1218,6 +1218,7 @@ export function DepositDialog({
               error={statusError}
               convertLoading={continueLoading}
               onConfirmConvert={onConfirmPendingConvert}
+              onClose={onClose}
             />
           ) : null}
         </FundingModalShell>

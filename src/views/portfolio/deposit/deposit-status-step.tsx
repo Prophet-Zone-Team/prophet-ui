@@ -9,6 +9,7 @@ import type { PendingDepositConvertMode } from "@/lib/trading/deposit-wallet-con
 import { fundingPrimaryButtonClass } from "@/views/portfolio/shared/funding-modal-shell";
 import type { DepositStatusPhase } from "@/views/portfolio/deposit/types";
 import { formatNumber } from "@/utils";
+import { cn } from "@/lib/cn";
 
 export interface DepositStatusStepProps {
   phase: DepositStatusPhase;
@@ -21,6 +22,7 @@ export interface DepositStatusStepProps {
   error?: string;
   convertLoading?: boolean;
   onConfirmConvert?: () => void;
+  onClose?: () => void;
 }
 
 export function DepositStatusStep({
@@ -33,7 +35,8 @@ export function DepositStatusStep({
   convertStatusLabel,
   error,
   convertLoading = false,
-  onConfirmConvert
+  onConfirmConvert,
+  onClose,
 }: DepositStatusStepProps) {
   const isWrapOnly = pendingConvertMode === "wrap-only";
   const readyTitle = isWrapOnly ? "USDC.e received" : "USDC received";
@@ -117,10 +120,21 @@ export function DepositStatusStep({
       ) : null}
 
       {phase === "success" ? (
-        <StatusBlock
-          title="Deposit complete"
-          description="Your funds were converted and your portfolio balance will refresh shortly."
-        />
+        <>
+          <StatusBlock
+            title="Deposit complete"
+            description="Your funds were converted and your portfolio balance will refresh shortly."
+          />
+          <button
+            type="button"
+            className={cn(fundingPrimaryButtonClass, "absolute left-5 bottom-10 md:bottom-5 w-[calc(100%_-_40px)]")}
+            onClick={() => {
+              onClose?.();
+            }}
+          >
+            Done
+          </button>
+        </>
       ) : null}
 
       {phase === "error" ? (
