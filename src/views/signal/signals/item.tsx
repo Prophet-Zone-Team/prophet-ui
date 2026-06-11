@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 import {
-  HighImpactSentimentIcon,
   NegativeSentimentIcon,
   PositiveSentimentIcon
 } from "@/views/analytics/news/icons";

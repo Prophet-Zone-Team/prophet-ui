@@ -494,6 +494,7 @@ export interface ProphetAnalyticsNewsArticle {
   fetched_at?: string;
   language?: string;
   score?: number;
+  impact_signal?: string;
   category?: string;
   reasons_json?: string;
   matched_teams_json?: string;
@@ -544,7 +545,7 @@ export interface ProphetAnalyticsTopCategoryItem {
 }
 
 export interface ProphetAnalyticsNewsImpact {
-  high_impact?: number;
+  today_signal?: number;
   positive?: number;
   negative?: number;
   neutral?: number;
