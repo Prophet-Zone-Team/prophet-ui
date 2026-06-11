@@ -224,7 +224,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                             stepId={step.id}
                             state={state}
                             loginInProgress={loginInProgress}
-                            onConnectWallet={() => void connectWallet()}
+                            onConnectWallet={() => void connectWallet("wallet")}
                             onSignClob={() => void signClobCredentials()}
                             onSignTokens={() => void signTokenApprovals()}
                             onRefresh={() => void refreshSession()}

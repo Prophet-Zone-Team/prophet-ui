@@ -64,7 +64,7 @@ export function getProviderLabelFromConnectorId(connectorId?: string) {
 
 function getConnectedSigningContext(walletAddress: string) {
   const account = getAccount(wagmiConfig);
-
+  debugger
   if (!account.isConnected || !account.address) {
     throw new Error("No wallet connected. Connect your wallet to continue.");
   }

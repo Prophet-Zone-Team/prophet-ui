@@ -22,6 +22,7 @@ export async function signTypedData(walletAddress: string, typedData: unknown): 
   try {
     const recoverableTypedData = toRecoverableTypedData(typedData);
     const account = getAccount(wagmiConfig);
+    debugger
 
     if (!account.isConnected || !account.address) {
       throw new Error("No wallet connected. Connect your wallet to continue.");

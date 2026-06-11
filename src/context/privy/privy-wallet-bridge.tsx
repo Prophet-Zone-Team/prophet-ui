@@ -17,9 +17,6 @@ import type { AuthLoginMethod } from "@/store/auth-store";
 const WALLET_POLL_INTERVAL_MS = 200;
 const DEFAULT_WALLET_WAIT_MS = 20_000;
 
-let setActiveWalletRef:
-  | ((wallet: ConnectedWallet) => Promise<void>)
-  | undefined;
 let connectedWalletsRef: ConnectedWallet[] = [];
 let privyAuthenticatedRef = false;
 let walletSyncSuspendedRef = false;
@@ -132,7 +129,7 @@ export async function waitForPrivyWallet(options?: {
       preferEmbedded: options?.preferEmbedded,
     });
 
-    if (wallet && setActiveWalletRef) {
+    if (wallet) {
       return wallet;
     }
 
@@ -155,11 +152,9 @@ export async function activatePrivyWallet(
     preferEmbedded,
   });
 
-  if (!wallet || !setActiveWalletRef) {
+  if (!wallet) {
     return undefined;
   }
-
-  await setActiveWalletRef(wallet);
 
   return wallet.address;
 }
@@ -171,72 +166,17 @@ export async function activatePrivyWallet(
 export function PrivyWalletBridge() {
   const { ready, authenticated } = usePrivy();
   const { wallets } = useWallets();
-  const { setActiveWallet } = useSetActiveWallet();
 
   useEffect(() => {
     privyAuthenticatedRef = ready && authenticated;
   }, [authenticated, ready]);
 
   useEffect(() => {
-    setActiveWalletRef = setActiveWallet;
     connectedWalletsRef = wallets;
 
     return () => {
-      if (setActiveWalletRef === setActiveWallet) {
-        setActiveWalletRef = undefined;
-      }
     };
-  }, [setActiveWallet, wallets]);
-
-  useEffect(() => {
-    if (
-      walletSyncSuspendedRef ||
-      !ready ||
-      !authenticated ||
-      wallets.length === 0
-    ) {
-      return;
-    }
-
-    const store = useAuthStore.getState();
-    const preferEmbedded = prefersEmbeddedLogin(store.loginMethod);
-    const account = getAccount(wagmiConfig);
-    const expectedAddress = store.session?.walletAddress;
-
-    if (account.isConnected && account.address) {
-      if (!preferEmbedded) {
-        return;
-      }
-
-      const embedded = findPrivyEmbeddedWallet(expectedAddress);
-
-      if (embedded && addressesMatch(account.address, embedded.address)) {
-        return;
-      }
-
-      if (isExternalWagmiConnector(account.connector?.id)) {
-        void releaseExternalWalletConnection().then(() => {
-          const wallet =
-            findPrivyWallet(expectedAddress, { preferEmbedded: true }) ??
-            findPrivyEmbeddedWallet(expectedAddress);
-
-          if (wallet) {
-            void setActiveWallet(wallet);
-          }
-        });
-
-        return;
-      }
-    }
-
-    const wallet =
-      findPrivyWallet(expectedAddress, { preferEmbedded }) ??
-      (preferEmbedded ? findPrivyEmbeddedWallet() : wallets[0]);
-
-    if (wallet) {
-      void setActiveWallet(wallet);
-    }
-  }, [authenticated, ready, setActiveWallet, wallets]);
+  }, [wallets]);
 
   return null;
 }
