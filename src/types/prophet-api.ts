@@ -825,3 +825,8 @@ export interface ProphetAnalyticsTrackData {
   accepted: boolean;
   duplicate: boolean;
 }
+
+/** POST /v1/analytics/track — batch event payload (list: 1-5 events) */
+export interface ProphetAnalyticsTrackBatchRequest {
+  list: ProphetAnalyticsTrackRequest[];
+}

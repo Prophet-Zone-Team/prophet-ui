@@ -9,6 +9,7 @@ import type {
   ProphetAnalyticsRecommend,
   ProphetAnalyticsTeamPathContext,
   ProphetAnalyticsTeamPowerRanking,
+  ProphetAnalyticsTrackBatchRequest,
   ProphetAnalyticsTrackData,
   ProphetAnalyticsTrackRequest,
   ProphetApiResponse,
@@ -623,14 +624,31 @@ export async function getProphetUserTransactions(params: {
   });
 }
 
-/** POST /v1/analytics/track — product analytics event; no auth required */
+/** POST /v1/analytics/track — product analytics events (list: 1-5); no auth required */
+export async function trackProphetAnalyticsEvents(
+  events: ProphetAnalyticsTrackBatchRequest["list"]
+): Promise<ProphetAnalyticsTrackData> {
+  if (events.length === 0) {
+    throw new ProphetApiError(400, "Analytics track list cannot be empty.");
+  }
+
+  if (events.length > 5) {
+    throw new ProphetApiError(
+      400,
+      "Analytics track list cannot contain more than 5 events."
+    );
+  }
+
+  const body: ProphetAnalyticsTrackBatchRequest = { list: events };
+
+  return prophetPost<ProphetAnalyticsTrackData>("/v1/analytics/track", body);
+}
+
+/** POST /v1/analytics/track — single product analytics event; no auth required */
 export async function trackProphetAnalyticsEvent(
   request: ProphetAnalyticsTrackRequest
 ): Promise<ProphetAnalyticsTrackData> {
-  return prophetPost<ProphetAnalyticsTrackData>(
-    "/v1/analytics/track",
-    request
-  );
+  return trackProphetAnalyticsEvents([request]);
 }
 
 /** GET /v1/analytics/competitiveness */

@@ -1,17 +1,14 @@
-import { getProphetApiBaseUrl } from "@/service/prophet";
 import type {
   ProphetAnalyticsTrackEventName,
   ProphetAnalyticsTrackRequest
 } from "@/types/prophet-api";
 
 import { buildAnalyticsBasePayload } from "./build-payload";
-import { resolveAnalyticsEnvironment } from "./resolve-environment";
-
-const ANALYTICS_TRACK_PATH = "/v1/analytics/track";
-
-function resolveAnalyticsTrackUrl(): string {
-  return `${getProphetApiBaseUrl()}${ANALYTICS_TRACK_PATH}`;
-}
+import {
+  resolveAnalyticsThrottleKey,
+  shouldSkipThrottledAnalyticsEvent
+} from "./event-throttle";
+import { enqueueAnalyticsTransport } from "./transport-queue";
 
 export type AnalyticsTrackInput = Omit<
   ProphetAnalyticsTrackRequest,
@@ -29,46 +26,6 @@ function createEventId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-function postAnalyticsPayload(body: string): void {
-  void fetch(resolveAnalyticsTrackUrl(), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body,
-    keepalive: true
-  }).catch(() => {
-    // ignore analytics transport failure
-  });
-}
-
-function sendAnalyticsPayload(body: string): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  // Local dev: use fetch so requests appear in DevTools as normal POST calls.
-  if (resolveAnalyticsEnvironment() === "local") {
-    postAnalyticsPayload(body);
-    return;
-  }
-
-  try {
-    if (typeof navigator.sendBeacon === "function") {
-      const accepted = navigator.sendBeacon(
-        resolveAnalyticsTrackUrl(),
-        new Blob([body], { type: "application/json" })
-      );
-
-      if (accepted) {
-        return;
-      }
-    }
-  } catch {
-    // ignore analytics transport failure
-  }
-
-  postAnalyticsPayload(body);
-}
-
 export function trackAnalyticsEvent(input: AnalyticsTrackInput): void {
   try {
     const payload: ProphetAnalyticsTrackRequest = {
@@ -77,7 +34,16 @@ export function trackAnalyticsEvent(input: AnalyticsTrackInput): void {
       eventId: input.eventId ?? createEventId()
     };
 
-    sendAnalyticsPayload(JSON.stringify(payload));
+    const throttleKey = resolveAnalyticsThrottleKey({
+      eventName: payload.eventName,
+      dedupeKey: payload.dedupeKey
+    });
+
+    if (shouldSkipThrottledAnalyticsEvent(throttleKey)) {
+      return;
+    }
+
+    enqueueAnalyticsTransport(payload);
   } catch {
     // ignore analytics failure
   }

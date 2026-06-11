@@ -689,39 +689,31 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         return;
       }
 
+      const analyticsContext = resolveTradeAnalyticsContext(
+        input,
+        orderPreview,
+        tradeSide
+      );
+
+      trackOrderPreviewRequested(analyticsContext);
+
+      if (orderPreview.canSubmitRealOrder) {
+        trackOrderPreviewCompleted(analyticsContext);
+      }
+
       void applyReadinessFetch(orderPreview);
     }, READINESS_FETCH_DEBOUNCE_MS);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [applyReadinessFetch, readinessQueryKey]);
+  }, [applyReadinessFetch, input, readinessQueryKey, tradeSide]);
 
   useEffect(() => {
-    if (!preview) {
-      return;
+    if (orderAmount === 0) {
+      return undefined;
     }
 
-    trackOrderPreviewRequested(
-      resolveTradeAnalyticsContext(input, preview, tradeSide)
-    );
-
-    if (preview.canSubmitRealOrder) {
-      trackOrderPreviewCompleted(
-        resolveTradeAnalyticsContext(input, preview, tradeSide)
-      );
-    }
-  }, [
-    input,
-    preview?.canSubmitRealOrder,
-    preview?.estimatedTotalCost,
-    preview?.shareSize,
-    preview?.sidePrice,
-    preview?.tokenId,
-    tradeSide
-  ]);
-
-  useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       trackOrderInputChanged({
         ...resolveTradeAnalyticsContext(input, preview, tradeSide),

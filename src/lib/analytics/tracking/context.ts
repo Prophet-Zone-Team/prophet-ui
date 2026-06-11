@@ -1,4 +1,6 @@
+import { resetAnalyticsEventThrottleForTests } from "./event-throttle";
 import { resetPageViewDedupeForTests } from "./page-view";
+import { resetAnalyticsTransportQueueForTests } from "./transport-queue";
 
 const seenDedupeKeys = new Set<string>();
 let impressionIndex = 0;
@@ -20,4 +22,6 @@ export function resetAnalyticsTrackingContextForTests(): void {
   seenDedupeKeys.clear();
   impressionIndex = 0;
   resetPageViewDedupeForTests();
+  resetAnalyticsEventThrottleForTests();
+  resetAnalyticsTransportQueueForTests();
 }

@@ -18,6 +18,16 @@ import {
   shouldSkipDuplicatePageView,
   trackPageViewed
 } from "@/lib/analytics/tracking/page-view";
+import {
+  resolveAnalyticsThrottleKey,
+  shouldSkipThrottledAnalyticsEvent
+} from "@/lib/analytics/tracking/event-throttle";
+import {
+  ANALYTICS_TRACK_BATCH_SIZE,
+  getAnalyticsTransportQueueDepthForTests,
+  isAnalyticsTransportProcessingForTests
+} from "@/lib/analytics/tracking/transport-queue";
+import { trackOrderInputChanged } from "@/lib/analytics/tracking/trade-events";
 import { trackAnalyticsEvent } from "@/lib/analytics/tracking/track";
 
 class MemoryStorage {
@@ -191,6 +201,207 @@ describe("analytics tracking", () => {
       Object.defineProperty(globalThis, "window", {
         configurable: true,
         value: originalWindow
+      });
+    }
+  });
+
+  it("throttles repeated events of the same type within 5 seconds", () => {
+    const key = resolveAnalyticsThrottleKey({ eventName: "market_tab_changed" });
+
+    assert.equal(shouldSkipThrottledAnalyticsEvent(key), false);
+    assert.equal(shouldSkipThrottledAnalyticsEvent(key), true);
+  });
+
+  it("skips order_input_changed when the changed value is zero", () => {
+    const originalWindow = globalThis.window;
+
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: {
+        location: { pathname: "/trade", search: "", hostname: "localhost" },
+        localStorage: new MemoryStorage(),
+        sessionStorage: new MemoryStorage()
+      }
+    });
+
+    try {
+      trackOrderInputChanged({
+        changedField: "amount",
+        amount: 0
+      });
+
+      assert.equal(getAnalyticsTransportQueueDepthForTests(), 0);
+      assert.equal(isAnalyticsTransportProcessingForTests(), false);
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: originalWindow
+      });
+    }
+  });
+
+  it("throttles changed events by event name only", () => {
+    const keyA = resolveAnalyticsThrottleKey({
+      eventName: "order_input_changed",
+      dedupeKey: "price"
+    });
+    const keyB = resolveAnalyticsThrottleKey({
+      eventName: "order_input_changed",
+      dedupeKey: "size"
+    });
+
+    assert.equal(keyA, "order_input_changed");
+    assert.equal(keyB, "order_input_changed");
+    assert.equal(shouldSkipThrottledAnalyticsEvent(keyA), false);
+    assert.equal(shouldSkipThrottledAnalyticsEvent(keyB), true);
+  });
+
+  it("allows distinct impression dedupe keys within the throttle window", () => {
+    const keyA = resolveAnalyticsThrottleKey({
+      eventName: "team_card_impressed",
+      dedupeKey: "team-a"
+    });
+    const keyB = resolveAnalyticsThrottleKey({
+      eventName: "team_card_impressed",
+      dedupeKey: "team-b"
+    });
+
+    assert.equal(shouldSkipThrottledAnalyticsEvent(keyA), false);
+    assert.equal(shouldSkipThrottledAnalyticsEvent(keyB), false);
+  });
+
+  it("batches queued analytics events up to five per request", async () => {
+    const originalWindow = globalThis.window;
+    const originalFetch = globalThis.fetch;
+    const requestBodies: Array<Array<{ eventId: string }> | undefined> = [];
+    let activeRequests = 0;
+    let maxConcurrentRequests = 0;
+
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: {
+        location: { pathname: "/fifa", search: "", hostname: "localhost" },
+        localStorage: new MemoryStorage(),
+        sessionStorage: new MemoryStorage()
+      }
+    });
+
+    Object.defineProperty(globalThis, "fetch", {
+      configurable: true,
+      value: (_input: RequestInfo | URL, init?: RequestInit) => {
+        const body =
+          typeof init?.body === "string"
+            ? (JSON.parse(init.body) as { list?: Array<{ eventId: string }> }).list
+            : undefined;
+
+        requestBodies.push(body);
+        activeRequests += 1;
+        maxConcurrentRequests = Math.max(maxConcurrentRequests, activeRequests);
+
+        return new Promise<Response>((resolve) => {
+          setTimeout(() => {
+            activeRequests -= 1;
+            resolve(new Response());
+          }, 10);
+        });
+      }
+    });
+
+    try {
+      trackAnalyticsEvent({
+        eventName: "page_viewed",
+        eventId: "event-1"
+      });
+      trackAnalyticsEvent({
+        eventName: "market_data_loaded",
+        eventId: "event-2"
+      });
+      trackAnalyticsEvent({
+        eventName: "section_viewed",
+        eventId: "event-3"
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      assert.equal(maxConcurrentRequests, 1);
+      assert.equal(requestBodies.length, 1);
+      assert.equal(requestBodies[0]?.length, 3);
+      assert.deepEqual(
+        requestBodies[0]?.map((item) => item.eventId),
+        ["event-1", "event-2", "event-3"]
+      );
+      assert.equal(getAnalyticsTransportQueueDepthForTests(), 0);
+      assert.equal(isAnalyticsTransportProcessingForTests(), false);
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: originalWindow
+      });
+      Object.defineProperty(globalThis, "fetch", {
+        configurable: true,
+        value: originalFetch
+      });
+    }
+  });
+
+  it("sends overflow analytics events in subsequent batches", async () => {
+    const originalWindow = globalThis.window;
+    const originalFetch = globalThis.fetch;
+    const batchSizes: number[] = [];
+
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: {
+        location: { pathname: "/fifa", search: "", hostname: "localhost" },
+        localStorage: new MemoryStorage(),
+        sessionStorage: new MemoryStorage()
+      }
+    });
+
+    Object.defineProperty(globalThis, "fetch", {
+      configurable: true,
+      value: (_input: RequestInfo | URL, init?: RequestInit) => {
+        const body =
+          typeof init?.body === "string"
+            ? (JSON.parse(init.body) as { list?: unknown[] }).list
+            : undefined;
+
+        batchSizes.push(body?.length ?? 0);
+
+        return Promise.resolve(new Response());
+      }
+    });
+
+    const eventNames = [
+      "page_viewed",
+      "market_data_loaded",
+      "section_viewed",
+      "chart_viewed",
+      "team_card_impressed",
+      "nav_clicked"
+    ] as const;
+
+    try {
+      for (let index = 0; index < ANALYTICS_TRACK_BATCH_SIZE + 1; index += 1) {
+        trackAnalyticsEvent({
+          eventName: eventNames[index],
+          eventId: `event-${index + 1}`,
+          dedupeKey: `overflow-test-${index + 1}`
+        });
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      assert.deepEqual(batchSizes, [ANALYTICS_TRACK_BATCH_SIZE, 1]);
+      assert.equal(getAnalyticsTransportQueueDepthForTests(), 0);
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: originalWindow
+      });
+      Object.defineProperty(globalThis, "fetch", {
+        configurable: true,
+        value: originalFetch
       });
     }
   });

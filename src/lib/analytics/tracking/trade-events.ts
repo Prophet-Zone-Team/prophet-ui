@@ -65,7 +65,33 @@ export function trackOrderTicketOpened(input: TradeAnalyticsFields): void {
   });
 }
 
+function parseTradeNumericValue(value: string | number | undefined): number {
+  if (value === undefined || value === "") {
+    return 0;
+  }
+
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function resolveOrderInputChangedValue(input: TradeAnalyticsFields): number {
+  switch (input.changedField) {
+    case "amount":
+      return parseTradeNumericValue(input.amount);
+    case "price":
+      return parseTradeNumericValue(input.price);
+    case "size":
+      return parseTradeNumericValue(input.size);
+    default:
+      return parseTradeNumericValue(input.amount ?? input.price ?? input.size);
+  }
+}
+
 export function trackOrderInputChanged(input: TradeAnalyticsFields): void {
+  if (resolveOrderInputChangedValue(input) === 0) {
+    return;
+  }
+
   trackAnalyticsEvent({
     eventName: "order_input_changed",
     ...buildTradeFields(input)
