@@ -61,6 +61,7 @@ export function getStoredTradingWalletInfo(walletAddress?: string) {
   const walletLogos: Record<WalletProviderKind, string> = {
     okx: "/wallets/logo-okx.png",
     metamask: "/wallets/logo-metamask.png",
+    privy: "",
     injected: "",
   };
 

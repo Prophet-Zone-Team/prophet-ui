@@ -4,15 +4,13 @@ import type { OneClickStatus, QuoteResponse } from "@stableflow/core";
 import { useCallback, useRef } from "react";
 import { parseUnits } from "viem";
 
-import { FundingNetworkType } from "@/config/funding";
 import {
   getConfidentialStatus,
   requestConfidentialTopupQuote,
   submitConfidentialDepositTx,
 } from "@/lib/confidential/client";
-import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import type { StableflowDepositToken } from "@/lib/funding/stableflow";
-import { transferCollateralFromConnectedWallet } from "@/lib/trading/polygon-collateral-transfer";
+import { fundingNetworkTypeToChainType, transferDepositFunds } from "@/lib/wallet";
 import {
   isStableflowSuccessStatus,
   isStableflowTerminalFailureStatus,
@@ -105,15 +103,14 @@ export function useConfidentialTopup(): UseConfidentialTopupResult {
 
       const amountBaseUnits = parseUnits(tokenAmount, token.decimals).toString();
 
-      if (token.chainType === FundingNetworkType.EVM) {
-        await ensureFundingEvmChain(fundingAddress, token.chainId);
-      }
-
-      const { txHash } = await transferCollateralFromConnectedWallet({
+      // transferDepositFunds switches the funding wallet to the token's chain
+      // before sending, so no separate ensure-chain call is needed here.
+      const { txHash } = await transferDepositFunds({
+        chainType: fundingNetworkTypeToChainType(token.chainType),
         walletAddress: fundingAddress,
         tokenAddress: token.address,
         toAddress: depositAddress,
-        amountUsd: tokenAmount,
+        amount: tokenAmount,
         tokenDecimals: token.decimals,
         chainId: token.chainId,
       });

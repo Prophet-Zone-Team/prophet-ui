@@ -7,7 +7,7 @@ import { NATIVE_FUNDING_TOKEN_ADDRESS } from "@/lib/funding/evm-balances";
 import {
   transferCollateralWithWalletClient,
   type CollateralTransferWalletClient,
-} from "./polygon-collateral-transfer";
+} from "./evm-transfer";
 
 const MOCK_TX_HASH = `0x${"a".repeat(64)}` as Hex;
 const ERC20_USDC_ARBITRUM = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831";

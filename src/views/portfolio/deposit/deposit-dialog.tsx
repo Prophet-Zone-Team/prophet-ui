@@ -6,8 +6,7 @@ import Big from "big.js";
 import { Loader2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useDevice } from "@/hooks/common/use-device";
-import { FundingNetworkType } from "@/config/funding";
-import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
+import { ensureWalletChain, fundingNetworkTypeToChainType } from "@/lib/wallet";
 import { reportFundingTransaction } from "@/lib/portfolio/user";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
 import type { SupportedChainOption } from "@/lib/funding/supported-assets";
@@ -818,12 +817,11 @@ export function DepositDialog({
       setContinueLoading(true);
 
       try {
-        if (selectedToken.chainType === FundingNetworkType.EVM) {
-          await ensureFundingEvmChain(
-            session.walletAddress,
-            selectedToken.chainId
-          );
-        }
+        await ensureWalletChain({
+          chainType: fundingNetworkTypeToChainType(selectedToken.chainType),
+          walletAddress: session.walletAddress,
+          chainId: selectedToken.chainId,
+        });
 
         const { txHash } = await depositViaPolygon(amount.tokenAmount, selectedToken);
         void reportFundingTransaction({
@@ -859,12 +857,11 @@ export function DepositDialog({
     setStatusPhase("bridging");
 
     try {
-      if (selectedToken.chainType === FundingNetworkType.EVM) {
-        await ensureFundingEvmChain(
-          session.walletAddress,
-          selectedToken.chainId
-        );
-      }
+      await ensureWalletChain({
+        chainType: fundingNetworkTypeToChainType(selectedToken.chainType),
+        walletAddress: session.walletAddress,
+        chainId: selectedToken.chainId,
+      });
 
       const execution = await depositViaStableflow(
         amount.tokenAmount,

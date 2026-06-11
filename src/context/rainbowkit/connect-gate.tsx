@@ -52,18 +52,26 @@ function resolveConnectedAddress(
   expectedAddress?: string,
   options?: { embeddedOnly?: boolean },
 ) {
+  if (options?.embeddedOnly) {
+    // Embedded (Privy) wallets are not registered as wagmi connectors, so
+    // resolve them from the Privy wallet list directly.
+    const embedded = findPrivyEmbeddedWallet(expectedAddress);
+
+    if (!embedded) {
+      return undefined;
+    }
+
+    if (expectedAddress && !addressesMatch(embedded.address, expectedAddress)) {
+      return undefined;
+    }
+
+    return embedded.address;
+  }
+
   const account = getAccount(wagmiConfig);
 
   if (!account.isConnected || !account.address) {
     return undefined;
-  }
-
-  if (options?.embeddedOnly) {
-    const embedded = findPrivyEmbeddedWallet(expectedAddress);
-
-    if (!embedded || !addressesMatch(account.address, embedded.address)) {
-      return undefined;
-    }
   }
 
   if (expectedAddress && !addressesMatch(account.address, expectedAddress)) {
@@ -118,23 +126,24 @@ export function RainbowConnectGate({ children }: { children: ReactNode }) {
       throw new Error("Wallet connection was cancelled.");
     }
 
-    // Embedded (email/google) wallets are created after Privy auth. Wait for
-    // them to appear and set the wagmi active wallet — never open the
-    // external-wallet picker in this flow.
-    let activated;
+    // Embedded (email/google) wallets are created after Privy auth and live
+    // outside wagmi. Wait for them to appear and return the address directly;
+    // never open the external-wallet picker in this flow.
     if (isEmbeddedLogin) {
-      activated = await activatePrivyWallet(options?.expectedAddress, {
+      const activated = await activatePrivyWallet(options?.expectedAddress, {
         preferEmbedded: true,
       }).catch(() => undefined);
-    }
 
-    if (!activated && !isEmbeddedLogin) {
-      openConnectModal?.();
-    } else if (!activated && isEmbeddedLogin) {
+      if (activated) {
+        return activated;
+      }
+
       throw new Error(
         "Your embedded wallet is still being created. Please try again in a moment.",
       );
     }
+
+    openConnectModal?.();
 
     return new Promise<string>((resolve, reject) => {
       const timeoutMs = 3_000;

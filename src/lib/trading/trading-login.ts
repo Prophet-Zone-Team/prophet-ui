@@ -12,6 +12,7 @@ import { getConnectGate } from "@/context/rainbowkit/connect-gate";
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import { signMessageWithWallet } from "@/components/trading/wallet-provider";
 import { activatePrivyWallet } from "@/context/privy/privy-wallet-bridge";
+import { getActiveEvmAccount } from "@/lib/wallet/evm/signer-source";
 import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 import { AuthLoginMethod, useAuthStore } from "@/store/auth-store";
 import { deriveTradingCredentials } from "@/lib/trading/clob-credentials-client";
@@ -361,6 +362,13 @@ export async function createTradingSession(
       payload.session.walletAddress,
       connected.connector.id,
     );
+  } else {
+    // Privy embedded wallets are not registered as wagmi connectors.
+    const activeAccount = getActiveEvmAccount();
+
+    if (activeAccount.source === "privy") {
+      storeConnectedWalletConnector(payload.session.walletAddress, "privy");
+    }
   }
 
   return payload.session;

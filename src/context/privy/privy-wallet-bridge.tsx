@@ -2,15 +2,8 @@
 
 import { useEffect } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
-import { useSetActiveWallet } from "@privy-io/wagmi";
-import { getAccount } from "wagmi/actions";
 import type { ConnectedWallet } from "@privy-io/react-auth";
 
-import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
-import {
-  isExternalWagmiConnector,
-  releaseExternalWalletConnection,
-} from "@/lib/trading/wallet-disconnect";
 import { useAuthStore } from "@/store/auth-store";
 import type { AuthLoginMethod } from "@/store/auth-store";
 
@@ -160,8 +153,9 @@ export async function activatePrivyWallet(
 }
 
 /**
- * Syncs the Privy wallet list into wagmi's active wallet so the existing
- * wagmi-based trading flow keeps working for embedded and external wallets.
+ * Mirrors the Privy auth state and wallet list into module-level refs so
+ * non-React modules (e.g. the EVM signer source) can resolve the active
+ * Privy embedded wallet without a wagmi connector.
  */
 export function PrivyWalletBridge() {
   const { ready, authenticated } = usePrivy();
@@ -173,9 +167,6 @@ export function PrivyWalletBridge() {
 
   useEffect(() => {
     connectedWalletsRef = wallets;
-
-    return () => {
-    };
   }, [wallets]);
 
   return null;

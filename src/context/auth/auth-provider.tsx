@@ -95,11 +95,10 @@ import {
   suspendPrivyWalletSync,
   waitForPrivyWallet,
 } from "@/context/privy/privy-wallet-bridge";
-import { useAccount, useDisconnect } from "wagmi";
+import { useDisconnect } from "wagmi";
 import { signConfidentialMessage } from "@/lib/confidential/sign-message";
 import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
 import { usePendingFunderUsdc } from "@/hooks/funding";
-import { useSetActiveWallet } from "@privy-io/wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { getAccount, watchAccount } from "wagmi/actions";
 import { wagmiConfig } from "../rainbowkit/wagmi-config";
@@ -115,7 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = usePrivy();
   const { disconnectAsync: wagmiDisconnect } = useDisconnect();
   const { wallets: privyWallets } = useWallets();
-  const { setActiveWallet } = useSetActiveWallet();
   const { connectModalOpen, openConnectModal } = useConnectModal();
   const connectModalOpenRef = useRef(connectModalOpen);
   const hydrated = useAuthHydrated();
@@ -387,6 +385,112 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [refreshCash]
   );
+
+  const getSessionAndReadiness = async (params?: { resume?: boolean, loginMethod?: AuthLoginMethod }) => {
+    const { resume } = params ?? {};
+    const store = useAuthStore.getState();
+    const _loginMethod = params?.loginMethod ?? store.loginMethod;
+
+    const handleStep = (step: TradingLoginStep) => {
+      if (!loginAbortRef.current) {
+        store.setLoginStep(step);
+      }
+    };
+
+    let session: TradingUserSession | undefined;
+    if (resume) {
+      session = await loadTradingSession();
+    }
+    try {
+      if (!session) {
+        let finalWalletAddress: string | undefined;
+        handleStep("requesting_wallet");
+        const preferEmbedded = _loginMethod === "email" || _loginMethod === "google";
+        // privy connect
+        if (preferEmbedded) {
+          const embeddedWallet = privyWallets.filter(isPrivyEmbeddedWallet)[0];
+          const embeddedAddress = embeddedWallet?.address;
+          console.log("embeddedAddress: %o", embeddedAddress);
+          finalWalletAddress = embeddedAddress;
+        }
+        // rainbowkit connect
+        else {
+          // connected
+          const account = getAccount(wagmiConfig);
+          console.log("rainbowkit connect account: %o", account);
+          if (account.isConnected && account.address) {
+            const walletAddress = account.address;
+            console.log("walletAddress: %o", walletAddress);
+            finalWalletAddress = walletAddress;
+          }
+          // not connected
+          else {
+            openConnectModal?.();
+
+            // wait for connect
+            const timeoutMs = 3_000;
+            const waitForConnect = () => {
+              return new Promise<string>((resolve, reject) => {
+                let unwatch: (() => void) | undefined;
+                let timeoutId: ReturnType<typeof setInterval> | undefined;
+
+                // Check every timeoutMs to see if the connection modal has been closed
+                timeoutId = setInterval(() => {
+                  if (connectModalOpenRef.current) {
+                    return;
+                  }
+                  reject(new Error("Connect cancelled"));
+                  clearInterval(timeoutId);
+                  unwatch?.();
+                }, timeoutMs);
+                const tryResolve = () => {
+                  const account = getAccount(wagmiConfig);
+                  if (!account.isConnected || !account.address) {
+                    return undefined;
+                  }
+
+                  console.log("tryResolve account: %o", account);
+                  console.log("tryResolve account.address: %o", account.address);
+
+                  resolve(account.address);
+                  clearInterval(timeoutId);
+                  unwatch?.();
+                }
+                unwatch = watchAccount(wagmiConfig, {
+                  onChange() {
+                    tryResolve();
+                  },
+                });
+              });
+            }
+
+            finalWalletAddress = await waitForConnect();
+            console.log("finalWalletAddress: %o", finalWalletAddress);
+          }
+        }
+
+        if (!finalWalletAddress) {
+          throw new Error("Connect timeout");
+        }
+
+        await ensureDepositWalletDeployed(finalWalletAddress, {
+          onStep: handleStep,
+        });
+        session = await createTradingSession(finalWalletAddress, {
+          onStep: handleStep,
+        });
+      }
+    } catch (error) {
+      await disconnectTradingSession().catch(() => undefined);
+      throw error;
+    }
+
+    handleStep("verifying_readiness");
+
+    const readiness = await fetchTradingReadinessWithBalances();
+
+    return { session, readiness };
+  };
 
   const handleWalletAccountSwitch = useCallback(
     async (nextAddress: string) => {
@@ -677,113 +781,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       syncingRef.current = false;
     }
   }, [refreshCash]);
-
-  const getSessionAndReadiness = async (params?: { resume?: boolean, loginMethod?: AuthLoginMethod }) => {
-    const { resume } = params ?? {};
-    const store = useAuthStore.getState();
-    const _loginMethod = params?.loginMethod ?? store.loginMethod;
-
-    const handleStep = (step: TradingLoginStep) => {
-      if (!loginAbortRef.current) {
-        store.setLoginStep(step);
-      }
-    };
-
-    let session: TradingUserSession | undefined;
-    if (resume) {
-      session = await loadTradingSession();
-    }
-    try {
-      if (!session) {
-        let finalWalletAddress: any;
-        handleStep("requesting_wallet");
-        const preferEmbedded = _loginMethod === "email" || _loginMethod === "google";
-        // privy connect
-        if (preferEmbedded) {
-          const embeddedWallet = privyWallets.filter(isPrivyEmbeddedWallet)[0];
-          await setActiveWallet(embeddedWallet);
-          const embeddedAddress = embeddedWallet?.address;
-          console.log("embeddedAddress: %o", embeddedAddress);
-          finalWalletAddress = embeddedAddress;
-        }
-        // rainbowkit connect
-        else {
-          // connected
-          const account = getAccount(wagmiConfig);
-          console.log("rainbowkit connect account: %o", account);
-          if (account.isConnected && account.address) {
-            const walletAddress = account.address;
-            console.log("walletAddress: %o", walletAddress);
-            finalWalletAddress = walletAddress;
-          }
-          // not connected
-          else {
-            openConnectModal?.();
-
-            // wait for connect
-            const timeoutMs = 3_000;
-            const waitForConnect = () => {
-              return new Promise((resolve, reject) => {
-                let unwatch: any;
-                let timeoutId: any;
-
-                // Check every timeoutMs to see if the connection modal has been closed
-                timeoutId = setInterval(() => {
-                  if (connectModalOpenRef.current) {
-                    return;
-                  }
-                  reject(new Error("Connect cancelled"));
-                  clearInterval(timeoutId);
-                  unwatch?.();
-                }, timeoutMs);
-                const tryResolve = () => {
-                  const account = getAccount(wagmiConfig);
-                  if (!account.isConnected || !account.address) {
-                    return undefined;
-                  }
-
-                  console.log("tryResolve account: %o", account);
-                  console.log("tryResolve account.address: %o", account.address);
-
-                  resolve(account.address);
-                  clearInterval(timeoutId);
-                  unwatch?.();
-                }
-                unwatch = watchAccount(wagmiConfig, {
-                  onChange() {
-                    tryResolve();
-                  },
-                });
-              });
-            }
-
-            finalWalletAddress = await waitForConnect();
-            console.log("finalWalletAddress: %o", finalWalletAddress);
-          }
-        }
-
-        if (!finalWalletAddress) {
-          throw new Error("Connect timeout");
-        }
-
-        await ensureDepositWalletDeployed(finalWalletAddress, {
-          onStep: handleStep,
-        });
-        session = await createTradingSession(finalWalletAddress, {
-          onStep: handleStep,
-        });
-      }
-    } catch (error) {
-      await disconnectTradingSession().catch(() => undefined);
-      throw error;
-    }
-
-    handleStep("verifying_readiness");
-
-    const readiness = await fetchTradingReadinessWithBalances();
-
-    return { session, readiness };
-  };
 
   // The runLogin method must complete the entire login process
   // because many dependent methods rely on its return value

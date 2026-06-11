@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { cookieToInitialState } from "wagmi";
-import { WagmiProvider } from "@privy-io/wagmi";
+import { cookieToInitialState, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PrivyProvider } from "@privy-io/react-auth";
 
