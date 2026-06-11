@@ -144,14 +144,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const confidentialAccount = useConfidentialAccount();
 
+  const [googleLoginWithOAuthReady, setGoogleLoginWithOAuthReady] = useState(false);
   useLoginWithOAuth({
     onComplete: (params) => {
       console.log("google oauth complete: %o", params);
       console.log("google oauth complete privyWallets: %o", privyWallets);
-      if (!params.loginAccount || params.loginMethod !== "google") {
-        return;
+      const googleAccount = params.user.linkedAccounts.find(
+        (a) => a.type === "google_oauth"
+      );
+      if (googleAccount || params.wasAlreadyAuthenticated) {
+        // void startPrivyTradingLogin("google");
+        setGoogleLoginWithOAuthReady(true);
       }
-      void startPrivyTradingLogin("google");
     },
     onError: (error) => {
       console.log("google oauth error: %o", error);
@@ -867,8 +871,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
     store.setPrivyLoginInProgress(true);
 
-    console.log("privyWallets: %o", privyWallets)
-
     if (store.session || isRegionBlockedRef.current) {
       consumeOAuthPending();
       clearOAuthUrlParams();
@@ -905,6 +907,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await releaseExternalWalletConnection(method);
 
       const hasEmbeddedWallet = privyWallets.some(isPrivyEmbeddedWallet);
+
+      console.log("hasEmbeddedWallet: %o", hasEmbeddedWallet)
 
       if (!hasEmbeddedWallet && !privyWalletCreatingRef.current) {
         privyWalletCreatingRef.current = true;
@@ -1249,7 +1253,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // for google oauth
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !privyReady || !googleLoginWithOAuthReady || !privyWallets.length) {
+      return;
+    }
+
+    const hasEmbeddedWallet = privyWallets.some(isPrivyEmbeddedWallet);
+
+    if (!hasEmbeddedWallet) {
       return;
     }
 
@@ -1264,8 +1274,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // const store = useAuthStore.getState();
       // store.setLoginMethod("google");
       // store.setLoginModalOpen(true);
+      void startPrivyTradingLogin("google");
     }
-  }, []);
+  }, [privyReady, googleLoginWithOAuthReady, privyWallets]);
 
   // refreshSession
   useEffect(() => {
@@ -1293,6 +1304,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [session, setupSteps.clobSigned, status, refreshCash, refreshPrivateBalance]);
 
+  // for rainbowkit wallet modal
   useEffect(() => {
     connectModalOpenRef.current = connectModalOpen;
   }, [connectModalOpen]);
