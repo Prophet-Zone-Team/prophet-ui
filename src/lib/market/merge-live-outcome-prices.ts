@@ -13,6 +13,32 @@ function probabilityFromAsk(ask: number | undefined): number | undefined {
   return Math.round(ask * 1000) / 10;
 }
 
+export function shouldUseNoAskForOutcomeProbability(
+  outcome: Pick<FixtureMarketOutcome, "id" | "side">,
+): boolean {
+  return outcome.side === "under" || outcome.id.endsWith(":no");
+}
+
+export function resolveFixtureOutcomeDisplayProbability(
+  outcome:
+    | Pick<
+        FixtureMarketOutcome,
+        "id" | "side" | "yesAsk" | "noAsk" | "probability"
+      >
+    | undefined,
+): number {
+  if (!outcome) {
+    return 0;
+  }
+
+  const useNoAsk = shouldUseNoAskForOutcomeProbability(outcome);
+  const fromAsk = probabilityFromAsk(
+    useNoAsk ? outcome.noAsk : outcome.yesAsk,
+  );
+
+  return fromAsk ?? outcome.probability ?? 0;
+}
+
 export function mergeLivePricesIntoFixtureOutcome(
   outcome: FixtureMarketOutcome,
   livePrices: LiveOutcomePrices | undefined,
@@ -22,14 +48,16 @@ export function mergeLivePricesIntoFixtureOutcome(
   }
 
   const merged = mergeFixtureOutcomeLiveAsks(outcome, livePrices);
-  const nextProbability = probabilityFromAsk(merged.yesAsk);
+  const useNoAsk = shouldUseNoAskForOutcomeProbability(outcome);
+  const displayAsk = useNoAsk ? merged.noAsk : merged.yesAsk;
+  const nextProbability = probabilityFromAsk(displayAsk);
 
   return {
     ...merged,
     probability: nextProbability ?? merged.probability,
     price:
-      merged.yesAsk !== undefined && merged.yesAsk > 0 && merged.yesAsk < 1
-        ? merged.yesAsk
+      displayAsk !== undefined && displayAsk > 0 && displayAsk < 1
+        ? displayAsk
         : merged.price,
   };
 }
