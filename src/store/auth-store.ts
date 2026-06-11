@@ -19,6 +19,7 @@ interface AuthPersistedState {
   loginModalOpen: boolean;
   error: string | undefined;
   loginMethod: AuthLoginMethod | undefined;
+  loginEmail: string | undefined;
 }
 
 interface AuthStore extends AuthPersistedState {
@@ -38,6 +39,7 @@ interface AuthStore extends AuthPersistedState {
   setLoginInProgress: (loginInProgress: boolean) => void;
   setPrivyLoginInProgress: (privyLoginInProgress: boolean) => void;
   setLoginMethod: (loginMethod: AuthLoginMethod | undefined) => void;
+  setLoginEmail: (loginEmail: string | undefined) => void;
   setError: (error: string | undefined) => void;
   setCash: (cash: CashBalanceView | undefined) => void;
   setCashStatus: (cashStatus: FundingLoadStatus) => void;
@@ -58,6 +60,7 @@ const initialPersistedState: AuthPersistedState = {
   loginModalOpen: false,
   error: undefined,
   loginMethod: undefined,
+  loginEmail: undefined,
 };
 
 export const useAuthStore = create<AuthStore>()(
@@ -83,6 +86,7 @@ export const useAuthStore = create<AuthStore>()(
         console.log("%c setLoginMethod on store: %o", "background: red; color: white;", loginMethod)
         return set({ loginMethod });
       },
+      setLoginEmail: (loginEmail) => set({ loginEmail }),
       setError: (error) => set({ error }),
       setCash: (cash) => set({ cash }),
       setCashStatus: (cashStatus) => set({ cashStatus }),
@@ -94,6 +98,7 @@ export const useAuthStore = create<AuthStore>()(
         set((state) => ({
           ...initialPersistedState,
           loginMethod: state.loginMethod,
+          loginEmail: state.loginEmail,
           loginInProgress: false,
           cash: undefined,
           cashStatus: "ready",
@@ -127,6 +132,7 @@ export const useAuthStore = create<AuthStore>()(
         loginModalOpen: state.loginModalOpen,
         error: state.error,
         loginMethod: state.loginMethod,
+        loginEmail: state.loginEmail,
       }),
       migrate: (persisted) => {
         const state = persisted as Partial<AuthPersistedState> | undefined;
@@ -139,6 +145,7 @@ export const useAuthStore = create<AuthStore>()(
           loginModalOpen: state?.loginModalOpen ?? false,
           error: state?.error,
           loginMethod: state?.loginMethod,
+          loginEmail: state?.loginEmail,
         };
       },
     },

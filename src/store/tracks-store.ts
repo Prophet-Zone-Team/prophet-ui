@@ -22,8 +22,19 @@ import {
   trackProphet,
   untrackProphet
 } from "@/service/prophet";
+import { getPrivyLoginEmail } from "@/context/privy/privy-wallet-bridge";
 import { useAuthStore } from "@/store/auth-store";
 import type { ProphetUserTrackItem } from "@/types/prophet-api";
+
+function resolveProphetLoginEmail(): string | undefined {
+  const { loginMethod, loginEmail } = useAuthStore.getState();
+
+  if (loginMethod !== "email" && loginMethod !== "google") {
+    return undefined;
+  }
+
+  return loginEmail ?? getPrivyLoginEmail();
+}
 
 export type TracksLoadStatus = "idle" | "loading" | "ready" | "error";
 
@@ -104,7 +115,9 @@ export const useTracksStore = create<TracksStore>()(
         set({ accountWallet: walletAddress });
 
         try {
-          await syncProphetWalletLogin(walletAddress);
+          await syncProphetWalletLogin(walletAddress, {
+            email: resolveProphetLoginEmail()
+          });
 
           if (!isProphetAuthenticated()) {
             return;

@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { OtpInput } from "@/components/auth/otp-input";
 import { cn } from "@/lib/cn";
 import { markOAuthPending, consumeOAuthPending } from "@/context/privy/privy-oauth";
+import { resolvePrivyLoginEmail } from "@/context/privy/resolve-privy-login-email";
 const RESEND_COUNTDOWN_SECONDS = 60;
 const OTP_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -16,7 +17,7 @@ interface PrivyLoginModalProps {
   open: boolean;
   onClose: () => void;
   onConnectExtensionWallet: () => void;
-  onEmailAuthenticated: () => void;
+  onEmailAuthenticated: (email: string) => void;
 }
 
 export function PrivyLoginModal({
@@ -37,8 +38,14 @@ export function PrivyLoginModal({
 
   const { ready } = usePrivy();
   const { sendCode, loginWithCode, state } = useLoginWithEmail({
-    onComplete: () => {
-      emailAuthenticatedRef.current();
+    onComplete: (params) => {
+      const resolvedEmail =
+        resolvePrivyLoginEmail(params.user, params.loginAccount) ??
+        email.trim();
+
+      if (resolvedEmail) {
+        emailAuthenticatedRef.current(resolvedEmail);
+      }
     },
     onError: (error) => {
       setErrorMessage(resolvePrivyError(error));
