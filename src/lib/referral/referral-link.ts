@@ -1,6 +1,6 @@
 import { REFERRAL_PATH, REFERRAL_QUERY_PARAM } from "@/lib/referral/config";
 
-function resolveOrigin(): string {
+export function resolveOrigin(): string {
   if (typeof window === "undefined") {
     return "";
   }
