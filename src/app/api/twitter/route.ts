@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-export const runtime = "edge";
 
 export async function GET(request: Request | NextRequest) {
   const parsedUrl = new URL(request.url as string);
