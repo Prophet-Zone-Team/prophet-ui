@@ -23,6 +23,10 @@ import {
 import { cn } from "@/lib/cn";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { MarketListMetricLoading } from "@/views/home/home-data-loading";
+import { useTranslations } from "next-intl";
+
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+import { useLocalizedTeamRegion } from "@/hooks/i18n/use-localized-team-region";
 import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-control";
 
 export interface MarketListItemProps {
@@ -47,13 +51,16 @@ export function MarketListItem({
   navigationDisabled = false
 }: MarketListItemProps) {
   const router = useRouter();
+  const t = useTranslations("home");
   const { team, market } = snapshot;
+  const teamDisplayName = useLocalizedTeamName(team.code, team.name);
+  const teamRegionLabel = useLocalizedTeamRegion(team.region);
   const yesTokenId = snapshot.market.polymarket?.tokens?.yes?.tokenId;
   const changePercent = market.change24h;
 
   const tradeHref = teamTradeHref(market?.polymarket?.slug || "");
   const detailHref = teamDetailHref(team.id);
-  const subtitle = `${team.code} / ${team.region}${team.group ? ` / Group ${team.group}` : ""}`;
+  const subtitle = `${team.code} / ${teamRegionLabel}${team.group ? ` / Group ${team.group}` : ""}`;
   const canNavigate =
     !navigationDisabled &&
     Boolean(yesTokenId) &&
@@ -105,8 +112,8 @@ export function MarketListItem({
       tabIndex={canNavigate ? 0 : undefined}
       aria-label={
         canNavigate
-          ? `Open trade page for ${team.name}`
-          : `${team.name}, market ended`
+          ? `Open trade page for ${teamDisplayName}`
+          : `${teamDisplayName}, market ended`
       }
       onClick={canNavigate ? navigateToTrade : undefined}
       onKeyDown={canNavigate ? handleRowKeyDown : undefined}
@@ -127,20 +134,20 @@ export function MarketListItem({
       <div className="flex w-full md:w-2/5 items-center gap-[20px]">
         <MarketBookmarkControl
           slug={market.polymarket?.slug || ""}
-          teamName={team.name}
+          teamName={teamDisplayName}
         />
         <span className="w-[18px] shrink-0 text-center text-[18px] font-[500] leading-[21px] text-black">
           {rank}
         </span>
         <TeamFlag
           code={team.code}
-          name={team.name}
+          name={teamDisplayName}
           logoUrl={team.logoUrl}
           className="h-[32px] w-[32px] shrink-0 rounded-[2px] text-[32px]"
         />
         <div className="min-w-0">
           <h3 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
-            {team.name}
+            {teamDisplayName}
           </h3>
           <p className={cn("m-0 mt-0.5", rowLabelClassName)}>{subtitle}</p>
         </div>
@@ -165,7 +172,9 @@ export function MarketListItem({
               />
             ) : null}
           </div>
-          <span className={cn("mt-0.5", rowLabelClassName)}>Probability</span>
+          <span className={cn("mt-0.5", rowLabelClassName)}>
+            {t("probability")}
+          </span>
         </div>
 
         <div className="flex w-1/2 flex-col max-lg:w-full">
@@ -176,7 +185,7 @@ export function MarketListItem({
               {hasLiveValues ? `$${formatVolume(market.volume)}` : "-"}
             </strong>
           )}
-          <span className={cn("mt-0.5", rowLabelClassName)}>Volume</span>
+          <span className={cn("mt-0.5", rowLabelClassName)}>{t("volume")}</span>
         </div>
       </div>
 
@@ -195,11 +204,11 @@ export function MarketListItem({
               className="h-3.5 w-2.5 shrink-0 fill-white stroke-white"
               aria-hidden="true"
             />
-            Bid
+            {t("bid")}
           </>
         </FastBidButton>
         <Link
-          className="flex-1 md:flex-grow-0 px-2 inline-flex h-[36px] w-[83px] items-center justify-center rounded-lg border border-[#909090] bg-white text-[14px] font-[500] leading-[17px] text-[#18110F]"
+          className="flex-1 md:shrink-0 px-2 inline-flex h-[36px] w-[83px] items-center justify-center rounded-lg border border-[#909090] bg-white text-[14px] font-[500] leading-[17px] text-[#18110F]"
           href={detailHref}
           onClick={() =>
             trackDetailsClicked({
@@ -213,7 +222,7 @@ export function MarketListItem({
             })
           }
         >
-          Details
+          {t("details")}
         </Link>
       </div>
     </article>

@@ -1,18 +1,10 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 export type RoadStep = 1 | 2 | 3;
-
-const STEPS: Array<{
-  step: RoadStep;
-  label: string;
-  note: string;
-}> = [
-  { step: 1, label: "Group standings", note: "12 groups + 8 third-place" },
-  { step: 2, label: "Knockout picks", note: "R32 through champion" },
-  { step: 3, label: "Share results", note: "Screenshot + share link" }
-];
 
 export function StepStepper({
   activeStep,
@@ -25,14 +17,38 @@ export function StepStepper({
   hasChampion: boolean;
   onStepChange: (step: RoadStep) => void;
 }) {
+  const t = useTranslations("roadToFinal");
+  const steps: Array<{
+    step: RoadStep;
+    label: string;
+    note: string;
+  }> = [
+    {
+      step: 1,
+      label: t("stepGroupStandings"),
+      note: t("stepGroupStandingsNote")
+    },
+    {
+      step: 2,
+      label: t("stepKnockoutPicks"),
+      note: t("stepKnockoutPicksNote")
+    },
+    {
+      step: 3,
+      label: t("stepShareResults"),
+      note: t("stepShareResultsNote")
+    }
+  ];
+
   return (
     <nav
       className="mb-[22px] grid grid-cols-1 gap-[10px] md:grid-cols-3"
-      aria-label="Simulator steps"
+      aria-label={t("simulatorStepsAria")}
     >
-      {STEPS.map(({ step, label, note }) => {
+      {steps.map(({ step, label, note }) => {
         const locked =
-          (step === 2 && !stepOneComplete) || (step === 3 && (!stepOneComplete || !hasChampion));
+          (step === 2 && !stepOneComplete) ||
+          (step === 3 && (!stepOneComplete || !hasChampion));
 
         return (
           <button
@@ -51,7 +67,9 @@ export function StepStepper({
             <span
               className={cn(
                 "inline-flex h-[34px] w-[34px] items-center justify-center rounded-full text-[13px] font-[700]",
-                activeStep === step ? "bg-white text-[#18110F]" : "bg-[#F3F3F3] text-black"
+                activeStep === step
+                  ? "bg-white text-[#18110F]"
+                  : "bg-[#F3F3F3] text-black"
               )}
             >
               {step}

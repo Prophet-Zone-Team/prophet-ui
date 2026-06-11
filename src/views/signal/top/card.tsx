@@ -1,6 +1,10 @@
+"use client";
+
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 import { formatImpactScore } from "@/views/analytics/news/format";
 import { SentimentColor, SentimentIcon } from "@/views/analytics/news/icons";
@@ -59,6 +63,11 @@ export function SignalTopCard({
   onSelect,
   className
 }: SignalTopCardProps) {
+  const t = useTranslations("signal");
+  const teamDisplayName = useLocalizedTeamName(item.teamCode, item.teamName);
+  const impactLabel = formatImpactScore(item.impactScore);
+  const isPositiveImpact = item.impactScore >= 0;
+
   return (
     <article
       className={cn(
@@ -67,13 +76,17 @@ export function SignalTopCard({
         onSelect && "cursor-pointer transition-colors hover:border-[#D8D8D8]",
         className
       )}
-      aria-label={`${item.teamName}: ${item.headline}. Impact ${formatImpactScore(item.impactScore)}`}
+      aria-label={t("newsCardAria", {
+        teamName: teamDisplayName,
+        headline: item.headline,
+        impact: impactLabel
+      })}
     >
       {onSelect ? (
         <button
           type="button"
           className="absolute inset-0 z-[1] rounded-[12px] opacity-0"
-          aria-label={`Open details for ${item.headline}`}
+          aria-label={t("openDetailsFor", { headline: item.headline })}
           onClick={() => onSelect(item)}
         />
       ) : null}
@@ -92,7 +105,7 @@ export function SignalTopCard({
               fallback={false}
             />
             <span className="truncate text-base font-[500] leading-[19px] text-black md:text-[18px] md:leading-[21px]">
-              {item.teamName}
+              {teamDisplayName}
             </span>
             <span className="shrink-0 [&_svg]:size-[18px]">
               <SentimentIcon sentiment={item.sentiment} />
@@ -113,12 +126,12 @@ export function SignalTopCard({
 
         <div className="mt-2 flex items-baseline justify-between md:hidden">
           <span className="text-[12px] font-[400] leading-[14px] text-[#909090]">
-            Impact
+            {t("impact")}
           </span>
           <span
             className={cn(
               "text-base font-[500] leading-[19px]",
-              SentimentColor({ sentiment: item.sentiment }),
+              SentimentColor({ sentiment: item.sentiment })
             )}
           >
             {formatImpactScore(item.impactScore)}
@@ -133,13 +146,13 @@ export function SignalTopCard({
         <span
           className={cn(
             "mt-[10px] text-[18px] font-[500] leading-[21px]",
-            SentimentColor({ sentiment: item.sentiment }),
+            SentimentColor({ sentiment: item.sentiment })
           )}
         >
           {formatImpactScore(item.impactScore)}
         </span>
         <span className="mt-[8px] text-[12px] font-[400] leading-[14px] text-[#909090]">
-          Impact
+          {t("impact")}
         </span>
       </div>
     </article>

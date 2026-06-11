@@ -12,10 +12,11 @@ import type { Team } from "@/types/market";
 import { ScheduleFilterTriggerButton } from "@/views/home/matches/schedule-filter-trigger-button";
 import { ScheduleTeamFilter } from "@/views/home/matches/schedule-team-filter";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
-const SCHEDULE_SORT_OPTIONS: { key: ScheduleSortKey; label: string }[] = [
-  { key: "volume", label: "Volume" },
-  { key: "time", label: "Time" }
+const SCHEDULE_SORT_OPTIONS: { key: ScheduleSortKey; labelKey: "volume" | "time" }[] = [
+  { key: "volume", labelKey: "volume" },
+  { key: "time", labelKey: "time" }
 ];
 
 export interface ScheduleFilterBarProps {
@@ -37,18 +38,19 @@ export function ScheduleFilterBar({
   onShowEndedChange,
   onSelectedTeamIdsChange
 }: ScheduleFilterBarProps) {
+  const t = useTranslations("home");
   const isMobile = useDevice();
   const [sortDrawerOpen, setSortDrawerOpen] = useState(false);
-  const currentSortLabel = useMemo(
-    () => SCHEDULE_SORT_OPTIONS.find((option) => option.key === sortKey)?.label ?? "Time",
-    [sortKey]
-  );
+  const currentSortLabel = useMemo(() => {
+    const option = SCHEDULE_SORT_OPTIONS.find((item) => item.key === sortKey);
+    return option ? t(option.labelKey) : t("time");
+  }, [sortKey, t]);
 
   return (
     <div
       className="mt-[30px] mb-3 flex min-h-[34px] items-center justify-between gap-3 rounded-[20px] px-3 md:px-0"
       role="toolbar"
-      aria-label="Schedule filters and sorting"
+      aria-label={t("scheduleFiltersAndSorting")}
     >
       <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
         {isMobile ? (
@@ -62,7 +64,7 @@ export function ScheduleFilterBar({
             <Drawer
               open={sortDrawerOpen}
               onClose={() => setSortDrawerOpen(false)}
-              title="Sort by"
+              title={t("sortBy")}
               direction={DrawerDirection.Bottom}
               className="!h-auto max-h-[40dvh]"
             >
@@ -70,7 +72,7 @@ export function ScheduleFilterBar({
                 {SCHEDULE_SORT_OPTIONS.map((option) => (
                   <SortPill
                     key={option.key}
-                    label={option.label}
+                    label={t(option.labelKey)}
                     active={sortKey === option.key}
                     className="w-full justify-center"
                     onClick={() => {
@@ -85,12 +87,12 @@ export function ScheduleFilterBar({
         ) : (
           <>
             <SortPill
-              label="Volume"
+              label={t("volume")}
               active={sortKey === "volume"}
               onClick={() => onSortKeyChange("volume")}
             />
             <SortPill
-              label="Time"
+              label={t("time")}
               active={sortKey === "time"}
               onClick={() => onSortKeyChange("time")}
             />
@@ -108,10 +110,10 @@ export function ScheduleFilterBar({
         <Switch
           checked={showEnded}
           onCheckedChange={onShowEndedChange}
-          aria-label="Show ended matches"
+          aria-label={t("showEndedMatches")}
         />
         <span className="whitespace-nowrap text-sm md:text-[16px] font-normal leading-[19px] text-black">
-          Show Ended
+          {t("showEnded")}
         </span>
       </label>
     </div>

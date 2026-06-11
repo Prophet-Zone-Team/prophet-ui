@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { getImpactPercentages } from "./format";
@@ -15,11 +19,12 @@ export function ImpactDistributionOverview({
   data = impactDistributionOverviewData,
   className
 }: ImpactDistributionOverviewProps) {
+  const t = useTranslations("signal");
   const percentages = getImpactPercentages(data.segments);
 
   return (
     <section
-      aria-label="Impact distribution overview"
+      aria-label={t("impactDistributionOverview")}
       className={cn(
         "box-border flex h-auto w-full max-w-none flex-col md:h-[174px]",
         "rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-4 md:px-5 md:py-5",
@@ -27,7 +32,7 @@ export function ImpactDistributionOverview({
       )}
     >
       <h2 className="m-0 text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
-        Impact Distribution Overview
+        {t("impactDistributionOverview")}
       </h2>
 
       <div className="mt-4 md:mt-5">

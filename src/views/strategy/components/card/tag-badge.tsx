@@ -1,17 +1,21 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import type { StrategyTagBadgeVariant } from "./types";
 
 const TAG_BADGE_CONFIG: Record<
   StrategyTagBadgeVariant,
-  { label: string; className: string }
+  { labelKey: "badgeHighReturn" | "badgeLowRisk"; className: string }
 > = {
   high_return: {
-    label: "High Return",
+    labelKey: "badgeHighReturn",
     className: "bg-gradient-to-r from-[#F4C22F] to-[#AD8F38] text-white"
   },
   low_risk: {
-    label: "Low Risk",
+    labelKey: "badgeLowRisk",
     className: "bg-gradient-to-r from-[#247950] to-[#43DF93] text-white"
   }
 };
@@ -25,6 +29,7 @@ export function StrategyTagBadge({
   variant,
   className
 }: StrategyTagBadgeProps) {
+  const t = useTranslations("strategy");
   const config = TAG_BADGE_CONFIG[variant];
 
   return (
@@ -36,7 +41,7 @@ export function StrategyTagBadge({
         className
       )}
     >
-      {config.label}
+      {t(config.labelKey)}
     </span>
   );
 }

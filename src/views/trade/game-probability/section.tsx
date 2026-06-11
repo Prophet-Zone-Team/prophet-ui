@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { formatChartProbability } from "@/components/home/market-formatters";
 import { TeamFlag } from "@/components/teams/team-flag";
@@ -54,6 +55,7 @@ import { gameColors } from "@/views/trade/game/ui";
 import { GameBinaryProbabilityChart } from "@/views/trade/game-probability/binary-chart";
 import { GameProbabilityChart } from "@/views/trade/game-probability/chart";
 import { useLiveMatchProbabilityChart } from "@/views/trade/game-probability/use-live-match-probability-chart";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { OrderbookPanel } from "@/views/trade/orderbook-panel";
 
 const GAME_PROBABILITY_TIME_RANGES = [
@@ -106,6 +108,8 @@ export function GameProbabilitySection({
   binaryPrimaryLabel,
   binarySecondaryLabel
 }: GameProbabilitySectionProps) {
+  const t = useTranslations("trade");
+  const tAuth = useTranslations("auth");
   const liveMatch = useMatchWithLiveState(match);
   const mockLiveFixture = isMockLiveFixtureEnabled();
   const isLive = isEffectiveLiveMatch(liveMatch) || mockLiveFixture;
@@ -134,8 +138,8 @@ export function GameProbabilitySection({
     ? undefined
     : 5000;
   const sides = resolveMatchSides(liveMatch, snapshots);
-  const homeLabel = sides.home.name ?? "Home";
-  const awayLabel = sides.away.name ?? "Away";
+  const homeLabel = sides.home.name ?? t("home");
+  const awayLabel = sides.away.name ?? t("away");
   const { goalEvents } = useGameStatistics({
     match: liveMatch,
     homeTeamName: homeLabel,
@@ -230,9 +234,21 @@ export function GameProbabilitySection({
         summaryMode,
         gameSnapshot,
         homeLabel,
-        awayLabel
+        drawLabel: t("draw"),
+        awayLabel,
+        homeCode: sides.home.code,
+        awayCode: sides.away.code
       }),
-    [awayLabel, gameSnapshot, homeLabel, summaryItems, summaryMode]
+    [
+      awayLabel,
+      gameSnapshot,
+      homeLabel,
+      sides.away.code,
+      sides.home.code,
+      summaryItems,
+      summaryMode,
+      t
+    ]
   );
 
   const effectiveChartMode = liveChartActive
@@ -316,6 +332,14 @@ export function GameProbabilitySection({
       resolvedSummaryItems
     ]
   );
+  const chartTimeRanges = useMemo(
+    () =>
+      GAME_PROBABILITY_TIME_RANGES.map((range) => ({
+        ...range,
+        label: range.id === "all" ? t("chartRangeAll") : range.label
+      })),
+    [t]
+  );
 
   return (
     <section
@@ -324,7 +348,7 @@ export function GameProbabilitySection({
         !orderbookEnabled && "xl:flex-col",
         className
       )}
-      aria-label="Match outcome probability"
+      aria-label={t("matchOutcomeProbabilityAria")}
     >
       <motion.div
         layout
@@ -334,7 +358,7 @@ export function GameProbabilitySection({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h2 className="m-0 text-[18px] font-[500] leading-6 text-black">
-              Probability
+              {t("probabilityLabel")}
             </h2>
           </div>
 
@@ -356,9 +380,9 @@ export function GameProbabilitySection({
               <div
                 className="flex flex-wrap gap-4"
                 role="group"
-                aria-label="Chart time range"
+                aria-label={t("chartTimeRangeAria")}
               >
-                {GAME_PROBABILITY_TIME_RANGES.map((range) => (
+                {chartTimeRanges.map((range) => (
                   <button
                     key={range.id}
                     type="button"
@@ -385,20 +409,33 @@ export function GameProbabilitySection({
 
         <div className="mt-4">
           {chartStatus === "loading" ? (
-            <ChartStateMessage message="Loading market price history..." />
+            <ChartStateMessage
+              message={
+                liveChartActive
+                  ? t("loadingLiveProbabilityHistory")
+                  : t("loadingProbabilityHistory")
+              }
+            />
           ) : null}
 
           {chartStatus === "empty" ? (
-            <ChartStateMessage message="No price history available for this market." />
+            <ChartStateMessage
+              message={
+                liveChartActive
+                  ? t("noLiveProbabilityHistoryAvailable")
+                  : t("noProbabilityHistoryAvailable")
+              }
+            />
           ) : null}
 
           {chartStatus === "error" ? (
             <ChartStateMessage
               message={
-                (liveChartActive ? liveChart.error : error) ??
-                "Unable to load market price history."
+                liveChartActive
+                  ? t("unableToLoadLiveProbabilityHistory")
+                  : t("unableToLoadProbabilityHistory")
               }
-              actionLabel="Retry"
+              actionLabel={tAuth("retry")}
               onAction={() => {
                 void (liveChartActive ? liveChart.refetch() : refetch());
               }}
@@ -409,7 +446,7 @@ export function GameProbabilitySection({
             <GameProbabilityChart
               data={chartPoints}
               homeLabel={homeLabel}
-              drawLabel="Draw"
+              drawLabel={t("draw")}
               awayLabel={awayLabel}
               mode={liveChartActive ? "live" : "historical"}
               timeRange={timeRange}
@@ -424,9 +461,7 @@ export function GameProbabilitySection({
           {chartStatus === "ready" && effectiveChartMode === "binary" ? (
             <GameBinaryProbabilityChart
               data={chartBinaryPoints}
-              primaryLabel={
-                binaryPrimaryLabel ?? displaySummaryItems[0]?.label
-              }
+              primaryLabel={binaryPrimaryLabel ?? displaySummaryItems[0]?.label}
               secondaryLabel={
                 binarySecondaryLabel ?? displaySummaryItems[1]?.label
               }
@@ -502,12 +537,18 @@ function buildDefaultSummaryItems({
   summaryMode,
   gameSnapshot,
   homeLabel,
-  awayLabel
+  drawLabel,
+  awayLabel,
+  homeCode,
+  awayCode
 }: {
   summaryMode: "ternary" | "binary";
   gameSnapshot?: GameMarketSnapshot;
   homeLabel: string;
+  drawLabel: string;
   awayLabel: string;
+  homeCode?: string;
+  awayCode?: string;
 }): ProbabilitySummaryItem[] {
   if (!gameSnapshot) {
     return [];
@@ -525,27 +566,42 @@ function buildDefaultSummaryItems({
     {
       label: homeLabel,
       value: home?.probability ?? 0,
-      color: gameColors.home
+      color: gameColors.home,
+      code: homeCode
     },
     {
-      label: "Draw",
+      label: drawLabel,
       value: draw?.probability ?? 0,
       color: gameColors.draw
     },
     {
       label: awayLabel,
       value: away?.probability ?? 0,
-      color: gameColors.awayBar
+      color: gameColors.awayBar,
+      code: awayCode
     }
   ];
+}
+
+function ProbabilitySummaryItemLabel({
+  code,
+  label
+}: Pick<ProbabilitySummaryItem, "code" | "label">) {
+  const displayLabel = useLocalizedTeamName(code, label);
+
+  return (
+    <span className="text-[12px] font-[400] leading-[17px] text-[#909090]">
+      {displayLabel}
+    </span>
+  );
 }
 
 function ProbabilitySummaryRow({ items }: { items: ProbabilitySummaryItem[] }) {
   return (
     <div className="w-full mt-3 flex flex-wrap items-center gap-x-2 md:gap-x-6 gap-y-2">
-      {items.map((item) => (
+      {items.map((item, index) => (
         <div
-          key={item.label}
+          key={`${item.code ?? item.label}-${index}`}
           className="inline-flex items-center gap-1 md:gap-2"
         >
           <span
@@ -553,9 +609,7 @@ function ProbabilitySummaryRow({ items }: { items: ProbabilitySummaryItem[] }) {
             style={{ backgroundColor: item.color ?? gameColors.draw }}
             aria-hidden
           />
-          <span className="text-[12px] font-[400] leading-[17px] text-[#909090]">
-            {item.label}
-          </span>
+          <ProbabilitySummaryItemLabel code={item.code} label={item.label} />
           <span className="text-[12px] font-[500] leading-[17px] text-black">
             {formatChartProbability(item.value)}
           </span>
@@ -605,13 +659,14 @@ function LiveScoreBadge({
   awayName: string;
   score: string;
 }) {
+  const t = useTranslations("trade");
   const [homeScore, awayScore] = score.split("-");
 
   return (
     <div className="flex items-center gap-3 text-sm font-[500] leading-[17px]">
       <span className="inline-flex items-center gap-1.5 text-[#65AF14]">
         <span className="size-2 rounded-full bg-[#65AF14]" aria-hidden />
-        LIVE
+        {t("liveBadge")}
       </span>
 
       <span className="inline-flex items-center gap-1.5 text-black">
@@ -641,6 +696,7 @@ export function buildTernarySummaryFromOutcomes(
   >,
   homeLabel: string,
   awayLabel: string,
+  drawLabel: string,
   homeCode?: string,
   awayCode?: string
 ): ProbabilitySummaryItem[] {
@@ -656,7 +712,7 @@ export function buildTernarySummaryFromOutcomes(
       code: homeCode
     },
     {
-      label: "Draw",
+      label: drawLabel,
       value: draw?.probability ?? 0,
       color: gameColors.draw
     },
@@ -674,7 +730,9 @@ export function buildBinarySummaryFromOutcomes(
   primarySide: string,
   secondarySide: string,
   primaryLabel: string,
-  secondaryLabel: string
+  secondaryLabel: string,
+  primaryCode?: string,
+  secondaryCode?: string
 ): ProbabilitySummaryItem[] {
   const primary = outcomes.find((item) => item.side === primarySide);
   const secondary = outcomes.find((item) => item.side === secondarySide);
@@ -683,12 +741,14 @@ export function buildBinarySummaryFromOutcomes(
     {
       label: primaryLabel,
       value: resolveFixtureOutcomeDisplayProbability(primary),
-      color: gameColors.home
+      color: gameColors.home,
+      code: primaryCode
     },
     {
       label: secondaryLabel,
       value: resolveFixtureOutcomeDisplayProbability(secondary),
-      color: gameColors.awayBar
+      color: gameColors.awayBar,
+      code: secondaryCode
     }
   ];
 }

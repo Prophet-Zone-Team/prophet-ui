@@ -1,3 +1,7 @@
+import {
+  formatDateFromIso,
+  formatTimeFromIso,
+} from "@/lib/formatters/datetime";
 import type { ProbabilityHistoryPoint, TeamMarketSnapshot } from "@/types/market";
 
 export type TeamChartTimeRange = "1H" | "1D" | "1W" | "1M" | "all";
@@ -265,24 +269,11 @@ export function formatTeamChartXAxisTick(
   value: string,
   range: TeamChartTimeRange,
 ): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
   if (range === "1H" || range === "1D") {
-    return new Intl.DateTimeFormat("en", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).format(date);
+    return formatTimeFromIso(value);
   }
 
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-  }).format(date);
+  return formatDateFromIso(value);
 }
 
 export function getTeamChartYDomain(

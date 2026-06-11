@@ -8,6 +8,7 @@ import {
   trackWinnerChartRangeChanged,
   trackWinnerChartTeamSelected
 } from "@/lib/analytics/tracking";
+import { useTranslations } from "next-intl";
 
 import {
   formatProbability,
@@ -46,6 +47,7 @@ export function ProbabilitySection({
   snapshot,
   showOrderbook
 }: ProbabilitySectionProps) {
+  const t = useTranslations("trade");
   const outcomeView = useTradeOutcomeSide();
   const setOutcomeView = useSetTradeOutcomeSide();
   const [timeRange, setTimeRange] = useState<TeamChartTimeRange>("all");
@@ -108,7 +110,14 @@ export function ProbabilitySection({
 
   const change24h = snapshot.market.change24h;
   const change24hPoints = outcomeView === "yes" ? change24h : -change24h;
-  const change24hLabel = change24h;
+  const chartTimeRanges = useMemo(
+    () =>
+      TEAM_CHART_TIME_RANGES.map((range) => ({
+        ...range,
+        label: range.id === "all" ? t("chartRangeAll") : range.label
+      })),
+    [t]
+  );
   const changeTone =
     change24hPoints > 0
       ? "text-[#65AF14]"
@@ -125,7 +134,7 @@ export function ProbabilitySection({
           ? "xl:grid xl:grid-cols-[minmax(0,1fr)_272px] xl:items-stretch"
           : "xl:flex-col"
       )}
-      aria-label="Winner probability"
+      aria-label={t("winnerProbabilityAria")}
     >
       <motion.div
         layout
@@ -139,12 +148,12 @@ export function ProbabilitySection({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="m-0 text-[20px] font-[500] leading-6 text-black">
-              Probability
+              {t("probabilityLabel")}
             </h2>
             <div
               className="flex h-[30px] w-[96px] gap-0.5 rounded-lg border border-[#EBEBEB] bg-white p-0.5"
               role="group"
-              aria-label="Outcome view"
+              aria-label={t("outcomeViewAria")}
             >
               <button
                 type="button"
@@ -163,7 +172,7 @@ export function ProbabilitySection({
                   setOutcomeView("yes");
                 }}
               >
-                Yes
+                {t("yes")}
               </button>
               <button
                 type="button"
@@ -182,7 +191,7 @@ export function ProbabilitySection({
                   setOutcomeView("no");
                 }}
               >
-                No
+                {t("no")}
               </button>
             </div>
           </div>
@@ -190,9 +199,9 @@ export function ProbabilitySection({
           <div
             className="flex flex-wrap gap-4"
             role="group"
-            aria-label="Chart time range"
+            aria-label={t("chartTimeRangeAria")}
           >
-            {TEAM_CHART_TIME_RANGES.map((range) => (
+            {chartTimeRanges.map((range) => (
               <button
                 key={range.id}
                 type="button"
@@ -223,25 +232,25 @@ export function ProbabilitySection({
         <div className="mt-4 flex flex-wrap items-end gap-8 sm:gap-10">
           <MetricBlock
             value={formatProbability(displayProbability)}
-            label="Probability"
+            label={t("probabilityLabel")}
             valueClassName="text-[36px] leading-[43px] text-black"
           />
           <MetricBlock
             value={change24h.toString()}
-            label="24h"
+            label={t("change24h")}
             valueClassName={cn("text-base leading-[19px]", changeTone)}
           />
           <MetricBlock
             value={`$${formatVolume(snapshot.market.volume)}`}
-            label="Volume"
+            label={t("volumeLabel")}
           />
           <MetricBlock
             value={
               snapshot.market.liquidity
                 ? `$${formatVolume(snapshot.market.liquidity)}`
-                : "Pending"
+                : t("pending")
             }
-            label="Liquidity"
+            label={t("liquidity")}
           />
         </div>
 

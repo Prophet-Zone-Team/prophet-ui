@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Pagination } from "@/components/pagination/pagination";
 import { cn } from "@/lib/cn";
@@ -11,6 +12,7 @@ import {
   formatTeamDetailMoney,
   formatUnixRelativeTime
 } from "@/lib/team/detail-format";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import type { MarketTradeRecord, TeamMarketSnapshot } from "@/types/market";
 
 const TRADES_PAGE_SIZE = 20;
@@ -34,6 +36,11 @@ function resolveTraderLabel(trade: MarketTradeRecord): string {
 }
 
 export function TradesTable({ snapshot, active }: TradesTableProps) {
+  const t = useTranslations("trade");
+  const teamDisplayName = useLocalizedTeamName(
+    snapshot.team.code,
+    snapshot.team.name
+  );
   const conditionId = snapshot.market.polymarket?.conditionId;
   const [trades, setTrades] = useState<MarketTradeRecord[]>([]);
   const [page, setPage] = useState(1);
@@ -45,8 +52,8 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
   const prevPageRef = useRef(page);
 
   const emptyMessage = useMemo(
-    () => `No recent trades for ${snapshot.team.name}.`,
-    [snapshot.team.name]
+    () => t("noRecentTrades", { teamName: teamDisplayName }),
+    [t, teamDisplayName]
   );
 
   const loadTrades = useCallback(
@@ -96,7 +103,7 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "Unable to load market trades."
+              : t("unableToLoadTrades")
           );
         }
       } finally {
@@ -106,7 +113,7 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
         }
       }
     },
-    [conditionId]
+    [conditionId, t]
   );
 
   useEffect(() => {
@@ -175,8 +182,7 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
   if (!conditionId) {
     return (
       <p className="px-4 py-10 text-center text-sm text-prophet-muted">
-        Trade data is unavailable because this market has no connected condition
-        ID.
+        {t("tradesDataUnavailable")}
       </p>
     );
   }
@@ -185,7 +191,7 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
     return (
       <div className="px-4 py-10 text-center">
         <strong className="block text-sm font-[500] text-black">
-          Market trades unavailable
+          {t("tradesUnavailable")}
         </strong>
         <p className="m-0 mt-2 text-sm text-prophet-muted">{error}</p>
       </div>
@@ -195,7 +201,7 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
   if (loading && !hasData && !error) {
     return (
       <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-        Loading trades…
+        {t("loadingTrades")}
       </p>
     );
   }
@@ -249,14 +255,16 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
 }
 
 export function TradesTableHeader() {
+  const t = useTranslations("trade");
+
   return (
     <div className="grid grid-cols-[minmax(0,0.8fr)_repeat(5,minmax(0,1fr))] gap-2 border-b border-prophet-line px-4 py-2 text-xs text-prophet-muted">
-      <span>Time</span>
-      <span>Type</span>
-      <span>Side</span>
-      <span>Price</span>
-      <span>Value</span>
-      <span>Trader</span>
+      <span>{t("time")}</span>
+      <span>{t("type")}</span>
+      <span>{t("side")}</span>
+      <span>{t("price")}</span>
+      <span>{t("value")}</span>
+      <span>{t("trader")}</span>
     </div>
   );
 }

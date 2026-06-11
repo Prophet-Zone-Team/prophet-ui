@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
@@ -78,30 +79,41 @@ export function TradeAuthActionButton({
         type="button"
         className={buttonClass}
         disabled={connectDisabled || loginInProgress}
+        aria-label={loginInProgress ? connectingLabel : undefined}
         onClick={() => void handleConnect()}
       >
-        {loginInProgress ? connectingLabel : connectLabel}
+        {loginInProgress ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          connectLabel
+        )}
       </button>
     );
 
     return connectButton;
   }
 
-  const label =
+  const busyLabel =
     actionStatus === "signing"
       ? signingLabel
       : actionStatus === "submitting"
         ? submittingLabel
-        : actionLabel;
+        : null;
+  const label = busyLabel ?? actionLabel;
 
   const actionButton = (
     <button
       type="button"
       className={buttonClass}
       disabled={!canSubmit || regionRestricted}
+      aria-label={busyLabel ?? undefined}
       onClick={() => void onAction()}
     >
-      {label}
+      {busyLabel ? (
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+      ) : (
+        label
+      )}
     </button>
   );
 

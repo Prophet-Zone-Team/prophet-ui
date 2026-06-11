@@ -1,6 +1,9 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { TeamFlag } from "@/components/teams/team-flag";
-import type { ApiFootballFixtureContext } from "@/types/market";
-import type { TeamMarketSnapshot } from "@/types/market";
+import type { ApiFootballFixtureContext, TeamMarketSnapshot } from "@/types/market";
 import { formatFixtureDate } from "@/lib/team/team-detail-model";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
@@ -16,12 +19,14 @@ export interface DossierNextFixtureProps {
 }
 
 export function DossierNextFixture({ fixture, snapshot }: DossierNextFixtureProps) {
+  const t = useTranslations("teamDetail");
+
   return (
-    <section className={teamPanelClass} aria-label="Next fixture">
+    <section className={teamPanelClass} aria-label={t("nextFixtureAria")}>
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Next Fixture</h2>
+        <h2 className={teamPanelTitleClass}>{t("nextFixture")}</h2>
         <span className={teamPanelBadgeClass}>
-          {fixture?.isWorldCupFixture ? "World Cup" : "Schedule"}
+          {fixture?.isWorldCupFixture ? t("worldCup") : t("schedule")}
         </span>
       </div>
       <div className="p-4">
@@ -35,7 +40,7 @@ export function DossierNextFixture({ fixture, snapshot }: DossierNextFixtureProp
                 </strong>
               </div>
               <span className="text-[10px] font-[500] uppercase text-prophet-muted">
-                {fixture.homeAway === "away" ? "at" : "vs"}
+                {fixture.homeAway === "away" ? t("at") : t("versus")}
               </span>
               <div className="flex flex-col items-center gap-1">
                 {fixture.opponentLogoUrl ? (
@@ -61,8 +66,8 @@ export function DossierNextFixture({ fixture, snapshot }: DossierNextFixtureProp
           </div>
         ) : (
           <TeamEmptyState
-            title="No official fixture"
-            body="Upcoming fixture data is pending for this team."
+            title={t("noOfficialFixture")}
+            body={t("noOfficialFixtureBody")}
           />
         )}
       </div>

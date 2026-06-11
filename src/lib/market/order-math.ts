@@ -133,10 +133,6 @@ export function isTakeProfitLimitAvailable(shareSize: number): boolean {
   return Number.isFinite(shareSize) && shareSize >= LIMIT_BUY_MIN_SHARES;
 }
 
-export function formatTakeProfitLimitDisabledMessage(): string {
-  return `Take profit limit requires a market buy of at least ${LIMIT_BUY_MIN_SHARES} shares.`;
-}
-
 export interface OrderEstimateInput {
   side: OrderOutcomeSide;
   tradeSide?: BidTradeSide;

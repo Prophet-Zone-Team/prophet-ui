@@ -1,19 +1,28 @@
 "use client";
 
 import { useCallback, useState, type RefObject } from "react";
+import { useTranslations } from "next-intl";
 
 import { CopiedToast } from "@/components/feedback/copied-toast";
 import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
 import {
   REFERRAL_TELEGRAM_SHARE_URL,
-  REFERRAL_TWITTER_SHARE_URL,
+  REFERRAL_TWITTER_SHARE_URL
 } from "@/lib/referral/config";
 import { downloadShareCardPng } from "@/lib/referral/download-share-card";
 import { cn } from "@/lib/cn";
-import { trackCopyLinkClicked, trackShareClicked } from "@/lib/analytics/tracking";
+import {
+  trackCopyLinkClicked,
+  trackShareClicked
+} from "@/lib/analytics/tracking";
 
 import { inviteActionButtonClass } from "./referral-ui";
-import { DownloadIcon, LinkIcon, TelegramBrandIcon, XBrandIcon } from "./referral-icons";
+import {
+  DownloadIcon,
+  LinkIcon,
+  TelegramBrandIcon,
+  XBrandIcon
+} from "./referral-icons";
 import { shareToX } from "@/utils/x";
 
 export type ReferralInviteActionsProps = {
@@ -29,25 +38,22 @@ export function ReferralInviteActions({
   shareCardRef,
   shareCardReady,
   className,
-  downloadFilename,
+  downloadFilename
 }: ReferralInviteActionsProps) {
+  const t = useTranslations("referral");
   const [downloading, setDownloading] = useState(false);
   const { copiedVisible, copy } = useCopyWithToast();
 
   const handleTwitter = useCallback(() => {
-    const tweetText = `The World Cup markets are coming.
-
-Track signals. Trade smarter.
-
-Join Prophet 👇
-
-`;
+    const tweetText = t("shareTweetIntro");
     trackShareClicked({
       target: "x",
       label: "Share on X",
       entrySource: "referral_invite_modal"
     });
-    shareToX(tweetText, `${fullLink}\n\n`, { hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket" });
+    shareToX(tweetText, `${fullLink}\n\n`, {
+      hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket"
+    });
   }, [fullLink]);
 
   const handleTelegram = useCallback(() => {
@@ -90,8 +96,8 @@ Join Prophet 👇
       <button
         type="button"
         className={inviteActionButtonClass}
-        aria-label="Share on X"
-        title={REFERRAL_TWITTER_SHARE_URL ? undefined : "Coming soon"}
+        aria-label={t("shareOnX")}
+        title={REFERRAL_TWITTER_SHARE_URL ? undefined : t("comingSoon")}
         onClick={handleTwitter}
       >
         <XBrandIcon />
@@ -100,8 +106,8 @@ Join Prophet 👇
       <button
         type="button"
         className={inviteActionButtonClass}
-        aria-label="Share on Telegram"
-        title={REFERRAL_TELEGRAM_SHARE_URL ? undefined : "Coming soon"}
+        aria-label={t("shareOnTelegram")}
+        title={REFERRAL_TELEGRAM_SHARE_URL ? undefined : t("comingSoon")}
         onClick={handleTelegram}
       >
         <TelegramBrandIcon />
@@ -110,7 +116,7 @@ Join Prophet 👇
       <button
         type="button"
         className={inviteActionButtonClass}
-        aria-label="Download share card"
+        aria-label={t("downloadShareCard")}
         aria-busy={downloading}
         disabled={!shareCardReady || downloading}
         onClick={() => void handleDownload()}
@@ -121,7 +127,7 @@ Join Prophet 👇
       <button
         type="button"
         className={inviteActionButtonClass}
-        aria-label="Copy referral link"
+        aria-label={t("copyReferralLink")}
         onClick={() => void handleCopyLink()}
       >
         <LinkIcon />

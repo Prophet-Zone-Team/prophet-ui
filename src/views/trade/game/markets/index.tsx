@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { GameMarketTabSwitcher } from "@/views/trade/game/markets/game-market-tab-switcher";
 import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
@@ -62,24 +63,32 @@ import { useLiveFixtureTabPrices } from "@/views/trade/game/markets/use-live-fix
 const GAME_MARKET_TABS = [
   {
     id: "moneyline",
-    label: "Moneyline",
+    labelKey: "moneyline",
     iconSrc: GAME_MARKET_TAB_ICONS.moneyline
   },
-  { id: "totals", label: "Totals", iconSrc: GAME_MARKET_TAB_ICONS.totals },
-  { id: "spreads", label: "Spreads", iconSrc: GAME_MARKET_TAB_ICONS.spreads },
+  {
+    id: "totals",
+    labelKey: "totals",
+    iconSrc: GAME_MARKET_TAB_ICONS.totals
+  },
+  {
+    id: "spreads",
+    labelKey: "spreads",
+    iconSrc: GAME_MARKET_TAB_ICONS.spreads
+  },
   {
     id: "halftime",
-    label: "Halftime Results",
+    labelKey: "halftimeResults",
     iconSrc: GAME_MARKET_TAB_ICONS.halftime
   },
   {
     id: "top_scores",
-    label: "Top Scores",
+    labelKey: "topScores",
     iconSrc: GAME_MARKET_TAB_ICONS.top_scores
   }
 ] as const satisfies ReadonlyArray<{
   id: GameMarketTabId;
-  label: string;
+  labelKey: string;
   iconSrc: string;
 }>;
 
@@ -98,6 +107,7 @@ export function GameMarketsSection({
   teamSnapshots,
   onTabChange
 }: GameMarketsSectionProps) {
+  const t = useTranslations("trade");
   const [tab, setTab] = useState<GameMarketTabId>("moneyline");
   const [totalsLineKey, setTotalsLineKey] = useState<string | undefined>(() =>
     resolveDefaultLineKey(findFixtureGroupByType(fixtureMarkets.lines, "total"))
@@ -266,8 +276,11 @@ export function GameMarketsSection({
         gameSnapshot,
         totalsLineKey,
         spreadsLineKey,
-        homeLabel: sides.home.name ?? "Home",
-        awayLabel: sides.away.name ?? "Away",
+        homeLabel: sides.home.name ?? t("home"),
+        awayLabel: sides.away.name ?? t("away"),
+        drawLabel: t("draw"),
+        overLabel: t("over"),
+        underLabel: t("under"),
         homeCode: sides.home.code,
         awayCode: sides.away.code,
         liveActiveTabOutcomes,
@@ -285,23 +298,33 @@ export function GameMarketsSection({
       totalsLineKey,
       liveActiveTabOutcomes,
       liveGameOutcomes,
+      t,
     ]
   );
 
   const moneylineGroup = findFixtureGroupByType(fixtureMarkets.lines, "moneyline");
+  const tabItems = useMemo(
+    () =>
+      GAME_MARKET_TABS.map((tabItem) => ({
+        id: tabItem.id,
+        label: t(tabItem.labelKey),
+        iconSrc: tabItem.iconSrc
+      })),
+    [t]
+  );
 
   return (
     <section
       className="mt-[50px] flex flex-col gap-[5px]"
-      aria-label="Match markets"
+      aria-label={t("matchMarkets")}
     >
       <div className="flex min-w-0 items-center justify-between gap-4 px-3 md:px-0">
         <div className="min-w-0 shrink">
           <GameMarketTabSwitcher
-            items={[...GAME_MARKET_TABS]}
+            items={tabItems}
             value={tab}
             onChange={handleTabChange}
-            aria-label="Match market categories"
+            aria-label={t("matchMarketCategories")}
           />
         </div>
         <OrderbookToggle
@@ -404,6 +427,9 @@ function buildSummaryConfig({
   spreadsLineKey,
   homeLabel,
   awayLabel,
+  drawLabel,
+  overLabel,
+  underLabel,
   homeCode,
   awayCode,
   liveActiveTabOutcomes,
@@ -416,6 +442,9 @@ function buildSummaryConfig({
   spreadsLineKey?: string;
   homeLabel: string;
   awayLabel: string;
+  drawLabel: string;
+  overLabel: string;
+  underLabel: string;
   homeCode?: string;
   awayCode?: string;
   liveActiveTabOutcomes: FixtureMarketOutcome[];
@@ -428,6 +457,7 @@ function buildSummaryConfig({
         liveGameOutcomes,
         homeLabel,
         awayLabel,
+        drawLabel,
         homeCode,
         awayCode
       )
@@ -441,6 +471,7 @@ function buildSummaryConfig({
         liveActiveTabOutcomes,
         homeLabel,
         awayLabel,
+        drawLabel,
         homeCode,
         awayCode
       )
@@ -469,11 +500,11 @@ function buildSummaryConfig({
         outcomes,
         "over",
         "under",
-        "Over",
-        "Under"
+        overLabel,
+        underLabel
       ),
-      binaryPrimaryLabel: "Over",
-      binarySecondaryLabel: "Under"
+      binaryPrimaryLabel: overLabel,
+      binarySecondaryLabel: underLabel
     };
   }
 
@@ -502,7 +533,9 @@ function buildSummaryConfig({
         "home",
         "away",
         homeOutcome?.label ?? homeLabel,
-        awayOutcome?.label ?? awayLabel
+        awayOutcome?.label ?? awayLabel,
+        homeCode,
+        awayCode
       ),
       binaryPrimaryLabel: homeOutcome?.label ?? homeLabel,
       binarySecondaryLabel: awayOutcome?.label ?? awayLabel

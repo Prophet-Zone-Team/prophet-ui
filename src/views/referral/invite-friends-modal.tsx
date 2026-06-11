@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { ShareInviteModal } from "@/components/share/share-invite-modal";
 import type { ReferralKickback } from "@/types/referral";
 
@@ -19,6 +21,7 @@ export function InviteFriendsModal({
   kickback,
   funderAddress,
 }: InviteFriendsModalProps) {
+  const t = useTranslations("referral");
   const cardRef = useRef<HTMLDivElement>(null);
   const [shareCardReady, setShareCardReady] = useState(false);
 
@@ -26,7 +29,7 @@ export function InviteFriendsModal({
     <ShareInviteModal
       open={open}
       onClose={onClose}
-      ariaLabel="Invite friends"
+      ariaLabel={t("inviteFriends")}
       linkPrefix={kickback.linkPrefix}
       referralCode={kickback.referralCode}
       fullLink={kickback.fullLink}

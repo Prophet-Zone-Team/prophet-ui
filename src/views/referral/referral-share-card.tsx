@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { QRCodeSVG } from "qrcode.react";
 
 import {
@@ -34,6 +35,7 @@ export const ReferralShareCard = forwardRef<HTMLDivElement, ReferralShareCardPro
     { fullLink, funderAddress, className, onBackgroundReady },
     ref,
   ) {
+    const t = useTranslations("referral");
     const [bgReady, setBgReady] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
     const funderDisplay = formatReferralFunderDisplay(funderAddress);
@@ -82,16 +84,16 @@ export const ReferralShareCard = forwardRef<HTMLDivElement, ReferralShareCardPro
           <div className="pointer-events-none absolute inset-0 z-10 flex flex-col px-5 pt-7 font-body">
             <div className="text-center">
               <p className={inviteShareCardTitleClass}>
-                Use Prophet,
+                {t("shareCardTitle")}
                 <br />
-                <span className={inviteShareCardProfitClass}>Make Profit!</span>
+                <span className={inviteShareCardProfitClass}>{t("shareCardProfit")}</span>
               </p>
 
               {funderDisplay ? (
                 <div className="mt-4">
                   <p className={inviteShareCardFunderClass}>{funderDisplay}</p>
                   <p className={inviteShareCardInviteClass}>
-                    invites you to join Prophet
+                    {t("shareCardInvite")}
                   </p>
                 </div>
               ) : null}

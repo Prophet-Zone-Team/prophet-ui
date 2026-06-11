@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { fetchReferralClaim } from "@/lib/referral/api";
@@ -15,6 +16,7 @@ import { formatNumber } from "@/utils";
 import { reportFundingTransaction } from "@/lib/portfolio/user";
 
 export function useReferralClaim() {
+  const t = useTranslations("referral");
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -40,7 +42,7 @@ export function useReferralClaim() {
       });
 
       const amountLabel = formatNumber(data.amount_usdc, 2, true) as string;
-      toast.success(`Claimed ${amountLabel} USDC`);
+      toast.success(t("claimSuccess", { amount: amountLabel }));
     },
     onError: (error: unknown) => {
       if (error instanceof ProphetApiError) {
@@ -48,7 +50,7 @@ export function useReferralClaim() {
         return;
       }
 
-      toast.error("Unable to claim referral rewards.");
+      toast.error(t("claimError"));
     }
   });
 

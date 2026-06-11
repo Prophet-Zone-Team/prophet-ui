@@ -1,6 +1,8 @@
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 
 import type { RelatedNewsItem } from "./types";
@@ -57,6 +59,9 @@ export function RelatedNewsRow({
   onSelect,
   className
 }: RelatedNewsRowProps) {
+  const t = useTranslations("trade");
+  const teamDisplayName = useLocalizedTeamName(item.teamCode, item.teamName);
+
   return (
     <article
       className={cn(
@@ -65,13 +70,13 @@ export function RelatedNewsRow({
         onSelect && "cursor-pointer duration-150 hover:bg-[#EDEDED]",
         className
       )}
-      aria-label={`${item.teamName}: ${item.headline}`}
+      aria-label={`${teamDisplayName}: ${item.headline}`}
     >
       {onSelect ? (
         <button
           type="button"
           className="absolute inset-0 z-[1] rounded-[12px] opacity-0"
-          aria-label={`Open details for ${item.headline}`}
+          aria-label={t("openNewsDetails", { headline: item.headline })}
           onClick={() => onSelect(item)}
         />
       ) : null}
@@ -88,7 +93,7 @@ export function RelatedNewsRow({
             className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px]"
           />
           <span className="truncate text-[14px] font-[500] leading-[21px] text-black">
-            {item.teamName}
+            {teamDisplayName}
           </span>
         </div>
         <h3 className="m-0 mt-[8px] line-clamp-2 text-[14px] font-[500] leading-[19px] text-black">

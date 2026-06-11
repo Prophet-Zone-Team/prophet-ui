@@ -4,6 +4,7 @@ import type { OneClickStatus, QuoteResponse } from "@stableflow/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Big from "big.js";
 import { Loader2, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useDevice } from "@/hooks/common/use-device";
 import { FundingNetworkType } from "@/config/funding";
@@ -88,6 +89,11 @@ export function DepositDialog({
   onOpenPrivateTopup,
   onPendingDepositChange,
 }: DepositDialogProps) {
+  const tPortfolio = useTranslations("portfolio");
+  const tDeposit = useTranslations("portfolio.deposit");
+  const tWallet = useTranslations("wallet");
+  const tAuth = useTranslations("auth");
+  const tCommon = useTranslations("common");
   const {
     session,
     syncCash,
@@ -114,7 +120,7 @@ export function DepositDialog({
   const onConfirmPendingDepositFromEntry = useCallback(async () => {
     try {
       await onConfirmPendingDeposit();
-      toast.success("Deposit successful");
+      toast.success(tDeposit("depositSuccessful"));
 
       if (onDepositSuccess) {
         await onDepositSuccess();
@@ -125,7 +131,7 @@ export function DepositDialog({
       const message = error instanceof Error ? error.message : String(error);
       toast.error(message);
     }
-  }, [onConfirmPendingDeposit, onDepositSuccess, syncCash]);
+  }, [onConfirmPendingDeposit, onDepositSuccess, syncCash, tDeposit]);
 
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
   const [entryTab, setEntryTab] = useState<DepositEntryTab>(INITIAL_ENTRY_TAB);
@@ -303,21 +309,21 @@ export function DepositDialog({
   const ariaLabel = useMemo(() => {
     switch (step) {
       case "entry":
-        return "Deposit entry";
+        return tDeposit("ariaEntry");
       case "tokens":
-        return "Select deposit token";
+        return tDeposit("ariaSelectToken");
       case "amount":
-        return "Enter deposit amount";
+        return tDeposit("ariaAmount");
       case "confirm":
-        return "Confirm deposit";
+        return tDeposit("ariaConfirm");
       case "status":
-        return "Deposit status";
+        return tDeposit("ariaStatus");
       case "stableflow_qr":
-        return "Stableflow deposit address";
+        return tDeposit("ariaStableflowAddress");
       default:
-        return "Deposit";
+        return tDeposit("ariaDefault");
     }
-  }, [step]);
+  }, [step, tDeposit]);
 
   function handleBack() {
     if (step === "stableflow_qr") {
@@ -379,7 +385,7 @@ export function DepositDialog({
         const selection = resolveDefaultStableflowQrSelection(tokens);
 
         if (!selection) {
-          toast.error("Stableflow deposit is not ready. Try again.");
+          toast.error(tDeposit("stableflowNotReady"));
           return;
         }
 
@@ -479,7 +485,7 @@ export function DepositDialog({
         : 0;
 
     if (Big(amount.tokenAmount || 0).gt(latestBalance)) {
-      toast.error("Insufficient balance");
+      toast.error(tDeposit("insufficientBalance"));
       setContinueLoading(false);
       return;
     }
@@ -490,7 +496,10 @@ export function DepositDialog({
       Big(amount.amountUsd || 0).lt(effectiveMinUsd)
     ) {
       toast.error(
-        `${selectedToken.symbol} minimum deposit amount is $${effectiveMinUsd} or higher`,
+        tDeposit("minDepositAmount", {
+          symbol: selectedToken.symbol,
+          amount: `$${effectiveMinUsd}`,
+        }),
       );
       setContinueLoading(false);
       return;
@@ -546,7 +555,9 @@ export function DepositDialog({
             execution.depositAddress,
             execution.depositMemo,
             (status: OneClickStatus) => {
-              setBridgeStatusLabel(formatStableflowStatusLabel(status));
+              setBridgeStatusLabel(
+                formatStableflowStatusLabel(status, tDeposit),
+              );
             }
           );
         }
@@ -608,7 +619,7 @@ export function DepositDialog({
         setStatusError(error instanceof Error ? error.message : String(error));
       }
     },
-    [pollFunderCollateralBalances, pollStableflowBridge]
+    [pollFunderCollateralBalances, pollStableflowBridge, tDeposit]
   );
 
   const transitionToStableflowStatus = useCallback(
@@ -831,7 +842,7 @@ export function DepositDialog({
           txHash,
           amount: amount.amountUsd
         });
-        toast.success("Deposit successful");
+        toast.success(tDeposit("depositSuccessful"));
         handleClose();
         syncCash();
       } catch (error: unknown) {
@@ -849,7 +860,7 @@ export function DepositDialog({
       !session.funderAddress ||
       !polygonUsdcDestinationAssetId
     ) {
-      toast.error("Stableflow deposit is not ready. Try again.");
+      toast.error(tDeposit("stableflowNotReady"));
       return;
     }
 
@@ -930,7 +941,7 @@ export function DepositDialog({
         );
       }
 
-      toast.success("Deposit successful");
+      toast.success(tDeposit("depositSuccessful"));
       syncCash();
       handleClose();
       if (onDepositSuccess) {
@@ -1006,7 +1017,7 @@ export function DepositDialog({
             onOpenPrivateTopup?.();
           }}
         >
-          Private Balance
+          {tWallet("privateBalance")}
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </button>
       );
@@ -1028,7 +1039,7 @@ export function DepositDialog({
           onClick={() => onContinueFromQr()}
         >
           {continueLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-          Continue
+          {tAuth("continue")}
         </button>
       );
     }
@@ -1044,7 +1055,7 @@ export function DepositDialog({
           onClick={() => void onContinueToAmount()}
         >
           {continueLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-          Continue
+          {tAuth("continue")}
         </button>
       );
     }
@@ -1058,7 +1069,7 @@ export function DepositDialog({
           onClick={() => void onContinueToConfirm()}
         >
           {continueLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-          Continue
+          {tAuth("continue")}
         </button>
       );
     }
@@ -1072,7 +1083,7 @@ export function DepositDialog({
           onClick={() => void onConfirmDeposit()}
         >
           {continueLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-          Confirm
+          {tCommon("confirm")}
         </button>
       );
     }
@@ -1095,6 +1106,9 @@ export function DepositDialog({
     stableflowQuote,
     stableflowQuoteLoading,
     step,
+    tAuth,
+    tCommon,
+    tWallet,
   ]);
 
   return (
@@ -1120,7 +1134,7 @@ export function DepositDialog({
         }}
       >
         <FundingModalShell
-          title="Deposit"
+          title={tPortfolio("depositLabel")}
           onClose={handleClose}
           onBack={showBack ? handleBack : undefined}
           footer={footer}

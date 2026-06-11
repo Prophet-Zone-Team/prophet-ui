@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import type { KeyPlayerView } from "@/lib/team/team-detail-model";
 import { getInitials } from "@/lib/team/team-detail-model";
 import { cn } from "@/lib/cn";
@@ -39,10 +43,12 @@ function PlayerMetric({
 }
 
 export function TeamKeyPlayersPanel({ players }: TeamKeyPlayersPanelProps) {
+  const t = useTranslations("teamDetail");
+
   return (
-    <section className={teamPanelClass} aria-label="Key players">
+    <section className={teamPanelClass} aria-label={t("keyPlayersAria")}>
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Key Players</h2>
+        <h2 className={teamPanelTitleClass}>{t("keyPlayers")}</h2>
       </div>
       <div className="grid gap-3 p-4 sm:grid-cols-2">
         {players.length > 0 ? (
@@ -75,26 +81,26 @@ export function TeamKeyPlayersPanel({ players }: TeamKeyPlayersPanelProps) {
               </div>
               <div className="mt-3 grid gap-1.5">
                 <PlayerMetric
-                  label="Expected minutes"
+                  label={t("expectedMinutes")}
                   value={`${player.expectedMinutes}%`}
                 />
                 <PlayerMetric
-                  label="Squad probability"
+                  label={t("squadProbability")}
                   value={`${player.squadProbability}%`}
                 />
                 <PlayerMetric
-                  label="Form score"
+                  label={t("formScore")}
                   value={String(player.formScore)}
                 />
                 <PlayerMetric
-                  label="Injury status"
+                  label={t("injuryStatus")}
                   value={player.injuryStatus}
                   tone={player.injuryStatus === "Risk" ? "down" : "up"}
                 />
               </div>
               <div className="mt-3 flex items-center justify-between gap-2 border-t border-prophet-line pt-2 text-xs">
                 <span className="text-prophet-muted">
-                  {player.club ? "Club" : "Profile note"}
+                  {player.club ? t("club") : t("profileNote")}
                 </span>
                 <strong className="truncate font-[500] text-black">
                   {player.club ?? player.note ?? player.topMarket}
@@ -105,8 +111,8 @@ export function TeamKeyPlayersPanel({ players }: TeamKeyPlayersPanelProps) {
         ) : (
           <div className="sm:col-span-2">
             <TeamEmptyState
-              title="No key players"
-              body="Key player data is not available for this team yet."
+              title={t("noKeyPlayers")}
+              body={t("noKeyPlayersBody")}
             />
           </div>
         )}

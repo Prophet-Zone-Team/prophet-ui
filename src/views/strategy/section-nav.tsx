@@ -3,12 +3,13 @@
 import { motion } from "framer-motion";
 import { useId } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 
 export const STRATEGY_SECTIONS = [
-  { href: "/strategy/available", label: "Available" },
-  { href: "/strategy/ended", label: "Ended" }
+  { href: "/strategy/available", labelKey: "available" },
+  { href: "/strategy/ended", labelKey: "ended" }
 ] as const;
 
 const PILL_TRANSITION = {
@@ -23,6 +24,7 @@ function isSectionActive(pathname: string, href: string): boolean {
 }
 
 export function StrategySectionNav() {
+  const t = useTranslations("strategy");
   const pathname = usePathname();
   const router = useRouter();
   const pillLayoutId = `${useId()}-strategy-section-pill`;
@@ -32,7 +34,7 @@ export function StrategySectionNav() {
       ?.href ?? STRATEGY_SECTIONS[0].href;
 
   return (
-    <nav aria-label="Strategy views" className="flex justify-center">
+    <nav aria-label={t("strategyViews")} className="flex justify-center">
       <div
         role="tablist"
         className="flex h-[46px] w-[279px] items-center rounded-[12px] bg-[#F4F4F4] p-[5px]"
@@ -64,7 +66,7 @@ export function StrategySectionNav() {
                   isActive ? "font-medium" : "font-normal"
                 )}
               >
-                {section.label}
+                {t(section.labelKey)}
               </span>
             </button>
           );

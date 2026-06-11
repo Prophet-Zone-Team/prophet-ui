@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import type { TeamPowerRankingPathDifficulty } from "./types";
@@ -7,15 +9,12 @@ export type PathDifficultyLabelProps = {
   className?: string;
 };
 
-const LABELS: Record<TeamPowerRankingPathDifficulty, string> = {
-  Medium: "Moderate",
-  Hard: "Hard"
-};
-
 export function PathDifficultyLabel({
   difficulty,
   className
 }: PathDifficultyLabelProps) {
+  const t = useTranslations("analytics");
+
   return (
     <span
       className={cn(
@@ -24,7 +23,7 @@ export function PathDifficultyLabel({
         className
       )}
     >
-      {LABELS[difficulty]}
+      {difficulty === "Hard" ? t("pathDifficultyHard") : t("pathDifficultyModerate")}
     </span>
   );
 }

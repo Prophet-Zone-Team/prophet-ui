@@ -1,4 +1,4 @@
-export const WALLET_USER_REJECTION_MESSAGE = "User rejected the request.";
+import { getRuntimeTranslator } from "@/lib/i18n/runtime-messages";
 
 export function isUserRejectedRequest(error: unknown): boolean {
   if (typeof error !== "object" || error === null) {
@@ -20,7 +20,8 @@ export function resolveWalletErrorMessage(
   error: unknown,
   options?: { rejectionMessage?: string },
 ): string {
-  const rejectionMessage = options?.rejectionMessage ?? WALLET_USER_REJECTION_MESSAGE;
+  const t = getRuntimeTranslator("common");
+  const rejectionMessage = options?.rejectionMessage ?? t("userRejectedRequest");
 
   if (isUserRejectedRequest(error)) {
     return rejectionMessage;
@@ -36,8 +37,10 @@ export function resolveWalletErrorMessage(
 }
 
 function extractErrorMessage(error: unknown): string {
+  const t = getRuntimeTranslator("common");
+
   if (error instanceof Error) {
-    return normalizeMessage(error.message);
+    return normalizeMessage(error.message, t("unknownWalletError"));
   }
 
   if (typeof error === "string") {
@@ -52,11 +55,11 @@ function extractErrorMessage(error: unknown): string {
     };
 
     if (typeof value.message === "string") {
-      return normalizeMessage(value.message);
+      return normalizeMessage(value.message, t("unknownWalletError"));
     }
 
     if (typeof value.shortMessage === "string") {
-      return normalizeMessage(value.shortMessage);
+      return normalizeMessage(value.shortMessage, t("unknownWalletError"));
     }
 
     if (typeof value.details === "string") {
@@ -66,18 +69,18 @@ function extractErrorMessage(error: unknown): string {
     try {
       return JSON.stringify(error);
     } catch {
-      return "Unknown wallet error.";
+      return t("unknownWalletError");
     }
   }
 
   return String(error);
 }
 
-function normalizeMessage(message: string): string {
+function normalizeMessage(message: string, fallback: string): string {
   const trimmed = message.trim();
 
   if (!trimmed || trimmed === "[object Object]") {
-    return "Unknown wallet error.";
+    return fallback;
   }
 
   return trimmed;

@@ -1,4 +1,8 @@
 import { findCuratedTeamById } from "@/data/teams/curated-team-list";
+import {
+  formatDateFromIso,
+  formatDateTimeFromIso,
+} from "@/lib/formatters/datetime";
 import type {
   Team,
   TeamMarketSnapshot,
@@ -192,18 +196,8 @@ export function formatScheduleKickoff(value: string | undefined): string {
   if (!value) {
     return "TBD";
   }
-  const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-
-  return `${hours}:${minutes} ${month}/${day}`;
+  return formatDateTimeFromIso(value);
 }
 
 export function filterScheduleMatches(
@@ -341,17 +335,7 @@ export function getScheduleDateKey(kickoffAt: string | undefined): string | null
 }
 
 export function formatScheduleDateGroupLabel(kickoffAt: string): string {
-  const date = new Date(kickoffAt);
-
-  if (Number.isNaN(date.getTime())) {
-    return kickoffAt;
-  }
-
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "long",
-    day: "numeric"
-  });
+  return formatDateFromIso(kickoffAt);
 }
 
 export interface ScheduleDateGroup {

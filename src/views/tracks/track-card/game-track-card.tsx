@@ -1,7 +1,10 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { getScheduleRowVariant } from "@/lib/market/schedule-match";
 import { cn } from "@/lib/cn";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { TrackCardActions } from "./header/actions";
 import { GameIdentity } from "./header/game-identity";
@@ -24,14 +27,17 @@ export function GameTrackCard({
   youBid,
   className
 }: TrackCardGameProps) {
+  const t = useTranslations("tracks");
+  const homeDisplayName = useLocalizedTeamName(homeTeam.code, homeTeam.name);
+  const awayDisplayName = useLocalizedTeamName(awayTeam.code, awayTeam.name);
   const liveMatch = useMatchWithLiveState(match);
-  const title = `${homeTeam.name} vs ${awayTeam.name}`;
+  const title = `${homeDisplayName} vs ${awayDisplayName}`;
   const isOngoing = getScheduleRowVariant(liveMatch.status) === "ongoing";
 
   return (
     <TrackCardShell
       className={cn(isOngoing && trackCardOngoingShellClassName, className)}
-      ariaLabel={`${title} track card`}
+      ariaLabel={t("matchTrackCardAria", { matchTitle: title })}
       header={
         <>
           <GameIdentity match={match} homeTeam={homeTeam} awayTeam={awayTeam} />

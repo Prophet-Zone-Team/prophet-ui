@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
@@ -30,14 +31,15 @@ export function SignalAllTeamFilterControl({
   disabled = false,
   className
 }: SignalAllTeamFilterProps) {
+  const t = useTranslations("signal");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedLabel =
     value === "all"
-      ? "All Teams"
+      ? t("allTeamsFilter")
       : (options.find((option) => option.value === value)?.label ??
-        "All Teams");
+        t("allTeamsFilter"));
 
   useEffect(() => {
     if (!open) {
@@ -118,7 +120,7 @@ export function SignalAllTeamFilterControl({
             style={{ transformOrigin: "top right" }}
           >
             <SignalAllTeamFilterOption
-              label="All Teams"
+              label={t("allTeamsFilter")}
               selected={value === "all"}
               onSelect={() => {
                 onChange("all");

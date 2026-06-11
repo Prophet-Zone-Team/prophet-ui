@@ -1,16 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { CopyButton } from "@/components/feedback/copy-button";
 import { useAuth } from "@/context/auth/use-auth";
-import { getWorldCupGroupForTeam, getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
+import {
+  getWorldCupGroupForTeam,
+  getWorldCupTeamByIdOrCode
+} from "@/data/world-cup-2026/groups";
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+import { resolveLocalizedTeamName } from "@/lib/i18n/localized-team-name";
 import type { PathResult } from "@/types/market";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 import type { ReferralKickback } from "@/types/referral";
 
-import { ROUND_LABELS } from "../lib/format";
+import { translateRoundLabel } from "../lib/i18n-labels";
 import { RoadToFinalShareModal } from "../road-to-final-share-modal";
 import type { GroupPlacements, KnockoutWinners } from "../types";
 import { Panel } from "../ui/panel";
@@ -44,23 +50,30 @@ export function ResultPanel({
   thirdPlaceOption?: ThirdPlaceAllocationOption;
   onBackToKnockout: () => void;
 }) {
+  const t = useTranslations("roadToFinal");
+  const tTeamNames = useTranslations("teamNames");
   const { isAuthenticated, loginInProgress, openLogin } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
   const champion = getWorldCupTeamByIdOrCode(championTeamId ?? "");
+  const championName = useLocalizedTeamName(
+    champion?.code ?? "",
+    champion?.name ?? ""
+  );
+
   return (
     <Panel>
       <div className="flex flex-col gap-[16px] lg:flex-row">
         <article className="flex-1 rounded-[8px] border border-[#EBEBEB] bg-[#FAFAFA] p-[20px]">
           <p className="m-0 text-[12px] font-[700] uppercase tracking-wide text-[#0F766E]">
-            2026 World Cup simulation
+            {t("worldCupSimulation")}
           </p>
           <h2 className="m-0 mt-[8px] text-[28px] font-[400] leading-[1.1] text-black">
-            {champion ? `${champion.name} wins` : "Champion not selected yet"}
+            {champion
+              ? t("championWins", { name: championName })
+              : t("championNotSelected")}
           </h2>
           <p className="m-0 mt-[8px] text-[14px] text-[#909090]">
-            {champion
-              ? "This route is saved in the share link below."
-              : "Return to step 2 and pick the winner of match 104."}
+            {champion ? t("routeSavedInShareLink") : t("returnToStep2Match104")}
           </p>
 
           <div className="mt-[18px] flex items-center gap-[12px]">
@@ -75,12 +88,15 @@ export function ResultPanel({
               />
               <div>
                 <strong className="block text-[18px] text-black">
-                  {champion?.name ?? "Pending"}
+                  {champion ? championName : t("pending")}
                 </strong>
                 <span className="text-[13px] text-[#909090]">
                   {champion
-                    ? `${champion.code} · Group ${getWorldCupGroupForTeam(champion.id) ?? "-"}`
-                    : "Waiting for final selection"}
+                    ? t("teamGroupMeta", {
+                        code: champion.code,
+                        group: getWorldCupGroupForTeam(champion.id) ?? "-"
+                      })
+                    : t("waitingForFinalSelection")}
                 </span>
               </div>
             </div>
@@ -94,13 +110,21 @@ export function ResultPanel({
                   className="rounded-[8px] border border-[#EBEBEB] bg-white px-[10px] py-[8px]"
                 >
                   <small className="block text-[11px] text-[#909090]">
-                    {ROUND_LABELS[round.round]}
+                    {translateRoundLabel(round.round, t)}
                   </small>
                   <strong className="text-[13px] text-black">
                     {round.possibleOpponentTeams
                       .slice(0, 2)
-                      .map((team) => team.teamName)
-                      .join(" / ") || "Pending"}
+                      .map((team) => {
+                        const meta = getWorldCupTeamByIdOrCode(team.teamId);
+
+                        return resolveLocalizedTeamName(
+                          meta?.code,
+                          team.teamName,
+                          tTeamNames
+                        );
+                      })
+                      .join(" / ") || t("pending")}
                   </strong>
                 </div>
               ))}
@@ -115,7 +139,7 @@ export function ResultPanel({
               className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
               onClick={() => setShareOpen(true)}
             >
-              Download screenshot
+              {t("downloadScreenshot")}
             </button>
           ) : (
             <button
@@ -124,22 +148,22 @@ export function ResultPanel({
               disabled={loginInProgress}
               onClick={() => void openLogin()}
             >
-              {loginInProgress ? "Connecting..." : "Connect wallet"}
+              {loginInProgress ? t("connecting") : t("connectWallet")}
             </button>
           )}
           <CopyButton
             text={shareUrl}
-            ariaLabel="Copy share link"
+            ariaLabel={t("copyShareLinkAria")}
             className="w-full rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
           >
-            Copy share link
+            {t("copyShareLink")}
           </CopyButton>
           <button
             type="button"
             className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
             onClick={onBackToKnockout}
           >
-            Back to knockout step
+            {t("backToKnockoutStep")}
           </button>
         </aside>
       </div>
@@ -158,14 +182,5 @@ export function ResultPanel({
         kickback={kickback}
       />
     </Panel>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[8px] border border-[#EBEBEB] bg-white px-[10px] py-[8px]">
-      <span className="block text-[11px] text-[#909090]">{label}</span>
-      <strong className="text-[13px] text-black">{value}</strong>
-    </div>
   );
 }

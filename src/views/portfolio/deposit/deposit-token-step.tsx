@@ -1,5 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
+import Big from "big.js";
+import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/utils";
 import {
@@ -11,9 +16,6 @@ import { TokenIcon } from "@/views/portfolio/shared/token-icon";
 import { useDepositContext } from "./context";
 import type { DepositSelectableToken } from "./types";
 import { getDefaultDepositTokenSortIndex, getEffectiveMinDepositUsd } from "./utils";
-import { useMemo } from "react";
-import Big from "big.js";
-import { Loader2 } from "lucide-react";
 
 export interface DepositTokenStepProps {
   selectedToken?: DepositSelectableToken;
@@ -24,6 +26,7 @@ export function DepositTokenStep({
   selectedToken,
   onSelectToken
 }: DepositTokenStepProps) {
+  const t = useTranslations("portfolio.deposit");
   const {
     depositMethod,
     selectableTokens,
@@ -31,7 +34,6 @@ export function DepositTokenStep({
     getTokenUsdValue,
     hasTokenUsdPrice,
     balancesLoading,
-    pricesLoading
   } = useDepositContext();
 
   const sortedSupportedAssets = useMemo(() => {
@@ -145,7 +147,7 @@ export function DepositTokenStep({
             <span className="flex shrink-0 flex-col items-end gap-0.5">
               {isDisabled ? (
                 <span className="text-sm font-[500] text-[#909090]">
-                  Unsupported
+                  {t("unsupported")}
                 </span>
               ) : null}
               {loading ? (
@@ -154,7 +156,7 @@ export function DepositTokenStep({
                 <>
                   {token.isLowBalance && (
                     <span className="text-xs font-[500] text-[#FF674B] opacity-80">
-                      Low balance
+                      {t("lowBalance")}
                     </span>
                   )}
                   <span className="text-sm font-[500] text-black">

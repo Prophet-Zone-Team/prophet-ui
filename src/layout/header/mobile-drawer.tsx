@@ -1,10 +1,14 @@
+"use client";
+
 import Drawer from "@/components/drawer";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import PrivateBalance from "./private-balance";
+import { WalletLanguageMenuItem } from "./wallet-language-menu-item";
 import { walletBalanceLabelClass, walletBalanceValueClass } from "./wallet-menu-ui";
 import NavBar from "./navigation-bar";
 import { cn } from "@/lib/cn";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 function MobileDrawer(props: any) {
   const {
@@ -14,6 +18,8 @@ function MobileDrawer(props: any) {
     onPrivateBalanceClick,
     balanceDisplay,
   } = props;
+
+  const t = useTranslations("wallet");
 
   return (
     <Drawer
@@ -50,7 +56,7 @@ function MobileDrawer(props: any) {
             />
           </RegionRestrictedControl>
           <div className="flex flex-col justify-center items-start gap-0 rounded-lg border border-[#FFFFFF] h-[50px] px-2.5 min-w-[150px]">
-            <span className={walletBalanceLabelClass}>Balance</span>
+            <span className={walletBalanceLabelClass}>{t("balance")}</span>
             <span className={cn(walletBalanceValueClass, "text-black !text-base")}>${balanceDisplay}</span>
           </div>
         </div>
@@ -60,6 +66,9 @@ function MobileDrawer(props: any) {
           activeClassName="!rounded-none"
           onClick={onClose}
         />
+        <div className="mt-4 px-4 pb-4">
+          <WalletLanguageMenuItem onSelect={onClose} />
+        </div>
       </div>
     </Drawer>
   );

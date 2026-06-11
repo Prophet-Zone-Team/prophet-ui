@@ -1,9 +1,12 @@
 "use client";
 
+import { useMemo } from "react";
+import { useTranslations } from "next-intl";
+
 import type { MarketDataMeta } from "@/data/providers/types";
 import { useAnalyticsTeamMarketNews } from "@/hooks/analytics/use-analytics-team-market-news";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useTeamDetail } from "@/hooks/team/use-team-detail";
-import { getTeamMarketMovementNarrative } from "@/lib/analytics/map-team-market-news";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import { TeamDetailFootnote } from "@/views/team/team-detail-footnote";
@@ -26,23 +29,50 @@ export interface TeamDetailViewProps {
 }
 
 export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
+  const t = useTranslations("teamDetail");
   const { data, isLoading, isError, refetch } = useTeamDetail(snapshot.team.name);
   const marketNews = useAnalyticsTeamMarketNews(snapshot.team.name);
+  const teamDisplayName = useLocalizedTeamName(
+    snapshot.team.code,
+    snapshot.team.name
+  );
+
+  const movementNarrative = useMemo(() => {
+    const change24h = marketNews.intelligence.change24h;
+    const relatedNewsCount = marketNews.totalNews;
+    const delta = Math.abs(change24h);
+    const change = `${change24h >= 0 ? "+" : "-"}${(delta * 100).toFixed(1)}%`;
+    const newsCopy =
+      relatedNewsCount > 0
+        ? relatedNewsCount === 1
+          ? t("relatedNewsItemSingular", { count: relatedNewsCount })
+          : t("relatedNewsItemsPlural", { count: relatedNewsCount })
+        : t("noQualifyingNewsItem");
+
+    return change24h >= 0
+      ? t("movementRose", { teamName: teamDisplayName, change, newsCopy })
+      : t("movementFell", { teamName: teamDisplayName, change, newsCopy });
+  }, [
+    marketNews.intelligence.change24h,
+    marketNews.totalNews,
+    t,
+    teamDisplayName
+  ]);
 
   if (isError && !data) {
     return (
       <div className={teamPageClass}>
         <TeamDetailHeader snapshot={snapshot} />
         <TeamEmptyState
-          title="Unable to load team data"
-          body="Team analytics could not be loaded. Please try again."
+          title={t("unableToLoadTeamData")}
+          body={t("teamAnalyticsLoadError")}
         />
         <button
           type="button"
           className="mt-4 text-sm font-[500] text-[#125afc] hover:underline"
           onClick={() => void refetch()}
         >
-          Retry
+          {t("retry")}
         </button>
       </div>
     );
@@ -86,11 +116,7 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
                 intelligence={marketNews.intelligence}
                 isEmpty={!marketNews.hasMarket}
                 relatedNewsCount={marketNews.totalNews}
-                movementNarrative={getTeamMarketMovementNarrative(
-                  snapshot.team.name,
-                  marketNews.intelligence.change24h,
-                  marketNews.totalNews
-                )}
+                movementNarrative={movementNarrative}
               />
             </div>
           </div>

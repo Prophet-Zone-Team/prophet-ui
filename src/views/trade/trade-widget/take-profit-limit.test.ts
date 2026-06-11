@@ -3,7 +3,6 @@ import { describe, it } from "node:test";
 
 import {
   deriveDefaultTakeProfitLimitPrice,
-  formatTakeProfitLimitDisabledMessage,
   formatTakeProfitLimitPriceString,
   isTakeProfitLimitAvailable,
   LIMIT_BUY_MIN_SHARES
@@ -33,8 +32,3 @@ describe("isTakeProfitLimitAvailable", () => {
   });
 });
 
-describe("formatTakeProfitLimitDisabledMessage", () => {
-  it("mentions the minimum share requirement", () => {
-    assert.match(formatTakeProfitLimitDisabledMessage(), /5 shares/);
-  });
-});

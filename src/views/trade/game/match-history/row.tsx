@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { formatMatchHistoryDate, formatMatchScore } from "./format";
@@ -11,24 +15,32 @@ export type MatchHistoryRowProps = {
 };
 
 function MatchHistoryResult({ entry }: { entry: MatchHistoryEntry }) {
+  const t = useTranslations("trade");
+
   if (entry.result === "win") {
     return (
-      <span className="text-[14px] leading-[17px] text-[#65AF14]">Win</span>
+      <span className="text-[14px] leading-[17px] text-[#65AF14]">
+        {t("win")}
+      </span>
     );
   }
 
   if (entry.result === "lose") {
     return (
-      <span className="text-[14px] leading-[17px] text-[#FF674B]">Lose</span>
+      <span className="text-[14px] leading-[17px] text-[#FF674B]">
+        {t("lose")}
+      </span>
     );
   }
 
   if (entry.result === "lost-penalties") {
     return (
       <div className="flex flex-col items-end gap-[2px] md:items-start">
-        <span className="text-[14px] leading-[17px] text-[#909090]">Draw</span>
+        <span className="text-[14px] leading-[17px] text-[#909090]">
+          {t("draw")}
+        </span>
         <span className="text-[14px] leading-[17px] text-[#FF674B]">
-          Lost on Penalties
+          {t("lostOnPenalties")}
         </span>
       </div>
     );
@@ -36,7 +48,17 @@ function MatchHistoryResult({ entry }: { entry: MatchHistoryEntry }) {
 
   return (
     <span className="text-[14px] font-[400] leading-[17px] text-[#909090]">
-      Draw
+      {t("draw")}
+    </span>
+  );
+}
+
+function PenaltyScoreLabel({ score }: { score: string }) {
+  const t = useTranslations("trade");
+
+  return (
+    <span className="mt-[2px] whitespace-nowrap text-[12px] font-[400] leading-[17px] text-black">
+      {t("penaltiesScore", { score })}
     </span>
   );
 }
@@ -70,9 +92,7 @@ export function MatchHistoryDesktopRow({
       <div role="cell" className="flex flex-col items-center text-center">
         <span>{formatMatchScore(entry.homeScore, entry.awayScore)}</span>
         {entry.penaltyScore ? (
-          <span className="mt-[2px] whitespace-nowrap text-[12px] font-[400] leading-[17px] text-black">
-            {entry.penaltyScore} penalties
-          </span>
+          <PenaltyScoreLabel score={entry.penaltyScore} />
         ) : null}
       </div>
       <span role="cell">{entry.awayCode}</span>
@@ -87,6 +107,8 @@ export function MatchHistoryMobileCard({
   entry,
   highlighted = false
 }: MatchHistoryRowProps) {
+  const t = useTranslations("trade");
+
   return (
     <article
       className={cn(
@@ -112,9 +134,7 @@ export function MatchHistoryMobileCard({
             {formatMatchScore(entry.homeScore, entry.awayScore)}
           </span>
           {entry.penaltyScore ? (
-            <span className="mt-[2px] whitespace-nowrap text-[12px] font-[400] leading-[17px] text-black">
-              {entry.penaltyScore} penalties
-            </span>
+            <PenaltyScoreLabel score={entry.penaltyScore} />
           ) : null}
         </div>
         <span className="w-10 shrink-0 text-right text-[14px] font-[500]">
@@ -124,7 +144,7 @@ export function MatchHistoryMobileCard({
 
       <div className="flex items-start justify-between gap-3 border-t border-[#EBEBEB] pt-2">
         <span className="text-[12px] leading-[17px] text-[#909090]">
-          Result
+          {t("result")}
         </span>
         <MatchHistoryResult entry={entry} />
       </div>

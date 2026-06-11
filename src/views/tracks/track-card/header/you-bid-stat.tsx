@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { trackCardValueClassName } from "../styles";
@@ -9,9 +13,15 @@ export type YouBidStatProps = {
   className?: string;
 };
 
-export function YouBidStat({ amountLabel, outcomeSide, className }: YouBidStatProps) {
+export function YouBidStat({
+  amountLabel,
+  outcomeSide,
+  className
+}: YouBidStatProps) {
+  const t = useTranslations("tracks");
+
   return (
-    <StatColumn label="You Bid" className={className}>
+    <StatColumn label={t("youBid")} className={className}>
       <span className={trackCardValueClassName}>{amountLabel}</span>
       {outcomeSide ? (
         <span
@@ -20,7 +30,7 @@ export function YouBidStat({ amountLabel, outcomeSide, className }: YouBidStatPr
             outcomeSide === "yes" ? "text-[#65AF14]" : "text-[#FF674B]"
           )}
         >
-          {outcomeSide === "yes" ? "Yes" : "No"}
+          {outcomeSide === "yes" ? t("yesOutcome") : t("noOutcome")}
         </span>
       ) : null}
     </StatColumn>

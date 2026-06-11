@@ -1,9 +1,11 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuthOptional } from "@/context/auth";
@@ -33,6 +35,7 @@ export function PlaceBidButton({
   snapshot,
   navigateToTrade = false
 }: PlaceBidButtonProps) {
+  const t = useTranslations("trade");
   const router = useRouter();
   const auth = useAuthOptional();
   const fastBidAmount = useFastBidAmount();
@@ -43,20 +46,12 @@ export function PlaceBidButton({
   const isBuyRestricted = auth?.isBuyRestricted ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const regionRestricted = isAuthenticated && isBuyRestricted;
-
-  const buttonText = useMemo(() => {
-    if (status === "checking") {
-      return "Checking";
-    }
-
-    if (status === "submitting") {
-      return "Submitting";
-    }
-
-    return shouldShowAmount
-      ? `Quick Bid(${formatFastBidAmountDisplay(displayAmount).slice(1)})`
-      : children;
-  }, [children, displayAmount, shouldShowAmount, status]);
+  const isBusy = status === "checking" || status === "submitting";
+  const busyAriaLabel =
+    status === "checking" ? t("checking") : t("submittingOrderStatus");
+  const idleButtonText = shouldShowAmount
+    ? `Quick Bid(${formatFastBidAmountDisplay(displayAmount).slice(1)})`
+    : children;
 
   async function handleClick() {
     if (!snapshot) {
@@ -109,9 +104,14 @@ export function PlaceBidButton({
       type="button"
       className={className}
       disabled={status === "checking" || status === "submitting" || regionRestricted}
+      aria-label={isBusy ? busyAriaLabel : undefined}
       onClick={() => void handleClick()}
     >
-      {buttonText}
+      {isBusy ? (
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+      ) : (
+        idleButtonText
+      )}
     </button>
   );
 

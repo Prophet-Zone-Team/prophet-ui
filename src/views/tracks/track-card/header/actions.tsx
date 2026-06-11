@@ -1,10 +1,9 @@
 "use client";
 
-"use client";
-
 import Link from "next/link";
 import { Zap } from "lucide-react";
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { FastBidButton } from "@/components/trading/fast-bid-button";
 import { trackDetailsClicked } from "@/lib/analytics/tracking";
@@ -47,6 +46,7 @@ export function TrackCardActions(props: TrackCardActionsProps) {
 }
 
 function TrackCardTeamActions({ snapshot }: TrackCardTeamActionsProps) {
+  const t = useTranslations("tracks");
   const fastBidAmount = useFastBidAmount();
   const hasHydrated = useConfigHydrated();
   const displayAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
@@ -67,18 +67,18 @@ function TrackCardTeamActions({ snapshot }: TrackCardTeamActionsProps) {
       <FastBidButton
         snapshot={snapshot}
         disabled={!fastBidReady}
-        className={cn(trackCardBidButtonClassName, "flex-1 md:flex-grow-0")}
+        className={cn(trackCardBidButtonClassName, "flex-1")}
       >
         <>
           <Zap
             className="h-3.5 w-2.5 shrink-0 fill-white stroke-white"
             aria-hidden
           />
-          Bid
+          {t("bid")}
         </>
       </FastBidButton>
       <Link href={tradeHref} className={trackCardOutlineButtonClassName}>
-        Trade
+        {t("trade")}
       </Link>
       <Link
         href={detailHref}
@@ -101,6 +101,7 @@ function TrackCardTeamActions({ snapshot }: TrackCardTeamActionsProps) {
 }
 
 function TrackCardGameActions({ matchId }: TrackCardGameActionsProps) {
+  const t = useTranslations("tracks");
   const tradeHref = gameTradeHref(matchId);
 
   return (
@@ -110,7 +111,7 @@ function TrackCardGameActions({ matchId }: TrackCardGameActionsProps) {
       onKeyDown={(event) => event.stopPropagation()}
     >
       <Link href={tradeHref} className={trackCardOutlineButtonClassName}>
-        Trade
+        {t("trade")}
       </Link>
     </div>
   );

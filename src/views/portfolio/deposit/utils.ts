@@ -137,17 +137,22 @@ export interface ValidateDepositAmountOptions {
   amountUsd?: string;
 }
 
+export type DepositAmountErrorKey =
+  | "amountZero"
+  | "amountBelowMinimum"
+  | "amountExceedsBalance";
+
 export function validateDepositAmount(
   tokenAmount: string | undefined,
   maxAmount: string,
   options?: ValidateDepositAmountOptions,
-): string | undefined {
+): DepositAmountErrorKey | undefined {
   if (maxAmount === undefined || Big(maxAmount).lte(0)) {
-    return "Amount exceeds available balance.";
+    return "amountExceedsBalance";
   }
 
   if (tokenAmount === undefined || Big(tokenAmount).lte(0)) {
-    return "Enter an amount greater than zero.";
+    return "amountZero";
   }
 
   const minDepositUsd = options?.minDepositUsd ?? 0;
@@ -157,11 +162,11 @@ export function validateDepositAmount(
     options?.amountUsd !== undefined &&
     Big(options.amountUsd).lt(minDepositUsd)
   ) {
-    return `Minimum deposit is $${minDepositUsd}.`;
+    return "amountBelowMinimum";
   }
 
   if (Big(tokenAmount).gt(maxAmount || 0)) {
-    return "Amount exceeds available balance.";
+    return "amountExceedsBalance";
   }
 
   return undefined;

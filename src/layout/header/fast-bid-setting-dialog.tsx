@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
@@ -23,6 +24,7 @@ export function FastBidSettingDialog({
   open,
   onClose
 }: FastBidSettingDialogProps) {
+  const t = useTranslations("wallet");
   const fastBidAmount = useFastBidAmount();
   const setFastBidAmount = useSetFastBidAmount();
   const [draftInput, setDraftInput] = useState(String(fastBidAmount));
@@ -60,20 +62,20 @@ export function FastBidSettingDialog({
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel="Fast Bid Setting"
+      ariaLabel={t("fastBidSetting")}
       className="w-[320px]"
       hideCloseButton
     >
       <div className={cn(fundingModalCardClass, "w-[320px]")}>
         <header className="relative flex shrink-0 items-center px-5 pb-4 pt-5">
           <h2 className="m-0 text-xl font-[500] leading-6 text-black">
-            Fast Bid Setting
+            {t("fastBidSetting")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="absolute right-5 top-5 inline-flex h-[10px] w-[10px] items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-opacity hover:opacity-70"
-            aria-label="Close"
+            aria-label={t("close")}
           >
             <span
               className="relative block h-[10px] w-[10px]"
@@ -95,7 +97,7 @@ export function FastBidSettingDialog({
               inputMode="decimal"
               value={draftInput}
               onChange={(event) => handleInputChange(event.target.value)}
-              aria-label="Fast bid amount"
+              aria-label={t("fastBidAmount")}
               style={{ fieldSizing: "content" }}
               className="max-w-full border-0 bg-transparent text-[36px] font-[500] leading-[43px] text-black outline-none focus:ring-0"
             />
@@ -120,7 +122,7 @@ export function FastBidSettingDialog({
             className="mt-8 inline-flex h-[50px] w-[280px] items-center justify-center rounded-xl bg-black text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSave}
           >
-            Save
+            {t("save")}
           </button>
         </div>
       </div>

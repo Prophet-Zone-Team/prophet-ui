@@ -1,3 +1,7 @@
+import {
+  formatDateFromIso,
+  formatTimeFromIso,
+} from "@/lib/formatters/datetime";
 import { buildFallbackProbabilityHistory } from "@/lib/team/probability-history";
 import type {
   ProbabilityHistoryPoint,
@@ -38,6 +42,7 @@ const DEFAULT_TOP_TEAM_COUNT = 8;
 
 export interface WinnerChartSeriesConfig {
   teamId: string;
+  teamCode: string;
   label: string;
   color: string;
   dataKey: string;
@@ -55,6 +60,7 @@ export interface WinnerChartYAxisConfig {
 
 export interface WinnerChartLegendValue {
   teamId: string;
+  teamCode: string;
   label: string;
   color: string;
   dataKey: string;
@@ -91,6 +97,7 @@ export function buildWinnerChartSeries(
 ): WinnerChartSeriesConfig[] {
   return teams.slice(0, topCount).map((snapshot, index) => ({
     teamId: snapshot.team.id,
+    teamCode: snapshot.team.code,
     label: snapshot.team.name,
     color: WINNER_CHART_PALETTE[index % WINNER_CHART_PALETTE.length],
     dataKey: snapshot.team.id
@@ -271,6 +278,7 @@ export function getLatestSeriesValues(
   if (!latest) {
     return series.map((item) => ({
       teamId: item.teamId,
+      teamCode: item.teamCode,
       label: item.label,
       color: item.color,
       dataKey: item.dataKey,
@@ -280,6 +288,7 @@ export function getLatestSeriesValues(
 
   return series.map((item) => ({
     teamId: item.teamId,
+    teamCode: item.teamCode,
     label: item.label,
     color: item.color,
     dataKey: item.dataKey,
@@ -291,37 +300,13 @@ export function formatWinnerChartXAxisTick(
   value: string,
   range: WinnerChartTimeRange
 ): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
   if (range === "1H" || range === "1D") {
-    return new Intl.DateTimeFormat("en", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false
-    }).format(date);
+    return formatTimeFromIso(value);
   }
 
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric"
-  }).format(date);
+  return formatDateFromIso(value);
 }
 
 export function formatWinnerChartTooltipDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    weekday: "short",
-    month: "long",
-    day: "numeric",
-    year: "numeric"
-  }).format(date);
+  return formatDateFromIso(value);
 }

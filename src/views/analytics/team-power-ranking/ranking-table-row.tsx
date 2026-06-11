@@ -6,9 +6,12 @@ import { TeamInfo } from "@/views/team-power-ranking/team-info";
 import { TrendIndicator } from "@/views/team-power-ranking/trend-indicator";
 import type { TeamPowerRankingEntry } from "@/views/team-power-ranking/types";
 
-import { rankingPreviewTableGridClass } from "./table-grid";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+
 import { cn } from "@/lib/cn";
+
+import { rankingPreviewTableGridClass } from "./table-grid";
 
 export type RankingTableRowProps = {
   entry: TeamPowerRankingEntry;
@@ -43,6 +46,7 @@ export function RankingTableDesktopRow({ entry }: RankingTableRowProps) {
 }
 
 export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
+  const t = useTranslations("analytics");
   const router = useRouter();
 
   return (
@@ -65,7 +69,7 @@ export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
       <div className="grid grid-cols-2 gap-3 border-t border-[#EBEBEB] pt-2">
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="text-[12px] leading-[17px] text-[#909090]">
-            Title Probability
+            {t("titleProbability")}
           </span>
           <span className="tabular-nums">
             {formatTitleProbability(entry.titleProbability)}
@@ -73,7 +77,7 @@ export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
         </div>
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="text-[12px] leading-[17px] text-[#909090]">
-            Round of 16
+            {t("roundOf16")}
           </span>
           <span className="tabular-nums">
             {formatAdvanceOdds(entry.roundOf16Probability)}

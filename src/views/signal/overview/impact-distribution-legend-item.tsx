@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 
@@ -16,9 +19,9 @@ export type ImpactDistributionLegendItemProps = {
   className?: string;
 };
 
-const LABELS: Record<ImpactSentiment, string> = {
-  positive: "Positive",
-  negative: "Negative"
+const SENTIMENT_KEYS: Record<ImpactSentiment, "positive" | "negative"> = {
+  positive: "positive",
+  negative: "negative"
 };
 
 const ICONS: Record<ImpactSentiment, () => ReactNode> = {
@@ -32,6 +35,7 @@ export function ImpactDistributionLegendItem({
   percent,
   className
 }: ImpactDistributionLegendItemProps) {
+  const t = useTranslations("signal");
   const formatted = formatImpactCountWithPercent(count, percent);
   const Icon = ICONS[sentiment];
 
@@ -42,7 +46,7 @@ export function ImpactDistributionLegendItem({
           <Icon />
         </span>
         <span className="truncate text-[16px] font-[500] leading-[19px] text-black">
-          {LABELS[sentiment]}
+          {t(SENTIMENT_KEYS[sentiment])}
         </span>
       </div>
       <span className="mt-[7px] shrink-0 text-[16px] font-[500] leading-[19px] text-right">

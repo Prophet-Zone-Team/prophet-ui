@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import {
@@ -15,7 +16,17 @@ import { StrategyBidModal } from "@/views/strategy/components/bid-modal";
 import { PORTFOLIO_STRATEGY_STATUS_CONFIG } from "@/lib/strategy/portfolio-strategy-status";
 
 import { PortfolioStrategyLegsTable } from "./portfolio-strategy-legs-table";
-import type { PortfolioStrategyRecord } from "./types";
+import type { PortfolioStrategyRecord, PortfolioStrategyStatus } from "./types";
+
+const PORTFOLIO_STRATEGY_STATUS_MESSAGE_KEYS: Record<
+  PortfolioStrategyStatus,
+  "strategyStatusNotOpen" | "strategyStatusHitSucceed" | "strategyStatusNotFinished" | "strategyStatusHitMissed"
+> = {
+  not_open: "strategyStatusNotOpen",
+  hit_succeed: "strategyStatusHitSucceed",
+  not_finished: "strategyStatusNotFinished",
+  hit_missed: "strategyStatusHitMissed"
+};
 
 const SUMMARY_GRID =
   "grid w-full grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))_auto] items-center gap-x-3";
@@ -42,6 +53,7 @@ export function PortfolioStrategyCard({
   onStrategyUpdated,
   className
 }: PortfolioStrategyCardProps) {
+  const t = useTranslations("portfolio");
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [bidModalOpen, setBidModalOpen] = useState(false);
   const snapshots = useWinnerSnapshots();
@@ -72,19 +84,19 @@ export function PortfolioStrategyCard({
         <div className="overflow-x-auto">
           <div className={cn(SUMMARY_GRID, "min-w-[720px] bg-white px-4 pb-4 pt-4")}>
             <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
-              Strategy
+              {t("strategy")}
             </span>
             <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
-              ROI
+              {t("roi")}
             </span>
             <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
-              Value
+              {t("value")}
             </span>
             <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
-              Hit Return
+              {t("hitReturn")}
             </span>
             <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
-              Status
+              {t("status")}
             </span>
             <div className="pb-2" aria-hidden />
             <h3 className="m-0 min-w-0 truncate font-[Sora] text-base font-semibold capitalize leading-5 text-black">
@@ -100,7 +112,7 @@ export function PortfolioStrategyCard({
               {strategy.hitReturnLabel}
             </span>
             <PortfolioStrategyStatus
-              label={strategy.statusLabel}
+              label={t(PORTFOLIO_STRATEGY_STATUS_MESSAGE_KEYS[strategy.status])}
               color={statusDisplay.color}
             />
             <div className="flex shrink-0 items-center justify-end gap-2 self-center">
@@ -110,7 +122,7 @@ export function PortfolioStrategyCard({
                   className={BID_AGAIN_BUTTON_CLASS}
                   onClick={() => setBidModalOpen(true)}
                 >
-                  Bid Again
+                  {t("bidAgain")}
                 </button>
               ) : null}
               <button
@@ -118,7 +130,7 @@ export function PortfolioStrategyCard({
                 onClick={() => setExpanded((value) => !value)}
                 aria-expanded={expanded}
                 aria-label={
-                  expanded ? "Collapse strategy legs" : "Expand strategy legs"
+                  expanded ? t("collapseStrategyLegs") : t("expandStrategyLegs")
                 }
                 className={cn(
                   "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
