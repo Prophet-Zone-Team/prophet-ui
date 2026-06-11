@@ -114,8 +114,7 @@ export function GameMarketsSection({
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
   const sides = resolveMatchSides(match, teamSnapshots);
-  const gameSlug = match.polymarket?.slug?.trim() ?? "";
-  const { odds: gameOdds } = useGameOdds({ slug: gameSlug });
+  const { odds: gameOdds } = useGameOdds({ match });
 
   const otherSources = useMemo(
     () =>
