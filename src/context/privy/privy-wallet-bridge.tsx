@@ -52,6 +52,25 @@ export function getPrivyLoginEmail() {
   return privyLoginEmailRef;
 }
 
+export async function waitForPrivyLoginEmail(options?: {
+  timeoutMs?: number;
+}): Promise<string | undefined> {
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_WALLET_WAIT_MS;
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const email = getPrivyLoginEmail();
+
+    if (email) {
+      return email;
+    }
+
+    await sleep(WALLET_POLL_INTERVAL_MS);
+  }
+
+  return getPrivyLoginEmail();
+}
+
 export function isPrivyEmbeddedWallet(wallet: ConnectedWallet): boolean {
   return wallet.walletClientType === "privy" || wallet.connectorType === "embedded";
 }

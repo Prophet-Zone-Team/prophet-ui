@@ -22,18 +22,37 @@ import {
   trackProphet,
   untrackProphet
 } from "@/service/prophet";
-import { getPrivyLoginEmail } from "@/context/privy/privy-wallet-bridge";
+import {
+  getPrivyLoginEmail,
+  isPrivyAuthenticated,
+  waitForPrivyLoginEmail
+} from "@/context/privy/privy-wallet-bridge";
 import { useAuthStore } from "@/store/auth-store";
 import type { ProphetUserTrackItem } from "@/types/prophet-api";
 
-function resolveProphetLoginEmail(): string | undefined {
+async function resolveProphetLoginEmail(): Promise<string | undefined> {
   const { loginMethod, loginEmail } = useAuthStore.getState();
 
-  if (loginMethod !== "email" && loginMethod !== "google") {
+  if (loginEmail) {
+    return loginEmail;
+  }
+
+  const privyEmail = getPrivyLoginEmail();
+
+  if (privyEmail) {
+    return privyEmail;
+  }
+
+  const shouldWait =
+    loginMethod === "email" ||
+    loginMethod === "google" ||
+    isPrivyAuthenticated();
+
+  if (!shouldWait) {
     return undefined;
   }
 
-  return loginEmail ?? getPrivyLoginEmail();
+  return waitForPrivyLoginEmail({ timeoutMs: 5_000 });
 }
 
 export type TracksLoadStatus = "idle" | "loading" | "ready" | "error";
@@ -116,7 +135,7 @@ export const useTracksStore = create<TracksStore>()(
 
         try {
           await syncProphetWalletLogin(walletAddress, {
-            email: resolveProphetLoginEmail()
+            email: await resolveProphetLoginEmail()
           });
 
           if (!isProphetAuthenticated()) {
@@ -304,11 +323,22 @@ function bindTracksStoreToAuth(): void {
     const wallet = state.session?.walletAddress;
     const prevWallet = prevState.session?.walletAddress;
 
-    if (wallet === prevWallet) {
+    if (wallet !== prevWallet) {
+      void useTracksStore.getState().initializeForAccount(wallet);
       return;
     }
 
-    void useTracksStore.getState().initializeForAccount(wallet);
+    const loginEmail = state.loginEmail;
+    const prevLoginEmail = prevState.loginEmail;
+
+    if (
+      wallet &&
+      loginEmail &&
+      loginEmail !== prevLoginEmail &&
+      (state.loginMethod === "email" || state.loginMethod === "google")
+    ) {
+      void syncProphetWalletLogin(wallet, { email: loginEmail });
+    }
   });
 }
 

@@ -31,20 +31,34 @@ export function PrivyLoginModal({
   const [countdown, setCountdown] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const emailAuthenticatedRef = useRef(onEmailAuthenticated);
+  const emailLoginHandledRef = useRef(false);
 
   useEffect(() => {
     emailAuthenticatedRef.current = onEmailAuthenticated;
   }, [onEmailAuthenticated]);
 
+  const handleEmailAuthenticated = useCallback((resolvedEmail: string) => {
+    if (emailLoginHandledRef.current) {
+      return;
+    }
+
+    emailLoginHandledRef.current = true;
+    emailAuthenticatedRef.current(resolvedEmail);
+  }, []);
+
   const { ready } = usePrivy();
   const { sendCode, loginWithCode, state } = useLoginWithEmail({
     onComplete: (params) => {
+      if (params.wasAlreadyAuthenticated) {
+        return;
+      }
+
       const resolvedEmail =
         resolvePrivyLoginEmail(params.user, params.loginAccount) ??
         email.trim();
 
       if (resolvedEmail) {
-        emailAuthenticatedRef.current(resolvedEmail);
+        handleEmailAuthenticated(resolvedEmail);
       }
     },
     onError: (error) => {
@@ -74,6 +88,7 @@ export function PrivyLoginModal({
       setCode("");
       setCountdown(0);
       setErrorMessage(undefined);
+      emailLoginHandledRef.current = false;
     }
   }, [open]);
 
@@ -112,10 +127,18 @@ export function PrivyLoginModal({
 
     try {
       await loginWithCode({ code });
+
+      // Returning Privy users may already be authenticated, so onComplete
+      // does not fire again after OTP verification.
+      const resolvedEmail = email.trim();
+
+      if (resolvedEmail) {
+        handleEmailAuthenticated(resolvedEmail);
+      }
     } catch (error) {
       setErrorMessage(resolvePrivyError(error));
     }
-  }, [code, loginWithCode, verifyDisabled]);
+  }, [code, email, handleEmailAuthenticated, loginWithCode, verifyDisabled]);
 
   const handleGoogle = useCallback(async () => {
     setErrorMessage(undefined);
