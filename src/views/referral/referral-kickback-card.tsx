@@ -45,7 +45,7 @@ export function ReferralKickbackCard({
           </span>
         </div>
         <p className="mt-3 text-[14px] leading-[normal] text-[#909090]">
-          {kickback.description}
+          {t("kickbackDescription")}
         </p>
       </div>
 

@@ -2,14 +2,36 @@
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useAnalyticsTeamPathContext } from "@/hooks/analytics/use-analytics-team-path-context";
+import {
+  formatLocalizedBiggestOpponent,
+  translateSimulatorCurrentStage
+} from "@/lib/analytics/localized-simulator-labels";
 import { getTeamPathContextSnapshot } from "@/lib/analytics/map-team-path-context";
 import { cn } from "@/lib/cn";
 import { defaultSimulatorTeamId } from "@/views/road-to-final/lib/teams";
 
 import { getPathDifficultyColor } from "./mock-data";
 import { TeamSelectModal } from "./team-select-modal";
+import type { PathDifficulty } from "./types";
+
+function translatePathDifficulty(
+  difficulty: PathDifficulty,
+  t: ReturnType<typeof useTranslations<"analytics">>
+): string {
+  if (difficulty === "Easy") {
+    return t("pathDifficultyEasy");
+  }
+
+  if (difficulty === "Hard") {
+    return t("pathDifficultyHard");
+  }
+
+  return t("pathDifficultyModerate");
+}
 
 function InfoRow({
   label,
@@ -41,6 +63,7 @@ function InfoRow({
 }
 
 export function Simulator() {
+  const t = useTranslations("analytics");
   const { teams, snapshotsByTeamId, isLoading, isError } =
     useAnalyticsTeamPathContext();
   const [selectedTeamId, setSelectedTeamId] = useState(defaultSimulatorTeamId);
@@ -71,11 +94,31 @@ export function Simulator() {
   );
 
   const pathDifficultyColor = getPathDifficultyColor(snapshot.pathDifficulty);
+  const teamDisplayName = useLocalizedTeamName(
+    selectedTeam?.teamCode ?? "",
+    selectedTeam?.teamName ?? ""
+  );
+  const biggestOpponentName = useLocalizedTeamName(
+    snapshot.biggestOpponentTeamCode ?? "",
+    snapshot.biggestOpponentName ?? ""
+  );
+  const currentStageLabel = translateSimulatorCurrentStage(
+    snapshot.currentStage,
+    t
+  );
+  const biggestOpponentLabel = formatLocalizedBiggestOpponent(
+    {
+      name: snapshot.biggestOpponentName,
+      round: snapshot.biggestOpponentRound
+    },
+    biggestOpponentName,
+    t
+  );
 
   if (isLoading) {
     return (
       <div className="flex h-[300px] w-[327px] shrink-0 items-center justify-center pl-[20px]">
-        <span className="text-[14px] text-[#909090]">Loading...</span>
+        <span className="text-[14px] text-[#909090]">{t("loading")}</span>
       </div>
     );
   }
@@ -83,7 +126,9 @@ export function Simulator() {
   if (isError || teams.length === 0 || !selectedTeam) {
     return (
       <div className="flex h-[300px] w-[327px] shrink-0 items-center justify-center pl-[20px]">
-        <span className="text-[14px] text-[#909090]">Unable to load data.</span>
+        <span className="text-[14px] text-[#909090]">
+          {t("unableToLoadData")}
+        </span>
       </div>
     );
   }
@@ -94,7 +139,9 @@ export function Simulator() {
         <button
           type="button"
           className="inline-flex w-fit items-center gap-[10px] border-0 bg-transparent p-0"
-          aria-label={`Selected team: ${selectedTeam.teamName}. Open team selector`}
+          aria-label={t("selectedTeamOpenSelector", {
+            teamName: teamDisplayName
+          })}
           aria-haspopup="dialog"
           onClick={() => setTeamModalOpen(true)}
         >
@@ -105,7 +152,7 @@ export function Simulator() {
             className="h-[36px] w-[36px] shrink-0 rounded-[6px] text-[36px]"
           />
           <span className="text-[18px] font-[500] leading-[21px] text-black">
-            {selectedTeam.teamName}
+            {teamDisplayName}
           </span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -124,22 +171,24 @@ export function Simulator() {
         </button>
 
         <div className="mt-[24px] flex flex-col gap-[16px]">
-          <InfoRow label="Current Stage" value={snapshot.currentStage} />
+          <InfoRow label={t("currentStage")} value={currentStageLabel} />
           <InfoRow
-            label="Path Difficulty"
-            value={snapshot.pathDifficulty}
+            label={t("pathDifficulty")}
+            value={translatePathDifficulty(snapshot.pathDifficulty, t)}
             valueStyle={{ color: pathDifficultyColor }}
           />
-          <InfoRow label="Biggest Opponent" value={snapshot.biggestOpponent} />
+          <InfoRow label={t("biggestOpponent")} value={biggestOpponentLabel} />
         </div>
 
         <Link
           href={`/road-to-final?team=${encodeURIComponent(selectedTeamId)}`}
           className="mt-auto flex h-[42px] w-full max-w-[307px] items-center justify-center gap-[6px] rounded-[8px] bg-[#18110F] no-underline"
-          aria-label={`Open road to final simulator for ${selectedTeam.teamName}`}
+          aria-label={t("openRoadToFinalSimulatorFor", {
+            teamName: teamDisplayName
+          })}
         >
           <span className="text-[14px] font-[500] leading-[17px] text-white">
-            Open Simulator
+            {t("openSimulator")}
           </span>
           <svg
             xmlns="http://www.w3.org/2000/svg"

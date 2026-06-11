@@ -15,7 +15,12 @@ import {
   StrategyCardBodySections
 } from "@/views/strategy/components/card";
 
-import { buildEndedStrategyCards } from "./lib/map-strategy-data";
+import { useLocalizedStrategyLabels } from "@/hooks/i18n/use-localized-strategy-labels";
+
+import {
+  buildEndedStrategyCards,
+  type EndedStrategyCardData
+} from "./lib/map-strategy-data";
 
 export function StrategyEnded() {
   const t = useTranslations("strategy");
@@ -53,24 +58,41 @@ export function StrategyEnded() {
       className="flex flex-col gap-3 md:gap-4"
     >
       {endedStrategies.map((strategy) => (
-        <StrategyCard
+        <StrategyEndedCard
           key={strategy.id}
-          variant={strategy.variant}
-          title={strategy.name}
-        >
-          <StrategyCardBodySections
-            variant={strategy.variant}
-            winnerTeam={strategy.winnerTeam}
-            description={strategy.description}
-            budgetLabel={strategy.budgetLabel}
-            estimatedRoiLabel={strategy.estimatedRoiLabel}
-            hitReturnLabel={strategy.hitReturnLabel}
-            isLoading={isLoading}
-            teams={strategy.teamRefs}
-            legs={strategy.legs}
-          />
-        </StrategyCard>
+          strategy={strategy}
+          isLoading={isLoading}
+        />
       ))}
     </section>
+  );
+}
+
+function StrategyEndedCard({
+  strategy,
+  isLoading
+}: {
+  strategy: EndedStrategyCardData;
+  isLoading: boolean;
+}) {
+  const { name, description } = useLocalizedStrategyLabels(strategy.id, {
+    name: strategy.name,
+    description: strategy.description
+  });
+
+  return (
+    <StrategyCard variant={strategy.variant} title={name}>
+      <StrategyCardBodySections
+        variant={strategy.variant}
+        winnerTeam={strategy.winnerTeam}
+        description={description}
+        budgetLabel={strategy.budgetLabel}
+        estimatedRoiLabel={strategy.estimatedRoiLabel}
+        hitReturnLabel={strategy.hitReturnLabel}
+        isLoading={isLoading}
+        teams={strategy.teamRefs}
+        legs={strategy.legs}
+      />
+    </StrategyCard>
   );
 }

@@ -15,6 +15,8 @@ import {
 } from "@/views/strategy/components/card";
 import { StrategyBidModal } from "@/views/strategy/components/bid-modal";
 
+import { useLocalizedStrategyLabels } from "@/hooks/i18n/use-localized-strategy-labels";
+
 import {
   buildAvailableStrategyCards,
   type AvailableStrategyCardData
@@ -55,23 +57,12 @@ export function StrategyAvailable() {
         className="flex flex-col gap-3 md:gap-4"
       >
         {availableStrategies.map((strategy) => (
-          <StrategyCard
+          <StrategyAvailableCard
             key={strategy.id}
-            variant="available"
-            title={strategy.name}
-          >
-            <StrategyCardBodySections
-              description={strategy.description}
-              badge={strategy.badge}
-              budgetLabel={strategy.budgetLabel}
-              estimatedRoiLabel={strategy.estimatedRoiLabel}
-              hitReturnLabel={strategy.hitReturnLabel}
-              isLoading={isLoading}
-              teams={strategy.teamRefs}
-              legs={strategy.legs}
-              onPlaceBid={() => setBidStrategy(strategy)}
-            />
-          </StrategyCard>
+            strategy={strategy}
+            isLoading={isLoading}
+            onPlaceBid={() => setBidStrategy(strategy)}
+          />
         ))}
       </section>
 
@@ -82,5 +73,36 @@ export function StrategyAvailable() {
         snapshots={snapshots}
       />
     </>
+  );
+}
+
+function StrategyAvailableCard({
+  strategy,
+  isLoading,
+  onPlaceBid
+}: {
+  strategy: AvailableStrategyCardData;
+  isLoading: boolean;
+  onPlaceBid: () => void;
+}) {
+  const { name, description } = useLocalizedStrategyLabels(strategy.id, {
+    name: strategy.name,
+    description: strategy.description
+  });
+
+  return (
+    <StrategyCard variant="available" title={name}>
+      <StrategyCardBodySections
+        description={description}
+        badge={strategy.badge}
+        budgetLabel={strategy.budgetLabel}
+        estimatedRoiLabel={strategy.estimatedRoiLabel}
+        hitReturnLabel={strategy.hitReturnLabel}
+        isLoading={isLoading}
+        teams={strategy.teamRefs}
+        legs={strategy.legs}
+        onPlaceBid={onPlaceBid}
+      />
+    </StrategyCard>
   );
 }

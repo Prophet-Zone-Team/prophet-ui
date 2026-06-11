@@ -5,7 +5,8 @@ export const LOCALE_LABELS: Record<AppLocale, string> = {
   es: "Español",
   ko: "한국어",
   ja: "日本語",
-  "zh-TW": "繁體中文"
+  "zh-TW": "繁體中文",
+  ru: "Русский"
 };
 
 export const LOCALE_SHORT_LABELS: Record<AppLocale, string> = {
@@ -13,5 +14,6 @@ export const LOCALE_SHORT_LABELS: Record<AppLocale, string> = {
   es: "ES",
   ko: "KO",
   ja: "JA",
-  "zh-TW": "繁中"
+  "zh-TW": "繁中",
+  ru: "RU"
 };

@@ -1,4 +1,5 @@
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 
 export type TeamInfoProps = {
@@ -16,7 +17,8 @@ export function TeamInfo({
   textClassName,
   className
 }: TeamInfoProps) {
-  const displayLabel = label === "name" ? teamName : teamCode;
+  const localizedTeamName = useLocalizedTeamName(teamCode, teamName);
+  const displayLabel = label === "name" ? localizedTeamName : teamCode;
 
   return (
     <div className={cn("flex min-w-0 items-center gap-[8px]", className)}>

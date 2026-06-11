@@ -1,3 +1,5 @@
+import { formatDate, formatDateTimeFromIso } from "@/lib/formatters/datetime";
+
 export function formatRelativeTime(iso: string | undefined): string {
   if (!iso) {
     return "";
@@ -13,7 +15,7 @@ export function formatRelativeTime(iso: string | undefined): string {
   const diffMs = now - published.getTime();
 
   if (diffMs < 0) {
-    return formatShortDate(published);
+    return formatDate(published);
   }
 
   const diffMinutes = Math.floor(diffMs / 60_000);
@@ -38,14 +40,7 @@ export function formatRelativeTime(iso: string | undefined): string {
     return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
   }
 
-  return formatShortDate(published);
-}
-
-function formatShortDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric"
-  });
+  return formatDate(published);
 }
 
 export function publishedAtToOrder(iso: string | undefined): number {
@@ -58,20 +53,5 @@ export function publishedAtToOrder(iso: string | undefined): number {
 }
 
 export function formatDateMonthAndTime(iso: string | undefined): string {
-  if (!iso) {
-    return "";
-  }
-
-  const date = new Date(iso);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-
-  return `${hours}:${minutes} ${month}/${day}`;
+  return formatDateTimeFromIso(iso);
 }

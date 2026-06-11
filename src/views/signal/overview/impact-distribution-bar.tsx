@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import type { ImpactSentiment } from "./types";
@@ -19,13 +23,14 @@ export function ImpactDistributionBar({
   segments,
   className
 }: ImpactDistributionBarProps) {
+  const t = useTranslations("signal");
   const total = segments.reduce((sum, segment) => sum + segment.count, 0);
 
   return (
     <div
       className={cn("flex h-[10px] w-full gap-[4px]", className)}
       role="img"
-      aria-label="Impact distribution bar"
+      aria-label={t("impactDistributionBar")}
     >
       {segments.map((segment) => {
         const widthPercent =

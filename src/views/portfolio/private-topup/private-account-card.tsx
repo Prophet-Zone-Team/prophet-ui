@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
@@ -35,6 +36,8 @@ export function PrivateAccountCard({
   onRefresh,
   onTopUp,
 }: PrivateAccountCardProps) {
+  const t = useTranslations("privateTopup");
+  const tWallet = useTranslations("wallet");
   const [refreshing, setRefreshing] = useState(false);
 
   function handleRefresh() {
@@ -60,7 +63,7 @@ export function PrivateAccountCard({
               <p
                 className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}
               >
-                Private Account
+                {t("privateAccount")}
               </p>
               {address ? (
                 <div className="mt-1 flex items-center gap-2">
@@ -69,7 +72,7 @@ export function PrivateAccountCard({
                   </p>
                   <PolymarketAddressCopyButton
                     address={address}
-                    ariaLabel="Copy private account address"
+                    ariaLabel={t("copyPrivateAccountAddress")}
                     className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-white/70 transition-colors hover:text-white"
                   >
                     <CopyIcon />
@@ -83,7 +86,7 @@ export function PrivateAccountCard({
           <button
             type="button"
             className="inline-flex size-8 shrink-0 items-center justify-center border-0 bg-transparent p-0 transition-opacity hover:opacity-80"
-            aria-label="Refresh private balance"
+            aria-label={t("refreshPrivateBalance")}
             onClick={handleRefresh}
           >
             <img
@@ -103,7 +106,7 @@ export function PrivateAccountCard({
             <p
               className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}
             >
-              Private Balance
+              {tWallet("privateBalance")}
             </p>
             <p
               className={cn(
@@ -130,7 +133,7 @@ export function PrivateAccountCard({
             disabled={!topupWalletConnected}
             onClick={onTopUp}
           >
-            Top up
+            {t("topUp")}
           </button>
         </div>
       </div>

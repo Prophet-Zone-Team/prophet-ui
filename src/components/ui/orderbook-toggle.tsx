@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/cn";
 
@@ -21,12 +23,14 @@ export function OrderbookToggle({
   variant = "game",
   className
 }: OrderbookToggleProps) {
+  const t = useTranslations("trade");
+
   return (
     <label className={cn("flex cursor-pointer items-center gap-2", className)}>
       <Switch
         checked={checked}
         onCheckedChange={onChange}
-        aria-label="Show orderbook"
+        aria-label={t("showOrderbook")}
       />
       <span
         className={cn(
@@ -34,7 +38,7 @@ export function OrderbookToggle({
           labelVariantClass[variant]
         )}
       >
-        Orderbook
+        {t("orderbook")}
       </span>
     </label>
   );

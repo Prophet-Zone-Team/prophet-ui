@@ -1,10 +1,10 @@
 "use client";
 
 import { NextIntlClientProvider } from "next-intl";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import type { AppLocale } from "@/i18n/config";
-import { loadMessages } from "@/lib/i18n/load-messages";
+import { invalidateMessageCache, loadMessages } from "@/lib/i18n/load-messages";
 import { setRuntimeMessages } from "@/lib/i18n/runtime-messages";
 import { setLocaleCookie } from "@/lib/i18n/set-locale-cookie";
 import { useConfigHydrated } from "@/store/use-config-hydrated";
@@ -23,46 +23,50 @@ export function LocaleProvider({
 }: LocaleProviderProps) {
   const hydrated = useConfigHydrated();
   const storeLocale = useLocale();
-  const [locale, setLocale] = useState(initialLocale);
+  const activeLocale = hydrated ? storeLocale : initialLocale;
   const [messages, setMessages] = useState(initialMessages);
+
+  const serverMessagesKey = useMemo(
+    () => JSON.stringify(initialMessages),
+    [initialMessages]
+  );
 
   useEffect(() => {
     if (!hydrated) {
+      setMessages(initialMessages);
       setRuntimeMessages(initialLocale, initialMessages);
       return;
     }
 
-    if (storeLocale === locale && messages === initialMessages && storeLocale === initialLocale) {
-      setRuntimeMessages(storeLocale, messages);
-      setLocaleCookie(storeLocale);
+    if (activeLocale === initialLocale) {
+      setMessages(initialMessages);
+      setRuntimeMessages(initialLocale, initialMessages);
+      setLocaleCookie(initialLocale);
       return;
     }
 
     let cancelled = false;
 
-    void loadMessages(storeLocale).then((loaded) => {
+    invalidateMessageCache(activeLocale);
+    void loadMessages(activeLocale).then((loaded) => {
       if (cancelled) {
         return;
       }
 
-      setLocale(storeLocale);
       setMessages(loaded);
-      setRuntimeMessages(storeLocale, loaded);
-      setLocaleCookie(storeLocale);
+      setRuntimeMessages(activeLocale, loaded);
+      setLocaleCookie(activeLocale);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [hydrated, storeLocale, initialLocale, initialMessages, locale, messages]);
-
-  const activeLocale = hydrated ? locale : initialLocale;
-  const activeMessages = hydrated ? messages : initialMessages;
+  }, [hydrated, activeLocale, initialLocale, initialMessages, serverMessagesKey]);
 
   return (
     <NextIntlClientProvider
       locale={activeLocale}
-      messages={activeMessages}
+      messages={messages}
       timeZone="UTC"
     >
       {children}

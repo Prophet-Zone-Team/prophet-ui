@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import {
@@ -24,10 +27,13 @@ const BACKGROUND_CLASS_NAMES: Record<SignalNewsItemVariant, string> = {
   negative: "bg-[#FF674B]/10",
 };
 
-const LABELS: Record<SignalNewsItemVariant, string> = {
-  today: "Today's Signal",
-  positive: "Positive",
-  negative: "Negative",
+const VARIANT_KEYS: Record<
+  SignalNewsItemVariant,
+  "todaySignal" | "positive" | "negative"
+> = {
+  today: "todaySignal",
+  positive: "positive",
+  negative: "negative",
 };
 
 const ICONS: Record<SignalNewsItemVariant, () => ReactNode> = {
@@ -41,7 +47,8 @@ export function SignalNewsItem({
   count,
   className
 }: SignalNewsItemProps) {
-  const label = LABELS[variant];
+  const t = useTranslations("signal");
+  const label = t(VARIANT_KEYS[variant]);
   const Icon = ICONS[variant];
 
   return (
@@ -51,7 +58,7 @@ export function SignalNewsItem({
         BACKGROUND_CLASS_NAMES[variant],
         className
       )}
-      aria-label={`${label}: ${count}`}
+      aria-label={t("summaryCountAria", { label, count })}
     >
       <div className="flex min-w-0 items-center gap-[8px]">
         <span className="shrink-0 [&_svg]:size-[26px]">

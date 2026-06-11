@@ -32,7 +32,11 @@ export function AppRoot({
     typeof window !== "undefined" ? isSecureInBrowser() : initialSecure;
 
   if (!isSecure) {
-    return <HttpsRequiredPage />;
+    return (
+      <LocaleProvider initialLocale={initialLocale} initialMessages={initialMessages}>
+        <HttpsRequiredPage />
+      </LocaleProvider>
+    );
   }
 
   return (

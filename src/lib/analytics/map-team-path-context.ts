@@ -80,13 +80,18 @@ function mapItem(item: ProphetAnalyticsTeamPathContext): TeamPathContextEntry | 
   }
 
   const team = resolveSimulatorTeam(teamName);
+  const opponentName = item.biggest_opponent_name?.trim();
+  const opponentTeam = opponentName ? resolveSimulatorTeam(opponentName) : null;
   const snapshot: SimulatorSnapshot = {
     currentStage: item.current_stage?.trim() || "—",
     pathDifficulty: parsePathDifficulty(item.path_difficulty_label),
     biggestOpponent: formatBiggestOpponent(
       item.biggest_opponent_name,
       item.biggest_opponent_round
-    )
+    ),
+    biggestOpponentName: opponentName,
+    biggestOpponentRound: item.biggest_opponent_round?.trim(),
+    biggestOpponentTeamCode: opponentTeam?.teamCode,
   };
 
   return { team, snapshot };

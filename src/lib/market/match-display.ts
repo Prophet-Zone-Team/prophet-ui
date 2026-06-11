@@ -1,3 +1,5 @@
+import { formatTime, formatTimeFromIso } from "@/lib/formatters/datetime";
+
 export function formatMatchScore(
   homeScore?: number,
   awayScore?: number
@@ -60,20 +62,8 @@ export function formatMatchMinuteAxisLabel(totalSeconds: number): string {
   return `${minutes}'`;
 }
 
-const liveChartClockFormatter = new Intl.DateTimeFormat("en", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
 export function formatChartTimestampClockLabel(timestamp: string): string {
-  const date = new Date(timestamp);
-
-  if (Number.isNaN(date.getTime())) {
-    return timestamp;
-  }
-
-  return liveChartClockFormatter.format(date);
+  return formatTimeFromIso(timestamp);
 }
 
 export function formatLiveChartClockLabel(
@@ -90,7 +80,7 @@ export function formatLiveChartClockLabel(
     return "—";
   }
 
-  return liveChartClockFormatter.format(
+  return formatTime(
     new Date(kickoffMs + Math.max(0, Math.floor(elapsedSeconds)) * 1000),
   );
 }

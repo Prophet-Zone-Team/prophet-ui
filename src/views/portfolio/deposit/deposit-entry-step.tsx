@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
@@ -31,6 +32,7 @@ export function DepositEntryStep({
   stableflowLoading = false,
   onOpenPrivateTopup,
 }: DepositEntryStepProps) {
+  const t = useTranslations("portfolio");
   const {
     session,
     openLogin,
@@ -66,7 +68,7 @@ export function DepositEntryStep({
           onClick={() => void openLogin()}
           disabled={loginInProgress}
         >
-          {loginInProgress ? "Connecting…" : "Connect Wallet"}
+          {loginInProgress ? t("connecting") : t("connectWallet")}
         </button>
       </div>
     );
@@ -129,7 +131,7 @@ export function DepositEntryStep({
                 aria-hidden="true"
               />
             ) : null}
-            Confirm pending deposit
+            {t("confirmPendingDeposit")}
           </button>
         </RegionRestrictedControl>
       ) : null}

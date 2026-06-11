@@ -1,5 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
@@ -72,9 +75,11 @@ export function StrategyCardBodyTop({
   onExpandToggle,
   placeBidDisabled = false,
   expandDisabled = false,
-  placeBidLabel = "Place Bid",
+  placeBidLabel,
   className
 }: StrategyCardBodyTopProps) {
+  const t = useTranslations("strategy");
+  const resolvedPlaceBidLabel = placeBidLabel ?? t("placeBid");
   const showExpandControl = Boolean(onExpandToggle);
   const showEndedOutcome = variant === "winner" || variant === "loss";
   return (
@@ -97,14 +102,14 @@ export function StrategyCardBodyTop({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
         <div className="grid min-w-0 flex-1 grid-cols-2 gap-x-6 gap-y-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between sm:gap-x-10 md:gap-x-12">
           <StrategyCardMetricColumn
-            label="Budget"
+            label={t("budget")}
             tone="default"
             muted={showEndedOutcome}
           >
             {budgetLabel}
           </StrategyCardMetricColumn>
           <StrategyCardMetricColumn
-            label="Est. ROI"
+            label={t("estRoi")}
             tone="positive"
             muted={showEndedOutcome}
           >
@@ -118,7 +123,7 @@ export function StrategyCardBodyTop({
             )}
           </StrategyCardMetricColumn>
           <StrategyCardMetricColumn
-            label="Hit Return"
+            label={t("hitReturn")}
             tone="positive"
             muted={showEndedOutcome}
           >
@@ -132,7 +137,7 @@ export function StrategyCardBodyTop({
             )}
           </StrategyCardMetricColumn>
           <StrategyCardMetricColumn
-            label="Teams"
+            label={t("teams")}
             tone="default"
             align="start"
             muted={showEndedOutcome}
@@ -161,7 +166,7 @@ export function StrategyCardBodyTop({
                   "sm:flex-initial"
                 )}
               >
-                {placeBidLabel}
+                {resolvedPlaceBidLabel}
               </button>
             )}
             {showExpandControl ? (
@@ -172,8 +177,8 @@ export function StrategyCardBodyTop({
                 aria-expanded={expanded}
                 aria-label={
                   expanded
-                    ? "Collapse strategy details"
-                    : "Expand strategy details"
+                    ? t("collapseStrategyDetails")
+                    : t("expandStrategyDetails")
                 }
                 className={cn(
                   "inline-flex size-[46px] shrink-0 items-center justify-center rounded-xl",
@@ -218,8 +223,9 @@ function StrategyCardEndedOutcome({
   winnerTeam?: StrategyCardTeamRef;
   className?: string;
 }) {
+  const t = useTranslations("strategy");
   const isLoss = variant === "loss";
-  const hitLabel = isLoss ? "Hit Missed" : "Hit Succeed";
+  const hitLabel = isLoss ? t("hitMissed") : t("hitSucceed");
   const hitColorClassName = isLoss ? "text-[#FF674B]" : "text-[#65AF14]";
   const winnerName = winnerTeam?.name ?? winnerTeam?.code;
 
@@ -229,7 +235,7 @@ function StrategyCardEndedOutcome({
         "inline-flex min-h-[48px] min-w-[133px] flex-col items-end justify-between gap-1",
         className
       )}
-      aria-label={isLoss ? "Strategy missed" : "Strategy succeeded"}
+      aria-label={isLoss ? t("strategyMissed") : t("strategySucceeded")}
     >
       <span
         className={cn(
@@ -249,7 +255,7 @@ function StrategyCardEndedOutcome({
             className={endedOutcomeFlagClassName}
           />
           <span className="font-[Sora] text-sm font-normal leading-[18px] text-[#909090]">
-            Winner: {winnerName}
+            {t("winnerPrefix", { name: winnerName })}
           </span>
         </div>
       ) : null}

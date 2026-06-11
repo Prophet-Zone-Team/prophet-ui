@@ -1,28 +1,58 @@
+import { formatDateTimeFromIso, formatDateTimeFromUnixSeconds } from "@/lib/formatters/datetime";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type {
   PortfolioTimeRange,
   PortfolioTransactionRecord
 } from "@/lib/portfolio/types";
 
-const PORTFOLIO_PNL_PERIOD_LABELS: Record<PortfolioTimeRange, string> = {
-  "1H": "Past hour",
-  "1D": "Past 24 hours",
-  "1W": "Past week",
-  "1M": "Past month",
-  YTD: "Year to date",
-  All: "All time"
+type PortfolioPnlPeriodMessageKey =
+  | "pnlPeriod1H"
+  | "pnlPeriod1D"
+  | "pnlPeriod1W"
+  | "pnlPeriod1M"
+  | "pnlPeriodYTD"
+  | "pnlPeriodAll";
+
+const PORTFOLIO_PNL_PERIOD_KEYS: Record<
+  PortfolioTimeRange,
+  PortfolioPnlPeriodMessageKey
+> = {
+  "1H": "pnlPeriod1H",
+  "1D": "pnlPeriod1D",
+  "1W": "pnlPeriod1W",
+  "1M": "pnlPeriod1M",
+  YTD: "pnlPeriodYTD",
+  All: "pnlPeriodAll"
 };
 
-export function getPortfolioPnlPeriodLabel(range: PortfolioTimeRange): string {
-  return PORTFOLIO_PNL_PERIOD_LABELS[range];
+export function getPortfolioPnlPeriodLabel(
+  t: (key: PortfolioPnlPeriodMessageKey) => string,
+  range: PortfolioTimeRange
+): string {
+  return t(PORTFOLIO_PNL_PERIOD_KEYS[range]);
 }
 
-export function formatPortfolioPnlHoverTime(timestamp?: number): string {
+export function formatPortfolioPnlHoverTime(
+  timestamp: number | undefined,
+  locale: string
+): string {
   if (timestamp == null) {
     return "—";
   }
 
-  return formatUnixSeconds(timestamp);
+  if (!Number.isFinite(timestamp)) {
+    return "—";
+  }
+
+  return new Intl.DateTimeFormat(locale, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).format(new Date(timestamp * 1000));
 }
 
 export function formatSignedPercent(value?: number): string {
@@ -34,30 +64,11 @@ export function formatSignedPercent(value?: number): string {
 }
 
 export function formatPortfolioDateTime(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  })
-    .format(date)
-    .replace(",", "");
+  return formatDateTimeFromIso(value);
 }
 
 export function formatUnixSeconds(value: number): string {
-  if (!Number.isFinite(value)) {
-    return "—";
-  }
-
-  return formatPortfolioDateTime(new Date(value * 1000).toISOString());
+  return formatDateTimeFromUnixSeconds(value);
 }
 
 export function formatSharePrice(price: number): string {

@@ -1,3 +1,5 @@
+import { formatDate } from "@/lib/formatters/datetime";
+
 export function formatTeamDetailMoney(value: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -29,10 +31,7 @@ export function formatUnixRelativeTime(timestampSeconds: number): string {
   const diffMs = now - date.getTime();
 
   if (diffMs < 0) {
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+    return formatDate(date);
   }
 
   const diffMinutes = Math.floor(diffMs / 60_000);
@@ -57,8 +56,5 @@ export function formatUnixRelativeTime(timestampSeconds: number): string {
     return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
   }
 
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  return formatDate(date);
 }

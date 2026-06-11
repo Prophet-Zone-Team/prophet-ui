@@ -9,6 +9,7 @@ import type { UserOpenOrder } from "@/lib/portfolio/types";
 import { FetchJsonError } from "@/lib/team/client-fetch";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { getRuntimeTranslator } from "@/lib/i18n/runtime-messages";
+import { translateTradeMessage } from "@/views/trade/trade-widget/trade-i18n";
 import type {
   BidTradeSide,
   OrderOutcomeSide,
@@ -58,7 +59,10 @@ export function resolveOrderErrorMessage(error: unknown): string {
   if (funding) {
     const fundingMessage = formatOrderFundingFailureMessage(funding);
     if (fundingMessage) {
-      return fundingMessage;
+      return translateTradeMessage(
+        fundingMessage,
+        getRuntimeTranslator("trade")
+      );
     }
   }
 
@@ -68,7 +72,7 @@ export function resolveOrderErrorMessage(error: unknown): string {
     return t("signatureCancelled");
   }
 
-  return message;
+  return translateTradeMessage(message, getRuntimeTranslator("trade"));
 }
 
 export function showOrderSubmittedToast(

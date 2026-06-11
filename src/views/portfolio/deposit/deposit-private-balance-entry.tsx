@@ -3,6 +3,7 @@
 import { ArrowRight, ChevronRight, Loader2 } from "lucide-react";
 import Big from "big.js";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import InputNumber from "@/components/input-number";
@@ -42,17 +43,6 @@ export interface DepositPrivateBalanceEntryProps {
   onTopUp?: () => void;
 }
 
-const UNSHIELD_PHASE_LABEL: Record<UnshieldPhase, string> = {
-  idle: "",
-  quoting: "Preparing transfer…",
-  signing: "Confirm in your wallet…",
-  submitting: "Submitting…",
-  awaiting_funds: "Waiting for funds…",
-  converting: "Converting to pUSD…",
-  success: "",
-  error: "",
-};
-
 export function DepositPrivateBalanceEntry({
   status,
   privateAccountAddress,
@@ -61,6 +51,8 @@ export function DepositPrivateBalanceEntry({
   walletAddress,
   onTopUp,
 }: DepositPrivateBalanceEntryProps) {
+  const tDeposit = useTranslations("portfolio.deposit");
+  const tPrivateTopup = useTranslations("privateTopup");
   const [inputValue, setInputValue] = useState("0");
   const [phase, setPhase] = useState<UnshieldPhase>("idle");
   const { unshield } = useConfidentialUnshield();
@@ -69,6 +61,17 @@ export function DepositPrivateBalanceEntry({
   const isInteractive = status === "funded";
   const maxBalanceUsd = privateBalanceUsd ?? 0;
   const transferring = phase !== "idle" && phase !== "success" && phase !== "error";
+
+  const unshieldPhaseLabel = useMemo(() => {
+    const labels: Partial<Record<UnshieldPhase, string>> = {
+      quoting: tDeposit("unshieldQuoting"),
+      signing: tDeposit("unshieldSigning"),
+      submitting: tDeposit("unshieldSubmitting"),
+      awaiting_funds: tDeposit("unshieldAwaitingFunds"),
+      converting: tDeposit("unshieldConverting"),
+    };
+    return labels[phase] ?? "";
+  }, [phase, tDeposit]);
 
   const formattedAccountBalance = useMemo(
     () =>
@@ -107,7 +110,7 @@ export function DepositPrivateBalanceEntry({
         eoaAddress: walletAddress,
         onPhase: setPhase,
       });
-      toast.success("Transfer complete");
+      toast.success(tDeposit("transferComplete"));
       setInputValue("0");
       try {
         await Promise.all([refreshPrivateBalance(), syncCash()]);
@@ -132,14 +135,14 @@ export function DepositPrivateBalanceEntry({
   return (
     <div className="flex flex-col gap-4 pb-2">
       <div className="flex items-center justify-between gap-3">
-        <span className={depositSectionLabelClass}>Private Account</span>
+        <span className={depositSectionLabelClass}>{tPrivateTopup("privateAccount")}</span>
         {status !== "not_created" ? (
           <button
             type="button"
             className={depositPrivateTopUpLinkClass}
             onClick={() => onTopUp?.()}
           >
-            Top up
+            {tPrivateTopup("topUp")}
             <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         ) : null}
@@ -157,7 +160,7 @@ export function DepositPrivateBalanceEntry({
               />
             </div>
 
-            <span className="text-base font-[500] text-black">Not Created</span>
+            <span className="text-base font-[500] text-black">{tDeposit("notCreated")}</span>
           </span>
         ) : (
           <>
@@ -196,7 +199,7 @@ export function DepositPrivateBalanceEntry({
               value={inputValue}
               onNumberChange={setInputValue}
               className={depositModalAmountInputClass}
-              aria-label="Private balance transfer amount in USD"
+              aria-label={tDeposit("privateTransferAmountAria")}
               placeholder="0"
               disabled={!isInteractive}
             />
@@ -218,15 +221,15 @@ export function DepositPrivateBalanceEntry({
 
         <div>
           <div className="flex items-center justify-between gap-1 px-4 py-3">
-            <span className="text-sm font-[500] text-[#909090]">From</span>
-            <span className="text-sm font-[500] text-[#909090]">To</span>
+            <span className="text-sm font-[500] text-[#909090]">{tDeposit("from")}</span>
+            <span className="text-sm font-[500] text-[#909090]">{tDeposit("to")}</span>
           </div>
           <div className={depositTransferBarClass}>
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <div className="relative shrink-0">
                 <TokenIcon
                   symbol="USDC"
-                  chainLabel="Private"
+                  chainLabel={tDeposit("privateLabel")}
                   icon={USDC_TOKEN.icon}
                   size="md"
                 />
@@ -240,7 +243,7 @@ export function DepositPrivateBalanceEntry({
               <div className="flex min-w-0 flex-col">
                 <span className="text-sm font-[500] text-black">USDC</span>
                 <span className="text-xs font-[500] text-[#909090]">
-                  Private
+                  {tDeposit("privateLabel")}
                 </span>
               </div>
             </div>
@@ -254,7 +257,7 @@ export function DepositPrivateBalanceEntry({
               <div className="flex min-w-0 flex-col items-end">
                 <span className="text-sm font-[500] text-black">USDC</span>
                 <span className="text-xs font-[500] text-[#909090]">
-                  Prophet
+                  {tDeposit("prophetLabel")}
                 </span>
               </div>
               <TokenIcon
@@ -270,7 +273,9 @@ export function DepositPrivateBalanceEntry({
 
         {isInteractive && privateAccountEoaAddress ? (
           <p className="m-0 text-center text-xs font-[400] text-[#909090]">
-            Linked to {formatShortWallet(privateAccountEoaAddress)}
+            {tDeposit("linkedTo", {
+              address: formatShortWallet(privateAccountEoaAddress),
+            })}
           </p>
         ) : null}
 
@@ -286,10 +291,10 @@ export function DepositPrivateBalanceEntry({
           {transferring ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-              {UNSHIELD_PHASE_LABEL[phase] || "Transferring…"}
+              {unshieldPhaseLabel || tDeposit("transferring")}
             </>
           ) : (
-            "Transfer"
+            tDeposit("transfer")
           )}
         </button>
       </div>

@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatProbability } from "@/components/home/market-formatters";
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
 import { cn } from "@/lib/cn";
 import {
-  formatOrderBookClearingTip,
-  formatOrderBookClearingTooltip
+  formatOrderBookClearingKickoff
 } from "@/lib/market/limit-order-clearing-tip";
 import {
   formatLimitPriceInputValue,
@@ -29,6 +28,7 @@ import {
   type TradeTicketStatus
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
 import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-button";
+import { translateTradeMessage } from "@/views/trade/trade-widget/trade-i18n";
 import { tradeQuickAmountClass, TRADE_BID_BUTTON_ID } from "@/views/trade/trade-widget/trade-ui";
 
 const QUICK_AMOUNTS = [1, 5, 10, 100] as const;
@@ -339,6 +339,9 @@ export function TradeTicketForm({
           tradeSide={tradeSide}
           actionLabel={actionLabel}
           connectLabel={t("enableTrading")}
+          connectingLabel={t("connecting")}
+          signingLabel={t("waitingForSignature")}
+          submittingLabel={t("submittingOrderStatus")}
           canSubmit={canSubmit && !actionInProgress}
           connectDisabled={status === "loading"}
           actionStatus={
@@ -376,7 +379,7 @@ export function TradeTicketForm({
         </div>
       ) : preview.disabledReason && amount !== "0" ? (
         <p className="m-0 text-xs text-prophet-muted">
-          {preview.disabledReason}
+          {translateTradeMessage(preview.disabledReason, t)}
         </p>
       ) : null}
 
@@ -505,12 +508,14 @@ function LimitOrderSummary({
 }
 
 function OrderBookClearingTip({ kickoffAt }: { kickoffAt: string }) {
-  const tip = formatOrderBookClearingTip(kickoffAt);
+  const t = useTranslations("trade");
+  const locale = useLocale();
+  const kickoffLabel = formatOrderBookClearingKickoff(kickoffAt, locale);
 
   return (
     <div className="flex items-center justify-center gap-1 text-center">
       <span className="text-xs font-[400] leading-4 text-prophet-muted">
-        {tip}
+        {t("orderBookClearingTip", { kickoff: kickoffLabel })}
       </span>
     </div>
   );

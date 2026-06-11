@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { CompetitivenessList } from "./competitiveness-list";
@@ -19,6 +21,7 @@ export function CompetitivenessSection({
   data,
   className
 }: CompetitivenessSectionProps) {
+  const t = useTranslations("analytics");
   const featuredEntry = data.entries[0];
   const Icon = SECTION_ICONS[data.variant];
 
@@ -26,9 +29,16 @@ export function CompetitivenessSection({
     return null;
   }
 
+  const label =
+    data.variant === "death" ? t("groupOfDeath") : t("easiestGroup");
+  const description =
+    data.variant === "death"
+      ? t("groupOfDeathDescription")
+      : t("easiestGroupDescription");
+
   return (
     <section
-      aria-label={data.label}
+      aria-label={label}
       className={cn(
         "flex flex-none flex-col items-stretch gap-4 px-3 py-4 md:flex-1 md:flex-row md:items-start md:gap-[30px] md:px-[25px] md:py-[24px]",
         className
@@ -36,10 +46,10 @@ export function CompetitivenessSection({
     >
       <SectionSummary
         variant={data.variant}
-        label={data.label}
+        label={label}
         groupId={featuredEntry.groupId}
         score={featuredEntry.score}
-        description={data.description}
+        description={description}
         icon={<Icon />}
         className="w-full shrink-0 md:w-[280px]"
       />

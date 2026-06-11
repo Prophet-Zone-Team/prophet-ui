@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
@@ -31,6 +33,9 @@ export function TopupWalletCard({
   onConnect,
   onDisconnect,
 }: TopupWalletCardProps) {
+  const t = useTranslations("privateTopup");
+  const tWallet = useTranslations("wallet");
+
   return (
     <div className={privateTopupWalletCardClass}>
       <div className="flex items-start justify-between gap-3">
@@ -45,7 +50,7 @@ export function TopupWalletCard({
           )}
           <div className="min-w-0 flex-1">
             <p className={`m-0 ${privateTopupSectionLabelClass}`}>
-              Funding Wallet
+              {t("fundingWallet")}
             </p>
             {connected && address ? (
               <div className="mt-1 flex items-center gap-2">
@@ -54,7 +59,7 @@ export function TopupWalletCard({
                 </p>
                 <CopyButton
                   text={address}
-                  ariaLabel="Copy wallet address"
+                  ariaLabel={t("copyWalletAddress")}
                   className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-colors hover:text-black"
                 >
                   <CopyIcon />
@@ -71,7 +76,7 @@ export function TopupWalletCard({
             className={privateTopupChangeLinkClass}
             onClick={onDisconnect}
           >
-            Change
+            {t("change")}
           </button>
         ) : null}
       </div>
@@ -85,7 +90,9 @@ export function TopupWalletCard({
 
       {connected ? (
         <div className="mt-auto pt-8">
-          <p className={`m-0 ${privateTopupSectionLabelClass}`}>Balance</p>
+          <p className={`m-0 ${privateTopupSectionLabelClass}`}>
+            {tWallet("balance")}
+          </p>
           <p className={cn("m-0 mt-2", privateTopupBalanceLargeClass)}>
             {balanceLoading
               ? "…"
@@ -102,7 +109,7 @@ export function TopupWalletCard({
           className={cn(privateTopupPrimaryButtonClass, "mt-auto")}
           onClick={onConnect}
         >
-          Connect Funding Wallet
+          {t("connectFundingWallet")}
         </button>
       )}
     </div>

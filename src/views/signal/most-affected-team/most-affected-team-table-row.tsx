@@ -1,10 +1,14 @@
-import { TeamFlag } from "@/components/teams/team-flag";
-import { cn } from "@/lib/cn";
+"use client";
 
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+
+import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+import { cn } from "@/lib/cn";
 import { formatNetImpact } from "./format";
 import { mostAffectedTeamTableGridClass } from "./most-affected-team-table-header";
 import type { MostAffectedTeamEntry } from "./types";
-import { useRouter } from "next/navigation";
 
 export type MostAffectedTeamTableRowProps = {
   entry: MostAffectedTeamEntry;
@@ -12,6 +16,8 @@ export type MostAffectedTeamTableRowProps = {
 };
 
 export function MostAffectedTeamDesktopRow({ entry }: MostAffectedTeamTableRowProps) {
+  const t = useTranslations("signal");
+  const teamDisplayName = useLocalizedTeamName(entry.teamCode, entry.teamName);
   const isNegativeImpact = entry.netImpact < 0;
   const router = useRouter();
 
@@ -41,7 +47,7 @@ export function MostAffectedTeamDesktopRow({ entry }: MostAffectedTeamTableRowPr
           className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px]"
         />
         <span className="whitespace-nowrap flex-1 w-0 overflow-hidden text-ellipsis">
-          {entry.teamName}
+          {teamDisplayName}
         </span>
       </div>
       <span
@@ -64,6 +70,8 @@ export function MostAffectedTeamMobileCard({
   entry,
   className
 }: MostAffectedTeamTableRowProps) {
+  const t = useTranslations("signal");
+  const teamDisplayName = useLocalizedTeamName(entry.teamCode, entry.teamName);
   const isNegativeImpact = entry.netImpact < 0;
   const router = useRouter();
 
@@ -88,11 +96,11 @@ export function MostAffectedTeamMobileCard({
           name={entry.teamName}
           className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px]"
         />
-        <span className="min-w-0 truncate font-[500]">{entry.teamName}</span>
+        <span className="min-w-0 truncate font-[500]">{teamDisplayName}</span>
       </div>
       <div className="grid grid-cols-2 gap-3 border-t border-[#EBEBEB] pt-2">
         <div className="flex flex-col gap-0.5">
-          <span className="text-[12px] text-[#909090]">Net Impact</span>
+          <span className="text-[12px] text-[#909090]">{t("netImpact")}</span>
           <span
             className={cn(
               "tabular-nums",
@@ -103,7 +111,9 @@ export function MostAffectedTeamMobileCard({
           </span>
         </div>
         <div className="flex flex-col items-end gap-0.5">
-          <span className="text-[12px] text-[#909090]">High-Impact Events</span>
+          <span className="text-[12px] text-[#909090]">
+            {t("highImpactEvents")}
+          </span>
           <span className="tabular-nums">{entry.highImpactEventCount}</span>
         </div>
       </div>

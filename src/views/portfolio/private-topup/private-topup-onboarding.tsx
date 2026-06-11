@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 
 import { useAuth } from "@/context/auth";
@@ -22,6 +23,7 @@ export function PrivateTopupOnboarding({
   onIntroOpenChange,
   onGuideOpenChange,
 }: PrivateTopupOnboardingProps) {
+  const t = useTranslations("privateTopup");
   const { disconnect, openLogin, onAuthenticateConfidential } = useAuth();
   const [proceeding, setProceeding] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -50,11 +52,11 @@ export function PrivateTopupOnboarding({
       closeAll();
       redirectToPrivate();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to enter Private Mode.");
+      setError(caught instanceof Error ? caught.message : t("unableToEnterPrivateMode"));
     } finally {
       setProceeding(false);
     }
-  }, [closeAll, proceeding, redirectToPrivate, walletAddress]);
+  }, [closeAll, onAuthenticateConfidential, proceeding, redirectToPrivate, t]);
 
   const handleChangeWallet = useCallback(async () => {
     try {

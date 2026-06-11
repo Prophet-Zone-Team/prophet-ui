@@ -1,18 +1,21 @@
 "use client";
 
 import { GitBranch, Target } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import type { FinishType, PathResult } from "@/types/market";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 
 import {
-  formatFinish,
-  getRouteDifficulty,
-  getStrongestOpponent,
-  ROUND_LABELS
-} from "../lib/format";
+  translateFinish,
+  translateRouteDifficulty,
+  translateRoundLabel
+} from "../lib/i18n-labels";
+import { translateKnockoutMethod } from "../lib/method-keys";
+import { getStrongestOpponent } from "../lib/format";
 import { Panel } from "../ui/panel";
 import { InsightItem } from "./insight-item";
 
@@ -33,11 +36,22 @@ export function SummaryPanel({
   teamId: string;
   thirdPlaceOption?: ThirdPlaceAllocationOption;
 }) {
+  const t = useTranslations("roadToFinal");
   const selectedTeam = getWorldCupTeamByIdOrCode(teamId);
   const champion = getWorldCupTeamByIdOrCode(championTeamId ?? "");
+  const selectedTeamName = useLocalizedTeamName(
+    selectedTeam?.code ?? "",
+    selectedTeam?.name ?? t("teamFallback")
+  );
+  const championName = useLocalizedTeamName(
+    champion?.code ?? "",
+    champion?.name ?? ""
+  );
   const strongestOpponent = getStrongestOpponent(result);
   const finalPotentialOpponents =
-    result?.rounds.find((round) => round.round === "FINAL")?.possibleOpponentTeams.slice(0, 2) ?? [];
+    result?.rounds
+      .find((round) => round.round === "FINAL")
+      ?.possibleOpponentTeams.slice(0, 2) ?? [];
 
   return (
     <div className="flex flex-col gap-[16px]">
@@ -46,7 +60,7 @@ export function SummaryPanel({
           id="simulation-summary-title"
           className="m-0 text-[16px] font-[400] text-black"
         >
-          Simulation Summary
+          {t("simulationSummary")}
         </h2>
         <div className="mt-[12px] flex items-center gap-[10px]">
           <TeamFlag
@@ -55,46 +69,56 @@ export function SummaryPanel({
             className="h-[32px] w-[32px] shrink-0 rounded-[6px] text-[32px]"
           />
           <strong className="text-[16px] font-[400] text-black">
-            {selectedTeam?.name ?? "Team"}
+            {selectedTeam ? selectedTeamName : t("teamFallback")}
           </strong>
         </div>
         <dl className="mt-[12px] space-y-[10px]">
-          <SummaryRow label="Current assumption" value={formatFinish(finishType)} />
           <SummaryRow
-            label="Advancing 3rd groups"
+            label={t("currentAssumption")}
+            value={translateFinish(finishType, t)}
+          />
+          <SummaryRow
+            label={t("advancingThirdGroups")}
             value={
               advancingThirdGroups.length === 8
                 ? advancingThirdGroups.join(", ")
-                : `${advancingThirdGroups.length}/8 selected`
+                : t("thirdGroupsSelected", {
+                    count: advancingThirdGroups.length
+                  })
             }
           />
           <SummaryRow
-            label="Annexe C option"
+            label={t("annexeCOption")}
             value={
-              thirdPlaceOption ? `Option ${thirdPlaceOption.option}` : "Pending"
+              thirdPlaceOption
+                ? t("optionNumber", { option: thirdPlaceOption.option })
+                : t("pending")
             }
           />
           <SummaryRow
-            label="Route difficulty"
-            value={getRouteDifficulty(result)}
+            label={t("routeDifficulty")}
+            value={translateRouteDifficulty(result, t)}
           />
           <SummaryRow
-            label="Strongest projected rival"
-            value={strongestOpponent?.teamName ?? "Pending"}
+            label={t("strongestProjectedRival")}
+            value={strongestOpponent?.teamName ?? t("pending")}
           />
           <SummaryRow
-            label="Final potential opponents"
+            label={t("finalPotentialOpponents")}
             value={
               finalPotentialOpponents.map((team) => team.teamName).join(" / ") ||
-              "Pending"
+              t("pending")
             }
           />
           {knockoutMethod ? (
-            <SummaryRow label="Knockout basis" value={knockoutMethod} />
+            <SummaryRow
+              label={t("knockoutBasis")}
+              value={translateKnockoutMethod(knockoutMethod, t)}
+            />
           ) : null}
           <SummaryRow
-            label="Champion"
-            value={champion?.name ?? "Not selected yet"}
+            label={t("champion")}
+            value={champion ? championName : t("notSelectedYet")}
           />
         </dl>
       </Panel>
@@ -104,31 +128,44 @@ export function SummaryPanel({
           id="path-insights-title"
           className="m-0 text-[16px] font-[400] text-black"
         >
-          Path Insights
+          {t("pathInsights")}
         </h2>
         <div className="mt-[12px] flex flex-col gap-[10px]">
           <InsightItem
             icon={<Target className="h-4 w-4" />}
-            title={`Strongest rival: ${strongestOpponent?.teamName ?? "Pending"}`}
+            title={t("strongestRivalTitle", {
+              name: strongestOpponent?.teamName ?? t("pending")
+            })}
             detail={
               strongestOpponent
-                ? `${strongestOpponent.teamName} can appear from ${ROUND_LABELS[strongestOpponent.earliestRound]}.`
-                : "Need a valid path first."
+                ? t("strongestRivalDetail", {
+                    name: strongestOpponent.teamName,
+                    round: translateRoundLabel(
+                      strongestOpponent.earliestRound,
+                      t
+                    )
+                  })
+                : t("needValidPathFirst")
             }
           />
           <InsightItem
             icon={<GitBranch className="h-4 w-4" />}
-            title="Annexe C resolved"
+            title={t("annexeCResolved")}
             detail={
               thirdPlaceOption
-                ? `Eight third-place groups match FIFA option ${thirdPlaceOption.option}.`
-                : "Waiting for exactly eight third-place groups."
+                ? t("annexeCResolvedDetail", {
+                    option: thirdPlaceOption.option
+                  })
+                : t("waitingForEightThirdGroups")
             }
           />
           <InsightItem
             icon={<Target className="h-4 w-4" />}
-            title="Key assumption"
-            detail={`${selectedTeam?.name ?? "Team"} currently follows seed ${result?.seed ?? "-"}. Changing group rank updates the full route.`}
+            title={t("keyAssumption")}
+            detail={t("keyAssumptionDetail", {
+              teamName: selectedTeam ? selectedTeamName : t("teamFallback"),
+              seed: result?.seed ?? "-"
+            })}
           />
         </div>
       </Panel>

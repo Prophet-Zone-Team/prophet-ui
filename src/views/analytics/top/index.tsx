@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { useAnalyticsRecommends } from "@/hooks/analytics/use-analytics-recommends";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 
 import { TopAnalyticsCard } from "@/views/analytics/top/card";
 import {
@@ -19,6 +20,55 @@ const ICON_BY_KEY: Record<string, ReactNode> = {
   hardestPath: <HardestPathIcon />,
   topAdvantage: <TopAdvantageIcon />
 };
+
+const CATEGORY_LABEL_KEYS = {
+  champion: "mostLikelyChampion",
+  darkHorse: "darkHorse",
+  hardestPath: "hardestPath",
+  topAdvantage: "topAdvantage"
+} as const;
+
+const CATEGORY_DESCRIPTION_KEYS = {
+  mostLikelyChampion: "mostLikelyChampionDescription",
+  darkHorse: "darkHorseDescription",
+  hardestPath: "hardestPathDescription",
+  topAdvantage: "topAdvantageDescription"
+} as const;
+
+function AnalyticsTopCard({
+  card
+}: {
+  card: {
+    iconKey?: string;
+    categoryLabel: string;
+    teamCode: string;
+    teamName: string;
+    description: string;
+    link?: string;
+  };
+}) {
+  const t = useTranslations("analytics");
+  const iconKey = card.iconKey ?? "";
+  const categoryKey =
+    CATEGORY_LABEL_KEYS[iconKey as keyof typeof CATEGORY_LABEL_KEYS] ??
+    "mostLikelyChampion";
+  const descriptionKey =
+    CATEGORY_DESCRIPTION_KEYS[
+      categoryKey as keyof typeof CATEGORY_DESCRIPTION_KEYS
+    ] ?? "mostLikelyChampionDescription";
+  const teamDisplayName = useLocalizedTeamName(card.teamCode, card.teamName);
+
+  return (
+    <TopAnalyticsCard
+      icon={ICON_BY_KEY[iconKey] ?? <ChampionIcon />}
+      categoryLabel={t(categoryKey)}
+      teamCode={card.teamCode}
+      teamName={teamDisplayName}
+      description={t(descriptionKey)}
+      link={card.link}
+    />
+  );
+}
 
 export function AnalyticsTopSection() {
   const t = useTranslations("analytics");
@@ -59,14 +109,9 @@ export function AnalyticsTopSection() {
       className="grid grid-cols-2 gap-4 md:grid-cols-4"
     >
       {cards.map((card) => (
-        <TopAnalyticsCard
+        <AnalyticsTopCard
           key={card.iconKey ?? card.categoryLabel}
-          icon={ICON_BY_KEY[card.iconKey ?? ""] ?? <ChampionIcon />}
-          categoryLabel={card.categoryLabel}
-          teamCode={card.teamCode}
-          teamName={card.teamName}
-          description={card.description}
-          link={card.link}
+          card={card}
         />
       ))}
     </section>

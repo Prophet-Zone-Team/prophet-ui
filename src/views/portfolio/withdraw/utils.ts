@@ -14,6 +14,11 @@ export function parseWithdrawAmount(raw: string): number | undefined {
   return value;
 }
 
+export type WithdrawAmountErrorKey =
+  | "amountZero"
+  | "amountBelowMinimum"
+  | "amountExceedsBalance";
+
 export interface ValidateWithdrawAmountOptions {
   minWithdrawUsd?: number;
 }
@@ -22,19 +27,19 @@ export function validateWithdrawAmount(
   amount: number | undefined,
   maxAmount: number,
   options?: ValidateWithdrawAmountOptions,
-): string | undefined {
+): WithdrawAmountErrorKey | undefined {
   if (amount === undefined || amount <= 0) {
-    return "Enter an amount greater than zero.";
+    return "amountZero";
   }
 
   const minWithdrawUsd = options?.minWithdrawUsd ?? 0;
 
   if (minWithdrawUsd > 0 && amount < minWithdrawUsd) {
-    return `Minimum withdrawal is $${minWithdrawUsd}.`;
+    return "amountBelowMinimum";
   }
 
   if (amount > maxAmount) {
-    return "Amount exceeds available balance.";
+    return "amountExceedsBalance";
   }
 
   return undefined;

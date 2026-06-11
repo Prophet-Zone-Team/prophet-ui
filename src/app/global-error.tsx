@@ -2,7 +2,7 @@
 
 import "@/app/globals.css";
 
-import { HttpsRequiredPage } from "@/components/runtime/https-required-page";
+import { HttpsRequiredPageLocaleShell } from "@/components/runtime/https-required-page";
 
 function isHttpsRelatedError(message: string): boolean {
   return /https|secure context/i.test(message);
@@ -19,7 +19,7 @@ export default function GlobalError({
     return (
       <html lang="en">
         <body className="bg-[#F9FAFC] min-h-screen">
-          <HttpsRequiredPage />
+          <HttpsRequiredPageLocaleShell />
         </body>
       </html>
     );

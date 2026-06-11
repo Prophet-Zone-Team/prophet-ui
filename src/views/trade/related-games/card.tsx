@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { MatchStatusBadge } from "@/components/match/match-status-badge";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { gameTradeHref } from "@/lib/routes/trade";
@@ -12,6 +13,7 @@ import {
   getScheduleRowVariant,
   resolveMatchSides
 } from "@/lib/market/schedule-match";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { getGameSidePrice } from "@/views/trade/game/market-section/format-bid-label";
@@ -57,8 +59,12 @@ export function RelatedGameCard({
   snapshots,
   highlightTeamId
 }: RelatedGameCardProps) {
+  const t = useTranslations("trade");
+  const tHome = useTranslations("home");
   const liveMatch = useMatchWithLiveState(match);
   const sides = resolveMatchSides(liveMatch, snapshots);
+  const homeDisplayName = useLocalizedTeamName(sides.home.code, sides.home.name);
+  const awayDisplayName = useLocalizedTeamName(sides.away.code, sides.away.name);
   const gameSnapshot = buildGameMarketSnapshot(liveMatch, snapshots);
   const homePrice = getGameSidePrice(gameSnapshot, "home");
   const drawPrice = getGameSidePrice(gameSnapshot, "draw");
@@ -70,12 +76,22 @@ export function RelatedGameCard({
   const scoreLabel = formatMatchScore(liveMatch.homeScore, liveMatch.awayScore);
   const kickoffLabel = formatScheduleKickoff(liveMatch.kickoffAt);
   const statusVariant = getScheduleRowVariant(liveMatch.status);
+  const statusLabel =
+    statusVariant === "ongoing"
+      ? tHome("matchStatusOngoing")
+      : statusVariant === "upcoming"
+        ? tHome("matchStatusUpcoming")
+        : tHome("matchStatusEnded");
 
   return (
     <div className="w-full md:max-w-[313px] rounded-xl bg-white px-4 py-3 shadow-[0_0_10px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0_0_14px_rgba(0,0,0,0.14)]">
       <Link href={gameTradeHref(match.id)} className="block">
         <div className="flex items-center justify-between">
-          <MatchStatusBadge variant={statusVariant} size="sm" />
+          <MatchStatusBadge
+            variant={statusVariant}
+            size="sm"
+            label={statusLabel}
+          />
           <span className="text-[14px] font-[500] leading-[17px] text-[#909090]">
             {kickoffLabel}
           </span>
@@ -83,7 +99,7 @@ export function RelatedGameCard({
 
         <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <MatchSide
-            name={sides.home.name}
+            name={homeDisplayName}
             code={sides.home.code}
             emphasized={match.homeTeamId === highlightTeamId}
           />
@@ -95,10 +111,10 @@ export function RelatedGameCard({
                 : "text-black text-[26px]"
             )}
           >
-            {statusVariant === "upcoming" ? "vs" : scoreLabel}
+            {statusVariant === "upcoming" ? t("versusShort") : scoreLabel}
           </strong>
           <MatchSide
-            name={sides.away.name}
+            name={awayDisplayName}
             code={sides.away.code}
             emphasized={match.awayTeamId === highlightTeamId}
           />
@@ -114,7 +130,7 @@ export function RelatedGameCard({
         />
         <GameOutcomeBidButton
           size="sm"
-          title="Draw"
+          title={t("draw")}
           price={drawPrice}
           background={gameColors.draw}
         />

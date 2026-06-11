@@ -2,15 +2,16 @@
 
 import { useTranslations } from "next-intl";
 
+import { useLegalDocument } from "@/hooks/i18n/use-legal-document";
 import { LegalDocumentPage } from "@/components/legal/legal-document-page";
-import { termsAndConditionsDocument } from "@/data/legal/terms-and-conditions";
 
 export function TermsAndConditionsPage() {
   const t = useTranslations("legal");
+  const document = useLegalDocument("terms");
 
   return (
     <LegalDocumentPage
-      document={termsAndConditionsDocument}
+      document={document}
       title={t("termsTitle")}
     />
   );

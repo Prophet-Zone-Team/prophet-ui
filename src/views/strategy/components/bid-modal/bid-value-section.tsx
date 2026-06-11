@@ -1,4 +1,9 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
+import { translateTradeMessage } from "@/views/trade/trade-widget/trade-i18n";
 import { tradeQuickAmountClass } from "@/views/trade/trade-widget/trade-ui";
 
 import { STRATEGY_BID_INVALID_SURFACE_CLASS, STRATEGY_BID_QUICK_FRACTIONS } from "./constants";
@@ -26,12 +31,22 @@ export function BidValueSection({
   onApplyMinBidAmount,
   className
 }: BidValueSectionProps) {
+  const t = useTranslations("strategy");
+  const tTrade = useTranslations("trade");
+
+  const quickFractionLabels = [
+    tTrade("quickAmount25"),
+    tTrade("quickAmount50"),
+    tTrade("quickAmount75"),
+    tTrade("max")
+  ] as const;
+
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       {minBidLabel ? (
         <div className="flex items-center justify-end gap-1">
           <span className="font-[Sora] text-sm font-light leading-[18px] text-[#909090]">
-            Min. bid value:
+            {t("minBidValue")}
           </span>
           <button
             type="button"
@@ -52,10 +67,10 @@ export function BidValueSection({
         )}
       >
         <span className="font-[Sora] text-sm font-normal leading-[18px] text-black">
-          Bid Value
+          {t("bidValue")}
         </span>
         <label className="sr-only" htmlFor="strategy-bid-amount">
-          Bid value in USDC
+          {t("bidValueSrOnly")}
         </label>
         <div className="flex items-baseline font-[Sora] text-xl font-medium leading-[25px] text-black">
           <span aria-hidden="true">$</span>
@@ -76,18 +91,18 @@ export function BidValueSection({
 
       {aggregateError ? (
         <p className="m-0 text-sm leading-[18px] text-[#FF674B]">
-          {aggregateError}
+          {translateTradeMessage(aggregateError, tTrade)}
         </p>
       ) : null}
 
       <div className="flex items-center justify-between gap-3">
         <span className="font-[Sora] text-sm font-normal leading-[18px] text-[#909090]">
-          Bal. {balanceLabel}
+          {t("balancePrefix")} {balanceLabel}
         </span>
         <div className="flex flex-wrap justify-end gap-2">
-          {STRATEGY_BID_QUICK_FRACTIONS.map(({ label, value }) => (
+          {STRATEGY_BID_QUICK_FRACTIONS.map(({ value }, index) => (
             <button
-              key={label}
+              key={quickFractionLabels[index]}
               type="button"
               className={cn(
                 tradeQuickAmountClass,
@@ -95,7 +110,7 @@ export function BidValueSection({
               )}
               onClick={() => onApplyBalanceFraction(value)}
             >
-              {label}
+              {quickFractionLabels[index]}
             </button>
           ))}
         </div>

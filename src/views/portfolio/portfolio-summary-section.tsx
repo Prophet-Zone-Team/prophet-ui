@@ -158,7 +158,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
                     disabled={regionRestricted}
                     onClick={() => openDepositDialog({ onSuccess: reload })}
                   >
-                    {t("deposit")}
+                    {t("depositLabel")}
                   </button>
                 </RegionRestrictedControl>
                 <button
@@ -166,7 +166,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
                   className={cn(portfolioWithdrawButtonClass, "flex-1")}
                   onClick={() => setWithdrawOpen(true)}
                 >
-                  {t("withdraw")}
+                  {t("withdrawLabel")}
                 </button>
               </>
             )}

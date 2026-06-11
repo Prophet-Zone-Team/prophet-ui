@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import {
   CartesianGrid,
@@ -17,7 +18,6 @@ import { formatProbability } from "@/components/home/market-formatters";
 import {
   formatChartTimestampClockLabel,
   formatGoalEventTime,
-  formatMatchMinuteAxisLabel,
 } from "@/lib/market/match-display";
 import {
   formatGameChartXAxisTick,
@@ -77,7 +77,18 @@ export function GameBinaryProbabilityChart({
   homeCode,
   awayCode,
 }: GameBinaryProbabilityChartProps) {
+  const t = useTranslations("trade");
   const isLive = mode === "live";
+  const formatLiveAxisTick = (value: number) => {
+    const safeSeconds = Math.max(0, Math.floor(value));
+    const minutes = Math.floor(safeSeconds / 60);
+
+    if (minutes === 45) {
+      return t("chartHalfTimeAxisLabel");
+    }
+
+    return `${minutes}'`;
+  };
 
   const series = useMemo(
     () => [
@@ -159,7 +170,7 @@ export function GameBinaryProbabilityChart({
                 padding={{ left: 0, right: 32 }}
                 tickFormatter={
                   isLive
-                    ? (value: number) => formatMatchMinuteAxisLabel(value)
+                    ? formatLiveAxisTick
                     : (value: string) => formatGameChartXAxisTick(value, timeRange)
                 }
               />

@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { TeamFlag } from "@/components/teams/team-flag";
-import type { ApiFootballFixtureContext, TeamMarketSnapshot } from "@/types/market";
+import type { TeamMarketSnapshot } from "@/types/market";
 import { formatFixtureDate, NextMatchView } from "@/lib/team/team-detail-model";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import { teamOpenTradeButtonClass } from "@/views/team/team-detail-ui";
@@ -18,12 +21,14 @@ export interface TeamNextMatchPanelProps {
 
 export function TeamNextMatchPanel({
   nextMatch,
-  snapshot
+  snapshot: _snapshot
 }: TeamNextMatchPanelProps) {
+  const t = useTranslations("teamDetail");
+
   return (
-    <section className={teamPanelClass} aria-label="Next match">
+    <section className={teamPanelClass} aria-label={t("nextMatchAria")}>
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Next Match</h2>
+        <h2 className={teamPanelTitleClass}>{t("nextMatch")}</h2>
         <div className=""></div>
       </div>
       <div className="p-4">
@@ -36,7 +41,9 @@ export function TeamNextMatchPanel({
                   {nextMatch.homeTeamName}
                 </strong>
               </div>
-              <span className="text-xs font-[500] text-prophet-muted">vs</span>
+              <span className="text-xs font-[500] text-prophet-muted">
+                {t("versus")}
+              </span>
               <div className="flex min-w-0 flex-col items-center gap-1">
                 {nextMatch.awayTeamName ? (
                   <TeamFlag name={nextMatch.awayTeamName} />
@@ -58,13 +65,13 @@ export function TeamNextMatchPanel({
               href="/fifa/matches"
               className={`${teamOpenTradeButtonClass} mt-4 w-full`}
             >
-              View Match
+              {t("viewMatch")}
             </Link>
           </>
         ) : (
           <TeamEmptyState
-            title="Next match pending"
-            body="Upcoming fixture data is not available for this team yet."
+            title={t("nextMatchPending")}
+            body={t("nextMatchPendingBody")}
           />
         )}
       </div>

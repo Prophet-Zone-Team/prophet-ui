@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { MatchStatusBadge } from "@/components/match/match-status-badge";
 import { TeamFlag } from "@/components/teams/team-flag";
@@ -13,6 +14,7 @@ import {
   getScheduleRowVariant,
   resolveMatchSides
 } from "@/lib/market/schedule-match";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { teamDetailHref } from "@/lib/routes/team";
 import Bg from "@/views/trade/game/header/bg";
@@ -110,12 +112,14 @@ function HeaderMetric({
   value,
   statusVariant,
   subtitle,
-  badgeLabel
+  badgeLabel,
+  versusLabel
 }: {
   value: string;
   statusVariant?: ReturnType<typeof getScheduleRowVariant>;
   subtitle?: string;
   badgeLabel?: string;
+  versusLabel: string;
 }) {
   return (
     <div className="relative md:w-[453px] h-full">
@@ -124,7 +128,9 @@ function HeaderMetric({
       </div>
       <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[35px]">
         {statusVariant === "upcoming" ? (
-          <span className="text-[#909090] text-[36px] font-[500]">VS</span>
+          <span className="text-[#909090] text-[36px] font-[500]">
+            {versusLabel}
+          </span>
         ) : (
           <strong className="text-center text-[40px] font-[400] capitalize leading-[48px] text-white sm:text-[60px] sm:leading-[72px]">
             {value}
@@ -180,8 +186,11 @@ export function TradeGameHeader({
   snapshots,
   teamProfiles
 }: TradeGameHeaderProps) {
+  const tHome = useTranslations("home");
   const liveMatch = useMatchWithLiveState(match);
   const sides = resolveMatchSides(liveMatch, snapshots);
+  const homeDisplayName = useLocalizedTeamName(sides.home.code, sides.home.name);
+  const awayDisplayName = useLocalizedTeamName(sides.away.code, sides.away.name);
 
   const homeProfile = liveMatch.homeTeamId
     ? teamProfiles?.[liveMatch.homeTeamId]
@@ -201,10 +210,16 @@ export function TradeGameHeader({
   const statusVariant = effectiveLive
     ? "ongoing"
     : getScheduleRowVariant(liveMatch.status);
+  const statusLabel =
+    statusVariant === "ongoing"
+      ? tHome("matchStatusOngoing")
+      : statusVariant === "upcoming"
+        ? tHome("matchStatusUpcoming")
+        : tHome("matchStatusEnded");
   const badgeLabel =
     effectiveLive && liveMatch.period?.trim()
       ? liveMatch.period.trim()
-      : undefined;
+      : statusLabel;
   const subtitle = effectiveLive
     ? liveClock
     : formatScheduleKickoff(liveMatch.kickoffAt);
@@ -214,7 +229,7 @@ export function TradeGameHeader({
       <TeamSideColumn
         team={{
           teamId: match.homeTeamId,
-          name: sides.home.name,
+          name: homeDisplayName,
           code: sides.home.code,
           logoUrl: sides.home.logoUrl ?? homeProfile?.logoUrl
         }}
@@ -225,11 +240,12 @@ export function TradeGameHeader({
         statusVariant={statusVariant}
         subtitle={subtitle}
         badgeLabel={badgeLabel}
+        versusLabel={tHome("versus")}
       />
       <TeamSideColumn
         team={{
           teamId: match.awayTeamId,
-          name: sides.away.name,
+          name: awayDisplayName,
           code: sides.away.code,
           logoUrl: sides.away.logoUrl ?? awayProfile?.logoUrl
         }}

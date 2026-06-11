@@ -1,5 +1,8 @@
+"use client";
+
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { fundingModalCardClass } from "@/views/portfolio/shared/funding-modal-shell";
@@ -17,17 +20,20 @@ export function StrategyBidModalShell({
   footer,
   className
 }: StrategyBidModalShellProps) {
+  const t = useTranslations("strategy");
+  const tCommon = useTranslations("common");
+
   return (
     <div className={cn(fundingModalCardClass, className)}>
       <header className="relative flex shrink-0 items-center justify-between px-5 pb-4 pt-5">
         <h2 className="m-0 font-[Sora] text-xl font-medium leading-[25px] text-black">
-          Join Strategy
+          {t("joinStrategy")}
         </h2>
         <button
           type="button"
           onClick={onClose}
           className="inline-flex size-8 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-colors hover:text-black"
-          aria-label="Close"
+          aria-label={tCommon("close")}
         >
           <X className="size-4" aria-hidden="true" />
         </button>

@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 
 import { useDevice } from "@/hooks/common/use-device";
 import { cn } from "@/lib/cn";
@@ -34,6 +35,7 @@ export function SignalNewsDetailDrawer({
   detail,
   onClose
 }: SignalNewsDetailDrawerProps) {
+  const t = useTranslations("signal");
   const isMobile = useDevice();
 
   useEffect(() => {
@@ -73,7 +75,7 @@ export function SignalNewsDetailDrawer({
         >
           <motion.button
             type="button"
-            aria-label="Close news detail overlay"
+            aria-label={t("closeNewsDetailOverlay")}
             className="absolute inset-0 bg-black/20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -115,7 +117,7 @@ export function SignalNewsDetailDrawer({
                     className="flex h-[200px] w-full items-center justify-center rounded-[12px] bg-[#F0F2F5] text-[14px] font-[400] text-[#909090] md:h-[338px]"
                     aria-hidden="true"
                   >
-                    No image available
+                    {t("noImageAvailable")}
                   </div>
                 )}
 

@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import type { LimitExpirationPreset } from "@/store/trade-ticket-store";
 import {
   getLimitExpirationLabel,
-  LIMIT_EXPIRATION_OPTIONS
-} from "@/views/trade/trade-widget/trade-ticket-helpers";
+  LIMIT_EXPIRATION_OPTION_KEYS,
+  LIMIT_EXPIRATION_PRESETS
+} from "@/views/trade/trade-widget/trade-i18n";
 import { tradeMarketButtonClass } from "@/views/trade/trade-widget/trade-ui";
 
 export interface LimitExpirationSelectProps {
@@ -23,9 +25,11 @@ export function LimitExpirationSelect({
   onChange,
   onCustomDateChange
 }: LimitExpirationSelectProps) {
+  const t = useTranslations("trade");
+  const locale = useLocale();
   const menuRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const selectedLabel = getLimitExpirationLabel(value, customDate);
+  const selectedLabel = getLimitExpirationLabel(t, value, customDate, locale);
 
   useEffect(() => {
     if (!isOpen) {
@@ -57,7 +61,7 @@ export function LimitExpirationSelect({
           type="button"
           aria-haspopup="listbox"
           aria-expanded={isOpen}
-          aria-label="Order expiration"
+          aria-label={t("orderExpiration")}
           className={cn(tradeMarketButtonClass, "cursor-pointer")}
           onClick={() => setIsOpen((open) => !open)}
         >
@@ -83,15 +87,15 @@ export function LimitExpirationSelect({
         {isOpen ? (
           <div
             role="listbox"
-            aria-label="Order expiration"
+            aria-label={t("orderExpiration")}
             className="absolute right-0 top-[calc(100%+4px)] z-20 min-w-[140px] overflow-hidden rounded-md border border-prophet-line bg-white py-1 shadow-prophet"
           >
-            {LIMIT_EXPIRATION_OPTIONS.map((option) => {
-              const isSelected = option.id === value;
+            {LIMIT_EXPIRATION_PRESETS.map((preset) => {
+              const isSelected = preset === value;
 
               return (
                 <button
-                  key={option.id}
+                  key={preset}
                   type="button"
                   role="option"
                   aria-selected={isSelected}
@@ -101,9 +105,9 @@ export function LimitExpirationSelect({
                       ? "bg-[#fafbfc] text-black"
                       : "text-prophet-muted hover:bg-[#fafbfc] hover:text-black"
                   )}
-                  onClick={() => selectOption(option.id)}
+                  onClick={() => selectOption(preset)}
                 >
-                  {option.label}
+                  {t(LIMIT_EXPIRATION_OPTION_KEYS[preset])}
                 </button>
               );
             })}
@@ -114,7 +118,7 @@ export function LimitExpirationSelect({
       {value === "custom" ? (
         <input
           type="datetime-local"
-          aria-label="Custom expiration date and time"
+          aria-label={t("expirationCustomDateSrOnly")}
           value={customDate ?? ""}
           onChange={(event) => onCustomDateChange(event.target.value)}
           className="rounded-md border border-prophet-line px-2 py-1 text-xs font-[400] text-black"

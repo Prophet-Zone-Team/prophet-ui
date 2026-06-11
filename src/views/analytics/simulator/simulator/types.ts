@@ -11,4 +11,7 @@ export type SimulatorSnapshot = {
   currentStage: string;
   pathDifficulty: PathDifficulty;
   biggestOpponent: string;
+  biggestOpponentName?: string;
+  biggestOpponentRound?: string;
+  biggestOpponentTeamCode?: string;
 };

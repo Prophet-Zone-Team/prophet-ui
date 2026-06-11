@@ -1,19 +1,23 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
-import {
-  resolveTradeWidgetHeaderIconKind,
-  resolveTradeWidgetHeaderTitle
-} from "@/lib/market/trade-widget-header";
+import { resolveTradeWidgetHeaderIconKind } from "@/lib/market/trade-widget-header";
 import {
   useSelectedFixtureOutcome,
   useTradeOutcomeSide
 } from "@/store/trade-ticket-store";
 import { FixtureOutcomeSplitIcon } from "@/views/trade/trade-widget/fixture-outcome-split-icon";
+import {
+  resolveFixtureOutcomeLabel,
+  resolveGameOutcomeLabel,
+  resolveTradeWidgetHeaderTitle
+} from "@/views/trade/trade-widget/trade-i18n";
 import type {
-  FixtureMarketOutcome,
   GameMarketSnapshot,
   MatchOutcomeSide,
   OrderOutcomeSide,
@@ -53,42 +57,6 @@ function MatchPlaceholderIcon() {
       </div>
     </div>
   );
-}
-
-function resolveGameOutcomeLabel(
-  matchOutcomeSide: MatchOutcomeSide,
-  homeName: string,
-  awayName: string
-): string {
-  if (matchOutcomeSide === "draw") {
-    return "Draw";
-  }
-
-  if (matchOutcomeSide === "away") {
-    return awayName;
-  }
-
-  return homeName;
-}
-
-function resolveFixtureOutcomeLabel(outcome: FixtureMarketOutcome): string {
-  if (outcome.marketType === "halftime") {
-    return `HT ${outcome.label}`;
-  }
-
-  if (outcome.marketType === "exact_score") {
-    return outcome.label;
-  }
-
-  if (outcome.marketType === "total" || outcome.marketType === "spread") {
-    return outcome.label;
-  }
-
-  if (outcome.marketType === "btts") {
-    return "Both Teams to Score";
-  }
-
-  return outcome.label;
 }
 
 function TradeWidgetHeaderIcon({
@@ -133,23 +101,42 @@ function TradeWidgetHeaderIcon({
 }
 
 export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
+  const t = useTranslations("trade");
   const selectedFixtureOutcome = useSelectedFixtureOutcome();
   const tradeOutcomeSide = useTradeOutcomeSide();
+  const isGameVariant = props.variant === "game";
+  const teamSnapshot = isGameVariant ? undefined : props.snapshot;
+  const gameSides = isGameVariant
+    ? resolveMatchSides(props.gameSnapshot.match, props.teamSnapshots)
+    : undefined;
+  const teamName = useLocalizedTeamName(
+    teamSnapshot?.team.code,
+    teamSnapshot?.team.name
+  );
+  const homeName = useLocalizedTeamName(
+    gameSides?.home.code,
+    gameSides?.home.name
+  );
+  const awayName = useLocalizedTeamName(
+    gameSides?.away.code,
+    gameSides?.away.name
+  );
 
-  if (props.variant === "game") {
+  if (isGameVariant) {
     const { showOutcomeLabel = true } = props;
-    const sides = resolveMatchSides(props.gameSnapshot.match, props.teamSnapshots);
     const outcomeLabel = selectedFixtureOutcome
-      ? resolveFixtureOutcomeLabel(selectedFixtureOutcome)
+      ? resolveFixtureOutcomeLabel(t, selectedFixtureOutcome)
       : resolveGameOutcomeLabel(
+          t,
           props.matchOutcomeSide,
-          sides.home.name,
-          sides.away.name
+          homeName,
+          awayName
         );
     const headerTitle = resolveTradeWidgetHeaderTitle(
+      t,
       selectedFixtureOutcome,
-      sides.home.name,
-      sides.away.name
+      homeName,
+      awayName
     );
     const iconKind = resolveTradeWidgetHeaderIconKind(
       selectedFixtureOutcome,
@@ -167,10 +154,10 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
       >
         <TradeWidgetHeaderIcon
           iconKind={iconKind}
-          homeCode={sides.home.code}
-          homeName={sides.home.name}
-          awayCode={sides.away.code}
-          awayName={sides.away.name}
+          homeCode={gameSides?.home.code}
+          homeName={homeName}
+          awayCode={gameSides?.away.code}
+          awayName={awayName}
         />
         <div className="min-w-0 flex-1">
           <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-black">
@@ -191,16 +178,16 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
     );
   }
 
-  const { snapshot, outcomeSide = "yes", showOutcomeLabel = true } = props;
+  const { outcomeSide = "yes", showOutcomeLabel = true } = props;
   const question =
-    snapshot.market.polymarket?.question ??
-    `Will ${snapshot.team.name} win the World Cup?`;
+    props.snapshot.market.polymarket?.question ??
+    t("teamWinQuestion", { teamName });
 
   return (
     <div className="flex items-start gap-2.5 px-4 pt-4">
       <TeamFlag
-        code={snapshot.team.code}
-        name={snapshot.team.name}
+        code={props.snapshot.team.code}
+        name={teamName}
         className="!h-[36px] !w-[36px] shrink-0 rounded-md"
       />
       <div className="min-w-0 flex-1">
@@ -214,7 +201,7 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
               outcomeSide === "yes" ? "text-[#65AF14]" : "text-[#FF674B]"
             )}
           >
-            {outcomeSide === "yes" ? "Yes" : "No"}
+            {outcomeSide === "yes" ? t("yes") : t("no")}
           </p>
         ) : null}
       </div>

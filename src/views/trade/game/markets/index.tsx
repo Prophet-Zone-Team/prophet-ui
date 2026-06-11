@@ -279,6 +279,7 @@ export function GameMarketsSection({
         spreadsLineKey,
         homeLabel: sides.home.name ?? t("home"),
         awayLabel: sides.away.name ?? t("away"),
+        drawLabel: t("draw"),
         overLabel: t("over"),
         underLabel: t("under"),
         homeCode: sides.home.code,
@@ -427,6 +428,7 @@ function buildSummaryConfig({
   spreadsLineKey,
   homeLabel,
   awayLabel,
+  drawLabel,
   overLabel,
   underLabel,
   homeCode,
@@ -441,6 +443,7 @@ function buildSummaryConfig({
   spreadsLineKey?: string;
   homeLabel: string;
   awayLabel: string;
+  drawLabel: string;
   overLabel: string;
   underLabel: string;
   homeCode?: string;
@@ -455,6 +458,7 @@ function buildSummaryConfig({
         liveGameOutcomes,
         homeLabel,
         awayLabel,
+        drawLabel,
         homeCode,
         awayCode
       )
@@ -468,6 +472,7 @@ function buildSummaryConfig({
         liveActiveTabOutcomes,
         homeLabel,
         awayLabel,
+        drawLabel,
         homeCode,
         awayCode
       )
@@ -529,7 +534,9 @@ function buildSummaryConfig({
         "home",
         "away",
         homeOutcome?.label ?? homeLabel,
-        awayOutcome?.label ?? awayLabel
+        awayOutcome?.label ?? awayLabel,
+        homeCode,
+        awayCode
       ),
       binaryPrimaryLabel: homeOutcome?.label ?? homeLabel,
       binarySecondaryLabel: awayOutcome?.label ?? awayLabel

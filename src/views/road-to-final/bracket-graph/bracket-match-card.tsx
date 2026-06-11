@@ -1,8 +1,17 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 import type { PathResult } from "@/types/market";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 
 import { MATCH_LOOKUP } from "../lib/bracket-config";
+import {
+  translateBracketSeedLabel,
+  translateRoundLabel
+} from "../lib/i18n-labels";
 import type {
   BracketSide,
   GroupPlacements,
@@ -14,7 +23,6 @@ import {
   isActiveSlot,
   resolveBracketSeed
 } from "./bracket-resolver";
-import { SHORT_ROUND_LABELS } from "../lib/format";
 import { SeedSlot } from "./seed-slot";
 
 function ResolvedSeedSlot({
@@ -36,6 +44,7 @@ function ResolvedSeedSlot({
   seed: string;
   thirdPlaceOption?: ThirdPlaceAllocationOption;
 }) {
+  const t = useTranslations("roadToFinal");
   const resolved = resolveBracketSeed(
     seed,
     match,
@@ -57,12 +66,19 @@ function ResolvedSeedSlot({
     selectedWinnerId && slotTeamId && selectedWinnerId === slotTeamId
   );
   const selectable = candidates.length === 1;
+  const localizedTeamName = useLocalizedTeamName(
+    resolved.team?.code ?? "",
+    resolved.team?.name ?? ""
+  );
+  const label = resolved.team
+    ? localizedTeamName
+    : translateBracketSeedLabel(resolved.label, resolved.seed, t);
 
   return (
     <SeedSlot
       active={active || resolved.active}
       disabled={!selectable}
-      label={resolved.label}
+      label={label}
       onClick={
         selectable
           ? () => onWinnerChange(matchId, candidates[0].id)
@@ -96,6 +112,8 @@ export function BracketMatchCard({
   side: BracketSide;
   thirdPlaceOption?: ThirdPlaceAllocationOption;
 }) {
+  const t = useTranslations("roadToFinal");
+  const resultTeamName = useLocalizedTeamName(result.teamCode, result.teamName);
   const match = MATCH_LOOKUP.get(matchId);
   const stage = getMatchStage(match);
 
@@ -109,14 +127,14 @@ export function BracketMatchCard({
         "min-w-[140px] rounded-[8px] border border-[#EBEBEB] bg-white p-[10px]",
         side === "left" ? "mr-[8px]" : "ml-[8px]"
       )}
-      aria-label={`Match ${matchId}`}
+      aria-label={t("matchLabel", { matchId })}
     >
       <div className="mb-[8px] flex items-center justify-between gap-[6px]">
         <span className="rounded-[4px] bg-[#F3F4F6] px-[6px] py-[2px] text-[10px] font-[300] text-[#909090]">
-          M{matchId}
+          {t("matchPrefix", { matchId })}
         </span>
         <span className="text-[10px] font-[300] text-[#909090]">
-          {stage ? SHORT_ROUND_LABELS[stage] : "KO"}
+          {stage ? translateRoundLabel(stage, t) : t("knockoutShort")}
         </span>
       </div>
       <div className="flex flex-col gap-[6px]">
@@ -143,7 +161,7 @@ export function BracketMatchCard({
       </div>
       {active ? (
         <p className="m-0 mt-[6px] text-[10px] font-[300] text-[#909090]">
-          {result.teamName} path
+          {t("teamPath", { teamName: resultTeamName })}
         </p>
       ) : null}
     </article>

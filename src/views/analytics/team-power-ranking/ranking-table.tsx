@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import type { TeamPowerRankingEntry } from "@/views/team-power-ranking/types";
 
@@ -18,7 +20,8 @@ export function RankingTable({
   className,
   rowGapClassName = "gap-y-[10px]"
 }: RankingTableProps) {
-  const tableLabel = "Team power ranking";
+  const t = useTranslations("analytics");
+  const tableLabel = t("teamPowerRankingAria");
 
   return (
     <div className={cn("flex flex-col", className)}>

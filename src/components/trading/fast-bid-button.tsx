@@ -1,8 +1,10 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuthOptional } from "@/context/auth";
@@ -46,6 +48,7 @@ export function FastBidButton({
   reportTransaction = true,
   onSuccess
 }: FastBidButtonProps) {
+  const t = useTranslations("trade");
   const router = useRouter();
   const auth = useAuthOptional();
   const fastBidAmount = useFastBidAmount();
@@ -57,18 +60,10 @@ export function FastBidButton({
 
   const configuredAmount = hasHydrated ? fastBidAmount : DEFAULT_FAST_BID_AMOUNT;
   const displayAmount = amountOverride ?? configuredAmount;
-
-  const buttonLabel = useMemo(() => {
-    if (status === "checking") {
-      return "Checking";
-    }
-
-    if (status === "submitting") {
-      return "Submitting";
-    }
-
-    return children;
-  }, [children, status]);
+  const isBusy = status === "checking" || status === "submitting";
+  const busyAriaLabel =
+    status === "checking" ? t("checking") : t("submittingOrderStatus");
+  const defaultAriaLabel = `Bid ${formatFastBidAmountDisplay(displayAmount)} on ${snapshot.team.name}`;
 
   async function handleClick() {
     if (
@@ -96,12 +91,19 @@ export function FastBidButton({
       type="button"
       className={className}
       disabled={
-        disabled || status === "checking" || status === "submitting" || regionRestricted
+        disabled ||
+        status === "checking" ||
+        status === "submitting" ||
+        regionRestricted
       }
-      aria-label={`Bid ${formatFastBidAmountDisplay(displayAmount)} on ${snapshot.team.name}`}
+      aria-label={isBusy ? busyAriaLabel : defaultAriaLabel}
       onClick={() => void handleClick()}
     >
-      {buttonLabel}
+      {isBusy ? (
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+      ) : (
+        children
+      )}
       {showAmount && status === "idle" ? (
         <span className={amountClassName}>
           {formatFastBidAmountDisplay(displayAmount)}
