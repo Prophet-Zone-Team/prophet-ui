@@ -107,4 +107,4 @@ function ZettaWalletInsightTeam({
 }
 
 export { ZettaWalletPanel } from "./zetta-wallet-panel";
-export type { ZettaOutcomeWalletCounts, ZettaSmartWalletsResponse } from "./types";
+export type { ZettaMetricCounts, ZettaOutcomeWalletCounts, ZettaSmartWalletsResponse } from "./types";

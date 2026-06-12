@@ -476,17 +476,6 @@ export interface UserWatchlistItem {
   notes?: string;
 }
 
-export type FavouriteEntityType = "team" | "match" | "news" | "market";
-
-export interface UserFavourite {
-  id: string;
-  userId: string;
-  walletAddress: string;
-  entityType: FavouriteEntityType;
-  entityId: string;
-  createdAt: string;
-}
-
 export type WorldCupMatchStatus = "scheduled" | "live" | "finished" | "postponed" | "cancelled" | "unknown";
 
 export interface MatchOddsOutcome {
