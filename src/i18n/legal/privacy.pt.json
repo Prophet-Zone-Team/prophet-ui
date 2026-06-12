@@ -1,0 +1,394 @@
+{
+  "preamble": {
+    "block0": {
+      "seg0": "Esta Política de Privacidade explica como {legalEntityName} (\"Prophet\", \"nós\", \"nos\" ou \"nosso\") coleta, utiliza, divulga, armazena e protege informações quando você acessa ou utiliza Prophet, incluindo nosso site, aplicativo web, painéis, ferramentas analíticas, páginas de dados de mercado, páginas de equipes, funcionalidades de lista de observação ou rastreamento, interfaces relacionadas a operações, APIs e serviços relacionados que vinculam a esta Política de Privacidade (coletivamente, o \"Serviço\")."
+    },
+    "block1": {
+      "seg0": "Esta Política de Privacidade deve ser lida em conjunto com nossos ",
+      "link1": "Termos e Condições",
+      "seg2": "."
+    },
+    "block2": {
+      "seg0": "Se você não concorda com esta Política de Privacidade, não utilize o Serviço."
+    }
+  },
+  "sections": {
+    "scope": {
+      "title": "1. Abrangência",
+      "blocks": {
+        "block0": {
+          "seg0": "Esta Política de Privacidade se aplica às informações que coletamos por meio do Serviço e das comunicações relacionadas. Ela não se aplica a sites, carteiras, aplicativos, protocolos, plataformas de mercado, exchanges, provedores de dados, provedores analíticos ou serviços de terceiros que não controlamos."
+        },
+        "block1": {
+          "seg0": "Serviços de terceiros, incluindo Polymarket, provedores de carteiras, redes blockchain, API-Football, GDELT, The Odds API, Cloudflare, provedores de hospedagem, provedores analíticos e outras integrações, podem processar informações conforme suas próprias políticas de privacidade."
+        }
+      }
+    },
+    "information-we-collect": {
+      "title": "2. Informações que coletamos",
+      "blocks": {
+        "block0": {
+          "seg0": "Podemos coletar as seguintes categorias de informações."
+        }
+      },
+      "subsections": {
+        "2-1-information-you-provide": {
+          "title": "2.1 Informações que você fornece",
+          "blocks": {
+            "block0": {
+              "seg0": "Você pode nos fornecer informações diretamente, incluindo:"
+            },
+            "block1": {
+              "orderedList": {
+                "item0": "Informações de contato, como endereço de e-mail, nome, identificador de Telegram, identificador de Discord ou outros dados de contato, se você optar por fornecê-los.",
+                "item1": "Informações de conta ou suporte, como solicitações, feedback, relatórios de erros, preferências ou comunicações.",
+                "item2": "Preferências de lista de observação ou rastreamento, como equipes, mercados, alertas ou visualizações salvas.",
+                "item3": "Entradas do usuário relacionadas a ordens, como lado da ordem, mercado, resultado, preço limite, tamanho, faixa de valor e ações de confirmação, quando a funcionalidade relacionada a operações estiver habilitada."
+              }
+            },
+            "block2": {
+              "seg0": "Não solicitamos, e você não deve fornecer, chaves privadas, frases-semente, segredos CLOB, frases de recuperação de carteira ou credenciais de autenticação sensíveis."
+            }
+          }
+        },
+        "2-2-wallet-and-trading-related-information": {
+          "title": "2.2 Informações relacionadas a carteiras e operações",
+          "blocks": {
+            "block0": {
+              "seg0": "Se você conectar uma carteira ou utilizar funcionalidades relacionadas a operações, podemos processar:"
+            },
+            "block1": {
+              "orderedList": {
+                "item0": "Endereço público de carteira.",
+                "item1": "Endereço de carteira com hash.",
+                "item2": "Tipo ou provedor de carteira.",
+                "item3": "Status de sessão de operações específico do usuário.",
+                "item4": "Status de verificação de elegibilidade.",
+                "item5": "Saldo, autorização, prévia de ordem, status de ordem, histórico de ordens, posição, cancelamento e metadados relacionados a transações.",
+                "item6": "ID de mercado, ID de resultado, ID de token, lado, preço, faixa de tamanho, faixa de valor, custo estimado, resultado potencial e códigos de erro."
+              }
+            },
+            "block2": {
+              "seg0": "Não custodiamos seus fundos. Não armazenamos suas chaves privadas ou frases-semente. Não utilizamos uma carteira compartilhada da plataforma ou chave privada de implantação para enviar operações de usuários."
+            },
+            "block3": {
+              "seg0": "Parte das informações de carteiras e transações pode estar disponível publicamente em redes blockchain ou ser processada por serviços de terceiros."
+            }
+          }
+        },
+        "2-3-automatically-collected-information": {
+          "title": "2.3 Informações coletadas automaticamente",
+          "blocks": {
+            "block0": {
+              "seg0": "Quando você utiliza o Serviço, podemos coletar automaticamente:"
+            },
+            "block1": {
+              "orderedList": {
+                "item0": "Informações do dispositivo, como tipo de dispositivo, navegador, sistema operacional, idioma, tamanho da tela e agente de usuário.",
+                "item1": "Informações de uso, como páginas visitadas, botões clicados, abas selecionadas, interações com gráficos, exposição de seções, profundidade de rolagem, impressões de cartões de equipes, dados de mercado carregados, estados de erro e duração da sessão.",
+                "item2": "Informações de registro, como endereço IP, localização aproximada derivada do endereço IP, registros de data e hora, caminhos de solicitação, referências e dados de diagnóstico.",
+                "item3": "Informações de desempenho, como latência, tempo de carregamento de página, tempo de resposta da API, Web Vitals, erros de frontend, erros de backend e falhas de provedores.",
+                "item4": "Identificadores analíticos, como ID anônimo, ID de sessão, ID de evento e identificadores de usuário ou carteira com hash."
+              }
+            }
+          }
+        },
+        "2-4-market-sports-news-and-data-provider-informa": {
+          "title": "2.4 Informações de mercados, esportes, notícias e provedores de dados",
+          "blocks": {
+            "block0": {
+              "seg0": "O Serviço pode coletar, receber ou processar dados de terceiros, incluindo:"
+            },
+            "block1": {
+              "orderedList": {
+                "item0": "Dados de mercados de predição, probabilidades, preços, volume, liquidez, metadados de ordens e mercados.",
+                "item1": "Dados de futebol, perfis de equipes, elencos, calendários, classificações, lesões e horários.",
+                "item2": "Metadados de notícias, títulos, URLs, nomes de fontes, registros de data e hora de publicação, fragmentos, equipes correspondentes e palavras-chave correspondentes.",
+                "item3": "Dados de odds, nomes de casas de apostas, odds decimais, probabilidade implícita, chaves de mercado e horários de atualização."
+              }
+            },
+            "block2": {
+              "seg0": "Esses dados podem incluir informações públicas sobre equipes, jogadores, partidas e mercados."
+            }
+          }
+        },
+        "2-5-cookies-local-storage-and-similar-technologi": {
+          "title": "2.5 Cookies, armazenamento local e tecnologias similares",
+          "blocks": {
+            "block0": {
+              "seg0": "Podemos utilizar cookies, armazenamento local, armazenamento de sessão, pixels e tecnologias similares para:"
+            },
+            "block1": {
+              "orderedList": {
+                "item0": "Manter sessões.",
+                "item1": "Recordar preferências.",
+                "item2": "Gerar IDs analíticos anônimos.",
+                "item3": "Melhorar desempenho e segurança.",
+                "item4": "Compreender o uso do produto.",
+                "item5": "Suportar a conexão de carteira e a funcionalidade de conta."
+              }
+            },
+            "block2": {
+              "seg0": "Você pode controlar cookies por meio das configurações do seu navegador, mas desabilitar cookies ou armazenamento pode afetar o Serviço."
+            }
+          }
+        }
+      }
+    },
+    "how-we-use": {
+      "title": "3. Como utilizamos as informações",
+      "blocks": {
+        "block0": {
+          "seg0": "Podemos utilizar as informações para:"
+        },
+        "block1": {
+          "orderedList": {
+            "item0": "Fornecer, operar, manter e melhorar o Serviço.",
+            "item1": "Exibir dados de mercado, dados de equipes, odds, notícias, análises, painéis, listas de observação, alertas e informações de portfólio.",
+            "item2": "Suportar a conexão de carteira de titularidade do usuário, verificações de elegibilidade, prévias de ordens, status de envio de ordens, histórico de ordens e visualizações de portfólio.",
+            "item3": "Autenticar usuários e manter sessões.",
+            "item4": "Analisar o uso do produto, funis de crescimento, adoção de funcionalidades, conversão, retenção, qualidade de dados e desempenho.",
+            "item5": "Depurar erros, prevenir abusos, aplicar limites de taxa, proteger a segurança e monitorar a saúde do sistema.",
+            "item6": "Detectar, prevenir, investigar ou responder a fraude, atividade não autorizada, risco de sanções, abuso, manipulação de mercado ou violações legais.",
+            "item7": "Comunicar com você, responder a solicitações e fornecer suporte.",
+            "item8": "Cumprir obrigações legais, fazer cumprir nossos Termos e proteger direitos, segurança e propriedade.",
+            "item9": "Realizar pesquisa, análises, testes e desenvolvimento de produto."
+          }
+        }
+      }
+    },
+    "analytics": {
+      "title": "4. Análises e medição do produto",
+      "blocks": {
+        "block0": {
+          "seg0": "Utilizamos análises para compreender como os usuários interagem com o Serviço e para melhorar o crescimento e a confiabilidade do produto."
+        },
+        "block1": {
+          "seg0": "Eventos analíticos podem incluir:"
+        },
+        "block2": {
+          "orderedList": {
+            "item0": "Visualizações de página.",
+            "item1": "Status de carregamento de dados de mercado.",
+            "item2": "Falhas de provedores de dados e uso de fallback.",
+            "item3": "Cliques em detalhes de equipes.",
+            "item4": "Cliques em Quick Bid ou Bid.",
+            "item5": "Cliques de login.",
+            "item6": "Status de conexão de carteira.",
+            "item7": "Visualizações de seções e impressões de cartões de equipes.",
+            "item8": "Alterações de intervalo de gráficos.",
+            "item9": "Ações de rastreamento ou lista de observação.",
+            "item10": "Status de ticket de ordem, prévia de ordem, confirmação de ordem e envio de ordem, quando habilitado."
+          }
+        },
+        "block3": {
+          "seg0": "Eventos analíticos são projetados para evitar segredos sensíveis. Endereços de carteira devem ser submetidos a hash quando utilizados para análises. Valores devem ser agrupados em faixas quando valores detalhados não são necessários."
+        }
+      }
+    },
+    "legal-bases": {
+      "title": "5. Bases legais para o tratamento",
+      "blocks": {
+        "block0": {
+          "seg0": "Quando as leis de privacidade aplicáveis exigem uma base legal, podemos tratar informações pessoais com base em:"
+        },
+        "block1": {
+          "orderedList": {
+            "item0": "Contrato: para fornecer o Serviço e cumprir nossos Termos.",
+            "item1": "Interesses legítimos: para operar, proteger, melhorar, analisar e salvaguardar o Serviço.",
+            "item2": "Consentimento: quando necessário para cookies, marketing ou determinadas análises.",
+            "item3": "Obrigações legais: para cumprir as leis aplicáveis, sanções, obrigações regulatórias, solicitações de autoridades e resolução de disputas.",
+            "item4": "Interesses vitais ou de interesse público: quando necessário para proteger a segurança ou prevenir danos, se aplicável."
+          }
+        }
+      }
+    },
+    "how-we-share": {
+      "title": "6. Como compartilhamos as informações",
+      "blocks": {
+        "block0": {
+          "seg0": "Podemos compartilhar informações com:"
+        },
+        "block1": {
+          "orderedList": {
+            "item0": "Prestadores de serviços: hospedagem, infraestrutura, bancos de dados, análises, segurança, monitoramento, atendimento ao cliente, e-mail, comunicações e provedores de desenvolvimento.",
+            "item1": "Integrações de terceiros: provedores de carteiras, Polymarket, infraestrutura de mercado, redes blockchain, relayers, provedores de dados, provedores de odds e provedores de notícias, quando necessário para fornecer a funcionalidade solicitada.",
+            "item2": "Provedores de conformidade e segurança: provedores que auxiliam com verificações de elegibilidade, geolocalização, triagem de sanções, prevenção de fraude, prevenção de abusos e segurança.",
+            "item3": "Consultores profissionais: advogados, auditores, contadores, seguradoras e consultores.",
+            "item4": "Autoridades ou partes legais: reguladores, tribunais, órgãos de segurança pública, agências governamentais ou outras partes, quando consideramos que a divulgação é exigida ou apropriada conforme a lei.",
+            "item5": "Transferências empresariais: em conexão com fusão, aquisição, financiamento, reorganização, falência, venda de ativos ou transação similar.",
+            "item6": "Com sua indicação ou consentimento: quando você solicitar ou autorizar o compartilhamento."
+          }
+        },
+        "block2": {
+          "seg0": "Também podemos compartilhar informações agregadas, desidentificadas ou anonimizadas que não identificam você de forma razoável."
+        }
+      }
+    },
+    "blockchain": {
+      "title": "7. Blockchain e dados públicos",
+      "blocks": {
+        "block0": {
+          "seg0": "Redes blockchain são sistemas públicos ou semipúblicos. Transações, endereços de carteira, movimentações de tokens, aprovações, posições e atividade relacionada podem ser visíveis para terceiros e podem ser permanentes ou difíceis de eliminar."
+        },
+        "block1": {
+          "seg0": "Prophet não controla redes blockchain, provedores de carteiras, Polymarket ou outra infraestrutura de mercado de terceiros. Suas interações com esses serviços podem estar sujeitas às suas próprias políticas de privacidade e termos."
+        }
+      }
+    },
+    "data-retention": {
+      "title": "8. Retenção de dados",
+      "blocks": {
+        "block0": {
+          "seg0": "Retemos informações pelo tempo razoavelmente necessário para fornecer o Serviço, cumprir obrigações legais, resolver disputas, fazer cumprir acordos, prevenir fraude ou abuso, manter a segurança, apoiar auditorias e melhorar o Serviço."
+        },
+        "block1": {
+          "seg0": "Os períodos de retenção podem variar conforme o tipo de informação:"
+        },
+        "block2": {
+          "orderedList": {
+            "item0": "Dados de eventos analíticos podem ser retidos para análise de produto e medição de crescimento.",
+            "item1": "Registros de auditoria relacionados a operações podem ser retidos para conformidade, segurança, suporte e resolução de disputas.",
+            "item2": "Registros podem ser retidos para segurança, depuração, monitoramento e prevenção de fraude.",
+            "item3": "Comunicações de conta ou suporte podem ser retidas conforme necessário para responder a solicitações e manter registros."
+          }
+        },
+        "block3": {
+          "seg0": "Podemos reter informações agregadas ou desidentificadas por períodos mais prolongados."
+        }
+      }
+    },
+    "security": {
+      "title": "9. Segurança",
+      "blocks": {
+        "block0": {
+          "seg0": "Utilizamos medidas administrativas, técnicas e organizacionais razoáveis, projetadas para proteger as informações. No entanto, nenhum sistema é completamente seguro. Não podemos garantir que as informações serão seguras, livres de erros ou protegidas contra acesso não autorizado."
+        },
+        "block1": {
+          "seg0": "Você é responsável por proteger sua carteira, chaves privadas, frases-semente, dispositivos, contas e credenciais. Prophet nunca solicitará sua chave privada ou frase-semente."
+        }
+      }
+    },
+    "international-transfers": {
+      "title": "10. Transferências internacionais",
+      "blocks": {
+        "block0": {
+          "seg0": "Podemos processar e armazenar informações nos Estados Unidos e em outros países. Esses países podem ter leis de privacidade distintas das de sua jurisdição. Quando necessário, utilizamos salvaguardas apropriadas para transferências internacionais."
+        }
+      }
+    },
+    "your-choices": {
+      "title": "11. Suas opções",
+      "blocks": {
+        "block0": {
+          "seg0": "Dependendo da sua localização e da lei aplicável, você pode ter opções em relação às suas informações, incluindo:"
+        },
+        "block1": {
+          "orderedList": {
+            "item0": "Acessar, corrigir ou eliminar determinadas informações.",
+            "item1": "Opor-se ou restringir determinado tratamento.",
+            "item2": "Revogar o consentimento quando o tratamento se basear no consentimento.",
+            "item3": "Optar por não receber comunicações de marketing.",
+            "item4": "Gerenciar cookies e armazenamento local por meio das configurações do navegador.",
+            "item5": "Solicitar uma cópia de determinadas informações."
+          }
+        },
+        "block2": {
+          "seg0": "Para exercer seus direitos, entre em contato conosco utilizando as informações abaixo. Podemos precisar verificar sua solicitação antes de responder."
+        }
+      }
+    },
+    "us-state-rights": {
+      "title": "12. Direitos de privacidade dos estados dos EUA",
+      "blocks": {
+        "block0": {
+          "seg0": "Se você é residente de um estado dos EUA com leis de privacidade aplicáveis, incluindo Califórnia, Colorado, Connecticut, Utah, Virgínia ou outros estados, você pode ter o direito de:"
+        },
+        "block1": {
+          "orderedList": {
+            "item0": "Conhecer ou acessar as informações pessoais coletadas sobre você.",
+            "item1": "Corrigir informações pessoais imprecisas.",
+            "item2": "Eliminar informações pessoais.",
+            "item3": "Obter uma cópia portável de informações pessoais.",
+            "item4": "Optar por não participar de determinada publicidade direcionada, venda ou compartilhamento de informações pessoais.",
+            "item5": "Limitar o uso ou a divulgação de informações pessoais sensíveis, quando aplicável.",
+            "item6": "Recorrer de uma solicitação de privacidade negada, quando exigido por lei."
+          }
+        },
+        "block2": {
+          "seg0": "Não vendemos intencionalmente informações pessoais em troca de dinheiro. Podemos utilizar tecnologias analíticas ou publicitárias que podem ser consideradas \"compartilhamento\" ou publicidade direcionada conforme determinadas leis estaduais. Se aplicável, forneceremos os mecanismos de exclusão exigidos."
+        },
+        "block3": {
+          "seg0": "Aviso de coleta da Califórnia"
+        },
+        "block4": {
+          "seg0": "Para residentes da Califórnia, podemos coletar as categorias de informações pessoais descritas na Seção 2, incluindo identificadores, atividade na internet ou em redes eletrônicas, geolocalização em nível aproximado, informações comerciais ou relacionadas a transações, inferências e comunicações. Coletamos e utilizamos essas informações para os fins descritos nas Seções 3 e 4, retemos conforme descrito na Seção 8 e compartilhamos conforme descrito na Seção 6."
+        },
+        "block5": {
+          "seg0": "Residentes da Califórnia podem entrar em contato conosco para exercer direitos conforme a Lei de Privacidade do Consumidor da Califórnia, alterada pela Lei de Direitos de Privacidade da Califórnia."
+        }
+      }
+    },
+    "eea-uk-swiss": {
+      "title": "13. Direitos de privacidade do EEE, Reino Unido e Suíça",
+      "blocks": {
+        "block0": {
+          "seg0": "Se você está localizado no Espaço Econômico Europeu, no Reino Unido ou na Suíça, você pode ter direitos conforme as leis de proteção de dados aplicáveis, incluindo direitos de acesso, retificação, eliminação, restrição, portabilidade, oposição e revogação do consentimento."
+        },
+        "block1": {
+          "seg0": "Você também pode ter o direito de apresentar uma reclamação à sua autoridade local de proteção de dados."
+        }
+      }
+    },
+    "children": {
+      "title": "14. Privacidade de menores",
+      "blocks": {
+        "block0": {
+          "seg0": "O Serviço não se destina a menores ou a pessoas menores de 18 anos. Não coletamos intencionalmente informações pessoais de menores. Se você acredita que um menor forneceu informações pessoais, entre em contato conosco e tomaremos as medidas apropriadas para eliminá-las."
+        }
+      }
+    },
+    "do-not-track": {
+      "title": "15. Do Not Track",
+      "blocks": {
+        "block0": {
+          "seg0": "Alguns navegadores oferecem sinais \"Do Not Track\". Não existe um padrão uniforme da indústria para responder a esses sinais. Salvo quando exigido por lei, atualmente não respondemos a sinais Do Not Track."
+        }
+      }
+    },
+    "changes": {
+      "title": "16. Alterações nesta Política de Privacidade",
+      "blocks": {
+        "block0": {
+          "seg0": "Podemos atualizar esta Política de Privacidade periodicamente. A Política de Privacidade atualizada será publicada no Serviço com uma data revisada de \"Última atualização\". Se exigido por lei, podemos fornecer aviso adicional ou solicitar consentimento."
+        },
+        "block1": {
+          "seg0": "Seu uso continuado do Serviço após a entrada em vigor de uma Política de Privacidade atualizada significa que você reconhece a Política de Privacidade atualizada."
+        }
+      }
+    },
+    "contact": {
+      "title": "17. Fale conosco",
+      "blocks": {
+        "block0": {
+          "seg0": "Para perguntas ou solicitações relacionadas à privacidade, entre em contato:"
+        },
+        "block1": {
+          "seg0": "{legalEntityName}"
+        },
+        "block2": {
+          "seg0": "{principalAddress}"
+        },
+        "block3": {
+          "seg0": "Email: {privacyEmail}"
+        },
+        "block4": {
+          "seg0": "Se você está em uma jurisdição que exige um representante de proteção de dados ou um encarregado de proteção de dados, inclua:"
+        },
+        "block5": {
+          "seg0": "Contato de proteção de dados: {dpoContact}"
+        }
+      }
+    }
+  }
+}

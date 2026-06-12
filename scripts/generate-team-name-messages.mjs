@@ -204,7 +204,57 @@ const TEAM_TRANSLATIONS = {
     TUR: "Turquía",
     URY: "Uruguay",
     USA: "Estados Unidos",
-    UZB: "Uzbekistán"
+    UZB: "Uzbequistán"
+  },
+  pt: {
+    ALG: "Argélia",
+    ARG: "Argentina",
+    AUS: "Austrália",
+    AUT: "Áustria",
+    BEL: "Bélgica",
+    BIH: "Bósnia e Herzegovina",
+    BRA: "Brasil",
+    CAN: "Canadá",
+    CVI: "Cabo Verde",
+    COL: "Colômbia",
+    CDR: "RD do Congo",
+    HRV: "Croácia",
+    CW: "Curaçao",
+    CZE: "Tchéquia",
+    ECU: "Equador",
+    EGY: "Egito",
+    ENG: "Inglaterra",
+    FRA: "França",
+    GER: "Alemanha",
+    GHA: "Gana",
+    HAI: "Haiti",
+    IRN: "Irã",
+    IRQ: "Iraque",
+    CIV: "Costa do Marfim",
+    JPN: "Japão",
+    JOR: "Jordânia",
+    MEX: "México",
+    MAR: "Marrocos",
+    NLD: "Países Baixos",
+    NZL: "Nova Zelândia",
+    NOR: "Noruega",
+    PAN: "Panamá",
+    PAR: "Paraguai",
+    PRT: "Portugal",
+    QAT: "Catar",
+    KSA: "Arábia Saudita",
+    SCO: "Escócia",
+    SEN: "Senegal",
+    RSA: "África do Sul",
+    KOR: "Coreia do Sul",
+    ESP: "Espanha",
+    SWE: "Suécia",
+    CHE: "Suíça",
+    TUN: "Tunísia",
+    TUR: "Turquia",
+    URY: "Uruguai",
+    USA: "Estados Unidos",
+    UZB: "Uzbequistão"
   },
   ru: {
     ALG: "Алжир",
@@ -302,6 +352,13 @@ const TEAM_REGIONS = {
     northAmerica: "América del Norte",
     southAmerica: "América del Sur"
   },
+  pt: {
+    africa: "África",
+    asia: "Ásia",
+    europe: "Europa",
+    northAmerica: "América do Norte",
+    southAmerica: "América do Sul"
+  },
   ko: {
     africa: "아프리카",
     asia: "아시아",
@@ -344,7 +401,7 @@ function buildTeamNames(locale, teams) {
 }
 
 const teams = extractWorldCupTeams();
-const locales = ["en", "es", "ko", "ja", "zh-TW", "ru"];
+const locales = ["en", "es", "pt", "ko", "ja", "zh-TW", "ru"];
 
 for (const locale of locales) {
   const filePath = path.join(MESSAGES_DIR, `${locale}.json`);

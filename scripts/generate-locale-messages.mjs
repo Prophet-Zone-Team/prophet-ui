@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import ptMap from "./locale-maps/pt.mjs";
 import ruMap from "./locale-maps/ru.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -4319,9 +4320,10 @@ const zhTW = deepTranslate(en, {
   }
 });
 
+const pt = deepTranslate(en, ptMap);
 const ru = deepTranslate(en, ruMap);
 
-const locales = { es, ko, ja, "zh-TW": zhTW, ru };
+const locales = { es, pt, ko, ja, "zh-TW": zhTW, ru };
 
 for (const [locale, messages] of Object.entries(locales)) {
   const filePath = path.join(ROOT, "src/i18n/messages", `${locale}.json`);
