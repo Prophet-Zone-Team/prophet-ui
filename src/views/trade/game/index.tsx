@@ -16,7 +16,9 @@ import { buildRelatedGamesTeamsQuery } from "@/lib/market/related-games-query";
 import { RelatedGames } from "@/views/trade/related-games";
 import { gameContentClass } from "@/views/trade/game/ui";
 import { useGameTradingMetadata } from "@/views/trade/game/use-game-trading-metadata";
+import { isGameMarketLiveUpdatesEnabled } from "@/lib/market/live-match";
 import { isGameClosedForTrading } from "@/lib/market/trading-market-status";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import type { ProphetGameSiblingEventSlugs } from "@/types/prophet-api";
 import type {
@@ -65,10 +67,13 @@ export default function TradeGameView({
     teamSnapshots: snapshots
   });
 
+  const liveMatch = useMatchWithLiveState(match);
+  const marketWsEnabled = isGameMarketLiveUpdatesEnabled(liveMatch);
+
   const canTrade =
     isTabTradingReady(activeMarketTab) &&
     loadingTab !== activeMarketTab &&
-    !isGameClosedForTrading(match, gameSnapshot.market.closed);
+    !isGameClosedForTrading(liveMatch, gameSnapshot.market.closed);
 
   const handleMarketTabChange = (tab: GameMarketTabId) => {
     setActiveMarketTab(tab);
@@ -121,7 +126,7 @@ export default function TradeGameView({
   const [tradeDrawerOpen, setTradeDrawerOpen] = useState<boolean>(false);
 
   return (
-    <MarketWsProvider enabled>
+    <MarketWsProvider enabled={marketWsEnabled}>
       <SyncMatchLiveStore matches={matchesToSync} />
       <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2">
         <div className="bg-black h-[228px] md:h-[258px] w-full absolute top-0 left-0" />

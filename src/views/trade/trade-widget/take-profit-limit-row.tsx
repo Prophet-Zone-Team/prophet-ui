@@ -87,7 +87,7 @@ export function TakeProfitLimitRow({
               }}
               style={{ fieldSizing: "content" }}
               className={cn(
-                "border-0 bg-transparent p-0 leading-[18px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+                "border-0 min-w-[16px] bg-transparent p-0 leading-[18px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
                 disabled && "cursor-default"
               )}
             />

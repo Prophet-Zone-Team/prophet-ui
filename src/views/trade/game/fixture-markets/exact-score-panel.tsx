@@ -81,7 +81,7 @@ export function ExactScorePanel({
 
                   return (
                     <LineOutcomeButton
-                      key={binarySide}
+                      key={`${outcome.id}-${binarySide}-${buyable ? resolveFixtureBuyAsk(outcome, binarySide) : "na"}`}
                       label={binarySide === "yes" ? "Yes" : "No"}
                       price={
                         buyable
