@@ -5,6 +5,11 @@ export interface ProphetApiResponse<T = unknown> {
   message: string;
 }
 
+/** POST /v1/upload — uploaded asset URL */
+export interface ProphetUploadData {
+  url: string;
+}
+
 export interface ProphetPolyMarketTeam {
   logo?: string;
   name?: string;

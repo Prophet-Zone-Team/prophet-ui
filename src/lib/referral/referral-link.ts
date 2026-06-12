@@ -5,7 +5,12 @@ export function resolveOrigin(): string {
     return "";
   }
 
-  return window.location.origin;
+  let origin = window.location.origin;
+  if (origin.includes("localhost")) {
+    return "https://test.prophet.zone";
+  }
+
+  return origin;
 }
 
 export function buildReferralLink(referralCode: string): string {
