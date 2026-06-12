@@ -50,7 +50,7 @@ export function MigrateDialog() {
       onClose={closeMigrateDialog}
       ariaLabel={t("ariaDefault")}
       overlayCloseable={false}
-      closeButtonClassName={dialogStep === "prompt" ? "bg-[none] border-0 text-white" : ""}
+      closeButtonClassName={dialogStep === "prompt" ? "bg-[none] border-0 text-white hover:bg-[none]" : ""}
     >
       {dialogStep === "prompt" ? (
         <div className="w-[492px] overflow-hidden rounded-[20px] bg-white shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]">
