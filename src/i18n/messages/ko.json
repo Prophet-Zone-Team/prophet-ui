@@ -470,7 +470,7 @@
       "selectChain": "체인 선택",
       "selectToken": "토큰 선택",
       "estReceive": "예상 수령액",
-      "quoteUnavailable": "견적을 사용할 수 없습니다. 예상 출력이 표시되지 않습니다.",
+      "quoteUnavailable": "유동성 부족.",
       "withdrawalSubmitted": "출금이 제출되었습니다",
       "unsupportedToken": "선택한 토큰은 이 출금 방식을 지원하지 않습니다.",
       "amountZero": "0보다 큰 금액을 입력하세요.",

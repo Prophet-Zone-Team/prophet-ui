@@ -470,7 +470,7 @@
       "selectChain": "チェーンを選択",
       "selectToken": "トークンを選択",
       "estReceive": "推定受取額",
-      "quoteUnavailable": "見積もり不可。推定出力は表示されません。",
+      "quoteUnavailable": "流動性不足。",
       "withdrawalSubmitted": "出金を送信しました",
       "unsupportedToken": "選択したトークンはこの出金方法に対応していません。",
       "amountZero": "0 より大きい金額を入力してください。",
