@@ -7,7 +7,8 @@ const TEAM_DETAIL_SLUG_ALIASES: Record<string, string> = {
   "cote-d-ivoire": "ivory-coast",
   "cabo-verde": "cape-verde",
   "ir-iran": "iran",
-  congo: "congo-dr"
+  congo: "congo-dr",
+  "dr-congo": "congo-dr",
 };
 
 export function resolveTeamDetailSlug(slug: string): string {
