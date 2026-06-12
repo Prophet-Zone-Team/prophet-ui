@@ -59,6 +59,7 @@ export interface TradeTicketFormProps {
   limitExpiration: LimitExpirationPreset;
   limitExpirationCustom?: string;
   expirationError?: string;
+  takeProfitLimitError?: string;
   fundingMessage?: string;
   actionLabel: string;
   canSubmit: boolean;
@@ -107,6 +108,7 @@ export function TradeTicketForm({
   limitExpiration,
   limitExpirationCustom,
   expirationError,
+  takeProfitLimitError,
   fundingMessage,
   actionLabel,
   canSubmit,
@@ -145,9 +147,10 @@ export function TradeTicketForm({
   const showCashBalance =
     isLimitOrder && tradeSide === "buy" && availableCash !== undefined;
   const showClearingTip = isLimitOrder && Boolean(kickoffAt);
-  const displayMessage = expirationError ?? message ?? fundingMessage;
+  const displayMessage =
+    expirationError ?? takeProfitLimitError ?? message ?? fundingMessage;
   const displayMessageIsError = Boolean(
-    expirationError || message || fundingMessage
+    expirationError || takeProfitLimitError || message || fundingMessage
   );
 
   return (

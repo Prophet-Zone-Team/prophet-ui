@@ -27,6 +27,7 @@ import {
 import {
   calculateReferencePrice,
   isTakeProfitLimitAvailable,
+  validateTakeProfitLimitPrice,
   LIMIT_BUY_MIN_SHARES,
   resolveMaxSellShares
 } from "@/lib/market/order-math";
@@ -583,6 +584,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     orderMode === "limit" && limitExpiration === "custom"
       ? validateLimitExpirationCustom(t, limitExpirationCustom)
       : undefined;
+  const takeProfitLimitError =
+    orderMode === "market" && tradeSide === "buy"
+      ? validateTakeProfitLimitPrice(
+          takeProfitLimitEnabled,
+          takeProfitLimitPrice
+        )
+      : undefined;
 
   const actionInProgress =
     status === "loading" || status === "signing" || status === "submitting";
@@ -627,7 +635,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   const canSubmit = canSubmitTradeTicket({
     status,
-    previewCanSubmit: previewCanSubmit && !expirationError
+    previewCanSubmit:
+      previewCanSubmit && !expirationError && !takeProfitLimitError
   });
 
   const actionLabel = resolveTradePrimaryActionLabel(
@@ -1202,6 +1211,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       return;
     }
 
+    if (takeProfitLimitError) {
+      setStatus("error");
+      setMessage(takeProfitLimitError);
+      showOrderErrorToast(takeProfitLimitError);
+      return;
+    }
+
     if (primaryAction.kind !== "submit") {
       setMessage(undefined);
       setEligibilityRetryAvailable(false);
@@ -1269,6 +1285,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [
     actionInProgress,
     expirationError,
+    takeProfitLimitError,
     handleRetryEligibility,
     openLogin,
     preview,
@@ -1394,6 +1411,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const availableCash = resolveTradeTicketAvailableCash(readiness);
   const fundingMessage =
     !expirationError &&
+    !takeProfitLimitError &&
     !message &&
     primaryAction.kind !== "submit" &&
     primaryAction.hint
@@ -1420,6 +1438,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       limitExpiration,
       limitExpirationCustom,
       expirationError,
+      takeProfitLimitError,
       fundingMessage,
       actionLabel,
       canSubmit,
