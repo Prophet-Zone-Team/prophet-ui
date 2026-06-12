@@ -143,12 +143,13 @@ export function MoneylineActionRow({
   otherSources?: MarketOtherSourceItem[];
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
 }) {
-  const outcomes = useMemo(
-    () =>
-      outcomesOverride ??
-      sortFixtureGroupOutcomes(group?.outcomes ?? [], "moneyline"),
-    [group?.outcomes, outcomesOverride]
-  );
+  const outcomes = useMemo(() => {
+    if (outcomesOverride?.length) {
+      return outcomesOverride;
+    }
+
+    return sortFixtureGroupOutcomes(group?.outcomes ?? [], "moneyline");
+  }, [group?.outcomes, outcomesOverride]);
 
   return (
     <MarketActionRowShell

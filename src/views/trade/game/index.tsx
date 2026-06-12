@@ -154,6 +154,7 @@ export default function TradeGameView({
             <TradeWidget
               variant="game"
               gameSnapshot={gameSnapshot}
+              fixtureMarkets={fixtureMarkets}
               teamSnapshots={snapshots}
               className="hidden md:flex"
             />
@@ -198,6 +199,7 @@ export default function TradeGameView({
         <TradeWidget
           variant="game"
           gameSnapshot={gameSnapshot}
+          fixtureMarkets={fixtureMarkets}
           teamSnapshots={snapshots}
           className=""
         />

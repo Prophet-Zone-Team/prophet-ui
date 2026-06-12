@@ -5,7 +5,10 @@ import { useTranslations } from "next-intl";
 
 import { GameMarketTabSwitcher } from "@/views/trade/game/markets/game-market-tab-switcher";
 import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
-import { resolveDefaultFixtureOutcome } from "@/lib/market/fixture-markets-mapper";
+import {
+  findFixtureMarketOutcome,
+  resolveDefaultFixtureOutcome,
+} from "@/lib/market/fixture-markets-mapper";
 import {
   getFixtureOutcomesForGroup,
   sortFixtureGroupOutcomes
@@ -192,6 +195,41 @@ export function GameMarketsSection({
     },
     [fixtureMarkets, selectFixtureOutcome]
   );
+
+  useEffect(() => {
+    if (!selectedOutcome) {
+      return;
+    }
+
+    const freshOutcome = findFixtureMarketOutcome(
+      {
+        lines: fixtureMarkets.lines,
+        exactScores: fixtureMarkets.exactScores,
+        halftime: fixtureMarkets.halftime,
+      },
+      selectedOutcome.id
+    );
+
+    if (!freshOutcome) {
+      return;
+    }
+
+    const pricingChanged =
+      freshOutcome.probability !== selectedOutcome.probability ||
+      freshOutcome.yesAsk !== selectedOutcome.yesAsk ||
+      freshOutcome.noAsk !== selectedOutcome.noAsk ||
+      freshOutcome.tokenId !== selectedOutcome.tokenId ||
+      freshOutcome.noTokenId !== selectedOutcome.noTokenId;
+
+    if (pricingChanged) {
+      selectFixtureOutcome(freshOutcome, selectedBinarySide ?? "yes");
+    }
+  }, [
+    fixtureMarkets,
+    selectFixtureOutcome,
+    selectedBinarySide,
+    selectedOutcome,
+  ]);
 
   useEffect(() => {
     if (selectedOutcome) {
