@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
 import { Modal } from "@/components/ui/modal";
 import { useAuth } from "@/context/auth";
+import { useLocalizedStrategyLabels } from "@/hooks/i18n/use-localized-strategy-labels";
 import { cn } from "@/lib/cn";
 import { getStrategyBidSignableLegs } from "@/lib/strategy/strategy-bid-validation";
 import { ensureTradingReadyForBid } from "@/views/trade/trade-widget/trade-ticket-helpers";
@@ -27,6 +29,8 @@ export function StrategyBidModal({
   strategy,
   snapshots
 }: StrategyBidModalProps) {
+  const t = useTranslations("strategy");
+  const tAuth = useTranslations("auth");
   const auth = useAuth();
   const [step, setStep] = useState<StrategyBidStep>("confirm");
   const [message, setMessage] = useState<string | undefined>();
@@ -49,6 +53,14 @@ export function StrategyBidModal({
     applyBalanceFraction,
     applyMinBidAmount
   } = useStrategyBidForm(open, strategy, snapshots);
+
+  const { name: localizedStrategyName } = useLocalizedStrategyLabels(
+    strategy?.id ?? "",
+    {
+      name: strategy?.name ?? "",
+      description: strategy?.description ?? ""
+    }
+  );
 
   useEffect(() => {
     if (!open) {
@@ -107,7 +119,7 @@ export function StrategyBidModal({
       <Modal
         open={open && step === "confirm"}
         onClose={handleClose}
-        ariaLabel="Join Strategy"
+        ariaLabel={t("joinStrategy")}
         className={STRATEGY_BID_MODAL_WIDTH}
         hideCloseButton
       >
@@ -121,18 +133,20 @@ export function StrategyBidModal({
                   "bg-[#65AF14] font-[Sora] text-base font-normal leading-5 text-white",
                   "transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
                 )}
-                actionLabel="Bid Now"
-                connectLabel="Enable trading"
+                actionLabel={t("bidNow")}
+                connectLabel={tAuth("enableTrading")}
                 canSubmit={canProceedToSign && !isProceeding}
                 actionStatus={isProceeding ? "submitting" : undefined}
-                submittingLabel="Checking…"
+                submittingLabel={t("checking")}
                 onAction={handleProceedToSign}
                 onLoginStart={() => setMessage(undefined)}
                 onLoginSuccess={() => setMessage(undefined)}
                 onLoginError={(error) => setMessage(error.message)}
               />
               {message ? (
-                <p className="m-0 text-center text-sm text-[#FF674B]">{message}</p>
+                <p className="m-0 text-center text-sm text-[#FF674B]">
+                  {message}
+                </p>
               ) : null}
             </div>
           }
@@ -140,12 +154,12 @@ export function StrategyBidModal({
           <div className="flex flex-col gap-6 pb-2">
             {skipPreValidation ? (
               <p className="m-0 rounded-lg border border-[#EBEBEB] bg-[#F7F7F7] px-3 py-2 text-center text-xs leading-[16px] text-[#909090]">
-                Test mode: order pre-validation is skipped.
+                {t("testModeSkipPreValidation")}
               </p>
             ) : null}
 
             <StrategySummary
-              name={strategy.name}
+              name={localizedStrategyName}
               estimatedRoiLabel={preview.estimatedRoiLabel}
               teams={strategy.teamRefs}
             />
@@ -177,11 +191,13 @@ export function StrategyBidModal({
       <StrategyBidSignModal
         open={open && step === "sign"}
         onClose={handleClose}
-        strategyName={strategy.name}
+        strategyName={localizedStrategyName}
         bidAmount={bidAmount}
         estimatedRoiLabel={preview.estimatedRoiLabel}
         hitReturnLabel={preview.toWinLabel}
-        legs={getStrategyBidSignableLegs(validation.legs, { skipPreValidation })}
+        legs={getStrategyBidSignableLegs(validation.legs, {
+          skipPreValidation
+        })}
         onComplete={handleClose}
       />
     </>

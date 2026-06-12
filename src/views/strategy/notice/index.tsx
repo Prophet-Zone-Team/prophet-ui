@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import {
@@ -14,14 +15,12 @@ const STRATEGY_NOTICE_TRANSITION = {
   ease: [0.3, 0, 0.2, 1] as const
 };
 
-const STRATEGY_NOTICE_TEXT =
-  "This strategy is generated from current market data and model estimates. It is for reference only and does not guarantee profit. Market prices and match outcomes may change, so please make your own decision based on your risk tolerance.";
-
 export type StrategyNoticeProps = {
   className?: string;
 };
 
 export function StrategyNotice({ className }: StrategyNoticeProps) {
+  const t = useTranslations("strategy");
   const hydrated = useConfigHydrated();
   const visible = useShowStrategyNotice();
   const dismiss = useDismissStrategyNotice();
@@ -47,14 +46,14 @@ export function StrategyNotice({ className }: StrategyNoticeProps) {
           )}
         >
           <p className="min-w-0 flex-1 text-base leading-5 text-white">
-            {STRATEGY_NOTICE_TEXT}
+            {t("noticeText")}
           </p>
           <button
             type="button"
             onClick={dismiss}
             className="inline-flex h-10 w-32 shrink-0 items-center justify-center rounded-lg bg-white text-base leading-5 text-black transition-opacity hover:opacity-90"
           >
-            Understood
+            {t("understood")}
           </button>
         </motion.div>
       ) : null}

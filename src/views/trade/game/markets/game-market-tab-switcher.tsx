@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Drawer, { DrawerDirection } from "@/components/drawer";
 import {
   TabSwitcher,
@@ -22,6 +23,8 @@ export function GameMarketTabSwitcher({
   onChange,
   "aria-label": ariaLabel
 }: GameMarketTabSwitcherProps) {
+  const t = useTranslations("trade");
+  const resolvedAriaLabel = ariaLabel ?? t("matchMarketCategories");
   const isMobile = useDevice();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const currentTab = useMemo(
@@ -53,7 +56,7 @@ export function GameMarketTabSwitcher({
         items={items}
         value={value}
         onChange={onChange}
-        aria-label={ariaLabel}
+        aria-label={resolvedAriaLabel}
       />
     );
   }
@@ -63,6 +66,7 @@ export function GameMarketTabSwitcher({
       <button
         type="button"
         className="inline-flex h-[34px] min-w-[98px] max-w-full items-center justify-center gap-[10px] rounded-[20px] border border-[#909090] bg-white px-3 font-normal leading-[19px] text-black"
+        aria-label={resolvedAriaLabel}
         aria-expanded={drawerOpen}
         aria-haspopup="dialog"
         onClick={() => setDrawerOpen((current) => !current)}
@@ -91,13 +95,13 @@ export function GameMarketTabSwitcher({
       <Drawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title="Market categories"
+        title={t("marketCategories")}
         direction={DrawerDirection.Bottom}
         className="!h-auto max-h-[70dvh]"
       >
         <div
           role="tablist"
-          aria-label={ariaLabel}
+          aria-label={resolvedAriaLabel}
           className="flex flex-col gap-2 px-4 pb-6"
         >
           {items.map((item) => {

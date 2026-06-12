@@ -1,5 +1,8 @@
+"use client";
+
 import { TeamFlag } from "@/components/teams/team-flag";
 import { MatchStatusBadge } from "@/components/match/match-status-badge";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import {
   formatScheduleKickoff,
   getScheduleRowVariant
@@ -15,28 +18,30 @@ export type GameIdentityProps = {
 };
 
 export function GameIdentity({ match, homeTeam, awayTeam }: GameIdentityProps) {
+  const homeDisplayName = useLocalizedTeamName(homeTeam.code, homeTeam.name);
+  const awayDisplayName = useLocalizedTeamName(awayTeam.code, awayTeam.name);
   const liveMatch = useMatchWithLiveState(match);
   const variant = getScheduleRowVariant(liveMatch.status);
   const kickoffLabel = formatScheduleKickoff(liveMatch.kickoffAt);
-  const title = `${homeTeam.name} vs ${awayTeam.name}`;
+  const title = `${homeDisplayName} vs ${awayDisplayName}`;
 
   return (
     <div className="flex w-full min-w-0 items-center gap-2 md:w-[38%] md:gap-3">
       <MatchBookmarkControl
         matchId={match.id}
-        homeTeamName={homeTeam.name}
-        awayTeamName={awayTeam.name}
+        homeTeamName={homeDisplayName}
+        awayTeamName={awayDisplayName}
       />
       <div className="mx-0 flex w-8 shrink-0 items-center md:mx-4 md:w-[32px]">
         <TeamFlag
           code={homeTeam.code}
-          name={homeTeam.name}
+          name={homeDisplayName}
           logoUrl={match.homeLogoUrl ?? homeTeam.logoUrl}
           className="relative top-[-8px] z-[1] h-[22px] w-[22px] rounded-[2px] text-[22px]"
         />
         <TeamFlag
           code={awayTeam.code}
-          name={awayTeam.name}
+          name={awayDisplayName}
           logoUrl={match.awayLogoUrl ?? awayTeam.logoUrl}
           className="relative left-[-10px] h-[22px] w-[22px] rounded-[2px] text-[22px]"
         />

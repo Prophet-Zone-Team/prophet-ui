@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
 import { CopyIcon } from "@/components/icons";
@@ -31,6 +32,7 @@ import { Loader2 } from "lucide-react";
 export interface PortfolioSummarySectionProps { }
 
 export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
+  const t = useTranslations("portfolio");
   const {
     session,
     portfolio,
@@ -65,7 +67,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
   return (
     <section
       className={portfolioSummaryCardClass}
-      aria-label="Portfolio summary"
+      aria-label={t("portfolioSummary")}
     >
       <div className="flex items-center gap-[20px]">
         {session ? (
@@ -86,7 +88,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
             </span>
             <PolymarketAddressCopyButton
               address={polymarketAddress}
-              ariaLabel="Copy Polymarket address"
+              ariaLabel={t("copyPolymarketAddress")}
               className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
             >
               <CopyIcon />
@@ -94,7 +96,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
           </div>
         ) : (
           <span className="text-[20px] font-[500] leading-6 text-prophet-muted">
-            Wallet not connected
+            {t("walletNotConnected")}
           </span>
         )}
         {confirmPendingDeposit.hasPendingDeposit ? (
@@ -111,7 +113,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
                   aria-hidden="true"
                 />
               ) : null}
-              Confirm pending deposit
+              {t("confirmPendingDeposit")}
             </button>
           </RegionRestrictedControl>
         ) : null}
@@ -121,7 +123,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
         <div className="w-full md:w-1/2 flex flex-col justify-between pt-[20px] md:h-[160px] relative">
           <div className="flex">
             <div className="w-1/2">
-              <div className={portfolioSummaryLabelClass}>Portfolio</div>
+              <div className={portfolioSummaryLabelClass}>{t("portfolio")}</div>
               <div className={portfolioSummaryValueLargeClass}>
                 ${portfolioDisplay}
               </div>
@@ -129,7 +131,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
             <div className="w-1/2">
               <div className="flex flex-wrap items-center gap-2">
                 <div className={portfolioSummaryLabelClass}>
-                  Available to trade
+                  {t("availableToTrade")}
                 </div>
               </div>
               <strong className={portfolioSummaryValueMediumClass}>
@@ -145,7 +147,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
                 onClick={() => void onConnectWallet()}
                 disabled={status === "loading"}
               >
-                {status === "loading" ? "Connecting…" : "Connect Wallet"}
+                {status === "loading" ? t("connecting") : t("connectWallet")}
               </button>
             ) : (
               <>
@@ -156,7 +158,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
                     disabled={regionRestricted}
                     onClick={() => openDepositDialog({ onSuccess: reload })}
                   >
-                    Deposit
+                    {t("depositLabel")}
                   </button>
                 </RegionRestrictedControl>
                 <button
@@ -164,7 +166,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
                   className={cn(portfolioWithdrawButtonClass, "flex-1")}
                   onClick={() => setWithdrawOpen(true)}
                 >
-                  Withdraw
+                  {t("withdrawLabel")}
                 </button>
               </>
             )}

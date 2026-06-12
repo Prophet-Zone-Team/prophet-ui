@@ -1,20 +1,12 @@
+import { formatDateTimeFromIso } from "@/lib/formatters/datetime";
+
 const GMT8_TIMEZONE = "Asia/Shanghai";
 
-export function formatOrderBookClearingKickoff(kickoffAt: string): string {
-  const date = new Date(kickoffAt);
-
-  if (Number.isNaN(date.getTime())) {
-    return kickoffAt;
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: GMT8_TIMEZONE,
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true
-  }).format(date);
+export function formatOrderBookClearingKickoff(
+  kickoffAt: string,
+  _locale = "en-US"
+): string {
+  return formatDateTimeFromIso(kickoffAt, GMT8_TIMEZONE);
 }
 
 export function formatOrderBookClearingTip(kickoffAt: string): string {

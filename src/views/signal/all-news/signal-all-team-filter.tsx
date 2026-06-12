@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import Drawer, { DrawerDirection } from "@/components/drawer";
 import { TeamFlag } from "@/components/teams/team-flag";
@@ -32,6 +33,7 @@ export function SignalAllTeamFilterControl({
   disabled = false,
   className
 }: SignalAllTeamFilterProps) {
+  const t = useTranslations("signal");
   const isMobile = useDevice();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

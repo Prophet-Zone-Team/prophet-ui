@@ -2,7 +2,8 @@
 
 import type { QuoteResponse } from "@stableflow/core";
 import { Loader2 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { POLYMARKET_USD } from "@/config/funding";
 import { formatQuoteCheckoutTime } from "@/lib/funding/bridge-quote";
@@ -18,7 +19,6 @@ import { TransactionBreakdown } from "@/views/portfolio/deposit/transaction-brea
 import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import type { PrivateTopupSelectableToken } from "@/views/portfolio/private-topup/types";
 import { privateTopupSecureIconWrapClass } from "@/views/portfolio/private-topup/private-topup-ui";
-import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 export interface PrivateTopupConfirmStepProps {
@@ -42,6 +42,7 @@ export function PrivateTopupConfirmStep({
   quoteLoading = false,
   quoteError,
 }: PrivateTopupConfirmStepProps) {
+  const t = useTranslations("privateTopup");
   const stableflowDisplay = useMemo(
     () =>
       stableflowQuote
@@ -85,7 +86,7 @@ export function PrivateTopupConfirmStep({
       {quoteLoading ? (
         <div className="flex items-center justify-center gap-2 text-sm text-[#909090]">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          <span>Fetching quote…</span>
+          <span>{t("fetchingQuote")}</span>
         </div>
       ) : null}
 
@@ -94,13 +95,13 @@ export function PrivateTopupConfirmStep({
       ) : null}
 
       <div className="flex flex-col">
-        <DetailRow label="From">
+        <DetailRow label={t("from")}>
           <span className="flex items-center gap-2">
             <WalletAvatarIcon address={topupWalletAddress} />
             <span>{formatShortWallet(topupWalletAddress)}</span>
           </span>
         </DetailRow>
-        <DetailRow label="To">
+        <DetailRow label={t("to")}>
           <span className="flex items-center gap-2">
             <div
               className={cn(
@@ -115,14 +116,14 @@ export function PrivateTopupConfirmStep({
                 aria-hidden
               />
             </div>
-            <span>Prophet Private</span>
+            <span>{t("prophetPrivate")}</span>
             <span>{formatShortWallet(privateAccountAddress)}</span>
           </span>
         </DetailRow>
-        <DetailRow label="Est. Time">
+        <DetailRow label={t("estTime")}>
           <span>{estimatedTime}</span>
         </DetailRow>
-        <DetailRow label="Send">
+        <DetailRow label={t("send")}>
           <span className="flex items-center gap-2">
             <TokenIcon
               symbol={token.symbol}
@@ -134,7 +135,7 @@ export function PrivateTopupConfirmStep({
             <span>{formatNumber(tokenAmount, 4, true, { round: 0 })}</span>
           </span>
         </DetailRow>
-        <DetailRow label="Est. Receive">
+        <DetailRow label={t("estReceive")}>
           <span className="flex items-center gap-2">
             <TokenIcon
               symbol={POLYMARKET_USD.symbol}

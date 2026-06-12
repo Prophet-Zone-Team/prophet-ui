@@ -8,33 +8,80 @@ export type WithdrawStep = "entry" | "form" | "status";
 
 export type WithdrawSelectableToken = FundingAsset | StableflowWithdrawToken;
 
+export type WithdrawOperationTitleKey =
+  | "phaseQuoting"
+  | "phaseUnwrapping"
+  | "phaseSwapping"
+  | "phaseSubmittingDepositTx"
+  | "phasePollingStableflow"
+  | "phasePollingBridge"
+  | "phaseSyncing"
+  | "phaseSuccess"
+  | "phaseError"
+  | "phaseDefault";
+
+export type WithdrawOperationDescriptionKey =
+  | "descQuoting"
+  | "descUnwrapping"
+  | "descSwapping"
+  | "descSubmittingDepositTx"
+  | "descPollingStableflow"
+  | "descPollingBridge"
+  | "descSyncing"
+  | "pleaseWait";
+
 export function isStableflowWithdrawSelectableToken(
   token: WithdrawSelectableToken | undefined,
 ): token is StableflowWithdrawToken {
   return Boolean(token && "assetId" in token);
 }
 
-export function formatWithdrawOperationTitle(phase: WithdrawOperationPhase): string {
+export function getWithdrawOperationTitleKey(
+  phase: WithdrawOperationPhase,
+): WithdrawOperationTitleKey {
   switch (phase) {
     case "quoting":
-      return "Preparing withdrawal";
+      return "phaseQuoting";
     case "unwrapping":
-      return "Unwrapping pUSD";
+      return "phaseUnwrapping";
     case "swapping":
-      return "Converting to USDC";
+      return "phaseSwapping";
     case "submitting_deposit_tx":
-      return "Registering deposit";
+      return "phaseSubmittingDepositTx";
     case "polling_stableflow":
-      return "Cross-chain transfer";
+      return "phasePollingStableflow";
     case "polling_bridge":
-      return "Bridge withdrawal";
+      return "phasePollingBridge";
     case "syncing":
-      return "Updating balance";
+      return "phaseSyncing";
     case "success":
-      return "Withdrawal complete";
+      return "phaseSuccess";
     case "error":
-      return "Withdrawal could not be completed";
+      return "phaseError";
     default:
-      return "Withdraw";
+      return "phaseDefault";
+  }
+}
+
+export function getWithdrawOperationDescriptionKey(
+  phase: WithdrawOperationPhase,
+): WithdrawOperationDescriptionKey {
+  switch (phase) {
+    case "quoting":
+      return "descQuoting";
+    case "unwrapping":
+      return "descUnwrapping";
+    case "swapping":
+      return "descSwapping";
+    case "submitting_deposit_tx":
+      return "descSubmittingDepositTx";
+    case "polling_stableflow":
+      return "descPollingStableflow";
+    case "polling_bridge":
+      return "descPollingBridge";
+    case "syncing":
+      return "descSyncing";
+    default:
+      return "pleaseWait";
   }
 }

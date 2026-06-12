@@ -6,7 +6,6 @@ import { formatVolume } from "@/components/home/market-formatters";
 import { cn } from "@/lib/cn";
 import { formatMatchScore } from "@/lib/market/match-display";
 import {
-  getOutcomePillLabel,
   getOutcomePillStyles,
   getTeamMatchOutcome,
   resolveMatchResultWinner,
@@ -26,9 +25,11 @@ import {
 import { gameTradeHref } from "@/lib/routes/trade";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { MatchBookmarkControl } from "@/views/home/matches/match-bookmark-control";
 import { MatchResultBar } from "@/views/home/matches/match-result-bar";
 import { ScheduleMatchOutcomeBar } from "@/views/home/matches/schedule-match-outcome-bar";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 export interface ScheduleMatchRowProps {
@@ -43,14 +44,21 @@ export function ScheduleMatchRow({
   className
 }: ScheduleMatchRowProps) {
   const router = useRouter();
+  const t = useTranslations("home");
   const liveMatch = useMatchWithLiveState(match);
   const variant = getScheduleRowVariant(liveMatch.status);
   const sides = resolveMatchSides(match, snapshots);
-  const oddsResult = parseMatchOutcomeOdds(
-    liveMatch,
-    sides.home.name,
-    sides.away.name
-  );
+  const homeName = sides.home.name;
+  const awayName = sides.away.name;
+  const homeDisplayName = useLocalizedTeamName(sides.home.code, homeName);
+  const awayDisplayName = useLocalizedTeamName(sides.away.code, awayName);
+  const statusLabel =
+    variant === "ongoing"
+      ? t("matchStatusOngoing")
+      : variant === "upcoming"
+        ? t("matchStatusUpcoming")
+        : t("matchStatusEnded");
+  const oddsResult = parseMatchOutcomeOdds(liveMatch, homeName, awayName);
   const homePct =
     oddsResult.status === "ready"
       ? formatOutcomePercent(oddsResult.probabilities.home)
@@ -81,7 +89,7 @@ export function ScheduleMatchRow({
           "border-[#7BCA25] shadow-[0_0_10px_rgba(123,202,37,0.25)]",
         className
       )}
-      aria-label={`${sides.home.name} vs ${sides.away.name}, ${variant}`}
+      aria-label={`${t("specialMatchAria", { home: homeDisplayName, away: awayDisplayName })}, ${statusLabel}`}
       onClick={
         canNavigate
           ? () => {
@@ -94,10 +102,14 @@ export function ScheduleMatchRow({
         <div className="flex shrink-0 items-center gap-3">
           <MatchBookmarkControl
             matchId={match.id}
-            homeTeamName={sides.home.name}
-            awayTeamName={sides.away.name}
+            homeTeamName={homeName}
+            awayTeamName={awayName}
           />
-          <StatusColumn variant={variant} kickoffLabel={kickoffLabel} />
+          <StatusColumn
+            variant={variant}
+            kickoffLabel={kickoffLabel}
+            statusLabel={statusLabel}
+          />
         </div>
         <div className="block md:hidden">
           <VolumeColumn amount={volumeLabel} />
@@ -109,6 +121,8 @@ export function ScheduleMatchRow({
           {variant === "upcoming" ? (
             <UpcomingMatchBody
               sides={sides}
+              homeDisplayName={homeDisplayName}
+              awayDisplayName={awayDisplayName}
               homePct={homePct}
               awayPct={awayPct}
               probabilities={
@@ -120,12 +134,16 @@ export function ScheduleMatchRow({
           ) : variant === "ended" ? (
             <EndedMatchBody
               sides={sides}
+              homeDisplayName={homeDisplayName}
+              awayDisplayName={awayDisplayName}
               scoreLabel={scoreLabel}
               resultWinner={resultWinner}
             />
           ) : (
             <OngoingMatchBody
               sides={sides}
+              homeDisplayName={homeDisplayName}
+              awayDisplayName={awayDisplayName}
               homePct={homePct}
               awayPct={awayPct}
               scoreLabel={scoreLabel}
@@ -148,14 +166,20 @@ export function ScheduleMatchRow({
 
 function StatusColumn({
   variant,
-  kickoffLabel
+  kickoffLabel,
+  statusLabel
 }: {
   variant: ScheduleRowVariant;
   kickoffLabel: string;
+  statusLabel: string;
 }) {
   return (
     <div className="shrink-0">
-      <MatchStatusBadge variant={variant} className="font-semibold" />
+      <MatchStatusBadge
+        variant={variant}
+        className="font-semibold"
+        label={statusLabel}
+      />
       <p className="m-0 mt-[4px] text-xs md:text-[14px] leading-[14px] text-[#909090]">
         {kickoffLabel}
       </p>
@@ -165,30 +189,38 @@ function StatusColumn({
 
 function UpcomingMatchBody({
   sides,
+  homeDisplayName,
+  awayDisplayName,
   homePct,
   awayPct,
   probabilities
 }: {
   sides: ReturnType<typeof resolveMatchSides>;
+  homeDisplayName: string;
+  awayDisplayName: string;
   homePct: string;
   awayPct: string;
   probabilities?: { home: number; draw: number; away: number };
 }) {
+  const t = useTranslations("home");
+
   return (
     <div className="pt-[14px] pb-[10px]">
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
         <TeamPercentSide
           align="start"
           percent={homePct}
-          name={sides.home.name}
+          name={homeDisplayName}
           code={sides.home.code}
           logoUrl={sides.home.logoUrl}
         />
-        <span className="px-1 text-sm font-normal text-[#909090]">VS</span>
+        <span className="px-1 text-sm font-normal text-[#909090]">
+          {t("versus")}
+        </span>
         <TeamPercentSide
           align="end"
           percent={awayPct}
-          name={sides.away.name}
+          name={awayDisplayName}
           code={sides.away.code}
           logoUrl={sides.away.logoUrl}
         />
@@ -202,12 +234,16 @@ function UpcomingMatchBody({
 
 function OngoingMatchBody({
   sides,
+  homeDisplayName,
+  awayDisplayName,
   homePct,
   awayPct,
   scoreLabel,
   probabilities
 }: {
   sides: ReturnType<typeof resolveMatchSides>;
+  homeDisplayName: string;
+  awayDisplayName: string;
   homePct: string;
   awayPct: string;
   scoreLabel: string;
@@ -219,7 +255,7 @@ function OngoingMatchBody({
         <TeamPercentSide
           align="start"
           percent={homePct}
-          name={sides.home.name}
+          name={homeDisplayName}
           code={sides.home.code}
           logoUrl={sides.home.logoUrl}
         />
@@ -229,7 +265,7 @@ function OngoingMatchBody({
         <TeamPercentSide
           align="end"
           percent={awayPct}
-          name={sides.away.name}
+          name={awayDisplayName}
           code={sides.away.code}
           logoUrl={sides.away.logoUrl}
         />
@@ -243,10 +279,14 @@ function OngoingMatchBody({
 
 function EndedMatchBody({
   sides,
+  homeDisplayName,
+  awayDisplayName,
   scoreLabel,
   resultWinner
 }: {
   sides: ReturnType<typeof resolveMatchSides>;
+  homeDisplayName: string;
+  awayDisplayName: string;
   scoreLabel: string;
   resultWinner: ReturnType<typeof resolveMatchResultWinner>;
 }) {
@@ -265,7 +305,7 @@ function EndedMatchBody({
         <TeamResultSide
           align="start"
           outcome={homeOutcome}
-          name={sides.home.name}
+          name={homeDisplayName}
           code={sides.home.code}
           logoUrl={sides.home.logoUrl}
         />
@@ -275,7 +315,7 @@ function EndedMatchBody({
         <TeamResultSide
           align="end"
           outcome={awayOutcome}
-          name={sides.away.name}
+          name={awayDisplayName}
           code={sides.away.code}
           logoUrl={sides.away.logoUrl}
         />
@@ -374,26 +414,35 @@ function TeamResultSide({
 }
 
 function OutcomePill({ outcome }: { outcome: TeamMatchOutcome }) {
+  const t = useTranslations("home");
   const styles = getOutcomePillStyles(outcome);
+  const label =
+    outcome === "win"
+      ? t("matchOutcomeWin")
+      : outcome === "lose"
+        ? t("matchOutcomeLose")
+        : t("matchOutcomeDraw");
 
   return (
     <span
       className="inline-flex shrink-0 items-center rounded-full px-[18px] h-[34px] text-[14px] font-[500] leading-[14px]"
       style={{ background: styles.background, color: styles.color }}
     >
-      {getOutcomePillLabel(outcome)}
+      {label}
     </span>
   );
 }
 
 function VolumeColumn({ amount }: { amount: string }) {
+  const t = useTranslations("home");
+
   return (
     <div className="flex flex-1 md:flex-grow-0 md:w-full shrink-0 flex-col items-end sm:w-[88px]">
       <strong className="text-lg font-[500] leading-[21px] text-black">
         {amount}
       </strong>
       <span className="text-xs font-normal leading-[14px] text-[#909090]">
-        Volume
+        {t("volume")}
       </span>
     </div>
   );

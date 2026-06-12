@@ -5,9 +5,59 @@ import {
 import { findFixtureGroupByType } from "@/views/trade/game/markets/fixture-market-actions";
 import type { GameMarketTabId } from "@/views/trade/game/markets/fixture-market-actions";
 import type {
+  FixtureMarketGroup,
   FixtureMarketOutcome,
   GameFixtureMarketsSnapshot,
 } from "@/types/market";
+
+function collectAllOutcomesForLineGroup(
+  group: FixtureMarketGroup,
+): FixtureMarketOutcome[] {
+  if (group.outcomesByLine) {
+    return Object.values(group.outcomesByLine).flat();
+  }
+
+  return group.outcomes;
+}
+
+function addUniqueOutcomes(
+  target: Map<string, FixtureMarketOutcome>,
+  outcomes: FixtureMarketOutcome[],
+): void {
+  for (const outcome of outcomes) {
+    if (!target.has(outcome.id)) {
+      target.set(outcome.id, outcome);
+    }
+  }
+}
+
+/** All fixture outcomes across moneyline, totals, spreads, halftime, and top scores. */
+export function resolveAllFixtureOutcomes(
+  fixtureMarkets: GameFixtureMarketsSnapshot,
+): FixtureMarketOutcome[] {
+  const byId = new Map<string, FixtureMarketOutcome>();
+
+  addUniqueOutcomes(
+    byId,
+    resolveFixtureOutcomesForTab(fixtureMarkets, "moneyline"),
+  );
+  addUniqueOutcomes(byId, fixtureMarkets.halftime);
+  addUniqueOutcomes(byId, fixtureMarkets.exactScores);
+
+  const totalGroup = findFixtureGroupByType(fixtureMarkets.lines, "total");
+
+  if (totalGroup) {
+    addUniqueOutcomes(byId, collectAllOutcomesForLineGroup(totalGroup));
+  }
+
+  const spreadGroup = findFixtureGroupByType(fixtureMarkets.lines, "spread");
+
+  if (spreadGroup) {
+    addUniqueOutcomes(byId, collectAllOutcomesForLineGroup(spreadGroup));
+  }
+
+  return [...byId.values()];
+}
 
 export function resolveFixtureOutcomesForTab(
   fixtureMarkets: GameFixtureMarketsSnapshot,

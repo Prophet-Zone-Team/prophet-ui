@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import type { MarketDataMeta } from "@/data/providers/types";
 import type { NormalizedBookmakerOdds } from "@/data/odds/types";
 import {
@@ -31,6 +35,7 @@ export function TeamOddsComparisonPanel({
   outrightOdds,
   dataStatus
 }: TeamOddsComparisonPanelProps) {
+  const t = useTranslations("teamDetail");
   const visibleFixtureOdds = fixtureOdds.slice(0, 6);
   const visibleOutrightOdds = outrightOdds.slice(0, 5);
   const spread =
@@ -42,38 +47,38 @@ export function TeamOddsComparisonPanel({
   const max = impliedValues.at(-1);
 
   return (
-    <section className={teamPanelClass} aria-label="Odds comparison">
+    <section className={teamPanelClass} aria-label={t("oddsComparisonAria")}>
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Odds Comparison</h2>
+        <h2 className={teamPanelTitleClass}>{t("oddsComparison")}</h2>
         <span className={teamPanelBadgeClass}>
           {dataStatus.odds?.source === "the-odds-api"
-            ? "The Odds API"
-            : "Odds pending"}
+            ? t("theOddsApi")
+            : t("oddsPending")}
         </span>
       </div>
       <div className="flex flex-col gap-4 p-4">
         <div className={teamMiniGridClass}>
           <TeamPanelMetric
-            label="Outright odds implied"
+            label={t("outrightOddsImplied")}
             value={formatProbability(
               snapshot.market.bookmakerImpliedProbability
             )}
           />
           <TeamPanelMetric
-            label="Market probability"
+            label={t("marketProbability")}
             value={formatProbability(snapshot.market.probability)}
           />
           <TeamPanelMetric
-            label="Difference"
+            label={t("difference")}
             value={formatChange(spread)}
             tone={spread < 0 ? "down" : spread > 0 ? "up" : undefined}
           />
           <TeamPanelMetric
-            label="Bookmaker spread"
+            label={t("bookmakerSpread")}
             value={
               min !== undefined && max !== undefined
                 ? `${formatProbability(min)} - ${formatProbability(max)}`
-                : "Unavailable"
+                : t("unavailable")
             }
           />
         </div>
@@ -87,7 +92,7 @@ export function TeamOddsComparisonPanel({
               >
                 <span className="text-prophet-muted">{item.bookmaker}</span>
                 <strong className="font-[500] text-black">
-                  Winner outright
+                  {t("winnerOutright")}
                 </strong>
                 <b className="font-[500] text-black">
                   {formatProbability(item.impliedProbability)}
@@ -101,25 +106,26 @@ export function TeamOddsComparisonPanel({
                 className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-2 rounded-md border border-prophet-line px-3 py-2 text-xs"
               >
                 <span className="text-prophet-muted">
-                  {item.bookmaker ?? "Bookmaker"}
+                  {item.bookmaker ?? t("bookmaker")}
                 </span>
                 <strong className="font-[500] text-black">
-                  {item.selectionName ?? item.marketName ?? "Fixture odds"}
+                  {item.selectionName ?? item.marketName ?? t("fixtureOdds")}
                 </strong>
-                <b className="font-[500] text-black">{item.odd ?? "Pending"}</b>
+                <b className="font-[500] text-black">
+                  {item.odd ?? t("pending")}
+                </b>
               </div>
             ))
           ) : (
             <TeamEmptyState
-              title="Fixture odds pending"
-              body="API-Football fixture odds are only shown when a priced upcoming match is available."
+              title={t("fixtureOddsPending")}
+              body={t("fixtureOddsPendingBody")}
             />
           )}
         </div>
 
         <p className="m-0 text-[11px] leading-relaxed text-prophet-muted">
-          Outright odds are third-party context. Fixture odds depend on
-          available scheduled matches and bookmaker coverage.
+          {t("oddsComparisonFootnote")}
         </p>
       </div>
     </section>

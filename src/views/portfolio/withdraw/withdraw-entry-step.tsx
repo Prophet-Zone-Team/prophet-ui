@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import { usePortfolioContext } from "../context";
 import { formatNumber } from "@/utils";
@@ -18,6 +19,7 @@ export function WithdrawEntryStep({
   onSelectStableflow,
   stableflowLoading = false,
 }: WithdrawEntryStepProps) {
+  const t = useTranslations("portfolio");
   const { session, onConnectWallet, status, portfolio, reload, coreStatus } =
     usePortfolioContext();
   const availableDisplay = session
@@ -40,7 +42,7 @@ export function WithdrawEntryStep({
           onClick={() => void onConnectWallet()}
           disabled={status === "loading"}
         >
-          {status === "loading" ? "Connecting…" : "Connect Wallet"}
+          {status === "loading" ? t("connecting") : t("connectWallet")}
         </button>
       </div>
     );

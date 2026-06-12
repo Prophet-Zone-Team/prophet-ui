@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 export type MarketOtherSourceItem = {
@@ -7,18 +9,18 @@ export type MarketOtherSourceItem = {
   netPercent: number;
 };
 
-function formatNetPercent(value: number) {
-  return `NET ${value.toFixed(1)}%`;
-}
-
-function OtherSourcePill({ sourceName, netPercent }: MarketOtherSourceItem) {
+function OtherSourcePill({
+  sourceName,
+  netPercent,
+  netPercentLabel
+}: MarketOtherSourceItem & { netPercentLabel: string }) {
   return (
     <div className="inline-flex h-[36px] shrink-0 items-center gap-2 rounded-[18px] border border-[#EBEBEB] bg-white px-3">
       <span className="text-[12px] font-[500] leading-[15px] text-[#909090]">
         {sourceName}
       </span>
       <span className="text-[12px] font-[500] leading-[15px] text-black">
-        {formatNetPercent(netPercent)}
+        {netPercentLabel}
       </span>
     </div>
   );
@@ -31,6 +33,8 @@ export function MarketOtherSources({
   sources: MarketOtherSourceItem[];
   className?: string;
 }) {
+  const t = useTranslations("trade");
+
   if (!sources.length) {
     return null;
   }
@@ -38,11 +42,17 @@ export function MarketOtherSources({
   return (
     <section className={cn("flex flex-col gap-3", className)}>
       <h4 className="m-0 text-[14px] font-[500] leading-[18px] text-[#909090]">
-        Other Sources
+        {t("otherSources")}
       </h4>
       <div className="flex flex-wrap gap-2">
         {sources.map((source) => (
-          <OtherSourcePill key={source.sourceName} {...source} />
+          <OtherSourcePill
+            key={source.sourceName}
+            {...source}
+            netPercentLabel={t("netPercent", {
+              value: source.netPercent.toFixed(1)
+            })}
+          />
         ))}
       </div>
     </section>

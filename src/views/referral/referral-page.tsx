@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAuth } from "@/context/auth/use-auth";
 import { useProphetReferral } from "@/hooks/referral/use-prophet-referral";
@@ -13,6 +14,7 @@ import { ReferralShell } from "./referral-shell";
 import { ReferralShellSkeleton } from "./referral-shell-skeleton";
 
 export function ReferralPage() {
+  const t = useTranslations("referral");
   const authHydrated = useAuthHydrated();
   const { session, isAuthenticated, openLogin, loginInProgress } = useAuth();
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -70,13 +72,13 @@ export function ReferralPage() {
     return (
       <div className={portfolioPageClass}>
         <div className="flex flex-col items-center gap-3 pt-[34px] text-[14px] text-[#909090]">
-          <p>Unable to load referral data.</p>
+          <p>{t("loadError")}</p>
           <button
             type="button"
             className="text-black underline-offset-2 hover:underline"
             onClick={() => void refetch()}
           >
-            Retry
+            {t("retry")}
           </button>
         </div>
       </div>

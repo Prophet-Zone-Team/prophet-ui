@@ -3,6 +3,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { defaultLocale, type AppLocale } from "@/i18n/config";
+
 export const MIN_FAST_BID_AMOUNT = 5;
 export const DEFAULT_FAST_BID_AMOUNT = 10;
 export const FAST_BID_PRESET_AMOUNTS = [5, 10, 100, 1000] as const;
@@ -12,10 +14,12 @@ interface UserConfigState {
   showOrderbook: boolean;
   showStrategyNotice: boolean;
   notificationsEnabled: boolean;
+  locale: AppLocale;
   setFastBidAmount: (amount: number) => void;
   setShowOrderbook: (value: boolean) => void;
   dismissStrategyNotice: () => void;
   setNotificationsEnabled: (value: boolean) => void;
+  setLocale: (locale: AppLocale) => void;
 }
 
 export function normalizeFastBidAmount(amount: number): number {
@@ -43,6 +47,7 @@ export const useUserConfigStore = create<UserConfigState>()(
       showOrderbook: true,
       showStrategyNotice: true,
       notificationsEnabled: true,
+      locale: defaultLocale,
       setFastBidAmount: (amount) => {
         set({ fastBidAmount: normalizeFastBidAmount(amount) });
       },
@@ -54,17 +59,21 @@ export const useUserConfigStore = create<UserConfigState>()(
       },
       setNotificationsEnabled: (value) => {
         set({ notificationsEnabled: value });
+      },
+      setLocale: (locale) => {
+        set({ locale });
       }
     }),
     {
       name: "wc-user-config",
-      version: 4,
+      version: 5,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         fastBidAmount: state.fastBidAmount,
         showOrderbook: state.showOrderbook,
         showStrategyNotice: state.showStrategyNotice,
-        notificationsEnabled: state.notificationsEnabled
+        notificationsEnabled: state.notificationsEnabled,
+        locale: state.locale
       }),
       migrate: (persisted) => {
         const state = persisted as
@@ -73,6 +82,7 @@ export const useUserConfigStore = create<UserConfigState>()(
               showOrderbook?: boolean;
               showStrategyNotice?: boolean;
               notificationsEnabled?: boolean;
+              locale?: AppLocale;
             }
           | undefined;
 
@@ -82,7 +92,8 @@ export const useUserConfigStore = create<UserConfigState>()(
           ),
           showOrderbook: state?.showOrderbook ?? true,
           showStrategyNotice: state?.showStrategyNotice ?? true,
-          notificationsEnabled: state?.notificationsEnabled ?? true
+          notificationsEnabled: state?.notificationsEnabled ?? true,
+          locale: state?.locale ?? defaultLocale
         };
       }
     }
@@ -119,4 +130,12 @@ export function useNotificationsEnabled() {
 
 export function useSetNotificationsEnabled() {
   return useUserConfigStore((state) => state.setNotificationsEnabled);
+}
+
+export function useLocale() {
+  return useUserConfigStore((state) => state.locale);
+}
+
+export function useSetLocale() {
+  return useUserConfigStore((state) => state.setLocale);
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   createContext,
   useContext,
@@ -23,7 +24,6 @@ import { formatChartProbability } from "@/components/home/market-formatters";
 import {
   formatChartTimestampClockLabel,
   formatGoalEventTime,
-  formatMatchMinuteAxisLabel,
 } from "@/lib/market/match-display";
 import {
   formatGameChartXAxisTick,
@@ -52,9 +52,9 @@ const CHART_COLORS = {
 } as const;
 
 const SERIES = [
-  { key: "home" as const, color: CHART_COLORS.home, label: "Home" },
-  { key: "draw" as const, color: CHART_COLORS.draw, label: "Draw" },
-  { key: "away" as const, color: CHART_COLORS.away, label: "Away" }
+  { key: "home" as const, color: CHART_COLORS.home },
+  { key: "draw" as const, color: CHART_COLORS.draw },
+  { key: "away" as const, color: CHART_COLORS.away }
 ] as const;
 
 const END_LABEL_RIGHT_INSET = 10;
@@ -271,9 +271,9 @@ export interface GameProbabilityChartProps {
 
 export function GameProbabilityChart({
   data,
-  homeLabel = "Home",
-  drawLabel = "Draw",
-  awayLabel = "Away",
+  homeLabel,
+  drawLabel,
+  awayLabel,
   mode = "historical",
   timeRange = "all",
   events = [],
@@ -282,15 +282,26 @@ export function GameProbabilityChart({
   homeCode,
   awayCode,
 }: GameProbabilityChartProps) {
+  const t = useTranslations("trade");
   const isLive = mode === "live";
+  const formatLiveAxisTick = (value: number) => {
+    const safeSeconds = Math.max(0, Math.floor(value));
+    const minutes = Math.floor(safeSeconds / 60);
+
+    if (minutes === 45) {
+      return t("chartHalfTimeAxisLabel");
+    }
+
+    return `${minutes}'`;
+  };
 
   const seriesLabels = useMemo(
     () => ({
-      home: homeLabel,
-      draw: drawLabel,
-      away: awayLabel
+      home: homeLabel ?? t("home"),
+      draw: drawLabel ?? t("draw"),
+      away: awayLabel ?? t("away")
     }),
-    [awayLabel, drawLabel, homeLabel]
+    [awayLabel, drawLabel, homeLabel, t]
   );
 
   const chartData = useMemo<ChartRow[]>(
@@ -332,17 +343,17 @@ export function GameProbabilityChart({
       events,
       maxElapsedSeconds: resolvedMaxElapsed,
       homeCode,
-      homeName: homeLabel,
+      homeName: seriesLabels.home,
       awayCode,
-      awayName: awayLabel,
+      awayName: seriesLabels.away,
     }),
     [
       awayCode,
-      awayLabel,
       events,
       homeCode,
-      homeLabel,
       resolvedMaxElapsed,
+      seriesLabels.away,
+      seriesLabels.home,
     ]
   );
 
@@ -375,7 +386,7 @@ export function GameProbabilityChart({
         padding={{ left: 0, right: END_LABEL_GUTTER }}
         tickFormatter={
           isLive
-            ? (value: number) => formatMatchMinuteAxisLabel(value)
+            ? formatLiveAxisTick
             : (value: string) => formatGameChartXAxisTick(value, timeRange)
         }
       />

@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Modal } from "@/components/ui/modal";
 import { TeamFlag } from "@/components/teams/team-flag";
@@ -40,6 +41,8 @@ export function PortfolioPositionRedeemDialog({
   teamName,
   onClose
 }: PortfolioPositionRedeemDialogProps) {
+  const t = useTranslations("portfolio");
+  const tCommon = useTranslations("common");
   const { session, syncCash } = useAuth();
   const { reload } = usePortfolioContext();
   const [phase, setPhase] = useState<RedeemPhase>("idle");
@@ -69,14 +72,14 @@ export function PortfolioPositionRedeemDialog({
 
   const handleConfirm = async () => {
     if (!session?.walletAddress || !position.conditionId) {
-      setErrorMessage("Connect your wallet to redeem this position.");
+      setErrorMessage(t("connectToRedeem"));
       setPhase("error");
       return;
     }
 
     setPhase("signing");
     setErrorMessage(undefined);
-    setStatusMessage("Preparing redeem transaction…");
+    setStatusMessage(t("preparingRedeemTransaction"));
 
     try {
       const { txHash } = await executeRedeem({
@@ -119,11 +122,11 @@ export function PortfolioPositionRedeemDialog({
     <Modal
       open={open}
       onClose={handleClose}
-      ariaLabel={`Redeem ${position.title}`}
+      ariaLabel={t("redeemAria", { title: position.title })}
       className={PORTFOLIO_REDEEM_MODAL_WIDTH}
       hideCloseButton
     >
-      <FundingModalShell title="Redeem" onClose={handleClose}>
+      <FundingModalShell title={t("redeemTitle")} onClose={handleClose}>
         <div className="flex flex-col gap-5 pb-2">
           <div className="flex items-start gap-2.5">
             {teamName ? <TeamFlag name={teamName} /> : null}
@@ -144,19 +147,17 @@ export function PortfolioPositionRedeemDialog({
 
           <div className="flex flex-col gap-1 rounded-lg border border-prophet-line/80 bg-[#FAFAFA] px-3 py-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-prophet-muted">Shares</span>
+              <span className="text-prophet-muted">{t("shares")}</span>
               <span className="font-[500] text-black">
                 {formatTeamDetailMoney(position.size)}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-prophet-muted">Estimated outcome</span>
+              <span className="text-prophet-muted">{t("estimatedOutcome")}</span>
               <span className="font-[500] text-black">{estimatedValue}</span>
             </div>
             <p className="m-0 text-xs text-prophet-muted">
-              Redemption converts resolved outcome tokens into tradable balance
-              on your deposit wallet. Estimated outcome is market data, not a
-              guaranteed return.
+              {t("redeemDescription")}
             </p>
           </div>
 
@@ -176,7 +177,7 @@ export function PortfolioPositionRedeemDialog({
             disabled={isBusy}
             onClick={handleClose}
           >
-            Cancel
+            {tCommon("cancel")}
           </button>
           <button
             type="button"
@@ -188,7 +189,7 @@ export function PortfolioPositionRedeemDialog({
             onClick={() => void handleConfirm()}
           >
             {isBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Confirm redeem
+            {t("confirmRedeem")}
           </button>
         </div>
       </FundingModalShell>

@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { SignalAllSortIcon } from "./signal-all-sort-icon";
@@ -34,6 +38,8 @@ export function SignalAllHeader({
   sortDisabled = false,
   className
 }: SignalAllHeaderProps) {
+  const t = useTranslations("signal");
+
   return (
     <header
       className={cn(
@@ -43,7 +49,7 @@ export function SignalAllHeader({
     >
       <div className="flex items-center justify-between gap-3">
         <h2 className="m-0 min-w-0 truncate text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
-          All Signals &amp; News
+          {t("allSignalsAndNews")}
         </h2>
         <SignalAllTeamFilterControl
           value={teamFilter}
@@ -70,13 +76,13 @@ export function SignalAllHeader({
           className="w-[110px] shrink-0"
         /> */}
         <span role="columnheader" className="w-[110px] shrink-0">
-          Team & Time
+          {t("teamAndTime")}
         </span>
         <span role="columnheader" className="min-w-0 flex-1 text-center">
-          News
+          {t("news")}
         </span>
         <span role="columnheader" className="shrink-0 justify-end">
-          Impact
+          {t("impact")}
         </span>
         {/* <SortableColumnHeader
           label="Impact"

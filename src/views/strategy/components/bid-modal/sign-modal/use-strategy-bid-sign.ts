@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAuth } from "@/context/auth";
 import type { StrategyBidLeg } from "@/lib/strategy/strategy-bid-validation";
@@ -12,6 +13,7 @@ import {
   summarizeStrategyBidSubmission
 } from "@/lib/strategy/run-strategy-bid";
 import { showOrderErrorToast } from "@/lib/trading/order-toast";
+import { translateTradeMessage } from "@/views/trade/trade-widget/trade-i18n";
 import { ensureTradingReadyForBid } from "@/views/trade/trade-widget/trade-ticket-helpers";
 
 import type { LegSignStatus, StrategyBidSignLegState } from "../types";
@@ -34,6 +36,8 @@ export function useStrategyBidSign(input: {
   hitReturnLabel: string;
   onComplete: () => void;
 }) {
+  const t = useTranslations("strategy");
+  const tTrade = useTranslations("trade");
   const auth = useAuth();
   const [legStates, setLegStates] = useState<StrategyBidSignLegState[]>(() =>
     createInitialLegStates(input.legs)
@@ -89,9 +93,7 @@ export function useStrategyBidSign(input: {
         const session = auth.session;
 
         if (!session?.funderAddress) {
-          throw new Error(
-            "A connected wallet, deployed deposit wallet, and Polymarket token are required."
-          );
+          throw new Error(t("walletRequiredForSign"));
         }
 
         const signed = await signStrategyBidLeg(current.leg, session);
@@ -184,7 +186,7 @@ export function useStrategyBidSign(input: {
       .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
 
     if (signedLegs.length !== legStates.length) {
-      const message = "All legs must be signed before submitting orders.";
+      const message = t("allLegsMustBeSigned");
       setSubmitError(message);
       showOrderErrorToast(message);
       return;
@@ -225,7 +227,9 @@ export function useStrategyBidSign(input: {
           return {
             ...entry,
             status: "submit_failed",
-            errorMessage: batchResult.error ?? "Transaction Failed"
+            errorMessage: batchResult.error
+              ? translateTradeMessage(batchResult.error, tTrade)
+              : t("transactionFailed")
           };
         })
       );

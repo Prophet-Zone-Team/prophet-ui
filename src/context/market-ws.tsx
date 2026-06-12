@@ -338,7 +338,7 @@ export function useMarketWsPrices(
       pricesByTokenId: filtered,
       connected: context.connected,
     };
-  }, [context, tokenKey]);
+  }, [context?.connected, context?.pricesByTokenId, context?.revision, tokenKey]);
 }
 
 export function useMarketWsOrderbook(

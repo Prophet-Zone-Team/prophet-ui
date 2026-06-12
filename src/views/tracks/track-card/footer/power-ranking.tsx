@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 
@@ -39,12 +43,14 @@ function TeamPowerRankingMetric({
   powerRanking,
   className
 }: TeamPowerRankingMetricProps) {
+  const t = useTranslations("tracks");
+
   return (
     <div className={cn("flex shrink-0 flex-col md:w-[15%]", className)}>
       <span className="text-[16px] font-[400] leading-[20px] text-black">
         {formatFifaRank(powerRanking.rank)}
       </span>
-      <span className={trackCardLabelClassName}>Fifa Ranking</span>
+      <span className={trackCardLabelClassName}>{t("fifaRanking")}</span>
     </div>
   );
 }
@@ -53,6 +59,8 @@ function GamePowerRankingMetric({
   powerRanking,
   className
 }: GamePowerRankingMetricProps) {
+  const t = useTranslations("tracks");
+
   return (
     <div className={cn("flex shrink-0 flex-col gap-1 md:w-[15%]", className)}>
       <div className="flex min-h-[20px] items-center gap-3">
@@ -67,7 +75,7 @@ function GamePowerRankingMetric({
           rank={powerRanking.away.rank}
         />
       </div>
-      <span className={trackCardLabelClassName}>Fifa Ranking</span>
+      <span className={trackCardLabelClassName}>{t("fifaRanking")}</span>
     </div>
   );
 }

@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import {
   strategyCardMetricLabelClassName,
@@ -20,6 +24,8 @@ export function StrategySummary({
   teams,
   className
 }: StrategySummaryProps) {
+  const t = useTranslations("strategy");
+
   return (
     <div className={cn("flex flex-col gap-5", className)}>
       <h3 className="m-0 text-center font-[Sora] text-lg font-semibold capitalize leading-[23px] text-black">
@@ -33,12 +39,12 @@ export function StrategySummary({
           >
             {estimatedRoiLabel}
           </span>
-          <span className={strategyCardMetricLabelClassName}>Est. ROI</span>
+          <span className={strategyCardMetricLabelClassName}>{t("estRoi")}</span>
         </div>
 
         <div className="flex flex-col items-center text-center">
           <StrategyTeamFlagsStack teams={teams} />
-          <span className={strategyCardMetricLabelClassName}>Teams</span>
+          <span className={strategyCardMetricLabelClassName}>{t("teams")}</span>
         </div>
       </div>
     </div>

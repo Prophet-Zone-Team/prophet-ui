@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { cn } from "@/lib/cn";
@@ -33,6 +34,7 @@ export function FundingCryptoEntry({
   onSelectStableflow,
   stableflowLoading = false,
 }: FundingCryptoEntryProps) {
+  const t = useTranslations("portfolio.fundingCrypto");
   const loginMethod = useAuthStore((state) => state.loginMethod);
   const isConnectedBridge = useMemo(() => {
     if (reference === "deposit") {
@@ -46,7 +48,7 @@ export function FundingCryptoEntry({
       {
         isConnectedBridge && (
           <>
-            <span className={depositSectionLabelClass}>Connected</span>
+            <span className={depositSectionLabelClass}>{t("connected")}</span>
             <button
               type="button"
               className={depositConnectedRowHighlightedClass}
@@ -71,7 +73,7 @@ export function FundingCryptoEntry({
         )
       }
 
-      <span className={depositSectionLabelClass}>Others</span>
+      <span className={depositSectionLabelClass}>{t("others")}</span>
       <button
         type="button"
         className={depositConnectedRowClass}
@@ -91,7 +93,7 @@ export function FundingCryptoEntry({
               className="size-8 shrink-0 rounded-full object-contain object-center"
             />
           )}
-          <span className={depositBridgeLabelClass}>Bridge</span>
+          <span className={depositBridgeLabelClass}>{t("bridge")}</span>
         </span>
       </button>
     </div>

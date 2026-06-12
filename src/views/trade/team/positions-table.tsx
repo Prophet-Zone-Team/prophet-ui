@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import { debounceEffect } from "@/lib/team/debounced-effect";
@@ -45,18 +47,6 @@ function resolveConditionIds(props: PositionsTableProps): string[] {
   return conditionId ? [conditionId] : [];
 }
 
-function resolveEmptyMessage(props: PositionsTableProps): string {
-  if (props.variant === "game") {
-    const sides = resolveMatchSides(
-      props.gameSnapshot.match,
-      props.teamSnapshots
-    );
-    return `No open positions for ${sides.home.name} vs ${sides.away.name}.`;
-  }
-
-  return `No open positions for ${props.snapshot.team.name}.`;
-}
-
 async function fetchPositionsForMarkets(
   conditionIds: string[]
 ): Promise<MarketPositionRecord[]> {
@@ -73,11 +63,46 @@ async function fetchPositionsForMarkets(
 }
 
 export function PositionsTable(props: PositionsTableProps) {
+  const t = useTranslations("trade");
   const active = props.active ?? true;
   const [positions, setPositions] = useState<MarketPositionRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasLoadedOnceRef = useRef(false);
+  const teamDisplayName = useLocalizedTeamName(
+    props.variant === "game" ? undefined : props.snapshot.team.code,
+    props.variant === "game" ? undefined : props.snapshot.team.name
+  );
+  const gameSides =
+    props.variant === "game"
+      ? resolveMatchSides(props.gameSnapshot.match, props.teamSnapshots)
+      : null;
+  const homeDisplayName = useLocalizedTeamName(
+    gameSides?.home.code,
+    gameSides?.home.name
+  );
+  const awayDisplayName = useLocalizedTeamName(
+    gameSides?.away.code,
+    gameSides?.away.name
+  );
+
+  const emptyMessage = useMemo(() => {
+    if (props.variant === "game" && gameSides) {
+      return t("noOpenPositionsForMatch", {
+        home: homeDisplayName,
+        away: awayDisplayName
+      });
+    }
+
+    return t("noOpenPositionsForTeam", { teamName: teamDisplayName });
+  }, [
+    props.variant,
+    gameSides,
+    t,
+    homeDisplayName,
+    awayDisplayName,
+    teamDisplayName
+  ]);
 
   const conditionIds = useMemo(() => resolveConditionIds(props), [
     props.variant,
@@ -122,7 +147,7 @@ export function PositionsTable(props: PositionsTableProps) {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "Unable to load market positions."
+              : t("unableToLoadPositions")
           );
         }
       } finally {
@@ -143,15 +168,14 @@ export function PositionsTable(props: PositionsTableProps) {
       ignore = true;
       cancelDebounce();
     };
-  }, [active, conditionIdsKey]);
+  }, [active, conditionIdsKey, t]);
 
   const hasData = positions.length > 0;
 
   if (conditionIds.length === 0) {
     return (
       <p className="px-4 py-10 text-center text-sm text-prophet-muted">
-        Position data is unavailable because this market has no connected
-        condition ID.
+        {t("positionsDataUnavailable")}
       </p>
     );
   }
@@ -160,7 +184,7 @@ export function PositionsTable(props: PositionsTableProps) {
     return (
       <div className="px-4 py-10 text-center">
         <strong className="block text-sm font-[500] text-black">
-          Market positions unavailable
+          {t("positionsUnavailable")}
         </strong>
         <p className="m-0 mt-2 text-sm text-prophet-muted">{error}</p>
       </div>
@@ -170,7 +194,7 @@ export function PositionsTable(props: PositionsTableProps) {
   if (loading && !hasData && !error) {
     return (
       <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-        Loading positions…
+        {t("loadingPositions")}
       </p>
     );
   }
@@ -178,7 +202,7 @@ export function PositionsTable(props: PositionsTableProps) {
   if (!loading && !hasData && !error) {
     return (
       <p className="px-4 py-10 text-center text-sm text-prophet-muted">
-        {resolveEmptyMessage(props)}
+        {emptyMessage}
       </p>
     );
   }

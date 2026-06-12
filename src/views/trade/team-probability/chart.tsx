@@ -19,6 +19,7 @@ import {
   findAnnotationForChartPoint,
   type TeamChartMatchAnnotation
 } from "@/lib/team/chart-match-annotations";
+import { formatDateFromIso } from "@/lib/formatters/datetime";
 import {
   formatTeamChartXAxisTick,
   type TeamChartTimeRange
@@ -283,16 +284,5 @@ function ChartTooltip({
 }
 
 function formatTooltipDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    weekday: "short",
-    month: "long",
-    day: "numeric",
-    year: "numeric"
-  }).format(date);
+  return formatDateFromIso(value);
 }

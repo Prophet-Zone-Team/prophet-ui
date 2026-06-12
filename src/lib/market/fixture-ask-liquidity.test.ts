@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   hasFixtureBuyAsk,
+  isFixtureOutcomeSelectable,
   mergeFixtureOutcomeLiveAsks,
   NO_ASK_LIQUIDITY_MESSAGE,
   resolveFixtureBuyAskDisabledReason,
@@ -11,7 +12,22 @@ import type { FixtureMarketOutcome } from "@/types/market";
 import { buildFixtureBidOrderPreview } from "@/lib/market/game-order";
 
 describe("fixture ask liquidity", () => {
-  it("blocks buy orders when the selected token has no ask", () => {
+  it("allows selecting outcomes with snapshot display prices but no live ask", () => {
+    assert.equal(
+      isFixtureOutcomeSelectable(
+        {
+          tokenId: "yes-token",
+          probability: 55,
+          price: 0.55,
+        },
+        "yes",
+      ),
+      true,
+    );
+    assert.equal(hasFixtureBuyAsk({ yesAsk: undefined, noAsk: 0.62 }, "yes"), false);
+  });
+
+  it("blocks buy orders when the selected token has no ask or display price", () => {
     const reason = resolveFixtureBuyAskDisabledReason(
       { yesAsk: undefined, noAsk: 0.62 },
       "yes",
@@ -23,7 +39,18 @@ describe("fixture ask liquidity", () => {
     assert.equal(hasFixtureBuyAsk({ yesAsk: undefined, noAsk: 0.62 }, "no"), true);
   });
 
-  it("includes ask liquidity in fixture bid preview", () => {
+  it("allows limit buy orders without live ask when snapshot price exists", () => {
+    const reason = resolveFixtureBuyAskDisabledReason(
+      { yesAsk: undefined, noAsk: 0.62, probability: 38, price: 0.38 },
+      "yes",
+      "buy",
+      "GTC",
+    );
+
+    assert.equal(reason, undefined);
+  });
+
+  it("allows market buy orders with snapshot display price but no live ask", () => {
     const preview = buildFixtureBidOrderPreview({
       outcome: {
         id: "spread:test:yes",
@@ -46,8 +73,8 @@ describe("fixture ask liquidity", () => {
       orderType: "FAK",
     });
 
-    assert.equal(preview.canSubmitRealOrder, false);
-    assert.equal(preview.disabledReason, NO_ASK_LIQUIDITY_MESSAGE);
+    assert.equal(preview.canSubmitRealOrder, true);
+    assert.equal(preview.disabledReason, undefined);
   });
 
   it("keeps snapshot asks when live asks are missing or invalid", () => {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { MatchHistoryDesktopRow, MatchHistoryMobileCard } from "./row";
@@ -19,9 +21,11 @@ export function MatchHistory({
   isError = false,
   className
 }: MatchHistoryProps) {
+  const t = useTranslations("trade");
+
   return (
     <section
-      aria-label="Match history"
+      aria-label={t("matchHistoryAria")}
       className={cn(
         "w-full max-w-none md:max-w-[531px] rounded-[12px] bg-white px-[12px] py-[16px]",
         "shadow-[0_0_10px_rgba(0,0,0,0.1)]",
@@ -29,27 +33,27 @@ export function MatchHistory({
       )}
     >
       <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
-        Match History
+        {t("matchHistory")}
       </h2>
 
       <div className="mt-[12px] flex w-full flex-col">
         {isLoading ? (
           <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
-            Loading...
+            {t("loadingData")}
           </p>
         ) : isError ? (
           <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
-            Unable to load data.
+            {t("unableToLoadData")}
           </p>
         ) : matches.length === 0 ? (
           <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
-            No match history is available yet.
+            {t("matchHistoryEmpty")}
           </p>
         ) : (
           <>
             <div
               role="table"
-              aria-label="Head-to-head match history"
+              aria-label={t("matchHistoryTableAria")}
               className="hidden w-full flex-col md:flex"
             >
               <div
@@ -59,14 +63,14 @@ export function MatchHistory({
                   "px-[12px] pb-[8px] text-[12px] font-[400] leading-[17px] text-[#909090]"
                 )}
               >
-                <span role="columnheader">Time</span>
-                <span role="columnheader">Format</span>
-                <span role="columnheader">Home</span>
+                <span role="columnheader">{t("time")}</span>
+                <span role="columnheader">{t("format")}</span>
+                <span role="columnheader">{t("home")}</span>
                 <span role="columnheader" className="text-center">
-                  VS
+                  {t("versus")}
                 </span>
-                <span role="columnheader">Away</span>
-                <span role="columnheader">Result</span>
+                <span role="columnheader">{t("away")}</span>
+                <span role="columnheader">{t("result")}</span>
               </div>
 
               <div className="flex flex-col gap-[2px]">
@@ -83,7 +87,7 @@ export function MatchHistory({
 
             <div
               className="flex flex-col gap-2 md:hidden"
-              aria-label="Head-to-head match history"
+              aria-label={t("matchHistoryTableAria")}
             >
               {matches.map((entry, index) => (
                 <MatchHistoryMobileCard

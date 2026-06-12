@@ -1,6 +1,20 @@
 import teamData from "@/data/teams";
 import { curatedTeamKeyToId } from "@/data/teams/curated-team-list";
 
+const TEAM_DETAIL_SLUG_ALIASES: Record<string, string> = {
+  "united-states": "usa",
+  "korea-republic": "south-korea",
+  "cote-d-ivoire": "ivory-coast",
+  "cabo-verde": "cape-verde",
+  "ir-iran": "iran",
+  congo: "congo-dr",
+  "dr-congo": "congo-dr",
+};
+
+export function resolveTeamDetailSlug(slug: string): string {
+  return TEAM_DETAIL_SLUG_ALIASES[slug] ?? slug;
+}
+
 export function teamDetailHref(teamId: string) {
   return `/team?slug=${encodeURIComponent(teamId)}`;
 }

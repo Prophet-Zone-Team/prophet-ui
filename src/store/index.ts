@@ -32,8 +32,10 @@ export {
   FAST_BID_PRESET_AMOUNTS,
   formatFastBidAmountDisplay,
   useFastBidAmount,
+  useLocale,
   useNotificationsEnabled,
   useSetFastBidAmount,
+  useSetLocale,
   useSetNotificationsEnabled,
   useUserConfigStore
 } from "@/store/user-config-store";

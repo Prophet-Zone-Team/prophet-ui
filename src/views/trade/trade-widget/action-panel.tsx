@@ -1,6 +1,6 @@
 "use client";
 
-import type { GameMarketSnapshot, TeamMarketSnapshot } from "@/types/market";
+import type { GameFixtureMarketsSnapshot, GameMarketSnapshot, TeamMarketSnapshot } from "@/types/market";
 import { TradeTicketForm } from "@/views/trade/trade-widget/trade-ticket-form";
 import { useTradeTicket } from "@/views/trade/trade-widget/use-trade-ticket";
 
@@ -12,6 +12,7 @@ export type ActionPanelTeamProps = {
 export type ActionPanelGameProps = {
   variant: "game";
   gameSnapshot: GameMarketSnapshot;
+  fixtureMarkets?: GameFixtureMarketsSnapshot;
   teamSnapshots: TeamMarketSnapshot[];
 };
 
@@ -20,7 +21,11 @@ export type ActionPanelProps = ActionPanelTeamProps | ActionPanelGameProps;
 export function ActionPanel(props: ActionPanelProps & { outcomeButtonClassName?: string; outcomeButtonContainerClassName?: string; }) {
   const ticket = useTradeTicket(
     props.variant === "game"
-      ? { variant: "game", gameSnapshot: props.gameSnapshot }
+      ? {
+          variant: "game",
+          gameSnapshot: props.gameSnapshot,
+          fixtureMarkets: props.fixtureMarkets,
+        }
       : { variant: "team", snapshot: props.snapshot }
   );
 

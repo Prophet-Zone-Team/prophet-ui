@@ -7,6 +7,7 @@ export type RankingFilterOption = {
 
 export type RankingFilterPillProps = {
   prefix: string;
+  filterAriaLabel: string;
   value: string;
   options: RankingFilterOption[];
   onChange: (value: string) => void;
@@ -15,6 +16,7 @@ export type RankingFilterPillProps = {
 
 export function RankingFilterPill({
   prefix,
+  filterAriaLabel,
   value,
   options,
   onChange,
@@ -37,7 +39,7 @@ export function RankingFilterPill({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        aria-label={`${prefix} filter`}
+        aria-label={filterAriaLabel}
         className={cn(
           "absolute inset-0 h-full w-full cursor-pointer opacity-0",
           "appearance-none"
