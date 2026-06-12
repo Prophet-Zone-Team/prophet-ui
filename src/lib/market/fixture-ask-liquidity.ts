@@ -50,7 +50,14 @@ function resolveMergedLiveAsk(
 
 export function mergeFixtureOutcomeLiveAsks(
   outcome: FixtureMarketOutcome,
-  liveAsks: { yesAsk?: number; noAsk?: number } | undefined,
+  liveAsks:
+    | {
+        yesAsk?: number;
+        noAsk?: number;
+        yesBid?: number;
+        noBid?: number;
+      }
+    | undefined,
 ): FixtureMarketOutcome {
   if (liveAsks === undefined) {
     return outcome;
@@ -58,11 +65,16 @@ export function mergeFixtureOutcomeLiveAsks(
 
   const yesAsk = resolveMergedLiveAsk(liveAsks.yesAsk, outcome.yesAsk);
   const noAsk = resolveMergedLiveAsk(liveAsks.noAsk, outcome.noAsk);
+  const yesBid =
+    liveAsks.yesBid !== undefined ? liveAsks.yesBid : outcome.yesBid;
+  const noBid = liveAsks.noBid !== undefined ? liveAsks.noBid : outcome.noBid;
 
   return {
     ...outcome,
     yesAsk,
     noAsk,
+    yesBid,
+    noBid,
     price: isValidAskPrice(yesAsk) ? yesAsk : outcome.price,
   };
 }
