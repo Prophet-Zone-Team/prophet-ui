@@ -4,6 +4,7 @@ import { disconnect, getAccount } from "wagmi/actions";
 import type { Connector } from "wagmi";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
+import { AuthLoginMethod } from "@/store/auth-store";
 
 const EXTERNAL_CONNECTOR_ID_HINTS = [
   "okx",
@@ -65,15 +66,17 @@ async function disconnectConnectorDeep(connector: Connector): Promise<void> {
 }
 
 /** Drops wagmi + provider state for extension / injected wallets (OKX, MetaMask, etc.). */
-export async function releaseExternalWalletConnection(): Promise<void> {
+export async function releaseExternalWalletConnection(currentLoginMethod?: AuthLoginMethod): Promise<void> {
   const account = getAccount(wagmiConfig);
 
   if (!account.isConnected || !account.connector) {
     return;
   }
 
-  if (!isExternalWagmiConnector(account.connector.id)) {
-    return;
+  if (currentLoginMethod === "google" || currentLoginMethod === "email") {
+    if (!isExternalWagmiConnector(account.connector.id)) {
+      return;
+    }
   }
 
   await disconnectConnectorDeep(account.connector);

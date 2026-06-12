@@ -991,7 +991,7 @@
     "shareCardTitle": "Use Prophet,",
     "shareCardProfit": "Make Profit!",
     "shareCardInvite": "invites you to join Prophet",
-    "shareTweetIntro": "The World Cup markets are coming.\n\nTrack signals. Trade smarter.\n\nJoin Prophet 👇\n\n{link}\n\n",
+    "shareTweetIntro": "The World Cup markets are coming.\n\nTrack signals. Trade smarter.\n\nJoin Prophet 👇\n\n",
     "claimSuccess": "Claimed {amount} USDC",
     "claimError": "Unable to claim referral rewards."
   },

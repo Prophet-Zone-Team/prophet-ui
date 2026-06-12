@@ -230,7 +230,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                                 entrySource: "login_modal_setup",
                                 label: "Connect wallet"
                               });
-                              void connectWallet();
+                              void connectWallet("wallet");
                             }}
                             onSignClob={() => void signClobCredentials()}
                             onSignTokens={() => void signTokenApprovals()}

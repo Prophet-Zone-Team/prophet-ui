@@ -2,15 +2,8 @@
 
 import { useEffect } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
-import { useSetActiveWallet } from "@privy-io/wagmi";
-import { getAccount } from "wagmi/actions";
 import type { ConnectedWallet } from "@privy-io/react-auth";
 
-import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
-import {
-  isExternalWagmiConnector,
-  releaseExternalWalletConnection,
-} from "@/lib/trading/wallet-disconnect";
 import { resolvePrivyLoginEmail } from "@/context/privy/resolve-privy-login-email";
 import { useAuthStore } from "@/store/auth-store";
 import type { AuthLoginMethod } from "@/store/auth-store";
@@ -18,9 +11,6 @@ import type { AuthLoginMethod } from "@/store/auth-store";
 const WALLET_POLL_INTERVAL_MS = 200;
 const DEFAULT_WALLET_WAIT_MS = 20_000;
 
-let setActiveWalletRef:
-  | ((wallet: ConnectedWallet) => Promise<void>)
-  | undefined;
 let connectedWalletsRef: ConnectedWallet[] = [];
 let privyAuthenticatedRef = false;
 let privyLoginEmailRef: string | undefined;
@@ -157,7 +147,7 @@ export async function waitForPrivyWallet(options?: {
       preferEmbedded: options?.preferEmbedded,
     });
 
-    if (wallet && setActiveWalletRef) {
+    if (wallet) {
       return wallet;
     }
 
@@ -180,23 +170,21 @@ export async function activatePrivyWallet(
     preferEmbedded,
   });
 
-  if (!wallet || !setActiveWalletRef) {
+  if (!wallet) {
     return undefined;
   }
-
-  await setActiveWalletRef(wallet);
 
   return wallet.address;
 }
 
 /**
- * Syncs the Privy wallet list into wagmi's active wallet so the existing
- * wagmi-based trading flow keeps working for embedded and external wallets.
+ * Mirrors the Privy auth state and wallet list into module-level refs so
+ * non-React modules (e.g. the EVM signer source) can resolve the active
+ * Privy embedded wallet without a wagmi connector.
  */
 export function PrivyWalletBridge() {
   const { ready, authenticated, user } = usePrivy();
   const { wallets } = useWallets();
-  const { setActiveWallet } = useSetActiveWallet();
 
   useEffect(() => {
     privyAuthenticatedRef = ready && authenticated;
@@ -208,65 +196,8 @@ export function PrivyWalletBridge() {
   }, [authenticated, user]);
 
   useEffect(() => {
-    setActiveWalletRef = setActiveWallet;
     connectedWalletsRef = wallets;
-
-    return () => {
-      if (setActiveWalletRef === setActiveWallet) {
-        setActiveWalletRef = undefined;
-      }
-    };
-  }, [setActiveWallet, wallets]);
-
-  useEffect(() => {
-    if (
-      walletSyncSuspendedRef ||
-      !ready ||
-      !authenticated ||
-      wallets.length === 0
-    ) {
-      return;
-    }
-
-    const store = useAuthStore.getState();
-    const preferEmbedded = prefersEmbeddedLogin(store.loginMethod);
-    const account = getAccount(wagmiConfig);
-    const expectedAddress = store.session?.walletAddress;
-
-    if (account.isConnected && account.address) {
-      if (!preferEmbedded) {
-        return;
-      }
-
-      const embedded = findPrivyEmbeddedWallet(expectedAddress);
-
-      if (embedded && addressesMatch(account.address, embedded.address)) {
-        return;
-      }
-
-      if (isExternalWagmiConnector(account.connector?.id)) {
-        void releaseExternalWalletConnection().then(() => {
-          const wallet =
-            findPrivyWallet(expectedAddress, { preferEmbedded: true }) ??
-            findPrivyEmbeddedWallet(expectedAddress);
-
-          if (wallet) {
-            void setActiveWallet(wallet);
-          }
-        });
-
-        return;
-      }
-    }
-
-    const wallet =
-      findPrivyWallet(expectedAddress, { preferEmbedded }) ??
-      (preferEmbedded ? findPrivyEmbeddedWallet() : wallets[0]);
-
-    if (wallet) {
-      void setActiveWallet(wallet);
-    }
-  }, [authenticated, ready, setActiveWallet, wallets]);
+  }, [wallets]);
 
   return null;
 }

@@ -22,7 +22,7 @@ import {
   isStableflowTerminalFailureStatus,
   pollStableflowExecution,
 } from "@/lib/trading/stableflow-bridge-status";
-import { transferCollateralFromConnectedWallet } from "@/lib/trading/polygon-collateral-transfer";
+import { fundingNetworkTypeToChainType, transferDepositFunds } from "@/lib/wallet";
 import { fetchJson } from "@/lib/team/client-fetch";
 import type {
   BridgeAggregateStatus,
@@ -200,11 +200,12 @@ export function useDeposit(): UseDepositResult {
       }
 
       setStatus("awaiting_wallet");
-      const { txHash } = await transferCollateralFromConnectedWallet({
+      const { txHash } = await transferDepositFunds({
+        chainType: fundingNetworkTypeToChainType(token.chainType),
         walletAddress: session.walletAddress,
         tokenAddress: token.address,
         toAddress: bridgeEvm,
-        amountUsd,
+        amount: amountUsd,
         tokenDecimals: token.decimals,
         chainId: token.chainId,
       });
@@ -243,11 +244,12 @@ export function useDeposit(): UseDepositResult {
 
     if (isPolygonNativeUsdcToken(token)) {
       setStatus("awaiting_wallet");
-      const { txHash } = await transferCollateralFromConnectedWallet({
+      const { txHash } = await transferDepositFunds({
+        chainType: fundingNetworkTypeToChainType(token.chainType),
         walletAddress: session.walletAddress,
         tokenAddress: token.address,
         toAddress: funderAddress,
-        amountUsd: amount,
+        amount,
         tokenDecimals: token.decimals,
         chainId: token.chainId,
       });
@@ -282,11 +284,12 @@ export function useDeposit(): UseDepositResult {
     }
 
     setStatus("awaiting_wallet");
-    const { txHash } = await transferCollateralFromConnectedWallet({
+    const { txHash } = await transferDepositFunds({
+      chainType: fundingNetworkTypeToChainType(token.chainType),
       walletAddress: session.walletAddress,
       tokenAddress: token.address,
       toAddress: depositAddress,
-      amountUsd: amount,
+      amount,
       tokenDecimals: token.decimals,
       chainId: token.chainId,
     });

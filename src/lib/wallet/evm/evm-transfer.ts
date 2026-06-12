@@ -1,13 +1,14 @@
 "use client";
 
-import { erc20Abi, parseUnits, type Address, type Chain, type Hex } from "viem";
+import Big from "big.js";
+import { erc20Abi, parseUnits, type Address, type Hex } from "viem";
 
-import { getWalletClientForAddress } from "@/components/trading/wallet-provider";
+import { getFundingEvmChain } from "@/config/funding/evm-chains";
 import { ensureFundingEvmChain } from "@/lib/funding/ensure-funding-evm-chain";
 import { isNativeFundingToken } from "@/lib/funding/evm-balances";
-import { isWagmiOnChain } from "@/lib/trading/wallet-chain-sync";
-import Big from "big.js";
-import { getFundingEvmChain } from "@/config/funding/evm-chains";
+import { getEvmWalletClient } from "@/lib/wallet/evm/evm-adapter";
+import { isActiveWalletOnChain } from "@/lib/wallet/evm/evm-chain";
+import type { WalletTransferParams, WalletTransferResult } from "@/lib/wallet/types";
 
 export interface CollateralTransferParams {
   tokenAddress: string;
@@ -55,17 +56,18 @@ export async function transferCollateralWithWalletClient(
   };
 }
 
-export async function transferCollateralFromConnectedWallet({
+/**
+ * Ensures the active wallet (wagmi external or Privy embedded) is on the
+ * target chain, then transfers a native or ERC20 token from it.
+ */
+export async function transferEvmToken({
   walletAddress,
+  chainId,
   tokenAddress,
   toAddress,
-  amountUsd,
+  amount,
   tokenDecimals,
-  chainId,
-}: CollateralTransferParams & {
-  walletAddress: string;
-  chainId: number;
-}): Promise<{ txHash: Hex }> {
+}: WalletTransferParams): Promise<WalletTransferResult & { txHash: Hex }> {
   const chain = getFundingEvmChain(chainId);
 
   if (!chain) {
@@ -74,11 +76,13 @@ export async function transferCollateralFromConnectedWallet({
 
   await ensureFundingEvmChain(walletAddress, chainId);
 
-  if (!isWagmiOnChain(chainId)) {
-    throw new Error(`Switch your wallet to ${chain.name} (chainId ${chainId}) before transferring.`);
+  if (!isActiveWalletOnChain(walletAddress, chainId)) {
+    throw new Error(
+      `Switch your wallet to ${chain.name} (chainId ${chainId}) before transferring.`,
+    );
   }
 
-  const walletClient = await getWalletClientForAddress(walletAddress, { chainId });
+  const walletClient = await getEvmWalletClient(walletAddress, { chainId });
 
   const transferClient: CollateralTransferWalletClient = {
     sendTransaction: (request) =>
@@ -98,7 +102,7 @@ export async function transferCollateralFromConnectedWallet({
   return transferCollateralWithWalletClient(transferClient, {
     tokenAddress,
     toAddress,
-    amountUsd,
+    amountUsd: amount,
     tokenDecimals,
   });
 }
