@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 
 import { ZettaMetricRow } from "./zetta-metric-row";
-import type { ZettaOutcomeWalletCounts } from "./types";
+import { hasZettaWalletPanelData, type ZettaOutcomeWalletCounts } from "./types";
 
 export type ZettaWalletPanelProps = {
   counts?: ZettaOutcomeWalletCounts;
@@ -13,21 +13,24 @@ export type ZettaWalletPanelProps = {
   className?: string;
 };
 
+const panelShellClassName =
+  "mx-4 flex w-full max-w-[313px] flex-col justify-center gap-[5px] rounded-lg bg-[#F5F5F5] px-3 py-2";
+
 export function ZettaWalletPanel({
   counts,
   isLoading = false,
   className
 }: ZettaWalletPanelProps) {
   const t = useTranslations("trade");
+  const hasSmartWallet = counts?.smartWallet !== undefined;
+  const hasBigWhale = counts?.bigWhale !== undefined;
+  const hasAnyData = hasZettaWalletPanelData(counts);
 
-  if (!counts) {
+  if (!hasAnyData) {
     if (isLoading) {
       return (
         <div
-          className={cn(
-            "mx-4 flex h-[61px] w-full max-w-[313px] flex-col justify-center gap-[5px] rounded-lg bg-[#F5F5F5] px-3 py-2",
-            className
-          )}
+          className={cn(panelShellClassName, "h-[61px]", className)}
           aria-hidden
         >
           <div className="h-[15px] animate-pulse rounded bg-[#E8E8E8]" />
@@ -42,23 +45,28 @@ export function ZettaWalletPanel({
   return (
     <section
       className={cn(
-        "mx-4 flex h-[61px] w-full max-w-[313px] flex-col justify-center gap-[5px] rounded-lg bg-[#F5F5F5] px-3 py-2",
+        panelShellClassName,
+        hasSmartWallet && hasBigWhale ? "h-[61px]" : "min-h-[33px]",
         className
       )}
       aria-label={t("zettaWalletInsightAria")}
     >
-      <ZettaMetricRow
-        icon="🧙"
-        label={t("smartWallet")}
-        yesCount={counts.yesSmartWalletCount}
-        noCount={counts.noSmartWalletCount}
-      />
-      <ZettaMetricRow
-        icon="🐋"
-        label={t("bigWhale")}
-        yesCount={counts.yesWhaleWalletCount}
-        noCount={counts.noWhaleWalletCount}
-      />
+      {hasSmartWallet ? (
+        <ZettaMetricRow
+          icon="🧙"
+          label={t("smartWallet")}
+          yesCount={counts.smartWallet!.yesCount}
+          noCount={counts.smartWallet!.noCount}
+        />
+      ) : null}
+      {hasBigWhale ? (
+        <ZettaMetricRow
+          icon="🐋"
+          label={t("bigWhale")}
+          yesCount={counts.bigWhale!.yesCount}
+          noCount={counts.bigWhale!.noCount}
+        />
+      ) : null}
     </section>
   );
 }

@@ -1,10 +1,59 @@
 import type { MatchOutcomeSide } from "@/types/market";
 
-import { mapSmartWalletOptionsBySide } from "./map-smart-wallet-options";
+import {
+  mapSmartWalletOptionsBySide,
+  resolveZettaEventTeamNames
+} from "./map-smart-wallet-options";
 import type {
+  ZettaMetricCounts,
   ZettaOutcomeWalletCounts,
+  ZettaSmartWalletOption,
   ZettaSmartWalletsResponse
 } from "./types";
+
+function isFiniteCount(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function resolveZettaMetricCounts(
+  yesValue: unknown,
+  noValue: unknown
+): ZettaMetricCounts | undefined {
+  const yesDefined = isFiniteCount(yesValue);
+  const noDefined = isFiniteCount(noValue);
+
+  if (!yesDefined && !noDefined) {
+    return undefined;
+  }
+
+  return {
+    yesCount: yesDefined ? yesValue : 0,
+    noCount: noDefined ? noValue : 0
+  };
+}
+
+function resolveOptionWalletCounts(
+  option: ZettaSmartWalletOption,
+  side: MatchOutcomeSide
+): ZettaOutcomeWalletCounts | undefined {
+  const counts: ZettaOutcomeWalletCounts = {
+    side,
+    smartWallet: resolveZettaMetricCounts(
+      option.yes.smart_wallet_count,
+      option.no.smart_wallet_count
+    ),
+    bigWhale: resolveZettaMetricCounts(
+      option.yes.whale_wallet_count,
+      option.no.whale_wallet_count
+    )
+  };
+
+  if (!counts.smartWallet && !counts.bigWhale) {
+    return undefined;
+  }
+
+  return counts;
+}
 
 export async function fetchZettaSmartWallets(
   eventSlug: string,
@@ -32,13 +81,18 @@ export async function fetchZettaSmartWallets(
 export function resolveZettaOutcomeWalletCounts(
   payload: ZettaSmartWalletsResponse | undefined,
   outcomeSide: MatchOutcomeSide,
-  homeTeamName: string,
-  awayTeamName: string
+  fallbackHomeTeamName: string,
+  fallbackAwayTeamName: string
 ): ZettaOutcomeWalletCounts | undefined {
   if (!payload?.options?.length) {
     return undefined;
   }
 
+  const { homeTeamName, awayTeamName } = resolveZettaEventTeamNames(
+    payload.event.title,
+    fallbackHomeTeamName,
+    fallbackAwayTeamName
+  );
   const mapped = mapSmartWalletOptionsBySide(
     payload.options,
     homeTeamName,
@@ -50,13 +104,7 @@ export function resolveZettaOutcomeWalletCounts(
     return undefined;
   }
 
-  return {
-    side: outcomeSide,
-    yesSmartWalletCount: option.yes.smart_wallet_count,
-    noSmartWalletCount: option.no.smart_wallet_count,
-    yesWhaleWalletCount: option.yes.whale_wallet_count,
-    noWhaleWalletCount: option.no.whale_wallet_count
-  };
+  return resolveOptionWalletCounts(option, outcomeSide);
 }
 
 export function resolveZettaTeamWalletCounts(
@@ -75,11 +123,5 @@ export function resolveZettaTeamWalletCounts(
           item.market_question.toLowerCase().includes(normalizedTeamName)
         ) ?? payload.options[0]);
 
-  return {
-    side: "home",
-    yesSmartWalletCount: option.yes.smart_wallet_count,
-    noSmartWalletCount: option.no.smart_wallet_count,
-    yesWhaleWalletCount: option.yes.whale_wallet_count,
-    noWhaleWalletCount: option.no.whale_wallet_count
-  };
+  return resolveOptionWalletCounts(option, "home");
 }

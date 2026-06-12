@@ -1,9 +1,23 @@
+import { parseTeamsFromTitle } from "@/lib/market/prophet-game-mapper";
 import type { MatchOutcomeSide } from "@/types/market";
 
 import type { ZettaSmartWalletOption } from "./types";
 
 function normalizeText(value: string): string {
   return value.trim().toLowerCase();
+}
+
+export function resolveZettaEventTeamNames(
+  eventTitle: string | undefined,
+  fallbackHomeTeamName: string,
+  fallbackAwayTeamName: string
+): { homeTeamName: string; awayTeamName: string } {
+  const parsed = parseTeamsFromTitle(eventTitle ?? "");
+
+  return {
+    homeTeamName: parsed.homeName ?? fallbackHomeTeamName,
+    awayTeamName: parsed.awayName ?? fallbackAwayTeamName
+  };
 }
 
 export function classifySmartWalletOptionSide(
@@ -20,12 +34,12 @@ export function classifySmartWalletOptionSide(
   const home = normalizeText(homeTeamName);
   const away = normalizeText(awayTeamName);
 
-  if (home && question.includes(home)) {
-    return "home";
-  }
-
   if (away && question.includes(away)) {
     return "away";
+  }
+
+  if (home && question.includes(home)) {
+    return "home";
   }
 
   return null;

@@ -28,10 +28,19 @@ export type ZettaSmartWalletsResponse = {
   options: ZettaSmartWalletOption[];
 };
 
+export type ZettaMetricCounts = {
+  yesCount: number;
+  noCount: number;
+};
+
 export type ZettaOutcomeWalletCounts = {
   side: MatchOutcomeSide;
-  yesSmartWalletCount: number;
-  noSmartWalletCount: number;
-  yesWhaleWalletCount: number;
-  noWhaleWalletCount: number;
+  smartWallet?: ZettaMetricCounts;
+  bigWhale?: ZettaMetricCounts;
 };
+
+export function hasZettaWalletPanelData(
+  counts: ZettaOutcomeWalletCounts | undefined
+): boolean {
+  return Boolean(counts?.smartWallet || counts?.bigWhale);
+}
