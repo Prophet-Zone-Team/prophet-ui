@@ -472,7 +472,7 @@
       "selectChain": "Select chain",
       "selectToken": "Select token",
       "estReceive": "Est. Receive",
-      "quoteUnavailable": "Quote unavailable; estimated output not shown.",
+      "quoteUnavailable": "Insufficient liquidity.",
       "withdrawalSubmitted": "Withdrawal submitted",
       "unsupportedToken": "Selected token is not supported for this withdrawal method.",
       "amountZero": "Enter an amount greater than zero.",
