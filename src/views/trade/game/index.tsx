@@ -158,7 +158,7 @@ export default function TradeGameView({
           </div>
         </div>
       </div>
-      <div className="flex md:hidden px-3 pb-10 pt-5 border border-[#EBEBEB] rounded-t-xl w-full fixed left-0 bottom-0 z-10 bg-white justify-between items-center gap-5">
+      <div className="flex flex-row-reverse md:hidden px-3 pb-10 pt-5 border border-[#EBEBEB] rounded-t-xl w-full fixed left-0 bottom-0 z-10 bg-white justify-between items-center gap-5">
         <button
           type="button"
           className="flex flex-1 h-[46px] justify-center items-center rounded-xl text-lg font-[500] text-white transition-opacity bg-[#65AF14] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
