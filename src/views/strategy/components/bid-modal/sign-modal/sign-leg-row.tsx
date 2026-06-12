@@ -1,5 +1,11 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
+import { translateTradeMessage } from "@/views/trade/trade-widget/trade-i18n";
 
 import { STRATEGY_BID_INVALID_SURFACE_CLASS } from "../constants";
 import type { StrategyBidSignLegState } from "../types";
@@ -13,6 +19,16 @@ export type SignLegRowProps = {
 };
 
 export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowProps) {
+  const t = useTranslations("strategy");
+  const tAuth = useTranslations("auth");
+  const tTrade = useTranslations("trade");
+  const teamDisplayName = useLocalizedTeamName(
+    entry.leg.team.code,
+    entry.leg.teamName
+  );
+  const errorLabel = entry.errorMessage
+    ? translateTradeMessage(entry.errorMessage, tTrade)
+    : t("transactionFailed");
   const showActionCard =
     entry.status === "sign_failed" ||
     entry.status === "submit_failed" ||
@@ -52,7 +68,7 @@ export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowPro
                 className="size-[26px] rounded-[4px] object-cover shadow-[0_0_2px_rgba(0,0,0,0.2)]"
               />
               <span className="font-[Sora] text-sm font-normal leading-[18px] text-black">
-                {entry.leg.teamName}
+                {teamDisplayName}
               </span>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-0.5">
@@ -60,7 +76,7 @@ export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowPro
                 {entry.leg.valuedLabel}
               </span>
               <span className="font-[Sora] text-sm font-normal leading-[18px] text-[#FF674B]">
-                Transaction Failed
+                {errorLabel}
               </span>
             </div>
           </div>
@@ -72,7 +88,7 @@ export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowPro
             }
             className="flex h-[50px] w-full items-center justify-center rounded-xl border border-[#EBEBEB] bg-white font-[Sora] text-base font-normal leading-5 text-black transition-opacity hover:opacity-90"
           >
-            {isRetry ? "Sign Again" : "Sign"}
+            {isRetry ? t("signAgain") : tAuth("sign")}
           </button>
         </div>
       </div>
@@ -98,7 +114,7 @@ export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowPro
             className="size-[26px] rounded-[4px] object-cover shadow-[0_0_2px_rgba(0,0,0,0.2)]"
           />
           <span className="font-[Sora] text-sm font-normal leading-[18px] text-black">
-            {entry.leg.teamName}
+            {teamDisplayName}
           </span>
           <span className="hidden min-w-0 flex-1 border-t border-[#EBEBEB] sm:block" aria-hidden />
         </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import {
   formatOpenOrderExpiration,
@@ -82,6 +84,9 @@ export function PortfolioOpenOrderDataCells({
 }: {
   order: UserOpenOrder;
 }) {
+  const t = useTranslations("portfolio");
+  const locale = useLocale();
+
   return (
     <>
       <span role="cell" className="font-[500] tabular-nums">
@@ -91,7 +96,7 @@ export function PortfolioOpenOrderDataCells({
         {formatOpenOrderTotal(order)}
       </span>
       <span role="cell" className="text-prophet-muted">
-        {formatOpenOrderExpiration(order)}
+        {formatOpenOrderExpiration(order, t, locale)}
       </span>
     </>
   );
@@ -100,7 +105,7 @@ export function PortfolioOpenOrderDataCells({
 export function PortfolioOpenOrderCancelButton({
   regionRestricted,
   onCancel,
-  label = "Cancel",
+  label,
   className
 }: {
   regionRestricted: boolean;
@@ -108,6 +113,9 @@ export function PortfolioOpenOrderCancelButton({
   label?: string;
   className?: string;
 }) {
+  const t = useTranslations("common");
+  const cancelLabel = label ?? t("cancel");
+
   return (
     <RegionRestrictedControl restricted={regionRestricted}>
       <button
@@ -126,7 +134,7 @@ export function PortfolioOpenOrderCancelButton({
           }
         }}
       >
-        {label}
+        {cancelLabel}
       </button>
     </RegionRestrictedControl>
   );
@@ -167,22 +175,25 @@ export function PortfolioOpenOrderChildMobileCard({
   regionRestricted: boolean;
   onCancel: () => void;
 }) {
+  const t = useTranslations("portfolio");
+  const locale = useLocale();
+
   return (
     <article className={cn(portfolioTableMobileCardClass, "bg-[#FCFCFC] pl-6")}>
-      <PortfolioTableMobileField label="Market">
+      <PortfolioTableMobileField label={t("market")}>
         <PortfolioOpenOrderSidePriceCell order={order} />
       </PortfolioTableMobileField>
-      <PortfolioTableMobileField label="Filled">
+      <PortfolioTableMobileField label={t("filled")}>
         {formatOpenOrderFilled(order)}
       </PortfolioTableMobileField>
-      <PortfolioTableMobileField label="Total">
+      <PortfolioTableMobileField label={t("total")}>
         {formatOpenOrderTotal(order)}
       </PortfolioTableMobileField>
       <PortfolioTableMobileField
-        label="Expiration"
+        label={t("expiration")}
         valueClassName="font-normal text-prophet-muted"
       >
-        {formatOpenOrderExpiration(order)}
+        {formatOpenOrderExpiration(order, t, locale)}
       </PortfolioTableMobileField>
       <PortfolioOpenOrderCancelButton
         regionRestricted={regionRestricted}

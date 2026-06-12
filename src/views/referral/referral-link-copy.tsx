@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { CopyIcon } from "@/components/icons";
 import { CopiedToast } from "@/components/feedback/copied-toast";
 import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
@@ -18,13 +20,14 @@ export function ReferralLinkCopy({
   fullLink,
   className,
 }: ReferralLinkCopyProps) {
+  const t = useTranslations("referral");
   const { copiedVisible, copy } = useCopyWithToast();
 
   return (
     <div className={cn("relative", className)}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[14px] leading-[normal] text-[#909090] shrink-0">Referral Link</p>
+          <p className="text-[14px] leading-[normal] text-[#909090] shrink-0">{t("referralLink")}</p>
         </div>
         <div className="flex items-center gap-1.5 flex-1 w-0 whitespace-nowrap">
           <p className="truncate text-[16px] leading-[normal] text-black flex items-center flex-nowrap flex-1">
@@ -37,7 +40,7 @@ export function ReferralLinkCopy({
           <button
             type="button"
             className="inline-flex shrink-0 items-center justify-center p-1 text-[#909090] transition-opacity hover:opacity-70"
-            aria-label="Copy referral link"
+            aria-label={t("copyReferralLink")}
             onClick={() => void copy(fullLink)}
           >
             <CopyIcon />

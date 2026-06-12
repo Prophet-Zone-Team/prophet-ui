@@ -11,6 +11,10 @@ import type {
   TeamMarketSnapshot
 } from "@/types/market";
 import { formatChange, formatProbability } from "@/components/home/market-formatters";
+import {
+  formatDateTimeFromIso,
+  formatDateFromIso,
+} from "@/lib/formatters/datetime";
 import { buildFallbackProbabilityHistory } from "@/lib/team/probability-history";
 
 export interface StrengthMetric {
@@ -244,31 +248,11 @@ export function formatSquadValue(metadata: TeamFootballMetadata | undefined): st
 }
 
 export function formatFixtureDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
-  }).format(date);
+  return formatDateTimeFromIso(value);
 }
 
 export function formatShortDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric"
-  }).format(date);
+  return formatDateFromIso(value);
 }
 
 export function formatImpact(value: number): string {

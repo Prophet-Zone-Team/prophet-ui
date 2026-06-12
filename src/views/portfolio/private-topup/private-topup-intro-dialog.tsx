@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { CopyButton } from "@/components/feedback/copy-button";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import { formatShortWallet } from "@/lib/team/detail-format";
@@ -42,11 +44,15 @@ export function PrivateTopupIntroDialog({
   onOpenGuide,
   onChangeWallet,
 }: PrivateTopupIntroDialogProps) {
+  const t = useTranslations("privateTopup");
+  const tWallet = useTranslations("wallet");
+  const tCommon = useTranslations("common");
+
   return (
     <FundingResponsiveOverlay
       open={open}
       onClose={onClose}
-      ariaLabel="Private Topup"
+      ariaLabel={t("ariaPrivateTopup")}
       className={PRIVATE_TOPUP_INTRO_MODAL_WIDTH}
       hideCloseButton
       overlayCloseable={!guideOpen}
@@ -59,30 +65,24 @@ export function PrivateTopupIntroDialog({
             type="button"
             className="absolute left-5 top-5 border-0 bg-transparent p-0 text-[16px] font-[400] text-[#3168ff] transition-opacity hover:opacity-80"
             onClick={() => {
-              // onClose();
               onOpenGuide();
             }}
           >
-            How to use?
+            {t("howToUse")}
           </button>
           <PrivateTopupModalClose onClose={onClose} />
 
           <div className="flex flex-col items-center pt-6">
             <img
               src="/logos/logo-private.svg"
-              alt="Private mode"
+              alt={t("privateModeAlt")}
               className="h-[52px] w-[70px] object-contain"
             />
             <h2 className="m-0 mt-4 text-center text-[26px] font-[500] leading-normal text-black">
-              Private Balance
+              {tWallet("privateBalance")}
             </h2>
-            <p className="m-0 mt-4 max-w-[416px] text-center text-[16px] font-[400] leading-normal text-black">
-              Trade on Prophet with stronger onchain privacy.
-              <br />
-              <br />
-              For better privacy, make sure your connected wallet has no past
-              activity linked to known wallets, exchanges, or your main account.
-              You can also create a new wallet before using Private Top-Up.
+            <p className="m-0 mt-4 max-w-[416px] whitespace-pre-line text-center text-[16px] font-[400] leading-normal text-black">
+              {t("introDescription")}
             </p>
           </div>
 
@@ -96,7 +96,7 @@ export function PrivateTopupIntroDialog({
                 className="size-3 shrink-0"
                 aria-hidden
               />
-              <span>Be sure that you are using your private wallet</span>
+              <span>{t("privateWalletWarning")}</span>
             </div>
 
             <div className="mt-3 flex items-start justify-between gap-3">
@@ -104,7 +104,7 @@ export function PrivateTopupIntroDialog({
                 <WalletAvatar address={walletAddress} className="size-[34px]" />
                 <div className="min-w-0">
                   <p className="m-0 text-[14px] font-[500] text-[#909090]">
-                    Connected Account
+                    {t("connectedAccount")}
                   </p>
                   <div className="mt-0.5 flex items-center gap-2">
                     <p className="m-0 truncate text-[16px] font-[500] text-black">
@@ -112,7 +112,7 @@ export function PrivateTopupIntroDialog({
                     </p>
                     <CopyButton
                       text={walletAddress}
-                      ariaLabel="Copy wallet address"
+                      ariaLabel={t("copyWalletAddress")}
                       className="inline-flex shrink-0 border-0 bg-transparent p-0 transition-opacity hover:opacity-70"
                     >
                       <img
@@ -130,14 +130,13 @@ export function PrivateTopupIntroDialog({
                 className={`${privateTopupChangeLinkClass} shrink-0 border-0 bg-transparent p-0 text-[14px]`}
                 onClick={onChangeWallet}
               >
-                Change Wallet
+                {t("changeWallet")}
               </button>
             </div>
           </div>
 
           <p className={`${privateTopupInfoBannerClass} mt-4`}>
-            Top up your private balance first, then withdraw only the amount you
-            need to use on Prophet. Your funds always remain under your custody.
+            {t("infoBanner")}
           </p>
 
           {error ? (
@@ -153,7 +152,7 @@ export function PrivateTopupIntroDialog({
               onClick={onClose}
               disabled={proceeding}
             >
-              Cancel
+              {tCommon("cancel")}
             </button>
             <button
               type="button"
@@ -161,7 +160,7 @@ export function PrivateTopupIntroDialog({
               onClick={onProceed}
               disabled={proceeding}
             >
-              {proceeding ? "Verifying…" : "Proceed"}
+              {proceeding ? t("verifying") : t("proceed")}
               <PrivateTopupProceedChevron />
             </button>
           </div>

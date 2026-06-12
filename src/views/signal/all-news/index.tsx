@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Pagination } from "@/components/pagination/pagination";
 import { cn } from "@/lib/cn";
@@ -20,6 +21,7 @@ export function SignalAllList({
   onItemSelect,
   className
 }: SignalAllListProps) {
+  const t = useTranslations("signal");
   const [page, setPage] = useState(1);
   const { items, total, pageSize, isLoading, isError } = useAnalyticsNewsPage(
     page,
@@ -27,11 +29,11 @@ export function SignalAllList({
     ""
   );
 
-  const teamOptions = [{ value: "all" as const, label: "All" }];
+  const teamOptions = [{ value: "all" as const, label: t("allTeams") }];
 
   return (
     <section
-      aria-label="All signals and news"
+      aria-label={t("allSignalsAndNewsAria")}
       className={cn("flex w-full flex-col pb-4 md:pb-5", className)}
     >
       <SignalAllHeader
@@ -47,15 +49,15 @@ export function SignalAllList({
       <div className="mt-3 flex flex-col gap-2 px-3 md:mt-[12px] md:gap-0 md:px-0">
         {isLoading ? (
           <p className="py-8 text-center text-[16px] font-[400] leading-[19px] text-[#909090]">
-            Loading...
+            {t("loading")}
           </p>
         ) : isError ? (
           <p className="py-8 text-center text-[16px] font-[400] leading-[19px] text-[#909090]">
-            Unable to load data.
+            {t("unableToLoadData")}
           </p>
         ) : items.length === 0 ? (
           <p className="py-8 text-center text-[16px] font-[400] leading-[19px] text-[#909090]">
-            No signals available.
+            {t("noSignalsAvailable")}
           </p>
         ) : (
           items.map((item) => (

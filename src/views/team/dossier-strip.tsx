@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import type { KeyPlayerView, RecentMatchView } from "@/lib/team/team-detail-model";
 import type { TeamDetailGroupPeer } from "@/lib/team/map-team-detail";
 import { DossierGroupContext } from "@/views/team/dossier-group-context";
@@ -18,8 +22,10 @@ export function DossierStrip({
   keyStars,
   recentMatches,
 }: DossierStripProps) {
+  const t = useTranslations("teamDetail");
+
   return (
-    <section className={teamDossierStripClass} aria-label="Football dossier quick scan">
+    <section className={teamDossierStripClass} aria-label={t("dossierStripAria")}>
       <TeamRecentMatchesPanel matches={recentMatches ?? []} />
       <DossierGroupContext groupLabel={groupLabel} peers={peers} />
       <DossierKeyStars players={keyStars} />

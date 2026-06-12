@@ -263,11 +263,6 @@ function Dashboard({
           {teams.slice(0, 16).map((snapshot, index) => (
             <TeamCard key={snapshot.team.id} snapshot={snapshot} rank={index + 1} />
           ))}
-          {teams.length > 16 ? (
-            <Link className="team-card more" href="/teams">
-              <span><span className="more-number">+{teams.length - 16}</span>more teams</span>
-            </Link>
-          ) : null}
         </div>
 
         <div className="footnote">

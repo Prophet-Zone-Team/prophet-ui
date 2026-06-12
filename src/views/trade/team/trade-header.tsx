@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyLinkIcon } from "@/components/icons";
@@ -12,6 +13,7 @@ import type {
   TeamFootballMetadata,
   TeamMarketSnapshot
 } from "@/types/market";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { BookmarkControl } from "@/views/trade/team/bookmark-control";
 
 export interface TradeHeaderProps {
@@ -58,6 +60,8 @@ function HeaderControls({
   onOrderbookChange: (value: boolean) => void;
   bookmark: ReactNode;
 }) {
+  const t = useTranslations("trade");
+
   return (
     <div className="flex flex-col items-end gap-3 sm:pt-0">
       <div className="flex items-center gap-3">
@@ -65,7 +69,7 @@ function HeaderControls({
 
         <CopyButton
           text={getPageUrl}
-          ariaLabel="Copy page link"
+          ariaLabel={t("copyPageLink")}
           className="inline-flex size-11 items-center justify-center rounded-sm text-[#909090] transition-colors hover:text-black"
         >
           <CopyLinkIcon />
@@ -88,7 +92,9 @@ export function TradeHeader({
   showOrderbook,
   onOrderbookChange
 }: TradeHeaderProps) {
+  const t = useTranslations("trade");
   const { team, market } = snapshot;
+  const teamDisplayName = useLocalizedTeamName(team.code, team.name);
   const fifaRank = metadata?.fifaRank ?? team.fifaRank;
   return (
     <header className="my-4">
@@ -99,24 +105,23 @@ export function TradeHeader({
           <div className="flex min-w-0 items-center gap-3">
             <TeamLogo
               code={team.code}
-              name={team.name}
-              logoUrl={profile?.logoUrl}
+              name={teamDisplayName}
+              logoUrl={profile?.logoUrl ?? team.logoUrl}
             />
 
             <div className="min-w-0 flex-1 pb-0.5">
               <div className="flex items-center gap-4">
                 <h1 className="m-0 truncate text-[36px] font-[500] capitalize leading-[43px] text-black">
-                  {team.name}
+                  {teamDisplayName}
                 </h1>
               </div>
               <p className="m-0 mt-0.5 text-right text-sm font-[500] leading-[17px] text-[#909090] sm:text-left">
                 {fifaRank ? (
-                  <>
-                    Current{" "}
-                    <span className="text-prophet-green">No.{fifaRank}</span>
-                  </>
+                  <span className="text-prophet-green">
+                    {t("currentFifaRank", { rank: fifaRank })}
+                  </span>
                 ) : (
-                  "Ranking pending"
+                  t("rankingPending")
                 )}
               </p>
             </div>
@@ -129,7 +134,7 @@ export function TradeHeader({
           bookmark={
             <BookmarkControl
               slug={market.polymarket?.slug || ""}
-              teamName={team.name}
+              teamName={teamDisplayName}
             />
           }
         />

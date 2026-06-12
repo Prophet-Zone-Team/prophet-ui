@@ -1,6 +1,6 @@
 import { formatShareSize } from "@/lib/market/order-math";
 import {
-  formatPortfolioDateTime,
+  formatPortfolioPnlHoverTime,
   formatSharePrice,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
@@ -30,22 +30,24 @@ export function formatOpenOrderTotal(order: UserOpenOrder): string {
   return formatTeamDetailMoney(price * original);
 }
 
-export function formatOpenOrderExpiration(order: UserOpenOrder): string {
+export function formatOpenOrderExpiration(
+  order: UserOpenOrder,
+  t: (key: "expirationUntilCancelled") => string,
+  locale: string
+): string {
   const expiration = order.expiration?.trim();
 
   if (!expiration || expiration === "0") {
-    return "Until cancelled";
+    return t("expirationUntilCancelled");
   }
 
   const expirationSeconds = Number(expiration);
 
   if (!Number.isFinite(expirationSeconds) || expirationSeconds <= 0) {
-    return "Until cancelled";
+    return t("expirationUntilCancelled");
   }
 
-  return formatPortfolioDateTime(
-    new Date(expirationSeconds * 1000).toISOString()
-  );
+  return formatPortfolioPnlHoverTime(expirationSeconds, locale);
 }
 
 export function formatOpenOrderPriceLabel(order: UserOpenOrder): string {

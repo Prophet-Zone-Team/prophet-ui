@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, Loader2 } from "lucide-react";
 import { useLoginWithEmail, useLoginWithOAuth, usePrivy } from "@privy-io/react-auth";
 
+import { useTranslations } from "next-intl";
+
 import { Modal } from "@/components/ui/modal";
 import { OtpInput } from "@/components/auth/otp-input";
 import { cn } from "@/lib/cn";
@@ -26,6 +28,7 @@ export function PrivyLoginModal({
   onConnectExtensionWallet,
   onEmailAuthenticated,
 }: PrivyLoginModalProps) {
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [countdown, setCountdown] = useState(0);
@@ -62,12 +65,12 @@ export function PrivyLoginModal({
       }
     },
     onError: (error) => {
-      setErrorMessage(resolvePrivyError(error));
+      setErrorMessage(resolvePrivyError(error, t("somethingWentWrongPleaseRetry")));
     },
   });
   const { initOAuth, loading: oauthLoading } = useLoginWithOAuth({
     onError: (error) => {
-      setErrorMessage(resolvePrivyError(error));
+      setErrorMessage(resolvePrivyError(error, t("somethingWentWrongPleaseRetry")));
     },
   });
 
@@ -114,9 +117,9 @@ export function PrivyLoginModal({
       await sendCode({ email: email.trim() });
       setCountdown(RESEND_COUNTDOWN_SECONDS);
     } catch (error) {
-      setErrorMessage(resolvePrivyError(error));
+      setErrorMessage(resolvePrivyError(error, t("somethingWentWrongPleaseRetry")));
     }
-  }, [email, sendCode, sendCodeDisabled]);
+  }, [email, sendCode, sendCodeDisabled, t]);
 
   const handleVerify = useCallback(async () => {
     if (verifyDisabled) {
@@ -136,9 +139,9 @@ export function PrivyLoginModal({
         handleEmailAuthenticated(resolvedEmail);
       }
     } catch (error) {
-      setErrorMessage(resolvePrivyError(error));
+      setErrorMessage(resolvePrivyError(error, t("somethingWentWrongPleaseRetry")));
     }
-  }, [code, email, handleEmailAuthenticated, loginWithCode, verifyDisabled]);
+  }, [code, email, handleEmailAuthenticated, loginWithCode, t, verifyDisabled]);
 
   const handleGoogle = useCallback(async () => {
     setErrorMessage(undefined);
@@ -148,20 +151,20 @@ export function PrivyLoginModal({
       await initOAuth({ provider: "google" });
     } catch (error) {
       consumeOAuthPending();
-      setErrorMessage(resolvePrivyError(error));
+      setErrorMessage(resolvePrivyError(error, t("somethingWentWrongPleaseRetry")));
     }
-  }, [initOAuth]);
+  }, [initOAuth, t]);
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel="Login by Email"
+      ariaLabel={t("loginByEmail")}
       className="w-full max-w-[468px] rounded-[20px] border border-[#ebebeb] bg-white p-6 shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]"
     >
       <div className="flex flex-col gap-5">
         <h2 className="text-[18px] font-[500] leading-[21px] text-black">
-          Login by Email
+          {t("loginByEmail")}
         </h2>
 
         <button
@@ -175,11 +178,11 @@ export function PrivyLoginModal({
           ) : (
             <GoogleIcon />
           )}
-          Continue with Google
+          {t("continueWithGoogle")}
         </button>
 
         <p className="text-center text-[14px] font-[400] leading-[normal] text-[#909090]">
-          Or other email
+          {t("orOtherEmail")}
         </p>
 
         <div className="relative">
@@ -187,7 +190,7 @@ export function PrivyLoginModal({
             type="email"
             inputMode="email"
             autoComplete="email"
-            placeholder="Email address"
+            placeholder={t("emailAddress")}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             className="h-[50px] w-full rounded-[6px] border border-[#ebebeb] bg-white pl-3 pr-[120px] text-[14px] text-black outline-none placeholder:text-[#909090] focus:border-black"
@@ -201,9 +204,9 @@ export function PrivyLoginModal({
             {sendingCode ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : countdown > 0 ? (
-              `${countdown}s`
+              t("resendCountdown", { count: countdown })
             ) : (
-              "Send Code"
+              t("sendCode")
             )}
           </button>
         </div>
@@ -225,7 +228,7 @@ export function PrivyLoginModal({
             {(submittingCode || !ready) ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
-              "Verify"
+              t("verify")
             )}
           </button>
         </div>
@@ -244,7 +247,7 @@ export function PrivyLoginModal({
           )}
           onClick={onConnectExtensionWallet}
         >
-          Connect with extension wallet
+          {t("connectWithExtensionWallet")}
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
@@ -252,7 +255,7 @@ export function PrivyLoginModal({
   );
 }
 
-function resolvePrivyError(error: unknown): string {
+function resolvePrivyError(error: unknown, fallbackMessage: string): string {
   if (error instanceof Error) {
     return error.message;
   }
@@ -261,7 +264,7 @@ function resolvePrivyError(error: unknown): string {
     return error;
   }
 
-  return "Something went wrong. Please try again.";
+  return fallbackMessage;
 }
 
 function GoogleIcon() {

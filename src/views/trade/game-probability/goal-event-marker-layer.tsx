@@ -8,6 +8,8 @@ import {
   type ReactNode
 } from "react";
 
+import { useTranslations } from "next-intl";
+
 import { TeamFlag } from "@/components/teams/team-flag";
 import { formatGoalEventTime } from "@/lib/market/match-display";
 import type { GameMatchChartEvent } from "@/types/market";
@@ -156,6 +158,7 @@ export const GoalEventMarkerLayer = memo(
     awayCode,
     awayName
   }: GoalEventMarkerLayerProps) {
+    const t = useTranslations("trade");
     const [hoveredEventKey, setHoveredEventKey] = useState<string | null>(null);
 
     if (!events.length || !height || !width || maxElapsedSeconds <= 0) {
@@ -192,7 +195,9 @@ export const GoalEventMarkerLayer = memo(
               <div key={eventKey}>
                 <button
                   type="button"
-                  aria-label={`Goal at ${formatGoalEventTime(event.elapsedSeconds)}`}
+                  aria-label={t("chartGoalAria", {
+                    time: formatGoalEventTime(event.elapsedSeconds)
+                  })}
                   className="absolute z-10 flex size-6 -translate-x-1/2 items-center justify-center border-0 bg-transparent p-0"
                   style={{ left: x, top: markerY }}
                   onMouseEnter={() => setHoveredEventKey(eventKey)}
@@ -226,7 +231,7 @@ export const GoalEventMarkerLayer = memo(
                           className="!h-4 !w-4 rounded-[2px]"
                         />
                         <span className="text-[12px] font-[500] leading-[17px] text-[#65AF14]">
-                          GOAL!
+                          {t("chartGoalLabel")}
                         </span>
                       </div>
                       <span

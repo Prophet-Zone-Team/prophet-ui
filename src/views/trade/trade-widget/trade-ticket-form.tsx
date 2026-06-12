@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { formatProbability } from "@/components/home/market-formatters";
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
 import { cn } from "@/lib/cn";
 import {
-  formatOrderBookClearingTip,
-  formatOrderBookClearingTooltip
+  formatOrderBookClearingKickoff
 } from "@/lib/market/limit-order-clearing-tip";
 import {
   formatLimitPriceInputValue,
@@ -22,23 +22,22 @@ import type { LimitExpirationPreset } from "@/store/trade-ticket-store";
 import { LimitExpirationSelect } from "@/views/trade/trade-widget/limit-expiration-select";
 import { TakeProfitLimitRow } from "@/views/trade/trade-widget/take-profit-limit-row";
 import {
-  deriveAmountInputLabel,
   deriveLimitBuyTotal,
-  deriveOutcomeSummaryLabel,
   deriveOutcomeSummaryValue,
   type OrderPreviewFields,
   type TradeTicketStatus
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
 import type { TradeOrderMode } from "@/views/trade/trade-widget/trade-market-button";
+import { translateTradeMessage } from "@/views/trade/trade-widget/trade-i18n";
 import { tradeQuickAmountClass, TRADE_BID_BUTTON_ID } from "@/views/trade/trade-widget/trade-ui";
 
 const QUICK_AMOUNTS = [1, 5, 10, 100] as const;
 const LIMIT_BUY_SHARE_DELTAS = [-100, -10, 10, 100] as const;
 
 const SELL_QUICK_FRACTIONS = [
-  { label: "25%", value: 0.25 },
-  { label: "50%", value: 0.5 },
-  { label: "75%", value: 0.75 }
+  { labelKey: "quickAmount25", value: 0.25 },
+  { labelKey: "quickAmount50", value: 0.5 },
+  { labelKey: "quickAmount75", value: 0.75 }
 ] as const;
 
 export interface TradeTicketFormProps {
@@ -137,9 +136,12 @@ export function TradeTicketForm({
   onTakeProfitLimitEnabledChange,
   onTakeProfitLimitPriceChange
 }: TradeTicketFormProps) {
+  const t = useTranslations("trade");
   const isLimitOrder = orderMode === "limit";
-  const outcomeSummaryLabel = deriveOutcomeSummaryLabel(tradeSide);
-  const amountInputLabel = deriveAmountInputLabel(orderMode, tradeSide);
+  const outcomeSummaryLabel =
+    tradeSide === "sell" ? t("youWillReceive") : t("toWin");
+  const amountInputLabel =
+    isLimitOrder || tradeSide === "sell" ? t("shares") : t("value");
   const summaryValue = deriveOutcomeSummaryValue(tradeSide, preview);
   const sellQuickDisabled = availableShares <= 0;
   const showCashBalance =
@@ -182,10 +184,10 @@ export function TradeTicketForm({
       {isLimitOrder ? (
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-[500] leading-[17px] text-black">
-            Limit Price
+            {t("limitPrice")}
           </span>
           <label className="sr-only" htmlFor="trade-limit-price">
-            Limit price
+            {t("limitPriceSrOnly")}
           </label>
           <LimitPriceInput
             limitPrice={limitPrice}
@@ -204,14 +206,14 @@ export function TradeTicketForm({
             </span>
             {showCashBalance ? (
               <span className="text-xs font-[400] leading-4 text-prophet-muted">
-                {formatTeamDetailMoney(availableCash)} cash
+                {formatTeamDetailMoney(availableCash)} {t("cashSuffix")}
               </span>
             ) : null}
           </div>
           <label className="sr-only" htmlFor="trade-amount">
             {isLimitOrder || tradeSide === "sell"
-              ? "Order size in shares"
-              : "Order amount in USDC"}
+              ? t("orderSizeInShares")
+              : t("orderAmountInUsdc")}
           </label>
           <div className="flex flex-1  items-baseline justify-end  text-[26px] font-[500]">
             {!isLimitOrder && tradeSide !== "sell" && <span>$</span>}
@@ -234,9 +236,9 @@ export function TradeTicketForm({
         <div className="flex flex-wrap justify-end gap-2">
           {tradeSide === "sell" ? (
             <>
-              {SELL_QUICK_FRACTIONS.map(({ label, value }) => (
+              {SELL_QUICK_FRACTIONS.map(({ labelKey, value }) => (
                 <button
-                  key={label}
+                  key={labelKey}
                   type="button"
                   className={cn(
                     tradeQuickAmountClass,
@@ -245,7 +247,7 @@ export function TradeTicketForm({
                   disabled={sellQuickDisabled}
                   onClick={() => onQuickAmount(value)}
                 >
-                  {label}
+                  {t(labelKey)}
                 </button>
               ))}
               <button
@@ -257,7 +259,7 @@ export function TradeTicketForm({
                 disabled={sellQuickDisabled}
                 onClick={() => onQuickAmount("all")}
               >
-                Max
+                {t("max")}
               </button>
             </>
           ) : isLimitOrder ? (
@@ -324,7 +326,9 @@ export function TradeTicketForm({
               {outcomeSummaryLabel}
             </span>
             <span className="text-sm font-[400] leading-[17px] text-prophet-muted">
-              Avg. Price {formatOrderbookPrice(preview.sidePrice)}
+              {t("avgPrice", {
+                price: formatOrderbookPrice(preview.sidePrice)
+              })}
             </span>
           </div>
           <span className="text-[26px] font-[500] leading-[38px] text-[#69C800]">
@@ -337,7 +341,10 @@ export function TradeTicketForm({
         <TradeAuthActionButton
           tradeSide={tradeSide}
           actionLabel={actionLabel}
-          connectLabel="Enable trading"
+          connectLabel={t("enableTrading")}
+          connectingLabel={t("connecting")}
+          signingLabel={t("waitingForSignature")}
+          submittingLabel={t("submittingOrderStatus")}
           canSubmit={canSubmit && !actionInProgress}
           connectDisabled={status === "loading"}
           actionStatus={
@@ -369,13 +376,13 @@ export function TradeTicketForm({
               disabled={actionInProgress || status === "loading"}
               onClick={() => void onRetryEligibility()}
             >
-              Retry eligibility check
+              {t("retryEligibilityCheck")}
             </button>
           ) : null}
         </div>
       ) : preview.disabledReason && amount !== "0" ? (
         <p className="m-0 text-xs text-prophet-muted">
-          {preview.disabledReason}
+          {translateTradeMessage(preview.disabledReason, t)}
         </p>
       ) : null}
 
@@ -459,14 +466,16 @@ function LimitOrderSummary({
   onLimitExpirationChange: (value: LimitExpirationPreset) => void;
   onLimitExpirationCustomChange: (value: string) => void;
 }) {
-  const outcomeSummaryLabel = deriveOutcomeSummaryLabel(tradeSide);
+  const t = useTranslations("trade");
+  const outcomeSummaryLabel =
+    tradeSide === "sell" ? t("youWillReceive") : t("toWin");
   const summaryValue = deriveOutcomeSummaryValue(tradeSide, preview);
 
   return (
     <div className="flex flex-col gap-3 border-t border-prophet-line pt-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-[500] leading-[17px] text-black">
-          Expiration
+          {t("expiration")}
         </span>
         <LimitExpirationSelect
           value={limitExpiration}
@@ -479,7 +488,7 @@ function LimitOrderSummary({
       {tradeSide === "buy" ? (
         <div className="flex items-center justify-between gap-2 border-t border-prophet-line/60 pt-3">
           <span className="text-sm font-[500] leading-[17px] text-black">
-            Total
+            {t("total")}
           </span>
           <span className="text-sm font-[500] leading-[17px] text-[#0d69ff]">
             {formatTeamDetailMoney(deriveLimitBuyTotal(preview))}
@@ -502,12 +511,14 @@ function LimitOrderSummary({
 }
 
 function OrderBookClearingTip({ kickoffAt }: { kickoffAt: string }) {
-  const tip = formatOrderBookClearingTip(kickoffAt);
+  const t = useTranslations("trade");
+  const locale = useLocale();
+  const kickoffLabel = formatOrderBookClearingKickoff(kickoffAt, locale);
 
   return (
     <div className="flex items-center justify-center gap-1 text-center">
       <span className="text-xs font-[400] leading-4 text-prophet-muted">
-        {tip}
+        {t("orderBookClearingTip", { kickoff: kickoffLabel })}
       </span>
     </div>
   );
@@ -532,6 +543,7 @@ function OutcomeButtonColumn({
   buttonClassName?: string;
   onSelect: () => void;
 }) {
+  const t = useTranslations("trade");
   const isYes = side === "yes";
   const showShares = shareCount !== undefined && shareCount > 0;
 
@@ -552,7 +564,7 @@ function OutcomeButtonColumn({
             isYes ? "text-[#65AF14]" : "text-[#FF674B]"
           )}
         >
-          {formatShareSize(shareCount)} shares
+          {t("sharesCount", { count: formatShareSize(shareCount) })}
         </span>
       ) : null}
     </div>
@@ -574,6 +586,7 @@ function OutcomeButton({
   buttonClassName?: string;
   onSelect: () => void;
 }) {
+  const t = useTranslations("trade");
   const isYes = side === "yes";
 
   return (
@@ -593,7 +606,7 @@ function OutcomeButton({
       )}
     >
       <span className="text-[20px] font-[500] leading-6">
-        {isYes ? "Yes" : "No"}
+        {isYes ? t("yes") : t("no")}
       </span>
       <div className="flex items-center gap-2">
         <span

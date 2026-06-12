@@ -1,4 +1,5 @@
 import { findGameMarketOutcome } from "@/lib/market/game-outcome-price";
+import { formatDateTimeFromIso } from "@/lib/formatters/datetime";
 import { buildGameBidOrderPreview, buildFixtureBidOrderPreview } from "@/lib/market/game-order";
 import {
   buildBidOrderPreview,
@@ -574,17 +575,7 @@ export function getLimitExpirationLabel(
   customDate?: string
 ): string {
   if (preset === "custom" && customDate) {
-    const date = new Date(customDate);
-
-    if (!Number.isNaN(date.getTime())) {
-      return new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true
-      }).format(date);
-    }
+    return formatDateTimeFromIso(customDate);
   }
 
   return (
@@ -1270,9 +1261,6 @@ export function formatGameDefaultLimitPriceString(
     tradeSide
   );
 }
-
-export const TAKE_PROFIT_LIMIT_FAILED_MESSAGE =
-  "Buy order succeeded, but the take profit limit order could not be placed. You can add a sell limit order from Portfolio.";
 
 export function resolveTakeProfitLimitPrice(
   takeProfitLimitPrice: string,

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/utils";
@@ -10,6 +12,7 @@ export interface PrivateBalanceProps {
 }
 
 function PrivateBalance({ onClick, className }: PrivateBalanceProps) {
+  const t = useTranslations("wallet");
   const { privateBalance, confidentialAccount } = useAuth();
 
   const balanceDisplay =
@@ -29,7 +32,7 @@ function PrivateBalance({ onClick, className }: PrivateBalanceProps) {
         className,
       )}
       onClick={onClick}
-      aria-label="Open Private Topup"
+      aria-label={t("openPrivateTopup")}
     >
       <div className="flex items-center justify-center gap-1 leading-[17px]">
         <img
@@ -37,7 +40,7 @@ function PrivateBalance({ onClick, className }: PrivateBalanceProps) {
           alt=""
           className="shrink-0 w-4 h-3 object-center object-contain"
         />
-        <div className="">Private Balance</div>
+        <div className="">{t("privateBalance")}</div>
       </div>
       <div className="text-black text-base leading-[19px]">{balanceDisplay}</div>
     </button>

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
@@ -51,6 +52,8 @@ export function PortfolioOpenOrderMarketCard({
   defaultExpanded = false,
   className
 }: PortfolioOpenOrderMarketCardProps) {
+  const t = useTranslations("portfolio");
+  const locale = useLocale();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [cancelAllOpen, setCancelAllOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<{
@@ -143,12 +146,12 @@ export function PortfolioOpenOrderMarketCard({
               onClick={() => setExpanded((value) => !value)}
               aria-expanded={expanded}
               aria-label={
-                expanded ? "Collapse market orders" : "Expand market orders"
+                expanded ? t("collapseMarketOrders") : t("expandMarketOrders")
               }
               className="mt-0.5 inline-flex items-center gap-1 text-left"
             >
               <span className="font-[Sora] text-xs font-normal text-[#909090]">
-                {orderCount} orders
+                {t("orderCount", { count: orderCount })}
               </span>
               <ChevronDown
                 className={cn(
@@ -184,7 +187,7 @@ export function PortfolioOpenOrderMarketCard({
                 }
               }}
             >
-              Cancel All
+              {t("cancelAll")}
             </button>
           </RegionRestrictedControl>
         </div>
@@ -232,17 +235,17 @@ export function PortfolioOpenOrderMarketCard({
             icon={marketIcon}
             order={singleOrder}
           />
-          <PortfolioTableMobileField label="Filled">
+          <PortfolioTableMobileField label={t("filled")}>
             {formatOpenOrderFilled(singleOrder)}
           </PortfolioTableMobileField>
-          <PortfolioTableMobileField label="Total">
+          <PortfolioTableMobileField label={t("total")}>
             {formatOpenOrderTotal(singleOrder)}
           </PortfolioTableMobileField>
           <PortfolioTableMobileField
-            label="Expiration"
+            label={t("expiration")}
             valueClassName="font-normal text-prophet-muted"
           >
-            {formatOpenOrderExpiration(singleOrder)}
+            {formatOpenOrderExpiration(singleOrder, t, locale)}
           </PortfolioTableMobileField>
           <PortfolioOpenOrderCancelButton
             regionRestricted={regionRestricted}
@@ -276,12 +279,12 @@ export function PortfolioOpenOrderMarketCard({
           onClick={() => setExpanded((value) => !value)}
           aria-expanded={expanded}
           aria-label={
-            expanded ? "Collapse market orders" : "Expand market orders"
+            expanded ? t("collapseMarketOrders") : t("expandMarketOrders")
           }
           className="inline-flex items-center gap-1 text-left"
         >
           <span className="font-[Sora] text-xs font-normal text-[#909090]">
-            {orderCount} orders
+            {t("orderCount", { count: orderCount })}
           </span>
           <ChevronDown
             className={cn(
@@ -291,14 +294,14 @@ export function PortfolioOpenOrderMarketCard({
             aria-hidden
           />
         </button>
-        <PortfolioTableMobileField label="Filled" valueClassName="text-prophet-muted">
+        <PortfolioTableMobileField label={t("filled")} valueClassName="text-prophet-muted">
           —
         </PortfolioTableMobileField>
-        <PortfolioTableMobileField label="Total" valueClassName="text-prophet-muted">
+        <PortfolioTableMobileField label={t("total")} valueClassName="text-prophet-muted">
           —
         </PortfolioTableMobileField>
         <PortfolioTableMobileField
-          label="Expiration"
+          label={t("expiration")}
           valueClassName="font-normal text-prophet-muted"
         >
           —
@@ -318,7 +321,7 @@ export function PortfolioOpenOrderMarketCard({
               }
             }}
           >
-            Cancel All
+            {t("cancelAll")}
           </button>
         </RegionRestrictedControl>
       </article>

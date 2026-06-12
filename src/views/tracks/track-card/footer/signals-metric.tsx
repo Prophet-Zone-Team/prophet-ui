@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { trackCardLabelClassName } from "../styles";
@@ -14,6 +18,7 @@ export function SignalsMetric({
   showPositiveLabel = false,
   className
 }: SignalsMetricProps) {
+  const t = useTranslations("tracks");
   const positiveCount = signals.positiveCount ?? 0;
 
   return (
@@ -24,11 +29,11 @@ export function SignalsMetric({
         </span>
         {showPositiveLabel && positiveCount > 0 ? (
           <span className="text-[14px] font-[400] leading-[18px] text-[#65AF14]">
-            Positive
+            {t("positive")}
           </span>
         ) : null}
       </div>
-      <span className={trackCardLabelClassName}>Signals</span>
+      <span className={trackCardLabelClassName}>{t("signals")}</span>
     </div>
   );
 }

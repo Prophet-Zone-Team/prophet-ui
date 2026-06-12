@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
+import { useTranslations } from "next-intl";
 
 import { enrichPortfolioStrategyRecords } from "@/lib/portfolio/compute-portfolio-strategy-summary";
 import { useWinnerSnapshots } from "@/store";
@@ -24,6 +25,8 @@ export function PortfolioStrategyList({
   sessionConnected,
   onConnectWallet
 }: PortfolioStrategyListProps) {
+  const t = useTranslations("portfolio");
+  const tAuth = useTranslations("auth");
   const { strategies, status, loadStrategies, hasLoadedRef } =
     usePortfolioStrategies(sessionConnected);
   const snapshots = useWinnerSnapshots();
@@ -52,7 +55,7 @@ export function PortfolioStrategyList({
   if (loading) {
     return (
       <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-        Loading strategies…
+        {t("loadingStrategies")}
       </p>
     );
   }
@@ -61,14 +64,14 @@ export function PortfolioStrategyList({
     return (
       <div className="flex flex-col items-center gap-3 px-4 py-10">
         <p className="m-0 text-sm text-prophet-muted">
-          Connect your wallet to view strategies in your connected account.
+          {t("connectWalletToViewStrategies")}
         </p>
         <button
           type="button"
           className={portfolioConnectButtonClass}
           onClick={() => void onConnectWallet()}
         >
-          Connect Wallet
+          {t("connectWallet")}
         </button>
       </div>
     );
@@ -78,14 +81,14 @@ export function PortfolioStrategyList({
     return (
       <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
         <p className="m-0 text-sm text-prophet-muted">
-          Unable to load strategies right now.
+          {t("unableToLoadStrategies")}
         </p>
         <button
           type="button"
           className={portfolioConnectButtonClass}
           onClick={() => void loadStrategies({ force: true })}
         >
-          Retry
+          {tAuth("retry")}
         </button>
       </div>
     );
@@ -94,14 +97,14 @@ export function PortfolioStrategyList({
   if (enrichedStrategies.length === 0) {
     return (
       <PortfolioEmptyState
-        title="No strategies yet"
-        body="Strategy positions will appear here after you place a strategy bid."
+        title={t("noStrategiesYet")}
+        body={t("noStrategiesBody")}
       />
     );
   }
 
   return (
-    <div className={portfolioTableScrollClass} aria-label="Your strategies">
+    <div className={portfolioTableScrollClass} aria-label={t("yourStrategies")}>
       <div className="flex flex-col">
         {enrichedStrategies.map((strategy) => (
           <PortfolioStrategyCard

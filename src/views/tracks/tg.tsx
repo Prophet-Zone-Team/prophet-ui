@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { Bell } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -9,6 +10,7 @@ import {
   type BindTelegramStatus
 } from "@/components/bind-tg";
 import { DEFAULT_BOT_USERNAME } from "@/components/bind-tg/constants";
+import { formatDate } from "@/lib/formatters/datetime";
 import { useAuth } from "@/context/auth/use-auth";
 import type { TracksTelegramBindLoadStatus } from "@/hooks/tracks/use-tracks-telegram-bind";
 import {
@@ -30,6 +32,7 @@ export default function TracksTelegramBanner({
   telegramLoadStatus,
   onTelegramBound
 }: TracksTelegramBannerProps) {
+  const t = useTranslations("tracks");
   const { openLogin } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bindStatus, setBindStatus] = useState<BindTelegramStatus>("unbound");
@@ -81,9 +84,7 @@ export default function TracksTelegramBanner({
 
     const loginAuth = window.Telegram?.Login?.auth;
     if (!loginAuth) {
-      toast.error(
-        "Telegram login is unavailable. Please refresh and try again."
-      );
+      toast.error(t("telegramLoginUnavailable"));
       return;
     }
 
@@ -103,7 +104,7 @@ export default function TracksTelegramBanner({
 
           try {
             await bindProphetTelegram(data);
-            setConnectedAt(new Date().toLocaleDateString());
+            setConnectedAt(formatDate(new Date()));
             setBindStatus("success");
             onTelegramBound({ bound: true, tgUserId: data.id });
           } catch (error) {
@@ -116,7 +117,7 @@ export default function TracksTelegramBanner({
             } else if (error instanceof Error) {
               toast.error(error.message);
             } else {
-              toast.error("Unable to bind Telegram.");
+              toast.error(t("unableToBindTelegram"));
             }
           } finally {
             setIsBinding(false);
@@ -124,7 +125,7 @@ export default function TracksTelegramBanner({
         })();
       }
     );
-  }, [isBinding, onTelegramBound, openLogin]);
+  }, [isBinding, onTelegramBound, openLogin, t]);
 
   const handleCheckStatus = useCallback(() => {
     setBindStatus((current) => (current === "unbound" ? "binding" : current));
@@ -147,16 +148,16 @@ export default function TracksTelegramBanner({
           />
         </div>
         <p className="m-0 text-[14px] font-[400] leading-[18px] text-black md:text-[16px] md:leading-[20px]">
-          Track on your{" "}
+          {t("telegramTrackBefore")}{" "}
           <button
             type="button"
             className="border-0 bg-transparent p-0 font-[600] underline cursor-pointer text-inherit disabled:cursor-wait disabled:opacity-60"
             onClick={() => void handleTelegramClick()}
             disabled={telegramLoadStatus === "loading"}
           >
-            Telegram
+            {t("telegram")}
           </button>{" "}
-          to receive real time notifications
+          {t("telegramTrackAfter")}
         </p>
       </div>
 

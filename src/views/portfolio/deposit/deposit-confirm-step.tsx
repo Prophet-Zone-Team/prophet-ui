@@ -3,6 +3,7 @@
 import type { QuoteResponse } from "@stableflow/core";
 import { Loader2 } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { POLYMARKET_USD } from "@/config/funding";
 import { useBridgeQuote } from "@/hooks/funding";
@@ -46,6 +47,7 @@ export function DepositConfirmStep({
   stableflowQuote,
   recipientAddress
 }: DepositConfirmStepProps) {
+  const t = useTranslations("portfolio.deposit");
   const quoteRequest = useMemo(
     () =>
       quoteMode === "bridge"
@@ -124,7 +126,7 @@ export function DepositConfirmStep({
       {showQuoteLoading ? (
         <div className="flex items-center justify-center gap-2 text-sm text-[#909090]">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          <span>Fetching quote…</span>
+          <span>{t("fetchingQuote")}</span>
         </div>
       ) : null}
 
@@ -135,13 +137,13 @@ export function DepositConfirmStep({
       ) : null}
 
       <div className="flex flex-col">
-        <DetailRow label="From">
+        <DetailRow label={t("from")}>
           <span className="flex items-center gap-2">
             <WalletAvatarIcon address={walletAddress} />
             <span>{formatShortWallet(walletAddress)}</span>
           </span>
         </DetailRow>
-        <DetailRow label="To">
+        <DetailRow label={t("to")}>
           <span className="flex items-center gap-2">
             <TokenIcon
               symbol="USDC"
@@ -153,10 +155,10 @@ export function DepositConfirmStep({
             <span>{formatShortWallet(toAddress)}</span>
           </span>
         </DetailRow>
-        <DetailRow label="Est. Time">
+        <DetailRow label={t("estTime")}>
           <span>{estimatedTime}</span>
         </DetailRow>
-        <DetailRow label="Send">
+        <DetailRow label={t("send")}>
           <span className="flex items-center gap-2">
             <TokenIcon
               symbol={token.symbol}
@@ -168,7 +170,7 @@ export function DepositConfirmStep({
             <span>{formatNumber(amount, 4, true, { round: 0 })}</span>
           </span>
         </DetailRow>
-        <DetailRow label="Receive">
+        <DetailRow label={t("receive")}>
           <span className="flex items-center gap-2">
             <TokenIcon
               symbol="USDC"

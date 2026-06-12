@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import {
@@ -20,11 +21,6 @@ import { TradeMarketButton } from "@/views/trade/trade-widget/trade-market-butto
 import { tradePanelClass } from "@/views/trade/trade-widget/trade-ui";
 import { cn } from "@/lib/cn";
 
-const TRADE_TABS = [
-  { id: "buy", label: "Buy" },
-  { id: "sell", label: "Sell" }
-] as const;
-
 export type TradeWidgetTeamProps = {
   variant?: "team";
   snapshot: TeamMarketSnapshot;
@@ -39,6 +35,14 @@ export type TradeWidgetGameProps = {
 export type TradeWidgetProps = TradeWidgetTeamProps | TradeWidgetGameProps;
 
 export function TradeWidget(props: TradeWidgetProps & { className?: string; outcomeButtonClassName?: string; outcomeButtonContainerClassName?: string; }) {
+  const t = useTranslations("trade");
+  const tradeTabs = useMemo(
+    () => [
+      { id: "buy" as const, label: t("buy") },
+      { id: "sell" as const, label: t("sell") }
+    ],
+    [t]
+  );
   const syncForTeamSnapshot = useSyncTradeTeamSnapshot();
   const syncForGameSnapshot = useSyncTradeGameSnapshot();
   const outcomeSide = useTradeOutcomeSide();
@@ -63,7 +67,7 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
   ]);
 
   return (
-    <section className={cn(tradePanelClass, props.className)} aria-label="Place order">
+    <section className={cn(tradePanelClass, props.className)} aria-label={t("placeOrder")}>
       {props.variant === "game" ? (
         <TradeWidgetHeader
           variant="game"
@@ -81,11 +85,11 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
       <div className="flex items-end justify-between gap-3 px-4 pt-3">
         <div className="border-b border-[#EBEBEB] flex-1">
           <TabSwitcher
-            items={[...TRADE_TABS]}
+            items={tradeTabs}
             value={tab}
             onChange={(value) => setTab(value as typeof tab)}
             size="compact"
-            aria-label="Trade side"
+            aria-label={t("tradeSide")}
             className="h-[25px]"
           />
         </div>

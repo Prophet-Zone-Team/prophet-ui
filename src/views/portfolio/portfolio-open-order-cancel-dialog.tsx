@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Modal } from "@/components/ui/modal";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
@@ -73,6 +75,7 @@ export function PortfolioOpenOrderCancelDialog({
   teamName,
   onClose
 }: PortfolioOpenOrderCancelDialogProps) {
+  const t = useTranslations("portfolio");
   const { removeOpenOrder } = usePortfolioContext();
   const { isRegionBlocked } = useAuth();
   const { cancelOpenOrder, isCanceling } = useCancelOpenOrder({
@@ -92,11 +95,11 @@ export function PortfolioOpenOrderCancelDialog({
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel={`Cancel order for ${marketLabel}`}
+      ariaLabel={t("cancelOrderFor", { market: marketLabel })}
       className={PORTFOLIO_SELL_MODAL_WIDTH}
       hideCloseButton
     >
-      <FundingModalShell title="Cancel order" onClose={onClose}>
+      <FundingModalShell title={t("cancelOrder")} onClose={onClose}>
         <div className="flex flex-col gap-5 pb-2">
           <div className="flex items-start gap-2.5">
             {teamName ? (
@@ -130,7 +133,7 @@ export function PortfolioOpenOrderCancelDialog({
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-[500] text-prophet-muted">
-                Remaining size
+                {t("remainingSize")}
               </span>
               <span className="text-sm font-[500] text-black">
                 {formatShareSize(getRemainingSize(order))}
@@ -138,7 +141,7 @@ export function PortfolioOpenOrderCancelDialog({
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-[500] text-prophet-muted">
-                Filled
+                {t("filled")}
               </span>
               <span className="text-sm font-[500] text-black">
                 {getFilledPercent(order)}
@@ -147,8 +150,7 @@ export function PortfolioOpenOrderCancelDialog({
           </div>
 
           <p className="m-0 text-sm text-prophet-muted">
-            This will remove the open order from the book. Any filled portion
-            will remain in your account.
+            {t("cancelOrderDescription")}
           </p>
         </div>
 
@@ -159,7 +161,7 @@ export function PortfolioOpenOrderCancelDialog({
             disabled={isBusy}
             onClick={onClose}
           >
-            Keep order
+            {t("keepOrder")}
           </button>
           <RegionRestrictedControl restricted={isRegionBlocked}>
             <button
@@ -168,7 +170,7 @@ export function PortfolioOpenOrderCancelDialog({
               disabled={isBusy || isRegionBlocked}
               onClick={() => void cancelOpenOrder(order)}
             >
-              {isBusy ? "Cancelling…" : "Cancel order"}
+              {isBusy ? t("cancelling") : t("cancelOrder")}
             </button>
           </RegionRestrictedControl>
         </div>

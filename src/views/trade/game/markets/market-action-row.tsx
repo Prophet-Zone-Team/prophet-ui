@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo, type ReactNode } from "react";
 
 import { formatCompactVolume } from "@/lib/formatters/volume";
@@ -96,6 +97,7 @@ function MarketActionRowShell({
   otherSources?: MarketOtherSourceItem[];
   className?: string;
 }) {
+  const t = useTranslations("trade");
   const volumeLabel = formatCompactVolume(volume);
 
   return (
@@ -104,7 +106,7 @@ function MarketActionRowShell({
         <div className="min-w-[88px] shrink-0">
           {volumeLabel ? (
             <p className="m-0 text-[20px] font-[500] leading-6 text-black">
-              {volumeLabel} Vol.
+              {t("compactVolume", { value: volumeLabel })}
             </p>
           ) : null}
         </div>

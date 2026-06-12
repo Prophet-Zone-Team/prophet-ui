@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   createContext,
   useContext,
@@ -25,25 +26,24 @@ import {
 } from "@/components/home/market-formatters";
 import {
   formatChartTimestampClockLabel,
-  formatGoalEventTime,
-  formatMatchMinuteAxisLabel,
+  formatGoalEventTime
 } from "@/lib/market/match-display";
 import {
   formatGameChartXAxisTick,
-  getBinaryFixtureChartYDomain,
+  getBinaryFixtureChartYDomain
 } from "@/lib/market/fixture-probability-chart";
 import {
   LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
-  resolveLiveChartAxisTicks,
+  resolveLiveChartAxisTicks
 } from "@/lib/market/live-fixture-probability-chart";
 import type {
   GameFixtureBinaryChartPoint,
   GameFixtureChartTimeRange,
-  GameMatchChartEvent,
+  GameMatchChartEvent
 } from "@/types/market";
 import {
   GoalEventMarkerChartProvider,
-  GoalEventMarkerCustomized,
+  GoalEventMarkerCustomized
 } from "@/views/trade/game-probability/goal-event-marker-layer";
 
 const CHART_COLORS = {
@@ -285,14 +285,29 @@ export function GameBinaryProbabilityChart({
   maxElapsedSeconds = 0,
   kickoffAt,
   homeCode,
-  awayCode,
+  awayCode
 }: GameBinaryProbabilityChartProps) {
+  const t = useTranslations("trade");
   const isLive = mode === "live";
+  const formatLiveAxisTick = (value: number) => {
+    const safeSeconds = Math.max(0, Math.floor(value));
+    const minutes = Math.floor(safeSeconds / 60);
+
+    if (minutes === 45) {
+      return t("chartHalfTimeAxisLabel");
+    }
+
+    return `${minutes}'`;
+  };
 
   const series = useMemo(
     () => [
       { key: "primary" as const, color: primaryColor, label: primaryLabel },
-      { key: "secondary" as const, color: secondaryColor, label: secondaryLabel }
+      {
+        key: "secondary" as const,
+        color: secondaryColor,
+        label: secondaryLabel
+      }
     ],
     [primaryColor, primaryLabel, secondaryColor, secondaryLabel]
   );
@@ -338,7 +353,7 @@ export function GameBinaryProbabilityChart({
       homeCode,
       homeName: primaryLabel,
       awayCode,
-      awayName: secondaryLabel,
+      awayName: secondaryLabel
     }),
     [
       awayCode,
@@ -346,7 +361,7 @@ export function GameBinaryProbabilityChart({
       homeCode,
       primaryLabel,
       resolvedMaxElapsed,
-      secondaryLabel,
+      secondaryLabel
     ]
   );
 
@@ -379,7 +394,7 @@ export function GameBinaryProbabilityChart({
         padding={{ left: 0, right: END_LABEL_GUTTER }}
         tickFormatter={
           isLive
-            ? (value: number) => formatMatchMinuteAxisLabel(value)
+            ? formatLiveAxisTick
             : (value: string) => formatGameChartXAxisTick(value, timeRange)
         }
       />
@@ -458,7 +473,7 @@ function BinaryChartTooltip({
   series,
   isLive,
   kickoffAt,
-  timeRange,
+  timeRange
 }: TooltipProps<number, string> & {
   series: Array<{ key: "primary" | "secondary"; color: string; label: string }>;
   isLive: boolean;

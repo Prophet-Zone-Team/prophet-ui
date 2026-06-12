@@ -1,6 +1,7 @@
 "use client";
 
 import { List, RotateCcw, Trash2, Wand2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { WORLD_CUP_2026_GROUP_ORDER } from "@/data/world-cup-2026/groups";
 import type { WorldCup2026Group } from "@/data/world-cup-2026/groups";
@@ -37,6 +38,8 @@ export function GroupPanel({
   onKnockoutReset: () => void;
   hideToolbar?: boolean;
 }) {
+  const t = useTranslations("roadToFinal");
+
   const groupGrid = (
     <div className="grid grid-cols-1 gap-[10px] sm:grid-cols-2">
       {WORLD_CUP_2026_GROUP_ORDER.map((group) => (
@@ -79,11 +82,10 @@ export function GroupPanel({
             id="group-selector-title"
             className="m-0 text-[18px] font-[400] leading-[21px] text-black"
           >
-            Group Ranking Selector
+            {t("groupRankingSelector")}
           </h1>
           <p className="m-0 mt-[6px] text-[14px] font-[300] leading-[17px] text-[#909090]">
-            Select 1st / 2nd / 3rd placements. The path updates with FIFA Annexe
-            C rules.
+            {t("groupRankingDescription")}
           </p>
         </div>
       </div>
@@ -101,7 +103,7 @@ export function GroupPanel({
           }}
         >
           <Wand2 className="h-4 w-4" aria-hidden />
-          Auto-fill assumptions
+          {t("autoFillAssumptions")}
         </button>
         <button
           type="button"
@@ -113,7 +115,7 @@ export function GroupPanel({
           }}
         >
           <RotateCcw className="h-4 w-4" aria-hidden />
-          Reset
+          {t("reset")}
         </button>
         <button
           type="button"
@@ -125,7 +127,7 @@ export function GroupPanel({
           }}
         >
           <Trash2 className="h-4 w-4" aria-hidden />
-          Clear
+          {t("clear")}
         </button>
       </div>
     </Panel>

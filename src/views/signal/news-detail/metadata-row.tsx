@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import { formatImpactScore } from "@/views/analytics/news/format";
 import { SentimentColor, SentimentIcon } from "@/views/analytics/news/icons";
@@ -18,6 +22,7 @@ export function SignalNewsDetailMetadataRow({
   categoryLabel,
   className
 }: SignalNewsDetailMetadataRowProps) {
+  const t = useTranslations("signal");
 
   return (
     <dl
@@ -28,7 +33,7 @@ export function SignalNewsDetailMetadataRow({
     >
       <div className="flex items-center gap-[8px]">
         <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
-          Impact
+          {t("impact")}
         </dt>
         <dd className="m-0 flex items-center gap-[4px]">
           <span className="shrink-0 [&_svg]:size-[16px]">
@@ -37,7 +42,7 @@ export function SignalNewsDetailMetadataRow({
           <span
             className={cn(
               "text-[14px] font-[500] leading-[17px]",
-              SentimentColor({ sentiment }),
+              SentimentColor({ sentiment })
             )}
           >
             {formatImpactScore(impactScore)}
@@ -47,7 +52,7 @@ export function SignalNewsDetailMetadataRow({
 
       <div className="flex items-center gap-[8px]">
         <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
-          Related
+          {t("related")}
         </dt>
         <dd className="m-0 text-[14px] font-[400] leading-[17px] text-black">
           {relatedLabel}
@@ -56,7 +61,7 @@ export function SignalNewsDetailMetadataRow({
 
       <div className="flex items-center gap-[8px]">
         <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
-          Categories
+          {t("categories")}
         </dt>
         <dd className="m-0 text-[14px] font-[400] leading-[17px] text-black">
           {categoryLabel}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { ExternalLinkConfirmDialog } from "@/components/feedback/external-link-confirm-dialog";
 import { cn } from "@/lib/cn";
@@ -28,6 +29,7 @@ export function SignalNewsDetailArticleBody({
   blocks,
   className
 }: SignalNewsDetailArticleBodyProps) {
+  const t = useTranslations("signal");
   const [pendingExternalLink, setPendingExternalLink] =
     useState<PendingExternalLink | null>(null);
 
@@ -52,7 +54,7 @@ export function SignalNewsDetailArticleBody({
               )}
               onClick={() => handleSourceLinkClick(segment.href)}
             >
-              {segment.value}
+              {t("source")}
             </button>
           );
         }

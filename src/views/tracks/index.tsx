@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo } from "react";
 
 import { useAuth } from "@/context/auth";
@@ -21,6 +22,8 @@ import TracksTelegramBanner from "./tg";
 import { TracksUnauthenticatedState } from "./unauthenticated";
 
 export function TracksView() {
+  const t = useTranslations("tracks");
+  const tCommon = useTranslations("common");
   const authHydrated = useAuthHydrated();
   const tracksHydrated = useTracksHydrated();
   const { isAuthenticated, openLogin, loginInProgress, session } = useAuth();
@@ -88,7 +91,7 @@ export function TracksView() {
     if (!authHydrated || !tracksHydrated) {
       return (
         <p className="py-[60px] text-center text-[16px] text-[#909090]">
-          Loading…
+          {tCommon("loading")}
         </p>
       );
     }
@@ -108,7 +111,7 @@ export function TracksView() {
     if (showLoadingState) {
       return (
         <p className="py-[60px] text-center text-[16px] text-[#909090]">
-          Loading tracks…
+          {t("loadingTracks")}
         </p>
       );
     }
@@ -135,7 +138,7 @@ export function TracksView() {
     if (topAttentionLoading) {
       return (
         <p className="py-8 text-center text-[14px] text-[#909090]">
-          Loading top attention…
+          {t("loadingTopAttention")}
         </p>
       );
     }
@@ -144,14 +147,14 @@ export function TracksView() {
       return (
         <div className="flex flex-col items-center gap-4 py-8">
           <p className="m-0 text-center text-[14px] text-[#909090]">
-            Unable to load top attention rankings right now.
+            {t("topAttentionLoadError")}
           </p>
           <button
             type="button"
             onClick={() => void refetchTopAttention()}
             className="rounded-[8px] border border-[#EBEBEB] bg-white px-4 py-2 text-[14px] font-[500] text-black"
           >
-            Retry
+            {t("retry")}
           </button>
         </div>
       );
@@ -202,7 +205,7 @@ export function TracksView() {
       </div>
       <div className="mt-3 lg:mt-4">
         <div className="my-5 text-base font-[500] text-black md:mt-4 md:text-[18px]">
-          Top Attention
+          {t("topAttention")}
         </div>
         {renderTopAttention()}
       </div>

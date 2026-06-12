@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import type { ClipboardEvent, KeyboardEvent } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 
@@ -20,6 +21,7 @@ export function OtpInput({
   onChange,
   onComplete,
 }: OtpInputProps) {
+  const t = useTranslations("auth");
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   const digits = Array.from({ length }, (_, index) => value[index] ?? "");
@@ -125,7 +127,7 @@ export function OtpInput({
           maxLength={1}
           disabled={disabled}
           value={digit}
-          aria-label={`Verification code digit ${index + 1}`}
+          aria-label={t("verificationCodeDigit", { index: index + 1 })}
           onChange={(event) => handleChange(index, event.target.value)}
           onKeyDown={(event) => handleKeyDown(index, event)}
           onPaste={handlePaste}

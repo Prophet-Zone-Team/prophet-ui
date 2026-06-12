@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
@@ -31,6 +32,7 @@ export function HomeMatchesSchedulePanel({
   matches,
   snapshots
 }: HomeMatchesSchedulePanelProps) {
+  const t = useTranslations("home");
   const [sortKey, setSortKey] = useState<ScheduleSortKey>("time");
   const [showEnded, setShowEnded] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<Team["id"][]>([]);
@@ -57,7 +59,7 @@ export function HomeMatchesSchedulePanel({
   );
 
   return (
-    <section className="min-w-0" aria-label="Football match schedule">
+    <section className="min-w-0" aria-label={t("footballMatchSchedule")}>
       <SyncMatchLiveStore matches={matches} />
       <div className="pb-[20px]">
         <SpecialMatchDataCard matches={matches} snapshots={snapshots} />
@@ -106,7 +108,7 @@ export function HomeMatchesSchedulePanel({
         )
       ) : (
         <p className="m-0 text-sm text-[#909090]">
-          No fixtures match the current filters.
+          {t("noFixturesMatchFilters")}
         </p>
       )}
     </section>

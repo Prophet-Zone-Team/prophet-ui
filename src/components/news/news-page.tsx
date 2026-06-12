@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { formatDateFromIso } from "@/lib/formatters/datetime";
 import { getNewsArticleSlug } from "@/lib/news/news-slugs";
 import { newsDetailHref } from "@/lib/routes/news";
 import type { NewsArticle, TeamMarketSnapshot } from "@/types/market";
@@ -71,6 +72,5 @@ function formatDate(value: string | undefined): string {
     return "Date pending";
   }
 
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(date);
+  return formatDateFromIso(value);
 }
