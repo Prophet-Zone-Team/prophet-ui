@@ -3,7 +3,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
+import Drawer, { DrawerDirection } from "@/components/drawer";
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useDevice } from "@/hooks/common/use-device";
 import { cn } from "@/lib/cn";
 
 import type { SignalAllTeamFilter, SignalAllTeamOption } from "./types";
@@ -30,17 +32,19 @@ export function SignalAllTeamFilterControl({
   disabled = false,
   className
 }: SignalAllTeamFilterProps) {
+  const isMobile = useDevice();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selectedLabel =
+  const selectedOption =
     value === "all"
-      ? "All Teams"
-      : (options.find((option) => option.value === value)?.label ??
-        "All Teams");
+      ? null
+      : (options.find((option) => option.value === value) ?? null);
+
+  const selectedLabel = selectedOption?.label ?? "All Teams";
 
   useEffect(() => {
-    if (!open) {
+    if (!open || isMobile) {
       return;
     }
 
@@ -63,18 +67,23 @@ export function SignalAllTeamFilterControl({
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [isMobile, open]);
+
+  function handleSelect(nextValue: SignalAllTeamFilter) {
+    onChange(nextValue);
+    setOpen(false);
+  }
 
   return (
     <div ref={containerRef} className={cn("relative shrink-0", className)}>
       <button
         type="button"
         className={cn(
-          "inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[14px] font-[400] leading-[17px] text-[#909090]",
+          "inline-flex max-w-[140px] items-center gap-[6px] border-0 bg-transparent p-0 text-[14px] font-[400] leading-[17px] text-[#909090] md:max-w-[180px]",
           disabled && "cursor-not-allowed opacity-50"
         )}
         aria-expanded={open}
-        aria-haspopup="listbox"
+        aria-haspopup={isMobile ? "dialog" : "listbox"}
         aria-label={`Filter by team: ${selectedLabel}`}
         disabled={disabled}
         onClick={() => {
@@ -83,7 +92,14 @@ export function SignalAllTeamFilterControl({
           }
         }}
       >
-        <span>{selectedLabel}</span>
+        {selectedOption ? (
+          <TeamFlag
+            code={selectedOption.teamCode}
+            name={selectedOption.label}
+            className="h-[16px] w-[16px] shrink-0 rounded-[2px] text-[16px]"
+          />
+        ) : null}
+        <span className="truncate">{selectedLabel}</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="11"
@@ -94,53 +110,88 @@ export function SignalAllTeamFilterControl({
             "shrink-0 text-[#909090] transition-transform",
             open && "rotate-180"
           )}
+          aria-hidden
         >
           <path
             d="M9.7998 0.800781L5.40757 4.80078L0.799805 0.800781"
             stroke="#909090"
-            stroke-width="1.6"
-            stroke-linecap="round"
+            strokeWidth="1.6"
+            strokeLinecap="round"
           />
         </svg>
       </button>
 
-      <AnimatePresence>
-        {open ? (
-          <motion.div
-            key="team-filter-dropdown"
-            className="absolute right-0 top-full z-50 mt-2 min-w-[180px] rounded-[8px] border border-[#EBEBEB] bg-white py-1 shadow-[0_0_10px_rgba(0,0,0,0.1)]"
-            role="listbox"
-            aria-label="Select team"
-            initial={{ opacity: 0, scaleY: 0.88, y: -6 }}
-            animate={{ opacity: 1, scaleY: 1, y: 0 }}
-            exit={{ opacity: 0, scaleY: 0.88, y: -6 }}
-            transition={TEAM_FILTER_DROPDOWN_TRANSITION}
-            style={{ transformOrigin: "top right" }}
-          >
-            <SignalAllTeamFilterOption
-              label="All Teams"
-              selected={value === "all"}
-              onSelect={() => {
-                onChange("all");
-                setOpen(false);
-              }}
-            />
-            {options.map((option) => (
-              <SignalAllTeamFilterOption
-                key={option.value}
-                label={option.label}
-                teamCode={option.teamCode}
-                selected={value === option.value}
-                onSelect={() => {
-                  onChange(option.value);
-                  setOpen(false);
-                }}
+      {!isMobile ? (
+        <AnimatePresence>
+          {open ? (
+            <motion.div
+              key="team-filter-dropdown"
+              className="absolute right-0 top-full z-50 mt-2 max-h-[min(360px,60vh)] min-w-[220px] overflow-y-auto rounded-[8px] border border-[#EBEBEB] bg-white py-1 shadow-[0_0_10px_rgba(0,0,0,0.1)]"
+              role="listbox"
+              aria-label="Select team"
+              initial={{ opacity: 0, scaleY: 0.88, y: -6 }}
+              animate={{ opacity: 1, scaleY: 1, y: 0 }}
+              exit={{ opacity: 0, scaleY: 0.88, y: -6 }}
+              transition={TEAM_FILTER_DROPDOWN_TRANSITION}
+              style={{ transformOrigin: "top right" }}
+            >
+              <SignalAllTeamFilterPanelContent
+                value={value}
+                options={options}
+                onSelect={handleSelect}
               />
-            ))}
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      ) : null}
+
+      {isMobile ? (
+        <Drawer
+          open={open}
+          onClose={() => setOpen(false)}
+          title="Filter by team"
+          direction={DrawerDirection.Bottom}
+          className="!h-auto max-h-[70dvh]"
+        >
+          <div className="overflow-y-auto px-4 pb-6">
+            <SignalAllTeamFilterPanelContent
+              value={value}
+              options={options}
+              onSelect={handleSelect}
+            />
+          </div>
+        </Drawer>
+      ) : null}
     </div>
+  );
+}
+
+function SignalAllTeamFilterPanelContent({
+  value,
+  options,
+  onSelect
+}: {
+  value: SignalAllTeamFilter;
+  options: SignalAllTeamOption[];
+  onSelect: (value: SignalAllTeamFilter) => void;
+}) {
+  return (
+    <>
+      <SignalAllTeamFilterOption
+        label="All Teams"
+        selected={value === "all"}
+        onSelect={() => onSelect("all")}
+      />
+      {options.map((option) => (
+        <SignalAllTeamFilterOption
+          key={option.value}
+          label={option.label}
+          teamCode={option.teamCode}
+          selected={value === option.value}
+          onSelect={() => onSelect(option.value)}
+        />
+      ))}
+    </>
   );
 }
 
@@ -161,7 +212,7 @@ function SignalAllTeamFilterOption({
       role="option"
       aria-selected={selected}
       className={cn(
-        "flex w-full items-center gap-2 border-0 bg-transparent px-3 py-2 text-left text-[14px] font-[400] leading-[17px]",
+        "flex w-full items-center justify-between gap-3 border-0 bg-transparent px-3 py-2 text-[14px] font-[400] leading-[17px]",
         selected ? "text-black" : "text-[#909090] hover:text-black"
       )}
       onClick={onSelect}
@@ -172,8 +223,10 @@ function SignalAllTeamFilterOption({
           name={label}
           className="h-[18px] w-[18px] shrink-0 rounded-[2px] text-[18px]"
         />
-      ) : null}
-      <span className="truncate">{label}</span>
+      ) : (
+        <span className="shrink-0" aria-hidden />
+      )}
+      <span className="min-w-0 flex-1 truncate text-right">{label}</span>
     </button>
   );
 }

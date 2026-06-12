@@ -15,17 +15,19 @@ import { useAnalyticsTeamPowerRankings } from "./use-analytics-team-power-rankin
 export function useAnalyticsNewsPage(
   page: number,
   pageSize: number = ANALYTICS_NEWS_PAGE_SIZE,
-  category = ""
+  category = "",
+  teams = ""
 ) {
   const { teamCodeLookup } = useAnalyticsTeamPowerRankings();
 
   const query = useQuery({
-    queryKey: analyticsQueryKeys.newsPage(page, pageSize, category),
+    queryKey: analyticsQueryKeys.newsPage(page, pageSize, category, teams),
     queryFn: () =>
       getAnalyticsNews({
         page,
         page_size: pageSize,
-        category
+        category,
+        teams
       }),
     staleTime: ANALYTICS_QUERY_STALE_TIME_MS
   });
