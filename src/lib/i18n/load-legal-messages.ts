@@ -16,6 +16,10 @@ const legalMessageLoaders: Partial<Record<AppLocale, () => Promise<LegalDocBundl
     privacy: (await import("@/i18n/legal/privacy.es.json")).default,
     terms: (await import("@/i18n/legal/terms.es.json")).default,
   }),
+  pt: async () => ({
+    privacy: (await import("@/i18n/legal/privacy.pt.json")).default,
+    terms: (await import("@/i18n/legal/terms.pt.json")).default,
+  }),
   ko: async () => ({
     privacy: (await import("@/i18n/legal/privacy.ko.json")).default,
     terms: (await import("@/i18n/legal/terms.ko.json")).default,

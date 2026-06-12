@@ -1,0 +1,372 @@
+{
+  "preamble": {
+    "block0": {
+      "seg0": "Estes Termos e Condições (os \"Termos\") regem seu acesso e uso de Prophet, incluindo o site, aplicativo web, painéis, ferramentas analíticas, páginas de dados de mercado, páginas de equipes, funcionalidades de lista de observação ou rastreamento, interfaces relacionadas a operações, APIs e serviços relacionados que vinculam a estes Termos (coletivamente, o \"Serviço\")."
+    },
+    "block1": {
+      "seg0": "O Serviço é operado por {legalEntityName}, uma entidade de {entityJurisdiction} com sede principal em {principalAddress} (\"Prophet\", \"nós\", \"nos\" ou \"nosso\")."
+    },
+    "block2": {
+      "seg0": "Leia estes Termos com atenção. Ao acessar ou utilizar o Serviço, conectar uma carteira, criar ou utilizar uma conta, clicar para aceitar estes Termos ou de qualquer outra forma utilizar qualquer parte do Serviço, você concorda em ficar vinculado a estes Termos. Se você não concorda, não utilize o Serviço."
+    },
+    "block3": {
+      "seg0": "Estes Termos contêm declarações de limitação de responsabilidade importantes, requisitos de elegibilidade, divulgações de risco e limitações de responsabilidade. Eles também incluem um acordo de arbitragem e uma renúncia a ações coletivas, quando permitido por lei."
+    }
+  },
+  "sections": {
+    "product-notice": {
+      "title": "1. Aviso importante do produto",
+      "blocks": {
+        "block0": {
+          "seg0": "Prophet é uma interface de análise de dados de mercados de predição da Copa do Mundo voltada ao consumidor e de operações de titularidade do usuário. O Serviço foi projetado para ajudar os usuários a visualizar, analisar e compreender o sentimento do mercado, probabilidades, movimentação do mercado, contexto em nível de equipe, contexto de notícias, comparações de odds, listas de observação, informações de portfólio e análises relacionadas."
+        },
+        "block1": {
+          "seg0": "Prophet não é uma casa de apostas, corretora, consultor de investimentos, consultor financeiro, consultor de operações de commodities, exchange, mercado de predição, custodiante, provedor de carteiras ou operador de jogos de azar. Prophet não cria, opera nem liquida mercados de Polymarket. Prophet não custodia fundos de usuários nem agrupa fundos de usuários."
+        },
+        "block2": {
+          "seg0": "Qualquer funcionalidade relacionada a operações tem como objetivo ajudar usuários elegíveis a interagir com serviços de terceiros utilizando sua própria conta, carteira, assinante, credenciais e fundos. Prophet não garante que qualquer transação, ordem, operação, transferência, conexão de carteira, depósito, retirada ou interação com o mercado será aceita, executada, casada, liquidada ou rentável."
+        }
+      }
+    },
+    "no-advice": {
+      "title": "2. Sem consultoria de investimentos, financeira, jogos de azar, apostas, jurídica ou fiscal",
+      "blocks": {
+        "block0": {
+          "seg0": "Todo conteúdo, análises, probabilidades, odds, sinais de mercado, painéis, classificações de equipes, contexto de notícias, resumos, alertas, informações de lista de observação, prévias de ordens, pagamentos estimados ou outros resultados disponibilizados por meio do Serviço são fornecidos exclusivamente para fins informativos e educacionais."
+        },
+        "block1": {
+          "seg0": "Prophet não fornece consultoria de investimentos, consultoria financeira, consultoria sobre jogos de azar, consultoria sobre apostas, consultoria jurídica, consultoria fiscal nem recomendações para comprar, vender, manter, operar, depositar, retirar ou de qualquer outra forma realizar transações. Nada no Serviço deve ser interpretado como recomendação, solicitação, garantia, endosso ou predição de qualquer resultado."
+        },
+        "block2": {
+          "seg0": "Probabilidades de mercado, preços, odds e sinais são estimativas derivadas de dados de terceiros ou informações de mercado e podem ser incompletas, desatualizadas, imprecisas, tardias, indisponíveis ou mal interpretadas. Você é o único responsável por suas próprias decisões."
+        }
+      }
+    },
+    "eligibility": {
+      "title": "3. Elegibilidade",
+      "blocks": {
+        "block0": {
+          "seg0": "Você só pode utilizar o Serviço se estiver legalmente autorizado a fazê-lo conforme todas as leis, normas e regulamentos aplicáveis a você."
+        },
+        "block1": {
+          "seg0": "Ao utilizar o Serviço, você declara e garante que:"
+        },
+        "block2": {
+          "orderedList": {
+            "item0": "Você tem pelo menos 18 anos ou a idade da maioridade legal em sua jurisdição, o que for maior.",
+            "item1": "Você tem plena capacidade legal e autoridade para celebrar estes Termos.",
+            "item2": "Você não está localizado, não reside habitualmente, não está constituído nem está de qualquer outra forma sujeito às leis de qualquer jurisdição onde o acesso ao Serviço, mercados de predição, Polymarket, operações baseadas em carteira ou atividade relacionada é proibido ou restrito.",
+            "item3": "Você não está sujeito a qualquer sanção administrada ou aplicada pelos Estados Unidos, pelas Nações Unidas, pela União Europeia, pelo Reino Unido ou por qualquer outra autoridade de sanções aplicável.",
+            "item4": "Você não utilizará o Serviço em nome de qualquer pessoa ou entidade proibida.",
+            "item5": "Você cumprirá todas as leis aplicáveis, incluindo leis relativas a commodities, derivativos, mercados financeiros, jogos de azar, gaming, sanções, prevenção à lavagem de dinheiro, proteção ao consumidor, privacidade e tributação."
+          }
+        },
+        "block3": {
+          "seg0": "Podemos restringir, suspender ou encerrar o acesso ao Serviço ou a qualquer funcionalidade relacionada a operações a qualquer momento, se acreditarmos, a nosso exclusivo critério, que você não é elegível, está restrito ou está utilizando o Serviço em violação destes Termos ou da lei aplicável."
+        }
+      }
+    },
+    "geographic-restrictions": {
+      "title": "4. Restrições geográficas e elegibilidade de Polymarket",
+      "blocks": {
+        "block0": {
+          "seg0": "O Serviço pode incluir interfaces ou links que permitem a usuários elegíveis interagir com Polymarket ou outra infraestrutura de mercado de terceiros. Polymarket e serviços de terceiros relacionados podem impor suas próprias regras de elegibilidade, restrições geográficas, triagem de sanções, requisitos de conta, requisitos de carteira e restrições de operações."
+        },
+        "block1": {
+          "seg0": "Você é o único responsável por determinar se é elegível para acessar ou utilizar Polymarket ou qualquer outro serviço de terceiros. Ordens ou transações podem ser bloqueadas, rejeitadas, canceladas ou de outra forma indisponíveis por elegibilidade geográfica, triagem de sanções, status de conta, status do mercado, fundos insuficientes, preços desatualizados, limites de mercado, problemas técnicos ou regras de terceiros."
+        },
+        "block2": {
+          "seg0": "Prophet pode realizar verificações de elegibilidade, geolocalização, carteira ou outras verificações relacionadas à conformidade antes de habilitar funcionalidades relacionadas a operações. Essas verificações não garantem que você está legalmente autorizado a operar nem que um serviço de terceiros aceitará qualquer ordem ou transação."
+        },
+        "block3": {
+          "seg0": "Você não deve tentar contornar geobloqueios, verificações de elegibilidade, controles de sanções, restrições de terceiros, restrições de carteira ou qualquer outro controle de acesso, incluindo VPNs, proxies, informações falsas ou contas não autorizadas."
+        }
+      }
+    },
+    "third-party": {
+      "title": "5. Serviços de terceiros",
+      "blocks": {
+        "block0": {
+          "seg0": "O Serviço pode exibir ou interagir com dados, APIs, protocolos, carteiras, relayers, plataformas de mercado, redes blockchain, exchanges, provedores de notícias, provedores de odds, serviços analíticos, provedores de dados ou outros serviços de terceiros, incluindo Polymarket, API-Football, GDELT, The Odds API, provedores de carteiras, Polygon e outros serviços."
+        },
+        "block1": {
+          "seg0": "Serviços de terceiros não são controlados por Prophet. Seu uso de serviços de terceiros é regido por seus próprios termos, políticas, tarifas, restrições e divulgações de risco. Prophet não é responsável por serviços de terceiros, conteúdo de terceiros, dados de terceiros, resultados de mercado de terceiros, execução de ordens de terceiros, liquidação de terceiros, comportamento de carteiras de terceiros, tarifas de terceiros, interrupções, erros, perdas ou restrições de terceiros."
+        },
+        "block2": {
+          "seg0": "Links, integrações, dados de mercado, odds ou referências a serviços de terceiros não implicam endosso, patrocínio, parceria ou recomendação, salvo quando expressamente declarado por escrito."
+        }
+      }
+    },
+    "wallets": {
+      "title": "6. Carteiras, contas, credenciais e fundos de titularidade do usuário",
+      "blocks": {
+        "block0": {
+          "seg0": "Fluxos de ordens reais, se habilitados, devem utilizar a carteira, conta, assinante, carteira de depósito ou funder, fundos e confirmação explícita do usuário. Prophet não permite que operações de usuários sejam assinadas com uma carteira compartilhada da plataforma, chave privada do servidor, fundos agrupados ou credenciais de nível de implantação."
+        },
+        "block1": {
+          "seg0": "Você é o único responsável por:"
+        },
+        "block2": {
+          "orderedList": {
+            "item0": "Manter a segurança de sua carteira, chaves privadas, frases-semente, passkeys, dispositivos, contas, credenciais de API e métodos de autenticação.",
+            "item1": "Revisar todos os detalhes da ordem antes da confirmação, incluindo mercado, resultado, lado, preço limite, tamanho, custo estimado, resultado potencial, tarifas se exibidas, conta, carteira e rede.",
+            "item2": "Garantir que você tem fundos, saldos, aprovações e autorizações suficientes.",
+            "item3": "Compreender os riscos de blockchain, carteiras, mercados e mercados de predição.",
+            "item4": "Cumprir os termos e requisitos de elegibilidade de terceiros."
+          }
+        },
+        "block3": {
+          "seg0": "Prophet nunca solicitará que você revele sua chave privada ou frase-semente. Se você revela chaves privadas, frases-semente ou credenciais sensíveis a qualquer pessoa, site, aplicativo ou terceiro, você pode perder permanentemente o acesso a seus ativos."
+        }
+      }
+    },
+    "trading-risks": {
+      "title": "7. Riscos de operações e mercado",
+      "blocks": {
+        "block0": {
+          "seg0": "Mercados de predição, transações blockchain, transações baseadas em carteira e ferramentas de dados de mercado envolvem riscos significativos. Você pode perder a totalidade do valor que decide comprometer em uma posição. Os resultados do mercado são incertos. Os preços podem se mover rapidamente. A liquidez pode ser limitada. Os mercados podem ser suspensos, resolvidos inesperadamente, disputados, cancelados, adiados ou de outra forma afetados por regras de terceiros ou problemas técnicos."
+        },
+        "block1": {
+          "seg0": "Prévias de ordens e resultados estimados são apenas estimativas. Podem não refletir o preço de execução final, tarifas, slippage, execuções parciais, preços desatualizados, ordens rejeitadas, resolução de mercado, status de carteira, condições de rede ou erros de terceiros."
+        },
+        "block2": {
+          "seg0": "Você reconhece e aceita todos os riscos decorrentes do seu uso do Serviço e de qualquer serviço de terceiros."
+        }
+      }
+    },
+    "market-data": {
+      "title": "8. Dados de mercado, odds, notícias e análises",
+      "blocks": {
+        "block0": {
+          "seg0": "O Serviço pode exibir preços de mercado, probabilidades, volume, liquidez, alterações de preço, sinais de mercado, odds, notícias, dados de equipes, dados históricos, classificações, calendários, lesões, elencos, alertas e outras análises. Essas informações podem ser provenientes de terceiros, geradas por nossos sistemas, curadas manualmente, armazenadas em cache, estimadas, tardias, incompletas, imprecisas, desatualizadas ou indisponíveis."
+        },
+        "block1": {
+          "seg0": "Não garantimos a precisão, integridade, pontualidade, disponibilidade ou confiabilidade de qualquer dado. Podemos etiquetar dados como ao vivo, em cache, fallback, simulados, indisponíveis ou em estado de erro quando conhecido, mas essas etiquetas podem estar desatualizadas ou imprecisas."
+        },
+        "block2": {
+          "seg0": "Impacto de notícias, sentimento, discrepância de odds, sinais de mercado ou funcionalidades similares são apenas contexto analítico. Não devem ser tratados como conclusões causais, consultoria de operações, consultoria de apostas ou recomendações."
+        }
+      }
+    },
+    "accounts": {
+      "title": "9. Contas e autenticação",
+      "blocks": {
+        "block0": {
+          "seg0": "Determinadas funcionalidades podem exigir autenticação, conexão de carteira, criação de conta ou autorização de terceiros. Você concorda em fornecer informações precisas e manter seguros sua conta e métodos de autenticação."
+        },
+        "block1": {
+          "seg0": "Podemos recusar, suspender, restringir ou encerrar o acesso a contas ou funcionalidades se acreditarmos que seu uso é ilícito, prejudicial, fraudulento, abusivo, inelegível, restrito ou de outra forma viola estes Termos."
+        }
+      }
+    },
+    "acceptable-use": {
+      "title": "10. Uso aceitável",
+      "blocks": {
+        "block0": {
+          "seg0": "Você concorda em não:"
+        },
+        "block1": {
+          "orderedList": {
+            "item0": "Utilizar o Serviço em violação de qualquer lei, regulamento, programa de sanções, termos de terceiros ou estes Termos.",
+            "item1": "Utilizar o Serviço se você é inelegível, geobloqueado, sancionado ou de outra forma restrito.",
+            "item2": "Contornar controles de elegibilidade, geolocalização, sanções, limites de taxa, carteira, autenticação ou segurança.",
+            "item3": "Utilizar bots, scrapers, crawlers, sistemas de trading automatizado ou métodos de acesso automatizado sem nosso consentimento prévio por escrito.",
+            "item4": "Interferir, interromper, sobrecarregar ou comprometer o Serviço ou sistemas relacionados.",
+            "item5": "Tentar acessar sistemas, dados, contas, credenciais, chaves, registros ou infraestrutura não públicos.",
+            "item6": "Realizar engenharia reversa, descompilar ou tentar derivar o código-fonte, salvo onde permitido por lei.",
+            "item7": "Enviar ou transmitir código malicioso, spam, conteúdo de phishing ou materiais prejudiciais.",
+            "item8": "Falsificar sua identidade, localização, elegibilidade, afiliação ou autoridade.",
+            "item9": "Utilizar o Serviço para facilitar fraude, manipulação de mercado, wash trading, jogos de azar ilegais, lavagem de dinheiro, evasão de sanções ou outra atividade ilícita.",
+            "item10": "Remover, ocultar ou alterar avisos legais, divulgações de risco ou etiquetas de fontes de dados."
+          }
+        }
+      }
+    },
+    "fees": {
+      "title": "11. Tarifas, gas, custos de rede e encargos de terceiros",
+      "blocks": {
+        "block0": {
+          "seg0": "Prophet pode exibir custos estimados, valores de ordens, resultados potenciais ou outras informações econômicas. Essas estimativas podem excluir ou refletir imprecisamente tarifas, spread, slippage, gas, encargos de rede, tarifas de terceiros, custos de relayers, tarifas de carteira ou impostos."
+        },
+        "block1": {
+          "seg0": "Serviços de terceiros podem cobrar tarifas. Redes blockchain podem exigir gas ou tarifas de transação. Você é o único responsável por todas as tarifas, custos, impostos e encargos associados à sua atividade."
+        }
+      }
+    },
+    "taxes": {
+      "title": "12. Impostos",
+      "blocks": {
+        "block0": {
+          "seg0": "Você é o único responsável por determinar, declarar e pagar quaisquer impostos, tributos ou encargos governamentais decorrentes do seu uso do Serviço, serviços de terceiros, atividade de carteira, atividade de mercado ou transações."
+        },
+        "block1": {
+          "seg0": "Prophet não fornece consultoria fiscal e não garante que qualquer informação exibida por meio do Serviço é adequada para declarações fiscais."
+        }
+      }
+    },
+    "ip": {
+      "title": "13. Propriedade intelectual",
+      "blocks": {
+        "block0": {
+          "seg0": "O Serviço, incluindo software, design, interfaces, logotipos, gráficos, texto, compilações de dados, análises e outro conteúdo, é propriedade de Prophet ou de seus licenciantes e é protegido por leis de propriedade intelectual."
+        },
+        "block1": {
+          "seg0": "Sujeito a estes Termos, concedemos a você uma licença limitada, revogável, não exclusiva, intransferível e não sublicenciável para acessar e utilizar o Serviço para seu uso pessoal, lícito e não comercial, salvo acordo escrito em contrário."
+        },
+        "block2": {
+          "seg0": "Você não pode copiar, modificar, distribuir, vender, arrendar, sublicenciar, criar obras derivadas nem explorar qualquer parte do Serviço, salvo o expressamente permitido por estes Termos ou pela lei aplicável."
+        }
+      }
+    },
+    "feedback": {
+      "title": "14. Feedback",
+      "blocks": {
+        "block0": {
+          "seg0": "Se você fornece feedback, sugestões, ideias ou recomendações, você concede a Prophet uma licença mundial, perpétua, irrevogável, livre de royalties, sublicenciável e transferível para utilizar, reproduzir, modificar, distribuir, exibir e de outra forma explorar esse feedback sem restrição ou compensação."
+        }
+      }
+    },
+    "privacy": {
+      "title": "15. Privacidade",
+      "blocks": {
+        "block0": {
+          "seg0": "Seu uso do Serviço está sujeito à nossa ",
+          "link1": "Política de Privacidade",
+          "seg2": ", que explica como coletamos, utilizamos, divulgamos e protegemos as informações. Ao utilizar o Serviço, você reconhece nossa Política de Privacidade."
+        }
+      }
+    },
+    "availability": {
+      "title": "16. Disponibilidade e alterações do Serviço",
+      "blocks": {
+        "block0": {
+          "seg0": "Podemos modificar, suspender, restringir, discontinuar ou remover qualquer parte do Serviço a qualquer momento, com ou sem aviso. Não garantimos disponibilidade contínua, ininterrupta, segura ou livre de erros."
+        },
+        "block1": {
+          "seg0": "Podemos atualizar a cobertura de mercado, fontes de dados, funcionalidades, exibições de preços, análises, interfaces de operações, verificações de elegibilidade e outras partes do Serviço a qualquer momento."
+        }
+      }
+    },
+    "disclaimers": {
+      "title": "17. Declarações de limitação de responsabilidade",
+      "blocks": {
+        "block0": {
+          "seg0": "O SERVIÇO É FORNECIDO \"NO ESTADO EM QUE SE ENCONTRA\" E \"CONFORME DISPONIBILIDADE\". NA MÁXIMA EXTENSÃO PERMITIDA POR LEI, PROPHET RENUNCIA A TODAS AS GARANTIAS, EXPRESSAS, IMPLÍCITAS, LEGAIS OU DE OUTRA FORMA, INCLUINDO GARANTIAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UM DETERMINADO FIM, TITULARIDADE, NÃO VIOLAÇÃO, PRECISÃO, DISPONIBILIDADE, SEGURANÇA, CONFIABILIDADE E CURSO DE NEGOCIAÇÃO."
+        },
+        "block1": {
+          "seg0": "NÃO GARANTIMOS QUE O SERVIÇO, OS DADOS, AS ANÁLISES, OS SERVIÇOS DE TERCEIROS, AS CONEXÕES DE CARTEIRA, OS FLUXOS DE ORDENS OU AS INFORMAÇÕES DE MERCADO SERÃO PRECISOS, COMPLETOS, PONTUAIS, DISPONÍVEIS, SEGUROS, LIVRES DE ERROS, ININTERRUPTOS OU ADEQUADOS PARA SUAS FINALIDADES."
+        }
+      }
+    },
+    "limitation-of-liability": {
+      "title": "18. Limitação de responsabilidade",
+      "blocks": {
+        "block0": {
+          "seg0": "NA MÁXIMA EXTENSÃO PERMITIDA POR LEI, PROPHET E SUAS AFILIADAS, DIRETORES, EXECUTIVOS, EMPREGADOS, CONTRATADOS, AGENTES, LICENCIANTES E PRESTADORES DE SERVIÇOS NÃO SERÃO RESPONSÁVEIS POR QUAISQUER DANOS INDIRETOS, INCIDENTAIS, ESPECIAIS, CONSEQUENCIAIS, EXEMPLARES, AUMENTADOS OU PUNITIVOS, PERDA DE LUCROS, PERDA DE RECEITA, PERDA DE DADOS, PERDA DE FUNDO DE COMÉRCIO, PERDAS DE OPERAÇÕES, PERDAS DE MERCADO, PERDA DE OPORTUNIDADES, PERDAS DE CARTEIRA, ACESSO NÃO AUTORIZADO, FALHAS DE TERCEIROS OU OUTROS DANOS DECORRENTES DE OU RELACIONADOS AO SERVIÇO OU A ESTES TERMOS, MESMO SE ADVERTIDOS DA POSSIBILIDADE DE TAIS DANOS."
+        },
+        "block1": {
+          "seg0": "NA MÁXIMA EXTENSÃO PERMITIDA POR LEI, NOSSA RESPONSABILIDADE TOTAL POR TODAS AS RECLAMAÇÕES DECORRENTES DE OU RELACIONADAS AO SERVIÇO OU A ESTES TERMOS NÃO EXCEDERÁ O MAIOR VALOR ENTRE US$100 OU O VALOR QUE VOCÊ PAGOU DIRETAMENTE A PROPHET PELO SERVIÇO NOS TRÊS MESES ANTERIORES AO EVENTO QUE DEU ORIGEM À RECLAMAÇÃO."
+        },
+        "block2": {
+          "seg0": "Algumas jurisdições não permitem determinadas limitações de responsabilidade. Nessas jurisdições, a responsabilidade será limitada na máxima extensão permitida por lei."
+        }
+      }
+    },
+    "indemnification": {
+      "title": "19. Indenização",
+      "blocks": {
+        "block0": {
+          "seg0": "Você concorda em defender, indenizar e manter indene Prophet e suas afiliadas, diretores, executivos, empregados, contratados, agentes, licenciantes e prestadores de serviços contra quaisquer reclamações, danos, perdas, responsabilidades, custos e despesas, incluindo honorários razoáveis de advogados, decorrentes de ou relacionados a:"
+        },
+        "block1": {
+          "orderedList": {
+            "item0": "Seu uso do Serviço.",
+            "item1": "Seu uso de serviços de terceiros.",
+            "item2": "Sua carteira, conta, credenciais, fundos, ordens, transações ou atividade de mercado.",
+            "item3": "Sua violação destes Termos.",
+            "item4": "Sua violação da lei aplicável ou de direitos de terceiros.",
+            "item5": "Sua falsa declaração de elegibilidade, localização, identidade ou autoridade."
+          }
+        }
+      }
+    },
+    "termination": {
+      "title": "20. Rescisão",
+      "blocks": {
+        "block0": {
+          "seg0": "Podemos suspender, restringir ou encerrar seu acesso ao Serviço a qualquer momento, com ou sem aviso, se acreditarmos que você violou estes Termos, é inelegível, apresenta risco ao Serviço ou a outros usuários, ou por qualquer outro motivo lícito."
+        },
+        "block1": {
+          "seg0": "Após a rescisão, seu direito de utilizar o Serviço cessará imediatamente. As seções que, por sua natureza, devem subsistir após a rescisão subsistirão, incluindo divulgações de risco, declarações de limitação de responsabilidade, limitações de responsabilidade, indenização, resolução de disputas, propriedade intelectual e disposições relacionadas à privacidade."
+        }
+      }
+    },
+    "governing-law": {
+      "title": "21. Lei aplicável",
+      "blocks": {
+        "block0": {
+          "seg0": "Estes Termos são regidos pelas leis de {governingLawJurisdiction}, sem consideração a princípios de conflito de leis, exceto na medida em que a lei aplicável exija o contrário."
+        }
+      }
+    },
+    "dispute-resolution": {
+      "title": "22. Resolução de disputas; arbitragem; renúncia a ações coletivas",
+      "blocks": {
+        "block0": {
+          "seg0": "Revise esta seção com assessoria jurídica antes da publicação."
+        },
+        "block1": {
+          "seg0": "Na máxima extensão permitida por lei, qualquer disputa, reclamação ou controvérsia decorrente de ou relacionada a estes Termos ou ao Serviço será resolvida por arbitragem vinculante administrada por {arbitrationProvider} conforme suas regras aplicáveis. O foro, o local e o idioma da arbitragem serão {arbitrationSeatLanguage}."
+        },
+        "block2": {
+          "seg0": "Você e Prophet concordam que as disputas serão resolvidas exclusivamente de forma individual e não como ação coletiva, consolidada, representativa ou de fiscal geral privado, salvo onde proibido por lei."
+        },
+        "block3": {
+          "seg0": "Qualquer das partes pode solicitar medidas cautelares ou equitativas em um tribunal de jurisdição competente para proteger propriedade intelectual, informações confidenciais, segurança ou uso não autorizado do Serviço."
+        },
+        "block4": {
+          "seg0": "Se esta seção de arbitragem ou renúncia a ações coletivas for considerada inexequível, a parte inexequível será separada e o restante destes Termos permanecerá em vigor."
+        }
+      }
+    },
+    "changes": {
+      "title": "23. Alterações nestes Termos",
+      "blocks": {
+        "block0": {
+          "seg0": "Podemos atualizar estes Termos periodicamente. Os Termos atualizados serão publicados no Serviço com uma data revisada de \"Última atualização\". Se realizamos alterações materiais, podemos fornecer aviso adicional quando exigido por lei."
+        },
+        "block1": {
+          "seg0": "Seu uso continuado do Serviço após a entrada em vigor dos Termos atualizados significa que você aceita os Termos atualizados. Se você não concorda, deve parar de utilizar o Serviço."
+        }
+      }
+    },
+    "miscellaneous": {
+      "title": "24. Disposições gerais",
+      "blocks": {
+        "block0": {
+          "seg0": "Estes Termos, em conjunto com a Política de Privacidade e quaisquer termos adicionais incorporados por referência, constituem o acordo integral entre você e Prophet em relação ao Serviço."
+        },
+        "block1": {
+          "seg0": "Se qualquer disposição for considerada inválida ou inexequível, as disposições restantes permanecerão em pleno vigor e efeito. Nossa falha em fazer cumprir qualquer disposição não constitui renúncia. Você não pode ceder estes Termos sem nosso consentimento prévio por escrito. Podemos ceder estes Termos como parte de fusão, aquisição, reorganização corporativa, venda de ativos ou por operação de lei."
+        }
+      }
+    },
+    "contact": {
+      "title": "25. Contato",
+      "blocks": {
+        "block0": {
+          "seg0": "Para perguntas sobre estes Termos, entre em contato:"
+        },
+        "block1": {
+          "seg0": "{legalEntityName}"
+        },
+        "block2": {
+          "seg0": "{principalAddress}"
+        },
+        "block3": {
+          "seg0": "Email: {legalEmail}"
+        }
+      }
+    }
+  }
+}
