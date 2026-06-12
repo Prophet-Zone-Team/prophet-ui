@@ -129,7 +129,7 @@ export function TradeTicketForm({
   onAmountMessageClear,
   takeProfitLimitEnabled = false,
   takeProfitLimitDisabled = false,
-  takeProfitLimitPrice = "0.012",
+  takeProfitLimitPrice = "",
   outcomeButtonClassName,
   outcomeButtonContainerClassName,
   onTakeProfitLimitEnabledChange,

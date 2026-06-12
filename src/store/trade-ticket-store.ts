@@ -86,13 +86,13 @@ const defaultTicketState = {
   limitPrice: "0.010",
   limitExpiration: "never" as LimitExpirationPreset,
   limitExpirationCustom: undefined as string | undefined,
-  takeProfitLimitEnabled: true,
-  takeProfitLimitPrice: "0.012"
+  takeProfitLimitEnabled: false,
+  takeProfitLimitPrice: ""
 };
 
 function resetTakeProfitLimitState() {
   return {
-    takeProfitLimitEnabled: true,
+    takeProfitLimitEnabled: false,
     takeProfitLimitPrice: defaultTicketState.takeProfitLimitPrice
   };
 }
