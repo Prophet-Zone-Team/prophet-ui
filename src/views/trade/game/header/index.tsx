@@ -126,7 +126,7 @@ function HeaderMetric({
       <div className="absolute top-[-14px] h-full hidden md:block">
         <Bg />
       </div>
-      <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[35px]">
+      <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[0px] md:mt-[35px]">
         {statusVariant === "upcoming" ? (
           <span className="text-[#909090] text-[36px] font-[500]">
             {versusLabel}
@@ -150,7 +150,7 @@ function HeaderMetric({
         {subtitle ? (
           <span
             className={cn(
-              "text-xs font-[500] leading-[17px] text-[#909090] sm:text-sm",
+              "text-xs font-[500] leading-[17px] text-[#909090] sm:text-sm whitespace-nowrap",
               statusVariant ? "mt-5 sm:mt-[33px]" : "mt-4 sm:mt-7"
             )}
           >
