@@ -192,8 +192,8 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
       }
 
       return (
-        stableflowTokens.find((token) => token.chainId === selectedChain.chainId) ??
-        stableflowTokens.find((token) => token.symbol === "USDC")
+        stableflowTokens.find((token) => token.symbol === "USDC") ??
+        stableflowTokens.find((token) => token.chainId === selectedChain.chainId)
       );
     });
   }, [isBridge, selectedChain, stableflowTokens, supportedAssets]);
@@ -343,7 +343,9 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     !assetsLoadingForMethod &&
     !!session?.walletAddress &&
     !!selectedToken &&
+    !!recipientInput.trim() &&
     formError === undefined &&
+    quoteError === undefined &&
     amount !== undefined &&
     !isBusy;
 
