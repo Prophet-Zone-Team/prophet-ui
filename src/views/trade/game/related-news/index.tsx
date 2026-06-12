@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import {
@@ -27,6 +28,7 @@ export function RelatedNews({
   onItemSelect,
   className
 }: RelatedNewsProps) {
+  const t = useTranslations("trade");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const selectedItem = useMemo(
@@ -53,7 +55,7 @@ export function RelatedNews({
   return (
     <>
       <section
-        aria-label="Related news"
+        aria-label={t("relatedNewsAria")}
         className={cn(
           "w-full max-w-[531px] rounded-[12px] bg-white px-[16px] py-[16px]",
           "shadow-[0_0_10px_rgba(0,0,0,0.1)]",
@@ -61,21 +63,21 @@ export function RelatedNews({
         )}
       >
         <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
-          Related News
+          {t("relatedNews")}
         </h2>
 
         <div className="mt-[12px] flex flex-col gap-[4px]">
           {isLoading ? (
             <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
-              Loading...
+              {t("loadingData")}
             </p>
           ) : isError ? (
             <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
-              Unable to load data.
+              {t("unableToLoadData")}
             </p>
           ) : items.length === 0 ? (
             <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
-              No related news is available for this fixture yet.
+              {t("relatedNewsEmpty")}
             </p>
           ) : (
             items.map((item) => (

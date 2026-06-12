@@ -1,4 +1,9 @@
 import {
+  formatDate,
+  formatDateFromIso,
+  formatTimeFromIso,
+} from "@/lib/formatters/datetime";
+import {
   DEFAULT_PROBABILITY_CHART_CLOB_INTERVAL,
   PROBABILITY_CHART_HISTORY_WINDOW_SECONDS,
   resolveProbabilityChartTimeWindow,
@@ -24,11 +29,6 @@ export interface FixtureBinaryOutcomeHistoryInput {
 }
 
 const OUTCOME_SIDES: MatchOutcomeSide[] = ["home", "draw", "away"];
-
-const chartDateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-});
 
 export function mapUiRangeToClobInterval(
   range: GameFixtureChartTimeRange,
@@ -126,21 +126,11 @@ export function formatGameChartXAxisTick(
   value: string,
   range: GameFixtureChartTimeRange,
 ): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
   if (range === "1H" || range === "1D") {
-    return new Intl.DateTimeFormat("en", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).format(date);
+    return formatTimeFromIso(value);
   }
 
-  return chartDateFormatter.format(date);
+  return formatDateFromIso(value);
 }
 
 export function filterGameFixtureChartByRange(
@@ -372,7 +362,7 @@ function priceToProbabilityPercent(price: number): number {
 }
 
 function formatFixtureChartLabel(timestampMs: number): string {
-  return chartDateFormatter.format(new Date(timestampMs));
+  return formatDate(new Date(timestampMs));
 }
 
 export function buildFixtureChartPoints(

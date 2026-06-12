@@ -202,7 +202,8 @@ export function formatLegStakeLabel(
   return formatStrategyMoney(stake);
 }
 
-export function formatLegProfitLabel(
+/** Per-leg gross return when that team wins; matches strategy card Hit Return. */
+export function formatLegHitReturnLabel(
   allocation: StrategyAllocation | undefined,
   hasTeamProbability: boolean
 ): string {
@@ -210,5 +211,5 @@ export function formatLegProfitLabel(
     return "—";
   }
 
-  return formatStrategyMoney(allocation.netProfit);
+  return formatStrategyMoney(allocation.theoreticalReturn);
 }

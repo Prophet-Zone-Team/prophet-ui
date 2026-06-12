@@ -1,7 +1,12 @@
-import type { BidTradeSide, OrderOutcomeSide, PolymarketFeeDetails, TradingOrderType } from "@/types/market";
+import type {
+  BidTradeSide,
+  OrderOutcomeSide,
+  PolymarketFeeDetails,
+  TradingOrderType
+} from "@/types/market";
 import {
   calculateBuyOrderCostFromBudget,
-  estimateBuyTakerFee,
+  estimateBuyTakerFee
 } from "@/lib/market/polymarket-fees";
 
 const MIN_PRICE = 0.01;
@@ -15,7 +20,7 @@ const TICK_PRICE_DECIMALS: Record<MarketTickSize, number> = {
   "0.1": 1,
   "0.01": 2,
   "0.001": 3,
-  "0.0001": 4,
+  "0.0001": 4
 };
 
 export const LIMIT_BUY_MIN_SHARES = 5;
@@ -30,7 +35,7 @@ export function isMarketTickSize(value: unknown): value is MarketTickSize {
 }
 
 export function resolveTickPriceDecimalPlaces(
-  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE,
+  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE
 ): number {
   if (isMarketTickSize(tickSize)) {
     return TICK_PRICE_DECIMALS[tickSize];
@@ -42,7 +47,7 @@ export function resolveTickPriceDecimalPlaces(
 /** Aligns CLOB prices to the market tick precision (matches Polymarket ROUNDING_CONFIG). */
 export function roundPriceToTick(
   price: number,
-  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE,
+  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE
 ): number {
   if (!Number.isFinite(price)) {
     return price;
@@ -76,7 +81,7 @@ export interface ResolveMarketOrderWorstPriceInput {
  * applies a small upward buffer so stale REST quotes cannot under-sign market orders.
  */
 export function resolveMarketOrderWorstPrice(
-  input: ResolveMarketOrderWorstPriceInput,
+  input: ResolveMarketOrderWorstPriceInput
 ): number {
   const tickSize = input.tickSize ?? DEFAULT_MARKET_TICK_SIZE;
   const slippageFactor =
@@ -96,7 +101,7 @@ export function isMarketOrderType(orderType: TradingOrderType): boolean {
 }
 
 function resolveMarketOrderPriceGuardTolerance(
-  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE,
+  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE
 ): number {
   const resolvedTickSize = isMarketTickSize(tickSize)
     ? tickSize
@@ -119,7 +124,7 @@ export function isSignedMarketOrderPriceWithinGuard(input: {
     sidePrice: input.sidePrice,
     bestAsk: input.bestAsk,
     bestBid: input.bestBid,
-    tickSize: input.tickSize,
+    tickSize: input.tickSize
   });
 
   if (input.tradeSide === "buy") {
@@ -135,6 +140,17 @@ export function isTakeProfitLimitAvailable(shareSize: number): boolean {
 
 export function formatTakeProfitLimitDisabledMessage(): string {
   return `Take profit limit requires a market buy of at least ${LIMIT_BUY_MIN_SHARES} shares.`;
+}
+
+export function validateTakeProfitLimitPrice(
+  enabled: boolean,
+  price: string
+): string | undefined {
+  if (!enabled || price.trim()) {
+    return undefined;
+  }
+
+  return "Enter a take profit limit price.";
 }
 
 export interface OrderEstimateInput {
@@ -160,7 +176,10 @@ export interface OrderEstimate {
   potentialOutcome: number;
 }
 
-export function calculatePotentialPayout(stake: number, probability: number): number {
+export function calculatePotentialPayout(
+  stake: number,
+  probability: number
+): number {
   if (stake <= 0 || probability <= 0) {
     return 0;
   }
@@ -168,13 +187,21 @@ export function calculatePotentialPayout(stake: number, probability: number): nu
   return roundMoney(stake / (probability / 100));
 }
 
-export function calculateReferencePrice(probability: number, side: OrderOutcomeSide): number {
+export function calculateReferencePrice(
+  probability: number,
+  side: OrderOutcomeSide
+): number {
   const normalizedProbability = clamp(probability / 100, MIN_PRICE, MAX_PRICE);
 
-  return side === "yes" ? roundPrice(normalizedProbability) : roundPrice(1 - normalizedProbability);
+  return side === "yes"
+    ? roundPrice(normalizedProbability)
+    : roundPrice(1 - normalizedProbability);
 }
 
-export function calculateOutcomeReferencePrice(probability: number, side: OrderOutcomeSide): number {
+export function calculateOutcomeReferencePrice(
+  probability: number,
+  side: OrderOutcomeSide
+): number {
   return calculateReferencePrice(probability, side);
 }
 
@@ -200,12 +227,18 @@ export function deriveDefaultTakeProfitLimitPrice(
   );
 }
 
-export function formatTakeProfitLimitPriceString(purchasePrice: number): string {
+export function formatTakeProfitLimitPriceString(
+  purchasePrice: number
+): string {
   return deriveDefaultTakeProfitLimitPrice(purchasePrice).toFixed(3);
 }
 
-export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate {
-  const sidePrice = normalizeLimitPrice(input.limitPrice ?? calculateReferencePrice(input.probability, input.side));
+export function calculateOrderEstimate(
+  input: OrderEstimateInput
+): OrderEstimate {
+  const sidePrice = normalizeLimitPrice(
+    input.limitPrice ?? calculateReferencePrice(input.probability, input.side)
+  );
   const tradeSide = input.tradeSide ?? "buy";
   const isLimitOrder = isLimitOrderType(input.orderType);
 
@@ -216,7 +249,9 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
     const estimatedTakerFee = 0;
     const estimatedTotalCost = orderCost;
     const potentialPayout =
-      tradeSide === "buy" ? roundMoney(shareSize) : roundMoney(shareSize * sidePrice);
+      tradeSide === "buy"
+        ? roundMoney(shareSize)
+        : roundMoney(shareSize * sidePrice);
 
     return {
       sidePrice,
@@ -226,7 +261,7 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
       estimatedTakerFee,
       estimatedTotalCost,
       potentialPayout,
-      potentialOutcome: roundMoney(potentialPayout - estimatedTotalCost),
+      potentialOutcome: roundMoney(potentialPayout - estimatedTotalCost)
     };
   }
 
@@ -239,7 +274,7 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
       ? calculateBuyOrderCostFromBudget({
           budget: requestedAmount,
           price: sidePrice,
-          fee: input.fee,
+          fee: input.fee
         })
       : requestedAmount;
   const estimatedTakerFee =
@@ -247,10 +282,11 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
       ? estimateBuyTakerFee({
           orderCost,
           price: sidePrice,
-          fee: input.fee,
+          fee: input.fee
         })
       : 0;
-  const estimatedTotalCost = tradeSide === "buy" ? roundMoney(orderCost + estimatedTakerFee) : orderCost;
+  const estimatedTotalCost =
+    tradeSide === "buy" ? roundMoney(orderCost + estimatedTakerFee) : orderCost;
   let shareSize =
     tradeSide === "buy" && sidePrice > 0
       ? roundShares(orderCost / sidePrice)
@@ -259,7 +295,10 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
   const resolvedOrderCost = tradeSide === "sell" ? shareSize : orderCost;
   const resolvedTotalCost =
     tradeSide === "buy" ? estimatedTotalCost : resolvedOrderCost;
-  const potentialPayout = tradeSide === "buy" ? roundMoney(shareSize) : roundMoney(shareSize * sidePrice);
+  const potentialPayout =
+    tradeSide === "buy"
+      ? roundMoney(shareSize)
+      : roundMoney(shareSize * sidePrice);
 
   return {
     sidePrice,
@@ -269,7 +308,7 @@ export function calculateOrderEstimate(input: OrderEstimateInput): OrderEstimate
     estimatedTakerFee,
     estimatedTotalCost: resolvedTotalCost,
     potentialPayout,
-    potentialOutcome: roundMoney(potentialPayout - estimatedTotalCost),
+    potentialOutcome: roundMoney(potentialPayout - estimatedTotalCost)
   };
 }
 
@@ -377,12 +416,19 @@ export function formatOrderbookTotal(size: number, price: number): string {
 
 export function formatShareSize(value: number): string {
   return new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 4,
+    maximumFractionDigits: 4
   }).format(value);
 }
 
-export function formatPayoutOdds(potentialPayout: number, estimatedTotalCost: number): string {
-  if (!Number.isFinite(potentialPayout) || !Number.isFinite(estimatedTotalCost) || estimatedTotalCost <= 0) {
+export function formatPayoutOdds(
+  potentialPayout: number,
+  estimatedTotalCost: number
+): string {
+  if (
+    !Number.isFinite(potentialPayout) ||
+    !Number.isFinite(estimatedTotalCost) ||
+    estimatedTotalCost <= 0
+  ) {
     return "n/a";
   }
 

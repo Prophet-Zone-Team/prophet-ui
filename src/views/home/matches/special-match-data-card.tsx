@@ -24,6 +24,9 @@ import { gameTradeHref } from "@/lib/routes/trade";
 import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
 import { useFeaturedScheduleMatch, useMatchWithLiveState } from "@/store/match-live-store";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
+import { useTranslations } from "next-intl";
+
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 
 function useSlantOffsetPx(): [number, (node: HTMLDivElement | null) => void] {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -83,24 +86,39 @@ function SpecialMatchDataCardContent({
   snapshots?: TeamMarketSnapshot[];
 }) {
   const router = useRouter();
+  const t = useTranslations("home");
+  const tTrade = useTranslations("trade");
   const liveMatch = useMatchWithLiveState(match);
   const sides = resolveMatchSides(liveMatch, snapshots);
   const canNavigate = getScheduleRowVariant(liveMatch.status) !== "ended";
   const homeName = sides.home.name;
   const awayName = sides.away.name;
+  const homeDisplayName = useLocalizedTeamName(sides.home.code, homeName);
+  const awayDisplayName = useLocalizedTeamName(sides.away.code, awayName);
   const oddsResult = parseMatchOutcomeOdds(liveMatch, homeName, awayName);
   const liveClock = useLiveElapsedClock(
     liveMatch.liveElapsedSeconds,
     liveMatch.status === "live"
   );
   const scoreLabel = formatMatchScore(liveMatch.homeScore, liveMatch.awayScore);
+  const rowVariant = getScheduleRowVariant(liveMatch.status);
+  const statusLabel =
+    rowVariant === "ongoing"
+      ? t("matchStatusOngoing")
+      : rowVariant === "upcoming"
+        ? t("matchStatusUpcoming")
+        : t("matchStatusEnded");
 
   const ariaLabel = [
-    `${homeName} vs ${awayName}`,
-    `Score ${scoreLabel}`,
-    liveMatch.status === "live" ? "ongoing" : liveMatch.status,
+    t("specialMatchAria", { home: homeDisplayName, away: awayDisplayName }),
+    t("specialMatchScoreAria", { score: scoreLabel }),
+    statusLabel,
     oddsResult.status === "ready"
-      ? `Win probabilities ${formatOutcomePercent(oddsResult.probabilities.home)} home, ${formatOutcomePercent(oddsResult.probabilities.draw)} draw, ${formatOutcomePercent(oddsResult.probabilities.away)} away`
+      ? t("specialMatchWinProbabilitiesAria", {
+          homePct: formatOutcomePercent(oddsResult.probabilities.home),
+          drawPct: formatOutcomePercent(oddsResult.probabilities.draw),
+          awayPct: formatOutcomePercent(oddsResult.probabilities.away)
+        })
       : undefined,
     liveClock
   ]
@@ -125,8 +143,9 @@ function SpecialMatchDataCardContent({
     >
       {oddsResult.status === "ready" ? (
         <ProbabilityStrip
-          homeName={homeName}
-          awayName={awayName}
+          homeName={homeDisplayName}
+          awayName={awayDisplayName}
+          drawLabel={tTrade("draw")}
           probabilities={oddsResult.probabilities}
         />
       ) : (
@@ -137,7 +156,7 @@ function SpecialMatchDataCardContent({
         <div className="w-full flex justify-center items-center md:w-[568px] h-[138px] rounded-[20px] bg-white px-2 md:px-4 py-3 md:py-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] sm:px-8 sm:py-5">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 relative">
             <TeamColumn
-              name={homeName}
+              name={homeDisplayName}
               code={sides.home.code}
               logoUrl={sides.home.logoUrl}
               align="start"
@@ -149,6 +168,7 @@ function SpecialMatchDataCardContent({
                   <MatchStatusBadge
                     variant="ongoing"
                     className="font-semibold"
+                    label={t("matchStatusOngoing")}
                   />
                   <strong className="text-[22px] md:text-[28px] font-semibold leading-none text-black sm:text-4xl">
                     {scoreLabel}
@@ -162,20 +182,22 @@ function SpecialMatchDataCardContent({
               ) : (
                 <>
                   <div className="text-[14px] text-[#9D84FF] font-[500]">
-                    Next Match
+                    {t("nextMatch")}
                   </div>
                   <div className="text-[30px] md:text-[36px] text-[#909090] font-[500]">
-                    VS
+                    {t("versus")}
                   </div>
                   <div className="text-sm md:text-[16px] text-[#000] font-[400]">
-                    Starts {formatScheduleKickoff(liveMatch.kickoffAt)}
+                    {t("startsAt", {
+                      kickoff: formatScheduleKickoff(liveMatch.kickoffAt)
+                    })}
                   </div>
                 </>
               )}
             </div>
 
             <TeamColumn
-              name={awayName}
+              name={awayDisplayName}
               code={sides.away.code}
               logoUrl={sides.away.logoUrl}
               align="end"
@@ -216,10 +238,12 @@ function TeamColumn({
 function ProbabilityStrip({
   homeName,
   awayName,
+  drawLabel,
   probabilities
 }: {
   homeName: string;
   awayName: string;
+  drawLabel: string;
   probabilities: { home: number; draw: number; away: number };
 }) {
   const [slantPx, setContainerRef] = useSlantOffsetPx();
@@ -249,7 +273,7 @@ function ProbabilityStrip({
           align="start"
         />
         <ProbabilitySegmentLabel
-          label="Draw"
+          label={drawLabel}
           probability={probabilities.draw}
           tone="dark"
           align="start"

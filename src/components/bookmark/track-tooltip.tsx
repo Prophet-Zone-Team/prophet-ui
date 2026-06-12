@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { TrackHintIcon } from "@/components/bookmark/bookmark-icons";
 
@@ -13,12 +16,14 @@ export function TrackTooltip({ children }: { children: ReactNode }) {
 }
 
 export function TrackLink() {
+  const t = useTranslations("trade");
+
   return (
     <Link
       href="/tracks"
       className="pointer-events-auto font-[500] underline-offset-2 hover:underline"
     >
-      [Tracks]
+      {t("tracksLink")}
     </Link>
   );
 }

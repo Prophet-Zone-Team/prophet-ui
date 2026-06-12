@@ -1,5 +1,8 @@
-import { hasFixtureBuyAsk } from "@/lib/market/fixture-ask-liquidity";
-import { resolveDefaultFixtureOutcome } from "@/lib/market/fixture-markets-mapper";
+import { resolveFixtureDisplayAskPrice } from "@/lib/market/fixture-ask-liquidity";
+import {
+  findFixtureMarketOutcome,
+  resolveDefaultFixtureOutcome,
+} from "@/lib/market/fixture-markets-mapper";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
 import {
   findGameMarketOutcome,
@@ -13,16 +16,60 @@ import {
 import type {
   BidTradeSide,
   FixtureMarketOutcome,
+  GameFixtureMarketsSnapshot,
   GameMarketSnapshot,
   MatchOutcomeSide,
   OrderOutcomeSide,
+  PolymarketFixtureMarketsData,
   TeamMarketSnapshot
 } from "@/types/market";
 
-export function resolveGameDefaultFixtureOutcome(
-  snapshot: GameMarketSnapshot
+function toFixtureMarketsData(
+  snapshot:
+    | GameFixtureMarketsSnapshot
+    | PolymarketFixtureMarketsData
+    | undefined,
+): PolymarketFixtureMarketsData | undefined {
+  if (!snapshot) {
+    return undefined;
+  }
+
+  return {
+    lines: snapshot.lines,
+    exactScores: snapshot.exactScores,
+    halftime: snapshot.halftime,
+  };
+}
+
+/** Re-resolve a stored fixture outcome against the latest markets snapshot. */
+export function resolveFreshFixtureOutcome(
+  selected: FixtureMarketOutcome | null | undefined,
+  fixtureMarkets:
+    | GameFixtureMarketsSnapshot
+    | PolymarketFixtureMarketsData
+    | undefined,
 ): FixtureMarketOutcome | undefined {
-  return resolveDefaultFixtureOutcome(snapshot.match.polymarket?.fixtureMarkets);
+  if (!selected) {
+    return undefined;
+  }
+
+  const data = toFixtureMarketsData(fixtureMarkets);
+
+  if (!data) {
+    return selected;
+  }
+
+  return findFixtureMarketOutcome(data, selected.id) ?? selected;
+}
+
+export function resolveGameDefaultFixtureOutcome(
+  snapshot: GameMarketSnapshot,
+  fixtureMarkets?: GameFixtureMarketsSnapshot,
+): FixtureMarketOutcome | undefined {
+  return (
+    resolveDefaultFixtureOutcome(snapshot.match.polymarket?.fixtureMarkets) ??
+    resolveDefaultFixtureOutcome(toFixtureMarketsData(fixtureMarkets))
+  );
 }
 
 export function isGameFixtureOutcomeBidReady(
@@ -43,7 +90,7 @@ export function isGameFixtureOutcomeBidReady(
     return false;
   }
 
-  return hasFixtureBuyAsk(outcome, binarySide);
+  return resolveFixtureDisplayAskPrice(outcome, binarySide) !== undefined;
 }
 
 export function isGameMoneylineBidReady(snapshot: GameMarketSnapshot): boolean {

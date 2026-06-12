@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import type { ConnectedWallet } from "@privy-io/react-auth";
 
+import { resolvePrivyLoginEmail } from "@/context/privy/resolve-privy-login-email";
 import { useAuthStore } from "@/store/auth-store";
 import type { AuthLoginMethod } from "@/store/auth-store";
 
@@ -12,6 +13,7 @@ const DEFAULT_WALLET_WAIT_MS = 20_000;
 
 let connectedWalletsRef: ConnectedWallet[] = [];
 let privyAuthenticatedRef = false;
+let privyLoginEmailRef: string | undefined;
 let walletSyncSuspendedRef = false;
 
 export function suspendPrivyWalletSync() {
@@ -34,6 +36,29 @@ function sleep(ms: number) {
 
 export function isPrivyAuthenticated() {
   return privyAuthenticatedRef;
+}
+
+export function getPrivyLoginEmail() {
+  return privyLoginEmailRef;
+}
+
+export async function waitForPrivyLoginEmail(options?: {
+  timeoutMs?: number;
+}): Promise<string | undefined> {
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_WALLET_WAIT_MS;
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const email = getPrivyLoginEmail();
+
+    if (email) {
+      return email;
+    }
+
+    await sleep(WALLET_POLL_INTERVAL_MS);
+  }
+
+  return getPrivyLoginEmail();
 }
 
 export function isPrivyEmbeddedWallet(wallet: ConnectedWallet): boolean {
@@ -158,12 +183,17 @@ export async function activatePrivyWallet(
  * Privy embedded wallet without a wagmi connector.
  */
 export function PrivyWalletBridge() {
-  const { ready, authenticated } = usePrivy();
+  const { ready, authenticated, user } = usePrivy();
   const { wallets } = useWallets();
 
   useEffect(() => {
     privyAuthenticatedRef = ready && authenticated;
   }, [authenticated, ready]);
+
+  useEffect(() => {
+    privyLoginEmailRef =
+      authenticated && user ? resolvePrivyLoginEmail(user) : undefined;
+  }, [authenticated, user]);
 
   useEffect(() => {
     connectedWalletsRef = wallets;

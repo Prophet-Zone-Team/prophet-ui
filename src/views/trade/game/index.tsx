@@ -16,14 +16,15 @@ import { buildRelatedGamesTeamsQuery } from "@/lib/market/related-games-query";
 import { RelatedGames } from "@/views/trade/related-games";
 import { gameContentClass } from "@/views/trade/game/ui";
 import { useGameTradingMetadata } from "@/views/trade/game/use-game-trading-metadata";
+import { isGameMarketLiveUpdatesEnabled } from "@/lib/market/live-match";
 import { isGameClosedForTrading } from "@/lib/market/trading-market-status";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import type { ProphetGameSiblingEventSlugs } from "@/types/prophet-api";
 import type {
   ApiFootballTeamProfile,
   GameFixtureMarketsSnapshot,
-  GameMarketSnapshot,
-  WorldCupMatch
+  GameMarketSnapshot
 } from "@/types/market";
 import Drawer from "@/components/drawer";
 import {
@@ -66,10 +67,13 @@ export default function TradeGameView({
     teamSnapshots: snapshots
   });
 
+  const liveMatch = useMatchWithLiveState(match);
+  const marketWsEnabled = isGameMarketLiveUpdatesEnabled(liveMatch);
+
   const canTrade =
     isTabTradingReady(activeMarketTab) &&
     loadingTab !== activeMarketTab &&
-    !isGameClosedForTrading(match, gameSnapshot.market.closed);
+    !isGameClosedForTrading(liveMatch, gameSnapshot.market.closed);
 
   const handleMarketTabChange = (tab: GameMarketTabId) => {
     setActiveMarketTab(tab);
@@ -122,7 +126,7 @@ export default function TradeGameView({
   const [tradeDrawerOpen, setTradeDrawerOpen] = useState<boolean>(false);
 
   return (
-    <MarketWsProvider enabled>
+    <MarketWsProvider enabled={marketWsEnabled}>
       <SyncMatchLiveStore matches={matchesToSync} />
       <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2">
         <div className="bg-black h-[228px] md:h-[258px] w-full absolute top-0 left-0" />
@@ -150,6 +154,7 @@ export default function TradeGameView({
             <TradeWidget
               variant="game"
               gameSnapshot={gameSnapshot}
+              fixtureMarkets={fixtureMarkets}
               teamSnapshots={snapshots}
               className="hidden md:flex"
             />
@@ -159,7 +164,7 @@ export default function TradeGameView({
           </div>
         </div>
       </div>
-      <div className="flex md:hidden px-3 pb-10 pt-5 border border-[#EBEBEB] rounded-t-xl w-full fixed left-0 bottom-0 z-10 bg-white justify-between items-center gap-5">
+      <div className="flex flex-row-reverse md:hidden px-3 pb-10 pt-5 border border-[#EBEBEB] rounded-t-xl w-full fixed left-0 bottom-0 z-10 bg-white justify-between items-center gap-5">
         <button
           type="button"
           className="flex flex-1 h-[46px] justify-center items-center rounded-xl text-lg font-[500] text-white transition-opacity bg-[#65AF14] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
@@ -194,6 +199,7 @@ export default function TradeGameView({
         <TradeWidget
           variant="game"
           gameSnapshot={gameSnapshot}
+          fixtureMarkets={fixtureMarkets}
           teamSnapshots={snapshots}
           className=""
         />

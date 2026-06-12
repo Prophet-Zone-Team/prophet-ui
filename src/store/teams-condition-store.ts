@@ -53,7 +53,11 @@ function needsTeamsConditionFetch(
     return true;
   }
 
-  return !entry.slug?.trim();
+  if (!entry.slug?.trim()) {
+    return true;
+  }
+
+  return !entry.question?.trim();
 }
 
 function buildContextMapForIds(
@@ -93,7 +97,14 @@ function migrateTeamsConditionEntry(
 
     return {
       teams,
-      slug: typeof entry.slug === "string" ? entry.slug : ""
+      slug: typeof entry.slug === "string" ? entry.slug : "",
+      question: typeof entry.question === "string" ? entry.question : "",
+      main_event_title:
+        typeof entry.main_event_title === "string"
+          ? entry.main_event_title
+          : "",
+      event_title:
+        typeof entry.event_title === "string" ? entry.event_title : ""
     };
   }
 

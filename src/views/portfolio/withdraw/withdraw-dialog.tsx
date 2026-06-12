@@ -3,6 +3,7 @@
 import type { QuoteResponse } from "@stableflow/core";
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import Big from "big.js";
 
@@ -73,6 +74,9 @@ export interface WithdrawDialogProps {
 }
 
 export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
+  const t = useTranslations("portfolio");
+  const tWithdraw = useTranslations("portfolio.withdraw");
+  const tCommon = useTranslations("common");
   const { session, portfolio, reload } = usePortfolioContext();
   const { supportedAssets, loading: assetsLoading } = useSupportedAssets({ enabled: open });
   const {
@@ -142,7 +146,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     if (session?.walletAddress && !recipientInput) {
       setRecipientInput(session.walletAddress);
     }
-  }, [open, recipientInput, session?.walletAddress]);
+  }, [open, session?.walletAddress]);
 
   useEffect(() => {
     if (!open || chainOptions.length === 0) {
@@ -188,8 +192,8 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
       }
 
       return (
-        stableflowTokens.find((token) => token.chainId === selectedChain.chainId) ??
-        stableflowTokens.find((token) => token.symbol === "USDC")
+        stableflowTokens.find((token) => token.symbol === "USDC") ??
+        stableflowTokens.find((token) => token.chainId === selectedChain.chainId)
       );
     });
   }, [isBridge, selectedChain, stableflowTokens, supportedAssets]);
@@ -200,12 +204,17 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     isBridge && selectedToken && !("assetId" in selectedToken)
       ? getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd)
       : 0;
-  const validationError = validateWithdrawAmount(amount, maxAmount, {
+  const validationErrorKey = validateWithdrawAmount(amount, maxAmount, {
     minWithdrawUsd: effectiveMinUsd,
   });
+  const validationError = validationErrorKey
+    ? validationErrorKey === "amountBelowMinimum"
+      ? tWithdraw("amountBelowMinimum", { amount: `${effectiveMinUsd}` })
+      : tWithdraw(validationErrorKey)
+    : undefined;
   const recipientError =
-    !isBridge && recipientInput.trim() && !EVM_ADDRESS_PATTERN.test(recipientInput.trim())
-      ? "Enter a valid EVM recipient address."
+    recipientInput.trim() && !EVM_ADDRESS_PATTERN.test(recipientInput.trim())
+      ? tWithdraw("invalidRecipient")
       : undefined;
   const formError = validationError ?? recipientError;
 
@@ -217,18 +226,18 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     amount !== undefined &&
     amount > 0 &&
     formError === undefined &&
-    (isBridge || EVM_ADDRESS_PATTERN.test(recipientInput.trim()));
+    EVM_ADDRESS_PATTERN.test(recipientInput.trim());
 
   const bridgeQuoteRequest = useMemo(
     () =>
-      isBridge && selectedToken && !("assetId" in selectedToken) && session?.walletAddress
+      isBridge && selectedToken && !("assetId" in selectedToken) && recipientInput.trim()
         ? buildWithdrawQuoteRequest({
           token: selectedToken,
           amount: amountInput,
-          recipientAddress: session.walletAddress,
+          recipientAddress: recipientInput.trim(),
         })
         : undefined,
-    [amountInput, isBridge, selectedToken, session],
+    [amountInput, isBridge, selectedToken, recipientInput],
   );
 
   const { quote: bridgeQuote, loading: bridgeQuoteLoading, error: bridgeQuoteError } = useBridgeQuote({
@@ -334,7 +343,9 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     !assetsLoadingForMethod &&
     !!session?.walletAddress &&
     !!selectedToken &&
+    !!recipientInput.trim() &&
     formError === undefined &&
+    quoteError === undefined &&
     amount !== undefined &&
     !isBusy;
 
@@ -432,7 +443,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         const result = await executeBridgeWithdraw({
           toChainId: String(selectedToken.chainId),
           toTokenAddress: selectedToken.address,
-          recipientAddr: session.walletAddress,
+          recipientAddr: recipientInput.trim(),
           amountUsd: amount,
         });
         txHash = result.txHash;
@@ -444,7 +455,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         });
         txHash = result.txHash;
       } else {
-        throw new Error("Selected token is not supported for this withdrawal method.");
+        throw new Error(tWithdraw("unsupportedToken"));
       }
 
       if (txHash) {
@@ -455,7 +466,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         });
       }
 
-      toast.success("Withdrawal submitted");
+      toast.success(tWithdraw("withdrawalSubmitted"));
       handleClose();
       reload();
     } catch (error: unknown) {
@@ -475,6 +486,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     reload,
     selectedToken,
     session,
+    tWithdraw,
   ]);
 
   const onSelectStableflow = async () => {
@@ -497,7 +509,11 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   const showFooter = step === "form";
 
   const ariaLabel =
-    step === "entry" ? "Withdraw entry" : step === "status" ? "Withdraw status" : "Withdraw funds";
+    step === "entry"
+      ? tWithdraw("ariaEntry")
+      : step === "status"
+        ? tWithdraw("ariaStatus")
+        : tWithdraw("ariaFunds");
 
   return (
     <FundingResponsiveOverlay
@@ -509,7 +525,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
       overlayCloseable={false}
     >
       <FundingModalShell
-        title="Withdraw"
+        title={t("withdrawLabel")}
         onClose={handleClose}
         onBack={showBack ? handleBack : undefined}
         className={
@@ -526,7 +542,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
               onClick={() => void handleWithdraw()}
             >
               {isBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Withdraw
+              {t("withdrawLabel")}
             </button>
           ) : undefined
         }
@@ -545,39 +561,25 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         {step === "form" ? (
           <div className="flex flex-col gap-5 pb-10 md:pb-2">
             <div className="flex flex-col gap-2">
-              <span className={withdrawFieldLabelClass}>Recipient Address</span>
-              {isBridge ? (
-                <div className={withdrawInputBoxClass}>
-                  <span className="flex min-w-0 items-center gap-2">
-                    <WalletAvatarIcon address={session?.walletAddress} />
-                    <span className="truncate text-base font-[500] text-black">
-                      {formatShortWallet(session?.walletAddress)}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-base font-[500] text-[#909090]">
-                    Connected
-                  </span>
-                </div>
-              ) : (
-                <div className={withdrawInputBoxClass}>
-                  <input
-                    type="text"
-                    value={recipientInput}
-                    onChange={(event) => setRecipientInput(event.target.value)}
-                    className={withdrawAmountInputClass}
-                    placeholder="0x…"
-                    aria-label="Recipient address"
-                    spellCheck={false}
-                  />
-                </div>
-              )}
+              <span className={withdrawFieldLabelClass}>{tWithdraw("recipientAddress")}</span>
+              <div className={withdrawInputBoxClass}>
+                <input
+                  type="text"
+                  value={recipientInput}
+                  onChange={(event) => setRecipientInput(event.target.value)}
+                  className={withdrawAmountInputClass}
+                  placeholder="0x…"
+                  aria-label={tWithdraw("recipientAddressAria")}
+                  spellCheck={false}
+                />
+              </div>
               {recipientError ? (
                 <p className="m-0 text-sm text-prophet-red">{recipientError}</p>
               ) : null}
             </div>
 
             <div className="flex flex-col gap-2">
-              <span className={withdrawFieldLabelClass}>Amount</span>
+              <span className={withdrawFieldLabelClass}>{tWithdraw("amount")}</span>
               <div className={withdrawInputBoxClass}>
                 <input
                   type="text"
@@ -586,7 +588,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                   onChange={(event) => setAmountInput(event.target.value)}
                   className={withdrawAmountInputClass}
                   placeholder="0"
-                  aria-label="Withdraw amount"
+                  aria-label={tWithdraw("amountAria")}
                 />
                 <span className="flex shrink-0 items-center gap-3">
                   <span className="text-base font-[500] text-[#909090]">
@@ -597,12 +599,17 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                     className={withdrawMaxButtonClass}
                     onClick={handleMax}
                   >
-                    Max
+                    {tWithdraw("max")}
                   </button>
                 </span>
               </div>
               {formError && amountInput.trim() ? (
                 <p className="m-0 text-sm text-prophet-red">{formError}</p>
+              ) : null}
+              {quoteError ? (
+                <p className="m-0 text-sm text-prophet-red">
+                  {tWithdraw("quoteUnavailable")}
+                </p>
               ) : null}
               {withdrawError && step === "form" ? (
                 <p className="m-0 text-sm text-prophet-red">{withdrawError}</p>
@@ -611,10 +618,10 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <FundingSelectorDropdown
-                label="Receive Chain"
+                label={tWithdraw("receiveChain")}
                 triggerLabel={
                   selectedChain?.chainName ??
-                  (assetsLoadingForMethod ? "Loading…" : "Select chain")
+                  (assetsLoadingForMethod ? tCommon("loading") : tWithdraw("selectChain"))
                 }
                 disabled={assetsLoadingForMethod || chainOptions.length === 0}
                 open={chainDropdownOpen}
@@ -665,10 +672,10 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
               </FundingSelectorDropdown>
 
               <FundingSelectorDropdown
-                label="Receive Token"
+                label={t("receiveToken")}
                 triggerLabel={
                   selectedToken?.symbol ??
-                  (assetsLoadingForMethod ? "Loading…" : "Select token")
+                  (assetsLoadingForMethod ? tCommon("loading") : tWithdraw("selectToken"))
                 }
                 disabled={assetsLoadingForMethod || tokensForChain.length === 0}
                 open={tokenDropdownOpen}
@@ -723,7 +730,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
 
             <div className="flex flex-col gap-1 py-1">
               <div className="flex items-center justify-between">
-                <span className={withdrawFieldLabelClass}>Est. Receive</span>
+                <span className={withdrawFieldLabelClass}>{tWithdraw("estReceive")}</span>
                 <div className="flex flex-col items-end gap-0.5">
                   <span className="text-base font-[500] text-black">
                     {receiveLabel}
@@ -733,11 +740,6 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                   </span>
                 </div>
               </div>
-              {quoteError ? (
-                <p className="m-0 text-right text-sm text-[#909090]">
-                  Quote unavailable; estimated output not shown.
-                </p>
-              ) : null}
             </div>
 
             <TransactionBreakdown

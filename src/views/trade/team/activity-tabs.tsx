@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import { PositionsTable } from "@/views/trade/team/positions-table";
@@ -15,22 +16,28 @@ import {
 import { tradeSectionClass } from "@/views/trade/trade-widget/trade-ui";
 import type { TeamMarketSnapshot } from "@/types/market";
 
-const ACTIVITY_TABS = [
-  { id: "trades", label: "Trades" },
-  { id: "position", label: "Position" },
-  { id: "top-holders", label: "Top Holders" }
-] as const;
+const ACTIVITY_TAB_IDS = ["trades", "position", "top-holders"] as const;
 
-type ActivityTabId = (typeof ACTIVITY_TABS)[number]["id"];
+type ActivityTabId = (typeof ACTIVITY_TAB_IDS)[number];
 
 export interface ActivityTabsProps {
   snapshot: TeamMarketSnapshot;
 }
 
 export function ActivityTabs({ snapshot }: ActivityTabsProps) {
+  const t = useTranslations("trade");
   const [tab, setTab] = useState<ActivityTabId>("trades");
   const [visitedTabs, setVisitedTabs] = useState<Set<ActivityTabId>>(
     () => new Set(["trades"]),
+  );
+
+  const activityTabs = useMemo(
+    () => [
+      { id: "trades" as const, label: t("tabTrades") },
+      { id: "position" as const, label: t("tabPosition") },
+      { id: "top-holders" as const, label: t("tabTopHolders") }
+    ],
+    [t]
   );
 
   const handleTabChange = useCallback((value: string) => {
@@ -52,10 +59,10 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
       <div className={tradeSectionClass}>
         <div className="border-b border-prophet-line px-4 pt-4">
           <TabSwitcher
-            items={[...ACTIVITY_TABS]}
+            items={activityTabs}
             value={tab}
             onChange={handleTabChange}
-            aria-label="Market activity"
+            aria-label={t("marketActivity")}
           />
         </div>
 
@@ -65,11 +72,11 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
             className="grid grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,1fr))] gap-2 border-b border-prophet-line px-4 py-2 text-xs text-prophet-muted"
             aria-hidden={tab !== "position"}
           >
-            <span>Outcome</span>
-            <span>Size</span>
-            <span>Value</span>
-            <span>PnL</span>
-            <span>Avg</span>
+            <span>{t("outcome")}</span>
+            <span>{t("size")}</span>
+            <span>{t("value")}</span>
+            <span>{t("pnl")}</span>
+            <span>{t("avg")}</span>
           </div>
         ) : null}
         {tab === "top-holders" ? <TopHoldersTableHeader /> : null}
@@ -78,7 +85,7 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
           <div
             hidden={tab !== "trades"}
             className="min-h-[500px]"
-            aria-label="Market trades"
+            aria-label={t("marketTradesAria")}
           >
             <TradesTable snapshot={snapshot} active={tab === "trades"} />
           </div>
@@ -87,7 +94,7 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
           <div
             hidden={tab !== "position"}
             className="min-h-[500px]"
-            aria-label="Market positions"
+            aria-label={t("marketPositionsAria")}
           >
             <PositionsTable snapshot={snapshot} active={tab === "position"} />
           </div>
@@ -96,7 +103,7 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
           <div
             hidden={tab !== "top-holders"}
             className="min-h-[500px]"
-            aria-label="Top holders"
+            aria-label={t("topHoldersAria")}
           >
             <TopHoldersTable
               snapshot={snapshot}

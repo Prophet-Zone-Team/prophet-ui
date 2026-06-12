@@ -13,25 +13,27 @@ import { DepositDialog } from "@/views/portfolio/deposit";
 import { PrivateTopupOnboarding } from "@/views/portfolio/private-topup/private-topup-onboarding";
 import { formatNumber } from "@/utils";
 import MobileDrawer from "./mobile-drawer";
+import { WalletLanguageMenuItem } from "./wallet-language-menu-item";
+import { useTranslations } from "next-intl";
 
-const LOGIN_STEP_LABELS = {
-  requesting_wallet: "Connecting wallet…",
-  checking_wallet_deployment: "Checking deposit wallet…",
-  wallet_already_deployed: "Deposit wallet already deployed",
-  deploying_wallet: "Deploying wallet…",
-  awaiting_session_signature: "Awaiting session signature…",
-  creating_session: "Creating session…",
-  checking_clob_credentials: "Checking credentials…",
-  clob_already_derived: "Trading already enabled",
-  checking_trading_chain: "Checking network…",
-  switching_trading_chain: "Switching to Polygon…",
-  awaiting_clob_signature: "Awaiting CLOB signature…",
-  deriving_credentials: "Deriving credentials…",
-  checking_token_approval: "Checking token approval…",
-  tokens_already_authorized: "Tokens already authorized",
-  awaiting_token_approval_signature: "Awaiting token approval signature…",
-  submitting_token_approval: "Submitting token approval…",
-  verifying_readiness: "Verifying readiness…",
+const LOGIN_STEP_KEYS = {
+  requesting_wallet: "connectingWallet",
+  checking_wallet_deployment: "checkingDepositWallet",
+  wallet_already_deployed: "depositWalletDeployed",
+  deploying_wallet: "deployingWallet",
+  awaiting_session_signature: "awaitingSessionSignature",
+  creating_session: "creatingSession",
+  checking_clob_credentials: "checkingCredentials",
+  clob_already_derived: "tradingAlreadyEnabled",
+  checking_trading_chain: "checkingNetwork",
+  switching_trading_chain: "switchingToPolygon",
+  awaiting_clob_signature: "awaitingClobSignature",
+  deriving_credentials: "derivingCredentials",
+  checking_token_approval: "checkingTokenApproval",
+  tokens_already_authorized: "tokensAlreadyAuthorized",
+  awaiting_token_approval_signature: "awaitingTokenApprovalSignature",
+  submitting_token_approval: "submittingTokenApproval",
+  verifying_readiness: "verifyingReadiness",
 } as const;
 
 interface WalletMenuButtonProps {
@@ -60,6 +62,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasPendingDeposit, setHasPendingDeposit] = useState(false);
   const [fastBidOpen, setFastBidOpen] = useState(false);
+  const t = useTranslations("wallet");
   const depositDialogOpen = useDepositDialogStore((state) => state.isOpen);
   const openDepositDialog = useDepositDialogStore((state) => state.open);
   const closeDepositDialog = useDepositDialogStore((state) => state.close);
@@ -100,15 +103,20 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
 
   const loginLabel = useMemo(() => {
     if (!hydrated) {
-      return "Login";
+      return t("login");
     }
 
     if (loginInProgress) {
-      return loginStep ? LOGIN_STEP_LABELS[loginStep] : "Connecting...";
+      if (!loginStep) {
+        return t("connecting");
+      }
+
+      const key = LOGIN_STEP_KEYS[loginStep as keyof typeof LOGIN_STEP_KEYS];
+      return key ? t(key) : t("connecting");
     }
 
-    return "Login";
-  }, [hydrated, loginInProgress, loginStep]);
+    return t("login");
+  }, [hydrated, loginInProgress, loginStep, t]);
 
   const balanceDisplay = useMemo(() => {
     if (cashStatus === "loading") {
@@ -150,17 +158,27 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
       return null;
     }
     return (
-      <div className="relative inline-flex flex-col items-end">
-        <WalletLoginButton
-          label={loginLabel}
-          disabled={!hydrated || loginInProgress}
-          onClick={handleLogin}
-        />
+      <div ref={menuRef} className="relative inline-flex flex-col items-end">
+        <div className="flex items-center gap-2">
+          <WalletLanguageMenuItem variant="compact" />
+          <WalletLoginButton
+            label={loginLabel}
+            disabled={!hydrated || loginInProgress}
+            onClick={handleLogin}
+          />
+        </div>
         {(message ?? error) ? (
           <p className="mt-2 w-[220px] text-right text-xs text-prophet-red absolute right-2 -bottom-2 translate-y-[100%]">
             {message ?? error}
           </p>
         ) : null}
+        <MobileDrawer
+          open={isMobileDrawerOpen}
+          onClose={onMobileDrawerClose}
+          regionRestricted={isBuyRestricted}
+          onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
+          balanceDisplay={balanceDisplay}
+        />
       </div>
     );
   }

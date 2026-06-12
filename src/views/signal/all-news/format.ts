@@ -1,3 +1,9 @@
+import teams from "@/data/teams/index";
+import {
+  curatedAbbreviationToCode,
+  isCuratedTeamVisible
+} from "@/data/teams/curated-team-list";
+
 import type {
   SignalAllNewsItem,
   SignalAllSortState,
@@ -5,27 +11,15 @@ import type {
   SignalAllTeamOption
 } from "./types";
 
-export function getSignalAllTeamOptions(
-  items: SignalAllNewsItem[]
-): SignalAllTeamOption[] {
-  const seen = new Set<string>();
-
-  return items.reduce<SignalAllTeamOption[]>(
-    (options, item) => {
-      if (seen.has(item.teamCode)) {
-        return options;
-      }
-
-      seen.add(item.teamCode);
-      options.push({
-        value: item.teamCode,
-        label: item.teamName,
-        teamCode: item.teamCode
-      });
-      return options;
-    },
-    []
-  );
+export function getSignalAllTeamOptions(): SignalAllTeamOption[] {
+  return Object.values(teams)
+    .filter((entry) => isCuratedTeamVisible(entry))
+    .map((entry) => ({
+      value: entry.name,
+      label: entry.name,
+      teamCode: curatedAbbreviationToCode(entry.abbreviation)
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label));
 }
 
 export function filterSignalAllItems(

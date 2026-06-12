@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { useAnalyticsLatestNews } from "@/hooks/analytics/use-analytics-latest-news";
@@ -19,6 +20,7 @@ export type SignalNewsImpactProps = {
 };
 
 export function SignalNewsImpact({ className }: SignalNewsImpactProps) {
+  const t = useTranslations("analytics");
   const { items, isLoading, isError } = useAnalyticsLatestNews("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
@@ -45,7 +47,7 @@ export function SignalNewsImpact({ className }: SignalNewsImpactProps) {
   return (
     <>
       <section
-        aria-label="Signal and news impact"
+        aria-label={t("signalNewsImpactAria")}
         className={cn(
           "box-border flex h-auto w-full max-w-none flex-col md:h-[453px]",
           "rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-4 md:px-[20px] md:py-[20px]",
@@ -56,15 +58,15 @@ export function SignalNewsImpact({ className }: SignalNewsImpactProps) {
         <div className="mt-[16px] min-h-0 flex-1 overflow-hidden">
           {isLoading ? (
             <p className="py-8 text-center text-[14px] text-[#909090]">
-              Loading...
+              {t("loading")}
             </p>
           ) : isError ? (
             <p className="py-8 text-center text-[14px] text-[#909090]">
-              Unable to load data.
+              {t("unableToLoadData")}
             </p>
           ) : items.length === 0 ? (
             <p className="py-8 text-center text-[14px] text-[#909090]">
-              No news available.
+              {t("noNewsAvailable")}
             </p>
           ) : (
             <NewsList items={items} onItemSelect={handleItemSelect} />

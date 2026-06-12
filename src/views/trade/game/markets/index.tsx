@@ -1,21 +1,29 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { GameMarketTabSwitcher } from "@/views/trade/game/markets/game-market-tab-switcher";
 import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
-import { resolveDefaultFixtureOutcome } from "@/lib/market/fixture-markets-mapper";
+import {
+  findFixtureMarketOutcome,
+  resolveDefaultFixtureOutcome,
+} from "@/lib/market/fixture-markets-mapper";
 import {
   getFixtureOutcomesForGroup,
   sortFixtureGroupOutcomes
 } from "@/lib/market/build-fixture-markets-snapshot";
 import { useGameStatisticsNotificationSync } from "@/hooks/market/use-game-statistics-notification-sync";
+import { useGameOdds } from "@/hooks/market/use-game-odds";
+import { mapGameOddsToOtherSources } from "@/lib/market/map-game-odds-other-sources";
+import { isGameMarketLiveUpdatesEnabled } from "@/lib/market/live-match";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import {
   mergeLivePricesIntoFixtureOutcomes,
   mergeLivePricesIntoGameOutcomes,
 } from "@/lib/market/merge-live-outcome-prices";
-import { resolveFixtureOutcomesForTab } from "@/lib/market/fixture-tab-outcomes";
+import { resolveAllFixtureOutcomes, resolveFixtureOutcomesForTab } from "@/lib/market/fixture-tab-outcomes";
 import {
   useSelectFixtureOutcome,
   useSelectedFixtureOutcome,
@@ -60,24 +68,32 @@ import { useLiveFixtureTabPrices } from "@/views/trade/game/markets/use-live-fix
 const GAME_MARKET_TABS = [
   {
     id: "moneyline",
-    label: "Moneyline",
+    labelKey: "moneyline",
     iconSrc: GAME_MARKET_TAB_ICONS.moneyline
   },
-  { id: "totals", label: "Totals", iconSrc: GAME_MARKET_TAB_ICONS.totals },
-  { id: "spreads", label: "Spreads", iconSrc: GAME_MARKET_TAB_ICONS.spreads },
+  {
+    id: "totals",
+    labelKey: "totals",
+    iconSrc: GAME_MARKET_TAB_ICONS.totals
+  },
+  {
+    id: "spreads",
+    labelKey: "spreads",
+    iconSrc: GAME_MARKET_TAB_ICONS.spreads
+  },
   {
     id: "halftime",
-    label: "Halftime Results",
+    labelKey: "halftimeResults",
     iconSrc: GAME_MARKET_TAB_ICONS.halftime
   },
   {
     id: "top_scores",
-    label: "Top Scores",
+    labelKey: "topScores",
     iconSrc: GAME_MARKET_TAB_ICONS.top_scores
   }
 ] as const satisfies ReadonlyArray<{
   id: GameMarketTabId;
-  label: string;
+  labelKey: string;
   iconSrc: string;
 }>;
 
@@ -96,6 +112,7 @@ export function GameMarketsSection({
   teamSnapshots,
   onTabChange
 }: GameMarketsSectionProps) {
+  const t = useTranslations("trade");
   const [tab, setTab] = useState<GameMarketTabId>("moneyline");
   const [totalsLineKey, setTotalsLineKey] = useState<string | undefined>(() =>
     resolveDefaultLineKey(findFixtureGroupByType(fixtureMarkets.lines, "total"))
@@ -111,10 +128,33 @@ export function GameMarketsSection({
   const selectFixtureOutcome = useSelectFixtureOutcome();
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
-  const sides = resolveMatchSides(match, teamSnapshots);
+  const liveMatch = useMatchWithLiveState(match);
+  const marketWsEnabled = isGameMarketLiveUpdatesEnabled(liveMatch);
+  const sides = resolveMatchSides(liveMatch, teamSnapshots);
+  const { odds: gameOdds } = useGameOdds({ match: liveMatch });
+
+  const otherSources = useMemo(
+    () =>
+      mapGameOddsToOtherSources({
+        odds: gameOdds,
+        tab,
+        selectedOutcome: selectedOutcome ?? undefined,
+        selectedBinarySide,
+        homeTeamName: sides.home.name,
+        awayTeamName: sides.away.name
+      }),
+    [
+      gameOdds,
+      selectedBinarySide,
+      selectedOutcome,
+      sides.away.name,
+      sides.home.name,
+      tab
+    ]
+  );
 
   useGameStatisticsNotificationSync({
-    match,
+    match: liveMatch,
     homeTeamName: sides.home.name,
     awayTeamName: sides.away.name,
   });
@@ -125,16 +165,20 @@ export function GameMarketsSection({
     () => resolveFixtureOutcomesForTab(fixtureMarkets, tab, activeLineKey),
     [activeLineKey, fixtureMarkets, tab],
   );
+  const allFixtureOutcomes = useMemo(
+    () => resolveAllFixtureOutcomes(fixtureMarkets),
+    [fixtureMarkets],
+  );
 
   useGameMarketWsTokens({
-    activeTabOutcomes,
+    fixtureOutcomes: allFixtureOutcomes,
     gameSnapshot,
-    enabled: true,
+    enabled: marketWsEnabled,
   });
 
-  const { pricesByOutcomeId } = useLiveFixtureTabPrices({
-    outcomes: activeTabOutcomes,
-    enabled: true,
+  const { pricesByOutcomeId, revision: marketWsRevision } = useLiveFixtureTabPrices({
+    outcomes: allFixtureOutcomes,
+    enabled: marketWsEnabled,
   });
 
   const selectDefaultForTab = useCallback(
@@ -151,6 +195,41 @@ export function GameMarketsSection({
     },
     [fixtureMarkets, selectFixtureOutcome]
   );
+
+  useEffect(() => {
+    if (!selectedOutcome) {
+      return;
+    }
+
+    const freshOutcome = findFixtureMarketOutcome(
+      {
+        lines: fixtureMarkets.lines,
+        exactScores: fixtureMarkets.exactScores,
+        halftime: fixtureMarkets.halftime,
+      },
+      selectedOutcome.id
+    );
+
+    if (!freshOutcome) {
+      return;
+    }
+
+    const pricingChanged =
+      freshOutcome.probability !== selectedOutcome.probability ||
+      freshOutcome.yesAsk !== selectedOutcome.yesAsk ||
+      freshOutcome.noAsk !== selectedOutcome.noAsk ||
+      freshOutcome.tokenId !== selectedOutcome.tokenId ||
+      freshOutcome.noTokenId !== selectedOutcome.noTokenId;
+
+    if (pricingChanged) {
+      selectFixtureOutcome(freshOutcome, selectedBinarySide ?? "yes");
+    }
+  }, [
+    fixtureMarkets,
+    selectFixtureOutcome,
+    selectedBinarySide,
+    selectedOutcome,
+  ]);
 
   useEffect(() => {
     if (selectedOutcome) {
@@ -224,7 +303,7 @@ export function GameMarketsSection({
 
   const liveActiveTabOutcomes = useMemo(
     () => mergeLivePricesIntoFixtureOutcomes(activeTabOutcomes, pricesByOutcomeId),
-    [activeTabOutcomes, pricesByOutcomeId],
+    [activeTabOutcomes, pricesByOutcomeId, marketWsRevision],
   );
   const liveGameOutcomes = useMemo(
     () =>
@@ -233,7 +312,7 @@ export function GameMarketsSection({
         activeTabOutcomes,
         pricesByOutcomeId,
       ),
-    [activeTabOutcomes, gameSnapshot.outcomes, pricesByOutcomeId],
+    [activeTabOutcomes, gameSnapshot.outcomes, pricesByOutcomeId, marketWsRevision],
   );
   const summaryConfig = useMemo(
     () =>
@@ -243,8 +322,11 @@ export function GameMarketsSection({
         gameSnapshot,
         totalsLineKey,
         spreadsLineKey,
-        homeLabel: sides.home.name ?? "Home",
-        awayLabel: sides.away.name ?? "Away",
+        homeLabel: sides.home.name ?? t("home"),
+        awayLabel: sides.away.name ?? t("away"),
+        drawLabel: t("draw"),
+        overLabel: t("over"),
+        underLabel: t("under"),
         homeCode: sides.home.code,
         awayCode: sides.away.code,
         liveActiveTabOutcomes,
@@ -262,23 +344,33 @@ export function GameMarketsSection({
       totalsLineKey,
       liveActiveTabOutcomes,
       liveGameOutcomes,
+      t,
     ]
   );
 
   const moneylineGroup = findFixtureGroupByType(fixtureMarkets.lines, "moneyline");
+  const tabItems = useMemo(
+    () =>
+      GAME_MARKET_TABS.map((tabItem) => ({
+        id: tabItem.id,
+        label: t(tabItem.labelKey),
+        iconSrc: tabItem.iconSrc
+      })),
+    [t]
+  );
 
   return (
     <section
       className="mt-[50px] flex flex-col gap-[5px]"
-      aria-label="Match markets"
+      aria-label={t("matchMarkets")}
     >
       <div className="flex min-w-0 items-center justify-between gap-4 px-3 md:px-0">
         <div className="min-w-0 shrink">
           <GameMarketTabSwitcher
-            items={[...GAME_MARKET_TABS]}
+            items={tabItems}
             value={tab}
             onChange={handleTabChange}
-            aria-label="Match market categories"
+            aria-label={t("matchMarketCategories")}
           />
         </div>
         <OrderbookToggle
@@ -294,6 +386,7 @@ export function GameMarketsSection({
           outcomesOverride={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
+          otherSources={otherSources}
           onSelect={handleSelect}
         />
       ) : null}
@@ -307,6 +400,7 @@ export function GameMarketsSection({
           outcomesOverride={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
+          otherSources={otherSources}
           onSelect={handleSelect}
         />
       ) : null}
@@ -320,6 +414,7 @@ export function GameMarketsSection({
           outcomesOverride={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
+          otherSources={otherSources}
           onSelect={handleSelect}
         />
       ) : null}
@@ -329,6 +424,7 @@ export function GameMarketsSection({
           outcomes={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
+          otherSources={otherSources}
           onSelect={handleSelect}
         />
       ) : null}
@@ -338,13 +434,14 @@ export function GameMarketsSection({
           outcomes={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
+          otherSources={otherSources}
           onSelect={handleSelect}
         />
       ) : null}
 
       {chartKind ? (
         <GameProbabilitySection
-          match={match}
+          match={liveMatch}
           snapshots={teamSnapshots}
           gameSnapshot={gameSnapshot}
           fixtureMarkets={fixtureMarkets}
@@ -364,7 +461,7 @@ export function GameMarketsSection({
         />
       ) : null}
 
-      <MarketContextRow match={match} teamSnapshots={teamSnapshots} />
+      <MarketContextRow match={liveMatch} teamSnapshots={teamSnapshots} />
     </section>
   );
 }
@@ -376,6 +473,9 @@ function buildSummaryConfig({
   spreadsLineKey,
   homeLabel,
   awayLabel,
+  drawLabel,
+  overLabel,
+  underLabel,
   homeCode,
   awayCode,
   liveActiveTabOutcomes,
@@ -388,6 +488,9 @@ function buildSummaryConfig({
   spreadsLineKey?: string;
   homeLabel: string;
   awayLabel: string;
+  drawLabel: string;
+  overLabel: string;
+  underLabel: string;
   homeCode?: string;
   awayCode?: string;
   liveActiveTabOutcomes: FixtureMarketOutcome[];
@@ -400,6 +503,7 @@ function buildSummaryConfig({
         liveGameOutcomes,
         homeLabel,
         awayLabel,
+        drawLabel,
         homeCode,
         awayCode
       )
@@ -413,6 +517,7 @@ function buildSummaryConfig({
         liveActiveTabOutcomes,
         homeLabel,
         awayLabel,
+        drawLabel,
         homeCode,
         awayCode
       )
@@ -441,11 +546,11 @@ function buildSummaryConfig({
         outcomes,
         "over",
         "under",
-        "Over",
-        "Under"
+        overLabel,
+        underLabel
       ),
-      binaryPrimaryLabel: "Over",
-      binarySecondaryLabel: "Under"
+      binaryPrimaryLabel: overLabel,
+      binarySecondaryLabel: underLabel
     };
   }
 
@@ -474,7 +579,9 @@ function buildSummaryConfig({
         "home",
         "away",
         homeOutcome?.label ?? homeLabel,
-        awayOutcome?.label ?? awayLabel
+        awayOutcome?.label ?? awayLabel,
+        homeCode,
+        awayCode
       ),
       binaryPrimaryLabel: homeOutcome?.label ?? homeLabel,
       binarySecondaryLabel: awayOutcome?.label ?? awayLabel

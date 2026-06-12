@@ -46,7 +46,7 @@ export interface AuthContextValue {
   openPrivyLogin: () => void;
   closePrivyLogin: () => void;
   /** Call after Privy email OTP succeeds to start the trading setup flow. */
-  completePrivyEmailLogin: () => void;
+  completePrivyEmailLogin: (email: string) => void;
   setLoginMethod: (method: AuthLoginMethod | undefined) => void;
   refreshEligibility: () => Promise<TradingEligibilityView | undefined>;
   openLogin: (method?: AuthLoginMethod) => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;

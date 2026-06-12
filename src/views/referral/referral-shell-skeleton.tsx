@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import {
@@ -22,10 +26,12 @@ function LoadingBlock({ className }: { className?: string }) {
 }
 
 export function ReferralShellSkeleton() {
+  const t = useTranslations("referral");
+
   return (
     <section
       className={referralShellClass}
-      aria-label="Referral program"
+      aria-label={t("referralProgram")}
       aria-busy="true"
     >
       <div className={referralTopGridClass}>

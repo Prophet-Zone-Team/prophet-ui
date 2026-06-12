@@ -2,6 +2,7 @@
 
 import { QRCodeSVG } from "qrcode.react";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import type { SupportedChainOption } from "@/lib/funding/supported-assets";
@@ -50,6 +51,7 @@ export function DepositStableflowQrStep({
   onChainChange,
   onTokenChange,
 }: DepositStableflowQrStepProps) {
+  const t = useTranslations("portfolio.deposit");
   const { getTokenUsdValue } = useDepositContext();
   const [chainDropdownOpen, setChainDropdownOpen] = useState(false);
   const [tokenDropdownOpen, setTokenDropdownOpen] = useState(false);
@@ -76,9 +78,9 @@ export function DepositStableflowQrStep({
 
     try {
       await navigator.clipboard.writeText(depositAddress);
-      toast.success("Address copied");
+      toast.success(t("addressCopied"));
     } catch {
-      toast.error("Could not copy address");
+      toast.error(t("couldNotCopyAddress"));
     }
   };
 
@@ -87,10 +89,10 @@ export function DepositStableflowQrStep({
       <div className="flex items-start gap-3">
         <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-2">
           <FundingSelectorDropdown
-            label="Tokens"
+            label={t("tokens")}
             triggerLabel={
               selectedToken?.symbol ??
-              (tokensLoading ? "Loading…" : "Select token")
+              (tokensLoading ? t("loading") : t("selectToken"))
             }
             disabled={selectorsDisabled || tokensForChain.length === 0}
             open={tokenDropdownOpen}
@@ -147,10 +149,10 @@ export function DepositStableflowQrStep({
           </FundingSelectorDropdown>
 
           <FundingSelectorDropdown
-            label="Chains"
+            label={t("chains")}
             triggerLabel={
               selectedChain?.chainName ??
-              (tokensLoading ? "Loading…" : "Select chain")
+              (tokensLoading ? t("loading") : t("selectChain"))
             }
             disabled={selectorsDisabled || chainOptions.length === 0}
             open={chainDropdownOpen}
@@ -220,7 +222,7 @@ export function DepositStableflowQrStep({
             "flex shrink-0 items-center gap-1 pt-6",
           )}
         >
-          Min ${STABLEFLOW_QR_MIN_DEPOSIT_USD}
+          {t("minLabel", { amount: `$${STABLEFLOW_QR_MIN_DEPOSIT_USD}` })}
         </span>
       </div>
 
@@ -247,7 +249,7 @@ export function DepositStableflowQrStep({
       )}
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm font-[500] text-black">Your deposit address</span>
+        <span className="text-sm font-[500] text-black">{t("yourDepositAddress")}</span>
         <div className={depositStableflowAddressBoxClass}>
           {quoteLoading || !depositAddress ? (
             <div className={depositStableflowAddressSkeletonClass} aria-hidden="true" />
@@ -266,7 +268,7 @@ export function DepositStableflowQrStep({
               className="size-3 shrink-0"
               aria-hidden="true"
             />
-            Copy address
+            {t("copyAddress")}
           </button>
         </div>
       </div>

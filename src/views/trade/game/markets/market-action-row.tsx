@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo, type ReactNode } from "react";
 
 import { formatCompactVolume } from "@/lib/formatters/volume";
@@ -22,6 +23,7 @@ import {
   resolveSpreadVariant,
   resolveTotalVariant
 } from "./fixture-market-actions";
+import { MarketOtherSources, type MarketOtherSourceItem } from "./market-other-sources";
 
 const cardClass = "rounded-[12px] border border-[#EBEBEB] bg-white";
 
@@ -63,7 +65,7 @@ function OutcomeButtons({
 
         return (
           <LineOutcomeButton
-            key={outcome.id}
+            key={`${outcome.id}-${displayPrice ?? "na"}`}
             label={outcome.label}
             price={displayPrice}
             variant={variant}
@@ -86,22 +88,25 @@ function MarketActionRowShell({
   volume,
   lineSelector,
   actions,
+  otherSources,
   className
 }: {
   volume?: number;
   lineSelector?: ReactNode;
   actions: ReactNode;
+  otherSources?: MarketOtherSourceItem[];
   className?: string;
 }) {
+  const t = useTranslations("trade");
   const volumeLabel = formatCompactVolume(volume);
 
   return (
-    <article className={cn(cardClass, "p-3 md:p-[16px]", className)}>
-      <div className="flex items-center gap-2 md:gap-4 flex-col md:flex-row">
+    <article className={cn(cardClass, className)}>
+      <div className="flex flex-col items-center gap-2 p-3 md:flex-row md:gap-4 md:p-[16px]">
         <div className="min-w-[88px] shrink-0">
           {volumeLabel ? (
             <p className="m-0 text-[20px] font-[500] leading-6 text-black">
-              {volumeLabel} Vol.
+              {t("compactVolume", { value: volumeLabel })}
             </p>
           ) : null}
         </div>
@@ -110,10 +115,15 @@ function MarketActionRowShell({
           {lineSelector}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center justify-center md:justify-end gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-center gap-2 md:justify-end">
           {actions}
         </div>
       </div>
+
+      <MarketOtherSources
+        sources={otherSources ?? []}
+        className="border-t border-[#EBEBEB] p-3 md:p-[16px]"
+      />
     </article>
   );
 }
@@ -123,24 +133,28 @@ export function MoneylineActionRow({
   outcomesOverride,
   selectedOutcomeId,
   selectedBinarySide,
+  otherSources,
   onSelect
 }: {
   group?: FixtureMarketGroup;
   outcomesOverride?: FixtureMarketOutcome[];
   selectedOutcomeId?: string;
   selectedBinarySide?: "yes" | "no";
+  otherSources?: MarketOtherSourceItem[];
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
 }) {
-  const outcomes = useMemo(
-    () =>
-      outcomesOverride ??
-      sortFixtureGroupOutcomes(group?.outcomes ?? [], "moneyline"),
-    [group?.outcomes, outcomesOverride]
-  );
+  const outcomes = useMemo(() => {
+    if (outcomesOverride?.length) {
+      return outcomesOverride;
+    }
+
+    return sortFixtureGroupOutcomes(group?.outcomes ?? [], "moneyline");
+  }, [group?.outcomes, outcomesOverride]);
 
   return (
     <MarketActionRowShell
       volume={group?.volume}
+      otherSources={otherSources}
       actions={
         <OutcomeButtons
           outcomes={outcomes}
@@ -157,11 +171,13 @@ export function HalftimeActionRow({
   outcomes,
   selectedOutcomeId,
   selectedBinarySide,
+  otherSources,
   onSelect
 }: {
   outcomes: FixtureMarketOutcome[];
   selectedOutcomeId?: string;
   selectedBinarySide?: "yes" | "no";
+  otherSources?: MarketOtherSourceItem[];
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
 }) {
   const sortedOutcomes = useMemo(
@@ -176,6 +192,7 @@ export function HalftimeActionRow({
   return (
     <MarketActionRowShell
       volume={totalVolume}
+      otherSources={otherSources}
       actions={
         <OutcomeButtons
           outcomes={sortedOutcomes}
@@ -196,6 +213,7 @@ export function LineGroupActionRow({
   outcomesOverride,
   selectedOutcomeId,
   selectedBinarySide,
+  otherSources,
   onSelect
 }: {
   group?: FixtureMarketGroup;
@@ -205,6 +223,7 @@ export function LineGroupActionRow({
   outcomesOverride?: FixtureMarketOutcome[];
   selectedOutcomeId?: string;
   selectedBinarySide?: "yes" | "no";
+  otherSources?: MarketOtherSourceItem[];
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
 }) {
   const lineOptions = useMemo(
@@ -231,6 +250,7 @@ export function LineGroupActionRow({
   return (
     <MarketActionRowShell
       volume={group?.volume}
+      otherSources={otherSources}
       lineSelector={
         lineOptions.length ? (
           <LineSelector

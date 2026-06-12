@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
 import { legalMeta } from "@/config/legal";
+import { defaultLocale } from "@/i18n/config";
 import {
   formatLegalListItem,
   formatLegalSegments,
@@ -85,13 +89,19 @@ function LegalBlocksView({ blocks }: { blocks: LegalBlock[] }) {
 
 export type LegalDocumentPageProps = {
   document: LegalDocument;
+  title: string;
   className?: string;
 };
 
 export function LegalDocumentPage({
   document,
+  title,
   className,
 }: LegalDocumentPageProps) {
+  const t = useTranslations("legal");
+  const locale = useLocale();
+  const showTranslationNotice = locale !== defaultLocale;
+
   return (
     <section
       className={cn(
@@ -100,12 +110,23 @@ export function LegalDocumentPage({
       )}
     >
       <article className="flex flex-col gap-8">
+        {showTranslationNotice ? (
+          <div
+            role="status"
+            className="rounded-[8px] border border-[#EBEBEB] bg-[#F7F7F7] px-4 py-3 text-[13px] font-[400] leading-[150%] text-[#606060]"
+          >
+            {t("translationNotice")}
+          </div>
+        ) : null}
+
         <header className="flex flex-col gap-2 border-b border-[#EBEBEB] pb-6">
           <h1 className="m-0 text-[24px] font-[600] leading-[120%] text-black md:text-[28px]">
-            {formatLegalString(document.title)}
+            {title}
           </h1>
           <p className="m-0 text-[12px] font-[400] leading-[150%] text-[#909090]">
-            Last Updated: {formatLegalString(legalMeta.lastUpdated)}
+            {t("lastUpdated", {
+              date: formatLegalString(legalMeta.lastUpdated),
+            })}
           </p>
         </header>
 

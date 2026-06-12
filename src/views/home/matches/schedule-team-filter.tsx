@@ -2,7 +2,9 @@
 
 import Drawer, { DrawerDirection } from "@/components/drawer";
 import { useDevice } from "@/hooks/common/use-device";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { TeamFlag } from "@/components/teams/team-flag";
@@ -22,6 +24,7 @@ export function ScheduleTeamFilter({
   selectedTeamIds,
   onSelectedTeamIdsChange
 }: ScheduleTeamFilterProps) {
+  const t = useTranslations("home");
   const isMobile = useDevice();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -81,15 +84,15 @@ export function ScheduleTeamFilter({
     <div
       className="flex min-w-0 items-center gap-[14px]"
       role="group"
-      aria-label="Filter by team"
+      aria-label={t("filterByTeam")}
     >
       <span className="hidden md:block shrink-0 text-[16px] font-[500] leading-[19px] text-[#909090]">
-        Filter
+        {t("filter")}
       </span>
 
       <div ref={containerRef} className="relative shrink-0">
         <ScheduleFilterTriggerButton
-          label="Teams"
+          label={t("teams")}
           open={open}
           ariaHaspopup={isMobile ? "dialog" : "listbox"}
           onClick={() => setOpen((current) => !current)}
@@ -110,7 +113,7 @@ export function ScheduleTeamFilter({
         <Drawer
           open={open}
           onClose={() => setOpen(false)}
-          title="Teams"
+          title={t("teams")}
           direction={DrawerDirection.Bottom}
           className="!h-auto max-h-[70dvh]"
         >
@@ -146,11 +149,14 @@ function ScheduleTeamFilterChip({
   team: ScheduleFilterTeam;
   onRemove: () => void;
 }) {
+  const t = useTranslations("home");
+  const displayName = useLocalizedTeamName(team.code, team.name);
+
   return (
     <span className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-[20px] bg-[#EBEBEB] pl-[10px] pr-[14px]">
       <TeamFlag
         code={team.code}
-        name={team.name}
+        name={displayName}
         className="h-[16px] w-[16px] shrink-0 rounded-[2px] text-[16px]"
       />
       <span className="text-[16px] font-[400] leading-[19px] text-black">
@@ -159,7 +165,7 @@ function ScheduleTeamFilterChip({
       <button
         type="button"
         className="inline-flex size-4 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-black"
-        aria-label={`Remove ${team.name} filter`}
+        aria-label={t("removeTeamFilter", { team: displayName })}
         onClick={onRemove}
       >
         <svg
@@ -186,51 +192,69 @@ function ScheduleTeamFilterPanelContent({
   selectedTeamIds: Team["id"][];
   onToggleTeam: (teamId: Team["id"]) => void;
 }) {
+  const t = useTranslations("home");
+
   return (
     <div
       role="listbox"
-      aria-label="Select teams"
+      aria-label={t("selectTeams")}
       aria-multiselectable="true"
       className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3"
     >
-      {teams.map((team) => {
-        const selected = selectedTeamIds.includes(team.id);
-
-        return (
-          <button
-            key={team.id}
-            type="button"
-            role="option"
-            aria-selected={selected}
-            className="flex min-w-0 items-center gap-2.5 rounded-md border-0 bg-transparent p-1 text-left"
-            onClick={() => onToggleTeam(team.id)}
-          >
-            <span
-              className={cn(
-                "inline-flex size-[18px] shrink-0 items-center justify-center rounded-[2px] border border-[#CFCFCF]",
-                selected ? "border-black bg-black" : "bg-white"
-              )}
-              aria-hidden
-            >
-              {selected ? (
-                <Check className="size-3 text-white" strokeWidth={3} />
-              ) : null}
-            </span>
-            <TeamFlag
-              code={team.code}
-              name={team.name}
-              logoUrl={team.logoUrl}
-              className="h-[26px] w-[26px] shrink-0 rounded text-[26px]"
-            />
-            <span className="truncate text-[14px] font-[500] leading-[17px] text-black">
-              {team.name}
-            </span>
-            <span className="shrink-0 text-[14px] font-[500] leading-[17px] text-[#909090]">
-              {team.code}
-            </span>
-          </button>
-        );
-      })}
+      {teams.map((team) => (
+        <ScheduleTeamFilterOption
+          key={team.id}
+          team={team}
+          selected={selectedTeamIds.includes(team.id)}
+          onToggle={() => onToggleTeam(team.id)}
+        />
+      ))}
     </div>
+  );
+}
+
+function ScheduleTeamFilterOption({
+  team,
+  selected,
+  onToggle
+}: {
+  team: ScheduleFilterTeam & { logoUrl?: string };
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const displayName = useLocalizedTeamName(team.code, team.name);
+
+  return (
+    <button
+      type="button"
+      role="option"
+      aria-selected={selected}
+      className="flex min-w-0 items-center gap-2.5 rounded-md border-0 bg-transparent p-1 text-left"
+      onClick={onToggle}
+    >
+      <span
+        className={cn(
+          "inline-flex size-[18px] shrink-0 items-center justify-center rounded-[2px] border border-[#CFCFCF]",
+          selected ? "border-black bg-black" : "bg-white"
+        )}
+        aria-hidden
+      >
+        {selected ? (
+          <Check className="size-3 text-white" strokeWidth={3} />
+        ) : null}
+      </span>
+      <TeamFlag
+        code={team.code}
+        name={displayName}
+        logoUrl={team.logoUrl}
+        className="h-[26px] w-[26px] shrink-0 rounded text-[26px]"
+      />
+      <span className="truncate text-[14px] font-[500] leading-[17px] text-black">
+        {displayName}
+      </span>
+      <span className="shrink-0 text-[14px] font-[500] leading-[17px] text-[#909090]">
+        {team.code}
+      </span>
+    </button>
   );
 }

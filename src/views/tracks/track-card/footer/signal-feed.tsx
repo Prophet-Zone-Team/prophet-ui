@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 
@@ -28,6 +29,7 @@ function renderFeedItems(
 }
 
 export function SignalFeed({ items, className }: SignalFeedProps) {
+  const t = useTranslations("tracks");
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState(false);
@@ -75,7 +77,7 @@ export function SignalFeed({ items, className }: SignalFeedProps) {
   if (items.length === 0) {
     return (
       <p className="m-0 min-w-0 flex-1 truncate text-[16px] font-[400] leading-[20px] text-[#909090]">
-        No related signals available.
+        {t("noRelatedSignals")}
       </p>
     );
   }
@@ -90,7 +92,7 @@ export function SignalFeed({ items, className }: SignalFeedProps) {
         "before:pointer-events-none before:absolute before:inset-y-0 before:right-0 before:z-[1] before:w-16 before:bg-gradient-to-l before:from-[#EDF0F3] before:to-transparent",
         className
       )}
-      aria-label="Related signals"
+      aria-label={t("relatedSignals")}
       aria-live="off"
     >
       <div

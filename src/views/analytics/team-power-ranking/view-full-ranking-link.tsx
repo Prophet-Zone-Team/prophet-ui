@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 
@@ -11,6 +12,8 @@ export function ViewFullRankingLink({
   href = "/team-power-ranking",
   className
 }: ViewFullRankingLinkProps) {
+  const t = useTranslations("analytics");
+
   return (
     <Link
       href={href}
@@ -21,7 +24,7 @@ export function ViewFullRankingLink({
         className
       )}
     >
-      <span>View Full Ranking</span>
+      <span>{t("viewFullRanking")}</span>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="6"

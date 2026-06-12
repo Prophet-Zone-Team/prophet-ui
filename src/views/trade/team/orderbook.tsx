@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { formatShareSize, normalizeLimitPrice } from "@/lib/market/order-math";
@@ -29,6 +30,7 @@ export interface OrderbookProps {
 }
 
 export function Orderbook({ tokenId, className }: OrderbookProps) {
+  const t = useTranslations("trade");
   const { book, loading, error } = useMarketOrderbook(tokenId);
   const setLimitPrice = useSetTradeLimitPrice();
   const setOrderMode = useSetTradeOrderMode();
@@ -69,7 +71,7 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
           className
         )}
       >
-        Order book unavailable for this market.
+        {t("orderbookUnavailable")}
       </div>
     );
   }
@@ -80,14 +82,14 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
         "flex min-h-0 flex-1 flex-col rounded-[12px] border border-[#EBEBEB] bg-white p-3 text-[12px]",
         className
       )}
-      aria-label="Market order book"
+      aria-label={t("marketOrderBookAria")}
     >
       <div className="text-[18px] font-[500] pb-[10px] text-black">
-        Orderbook
+        {t("orderbook")}
       </div>
       <div className="grid shrink-0 grid-cols-2 gap-2 px-1 pb-2 font-[400] leading-[17px] text-[#909090]">
-        <span>Price</span>
-        <span className="text-right">Shares</span>
+        <span>{t("price")}</span>
+        <span className="text-right">{t("shares")}</span>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -95,7 +97,7 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
           <div
             className="flex min-h-0 flex-1 items-center justify-center"
             aria-busy="true"
-            aria-label="Loading order book"
+            aria-label={t("loadingOrderBookAria")}
           >
             <Loader2
               className="h-5 w-5 animate-spin text-[#909090]"
@@ -104,7 +106,7 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
           </div>
         ) : error && !book ? (
           <div className="flex min-h-0 flex-1 items-center justify-center px-1">
-            <p className="text-center text-[#909090]">No Data.</p>
+            <p className="text-center text-[#909090]">{t("noData")}</p>
           </div>
         ) : (
           <>
@@ -130,7 +132,7 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
                   : "—"}
               </span>
               <span className="font-[400] leading-[17px] text-[#909090]">
-                Market Price
+                {t("marketPrice")}
               </span>
             </div>
 
@@ -163,6 +165,7 @@ function OrderbookRow({
   side: "ask" | "bid";
   onSelect: (price: number) => void;
 }) {
+  const t = useTranslations("trade");
   const priceLabel = formatOrderbookDisplayPrice(price);
 
   return (
@@ -175,7 +178,7 @@ function OrderbookRow({
           ? "hover:bg-[#FF674B]/10 active:bg-[#FF674B]/15"
           : "hover:bg-[#65AF14]/10 active:bg-[#65AF14]/15"
       )}
-      aria-label={`Set limit price to ${priceLabel}`}
+      aria-label={t("setLimitPriceTo", { price: priceLabel })}
     >
       <span
         className={cn(

@@ -54,6 +54,7 @@ export interface UserOpenOrder {
   outcome: string;
   created_at: number;
   order_type: string;
+  expiration?: string;
 }
 
 export interface PortfolioSeriesPoint {

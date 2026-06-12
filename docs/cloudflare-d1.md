@@ -48,6 +48,14 @@ In the Worker **Settings → Build**:
 
 Copy required env vars from `.env.example` into **Build variables and secrets** and **Variables & secrets** so `next build` and runtime handlers can reach Polymarket, D1, and odds providers.
 
+If the build fails with `JavaScript heap out of memory` or `Ineffective mark-compacts near heap limit`, add this **Build variable**:
+
+```text
+NODE_OPTIONS=--max-old-space-size=6144
+```
+
+The repo also sets this via `.npmrc` and the `cf:build` script. If memory errors persist, try `8192` locally; on Cloudflare keep headroom below the ~8GB build container cap. `next.config.mjs` enables `experimental.webpackMemoryOptimizations` and limits build CPUs to reduce peak usage.
+
 ### Local / CLI
 
 ```bash

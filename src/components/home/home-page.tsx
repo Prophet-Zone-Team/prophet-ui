@@ -108,7 +108,7 @@ function Hero({
         <div className="hero-actions">
           <PlaceBidButton />
           <div className="hero-secondary-actions">
-            <Link className="hero-link" href="/fifa/matches">
+            <Link className="hero-link" href="/fifa">
               View matches
               <ArrowIcon />
             </Link>
@@ -263,11 +263,6 @@ function Dashboard({
           {teams.slice(0, 16).map((snapshot, index) => (
             <TeamCard key={snapshot.team.id} snapshot={snapshot} rank={index + 1} />
           ))}
-          {teams.length > 16 ? (
-            <Link className="team-card more" href="/teams">
-              <span><span className="more-number">+{teams.length - 16}</span>more teams</span>
-            </Link>
-          ) : null}
         </div>
 
         <div className="footnote">
@@ -363,7 +358,7 @@ function MatchesSection() {
     <section className="panel matches" aria-labelledby="matches-title">
       <div className="section-head">
         <h2 id="matches-title">Upcoming Matches <span className="not-real">(not real)</span></h2>
-        <Link className="matches-link" href="/fifa/matches">View all matches <span aria-hidden="true">›</span></Link>
+        <Link className="matches-link" href="/fifa">View all matches <span aria-hidden="true">›</span></Link>
       </div>
       <div className="match-grid">
         <MatchCard home="Argentina" homeCode="ARG" away="Japan" awayCode="JPN" time="Today · 20:00" odds={["58%", "24%", "18%"]} />

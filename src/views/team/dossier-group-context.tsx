@@ -1,12 +1,16 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+
 import type { TeamDetailGroupPeer } from "@/lib/team/map-team-detail";
+import { cn } from "@/lib/cn";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
   teamPanelClass,
   teamPanelHeadClass,
   teamPanelTitleClass
 } from "@/views/team/team-detail-ui";
-import { useRouter } from "next/navigation";
-import { cn } from "@/lib/cn";
 
 export interface DossierGroupContextProps {
   groupLabel?: string;
@@ -17,20 +21,22 @@ export function DossierGroupContext({
   groupLabel,
   peers
 }: DossierGroupContextProps) {
+  const t = useTranslations("teamDetail");
   const router = useRouter();
 
+  const formatGroupLabel = (label: string) =>
+    label.startsWith("Group") ? label : t("groupLabel", { group: label });
+
   return (
-    <section className={teamPanelClass} aria-label="Group context">
+    <section className={teamPanelClass} aria-label={t("groupContextAria")}>
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Group Context</h2>
+        <h2 className={teamPanelTitleClass}>{t("groupContext")}</h2>
       </div>
       <div className="p-4">
         {groupLabel && peers.length > 0 ? (
           <div className="grid gap-1.5">
             <strong className="rounded-md border border-prophet-line bg-[#f5f9ff] px-2 py-1.5 text-xs font-[500] text-[#125afc]">
-              {groupLabel.startsWith("Group")
-                ? groupLabel
-                : `Group ${groupLabel}`}
+              {formatGroupLabel(groupLabel)}
             </strong>
             {peers.slice(0, 4).map((peer) => (
               <span
@@ -61,8 +67,8 @@ export function DossierGroupContext({
           </div>
         ) : (
           <TeamEmptyState
-            title="Group pending"
-            body="Group context is not available for this team yet."
+            title={t("groupPendingTitle")}
+            body={t("groupPendingBody")}
           />
         )}
       </div>

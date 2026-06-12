@@ -1,3 +1,6 @@
+import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import {
@@ -13,23 +16,25 @@ export type SignalSummaryBarProps = {
 };
 
 export function SignalSummaryBar({ summary, className }: SignalSummaryBarProps) {
+  const t = useTranslations("signal");
+
   return (
     <div
       className={cn("flex flex-wrap items-center gap-[8px]", className)}
     >
       <SignalSummaryTag
-        label="Today's Signal"
+        label={t("todaySignal")}
         count={summary.todaySignal}
         tone="neutral"
       />
       <SignalSummaryTag
-        label="Positive"
+        label={t("positive")}
         count={summary.positive}
         tone="positive"
         icon={<PositiveSentimentIcon />}
       />
       <SignalSummaryTag
-        label="Negative"
+        label={t("negative")}
         count={summary.negative}
         tone="negative"
         icon={<NegativeSentimentIcon />}

@@ -1,4 +1,7 @@
+"use client";
+
 import { Check, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 
@@ -15,6 +18,8 @@ export function SignLegStatusIcon({
   showError = false,
   className
 }: SignLegStatusIconProps) {
+  const t = useTranslations("strategy");
+
   if (status === "signed") {
     return (
       <span
@@ -50,7 +55,7 @@ export function SignLegStatusIcon({
           "inline-flex size-5 shrink-0 items-center justify-center rounded-md border border-[#EBEBEB] bg-white",
           className
         )}
-        aria-label="Signing"
+        aria-label={t("signing")}
       >
         <Loader2 className="size-3 animate-spin text-[#65AF14]" aria-hidden />
       </span>

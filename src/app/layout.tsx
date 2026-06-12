@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { getMessages } from "next-intl/server";
 
 import { AppRoot } from "@/components/runtime/app-root";
 import "@/app/globals.css";
 import { Metadata } from "@/context/rainbowkit/metadata";
+import { LOCALE_COOKIE, resolveLocale } from "@/i18n/config";
 import { isSecureFromHeaders } from "@/lib/runtime/is-secure-app-context";
 import Script from "next/script";
 
@@ -19,11 +21,14 @@ export const metadata = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const requestHeaders = await headers();
+  const cookieStore = await cookies();
   const cookie = requestHeaders.get("cookie");
   const initialSecure = isSecureFromHeaders(requestHeaders);
+  const locale = resolveLocale(cookieStore.get(LOCALE_COOKIE)?.value);
+  const messages = await getMessages();
 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <Script id="crypto-randomuuid-polyfill" strategy="beforeInteractive">
           {`
@@ -55,7 +60,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         </Script>
       </head>
       <body className="bg-[#F9FAFC] min-h-screen">
-        <AppRoot initialSecure={initialSecure} cookie={cookie}>
+        <AppRoot
+          initialSecure={initialSecure}
+          cookie={cookie}
+          initialLocale={locale}
+          initialMessages={messages}
+        >
           {children}
         </AppRoot>
         <Script
@@ -72,7 +82,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-G64CF421WK');
+            gtag('config', 'G-61KQ9XX9HM');
           `}
         </Script>
       </body>
