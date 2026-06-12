@@ -46,7 +46,7 @@ export function ReferralInviteActions({
   const { copiedVisible, copy } = useCopyWithToast();
 
   const handleTwitter = useCallback(() => {
-    const tweetText = t("shareTweetIntro", { link: fullLink });
+    const tweetText = t("shareTweetIntro");
     trackShareClicked({
       target: "x",
       label: "Share on X",
