@@ -38,6 +38,7 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
   cardRef: RefObject<HTMLDivElement | null>;
   shareImageUploadMode: "cache" | "always";
   shareImageCacheKey?: ShareImageCacheKey;
+  modalShellClass?: string;
 };
 
 export function ShareInviteModal({
@@ -53,6 +54,7 @@ export function ShareInviteModal({
   cardRef,
   shareImageUploadMode,
   shareImageCacheKey,
+  modalShellClass,
 }: ShareInviteModalProps) {
   const isMobile = useDevice();
 
@@ -70,6 +72,7 @@ export function ShareInviteModal({
           inviteModalShellClass,
           "relative",
           inviteModalMobileShellClass,
+          modalShellClass,
         )}
       >
         {isMobile ? (
