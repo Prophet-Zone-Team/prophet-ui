@@ -9,11 +9,11 @@ function resolveShareCardRenderOptions(element: HTMLElement) {
     height,
     options: {
       cacheBust: true,
-      pixelRatio: 2,
+      pixelRatio: 1.4,
       width,
       height,
-      canvasWidth: width * 2,
-      canvasHeight: height * 2,
+      canvasWidth: width * 1.4,
+      canvasHeight: height * 1.4,
       style: {
         width: `${width}px`,
         height: `${height}px`,
