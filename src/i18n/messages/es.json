@@ -470,7 +470,7 @@
       "selectChain": "Seleccionar cadena",
       "selectToken": "Seleccionar token",
       "estReceive": "Recepción est.",
-      "quoteUnavailable": "Cotización no disponible; no se muestra la salida estimada.",
+      "quoteUnavailable": "Liquidez insuficiente.",
       "withdrawalSubmitted": "Retiro enviado",
       "unsupportedToken": "El token seleccionado no es compatible con este método de retiro.",
       "amountZero": "Ingresa un monto mayor que cero.",
