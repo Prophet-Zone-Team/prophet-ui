@@ -99,6 +99,7 @@ import { useDisconnect } from "wagmi";
 import { signConfidentialMessage } from "@/lib/confidential/sign-message";
 import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
 import { usePendingFunderUsdc } from "@/hooks/funding";
+import { useMigratePromptStore } from "@/store/use-migrate-prompt-store";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
@@ -248,6 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearAuthState = useCallback(
     async (options?: { error?: string; openModal?: boolean }) => {
       const store = useAuthStore.getState();
+      const migrateStore = useMigratePromptStore.getState();
 
       try {
         await disconnectTradingSession();
@@ -283,6 +285,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setLoginInProgress(false);
       store.setLoginStep(undefined);
       store.setStatus("ready");
+      store.setReadiness(undefined);
+      migrateStore.resetAutoPrompted();
 
       if (options?.error) {
         store.setError(options.error);
