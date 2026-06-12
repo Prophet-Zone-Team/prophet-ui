@@ -40,7 +40,10 @@ export function HomeSectionNav() {
           fromRange: activeHref,
           toRange: href,
           target: href,
-          label: HOME_SECTIONS.find((section) => section.href === href)?.label,
+          label: (() => {
+            const section = HOME_SECTIONS.find((item) => item.href === href);
+            return section ? t(section.labelKey) : undefined;
+          })(),
           section: "home_market_tabs"
         });
         router.push(href);
