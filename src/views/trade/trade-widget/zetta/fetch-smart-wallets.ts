@@ -16,7 +16,7 @@ export async function fetchZettaSmartWallets(
     throw new Error("Event slug is required.");
   }
 
-  const url = `https://zetta.prophet.zone/api/zetta/smart-wallets?event=${encodeURIComponent(slug)}`;
+  const url = `/api/zetta/smart-wallets?event=${encodeURIComponent(slug)}`;
   const response = await fetch(url, {
     signal,
     cache: "no-store"
