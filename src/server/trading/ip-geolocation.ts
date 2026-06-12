@@ -7,7 +7,7 @@ import {
 } from "@/lib/trading/ip-geolocation";
 import { serverFetch } from "@/server/trading/server-fetch";
 
-const DEFAULT_GEOIP_LOOKUP_URL = "https://ipwho.is/{ip}";
+const DEFAULT_GEOIP_LOOKUP_URL = "https://ipwho.is/{ip}"; 
 const GEOIP_LOOKUP_TIMEOUT_MS = 3000;
 
 export type { IpGeoLookupResult };
