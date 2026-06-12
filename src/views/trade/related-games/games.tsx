@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useRelatedGames } from "@/hooks/market/use-related-games";
 import { buildRelatedGamesTeamsQuery } from "@/lib/market/related-games-query";
 import type { TeamMarketSnapshot } from "@/types/market";
@@ -47,6 +49,7 @@ export function RelatedGames({
   snapshots,
   excludeMatchId
 }: RelatedGamesProps) {
+  const t = useTranslations("trade");
   const teamsKey = buildRelatedGamesTeamsQuery(teamNames);
   const { matches, isLoading, isError } = useRelatedGames({
     teamNames,
@@ -59,14 +62,14 @@ export function RelatedGames({
   }
 
   return (
-    <section className={tradeSectionClass} aria-label="Related games">
-      <h2 className={`${tradePanelTitleClass} px-4 py-3`}>Related Games</h2>
+    <section className={tradeSectionClass} aria-label={t("relatedGamesAria")}>
+      <h2 className={`${tradePanelTitleClass} px-4 py-3`}>{t("relatedGames")}</h2>
 
       {isLoading ? (
         <RelatedGamesLoading />
       ) : isError ? (
         <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-          Related games are unavailable right now.
+          {t("relatedGamesUnavailable")}
         </p>
       ) : matches.length > 0 ? (
         <div className="flex flex-col gap-3 px-3">
@@ -81,7 +84,7 @@ export function RelatedGames({
         </div>
       ) : (
         <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-          No related fixtures are scheduled for this team yet.
+          {t("noRelatedFixtures")}
         </p>
       )}
     </section>

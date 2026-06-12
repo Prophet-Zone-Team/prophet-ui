@@ -1,9 +1,10 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import { formatImpactScore } from "@/views/analytics/news/format";
-import {
-  NegativeSentimentIcon,
-  PositiveSentimentIcon
-} from "@/views/analytics/news/icons";
+import { SentimentColor, SentimentIcon } from "@/views/analytics/news/icons";
 import type { NewsSentiment } from "@/views/analytics/news/types";
 
 export type SignalNewsDetailMetadataRowProps = {
@@ -14,14 +15,6 @@ export type SignalNewsDetailMetadataRowProps = {
   className?: string;
 };
 
-function SentimentIcon({ sentiment }: { sentiment: NewsSentiment }) {
-  if (sentiment === "negative") {
-    return <NegativeSentimentIcon />;
-  }
-
-  return <PositiveSentimentIcon />;
-}
-
 export function SignalNewsDetailMetadataRow({
   sentiment,
   impactScore,
@@ -29,7 +22,7 @@ export function SignalNewsDetailMetadataRow({
   categoryLabel,
   className
 }: SignalNewsDetailMetadataRowProps) {
-  const isPositiveImpact = sentiment === "positive";
+  const t = useTranslations("signal");
 
   return (
     <dl
@@ -40,7 +33,7 @@ export function SignalNewsDetailMetadataRow({
     >
       <div className="flex items-center gap-[8px]">
         <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
-          Impact
+          {t("impact")}
         </dt>
         <dd className="m-0 flex items-center gap-[4px]">
           <span className="shrink-0 [&_svg]:size-[16px]">
@@ -49,7 +42,7 @@ export function SignalNewsDetailMetadataRow({
           <span
             className={cn(
               "text-[14px] font-[500] leading-[17px]",
-              isPositiveImpact ? "text-[#7BCA25]" : "text-[#FF674B]"
+              SentimentColor({ sentiment })
             )}
           >
             {formatImpactScore(impactScore)}
@@ -59,7 +52,7 @@ export function SignalNewsDetailMetadataRow({
 
       <div className="flex items-center gap-[8px]">
         <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
-          Related
+          {t("related")}
         </dt>
         <dd className="m-0 text-[14px] font-[400] leading-[17px] text-black">
           {relatedLabel}
@@ -68,7 +61,7 @@ export function SignalNewsDetailMetadataRow({
 
       <div className="flex items-center gap-[8px]">
         <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
-          Categories
+          {t("categories")}
         </dt>
         <dd className="m-0 text-[14px] font-[400] leading-[17px] text-black">
           {categoryLabel}

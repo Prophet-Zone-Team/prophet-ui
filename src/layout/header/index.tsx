@@ -7,8 +7,10 @@ import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import { WalletMenuButton } from "@/layout/header/wallet-menu-button";
 import NavBar from "./navigation-bar";
+import { useTranslations } from "next-intl";
 
 export function AppHeader() {
+  const t = useTranslations("common");
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
@@ -50,7 +52,7 @@ export function AppHeader() {
             <Link
               className="inline-flex items-center gap-[6px]"
               href={homeLink}
-              aria-label="Prophet home"
+              aria-label={t("prophetHome")}
             >
               <img
                 src="/logo.svg"

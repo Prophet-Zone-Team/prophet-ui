@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useDevice } from "@/hooks/common/use-device";
 import { cn } from "@/lib/cn";
 import {
@@ -10,32 +12,36 @@ import {
 } from "@/views/portfolio/deposit/deposit-ui";
 import type { DepositEntryTab } from "@/views/portfolio/deposit/types";
 
-const TABS: Array<{
-  id: DepositEntryTab;
-  label: string;
-  disabled?: boolean;
-  activeWidthClass?: string;
-}> = [
-    { id: "crypto", label: "By Crypto", activeWidthClass: "md:min-w-[140px]" },
-    {
-      id: "private_balance",
-      label: "Private Balance",
-      activeWidthClass: "md:min-w-[160px]",
-    },
-    { id: "cash", label: "By Cash", disabled: true },
-  ];
-
 export interface DepositSourceTabsProps {
   value: DepositEntryTab;
   onChange: (tab: DepositEntryTab) => void;
 }
 
 export function DepositSourceTabs({ value, onChange }: DepositSourceTabsProps) {
+  const tWallet = useTranslations("wallet");
+  const t = useTranslations("portfolio.deposit");
   const isMobile = useDevice();
 
+  const tabs: Array<{
+    id: DepositEntryTab;
+    label: string;
+    shortLabel?: string;
+    disabled?: boolean;
+    activeWidthClass?: string;
+  }> = [
+    { id: "crypto", label: t("byCrypto"), activeWidthClass: "md:min-w-[140px]" },
+    {
+      id: "private_balance",
+      label: tWallet("privateBalance"),
+      shortLabel: tWallet("privateBalanceShort"),
+      activeWidthClass: "md:min-w-[160px]",
+    },
+    { id: "cash", label: t("byCash"), disabled: true },
+  ];
+
   return (
-    <div className={depositSourceTabsTrackClass} role="tablist" aria-label="Deposit source">
-      {TABS.map((tab) => {
+    <div className={depositSourceTabsTrackClass} role="tablist" aria-label={t("sourceTabsAria")}>
+      {tabs.map((tab) => {
         const isActive = value === tab.id;
 
         return (
@@ -57,7 +63,7 @@ export function DepositSourceTabs({ value, onChange }: DepositSourceTabsProps) {
               }
             }}
           >
-            {isMobile && tab.label === "Private Balance" ? "Private" : tab.label}
+            {isMobile && tab.shortLabel ? tab.shortLabel : tab.label}
           </button>
         );
       })}

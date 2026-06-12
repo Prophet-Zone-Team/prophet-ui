@@ -13,13 +13,13 @@ import type { FixtureMarketOutcome, GameMarketSnapshot } from "@/types/market";
 import { resolveOrderbookTokenId } from "@/views/trade/game/markets/fixture-market-actions";
 
 export interface UseGameMarketWsTokensOptions {
-  activeTabOutcomes: FixtureMarketOutcome[];
+  fixtureOutcomes: FixtureMarketOutcome[];
   gameSnapshot: GameMarketSnapshot;
   enabled: boolean;
 }
 
 export function useGameMarketWsTokens({
-  activeTabOutcomes,
+  fixtureOutcomes,
   gameSnapshot,
   enabled,
 }: UseGameMarketWsTokensOptions): void {
@@ -51,7 +51,7 @@ export function useGameMarketWsTokens({
   ]);
 
   const tokenIds = useMemo(() => {
-    const ids = activeTabOutcomes.flatMap((outcome) => [
+    const ids = fixtureOutcomes.flatMap((outcome) => [
       outcome.tokenId,
       outcome.noTokenId,
     ]);
@@ -61,7 +61,7 @@ export function useGameMarketWsTokens({
     }
 
     return ids;
-  }, [activeTabOutcomes, orderbookTokenId]);
+  }, [fixtureOutcomes, orderbookTokenId]);
 
   useRegisterMarketWsTokens("game-markets", tokenIds, { enabled });
 }

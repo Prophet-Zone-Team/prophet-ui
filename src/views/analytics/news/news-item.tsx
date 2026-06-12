@@ -1,8 +1,14 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedRelativeTime } from "@/hooks/i18n/use-localized-relative-time";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 
 import { formatImpactScore } from "./format";
-import { NegativeSentimentIcon, PositiveSentimentIcon } from "./icons";
+import { SentimentColor, SentimentIcon } from "./icons";
 import { NewsItemThumbnail } from "./news-item-thumbnail";
 import type { NewsImpactItem } from "./types";
 
@@ -12,19 +18,12 @@ export type NewsItemProps = {
   className?: string;
 };
 
-function SentimentIcon({
-  sentiment
-}: {
-  sentiment: NewsImpactItem["sentiment"];
-}) {
-  if (sentiment === "negative") {
-    return <NegativeSentimentIcon />;
-  }
-
-  return <PositiveSentimentIcon />;
-}
-
 export function NewsItem({ item, onSelect, className }: NewsItemProps) {
+  const t = useTranslations("signal");
+  const teamDisplayName = useLocalizedTeamName(item.teamCode, item.teamName);
+  const publishedAtLabel = useLocalizedRelativeTime(item.publishedAt);
+  const impactLabel = formatImpactScore(item.impactScore);
+
   return (
     <article
       className={cn(
@@ -33,13 +32,17 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
         onSelect && "cursor-pointer duration-150 hover:bg-[#EDEDED]",
         className
       )}
-      aria-label={`${item.teamName}: ${item.headline}. Impact ${formatImpactScore(item.impactScore)}`}
+      aria-label={t("newsCardAria", {
+        teamName: teamDisplayName,
+        headline: item.headline,
+        impact: impactLabel
+      })}
     >
       {onSelect ? (
         <button
           type="button"
           className="absolute inset-0 z-[1] rounded-[12px] opacity-0"
-          aria-label={`Open details for ${item.headline}`}
+          aria-label={t("openDetailsFor", { headline: item.headline })}
           onClick={onSelect}
         />
       ) : null}
@@ -60,12 +63,12 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
                 fallback={false}
               />
               <span className="truncate text-base font-[500] leading-[19px] text-black md:text-[18px] md:leading-[21px]">
-                {item.teamName}
+                {teamDisplayName}
               </span>
               <SentimentIcon sentiment={item.sentiment} />
             </div>
             <span className="shrink-0 whitespace-nowrap text-[12px] font-[400] leading-[14px] text-[#909090] md:hidden">
-              {item.publishedAtLabel}
+              {publishedAtLabel}
             </span>
           </div>
 
@@ -76,40 +79,37 @@ export function NewsItem({ item, onSelect, className }: NewsItemProps) {
           <p
             className="m-0 mt-1 line-clamp-3 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-[4px] md:line-clamp-2"
             dangerouslySetInnerHTML={{ __html: item.summary }}
-          >
-          </p>
+          ></p>
 
           <div className="mt-2 flex items-baseline justify-between md:hidden">
             <span className="text-[12px] font-[400] leading-[14px] text-[#909090]">
-              Impact
+              {t("impact")}
             </span>
             <span
               className={cn(
                 "text-base font-[500] leading-[19px]",
-                item.sentiment === "positive" ? "text-[#7BCA25]" : "",
-                item.sentiment === "negative" ? "text-[#FF674B]" : "",
+                SentimentColor({ sentiment: item.sentiment })
               )}
             >
-              {formatImpactScore(item.impactScore)}
+              {impactLabel}
             </span>
           </div>
         </div>
 
         <div className="hidden min-w-[66px] shrink-0 flex-col items-end md:flex">
           <span className="whitespace-nowrap text-[12px] font-[400] leading-[14px] text-[#909090]">
-            {item.publishedAtLabel}
+            {publishedAtLabel}
           </span>
           <span
             className={cn(
               "mt-[8px] text-[18px] font-[500] leading-[21px]",
-              item.sentiment === "positive" ? "text-[#7BCA25]" : "",
-              item.sentiment === "negative" ? "text-[#FF674B]" : "",
+              SentimentColor({ sentiment: item.sentiment })
             )}
           >
-            {formatImpactScore(item.impactScore)}
+            {impactLabel}
           </span>
           <span className="mt-[2px] text-[12px] font-[400] leading-[14px] text-[#909090]">
-            Impact
+            {t("impact")}
           </span>
         </div>
       </div>

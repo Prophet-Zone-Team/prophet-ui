@@ -131,6 +131,34 @@ export interface ProphetGetGameStatisticsData {
   statistics?: string;
 }
 
+/** Single odds value from GET /v1/game/odds bookmaker bets. */
+export interface ProphetGameOddsValue {
+  value: string;
+  odd: string;
+}
+
+/** Bet group within a bookmaker odds entry. */
+export interface ProphetGameOddsBet {
+  id: number;
+  name: string;
+  values: ProphetGameOddsValue[];
+}
+
+/** Bookmaker odds entry from GET /v1/game/odds. */
+export interface ProphetGameOddsBookmaker {
+  name: string;
+  bets: ProphetGameOddsBet[];
+}
+
+/** GET /v1/game/odds — bookmaker odds grouped by market category. */
+export interface ProphetGetGameOddsData {
+  Moneyline?: ProphetGameOddsBookmaker[];
+  Totals?: ProphetGameOddsBookmaker[];
+  Spreads?: ProphetGameOddsBookmaker[];
+  HalftimeResults?: ProphetGameOddsBookmaker[];
+  ExactScore?: ProphetGameOddsBookmaker[];
+}
+
 export type ProphetGameStatisticValue = number | string | null;
 
 export interface ProphetGameStatisticItem {
@@ -499,6 +527,7 @@ export interface ProphetAnalyticsNewsArticle {
   fetched_at?: string;
   language?: string;
   score?: number;
+  impact_signal?: string;
   category?: string;
   reasons_json?: string;
   matched_teams_json?: string;
@@ -549,7 +578,7 @@ export interface ProphetAnalyticsTopCategoryItem {
 }
 
 export interface ProphetAnalyticsNewsImpact {
-  high_impact?: number;
+  today_signal?: number;
   positive?: number;
   negative?: number;
   neutral?: number;

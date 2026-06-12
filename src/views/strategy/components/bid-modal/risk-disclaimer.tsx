@@ -1,8 +1,9 @@
+"use client";
+
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
-
-import { STRATEGY_BID_RISK_DISCLAIMER } from "./constants";
 
 export type RiskDisclaimerProps = {
   checked: boolean;
@@ -15,6 +16,8 @@ export function RiskDisclaimer({
   onCheckedChange,
   className
 }: RiskDisclaimerProps) {
+  const t = useTranslations("strategy");
+
   return (
     <label
       className={cn(
@@ -42,7 +45,7 @@ export function RiskDisclaimer({
         </span>
       </span>
       <span className="font-[Sora] text-sm font-light leading-[18px] text-[#909090]">
-        {STRATEGY_BID_RISK_DISCLAIMER}
+        {t("riskDisclaimer")}
       </span>
     </label>
   );

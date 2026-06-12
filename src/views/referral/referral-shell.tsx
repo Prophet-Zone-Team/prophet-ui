@@ -1,4 +1,8 @@
-import type { ReferralActivityRow, ReferralContent } from "@/types/referral";
+"use client";
+
+import { useTranslations } from "next-intl";
+
+import type { ReferralContent } from "@/types/referral";
 
 import { ReferralActivityPanel } from "./referral-activity-panel";
 import { ReferralKickbackCard } from "./referral-kickback-card";
@@ -24,8 +28,10 @@ export function ReferralShell({
   onInviteFriends,
   onConnectWallet,
 }: ReferralShellProps) {
+  const t = useTranslations("referral");
+
   return (
-    <section className={referralShellClass} aria-label="Referral program">
+    <section className={referralShellClass} aria-label={t("referralProgram")}>
       <div className={referralTopGridClass}>
         <ReferralRewardsCard rewards={rewards} />
         <ReferralKickbackCard

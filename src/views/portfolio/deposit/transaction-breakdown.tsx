@@ -1,11 +1,13 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import { formatNumber } from "@/utils";
 import {
   depositBreakdownBoxClass,
   depositBreakdownRowClass,
 } from "@/views/portfolio/deposit/deposit-ui";
-import { Loader2 } from "lucide-react";
 
 export interface TransactionBreakdownProps {
   loading?: boolean;
@@ -22,6 +24,7 @@ export function TransactionBreakdown({
   maxSlippagePercent,
   poweredByLogoSrc,
 }: TransactionBreakdownProps) {
+  const t = useTranslations("portfolio.deposit");
   const networkDisplay =
     loading || networkCostUsd === undefined
       ? "--"
@@ -36,28 +39,28 @@ export function TransactionBreakdown({
   return (
     <div className={depositBreakdownBoxClass}>
       <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="m-0 text-sm text-[#909090]">Transaction breakdown</p>
+        <p className="m-0 text-sm text-[#909090]">{t("transactionBreakdown")}</p>
         {poweredByLogoSrc ? (
           <div className="flex items-center gap-1.5">
-            <span className="text-sm text-[#909090]">Powered by</span>
+            <span className="text-sm text-[#909090]">{t("poweredBy")}</span>
             <img
               src={poweredByLogoSrc}
-              alt="Stableflow"
+              alt={t("stableflowAlt")}
               className="h-4 w-auto object-contain"
             />
           </div>
         ) : null}
       </div>
       <div className={depositBreakdownRowClass}>
-        <span>Network cost</span>
+        <span>{t("networkCost")}</span>
         <span>{loading ? (<Loader2 className="h-4 w-4 animate-spin" />) : networkDisplay}</span>
       </div>
       <div className={depositBreakdownRowClass}>
-        <span>Price impact</span>
+        <span>{t("priceImpact")}</span>
         <span>{loading ? (<Loader2 className="h-4 w-4 animate-spin" />) : priceImpactDisplay}</span>
       </div>
       <div className={depositBreakdownRowClass}>
-        <span>Max slippage</span>
+        <span>{t("maxSlippage")}</span>
         <span>{loading ? (<Loader2 className="h-4 w-4 animate-spin" />) : slippageDisplay}</span>
       </div>
     </div>

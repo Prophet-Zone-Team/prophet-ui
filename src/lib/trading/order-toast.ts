@@ -8,6 +8,8 @@ import { formatOrderFundingFailureMessage } from "@/lib/trading/order-funding-ch
 import type { UserOpenOrder } from "@/lib/portfolio/types";
 import { FetchJsonError } from "@/lib/team/client-fetch";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import { getRuntimeTranslator } from "@/lib/i18n/runtime-messages";
+import { translateTradeMessage } from "@/views/trade/trade-widget/trade-i18n";
 import type {
   BidTradeSide,
   OrderOutcomeSide,
@@ -23,42 +25,54 @@ export interface OrderToastSummaryInput {
   teamName?: string;
 }
 
-const WALLET_REJECTION_MESSAGE = "Signature request was cancelled.";
-
 export function formatOrderToastSummary(input: OrderToastSummaryInput): string {
-  const outcomeLabel = input.outcomeSide === "yes" ? "Yes" : "No";
+  const t = getRuntimeTranslator("toast");
+  const tTrade = getRuntimeTranslator("trade");
+  const outcomeLabel = input.outcomeSide === "yes" ? tTrade("yes") : tTrade("no");
   const prefix = input.teamName ? `${input.teamName} · ` : "";
 
   if (input.tradeSide === "sell") {
-    return `${prefix}Sell ${outcomeLabel} · ${formatShareSize(input.shareSize)} shares`;
+    return `${prefix}${t("sellShares", {
+      outcome: outcomeLabel,
+      shares: formatShareSize(input.shareSize)
+    })}`;
   }
 
   const buyVerb =
-    input.variant === "team" ? "Bid for" : "Buy";
+    input.variant === "team" ? t("bidFor") : tTrade("buy");
 
-  return `${prefix}${buyVerb} ${outcomeLabel} · ${formatTeamDetailMoney(input.estimatedTotalCost)} est. cost`;
+  return `${prefix}${t("buyOutcome", {
+    verb: buyVerb,
+    outcome: outcomeLabel,
+    cost: formatTeamDetailMoney(input.estimatedTotalCost)
+  })}`;
 }
 
 export function resolveOrderErrorMessage(error: unknown): string {
+  const t = getRuntimeTranslator("common");
+
   if (isUserRejectedRequest(error)) {
-    return WALLET_REJECTION_MESSAGE;
+    return t("signatureCancelled");
   }
 
   const funding = extractOrderFundingFromError(error);
   if (funding) {
     const fundingMessage = formatOrderFundingFailureMessage(funding);
     if (fundingMessage) {
-      return fundingMessage;
+      return translateTradeMessage(
+        fundingMessage,
+        getRuntimeTranslator("trade")
+      );
     }
   }
 
   const message = error instanceof Error ? error.message : String(error);
 
   if (isWalletRejectionMessage(message)) {
-    return WALLET_REJECTION_MESSAGE;
+    return t("signatureCancelled");
   }
 
-  return message;
+  return translateTradeMessage(message, getRuntimeTranslator("trade"));
 }
 
 export function showOrderSubmittedToast(
@@ -68,15 +82,16 @@ export function showOrderSubmittedToast(
     onViewPortfolio?: () => void;
   }
 ): void {
+  const t = getRuntimeTranslator("toast");
   const description = options?.orderId
     ? `${summary} · ${truncateOrderId(options.orderId)}`
     : summary;
 
-  toast.success("Order submitted", {
+  toast.success(t("orderSubmitted"), {
     description,
     action: options?.onViewPortfolio
       ? {
-          label: "View portfolio",
+          label: t("viewPortfolio"),
           onClick: options.onViewPortfolio
         }
       : undefined
@@ -84,14 +99,16 @@ export function showOrderSubmittedToast(
 }
 
 export function showOrderErrorToast(error: unknown): void {
-  toast.error("Order failed", {
+  const t = getRuntimeTranslator("toast");
+  toast.error(t("orderFailed"), {
     description: resolveOrderErrorMessage(error)
   });
 }
 
 export function formatOrderCancelToastSummary(order: UserOpenOrder): string {
+  const tTrade = getRuntimeTranslator("trade");
   const outcomeLabel = order.outcome || "—";
-  const sideLabel = order.side?.toLowerCase() === "sell" ? "Sell" : "Buy";
+  const sideLabel = order.side?.toLowerCase() === "sell" ? tTrade("sell") : tTrade("buy");
   const price = Number(order.price);
   const priceLabel = Number.isFinite(price)
     ? formatSharePrice(price)
@@ -106,7 +123,8 @@ export function formatOrderCancelToastSummary(order: UserOpenOrder): string {
 }
 
 export function showOrderCancelledToast(summary: string): void {
-  toast.success("Order cancelled", {
+  const t = getRuntimeTranslator("toast");
+  toast.success(t("orderCancelled"), {
     description: summary
   });
 }
@@ -115,13 +133,15 @@ export function formatMarketCancelToastSummary(
   marketTitle: string,
   count: number
 ): string {
-  const orderLabel = count === 1 ? "order" : "orders";
+  const t = getRuntimeTranslator("toast");
+  const orderLabel = count === 1 ? t("order") : t("orders");
 
   return `${marketTitle} · ${count} ${orderLabel}`;
 }
 
 export function showMarketOrdersCancelledToast(summary: string): void {
-  toast.success("Orders cancelled", {
+  const t = getRuntimeTranslator("toast");
+  toast.success(t("ordersCancelled"), {
     description: summary
   });
 }
@@ -130,8 +150,9 @@ export function showPartialMarketCancelToast(
   cancelledCount: number,
   failedCount: number
 ): void {
-  toast.warning("Some orders were not cancelled", {
-    description: `${cancelledCount} cancelled, ${failedCount} failed`
+  const t = getRuntimeTranslator("toast");
+  toast.warning(t("someOrdersNotCancelled"), {
+    description: t("cancelledFailed", { cancelled: cancelledCount, failed: failedCount })
   });
 }
 

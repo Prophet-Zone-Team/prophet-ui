@@ -99,6 +99,21 @@ export function useGameTradingMetadata({
   );
   const [loadingTab, setLoadingTab] = useState<GameMarketTabId | null>(null);
 
+  useEffect(() => {
+    setMatch(initialMatch);
+    setGameSnapshot(initialGameSnapshot);
+    setFixtureMarkets(initialFixtureMarkets);
+
+    const moneylineReady = tabTradingDataLoaded(
+      "moneyline",
+      initialMatch,
+      initialFixtureMarkets,
+    );
+
+    setLoadedTabs(moneylineReady ? new Set(["moneyline"]) : new Set());
+    setLoadingTab(null);
+  }, [initialFixtureMarkets, initialGameSnapshot, initialMatch]);
+
   const loadTabTradingData = useCallback(
     async (tab: GameMarketTabId) => {
       const eventSlug = resolveSiblingEventSlugForTab(tab, siblingEventSlugs);

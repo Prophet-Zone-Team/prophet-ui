@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Pagination } from "@/components/pagination/pagination";
 import { cn } from "@/lib/cn";
@@ -22,17 +23,17 @@ import { PortfolioStrategyList } from "@/views/portfolio/strategy";
 import { portfolioActivityCardClass } from "@/views/portfolio/portfolio-ui";
 import type { PortfolioLoadOptions } from "@/views/portfolio/use-portfolio-data";
 
-const PORTFOLIO_TABS = [
-  { id: "position", label: "Position" },
-  { id: "open-order", label: "Open Order" },
-  { id: "strategy", label: "Strategy" },
-  { id: "history", label: "History" }
+const PORTFOLIO_TAB_IDS = [
+  "position",
+  "open-order",
+  "strategy",
+  "history"
 ] as const;
 
-type PortfolioTabId = (typeof PORTFOLIO_TABS)[number]["id"];
+type PortfolioTabId = (typeof PORTFOLIO_TAB_IDS)[number];
 
 function parsePortfolioTab(value: string | null): PortfolioTabId | null {
-  if (value && PORTFOLIO_TABS.some((item) => item.id === value)) {
+  if (value && PORTFOLIO_TAB_IDS.some((item) => item === value)) {
     return value as PortfolioTabId;
   }
 
@@ -82,10 +83,21 @@ export function PortfolioActivityTabs({
   loadOpenOrders,
   loadActivityHistory
 }: PortfolioActivityTabsProps) {
+  const t = useTranslations("portfolio");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const tab = parsePortfolioTab(searchParams.get("tab")) ?? "position";
+  const portfolioTabs = useMemo(
+    () =>
+      [
+        { id: "position" as const, label: t("tabPosition") },
+        { id: "open-order" as const, label: t("tabOpenOrder") },
+        { id: "strategy" as const, label: t("tabStrategy") },
+        { id: "history" as const, label: t("tabHistory") }
+      ] satisfies { id: PortfolioTabId; label: string }[],
+    [t]
+  );
   const [positionPage, setPositionPage] = useState(1);
   const [openOrderPage, setOpenOrderPage] = useState(1);
   const loadedTabsRef = useRef<Set<PortfolioTabId>>(new Set());
@@ -245,14 +257,14 @@ export function PortfolioActivityTabs({
   return (
     <section
       className={portfolioActivityCardClass}
-      aria-label="Portfolio activity"
+      aria-label={t("portfolioActivity")}
     >
       <div className="shrink-0 overflow-x-auto border-b border-[#EBEBEB] px-3 pt-3 md:px-4">
         <TabSwitcher
-          items={[...PORTFOLIO_TABS]}
+          items={portfolioTabs}
           value={tab}
           onChange={handleTabChange}
-          aria-label="Portfolio activity"
+          aria-label={t("portfolioActivity")}
           size="compact"
           className="min-w-max gap-4 md:gap-6"
         />

@@ -13,6 +13,7 @@ import type {
   ProphetSubmitStrategyRequest
 } from "@/types/prophet-api";
 import { TEAM_MARKET_BUY_ORDER_TYPE_EXPORT } from "@/lib/trading/team-market-buy-preview";
+import { getRuntimeTranslator } from "@/lib/i18n/runtime-messages";
 import {
   formatOrderToastSummary,
   resolveOrderErrorMessage,
@@ -160,21 +161,29 @@ export function summarizeStrategyBidSubmission(
   result: SubmitBatchOrderResult,
   strategyName: string
 ) {
+  const t = getRuntimeTranslator("strategy");
+
   if (result.failureCount === 0) {
     showOrderSubmittedToast(
-      `${result.successCount} strategy orders submitted for ${strategyName}.`,
+      t("strategyOrdersSubmitted", {
+        count: result.successCount,
+        strategyName
+      }),
       { onViewPortfolio: () => window.location.assign("/portfolio") }
     );
     return;
   }
 
   if (result.successCount === 0) {
-    showOrderErrorToast("Strategy orders could not be submitted. Review failed legs and try again.");
+    showOrderErrorToast(t("strategyOrdersSubmitFailed"));
     return;
   }
 
   showOrderErrorToast(
-    `${result.successCount} orders submitted, ${result.failureCount} failed. Review failed legs and try again.`
+    t("strategyOrdersPartialFailure", {
+      successCount: result.successCount,
+      failureCount: result.failureCount
+    })
   );
 }
 

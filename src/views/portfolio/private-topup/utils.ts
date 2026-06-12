@@ -122,16 +122,18 @@ export function computeUsdFromTokenAmount(
   return tokenAmountToUsdFromPrice(tokenAmount, price);
 }
 
+export type PrivateTopupAmountErrorKey = "amountZero" | "amountExceedsBalance";
+
 export function validatePrivateTopupAmount(
   tokenAmount: string | undefined,
   maxAmount: string,
-): string | undefined {
+): PrivateTopupAmountErrorKey | undefined {
   if (tokenAmount === undefined || Big(tokenAmount).lte(0)) {
-    return "Enter an amount greater than zero.";
+    return "amountZero";
   }
 
   if (Big(tokenAmount).gt(maxAmount || 0)) {
-    return "Amount exceeds available balance.";
+    return "amountExceedsBalance";
   }
 
   return undefined;

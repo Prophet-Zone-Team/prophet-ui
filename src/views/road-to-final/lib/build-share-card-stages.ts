@@ -40,10 +40,10 @@ const STAGE_LAYOUT: Array<{
   round?: KnockoutRound;
 }> = [
   { key: "FINAL", side: "left", round: "FINAL" },
-  { key: "QF", side: "left", round: "QF" },
-  { key: "R32", side: "left", round: "R32" },
   { key: "SF", side: "right", round: "SF" },
+  { key: "QF", side: "left", round: "QF" },
   { key: "R16", side: "right", round: "R16" },
+  { key: "R32", side: "left", round: "R32" },
   { key: "GROUP", side: "right" },
 ];
 

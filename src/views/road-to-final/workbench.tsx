@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { CopyButton } from "@/components/feedback/copy-button";
 import { trackCopyLinkClicked } from "@/lib/analytics/tracking";
 import type { FinishType, PathResult } from "@/types/market";
@@ -9,19 +10,19 @@ import type { WorldCup2026Group } from "@/data/world-cup-2026/groups";
 import { BracketPanel } from "./bracket-panel";
 import { GroupPanel } from "./group-panel";
 import { ResultPanel } from "./result-panel";
-import { SummaryPanel } from "./summary-panel";
 import type { RoadStep } from "./step-stepper";
 import { StepStepper } from "./step-stepper";
 import type { ReferralKickback } from "@/types/referral";
 
 import type { GroupPlacements, KnockoutWinners } from "./types";
+import { translateSortMethod } from "./lib/method-keys";
 import { Panel } from "./ui/panel";
 
 export function RoadWorkbench({
   activeGroup,
   activeStep,
   advancingThirdGroups,
-  calculationError,
+  calculationErrorKey,
   championTeamId,
   funderAddress,
   kickback,
@@ -63,7 +64,7 @@ export function RoadWorkbench({
   activeGroup: WorldCup2026Group;
   activeStep: RoadStep;
   advancingThirdGroups: string[];
-  calculationError?: string;
+  calculationErrorKey?: string;
   championTeamId?: string;
   funderAddress?: string;
   kickback?: ReferralKickback;
@@ -102,19 +103,20 @@ export function RoadWorkbench({
   thirdPlaceOption?: ThirdPlaceAllocationOption;
   viewMode: "graph" | "list";
 }) {
+  const t = useTranslations("roadToFinal");
+
   return (
     <div>
       <header className="mb-[18px] flex flex-col gap-[14px] md:flex-row md:items-end md:justify-between">
         <div>
           <p className="m-0 text-[12px] font-[700] uppercase tracking-wide text-[#C2410C]">
-            Road to Final · 2026
+            {t("pageEyebrow")}
           </p>
           <h1 className="m-0 mt-[6px] text-[clamp(28px,4vw,48px)] font-[400] leading-[1.02] text-black">
-            Build your World Cup champion route in three steps
+            {t("pageTitle")}
           </h1>
           <p className="m-0 mt-[8px] max-w-[760px] text-[15px] leading-[1.55] text-[#909090]">
-            Set all 12 group standings, pick knockout winners through the final,
-            then share a screenshot and reproducible link.
+            {t("pageDescription")}
           </p>
         </div>
         <CopyButton
@@ -129,7 +131,7 @@ export function RoadWorkbench({
             })
           }
         >
-          Copy current link
+          {t("copyCurrentLink")}
         </CopyButton>
       </header>
 
@@ -141,51 +143,56 @@ export function RoadWorkbench({
       />
 
       {activeStep === 1 ? (
-        <section aria-label="Step 1 group standings">
+        <section aria-label={t("step1GroupStandingsAria")}>
           <Panel>
             <div>
               <h2 className="m-0 text-[18px] font-[400] text-black">
-                Step 1: Group standings
+                {t("step1Title")}
               </h2>
               <p className="m-0 mt-[6px] text-[13px] text-[#909090]">
-                Assign 1st through 4th in each group. Third-place advancement
-                affects Annexe C bracket slots.
+                {t("step1Description")}
               </p>
             </div>
 
             <div className="mt-[16px] flex flex-wrap gap-[8px]">
               <ShortcutButton
-                label="Random fill"
+                label={t("randomFill")}
                 onClick={onGroupRandomFill}
                 primary
               />
-              <ShortcutButton label="By FIFA rank" onClick={onGroupFifaFill} />
               <ShortcutButton
-                label="By squad value"
+                label={t("byFifaRank")}
+                onClick={onGroupFifaFill}
+              />
+              <ShortcutButton
+                label={t("bySquadValue")}
                 onClick={onGroupMarketFill}
               />
               <ShortcutButton
-                label="Reset defaults"
+                label={t("resetDefaults")}
                 onClick={onGroupReset}
                 warn
               />
             </div>
 
             <div className="mt-[16px] grid grid-cols-2 gap-[10px] sm:grid-cols-4">
-              <Metric label="Groups complete" value="12/12" />
+              <Metric label={t("groupsComplete")} value="12/12" />
               <Metric
-                label="Third-place advancing"
+                label={t("thirdPlaceAdvancing")}
                 value={`${advancingThirdGroups.length}/8`}
               />
               <Metric
-                label="Annexe C"
+                label={t("annexeC")}
                 value={
                   thirdPlaceOption
-                    ? `Option ${thirdPlaceOption.option}`
-                    : "Pending"
+                    ? t("optionNumber", { option: thirdPlaceOption.option })
+                    : t("pending")
                 }
               />
-              <Metric label="Shortcut basis" value={sortMethod} />
+              <Metric
+                label={t("shortcutBasis")}
+                value={translateSortMethod(sortMethod, t)}
+              />
             </div>
 
             <div className="mt-[16px]">
@@ -210,15 +217,14 @@ export function RoadWorkbench({
 
             <div className="mt-[16px] flex flex-col gap-[10px] border-t border-[#EBEBEB] pt-[16px] sm:flex-row sm:items-center sm:justify-between">
               <span className="text-[13px] text-[#909090]">
-                Requirement: all groups ranked 1-4 with exactly 8 third-place
-                groups advancing.
+                {t("step1Requirement")}
               </span>
               <button
                 type="button"
                 className="rounded-[8px] bg-[#0F766E] px-[14px] py-[10px] text-[13px] text-white"
                 onClick={onGoToStep2}
               >
-                Continue to knockout (R32)
+                {t("continueToKnockout")}
               </button>
             </div>
           </Panel>
@@ -226,34 +232,33 @@ export function RoadWorkbench({
       ) : null}
 
       {activeStep === 2 ? (
-        <section aria-label="Step 2 knockout bracket">
+        <section aria-label={t("step2KnockoutAria")}>
           <Panel className="flex flex-col">
             <div className="flex flex-col gap-[12px] lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <h2 className="m-0 text-[18px] font-[400] text-black">
-                  Step 2: Knockout to champion
+                  {t("step2Title")}
                 </h2>
                 <p className="m-0 mt-[6px] text-[13px] text-[#909090]">
-                  Pick the winner in each match, or use shortcuts to fill the
-                  bracket in one pass.
+                  {t("step2Description")}
                 </p>
               </div>
               <div className="flex flex-wrap gap-[8px]">
                 <ShortcutButton
-                  label="Random knockout"
+                  label={t("randomKnockout")}
                   onClick={onApplyKnockoutRandom}
                   primary
                 />
                 <ShortcutButton
-                  label="By FIFA rank"
+                  label={t("byFifaRank")}
                   onClick={onApplyKnockoutFifa}
                 />
                 <ShortcutButton
-                  label="By squad value"
+                  label={t("bySquadValue")}
                   onClick={onApplyKnockoutMarket}
                 />
                 <ShortcutButton
-                  label="Clear knockout"
+                  label={t("clearKnockout")}
                   onClick={onKnockoutClear}
                 />
               </div>
@@ -267,7 +272,7 @@ export function RoadWorkbench({
 
             <div className="mt-[16px]">
               <BracketPanel
-                calculationError={calculationError}
+                calculationErrorKey={calculationErrorKey}
                 finishType={finishType}
                 knockoutWinners={knockoutWinners}
                 onKnockoutWinnersChange={onKnockoutWinnersChange}
@@ -289,14 +294,14 @@ export function RoadWorkbench({
                 className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
                 onClick={onBackToStep1}
               >
-                Back to step 1
+                {t("backToStep1")}
               </button>
               <button
                 type="button"
                 className="rounded-[8px] bg-[#0F766E] px-[14px] py-[10px] text-[13px] text-white"
                 onClick={onGoToStep3}
               >
-                Finish and generate result
+                {t("finishAndGenerate")}
               </button>
             </div>
           </Panel>
@@ -304,14 +309,13 @@ export function RoadWorkbench({
       ) : null}
 
       {activeStep === 3 ? (
-        <section aria-label="Step 3 results and sharing">
+        <section aria-label={t("step3ResultsAria")}>
           <div className="mb-[12px]">
             <h2 className="m-0 text-[18px] font-[400] text-black">
-              Step 3: Results and sharing
+              {t("step3Title")}
             </h2>
             <p className="m-0 mt-[6px] text-[13px] text-[#909090]">
-              The share link includes group standings, third-place groups, and
-              knockout selections.
+              {t("step3Description")}
             </p>
           </div>
           <ResultPanel

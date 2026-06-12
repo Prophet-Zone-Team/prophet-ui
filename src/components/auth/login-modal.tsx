@@ -19,6 +19,7 @@ import {
 import type { TradingLoginStep } from "@/lib/trading/trading-login";
 import type { AuthContextValue } from "@/context/auth/auth-context";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface LoginModalProps {
   auth: Pick<
@@ -53,26 +54,23 @@ interface LoginModalProps {
 const SETUP_STEPS = [
   {
     id: "deploy_wallet",
-    label: "Connect wallet",
-    description: "Connect the wallet you want to trade with."
+    labelKey: "connectWallet",
+    descriptionKey: "connectWalletDescription"
   },
   {
     id: "authorize_tokens",
-    label: "Approve USDC",
-    description: "Allow your wallet to use USDC when placing orders."
+    labelKey: "approveUsdc",
+    descriptionKey: "approveUsdcDescription"
   },
   {
     id: "enable_trading",
-    label: "Enable orders",
-    description:
-      "Sign a message so Prophet can submit your orders to Polymarket. This does not move funds."
+    labelKey: "enableOrders",
+    descriptionKey: "enableOrdersDescription"
   }
 ] as const;
 
-const POLYGON_HINT =
-  "Switch your wallet to Polygon mainnet (chainId 137) before signing.";
-
 export function LoginModal({ auth }: LoginModalProps) {
+  const t = useTranslations("auth");
   const {
     hydrated,
     loginModalOpen,
@@ -121,23 +119,24 @@ export function LoginModal({ auth }: LoginModalProps) {
     <Modal
       open={hydrated && loginModalOpen && !isPrivateMode}
       onClose={() => void closeLogin()}
-      ariaLabel={showRestrictedView ? "Trading unavailable" : "Enable trading"}
+      ariaLabel={showRestrictedView ? t("tradingUnavailable") : t("enableTrading")}
       hideCloseButton={loginInProgress}
       className="w-full max-w-md rounded-xl border border-prophet-line bg-white p-6 shadow-prophet"
     >
       <div className="flex flex-col gap-5">
         <div>
           <h2 className="text-[18px] font-[500] leading-[21px] text-black">
-            Welcome to Prophet
+            {t("welcomeTitle")}
           </h2>
           <div className="text-[14px] font-[400] leading-[21px] text-[#909090] mt-2">
-            Set up your wallet once to trade{" "}
-            <span className="text-black font-[500]">Polymarket</span> markets
-            through Prophet.
+            {t.rich("welcomeDescription", {
+              brand: (chunks) => (
+                <span className="text-black font-[500]">{chunks}</span>
+              )
+            })}
           </div>
           <p className="mt-2 text-[12px] font-[400] text-[#3168FF] px-[10px] py-[4px] rounded-[8px] bg-[#E3E9FF]">
-            Market data is informational only and not financial advice. You stay
-            in control of your funds.
+            {t("disclaimer")}
           </p>
         </div>
         {showCloseOnlyBanner ? (
@@ -200,16 +199,17 @@ export function LoginModal({ auth }: LoginModalProps) {
                               state === "failed" && "text-prophet-red"
                             )}
                           >
-                            {step.label}
+                            {t(step.labelKey)}
                           </p>
                           <p className="mt-0.5 text-xs text-prophet-muted">
                             {step.id === "deploy_wallet"
                               ? getDeployWalletDescription({
                                 loginStep,
                                 readiness,
-                                session
+                                session,
+                                t
                               })
-                              : step.description}
+                              : t(step.descriptionKey)}
                           </p>
                         </div>
 
@@ -252,7 +252,7 @@ export function LoginModal({ auth }: LoginModalProps) {
 
             {showPolygonHint ? (
               <p className="rounded-lg border border-prophet-line bg-[#fafbfc] px-3 py-2 text-xs text-prophet-muted">
-                {POLYGON_HINT}
+                {t("polygonHint")}
               </p>
             ) : null}
 
@@ -263,7 +263,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                   className="rounded-lg bg-gradient-to-br from-[#0d69ff] to-[#124cf0] px-4 py-2 text-sm font-extrabold text-white"
                   onClick={() => void closeLogin()}
                 >
-                  Done
+                  {t("done")}
                 </button>
               </div>
             ) : null}
@@ -275,7 +275,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                 onClick={openPrivyLogin}
                 disabled={loginInProgress || privyLoginInProgress}
               >
-                Or login by Email
+                {t("orLoginByEmail")}
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </button>
             ) : null}
@@ -301,14 +301,6 @@ export function LoginModal({ auth }: LoginModalProps) {
   );
 }
 
-function PoweredByPolymarket() {
-  return (
-    <div className="flex items-center justify-center gap-1.5 border-t border-prophet-line pt-4">
-      <span className="text-xs text-prophet-muted">Powered by</span>
-      <PolymarketIcon />
-    </div>
-  );
-}
 
 function RestrictedRegionView({
   detail,
@@ -319,14 +311,17 @@ function RestrictedRegionView({
   label: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("auth");
+  const tCommon = useTranslations("common");
+
   return (
     <div className="flex flex-col gap-5">
       <div>
         <h2 className="text-lg font-extrabold text-prophet-ink">
-          Trading unavailable in your region
+          {t("tradingUnavailableInRegion")}
         </h2>
         <p className="mt-1 text-sm text-prophet-muted">
-          Market data remains available. Trading and funding actions are disabled.
+          {t("regionMarketDataAvailable")}
         </p>
       </div>
 
@@ -341,7 +336,7 @@ function RestrictedRegionView({
           className="rounded-lg border border-prophet-line bg-white px-4 py-2 text-sm font-extrabold text-prophet-ink"
           onClick={onClose}
         >
-          Close
+          {tCommon("close")}
         </button>
       </div>
     </div>
@@ -508,6 +503,8 @@ function StepAction({
   onSignTokens: () => void;
   onRefresh: () => void;
 }) {
+  const t = useTranslations("auth");
+
   if (stepId === "deploy_wallet") {
     if (state === "failed") {
       return (
@@ -517,7 +514,7 @@ function StepAction({
           disabled={loginInProgress}
           onClick={onRefresh}
         >
-          Retry
+          {t("retry")}
         </button>
       );
     }
@@ -529,7 +526,7 @@ function StepAction({
         disabled={loginInProgress}
         onClick={onConnectWallet}
       >
-        Connect wallet
+        {t("connectWallet")}
       </button>
     );
   }
@@ -542,7 +539,7 @@ function StepAction({
         disabled={loginInProgress}
         onClick={onSignTokens}
       >
-        Sign
+        {t("sign")}
       </button>
     );
   }
@@ -554,7 +551,7 @@ function StepAction({
       disabled={loginInProgress}
       onClick={onSignClob}
     >
-      Sign
+      {t("sign")}
     </button>
   );
 }
@@ -612,27 +609,29 @@ function getDeployWalletDescription({
   loginStep,
   readiness,
   session,
+  t,
 }: {
   loginStep: TradingLoginStep | undefined;
   readiness: AuthContextValue["readiness"];
   session: AuthContextValue["session"];
+  t: ReturnType<typeof useTranslations<"auth">>;
 }) {
   const funderAddress = readiness?.session?.funderAddress ?? session?.funderAddress;
   const shortFunder = funderAddress ? `${funderAddress.slice(0, 6)}…${funderAddress.slice(-4)}` : undefined;
 
   if (loginStep === "checking_wallet_deployment") {
-    return "Checking whether your Polymarket deposit wallet is already deployed.";
+    return t("checkingDepositWalletDeployment");
   }
 
   if (loginStep === "wallet_already_deployed" || readiness?.session?.depositWalletStatus === "deployed") {
     return shortFunder
-      ? `Deposit wallet already deployed at ${shortFunder}.`
-      : "Your Polymarket deposit wallet is already deployed.";
+      ? t("depositWalletDeployedAt", { address: shortFunder })
+      : t("depositWalletAlreadyDeployed");
   }
 
   if (loginStep === "deploying_wallet" || readiness?.session?.depositWalletStatus === "deploying") {
-    return "Deploying your Polymarket deposit wallet.";
+    return t("deployingDepositWallet");
   }
 
-  return "Prepare your Polymarket deposit wallet before signing in.";
+  return t("prepareDepositWallet");
 }

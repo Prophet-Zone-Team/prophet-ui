@@ -5,6 +5,10 @@ import {
 } from "@/data/world-cup-2026/groups";
 
 import { DEFAULT_THIRD_PLACE_GROUPS } from "./path-config";
+import {
+  normalizeKnockoutMethod,
+  normalizeSortMethod
+} from "./method-keys";
 import { PLACEMENT_OPTIONS, type GroupPlacements, type KnockoutWinners } from "../types";
 
 const RANK_KEYS = PLACEMENT_OPTIONS.map((option) => option.key);
@@ -119,11 +123,11 @@ export function hydrateFromUrlPayload(
   }
 
   if (payload.m) {
-    next.sortMethod = payload.m;
+    next.sortMethod = normalizeSortMethod(payload.m);
   }
 
   if (payload.km) {
-    next.knockoutMethod = payload.km;
+    next.knockoutMethod = normalizeKnockoutMethod(payload.km);
   }
 
   if (payload.s && payload.s >= 1 && payload.s <= 3) {
@@ -149,8 +153,8 @@ export function createDefaultSharedState(teamId: string): RoadToFinalSharedState
     thirdGroups: [...DEFAULT_THIRD_PLACE_GROUPS],
     teamId,
     knockoutWinners: {},
-    sortMethod: "Default order",
-    knockoutMethod: "Manual selection",
+    sortMethod: "defaultOrder",
+    knockoutMethod: "manualSelection",
     step: 1
   };
 }

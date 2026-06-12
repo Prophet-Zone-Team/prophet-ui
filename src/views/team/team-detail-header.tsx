@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyLinkIcon } from "@/components/icons";
 import { trackCopyLinkClicked } from "@/lib/analytics/tracking";
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { teamTradeHref } from "@/lib/routes/trade";
 import type { TeamDetailHeaderData } from "@/lib/team/map-team-detail";
 import type { TeamMarketSnapshot } from "@/types/market";
@@ -53,14 +55,6 @@ function HeroMetric({
   );
 }
 
-function getGroupLabel(groupName?: string): string {
-  if (!groupName) {
-    return "Pending";
-  }
-
-  return groupName.startsWith("Group") ? groupName : `Group ${groupName}`;
-}
-
 function getPageUrl() {
   if (typeof window === "undefined") {
     return undefined;
@@ -73,9 +67,10 @@ export function TeamDetailHeader({
   snapshot,
   detail
 }: TeamDetailHeaderProps) {
+  const t = useTranslations("teamDetail");
   const { team, market } = snapshot;
   const fifaRank = detail?.fifaRank;
-  const displayName = detail?.name || team.name;
+  const displayName = useLocalizedTeamName(team.code, detail?.name || team.name);
   const logoUrl = detail?.logo;
   const bestFinish = detail?.bestFinish;
   const titles = detail?.titles;
@@ -83,6 +78,16 @@ export function TeamDetailHeader({
 
   const currentTeam = teamData[team.name as keyof typeof teamData];
   const teamSlug = (currentTeam as unknown as any)?.slug;
+
+  const getGroupLabel = (groupName?: string): string => {
+    if (!groupName) {
+      return t("pending");
+    }
+
+    return groupName.startsWith("Group")
+      ? groupName
+      : t("groupLabel", { group: groupName });
+  };
 
   return (
     <header className="my-4">
@@ -102,26 +107,28 @@ export function TeamDetailHeader({
                 {displayName}
               </h1>
               <span className="inline-flex h-[26px] items-center rounded-[14px] border border-[#909090] px-3 text-sm font-[500] text-[#909090]">
-                Team
+                {t("team")}
               </span>
             </div>
             <p className="m-0 mt-1 text-sm text-prophet-muted">
-              {fifaRank ? `FIFA Ranking #${fifaRank}` : "FIFA ranking pending"}
+              {fifaRank
+                ? t("fifaRanking", { rank: fifaRank })
+                : t("fifaRankingPending")}
               {detail?.groupName
                 ? ` / ${getGroupLabel(detail.groupName)}`
-                : " / Group pending"}
+                : ` / ${t("groupPending")}`}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <span className="rounded-full border border-prophet-line px-2 py-0.5 text-[11px] font-[500] text-prophet-muted">
-                {bestFinish ?? "World Cup history pending"}
+                {bestFinish ?? t("worldCupHistoryPending")}
               </span>
               {!!titles && (
                 <span className="rounded-full border border-[rgba(101,175,20,0.30)] px-4 py-0.5 text-[11px] font-[500] text-[#65AF14] bg-[rgba(101,175,20,0.30)]">
-                  {titles} titles
+                  {t("titlesCount", { count: titles })}
                 </span>
               )}
               <span className="rounded-full border border-prophet-line px-2 py-0.5 text-[11px] font-[500] text-prophet-muted">
-                curated metadata
+                {t("curatedMetadata")}
               </span>
             </div>
           </div>
@@ -130,11 +137,11 @@ export function TeamDetailHeader({
         <div className="flex flex-col gap-3">
           <div className={teamHeroMetricsClass}>
             <HeroMetric
-              label="FIFA rank"
-              value={fifaRank ? `#${fifaRank}` : "Pending"}
+              label={t("fifaRank")}
+              value={fifaRank ? `#${fifaRank}` : t("pending")}
             />
             <HeroMetric
-              label="Squad value"
+              label={t("squadValue")}
               value={
                 marketValue
                   ? formatNumber(marketValue, 2, true, {
@@ -145,9 +152,12 @@ export function TeamDetailHeader({
                   : "-"
               }
             />
-            <HeroMetric label="Best finish" value={bestFinish ?? "Pending"} />
             <HeroMetric
-              label="Group"
+              label={t("bestFinish")}
+              value={bestFinish ?? t("pending")}
+            />
+            <HeroMetric
+              label={t("group")}
               value={getGroupLabel(detail?.groupName)}
             />
           </div>
@@ -159,7 +169,7 @@ export function TeamDetailHeader({
                   href={teamTradeHref(teamSlug)}
                   className={teamOpenTradeButtonClass}
                 >
-                  Open Trade
+                  {t("openTrade")}
                 </Link>
               )
             }
@@ -170,7 +180,7 @@ export function TeamDetailHeader({
               />
               <CopyButton
                 text={getPageUrl}
-                ariaLabel="Copy page link"
+                ariaLabel={t("copyPageLink")}
                 className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted hover:text-black"
                 onCopy={() =>
                   trackCopyLinkClicked({

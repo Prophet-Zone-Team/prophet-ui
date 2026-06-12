@@ -1,5 +1,6 @@
 import type { MarketDataMeta } from "@/data/providers/types";
 import { getMarketDataSourceLabel } from "@/data/providers/source";
+import { formatDateTimeFromIso } from "@/lib/formatters/datetime";
 
 export function DataStatusBanner({ meta }: { meta: MarketDataMeta }) {
   const tone = getStatusTone(meta);
@@ -188,16 +189,5 @@ function getNewsStatusLabel(news: MarketDataMeta["news"]): string | undefined {
 }
 
 function formatUpdatedAt(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  return formatDateTimeFromIso(value);
 }

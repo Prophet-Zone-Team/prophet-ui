@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -14,12 +15,15 @@ import {
 } from "@/views/strategy/components/card";
 import { StrategyBidModal } from "@/views/strategy/components/bid-modal";
 
+import { useLocalizedStrategyLabels } from "@/hooks/i18n/use-localized-strategy-labels";
+
 import {
   buildAvailableStrategyCards,
   type AvailableStrategyCardData
 } from "./lib/map-strategy-data";
 
 export function StrategyAvailable() {
+  const t = useTranslations("strategy");
   const fetchEvent = useWinnerTeamsStore((state) => state.fetchEvent);
   const snapshots = useWinnerSnapshots();
   const status = useWinnerTeamsStatus();
@@ -38,9 +42,9 @@ export function StrategyAvailable() {
 
   if (availableStrategies.length === 0) {
     return (
-      <section aria-label="Available strategies">
+      <section aria-label={t("availableStrategies")}>
         <p className="py-8 text-center text-sm text-[#909090] md:py-12">
-          No available strategies at the moment.
+          {t("noAvailableStrategies")}
         </p>
       </section>
     );
@@ -49,27 +53,16 @@ export function StrategyAvailable() {
   return (
     <>
       <section
-        aria-label="Available strategies"
+        aria-label={t("availableStrategies")}
         className="flex flex-col gap-3 md:gap-4"
       >
         {availableStrategies.map((strategy) => (
-          <StrategyCard
+          <StrategyAvailableCard
             key={strategy.id}
-            variant="available"
-            title={strategy.name}
-          >
-            <StrategyCardBodySections
-              description={strategy.description}
-              badge={strategy.badge}
-              budgetLabel={strategy.budgetLabel}
-              estimatedRoiLabel={strategy.estimatedRoiLabel}
-              hitReturnLabel={strategy.hitReturnLabel}
-              isLoading={isLoading}
-              teams={strategy.teamRefs}
-              legs={strategy.legs}
-              onPlaceBid={() => setBidStrategy(strategy)}
-            />
-          </StrategyCard>
+            strategy={strategy}
+            isLoading={isLoading}
+            onPlaceBid={() => setBidStrategy(strategy)}
+          />
         ))}
       </section>
 
@@ -80,5 +73,36 @@ export function StrategyAvailable() {
         snapshots={snapshots}
       />
     </>
+  );
+}
+
+function StrategyAvailableCard({
+  strategy,
+  isLoading,
+  onPlaceBid
+}: {
+  strategy: AvailableStrategyCardData;
+  isLoading: boolean;
+  onPlaceBid: () => void;
+}) {
+  const { name, description } = useLocalizedStrategyLabels(strategy.id, {
+    name: strategy.name,
+    description: strategy.description
+  });
+
+  return (
+    <StrategyCard variant="available" title={name}>
+      <StrategyCardBodySections
+        description={description}
+        badge={strategy.badge}
+        budgetLabel={strategy.budgetLabel}
+        estimatedRoiLabel={strategy.estimatedRoiLabel}
+        hitReturnLabel={strategy.hitReturnLabel}
+        isLoading={isLoading}
+        teams={strategy.teamRefs}
+        legs={strategy.legs}
+        onPlaceBid={onPlaceBid}
+      />
+    </StrategyCard>
   );
 }

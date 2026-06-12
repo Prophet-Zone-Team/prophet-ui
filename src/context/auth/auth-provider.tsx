@@ -75,7 +75,7 @@ import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
 import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 import { useTracksStore } from "@/store/tracks-store";
 import { useNotificationWsStore } from "@/store/notification-ws-store";
-import { logoutProphet } from "@/service/prophet";
+import { logoutProphet, syncProphetWalletLogin } from "@/service/prophet";
 import { selectIsAuthenticated, useAuthStore } from "@/store/auth-store";
 import type { AuthLoginMethod } from "@/store/auth-store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
@@ -144,13 +144,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     undefined
   );
   const confidentialAccount = useConfidentialAccount();
-  const confirmPendingDeposit = usePendingFunderUsdc({
-    enabled: Boolean(session?.funderAddress && session.depositWalletStatus === "deployed"),
-  });
 
   useLoginWithOAuth({
     onComplete: (params) => {
-      if (!params.loginAccount || params.loginMethod !== "google") {
+      if (params.loginMethod !== "google") {
         return;
       }
 
@@ -701,12 +698,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setStatus("loading");
       store.setError(undefined);
       store.setLoginStep(undefined);
-      if (_loginMethod === "email" || _loginMethod === "google") {
-        store.setPrivyLoginInProgress(true);
+      if (method) {
+        store.setLoginMethod(method);
+      } else if (!_loginMethod) {
+        store.setLoginMethod("wallet");
       }
 
-      if (!_loginMethod) {
-        store.setLoginMethod("wallet");
+      if (_loginMethod === "email" || _loginMethod === "google") {
+        store.setPrivyLoginInProgress(true);
+      } else {
         store.setPrivyLoginInProgress(false);
       }
 
@@ -1090,6 +1090,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const confirmPendingDeposit = usePendingFunderUsdc({
+    enabled: true,
+    session,
+    syncCash,
+  });
+
   useEffect(() => {
     if (!hydrated || !session?.walletAddress) {
       return;
@@ -1208,8 +1214,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const email = resolvePrivyLoginEmail(privyUser);
 
-    if (email) {
-      store.setLoginEmail(email);
+    if (!email) {
+      return;
+    }
+
+    store.setLoginEmail(email);
+
+    const walletAddress = store.session?.walletAddress;
+
+    if (walletAddress) {
+      void syncProphetWalletLogin(walletAddress, { email });
     }
   }, [loginMethod, privyAuthenticated, privyUser]);
 

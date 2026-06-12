@@ -3,12 +3,14 @@
 import type { OneClickStatus } from "@stableflow/core";
 import Big from "big.js";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { formatShortWallet } from "@/lib/team/detail-format";
 import type { PendingDepositConvertMode } from "@/lib/trading/deposit-wallet-convert";
 import { fundingPrimaryButtonClass } from "@/views/portfolio/shared/funding-modal-shell";
 import type { DepositStatusPhase } from "@/views/portfolio/deposit/types";
 import { formatNumber } from "@/utils";
+import { cn } from "@/lib/cn";
 
 export interface DepositStatusStepProps {
   phase: DepositStatusPhase;
@@ -21,6 +23,7 @@ export interface DepositStatusStepProps {
   error?: string;
   convertLoading?: boolean;
   onConfirmConvert?: () => void;
+  onClose?: () => void;
 }
 
 export function DepositStatusStep({
@@ -33,30 +36,52 @@ export function DepositStatusStep({
   convertStatusLabel,
   error,
   convertLoading = false,
-  onConfirmConvert
+  onConfirmConvert,
+  onClose
 }: DepositStatusStepProps) {
+  const tDeposit = useTranslations("portfolio.deposit");
+  const tPortfolio = useTranslations("portfolio");
+  const tAuth = useTranslations("auth");
   const isWrapOnly = pendingConvertMode === "wrap-only";
-  const readyTitle = isWrapOnly ? "USDC.e received" : "USDC received";
-  const readyDescription = isWrapOnly
-    ? detectedUsdceAmount
-      ? `${formatNumber(detectedUsdceAmount, 4, true, { round: 0 })} USDC.e is available on your deposit wallet. Confirm to wrap it into tradable balance.`
-      : "USDC.e is available on your deposit wallet. Confirm to wrap it into tradable balance."
-    : detectedUsdcAmount
-      ? `${formatNumber(detectedUsdcAmount, 4, true, { round: 0 })} USDC is available on your deposit wallet. Confirm to convert it into tradable balance.`
-      : "USDC is available on your deposit wallet. Confirm to convert it into tradable balance.";
+
+  const readyTitle = isWrapOnly
+    ? tDeposit("statusUsdceReceived")
+    : tDeposit("statusUsdcReceived");
+
+  const readyDescription = (() => {
+    if (isWrapOnly) {
+      if (detectedUsdceAmount) {
+        return tDeposit("statusUsdceReadyWithAmount", {
+          amount: formatNumber(detectedUsdceAmount, 4, true, { round: 0 })
+        });
+      }
+      return tDeposit("statusUsdceReady");
+    }
+
+    if (detectedUsdcAmount) {
+      return tDeposit("statusUsdcReadyWithAmount", {
+        amount: formatNumber(detectedUsdcAmount, 4, true, { round: 0 })
+      });
+    }
+    return tDeposit("statusUsdcReady");
+  })();
 
   const awaitingDetail = (() => {
     const parts: string[] = [];
 
     if (detectedUsdcAmount && Big(detectedUsdcAmount || 0).gt(0)) {
       parts.push(
-        `USDC: ${formatNumber(detectedUsdcAmount, 4, true, { round: 0 })}`
+        tDeposit("usdcDetected", {
+          amount: formatNumber(detectedUsdcAmount, 4, true, { round: 0 })
+        })
       );
     }
 
     if (detectedUsdceAmount && Big(detectedUsdceAmount || 0).gt(0)) {
       parts.push(
-        `USDC.e: ${formatNumber(detectedUsdceAmount, 4, true, { round: 0 })}`
+        tDeposit("usdceDetected", {
+          amount: formatNumber(detectedUsdceAmount, 4, true, { round: 0 })
+        })
       );
     }
 
@@ -67,8 +92,8 @@ export function DepositStatusStep({
     <div className="flex flex-col gap-6 pb-2 pt-16">
       {phase === "bridging" ? (
         <StatusBlock
-          title="Bridging funds"
-          description="Your transfer is being routed to Polygon USDC on your deposit wallet."
+          title={tDeposit("statusBridgingTitle")}
+          description={tDeposit("statusBridgingDescription")}
           detail={bridgeStatusLabel}
           loading
         />
@@ -76,8 +101,10 @@ export function DepositStatusStep({
 
       {phase === "awaiting_funds" ? (
         <StatusBlock
-          title="Waiting for funds"
-          description={`Checking USDC and USDC.e on deposit wallet ${formatShortWallet(funderAddress)}.`}
+          title={tDeposit("statusAwaitingTitle")}
+          description={tDeposit("statusAwaitingDescription", {
+            address: formatShortWallet(funderAddress)
+          })}
           detail={awaitingDetail}
           loading
         />
@@ -98,18 +125,18 @@ export function DepositStatusStep({
             {convertLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
-            Confirm pending deposit
+            {tPortfolio("confirmPendingDeposit")}
           </button>
         </div>
       ) : null}
 
       {phase === "converting" ? (
         <StatusBlock
-          title="Converting deposit"
+          title={tDeposit("statusConvertingTitle")}
           description={
             isWrapOnly
-              ? "Sign the wallet prompt to wrap USDC.e into your tradable balance."
-              : "Sign the wallet prompts to convert USDC into your tradable balance."
+              ? tDeposit("statusConvertingWrap")
+              : tDeposit("statusConvertingConvert")
           }
           detail={convertStatusLabel}
           loading
@@ -117,16 +144,30 @@ export function DepositStatusStep({
       ) : null}
 
       {phase === "success" ? (
-        <StatusBlock
-          title="Deposit complete"
-          description="Your funds were converted and your portfolio balance will refresh shortly."
-        />
+        <>
+          <StatusBlock
+            title={tDeposit("statusSuccessTitle")}
+            description={tDeposit("statusSuccessDescription")}
+          />
+          <button
+            type="button"
+            className={cn(
+              fundingPrimaryButtonClass,
+              "absolute left-5 bottom-10 md:bottom-5 w-[calc(100%_-_40px)]"
+            )}
+            onClick={() => {
+              onClose?.();
+            }}
+          >
+            {tAuth("done")}
+          </button>
+        </>
       ) : null}
 
       {phase === "error" ? (
         <StatusBlock
-          title="Deposit could not be completed"
-          description={error ?? "An unexpected error occurred."}
+          title={tDeposit("statusErrorTitle")}
+          description={error ?? tDeposit("unexpectedError")}
           isError
         />
       ) : null}
@@ -166,6 +207,9 @@ function StatusBlock({
   );
 }
 
-export function formatStableflowStatusLabel(status: OneClickStatus): string {
-  return `Bridge status: ${status}`;
+export function formatStableflowStatusLabel(
+  status: OneClickStatus,
+  translate: (key: "bridgeStatus", values: { status: string }) => string
+): string {
+  return translate("bridgeStatus", { status });
 }

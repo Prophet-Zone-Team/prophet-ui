@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { ShareInviteModal } from "@/components/share/share-invite-modal";
 import { ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME } from "@/lib/road-to-final/share-card-config";
@@ -44,6 +45,7 @@ export function RoadToFinalShareModal({
   funderAddress,
   kickback,
 }: RoadToFinalShareModalProps) {
+  const t = useTranslations("roadToFinal");
   const cardRef = useRef<HTMLDivElement>(null);
   const [shareCardReady, setShareCardReady] = useState(false);
 
@@ -97,7 +99,7 @@ export function RoadToFinalShareModal({
     <ShareInviteModal
       open={open}
       onClose={onClose}
-      ariaLabel="Share simulation result"
+      ariaLabel={t("shareSimulationResultAria")}
       linkPrefix={inviteLink.linkPrefix}
       referralCode={inviteLink.referralCode}
       fullLink={inviteLink.fullLink}

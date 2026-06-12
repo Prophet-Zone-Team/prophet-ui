@@ -15,8 +15,12 @@ export function deriveBestThirdGroups(
   const scored = WORLD_CUP_2026_GROUP_ORDER.map((group) => {
     const teamId = placements[group].third;
     const usesFifa =
-      method.includes("FIFA") || method.includes("rank") || method.includes("排名");
+      method === "fifaRank" ||
+      method.includes("FIFA") ||
+      method.includes("rank") ||
+      method.includes("排名");
     const usesMarket =
+      method === "squadValueRanking" ||
       method.includes("market") ||
       method.includes("value") ||
       method.includes("身价");

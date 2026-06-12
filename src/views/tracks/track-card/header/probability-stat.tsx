@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { ProbabilityChangeTrend } from "@/components/market/probability-change-trend";
 import { formatProbability } from "@/components/home/market-formatters";
 import {
@@ -20,10 +24,11 @@ export function ProbabilityStat({
   teamCode,
   className
 }: ProbabilityStatProps) {
+  const t = useTranslations("tracks");
   const changePercent = change24h;
 
   return (
-    <StatColumn label="Probability" className={className}>
+    <StatColumn label={t("probability")} className={className}>
       <span className={trackCardLargeValueClassName}>
         {formatProbability(probability)}
       </span>
@@ -45,8 +50,10 @@ export function VolumeStat({
   volumeLabel: string;
   className?: string;
 }) {
+  const t = useTranslations("tracks");
+
   return (
-    <StatColumn label="Volume" className={cn(className)}>
+    <StatColumn label={t("volume")} className={cn(className)}>
       <span className={trackCardValueClassName}>{volumeLabel}</span>
     </StatColumn>
   );

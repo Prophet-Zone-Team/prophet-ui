@@ -1,10 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/cn";
 import { useAnalyticsTeamPowerRankings } from "@/hooks/analytics/use-analytics-team-power-rankings";
 import { PageBack } from "@/components/ui/page-back";
+import { resolveLocalizedTeamName } from "@/lib/i18n/localized-team-name";
 
 import { FullRankingTable } from "./full-ranking-table";
 import {
@@ -14,21 +16,38 @@ import {
 import { RankingFilterPill } from "./ranking-filter-pill";
 
 export function TeamPowerRankingPage() {
+  const t = useTranslations("analytics");
+  const tTeamNames = useTranslations("teamNames");
   const { entries, isLoading, isError } = useAnalyticsTeamPowerRankings();
   const [teamFilter, setTeamFilter] = useState("all");
   const [groupFilter, setGroupFilter] = useState("all");
 
-  const teamOptions = useMemo(() => getTeamFilterOptions(entries), [entries]);
+  const teamOptions = useMemo(
+    () =>
+      getTeamFilterOptions(entries).map((option) =>
+        option.value === "all"
+          ? { ...option, label: t("all") }
+          : {
+              ...option,
+              label: resolveLocalizedTeamName(
+                entries.find((entry) => entry.id === option.value)?.teamCode,
+                option.label,
+                tTeamNames
+              )
+            }
+      ),
+    [entries, t, tTeamNames]
+  );
 
   const groupOptions = useMemo(() => {
     const groups = [
       ...new Set(entries.map((entry) => entry.group).filter(Boolean))
     ].sort();
     return [
-      { value: "all", label: "All" },
+      { value: "all", label: t("all") },
       ...groups.map((group) => ({ value: group, label: group }))
     ];
-  }, [entries]);
+  }, [entries, t]);
 
   const filteredEntries = useMemo(
     () =>
@@ -44,18 +63,20 @@ export function TeamPowerRankingPage() {
       <PageBack />
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <h1 className="m-0 pt-4 text-[22px] font-[400] leading-[26px] text-black md:pt-[20px] md:text-[26px] md:leading-[31px]">
-          Team Power Ranking
+          {t("teamPowerRanking")}
         </h1>
 
         <div className="flex flex-wrap items-center gap-2 md:mt-5 md:gap-3">
           <RankingFilterPill
-            prefix="Team"
+            prefix={t("team")}
+            filterAriaLabel={t("teamFilterAria")}
             value={teamFilter}
             options={teamOptions}
             onChange={setTeamFilter}
           />
           <RankingFilterPill
-            prefix="Group"
+            prefix={t("group")}
+            filterAriaLabel={t("groupFilterAria")}
             value={groupFilter}
             options={groupOptions}
             onChange={setGroupFilter}
@@ -71,11 +92,11 @@ export function TeamPowerRankingPage() {
       >
         {isLoading ? (
           <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-[#909090] md:px-5">
-            Loading...
+            {t("loading")}
           </p>
         ) : isError ? (
           <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-[#909090] md:px-5">
-            Unable to load data.
+            {t("unableToLoadData")}
           </p>
         ) : (
           <div className="md:overflow-x-auto">

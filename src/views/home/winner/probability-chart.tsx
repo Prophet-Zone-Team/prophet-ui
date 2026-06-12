@@ -13,6 +13,10 @@ import {
   type TooltipProps
 } from "recharts";
 
+import { useTranslations } from "next-intl";
+
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+
 import { formatProbability } from "@/components/home/market-formatters";
 import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { cn } from "@/lib/cn";
@@ -67,13 +71,13 @@ export function WinnerProbabilityChart({
   topTeamCount = 8,
   showAxisTooltip = false
 }: WinnerProbabilityChartProps) {
+  const t = useTranslations("home");
   const [timeRange, setTimeRange] = useState<WinnerChartTimeRange>("all");
   const shouldFetch = probabilityHistory === undefined;
 
   const {
     points: fetchedPoints,
-    status: fetchStatus,
-    error: fetchError
+    status: fetchStatus
   } = useProbabilityChart({
     kind: "winner",
     teams,
@@ -129,7 +133,7 @@ export function WinnerProbabilityChart({
         "min-w-0 rounded-xl border border-[#EBEBEB] bg-white px-3 md:px-5 pb-5 pt-4",
         className
       )}
-      aria-label="World Cup winner probability chart"
+      aria-label={t("worldCupWinnerProbabilityChartAria")}
     >
       <div
         className={cn(
@@ -138,7 +142,7 @@ export function WinnerProbabilityChart({
         )}
       >
         <h2 className="text-base md:text-[20px] font-[500] leading-6 text-black">
-          World Cup Winner Probability
+          {t("worldCupWinnerProbability")}
         </h2>
       </div>
 
@@ -146,15 +150,15 @@ export function WinnerProbabilityChart({
 
       {!showChart && fetchStatus === "loading" ? (
         <p className="mt-4 py-8 text-center text-sm text-[#909090]">
-          Loading probability history...
+          {t("loadingProbabilityHistory")}
         </p>
       ) : !showChart && fetchStatus === "error" ? (
         <p className="mt-4 py-8 text-center text-sm text-[#909090]">
-          {fetchError ?? "Unable to load probability chart history."}
+          {t("unableToLoadProbabilityHistory")}
         </p>
       ) : !showChart && fetchStatus === "empty" ? (
         <p className="mt-4 py-8 text-center text-sm text-[#909090]">
-          Market token data is not available for these teams yet.
+          {t("marketTokenUnavailable")}
         </p>
       ) : (
         <div className="mt-4 h-[190px] w-full">
@@ -270,19 +274,43 @@ function WinnerChartTooltip({
         );
 
         return (
-          <p
+          <WinnerChartTooltipRow
             key={String(entry.dataKey)}
-            className="m-0 text-sm font-[400] leading-[24px]"
-            style={{ color: entry.color }}
-          >
-            {item?.label ?? entry.dataKey}:{" "}
-            {typeof entry.value === "number"
-              ? formatProbability(entry.value)
-              : "—"}
-          </p>
+            teamCode={item?.teamCode}
+            fallbackLabel={item?.label ?? String(entry.dataKey)}
+            color={entry.color}
+            value={
+              typeof entry.value === "number"
+                ? formatProbability(entry.value)
+                : "—"
+            }
+          />
         );
       })}
     </div>
+  );
+}
+
+function WinnerChartTooltipRow({
+  teamCode,
+  fallbackLabel,
+  color,
+  value
+}: {
+  teamCode?: string;
+  fallbackLabel: string;
+  color?: string;
+  value: string;
+}) {
+  const teamDisplayName = useLocalizedTeamName(teamCode, fallbackLabel);
+
+  return (
+    <p
+      className="m-0 text-sm font-[400] leading-[24px]"
+      style={{ color }}
+    >
+      {teamDisplayName}: {value}
+    </p>
   );
 }
 
@@ -291,6 +319,8 @@ function ChartLegendItem({
 }: {
   item: ReturnType<typeof getLatestSeriesValues>[number];
 }) {
+  const teamDisplayName = useLocalizedTeamName(item.teamCode, item.label);
+
   return (
     <div className="flex items-center gap-2 text-[14px] leading-[17px]">
       <span
@@ -298,7 +328,7 @@ function ChartLegendItem({
         style={{ backgroundColor: item.color }}
         aria-hidden="true"
       />
-      <span className="text-[#909090]">{item.label}</span>
+      <span className="text-[#909090]">{teamDisplayName}</span>
       <span className="font-[500] text-black">
         {formatProbability(item.value)}
       </span>

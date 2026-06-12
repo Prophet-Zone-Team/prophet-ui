@@ -16,6 +16,7 @@ export type SignalAllSortState = {
   direction: SignalAllSortDirection;
 };
 
+/** `value` and `label` are team `name` from curated teams data; `teamCode` is for TeamFlag display only. */
 export type SignalAllTeamOption = {
   value: SignalAllTeamFilter;
   label: string;

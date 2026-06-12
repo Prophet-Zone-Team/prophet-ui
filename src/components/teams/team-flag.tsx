@@ -1,5 +1,8 @@
-import { cn } from "@/lib/cn";
+import type { ReactNode } from "react";
+
+import { findCuratedTeamByCode } from "@/data/teams/curated-team-list";
 import teams from "@/data/teams";
+import { cn } from "@/lib/cn";
 
 interface TeamFlagProps {
   code?: string;
@@ -44,6 +47,24 @@ function FlagIcon({
   );
 }
 
+function renderFlagAsset(
+  flagCode: string,
+  label: string,
+  className?: string
+): ReactNode {
+  if (isImageUrl(flagCode)) {
+    return (
+      <img
+        src={flagCode}
+        alt={label}
+        className={cn(defaultFlagClassName, "object-cover", className)}
+      />
+    );
+  }
+
+  return <FlagIcon flagCode={flagCode} label={label} className={className} />;
+}
+
 export function TeamFlag({
   code,
   name,
@@ -54,35 +75,19 @@ export function TeamFlag({
   const label = name ?? code ?? "Team flag";
 
   if (logoUrl) {
-    if (isImageUrl(logoUrl)) {
-      return (
-        <img
-          src={logoUrl}
-          alt={label}
-          className={cn(defaultFlagClassName, "object-cover", className)}
-        />
-      );
-    }
+    return renderFlagAsset(logoUrl, label, className);
+  }
 
-    return <FlagIcon flagCode={logoUrl} label={label} className={className} />;
+  const curatedTeam = code ? findCuratedTeamByCode(code) : undefined;
+
+  if (curatedTeam?.logoUrl) {
+    return renderFlagAsset(curatedTeam.logoUrl, label, className);
   }
 
   const team = teams[name as keyof typeof teams];
 
   if (team?.logo) {
-    if (isImageUrl(team.logo)) {
-      return (
-        <img
-          src={team.logo}
-          alt={label}
-          className={cn(defaultFlagClassName, "object-cover", className)}
-        />
-      );
-    }
-
-    return (
-      <FlagIcon flagCode={team.logo} label={label} className={className} />
-    );
+    return renderFlagAsset(team.logo, label, className);
   }
 
   if (!fallback) {

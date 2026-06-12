@@ -2,6 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import Big from "big.js";
 
 import { POLYMARKET_USD } from "@/config/funding";
@@ -49,12 +50,13 @@ export function PrivateTopupAmountStep({
   maxAmount,
   onAmountChange,
 }: PrivateTopupAmountStepProps) {
+  const t = useTranslations("privateTopup");
   const { topupWalletAddress, privateAccountAddress } = usePrivateTopupContext();
   const prices = usePricesStore((state) => state.prices);
 
   const [inputValue, setInputValue] = useState("0");
 
-  const validationError = useMemo(
+  const validationErrorKey = useMemo(
     () => validatePrivateTopupAmount(amount.tokenAmount, maxAmount),
     [amount.tokenAmount, maxAmount],
   );
@@ -112,7 +114,7 @@ export function PrivateTopupAmountStep({
             value={inputValue}
             onNumberChange={handleInputChange}
             className={privateTopupModalAmountInputClass}
-            aria-label="Top up amount in USD"
+            aria-label={t("topUpAmountAria")}
             placeholder="0"
           />
         </div>
@@ -129,15 +131,15 @@ export function PrivateTopupAmountStep({
             </button>
           ))}
         </div>
-        {validationError ? (
-          <p className="m-0 text-sm text-prophet-red">{validationError}</p>
+        {validationErrorKey ? (
+          <p className="m-0 text-sm text-prophet-red">{t(validationErrorKey)}</p>
         ) : null}
       </div>
 
       <div className={cn(depositTransferBarClass, "mt-[3.5rem]")}>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <span className="text-sm font-[400] text-[#909090]">
-            Funding Wallet
+            {t("fundingWallet")}
           </span>
           <div className="flex items-center gap-2">
             <WalletAvatarIcon address={topupWalletAddress} className="size-5" />
@@ -173,7 +175,7 @@ export function PrivateTopupAmountStep({
 
         <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
           <span className="text-sm font-[400] text-[#909090]">
-            Private Wallet
+            {t("privateWallet")}
           </span>
           <div className="flex items-center gap-2">
             <div className={privateTopupSecureIconWrapClass}>

@@ -1,20 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { tradeMarketButtonClass } from "@/views/trade/trade-widget/trade-ui";
 
 export type TradeOrderMode = "market" | "limit";
-
-const ORDER_MODE_OPTIONS: {
-  id: TradeOrderMode;
-  label: string;
-  description: string;
-}[] = [
-  { id: "market", label: "Market", description: "Market order (FAK)" },
-  { id: "limit", label: "Limit", description: "Limit order (GTC)" }
-];
 
 export interface TradeMarketButtonProps {
   value: TradeOrderMode;
@@ -22,11 +14,28 @@ export interface TradeMarketButtonProps {
 }
 
 export function TradeMarketButton({ value, onChange }: TradeMarketButtonProps) {
+  const t = useTranslations("trade");
   const menuRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const orderModeOptions = useMemo(
+    () =>
+      [
+        {
+          id: "market" as const,
+          label: t("market"),
+          description: t("marketOrderDescription")
+        },
+        {
+          id: "limit" as const,
+          label: t("limit"),
+          description: t("limitOrderDescription")
+        }
+      ] as const,
+    [t]
+  );
   const selectedOption =
-    ORDER_MODE_OPTIONS.find((option) => option.id === value) ??
-    ORDER_MODE_OPTIONS[0];
+    orderModeOptions.find((option) => option.id === value) ??
+    orderModeOptions[0];
 
   useEffect(() => {
     if (!isOpen) {
@@ -83,10 +92,10 @@ export function TradeMarketButton({ value, onChange }: TradeMarketButtonProps) {
       {isOpen ? (
         <div
           role="listbox"
-          aria-label="Order type"
+          aria-label={t("orderType")}
           className="absolute right-0 top-[calc(100%+4px)] z-20 min-w-[120px] overflow-hidden rounded-md border border-prophet-line bg-white py-1 shadow-prophet"
         >
-          {ORDER_MODE_OPTIONS.map((option) => {
+          {orderModeOptions.map((option) => {
             const isSelected = option.id === value;
 
             return (

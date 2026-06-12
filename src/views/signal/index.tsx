@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { PageBack } from "@/components/ui/page-back";
@@ -36,6 +37,7 @@ export function SignalPage({
   data = signalPageData,
   className
 }: SignalPageProps) {
+  const t = useTranslations("signal");
   const { items: topImpactItems, isLoading: isTopLoading } =
     useAnalyticsLatestNews("");
   const {
@@ -88,19 +90,19 @@ export function SignalPage({
       <PageBack />
 
       <section
-        aria-label="Signal and news impact"
+        aria-label={t("signalAndNewsImpact")}
         className="pt-4 md:pt-[20px]"
       >
         <h1 className="m-0 text-[22px] font-[400] leading-[26px] text-black md:text-[26px] md:leading-[31px]">
-          Signal &amp; New Impact
+          {t("signalAndNewsImpact")}
         </h1>
         {isTopLoading ? (
           <p className="mt-4 py-8 text-center text-[14px] text-[#909090] md:mt-[24px]">
-            Loading...
+            {t("loading")}
           </p>
         ) : topImpactItems.length === 0 ? (
           <p className="mt-4 py-8 text-center text-[14px] text-[#909090] md:mt-[24px]">
-            No news available.
+            {t("noNewsAvailable")}
           </p>
         ) : (
           <div className="mt-4 grid grid-cols-1 gap-3 md:mt-[24px] md:grid-cols-3 md:gap-[19px]">
@@ -116,11 +118,11 @@ export function SignalPage({
       </section>
 
       <section
-        aria-label="All signals and news summary"
+        aria-label={t("allSignalsAndNewsAria")}
         className="mt-5 md:mt-[20px]"
       >
         <h2 className="m-0 text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
-          All Signals &amp; News
+          {t("allSignalsAndNews")}
         </h2>
         <div className="mt-4 grid grid-cols-2 gap-3 md:mt-[20px] md:grid-cols-3 md:gap-[21px]">
           {SUMMARY_VARIANTS.map(({ variant, countKey }) => (

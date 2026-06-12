@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import type {
   ApiFootballDataIssue,
   ApiFootballInjuryContext,
@@ -40,7 +44,13 @@ function PlayerAvatar({ player }: { player: ApiFootballSquadPlayer }) {
   );
 }
 
-function MiniPlayerRow({ player }: { player: ApiFootballSquadPlayer }) {
+function MiniPlayerRow({
+  player,
+  positionFallback
+}: {
+  player: ApiFootballSquadPlayer;
+  positionFallback: string;
+}) {
   return (
     <div className="flex items-center gap-2 rounded-md border border-prophet-line px-2 py-1.5 text-xs">
       <span className="w-5 text-prophet-muted">{player.number ?? "-"}</span>
@@ -48,7 +58,7 @@ function MiniPlayerRow({ player }: { player: ApiFootballSquadPlayer }) {
         {player.name}
       </strong>
       <small className="text-prophet-muted">
-        {player.position ?? "Player"}
+        {player.position ?? positionFallback}
       </small>
     </div>
   );
@@ -57,8 +67,9 @@ function MiniPlayerRow({ player }: { player: ApiFootballSquadPlayer }) {
 export function TeamLineupPanel({
   squad,
   injuries,
-  dataIssues
+  dataIssues: _dataIssues
 }: TeamLineupPanelProps) {
+  const t = useTranslations("teamDetail");
   const starters = getLineupPlayers(squad);
   const bench = squad
     .filter(
@@ -69,9 +80,9 @@ export function TeamLineupPanel({
   const hasSquad = squad.length > 0;
 
   return (
-    <section className={teamPanelClass} aria-label="Expected starting XI">
+    <section className={teamPanelClass} aria-label={t("startingXIAria")}>
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Expected Starting XI</h2>
+        <h2 className={teamPanelTitleClass}>{t("expectedStartingXI")}</h2>
       </div>
       <div className="p-4">
         {hasSquad ? (
@@ -95,7 +106,7 @@ export function TeamLineupPanel({
                         {shortenName(player.name)}
                       </strong>
                       <span className="text-[9px] text-prophet-muted">
-                        {player.position ?? "Player"}
+                        {player.position ?? t("player")}
                       </span>
                     </div>
                   );
@@ -106,23 +117,27 @@ export function TeamLineupPanel({
             <div className="grid gap-3">
               <div>
                 <h3 className="m-0 mb-2 text-sm font-[500] text-black">
-                  Bench
+                  {t("bench")}
                 </h3>
                 {bench.length > 0 ? (
                   <div className="grid gap-1.5">
                     {bench.map((player) => (
-                      <MiniPlayerRow key={player.playerId} player={player} />
+                      <MiniPlayerRow
+                        key={player.playerId}
+                        player={player}
+                        positionFallback={t("player")}
+                      />
                     ))}
                   </div>
                 ) : (
                   <p className="m-0 text-xs text-prophet-muted">
-                    No bench players stored yet.
+                    {t("noBenchPlayers")}
                   </p>
                 )}
               </div>
               <div>
                 <h3 className="m-0 mb-2 text-sm font-[500] text-black">
-                  Doubtful / Out
+                  {t("doubtfulOut")}
                 </h3>
                 {injuries.length > 0 ? (
                   <div className="grid gap-1.5">
@@ -133,14 +148,14 @@ export function TeamLineupPanel({
                       >
                         <span>{injury.playerName}</span>
                         <strong className="font-[500] text-prophet-red">
-                          {injury.reason ?? "Injury"}
+                          {injury.reason ?? t("injury")}
                         </strong>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="m-0 text-xs text-prophet-muted">
-                    No injury signal stored.
+                    {t("noInjurySignal")}
                   </p>
                 )}
               </div>
@@ -148,8 +163,8 @@ export function TeamLineupPanel({
           </div>
         ) : (
           <TeamEmptyState
-            title="Starting XI pending"
-            body="Expected starting lineup data is not available for this team yet."
+            title={t("startingXIPending")}
+            body={t("startingXIPendingBody")}
           />
         )}
       </div>

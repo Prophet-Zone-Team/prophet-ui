@@ -1,13 +1,14 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import { trackMarketTabChanged } from "@/lib/analytics/tracking";
 
 const HOME_SECTIONS = [
-  { href: "/fifa", label: "World Cup Winner" },
-  { href: "/fifa/matches", label: "Matches" }
+  { href: "/fifa", labelKey: "matches" },
+  { href: "/fifa/winner", labelKey: "worldCupWinner" }
 ] as const;
 
 function isSectionActive(pathname: string, href: string): boolean {
@@ -19,6 +20,7 @@ function isSectionActive(pathname: string, href: string): boolean {
 }
 
 export function HomeSectionNav() {
+  const t = useTranslations("home");
   const pathname = usePathname();
   const router = useRouter();
 
@@ -30,7 +32,7 @@ export function HomeSectionNav() {
     <TabSwitcher
       items={HOME_SECTIONS.map((section) => ({
         id: section.href,
-        label: section.label
+        label: t(section.labelKey)
       }))}
       value={activeHref}
       onChange={(href) => {

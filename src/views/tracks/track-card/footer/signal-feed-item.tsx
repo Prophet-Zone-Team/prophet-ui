@@ -1,10 +1,7 @@
 import Image from "next/image";
 
 import { cn } from "@/lib/cn";
-import {
-  NegativeSentimentIcon,
-  PositiveSentimentIcon
-} from "@/views/analytics/news/icons";
+import { SentimentIcon } from "@/views/analytics/news/icons";
 
 import type { TrackCardSentiment, TrackCardSignalItem } from "../types";
 
@@ -53,14 +50,6 @@ function SignalThumbnail({
       {getThumbnailInitials(alt)}
     </div>
   );
-}
-
-function SentimentIcon({ sentiment }: { sentiment: TrackCardSentiment }) {
-  if (sentiment === "negative") {
-    return <NegativeSentimentIcon />;
-  }
-
-  return <PositiveSentimentIcon />;
 }
 
 export function SignalFeedItem({

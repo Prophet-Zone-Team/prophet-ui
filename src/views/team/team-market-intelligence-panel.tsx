@@ -1,7 +1,10 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import type { MarketDataMeta } from "@/data/providers/types";
 import { getMarketDataSourceLabel } from "@/data/providers/source";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
@@ -12,7 +15,7 @@ import {
 } from "@/views/team/team-detail-ui";
 import { TeamPanelMetric } from "./team-panel-metric";
 import { formatChange, formatProbability, formatShortDate } from "@/lib/team/team-detail-model";
-import { formatVolume, getSentimentLabel } from "@/components/home/market-formatters";
+import { formatVolume } from "@/components/home/market-formatters";
 import type { TeamMarketIntelligenceData } from "@/lib/analytics/map-team-market-news";
 
 export interface TeamMarketIntelligencePanelProps {
@@ -32,56 +35,64 @@ export function TeamMarketIntelligencePanel({
   relatedNewsCount,
   movementNarrative
 }: TeamMarketIntelligencePanelProps) {
+  const t = useTranslations("teamDetail");
+  const teamDisplayName = useLocalizedTeamName(
+    snapshot.team.code,
+    snapshot.team.name
+  );
+
   return (
-    <section className={teamPanelClass} aria-label="Market intelligence">
+    <section
+      className={teamPanelClass}
+      aria-label={t("marketIntelligenceAria")}
+    >
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Market Intelligence</h2>
+        <h2 className={teamPanelTitleClass}>{t("marketIntelligence")}</h2>
       </div>
       <div className="p-4">
         {isEmpty ? (
           <TeamEmptyState
-            title="Market intelligence pending"
-            body={`Market intelligence summary is not available for ${snapshot.team.name} yet. Live market data may still load from ${getMarketDataSourceLabel(dataStatus.source)}.`}
+            title={t("marketIntelligencePending")}
+            body={t("marketIntelligencePendingBody", {
+              teamName: teamDisplayName,
+              source: getMarketDataSourceLabel(dataStatus.source)
+            })}
           />
         ) : (
           <div className="flex flex-col gap-4 p-4">
             <div className={teamMiniGridClass}>
               <TeamPanelMetric
-                label="Winner probability"
+                label={t("winnerProbability")}
                 value={formatProbability(intelligence.probability)}
               />
               <TeamPanelMetric
-                label="24h change"
+                label={t("change24h")}
                 value={formatChange(intelligence.change24h)}
                 tone={intelligence.change24h < 0 ? "down" : "up"}
               />
               <TeamPanelMetric
-                label="7d change"
+                label={t("change7d")}
                 value={formatChange(intelligence.change7d)}
                 tone={intelligence.change7d < 0 ? "down" : "up"}
               />
               <TeamPanelMetric
-                label="Market volume"
+                label={t("marketVolume")}
                 value={formatVolume(intelligence.volume)}
               />
               <TeamPanelMetric
-                label="Liquidity"
+                label={t("liquidity")}
                 value={
                   intelligence.liquidity
                     ? formatVolume(intelligence.liquidity)
-                    : "Pending"
+                    : t("pending")
                 }
               />
-              {/* <TeamPanelMetric
-                label="Sentiment"
-                value={getSentimentLabel(intelligence.sentiment)}
-              /> */}
               <TeamPanelMetric
-                label="News signals"
+                label={t("newsSignals")}
                 value={String(relatedNewsCount)}
               />
               <TeamPanelMetric
-                label="Updated"
+                label={t("updated")}
                 value={formatShortDate(
                   intelligence.updatedAt ?? dataStatus.lastUpdated
                 )}
@@ -90,7 +101,7 @@ export function TeamMarketIntelligencePanel({
 
             <div className="rounded-lg border border-prophet-line bg-[#fafbfc] px-3 py-2.5">
               <span className="text-[10px] font-[500] uppercase tracking-wide text-prophet-muted">
-                Why it moved
+                {t("whyItMoved")}
               </span>
               <p className="m-0 mt-1 text-xs leading-relaxed text-black">
                 {movementNarrative}

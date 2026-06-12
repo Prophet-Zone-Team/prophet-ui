@@ -9,37 +9,59 @@ import { AuthProvider } from "@/context/auth";
 import { ProphetNotificationWsProvider } from "@/context/prophet-notification-ws";
 import { SportsWsProvider } from "@/context/sports-ws";
 import RainbowProvider from "@/context/rainbowkit/provider";
+import { LocaleProvider } from "@/components/runtime/locale-provider";
 import { AppChrome } from "@/layout/app-chrome";
+import type { AppLocale } from "@/i18n/config";
 import { isSecureInBrowser } from "@/lib/runtime/is-secure-app-context";
 
 interface AppRootProps {
   initialSecure: boolean;
   cookie?: string | null;
+  initialLocale: AppLocale;
+  initialMessages: Record<string, unknown>;
   children: ReactNode;
 }
 
-export function AppRoot({ initialSecure, cookie, children }: AppRootProps) {
+export function AppRoot({
+  initialSecure,
+  cookie,
+  initialLocale,
+  initialMessages,
+  children
+}: AppRootProps) {
   const isSecure =
     typeof window !== "undefined" ? isSecureInBrowser() : initialSecure;
 
   if (!isSecure) {
-    return <HttpsRequiredPage />;
+    return (
+      <LocaleProvider
+        initialLocale={initialLocale}
+        initialMessages={initialMessages}
+      >
+        <HttpsRequiredPage />
+      </LocaleProvider>
+    );
   }
 
   return (
-    <RainbowProvider cookie={cookie}>
-      <AnalyticsProvider>
-        <AuthProvider>
-          <SportsWsProvider>
-            <ProphetNotificationWsProvider>
-              <main className="min-h-screen overflow-x-hidden font-body">
-                <AppChrome>{children}</AppChrome>
-              </main>
-              <Toaster />
-            </ProphetNotificationWsProvider>
-          </SportsWsProvider>
-        </AuthProvider>
-      </AnalyticsProvider>
-    </RainbowProvider>
+    <LocaleProvider
+      initialLocale={initialLocale}
+      initialMessages={initialMessages}
+    >
+      <RainbowProvider cookie={cookie}>
+        <AnalyticsProvider>
+          <AuthProvider>
+            <SportsWsProvider>
+              <ProphetNotificationWsProvider>
+                <main className="min-h-screen overflow-x-hidden font-body">
+                  <AppChrome>{children}</AppChrome>
+                </main>
+                <Toaster />
+              </ProphetNotificationWsProvider>
+            </SportsWsProvider>
+          </AuthProvider>
+        </AnalyticsProvider>
+      </RainbowProvider>
+    </LocaleProvider>
   );
 }

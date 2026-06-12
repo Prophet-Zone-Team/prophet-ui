@@ -1,15 +1,8 @@
-import { isPrivateModeHost } from "@/config/funding";
-import { HomeWinnerPanel } from "@/views/home";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { getFootballMatches } from "@/data/providers/football-matches";
+import { HomeMatchesPanel } from "@/views/home";
 
-export default async function FifaWinnerPage() {
-  const hostHeader = (await headers()).get("host") ?? "";
-  const hostname = hostHeader.split(":")[0] ?? "";
+export default async function FifaMatchesPage() {
+  const { matches, meta: matchesMeta } = await getFootballMatches();
 
-  if (isPrivateModeHost(hostname)) {
-    redirect("/private");
-  }
-
-  return <HomeWinnerPanel />;
+  return <HomeMatchesPanel matches={matches} matchesMeta={matchesMeta} />;
 }

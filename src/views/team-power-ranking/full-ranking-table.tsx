@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { FullRankingTableHeader } from "./full-ranking-table-header";
@@ -17,14 +19,15 @@ export type FullRankingTableProps = {
 };
 
 export function FullRankingTable({ entries, className }: FullRankingTableProps) {
+  const t = useTranslations("analytics");
   const titleOddsMax = getTitleOddsMax(entries);
   const advanceOddsMax = getAdvanceOddsMax(entries);
-  const tableLabel = "Team power ranking";
+  const tableLabel = t("teamPowerRankingAria");
 
   if (entries.length === 0) {
     return (
       <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-[#909090] md:px-5">
-        No teams match these filters.
+        {t("noTeamsMatchFilters")}
       </p>
     );
   }

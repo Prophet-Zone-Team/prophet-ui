@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
-import { formatGroupLabel } from "./format";
 import { CompetitivenessScore } from "./competitiveness-score";
 import type { GroupCompetitivenessVariant } from "./types";
 
@@ -30,6 +31,8 @@ export function SectionSummary({
   icon,
   className
 }: SectionSummaryProps) {
+  const t = useTranslations("analytics");
+
   return (
     <div className={cn("flex min-w-0 flex-col", className)}>
       <div className="flex items-center gap-[8px]">
@@ -46,7 +49,7 @@ export function SectionSummary({
 
       <div className="mt-3 flex items-baseline justify-between gap-3 md:mt-[16px]">
         <h3 className="m-0 text-lg font-[500] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
-          {formatGroupLabel(groupId)}
+          {t("groupLabel", { groupId })}
         </h3>
         <CompetitivenessScore score={score} />
       </div>

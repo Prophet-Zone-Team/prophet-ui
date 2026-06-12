@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { NewsList } from "@/views/analytics/news/news-list";
 import type { NewsImpactItem } from "@/views/analytics/news/types";
@@ -26,6 +28,11 @@ export function TeamNewsSignalsPanel({
   items,
   snapshot
 }: TeamNewsSignalsPanelProps) {
+  const t = useTranslations("teamDetail");
+  const teamDisplayName = useLocalizedTeamName(
+    snapshot.team.code,
+    snapshot.team.name
+  );
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const selectedItem = useMemo(
@@ -50,17 +57,17 @@ export function TeamNewsSignalsPanel({
 
   return (
     <>
-      <section className={teamPanelClass} aria-label="News-to-market signals">
+      <section className={teamPanelClass} aria-label={t("newsSignalsAria")}>
         <div className={teamPanelHeadClass}>
-          <h2 className={teamPanelTitleClass}>News-to-Market Signals</h2>
+          <h2 className={teamPanelTitleClass}>{t("newsToMarketSignals")}</h2>
         </div>
         <div className="p-4">
           {items.length > 0 ? (
             <NewsList items={items} onItemSelect={handleItemSelect} />
           ) : (
             <TeamEmptyState
-              title="No related news"
-              body={`${snapshot.team.name} has no qualifying news signals attached right now.`}
+              title={t("noRelatedNews")}
+              body={t("noRelatedNewsBody", { teamName: teamDisplayName })}
             />
           )}
         </div>
