@@ -13,7 +13,7 @@ export type ShareCardOverlayRect = {
 export const ROAD_SHARE_CARD_FOOTER = {
   qrTop: "86%",
   qrLeft: "4.1%",
-  qrSizePx: 94,
+  qrSizePx: 32,
   inviteTop: "90.8%",
   inviteLeft: "22%",
   inviteMaxWidth: "42%",

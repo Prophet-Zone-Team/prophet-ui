@@ -52,11 +52,7 @@ export const ReferralShareCard = forwardRef<HTMLDivElement, ReferralShareCardPro
     }, []);
 
     return (
-      <div
-        ref={ref}
-        className={cn(inviteShareCardOuterClass, className)}
-        data-share-card-ready={bgReady ? "true" : "false"}
-      >
+      <div className={cn(inviteShareCardOuterClass, className)}>
         <div
           className={inviteShareCardClass}
           style={{
@@ -65,50 +61,50 @@ export const ReferralShareCard = forwardRef<HTMLDivElement, ReferralShareCardPro
             padding: REFERRAL_SHARE_CARD_EXPORT_PADDING,
           }}
         >
-          <img
-            ref={imgRef}
-            src={REFERRAL_SHARE_CARD_IMAGE_PATH}
-            alt=""
-            width={REFERRAL_SHARE_CARD_WIDTH}
-            height={REFERRAL_SHARE_CARD_HEIGHT}
-            className="absolute inset-0 block h-full w-full object-contain object-center rounded-[10px]"
-            style={{
-              width: REFERRAL_SHARE_CARD_WIDTH,
-              height: REFERRAL_SHARE_CARD_HEIGHT,
-              left: REFERRAL_SHARE_CARD_EXPORT_PADDING,
-              top: REFERRAL_SHARE_CARD_EXPORT_PADDING,
-            }}
-            onLoad={handleBgLoad}
-          />
-
-          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col pl-5 pr-5 pt-7 font-body">
-            <div className="text-left">
-              <p className={inviteShareCardTitleClass}>
-                {t("shareCardTitle")}
-                <br />
-                <span className={inviteShareCardProfitClass}>{t("shareCardProfit")}</span>
-              </p>
-
-              {funderDisplay ? (
-                <div className="mt-2">
-                  <p className={inviteShareCardFunderClass}>{funderDisplay}</p>
-                  <p className={inviteShareCardInviteClass}>
-                    {t("shareCardInvite")}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          </div>
-
-          <div className={inviteShareCardQrWrapClass} aria-hidden="true">
-            <QRCodeSVG
-              value={fullLink}
-              size={36}
-              level="M"
-              marginSize={0}
-              bgColor="#ffffff"
-              fgColor="#000000"
+          <div
+            ref={ref}
+            className="relative w-full h-full"
+            data-share-card-ready={bgReady ? "true" : "false"}
+          >
+            <img
+              ref={imgRef}
+              src={REFERRAL_SHARE_CARD_IMAGE_PATH}
+              alt=""
+              width="100%"
+              height="100%"
+              className="absolute inset-0 block h-full w-full object-contain object-center rounded-[10px]"
+              onLoad={handleBgLoad}
             />
+
+            <div className="pointer-events-none absolute inset-0 z-10 flex flex-col pl-5 pr-5 pt-7 font-body h-full w-full">
+              <div className="text-left">
+                <p className={inviteShareCardTitleClass}>
+                  {t("shareCardTitle")}
+                  <br />
+                  <span className={inviteShareCardProfitClass}>{t("shareCardProfit")}</span>
+                </p>
+
+                {funderDisplay ? (
+                  <div className="mt-2">
+                    <p className={inviteShareCardFunderClass}>{funderDisplay}</p>
+                    <p className={inviteShareCardInviteClass}>
+                      {t("shareCardInvite")}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className={inviteShareCardQrWrapClass} aria-hidden="true">
+              <QRCodeSVG
+                value={fullLink}
+                size={36}
+                level="M"
+                marginSize={0}
+                bgColor="#ffffff"
+                fgColor="#000000"
+              />
+            </div>
           </div>
         </div>
       </div>
