@@ -7,18 +7,12 @@ import {
   formatSharePrice,
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
-import {
-  formatSharePrice,
-  getOutcomeToneClass
-} from "@/lib/portfolio/portfolio-format";
 import type { PortfolioMarketIcon } from "@/lib/portfolio/teams-condition";
 
 export interface PortfolioMarketCellProps {
   title: string;
   href?: string;
   outcome: string;
-  price?: number;
-  /** @deprecated Prefer `price` so cents formatting stays consistent. */
   price?: number;
   /** @deprecated Prefer `price` so cents formatting stays consistent. */
   priceLabel?: string;

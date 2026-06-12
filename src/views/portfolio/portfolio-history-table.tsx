@@ -9,7 +9,6 @@ import {
   formatPortfolioDateTime,
   formatPortfolioTransactionMarketName,
   formatSharePrice,
-  formatSharePrice,
   getOutcomeToneClass,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
@@ -103,15 +102,6 @@ export interface PortfolioHistoryTableProps {
   needsWallet: boolean;
   loading: boolean;
   onConnectWallet: () => void;
-}
-
-function formatTransactionValue(
-  transaction: PortfolioTransactionRecord
-): string {
-  const raw = transaction.filledUsdc || transaction.amount;
-  const value = Number(raw);
-
-  return Number.isFinite(value) ? formatTeamDetailMoney(value) : raw || "—";
 }
 
 function formatTransactionValue(
