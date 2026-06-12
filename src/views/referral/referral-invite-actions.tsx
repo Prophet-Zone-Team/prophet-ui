@@ -41,8 +41,6 @@ Track signals. Trade smarter.
 
 Join Prophet 👇
 
-${fullLink}
-
 `;
     const origin = resolveOrigin();
     const imgUrl = `${origin}/analytics/share-card.png`;
