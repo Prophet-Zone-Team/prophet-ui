@@ -5,7 +5,9 @@ import type { Connector } from "wagmi";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import { waitForWalletReady } from "@/lib/trading/wallet-connection-watch";
-import { TRADING_CHAIN_ID } from "@/lib/trading/wallet-trading-chain";
+import { POLYGON_NETWORK } from "@/lib/market/deposit-assets";
+
+const DEFAULT_SIGNING_CHAIN_ID = POLYGON_NETWORK.chainId;
 
 const MOBILE_UA_PATTERN = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
 const MOBILE_SIGNING_BUFFER_MS = 250;
@@ -19,16 +21,22 @@ export function isMobileUserAgent() {
   return MOBILE_UA_PATTERN.test(navigator.userAgent);
 }
 
-export async function prepareWalletSigning(options?: { chainId?: number }) {
-  const chainId = options?.chainId ?? TRADING_CHAIN_ID;
+export async function prepareWalletSigning(options?: {
+  chainId?: number;
+  /** Privy embedded wallets have no wagmi connector to prewarm. */
+  skipConnectorPrewarm?: boolean;
+}) {
+  const chainId = options?.chainId ?? DEFAULT_SIGNING_CHAIN_ID;
 
   await waitForWalletReady();
   await waitForPageVisible();
 
-  const connector = resolveLiveConnector(getAccount(wagmiConfig).connector);
+  if (!options?.skipConnectorPrewarm) {
+    const connector = resolveLiveConnector(getAccount(wagmiConfig).connector);
 
-  if (connector && typeof connector.getProvider === "function") {
-    await connector.getProvider({ chainId });
+    if (connector && typeof connector.getProvider === "function") {
+      await connector.getProvider({ chainId });
+    }
   }
 
   if (isMobileUserAgent()) {

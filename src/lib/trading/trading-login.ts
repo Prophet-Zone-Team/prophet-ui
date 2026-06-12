@@ -12,8 +12,9 @@ import { getConnectGate } from "@/context/rainbowkit/connect-gate";
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import { signMessageWithWallet } from "@/components/trading/wallet-provider";
 import { activatePrivyWallet } from "@/context/privy/privy-wallet-bridge";
+import { getActiveEvmAccount } from "@/lib/wallet/evm/signer-source";
 import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
-import { useAuthStore } from "@/store/auth-store";
+import { AuthLoginMethod, useAuthStore } from "@/store/auth-store";
 import { deriveTradingCredentials } from "@/lib/trading/clob-credentials-client";
 import {
   deployDepositWallet,
@@ -63,40 +64,42 @@ export type TradingLoginStep =
   | "submitting_token_approval"
   | "verifying_readiness";
 
-export async function completeTradingLogin(options?: {
-  onStep?: (step: TradingLoginStep) => void;
-  resume?: boolean;
-  connectSignal?: AbortSignal;
-}): Promise<{ session: TradingUserSession; readiness: UserTradingReadiness }> {
-  let session: TradingUserSession | undefined;
+// export async function completeTradingLogin(options?: {
+//   loginMethod?: AuthLoginMethod;
+//   onStep?: (step: TradingLoginStep) => void;
+//   resume?: boolean;
+//   connectSignal?: AbortSignal;
+// }): Promise<{ session: TradingUserSession; readiness: UserTradingReadiness }> {
+//   let session: TradingUserSession | undefined;
 
-  if (options?.resume) {
-    session = await loadTradingSession();
-  }
+//   if (options?.resume) {
+//     session = await loadTradingSession();
+//   }
 
-  try {
-    if (!session) {
-      const walletAddress = await connectWallet({
-        onStep: options?.onStep,
-        signal: options?.connectSignal,
-      });
-      await ensureDepositWalletDeployed(walletAddress, {
-        onStep: options?.onStep,
-      });
-      session = await createTradingSession(walletAddress, {
-        onStep: options?.onStep,
-      });
-    }
-  } catch (error) {
-    await disconnectTradingSession().catch(() => undefined);
-    throw error;
-  }
+//   try {
+//     if (!session) {
+//       const walletAddress = await connectWallet({
+//         loginMethod: options?.loginMethod,
+//         onStep: options?.onStep,
+//         signal: options?.connectSignal,
+//       });
+//       await ensureDepositWalletDeployed(walletAddress, {
+//         onStep: options?.onStep,
+//       });
+//       session = await createTradingSession(walletAddress, {
+//         onStep: options?.onStep,
+//       });
+//     }
+//   } catch (error) {
+//     await disconnectTradingSession().catch(() => undefined);
+//     throw error;
+//   }
 
-  options?.onStep?.("verifying_readiness");
-  const readiness = await fetchTradingReadinessWithBalances();
+//   options?.onStep?.("verifying_readiness");
+//   const readiness = await fetchTradingReadinessWithBalances();
 
-  return { session: session!, readiness };
-}
+//   return { session: session!, readiness };
+// }
 
 export async function ensureDepositWalletDeployed(
   walletAddress: string,
@@ -232,60 +235,61 @@ export async function fetchTradingReadinessWithBalances() {
   return mergeTradingReadiness(setup, balances);
 }
 
-export async function connectWallet(options?: {
-  onStep?: (step: TradingLoginStep) => void;
-  signal?: AbortSignal;
-  expectedAddress?: string;
-}): Promise<string> {
-  options?.onStep?.("requesting_wallet");
+// export async function connectWallet(options?: {
+//   loginMethod?: AuthLoginMethod;
+//   onStep?: (step: TradingLoginStep) => void;
+//   signal?: AbortSignal;
+//   expectedAddress?: string;
+// }): Promise<string> {
+//   options?.onStep?.("requesting_wallet");
 
-  const loginMethod = useAuthStore.getState().loginMethod;
-  const preferEmbedded = loginMethod === "email" || loginMethod === "google";
+//   const loginMethod = options?.loginMethod ?? useAuthStore.getState().loginMethod;
+//   const preferEmbedded = loginMethod === "email" || loginMethod === "google";
 
-  if (preferEmbedded) {
-    await releaseExternalWalletConnection();
+//   if (preferEmbedded) {
+//     await releaseExternalWalletConnection(loginMethod);
 
-    const embeddedAddress = await activatePrivyWallet(options?.expectedAddress, {
-      preferEmbedded: true,
-    });
+//     const embeddedAddress = await activatePrivyWallet(options?.expectedAddress, {
+//       preferEmbedded: true,
+//     });
 
-    if (embeddedAddress) {
-      return embeddedAddress;
-    }
-  }
+//     if (embeddedAddress) {
+//       return embeddedAddress;
+//     }
+//   }
 
-  const account = getAccount(wagmiConfig);
+//   const account = getAccount(wagmiConfig);
 
-  if (account.isConnected && account.address && !preferEmbedded) {
-    if (
-      !options?.expectedAddress ||
-      account.address.toLowerCase() === options.expectedAddress.toLowerCase()
-    ) {
-      if (account.connector?.id) {
-        storeConnectedWalletConnector(account.address, account.connector.id);
-      }
+//   if (account.isConnected && account.address && !preferEmbedded) {
+//     if (
+//       !options?.expectedAddress ||
+//       account.address.toLowerCase() === options.expectedAddress.toLowerCase()
+//     ) {
+//       if (account.connector?.id) {
+//         storeConnectedWalletConnector(account.address, account.connector.id);
+//       }
 
-      return account.address;
-    }
-  }
+//       return account.address;
+//     }
+//   }
 
-  try {
-    const walletAddress = await getConnectGate().openConnectAndWait({
-      expectedAddress: options?.expectedAddress,
-      signal: options?.signal,
-    });
+//   try {
+//     const walletAddress = await getConnectGate().openConnectAndWait({
+//       expectedAddress: options?.expectedAddress,
+//       signal: options?.signal,
+//     });
 
-    const connected = getAccount(wagmiConfig);
+//     const connected = getAccount(wagmiConfig);
 
-    if (connected.connector?.id) {
-      storeConnectedWalletConnector(walletAddress, connected.connector.id);
-    }
+//     if (connected.connector?.id) {
+//       storeConnectedWalletConnector(walletAddress, connected.connector.id);
+//     }
 
-    return walletAddress;
-  } catch (error) {
-    throw new Error(resolveWalletErrorMessage(error));
-  }
-}
+//     return walletAddress;
+//   } catch (error) {
+//     throw new Error(resolveWalletErrorMessage(error));
+//   }
+// }
 
 export async function createTradingSession(
   walletAddress: string,
@@ -358,6 +362,13 @@ export async function createTradingSession(
       payload.session.walletAddress,
       connected.connector.id,
     );
+  } else {
+    // Privy embedded wallets are not registered as wagmi connectors.
+    const activeAccount = getActiveEvmAccount();
+
+    if (activeAccount.source === "privy") {
+      storeConnectedWalletConnector(payload.session.walletAddress, "privy");
+    }
   }
 
   return payload.session;

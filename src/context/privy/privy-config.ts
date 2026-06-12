@@ -10,7 +10,7 @@ export const PRIVY_CLIENT_ID =
   process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID?.trim() || undefined;
 
 export const privyConfig: PrivyClientConfig = {
-  loginMethods: ["email", "google", "wallet"],
+  loginMethods: ["email", "google"],
   embeddedWallets: {
     ethereum: {
       createOnLogin: "users-without-wallets",

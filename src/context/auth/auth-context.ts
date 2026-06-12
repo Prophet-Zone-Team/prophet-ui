@@ -49,9 +49,8 @@ export interface AuthContextValue {
   completePrivyEmailLogin: (email: string) => void;
   setLoginMethod: (method: AuthLoginMethod | undefined) => void;
   refreshEligibility: () => Promise<TradingEligibilityView | undefined>;
-  openLogin: () => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
-  connectWallet: () => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
-  retryLogin: () => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
+  openLogin: (method?: AuthLoginMethod) => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
+  connectWallet: (method?: AuthLoginMethod) => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
   signClobCredentials: () => Promise<void>;
   signTokenApprovals: () => Promise<void>;
   closeLogin: () => Promise<void>;
