@@ -983,7 +983,7 @@ export function DepositDialog({
     }
 
     if (entryTab === "crypto") {
-      return DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.crypto;
+      return `${DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.crypto} pb-3`;
     }
 
     if (entryTab === "private_balance") {
@@ -1161,6 +1161,7 @@ export function DepositDialog({
                 handleClose();
                 onOpenPrivateTopup?.();
               }}
+              onClose={handleClose}
             />
           ) : null}
 
@@ -1229,7 +1230,7 @@ export function DepositDialog({
               error={statusError}
               convertLoading={continueLoading}
               onConfirmConvert={onConfirmPendingConvert}
-              onClose={onClose}
+              onClose={handleClose}
             />
           ) : null}
         </FundingModalShell>
