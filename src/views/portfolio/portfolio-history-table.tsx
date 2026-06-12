@@ -10,7 +10,6 @@ import {
   formatPortfolioDateTime,
   formatPortfolioTransactionMarketName,
   formatSharePrice,
-  formatSharePrice,
   getOutcomeToneClass,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
