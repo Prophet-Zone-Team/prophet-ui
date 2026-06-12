@@ -17,7 +17,6 @@ import { safeCalculatePath } from "./lib/calculate-path";
 import { getFifaRank, getSquadValue } from "./lib/team-strength";
 import { getFinishForTeam, createDefaultPlacements } from "./lib/placements";
 import { DEFAULT_THIRD_PLACE_GROUPS } from "./lib/path-config";
-import { copyText } from "./lib/share";
 import {
   decodeUrlState,
   encodeUrlState,
@@ -315,7 +314,6 @@ export function RoadToFinalPage({
         onApplyKnockoutRandom={() => applyKnockoutFill("Random fill", "random")}
         onBackToStep1={() => stepTo(1)}
         onBackToStep2={() => stepTo(2)}
-        onCopyCurrentLink={() => void copyText(shareUrl)}
         onGoToStep2={() => stepTo(2)}
         onGoToStep3={() => stepTo(3)}
         onGroupFifaFill={() =>

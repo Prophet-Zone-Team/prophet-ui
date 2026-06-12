@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyLinkIcon } from "@/components/icons";
+import { trackCopyLinkClicked } from "@/lib/analytics/tracking";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { teamTradeHref } from "@/lib/routes/trade";
 import type { TeamDetailHeaderData } from "@/lib/team/map-team-detail";
@@ -171,6 +172,13 @@ export function TeamDetailHeader({
                 text={getPageUrl}
                 ariaLabel="Copy page link"
                 className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted hover:text-black"
+                onCopy={() =>
+                  trackCopyLinkClicked({
+                    target: "page_link",
+                    label: "Copy page link",
+                    entrySource: "team_detail_page"
+                  })
+                }
               >
                 <CopyLinkIcon />
               </CopyButton>

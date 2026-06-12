@@ -15,6 +15,7 @@ export type CopyButtonProps = {
   className?: string;
   toastClassName?: string;
   disabled?: boolean;
+  onCopy?: () => void;
   children: ReactNode;
 };
 
@@ -24,11 +25,13 @@ export function CopyButton({
   className,
   toastClassName,
   disabled = false,
+  onCopy,
   children
 }: CopyButtonProps) {
   const { copiedVisible, copy } = useCopyWithToast();
 
   const handleCopy = async () => {
+    onCopy?.();
     const value = typeof text === "function" ? text() : text;
     await copy(value);
   };

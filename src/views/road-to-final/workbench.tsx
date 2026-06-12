@@ -1,5 +1,7 @@
 "use client";
 
+import { CopyButton } from "@/components/feedback/copy-button";
+import { trackCopyLinkClicked } from "@/lib/analytics/tracking";
 import type { FinishType, PathResult } from "@/types/market";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 import type { WorldCup2026Group } from "@/data/world-cup-2026/groups";
@@ -34,7 +36,6 @@ export function RoadWorkbench({
   onApplyKnockoutRandom,
   onBackToStep1,
   onBackToStep2,
-  onCopyCurrentLink,
   onGoToStep2,
   onGoToStep3,
   onGroupFifaFill,
@@ -77,7 +78,6 @@ export function RoadWorkbench({
   onApplyKnockoutRandom: () => void;
   onBackToStep1: () => void;
   onBackToStep2: () => void;
-  onCopyCurrentLink: () => void;
   onGoToStep2: () => void;
   onGoToStep3: () => void;
   onGroupFifaFill: () => void;
@@ -117,13 +117,20 @@ export function RoadWorkbench({
             then share a screenshot and reproducible link.
           </p>
         </div>
-        <button
-          type="button"
+        <CopyButton
+          text={shareUrl}
+          ariaLabel="Copy current link"
           className="shrink-0 rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
-          onClick={() => void onCopyCurrentLink()}
+          onCopy={() =>
+            trackCopyLinkClicked({
+              target: "share_link",
+              label: "Copy current link",
+              entrySource: "road_to_final_page"
+            })
+          }
         >
           Copy current link
-        </button>
+        </CopyButton>
       </header>
 
       <StepStepper
