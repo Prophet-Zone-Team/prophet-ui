@@ -68,7 +68,10 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
   ]);
 
   return (
-    <section className={cn(tradePanelClass, props.className)} aria-label={t("placeOrder")}>
+    <section
+      className={cn(tradePanelClass, props.className)}
+      aria-label={t("placeOrder")}
+    >
       {props.variant === "game" ? (
         <TradeWidgetHeader
           variant="game"
@@ -101,16 +104,22 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
         <ActionPanel
           variant="game"
           gameSnapshot={props.gameSnapshot}
-          fixtureMarkets={props.variant === "game" ? props.fixtureMarkets : undefined}
+          fixtureMarkets={
+            props.variant === "game" ? props.fixtureMarkets : undefined
+          }
           teamSnapshots={props.teamSnapshots}
           outcomeButtonClassName={props.outcomeButtonClassName}
-          outcomeButtonContainerClassName={props.outcomeButtonContainerClassName}
+          outcomeButtonContainerClassName={
+            props.outcomeButtonContainerClassName
+          }
         />
       ) : (
         <ActionPanel
           snapshot={props.snapshot}
           outcomeButtonClassName={props.outcomeButtonClassName}
-          outcomeButtonContainerClassName={props.outcomeButtonContainerClassName}
+          outcomeButtonContainerClassName={
+            props.outcomeButtonContainerClassName
+          }
         />
       )}
     </section>
