@@ -20,7 +20,11 @@ import {
   useTradeOutcomeSide,
   useTradeTab
 } from "@/store/trade-ticket-store";
-import type { GameFixtureMarketsSnapshot, GameMarketSnapshot, TeamMarketSnapshot } from "@/types/market";
+import type {
+  GameFixtureMarketsSnapshot,
+  GameMarketSnapshot,
+  TeamMarketSnapshot
+} from "@/types/market";
 import { ActionPanel } from "@/views/trade/trade-widget/action-panel";
 import { TradeWidgetHeader } from "@/views/trade/trade-widget/header";
 import { TradeMarketButton } from "@/views/trade/trade-widget/trade-market-button";
@@ -114,7 +118,6 @@ export function TradeWidget(
 
   return (
     <section
-      ref={bidAreaRef}
       className={cn(tradePanelClass, props.className)}
       aria-label={t("placeOrder")}
     >
@@ -159,7 +162,9 @@ export function TradeWidget(
         <ActionPanel
           variant="game"
           gameSnapshot={props.gameSnapshot}
-          fixtureMarkets={props.variant === "game" ? props.fixtureMarkets : undefined}
+          fixtureMarkets={
+            props.variant === "game" ? props.fixtureMarkets : undefined
+          }
           teamSnapshots={props.teamSnapshots}
           outcomeButtonClassName={props.outcomeButtonClassName}
           outcomeButtonContainerClassName={

@@ -11,6 +11,7 @@ export interface PortfolioTransactionRecord {
   type: PortfolioTransactionType;
   side: string;
   price: string;
+  size?: number;
   amount: string;
   filledSize: string;
   filledUsdc: string;
@@ -19,6 +20,7 @@ export interface PortfolioTransactionRecord {
   slug: string;
   source: string;
   createdAt: string;
+  tradeCreatedAt: string;
   txHash: string;
 }
 
