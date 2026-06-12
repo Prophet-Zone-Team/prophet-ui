@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 import {
   formatPortfolioDateTime,
   formatPortfolioTransactionMarketName,
-  formatTransactionPrice,
+  formatSharePrice,
   getOutcomeToneClass,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
@@ -104,13 +104,30 @@ export interface PortfolioHistoryTableProps {
   onConnectWallet: () => void;
 }
 
+function formatTransactionValue(
+  transaction: PortfolioTransactionRecord
+): string {
+  const raw = transaction.filledUsdc || transaction.amount;
+  const value = Number(raw);
+
+  return Number.isFinite(value) ? formatTeamDetailMoney(value) : raw || "—";
+}
+
 function HistoryMarketCell({
   transaction
 }: {
   transaction: PortfolioTransactionRecord;
 }) {
   const t = useTranslations("portfolio");
-  const outcomeLine = `${transaction.side} ${formatTransactionPrice(transaction.price)}`;
+  const price = Number(transaction.price);
+  const priceLabel = Number.isFinite(price)
+    ? formatSharePrice(price)
+    : transaction.price;
+  const filledSize = Number(transaction.filledSize);
+  const sharesLabel =
+    Number.isFinite(filledSize) && filledSize > 0
+      ? `${filledSize.toFixed(1)} shares`
+      : null;
   const nonMarketLabels: Partial<Record<PortfolioTransactionType, string>> = {
     withdraw: t("txTypeWithdraw"),
     deposit: t("txTypeDeposit"),
@@ -156,7 +173,10 @@ function HistoryMarketCell({
             getOutcomeToneClass(transaction.side)
           )}
         >
-          {outcomeLine}
+          {transaction.side} {priceLabel}
+          {sharesLabel ? (
+            <span className="text-prophet-muted ml-1"> {sharesLabel}</span>
+          ) : null}
         </p>
       </div>
     </div>
@@ -177,7 +197,8 @@ function HistoryRowContent({
     withdraw: t("txActionWithdraw"),
     claim: t("txActionClaim")
   };
-  const actionLabel = txActionLabels[transaction.type] ?? titleCase(transaction.type);
+  const actionLabel =
+    txActionLabels[transaction.type] ?? titleCase(transaction.type);
 
   const showStrategyLabel = transaction.source === "strategy";
 
@@ -328,7 +349,7 @@ function renderHistoryRow(
           <div>
             <p className={portfolioTableMobileLabelClass}>{t("value")}</p>
             <p className={portfolioTableMobileValueClass}>
-              {formatTeamDetailMoney(Number(transaction.amount))}
+              {formatTransactionValue(transaction)}
             </p>
           </div>
           <div className="text-right">
@@ -384,7 +405,10 @@ export function PortfolioHistoryTable({
 
   if (transactions.length === 0) {
     return (
-      <div className={portfolioTableScrollClass} aria-label={t("transactionHistory")}>
+      <div
+        className={portfolioTableScrollClass}
+        aria-label={t("transactionHistory")}
+      >
         <div className={cn(portfolioHistoryListClass, "hidden md:block")}>
           <PortfolioHistoryTableHeader />
         </div>
@@ -405,7 +429,10 @@ export function PortfolioHistoryTable({
   });
 
   return (
-    <div className={portfolioTableScrollClass} aria-label={t("transactionHistory")}>
+    <div
+      className={portfolioTableScrollClass}
+      aria-label={t("transactionHistory")}
+    >
       <div className={cn(portfolioHistoryListClass, "hidden md:block")}>
         <PortfolioHistoryTableHeader />
         {desktopRows}

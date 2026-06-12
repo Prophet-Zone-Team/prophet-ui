@@ -18,8 +18,7 @@ import { fetchPositionGameSellContext } from "@/lib/portfolio/fetch-position-gam
 import type { PositionGameSellContext } from "@/lib/portfolio/resolve-position-game-sell-context";
 import {
   formatPortfolioDateTime,
-  formatPnlSubline,
-  formatSharePrice
+  formatPnlSubline
 } from "@/lib/portfolio/portfolio-format";
 import { canRedeemPosition } from "@/lib/portfolio/portfolio-metrics";
 import {
@@ -330,7 +329,7 @@ export function PortfolioPositionsTable({
           title={position.title}
           href={tradeHref}
           outcome={position.outcome}
-          priceLabel={formatSharePrice(position.avgPrice)}
+          price={position.avgPrice}
           shares={position.size}
           icon={marketIcon}
         />
@@ -361,7 +360,7 @@ export function PortfolioPositionsTable({
           title={position.title}
           href={tradeHref}
           outcome={position.outcome}
-          priceLabel={formatSharePrice(position.avgPrice)}
+          price={position.avgPrice}
           shares={position.size}
           icon={marketIcon}
         />

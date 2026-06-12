@@ -335,6 +335,8 @@ export interface ProphetReportTransactionRequest {
 export interface ProphetUserTransaction {
   amount?: string;
   created_at?: string;
+  filled_size?: string;
+  filled_usdc?: string;
   id?: number;
   market_name?: string;
   price?: string;
