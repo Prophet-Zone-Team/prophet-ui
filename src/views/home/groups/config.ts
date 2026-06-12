@@ -10,13 +10,18 @@ export const GROUP_STANDING_STAT_FIELDS: {
     GroupStandingRow,
     "played" | "wins" | "draws" | "losses" | "points"
   >;
-  label: string;
+  labelKey:
+    | "statPlayed"
+    | "statWins"
+    | "statDraws"
+    | "statLosses"
+    | "statPoints";
 }[] = [
-  { key: "played", label: "Played" },
-  { key: "wins", label: "Wins" },
-  { key: "draws", label: "Draws" },
-  { key: "losses", label: "Losses" },
-  { key: "points", label: "Points" },
+  { key: "played", labelKey: "statPlayed" },
+  { key: "wins", labelKey: "statWins" },
+  { key: "draws", labelKey: "statDraws" },
+  { key: "losses", labelKey: "statLosses" },
+  { key: "points", labelKey: "statPoints" },
 ];
 
 /** Figma sample values for Group A / B advancing probabilities. */

@@ -710,6 +710,34 @@ export interface ProphetGetTeamDetailNextMatch {
   updated_at: string;
 }
 
+/** GET /v1/game/group-standings — group stage standings with market prices */
+export interface ProphetGroupStandingTeam {
+  team_id: number;
+  team_name: string;
+  team_logo: string;
+  rank: number;
+  points: number;
+  played: number;
+  win: number;
+  draw: number;
+  lose: number;
+  goals_for: number;
+  goals_against: number;
+  goals_diff: number;
+  source_update_at: number;
+  outcomePrices?: string;
+}
+
+export interface ProphetGroupStandingGroup {
+  group_code: string;
+  group_name: string;
+  teams: ProphetGroupStandingTeam[];
+}
+
+export interface ProphetGetGroupStandingsData {
+  groups: ProphetGroupStandingGroup[];
+}
+
 export interface ProphetGetTeamDetailData {
   name: string;
   logo: string;

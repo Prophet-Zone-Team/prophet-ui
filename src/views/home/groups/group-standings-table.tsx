@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { GridTable } from "@/components/grid-table";
 import type { GridTableColumn } from "@/components/grid-table";
@@ -20,11 +21,14 @@ import { getGroupLabel } from "./utils";
 const statCellClassName = "text-center opacity-30";
 const statHeaderClassName = "text-center";
 
-function buildColumns(group: WorldCup2026Group): GridTableColumn<GroupStandingRow>[] {
+function buildColumns(
+  group: WorldCup2026Group,
+  t: ReturnType<typeof useTranslations<"home">>,
+): GridTableColumn<GroupStandingRow>[] {
   const statColumns: GridTableColumn<GroupStandingRow>[] =
     GROUP_STANDING_STAT_FIELDS.map((field) => ({
       id: field.key,
-      header: field.label,
+      header: t(field.labelKey),
       headerClassName: statHeaderClassName,
       cellClassName: statCellClassName,
       renderCell: (row) => row[field.key],
@@ -39,6 +43,7 @@ function buildColumns(group: WorldCup2026Group): GridTableColumn<GroupStandingRo
           <TeamFlag
             name={row.flagName}
             code={row.teamCode}
+            logoUrl={row.logoUrl}
             className="h-6 w-6 shrink-0 rounded-[2px] text-2xl"
           />
           <span className="truncate text-[16px] leading-normal text-black">
@@ -50,7 +55,7 @@ function buildColumns(group: WorldCup2026Group): GridTableColumn<GroupStandingRo
     ...statColumns,
     {
       id: "advancing",
-      header: "Advancing",
+      header: t("advancing"),
       headerClassName: statHeaderClassName,
       cellClassName: "text-center",
       renderCell: (row) => (
@@ -69,7 +74,9 @@ export function GroupStandingsTable({
   group: WorldCup2026Group;
   rows: GroupStandingRow[];
 }) {
-  const columns = useMemo(() => buildColumns(group), [group]);
+  const t = useTranslations("home");
+  const columns = useMemo(() => buildColumns(group, t), [group, t]);
+  const groupLabel = getGroupLabel(group, t);
 
   return (
     <GridTable
@@ -78,7 +85,7 @@ export function GroupStandingsTable({
       getRowKey={(row) => row.teamId}
       gridTemplateColumns={GROUP_STANDINGS_GRID_TEMPLATE_COLUMNS}
       minWidth={GROUP_STANDINGS_TABLE_MIN_WIDTH}
-      ariaLabel={`${getGroupLabel(group)} standings`}
+      ariaLabel={t("groupStandingsTableAria", { groupLabel })}
       headerRowClassName="items-center pt-[14px]"
       bodyRowClassName="items-center transition-colors hover:bg-[#F9FAFC] rounded-[12px]"
     />

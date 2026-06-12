@@ -8,7 +8,7 @@ import { TabSwitcher } from "@/components/ui/tab-switcher";
 const HOME_SECTIONS = [
   { href: "/fifa", labelKey: "matches" },
   { href: "/fifa/winner", labelKey: "worldCupWinner" },
-  { href: "/fifa/groups", labelKey: "Groups" },
+  { href: "/fifa/groups", labelKey: "groups" },
 ] as const;
 
 function isSectionActive(pathname: string, href: string): boolean {

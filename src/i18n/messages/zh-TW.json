@@ -852,7 +852,21 @@
     "specialMatchWinProbabilitiesAria": "勝率 {homePct} 主場、{drawPct} 和局、{awayPct} 客場",
     "matchOutcomeWin": "勝",
     "matchOutcomeLose": "負",
-    "matchOutcomeDraw": "和局"
+    "matchOutcomeDraw": "和局",
+    "groups": "小組",
+    "groupLabel": "小組 {group}",
+    "groupStandingsAria": "小組積分榜",
+    "loadingGroupStandingsAria": "載入小組積分榜中",
+    "noGroupsMatchSearch": "沒有符合搜尋條件的小組。",
+    "noGroupStandingsAvailable": "小組積分榜尚不可用。",
+    "unableToLoadGroupStandings": "無法載入小組積分榜。",
+    "statPlayed": "賽",
+    "statWins": "勝",
+    "statDraws": "和",
+    "statLosses": "負",
+    "statPoints": "分",
+    "advancing": "晉級機率",
+    "groupStandingsTableAria": "{groupLabel} 積分榜"
   },
   "teams": {
     "teamDirectory": "Team directory",

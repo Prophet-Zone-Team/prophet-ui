@@ -177,6 +177,9 @@ export function filterGroupsBySearch(
   );
 }
 
-export function getGroupLabel(group: WorldCup2026Group): string {
-  return `Group ${group}`;
+export function getGroupLabel(
+  group: WorldCup2026Group,
+  t: (key: "groupLabel", values: { group: WorldCup2026Group }) => string,
+): string {
+  return t("groupLabel", { group });
 }

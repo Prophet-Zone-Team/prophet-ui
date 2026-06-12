@@ -5,6 +5,7 @@ export type GroupStandingRow = {
   teamName: string;
   flagName: string;
   teamCode: string;
+  logoUrl?: string;
   played: number;
   wins: number;
   draws: number;

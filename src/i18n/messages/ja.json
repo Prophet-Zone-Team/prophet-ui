@@ -852,7 +852,21 @@
     "specialMatchWinProbabilitiesAria": "勝利確率 {homePct} ホーム、{drawPct} 引き分け、{awayPct} アウェイ",
     "matchOutcomeWin": "勝ち",
     "matchOutcomeLose": "負け",
-    "matchOutcomeDraw": "引き分け"
+    "matchOutcomeDraw": "引き分け",
+    "groups": "グループ",
+    "groupLabel": "グループ {group}",
+    "groupStandingsAria": "グループ順位表",
+    "loadingGroupStandingsAria": "グループ順位表を読み込み中",
+    "noGroupsMatchSearch": "検索条件に一致するグループがありません。",
+    "noGroupStandingsAvailable": "グループ順位表はまだ利用できません。",
+    "unableToLoadGroupStandings": "グループ順位表を読み込めませんでした。",
+    "statPlayed": "試合",
+    "statWins": "勝",
+    "statDraws": "分",
+    "statLosses": "負",
+    "statPoints": "点",
+    "advancing": "突破確率",
+    "groupStandingsTableAria": "{groupLabel} 順位表"
   },
   "teams": {
     "teamDirectory": "Team directory",
