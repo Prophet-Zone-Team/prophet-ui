@@ -44,7 +44,6 @@ export function SignalNewsDetailMetadataRow({
             className={cn(
               "text-[14px] font-[500] leading-[17px]",
               SentimentColor({ sentiment })
-              SentimentColor({ sentiment })
             )}
           >
             {formatImpactScore(impactScore)}

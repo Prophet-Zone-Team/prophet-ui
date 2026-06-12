@@ -991,7 +991,7 @@
     "shareCardTitle": "使用 Prophet，",
     "shareCardProfit": "賺取收益！",
     "shareCardInvite": "邀請你加入 Prophet",
-    "shareTweetIntro": "世界盃市場即將來臨。\n\n追蹤訊號。更聰明地交易。\n\n加入 Prophet 👇\n\n",
+    "shareTweetIntro": "世界盃市場即將來臨。\n\n追蹤訊號。更聰明地交易。\n\n加入 Prophet 👇\n\n{link}\n\n",
     "claimSuccess": "已領取 {amount} USDC",
     "claimError": "無法領取推薦獎勵。"
   },

@@ -24,6 +24,7 @@ import {
   XBrandIcon
 } from "./referral-icons";
 import { shareToX } from "@/utils/x";
+import { resolveOrigin } from "@/lib/referral/referral-link";
 
 export type ReferralInviteActionsProps = {
   fullLink: string;
@@ -45,13 +46,16 @@ export function ReferralInviteActions({
   const { copiedVisible, copy } = useCopyWithToast();
 
   const handleTwitter = useCallback(() => {
-    const tweetText = t("shareTweetIntro");
+    const tweetText = t("shareTweetIntro", { link: fullLink });
     trackShareClicked({
       target: "x",
       label: "Share on X",
       entrySource: "referral_invite_modal"
     });
-    shareToX(tweetText, `${fullLink}\n\n`, {
+    const origin = resolveOrigin();
+    const imgUrl = `${origin}/analytics/share-card.png`;
+    const tweetUrl = `${origin}/api/twitter?img=${encodeURIComponent(imgUrl)}&link=${encodeURIComponent(fullLink)}`;
+    shareToX(tweetText, `${tweetUrl}\n\n`, {
       hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket"
     });
   }, [fullLink]);
