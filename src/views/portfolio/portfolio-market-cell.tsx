@@ -1,12 +1,17 @@
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
-import { getOutcomeToneClass } from "@/lib/portfolio/portfolio-format";
+import {
+  formatSharePrice,
+  getOutcomeToneClass
+} from "@/lib/portfolio/portfolio-format";
 import type { PortfolioMarketIcon } from "@/lib/portfolio/teams-condition";
 
 export interface PortfolioMarketCellProps {
   title: string;
   href?: string;
   outcome: string;
+  price?: number;
+  /** @deprecated Prefer `price` so cents formatting stays consistent. */
   priceLabel?: string;
   shares?: number;
   icon?: PortfolioMarketIcon;
@@ -65,11 +70,16 @@ export function PortfolioMarketCell({
   title,
   href,
   outcome,
+  price,
   priceLabel,
   shares,
   icon = { kind: "placeholder" }
 }: PortfolioMarketCellProps) {
-  const subline = priceLabel ? `${outcome} ${priceLabel}` : outcome;
+  const formattedPrice =
+    price != null && Number.isFinite(price)
+      ? formatSharePrice(price)
+      : priceLabel;
+  const subline = formattedPrice ? `${outcome} ${formattedPrice}` : outcome;
   const sharesLabel =
     shares != null && Number.isFinite(shares)
       ? `${shares.toFixed(1)} shares`

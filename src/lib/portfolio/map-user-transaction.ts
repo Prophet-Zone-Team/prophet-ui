@@ -60,6 +60,8 @@ export function mapProphetUserTransaction(
     side: row.side?.trim() || "—",
     price: row.price?.trim() || "0",
     amount: amount,
+    filledSize: row.filled_size?.trim() || "",
+    filledUsdc: row.filled_usdc?.trim() || "",
     marketName: row.market_name?.trim() || "—",
     teamName: row.team_name?.trim() || "",
     slug: row.slug?.trim() || "",

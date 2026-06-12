@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 import {
   formatPortfolioDateTime,
   formatPortfolioTransactionMarketName,
-  formatTransactionPrice,
+  formatSharePrice,
   getOutcomeToneClass,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
@@ -105,12 +105,29 @@ export interface PortfolioHistoryTableProps {
   onConnectWallet: () => void;
 }
 
+function formatTransactionValue(
+  transaction: PortfolioTransactionRecord
+): string {
+  const raw = transaction.filledUsdc || transaction.amount;
+  const value = Number(raw);
+
+  return Number.isFinite(value) ? formatTeamDetailMoney(value) : raw || "—";
+}
+
 function HistoryMarketCell({
   transaction
 }: {
   transaction: PortfolioTransactionRecord;
 }) {
-  const outcomeLine = `${transaction.side} ${formatTransactionPrice(transaction.price)}`;
+  const price = Number(transaction.price);
+  const priceLabel = Number.isFinite(price)
+    ? formatSharePrice(price)
+    : transaction.price;
+  const filledSize = Number(transaction.filledSize);
+  const sharesLabel =
+    Number.isFinite(filledSize) && filledSize > 0
+      ? `${filledSize.toFixed(1)} shares`
+      : null;
   const nonMarketLabel = NON_MARKET_LABELS[transaction.type];
 
   if (nonMarketLabel) {
@@ -151,7 +168,10 @@ function HistoryMarketCell({
             getOutcomeToneClass(transaction.side)
           )}
         >
-          {outcomeLine}
+          {transaction.side} {priceLabel}
+          {sharesLabel ? (
+            <span className="text-prophet-muted ml-1"> {sharesLabel}</span>
+          ) : null}
         </p>
       </div>
     </div>
@@ -305,7 +325,7 @@ function renderHistoryRow(
           <div>
             <p className={portfolioTableMobileLabelClass}>Value</p>
             <p className={portfolioTableMobileValueClass}>
-              {formatTeamDetailMoney(Number(transaction.amount))}
+              {formatTransactionValue(transaction)}
             </p>
           </div>
           <div className="text-right">
@@ -344,7 +364,8 @@ export function PortfolioHistoryTable({
     return (
       <div className="flex flex-col items-center gap-3 px-4 py-10">
         <p className="m-0 text-sm text-prophet-muted">
-          Connect your wallet to view transaction history in your connected account.
+          Connect your wallet to view transaction history in your connected
+          account.
         </p>
         <button
           type="button"
@@ -359,7 +380,10 @@ export function PortfolioHistoryTable({
 
   if (transactions.length === 0) {
     return (
-      <div className={portfolioTableScrollClass} aria-label="Transaction history">
+      <div
+        className={portfolioTableScrollClass}
+        aria-label="Transaction history"
+      >
         <div className={cn(portfolioHistoryListClass, "hidden md:block")}>
           <PortfolioHistoryTableHeader />
         </div>
