@@ -16,7 +16,9 @@ export default async function Page({ searchParams }: TeamPageProps) {
     notFound();
   }
 
-  const result = await getTeamMarketSnapshot(slug);
+  const result = await getTeamMarketSnapshot(
+    slug === "korea-republic" ? "south-korea" : slug
+  );
 
   if (!result) {
     notFound();
