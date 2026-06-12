@@ -22,7 +22,6 @@ import {
 } from "@/lib/market/game-outcome-price";
 import {
   calculateReferencePrice,
-  formatTakeProfitLimitPriceString,
   isTakeProfitLimitAvailable,
   LIMIT_BUY_MIN_SHARES,
   resolveMaxSellShares
@@ -209,8 +208,6 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       lastFetchedReadinessKeyRef.current = null;
     };
   }, []);
-  const takeProfitPriceTouched = useRef(false);
-
   const orderAmount = parseOrderAmount(amount);
   const limitExpirationTimestamp =
     orderMode === "limit"
@@ -597,24 +594,6 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot read from latest closure
   }, [limitPriceContextKey, setLimitPrice]);
 
-  useEffect(() => {
-    takeProfitPriceTouched.current = false;
-  }, [limitPriceContextKey, orderMode, tab]);
-
-  useEffect(() => {
-    if (orderMode !== "market" || tradeSide !== "buy" || !preview) {
-      return;
-    }
-
-    if (takeProfitPriceTouched.current) {
-      return;
-    }
-
-    setTakeProfitLimitPrice(
-      formatTakeProfitLimitPriceString(preview.sidePrice)
-    );
-  }, [orderMode, preview?.sidePrice, setTakeProfitLimitPrice, tradeSide]);
-
   const readinessQueryKey = useMemo(() => {
     if (!preview?.tokenId) {
       return null;
@@ -991,6 +970,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         orderMode === "market" &&
         tradeSide === "buy" &&
         takeProfitLimitEnabled &&
+        takeProfitLimitPrice.trim() &&
         takeProfitLimitAvailable &&
         preview.shareSize >= LIMIT_BUY_MIN_SHARES &&
         preview.tokenId
@@ -1088,6 +1068,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
       setStatus("idle");
       setMessage(undefined);
+      setTakeProfitLimitEnabled(false);
+      setTakeProfitLimitPrice("");
 
       await Promise.all([
         refreshOrderReadiness(),
@@ -1131,6 +1113,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     signClobCredentials,
     signTokenApprovals,
     refreshOutcomeShares,
+    setTakeProfitLimitEnabled,
+    setTakeProfitLimitPrice,
     takeProfitLimitEnabled,
     takeProfitLimitPrice,
     effectiveFixtureOutcome,
@@ -1406,11 +1390,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       takeProfitLimitEnabled,
       takeProfitLimitDisabled: !takeProfitLimitAvailable,
       takeProfitLimitPrice,
-      onTakeProfitLimitEnabledChange: setTakeProfitLimitEnabled,
-      onTakeProfitLimitPriceChange: (value: string) => {
-        takeProfitPriceTouched.current = true;
-        setTakeProfitLimitPrice(value);
-      }
+      onTakeProfitLimitEnabledChange: (value: boolean) => {
+        setTakeProfitLimitEnabled(value);
+
+        if (!value) {
+          setTakeProfitLimitPrice("");
+        }
+      },
+      onTakeProfitLimitPriceChange: setTakeProfitLimitPrice
     }
   };
 }
