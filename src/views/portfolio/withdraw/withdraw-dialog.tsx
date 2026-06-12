@@ -192,8 +192,8 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
       }
 
       return (
-        stableflowTokens.find((token) => token.chainId === selectedChain.chainId) ??
-        stableflowTokens.find((token) => token.symbol === "USDC")
+        stableflowTokens.find((token) => token.symbol === "USDC") ??
+        stableflowTokens.find((token) => token.chainId === selectedChain.chainId)
       );
     });
   }, [isBridge, selectedChain, stableflowTokens, supportedAssets]);
@@ -209,11 +209,11 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   });
   const validationError = validationErrorKey
     ? validationErrorKey === "amountBelowMinimum"
-      ? tWithdraw("amountBelowMinimum", { amount: `$${effectiveMinUsd}` })
+      ? tWithdraw("amountBelowMinimum", { amount: `${effectiveMinUsd}` })
       : tWithdraw(validationErrorKey)
     : undefined;
   const recipientError =
-    !isBridge && recipientInput.trim() && !EVM_ADDRESS_PATTERN.test(recipientInput.trim())
+    recipientInput.trim() && !EVM_ADDRESS_PATTERN.test(recipientInput.trim())
       ? tWithdraw("invalidRecipient")
       : undefined;
   const formError = validationError ?? recipientError;
@@ -226,18 +226,18 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     amount !== undefined &&
     amount > 0 &&
     formError === undefined &&
-    (isBridge || EVM_ADDRESS_PATTERN.test(recipientInput.trim()));
+    EVM_ADDRESS_PATTERN.test(recipientInput.trim());
 
   const bridgeQuoteRequest = useMemo(
     () =>
-      isBridge && selectedToken && !("assetId" in selectedToken) && session?.walletAddress
+      isBridge && selectedToken && !("assetId" in selectedToken) && recipientInput.trim()
         ? buildWithdrawQuoteRequest({
           token: selectedToken,
           amount: amountInput,
-          recipientAddress: session.walletAddress,
+          recipientAddress: recipientInput.trim(),
         })
         : undefined,
-    [amountInput, isBridge, selectedToken, session],
+    [amountInput, isBridge, selectedToken, recipientInput],
   );
 
   const { quote: bridgeQuote, loading: bridgeQuoteLoading, error: bridgeQuoteError } = useBridgeQuote({
@@ -343,7 +343,9 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     !assetsLoadingForMethod &&
     !!session?.walletAddress &&
     !!selectedToken &&
+    !!recipientInput.trim() &&
     formError === undefined &&
+    quoteError === undefined &&
     amount !== undefined &&
     !isBusy;
 
@@ -441,7 +443,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         const result = await executeBridgeWithdraw({
           toChainId: String(selectedToken.chainId),
           toTokenAddress: selectedToken.address,
-          recipientAddr: session.walletAddress,
+          recipientAddr: recipientInput.trim(),
           amountUsd: amount,
         });
         txHash = result.txHash;
@@ -560,31 +562,17 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
           <div className="flex flex-col gap-5 pb-10 md:pb-2">
             <div className="flex flex-col gap-2">
               <span className={withdrawFieldLabelClass}>{tWithdraw("recipientAddress")}</span>
-              {isBridge ? (
-                <div className={withdrawInputBoxClass}>
-                  <span className="flex min-w-0 items-center gap-2">
-                    <WalletAvatarIcon address={session?.walletAddress} />
-                    <span className="truncate text-base font-[500] text-black">
-                      {formatShortWallet(session?.walletAddress)}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-base font-[500] text-[#909090]">
-                    {tWithdraw("connected")}
-                  </span>
-                </div>
-              ) : (
-                <div className={withdrawInputBoxClass}>
-                  <input
-                    type="text"
-                    value={recipientInput}
-                    onChange={(event) => setRecipientInput(event.target.value)}
-                    className={withdrawAmountInputClass}
-                    placeholder="0x…"
-                    aria-label={tWithdraw("recipientAddressAria")}
-                    spellCheck={false}
-                  />
-                </div>
-              )}
+              <div className={withdrawInputBoxClass}>
+                <input
+                  type="text"
+                  value={recipientInput}
+                  onChange={(event) => setRecipientInput(event.target.value)}
+                  className={withdrawAmountInputClass}
+                  placeholder="0x…"
+                  aria-label={tWithdraw("recipientAddressAria")}
+                  spellCheck={false}
+                />
+              </div>
               {recipientError ? (
                 <p className="m-0 text-sm text-prophet-red">{recipientError}</p>
               ) : null}
@@ -617,6 +605,11 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
               </div>
               {formError && amountInput.trim() ? (
                 <p className="m-0 text-sm text-prophet-red">{formError}</p>
+              ) : null}
+              {quoteError ? (
+                <p className="m-0 text-sm text-prophet-red">
+                  {tWithdraw("quoteUnavailable")}
+                </p>
               ) : null}
               {withdrawError && step === "form" ? (
                 <p className="m-0 text-sm text-prophet-red">{withdrawError}</p>
@@ -747,11 +740,6 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                   </span>
                 </div>
               </div>
-              {quoteError ? (
-                <p className="m-0 text-right text-sm text-[#909090]">
-                  {tWithdraw("quoteUnavailable")}
-                </p>
-              ) : null}
             </div>
 
             <TransactionBreakdown

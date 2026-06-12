@@ -470,7 +470,7 @@
       "selectChain": "選擇鏈",
       "selectToken": "選擇代幣",
       "estReceive": "預估收到",
-      "quoteUnavailable": "報價不可用；未顯示預估輸出。",
+      "quoteUnavailable": "流動性不足。",
       "withdrawalSubmitted": "提款已提交",
       "unsupportedToken": "所選代幣不支援此提款方式。",
       "amountZero": "請輸入大於零的金額。",
