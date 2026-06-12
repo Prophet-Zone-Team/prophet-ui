@@ -8,16 +8,30 @@ import { cn } from "@/lib/cn";
 import { formatImpactScore } from "@/views/analytics/news/format";
 import { SentimentColor, SentimentIcon } from "@/views/analytics/news/icons";
 import type { NewsImpactItem } from "@/views/analytics/news/types";
+import { SignalAllTeamFilter } from "./types";
+import teams from "@/data/teams";
 
 export type SignalAllItemProps = {
   item: NewsImpactItem;
   onSelect?: (item: NewsImpactItem) => void;
   className?: string;
+  teamFilter?: SignalAllTeamFilter;
 };
 
-export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps) {
+export function SignalAllItem({ item, onSelect, className, teamFilter }: SignalAllItemProps) {
+
+  let teamName = item.teamName;
+  let teamCode = item.teamCode;
+  if (teamFilter && teamFilter !== "all" && item.matchedTeams?.includes(teamFilter)) {
+    teamName = teamFilter;
+    const filterTeam = Object.values(teams).find((team) => team.name === teamName);
+    if (filterTeam) {
+      teamCode = filterTeam.abbreviation;
+    }
+  }
+
   const t = useTranslations("signal");
-  const teamDisplayName = useLocalizedTeamName(item.teamCode, item.teamName);
+  const teamDisplayName = useLocalizedTeamName(teamCode, teamName);
   const impactLabel = formatImpactScore(item.impactScore);
 
   return (
@@ -45,8 +59,8 @@ export function SignalAllItem({ item, onSelect, className }: SignalAllItemProps)
       <div className="flex w-full shrink-0 items-center justify-between gap-2 md:w-[110px] md:flex-col md:items-start md:gap-1">
         <div className="flex w-full flex-1 items-center gap-2 md:gap-[8px] overflow-hidden">
           <TeamFlag
-            code={item.teamCode}
-            name={item.teamName}
+            code={teamCode}
+            name={teamName}
             className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] md:h-[20px] md:w-[20px] md:text-[20px]"
             fallback={false}
           />

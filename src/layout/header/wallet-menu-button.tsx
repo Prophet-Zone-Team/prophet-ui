@@ -163,7 +163,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
       return null;
     }
     return (
-      <div className="relative inline-flex flex-col items-end">
+      <div ref={menuRef} className="relative inline-flex flex-col items-end">
         <div className="flex items-center gap-2">
           <WalletLanguageMenuItem variant="compact" />
           <WalletLoginButton
@@ -177,6 +177,13 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
             {message ?? error}
           </p>
         ) : null}
+        <MobileDrawer
+          open={isMobileDrawerOpen}
+          onClose={onMobileDrawerClose}
+          regionRestricted={isBuyRestricted}
+          onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
+          balanceDisplay={balanceDisplay}
+        />
       </div>
     );
   }

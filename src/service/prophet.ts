@@ -752,12 +752,14 @@ export async function getAnalyticsNews(params: {
   page: number;
   page_size: number;
   category?: string;
+  teams?: string;
 }): Promise<ProphetGetAnalyticsNewsData> {
   return prophetGet<ProphetGetAnalyticsNewsData>("/v1/analytics/news", {
     params: {
       page: params.page,
       page_size: params.page_size,
-      category: params.category ?? ""
+      category: params.category ?? "",
+      teams: params.teams ?? ""
     }
   });
 }

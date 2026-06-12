@@ -146,7 +146,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     if (session?.walletAddress && !recipientInput) {
       setRecipientInput(session.walletAddress);
     }
-  }, [open, recipientInput, session?.walletAddress]);
+  }, [open, session?.walletAddress]);
 
   useEffect(() => {
     if (!open || chainOptions.length === 0) {

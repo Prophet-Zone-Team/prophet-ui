@@ -5,8 +5,12 @@ export const analyticsQueryKeys = {
   teamPathContext: ["analytics", "team-path-context"] as const,
   latestNews: (category: string) =>
     ["analytics", "news", "latest", category] as const,
-  newsPage: (page: number, pageSize: number, category: string) =>
-    ["analytics", "news", page, pageSize, category] as const,
+  newsPage: (
+    page: number,
+    pageSize: number,
+    category: string,
+    teams = ""
+  ) => ["analytics", "news", page, pageSize, category, teams] as const,
   teamRelatedNews: (teamsKey: string) =>
     ["analytics", "news", "team-related", teamsKey] as const,
   newsTopCategoryImpact: ["analytics", "news", "top-category-impact"] as const,
