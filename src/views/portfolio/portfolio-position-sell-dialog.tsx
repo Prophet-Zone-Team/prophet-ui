@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { Modal } from "@/components/ui/modal";
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
@@ -71,12 +72,13 @@ function PortfolioPositionSellSharedBody({
   onClose,
   ticket
 }: PortfolioPositionSellSharedBodyProps) {
+  const t = useTranslations("portfolio");
   const router = useRouter();
 
   if (!ticket) {
     return (
       <p className="py-8 text-center text-sm text-prophet-muted">
-        Loading order preview…
+        {t("loadingOrderPreview")}
       </p>
     );
   }
@@ -124,7 +126,7 @@ function PortfolioPositionSellSharedBody({
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-[500] text-black">Receive Token</span>
+            <span className="text-sm font-[500] text-black">{t("receiveToken")}</span>
             <span className="text-xl font-[500] text-black">
               {receiveAmount}
             </span>
@@ -170,14 +172,14 @@ function PortfolioPositionSellSharedBody({
           disabled={isBusy}
           onClick={handleEditOrder}
         >
-          Edit order
+          {t("editOrder")}
         </button>
         <TradeAuthActionButton
           tradeSide="sell"
           className={fundingPrimaryButtonClass}
-          actionLabel={`Cash out ${receiveAmount}`}
-          signingLabel="Waiting for signature…"
-          submittingLabel="Processing…"
+          actionLabel={t("cashOut", { amount: receiveAmount })}
+          signingLabel={t("waitingForSignature")}
+          submittingLabel={t("processing")}
           canSubmit={formProps.canSubmit}
           actionStatus={
             formProps.status === "signing"
@@ -286,17 +288,18 @@ function PortfolioPositionGameSellBody({
 }
 
 export function PortfolioPositionSellDialog(props: PortfolioPositionSellDialogProps) {
+  const t = useTranslations("portfolio");
   const { open, position, onClose } = props;
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel={`Sell ${position.title}`}
+      ariaLabel={t("sellAria", { title: position.title })}
       className={PORTFOLIO_SELL_MODAL_WIDTH}
       hideCloseButton
     >
-      <FundingModalShell title="Sell" onClose={onClose}>
+      <FundingModalShell title={t("sellTitle")} onClose={onClose}>
         {props.variant === "team" ? (
           <PortfolioPositionTeamSellBody
             position={position}

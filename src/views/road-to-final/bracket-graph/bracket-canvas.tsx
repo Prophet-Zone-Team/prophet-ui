@@ -1,4 +1,9 @@
+"use client";
+
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
+
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 import type { PathResult } from "@/types/market";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
@@ -7,6 +12,10 @@ import {
   LEFT_BRACKET_COLUMNS,
   RIGHT_BRACKET_COLUMNS
 } from "../lib/bracket-config";
+import {
+  translateBracketSeedLabel,
+  translateColumnLabel
+} from "../lib/i18n-labels";
 import type {
   BracketColumnConfig,
   BracketSide,
@@ -24,6 +33,8 @@ function CollapsedBracketSide({
   onToggle: () => void;
   side: Exclude<BracketSide, "center">;
 }) {
+  const t = useTranslations("roadToFinal");
+
   return (
     <button
       type="button"
@@ -32,7 +43,9 @@ function CollapsedBracketSide({
         "rounded-[8px] border border-dashed border-[#EBEBEB] bg-[#F9FAFC] text-[#909090]",
         "transition-colors hover:border-[#18110F] hover:text-black"
       )}
-      aria-label={`Expand ${side} half`}
+      aria-label={
+        side === "left" ? t("expandLeftHalf") : t("expandRightHalf")
+      }
       onClick={onToggle}
     >
       {side === "left" ? (
@@ -41,9 +54,9 @@ function CollapsedBracketSide({
         <ChevronLeft className="h-4 w-4" aria-hidden />
       )}
       <span className="text-[10px] font-[300] [writing-mode:vertical-rl]">
-        {side === "left" ? "Left half" : "Right half"}
+        {side === "left" ? t("leftHalf") : t("rightHalf")}
       </span>
-      <strong className="text-[11px] font-[400] text-black">Show</strong>
+      <strong className="text-[11px] font-[400] text-black">{t("show")}</strong>
     </button>
   );
 }
@@ -67,6 +80,8 @@ function BracketSideColumns({
   side: BracketSide;
   thirdPlaceOption?: ThirdPlaceAllocationOption;
 }) {
+  const t = useTranslations("roadToFinal");
+
   return (
     <>
       {columns.map((column) => (
@@ -75,7 +90,7 @@ function BracketSideColumns({
           className="flex shrink-0 flex-col justify-center gap-[16px]"
         >
           <span className="text-center text-[10px] font-[300] text-[#909090]">
-            {column.label}
+            {translateColumnLabel(column, t)}
           </span>
           <div className="flex flex-col gap-[16px]">
             {column.matchIds.map((matchId) => (
@@ -114,6 +129,7 @@ function ResolvedFinalSlot({
   seed: string;
   thirdPlaceOption?: ThirdPlaceAllocationOption;
 }) {
+  const t = useTranslations("roadToFinal");
   const matchId = 104;
   const match = { matchId, left: "W101", right: "W102", stage: "FINAL" };
   const resolved = resolveBracketSeed(
@@ -138,12 +154,19 @@ function ResolvedFinalSlot({
     selectedWinnerId && slotTeamId && selectedWinnerId === slotTeamId
   );
   const selectable = candidates.length === 1;
+  const localizedTeamName = useLocalizedTeamName(
+    resolved.team?.code ?? "",
+    resolved.team?.name ?? ""
+  );
+  const label = resolved.team
+    ? localizedTeamName
+    : translateBracketSeedLabel(resolved.label, resolved.seed, t);
 
   return (
     <SeedSlot
       active={active || resolved.active}
       disabled={!selectable}
-      label={resolved.label}
+      label={label}
       onClick={
         selectable ? () => onWinnerChange(matchId, candidates[0].id) : undefined
       }
@@ -175,6 +198,8 @@ export function BracketCanvas({
   thirdPlaceOption?: ThirdPlaceAllocationOption;
   variant?: "fullscreen";
 }) {
+  const t = useTranslations("roadToFinal");
+  const resultTeamName = useLocalizedTeamName(result.teamCode, result.teamName);
   const finalActive = activeMatchIds.has(104);
 
   return (
@@ -211,15 +236,17 @@ export function BracketCanvas({
 
         <div
           className="flex w-[160px] shrink-0 flex-col items-center gap-[8px] self-center"
-          aria-label="Final"
+          aria-label={t("final")}
         >
-          <span className="text-[10px] font-[300] text-[#909090]">Final</span>
+          <span className="text-[10px] font-[300] text-[#909090]">
+            {t("final")}
+          </span>
           <div className="w-full rounded-[8px] border border-[#EBEBEB] bg-white p-[12px]">
             <span className="rounded-[4px] bg-[#F3F4F6] px-[6px] py-[2px] text-[10px] text-[#909090]">
-              M104
+              {t("matchPrefix", { matchId: 104 })}
             </span>
             <strong className="mt-[6px] block text-[14px] font-[400] text-black">
-              Final
+              {t("final")}
             </strong>
             <div className="mt-[8px] flex flex-col gap-[6px]">
               <ResolvedFinalSlot
@@ -230,7 +257,9 @@ export function BracketCanvas({
                 seed="W101"
                 thirdPlaceOption={thirdPlaceOption}
               />
-              <span className="text-center text-[10px] text-[#909090]">vs</span>
+              <span className="text-center text-[10px] text-[#909090]">
+                {t("versus")}
+              </span>
               <ResolvedFinalSlot
                 active={activeMatchIds.has(102)}
                 knockoutWinners={knockoutWinners}
@@ -245,8 +274,8 @@ export function BracketCanvas({
             </div>
             <p className="m-0 mt-[6px] text-[10px] font-[300] text-[#909090]">
               {finalActive
-                ? `${result.teamName} route reaches the final lane.`
-                : "Projected winner path appears once a finalist branch is selected."}
+                ? t("finalRouteReachesLane", { teamName: resultTeamName })
+                : t("finalRoutePending")}
             </p>
           </div>
         </div>

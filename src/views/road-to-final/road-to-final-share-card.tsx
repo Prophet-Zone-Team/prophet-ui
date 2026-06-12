@@ -2,8 +2,10 @@
 
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { useTranslations } from "next-intl";
 
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { inviteShareCardOuterClass } from "@/components/share/share-modal-ui";
 import { cn } from "@/lib/cn";
 import { formatReferralFunderDisplay } from "@/lib/referral/format-funder-display";
@@ -16,6 +18,7 @@ import {
 } from "@/lib/road-to-final/share-card-config";
 
 import type { ShareCardStage, ShareCardTeam } from "./lib/build-share-card-stages";
+import { translateShareStageLabel } from "./lib/i18n-labels";
 import {
   ROAD_SHARE_CARD_FOOTER,
 } from "./road-to-final-share-card-layout";
@@ -65,6 +68,7 @@ export const RoadToFinalShareCard = forwardRef<
   },
   ref,
 ) {
+  const t = useTranslations("roadToFinal");
   const [bgReady, setBgReady] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const funderDisplay = formatReferralFunderDisplay(funderAddress);
@@ -152,7 +156,7 @@ export const RoadToFinalShareCard = forwardRef<
               ) : null}
 
               <p className="text-center text-[28px] font-medium capitalize leading-normal text-white/60">
-                2026 World Cup simulation
+                {t("worldCupSimulation")}
               </p>
 
               {champion ? (
@@ -163,12 +167,12 @@ export const RoadToFinalShareCard = forwardRef<
                     className="h-[105px] w-[105px] shrink-0 min-w-[105px] rounded-[20px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
                   />
                   <p className="whitespace-nowrap text-[52px] font-medium leading-normal text-white">
-                    {champion.name}
+                    <ChampionName champion={champion} />
                   </p>
                 </div>
               ) : (
                 <p className="mt-[37px] whitespace-nowrap text-center text-[40px] font-medium text-white/80">
-                  Champion pending
+                  {t("championPending")}
                 </p>
               )}
             </div>
@@ -198,7 +202,7 @@ export const RoadToFinalShareCard = forwardRef<
                     }}
                   >
                     <p className="m-0 whitespace-nowrap text-[28px] font-medium uppercase leading-normal text-white">
-                      {stage.label}
+                      {translateShareStageLabel(stage.key, stage.label, t)}
                     </p>
                     <StageFlags stage={stage} />
                   </div>
@@ -244,7 +248,7 @@ export const RoadToFinalShareCard = forwardRef<
           </div>
 
           <p className="absolute left-[188px] rounded-xl flex justify-center items-center bottom-[57px] m-0 truncate text-[16px] font-normal leading-normal text-white/80 border h-[55px] px-[20px] border-[rgba(255,255,255,0.30)] backdrop-blur-[10px] bg-[rgba(130,163,255,0.10)]">
-            Invite link: {inviteLabel}
+            {t("inviteLink", { link: inviteLabel })}
           </p>
         </div>
         </div>
@@ -252,3 +256,9 @@ export const RoadToFinalShareCard = forwardRef<
     </div>
   );
 });
+
+function ChampionName({ champion }: { champion: ShareCardTeam }) {
+  const displayName = useLocalizedTeamName(champion.code, champion.name);
+
+  return <>{displayName}</>;
+}

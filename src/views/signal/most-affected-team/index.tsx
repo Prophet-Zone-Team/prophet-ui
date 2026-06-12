@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { MostAffectedTeamTable } from "./most-affected-team-table";
@@ -15,9 +19,11 @@ export function MostAffectedTeam({
   className,
   isLoading = false
 }: MostAffectedTeamProps) {
+  const t = useTranslations("signal");
+
   return (
     <section
-      aria-label="Most affected team"
+      aria-label={t("mostAffectedTeamAria")}
       className={cn(
         "box-border flex h-auto w-full max-w-none flex-col md:h-[564px]",
         "rounded-[12px] border border-[#EBEBEB] bg-white px-3 pb-4 pt-4 md:px-5 md:pb-5 md:pt-5",
@@ -25,12 +31,12 @@ export function MostAffectedTeam({
       )}
     >
       <h2 className="m-0 shrink-0 text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
-        Most Affected Team
+        {t("mostAffectedTeam")}
       </h2>
 
       <div className="mt-4 min-h-0 flex-1 md:mt-[26px]">
         {isLoading ? (
-          <p className="text-[14px] text-[#909090]">Loading...</p>
+          <p className="text-[14px] text-[#909090]">{t("loading")}</p>
         ) : (
           <MostAffectedTeamTable entries={data.entries} />
         )}

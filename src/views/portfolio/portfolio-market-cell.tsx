@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { getOutcomeToneClass } from "@/lib/portfolio/portfolio-format";
@@ -69,10 +72,11 @@ export function PortfolioMarketCell({
   shares,
   icon = { kind: "placeholder" }
 }: PortfolioMarketCellProps) {
+  const t = useTranslations("portfolio");
   const subline = priceLabel ? `${outcome} ${priceLabel}` : outcome;
   const sharesLabel =
     shares != null && Number.isFinite(shares)
-      ? `${shares.toFixed(1)} shares`
+      ? t("sharesCount", { count: shares.toFixed(1) })
       : null;
 
   return (

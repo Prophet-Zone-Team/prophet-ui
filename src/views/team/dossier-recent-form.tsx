@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
   teamPanelClass,
@@ -14,10 +18,12 @@ export function DossierRecentForm({
   formResults,
   latestLabel
 }: DossierRecentFormProps) {
+  const t = useTranslations("teamDetail");
+
   return (
-    <section className={teamPanelClass} aria-label="Recent form">
+    <section className={teamPanelClass} aria-label={t("recentFormAria")}>
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Recent Form</h2>
+        <h2 className={teamPanelTitleClass}>{t("recentForm")}</h2>
       </div>
       <div className="p-4">
         {formResults.length > 0 ? (
@@ -39,13 +45,13 @@ export function DossierRecentForm({
               ))}
             </div>
             <p className="m-0 mt-3 text-xs text-prophet-muted">
-              {latestLabel ?? "Recent results loaded."}
+              {latestLabel ?? t("recentResultsLoaded")}
             </p>
           </>
         ) : (
           <TeamEmptyState
-            title="No recent result data"
-            body="Recent form is not available for this team yet."
+            title={t("recentFormNoData")}
+            body={t("recentFormNoDataBody")}
           />
         )}
       </div>

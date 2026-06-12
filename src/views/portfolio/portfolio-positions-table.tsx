@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
@@ -73,13 +74,15 @@ type RedeemTarget = {
 };
 
 function PortfolioPositionsTableHeader() {
+  const t = useTranslations("portfolio");
+
   return (
     <div className={portfolioPositionsTableHeadClass}>
-      <span>Market</span>
-      <span>Traded</span>
-      <span>To Win</span>
-      <span>Value</span>
-      <span className="justify-self-end text-right">Action</span>
+      <span>{t("market")}</span>
+      <span>{t("traded")}</span>
+      <span>{t("toWin")}</span>
+      <span>{t("value")}</span>
+      <span className="justify-self-end text-right">{t("action")}</span>
     </div>
   );
 }
@@ -92,6 +95,7 @@ export function PortfolioPositionsTable({
   loading,
   onConnectWallet
 }: PortfolioPositionsTableProps) {
+  const t = useTranslations("portfolio");
   const [sellTarget, setSellTarget] = useState<SellTarget | null>(null);
   const [redeemTarget, setRedeemTarget] = useState<RedeemTarget | null>(null);
   const [actionLoadingAsset, setActionLoadingAsset] = useState<string | null>(
@@ -119,7 +123,7 @@ export function PortfolioPositionsTable({
   if (loading) {
     return (
       <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-        Loading positions…
+        {t("loadingPositions")}
       </p>
     );
   }
@@ -128,14 +132,14 @@ export function PortfolioPositionsTable({
     return (
       <div className="flex flex-col items-center gap-3 px-4 py-10">
         <p className="m-0 text-sm text-prophet-muted">
-          Connect your wallet to view positions in your connected account.
+          {t("connectWalletToViewPositions")}
         </p>
         <button
           type="button"
           className={portfolioConnectButtonClass}
           onClick={() => void onConnectWallet()}
         >
-          Connect Wallet
+          {t("connectWallet")}
         </button>
       </div>
     );
@@ -143,13 +147,13 @@ export function PortfolioPositionsTable({
 
   if (positions.length === 0) {
     return (
-      <div className={portfolioTableScrollClass} aria-label="Your positions">
+      <div className={portfolioTableScrollClass} aria-label={t("yourPositions")}>
         <div className={portfolioTableDesktopScrollClass}>
           <PortfolioPositionsTableHeader />
         </div>
         <PortfolioEmptyState
-          title="No open positions"
-          body="No current Polymarket positions were returned for the connected account."
+          title={t("noOpenPositions")}
+          body={t("noOpenPositionsBody")}
         />
       </div>
     );
@@ -193,8 +197,7 @@ export function PortfolioPositionsTable({
 
           if (!readinessResult.ok) {
             toast.error(
-              readinessResult.message ??
-                "This position is not available to sell right now."
+              readinessResult.message ?? t("positionNotAvailableToSell")
             );
             return;
           }
@@ -210,7 +213,7 @@ export function PortfolioPositionsTable({
         const gameContext = await fetchPositionGameSellContext(position);
 
         if (!gameContext) {
-          toast.error("Market data unavailable");
+          toast.error(t("marketDataUnavailable"));
           return;
         }
 
@@ -221,8 +224,7 @@ export function PortfolioPositionsTable({
 
         if (!readinessResult.ok) {
           toast.error(
-            readinessResult.message ??
-              "This position is not available to sell right now."
+            readinessResult.message ?? t("positionNotAvailableToSell")
           );
           return;
         }
@@ -234,7 +236,9 @@ export function PortfolioPositionsTable({
         setSellTarget({ variant: "game", position, context: gameContext });
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : "Market data unavailable";
+          error instanceof Error
+            ? error.message
+            : t("marketDataUnavailable");
         toast.error(message);
       } finally {
         setActionLoadingAsset(null);
@@ -258,8 +262,7 @@ export function PortfolioPositionsTable({
 
         if (!readinessResult.ok) {
           toast.error(
-            readinessResult.message ??
-              "This position is not available to redeem right now."
+            readinessResult.message ?? t("positionNotAvailableToRedeem")
           );
           return;
         }
@@ -290,7 +293,7 @@ export function PortfolioPositionsTable({
                   aria-hidden="true"
                 />
               ) : (
-                "Redeem"
+                t("redeem")
               )}
             </button>
           </RegionRestrictedControl>
@@ -313,7 +316,7 @@ export function PortfolioPositionsTable({
                   aria-hidden="true"
                 />
               ) : (
-                "Sell"
+                t("sell")
               )}
             </button>
           </RegionRestrictedControl>
@@ -363,13 +366,13 @@ export function PortfolioPositionsTable({
           icon={marketIcon}
         />
         <div className="grid grid-cols-2 gap-2">
-          <PortfolioTableMobileField label="Traded">
+          <PortfolioTableMobileField label={t("traded")}>
             {formatTeamDetailMoney(position.initialValue)}
           </PortfolioTableMobileField>
-          <PortfolioTableMobileField label="To Win">
+          <PortfolioTableMobileField label={t("toWin")}>
             {formatTeamDetailMoney(position.size)}
           </PortfolioTableMobileField>
-          <PortfolioTableMobileField label="Value">
+          <PortfolioTableMobileField label={t("value")}>
             <div className="flex flex-col items-end gap-0.5">
               <span>{formatTeamDetailMoney(position.currentValue)}</span>
               <span className={cn("text-xs font-normal", pnlTone)}>
@@ -378,7 +381,7 @@ export function PortfolioPositionsTable({
             </div>
           </PortfolioTableMobileField>
           <PortfolioTableMobileField
-            label="Time"
+            label={t("time")}
             valueClassName="font-normal text-prophet-muted"
           >
             {timeValue ? formatPortfolioDateTime(timeValue) : "—"}
@@ -391,7 +394,7 @@ export function PortfolioPositionsTable({
 
   return (
     <>
-      <div className={portfolioTableScrollClass} aria-label="Your positions">
+      <div className={portfolioTableScrollClass} aria-label={t("yourPositions")}>
         <div className={portfolioTableDesktopScrollClass}>
           <PortfolioPositionsTableHeader />
           {desktopRows}

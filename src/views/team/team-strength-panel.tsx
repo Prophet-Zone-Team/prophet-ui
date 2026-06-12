@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -25,15 +26,16 @@ export function TeamStrengthPanel({
   metrics,
   overallScore
 }: TeamStrengthPanelProps) {
+  const t = useTranslations("teamDetail");
   const score =
     overallScore !== undefined
       ? Math.round(overallScore * 10) / 10
       : undefined;
 
   return (
-    <section className={teamPanelClass} aria-label="Team strength">
+    <section className={teamPanelClass} aria-label={t("teamStrengthAria")}>
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Team Strength</h2>
+        <h2 className={teamPanelTitleClass}>{t("teamStrength")}</h2>
       </div>
       <div className="p-4">
         {metrics.length > 0 ? (
@@ -56,17 +58,21 @@ export function TeamStrengthPanel({
               </ResponsiveContainer>
             </div>
             <div className="mt-3 flex items-baseline justify-center gap-1 border-t border-prophet-line pt-3">
-              <span className="text-xs text-prophet-muted">Strength Score</span>
+              <span className="text-xs text-prophet-muted">
+                {t("strengthScore")}
+              </span>
               <strong className="text-2xl font-[500] text-black">
                 {score ?? "—"}
               </strong>
-              <small className="text-xs text-prophet-muted">/100</small>
+              <small className="text-xs text-prophet-muted">
+                {t("scoreOutOf100")}
+              </small>
             </div>
           </>
         ) : (
           <TeamEmptyState
-            title="Team strength pending"
-            body="Strength metrics are not available for this team yet."
+            title={t("teamStrengthPending")}
+            body={t("teamStrengthPendingBody")}
           />
         )}
       </div>

@@ -1,9 +1,11 @@
-import { cn } from "@/lib/cn";
+import { useTranslations } from "next-intl";
 
-import { formatGroupLabel, getCompetitivenessBarWidth } from "./format";
+import { cn } from "@/lib/cn";
+import { formatLongText } from "@/utils";
+
+import { getCompetitivenessBarWidth } from "./format";
 import { CompetitivenessScore } from "./competitiveness-score";
 import type { GroupCompetitivenessEntry, GroupCompetitivenessVariant } from "./types";
-import { formatLongText } from "@/utils";
 
 const BAR_COLORS: Record<GroupCompetitivenessVariant, string> = {
   death: "#FF674B",
@@ -17,6 +19,8 @@ export type ProgressBarRowProps = {
 };
 
 export function ProgressBarRow({ entry, variant, className }: ProgressBarRowProps) {
+  const t = useTranslations("analytics");
+  const groupLabel = t("groupLabel", { groupId: entry.groupId });
   const barWidth = getCompetitivenessBarWidth(entry.score);
 
   return (
@@ -25,13 +29,16 @@ export function ProgressBarRow({ entry, variant, className }: ProgressBarRowProp
         "grid grid-cols-[62px_minmax(0,1fr)_44px] items-center gap-x-2 whitespace-nowrap md:grid-cols-[70px_minmax(0,1fr)_50px] md:gap-x-[12px]",
         className
       )}
-      aria-label={`${formatGroupLabel(entry.groupId)}, ${entry.score} out of 100`}
+      aria-label={t("groupScoreAria", {
+        groupLabel,
+        score: entry.score
+      })}
     >
       <span
         className="text-[14px] font-[400] leading-[17px] text-[#909090] overflow-hidden"
-        title={formatGroupLabel(entry.groupId)}
+        title={groupLabel}
       >
-        {formatLongText(formatGroupLabel(entry.groupId), 6, 1)}
+        {formatLongText(groupLabel, 6, 1)}
       </span>
 
       <div

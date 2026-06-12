@@ -70,7 +70,7 @@ import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
 import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 import { useTracksStore } from "@/store/tracks-store";
 import { useNotificationWsStore } from "@/store/notification-ws-store";
-import { logoutProphet } from "@/service/prophet";
+import { logoutProphet, syncProphetWalletLogin } from "@/service/prophet";
 import { selectIsAuthenticated, useAuthStore } from "@/store/auth-store";
 import type { AuthLoginMethod } from "@/store/auth-store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
@@ -88,6 +88,7 @@ import {
   hasOAuthReturnParams,
   OAUTH_PENDING_STORAGE_KEY,
 } from "@/context/privy/privy-oauth";
+import { resolvePrivyLoginEmail } from "@/context/privy/resolve-privy-login-email";
 import {
   isPrivyEmbeddedWallet,
   resumePrivyWalletSync,
@@ -105,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const {
     ready: privyReady,
     authenticated: privyAuthenticated,
+    user: privyUser,
     logout: privyLogout,
     createWallet
   } = usePrivy();
@@ -140,9 +142,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useLoginWithOAuth({
     onComplete: (params) => {
-      if (!params.loginAccount || params.loginMethod !== "google") {
+      if (params.loginMethod !== "google") {
         return;
       }
+
+      const email = resolvePrivyLoginEmail(params.user, params.loginAccount);
+
+      if (email) {
+        useAuthStore.getState().setLoginEmail(email);
+      }
+
       void startPrivyTradingLogin("google");
     },
     onError: () => {
@@ -684,12 +693,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setStatus("loading");
       store.setError(undefined);
       store.setLoginStep(undefined);
-      if (_loginMethod === "email" || _loginMethod === "google") {
-        store.setPrivyLoginInProgress(true);
+      if (method) {
+        store.setLoginMethod(method);
+      } else if (!_loginMethod) {
+        store.setLoginMethod("wallet");
       }
 
-      if (!_loginMethod) {
-        store.setLoginMethod("wallet");
+      if (_loginMethod === "email" || _loginMethod === "google") {
+        store.setPrivyLoginInProgress(true);
+      } else {
         store.setPrivyLoginInProgress(false);
       }
 
@@ -947,9 +959,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPrivyModalOpen(false);
   }, []);
 
-  const completePrivyEmailLogin = useCallback(() => {
+  const completePrivyEmailLogin = useCallback((email: string) => {
     const store = useAuthStore.getState();
     store.setLoginMethod("email");
+    store.setLoginEmail(email);
     store.setLoginModalOpen(true);
     setPrivyModalOpen(false);
     pendingPrivyLoginMethodRef.current = "email";
@@ -994,6 +1007,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setLoginStep(undefined);
     store.setLoginModalOpen(false);
     store.setLoginMethod(undefined);
+    store.setLoginEmail(undefined);
 
     try {
       // Log out Privy first so PrivyWalletBridge stops re-binding wagmi.
@@ -1160,6 +1174,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void refreshSession();
   }, [hydrated, privyReady, privyAuthenticated, refreshSession]);
+
+  useEffect(() => {
+    if (!privyAuthenticated || !privyUser) {
+      return;
+    }
+
+    const store = useAuthStore.getState();
+
+    if (store.loginMethod !== "email" && store.loginMethod !== "google") {
+      return;
+    }
+
+    if (store.loginEmail) {
+      return;
+    }
+
+    const email = resolvePrivyLoginEmail(privyUser);
+
+    if (!email) {
+      return;
+    }
+
+    store.setLoginEmail(email);
+
+    const walletAddress = store.session?.walletAddress;
+
+    if (walletAddress) {
+      void syncProphetWalletLogin(walletAddress, { email });
+    }
+  }, [loginMethod, privyAuthenticated, privyUser]);
 
   useEffect(() => {
     // if (!hydrated || !privyReady || !privyAuthenticated) {

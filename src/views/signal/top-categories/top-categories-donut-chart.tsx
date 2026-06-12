@@ -1,6 +1,7 @@
 "use client";
 
 import { Cell, Pie, PieChart } from "recharts";
+import { useTranslations } from "next-intl";
 
 import { getCategoryColor, getCategoryTotal } from "./format";
 import type { SignalCategorySegment } from "./types";
@@ -18,6 +19,7 @@ export function TopCategoriesDonutChart({
   categories,
   className
 }: TopCategoriesDonutChartProps) {
+  const t = useTranslations("signal");
   const total = getCategoryTotal(categories);
   const chartData: ChartDatum[] = categories.map((category) => ({
     ...category,
@@ -28,7 +30,7 @@ export function TopCategoriesDonutChart({
     <div
       className={className}
       role="img"
-      aria-label={`Category distribution total ${total}`}
+      aria-label={t("categoryDistributionTotal", { total })}
     >
       <div className="relative size-[186px]">
         <PieChart width={186} height={186}>
@@ -53,7 +55,7 @@ export function TopCategoriesDonutChart({
 
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-[16px] font-[400] leading-[19px] text-[#909090]">
-            Total
+            {t("total")}
           </span>
           <span className="text-[20px] font-[400] leading-[24px] text-black tabular-nums">
             {total}

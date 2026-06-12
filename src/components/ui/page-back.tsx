@@ -1,9 +1,11 @@
 import { cn } from "@/lib/cn";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { BackChevronIcon } from "@/components/icons";
 
 export function PageBack({ className }: { className?: string }) {
   const router = useRouter();
+  const t = useTranslations("common");
   return (
     <button
       type="button"
@@ -14,7 +16,7 @@ export function PageBack({ className }: { className?: string }) {
       )}
     >
       <BackChevronIcon />
-      <span>back</span>
+      <span>{t("back")}</span>
     </button>
   );
 }

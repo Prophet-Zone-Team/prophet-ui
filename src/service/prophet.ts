@@ -20,6 +20,7 @@ import type {
   ProphetGetTeamGameResultsData,
   ProphetGetHeadToHeadFixturesData,
   ProphetGetGameStatisticsData,
+  ProphetGetGameOddsData,
   ProphetGameStatisticsPayload,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
@@ -371,6 +372,17 @@ function parseGameStatisticsPayload(
   }
 }
 
+/** GET /v1/game/odds — bookmaker odds by market category */
+export async function getProphetGameOdds(params: {
+  slug: string;
+  signal?: AbortSignal;
+}): Promise<ProphetGetGameOddsData> {
+  return prophetGet<ProphetGetGameOddsData>("/v1/game/odds", {
+    params: { slug: params.slug },
+    signal: params.signal
+  });
+}
+
 /** GET /v1/game/statistics — match statistics and events by slug */
 export async function getProphetGameStatistics(params: {
   slug: string;
@@ -451,7 +463,8 @@ export async function applyProphetReferral(
 
 /** Sync Prophet session for the connected wallet; never throws. */
 export async function syncProphetWalletLogin(
-  address: string
+  address: string,
+  options?: { email?: string }
 ): Promise<ProphetLoginData | null> {
   const normalizedAddress = normalizeWalletAddress(address);
   const existingToken = getProphetApiToken();
@@ -459,7 +472,14 @@ export async function syncProphetWalletLogin(
   const existingReferral = getProphetReferral();
   const referralCodeFromQuery = readReferralCodeFromQuery();
 
-  if (existingToken && existingWallet === normalizedAddress && existingReferral) {
+  // Re-login when email is available so returning Privy users can still
+  // associate email after an earlier login raced without it.
+  if (
+    existingToken &&
+    existingWallet === normalizedAddress &&
+    existingReferral &&
+    !options?.email
+  ) {
     if (shouldApplyReferralOnCache(referralCodeFromQuery, existingReferral)) {
       try {
         await applyProphetReferral({
@@ -479,6 +499,7 @@ export async function syncProphetWalletLogin(
   try {
     return await loginProphet({
       address: normalizedAddress,
+      ...(options?.email ? { email: options.email } : {}),
       ...(referralCodeFromQuery
         ? { referral_code: referralCodeFromQuery }
         : {})
@@ -695,12 +716,14 @@ export async function getAnalyticsNews(params: {
   page: number;
   page_size: number;
   category?: string;
+  teams?: string;
 }): Promise<ProphetGetAnalyticsNewsData> {
   return prophetGet<ProphetGetAnalyticsNewsData>("/v1/analytics/news", {
     params: {
       page: params.page,
       page_size: params.page_size,
-      category: params.category ?? ""
+      category: params.category ?? "",
+      teams: params.teams ?? ""
     }
   });
 }

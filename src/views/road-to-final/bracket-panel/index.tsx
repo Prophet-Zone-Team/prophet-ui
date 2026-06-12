@@ -2,12 +2,14 @@
 
 import type { ReactNode } from "react";
 import { GitBranch, List } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   WORLD_CUP_2026_GROUPS,
   WORLD_CUP_2026_GROUP_ORDER,
   getWorldCupGroupForTeam
 } from "@/data/world-cup-2026/groups";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 import type { FinishType, PathResult } from "@/types/market";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
@@ -20,7 +22,7 @@ import { Panel } from "../ui/panel";
 import { PathList } from "./path-list";
 
 export function BracketPanel({
-  calculationError,
+  calculationErrorKey,
   embedded = false,
   finishType,
   knockoutWinners,
@@ -34,7 +36,7 @@ export function BracketPanel({
   thirdPlaceOption,
   viewMode
 }: {
-  calculationError?: string;
+  calculationErrorKey?: string;
   embedded?: boolean;
   finishType: FinishType;
   knockoutWinners: KnockoutWinners;
@@ -48,18 +50,20 @@ export function BracketPanel({
   thirdPlaceOption?: ThirdPlaceAllocationOption;
   viewMode: "graph" | "list";
 }) {
+  const t = useTranslations("roadToFinal");
+
   const body = (
     <>
       {!embedded ? (
         <div>
           <span className="text-[12px] font-[300] uppercase tracking-wide text-[#909090]">
-            Road to Final
+            {t("featureLabel")}
           </span>
           <h2
             id="road-bracket-title"
             className="m-0 mt-[4px] text-[18px] font-[400] text-black"
           >
-            Knockout Path
+            {t("knockoutPath")}
           </h2>
         </div>
       ) : null}
@@ -67,7 +71,9 @@ export function BracketPanel({
       <div className="mt-[16px] flex flex-wrap items-end justify-between gap-[12px]">
         <div className="flex flex-wrap gap-[12px]">
           <label className="flex flex-col gap-[4px]">
-            <span className="text-[12px] font-[300] text-[#909090]">Team</span>
+            <span className="text-[12px] font-[300] text-[#909090]">
+              {t("team")}
+            </span>
             <select
               value={teamId}
               onChange={(event) => onTeamChange(event.target.value)}
@@ -75,16 +81,14 @@ export function BracketPanel({
             >
               {WORLD_CUP_2026_GROUP_ORDER.flatMap((group) =>
                 WORLD_CUP_2026_GROUPS[group].map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {team.name}
-                  </option>
+                  <TeamOption key={team.id} team={team} />
                 ))
               )}
             </select>
           </label>
           <label className="flex flex-col gap-[4px]">
             <span className="text-[12px] font-[300] text-[#909090]">
-              Assumption
+              {t("assumption")}
             </span>
             <select
               value={finishType}
@@ -97,21 +101,16 @@ export function BracketPanel({
 
                 if (group && placement) {
                   onPlacementsChange(
-                    updateGroupPlacement(
-                      placements,
-                      group,
-                      placement,
-                      teamId
-                    )
+                    updateGroupPlacement(placements, group, placement, teamId)
                   );
                   onKnockoutWinnersChange({});
                 }
               }}
               className="h-[32px] min-w-[140px] rounded-[6px] border border-[#EBEBEB] bg-white px-[8px] text-[13px]"
             >
-              <option value="GROUP_WINNER">Group winner</option>
-              <option value="RUNNER_UP">Runner-up</option>
-              <option value="BEST_THIRD">Best third</option>
+              <option value="GROUP_WINNER">{t("finishGroupWinner")}</option>
+              <option value="RUNNER_UP">{t("finishRunnerUp")}</option>
+              <option value="BEST_THIRD">{t("finishBestThird")}</option>
             </select>
           </label>
         </div>
@@ -119,26 +118,25 @@ export function BracketPanel({
           <ViewModeButton
             active={viewMode === "graph"}
             icon={<GitBranch className="h-3.5 w-3.5" />}
-            label="Bracket"
+            label={t("viewBracket")}
             onClick={() => onViewModeChange("graph")}
           />
           <ViewModeButton
             active={viewMode === "list"}
             icon={<List className="h-3.5 w-3.5" />}
-            label="List"
+            label={t("viewList")}
             onClick={() => onViewModeChange("list")}
           />
         </div>
       </div>
 
-      {calculationError ? (
+      {calculationErrorKey ? (
         <div className="mt-[16px] rounded-[8px] border border-[#FECACA] bg-[#FEF2F2] p-[12px]">
           <strong className="block text-[14px] text-[#991B1B]">
-            {calculationError}
+            {t(calculationErrorKey)}
           </strong>
           <span className="mt-[4px] block text-[13px] font-[300] text-[#B91C1C]">
-            Choose exactly eight third-place groups by assigning eight teams to
-            3rd and keeping four teams outside the top three.
+            {t("calculationErrorHint")}
           </span>
         </div>
       ) : null}
@@ -169,6 +167,20 @@ export function BracketPanel({
     <Panel className="flex min-w-0 flex-col" aria-labelledby="road-bracket-title">
       {body}
     </Panel>
+  );
+}
+
+function TeamOption({
+  team
+}: {
+  team: { id: string; code: string; name: string };
+}) {
+  const displayName = useLocalizedTeamName(team.code, team.name);
+
+  return (
+    <option value={team.id}>
+      {displayName}
+    </option>
   );
 }
 

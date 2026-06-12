@@ -12,6 +12,12 @@ export function resolveOpenOrderMarketTitle(
   marketContextMap: Record<string, OpenOrderMarketContext>
 ): string {
   const marketContext = marketContextMap[order.market];
+  const mappedTitle = marketContext?.title?.trim();
+
+  if (mappedTitle) {
+    return mappedTitle;
+  }
+
   const teams = marketContext?.teams ?? [];
 
   if (teams.length === 1) {
@@ -20,12 +26,6 @@ export function resolveOpenOrderMarketTitle(
     if (teamName) {
       return `Will ${teamName} win the 2026 FIFA World Cup?`;
     }
-  }
-
-  const mappedTitle = marketContext?.title?.trim();
-
-  if (mappedTitle) {
-    return mappedTitle;
   }
 
   return order.outcome || order.market || order.asset_id;

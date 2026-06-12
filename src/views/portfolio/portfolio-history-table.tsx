@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import {
@@ -29,22 +30,18 @@ import {
   portfolioTableScrollClass
 } from "@/views/portfolio/portfolio-ui";
 
-const NON_MARKET_LABELS: Partial<Record<PortfolioTransactionType, string>> = {
-  withdraw: "Withdraw",
-  deposit: "Deposit",
-  claim: "Claim Referral Earning"
-};
-
 const STRATEGY_PAGE_HREF = "/strategy/available";
 
 function StrategySourceLabel() {
+  const t = useTranslations("portfolio");
+
   return (
     <Link
       href={STRATEGY_PAGE_HREF}
       className="inline-flex h-6 w-[75px] shrink-0 items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-black to-[#666666] font-[Sora] text-[10px] font-normal leading-[13px] text-white no-underline backdrop-blur-[5px] transition-opacity hover:opacity-90"
-      aria-label="View strategy"
+      aria-label={t("viewStrategy")}
     >
-      Strategy
+      {t("strategy")}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="8"
@@ -86,13 +83,15 @@ function ProphetTransactionMarkIcon() {
 }
 
 function PortfolioHistoryTableHeader() {
+  const t = useTranslations("portfolio");
+
   return (
     <div className={portfolioHistoryTableHeadClass} role="row">
-      <span role="columnheader">Action</span>
-      <span role="columnheader">Market</span>
-      <span role="columnheader">Value</span>
+      <span role="columnheader">{t("action")}</span>
+      <span role="columnheader">{t("market")}</span>
+      <span role="columnheader">{t("value")}</span>
       <span className="text-right" role="columnheader">
-        Time
+        {t("time")}
       </span>
     </div>
   );
@@ -110,8 +109,14 @@ function HistoryMarketCell({
 }: {
   transaction: PortfolioTransactionRecord;
 }) {
+  const t = useTranslations("portfolio");
   const outcomeLine = `${transaction.side} ${formatTransactionPrice(transaction.price)}`;
-  const nonMarketLabel = NON_MARKET_LABELS[transaction.type];
+  const nonMarketLabels: Partial<Record<PortfolioTransactionType, string>> = {
+    withdraw: t("txTypeWithdraw"),
+    deposit: t("txTypeDeposit"),
+    claim: t("txTypeClaim")
+  };
+  const nonMarketLabel = nonMarketLabels[transaction.type];
 
   if (nonMarketLabel) {
     return (
@@ -163,7 +168,16 @@ function HistoryRowContent({
 }: {
   transaction: PortfolioTransactionRecord;
 }) {
-  const actionLabel = titleCase(transaction.type);
+  const t = useTranslations("portfolio");
+  const txActionLabels: Record<PortfolioTransactionType, string> = {
+    buy: t("txActionBuy"),
+    sell: t("txActionSell"),
+    redeem: t("txActionRedeem"),
+    deposit: t("txActionDeposit"),
+    withdraw: t("txActionWithdraw"),
+    claim: t("txActionClaim")
+  };
+  const actionLabel = txActionLabels[transaction.type] ?? titleCase(transaction.type);
 
   const showStrategyLabel = transaction.source === "strategy";
 
@@ -283,8 +297,17 @@ function TransactionActionIcon({
 
 function renderHistoryRow(
   transaction: PortfolioTransactionRecord,
-  variant: "desktop" | "mobile"
+  variant: "desktop" | "mobile",
+  t: ReturnType<typeof useTranslations<"portfolio">>
 ): ReactNode {
+  const txActionLabels: Record<PortfolioTransactionType, string> = {
+    buy: t("txActionBuy"),
+    sell: t("txActionSell"),
+    redeem: t("txActionRedeem"),
+    deposit: t("txActionDeposit"),
+    withdraw: t("txActionWithdraw"),
+    claim: t("txActionClaim")
+  };
   const showStrategyLabel = transaction.source === "strategy";
 
   if (variant === "mobile") {
@@ -296,20 +319,20 @@ function renderHistoryRow(
         <div className="flex flex-wrap items-center gap-2">
           <TransactionActionIcon type={transaction.type} />
           <span className="text-[14px] font-normal text-black">
-            {titleCase(transaction.type)}
+            {txActionLabels[transaction.type] ?? titleCase(transaction.type)}
           </span>
           {showStrategyLabel ? <StrategySourceLabel /> : null}
         </div>
         <HistoryMarketCell transaction={transaction} />
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className={portfolioTableMobileLabelClass}>Value</p>
+            <p className={portfolioTableMobileLabelClass}>{t("value")}</p>
             <p className={portfolioTableMobileValueClass}>
               {formatTeamDetailMoney(Number(transaction.amount))}
             </p>
           </div>
           <div className="text-right">
-            <p className={portfolioTableMobileLabelClass}>Time</p>
+            <p className={portfolioTableMobileLabelClass}>{t("time")}</p>
             <p className={cn(portfolioTableMobileValueClass, "font-normal")}>
               {formatPortfolioDateTime(transaction.createdAt)}
             </p>
@@ -332,10 +355,12 @@ export function PortfolioHistoryTable({
   loading,
   onConnectWallet
 }: PortfolioHistoryTableProps) {
+  const t = useTranslations("portfolio");
+
   if (loading) {
     return (
       <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-        Loading transaction history…
+        {t("loadingTransactionHistory")}
       </p>
     );
   }
@@ -344,14 +369,14 @@ export function PortfolioHistoryTable({
     return (
       <div className="flex flex-col items-center gap-3 px-4 py-10">
         <p className="m-0 text-sm text-prophet-muted">
-          Connect your wallet to view transaction history in your connected account.
+          {t("connectWalletToViewHistory")}
         </p>
         <button
           type="button"
           className={portfolioConnectButtonClass}
           onClick={() => void onConnectWallet()}
         >
-          Connect Wallet
+          {t("connectWallet")}
         </button>
       </div>
     );
@@ -359,13 +384,13 @@ export function PortfolioHistoryTable({
 
   if (transactions.length === 0) {
     return (
-      <div className={portfolioTableScrollClass} aria-label="Transaction history">
+      <div className={portfolioTableScrollClass} aria-label={t("transactionHistory")}>
         <div className={cn(portfolioHistoryListClass, "hidden md:block")}>
           <PortfolioHistoryTableHeader />
         </div>
         <PortfolioEmptyState
-          title="No transaction history"
-          body="Trade activity reported to your Prophet account will appear here."
+          title={t("noTransactionHistory")}
+          body={t("noTransactionHistoryBody")}
         />
       </div>
     );
@@ -375,12 +400,12 @@ export function PortfolioHistoryTable({
   const mobileCards: ReactNode[] = [];
 
   transactions.forEach((transaction) => {
-    desktopRows.push(renderHistoryRow(transaction, "desktop"));
-    mobileCards.push(renderHistoryRow(transaction, "mobile"));
+    desktopRows.push(renderHistoryRow(transaction, "desktop", t));
+    mobileCards.push(renderHistoryRow(transaction, "mobile", t));
   });
 
   return (
-    <div className={portfolioTableScrollClass} aria-label="Transaction history">
+    <div className={portfolioTableScrollClass} aria-label={t("transactionHistory")}>
       <div className={cn(portfolioHistoryListClass, "hidden md:block")}>
         <PortfolioHistoryTableHeader />
         {desktopRows}

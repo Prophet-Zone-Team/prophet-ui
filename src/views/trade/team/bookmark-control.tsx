@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import {
   BookmarkToggle,
   type ProphetBookmarkTarget
@@ -12,6 +14,7 @@ export interface BookmarkControlProps {
 }
 
 export function BookmarkControl({ slug, teamName }: BookmarkControlProps) {
+  const t = useTranslations("trade");
   const target: ProphetBookmarkTarget = {
     category: "team",
     slug: slug,
@@ -21,12 +24,13 @@ export function BookmarkControl({ slug, teamName }: BookmarkControlProps) {
   return (
     <BookmarkToggle
       target={target}
-      ariaLabel={`Add ${teamName} to Track`}
-      trackedAriaLabel={`Remove ${teamName} from Track`}
+      ariaLabel={t("addTeamToTrack", { teamName })}
+      trackedAriaLabel={t("removeTeamFromTrack", { teamName })}
       tooltip={
         <TrackTooltip>
-          You subscribed will be listed in <TrackLink />, and team changes will
-          be notified in time.
+          {t.rich("trackTeamTooltip", {
+            tracks: () => <TrackLink />
+          })}
         </TrackTooltip>
       }
     />

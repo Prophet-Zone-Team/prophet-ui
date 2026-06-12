@@ -1,4 +1,7 @@
+"use client";
+
 import { cn } from "@/lib/cn";
+import { useTranslations } from "next-intl";
 
 export type SignalNewsDetailCloseButtonProps = {
   onClick: () => void;
@@ -9,6 +12,8 @@ export function SignalNewsDetailCloseButton({
   onClick,
   className
 }: SignalNewsDetailCloseButtonProps) {
+  const t = useTranslations("signal");
+
   return (
     <button
       type="button"
@@ -16,7 +21,7 @@ export function SignalNewsDetailCloseButton({
         "inline-flex h-[10px] w-[10px] items-center justify-center p-0",
         className
       )}
-      aria-label="Close news detail"
+      aria-label={t("closeNewsDetail")}
       onClick={onClick}
     >
       <svg

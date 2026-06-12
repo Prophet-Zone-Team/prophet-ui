@@ -9,8 +9,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 
 import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 import type { PathResult } from "@/types/market";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
@@ -32,8 +34,13 @@ export function RoadBracketGraph({
   result: PathResult;
   thirdPlaceOption?: ThirdPlaceAllocationOption;
 }) {
+  const t = useTranslations("roadToFinal");
   const activeMatchIds = new Set(result.pathMatchIds);
   const selectedTeam = getWorldCupTeamByIdOrCode(result.teamId);
+  const selectedTeamName = useLocalizedTeamName(
+    selectedTeam?.code ?? result.teamCode ?? "",
+    selectedTeam?.name ?? result.teamName
+  );
   const [collapsedSides, setCollapsedSides] = useState({
     left: false,
     right: false
@@ -41,8 +48,8 @@ export function RoadBracketGraph({
   const [expanded, setExpanded] = useState(false);
   const [canPortal, setCanPortal] = useState(false);
   const optionLabel = thirdPlaceOption
-    ? `Annexe C option ${thirdPlaceOption.option}`
-    : "Choose 8 third-place groups";
+    ? t("annexeCOptionLabel", { option: thirdPlaceOption.option })
+    : t("chooseEightThirdGroups");
 
   const toggleSide = (side: Exclude<BracketSide, "center">) => {
     setCollapsedSides((current) => ({ ...current, [side]: !current[side] }));
@@ -74,11 +81,14 @@ export function RoadBracketGraph({
   }, [expanded]);
 
   const tools = (
-    <div className="flex flex-wrap items-center gap-[8px]" aria-label="Bracket display controls">
+    <div
+      className="flex flex-wrap items-center gap-[8px]"
+      aria-label={t("bracketDisplayControlsAria")}
+    >
       <button
         type="button"
         aria-label={
-          collapsedSides.left ? "Expand left half" : "Collapse left half"
+          collapsedSides.left ? t("expandLeftHalf") : t("collapseLeftHalf")
         }
         className={cn(
           "inline-flex items-center gap-[4px] rounded-[6px] border px-[10px] py-[6px] text-[12px]",
@@ -93,12 +103,12 @@ export function RoadBracketGraph({
         ) : (
           <ChevronLeft className="h-3 w-3" aria-hidden />
         )}
-        Left half
+        {t("leftHalf")}
       </button>
       <button
         type="button"
         aria-label={
-          collapsedSides.right ? "Expand right half" : "Collapse right half"
+          collapsedSides.right ? t("expandRightHalf") : t("collapseRightHalf")
         }
         className={cn(
           "inline-flex items-center gap-[4px] rounded-[6px] border px-[10px] py-[6px] text-[12px]",
@@ -108,7 +118,7 @@ export function RoadBracketGraph({
         )}
         onClick={() => toggleSide("right")}
       >
-        Right half
+        {t("rightHalf")}
         {collapsedSides.right ? (
           <ChevronLeft className="h-3 w-3" aria-hidden />
         ) : (
@@ -117,30 +127,30 @@ export function RoadBracketGraph({
       </button>
       <button
         type="button"
-        aria-label="Open fullscreen bracket"
+        aria-label={t("openFullscreenBracket")}
         className="inline-flex items-center gap-[4px] rounded-[6px] border border-[#EBEBEB] bg-white px-[10px] py-[6px] text-[12px] text-black"
         onClick={() => setExpanded(true)}
       >
         <Maximize2 className="h-3 w-3" aria-hidden />
-        Fullscreen
+        {t("fullscreen")}
       </button>
     </div>
   );
 
   return (
-    <div aria-label="Full knockout bracket with highlighted projected path">
+    <div aria-label={t("fullKnockoutBracketAria")}>
       <div className="mb-[12px] flex flex-wrap items-center justify-between gap-[12px]">
         <button
           type="button"
           className="inline-flex items-center gap-[6px] rounded-[6px] border border-[#EBEBEB] bg-white px-[10px] py-[6px] text-[12px] text-black"
-          aria-label={`Open ${optionLabel} fullscreen bracket`}
+          aria-label={t("openFullscreenBracketFor", { optionLabel })}
           onClick={() => setExpanded(true)}
         >
           <Maximize2 className="h-3 w-3" aria-hidden />
           {optionLabel}
         </button>
         <strong className="text-[14px] font-[400] text-black">
-          {selectedTeam?.name ?? result.teamName} path highlighted
+          {t("pathHighlighted", { teamName: selectedTeamName })}
         </strong>
         {tools}
       </div>
@@ -162,7 +172,7 @@ export function RoadBracketGraph({
               <div className="flex shrink-0 items-center justify-between border-b border-[#EBEBEB] px-[20px] py-[12px]">
                 <div>
                   <span className="text-[12px] font-[300] text-[#909090]">
-                    Road to Final
+                    {t("featureLabel")}
                   </span>
                   <strong className="mt-[4px] block text-[16px] font-[400] text-black">
                     {optionLabel}
@@ -172,16 +182,16 @@ export function RoadBracketGraph({
                   {tools}
                   <button
                     type="button"
-                    aria-label="Exit fullscreen bracket"
+                    aria-label={t("exitFullscreenBracket")}
                     className="inline-flex items-center gap-[4px] rounded-[6px] border border-[#EBEBEB] px-[10px] py-[6px] text-[12px]"
                     onClick={() => setExpanded(false)}
                   >
                     <Minimize2 className="h-3 w-3" aria-hidden />
-                    Exit
+                    {t("exit")}
                   </button>
                   <button
                     type="button"
-                    aria-label="Close fullscreen bracket"
+                    aria-label={t("closeFullscreenBracket")}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-[6px] border border-[#EBEBEB]"
                     onClick={() => setExpanded(false)}
                   >

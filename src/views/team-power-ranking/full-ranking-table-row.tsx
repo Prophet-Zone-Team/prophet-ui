@@ -1,3 +1,6 @@
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { formatAdvanceOdds, formatTitleProbability } from "./format";
@@ -8,7 +11,6 @@ import { SignalStatusLabel } from "./signal-status-label";
 import { TeamInfo } from "./team-info";
 import { TrendIndicator } from "./trend-indicator";
 import type { TeamPowerRankingEntry } from "./types";
-import { useRouter } from "next/navigation";
 
 export type FullRankingTableRowProps = {
   entry: TeamPowerRankingEntry;
@@ -82,6 +84,7 @@ export function FullRankingMobileCard({
   advanceOddsMax,
   className
 }: FullRankingTableRowProps & { className?: string }) {
+  const t = useTranslations("analytics");
   const router = useRouter();
 
   return (
@@ -113,7 +116,7 @@ export function FullRankingMobileCard({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[12px] leading-[17px] text-[#909090]">
-            Title Probability
+            {t("titleProbability")}
           </span>
           <span className="shrink-0 tabular-nums text-black">
             {formatTitleProbability(entry.titleProbability)}
@@ -129,7 +132,7 @@ export function FullRankingMobileCard({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[12px] leading-[17px] text-[#909090]">
-            Round of 16
+            {t("roundOf16")}
           </span>
           <span className="shrink-0 tabular-nums text-black">
             {formatAdvanceOdds(entry.roundOf16Probability)}
@@ -145,19 +148,19 @@ export function FullRankingMobileCard({
       <div className="grid grid-cols-3 gap-2 border-t border-[#EBEBEB] pt-2">
         <div className="flex min-w-0 flex-col items-start gap-1">
           <span className="text-[12px] leading-[17px] text-[#909090]">
-            Path
+            {t("pathShort")}
           </span>
           <PathDifficultyLabel difficulty={entry.pathDifficulty} />
         </div>
         <div className="flex flex-col items-center gap-1">
           <span className="text-[12px] leading-[17px] text-[#909090]">
-            Trend
+            {t("trend")}
           </span>
           <TrendIndicator trend={entry.trend} />
         </div>
         <div className="flex min-w-0 flex-col items-end gap-1">
           <span className="text-[12px] leading-[17px] text-[#909090]">
-            Signal
+            {t("signalShort")}
           </span>
           <SignalStatusLabel status={entry.signalStatus} />
         </div>

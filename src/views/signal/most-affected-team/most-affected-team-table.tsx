@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { MostAffectedTeamTableHeader } from "./most-affected-team-table-header";
@@ -16,12 +20,13 @@ export function MostAffectedTeamTable({
   entries,
   className
 }: MostAffectedTeamTableProps) {
-  const tableLabel = "Most affected teams";
+  const t = useTranslations("signal");
+  const tableLabel = t("mostAffectedTeamsAria");
 
   if (entries.length === 0) {
     return (
       <p className="py-8 text-center text-[16px] leading-[19px] text-[#909090]">
-        No team impact data available.
+        {t("noTeamImpactData")}
       </p>
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 
 import { cn } from "@/lib/cn";
@@ -29,6 +30,8 @@ const CHART_NEGATIVE = {
 export interface PortfolioPerformanceChartProps {}
 
 export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
+  const t = useTranslations("portfolio");
+  const locale = useLocale();
   const { session } = usePortfolioContext();
   const polymarketAddress = session?.funderAddress ?? session?.walletAddress;
 
@@ -64,8 +67,8 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
   const isLoading = status === "loading";
   const timeLabel =
     activeIndex != null
-      ? formatPortfolioPnlHoverTime(displayTimestamp)
-      : getPortfolioPnlPeriodLabel(range);
+      ? formatPortfolioPnlHoverTime(displayTimestamp, locale)
+      : getPortfolioPnlPeriodLabel(t, range);
 
   const handleChartMouseMove = (state: { activeTooltipIndex?: number }) => {
     const index = state?.activeTooltipIndex;
@@ -79,7 +82,7 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
     <div className="flex w-full md:w-1/2 flex-col justify-between gap-4 border-t border-prophet-line pt-6 lg:border-t-0 lg:pl-8 lg:pt-0">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <span className={portfolioSummaryLabelClass}>Profit / Loss</span>
+          <span className={portfolioSummaryLabelClass}>{t("profitLoss")}</span>
           <div className="flex flex-col gap-1">
             <span
               className={cn("text-[32px] font-[500] leading-[38px]", pnlTone)}
@@ -92,7 +95,7 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
         <div
           className="flex shrink-0 gap-4"
           role="tablist"
-          aria-label="Portfolio performance time range"
+          aria-label={t("performanceTimeRange")}
         >
           {TIME_RANGES.map((item) => (
             <button

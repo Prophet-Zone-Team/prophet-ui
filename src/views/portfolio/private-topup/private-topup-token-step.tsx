@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/utils";
@@ -30,6 +31,7 @@ export function PrivateTopupTokenStep({
   onSelectToken,
   onChangeWallet,
 }: PrivateTopupTokenStepProps) {
+  const t = useTranslations("privateTopup");
   const {
     selectableTokens,
     topupWalletAddress,
@@ -62,13 +64,13 @@ export function PrivateTopupTokenStep({
     <div className="flex flex-col gap-5 pb-2">
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <span className={privateTopupSectionLabelClass}>Funding Wallet</span>
+          <span className={privateTopupSectionLabelClass}>{t("fundingWallet")}</span>
           <button
             type="button"
             className={privateTopupChangeLinkClass}
             onClick={onChangeWallet}
           >
-            Change
+            {t("change")}
           </button>
         </div>
         <div className={privateTopupFundingWalletRowClass}>
@@ -96,7 +98,7 @@ export function PrivateTopupTokenStep({
 
       <div>
         <p className={`m-0 mb-2 ${privateTopupSectionLabelClass}`}>
-          Select Asset
+          {t("selectAsset")}
         </p>
         <div className="flex max-h-[340px] flex-col gap-0.5 overflow-y-auto">
           {sortedTokens.map((token) => {

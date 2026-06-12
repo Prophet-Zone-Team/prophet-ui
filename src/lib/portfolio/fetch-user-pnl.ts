@@ -1,4 +1,8 @@
 import { fetchJson } from "@/lib/team/client-fetch";
+import {
+  formatDateFromUnixSeconds,
+  formatTimeFromUnixSeconds,
+} from "@/lib/formatters/datetime";
 import type {
   PortfolioSeriesPoint,
   PortfolioTimeRange
@@ -85,24 +89,11 @@ function formatSeriesDate(
   timestampSeconds: number,
   range: PortfolioTimeRange
 ): string {
-  const date = new Date(timestampSeconds * 1000);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
   if (range === "1H" || range === "1D") {
-    return new Intl.DateTimeFormat("en", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: false
-    }).format(date);
+    return formatTimeFromUnixSeconds(timestampSeconds);
   }
 
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric"
-  }).format(date);
+  return formatDateFromUnixSeconds(timestampSeconds);
 }
 
 export function mapUserPnlToSeries(

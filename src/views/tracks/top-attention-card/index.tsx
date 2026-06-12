@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { KeyboardEvent } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   formatProbability,
@@ -10,6 +11,7 @@ import {
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuthOptional } from "@/context/auth";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 import { formatOrderbookPrice } from "@/lib/market/order-math";
 import { formatScheduleKickoff } from "@/lib/market/schedule-match";
@@ -84,13 +86,20 @@ function resolveTopAttentionBadgeStyle(label: string) {
     : DEFAULT_TOP_ATTENTION_BADGE_STYLE;
 }
 
-const MATCH_OUTCOME_BUTTON_STYLES: Record<
-  MatchOutcomeSide,
-  { label: string; background: string }
+const MATCH_OUTCOME_BUTTON_BACKGROUNDS: Record<MatchOutcomeSide, string> = {
+  home: gameColors.home,
+  draw: gameColors.draw,
+  away: gameColors.awayBar
+};
+
+const TOP_ATTENTION_BADGE_MESSAGE_KEYS: Record<
+  TopAttentionBadgeStyleKey,
+  "badgeMostPopular" | "badgeHighestVolume" | "badgeDarkHorse" | "badgeTopProbability"
 > = {
-  home: { label: "Win", background: gameColors.home },
-  draw: { label: "Draw", background: gameColors.draw },
-  away: { label: "Loss", background: gameColors.awayBar }
+  most_popular: "badgeMostPopular",
+  highest_volume: "badgeHighestVolume",
+  dark_horse: "badgeDarkHorse",
+  top_probability: "badgeTopProbability"
 };
 
 export type TopAttentionTeamCardProps = {
@@ -141,17 +150,41 @@ export function TopAttentionCard(props: TopAttentionCardProps) {
   return <TopAttentionTeamCard {...props} />;
 }
 
+function useLocalizedTopAttentionBadge(label: string): string {
+  const t = useTranslations("tracks");
+  const key = resolveTopAttentionBadgeStyleKey(label);
+
+  return key ? t(TOP_ATTENTION_BADGE_MESSAGE_KEYS[key]) : label;
+}
+
+function useMatchOutcomeLabel(outcomeSide: MatchOutcomeSide): string {
+  const t = useTranslations("tracks");
+
+  if (outcomeSide === "home") {
+    return t("matchOutcomeWin");
+  }
+
+  if (outcomeSide === "draw") {
+    return t("matchOutcomeDraw");
+  }
+
+  return t("matchOutcomeLoss");
+}
+
 function TopAttentionTeamCard({
   snapshot,
   attention,
-  categoryLabel = "FIFA World Cup",
+  categoryLabel,
   badges,
   className
 }: TopAttentionTeamCardProps) {
+  const t = useTranslations("tracks");
   const router = useRouter();
   const { team, market } = snapshot;
+  const displayName = useLocalizedTeamName(team.code, team.name);
   const tradeHref = teamTradeHref(market?.slug || "");
   const volumeLabel = `$${formatVolume(market.volume)}`;
+  const resolvedCategoryLabel = categoryLabel ?? t("categoryFifaWorldCup");
 
   const attentionLabel =
     attention !== undefined ? `🔥${formatAttention(attention)}` : undefined;
@@ -172,28 +205,28 @@ function TopAttentionTeamCard({
       role="link"
       tabIndex={0}
       className={cn(cardClassName, cardInteractiveClassName, className)}
-      aria-label={`Open trade page for ${team.name}`}
+      aria-label={t("openTradePageFor", { name: displayName })}
       onClick={navigateToTrade}
       onKeyDown={handleCardKeyDown}
     >
       <div className="flex items-start justify-between gap-3">
         <p className="m-0 text-[12px] font-[400] capitalize leading-[15px] text-[#909090]">
-          {categoryLabel}
+          {resolvedCategoryLabel}
         </p>
         <MarketBookmarkControl
           slug={market.polymarket?.slug || ""}
-          teamName={team.name}
+          teamName={displayName}
         />
       </div>
 
       <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
         <TeamFlag
           code={team.code}
-          name={team.name}
+          name={displayName}
           className="h-[26px] w-[26px] shrink-0 rounded-[4px] text-[26px]"
         />
         <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-black">
-          {team.name}
+          {displayName}
         </h3>
         {badges?.map((label) => (
           <TopAttentionBadge key={label} label={label} />
@@ -228,12 +261,15 @@ function TopAttentionMatchCard({
   outcomePrices,
   className
 }: TopAttentionMatchCardProps) {
+  const t = useTranslations("tracks");
   const router = useRouter();
+  const homeDisplayName = useLocalizedTeamName(homeTeam.code, homeTeam.name);
+  const awayDisplayName = useLocalizedTeamName(awayTeam.code, awayTeam.name);
   const kickoffLabel = formatScheduleKickoff(match.kickoffAt);
   const volumeLabel = `$${formatVolume(volume)}`;
   const attentionLabel =
     attention !== undefined ? `🔥${formatAttention(attention)}` : undefined;
-  const matchTitle = `${homeTeam.name} vs ${awayTeam.name}`;
+  const matchTitle = `${homeDisplayName} vs ${awayDisplayName}`;
 
   const tradeHref = gameTradeHref(match.id);
 
@@ -253,7 +289,7 @@ function TopAttentionMatchCard({
       role="link"
       tabIndex={0}
       className={cn(cardClassName, cardInteractiveClassName, className)}
-      aria-label={`Open trade page for ${matchTitle}`}
+      aria-label={t("openTradePageFor", { name: matchTitle })}
       onClick={navigateToTrade}
       onKeyDown={handleCardKeyDown}
     >
@@ -263,8 +299,8 @@ function TopAttentionMatchCard({
         </p>
         <MatchBookmarkControl
           matchId={match.id}
-          homeTeamName={homeTeam.name}
-          awayTeamName={awayTeam.name}
+          homeTeamName={homeDisplayName}
+          awayTeamName={awayDisplayName}
         />
       </div>
 
@@ -272,12 +308,12 @@ function TopAttentionMatchCard({
         <div className="flex shrink-0 items-center gap-[4px]">
           <TeamFlag
             code={homeTeam.code}
-            name={homeTeam.name}
+            name={homeDisplayName}
             className="relative z-[1] h-[26px] w-[26px] rounded-[4px] text-[26px]"
           />
           <TeamFlag
             code={awayTeam.code}
-            name={awayTeam.name}
+            name={awayDisplayName}
             className="relative h-[26px] w-[26px] rounded-[4px] text-[26px]"
           />
         </div>
@@ -302,19 +338,14 @@ function TopAttentionMatchCard({
             key={outcomeSide}
             matchId={match.id}
             outcomeSide={outcomeSide}
-            label={resolveMatchOutcomeButtonLabel(outcomeSide)}
             price={outcomePrices?.[outcomeSide]}
-            background={MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].background}
+            background={MATCH_OUTCOME_BUTTON_BACKGROUNDS[outcomeSide]}
             matchLabel={matchTitle}
           />
         ))}
       </div>
     </article>
   );
-}
-
-function resolveMatchOutcomeButtonLabel(outcomeSide: MatchOutcomeSide): string {
-  return MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].label;
 }
 
 function TopAttentionStatsRow({
@@ -326,6 +357,8 @@ function TopAttentionStatsRow({
   volume: string;
   attention?: string;
 }) {
+  const t = useTranslations("tracks");
+
   return (
     <div
       className={cn(
@@ -333,16 +366,17 @@ function TopAttentionStatsRow({
         attention !== undefined ? "grid-cols-3" : "grid-cols-2"
       )}
     >
-      <StatColumn label="Net" value={probability} />
-      <StatColumn label="Volume" value={volume} />
+      <StatColumn label={t("net")} value={probability} />
+      <StatColumn label={t("volume")} value={volume} />
       {attention !== undefined ? (
-        <StatColumn label="Attention" value={attention} align="center" />
+        <StatColumn label={t("attention")} value={attention} align="center" />
       ) : null}
     </div>
   );
 }
 
 function TopAttentionBadge({ label }: { label: string }) {
+  const localizedLabel = useLocalizedTopAttentionBadge(label);
   const style = resolveTopAttentionBadgeStyle(label);
 
   return (
@@ -353,7 +387,7 @@ function TopAttentionBadge({ label }: { label: string }) {
         backgroundColor: style.backgroundColor
       }}
     >
-      {label}
+      {localizedLabel}
     </span>
   );
 }
@@ -380,28 +414,27 @@ function StatColumn({
 function MatchOutcomeQuickBidButton({
   matchId,
   outcomeSide,
-  label,
   price,
   background,
   matchLabel
 }: {
   matchId: string;
   outcomeSide: MatchOutcomeSide;
-  label: string;
   price?: number;
   background: string;
   matchLabel: string;
 }) {
+  const t = useTranslations("tracks");
   const router = useRouter();
   const auth = useAuthOptional();
   const setMatchOutcomeSide = useSetTradeMatchOutcomeSide();
   const isBuyRestricted = auth?.isBuyRestricted ?? false;
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const regionRestricted = isAuthenticated && isBuyRestricted;
-  const outcomeLabel = MATCH_OUTCOME_BUTTON_STYLES[outcomeSide].label;
+  const outcomeLabel = useMatchOutcomeLabel(outcomeSide);
   const priceLabel =
     price !== undefined ? formatOrderbookPrice(price) : undefined;
-  const buttonLabel = priceLabel ? `${label} ${priceLabel}` : label;
+  const buttonLabel = priceLabel ? `${outcomeLabel} ${priceLabel}` : outcomeLabel;
 
   function handleClick() {
     if (regionRestricted) {
@@ -416,7 +449,11 @@ function MatchOutcomeQuickBidButton({
     <button
       type="button"
       disabled={regionRestricted}
-      aria-label={`${outcomeLabel} on ${matchLabel} at ${buttonLabel}`}
+      aria-label={t("matchOutcomeAtPrice", {
+        outcome: outcomeLabel,
+        match: matchLabel,
+        price: buttonLabel
+      })}
       onClick={handleClick}
       className={cn(
         "inline-flex h-10 w-full items-center justify-center rounded-[8px]",
@@ -443,6 +480,7 @@ function OutcomeQuickBidButton({
   snapshot: TeamMarketSnapshot;
   side: OrderOutcomeSide;
 }) {
+  const t = useTranslations("tracks");
   const router = useRouter();
   const auth = useAuthOptional();
   const syncTeamSnapshot = useSyncTradeTicketSnapshot();
@@ -451,9 +489,13 @@ function OutcomeQuickBidButton({
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const regionRestricted = isAuthenticated && isBuyRestricted;
   const isYes = side === "yes";
+  const displayName = useLocalizedTeamName(
+    snapshot.team.code,
+    snapshot.team.name
+  );
   const price = getTeamSimpleSidePrice(snapshot, side);
   const priceLabel = formatOrderbookPrice(price);
-  const sideLabel = isYes ? "YES" : "NO";
+  const sideLabel = isYes ? t("yesOutcome").toUpperCase() : t("noOutcome").toUpperCase();
   const buttonLabel = `${sideLabel} ${priceLabel}`;
 
   function handleClick() {
@@ -470,7 +512,11 @@ function OutcomeQuickBidButton({
     <button
       type="button"
       disabled={regionRestricted}
-      aria-label={`${isYes ? "Yes" : "No"} on ${snapshot.team.name} at ${priceLabel}`}
+      aria-label={t("outcomeAtPrice", {
+        side: isYes ? t("yesOutcome") : t("noOutcome"),
+        team: displayName,
+        price: priceLabel
+      })}
       onClick={handleClick}
       className={cn(
         "inline-flex h-10 w-full items-center justify-center rounded-[8px]",

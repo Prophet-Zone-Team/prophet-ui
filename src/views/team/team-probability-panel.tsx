@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { resolveTeamOrderbookTokenId } from "@/lib/market/resolve-team-orderbook-token";
@@ -18,6 +19,8 @@ export interface TeamProbabilityPanelProps {
 }
 
 export function TeamProbabilityPanel({ snapshot }: TeamProbabilityPanelProps) {
+  const t = useTranslations("teamDetail");
+  const tCommon = useTranslations("common");
   const yesTokenId = resolveTeamOrderbookTokenId(snapshot, "yes");
   const { points, status } = useProbabilityChart({
     kind: "team",
@@ -35,22 +38,29 @@ export function TeamProbabilityPanel({ snapshot }: TeamProbabilityPanelProps) {
   const teams = useMemo(() => [snapshot], [snapshot]);
 
   return (
-    <section className={teamPanelClass} aria-label="Winner probability over time">
+    <section
+      className={teamPanelClass}
+      aria-label={t("winnerProbabilityAria")}
+    >
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Winner Probability Over Time</h2>
+        <h2 className={teamPanelTitleClass}>
+          {t("winnerProbabilityOverTime")}
+        </h2>
       </div>
       <div className="p-4 pt-0">
         {!yesTokenId ? (
           <TeamEmptyState
-            title="Probability history pending"
-            body="Market token data is not available for this team yet."
+            title={t("probabilityHistoryPending")}
+            body={t("probabilityHistoryPendingBody")}
           />
         ) : status === "loading" ? (
-          <p className="py-8 text-center text-sm text-prophet-muted">Loading...</p>
+          <p className="py-8 text-center text-sm text-prophet-muted">
+            {tCommon("loading")}
+          </p>
         ) : status === "error" ? (
           <TeamEmptyState
-            title="Unable to load probability history"
-            body="Winner probability history could not be loaded from the market."
+            title={t("unableToLoadProbabilityHistory")}
+            body={t("probabilityHistoryLoadError")}
           />
         ) : (
           <WinnerProbabilityChart

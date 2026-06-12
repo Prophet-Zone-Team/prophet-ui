@@ -1,4 +1,9 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
 import { MarketListMetricLoading } from "@/views/home/home-data-loading";
 
@@ -23,13 +28,13 @@ export type StrategyCardBodyTableProps = {
   className?: string;
 };
 
-const TABLE_COLUMNS = [
-  "Team",
-  "Market",
-  "Side",
-  "Value",
-  "Probability",
-  "Hit Return"
+const TABLE_COLUMN_KEYS = [
+  "tableTeam",
+  "tableMarket",
+  "tableSide",
+  "tableValue",
+  "tableProbability",
+  "tableHitReturn"
 ] as const;
 
 export function StrategyCardBodyTable({
@@ -38,6 +43,8 @@ export function StrategyCardBodyTable({
   isLoading = false,
   className
 }: StrategyCardBodyTableProps) {
+  const t = useTranslations("strategy");
+
   if (legs.length === 0) {
     return null;
   }
@@ -46,7 +53,7 @@ export function StrategyCardBodyTable({
     <div className={cn("mx-4 mb-4 overflow-x-auto md:mx-5 md:mb-5", className)}>
       <div
         role="table"
-        aria-label="Strategy legs"
+        aria-label={t("strategyLegs")}
         className="min-w-[720px] border border-[#EBEBEB] bg-[#FCFCFC]"
       >
         <div
@@ -57,9 +64,9 @@ export function StrategyCardBodyTable({
             "px-4 py-3"
           )}
         >
-          {TABLE_COLUMNS.map((column) => (
-            <span key={column} role="columnheader">
-              {column}
+          {TABLE_COLUMN_KEYS.map((columnKey) => (
+            <span key={columnKey} role="columnheader">
+              {t(columnKey)}
             </span>
           ))}
         </div>
@@ -86,6 +93,7 @@ function StrategyCardLegRow({
   variant: StrategyCardVariant;
   isLoading?: boolean;
 }) {
+  const teamDisplayName = useLocalizedTeamName(leg.team.code, leg.teamName);
   const isEnded = variant === "winner" || variant === "loss";
   const isHighlighted = Boolean(leg.isTournamentWinner);
   const isMuted = isEnded && !isHighlighted;
@@ -108,7 +116,7 @@ function StrategyCardLegRow({
           fallback={false}
           className={strategyCardTableFlagClassName}
         />
-        <span className="truncate">{leg.teamName}</span>
+        <span className="truncate">{teamDisplayName}</span>
       </div>
       <span role="cell" className="min-w-0 truncate">
         {leg.marketLabel}
@@ -151,7 +159,8 @@ function OutcomeSideLabel({
   side: StrategyCardOutcomeSide;
   muted?: boolean;
 }) {
-  const label = side === "yes" ? "Yes" : "No";
+  const t = useTranslations("common");
+  const label = side === "yes" ? t("yes") : t("no");
 
   return (
     <span

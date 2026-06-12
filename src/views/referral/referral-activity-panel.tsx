@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { GridTable } from "@/components/grid-table";
 import type { GridTableColumn } from "@/components/grid-table";
@@ -24,42 +25,6 @@ import {
   referralSummaryStatValueClass,
   referralSummaryStatValueMutedClass,
 } from "./referral-ui";
-
-const ACTIVITY_COLUMNS: GridTableColumn<ReferralActivityRow>[] = [
-  {
-    id: "user",
-    header: "User",
-    renderCell: (row) => row.user,
-  },
-  {
-    id: "txId",
-    header: "Tx ID",
-    renderCell: (row) => row.txId,
-  },
-  {
-    id: "time",
-    header: "Time",
-    renderCell: (row) => row.time,
-  },
-  {
-    id: "market",
-    header: "Market",
-    renderCell: (row) => row.market,
-  },
-  {
-    id: "value",
-    header: "Value",
-    renderCell: (row) => row.value,
-  },
-  {
-    id: "earnings",
-    header: "Earnings",
-    align: "right",
-    cellClassName: referralEarningsCellClass,
-    headerClassName: referralEarningsCellClass,
-    renderCell: (row) => row.earnings,
-  },
-];
 
 function LoadingBlock({ className }: { className?: string }) {
   return (
@@ -122,8 +87,48 @@ export function ReferralActivityPanel({
   onInviteFriends,
   onConnectWallet,
 }: ReferralActivityPanelProps) {
+  const t = useTranslations("referral");
   const [page, setPage] = useState(1);
   const { claim, isPending } = useReferralClaim();
+
+  const activityColumns = useMemo<GridTableColumn<ReferralActivityRow>[]>(
+    () => [
+      {
+        id: "user",
+        header: t("tableUser"),
+        renderCell: (row) => row.user,
+      },
+      {
+        id: "txId",
+        header: t("tableTxId"),
+        renderCell: (row) => row.txId,
+      },
+      {
+        id: "time",
+        header: t("tableTime"),
+        renderCell: (row) => row.time,
+      },
+      {
+        id: "market",
+        header: t("tableMarket"),
+        renderCell: (row) => row.market,
+      },
+      {
+        id: "value",
+        header: t("tableValue"),
+        renderCell: (row) => row.value,
+      },
+      {
+        id: "earnings",
+        header: t("tableEarnings"),
+        align: "right",
+        cellClassName: referralEarningsCellClass,
+        headerClassName: referralEarningsCellClass,
+        renderCell: (row) => row.earnings,
+      },
+    ],
+    [t],
+  );
 
   const {
     rows: apiRows,
@@ -138,26 +143,26 @@ export function ReferralActivityPanel({
 
   return (
     <>
-      <section className={referralActivityPanelClass} aria-label="Referral activity">
+      <section className={referralActivityPanelClass} aria-label={t("referralActivity")}>
         <div className={referralSummaryBarClass}>
           <SummaryStat
             value={summary.myReferrals}
-            label="My Referrals"
+            label={t("myReferrals")}
             muted={muted}
           />
           <SummaryStat
             value={summary.totalVolume}
-            label="Total Volume"
+            label={t("totalVolume")}
             muted={muted}
           />
           <SummaryStat
             value={summary.myEarnings}
-            label="My Earnings"
+            label={t("myEarnings")}
             muted={muted}
           />
           <SummaryStat
             value={summary.toBeClaimed}
-            label="To be Claimed"
+            label={t("toBeClaimedLabel")}
             muted={muted}
           />
           <button
@@ -166,7 +171,7 @@ export function ReferralActivityPanel({
             className={referralClaimButtonClass}
             onClick={() => claim()}
           >
-            {isPending ? "Claiming…" : "Claim"}
+            {isPending ? t("claiming") : t("claim")}
           </button>
         </div>
 
@@ -174,11 +179,11 @@ export function ReferralActivityPanel({
           <ActivityTableSkeleton />
         ) : (
           <GridTable
-            columns={ACTIVITY_COLUMNS}
+            columns={activityColumns}
             rows={isEmpty ? [] : activityRows}
             getRowKey={(row) => row.id}
             gridTemplateColumns={referralGridTemplateColumns}
-            ariaLabel="Referral rewards activity"
+            ariaLabel={t("referralRewardsActivity")}
             className="mt-4"
           />
         )}
@@ -187,8 +192,8 @@ export function ReferralActivityPanel({
           <div className={referralEmptyStateClass}>
             <p className={referralEmptyMessageClass}>
               {needsWallet
-                ? "Connect your wallet to view referral activity."
-                : "No rewards found"}
+                ? t("connectWalletToViewActivity")
+                : t("noRewardsFound")}
             </p>
             <button
               type="button"
@@ -198,9 +203,9 @@ export function ReferralActivityPanel({
             >
               {needsWallet
                 ? loginInProgress
-                  ? "Connecting…"
-                  : "Connect Wallet"
-                : "Invite Friends"}
+                  ? t("connecting")
+                  : t("connectWallet")
+                : t("inviteFriends")}
             </button>
           </div>
         )}

@@ -1,4 +1,6 @@
-import Image from "next/image";
+"use client";
+
+import { useTranslations } from "next-intl";
 
 import type { ReferralKickback } from "@/types/referral";
 
@@ -26,22 +28,24 @@ export function ReferralKickbackCard({
   onInviteFriends,
   onConnectWallet,
 }: ReferralKickbackCardProps) {
+  const t = useTranslations("referral");
+
   return (
     <section
       className={referralKickbackCardClass}
-      aria-label="Referral kickback and link"
+      aria-label={t("referralKickbackAndLink")}
     >
       <div className="flex flex-1 flex-col px-6 pt-6">
         <div className="flex items-start justify-between gap-4">
           <span className="text-[14px] leading-[normal] text-[#909090]">
-            Kickback Rate
+            {t("kickbackRate")}
           </span>
           <span className="text-[18px] font-medium leading-[normal] text-black">
             {kickback.ratePercent}
           </span>
         </div>
         <p className="mt-3 text-[14px] leading-[normal] text-[#909090]">
-          {kickback.description}
+          {t("kickbackDescription")}
         </p>
       </div>
 
@@ -54,7 +58,7 @@ export function ReferralKickbackCard({
               disabled={loginInProgress}
               onClick={onConnectWallet}
             >
-              {loginInProgress ? "Connecting…" : "Connect Wallet"}
+              {loginInProgress ? t("connecting") : t("connectWallet")}
             </button>
           ) : (
             <>
@@ -71,7 +75,7 @@ export function ReferralKickbackCard({
                 className={referralInviteButtonClass}
                 onClick={onInviteFriends}
               >
-                Invite Friends
+                {t("inviteFriends")}
               </button>
             </>
           )}

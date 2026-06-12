@@ -3,6 +3,7 @@
 import { ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import Big from "big.js";
+import { useTranslations } from "next-intl";
 
 import InputNumber from "@/components/input-number";
 import { POLYMARKET_USD } from "@/config/funding";
@@ -44,13 +45,14 @@ export function DepositAmountStep({
   minDepositUsd,
   onAmountChange
 }: DepositAmountStepProps) {
+  const t = useTranslations("portfolio.deposit");
   const prices = usePricesStore((state) => state.prices);
 
   const [inputValue, setInputValue] = useState(() =>
     Big(amount.amountUsd || 0).gt(0) ? amount.amountUsd : "0"
   );
 
-  const validationError = useMemo(
+  const validationErrorKey = useMemo(
     () =>
       validateDepositAmount(amount.tokenAmount, maxAmount, {
         minDepositUsd,
@@ -58,6 +60,12 @@ export function DepositAmountStep({
       }),
     [amount.amountUsd, amount.tokenAmount, maxAmount, minDepositUsd]
   );
+
+  const validationError = validationErrorKey
+    ? validationErrorKey === "amountBelowMinimum"
+      ? t("amountBelowMinimum", { amount: `$${minDepositUsd}` })
+      : t(validationErrorKey)
+    : undefined;
 
   const unitPrice = selectDepositTokenUnitPrice(prices, token);
 
@@ -110,7 +118,7 @@ export function DepositAmountStep({
             value={inputValue}
             onNumberChange={handleInputChange}
             className={depositModalAmountInputClass}
-            aria-label="Deposit amount in USD"
+            aria-label={t("amountAria")}
             placeholder="0"
           />
         </div>
@@ -134,8 +142,8 @@ export function DepositAmountStep({
 
       <div className="mt-20">
         <div className="flex items-center justify-between gap-1 px-4 py-3">
-          <span className="text-sm font-[500] text-[#909090]">Send</span>
-          <span className="text-sm font-[500] text-[#909090]">Receive</span>
+          <span className="text-sm font-[500] text-[#909090]">{t("send")}</span>
+          <span className="text-sm font-[500] text-[#909090]">{t("receive")}</span>
         </div>
         <div className={depositTransferBarClass}>
           <div className="flex min-w-0 flex-1 flex-col gap-2">

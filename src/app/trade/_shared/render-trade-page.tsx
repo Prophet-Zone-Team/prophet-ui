@@ -41,6 +41,7 @@ export async function renderGameTradePage(slug: string) {
 
   return (
     <TradeGameView
+      key={slug}
       match={match}
       snapshots={[]}
       gameSnapshot={gameSnapshot}

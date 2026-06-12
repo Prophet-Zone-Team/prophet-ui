@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 
@@ -11,6 +12,8 @@ export function ViewMoreLink({
   href = "/signal",
   className
 }: ViewMoreLinkProps) {
+  const t = useTranslations("analytics");
+
   return (
     <Link
       href={href}
@@ -21,7 +24,7 @@ export function ViewMoreLink({
         className
       )}
     >
-      <span>View More</span>
+      <span>{t("viewMore")}</span>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="6"

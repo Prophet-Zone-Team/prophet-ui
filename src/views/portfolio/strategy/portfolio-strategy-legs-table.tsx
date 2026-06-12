@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import {
@@ -39,6 +41,9 @@ export function PortfolioStrategyLegsTable({
   legs,
   className
 }: PortfolioStrategyLegsTableProps) {
+  const t = useTranslations("portfolio");
+  const tCommon = useTranslations("common");
+
   if (legs.length === 0) {
     return null;
   }
@@ -47,30 +52,43 @@ export function PortfolioStrategyLegsTable({
     <div className={cn("bg-[#FCFCFC]", className)}>
       <div className="hidden min-w-[720px] md:block">
         <div className={LEGS_TABLE_HEAD_CLASS} role="row">
-          <span role="columnheader">Market</span>
-          <span role="columnheader">Traded</span>
-          <span role="columnheader">To Win</span>
-          <span role="columnheader">Value</span>
-          <span role="columnheader">Time</span>
+          <span role="columnheader">{t("market")}</span>
+          <span role="columnheader">{t("traded")}</span>
+          <span role="columnheader">{t("toWin")}</span>
+          <span role="columnheader">{t("value")}</span>
+          <span role="columnheader">{t("time")}</span>
         </div>
 
         {legs.map((leg) => (
-          <PortfolioStrategyLegRow key={leg.id} leg={leg} />
+          <PortfolioStrategyLegRow key={leg.id} leg={leg} t={t} tCommon={tCommon} />
         ))}
       </div>
 
       <div className={portfolioTableMobileListClass}>
         {legs.map((leg) => (
-          <PortfolioStrategyLegMobileCard key={`${leg.id}-mobile`} leg={leg} />
+          <PortfolioStrategyLegMobileCard
+            key={`${leg.id}-mobile`}
+            leg={leg}
+            t={t}
+            tCommon={tCommon}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function PortfolioStrategyLegRow({ leg }: { leg: PortfolioStrategyLeg }) {
+function PortfolioStrategyLegRow({
+  leg,
+  t,
+  tCommon
+}: {
+  leg: PortfolioStrategyLeg;
+  t: ReturnType<typeof useTranslations<"portfolio">>;
+  tCommon: ReturnType<typeof useTranslations<"common">>;
+}) {
   const pnlTone = leg.cashPnl >= 0 ? "text-[#65AF14]" : "text-[#FF674B]";
-  const sideLabel = leg.side === "yes" ? "Yes" : "No";
+  const sideLabel = leg.side === "yes" ? tCommon("yes") : tCommon("no");
 
   return (
     <div className={LEGS_TABLE_ROW_CLASS} role="row">
@@ -98,9 +116,17 @@ function PortfolioStrategyLegRow({ leg }: { leg: PortfolioStrategyLeg }) {
   );
 }
 
-function PortfolioStrategyLegMobileCard({ leg }: { leg: PortfolioStrategyLeg }) {
+function PortfolioStrategyLegMobileCard({
+  leg,
+  t,
+  tCommon
+}: {
+  leg: PortfolioStrategyLeg;
+  t: ReturnType<typeof useTranslations<"portfolio">>;
+  tCommon: ReturnType<typeof useTranslations<"common">>;
+}) {
   const pnlTone = leg.cashPnl >= 0 ? "text-[#65AF14]" : "text-[#FF674B]";
-  const sideLabel = leg.side === "yes" ? "Yes" : "No";
+  const sideLabel = leg.side === "yes" ? tCommon("yes") : tCommon("no");
 
   return (
     <article className={portfolioTableMobileCardClass}>
@@ -110,13 +136,13 @@ function PortfolioStrategyLegMobileCard({ leg }: { leg: PortfolioStrategyLeg }) 
         tradedAmountLabel={formatTeamDetailMoney(leg.tradedAmount)}
       />
       <div className="grid grid-cols-2 gap-2">
-        <PortfolioTableMobileField label="Traded">
+        <PortfolioTableMobileField label={t("traded")}>
           {formatTeamDetailMoney(leg.tradedAmount)}
         </PortfolioTableMobileField>
-        <PortfolioTableMobileField label="To Win">
+        <PortfolioTableMobileField label={t("toWin")}>
           {formatTeamDetailMoney(leg.toWinAmount)}
         </PortfolioTableMobileField>
-        <PortfolioTableMobileField label="Value">
+        <PortfolioTableMobileField label={t("value")}>
           <div className="flex flex-col items-end gap-0.5">
             <span>{formatTeamDetailMoney(leg.currentValue)}</span>
             <span className={cn("text-xs font-normal", pnlTone)}>
@@ -125,7 +151,7 @@ function PortfolioStrategyLegMobileCard({ leg }: { leg: PortfolioStrategyLeg }) 
           </div>
         </PortfolioTableMobileField>
         <PortfolioTableMobileField
-          label="Time"
+          label={t("time")}
           valueClassName="font-normal text-prophet-muted"
         >
           <PortfolioStrategyLegTimeCell leg={leg} align="end" />

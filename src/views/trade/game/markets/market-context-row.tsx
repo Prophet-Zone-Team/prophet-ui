@@ -4,6 +4,7 @@ import { useMemo } from "react";
 
 import { useAnalyticsHeadToHeadFixtures } from "@/hooks/analytics/use-analytics-head-to-head-fixtures";
 import { useAnalyticsTeamRelatedNews } from "@/hooks/analytics/use-analytics-team-related-news";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
@@ -27,6 +28,8 @@ export function MarketContextRow({
 
   const homeTeamName = sides.home.name;
   const awayTeamName = sides.away.name;
+  const homeDisplayName = useLocalizedTeamName(sides.home.code, homeTeamName);
+  const awayDisplayName = useLocalizedTeamName(sides.away.code, awayTeamName);
 
   const {
     items: relatedNewsItems,
@@ -60,12 +63,12 @@ export function MarketContextRow({
     <div className="mt-[8px] flex flex-col gap-4">
       <GameStatistics
         homeTeam={{
-          name: homeTeamName,
+          name: homeDisplayName,
           code: sides.home.code,
           logoUrl: sides.home.logoUrl
         }}
         awayTeam={{
-          name: awayTeamName,
+          name: awayDisplayName,
           code: sides.away.code,
           logoUrl: sides.away.logoUrl
         }}

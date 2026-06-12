@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import type { KeyPlayerView } from "@/lib/team/team-detail-model";
 import { getInitials } from "@/lib/team/team-detail-model";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
@@ -12,12 +16,13 @@ export interface DossierKeyStarsProps {
 }
 
 export function DossierKeyStars({ players }: DossierKeyStarsProps) {
+  const t = useTranslations("teamDetail");
   const stars = players.slice(0, 3);
 
   return (
-    <section className={teamPanelClass} aria-label="Key stars">
+    <section className={teamPanelClass} aria-label={t("keyStarsAria")}>
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>Key Stars</h2>
+        <h2 className={teamPanelTitleClass}>{t("keyStars")}</h2>
       </div>
       <div className="grid gap-2 p-4">
         {stars.length > 0 ? (
@@ -47,8 +52,8 @@ export function DossierKeyStars({ players }: DossierKeyStarsProps) {
           ))
         ) : (
           <TeamEmptyState
-            title="No key stars"
-            body="Key player data is not available for this team yet."
+            title={t("noKeyStars")}
+            body={t("noKeyStarsBody")}
           />
         )}
       </div>

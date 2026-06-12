@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -28,6 +29,7 @@ import { MAIN_HOSTNAME } from "@/config/funding";
 import { useAuth } from "@/context/auth";
 
 export function PrivateTopupPage() {
+  const t = useTranslations("privateTopup");
   const fundingWallet = useFundingWallet();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [stableflowTokens, setStableflowTokens] = useState<StableflowDepositToken[]>([]);
@@ -124,7 +126,7 @@ export function PrivateTopupPage() {
         <div className="mx-auto flex w-full max-w-[966px] flex-col items-center gap-8">
           <img
             src="/logos/logo-private.svg"
-            alt="Private mode"
+            alt={t("privateModeAlt")}
             className="h-[52px] w-[70px] object-contain"
           />
 
@@ -132,14 +134,13 @@ export function PrivateTopupPage() {
 
           {confidentialAccount.authenticated && confidentialAccount.eoaAddress ? (
             <p className={`${privateTopupInfoBannerClass} w-full`}>
-              This Private Account is linked to your wallet {formatShortWallet(confidentialAccount.eoaAddress)}.
-              Confirm this is correct before funding.
+              {t("linkedAccountBanner", {
+                address: formatShortWallet(confidentialAccount.eoaAddress),
+              })}
             </p>
           ) : !confidentialAccount.loading ? (
             <div className={`${privateTopupWarningBannerClass} w-full justify-center`}>
-              <span>
-                No verified Private Account found. Start Private Mode from the main site to continue.
-              </span>
+              <span>{t("noVerifiedAccount")}</span>
             </div>
           ) : null}
 
@@ -160,7 +161,7 @@ export function PrivateTopupPage() {
             href={`https://${MAIN_HOSTNAME}/fifa`}
             className={privateTopupGetStartedLinkClass}
           >
-            <span>Starts to get Prophet</span>
+            <span>{t("startsToGetProphet")}</span>
             <ChevronRight aria-hidden />
           </Link>
         </div>

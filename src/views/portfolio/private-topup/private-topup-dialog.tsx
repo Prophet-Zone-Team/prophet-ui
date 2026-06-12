@@ -4,6 +4,7 @@ import type { OneClickStatus, QuoteResponse } from "@stableflow/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Big from "big.js";
 import { CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
@@ -68,6 +69,9 @@ export function PrivateTopupDialog({
   onClose,
   onSuccess,
 }: PrivateTopupDialogProps) {
+  const t = useTranslations("privateTopup");
+  const tDeposit = useTranslations("portfolio.deposit");
+  const tAuth = useTranslations("auth");
   const { requestQuote, executeTopup, pollTopupStatus, stopStatusPoll } =
     useConfidentialTopup();
 
@@ -178,17 +182,17 @@ export function PrivateTopupDialog({
   const ariaLabel = useMemo(() => {
     switch (step) {
       case "tokens":
-        return "Select top up asset";
+        return t("ariaSelectTopUpAsset");
       case "amount":
-        return "Enter top up amount";
+        return t("ariaEnterTopUpAmount");
       case "confirm":
-        return "Confirm private top up";
+        return t("ariaConfirmPrivateTopUp");
       case "status":
-        return "Top up status";
+        return t("ariaTopUpStatus");
       default:
-        return "Private top up";
+        return t("ariaPrivateTopUp");
     }
-  }, [step]);
+  }, [step, t]);
 
   function handleBack() {
     if (step === "amount") {
@@ -257,22 +261,22 @@ export function PrivateTopupDialog({
       try {
         setStatusPhase("bridging");
         await pollTopupStatus(depositAddress, depositMemo, (status: OneClickStatus) => {
-          setBridgeStatusLabel(formatStableflowStatusLabel(status));
+          setBridgeStatusLabel(formatStableflowStatusLabel(status, tDeposit));
         });
         setStatusPhase("success");
-        toast.success("Top up successful");
+        toast.success(t("topUpSuccessful"));
         await onSuccess?.();
       } catch (error) {
         setStatusPhase("error");
         setStatusError(error instanceof Error ? error.message : String(error));
       }
     },
-    [onSuccess, pollTopupStatus],
+    [onSuccess, pollTopupStatus, t, tDeposit],
   );
 
   const onConfirmTopup = async () => {
     if (!selectedToken || !quote) {
-      toast.error("Private top up is not ready. Try again.");
+      toast.error(t("notReady"));
       return;
     }
 
@@ -312,7 +316,7 @@ export function PrivateTopupDialog({
           disabled={!selectedToken || continueLoading}
           onClick={onContinueToAmount}
         >
-          Continue
+          {tAuth("continue")}
         </button>
       );
     }
@@ -331,7 +335,7 @@ export function PrivateTopupDialog({
           onClick={() => void onContinueToConfirm()}
         >
           {continueLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Continue
+          {tAuth("continue")}
         </button>
       );
     }
@@ -345,7 +349,7 @@ export function PrivateTopupDialog({
           onClick={() => void onConfirmTopup()}
         >
           {continueLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Confirm Top up
+          {t("confirmTopUp")}
         </button>
       );
     }
@@ -361,6 +365,8 @@ export function PrivateTopupDialog({
     selectedToken,
     selectedTokenMaxAmount,
     step,
+    t,
+    tAuth,
   ]);
 
   const shellMinHeight =
@@ -389,7 +395,7 @@ export function PrivateTopupDialog({
         }}
       >
         <FundingModalShell
-          title="Top up Private Balance"
+          title={t("titleTopUpPrivateBalance")}
           onClose={handleClose}
           onBack={showBack ? handleBack : undefined}
           footer={footer}
@@ -425,11 +431,11 @@ export function PrivateTopupDialog({
                   onChange={(event) => setEoaConfirmed(event.target.checked)}
                 />
                 <span>
-                  I confirm this Private Account is linked to my wallet
-                  {privateAccountEoaAddress
-                    ? ` ${formatShortWallet(privateAccountEoaAddress)}`
-                    : ""}
-                  .
+                  {t("confirmPrivateAccountLinked", {
+                    address: privateAccountEoaAddress
+                      ? ` ${formatShortWallet(privateAccountEoaAddress)}`
+                      : "",
+                  })}
                 </span>
               </label>
               <PrivateTopupConfirmStep
@@ -471,6 +477,9 @@ function TopupStatusView({
   onDone: () => void;
   onRetry: () => void;
 }) {
+  const t = useTranslations("privateTopup");
+  const tAuth = useTranslations("auth");
+
   return (
     <div className="flex flex-col items-center justify-center gap-5 py-10 text-center">
       {phase === "bridging" ? (
@@ -478,10 +487,10 @@ function TopupStatusView({
           <Loader2 className="h-10 w-10 animate-spin text-black" aria-hidden />
           <div>
             <p className="m-0 text-lg font-[556] text-black">
-              Moving funds to your Private Account
+              {t("movingFunds")}
             </p>
             <p className="m-0 mt-1 text-sm text-[#909090]">
-              {bridgeStatusLabel ?? "This can take a few minutes."}
+              {bridgeStatusLabel ?? t("bridgeStatusFallback")}
             </p>
           </div>
         </>
@@ -491,13 +500,13 @@ function TopupStatusView({
         <>
           <CheckCircle2 className="h-10 w-10 text-[#16a34a]" aria-hidden />
           <div>
-            <p className="m-0 text-lg font-[556] text-black">Top up complete</p>
+            <p className="m-0 text-lg font-[556] text-black">{t("topUpComplete")}</p>
             <p className="m-0 mt-1 text-sm text-[#909090]">
-              Your private balance has been updated.
+              {t("topUpCompleteBody")}
             </p>
           </div>
           <button type="button" className={fundingPrimaryButtonClass} onClick={onDone}>
-            Done
+            {tAuth("done")}
           </button>
         </>
       ) : null}
@@ -506,13 +515,13 @@ function TopupStatusView({
         <>
           <ShieldAlert className="h-10 w-10 text-[#e5484d]" aria-hidden />
           <div>
-            <p className="m-0 text-lg font-[556] text-black">Top up failed</p>
+            <p className="m-0 text-lg font-[556] text-black">{t("topUpFailed")}</p>
             <p className="m-0 mt-1 text-sm text-[#e5484d]">
-              {error ?? "Something went wrong. Try again."}
+              {error ?? t("somethingWentWrong")}
             </p>
           </div>
           <button type="button" className={fundingPrimaryButtonClass} onClick={onRetry}>
-            Try again
+            {t("tryAgain")}
           </button>
         </>
       ) : null}
