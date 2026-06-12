@@ -84,14 +84,30 @@ describe("shouldDefaultGameMarketOrder", () => {
     assert.equal(isGameFixtureOutcomeBidReady(outcome, snapshot, "yes"), true);
   });
 
-  it("returns false when fixture outcome has no ask liquidity", () => {
+  it("returns false when fixture outcome has no ask or display price", () => {
     const snapshot = buildSnapshot();
-    const outcome = buildOutcome({ yesAsk: undefined, noAsk: undefined });
+    const outcome = buildOutcome({
+      yesAsk: undefined,
+      noAsk: undefined,
+      price: undefined,
+      probability: undefined,
+    });
 
     assert.equal(
       shouldDefaultGameMarketOrder(snapshot, outcome, "yes"),
       false
     );
+  });
+
+  it("returns true when fixture outcome has snapshot price but no live ask", () => {
+    const snapshot = buildSnapshot();
+    const outcome = buildOutcome({ yesAsk: undefined, noAsk: undefined });
+
+    assert.equal(
+      shouldDefaultGameMarketOrder(snapshot, outcome, "yes"),
+      true
+    );
+    assert.equal(isGameFixtureOutcomeBidReady(outcome, snapshot, "yes"), true);
   });
 
   it("falls back to moneyline token readiness when no fixture outcome is selected", () => {

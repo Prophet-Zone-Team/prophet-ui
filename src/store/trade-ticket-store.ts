@@ -2,10 +2,11 @@
 
 import { create } from "zustand";
 
-import { hasFixtureBuyAsk } from "@/lib/market/fixture-ask-liquidity";
+import { resolveFixtureDisplayAskPrice } from "@/lib/market/fixture-ask-liquidity";
 import {
   formatDefaultGameTradeLimitPrice,
   formatDefaultTradeLimitPrice,
+  resolveFreshFixtureOutcome,
   resolveGameDefaultFixtureOutcome,
   shouldDefaultGameMarketOrder
 } from "@/lib/market/trade-ticket";
@@ -140,8 +141,27 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
     if (get().marketKey === marketKey && get().entityType === "game") {
       const current = get();
       const updates: Partial<TradeTicketState> = {};
+      const refreshedOutcome = current.selectedFixtureOutcome
+        ? resolveFreshFixtureOutcome(
+            current.selectedFixtureOutcome,
+            snapshot.match.polymarket?.fixtureMarkets
+          )
+        : defaultOutcome;
 
-      if (!current.selectedFixtureOutcome && defaultOutcome) {
+      if (refreshedOutcome && refreshedOutcome !== current.selectedFixtureOutcome) {
+        updates.selectedFixtureOutcome = refreshedOutcome;
+        updates.outcomeSide = current.outcomeSide ?? defaultBinarySide;
+        updates.matchOutcomeSide =
+          refreshedOutcome.side === "home" ||
+          refreshedOutcome.side === "draw" ||
+          refreshedOutcome.side === "away"
+            ? refreshedOutcome.side
+            : current.matchOutcomeSide;
+        updates.limitPrice = resolveFixtureSelectionLimitPrice(
+          refreshedOutcome,
+          current.outcomeSide ?? defaultBinarySide
+        ).toFixed(3);
+      } else if (!current.selectedFixtureOutcome && defaultOutcome) {
         updates.selectedFixtureOutcome = defaultOutcome;
         updates.outcomeSide = defaultBinarySide;
         updates.matchOutcomeSide =
@@ -238,7 +258,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
     const bidReady =
       Boolean(outcome.tokenId) &&
       outcome.acceptingOrders !== false &&
-      hasFixtureBuyAsk(outcome, binarySide);
+      resolveFixtureDisplayAskPrice(outcome, binarySide) !== undefined;
 
     set({
       selectedFixtureOutcome: outcome,

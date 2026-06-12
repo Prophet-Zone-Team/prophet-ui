@@ -19,6 +19,7 @@ import {
 import {
   resolveFixtureBuyAsk,
   resolveFixtureBuyAskDisabledReason,
+  resolveFixtureDisplayAskPrice,
 } from "@/lib/market/fixture-ask-liquidity";
 import {
   getClosedMarketDisabledReason,
@@ -87,6 +88,7 @@ export function buildFixtureBidOrderPreview(input: {
       input.outcome,
       input.binarySide,
       input.tradeSide,
+      input.orderType,
     ) ??
     getGameDisabledReason({
       acceptingOrders: resolveEffectiveAcceptingOrders(
@@ -139,7 +141,7 @@ export function getDefaultFixtureLimitPrice(
     return outcome.noBid ?? outcome.noAsk ?? Math.max(0.001, 1 - outcome.price);
   }
 
-  return resolveFixtureBuyAsk(outcome, binarySide);
+  return resolveFixtureDisplayAskPrice(outcome, binarySide);
 }
 
 export function buildGameBidOrderPreview(
@@ -170,6 +172,7 @@ export function buildGameBidOrderPreview(
       outcome,
       binarySide: input.binarySide,
       tradeSide: input.tradeSide,
+      orderType: input.orderType,
     }) ??
     getGameDisabledReason({
       acceptingOrders: input.snapshot.market.acceptingOrders,
@@ -203,16 +206,26 @@ function getGameBuyAskDisabledReason({
   outcome,
   binarySide,
   tradeSide,
+  orderType,
 }: {
-  outcome?: Pick<FixtureMarketOutcome, "yesAsk" | "noAsk">;
+  outcome?: Pick<
+    FixtureMarketOutcome,
+    "yesAsk" | "noAsk" | "price" | "probability"
+  >;
   binarySide: OrderOutcomeSide;
   tradeSide: BidTradeSide;
+  orderType: TradingOrderType;
 }): string | undefined {
   if (!outcome) {
     return undefined;
   }
 
-  return resolveFixtureBuyAskDisabledReason(outcome, binarySide, tradeSide);
+  return resolveFixtureBuyAskDisabledReason(
+    outcome,
+    binarySide,
+    tradeSide,
+    orderType,
+  );
 }
 
 function getGameDisabledReason({
