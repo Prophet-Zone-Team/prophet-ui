@@ -993,6 +993,9 @@
     "shareCardProfit": "賺取收益！",
     "shareCardInvite": "邀請你加入 Prophet",
     "shareTweetIntro": "世界盃市場即將來臨。\n\n追蹤訊號。更聰明地交易。\n\n加入 Prophet 👇\n\n",
+    "shareUploadAuthRequired": "請連接錢包後再分享到 X。",
+    "shareUploadError": "無法準備分享圖片，請重試。",
+    "shareCardNotReady": "分享卡片仍在載入中，請稍後再試。",
     "claimSuccess": "已領取 {amount} USDC",
     "claimError": "無法領取推薦獎勵。"
   },

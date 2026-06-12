@@ -122,4 +122,5 @@ export const inviteLinkRowShellClass =
 export const inviteActionButtonClass = cn(
   "inline-flex h-[52px] w-full items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white",
   "text-[#909090] transition-colors hover:bg-[#f5f5f5] focus-visible:bg-[#f5f5f5]",
+  "disabled:cursor-not-allowed disabled:opacity-30",
 );
