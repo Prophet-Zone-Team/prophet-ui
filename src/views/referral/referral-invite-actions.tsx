@@ -76,7 +76,7 @@ export function ReferralInviteActions({
         shareImageUploadMode === "cache" &&
         shareImageCacheKey?.referralCode
       ) {
-        imgUrl = readReferralShareImageCache(shareImageCacheKey);
+        // imgUrl = readReferralShareImageCache(shareImageCacheKey);
       }
 
       if (!imgUrl) {

@@ -71,7 +71,7 @@ export const ReferralShareCard = forwardRef<HTMLDivElement, ReferralShareCardPro
             alt=""
             width={REFERRAL_SHARE_CARD_WIDTH}
             height={REFERRAL_SHARE_CARD_HEIGHT}
-            className="absolute inset-0 block h-full w-full object-contain object-center"
+            className="absolute inset-0 block h-full w-full object-contain object-center rounded-[10px]"
             style={{
               width: REFERRAL_SHARE_CARD_WIDTH,
               height: REFERRAL_SHARE_CARD_HEIGHT,
@@ -81,8 +81,8 @@ export const ReferralShareCard = forwardRef<HTMLDivElement, ReferralShareCardPro
             onLoad={handleBgLoad}
           />
 
-          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col px-5 pt-7 font-body">
-            <div className="text-center">
+          <div className="pointer-events-none absolute inset-0 z-10 flex flex-col pl-5 pr-5 pt-7 font-body">
+            <div className="text-left">
               <p className={inviteShareCardTitleClass}>
                 {t("shareCardTitle")}
                 <br />
@@ -90,7 +90,7 @@ export const ReferralShareCard = forwardRef<HTMLDivElement, ReferralShareCardPro
               </p>
 
               {funderDisplay ? (
-                <div className="mt-4">
+                <div className="mt-2">
                   <p className={inviteShareCardFunderClass}>{funderDisplay}</p>
                   <p className={inviteShareCardInviteClass}>
                     {t("shareCardInvite")}
