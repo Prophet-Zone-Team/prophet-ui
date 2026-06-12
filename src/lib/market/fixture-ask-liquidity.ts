@@ -6,6 +6,10 @@ import type {
   TradingOrderType
 } from "@/types/market";
 
+export type AskLiquidityOutcome = Partial<
+  Pick<FixtureMarketOutcome, "yesAsk" | "noAsk" | "price" | "probability">
+>;
+
 export const NO_ASK_LIQUIDITY_MESSAGE =
   "No sell orders are available for this outcome. You cannot place a buy order right now.";
 
@@ -37,10 +41,7 @@ function probabilityToAskPrice(
 
 /** Buy-side display/trade ask with snapshot probability fallback when CLOB asks are missing. */
 export function resolveFixtureDisplayAskPrice(
-  outcome: Pick<
-    FixtureMarketOutcome,
-    "yesAsk" | "noAsk" | "price" | "probability"
-  >,
+  outcome: AskLiquidityOutcome,
   binarySide: OrderOutcomeSide = "yes"
 ): number | undefined {
   const ask = resolveFixtureBuyAsk(outcome, binarySide);
@@ -71,10 +72,7 @@ export function resolveFixtureDisplayAskPrice(
 
 /** Whether an outcome button can be selected in the markets UI. */
 export function isFixtureOutcomeSelectable(
-  outcome: Pick<
-    FixtureMarketOutcome,
-    "tokenId" | "yesAsk" | "noAsk" | "price" | "probability"
-  >,
+  outcome: Pick<FixtureMarketOutcome, "tokenId"> & AskLiquidityOutcome,
   binarySide: OrderOutcomeSide = "yes"
 ): boolean {
   if (!outcome.tokenId) {
@@ -92,10 +90,7 @@ export function hasFixtureBuyAsk(
 }
 
 export function resolveFixtureBuyAskDisabledReason(
-  outcome: Pick<
-    FixtureMarketOutcome,
-    "yesAsk" | "noAsk" | "price" | "probability"
-  >,
+  outcome: AskLiquidityOutcome,
   binarySide: OrderOutcomeSide,
   tradeSide: BidTradeSide,
   orderType?: TradingOrderType

@@ -1,6 +1,7 @@
 import type {
   BidTradeSide,
   FixtureMarketOutcome,
+  GameMarketOutcome,
   GameMarketSnapshot,
   MatchOutcomeSide,
   OrderOutcomeSide,
@@ -208,10 +209,7 @@ function getGameBuyAskDisabledReason({
   tradeSide,
   orderType,
 }: {
-  outcome?: Pick<
-    FixtureMarketOutcome,
-    "yesAsk" | "noAsk" | "price" | "probability"
-  >;
+  outcome?: GameMarketOutcome;
   binarySide: OrderOutcomeSide;
   tradeSide: BidTradeSide;
   orderType: TradingOrderType;
