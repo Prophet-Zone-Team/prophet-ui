@@ -182,7 +182,8 @@ function TopAttentionTeamCard({
   const router = useRouter();
   const { team, market } = snapshot;
   const displayName = useLocalizedTeamName(team.code, team.name);
-  const tradeHref = teamTradeHref(market?.slug || "");
+
+  const tradeHref = teamTradeHref(market?.polymarket?.slug || "");
   const volumeLabel = `$${formatVolume(market.volume)}`;
   const resolvedCategoryLabel = categoryLabel ?? t("categoryFifaWorldCup");
 

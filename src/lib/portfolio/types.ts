@@ -11,12 +11,14 @@ export interface PortfolioTransactionRecord {
   type: PortfolioTransactionType;
   side: string;
   price: string;
+  size?: number;
   amount: string;
   marketName: string;
   teamName: string;
   slug: string;
   source: string;
   createdAt: string;
+  tradeCreatedAt: string;
   txHash: string;
 }
 
