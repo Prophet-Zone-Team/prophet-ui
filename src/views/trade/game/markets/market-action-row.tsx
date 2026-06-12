@@ -64,7 +64,7 @@ function OutcomeButtons({
 
         return (
           <LineOutcomeButton
-            key={outcome.id}
+            key={`${outcome.id}-${displayPrice ?? "na"}`}
             label={outcome.label}
             price={displayPrice}
             variant={variant}

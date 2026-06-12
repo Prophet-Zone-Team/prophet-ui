@@ -5,7 +5,7 @@ import type {
   GameMarketOutcome,
 } from "@/types/market";
 
-function probabilityFromAsk(ask: number | undefined): number | undefined {
+export function probabilityFromAsk(ask: number | undefined): number | undefined {
   if (ask === undefined || ask <= 0 || ask >= 1) {
     return undefined;
   }
@@ -17,6 +17,15 @@ export function shouldUseNoAskForOutcomeProbability(
   outcome: Pick<FixtureMarketOutcome, "id" | "side">,
 ): boolean {
   return outcome.side === "under" || outcome.id.endsWith(":no");
+}
+
+export function resolveLiveOutcomeYesNoProbabilities(
+  outcome: Pick<FixtureMarketOutcome, "yesAsk" | "noAsk" | "probability">,
+): { yes: number; no: number } {
+  const yes = probabilityFromAsk(outcome.yesAsk) ?? outcome.probability ?? 0;
+  const no = probabilityFromAsk(outcome.noAsk) ?? Math.max(0, 100 - yes);
+
+  return { yes, no };
 }
 
 export function resolveFixtureOutcomeDisplayProbability(

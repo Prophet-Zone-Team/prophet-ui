@@ -3,6 +3,10 @@
 import { useMemo } from "react";
 
 import {
+  useMarketWsContext,
+  useRegisterMarketWsTokens,
+} from "@/context/market-ws";
+import {
   buildMarketTokenKey,
   useMarketTokenPrices,
 } from "@/hooks/market/use-market-token-prices";
@@ -18,6 +22,7 @@ export interface UseLiveFixtureTabPricesOptions {
 export interface UseLiveFixtureTabPricesResult {
   pricesByOutcomeId: Record<string, LiveOutcomePrices>;
   lastUpdated?: string;
+  revision: number;
 }
 
 function mapTokenPricesToOutcomes(
@@ -53,9 +58,15 @@ export function useLiveFixtureTabPrices({
   outcomes,
   enabled,
 }: UseLiveFixtureTabPricesOptions): UseLiveFixtureTabPricesResult {
-  const tokenKey = buildMarketTokenKey(
-    outcomes.flatMap((outcome) => [outcome.tokenId, outcome.noTokenId])
+  const marketWsContext = useMarketWsContext();
+  const revision = marketWsContext?.revision ?? 0;
+  const tokenIds = useMemo(
+    () => outcomes.flatMap((outcome) => [outcome.tokenId, outcome.noTokenId]),
+    [outcomes]
   );
+  const tokenKey = buildMarketTokenKey(tokenIds);
+
+  useRegisterMarketWsTokens("game-fixture-tab-prices", tokenIds, { enabled });
 
   const { pricesByTokenId } = useMarketTokenPrices(
     tokenKey ? tokenKey.split("|") : [],
@@ -65,7 +76,10 @@ export function useLiveFixtureTabPrices({
     }
   );
 
-  const pricesByOutcomeId = mapTokenPricesToOutcomes(outcomes, pricesByTokenId);
+  const pricesByOutcomeId = useMemo(
+    () => mapTokenPricesToOutcomes(outcomes, pricesByTokenId),
+    [outcomes, pricesByTokenId, revision]
+  );
 
   const lastUpdated = useMemo(() => {
     let latest: string | undefined;
@@ -77,10 +91,11 @@ export function useLiveFixtureTabPrices({
     }
 
     return latest;
-  }, [pricesByTokenId]);
+  }, [pricesByTokenId, revision]);
 
   return {
     pricesByOutcomeId,
     lastUpdated,
+    revision,
   };
 }
