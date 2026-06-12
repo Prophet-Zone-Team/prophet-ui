@@ -16,6 +16,12 @@ const DATETIME_PARTS: Intl.DateTimeFormatOptions = {
   second: "2-digit",
 };
 
+const SHORT_DATE_PARTS: Intl.DateTimeFormatOptions = {
+  month: "2-digit",
+  day: "2-digit",
+  ...TIME_PARTS,
+};
+
 function lookupPart(
   parts: Intl.DateTimeFormatPart[],
   type: Intl.DateTimeFormatPartTypes,
@@ -43,6 +49,10 @@ function formatTimeFromParts(parts: Intl.DateTimeFormatPart[]): string {
 
 function formatDateTimeFromParts(parts: Intl.DateTimeFormatPart[]): string {
   return `${formatDateFromParts(parts)} ${formatTimeFromParts(parts)}:${lookupPart(parts, "second")}`;
+}
+
+function formatShortDateMinuteFromParts(parts: Intl.DateTimeFormatPart[]): string {
+  return `${lookupPart(parts, "month")}-${lookupPart(parts, "day")} ${formatTimeFromParts(parts)}`;
 }
 
 export function formatDate(date: Date, timeZone?: string): string {
@@ -131,6 +141,14 @@ export function formatDateTime(date: Date, timeZone?: string): string {
   );
 }
 
+export function formatShortDateMinute(date: Date, timeZone?: string): string {
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return formatShortDateMinuteFromParts(createFormatter(SHORT_DATE_PARTS, timeZone).formatToParts(date));
+}
+
 export function formatDateTimeFromIso(
   value: string | undefined,
   timeZone?: string,
@@ -146,6 +164,17 @@ export function formatDateTimeFromIso(
   }
 
   return formatDateTime(date, timeZone);
+}
+
+export function formatShortDateMinuteFromIso(
+  value: string | undefined,
+  timeZone?: string,
+): string {
+  if (!value) {
+    return "";
+  }
+
+  return formatShortDateMinute(new Date(value), timeZone);
 }
 
 export function formatDateTimeFromUnixSeconds(
