@@ -186,6 +186,7 @@
     "marketNotAcceptingOrders": "This Polymarket market is not accepting orders.",
     "marketClosed": "This Polymarket market is closed.",
     "enterPositiveAmount": "Enter a positive amount.",
+    "enterTakeProfitLimitPrice": "Enter a take profit limit price.",
     "amountMinOrderSize": "Amount must be at least ${amount}.",
     "limitBuyMinShares": "Limit buy orders must be at least {minShares} shares.",
     "takeProfitLimitFailed": "Buy order succeeded, but the take profit limit order could not be placed. You can add a sell limit order from Portfolio.",

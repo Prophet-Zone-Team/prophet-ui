@@ -46,6 +46,7 @@ const TRADE_GATE_MESSAGE_KEYS: Partial<Record<string, TradeMessageKey>> = {
     "marketNotAcceptingOrders",
   "This Polymarket market is closed.": "marketClosed",
   "Enter a positive amount.": "enterPositiveAmount",
+  "Enter a take profit limit price.": "enterTakeProfitLimitPrice",
   "Refresh your trading allowance, then submit your order again.":
     "refreshAllowanceHint",
   "Balance and allowance checks require user CLOB credentials.":

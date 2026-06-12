@@ -186,6 +186,7 @@
     "marketNotAcceptingOrders": "이 Polymarket 마켓은 현재 주문을 받지 않습니다.",
     "marketClosed": "이 Polymarket 마켓은 종료되었습니다.",
     "enterPositiveAmount": "0보다 큰 금액을 입력하세요.",
+    "enterTakeProfitLimitPrice": "익절 지정가 가격을 입력하세요.",
     "amountMinOrderSize": "금액은 최소 ${amount} 이상이어야 합니다.",
     "limitBuyMinShares": "지정가 매수 주문은 최소 {minShares} 수량 이상이어야 합니다.",
     "takeProfitLimitFailed": "매수 주문은 성공했지만 익절 지정가 주문을 제출할 수 없었습니다. 포트폴리오에서 매도 지정가 주문을 추가할 수 있습니다.",

@@ -5,7 +5,8 @@ import {
   deriveDefaultTakeProfitLimitPrice,
   formatTakeProfitLimitPriceString,
   isTakeProfitLimitAvailable,
-  LIMIT_BUY_MIN_SHARES
+  LIMIT_BUY_MIN_SHARES,
+  validateTakeProfitLimitPrice
 } from "@/lib/market/order-math";
 
 describe("deriveDefaultTakeProfitLimitPrice", () => {
@@ -26,9 +27,26 @@ describe("deriveDefaultTakeProfitLimitPrice", () => {
 
 describe("isTakeProfitLimitAvailable", () => {
   it("requires at least the limit order minimum share size", () => {
-    assert.equal(isTakeProfitLimitAvailable(LIMIT_BUY_MIN_SHARES - 0.0001), false);
+    assert.equal(
+      isTakeProfitLimitAvailable(LIMIT_BUY_MIN_SHARES - 0.0001),
+      false
+    );
     assert.equal(isTakeProfitLimitAvailable(LIMIT_BUY_MIN_SHARES), true);
     assert.equal(isTakeProfitLimitAvailable(LIMIT_BUY_MIN_SHARES + 1), true);
   });
 });
 
+describe("validateTakeProfitLimitPrice", () => {
+  it("requires a price when take profit limit is enabled", () => {
+    assert.equal(
+      validateTakeProfitLimitPrice(true, ""),
+      "Enter a take profit limit price."
+    );
+    assert.equal(
+      validateTakeProfitLimitPrice(true, "   "),
+      "Enter a take profit limit price."
+    );
+    assert.equal(validateTakeProfitLimitPrice(true, "0.276"), undefined);
+    assert.equal(validateTakeProfitLimitPrice(false, ""), undefined);
+  });
+});

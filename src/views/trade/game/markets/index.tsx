@@ -13,12 +13,14 @@ import {
 import { useGameStatisticsNotificationSync } from "@/hooks/market/use-game-statistics-notification-sync";
 import { useGameOdds } from "@/hooks/market/use-game-odds";
 import { mapGameOddsToOtherSources } from "@/lib/market/map-game-odds-other-sources";
+import { isGameMarketLiveUpdatesEnabled } from "@/lib/market/live-match";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
+import { useMatchWithLiveState } from "@/store/match-live-store";
 import {
   mergeLivePricesIntoFixtureOutcomes,
   mergeLivePricesIntoGameOutcomes,
 } from "@/lib/market/merge-live-outcome-prices";
-import { resolveFixtureOutcomesForTab } from "@/lib/market/fixture-tab-outcomes";
+import { resolveAllFixtureOutcomes, resolveFixtureOutcomesForTab } from "@/lib/market/fixture-tab-outcomes";
 import {
   useSelectFixtureOutcome,
   useSelectedFixtureOutcome,
@@ -123,8 +125,10 @@ export function GameMarketsSection({
   const selectFixtureOutcome = useSelectFixtureOutcome();
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
-  const sides = resolveMatchSides(match, teamSnapshots);
-  const { odds: gameOdds } = useGameOdds({ match });
+  const liveMatch = useMatchWithLiveState(match);
+  const marketWsEnabled = isGameMarketLiveUpdatesEnabled(liveMatch);
+  const sides = resolveMatchSides(liveMatch, teamSnapshots);
+  const { odds: gameOdds } = useGameOdds({ match: liveMatch });
 
   const otherSources = useMemo(
     () =>
@@ -147,7 +151,7 @@ export function GameMarketsSection({
   );
 
   useGameStatisticsNotificationSync({
-    match,
+    match: liveMatch,
     homeTeamName: sides.home.name,
     awayTeamName: sides.away.name,
   });
@@ -158,16 +162,20 @@ export function GameMarketsSection({
     () => resolveFixtureOutcomesForTab(fixtureMarkets, tab, activeLineKey),
     [activeLineKey, fixtureMarkets, tab],
   );
+  const allFixtureOutcomes = useMemo(
+    () => resolveAllFixtureOutcomes(fixtureMarkets),
+    [fixtureMarkets],
+  );
 
   useGameMarketWsTokens({
-    activeTabOutcomes,
+    fixtureOutcomes: allFixtureOutcomes,
     gameSnapshot,
-    enabled: true,
+    enabled: marketWsEnabled,
   });
 
-  const { pricesByOutcomeId } = useLiveFixtureTabPrices({
-    outcomes: activeTabOutcomes,
-    enabled: true,
+  const { pricesByOutcomeId, revision: marketWsRevision } = useLiveFixtureTabPrices({
+    outcomes: allFixtureOutcomes,
+    enabled: marketWsEnabled,
   });
 
   const selectDefaultForTab = useCallback(
@@ -257,7 +265,7 @@ export function GameMarketsSection({
 
   const liveActiveTabOutcomes = useMemo(
     () => mergeLivePricesIntoFixtureOutcomes(activeTabOutcomes, pricesByOutcomeId),
-    [activeTabOutcomes, pricesByOutcomeId],
+    [activeTabOutcomes, pricesByOutcomeId, marketWsRevision],
   );
   const liveGameOutcomes = useMemo(
     () =>
@@ -266,7 +274,7 @@ export function GameMarketsSection({
         activeTabOutcomes,
         pricesByOutcomeId,
       ),
-    [activeTabOutcomes, gameSnapshot.outcomes, pricesByOutcomeId],
+    [activeTabOutcomes, gameSnapshot.outcomes, pricesByOutcomeId, marketWsRevision],
   );
   const summaryConfig = useMemo(
     () =>
@@ -395,7 +403,7 @@ export function GameMarketsSection({
 
       {chartKind ? (
         <GameProbabilitySection
-          match={match}
+          match={liveMatch}
           snapshots={teamSnapshots}
           gameSnapshot={gameSnapshot}
           fixtureMarkets={fixtureMarkets}
@@ -415,7 +423,7 @@ export function GameMarketsSection({
         />
       ) : null}
 
-      <MarketContextRow match={match} teamSnapshots={teamSnapshots} />
+      <MarketContextRow match={liveMatch} teamSnapshots={teamSnapshots} />
     </section>
   );
 }

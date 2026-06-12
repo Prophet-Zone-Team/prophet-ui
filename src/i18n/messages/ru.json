@@ -186,6 +186,7 @@
     "marketNotAcceptingOrders": "Этот рынок Polymarket сейчас не принимает ордера.",
     "marketClosed": "Этот рынок Polymarket закрыт.",
     "enterPositiveAmount": "Введите положительную сумму.",
+    "enterTakeProfitLimitPrice": "Введите цену лимита тейк-профита.",
     "amountMinOrderSize": "Сумма должна быть не менее ${amount}.",
     "limitBuyMinShares": "Лимитные ордера на покупку должны быть не менее {minShares} акций.",
     "takeProfitLimitFailed": "Ордер на покупку выполнен, но лимитный ордер тейк-профита не удалось разместить. Вы можете добавить лимитный ордер на продажу в Портфеле.",

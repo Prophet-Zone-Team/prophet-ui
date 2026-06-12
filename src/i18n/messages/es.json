@@ -186,6 +186,7 @@
     "marketNotAcceptingOrders": "Este mercado de Polymarket no acepta órdenes en este momento.",
     "marketClosed": "Este mercado de Polymarket está cerrado.",
     "enterPositiveAmount": "Introduce un importe positivo.",
+    "enterTakeProfitLimitPrice": "Introduce un precio de límite de toma de ganancias.",
     "amountMinOrderSize": "El importe debe ser al menos ${amount}.",
     "limitBuyMinShares": "Las órdenes de compra limitada deben ser de al menos {minShares} acciones.",
     "takeProfitLimitFailed": "La orden de compra se realizó correctamente, pero no se pudo colocar la orden límite de toma de ganancias. Puedes añadir una orden límite de venta desde Portafolio.",

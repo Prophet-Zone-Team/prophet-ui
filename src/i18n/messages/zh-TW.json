@@ -186,6 +186,7 @@
     "marketNotAcceptingOrders": "此 Polymarket 市場目前不接受訂單。",
     "marketClosed": "此 Polymarket 市場已關閉。",
     "enterPositiveAmount": "請輸入大於零的金額。",
+    "enterTakeProfitLimitPrice": "請輸入止盈限價價格。",
     "amountMinOrderSize": "金額至少須為 ${amount}。",
     "limitBuyMinShares": "限價買單至少須為 {minShares} 份額。",
     "takeProfitLimitFailed": "買入訂單已成功，但止盈限價單未能提交。您可從投資組合新增賣出限價單。",

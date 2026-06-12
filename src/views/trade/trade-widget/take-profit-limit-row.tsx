@@ -58,45 +58,48 @@ export function TakeProfitLimitRow({
         />
       </div>
 
-      <div className="flex h-[46px] items-center justify-between gap-2 rounded-lg border border-[#EBEBEB] bg-white px-3">
-        <span className="text-sm font-[400] leading-[18px] text-[#909090]">
-          {t("sellAt")}
-        </span>
-        <label className="sr-only" htmlFor="take-profit-limit-price">
-          {t("takeProfitLimitPriceSrOnly")}
-        </label>
-        <div className="flex min-w-0 items-baseline justify-end gap-0.5">
-          <span className="text-sm font-[400] leading-[18px] text-black">
-            ￠
+      {enabled ? (
+        <div className="flex h-[46px] items-center justify-between gap-2 rounded-lg border border-[#EBEBEB] bg-white px-3">
+          <span className="text-sm font-[400] leading-[18px] text-[#909090]">
+            {t("sellAt")}
           </span>
-          <input
-            id="take-profit-limit-price"
-            type="number"
-            min={1}
-            max={99}
-            step={0.1}
-            inputMode="decimal"
-            readOnly={disabled}
-            disabled={disabled}
-            tabIndex={disabled ? -1 : undefined}
-            value={formatLimitPriceInputValue(price)}
-            onChange={(event) => {
-              if (disabled) {
-                return;
-              }
+          <label className="sr-only" htmlFor="take-profit-limit-price">
+            {t("takeProfitLimitPriceSrOnly")}
+          </label>
+          <div className="flex min-w-0 items-baseline justify-end gap-0.5">
+            <span className="text-sm font-[400] leading-[18px] text-black">
+              ￠
+            </span>
+            <input
+              id="take-profit-limit-price"
+              type="number"
+              min={1}
+              max={99}
+              step={0.1}
+              inputMode="decimal"
+              readOnly={disabled}
+              disabled={disabled}
+              tabIndex={disabled ? -1 : undefined}
+              autoFocus={true}
+              value={price.trim() ? formatLimitPriceInputValue(price) : ""}
+              onChange={(event) => {
+                if (disabled) {
+                  return;
+                }
 
-              onPriceChange(
-                parseLimitPriceDisplayValue(event.target.value, purchasePrice)
-              );
-            }}
-            style={{ fieldSizing: "content" }}
-            className={cn(
-              "border-0 bg-transparent p-0 leading-[18px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-              disabled && "cursor-default"
-            )}
-          />
+                onPriceChange(
+                  parseLimitPriceDisplayValue(event.target.value, purchasePrice)
+                );
+              }}
+              style={{ fieldSizing: "content" }}
+              className={cn(
+                "border-0 min-w-[16px] bg-transparent p-0 leading-[18px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+                disabled && "cursor-default"
+              )}
+            />
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 

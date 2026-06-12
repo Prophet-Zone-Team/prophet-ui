@@ -186,6 +186,7 @@
     "marketNotAcceptingOrders": "この Polymarket マーケットは現在注文を受け付けていません。",
     "marketClosed": "この Polymarket マーケットは終了しています。",
     "enterPositiveAmount": "0 より大きい金額を入力してください。",
+    "enterTakeProfitLimitPrice": "利確指値価格を入力してください。",
     "amountMinOrderSize": "金額は少なくとも ${amount} 必要です。",
     "limitBuyMinShares": "指値買い注文は少なくとも {minShares} 数量が必要です。",
     "takeProfitLimitFailed": "買い注文は成功しましたが、利確指値注文を送信できませんでした。ポートフォリオから売り指値注文を追加できます。",
