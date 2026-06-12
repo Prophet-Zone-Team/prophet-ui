@@ -137,6 +137,17 @@ export function formatTakeProfitLimitDisabledMessage(): string {
   return `Take profit limit requires a market buy of at least ${LIMIT_BUY_MIN_SHARES} shares.`;
 }
 
+export function validateTakeProfitLimitPrice(
+  enabled: boolean,
+  price: string
+): string | undefined {
+  if (!enabled || price.trim()) {
+    return undefined;
+  }
+
+  return "Enter a take profit limit price.";
+}
+
 export interface OrderEstimateInput {
   side: OrderOutcomeSide;
   tradeSide?: BidTradeSide;
