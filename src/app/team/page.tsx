@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { TeamDetailPage } from "@/components/team/team-detail-page";
 import { getTeamMarketSnapshot } from "@/data/providers/world-cup-market-data";
+import { resolveTeamDetailSlug } from "@/lib/routes/team";
 
 interface TeamPageProps {
   searchParams: Promise<{
@@ -16,9 +17,7 @@ export default async function Page({ searchParams }: TeamPageProps) {
     notFound();
   }
 
-  const result = await getTeamMarketSnapshot(
-    slug === "korea-republic" ? "south-korea" : slug
-  );
+  const result = await getTeamMarketSnapshot(resolveTeamDetailSlug(slug));
 
   if (!result) {
     notFound();
