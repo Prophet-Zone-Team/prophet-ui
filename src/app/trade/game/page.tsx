@@ -39,14 +39,14 @@ export async function generateMetadata({
 
   await reportHeadersToWatcher(headersList);
 
-  if (
-    !shouldGenerateGameShareImage(
-      headersList,
-      params[TWITTER_PREVIEW_PARAM],
-    )
-  ) {
-    return {};
-  }
+  // if (
+  //   !shouldGenerateGameShareImage(
+  //     headersList,
+  //     params[TWITTER_PREVIEW_PARAM],
+  //   )
+  // ) {
+  //   return {};
+  // }
 
   try {
     const context = await loadGameTradeContext(slug);
