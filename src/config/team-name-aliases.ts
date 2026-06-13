@@ -23,6 +23,7 @@ const teamAliases: Record<string, string[]> = {
   "south-korea": ["south korea", "korea republic", "republic of korea", "korea", "kor"],
   spain: ["spain", "espana", "esp"],
   switzerland: ["switzerland", "sui"],
+  turkiye: ["turkiye", "turkey", "tur"],
   uruguay: ["uruguay", "uru"],
   usa: ["united states", "usa", "us", "united states of america", "u.s.", "u.s.a."],
 };

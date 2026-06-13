@@ -1,11 +1,12 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { formatShareSize, normalizeLimitPrice } from "@/lib/market/order-math";
+import type { OrderbookLevel } from "@/lib/market/orderbook-levels";
 import { useMarketOrderbook } from "@/hooks/market/use-market-orderbook";
 import {
   useSetTradeLimitPrice,
@@ -14,6 +15,24 @@ import {
 
 const MAX_ASK_ROWS = 8;
 const MAX_BID_ROWS = 8;
+const ORDERBOOK_ROW_HEIGHT_CLASS = "h-[21px]";
+const ORDERBOOK_ASKS_HEIGHT_CLASS = "h-[168px]";
+const ORDERBOOK_BIDS_HEIGHT_CLASS = "h-[168px]";
+const ORDERBOOK_BODY_HEIGHT_CLASS = "h-[368px]";
+
+type OrderbookRowSlot = OrderbookLevel | "empty";
+
+function padOrderbookRows(
+  levels: OrderbookLevel[],
+  maxRows: number,
+  align: "start" | "end"
+): OrderbookRowSlot[] {
+  const sliced = levels.slice(0, maxRows);
+  const emptyCount = maxRows - sliced.length;
+  const empties = Array.from({ length: emptyCount }, () => "empty" as const);
+
+  return align === "end" ? [...empties, ...sliced] : [...sliced, ...empties];
+}
 
 function formatOrderbookDisplayPrice(price: number): string {
   return (
@@ -40,28 +59,20 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
     setOrderMode("limit");
   };
 
-  const asksScrollRef = useRef<HTMLDivElement>(null);
-
   const asks = useMemo(
-    () => [...(book?.asks ?? [])].slice(0, MAX_ASK_ROWS).reverse(),
+    () =>
+      padOrderbookRows(
+        [...(book?.asks ?? [])].slice(0, MAX_ASK_ROWS).reverse(),
+        MAX_ASK_ROWS,
+        "end"
+      ),
     [book]
   );
-  const bids = useMemo(() => (book?.bids ?? []).slice(0, MAX_BID_ROWS), [book]);
+  const bids = useMemo(
+    () => padOrderbookRows(book?.bids ?? [], MAX_BID_ROWS, "start"),
+    [book]
+  );
   const marketPrice = book?.marketPrice;
-
-  useLayoutEffect(() => {
-    if (!tokenId) {
-      return;
-    }
-
-    const el = asksScrollRef.current;
-
-    if (!el) {
-      return;
-    }
-
-    el.scrollTop = el.scrollHeight;
-  }, [asks, loading, tokenId]);
 
   if (!tokenId) {
     return (
@@ -92,10 +103,15 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
         <span className="text-right">{t("shares")}</span>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div
+        className={cn(
+          "relative flex shrink-0 flex-col overflow-hidden",
+          ORDERBOOK_BODY_HEIGHT_CLASS
+        )}
+      >
         {loading && !book ? (
           <div
-            className="flex min-h-0 flex-1 items-center justify-center"
+            className="absolute inset-0 z-10 flex items-center justify-center bg-white"
             aria-busy="true"
             aria-label={t("loadingOrderBookAria")}
           >
@@ -104,54 +120,73 @@ export function Orderbook({ tokenId, className }: OrderbookProps) {
               aria-hidden="true"
             />
           </div>
-        ) : error && !book ? (
-          <div className="flex min-h-0 flex-1 items-center justify-center px-1">
+        ) : null}
+
+        {error && !book ? (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white px-1">
             <p className="text-center text-[#909090]">{t("noData")}</p>
           </div>
-        ) : (
-          <>
-            <div
-              ref={asksScrollRef}
-              className="flex min-h-0 flex-1 flex-col justify-end overflow-y-auto"
-            >
-              {asks.map((level, index) => (
-                <OrderbookRow
-                  key={`ask-${level.price}-${index}`}
-                  price={level.price}
-                  size={level.size}
-                  side="ask"
-                  onSelect={handlePriceSelect}
-                />
-              ))}
-            </div>
+        ) : null}
 
-            <div className="mx-[-4px] flex h-8 shrink-0 items-center justify-between bg-[#EBEBEB] px-2">
-              <span className="font-[400] leading-[17px] text-black">
-                {marketPrice !== undefined
-                  ? formatOrderbookDisplayPrice(marketPrice)
-                  : "—"}
-              </span>
-              <span className="font-[400] leading-[17px] text-[#909090]">
-                {t("marketPrice")}
-              </span>
-            </div>
+        <div
+          className={cn(
+            "flex shrink-0 flex-col overflow-hidden",
+            ORDERBOOK_ASKS_HEIGHT_CLASS
+          )}
+        >
+          {asks.map((level, index) =>
+            level === "empty" ? (
+              <OrderbookEmptyRow key={`ask-empty-${index}`} />
+            ) : (
+              <OrderbookRow
+                key={`ask-${level.price}-${index}`}
+                price={level.price}
+                size={level.size}
+                side="ask"
+                onSelect={handlePriceSelect}
+              />
+            )
+          )}
+        </div>
 
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-              {bids.map((level, index) => (
-                <OrderbookRow
-                  key={`bid-${level.price}-${index}`}
-                  price={level.price}
-                  size={level.size}
-                  side="bid"
-                  onSelect={handlePriceSelect}
-                />
-              ))}
-            </div>
-          </>
-        )}
+        <div className="mx-[-4px] flex h-8 shrink-0 items-center justify-between bg-[#EBEBEB] px-2">
+          <span className="font-[400] leading-[17px] text-black">
+            {marketPrice !== undefined
+              ? formatOrderbookDisplayPrice(marketPrice)
+              : "—"}
+          </span>
+          <span className="font-[400] leading-[17px] text-[#909090]">
+            {t("marketPrice")}
+          </span>
+        </div>
+
+        <div
+          className={cn(
+            "flex shrink-0 flex-col overflow-hidden",
+            ORDERBOOK_BIDS_HEIGHT_CLASS
+          )}
+        >
+          {bids.map((level, index) =>
+            level === "empty" ? (
+              <OrderbookEmptyRow key={`bid-empty-${index}`} />
+            ) : (
+              <OrderbookRow
+                key={`bid-${level.price}-${index}`}
+                price={level.price}
+                size={level.size}
+                side="bid"
+                onSelect={handlePriceSelect}
+              />
+            )
+          )}
+        </div>
       </div>
     </div>
   );
+}
+
+function OrderbookEmptyRow() {
+  return <div className={ORDERBOOK_ROW_HEIGHT_CLASS} aria-hidden="true" />;
 }
 
 function OrderbookRow({
@@ -173,7 +208,8 @@ function OrderbookRow({
       type="button"
       onClick={() => onSelect(price)}
       className={cn(
-        "grid w-full grid-cols-2 gap-2 rounded px-1 py-0.5 text-left leading-[17px] transition-colors",
+        "grid w-full grid-cols-2 gap-2 rounded px-1 text-left leading-[17px] transition-colors",
+        ORDERBOOK_ROW_HEIGHT_CLASS,
         side === "ask"
           ? "hover:bg-[#FF674B]/10 active:bg-[#FF674B]/15"
           : "hover:bg-[#65AF14]/10 active:bg-[#65AF14]/15"
