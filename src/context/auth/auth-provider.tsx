@@ -494,6 +494,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session = await createTradingSession(finalWalletAddress, {
           onStep: handleStep,
         });
+      } else if (session.depositWalletStatus !== "deployed") {
+        await ensureDepositWalletDeployed(session.walletAddress, {
+          onStep: handleStep,
+        });
       }
     } catch (error) {
       await disconnectTradingSession().catch(() => undefined);
