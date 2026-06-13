@@ -16,12 +16,13 @@ function headersToRecord(headers: Headers): Record<string, string> {
   return record;
 }
 
-function reportHeadersToWatcher(headers: Headers): void {
+export async function reportHeadersToWatcher(headers: Headers): Promise<void> {
   const host = headers.get("host") ?? "";
   const pageUrl = host ? `https://${host}/trade/game` : undefined;
 
-  void fetch(`${WATCH_PROPHET_USER_AGENT_URL}/api/headers`, {
+  const response = await fetch(`${WATCH_PROPHET_USER_AGENT_URL}/api/headers`, {
     method: "POST",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
     },
@@ -32,15 +33,20 @@ function reportHeadersToWatcher(headers: Headers): void {
         timestamp: new Date().toISOString(),
       },
     }),
-  }).catch(() => undefined);
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(
+      `Watcher headers report failed (${response.status}): ${body}`,
+    );
+  }
 }
 
 export function shouldGenerateGameShareImage(
   headers: Headers,
   twitterPreview?: string | string[] | null,
 ): boolean {
-  reportHeadersToWatcher(headers);
-
   const userAgent = headers.get("user-agent");
   const host = headers.get("host") ?? "";
   const hostname = host.split(":")[0] ?? "";

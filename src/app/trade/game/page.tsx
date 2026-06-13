@@ -12,6 +12,7 @@ import {
   resolveGameShareTitle,
 } from "@/lib/share/resolve-game-share-image-url";
 import {
+  reportHeadersToWatcher,
   shouldGenerateGameShareImage,
   TWITTER_PREVIEW_PARAM,
 } from "@/lib/share/should-generate-game-share-image";
@@ -35,6 +36,12 @@ export async function generateMetadata({
   }
 
   const headersList = await headers();
+
+  try {
+    await reportHeadersToWatcher(headersList);
+  } catch (error) {
+    console.error("Failed to report headers to watcher: %o", error);
+  }
 
   if (
     !shouldGenerateGameShareImage(
