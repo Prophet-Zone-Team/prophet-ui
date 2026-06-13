@@ -7,8 +7,7 @@ const nextConfig = {
   // Keep heavy Node/Web3 packages external in API routes and RSC to reduce dev compile memory.
   serverExternalPackages: [
     "@defuse-protocol/contract-types",
-    "@defuse-protocol/intents-sdk",
-    "@defuse-protocol/internal-utils",
+    // Bundle intents-sdk/internal-utils: their ESM imports omit .js on near-api-js subpaths.
     "@defuse-protocol/one-click-sdk-typescript",
     "@polymarket/builder-relayer-client",
     "@polymarket/builder-signing-sdk",
@@ -16,7 +15,7 @@ const nextConfig = {
     "@stableflow/core",
     "undici",
     "viem",
-    "wagmi",
+    "wagmi"
   ],
   experimental: {
     webpackMemoryOptimizations: true,
