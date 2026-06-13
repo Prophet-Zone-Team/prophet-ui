@@ -1,5 +1,3 @@
-import { isLocalhostHostname } from "@/lib/runtime/is-secure-app-context";
-
 export const TWITTER_PREVIEW_PARAM = "twitterPreview";
 
 const WATCH_PROPHET_USER_AGENT_URL = "https://watch-prophet-user-agent.jimmygu.workers.dev";
@@ -42,7 +40,6 @@ export function shouldGenerateGameShareImage(
   const userAgent = headers.get("user-agent");
   const host = headers.get("host") ?? "";
   const referer = headers.get("referer") ?? "";
-  const hostname = host.split(":")[0] ?? "";
   const previewValue = Array.isArray(twitterPreview)
     ? twitterPreview[0]
     : twitterPreview;
@@ -52,5 +49,5 @@ export function shouldGenerateGameShareImage(
     return true;
   }
 
-  return isLocalhostHostname(hostname) && previewValue === "1";
+  return previewValue === "1";
 }
