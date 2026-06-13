@@ -75,14 +75,36 @@ export function mergeTradingReadiness(
 
   const { balances, funding } = balancesResponse;
   const hasCredentials = setup.credentials.hasClobCredentials;
+  const setupAllowanceCheck = setup.checks.find((check) => check.id === "allowance");
+  const setupAllowancePassed = setupAllowanceCheck?.status === "pass";
   let checks = setup.checks.filter((check) => check.id !== "balance");
 
   if (funding) {
     checks = checks.filter((check) => check.id !== "allowance");
     checks.push(
       buildBalanceCheck({ balances, funding, hasCredentials, tradeSide: options?.tradeSide }),
-      buildOrderAllowanceCheck(funding, options?.tradeSide),
     );
+
+    if (options?.tradeSide === "sell") {
+      if (setupAllowanceCheck) {
+        checks.push(setupAllowanceCheck);
+      }
+    } else {
+      const orderAllowanceCheck = buildOrderAllowanceCheck(
+        funding,
+        options?.tradeSide,
+      );
+
+      if (setupAllowancePassed && orderAllowanceCheck.status === "unknown") {
+        if (setupAllowanceCheck) {
+          checks.push(setupAllowanceCheck);
+        } else {
+          checks.push(orderAllowanceCheck);
+        }
+      } else {
+        checks.push(orderAllowanceCheck);
+      }
+    }
   } else if (balances) {
     checks.push(buildBalanceCheck({ balances, funding, hasCredentials, tradeSide: options?.tradeSide }));
   }

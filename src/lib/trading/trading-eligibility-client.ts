@@ -1,6 +1,7 @@
 "use client";
 
 import { fetchJson } from "@/lib/team/client-fetch";
+import { formatGeoLocation } from "@/lib/trading/geo-restrictions";
 import type { TradingEligibilityStatus, TradingUserSession } from "@/types/market";
 
 export const REGION_BLOCKED_LABEL = "Trading unavailable";
@@ -50,18 +51,10 @@ export interface TradingEligibilityView {
   reason?: string;
 }
 
-function formatEligibilityLocation(
-  view: TradingEligibilityView | undefined,
-): string | undefined {
-  const location = [view?.country, view?.region].filter(Boolean).join(" / ");
-
-  return location || undefined;
-}
-
 export function formatRegionBlockedLabel(
   view: TradingEligibilityView | undefined,
 ) {
-  const location = formatEligibilityLocation(view);
+  const location = formatGeoLocation(view?.country, view?.region);
 
   if (location) {
     return `${REGION_BLOCKED_LABEL} (${location})`;
@@ -71,7 +64,7 @@ export function formatRegionBlockedLabel(
 }
 
 export function formatCloseOnlyLabel(view: TradingEligibilityView | undefined) {
-  const location = formatEligibilityLocation(view);
+  const location = formatGeoLocation(view?.country, view?.region);
 
   if (location) {
     return `${CLOSE_ONLY_LABEL} (${location})`;
@@ -81,12 +74,12 @@ export function formatCloseOnlyLabel(view: TradingEligibilityView | undefined) {
 }
 
 export function formatRegionBlockedDetail(view: TradingEligibilityView | undefined) {
-  const location = formatEligibilityLocation(view);
+  const location = formatGeoLocation(view?.country, view?.region);
   const reason =
     view?.reason ??
-    "Polymarket reports order placement is unavailable from this location. Market data remains available for review.";
+    "Order placement is unavailable from this location. Market data remains available for review.";
 
-  if (location) {
+  if (location && !reason.includes(location)) {
     return `${reason} (${location})`;
   }
 
@@ -94,12 +87,12 @@ export function formatRegionBlockedDetail(view: TradingEligibilityView | undefin
 }
 
 export function formatCloseOnlyDetail(view: TradingEligibilityView | undefined) {
-  const location = formatEligibilityLocation(view);
+  const location = formatGeoLocation(view?.country, view?.region);
   const reason =
     view?.reason ??
     "New orders and deposits are unavailable in your region. You may still close existing positions or cancel open orders.";
 
-  if (location) {
+  if (location && !reason.includes(location)) {
     return `${reason} (${location})`;
   }
 

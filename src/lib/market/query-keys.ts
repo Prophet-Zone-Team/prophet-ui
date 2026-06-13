@@ -4,6 +4,8 @@ export const marketQueryKeys = {
   gameStatistics: (slug: string) =>
     ["market", "game-statistics", slug] as const,
   gameOdds: (slug: string) => ["market", "game-odds", slug] as const,
+  zettaSmartWallets: (slug: string) =>
+    ["market", "zetta-smart-wallets", slug] as const,
   teamGameResults: (teamName: string) =>
     ["market", "team-game-results", teamName] as const
 };
