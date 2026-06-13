@@ -906,16 +906,22 @@ export function getFirstFailedCheck(
   return readiness?.checks.find((check) => check.status === "fail");
 }
 
+export function getFirstBlockingCheck(
+  readiness: UserTradingReadiness | undefined
+): AccountReadinessCheck | undefined {
+  return readiness?.checks.find((check) => check.status !== "pass");
+}
+
 export function formatReadinessFailureMessage(
   readiness: UserTradingReadiness | undefined
 ): string | undefined {
-  const failed = getFirstFailedCheck(readiness);
+  const blocking = getFirstBlockingCheck(readiness);
 
-  if (!failed) {
+  if (!blocking) {
     return undefined;
   }
 
-  return `${failed.label}: ${failed.detail}`;
+  return `${blocking.label}: ${blocking.detail}`;
 }
 
 export const INSUFFICIENT_FUNDS_MESSAGE = "Insufficient funds";
@@ -1059,7 +1065,7 @@ export async function ensureTradingReadyForBid(deps: {
         "Polymarket geoblock check timed out or is unreachable. Retry the eligibility check.",
     };
   }
-  const setupReadiness = deps.orderReadiness ?? deps.authReadiness;
+  const setupReadiness = deps.authReadiness ?? deps.orderReadiness;
   const setupSteps = getTradingSetupSteps(setupReadiness);
   if (!deps.session) {
     await deps.openLogin();
@@ -1120,8 +1126,8 @@ export async function ensureTradingReadyForBid(deps: {
     };
   }
 
-  if (!isTradingSetupComplete(orderReadiness)) {
-    if (!isSetupStepComplete(orderReadiness, "clob")) {
+  if (!isTradingSetupComplete(setupReadiness)) {
+    if (!isSetupStepComplete(setupReadiness, "clob")) {
       await deps.signClobCredentials();
       await deps.refreshSetupReadiness?.();
       return {
@@ -1131,7 +1137,7 @@ export async function ensureTradingReadyForBid(deps: {
       };
     }
 
-    if (!isSetupStepComplete(orderReadiness, "tokens")) {
+    if (!isSetupStepComplete(setupReadiness, "tokens")) {
       await deps.signTokenApprovals();
       await deps.refreshSetupReadiness?.();
       return {
