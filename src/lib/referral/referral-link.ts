@@ -1,11 +1,16 @@
 import { REFERRAL_PATH, REFERRAL_QUERY_PARAM } from "@/lib/referral/config";
 
-function resolveOrigin(): string {
+export function resolveOrigin(): string {
   if (typeof window === "undefined") {
     return "";
   }
 
-  return window.location.origin;
+  let origin = window.location.origin;
+  if (origin.includes("localhost")) {
+    return "https://test.prophet.zone";
+  }
+
+  return origin;
 }
 
 export function buildReferralLink(referralCode: string): string {

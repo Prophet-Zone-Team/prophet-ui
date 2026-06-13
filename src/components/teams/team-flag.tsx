@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { ProphetMarkIcon } from "@/components/icons/prophet-mark-icon";
 import { findCuratedTeamByCode } from "@/data/teams/curated-team-list";
 import teams from "@/data/teams";
 import { cn } from "@/lib/cn";
@@ -95,15 +96,10 @@ export function TeamFlag({
   }
 
   return (
-    <span
-      className={cn(
-        defaultFlagClassName,
-        "grid place-items-center text-[10px] font-semibold text-prophet-muted",
-        className
-      )}
-      aria-label={name ?? "Unknown team"}
-    >
-      {code?.slice(0, 2) ?? "?"}
-    </span>
+    <ProphetMarkIcon
+      className={cn(defaultFlagClassName, className)}
+      aria-label={label}
+      role="img"
+    />
   );
 }

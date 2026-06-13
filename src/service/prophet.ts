@@ -45,10 +45,12 @@ import type {
   ProphetTopTracksData,
   ProphetUserTrackItem,
   ProphetUserTrackListItem,
-  ProphetLoginReferral
+  ProphetLoginReferral,
+  ProphetUploadData
 } from "@/types/prophet-api";
 import type { TokenPricesBySymbol } from "@/types/funding";
 import type { TelegramLoginAuthData } from "@/types/telegram-widget";
+import { clearReferralShareImageCache } from "@/lib/referral/referral-share-image-cache";
 
 const AUTH_STORAGE_KEY = "prophet_api_token";
 const REFERRAL_STORAGE_KEY = "prophet_api_referral";
@@ -449,6 +451,24 @@ export async function loginProphet(
 export function logoutProphet(): void {
   setProphetApiToken(null);
   setProphetReferral(null);
+  clearReferralShareImageCache();
+}
+
+/** POST /v1/upload — upload a binary file; returns CDN URL */
+export async function uploadProphetFile(
+  file: Blob,
+  filename = "share-card.png",
+): Promise<ProphetUploadData> {
+  requireProphetApiToken();
+
+  const formData = new FormData();
+  formData.append("file", file, filename);
+
+  return prophetPost<ProphetUploadData>("/v1/upload", formData, {
+    headers: {
+      "Content-Type": undefined,
+    },
+  });
 }
 
 /** GET /v1/user/referral */

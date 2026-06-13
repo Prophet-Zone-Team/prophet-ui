@@ -5,6 +5,11 @@ export interface ProphetApiResponse<T = unknown> {
   message: string;
 }
 
+/** POST /v1/upload — uploaded asset URL */
+export interface ProphetUploadData {
+  url: string;
+}
+
 export interface ProphetPolyMarketTeam {
   logo?: string;
   name?: string;
@@ -331,18 +336,32 @@ export interface ProphetReportTransactionRequest {
   referral_code?: string;
 }
 
+export type ProphetUserTransactionKind =
+  | "order"
+  | "trade"
+  | "deposit"
+  | "withdraw"
+  | "redeem";
+
+export type ProphetUserTransactionTradeSide = "buy" | "sell";
+
 /** Row from GET /v1/user/transactions (database.UserTransaction). */
 export interface ProphetUserTransaction {
   amount?: string;
   created_at?: string;
+  trade_create_at?: string;
   id?: number;
   market_name?: string;
+  order_type?: ProphetReportOrderType;
   price?: string;
   side?: string;
+  size?: string;
   slug?: string;
   source?: string;
   team_name?: string;
+  trade_side?: ProphetUserTransactionTradeSide;
   tx_hash?: string;
+  /** order | trade | deposit | withdraw | redeem (legacy rows may still use buy/sell). */
   type?: string;
   user_id?: number;
 }
