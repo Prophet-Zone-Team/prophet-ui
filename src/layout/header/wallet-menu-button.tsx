@@ -11,6 +11,7 @@ import { WalletMenuDropdown } from "@/layout/header/wallet-menu-dropdown";
 import { FastBidSettingDialog } from "@/layout/header/fast-bid-setting-dialog";
 import { useDepositDialogStore } from "@/store/use-deposit-dialog";
 import { DepositDialog } from "@/views/portfolio/deposit";
+import { MigrateDialog } from "@/views/portfolio/migrate";
 import { PrivateTopupOnboarding } from "@/views/portfolio/private-topup/private-topup-onboarding";
 import { formatNumber } from "@/utils";
 import MobileDrawer from "./mobile-drawer";
@@ -232,6 +233,8 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
           setPrivateTopupIntroOpen(true);
         }}
       />
+
+      <MigrateDialog />
 
       <FastBidSettingDialog
         open={fastBidOpen}
