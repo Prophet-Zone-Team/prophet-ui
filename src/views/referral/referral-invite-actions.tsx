@@ -6,13 +6,11 @@ import { toast } from "sonner";
 
 import { CopiedToast } from "@/components/feedback/copied-toast";
 import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
-import {
-  REFERRAL_TELEGRAM_SHARE_URL,
-} from "@/lib/referral/config";
+import { REFERRAL_TELEGRAM_SHARE_URL } from "@/lib/referral/config";
 import { downloadShareCardPng } from "@/lib/referral/download-share-card";
 import {
   readReferralShareImageCache,
-  writeReferralShareImageCache,
+  writeReferralShareImageCache
 } from "@/lib/referral/referral-share-image-cache";
 import { renderShareCardBlob } from "@/lib/referral/render-share-card";
 import { resolveOrigin } from "@/lib/referral/referral-link";
@@ -24,12 +22,17 @@ import {
 import {
   isProphetAuthenticated,
   ProphetApiError,
-  uploadProphetFile,
+  uploadProphetFile
 } from "@/service/prophet";
 import { shareToX } from "@/utils/x";
 
 import { inviteActionButtonClass } from "./referral-ui";
-import { DownloadIcon, LinkIcon, TelegramBrandIcon, XBrandIcon } from "./referral-icons";
+import {
+  DownloadIcon,
+  LinkIcon,
+  TelegramBrandIcon,
+  XBrandIcon
+} from "./referral-icons";
 import { Loader2 } from "lucide-react";
 
 export type ShareImageCacheKey = {
@@ -111,7 +114,7 @@ export function ReferralInviteActions({
         ) {
           writeReferralShareImageCache({
             ...shareImageCacheKey,
-            url: imgUrl,
+            url: imgUrl
           });
         }
       }
@@ -120,11 +123,9 @@ export function ReferralInviteActions({
 
       const origin = resolveOrigin();
       const tweetUrl = `${origin}/api/twitter?img=${encodeURIComponent(imgUrl)}&link=${encodeURIComponent(fullLink)}`;
-      shareToX(
-        t("shareTweetIntro"),
-        `${tweetUrl}\n\n`,
-        { hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket" },
-      );
+      shareToX(t("shareTweetIntro"), `${tweetUrl}\n\n`, {
+        hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket"
+      });
     } catch (error) {
       if (error instanceof ProphetApiError) {
         toast.error(error.message);
@@ -141,7 +142,7 @@ export function ReferralInviteActions({
     shareImageCacheKey,
     shareImageUploadMode,
     sharing,
-    t,
+    t
   ]);
 
   const handleTelegram = useCallback(() => {
@@ -189,15 +190,7 @@ export function ReferralInviteActions({
         disabled={sharing || !shareCardReady}
         onClick={() => void handleTwitter()}
       >
-        {
-          sharing
-            ? (
-              <Loader2 className="size-4 animate-spin" />
-            )
-            : (
-              <XBrandIcon />
-            )
-        }
+        {sharing ? <Loader2 className="size-4 animate-spin" /> : <XBrandIcon />}
       </button>
 
       <button
@@ -218,15 +211,11 @@ export function ReferralInviteActions({
         disabled={!shareCardReady || downloading}
         onClick={() => void handleDownload()}
       >
-        {
-          downloading
-            ? (
-              <Loader2 className="size-4 animate-spin" />
-            )
-            : (
-              <DownloadIcon />
-            )
-        }
+        {downloading ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : (
+          <DownloadIcon />
+        )}
       </button>
 
       <button

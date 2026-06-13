@@ -478,7 +478,7 @@
       "migrateNow": "Перенести сейчас",
       "v1Account": "Аккаунт V1 (Polymarket)",
       "v2Account": "Аккаунт V2 (Polymarket)",
-      "prophetAccount": "Prophet account",
+      "prophetAccount": "V3 account (Polymarket)",
       "depositEntryTitle": "Перенос из аккаунта V1 / V2",
       "depositEntrySubtitle": "Обнаружен баланс в {accountLabel}",
       "menuEntrySubtitle": "Перенести баланс из V1/V2",

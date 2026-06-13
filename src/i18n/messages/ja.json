@@ -478,7 +478,7 @@
       "migrateNow": "今すぐ移行",
       "v1Account": "V1 アカウント (Polymarket)",
       "v2Account": "V2 アカウント (Polymarket)",
-      "prophetAccount": "Prophet account",
+      "prophetAccount": "V3 account (Polymarket)",
       "depositEntryTitle": "V1 / V2 アカウントから移行",
       "depositEntrySubtitle": "{accountLabel} で残高を検出",
       "menuEntrySubtitle": "V1/V2 から残高を移行",

@@ -10,7 +10,7 @@ import { POLYMARKET_USD } from "@/config/funding";
 export type LegacyPolymarketAccountType = "proxy" | "safe";
 
 export const USDC_DECIMALS = 6;
-export const MIN_MIGRATION_ATOMIC = process.env.NEXT_PUBLIC_MIGRATE_MIN_WEI ? BigInt(process.env.NEXT_PUBLIC_MIGRATE_MIN_WEI) : 100000n;
+export const MIN_MIGRATION_ATOMIC = process.env.NEXT_PUBLIC_MIGRATE_MIN_WEI ? BigInt(process.env.NEXT_PUBLIC_MIGRATE_MIN_WEI) : 10000000n;
 export const MIN_MIGRATION_USD = Number(MIN_MIGRATION_ATOMIC) / (10 ** USDC_DECIMALS);
 
 export const POLYMARKET_POLYGON_CHAIN_ID = 137;

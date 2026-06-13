@@ -478,7 +478,7 @@
       "migrateNow": "지금 마이그레이션",
       "v1Account": "V1 계정 (Polymarket)",
       "v2Account": "V2 계정 (Polymarket)",
-      "prophetAccount": "Prophet account",
+      "prophetAccount": "V3 account (Polymarket)",
       "depositEntryTitle": "V1 / V2 계정에서 마이그레이션",
       "depositEntrySubtitle": "{accountLabel}에서 잔액 감지됨",
       "menuEntrySubtitle": "V1/V2에서 잔액 마이그레이션",
