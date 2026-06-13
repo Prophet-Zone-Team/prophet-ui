@@ -53,7 +53,11 @@ export async function generateMetadata({
     const imageUrl = await resolveGameShareImageUrl(context);
 
     if (!imageUrl) {
-      return {};
+      return {
+        twitter: {
+          description: "Failed to generate game share image",
+        },
+      };
     }
 
     const title = resolveGameShareTitle(context);
@@ -83,7 +87,11 @@ export async function generateMetadata({
     };
   } catch (error) {
     console.error("Error generating game share image: %o", error);
-    return {};
+    return {
+      twitter: {
+        description: error instanceof Error ? error.message : "Unknown error",
+      },
+    };
   }
 }
 
