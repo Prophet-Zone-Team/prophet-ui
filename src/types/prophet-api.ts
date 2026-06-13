@@ -92,12 +92,16 @@ export interface ProphetTeamsConditionTeam {
   ordering?: string;
 }
 
+export type PortfolioMarketKind = "team" | "game" | "group";
+
 export interface ProphetTeamsConditionEntry {
   teams: ProphetTeamsConditionTeam[];
   slug: string;
   question?: string;
   main_event_title?: string;
   event_title?: string;
+  icon?: string;
+  marketKind?: PortfolioMarketKind;
 }
 
 export type ProphetGetTeamsConditionData = Record<

@@ -38,6 +38,14 @@ function PortfolioDrawIcon() {
 
 function PortfolioMarketIconView({ icon }: { icon: PortfolioMarketIcon }) {
   switch (icon.kind) {
+    case "image":
+      return (
+        <img
+          src={icon.src}
+          alt=""
+          className="h-5 w-5 shrink-0 rounded-[2px] object-cover"
+        />
+      );
     case "single":
       return (
         <TeamFlag name={icon.teamName} className={portfolioFlagClassName} />
