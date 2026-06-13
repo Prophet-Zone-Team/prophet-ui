@@ -168,23 +168,44 @@ export function getFundingRpcUrl(chainId: number): string {
   return envOverride || network.defaultRpcUrl;
 }
 
-export function getFundingRpcUrls(chainId: number): string[] {
-  const network = getFundingNetworkByChainId(chainId);
+export function getFundingRpcUrls(chainId: number): { rpcUrls: string[]; networkName: string; } {
+  const networkIndex = Object.values(FUNDING_NETWORKS).findIndex((network) => network.chainId === chainId);
+  const networkName = Object.keys(FUNDING_NETWORKS)[networkIndex];
 
-  if (!network) {
+  if (!networkName) {
     throw new Error(`Unsupported funding chainId: ${chainId}`);
   }
 
-  return network.rpcUrls;
+  const network = FUNDING_NETWORKS[networkName];
+
+  return { rpcUrls: network.rpcUrls, networkName: networkName.toLowerCase() };
 }
 
-export function getRpcHeaders(chain: string) {
+const SIGNED_RPC_HOST = "rpcs.stableflow.ai";
+
+function isSignedRpcUrl(rpcUrl: string): boolean {
+  return rpcUrl.includes(SIGNED_RPC_HOST);
+}
+
+export function getSignedRpcHttpConfig(rpcUrl: string, chain: string) {
+  if (!isSignedRpcUrl(rpcUrl)) {
+    return {};
+  }
+
   return {
-    fetchOptions: {
-      headers: (generateRpcSignature(chain).headers as any),
-    }
+    onFetchRequest: (_request: Request, init: RequestInit) => {
+      const { headers } = generateRpcSignature(chain);
+
+      return {
+        ...init,
+        headers: {
+          ...(init.headers as Record<string, string> | undefined),
+          ...headers,
+        },
+      };
+    },
   };
-};
+}
 
 export function getFundingRpcUrlFallback(chainId: number) {
   const networkIndex = Object.values(FUNDING_NETWORKS).findIndex((network) => network.chainId === chainId);
@@ -202,7 +223,7 @@ export function getFundingRpcUrlFallback(chainId: number) {
       .map(
         (rpc) => http(
           rpc,
-          getRpcHeaders(networkName.toLowerCase())
+          getSignedRpcHttpConfig(rpc, networkName.toLowerCase()),
         )
       )
   );
