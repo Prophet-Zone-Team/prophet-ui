@@ -476,7 +476,7 @@
       "migrateNow": "Migrar ahora",
       "v1Account": "Cuenta V1 (Polymarket)",
       "v2Account": "Cuenta V2 (Polymarket)",
-      "prophetAccount": "Prophet account",
+      "prophetAccount": "V3 account (Polymarket)",
       "depositEntryTitle": "Migrar desde cuenta V1 / V2",
       "depositEntrySubtitle": "Saldo detectado en {accountLabel}",
       "menuEntrySubtitle": "Migrar saldo desde V1/V2",

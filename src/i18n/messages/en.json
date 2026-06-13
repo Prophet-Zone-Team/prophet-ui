@@ -481,7 +481,7 @@
       "migrateNow": "Migrate Now",
       "v1Account": "V1 account (Polymarket)",
       "v2Account": "V2 account (Polymarket)",
-      "prophetAccount": "Prophet account",
+      "prophetAccount": "V3 account (Polymarket)",
       "depositEntryTitle": "Migrate from V1 / V2 Account",
       "depositEntrySubtitle": "Detected balance in {accountLabel}",
       "menuEntrySubtitle": "Migrate balance from V1/V2",
