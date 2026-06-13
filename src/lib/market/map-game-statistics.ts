@@ -1,3 +1,13 @@
+import {
+  findCuratedTeamByCode,
+  findCuratedTeamByName
+} from "@/data/teams/curated-team-list";
+import {
+  getTeamNameAliases,
+  normalizeTeamAlias
+} from "@/config/team-name-aliases";
+import { normalizeTeamCode } from "@/lib/i18n/localized-team-name";
+import type { Team } from "@/types/market";
 import type {
   ProphetGameStatisticsPayload,
   ProphetGameStatisticValue
@@ -67,10 +77,90 @@ export function parseStatisticValue(value: ProphetGameStatisticValue): number {
   return 0;
 }
 
+function resolveCuratedTeam(
+  teamName: string,
+  explicitCode?: string
+): Team | undefined {
+  const normalizedExplicit = normalizeTeamCode(explicitCode);
+
+  if (normalizedExplicit) {
+    return findCuratedTeamByCode(normalizedExplicit);
+  }
+
+  return findCuratedTeamByName(teamName) ?? findCuratedTeamByCode(teamName);
+}
+
+function resolveCuratedTeamCode(
+  teamName: string,
+  explicitCode?: string
+): string | undefined {
+  const normalizedExplicit = normalizeTeamCode(explicitCode);
+
+  if (normalizedExplicit) {
+    return normalizedExplicit;
+  }
+
+  const curatedTeam = resolveCuratedTeam(teamName);
+
+  return normalizeTeamCode(curatedTeam?.code);
+}
+
+function buildNormalizedAliasSet(
+  teamName: string,
+  curatedTeam?: Team
+): Set<string> {
+  const aliases = new Set<string>([normalizeTeamAlias(teamName)]);
+
+  if (curatedTeam) {
+    for (const alias of getTeamNameAliases(curatedTeam)) {
+      aliases.add(alias);
+    }
+  }
+
+  return aliases;
+}
+
+function resolveTeamSideByAliasOverlap(
+  teamName: string,
+  homeTeamName: string,
+  awayTeamName: string,
+  options?: {
+    homeCode?: string;
+    awayCode?: string;
+  }
+): "home" | "away" | undefined {
+  const homeTeam = resolveCuratedTeam(homeTeamName, options?.homeCode);
+  const awayTeam = resolveCuratedTeam(awayTeamName, options?.awayCode);
+  const eventTeam = resolveCuratedTeam(teamName);
+  const eventAliases = buildNormalizedAliasSet(teamName, eventTeam);
+
+  if (homeTeam) {
+    const homeAliases = buildNormalizedAliasSet(homeTeamName, homeTeam);
+
+    if ([...eventAliases].some((alias) => homeAliases.has(alias))) {
+      return "home";
+    }
+  }
+
+  if (awayTeam) {
+    const awayAliases = buildNormalizedAliasSet(awayTeamName, awayTeam);
+
+    if ([...eventAliases].some((alias) => awayAliases.has(alias))) {
+      return "away";
+    }
+  }
+
+  return undefined;
+}
+
 export function resolveTeamSide(
   teamName: string,
   homeTeamName: string,
-  awayTeamName: string
+  awayTeamName: string,
+  options?: {
+    homeCode?: string;
+    awayCode?: string;
+  }
 ): "home" | "away" | undefined {
   const normalized = normalizeTeamName(teamName);
   const normalizedHome = normalizeTeamName(homeTeamName);
@@ -84,7 +174,24 @@ export function resolveTeamSide(
     return "away";
   }
 
-  return undefined;
+  const eventCode = resolveCuratedTeamCode(teamName);
+  const homeCode = resolveCuratedTeamCode(homeTeamName, options?.homeCode);
+  const awayCode = resolveCuratedTeamCode(awayTeamName, options?.awayCode);
+
+  if (eventCode && homeCode && eventCode === homeCode) {
+    return "home";
+  }
+
+  if (eventCode && awayCode && eventCode === awayCode) {
+    return "away";
+  }
+
+  return resolveTeamSideByAliasOverlap(
+    teamName,
+    homeTeamName,
+    awayTeamName,
+    options
+  );
 }
 
 function buildStatLookup(

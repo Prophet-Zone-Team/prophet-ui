@@ -16,15 +16,5 @@
   },
   "observability": {
     "enabled": true
-  },
-  "d1_databases": [
-    {
-      "binding": "MARKET_HISTORY_DB",
-      "database_name": "world-cup-market-history",
-      "database_id": "674ada08-ce93-4076-ac06-4b61d1d2b4bf"
-    }
-  ],
-  "triggers": {
-    "crons": ["*/10 * * * *"]
   }
 }

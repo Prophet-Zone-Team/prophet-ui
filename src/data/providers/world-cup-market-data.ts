@@ -1,19 +1,12 @@
 import { mockDataProvider } from "@/data/providers/mock-data-provider";
 import { polymarketDataProvider } from "@/data/providers/polymarket-data-provider";
 import { kalshiDataProvider } from "@/data/providers/kalshi-data-provider";
-import { getStoredPolymarketWorldCupData } from "@/data/providers/stored-polymarket-data-provider";
 import {
   getMarketDataSourceLabel,
   normalizeMarketDataSource
 } from "@/data/providers/source";
 import type { MarketDataSource, WorldCupMarketData, WorldCupMarketDataOptions } from "@/data/providers/types";
-import { getNewsImpactForSnapshots } from "@/data/news/news-impact";
-import { getApiFootballContext } from "@/data/football/api-football-provider";
-import { theOddsApiProvider } from "@/data/odds/the-odds-api-provider";
 import { getAllTeamFootballMetadata } from "@/data/teams/football-metadata";
-import type { NormalizedTeamOddsSummary } from "@/data/odds/types";
-import { attachStoredMarketHistory } from "@/server/market-history/history-reader";
-import { getSignalDataRepository } from "@/server/signal-data/repository";
 import type {
   MarketSentiment,
   ProbabilityHistoryPoint,
@@ -21,271 +14,14 @@ import type {
   TeamMarketSnapshot,
 } from "@/types/market";
 
-const MARKET_DATA_CACHE_TTL_MS = 60_000;
 const LIVE_MARKET_DATA_CACHE_TTL_MS = 60_000;
-const ENRICHMENT_CACHE_TTL_MS = 60_000;
-const marketDataCache = new Map<string, { data: WorldCupMarketData; expiresAt: number }>();
 const liveMarketDataCache = new Map<string, { data: WorldCupMarketData; expiresAt: number }>();
-const oddsLayerCache = new Map<string, { layer: OddsLayer; expiresAt: number }>();
-const historyLayerCache = new Map<string, { layer: HistoryLayer; expiresAt: number }>();
-const newsLayerCache = new Map<string, { layer: NewsLayer; expiresAt: number }>();
-const footballLayerCache = new Map<string, { layer: FootballLayer; expiresAt: number }>();
-
-interface OddsLayer {
-  bookmakerByTeamId: Map<string, number | undefined>;
-  meta?: WorldCupMarketData["meta"]["odds"];
-}
-
-interface HistoryLayer {
-  snapshots: TeamMarketSnapshot[];
-  probabilityHistory: ProbabilityHistoryPoint[];
-  universe?: WorldCupMarketData["universe"];
-}
-
-interface NewsLayer {
-  newsEvents: WorldCupMarketData["newsEvents"];
-  meta?: WorldCupMarketData["meta"]["news"];
-  error?: string;
-}
-
-interface FootballLayer {
-  footballContext: WorldCupMarketData["footballContext"];
-  footballTeamContext: WorldCupMarketData["footballTeamContext"];
-  meta?: WorldCupMarketData["meta"]["football"];
-  error?: string;
-}
 
 export { getTeamMarketSnapshot } from "@/data/providers/team-market-snapshot";
 export type { TeamMarketSnapshotResult } from "@/data/providers/types";
 
 export async function getWorldCupMarketData(options: WorldCupMarketDataOptions = {}): Promise<WorldCupMarketData> {
-  const cacheKey = getMarketDataCacheKey(options);
-  const cached = marketDataCache.get(cacheKey);
-
-  if (cached && cached.expiresAt > Date.now()) {
-    return cloneMarketData(withCachedStatus(cached.data));
-  }
-
-  const data = await getLiveWorldCupMarketData(options);
-  const isMock = data.meta.source === "mock";
-  const includeOdds = options.includeOdds !== false && !isMock;
-  const includeHistory = options.includeHistory !== false && !isMock;
-  const includeNews = options.includeNews !== false && !isMock;
-  const includeFootball = options.includeFootballContext !== false;
-
-  const [oddsLayer, historyLayer, newsLayer, footballLayer] = await Promise.all([
-    includeOdds ? getOddsLayer(data) : Promise.resolve(null),
-    includeHistory ? getHistoryLayer(data) : Promise.resolve(null),
-    includeNews ? getNewsLayer(data) : Promise.resolve(null),
-    includeFootball
-      ? getFootballLayer(data, options.footballContextTeamIds)
-      : Promise.resolve(null),
-  ]);
-
-  const result = mergeMarketDataLayers(data, {
-    oddsLayer,
-    historyLayer,
-    newsLayer,
-    footballLayer,
-    footballContextTeamIds: options.footballContextTeamIds,
-  });
-
-  marketDataCache.set(cacheKey, {
-    data: cloneMarketData(result),
-    expiresAt: Date.now() + MARKET_DATA_CACHE_TTL_MS,
-  });
-
-  return result;
-}
-
-async function getOddsLayer(data: WorldCupMarketData): Promise<OddsLayer> {
-  const cacheKey = data.meta.source;
-  const cached = oddsLayerCache.get(cacheKey);
-
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.layer;
-  }
-
-  const enriched = await attachBookmakerOdds(data);
-  const layer: OddsLayer = {
-    bookmakerByTeamId: new Map(
-      enriched.snapshots.map((snapshot) => [
-        snapshot.team.id,
-        snapshot.market.bookmakerImpliedProbability,
-      ]),
-    ),
-    meta: enriched.meta.odds,
-  };
-
-  oddsLayerCache.set(cacheKey, {
-    layer,
-    expiresAt: Date.now() + ENRICHMENT_CACHE_TTL_MS,
-  });
-
-  return layer;
-}
-
-async function getHistoryLayer(data: WorldCupMarketData): Promise<HistoryLayer> {
-  const cacheKey = `${data.meta.source}:${data.meta.lastUpdated}`;
-  const cached = historyLayerCache.get(cacheKey);
-
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.layer;
-  }
-
-  const enriched = await attachStoredMarketHistory(data);
-  const layer: HistoryLayer = {
-    snapshots: enriched.snapshots,
-    probabilityHistory: enriched.probabilityHistory,
-    universe: enriched.universe,
-  };
-
-  historyLayerCache.set(cacheKey, {
-    layer,
-    expiresAt: Date.now() + ENRICHMENT_CACHE_TTL_MS,
-  });
-
-  return layer;
-}
-
-async function getNewsLayer(data: WorldCupMarketData): Promise<NewsLayer> {
-  const cacheKey = `${data.meta.source}:${data.meta.lastUpdated}`;
-  const cached = newsLayerCache.get(cacheKey);
-
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.layer;
-  }
-
-  const enriched = await attachNewsImpact(data);
-  const layer: NewsLayer = {
-    newsEvents: enriched.newsEvents,
-    meta: enriched.meta.news,
-    error: enriched.meta.error,
-  };
-
-  newsLayerCache.set(cacheKey, {
-    layer,
-    expiresAt: Date.now() + ENRICHMENT_CACHE_TTL_MS,
-  });
-
-  return layer;
-}
-
-async function getFootballLayer(
-  data: WorldCupMarketData,
-  teamIds: string[] | undefined,
-): Promise<FootballLayer> {
-  const cacheKey =
-    teamIds?.length === 1 ? `team:${teamIds[0]}` : "all";
-  const cached = footballLayerCache.get(cacheKey);
-
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.layer;
-  }
-
-  const enriched = await attachFootballContext(data, teamIds);
-  const layer: FootballLayer = {
-    footballContext: enriched.footballContext,
-    footballTeamContext: enriched.footballTeamContext,
-    meta: enriched.meta.football,
-    error: enriched.meta.error,
-  };
-
-  footballLayerCache.set(cacheKey, {
-    layer,
-    expiresAt: Date.now() + ENRICHMENT_CACHE_TTL_MS,
-  });
-
-  return layer;
-}
-
-function mergeMarketDataLayers(
-  data: WorldCupMarketData,
-  layers: {
-    oddsLayer: OddsLayer | null;
-    historyLayer: HistoryLayer | null;
-    newsLayer: NewsLayer | null;
-    footballLayer: FootballLayer | null;
-    footballContextTeamIds?: string[];
-  },
-): WorldCupMarketData {
-  let snapshots = data.snapshots;
-  let result: WorldCupMarketData = {
-    ...data,
-    newsEvents: [],
-    probabilityHistory: [],
-    footballContext: [],
-    footballTeamContext: [],
-  };
-
-  if (layers.historyLayer) {
-    snapshots = layers.historyLayer.snapshots;
-    result = {
-      ...result,
-      snapshots,
-      probabilityHistory: layers.historyLayer.probabilityHistory,
-      universe: layers.historyLayer.universe,
-    };
-  } else {
-    result = {
-      ...result,
-      snapshots,
-    };
-  }
-
-  if (layers.oddsLayer) {
-    result = {
-      ...result,
-      snapshots: result.snapshots.map((snapshot) => ({
-        ...snapshot,
-        market: {
-          ...snapshot.market,
-          bookmakerImpliedProbability:
-            layers.oddsLayer?.bookmakerByTeamId.get(snapshot.team.id) ??
-            snapshot.market.bookmakerImpliedProbability,
-        },
-      })),
-      meta: {
-        ...result.meta,
-        odds: layers.oddsLayer.meta,
-      },
-    };
-  }
-
-  if (layers.newsLayer) {
-    result = {
-      ...result,
-      newsEvents: layers.newsLayer.newsEvents,
-      meta: {
-        ...result.meta,
-        error: joinMetaErrors(result.meta.error, layers.newsLayer.error),
-        news: layers.newsLayer.meta,
-      },
-    };
-  }
-
-  if (layers.footballLayer) {
-    const teamIds = layers.footballContextTeamIds;
-    const footballTeamContext =
-      teamIds && teamIds.length > 0
-        ? layers.footballLayer.footballTeamContext.filter((context) =>
-            teamIds.includes(context.profile.teamId),
-          )
-        : layers.footballLayer.footballTeamContext;
-
-    result = {
-      ...result,
-      footballContext: footballTeamContext.map((context) => context.profile),
-      footballTeamContext,
-      meta: {
-        ...result.meta,
-        error: joinMetaErrors(result.meta.error, layers.footballLayer.error),
-        football: layers.footballLayer.meta,
-      },
-    };
-  }
-
-  return result;
+  return getLiveWorldCupMarketData(options);
 }
 
 export async function getLiveWorldCupMarketData(options: WorldCupMarketDataOptions = {}): Promise<WorldCupMarketData> {
@@ -304,20 +40,7 @@ export async function getLiveWorldCupMarketData(options: WorldCupMarketDataOptio
   try {
     let data: WorldCupMarketData;
 
-    if (source === "polymarket" && options.preferStored !== false) {
-      const stored = await getStoredPolymarketWorldCupData();
-
-      if (stored) {
-        data = snapshotsNeedPolymarketTradingMetadata(stored.snapshots)
-          ? mergePolymarketTradingMetadata(
-              stored,
-              await polymarketDataProvider.getWorldCupMarketData(),
-            )
-          : stored;
-      } else {
-        data = await polymarketDataProvider.getWorldCupMarketData();
-      }
-    } else if (source === "kalshi") {
+    if (source === "kalshi") {
       data = await kalshiDataProvider.getWorldCupMarketData();
     } else if (source === "polymarket") {
       data = await polymarketDataProvider.getWorldCupMarketData();
@@ -407,168 +130,6 @@ function mergeProviderData(polymarketData: WorldCupMarketData, kalshiData: World
   };
 }
 
-async function attachNewsImpact(data: WorldCupMarketData): Promise<WorldCupMarketData> {
-  const cached = await readCachedNewsEvents(data);
-
-  if (cached.newsEvents.length > 0) {
-    return {
-      ...data,
-      newsEvents: cached.newsEvents,
-      meta: {
-        ...data.meta,
-        news: cached.meta,
-      },
-    };
-  }
-
-  const result = await getNewsImpactForSnapshots(data.snapshots);
-  const lastNewsUpdate = result.newsEvents.reduce<string | undefined>((latest, event) => {
-    if (!latest || event.publishedAt > latest) {
-      return event.publishedAt;
-    }
-
-    return latest;
-  }, undefined);
-
-  return {
-    ...data,
-    newsEvents: result.newsEvents,
-    meta: {
-      ...data.meta,
-      error: joinMetaErrors(data.meta.error, result.error),
-      news: {
-        source: "gdelt",
-        status: result.error && result.newsEvents.length === 0 ? "unavailable" : "live",
-        articleCount: result.newsEvents.length,
-        lastUpdated: lastNewsUpdate,
-        error: result.error,
-      },
-    },
-  };
-}
-
-async function attachFootballContext(
-  data: WorldCupMarketData,
-  teamIds: string[] | undefined,
-): Promise<WorldCupMarketData> {
-  const cached = await readCachedFootballContext(teamIds);
-
-  if (cached.context.length > 0) {
-    return {
-      ...data,
-      footballContext: cached.context.map((teamContext) => teamContext.profile),
-      footballTeamContext: cached.context,
-      meta: {
-        ...data.meta,
-        football: cached.meta,
-      },
-    };
-  }
-
-  if (!teamIds || teamIds.length !== 1) {
-    return {
-      ...data,
-      meta: {
-        ...data.meta,
-        football: cached.meta,
-      },
-    };
-  }
-
-  const snapshots = teamIds
-    ? data.snapshots.filter((snapshot) => teamIds.includes(snapshot.team.id))
-    : data.snapshots;
-  const result = await getApiFootballContext(snapshots);
-
-  return {
-    ...data,
-    footballContext: result.context.map((teamContext) => teamContext.profile),
-    footballTeamContext: result.context,
-    meta: {
-      ...data.meta,
-      error: joinMetaErrors(data.meta.error, result.meta.status === "unavailable" ? result.meta.error : undefined),
-      football: result.meta,
-    },
-  };
-}
-
-async function readCachedNewsEvents(data: WorldCupMarketData): Promise<{
-  newsEvents: WorldCupMarketData["newsEvents"];
-  meta: NonNullable<WorldCupMarketData["meta"]["news"]>;
-}> {
-  const repository = await getSignalDataRepository();
-  const articles = await repository.readNewsArticles({ days: 30, limit: 80 });
-  const teamIds = new Set(data.snapshots.map((snapshot) => snapshot.team.id));
-  const articlesByTeam = articles
-    .flatMap((article) =>
-      article.matchedTeamIds
-        .filter((teamId) => teamIds.has(teamId))
-        .map((teamId) => ({ article, teamId })),
-    )
-    .slice(0, 40);
-  const newsEvents = articlesByTeam.map(({ article, teamId }, index) => {
-    const snapshot = data.snapshots.find((item) => item.team.id === teamId);
-    const change24h = snapshot?.market.change24h ?? 0;
-    const impactScore = Math.max(35, Math.min(86, Math.round(Math.abs(change24h) * 24 + 42)));
-
-    return {
-      id: `${article.id}-${teamId}-${index}`,
-      teamId,
-      headline: article.title,
-      source: article.source ?? "GDELT",
-      publishedAt: article.publishedAt ?? data.meta.lastUpdated,
-      impactScore: change24h >= 0 ? impactScore : -impactScore,
-      summary: `Possible related coverage appeared in the stored GDELT signal cache. Correlation, not causation.`,
-      url: article.url,
-      language: article.language,
-      matchedKeywords: article.matchedKeywords,
-    };
-  });
-  const lastUpdated = newsEvents.reduce<string | undefined>((latest, event) => {
-    if (!latest || event.publishedAt > latest) {
-      return event.publishedAt;
-    }
-
-    return latest;
-  }, undefined);
-
-  return {
-    newsEvents,
-    meta: {
-      source: "gdelt",
-      status: "live",
-      articleCount: newsEvents.length,
-      lastUpdated,
-    },
-  };
-}
-
-async function readCachedFootballContext(teamIds: string[] | undefined): Promise<{
-  context: WorldCupMarketData["footballTeamContext"];
-  meta: NonNullable<WorldCupMarketData["meta"]["football"]>;
-}> {
-  const repository = await getSignalDataRepository();
-  const context = teamIds?.length === 1
-    ? await repository.readFootballTeamContext({ teamId: teamIds[0] })
-    : await repository.readFootballTeamContext();
-
-  return {
-    context,
-    meta: {
-      source: "api-football",
-      status: context.length > 0 ? "live" : "unavailable",
-      teamCount: context.length,
-      lastUpdated: context.reduce<string | undefined>((latest, teamContext) => {
-        if (!latest || teamContext.profile.updatedAt > latest) {
-          return teamContext.profile.updatedAt;
-        }
-
-        return latest;
-      }, undefined),
-    },
-  };
-}
-
 function mergeSnapshot(
   polymarketSnapshot: TeamMarketSnapshot | undefined,
   kalshiSnapshot: TeamMarketSnapshot | undefined,
@@ -604,53 +165,6 @@ function mergeMarketData(polymarketMarket: TeamMarketData, kalshiMarket: TeamMar
     bookmakerImpliedProbability: kalshiMarket.probability,
     updatedAt: polymarketMarket.updatedAt > kalshiMarket.updatedAt ? polymarketMarket.updatedAt : kalshiMarket.updatedAt,
     polymarket: polymarketMarket.polymarket,
-  };
-}
-
-async function attachBookmakerOdds(data: WorldCupMarketData): Promise<WorldCupMarketData> {
-  if (data.meta.source === "mock") {
-    return data;
-  }
-
-  const result = await theOddsApiProvider.getWorldCupWinnerOdds();
-
-  if (result.summaries.length === 0) {
-    return {
-      ...data,
-      meta: {
-        ...data.meta,
-        odds: result.meta,
-      },
-    };
-  }
-
-  const summariesByTeam = new Map(result.summaries.map((summary) => [summary.teamId, summary]));
-  const snapshots = data.snapshots.map((snapshot) => applyOddsSummary(snapshot, summariesByTeam.get(snapshot.team.id)));
-
-  return {
-    ...data,
-    snapshots,
-    meta: {
-      ...data.meta,
-      odds: result.meta,
-    },
-  };
-}
-
-function applyOddsSummary(
-  snapshot: TeamMarketSnapshot,
-  summary: NormalizedTeamOddsSummary | undefined,
-): TeamMarketSnapshot {
-  if (!summary) {
-    return snapshot;
-  }
-
-  return {
-    ...snapshot,
-    market: {
-      ...snapshot.market,
-      bookmakerImpliedProbability: summary.medianImpliedProbability,
-    },
   };
 }
 
@@ -719,12 +233,6 @@ function getErrorMessage(error: unknown): string {
   return "Unable to load live Polymarket market data.";
 }
 
-function joinMetaErrors(...messages: Array<string | undefined>): string | undefined {
-  const filtered = messages.filter(Boolean);
-
-  return filtered.length > 0 ? filtered.join(" ") : undefined;
-}
-
 function average(...values: number[]): number {
   return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10;
 }
@@ -747,54 +255,6 @@ function deriveSentiment(change24h: number): MarketSentiment {
 
 function isSnapshot(value: TeamMarketSnapshot | undefined): value is TeamMarketSnapshot {
   return Boolean(value);
-}
-
-function snapshotsNeedPolymarketTradingMetadata(snapshots: TeamMarketSnapshot[]): boolean {
-  return snapshots.some((snapshot) => !hasPolymarketOutcomeTokenIds(snapshot));
-}
-
-function hasPolymarketOutcomeTokenIds(snapshot: TeamMarketSnapshot): boolean {
-  const tokens = snapshot.market.polymarket?.tokens;
-
-  return Boolean(tokens?.yes?.tokenId || tokens?.no?.tokenId);
-}
-
-function mergePolymarketTradingMetadata(
-  base: WorldCupMarketData,
-  live: WorldCupMarketData,
-): WorldCupMarketData {
-  const liveByTeamId = new Map(live.snapshots.map((snapshot) => [snapshot.team.id, snapshot]));
-
-  return {
-    ...base,
-    snapshots: base.snapshots.map((snapshot) => {
-      const polymarket = liveByTeamId.get(snapshot.team.id)?.market.polymarket;
-
-      if (!polymarket) {
-        return snapshot;
-      }
-
-      return {
-        ...snapshot,
-        market: {
-          ...snapshot.market,
-          polymarket,
-        },
-      };
-    }),
-  };
-}
-
-function getMarketDataCacheKey(options: WorldCupMarketDataOptions) {
-  return JSON.stringify({
-    source: normalizeMarketDataSource(options.source),
-    includeHistory: options.includeHistory !== false,
-    includeNews: options.includeNews !== false,
-    includeFootballContext: options.includeFootballContext !== false,
-    includeOdds: options.includeOdds !== false,
-    preferStored: options.preferStored !== false,
-    footballContextTeamIds: [...(options.footballContextTeamIds ?? [])].sort(),
-  });
 }
 
 function withCachedStatus(data: WorldCupMarketData): WorldCupMarketData {

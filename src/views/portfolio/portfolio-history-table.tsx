@@ -3,12 +3,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
+import { ProphetMarkIcon } from "@/components/icons/prophet-mark-icon";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import {
   formatPortfolioDateTime,
   formatPortfolioTransactionMarketName,
-  formatTransactionPrice,
+  formatSharePrice,
   getOutcomeToneClass,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
@@ -62,26 +63,6 @@ function StrategySourceLabel() {
   );
 }
 
-function ProphetTransactionMarkIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="30"
-      height="30"
-      viewBox="0 0 30 30"
-      fill="none"
-      className="size-[30px] shrink-0"
-      aria-hidden="true"
-    >
-      <rect width="30" height="30" rx="15" fill="black" />
-      <path
-        d="M15.953 6.30142C17.9837 7.69147 19.3458 9.91585 19.4893 12.4482C22.1747 13.8154 24 16.5185 24 19.6179V20.0737L23.5637 20.2651C22.4821 20.7396 21.2881 20.9997 20.0239 20.9997C18.366 20.9996 16.8201 20.5472 15.5133 19.7653C14.2064 20.5474 12.6602 21 11.0022 21C9.71279 21 8.5349 20.7487 7.42951 20.251L7 20.0576V19.6068C7.00001 16.4963 8.83781 13.7914 11.5375 12.432C11.6857 9.90649 13.0462 7.68862 15.0723 6.30142L15.5126 6L15.953 6.30142ZM11.6105 14.0528C9.86379 15.1707 8.67267 17.0203 8.52095 19.1452C9.28924 19.429 10.1052 19.5737 11.0022 19.5737C12.1649 19.5737 13.2621 19.3023 14.2276 18.8223C12.8439 17.591 11.892 15.9245 11.6105 14.0528ZM19.4127 14.0712C19.1279 15.9354 18.1779 17.5949 16.7988 18.8222C17.7643 19.3021 18.8613 19.5733 20.0239 19.5733C20.8922 19.5733 21.7159 19.425 22.4786 19.1511C22.326 17.0368 21.1451 15.1925 19.4127 14.0712ZM15.5 12.9256C14.6363 12.9256 13.8088 13.0752 13.0445 13.3489C13.1762 15.2131 14.1079 16.866 15.5131 17.9991C16.9157 16.868 17.8463 15.2194 17.9807 13.3595C17.2093 13.0791 16.3731 12.9256 15.5 12.9256ZM15.5127 7.78546C14.2632 8.79335 13.3891 10.2111 13.1177 11.822C13.8734 11.612 14.6728 11.4993 15.5 11.4993C16.3373 11.4993 17.1459 11.615 17.9097 11.8305C17.6398 10.216 16.7646 8.79507 15.5127 7.78546Z"
-        fill="white"
-      />
-    </svg>
-  );
-}
-
 function PortfolioHistoryTableHeader() {
   const t = useTranslations("portfolio");
 
@@ -110,7 +91,15 @@ function HistoryMarketCell({
   transaction: PortfolioTransactionRecord;
 }) {
   const t = useTranslations("portfolio");
-  const outcomeLine = `${transaction.side} ${formatTransactionPrice(transaction.price)}`;
+  const price = Number(transaction.price);
+  const priceLabel = Number.isFinite(price)
+    ? formatSharePrice(price)
+    : transaction.price;
+  const outcomeLine = `${transaction.side} ${priceLabel}`;
+  const sharesLabel =
+    transaction.size != null && Number.isFinite(transaction.size)
+      ? t("sharesCount", { count: transaction.size.toFixed(1) })
+      : null;
   const nonMarketLabels: Partial<Record<PortfolioTransactionType, string>> = {
     withdraw: t("txTypeWithdraw"),
     deposit: t("txTypeDeposit"),
@@ -121,7 +110,7 @@ function HistoryMarketCell({
   if (nonMarketLabel) {
     return (
       <div className="flex min-w-0 items-center gap-2 md:gap-3">
-        <ProphetTransactionMarkIcon />
+        <ProphetMarkIcon className="size-[30px]" aria-hidden="true" />
         <p className="m-0 truncate text-[14px] font-medium leading-[18px] text-black">
           {nonMarketLabel}
         </p>
@@ -135,15 +124,13 @@ function HistoryMarketCell({
         {transaction.teamName ? (
           <TeamFlag
             name={transaction.teamName}
-            className="size-[30px] shrink-0 rounded-[2px]"
+            className="size-[30px] shrink-0 rounded-[2px] text-[30px]"
           />
         ) : (
-          <span
-            className="flex size-[30px] shrink-0 items-center justify-center rounded-[2px] text-[10px] text-prophet-muted"
+          <ProphetMarkIcon
+            className="size-[30px] shrink-0 rounded-[2px]"
             aria-hidden="true"
-          >
-            ?
-          </span>
+          />
         )}
       </div>
       <div className="min-w-0">
@@ -157,6 +144,9 @@ function HistoryMarketCell({
           )}
         >
           {outcomeLine}
+          {sharesLabel ? (
+            <span className="ml-1 text-prophet-muted">{sharesLabel}</span>
+          ) : null}
         </p>
       </div>
     </div>
@@ -198,7 +188,7 @@ function HistoryRowContent({
       </span>
 
       <span className="hidden text-right text-[14px] font-normal leading-[18px] text-black md:block">
-        {formatPortfolioDateTime(transaction.createdAt)}
+        {formatPortfolioDateTime(transaction.tradeCreatedAt)}
       </span>
     </>
   );
@@ -334,7 +324,7 @@ function renderHistoryRow(
           <div className="text-right">
             <p className={portfolioTableMobileLabelClass}>{t("time")}</p>
             <p className={cn(portfolioTableMobileValueClass, "font-normal")}>
-              {formatPortfolioDateTime(transaction.createdAt)}
+              {formatPortfolioDateTime(transaction.tradeCreatedAt)}
             </p>
           </div>
         </div>

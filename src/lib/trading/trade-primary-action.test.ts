@@ -206,4 +206,50 @@ describe("trade primary action classification", () => {
 
     assert.equal(action.kind, "sync_allowance");
   });
+
+  it("routes unknown order funding checks to refresh allowance", () => {
+    const action = resolveTradePrimaryAction({
+      ...baseInput,
+      orderReadiness: readinessWithChecks([
+        {
+          id: "balance",
+          label: "USDC balance",
+          status: "pass",
+          detail: "ok",
+        },
+        {
+          id: "allowance",
+          label: "USDC allowance",
+          status: "unknown",
+          detail: "USDC allowance is not available. Required: 10.00 USDC.",
+        },
+      ]),
+    });
+
+    assert.equal(action.kind, "sync_allowance");
+    assert.match(action.hint ?? "", /USDC allowance is not available/);
+  });
+
+  it("does not route sell readiness to refresh allowance", () => {
+    const action = resolveTradePrimaryAction({
+      ...baseInput,
+      tradeSide: "sell",
+      orderReadiness: readinessWithChecks([
+        {
+          id: "balance",
+          label: "Token balance",
+          status: "pass",
+          detail: "ok",
+        },
+        {
+          id: "allowance",
+          label: "Allowance",
+          status: "pass",
+          detail: "Required USDC allowances are approved on-chain for trading.",
+        },
+      ]),
+    });
+
+    assert.equal(action.kind, "submit");
+  });
 });

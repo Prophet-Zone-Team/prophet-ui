@@ -117,8 +117,12 @@ function isAllowanceInsufficient(
   return allowanceCheck?.status === "fail";
 }
 
-function needsAuthorizeTokens(readiness: UserTradingReadiness | undefined): boolean {
+function needsAuthorizeTokens(
+  readiness: UserTradingReadiness | undefined,
+  authReadiness?: UserTradingReadiness,
+): boolean {
   const allowanceCheck = getReadinessCheck(readiness, "allowance");
+  const setupReadiness = authReadiness ?? readiness;
 
   if (allowanceCheck?.status === "pass") {
     return false;
@@ -131,7 +135,15 @@ function needsAuthorizeTokens(readiness: UserTradingReadiness | undefined): bool
     );
   }
 
-  return !getTradingSetupSteps(readiness).tokensAuthorized;
+  if (allowanceCheck?.status === "unknown") {
+    if (allowanceCheck.label === "Allowance") {
+      return !getTradingSetupSteps(setupReadiness).tokensAuthorized;
+    }
+
+    return false;
+  }
+
+  return !getTradingSetupSteps(setupReadiness).tokensAuthorized;
 }
 
 export function resolveTradePrimaryAction(
@@ -192,7 +204,7 @@ export function resolveTradePrimaryAction(
   }
 
   const readiness = input.orderReadiness ?? input.authReadiness;
-  const setupSteps = getTradingSetupSteps(readiness);
+  const setupSteps = getTradingSetupSteps(input.authReadiness ?? readiness);
 
   if (!setupSteps.walletDeployed) {
     return {
@@ -211,7 +223,7 @@ export function resolveTradePrimaryAction(
     };
   }
 
-  if (needsAuthorizeTokens(readiness)) {
+  if (needsAuthorizeTokens(readiness, input.authReadiness)) {
     const allowanceCheck = getReadinessCheck(readiness, "allowance");
 
     return {
@@ -248,13 +260,27 @@ export function resolveTradePrimaryAction(
   }
 
   if (readiness && !readiness.ready) {
-    const failed = readiness.checks.find((check) => check.status === "fail");
+    const blocking = readiness.checks.find((check) => check.status !== "pass");
 
-    if (failed) {
+    if (blocking) {
+      if (
+        input.tradeSide === "buy" &&
+        blocking.status === "unknown" &&
+        (blocking.id === "allowance" || blocking.id === "balance")
+      ) {
+        return {
+          kind: "sync_allowance",
+          label: "Refresh allowance",
+          hint:
+            blocking.detail ??
+            "Refresh your trading balance and allowance, then submit your order again.",
+        };
+      }
+
       return {
         kind: "market_blocked",
         label: input.submitLabel,
-        hint: `${failed.label}: ${failed.detail}`,
+        hint: `${blocking.label}: ${blocking.detail}`,
       };
     }
   }

@@ -13,4 +13,5 @@ export const strategyCardTableHeaderClassName =
 export const strategyCardTableCellClassName =
   "font-[Sora] text-sm font-medium leading-[18px] text-black";
 
-export const strategyCardTableFlagClassName = "size-8 shrink-0 object-cover";
+export const strategyCardTableFlagClassName =
+  "size-8 shrink-0 text-[28px] object-cover";
