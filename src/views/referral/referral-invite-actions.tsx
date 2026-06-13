@@ -2,24 +2,43 @@
 
 import { useCallback, useState, type RefObject } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { CopiedToast } from "@/components/feedback/copied-toast";
 import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
 import {
   REFERRAL_TELEGRAM_SHARE_URL,
-  REFERRAL_TWITTER_SHARE_URL,
 } from "@/lib/referral/config";
 import { downloadShareCardPng } from "@/lib/referral/download-share-card";
+import {
+  readReferralShareImageCache,
+  writeReferralShareImageCache,
+} from "@/lib/referral/referral-share-image-cache";
+import { renderShareCardBlob } from "@/lib/referral/render-share-card";
+import { resolveOrigin } from "@/lib/referral/referral-link";
 import { cn } from "@/lib/cn";
+import {
+  isProphetAuthenticated,
+  ProphetApiError,
+  uploadProphetFile,
+} from "@/service/prophet";
+import { shareToX } from "@/utils/x";
 
 import { inviteActionButtonClass } from "./referral-ui";
 import { DownloadIcon, LinkIcon, TelegramBrandIcon, XBrandIcon } from "./referral-icons";
-import { shareToX } from "@/utils/x";
+import { Loader2 } from "lucide-react";
+
+export type ShareImageCacheKey = {
+  referralCode: string;
+  funderAddress?: string;
+};
 
 export type ReferralInviteActionsProps = {
   fullLink: string;
   shareCardRef: RefObject<HTMLDivElement | null>;
   shareCardReady: boolean;
+  shareImageUploadMode: "cache" | "always";
+  shareImageCacheKey?: ShareImageCacheKey;
   className?: string;
   downloadFilename?: string;
 };
@@ -28,20 +47,92 @@ export function ReferralInviteActions({
   fullLink,
   shareCardRef,
   shareCardReady,
+  shareImageUploadMode,
+  shareImageCacheKey,
   className,
   downloadFilename,
 }: ReferralInviteActionsProps) {
   const t = useTranslations("referral");
   const [downloading, setDownloading] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const { copiedVisible, copy } = useCopyWithToast();
 
-  const handleTwitter = useCallback(() => {
-    shareToX(
-      t("shareTweetIntro"),
-      `${fullLink}\n\n`,
-      { hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket" },
-    );
-  }, [fullLink, t]);
+  const handleTwitter = useCallback(async () => {
+    if (!shareCardReady || sharing) {
+      return;
+    }
+
+    if (!isProphetAuthenticated()) {
+      toast.error(t("shareUploadAuthRequired"));
+      return;
+    }
+
+    setSharing(true);
+
+    try {
+      let imgUrl: string | null = null;
+
+      if (
+        shareImageUploadMode === "cache" &&
+        shareImageCacheKey?.referralCode
+      ) {
+        // imgUrl = readReferralShareImageCache(shareImageCacheKey);
+      }
+
+      if (!imgUrl) {
+        const element = shareCardRef.current;
+        if (!element) {
+          toast.error(t("shareCardNotReady"));
+          return;
+        }
+
+        const blob = await renderShareCardBlob(element);
+        if (!blob) {
+          toast.error(t("shareCardNotReady"));
+          return;
+        }
+
+        const uploadResult = await uploadProphetFile(blob);
+        imgUrl = uploadResult.url;
+
+        if (
+          shareImageUploadMode === "cache" &&
+          shareImageCacheKey?.referralCode
+        ) {
+          writeReferralShareImageCache({
+            ...shareImageCacheKey,
+            url: imgUrl,
+          });
+        }
+      }
+
+      // imgUrl = "https://assets.dapdap.net/monad/upload/47a465d1-47cd-4d0c-8933-568ff1e6f862";
+
+      const origin = resolveOrigin();
+      const tweetUrl = `${origin}/api/twitter?img=${encodeURIComponent(imgUrl)}&link=${encodeURIComponent(fullLink)}`;
+      shareToX(
+        t("shareTweetIntro"),
+        `${tweetUrl}\n\n`,
+        { hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket" },
+      );
+    } catch (error) {
+      if (error instanceof ProphetApiError) {
+        toast.error(error.message);
+      } else {
+        toast.error(t("shareUploadError"));
+      }
+    } finally {
+      setSharing(false);
+    }
+  }, [
+    fullLink,
+    shareCardReady,
+    shareCardRef,
+    shareImageCacheKey,
+    shareImageUploadMode,
+    sharing,
+    t,
+  ]);
 
   const handleTelegram = useCallback(() => {
     if (!REFERRAL_TELEGRAM_SHARE_URL) {
@@ -74,10 +165,19 @@ export function ReferralInviteActions({
         type="button"
         className={inviteActionButtonClass}
         aria-label={t("shareOnX")}
-        title={REFERRAL_TWITTER_SHARE_URL ? undefined : t("comingSoon")}
-        onClick={handleTwitter}
+        aria-busy={sharing}
+        disabled={sharing || !shareCardReady}
+        onClick={() => void handleTwitter()}
       >
-        <XBrandIcon />
+        {
+          sharing
+            ? (
+              <Loader2 className="size-4 animate-spin" />
+            )
+            : (
+              <XBrandIcon />
+            )
+        }
       </button>
 
       <button
@@ -98,7 +198,15 @@ export function ReferralInviteActions({
         disabled={!shareCardReady || downloading}
         onClick={() => void handleDownload()}
       >
-        <DownloadIcon />
+        {
+          downloading
+            ? (
+              <Loader2 className="size-4 animate-spin" />
+            )
+            : (
+              <DownloadIcon />
+            )
+        }
       </button>
 
       <button
