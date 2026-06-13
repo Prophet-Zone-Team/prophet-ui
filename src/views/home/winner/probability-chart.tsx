@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState, type ReactElement } from "react";
+
+import { useAnalyticsImpression } from "@/hooks/analytics/use-analytics-impression";
 import {
   Line,
   LineChart,
@@ -114,9 +116,19 @@ export function WinnerProbabilityChart({
   );
 
   const showChart = !shouldFetch || fetchStatus === "ready";
+  const chartRef = useAnalyticsImpression<HTMLElement>({
+    eventName: "chart_viewed",
+    dedupeKey: "chart:winner_probability",
+    enabled: showChart,
+    payload: {
+      chartId: "winner_probability",
+      section: "winner_chart"
+    }
+  });
 
   return (
     <section
+      ref={chartRef}
       className={cn(
         "min-w-0 rounded-xl border border-[#EBEBEB] bg-white px-3 md:px-5 pb-5 pt-4",
         className

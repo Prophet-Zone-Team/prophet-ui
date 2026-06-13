@@ -131,20 +131,29 @@ export function GameMarketsSection({
   const liveMatch = useMatchWithLiveState(match);
   const marketWsEnabled = isGameMarketLiveUpdatesEnabled(liveMatch);
   const sides = resolveMatchSides(liveMatch, teamSnapshots);
-  const { odds: gameOdds } = useGameOdds({ match: liveMatch });
+  const { odds: gameOdds, variant: gameVariant } = useGameOdds({
+    match: liveMatch
+  });
+  const isGameOngoing = gameVariant === "ongoing";
 
   const otherSources = useMemo(
-    () =>
-      mapGameOddsToOtherSources({
+    () => {
+      if (isGameOngoing) {
+        return [];
+      }
+
+      return mapGameOddsToOtherSources({
         odds: gameOdds,
         tab,
         selectedOutcome: selectedOutcome ?? undefined,
         selectedBinarySide,
         homeTeamName: sides.home.name,
         awayTeamName: sides.away.name
-      }),
+      });
+    },
     [
       gameOdds,
+      isGameOngoing,
       selectedBinarySide,
       selectedOutcome,
       sides.away.name,

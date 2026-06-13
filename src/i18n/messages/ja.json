@@ -1025,6 +1025,9 @@
     "shareCardProfit": "利益を得よう！",
     "shareCardInvite": "がProphetへの参加を招待しています",
     "shareTweetIntro": "ワールドカップ市場が始まります。\n\nシグナルを追跡。より賢く取引。\n\nProphetに参加 👇\n\n",
+    "shareUploadAuthRequired": "Xで共有するにはウォレットを接続してください。",
+    "shareUploadError": "共有画像を準備できませんでした。もう一度お試しください。",
+    "shareCardNotReady": "共有カードを読み込み中です。しばらくしてからお試しください。",
     "claimSuccess": "{amount} USDCを受け取りました",
     "claimError": "紹介リワードを受け取れません。"
   },

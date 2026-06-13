@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
 import { fetchUserOpenOrders } from "@/server/trading/clob-user-client";
-import { refreshPersistedOrderStatuses } from "@/server/trading/order-store";
 import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
@@ -28,15 +27,9 @@ export async function GET(request: Request) {
       tokenId: url.searchParams.get("tokenId") ?? undefined,
     });
     const updatedAt = new Date().toISOString();
-    const history = await refreshPersistedOrderStatuses({
-      session: record.session,
-      openOrders: orders,
-      refreshedAt: updatedAt,
-    });
 
     return NextResponse.json({
       orders,
-      history,
       updatedAt,
     });
   } catch (error) {

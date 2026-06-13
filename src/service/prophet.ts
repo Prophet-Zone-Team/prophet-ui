@@ -9,6 +9,9 @@ import type {
   ProphetAnalyticsRecommend,
   ProphetAnalyticsTeamPathContext,
   ProphetAnalyticsTeamPowerRanking,
+  ProphetAnalyticsTrackBatchRequest,
+  ProphetAnalyticsTrackData,
+  ProphetAnalyticsTrackRequest,
   ProphetApiResponse,
   ProphetBindTelegramRequest,
   ProphetCancelTrackRequest,
@@ -42,10 +45,12 @@ import type {
   ProphetTopTracksData,
   ProphetUserTrackItem,
   ProphetUserTrackListItem,
-  ProphetLoginReferral
+  ProphetLoginReferral,
+  ProphetUploadData
 } from "@/types/prophet-api";
 import type { TokenPricesBySymbol } from "@/types/funding";
 import type { TelegramLoginAuthData } from "@/types/telegram-widget";
+import { clearReferralShareImageCache } from "@/lib/referral/referral-share-image-cache";
 
 const AUTH_STORAGE_KEY = "prophet_api_token";
 const REFERRAL_STORAGE_KEY = "prophet_api_referral";
@@ -66,7 +71,13 @@ export class ProphetApiError extends Error {
   }
 }
 
-function resolveBaseUrl(): string {
+export function getProphetApiBaseUrl(): string {
+  const override = process.env.NEXT_PUBLIC_PROPHET_API_URL?.trim();
+
+  if (override) {
+    return override.replace(/\/$/, "");
+  }
+
   return process.env.NEXT_PUBLIC_ENV === "production"
     ? "https://api.prophet.zone"
     : "https://api_stg.prophet.zone";
@@ -250,7 +261,7 @@ function attachAuthHeader(
 
 function createProphetClient(): AxiosInstance {
   const client = axios.create({
-    baseURL: resolveBaseUrl(),
+    baseURL: getProphetApiBaseUrl(),
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json"
@@ -440,6 +451,24 @@ export async function loginProphet(
 export function logoutProphet(): void {
   setProphetApiToken(null);
   setProphetReferral(null);
+  clearReferralShareImageCache();
+}
+
+/** POST /v1/upload — upload a binary file; returns CDN URL */
+export async function uploadProphetFile(
+  file: Blob,
+  filename = "share-card.png",
+): Promise<ProphetUploadData> {
+  requireProphetApiToken();
+
+  const formData = new FormData();
+  formData.append("file", file, filename);
+
+  return prophetPost<ProphetUploadData>("/v1/upload", formData, {
+    headers: {
+      "Content-Type": undefined,
+    },
+  });
 }
 
 /** GET /v1/user/referral */
@@ -632,6 +661,33 @@ export async function getProphetUserTransactions(params: {
       ...(params.type ? { type: params.type } : {})
     }
   });
+}
+
+/** POST /v1/analytics/track — product analytics events (list: 1-5); no auth required */
+export async function trackProphetAnalyticsEvents(
+  events: ProphetAnalyticsTrackBatchRequest["list"]
+): Promise<ProphetAnalyticsTrackData> {
+  if (events.length === 0) {
+    throw new ProphetApiError(400, "Analytics track list cannot be empty.");
+  }
+
+  if (events.length > 5) {
+    throw new ProphetApiError(
+      400,
+      "Analytics track list cannot contain more than 5 events."
+    );
+  }
+
+  const body: ProphetAnalyticsTrackBatchRequest = { list: events };
+
+  return prophetPost<ProphetAnalyticsTrackData>("/v1/analytics/track", body);
+}
+
+/** POST /v1/analytics/track — single product analytics event; no auth required */
+export async function trackProphetAnalyticsEvent(
+  request: ProphetAnalyticsTrackRequest
+): Promise<ProphetAnalyticsTrackData> {
+  return trackProphetAnalyticsEvents([request]);
 }
 
 /** GET /v1/analytics/competitiveness */

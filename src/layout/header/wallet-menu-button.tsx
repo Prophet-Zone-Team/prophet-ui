@@ -4,6 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
+import { trackLoginClicked } from "@/lib/analytics/tracking";
 import { WalletConnectedBar } from "@/layout/header/wallet-connected-bar";
 import { WalletLoginButton } from "@/layout/header/wallet-login-button";
 import { WalletMenuDropdown } from "@/layout/header/wallet-menu-dropdown";
@@ -140,6 +141,10 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
 
   function handleLogin() {
     setMessage(undefined);
+    trackLoginClicked({
+      entrySource: "header_wallet_menu",
+      label: "Login"
+    });
     openLoginModalOnly();
   }
 

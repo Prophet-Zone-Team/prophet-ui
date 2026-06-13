@@ -124,6 +124,23 @@ describe("map-game-statistics", () => {
     ]);
   });
 
+  it("maps USA goal events when UI uses United States as home label", () => {
+    const payload = parseGameStatisticsPayload(
+      `{"statistics":[],"events":[{"time":{"elapsed":7,"extra":null},"team":{"id":2384,"name":"USA"},"type":"Goal","detail":"Own Goal"},{"time":{"elapsed":31,"extra":null},"team":{"id":2384,"name":"USA"},"type":"Goal","detail":"Normal Goal"},{"time":{"elapsed":45,"extra":5},"team":{"id":2384,"name":"USA"},"type":"Goal","detail":"Normal Goal"}]}`
+    );
+    const goalEvents = mapGameStatisticsGoalEvents(
+      payload,
+      "United States",
+      "Paraguay"
+    );
+
+    assert.deepEqual(goalEvents, [
+      { elapsedSeconds: 420, side: "home", type: "goal" },
+      { elapsedSeconds: 1860, side: "home", type: "goal" },
+      { elapsedSeconds: 3000, side: "home", type: "goal" }
+    ]);
+  });
+
   it("includes stoppage time in goal elapsedSeconds", () => {
     const payload = parseGameStatisticsPayload(
       `{"statistics":[],"events":[{"time":{"elapsed":90,"extra":6},"team":{"id":42,"name":"Arsenal"},"type":"Goal","detail":"Normal Goal"}]}`

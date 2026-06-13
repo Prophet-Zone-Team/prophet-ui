@@ -11,6 +11,7 @@ import { useDevice } from "@/hooks/common/use-device";
 import { cn } from "@/lib/cn";
 import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
 import { ReferralInviteActions } from "@/views/referral/referral-invite-actions";
+import type { ShareImageCacheKey } from "@/views/referral/referral-invite-actions";
 import { ReferralInviteLinkRow } from "@/views/referral/referral-invite-link-row";
 
 import {
@@ -35,6 +36,9 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
   downloadFilename?: string;
   shareCardReady: boolean;
   cardRef: RefObject<HTMLDivElement | null>;
+  shareImageUploadMode: "cache" | "always";
+  shareImageCacheKey?: ShareImageCacheKey;
+  modalShellClass?: string;
 };
 
 export function ShareInviteModal({
@@ -48,6 +52,9 @@ export function ShareInviteModal({
   downloadFilename,
   shareCardReady,
   cardRef,
+  shareImageUploadMode,
+  shareImageCacheKey,
+  modalShellClass,
 }: ShareInviteModalProps) {
   const isMobile = useDevice();
 
@@ -65,6 +72,7 @@ export function ShareInviteModal({
           inviteModalShellClass,
           "relative",
           inviteModalMobileShellClass,
+          modalShellClass,
         )}
       >
         {isMobile ? (
@@ -91,6 +99,8 @@ export function ShareInviteModal({
             fullLink={fullLink}
             shareCardRef={cardRef}
             shareCardReady={shareCardReady}
+            shareImageUploadMode={shareImageUploadMode}
+            shareImageCacheKey={shareImageCacheKey}
             downloadFilename={downloadFilename}
           />
         </div>

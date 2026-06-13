@@ -13,7 +13,6 @@ import {
   ROAD_TO_FINAL_SHARE_CARD_EXPORT_PADDING,
   ROAD_TO_FINAL_SHARE_CARD_HEIGHT,
   ROAD_TO_FINAL_SHARE_CARD_IMAGE_PATH,
-  ROAD_TO_FINAL_SHARE_CARD_PREVIEW_WIDTH,
   ROAD_TO_FINAL_SHARE_CARD_WIDTH,
 } from "@/lib/road-to-final/share-card-config";
 
@@ -40,13 +39,13 @@ function StageFlags({ stage }: { stage: ShareCardStage }) {
       : [stage.focusTeam, ...stage.opponents];
 
   return (
-    <div className={cn("shrink-0 flex items-center", teams.length < 4 ? "gap-[50px]" : "gap-[12px]")}>
+    <div className={cn("shrink-0 flex items-center", teams.length < 4 ? "gap-[13px]" : "gap-[4px]")}>
       {teams.map((team) => (
         <TeamFlag
           key={team.id}
           code={team.code}
           name={team.name}
-          className="shrink-0 !size-[52px] rounded-xl"
+          className="shrink-0 !size-[16px] rounded-[4px]"
         />
       ))}
     </div>
@@ -72,10 +71,9 @@ export const RoadToFinalShareCard = forwardRef<
   const [bgReady, setBgReady] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const funderDisplay = formatReferralFunderDisplay(funderAddress);
-  const previewScale = ROAD_TO_FINAL_SHARE_CARD_PREVIEW_WIDTH / ROAD_TO_FINAL_SHARE_CARD_WIDTH;
-  const designWidth =
+  const previewWidth =
     ROAD_TO_FINAL_SHARE_CARD_WIDTH + ROAD_TO_FINAL_SHARE_CARD_EXPORT_PADDING * 2;
-  const designHeight =
+  const previewHeight =
     ROAD_TO_FINAL_SHARE_CARD_HEIGHT + ROAD_TO_FINAL_SHARE_CARD_EXPORT_PADDING * 2;
 
   function handleBgLoad() {
@@ -91,12 +89,9 @@ export const RoadToFinalShareCard = forwardRef<
 
   const inviteLabel = displayLink.replace(/^https?:\/\//, "");
 
-  const previewWidth = designWidth * previewScale;
-  const previewHeight = designHeight * previewScale;
-
   return (
     <div
-      className={cn(inviteShareCardOuterClass, className)}
+      className={cn(inviteShareCardOuterClass, className, "rounded-[14px]")}
       data-share-card-ready={bgReady ? "true" : "false"}
       style={{
         width: previewWidth,
@@ -104,153 +99,130 @@ export const RoadToFinalShareCard = forwardRef<
         overflow: "hidden",
       }}
     >
-      <div
-        className="origin-top-left"
-        style={{
-          width: designWidth,
-          height: designHeight,
-          transform: `scale(${previewScale})`,
-          transformOrigin: "top left",
-        }}
-      >
+      <div className="origin-top-left w-full h-full">
         <div
-          ref={ref}
-          className="relative overflow-hidden rounded-[30px] shadow-[0_0_20px_rgba(0,0,0,0.2)]"
-          style={{
-            width: designWidth,
-            height: designHeight,
-            padding: ROAD_TO_FINAL_SHARE_CARD_EXPORT_PADDING,
-          }}
+          className="w-full h-full p-1 relative overflow-hidden rounded-[12px] shadow-[0_0_20px_rgba(0,0,0,0.2)]"
         >
-        <img
-          ref={imgRef}
-          src={ROAD_TO_FINAL_SHARE_CARD_IMAGE_PATH}
-          alt=""
-          width={ROAD_TO_FINAL_SHARE_CARD_WIDTH}
-          height={ROAD_TO_FINAL_SHARE_CARD_HEIGHT}
-          className="absolute block object-cover object-center pointer-events-none"
-          style={{
-            width: ROAD_TO_FINAL_SHARE_CARD_WIDTH,
-            height: ROAD_TO_FINAL_SHARE_CARD_HEIGHT,
-            left: ROAD_TO_FINAL_SHARE_CARD_EXPORT_PADDING,
-            top: ROAD_TO_FINAL_SHARE_CARD_EXPORT_PADDING,
-          }}
-          onLoad={handleBgLoad}
-        />
+          <div ref={ref} className="w-full h-full relative">
+            <img
+              ref={imgRef}
+              src={ROAD_TO_FINAL_SHARE_CARD_IMAGE_PATH}
+              alt=""
+              width="100%"
+              height="100%"
+              className="w-full h-full absolute block object-cover object-center pointer-events-none rounded-[10px]"
+              onLoad={handleBgLoad}
+            />
 
-        <div
-          className="absolute z-10 font-body text-white flex flex-col items-center"
-          style={{
-            width: ROAD_TO_FINAL_SHARE_CARD_WIDTH,
-            height: ROAD_TO_FINAL_SHARE_CARD_HEIGHT,
-            left: ROAD_TO_FINAL_SHARE_CARD_EXPORT_PADDING,
-            top: ROAD_TO_FINAL_SHARE_CARD_EXPORT_PADDING,
-          }}
-        >
-          <div className="relative shrink-0 mt-[190px] mx-auto w-[590px] h-[354px] rounded-[30px] border-[16px] border-[rgba(255,255,255,0.30)]">
-            <div className="relative pt-[31px] w-full h-full bg-[rgba(130,163,255,0.10)] border-[4px] border-[#FFFFFF] rounded-[18px] backdrop-blur-[10px]">
-              {funderDisplay ? (
-                <p className="text-center text-[36px] font-semibold leading-[1.5] text-white">
-                  {funderDisplay}
-                </p>
-              ) : null}
-
-              <p className="text-center text-[28px] font-medium capitalize leading-normal text-white/60">
-                {t("worldCupSimulation")}
-              </p>
-
-              {champion ? (
-                <div className="flex items-center gap-7 justify-center mt-[37px]">
-                  <TeamFlag
-                    code={champion.code}
-                    name={champion.name}
-                    className="h-[105px] w-[105px] shrink-0 min-w-[105px] rounded-[20px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
-                  />
-                  <p className="whitespace-nowrap text-[52px] font-medium leading-normal text-white">
-                    <ChampionName champion={champion} />
-                  </p>
-                </div>
-              ) : (
-                <p className="mt-[37px] whitespace-nowrap text-center text-[40px] font-medium text-white/80">
-                  {t("championPending")}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="relative flex-1 w-full pt-[50px] flex flex-col items-center">
-            {stages.map((stage, index) => {
-              const teams =
-                stage.key === "GROUP"
-                  ? stage.opponents
-                  : [stage.focusTeam, ...stage.opponents];
-
-              return (
-                <div
-                  className="relative z-[3] flex"
-                  key={stage.key}
-                  style={{
-                    paddingLeft: index % 2 === 0 ? "0px" : "480px",
-                    paddingRight: index % 2 === 0 ? "480px" : "0px",
-                    marginTop: index !== 0 ? "-40px" : "0px",
-                  }}
-                >
-                  <div
-                    className="relative bg-[rgba(130,163,255,0.10)] rounded-[30px] border border-[#FFFFFF] backdrop-blur-[10px] py-[25px] flex flex-col items-center gap-5"
-                    style={{
-                      width: teams.length < 4 ? "274px" : "316px",
-                    }}
-                  >
-                    <p className="m-0 whitespace-nowrap text-[28px] font-medium uppercase leading-normal text-white">
-                      {translateShareStageLabel(stage.key, stage.label, t)}
+            <div
+              className="absolute z-10 font-body text-white flex flex-row-reverse justify-end items-center w-full h-full"
+            >
+              <div className="relative shrink-0 mr-[10px] mx-auto w-[110px] h-[130px] rounded-[10px] border-[4px] border-[rgba(255,255,255,0.30)]">
+                <div className="relative flex flex-col items-center justify-center gap-[10px] w-full h-full bg-[rgba(130,163,255,0.10)] border-[1px] border-[#FFFFFF] rounded-[6px] backdrop-blur-[10px]">
+                  {funderDisplay ? (
+                    <p className="text-center text-[12px] font-semibold leading-[1.5] text-white">
+                      {funderDisplay}
                     </p>
-                    <StageFlags stage={stage} />
-                  </div>
-                </div>
-              );
-            })}
+                  ) : null}
 
-            <div className="w-[1px] h-full absolute left-1/2 -translate-x-1/2 top-0 z-[1] bg-[#EBEBEB] flex flex-col items-center gap-y-[70px] pt-[110px]">
-              {
-                stages.map((stage, index) => {
+                  <p className="text-center text-[10px] font-medium capitalize leading-normal text-white/60">
+                    {t("worldCupSimulation")}
+                  </p>
+
+                  {champion ? (
+                    <div className="flex items-center gap-3 justify-center">
+                      <TeamFlag
+                        code={champion.code}
+                        name={champion.name}
+                        className="h-[28px] w-[28px] shrink-0 min-w-[28px] rounded-[4px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+                      />
+                      <p className="whitespace-nowrap text-[12px] font-medium leading-normal text-white">
+                        <ChampionName champion={champion} />
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="whitespace-nowrap text-center text-[12px] font-medium text-white/80">
+                      {t("championPending")}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="relative flex-1 w-full flex flex-row-reverse justify-start items-center pr-[15px]">
+                {stages.map((stage, index) => {
+                  const teams =
+                    stage.key === "GROUP"
+                      ? stage.opponents
+                      : [stage.focusTeam, ...stage.opponents];
+
                   return (
                     <div
-                      key={index}
-                      className="relative size-[56px] shrink-0 rounded-full border-[10px] border-[rgba(255,255,255,0.30)]"
+                      className="relative z-[3] flex"
+                      key={stage.key}
+                      style={{
+                        paddingTop: index % 2 === 0 ? "0px" : "100px",
+                        paddingBottom: index % 2 === 0 ? "100px" : "0px",
+                        marginRight: index !== 0 ? "-37px" : "0px",
+                      }}
                     >
-                      <div className="w-full h-full bg-white rounded-full"></div>
                       <div
-                        className="absolute top-1/2 -translate-y-1/2 h-[1px] w-[140px] bg-[#EBEBEB]"
+                        className="relative flex flex-col items-center justify-center bg-[rgba(130,163,255,0.10)] rounded-[10px] border border-[#FFFFFF] backdrop-blur-[10px] gap-1"
                         style={{
-                          left: index % 2 === 0 ? "unset" : "0px",
-                          right: index % 2 === 0 ? "0px" : "unset",
+                          width: "90px",
+                          height: "56px",
                         }}
-                      ></div>
+                      >
+                        <p className="m-0 whitespace-nowrap text-[10px] font-medium uppercase leading-normal text-white">
+                          {translateShareStageLabel(stage.key, stage.label, t)}
+                        </p>
+                        <StageFlags stage={stage} />
+                      </div>
                     </div>
                   );
-                })
-              }
+                })}
+
+                <div className="h-[1px] w-full absolute top-1/2 -translate-y-1/2 right-0 z-[1] bg-[#EBEBEB] flex flex-row-reverse items-center gap-x-[36px] pr-[50px]">
+                  {
+                    stages.map((stage, index) => {
+                      return (
+                        <div
+                          key={index}
+                          className="relative size-[17px] shrink-0 rounded-full border-[4px] border-[rgba(255,255,255,0.30)]"
+                        >
+                          <div className="w-full h-full bg-white rounded-full"></div>
+                          <div
+                            className="absolute left-1/2 -translate-x-1/2 w-[1px] h-[70px] bg-[#EBEBEB]"
+                            style={{
+                              top: index % 2 === 0 ? "unset" : "0px",
+                              bottom: index % 2 === 0 ? "0px" : "unset",
+                            }}
+                          ></div>
+                        </div>
+                      );
+                    })
+                  }
+                </div>
+              </div>
+
+              <div
+                className="absolute rounded-[4px] border border-black bg-white p-[2px] right-[10px] bottom-[10px]"
+                aria-hidden="true"
+              >
+                <QRCodeSVG
+                  value={fullLink}
+                  size={ROAD_SHARE_CARD_FOOTER.qrSizePx}
+                  level="M"
+                  marginSize={0}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                />
+              </div>
+
+              <p className="absolute right-[60px] rounded-[4px] flex justify-center items-center bottom-[10px] m-0 truncate text-[9px] font-normal leading-normal text-white/80 border h-[24px] px-[6px] border-[rgba(255,255,255,0.30)] backdrop-blur-[3px] bg-[rgba(130,163,255,0.10)]">
+                {t("inviteLink", { link: inviteLabel })}
+              </p>
             </div>
           </div>
-
-          <div
-            className="absolute rounded-[12px] border border-black bg-white p-[2px] left-[48px] bottom-[57px]"
-            aria-hidden="true"
-          >
-            <QRCodeSVG
-              value={fullLink}
-              size={ROAD_SHARE_CARD_FOOTER.qrSizePx}
-              level="M"
-              marginSize={0}
-              bgColor="#ffffff"
-              fgColor="#000000"
-            />
-          </div>
-
-          <p className="absolute left-[188px] rounded-xl flex justify-center items-center bottom-[57px] m-0 truncate text-[16px] font-normal leading-normal text-white/80 border h-[55px] px-[20px] border-[rgba(255,255,255,0.30)] backdrop-blur-[10px] bg-[rgba(130,163,255,0.10)]">
-            {t("inviteLink", { link: inviteLabel })}
-          </p>
-        </div>
         </div>
       </div>
     </div>

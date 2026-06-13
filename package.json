@@ -11,15 +11,10 @@
     "check:trading-safety": "node scripts/check-trading-safety.mjs",
     "smoke:trading:prod": "node scripts/smoke-trading-production.mjs",
     "start": "next start",
-    "preview": "node scripts/stop-preview-ports.mjs && npm run d1:schema:local && NODE_OPTIONS='--max-old-space-size=6144' opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "preview": "node scripts/stop-preview-ports.mjs && NODE_OPTIONS='--max-old-space-size=6144' opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "NODE_OPTIONS='--max-old-space-size=6144' opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "typecheck": "next typegen && tsc --noEmit",
-    "collect:market": "node scripts/collect-market-snapshots.mjs",
-    "collect:market:local": "node scripts/collect-market-snapshots.mjs http://localhost:3005",
-    "collect:signals:local": "curl -X POST http://localhost:3000/api/signals/collect",
-    "d1:schema:local": "npx wrangler d1 execute world-cup-market-history --local --file=db/d1/schema.sql",
-    "d1:schema:remote": "npx wrangler d1 execute world-cup-market-history --remote --file=db/d1/schema.sql"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@defuse-protocol/contract-types": "^0.6.4",

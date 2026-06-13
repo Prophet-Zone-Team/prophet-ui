@@ -5,6 +5,11 @@ export interface ProphetApiResponse<T = unknown> {
   message: string;
 }
 
+/** POST /v1/upload — uploaded asset URL */
+export interface ProphetUploadData {
+  url: string;
+}
+
 export interface ProphetPolyMarketTeam {
   logo?: string;
   name?: string;
@@ -331,18 +336,32 @@ export interface ProphetReportTransactionRequest {
   referral_code?: string;
 }
 
+export type ProphetUserTransactionKind =
+  | "order"
+  | "trade"
+  | "deposit"
+  | "withdraw"
+  | "redeem";
+
+export type ProphetUserTransactionTradeSide = "buy" | "sell";
+
 /** Row from GET /v1/user/transactions (database.UserTransaction). */
 export interface ProphetUserTransaction {
   amount?: string;
   created_at?: string;
+  trade_create_at?: string;
   id?: number;
   market_name?: string;
+  order_type?: ProphetReportOrderType;
   price?: string;
   side?: string;
+  size?: string;
   slug?: string;
   source?: string;
   team_name?: string;
+  trade_side?: ProphetUserTransactionTradeSide;
   tx_hash?: string;
+  /** order | trade | deposit | withdraw | redeem (legacy rows may still use buy/sell). */
   type?: string;
   user_id?: number;
 }
@@ -731,4 +750,131 @@ export interface ProphetGetTeamDetailData {
   titles: number;
   next_match: ProphetGetTeamDetailNextMatch | null;
   market_value: string;
+}
+
+/** POST /v1/analytics/track — supported product analytics event names */
+export type ProphetAnalyticsTrackEventName =
+  | "page_viewed"
+  | "market_data_loaded"
+  | "data_provider_failed"
+  | "fallback_data_used"
+  | "team_detail_clicked"
+  | "quick_bid_clicked"
+  | "login_clicked"
+  | "wallet_connect_started"
+  | "wallet_connected"
+  | "wallet_connect_failed"
+  | "section_viewed"
+  | "team_card_impressed"
+  | "chart_viewed"
+  | "bid_area_viewed"
+  | "winner_chart_range_changed"
+  | "winner_chart_team_selected"
+  | "chart_legend_toggled"
+  | "market_tab_changed"
+  | "track_clicked"
+  | "track_added"
+  | "track_removed"
+  | "nav_clicked"
+  | "details_clicked"
+  | "eligibility_check_completed"
+  | "order_ticket_opened"
+  | "order_input_changed"
+  | "order_preview_requested"
+  | "order_preview_completed"
+  | "order_confirm_clicked"
+  | "order_submit_started"
+  | "order_submit_succeeded"
+  | "order_submit_failed"
+  | "portfolio_viewed"
+  | "track_page_viewed"
+  | "tracked_team_revisited"
+  | "share_clicked"
+  | "copy_link_clicked";
+
+export type ProphetAnalyticsTrackEnvironment =
+  | "production"
+  | "preview"
+  | "local";
+
+export type ProphetAnalyticsTrackSource = "client" | "server" | "worker";
+
+/** POST /v1/analytics/track — product analytics event payload */
+export interface ProphetAnalyticsTrackRequest {
+  eventName: ProphetAnalyticsTrackEventName;
+  eventId: string;
+  anonymousId?: string;
+  sessionId?: string;
+  userIdHash?: string;
+  walletHash?: string;
+  path?: string;
+  referrer?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  deviceType?: string;
+  browser?: string;
+  os?: string;
+  country?: string;
+  region?: string;
+  language?: string;
+  appVersion?: string;
+  commitSha?: string;
+  environment?: ProphetAnalyticsTrackEnvironment;
+  source?: ProphetAnalyticsTrackSource;
+  clientTimestamp?: string;
+  sessionStartedAt?: string;
+  pageLoadedAt?: string;
+  dataLoadedAt?: string;
+  lastUpdated?: string;
+  visibleStartedAt?: string;
+  visibleMs?: number;
+  latencyMs?: number;
+  section?: string;
+  sectionIndex?: number;
+  visibleRatio?: number;
+  impressionIndex?: number;
+  itemPosition?: number;
+  listName?: string;
+  dedupeKey?: string;
+  target?: string;
+  label?: string;
+  entrySource?: string;
+  chartId?: string;
+  fromRange?: string;
+  toRange?: string;
+  seriesKey?: string;
+  visible?: boolean;
+  teamId?: string;
+  teamName?: string;
+  teamCode?: string;
+  sortKey?: string;
+  volumeBucket?: string;
+  marketStatus?: string;
+  marketId?: string;
+  outcomeId?: string;
+  side?: string;
+  price?: string;
+  priceBucket?: string;
+  sizeBucket?: string;
+  amountBucket?: string;
+  changedField?: string;
+  eligibilityStatus?: string;
+  walletType?: string;
+  orderStatus?: string;
+  failureReason?: string;
+  errorCode?: string;
+  stalePrice?: boolean;
+  properties?: Record<string, unknown>;
+}
+
+/** POST /v1/analytics/track — deduplicated acceptance result */
+export interface ProphetAnalyticsTrackData {
+  accepted: boolean;
+  duplicate: boolean;
+}
+
+/** POST /v1/analytics/track — batch event payload (list: 1-5 events) */
+export interface ProphetAnalyticsTrackBatchRequest {
+  list: ProphetAnalyticsTrackRequest[];
 }

@@ -1025,6 +1025,9 @@
     "shareCardProfit": "Make Profit!",
     "shareCardInvite": "invites you to join Prophet",
     "shareTweetIntro": "The World Cup markets are coming.\n\nTrack signals. Trade smarter.\n\nJoin Prophet 👇\n\n",
+    "shareUploadAuthRequired": "Connect your wallet to share on X.",
+    "shareUploadError": "Unable to prepare the share image. Please try again.",
+    "shareCardNotReady": "Share card is still loading. Please try again.",
     "claimSuccess": "Claimed {amount} USDC",
     "claimError": "No se pudieron reclamar las recompensas de referidos."
   },
