@@ -22,6 +22,7 @@ import type {
   ProphetGetGameStatisticsData,
   ProphetGetGameOddsData,
   ProphetGetGroupStandingsData,
+  ProphetGetGroupMatchesData,
   ProphetGameStatisticsPayload,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
@@ -371,6 +372,17 @@ function parseGameStatisticsPayload(
       "Unable to parse game statistics response."
     );
   }
+}
+
+/** GET /v1/game/group-matches — group stage fixtures for a group code */
+export async function getProphetGroupMatches(params: {
+  group_code: string;
+  signal?: AbortSignal;
+}): Promise<ProphetGetGroupMatchesData> {
+  return prophetGet<ProphetGetGroupMatchesData>("/v1/game/group-matches", {
+    params: { group_code: params.group_code },
+    signal: params.signal,
+  });
 }
 
 /** GET /v1/game/group-standings — group stage standings with market prices */

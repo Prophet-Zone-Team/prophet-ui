@@ -1,6 +1,7 @@
 import curatedTeams from "@/data/teams/index";
 import {
   curatedEntryToTeam,
+  findCuratedTeamById,
   findCuratedTeamByName,
 } from "@/data/teams/curated-team-list";
 import { normalizeGammaSearchText } from "@/lib/market/polymarket-gamma";
@@ -40,6 +41,12 @@ export function resolveWorldCupTeamByCuratedKey(indexKey: string): Team | undefi
 
   if (curated) {
     return curatedEntryToTeam(indexKey, curated);
+  }
+
+  const byId = findCuratedTeamById(indexKey);
+
+  if (byId) {
+    return byId;
   }
 
   return findCuratedTeamByName(indexKey);

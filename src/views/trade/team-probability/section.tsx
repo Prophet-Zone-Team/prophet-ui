@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
+  formatChange,
   formatProbability,
   formatVolume
 } from "@/components/home/market-formatters";
@@ -35,11 +36,13 @@ const probabilityCardClass =
 export interface ProbabilitySectionProps {
   snapshot: TeamMarketSnapshot;
   showOrderbook: boolean;
+  showHeaderControls?: boolean;
 }
 
 export function ProbabilitySection({
   snapshot,
-  showOrderbook
+  showOrderbook,
+  showHeaderControls = true
 }: ProbabilitySectionProps) {
   const t = useTranslations("trade");
   const outcomeView = useTradeOutcomeSide();
@@ -110,6 +113,57 @@ export function ProbabilitySection({
         ? "text-[#FF674B]"
         : "text-prophet-muted";
 
+  const metricBlocks = (
+    <>
+      <MetricBlock
+        value={formatProbability(displayProbability)}
+        label={t("probabilityLabel")}
+        valueClassName="text-[36px] leading-[43px] text-black"
+      />
+      <MetricBlock
+        value={formatChange(change24hPoints)}
+        label={t("change24h")}
+        valueClassName={cn("text-base leading-[19px]", changeTone)}
+      />
+      <MetricBlock
+        value={`$${formatVolume(snapshot.market.volume)}`}
+        label={t("volumeLabel")}
+      />
+      <MetricBlock
+        value={
+          snapshot.market.liquidity
+            ? `$${formatVolume(snapshot.market.liquidity)}`
+            : t("pending")
+        }
+        label={t("liquidity")}
+      />
+    </>
+  );
+
+  const timeRangeControls = (
+    <div
+      className="flex flex-wrap gap-4"
+      role="group"
+      aria-label={t("chartTimeRangeAria")}
+    >
+      {chartTimeRanges.map((range) => (
+        <button
+          key={range.id}
+          type="button"
+          className={cn(
+            "border-0 bg-transparent p-0 text-sm leading-[17px]",
+            timeRange === range.id
+              ? "font-[500] text-black"
+              : "font-[400] text-[#909090]"
+          )}
+          onClick={() => setTimeRange(range.id)}
+        >
+          {range.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <section
       className={cn(
@@ -129,86 +183,56 @@ export function ProbabilitySection({
           showOrderbook && "min-h-0"
         )}
       >
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="m-0 text-[20px] font-[500] leading-6 text-black">
-              {t("probabilityLabel")}
-            </h2>
-            <div
-              className="flex h-[30px] w-[96px] gap-0.5 rounded-lg border border-[#EBEBEB] bg-white p-0.5"
-              role="group"
-              aria-label={t("outcomeViewAria")}
-            >
-              <button
-                type="button"
-                className={cn(
-                  "flex-1",
-                  tradeYesNoPill(outcomeView === "yes", "yes")
-                )}
-                onClick={() => setOutcomeView("yes")}
-              >
-                {t("yes")}
-              </button>
-              <button
-                type="button"
-                className={cn(
-                  "flex-1",
-                  tradeYesNoPill(outcomeView === "no", "no")
-                )}
-                onClick={() => setOutcomeView("no")}
-              >
-                {t("no")}
-              </button>
+        {showHeaderControls ? (
+          <>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="m-0 text-[20px] font-[500] leading-6 text-black">
+                  {t("probabilityLabel")}
+                </h2>
+                <div
+                  className="flex h-[30px] w-[96px] gap-0.5 rounded-lg border border-[#EBEBEB] bg-white p-0.5"
+                  role="group"
+                  aria-label={t("outcomeViewAria")}
+                >
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex-1",
+                      tradeYesNoPill(outcomeView === "yes", "yes")
+                    )}
+                    onClick={() => setOutcomeView("yes")}
+                  >
+                    {t("yes")}
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex-1",
+                      tradeYesNoPill(outcomeView === "no", "no")
+                    )}
+                    onClick={() => setOutcomeView("no")}
+                  >
+                    {t("no")}
+                  </button>
+                </div>
+              </div>
+
+              {timeRangeControls}
             </div>
-          </div>
 
-          <div
-            className="flex flex-wrap gap-4"
-            role="group"
-            aria-label={t("chartTimeRangeAria")}
-          >
-            {chartTimeRanges.map((range) => (
-              <button
-                key={range.id}
-                type="button"
-                className={cn(
-                  "border-0 bg-transparent p-0 text-sm leading-[17px]",
-                  timeRange === range.id
-                    ? "font-[500] text-black"
-                    : "font-[400] text-[#909090]"
-                )}
-                onClick={() => setTimeRange(range.id)}
-              >
-                {range.label}
-              </button>
-            ))}
+            <div className="mt-4 flex flex-wrap items-end gap-8 sm:gap-10">
+              {metricBlocks}
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex min-w-0 flex-wrap items-end gap-8 sm:gap-10">
+              {metricBlocks}
+            </div>
+            {timeRangeControls}
           </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-end gap-8 sm:gap-10">
-          <MetricBlock
-            value={formatProbability(displayProbability)}
-            label={t("probabilityLabel")}
-            valueClassName="text-[36px] leading-[43px] text-black"
-          />
-          <MetricBlock
-            value={change24h.toString()}
-            label={t("change24h")}
-            valueClassName={cn("text-base leading-[19px]", changeTone)}
-          />
-          <MetricBlock
-            value={`$${formatVolume(snapshot.market.volume)}`}
-            label={t("volumeLabel")}
-          />
-          <MetricBlock
-            value={
-              snapshot.market.liquidity
-                ? `$${formatVolume(snapshot.market.liquidity)}`
-                : t("pending")
-            }
-            label={t("liquidity")}
-          />
-        </div>
+        )}
 
         <div className="mt-4">
           <ProbabilityChart

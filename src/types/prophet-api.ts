@@ -63,6 +63,9 @@ export interface ProphetGetGamesData {
 /** GET /v1/related-games — related Polymarket games for comma-separated team names */
 export type ProphetGetRelatedGamesData = ProphetPolyMarketGameItem[];
 
+/** GET /v1/game/group-matches — group stage fixtures for a group code */
+export type ProphetGetGroupMatchesData = ProphetPolyMarketGameItem[];
+
 /** GET /v1/games/result — finished games for a team */
 export interface ProphetTeamGameResult {
   home_team: string;
