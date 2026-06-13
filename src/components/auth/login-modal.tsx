@@ -9,6 +9,7 @@ import { PolymarketIcon } from "@/components/icons";
 import { Modal } from "@/components/ui/modal";
 import { PrivyLoginModal } from "@/components/auth/privy-login-modal";
 import { cn } from "@/lib/cn";
+import { trackLoginClicked } from "@/lib/analytics/tracking";
 import {
   formatCloseOnlyDetail,
   formatCloseOnlyLabel,
@@ -224,7 +225,13 @@ export function LoginModal({ auth }: LoginModalProps) {
                             stepId={step.id}
                             state={state}
                             loginInProgress={loginInProgress}
-                            onConnectWallet={() => void connectWallet()}
+                            onConnectWallet={() => {
+                              trackLoginClicked({
+                                entrySource: "login_modal_setup",
+                                label: "Connect wallet"
+                              });
+                              void connectWallet();
+                            }}
                             onSignClob={() => void signClobCredentials()}
                             onSignTokens={() => void signTokenApprovals()}
                             onRefresh={() => void refreshSession()}
@@ -280,6 +287,10 @@ export function LoginModal({ auth }: LoginModalProps) {
         open={privyModalOpen}
         onClose={closePrivyLogin}
         onConnectExtensionWallet={() => {
+          trackLoginClicked({
+            entrySource: "privy_login_modal",
+            label: "Connect with extension wallet"
+          });
           setLoginMethod("wallet");
           closePrivyLogin();
           void connectWallet();

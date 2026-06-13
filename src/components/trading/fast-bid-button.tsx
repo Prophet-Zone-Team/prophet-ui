@@ -8,6 +8,7 @@ import { useState } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuthOptional } from "@/context/auth";
+import { trackQuickBidClicked } from "@/lib/analytics/tracking";
 import { runFastBid, type FastBidStatus } from "@/lib/trading/run-fast-bid";
 import {
   DEFAULT_FAST_BID_AMOUNT,
@@ -74,6 +75,17 @@ export function FastBidButton({
     ) {
       return;
     }
+
+    trackQuickBidClicked({
+      teamId: snapshot.team.id,
+      teamName: snapshot.team.name,
+      teamCode: snapshot.team.code,
+      marketId: snapshot.market.polymarket?.conditionId,
+      outcomeId: snapshot.market.polymarket?.tokens?.yes?.tokenId,
+      side: "buy",
+      price: snapshot.market.probability,
+      entrySource: "fast_bid_button"
+    });
 
     await runFastBid({
       snapshot,

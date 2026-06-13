@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { CopyButton } from "@/components/feedback/copy-button";
 import { useAuth } from "@/context/auth/use-auth";
+import { trackCopyLinkClicked } from "@/lib/analytics/tracking";
 import {
   getWorldCupGroupForTeam,
   getWorldCupTeamByIdOrCode
@@ -155,6 +156,13 @@ export function ResultPanel({
             text={shareUrl}
             ariaLabel={t("copyShareLinkAria")}
             className="w-full rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black"
+            onCopy={() =>
+              trackCopyLinkClicked({
+                target: "share_link",
+                label: "Copy share link",
+                entrySource: "road_to_final_page"
+              })
+            }
           >
             {t("copyShareLink")}
           </CopyButton>

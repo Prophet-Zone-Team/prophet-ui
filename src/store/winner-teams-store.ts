@@ -4,6 +4,12 @@ import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
 import { FIFA_WINNER_EVENT_PATH } from "@/config/fifa-winner-market";
+import {
+  classifyProviderFailure,
+  trackDataProviderFailed,
+  trackFallbackDataUsed,
+  trackMarketDataLoaded
+} from "@/lib/analytics/tracking";
 import { buildStaticWinnerSnapshots } from "@/lib/market/build-static-winner-snapshots";
 import { fetchPolymarket } from "@/lib/market/polymarket-api-client";
 import type { GammaEventRecord } from "@/lib/market/polymarket-gamma";
@@ -47,6 +53,8 @@ export const useWinnerTeamsStore = create<WinnerTeamsState>()((set, get) => ({
     set({ status: "loading", error: undefined });
 
     fetchPromise = (async () => {
+      const startedAt = Date.now();
+
       try {
         const payload = await fetchPolymarket<GammaEventRecord>(FIFA_WINNER_EVENT_PATH);
         const event = parseWinnerGammaEvent(payload);
@@ -64,10 +72,28 @@ export const useWinnerTeamsStore = create<WinnerTeamsState>()((set, get) => ({
           lastUpdated: patch.lastUpdated,
           byTeamId: patch.byTeamId,
         });
+
+        trackMarketDataLoaded({
+          latencyMs: Date.now() - startedAt,
+          lastUpdated: patch.lastUpdated
+        });
       } catch (error) {
+        const failure = classifyProviderFailure(error);
+
         set({
           status: "error",
           error: error instanceof Error ? error.message : "Failed to load winner markets.",
+        });
+
+        trackDataProviderFailed({
+          latencyMs: Date.now() - startedAt,
+          failureReason: failure.failureReason,
+          errorCode: failure.errorCode
+        });
+
+        trackFallbackDataUsed({
+          fallbackType: "static_placeholder",
+          path: typeof window !== "undefined" ? window.location.pathname : undefined
         });
       } finally {
         fetchPromise = undefined;

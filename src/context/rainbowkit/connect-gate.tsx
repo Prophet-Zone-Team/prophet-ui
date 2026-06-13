@@ -16,6 +16,7 @@ import {
   activatePrivyWallet,
   findPrivyEmbeddedWallet,
 } from "@/context/privy/privy-wallet-bridge";
+import { trackWalletConnectFailed } from "@/lib/analytics/tracking";
 import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -79,6 +80,12 @@ export function RainbowConnectGate({ children }: { children: ReactNode }) {
 
   const { connectWallet } = useConnectWallet({
     onError: (error) => {
+      trackWalletConnectFailed({
+        failureReason: "wallet_rejected",
+        errorCode: "WALLET_CONNECT_GATE_ERROR",
+        walletType: "wallet"
+      });
+
       pendingErrorRef.current?.(
         new Error(
           typeof error === "string"

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 
+import { TrackedTeamRevisitEffect } from "@/components/analytics/tracked-team-revisit-effect";
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { MarketWsProvider } from "@/context/market-ws";
 import {
@@ -45,6 +46,13 @@ function TradeTeamViewContent({
   );
   return (
     <div className={tradePageClass}>
+      <TrackedTeamRevisitEffect
+        teamId={snapshot.team.id}
+        teamName={snapshot.team.name}
+        teamCode={snapshot.team.code}
+        slug={snapshot.market.slug}
+        entrySource="trade_team_page"
+      />
       <SyncMatchLiveStore matches={[]} />
       <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_345px] xl:items-start">
         <div className="order-2 flex min-w-0 flex-col gap-4 xl:order-1">

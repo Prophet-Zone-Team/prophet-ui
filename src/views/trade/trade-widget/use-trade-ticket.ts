@@ -70,6 +70,17 @@ import type {
   UserPositionRecord,
   WorldCupMatch
 } from "@/types/market";
+import {
+  trackEligibilityCheckCompleted,
+  trackOrderConfirmClicked,
+  trackOrderInputChanged,
+  trackOrderPreviewCompleted,
+  trackOrderPreviewRequested,
+  trackOrderSubmitFailed,
+  trackOrderSubmitStarted,
+  trackOrderSubmitSucceeded
+} from "@/lib/analytics/tracking";
+import { resolveTradeAnalyticsContext } from "@/lib/analytics/tracking/resolve-trade-context";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
 import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import {
@@ -758,6 +769,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             isEligibilityNetworkFailure(sessionRef.current)
           );
           lastFetchedReadinessKeyRef.current = queryKey;
+
+          trackEligibilityCheckCompleted({
+            ...resolveTradeAnalyticsContext(input, orderPreview, tradeSide),
+            eligibilityStatus: nextReadiness.ready ? "eligible" : "not_ready"
+          });
         }
 
         return nextReadiness;
@@ -788,13 +804,41 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         return;
       }
 
+      const analyticsContext = resolveTradeAnalyticsContext(
+        input,
+        orderPreview,
+        tradeSide
+      );
+
+      trackOrderPreviewRequested(analyticsContext);
+
+      if (orderPreview.canSubmitRealOrder) {
+        trackOrderPreviewCompleted(analyticsContext);
+      }
+
       void applyReadinessFetch(orderPreview);
     }, READINESS_FETCH_DEBOUNCE_MS);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [applyReadinessFetch, readinessQueryKey]);
+  }, [applyReadinessFetch, input, readinessQueryKey, tradeSide]);
+
+  useEffect(() => {
+    if (orderAmount === 0) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      trackOrderInputChanged({
+        ...resolveTradeAnalyticsContext(input, preview, tradeSide),
+        changedField: "amount",
+        amount: orderAmount
+      });
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [amount, input, orderAmount, preview, tradeSide]);
 
   const refreshOutcomeShares = useCallback(async () => {
     if (!isAuthenticated || !conditionId) {
@@ -991,6 +1035,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       return;
     }
 
+    trackOrderSubmitStarted(
+      resolveTradeAnalyticsContext(input, preview, tradeSide)
+    );
+
     setStatus("signing");
     setMessage(t("reviewSignOrder"));
 
@@ -1140,6 +1188,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
          document.getElementById(TRADE_BID_BUTTON_ID)
        );
      }
+      trackOrderSubmitSucceeded({
+        ...resolveTradeAnalyticsContext(input, preview, tradeSide),
+        orderStatus: "succeeded"
+      });
+
       setStatus("idle");
       setMessage(undefined);
       setTakeProfitLimitEnabled(false);
@@ -1153,6 +1206,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       await input.onOrderSuccess?.();
     } catch (error) {
       const errorMessage = resolveOrderErrorMessage(error);
+      trackOrderSubmitFailed({
+        ...resolveTradeAnalyticsContext(input, preview, tradeSide),
+        orderStatus: "failed",
+        failureReason: "wallet_rejected",
+        errorCode: "ORDER_SUBMIT_FAILED"
+      });
       setStatus("error");
       setMessage(errorMessage);
       showOrderErrorToast(error);
@@ -1271,6 +1330,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       return;
     }
 
+    trackOrderConfirmClicked(
+      resolveTradeAnalyticsContext(input, preview, tradeSide)
+    );
     await submitOrder();
   }, [
     actionInProgress,

@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { trackTrackAdded, trackTrackRemoved } from "@/lib/analytics/tracking";
 import {
   buildTrackRequest,
   buildUntrackRequest,
@@ -219,6 +220,10 @@ export const useTracksStore = create<TracksStore>()(
 
         try {
           await trackProphet(buildTrackRequest(target));
+          trackTrackAdded({
+            teamName: target.category === "team" ? target.teamName : undefined,
+            entrySource: "tracks_store"
+          });
         } catch (error) {
           set({ byKey: previousByKey });
           throw error;
@@ -251,6 +256,10 @@ export const useTracksStore = create<TracksStore>()(
 
         try {
           await untrackProphet(buildUntrackRequest(target));
+          trackTrackRemoved({
+            teamName: target.category === "team" ? target.teamName : undefined,
+            entrySource: "tracks_store"
+          });
         } catch (error) {
           set({ byKey: previousByKey, items: previousItems });
           throw error;

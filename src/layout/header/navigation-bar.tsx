@@ -1,4 +1,6 @@
 import { usePathname } from "next/navigation";
+
+import { trackNavClicked } from "@/lib/analytics/tracking";
 import { useTranslations } from "next-intl";
 import { isNavActive, PRIMARY_NAV } from "./nav";
 import { cn } from "@/lib/cn";
@@ -13,10 +15,7 @@ function NavBar(props: any) {
 
   return (
     <nav
-      className={cn(
-        "text-[13px] text-prophet-nav",
-        className,
-      )}
+      className={cn("text-[13px] text-prophet-nav", className)}
       aria-label={t("primaryNavigation")}
     >
       {PRIMARY_NAV.map(({ href, labelKey }) => {
@@ -32,7 +31,13 @@ function NavBar(props: any) {
               navClassName
             )}
             aria-current={active ? "page" : undefined}
-            onClick={onClick}
+            onClick={(event) => {
+              trackNavClicked({
+                target: href,
+                label: t(labelKey)
+              });
+              onClick?.(event);
+            }}
           >
             {active ? (
               <motion.span
