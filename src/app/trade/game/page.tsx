@@ -37,11 +37,7 @@ export async function generateMetadata({
 
   const headersList = await headers();
 
-  try {
-    await reportHeadersToWatcher(headersList);
-  } catch (error) {
-    console.error("Failed to report headers to watcher: %o", error);
-  }
+  await reportHeadersToWatcher(headersList);
 
   if (
     !shouldGenerateGameShareImage(
