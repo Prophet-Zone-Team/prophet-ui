@@ -22,6 +22,7 @@ describe("winner-event-mapper", () => {
           orderMinSize: 5,
           volumeNum: 42_000,
           oneDayPriceChange: 0.01,
+          liquidity: 8_000,
         },
         {
           groupItemTitle: "United States",
@@ -38,6 +39,8 @@ describe("winner-event-mapper", () => {
 
     assert.equal(patch.eventVolume, 1_000_000);
     assert.equal(patch.byTeamId.spain?.probability, 12);
+    assert.equal(patch.byTeamId.spain?.change24h, 1);
+    assert.equal(patch.byTeamId.spain?.liquidity, 8_000);
     assert.equal(patch.byTeamId.usa?.probability, 0.5);
     assert.equal(patch.byTeamId.spain?.polymarket?.tokens?.yes?.tokenId, "yes-spain");
     assert.equal(patch.byTeamId.usa?.volume, 10_000);

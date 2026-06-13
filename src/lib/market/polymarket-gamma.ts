@@ -41,8 +41,11 @@ export interface GammaEventRecord {
   startTime?: string;
   eventDate?: string;
   endDate?: string;
+  image?: string;
+  icon?: string;
   seriesSlug?: string;
   volume?: number | string;
+  volumeNum?: number | string;
   volume24hr?: number | string;
   liquidity?: number | string;
   active?: boolean;

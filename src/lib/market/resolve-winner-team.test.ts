@@ -16,6 +16,7 @@ describe("resolve-winner-team", () => {
     assert.equal(resolveWorldCupTeamByCuratedKey("Curaçao")?.id, "curacao");
     assert.equal(resolveWorldCupTeamByCuratedKey("Ivory Coast")?.id, "ivory-coast");
     assert.equal(resolveWorldCupTeamByCuratedKey("South Korea")?.id, "south-korea");
+    assert.equal(resolveWorldCupTeamByCuratedKey("south-korea")?.id, "south-korea");
     assert.equal(resolveWorldCupTeamByCuratedKey("Austria")?.id, "austria");
     assert.equal(resolveWorldCupTeamByCuratedKey("Algeria")?.id, "algeria");
     assert.notEqual(resolveWorldCupTeamByCuratedKey("Austria")?.id, "australia");
