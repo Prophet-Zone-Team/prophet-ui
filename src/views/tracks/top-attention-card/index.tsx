@@ -240,11 +240,7 @@ function TopAttentionTeamCard({
         attention={attentionLabel}
       />
 
-      <div
-        className="grid grid-cols-2 gap-2.5"
-        onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => event.stopPropagation()}
-      >
+      <div className="grid grid-cols-2 gap-2.5">
         <OutcomeQuickBidButton snapshot={snapshot} side="yes" />
         <OutcomeQuickBidButton snapshot={snapshot} side="no" />
       </div>
@@ -329,11 +325,7 @@ function TopAttentionMatchCard({
         attention={attentionLabel}
       />
 
-      <div
-        className="grid grid-cols-3 gap-2"
-        onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => event.stopPropagation()}
-      >
+      <div className="grid grid-cols-3 gap-2">
         {(["home", "draw", "away"] as const).map((outcomeSide) => (
           <MatchOutcomeQuickBidButton
             key={outcomeSide}
@@ -426,7 +418,6 @@ function MatchOutcomeQuickBidButton({
   matchLabel: string;
 }) {
   const t = useTranslations("tracks");
-  const router = useRouter();
   const auth = useAuthOptional();
   const setMatchOutcomeSide = useSetTradeMatchOutcomeSide();
   const isBuyRestricted = auth?.isBuyRestricted ?? false;
@@ -443,7 +434,6 @@ function MatchOutcomeQuickBidButton({
     }
 
     setMatchOutcomeSide(outcomeSide);
-    router.push(gameTradeHref(matchId));
   }
 
   const button = (
@@ -482,7 +472,6 @@ function OutcomeQuickBidButton({
   side: OrderOutcomeSide;
 }) {
   const t = useTranslations("tracks");
-  const router = useRouter();
   const auth = useAuthOptional();
   const syncTeamSnapshot = useSyncTradeTicketSnapshot();
   const setOutcomeSide = useSetTradeOutcomeSide();
@@ -506,7 +495,6 @@ function OutcomeQuickBidButton({
 
     syncTeamSnapshot(snapshot);
     setOutcomeSide(side);
-    router.push(teamTradeHref(snapshot.team.id));
   }
 
   const button = (
