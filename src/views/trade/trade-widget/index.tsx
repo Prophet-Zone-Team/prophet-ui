@@ -118,6 +118,7 @@ export function TradeWidget(
 
   return (
     <section
+      ref={bidAreaRef}
       className={cn(tradePanelClass, props.className)}
       aria-label={t("placeOrder")}
     >

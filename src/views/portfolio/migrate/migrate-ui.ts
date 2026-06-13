@@ -44,7 +44,7 @@ export const migrateMenuBannerClass = cn(
 );
 
 export const migrateDepositEntryClass = cn(
-  "relative flex h-[72px] w-full cursor-pointer items-center justify-between overflow-hidden",
+  "relative flex flex-col gap-2 h-[72px] w-full cursor-pointer items-center justify-center overflow-hidden",
   "rounded-[8px] px-4 text-left transition-opacity hover:opacity-90",
   "bg-[url('/migrate/bg-card-3.png')] bg-cover bg-center bg-no-repeat"
 );

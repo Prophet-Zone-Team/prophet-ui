@@ -88,6 +88,10 @@ export type TradingLoginStep =
 //       session = await createTradingSession(walletAddress, {
 //         onStep: options?.onStep,
 //       });
+//     } else if (session.depositWalletStatus !== "deployed") {
+//       await ensureDepositWalletDeployed(session.walletAddress, {
+//         onStep: options?.onStep,
+//       });
 //     }
 //   } catch (error) {
 //     await disconnectTradingSession().catch(() => undefined);

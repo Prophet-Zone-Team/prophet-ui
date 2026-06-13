@@ -26,6 +26,9 @@ importers:
       '@lucide/lab':
         specifier: ^0.1.2
         version: 0.1.2
+      '@noble/hashes':
+        specifier: ^2.2.0
+        version: 2.2.0
       '@polymarket/builder-abstract-signer':
         specifier: ^0.0.1
         version: 0.0.1(bufferutil@4.1.0)(utf-8-validate@6.0.6)(zod@4.4.3)

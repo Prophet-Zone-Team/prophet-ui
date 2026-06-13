@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyLinkIcon } from "@/components/icons";
+import { trackCopyLinkClicked } from "@/lib/analytics/tracking";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { teamTradeHref } from "@/lib/routes/trade";
@@ -181,6 +182,13 @@ export function TeamDetailHeader({
                 text={getPageUrl}
                 ariaLabel={t("copyPageLink")}
                 className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted hover:text-black"
+                onCopy={() =>
+                  trackCopyLinkClicked({
+                    target: "page_link",
+                    label: "Copy page link",
+                    entrySource: "team_detail_page"
+                  })
+                }
               >
                 <CopyLinkIcon />
               </CopyButton>

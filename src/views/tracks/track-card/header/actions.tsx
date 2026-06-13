@@ -94,7 +94,7 @@ function TrackCardTeamActions({ snapshot }: TrackCardTeamActionsProps) {
           })
         }
       >
-        Details
+        {t("details")}
       </Link>
     </div>
   );

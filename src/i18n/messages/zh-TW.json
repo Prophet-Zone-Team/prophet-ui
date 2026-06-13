@@ -487,7 +487,7 @@
       "migrateNow": "立即遷移",
       "v1Account": "V1 帳戶 (Polymarket)",
       "v2Account": "V2 帳戶 (Polymarket)",
-      "prophetAccount": "Prophet account",
+      "prophetAccount": "V3 account (Polymarket)",
       "depositEntryTitle": "從 V1 / V2 帳戶遷移",
       "depositEntrySubtitle": "在 {accountLabel} 中偵測到餘額",
       "menuEntrySubtitle": "從 V1/V2 遷移餘額",
