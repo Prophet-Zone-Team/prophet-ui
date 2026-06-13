@@ -4,6 +4,20 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Keep heavy Node/Web3 packages external in API routes and RSC to reduce dev compile memory.
+  serverExternalPackages: [
+    "@defuse-protocol/contract-types",
+    "@defuse-protocol/intents-sdk",
+    "@defuse-protocol/internal-utils",
+    "@defuse-protocol/one-click-sdk-typescript",
+    "@polymarket/builder-relayer-client",
+    "@polymarket/builder-signing-sdk",
+    "@polymarket/clob-client-v2",
+    "@stableflow/core",
+    "undici",
+    "viem",
+    "wagmi",
+  ],
   experimental: {
     webpackMemoryOptimizations: true,
     // Lower build parallelism to reduce peak memory on Cloudflare Workers Builds.
