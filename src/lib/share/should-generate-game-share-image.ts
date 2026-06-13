@@ -1,7 +1,5 @@
 import { isLocalhostHostname } from "@/lib/runtime/is-secure-app-context";
 
-import { isTwitterCrawler } from "./is-twitter-crawler";
-
 export const TWITTER_PREVIEW_PARAM = "twitterPreview";
 
 const WATCH_PROPHET_USER_AGENT_URL = "https://watch-prophet-user-agent.jimmygu.workers.dev";
@@ -20,26 +18,35 @@ export async function reportHeadersToWatcher(headers: Headers): Promise<void> {
   const host = headers.get("host") ?? "";
   const pageUrl = host ? `https://${host}/trade/game` : undefined;
 
-  const response = await fetch(`${WATCH_PROPHET_USER_AGENT_URL}/api/headers`, {
-    method: "POST",
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      headers: headersToRecord(headers),
-      meta: {
-        pageUrl,
-        timestamp: new Date().toISOString(),
+  try {
+    await fetch(`${WATCH_PROPHET_USER_AGENT_URL}/api/headers`, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
       },
-    }),
-  });
+      body: JSON.stringify({
+        headers: headersToRecord(headers),
+        meta: {
+          pageUrl,
+          timestamp: new Date().toISOString(),
+        },
+      }),
+    });
+  } catch (error) {
+    console.log("POST Watcher headers report failed", error);
+  }
 
-  if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    throw new Error(
-      `Watcher headers report failed (${response.status}): ${body}`,
-    );
+  try {
+    await fetch(`${WATCH_PROPHET_USER_AGENT_URL}/api/headers`, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    console.log("GET Watcher headers report failed", error);
   }
 }
 
@@ -49,12 +56,14 @@ export function shouldGenerateGameShareImage(
 ): boolean {
   const userAgent = headers.get("user-agent");
   const host = headers.get("host") ?? "";
+  const referer = headers.get("referer") ?? "";
   const hostname = host.split(":")[0] ?? "";
   const previewValue = Array.isArray(twitterPreview)
     ? twitterPreview[0]
     : twitterPreview;
 
-  if (isTwitterCrawler(userAgent)) {
+  const isTwitterCrawler = /Twitterbot/i.test(userAgent ?? "") || referer.includes("t.co");
+  if (isTwitterCrawler) {
     return true;
   }
 
