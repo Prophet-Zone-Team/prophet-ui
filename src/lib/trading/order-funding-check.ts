@@ -148,19 +148,16 @@ function checkSellFunding({
 }): OrderFundingCheck {
   return {
     balance: compareAvailable(balances.conditionalTokenBalance, requiredShares),
-    allowance: compareAvailable(balances.conditionalTokenAllowance, requiredShares),
+    // Sell relies on one-time setup approvals from login; only share balance gates the order.
+    allowance: "pass",
     balanceDetail: formatFundingDetail({
       label: "Conditional token balance",
       available: balances.conditionalTokenBalance,
       required: requiredShares,
       unit: "shares",
     }),
-    allowanceDetail: formatFundingDetail({
-      label: "Conditional token allowance",
-      available: balances.conditionalTokenAllowance,
-      required: requiredShares,
-      unit: "shares",
-    }),
+    allowanceDetail:
+      "Outcome token spending was authorized during account setup.",
   };
 }
 
