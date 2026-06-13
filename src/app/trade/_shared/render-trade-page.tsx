@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 
 import { buildFixtureMarketsSnapshot } from "@/lib/market/build-fixture-markets-snapshot";
@@ -12,11 +13,26 @@ import {
 } from "@/lib/market/polymarket-gamma-fetch";
 import type { GammaMarketRecord } from "@/lib/market/polymarket-gamma";
 import { mapGammaMarketToTeamSnapshot } from "@/lib/market/winner-event-mapper";
+import type { ProphetPolyMarketGameDetail } from "@/types/prophet-api";
+import type {
+  GameFixtureMarketsSnapshot,
+  GameMarketSnapshot,
+  WorldCupMatch,
+} from "@/types/market";
 import { getProphetGame } from "@/service/prophet";
 import TradeGameView from "@/views/trade/game";
 import TradeTeamView from "@/views/trade/team";
 
-export async function renderGameTradePage(slug: string) {
+export type GameTradeContext = {
+  slug: string;
+  match: WorldCupMatch;
+  gameSnapshot: GameMarketSnapshot;
+  fixtureMarkets: GameFixtureMarketsSnapshot;
+  siblingEventSlugs: ReturnType<typeof resolveProphetGameSiblingEventSlugs>;
+  tracked: ProphetPolyMarketGameDetail["tracked"];
+};
+
+export const loadGameTradeContext = cache(async (slug: string): Promise<GameTradeContext> => {
   let detail;
 
   try {
@@ -35,19 +51,28 @@ export async function renderGameTradePage(slug: string) {
     notFound();
   }
 
-  const siblingEventSlugs = resolveProphetGameSiblingEventSlugs(detail);
-  const gameSnapshot = buildGameMarketSnapshot(match, []);
-  const fixtureMarkets = buildFixtureMarketsSnapshot(match);
+  return {
+    slug,
+    match,
+    gameSnapshot: buildGameMarketSnapshot(match, []),
+    fixtureMarkets: buildFixtureMarketsSnapshot(match),
+    siblingEventSlugs: resolveProphetGameSiblingEventSlugs(detail),
+    tracked: detail.tracked,
+  };
+});
+
+export async function renderGameTradePage(slug: string) {
+  const context = await loadGameTradeContext(slug);
 
   return (
     <TradeGameView
       key={slug}
-      match={match}
+      match={context.match}
       snapshots={[]}
-      gameSnapshot={gameSnapshot}
-      fixtureMarkets={fixtureMarkets}
-      siblingEventSlugs={siblingEventSlugs}
-      tracked={detail.tracked}
+      gameSnapshot={context.gameSnapshot}
+      fixtureMarkets={context.fixtureMarkets}
+      siblingEventSlugs={context.siblingEventSlugs}
+      tracked={context.tracked}
     />
   );
 }
