@@ -30,10 +30,10 @@ const getCachedGameShareImageUrl = unstable_cache(
 
     return uploadShareImageServer(pngBuffer, filename);
   },
-  ["game-share-image-v7"],
+  ["game-share-image-v8"],
   {
     revalidate: CACHE_REVALIDATE_SECONDS,
-    tags: ["game-share-image-v7"],
+    tags: ["game-share-image-v8"],
   },
 );
 
@@ -44,7 +44,7 @@ export async function resolveGameShareImageUrl(
     return await getCachedGameShareImageUrl(context.slug);
   } catch (error) {
     console.error("[game-share-image] Failed to generate share image", error);
-    return null;
+    throw error;
   }
 }
 
