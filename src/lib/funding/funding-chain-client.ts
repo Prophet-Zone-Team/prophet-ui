@@ -1,7 +1,7 @@
-import { createPublicClient } from "viem";
+import { createPublicClient, fallback, http } from "viem";
 
 import { getFundingEvmChain } from "@/config/funding/evm-chains";
-import { getFundingRpcUrlFallback } from "@/config/funding/networks";
+import { getFundingRpcUrls, getSignedRpcHttpConfig } from "@/config/funding/networks";
 
 export type FundingPublicClient = ReturnType<typeof createPublicClient>;
 
@@ -20,9 +20,13 @@ export function getFundingPublicClient(chainId: number): FundingPublicClient {
     throw new Error(`No viem chain configured for funding chainId: ${chainId}`);
   }
 
+  const { rpcUrls, networkName } = getFundingRpcUrls(chainId);
+
   const client = createPublicClient({
     chain,
-    transport: getFundingRpcUrlFallback(chainId),
+    transport: fallback(
+      rpcUrls.map((rpc) => http(rpc, getSignedRpcHttpConfig(rpc, networkName))),
+    ),
   });
 
   clientCache.set(chainId, client);
