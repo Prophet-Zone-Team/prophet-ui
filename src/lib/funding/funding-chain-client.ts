@@ -1,7 +1,7 @@
-import { createPublicClient, http } from "viem";
+import { createPublicClient } from "viem";
 
 import { getFundingEvmChain } from "@/config/funding/evm-chains";
-import { getFundingRpcUrl } from "@/config/funding/networks";
+import { getFundingRpcUrlFallback } from "@/config/funding/networks";
 
 export type FundingPublicClient = ReturnType<typeof createPublicClient>;
 
@@ -22,7 +22,7 @@ export function getFundingPublicClient(chainId: number): FundingPublicClient {
 
   const client = createPublicClient({
     chain,
-    transport: http(getFundingRpcUrl(chainId)),
+    transport: getFundingRpcUrlFallback(chainId),
   });
 
   clientCache.set(chainId, client);

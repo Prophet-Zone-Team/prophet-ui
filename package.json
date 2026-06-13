@@ -22,6 +22,7 @@
     "@defuse-protocol/internal-utils": "^0.35.0",
     "@defuse-protocol/one-click-sdk-typescript": "^0.1.24",
     "@lucide/lab": "^0.1.2",
+    "@noble/hashes": "^2.2.0",
     "@polymarket/builder-abstract-signer": "^0.0.1",
     "@polymarket/builder-relayer-client": "^0.0.10",
     "@polymarket/builder-signing-sdk": "^0.0.8",
