@@ -19,31 +19,16 @@ export async function reportHeadersToWatcher(headers: Headers): Promise<void> {
   const pageUrl = host ? `https://${host}/trade/game` : undefined;
 
   try {
-    await fetch(`${WATCH_PROPHET_USER_AGENT_URL}/api/headers`, {
-      method: "POST",
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        headers: headersToRecord(headers),
-        meta: {
-          pageUrl,
-          timestamp: new Date().toISOString(),
-        },
-      }),
-    });
-  } catch (error) {
-    console.log("POST Watcher headers report failed", error);
-  }
+    const getUrl = new URL(`${WATCH_PROPHET_USER_AGENT_URL}/api/headers`);
+    getUrl.searchParams.set("headers", JSON.stringify(headersToRecord(headers)));
 
-  try {
-    await fetch(`${WATCH_PROPHET_USER_AGENT_URL}/api/headers`, {
+    if (pageUrl) {
+      getUrl.searchParams.set("pageUrl", pageUrl);
+    }
+
+    await fetch(getUrl.toString(), {
       method: "GET",
       cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
   } catch (error) {
     console.log("GET Watcher headers report failed", error);
