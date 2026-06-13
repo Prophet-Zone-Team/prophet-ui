@@ -27,6 +27,9 @@ export interface GammaMarketRecord {
   priceChange7d?: number | string;
   sportsMarketType?: string;
   groupItemTitle?: string;
+  icon?: string;
+  image?: string;
+  events?: GammaEventRecord[];
   updatedAt?: string;
   createdAt?: string;
 }
@@ -55,6 +58,7 @@ export interface GammaEventRecord {
   period?: string;
   elapsed?: string;
   gameStatus?: string;
+  gameId?: string | number;
   markets?: GammaMarketRecord[];
   tags?: Array<{ id?: string | number; label?: string; slug?: string }>;
   series?: Array<{ id?: string | number; title?: string; slug?: string }>;
