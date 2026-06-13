@@ -852,7 +852,21 @@
     "specialMatchWinProbabilitiesAria": "Win probabilities {homePct} home, {drawPct} draw, {awayPct} away",
     "matchOutcomeWin": "Win",
     "matchOutcomeLose": "Lose",
-    "matchOutcomeDraw": "Draw"
+    "matchOutcomeDraw": "Draw",
+    "groups": "Groups",
+    "groupLabel": "Group {group}",
+    "groupStandingsAria": "Group standings",
+    "loadingGroupStandingsAria": "Loading group standings",
+    "noGroupsMatchSearch": "No groups match your search.",
+    "noGroupStandingsAvailable": "Group standings are not available yet.",
+    "unableToLoadGroupStandings": "Unable to load group standings.",
+    "statPlayed": "Played",
+    "statWins": "Wins",
+    "statDraws": "Draws",
+    "statLosses": "Losses",
+    "statPoints": "Points",
+    "advancing": "Advancing",
+    "groupStandingsTableAria": "{groupLabel} standings"
   },
   "teams": {
     "teamDirectory": "Team directory",

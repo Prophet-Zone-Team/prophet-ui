@@ -852,7 +852,21 @@
     "specialMatchWinProbabilitiesAria": "Probabilidades de victoria {homePct} local, {drawPct} empate, {awayPct} visitante",
     "matchOutcomeWin": "Victoria",
     "matchOutcomeLose": "Derrota",
-    "matchOutcomeDraw": "Empate"
+    "matchOutcomeDraw": "Empate",
+    "groups": "Grupos",
+    "groupLabel": "Grupo {group}",
+    "groupStandingsAria": "Clasificación por grupos",
+    "loadingGroupStandingsAria": "Cargando clasificación por grupos",
+    "noGroupsMatchSearch": "Ningún grupo coincide con tu búsqueda.",
+    "noGroupStandingsAvailable": "La clasificación por grupos aún no está disponible.",
+    "unableToLoadGroupStandings": "No se pudo cargar la clasificación por grupos.",
+    "statPlayed": "Jugados",
+    "statWins": "Ganados",
+    "statDraws": "Empates",
+    "statLosses": "Perdidos",
+    "statPoints": "Puntos",
+    "advancing": "Prob. de avance",
+    "groupStandingsTableAria": "Clasificación de {groupLabel}"
   },
   "teams": {
     "teamDirectory": "Team directory",

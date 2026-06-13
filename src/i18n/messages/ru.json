@@ -852,7 +852,21 @@
     "specialMatchWinProbabilitiesAria": "Вероятности победы {homePct} дома, {drawPct} ничья, {awayPct} в гостях",
     "matchOutcomeWin": "Победа",
     "matchOutcomeLose": "Поражение",
-    "matchOutcomeDraw": "Ничья"
+    "matchOutcomeDraw": "Ничья",
+    "groups": "Группы",
+    "groupLabel": "Группа {group}",
+    "groupStandingsAria": "Турнирная таблица групп",
+    "loadingGroupStandingsAria": "Загрузка турнирной таблицы групп",
+    "noGroupsMatchSearch": "Нет групп, соответствующих вашему поиску.",
+    "noGroupStandingsAvailable": "Турнирная таблица групп пока недоступна.",
+    "unableToLoadGroupStandings": "Не удалось загрузить турнирную таблицу групп.",
+    "statPlayed": "И",
+    "statWins": "В",
+    "statDraws": "Н",
+    "statLosses": "П",
+    "statPoints": "О",
+    "advancing": "Вероятность выхода",
+    "groupStandingsTableAria": "Таблица {groupLabel}"
   },
   "teams": {
     "teamDirectory": "Team directory",

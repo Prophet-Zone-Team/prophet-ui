@@ -21,6 +21,7 @@ import type {
   ProphetGetHeadToHeadFixturesData,
   ProphetGetGameStatisticsData,
   ProphetGetGameOddsData,
+  ProphetGetGroupStandingsData,
   ProphetGameStatisticsPayload,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
@@ -370,6 +371,17 @@ function parseGameStatisticsPayload(
       "Unable to parse game statistics response."
     );
   }
+}
+
+/** GET /v1/game/group-standings — group stage standings with market prices */
+export async function getProphetGroupStandings(params?: {
+  group_code?: string;
+  signal?: AbortSignal;
+}): Promise<ProphetGetGroupStandingsData> {
+  return prophetGet<ProphetGetGroupStandingsData>("/v1/game/group-standings", {
+    params: params?.group_code ? { group_code: params.group_code } : undefined,
+    signal: params?.signal
+  });
 }
 
 /** GET /v1/game/odds — bookmaker odds by market category */
