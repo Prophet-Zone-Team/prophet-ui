@@ -401,6 +401,17 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   );
 
   const sellPosition = input.sellPosition;
+  const inputVariant = input.variant;
+  const teamSnapshot = input.variant === "team" ? input.snapshot : undefined;
+  const teamSnapshotSellKey = teamSnapshot
+    ? [
+        teamSnapshot.team.id,
+        teamSnapshot.market.polymarket?.tokens.yes?.tokenId,
+        teamSnapshot.market.polymarket?.tokens.no?.tokenId
+      ].join("|")
+    : null;
+  const sellPositionAsset = sellPosition?.asset;
+  const sellPositionSize = sellPosition?.size;
 
   const maxSellShares = useMemo(() => {
     if (tradeSide !== "sell") {
@@ -887,11 +898,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   useEffect(() => {
     if (sellPosition && tradeSide === "sell") {
-      if (input.variant === "team") {
-        const side = resolveOutcomeSideForPosition(
-          sellPosition,
-          input.snapshot
-        );
+      if (inputVariant === "team" && teamSnapshot) {
+        const side = resolveOutcomeSideForPosition(sellPosition, teamSnapshot);
         const nextShares = {
           yes: side === "yes" ? sellPosition.size : 0,
           no: side === "no" ? sellPosition.size : 0
@@ -929,11 +937,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       void refreshOutcomeShares();
     }
   }, [
-    input,
+    inputVariant,
+    teamSnapshotSellKey,
     isAuthenticated,
     outcomeSide,
     refreshOutcomeShares,
-    sellPosition,
+    sellPositionAsset,
+    sellPositionSize,
     tradeSide
   ]);
 
@@ -980,10 +990,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
     setMessage(undefined);
 
+    const latestReadiness = (await refreshOrderReadiness()) ?? readiness;
+
     const gate = await ensureTradingReadyForBid({
       session,
       authReadiness,
-      orderReadiness: readiness,
+      orderReadiness: latestReadiness,
       previewCanSubmit,
       previewDisabledReason: preview.disabledReason,
       tradeSide,

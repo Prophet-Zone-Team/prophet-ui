@@ -1,10 +1,9 @@
 "use client";
 
-
 import {
   disconnectTradingSession,
   loadTradingSession,
-  storeConnectedWalletConnector,
+  storeConnectedWalletConnector
 } from "@/components/trading/trading-wallet-session";
 import { getAccount } from "wagmi/actions";
 
@@ -19,20 +18,20 @@ import { deriveTradingCredentials } from "@/lib/trading/clob-credentials-client"
 import {
   deployDepositWallet,
   fetchDepositWalletStatus,
-  pollDepositWalletUntilDeployed,
+  pollDepositWalletUntilDeployed
 } from "@/lib/trading/deposit-wallet-client";
 import { submitDepositWalletApproval } from "@/lib/trading/deposit-wallet-approval";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
 import {
   fetchTradingBalancesWithOnchain,
-  fetchTradingReadinessWithOnchain,
+  fetchTradingReadinessWithOnchain
 } from "@/lib/trading/trading-balances-client";
 import { isSetupStepComplete } from "@/lib/trading/trading-setup";
 import { ensureTradingChain } from "@/lib/trading/wallet-trading-chain";
 import type {
   DepositWalletCheckResponse,
   TradingUserSession,
-  UserTradingReadiness,
+  UserTradingReadiness
 } from "@/types/market";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
 
@@ -105,7 +104,7 @@ export async function ensureDepositWalletDeployed(
   walletAddress: string,
   options?: {
     onStep?: (step: TradingLoginStep) => void;
-  },
+  }
 ): Promise<DepositWalletCheckResponse> {
   options?.onStep?.("checking_wallet_deployment");
 
@@ -126,17 +125,23 @@ export async function ensureDepositWalletDeployed(
       walletAddress: deployResult.walletAddress,
       deployed: true,
       status: "deployed",
-      checkedAt: deployResult.checkedAt,
+      checkedAt: deployResult.checkedAt
     };
   }
 
-  if (deployResult.status === "relayer_unconfigured" || deployResult.status === "error") {
-    throw new Error(deployResult.error ?? "Unable to deploy Polymarket deposit wallet.");
+  if (
+    deployResult.status === "relayer_unconfigured" ||
+    deployResult.status === "error"
+  ) {
+    throw new Error(
+      deployResult.error ?? "Unable to deploy Polymarket deposit wallet."
+    );
   }
 
   if (deployResult.status !== "deploying") {
     throw new Error(
-      deployResult.error ?? `Unexpected deposit wallet status: ${deployResult.status}.`,
+      deployResult.error ??
+        `Unexpected deposit wallet status: ${deployResult.status}.`
     );
   }
 
@@ -147,17 +152,17 @@ export async function signClobCredentials(
   session: TradingUserSession,
   options?: {
     onStep?: (step: TradingLoginStep) => void;
-  },
+  }
 ) {
   await ensureTradingChain(session.walletAddress, {
     onChecking: () => options?.onStep?.("checking_trading_chain"),
-    onSwitching: () => options?.onStep?.("switching_trading_chain"),
+    onSwitching: () => options?.onStep?.("switching_trading_chain")
   });
 
   await deriveTradingCredentials(session, {
     onChecking: () => options?.onStep?.("checking_clob_credentials"),
     onAwaitingSignature: () => options?.onStep?.("awaiting_clob_signature"),
-    onDeriving: () => options?.onStep?.("deriving_credentials"),
+    onDeriving: () => options?.onStep?.("deriving_credentials")
   });
 }
 
@@ -165,7 +170,7 @@ export async function ensureClobCredentials(
   session: TradingUserSession,
   options?: {
     onStep?: (step: TradingLoginStep) => void;
-  },
+  }
 ): Promise<UserTradingReadiness> {
   options?.onStep?.("checking_clob_credentials");
 
@@ -185,14 +190,14 @@ export async function signTokenApprovals(
   options?: {
     onStep?: (step: TradingLoginStep) => void;
     onStatus?: (message: string) => void;
-  },
+  }
 ) {
   options?.onStep?.("awaiting_token_approval_signature");
   await submitDepositWalletApproval(session, {
     onStatus: (message) => {
       options?.onStatus?.(message);
       options?.onStep?.("submitting_token_approval");
-    },
+    }
   });
 }
 
@@ -201,7 +206,7 @@ export async function ensureTokenApprovals(
   options?: {
     onStep?: (step: TradingLoginStep) => void;
     onStatus?: (message: string) => void;
-  },
+  }
 ): Promise<UserTradingReadiness> {
   options?.onStep?.("checking_token_approval");
 
@@ -229,7 +234,7 @@ export async function fetchTradingBalances() {
 export async function fetchTradingReadinessWithBalances() {
   const [setup, balances] = await Promise.all([
     fetchTradingReadiness(),
-    fetchTradingBalances().catch(() => undefined),
+    fetchTradingBalances().catch(() => undefined)
   ]);
 
   return mergeTradingReadiness(setup, balances);
@@ -295,17 +300,17 @@ export async function createTradingSession(
   walletAddress: string,
   options?: {
     onStep?: (step: TradingLoginStep) => void;
-  },
+  }
 ): Promise<TradingUserSession> {
   const challengeResponse = await fetch("/api/trading/session", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
       mode: "challenge",
-      walletAddress,
-    }),
+      walletAddress
+    })
   });
   const challengePayload = (await challengeResponse.json()) as {
     challenge?: TradingSessionChallenge;
@@ -314,7 +319,7 @@ export async function createTradingSession(
 
   if (!challengeResponse.ok || !challengePayload.challenge) {
     throw new Error(
-      challengePayload.error ?? "Unable to create a trading session challenge.",
+      challengePayload.error ?? "Unable to create a trading session challenge."
     );
   }
 
@@ -325,7 +330,7 @@ export async function createTradingSession(
   try {
     signature = await signMessageWithWallet(
       walletAddress,
-      challengePayload.challenge.message,
+      challengePayload.challenge.message
     );
   } catch (error) {
     throw new Error(resolveWalletErrorMessage(error));
@@ -336,15 +341,15 @@ export async function createTradingSession(
   const response = await fetch("/api/trading/session", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
       mode: "create",
       walletAddress,
       token: challengePayload.challenge.token,
       signature,
-      signatureType: DEFAULT_SIGNATURE_TYPE,
-    }),
+      signatureType: DEFAULT_SIGNATURE_TYPE
+    })
   });
   const payload = (await response.json()) as {
     session?: TradingUserSession;
@@ -360,7 +365,7 @@ export async function createTradingSession(
   if (connected.connector?.id) {
     storeConnectedWalletConnector(
       payload.session.walletAddress,
-      connected.connector.id,
+      connected.connector.id
     );
   } else {
     // Privy embedded wallets are not registered as wagmi connectors.
