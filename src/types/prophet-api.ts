@@ -10,6 +10,13 @@ export interface ProphetUploadData {
   url: string;
 }
 
+/** GET /v1/polymarket/stats — aggregate World Cup market stats */
+export interface ProphetGetPolymarketStatsData {
+  volume?: string;
+  oneDayPriceChange?: string;
+  oneDayPriceChangeTeam?: string;
+}
+
 export interface ProphetPolyMarketTeam {
   logo?: string;
   name?: string;
