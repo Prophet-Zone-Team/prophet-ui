@@ -12,7 +12,6 @@ import {
   resolveGameShareTitle,
 } from "@/lib/share/resolve-game-share-image-url";
 import {
-  reportHeadersToWatcher,
   shouldGenerateGameShareImage,
   TWITTER_PREVIEW_PARAM,
 } from "@/lib/share/should-generate-game-share-image";
@@ -37,16 +36,14 @@ export async function generateMetadata({
 
   const headersList = await headers();
 
-  await reportHeadersToWatcher(headersList);
-
-  // if (
-  //   !shouldGenerateGameShareImage(
-  //     headersList,
-  //     params[TWITTER_PREVIEW_PARAM],
-  //   )
-  // ) {
-  //   return {};
-  // }
+  if (
+    !shouldGenerateGameShareImage(
+      headersList,
+      params[TWITTER_PREVIEW_PARAM],
+    )
+  ) {
+    return {};
+  }
 
   try {
     const context = await loadGameTradeContext(slug);

@@ -10,8 +10,10 @@ export const marketQueryKeys = {
     ["market", "zetta-smart-wallets", slug] as const,
   teamGameResults: (teamName: string) =>
     ["market", "team-game-results", teamName] as const,
+  teamLineup: (teamName: string) =>
+    ["market", "team-lineup", teamName] as const,
   groupMatches: (groupCode: string) =>
     ["market", "group-matches", groupCode] as const,
   groupWinner: (groupCode: string) =>
-    ["market", "group-winner", groupCode] as const,
+    ["market", "group-winner", groupCode] as const
 };

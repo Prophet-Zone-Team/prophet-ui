@@ -84,6 +84,29 @@ export interface ProphetGetTeamGameResultsData {
   list: ProphetTeamGameResult[] | null;
 }
 
+/** GET /v1/team/lineup — World Cup team starting lineup */
+export interface ProphetTeamLineupPlayer {
+  id: number;
+  name: string;
+  number: number;
+  pos: string;
+  grid: string;
+}
+
+export interface ProphetTeamLineupStartXI {
+  player: ProphetTeamLineupPlayer;
+}
+
+export interface ProphetWorldCupTeamLineup {
+  team_id: number;
+  team_name: string;
+  match_time: number;
+  formation: string;
+  startXIs: ProphetTeamLineupStartXI[];
+}
+
+export type ProphetGetTeamLineupData = ProphetWorldCupTeamLineup[];
+
 /** GET /v1/teams-condition — team(s) per Polymarket condition id */
 export interface ProphetTeamsConditionTeam {
   id?: number;
