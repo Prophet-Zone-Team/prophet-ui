@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { resolveSessionCookiePolicy } from "@/lib/cors/session-cookie-policy";
 import {
   deriveUserClobCredentials,
   getFreshClobAuthTypedData,
@@ -168,6 +169,7 @@ export async function POST(request: Request) {
             userId: record.session.userId,
             sessionId: record.session.sessionId,
             credentials: storedCredentials,
+            policy: resolveSessionCookiePolicy(request),
           }),
         },
       },

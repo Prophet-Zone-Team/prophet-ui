@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { resolveSessionCookiePolicy } from "@/lib/cors/session-cookie-policy";
 import {
   checkTradingEligibility,
   getClientGeoFromRequest,
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          "Set-Cookie": createTradingSessionCookie(session),
+          "Set-Cookie": createTradingSessionCookie(session, resolveSessionCookiePolicy(request)),
         },
       },
     );

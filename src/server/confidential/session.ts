@@ -3,6 +3,7 @@ import "server-only";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
 
 import { MAIN_DOMAIN } from "@/config/funding";
+import type { SessionCookiePolicy } from "@/lib/cors/session-cookie-policy";
 
 import { verifyAccessTokenIdentity } from "./auth";
 import { refreshOneClickToken } from "./one-click-client";
@@ -27,38 +28,52 @@ export interface ConfidentialSession {
 export function createConfidentialSessionCookie(
   session: ConfidentialSession,
   host: string | null,
+  policy?: SessionCookiePolicy,
 ): string {
   const payload = encryptCookiePayload(session);
-  const domain = computeCookieDomain(host);
 
-  const parts = [
+  return buildConfidentialCookieParts(
     `${CONFIDENTIAL_SESSION_COOKIE_NAME}=${encodeURIComponent(payload)}`,
-    "Path=/",
-    "HttpOnly",
-    "SameSite=Lax",
-    `Max-Age=${SESSION_MAX_AGE_SECONDS}`,
-  ];
-
-  if (domain) {
-    parts.push(`Domain=${domain}`);
-    parts.push("Secure");
-  }
-
-  return parts.join("; ");
+    String(SESSION_MAX_AGE_SECONDS),
+    host,
+    policy,
+  );
 }
 
-export function clearConfidentialSessionCookie(host: string | null): string {
-  const domain = computeCookieDomain(host);
-  const parts = [
+export function clearConfidentialSessionCookie(
+  host: string | null,
+  policy?: SessionCookiePolicy,
+): string {
+  return buildConfidentialCookieParts(
     `${CONFIDENTIAL_SESSION_COOKIE_NAME}=`,
-    "Path=/",
-    "HttpOnly",
-    "SameSite=Lax",
-    "Max-Age=0",
-  ];
+    "0",
+    host,
+    policy,
+  );
+}
+
+function buildConfidentialCookieParts(
+  nameValue: string,
+  maxAge: string,
+  host: string | null,
+  policy?: SessionCookiePolicy,
+): string {
+  const domain = computeCookieDomain(host);
+  const resolvedPolicy: SessionCookiePolicy = policy ?? { sameSite: "Lax", secure: false };
+  const needsSecure =
+    resolvedPolicy.secure ||
+    resolvedPolicy.sameSite === "None" ||
+    Boolean(domain);
+
+  const parts = [nameValue, "Path=/", "HttpOnly", `Max-Age=${maxAge}`];
 
   if (domain) {
     parts.push(`Domain=${domain}`);
+  }
+
+  parts.push(`SameSite=${resolvedPolicy.sameSite}`);
+
+  if (needsSecure) {
     parts.push("Secure");
   }
 

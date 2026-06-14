@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { resolveSessionCookiePolicy } from "@/lib/cors/session-cookie-policy";
 import { verifyAccessTokenIdentity } from "@/server/confidential/auth";
 import { isMatchingIntentsUserId } from "@/server/confidential/intents-user-id";
 import {
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const host = request.headers.get("host");
+  const cookiePolicy = resolveSessionCookiePolicy(request);
   const session = getConfidentialSessionFromCookie(request.headers.get("cookie"));
 
   if (!session) {
@@ -23,7 +25,7 @@ export async function GET(request: Request) {
   // Tamper check: the cookie's intentsUserId must re-derive from its EOA.
   if (!isMatchingIntentsUserId(session.eoaAddress, session.intentsUserId)) {
     const response = NextResponse.json({ authenticated: false });
-    response.headers.set("Set-Cookie", clearConfidentialSessionCookie(host));
+    response.headers.set("Set-Cookie", clearConfidentialSessionCookie(host, cookiePolicy));
     return response;
   }
 
@@ -33,7 +35,7 @@ export async function GET(request: Request) {
 
     if (!identity) {
       const response = NextResponse.json({ authenticated: false });
-      response.headers.set("Set-Cookie", clearConfidentialSessionCookie(host));
+      response.headers.set("Set-Cookie", clearConfidentialSessionCookie(host, cookiePolicy));
       return response;
     }
 
@@ -44,19 +46,26 @@ export async function GET(request: Request) {
     });
 
     if (refreshed) {
-      response.headers.set("Set-Cookie", createConfidentialSessionCookie(validSession, host));
+      response.headers.set(
+        "Set-Cookie",
+        createConfidentialSessionCookie(validSession, host, cookiePolicy),
+      );
     }
 
     return response;
   } catch {
     const response = NextResponse.json({ authenticated: false });
-    response.headers.set("Set-Cookie", clearConfidentialSessionCookie(host));
+    response.headers.set("Set-Cookie", clearConfidentialSessionCookie(host, cookiePolicy));
     return response;
   }
 }
 
 export async function DELETE(request: Request) {
+  const cookiePolicy = resolveSessionCookiePolicy(request);
   const response = NextResponse.json({ ok: true });
-  response.headers.set("Set-Cookie", clearConfidentialSessionCookie(request.headers.get("host")));
+  response.headers.set(
+    "Set-Cookie",
+    clearConfidentialSessionCookie(request.headers.get("host"), cookiePolicy),
+  );
   return response;
 }

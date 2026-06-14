@@ -2,6 +2,7 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 
+import { resolveSessionCookiePolicy, type SessionCookiePolicy } from "@/lib/cors/session-cookie-policy";
 import { isMatchingIntentsUserId } from "./intents-user-id";
 import {
   clearConfidentialSessionCookie,
@@ -16,6 +17,7 @@ export interface ConfidentialAccess {
   accessToken: string;
   refreshed: boolean;
   host: string | null;
+  cookiePolicy: SessionCookiePolicy;
 }
 
 export type ConfidentialAccessResult =
@@ -31,6 +33,7 @@ export async function requireConfidentialAccess(
   request: Request,
 ): Promise<ConfidentialAccessResult> {
   const host = request.headers.get("host");
+  const cookiePolicy = resolveSessionCookiePolicy(request);
   const session = getConfidentialSessionFromCookie(request.headers.get("cookie"));
 
   if (!session) {
@@ -45,7 +48,7 @@ export async function requireConfidentialAccess(
       { error: "Confidential session failed verification." },
       { status: 401 },
     );
-    response.headers.set("Set-Cookie", clearConfidentialSessionCookie(host));
+    response.headers.set("Set-Cookie", clearConfidentialSessionCookie(host, cookiePolicy));
     return { ok: false, response };
   }
 
@@ -53,14 +56,14 @@ export async function requireConfidentialAccess(
     const { accessToken, session: validSession, refreshed } = await getValidAccessToken(session);
     return {
       ok: true,
-      access: { session: validSession, accessToken, refreshed, host },
+      access: { session: validSession, accessToken, refreshed, host, cookiePolicy },
     };
   } catch {
     const response = NextResponse.json(
       { error: "Confidential session expired. Re-authenticate from the main site." },
       { status: 401 },
     );
-    response.headers.set("Set-Cookie", clearConfidentialSessionCookie(host));
+    response.headers.set("Set-Cookie", clearConfidentialSessionCookie(host, cookiePolicy));
     return { ok: false, response };
   }
 }
@@ -70,7 +73,7 @@ export function applyRefreshedCookie(response: NextResponse, access: Confidentia
   if (access.refreshed) {
     response.headers.set(
       "Set-Cookie",
-      createConfidentialSessionCookie(access.session, access.host),
+      createConfidentialSessionCookie(access.session, access.host, access.cookiePolicy),
     );
   }
 

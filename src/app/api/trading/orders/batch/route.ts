@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { resolveSessionCookiePolicy } from "@/lib/cors/session-cookie-policy";
 import { isMarketOrderType } from "@/lib/market/order-math";
 import {
   checkOrderFunding,
@@ -298,7 +299,7 @@ export async function POST(request: Request) {
       },
       {
         headers: {
-          "Set-Cookie": createTradingSessionCookie(eligibility)
+          "Set-Cookie": createTradingSessionCookie(eligibility, resolveSessionCookiePolicy(request))
         }
       }
     );
