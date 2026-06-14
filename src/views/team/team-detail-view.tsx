@@ -7,7 +7,6 @@ import type { MarketDataMeta } from "@/data/providers/types";
 import { useAnalyticsTeamMarketNews } from "@/hooks/analytics/use-analytics-team-market-news";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useTeamDetail } from "@/hooks/team/use-team-detail";
-import { useTeamLineup } from "@/hooks/team/use-team-lineup";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import { TeamDetailFootnote } from "@/views/team/team-detail-footnote";
@@ -15,6 +14,7 @@ import { TeamDetailHeader } from "@/views/team/team-detail-header";
 import { TeamDetailBodySkeleton } from "@/views/team/team-detail-loading";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import { TeamKeyPlayersPanel } from "@/views/team/team-key-players-panel";
+import { TeamLineupPanel } from "@/views/team/team-lineup-panel";
 import { TeamMarketIntelligencePanel } from "@/views/team/team-market-intelligence-panel";
 import { TeamNewsSignalsPanel } from "@/views/team/team-news-signals-panel";
 import { TeamNextMatchPanel } from "@/views/team/team-next-match-panel";
@@ -32,8 +32,6 @@ export interface TeamDetailViewProps {
 export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
   const t = useTranslations("teamDetail");
   const { data, isLoading, isError, refetch } = useTeamDetail(snapshot.team.name);
-  const pageReady = !(isLoading && !data);
-  const lineup = useTeamLineup(snapshot.team.name, pageReady);
   const marketNews = useAnalyticsTeamMarketNews(snapshot.team.name);
   const teamDisplayName = useLocalizedTeamName(
     snapshot.team.code,
@@ -99,10 +97,8 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
               />
               <TeamProbabilityPanel snapshot={snapshot} />
               <div className="grid gird-cols-1 gap-4 col-span-2">
-                <TeamKeyPlayersPanel
-                  players={lineup.players}
-                  isLoading={lineup.isLoading}
-                />
+                <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
+                <TeamLineupPanel teamName={snapshot.team.name} />
                 <TeamNewsSignalsPanel
                   items={marketNews.newsItems}
                   snapshot={snapshot}

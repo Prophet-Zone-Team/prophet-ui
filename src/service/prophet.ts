@@ -465,7 +465,7 @@ export async function getProphetTeamGameResults(params: {
   });
 }
 
-/** GET /v1/team/lineup — World Cup team starting lineup by name */
+/** GET /v1/team/lineup — expected starting XI for a team by name */
 export async function getProphetTeamLineup(params: {
   team_name: string;
 }): Promise<ProphetGetTeamLineupData> {

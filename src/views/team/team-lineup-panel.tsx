@@ -1,17 +1,14 @@
 "use client";
 
+import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
-import type {
-  ApiFootballDataIssue,
-  ApiFootballInjuryContext,
-  ApiFootballSquadPlayer
-} from "@/types/market";
+import { useTeamLineup } from "@/hooks/team/use-team-lineup";
 import {
-  getInitials,
-  getLineupPlayers,
-  shortenName
-} from "@/lib/team/team-detail-model";
+  buildLineupPlacementMap,
+  type TeamLineupPlayerView
+} from "@/lib/team/map-team-lineup";
+import { getInitials, shortenName } from "@/lib/team/team-detail-model";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import {
   teamPanelClass,
@@ -19,147 +16,78 @@ import {
   teamPanelTitleClass
 } from "@/views/team/team-detail-ui";
 
-
 export interface TeamLineupPanelProps {
-  squad: ApiFootballSquadPlayer[];
-  injuries: ApiFootballInjuryContext[];
-  dataIssues: ApiFootballDataIssue[];
+  teamName: string;
 }
 
-function PlayerAvatar({ player }: { player: ApiFootballSquadPlayer }) {
-  if (player.photoUrl) {
-    return (
-      <img
-        src={player.photoUrl}
-        alt={player.name}
-        className="mx-auto size-8 rounded-full object-cover"
-      />
-    );
-  }
-
+function PlayerAvatar({ player }: { player: TeamLineupPlayerView }) {
   return (
     <span className="mx-auto flex size-8 items-center justify-center rounded-full bg-white/90 text-[9px] font-[500] text-[#125afc]">
-      {getInitials(player.name)}
+      {player.number ?? getInitials(player.name)}
     </span>
   );
 }
 
-function MiniPlayerRow({
-  player,
-  positionFallback
-}: {
-  player: ApiFootballSquadPlayer;
-  positionFallback: string;
-}) {
+function LineupPitchSkeleton() {
   return (
-    <div className="flex items-center gap-2 rounded-md border border-prophet-line px-2 py-1.5 text-xs">
-      <span className="w-5 text-prophet-muted">{player.number ?? "-"}</span>
-      <strong className="min-w-0 flex-1 truncate font-[500] text-black">
-        {player.name}
-      </strong>
-      <small className="text-prophet-muted">
-        {player.position ?? positionFallback}
-      </small>
-    </div>
+    <div
+      className="min-h-[280px] animate-pulse rounded-xl border border-[#65af14]/40 bg-[#ebebeb]/50"
+      aria-hidden
+    />
   );
 }
 
-export function TeamLineupPanel({
-  squad,
-  injuries,
-  dataIssues: _dataIssues
-}: TeamLineupPanelProps) {
+export function TeamLineupPanel({ teamName }: TeamLineupPanelProps) {
   const t = useTranslations("teamDetail");
-  const starters = getLineupPlayers(squad);
-  const bench = squad
-    .filter(
-      (player) =>
-        !starters.some((starter) => starter.playerId === player.playerId)
-    )
-    .slice(0, 7);
-  const hasSquad = squad.length > 0;
+  const { lineup, isLoading } = useTeamLineup(teamName);
+  const hasStarters = (lineup?.starters.length ?? 0) > 0;
+  const placementByPlayerId = useMemo(
+    () => buildLineupPlacementMap(lineup?.starters ?? []),
+    [lineup?.starters]
+  );
 
   return (
     <section className={teamPanelClass} aria-label={t("startingXIAria")}>
       <div className={teamPanelHeadClass}>
-        <h2 className={teamPanelTitleClass}>{t("expectedStartingXI")}</h2>
+        <div className="flex min-w-0 items-baseline gap-2">
+          <h2 className={teamPanelTitleClass}>{t("expectedStartingXI")}</h2>
+          {lineup?.formation ? (
+            <span className="text-xs text-prophet-muted">
+              {lineup.formation}
+            </span>
+          ) : null}
+        </div>
       </div>
-      <div className="p-4">
-        {hasSquad ? (
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(200px,0.8fr)]">
-            <div className="relative min-h-[280px] rounded-xl border border-[#65af14]/40 bg-gradient-to-b from-[#e8f5e0] to-[#d4edc4] p-3">
-              <div className="grid h-full grid-cols-3 grid-rows-5 gap-1">
-                {Array.from({ length: 11 }, (_, index) => {
-                  const player = starters[index];
+      <div className="p-4 bg-gradient-to-b from-[#e8f5e0] to-[#d4edc4]">
+        {isLoading ? (
+          <LineupPitchSkeleton />
+        ) : hasStarters && lineup ? (
+          <div className="w-[700px] mx-auto relative min-h-[280px] rounded-xl p-3">
+            {lineup.starters.map((player) => {
+              const positionStyle = placementByPlayerId.get(player.playerId);
 
-                  if (!player) {
-                    return <div key={`empty-${index}`} />;
+              return (
+                <div
+                  key={player.playerId}
+                  className={
+                    positionStyle
+                      ? "absolute flex w-[96px] -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center"
+                      : "flex flex-col items-center justify-center text-center"
                   }
-
-                  return (
-                    <div
-                      key={player.playerId}
-                      className="flex flex-col items-center justify-center text-center"
-                    >
-                      <PlayerAvatar player={player} />
-                      <strong className="mt-1 max-w-[72px] truncate text-[10px] font-[500] text-black">
-                        {shortenName(player.name)}
-                      </strong>
-                      <span className="text-[9px] text-prophet-muted">
-                        {player.position ?? t("player")}
+                  style={positionStyle}
+                >
+                  <PlayerAvatar player={player} />
+                  <strong className="mt-1 max-w-[96px] truncate text-[10px] font-[500] text-black">
+                    {shortenName(player.name)}
+                    {player.position ? (
+                      <span className="ml-1 font-[400] text-prophet-muted">
+                        {player.position}
                       </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="grid gap-3">
-              <div>
-                <h3 className="m-0 mb-2 text-sm font-[500] text-black">
-                  {t("bench")}
-                </h3>
-                {bench.length > 0 ? (
-                  <div className="grid gap-1.5">
-                    {bench.map((player) => (
-                      <MiniPlayerRow
-                        key={player.playerId}
-                        player={player}
-                        positionFallback={t("player")}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="m-0 text-xs text-prophet-muted">
-                    {t("noBenchPlayers")}
-                  </p>
-                )}
-              </div>
-              <div>
-                <h3 className="m-0 mb-2 text-sm font-[500] text-black">
-                  {t("doubtfulOut")}
-                </h3>
-                {injuries.length > 0 ? (
-                  <div className="grid gap-1.5">
-                    {injuries.slice(0, 4).map((injury) => (
-                      <div
-                        key={`${injury.playerName}-${injury.reason ?? "injury"}`}
-                        className="flex items-center justify-between gap-2 rounded-md border border-prophet-red/30 bg-[#fff4f6] px-2 py-1.5 text-xs"
-                      >
-                        <span>{injury.playerName}</span>
-                        <strong className="font-[500] text-prophet-red">
-                          {injury.reason ?? t("injury")}
-                        </strong>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="m-0 text-xs text-prophet-muted">
-                    {t("noInjurySignal")}
-                  </p>
-                )}
-              </div>
-            </div>
+                    ) : null}
+                  </strong>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <TeamEmptyState
