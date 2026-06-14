@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { recoverTypedDataAddress } from "viem";
 
+import { resolveSessionCookiePolicy } from "@/lib/cors/session-cookie-policy";
 import { buildTradingApprovalBatch, type DepositWalletBatchSignablePayload } from "@/lib/market/deposit-wallet-batch";
 import { getTradingChainId } from "@/server/trading/clob-auth";
 import {
@@ -192,7 +193,7 @@ export async function POST(request: Request) {
       },
       {
         headers: {
-          "Set-Cookie": createTradingSessionCookie(session),
+          "Set-Cookie": createTradingSessionCookie(session, resolveSessionCookiePolicy(request)),
         },
       },
     );

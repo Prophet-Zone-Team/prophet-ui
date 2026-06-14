@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { resolveSessionCookiePolicy } from "@/lib/cors/session-cookie-policy";
 import {
   clearTradingSession,
   clearTradingSessionCookie,
@@ -111,9 +112,10 @@ export async function POST(request: Request) {
   });
 
   const response = NextResponse.json({ session });
+  const cookiePolicy = resolveSessionCookiePolicy(request);
 
-  response.headers.append("Set-Cookie", createTradingSessionCookie(session));
-  response.headers.append("Set-Cookie", clearTradingCredentialsCookie());
+  response.headers.append("Set-Cookie", createTradingSessionCookie(session, cookiePolicy));
+  response.headers.append("Set-Cookie", clearTradingCredentialsCookie(cookiePolicy));
 
   return response;
 }
@@ -121,13 +123,14 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const record = getTradingSessionFromCookie(request.headers.get("cookie"));
   clearTradingSession(record?.session.userId);
+  const cookiePolicy = resolveSessionCookiePolicy(request);
 
   const response = NextResponse.json({
     ok: true,
   });
 
-  response.headers.append("Set-Cookie", clearTradingSessionCookie());
-  response.headers.append("Set-Cookie", clearTradingCredentialsCookie());
+  response.headers.append("Set-Cookie", clearTradingSessionCookie(cookiePolicy));
+  response.headers.append("Set-Cookie", clearTradingCredentialsCookie(cookiePolicy));
 
   return response;
 }

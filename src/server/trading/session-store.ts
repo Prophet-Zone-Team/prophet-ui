@@ -3,6 +3,10 @@ import "server-only";
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 
 import type { TradingUserSession, UserTradingCredentialStatus } from "@/types/market";
+import {
+  appendSessionCookieAttributes,
+  type SessionCookiePolicy,
+} from "@/lib/cors/session-cookie-policy";
 
 export interface StoredUserTradingCredentials {
   key: string;
@@ -179,10 +183,12 @@ export function createTradingCredentialsCookie({
   userId,
   sessionId,
   credentials,
+  policy,
 }: {
   userId: string;
   sessionId: string;
   credentials: StoredUserTradingCredentials;
+  policy?: SessionCookiePolicy;
 }): string {
   const payload = encryptCookiePayload({
     userId,
@@ -190,13 +196,15 @@ export function createTradingCredentialsCookie({
     credentials,
   });
 
-  return [
-    `${CREDENTIAL_COOKIE_NAME}=${encodeURIComponent(payload)}`,
-    "Path=/",
-    "HttpOnly",
-    "SameSite=Lax",
-    `Max-Age=${CREDENTIAL_COOKIE_MAX_AGE}`,
-  ].join("; ");
+  return appendSessionCookieAttributes(
+    [
+      `${CREDENTIAL_COOKIE_NAME}=${encodeURIComponent(payload)}`,
+      "Path=/",
+      "HttpOnly",
+      `Max-Age=${CREDENTIAL_COOKIE_MAX_AGE}`,
+    ],
+    policy,
+  ).join("; ");
 }
 
 export function getTradingCredentialStatus(userId: string | undefined, sessionId?: string): UserTradingCredentialStatus {
@@ -260,25 +268,36 @@ export function parseTradingSessionCookie(
   }
 }
 
-export function createTradingSessionCookie(session: TradingUserSession): string {
+export function createTradingSessionCookie(
+  session: TradingUserSession,
+  policy?: SessionCookiePolicy,
+): string {
   const maxAge = Math.max(0, Math.floor((Date.parse(session.expiresAt ?? session.createdAt) - Date.now()) / 1000));
   const payload = signCookiePayload({ session });
 
-  return [
-    `${SESSION_COOKIE_NAME}=${encodeURIComponent(payload)}`,
-    "Path=/",
-    "HttpOnly",
-    "SameSite=Lax",
-    `Max-Age=${maxAge}`,
-  ].join("; ");
+  return appendSessionCookieAttributes(
+    [
+      `${SESSION_COOKIE_NAME}=${encodeURIComponent(payload)}`,
+      "Path=/",
+      "HttpOnly",
+      `Max-Age=${maxAge}`,
+    ],
+    policy,
+  ).join("; ");
 }
 
-export function clearTradingSessionCookie(): string {
-  return `${SESSION_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+export function clearTradingSessionCookie(policy?: SessionCookiePolicy): string {
+  return appendSessionCookieAttributes(
+    [`${SESSION_COOKIE_NAME}=`, "Path=/", "HttpOnly", "Max-Age=0"],
+    policy,
+  ).join("; ");
 }
 
-export function clearTradingCredentialsCookie(): string {
-  return `${CREDENTIAL_COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+export function clearTradingCredentialsCookie(policy?: SessionCookiePolicy): string {
+  return appendSessionCookieAttributes(
+    [`${CREDENTIAL_COOKIE_NAME}=`, "Path=/", "HttpOnly", "Max-Age=0"],
+    policy,
+  ).join("; ");
 }
 
 function parseTradingCredentialsCookie(

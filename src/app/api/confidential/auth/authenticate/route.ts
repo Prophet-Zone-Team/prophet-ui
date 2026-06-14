@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { resolveSessionCookiePolicy } from "@/lib/cors/session-cookie-policy";
 import { buildAuthSignedData, verifyAccessTokenIdentity } from "@/server/confidential/auth";
 import { deriveIntentsUserId, normalizeEvmAddress } from "@/server/confidential/intents-user-id";
 import { authenticateOneClick } from "@/server/confidential/one-click-client";
@@ -61,9 +62,10 @@ export async function POST(request: Request) {
     };
 
     const response = NextResponse.json({ intentsUserId });
+    const cookiePolicy = resolveSessionCookiePolicy(request);
     response.headers.set(
       "Set-Cookie",
-      createConfidentialSessionCookie(session, request.headers.get("host")),
+      createConfidentialSessionCookie(session, request.headers.get("host"), cookiePolicy),
     );
 
     return response;
