@@ -5,7 +5,9 @@
     "strategies": "Estrategias",
     "tracks": "Seguimiento",
     "portfolio": "Portafolio",
-    "primaryNavigation": "Navegación principal"
+    "worldCup": "WorldCup",
+    "primaryNavigation": "Navegación principal",
+    "bottomNavigation": "Navegación inferior"
   },
   "wallet": {
     "portfolio": "Portafolio",
@@ -838,6 +840,7 @@
     "fifaWorldCup2026": "Copa Mundial FIFA 2026",
     "heroTaglineBefore": "Antes de las noticias,",
     "heroTaglineMoves": "ya se mueve",
+    "mobileLoadingAria": "Cargando Prophet",
     "sourcePolymarket": "fuente: Polymarket",
     "worldCupMarketSummary": "Resumen del mercado del Mundial",
     "teamsListed": "Equipos listados",
@@ -870,6 +873,7 @@
     "teams": "Equipos",
     "filterByTeam": "Filtrar por equipo",
     "selectTeams": "Seleccionar equipos",
+    "searchTeams": "Buscar",
     "removeTeamFilter": "Quitar filtro de {team}",
     "allWorldCupTeamMarkets": "All World Cup team markets",
     "liveMarketDataUnavailable": "Live market data is unavailable. Check Polymarket connectivity and try again.",
@@ -1482,7 +1486,6 @@
   },
   "runtime": {
     "connectionLabel": "Conexión",
-    "httpsRequiredTitle": "Se requiere conexión segura",
     "httpsRequiredDescription": "El inicio de sesión con billetera y las funciones de trading requieren una conexión HTTPS cifrada. Abre la versión segura de esta página para continuar.",
     "openSecureVersion": "Abrir versión segura"
   }

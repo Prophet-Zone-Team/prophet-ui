@@ -6,6 +6,24 @@ export const PRIMARY_NAV = [
   { href: "/portfolio", labelKey: "portfolio" as const }
 ] as const;
 
+export const MOBILE_BOTTOM_NAV = [
+  { href: "/analytics", labelKey: "analytics" as const, icon: "analytics" as const },
+  { href: "/strategy", labelKey: "strategies" as const, icon: "strategies" as const },
+  {
+    href: "/fifa",
+    labelKey: "worldCup" as const,
+    icon: "worldCup" as const,
+    center: true
+  },
+  { href: "/tracks", labelKey: "tracks" as const, icon: "tracks" as const },
+  {
+    href: "/portfolio",
+    labelKey: "portfolio" as const,
+    icon: "portfolio" as const,
+    showBalance: true
+  }
+] as const;
+
 export function isNavActive(pathname: string, href: string): boolean {
   if (href === "/fifa") {
     return pathname === "/fifa" || pathname === "/fifa/matches";

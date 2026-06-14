@@ -5,7 +5,9 @@
     "strategies": "전략",
     "tracks": "트랙",
     "portfolio": "포트폴리오",
-    "primaryNavigation": "기본 탐색"
+    "worldCup": "WorldCup",
+    "primaryNavigation": "기본 탐색",
+    "bottomNavigation": "하단 탐색"
   },
   "wallet": {
     "portfolio": "포트폴리오",
@@ -838,6 +840,7 @@
     "fifaWorldCup2026": "2026 FIFA 월드컵",
     "heroTaglineBefore": "뉴스보다 먼저,",
     "heroTaglineMoves": "움직입니다",
+    "mobileLoadingAria": "Prophet 로딩 중",
     "sourcePolymarket": "출처: Polymarket",
     "worldCupMarketSummary": "월드컵 시장 요약",
     "teamsListed": "등록 팀",
@@ -870,6 +873,7 @@
     "teams": "팀",
     "filterByTeam": "팀별 필터",
     "selectTeams": "팀 선택",
+    "searchTeams": "검색",
     "removeTeamFilter": "{team} 필터 제거",
     "allWorldCupTeamMarkets": "All World Cup team markets",
     "liveMarketDataUnavailable": "Live market data is unavailable. Check Polymarket connectivity and try again.",
@@ -1482,7 +1486,6 @@
   },
   "runtime": {
     "connectionLabel": "연결",
-    "httpsRequiredTitle": "보안 연결이 필요합니다",
     "httpsRequiredDescription": "지갑 로그인 및 거래 기능을 사용하려면 암호화된 HTTPS 연결이 필요합니다. 계속하려면 이 페이지의 보안 버전을 여세요.",
     "openSecureVersion": "보안 버전 열기"
   }
