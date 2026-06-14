@@ -1,4 +1,5 @@
 export const marketQueryKeys = {
+  polymarketStats: () => ["market", "polymarket-stats"] as const,
   relatedGames: (teamsKey: string) =>
     ["market", "related-games", teamsKey] as const,
   groupStandings: (groupCode: string) =>
