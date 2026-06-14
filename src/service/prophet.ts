@@ -21,6 +21,7 @@ import type {
   ProphetGetTeamsConditionData,
   ProphetGetRelatedGamesData,
   ProphetGetTeamGameResultsData,
+  ProphetGetTeamLineupData,
   ProphetGetHeadToHeadFixturesData,
   ProphetGetGameStatisticsData,
   ProphetGetGameOddsData,
@@ -46,7 +47,8 @@ import type {
   ProphetUserTrackItem,
   ProphetUserTrackListItem,
   ProphetLoginReferral,
-  ProphetUploadData
+  ProphetUploadData,
+  ProphetGetPolymarketStatsData
 } from "@/types/prophet-api";
 import type { TokenPricesBySymbol } from "@/types/funding";
 import type { TelegramLoginAuthData } from "@/types/telegram-widget";
@@ -334,6 +336,15 @@ export async function getProphetTokenPrices(
   return prophetGet<TokenPricesBySymbol>("/v1/token/price", { signal });
 }
 
+/** GET /v1/polymarket/stats — aggregate Polymarket World Cup stats */
+export async function getProphetPolymarketStats(
+  signal?: AbortSignal,
+): Promise<ProphetGetPolymarketStatsData> {
+  return prophetGet<ProphetGetPolymarketStatsData>("/v1/polymarket/stats", {
+    signal,
+  });
+}
+
 /** GET /v1/games — all Polymarket games, sorted by start_time ascending */
 export async function getProphetGames(): Promise<ProphetGetGamesData> {
   return prophetGet<ProphetGetGamesData>("/v1/games");
@@ -424,6 +435,17 @@ export async function getProphetTeamGameResults(params: {
   team_name: string;
 }): Promise<ProphetGetTeamGameResultsData> {
   return prophetGet<ProphetGetTeamGameResultsData>("/v1/games/result", {
+    params: {
+      team_name: params.team_name
+    }
+  });
+}
+
+/** GET /v1/team/lineup — expected starting XI for a team by name */
+export async function getProphetTeamLineup(params: {
+  team_name: string;
+}): Promise<ProphetGetTeamLineupData> {
+  return prophetGet<ProphetGetTeamLineupData>("/v1/team/lineup", {
     params: {
       team_name: params.team_name
     }
