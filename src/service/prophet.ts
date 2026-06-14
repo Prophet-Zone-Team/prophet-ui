@@ -21,6 +21,7 @@ import type {
   ProphetGetTeamsConditionData,
   ProphetGetRelatedGamesData,
   ProphetGetTeamGameResultsData,
+  ProphetGetTeamLineupData,
   ProphetGetHeadToHeadFixturesData,
   ProphetGetGameStatisticsData,
   ProphetGetGameOddsData,
@@ -434,6 +435,17 @@ export async function getProphetTeamGameResults(params: {
   team_name: string;
 }): Promise<ProphetGetTeamGameResultsData> {
   return prophetGet<ProphetGetTeamGameResultsData>("/v1/games/result", {
+    params: {
+      team_name: params.team_name
+    }
+  });
+}
+
+/** GET /v1/team/lineup — expected starting XI for a team by name */
+export async function getProphetTeamLineup(params: {
+  team_name: string;
+}): Promise<ProphetGetTeamLineupData> {
+  return prophetGet<ProphetGetTeamLineupData>("/v1/team/lineup", {
     params: {
       team_name: params.team_name
     }
