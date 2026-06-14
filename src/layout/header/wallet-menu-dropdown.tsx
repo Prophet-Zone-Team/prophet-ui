@@ -16,6 +16,8 @@ import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-add
 import { Switch } from "@/components/ui/switch";
 
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
+import { useMigrate } from "@/context/migrate";
+import { MigrateMenuEntry } from "@/views/portfolio/migrate";
 import {
   walletMenuDropdownClass,
   walletMenuItemClass,
@@ -54,6 +56,7 @@ export function WalletMenuDropdown({
   isPrivateMode,
 }: WalletMenuDropdownProps) {
   const t = useTranslations("wallet");
+  const { openMigrateDialog } = useMigrate();
   const fastBidAmount = useFastBidAmount();
   const notificationsEnabled = useNotificationsEnabled();
   const setNotificationsEnabled = useSetNotificationsEnabled();
@@ -89,6 +92,13 @@ export function WalletMenuDropdown({
       {
         !isPrivateMode && (
           <>
+            <MigrateMenuEntry
+              onOpen={() => {
+                onClose();
+                openMigrateDialog("setup");
+              }}
+            />
+
             <Link
               href="/portfolio"
               role="menuitem"

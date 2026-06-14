@@ -1,10 +1,16 @@
+import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
-import { RoadToFinalPage } from "@/views/road-to-final";
 import {
   defaultSimulatorTeamId,
-  resolveSimulatorTeamId
+  resolveSimulatorTeamId,
 } from "@/views/road-to-final/lib/teams";
+
+const RoadToFinalPage = dynamic(
+  () =>
+    import("@/views/road-to-final").then((mod) => mod.RoadToFinalPage),
+  { loading: () => null },
+);
 
 interface PageProps {
   searchParams: Promise<{
@@ -15,7 +21,7 @@ interface PageProps {
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams;
   const teamId = resolveSimulatorTeamId(
-    params.team ?? defaultSimulatorTeamId
+    params.team ?? defaultSimulatorTeamId,
   );
 
   return (
