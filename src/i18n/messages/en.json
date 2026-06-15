@@ -505,7 +505,7 @@
       "recipientAddress": "Recipient Address",
       "recipientAddressAria": "Recipient address",
       "connected": "Connected",
-      "invalidRecipient": "Enter a valid EVM recipient address.",
+      "invalidRecipient": "Enter a valid {chainType} recipient address.",
       "amount": "Amount",
       "amountAria": "Withdraw amount",
       "max": "Max",

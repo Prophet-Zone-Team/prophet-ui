@@ -500,7 +500,7 @@
       "recipientAddress": "Адрес получателя",
       "recipientAddressAria": "Адрес получателя",
       "connected": "Подключено",
-      "invalidRecipient": "Введите действительный EVM-адрес получателя.",
+      "invalidRecipient": "Введите действительный {chainType}-адрес получателя.",
       "amount": "Сумма",
       "amountAria": "Сумма вывода",
       "max": "Макс.",

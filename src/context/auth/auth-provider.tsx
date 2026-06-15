@@ -38,6 +38,7 @@ import {
   connectNearAndDeriveAddress,
   disconnectNearWallet,
   getNearDerivedEvmAddress,
+  waitForNearDerivedAddress,
 } from "@/lib/wallet/near/near-connect";
 import { mapBalanceSnapshotToCash } from "@/lib/trading/cash-balance-model";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
@@ -675,8 +676,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // not wrongly clear the session before wagmi rehydrates.
       const embeddedLoginMethod =
         store.loginMethod === "email" || store.loginMethod === "google";
+      const nearLoginMethod = store.loginMethod === "near";
 
-      if (embeddedLoginMethod) {
+      if (embeddedLoginMethod || nearLoginMethod) {
+        if (nearLoginMethod) {
+          try {
+            await waitForNearDerivedAddress(15_000);
+          } catch {
+            const nextReadiness = await refreshReadiness(nextSession);
+            store.setStatus("ready");
+            store.setLoginStep(undefined);
+            store.setError(
+              "NEAR wallet is not connected. Reconnect your wallet to continue."
+            );
+            openSetupModalIfNeeded();
+
+            if (isTradingSetupComplete(nextReadiness)) {
+              store.setLoginModalOpen(true);
+            }
+
+            return;
+          }
+
+          const derivedAddress = getNearDerivedEvmAddress();
+
+          if (
+            derivedAddress &&
+            derivedAddress.toLowerCase() !==
+              nextSession.walletAddress.toLowerCase()
+          ) {
+            await handleWalletAccountSwitch(derivedAddress);
+            return;
+          }
+        }
+
         if (nextSession.depositWalletStatus !== "deployed") {
           await ensureDepositWalletDeployed(nextSession.walletAddress, {
             onStep: (step) => store.setLoginStep(step)

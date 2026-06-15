@@ -500,7 +500,7 @@
       "recipientAddress": "受取アドレス",
       "recipientAddressAria": "受取アドレス",
       "connected": "接続済み",
-      "invalidRecipient": "有効な EVM 受取アドレスを入力してください。",
+      "invalidRecipient": "有効な {chainType} 受取アドレスを入力してください。",
       "amount": "金額",
       "amountAria": "出金額",
       "max": "最大",

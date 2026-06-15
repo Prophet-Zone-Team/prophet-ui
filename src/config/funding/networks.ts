@@ -145,8 +145,24 @@ export const FUNDING_NETWORKS: Record<string, FundingNetwork> = {
     chainName: "Near",
     chainIcon: getStableflowChainLogo("near"),
     chainType: FundingNetworkType.NEAR,
-    defaultRpcUrl: "https://rpc.mainnet.near.org",
+    defaultRpcUrl: "https://nearinner.deltarpc.com",
     rpcUrls: ["https://nearinner.deltarpc.com", "https://rpc.mainnet.near.org"],
+  },
+  tron: {
+    chainId: 999_999_998,
+    chainName: "Tron",
+    chainIcon: getStableflowChainLogo("tron"),
+    chainType: FundingNetworkType.TVM,
+    defaultRpcUrl: "https://tron-rpc.publicnode.com",
+    rpcUrls: ["https://rpcs.stableflow.ai/rpc/tron", "https://tron-rpc.publicnode.com"],
+  },
+  solana: {
+    chainId: 999_999_997,
+    chainName: "Solana",
+    chainIcon: getStableflowChainLogo("solana"),
+    chainType: FundingNetworkType.SVM,
+    defaultRpcUrl: "https://solana-rpc.publicnode.com",
+    rpcUrls: ["https://rpcs.stableflow.ai/rpc/solana", "https://solana-rpc.publicnode.com"],
   },
 };
 

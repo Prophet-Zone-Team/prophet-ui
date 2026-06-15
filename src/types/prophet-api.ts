@@ -239,6 +239,8 @@ export interface ProphetLoginRequest {
   address: string;
   /** Required when logging in via Privy email or Google. */
   email?: string;
+  /** NEAR account ID when logging in via NEAR wallet. */
+  near_address?: string;
   referral_code?: string;
 }
 

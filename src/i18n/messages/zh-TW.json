@@ -503,7 +503,7 @@
       "recipientAddress": "收款地址",
       "recipientAddressAria": "收款地址",
       "connected": "已連接",
-      "invalidRecipient": "請輸入有效的 EVM 收款地址。",
+      "invalidRecipient": "請輸入有效的 {chainType} 收款地址。",
       "amount": "金額",
       "amountAria": "提款金額",
       "max": "最大",

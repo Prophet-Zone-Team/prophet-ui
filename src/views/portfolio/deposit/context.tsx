@@ -69,26 +69,48 @@ export function DepositProvider({
     | "hasPendingDeposit"
     | "converting"
     | "onConfirmPendingDeposit"
-  >;
+  > & {
+    getNearTokenBalance?: (
+      token: Pick<StableflowDepositToken, "chainId" | "address" | "blockchain">,
+    ) => string;
+  };
 }) {
   const evmBalances = useBalancesStore((state) => state.evmBalances);
   const prices = usePricesStore((state) => state.prices);
 
   const getTokenBalance = useCallback(
-    (token: Pick<FundingToken, "chainId" | "address">) =>
-      selectFundingTokenBalance(evmBalances, token),
-    [evmBalances],
+    (token: Pick<FundingToken, "chainId" | "address">) => {
+      if (
+        isStableflowDepositToken(token as DepositSelectableToken) &&
+        (token as StableflowDepositToken).blockchain === "near" &&
+        value.getNearTokenBalance
+      ) {
+        return value.getNearTokenBalance(token as StableflowDepositToken);
+      }
+
+      return selectFundingTokenBalance(evmBalances, token);
+    },
+    [evmBalances, value.getNearTokenBalance],
   );
 
   const getTokenBalanceString = useCallback(
-    (token: Pick<FundingToken, "chainId" | "address" | "decimals">) =>
-      selectFundingTokenBalanceString(evmBalances, token),
-    [evmBalances],
+    (token: Pick<FundingToken, "chainId" | "address" | "decimals">) => {
+      if (
+        isStableflowDepositToken(token as DepositSelectableToken) &&
+        (token as StableflowDepositToken).blockchain === "near" &&
+        value.getNearTokenBalance
+      ) {
+        return value.getNearTokenBalance(token as StableflowDepositToken);
+      }
+
+      return selectFundingTokenBalanceString(evmBalances, token);
+    },
+    [evmBalances, value.getNearTokenBalance],
   );
 
   const getTokenUsdValue = useCallback(
     (token: Pick<FundingToken, "symbol" | "chainId" | "address">) => {
-      const balance = selectFundingTokenBalance(evmBalances, token);
+      const balance = getTokenBalance(token);
 
       if (isStableflowDepositToken(token as DepositSelectableToken)) {
         const stableflowToken = token as StableflowDepositToken;
@@ -101,7 +123,7 @@ export function DepositProvider({
 
       return selectTokenUsdValue(prices, token.symbol, balance);
     },
-    [evmBalances, prices],
+    [getTokenBalance, prices],
   );
 
   const hasTokenUsdPrice = useCallback(
@@ -153,6 +175,7 @@ export function DepositProvider({
       value.funderAddress,
       value.hasPendingDeposit,
       value.onConfirmPendingDeposit,
+      value.getNearTokenBalance,
       value.pricesLoading,
       value.selectableTokens,
       value.supportedAssets,

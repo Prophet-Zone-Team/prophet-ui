@@ -500,7 +500,7 @@
       "recipientAddress": "Dirección del destinatario",
       "recipientAddressAria": "Dirección del destinatario",
       "connected": "Conectado",
-      "invalidRecipient": "Ingresa una dirección EVM de destinatario válida.",
+      "invalidRecipient": "Ingresa una dirección {chainType} de destinatario válida.",
       "amount": "Monto",
       "amountAria": "Monto de retiro",
       "max": "Máx.",

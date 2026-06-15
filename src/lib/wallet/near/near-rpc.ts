@@ -1,12 +1,13 @@
 import { providers } from "near-api-js";
+import type { CodeResult } from "near-api-js/lib/providers/provider";
 
-import { NEAR_NETWORK } from "./near-config";
+import { FUNDING_NETWORKS } from "@/config/funding";
 
 let cachedProvider: providers.JsonRpcProvider | undefined;
 
 function getProvider(): providers.JsonRpcProvider {
   if (!cachedProvider) {
-    cachedProvider = new providers.JsonRpcProvider({ url: NEAR_NETWORK.nodeUrl });
+    cachedProvider = new providers.JsonRpcProvider({ url: FUNDING_NETWORKS.near.defaultRpcUrl });
   }
 
   return cachedProvider;
@@ -25,13 +26,14 @@ export async function viewFunction<TResult = unknown>(params: {
     "base64",
   );
 
-  const response = (await getProvider().query({
+  const queryResponse = await getProvider().query({
     request_type: "call_function",
     account_id: params.contractId,
     method_name: params.methodName,
     args_base64: argsBase64,
     finality: "optimistic",
-  })) as { result: number[] };
+  });
+  const response = queryResponse as unknown as CodeResult;
 
   const raw = Buffer.from(response.result).toString("utf-8");
 

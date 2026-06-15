@@ -299,6 +299,7 @@ export function useWithdraw(): UseWithdrawResult {
           amountBaseUnits,
           recipient,
           dry,
+          destinationBlockchain: destinationToken.blockchain,
         }),
       });
 

@@ -500,7 +500,7 @@
       "recipientAddress": "수령 주소",
       "recipientAddressAria": "수령 주소",
       "connected": "연결됨",
-      "invalidRecipient": "유효한 EVM 수령 주소를 입력하세요.",
+      "invalidRecipient": "유효한 {chainType} 수령 주소를 입력하세요.",
       "amount": "금액",
       "amountAria": "출금 금액",
       "max": "최대",
