@@ -7,15 +7,12 @@ export const PRIMARY_NAV = [
 ] as const;
 
 export const MOBILE_BOTTOM_NAV = [
-  { href: "/analytics", labelKey: "analytics" as const, icon: "analytics" as const },
-  { href: "/strategy", labelKey: "strategies" as const, icon: "strategies" as const },
   {
     href: "/fifa",
     labelKey: "worldCup" as const,
-    icon: "worldCup" as const,
-    center: true
+    icon: "worldCup" as const
   },
-  { href: "/tracks", labelKey: "tracks" as const, icon: "tracks" as const },
+  { href: "/strategy", labelKey: "strategies" as const, icon: "strategies" as const },
   {
     href: "/portfolio",
     labelKey: "portfolio" as const,

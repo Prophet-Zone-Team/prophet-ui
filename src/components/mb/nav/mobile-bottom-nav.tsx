@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { useTranslations } from "next-intl";
 
 import {
-  AnalyticsIcon,
   PortfolioIcon,
   StrategiesIcon,
-  TracksIcon,
   WorldCupIcon
 } from "@/components/mb/nav/icons";
 import { useAuth } from "@/context/auth";
@@ -23,14 +21,37 @@ import { cn } from "@/lib/cn";
 import { formatNumber } from "@/utils";
 
 const NAV_ICON_MAP = {
-  analytics: AnalyticsIcon,
   strategies: StrategiesIcon,
   worldCup: WorldCupIcon,
-  tracks: TracksIcon,
   portfolio: PortfolioIcon
 } as const;
 
-const NAV_BAR_SHADOW = "0 0 10px rgba(0, 0, 0, 0.1)";
+const NAV_SVG_WIDTH = 410;
+const NAV_SVG_HEIGHT = 94;
+const NAV_BAR_TOP = 20;
+const NAV_BUMP_TOP = 10;
+const NAV_SHADOW_FILTER_PAD = 20;
+
+function buildMobileNavBarPath(centerX: number) {
+  const rightBar = centerX + 25.295;
+  const leftBar = centerX - 25.295;
+
+  return [
+    `M${centerX} ${NAV_BUMP_TOP}`,
+    `C${centerX + 9.784} ${NAV_BUMP_TOP} ${centerX + 18.679} 13.799 ${rightBar} ${NAV_BAR_TOP}`,
+    `H${NAV_SVG_WIDTH}`,
+    `V${NAV_SVG_HEIGHT}`,
+    `H0`,
+    `V${NAV_BAR_TOP}`,
+    `H${leftBar}`,
+    `C${centerX - 18.679} 13.799 ${centerX - 9.784} ${NAV_BUMP_TOP} ${centerX} ${NAV_BUMP_TOP}`,
+    "Z"
+  ].join("");
+}
+
+function buildFlatMobileNavBarPath() {
+  return `M0 ${NAV_BAR_TOP}H${NAV_SVG_WIDTH}V${NAV_SVG_HEIGHT}H0V${NAV_BAR_TOP}Z`;
+}
 
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -53,31 +74,91 @@ export function MobileBottomNav() {
     });
   }, [cash?.available, cashStatus]);
 
+  const shadowFilterId = useId().replace(/:/g, "");
+
+  const activeIndex = useMemo(
+    () =>
+      MOBILE_BOTTOM_NAV.findIndex((item) => isNavActive(pathname, item.href)),
+    [pathname]
+  );
+
+  const navBarPath = useMemo(() => {
+    if (activeIndex < 0) {
+      return buildFlatMobileNavBarPath();
+    }
+
+    const centerX =
+      ((activeIndex + 0.5) / MOBILE_BOTTOM_NAV.length) * NAV_SVG_WIDTH;
+
+    return buildMobileNavBarPath(centerX);
+  }, [activeIndex]);
+
   if (hideBottomNav) {
     return null;
   }
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 h-[74px] md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-[100vw] md:hidden"
+      style={{
+        height: "calc(74px + env(safe-area-inset-bottom, 0px))",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)"
+      }}
       aria-label={t("bottomNavigation")}
     >
-      <div
-        className="absolute inset-x-0 z-[2] bottom-0 h-16 bg-[#F9FAFC]"
+      <svg
+        className="pointer-events-none absolute inset-0 z-[1] h-full w-full"
+        viewBox={`0 0 ${NAV_SVG_WIDTH} ${NAV_SVG_HEIGHT}`}
+        preserveAspectRatio="none"
         aria-hidden
-      />
-      <div
-        className="pointer-events-none z-[1] absolute left-1/2 top-0 size-[74px] -translate-x-1/2 rounded-full bg-[#F9FAFC]"
-        style={{ boxShadow: NAV_BAR_SHADOW }}
-        aria-hidden
-      />
+      >
+        <defs>
+          <filter
+            id={shadowFilterId}
+            x={-NAV_SHADOW_FILTER_PAD}
+            y={-NAV_SHADOW_FILTER_PAD}
+            width={NAV_SVG_WIDTH + NAV_SHADOW_FILTER_PAD * 2}
+            height={NAV_SVG_HEIGHT + NAV_SHADOW_FILTER_PAD * 2}
+            filterUnits="userSpaceOnUse"
+            colorInterpolationFilters="sRGB"
+          >
+            <feFlood floodOpacity="0" result="BackgroundImageFix" />
+            <feColorMatrix
+              in="SourceAlpha"
+              type="matrix"
+              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+              result="hardAlpha"
+            />
+            <feOffset />
+            <feGaussianBlur stdDeviation="5" />
+            <feComposite in2="hardAlpha" operator="out" />
+            <feColorMatrix
+              type="matrix"
+              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"
+            />
+            <feBlend
+              mode="normal"
+              in2="BackgroundImageFix"
+              result="effect1_dropShadow"
+            />
+            <feBlend
+              mode="normal"
+              in="SourceGraphic"
+              in2="effect1_dropShadow"
+              result="shape"
+            />
+          </filter>
+        </defs>
+        <g filter={`url(#${shadowFilterId})`}>
+          <path d={navBarPath} fill="#F9FAFC" />
+        </g>
+      </svg>
 
-      <div className="relative z-[3] flex h-full items-end">
+      <div className="relative z-[3] flex h-[74px] w-full items-end">
         {MOBILE_BOTTOM_NAV.map((item) => {
           const active = isNavActive(pathname, item.href);
           const Icon = NAV_ICON_MAP[item.icon];
           const showBalance = "showBalance" in item && item.showBalance;
-          const isCenterItem = "center" in item && item.center;
           const label =
             showBalance && hydrated && isAuthenticated && session
               ? `$${balanceDisplay}`
@@ -96,12 +177,7 @@ export function MobileBottomNav() {
                 });
               }}
             >
-              <span
-                className={cn(
-                  "flex h-5 items-center justify-center",
-                  isCenterItem && "mb-[8px]"
-                )}
-              >
+              <span className="flex h-[33px] items-end justify-center">
                 <Icon active={active} />
               </span>
               <span

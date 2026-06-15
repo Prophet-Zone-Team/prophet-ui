@@ -23,7 +23,9 @@ export function AppChrome({ children }: AppChromeProps) {
       <div
         className={cn(
           "flex-1 pt-[60px] md:pt-[70px] md:pb-0",
-          hideMobileBottomNav ? "pb-0" : "pb-[74px]"
+          hideMobileBottomNav
+            ? "pb-0"
+            : "pb-[calc(74px+env(safe-area-inset-bottom,0px))]"
         )}
       >
         {children}
