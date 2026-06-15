@@ -1,8 +1,9 @@
 /**
- * Verifies game To Win preview aligns with Polymarket CLOB ask pricing.
+ * Verifies game To Win preview uses builder and platform fee adjustments.
  * Run: node --import tsx scripts/verify-game-to-win.ts
  */
 import { buildGameBidOrderPreview } from "../src/lib/market/game-order";
+import { calculateToWinAmount } from "../src/lib/market/polymarket-fees";
 import type { GameMarketSnapshot } from "../src/types/market";
 
 function buildMockSnapshot(
@@ -38,11 +39,6 @@ function buildMockSnapshot(
   };
 }
 
-function expectedPolymarketToWin(amount: number, ask: number): number {
-  const shares = amount / ask;
-  return Math.round(shares * 100) / 100;
-}
-
 const cases = [
   { side: "home" as const, label: "Mexico", ask: 0.67, probability: 66.5 },
   { side: "draw" as const, label: "Draw", ask: 0.23, probability: 22 },
@@ -63,19 +59,24 @@ for (const testCase of cases) {
     orderType: "FAK",
   });
 
-  const expected = expectedPolymarketToWin(1, testCase.ask);
-  const delta = Math.abs(preview.potentialPayout - expected);
+  const expected = calculateToWinAmount({
+    amount: 1,
+    price: testCase.ask,
+    orderType: "FAK",
+    tradeSide: "buy",
+  });
+  const delta = Math.abs(preview.potentialOutcome - expected);
 
-  if (delta > 0.02) {
+  if (delta > 0.0001) {
     failed += 1;
     console.error(
-      `[FAIL] ${testCase.label}: To Win=${preview.potentialPayout}, expected≈${expected}, delta=${delta.toFixed(4)}`,
+      `[FAIL] ${testCase.label}: To Win=${preview.potentialOutcome}, expected=${expected}, delta=${delta.toFixed(4)}`,
     );
     continue;
   }
 
   console.log(
-    `[OK] ${testCase.label}: sidePrice=${preview.sidePrice}, To Win=$${preview.potentialPayout.toFixed(2)} (expected≈$${expected.toFixed(2)})`,
+    `[OK] ${testCase.label}: sidePrice=${preview.sidePrice}, To Win=$${preview.potentialOutcome.toFixed(2)} (expected=$${expected.toFixed(2)})`,
   );
 }
 

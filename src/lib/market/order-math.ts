@@ -6,6 +6,7 @@ import type {
 } from "@/types/market";
 import {
   calculateBuyOrderCostFromBudget,
+  calculateToWinAmount,
   estimateBuyTakerFee
 } from "@/lib/market/polymarket-fees";
 
@@ -248,9 +249,18 @@ export function calculateOrderEstimate(
     const orderCost = roundMoney(shareSize * sidePrice);
     const estimatedTakerFee = 0;
     const estimatedTotalCost = orderCost;
+    const toWin =
+      tradeSide === "buy"
+        ? calculateToWinAmount({
+            amount: input.amount,
+            price: sidePrice,
+            orderType: input.orderType,
+            tradeSide,
+          })
+        : 0;
     const potentialPayout =
       tradeSide === "buy"
-        ? roundMoney(shareSize)
+        ? toWin
         : roundMoney(shareSize * sidePrice);
 
     return {
@@ -261,7 +271,7 @@ export function calculateOrderEstimate(
       estimatedTakerFee,
       estimatedTotalCost,
       potentialPayout,
-      potentialOutcome: roundMoney(potentialPayout - estimatedTotalCost)
+      potentialOutcome: tradeSide === "buy" ? toWin : roundMoney(potentialPayout - estimatedTotalCost)
     };
   }
 
@@ -295,10 +305,17 @@ export function calculateOrderEstimate(
   const resolvedOrderCost = tradeSide === "sell" ? shareSize : orderCost;
   const resolvedTotalCost =
     tradeSide === "buy" ? estimatedTotalCost : resolvedOrderCost;
-  const potentialPayout =
+  const toWin =
     tradeSide === "buy"
-      ? roundMoney(shareSize)
-      : roundMoney(shareSize * sidePrice);
+      ? calculateToWinAmount({
+          amount: requestedAmount,
+          price: sidePrice,
+          orderType: input.orderType,
+          tradeSide,
+        })
+      : 0;
+  const potentialPayout =
+    tradeSide === "buy" ? toWin : roundMoney(shareSize * sidePrice);
 
   return {
     sidePrice,
@@ -308,7 +325,7 @@ export function calculateOrderEstimate(
     estimatedTakerFee,
     estimatedTotalCost: resolvedTotalCost,
     potentialPayout,
-    potentialOutcome: roundMoney(potentialPayout - estimatedTotalCost)
+    potentialOutcome: tradeSide === "buy" ? toWin : roundMoney(potentialPayout - estimatedTotalCost)
   };
 }
 
