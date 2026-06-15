@@ -12,8 +12,10 @@ import {
 import { useTranslations } from "next-intl";
 
 import {
+  formatChange,
   formatProbability,
-  formatVolume
+  formatVolume,
+  getChangeTone
 } from "@/components/home/market-formatters";
 import { ProbabilityChangeTrend } from "@/components/market/probability-change-trend";
 import { cn } from "@/lib/cn";
@@ -41,7 +43,6 @@ import { tradeYesNoPill } from "@/views/trade/trade-widget/trade-ui";
 const probabilityCardClass =
   "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
 
-const probabilityCardBorderlessClass = "min-w-0 flex-1 bg-white p-4 sm:p-5";
 const probabilityCardBorderlessClass = "min-w-0 flex-1 bg-white p-4 sm:p-5";
 
 const orderbookBorderlessClass = "rounded-none border-0";
@@ -128,6 +129,7 @@ export function ProbabilitySection({
 
   const change24h = liveSnapshot.market.change24h;
   const change24hPoints = outcomeView === "yes" ? change24h : -change24h;
+  const changeTone = getChangeTone(change24hPoints);
   const chartTimeRanges = useMemo(
     () =>
       TEAM_CHART_TIME_RANGES.map((range) => ({

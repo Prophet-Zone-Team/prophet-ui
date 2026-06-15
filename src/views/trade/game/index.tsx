@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
@@ -29,7 +29,6 @@ import { formatOrderbookPrice } from "@/lib/market/order-math";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import { useGameMobileOutcomePrices } from "./use-game-mobile-outcome-prices";
-import type { ProphetGameSiblingEventSlugs } from "@/types/prophet-api";
 import type {
   ApiFootballTeamProfile,
   GameFixtureMarketsSnapshot,

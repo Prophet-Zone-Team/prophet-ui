@@ -1,12 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { TrackedTeamRevisitEffect } from "@/components/analytics/tracked-team-revisit-effect";
 import Drawer from "@/components/drawer";
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { MarketWsProvider } from "@/context/market-ws";
+import {
+  MarketLivePriceWsProvider,
+  useRegisterRtdsEventSlugs,
+  WORLD_CUP_WINNER_EVENT_SLUG
+} from "@/context/market-live-price-ws";
 import { cn } from "@/lib/cn";
 import {
   useSetTradeOrderMode,
