@@ -463,13 +463,11 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         throw new Error(tWithdraw("unsupportedToken"));
       }
 
-      if (txHash) {
-        void reportFundingTransaction({
-          type: "withdraw",
-          txHash,
-          amount: String(amount)
-        });
-      }
+      void reportFundingTransaction({
+        type: "withdraw",
+        txHash: txHash ?? "",
+        amount: String(amount)
+      });
 
       toast.success(tWithdraw("withdrawalSubmitted"));
       handleClose();
