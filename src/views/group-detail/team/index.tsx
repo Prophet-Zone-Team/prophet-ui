@@ -17,6 +17,7 @@ import {
   useTradeOutcomeSide
 } from "@/store";
 import type { OrderOutcomeSide, TeamMarketSnapshot } from "@/types/market";
+import { useLiveTeamSnapshot } from "@/context/market-live-price-ws";
 import { getTeamSimpleSidePrice } from "@/views/trade/game/market-section/format-bid-label";
 
 export interface GroupDetailTeamProps {
@@ -92,10 +93,11 @@ export function GroupDetailTeam({
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const regionRestricted = isAuthenticated && isBuyRestricted;
 
-  const { team, market } = snapshot;
+  const liveSnapshot = useLiveTeamSnapshot(snapshot);
+  const { team, market } = liveSnapshot;
   const displayName = useLocalizedTeamName(team.code, team.name);
-  const yesPrice = getTeamSimpleSidePrice(snapshot, "yes");
-  const noPrice = getTeamSimpleSidePrice(snapshot, "no");
+  const yesPrice = getTeamSimpleSidePrice(liveSnapshot, "yes");
+  const noPrice = getTeamSimpleSidePrice(liveSnapshot, "no");
   const probabilityLabel = formatGroupTeamProbability(market.probability);
 
   function handleOutcomeClick(side: OrderOutcomeSide) {
@@ -104,7 +106,7 @@ export function GroupDetailTeam({
     }
 
     onSelect?.();
-    syncTeamSnapshot(snapshot);
+    syncTeamSnapshot(liveSnapshot);
     setOutcomeSide(side);
 
     if (tradeInPlace) {

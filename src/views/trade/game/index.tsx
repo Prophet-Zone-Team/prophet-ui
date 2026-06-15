@@ -1,9 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { MarketWsProvider } from "@/context/market-ws";
+import {
+  MarketLivePriceWsProvider,
+  useRegisterRtdsEventSlugs,
+} from "@/context/market-live-price-ws";
+import { resolveFixtureSiblingSlugs } from "@/lib/market/fixture-sibling-events";
+import type { ProphetGameSiblingEventSlugs } from "@/types/prophet-api";
 import {
   TradeGameHeader,
   type TradeGameHeaderProps
@@ -20,7 +26,6 @@ import { isGameMarketLiveUpdatesEnabled } from "@/lib/market/live-match";
 import { isGameClosedForTrading } from "@/lib/market/trading-market-status";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { TradeWidget } from "@/views/trade/trade-widget";
-import type { ProphetGameSiblingEventSlugs } from "@/types/prophet-api";
 import type {
   ApiFootballTeamProfile,
   GameFixtureMarketsSnapshot,
@@ -52,32 +57,23 @@ export default function TradeGameView({
   const [activeMarketTab, setActiveMarketTab] =
     useState<GameMarketTabId>("moneyline");
 
-  const {
-    match,
-    gameSnapshot,
-    fixtureMarkets,
-    loadingTab,
-    ensureTabTradingData,
-    isTabTradingReady
-  } = useGameTradingMetadata({
-    initialMatch,
-    initialGameSnapshot,
-    initialFixtureMarkets,
-    siblingEventSlugs,
-    teamSnapshots: snapshots
-  });
+  const { match, gameSnapshot, fixtureMarkets, isTabTradingReady } =
+    useGameTradingMetadata({
+      initialMatch,
+      initialGameSnapshot,
+      initialFixtureMarkets,
+    });
 
   const liveMatch = useMatchWithLiveState(match);
   const marketWsEnabled = isGameMarketLiveUpdatesEnabled(liveMatch);
+  const rtdsEnabled = Boolean(match.id?.trim());
 
   const canTrade =
     isTabTradingReady(activeMarketTab) &&
-    loadingTab !== activeMarketTab &&
     !isGameClosedForTrading(liveMatch, gameSnapshot.market.closed);
 
   const handleMarketTabChange = (tab: GameMarketTabId) => {
     setActiveMarketTab(tab);
-    void ensureTabTradingData(tab);
   };
 
   const relatedGameTeamNames = useMemo(
@@ -126,8 +122,14 @@ export default function TradeGameView({
   const [tradeDrawerOpen, setTradeDrawerOpen] = useState<boolean>(false);
 
   return (
-    <MarketWsProvider enabled={marketWsEnabled}>
-      <SyncMatchLiveStore matches={matchesToSync} />
+    <MarketLivePriceWsProvider enabled={rtdsEnabled}>
+      <MarketWsProvider enabled={marketWsEnabled}>
+        <TradeGameRtdsRegistration
+          matchId={match.id}
+          siblingEventSlugs={siblingEventSlugs}
+          enabled={rtdsEnabled}
+        >
+          <SyncMatchLiveStore matches={matchesToSync} />
       <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2">
         <div className="bg-black h-[228px] md:h-[258px] w-full absolute top-0 left-0" />
         <TradeGameHeaderToolbar />
@@ -204,6 +206,57 @@ export default function TradeGameView({
           className=""
         />
       </Drawer>
-    </MarketWsProvider>
+        </TradeGameRtdsRegistration>
+      </MarketWsProvider>
+    </MarketLivePriceWsProvider>
   );
+}
+
+function collectTradeGameRtdsEventSlugs(
+  matchId: string,
+  siblingEventSlugs: ProphetGameSiblingEventSlugs,
+): string[] {
+  const slugs = new Set<string>();
+
+  const main = siblingEventSlugs.main?.trim() || matchId.trim();
+
+  if (main) {
+    slugs.add(main);
+  }
+
+  for (const slug of [
+    siblingEventSlugs.moreMarkets,
+    siblingEventSlugs.halftime,
+    siblingEventSlugs.exactScore,
+    ...resolveFixtureSiblingSlugs(matchId),
+  ]) {
+    const trimmed = slug?.trim();
+
+    if (trimmed) {
+      slugs.add(trimmed);
+    }
+  }
+
+  return [...slugs].sort();
+}
+
+function TradeGameRtdsRegistration({
+  matchId,
+  siblingEventSlugs,
+  enabled,
+  children,
+}: {
+  matchId: string;
+  siblingEventSlugs: ProphetGameSiblingEventSlugs;
+  enabled: boolean;
+  children: ReactNode;
+}) {
+  const eventSlugs = useMemo(
+    () => collectTradeGameRtdsEventSlugs(matchId, siblingEventSlugs),
+    [matchId, siblingEventSlugs],
+  );
+
+  useRegisterRtdsEventSlugs("trade-game", eventSlugs, { enabled });
+
+  return children;
 }

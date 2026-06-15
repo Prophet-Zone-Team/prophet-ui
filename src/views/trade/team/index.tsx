@@ -1,10 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import { TrackedTeamRevisitEffect } from "@/components/analytics/tracked-team-revisit-effect";
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { MarketWsProvider } from "@/context/market-ws";
+import {
+  MarketLivePriceWsProvider,
+  useRegisterRtdsEventSlugs,
+  WORLD_CUP_WINNER_EVENT_SLUG,
+} from "@/context/market-live-price-ws";
 import {
   useSetShowOrderbook,
   useShowOrderbook
@@ -44,6 +49,7 @@ function TradeTeamViewContent({
       snapshot.market.polymarket?.tokens.no?.tokenId
     )
   );
+
   return (
     <div className={tradePageClass}>
       <TrackedTeamRevisitEffect
@@ -87,6 +93,20 @@ function TradeTeamViewContent({
   );
 }
 
+function TradeTeamRtdsRegistration({
+  enabled,
+  children,
+}: {
+  enabled: boolean;
+  children: ReactNode;
+}) {
+  useRegisterRtdsEventSlugs("trade-team", [WORLD_CUP_WINNER_EVENT_SLUG], {
+    enabled,
+  });
+
+  return children;
+}
+
 export default function TradeTeamView({
   snapshot,
   footballProfile,
@@ -95,15 +115,25 @@ export default function TradeTeamView({
   const yesTokenId = snapshot.market.polymarket?.tokens.yes?.tokenId;
   const noTokenId = snapshot.market.polymarket?.tokens.no?.tokenId;
   const marketWsEnabled = Boolean(yesTokenId || noTokenId);
+  const rtdsEnabled = Boolean(
+    snapshot.market.polymarket?.conditionId ||
+      snapshot.market.slug?.trim() ||
+      yesTokenId ||
+      noTokenId,
+  );
 
   return (
-    <MarketWsProvider enabled={marketWsEnabled}>
-      <TradeTeamViewContent
-        snapshot={snapshot}
-        footballProfile={footballProfile}
-        footballMetadata={footballMetadata}
-      />
-    </MarketWsProvider>
+    <MarketLivePriceWsProvider enabled={rtdsEnabled}>
+      <MarketWsProvider enabled={marketWsEnabled}>
+        <TradeTeamRtdsRegistration enabled={rtdsEnabled}>
+          <TradeTeamViewContent
+            snapshot={snapshot}
+            footballProfile={footballProfile}
+            footballMetadata={footballMetadata}
+          />
+        </TradeTeamRtdsRegistration>
+      </MarketWsProvider>
+    </MarketLivePriceWsProvider>
   );
 }
 
