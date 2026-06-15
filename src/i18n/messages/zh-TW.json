@@ -295,6 +295,7 @@
     "chartTimeRangeAria": "圖表時間範圍",
     "chartRangeAll": "全部",
     "change24h": "24 小時",
+    "timeLabel": "時間",
     "volumeLabel": "成交量",
     "compactVolume": "{value} 成交量",
     "liquidity": "流動性",

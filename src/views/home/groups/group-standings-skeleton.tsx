@@ -47,27 +47,17 @@ function DesktopGroupSkeleton() {
   );
 }
 
-function MobileTeamCardSkeleton() {
+function MobileTeamRowSkeleton() {
   return (
-    <div
-      className="rounded-[8px] border border-[#EBEBEB] px-3 py-3"
-      aria-hidden="true"
-    >
-      <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center gap-3" aria-hidden="true">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex items-center gap-2">
           <div className={`${loadingSurface} size-6 rounded-[2px]`} />
           <div className={`${loadingSurface} h-4 w-24`} />
         </div>
-        <div className={`${loadingSurface} h-8 w-[88px] rounded-[8px]`} />
+        <div className={`${loadingSurface} h-[6px] w-full rounded-[4px]`} />
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-x-3 gap-y-2">
-        {Array.from({ length: 5 }, (_, index) => (
-          <div key={index} className="flex flex-col gap-1">
-            <div className={`${loadingSurface} h-3 w-10`} />
-            <div className={`${loadingSurface} h-4 w-4`} />
-          </div>
-        ))}
-      </div>
+      <div className={`${loadingSurface} h-9 w-[75px] shrink-0 rounded-[8px]`} />
     </div>
   );
 }
@@ -78,12 +68,12 @@ function MobileGroupSkeleton() {
       {Array.from({ length: 4 }, (_, index) => (
         <div
           key={index}
-          className="rounded-[12px] border border-[#EBEBEB] bg-white px-3 pb-3 pt-3"
+          className="rounded-[12px] border border-[#EBEBEB] bg-white px-4 py-4"
         >
-          <div className={`${loadingSurface} mb-3 h-9 w-24 rounded-[8px]`} />
-          <div className="flex flex-col gap-2">
-            {Array.from({ length: 4 }, (_, cardIndex) => (
-              <MobileTeamCardSkeleton key={cardIndex} />
+          <div className={`${loadingSurface} mb-4 h-[23px] w-20`} />
+          <div className="flex flex-col gap-4">
+            {Array.from({ length: 4 }, (_, rowIndex) => (
+              <MobileTeamRowSkeleton key={rowIndex} />
             ))}
           </div>
         </div>

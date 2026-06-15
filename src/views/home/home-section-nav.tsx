@@ -12,6 +12,10 @@ const HOME_SECTIONS = [
     href: "/fifa/winner",
     labelKey: "worldCupWinner" as const,
     mobileLabelKey: "winner" as const
+  },
+  {
+    href: "/fifa/groups",
+    labelKey: "groups" as const
   }
 ] as const;
 

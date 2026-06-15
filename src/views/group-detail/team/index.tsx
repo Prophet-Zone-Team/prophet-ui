@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
 import type { KeyboardEvent } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
@@ -19,11 +20,19 @@ import {
 import type { OrderOutcomeSide, TeamMarketSnapshot } from "@/types/market";
 import { getTeamSimpleSidePrice } from "@/views/trade/game/market-section/format-bid-label";
 
+const TAB_UNDERLINE_TRANSITION = {
+  type: "spring" as const,
+  stiffness: 420,
+  damping: 34,
+  mass: 0.85
+};
+
 export interface GroupDetailTeamProps {
   snapshot: TeamMarketSnapshot;
   className?: string;
   selected?: boolean;
   onSelect?: () => void;
+  underlineLayoutId: string;
   /** When true, Yes/No stays on the current page instead of navigating to trade. */
   tradeInPlace?: boolean;
   onOutcomeClick?: (side: OrderOutcomeSide) => void;
@@ -80,6 +89,7 @@ export function GroupDetailTeam({
   className,
   selected = false,
   onSelect,
+  underlineLayoutId,
   tradeInPlace = false,
   onOutcomeClick
 }: GroupDetailTeamProps) {
@@ -127,58 +137,112 @@ export function GroupDetailTeam({
   }
 
   return (
-    <article
-      className={cn(
-        "box-border flex w-[222px] flex-col justify-between rounded-[8px]",
-        className
-      )}
-      aria-label={displayName}
-    >
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={handleSelectTeam}
-        onKeyDown={handleSelectKeyDown}
-        className="flex cursor-pointer items-end justify-between gap-2"
+    <>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={selected}
+        aria-label={displayName}
+        tabIndex={selected ? 0 : -1}
+        onClick={onSelect}
+        className={cn(
+          "flex min-w-0 flex-1 cursor-pointer flex-col items-center border-0 bg-transparent p-0 md:hidden",
+          "transition-opacity duration-200",
+          className
+        )}
       >
-        <div className="flex min-w-0 items-center gap-2">
+        <span
+          className={cn(
+            "text-[20px] leading-[24px] text-black",
+            selected ? "font-[600]" : "font-[400]"
+          )}
+        >
+          {probabilityLabel}
+        </span>
+
+        <TeamFlag
+          code={team.code}
+          name={displayName}
+          logoUrl={team.logoUrl}
+          className="mt-1 h-[40px] w-[40px] shrink-0 rounded-[6px] text-[40px]"
+        />
+
+        <span
+          className={cn(
+            "mt-1 max-w-full truncate px-1 text-[14px] leading-[15px] text-black",
+            selected ? "font-[600]" : "font-[400]"
+          )}
+        >
+          {displayName}
+        </span>
+
+        {selected ? (
+          <motion.span
+            layoutId={underlineLayoutId}
+            aria-hidden="true"
+            className="mt-2 block h-0 w-10 shrink-0 rounded-[6px] border-b-[3px] border-black"
+            transition={TAB_UNDERLINE_TRANSITION}
+          />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="mt-2 block h-0 w-10 shrink-0 border-b-[3px] border-transparent"
+          />
+        )}
+      </button>
+
+      <article
+        className={cn(
+          "box-border hidden w-[222px] flex-col justify-between rounded-[8px] md:flex",
+          className
+        )}
+        aria-label={displayName}
+      >
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleSelectTeam}
+          onKeyDown={handleSelectKeyDown}
+          className="flex cursor-pointer items-end gap-2"
+        >
           <TeamFlag
             code={team.code}
             name={displayName}
             logoUrl={team.logoUrl}
             className="h-[50px] w-[49px] shrink-0 rounded-[6px] text-[50px]"
           />
-          <span className="truncate text-[16px] font-[500] leading-5 text-black">
-            {displayName}
-          </span>
+          <div className="min-w-0">
+            <div className="truncate text-[16px] font-[500] leading-5 text-black">
+              {displayName}
+            </div>
+            <div className="shrink-0 text-[24px] font-[500] leading-[30px] text-black">
+              {probabilityLabel}
+            </div>
+          </div>
         </div>
 
-        <span className="shrink-0 text-[24px] font-[500] leading-[30px] text-black">
-          {probabilityLabel}
-        </span>
-      </div>
+        <div className="mt-2 flex gap-2">
+          <RegionRestrictedControl restricted={regionRestricted}>
+            <OutcomeButton
+              side="yes"
+              price={yesPrice}
+              active={selected && tradeOutcomeSide === "yes"}
+              disabled={regionRestricted}
+              onClick={() => handleOutcomeClick("yes")}
+            />
+          </RegionRestrictedControl>
 
-      <div className="flex gap-2 mt-2">
-        <RegionRestrictedControl restricted={regionRestricted}>
-          <OutcomeButton
-            side="yes"
-            price={yesPrice}
-            active={selected && tradeOutcomeSide === "yes"}
-            disabled={regionRestricted}
-            onClick={() => handleOutcomeClick("yes")}
-          />
-        </RegionRestrictedControl>
-
-        <RegionRestrictedControl restricted={regionRestricted}>
-          <OutcomeButton
-            side="no"
-            price={noPrice}
-            active={selected && tradeOutcomeSide === "no"}
-            disabled={regionRestricted}
-            onClick={() => handleOutcomeClick("no")}
-          />
-        </RegionRestrictedControl>
-      </div>
-    </article>
+          <RegionRestrictedControl restricted={regionRestricted}>
+            <OutcomeButton
+              side="no"
+              price={noPrice}
+              active={selected && tradeOutcomeSide === "no"}
+              disabled={regionRestricted}
+              onClick={() => handleOutcomeClick("no")}
+            />
+          </RegionRestrictedControl>
+        </div>
+      </article>
+    </>
   );
 }

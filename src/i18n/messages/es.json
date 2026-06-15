@@ -292,6 +292,7 @@
     "chartTimeRangeAria": "Rango de tiempo del gráfico",
     "chartRangeAll": "Todo",
     "change24h": "24 h",
+    "timeLabel": "Tiempo",
     "volumeLabel": "Volumen",
     "compactVolume": "{value} vol.",
     "liquidity": "Liquidez",

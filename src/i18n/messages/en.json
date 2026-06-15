@@ -295,6 +295,7 @@
     "chartTimeRangeAria": "Chart time range",
     "chartRangeAll": "All",
     "change24h": "24h",
+    "timeLabel": "Time",
     "volumeLabel": "Volume",
     "compactVolume": "{value} Vol.",
     "liquidity": "Liquidity",

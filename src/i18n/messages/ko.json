@@ -292,6 +292,7 @@
     "chartTimeRangeAria": "차트 기간",
     "chartRangeAll": "전체",
     "change24h": "24시간",
+    "timeLabel": "시간",
     "volumeLabel": "거래량",
     "compactVolume": "{value} 거래량",
     "liquidity": "유동성",

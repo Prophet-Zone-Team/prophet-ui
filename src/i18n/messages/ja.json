@@ -292,6 +292,7 @@
     "chartTimeRangeAria": "チャート期間",
     "chartRangeAll": "すべて",
     "change24h": "24時間",
+    "timeLabel": "時間",
     "volumeLabel": "出来高",
     "compactVolume": "{value} 出来高",
     "liquidity": "流動性",

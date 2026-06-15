@@ -292,6 +292,7 @@
     "chartTimeRangeAria": "Временной диапазон графика",
     "chartRangeAll": "Всё",
     "change24h": "24 ч",
+    "timeLabel": "Время",
     "volumeLabel": "Объём",
     "compactVolume": "{value} об.",
     "liquidity": "Ликвидность",
