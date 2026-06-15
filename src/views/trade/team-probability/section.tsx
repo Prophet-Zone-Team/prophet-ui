@@ -11,6 +11,7 @@ import {
 import { useTranslations } from "next-intl";
 
 import {
+  formatChange,
   formatProbability,
   formatVolume
 } from "@/components/home/market-formatters";
@@ -38,14 +39,24 @@ import { tradeYesNoPill } from "@/views/trade/trade-widget/trade-ui";
 const probabilityCardClass =
   "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
 
+const probabilityCardBorderlessClass = "min-w-0 flex-1 bg-white p-4 sm:p-5";
+
+const orderbookBorderlessClass = "rounded-none border-0";
+
 export interface ProbabilitySectionProps {
   snapshot: TeamMarketSnapshot;
   showOrderbook: boolean;
+  showHeaderControls?: boolean;
+  borderless?: boolean;
+  showChartOrderbookDivider?: boolean;
 }
 
 export function ProbabilitySection({
   snapshot,
-  showOrderbook
+  showOrderbook,
+  showHeaderControls = true,
+  borderless = false,
+  showChartOrderbookDivider = false
 }: ProbabilitySectionProps) {
   const t = useTranslations("trade");
   const outcomeView = useTradeOutcomeSide();
@@ -125,14 +136,72 @@ export function ProbabilitySection({
         ? "text-[#FF674B]"
         : "text-prophet-muted";
 
+  const metricBlocks = (
+    <>
+      <MetricBlock
+        value={formatProbability(displayProbability)}
+        label={t("probabilityLabel")}
+        valueClassName="text-[36px] leading-[43px] text-black"
+      />
+      <MetricBlock
+        value={formatChange(change24hPoints)}
+        label={t("change24h")}
+        valueClassName={cn("text-base leading-[19px]", changeTone)}
+      />
+      <MetricBlock
+        value={`$${formatVolume(snapshot.market.volume)}`}
+        label={t("volumeLabel")}
+      />
+      <MetricBlock
+        value={
+          snapshot.market.liquidity
+            ? `$${formatVolume(snapshot.market.liquidity)}`
+            : t("pending")
+        }
+        label={t("liquidity")}
+      />
+    </>
+  );
+
+  const timeRangeControls = (
+    <div
+      className="flex flex-wrap gap-4"
+      role="group"
+      aria-label={t("chartTimeRangeAria")}
+    >
+      {chartTimeRanges.map((range) => (
+        <button
+          key={range.id}
+          type="button"
+          className={cn(
+            "border-0 bg-transparent p-0 text-sm leading-[17px]",
+            timeRange === range.id
+              ? "font-[500] text-black"
+              : "font-[400] text-[#909090]"
+          )}
+          onClick={() => setTimeRange(range.id)}
+        >
+          {range.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  const chartCardClass = borderless
+    ? probabilityCardBorderlessClass
+    : probabilityCardClass;
+
   return (
     <section
       ref={chartRef}
       className={cn(
-        "flex flex-col gap-3",
-        showOrderbook
-          ? "xl:grid xl:grid-cols-[minmax(0,1fr)_272px] xl:items-stretch"
-          : "xl:flex-col"
+        "flex flex-col",
+        showChartOrderbookDivider ? "gap-0" : "gap-3",
+        showOrderbook && showChartOrderbookDivider
+          ? "xl:grid xl:grid-cols-[minmax(0,1fr)_1px_272px] xl:items-stretch xl:gap-0"
+          : showOrderbook
+            ? "xl:grid xl:grid-cols-[minmax(0,1fr)_272px] xl:items-stretch"
+            : "xl:flex-col"
       )}
       aria-label={t("winnerProbabilityAria")}
     >
@@ -140,119 +209,79 @@ export function ProbabilitySection({
         layout
         transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.85 }}
         className={cn(
-          probabilityCardClass,
+          chartCardClass,
           !showOrderbook && "w-full",
           showOrderbook && "min-h-0"
         )}
       >
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="m-0 text-[20px] font-[500] leading-6 text-black">
-              {t("probabilityLabel")}
-            </h2>
-            <div
-              className="flex h-[30px] w-[96px] gap-0.5 rounded-lg border border-[#EBEBEB] bg-white p-0.5"
-              role="group"
-              aria-label={t("outcomeViewAria")}
-            >
-              <button
-                type="button"
-                className={cn(
-                  "flex-1",
-                  tradeYesNoPill(outcomeView === "yes", "yes")
-                )}
-                onClick={() => {
-                  trackWinnerChartTeamSelected({
-                    chartId: "team_probability",
-                    seriesKey: "yes",
-                    teamId: snapshot.team.id,
-                    teamName: snapshot.team.name,
-                    teamCode: snapshot.team.code
-                  });
-                  setOutcomeView("yes");
-                }}
-              >
-                {t("yes")}
-              </button>
-              <button
-                type="button"
-                className={cn(
-                  "flex-1",
-                  tradeYesNoPill(outcomeView === "no", "no")
-                )}
-                onClick={() => {
-                  trackWinnerChartTeamSelected({
-                    chartId: "team_probability",
-                    seriesKey: "no",
-                    teamId: snapshot.team.id,
-                    teamName: snapshot.team.name,
-                    teamCode: snapshot.team.code
-                  });
-                  setOutcomeView("no");
-                }}
-              >
-                {t("no")}
-              </button>
+        {showHeaderControls ? (
+          <>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="m-0 text-[20px] font-[500] leading-6 text-black">
+                  {t("probabilityLabel")}
+                </h2>
+                <div
+                  className="flex h-[30px] w-[96px] gap-0.5 rounded-lg border border-[#EBEBEB] bg-white p-0.5"
+                  role="group"
+                  aria-label={t("outcomeViewAria")}
+                >
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex-1",
+                      tradeYesNoPill(outcomeView === "yes", "yes")
+                    )}
+                    onClick={() => {
+                      trackWinnerChartTeamSelected({
+                        chartId: "team_probability",
+                        seriesKey: "yes",
+                        teamId: snapshot.team.id,
+                        teamName: snapshot.team.name,
+                        teamCode: snapshot.team.code
+                      });
+                      setOutcomeView("yes");
+                    }}
+                  >
+                    {t("yes")}
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex-1",
+                      tradeYesNoPill(outcomeView === "no", "no")
+                    )}
+                    onClick={() => {
+                      trackWinnerChartTeamSelected({
+                        chartId: "team_probability",
+                        seriesKey: "no",
+                        teamId: snapshot.team.id,
+                        teamName: snapshot.team.name,
+                        teamCode: snapshot.team.code
+                      });
+                      setOutcomeView("no");
+                    }}
+                  >
+                    {t("no")}
+                  </button>
+                </div>
+              </div>
+
+              {timeRangeControls}
             </div>
-          </div>
 
-          <div
-            className="flex flex-wrap gap-4"
-            role="group"
-            aria-label={t("chartTimeRangeAria")}
-          >
-            {chartTimeRanges.map((range) => (
-              <button
-                key={range.id}
-                type="button"
-                className={cn(
-                  "border-0 bg-transparent p-0 text-sm leading-[17px]",
-                  timeRange === range.id
-                    ? "font-[500] text-black"
-                    : "font-[400] text-[#909090]"
-                )}
-                onClick={() => {
-                  trackWinnerChartRangeChanged({
-                    chartId: "team_probability",
-                    fromRange: previousTimeRangeRef.current,
-                    toRange: range.id,
-                    teamId: snapshot.team.id,
-                    teamName: snapshot.team.name
-                  });
-                  previousTimeRangeRef.current = range.id;
-                  setTimeRange(range.id);
-                }}
-              >
-                {range.label}
-              </button>
-            ))}
+            <div className="mt-4 flex flex-wrap items-end gap-8 sm:gap-10">
+              {metricBlocks}
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex min-w-0 flex-wrap items-end gap-8 sm:gap-10">
+              {metricBlocks}
+            </div>
+            {timeRangeControls}
           </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-end gap-8 sm:gap-10">
-          <MetricBlock
-            value={formatProbability(displayProbability)}
-            label={t("probabilityLabel")}
-            valueClassName="text-[36px] leading-[43px] text-black"
-          />
-          <MetricBlock
-            value={change24h.toString()}
-            label={t("change24h")}
-            valueClassName={cn("text-base leading-[19px]", changeTone)}
-          />
-          <MetricBlock
-            value={`$${formatVolume(snapshot.market.volume)}`}
-            label={t("volumeLabel")}
-          />
-          <MetricBlock
-            value={
-              snapshot.market.liquidity
-                ? `$${formatVolume(snapshot.market.liquidity)}`
-                : t("pending")
-            }
-            label={t("liquidity")}
-          />
-        </div>
+        )}
 
         <div className="mt-4">
           <ProbabilityChart
@@ -264,10 +293,18 @@ export function ProbabilitySection({
         </div>
       </motion.div>
 
+      {showChartOrderbookDivider && showOrderbook ? (
+        <div
+          className="h-px w-full shrink-0 bg-[#EBEBEB] xl:h-auto xl:w-px xl:self-stretch"
+          aria-hidden
+        />
+      ) : null}
+
       <OrderbookPanel
         visible={showOrderbook}
         tokenId={tokenId}
         className="min-h-0 w-full"
+        orderbookClassName={borderless ? orderbookBorderlessClass : undefined}
       />
     </section>
   );

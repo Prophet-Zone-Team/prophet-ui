@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 import { formatVolume } from "@/components/home/market-formatters";
 import { TeamFlag } from "@/components/teams/team-flag";
@@ -9,6 +9,9 @@ import { usePolymarketStats } from "@/hooks/market/use-polymarket-stats";
 import { HomeHero } from "@/views/home/header";
 import { MarketListMetricLoading } from "@/views/home/home-data-loading";
 import { HomeSectionNav } from "@/views/home/home-section-nav";
+import { HomeSectionSearch } from "./home-section-search";
+import { usePathname } from "next/navigation";
+import { HomeProvider } from "./context";
 
 export interface HomePageShellProps {
   children: ReactNode;
@@ -61,16 +64,27 @@ export function HomePageShell({ children }: HomePageShellProps) {
     );
   })();
 
+  const [searchValue, setSearchValue] = useState("");
+
   return (
-    <section className="mx-auto max-w-[1112px]">
-      <HomeHero
-        totalVolumeLabel={totalVolumeLabel}
-        topMoveValue={topMoveValue}
-      />
+    <HomeProvider
+      value={{
+        searchValue,
+        setSearchValue
+      }}
+    >
+      <section className="mx-auto max-w-[1112px]">
+        <HomeHero
+          totalVolumeLabel={totalVolumeLabel}
+          topMoveValue={topMoveValue}
+        />
 
-      <HomeSectionNav />
+        <div className="w-full flex justify-center md:justify-between items-center">
+          <HomeSectionNav />
+        </div>
 
-      <div role="tabpanel">{children}</div>
-    </section>
+        <div role="tabpanel">{children}</div>
+      </section>
+    </HomeProvider>
   );
 }

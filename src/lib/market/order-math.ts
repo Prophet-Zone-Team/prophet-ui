@@ -328,7 +328,7 @@ export function formatLimitPriceInputValue(price: string | number): string {
     return "";
   }
 
-  const cents = normalizeLimitPrice(numeric) * 100;
+  const cents = Math.round(normalizeLimitPrice(numeric) * 1000) / 10;
 
   return Number.isInteger(cents) ? String(cents) : cents.toFixed(1);
 }

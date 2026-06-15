@@ -23,7 +23,7 @@ import {
 } from "@/lib/portfolio/portfolio-format";
 import { canRedeemPosition } from "@/lib/portfolio/portfolio-metrics";
 import {
-  resolvePortfolioMarketIcon,
+  resolvePortfolioPositionIcon,
   resolvePortfolioTeamName,
   type OpenOrderMarketContext
 } from "@/lib/portfolio/teams-condition";
@@ -166,10 +166,20 @@ export function PortfolioPositionsTable({
     const marketContext = marketContextMap[position.conditionId];
     const teams = marketContext?.teams ?? [];
     const teamName = resolvePortfolioTeamName(teams, position);
-    const marketIcon = resolvePortfolioMarketIcon(teams, position.outcome);
+    const marketIcon = resolvePortfolioPositionIcon(position, teams, {
+      contextIcon: marketContext?.icon,
+      marketKind: marketContext?.marketKind
+    });
     const tradeHref = resolvePortfolioPositionTradeHref(
-      { slug: position.slug?.trim() || marketContext?.slug || "" },
-      teams
+      {
+        slug: position.slug,
+        eventSlug: position.eventSlug
+      },
+      {
+        marketKind: marketContext?.marketKind,
+        contextSlug: marketContext?.slug,
+        teams
+      }
     );
     const timeValue = positionTimeMap.get(position.asset);
     const pnlTone =

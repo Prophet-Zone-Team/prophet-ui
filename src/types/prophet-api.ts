@@ -75,6 +75,9 @@ export interface ProphetGetGamesData {
 /** GET /v1/related-games — related Polymarket games for comma-separated team names */
 export type ProphetGetRelatedGamesData = ProphetPolyMarketGameItem[];
 
+/** GET /v1/game/group-matches — group stage fixtures for a group code */
+export type ProphetGetGroupMatchesData = ProphetPolyMarketGameItem[];
+
 /** GET /v1/games/result — finished games for a team */
 export interface ProphetTeamGameResult {
   home_team: string;
@@ -119,12 +122,16 @@ export interface ProphetTeamsConditionTeam {
   ordering?: string;
 }
 
+export type PortfolioMarketKind = "team" | "game" | "group";
+
 export interface ProphetTeamsConditionEntry {
   teams: ProphetTeamsConditionTeam[];
   slug: string;
   question?: string;
   main_event_title?: string;
   event_title?: string;
+  icon?: string;
+  marketKind?: PortfolioMarketKind;
 }
 
 export type ProphetGetTeamsConditionData = Record<
@@ -757,6 +764,34 @@ export interface ProphetGetTeamDetailNextMatch {
   home_goals: number;
   away_goals: number;
   updated_at: string;
+}
+
+/** GET /v1/game/group-standings — group stage standings with market prices */
+export interface ProphetGroupStandingTeam {
+  team_id: number;
+  team_name: string;
+  team_logo: string;
+  rank: number;
+  points: number;
+  played: number;
+  win: number;
+  draw: number;
+  lose: number;
+  goals_for: number;
+  goals_against: number;
+  goals_diff: number;
+  source_update_at: number;
+  outcomePrices?: string;
+}
+
+export interface ProphetGroupStandingGroup {
+  group_code: string;
+  group_name: string;
+  teams: ProphetGroupStandingTeam[];
+}
+
+export interface ProphetGetGroupStandingsData {
+  groups: ProphetGroupStandingGroup[];
 }
 
 export interface ProphetGetTeamDetailData {
