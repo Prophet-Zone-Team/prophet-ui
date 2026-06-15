@@ -16,8 +16,17 @@ import {
 import { getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
 import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity";
 import { useMarketWsPrices, useRegisterMarketWsTokens } from "@/context/market-ws";
+import {
+  livePriceToProbability,
+  resolveLiveMarketPrice,
+  useMarketLivePriceRevision,
+  useMarketLivePricesByConditionId,
+} from "@/context/market-live-price-ws";
 import { isValidAskPrice, resolveFixtureDisplayAskPrice } from "@/lib/market/fixture-ask-liquidity";
-import { resolveLiveOutcomeYesNoProbabilities } from "@/lib/market/merge-live-outcome-prices";
+import {
+  mergeRtdsPriceIntoFixtureOutcome,
+  resolveLiveOutcomeYesNoProbabilities,
+} from "@/lib/market/merge-live-outcome-prices";
 import { isGameMarketLiveUpdatesEnabled } from "@/lib/market/live-match";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
@@ -169,8 +178,21 @@ function resolveLiveOutcomeButtonPrice(
   fixtureOutcome: FixtureMarketOutcome | undefined,
   matchOutcome: GameMarketOutcome | undefined,
   matchProbability: number,
-  tradeSide: BidTradeSide
+  tradeSide: BidTradeSide,
+  pricesByConditionId: Record<string, number>,
 ): number | undefined {
+  const liveYesPrice = resolveLiveMarketPrice(
+    fixtureOutcome?.conditionId,
+    undefined,
+    pricesByConditionId,
+  );
+
+  if (liveYesPrice !== undefined) {
+    return binarySide === "yes"
+      ? liveYesPrice
+      : Math.max(0.001, Math.min(0.999, 1 - liveYesPrice));
+  }
+
   const livePrice = tokenId ? tokenPrices[tokenId]?.bestAsk : undefined;
 
   if (isValidAskPrice(livePrice)) {
@@ -261,6 +283,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       ? resolveLimitExpirationTimestamp(limitExpiration, limitExpirationCustom)
       : undefined;
   const orderType = resolveOrderType(orderMode, limitExpirationTimestamp);
+  const pricesByConditionId = useMarketLivePricesByConditionId();
+  const livePriceRevision = useMarketLivePriceRevision();
 
   const marketTokenDeps =
     input.variant === "team"
@@ -385,11 +409,16 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       return undefined;
     }
 
-    return mergeFixtureOutcomeLiveAsks(
+    const withClobAsks = mergeFixtureOutcomeLiveAsks(
       freshSelectedFixtureOutcome,
-      liveFixtureAsks
+      liveFixtureAsks,
     );
-  }, [freshSelectedFixtureOutcome, liveFixtureAsks]);
+
+    return mergeRtdsPriceIntoFixtureOutcome(
+      withClobAsks,
+      pricesByConditionId,
+    );
+  }, [freshSelectedFixtureOutcome, liveFixtureAsks, pricesByConditionId]);
 
   const { conditionId, yesTokenId, noTokenId } = marketTokenIds;
 
@@ -452,8 +481,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   const limitPriceContextKey =
     input.variant === "team"
-      ? `team:${input.snapshot.team.id}:${outcomeSide}:${tradeSide}`
-      : `game:${input.gameSnapshot.match.id}:${selectedFixtureOutcome?.id ?? matchOutcomeSide}:${outcomeSide}:${tradeSide}`;
+      ? `team:${input.snapshot.team.id}:${outcomeSide}:${tradeSide}:${livePriceRevision}`
+      : `game:${input.gameSnapshot.match.id}:${selectedFixtureOutcome?.id ?? matchOutcomeSide}:${outcomeSide}:${tradeSide}:${livePriceRevision}`;
 
   const teamDefaults = useMemo(() => {
     if (input.variant !== "team") {
@@ -461,11 +490,25 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     const snapshot = input.snapshot;
-    const defaultLimit = getTeamDefaultLimitPrice(
-      snapshot,
-      outcomeSide,
-      tradeSide
+    const teamConditionId = snapshot.market.polymarket?.conditionId;
+    const liveYesPrice = resolveLiveMarketPrice(
+      teamConditionId,
+      undefined,
+      pricesByConditionId,
     );
+    const yesTokenPrice =
+      liveYesPrice ??
+      (yesTokenId ? teamTokenPrices[yesTokenId]?.bestAsk : undefined) ??
+      snapshot.market.polymarket?.tokens.yes?.price ??
+      calculateReferencePrice(snapshot.market.probability, "yes");
+    const noTokenPrice =
+      liveYesPrice !== undefined
+        ? Math.max(0.001, Math.min(0.999, 1 - liveYesPrice))
+        : ((noTokenId ? teamTokenPrices[noTokenId]?.bestAsk : undefined) ??
+          snapshot.market.polymarket?.tokens.no?.price ??
+          calculateReferencePrice(snapshot.market.probability, "no"));
+    const sidePrice = outcomeSide === "yes" ? yesTokenPrice : noTokenPrice;
+    const defaultLimit = sidePrice;
     const orderLimitPrice = resolveOrderLimitPrice(
       orderMode,
       parseLimitPriceInput(limitPrice, defaultLimit),
@@ -485,20 +528,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       acceptingOrders: sellAcceptingOrders
     });
 
-    const yesTokenPrice =
-      (yesTokenId ? teamTokenPrices[yesTokenId]?.bestAsk : undefined) ??
-      snapshot.market.polymarket?.tokens.yes?.price ??
-      calculateReferencePrice(snapshot.market.probability, "yes");
-    const noTokenPrice =
-      (noTokenId ? teamTokenPrices[noTokenId]?.bestAsk : undefined) ??
-      snapshot.market.polymarket?.tokens.no?.price ??
-      calculateReferencePrice(snapshot.market.probability, "no");
-
     return {
       snapshot,
       preview,
-      yesPrice: snapshot.market.probability,
-      noPrice: Math.max(0, 100 - snapshot.market.probability),
+      yesPrice:
+        livePriceToProbability(yesTokenPrice) ?? snapshot.market.probability,
+      noPrice:
+        livePriceToProbability(noTokenPrice) ??
+        Math.max(0, 100 - snapshot.market.probability),
       yesTokenPrice,
       noTokenPrice,
       defaultLimit,
@@ -507,12 +544,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [
     cappedOrderAmount,
     input,
+    livePriceRevision,
     maxSellShares,
     noTokenId,
     orderMode,
     orderType,
     outcomeSide,
     limitPrice,
+    pricesByConditionId,
     sellAcceptingOrders,
     sellPosition,
     teamTokenPrices,
@@ -579,7 +618,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
           effectiveFixtureOutcome,
           matchOutcome,
           matchProbability,
-          tradeSide
+          tradeSide,
+          pricesByConditionId,
         ) ?? calculateReferencePrice(matchProbability, "yes"),
       noTokenPrice:
         resolveLiveOutcomeButtonPrice(
@@ -589,7 +629,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
           effectiveFixtureOutcome,
           matchOutcome,
           matchProbability,
-          tradeSide
+          tradeSide,
+          pricesByConditionId,
         ) ??
         calculateReferencePrice(
           liveProbabilities?.no ?? Math.max(0, 100 - matchProbability),
@@ -603,12 +644,14 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     effectiveFixtureOutcome,
     fixtureTokenPrices,
     input,
+    livePriceRevision,
     matchOutcomeSide,
     maxSellShares,
     orderMode,
     orderType,
     outcomeSide,
     limitPrice,
+    pricesByConditionId,
     tradeSide
   ]);
 
@@ -698,27 +741,27 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   useEffect(() => {
     if (input.variant === "team") {
-      setLimitPrice(
-        formatTeamDefaultLimitPriceString(
-          input.snapshot,
-          outcomeSide,
-          tradeSide
-        )
-      );
+      const defaultLimit = teamDefaults?.defaultLimit;
+
+      if (defaultLimit !== undefined) {
+        setLimitPrice(defaultLimit.toFixed(3));
+      }
+
       return;
     }
 
-    setLimitPrice(
-      formatGameDefaultLimitPriceString(
-        input.gameSnapshot,
-        matchOutcomeSide,
-        outcomeSide,
-        tradeSide
-      )
-    );
-    // Reset default limit price only when trade context changes, not on snapshot refreshes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot read from latest closure
-  }, [limitPriceContextKey, setLimitPrice]);
+    const defaultLimit = gameDefaults?.defaultLimit;
+
+    if (defaultLimit !== undefined) {
+      setLimitPrice(defaultLimit.toFixed(3));
+    }
+  }, [
+    gameDefaults?.defaultLimit,
+    input.variant,
+    limitPriceContextKey,
+    setLimitPrice,
+    teamDefaults?.defaultLimit,
+  ]);
 
   const readinessQueryKey = useMemo(() => {
     if (!preview?.tokenId) {

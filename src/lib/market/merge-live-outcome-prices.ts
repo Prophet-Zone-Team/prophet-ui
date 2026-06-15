@@ -71,6 +71,43 @@ export function mergeLivePricesIntoFixtureOutcome(
   };
 }
 
+export function mergeRtdsPriceIntoFixtureOutcome(
+  outcome: FixtureMarketOutcome,
+  pricesByConditionId: Record<string, number>,
+): FixtureMarketOutcome {
+  const conditionId = outcome.conditionId?.trim();
+
+  if (!conditionId) {
+    return outcome;
+  }
+
+  const liveYes = pricesByConditionId[conditionId];
+
+  if (liveYes === undefined || liveYes <= 0 || liveYes >= 1) {
+    return outcome;
+  }
+
+  const liveNo = 1 - liveYes;
+  const nextProbability = probabilityFromAsk(liveYes);
+
+  return {
+    ...outcome,
+    yesAsk: liveYes,
+    noAsk: liveNo,
+    price: liveYes,
+    probability: nextProbability ?? outcome.probability,
+  };
+}
+
+export function mergeRtdsPricesIntoFixtureOutcomes(
+  outcomes: FixtureMarketOutcome[],
+  pricesByConditionId: Record<string, number>,
+): FixtureMarketOutcome[] {
+  return outcomes.map((outcome) =>
+    mergeRtdsPriceIntoFixtureOutcome(outcome, pricesByConditionId),
+  );
+}
+
 export function mergeLivePricesIntoFixtureOutcomes(
   outcomes: FixtureMarketOutcome[],
   pricesByOutcomeId: Record<string, LiveOutcomePrices>,

@@ -22,7 +22,9 @@ import { useMatchWithLiveState } from "@/store/match-live-store";
 import {
   mergeLivePricesIntoFixtureOutcomes,
   mergeLivePricesIntoGameOutcomes,
+  mergeRtdsPricesIntoFixtureOutcomes,
 } from "@/lib/market/merge-live-outcome-prices";
+import { useMarketLivePricesByConditionId } from "@/context/market-live-price-ws";
 import { resolveAllFixtureOutcomes, resolveFixtureOutcomesForTab } from "@/lib/market/fixture-tab-outcomes";
 import {
   useSelectFixtureOutcome,
@@ -189,6 +191,21 @@ export function GameMarketsSection({
     outcomes: allFixtureOutcomes,
     enabled: marketWsEnabled,
   });
+  const pricesByConditionId = useMarketLivePricesByConditionId();
+
+  const rtdsActiveTabOutcomes = useMemo(
+    () => mergeRtdsPricesIntoFixtureOutcomes(activeTabOutcomes, pricesByConditionId),
+    [activeTabOutcomes, pricesByConditionId],
+  );
+
+  const liveActiveTabOutcomes = useMemo(
+    () =>
+      mergeLivePricesIntoFixtureOutcomes(
+        rtdsActiveTabOutcomes,
+        pricesByOutcomeId,
+      ),
+    [pricesByOutcomeId, marketWsRevision, rtdsActiveTabOutcomes],
+  );
 
   const selectDefaultForTab = useCallback(
     (nextTab: GameMarketTabId, lineKey?: string) => {
@@ -310,18 +327,19 @@ export function GameMarketsSection({
     }
   };
 
-  const liveActiveTabOutcomes = useMemo(
-    () => mergeLivePricesIntoFixtureOutcomes(activeTabOutcomes, pricesByOutcomeId),
-    [activeTabOutcomes, pricesByOutcomeId, marketWsRevision],
-  );
   const liveGameOutcomes = useMemo(
     () =>
       mergeLivePricesIntoGameOutcomes(
         gameSnapshot.outcomes,
-        activeTabOutcomes,
+        rtdsActiveTabOutcomes,
         pricesByOutcomeId,
       ),
-    [activeTabOutcomes, gameSnapshot.outcomes, pricesByOutcomeId, marketWsRevision],
+    [
+      gameSnapshot.outcomes,
+      pricesByOutcomeId,
+      marketWsRevision,
+      rtdsActiveTabOutcomes,
+    ],
   );
   const summaryConfig = useMemo(
     () =>

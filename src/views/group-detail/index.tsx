@@ -1,11 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { PageBack } from "@/components/ui/page-back";
 import { MarketWsProvider } from "@/context/market-ws";
+import {
+  MarketLivePriceWsProvider,
+  useRegisterRtdsEventSlugs,
+} from "@/context/market-live-price-ws";
 import type { WorldCup2026Group } from "@/data/world-cup-2026/groups";
+import { resolveGroupWinnerEventSlug } from "@/config/fifa-group-winner-market";
 import { useGroupWinnerMarket } from "@/hooks/market/use-group-winner-market";
 import {
   resolveDefaultSelectedTeamId,
@@ -251,12 +256,43 @@ export function GroupDetailView(props: GroupDetailViewProps) {
       snapshot.market.polymarket?.tokens.yes?.tokenId ||
       snapshot.market.polymarket?.tokens.no?.tokenId
   );
+  const rtdsEnabled = props.initialSnapshots.some(
+    (snapshot) =>
+      snapshot.market.polymarket?.conditionId ||
+      snapshot.market.slug?.trim() ||
+      snapshot.market.polymarket?.tokens.yes?.tokenId ||
+      snapshot.market.polymarket?.tokens.no?.tokenId,
+  );
+  const eventSlug = resolveGroupWinnerEventSlug(props.group);
 
   return (
-    <MarketWsProvider enabled={marketWsEnabled}>
-      <GroupDetailViewContent {...props} />
-    </MarketWsProvider>
+    <MarketLivePriceWsProvider enabled={rtdsEnabled}>
+      <MarketWsProvider enabled={marketWsEnabled}>
+        <GroupDetailRtdsRegistration eventSlug={eventSlug} enabled={rtdsEnabled}>
+          <GroupDetailViewContent {...props} />
+        </GroupDetailRtdsRegistration>
+      </MarketWsProvider>
+    </MarketLivePriceWsProvider>
   );
+}
+
+function GroupDetailRtdsRegistration({
+  eventSlug,
+  enabled,
+  children,
+}: {
+  eventSlug: string;
+  enabled: boolean;
+  children: ReactNode;
+}) {
+  const eventSlugs = useMemo(
+    () => [eventSlug],
+    [eventSlug],
+  );
+
+  useRegisterRtdsEventSlugs("group-detail", eventSlugs, { enabled });
+
+  return children;
 }
 
 export default GroupDetailView;
