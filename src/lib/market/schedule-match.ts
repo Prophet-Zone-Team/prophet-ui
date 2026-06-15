@@ -1,7 +1,7 @@
 import { findCuratedTeamById } from "@/data/teams/curated-team-list";
 import {
   formatDateFromIso,
-  formatDateTimeFromIso,
+  formatKickoffSubtitleFromIso,
 } from "@/lib/formatters/datetime";
 import type {
   Team,
@@ -197,7 +197,7 @@ export function formatScheduleKickoff(value: string | undefined): string {
     return "TBD";
   }
 
-  return formatDateTimeFromIso(value);
+  return formatKickoffSubtitleFromIso(value);
 }
 
 export function filterScheduleMatches(

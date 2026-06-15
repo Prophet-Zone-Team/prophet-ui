@@ -17,7 +17,6 @@ import {
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { teamDetailHref } from "@/lib/routes/team";
-import Bg from "@/views/trade/game/header/bg";
 import type {
   ApiFootballTeamProfile,
   TeamMarketSnapshot,
@@ -122,11 +121,8 @@ function HeaderMetric({
   versusLabel: string;
 }) {
   return (
-    <div className="relative md:w-[453px] h-full">
-      <div className="absolute top-[-14px] h-full hidden md:block">
-        <Bg />
-      </div>
-      <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[0px] md:mt-[35px]">
+    <div className="relative h-full w-full overflow-visible md:w-[453px]">
+      <div className="flex flex-col justify-center items-center h-full relative z-10 mt-[24px] md:mt-[35px]">
         {statusVariant === "upcoming" ? (
           <span className="text-[#909090] text-[36px] font-[500]">
             {versusLabel}
@@ -172,7 +168,7 @@ function TeamSideColumn({
   return (
     <div
       className={cn(
-        "flex pt-10 sm:pt-[64px]",
+        "relative z-10 flex pt-10 sm:pt-[64px]",
         justify === "end" ? "justify-end" : "justify-start"
       )}
     >

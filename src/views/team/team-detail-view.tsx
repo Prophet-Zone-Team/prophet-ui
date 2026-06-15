@@ -21,8 +21,10 @@ import {
 } from "@/store/user-config-store";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { MarketDetailsNav } from "@/views/trade/team/market-details-nav";
+import { TeamMobileTradeButtons } from "@/views/trade/team/team-mobile-trade-buttons";
 import { TradeHeader } from "@/views/trade/team/trade-header";
 import { useTeamMarketWsTokens } from "@/views/trade/team/use-team-market-ws-tokens";
+import { useTeamMobileOutcomePrices } from "@/views/trade/team/use-team-mobile-outcome-prices";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import { TeamDetailFootnote } from "@/views/team/team-detail-footnote";
 import { TeamDetailHeader } from "@/views/team/team-detail-header";
@@ -64,13 +66,15 @@ export function TeamDetailView({
   const outcomeSide = useTradeOutcomeSide();
   const [tradeDrawerOpen, setTradeDrawerOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useTeamDetail(snapshot.team.name);
-
-  useTeamMarketWsTokens(
-    snapshot,
-    Boolean(
-      snapshot.market.polymarket?.tokens.yes?.tokenId ||
+  const marketWsEnabled = Boolean(
+    snapshot.market.polymarket?.tokens.yes?.tokenId ||
       snapshot.market.polymarket?.tokens.no?.tokenId
-    )
+  );
+
+  useTeamMarketWsTokens(snapshot, marketWsEnabled);
+  const { yesPrice, noPrice } = useTeamMobileOutcomePrices(
+    snapshot,
+    marketWsEnabled
   );
   const marketNews = useAnalyticsTeamMarketNews(snapshot.team.name);
   const teamDisplayName = useLocalizedTeamName(
@@ -131,22 +135,11 @@ export function TeamDetailView({
 
   const mobileTradeBar = (
     <>
-      <div className="fixed bottom-0 left-0 z-10 flex w-full items-center justify-between gap-5 p-3 md:hidden">
-        <button
-          type="button"
-          className="flex h-[46px] flex-1 items-center justify-center rounded-xl bg-[#FF674B] text-lg font-[500] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() => openTradeDrawer("no")}
-        >
-          {tTrade("no")}
-        </button>
-        <button
-          type="button"
-          className="flex h-[46px] flex-1 items-center justify-center rounded-xl bg-[#65AF14] text-lg font-[500] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() => openTradeDrawer("yes")}
-        >
-          {tTrade("yes")}
-        </button>
-      </div>
+      <TeamMobileTradeButtons
+        yesPrice={yesPrice}
+        noPrice={noPrice}
+        onSelect={openTradeDrawer}
+      />
 
       <Drawer
         open={tradeDrawerOpen}
