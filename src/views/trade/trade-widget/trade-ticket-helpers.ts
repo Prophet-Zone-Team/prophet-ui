@@ -534,12 +534,12 @@ export function deriveOutcomeSummaryLabel(tradeSide: BidTradeSide): string {
   return tradeSide === "sell" ? "You will receive" : "To Win";
 }
 
-/** Estimated total payout if the selected outcome wins ($1 per share). */
+/** Estimated total payout if the selected outcome wins, including cost. */
 export function deriveOutcomeSummaryValue(
   tradeSide: BidTradeSide,
   preview: OrderPreviewFields
 ): number {
-  return preview.potentialPayout;
+  return tradeSide === "buy" ? preview.potentialOutcome : preview.potentialPayout;
 }
 
 export function deriveAmountInputLabel(
