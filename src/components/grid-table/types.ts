@@ -19,4 +19,6 @@ export type GridTableProps<T> = {
   bodyRowClassName?: string;
   minWidth?: string;
   ariaLabel?: string;
+  onRowClick?: (row: T) => void;
+  getRowAriaLabel?: (row: T) => string;
 };

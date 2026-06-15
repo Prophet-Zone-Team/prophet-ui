@@ -1,6 +1,7 @@
 import { formatMatchVersusTitle } from "@/lib/market/trade-widget-header";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
 import type {
+  PortfolioMarketKind,
   ProphetTeamsConditionEntry,
   ProphetTeamsConditionTeam
 } from "@/types/prophet-api";
@@ -10,6 +11,8 @@ export type OpenOrderMarketContext = {
   title: string;
   teams: ProphetTeamsConditionTeam[];
   slug?: string;
+  icon?: string;
+  marketKind?: PortfolioMarketKind;
 };
 
 export function formatTeamsConditionTitle(
@@ -72,7 +75,9 @@ export function buildOpenOrderMarketMap(
       title:
         entry?.question?.trim() || formatTeamsConditionTitle(safeTeams),
       teams: safeTeams,
-      slug: entry?.slug?.trim() || undefined
+      slug: entry?.slug?.trim() || undefined,
+      icon: entry?.icon?.trim() || undefined,
+      marketKind: entry?.marketKind
     };
   }
 
@@ -101,12 +106,43 @@ export type PortfolioMarketIcon =
   | { kind: "single"; teamName: string }
   | { kind: "match"; homeName: string; awayName: string }
   | { kind: "draw" }
+  | { kind: "image"; src: string }
   | { kind: "placeholder" };
+
+export type PortfolioMarketIconOptions = {
+  contextIcon?: string;
+  marketKind?: PortfolioMarketKind;
+};
+
+export function resolvePortfolioPositionIcon(
+  position: Pick<UserPositionRecord, "icon" | "outcome">,
+  teams: ProphetTeamsConditionTeam[],
+  options: PortfolioMarketIconOptions = {}
+): PortfolioMarketIcon {
+  const iconSrc = position.icon?.trim();
+
+  if (iconSrc) {
+    return { kind: "image", src: iconSrc };
+  }
+
+  return resolvePortfolioMarketIcon(teams, position.outcome, options);
+}
 
 export function resolvePortfolioMarketIcon(
   teams: ProphetTeamsConditionTeam[],
-  outcome: string
+  outcome: string,
+  options: PortfolioMarketIconOptions = {}
 ): PortfolioMarketIcon {
+  const contextIcon = options.contextIcon?.trim();
+
+  if (contextIcon) {
+    return { kind: "image", src: contextIcon };
+  }
+
+  if (options.marketKind === "game") {
+    return { kind: "placeholder" };
+  }
+
   const normalizedOutcome = outcome.trim().toLowerCase();
 
   if (teams.length === 0) {
