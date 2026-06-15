@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
-import { Modal } from "@/components/ui/modal";
 import { useAuth } from "@/context/auth";
 import { useLocalizedStrategyLabels } from "@/hooks/i18n/use-localized-strategy-labels";
 import { cn } from "@/lib/cn";
@@ -18,6 +17,7 @@ import { MarketBreakdownTable } from "./market-breakdown-table";
 import { RiskDisclaimer } from "./risk-disclaimer";
 import { StrategyBidSignModal } from "./sign-modal";
 import { StrategyBidModalShell } from "./strategy-bid-modal-shell";
+import { StrategyBidResponsiveOverlay } from "./strategy-bid-responsive-overlay";
 import { StrategySummary } from "./strategy-summary";
 import type { StrategyBidModalProps, StrategyBidStep } from "./types";
 import { useStrategyBidForm } from "./use-strategy-bid-form";
@@ -122,7 +122,7 @@ export function StrategyBidModal({
 
   return (
     <>
-      <Modal
+      <StrategyBidResponsiveOverlay
         open={open && step === "confirm"}
         onClose={handleClose}
         ariaLabel={t("joinStrategy")}
@@ -192,7 +192,7 @@ export function StrategyBidModal({
             />
           </div>
         </StrategyBidModalShell>
-      </Modal>
+      </StrategyBidResponsiveOverlay>
 
       <StrategyBidSignModal
         open={open && step === "sign"}

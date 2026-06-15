@@ -50,11 +50,11 @@ export function StrategyCardBodyTable({
   }
 
   return (
-    <div className={cn("mx-4 mb-4 overflow-x-auto md:mx-5 md:mb-5", className)}>
+    <div className={cn("mx-3 mb-3 overflow-x-auto md:mx-5 md:mb-5", className)}>
       <div
         role="table"
         aria-label={t("strategyLegs")}
-        className="min-w-[720px] border border-[#EBEBEB] bg-[#FCFCFC]"
+        className="min-w-[640px] border border-[#EBEBEB] bg-[#FCFCFC] md:min-w-[720px]"
       >
         <div
           role="row"

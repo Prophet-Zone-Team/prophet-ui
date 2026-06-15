@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
-import { HttpsRequiredPage } from "@/components/runtime/https-required-page";
 import { AnalyticsProvider } from "@/context/analytics";
 import { AuthProvider } from "@/context/auth";
 import RainbowProvider from "@/context/rainbowkit/provider";
@@ -12,8 +11,8 @@ import { ProphetNotificationWsProvider } from "@/context/prophet-notification-ws
 import { SportsWsProvider } from "@/context/sports-ws";
 import { LocaleProvider } from "@/components/runtime/locale-provider";
 import { AppChrome } from "@/layout/app-chrome";
+import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen";
 import type { AppLocale } from "@/i18n/config";
-import { isSecureInBrowser } from "@/lib/runtime/is-secure-app-context";
 
 interface AppRootProps {
   initialSecure: boolean;
@@ -30,20 +29,6 @@ export function AppRoot({
   initialMessages,
   children
 }: AppRootProps) {
-  const isSecure =
-    typeof window !== "undefined" ? isSecureInBrowser() : initialSecure;
-
-  if (!isSecure) {
-    return (
-      <LocaleProvider
-        initialLocale={initialLocale}
-        initialMessages={initialMessages}
-      >
-        <HttpsRequiredPage />
-      </LocaleProvider>
-    );
-  }
-
   return (
     <LocaleProvider
       initialLocale={initialLocale}
@@ -56,6 +41,7 @@ export function AppRoot({
               <SportsWsProvider>
                 <ProphetNotificationWsProvider>
                   <main className="min-h-screen overflow-x-hidden font-body">
+                    <MobileLoadingScreen />
                     <AppChrome>{children}</AppChrome>
                   </main>
                   <Toaster />

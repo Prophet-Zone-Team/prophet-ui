@@ -2,13 +2,13 @@
 
 import { useTranslations } from "next-intl";
 
-import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
 import { formatStrategyBudgetLabel } from "@/lib/strategy/strategy-metrics";
 import type { StrategyBidLeg } from "@/lib/strategy/strategy-bid-validation";
 
 import { STRATEGY_BID_SIGN_MODAL_WIDTH } from "../constants";
 import { StrategyBidModalShell } from "../strategy-bid-modal-shell";
+import { StrategyBidResponsiveOverlay } from "../strategy-bid-responsive-overlay";
 import { SignLegRow } from "./sign-leg-row";
 import { useStrategyBidSign } from "./use-strategy-bid-sign";
 
@@ -57,7 +57,7 @@ export function StrategyBidSignModal({
   }
 
   return (
-    <Modal
+    <StrategyBidResponsiveOverlay
       open={open}
       onClose={onClose}
       ariaLabel={t("joinStrategySigning")}
@@ -118,6 +118,6 @@ export function StrategyBidSignModal({
           </div>
         </div>
       </StrategyBidModalShell>
-    </Modal>
+    </StrategyBidResponsiveOverlay>
   );
 }

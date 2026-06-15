@@ -5,7 +5,9 @@
     "strategies": "策略",
     "tracks": "追蹤",
     "portfolio": "投資組合",
-    "primaryNavigation": "主要導覽"
+    "worldCup": "WorldCup",
+    "primaryNavigation": "主要導覽",
+    "bottomNavigation": "底部導覽"
   },
   "wallet": {
     "portfolio": "投資組合",
@@ -138,6 +140,9 @@
     "buy": "買入",
     "sell": "賣出",
     "market": "Market",
+    "details": "詳情",
+    "bid": "出價",
+    "marketDetailsNavAria": "市場與球隊詳情",
     "limit": "Limit",
     "marketOrderDescription": "Market order (FAK)",
     "limitOrderDescription": "Limit order (GTC)",
@@ -295,6 +300,7 @@
     "chartTimeRangeAria": "圖表時間範圍",
     "chartRangeAll": "全部",
     "change24h": "24 小時",
+    "timeLabel": "時間",
     "volumeLabel": "成交量",
     "compactVolume": "{value} 成交量",
     "liquidity": "流動性",
@@ -366,6 +372,10 @@
     "matchHistoryAria": "對戰紀錄",
     "matchHistoryTableAria": "歷史交鋒紀錄",
     "matchHistoryEmpty": "尚無對戰紀錄。",
+    "tabRelatedGamesMobile": "賽事",
+    "tabRelatedNewsMobile": "新聞",
+    "tabMatchHistoryMobile": "紀錄",
+    "matchContextTabsAria": "比賽資訊",
     "format": "賽制",
     "versus": "VS",
     "result": "結果",
@@ -852,6 +862,7 @@
     "fifaWorldCup2026": "2026 FIFA 世界盃",
     "heroTaglineBefore": "新聞之前，",
     "heroTaglineMoves": "市場先動",
+    "mobileLoadingAria": "正在載入 Prophet",
     "sourcePolymarket": "資料來源：Polymarket",
     "worldCupMarketSummary": "世界盃市場摘要",
     "teamsListed": "上架球隊",
@@ -862,6 +873,7 @@
     "kickoffCountdown": "{days}天 {hours}小時 {minutes}分",
     "worldCupMarketViews": "世界盃市場檢視",
     "worldCupWinner": "世界盃冠軍",
+    "winner": "冠軍",
     "worldCupWinnerProbability": "世界盃冠軍機率",
     "worldCupWinnerProbabilityChartAria": "世界盃冠軍機率圖表",
     "loadingProbabilityHistory": "載入機率歷史中...",
@@ -884,6 +896,7 @@
     "teams": "球隊",
     "filterByTeam": "依球隊篩選",
     "selectTeams": "選擇球隊",
+    "searchTeams": "搜尋",
     "removeTeamFilter": "移除 {team} 篩選",
     "allWorldCupTeamMarkets": "All World Cup team markets",
     "liveMarketDataUnavailable": "Live market data is unavailable. Check Polymarket connectivity and try again.",
@@ -1511,7 +1524,6 @@
   },
   "runtime": {
     "connectionLabel": "連線",
-    "httpsRequiredTitle": "需要安全連線",
     "httpsRequiredDescription": "錢包登入與交易功能需要加密的 HTTPS 連線。請開啟此頁面的安全版本以繼續。",
     "openSecureVersion": "開啟安全版本"
   }

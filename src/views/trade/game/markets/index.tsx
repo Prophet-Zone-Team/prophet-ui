@@ -388,11 +388,11 @@ export function GameMarketsSection({
 
   return (
     <section
-      className="mt-[50px] flex flex-col gap-[5px]"
+      className="md:mt-[50px] mt-[20px] flex flex-col gap-[5px]"
       aria-label={t("matchMarkets")}
     >
       <div className="flex min-w-0 items-center justify-between gap-4 px-3 md:px-0">
-        <div className="min-w-0 shrink">
+        <div className="min-w-0 flex-1">
           <GameMarketTabSwitcher
             items={tabItems}
             value={tab}
@@ -404,6 +404,7 @@ export function GameMarketsSection({
           variant="game"
           checked={showOrderbook}
           onChange={setShowOrderbook}
+          className="hidden shrink-0 md:flex"
         />
       </div>
 
@@ -488,7 +489,11 @@ export function GameMarketsSection({
         />
       ) : null}
 
-      <MarketContextRow match={liveMatch} teamSnapshots={teamSnapshots} />
+      <MarketContextRow
+        match={liveMatch}
+        teamSnapshots={teamSnapshots}
+        gameSnapshotHomeTeamId={gameSnapshot.homeTeamId}
+      />
     </section>
   );
 }

@@ -173,7 +173,7 @@ export function GameStatistics({
     <section
       aria-label={t("statisticsAria")}
       className={cn(
-        "w-full rounded-[12px] border border-[#EBEBEB] bg-white px-4 py-4 sm:px-5",
+        "hidden w-full rounded-[12px] border border-[#EBEBEB] bg-white px-4 py-4 sm:px-5 md:block",
         className
       )}
     >

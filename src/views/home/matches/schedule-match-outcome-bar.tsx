@@ -14,7 +14,7 @@ export function ScheduleMatchOutcomeBar({
   height = 8
 }: ScheduleMatchOutcomeBarProps) {
   return (
-    <div className="pt-[20px]">
+    <div className="md:pt-[20px] pt-[10px]">
       <ProbabilityBar
         height={height}
         trackColor={gameColors.drawBar}

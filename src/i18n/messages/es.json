@@ -5,7 +5,9 @@
     "strategies": "Estrategias",
     "tracks": "Seguimiento",
     "portfolio": "Portafolio",
-    "primaryNavigation": "Navegación principal"
+    "worldCup": "WorldCup",
+    "primaryNavigation": "Navegación principal",
+    "bottomNavigation": "Navegación inferior"
   },
   "wallet": {
     "portfolio": "Portafolio",
@@ -138,6 +140,9 @@
     "buy": "Comprar",
     "sell": "Vender",
     "market": "Mercado",
+    "details": "Detalles",
+    "bid": "Ofertar",
+    "marketDetailsNavAria": "Mercado y detalles del equipo",
     "limit": "Límite",
     "marketOrderDescription": "Market order (FAK)",
     "limitOrderDescription": "Limit order (GTC)",
@@ -292,6 +297,7 @@
     "chartTimeRangeAria": "Rango de tiempo del gráfico",
     "chartRangeAll": "Todo",
     "change24h": "24 h",
+    "timeLabel": "Tiempo",
     "volumeLabel": "Volumen",
     "compactVolume": "{value} vol.",
     "liquidity": "Liquidez",
@@ -363,6 +369,10 @@
     "matchHistoryAria": "Historial de partidos",
     "matchHistoryTableAria": "Historial cara a cara",
     "matchHistoryEmpty": "Aún no hay historial de partidos disponible.",
+    "tabRelatedGamesMobile": "Partidos",
+    "tabRelatedNewsMobile": "Noticias",
+    "tabMatchHistoryMobile": "Historial",
+    "matchContextTabsAria": "Contexto del partido",
     "format": "Formato",
     "versus": "VS",
     "result": "Resultado",
@@ -849,6 +859,7 @@
     "fifaWorldCup2026": "Copa Mundial FIFA 2026",
     "heroTaglineBefore": "Antes de las noticias,",
     "heroTaglineMoves": "ya se mueve",
+    "mobileLoadingAria": "Cargando Prophet",
     "sourcePolymarket": "fuente: Polymarket",
     "worldCupMarketSummary": "Resumen del mercado del Mundial",
     "teamsListed": "Equipos listados",
@@ -859,6 +870,7 @@
     "kickoffCountdown": "{days}d {hours}h {minutes}m",
     "worldCupMarketViews": "Vistas del mercado del Mundial",
     "worldCupWinner": "Campeón del Mundial",
+    "winner": "Winner",
     "worldCupWinnerProbability": "Probabilidad de campeón del Mundial",
     "worldCupWinnerProbabilityChartAria": "Gráfico de probabilidad de campeón del Mundial",
     "loadingProbabilityHistory": "Cargando historial de probabilidades...",
@@ -881,6 +893,7 @@
     "teams": "Equipos",
     "filterByTeam": "Filtrar por equipo",
     "selectTeams": "Seleccionar equipos",
+    "searchTeams": "Buscar",
     "removeTeamFilter": "Quitar filtro de {team}",
     "allWorldCupTeamMarkets": "All World Cup team markets",
     "liveMarketDataUnavailable": "Live market data is unavailable. Check Polymarket connectivity and try again.",
@@ -1508,7 +1521,6 @@
   },
   "runtime": {
     "connectionLabel": "Conexión",
-    "httpsRequiredTitle": "Se requiere conexión segura",
     "httpsRequiredDescription": "El inicio de sesión con billetera y las funciones de trading requieren una conexión HTTPS cifrada. Abre la versión segura de esta página para continuar.",
     "openSecureVersion": "Abrir versión segura"
   }

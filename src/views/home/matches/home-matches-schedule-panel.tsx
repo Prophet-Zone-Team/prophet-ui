@@ -1,7 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+
+import { resolveLocalizedTeamName } from "@/lib/i18n/localized-team-name";
 
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 
@@ -9,6 +11,8 @@ import { curatedNationalTeamsList } from "@/data/teams/curated-team-list";
 import {
   buildScheduleDateGroups,
   buildScheduleMatchList,
+  combineScheduleTeamFilterIds,
+  resolveScheduleTeamSearchMatches,
   type ScheduleFilterTeam,
   type ScheduleSortKey
 } from "@/lib/market/schedule-match";
@@ -33,19 +37,37 @@ export function HomeMatchesSchedulePanel({
   snapshots
 }: HomeMatchesSchedulePanelProps) {
   const t = useTranslations("home");
+  const tTeamNames = useTranslations("teamNames");
   const [sortKey, setSortKey] = useState<ScheduleSortKey>("time");
   const [showEnded, setShowEnded] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState<Team["id"][]>([]);
+  const [teamSearchQuery, setTeamSearchQuery] = useState("");
   const matchesWithLive = useScheduleMatchesWithLiveState(matches);
+
+  const resolveTeamDisplayName = useCallback(
+    (team: ScheduleFilterTeam) =>
+      resolveLocalizedTeamName(team.code, team.name, tTeamNames),
+    [tTeamNames]
+  );
+
+  const filteredTeamIds = useMemo(() => {
+    const searchMatchedTeamIds = resolveScheduleTeamSearchMatches(
+      SCHEDULE_FILTER_TEAMS,
+      teamSearchQuery,
+      resolveTeamDisplayName
+    );
+
+    return combineScheduleTeamFilterIds(selectedTeamIds, searchMatchedTeamIds);
+  }, [resolveTeamDisplayName, selectedTeamIds, teamSearchQuery]);
 
   const sortedMatches = useMemo(
     () =>
       buildScheduleMatchList(matchesWithLive, snapshots, {
         showEnded,
         sortKey,
-        teamIds: selectedTeamIds
+        teamIds: filteredTeamIds
       }),
-    [matchesWithLive, snapshots, showEnded, sortKey, selectedTeamIds]
+    [filteredTeamIds, matchesWithLive, snapshots, showEnded, sortKey]
   );
 
   const dateGroups = useMemo(
@@ -53,9 +75,9 @@ export function HomeMatchesSchedulePanel({
       buildScheduleDateGroups(matchesWithLive, snapshots, {
         showEnded,
         sortKey,
-        teamIds: selectedTeamIds
+        teamIds: filteredTeamIds
       }),
-    [matchesWithLive, snapshots, showEnded, sortKey, selectedTeamIds]
+    [filteredTeamIds, matchesWithLive, snapshots, showEnded, sortKey]
   );
 
   return (
@@ -70,9 +92,11 @@ export function HomeMatchesSchedulePanel({
         showEnded={showEnded}
         teams={SCHEDULE_FILTER_TEAMS}
         selectedTeamIds={selectedTeamIds}
+        teamSearchQuery={teamSearchQuery}
         onSortKeyChange={setSortKey}
         onShowEndedChange={setShowEnded}
         onSelectedTeamIdsChange={setSelectedTeamIds}
+        onTeamSearchQueryChange={setTeamSearchQuery}
       />
 
       {sortedMatches.length > 0 ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { formatChartProbability } from "@/components/home/market-formatters";
@@ -123,6 +124,7 @@ export function GameProbabilitySection({
   const [timeRange, setTimeRange] = useState<GameFixtureChartTimeRange>(() =>
     isLive ? "1H" : "all"
   );
+  const [orderbookExpanded, setOrderbookExpanded] = useState(false);
   const matchOutcomeSide = useTradeMatchOutcomeSide();
   const selectedFixtureOutcome = useSelectedFixtureOutcome();
   const tradeOutcomeSide = useTradeOutcomeSide();
@@ -344,8 +346,10 @@ export function GameProbabilitySection({
   return (
     <section
       className={cn(
-        "mt-[8px] flex flex-col gap-3 xl:flex-row xl:items-stretch",
-        !orderbookEnabled && "xl:flex-col",
+        "mt-[8px] flex flex-col gap-3",
+        orderbookEnabled
+          ? "xl:grid xl:grid-cols-[minmax(0,1fr)_272px] xl:items-stretch"
+          : "xl:flex-col",
         className
       )}
       aria-label={t("matchOutcomeProbabilityAria")}
@@ -481,11 +485,52 @@ export function GameProbabilitySection({
         </div>
       </motion.div>
 
-      <OrderbookPanel
-        visible={orderbookEnabled}
-        tokenId={tokenId}
-        className="w-full shrink-0 xl:w-[272px]"
-      />
+      <div className="hidden md:block">
+        <OrderbookPanel
+          visible={orderbookEnabled}
+          tokenId={tokenId}
+          className="min-h-0 w-full"
+        />
+      </div>
+
+      <div className="md:hidden">
+        {orderbookEnabled ? (
+          <div className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white">
+            <button
+              type="button"
+              className="flex w-full items-center justify-between px-4 py-3 text-left"
+              aria-expanded={orderbookExpanded}
+              aria-controls="game-trade-mobile-orderbook"
+              onClick={() => setOrderbookExpanded((current) => !current)}
+            >
+              <span className="text-base font-[500] leading-[19px] text-black">
+                {t("orderbook")}
+              </span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 text-[#909090] transition-transform",
+                  orderbookExpanded && "rotate-180"
+                )}
+                aria-hidden="true"
+              />
+            </button>
+
+            {orderbookExpanded ? (
+              <div
+                id="game-trade-mobile-orderbook"
+                className="border-t border-[#EBEBEB]"
+              >
+                <OrderbookPanel
+                  visible
+                  tokenId={tokenId}
+                  variant="mirror"
+                  className="min-h-0 w-full"
+                />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

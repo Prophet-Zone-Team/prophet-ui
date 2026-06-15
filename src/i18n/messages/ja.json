@@ -5,7 +5,9 @@
     "strategies": "戦略",
     "tracks": "トラック",
     "portfolio": "ポートフォリオ",
-    "primaryNavigation": "メインナビゲーション"
+    "worldCup": "WorldCup",
+    "primaryNavigation": "メインナビゲーション",
+    "bottomNavigation": "ボトムナビゲーション"
   },
   "wallet": {
     "portfolio": "ポートフォリオ",
@@ -138,6 +140,9 @@
     "buy": "買い",
     "sell": "売り",
     "market": "Market",
+    "details": "詳細",
+    "bid": "入札",
+    "marketDetailsNavAria": "マーケットとチーム詳細",
     "limit": "Limit",
     "marketOrderDescription": "Market order (FAK)",
     "limitOrderDescription": "Limit order (GTC)",
@@ -292,6 +297,7 @@
     "chartTimeRangeAria": "チャート期間",
     "chartRangeAll": "すべて",
     "change24h": "24時間",
+    "timeLabel": "時間",
     "volumeLabel": "出来高",
     "compactVolume": "{value} 出来高",
     "liquidity": "流動性",
@@ -363,6 +369,10 @@
     "matchHistoryAria": "試合履歴",
     "matchHistoryTableAria": "対戦履歴",
     "matchHistoryEmpty": "試合履歴はまだありません。",
+    "tabRelatedGamesMobile": "試合",
+    "tabRelatedNewsMobile": "ニュース",
+    "tabMatchHistoryMobile": "履歴",
+    "matchContextTabsAria": "試合情報",
     "format": "形式",
     "versus": "VS",
     "result": "結果",
@@ -849,6 +859,7 @@
     "fifaWorldCup2026": "2026 FIFAワールドカップ",
     "heroTaglineBefore": "ニュースより先に、",
     "heroTaglineMoves": "動く",
+    "mobileLoadingAria": "Prophet を読み込み中",
     "sourcePolymarket": "出典: Polymarket",
     "worldCupMarketSummary": "ワールドカップ市場サマリー",
     "teamsListed": "掲載チーム",
@@ -859,6 +870,7 @@
     "kickoffCountdown": "{days}日 {hours}時間 {minutes}分",
     "worldCupMarketViews": "ワールドカップ市場ビュー",
     "worldCupWinner": "ワールドカップ優勝",
+    "winner": "優勝",
     "worldCupWinnerProbability": "ワールドカップ優勝確率",
     "worldCupWinnerProbabilityChartAria": "ワールドカップ優勝確率チャート",
     "loadingProbabilityHistory": "確率履歴を読み込み中...",
@@ -881,6 +893,7 @@
     "teams": "チーム",
     "filterByTeam": "チームで絞り込み",
     "selectTeams": "チームを選択",
+    "searchTeams": "検索",
     "removeTeamFilter": "{team}のフィルターを解除",
     "allWorldCupTeamMarkets": "All World Cup team markets",
     "liveMarketDataUnavailable": "Live market data is unavailable. Check Polymarket connectivity and try again.",
@@ -1508,7 +1521,6 @@
   },
   "runtime": {
     "connectionLabel": "接続",
-    "httpsRequiredTitle": "セキュア接続が必要です",
     "httpsRequiredDescription": "ウォレットログインと取引機能には暗号化された HTTPS 接続が必要です。続行するには、このページのセキュア版を開いてください。",
     "openSecureVersion": "セキュア版を開く"
   }

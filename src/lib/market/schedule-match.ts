@@ -1,7 +1,7 @@
 import { findCuratedTeamById } from "@/data/teams/curated-team-list";
 import {
   formatDateFromIso,
-  formatDateTimeFromIso,
+  formatKickoffSubtitleFromIso,
 } from "@/lib/formatters/datetime";
 import type {
   Team,
@@ -197,7 +197,7 @@ export function formatScheduleKickoff(value: string | undefined): string {
     return "TBD";
   }
 
-  return formatDateTimeFromIso(value);
+  return formatKickoffSubtitleFromIso(value);
 }
 
 export function filterScheduleMatches(
@@ -282,10 +282,14 @@ export function buildScheduleFilterTeams(
 
 export function filterScheduleMatchesByTeams(
   matches: WorldCupMatch[],
-  teamIds: Team["id"][]
+  teamIds?: Team["id"][]
 ): WorldCupMatch[] {
-  if (teamIds.length === 0) {
+  if (teamIds === undefined) {
     return matches;
+  }
+
+  if (teamIds.length === 0) {
+    return [];
   }
 
   const selectedTeamIds = new Set(teamIds);
@@ -298,6 +302,51 @@ export function filterScheduleMatchesByTeams(
 
     return homeSelected || awaySelected;
   });
+}
+
+export function resolveScheduleTeamSearchMatches(
+  teams: ScheduleFilterTeam[],
+  searchQuery: string,
+  resolveLocalizedName: (team: ScheduleFilterTeam) => string
+): Team["id"][] | null {
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  if (!normalizedQuery) {
+    return null;
+  }
+
+  return teams
+    .filter((team) => {
+      const displayName = resolveLocalizedName(team).toLowerCase();
+
+      return (
+        displayName.includes(normalizedQuery) ||
+        team.code.toLowerCase().includes(normalizedQuery) ||
+        team.name.toLowerCase().includes(normalizedQuery)
+      );
+    })
+    .map((team) => team.id);
+}
+
+export function combineScheduleTeamFilterIds(
+  selectedTeamIds: Team["id"][],
+  searchMatchedTeamIds: Team["id"][] | null
+): Team["id"][] | undefined {
+  if (!searchMatchedTeamIds) {
+    return selectedTeamIds.length > 0 ? selectedTeamIds : undefined;
+  }
+
+  if (searchMatchedTeamIds.length === 0) {
+    return [];
+  }
+
+  if (selectedTeamIds.length === 0) {
+    return searchMatchedTeamIds;
+  }
+
+  return selectedTeamIds.filter((teamId) =>
+    searchMatchedTeamIds.includes(teamId)
+  );
 }
 
 export function sortScheduleMatches(
@@ -381,7 +430,7 @@ export function buildScheduleMatchList(
   const filteredByStatus = filterScheduleMatches(matches, options.showEnded);
   const filteredByTeams = filterScheduleMatchesByTeams(
     filteredByStatus,
-    options.teamIds ?? []
+    options.teamIds
   );
   return sortScheduleMatches(filteredByTeams, snapshots, options.sortKey);
 }

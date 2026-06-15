@@ -15,6 +15,7 @@ import {
 
 import { TeamFlag } from "@/components/teams/team-flag";
 import { formatProbability } from "@/components/home/market-formatters";
+import { useDevice } from "@/hooks/common/use-device";
 import {
   findAnnotationForChartPoint,
   type TeamChartMatchAnnotation
@@ -63,6 +64,7 @@ export function ProbabilityChart({
   annotations,
   timeRange
 }: ProbabilityChartProps) {
+  const isMobile = useDevice();
   const gradientId = useId().replace(/:/g, "");
   const formatXAxisTick = (value: string) =>
     formatTeamChartXAxisTick(value, timeRange);
@@ -90,7 +92,7 @@ export function ProbabilityChart({
           <CartesianGrid stroke="#ebebeb" vertical={false} />
           <XAxis
             dataKey="date"
-            tick={{ fill: "#909090", fontSize: 14, dy: 6 }}
+            tick={{ fill: "#909090", fontSize: isMobile ? 10 : 14, dy: 6 }}
             tickLine={false}
             axisLine={false}
             minTickGap={32}
@@ -98,7 +100,7 @@ export function ProbabilityChart({
           />
           <YAxis
             domain={yDomain}
-            tick={{ fill: "#909090", fontSize: 14 }}
+            tick={{ fill: "#909090", fontSize: isMobile ? 10 : 14 }}
             tickFormatter={(value: number) => `${Number(value).toFixed(0)}%`}
             tickLine={false}
             axisLine={false}

@@ -1,6 +1,7 @@
 import { cn } from "@/lib/cn";
 
-export const tradePageClass = "mx-auto max-w-[1440px] px-4 pb-10 pt-2 sm:px-6";
+export const tradePageClass =
+  "mx-auto max-w-[1440px] px-4 pb-10 md:pt-2 sm:px-6";
 
 export const tradePanelClass = cn(
   "flex w-full flex-col overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white",
