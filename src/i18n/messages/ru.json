@@ -44,7 +44,12 @@
     "fastBidSetting": "Настройка быстрой ставки",
     "fastBidAmount": "Сумма быстрой ставки",
     "save": "Сохранить",
-    "close": "Закрыть"
+    "close": "Закрыть",
+    "selectWalletTitle": "Выберите кошелек",
+    "selectWalletSubtitle": "Выберите кошелек для подключения аккаунта",
+    "walletTokenPocketDescription": "Мультичейн-кошелек",
+    "walletOkxDescription": "Кошелек биржи OKX",
+    "selectWalletEmpty": "На этом устройстве не найден поддерживаемый кошелек."
   },
   "footer": {
     "copyright": "© {year} Prophet. Все права защищены.",

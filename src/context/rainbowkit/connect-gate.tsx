@@ -18,7 +18,7 @@ import {
 import { trackWalletConnectFailed } from "@/lib/analytics/tracking";
 import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 import { AuthLoginMethod, useAuthStore } from "@/store/auth-store";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useConnectModal } from "@/context/rainbowkit/connect-modal";
 
 export interface OpenConnectOptions {
   loginMethod?: AuthLoginMethod;

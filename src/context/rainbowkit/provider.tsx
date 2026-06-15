@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PrivyProvider } from "@privy-io/react-auth";
 
 import { RainbowConnectGate } from "@/context/rainbowkit/connect-gate";
+import { ConnectModalProvider } from "@/context/rainbowkit/connect-modal";
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import {
   PRIVY_APP_ID,
@@ -38,8 +39,10 @@ export default function RainbowProvider({
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={wagmiConfig} initialState={initialState}>
           <RainbowKitProvider modalSize="compact" locale="en-US">
-            <PrivyWalletBridge />
-            <RainbowConnectGate>{children}</RainbowConnectGate>
+            <ConnectModalProvider>
+              <PrivyWalletBridge />
+              <RainbowConnectGate>{children}</RainbowConnectGate>
+            </ConnectModalProvider>
           </RainbowKitProvider>
         </WagmiProvider>
       </QueryClientProvider>

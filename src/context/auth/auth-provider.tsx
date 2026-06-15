@@ -105,7 +105,7 @@ import { useDisconnect } from "wagmi";
 import { signConfidentialMessage } from "@/lib/confidential/sign-message";
 import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
 import { usePendingFunderUsdc } from "@/hooks/funding";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useConnectModal } from "@/context/rainbowkit/connect-modal";
 import { getAccount, watchAccount } from "wagmi/actions";
 import { wagmiConfig } from "../rainbowkit/wagmi-config";
 import { useMigratePromptStore } from "@/store/use-migrate-prompt-store";
