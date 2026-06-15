@@ -44,7 +44,12 @@
     "fastBidSetting": "Fast Bid Setting",
     "fastBidAmount": "Fast bid amount",
     "save": "保存",
-    "close": "閉じる"
+    "close": "閉じる",
+    "selectWalletTitle": "ウォレットを選択",
+    "selectWalletSubtitle": "アカウント接続用のウォレットを選択してください",
+    "walletTokenPocketDescription": "マルチチェーンウォレット",
+    "walletOkxDescription": "OKX 取引所ウォレット",
+    "selectWalletEmpty": "このデバイスでサポートされているウォレットが見つかりません。"
   },
   "footer": {
     "copyright": "© {year} Prophet. All rights reserved.",

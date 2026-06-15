@@ -44,7 +44,12 @@
     "fastBidSetting": "Configuración de oferta rápida",
     "fastBidAmount": "Monto de oferta rápida",
     "save": "Guardar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "selectWalletTitle": "Seleccionar billetera",
+    "selectWalletSubtitle": "Selecciona una billetera para conectar tu cuenta",
+    "walletTokenPocketDescription": "Billetera multichain",
+    "walletOkxDescription": "Billetera de exchange OKX",
+    "selectWalletEmpty": "No se encontró ninguna billetera compatible en este dispositivo."
   },
   "footer": {
     "copyright": "© {year} Prophet. Todos los derechos reservados.",
