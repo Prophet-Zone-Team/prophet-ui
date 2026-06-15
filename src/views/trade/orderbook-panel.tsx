@@ -3,7 +3,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 
 import { cn } from "@/lib/cn";
-import { Orderbook } from "@/views/trade/team/orderbook";
+import {
+  Orderbook,
+  type OrderbookVariant
+} from "@/views/trade/team/orderbook";
 
 const ORDERBOOK_PANEL_TRANSITION = {
   type: "spring" as const,
@@ -16,12 +19,14 @@ export interface OrderbookPanelProps {
   visible: boolean;
   tokenId?: string;
   className?: string;
+  variant?: OrderbookVariant;
 }
 
 export function OrderbookPanel({
   visible,
   tokenId,
-  className
+  className,
+  variant = "stacked"
 }: OrderbookPanelProps) {
   return (
     <AnimatePresence initial={false}>
@@ -40,6 +45,7 @@ export function OrderbookPanel({
           <Orderbook
             key={tokenId ?? "orderbook"}
             tokenId={tokenId}
+            variant={variant}
             className="min-h-0 flex-1"
           />
         </motion.div>

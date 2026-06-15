@@ -1,10 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { TrackedTeamRevisitEffect } from "@/components/analytics/tracked-team-revisit-effect";
+import Drawer from "@/components/drawer";
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { MarketWsProvider } from "@/context/market-ws";
+import { cn } from "@/lib/cn";
+import {
+  useSetTradeOrderMode,
+  useSetTradeOutcomeSide,
+  useSetTradeTab,
+  useTradeOutcomeSide
+} from "@/store";
 import {
   useSetShowOrderbook,
   useShowOrderbook
@@ -15,6 +24,7 @@ import type {
   TeamMarketSnapshot
 } from "@/types/market";
 import { ActivityTabs } from "@/views/trade/team/activity-tabs";
+import { MarketDetailsNav } from "@/views/trade/team/market-details-nav";
 import { TradeHeader } from "@/views/trade/team/trade-header";
 import { useTeamMarketWsTokens } from "@/views/trade/team/use-team-market-ws-tokens";
 import { ProbabilitySection } from "@/views/trade/team-probability";
@@ -33,8 +43,14 @@ function TradeTeamViewContent({
   footballProfile,
   footballMetadata
 }: TradeTeamViewProps) {
+  const t = useTranslations("trade");
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
+  const setOutcomeSide = useSetTradeOutcomeSide();
+  const setTab = useSetTradeTab();
+  const setOrderMode = useSetTradeOrderMode();
+  const outcomeSide = useTradeOutcomeSide();
+  const [tradeDrawerOpen, setTradeDrawerOpen] = useState(false);
   const allSnapshots = useMemo(() => [snapshot], [snapshot]);
 
   useTeamMarketWsTokens(
@@ -44,8 +60,18 @@ function TradeTeamViewContent({
       snapshot.market.polymarket?.tokens.no?.tokenId
     )
   );
+
+  function openTradeDrawer(side: "yes" | "no") {
+    setOutcomeSide(side);
+    setTab("buy");
+    setOrderMode("market");
+    setTradeDrawerOpen(true);
+  }
+
+  const drawerTitle = outcomeSide === "yes" ? t("buyYes") : t("buyNo");
+
   return (
-    <div className={tradePageClass}>
+    <div className={cn(tradePageClass, "pb-[130px] md:pb-10")}>
       <TrackedTeamRevisitEffect
         teamId={snapshot.team.id}
         teamName={snapshot.team.name}
@@ -63,6 +89,7 @@ function TradeTeamViewContent({
             showOrderbook={showOrderbook}
             onOrderbookChange={setShowOrderbook}
           />
+          <MarketDetailsNav snapshot={snapshot} />
           <ProbabilitySection
             snapshot={snapshot}
             showOrderbook={showOrderbook}
@@ -70,7 +97,7 @@ function TradeTeamViewContent({
           <ActivityTabs snapshot={snapshot} />
         </div>
 
-        <aside className="order-1 flex min-w-0 flex-col gap-4 xl:order-2 xl:sticky xl:top-14">
+        <aside className="order-1 hidden min-w-0 flex-col gap-4 md:flex xl:order-2 xl:sticky xl:top-14">
           <TradeWidget
             snapshot={snapshot}
             outcomeButtonClassName="w-full"
@@ -83,6 +110,37 @@ function TradeTeamViewContent({
           />
         </aside>
       </div>
+
+      <div className="fixed bottom-0 left-0 z-10 flex w-full items-center justify-between gap-5 p-3 md:hidden">
+        <button
+          type="button"
+          className="flex h-[46px] flex-1 items-center justify-center rounded-xl bg-[#FF674B] text-lg font-[500] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => openTradeDrawer("no")}
+        >
+          {t("no")}
+        </button>
+        <button
+          type="button"
+          className="flex h-[46px] flex-1 items-center justify-center rounded-xl bg-[#65AF14] text-lg font-[500] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => openTradeDrawer("yes")}
+        >
+          {t("yes")}
+        </button>
+      </div>
+
+      <Drawer
+        open={tradeDrawerOpen}
+        onClose={() => setTradeDrawerOpen(false)}
+        title={drawerTitle}
+        className="!h-auto max-h-[70dvh]"
+      >
+        <TradeWidget
+          snapshot={snapshot}
+          outcomeButtonClassName="w-full"
+          outcomeButtonContainerClassName="gap-3"
+          className="border-0 rounded-none"
+        />
+      </Drawer>
     </div>
   );
 }

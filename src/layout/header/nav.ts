@@ -39,3 +39,11 @@ export function isNavActive(pathname: string, href: string): boolean {
 
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+export function shouldHideMobileBottomNav(pathname: string) {
+  return (
+    /^\/private/.test(pathname) ||
+    pathname === "/team" ||
+    pathname.startsWith("/trade")
+  );
+}

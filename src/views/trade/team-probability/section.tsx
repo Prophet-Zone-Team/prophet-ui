@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
 import { useAnalyticsImpression } from "@/hooks/analytics/use-analytics-impression";
@@ -51,6 +52,7 @@ export function ProbabilitySection({
   const outcomeView = useTradeOutcomeSide();
   const setOutcomeView = useSetTradeOutcomeSide();
   const [timeRange, setTimeRange] = useState<TeamChartTimeRange>("all");
+  const [orderbookExpanded, setOrderbookExpanded] = useState(false);
   const previousTimeRangeRef = useRef<TeamChartTimeRange>("all");
   const chartRef = useAnalyticsImpression<HTMLElement>({
     eventName: "chart_viewed",
@@ -125,6 +127,36 @@ export function ProbabilitySection({
         ? "text-[#FF674B]"
         : "text-prophet-muted";
 
+  const timeRangeButtons = (
+    <>
+      {chartTimeRanges.map((range) => (
+        <button
+          key={range.id}
+          type="button"
+          className={cn(
+            "border-0 bg-transparent p-0 md:text-sm text-[12px] leading-[17px]",
+            timeRange === range.id
+              ? "font-[500] text-black"
+              : "font-[400] text-[#909090]"
+          )}
+          onClick={() => {
+            trackWinnerChartRangeChanged({
+              chartId: "team_probability",
+              fromRange: previousTimeRangeRef.current,
+              toRange: range.id,
+              teamId: snapshot.team.id,
+              teamName: snapshot.team.name
+            });
+            previousTimeRangeRef.current = range.id;
+            setTimeRange(range.id);
+          }}
+        >
+          {range.label}
+        </button>
+      ))}
+    </>
+  );
+
   return (
     <section
       ref={chartRef}
@@ -146,8 +178,8 @@ export function ProbabilitySection({
         )}
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="m-0 text-[20px] font-[500] leading-6 text-black">
+          <div className="flex flex-wrap items-center md:justify-start justify-between gap-3">
+            <h2 className="m-0 text-[16px] md:text-[20px] font-[500] md:leading-6 text-black">
               {t("probabilityLabel")}
             </h2>
             <div
@@ -197,61 +229,49 @@ export function ProbabilitySection({
           </div>
 
           <div
-            className="flex flex-wrap gap-4"
+            className="hidden flex-wrap gap-4 md:flex"
             role="group"
             aria-label={t("chartTimeRangeAria")}
           >
-            {chartTimeRanges.map((range) => (
-              <button
-                key={range.id}
-                type="button"
-                className={cn(
-                  "border-0 bg-transparent p-0 text-sm leading-[17px]",
-                  timeRange === range.id
-                    ? "font-[500] text-black"
-                    : "font-[400] text-[#909090]"
-                )}
-                onClick={() => {
-                  trackWinnerChartRangeChanged({
-                    chartId: "team_probability",
-                    fromRange: previousTimeRangeRef.current,
-                    toRange: range.id,
-                    teamId: snapshot.team.id,
-                    teamName: snapshot.team.name
-                  });
-                  previousTimeRangeRef.current = range.id;
-                  setTimeRange(range.id);
-                }}
-              >
-                {range.label}
-              </button>
-            ))}
+            {timeRangeButtons}
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-end gap-8 sm:gap-10">
-          <MetricBlock
-            value={formatProbability(displayProbability)}
-            label={t("probabilityLabel")}
-            valueClassName="text-[36px] leading-[43px] text-black"
-          />
-          <MetricBlock
-            value={change24h.toString()}
-            label={t("change24h")}
-            valueClassName={cn("text-base leading-[19px]", changeTone)}
-          />
-          <MetricBlock
-            value={`$${formatVolume(snapshot.market.volume)}`}
-            label={t("volumeLabel")}
-          />
-          <MetricBlock
-            value={
-              snapshot.market.liquidity
-                ? `$${formatVolume(snapshot.market.liquidity)}`
-                : t("pending")
-            }
-            label={t("liquidity")}
-          />
+        <div className="mt-4 flex items-end justify-between gap-4">
+          <div className="flex min-w-0 flex-wrap items-end gap-6 sm:gap-8 md:gap-10">
+            <MetricBlock
+              value={formatProbability(displayProbability)}
+              label={t("probabilityLabel")}
+              valueClassName="md:text-[36px] md:leading-[43px] text-[20px] leading-[24px] text-black"
+            />
+            <MetricBlock
+              value={change24h.toString()}
+              label={t("change24h")}
+              valueClassName={cn("text-base leading-[19px]", changeTone)}
+            />
+            <MetricBlock
+              value={`$${formatVolume(snapshot.market.volume)}`}
+              label={t("volumeLabel")}
+              className="hidden md:block"
+            />
+            <MetricBlock
+              value={
+                snapshot.market.liquidity
+                  ? `$${formatVolume(snapshot.market.liquidity)}`
+                  : t("pending")
+              }
+              label={t("liquidity")}
+              className="hidden md:block"
+            />
+          </div>
+
+          <div
+            className="flex shrink-0 flex-wrap justify-end gap-3 md:hidden"
+            role="group"
+            aria-label={t("chartTimeRangeAria")}
+          >
+            {timeRangeButtons}
+          </div>
         </div>
 
         <div className="mt-4">
@@ -264,11 +284,50 @@ export function ProbabilitySection({
         </div>
       </motion.div>
 
-      <OrderbookPanel
-        visible={showOrderbook}
-        tokenId={tokenId}
-        className="min-h-0 w-full"
-      />
+      <div className="hidden md:block">
+        <OrderbookPanel
+          visible={showOrderbook}
+          tokenId={tokenId}
+          className="min-h-0 w-full"
+        />
+      </div>
+
+      <div className="md:hidden">
+        <div className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between px-4 py-3 text-left"
+            aria-expanded={orderbookExpanded}
+            aria-controls="team-trade-mobile-orderbook"
+            onClick={() => setOrderbookExpanded((current) => !current)}
+          >
+            <span className="text-base font-[500] leading-[19px] text-black">
+              {t("orderbook")}
+            </span>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 shrink-0 text-[#909090] transition-transform",
+                orderbookExpanded && "rotate-180"
+              )}
+              aria-hidden="true"
+            />
+          </button>
+
+          {orderbookExpanded ? (
+            <div
+              id="team-trade-mobile-orderbook"
+              className="border-t border-[#EBEBEB]"
+            >
+              <OrderbookPanel
+                visible
+                tokenId={tokenId}
+                variant="mirror"
+                className="min-h-0 w-full"
+              />
+            </div>
+          ) : null}
+        </div>
+      </div>
     </section>
   );
 }
@@ -294,7 +353,7 @@ function MetricBlock({
       >
         {value}
       </p>
-      <p className="m-0 mt-1 text-sm font-[500] leading-[17px] text-[#909090]">
+      <p className="m-0 mt-1 md:block hidden text-sm font-[500] leading-[17px] text-[#909090]">
         {label}
       </p>
     </div>

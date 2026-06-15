@@ -14,7 +14,11 @@ import {
 } from "@/components/mb/nav/icons";
 import { useAuth } from "@/context/auth";
 import { trackNavClicked } from "@/lib/analytics/tracking";
-import { isNavActive, MOBILE_BOTTOM_NAV } from "@/layout/header/nav";
+import {
+  isNavActive,
+  MOBILE_BOTTOM_NAV,
+  shouldHideMobileBottomNav
+} from "@/layout/header/nav";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/utils";
 
@@ -33,9 +37,10 @@ export function MobileBottomNav() {
   const t = useTranslations("nav");
   const { cash, cashStatus, hydrated, isAuthenticated, session } = useAuth();
 
-  const isPrivateMode = useMemo(() => {
-    return [/^\/private/].some((reg) => reg.test(pathname));
-  }, [pathname]);
+  const hideBottomNav = useMemo(
+    () => shouldHideMobileBottomNav(pathname),
+    [pathname]
+  );
 
   const balanceDisplay = useMemo(() => {
     if (cashStatus === "loading") {
@@ -48,7 +53,7 @@ export function MobileBottomNav() {
     });
   }, [cash?.available, cashStatus]);
 
-  if (isPrivateMode) {
+  if (hideBottomNav) {
     return null;
   }
 
