@@ -11,7 +11,7 @@ import {
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-
+import { GroupProbabilityChart } from "@/views/group-detail/probability-chart";
 import Drawer from "@/components/drawer";
 import { MarketWsProvider } from "@/context/market-ws";
 import {
@@ -21,6 +21,7 @@ import {
 import type { WorldCup2026Group } from "@/data/world-cup-2026/groups";
 import { resolveGroupWinnerEventSlug } from "@/config/fifa-group-winner-market";
 import { useGroupWinnerMarket } from "@/hooks/market/use-group-winner-market";
+import { useGroupGameData } from "@/hooks/market/use-group-game-data";
 import { cn } from "@/lib/cn";
 import {
   resolveDefaultSelectedTeamId,
@@ -41,8 +42,12 @@ import { useShowOrderbook } from "@/store/user-config-store";
 import type { OrderOutcomeSide, TeamMarketSnapshot } from "@/types/market";
 import { GroupDetailHeader } from "@/views/group-detail/header";
 import { GroupMatchesPanel } from "@/views/group-detail/group-matches-panel";
+import { GroupMatchesTable } from "@/views/group-detail/group-matches-table";
 import { GroupDetailTeam } from "@/views/group-detail/team";
-import { ProbabilitySection } from "@/views/trade/team-probability";
+import {
+  ProbabilityMobileOrderbook,
+  ProbabilitySection
+} from "@/views/trade/team-probability";
 import { TeamMobileTradeButtons } from "@/views/trade/team/team-mobile-trade-buttons";
 import { useTeamMarketWsTokens } from "@/views/trade/team/use-team-market-ws-tokens";
 import { useTeamMobileOutcomePrices } from "@/views/trade/team/use-team-mobile-outcome-prices";
@@ -103,6 +108,13 @@ function GroupDetailViewContent({
     initialSnapshots,
     initialHeader
   });
+
+  const {
+    pointsByTeamId,
+    matches: groupMatches,
+    isLoading: isGroupGameLoading,
+    isError: isGroupGameError
+  } = useGroupGameData({ group, snapshots });
 
   const selectedSnapshot = useMemo(
     () =>
@@ -226,7 +238,7 @@ function GroupDetailViewContent({
   return (
     <div className={cn(tradePageClass, "pb-[130px] md:pb-10")}>
       <div className="flex pt-[10px] flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_345px] xl:items-start">
-        <div className="order-2 flex min-w-0 flex-col gap-4 xl:order-1">
+        <div className="order-2 flex min-w-0 flex-col gap-1 md:gap-4 xl:order-1">
           <GroupDetailHeader
             title={header.title}
             dateRange={header.dateRange}
@@ -262,6 +274,7 @@ function GroupDetailViewContent({
                     onSelect={() => handleSelectTeam(snapshot.team.id)}
                     underlineLayoutId={teamTabUnderlineId}
                     tradeInPlace
+                    points={pointsByTeamId.get(snapshot.team.id)}
                     onOutcomeClick={(side) =>
                       handleOutcomeClick(side, snapshot.team.id)
                     }
@@ -291,9 +304,24 @@ function GroupDetailViewContent({
                 groupLayout
                 borderless
                 showChartOrderbookDivider
+                hideMobileOrderbook
               />
             </div>
           </section>
+          <ProbabilityMobileOrderbook
+            snapshot={selectedSnapshot}
+            showOrderbook={showOrderbook}
+            className="md:hidden"
+          />
+          <GroupProbabilityChart
+            className="rounded-[12px] border border-[#EBEBEB] bg-white px-4 pb-4 pt-3 my-2 md:block hidden"
+            teams={snapshots}
+          />
+          <GroupMatchesTable
+            matches={groupMatches}
+            isLoading={isGroupGameLoading}
+            isError={isGroupGameError}
+          />
 
           <div className="md:hidden">
             <GroupMatchesPanel
