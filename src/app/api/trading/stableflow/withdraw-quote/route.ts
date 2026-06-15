@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { buildStableflowWithdrawQuoteRequest } from "@/lib/funding/stableflow-withdraw";
+import {
+  isValidEvmAddress,
+  isValidStableflowRecipientAddress,
+} from "@/lib/funding/recipient-validation";
 import { getStableflowQuote } from "@/server/trading/stableflow";
 import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 
@@ -12,6 +16,7 @@ interface StableflowWithdrawQuotePayload {
   amountBaseUnits?: string;
   recipient?: string;
   dry?: boolean;
+  destinationBlockchain?: string;
 }
 
 export async function POST(request: Request) {
@@ -70,13 +75,37 @@ function validatePayload(payload: StableflowWithdrawQuotePayload, funderAddress:
     return "amountBaseUnits must be a positive integer string.";
   }
 
-  if (!payload.recipient?.trim() || !/^0x[a-fA-F0-9]{40}$/.test(payload.recipient.trim())) {
-    return "recipient must be a valid EVM address.";
+  const destinationBlockchain =
+    payload.destinationBlockchain?.trim() ||
+    inferBlockchainFromAssetId(payload.destinationAssetId);
+
+  if (!payload.recipient?.trim()) {
+    return "recipient is required.";
   }
 
-  if (!funderAddress || !/^0x[a-fA-F0-9]{40}$/.test(funderAddress)) {
+  if (!isValidStableflowRecipientAddress(destinationBlockchain, payload.recipient)) {
+    return "recipient must be a valid address for the destination chain.";
+  }
+
+  if (!funderAddress || !isValidEvmAddress(funderAddress)) {
     return "Trading session is missing a valid deposit wallet.";
   }
 
   return undefined;
+}
+
+function inferBlockchainFromAssetId(assetId: string): string {
+  if (assetId.startsWith("1cs_v1:sol:")) {
+    return "sol";
+  }
+
+  if (assetId.includes(":tron") || assetId.includes("tron-")) {
+    return "tron";
+  }
+
+  if (assetId.startsWith("nep141:") && !assetId.includes(":sol") && !assetId.includes(":tron")) {
+    return "near";
+  }
+
+  return "pol";
 }

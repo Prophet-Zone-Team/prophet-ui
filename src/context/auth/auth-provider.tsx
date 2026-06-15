@@ -34,6 +34,12 @@ import {
   trackWalletConnected,
   trackWalletConnectStarted
 } from "@/lib/analytics/tracking";
+import {
+  connectNearAndDeriveAddress,
+  disconnectNearWallet,
+  getNearDerivedEvmAddress,
+  waitForNearDerivedAddress,
+} from "@/lib/wallet/near/near-connect";
 import { mapBalanceSnapshotToCash } from "@/lib/trading/cash-balance-model";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
 import {
@@ -421,8 +427,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let finalWalletAddress: string | undefined;
         handleStep("requesting_wallet");
         const preferEmbedded = _loginMethod === "email" || _loginMethod === "google";
+        // near connect: derive the EVM owner address from the NEAR MPC signer
+        if (_loginMethod === "near") {
+          finalWalletAddress = getNearDerivedEvmAddress()
+            ?? (await connectNearAndDeriveAddress());
+        }
         // privy connect
-        if (preferEmbedded) {
+        else if (preferEmbedded) {
           const embeddedWallet = privyWallets.filter(isPrivyEmbeddedWallet)[0];
           const embeddedAddress = embeddedWallet?.address;
           console.log("embeddedAddress: %o", embeddedAddress);
@@ -665,8 +676,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // not wrongly clear the session before wagmi rehydrates.
       const embeddedLoginMethod =
         store.loginMethod === "email" || store.loginMethod === "google";
+      const nearLoginMethod = store.loginMethod === "near";
 
-      if (embeddedLoginMethod) {
+      if (embeddedLoginMethod || nearLoginMethod) {
+        if (nearLoginMethod) {
+          try {
+            await waitForNearDerivedAddress(15_000);
+          } catch {
+            const nextReadiness = await refreshReadiness(nextSession);
+            store.setStatus("ready");
+            store.setLoginStep(undefined);
+            store.setError(
+              "NEAR wallet is not connected. Reconnect your wallet to continue."
+            );
+            openSetupModalIfNeeded();
+
+            if (isTradingSetupComplete(nextReadiness)) {
+              store.setLoginModalOpen(true);
+            }
+
+            return;
+          }
+
+          const derivedAddress = getNearDerivedEvmAddress();
+
+          if (
+            derivedAddress &&
+            derivedAddress.toLowerCase() !==
+              nextSession.walletAddress.toLowerCase()
+          ) {
+            await handleWalletAccountSwitch(derivedAddress);
+            return;
+          }
+        }
+
         if (nextSession.depositWalletStatus !== "deployed") {
           await ensureDepositWalletDeployed(nextSession.walletAddress, {
             onStep: (step) => store.setLoginStep(step)
@@ -1073,6 +1116,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return runLogin(Boolean(store.session), method);
   };
 
+  const connectNearWallet = async () => {
+    const store = useAuthStore.getState();
+
+    try {
+      await releaseExternalWalletConnection("near");
+      await wagmiDisconnect();
+    } catch { }
+
+    store.setLoginMethod("near");
+
+    if (isRegionBlockedRef.current) {
+      openLoginModalOnly();
+      return undefined;
+    }
+
+    try {
+      await connectNearAndDeriveAddress();
+    } catch (connectError) {
+      store.setError(resolveWalletErrorMessage(connectError));
+      openLoginModalOnly();
+      return undefined;
+    }
+
+    return runLogin(Boolean(store.session), "near");
+  };
+
   const signClobCredentials = useCallback(async () => {
     await runSignStep("clob");
   }, [runSignStep]);
@@ -1126,6 +1195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const disconnect = useCallback(async () => {
     const store = useAuthStore.getState();
+    const loginMethod = store.loginMethod;
 
     suspendPrivyWalletSync();
     loginAbortRef.current = true;
@@ -1153,6 +1223,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         await wagmiDisconnect();
       } catch { }
+      if (loginMethod === "near") {
+        try {
+          await disconnectNearWallet();
+        } catch { }
+      }
 
       await clearAuthState({ openModal: false });
 
@@ -1214,10 +1289,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Embedded wallets (email / google) are managed by Privy and do not emit
-    // injected-provider disconnect/account-change events, so skip the watcher
-    // to avoid false "disconnected" detection.
-    if (loginMethod === "email" || loginMethod === "google") {
+    // Embedded wallets (email / google) are managed by Privy and NEAR wallets
+    // are managed by the wallet-selector; none emit injected-provider
+    // disconnect/account-change events, so skip the watcher to avoid false
+    // "disconnected" detection.
+    if (
+      loginMethod === "email" ||
+      loginMethod === "google" ||
+      loginMethod === "near"
+    ) {
       return;
     }
 
@@ -1407,6 +1487,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshEligibility,
     openLogin,
     connectWallet: openLogin,
+    connectNearWallet,
     signClobCredentials,
     signTokenApprovals,
     closeLogin,

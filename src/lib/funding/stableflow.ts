@@ -3,12 +3,14 @@ import Big from "big.js";
 
 import { FUNDING_NETWORKS, FundingNetworkType, type FundingNetwork } from "@/config/funding/networks";
 import type { FundingAsset } from "@/config/funding/tokens";
+import type { AuthLoginMethod } from "@/store/auth-store";
 import {
   getTokensForChain,
   getUniqueChainsFromAssets,
   type SupportedChainOption,
 } from "@/lib/funding/supported-assets";
 import { getTokenLogo } from "@/utils/logo";
+import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
 
 export const POLYGON_USDC_NATIVE = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359";
 
@@ -28,6 +30,9 @@ export const STABLEFLOW_BLOCKCHAIN_TO_CHAIN_ID: Record<string, number> = {
   plasma: FUNDING_NETWORKS.plasma.chainId,
   scroll: FUNDING_NETWORKS.scroll.chainId,
   xlayer: FUNDING_NETWORKS.xlayer.chainId,
+  near: FUNDING_NETWORKS.near.chainId,
+  sol: FUNDING_NETWORKS.solana.chainId,
+  tron: FUNDING_NETWORKS.tron.chainId,
 };
 
 export interface StableflowDepositToken extends FundingAsset {
@@ -68,23 +73,92 @@ export function getFundingNetworkForStableflowBlockchain(blockchain: string): Fu
 
 export function filterStableflowTokensForFundingNetworks(tokens: TokenResponse[]): TokenResponse[] {
   return tokens.filter((token) => {
-    if (!token.contractAddress) {
+    const network = getFundingNetworkForStableflowBlockchain(token.blockchain);
+
+    if (!network) {
       return false;
     }
 
-    const network = getFundingNetworkForStableflowBlockchain(token.blockchain);
+    if (/DEPRECATED/i.test(token.symbol)) {
+      return false;
+    }
 
-    return Boolean(network && network.chainType === FundingNetworkType.EVM);
+    if (network.chainType === FundingNetworkType.EVM) {
+      return Boolean(token.contractAddress);
+    }
+
+    return true;
   });
+}
+
+export function mergeStableflowTokens(
+  apiTokens: TokenResponse[],
+  extraTokens: TokenResponse[],
+): TokenResponse[] {
+  const merged = new Map<string, TokenResponse>();
+
+  for (const token of apiTokens) {
+    merged.set(token.assetId, token);
+  }
+
+  for (const token of extraTokens) {
+    merged.set(token.assetId, token);
+  }
+
+  return Array.from(merged.values());
+}
+
+export function resolveStableflowTokenAddress(token: TokenResponse): string {
+  return token.contractAddress?.trim() || token.assetId;
+}
+
+export function isNearOriginStableflowToken(
+  token: Pick<StableflowDepositToken, "blockchain">,
+): boolean {
+  return token.blockchain === "near";
+}
+
+export function shouldDepositViaStableflowQr(
+  loginMethod: AuthLoginMethod | null | undefined,
+  token: Pick<StableflowDepositToken, "blockchain" | "chainType">,
+): boolean {
+  if (loginMethod === "email" || loginMethod === "google") {
+    return true;
+  }
+
+  if (loginMethod === "near") {
+    return !isNearOriginStableflowToken(token);
+  }
+
+  if (loginMethod === "wallet") {
+    return token.chainType !== FundingNetworkType.EVM;
+  }
+
+  return false;
+}
+
+export function getStableflowRefundAddress(params: {
+  blockchain: string;
+  walletAddress?: string;
+  nearAccountId?: string | null;
+}): string | undefined {
+  const { blockchain, walletAddress, nearAccountId } = params;
+
+  if (blockchain === "near") {
+    return nearAccountId ?? getNearAccountSnapshot().accountId ?? undefined;
+  }
+
+  return walletAddress;
 }
 
 export function mapStableflowTokenToDepositToken(token: TokenResponse): StableflowDepositToken | undefined {
   const network = getFundingNetworkForStableflowBlockchain(token.blockchain);
 
-  if (!network || !token.contractAddress) {
+  if (!network) {
     return undefined;
   }
 
+  const address = resolveStableflowTokenAddress(token);
   const icon = getTokenLogo(token.symbol);
 
   return {
@@ -93,7 +167,7 @@ export function mapStableflowTokenToDepositToken(token: TokenResponse): Stablefl
     blockchain: token.blockchain,
     symbol: token.symbol,
     name: token.symbol,
-    address: token.contractAddress,
+    address,
     decimals: token.decimals,
     icon,
     minCheckoutUsd: 0,

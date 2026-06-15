@@ -1,6 +1,6 @@
 export type ChainType = "evm" | "solana" | "tron";
 
-export type WalletAccountSource = "wagmi" | "privy";
+export type WalletAccountSource = "wagmi" | "privy" | "near";
 
 export interface UnifiedWalletAccount {
   address?: string;

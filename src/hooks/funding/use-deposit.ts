@@ -8,9 +8,12 @@ import { useAuth } from "@/context/auth";
 import type { FundingAsset } from "@/config/funding";
 import { useSupportedAssets } from "@/hooks/funding/use-supported-assets";
 import {
+  getStableflowRefundAddress,
   isPolygonNativeUsdcToken,
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
+import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
+import { transferNearFtToken } from "@/lib/wallet/near/near-transfer";
 import { isTerminalBridgeStatus, pollBridgeAddress } from "@/lib/trading/bridge-status";
 import {
   fetchFunderCollateralBalances,
@@ -45,6 +48,13 @@ export interface UseDepositResult {
     token: StableflowDepositToken,
     funderAddress: string,
     polygonUsdcDestinationAssetId: string,
+  ) => Promise<StableflowDepositContext>;
+  depositViaNearStableflow: (
+    amount: string,
+    token: StableflowDepositToken,
+    funderAddress: string,
+    polygonUsdcDestinationAssetId: string,
+    quote?: QuoteResponse,
   ) => Promise<StableflowDepositContext>;
   pollStableflowBridge: (
     depositAddress: string,
@@ -316,6 +326,86 @@ export function useDeposit(): UseDepositResult {
     };
   };
 
+  const depositViaNearStableflow = async (
+    amount: string,
+    token: StableflowDepositToken,
+    funderAddress: string,
+    polygonUsdcDestinationAssetId: string,
+    existingQuote?: QuoteResponse,
+  ): Promise<StableflowDepositContext> => {
+    const nearAccountId = getNearAccountSnapshot().accountId;
+
+    if (!nearAccountId) {
+      throw new Error("Connect a NEAR wallet before depositing funds.");
+    }
+
+    setStatus("preparing");
+    setError(undefined);
+
+    const amountBaseUnits = parseUnits(amount, token.decimals).toString();
+    const refundTo = getStableflowRefundAddress({
+      blockchain: token.blockchain,
+      nearAccountId,
+    });
+
+    if (!refundTo) {
+      throw new Error("NEAR account is not available for this deposit.");
+    }
+
+    const quote =
+      existingQuote ??
+      (
+        await fetchJson<{ quote: QuoteResponse }>("/api/trading/stableflow/quote", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            originAssetId: token.assetId,
+            destinationAssetId: polygonUsdcDestinationAssetId,
+            amountBaseUnits,
+            refundTo,
+            recipient: funderAddress,
+            originBlockchain: token.blockchain,
+          }),
+        })
+      ).quote;
+
+    const depositAddress = quote.quote.depositAddress;
+
+    if (!depositAddress) {
+      throw new Error("Stableflow quote did not return a deposit address.");
+    }
+
+    setStatus("awaiting_wallet");
+    const { txHash } = await transferNearFtToken({
+      contractId: token.address,
+      depositAddress,
+      amountBaseUnits,
+    });
+
+    await fetchJson("/api/trading/stableflow/submit-tx", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        txHash,
+        depositAddress,
+      }),
+    });
+
+    setStatus("idle");
+
+    return {
+      quote,
+      depositAddress,
+      depositMemo: quote.quote.depositMemo,
+      txHash,
+      expectedAmountBaseUnits: amountBaseUnits,
+    };
+  };
+
   const pollStableflowBridge = useCallback(
     async (
       depositAddress: string,
@@ -399,6 +489,7 @@ export function useDeposit(): UseDepositResult {
     getBridgeDepositAddresses,
     depositViaPolygon,
     depositViaStableflow,
+    depositViaNearStableflow,
     pollStableflowBridge,
     pollFunderCollateralBalances,
     startStatusPoll,

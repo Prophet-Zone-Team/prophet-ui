@@ -20,6 +20,7 @@ import type { TradingLoginStep } from "@/lib/trading/trading-login";
 import type { AuthContextValue } from "@/context/auth/auth-context";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { getStableflowChainLogo } from "@/utils/logo";
 
 interface LoginModalProps {
   auth: Pick<
@@ -40,6 +41,7 @@ interface LoginModalProps {
     | "privyModalOpen"
     | "closeLogin"
     | "connectWallet"
+    | "connectNearWallet"
     | "openPrivyLogin"
     | "closePrivyLogin"
     | "completePrivyEmailLogin"
@@ -88,6 +90,7 @@ export function LoginModal({ auth }: LoginModalProps) {
     privyModalOpen,
     closeLogin,
     connectWallet,
+    connectNearWallet,
     openPrivyLogin,
     closePrivyLogin,
     completePrivyEmailLogin,
@@ -232,6 +235,13 @@ export function LoginModal({ auth }: LoginModalProps) {
                               });
                               void connectWallet("wallet");
                             }}
+                            onConnectNear={() => {
+                              trackLoginClicked({
+                                entrySource: "login_modal_setup",
+                                label: "Connect Near wallet"
+                              });
+                              void connectNearWallet();
+                            }}
                             onSignClob={() => void signClobCredentials()}
                             onSignTokens={() => void signTokenApprovals()}
                             onRefresh={() => void refreshSession()}
@@ -374,13 +384,13 @@ function getSetupStepState(
 
     if (
       privyLoginInProgress || (loginInProgress &&
-      (loginStep === "requesting_wallet" ||
-        loginStep === "checking_wallet_deployment" ||
-        loginStep === "deploying_wallet" ||
-        loginStep === "creating_session" ||
-        loginStep === "verifying_readiness" ||
-        loginStep === "awaiting_session_signature"
-      ))
+        (loginStep === "requesting_wallet" ||
+          loginStep === "checking_wallet_deployment" ||
+          loginStep === "deploying_wallet" ||
+          loginStep === "creating_session" ||
+          loginStep === "verifying_readiness" ||
+          loginStep === "awaiting_session_signature"
+        ))
     ) {
       return "active";
     }
@@ -468,10 +478,17 @@ function stepNeedsUserAction(
     return !session && !loginInProgress && !privyLoginInProgress;
   }
 
+  if (
+    !session
+    || session.depositWalletStatus !== "deployed"
+  ) {
+    return false;
+  }
+
   if (stepId === "authorize_tokens") {
     if (
-      setupSteps.tokensAuthorized ||
-      loginStep === "tokens_already_authorized"
+      setupSteps.tokensAuthorized
+      || loginStep === "tokens_already_authorized"
     ) {
       return false;
     }
@@ -479,7 +496,9 @@ function stepNeedsUserAction(
     return setupSteps.walletDeployed && !loginInProgress && !privyLoginInProgress;
   }
 
-  if (setupSteps.clobSigned || loginStep === "clob_already_derived") {
+  if (
+    setupSteps.clobSigned
+    || loginStep === "clob_already_derived") {
     return false;
   }
 
@@ -491,6 +510,7 @@ function StepAction({
   state,
   loginInProgress,
   onConnectWallet,
+  onConnectNear,
   onSignClob,
   onSignTokens,
   onRefresh,
@@ -499,6 +519,7 @@ function StepAction({
   state: StepVisualState;
   loginInProgress: boolean;
   onConnectWallet: () => void;
+  onConnectNear: () => void;
   onSignClob: () => void;
   onSignTokens: () => void;
   onRefresh: () => void;
@@ -520,14 +541,30 @@ function StepAction({
     }
 
     return (
-      <button
-        type="button"
-        className="shrink-0 rounded-[8px] bg-black w-full h-[50px] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
-        disabled={loginInProgress}
-        onClick={onConnectWallet}
-      >
-        {t("connectWallet")}
-      </button>
+      <div className="flex w-full flex-col gap-2">
+        <button
+          type="button"
+          className="shrink-0 rounded-[8px] bg-black w-full h-[50px] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
+          disabled={loginInProgress}
+          onClick={onConnectWallet}
+        >
+          {t("connectWallet")}
+        </button>
+        <button
+          type="button"
+          className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] border border-prophet-line bg-white w-full h-[50px] text-[14px] font-[500] leading-[18px] text-black disabled:opacity-60"
+          disabled={loginInProgress}
+          onClick={onConnectNear}
+        >
+          <img
+            src={getStableflowChainLogo("near")}
+            alt=""
+            className="h-5 w-5 rounded-full"
+            aria-hidden="true"
+          />
+          <span>{t("connectNearWallet")}</span>
+        </button>
+      </div>
     );
   }
 
