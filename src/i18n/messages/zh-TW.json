@@ -872,7 +872,8 @@
     "statLosses": "負",
     "statPoints": "分",
     "advancing": "晉級機率",
-    "groupStandingsTableAria": "{groupLabel} 積分榜"
+    "groupStandingsTableAria": "{groupLabel} 積分榜",
+    "groupStandingRowNavigateAria": "開啟 {teamName} 的 {groupLabel} 頁面"
   },
   "teams": {
     "teamDirectory": "Team directory",

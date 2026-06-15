@@ -16,12 +16,14 @@ export interface OrderbookPanelProps {
   visible: boolean;
   tokenId?: string;
   className?: string;
+  orderbookClassName?: string;
 }
 
 export function OrderbookPanel({
   visible,
   tokenId,
-  className
+  className,
+  orderbookClassName
 }: OrderbookPanelProps) {
   return (
     <AnimatePresence initial={false}>
@@ -40,7 +42,7 @@ export function OrderbookPanel({
           <Orderbook
             key={tokenId ?? "orderbook"}
             tokenId={tokenId}
-            className="min-h-0 flex-1"
+            className={cn("min-h-0 flex-1", orderbookClassName)}
           />
         </motion.div>
       ) : null}

@@ -872,7 +872,8 @@
     "statLosses": "Perdidos",
     "statPoints": "Puntos",
     "advancing": "Prob. de avance",
-    "groupStandingsTableAria": "Clasificación de {groupLabel}"
+    "groupStandingsTableAria": "Clasificación de {groupLabel}",
+    "groupStandingRowNavigateAria": "Abrir la página de {groupLabel} para {teamName}"
   },
   "teams": {
     "teamDirectory": "Team directory",

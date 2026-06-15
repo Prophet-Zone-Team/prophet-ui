@@ -872,7 +872,8 @@
     "statLosses": "패",
     "statPoints": "점",
     "advancing": "진출 확률",
-    "groupStandingsTableAria": "{groupLabel} 순위"
+    "groupStandingsTableAria": "{groupLabel} 순위",
+    "groupStandingRowNavigateAria": "{teamName}의 {groupLabel} 페이지 열기"
   },
   "teams": {
     "teamDirectory": "Team directory",

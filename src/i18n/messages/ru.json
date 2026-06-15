@@ -872,7 +872,8 @@
     "statLosses": "П",
     "statPoints": "О",
     "advancing": "Вероятность выхода",
-    "groupStandingsTableAria": "Таблица {groupLabel}"
+    "groupStandingsTableAria": "Таблица {groupLabel}",
+    "groupStandingRowNavigateAria": "Открыть страницу {groupLabel} для {teamName}"
   },
   "teams": {
     "teamDirectory": "Team directory",
