@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { trackDetailsClicked } from "@/lib/analytics/tracking";
+import { teamTradeHref } from "@/lib/routes/trade";
 import { teamDetailHref } from "@/lib/routes/team";
 import type { TeamMarketSnapshot } from "@/types/market";
 
@@ -13,12 +14,30 @@ const segmentLabelClassName =
 
 export interface MarketDetailsNavProps {
   snapshot: TeamMarketSnapshot;
+  activeTab?: "market" | "details";
 }
 
-export function MarketDetailsNav({ snapshot }: MarketDetailsNavProps) {
+export function MarketDetailsNav({
+  snapshot,
+  activeTab = "market"
+}: MarketDetailsNavProps) {
   const t = useTranslations("trade");
   const router = useRouter();
   const { team } = snapshot;
+  const isMarketActive = activeTab === "market";
+
+  function handleMarketClick() {
+    trackDetailsClicked({
+      teamId: team.id,
+      teamName: team.name,
+      teamCode: team.code,
+      entrySource: isMarketActive ? "trade_team_page" : "team_detail_page",
+      target: "trade_team"
+    });
+    router.push(
+      teamTradeHref(snapshot.market.polymarket?.slug || snapshot.team.id)
+    );
+  }
 
   function handleDetailsClick() {
     trackDetailsClicked({
@@ -28,7 +47,7 @@ export function MarketDetailsNav({ snapshot }: MarketDetailsNavProps) {
       entrySource: "trade_team_page",
       target: "team_detail"
     });
-    router.push(teamDetailHref(team.id));
+    router.push(teamDetailHref(team.id, { entry: "trade" }));
   }
 
   return (
@@ -41,23 +60,30 @@ export function MarketDetailsNav({ snapshot }: MarketDetailsNavProps) {
         <button
           type="button"
           role="tab"
-          aria-selected
+          aria-selected={isMarketActive}
           className={cn(
-            "flex h-[36px] flex-1 items-center justify-center rounded-[8px] border border-[#EBEBEB] bg-white",
+            "flex h-[36px] flex-1 items-center justify-center rounded-[8px] border",
+            isMarketActive
+              ? "border-[#EBEBEB] bg-white"
+              : "border-transparent bg-transparent",
             segmentLabelClassName
           )}
+          onClick={isMarketActive ? undefined : handleMarketClick}
         >
           {t("market")}
         </button>
         <button
           type="button"
           role="tab"
-          aria-selected={false}
+          aria-selected={!isMarketActive}
           className={cn(
-            "flex h-[36px] flex-1 items-center justify-center rounded-[8px] border border-transparent bg-transparent",
+            "flex h-[36px] flex-1 items-center justify-center rounded-[8px] border",
+            isMarketActive
+              ? "border-transparent bg-transparent"
+              : "border-[#EBEBEB] bg-white",
             segmentLabelClassName
           )}
-          onClick={handleDetailsClick}
+          onClick={isMarketActive ? handleDetailsClick : undefined}
         >
           {t("details")}
         </button>

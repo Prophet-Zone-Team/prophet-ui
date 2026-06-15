@@ -32,6 +32,7 @@ export interface TradeHeaderProps {
   metadata?: TeamFootballMetadata;
   showOrderbook: boolean;
   onOrderbookChange: (value: boolean) => void;
+  pageBackHistorySteps?: number;
 }
 
 const fastBidButtonClassName =
@@ -178,7 +179,8 @@ export function TradeHeader({
   profile,
   metadata,
   showOrderbook,
-  onOrderbookChange
+  onOrderbookChange,
+  pageBackHistorySteps = 1
 }: TradeHeaderProps) {
   const { team, market } = snapshot;
   const teamDisplayName = useLocalizedTeamName(team.code, team.name);
@@ -194,7 +196,7 @@ export function TradeHeader({
     <header className="md:my-4">
       <div className="flex flex-col md:gap-3 md:hidden">
         <div className="flex items-center justify-between">
-          <PageBack />
+          <PageBack historySteps={pageBackHistorySteps} />
           <HeaderActionButtons bookmark={bookmark} />
         </div>
 

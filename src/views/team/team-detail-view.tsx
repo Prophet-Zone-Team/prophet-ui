@@ -1,17 +1,36 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import Drawer from "@/components/drawer";
 import type { MarketDataMeta } from "@/data/providers/types";
 import { useAnalyticsTeamMarketNews } from "@/hooks/analytics/use-analytics-team-market-news";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useTeamDetail } from "@/hooks/team/use-team-detail";
+import { cn } from "@/lib/cn";
+import {
+  useSetTradeOrderMode,
+  useSetTradeOutcomeSide,
+  useSetTradeTab,
+  useTradeOutcomeSide
+} from "@/store";
+import {
+  useSetShowOrderbook,
+  useShowOrderbook
+} from "@/store/user-config-store";
 import type { TeamMarketSnapshot } from "@/types/market";
+import { MarketDetailsNav } from "@/views/trade/team/market-details-nav";
+import { TradeHeader } from "@/views/trade/team/trade-header";
+import { useTeamMarketWsTokens } from "@/views/trade/team/use-team-market-ws-tokens";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import { TeamDetailFootnote } from "@/views/team/team-detail-footnote";
 import { TeamDetailHeader } from "@/views/team/team-detail-header";
-import { TeamDetailBodySkeleton } from "@/views/team/team-detail-loading";
+import {
+  TeamDetailBodySkeleton,
+  TeamDetailMobileBodySkeleton
+} from "@/views/team/team-detail-loading";
+import { TeamDetailMobileStats } from "@/views/team/team-detail-mobile-stats";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import { TeamKeyPlayersPanel } from "@/views/team/team-key-players-panel";
 import { TeamLineupPanel } from "@/views/team/team-lineup-panel";
@@ -27,11 +46,32 @@ import { DossierGroupContext } from "./dossier-group-context";
 export interface TeamDetailViewProps {
   snapshot: TeamMarketSnapshot;
   dataStatus: MarketDataMeta;
+  mobileBackEntry?: "trade";
 }
 
-export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
+export function TeamDetailView({
+  snapshot,
+  dataStatus,
+  mobileBackEntry
+}: TeamDetailViewProps) {
   const t = useTranslations("teamDetail");
+  const tTrade = useTranslations("trade");
+  const showOrderbook = useShowOrderbook();
+  const setShowOrderbook = useSetShowOrderbook();
+  const setOutcomeSide = useSetTradeOutcomeSide();
+  const setTab = useSetTradeTab();
+  const setOrderMode = useSetTradeOrderMode();
+  const outcomeSide = useTradeOutcomeSide();
+  const [tradeDrawerOpen, setTradeDrawerOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useTeamDetail(snapshot.team.name);
+
+  useTeamMarketWsTokens(
+    snapshot,
+    Boolean(
+      snapshot.market.polymarket?.tokens.yes?.tokenId ||
+      snapshot.market.polymarket?.tokens.no?.tokenId
+    )
+  );
   const marketNews = useAnalyticsTeamMarketNews(snapshot.team.name);
   const teamDisplayName = useLocalizedTeamName(
     snapshot.team.code,
@@ -60,10 +100,74 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
     teamDisplayName
   ]);
 
+  function openTradeDrawer(side: "yes" | "no") {
+    setOutcomeSide(side);
+    setTab("buy");
+    setOrderMode("market");
+    setTradeDrawerOpen(true);
+  }
+
+  const drawerTitle =
+    outcomeSide === "yes" ? tTrade("buyYes") : tTrade("buyNo");
+  const pageClassName = cn(teamPageClass, "pb-[130px] md:pb-10");
+  const mobilePageBackSteps = mobileBackEntry === "trade" ? 2 : 1;
+
+  const header = (
+    <>
+      <div className="md:hidden">
+        <TradeHeader
+          snapshot={snapshot}
+          showOrderbook={showOrderbook}
+          onOrderbookChange={setShowOrderbook}
+          pageBackHistorySteps={mobilePageBackSteps}
+        />
+        <MarketDetailsNav snapshot={snapshot} activeTab="details" />
+      </div>
+      <div className="hidden md:block">
+        <TeamDetailHeader snapshot={snapshot} detail={data?.header} />
+      </div>
+    </>
+  );
+
+  const mobileTradeBar = (
+    <>
+      <div className="fixed bottom-0 left-0 z-10 flex w-full items-center justify-between gap-5 p-3 md:hidden">
+        <button
+          type="button"
+          className="flex h-[46px] flex-1 items-center justify-center rounded-xl bg-[#FF674B] text-lg font-[500] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => openTradeDrawer("no")}
+        >
+          {tTrade("no")}
+        </button>
+        <button
+          type="button"
+          className="flex h-[46px] flex-1 items-center justify-center rounded-xl bg-[#65AF14] text-lg font-[500] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => openTradeDrawer("yes")}
+        >
+          {tTrade("yes")}
+        </button>
+      </div>
+
+      <Drawer
+        open={tradeDrawerOpen}
+        onClose={() => setTradeDrawerOpen(false)}
+        title={drawerTitle}
+        className="!h-auto max-h-[70dvh]"
+      >
+        <TradeWidget
+          snapshot={snapshot}
+          outcomeButtonClassName="w-full"
+          outcomeButtonContainerClassName="gap-3"
+          className="border-0 rounded-none"
+        />
+      </Drawer>
+    </>
+  );
+
   if (isError && !data) {
     return (
-      <div className={teamPageClass}>
-        <TeamDetailHeader snapshot={snapshot} />
+      <div className={pageClassName}>
+        {header}
         <TeamEmptyState
           title={t("unableToLoadTeamData")}
           body={t("teamAnalyticsLoadError")}
@@ -75,22 +179,50 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
         >
           {t("retry")}
         </button>
+        {mobileTradeBar}
       </div>
     );
   }
 
   return (
-    <div className={teamPageClass}>
-      <TeamDetailHeader snapshot={snapshot} detail={data?.header} />
+    <div className={pageClassName}>
+      {header}
 
       {isLoading && !data ? (
-        <TeamDetailBodySkeleton />
+        <>
+          <TeamDetailMobileBodySkeleton />
+          <div className="hidden md:block">
+            <TeamDetailBodySkeleton />
+          </div>
+        </>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_345px] gap-4">
+          <div className="flex flex-col gap-4 md:hidden">
+            <TeamDetailMobileStats detail={data?.header} />
+            <TeamRecentMatchesPanel matches={data?.recentMatches ?? []} />
+            <TeamNextMatchPanel
+              nextMatch={data?.nextMatch}
+              snapshot={snapshot}
+            />
+            <DossierGroupContext
+              groupLabel={data?.groupLabel}
+              peers={data?.groupPeers ?? []}
+            />
+            <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
+            <TeamLineupPanel teamName={snapshot.team.name} />
+            <TeamStrengthPanel
+              metrics={data?.strengthMetrics ?? []}
+              overallScore={data?.strengthScore}
+            />
+          </div>
+
+          <div className="hidden md:grid md:grid-cols-[1fr_345px] gap-4">
             <div className="md:grid md:grid-cols-2 flex flex-col gap-4">
               <TeamRecentMatchesPanel matches={data?.recentMatches ?? []} />
-              <DossierGroupContext groupLabel={data?.groupLabel} peers={data?.groupPeers ?? []} />
+              <DossierGroupContext
+                groupLabel={data?.groupLabel}
+                peers={data?.groupPeers ?? []}
+              />
               <TeamStrengthPanel
                 metrics={data?.strengthMetrics ?? []}
                 overallScore={data?.strengthScore}
@@ -111,7 +243,10 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
                 outcomeButtonClassName="w-full"
                 outcomeButtonContainerClassName="gap-3"
               />
-              <TeamNextMatchPanel nextMatch={data?.nextMatch} snapshot={snapshot} />
+              <TeamNextMatchPanel
+                nextMatch={data?.nextMatch}
+                snapshot={snapshot}
+              />
               <TeamMarketIntelligencePanel
                 snapshot={snapshot}
                 dataStatus={dataStatus}
@@ -123,9 +258,12 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
             </div>
           </div>
 
-          <TeamDetailFootnote dataStatus={dataStatus} />
+          <div className="hidden md:block">
+            <TeamDetailFootnote dataStatus={dataStatus} />
+          </div>
         </>
       )}
+      {mobileTradeBar}
     </div>
   );
 }

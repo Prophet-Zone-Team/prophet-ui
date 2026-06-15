@@ -7,11 +7,12 @@ import { resolveTeamDetailSlug } from "@/lib/routes/team";
 interface TeamPageProps {
   searchParams: Promise<{
     slug?: string;
+    entry?: string;
   }>;
 }
 
 export default async function Page({ searchParams }: TeamPageProps) {
-  const { slug } = await searchParams;
+  const { slug, entry } = await searchParams;
 
   if (!slug) {
     notFound();
@@ -24,6 +25,10 @@ export default async function Page({ searchParams }: TeamPageProps) {
   }
 
   return (
-    <TeamDetailPage snapshot={result.snapshot} dataStatus={result.meta} />
+    <TeamDetailPage
+      snapshot={result.snapshot}
+      dataStatus={result.meta}
+      mobileBackEntry={entry === "trade" ? "trade" : undefined}
+    />
   );
 }
