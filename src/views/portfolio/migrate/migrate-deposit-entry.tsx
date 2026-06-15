@@ -29,17 +29,17 @@ export function MigrateDepositEntry({ onOpen }: MigrateDepositEntryProps) {
         {t("depositEntryTitle")}
       </p>
       <button type="button" className={migrateDepositEntryClass} onClick={onOpen}>
-        <div className="relative z-[1] min-w-0 flex-1 text-left">
-          <p className="mt-0.5 text-xs font-[400] text-[#a0a0a0]">
-            {t("depositEntrySubtitle", { accountLabel })}
+        <div className="text-base font-[500] text-[#ffffff] relative z-[1] text-left flex justify-between items-center gap-1 w-full">
+          <p className="">
+            {accountLabel?.replace(/\(.*\)$/, "")} {formatShortWallet(account.address)}
           </p>
-          <p className="mt-1 text-sm font-[500] text-white/80">
-            {formatShortWallet(account.address)}
+          <p className="">
+            {formatNumber(account.balanceUsd, 2, true, { prefix: "$", round: 0 })}
           </p>
         </div>
-        <p className="relative z-[1] shrink-0 text-base font-[500] leading-[1.5] text-white">
-          {formatNumber(account.balanceUsd, 2, true, { prefix: "$", round: 0 })}
-        </p>
+        <div className="text-[#A0A0A0] text-xs font-[400] w-full">
+          {t("depositEntrySubtitle", { accountLabel })}
+        </div>
       </button>
     </>
   );

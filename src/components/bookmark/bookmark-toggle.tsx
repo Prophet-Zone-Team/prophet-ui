@@ -12,6 +12,7 @@ import {
 import { TrackedBookmarkIcon, UntrackedBookmarkIcon } from "@/components/bookmark/bookmark-icons";
 import { useAuth } from "@/context/auth/use-auth";
 import { cn } from "@/lib/cn";
+import { trackTrackClicked } from "@/lib/analytics/tracking";
 import {
   resolveTrackStoreKeyFromTarget,
   type ProphetBookmarkTarget
@@ -154,6 +155,12 @@ export function BookmarkToggle({
         disabled={isLoading}
         onClick={(event) => {
           event.stopPropagation();
+
+          trackTrackClicked({
+            teamName: target.category === "team" ? target.teamName : undefined,
+            target: isTracked ? "untrack" : "track",
+            entrySource: "bookmark_toggle"
+          });
 
           if (!isTracked && !isLoading) {
             pendingTrackSuccessTooltipRef.current = true;

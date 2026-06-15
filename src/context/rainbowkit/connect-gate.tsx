@@ -15,6 +15,7 @@ import {
   activatePrivyWallet,
   findPrivyEmbeddedWallet,
 } from "@/context/privy/privy-wallet-bridge";
+import { trackWalletConnectFailed } from "@/lib/analytics/tracking";
 import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 import { AuthLoginMethod, useAuthStore } from "@/store/auth-store";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -195,6 +196,11 @@ export function RainbowConnectGate({ children }: { children: ReactNode }) {
           return;
         }
         finish(() => {
+          trackWalletConnectFailed({
+            failureReason: "wallet_rejected",
+            errorCode: "WALLET_CONNECT_GATE_ERROR",
+            walletType: "wallet"
+          });
           reject(new Error("Connect cancelled"));
         });
       }, timeoutMs);

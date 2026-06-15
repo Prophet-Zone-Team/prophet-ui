@@ -476,7 +476,7 @@
       "migrateNow": "Migrar ahora",
       "v1Account": "Cuenta V1 (Polymarket)",
       "v2Account": "Cuenta V2 (Polymarket)",
-      "prophetAccount": "Prophet account",
+      "prophetAccount": "V3 account (Polymarket)",
       "depositEntryTitle": "Migrar desde cuenta V1 / V2",
       "depositEntrySubtitle": "Saldo detectado en {accountLabel}",
       "menuEntrySubtitle": "Migrar saldo desde V1/V2",
@@ -1025,6 +1025,9 @@
     "shareCardProfit": "Make Profit!",
     "shareCardInvite": "invites you to join Prophet",
     "shareTweetIntro": "The World Cup markets are coming.\n\nTrack signals. Trade smarter.\n\nJoin Prophet 👇\n\n",
+    "shareUploadAuthRequired": "Connect your wallet to share on X.",
+    "shareUploadError": "Unable to prepare the share image. Please try again.",
+    "shareCardNotReady": "Share card is still loading. Please try again.",
     "claimSuccess": "Claimed {amount} USDC",
     "claimError": "No se pudieron reclamar las recompensas de referidos."
   },

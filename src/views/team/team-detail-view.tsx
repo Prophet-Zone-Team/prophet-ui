@@ -14,6 +14,7 @@ import { TeamDetailHeader } from "@/views/team/team-detail-header";
 import { TeamDetailBodySkeleton } from "@/views/team/team-detail-loading";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
 import { TeamKeyPlayersPanel } from "@/views/team/team-key-players-panel";
+import { TeamLineupPanel } from "@/views/team/team-lineup-panel";
 import { TeamMarketIntelligencePanel } from "@/views/team/team-market-intelligence-panel";
 import { TeamNewsSignalsPanel } from "@/views/team/team-news-signals-panel";
 import { TeamNextMatchPanel } from "@/views/team/team-next-match-panel";
@@ -97,6 +98,7 @@ export function TeamDetailView({ snapshot, dataStatus }: TeamDetailViewProps) {
               <TeamProbabilityPanel snapshot={snapshot} />
               <div className="grid gird-cols-1 gap-4 col-span-2">
                 <TeamKeyPlayersPanel players={data?.keyStars ?? []} />
+                <TeamLineupPanel teamName={snapshot.team.name} />
                 <TeamNewsSignalsPanel
                   items={marketNews.newsItems}
                   snapshot={snapshot}

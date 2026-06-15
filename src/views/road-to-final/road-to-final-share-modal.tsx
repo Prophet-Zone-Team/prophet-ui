@@ -106,6 +106,8 @@ export function RoadToFinalShareModal({
       downloadFilename={ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME}
       shareCardReady={shareCardReady}
       cardRef={cardRef}
+      shareImageUploadMode="always"
+      modalShellClass="md:w-[550px]"
     >
       <RoadToFinalShareCard
         ref={cardRef}

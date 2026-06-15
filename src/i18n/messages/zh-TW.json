@@ -479,7 +479,7 @@
       "migrateNow": "立即遷移",
       "v1Account": "V1 帳戶 (Polymarket)",
       "v2Account": "V2 帳戶 (Polymarket)",
-      "prophetAccount": "Prophet account",
+      "prophetAccount": "V3 account (Polymarket)",
       "depositEntryTitle": "從 V1 / V2 帳戶遷移",
       "depositEntrySubtitle": "在 {accountLabel} 中偵測到餘額",
       "menuEntrySubtitle": "從 V1/V2 遷移餘額",
@@ -1028,6 +1028,9 @@
     "shareCardProfit": "賺取收益！",
     "shareCardInvite": "邀請你加入 Prophet",
     "shareTweetIntro": "世界盃市場即將來臨。\n\n追蹤訊號。更聰明地交易。\n\n加入 Prophet 👇\n\n",
+    "shareUploadAuthRequired": "請連接錢包後再分享到 X。",
+    "shareUploadError": "無法準備分享圖片，請重試。",
+    "shareCardNotReady": "分享卡片仍在載入中，請稍後再試。",
     "claimSuccess": "已領取 {amount} USDC",
     "claimError": "無法領取推薦獎勵。"
   },

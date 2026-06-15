@@ -35,6 +35,11 @@ export function InviteFriendsModal({
       fullLink={kickback.fullLink}
       shareCardReady={shareCardReady}
       cardRef={cardRef}
+      shareImageUploadMode="cache"
+      shareImageCacheKey={{
+        referralCode: kickback.referralCode,
+        funderAddress,
+      }}
     >
       <ReferralShareCard
         ref={cardRef}

@@ -3,13 +3,11 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo } from "react";
 
+import { trackTrackPageViewed } from "@/lib/analytics/tracking";
+
 import { useAuth } from "@/context/auth";
 import { mapProphetTracksToCardProps } from "@/lib/tracks/prophet-track-mapper";
-import {
-  useTracksHydrated,
-  useTracksItems,
-  useTracksStore
-} from "@/store";
+import { useTracksHydrated, useTracksItems, useTracksStore } from "@/store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
 import { TracksEmptyState } from "./empty";
 import TracksTitle from "./title";
@@ -22,6 +20,10 @@ import TracksTelegramBanner from "./tg";
 import { TracksUnauthenticatedState } from "./unauthenticated";
 
 export function TracksView() {
+  useEffect(() => {
+    trackTrackPageViewed();
+  }, []);
+
   const t = useTranslations("tracks");
   const tCommon = useTranslations("common");
   const authHydrated = useAuthHydrated();
@@ -47,10 +49,7 @@ export function TracksView() {
     refetch: refetchTopAttention
   } = useProphetTopTracks();
 
-  const trackCards = useMemo(
-    () => mapProphetTracksToCardProps(items),
-    [items]
-  );
+  const trackCards = useMemo(() => mapProphetTracksToCardProps(items), [items]);
 
   const topAttentionTeamCards = useMemo(
     () => topAttentionCards.filter((card) => card.variant !== "match"),
@@ -169,10 +168,7 @@ export function TracksView() {
         {topAttentionTeamCards.length > 0 ? (
           <div className="flex flex-wrap gap-[4px]">
             {topAttentionTeamCards.map((card) => (
-              <TopAttentionCard
-                key={card.snapshot.team.id}
-                {...card}
-              />
+              <TopAttentionCard key={card.snapshot.team.id} {...card} />
             ))}
           </div>
         ) : null}

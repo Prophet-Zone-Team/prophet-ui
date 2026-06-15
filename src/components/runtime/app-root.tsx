@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
 import { HttpsRequiredPage } from "@/components/runtime/https-required-page";
+import { AnalyticsProvider } from "@/context/analytics";
 import { AuthProvider } from "@/context/auth";
 import { MigrateProvider } from "@/context/migrate";
 import { ProphetNotificationWsProvider } from "@/context/prophet-notification-ws";
@@ -34,27 +35,35 @@ export function AppRoot({
 
   if (!isSecure) {
     return (
-      <LocaleProvider initialLocale={initialLocale} initialMessages={initialMessages}>
+      <LocaleProvider
+        initialLocale={initialLocale}
+        initialMessages={initialMessages}
+      >
         <HttpsRequiredPage />
       </LocaleProvider>
     );
   }
 
   return (
-    <LocaleProvider initialLocale={initialLocale} initialMessages={initialMessages}>
+    <LocaleProvider
+      initialLocale={initialLocale}
+      initialMessages={initialMessages}
+    >
       <RainbowProvider cookie={cookie}>
-        <AuthProvider>
-          <MigrateProvider>
-            <SportsWsProvider>
-              <ProphetNotificationWsProvider>
-                <main className="min-h-screen overflow-x-hidden font-body">
-                  <AppChrome>{children}</AppChrome>
-                </main>
-                <Toaster />
-              </ProphetNotificationWsProvider>
-            </SportsWsProvider>
-          </MigrateProvider>
-        </AuthProvider>
+        <AnalyticsProvider>
+          <AuthProvider>
+            <MigrateProvider>
+              <SportsWsProvider>
+                <ProphetNotificationWsProvider>
+                  <main className="min-h-screen overflow-x-hidden font-body">
+                    <AppChrome>{children}</AppChrome>
+                  </main>
+                  <Toaster />
+                </ProphetNotificationWsProvider>
+              </SportsWsProvider>
+            </MigrateProvider>
+          </AuthProvider>
+        </AnalyticsProvider>
       </RainbowProvider>
     </LocaleProvider>
   );

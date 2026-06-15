@@ -102,16 +102,16 @@ export const inviteShareCardClass = cn(
 );
 
 export const inviteShareCardTitleClass = cn(
-  "bg-gradient-to-b from-white from-[21.825%] to-[#bbd0fd] bg-clip-text text-center text-[32px] font-semibold leading-[normal] text-transparent",
+  "bg-gradient-to-b from-white from-[21.825%] to-[#bbd0fd] bg-clip-text text-left text-[26px] font-semibold leading-[normal] text-transparent",
 );
 
 export const inviteShareCardProfitClass = "text-[#bbd0fd]";
 
 export const inviteShareCardFunderClass =
-  "text-center text-[11px] font-semibold leading-[1.3] text-[#7599ff]";
+  "text-left text-[11px] font-semibold leading-[1.3] text-[#7599ff]";
 
 export const inviteShareCardInviteClass =
-  "text-center text-[10px] font-light leading-[1.3] tracking-[-0.7px] text-white";
+  "text-left text-[10px] font-light leading-[1.3] tracking-[-0.7px] text-white";
 
 export const inviteShareCardQrWrapClass =
   "absolute bottom-[16px] right-[16px] z-20 rounded-[4px] border border-black bg-white p-[2px]";
@@ -122,4 +122,5 @@ export const inviteLinkRowShellClass =
 export const inviteActionButtonClass = cn(
   "inline-flex h-[52px] w-full items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white",
   "text-[#909090] transition-colors hover:bg-[#f5f5f5] focus-visible:bg-[#f5f5f5]",
+  "disabled:cursor-not-allowed disabled:opacity-30",
 );
