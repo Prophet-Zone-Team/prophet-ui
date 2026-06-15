@@ -191,10 +191,15 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         return current;
       }
 
-      return (
-        stableflowTokens.find((token) => token.symbol === "USDC") ??
-        stableflowTokens.find((token) => token.chainId === selectedChain.chainId)
-      );
+      if (selectedChain?.chainId) {
+        const selectedChainTokens = stableflowTokens.filter((token) => token.chainId === selectedChain.chainId);
+        const defaultToken = selectedChainTokens.find((token) => token.symbol === "USDC") ?? selectedChainTokens[0];
+        if (defaultToken) {
+          return defaultToken;
+        }
+      }
+
+      return stableflowTokens.find((token) => token.symbol === "USDC");
     });
   }, [isBridge, selectedChain, stableflowTokens, supportedAssets]);
 
@@ -458,13 +463,11 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
         throw new Error(tWithdraw("unsupportedToken"));
       }
 
-      if (txHash) {
-        void reportFundingTransaction({
-          type: "withdraw",
-          txHash,
-          amount: String(amount)
-        });
-      }
+      void reportFundingTransaction({
+        type: "withdraw",
+        txHash: txHash ?? "",
+        amount: String(amount)
+      });
 
       toast.success(tWithdraw("withdrawalSubmitted"));
       handleClose();

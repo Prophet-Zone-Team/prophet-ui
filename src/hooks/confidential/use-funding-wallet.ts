@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useAccount } from "wagmi";
 
 import { disconnectWagmiWallet } from "@/components/trading/wallet-provider";
 import { useConnectGate } from "@/context/rainbowkit/connect-gate";
+import { useUnifiedAccount } from "@/hooks/wallet/use-unified-account";
 
 export interface UseFundingWalletResult {
   address?: string;
@@ -23,7 +23,7 @@ export interface UseFundingWalletResult {
  */
 export function useFundingWallet(): UseFundingWalletResult {
   const { openConnectAndWait } = useConnectGate();
-  const { address, isConnected } = useAccount();
+  const { address, connected: isConnected } = useUnifiedAccount();
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 

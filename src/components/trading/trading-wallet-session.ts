@@ -15,13 +15,6 @@ export async function loadTradingSession() {
   return payload.session;
 }
 
-/** @deprecated Use auth `openLogin()` / `completeTradingLogin()` instead. */
-export async function connectTradingWallet() {
-  const { completeTradingLogin } = await import("@/lib/trading/trading-login");
-  const result = await completeTradingLogin();
-  return result.session;
-}
-
 export async function disconnectTradingSession() {
   await fetch("/api/trading/session", {
     method: "DELETE",
@@ -68,6 +61,7 @@ export function getStoredTradingWalletInfo(walletAddress?: string) {
   const walletLogos: Record<WalletProviderKind, string> = {
     okx: "/wallets/logo-okx.png",
     metamask: "/wallets/logo-metamask.png",
+    privy: "",
     injected: "",
   };
 

@@ -1,4 +1,4 @@
-import type { Chain } from "viem";
+import type { Chain, fallback } from "viem";
 import {
   abstract,
   arbitrum,
@@ -18,7 +18,7 @@ import {
 } from "viem/chains";
 import { http } from "wagmi";
 
-import { getEvmFundingNetworks, getFundingRpcUrl } from "@/config/funding/networks";
+import { getEvmFundingNetworks, getFundingRpcUrlFallback } from "@/config/funding/networks";
 
 export const FUNDING_EVM_CHAINS = [
   polygon,
@@ -46,9 +46,9 @@ export function getFundingEvmChain(chainId: number): Chain | undefined {
   return FUNDING_EVM_CHAIN_BY_ID[chainId];
 }
 
-export function buildFundingEvmTransports(): Record<number, ReturnType<typeof http>> {
+export function buildFundingEvmTransports(): Record<number, ReturnType<typeof fallback>> {
   return Object.fromEntries(
-    FUNDING_EVM_CHAINS.map((chain) => [chain.id, http(getFundingRpcUrl(chain.id))]),
+    FUNDING_EVM_CHAINS.map((chain) => [chain.id, getFundingRpcUrlFallback(chain.id)]),
   );
 }
 
