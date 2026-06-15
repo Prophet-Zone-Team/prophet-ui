@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import type { KeyboardEvent } from "react";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
+import Popover from "@/components/popover";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuthOptional } from "@/context/auth";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
@@ -36,6 +37,7 @@ export interface GroupDetailTeamProps {
   /** When true, Yes/No stays on the current page instead of navigating to trade. */
   tradeInPlace?: boolean;
   onOutcomeClick?: (side: OrderOutcomeSide) => void;
+  points?: number;
 }
 
 function formatGroupTeamProbability(value: number): string {
@@ -91,10 +93,12 @@ export function GroupDetailTeam({
   onSelect,
   underlineLayoutId,
   tradeInPlace = false,
-  onOutcomeClick
+  onOutcomeClick,
+  points
 }: GroupDetailTeamProps) {
   const router = useRouter();
   const auth = useAuthOptional();
+  const t = useTranslations("trade");
   const syncTeamSnapshot = useSyncTradeTicketSnapshot();
   const setOutcomeSide = useSetTradeOutcomeSide();
   const tradeOutcomeSide = useTradeOutcomeSide();
@@ -211,9 +215,28 @@ export function GroupDetailTeam({
             logoUrl={team.logoUrl}
             className="h-[50px] w-[49px] shrink-0 rounded-[6px] text-[50px]"
           />
-          <div className="min-w-0">
-            <div className="truncate text-[16px] font-[500] leading-5 text-black">
-              {displayName}
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 justify-between items-center gap-1.5">
+              <div className="truncate text-[16px] font-[500] leading-5 text-black">
+                {displayName}
+              </div>
+              {points != null ? (
+                <Popover
+                  placement="Top"
+                  trigger="Hover"
+                  content={
+                    <div className="flex h-[46px] w-[118px] items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white px-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+                      <span className="text-[14px] font-[400] leading-[18px] text-black">
+                        {t("currentPoint")}
+                      </span>
+                    </div>
+                  }
+                >
+                  <span className="shrink-0 text-[16px] font-[500] leading-5 text-black">
+                    {points}
+                  </span>
+                </Popover>
+              ) : null}
             </div>
             <div className="shrink-0 text-[24px] font-[500] leading-[30px] text-black">
               {probabilityLabel}

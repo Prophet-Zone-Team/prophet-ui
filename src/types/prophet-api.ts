@@ -78,6 +78,43 @@ export type ProphetGetRelatedGamesData = ProphetPolyMarketGameItem[];
 /** GET /v1/game/group-matches — group stage fixtures for a group code */
 export type ProphetGetGroupMatchesData = ProphetPolyMarketGameItem[];
 
+/** GET /v1/game/group — group standings, winner market, and fixtures */
+export interface ProphetGroupDetailStanding {
+  id: number;
+  group_code: string;
+  group_name: string;
+  team_id: number;
+  team_name: string;
+  team_logo: string;
+  rank: number;
+  points: number;
+  played: number;
+  win: number;
+  draw: number;
+  lose: number;
+  goals_for: number;
+  goals_against: number;
+  goals_diff: number;
+  source_update_at: number;
+}
+
+export interface ProphetGroupWinnerEvent {
+  id?: string;
+  slug?: string;
+  active?: boolean;
+  closed?: boolean;
+  archived?: boolean;
+  volume?: string;
+  markets?: ProphetPolyMarketMarket[] | null;
+}
+
+export interface ProphetGetGroupData {
+  group_code: string;
+  standings: ProphetGroupDetailStanding[];
+  winner_event?: ProphetGroupWinnerEvent;
+  matches: ProphetPolyMarketGameItem[];
+}
+
 /** GET /v1/games/result — finished games for a team */
 export interface ProphetTeamGameResult {
   home_team: string;

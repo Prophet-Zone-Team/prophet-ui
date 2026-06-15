@@ -51,6 +51,70 @@ export interface ProbabilitySectionProps {
   groupLayout?: boolean;
   borderless?: boolean;
   showChartOrderbookDivider?: boolean;
+  hideMobileOrderbook?: boolean;
+}
+
+export interface ProbabilityMobileOrderbookProps {
+  snapshot: TeamMarketSnapshot;
+  showOrderbook: boolean;
+  className?: string;
+}
+
+export function ProbabilityMobileOrderbook({
+  snapshot,
+  showOrderbook,
+  className
+}: ProbabilityMobileOrderbookProps) {
+  const t = useTranslations("trade");
+  const outcomeView = useTradeOutcomeSide();
+  const [orderbookExpanded, setOrderbookExpanded] = useState(false);
+  const tokenId = useMemo(
+    () => resolveTeamOrderbookTokenId(snapshot, outcomeView),
+    [outcomeView, snapshot]
+  );
+
+  if (!showOrderbook) {
+    return null;
+  }
+
+  return (
+    <div className={className}>
+      <div className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between px-4 py-3 text-left"
+          aria-expanded={orderbookExpanded}
+          aria-controls="team-trade-mobile-orderbook"
+          onClick={() => setOrderbookExpanded((current) => !current)}
+        >
+          <span className="text-base font-[500] leading-[19px] text-black">
+            {t("orderbook")}
+          </span>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-[#909090] transition-transform",
+              orderbookExpanded && "rotate-180"
+            )}
+            aria-hidden="true"
+          />
+        </button>
+
+        {orderbookExpanded ? (
+          <div
+            id="team-trade-mobile-orderbook"
+            className="border-t border-[#EBEBEB]"
+          >
+            <OrderbookPanel
+              visible
+              tokenId={tokenId}
+              variant="mirror"
+              className="min-h-0 w-full"
+            />
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 export function ProbabilitySection({
@@ -59,13 +123,13 @@ export function ProbabilitySection({
   showHeaderControls = true,
   groupLayout = false,
   borderless = false,
-  showChartOrderbookDivider = false
+  showChartOrderbookDivider = false,
+  hideMobileOrderbook = false
 }: ProbabilitySectionProps) {
   const t = useTranslations("trade");
   const outcomeView = useTradeOutcomeSide();
   const setOutcomeView = useSetTradeOutcomeSide();
   const [timeRange, setTimeRange] = useState<TeamChartTimeRange>("all");
-  const [orderbookExpanded, setOrderbookExpanded] = useState(false);
   const previousTimeRangeRef = useRef<TeamChartTimeRange>("all");
   const chartRef = useAnalyticsImpression<HTMLElement>({
     eventName: "chart_viewed",
@@ -354,42 +418,13 @@ export function ProbabilitySection({
         />
       </div>
 
-      <div className="md:hidden">
-        <div className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white">
-          <button
-            type="button"
-            className="flex w-full items-center justify-between px-4 py-3 text-left"
-            aria-expanded={orderbookExpanded}
-            aria-controls="team-trade-mobile-orderbook"
-            onClick={() => setOrderbookExpanded((current) => !current)}
-          >
-            <span className="text-base font-[500] leading-[19px] text-black">
-              {t("orderbook")}
-            </span>
-            <ChevronDown
-              className={cn(
-                "h-4 w-4 shrink-0 text-[#909090] transition-transform",
-                orderbookExpanded && "rotate-180"
-              )}
-              aria-hidden="true"
-            />
-          </button>
-
-          {orderbookExpanded ? (
-            <div
-              id="team-trade-mobile-orderbook"
-              className="border-t border-[#EBEBEB]"
-            >
-              <OrderbookPanel
-                visible
-                tokenId={tokenId}
-                variant="mirror"
-                className="min-h-0 w-full"
-              />
-            </div>
-          ) : null}
-        </div>
-      </div>
+      {hideMobileOrderbook ? null : (
+        <ProbabilityMobileOrderbook
+          snapshot={snapshot}
+          showOrderbook={showOrderbook}
+          className="md:hidden"
+        />
+      )}
     </section>
   );
 }
