@@ -44,7 +44,6 @@ const probabilityCardClass =
   "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
 
 const probabilityCardBorderlessClass = "min-w-0 flex-1 bg-white p-4 sm:p-5";
-const probabilityCardBorderlessClass = "min-w-0 flex-1 bg-white p-4 sm:p-5";
 
 const orderbookBorderlessClass = "rounded-none border-0";
 
