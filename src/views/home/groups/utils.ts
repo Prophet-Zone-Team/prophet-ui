@@ -1,5 +1,6 @@
 import teams from "@/data/teams";
 import {
+  getWorldCupTeamByIdOrCode,
   WORLD_CUP_2026_GROUP_ORDER,
   WORLD_CUP_2026_GROUPS,
   type WorldCup2026Group,
@@ -182,4 +183,12 @@ export function getGroupLabel(
   t: (key: "groupLabel", values: { group: WorldCup2026Group }) => string,
 ): string {
   return t("groupLabel", { group });
+}
+
+export function resolveGroupStandingRowTeamId(row: GroupStandingRow): string {
+  return (
+    getWorldCupTeamByIdOrCode(row.teamCode)?.id ??
+    getWorldCupTeamByIdOrCode(row.teamId)?.id ??
+    row.teamId
+  );
 }

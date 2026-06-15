@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import Popover from "@/components/popover";
@@ -7,8 +8,10 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/cn";
 import {
   formatLimitPriceInputValue,
+  isCompleteLimitPriceDisplayValue,
   LIMIT_BUY_MIN_SHARES,
-  parseLimitPriceDisplayValue
+  parseLimitPriceDisplayValue,
+  sanitizeLimitPriceDisplayInput
 } from "@/lib/market/order-math";
 
 export interface TakeProfitLimitRowProps {
@@ -41,6 +44,20 @@ export function TakeProfitLimitRow({
   className
 }: TakeProfitLimitRowProps) {
   const t = useTranslations("trade");
+  const [displayValue, setDisplayValue] = useState(() =>
+    formatLimitPriceInputValue(price)
+  );
+  const lastEmittedPriceRef = useRef(price);
+
+  useEffect(() => {
+    if (price === lastEmittedPriceRef.current) {
+      return;
+    }
+
+    lastEmittedPriceRef.current = price;
+    setDisplayValue(formatLimitPriceInputValue(price));
+  }, [price]);
+
   const resolvedDisabledMessage =
     disabledMessage ??
     t("takeProfitLimitDisabled", { minShares: LIMIT_BUY_MIN_SHARES });
@@ -72,24 +89,39 @@ export function TakeProfitLimitRow({
             </span>
             <input
               id="take-profit-limit-price"
-              type="number"
-              min={1}
-              max={99}
-              step={0.1}
+              type="text"
               inputMode="decimal"
               readOnly={disabled}
               disabled={disabled}
               tabIndex={disabled ? -1 : undefined}
               autoFocus={true}
-              value={price.trim() ? formatLimitPriceInputValue(price) : ""}
+              value={displayValue}
               onChange={(event) => {
                 if (disabled) {
                   return;
                 }
 
-                onPriceChange(
-                  parseLimitPriceDisplayValue(event.target.value, purchasePrice)
+                const sanitized = sanitizeLimitPriceDisplayInput(
+                  event.target.value
                 );
+                setDisplayValue(sanitized);
+
+                if (sanitized === "") {
+                  lastEmittedPriceRef.current = "";
+                  onPriceChange("");
+                  return;
+                }
+
+                if (!isCompleteLimitPriceDisplayValue(sanitized)) {
+                  return;
+                }
+
+                const parsed = parseLimitPriceDisplayValue(
+                  sanitized,
+                  purchasePrice
+                );
+                lastEmittedPriceRef.current = parsed;
+                onPriceChange(parsed);
               }}
               style={{ fieldSizing: "content" }}
               className={cn(

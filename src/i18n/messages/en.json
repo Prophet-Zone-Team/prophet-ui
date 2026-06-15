@@ -912,7 +912,8 @@
     "statLosses": "Losses",
     "statPoints": "Points",
     "advancing": "Advancing",
-    "groupStandingsTableAria": "{groupLabel} standings"
+    "groupStandingsTableAria": "{groupLabel} standings",
+    "groupStandingRowNavigateAria": "Open {groupLabel} page for {teamName}"
   },
   "teams": {
     "teamDirectory": "Team directory",

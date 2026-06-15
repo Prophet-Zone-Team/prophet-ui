@@ -909,7 +909,8 @@
     "statLosses": "負",
     "statPoints": "点",
     "advancing": "突破確率",
-    "groupStandingsTableAria": "{groupLabel} 順位表"
+    "groupStandingsTableAria": "{groupLabel} 順位表",
+    "groupStandingRowNavigateAria": "{teamName} の {groupLabel} ページを開く"
   },
   "teams": {
     "teamDirectory": "Team directory",

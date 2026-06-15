@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { PageBack } from "@/components/ui/page-back";
 import { MarketWsProvider } from "@/context/market-ws";
@@ -10,6 +11,15 @@ import {
   resolveDefaultSelectedTeamId,
   type GroupWinnerHeaderData
 } from "@/lib/market/map-group-winner-event";
+import {
+  groupDetailHref,
+  resolveGroupDetailTeamParam
+} from "@/lib/routes/group";
+import {
+  useSetTradeOutcomeSide,
+  useSyncTradeTicketSnapshot,
+  useTradeOutcomeSide
+} from "@/store";
 import type { OrderOutcomeSide, TeamMarketSnapshot } from "@/types/market";
 import { GroupDetailHeader } from "@/views/group-detail/header";
 import { GroupMatchesPanel } from "@/views/group-detail/group-matches-panel";
@@ -29,15 +39,38 @@ export interface GroupDetailViewProps {
   initialHeader: GroupWinnerHeaderData;
 }
 
+function resolveInitialSelectedTeamId(
+  snapshots: TeamMarketSnapshot[],
+  teamFromUrl?: string
+): string {
+  if (
+    teamFromUrl &&
+    snapshots.some((snapshot) => snapshot.team.id === teamFromUrl)
+  ) {
+    return teamFromUrl;
+  }
+
+  return resolveDefaultSelectedTeamId(snapshots) ?? snapshots[0]?.team.id ?? "";
+}
+
 function GroupDetailViewContent({
   group,
   initialSnapshots,
   initialHeader
 }: GroupDetailViewProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const tradeWidgetRef = useRef<HTMLDivElement>(null);
-  const defaultTeamId = resolveDefaultSelectedTeamId(initialSnapshots);
-  const [selectedTeamId, setSelectedTeamId] = useState<string>(
-    defaultTeamId ?? initialSnapshots[0]?.team.id ?? ""
+  const appliedUrlTeamRef = useRef(false);
+  const teamFromUrl = resolveGroupDetailTeamParam(
+    searchParams.get("team") ?? undefined
+  );
+  const sideFromUrl = searchParams.get("side");
+  const outcomeSide = useTradeOutcomeSide();
+  const setOutcomeSide = useSetTradeOutcomeSide();
+  const syncTeamSnapshot = useSyncTradeTicketSnapshot();
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(() =>
+    resolveInitialSelectedTeamId(initialSnapshots, teamFromUrl)
   );
 
   const { snapshots, header } = useGroupWinnerMarket({
@@ -61,12 +94,29 @@ function GroupDetailViewContent({
       return;
     }
 
-    const nextId = resolveDefaultSelectedTeamId(snapshots);
+    const nextId = resolveInitialSelectedTeamId(snapshots, teamFromUrl);
 
     if (nextId) {
       setSelectedTeamId(nextId);
     }
-  }, [selectedTeamId, snapshots]);
+  }, [selectedTeamId, snapshots, teamFromUrl]);
+
+  useEffect(() => {
+    if (appliedUrlTeamRef.current || !teamFromUrl) {
+      return;
+    }
+
+    const snapshot = snapshots.find((entry) => entry.team.id === teamFromUrl);
+
+    if (!snapshot) {
+      return;
+    }
+
+    appliedUrlTeamRef.current = true;
+    setSelectedTeamId(teamFromUrl);
+    syncTeamSnapshot(snapshot);
+    setOutcomeSide(sideFromUrl === "no" ? "no" : "yes");
+  }, [teamFromUrl, sideFromUrl, snapshots, syncTeamSnapshot, setOutcomeSide]);
 
   const scrollToTradeWidget = useCallback(() => {
     const target =
@@ -76,11 +126,29 @@ function GroupDetailViewContent({
     target?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, []);
 
+  const updateGroupDetailUrl = useCallback(
+    (teamId: string, side: OrderOutcomeSide) => {
+      router.replace(groupDetailHref(group, { team: teamId, side }), {
+        scroll: false
+      });
+    },
+    [group, router]
+  );
+
+  const handleSelectTeam = useCallback(
+    (teamId: string) => {
+      setSelectedTeamId(teamId);
+      updateGroupDetailUrl(teamId, outcomeSide);
+    },
+    [updateGroupDetailUrl, outcomeSide]
+  );
+
   const handleOutcomeClick = useCallback(
-    (_side: OrderOutcomeSide) => {
+    (side: OrderOutcomeSide, teamId: string) => {
+      updateGroupDetailUrl(teamId, side);
       scrollToTradeWidget();
     },
-    [scrollToTradeWidget]
+    [updateGroupDetailUrl, scrollToTradeWidget]
   );
 
   useTeamMarketWsTokens(
@@ -114,26 +182,45 @@ function GroupDetailViewContent({
             teams={snapshots}
           />
 
-          <section className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:justify-items-center">
-              {snapshots.map((snapshot) => (
-                <GroupDetailTeam
-                  key={snapshot.team.id}
-                  snapshot={snapshot}
-                  selected={snapshot.team.id === selectedTeamId}
-                  onSelect={() => setSelectedTeamId(snapshot.team.id)}
-                  tradeInPlace
-                  onOutcomeClick={handleOutcomeClick}
-                  className="w-full max-w-[222px]"
-                />
-              ))}
+          <section className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)_1px_minmax(0,1fr)_1px_minmax(0,1fr)] xl:items-stretch xl:justify-items-center xl:gap-x-0">
+              {snapshots.flatMap((snapshot, index) => {
+                const team = (
+                  <GroupDetailTeam
+                    key={snapshot.team.id}
+                    snapshot={snapshot}
+                    selected={snapshot.team.id === selectedTeamId}
+                    onSelect={() => handleSelectTeam(snapshot.team.id)}
+                    tradeInPlace
+                    onOutcomeClick={(side) =>
+                      handleOutcomeClick(side, snapshot.team.id)
+                    }
+                    className="w-full max-w-[222px] py-4"
+                  />
+                );
+
+                if (index >= snapshots.length - 1) {
+                  return [team];
+                }
+
+                return [
+                  team,
+                  <div
+                    key={`divider-${snapshot.team.id}`}
+                    className="hidden w-px self-stretch bg-[#EBEBEB] xl:block"
+                    aria-hidden
+                  />
+                ];
+              })}
             </div>
 
-            <div className="mt-5 border-t border-[#EBEBEB] pt-5">
+            <div className="border-t border-[#EBEBEB]">
               <ProbabilitySection
                 snapshot={selectedSnapshot}
                 showOrderbook={true}
                 showHeaderControls={false}
+                borderless
+                showChartOrderbookDivider
               />
             </div>
           </section>

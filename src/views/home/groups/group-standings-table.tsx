@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { GridTable } from "@/components/grid-table";
 import type { GridTableColumn } from "@/components/grid-table";
 import { TeamFlag } from "@/components/teams/team-flag";
 import type { WorldCup2026Group } from "@/data/world-cup-2026/groups";
+import { groupDetailHref } from "@/lib/routes/group";
 import type { GroupStandingRow } from "@/types/group-standings";
 
 import { AdvancingProbabilityPill } from "./advancing-probability-pill";
@@ -16,7 +18,10 @@ import {
   GROUP_STANDINGS_TABLE_MIN_WIDTH,
 } from "./config";
 import { GroupBadge } from "./group-badge";
-import { getGroupLabel } from "./utils";
+import {
+  getGroupLabel,
+  resolveGroupStandingRowTeamId,
+} from "./utils";
 
 const statCellClassName = "text-center opacity-30";
 const statHeaderClassName = "text-center";
@@ -74,9 +79,22 @@ export function GroupStandingsTable({
   group: WorldCup2026Group;
   rows: GroupStandingRow[];
 }) {
+  const router = useRouter();
   const t = useTranslations("home");
   const columns = useMemo(() => buildColumns(group, t), [group, t]);
   const groupLabel = getGroupLabel(group, t);
+
+  const handleRowClick = useCallback(
+    (row: GroupStandingRow) => {
+      router.push(
+        groupDetailHref(group, {
+          team: resolveGroupStandingRowTeamId(row),
+          side: "yes",
+        }),
+      );
+    },
+    [group, router],
+  );
 
   return (
     <GridTable
@@ -87,7 +105,14 @@ export function GroupStandingsTable({
       minWidth={GROUP_STANDINGS_TABLE_MIN_WIDTH}
       ariaLabel={t("groupStandingsTableAria", { groupLabel })}
       headerRowClassName="items-center pt-[14px]"
-      bodyRowClassName="items-center transition-colors hover:bg-[#F9FAFC] rounded-[12px]"
+      bodyRowClassName="items-center rounded-[12px] transition-colors hover:bg-[#F9FAFC]"
+      onRowClick={handleRowClick}
+      getRowAriaLabel={(row) =>
+        t("groupStandingRowNavigateAria", {
+          teamName: row.teamName,
+          groupLabel,
+        })
+      }
     />
   );
 }

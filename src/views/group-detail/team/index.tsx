@@ -129,7 +129,7 @@ export function GroupDetailTeam({
   return (
     <article
       className={cn(
-        "box-border flex h-[102px] w-[222px] flex-col justify-between rounded-[8px]",
+        "box-border flex w-[222px] flex-col justify-between rounded-[8px]",
         className
       )}
       aria-label={displayName}
@@ -158,7 +158,7 @@ export function GroupDetailTeam({
         </span>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 mt-2">
         <RegionRestrictedControl restricted={regionRestricted}>
           <OutcomeButton
             side="yes"
