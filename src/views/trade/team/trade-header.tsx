@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyLinkIcon } from "@/components/icons";
+import { trackCopyLinkClicked } from "@/lib/analytics/tracking";
 import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { PageBack } from "@/components/ui/page-back";
@@ -71,6 +72,13 @@ function HeaderControls({
           text={getPageUrl}
           ariaLabel={t("copyPageLink")}
           className="inline-flex size-11 items-center justify-center rounded-sm text-[#909090] transition-colors hover:text-black"
+          onCopy={() =>
+            trackCopyLinkClicked({
+              target: "page_link",
+              label: "Copy page link",
+              entrySource: "trade_team_page"
+            })
+          }
         >
           <CopyLinkIcon />
         </CopyButton>

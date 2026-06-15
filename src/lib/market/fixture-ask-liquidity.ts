@@ -1,49 +1,122 @@
+import { isLimitOrderType } from "@/lib/market/order-math";
 import type {
   BidTradeSide,
   FixtureMarketOutcome,
   OrderOutcomeSide,
+  TradingOrderType
 } from "@/types/market";
+
+export type AskLiquidityOutcome = Partial<
+  Pick<FixtureMarketOutcome, "yesAsk" | "noAsk" | "price" | "probability">
+>;
 
 export const NO_ASK_LIQUIDITY_MESSAGE =
   "No sell orders are available for this outcome. You cannot place a buy order right now.";
 
 export function isValidAskPrice(price: number | undefined): price is number {
-  return price !== undefined && Number.isFinite(price) && price > 0 && price < 1;
+  return (
+    price !== undefined && Number.isFinite(price) && price > 0 && price < 1
+  );
 }
 
 export function resolveFixtureBuyAsk(
   outcome: Pick<FixtureMarketOutcome, "yesAsk" | "noAsk">,
-  binarySide: OrderOutcomeSide,
+  binarySide: OrderOutcomeSide
 ): number | undefined {
   const ask = binarySide === "yes" ? outcome.yesAsk : outcome.noAsk;
 
   return isValidAskPrice(ask) ? ask : undefined;
 }
 
+function probabilityToAskPrice(
+  probability: number | undefined
+): number | undefined {
+  if (probability === undefined || !Number.isFinite(probability)) {
+    return undefined;
+  }
+
+  const price = probability / 100;
+  return isValidAskPrice(price) ? price : undefined;
+}
+
+/** Buy-side display/trade ask with snapshot probability fallback when CLOB asks are missing. */
+export function resolveFixtureDisplayAskPrice(
+  outcome: AskLiquidityOutcome,
+  binarySide: OrderOutcomeSide = "yes"
+): number | undefined {
+  const ask = resolveFixtureBuyAsk(outcome, binarySide);
+
+  if (ask !== undefined) {
+    return ask;
+  }
+
+  if (binarySide === "yes") {
+    if (isValidAskPrice(outcome.price)) {
+      return outcome.price;
+    }
+
+    return probabilityToAskPrice(outcome.probability);
+  }
+
+  if (isValidAskPrice(outcome.price)) {
+    const noPrice = 1 - outcome.price;
+    return isValidAskPrice(noPrice) ? noPrice : undefined;
+  }
+
+  if (outcome.probability !== undefined) {
+    return probabilityToAskPrice(100 - outcome.probability);
+  }
+
+  return undefined;
+}
+
+/** Whether an outcome button can be selected in the markets UI. */
+export function isFixtureOutcomeSelectable(
+  outcome: Pick<FixtureMarketOutcome, "tokenId"> & AskLiquidityOutcome,
+  binarySide: OrderOutcomeSide = "yes"
+): boolean {
+  if (!outcome.tokenId) {
+    return false;
+  }
+
+  return resolveFixtureDisplayAskPrice(outcome, binarySide) !== undefined;
+}
+
 export function hasFixtureBuyAsk(
   outcome: Pick<FixtureMarketOutcome, "yesAsk" | "noAsk">,
-  binarySide: OrderOutcomeSide,
+  binarySide: OrderOutcomeSide
 ): boolean {
   return resolveFixtureBuyAsk(outcome, binarySide) !== undefined;
 }
 
 export function resolveFixtureBuyAskDisabledReason(
-  outcome: Pick<FixtureMarketOutcome, "yesAsk" | "noAsk">,
+  outcome: AskLiquidityOutcome,
   binarySide: OrderOutcomeSide,
   tradeSide: BidTradeSide,
+  orderType?: TradingOrderType
 ): string | undefined {
   if (tradeSide !== "buy") {
     return undefined;
   }
 
-  return hasFixtureBuyAsk(outcome, binarySide)
-    ? undefined
-    : NO_ASK_LIQUIDITY_MESSAGE;
+  if (orderType && isLimitOrderType(orderType)) {
+    return undefined;
+  }
+
+  if (hasFixtureBuyAsk(outcome, binarySide)) {
+    return undefined;
+  }
+
+  if (resolveFixtureDisplayAskPrice(outcome, binarySide) !== undefined) {
+    return undefined;
+  }
+
+  return NO_ASK_LIQUIDITY_MESSAGE;
 }
 
 function resolveMergedLiveAsk(
   liveAsk: number | undefined,
-  snapshotAsk: number | undefined,
+  snapshotAsk: number | undefined
 ): number | undefined {
   return isValidAskPrice(liveAsk) ? liveAsk : snapshotAsk;
 }
@@ -57,7 +130,7 @@ export function mergeFixtureOutcomeLiveAsks(
         yesBid?: number;
         noBid?: number;
       }
-    | undefined,
+    | undefined
 ): FixtureMarketOutcome {
   if (liveAsks === undefined) {
     return outcome;
@@ -75,6 +148,6 @@ export function mergeFixtureOutcomeLiveAsks(
     noAsk,
     yesBid,
     noBid,
-    price: isValidAskPrice(yesAsk) ? yesAsk : outcome.price,
+    price: isValidAskPrice(yesAsk) ? yesAsk : outcome.price
   };
 }

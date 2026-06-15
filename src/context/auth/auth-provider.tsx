@@ -29,6 +29,11 @@ import {
   getConfidentialSession,
   requestConfidentialChallenge,
 } from "@/lib/confidential/client";
+import {
+  trackWalletConnectFailed,
+  trackWalletConnected,
+  trackWalletConnectStarted
+} from "@/lib/analytics/tracking";
 import { mapBalanceSnapshotToCash } from "@/lib/trading/cash-balance-model";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
 import {
@@ -99,6 +104,7 @@ import { useDisconnect } from "wagmi";
 import { signConfidentialMessage } from "@/lib/confidential/sign-message";
 import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
 import { usePendingFunderUsdc } from "@/hooks/funding";
+import { useMigratePromptStore } from "@/store/use-migrate-prompt-store";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
@@ -248,6 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearAuthState = useCallback(
     async (options?: { error?: string; openModal?: boolean }) => {
       const store = useAuthStore.getState();
+      const migrateStore = useMigratePromptStore.getState();
 
       try {
         await disconnectTradingSession();
@@ -283,6 +290,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setLoginInProgress(false);
       store.setLoginStep(undefined);
       store.setStatus("ready");
+      store.setReadiness(undefined);
+      migrateStore.resetAutoPrompted();
 
       if (options?.error) {
         store.setError(options.error);
@@ -705,6 +714,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.setPrivyLoginInProgress(false);
       }
 
+      trackWalletConnectStarted({
+        walletType: _loginMethod ?? "wallet"
+      });
+
       try {
         const result = await completeTradingLogin({
           resume,
@@ -728,6 +741,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         maybeCloseSetupModal(result.readiness);
         store.setPrivyLoginInProgress(false);
 
+        void trackWalletConnected({
+          walletAddress: result.session.walletAddress,
+          userId: result.session.walletAddress,
+          walletType: _loginMethod ?? "wallet"
+        });
+
         return result;
       } catch (loginError) {
         if (loginAbortRef.current) {
@@ -743,6 +762,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         privyAutoLoginRef.current = false;
         oauthAutoConnectRef.current = false;
         store.setPrivyLoginInProgress(false);
+
+        trackWalletConnectFailed({
+          failureReason: "wallet_rejected",
+          errorCode: "WALLET_CONNECT_FAILED",
+          walletType: _loginMethod ?? "wallet"
+        });
+
         throw loginError;
       } finally {
         if (!loginAbortRef.current) {

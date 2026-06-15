@@ -4,12 +4,14 @@ import { AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
+import { trackLoginClicked } from "@/lib/analytics/tracking";
 import { WalletConnectedBar } from "@/layout/header/wallet-connected-bar";
 import { WalletLoginButton } from "@/layout/header/wallet-login-button";
 import { WalletMenuDropdown } from "@/layout/header/wallet-menu-dropdown";
 import { FastBidSettingDialog } from "@/layout/header/fast-bid-setting-dialog";
 import { useDepositDialogStore } from "@/store/use-deposit-dialog";
 import { DepositDialog } from "@/views/portfolio/deposit";
+import { MigrateDialog } from "@/views/portfolio/migrate";
 import { PrivateTopupOnboarding } from "@/views/portfolio/private-topup/private-topup-onboarding";
 import { formatNumber } from "@/utils";
 import MobileDrawer from "./mobile-drawer";
@@ -139,6 +141,10 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
 
   function handleLogin() {
     setMessage(undefined);
+    trackLoginClicked({
+      entrySource: "header_wallet_menu",
+      label: "Login"
+    });
     openLoginModalOnly();
   }
 
@@ -158,7 +164,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
       return null;
     }
     return (
-      <div className="relative inline-flex flex-col items-end">
+      <div ref={menuRef} className="relative inline-flex flex-col items-end">
         <div className="flex items-center gap-2">
           <WalletLanguageMenuItem variant="compact" />
           <WalletLoginButton
@@ -172,6 +178,13 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
             {message ?? error}
           </p>
         ) : null}
+        <MobileDrawer
+          open={isMobileDrawerOpen}
+          onClose={onMobileDrawerClose}
+          regionRestricted={isBuyRestricted}
+          onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
+          balanceDisplay={balanceDisplay}
+        />
       </div>
     );
   }
@@ -220,6 +233,8 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
           setPrivateTopupIntroOpen(true);
         }}
       />
+
+      <MigrateDialog />
 
       <FastBidSettingDialog
         open={fastBidOpen}

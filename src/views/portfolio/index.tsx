@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+
+import { trackPortfolioViewed } from "@/lib/analytics/tracking";
 
 import { useAuth } from "@/context/auth";
 import { buildPortfolioView } from "@/lib/portfolio/portfolio-metrics";
@@ -11,6 +13,10 @@ import { usePortfolioData } from "@/views/portfolio/use-portfolio-data";
 import { PortfolioProvider } from "./context";
 
 export function PortfolioView() {
+  useEffect(() => {
+    trackPortfolioViewed();
+  }, []);
+
   const { cash } = useAuth();
   const {
     session,

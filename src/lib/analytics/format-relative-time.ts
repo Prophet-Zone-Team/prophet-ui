@@ -1,4 +1,4 @@
-import { formatDate, formatDateTimeFromIso } from "@/lib/formatters/datetime";
+import { formatDate, formatShortDateMinuteFromIso } from "@/lib/formatters/datetime";
 
 export function formatRelativeTime(iso: string | undefined): string {
   if (!iso) {
@@ -53,5 +53,5 @@ export function publishedAtToOrder(iso: string | undefined): number {
 }
 
 export function formatDateMonthAndTime(iso: string | undefined): string {
-  return formatDateTimeFromIso(iso);
+  return formatShortDateMinuteFromIso(iso);
 }

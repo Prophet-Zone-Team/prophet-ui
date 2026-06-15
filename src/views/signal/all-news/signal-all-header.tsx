@@ -48,15 +48,16 @@ export function SignalAllHeader({
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 className="m-0 text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
+        <h2 className="m-0 min-w-0 truncate text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
           {t("allSignalsAndNews")}
         </h2>
-        {/* <SignalAllTeamFilterControl
+        <SignalAllTeamFilterControl
           value={teamFilter}
           options={teamOptions}
           onChange={onTeamFilterChange}
           disabled={teamFilterDisabled}
-        /> */}
+          className="shrink-0"
+        />
       </div>
 
       <div

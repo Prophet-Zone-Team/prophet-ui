@@ -2,15 +2,11 @@ import "server-only";
 
 import {
   defaultReasonForKind,
-  mergeGeoblockWithLocalRules,
+  resolveLocalGeoEligibility
 } from "@/lib/trading/geo-restrictions";
-import { resolveEligibilityFromLocalFallback } from "@/lib/trading/eligibility-fallback";
 import type { TradingEligibilityStatus, TradingUserSession } from "@/types/market";
+import { lookupGeoFromIp } from "@/server/trading/ip-geolocation";
 import { updateTradingSession } from "@/server/trading/session-store";
-import { serverFetch } from "@/server/trading/server-fetch";
-
-const DEFAULT_GEOBLOCK_URL = "https://polymarket.com/api/geoblock";
-const GEOBLOCK_TIMEOUT_MS = 8000;
 
 export interface TradingEligibilityResult {
   status: TradingEligibilityStatus;
@@ -18,15 +14,6 @@ export interface TradingEligibilityResult {
   country?: string;
   region?: string;
   reason?: string;
-}
-
-interface PolymarketGeoblockResponse {
-  blocked?: boolean;
-  country?: string;
-  region?: string;
-  proxy?: boolean;
-  vpn?: boolean;
-  error?: string;
 }
 
 export interface ClientGeoHeaders {
@@ -51,102 +38,24 @@ export async function checkTradingEligibility(
     };
   }
 
-  try {
-    const headers: Record<string, string> = { Accept: "application/json" };
+  let country = clientGeo?.country;
+  let region = clientGeo?.region;
 
-    if (clientGeo?.ip) {
-      headers["X-Forwarded-For"] = clientGeo.ip;
-    }
-
-    const response = await serverFetch(getGeoblockUrl(), {
-      method: "GET",
-      headers,
-      cache: "no-store",
-      signal: AbortSignal.timeout(GEOBLOCK_TIMEOUT_MS),
-    });
-
-    if (!response.ok) {
-      return resolveEligibilityFromLocalFallback({
-        checkedAt,
-        clientGeo,
-        apiFailureReason: `Polymarket geoblock check returned ${response.status}.`,
-      });
-    }
-
-    const payload = (await response.json()) as PolymarketGeoblockResponse;
-    const merged = mergeGeoblockWithLocalRules({
-      apiBlocked: payload.blocked === true,
-      country: payload.country ?? clientGeo?.country,
-      region: payload.region ?? clientGeo?.region,
-      apiError: payload.error,
-    });
-
-    const proxyHint =
-      payload.proxy || payload.vpn
-        ? " Geoblock returned eligible with proxy/VPN signal present."
-        : "";
-
-    return {
-      status: merged.status,
-      checkedAt,
-      country: payload.country ?? clientGeo?.country,
-      region: payload.region ?? clientGeo?.region,
-      reason: merged.reason
-        ? `${merged.reason}${proxyHint}`.trim()
-        : proxyHint || undefined,
-    };
-  } catch (error) {
-    return resolveEligibilityFromLocalFallback({
-      checkedAt,
-      clientGeo,
-      apiFailureReason: formatGeoblockFetchError(error),
-    });
-  }
-}
-
-export function isGeoblockNetworkError(reason: string | undefined) {
-  if (!reason) {
-    return false;
+  if (!country && clientGeo?.ip) {
+    const lookup = await lookupGeoFromIp(clientGeo.ip);
+    country = lookup?.country ?? country;
+    region = lookup?.region ?? region;
   }
 
-  const normalized = reason.toLowerCase();
+  const resolved = resolveLocalGeoEligibility(country, region);
 
-  return (
-    normalized.includes("timeout") ||
-    normalized.includes("aborted") ||
-    normalized.includes("fetch failed") ||
-    normalized.includes("network") ||
-    normalized.includes("econnrefused") ||
-    normalized.includes("enotfound") ||
-    normalized.includes("unreachable")
-  );
-}
-
-export function formatGeoblockFetchError(error: unknown) {
-  const detail = error instanceof Error ? error.message : String(error);
-
-  if (isGeoblockNetworkError(detail)) {
-    return formatGeoblockNetworkErrorMessage();
-  }
-
-  return detail;
-}
-
-export function formatGeoblockNetworkErrorMessage() {
-  const proxyHint =
-    process.env.NODE_ENV === "development" && !hasDevelopmentProxyConfigured()
-      ? " In development, set HTTPS_PROXY if Polymarket APIs require a local proxy."
-      : "";
-
-  return `Polymarket geoblock check timed out or is unreachable.${proxyHint} Retry the eligibility check or verify server network access.`;
-}
-
-export function formatEligibilityErrorDetail(reason: string | undefined) {
-  if (isGeoblockNetworkError(reason)) {
-    return formatGeoblockNetworkErrorMessage();
-  }
-
-  return reason ?? "Polymarket geoblock check failed.";
+  return {
+    status: resolved.status,
+    checkedAt,
+    country,
+    region,
+    reason: resolved.reason
+  };
 }
 
 export function formatEligibilityRestrictionReason(
@@ -168,15 +77,6 @@ export function formatEligibilityRestrictionReason(
   }
 
   return reason;
-}
-
-function hasDevelopmentProxyConfigured() {
-  return Boolean(
-    process.env.HTTPS_PROXY?.trim() ||
-    process.env.https_proxy?.trim() ||
-    process.env.HTTP_PROXY?.trim() ||
-    process.env.http_proxy?.trim(),
-  );
 }
 
 export async function refreshSessionEligibility(
@@ -224,6 +124,12 @@ export function getClientIp(request: Request): string | undefined {
     return cfIp;
   }
 
+  const vercelIp = request.headers.get("x-vercel-forwarded-for");
+
+  if (vercelIp) {
+    return vercelIp.split(",")[0].trim();
+  }
+
   const forwarded = request.headers.get("x-forwarded-for");
 
   if (forwarded) {
@@ -240,17 +146,18 @@ export function getClientIp(request: Request): string | undefined {
 }
 
 function getClientCountry(request: Request): string | undefined {
-  return request.headers.get("cf-ipcountry")?.trim() || undefined;
+  return (
+    request.headers.get("cf-ipcountry")?.trim() ||
+    request.headers.get("x-vercel-ip-country")?.trim() ||
+    undefined
+  );
 }
 
 function getClientRegion(request: Request): string | undefined {
   return (
     request.headers.get("cf-region")?.trim() ||
     request.headers.get("cf-region-code")?.trim() ||
+    request.headers.get("x-vercel-ip-country-region")?.trim() ||
     undefined
   );
-}
-
-function getGeoblockUrl() {
-  return process.env.POLYMARKET_GEOBLOCK_URL?.trim() || DEFAULT_GEOBLOCK_URL;
 }

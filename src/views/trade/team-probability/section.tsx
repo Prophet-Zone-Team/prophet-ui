@@ -1,7 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+
+import { useAnalyticsImpression } from "@/hooks/analytics/use-analytics-impression";
+import {
+  trackWinnerChartRangeChanged,
+  trackWinnerChartTeamSelected
+} from "@/lib/analytics/tracking";
 import { useTranslations } from "next-intl";
 
 import {
@@ -33,8 +39,7 @@ import { tradeYesNoPill } from "@/views/trade/trade-widget/trade-ui";
 const probabilityCardClass =
   "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
 
-const probabilityCardBorderlessClass =
-  "min-w-0 flex-1 bg-white p-4 sm:p-5";
+const probabilityCardBorderlessClass = "min-w-0 flex-1 bg-white p-4 sm:p-5";
 
 const orderbookBorderlessClass = "rounded-none border-0";
 
@@ -57,6 +62,15 @@ export function ProbabilitySection({
   const outcomeView = useTradeOutcomeSide();
   const setOutcomeView = useSetTradeOutcomeSide();
   const [timeRange, setTimeRange] = useState<TeamChartTimeRange>("all");
+  const previousTimeRangeRef = useRef<TeamChartTimeRange>("all");
+  const chartRef = useAnalyticsImpression<HTMLElement>({
+    eventName: "chart_viewed",
+    dedupeKey: `chart:team_probability:${snapshot.team.id}`,
+    payload: {
+      chartId: "team_probability",
+      section: "team_probability"
+    }
+  });
   const yesTokenId = resolveTeamOrderbookTokenId(snapshot, "yes");
   const { points: probabilityHistory } = useProbabilityChart({
     kind: "team",
@@ -179,6 +193,7 @@ export function ProbabilitySection({
 
   return (
     <section
+      ref={chartRef}
       className={cn(
         "flex flex-col",
         showChartOrderbookDivider ? "gap-0" : "gap-3",
@@ -217,7 +232,16 @@ export function ProbabilitySection({
                       "flex-1",
                       tradeYesNoPill(outcomeView === "yes", "yes")
                     )}
-                    onClick={() => setOutcomeView("yes")}
+                    onClick={() => {
+                      trackWinnerChartTeamSelected({
+                        chartId: "team_probability",
+                        seriesKey: "yes",
+                        teamId: snapshot.team.id,
+                        teamName: snapshot.team.name,
+                        teamCode: snapshot.team.code
+                      });
+                      setOutcomeView("yes");
+                    }}
                   >
                     {t("yes")}
                   </button>
@@ -227,7 +251,16 @@ export function ProbabilitySection({
                       "flex-1",
                       tradeYesNoPill(outcomeView === "no", "no")
                     )}
-                    onClick={() => setOutcomeView("no")}
+                    onClick={() => {
+                      trackWinnerChartTeamSelected({
+                        chartId: "team_probability",
+                        seriesKey: "no",
+                        teamId: snapshot.team.id,
+                        teamName: snapshot.team.name,
+                        teamCode: snapshot.team.code
+                      });
+                      setOutcomeView("no");
+                    }}
                   >
                     {t("no")}
                   </button>

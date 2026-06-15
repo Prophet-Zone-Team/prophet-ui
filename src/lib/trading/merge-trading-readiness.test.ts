@@ -59,4 +59,58 @@ describe("mergeTradingReadiness", () => {
       "Need more allowance.",
     );
   });
+
+  it("keeps setup allowance for sell orders and ignores order allowance funding", () => {
+    const merged = mergeTradingReadiness(
+      setupReadiness(),
+      {
+        balances: {
+          walletAddress: "0xabc",
+          conditionalTokenBalance: 25,
+          updatedAt: "2026-01-02T00:00:00.000Z",
+        },
+        funding: {
+          balance: "pass",
+          allowance: "unknown",
+          balanceDetail: "25.00 shares available.",
+          allowanceDetail: "Conditional token allowance is not available. Required: 10.00 shares.",
+        },
+        updatedAt: "2026-01-02T00:00:00.000Z",
+      },
+      { tradeSide: "sell" },
+    );
+
+    assert.equal(merged.ready, true);
+    assert.equal(
+      merged.checks.find((check) => check.id === "allowance")?.detail,
+      "setup ok",
+    );
+  });
+
+  it("reuses setup allowance for buy when order allowance is unknown", () => {
+    const merged = mergeTradingReadiness(
+      setupReadiness(),
+      {
+        balances: {
+          walletAddress: "0xabc",
+          usdcAvailable: 25,
+          updatedAt: "2026-01-02T00:00:00.000Z",
+        },
+        funding: {
+          balance: "pass",
+          allowance: "unknown",
+          balanceDetail: "25.00 USDC available.",
+          allowanceDetail: "USDC allowance is not available. Required: 10.00 USDC.",
+        },
+        updatedAt: "2026-01-02T00:00:00.000Z",
+      },
+      { tradeSide: "buy" },
+    );
+
+    assert.equal(merged.ready, true);
+    assert.equal(
+      merged.checks.find((check) => check.id === "allowance")?.detail,
+      "setup ok",
+    );
+  });
 });

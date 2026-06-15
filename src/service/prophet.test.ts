@@ -19,6 +19,10 @@ import {
   trackProphet,
   untrackProphet
 } from "@/service/prophet";
+import {
+  readReferralShareImageCache,
+  writeReferralShareImageCache,
+} from "@/lib/referral/referral-share-image-cache";
 
 function createLocalStorageMock(): Storage {
   const store = new Map<string, string>();
@@ -114,10 +118,23 @@ describe("prophet auth guards", () => {
     setProphetApiToken("test-token");
     assert.equal(isProphetAuthenticated(), true);
 
+    writeReferralShareImageCache({
+      referralCode: "TESTCODE",
+      funderAddress: "0xabc",
+      url: "https://assets.dapdap.net/prophet/upload/test.png",
+    });
+
     logoutProphet();
 
     assert.equal(isProphetAuthenticated(), false);
     assert.throws(() => requireProphetApiToken());
+    assert.equal(
+      readReferralShareImageCache({
+        referralCode: "TESTCODE",
+        funderAddress: "0xabc",
+      }),
+      null,
+    );
   });
 
   it("getProphetTopTracks does not require authentication token", () => {

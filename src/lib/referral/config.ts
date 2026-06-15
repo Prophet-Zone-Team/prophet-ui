@@ -17,9 +17,9 @@ export const REFERRAL_USE_EMPTY_STATE = false;
 export const REFERRAL_SHARE_CARD_IMAGE_PATH = "/referral/share-card.png";
 
 /** Fixed export size matching share-card.png (px). */
-export const REFERRAL_SHARE_CARD_WIDTH = 308;
+export const REFERRAL_SHARE_CARD_WIDTH = 434;
 
-export const REFERRAL_SHARE_CARD_HEIGHT = 394;
+export const REFERRAL_SHARE_CARD_HEIGHT = 228;
 
 /** Padding on capture wrapper so box-shadow is not clipped in PNG export. */
 export const REFERRAL_SHARE_CARD_EXPORT_PADDING = 4;

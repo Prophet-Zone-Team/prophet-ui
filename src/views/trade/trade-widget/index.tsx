@@ -3,7 +3,13 @@
 import { useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 
+import { useAnalyticsImpression } from "@/hooks/analytics/use-analytics-impression";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
+import {
+  trackMarketTabChanged,
+  trackOrderTicketOpened
+} from "@/lib/analytics/tracking";
+import { resolveTradeAnalyticsContext } from "@/lib/analytics/tracking/resolve-trade-context";
 import {
   useSetTradeOrderMode,
   useSetTradeTab,
@@ -14,7 +20,11 @@ import {
   useTradeOutcomeSide,
   useTradeTab
 } from "@/store/trade-ticket-store";
-import type { GameMarketSnapshot, TeamMarketSnapshot } from "@/types/market";
+import type {
+  GameFixtureMarketsSnapshot,
+  GameMarketSnapshot,
+  TeamMarketSnapshot
+} from "@/types/market";
 import { ActionPanel } from "@/views/trade/trade-widget/action-panel";
 import { TradeWidgetHeader } from "@/views/trade/trade-widget/header";
 import { TradeMarketButton } from "@/views/trade/trade-widget/trade-market-button";
@@ -29,12 +39,19 @@ export type TradeWidgetTeamProps = {
 export type TradeWidgetGameProps = {
   variant: "game";
   gameSnapshot: GameMarketSnapshot;
+  fixtureMarkets?: GameFixtureMarketsSnapshot;
   teamSnapshots: TeamMarketSnapshot[];
 };
 
 export type TradeWidgetProps = TradeWidgetTeamProps | TradeWidgetGameProps;
 
-export function TradeWidget(props: TradeWidgetProps & { className?: string; outcomeButtonClassName?: string; outcomeButtonContainerClassName?: string; }) {
+export function TradeWidget(
+  props: TradeWidgetProps & {
+    className?: string;
+    outcomeButtonClassName?: string;
+    outcomeButtonContainerClassName?: string;
+  }
+) {
   const t = useTranslations("trade");
   const tradeTabs = useMemo(
     () => [
@@ -52,6 +69,39 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
   const setTab = useSetTradeTab();
   const setOrderMode = useSetTradeOrderMode();
 
+  const teamSnapshot = props.variant === "game" ? undefined : props.snapshot;
+  const bidAreaRef = useAnalyticsImpression<HTMLElement>({
+    eventName: "bid_area_viewed",
+    dedupeKey:
+      props.variant === "game"
+        ? `bid_area:game:${props.gameSnapshot.match.id}`
+        : `bid_area:team:${props.snapshot.team.id}`,
+    payload: {
+      teamId: teamSnapshot?.team.id,
+      teamName: teamSnapshot?.team.name,
+      marketId: teamSnapshot?.market.polymarket?.conditionId
+    }
+  });
+
+  useEffect(() => {
+    trackOrderTicketOpened(
+      props.variant === "game"
+        ? resolveTradeAnalyticsContext({
+            variant: "game",
+            gameSnapshot: props.gameSnapshot
+          })
+        : resolveTradeAnalyticsContext({
+            variant: "team",
+            snapshot: props.snapshot
+          })
+    );
+  }, [
+    props.variant,
+    props.variant === "game"
+      ? props.gameSnapshot.match.id
+      : props.snapshot.team.id
+  ]);
+
   useEffect(() => {
     if (props.variant === "game") {
       syncForGameSnapshot(props.gameSnapshot);
@@ -67,7 +117,11 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
   ]);
 
   return (
-    <section className={cn(tradePanelClass, props.className)} aria-label={t("placeOrder")}>
+    <section
+      ref={bidAreaRef}
+      className={cn(tradePanelClass, props.className)}
+      aria-label={t("placeOrder")}
+    >
       {props.variant === "game" ? (
         <TradeWidgetHeader
           variant="game"
@@ -87,7 +141,16 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
           <TabSwitcher
             items={tradeTabs}
             value={tab}
-            onChange={(value) => setTab(value as typeof tab)}
+            onChange={(value) => {
+              trackMarketTabChanged({
+                fromRange: tab,
+                toRange: value,
+                target: value,
+                label: tradeTabs.find((item) => item.id === value)?.label,
+                section: "trade_widget_tabs"
+              });
+              setTab(value as typeof tab);
+            }}
             size="compact"
             aria-label={t("tradeSide")}
             className="h-[25px]"
@@ -100,15 +163,22 @@ export function TradeWidget(props: TradeWidgetProps & { className?: string; outc
         <ActionPanel
           variant="game"
           gameSnapshot={props.gameSnapshot}
+          fixtureMarkets={
+            props.variant === "game" ? props.fixtureMarkets : undefined
+          }
           teamSnapshots={props.teamSnapshots}
           outcomeButtonClassName={props.outcomeButtonClassName}
-          outcomeButtonContainerClassName={props.outcomeButtonContainerClassName}
+          outcomeButtonContainerClassName={
+            props.outcomeButtonContainerClassName
+          }
         />
       ) : (
         <ActionPanel
           snapshot={props.snapshot}
           outcomeButtonClassName={props.outcomeButtonClassName}
-          outcomeButtonContainerClassName={props.outcomeButtonContainerClassName}
+          outcomeButtonContainerClassName={
+            props.outcomeButtonContainerClassName
+          }
         />
       )}
     </section>

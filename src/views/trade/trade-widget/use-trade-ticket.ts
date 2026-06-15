@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { resolveFreshFixtureOutcome } from "@/lib/market/trade-ticket";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
 import { fireBasicConfettiFromElement } from "@/lib/confetti/fire-basic-cannon";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
@@ -15,7 +16,7 @@ import {
 import { getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
 import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity";
 import { useMarketWsPrices, useRegisterMarketWsTokens } from "@/context/market-ws";
-import { isValidAskPrice } from "@/lib/market/fixture-ask-liquidity";
+import { isValidAskPrice, resolveFixtureDisplayAskPrice } from "@/lib/market/fixture-ask-liquidity";
 import { resolveLiveOutcomeYesNoProbabilities } from "@/lib/market/merge-live-outcome-prices";
 import { isGameMarketLiveUpdatesEnabled } from "@/lib/market/live-match";
 import { useMatchWithLiveState } from "@/store/match-live-store";
@@ -62,12 +63,24 @@ import {
 import type {
   BidTradeSide,
   FixtureMarketOutcome,
+  GameFixtureMarketsSnapshot,
   GameMarketOutcome,
   GameMarketSnapshot,
   TeamMarketSnapshot,
   UserPositionRecord,
   WorldCupMatch
 } from "@/types/market";
+import {
+  trackEligibilityCheckCompleted,
+  trackOrderConfirmClicked,
+  trackOrderInputChanged,
+  trackOrderPreviewCompleted,
+  trackOrderPreviewRequested,
+  trackOrderSubmitFailed,
+  trackOrderSubmitStarted,
+  trackOrderSubmitSucceeded
+} from "@/lib/analytics/tracking";
+import { resolveTradeAnalyticsContext } from "@/lib/analytics/tracking/resolve-trade-context";
 import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
 import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import {
@@ -129,6 +142,7 @@ export type UseTradeTicketTeamInput = {
 export type UseTradeTicketGameInput = {
   variant: "game";
   gameSnapshot: GameMarketSnapshot;
+  fixtureMarkets?: GameFixtureMarketsSnapshot;
   sellPosition?: UserPositionRecord;
   onOrderSuccess?: () => void | Promise<void>;
 };
@@ -164,7 +178,7 @@ function resolveLiveOutcomeButtonPrice(
   }
 
   if (fixtureOutcome) {
-    return getDefaultFixtureLimitPrice(fixtureOutcome, binarySide, tradeSide);
+    return resolveFixtureDisplayAskPrice(fixtureOutcome, binarySide);
   }
 
   return resolveGameOutcomeTradePrice(
@@ -291,32 +305,62 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       : TRADE_TICKET_NON_GAME_MATCH
   );
 
+  const freshSelectedFixtureOutcome = useMemo(() => {
+    if (input.variant !== "game") {
+      return selectedFixtureOutcome ?? undefined;
+    }
+
+    const fixtureMarkets =
+      input.fixtureMarkets ??
+      (input.gameSnapshot.match.polymarket?.fixtureMarkets
+        ? {
+            matchId: input.gameSnapshot.match.id,
+            lines: input.gameSnapshot.match.polymarket.fixtureMarkets.lines,
+            exactScores:
+              input.gameSnapshot.match.polymarket.fixtureMarkets.exactScores,
+            halftime: input.gameSnapshot.match.polymarket.fixtureMarkets.halftime,
+            freshness: input.gameSnapshot.match.freshness,
+          }
+        : undefined);
+
+    return resolveFreshFixtureOutcome(
+      selectedFixtureOutcome,
+      fixtureMarkets
+    );
+  }, [input, selectedFixtureOutcome]);
+
   const fixtureWsEnabled =
     input.variant === "game" &&
-    Boolean(selectedFixtureOutcome) &&
+    Boolean(freshSelectedFixtureOutcome) &&
     isGameMarketLiveUpdatesEnabled(liveGameMatch);
 
   const { pricesByTokenId: fixtureTokenPrices } = useMarketWsPrices(
     fixtureWsEnabled
-      ? [selectedFixtureOutcome?.tokenId, selectedFixtureOutcome?.noTokenId]
+      ? [
+          freshSelectedFixtureOutcome?.tokenId,
+          freshSelectedFixtureOutcome?.noTokenId,
+        ]
       : []
   );
 
   useRegisterMarketWsTokens(
     "trade-ticket-game",
     fixtureWsEnabled
-      ? [selectedFixtureOutcome?.tokenId, selectedFixtureOutcome?.noTokenId]
+      ? [
+          freshSelectedFixtureOutcome?.tokenId,
+          freshSelectedFixtureOutcome?.noTokenId,
+        ]
       : [],
     { enabled: fixtureWsEnabled }
   );
 
   const liveFixtureAsks = useMemo(() => {
-    if (input.variant !== "game" || !selectedFixtureOutcome) {
+    if (input.variant !== "game" || !freshSelectedFixtureOutcome) {
       return undefined;
     }
 
-    const yesTokenId = selectedFixtureOutcome.tokenId;
-    const noTokenId = selectedFixtureOutcome.noTokenId;
+    const yesTokenId = freshSelectedFixtureOutcome.tokenId;
+    const noTokenId = freshSelectedFixtureOutcome.noTokenId;
     const yesPrices = yesTokenId ? fixtureTokenPrices[yesTokenId] : undefined;
     const noPrices = noTokenId ? fixtureTokenPrices[noTokenId] : undefined;
     const yesAsk = yesPrices?.bestAsk;
@@ -334,15 +378,18 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     return { yesAsk, noAsk, yesBid, noBid };
-  }, [fixtureTokenPrices, input.variant, selectedFixtureOutcome]);
+  }, [fixtureTokenPrices, freshSelectedFixtureOutcome, input.variant]);
 
   const effectiveFixtureOutcome = useMemo(() => {
-    if (!selectedFixtureOutcome) {
+    if (!freshSelectedFixtureOutcome) {
       return undefined;
     }
 
-    return mergeFixtureOutcomeLiveAsks(selectedFixtureOutcome, liveFixtureAsks);
-  }, [liveFixtureAsks, selectedFixtureOutcome]);
+    return mergeFixtureOutcomeLiveAsks(
+      freshSelectedFixtureOutcome,
+      liveFixtureAsks
+    );
+  }, [freshSelectedFixtureOutcome, liveFixtureAsks]);
 
   const { conditionId, yesTokenId, noTokenId } = marketTokenIds;
 
@@ -354,6 +401,17 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   );
 
   const sellPosition = input.sellPosition;
+  const inputVariant = input.variant;
+  const teamSnapshot = input.variant === "team" ? input.snapshot : undefined;
+  const teamSnapshotSellKey = teamSnapshot
+    ? [
+        teamSnapshot.team.id,
+        teamSnapshot.market.polymarket?.tokens.yes?.tokenId,
+        teamSnapshot.market.polymarket?.tokens.no?.tokenId
+      ].join("|")
+    : null;
+  const sellPositionAsset = sellPosition?.asset;
+  const sellPositionSize = sellPosition?.size;
 
   const maxSellShares = useMemo(() => {
     if (tradeSide !== "sell") {
@@ -522,7 +580,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
           matchOutcome,
           matchProbability,
           tradeSide
-        ) ?? 0,
+        ) ?? calculateReferencePrice(matchProbability, "yes"),
       noTokenPrice:
         resolveLiveOutcomeButtonPrice(
           effectiveFixtureOutcome?.noTokenId,
@@ -532,7 +590,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
           matchOutcome,
           matchProbability,
           tradeSide
-        ) ?? 0,
+        ) ??
+        calculateReferencePrice(
+          liveProbabilities?.no ?? Math.max(0, 100 - matchProbability),
+          "no"
+        ),
       defaultLimit,
       orderLimitPrice
     };
@@ -707,6 +769,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             isEligibilityNetworkFailure(sessionRef.current)
           );
           lastFetchedReadinessKeyRef.current = queryKey;
+
+          trackEligibilityCheckCompleted({
+            ...resolveTradeAnalyticsContext(input, orderPreview, tradeSide),
+            eligibilityStatus: nextReadiness.ready ? "eligible" : "not_ready"
+          });
         }
 
         return nextReadiness;
@@ -737,13 +804,41 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         return;
       }
 
+      const analyticsContext = resolveTradeAnalyticsContext(
+        input,
+        orderPreview,
+        tradeSide
+      );
+
+      trackOrderPreviewRequested(analyticsContext);
+
+      if (orderPreview.canSubmitRealOrder) {
+        trackOrderPreviewCompleted(analyticsContext);
+      }
+
       void applyReadinessFetch(orderPreview);
     }, READINESS_FETCH_DEBOUNCE_MS);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [applyReadinessFetch, readinessQueryKey]);
+  }, [applyReadinessFetch, input, readinessQueryKey, tradeSide]);
+
+  useEffect(() => {
+    if (orderAmount === 0) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      trackOrderInputChanged({
+        ...resolveTradeAnalyticsContext(input, preview, tradeSide),
+        changedField: "amount",
+        amount: orderAmount
+      });
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [amount, input, orderAmount, preview, tradeSide]);
 
   const refreshOutcomeShares = useCallback(async () => {
     if (!isAuthenticated || !conditionId) {
@@ -803,11 +898,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   useEffect(() => {
     if (sellPosition && tradeSide === "sell") {
-      if (input.variant === "team") {
-        const side = resolveOutcomeSideForPosition(
-          sellPosition,
-          input.snapshot
-        );
+      if (inputVariant === "team" && teamSnapshot) {
+        const side = resolveOutcomeSideForPosition(sellPosition, teamSnapshot);
         const nextShares = {
           yes: side === "yes" ? sellPosition.size : 0,
           no: side === "no" ? sellPosition.size : 0
@@ -845,11 +937,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       void refreshOutcomeShares();
     }
   }, [
-    input,
+    inputVariant,
+    teamSnapshotSellKey,
     isAuthenticated,
     outcomeSide,
     refreshOutcomeShares,
-    sellPosition,
+    sellPositionAsset,
+    sellPositionSize,
     tradeSide
   ]);
 
@@ -896,10 +990,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
     setMessage(undefined);
 
+    const latestReadiness = (await refreshOrderReadiness()) ?? readiness;
+
     const gate = await ensureTradingReadyForBid({
       session,
       authReadiness,
-      orderReadiness: readiness,
+      orderReadiness: latestReadiness,
       previewCanSubmit,
       previewDisabledReason: preview.disabledReason,
       tradeSide,
@@ -938,6 +1034,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       showOrderErrorToast(missingSessionMessage);
       return;
     }
+
+    trackOrderSubmitStarted(
+      resolveTradeAnalyticsContext(input, preview, tradeSide)
+    );
 
     setStatus("signing");
     setMessage(t("reviewSignOrder"));
@@ -1088,6 +1188,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
          document.getElementById(TRADE_BID_BUTTON_ID)
        );
      }
+      trackOrderSubmitSucceeded({
+        ...resolveTradeAnalyticsContext(input, preview, tradeSide),
+        orderStatus: "succeeded"
+      });
+
       setStatus("idle");
       setMessage(undefined);
       setTakeProfitLimitEnabled(false);
@@ -1101,6 +1206,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       await input.onOrderSuccess?.();
     } catch (error) {
       const errorMessage = resolveOrderErrorMessage(error);
+      trackOrderSubmitFailed({
+        ...resolveTradeAnalyticsContext(input, preview, tradeSide),
+        orderStatus: "failed",
+        failureReason: "wallet_rejected",
+        errorCode: "ORDER_SUBMIT_FAILED"
+      });
       setStatus("error");
       setMessage(errorMessage);
       showOrderErrorToast(error);
@@ -1219,6 +1330,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       return;
     }
 
+    trackOrderConfirmClicked(
+      resolveTradeAnalyticsContext(input, preview, tradeSide)
+    );
     await submitOrder();
   }, [
     actionInProgress,

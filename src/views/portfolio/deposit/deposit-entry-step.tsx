@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
+import { useMigrate } from "@/context/migrate";
 import { formatNumber } from "@/utils";
 import { depositPendingConfirmButtonClass } from "@/views/portfolio/deposit/deposit-ui";
 import { DepositPrivateBalanceEntry } from "@/views/portfolio/deposit/deposit-private-balance-entry";
@@ -14,6 +15,7 @@ import { resolvePrivateAccountStatus } from "@/views/portfolio/deposit/resolve-p
 import type { DepositEntryTab } from "@/views/portfolio/deposit/types";
 import { useDepositContext } from "@/views/portfolio/deposit/context";
 import { FundingCryptoEntry } from "@/views/portfolio/shared/funding-crypto-entry";
+import { MigrateDepositEntry } from "@/views/portfolio/migrate";
 
 export interface DepositEntryStepProps {
   entryTab: DepositEntryTab;
@@ -22,6 +24,7 @@ export interface DepositEntryStepProps {
   onSelectStableflow: () => void;
   stableflowLoading?: boolean;
   onOpenPrivateTopup?: () => void;
+  onClose?: () => void;
 }
 
 export function DepositEntryStep({
@@ -31,6 +34,7 @@ export function DepositEntryStep({
   onSelectStableflow,
   stableflowLoading = false,
   onOpenPrivateTopup,
+  onClose,
 }: DepositEntryStepProps) {
   const t = useTranslations("portfolio");
   const {
@@ -51,6 +55,7 @@ export function DepositEntryStep({
     converting,
     onConfirmPendingDeposit,
   } = useDepositContext();
+  const { openMigrateDialog } = useMigrate();
   const regionRestricted = Boolean(isBuyRestricted);
 
   useEffect(() => {
@@ -116,6 +121,13 @@ export function DepositEntryStep({
           onTopUp={onOpenPrivateTopup}
         />
       ) : null}
+
+      <MigrateDepositEntry
+        onOpen={() => {
+          openMigrateDialog("setup")
+          onClose?.();
+        }}
+      />
 
       {(hasPendingDeposit && entryTab === "crypto") ? (
         <RegionRestrictedControl restricted={regionRestricted}>

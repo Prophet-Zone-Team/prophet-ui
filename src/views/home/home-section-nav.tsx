@@ -4,11 +4,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
+import { trackMarketTabChanged } from "@/lib/analytics/tracking";
 
 const HOME_SECTIONS = [
   { href: "/fifa", labelKey: "matches" },
   { href: "/fifa/winner", labelKey: "worldCupWinner" },
-  { href: "/fifa/groups", labelKey: "groups" },
+  { href: "/fifa/groups", labelKey: "groups" }
 ] as const;
 
 function isSectionActive(pathname: string, href: string): boolean {
@@ -35,9 +36,21 @@ export function HomeSectionNav() {
         label: t(section.labelKey)
       }))}
       value={activeHref}
-      onChange={(href) => router.push(href)}
-      aria-label={t("worldCupMarketViews")}
-      className="mb-[-4px] justify-center md:justify-start"
+      onChange={(href) => {
+        trackMarketTabChanged({
+          fromRange: activeHref,
+          toRange: href,
+          target: href,
+          label: (() => {
+            const section = HOME_SECTIONS.find((item) => item.href === href);
+            return section ? t(section.labelKey) : undefined;
+          })(),
+          section: "home_market_tabs"
+        });
+        router.push(href);
+      }}
+      aria-label="World Cup market views"
+      className="md:pl-[40px] mb-[-4px] justify-center md:justify-start"
     />
   );
 }
