@@ -65,6 +65,7 @@
     "enableTrading": "取引を有効化",
     "connectWallet": "ウォレットを接続",
     "connectWalletDescription": "取引に使用するウォレットを接続してください。",
+    "connectNearWallet": "Near ウォレットを接続",
     "approveUsdc": "USDCを承認",
     "approveUsdcDescription": "注文時にウォレットでUSDCを使用できるようにします。",
     "enableOrders": "注文を有効化",

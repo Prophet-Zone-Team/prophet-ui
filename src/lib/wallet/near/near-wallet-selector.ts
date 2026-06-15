@@ -1,0 +1,57 @@
+import {
+  setupWalletSelector,
+  type WalletSelector,
+} from "@near-wallet-selector/core";
+import {
+  setupModal,
+  type WalletSelectorModal,
+} from "@near-wallet-selector/modal-ui";
+import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
+import { setupIntearWallet } from "@near-wallet-selector/intear-wallet";
+import { setupMeteorWallet } from "@near-wallet-selector/meteor-wallet";
+import { setupHotWallet } from "@near-wallet-selector/hot-wallet";
+import { setupWalletConnect } from "rhea-wallet-connect";
+
+import { Metadata } from "@/context/rainbowkit/metadata";
+
+import { NEAR_NETWORK } from "./near-config";
+
+const WALLET_CONNECT_PROJECT_ID =
+  process.env.NEXT_PUBLIC_RAINBOWKIT_PROJECT_ID || "";
+
+export interface NearSelectorBundle {
+  selector: WalletSelector;
+  modal: WalletSelectorModal;
+}
+
+/**
+ * Builds the NEAR wallet-selector and its modal with the wallets prophet
+ * currently supports. Mirrors the stableflow setup; extend the module list
+ * here when more NEAR wallets are needed.
+ */
+export async function createNearSelectorBundle(): Promise<NearSelectorBundle> {
+  const selector = await setupWalletSelector({
+    network: NEAR_NETWORK.networkId,
+    debug: false,
+    modules: [
+      setupMyNearWallet(),
+      setupHotWallet() as never,
+      setupMeteorWallet(),
+      setupIntearWallet(),
+      setupWalletConnect({
+        projectId: WALLET_CONNECT_PROJECT_ID,
+        metadata: {
+          name: Metadata.name,
+          description: Metadata.description,
+          url: Metadata.url,
+          icons: Metadata.icons,
+        },
+        chainId: "near:mainnet",
+      }),
+    ],
+  });
+
+  const modal = setupModal(selector, { contractId: "" });
+
+  return { selector, modal };
+}

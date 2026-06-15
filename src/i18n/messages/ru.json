@@ -65,6 +65,7 @@
     "enableTrading": "Включить торговлю",
     "connectWallet": "Подключить кошелёк",
     "connectWalletDescription": "Подключите кошелёк, с которым вы хотите торговать.",
+    "connectNearWallet": "Подключить кошелёк Near",
     "approveUsdc": "Одобрить USDC",
     "approveUsdcDescription": "Разрешите кошельку использовать USDC при размещении ордеров.",
     "enableOrders": "Включить ордера",

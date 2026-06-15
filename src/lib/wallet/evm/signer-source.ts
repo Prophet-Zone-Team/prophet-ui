@@ -11,15 +11,22 @@ import {
 } from "@/context/privy/privy-wallet-bridge";
 import { useAuthStore } from "@/store/auth-store";
 import type { UnifiedWalletAccount } from "@/lib/wallet/types";
+import {
+  getExternalEvmSigner,
+  type ExternalEvmSigner,
+} from "@/lib/wallet/evm/external-signer-registry";
 
 /**
  * Where the active EVM signer lives. External wallets stay connected through
  * wagmi/RainbowKit; email/google logins use a Privy embedded wallet that is
- * not registered as a wagmi connector.
+ * not registered as a wagmi connector. "external" covers non-EVM-native
+ * wallets (e.g. NEAR MPC-derived, or a future TON bridge) that register a
+ * signer for their derived EVM address.
  */
 export type EvmSignerSource =
   | { kind: "wagmi"; address: string; chainId?: number; connector: Connector }
-  | { kind: "privy"; wallet: ConnectedWallet };
+  | { kind: "privy"; wallet: ConnectedWallet }
+  | { kind: "external"; signer: ExternalEvmSigner };
 
 export function isEmbeddedLoginMethod(): boolean {
   const loginMethod = useAuthStore.getState().loginMethod;
@@ -56,6 +63,12 @@ function resolveLiveConnector(connector: Connector | undefined): Connector | und
 }
 
 export function resolveEvmSignerSource(walletAddress?: string): EvmSignerSource {
+  const externalSigner = getExternalEvmSigner(walletAddress);
+
+  if (externalSigner) {
+    return { kind: "external", signer: externalSigner };
+  }
+
   const preferEmbedded = isEmbeddedLoginMethod();
 
   if (preferEmbedded) {
@@ -109,8 +122,18 @@ export function resolveEvmSignerSource(walletAddress?: string): EvmSignerSource 
   throw new Error("No wallet connected. Connect your wallet to continue.");
 }
 
-/** Non-throwing snapshot of the active EVM account across wagmi and Privy. */
+/** Non-throwing snapshot of the active EVM account across wagmi, Privy and external signers. */
 export function getActiveEvmAccount(): UnifiedWalletAccount {
+  const externalSigner = getExternalEvmSigner();
+
+  if (externalSigner) {
+    return {
+      address: externalSigner.address,
+      connected: true,
+      source: "near",
+    };
+  }
+
   if (isEmbeddedLoginMethod()) {
     const embedded = findPrivyEmbeddedWallet();
 

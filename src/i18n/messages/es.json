@@ -65,6 +65,7 @@
     "enableTrading": "Habilitar trading",
     "connectWallet": "Conectar billetera",
     "connectWalletDescription": "Conecta la billetera con la que deseas operar.",
+    "connectNearWallet": "Conectar billetera Near",
     "approveUsdc": "Aprobar USDC",
     "approveUsdcDescription": "Permite que tu billetera use USDC al colocar órdenes.",
     "enableOrders": "Habilitar órdenes",

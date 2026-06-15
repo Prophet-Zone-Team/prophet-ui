@@ -65,6 +65,7 @@
     "enableTrading": "Enable trading",
     "connectWallet": "Connect wallet",
     "connectWalletDescription": "Connect the wallet you want to trade with.",
+    "connectNearWallet": "Connect Near wallet",
     "approveUsdc": "Approve USDC",
     "approveUsdcDescription": "Allow your wallet to use USDC when placing orders.",
     "enableOrders": "Enable orders",

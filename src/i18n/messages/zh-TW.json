@@ -65,6 +65,7 @@
     "enableTrading": "啟用交易",
     "connectWallet": "連接錢包",
     "connectWalletDescription": "連接您要用於交易的錢包。",
+    "connectNearWallet": "連接 Near 錢包",
     "approveUsdc": "授權 USDC",
     "approveUsdcDescription": "允許您的錢包在下單時使用 USDC。",
     "enableOrders": "啟用下單",

@@ -6,6 +6,8 @@ export enum FundingNetworkType {
   EVM = "evm",
   SVM = "svm",
   BTC = "btc",
+  NEAR = "near",
+  TVM = "tvm",
 }
 
 export interface FundingNetwork {
@@ -137,6 +139,14 @@ export const FUNDING_NETWORKS: Record<string, FundingNetwork> = {
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://xlayerrpc.okx.com",
     rpcUrls: ["https://rpcs.stableflow.ai/rpc/xlayer", "https://xlayerrpc.okx.com"],
+  },
+  near: {
+    chainId: 999_999_999,
+    chainName: "Near",
+    chainIcon: getStableflowChainLogo("near"),
+    chainType: FundingNetworkType.NEAR,
+    defaultRpcUrl: "https://rpc.mainnet.near.org",
+    rpcUrls: ["https://nearinner.deltarpc.com", "https://rpc.mainnet.near.org"],
   },
 };
 

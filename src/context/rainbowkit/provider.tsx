@@ -7,6 +7,7 @@ import { PrivyProvider } from "@privy-io/react-auth";
 
 import { RainbowConnectGate } from "@/context/rainbowkit/connect-gate";
 import { ConnectModalProvider } from "@/context/rainbowkit/connect-modal";
+import { NearProvider } from "@/context/near/near-provider";
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import {
   PRIVY_APP_ID,
@@ -41,7 +42,9 @@ export default function RainbowProvider({
           <RainbowKitProvider modalSize="compact" locale="en-US">
             <ConnectModalProvider>
               <PrivyWalletBridge />
-              <RainbowConnectGate>{children}</RainbowConnectGate>
+              <NearProvider>
+                <RainbowConnectGate>{children}</RainbowConnectGate>
+              </NearProvider>
             </ConnectModalProvider>
           </RainbowKitProvider>
         </WagmiProvider>
