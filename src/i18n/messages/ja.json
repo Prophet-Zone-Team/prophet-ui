@@ -851,6 +851,7 @@
     "kickoffCountdown": "{days}日 {hours}時間 {minutes}分",
     "worldCupMarketViews": "ワールドカップ市場ビュー",
     "worldCupWinner": "ワールドカップ優勝",
+    "winner": "優勝",
     "worldCupWinnerProbability": "ワールドカップ優勝確率",
     "worldCupWinnerProbabilityChartAria": "ワールドカップ優勝確率チャート",
     "loadingProbabilityHistory": "確率履歴を読み込み中...",

@@ -851,6 +851,7 @@
     "kickoffCountdown": "{days}일 {hours}시간 {minutes}분",
     "worldCupMarketViews": "월드컵 시장 보기",
     "worldCupWinner": "월드컵 우승",
+    "winner": "우승",
     "worldCupWinnerProbability": "월드컵 우승 확률",
     "worldCupWinnerProbabilityChartAria": "월드컵 우승 확률 차트",
     "loadingProbabilityHistory": "확률 기록 불러오는 중...",

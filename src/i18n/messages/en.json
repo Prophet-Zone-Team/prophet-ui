@@ -854,6 +854,7 @@
     "kickoffCountdown": "{days}d {hours}h {minutes}m",
     "worldCupMarketViews": "World Cup market views",
     "worldCupWinner": "World Cup Winner",
+    "winner": "Winner",
     "worldCupWinnerProbability": "World Cup Winner Probability",
     "worldCupWinnerProbabilityChartAria": "World Cup winner probability chart",
     "loadingProbabilityHistory": "Loading probability history...",

@@ -851,6 +851,7 @@
     "kickoffCountdown": "{days}д {hours}ч {minutes}м",
     "worldCupMarketViews": "Представления рынка ЧМ",
     "worldCupWinner": "Победитель ЧМ",
+    "winner": "Winner",
     "worldCupWinnerProbability": "Вероятность победителя ЧМ",
     "worldCupWinnerProbabilityChartAria": "График вероятности победителя ЧМ",
     "loadingProbabilityHistory": "Загрузка истории вероятностей...",

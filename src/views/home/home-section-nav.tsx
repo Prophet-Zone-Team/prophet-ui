@@ -7,8 +7,12 @@ import { TabSwitcher } from "@/components/ui/tab-switcher";
 import { trackMarketTabChanged } from "@/lib/analytics/tracking";
 
 const HOME_SECTIONS = [
-  { href: "/fifa", labelKey: "matches" },
-  { href: "/fifa/winner", labelKey: "worldCupWinner" }
+  { href: "/fifa", labelKey: "matches" as const },
+  {
+    href: "/fifa/winner",
+    labelKey: "worldCupWinner" as const,
+    mobileLabelKey: "winner" as const
+  }
 ] as const;
 
 function isSectionActive(pathname: string, href: string): boolean {
@@ -32,7 +36,9 @@ export function HomeSectionNav() {
     <TabSwitcher
       items={HOME_SECTIONS.map((section) => ({
         id: section.href,
-        label: t(section.labelKey)
+        label: t(section.labelKey),
+        mobileLabel:
+          "mobileLabelKey" in section ? t(section.mobileLabelKey) : undefined
       }))}
       value={activeHref}
       onChange={(href) => {

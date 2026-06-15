@@ -854,6 +854,7 @@
     "kickoffCountdown": "{days}天 {hours}小時 {minutes}分",
     "worldCupMarketViews": "世界盃市場檢視",
     "worldCupWinner": "世界盃冠軍",
+    "winner": "冠軍",
     "worldCupWinnerProbability": "世界盃冠軍機率",
     "worldCupWinnerProbabilityChartAria": "世界盃冠軍機率圖表",
     "loadingProbabilityHistory": "載入機率歷史中...",
