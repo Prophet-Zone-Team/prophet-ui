@@ -2,13 +2,15 @@ import "server-only";
 
 import type { Hex } from "viem";
 
-import { getTradingHost } from "@/server/trading/clob-auth";
-import { serverFetch } from "@/server/trading/server-fetch";
+import {
+  BUILDER_MAKER_FEE_RATE,
+  BUILDER_TAKER_FEE_RATE
+} from "@/lib/market/polymarket-fees";
+
+export { BUILDER_MAKER_FEE_RATE, BUILDER_TAKER_FEE_RATE };
 
 export const ZERO_ORDER_BUILDER_CODE =
   "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
-
-const ZERO_BUILDER_CODE = ZERO_ORDER_BUILDER_CODE;
 
 export function getPolymarketBuilderCode(): Hex | undefined {
   const value = process.env.POLYMARKET_BUILDER_CODE?.trim() ?? process.env.BUILDER_CODE?.trim();
@@ -17,24 +19,13 @@ export function getPolymarketBuilderCode(): Hex | undefined {
 }
 
 export function getOrderBuilderCode(): Hex {
-  return getPolymarketBuilderCode() ?? ZERO_BUILDER_CODE;
+  return getPolymarketBuilderCode() ?? ZERO_ORDER_BUILDER_CODE;
 }
 
-export async function getBuilderTakerFeeRate(builderCode = getOrderBuilderCode()): Promise<number> {
-  if (!builderCode || builderCode === ZERO_BUILDER_CODE) {
-    return 0;
-  }
+export function getBuilderMakerFeeRate(): number {
+  return BUILDER_MAKER_FEE_RATE;
+}
 
-  const response = await serverFetch(`${getTradingHost()}/fees/builder-fees/${builderCode}`, {
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    return 0;
-  }
-
-  const payload = (await response.json()) as { builder_taker_fee_rate_bps?: unknown };
-  const parsed = typeof payload.builder_taker_fee_rate_bps === "number" ? payload.builder_taker_fee_rate_bps : undefined;
-
-  return parsed && Number.isFinite(parsed) ? parsed / 10000 : 0;
+export function getBuilderTakerFeeRate(): number {
+  return BUILDER_TAKER_FEE_RATE;
 }

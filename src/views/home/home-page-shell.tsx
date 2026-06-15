@@ -20,5 +20,5 @@ export function HomePageShell({ children }: HomePageShellProps) {
 
       <div role="tabpanel">{children}</div>
     </section>
-  );  
+  );
 }

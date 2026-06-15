@@ -13,6 +13,7 @@ export const marketQueryKeys = {
     ["market", "team-game-results", teamName] as const,
   teamLineup: (teamName: string) =>
     ["market", "team-lineup", teamName] as const,
+    ["market", "team-lineup", teamName] as const,
   groupMatches: (groupCode: string) =>
     ["market", "group-matches", groupCode] as const,
   groupWinner: (groupCode: string) =>
