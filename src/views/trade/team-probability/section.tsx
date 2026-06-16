@@ -31,7 +31,6 @@ import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { useTeamGameResults } from "@/hooks/market/use-team-game-results";
 import { resolveTeamOrderbookTokenId } from "@/lib/market/resolve-team-orderbook-token";
 import type { TeamMarketSnapshot } from "@/types/market";
-import { useLiveTeamSnapshot } from "@/context/market-live-price-ws";
 import {
   useSetTradeOutcomeSide,
   useTradeOutcomeSide
@@ -130,7 +129,6 @@ export function ProbabilitySection({
   hideMobileOrderbook = false
 }: ProbabilitySectionProps) {
   const t = useTranslations("trade");
-  const liveSnapshot = useLiveTeamSnapshot(snapshot);
   const outcomeView = useTradeOutcomeSide();
   const setOutcomeView = useSetTradeOutcomeSide();
   const [timeRange, setTimeRange] = useState<TeamChartTimeRange>("all");
@@ -143,11 +141,11 @@ export function ProbabilitySection({
       section: "team_probability"
     }
   });
-  const yesTokenId = resolveTeamOrderbookTokenId(liveSnapshot, "yes");
+  const yesTokenId = resolveTeamOrderbookTokenId(snapshot, "yes");
   const { points: probabilityHistory } = useProbabilityChart({
     kind: "team",
     tokenId: yesTokenId,
-    entityId: liveSnapshot.team.id,
+    entityId: snapshot.team.id,
     pollIntervalMs: 5000,
     enabled: Boolean(yesTokenId)
   });
@@ -155,13 +153,13 @@ export function ProbabilitySection({
     teamName: snapshot.team.name,
     teamId: snapshot.team.id
   });
-  const yesProbability = liveSnapshot.market.probability;
+  const yesProbability = snapshot.market.probability;
   const noProbability = Math.max(0, 100 - yesProbability);
   const displayProbability =
     outcomeView === "yes" ? yesProbability : noProbability;
 
   const chartData = useMemo(() => {
-    const base = resolveTeamChartData(liveSnapshot, probabilityHistory);
+    const base = resolveTeamChartData(snapshot, probabilityHistory);
     const filtered = filterTeamChartByRange(base, timeRange);
 
     if (outcomeView === "no") {
@@ -172,26 +170,26 @@ export function ProbabilitySection({
     }
 
     return filtered;
-  }, [liveSnapshot, outcomeView, probabilityHistory, timeRange]);
+  }, [outcomeView, probabilityHistory, snapshot, timeRange]);
 
   const annotations = useMemo(
     () =>
       buildTeamChartMatchAnnotations({
-        teamId: liveSnapshot.team.id,
+        teamId: snapshot.team.id,
         matches: teamGameMatches,
         chartData,
-        snapshots: [liveSnapshot]
+        snapshots: [snapshot]
       }),
-    [chartData, liveSnapshot, teamGameMatches]
+    [chartData, snapshot, teamGameMatches]
   );
 
   const yDomain = useMemo(() => getTeamChartYDomain(chartData), [chartData]);
   const tokenId = useMemo(
-    () => resolveTeamOrderbookTokenId(liveSnapshot, outcomeView),
-    [liveSnapshot, outcomeView]
+    () => resolveTeamOrderbookTokenId(snapshot, outcomeView),
+    [outcomeView, snapshot]
   );
 
-  const change24h = liveSnapshot.market.change24h;
+  const change24h = snapshot.market.change24h;
   const change24hPoints = outcomeView === "yes" ? change24h : -change24h;
   const changeTone = getChangeTone(change24hPoints);
   const chartTimeRanges = useMemo(
@@ -310,8 +308,8 @@ export function ProbabilitySection({
       />
       <MetricBlock
         value={
-          liveSnapshot.market.liquidity
-            ? `$${formatVolume(liveSnapshot.market.liquidity)}`
+          snapshot.market.liquidity
+            ? `$${formatVolume(snapshot.market.liquidity)}`
             : t("pending")
         }
         label={t("liquidity")}

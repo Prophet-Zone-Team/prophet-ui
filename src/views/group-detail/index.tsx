@@ -14,12 +14,7 @@ import { useTranslations } from "next-intl";
 import { GroupProbabilityChart } from "@/views/group-detail/probability-chart";
 import Drawer from "@/components/drawer";
 import { MarketWsProvider } from "@/context/market-ws";
-import {
-  MarketLivePriceWsProvider,
-  useRegisterRtdsEventSlugs
-} from "@/context/market-live-price-ws";
 import type { WorldCup2026Group } from "@/data/world-cup-2026/groups";
-import { resolveGroupWinnerEventSlug } from "@/config/fifa-group-winner-market";
 import { useGroupWinnerMarket } from "@/hooks/market/use-group-winner-market";
 import { useGroupGameData } from "@/hooks/market/use-group-game-data";
 import { cn } from "@/lib/cn";
@@ -377,43 +372,12 @@ export function GroupDetailView(props: GroupDetailViewProps) {
       snapshot.market.polymarket?.tokens.yes?.tokenId ||
       snapshot.market.polymarket?.tokens.no?.tokenId
   );
-  const rtdsEnabled = props.initialSnapshots.some(
-    (snapshot) =>
-      snapshot.market.polymarket?.conditionId ||
-      snapshot.market.slug?.trim() ||
-      snapshot.market.polymarket?.tokens.yes?.tokenId ||
-      snapshot.market.polymarket?.tokens.no?.tokenId
-  );
-  const eventSlug = resolveGroupWinnerEventSlug(props.group);
 
   return (
-    <MarketLivePriceWsProvider enabled={rtdsEnabled}>
-      <MarketWsProvider enabled={marketWsEnabled}>
-        <GroupDetailRtdsRegistration
-          eventSlug={eventSlug}
-          enabled={rtdsEnabled}
-        >
-          <GroupDetailViewContent {...props} />
-        </GroupDetailRtdsRegistration>
-      </MarketWsProvider>
-    </MarketLivePriceWsProvider>
+    <MarketWsProvider enabled={marketWsEnabled}>
+      <GroupDetailViewContent {...props} />
+    </MarketWsProvider>
   );
-}
-
-function GroupDetailRtdsRegistration({
-  eventSlug,
-  enabled,
-  children
-}: {
-  eventSlug: string;
-  enabled: boolean;
-  children: ReactNode;
-}) {
-  const eventSlugs = useMemo(() => [eventSlug], [eventSlug]);
-
-  useRegisterRtdsEventSlugs("group-detail", eventSlugs, { enabled });
-
-  return children;
 }
 
 export default GroupDetailView;

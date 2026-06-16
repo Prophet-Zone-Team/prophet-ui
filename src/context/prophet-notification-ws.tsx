@@ -12,7 +12,6 @@ import {
   PROPHET_API_TOKEN_CHANGED_EVENT,
 } from "@/service/prophet";
 import { useNotificationWsStore } from "@/store/notification-ws-store";
-import { useNotificationsEnabled } from "@/store/user-config-store";
 
 const AUTH_STORAGE_KEY = "prophet_api_token";
 
@@ -24,17 +23,12 @@ export function ProphetNotificationWsProvider({
   children,
 }: ProphetNotificationWsProviderProps) {
   const { session, hydrated } = useAuth();
-  const notificationsEnabled = useNotificationsEnabled();
   const mockSamplesEnqueuedRef = useRef(false);
 
   const walletAddress = session?.walletAddress ?? null;
   const apiToken = hydrated && walletAddress ? getProphetApiToken() : null;
 
   useEffect(() => {
-    if (!notificationsEnabled) {
-      return;
-    }
-
     const client = getProphetNotificationWsClient();
 
     const unsubscribeMessages = client.subscribe((data) => {
@@ -67,18 +61,12 @@ export function ProphetNotificationWsProvider({
       unsubscribeMessages();
       unsubscribeStatus();
     };
-  }, [notificationsEnabled]);
+  }, []);
 
   useEffect(() => {
     const client = getProphetNotificationWsClient();
     const setConnectionStatus =
       useNotificationWsStore.getState().setConnectionStatus;
-
-    if (!notificationsEnabled) {
-      client.disconnect();
-      setConnectionStatus("idle");
-      return;
-    }
 
     const syncConnection = () => {
       const token = getProphetApiToken();
@@ -119,14 +107,10 @@ export function ProphetNotificationWsProvider({
       client.disconnect();
       setConnectionStatus("idle");
     };
-  }, [apiToken, hydrated, notificationsEnabled, walletAddress]);
+  }, [apiToken, hydrated, walletAddress]);
 
   useEffect(() => {
-    if (
-      !notificationsEnabled ||
-      !isMockProphetNotificationsEnabled() ||
-      !session
-    ) {
+    if (!isMockProphetNotificationsEnabled() || !session) {
       return;
     }
 
@@ -136,7 +120,7 @@ export function ProphetNotificationWsProvider({
 
     mockSamplesEnqueuedRef.current = true;
     enqueueProphetNotificationSamples();
-  }, [notificationsEnabled, session]);
+  }, [session]);
 
   return (
     <>

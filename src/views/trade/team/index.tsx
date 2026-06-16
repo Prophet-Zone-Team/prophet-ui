@@ -7,11 +7,6 @@ import { TrackedTeamRevisitEffect } from "@/components/analytics/tracked-team-re
 import Drawer from "@/components/drawer";
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { MarketWsProvider } from "@/context/market-ws";
-import {
-  MarketLivePriceWsProvider,
-  useRegisterRtdsEventSlugs,
-  WORLD_CUP_WINNER_EVENT_SLUG
-} from "@/context/market-live-price-ws";
 import { cn } from "@/lib/cn";
 import {
   useSetTradeOrderMode,
@@ -67,9 +62,11 @@ function TradeTeamViewContent({
   useTeamMarketWsTokens(snapshot, marketWsEnabled);
   const { yesPrice, noPrice } = useTeamMobileOutcomePrices(
     snapshot,
-    marketWsEnabled
+    Boolean(
+      snapshot.market.polymarket?.tokens.yes?.tokenId ||
+      snapshot.market.polymarket?.tokens.no?.tokenId
+    )
   );
-
   function openTradeDrawer(side: "yes" | "no") {
     setOutcomeSide(side);
     setTab("buy");
@@ -173,17 +170,13 @@ export default function TradeTeamView({
   );
 
   return (
-    <MarketLivePriceWsProvider enabled={rtdsEnabled}>
-      <MarketWsProvider enabled={marketWsEnabled}>
-        <TradeTeamRtdsRegistration enabled={rtdsEnabled}>
-          <TradeTeamViewContent
-            snapshot={snapshot}
-            footballProfile={footballProfile}
-            footballMetadata={footballMetadata}
-          />
-        </TradeTeamRtdsRegistration>
-      </MarketWsProvider>
-    </MarketLivePriceWsProvider>
+    <MarketWsProvider enabled={marketWsEnabled}>
+      <TradeTeamViewContent
+        snapshot={snapshot}
+        footballProfile={footballProfile}
+        footballMetadata={footballMetadata}
+      />
+    </MarketWsProvider>
   );
 }
 

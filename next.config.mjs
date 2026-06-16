@@ -2,20 +2,25 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-const isVercelBuild = process.env.VERCEL === "1";
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  modularizeImports: {
-    "lucide-react": {
-      transform: "lucide-react/dist/esm/icons/{{member}}"
-    }
-  },
+  // Keep heavy Node/Web3 packages external in API routes and RSC to reduce dev compile memory.
+  // serverExternalPackages: [
+  //   "@defuse-protocol/contract-types",
+  //   // Bundle intents-sdk/internal-utils: their ESM imports omit .js on near-api-js subpaths.
+  //   "@defuse-protocol/one-click-sdk-typescript",
+  //   "@polymarket/builder-relayer-client",
+  //   "@polymarket/builder-signing-sdk",
+  //   "@polymarket/clob-client-v2",
+  //   "@stableflow/core",
+  //   "undici",
+  //   "viem",
+  //   "wagmi"
+  // ],
   experimental: {
     webpackMemoryOptimizations: true,
-    // Vercel build containers have ~8GB RAM; a single worker avoids OOM from parallel heaps.
-    // Cloudflare Workers Builds can use more parallelism with script-level heap limits.
-    cpus: isVercelBuild ? 1 : 4
+    // Lower build parallelism to reduce peak memory on Cloudflare Workers Builds.
+    cpus: 4
   },
   images: {
     remotePatterns: [
