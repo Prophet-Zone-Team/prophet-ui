@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { formatOrderbookPrice } from "@/lib/market/order-math";
+import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 
 export interface TeamMobileTradeButtonsProps {
   yesPrice: number;
@@ -18,6 +18,7 @@ export function TeamMobileTradeButtons({
   disabled = false
 }: TeamMobileTradeButtonsProps) {
   const t = useTranslations("trade");
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
 
   return (
     <div className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-between gap-5 border-t border-[#EBEBEB] bg-white p-3 pb-[calc(12px+env(safe-area-inset-bottom,0px))] md:hidden">
@@ -29,7 +30,7 @@ export function TeamMobileTradeButtons({
       >
         <span className="text-lg font-[500]">{t("no")}</span>
         <span className="text-xs font-[500] leading-[14px]">
-          {formatOrderbookPrice(noPrice)}
+          {formatOutcomeDisplay(noPrice)}
         </span>
       </button>
       <button
@@ -40,7 +41,7 @@ export function TeamMobileTradeButtons({
       >
         <span className="text-lg font-[500]">{t("yes")}</span>
         <span className="text-xs font-[500] leading-[14px]">
-          {formatOrderbookPrice(yesPrice)}
+          {formatOutcomeDisplay(yesPrice)}
         </span>
       </button>
     </div>

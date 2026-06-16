@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { formatOrderbookPrice } from "@/lib/market/order-math";
+import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 import { gameColors } from "@/views/trade/game/ui";
 
 export type LineOutcomeButtonVariant =
@@ -41,6 +41,7 @@ export function LineOutcomeButton({
   onClick?: () => void;
 }) {
   const color = variantStyles[variant];
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
 
   return (
     <button
@@ -70,7 +71,9 @@ export function LineOutcomeButton({
       )}
     >
       <span>{label}</span>
-      {price !== undefined ? <span>{formatOrderbookPrice(price)}</span> : null}
+      {price !== undefined ? (
+        <span>{formatOutcomeDisplay(price)}</span>
+      ) : null}
     </button>
   );
 }
