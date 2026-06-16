@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import { getMessages } from "next-intl/server";
 
@@ -8,6 +9,12 @@ import { Metadata } from "@/context/rainbowkit/metadata";
 import { LOCALE_COOKIE, resolveLocale } from "@/i18n/config";
 import { isSecureFromHeaders } from "@/lib/runtime/is-secure-app-context";
 import Script from "next/script";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover"
+};
 
 export const metadata = {
   title: Metadata.name,
@@ -62,7 +69,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           `}
         </Script>
       </head>
-      <body className="bg-[#F9FAFC] min-h-screen">
+      <body className="flex min-h-dvh flex-col bg-[#F9FAFC]">
         <AppRoot
           initialSecure={initialSecure}
           cookie={cookie}

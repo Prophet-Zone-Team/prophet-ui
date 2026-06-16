@@ -40,7 +40,7 @@ export function AppRoot({
             <MigrateProvider>
               <SportsWsProvider>
                 <ProphetNotificationWsProvider>
-                  <main className="min-h-screen overflow-x-hidden font-body">
+                  <main className="flex min-h-0 flex-1 flex-col overflow-x-hidden font-body">
                     <MobileLoadingScreen />
                     <AppChrome>{children}</AppChrome>
                   </main>
