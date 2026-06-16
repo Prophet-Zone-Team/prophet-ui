@@ -5,7 +5,9 @@ const ruMap = {
     strategies: "Стратегии",
     tracks: "Отслеживание",
     portfolio: "Портфель",
-    primaryNavigation: "Основная навигация"
+    worldCup: "WorldCup",
+    primaryNavigation: "Основная навигация",
+    bottomNavigation: "Нижняя навигация"
   },
   wallet: {
     portfolio: "Портфель",
@@ -61,7 +63,8 @@ const ruMap = {
     tradingUnavailable: "Торговля недоступна",
     enableTrading: "Включить торговлю",
     connectWallet: "Подключить кошелёк",
-    connectWalletDescription: "Подключите кошелёк, с которым вы хотите торговать.",
+    connectWalletDescription:
+      "Подключите кошелёк, с которым вы хотите торговать.",
     approveUsdc: "Одобрить USDC",
     approveUsdcDescription:
       "Разрешите кошельку использовать USDC при размещении ордеров.",
@@ -159,8 +162,7 @@ const ruMap = {
     authorizeTokenSpending:
       "Разрешите расход токенов перед размещением ордеров.",
     marketNotAvailable: "Этот рынок недоступен для реальных ордеров.",
-    refreshAllowanceHint:
-      "Обновите торговый лимит и отправьте ордер снова.",
+    refreshAllowanceHint: "Обновите торговый лимит и отправьте ордер снова.",
     checking: "Проверка…",
     checkingEligibility: "Проверка права на торговлю на Polymarket...",
     walletSessionRequired:
@@ -210,8 +212,7 @@ const ruMap = {
     takeProfitLimitFailed:
       "Ордер на покупку выполнен, но лимитный ордер тейк-профита не удалось разместить. Вы можете добавить лимитный ордер на продажу в Портфеле.",
     takeProfitLimitUnavailable: "Лимитный ордер тейк-профита недоступен.",
-    takeProfitLimitSubmittedSuffix:
-      " · Лимитный ордер тейк-профита отправлен",
+    takeProfitLimitSubmittedSuffix: " · Лимитный ордер тейк-профита отправлен",
     draw: "Ничья",
     over: "Больше",
     under: "Меньше",
@@ -267,8 +268,7 @@ const ruMap = {
       "Данные о позициях недоступны, так как у этого рынка нет подключённого condition ID.",
     positionsUnavailable: "Позиции на рынке недоступны",
     loadingPositions: "Загрузка позиций…",
-    noPublicHolderData:
-      "Нет публичных данных о держателях для {teamName}.",
+    noPublicHolderData: "Нет публичных данных о держателях для {teamName}.",
     outcomeNumber: "Исход {number}",
     unableToLoadTopHolders: "Не удалось загрузить крупнейших держателей.",
     holdersDataUnavailable:
@@ -287,7 +287,8 @@ const ruMap = {
       "История вероятностей для этого рынка недоступна.",
     noLiveProbabilityHistoryAvailable:
       "История вероятностей в реальном времени пока недоступна.",
-    unableToLoadProbabilityHistory: "Не удалось загрузить историю вероятностей.",
+    unableToLoadProbabilityHistory:
+      "Не удалось загрузить историю вероятностей.",
     matchOutcomeProbabilityAria: "Вероятность исхода матча",
     liveBadge: "LIVE",
     chartGoalLabel: "ГОЛ!",
@@ -312,7 +313,8 @@ const ruMap = {
     relatedGames: "Связанные матчи",
     relatedGamesAria: "Связанные матчи",
     relatedGamesUnavailable: "Связанные матчи сейчас недоступны.",
-    noRelatedFixtures: "Для этой команды пока нет запланированных связанных матчей.",
+    noRelatedFixtures:
+      "Для этой команды пока нет запланированных связанных матчей.",
     versusShort: "vs",
     loadingData: "Загрузка...",
     unableToLoadData: "Не удалось загрузить данные.",
@@ -369,8 +371,7 @@ const ruMap = {
       "Для подключённого аккаунта не найдено открытых позиций Polymarket.",
     redeem: "Погасить",
     sell: "Продать",
-    positionNotAvailableToSell:
-      "Эта позиция сейчас недоступна для продажи.",
+    positionNotAvailableToSell: "Эта позиция сейчас недоступна для продажи.",
     marketDataUnavailable: "Рыночные данные недоступны",
     positionNotAvailableToRedeem:
       "Эта позиция сейчас недоступна для погашения.",
@@ -581,7 +582,8 @@ const ruMap = {
     darkHorse: "Тёмная лошадка",
     darkHorseDescription: "Низкая цена титула, но сильный путь и потенциал",
     hardestPath: "Самый сложный путь",
-    hardestPathDescription: "Сильная команда с подавленной вероятностью выхода в 1/8",
+    hardestPathDescription:
+      "Сильная команда с подавленной вероятностью выхода в 1/8",
     topAdvantage: "Наибольшее преимущество",
     topAdvantageDescription: "Лучшее преимущество пути среди не-лидеров",
     groupStageFirst: "Групповой этап — 1-е место",
@@ -666,13 +668,11 @@ const ruMap = {
     worldCupMarketViews: "Представления рынка ЧМ",
     worldCupWinner: "Победитель ЧМ",
     worldCupWinnerProbability: "Вероятность победителя ЧМ",
-    worldCupWinnerProbabilityChartAria:
-      "График вероятности победителя ЧМ",
+    worldCupWinnerProbabilityChartAria: "График вероятности победителя ЧМ",
     loadingProbabilityHistory: "Загрузка истории вероятностей...",
     unableToLoadProbabilityHistory:
       "Не удалось загрузить историю графика вероятностей.",
-    marketTokenUnavailable:
-      "Рыночные данные для этих команд пока недоступны.",
+    marketTokenUnavailable: "Рыночные данные для этих команд пока недоступны.",
     probability: "Вероятность",
     volume: "Объём",
     bid: "Ставка",
@@ -715,8 +715,7 @@ const ruMap = {
     loadingTracks: "Загрузка отслеживания…",
     loadingTopAttention: "Загрузка наибольшего внимания…",
     topAttention: "Наибольшее внимание",
-    topAttentionLoadError:
-      "Не удалось загрузить рейтинги внимания.",
+    topAttentionLoadError: "Не удалось загрузить рейтинги внимания.",
     retry: "Повторить",
     topAttentionEmpty:
       "Рейтинги популярных подписок недоступны. Вернитесь позже, чтобы увидеть наиболее отслеживаемые команды и матчи.",
@@ -826,8 +825,7 @@ const ruMap = {
     strengthScore: "Показатель силы",
     scoreOutOf100: "/100",
     teamStrengthPending: "Сила команды ожидается",
-    teamStrengthPendingBody:
-      "Метрики силы для этой команды пока недоступны.",
+    teamStrengthPendingBody: "Метрики силы для этой команды пока недоступны.",
     recentMatchesAria: "Недавние матчи",
     recentMatches: "Недавние матчи",
     date: "Дата",
@@ -843,8 +841,7 @@ const ruMap = {
     probabilityHistoryPending: "История вероятностей ожидается",
     probabilityHistoryPendingBody:
       "Данные рыночного токена для этой команды пока недоступны.",
-    unableToLoadProbabilityHistory:
-      "Не удалось загрузить историю вероятностей",
+    unableToLoadProbabilityHistory: "Не удалось загрузить историю вероятностей",
     probabilityHistoryLoadError:
       "Не удалось загрузить историю вероятности чемпионства с рынка.",
     oddsComparisonAria: "Сравнение коэффициентов",
@@ -918,8 +915,7 @@ const ruMap = {
     groupContextAria: "Контекст группы",
     groupContext: "Контекст группы",
     groupPendingTitle: "Группа ожидается",
-    groupPendingBody:
-      "Контекст группы для этой команды пока недоступен.",
+    groupPendingBody: "Контекст группы для этой команды пока недоступен.",
     keyStarsAria: "Ключевые звёзды",
     keyStars: "Ключевые звёзды",
     noKeyStars: "Нет ключевых звёзд",
@@ -937,8 +933,7 @@ const ruMap = {
     recentForm: "Недавняя форма",
     recentResultsLoaded: "Недавние результаты загружены.",
     recentFormNoData: "Нет данных о недавних результатах",
-    recentFormNoDataBody:
-      "Недавняя форма для этой команды пока недоступна.",
+    recentFormNoDataBody: "Недавняя форма для этой команды пока недоступна.",
     dossierStripAria: "Краткий обзор футбольного досье"
   },
   leagueNames: {
@@ -1097,7 +1092,8 @@ const ruMap = {
     worldCupSimulation: "Симуляция ЧМ 2026",
     championWins: "{name} побеждает",
     championNotSelected: "Чемпион ещё не выбран",
-    routeSavedInShareLink: "Этот маршрут сохраняется в ссылке для sharing ниже.",
+    routeSavedInShareLink:
+      "Этот маршрут сохраняется в ссылке для sharing ниже.",
     returnToStep2Match104:
       "Вернитесь к шагу 2 и выберите победителя матча 104.",
     waitingForFinalSelection: "Ожидание выбора финала",
@@ -1131,7 +1127,6 @@ const ruMap = {
   },
   runtime: {
     connectionLabel: "Подключение",
-    httpsRequiredTitle: "Требуется защищённое соединение",
     httpsRequiredDescription:
       "Вход через кошелёк и функции торговли требуют зашифрованного HTTPS-соединения. Откройте защищённую версию этой страницы, чтобы продолжить.",
     openSecureVersion: "Открыть защищённую версию"

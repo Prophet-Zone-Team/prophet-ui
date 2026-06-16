@@ -1,3 +1,4 @@
+import type { OutcomeDisplayMode } from "@/lib/market/outcome-display-mode";
 import type {
   BidTradeSide,
   OrderOutcomeSide,
@@ -419,6 +420,31 @@ export function formatTradePanelPrice(price: number): string {
 
 export function formatOrderbookPrice(price: number): string {
   return formatTradePanelPrice(price) + "￠";
+}
+
+/** Decimal multiplier (1 / USD share price), 2 decimal places. */
+export function formatOutcomeMultiplier(price: number): string {
+  const usdPrice = normalizeLimitPrice(price);
+
+  if (usdPrice <= 0) {
+    return "—";
+  }
+
+  const multiplier = 1 / usdPrice;
+
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(multiplier);
+}
+
+export function formatOutcomeButtonDisplay(
+  price: number,
+  mode: OutcomeDisplayMode
+): string {
+  return mode === "decimal"
+    ? formatOutcomeMultiplier(price)
+    : formatOrderbookPrice(price);
 }
 
 export function formatOrderbookTotal(size: number, price: number): string {

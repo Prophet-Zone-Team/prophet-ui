@@ -42,7 +42,7 @@ export function AppHeader() {
       className={cn(
         "fixed inset-x-0 z-50 flex h-[60px] items-center justify-center transition-[background-color,box-shadow,border-color] duration-200",
         isScrolled &&
-        "border-b border-prophet-line/50 bg-white/75 shadow-prophet-wallet backdrop-blur-2xl backdrop-saturate-150",
+          "border-b border-prophet-line/50 bg-white/75 shadow-prophet-wallet backdrop-blur-2xl backdrop-saturate-150",
         "pl-3 pr-3 md:pl-2 md:pr-0"
       )}
     >
@@ -62,21 +62,14 @@ export function AppHeader() {
                 className="block"
                 aria-hidden
               />
-              <span className="hidden md:block text-[20px] font-[500]">PROPHET</span>
+              <span className="hidden md:block text-[20px] font-[500]">
+                PROPHET
+              </span>
             </Link>
-            <button
-              type="button"
-              className="block md:hidden size-[38px] min-w-[38px] bg-[url('/icons/icon-menu.svg')] bg-center bg-no-repeat bg-[length:16px_16px]"
-              onClick={() => {
-                setIsMobileDrawerOpen(true);
-              }}
-            />
           </div>
-          {
-            !isPrivateMode && (
-              <NavBar className="hidden md:flex flex-1 items-center justify-end gap-[20px]" />
-            )
-          }
+          {!isPrivateMode && (
+            <NavBar className="hidden md:flex flex-1 items-center justify-end gap-[20px]" />
+          )}
         </div>
 
         <WalletMenuButton

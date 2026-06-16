@@ -22,7 +22,7 @@ export function StrategyTeamFlagsStack({
 }: StrategyTeamFlagsStackProps) {
   return (
     <div
-      className={cn("flex items-center")}
+      className={cn("flex min-w-0 items-center overflow-x-auto", className)}
       aria-label={`${teams.length} teams`}
     >
       <div className={cn("text-[26px] font-[500] mr-[10px]", className)}>

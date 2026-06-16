@@ -148,7 +148,7 @@ export function BookmarkToggle({
     >
       <button
         type="button"
-        className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[2px] p-0 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] p-0 disabled:cursor-not-allowed disabled:opacity-60 md:h-5 md:w-5"
         aria-pressed={isTracked}
         aria-busy={isLoading}
         aria-label={buttonAriaLabel}
@@ -171,7 +171,7 @@ export function BookmarkToggle({
       >
         {isLoading ? (
           <Loader2
-            className="h-4 w-4 animate-spin text-[#909090]"
+            className="h-[12.8px] w-[12.8px] animate-spin text-[#909090] md:h-4 md:w-4"
             aria-hidden="true"
           />
         ) : isTracked ? (

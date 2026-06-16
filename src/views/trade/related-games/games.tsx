@@ -16,6 +16,7 @@ export interface RelatedGamesProps {
   highlightTeamId: string;
   snapshots: TeamMarketSnapshot[];
   excludeMatchId?: string;
+  embedded?: boolean;
 }
 
 function LoadingBlock({ className }: { className?: string }) {
@@ -47,7 +48,8 @@ export function RelatedGames({
   teamNames,
   highlightTeamId,
   snapshots,
-  excludeMatchId
+  excludeMatchId,
+  embedded = false
 }: RelatedGamesProps) {
   const t = useTranslations("trade");
   const teamsKey = buildRelatedGamesTeamsQuery(teamNames);
@@ -62,17 +64,24 @@ export function RelatedGames({
   }
 
   return (
-    <section className={tradeSectionClass} aria-label={t("relatedGamesAria")}>
-      <h2 className={`${tradePanelTitleClass} px-4 py-3`}>{t("relatedGames")}</h2>
+    <section
+      className={embedded ? undefined : tradeSectionClass}
+      aria-label={t("relatedGamesAria")}
+    >
+      {embedded ? null : (
+        <h2 className={`${tradePanelTitleClass} px-4 py-3`}>{t("relatedGames")}</h2>
+      )}
 
       {isLoading ? (
         <RelatedGamesLoading />
       ) : isError ? (
-        <p className="px-4 py-8 text-center text-sm text-prophet-muted">
+        <p
+          className={`text-center text-sm text-prophet-muted ${embedded ? "px-4 py-8" : "px-4 py-8"}`}
+        >
           {t("relatedGamesUnavailable")}
         </p>
       ) : matches.length > 0 ? (
-        <div className="flex flex-col gap-3 px-3">
+        <div className={`flex flex-col gap-3 ${embedded ? "px-4 pb-4" : "px-3"}`}>
           {matches.map((match) => (
             <RelatedGameCard
               key={match.id}

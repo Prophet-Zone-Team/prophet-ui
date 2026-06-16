@@ -10,6 +10,7 @@ interface OtpInputProps {
   value: string;
   length?: number;
   disabled?: boolean;
+  className?: string;
   onChange: (code: string) => void;
   onComplete?: (code: string) => void;
 }
@@ -18,6 +19,7 @@ export function OtpInput({
   value,
   length = 6,
   disabled = false,
+  className,
   onChange,
   onComplete,
 }: OtpInputProps) {
@@ -114,7 +116,13 @@ export function OtpInput({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div
+      className={cn(
+        "grid min-w-0 grid-cols-6 gap-1 sm:gap-2",
+        "w-full sm:w-auto",
+        className,
+      )}
+    >
       {digits.map((digit, index) => (
         <input
           key={index}
@@ -133,9 +141,10 @@ export function OtpInput({
           onPaste={handlePaste}
           onFocus={(event) => event.target.select()}
           className={cn(
-            "size-[42px] rounded-[6px] border border-[#ebebeb] bg-white text-center",
+            "aspect-square w-full min-w-0 rounded-[6px] border border-[#ebebeb] bg-white text-center",
             "text-[16px] font-[500] text-black outline-none",
             "focus:border-black disabled:opacity-50",
+            "sm:size-[42px]",
           )}
         />
       ))}

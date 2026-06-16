@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { MarketWsProvider } from "@/context/market-ws";
@@ -18,8 +19,10 @@ import { gameContentClass } from "@/views/trade/game/ui";
 import { useGameTradingMetadata } from "@/views/trade/game/use-game-trading-metadata";
 import { isGameMarketWsEnabled } from "@/lib/market/live-match";
 import { isGameClosedForTrading } from "@/lib/market/trading-market-status";
+import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { TradeWidget } from "@/views/trade/trade-widget";
+import { useGameMobileOutcomePrices } from "./use-game-mobile-outcome-prices";
 import type { ProphetGameSiblingEventSlugs } from "@/types/prophet-api";
 import type {
   ApiFootballTeamProfile,
@@ -29,9 +32,11 @@ import type {
 import Drawer from "@/components/drawer";
 import {
   useSetTradeOrderMode,
-  useTradeTab,
-  useTradeTicketStore
+  useSetTradeOutcomeSide,
+  useSetTradeTab,
+  useTradeOutcomeSide
 } from "@/store";
+import Bg from "@/views/trade/game/header/bg";
 
 export type TradeGameViewProps = TradeGameHeaderProps & {
   gameSnapshot: GameMarketSnapshot;
@@ -49,6 +54,7 @@ export default function TradeGameView({
   siblingEventSlugs,
   teamProfiles
 }: TradeGameViewProps) {
+  const t = useTranslations("trade");
   const [activeMarketTab, setActiveMarketTab] =
     useState<GameMarketTabId>("moneyline");
 
@@ -120,22 +126,44 @@ export default function TradeGameView({
     [match, relatedMatches]
   );
 
-  const setTab = useTradeTicketStore((state) => state.setTab);
+  const setTab = useSetTradeTab();
+  const setOutcomeSide = useSetTradeOutcomeSide();
   const setOrderMode = useSetTradeOrderMode();
-  const tab = useTradeTab();
+  const outcomeSide = useTradeOutcomeSide();
   const [tradeDrawerOpen, setTradeDrawerOpen] = useState<boolean>(false);
+
+  function openTradeDrawer(side: "yes" | "no") {
+    if (!canTrade) {
+      return;
+    }
+
+    setOutcomeSide(side);
+    setTab("buy");
+    setOrderMode("market");
+    setTradeDrawerOpen(true);
+  }
+
+  const drawerTitle = outcomeSide === "yes" ? t("buyYes") : t("buyNo");
+  const { yesPrice, noPrice } = useGameMobileOutcomePrices(
+    gameSnapshot,
+    marketWsEnabled
+  );
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
 
   return (
     <MarketWsProvider enabled={marketWsEnabled}>
       <SyncMatchLiveStore matches={matchesToSync} />
       <div className="relative left-1/2 pt-6 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2">
-        <div className="bg-black h-[228px] md:h-[258px] w-full absolute top-0 left-0" />
+        <div className="bg-black h-[200px] md:h-[258px] w-full absolute top-0 left-0" />
+        <div className="pointer-events-none absolute inset-x-0 z-0 max-w-[453px] h-[200px] md:h-[258px] overflow-visible left-1/2 -translate-x-1/2 top-[14px] md:left-[calc(50%-180px)] md:top-[19px]">
+          <Bg />
+        </div>
         <TradeGameHeaderToolbar />
         <div
           className={`${gameContentClass} pb-[130px] md:pb-10 relative z-10`}
         >
           <div className="shrink-0 w-full md:w-[1080px] pt-2">
-            <div className="relative h-[220px]">
+            <div className="relative h-[182px] md:h-[220px]">
               <TradeGameHeader
                 match={match}
                 snapshots={snapshots}
@@ -150,13 +178,14 @@ export default function TradeGameView({
               onTabChange={handleMarketTabChange}
             />
           </div>
-          <div className="mt-6 flex flex-col gap-4 w-full md:w-[345px]">
+          <div className="mt-6 hidden min-w-0 flex-col gap-4 md:flex md:w-[345px]">
             <TradeWidget
               variant="game"
               gameSnapshot={gameSnapshot}
               fixtureMarkets={fixtureMarkets}
               teamSnapshots={snapshots}
-              className="hidden md:flex"
+              outcomeButtonClassName="w-full"
+              outcomeButtonContainerClassName="gap-3"
             />
             {relatedGamesTeamsKey.length > 0 ? (
               <RelatedGames {...sidebar.relatedGames} />
@@ -164,44 +193,44 @@ export default function TradeGameView({
           </div>
         </div>
       </div>
-      <div className="flex flex-row-reverse md:hidden px-3 pb-10 pt-5 border border-[#EBEBEB] rounded-t-xl w-full fixed left-0 bottom-0 z-10 bg-white justify-between items-center gap-5">
+      <div className="fixed bottom-0 left-0 z-10 flex w-full items-center justify-between gap-5 p-3 md:hidden">
         <button
           type="button"
-          className="flex flex-1 h-[46px] justify-center items-center rounded-xl text-lg font-[500] text-white transition-opacity bg-[#65AF14] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-[46px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#FF674B] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={!canTrade}
-          onClick={() => {
-            setTradeDrawerOpen(true);
-            setTab("sell");
-          }}
+          onClick={() => openTradeDrawer("no")}
         >
-          Sell
+          <span className="text-lg font-[500]">{t("no")}</span>
+          <span className="text-xs font-[500] leading-[14px]">
+            {formatOutcomeDisplay(noPrice)}
+          </span>
         </button>
         <button
           type="button"
-          className="flex flex-1 h-[46px] justify-center items-center rounded-xl text-lg font-[500] text-white transition-opacity bg-[#65AF14] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-[46px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#65AF14] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={!canTrade}
-          onClick={() => {
-            if (canTrade) {
-              setOrderMode("market");
-            }
-            setTradeDrawerOpen(true);
-            setTab("buy");
-          }}
+          onClick={() => openTradeDrawer("yes")}
         >
-          Buy
+          <span className="text-lg font-[500]">{t("yes")}</span>
+          <span className="text-xs font-[500] leading-[14px]">
+            {formatOutcomeDisplay(yesPrice)}
+          </span>
         </button>
       </div>
       <Drawer
         open={!!tradeDrawerOpen}
         onClose={() => setTradeDrawerOpen(false)}
-        title={tab === "sell" ? "Sell" : "Buy"}
+        title={drawerTitle}
+        className="!h-auto max-h-[70dvh]"
       >
         <TradeWidget
           variant="game"
           gameSnapshot={gameSnapshot}
           fixtureMarkets={fixtureMarkets}
           teamSnapshots={snapshots}
-          className=""
+          outcomeButtonClassName="w-full"
+          outcomeButtonContainerClassName="gap-3"
+          className="border-0 rounded-none"
         />
       </Drawer>
     </MarketWsProvider>

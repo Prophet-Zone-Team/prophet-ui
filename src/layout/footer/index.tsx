@@ -4,12 +4,23 @@ import { SOCIALS_LIST } from "@/config/social";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-function AppFooter() {
+import { cn } from "@/lib/cn";
+
+interface AppFooterProps {
+  className?: string;
+}
+
+function AppFooter({ className }: AppFooterProps) {
   const t = useTranslations("footer");
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full border-t border-[#E9E9E9] py-4 px-10 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-2 font-[Sora] text-[#909090] text-xs font-normal">
+    <footer
+      className={cn(
+        "w-full border-t border-[#E9E9E9] py-4 px-10 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-2 font-[Sora] text-[#909090] text-xs font-normal",
+        className
+      )}
+    >
       <div className="flex justify-center md:justify-start items-center order-3 md:order-1">
         {t("copyright", { year: currentYear })}
       </div>

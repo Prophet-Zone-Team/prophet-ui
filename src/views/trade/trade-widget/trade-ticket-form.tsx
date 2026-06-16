@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatProbability } from "@/components/home/market-formatters";
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
+import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 import { cn } from "@/lib/cn";
 import {
   formatOrderBookClearingKickoff
@@ -139,6 +140,7 @@ export function TradeTicketForm({
   walletInsight
 }: TradeTicketFormProps) {
   const t = useTranslations("trade");
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
   const isLimitOrder = orderMode === "limit";
   const outcomeSummaryLabel =
     tradeSide === "sell" ? t("youWillReceive") : t("toWin");
@@ -166,7 +168,7 @@ export function TradeTicketForm({
         <OutcomeButtonColumn
           side="yes"
           active={outcomeSide === "yes"}
-          priceLabel={formatOrderbookPrice(yesTokenPrice)}
+          priceLabel={formatOutcomeDisplay(yesTokenPrice)}
           probabilityLabel={formatProbability(yesProbability)}
           shareCount={tradeSide === "sell" ? yesShares : undefined}
           onSelect={() => onSelectOutcome("yes")}
@@ -175,7 +177,7 @@ export function TradeTicketForm({
         <OutcomeButtonColumn
           side="no"
           active={outcomeSide === "no"}
-          priceLabel={formatOrderbookPrice(noTokenPrice)}
+          priceLabel={formatOutcomeDisplay(noTokenPrice)}
           probabilityLabel={formatProbability(noProbability)}
           shareCount={tradeSide === "sell" ? noShares : undefined}
           onSelect={() => onSelectOutcome("no")}
