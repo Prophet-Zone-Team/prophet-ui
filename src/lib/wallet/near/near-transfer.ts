@@ -1,4 +1,4 @@
-import { actionCreators } from "@near-wallet-selector/core";
+import type { FunctionCallAction } from "@near-wallet-selector/core";
 
 import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
 import { viewFunction } from "@/lib/wallet/near/near-rpc";
@@ -12,8 +12,16 @@ function createFunctionCallAction(
   args: Record<string, unknown>,
   gas: string,
   deposit: string,
-) {
-  return actionCreators.functionCall(methodName, args, BigInt(gas), BigInt(deposit));
+): FunctionCallAction {
+  return {
+    type: "FunctionCall",
+    params: {
+      methodName,
+      args,
+      gas,
+      deposit,
+    },
+  };
 }
 
 export interface TransferNearFtTokenParams {

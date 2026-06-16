@@ -1,9 +1,6 @@
 import { Buffer } from "buffer";
 import { utils } from "near-api-js";
-import {
-  actionCreators,
-  type FinalExecutionOutcome,
-} from "@near-wallet-selector/core";
+import type { FinalExecutionOutcome } from "@near-wallet-selector/core";
 import { getAddress, keccak256 } from "viem";
 
 import {
@@ -119,28 +116,28 @@ export async function signDigestWithV1Signer(
   const payload = normalizeV1SignerDigest(digest);
   const path = getV1SignerEvmDerivationPath(nearAccountId);
   const wallet = await getActiveNearWallet();
-  const { functionCall } = actionCreators;
 
-  // wallet-selector v10+ requires NAJ actions (via actionCreators), not the
-  // v9 internal { type: "FunctionCall", params: ... } format.
   const outcomes = await wallet.signAndSendTransactions({
     transactions: [
       {
         signerId: nearAccountId,
         receiverId: V1_SIGNER_CONTRACT_ID,
         actions: [
-          functionCall(
-            "sign",
-            {
-              request: {
-                payload_v2: { Ecdsa: payload },
-                path,
-                domain_id: V1_SIGNER_DOMAIN_ID,
+          {
+            type: "FunctionCall",
+            params: {
+              methodName: "sign",
+              args: {
+                request: {
+                  payload_v2: { Ecdsa: payload },
+                  path,
+                  domain_id: V1_SIGNER_DOMAIN_ID,
+                },
               },
+              gas: V1_SIGNER_SIGN_GAS,
+              deposit: ONE_YOCTO_NEAR,
             },
-            BigInt(V1_SIGNER_SIGN_GAS),
-            BigInt(ONE_YOCTO_NEAR),
-          ),
+          },
         ],
       },
     ],

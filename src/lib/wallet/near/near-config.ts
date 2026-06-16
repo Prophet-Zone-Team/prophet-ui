@@ -8,7 +8,7 @@ export type NearNetworkConfig = {
 
 export const NEAR_NETWORK: NearNetworkConfig = {
   networkId: "mainnet",
-  nodeUrl: "https://rpc.mainnet.near.org",
+  nodeUrl: "https://nearinner.deltarpc.com",
   walletUrl: "https://app.mynearwallet.com/",
   helperUrl: "https://helper.mainnet.near.org",
   explorerUrl: "https://nearblocks.io",
