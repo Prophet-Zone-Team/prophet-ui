@@ -274,6 +274,7 @@ function ProbabilityStrip({
           tone="dark"
           align="start"
           contentLeft={`calc(${homeEnd}% + clamp(16px, 4vw, 60px))`}
+          className="hidden sm:block"
         />
         <ProbabilitySegmentLabel
           label={awayName}
@@ -307,7 +308,8 @@ function ProbabilitySegmentLabel({
   tone,
   percentClassName,
   align = "start",
-  contentLeft
+  contentLeft,
+  className
 }: {
   label: string;
   probability: number;
@@ -315,12 +317,13 @@ function ProbabilitySegmentLabel({
   percentClassName?: string;
   align?: "start" | "center" | "end";
   contentLeft?: string;
+  className?: string;
 }) {
   const textColor = tone === "light" ? "text-white" : "text-black";
   const showPercent = Math.round(probability * 100) >= 10;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-30">
+    <div className={cn("pointer-events-none absolute inset-0 z-30", className)}>
       <div
         className={cn(
           "absolute bottom-3 z-30 flex max-w-[min(100%,280px)] flex-col gap-0.5 sm:bottom-8",
