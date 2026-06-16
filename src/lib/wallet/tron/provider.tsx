@@ -152,8 +152,10 @@ export function TronFundingProvider({ children }: { children: React.ReactNode })
   const handleConnectRef = useRef(handleConnect);
   const handleDisconnectRef = useRef(handleDisconnect);
 
-  handleConnectRef.current = handleConnect;
-  handleDisconnectRef.current = handleDisconnect;
+  useEffect(() => {
+    handleConnectRef.current = handleConnect;
+    handleDisconnectRef.current = handleDisconnect;
+  });
 
   useEffect(() => {
     registerConnectHandler("tron", () => handleConnectRef.current());

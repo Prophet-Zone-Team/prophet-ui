@@ -28,7 +28,9 @@ function SolanaFundingBridge() {
   const address = publicKey?.toBase58();
   const signTransactionRef = useRef(walletAdapter.signTransaction);
 
-  signTransactionRef.current = walletAdapter.signTransaction;
+  useEffect(() => {
+    signTransactionRef.current = walletAdapter.signTransaction;
+  });
 
   useEffect(() => {
     const signTransaction = signTransactionRef.current;
@@ -88,8 +90,10 @@ function SolanaFundingBridge() {
   const handleConnectRef = useRef(handleConnect);
   const handleDisconnectRef = useRef(handleDisconnect);
 
-  handleConnectRef.current = handleConnect;
-  handleDisconnectRef.current = handleDisconnect;
+  useEffect(() => {
+    handleConnectRef.current = handleConnect;
+    handleDisconnectRef.current = handleDisconnect;
+  });
 
   useEffect(() => {
     registerConnectHandler("solana", () => handleConnectRef.current());

@@ -68,8 +68,10 @@ export function useFundingWallet(
   const handleEvmConnectRef = useRef(handleEvmConnect);
   const handleEvmDisconnectRef = useRef(handleEvmDisconnect);
 
-  handleEvmConnectRef.current = handleEvmConnect;
-  handleEvmDisconnectRef.current = handleEvmDisconnect;
+  useEffect(() => {
+    handleEvmConnectRef.current = handleEvmConnect;
+    handleEvmDisconnectRef.current = handleEvmDisconnect;
+  });
 
   useEffect(() => {
     registerConnectHandler("evm", () => handleEvmConnectRef.current());

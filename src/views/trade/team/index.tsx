@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { TrackedTeamRevisitEffect } from "@/components/analytics/tracked-team-revisit-effect";
@@ -140,20 +140,6 @@ function TradeTeamViewContent({
   );
 }
 
-function TradeTeamRtdsRegistration({
-  enabled,
-  children
-}: {
-  enabled: boolean;
-  children: ReactNode;
-}) {
-  useRegisterRtdsEventSlugs("trade-team", [WORLD_CUP_WINNER_EVENT_SLUG], {
-    enabled
-  });
-
-  return children;
-}
-
 export default function TradeTeamView({
   snapshot,
   footballProfile,
@@ -162,12 +148,6 @@ export default function TradeTeamView({
   const yesTokenId = snapshot.market.polymarket?.tokens.yes?.tokenId;
   const noTokenId = snapshot.market.polymarket?.tokens.no?.tokenId;
   const marketWsEnabled = Boolean(yesTokenId || noTokenId);
-  const rtdsEnabled = Boolean(
-    snapshot.market.polymarket?.conditionId ||
-    snapshot.market.slug?.trim() ||
-    yesTokenId ||
-    noTokenId
-  );
 
   return (
     <MarketWsProvider enabled={marketWsEnabled}>

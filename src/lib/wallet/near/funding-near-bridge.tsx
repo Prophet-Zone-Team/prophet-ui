@@ -95,8 +95,10 @@ export function FundingNearBridge() {
   const handleConnectRef = useRef(handleConnect);
   const handleDisconnectRef = useRef(handleDisconnect);
 
-  handleConnectRef.current = handleConnect;
-  handleDisconnectRef.current = handleDisconnect;
+  useEffect(() => {
+    handleConnectRef.current = handleConnect;
+    handleDisconnectRef.current = handleDisconnect;
+  });
 
   useEffect(() => {
     registerConnectHandler("near", () => handleConnectRef.current());

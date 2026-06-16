@@ -28,6 +28,7 @@ import type {
   GameFixtureMarketsSnapshot,
   GameMarketSnapshot
 } from "@/types/market";
+import type { ProphetGameSiblingEventSlugs } from "@/types/prophet-api";
 import Drawer from "@/components/drawer";
 import {
   useSetTradeOrderMode,
