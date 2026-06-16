@@ -42,7 +42,7 @@ export function ConnectModalProvider({ children }: { children: React.ReactNode }
   };
 
   const openConnectModal = () => {
-    // TODO: Open the wallet selector only after TokenPocket wallet integration is completed
+    // Open the wallet selector only after TokenPocket wallet integration is completed
     if (isOpenWalletApp) {
       setConnectModalOpen(true);
       return;

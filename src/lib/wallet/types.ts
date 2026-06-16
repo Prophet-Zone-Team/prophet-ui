@@ -18,6 +18,8 @@ export interface WalletTransferParams {
   /** Human-readable decimal amount (e.g. "12.5"). */
   amount: string;
   tokenDecimals: number;
+  /** Optional symbol for native-token routing on non-EVM chains. */
+  symbol?: string;
 }
 
 export interface WalletTransferResult {

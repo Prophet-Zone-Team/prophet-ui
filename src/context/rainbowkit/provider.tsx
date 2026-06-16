@@ -8,6 +8,9 @@ import { PrivyProvider } from "@privy-io/react-auth";
 import { RainbowConnectGate } from "@/context/rainbowkit/connect-gate";
 import { ConnectModalProvider } from "@/context/rainbowkit/connect-modal";
 import { NearProvider } from "@/context/near/near-provider";
+import { FundingNearBridge } from "@/lib/wallet/near/funding-near-bridge";
+import { SolanaFundingProvider } from "@/lib/wallet/solana/provider";
+import { TronFundingProvider } from "@/lib/wallet/tron/provider";
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import {
   PRIVY_APP_ID,
@@ -43,7 +46,12 @@ export default function RainbowProvider({
             <ConnectModalProvider>
               <PrivyWalletBridge />
               <NearProvider>
-                <RainbowConnectGate>{children}</RainbowConnectGate>
+                <FundingNearBridge />
+                <SolanaFundingProvider>
+                  <TronFundingProvider>
+                    <RainbowConnectGate>{children}</RainbowConnectGate>
+                  </TronFundingProvider>
+                </SolanaFundingProvider>
               </NearProvider>
             </ConnectModalProvider>
           </RainbowKitProvider>

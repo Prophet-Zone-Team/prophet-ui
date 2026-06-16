@@ -15,10 +15,12 @@ import {
   privateTopupWalletCardClass,
   privateTopupBalanceLargeClass,
 } from "@/views/portfolio/private-topup/private-topup-ui";
+import type { FundingWalletChainType } from "@/store/use-funding-wallet-store";
 
 export interface TopupWalletCardProps {
   connected: boolean;
   address?: string;
+  chainType?: FundingWalletChainType;
   balanceUsd: number;
   balanceLoading?: boolean;
   onConnect: () => void;
@@ -28,6 +30,7 @@ export interface TopupWalletCardProps {
 export function TopupWalletCard({
   connected,
   address,
+  chainType,
   balanceUsd,
   balanceLoading = false,
   onConnect,
@@ -51,6 +54,11 @@ export function TopupWalletCard({
           <div className="min-w-0 flex-1">
             <p className={`m-0 ${privateTopupSectionLabelClass}`}>
               {t("fundingWallet")}
+              {chainType ? (
+                <span className="ml-2 text-[#909090]">
+                  {t(`fundingChain.${chainType === "evm" ? "evm" : chainType}`)}
+                </span>
+              ) : null}
             </p>
             {connected && address ? (
               <div className="mt-1 flex items-center gap-2">

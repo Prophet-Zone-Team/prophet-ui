@@ -50,7 +50,15 @@
     "walletTokenPocketDescription": "Мультичейн-кошелек",
     "walletOkxDescription": "Кошелек биржи OKX",
     "walletOthersDescription": "Другие кошельки",
-    "selectWalletEmpty": "На этом устройстве не найден поддерживаемый кошелек."
+    "selectWalletEmpty": "На этом устройстве не найден поддерживаемый кошелек.",
+    "connectSolanaWallet": "Подключить кошелек Solana",
+    "connectTronWallet": "Подключить кошелек Tron",
+    "connectNearWallet": "Подключить кошелек NEAR",
+    "selectSolanaWallet": "Выбрать кошелек Solana",
+    "selectTronWallet": "Выбрать кошелек Tron",
+    "noSolanaWalletDetected": "На этом устройстве не обнаружен кошелек Solana.",
+    "noTronWalletDetected": "На этом устройстве не обнаружен кошелек Tron.",
+    "selectFundingWalletChain": "Выберите сеть кошелька для пополнения"
   },
   "footer": {
     "copyright": "© {year} Prophet. Все права защищены.",
@@ -1445,6 +1453,13 @@
     "fundingWallet": "Funding Wallet",
     "change": "Change",
     "connectFundingWallet": "Connect Funding Wallet",
+    "selectFundingWalletChain": "Выберите сеть кошелька для пополнения",
+    "fundingChain": {
+      "evm": "EVM",
+      "solana": "Solana",
+      "tron": "Tron",
+      "near": "NEAR"
+    },
     "linkedAccountBanner": "This Private Account is linked to your wallet {address}. Confirm this is correct before funding.",
     "noVerifiedAccount": "No verified Private Account found. Start Private Mode from the main site to continue.",
     "startsToGetProphet": "Starts to get Prophet",

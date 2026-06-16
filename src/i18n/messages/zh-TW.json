@@ -50,7 +50,15 @@
     "walletTokenPocketDescription": "多鏈錢包",
     "walletOkxDescription": "OKX 交易所錢包",
     "walletOthersDescription": "其他錢包",
-    "selectWalletEmpty": "此裝置上找不到支援的錢包。"
+    "selectWalletEmpty": "此裝置上找不到支援的錢包。",
+    "connectSolanaWallet": "連接 Solana 錢包",
+    "connectTronWallet": "連接 Tron 錢包",
+    "connectNearWallet": "連接 NEAR 錢包",
+    "selectSolanaWallet": "選擇 Solana 錢包",
+    "selectTronWallet": "選擇 Tron 錢包",
+    "noSolanaWalletDetected": "此裝置未偵測到 Solana 錢包。",
+    "noTronWalletDetected": "此裝置未偵測到 Tron 錢包。",
+    "selectFundingWalletChain": "選擇充值錢包網路"
   },
   "footer": {
     "copyright": "© {year} Prophet. 版權所有。",
@@ -1448,6 +1456,13 @@
     "fundingWallet": "Funding Wallet",
     "change": "Change",
     "connectFundingWallet": "Connect Funding Wallet",
+    "selectFundingWalletChain": "選擇充值錢包網路",
+    "fundingChain": {
+      "evm": "EVM",
+      "solana": "Solana",
+      "tron": "Tron",
+      "near": "NEAR"
+    },
     "linkedAccountBanner": "This Private Account is linked to your wallet {address}. Confirm this is correct before funding.",
     "noVerifiedAccount": "No verified Private Account found. Start Private Mode from the main site to continue.",
     "startsToGetProphet": "Starts to get Prophet",

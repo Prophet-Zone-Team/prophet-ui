@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { STABLEFLOW_EXTRA_TOKENS } from "@/config/funding/stableflow-extra-tokens";
 import {
   filterStableflowTokensForFundingNetworks,
   mapStableflowTokenToDepositToken,
-  mergeStableflowTokens,
   resolvePolygonUsdcDestinationAsset,
 } from "@/lib/funding/stableflow";
 import { getStableflowTokens } from "@/server/trading/stableflow";
@@ -22,12 +20,11 @@ export async function GET(request: Request) {
 
   try {
     const apiTokens = await getStableflowTokens();
-    const allTokens = mergeStableflowTokens(apiTokens, STABLEFLOW_EXTRA_TOKENS);
-    const filtered = filterStableflowTokensForFundingNetworks(allTokens);
+    const filtered = filterStableflowTokensForFundingNetworks(apiTokens);
     const tokens = filtered
       .map((token) => mapStableflowTokenToDepositToken(token))
       .filter((token): token is NonNullable<typeof token> => Boolean(token));
-    const polygonUsdcDestinationAssetId = resolvePolygonUsdcDestinationAsset(allTokens)?.assetId;
+    const polygonUsdcDestinationAssetId = resolvePolygonUsdcDestinationAsset(apiTokens)?.assetId;
 
     if (!polygonUsdcDestinationAssetId) {
       return NextResponse.json(

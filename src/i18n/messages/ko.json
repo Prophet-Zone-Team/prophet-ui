@@ -50,7 +50,15 @@
     "walletTokenPocketDescription": "멀티체인 지갑",
     "walletOkxDescription": "OKX 거래소 지갑",
     "walletOthersDescription": "다른 지갑",
-    "selectWalletEmpty": "이 기기에서 지원되는 지갑을 찾을 수 없습니다."
+    "selectWalletEmpty": "이 기기에서 지원되는 지갑을 찾을 수 없습니다.",
+    "connectSolanaWallet": "Solana 지갑 연결",
+    "connectTronWallet": "Tron 지갑 연결",
+    "connectNearWallet": "NEAR 지갑 연결",
+    "selectSolanaWallet": "Solana 지갑 선택",
+    "selectTronWallet": "Tron 지갑 선택",
+    "noSolanaWalletDetected": "이 기기에서 Solana 지갑이 감지되지 않았습니다.",
+    "noTronWalletDetected": "이 기기에서 Tron 지갑이 감지되지 않았습니다.",
+    "selectFundingWalletChain": "입금 지갑 네트워크 선택"
   },
   "footer": {
     "copyright": "© {year} Prophet. 모든 권리 보유.",
@@ -1445,6 +1453,13 @@
     "fundingWallet": "Funding Wallet",
     "change": "Change",
     "connectFundingWallet": "Connect Funding Wallet",
+    "selectFundingWalletChain": "입금 지갑 네트워크 선택",
+    "fundingChain": {
+      "evm": "EVM",
+      "solana": "Solana",
+      "tron": "Tron",
+      "near": "NEAR"
+    },
     "linkedAccountBanner": "This Private Account is linked to your wallet {address}. Confirm this is correct before funding.",
     "noVerifiedAccount": "No verified Private Account found. Start Private Mode from the main site to continue.",
     "startsToGetProphet": "Starts to get Prophet",

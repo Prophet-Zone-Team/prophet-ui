@@ -72,6 +72,9 @@ export const depositPercentButtonClass = cn(
 export const depositTransferBarClass =
   "flex items-center justify-between gap-3 rounded-[6px] bg-[#f4f4f4] px-4 py-3";
 
+export const depositFundingWalletChangeClass =
+  "border-0 bg-transparent p-0 text-sm font-[400] text-[#3168ff] transition-opacity hover:opacity-80";
+
 export const depositDetailRowClass =
   "flex items-center justify-between py-3 text-sm last:border-b-0 gap-2";
 

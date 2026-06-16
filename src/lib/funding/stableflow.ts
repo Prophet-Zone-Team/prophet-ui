@@ -2,8 +2,12 @@ import { QuoteRequest, type QuoteResponse, type TokenResponse } from "@stableflo
 import Big from "big.js";
 
 import { FUNDING_NETWORKS, FundingNetworkType, type FundingNetwork } from "@/config/funding/networks";
-import type { FundingAsset } from "@/config/funding/tokens";
+import type { FundingAsset, FundingToken } from "@/config/funding/tokens";
 import type { AuthLoginMethod } from "@/store/auth-store";
+import {
+  getFundingWalletAddress,
+  type FundingWalletChainType,
+} from "@/store/use-funding-wallet-store";
 import {
   getTokensForChain,
   getUniqueChainsFromAssets,
@@ -71,6 +75,8 @@ export function getFundingNetworkForStableflowBlockchain(blockchain: string): Fu
   return Object.values(FUNDING_NETWORKS).find((network) => network.chainId === chainId);
 }
 
+const NATIVE_FUNDING_BLOCKCHAINS = new Set(["near", "sol", "tron"]);
+
 export function filterStableflowTokensForFundingNetworks(tokens: TokenResponse[]): TokenResponse[] {
   return tokens.filter((token) => {
     const network = getFundingNetworkForStableflowBlockchain(token.blockchain);
@@ -87,25 +93,12 @@ export function filterStableflowTokensForFundingNetworks(tokens: TokenResponse[]
       return Boolean(token.contractAddress);
     }
 
-    return true;
+    if (NATIVE_FUNDING_BLOCKCHAINS.has(token.blockchain)) {
+      return true;
+    }
+
+    return false;
   });
-}
-
-export function mergeStableflowTokens(
-  apiTokens: TokenResponse[],
-  extraTokens: TokenResponse[],
-): TokenResponse[] {
-  const merged = new Map<string, TokenResponse>();
-
-  for (const token of apiTokens) {
-    merged.set(token.assetId, token);
-  }
-
-  for (const token of extraTokens) {
-    merged.set(token.assetId, token);
-  }
-
-  return Array.from(merged.values());
 }
 
 export function resolveStableflowTokenAddress(token: TokenResponse): string {
@@ -130,6 +123,13 @@ export function shouldDepositViaStableflowQr(
     return !isNearOriginStableflowToken(token);
   }
 
+  if (
+    token.chainType === FundingNetworkType.SVM ||
+    token.chainType === FundingNetworkType.TVM
+  ) {
+    return false;
+  }
+
   if (loginMethod === "wallet") {
     return token.chainType !== FundingNetworkType.EVM;
   }
@@ -137,15 +137,73 @@ export function shouldDepositViaStableflowQr(
   return false;
 }
 
+export function getFundingWalletChainType(
+  chainType: FundingNetworkType,
+): FundingWalletChainType | undefined {
+  switch (chainType) {
+    case FundingNetworkType.SVM:
+      return "solana";
+    case FundingNetworkType.TVM:
+      return "tron";
+    case FundingNetworkType.EVM:
+      return "evm";
+    case FundingNetworkType.NEAR:
+      return "near";
+    default:
+      return undefined;
+  }
+}
+
+export function requiresFundingWalletConnection(
+  token: Pick<FundingToken, "chainType">,
+): boolean {
+  return (
+    token.chainType === FundingNetworkType.SVM ||
+    token.chainType === FundingNetworkType.TVM
+  );
+}
+
+export function resolveFundingWalletAddress(
+  token: Pick<FundingToken, "chainType">,
+): string | undefined {
+  const chainType = getFundingWalletChainType(token.chainType);
+
+  if (!chainType) {
+    return undefined;
+  }
+
+  return getFundingWalletAddress(chainType);
+}
+
+export function isFundingWalletConnected(
+  token: Pick<FundingToken, "chainType">,
+): boolean {
+  if (!requiresFundingWalletConnection(token)) {
+    return true;
+  }
+
+  return Boolean(resolveFundingWalletAddress(token));
+}
+
 export function getStableflowRefundAddress(params: {
   blockchain: string;
   walletAddress?: string;
   nearAccountId?: string | null;
+  solanaAddress?: string | null;
+  tronAddress?: string | null;
 }): string | undefined {
-  const { blockchain, walletAddress, nearAccountId } = params;
+  const { blockchain, walletAddress, nearAccountId, solanaAddress, tronAddress } = params;
 
   if (blockchain === "near") {
     return nearAccountId ?? getNearAccountSnapshot().accountId ?? undefined;
+  }
+
+  if (blockchain === "sol") {
+    return solanaAddress ?? getFundingWalletAddress("solana");
+  }
+
+  if (blockchain === "tron") {
+    return tronAddress ?? getFundingWalletAddress("tron");
   }
 
   return walletAddress;

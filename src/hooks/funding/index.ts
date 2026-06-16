@@ -23,3 +23,16 @@ export {
   type UsePendingFunderUsdcOptions,
   type UsePendingFunderUsdcResult,
 } from "@/hooks/funding/use-pending-funder-usdc";
+export {
+  useFundingWalletConnect,
+} from "@/hooks/funding/use-funding-wallet-connect";
+export {
+  useSolBalances,
+  type UseSolBalancesOptions,
+  type UseSolBalancesResult,
+} from "@/hooks/funding/use-sol-balances";
+export {
+  useTronBalances,
+  type UseTronBalancesOptions,
+  type UseTronBalancesResult,
+} from "@/hooks/funding/use-tron-balances";

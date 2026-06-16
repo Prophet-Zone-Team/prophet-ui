@@ -35,13 +35,13 @@ export const walletOptions: WalletOption[] = [
     descriptionKey: "walletOkxDescription",
     downloadUrl: "https://www.okx.com/web3",
   },
-  {
-    id: "others",
-    name: "Others",
-    icon: getStableflowWalletLogo("logo-walletconnect.png"),
-    descriptionKey: "walletOthersDescription",
-    downloadUrl: "",
-  },
+  // {
+  //   id: "others",
+  //   name: "Others",
+  //   icon: getStableflowWalletLogo("logo-walletconnect.png"),
+  //   descriptionKey: "walletOthersDescription",
+  //   downloadUrl: "",
+  // },
 ];
 
 const walletLaunchChecks: Record<WalletId, (params?: { checkOnly?: boolean }) => boolean> = {

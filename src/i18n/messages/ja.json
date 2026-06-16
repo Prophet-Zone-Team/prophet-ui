@@ -50,7 +50,15 @@
     "walletTokenPocketDescription": "マルチチェーンウォレット",
     "walletOkxDescription": "OKX 取引所ウォレット",
     "walletOthersDescription": "その他のウォレット",
-    "selectWalletEmpty": "このデバイスでサポートされているウォレットが見つかりません。"
+    "selectWalletEmpty": "このデバイスでサポートされているウォレットが見つかりません。",
+    "connectSolanaWallet": "Solanaウォレットを接続",
+    "connectTronWallet": "Tronウォレットを接続",
+    "connectNearWallet": "NEARウォレットを接続",
+    "selectSolanaWallet": "Solanaウォレットを選択",
+    "selectTronWallet": "Tronウォレットを選択",
+    "noSolanaWalletDetected": "このデバイスでSolanaウォレットが検出されませんでした。",
+    "noTronWalletDetected": "このデバイスでTronウォレットが検出されませんでした。",
+    "selectFundingWalletChain": "入金ウォレットのネットワークを選択"
   },
   "footer": {
     "copyright": "© {year} Prophet. All rights reserved.",
@@ -1445,6 +1453,13 @@
     "fundingWallet": "Funding Wallet",
     "change": "Change",
     "connectFundingWallet": "Connect Funding Wallet",
+    "selectFundingWalletChain": "入金ウォレットのネットワークを選択",
+    "fundingChain": {
+      "evm": "EVM",
+      "solana": "Solana",
+      "tron": "Tron",
+      "near": "NEAR"
+    },
     "linkedAccountBanner": "This Private Account is linked to your wallet {address}. Confirm this is correct before funding.",
     "noVerifiedAccount": "No verified Private Account found. Start Private Mode from the main site to continue.",
     "startsToGetProphet": "Starts to get Prophet",
