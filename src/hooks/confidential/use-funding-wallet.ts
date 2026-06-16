@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 
 import { disconnectWagmiWallet } from "@/components/trading/wallet-provider";
 import { useConnectGate } from "@/context/rainbowkit/connect-gate";
@@ -34,11 +35,13 @@ export function useFundingWallet(
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const fundingSlices = useFundingWalletStore((state) => ({
-    solana: state.solana,
-    tron: state.tron,
-    near: state.near,
-  }));
+  const fundingSlices = useFundingWalletStore(
+    useShallow((state) => ({
+      solana: state.solana,
+      tron: state.tron,
+      near: state.near,
+    })),
+  );
   const setSlice = useFundingWalletStore((state) => state.setSlice);
   const registerConnectHandler = useFundingWalletStore((state) => state.registerConnectHandler);
   const registerDisconnectHandler = useFundingWalletStore((state) => state.registerDisconnectHandler);

@@ -86,7 +86,7 @@ export function DepositProvider({
   const prices = usePricesStore((state) => state.prices);
 
   const getTokenBalance = useCallback(
-    (token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals">) => {
+    (token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals"> & { assetId?: string; blockchain?: string; }) => {
       if (
         isStableflowDepositToken(token as DepositSelectableToken) &&
         (token as StableflowDepositToken).blockchain === "near" &&
@@ -109,7 +109,7 @@ export function DepositProvider({
   );
 
   const getTokenBalanceString = useCallback(
-    (token: Pick<FundingToken, "chainId" | "address" | "decimals" | "symbol">) => {
+    (token: Pick<FundingToken, "chainId" | "address" | "decimals" | "symbol"> & { assetId?: string; blockchain?: string; }) => {
       if (
         isStableflowDepositToken(token as DepositSelectableToken) &&
         (token as StableflowDepositToken).blockchain === "near" &&
@@ -132,12 +132,14 @@ export function DepositProvider({
   );
 
   const getTokenUsdValue = useCallback(
-    (token: Pick<FundingToken, "symbol" | "chainId" | "address"> & { decimals?: number }) => {
+    (token: Pick<FundingToken, "symbol" | "chainId" | "address"> & { decimals?: number; assetId?: string; blockchain?: string; }) => {
       const balance = getTokenBalance({
         symbol: token.symbol,
         chainId: token.chainId,
         address: token.address,
         decimals: token.decimals ?? 0,
+        assetId: token.assetId,
+        blockchain: token.blockchain,
       });
 
       if (isStableflowDepositToken(token as DepositSelectableToken)) {
