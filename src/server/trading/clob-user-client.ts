@@ -391,7 +391,7 @@ export async function fetchUserPositions({
     user: userAddress,
     limit: String(Math.max(1, Math.min(limit, 500))),
     sizeThreshold: "0",
-    sortBy: "RESOLVING",
+    sortBy: "CURRENT",
     sortDirection: "DESC"
   });
 

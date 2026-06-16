@@ -190,7 +190,9 @@ export function MarketWsProvider({
   );
 
   useEffect(() => {
-    if (!enabled || unionTokenIds.length === 0) {
+    const activeTokenIds = collectUnionTokenIds(registrationsRef.current);
+
+    if (!enabled || activeTokenIds.length === 0) {
       setPricesByTokenId((current) =>
         Object.keys(current).length === 0 ? current : {}
       );
@@ -198,7 +200,6 @@ export function MarketWsProvider({
       return;
     }
 
-    const activeTokenIds = unionTokenIds;
     const client = getPolymarketMarketWsClient();
 
     const syncFromCache = () => {

@@ -18,7 +18,7 @@ import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity"
 import { useMarketWsPrices, useRegisterMarketWsTokens } from "@/context/market-ws";
 import { isValidAskPrice, resolveFixtureDisplayAskPrice } from "@/lib/market/fixture-ask-liquidity";
 import { resolveLiveOutcomeYesNoProbabilities } from "@/lib/market/merge-live-outcome-prices";
-import { isGameMarketLiveUpdatesEnabled } from "@/lib/market/live-match";
+import { isGameMarketWsEnabled } from "@/lib/market/live-match";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
 import {
@@ -332,7 +332,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const fixtureWsEnabled =
     input.variant === "game" &&
     Boolean(freshSelectedFixtureOutcome) &&
-    isGameMarketLiveUpdatesEnabled(liveGameMatch);
+    isGameMarketWsEnabled(liveGameMatch);
 
   const { pricesByTokenId: fixtureTokenPrices } = useMarketWsPrices(
     fixtureWsEnabled
@@ -398,6 +398,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   const { pricesByTokenId: teamTokenPrices } = useMarketWsPrices(
     teamWsEnabled ? [yesTokenId, noTokenId] : []
+  );
+
+  useRegisterMarketWsTokens(
+    "trade-ticket-team",
+    teamWsEnabled ? [yesTokenId, noTokenId] : [],
+    { enabled: teamWsEnabled }
   );
 
   const sellPosition = input.sellPosition;
