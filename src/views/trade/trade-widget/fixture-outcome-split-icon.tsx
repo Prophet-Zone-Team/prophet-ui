@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import { gameColors } from "@/views/trade/game/ui";
 
@@ -5,8 +9,6 @@ export type FixtureOutcomeSplitVariant = "over_under" | "yes_no";
 
 const splitVariantConfig = {
   over_under: {
-    leftLabel: "O",
-    rightLabel: "U",
     leftColor: gameColors.home,
     rightColor: gameColors.awayBar
   },
@@ -27,7 +29,12 @@ export function FixtureOutcomeSplitIcon({
   activeSide: "left" | "right";
   className?: string;
 }) {
+  const t = useTranslations("trade");
   const config = splitVariantConfig[variant];
+  const leftLabel =
+    variant === "over_under" ? t("overAbbrev") : splitVariantConfig.yes_no.leftLabel;
+  const rightLabel =
+    variant === "over_under" ? t("underAbbrev") : splitVariantConfig.yes_no.rightLabel;
   const leftActive = activeSide === "left";
   const rightActive = activeSide === "right";
 
@@ -63,7 +70,7 @@ export function FixtureOutcomeSplitIcon({
           leftActive ? "opacity-100" : "opacity-90 dark:opacity-60"
         )}
       >
-        {config.leftLabel}
+        {leftLabel}
       </p>
       <p
         className={cn(
@@ -71,7 +78,7 @@ export function FixtureOutcomeSplitIcon({
           rightActive ? "opacity-100" : "opacity-90 dark:opacity-60"
         )}
       >
-        {config.rightLabel}
+        {rightLabel}
       </p>
     </div>
   );
