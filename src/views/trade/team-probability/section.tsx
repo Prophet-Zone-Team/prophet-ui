@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
 import { useAnalyticsImpression } from "@/hooks/analytics/use-analytics-impression";
@@ -11,10 +12,10 @@ import {
 import { useTranslations } from "next-intl";
 
 import {
-  formatChange,
   formatProbability,
   formatVolume
 } from "@/components/home/market-formatters";
+import { ProbabilityChangeTrend } from "@/components/market/probability-change-trend";
 import { cn } from "@/lib/cn";
 import { buildTeamChartMatchAnnotations } from "@/lib/team/chart-match-annotations";
 import {
@@ -40,6 +41,7 @@ const probabilityCardClass =
   "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
 
 const probabilityCardBorderlessClass = "min-w-0 flex-1 bg-white p-4 sm:p-5";
+const probabilityCardBorderlessClass = "min-w-0 flex-1 bg-white p-4 sm:p-5";
 
 const orderbookBorderlessClass = "rounded-none border-0";
 
@@ -47,16 +49,83 @@ export interface ProbabilitySectionProps {
   snapshot: TeamMarketSnapshot;
   showOrderbook: boolean;
   showHeaderControls?: boolean;
+  groupLayout?: boolean;
   borderless?: boolean;
   showChartOrderbookDivider?: boolean;
+  hideMobileOrderbook?: boolean;
+}
+
+export interface ProbabilityMobileOrderbookProps {
+  snapshot: TeamMarketSnapshot;
+  showOrderbook: boolean;
+  className?: string;
+}
+
+export function ProbabilityMobileOrderbook({
+  snapshot,
+  showOrderbook,
+  className
+}: ProbabilityMobileOrderbookProps) {
+  const t = useTranslations("trade");
+  const outcomeView = useTradeOutcomeSide();
+  const [orderbookExpanded, setOrderbookExpanded] = useState(false);
+  const tokenId = useMemo(
+    () => resolveTeamOrderbookTokenId(snapshot, outcomeView),
+    [outcomeView, snapshot]
+  );
+
+  if (!showOrderbook) {
+    return null;
+  }
+
+  return (
+    <div className={className}>
+      <div className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between px-4 py-3 text-left"
+          aria-expanded={orderbookExpanded}
+          aria-controls="team-trade-mobile-orderbook"
+          onClick={() => setOrderbookExpanded((current) => !current)}
+        >
+          <span className="text-base font-[500] leading-[19px] text-black">
+            {t("orderbook")}
+          </span>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-[#909090] transition-transform",
+              orderbookExpanded && "rotate-180"
+            )}
+            aria-hidden="true"
+          />
+        </button>
+
+        {orderbookExpanded ? (
+          <div
+            id="team-trade-mobile-orderbook"
+            className="border-t border-[#EBEBEB]"
+          >
+            <OrderbookPanel
+              visible
+              tokenId={tokenId}
+              variant="mirror"
+              className="min-h-0 w-full"
+            />
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 export function ProbabilitySection({
   snapshot,
   showOrderbook,
   showHeaderControls = true,
+  groupLayout = false,
   borderless = false,
-  showChartOrderbookDivider = false
+  showChartOrderbookDivider = false,
+  hideMobileOrderbook = false
 }: ProbabilitySectionProps) {
   const t = useTranslations("trade");
   const outcomeView = useTradeOutcomeSide();
@@ -129,25 +198,98 @@ export function ProbabilitySection({
       })),
     [t]
   );
-  const changeTone =
-    change24hPoints > 0
-      ? "text-[#65AF14]"
-      : change24hPoints < 0
-        ? "text-[#FF674B]"
-        : "text-prophet-muted";
+  const yesNoToggle = (
+    <div
+      className="flex h-[30px] w-[96px] gap-0.5 rounded-lg border border-[#EBEBEB] bg-white p-0.5"
+      role="group"
+      aria-label={t("outcomeViewAria")}
+    >
+      <button
+        type="button"
+        className={cn("flex-1", tradeYesNoPill(outcomeView === "yes", "yes"))}
+        onClick={() => {
+          trackWinnerChartTeamSelected({
+            chartId: "team_probability",
+            seriesKey: "yes",
+            teamId: snapshot.team.id,
+            teamName: snapshot.team.name,
+            teamCode: snapshot.team.code
+          });
+          setOutcomeView("yes");
+        }}
+      >
+        {t("yes")}
+      </button>
+      <button
+        type="button"
+        className={cn("flex-1", tradeYesNoPill(outcomeView === "no", "no"))}
+        onClick={() => {
+          trackWinnerChartTeamSelected({
+            chartId: "team_probability",
+            seriesKey: "no",
+            teamId: snapshot.team.id,
+            teamName: snapshot.team.name,
+            teamCode: snapshot.team.code
+          });
+          setOutcomeView("no");
+        }}
+      >
+        {t("no")}
+      </button>
+    </div>
+  );
 
-  const metricBlocks = (
+  const timeRangeButtons = (
     <>
-      <MetricBlock
-        value={formatProbability(displayProbability)}
-        label={t("probabilityLabel")}
-        valueClassName="text-[36px] leading-[43px] text-black"
-      />
-      <MetricBlock
-        value={formatChange(change24hPoints)}
-        label={t("change24h")}
-        valueClassName={cn("text-base leading-[19px]", changeTone)}
-      />
+      {chartTimeRanges.map((range) => (
+        <button
+          key={range.id}
+          type="button"
+          className={cn(
+            "border-0 bg-transparent p-0 md:text-sm text-[12px] leading-[17px]",
+            timeRange === range.id
+              ? "font-[500] text-black"
+              : "font-[400] text-[#909090]"
+          )}
+          onClick={() => {
+            trackWinnerChartRangeChanged({
+              chartId: "team_probability",
+              fromRange: previousTimeRangeRef.current,
+              toRange: range.id,
+              teamId: snapshot.team.id,
+              teamName: snapshot.team.name
+            });
+            previousTimeRangeRef.current = range.id;
+            setTimeRange(range.id);
+          }}
+        >
+          {range.label}
+        </button>
+      ))}
+    </>
+  );
+
+  const groupMetricBlocks = (
+    <div>
+      <div className="flex items-end gap-2">
+        <p className="m-0 text-[20px] font-[500] leading-[24px] text-black md:text-[36px] md:leading-[43px]">
+          {formatProbability(displayProbability)}
+        </p>
+        {!!change24hPoints ? (
+          <ProbabilityChangeTrend
+            changePercent={change24hPoints}
+            decimals={1}
+          />
+        ) : null}
+      </div>
+      <p className="m-0 mt-1 hidden text-sm font-[500] leading-[17px] text-[#909090] md:block">
+        {t("probabilityLabel")}
+      </p>
+    </div>
+  );
+
+  const marketMetricBlocks = (
+    <>
       <MetricBlock
         value={`$${formatVolume(snapshot.market.volume)}`}
         label={t("volumeLabel")}
@@ -216,68 +358,36 @@ export function ProbabilitySection({
       >
         {showHeaderControls ? (
           <>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <h2 className="m-0 text-[20px] font-[500] leading-6 text-black">
-                  {t("probabilityLabel")}
-                </h2>
-                <div
-                  className="flex h-[30px] w-[96px] gap-0.5 rounded-lg border border-[#EBEBEB] bg-white p-0.5"
-                  role="group"
-                  aria-label={t("outcomeViewAria")}
-                >
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex-1",
-                      tradeYesNoPill(outcomeView === "yes", "yes")
-                    )}
-                    onClick={() => {
-                      trackWinnerChartTeamSelected({
-                        chartId: "team_probability",
-                        seriesKey: "yes",
-                        teamId: snapshot.team.id,
-                        teamName: snapshot.team.name,
-                        teamCode: snapshot.team.code
-                      });
-                      setOutcomeView("yes");
-                    }}
-                  >
-                    {t("yes")}
-                  </button>
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex-1",
-                      tradeYesNoPill(outcomeView === "no", "no")
-                    )}
-                    onClick={() => {
-                      trackWinnerChartTeamSelected({
-                        chartId: "team_probability",
-                        seriesKey: "no",
-                        teamId: snapshot.team.id,
-                        teamName: snapshot.team.name,
-                        teamCode: snapshot.team.code
-                      });
-                      setOutcomeView("no");
-                    }}
-                  >
-                    {t("no")}
-                  </button>
-                </div>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="m-0 text-[16px] font-[500] leading-6 text-black md:text-[20px]">
+                {t("probabilityLabel")}
+              </h2>
+              {yesNoToggle}
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+              <div className="flex min-w-0 flex-wrap items-end gap-8 sm:gap-10">
+                {groupMetricBlocks}
               </div>
-
-              {timeRangeControls}
+              <div
+                className="flex flex-wrap gap-4"
+                role="group"
+                aria-label={t("chartTimeRangeAria")}
+              >
+                {timeRangeButtons}
+              </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-end gap-8 sm:gap-10">
-              {metricBlocks}
-            </div>
+            {!groupLayout ? (
+              <div className="mt-4 hidden flex-wrap items-end gap-8 sm:gap-10 md:flex">
+                {marketMetricBlocks}
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="flex min-w-0 flex-wrap items-end gap-8 sm:gap-10">
-              {metricBlocks}
+              {groupMetricBlocks}
             </div>
             {timeRangeControls}
           </div>
@@ -300,12 +410,22 @@ export function ProbabilitySection({
         />
       ) : null}
 
-      <OrderbookPanel
-        visible={showOrderbook}
-        tokenId={tokenId}
-        className="min-h-0 w-full"
-        orderbookClassName={borderless ? orderbookBorderlessClass : undefined}
-      />
+      <div className="hidden md:block">
+        <OrderbookPanel
+          visible={showOrderbook}
+          tokenId={tokenId}
+          className="min-h-0 w-full"
+          orderbookClassName={borderless ? orderbookBorderlessClass : undefined}
+        />
+      </div>
+
+      {hideMobileOrderbook ? null : (
+        <ProbabilityMobileOrderbook
+          snapshot={snapshot}
+          showOrderbook={showOrderbook}
+          className="md:hidden"
+        />
+      )}
     </section>
   );
 }
@@ -331,7 +451,7 @@ function MetricBlock({
       >
         {value}
       </p>
-      <p className="m-0 mt-1 text-sm font-[500] leading-[17px] text-[#909090]">
+      <p className="m-0 mt-1 md:block hidden text-sm font-[500] leading-[17px] text-[#909090]">
         {label}
       </p>
     </div>

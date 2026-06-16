@@ -43,6 +43,57 @@ const rowLabelClassName = "text-[12px] font-[400] text-[#909090]";
 const bidButtonClassName =
   "inline-flex h-[36px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] px-2 text-[14px] font-[500] leading-[17px] text-white disabled:cursor-wait disabled:opacity-70";
 
+function MarketListMobileProbability({
+  probability,
+  changePercent,
+  hasLiveValues,
+  isLoading
+}: {
+  probability: number;
+  changePercent: number;
+  hasLiveValues: boolean;
+  isLoading: boolean;
+}) {
+  if (isLoading) {
+    return <MarketListMetricLoading variant="probability" />;
+  }
+
+  const probabilityLabel = hasLiveValues
+    ? formatListProbability(probability)
+    : "-";
+  const fillPercent = hasLiveValues
+    ? Math.min(100, Math.max(0, probability))
+    : 0;
+
+  return (
+    <div className="flex shrink-0 items-end gap-2">
+      {hasLiveValues && !!changePercent ? (
+        <ProbabilityChangeTrend
+          changePercent={changePercent}
+          decimals={1}
+          className="[&_span]:leading-[18px] [&_svg]:size-[13px]"
+        />
+      ) : null}
+      <div className="flex w-[94px] flex-col items-end gap-[10px] pb-[4px]">
+        <span className="text-right text-[18px] font-[500] leading-[23px] text-black">
+          {probabilityLabel}
+        </span>
+        {hasLiveValues ? (
+          <div
+            className="h-[8px] w-[94px] overflow-hidden rounded-[4px] bg-[#D9D9D9]"
+            role="presentation"
+          >
+            <div
+              className="h-full rounded-[4px] bg-black"
+              style={{ width: `${fillPercent}%` }}
+            />
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function MarketListItem({
   snapshot,
   rank,
@@ -118,7 +169,7 @@ export function MarketListItem({
       onClick={canNavigate ? navigateToTrade : undefined}
       onKeyDown={canNavigate ? handleRowKeyDown : undefined}
       className={cn(
-        "flex min-h-[78px] items-center gap-x-10 gap-y-3 overflow-visible rounded-xl border border-[#EBEBEB] px-4",
+        "flex md:min-h-[78px] items-center gap-x-10 gap-y-3 overflow-visible rounded-xl border border-[#EBEBEB] px-4",
         canNavigate
           ? "cursor-pointer transition-colors hover:border-[#d0d0d0]"
           : "cursor-default opacity-90",
@@ -131,30 +182,42 @@ export function MarketListItem({
             : "linear-gradient(90deg, rgba(255, 181, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
       }}
     >
-      <div className="flex w-full md:w-2/5 items-center gap-[20px]">
-        <MarketBookmarkControl
-          slug={market.polymarket?.slug || ""}
-          teamName={teamDisplayName}
-        />
-        <span className="w-[18px] shrink-0 text-center text-[18px] font-[500] leading-[21px] text-black">
-          {rank}
-        </span>
-        <TeamFlag
-          code={team.code}
-          name={teamDisplayName}
-          logoUrl={team.logoUrl}
-          className="h-[32px] w-[32px] shrink-0 rounded-[2px] text-[32px]"
-        />
-        <div className="min-w-0">
-          <h3 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
-            {teamDisplayName}
-          </h3>
-          <p className={cn("m-0 mt-0.5", rowLabelClassName)}>{subtitle}</p>
+      <div className="flex w-full items-center gap-[20px] max-lg:justify-between max-lg:gap-3 lg:w-2/5">
+        <div className="flex min-w-0 items-center gap-[20px]">
+          <div className="hidden shrink-0 lg:block">
+            <MarketBookmarkControl
+              slug={market.polymarket?.slug || ""}
+              teamName={teamDisplayName}
+            />
+          </div>
+          <span className="hidden w-[18px] shrink-0 text-center text-[18px] font-[500] leading-[21px] text-black lg:inline">
+            {rank}
+          </span>
+          <TeamFlag
+            code={team.code}
+            name={teamDisplayName}
+            logoUrl={team.logoUrl}
+            className="h-[32px] w-[32px] shrink-0 rounded-[2px] text-[32px]"
+          />
+          <div className="min-w-0">
+            <h3 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
+              {teamDisplayName}
+            </h3>
+            <p className={cn("m-0 mt-0.5", rowLabelClassName)}>{subtitle}</p>
+          </div>
+        </div>
+        <div className="lg:hidden">
+          <MarketListMobileProbability
+            probability={market.probability}
+            changePercent={changePercent}
+            hasLiveValues={hasLiveValues}
+            isLoading={isLoading}
+          />
         </div>
       </div>
 
-      <div className="flex items-center gap-x-10 w-full md:w-2/5">
-        <div className="flex w-1/2 flex-col max-lg:w-full">
+      <div className="hidden w-full items-center gap-x-10 lg:flex lg:w-2/5">
+        <div className="flex w-1/2 flex-col">
           <div className="flex items-center gap-[8px]">
             {isLoading ? (
               <MarketListMetricLoading variant="probability" />
@@ -177,7 +240,7 @@ export function MarketListItem({
           </span>
         </div>
 
-        <div className="flex w-1/2 flex-col max-lg:w-full">
+        <div className="flex w-1/2 flex-col">
           {isLoading ? (
             <MarketListMetricLoading variant="volume" />
           ) : (
@@ -190,7 +253,7 @@ export function MarketListItem({
       </div>
 
       <div
-        className="ml-auto flex w-full md:w-1/5 items-center gap-2 justify-between md:justify-start"
+        className="ml-auto hidden w-full items-center gap-2 md:w-1/5 lg:flex lg:justify-start"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
       >

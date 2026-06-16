@@ -15,6 +15,7 @@ const TAB_UNDERLINE_TRANSITION = {
 export interface TabSwitcherItem {
   id: string;
   label: string;
+  mobileLabel?: string;
   iconSrc?: string;
 }
 
@@ -85,7 +86,14 @@ export function TabSwitcher({
                   className="size-5 shrink-0"
                 />
               ) : null}
-              {item.label}
+              {item.mobileLabel ? (
+                <>
+                  <span className="md:hidden">{item.mobileLabel}</span>
+                  <span className="hidden md:inline">{item.label}</span>
+                </>
+              ) : (
+                item.label
+              )}
             </span>
             {isActive ? (
               <motion.span

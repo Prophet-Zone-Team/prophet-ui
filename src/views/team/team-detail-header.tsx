@@ -90,7 +90,7 @@ export function TeamDetailHeader({
   };
 
   return (
-    <header className="my-4">
+    <header className="md:my-4">
       <PageBack />
 
       <div className={teamHeroCardClass}>
@@ -145,10 +145,10 @@ export function TeamDetailHeader({
               value={
                 marketValue
                   ? formatNumber(marketValue, 2, true, {
-                    prefix: "€",
-                    isShort: true,
-                    isShortUppercase: true
-                  })
+                      prefix: "€",
+                      isShort: true,
+                      isShortUppercase: true
+                    })
                   : "-"
               }
             />
@@ -163,16 +163,14 @@ export function TeamDetailHeader({
           </div>
 
           <div className="flex flex-wrap items-center justify-between md:justify-end gap-2">
-            {
-              !!teamSlug && (
-                <Link
-                  href={teamTradeHref(teamSlug)}
-                  className={teamOpenTradeButtonClass}
-                >
-                  {t("openTrade")}
-                </Link>
-              )
-            }
+            {!!teamSlug && (
+              <Link
+                href={teamTradeHref(teamSlug)}
+                className={teamOpenTradeButtonClass}
+              >
+                {t("openTrade")}
+              </Link>
+            )}
             <div className="flex items-center gap-2">
               <BookmarkControl
                 slug={market.polymarket?.slug || ""}

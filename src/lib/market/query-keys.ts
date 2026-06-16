@@ -16,5 +16,6 @@ export const marketQueryKeys = {
   groupMatches: (groupCode: string) =>
     ["market", "group-matches", groupCode] as const,
   groupWinner: (groupCode: string) =>
-    ["market", "group-winner", groupCode] as const
+    ["market", "group-winner", groupCode] as const,
+  groupGame: (groupCode: string) => ["market", "group-game", groupCode] as const
 };

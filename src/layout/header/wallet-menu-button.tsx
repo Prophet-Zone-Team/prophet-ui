@@ -14,7 +14,6 @@ import { DepositDialog } from "@/views/portfolio/deposit";
 import { MigrateDialog } from "@/views/portfolio/migrate";
 import { PrivateTopupOnboarding } from "@/views/portfolio/private-topup/private-topup-onboarding";
 import { formatNumber } from "@/utils";
-import MobileDrawer from "./mobile-drawer";
 import { WalletLanguageMenuItem } from "./wallet-language-menu-item";
 import { useTranslations } from "next-intl";
 
@@ -178,13 +177,6 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
             {message ?? error}
           </p>
         ) : null}
-        <MobileDrawer
-          open={isMobileDrawerOpen}
-          onClose={onMobileDrawerClose}
-          regionRestricted={isBuyRestricted}
-          onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
-          balanceDisplay={balanceDisplay}
-        />
       </div>
     );
   }
@@ -254,14 +246,6 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
           {message}
         </p>
       ) : null}
-
-      <MobileDrawer
-        open={isMobileDrawerOpen}
-        onClose={onMobileDrawerClose}
-        regionRestricted={isBuyRestricted}
-        onPrivateBalanceClick={() => setPrivateTopupIntroOpen(true)}
-        balanceDisplay={balanceDisplay}
-      />
     </div>
   );
 }

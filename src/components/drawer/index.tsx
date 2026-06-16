@@ -149,27 +149,34 @@ const DrawerContent = (props: DrawerContentProps) => {
         stiffness: 220,
         damping: isMobile ? 27 : 30,
         duration: 0.3,
-        delay: open ? 0.05 : 0,
+        delay: open ? 0.05 : 0
       }}
       style={{ zIndex: contentZIndex }}
       className={clsx(
-        "fixed overflow-y-auto overflow-x-hidden bg-white shadow-[0_0_10px_0_rgba(0,0,0,0.10)]",
-        direction === DrawerDirection.Bottom ? "rounded-b-0 rounded-t-2xl w-full h-[70dvh] left-0 bottom-0" : "",
-        direction === DrawerDirection.Top ? "rounded-t-0 rounded-b-2xl w-full h-[70dvh] left-0 top-0" : "",
-        direction === DrawerDirection.Left ? "rounded-l-0 rounded-r-2xl h-full w-[30dvh] left-0 top-0" : "",
-        direction === DrawerDirection.Right ? "rounded-r-0 rounded-l-2xl h-full w-[30dvh] right-0 top-0" : "",
-        className,
+        "fixed flex flex-col bg-white shadow-[0_0_10px_0_rgba(0,0,0,0.10)]",
+        direction === DrawerDirection.Bottom
+          ? "rounded-b-0 rounded-t-2xl w-full h-[70dvh] left-0 bottom-0"
+          : "",
+        direction === DrawerDirection.Top
+          ? "rounded-t-0 rounded-b-2xl w-full h-[70dvh] left-0 top-0"
+          : "",
+        direction === DrawerDirection.Left
+          ? "rounded-l-0 rounded-r-2xl h-full w-[30dvh] left-0 top-0"
+          : "",
+        direction === DrawerDirection.Right
+          ? "rounded-r-0 rounded-l-2xl h-full w-[30dvh] right-0 top-0"
+          : "",
+        className
       )}
     >
       {!hideHeader ? (
-        <DrawerTitle
-          onClose={onClose}
-          className=""
-        >
+        <DrawerTitle onClose={onClose} className="">
           {title}
         </DrawerTitle>
       ) : null}
-      {children}
+      <div className={clsx("min-h-0 flex-1 overflow-y-auto overflow-x-hidden")}>
+        {children}
+      </div>
     </motion.div>
   );
 };

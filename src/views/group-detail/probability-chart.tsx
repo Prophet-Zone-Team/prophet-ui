@@ -148,7 +148,7 @@ export function GroupProbabilityChart({
               key={range.id}
               type="button"
               className={cn(
-                "border-0 bg-transparent p-0 text-sm leading-[17px]",
+                "border-0 bg-transparent p-0 text-[10px] leading-[12px]",
                 timeRange === range.id
                   ? "font-[500] text-black"
                   : "font-[400] text-[#909090]"
@@ -188,7 +188,7 @@ export function GroupProbabilityChart({
                   padding={{ left: 0, right: 12 }}
                   tick={{
                     fill: "#909090",
-                    fontSize: 14,
+                    fontSize: 10,
                     dy: 6
                   }}
                   tickLine={false}
@@ -200,7 +200,7 @@ export function GroupProbabilityChart({
                   orientation="right"
                   domain={yAxis.domain}
                   ticks={yAxis.ticks}
-                  tick={{ fill: "#909090", fontSize: 14 }}
+                  tick={{ fill: "#909090", fontSize: 10 }}
                   tickFormatter={(value: number) => `${value}%`}
                   tickLine={false}
                   axisLine={false}
@@ -265,7 +265,7 @@ function GroupChartLegendItem({ item }: { item: GroupChartLegendValue }) {
   const teamDisplayName = useLocalizedTeamName(item.teamCode, item.label);
 
   return (
-    <div className="flex items-center gap-2 text-[14px] leading-[17px]">
+    <div className="flex items-center gap-2 text-[10px] leading-[12px]">
       <span
         className="h-3 w-3 shrink-0 rounded-full"
         style={{ backgroundColor: item.color }}
@@ -295,7 +295,7 @@ function GroupChartTooltip({
 
   return (
     <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-      <p className="m-0 mb-1 text-sm font-[400] leading-[17px] text-[#909090]">
+      <p className="m-0 mb-1 text-[10px] font-[400] leading-[12px] text-[#909090]">
         {formatGroupChartTooltipDate(dateLabel)}
       </p>
       {payload.map((entry) => {
@@ -335,7 +335,7 @@ function GroupChartTooltipRow({
   const teamDisplayName = useLocalizedTeamName(teamCode, fallbackLabel);
 
   return (
-    <p className="m-0 text-sm font-[400] leading-[24px]" style={{ color }}>
+    <p className="m-0 text-[10px] font-[400] leading-[12px]" style={{ color }}>
       {teamDisplayName}: {value}
     </p>
   );

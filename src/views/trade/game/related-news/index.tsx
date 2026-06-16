@@ -19,6 +19,7 @@ export type RelatedNewsProps = {
   isError?: boolean;
   onItemSelect?: (item: RelatedNewsItem) => void;
   className?: string;
+  embedded?: boolean;
 };
 
 export function RelatedNews({
@@ -26,7 +27,8 @@ export function RelatedNews({
   isLoading = false,
   isError = false,
   onItemSelect,
-  className
+  className,
+  embedded = false
 }: RelatedNewsProps) {
   const t = useTranslations("trade");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -57,16 +59,19 @@ export function RelatedNews({
       <section
         aria-label={t("relatedNewsAria")}
         className={cn(
-          "w-full max-w-[531px] rounded-[12px] bg-white px-[16px] py-[16px]",
-          "shadow-[0_0_10px_rgba(0,0,0,0.1)]",
+          embedded
+            ? "w-full px-4 pb-4"
+            : "w-full max-w-[531px] rounded-[12px] bg-white px-[16px] py-[16px] shadow-[0_0_10px_rgba(0,0,0,0.1)]",
           className
         )}
       >
-        <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
-          {t("relatedNews")}
-        </h2>
+        {embedded ? null : (
+          <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
+            {t("relatedNews")}
+          </h2>
+        )}
 
-        <div className="mt-[12px] flex flex-col gap-[4px]">
+        <div className={cn("flex flex-col gap-[4px]", embedded ? "" : "mt-[12px]")}>
           {isLoading ? (
             <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
               {t("loadingData")}

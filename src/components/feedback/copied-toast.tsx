@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { CheckIcon } from "@/components/icons";
@@ -8,6 +9,7 @@ import { cn } from "@/lib/cn";
 export type CopiedToastProps = {
   visible: boolean;
   className?: string;
+  style?: CSSProperties;
 };
 
 const COPIED_TOAST_TRANSITION = {
@@ -15,7 +17,7 @@ const COPIED_TOAST_TRANSITION = {
   ease: "easeInOut" as const
 };
 
-export function CopiedToast({ visible, className }: CopiedToastProps) {
+export function CopiedToast({ visible, className, style }: CopiedToastProps) {
   return (
     <AnimatePresence>
       {visible ? (
@@ -27,6 +29,7 @@ export function CopiedToast({ visible, className }: CopiedToastProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={COPIED_TOAST_TRANSITION}
+          style={style}
           className={cn(
             "flex h-[46px] w-[118px] items-center justify-center gap-2 rounded-[12px] border border-[#EBEBEB] bg-white shadow-[0_0_10px_rgba(0,0,0,0.1)]",
             className

@@ -41,17 +41,17 @@ export function StrategyNotice({ className }: StrategyNoticeProps) {
           exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -79 }}
           transition={STRATEGY_NOTICE_TRANSITION}
           className={cn(
-            "flex min-h-[79px] w-full items-center gap-4 bg-[#3168FF] px-4 py-5 sm:px-6",
+            "flex min-h-[79px] w-full flex-col gap-3 bg-[#3168FF] px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-5",
             className
           )}
         >
-          <p className="min-w-0 flex-1 text-base leading-5 text-white">
+          <p className="min-w-0 flex-1 text-sm leading-5 text-white sm:text-base">
             {t("noticeText")}
           </p>
           <button
             type="button"
             onClick={dismiss}
-            className="inline-flex h-10 w-32 shrink-0 items-center justify-center rounded-lg bg-white text-base leading-5 text-black transition-opacity hover:opacity-90"
+            className="inline-flex h-10 w-full shrink-0 items-center justify-center rounded-lg bg-white text-base leading-5 text-black transition-opacity hover:opacity-90 sm:w-32"
           >
             {t("understood")}
           </button>
