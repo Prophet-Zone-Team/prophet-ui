@@ -5,6 +5,7 @@ import curatedTeams from "@/data/teams/index";
 import { isCuratedTeamDisplayed } from "@/data/teams/curated-team-list";
 import { buildStaticWinnerSnapshots } from "@/lib/market/build-static-winner-snapshots";
 import {
+  resolveCanonicalWorldCupTeamId,
   resolveWorldCupTeamByCuratedKey,
   resolveWorldCupTeamByGroupItemTitle,
 } from "@/lib/market/resolve-winner-team";
@@ -28,6 +29,21 @@ describe("resolve-winner-team", () => {
     assert.equal(resolveWorldCupTeamByGroupItemTitle("United States")?.id, "usa");
     assert.equal(resolveWorldCupTeamByGroupItemTitle("Spain")?.id, "spain");
     assert.equal(resolveWorldCupTeamByGroupItemTitle("Congo DR")?.id, "congo-dr");
+    assert.equal(resolveWorldCupTeamByGroupItemTitle("Korea Republic")?.id, "south-korea");
+    assert.equal(resolveWorldCupTeamByGroupItemTitle("Cabo Verde")?.id, "cape-verde");
+    assert.equal(resolveWorldCupTeamByGroupItemTitle("IR Iran")?.id, "iran");
+    assert.equal(resolveWorldCupTeamByGroupItemTitle("Côte d'Ivoire")?.id, "ivory-coast");
+    assert.equal(resolveWorldCupTeamByGroupItemTitle("DR Congo")?.id, "congo-dr");
+  });
+
+  it("normalizes variant curated ids to canonical world cup ids", () => {
+    assert.equal(resolveCanonicalWorldCupTeamId("korea-republic"), "south-korea");
+    assert.equal(resolveCanonicalWorldCupTeamId("united-states"), "usa");
+    assert.equal(resolveCanonicalWorldCupTeamId("cabo-verde"), "cape-verde");
+    assert.equal(resolveCanonicalWorldCupTeamId("ir-iran"), "iran");
+    assert.equal(resolveCanonicalWorldCupTeamId("cote-d-ivoire"), "ivory-coast");
+    assert.equal(resolveCanonicalWorldCupTeamId("dr-congo"), "congo-dr");
+    assert.equal(resolveCanonicalWorldCupTeamId("south-korea"), "south-korea");
   });
 
   it("builds a static snapshot for every visible curated team", () => {

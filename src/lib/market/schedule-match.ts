@@ -1,4 +1,5 @@
 import { findCuratedTeamById } from "@/data/teams/curated-team-list";
+import { resolveCanonicalWorldCupTeamId } from "@/lib/market/resolve-winner-team";
 import {
   formatDateFromIso,
   formatKickoffSubtitleFromIso,
@@ -292,13 +293,23 @@ export function filterScheduleMatchesByTeams(
     return [];
   }
 
-  const selectedTeamIds = new Set(teamIds);
+  const selectedTeamIds = new Set(
+    teamIds.map((teamId) => resolveCanonicalWorldCupTeamId(teamId))
+  );
 
   return matches.filter((match) => {
+    const homeTeamId =
+      match.homeTeamId !== undefined
+        ? resolveCanonicalWorldCupTeamId(match.homeTeamId)
+        : undefined;
+    const awayTeamId =
+      match.awayTeamId !== undefined
+        ? resolveCanonicalWorldCupTeamId(match.awayTeamId)
+        : undefined;
     const homeSelected =
-      match.homeTeamId !== undefined && selectedTeamIds.has(match.homeTeamId);
+      homeTeamId !== undefined && selectedTeamIds.has(homeTeamId);
     const awaySelected =
-      match.awayTeamId !== undefined && selectedTeamIds.has(match.awayTeamId);
+      awayTeamId !== undefined && selectedTeamIds.has(awayTeamId);
 
     return homeSelected || awaySelected;
   });
