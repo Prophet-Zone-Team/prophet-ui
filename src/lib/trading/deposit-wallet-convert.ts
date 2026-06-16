@@ -194,16 +194,18 @@ export async function executePendingDepositConvert({
 }) {
   onStatus?.("Checking wallet network…");
   await ensureDepositConvertPolygonChain(walletAddress);
+  let finalTransactionId: string;
 
   if (mode === "full") {
     onStatus?.("Step 1/2: Converting USDC to USDC.e…");
-    await executeDepositConvertPhase({
+    const { transactionId } = await executeDepositConvertPhase({
       walletAddress,
       phase: "usdc-to-usdce",
       amountUsd,
       onStatus,
     });
 
+    finalTransactionId = transactionId;
     onStatus?.("Waiting for deposit wallet to become ready…");
     await delay(DEPOSIT_WALLET_IDLE_DELAY_MS);
   }
@@ -216,12 +218,16 @@ export async function executePendingDepositConvert({
       ? "Wrapping USDC.e to pUSD…"
       : "Step 2/2: Wrapping USDC.e to pUSD…",
   );
-  await executeDepositConvertPhase({
+  const { transactionId } = await executeDepositConvertPhase({
     walletAddress,
     phase: "usdce-to-pusd",
     amountUsd: wrapAmountUsd,
     onStatus,
   });
+
+  finalTransactionId = transactionId;
+
+  return { transactionId: finalTransactionId };
 }
 
 export async function executeFullDepositConvert({
