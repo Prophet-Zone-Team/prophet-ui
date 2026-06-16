@@ -125,7 +125,8 @@ export function shouldDepositViaStableflowQr(
 
   if (
     token.chainType === FundingNetworkType.SVM ||
-    token.chainType === FundingNetworkType.TVM
+    token.chainType === FundingNetworkType.TVM ||
+    token.chainType === FundingNetworkType.NEAR
   ) {
     return false;
   }
@@ -159,8 +160,24 @@ export function requiresFundingWalletConnection(
 ): boolean {
   return (
     token.chainType === FundingNetworkType.SVM ||
-    token.chainType === FundingNetworkType.TVM
+    token.chainType === FundingNetworkType.TVM ||
+    token.chainType === FundingNetworkType.NEAR
   );
+}
+
+export function requiresDepositFundingWalletConnection(
+  token: Pick<FundingToken, "chainType"> & { blockchain?: string },
+  loginMethod: AuthLoginMethod | null | undefined,
+): boolean {
+  if (
+    loginMethod === "near" &&
+    token.blockchain &&
+    isNearOriginStableflowToken({ blockchain: token.blockchain })
+  ) {
+    return false;
+  }
+
+  return requiresFundingWalletConnection(token);
 }
 
 export function resolveFundingWalletAddress(

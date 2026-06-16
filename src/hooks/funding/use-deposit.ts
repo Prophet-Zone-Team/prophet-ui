@@ -274,6 +274,12 @@ export function useDeposit(): UseDepositResult {
     funderAddress: string,
     polygonUsdcDestinationAssetId: string,
   ): Promise<StableflowDepositContext> => {
+    if (token.blockchain === "near") {
+      throw new Error(
+        "NEAR-origin deposits must use depositViaNearStableflow.",
+      );
+    }
+
     const transferWalletAddress = resolveStableflowTransferWallet(token);
 
     setStatus("preparing");

@@ -79,11 +79,19 @@ export function waitForNearDerivedAddress(
 export async function connectNearAndDeriveAddress(
   timeoutMs?: number,
 ): Promise<string> {
-  if (!isNearConnected()) {
-    openNearWalletModal();
-  }
+  useNearAccountStore.getState().set({ evmDerivationRequested: true });
 
-  return waitForNearDerivedAddress(timeoutMs);
+  try {
+    const { accountId } = getNearAccountSnapshot();
+
+    if (!accountId) {
+      openNearWalletModal();
+    }
+
+    return await waitForNearDerivedAddress(timeoutMs);
+  } finally {
+    useNearAccountStore.getState().set({ evmDerivationRequested: false });
+  }
 }
 
 export async function disconnectNearWallet(): Promise<void> {
