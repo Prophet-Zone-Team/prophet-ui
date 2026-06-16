@@ -2,8 +2,16 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { useLocale as useIntlLocale } from "next-intl";
 
 import { defaultLocale, type AppLocale } from "@/i18n/config";
+import {
+  resolveOutcomeDisplayMode,
+  type OutcomeDisplayMode
+} from "@/lib/market/outcome-display-mode";
+import { useConfigHydrated } from "@/store/use-config-hydrated";
+
+export type { OutcomeDisplayMode };
 
 export const MIN_FAST_BID_AMOUNT = 5;
 export const DEFAULT_FAST_BID_AMOUNT = 10;
@@ -15,11 +23,13 @@ interface UserConfigState {
   showStrategyNotice: boolean;
   notificationsEnabled: boolean;
   locale: AppLocale;
+  outcomeDisplayMode?: OutcomeDisplayMode;
   setFastBidAmount: (amount: number) => void;
   setShowOrderbook: (value: boolean) => void;
   dismissStrategyNotice: () => void;
   setNotificationsEnabled: (value: boolean) => void;
   setLocale: (locale: AppLocale) => void;
+  setOutcomeDisplayMode: (mode: OutcomeDisplayMode) => void;
 }
 
 export function normalizeFastBidAmount(amount: number): number {
@@ -48,6 +58,7 @@ export const useUserConfigStore = create<UserConfigState>()(
       showStrategyNotice: true,
       notificationsEnabled: true,
       locale: defaultLocale,
+      outcomeDisplayMode: undefined,
       setFastBidAmount: (amount) => {
         set({ fastBidAmount: normalizeFastBidAmount(amount) });
       },
@@ -61,19 +72,26 @@ export const useUserConfigStore = create<UserConfigState>()(
         set({ notificationsEnabled: value });
       },
       setLocale: (locale) => {
+        if (locale === "zh-TW") {
+          set({ outcomeDisplayMode: "decimal" });
+        }
         set({ locale });
+      },
+      setOutcomeDisplayMode: (mode) => {
+        set({ outcomeDisplayMode: mode });
       }
     }),
     {
       name: "wc-user-config",
-      version: 5,
+      version: 6,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         fastBidAmount: state.fastBidAmount,
         showOrderbook: state.showOrderbook,
         showStrategyNotice: state.showStrategyNotice,
         notificationsEnabled: state.notificationsEnabled,
-        locale: state.locale
+        locale: state.locale,
+        outcomeDisplayMode: state.outcomeDisplayMode
       }),
       migrate: (persisted) => {
         const state = persisted as
@@ -83,6 +101,7 @@ export const useUserConfigStore = create<UserConfigState>()(
               showStrategyNotice?: boolean;
               notificationsEnabled?: boolean;
               locale?: AppLocale;
+              outcomeDisplayMode?: OutcomeDisplayMode;
             }
           | undefined;
 
@@ -93,7 +112,8 @@ export const useUserConfigStore = create<UserConfigState>()(
           showOrderbook: state?.showOrderbook ?? true,
           showStrategyNotice: state?.showStrategyNotice ?? true,
           notificationsEnabled: state?.notificationsEnabled ?? true,
-          locale: state?.locale ?? defaultLocale
+          locale: state?.locale ?? defaultLocale,
+          outcomeDisplayMode: state?.outcomeDisplayMode
         };
       }
     }
@@ -138,4 +158,22 @@ export function useLocale() {
 
 export function useSetLocale() {
   return useUserConfigStore((state) => state.setLocale);
+}
+
+export function useOutcomeDisplayModePreference() {
+  return useUserConfigStore((state) => state.outcomeDisplayMode);
+}
+
+export function useSetOutcomeDisplayMode() {
+  return useUserConfigStore((state) => state.setOutcomeDisplayMode);
+}
+
+export function useResolvedOutcomeDisplayMode(): OutcomeDisplayMode {
+  const hydrated = useConfigHydrated();
+  const intlLocale = useIntlLocale() as AppLocale;
+  const storeLocale = useUserConfigStore((state) => state.locale);
+  const stored = useOutcomeDisplayModePreference();
+  const locale = hydrated ? storeLocale : intlLocale;
+
+  return resolveOutcomeDisplayMode(locale, hydrated ? stored : undefined);
 }

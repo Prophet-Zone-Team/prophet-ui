@@ -4,6 +4,7 @@ import Drawer from "@/components/drawer";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import PrivateBalance from "./private-balance";
 import { WalletLanguageMenuItem } from "./wallet-language-menu-item";
+import { WalletOutcomeDisplayMenuItem } from "./wallet-outcome-display-menu-item";
 import { walletBalanceLabelClass, walletBalanceValueClass } from "./wallet-menu-ui";
 import NavBar from "./navigation-bar";
 import { cn } from "@/lib/cn";
@@ -79,7 +80,8 @@ function MobileDrawer(props: any) {
           activeClassName="!rounded-none"
           onClick={onClose}
         />
-        <div className="mt-4 px-4 pb-4">
+        <div className="mt-4 flex flex-col gap-3 px-4 pb-4">
+          <WalletOutcomeDisplayMenuItem onSelect={onClose} />
           <WalletLanguageMenuItem onSelect={onClose} />
         </div>
       </div>
