@@ -22,7 +22,7 @@ export function AppChrome({ children }: AppChromeProps) {
       <AppHeader />
       <div
         className={cn(
-          "pt-[60px] md:flex-1 md:pt-[70px] md:pb-0",
+          "pt-[60px] md:min-h-[calc(100dvh-70px)] md:flex-1 md:pt-[70px] md:pb-0",
           hideMobileBottomNav
             ? "pb-0"
             : "pb-[calc(74px+env(safe-area-inset-bottom,0px))]"

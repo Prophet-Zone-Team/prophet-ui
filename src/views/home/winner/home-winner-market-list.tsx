@@ -1,6 +1,5 @@
 "use client";
 
-import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
@@ -80,35 +79,5 @@ export function HomeWinnerMarketList({
         />
       )}
     </>
-  );
-}
-
-function WinnerTeamSearchInput({
-  value,
-  onChange,
-  placeholder
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-}) {
-  const t = useTranslations("home");
-
-  return (
-    <div className="relative min-w-0 shrink-0">
-      <Search
-        className="pointer-events-none absolute left-3 top-1/2 size-[14px] -translate-y-1/2 text-[#222429]"
-        strokeWidth={2}
-        aria-hidden
-      />
-      <input
-        type="search"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        aria-label={t("searchTeams")}
-        className="box-border h-[30px] w-[222px] max-w-[calc(100vw-8rem)] rounded-[18px] border border-[#EBEBEB] bg-white py-0 pl-[34px] pr-3 font-[Sora] text-[12px] font-normal leading-[15px] text-black outline-none placeholder:text-[#909090]"
-      />
-    </div>
   );
 }
