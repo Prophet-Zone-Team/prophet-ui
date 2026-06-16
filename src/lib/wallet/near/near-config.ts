@@ -24,7 +24,7 @@ export const V1_SIGNER_CONTRACT_ID = process.env.NEXT_PUBLIC_NEAR_MPC_CONTRACT_I
  * across rhea world cup and prophet for a given NEAR account.
  */
 export const V1_SIGNER_EVM_DERIVATION_PATH_PREFIX = process.env.NEXT_PUBLIC_NEAR_MPC_PATH_PREFIX
-  || "prophet-polymarket";
+  || "polymarket";
 
 export const V1_SIGNER_DOMAIN_ID = 0;
 
