@@ -16,7 +16,7 @@ import {
 import { useGameStatisticsNotificationSync } from "@/hooks/market/use-game-statistics-notification-sync";
 import { useGameOdds } from "@/hooks/market/use-game-odds";
 import { mapGameOddsToOtherSources } from "@/lib/market/map-game-odds-other-sources";
-import { isGameMarketLiveUpdatesEnabled } from "@/lib/market/live-match";
+import { isGameMarketWsEnabled } from "@/lib/market/live-match";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import {
@@ -129,7 +129,7 @@ export function GameMarketsSection({
   const showOrderbook = useShowOrderbook();
   const setShowOrderbook = useSetShowOrderbook();
   const liveMatch = useMatchWithLiveState(match);
-  const marketWsEnabled = isGameMarketLiveUpdatesEnabled(liveMatch);
+  const marketWsEnabled = isGameMarketWsEnabled(liveMatch);
   const sides = resolveMatchSides(liveMatch, teamSnapshots);
   const { odds: gameOdds, variant: gameVariant } = useGameOdds({
     match: liveMatch

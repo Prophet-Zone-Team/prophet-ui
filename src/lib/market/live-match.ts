@@ -10,3 +10,8 @@ export function isEffectiveLiveMatch(match: WorldCupMatch): boolean {
 export function isGameMarketLiveUpdatesEnabled(match: WorldCupMatch): boolean {
   return isEffectiveLiveMatch(match) || isMockLiveFixtureEnabled();
 }
+
+export function isGameMarketWsEnabled(match: WorldCupMatch): boolean {
+  const status = getScheduleRowVariant(match.status);
+  return status === "ongoing" || status === "upcoming";
+}
