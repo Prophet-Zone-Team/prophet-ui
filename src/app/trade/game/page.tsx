@@ -2,20 +2,13 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
-import {
-  loadGameTradeContext,
-  renderGameTradePage,
-} from "@/app/trade/_shared/render-trade-page";
-import {
-  GAME_SHARE_TWITTER_DESCRIPTION,
-  resolveGameShareImageUrl,
-  resolveGameShareTitle,
-} from "@/lib/share/resolve-game-share-image-url";
+import { renderGameTradePage } from "@/app/trade/_shared/render-trade-page";
+import { fetchGameShareOgMetadata } from "@/lib/share/fetch-game-share-og";
+import { GAME_SHARE_TWITTER_DESCRIPTION } from "@/lib/share/game-share-constants";
 import {
   shouldGenerateGameShareImage,
   TWITTER_PREVIEW_PARAM,
 } from "@/lib/share/should-generate-game-share-image";
-import { getGameShareCardRenderDimensions } from "@/lib/share/render-game-share-card";
 
 interface TradeGameRouteProps {
   searchParams: Promise<{
@@ -46,10 +39,9 @@ export async function generateMetadata({
   }
 
   try {
-    const context = await loadGameTradeContext(slug);
-    const imageUrl = await resolveGameShareImageUrl(context);
+    const shareMetadata = await fetchGameShareOgMetadata(slug);
 
-    if (!imageUrl) {
+    if (!shareMetadata) {
       return {
         twitter: {
           description: "Failed to generate game share image",
@@ -57,8 +49,7 @@ export async function generateMetadata({
       };
     }
 
-    const title = resolveGameShareTitle(context);
-    const renderDimensions = getGameShareCardRenderDimensions();
+    const { imageUrl, title, width, height } = shareMetadata;
 
     return {
       title,
@@ -76,8 +67,8 @@ export async function generateMetadata({
         images: [
           {
             url: imageUrl,
-            width: renderDimensions.width,
-            height: renderDimensions.height,
+            width,
+            height,
           },
         ],
       },

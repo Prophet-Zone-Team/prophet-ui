@@ -17,13 +17,6 @@ const nextConfig = {
       }
     ]
   },
-  outputFileTracingIncludes: {
-    "/trade/game": [
-      "./node_modules/@resvg/resvg-wasm/index_bg.wasm",
-      "./public/fonts/Sora-*.ttf",
-      "./public/referral/prophet-logo.png"
-    ]
-  },
   async redirects() {
     return [
       {
