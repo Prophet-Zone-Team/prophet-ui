@@ -10,8 +10,8 @@ import Popover from "@/components/popover";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuthOptional } from "@/context/auth";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 import { cn } from "@/lib/cn";
-import { formatOrderbookPrice } from "@/lib/market/order-math";
 import { teamTradeHref } from "@/lib/routes/trade";
 import {
   useSetTradeOutcomeSide,
@@ -59,7 +59,8 @@ function OutcomeButton({
 }) {
   const t = useTranslations("trade");
   const isYes = side === "yes";
-  const priceLabel = formatOrderbookPrice(price);
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
+  const priceLabel = formatOutcomeDisplay(price);
   const label = `${isYes ? t("yes") : t("no")} ${priceLabel}`;
 
   return (

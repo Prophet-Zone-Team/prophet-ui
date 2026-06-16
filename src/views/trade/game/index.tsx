@@ -19,7 +19,7 @@ import { gameContentClass } from "@/views/trade/game/ui";
 import { useGameTradingMetadata } from "@/views/trade/game/use-game-trading-metadata";
 import { isGameMarketWsEnabled } from "@/lib/market/live-match";
 import { isGameClosedForTrading } from "@/lib/market/trading-market-status";
-import { formatOrderbookPrice } from "@/lib/market/order-math";
+import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { TradeWidget } from "@/views/trade/trade-widget";
 import { useGameMobileOutcomePrices } from "./use-game-mobile-outcome-prices";
@@ -149,6 +149,7 @@ export default function TradeGameView({
     gameSnapshot,
     marketWsEnabled
   );
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
 
   return (
     <MarketWsProvider enabled={marketWsEnabled}>
@@ -202,7 +203,7 @@ export default function TradeGameView({
         >
           <span className="text-lg font-[500]">{t("no")}</span>
           <span className="text-xs font-[500] leading-[14px]">
-            {formatOrderbookPrice(noPrice)}
+            {formatOutcomeDisplay(noPrice)}
           </span>
         </button>
         <button
@@ -213,7 +214,7 @@ export default function TradeGameView({
         >
           <span className="text-lg font-[500]">{t("yes")}</span>
           <span className="text-xs font-[500] leading-[14px]">
-            {formatOrderbookPrice(yesPrice)}
+            {formatOutcomeDisplay(yesPrice)}
           </span>
         </button>
       </div>
