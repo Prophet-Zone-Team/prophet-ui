@@ -24,6 +24,7 @@ import {
   resolveTotalVariant
 } from "./fixture-market-actions";
 import { MarketOtherSources, type MarketOtherSourceItem } from "./market-other-sources";
+import { resolveFixtureOutcomeLabel } from "@/views/trade/trade-widget/trade-i18n";
 
 const cardClass = "rounded-[12px] border border-[#EBEBEB] bg-white";
 
@@ -44,6 +45,8 @@ function OutcomeButtons({
   selectedBinarySide?: "yes" | "no";
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
 }) {
+  const t = useTranslations("trade");
+
   if (!outcomes.length) {
     return <EmptyActions />;
   }
@@ -66,7 +69,7 @@ function OutcomeButtons({
         return (
           <LineOutcomeButton
             key={`${outcome.id}-${displayPrice ?? "na"}`}
-            label={outcome.label}
+            label={resolveFixtureOutcomeLabel(t, outcome)}
             price={displayPrice}
             variant={variant}
             active={isOutcomeSelected(

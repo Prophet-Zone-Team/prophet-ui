@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { resolveFixtureBuyAsk } from "@/lib/market/fixture-ask-liquidity";
@@ -9,6 +10,7 @@ import {
   GameOutcomeBidButton,
   type GameOutcomeBidButtonSize
 } from "@/views/trade/shared/game-outcome-bid-buttons";
+import { resolveFixtureOutcomeLabel } from "@/views/trade/trade-widget/trade-i18n";
 
 const cardClass = "rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
 
@@ -71,6 +73,7 @@ export function OutcomeButtonRow({
   columns?: 2 | 3 | 4;
   size?: GameOutcomeBidButtonSize;
 }) {
+  const t = useTranslations("trade");
   const gridClass =
     columns === 2
       ? "grid-cols-2"
@@ -89,7 +92,7 @@ export function OutcomeButtonRow({
         return (
           <GameOutcomeBidButton
             key={`${outcome.id}:${binarySide}`}
-            title={outcome.label}
+            title={resolveFixtureOutcomeLabel(t, outcome)}
             price={
               buyable ? resolveFixtureBuyAsk(outcome, binarySide) : undefined
             }
