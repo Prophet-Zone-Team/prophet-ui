@@ -287,7 +287,6 @@ export function WinnerProbabilityChart({
     () => (isMobile ? { series } : null),
     [isMobile, series]
   );
-
   const showChart = !shouldFetch || fetchStatus === "ready";
   const chartRef = useAnalyticsImpression<HTMLElement>({
     eventName: "chart_viewed",
@@ -337,9 +336,9 @@ export function WinnerProbabilityChart({
         </p>
       ) : (
         <div className="mt-4 h-[190px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            {mobileFlagConfig ? (
-              <MobileFlagChartProvider value={mobileFlagConfig}>
+          {mobileFlagConfig ? (
+            <MobileFlagChartProvider value={mobileFlagConfig}>
+              <ResponsiveContainer width="100%" height="100%">
                 <WinnerLineChartBody
                   chartData={chartData}
                   series={series}
@@ -348,8 +347,10 @@ export function WinnerProbabilityChart({
                   formatXAxisTick={formatXAxisTick}
                   isMobile={isMobile}
                 />
-              </MobileFlagChartProvider>
-            ) : (
+              </ResponsiveContainer>
+            </MobileFlagChartProvider>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
               <WinnerLineChartBody
                 chartData={chartData}
                 series={series}
@@ -358,8 +359,8 @@ export function WinnerProbabilityChart({
                 formatXAxisTick={formatXAxisTick}
                 isMobile={isMobile}
               />
-            )}
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          )}
         </div>
       )}
     </section>
@@ -372,7 +373,9 @@ function WinnerLineChartBody({
   yAxis,
   showAxisTooltip,
   formatXAxisTick,
-  isMobile
+  isMobile,
+  width,
+  height
 }: {
   chartData: ReturnType<typeof filterWinnerChartByRange>;
   series: WinnerChartSeriesConfig[];
@@ -380,9 +383,13 @@ function WinnerLineChartBody({
   showAxisTooltip: boolean;
   formatXAxisTick: (value: string) => string;
   isMobile: boolean;
+  width?: number;
+  height?: number;
 }) {
   return (
     <LineChart
+      width={width}
+      height={height}
       data={chartData}
       margin={{
         top: 8,
