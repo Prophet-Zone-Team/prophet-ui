@@ -60,17 +60,6 @@ export function HomeWinnerMarketList({
 
   return (
     <>
-      <div className="mb-3 flex w-full min-w-0 items-center justify-between gap-[14px] md:hidden">
-        <span className="shrink-0 text-[16px] font-[500] leading-[19px] text-[#000]">
-          {tSignal("allTeamsFilter")}
-        </span>
-        <WinnerTeamSearchInput
-          value={teamSearchQuery}
-          onChange={setTeamSearchQuery}
-          placeholder={t("searchTeams")}
-        />
-      </div>
-
       {showSearchEmptyState ? (
         <p className="m-0 text-sm text-[#909090]">
           {tSignal("noTeamsMatchFilters")}
