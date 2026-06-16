@@ -112,8 +112,9 @@ import { signConfidentialMessage } from "@/lib/confidential/sign-message";
 import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
 import { usePendingFunderUsdc } from "@/hooks/funding";
 import { useConnectModal } from "@/context/rainbowkit/connect-modal";
-import { getAccount, watchAccount } from "wagmi/actions";
+import { getAccount } from "wagmi/actions";
 import { wagmiConfig } from "../rainbowkit/wagmi-config";
+import { waitForExternalWalletConnection } from "@/lib/trading/wait-for-wallet-connect";
 import { useMigratePromptStore } from "@/store/use-migrate-prompt-store";
 import { useNearAccountStore } from "@/lib/wallet/near/near-account-store";
 
@@ -455,44 +456,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           else {
             openConnectModal?.();
 
-            // wait for connect
-            const timeoutMs = 3_000;
-            const waitForConnect = () => {
-              return new Promise<string>((resolve, reject) => {
-                let unwatch: (() => void) | undefined;
-                let timeoutId: ReturnType<typeof setInterval> | undefined;
-
-                // Check every timeoutMs to see if the connection modal has been closed
-                timeoutId = setInterval(() => {
-                  if (connectModalOpenRef.current) {
-                    return;
-                  }
-                  reject(new Error("Connect cancelled"));
-                  clearInterval(timeoutId);
-                  unwatch?.();
-                }, timeoutMs);
-                const tryResolve = () => {
-                  const account = getAccount(wagmiConfig);
-                  if (!account.isConnected || !account.address) {
-                    return undefined;
-                  }
-
-                  console.log("tryResolve account: %o", account);
-                  console.log("tryResolve account.address: %o", account.address);
-
-                  resolve(account.address);
-                  clearInterval(timeoutId);
-                  unwatch?.();
-                }
-                unwatch = watchAccount(wagmiConfig, {
-                  onChange() {
-                    tryResolve();
-                  },
-                });
-              });
-            }
-
-            finalWalletAddress = await waitForConnect();
+            finalWalletAddress = await waitForExternalWalletConnection({
+              connectModalOpenRef,
+            });
             console.log("finalWalletAddress: %o", finalWalletAddress);
           }
         }

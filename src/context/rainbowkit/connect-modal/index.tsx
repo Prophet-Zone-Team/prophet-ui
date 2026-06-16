@@ -5,7 +5,9 @@ import { useConnectModal as useRainbowkitConnectModal } from "@rainbow-me/rainbo
 
 import { useDevice } from "@/hooks/common/use-device";
 
-import { isInMobileBrowser, openOkxWallet, openTokenPocket } from "../utils";
+import { connectInAppBrowserWallet } from "@/lib/wallet/evm/connect-in-app-browser";
+
+import { isInMobileBrowser, isInWalletInAppBrowser, openOkxWallet, openTokenPocket } from "../utils";
 import { launchWalletApp, WalletSelectorModal } from "./wallet-selector";
 
 export interface ConnectModal {
@@ -42,6 +44,13 @@ export function ConnectModalProvider({ children }: { children: React.ReactNode }
   };
 
   const openConnectModal = () => {
+    if (isInWalletInAppBrowser()) {
+      void connectInAppBrowserWallet().catch((error) => {
+        console.error("[wallet] In-app auto-connect failed:", error);
+      });
+      return;
+    }
+
     // Open the wallet selector only after TokenPocket wallet integration is completed
     if (isOpenWalletApp) {
       setConnectModalOpen(true);
