@@ -20,7 +20,7 @@ const nextConfig = {
     webpackMemoryOptimizations: true,
     // Vercel build containers have ~8GB RAM; a single worker avoids OOM from parallel heaps.
     // Cloudflare Workers Builds can use more parallelism with script-level heap limits.
-    cpus: isVercelBuild ? 1 : 4
+    cpus: 1
   },
   images: {
     remotePatterns: [
