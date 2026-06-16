@@ -49,6 +49,7 @@
     "selectWalletSubtitle": "Selecciona una billetera para conectar tu cuenta",
     "walletTokenPocketDescription": "Billetera multichain",
     "walletOkxDescription": "Billetera de exchange OKX",
+    "walletOthersDescription": "Otras billeteras",
     "selectWalletEmpty": "No se encontró ninguna billetera compatible en este dispositivo."
   },
   "footer": {

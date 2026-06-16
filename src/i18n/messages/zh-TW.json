@@ -49,6 +49,7 @@
     "selectWalletSubtitle": "選擇一個錢包來連接您的帳戶",
     "walletTokenPocketDescription": "多鏈錢包",
     "walletOkxDescription": "OKX 交易所錢包",
+    "walletOthersDescription": "其他錢包",
     "selectWalletEmpty": "此裝置上找不到支援的錢包。"
   },
   "footer": {

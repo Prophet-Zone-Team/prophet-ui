@@ -49,6 +49,7 @@
     "selectWalletSubtitle": "アカウント接続用のウォレットを選択してください",
     "walletTokenPocketDescription": "マルチチェーンウォレット",
     "walletOkxDescription": "OKX 取引所ウォレット",
+    "walletOthersDescription": "その他のウォレット",
     "selectWalletEmpty": "このデバイスでサポートされているウォレットが見つかりません。"
   },
   "footer": {
