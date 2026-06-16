@@ -30,11 +30,13 @@ const nextConfig = {
       }
     ]
   },
-  outputFileTracingIncludes: {
-    "/trade/game": [
-      "./node_modules/@resvg/resvg-wasm/index_bg.wasm",
-      "./public/fonts/Sora-*.ttf",
-      "./public/referral/prophet-logo.png"
+  outputFileTracingExcludes: {
+    "*": [
+      "./node_modules/esbuild/**",
+      "./node_modules/webpack/**",
+      "./node_modules/terser/**",
+      "./node_modules/sass/**",
+      "./node_modules/caniuse-lite/**"
     ]
   },
   async redirects() {

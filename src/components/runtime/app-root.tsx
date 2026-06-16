@@ -1,18 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
 
-import { Toaster } from "@/components/ui/sonner";
 import { AnalyticsProvider } from "@/context/analytics";
-import { AuthProvider } from "@/context/auth";
-import RainbowProvider from "@/context/rainbowkit/provider";
-import { MigrateProvider } from "@/context/migrate";
-import { ProphetNotificationWsProvider } from "@/context/prophet-notification-ws";
-import { SportsWsProvider } from "@/context/sports-ws";
 import { LocaleProvider } from "@/components/runtime/locale-provider";
-import { AppChrome } from "@/layout/app-chrome";
 import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen";
 import type { AppLocale } from "@/i18n/config";
+
+const WalletRuntimeProviders = dynamic(
+  () => import("@/components/runtime/wallet-runtime-providers"),
+  { ssr: false },
+);
 
 interface AppRootProps {
   initialSecure: boolean;
@@ -23,11 +22,10 @@ interface AppRootProps {
 }
 
 export function AppRoot({
-  initialSecure,
   cookie,
   initialLocale,
   initialMessages,
-  children
+  children,
 }: AppRootProps) {
   return (
     <LocaleProvider
@@ -35,21 +33,10 @@ export function AppRoot({
       initialMessages={initialMessages}
     >
       <AnalyticsProvider>
-        <RainbowProvider cookie={cookie}>
-          <AuthProvider>
-            <MigrateProvider>
-              <SportsWsProvider>
-                <ProphetNotificationWsProvider>
-                  <main className="flex min-h-0 flex-1 flex-col overflow-x-hidden font-body">
-                    <MobileLoadingScreen />
-                    <AppChrome>{children}</AppChrome>
-                  </main>
-                  <Toaster />
-                </ProphetNotificationWsProvider>
-              </SportsWsProvider>
-            </MigrateProvider>
-          </AuthProvider>
-        </RainbowProvider>
+        <MobileLoadingScreen />
+        <WalletRuntimeProviders cookie={cookie}>
+          {children}
+        </WalletRuntimeProviders>
       </AnalyticsProvider>
     </LocaleProvider>
   );
