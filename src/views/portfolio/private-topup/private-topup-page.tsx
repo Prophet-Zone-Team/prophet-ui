@@ -24,7 +24,11 @@ import {
   privateTopupPageClass,
   privateTopupWarningBannerClass,
 } from "@/views/portfolio/private-topup/private-topup-ui";
+import { PrivateTopupChainPicker } from "@/views/portfolio/private-topup/private-topup-chain-picker";
 import { TopupWalletCard } from "@/views/portfolio/private-topup/topup-wallet-card";
+import { useSolBalances, useTronBalances } from "@/hooks/funding";
+import { useNearBalances } from "@/hooks/funding/use-near-balances";
+import type { FundingWalletChainType } from "@/store/use-funding-wallet-store";
 import { MAIN_HOSTNAME } from "@/config/funding";
 import { useAuth } from "@/context/auth";
 
@@ -32,6 +36,7 @@ export function PrivateTopupPage() {
   const t = useTranslations("privateTopup");
   const fundingWallet = useFundingWallet();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [chainPickerOpen, setChainPickerOpen] = useState(false);
   const [stableflowTokens, setStableflowTokens] = useState<StableflowDepositToken[]>([]);
   const [tokensLoading, setTokensLoading] = useState(false);
   const setEvmBalances = useBalancesStore((state) => state.setEvmBalances);
@@ -73,8 +78,27 @@ export function PrivateTopupPage() {
     enabled: topupWalletConnected,
   });
 
+  const { loading: solBalancesLoading } = useSolBalances({
+    enabled: topupWalletConnected && fundingWallet.chainType === "solana",
+    tokens: stableflowFundingTokens,
+  });
+
+  const { loading: tronBalancesLoading } = useTronBalances({
+    enabled: topupWalletConnected && fundingWallet.chainType === "tron",
+    tokens: stableflowFundingTokens,
+  });
+
+  const { loading: nearBalancesLoading } = useNearBalances({
+    enabled: topupWalletConnected && fundingWallet.chainType === "near",
+    tokens: stableflowTokens,
+  });
+
   const loadFundingBalances = useCallback(async () => {
     if (!topupWalletAddress || stableflowFundingTokens.length === 0) {
+      return;
+    }
+
+    if (fundingWallet.chainType !== "evm") {
       return;
     }
 
@@ -84,7 +108,7 @@ export function PrivateTopupPage() {
     } catch {
       // Balance fetch is best-effort; the UI shows "--" on failure.
     }
-  }, [setEvmBalances, stableflowFundingTokens, topupWalletAddress]);
+  }, [fundingWallet.chainType, setEvmBalances, stableflowFundingTokens, topupWalletAddress]);
 
   useEffect(() => {
     if (topupWalletConnected && topupWalletAddress) {
@@ -95,7 +119,11 @@ export function PrivateTopupPage() {
   }, [clearEvmBalances, loadFundingBalances, topupWalletAddress, topupWalletConnected]);
 
   function handleConnectWallet() {
-    void fundingWallet.connect();
+    setChainPickerOpen(true);
+  }
+
+  function handleSelectFundingChain(chainType: FundingWalletChainType) {
+    void fundingWallet.connect(chainType);
   }
 
   function handleDisconnectWallet() {
@@ -118,7 +146,7 @@ export function PrivateTopupPage() {
         selectableTokens: stableflowTokens,
         topupWalletAddress,
         privateAccountAddress,
-        balancesLoading: tokensLoading,
+        balancesLoading: tokensLoading || solBalancesLoading || tronBalancesLoading || nearBalancesLoading,
         pricesLoading,
       }}
     >
@@ -147,6 +175,7 @@ export function PrivateTopupPage() {
           <PrivateTopupCardsRow
             topupWalletConnected={topupWalletConnected}
             topupWalletAddress={topupWalletAddress}
+            topupWalletChainType={fundingWallet.chainType}
             tokensLoading={tokensLoading}
             onConnect={handleConnectWallet}
             onDisconnect={handleDisconnectWallet}
@@ -167,16 +196,21 @@ export function PrivateTopupPage() {
         </div>
       </div>
 
-      {topupWalletAddress && privateAccountAddress ? (
+      {topupWalletConnected && privateAccountAddress ? (
         <PrivateTopupDialog
           open={dialogOpen}
-          topupWalletAddress={topupWalletAddress}
+          topupWalletChainType={fundingWallet.chainType}
           privateAccountAddress={privateAccountAddress}
           privateAccountEoaAddress={confidentialAccount.eoaAddress}
           onClose={() => setDialogOpen(false)}
           onSuccess={handleTopupSuccess}
         />
       ) : null}
+      <PrivateTopupChainPicker
+        open={chainPickerOpen}
+        onClose={() => setChainPickerOpen(false)}
+        onSelect={handleSelectFundingChain}
+      />
     </PrivateTopupProvider>
   );
 }
@@ -184,6 +218,7 @@ export function PrivateTopupPage() {
 function PrivateTopupCardsRow({
   topupWalletConnected,
   topupWalletAddress,
+  topupWalletChainType,
   tokensLoading,
   onConnect,
   onDisconnect,
@@ -195,6 +230,7 @@ function PrivateTopupCardsRow({
 }: {
   topupWalletConnected: boolean;
   topupWalletAddress?: string;
+  topupWalletChainType?: FundingWalletChainType;
   tokensLoading: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
@@ -217,6 +253,7 @@ function PrivateTopupCardsRow({
       <TopupWalletCard
         connected={topupWalletConnected}
         address={topupWalletAddress}
+        chainType={topupWalletChainType}
         balanceUsd={topupWalletBalanceUsd}
         balanceLoading={balanceLoading}
         onConnect={onConnect}

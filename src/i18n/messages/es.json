@@ -51,7 +51,16 @@
     "selectWalletSubtitle": "Selecciona una billetera para conectar tu cuenta",
     "walletTokenPocketDescription": "Billetera multichain",
     "walletOkxDescription": "Billetera de exchange OKX",
-    "selectWalletEmpty": "No se encontró ninguna billetera compatible en este dispositivo."
+    "walletOthersDescription": "Otras billeteras",
+    "selectWalletEmpty": "No se encontró ninguna billetera compatible en este dispositivo.",
+    "connectSolanaWallet": "Conectar billetera Solana",
+    "connectTronWallet": "Conectar billetera Tron",
+    "connectNearWallet": "Conectar billetera NEAR",
+    "selectSolanaWallet": "Seleccionar billetera Solana",
+    "selectTronWallet": "Seleccionar billetera Tron",
+    "noSolanaWalletDetected": "No se detectó ninguna billetera Solana en este dispositivo.",
+    "noTronWalletDetected": "No se detectó ninguna billetera Tron en este dispositivo.",
+    "selectFundingWalletChain": "Seleccionar red de billetera de fondos"
   },
   "footer": {
     "copyright": "© {year} Prophet. Todos los derechos reservados.",
@@ -1481,6 +1490,13 @@
     "fundingWallet": "Funding Wallet",
     "change": "Change",
     "connectFundingWallet": "Connect Funding Wallet",
+    "selectFundingWalletChain": "Seleccionar red de billetera de fondos",
+    "fundingChain": {
+      "evm": "EVM",
+      "solana": "Solana",
+      "tron": "Tron",
+      "near": "NEAR"
+    },
     "linkedAccountBanner": "This Private Account is linked to your wallet {address}. Confirm this is correct before funding.",
     "noVerifiedAccount": "No verified Private Account found. Start Private Mode from the main site to continue.",
     "startsToGetProphet": "Starts to get Prophet",

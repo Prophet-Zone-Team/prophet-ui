@@ -10,13 +10,13 @@ import { getStableflowWalletLogo } from "@/utils/logo";
 
 import { openOkxWallet, openTokenPocket } from "../utils";
 
-export type WalletId = "tokenpocket" | "okx";
+export type WalletId = "tokenpocket" | "okx" | "others";
 
 export type WalletOption = {
   id: WalletId;
   name: string;
   icon: string;
-  descriptionKey: "walletTokenPocketDescription" | "walletOkxDescription";
+  descriptionKey: "walletTokenPocketDescription" | "walletOkxDescription" | "walletOthersDescription";
   downloadUrl: string;
 };
 
@@ -35,11 +35,19 @@ export const walletOptions: WalletOption[] = [
     descriptionKey: "walletOkxDescription",
     downloadUrl: "https://www.okx.com/web3",
   },
+  // {
+  //   id: "others",
+  //   name: "Others",
+  //   icon: getStableflowWalletLogo("logo-walletconnect.png"),
+  //   descriptionKey: "walletOthersDescription",
+  //   downloadUrl: "",
+  // },
 ];
 
 const walletLaunchChecks: Record<WalletId, (params?: { checkOnly?: boolean }) => boolean> = {
   tokenpocket: openTokenPocket,
   okx: openOkxWallet,
+  others: () => true,
 };
 
 export function getAvailableWallets() {
@@ -112,27 +120,31 @@ export function WalletSelectorModal({ open, onClose, onSelect }: WalletSelectorM
                   {t(wallet.descriptionKey)}
                 </span>
               </span>
-              <span
-                role="button"
-                tabIndex={0}
-                aria-label={`Open ${wallet.name} download page`}
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-prophet-muted transition-colors hover:bg-[#f3f4f6] hover:text-[#18110F]"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  window.open(wallet.downloadUrl, "_blank", "noopener,noreferrer");
-                }}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter" && event.key !== " ") {
-                    return;
-                  }
+              {/* {
+                !!wallet.downloadUrl && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open ${wallet.name} download page`}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-prophet-muted transition-colors hover:bg-[#f3f4f6] hover:text-[#18110F]"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      window.open(wallet.downloadUrl, "_blank", "noopener,noreferrer");
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter" && event.key !== " ") {
+                        return;
+                      }
 
-                  event.preventDefault();
-                  event.stopPropagation();
-                  window.open(wallet.downloadUrl, "_blank", "noopener,noreferrer");
-                }}
-              >
-                <ExternalLink className="h-4 w-4" aria-hidden="true" />
-              </span>
+                      event.preventDefault();
+                      event.stopPropagation();
+                      window.open(wallet.downloadUrl, "_blank", "noopener,noreferrer");
+                    }}
+                  >
+                    <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                )
+              } */}
             </button>
           ))
         ) : (

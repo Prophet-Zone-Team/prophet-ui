@@ -6,10 +6,13 @@ import { parseUnits } from "viem";
 
 import { useAuth } from "@/context/auth";
 import type { FundingAsset } from "@/config/funding";
+import { FundingNetworkType } from "@/config/funding/networks";
 import { useSupportedAssets } from "@/hooks/funding/use-supported-assets";
 import {
   getStableflowRefundAddress,
   isPolygonNativeUsdcToken,
+  resolveFundingWalletAddress,
+  requiresFundingWalletConnection,
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
 import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
@@ -194,7 +197,11 @@ export function useDeposit(): UseDepositResult {
   }, []);
 
   const depositViaPolygon = async (amountUsd: string, token: FundingAsset) => {
-    if (!session?.walletAddress) {
+    const transferWalletAddress = requiresFundingWalletConnection(token)
+      ? resolveFundingWalletAddress(token)
+      : session?.walletAddress;
+
+    if (!transferWalletAddress) {
       throw new Error("Connect a wallet before depositing funds.");
     }
 
@@ -203,30 +210,36 @@ export function useDeposit(): UseDepositResult {
 
     try {
       const addresses = await getBridgeDepositAddresses();
-      const bridgeEvm = addresses.deposit.address.evm;
+      const bridgeAddress =
+        token.chainType === FundingNetworkType.SVM
+          ? addresses.deposit.address.svm
+          : token.chainType === FundingNetworkType.TVM
+            ? addresses.deposit.address.tvm
+            : addresses.deposit.address.evm;
 
-      if (!bridgeEvm) {
-        throw new Error("Bridge did not return an EVM deposit address.");
+      if (!bridgeAddress) {
+        throw new Error("Bridge did not return a deposit address for the selected chain.");
       }
 
       setStatus("awaiting_wallet");
       const { txHash } = await transferDepositFunds({
         chainType: fundingNetworkTypeToChainType(token.chainType),
-        walletAddress: session.walletAddress,
+        walletAddress: transferWalletAddress,
         tokenAddress: token.address,
-        toAddress: bridgeEvm,
+        toAddress: bridgeAddress,
         amount: amountUsd,
         tokenDecimals: token.decimals,
         chainId: token.chainId,
+        symbol: token.symbol,
       });
 
-      const aggregateStatus = await startStatusPoll(bridgeEvm);
+      const aggregateStatus = await startStatusPoll(bridgeAddress);
 
       if (!isTerminalBridgeStatus(aggregateStatus)) {
         throw new Error("Deposit status polling ended before completion.");
       }
 
-      return { txHash, statusAddress: bridgeEvm };
+      return { txHash, statusAddress: bridgeAddress };
     } catch (depositError) {
       if (status !== "syncing") {
         setStatus("error");
@@ -237,31 +250,53 @@ export function useDeposit(): UseDepositResult {
     }
   };
 
+  const resolveStableflowTransferWallet = (token: StableflowDepositToken): string => {
+    if (requiresFundingWalletConnection(token)) {
+      const fundingAddress = resolveFundingWalletAddress(token);
+
+      if (!fundingAddress) {
+        throw new Error(`Connect a ${token.chainName} wallet before depositing funds.`);
+      }
+
+      return fundingAddress;
+    }
+
+    if (!session?.walletAddress) {
+      throw new Error("Connect a wallet before depositing funds.");
+    }
+
+    return session.walletAddress;
+  };
+
   const depositViaStableflow = async (
     amount: string,
     token: StableflowDepositToken,
     funderAddress: string,
     polygonUsdcDestinationAssetId: string,
   ): Promise<StableflowDepositContext> => {
-    if (!session?.walletAddress) {
-      throw new Error("Connect a wallet before depositing funds.");
-    }
+    const transferWalletAddress = resolveStableflowTransferWallet(token);
 
     setStatus("preparing");
     setError(undefined);
 
     const amountBaseUnits = parseUnits(amount, token.decimals).toString();
+    const refundTo =
+      getStableflowRefundAddress({
+        blockchain: token.blockchain,
+        walletAddress: transferWalletAddress,
+      }) ?? transferWalletAddress;
 
     if (isPolygonNativeUsdcToken(token)) {
       setStatus("awaiting_wallet");
       const { txHash } = await transferDepositFunds({
         chainType: fundingNetworkTypeToChainType(token.chainType),
-        walletAddress: session.walletAddress,
+        walletAddress: transferWalletAddress,
         tokenAddress: token.address,
         toAddress: funderAddress,
         amount,
         tokenDecimals: token.decimals,
         chainId: token.chainId,
+        symbol: token.symbol,
       });
 
       setStatus("idle");
@@ -282,8 +317,9 @@ export function useDeposit(): UseDepositResult {
         originAssetId: token.assetId,
         destinationAssetId: polygonUsdcDestinationAssetId,
         amountBaseUnits,
-        refundTo: session.walletAddress,
+        refundTo,
         recipient: funderAddress,
+        originBlockchain: token.blockchain,
       }),
     });
 
@@ -296,12 +332,13 @@ export function useDeposit(): UseDepositResult {
     setStatus("awaiting_wallet");
     const { txHash } = await transferDepositFunds({
       chainType: fundingNetworkTypeToChainType(token.chainType),
-      walletAddress: session.walletAddress,
+      walletAddress: transferWalletAddress,
       tokenAddress: token.address,
       toAddress: depositAddress,
       amount,
       tokenDecimals: token.decimals,
       chainId: token.chainId,
+      symbol: token.symbol,
     });
 
     await fetchJson("/api/trading/stableflow/submit-tx", {

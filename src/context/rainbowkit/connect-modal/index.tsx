@@ -42,17 +42,21 @@ export function ConnectModalProvider({ children }: { children: React.ReactNode }
   };
 
   const openConnectModal = () => {
-    // TODO: Open the wallet selector only after TokenPocket wallet integration is completed
-    // if (isOpenWalletApp) {
-    //   setConnectModalOpen(true);
-    //   return;
-    // }
+    // Open the wallet selector only after TokenPocket wallet integration is completed
+    if (isOpenWalletApp) {
+      setConnectModalOpen(true);
+      return;
+    }
 
     rainbowkitOpenConnectModal?.();
   };
 
   const handleWalletSelect = (walletId: Parameters<typeof launchWalletApp>[0]) => {
     closeConnectModal();
+    if (walletId === "others") {
+      rainbowkitOpenConnectModal?.();
+      return;
+    }
     launchWalletApp(walletId);
   };
 

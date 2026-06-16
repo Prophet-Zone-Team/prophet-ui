@@ -9,6 +9,20 @@ import { ensureEvmChain } from "@/lib/wallet/evm/evm-chain";
 import { transferEvmToken } from "@/lib/wallet/evm/evm-transfer";
 import { getActiveEvmAccount } from "@/lib/wallet/evm/signer-source";
 import {
+  disconnectSolanaWallet,
+  ensureSolanaChain,
+  getActiveSolanaAccount,
+  signSolanaMessage,
+  transferSolanaFundingToken,
+} from "@/lib/wallet/solana/solana-adapter";
+import {
+  disconnectTronWallet,
+  ensureTronChain,
+  getActiveTronAccount,
+  signTronMessage,
+  transferTronFundingToken,
+} from "@/lib/wallet/tron/tron-adapter";
+import {
   UnsupportedChainTypeError,
   type ChainType,
   type EnsureChainOptions,
@@ -28,16 +42,38 @@ const evmWalletAdapter: WalletAdapter = {
   disconnect: disconnectEvmWallet,
 };
 
+const solanaWalletAdapter: WalletAdapter = {
+  chainType: "solana",
+  getActiveAccount: getActiveSolanaAccount,
+  signMessage: signSolanaMessage,
+  ensureChain: async () => ensureSolanaChain(),
+  transferToken: transferSolanaFundingToken,
+  disconnect: disconnectSolanaWallet,
+};
+
+const tronWalletAdapter: WalletAdapter = {
+  chainType: "tron",
+  getActiveAccount: getActiveTronAccount,
+  signMessage: signTronMessage,
+  ensureChain: async () => ensureTronChain(),
+  transferToken: transferTronFundingToken,
+  disconnect: disconnectTronWallet,
+};
+
 /**
- * Single entry point for chain-family-specific wallet operations. Solana and
- * Tron adapters can be registered here without touching call sites.
+ * Single entry point for chain-family-specific wallet operations.
  */
 export function getWalletAdapter(chainType: ChainType): WalletAdapter {
-  if (chainType === "evm") {
-    return evmWalletAdapter;
+  switch (chainType) {
+    case "evm":
+      return evmWalletAdapter;
+    case "solana":
+      return solanaWalletAdapter;
+    case "tron":
+      return tronWalletAdapter;
+    default:
+      throw new UnsupportedChainTypeError(chainType);
   }
-
-  throw new UnsupportedChainTypeError(chainType);
 }
 
 export function fundingNetworkTypeToChainType(
@@ -48,6 +84,8 @@ export function fundingNetworkTypeToChainType(
       return "evm";
     case FundingNetworkType.SVM:
       return "solana";
+    case FundingNetworkType.TVM:
+      return "tron";
     default:
       throw new UnsupportedChainTypeError(networkType);
   }

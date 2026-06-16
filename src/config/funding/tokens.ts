@@ -1387,7 +1387,67 @@ export const FUNDING_TOKENS: Record<string, Record<string, FundingToken>> = {
       decimals: 6,
       icon: getTokenLogo("xaut0"),
     }
-  }
+  },
+  solana: {
+    "SOL": {
+      ...FUNDING_NETWORKS.solana,
+      symbol: "SOL",
+      address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+      decimals: 9,
+      icon: getTokenLogo("sol"),
+    },
+    "TRUMP": {
+      ...FUNDING_NETWORKS.solana,
+      symbol: "TRUMP",
+      address: "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+      decimals: 6,
+      icon: getTokenLogo("trump"),
+    },
+    "CASH": {
+      ...FUNDING_NETWORKS.solana,
+      symbol: "CASH",
+      address: "CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH",
+      decimals: 6,
+      icon: getTokenLogo("cash"),
+    },
+    "USDe": {
+      ...FUNDING_NETWORKS.solana,
+      symbol: "USDe",
+      address: "DEkqHyPN7GMRJ5cArtQFAWefqbZb33Hyf6s5iCwjEonT",
+      decimals: 9,
+      icon: getTokenLogo("usde"),
+    },
+    "USDC": {
+      ...FUNDING_NETWORKS.solana,
+      symbol: "USDC",
+      address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      decimals: 6,
+      icon: getTokenLogo("usdc"),
+    },
+    "USDT": {
+      ...FUNDING_NETWORKS.solana,
+      symbol: "USDT",
+      address: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+      decimals: 6,
+      icon: getTokenLogo("usdt"),
+    },
+    "JupUSD": {
+      ...FUNDING_NETWORKS.solana,
+      symbol: "JupUSD",
+      address: "JuprjznTrTSp2UFa3ZBUFgwdAmtZCq4MQCwysN55USD",
+      decimals: 6,
+      icon: getTokenLogo("jupusd"),
+    },
+  },
+  tron: {
+    "USDT": {
+      ...FUNDING_NETWORKS.tron,
+      symbol: "USDT",
+      address: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      decimals: 6,
+      icon: getTokenLogo("usdt"),
+    },
+  },
 };
 
 export const FUNDING_TOKENS_LIST = Object.values(FUNDING_TOKENS).flatMap(item => Object.values(item));
