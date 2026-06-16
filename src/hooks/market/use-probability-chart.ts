@@ -417,6 +417,9 @@ function useProbabilityChartFixture(
           {
             markets: tokenIds,
             interval: historyRequest.interval,
+            ...(historyRequest.fidelity !== undefined
+              ? { fidelity: historyRequest.fidelity }
+              : {}),
             ...(historyRequest.start_ts !== undefined
               ? { start_ts: historyRequest.start_ts }
               : {}),
