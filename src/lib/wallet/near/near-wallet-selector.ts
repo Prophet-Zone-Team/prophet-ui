@@ -1,5 +1,6 @@
 import {
   setupWalletSelector,
+  type Network,
   type WalletSelector,
 } from "@near-wallet-selector/core";
 import {
@@ -31,11 +32,15 @@ export interface NearSelectorBundle {
  */
 export async function createNearSelectorBundle(): Promise<NearSelectorBundle> {
   const selector = await setupWalletSelector({
-    network: NEAR_NETWORK.networkId,
+    network: {
+      networkId: NEAR_NETWORK.networkId,
+      nodeUrl: NEAR_NETWORK.nodeUrl,
+    } as Network,
+    fallbackRpcUrls: ["https://free.rpc.fastnear.com", "https://nearinner.deltarpc.com"],
     debug: false,
     modules: [
       setupMyNearWallet(),
-      setupHotWallet() as never,
+      setupHotWallet(),
       setupMeteorWallet(),
       setupIntearWallet(),
       setupWalletConnect({
