@@ -17,7 +17,7 @@ import { buildRelatedGamesTeamsQuery } from "@/lib/market/related-games-query";
 import { RelatedGames } from "@/views/trade/related-games";
 import { gameContentClass } from "@/views/trade/game/ui";
 import { useGameTradingMetadata } from "@/views/trade/game/use-game-trading-metadata";
-import { isGameMarketLiveUpdatesEnabled } from "@/lib/market/live-match";
+import { isGameMarketWsEnabled } from "@/lib/market/live-match";
 import { isGameClosedForTrading } from "@/lib/market/trading-market-status";
 import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 import { useMatchWithLiveState } from "@/store/match-live-store";
@@ -74,7 +74,7 @@ export default function TradeGameView({
   });
 
   const liveMatch = useMatchWithLiveState(match);
-  const marketWsEnabled = isGameMarketLiveUpdatesEnabled(liveMatch);
+  const marketWsEnabled = isGameMarketWsEnabled(liveMatch);
 
   const canTrade =
     isTabTradingReady(activeMarketTab) &&

@@ -43,9 +43,30 @@ export function calculateToWinAmount({
   const rate = resolveBuilderFeeRate(orderType);
   const grossPayout = shares * (1 - rate);
   const profit = grossPayout - cost;
-  const netProfit = profit - profit * TO_WIN_PLATFORM_FEE_RATE;
+  const platformFee = calculateToWinPlatformFee(shares, price);
+  const netProfit = profit - platformFee;
 
   return roundMoney(netProfit + cost);
+}
+
+export function calculateToWinPlatformFee(
+  shares: number,
+  price: number
+): number {
+  if (
+    !Number.isFinite(shares) ||
+    shares <= 0 ||
+    !Number.isFinite(price) ||
+    price <= 0
+  ) {
+    return 0;
+  }
+
+  const normalizedPrice = clamp(price, MIN_PRICE, MAX_PRICE);
+
+  return (
+    shares * TO_WIN_PLATFORM_FEE_RATE * normalizedPrice * (1 - normalizedPrice)
+  );
 }
 
 export function estimateBuyTakerFee({
