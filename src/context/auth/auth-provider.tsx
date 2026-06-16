@@ -115,6 +115,7 @@ import { useConnectModal } from "@/context/rainbowkit/connect-modal";
 import { getAccount, watchAccount } from "wagmi/actions";
 import { wagmiConfig } from "../rainbowkit/wagmi-config";
 import { useMigratePromptStore } from "@/store/use-migrate-prompt-store";
+import { useNearAccountStore } from "@/lib/wallet/near/near-account-store";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
@@ -157,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     undefined
   );
   const confidentialAccount = useConfidentialAccount();
+  const nearAccountStore = useNearAccountStore();
 
   const [googleLoginWithOAuthReady, setGoogleLoginWithOAuthReady] = useState(false);
   useLoginWithOAuth({
@@ -703,7 +705,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (
             derivedAddress &&
             derivedAddress.toLowerCase() !==
-              nextSession.walletAddress.toLowerCase()
+            nextSession.walletAddress.toLowerCase()
           ) {
             await handleWalletAccountSwitch(derivedAddress);
             return;
@@ -1212,6 +1214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setLoginModalOpen(false);
     store.setLoginMethod(undefined);
     store.setLoginEmail(undefined);
+    nearAccountStore.reset();
 
     try {
       // Log out Privy first so PrivyWalletBridge stops re-binding wagmi.
