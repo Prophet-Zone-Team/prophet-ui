@@ -111,6 +111,25 @@ export function isNearOriginStableflowToken(
   return token.blockchain === "near";
 }
 
+export function isSocialAuthLoginMethod(
+  loginMethod: AuthLoginMethod | null | undefined,
+): boolean {
+  return loginMethod === "email" || loginMethod === "google";
+}
+
+export function filterStableflowTokensForDeposit(
+  tokens: StableflowDepositToken[],
+  loginMethod: AuthLoginMethod | null | undefined,
+): StableflowDepositToken[] {
+  if (!isSocialAuthLoginMethod(loginMethod)) {
+    return tokens;
+  }
+
+  return tokens.filter(
+    (token) => token.chainType === FundingNetworkType.EVM,
+  );
+}
+
 export function shouldDepositViaStableflowQr(
   loginMethod: AuthLoginMethod | null | undefined,
   token: Pick<StableflowDepositToken, "blockchain" | "chainType">,
