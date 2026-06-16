@@ -97,6 +97,7 @@ export function buildFixtureBidOrderPreview(input: {
         input.closed,
       ),
       amount: input.amount,
+      shareSize: estimate.shareSize,
       orderType: input.orderType,
       tradeSide: input.tradeSide,
       tokenId,
@@ -178,6 +179,7 @@ export function buildGameBidOrderPreview(
     getGameDisabledReason({
       acceptingOrders: input.snapshot.market.acceptingOrders,
       amount: input.amount,
+      shareSize: estimate.shareSize,
       orderType: input.orderType,
       tradeSide: input.tradeSide,
       tokenId
@@ -229,12 +231,14 @@ function getGameBuyAskDisabledReason({
 function getGameDisabledReason({
   acceptingOrders,
   amount,
+  shareSize,
   orderType,
   tradeSide,
   tokenId
 }: {
   acceptingOrders: boolean;
   amount: number;
+  shareSize: number;
   orderType: TradingOrderType;
   tradeSide: BidTradeSide;
   tokenId?: string;
@@ -249,6 +253,7 @@ function getGameDisabledReason({
 
   return validateOrderAmount({
     amount,
+    shareSize,
     orderType,
     tradeSide
   });
