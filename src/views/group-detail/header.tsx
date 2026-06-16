@@ -66,7 +66,7 @@ export function GroupDetailHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
-        <BookmarkControl slug={slug} teamName={title} />
+        {/* <BookmarkControl slug={slug} teamName={title} /> */}
 
         <CopyButton
           text={getPageUrl}
