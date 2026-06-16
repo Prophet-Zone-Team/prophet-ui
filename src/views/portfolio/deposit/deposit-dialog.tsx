@@ -19,10 +19,11 @@ import {
   resolveDefaultStableflowQrSelection,
   shouldDepositViaStableflowQr,
   stableflowTokensToFundingTokens,
-  requiresFundingWalletConnection,
+  requiresDepositFundingWalletConnection,
   resolveFundingWalletAddress,
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
+import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
 import { useNearBalances } from "@/hooks/funding/use-near-balances";
 import {
   pollStableflowUntilDepositDetected,
@@ -598,6 +599,12 @@ export function DepositDialog({
           getStableflowRefundAddress({
             blockchain: selectedToken.blockchain,
             walletAddress: session.walletAddress,
+            nearAccountId:
+              selectedToken.blockchain === "near"
+                ? resolveFundingWalletAddress(selectedToken) ??
+                  getNearAccountSnapshot().accountId ??
+                  undefined
+                : undefined,
           }) ?? session.walletAddress;
         const { quote } = await fetchJson<{ quote: QuoteResponse }>(
           "/api/trading/stableflow/quote",
@@ -921,7 +928,10 @@ export function DepositDialog({
       return;
     }
 
-    const needsFundingWallet = requiresFundingWalletConnection(selectedToken);
+    const needsFundingWallet = requiresDepositFundingWalletConnection(
+      selectedToken,
+      loginMethod,
+    );
 
     if (!needsFundingWallet && !session?.walletAddress) {
       return;
@@ -994,7 +1004,6 @@ export function DepositDialog({
 
     try {
       const useNearDeposit =
-        loginMethod === "near" &&
         isStableflowDepositToken(selectedToken) &&
         selectedToken.blockchain === "near";
 
@@ -1208,7 +1217,10 @@ export function DepositDialog({
     }
 
     if (step === "amount" && selectedToken) {
-      const needsFundingWallet = requiresFundingWalletConnection(selectedToken);
+      const needsFundingWallet = requiresDepositFundingWalletConnection(
+        selectedToken,
+        loginMethod,
+      );
       const walletConnected = isConnectedForToken(selectedToken);
 
       if (needsFundingWallet && !walletConnected) {
@@ -1273,6 +1285,7 @@ export function DepositDialog({
     stableflowQuote,
     stableflowQuoteLoading,
     step,
+    loginMethod,
     tAuth,
     tCommon,
     tWallet,
@@ -1377,7 +1390,7 @@ export function DepositDialog({
               showChangeWallet={
                 !isSocialLogin &&
                 !isNearLogin &&
-                requiresFundingWalletConnection(selectedToken) &&
+                requiresDepositFundingWalletConnection(selectedToken, loginMethod) &&
                 isConnectedForToken(selectedToken)
               }
               onChangeWallet={() => void disconnectForToken(selectedToken)}
