@@ -541,10 +541,10 @@ function StepAction({
     }
 
     return (
-      <div className="flex w-full flex-col gap-2">
+      <div className="w-full grid grid-cols-2 border border-[#EBEBEB] rounded-[12px] p-[3px]">
         <button
           type="button"
-          className="shrink-0 rounded-[8px] bg-black w-full h-[50px] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
+          className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] w-full h-[50px] text-[14px] font-[500] leading-[18px] text-white bg-black disabled:opacity-60 duration-150"
           disabled={loginInProgress}
           onClick={onConnectWallet}
         >
@@ -552,17 +552,11 @@ function StepAction({
         </button>
         <button
           type="button"
-          className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] border border-prophet-line bg-white w-full h-[50px] text-[14px] font-[500] leading-[18px] text-black disabled:opacity-60"
+          className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] w-full h-[50px] text-[14px] font-[500] leading-[18px] text-black disabled:opacity-60 duration-150"
           disabled={loginInProgress}
           onClick={onConnectNear}
         >
-          <img
-            src={getStableflowChainLogo("near")}
-            alt=""
-            className="h-5 w-5 rounded-full"
-            aria-hidden="true"
-          />
-          <span>{t("connectNearWallet")}</span>
+          {t("connectNearWallet")}
         </button>
       </div>
     );
