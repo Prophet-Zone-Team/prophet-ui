@@ -161,6 +161,9 @@ importers:
       tailwind-merge:
         specifier: ^3.0.1
         version: 3.6.0
+      tp-js-sdk:
+        specifier: ^3.7.14
+        version: 3.7.14
       tronweb:
         specifier: ^6.3.0
         version: 6.3.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
@@ -10083,6 +10086,9 @@ packages:
 
   toml@3.0.0:
     resolution: {integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==}
+
+  tp-js-sdk@3.7.14:
+    resolution: {integrity: sha512-eeZ1JyrF1qcY1PkV2GfyNq5Cj0W5voU2L6dPzXRq13yVK4ofjls5hElw4aBm2f/URFPh55xHxvGnjFfUTcfWxw==}
 
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
@@ -27801,6 +27807,11 @@ snapshots:
   toidentifier@1.0.1: {}
 
   toml@3.0.0: {}
+
+  tp-js-sdk@3.7.14:
+    dependencies:
+      buffer: 6.0.3
+      promise: 8.3.0
 
   tr46@0.0.3: {}
 

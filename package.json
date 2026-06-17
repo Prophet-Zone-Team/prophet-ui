@@ -68,6 +68,7 @@
     "satori": "^0.26.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.0.1",
+    "tp-js-sdk": "^3.7.14",
     "tronweb": "^6.3.0",
     "undici": "^8.3.0",
     "viem": "^2.48.11",

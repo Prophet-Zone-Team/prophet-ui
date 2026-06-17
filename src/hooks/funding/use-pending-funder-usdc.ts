@@ -11,6 +11,7 @@ import {
   type PendingDepositConvertMode,
 } from "@/lib/trading/deposit-wallet-convert";
 import { TradingUserSession } from "@/types/market";
+import { reportFundingTransaction } from "@/lib/portfolio/user";
 
 const DEFAULT_POLL_INTERVAL_MS = 15_000;
 
@@ -114,10 +115,11 @@ export function usePendingFunderUsdc(
     setConverting(true);
 
     try {
-      await executePendingDepositConvert({
+      const amountUsd = getPendingConvertAmountUsd(collateralBalances, pendingConvertMode);
+      const { transactionId } = await executePendingDepositConvert({
         walletAddress: session.walletAddress,
         mode: pendingConvertMode,
-        amountUsd: getPendingConvertAmountUsd(collateralBalances, pendingConvertMode),
+        amountUsd,
       });
 
       try {
@@ -125,6 +127,12 @@ export function usePendingFunderUsdc(
       } catch (syncError) {
         console.warn("[usePendingFunderUsdc] syncCash after convert failed", syncError);
       }
+
+      void reportFundingTransaction({
+        type: "deposit",
+        txHash: transactionId ?? "",
+        amount: amountUsd,
+      });
 
       await refresh();
     } finally {

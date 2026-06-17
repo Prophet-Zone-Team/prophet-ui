@@ -19,10 +19,12 @@ import {
   resolveDefaultStableflowQrSelection,
   shouldDepositViaStableflowQr,
   stableflowTokensToFundingTokens,
-  requiresFundingWalletConnection,
+  filterStableflowTokensForDeposit,
+  requiresDepositFundingWalletConnection,
   resolveFundingWalletAddress,
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
+import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
 import { useNearBalances } from "@/hooks/funding/use-near-balances";
 import {
   pollStableflowUntilDepositDetected,
@@ -206,9 +208,14 @@ export function DepositDialog({
     ? resolvePendingDepositConvertMode(funderCollateralBalances)
     : null;
 
+  const depositStableflowTokens = useMemo(
+    () => filterStableflowTokensForDeposit(stableflowTokens, loginMethod),
+    [stableflowTokens, loginMethod],
+  );
+
   const stableflowFundingTokens = useMemo(
-    () => stableflowTokensToFundingTokens(stableflowTokens),
-    [stableflowTokens]
+    () => stableflowTokensToFundingTokens(depositStableflowTokens),
+    [depositStableflowTokens]
   );
 
   const { loading: connectedBalancesLoading, getTokenBalance } = useEvmBalances(
@@ -234,7 +241,7 @@ export function DepositDialog({
     getTokenBalance: getNearTokenBalance,
   } = useNearBalances({
     enabled: open && !!session && depositMethod === "stableflow",
-    tokens: stableflowTokens,
+    tokens: depositStableflowTokens,
   });
 
   const {
@@ -242,7 +249,7 @@ export function DepositDialog({
     getTokenBalance: getSolTokenBalance,
   } = useSolBalances({
     enabled: open && !!session,
-    tokens: depositMethod === "stableflow" ? stableflowTokens : supportedAssets,
+    tokens: depositMethod === "stableflow" ? depositStableflowTokens : supportedAssets,
   });
 
   const {
@@ -250,7 +257,7 @@ export function DepositDialog({
     getTokenBalance: getTronTokenBalance,
   } = useTronBalances({
     enabled: open && !!session,
-    tokens: depositMethod === "stableflow" ? stableflowTokens : supportedAssets,
+    tokens: depositMethod === "stableflow" ? depositStableflowTokens : supportedAssets,
   });
 
   const { connectForToken, disconnectForToken, isConnectedForToken, getConnectLabelKey } = useFundingWalletConnect();
@@ -267,7 +274,7 @@ export function DepositDialog({
       : connectedBalancesLoading || solBalancesLoading || tronBalancesLoading;
 
   const selectableTokens =
-    depositMethod === "stableflow" ? stableflowTokens : supportedAssets;
+    depositMethod === "stableflow" ? depositStableflowTokens : supportedAssets;
 
   const resolveTokenBalanceString = useCallback(
     (token: DepositSelectableToken) => {
@@ -436,10 +443,17 @@ export function DepositDialog({
         tokens = payload?.tokens ?? [];
       }
 
+      const visibleTokens = filterStableflowTokensForDeposit(tokens, loginMethod);
+
       setDepositMethod("stableflow");
 
       if (isSocialLogin) {
-        const selection = resolveDefaultStableflowQrSelection(tokens);
+        if (visibleTokens.length === 0) {
+          toast.error(tDeposit("stableflowNotReady"));
+          return;
+        }
+
+        const selection = resolveDefaultStableflowQrSelection(visibleTokens);
 
         if (!selection) {
           toast.error(tDeposit("stableflowNotReady"));
@@ -467,7 +481,7 @@ export function DepositDialog({
       qrTransitionStartedRef.current = false;
 
       const tokensOnChain = getStableflowTokensForChain(
-        stableflowTokens,
+        depositStableflowTokens,
         chain.chainId,
       );
       const nextToken =
@@ -478,7 +492,7 @@ export function DepositDialog({
         setSelectedToken(nextToken);
       }
     },
-    [stableflowTokens],
+    [depositStableflowTokens],
   );
 
   const handleQrTokenChange = useCallback(
@@ -502,7 +516,7 @@ export function DepositDialog({
         isStableflowDepositToken(selectedToken) &&
         shouldDepositViaStableflowQr(loginMethod, selectedToken)
       ) {
-        const chainOptions = getStableflowChainOptions(stableflowTokens);
+        const chainOptions = getStableflowChainOptions(depositStableflowTokens);
         const nextChain =
           chainOptions.find((option) => option.chainId === selectedToken.chainId) ??
           chainOptions[0];
@@ -598,6 +612,12 @@ export function DepositDialog({
           getStableflowRefundAddress({
             blockchain: selectedToken.blockchain,
             walletAddress: session.walletAddress,
+            nearAccountId:
+              selectedToken.blockchain === "near"
+                ? resolveFundingWalletAddress(selectedToken) ??
+                  getNearAccountSnapshot().accountId ??
+                  undefined
+                : undefined,
           }) ?? session.walletAddress;
         const { quote } = await fetchJson<{ quote: QuoteResponse }>(
           "/api/trading/stableflow/quote",
@@ -921,7 +941,10 @@ export function DepositDialog({
       return;
     }
 
-    const needsFundingWallet = requiresFundingWalletConnection(selectedToken);
+    const needsFundingWallet = requiresDepositFundingWalletConnection(
+      selectedToken,
+      loginMethod,
+    );
 
     if (!needsFundingWallet && !session?.walletAddress) {
       return;
@@ -994,7 +1017,6 @@ export function DepositDialog({
 
     try {
       const useNearDeposit =
-        loginMethod === "near" &&
         isStableflowDepositToken(selectedToken) &&
         selectedToken.blockchain === "near";
 
@@ -1208,7 +1230,10 @@ export function DepositDialog({
     }
 
     if (step === "amount" && selectedToken) {
-      const needsFundingWallet = requiresFundingWalletConnection(selectedToken);
+      const needsFundingWallet = requiresDepositFundingWalletConnection(
+        selectedToken,
+        loginMethod,
+      );
       const walletConnected = isConnectedForToken(selectedToken);
 
       if (needsFundingWallet && !walletConnected) {
@@ -1273,6 +1298,7 @@ export function DepositDialog({
     stableflowQuote,
     stableflowQuoteLoading,
     step,
+    loginMethod,
     tAuth,
     tCommon,
     tWallet,
@@ -1340,7 +1366,7 @@ export function DepositDialog({
 
           {step === "stableflow_qr" ? (
             <DepositStableflowQrStep
-              stableflowTokens={stableflowTokens}
+              stableflowTokens={depositStableflowTokens}
               selectedChain={qrSelectedChain}
               selectedToken={
                 isStableflowDepositToken(selectedToken)
@@ -1377,7 +1403,7 @@ export function DepositDialog({
               showChangeWallet={
                 !isSocialLogin &&
                 !isNearLogin &&
-                requiresFundingWalletConnection(selectedToken) &&
+                requiresDepositFundingWalletConnection(selectedToken, loginMethod) &&
                 isConnectedForToken(selectedToken)
               }
               onChangeWallet={() => void disconnectForToken(selectedToken)}

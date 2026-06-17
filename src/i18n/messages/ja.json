@@ -54,6 +54,8 @@
     "selectWalletSubtitle": "アカウント接続用のウォレットを選択してください",
     "walletTokenPocketDescription": "マルチチェーンウォレット",
     "walletOkxDescription": "OKX 取引所ウォレット",
+    "walletMetaMaskDescription": "自己管理型 EVM ウォレット",
+    "walletBinanceDescription": "Binance Web3 ウォレット",
     "walletOthersDescription": "その他のウォレット",
     "selectWalletEmpty": "このデバイスでサポートされているウォレットが見つかりません。",
     "connectSolanaWallet": "Solanaウォレットを接続",

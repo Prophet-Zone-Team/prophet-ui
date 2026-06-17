@@ -9,10 +9,14 @@ import {
   registerExternalEvmSigner,
   unregisterExternalEvmSigner,
 } from "@/lib/wallet/evm/external-signer-registry";
-import { useNearAccountStore } from "@/lib/wallet/near/near-account-store";
+import {
+  getNearAccountSnapshot,
+  useNearAccountStore,
+} from "@/lib/wallet/near/near-account-store";
 import { createNearSelectorBundle } from "@/lib/wallet/near/near-wallet-selector";
 import { createNearEvmSigner } from "@/lib/wallet/near/near-evm-signer";
 import { deriveV1SignerEvmAddress } from "@/lib/wallet/near/v1-signer";
+import { useAuthStore } from "@/store/auth-store";
 
 function getActiveAccountId(selector: WalletSelector): string | null {
   return (
@@ -20,6 +24,13 @@ function getActiveAccountId(selector: WalletSelector): string | null {
       .getState()
       .accounts.find((account) => account.active)?.accountId ?? null
   );
+}
+
+function shouldDeriveNearEvmAddress(): boolean {
+  const { evmDerivationRequested } = getNearAccountSnapshot();
+  const loginMethod = useAuthStore.getState().loginMethod;
+
+  return loginMethod === "near" || evmDerivationRequested;
 }
 
 /**
@@ -32,6 +43,9 @@ function getActiveAccountId(selector: WalletSelector): string | null {
 export function NearProvider({ children }: { children: React.ReactNode }) {
   const lastAccountIdRef = useRef<string | null>(null);
   const registeredAddressRef = useRef<string | null>(null);
+  const syncAccountRef = useRef<
+    ((accountId: string | null, options?: { force?: boolean }) => Promise<void>) | null
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,8 +58,18 @@ export function NearProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const syncAccount = async (accountId: string | null) => {
-      if (accountId === lastAccountIdRef.current) {
+    const syncAccount = async (
+      accountId: string | null,
+      options?: { force?: boolean },
+    ) => {
+      const { derivedEvmAddress } = getNearAccountSnapshot();
+      const shouldDerive = shouldDeriveNearEvmAddress();
+
+      if (
+        accountId === lastAccountIdRef.current &&
+        !options?.force &&
+        !(shouldDerive && accountId && !derivedEvmAddress)
+      ) {
         return;
       }
 
@@ -54,6 +78,15 @@ export function NearProvider({ children }: { children: React.ReactNode }) {
       if (!accountId) {
         clearRegisteredSigner();
         useNearAccountStore.getState().reset();
+        return;
+      }
+
+      if (!shouldDerive) {
+        clearRegisteredSigner();
+        useNearAccountStore.getState().set({
+          accountId,
+          derivedEvmAddress: null,
+        });
         return;
       }
 
@@ -80,6 +113,8 @@ export function NearProvider({ children }: { children: React.ReactNode }) {
         }
       }
     };
+
+    syncAccountRef.current = syncAccount;
 
     const init = async () => {
       try {
@@ -120,6 +155,41 @@ export function NearProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
       unsubscribe?.();
+      syncAccountRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const rerunSyncIfNeeded = () => {
+      const { accountId, derivedEvmAddress } = getNearAccountSnapshot();
+
+      if (
+        shouldDeriveNearEvmAddress() &&
+        accountId &&
+        !derivedEvmAddress &&
+        syncAccountRef.current
+      ) {
+        void syncAccountRef.current(accountId, { force: true });
+      }
+    };
+
+    rerunSyncIfNeeded();
+
+    const unsubscribeAuth = useAuthStore.subscribe((state, previousState) => {
+      if (state.loginMethod !== previousState.loginMethod) {
+        rerunSyncIfNeeded();
+      }
+    });
+
+    const unsubscribeNear = useNearAccountStore.subscribe((state, previousState) => {
+      if (state.evmDerivationRequested !== previousState.evmDerivationRequested) {
+        rerunSyncIfNeeded();
+      }
+    });
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeNear();
     };
   }, []);
 

@@ -19,6 +19,7 @@ import {
 } from "@/context/privy/privy-config";
 import { PrivyWalletBridge } from "@/context/privy/privy-wallet-bridge";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { TokenPocketRedirectGuard } from "@/lib/wallet/tokenpocket/redirect-guard";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ export default function RainbowProvider({
         <WagmiProvider config={wagmiConfig} initialState={initialState}>
           <RainbowKitProvider modalSize="compact" locale="en-US">
             <ConnectModalProvider>
+              <TokenPocketRedirectGuard />
               <PrivyWalletBridge />
               <NearProvider>
                 <FundingNearBridge />

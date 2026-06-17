@@ -111,6 +111,25 @@ export function isNearOriginStableflowToken(
   return token.blockchain === "near";
 }
 
+export function isSocialAuthLoginMethod(
+  loginMethod: AuthLoginMethod | null | undefined,
+): boolean {
+  return loginMethod === "email" || loginMethod === "google";
+}
+
+export function filterStableflowTokensForDeposit(
+  tokens: StableflowDepositToken[],
+  loginMethod: AuthLoginMethod | null | undefined,
+): StableflowDepositToken[] {
+  if (!isSocialAuthLoginMethod(loginMethod)) {
+    return tokens;
+  }
+
+  return tokens.filter(
+    (token) => token.chainType === FundingNetworkType.EVM,
+  );
+}
+
 export function shouldDepositViaStableflowQr(
   loginMethod: AuthLoginMethod | null | undefined,
   token: Pick<StableflowDepositToken, "blockchain" | "chainType">,
@@ -125,7 +144,8 @@ export function shouldDepositViaStableflowQr(
 
   if (
     token.chainType === FundingNetworkType.SVM ||
-    token.chainType === FundingNetworkType.TVM
+    token.chainType === FundingNetworkType.TVM ||
+    token.chainType === FundingNetworkType.NEAR
   ) {
     return false;
   }
@@ -159,8 +179,24 @@ export function requiresFundingWalletConnection(
 ): boolean {
   return (
     token.chainType === FundingNetworkType.SVM ||
-    token.chainType === FundingNetworkType.TVM
+    token.chainType === FundingNetworkType.TVM ||
+    token.chainType === FundingNetworkType.NEAR
   );
+}
+
+export function requiresDepositFundingWalletConnection(
+  token: Pick<FundingToken, "chainType"> & { blockchain?: string },
+  loginMethod: AuthLoginMethod | null | undefined,
+): boolean {
+  if (
+    loginMethod === "near" &&
+    token.blockchain &&
+    isNearOriginStableflowToken({ blockchain: token.blockchain })
+  ) {
+    return false;
+  }
+
+  return requiresFundingWalletConnection(token);
 }
 
 export function resolveFundingWalletAddress(
