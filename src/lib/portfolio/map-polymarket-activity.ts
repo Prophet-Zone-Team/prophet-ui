@@ -53,7 +53,7 @@ export function resolveActivityPortfolioType(
     return "deposit";
   }
 
-  if (normalizedType === "WITHDRAW") {
+  if (normalizedType === "WITHDRAW" || normalizedType === "WITHDRAWAL") {
     return "withdraw";
   }
 
@@ -107,7 +107,12 @@ function resolveActivityTeamName(row: PolymarketActivityRow): string {
 export function mapPolymarketActivity(
   row: PolymarketActivityRow
 ): PortfolioTransactionRecord {
-  const type = resolveActivityPortfolioType(row.type, row.side);
+  let type = resolveActivityPortfolioType(row.type, row.side);
+
+  if (type === "redeem" && row.size === 0) {
+    type = "loss";
+  }
+
   const slug = resolveActivitySlug(row);
   const createdAt = timestampToIso(row.timestamp);
 

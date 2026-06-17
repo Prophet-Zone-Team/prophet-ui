@@ -71,6 +71,7 @@ describe("resolveActivityPortfolioType", () => {
     assert.equal(resolveActivityPortfolioType("REDEEM"), "redeem");
     assert.equal(resolveActivityPortfolioType("DEPOSIT"), "deposit");
     assert.equal(resolveActivityPortfolioType("WITHDRAW"), "withdraw");
+    assert.equal(resolveActivityPortfolioType("WITHDRAWAL"), "withdraw");
     assert.equal(resolveActivityPortfolioType("YIELD"), "claim");
     assert.equal(resolveActivityPortfolioType("SPLIT"), "activity");
   });
@@ -101,6 +102,21 @@ describe("mapPolymarketActivity", () => {
 
     assert.equal(mapped.type, "redeem");
     assert.equal(mapped.amount, "6.097555");
+  });
+
+  it("maps zero-size redeem rows as loss", () => {
+    const mapped = mapPolymarketActivity(
+      createTradeRow({
+        type: "REDEEM",
+        side: "",
+        outcome: "",
+        size: 0,
+        usdcSize: 0,
+        price: 0
+      })
+    );
+
+    assert.equal(mapped.type, "loss");
   });
 });
 
