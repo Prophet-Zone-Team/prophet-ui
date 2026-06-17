@@ -617,6 +617,7 @@
     "txActionDeposit": "入金",
     "txActionWithdraw": "提款",
     "txActionClaim": "領取",
+    "txActionLoss": "虧損",
     "profitLoss": "損益",
     "performanceTimeRange": "投資組合績效時間範圍",
     "pnlPeriod1H": "過去一小時",

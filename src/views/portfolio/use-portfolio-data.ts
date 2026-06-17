@@ -4,7 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
 import { PORTFOLIO_HISTORY_PAGE_SIZE } from "@/lib/portfolio/config";
-import { mapProphetUserTransactions } from "@/lib/portfolio/map-user-transaction";
+import {
+  applyTradeLossFromPositions,
+  mapProphetUserTransactions
+} from "@/lib/portfolio/map-user-transaction";
 import {
   collectUniqueConditionIds,
   collectUniqueConditionIdsFromPositions,
@@ -253,7 +256,29 @@ export function usePortfolioData(): UsePortfolioDataResult {
           return;
         }
 
-        setTransactions(mapProphetUserTransactions(payload.list));
+        const mapped = mapProphetUserTransactions(payload.list);
+
+        let transactionsWithLoss = mapped;
+
+        try {
+          const positionsPayload = await fetchJson<{
+            positions?: UserPositionRecord[];
+          }>(
+            "/api/trading/positions?limit=100&redeemable=true&sizeThreshold=0.1"
+          );
+          transactionsWithLoss = applyTradeLossFromPositions(
+            mapped,
+            payload.list ?? [],
+            positionsPayload?.positions ?? []
+          );
+        } catch (positionsError) {
+          console.warn(
+            "[portfolio] redeemable positions failed for loss detection",
+            positionsError
+          );
+        }
+
+        setTransactions(transactionsWithLoss);
         setHistoryTotal(payload.total ?? 0);
         historyLoadedPagesRef.current.add(page);
         setHistoryStatus("ready");

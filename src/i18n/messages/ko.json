@@ -614,6 +614,7 @@
     "txActionDeposit": "입금",
     "txActionWithdraw": "출금",
     "txActionClaim": "수령",
+    "txActionLoss": "손실",
     "profitLoss": "손익",
     "performanceTimeRange": "포트폴리오 성과 기간",
     "pnlPeriod1H": "지난 1시간",
