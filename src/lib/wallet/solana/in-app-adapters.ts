@@ -31,7 +31,7 @@ export const BINANCE_SOLANA_WALLET_NAME = "Binance Wallet" as WalletName<"Binanc
 export const METAMASK_SOLANA_WALLET_NAME = "MetaMask" as WalletName<"MetaMask">;
 
 const IN_APP_SOLANA_WALLET_NAMES: Record<InAppBrowserWalletKind, WalletName[]> = {
-  tokenpocket: ["Solflare" as WalletName, "Phantom" as WalletName],
+  tokenpocket: ["Phantom" as WalletName],
   okx: [OKX_SOLANA_WALLET_NAME],
   metamask: [METAMASK_SOLANA_WALLET_NAME],
   binance: [BINANCE_SOLANA_WALLET_NAME],

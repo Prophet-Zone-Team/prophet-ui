@@ -27,6 +27,15 @@ function mapConnectError(error: unknown): Error {
     return new Error("Wallet connection was rejected.");
   }
 
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    (error as { name?: unknown }).name === "WalletNotSelectedError"
+  ) {
+    return new Error("Select a Solana wallet before connecting.");
+  }
+
   if (error instanceof Error) {
     return error;
   }
@@ -34,12 +43,9 @@ function mapConnectError(error: unknown): Error {
   return new Error("Wallet connection failed.");
 }
 
-export async function connectInAppBrowserSolanaWallet(params: {
-  wallets: WalletAdapter[];
-  select: (walletName: WalletAdapter["name"]) => void;
-  connect: () => Promise<void>;
-  getAddress: () => string | undefined;
-}): Promise<string> {
+export async function connectInAppBrowserSolanaWallet<T extends WalletAdapter>(
+  wallets: T[],
+): Promise<{ address: string; adapter: T }> {
   if (!isInWalletInAppBrowser()) {
     throw new Error("Not in a supported in-app browser.");
   }
@@ -50,12 +56,8 @@ export async function connectInAppBrowserSolanaWallet(params: {
     throw new Error("Not in a supported in-app browser.");
   }
 
-  console.log("connectInAppBrowserSolanaWallet kind: %o", kind);
-
   if (kind === "tokenpocket") {
     const solanaResult = await ensureSolanaWallet();
-
-    console.log("connectInAppBrowserSolanaWallet solanaResult: %o", solanaResult);
 
     if (solanaResult.reloadPending) {
       throw new Error(
@@ -64,28 +66,25 @@ export async function connectInAppBrowserSolanaWallet(params: {
     }
   }
 
-  const wallet = resolveInAppSolanaWallet(params.wallets, kind);
+  const adapter = resolveInAppSolanaWallet(wallets, kind);
 
-  console.log("connectInAppBrowserSolanaWallet wallet: %o", wallet);
-
-  if (!wallet) {
+  if (!adapter) {
     throw new Error("No compatible Solana wallet provider found in this browser.");
   }
 
   try {
-    params.select(getInAppSolanaWalletName(kind));
-    await params.connect();
+    await adapter.connect();
   } catch (error) {
     throw mapConnectError(error);
   }
 
-  const address = params.getAddress();
+  const address = adapter.publicKey?.toBase58();
 
   if (!address) {
     throw new Error("Wallet connection failed.");
   }
 
-  return address;
+  return { address, adapter: adapter as T };
 }
 
 export { resolveInAppSolanaWallet, getInAppSolanaWalletName };
