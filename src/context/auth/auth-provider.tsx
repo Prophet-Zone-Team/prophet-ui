@@ -1161,7 +1161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clearAuthState]);
 
-  const disconnect = useCallback(async () => {
+  const disconnect = async () => {
     const store = useAuthStore.getState();
     const loginMethod = store.loginMethod;
 
@@ -1212,7 +1212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resumePrivyWalletSync();
       walletHandlingRef.current = false;
     }
-  }, [clearAuthState, privyLogout, wagmiDisconnect]);
+  };
 
   const onAuthenticateConfidential = async () => {
     if (!session) {
@@ -1455,7 +1455,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoginMethod,
     refreshEligibility,
     openLogin,
-    connectWallet: openLogin,
     connectNearWallet,
     signClobCredentials,
     signTokenApprovals,

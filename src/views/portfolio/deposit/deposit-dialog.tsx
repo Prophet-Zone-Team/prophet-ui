@@ -38,6 +38,7 @@ import {
 import { useDeposit, useEvmBalances, usePrices, useSolBalances, useTronBalances } from "@/hooks/funding";
 import { useFundingWalletConnect } from "@/hooks/funding/use-funding-wallet-connect";
 import { useAuth } from "@/context/auth";
+import { shouldHideFundingWalletChange } from "@/context/rainbowkit/utils";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { useAuthStore } from "@/store";
 import { useBalancesStore } from "@/store/use-balances";
@@ -261,6 +262,18 @@ export function DepositDialog({
   });
 
   const { connectForToken, disconnectForToken, isConnectedForToken, getConnectLabelKey } = useFundingWalletConnect();
+
+  const handleFundingWalletConnect = useCallback(
+    async (token: DepositSelectableToken) => {
+      try {
+        await connectForToken(token);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        toast.error(message);
+      }
+    },
+    [connectForToken],
+  );
 
   const { loading: pricesLoading } = usePrices({
     auto: open,
@@ -1242,7 +1255,7 @@ export function DepositDialog({
             type="button"
             className={fundingPrimaryButtonClass}
             disabled={continueLoading}
-            onClick={() => void connectForToken(selectedToken)}
+            onClick={() => void handleFundingWalletConnect(selectedToken)}
           >
             {continueLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
             {tWallet(getConnectLabelKey(selectedToken))}
@@ -1284,7 +1297,7 @@ export function DepositDialog({
     depositMethod,
     entryTab,
     handleClose,
-    connectForToken,
+    handleFundingWalletConnect,
     getConnectLabelKey,
     isConnectedForToken,
     onConfirmDeposit,
@@ -1401,6 +1414,7 @@ export function DepositDialog({
               }
               onAmountChange={setAmount}
               showChangeWallet={
+                !shouldHideFundingWalletChange() &&
                 !isSocialLogin &&
                 !isNearLogin &&
                 requiresDepositFundingWalletConnection(selectedToken, loginMethod) &&

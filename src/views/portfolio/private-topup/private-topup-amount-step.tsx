@@ -84,7 +84,9 @@ export function PrivateTopupAmountStep({
     transferWalletAddress,
   ]);
 
-  const [inputValue, setInputValue] = useState("0");
+  const [inputValue, setInputValue] = useState(() =>
+    Big(amount.amountUsd || 0).gt(0) ? amount.amountUsd : "0",
+  );
 
   const validationErrorKey = useMemo(
     () => validatePrivateTopupAmount(amount.tokenAmount, maxAmount),

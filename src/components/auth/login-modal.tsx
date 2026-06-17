@@ -40,7 +40,7 @@ interface LoginModalProps {
     | "eligibilityView"
     | "privyModalOpen"
     | "closeLogin"
-    | "connectWallet"
+    | "openLogin"
     | "connectNearWallet"
     | "openPrivyLogin"
     | "closePrivyLogin"
@@ -89,7 +89,7 @@ export function LoginModal({ auth }: LoginModalProps) {
     eligibilityView,
     privyModalOpen,
     closeLogin,
-    connectWallet,
+    openLogin,
     connectNearWallet,
     openPrivyLogin,
     closePrivyLogin,
@@ -237,7 +237,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                                 entrySource: "login_modal_setup",
                                 label: "Connect wallet"
                               });
-                              void connectWallet("wallet");
+                              void openLogin("wallet");
                             }}
                             onConnectNear={() => {
                               trackLoginClicked({
@@ -308,7 +308,7 @@ export function LoginModal({ auth }: LoginModalProps) {
         });
         setLoginMethod("wallet");
         closePrivyLogin();
-        void connectWallet();
+        void openLogin();
       }}
       onEmailAuthenticated={completePrivyEmailLogin}
     />

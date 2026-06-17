@@ -112,7 +112,7 @@ export function isInOKApp() {
     return false;
   }
 
-  return typeof window.okxwallet !== "undefined" || hasOkxUserAgent();
+  return hasOkxUserAgent();
 }
 
 export function isInMetaMask() {
@@ -120,7 +120,14 @@ export function isInMetaMask() {
     return false;
   }
 
-  return isMetaMaskProvider(getInjectedEthereum()) || hasMetaMaskUserAgent();
+  // MetaMask extension on desktop also sets window.ethereum.isMetaMask; only the
+  // mobile in-app browser adds MetaMaskMobile to the user agent.
+  if (hasMetaMaskUserAgent()) {
+    return true;
+  }
+
+  // Legacy in-app builds may omit MetaMaskMobile; only trust injected provider on mobile.
+  return Boolean(isInMobileBrowser() && isMetaMaskProvider(getInjectedEthereum()));
 }
 
 export function isInBinanceApp() {
@@ -135,12 +142,20 @@ export function isInBinanceApp() {
 }
 
 export function isInWalletInAppBrowser(): boolean {
+  const _isInTokenPocket = isInTokenPocket();
+  const _isInOKApp = isInOKApp();
+  const _isInBinanceApp = isInBinanceApp();
+  const _isInMetaMask = isInMetaMask();
   return (
-    isInTokenPocket() ||
-    isInOKApp() ||
-    isInBinanceApp() ||
-    isInMetaMask()
+    _isInTokenPocket ||
+    _isInOKApp ||
+    _isInBinanceApp ||
+    _isInMetaMask
   );
+}
+
+export function shouldHideFundingWalletChange(): boolean {
+  return isInWalletInAppBrowser();
 }
 
 export function getInAppBrowserWalletKind(): InAppBrowserWalletKind | null {

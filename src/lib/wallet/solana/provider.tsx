@@ -7,19 +7,28 @@ import {
   SolflareWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 
+import { isInWalletInAppBrowser } from "@/context/rainbowkit/utils";
 import { FUNDING_NETWORKS } from "@/config/funding/networks";
 import { generateRpcSignature } from "@/config/funding/signature";
+import { connectInAppBrowserSolanaWallet } from "@/lib/wallet/solana/connect-in-app-browser";
+import { buildInAppSolanaWalletAdapters } from "@/lib/wallet/solana/in-app-adapters";
 import { setFundingWalletInstance } from "@/lib/wallet/solana/funding-wallet-instance";
 import { SolanaWalletModalProvider, useSolanaWalletModal } from "@/lib/wallet/solana/wallet-modal-context";
 import { SolanaWalletSelectorModal } from "@/lib/wallet/solana/wallet-selector-modal";
 import SolanaFundingWallet from "@/lib/wallet/solana/wallet";
 import { useFundingWalletStore } from "@/store/use-funding-wallet-store";
 
-const adapters = [new SolflareWalletAdapter(), new PhantomWalletAdapter()];
+function buildSolanaAdapters() {
+  return [
+    ...buildInAppSolanaWalletAdapters(),
+    new SolflareWalletAdapter(),
+    new PhantomWalletAdapter(),
+  ];
+}
 
 function SolanaFundingBridge() {
   const walletAdapter = useWallet();
-  const { publicKey, disconnect, connect, wallet, connecting } = walletAdapter;
+  const { publicKey, disconnect, connect, wallet, connecting, wallets, select } = walletAdapter;
   const { setVisible } = useSolanaWalletModal();
   const setSlice = useFundingWalletStore((state) => state.setSlice);
   const registerConnectHandler = useFundingWalletStore((state) => state.registerConnectHandler);
@@ -58,12 +67,21 @@ function SolanaFundingBridge() {
       connecting,
       walletName: undefined,
     });
-  }, [address, connecting, publicKey, setSlice, wallet?.adapter.name]);
+  }, [address, connecting, publicKey, setSlice, wallet?.adapter.name, walletAdapter]);
 
   const handleConnect = useCallback(async () => {
     setSlice("solana", { connecting: true });
 
     try {
+      if (isInWalletInAppBrowser()) {
+        return await connectInAppBrowserSolanaWallet({
+          wallets: wallets.map((entry) => entry.adapter),
+          select,
+          connect,
+          getAddress: () => walletAdapter.wallet?.adapter.publicKey?.toBase58(),
+        });
+      }
+
       if (wallet) {
         await connect();
         return publicKey?.toBase58();
@@ -74,7 +92,7 @@ function SolanaFundingBridge() {
     } finally {
       setSlice("solana", { connecting: false });
     }
-  }, [connect, publicKey, setSlice, setVisible, wallet]);
+  }, [connect, publicKey, select, setSlice, setVisible, wallet, wallets]);
 
   const handleDisconnect = useCallback(async () => {
     await disconnect();
@@ -104,6 +122,7 @@ function SolanaFundingBridge() {
 }
 
 export function SolanaFundingProvider({ children }: { children: React.ReactNode }) {
+  const adapters = useMemo(() => buildSolanaAdapters(), []);
   const endpoint = useMemo(
     () => FUNDING_NETWORKS.solana.rpcUrls[0] ?? FUNDING_NETWORKS.solana.defaultRpcUrl,
     [],
