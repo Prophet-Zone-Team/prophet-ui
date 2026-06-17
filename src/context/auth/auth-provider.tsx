@@ -60,6 +60,7 @@ import {
   subscribeWalletConnection,
   inspectWalletConnection
 } from "@/lib/trading/wallet-connection-watch";
+import { isTokenPocketFundingSwitchGracePeriod } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import {
   getTradingSetupSteps,
   isSetupStepComplete,
@@ -326,6 +327,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
 
     if (!store.session || walletHandlingRef.current) {
+      return;
+    }
+
+    if (isTokenPocketFundingSwitchGracePeriod(true)) {
       return;
     }
 
@@ -708,6 +713,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
 
       if (walletSnapshot.status === "disconnected") {
+        if (isTokenPocketFundingSwitchGracePeriod(true)) {
+          const nextReadiness = await refreshReadiness(nextSession);
+          store.setStatus("ready");
+          store.setLoginStep(undefined);
+          store.setError(
+            "Wallet extension is not connected. Reconnect your Polygon wallet after connecting a funding wallet.",
+          );
+          openSetupModalIfNeeded();
+
+          if (isTradingSetupComplete(nextReadiness)) {
+            store.setLoginModalOpen(false);
+          }
+
+          return;
+        }
+
         if (privyAuthenticated) {
           const nextReadiness = await refreshReadiness(nextSession);
           store.setStatus("ready");

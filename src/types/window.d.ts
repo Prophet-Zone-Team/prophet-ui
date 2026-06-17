@@ -51,6 +51,7 @@ interface MetaMaskSolanaProvider {
   signMessage?: (message: Uint8Array) => Promise<{ signature: Uint8Array }>;
   isMetaMask?: boolean;
   isPhantom?: boolean;
+  isTokenPocket?: boolean;
 }
 
 declare global {
@@ -59,6 +60,10 @@ declare global {
     okxwallet?: OkxWalletWindow;
     binancew3w?: BinanceW3wWindow;
     solana?: MetaMaskSolanaProvider;
+    tronWeb?: unknown;
+    tronLink?: {
+      tronWeb?: unknown;
+    };
   }
 }
 

@@ -4,7 +4,12 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { isInTokenPocket } from "@/context/rainbowkit/utils";
-import { TP_REDIRECT_STORAGE_KEY } from "@/lib/wallet/tokenpocket/constants";
+import {
+  dispatchTpFundingSwitchComplete,
+  getTpFundingSwitchFlag,
+  getTpRedirectContext,
+  clearTpRedirectContext,
+} from "@/lib/wallet/tokenpocket/tp-funding-switch";
 
 export function TokenPocketRedirectGuard() {
   const router = useRouter();
@@ -15,17 +20,25 @@ export function TokenPocketRedirectGuard() {
       return;
     }
 
-    const redirectTo = localStorage.getItem(TP_REDIRECT_STORAGE_KEY);
+    const redirectContext = getTpRedirectContext();
 
-    if (!redirectTo) {
+    if (!redirectContext) {
       return;
     }
 
-    localStorage.removeItem(TP_REDIRECT_STORAGE_KEY);
+    clearTpRedirectContext();
 
-    if (redirectTo !== pathname) {
-      router.replace(redirectTo);
+    if (redirectContext.redirectPath !== pathname) {
+      router.replace(redirectContext.redirectPath);
     }
+
+    const switchFlag = getTpFundingSwitchFlag();
+
+    dispatchTpFundingSwitchComplete({
+      hostKind: redirectContext.hostKind,
+      blockchain: switchFlag?.blockchain,
+      redirectPath: redirectContext.redirectPath,
+    });
   }, [pathname, router]);
 
   return null;

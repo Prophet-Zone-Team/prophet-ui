@@ -39,6 +39,7 @@ import { useDeposit, useEvmBalances, usePrices, useSolBalances, useTronBalances 
 import { useFundingWalletConnect } from "@/hooks/funding/use-funding-wallet-connect";
 import { useAuth } from "@/context/auth";
 import { shouldHideFundingWalletChange } from "@/context/rainbowkit/utils";
+import { isTpFundingSwitchPendingError } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { useAuthStore } from "@/store";
 import { useBalancesStore } from "@/store/use-balances";
@@ -269,6 +270,10 @@ export function DepositDialog({
         await connectForToken(token);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        if (isTpFundingSwitchPendingError(error)) {
+          toast.message(message);
+          return;
+        }
         toast.error(message);
       }
     },

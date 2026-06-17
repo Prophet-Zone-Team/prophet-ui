@@ -8,6 +8,9 @@ import {
   type InAppBrowserWalletKind,
 } from "@/context/rainbowkit/utils";
 import { ensureSolanaWallet } from "@/lib/wallet/tokenpocket/ensure-matic-wallet";
+import { throwTpFundingSwitchPending } from "@/lib/wallet/tokenpocket/ensure-tp-wallet";
+import { TP_BLOCKCHAIN_SOLANA } from "@/lib/wallet/tokenpocket/constants";
+import { probeTokenPocketSolanaProvider } from "@/lib/wallet/tokenpocket/tp-provider-probe";
 import {
   getInAppSolanaWalletName,
   resolveInAppSolanaWallet,
@@ -43,35 +46,9 @@ function mapConnectError(error: unknown): Error {
   return new Error("Wallet connection failed.");
 }
 
-export async function connectInAppBrowserSolanaWallet<T extends WalletAdapter>(
-  wallets: T[],
+async function connectSolanaAdapter<T extends WalletAdapter>(
+  adapter: T,
 ): Promise<{ address: string; adapter: T }> {
-  if (!isInWalletInAppBrowser()) {
-    throw new Error("Not in a supported in-app browser.");
-  }
-
-  const kind = getInAppBrowserWalletKind();
-
-  if (!kind) {
-    throw new Error("Not in a supported in-app browser.");
-  }
-
-  if (kind === "tokenpocket") {
-    const solanaResult = await ensureSolanaWallet();
-
-    if (solanaResult.reloadPending) {
-      throw new Error(
-        "Switching to the Solana wallet in TokenPocket. Tap Connect wallet again after the page reloads.",
-      );
-    }
-  }
-
-  const adapter = resolveInAppSolanaWallet(wallets, kind);
-
-  if (!adapter) {
-    throw new Error("No compatible Solana wallet provider found in this browser.");
-  }
-
   try {
     await adapter.connect();
   } catch (error) {
@@ -86,6 +63,47 @@ export async function connectInAppBrowserSolanaWallet<T extends WalletAdapter>(
   }
 
   return { address, adapter: adapter as T };
+}
+
+export async function connectInAppBrowserSolanaWallet<T extends WalletAdapter>(
+  wallets: T[],
+): Promise<{ address: string; adapter: T }> {
+  if (!isInWalletInAppBrowser()) {
+    throw new Error("Not in a supported in-app browser.");
+  }
+
+  const kind = getInAppBrowserWalletKind();
+
+  if (!kind) {
+    throw new Error("Not in a supported in-app browser.");
+  }
+
+  const adapter = resolveInAppSolanaWallet(wallets, kind);
+
+  if (!adapter) {
+    throw new Error("No compatible Solana wallet provider found in this browser.");
+  }
+
+  if (kind === "tokenpocket" && probeTokenPocketSolanaProvider()) {
+    try {
+      return await connectSolanaAdapter(adapter as T);
+    } catch (error) {
+      if (isUserRejectedRequest(error)) {
+        throw mapConnectError(error);
+      }
+      // Fall through to tp-js-sdk wallet family switch.
+    }
+  }
+
+  if (kind === "tokenpocket") {
+    const solanaResult = await ensureSolanaWallet();
+
+    if (solanaResult.reloadPending) {
+      throwTpFundingSwitchPending(TP_BLOCKCHAIN_SOLANA);
+    }
+  }
+
+  return connectSolanaAdapter(adapter as T);
 }
 
 export { resolveInAppSolanaWallet, getInAppSolanaWalletName };

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import {
   stableflowTokensToFundingTokens,
@@ -34,6 +35,8 @@ import {
   useFundingWalletStore,
 } from "@/store/use-funding-wallet-store";
 import { MAIN_HOSTNAME } from "@/config/funding";
+import { TP_FUNDING_SWITCH_EVENT } from "@/lib/wallet/tokenpocket/constants";
+import type { TpFundingSwitchCompleteDetail } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import { useAuth } from "@/context/auth";
 
 export function PrivateTopupPage() {
@@ -168,6 +171,31 @@ export function PrivateTopupPage() {
   useEffect(() => {
     void refreshPrivateBalance({ requiredSession: false });
   }, [refreshPrivateBalance]);
+
+  useEffect(() => {
+    const handleFundingSwitchComplete = (event: Event) => {
+      const detail = (event as CustomEvent<TpFundingSwitchCompleteDetail>).detail;
+
+      if (detail.hostKind !== "private") {
+        return;
+      }
+
+      void refreshPrivateBalance({ requiredSession: false });
+
+      if (!fundingWallet.connected) {
+        toast.message(
+          "Page reloaded in TokenPocket. Reconnect your funding wallet to continue the top up.",
+        );
+        setChainPickerOpen(true);
+      }
+    };
+
+    window.addEventListener(TP_FUNDING_SWITCH_EVENT, handleFundingSwitchComplete);
+
+    return () => {
+      window.removeEventListener(TP_FUNDING_SWITCH_EVENT, handleFundingSwitchComplete);
+    };
+  }, [fundingWallet.connected, refreshPrivateBalance]);
 
   return (
     <PrivateTopupProvider
