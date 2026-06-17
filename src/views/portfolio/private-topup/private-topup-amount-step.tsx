@@ -3,10 +3,12 @@
 import { ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useShallow } from "zustand/react/shallow";
 import Big from "big.js";
 
 import { POLYMARKET_USD } from "@/config/funding";
 import { formatShortWallet } from "@/lib/team/detail-format";
+import { useFundingWalletStore } from "@/store/use-funding-wallet-store";
 import { usePricesStore } from "@/store/use-prices";
 import { formatNumber } from "@/utils";
 import {
@@ -29,7 +31,9 @@ import {
   applyTokenBalancePercent,
   computeUsdFromTokenAmount,
   parseUsdInput,
+  resolvePrivateTopupTransferAddress,
   selectTokenUnitPrice,
+  usdInputToTokenAmount,
   validatePrivateTopupAmount,
 } from "@/views/portfolio/private-topup/utils";
 import { cn } from "@/lib/cn";
@@ -41,6 +45,7 @@ export interface PrivateTopupAmountStepProps {
   token: PrivateTopupSelectableToken;
   amount: PrivateTopupAmountState;
   maxAmount: string;
+  transferWalletAddress?: string;
   onAmountChange: (amount: PrivateTopupAmountState) => void;
 }
 
@@ -48,11 +53,36 @@ export function PrivateTopupAmountStep({
   token,
   amount,
   maxAmount,
+  transferWalletAddress,
   onAmountChange,
 }: PrivateTopupAmountStepProps) {
   const t = useTranslations("privateTopup");
-  const { topupWalletAddress, privateAccountAddress } = usePrivateTopupContext();
+  const { topupWalletAddress, privateAccountAddress, primaryChainType } =
+    usePrivateTopupContext();
   const prices = usePricesStore((state) => state.prices);
+
+  const fundingWalletSnapshot = useFundingWalletStore(
+    useShallow((state) => ({
+      evm: state.evm.connected ? state.evm.address : undefined,
+      solana: state.solana.connected ? state.solana.address : undefined,
+      tron: state.tron.connected ? state.tron.address : undefined,
+      near: state.near.connected ? state.near.address : undefined,
+    })),
+  );
+
+  const fundingWalletAddress = useMemo(() => {
+    if (primaryChainType) {
+      return resolvePrivateTopupTransferAddress(token, primaryChainType);
+    }
+
+    return transferWalletAddress ?? topupWalletAddress;
+  }, [
+    fundingWalletSnapshot,
+    primaryChainType,
+    token,
+    topupWalletAddress,
+    transferWalletAddress,
+  ]);
 
   const [inputValue, setInputValue] = useState("0");
 
@@ -84,15 +114,13 @@ export function PrivateTopupAmountStep({
       return;
     }
 
-    let tokenAmount = Big(parsedUsd)
-      .div(unitPrice)
-      .toFixed(token.decimals, Big.roundDown);
+    const { tokenAmount, amountUsd } = usdInputToTokenAmount({
+      usdInput: parsedUsd,
+      maxAmount,
+      price: unitPrice,
+      decimals: token.decimals,
+    });
 
-    if (Big(tokenAmount).gt(maxAmount || 0)) {
-      tokenAmount = applyTokenBalancePercent(maxAmount, 100, token.decimals);
-    }
-
-    const amountUsd = computeUsdFromTokenAmount(tokenAmount, prices, token);
     onAmountChange({ tokenAmount, amountUsd });
   }
 
@@ -142,10 +170,10 @@ export function PrivateTopupAmountStep({
             {t("fundingWallet")}
           </span>
           <div className="flex items-center gap-2">
-            <WalletAvatarIcon address={topupWalletAddress} className="size-5" />
+            <WalletAvatarIcon address={fundingWalletAddress} className="size-5" />
             <span className="truncate text-base font-[500] text-black">
-              {topupWalletAddress
-                ? formatShortWallet(topupWalletAddress)
+              {fundingWalletAddress
+                ? formatShortWallet(fundingWalletAddress)
                 : "--"}
             </span>
           </div>

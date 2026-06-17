@@ -114,3 +114,24 @@ export const privateTopupGuideFooterProceedClass = cn(
   "bg-black px-4 text-[16px] font-[400] text-white transition-opacity hover:opacity-90",
   "disabled:opacity-30 disabled:cursor-not-allowed",
 );
+
+export const privateTopupTokenSearchWrapClass = cn(
+  "relative mb-3 flex h-[34px] w-full items-center rounded-[18px]",
+  "border border-[#ebebeb] bg-white px-3",
+);
+
+export const privateTopupTokenSearchInputClass = cn(
+  "min-w-0 flex-1 border-0 bg-transparent py-0 pl-1 pr-2",
+  "text-sm font-[400] text-black outline-none placeholder:text-[#909090]",
+  "[&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden",
+);
+
+export const privateTopupTokenSearchClearClass = cn(
+  "flex size-4 shrink-0 items-center justify-center rounded-full bg-[#ebebeb]",
+  "text-[#909090] transition-opacity hover:opacity-80",
+);
+
+export const privateTopupTokenSearchEmptyClass = cn(
+  "flex min-h-[120px] items-center justify-center px-4 py-8 text-center",
+  "text-sm font-[400] text-[#909090]",
+);
