@@ -227,7 +227,7 @@ const ruMap = {
     totals: "Тоталы",
     spreads: "Фора",
     halftimeResults: "Результаты первого тайма",
-    topScores: "Популярные счёта",
+    topScores: "Дополнительный счёт",
     orderbook: "Стакан",
     showOrderbook: "Показать стакан",
     copyPageLink: "Копировать ссылку на страницу",
