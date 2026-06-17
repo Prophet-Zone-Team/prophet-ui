@@ -428,6 +428,7 @@ const ruMap = {
     txActionDeposit: "Пополнить",
     txActionWithdraw: "Вывести",
     txActionClaim: "Получить",
+    txActionLoss: "Убыток",
     profitLoss: "Прибыль / Убыток",
     performanceTimeRange: "Временной диапазон эффективности портфеля",
     pnlPeriod1H: "За последний час",

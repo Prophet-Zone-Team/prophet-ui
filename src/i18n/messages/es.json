@@ -637,6 +637,7 @@
     "txActionDeposit": "Depositar",
     "txActionWithdraw": "Retirar",
     "txActionClaim": "Reclamar",
+    "txActionLoss": "Pérdida",
     "profitLoss": "Ganancias / Pérdidas",
     "performanceTimeRange": "Rango de tiempo del rendimiento del portafolio",
     "pnlPeriod1H": "Última hora",

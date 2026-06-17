@@ -637,6 +637,7 @@
     "txActionDeposit": "入金",
     "txActionWithdraw": "出金",
     "txActionClaim": "受取",
+    "txActionLoss": "損失",
     "profitLoss": "損益",
     "performanceTimeRange": "ポートフォリオパフォーマンス期間",
     "pnlPeriod1H": "過去1時間",

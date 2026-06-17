@@ -640,6 +640,7 @@
     "txActionDeposit": "Deposit",
     "txActionWithdraw": "Withdraw",
     "txActionClaim": "Claim",
+    "txActionLoss": "Loss",
     "profitLoss": "Profit / Loss",
     "performanceTimeRange": "Portfolio performance time range",
     "pnlPeriod1H": "Past hour",
