@@ -230,7 +230,7 @@ export function TeamDetailView({
                 />
               </div>
             </div>
-            <div className="grid gird-cols-1 gap-4">
+            <div className="flex flex-col gap-4">
               <TradeWidget
                 snapshot={snapshot}
                 outcomeButtonClassName="w-full"

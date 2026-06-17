@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS='--max-old-space-size=8192' next dev --port 3010",
-    "dev:turbo": "NODE_OPTIONS='--max-old-space-size=8192' next dev --turbo --port 3010",
-    "build": "NODE_OPTIONS='--max-old-space-size=6144' next build",
+    "dev": "NODE_OPTIONS='--max-old-space-size=8192' next dev",
+    "dev:turbo": "NODE_OPTIONS='--max-old-space-size=8192' next dev --turbo",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --no-lint",
     "cf:build": "NODE_OPTIONS='--max-old-space-size=6144' opennextjs-cloudflare build",
     "lint": "eslint . --quiet",
     "lint:strict": "eslint . --max-warnings=0",
