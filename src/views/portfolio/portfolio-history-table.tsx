@@ -175,7 +175,8 @@ function HistoryRowContent({
     deposit: t("txActionDeposit"),
     withdraw: t("txActionWithdraw"),
     claim: t("txActionClaim"),
-    loss: t("txActionLoss")
+    loss: t("txActionLoss"),
+    activity: t("txActionActivity")
   };
   const actionLabel =
     txActionLabels[transaction.type] ?? titleCase(transaction.type);
@@ -287,6 +288,17 @@ function TransactionActionIcon({
       </svg>
     );
   }
+
+  if (type === "activity") {
+    return (
+      <span
+        className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#909090]"
+        aria-hidden="true"
+      >
+        <span className="size-1.5 rounded-full bg-white" />
+      </span>
+    );
+  }
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -319,7 +331,8 @@ function renderHistoryRow(
     deposit: t("txActionDeposit"),
     withdraw: t("txActionWithdraw"),
     claim: t("txActionClaim"),
-    loss: t("txActionLoss")
+    loss: t("txActionLoss"),
+    activity: t("txActionActivity")
   };
   const showStrategyLabel = transaction.source === "strategy";
 
