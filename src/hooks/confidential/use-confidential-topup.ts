@@ -73,6 +73,7 @@ export function useConfidentialTopup(): UseConfidentialTopupResult {
         destinationAssetId,
         amountBaseUnits,
         refundTo: fundingAddress,
+        originBlockchain: token.blockchain,
       });
 
       if (!quote.quote.depositAddress) {

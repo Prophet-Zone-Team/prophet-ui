@@ -1,13 +1,102 @@
 import Big from "big.js";
 
+import { STABLECOIN_SYMBOLS } from "@/config/funding";
+import { FundingNetworkType } from "@/config/funding/networks";
 import {
   hasTokenPrice,
   selectTokenPrice,
   selectTokenUsdValue,
 } from "@/lib/funding/price-selectors";
-import type { StableflowDepositToken } from "@/lib/funding/stableflow";
+import {
+  resolveFundingWalletAddress,
+  type StableflowDepositToken,
+} from "@/lib/funding/stableflow";
+import type { FundingWalletChainType } from "@/store/use-funding-wallet-store";
+import { getFundingWalletAddress } from "@/store/use-funding-wallet-store";
 import type { TokenPricesBySymbol } from "@/types/funding";
 import { removeNumberEndZero } from "@/utils";
+
+import type { PrivateTopupSelectableToken } from "./types";
+
+export function resolvePrivateTopupTransferAddress(
+  token: PrivateTopupSelectableToken,
+  primaryChainType: FundingWalletChainType,
+): string | undefined {
+  if (token.blockchain === "near") {
+    return getFundingWalletAddress("near");
+  }
+
+  if (
+    token.chainType === FundingNetworkType.SVM ||
+    token.chainType === FundingNetworkType.TVM ||
+    token.chainType === FundingNetworkType.NEAR
+  ) {
+    return resolveFundingWalletAddress(token);
+  }
+
+  if (primaryChainType === "evm") {
+    return getFundingWalletAddress("evm");
+  }
+
+  return getFundingWalletAddress("evm");
+}
+
+export function isPrivateTopupTransferWalletConnected(
+  token: PrivateTopupSelectableToken,
+  primaryChainType: FundingWalletChainType,
+): boolean {
+  return Boolean(resolvePrivateTopupTransferAddress(token, primaryChainType));
+}
+
+export type PrivateTopupConnectLabelKey =
+  | "connectChainWallet"
+  | "connectSolanaWallet"
+  | "connectTronWallet"
+  | "connectNearWallet";
+
+export function getPrivateTopupConnectLabelKey(
+  token: Pick<PrivateTopupSelectableToken, "chainType" | "chainName">,
+): PrivateTopupConnectLabelKey {
+  switch (token.chainType) {
+    case FundingNetworkType.SVM:
+      return "connectSolanaWallet";
+    case FundingNetworkType.TVM:
+      return "connectTronWallet";
+    case FundingNetworkType.NEAR:
+      return "connectNearWallet";
+    default:
+      return "connectChainWallet";
+  }
+}
+
+export function formatPrivateTopupConnectLabel(
+  tWallet: (key: PrivateTopupConnectLabelKey, values?: { chainName: string }) => string,
+  token: Pick<PrivateTopupSelectableToken, "chainType" | "chainName">,
+): string {
+  const key = getPrivateTopupConnectLabelKey(token);
+
+  if (key === "connectChainWallet") {
+    return tWallet(key, { chainName: token.chainName });
+  }
+
+  return tWallet(key);
+}
+
+export function matchesPrivateTopupTokenSearch(
+  token: Pick<PrivateTopupSelectableToken, "symbol" | "chainName">,
+  query: string,
+): boolean {
+  const normalized = query.trim().toLowerCase();
+
+  if (!normalized) {
+    return true;
+  }
+
+  return (
+    token.symbol.toLowerCase().includes(normalized) ||
+    token.chainName.toLowerCase().includes(normalized)
+  );
+}
 
 export function parseUsdInput(raw: string): string | undefined {
   const normalized = raw.trim().replace(/[$,\s]/g, "");
@@ -29,6 +118,10 @@ export function selectTokenUnitPrice(
   prices: TokenPricesBySymbol,
   token: Pick<StableflowDepositToken, "symbol" | "price">,
 ): string | undefined {
+  if (STABLECOIN_SYMBOLS.has(token.symbol)) {
+    return "1";
+  }
+
   if (token.price > 0) {
     return String(token.price);
   }

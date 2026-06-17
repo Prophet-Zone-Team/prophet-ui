@@ -29,6 +29,10 @@ import { TopupWalletCard } from "@/views/portfolio/private-topup/topup-wallet-ca
 import { useSolBalances, useTronBalances } from "@/hooks/funding";
 import { useNearBalances } from "@/hooks/funding/use-near-balances";
 import type { FundingWalletChainType } from "@/store/use-funding-wallet-store";
+import {
+  getFundingWalletAddress,
+  useFundingWalletStore,
+} from "@/store/use-funding-wallet-store";
 import { MAIN_HOSTNAME } from "@/config/funding";
 import { useAuth } from "@/context/auth";
 
@@ -78,45 +82,59 @@ export function PrivateTopupPage() {
     enabled: topupWalletConnected,
   });
 
-  const { loading: solBalancesLoading } = useSolBalances({
-    enabled: topupWalletConnected && fundingWallet.chainType === "solana",
+  const evmFundingAddress = useFundingWalletStore((state) =>
+    state.evm.connected ? state.evm.address : undefined,
+  );
+
+  const {
+    loading: solBalancesLoading,
+    getTokenBalance: getSolTokenBalance,
+    refresh: refreshSolBalances,
+  } = useSolBalances({
+    enabled: topupWalletConnected,
     tokens: stableflowFundingTokens,
   });
 
-  const { loading: tronBalancesLoading } = useTronBalances({
-    enabled: topupWalletConnected && fundingWallet.chainType === "tron",
+  const {
+    loading: tronBalancesLoading,
+    getTokenBalance: getTronTokenBalance,
+    refresh: refreshTronBalances,
+  } = useTronBalances({
+    enabled: topupWalletConnected,
     tokens: stableflowFundingTokens,
   });
 
-  const { loading: nearBalancesLoading } = useNearBalances({
-    enabled: topupWalletConnected && fundingWallet.chainType === "near",
+  const {
+    loading: nearBalancesLoading,
+    getTokenBalance: getNearTokenBalance,
+    refresh: refreshNearBalances,
+  } = useNearBalances({
+    enabled: topupWalletConnected,
     tokens: stableflowTokens,
   });
 
   const loadFundingBalances = useCallback(async () => {
-    if (!topupWalletAddress || stableflowFundingTokens.length === 0) {
-      return;
-    }
+    const evmAddress = getFundingWalletAddress("evm");
 
-    if (fundingWallet.chainType !== "evm") {
+    if (!evmAddress || stableflowFundingTokens.length === 0) {
       return;
     }
 
     try {
-      const byChain = await fetchEvmTokenBalances(topupWalletAddress, stableflowFundingTokens);
+      const byChain = await fetchEvmTokenBalances(evmAddress, stableflowFundingTokens);
       setEvmBalances({ evmBalances: byChain });
     } catch {
       // Balance fetch is best-effort; the UI shows "--" on failure.
     }
-  }, [fundingWallet.chainType, setEvmBalances, stableflowFundingTokens, topupWalletAddress]);
+  }, [setEvmBalances, stableflowFundingTokens]);
 
   useEffect(() => {
-    if (topupWalletConnected && topupWalletAddress) {
+    if (topupWalletConnected && evmFundingAddress) {
       void loadFundingBalances();
     } else if (!topupWalletConnected) {
       clearEvmBalances();
     }
-  }, [clearEvmBalances, loadFundingBalances, topupWalletAddress, topupWalletConnected]);
+  }, [clearEvmBalances, evmFundingAddress, loadFundingBalances, topupWalletConnected]);
 
   function handleConnectWallet() {
     setChainPickerOpen(true);
@@ -133,8 +151,19 @@ export function PrivateTopupPage() {
 
   const handleTopupSuccess = useCallback(async () => {
     await refreshPrivateBalance({ requiredSession: false });
-    await loadFundingBalances();
-  }, [refreshPrivateBalance, loadFundingBalances]);
+    await Promise.all([
+      loadFundingBalances(),
+      refreshSolBalances(),
+      refreshTronBalances(),
+      refreshNearBalances(),
+    ]);
+  }, [
+    loadFundingBalances,
+    refreshNearBalances,
+    refreshPrivateBalance,
+    refreshSolBalances,
+    refreshTronBalances,
+  ]);
 
   useEffect(() => {
     void refreshPrivateBalance({ requiredSession: false });
@@ -146,8 +175,13 @@ export function PrivateTopupPage() {
         selectableTokens: stableflowTokens,
         topupWalletAddress,
         privateAccountAddress,
-        balancesLoading: tokensLoading || solBalancesLoading || tronBalancesLoading || nearBalancesLoading,
+        primaryChainType: fundingWallet.chainType,
+        balancesLoading:
+          tokensLoading || solBalancesLoading || tronBalancesLoading || nearBalancesLoading,
         pricesLoading,
+        getNearTokenBalance,
+        getSolTokenBalance,
+        getTronTokenBalance,
       }}
     >
       <div className={privateTopupPageClass}>
