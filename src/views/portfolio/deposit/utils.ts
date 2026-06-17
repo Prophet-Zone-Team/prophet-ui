@@ -244,3 +244,19 @@ export function buildDepositAmountFromMaxBalance(
 
   return { tokenAmount, amountUsd };
 }
+
+export function matchesDepositTokenSearch(
+  token: Pick<DepositSelectableToken, "symbol" | "chainName">,
+  query: string,
+): boolean {
+  const normalized = query.trim().toLowerCase();
+
+  if (!normalized) {
+    return true;
+  }
+
+  return (
+    token.symbol.toLowerCase().includes(normalized) ||
+    token.chainName.toLowerCase().includes(normalized)
+  );
+}
