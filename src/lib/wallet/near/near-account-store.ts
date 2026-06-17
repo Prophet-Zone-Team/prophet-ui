@@ -7,6 +7,7 @@ export interface NearAccountState {
   modal: WalletSelectorModal | null;
   accountId: string | null;
   derivedEvmAddress: string | null;
+  evmDerivationRequested: boolean;
   walletName?: string;
   walletIcon?: string;
   set: (partial: Partial<Omit<NearAccountState, "set" | "reset">>) => void;
@@ -18,6 +19,7 @@ const INITIAL_STATE: Omit<NearAccountState, "set" | "reset"> = {
   modal: null,
   accountId: null,
   derivedEvmAddress: null,
+  evmDerivationRequested: false,
   walletName: undefined,
   walletIcon: undefined,
 };
