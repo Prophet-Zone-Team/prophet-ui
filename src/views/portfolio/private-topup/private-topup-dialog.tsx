@@ -3,7 +3,6 @@
 import type { OneClickStatus, QuoteResponse } from "@stableflow/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import Big from "big.js";
 import { CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -39,8 +38,6 @@ import type {
   PrivateTopupStep,
 } from "@/views/portfolio/private-topup/types";
 import {
-  applyTokenBalancePercent,
-  computeUsdFromTokenAmount,
   formatPrivateTopupConnectLabel,
   isPrivateTopupTransferWalletConnected,
   resolvePrivateTopupTransferAddress,
@@ -50,7 +47,6 @@ import {
   fundingPrimaryButtonClass,
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
-import { usePricesStore } from "@/store";
 import type { FundingWalletChainType } from "@/store/use-funding-wallet-store";
 import {
   getFundingWalletAddress,
@@ -136,7 +132,6 @@ export function PrivateTopupDialog({
   const [bridgeStatusLabel, setBridgeStatusLabel] = useState<string | undefined>();
   const [statusError, setStatusError] = useState<string | undefined>();
 
-  const prices = usePricesStore((state) => state.prices);
   const evmBalances = useBalancesStore((state) => state.evmBalances);
   const mergeEvmBalances = useBalancesStore((state) => state.mergeEvmBalances);
 
@@ -328,21 +323,18 @@ export function PrivateTopupDialog({
       return;
     }
 
-    const max = selectedTokenMaxAmount;
-
-    if (Big(max || 0).gt(0)) {
-      const tokenAmount = applyTokenBalancePercent(max, 100, selectedToken.decimals);
-      const amountUsd = computeUsdFromTokenAmount(tokenAmount, prices, selectedToken);
-      setAmount({ tokenAmount, amountUsd });
-    } else {
-      setAmount(INITIAL_AMOUNT);
-    }
-
+    setAmount(INITIAL_AMOUNT);
     setStep("amount");
   };
 
   const onContinueToConfirm = async () => {
     if (!selectedToken || !polygonUsdcDestinationAssetId) {
+      return;
+    }
+
+    if (
+      !isPrivateTopupAmountStepValid(amount.tokenAmount, selectedTokenMaxAmount)
+    ) {
       return;
     }
 
