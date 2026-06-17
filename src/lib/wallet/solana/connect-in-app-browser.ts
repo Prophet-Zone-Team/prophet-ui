@@ -76,6 +76,7 @@ export async function connectInAppBrowserSolanaWallet(params: {
     params.select(getInAppSolanaWalletName(kind));
     await params.connect();
   } catch (error) {
+    console.log("connectInAppBrowserSolanaWallet error: %o", error);
     throw mapConnectError(error);
   }
 
