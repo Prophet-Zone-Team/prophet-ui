@@ -6,6 +6,9 @@ import {
   type InAppBrowserWalletKind,
 } from "@/context/rainbowkit/utils";
 import { ensureTronWallet } from "@/lib/wallet/tokenpocket/ensure-matic-wallet";
+import { throwTpFundingSwitchPending } from "@/lib/wallet/tokenpocket/ensure-tp-wallet";
+import { TP_BLOCKCHAIN_TRON } from "@/lib/wallet/tokenpocket/constants";
+import { probeTokenPocketTronReady } from "@/lib/wallet/tokenpocket/tp-provider-probe";
 
 const TRON_WALLET_READY_FOUND = "Found";
 
@@ -56,35 +59,9 @@ export function resolveInAppTronAdapter(
   );
 }
 
-export async function connectInAppBrowserTronWallet<T extends TronFundingWalletAdapter>(
-  adapters: T[],
+async function connectTronAdapter<T extends TronFundingWalletAdapter>(
+  adapter: T,
 ): Promise<{ address: string; adapter: T }> {
-  if (!isInWalletInAppBrowser()) {
-    throw new Error("Not in a supported in-app browser.");
-  }
-
-  const kind = getInAppBrowserWalletKind();
-
-  if (!kind) {
-    throw new Error("Not in a supported in-app browser.");
-  }
-
-  if (kind === "tokenpocket") {
-    const tronResult = await ensureTronWallet();
-
-    if (tronResult.reloadPending) {
-      throw new Error(
-        "Switching to the Tron wallet in TokenPocket. Tap Connect wallet again after the page reloads.",
-      );
-    }
-  }
-
-  const adapter = resolveInAppTronAdapter(adapters, kind);
-
-  if (!adapter) {
-    throw new Error("No compatible Tron wallet provider found in this browser.");
-  }
-
   try {
     await adapter.connect();
   } catch (error) {
@@ -98,4 +75,45 @@ export async function connectInAppBrowserTronWallet<T extends TronFundingWalletA
   }
 
   return { address, adapter: adapter as T };
+}
+
+export async function connectInAppBrowserTronWallet<T extends TronFundingWalletAdapter>(
+  adapters: T[],
+): Promise<{ address: string; adapter: T }> {
+  if (!isInWalletInAppBrowser()) {
+    throw new Error("Not in a supported in-app browser.");
+  }
+
+  const kind = getInAppBrowserWalletKind();
+
+  if (!kind) {
+    throw new Error("Not in a supported in-app browser.");
+  }
+
+  const adapter = resolveInAppTronAdapter(adapters, kind);
+
+  if (!adapter) {
+    throw new Error("No compatible Tron wallet provider found in this browser.");
+  }
+
+  if (kind === "tokenpocket" && probeTokenPocketTronReady()) {
+    try {
+      return await connectTronAdapter(adapter as T);
+    } catch (error) {
+      if (isUserRejectedRequest(error)) {
+        throw mapConnectError(error);
+      }
+      // Fall through to tp-js-sdk wallet family switch.
+    }
+  }
+
+  if (kind === "tokenpocket") {
+    const tronResult = await ensureTronWallet();
+
+    if (tronResult.reloadPending) {
+      throwTpFundingSwitchPending(TP_BLOCKCHAIN_TRON);
+    }
+  }
+
+  return connectTronAdapter(adapter as T);
 }

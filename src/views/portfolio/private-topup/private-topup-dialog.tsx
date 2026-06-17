@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { shouldHideFundingWalletChange } from "@/context/rainbowkit/utils";
+import { isTpFundingSwitchPendingError } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import { FundingNetworkType } from "@/config/funding/networks";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
 import { fetchEvmTokenBalances } from "@/lib/funding/evm-balances";
@@ -93,6 +94,10 @@ export function PrivateTopupDialog({
         await connectForToken(token);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        if (isTpFundingSwitchPendingError(error)) {
+          toast.message(message);
+          return;
+        }
         toast.error(message);
       }
     },

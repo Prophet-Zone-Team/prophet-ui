@@ -1,26 +1,21 @@
 "use client";
 
-import { TP_REDIRECT_STORAGE_KEY } from "@/lib/wallet/tokenpocket/constants";
+import {
+  TP_FUNDING_SWITCH_FLAG_KEY,
+} from "@/lib/wallet/tokenpocket/constants";
 import { getTpSdk } from "@/lib/wallet/tokenpocket/tp-sdk-client";
+import {
+  resolveTpHostKind,
+  saveTpRedirectContext,
+  setTpFundingSwitchFlag,
+  TpFundingSwitchPendingError,
+  clearTpRedirectContext,
+} from "@/lib/wallet/tokenpocket/tp-funding-switch";
 
 export type EnsureTpWalletResult = {
   alreadyActive: boolean;
   reloadPending: boolean;
 };
-
-function saveRedirectPath() {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const pathname = window.location.pathname ?? "";
-  const queryString = window.location.search ?? "";
-  const redirectTo = `${pathname}${queryString}`;
-
-  if (redirectTo) {
-    localStorage.setItem(TP_REDIRECT_STORAGE_KEY, redirectTo);
-  }
-}
 
 function buildSwitchError(blockchain: string) {
   return `Switch to the ${blockchain} wallet in TokenPocket to continue.`;
@@ -39,7 +34,8 @@ export async function ensureTpWallet(blockchain: string): Promise<EnsureTpWallet
     // Fall through to wallet switch attempt.
   }
 
-  saveRedirectPath();
+  saveTpRedirectContext();
+  setTpFundingSwitchFlag(blockchain);
 
   try {
     const switched = await tp.getWallet({
@@ -53,8 +49,9 @@ export async function ensureTpWallet(blockchain: string): Promise<EnsureTpWallet
 
     return { alreadyActive: false, reloadPending: true };
   } catch (error) {
+    clearTpRedirectContext();
     if (typeof window !== "undefined") {
-      localStorage.removeItem(TP_REDIRECT_STORAGE_KEY);
+      sessionStorage.removeItem(TP_FUNDING_SWITCH_FLAG_KEY);
     }
 
     if (error instanceof Error) {
@@ -65,10 +62,15 @@ export async function ensureTpWallet(blockchain: string): Promise<EnsureTpWallet
   }
 }
 
-export function clearTokenPocketRedirectPath() {
-  if (typeof window === "undefined") {
-    return;
-  }
+export function throwTpFundingSwitchPending(blockchain: string): never {
+  const hostKind =
+    typeof window !== "undefined"
+      ? resolveTpHostKind(window.location.hostname)
+      : "main";
 
-  localStorage.removeItem(TP_REDIRECT_STORAGE_KEY);
+  throw new TpFundingSwitchPendingError(blockchain, hostKind);
+}
+
+export function clearTokenPocketRedirectPath() {
+  clearTpRedirectContext();
 }

@@ -14,6 +14,7 @@ import type { Transaction, TransactionVersion, VersionedTransaction } from "@sol
 import { PublicKey } from "@solana/web3.js";
 
 import type { InAppBrowserWalletKind } from "@/context/rainbowkit/utils";
+import { probeTokenPocketSolanaProvider } from "@/lib/wallet/tokenpocket/tp-provider-probe";
 
 type InjectedSolanaProvider = {
   connect?: (options?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: PublicKey }>;
@@ -29,9 +30,10 @@ type InjectedSolanaProvider = {
 export const OKX_SOLANA_WALLET_NAME = "OKX Wallet" as WalletName<"OKX Wallet">;
 export const BINANCE_SOLANA_WALLET_NAME = "Binance Wallet" as WalletName<"Binance Wallet">;
 export const METAMASK_SOLANA_WALLET_NAME = "MetaMask" as WalletName<"MetaMask">;
+export const TOKENPOCKET_SOLANA_WALLET_NAME = "TokenPocket" as WalletName<"TokenPocket">;
 
 const IN_APP_SOLANA_WALLET_NAMES: Record<InAppBrowserWalletKind, WalletName[]> = {
-  tokenpocket: ["Phantom" as WalletName],
+  tokenpocket: [TOKENPOCKET_SOLANA_WALLET_NAME, "Phantom" as WalletName],
   okx: [OKX_SOLANA_WALLET_NAME],
   metamask: [METAMASK_SOLANA_WALLET_NAME],
   binance: [BINANCE_SOLANA_WALLET_NAME],
@@ -172,6 +174,10 @@ class InjectedSolanaWalletAdapter extends BaseWalletAdapter {
   }
 }
 
+function getTokenPocketSolanaProvider(): InjectedSolanaProvider | undefined {
+  return probeTokenPocketSolanaProvider() as InjectedSolanaProvider | undefined;
+}
+
 function getOkxSolanaProvider(): InjectedSolanaProvider | undefined {
   return (window.okxwallet as any)?.solana as InjectedSolanaProvider | undefined;
 }
@@ -201,6 +207,12 @@ function getMetaMaskSolanaProvider(): InjectedSolanaProvider | undefined {
 
 export function buildInAppSolanaWalletAdapters(): WalletAdapter[] {
   return [
+    new InjectedSolanaWalletAdapter({
+      name: TOKENPOCKET_SOLANA_WALLET_NAME,
+      url: "https://www.tokenpocket.pro",
+      icon: "https://www.tokenpocket.pro/favicon.ico",
+      getProvider: getTokenPocketSolanaProvider,
+    }),
     new InjectedSolanaWalletAdapter({
       name: OKX_SOLANA_WALLET_NAME,
       url: "https://okx.com",

@@ -91,6 +91,21 @@ describe("resolveInAppSolanaWallet", () => {
       emit: () => false,
     },
     {
+      name: "TokenPocket",
+      readyState: SolanaWalletReadyState.Installed,
+      url: "https://www.tokenpocket.pro",
+      icon: "",
+      publicKey: null,
+      connecting: false,
+      connected: false,
+      connect: async () => undefined,
+      disconnect: async () => undefined,
+      sendTransaction: async () => "",
+      on: () => undefined,
+      off: () => undefined,
+      emit: () => false,
+    },
+    {
       name: "Phantom",
       readyState: SolanaWalletReadyState.Installed,
       url: "https://phantom.app",
@@ -111,7 +126,7 @@ describe("resolveInAppSolanaWallet", () => {
     assert.equal(getInAppSolanaWalletName("okx"), "OKX Wallet");
     assert.equal(getInAppSolanaWalletName("metamask"), "MetaMask");
     assert.equal(getInAppSolanaWalletName("binance"), "Binance Wallet");
-    assert.equal(getInAppSolanaWalletName("tokenpocket"), "Phantom");
+    assert.equal(getInAppSolanaWalletName("tokenpocket"), "TokenPocket");
   });
 
   it("resolves the host wallet adapter by kind", () => {
@@ -119,7 +134,7 @@ describe("resolveInAppSolanaWallet", () => {
     assert.equal(resolveInAppSolanaWallet(typedWallets, "okx")?.name, "OKX Wallet");
     assert.equal(resolveInAppSolanaWallet(typedWallets, "metamask")?.name, "MetaMask");
     assert.equal(resolveInAppSolanaWallet(typedWallets, "binance")?.name, "Binance Wallet");
-    assert.equal(resolveInAppSolanaWallet(typedWallets, "tokenpocket")?.name, "Phantom");
+    assert.equal(resolveInAppSolanaWallet(typedWallets, "tokenpocket")?.name, "TokenPocket");
   });
 });
 

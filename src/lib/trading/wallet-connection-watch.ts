@@ -12,6 +12,7 @@ import {
   getPrimaryAuthorizedWalletAccount,
   isWalletAddressAuthorized
 } from "@/components/trading/wallet-provider";
+import { isTokenPocketFundingSwitchGracePeriod } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 
 export type WalletConnectionStatus =
   | "matched"
@@ -234,6 +235,10 @@ export function subscribeWalletConnection(
       }
 
       if (snapshot.status === "disconnected") {
+        if (isTokenPocketFundingSwitchGracePeriod(Boolean(options.expectedAddress))) {
+          return;
+        }
+
         options.onDisconnected();
         return;
       }
