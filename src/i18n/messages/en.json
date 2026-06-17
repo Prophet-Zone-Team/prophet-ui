@@ -49,6 +49,8 @@
     "selectWalletSubtitle": "Select a wallet to connect your account",
     "walletTokenPocketDescription": "Multi-chain wallet",
     "walletOkxDescription": "OKX exchange wallet",
+    "walletMetaMaskDescription": "Self-custody EVM wallet",
+    "walletBinanceDescription": "Binance Web3 Wallet",
     "walletOthersDescription": "Other wallets",
     "selectWalletEmpty": "No supported wallet found on this device.",
     "connectSolanaWallet": "Connect Solana wallet",

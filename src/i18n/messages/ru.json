@@ -49,6 +49,8 @@
     "selectWalletSubtitle": "Выберите кошелек для подключения аккаунта",
     "walletTokenPocketDescription": "Мультичейн-кошелек",
     "walletOkxDescription": "Кошелек биржи OKX",
+    "walletMetaMaskDescription": "EVM-кошелек с самохранением",
+    "walletBinanceDescription": "Binance Web3 Wallet",
     "walletOthersDescription": "Другие кошельки",
     "selectWalletEmpty": "На этом устройстве не найден поддерживаемый кошелек.",
     "connectSolanaWallet": "Подключить кошелек Solana",

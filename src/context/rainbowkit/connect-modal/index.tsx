@@ -7,7 +7,14 @@ import { useDevice } from "@/hooks/common/use-device";
 
 import { connectInAppBrowserWallet } from "@/lib/wallet/evm/connect-in-app-browser";
 
-import { isInMobileBrowser, isInWalletInAppBrowser, openOkxWallet, openTokenPocket } from "../utils";
+import {
+  isInMobileBrowser,
+  isInWalletInAppBrowser,
+  openBinanceWallet,
+  openMetaMaskWallet,
+  openOkxWallet,
+  openTokenPocket,
+} from "../utils";
 import { launchWalletApp, WalletSelectorModal } from "./wallet-selector";
 
 export interface ConnectModal {
@@ -34,7 +41,9 @@ export function ConnectModalProvider({ children }: { children: React.ReactNode }
   const isOpenWalletApp = useMemo(() => {
     const isOpenTp = openTokenPocket({ checkOnly: true });
     const isOpenOK = openOkxWallet({ checkOnly: true });
-    return isMobileBrowser && (isOpenTp || isOpenOK);
+    const isOpenMM = openMetaMaskWallet({ checkOnly: true });
+    const isOpenBinance = openBinanceWallet({ checkOnly: true });
+    return isMobileBrowser && (isOpenTp || isOpenOK || isOpenMM || isOpenBinance);
   }, [isMobileBrowser]);
 
   const [connectModalOpen, setConnectModalOpen] = useState(false);

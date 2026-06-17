@@ -8,15 +8,25 @@ import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
 import { getStableflowWalletLogo } from "@/utils/logo";
 
-import { openOkxWallet, openTokenPocket } from "../utils";
+import {
+  openBinanceWallet,
+  openMetaMaskWallet,
+  openOkxWallet,
+  openTokenPocket,
+} from "../utils";
 
-export type WalletId = "tokenpocket" | "okx" | "others";
+export type WalletId = "tokenpocket" | "okx" | "metamask" | "binance" | "others";
 
 export type WalletOption = {
   id: WalletId;
   name: string;
   icon: string;
-  descriptionKey: "walletTokenPocketDescription" | "walletOkxDescription" | "walletOthersDescription";
+  descriptionKey:
+    | "walletTokenPocketDescription"
+    | "walletOkxDescription"
+    | "walletMetaMaskDescription"
+    | "walletBinanceDescription"
+    | "walletOthersDescription";
   downloadUrl: string;
 };
 
@@ -36,6 +46,20 @@ export const walletOptions: WalletOption[] = [
     downloadUrl: "https://www.okx.com/web3",
   },
   {
+    id: "metamask",
+    name: "MetaMask",
+    icon: getStableflowWalletLogo("logo-metamask.png"),
+    descriptionKey: "walletMetaMaskDescription",
+    downloadUrl: "https://metamask.io/download",
+  },
+  {
+    id: "binance",
+    name: "Binance Web3 Wallet",
+    icon: getStableflowWalletLogo("logo-binance.png"),
+    descriptionKey: "walletBinanceDescription",
+    downloadUrl: "https://www.binance.com/en/web3wallet",
+  },
+  {
     id: "others",
     name: "Others",
     icon: getStableflowWalletLogo("logo-walletconnect.png"),
@@ -47,6 +71,8 @@ export const walletOptions: WalletOption[] = [
 const walletLaunchChecks: Record<WalletId, (params?: { checkOnly?: boolean }) => boolean> = {
   tokenpocket: openTokenPocket,
   okx: openOkxWallet,
+  metamask: openMetaMaskWallet,
+  binance: openBinanceWallet,
   others: () => true,
 };
 

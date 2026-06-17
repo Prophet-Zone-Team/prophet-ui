@@ -16,6 +16,8 @@ import { ensureMaticWallet } from "@/lib/wallet/tokenpocket/ensure-matic-wallet"
 const CONNECTOR_ID_HINTS: Record<InAppBrowserWalletKind, string[]> = {
   tokenpocket: ["tokenpocket"],
   okx: ["okx", "okex"],
+  metamask: ["metamask"],
+  binance: ["binance", "wallet.binance.com"],
 };
 
 function connectorMatchesHints(connector: Connector, hints: string[]) {
