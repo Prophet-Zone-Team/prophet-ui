@@ -30,14 +30,18 @@ export const OKX_SOLANA_WALLET_NAME = "OKX Wallet" as WalletName<"OKX Wallet">;
 export const BINANCE_SOLANA_WALLET_NAME = "Binance Wallet" as WalletName<"Binance Wallet">;
 export const METAMASK_SOLANA_WALLET_NAME = "MetaMask" as WalletName<"MetaMask">;
 
-const IN_APP_SOLANA_WALLET_NAMES: Record<InAppBrowserWalletKind, WalletName> = {
-  tokenpocket: "Phantom" as WalletName,
-  okx: OKX_SOLANA_WALLET_NAME,
-  metamask: METAMASK_SOLANA_WALLET_NAME,
-  binance: BINANCE_SOLANA_WALLET_NAME,
+const IN_APP_SOLANA_WALLET_NAMES: Record<InAppBrowserWalletKind, WalletName[]> = {
+  tokenpocket: ["Solflare" as WalletName, "Phantom" as WalletName],
+  okx: [OKX_SOLANA_WALLET_NAME],
+  metamask: [METAMASK_SOLANA_WALLET_NAME],
+  binance: [BINANCE_SOLANA_WALLET_NAME],
 };
 
 export function getInAppSolanaWalletName(kind: InAppBrowserWalletKind): WalletName {
+  return IN_APP_SOLANA_WALLET_NAMES[kind][0];
+}
+
+export function getInAppSolanaWalletNames(kind: InAppBrowserWalletKind): WalletName[] {
   return IN_APP_SOLANA_WALLET_NAMES[kind];
 }
 
@@ -222,12 +226,16 @@ export function resolveInAppSolanaWallet(
   wallets: WalletAdapter[],
   kind: InAppBrowserWalletKind,
 ): WalletAdapter | undefined {
-  const targetName = getInAppSolanaWalletName(kind);
+  const targetNames = getInAppSolanaWalletNames(kind);
 
   return wallets.find(
     (wallet) =>
-      wallet.name === targetName &&
+      targetNames.includes(wallet.name) &&
       (wallet.readyState === WalletReadyState.Installed ||
         wallet.readyState === WalletReadyState.Loadable),
-  ) ?? wallets?.[0];
+  ) ?? wallets.find(
+    (wallet) =>
+      wallet.readyState === WalletReadyState.Installed ||
+      wallet.readyState === WalletReadyState.Loadable
+  );
 }
