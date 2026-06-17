@@ -58,6 +58,9 @@ export function resolveInAppTronAdapter(
   return adapters.find(
     (adapter) =>
       adapter.name === targetName && adapter.readyState === TRON_WALLET_READY_FOUND,
+  ) ?? adapters.find(
+    (adapter) =>
+      adapter.readyState === TRON_WALLET_READY_FOUND,
   );
 }
 
