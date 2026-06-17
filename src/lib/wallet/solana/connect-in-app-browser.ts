@@ -50,8 +50,12 @@ export async function connectInAppBrowserSolanaWallet(params: {
     throw new Error("Not in a supported in-app browser.");
   }
 
+  console.log("connectInAppBrowserSolanaWallet kind: %o", kind);
+
   if (kind === "tokenpocket") {
     const solanaResult = await ensureSolanaWallet();
+
+    console.log("connectInAppBrowserSolanaWallet solanaResult: %o", solanaResult);
 
     if (solanaResult.reloadPending) {
       throw new Error(
@@ -61,6 +65,8 @@ export async function connectInAppBrowserSolanaWallet(params: {
   }
 
   const wallet = resolveInAppSolanaWallet(params.wallets, kind);
+
+  console.log("connectInAppBrowserSolanaWallet wallet: %o", wallet);
 
   if (!wallet) {
     throw new Error("No compatible Solana wallet provider found in this browser.");
