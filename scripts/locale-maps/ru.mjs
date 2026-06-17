@@ -412,6 +412,7 @@ const ruMap = {
     keepOrders: "Оставить ордера",
     transactionHistory: "История транзакций",
     loadingTransactionHistory: "Загрузка истории транзакций…",
+    showMoreHistory: "Показать больше истории",
     connectWalletToViewHistory:
       "Подключите кошелёк, чтобы просмотреть историю транзакций подключённого аккаунта.",
     noTransactionHistory: "Нет истории транзакций",
@@ -429,6 +430,7 @@ const ruMap = {
     txActionWithdraw: "Вывести",
     txActionClaim: "Получить",
     txActionLoss: "Убыток",
+    txActionActivity: "Активность",
     profitLoss: "Прибыль / Убыток",
     performanceTimeRange: "Временной диапазон эффективности портфеля",
     pnlPeriod1H: "За последний час",
