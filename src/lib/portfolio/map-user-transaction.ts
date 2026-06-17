@@ -3,6 +3,7 @@ import type {
   PortfolioTransactionType
 } from "@/lib/portfolio/types";
 import type { ProphetUserTransaction } from "@/types/prophet-api";
+import type { UserPositionRecord } from "@/types/market";
 
 const LEGACY_TRANSACTION_TYPES = new Set<PortfolioTransactionType>([
   "buy",
@@ -132,6 +133,87 @@ export function mapProphetUserTransactions(
   return (rows ?? []).map((row, index) =>
     mapProphetUserTransaction(row, index)
   );
+}
+
+function normalizeOutcome(value: string | undefined): string {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+function rawTradeMatchesZeroValuePosition(
+  row: ProphetUserTransaction,
+  position: UserPositionRecord
+): boolean {
+  if (position.currentValue !== 0) {
+    return false;
+  }
+
+  const transactionOutcome = normalizeOutcome(row.side);
+  const positionOutcome = normalizeOutcome(position.outcome);
+
+  if (
+    transactionOutcome &&
+    positionOutcome &&
+    transactionOutcome !== positionOutcome
+  ) {
+    return false;
+  }
+
+  const transactionSlug = row.slug?.trim();
+
+  if (transactionSlug) {
+    const slugs = [position.slug, position.eventSlug].filter(Boolean);
+
+    return slugs.some((slug) => slug === transactionSlug);
+  }
+
+  if (row.team_name?.trim()) {
+    const team = row.team_name.trim().toLowerCase();
+    const text = `${position.title} ${position.slug}`.toLowerCase();
+
+    return text.includes(team);
+  }
+
+  return false;
+}
+
+function isLossCandidateTrade(row: ProphetUserTransaction): boolean {
+  const apiType = row.type?.trim().toLowerCase();
+  const tradeSide = row.trade_side?.trim().toLowerCase();
+
+  return apiType === "trade" && tradeSide === "buy";
+}
+
+export function applyTradeLossFromPositions(
+  mapped: PortfolioTransactionRecord[],
+  rawRows: ProphetUserTransaction[],
+  positions: UserPositionRecord[]
+): PortfolioTransactionRecord[] {
+  const zeroValuePositions = positions.filter(
+    (position) => position.currentValue === 0
+  );
+
+  if (zeroValuePositions.length === 0) {
+    return mapped;
+  }
+
+  return mapped.map((transaction, index) => {
+    const raw = rawRows[index];
+
+    if (!raw || !isLossCandidateTrade(raw)) {
+      return transaction;
+    }
+
+    const hasMatchingLossPosition = zeroValuePositions.some((position) =>
+      rawTradeMatchesZeroValuePosition(raw, position)
+    );
+
+    // No matching position in the API response — keep the original buy type.
+    if (!hasMatchingLossPosition) {
+      return transaction;
+    }
+
+    return { ...transaction, type: "loss" };
+  });
 }
 
 export function isFundingPortfolioTransactionType(

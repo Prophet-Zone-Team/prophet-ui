@@ -108,6 +108,7 @@ export function mapNextMatch(
 
   return {
     id: match.id,
+    slug: match.slug?.trim() || undefined,
     apiFixtureId: match.api_fixture_id,
     referee: match.referee,
     timezone: match.timezone,

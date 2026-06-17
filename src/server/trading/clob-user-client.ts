@@ -381,22 +381,36 @@ export async function fetchUserActivity({
 export async function fetchUserPositions({
   userAddress,
   conditionIds,
-  limit = 100
+  limit = 100,
+  redeemable,
+  sizeThreshold = "0",
+  offset
 }: {
   userAddress: string;
   conditionIds?: string[];
   limit?: number;
+  redeemable?: boolean;
+  sizeThreshold?: number | string;
+  offset?: number;
 }): Promise<UserPositionRecord[]> {
   const params = new URLSearchParams({
     user: userAddress,
     limit: String(Math.max(1, Math.min(limit, 500))),
-    sizeThreshold: "0",
+    sizeThreshold: String(sizeThreshold),
     sortBy: "CURRENT",
     sortDirection: "DESC"
   });
 
   if (conditionIds?.length) {
     params.set("market", conditionIds.join(","));
+  }
+
+  if (redeemable !== undefined) {
+    params.set("redeemable", String(redeemable));
+  }
+
+  if (offset !== undefined && Number.isFinite(offset) && offset > 0) {
+    params.set("offset", String(offset));
   }
 
   const response = await serverFetch(

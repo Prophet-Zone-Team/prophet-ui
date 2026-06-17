@@ -346,6 +346,7 @@ export function TradeTicketForm({
       <div id={TRADE_BID_BUTTON_ID} className="w-full">
         <TradeAuthActionButton
           tradeSide={tradeSide}
+          outcomeSide={outcomeSide}
           actionLabel={actionLabel}
           connectLabel={t("enableTrading")}
           connectingLabel={t("connecting")}
