@@ -178,9 +178,18 @@ export function resolveOutcomeSideForGamePosition(
 
 export function derivePositionSellReceiveAmount(
   position: UserPositionRecord,
-  selectedShares: number
+  selectedShares: number,
+  sidePrice?: number
 ): number {
-  if (position.size <= 0 || selectedShares <= 0) {
+  if (selectedShares <= 0) {
+    return 0;
+  }
+
+  if (sidePrice !== undefined && Number.isFinite(sidePrice) && sidePrice > 0) {
+    return roundMoney(selectedShares * sidePrice);
+  }
+
+  if (position.size <= 0) {
     return 0;
   }
 

@@ -8,6 +8,7 @@ import { resolveFreshFixtureOutcome } from "@/lib/market/trade-ticket";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
 import { fireBasicConfettiFromElement } from "@/lib/confetti/fire-basic-cannon";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
+import { fetchOnchainConditionalTokenBalance } from "@/lib/trading/onchain-conditional-balance";
 import {
   resolveTradePrimaryAction,
   runTradePrimaryAction
@@ -99,8 +100,8 @@ import {
   fetchReadinessForPreview,
   formatGameDefaultLimitPriceString,
   formatTeamDefaultLimitPriceString,
-  getGameDefaultLimitPrice,
-  getTeamDefaultLimitPrice,
+  resolveGameDefaultLimitPrice,
+  resolveTeamDefaultLimitPrice,
   isEligibilityNetworkFailure,
   parseLimitPriceInput,
   parseOrderAmount,
@@ -162,7 +163,7 @@ const TRADE_TICKET_NON_GAME_MATCH: WorldCupMatch = {
   freshness: { source: "none", status: "unavailable" }
 };
 
-function resolveLiveOutcomeButtonPrice(
+function resolveLiveOutcomeTradePrice(
   tokenId: string | undefined,
   tokenPrices: Record<string, { bestAsk?: number; bestBid?: number } | undefined>,
   binarySide: "yes" | "no",
@@ -171,13 +172,24 @@ function resolveLiveOutcomeButtonPrice(
   matchProbability: number,
   tradeSide: BidTradeSide
 ): number | undefined {
-  const livePrice = tokenId ? tokenPrices[tokenId]?.bestAsk : undefined;
+  const liveBookPrice =
+    tradeSide === "sell"
+      ? tokenId
+        ? tokenPrices[tokenId]?.bestBid
+        : undefined
+      : tokenId
+        ? tokenPrices[tokenId]?.bestAsk
+        : undefined;
 
-  if (isValidAskPrice(livePrice)) {
-    return livePrice;
+  if (isValidAskPrice(liveBookPrice)) {
+    return liveBookPrice;
   }
 
   if (fixtureOutcome) {
+    if (tradeSide === "sell") {
+      return getDefaultFixtureLimitPrice(fixtureOutcome, binarySide, tradeSide);
+    }
+
     return resolveFixtureDisplayAskPrice(fixtureOutcome, binarySide);
   }
 
@@ -239,6 +251,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     yes: 0,
     no: 0
   });
+  const [onchainSellShares, setOnchainSellShares] = useState<number | undefined>();
   const readinessFetchGeneration = useRef(0);
   const lastFetchedReadinessKeyRef = useRef<string | null>(null);
   const previewForReadinessRef = useRef<BidOrderPreview | undefined>(undefined);
@@ -406,6 +419,40 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     { enabled: teamWsEnabled }
   );
 
+  const gameMoneylineOutcome = useMemo(() => {
+    if (input.variant !== "game") {
+      return undefined;
+    }
+
+    return findGameMarketOutcome(input.gameSnapshot.outcomes, matchOutcomeSide);
+  }, [input, matchOutcomeSide]);
+
+  const gameMoneylineWsEnabled =
+    input.variant === "game" &&
+    !freshSelectedFixtureOutcome &&
+    isGameMarketWsEnabled(liveGameMatch) &&
+    Boolean(gameMoneylineOutcome?.tokenId || gameMoneylineOutcome?.noTokenId);
+
+  const gameMoneylineTokenIds = useMemo(
+    () =>
+      gameMoneylineWsEnabled
+        ? [gameMoneylineOutcome?.tokenId, gameMoneylineOutcome?.noTokenId]
+        : [],
+    [
+      gameMoneylineOutcome?.noTokenId,
+      gameMoneylineOutcome?.tokenId,
+      gameMoneylineWsEnabled
+    ]
+  );
+
+  const { pricesByTokenId: gameMoneylineTokenPrices } = useMarketWsPrices(
+    gameMoneylineTokenIds
+  );
+
+  useRegisterMarketWsTokens("trade-ticket-game-moneyline", gameMoneylineTokenIds, {
+    enabled: gameMoneylineWsEnabled
+  });
+
   const sellPosition = input.sellPosition;
   const inputVariant = input.variant;
   const teamSnapshot = input.variant === "team" ? input.snapshot : undefined;
@@ -424,19 +471,27 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       return undefined;
     }
 
+    if (sellPosition) {
+      return resolveMaxSellShares(
+        onchainSellShares,
+        sellPosition.size
+      );
+    }
+
     const positionSize =
-      sellPosition?.size ??
-      (outcomeShares[outcomeSide] > 0 ? outcomeShares[outcomeSide] : undefined);
+      outcomeShares[outcomeSide] > 0 ? outcomeShares[outcomeSide] : undefined;
 
     return resolveMaxSellShares(
       positionSize,
       readiness?.balances?.conditionalTokenBalance
     );
   }, [
+    onchainSellShares,
     outcomeShares,
     outcomeSide,
     readiness?.balances?.conditionalTokenBalance,
     sellPosition?.size,
+    sellPosition,
     tradeSide
   ]);
 
@@ -467,10 +522,18 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     const snapshot = input.snapshot;
-    const defaultLimit = getTeamDefaultLimitPrice(
+    const sellTokenId =
+      sellPosition && tradeSide === "sell"
+        ? sellPosition.asset
+        : outcomeSide === "yes"
+          ? yesTokenId
+          : noTokenId;
+    const sellLiveBook = sellTokenId ? teamTokenPrices[sellTokenId] : undefined;
+    const defaultLimit = resolveTeamDefaultLimitPrice(
       snapshot,
       outcomeSide,
-      tradeSide
+      tradeSide,
+      sellLiveBook
     );
     const orderLimitPrice = resolveOrderLimitPrice(
       orderMode,
@@ -538,18 +601,26 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     const liveProbabilities = effectiveFixtureOutcome
       ? resolveLiveOutcomeYesNoProbabilities(effectiveFixtureOutcome)
       : undefined;
-    const defaultLimit = effectiveFixtureOutcome
-      ? getDefaultFixtureLimitPrice(
-          effectiveFixtureOutcome,
-          outcomeSide,
-          tradeSide
-        )
-      : getGameDefaultLimitPrice(
-          gameSnapshot,
-          matchOutcomeSide,
-          outcomeSide,
-          tradeSide
-        );
+    const matchOutcome = effectiveFixtureOutcome
+      ? undefined
+      : findGameMarketOutcome(gameSnapshot.outcomes, matchOutcomeSide);
+    const sellTokenId =
+      sellPosition && tradeSide === "sell"
+        ? sellPosition.asset
+        : outcomeSide === "yes"
+          ? effectiveFixtureOutcome?.tokenId ?? matchOutcome?.tokenId
+          : effectiveFixtureOutcome?.noTokenId ?? matchOutcome?.noTokenId;
+    const sellLiveBook = sellTokenId
+      ? (fixtureTokenPrices[sellTokenId] ?? gameMoneylineTokenPrices[sellTokenId])
+      : undefined;
+    const defaultLimit = resolveGameDefaultLimitPrice(
+      gameSnapshot,
+      matchOutcomeSide,
+      outcomeSide,
+      tradeSide,
+      effectiveFixtureOutcome,
+      sellLiveBook
+    );
     const orderLimitPrice = resolveOrderLimitPrice(
       orderMode,
       parseLimitPriceInput(limitPrice, defaultLimit ?? 0),
@@ -566,10 +637,18 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       orderType,
       fixtureOutcome: effectiveFixtureOutcome
     });
-    const preview = toBidOrderPreview(gamePreview);
-    const matchOutcome = effectiveFixtureOutcome
-      ? undefined
-      : findGameMarketOutcome(gameSnapshot.outcomes, matchOutcomeSide);
+    const basePreview = toBidOrderPreview(gamePreview);
+    const preview =
+      sellPosition && tradeSide === "sell"
+        ? { ...basePreview, tokenId: sellPosition.asset }
+        : basePreview;
+    const gameLiveTokenPrices = effectiveFixtureOutcome
+      ? fixtureTokenPrices
+      : gameMoneylineTokenPrices;
+    const yesLiveTokenId =
+      effectiveFixtureOutcome?.tokenId ?? matchOutcome?.tokenId;
+    const noLiveTokenId =
+      effectiveFixtureOutcome?.noTokenId ?? matchOutcome?.noTokenId;
 
     return {
       gameSnapshot,
@@ -578,9 +657,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       yesPrice: liveProbabilities?.yes ?? matchProbability,
       noPrice: liveProbabilities?.no ?? Math.max(0, 100 - matchProbability),
       yesTokenPrice:
-        resolveLiveOutcomeButtonPrice(
-          effectiveFixtureOutcome?.tokenId,
-          fixtureTokenPrices,
+        resolveLiveOutcomeTradePrice(
+          yesLiveTokenId,
+          gameLiveTokenPrices,
           "yes",
           effectiveFixtureOutcome,
           matchOutcome,
@@ -588,9 +667,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
           tradeSide
         ) ?? calculateReferencePrice(matchProbability, "yes"),
       noTokenPrice:
-        resolveLiveOutcomeButtonPrice(
-          effectiveFixtureOutcome?.noTokenId,
-          fixtureTokenPrices,
+        resolveLiveOutcomeTradePrice(
+          noLiveTokenId,
+          gameLiveTokenPrices,
           "no",
           effectiveFixtureOutcome,
           matchOutcome,
@@ -608,6 +687,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     cappedOrderAmount,
     effectiveFixtureOutcome,
     fixtureTokenPrices,
+    gameMoneylineTokenPrices,
     input,
     matchOutcomeSide,
     maxSellShares,
@@ -615,6 +695,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     orderType,
     outcomeSide,
     limitPrice,
+    sellPosition,
     tradeSide
   ]);
 
@@ -871,6 +952,59 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }, [conditionId, isAuthenticated, noTokenId, yesTokenId]);
 
   useEffect(() => {
+    if (!sellPosition || tradeSide !== "sell") {
+      setOnchainSellShares(undefined);
+      return;
+    }
+
+    const funderAddress = session?.funderAddress;
+    const tokenId = sellPosition.asset;
+
+    if (!funderAddress || !tokenId) {
+      setOnchainSellShares(undefined);
+      return;
+    }
+
+    let cancelled = false;
+
+    void fetchOnchainConditionalTokenBalance(funderAddress, tokenId).then(
+      (balance) => {
+        if (!cancelled) {
+          setOnchainSellShares(balance);
+        }
+      }
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sellPosition?.asset, session?.funderAddress, sellPosition, tradeSide]);
+
+  useEffect(() => {
+    if (!sellPosition?.asset || tradeSide !== "sell") {
+      return;
+    }
+
+    let cancelled = false;
+
+    void postCollateralBalanceSync(sellPosition.asset)
+      .catch(() => undefined)
+      .then(() => {
+        if (!cancelled && previewForReadinessRef.current) {
+          void applyReadinessFetch(previewForReadinessRef.current, {
+            force: true
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // Sync CLOB cache when opening a portfolio sell ticket.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on sell open
+  }, [applyReadinessFetch, sellPosition?.asset, tradeSide]);
+
+  useEffect(() => {
     if (!sellPosition) {
       setPositionAcceptingOrders(undefined);
       return;
@@ -904,11 +1038,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
   useEffect(() => {
     if (sellPosition && tradeSide === "sell") {
+      const sellShares = onchainSellShares ?? sellPosition.size;
+
       if (inputVariant === "team" && teamSnapshot) {
         const side = resolveOutcomeSideForPosition(sellPosition, teamSnapshot);
         const nextShares = {
-          yes: side === "yes" ? sellPosition.size : 0,
-          no: side === "no" ? sellPosition.size : 0
+          yes: side === "yes" ? sellShares : 0,
+          no: side === "no" ? sellShares : 0
         };
 
         setOutcomeShares((current) =>
@@ -920,8 +1056,8 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       }
 
       const nextShares = {
-        yes: outcomeSide === "yes" ? sellPosition.size : 0,
-        no: outcomeSide === "no" ? sellPosition.size : 0
+        yes: outcomeSide === "yes" ? sellShares : 0,
+        no: outcomeSide === "no" ? sellShares : 0
       };
 
       setOutcomeShares((current) =>
@@ -950,6 +1086,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     refreshOutcomeShares,
     sellPositionAsset,
     sellPositionSize,
+    onchainSellShares,
     tradeSide
   ]);
 
@@ -995,6 +1132,10 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     setMessage(undefined);
+
+    if (tradeSide === "sell" && preview.tokenId) {
+      await postCollateralBalanceSync(preview.tokenId).catch(() => undefined);
+    }
 
     const latestReadiness = (await refreshOrderReadiness()) ?? readiness;
 

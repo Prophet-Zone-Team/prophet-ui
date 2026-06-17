@@ -504,7 +504,7 @@ export function resolveMaxSellShares(
 ): number | undefined {
   const valid = candidates.filter(
     (value): value is number =>
-      value !== undefined && Number.isFinite(value) && value > 0
+      value !== undefined && Number.isFinite(value) && value >= 0
   );
 
   if (valid.length === 0) {
