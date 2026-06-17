@@ -4,10 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
 import { PORTFOLIO_HISTORY_PAGE_SIZE } from "@/lib/portfolio/config";
+import type { PolymarketActivityRow } from "@/lib/portfolio/fetch-polymarket-activity";
+import { fetchPolymarketUserActivity } from "@/lib/portfolio/fetch-polymarket-activity";
 import {
-  applyTradeLossFromPositions,
-  mapProphetUserTransactions
-} from "@/lib/portfolio/map-user-transaction";
+  mapLossPositionsToTransactions,
+  mapPolymarketActivities,
+  mergePortfolioHistoryByTime
+} from "@/lib/portfolio/map-polymarket-activity";
 import {
   collectUniqueConditionIds,
   collectUniqueConditionIdsFromPositions,
@@ -19,10 +22,6 @@ import type {
   UserOpenOrder
 } from "@/lib/portfolio/types";
 import { fetchJson } from "@/lib/team/client-fetch";
-import {
-  getProphetUserTransactions,
-  isProphetAuthenticated
-} from "@/service/prophet";
 import { useTeamsConditionStore } from "@/store/teams-condition-store";
 import type { UserPositionRecord } from "@/types/market";
 
@@ -39,9 +38,8 @@ export interface UsePortfolioDataResult {
   openOrders: UserOpenOrder[];
   marketContextMap: Record<string, OpenOrderMarketContext>;
   transactions: PortfolioTransactionRecord[];
-  historyPage: number;
-  historyTotal: number;
-  historyPageSize: number;
+  historyHasMore: boolean;
+  historyLoadingMore: boolean;
   coreStatus: PortfolioLoadStatus;
   openOrdersStatus: PortfolioLoadStatus;
   historyStatus: PortfolioLoadStatus;
@@ -50,7 +48,7 @@ export interface UsePortfolioDataResult {
   loadCore: (options?: PortfolioLoadOptions) => Promise<void>;
   loadOpenOrders: (options?: PortfolioLoadOptions) => Promise<void>;
   loadActivityHistory: (options?: PortfolioLoadOptions) => Promise<void>;
-  setHistoryPage: (page: number) => void;
+  loadMoreActivityHistory: () => Promise<void>;
   removeOpenOrder: (orderId: string) => void;
   removeOpenOrders: (orderIds: string[]) => void;
   removeOpenOrdersByMarket: (marketId: string) => void;
@@ -67,8 +65,8 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const [transactions, setTransactions] = useState<PortfolioTransactionRecord[]>(
     []
   );
-  const [historyPage, setHistoryPage] = useState(1);
-  const [historyTotal, setHistoryTotal] = useState(0);
+  const [historyHasMore, setHistoryHasMore] = useState(false);
+  const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [coreStatus, setCoreStatus] = useState<PortfolioLoadStatus>("idle");
   const [openOrdersStatus, setOpenOrdersStatus] =
     useState<PortfolioLoadStatus>("idle");
@@ -79,8 +77,37 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const coreLoadInFlightRef = useRef<Promise<void> | null>(null);
   const sessionUserIdRef = useRef<string | undefined>(undefined);
   const openOrdersLoadedRef = useRef(false);
-  const historyLoadedPagesRef = useRef<Set<number>>(new Set());
+  const historyLoadedRef = useRef(false);
+  const activitiesCacheRef = useRef<PolymarketActivityRow[]>([]);
+  const lossTransactionsCacheRef = useRef<PortfolioTransactionRecord[]>([]);
   const historyRequestIdRef = useRef(0);
+  const loadMoreRequestIdRef = useRef(0);
+
+  const buildMergedHistory = useCallback(() => {
+    return mergePortfolioHistoryByTime([
+      ...mapPolymarketActivities(activitiesCacheRef.current),
+      ...lossTransactionsCacheRef.current
+    ]);
+  }, []);
+
+  const fetchLossTransactions = useCallback(async () => {
+    try {
+      const positionsPayload = await fetchJson<{
+        positions?: UserPositionRecord[];
+      }>(
+        "/api/trading/positions?limit=100&redeemable=true&sizeThreshold=0.1"
+      );
+      lossTransactionsCacheRef.current = mapLossPositionsToTransactions(
+        positionsPayload?.positions ?? []
+      );
+    } catch (positionsError) {
+      console.warn(
+        "[portfolio] redeemable positions failed for loss history",
+        positionsError
+      );
+      lossTransactionsCacheRef.current = [];
+    }
+  }, []);
 
   const ensureMarketContext = useCallback(
     async (conditionIds: string[], options?: { force?: boolean }) => {
@@ -104,13 +131,16 @@ export function usePortfolioData(): UsePortfolioDataResult {
     setOpenOrders([]);
     setMarketContextMap({});
     setTransactions([]);
-    setHistoryPage(1);
-    setHistoryTotal(0);
+    setHistoryHasMore(false);
+    setHistoryLoadingMore(false);
     setOpenOrdersStatus("idle");
     setHistoryStatus("idle");
     coreLoadedRef.current = false;
     openOrdersLoadedRef.current = false;
-    historyLoadedPagesRef.current = new Set();
+    historyLoadedRef.current = false;
+    activitiesCacheRef.current = [];
+    lossTransactionsCacheRef.current = [];
+    loadMoreRequestIdRef.current = 0;
   }, []);
 
   const loadCore = useCallback(async (options?: PortfolioLoadOptions) => {
@@ -224,17 +254,17 @@ export function usePortfolioData(): UsePortfolioDataResult {
         return;
       }
 
-      const page = options?.page ?? historyPage;
-      const alreadyLoaded = historyLoadedPagesRef.current.has(page);
-
-      if (alreadyLoaded && !options?.force) {
+      if (historyLoadedRef.current && !options?.force) {
         return;
       }
 
-      if (!isProphetAuthenticated()) {
+      const polymarketAddress =
+        session.funderAddress ?? session.walletAddress;
+
+      if (!polymarketAddress?.trim()) {
         setTransactions([]);
-        setHistoryTotal(0);
-        historyLoadedPagesRef.current.add(page);
+        setHistoryHasMore(false);
+        historyLoadedRef.current = true;
         setHistoryStatus("ready");
         return;
       }
@@ -242,66 +272,107 @@ export function usePortfolioData(): UsePortfolioDataResult {
       const requestId = historyRequestIdRef.current + 1;
       historyRequestIdRef.current = requestId;
 
-      if (!alreadyLoaded) {
+      if (!historyLoadedRef.current || options?.force) {
         setHistoryStatus("loading");
       }
 
       try {
-        const payload = await getProphetUserTransactions({
-          page,
-          page_size: PORTFOLIO_HISTORY_PAGE_SIZE
-        });
+        activitiesCacheRef.current = [];
+        lossTransactionsCacheRef.current = [];
+
+        const [activityResult] = await Promise.all([
+          fetchPolymarketUserActivity(polymarketAddress, {
+            limit: PORTFOLIO_HISTORY_PAGE_SIZE,
+            offset: 0
+          }),
+          fetchLossTransactions()
+        ]);
 
         if (historyRequestIdRef.current !== requestId) {
           return;
         }
 
-        const mapped = mapProphetUserTransactions(payload.list);
-
-        let transactionsWithLoss = mapped;
-
-        try {
-          const positionsPayload = await fetchJson<{
-            positions?: UserPositionRecord[];
-          }>(
-            "/api/trading/positions?limit=100&redeemable=true&sizeThreshold=0.1"
-          );
-          transactionsWithLoss = applyTradeLossFromPositions(
-            mapped,
-            payload.list ?? [],
-            positionsPayload?.positions ?? []
-          );
-        } catch (positionsError) {
-          console.warn(
-            "[portfolio] redeemable positions failed for loss detection",
-            positionsError
-          );
-        }
-
-        setTransactions(transactionsWithLoss);
-        setHistoryTotal(payload.total ?? 0);
-        historyLoadedPagesRef.current.add(page);
+        activitiesCacheRef.current = activityResult.activities;
+        setTransactions(buildMergedHistory());
+        setHistoryHasMore(activityResult.hasMore);
+        historyLoadedRef.current = true;
         setHistoryStatus("ready");
       } catch {
         if (historyRequestIdRef.current !== requestId) {
           return;
         }
 
-        historyLoadedPagesRef.current.add(page);
+        historyLoadedRef.current = true;
         setTransactions([]);
+        setHistoryHasMore(false);
         setHistoryStatus("error");
       }
     },
-    [historyPage, session]
+    [buildMergedHistory, fetchLossTransactions, session]
   );
 
-  const setHistoryPageAndLoad = useCallback(
-    (page: number) => {
-      setHistoryPage(page);
-      void loadActivityHistory({ page, force: true });
-    },
-    [loadActivityHistory]
-  );
+  const loadMoreActivityHistory = useCallback(async () => {
+    if (!session || !historyHasMore || historyLoadingMore) {
+      return;
+    }
+
+    const polymarketAddress =
+      session.funderAddress ?? session.walletAddress;
+
+    if (!polymarketAddress?.trim()) {
+      return;
+    }
+
+    const requestId = loadMoreRequestIdRef.current + 1;
+    loadMoreRequestIdRef.current = requestId;
+    setHistoryLoadingMore(true);
+
+    try {
+      const offset = activitiesCacheRef.current.length;
+      const { activities, hasMore } = await fetchPolymarketUserActivity(
+        polymarketAddress,
+        {
+          limit: PORTFOLIO_HISTORY_PAGE_SIZE,
+          offset
+        }
+      );
+
+      if (loadMoreRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      activitiesCacheRef.current = [
+        ...activitiesCacheRef.current,
+        ...activities
+      ];
+
+      setTransactions((previous) => {
+        const existingIds = new Set(previous.map((item) => item.id));
+        const incoming = mapPolymarketActivities(activities).filter(
+          (item) => !existingIds.has(item.id)
+        );
+
+        if (incoming.length === 0) {
+          return previous;
+        }
+
+        return mergePortfolioHistoryByTime([...previous, ...incoming]);
+      });
+      setHistoryHasMore(hasMore);
+    } catch {
+      if (loadMoreRequestIdRef.current !== requestId) {
+        return;
+      }
+    } finally {
+      if (loadMoreRequestIdRef.current === requestId) {
+        setHistoryLoadingMore(false);
+      }
+    }
+  }, [
+    historyHasMore,
+    historyLoadingMore,
+    session
+  ]);
 
   const reload = useCallback(async () => {
     if (!session) {
@@ -314,12 +385,10 @@ export function usePortfolioData(): UsePortfolioDataResult {
       await loadOpenOrders({ force: true });
     }
 
-    if (historyLoadedPagesRef.current.size > 0) {
-      historyLoadedPagesRef.current.delete(historyPage);
-      await loadActivityHistory({ page: historyPage, force: true });
+    if (historyLoadedRef.current) {
+      await loadActivityHistory({ force: true });
     }
   }, [
-    historyPage,
     loadActivityHistory,
     loadCore,
     loadOpenOrders,
@@ -393,9 +462,8 @@ export function usePortfolioData(): UsePortfolioDataResult {
     openOrders,
     marketContextMap,
     transactions,
-    historyPage,
-    historyTotal,
-    historyPageSize: PORTFOLIO_HISTORY_PAGE_SIZE,
+    historyHasMore,
+    historyLoadingMore,
     coreStatus,
     openOrdersStatus,
     historyStatus,
@@ -404,7 +472,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     loadCore,
     loadOpenOrders,
     loadActivityHistory,
-    setHistoryPage: setHistoryPageAndLoad,
+    loadMoreActivityHistory,
     removeOpenOrder,
     removeOpenOrders,
     removeOpenOrdersByMarket,
