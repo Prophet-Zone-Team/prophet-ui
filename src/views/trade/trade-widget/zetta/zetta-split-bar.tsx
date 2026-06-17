@@ -13,15 +13,27 @@ export function ZettaSplitBar({
 }: ZettaSplitBarProps) {
   const total = yesCount + noCount;
   const yesPercent = total > 0 ? (yesCount / total) * 100 : 50;
+  const isEmpty = total === 0;
 
   return (
     <div
-      className={cn("relative h-[6px] flex-1 overflow-hidden rounded-full", className)}
+      className={cn(
+        "relative h-[6px] flex-1 overflow-hidden rounded-full",
+        className
+      )}
       role="presentation"
     >
-      <div className="absolute inset-0 bg-[#F5A898]" />
       <div
-        className="absolute inset-y-0 left-0 bg-[#B5DE99]"
+        className={cn(
+          "absolute inset-0",
+          isEmpty ? "bg-[#D9D9D9]" : "bg-[#F5A898]"
+        )}
+      />
+      <div
+        className={cn(
+          "absolute inset-y-0 left-0",
+          isEmpty ? "bg-[#D9D9D9]" : "bg-[#B5DE99]"
+        )}
         style={{
           width: `${yesPercent}%`,
           clipPath:
