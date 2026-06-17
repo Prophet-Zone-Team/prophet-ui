@@ -18,6 +18,9 @@ function getWindowTronWeb(): unknown {
     return undefined;
   }
 
+  console.log("getWindowTronWeb window.tronWeb: %o", window.tronWeb);
+  console.log("getWindowTronWeb window.tronLink?.tronWeb: %o", window.tronLink?.tronWeb);
+
   return window.tronWeb ?? window.tronLink?.tronWeb;
 }
 
