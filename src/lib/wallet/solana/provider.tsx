@@ -88,7 +88,12 @@ function SolanaFundingBridge() {
     }
 
     const slice = useFundingWalletStore.getState().solana;
+
     if (slice.connected && slice.address) {
+      return;
+    }
+
+    if (connecting || slice.connecting) {
       return;
     }
 
@@ -96,7 +101,7 @@ function SolanaFundingBridge() {
     setSlice("solana", {
       address: undefined,
       connected: false,
-      connecting,
+      connecting: false,
       walletName: undefined,
     });
   }, [address, connecting, publicKey, setSlice, wallet?.adapter.name, walletAdapter]);

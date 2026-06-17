@@ -2,6 +2,7 @@ import Big from "big.js";
 import { erc20Abi, type Address } from "viem";
 
 import type { FundingToken } from "@/config/funding";
+import { FundingNetworkType } from "@/config/funding/networks";
 import { getFundingPublicClient } from "@/lib/funding/funding-chain-client";
 import type { EvmBalancesByChain } from "@/types/funding";
 import { removeNumberEndZero } from "@/utils/format";
@@ -24,6 +25,12 @@ export function atomicBalanceToDecimal(balance: bigint, decimals: number): strin
   return removeNumberEndZero(Big(balance.toString()).div(10 ** decimals).toFixed(decimals));
 }
 
+export function filterEvmFundingTokens<T extends Pick<FundingToken, "chainType">>(
+  tokens: T[],
+): T[] {
+  return tokens.filter((token) => token.chainType === FundingNetworkType.EVM);
+}
+
 export async function fetchEvmTokenBalances(
   walletAddress: string,
   tokens: FundingToken[],
@@ -31,7 +38,13 @@ export async function fetchEvmTokenBalances(
 ): Promise<EvmBalancesByChain> {
   const owner = walletAddress as Address;
   const balances: EvmBalancesByChain = {};
-  const tokensByChain = groupTokensByChainId(tokens);
+  const evmTokens = filterEvmFundingTokens(tokens);
+
+  if (evmTokens.length === 0) {
+    return balances;
+  }
+
+  const tokensByChain = groupTokensByChainId(evmTokens);
 
   await Promise.allSettled(
     Object.entries(tokensByChain).map(async ([chainIdKey, chainTokens]) => {
