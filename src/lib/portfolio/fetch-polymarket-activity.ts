@@ -50,6 +50,7 @@ function buildActivityUrl(
     user: userAddress.toLowerCase(),
     limit: String(Math.max(1, Math.min(options.limit, 500))),
     offset: String(Math.max(0, options.offset)),
+    excludeDepositsWithdrawals: "false",
     sortBy: "TIMESTAMP",
     sortDirection: "DESC"
   });

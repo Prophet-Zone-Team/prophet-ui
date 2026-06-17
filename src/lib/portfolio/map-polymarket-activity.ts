@@ -160,19 +160,81 @@ export function mapLossPositionToTransaction(
   };
 }
 
+function isActivityTradeBuy(row: PolymarketActivityRow): boolean {
+  return (
+    row.type.trim().toUpperCase() === "TRADE" &&
+    row.side?.trim().toUpperCase() === "BUY"
+  );
+}
+
+export function normalizeLossMatchKey(
+  conditionId: string,
+  asset: string
+): string {
+  return `${conditionId.trim().toLowerCase()}:${asset.trim().toLowerCase()}`;
+}
+
+export function buildPendingLossMap(
+  positions: UserPositionRecord[] | undefined,
+  insertedLossIds: Set<string>
+): Map<string, PortfolioTransactionRecord[]> {
+  const map = new Map<string, PortfolioTransactionRecord[]>();
+
+  for (const position of positions ?? []) {
+    if (position.currentValue !== 0) {
+      continue;
+    }
+
+    const loss = mapLossPositionToTransaction(position);
+
+    if (insertedLossIds.has(loss.id)) {
+      continue;
+    }
+
+    const key = normalizeLossMatchKey(position.conditionId, position.asset);
+    const pending = map.get(key) ?? [];
+    pending.push(loss);
+    map.set(key, pending);
+  }
+
+  return map;
+}
+
+export function mapActivityBatchWithLossInsertions(
+  rows: PolymarketActivityRow[] | undefined,
+  lossPositions: UserPositionRecord[] | undefined,
+  insertedLossIds: Set<string>
+): PortfolioTransactionRecord[] {
+  const pendingLossMap = buildPendingLossMap(lossPositions, insertedLossIds);
+  const result: PortfolioTransactionRecord[] = [];
+
+  for (const row of rows ?? []) {
+    if (
+      isActivityTradeBuy(row) &&
+      row.conditionId?.trim() &&
+      row.asset?.trim()
+    ) {
+      const key = normalizeLossMatchKey(row.conditionId, row.asset);
+      const pendingLosses = pendingLossMap.get(key) ?? [];
+
+      for (const loss of pendingLosses) {
+        if (!insertedLossIds.has(loss.id)) {
+          result.push(loss);
+          insertedLossIds.add(loss.id);
+        }
+      }
+    }
+
+    result.push(mapPolymarketActivity(row));
+  }
+
+  return result;
+}
+
 export function mapLossPositionsToTransactions(
   positions: UserPositionRecord[] | undefined
 ): PortfolioTransactionRecord[] {
   return (positions ?? [])
     .filter((position) => position.currentValue === 0)
     .map((position) => mapLossPositionToTransaction(position));
-}
-
-export function mergePortfolioHistoryByTime(
-  items: PortfolioTransactionRecord[]
-): PortfolioTransactionRecord[] {
-  return [...items].sort(
-    (left, right) =>
-      Date.parse(right.tradeCreatedAt) - Date.parse(left.tradeCreatedAt)
-  );
 }
