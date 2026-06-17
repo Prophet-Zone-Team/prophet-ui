@@ -3,9 +3,9 @@ import { describe, it } from "node:test";
 
 import type { PolymarketActivityRow } from "@/lib/portfolio/fetch-polymarket-activity";
 import {
+  mapActivityBatchWithLossInsertions,
   mapLossPositionToTransaction,
   mapPolymarketActivity,
-  mergePortfolioHistoryByTime,
   resolveActivityPortfolioType
 } from "@/lib/portfolio/map-polymarket-activity";
 import type { UserPositionRecord } from "@/types/market";
@@ -22,6 +22,8 @@ function createTradeRow(
     price: 0.82,
     side: "BUY",
     outcome: "Yes",
+    conditionId: "0xcondition",
+    asset: "asset-1",
     title: "Will Argentina win on 2026-06-16?",
     slug: "fifwc-arg-alg-2026-06-16-arg",
     eventSlug: "fifwc-arg-alg-2026-06-16",
@@ -115,16 +117,93 @@ describe("mapLossPositionToTransaction", () => {
   });
 });
 
-describe("mergePortfolioHistoryByTime", () => {
-  it("sorts activity and loss records by time descending", () => {
-    const buy = mapPolymarketActivity(
-      createTradeRow({ timestamp: 1781000000 })
+describe("mapActivityBatchWithLossInsertions", () => {
+  it("inserts loss before matching buy by conditionId and asset", () => {
+    const insertedLossIds = new Set<string>();
+    const rows = [
+      createTradeRow({ transactionHash: "0xclaim", type: "YIELD", side: "" }),
+      createTradeRow({ transactionHash: "0xbuy" })
+    ];
+    const lossPositions = [createZeroValuePosition()];
+
+    const result = mapActivityBatchWithLossInsertions(
+      rows,
+      lossPositions,
+      insertedLossIds
     );
-    const loss = mapLossPositionToTransaction(createZeroValuePosition());
 
-    const merged = mergePortfolioHistoryByTime([loss, buy]);
+    assert.equal(result.length, 3);
+    assert.equal(result[0].type, "claim");
+    assert.equal(result[1].type, "loss");
+    assert.equal(result[2].type, "buy");
+    assert.equal(insertedLossIds.size, 1);
+  });
 
-    assert.equal(merged[0].type, "buy");
-    assert.equal(merged[1].type, "loss");
+  it("does not insert loss when conditionId or asset does not match", () => {
+    const insertedLossIds = new Set<string>();
+    const rows = [
+      createTradeRow({
+        conditionId: "0xother",
+        asset: "asset-other"
+      })
+    ];
+    const lossPositions = [createZeroValuePosition()];
+
+    const result = mapActivityBatchWithLossInsertions(
+      rows,
+      lossPositions,
+      insertedLossIds
+    );
+
+    assert.equal(result.length, 1);
+    assert.equal(result[0].type, "buy");
+    assert.equal(insertedLossIds.size, 0);
+  });
+
+  it("does not insert the same loss twice across batches", () => {
+    const insertedLossIds = new Set<string>();
+    const lossPositions = [createZeroValuePosition()];
+    const firstBatch = mapActivityBatchWithLossInsertions(
+      [createTradeRow({ transactionHash: "0xbuy1" })],
+      lossPositions,
+      insertedLossIds
+    );
+    const secondBatch = mapActivityBatchWithLossInsertions(
+      [createTradeRow({ transactionHash: "0xbuy2" })],
+      lossPositions,
+      insertedLossIds
+    );
+
+    assert.equal(firstBatch.length, 2);
+    assert.equal(firstBatch[0].type, "loss");
+    assert.equal(secondBatch.length, 1);
+    assert.equal(secondBatch[0].type, "buy");
+  });
+
+  it("preserves API row order without global reordering", () => {
+    const insertedLossIds = new Set<string>();
+    const rows = [
+      createTradeRow({
+        timestamp: 1782000000,
+        transactionHash: "0xnewer",
+        type: "REDEEM",
+        side: ""
+      }),
+      createTradeRow({
+        timestamp: 1781000000,
+        transactionHash: "0xolder"
+      })
+    ];
+
+    const result = mapActivityBatchWithLossInsertions(
+      rows,
+      [createZeroValuePosition()],
+      insertedLossIds
+    );
+
+    assert.equal(result.length, 3);
+    assert.equal(result[0].type, "redeem");
+    assert.equal(result[1].type, "loss");
+    assert.equal(result[2].type, "buy");
   });
 });

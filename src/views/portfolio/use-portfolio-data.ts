@@ -7,9 +7,7 @@ import { PORTFOLIO_HISTORY_PAGE_SIZE } from "@/lib/portfolio/config";
 import type { PolymarketActivityRow } from "@/lib/portfolio/fetch-polymarket-activity";
 import { fetchPolymarketUserActivity } from "@/lib/portfolio/fetch-polymarket-activity";
 import {
-  mapLossPositionsToTransactions,
-  mapPolymarketActivities,
-  mergePortfolioHistoryByTime
+  mapActivityBatchWithLossInsertions
 } from "@/lib/portfolio/map-polymarket-activity";
 import {
   collectUniqueConditionIds,
@@ -79,33 +77,27 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const openOrdersLoadedRef = useRef(false);
   const historyLoadedRef = useRef(false);
   const activitiesCacheRef = useRef<PolymarketActivityRow[]>([]);
-  const lossTransactionsCacheRef = useRef<PortfolioTransactionRecord[]>([]);
+  const lossPositionsCacheRef = useRef<UserPositionRecord[]>([]);
+  const insertedLossIdsRef = useRef<Set<string>>(new Set());
   const historyRequestIdRef = useRef(0);
   const loadMoreRequestIdRef = useRef(0);
 
-  const buildMergedHistory = useCallback(() => {
-    return mergePortfolioHistoryByTime([
-      ...mapPolymarketActivities(activitiesCacheRef.current),
-      ...lossTransactionsCacheRef.current
-    ]);
-  }, []);
-
-  const fetchLossTransactions = useCallback(async () => {
+  const fetchLossPositions = useCallback(async () => {
     try {
       const positionsPayload = await fetchJson<{
         positions?: UserPositionRecord[];
       }>(
         "/api/trading/positions?limit=100&redeemable=true&sizeThreshold=0.1"
       );
-      lossTransactionsCacheRef.current = mapLossPositionsToTransactions(
-        positionsPayload?.positions ?? []
+      lossPositionsCacheRef.current = (positionsPayload?.positions ?? []).filter(
+        (position) => position.currentValue === 0
       );
     } catch (positionsError) {
       console.warn(
         "[portfolio] redeemable positions failed for loss history",
         positionsError
       );
-      lossTransactionsCacheRef.current = [];
+      lossPositionsCacheRef.current = [];
     }
   }, []);
 
@@ -139,7 +131,8 @@ export function usePortfolioData(): UsePortfolioDataResult {
     openOrdersLoadedRef.current = false;
     historyLoadedRef.current = false;
     activitiesCacheRef.current = [];
-    lossTransactionsCacheRef.current = [];
+    lossPositionsCacheRef.current = [];
+    insertedLossIdsRef.current = new Set();
     loadMoreRequestIdRef.current = 0;
   }, []);
 
@@ -278,14 +271,15 @@ export function usePortfolioData(): UsePortfolioDataResult {
 
       try {
         activitiesCacheRef.current = [];
-        lossTransactionsCacheRef.current = [];
+        lossPositionsCacheRef.current = [];
+        insertedLossIdsRef.current = new Set();
 
         const [activityResult] = await Promise.all([
           fetchPolymarketUserActivity(polymarketAddress, {
             limit: PORTFOLIO_HISTORY_PAGE_SIZE,
             offset: 0
           }),
-          fetchLossTransactions()
+          fetchLossPositions()
         ]);
 
         if (historyRequestIdRef.current !== requestId) {
@@ -293,7 +287,13 @@ export function usePortfolioData(): UsePortfolioDataResult {
         }
 
         activitiesCacheRef.current = activityResult.activities;
-        setTransactions(buildMergedHistory());
+        setTransactions(
+          mapActivityBatchWithLossInsertions(
+            activityResult.activities,
+            lossPositionsCacheRef.current,
+            insertedLossIdsRef.current
+          )
+        );
         setHistoryHasMore(activityResult.hasMore);
         historyLoadedRef.current = true;
         setHistoryStatus("ready");
@@ -308,7 +308,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
         setHistoryStatus("error");
       }
     },
-    [buildMergedHistory, fetchLossTransactions, session]
+    [fetchLossPositions, session]
   );
 
   const loadMoreActivityHistory = useCallback(async () => {
@@ -346,17 +346,21 @@ export function usePortfolioData(): UsePortfolioDataResult {
         ...activities
       ];
 
+      const incoming = mapActivityBatchWithLossInsertions(
+        activities,
+        lossPositionsCacheRef.current,
+        insertedLossIdsRef.current
+      );
+
       setTransactions((previous) => {
         const existingIds = new Set(previous.map((item) => item.id));
-        const incoming = mapPolymarketActivities(activities).filter(
-          (item) => !existingIds.has(item.id)
-        );
+        const appended = incoming.filter((item) => !existingIds.has(item.id));
 
-        if (incoming.length === 0) {
+        if (appended.length === 0) {
           return previous;
         }
 
-        return mergePortfolioHistoryByTime([...previous, ...incoming]);
+        return [...previous, ...appended];
       });
       setHistoryHasMore(hasMore);
     } catch {
