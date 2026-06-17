@@ -50,7 +50,6 @@ export interface AuthContextValue {
   setLoginMethod: (method: AuthLoginMethod | undefined) => void;
   refreshEligibility: () => Promise<TradingEligibilityView | undefined>;
   openLogin: (method?: AuthLoginMethod) => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
-  connectWallet: (method?: AuthLoginMethod) => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
   connectNearWallet: () => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
   signClobCredentials: () => Promise<void>;
   signTokenApprovals: () => Promise<void>;
