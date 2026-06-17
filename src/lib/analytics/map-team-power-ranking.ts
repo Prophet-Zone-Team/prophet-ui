@@ -104,5 +104,11 @@ export function resolveTeamCode(
     return fromLookup;
   }
 
+  const currentTeam = teamData[teamName as keyof typeof teamData];
+
+  if (currentTeam) {
+    return curatedAbbreviationToCode(currentTeam.abbreviation);
+  }
+
   return teamName.slice(0, 3).toUpperCase();
 }
