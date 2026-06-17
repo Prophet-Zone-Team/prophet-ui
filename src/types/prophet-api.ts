@@ -781,6 +781,7 @@ export interface ProphetGetTeamDetailPeer {
 
 export interface ProphetGetTeamDetailNextMatch {
   id: number;
+  slug?: string;
   api_fixture_id: number;
   referee: string;
   timezone: string;

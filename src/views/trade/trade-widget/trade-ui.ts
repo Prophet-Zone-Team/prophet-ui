@@ -35,10 +35,19 @@ export function tradeYesNoPill(active: boolean, side: "yes" | "no") {
   );
 }
 
-export const tradeBidButtonClass = cn(
+const tradeBidButtonBaseClass = cn(
   "flex h-[46px] w-full items-center justify-center rounded-xl text-lg font-[500] text-white transition-opacity",
-  "bg-[#65AF14] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+  "hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
 );
+
+export const tradeBidButtonClass = cn(tradeBidButtonBaseClass, "bg-[#65AF14]");
+
+export function tradeOutcomeBidButtonClass(outcomeSide: "yes" | "no") {
+  return cn(
+    tradeBidButtonBaseClass,
+    outcomeSide === "yes" ? "bg-[#65AF14]" : "bg-[#FF674B]"
+  );
+}
 
 export const TRADE_BID_BUTTON_ID = "widget-trade-bid-button";
 
