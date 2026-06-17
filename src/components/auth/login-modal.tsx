@@ -553,7 +553,7 @@ function StepAction({
           disabled={loginInProgress}
           onClick={onConnectWallet}
         >
-          {t("connectWallet")}
+          {t("connectEVMWallet")}
         </button>
         <button
           type="button"
