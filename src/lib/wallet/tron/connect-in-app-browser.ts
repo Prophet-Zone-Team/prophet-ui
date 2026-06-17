@@ -53,6 +53,8 @@ export function resolveInAppTronAdapter(
 ): TronFundingWalletAdapter | undefined {
   const targetName = IN_APP_TRON_ADAPTER_NAMES[kind];
 
+  console.log("resolveInAppTronAdapter targetName: %o", targetName);
+
   return adapters.find(
     (adapter) =>
       adapter.name === targetName && adapter.readyState === TRON_WALLET_READY_FOUND,
@@ -89,6 +91,9 @@ export async function connectInAppBrowserTronWallet<T extends TronFundingWalletA
   if (!kind) {
     throw new Error("Not in a supported in-app browser.");
   }
+
+  console.log("connectInAppBrowserTronWallet adapters: %o", adapters);
+  console.log("connectInAppBrowserTronWallet kind: %o", kind);
 
   const adapter = resolveInAppTronAdapter(adapters, kind);
 
