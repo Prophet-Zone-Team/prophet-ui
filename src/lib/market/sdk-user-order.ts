@@ -10,6 +10,7 @@ import type { TickSize } from "@polymarket/clob-client-v2";
 
 import { fetchJson } from "@/lib/team/client-fetch";
 import type { BidOrderPreview } from "@/lib/market/polymarket-order";
+import { LIMIT_BUY_MIN_SHARES } from "@/lib/market/order-math";
 import type { SignedUserOrderPayload } from "@/lib/market/user-order";
 import { createViemClobWalletClient } from "@/lib/trading/viem-clob-signer";
 import type { WalletClient } from "viem";
@@ -285,14 +286,13 @@ function resolveMarketOrderAmount(preview: BidOrderPreview): number {
     return preview.shareSize;
   }
 
-  const minOrderSize = preview.minOrderSize ?? 1;
-  const amount = preview.inputAmount ?? preview.estimatedCost;
+  const minShares = preview.minOrderSize ?? LIMIT_BUY_MIN_SHARES;
 
-  if (amount < minOrderSize) {
+  if (preview.shareSize < minShares) {
     throw new Error(
-      `Market buy orders must be at least $${minOrderSize.toFixed(2)}. Increase the amount and try again.`
+      `Market buy orders must be at least ${minShares} shares. Increase the amount and try again.`
     );
   }
 
-  return amount;
+  return preview.inputAmount ?? preview.estimatedCost;
 }

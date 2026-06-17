@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import {
@@ -15,6 +16,7 @@ import {
   type LineOutcomeButtonVariant
 } from "@/views/trade/game/fixture-markets/line-outcome-button";
 import { LineSelector } from "@/views/trade/game/fixture-markets/line-selector";
+import { resolveFixtureOutcomeLabel } from "@/views/trade/trade-widget/trade-i18n";
 
 type LineSectionType = "moneyline" | "spread" | "total" | "btts";
 
@@ -160,6 +162,7 @@ function SpreadTotalSection({
   selectedBinarySide?: "yes" | "no";
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
 }) {
+  const t = useTranslations("trade");
   const lineOptions = useMemo(
     () => (group ? getFixtureLineOptions(group) : []),
     [group]
@@ -194,7 +197,7 @@ function SpreadTotalSection({
             return (
               <LineOutcomeButton
                 key={outcome.id}
-                label={outcome.label}
+                label={resolveFixtureOutcomeLabel(t, outcome)}
                 price={
                   buyable ? resolveOutcomePrice(outcome, binarySide) : undefined
                 }

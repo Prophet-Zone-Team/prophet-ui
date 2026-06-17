@@ -532,26 +532,33 @@ function capSellShareSize(
 
 export function validateOrderAmount(input: {
   amount: number;
+  shareSize?: number;
   orderType: TradingOrderType;
   tradeSide: BidTradeSide;
+  /** Polymarket CLOB minimum order size in shares (Gamma `orderMinSize` / CLOB `mos`). */
   minOrderSize?: number;
 }): string | undefined {
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
     return "Enter a positive amount.";
   }
 
+  const minShares = input.minOrderSize ?? LIMIT_BUY_MIN_SHARES;
+
   if (isLimitOrderType(input.orderType) && input.tradeSide === "buy") {
-    if (input.amount < LIMIT_BUY_MIN_SHARES) {
-      return `Limit buy orders must be at least ${LIMIT_BUY_MIN_SHARES} shares.`;
+    if (input.amount < minShares) {
+      return `Limit buy orders must be at least ${minShares} shares.`;
     }
 
     return undefined;
   }
 
-  if (!isLimitOrderType(input.orderType) && input.tradeSide === "buy") {
-    if (input.minOrderSize !== undefined && input.amount < input.minOrderSize) {
-      return `Amount must be at least $${input.minOrderSize}.`;
-    }
+  if (
+    !isLimitOrderType(input.orderType) &&
+    input.tradeSide === "buy" &&
+    input.shareSize !== undefined &&
+    input.shareSize < minShares
+  ) {
+    return `Market buy orders must be at least ${minShares} shares.`;
   }
 
   return undefined;
