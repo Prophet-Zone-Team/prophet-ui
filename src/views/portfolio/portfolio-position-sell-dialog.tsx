@@ -84,11 +84,16 @@ function PortfolioPositionSellSharedBody({
 
   const { formProps } = ticket;
   const selectedShares = parseOrderAmount(formProps.amount);
+  const liveSidePrice = formProps.preview.sidePrice;
   const receiveAmount = formatTeamDetailMoney(
-    derivePositionSellReceiveAmount(position, selectedShares)
+    derivePositionSellReceiveAmount(
+      position,
+      selectedShares,
+      liveSidePrice
+    )
   );
 
-  const sellQuickDisabled = position.size <= 0;
+  const sellQuickDisabled = formProps.availableShares <= 0;
   const selectedQuickAmount = resolveSelectedSellQuickAmount(
     formProps.availableShares,
     formProps.amount
@@ -118,7 +123,10 @@ function PortfolioPositionSellSharedBody({
                 getOutcomeToneClass(position.outcome)
               )}
             >
-              {position.outcome} {formatSharePrice(position.curPrice)}
+              {position.outcome}{" "}
+              {formatSharePrice(
+                liveSidePrice > 0 ? liveSidePrice : position.curPrice
+              )}
             </p>
           </div>
         </div>
@@ -270,6 +278,7 @@ function PortfolioPositionGameSellBody({
   const ticket = useTradeTicket({
     variant: "game",
     gameSnapshot: context.gameSnapshot,
+    fixtureMarkets: context.fixtureMarkets,
     sellPosition: position,
     onOrderSuccess: handleOrderSuccess
   });

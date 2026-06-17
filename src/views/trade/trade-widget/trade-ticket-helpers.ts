@@ -1,6 +1,7 @@
 import { findGameMarketOutcome } from "@/lib/market/game-outcome-price";
 import { formatDateTimeFromIso } from "@/lib/formatters/datetime";
-import { buildGameBidOrderPreview, buildFixtureBidOrderPreview } from "@/lib/market/game-order";
+import { buildGameBidOrderPreview, buildFixtureBidOrderPreview, getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
+import { isValidAskPrice } from "@/lib/market/fixture-ask-liquidity";
 import {
   buildBidOrderPreview,
   type BidOrderPreview
@@ -166,6 +167,23 @@ export function getTeamDefaultLimitPrice(
   return getDefaultTradeLimitPrice(snapshot, outcomeSide);
 }
 
+export function resolveTeamDefaultLimitPrice(
+  snapshot: TeamMarketSnapshot,
+  outcomeSide: OrderOutcomeSide,
+  tradeSide: BidTradeSide,
+  liveBook?: { bestBid?: number; bestAsk?: number }
+): number {
+  if (tradeSide === "sell" && isValidAskPrice(liveBook?.bestBid)) {
+    return liveBook!.bestBid!;
+  }
+
+  if (tradeSide === "buy" && isValidAskPrice(liveBook?.bestAsk)) {
+    return liveBook!.bestAsk!;
+  }
+
+  return getTeamDefaultLimitPrice(snapshot, outcomeSide, tradeSide);
+}
+
 export function getGameDefaultLimitPrice(
   gameSnapshot: GameMarketSnapshot,
   matchOutcomeSide: Parameters<typeof getDefaultGameTradeLimitPrice>[1],
@@ -173,6 +191,50 @@ export function getGameDefaultLimitPrice(
   tradeSide: BidTradeSide
 ): number {
   return getDefaultGameTradeLimitPrice(
+    gameSnapshot,
+    matchOutcomeSide,
+    binarySide,
+    tradeSide
+  );
+}
+
+export function resolveGameDefaultLimitPrice(
+  gameSnapshot: GameMarketSnapshot,
+  matchOutcomeSide: Parameters<typeof getDefaultGameTradeLimitPrice>[1],
+  binarySide: OrderOutcomeSide,
+  tradeSide: BidTradeSide,
+  fixtureOutcome?: FixtureMarketOutcome | null,
+  liveBook?: { bestBid?: number; bestAsk?: number }
+): number {
+  if (fixtureOutcome) {
+    const fixturePrice = getDefaultFixtureLimitPrice(
+      fixtureOutcome,
+      binarySide,
+      tradeSide
+    );
+
+    if (fixturePrice !== undefined) {
+      if (tradeSide === "sell" && isValidAskPrice(liveBook?.bestBid)) {
+        return liveBook!.bestBid!;
+      }
+
+      if (tradeSide === "buy" && isValidAskPrice(liveBook?.bestAsk)) {
+        return liveBook!.bestAsk!;
+      }
+
+      return fixturePrice;
+    }
+  }
+
+  if (tradeSide === "sell" && isValidAskPrice(liveBook?.bestBid)) {
+    return liveBook!.bestBid!;
+  }
+
+  if (tradeSide === "buy" && isValidAskPrice(liveBook?.bestAsk)) {
+    return liveBook!.bestAsk!;
+  }
+
+  return getGameDefaultLimitPrice(
     gameSnapshot,
     matchOutcomeSide,
     binarySide,
