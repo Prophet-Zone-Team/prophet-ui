@@ -8,6 +8,7 @@ import { CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { shouldHideFundingWalletChange } from "@/context/rainbowkit/utils";
 import { FundingNetworkType } from "@/config/funding/networks";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
 import { fetchEvmTokenBalances } from "@/lib/funding/evm-balances";
@@ -89,6 +90,18 @@ export function PrivateTopupDialog({
   const { requestQuote, executeTopup, pollTopupStatus, stopStatusPoll } =
     useConfidentialTopup();
   const { connectForToken } = useFundingWalletConnect();
+
+  const handleFundingWalletConnect = useCallback(
+    async (token: PrivateTopupSelectableToken) => {
+      try {
+        await connectForToken(token);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        toast.error(message);
+      }
+    },
+    [connectForToken],
+  );
 
   const evmFundingAddress = useFundingWalletStore((state) =>
     state.evm.connected ? state.evm.address : undefined,
@@ -443,7 +456,7 @@ export function PrivateTopupDialog({
             type="button"
             className={fundingPrimaryButtonClass}
             disabled={continueLoading}
-            onClick={() => void connectForToken(selectedToken)}
+            onClick={() => void handleFundingWalletConnect(selectedToken)}
           >
             {continueLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {formatPrivateTopupConnectLabel(tWallet, selectedToken)}
@@ -488,7 +501,7 @@ export function PrivateTopupDialog({
     amount.tokenAmount,
     continueLoading,
     eoaConfirmed,
-    connectForToken,
+    handleFundingWalletConnect,
     onConfirmTopup,
     onContinueToConfirm,
     quote,
@@ -543,6 +556,7 @@ export function PrivateTopupDialog({
               selectedToken={selectedToken}
               onSelectToken={setSelectedToken}
               onChangeWallet={handleClose}
+              showChangeWallet={!shouldHideFundingWalletChange()}
             />
           ) : null}
 

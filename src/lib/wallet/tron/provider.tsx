@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  BinanceWalletAdapter,
+  MetaMaskAdapter,
   OkxWalletAdapter,
   TronLinkAdapter,
   WalletConnectAdapter,
@@ -9,8 +11,9 @@ import {
 } from "@tronweb3/tronwallet-adapters";
 import { TronWeb } from "tronweb";
 
-import { FUNDING_NETWORKS } from "@/config/funding/networks";
+import { isInWalletInAppBrowser } from "@/context/rainbowkit/utils";
 import { generateRpcSignature } from "@/config/funding/signature";
+import { connectInAppBrowserTronWallet } from "@/lib/wallet/tron/connect-in-app-browser";
 import { setTronFundingWalletInstance } from "@/lib/wallet/tron/funding-wallet-instance";
 import { createTronWeb } from "@/lib/wallet/tron/tron-web";
 import TronFundingWallet from "@/lib/wallet/tron/wallet";
@@ -24,6 +27,8 @@ function buildTronAdapters() {
     new TronLinkAdapter(),
     new OkxWalletAdapter(),
     new TokenPocketAdapter(),
+    new MetaMaskAdapter({ openAppWithDeeplink: false }),
+    new BinanceWalletAdapter(),
     ...(projectId
       ? [
           new WalletConnectAdapter({
@@ -82,6 +87,20 @@ export function TronFundingProvider({ children }: { children: React.ReactNode })
     setTronFundingWalletInstance(instance);
   }, []);
 
+  const applyConnectedAdapter = useCallback(
+    (adapter: (typeof adapters)[number]) => {
+      setActiveAdapter(adapter);
+      syncWalletInstance(adapter.address ?? undefined, adapter);
+      setSlice("tron", {
+        address: adapter.address ?? undefined,
+        connected: Boolean(adapter.address),
+        connecting: false,
+        walletName: adapter.name,
+      });
+    },
+    [setSlice, syncWalletInstance],
+  );
+
   const handleDisconnect = useCallback(async () => {
     if (activeAdapter) {
       await activeAdapter.disconnect();
@@ -99,20 +118,20 @@ export function TronFundingProvider({ children }: { children: React.ReactNode })
 
   const handleConnect = useCallback(async (): Promise<string | undefined> => {
     setConnecting(true);
-    setSelectorOpen(true);
 
     try {
+      if (isInWalletInAppBrowser()) {
+        const { address, adapter } = await connectInAppBrowserTronWallet(adapters);
+        applyConnectedAdapter(adapter);
+        return address;
+      }
+
+      setSelectorOpen(true);
+
       if (installedWallets.length === 1) {
         const adapter = installedWallets[0];
         await adapter.connect();
-        setActiveAdapter(adapter);
-        syncWalletInstance(adapter.address ?? undefined, adapter);
-        setSlice("tron", {
-          address: adapter.address ?? undefined,
-          connected: Boolean(adapter.address),
-          connecting: false,
-          walletName: adapter.name,
-        });
+        applyConnectedAdapter(adapter);
         setSelectorOpen(false);
         return adapter.address ?? undefined;
       }
@@ -121,7 +140,7 @@ export function TronFundingProvider({ children }: { children: React.ReactNode })
     } finally {
       setConnecting(false);
     }
-  }, [installedWallets, setSlice, syncWalletInstance]);
+  }, [adapters, applyConnectedAdapter, installedWallets]);
 
   const handleSelectWallet = useCallback(
     async (walletName: string) => {
@@ -135,20 +154,13 @@ export function TronFundingProvider({ children }: { children: React.ReactNode })
 
       try {
         await adapter.connect();
-        setActiveAdapter(adapter);
-        syncWalletInstance(adapter.address ?? undefined, adapter);
-        setSlice("tron", {
-          address: adapter.address ?? undefined,
-          connected: Boolean(adapter.address),
-          connecting: false,
-          walletName: adapter.name,
-        });
+        applyConnectedAdapter(adapter);
         setSelectorOpen(false);
       } finally {
         setConnecting(false);
       }
     },
-    [adapters, setSlice, syncWalletInstance],
+    [adapters, applyConnectedAdapter],
   );
 
   const handleConnectRef = useRef(handleConnect);

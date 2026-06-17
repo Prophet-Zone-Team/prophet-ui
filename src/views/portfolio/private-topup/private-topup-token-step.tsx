@@ -29,12 +29,14 @@ export interface PrivateTopupTokenStepProps {
   selectedToken?: PrivateTopupSelectableToken;
   onSelectToken: (token: PrivateTopupSelectableToken) => void;
   onChangeWallet: () => void;
+  showChangeWallet?: boolean;
 }
 
 export function PrivateTopupTokenStep({
   selectedToken,
   onSelectToken,
   onChangeWallet,
+  showChangeWallet = true,
 }: PrivateTopupTokenStepProps) {
   const t = useTranslations("privateTopup");
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,13 +80,15 @@ export function PrivateTopupTokenStep({
       <div>
         <div className="mb-2 flex items-center justify-between">
           <span className={privateTopupSectionLabelClass}>{t("fundingWallet")}</span>
-          <button
-            type="button"
-            className={privateTopupChangeLinkClass}
-            onClick={onChangeWallet}
-          >
-            {t("change")}
-          </button>
+          {showChangeWallet ? (
+            <button
+              type="button"
+              className={privateTopupChangeLinkClass}
+              onClick={onChangeWallet}
+            >
+              {t("change")}
+            </button>
+          ) : null}
         </div>
         <div className={privateTopupFundingWalletRowClass}>
           <span className="flex min-w-0 items-center gap-2">

@@ -154,6 +154,10 @@ export function isInWalletInAppBrowser(): boolean {
   );
 }
 
+export function shouldHideFundingWalletChange(): boolean {
+  return isInWalletInAppBrowser();
+}
+
 export function getInAppBrowserWalletKind(): InAppBrowserWalletKind | null {
   if (isInTokenPocket()) {
     return "tokenpocket";
