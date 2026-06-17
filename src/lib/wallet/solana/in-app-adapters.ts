@@ -169,7 +169,7 @@ class InjectedSolanaWalletAdapter extends BaseWalletAdapter {
 }
 
 function getOkxSolanaProvider(): InjectedSolanaProvider | undefined {
-  return window.okxwallet?.solana as InjectedSolanaProvider | undefined;
+  return (window.okxwallet as any)?.solana as InjectedSolanaProvider | undefined;
 }
 
 function getBinanceSolanaProvider(): InjectedSolanaProvider | undefined {
@@ -229,5 +229,5 @@ export function resolveInAppSolanaWallet(
       wallet.name === targetName &&
       (wallet.readyState === WalletReadyState.Installed ||
         wallet.readyState === WalletReadyState.Loadable),
-  );
+  ) ?? wallets?.[0];
 }

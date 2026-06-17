@@ -34,6 +34,8 @@ function SolanaFundingBridge() {
   const registerConnectHandler = useFundingWalletStore((state) => state.registerConnectHandler);
   const registerDisconnectHandler = useFundingWalletStore((state) => state.registerDisconnectHandler);
 
+  console.log("wallets: %o", wallets)
+
   const address = publicKey?.toBase58();
   const signTransactionRef = useRef(walletAdapter.signTransaction);
 
