@@ -48,6 +48,7 @@ export function useSolBalances(options: UseSolBalancesOptions = {}): UseSolBalan
   const address = useFundingWalletStore((state) =>
     state.solana.connected ? state.solana.address : undefined,
   );
+  const solanaConnected = useFundingWalletStore((state) => state.solana.connected);
 
   const solTokenKey = useMemo(
     () =>
@@ -108,6 +109,8 @@ export function useSolBalances(options: UseSolBalancesOptions = {}): UseSolBalan
           balancesAreEqual(current, nextBalances) ? current : nextBalances,
         );
       }
+    } catch (error) {
+      console.warn("[useSolBalances] refresh failed", error);
     } finally {
       if (requestId === requestIdRef.current) {
         setLoading(false);
@@ -117,7 +120,7 @@ export function useSolBalances(options: UseSolBalancesOptions = {}): UseSolBalan
 
   useEffect(() => {
     void refresh();
-  }, [address, enabled, refresh, solTokenKey]);
+  }, [address, enabled, refresh, solTokenKey, solanaConnected]);
 
   const getTokenBalance = useCallback(
     (token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals">) => {

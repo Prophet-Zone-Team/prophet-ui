@@ -47,6 +47,7 @@ export function useTronBalances(options: UseTronBalancesOptions = {}): UseTronBa
   const address = useFundingWalletStore((state) =>
     state.tron.connected ? state.tron.address : undefined,
   );
+  const tronConnected = useFundingWalletStore((state) => state.tron.connected);
 
   const tronTokenKey = useMemo(
     () =>
@@ -105,6 +106,8 @@ export function useTronBalances(options: UseTronBalancesOptions = {}): UseTronBa
           balancesAreEqual(current, nextBalances) ? current : nextBalances,
         );
       }
+    } catch (error) {
+      console.warn("[useTronBalances] refresh failed", error);
     } finally {
       if (requestId === requestIdRef.current) {
         setLoading(false);
@@ -114,7 +117,7 @@ export function useTronBalances(options: UseTronBalancesOptions = {}): UseTronBa
 
   useEffect(() => {
     void refresh();
-  }, [address, enabled, refresh, tronTokenKey]);
+  }, [address, enabled, refresh, tronTokenKey, tronConnected]);
 
   const getTokenBalance = useCallback(
     (token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals">) => {
