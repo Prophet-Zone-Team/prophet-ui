@@ -5,6 +5,7 @@ import {
   OkxWalletAdapter,
   TronLinkAdapter,
   WalletConnectAdapter,
+  TokenPocketAdapter,
 } from "@tronweb3/tronwallet-adapters";
 import { TronWeb } from "tronweb";
 
@@ -22,6 +23,7 @@ function buildTronAdapters() {
   return [
     new TronLinkAdapter(),
     new OkxWalletAdapter(),
+    new TokenPocketAdapter(),
     ...(projectId
       ? [
           new WalletConnectAdapter({
