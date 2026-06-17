@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { AnalyticsProvider } from "@/context/analytics";
 import { LocaleProvider } from "@/components/runtime/locale-provider";
 import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen";
+import { MobileVConsole } from "@/components/runtime/mobile-vconsole";
 import type { AppLocale } from "@/i18n/config";
 
 const WalletRuntimeProviders = dynamic(
@@ -34,6 +35,7 @@ export function AppRoot({
     >
       <AnalyticsProvider>
         <MobileLoadingScreen />
+        <MobileVConsole />
         <WalletRuntimeProviders cookie={cookie}>
           {children}
         </WalletRuntimeProviders>
