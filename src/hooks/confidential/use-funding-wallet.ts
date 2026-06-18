@@ -13,6 +13,45 @@ import {
   useFundingWalletStore,
 } from "@/store/use-funding-wallet-store";
 
+const CONNECTED_CHAIN_PRIORITY: FundingWalletChainType[] = [
+  "evm",
+  "near",
+  "solana",
+  "tron",
+];
+
+function isFundingWalletChainConnected(
+  chainType: FundingWalletChainType,
+  evmConnected: boolean,
+  evmAddress: string | undefined,
+  fundingSlices: {
+    solana: { connected: boolean; address?: string; connecting: boolean };
+    tron: { connected: boolean; address?: string; connecting: boolean };
+    near: { connected: boolean; address?: string; connecting: boolean };
+  },
+): boolean {
+  if (chainType === "evm") {
+    return evmConnected && Boolean(evmAddress);
+  }
+
+  const slice = fundingSlices[chainType];
+  return slice.connected && Boolean(slice.address);
+}
+
+function resolveConnectedFundingChainType(
+  evmConnected: boolean,
+  evmAddress: string | undefined,
+  fundingSlices: {
+    solana: { connected: boolean; address?: string; connecting: boolean };
+    tron: { connected: boolean; address?: string; connecting: boolean };
+    near: { connected: boolean; address?: string; connecting: boolean };
+  },
+): FundingWalletChainType | undefined {
+  return CONNECTED_CHAIN_PRIORITY.find((chainType) =>
+    isFundingWalletChainConnected(chainType, evmConnected, evmAddress, fundingSlices),
+  );
+}
+
 export interface UseFundingWalletResult {
   chainType?: FundingWalletChainType;
   address?: string;
@@ -78,6 +117,39 @@ export function useFundingWallet(
     registerConnectHandler("evm", () => handleEvmConnectRef.current());
     registerDisconnectHandler("evm", () => handleEvmDisconnectRef.current());
   }, [registerConnectHandler, registerDisconnectHandler]);
+
+  useEffect(() => {
+    if (connecting) {
+      return;
+    }
+
+    if (
+      isFundingWalletChainConnected(
+        activeChainType,
+        evmConnected,
+        evmAddress,
+        fundingSlices,
+      )
+    ) {
+      return;
+    }
+
+    const detectedChainType = resolveConnectedFundingChainType(
+      evmConnected,
+      evmAddress,
+      fundingSlices,
+    );
+
+    if (detectedChainType && detectedChainType !== activeChainType) {
+      setActiveChainType(detectedChainType);
+    }
+  }, [
+    activeChainType,
+    connecting,
+    evmAddress,
+    evmConnected,
+    fundingSlices,
+  ]);
 
   const activeSlice = useMemo(() => {
     if (activeChainType === "evm") {

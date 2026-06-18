@@ -7,6 +7,7 @@ import {
   openNearWalletModal,
 } from "@/lib/wallet/near/near-connect";
 import { getNearAccountSnapshot, useNearAccountStore } from "@/lib/wallet/near/near-account-store";
+import { buildNearFundingSlicePatch } from "@/lib/wallet/near/sync-near-funding-slice";
 import { useFundingWalletStore } from "@/store/use-funding-wallet-store";
 
 const CONNECT_POLL_MS = 200;
@@ -66,16 +67,21 @@ export function FundingNearBridge() {
   const registerDisconnectHandler = useFundingWalletStore((state) => state.registerDisconnectHandler);
 
   const handleConnect = useCallback(async () => {
+    const existingAccountId = getNearAccountSnapshot().accountId;
+
+    if (existingAccountId) {
+      const { walletName } = getNearAccountSnapshot();
+      setSlice("near", buildNearFundingSlicePatch(existingAccountId, walletName));
+      return existingAccountId;
+    }
+
     setSlice("near", { connecting: true });
 
     try {
       openNearWalletModal();
       const accountId = await waitForNearAccountId();
-      setSlice("near", {
-        address: accountId,
-        connected: true,
-        connecting: false,
-      });
+      const { walletName } = getNearAccountSnapshot();
+      setSlice("near", buildNearFundingSlicePatch(accountId, walletName));
       return accountId;
     } finally {
       setSlice("near", { connecting: false });
@@ -84,12 +90,7 @@ export function FundingNearBridge() {
 
   const handleDisconnect = useCallback(async () => {
     await disconnectNearWallet();
-    setSlice("near", {
-      address: undefined,
-      connected: false,
-      connecting: false,
-      walletName: undefined,
-    });
+    setSlice("near", buildNearFundingSlicePatch(null));
   }, [setSlice]);
 
   const handleConnectRef = useRef(handleConnect);
@@ -104,15 +105,23 @@ export function FundingNearBridge() {
   }, [registerConnectHandler, registerDisconnectHandler]);
 
   useEffect(() => {
-    const accountId = getNearAccountSnapshot().accountId;
+    const syncNearFundingSlice = () => {
+      const { accountId, walletName } = getNearAccountSnapshot();
+      setSlice("near", buildNearFundingSlicePatch(accountId, walletName));
+    };
 
-    if (accountId) {
-      setSlice("near", {
-        address: accountId,
-        connected: true,
-        connecting: false,
-      });
-    }
+    syncNearFundingSlice();
+
+    return useNearAccountStore.subscribe((state, previousState) => {
+      if (
+        state.accountId === previousState.accountId &&
+        state.walletName === previousState.walletName
+      ) {
+        return;
+      }
+
+      syncNearFundingSlice();
+    });
   }, [setSlice]);
 
   return null;
