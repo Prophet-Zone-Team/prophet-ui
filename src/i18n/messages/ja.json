@@ -504,7 +504,12 @@
       "unshieldAwaitingFunds": "Waiting for funds…",
       "unshieldConverting": "Converting to pUSD…",
       "usdcDetected": "USDC: {amount}",
-      "usdceDetected": "USDC.e: {amount}"
+      "usdceDetected": "USDC.e: {amount}",
+      "tpSwitchPolygonTitle": "Polygonウォレットに切り替え",
+      "tpSwitchPolygonDescription": "入金の変換には TokenPocket の Polygon（Matic）ウォレットが必要です。切り替え後、このページは再読み込みされます。もう一度「保留中の入金を確認」をタップして入金を完了してください。",
+      "tpSwitchPolygonOnCloseTitle": "終了前に Polygonウォレットに切り替え",
+      "tpSwitchPolygonOnCloseDescription": "閉じる前に TokenPocket の Polygon（Matic）ウォレットに戻してください。取引などの操作には EVM ウォレットでの署名が必要です。切り替え後、このページは再読み込みされます。",
+      "tpSwitchPolygonConfirm": "ウォレットを切り替え"
     },
     "migrate": {
       "ariaDefault": "残高を移行",

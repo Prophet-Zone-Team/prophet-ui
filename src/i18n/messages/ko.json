@@ -504,7 +504,12 @@
       "unshieldAwaitingFunds": "Waiting for funds…",
       "unshieldConverting": "Converting to pUSD…",
       "usdcDetected": "USDC: {amount}",
-      "usdceDetected": "USDC.e: {amount}"
+      "usdceDetected": "USDC.e: {amount}",
+      "tpSwitchPolygonTitle": "Polygon 지갑으로 전환",
+      "tpSwitchPolygonDescription": "입금 변환에는 TokenPocket의 Polygon(Matic) 지갑이 필요합니다. 전환 후 이 페이지가 새로고침됩니다. 계정 입금을 완료하려면 다시 '대기 중인 입금 확인'을 탭하세요.",
+      "tpSwitchPolygonOnCloseTitle": "나가기 전 Polygon 지갑으로 전환",
+      "tpSwitchPolygonOnCloseDescription": "닫기 전 TokenPocket의 Polygon(Matic) 지갑으로 돌아가세요. 거래 및 기타 작업은 EVM 지갑 서명이 필요합니다. 전환 후 이 페이지가 새로고침됩니다.",
+      "tpSwitchPolygonConfirm": "지갑 전환"
     },
     "migrate": {
       "ariaDefault": "잔액 마이그레이션",
