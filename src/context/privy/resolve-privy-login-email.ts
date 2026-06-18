@@ -5,7 +5,7 @@ export function resolvePrivyLoginEmail(
   user: User | null | undefined,
   loginAccount?: LinkedAccountWithMetadata | null
 ): string | undefined {
-  console.log("privy", user, loginAccount);
+
   if (loginAccount?.type === "email") {
     return loginAccount.address;
   }
