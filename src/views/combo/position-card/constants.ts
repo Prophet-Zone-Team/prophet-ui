@@ -1,5 +1,5 @@
 export const positionCardShellClassName =
-  "relative flex h-[210px] w-[336px] flex-col overflow-hidden rounded-[12px] border border-[#EBEBEB]";
+  "relative flex h-[210px] w-[280px] shrink-0 flex-col overflow-hidden rounded-[12px] border border-[#EBEBEB] sm:w-[336px]";
 
 export const positionCardShellStyle = {
   background:

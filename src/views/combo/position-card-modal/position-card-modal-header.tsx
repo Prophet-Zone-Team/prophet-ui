@@ -12,7 +12,7 @@ export function PositionCardModalHeader({
   onClose
 }: PositionCardModalHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-3 px-4 pt-4">
+    <div className="flex items-center justify-between gap-3 px-3 pt-3 sm:px-4 sm:pt-4">
       <div className="flex min-w-0 items-center gap-1.5">
         <ComboLogo />
         <span className="bg-[linear-gradient(270deg,#542099_0%,#8C35FF_100%)] bg-clip-text text-sm font-[600] leading-[18px] text-transparent">

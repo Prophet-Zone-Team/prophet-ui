@@ -2,6 +2,8 @@ export interface ComboOddsOption {
   id: string;
   label: string;
   price: number;
+  disabled?: boolean;
+  disabledTooltip?: string;
 }
 
 export interface ComboItemTeam {
@@ -23,6 +25,8 @@ export interface ComboItemProps {
   /** Over/under and related total markets shown in expanded view and collapsed preview. */
   totalOdds?: ComboOddsOption[];
   totalOddsCount?: number;
+  /** Selected combo legs count for this market group. */
+  selectedLegsCount?: number;
   selectedOddsId?: string | null;
   defaultSelectedOddsId?: string;
   expanded?: boolean;

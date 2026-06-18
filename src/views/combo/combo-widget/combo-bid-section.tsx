@@ -67,7 +67,7 @@ export function ComboBidSection({
   };
 
   return (
-    <div className="flex flex-col gap-3 px-4 pb-4 pt-4">
+    <div className="flex flex-col gap-3 px-3 pb-[calc(16px+env(safe-area-inset-bottom,0px))] pt-3 sm:px-4 sm:pb-4 sm:pt-4">
       {showBidDetails ? (
         <>
           <h2 className="m-0 text-base font-[500] leading-5 text-black">

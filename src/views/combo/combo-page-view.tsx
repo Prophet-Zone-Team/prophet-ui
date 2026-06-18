@@ -9,6 +9,7 @@ import { useComboLivePrices } from "@/hooks/combo/use-combo-live-prices";
 import { useComboMarkets } from "@/hooks/combo/use-combo-markets";
 import { useComboTicket } from "@/hooks/combo/use-combo-ticket";
 import { buildComboLegsFromPicks } from "@/lib/combo/markets-client";
+import { applyComboLegSelectionRules } from "@/lib/combo/combo-leg-selection";
 import {
   mapComboGameToItemProps,
   parseComboMarketOddsId,
@@ -22,12 +23,18 @@ import {
   useSetComboBidAmount,
   useSetComboPicks,
   useUpdateComboPick,
-  useUpsertComboPick
 } from "@/store/combo-store";
-import type { ComboMarketRecord, ComboMarketsDay } from "@/types/combo";
+import type { ComboGameGroup, ComboMarketRecord, ComboMarketsDay } from "@/types/combo";
 import { ComboItem } from "@/views/combo/combo-item";
 import type { ComboOddsOption } from "@/views/combo/combo-item/types";
+import {
+  ComboMobileWidget,
+  COMBO_MOBILE_PAGE_SCROLL_BUFFER_PX,
+  COMBO_MOBILE_WIDGET_BOTTOM_OFFSET_PX,
+  getComboMobileReserveHeight
+} from "@/views/combo/combo-mobile-widget";
 import { ComboWidget } from "@/views/combo/combo-widget";
+import type { ComboWidgetProps } from "@/views/combo/combo-widget/types";
 import type { ComboPickOutcomeSide } from "@/views/combo/combo-widget/types";
 import { createComboPickFromMarket } from "@/views/combo/combo-ticket-container";
 import { MIN_COMBO_PICKS } from "@/views/combo/combo-widget/constants";
@@ -45,7 +52,6 @@ export function ComboPageView() {
   });
   const picks = useComboPicks();
   const bidAmount = useComboBidAmount();
-  const upsertPick = useUpsertComboPick();
   const updatePick = useUpdateComboPick();
   const removePick = useRemoveComboPick();
   const setBidAmount = useSetComboBidAmount();
@@ -101,7 +107,11 @@ export function ComboPageView() {
   }, [picks]);
 
   const handleSelectMarketOdds = useCallback(
-    (market: ComboMarketRecord, option: ComboOddsOption) => {
+    (group: ComboGameGroup, market: ComboMarketRecord, option: ComboOddsOption) => {
+      if (option.disabled) {
+        return;
+      }
+
       const parsed = parseComboMarketOddsId(option.id);
 
       if (!parsed || parsed.marketId !== market.id) {
@@ -118,6 +128,8 @@ export function ComboPageView() {
         return;
       }
 
+      const groupMarketIds = new Set(group.markets.map((entry) => entry.id));
+      const remainingPicks = picks.filter((pick) => !groupMarketIds.has(pick.id));
       const teamMeta = resolveComboMarketTeamCodes(market);
       const pick = createComboPickFromMarket({
         market,
@@ -126,9 +138,9 @@ export function ComboPageView() {
         teamName: teamMeta.teamName
       });
 
-      upsertPick(pick);
+      setPicks([...remainingPicks, pick]);
     },
-    [picksByMarketId, removePick, upsertPick]
+    [picks, picksByMarketId, removePick, setPicks]
   );
 
   const handlePickOutcomeChange = useCallback(
@@ -160,8 +172,34 @@ export function ComboPageView() {
     [removePick]
   );
 
+  const comboWidgetProps: ComboWidgetProps = {
+    picks,
+    multiplier: ticket.multiplier,
+    bidAmount,
+    balance,
+    toWinAmount: ticket.toWinAmount,
+    isAuthenticated: ticket.isAuthenticated,
+    loginInProgress: auth.loginInProgress,
+    connectWalletLabel: t("connectWallet"),
+    connectingLabel: t("connecting"),
+    submitLabel: t("submitCombo"),
+    isSubmitting: ticket.isSubmitting,
+    isSubmitDisabled: ticket.isSubmitDisabled,
+    isQuoteLoading: ticket.isAuthenticated && ticket.isQuotePending,
+    onBidAmountChange: setBidAmount,
+    onPickOutcomeChange: handlePickOutcomeChange,
+    onRemovePick: handleRemovePick,
+    onConnectWallet: () => void auth.openLogin(),
+    onSubmit: ticket.submit
+  };
+
+  const mobileBottomReservePx =
+    getComboMobileReserveHeight(picks.length) +
+    COMBO_MOBILE_WIDGET_BOTTOM_OFFSET_PX +
+    COMBO_MOBILE_PAGE_SCROLL_BUFFER_PX;
+
   return (
-    <section className="mx-auto w-full max-w-[1200px] px-3 pb-8 pt-4 md:px-4 md:pt-5">
+    <section className="mx-auto w-full max-w-[1200px] px-3 pt-4 md:px-4 md:pt-5 lg:pb-8">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_345px] lg:items-start">
         <div className="flex min-w-0 flex-col gap-3">
           <TabSwitcher
@@ -201,16 +239,35 @@ export function ComboPageView() {
               selectedPick?.type === "moneyline"
                 ? selectedPick.outcomeSide
                 : undefined;
+            const selectedLegsCount = group.markets.reduce(
+              (count, market) =>
+                count + (picksByMarketId.has(market.id) ? 1 : 0),
+              0
+            );
+            const baseItemProps = mapComboGameToItemProps(group, {
+              selectedMarketId: selectedPick?.id,
+              selectedOutcomeSide,
+              isInCombo: Boolean(selectedPick),
+              liveYesPriceByMarketId
+            });
+            const selectionRules = applyComboLegSelectionRules({
+              moneylineOdds: baseItemProps.moneylineOdds,
+              spreadOdds: baseItemProps.spreadOdds,
+              topScoreOdds: baseItemProps.topScoreOdds,
+              selectedPick,
+              group,
+              disabledTooltip: t("cannotAddToCombo")
+            });
 
             return (
               <ComboItem
                 key={group.slug}
-                {...mapComboGameToItemProps(group, {
-                  selectedMarketId: selectedPick?.id,
-                  selectedOutcomeSide,
-                  isInCombo: Boolean(selectedPick),
-                  liveYesPriceByMarketId
-                })}
+                {...baseItemProps}
+                selectedLegsCount={selectedLegsCount}
+                bttsOdds={[]}
+                moneylineOdds={selectionRules.moneylineOdds}
+                spreadOdds={selectionRules.spreadOdds}
+                topScoreOdds={selectionRules.topScoreOdds}
                 onSelectOdds={(option) => {
                   const parsed = parseComboMarketOddsId(option.id);
                   const market = parsed
@@ -218,7 +275,7 @@ export function ComboPageView() {
                     : undefined;
 
                   if (market) {
-                    handleSelectMarketOdds(market, option);
+                    handleSelectMarketOdds(group, market, option);
                   }
                 }}
               />
@@ -226,31 +283,40 @@ export function ComboPageView() {
           })}
         </div>
 
-        <aside className="lg:w-[345px] lg:shrink-0">
+        <aside className="hidden lg:block lg:w-[345px] lg:shrink-0">
           <div className="lg:fixed lg:top-[78px] lg:z-20 lg:w-[345px] lg:max-h-[calc(100dvh-94px)] lg:overflow-y-auto lg:[right:max(1rem,calc((100vw-75rem)/2+1rem))]">
-            <ComboWidget
-              picks={picks}
-              multiplier={ticket.multiplier}
-              bidAmount={bidAmount}
-              balance={balance}
-              toWinAmount={ticket.toWinAmount}
-              isAuthenticated={ticket.isAuthenticated}
-              loginInProgress={auth.loginInProgress}
-              connectWalletLabel={t("connectWallet")}
-              connectingLabel={t("connecting")}
-              submitLabel={t("submitCombo")}
-              isSubmitting={ticket.isSubmitting}
-              isSubmitDisabled={ticket.isSubmitDisabled}
-              isQuoteLoading={ticket.isAuthenticated && ticket.isQuotePending}
-              onBidAmountChange={setBidAmount}
-              onPickOutcomeChange={handlePickOutcomeChange}
-              onRemovePick={handleRemovePick}
-              onConnectWallet={() => void auth.openLogin()}
-              onSubmit={ticket.submit}
-            />
+            <ComboWidget {...comboWidgetProps} />
           </div>
         </aside>
       </div>
+
+      <ComboMobileWidget
+        picks={picks}
+        multiplier={ticket.multiplier}
+        bidAmount={bidAmount}
+        balance={balance}
+        toWinAmount={ticket.toWinAmount}
+        isAuthenticated={ticket.isAuthenticated}
+        loginInProgress={auth.loginInProgress}
+        connectWalletLabel={t("connectWallet")}
+        connectingLabel={t("connecting")}
+        submitLabel={t("submitCombo")}
+        isSubmitting={ticket.isSubmitting}
+        isSubmitDisabled={ticket.isSubmitDisabled}
+        isQuoteLoading={ticket.isAuthenticated && ticket.isQuotePending}
+        onBidAmountChange={setBidAmount}
+        onRemovePick={handleRemovePick}
+        onConnectWallet={() => void auth.openLogin()}
+        onSubmit={ticket.submit}
+      />
+
+      <div
+        className="shrink-0 lg:hidden"
+        aria-hidden
+        style={{
+          height: `calc(${mobileBottomReservePx}px + env(safe-area-inset-bottom, 0px))`
+        }}
+      />
     </section>
   );
 }

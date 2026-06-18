@@ -42,6 +42,7 @@ export function shouldHideMobileBottomNav(pathname: string) {
     /^\/private/.test(pathname) ||
     pathname === "/team" ||
     pathname === "/group" ||
+    pathname === "/combo" ||
     pathname.startsWith("/trade")
   );
 }

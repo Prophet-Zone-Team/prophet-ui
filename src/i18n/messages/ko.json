@@ -1552,13 +1552,20 @@
     "connectWallet": "지갑 연결",
     "connecting": "연결 중…",
     "buildCombo": "Build A Combo",
+    "reviewTicket": "확인",
     "submitCombo": "Combo",
     "signingCombo": "Signing combo order…",
     "submittingCombo": "Submitting combo order…",
     "submittedSummary": "Bid {cost} · To win {toWin} · {picks} picks",
     "signingCashout": "Signing cashout…",
     "submittingCashout": "Submitting cashout…",
-    "cashoutSubmittedSummary": "Cashout {amount}"
+    "cashoutSubmittedSummary": "Cashout {amount}",
+    "cannotAddToCombo": "콤보에 추가할 수 없습니다",
+    "selectMinPicksHint": "Select atleast 2 picks to build a combo",
+    "allIn": "All-in",
+    "toWin": "예상 수익",
+    "bidAmount": "Bid amount",
+    "submit": "Submit"
   },
   "runtime": {
     "connectionLabel": "연결",

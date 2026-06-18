@@ -54,7 +54,7 @@ export function PositionCardModalActions({
     onCashout?.();
   };
   return (
-    <div className="flex gap-3 px-4 pb-4">
+    <div className="flex flex-col gap-3 px-3 pb-[calc(16px+env(safe-area-inset-bottom,0px))] sm:flex-row sm:px-4 sm:pb-4">
       <button
         type="button"
         disabled={cashoutDisabled}

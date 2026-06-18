@@ -1555,13 +1555,20 @@
     "connectWallet": "連接錢包",
     "connecting": "連接中…",
     "buildCombo": "Build A Combo",
+    "reviewTicket": "查看",
     "submitCombo": "Combo",
     "signingCombo": "正在签名 Combo 订单…",
     "submittingCombo": "正在提交 Combo 订单…",
     "submittedSummary": "出价 {cost} · 预计赢得 {toWin} · {picks} 项",
     "signingCashout": "正在签名兑现…",
     "submittingCashout": "正在提交兑现…",
-    "cashoutSubmittedSummary": "兑现 {amount}"
+    "cashoutSubmittedSummary": "兑现 {amount}",
+    "cannotAddToCombo": "无法加入组合",
+    "selectMinPicksHint": "请至少选择 2 项来构建组合",
+    "allIn": "全押",
+    "toWin": "预期获利",
+    "bidAmount": "出价金额",
+    "submit": "提交"
   },
   "runtime": {
     "connectionLabel": "連線",

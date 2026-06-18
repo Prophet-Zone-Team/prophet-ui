@@ -59,7 +59,7 @@ export function HomeSectionNav() {
         router.push(href);
       }}
       aria-label="World Cup market views"
-      className="md:pl-[40px] mb-[-4px] justify-center md:justify-start"
+      className="md:pl-[40px] w-full mb-[-4px] justify-center md:justify-start"
     />
   );
 }

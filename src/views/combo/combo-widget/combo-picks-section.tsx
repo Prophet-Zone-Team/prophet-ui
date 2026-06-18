@@ -25,7 +25,7 @@ export function ComboPicksSection({
   onRemovePick
 }: ComboPicksSectionProps) {
   return (
-    <div className="flex flex-col gap-3 px-4 pb-4 pt-4">
+    <div className="flex flex-col gap-3 px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-1.5">
           <ComboLogo />

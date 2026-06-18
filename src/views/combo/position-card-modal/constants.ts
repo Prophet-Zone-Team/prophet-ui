@@ -1,5 +1,5 @@
 export const positionCardModalShellClassName =
-  "flex w-[500px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[12px] border border-[#EBEBEB]";
+  "flex w-full max-w-none flex-col overflow-hidden rounded-none border-0 md:w-[500px] md:max-w-[calc(100vw-2rem)] md:rounded-[12px] md:border md:border-[#EBEBEB]";
 
 export const positionCardModalShellStyle = {
   background:

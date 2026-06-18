@@ -1552,13 +1552,20 @@
     "connectWallet": "ウォレットを接続",
     "connecting": "接続中…",
     "buildCombo": "Build A Combo",
+    "reviewTicket": "確認",
     "submitCombo": "Combo",
     "signingCombo": "Signing combo order…",
     "submittingCombo": "Submitting combo order…",
     "submittedSummary": "Bid {cost} · To win {toWin} · {picks} picks",
     "signingCashout": "Signing cashout…",
     "submittingCashout": "Submitting cashout…",
-    "cashoutSubmittedSummary": "Cashout {amount}"
+    "cashoutSubmittedSummary": "Cashout {amount}",
+    "cannotAddToCombo": "コンボに追加できません",
+    "selectMinPicksHint": "Select atleast 2 picks to build a combo",
+    "allIn": "All-in",
+    "toWin": "予想利益",
+    "bidAmount": "Bid amount",
+    "submit": "Submit"
   },
   "runtime": {
     "connectionLabel": "接続",

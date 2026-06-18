@@ -1555,13 +1555,20 @@
     "connectWallet": "Connect Wallet",
     "connecting": "Connecting…",
     "buildCombo": "Build A Combo",
+    "reviewTicket": "Review",
     "submitCombo": "Combo",
     "signingCombo": "Signing combo order…",
     "submittingCombo": "Submitting combo order…",
     "submittedSummary": "Bid {cost} · To win {toWin} · {picks} picks",
     "signingCashout": "Signing cashout…",
     "submittingCashout": "Submitting cashout…",
-    "cashoutSubmittedSummary": "Cashout {amount}"
+    "cashoutSubmittedSummary": "Cashout {amount}",
+    "cannotAddToCombo": "Cannot add to combo",
+    "selectMinPicksHint": "Select atleast 2 picks to build a combo",
+    "allIn": "All-in",
+    "toWin": "To Win",
+    "bidAmount": "Bid amount",
+    "submit": "Submit"
   },
   "runtime": {
     "connectionLabel": "Connection",

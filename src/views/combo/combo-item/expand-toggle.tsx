@@ -20,7 +20,8 @@ export function ExpandToggle({
       className="inline-flex shrink-0 items-center gap-1.5 text-sm font-[400] leading-[18px] text-black transition-opacity hover:opacity-70"
       aria-expanded={expanded}
     >
-      <span>All Odds ({totalCount})</span>
+      <span className="hidden min-[380px]:inline">All Odds ({totalCount})</span>
+      <span className="min-[380px]:hidden">All ({totalCount})</span>
       <ChevronDown
         className={cn(
           "size-3.5 text-[#909090] transition-transform duration-200",

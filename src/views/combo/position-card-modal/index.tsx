@@ -4,11 +4,11 @@ import { useTranslations } from "next-intl";
 
 import { useState } from "react";
 
-import { Modal } from "@/components/ui/modal";
 import { useAuth } from "@/context/auth/use-auth";
 import { useProphetReferral } from "@/hooks/referral/use-prophet-referral";
 import { ComboPositionCashoutShareModal } from "@/views/combo/share-modal/combo-position-cashout-share-modal";
 import { ComboPositionShareModal } from "@/views/combo/share-modal/combo-position-share-modal";
+import { ComboResponsiveOverlay } from "@/views/combo/combo-responsive-overlay";
 
 import {
   positionCardModalShellClassName,
@@ -37,11 +37,9 @@ export function PositionCardModal({
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [cashoutShareModalOpen, setCashoutShareModalOpen] = useState(false);
 
-  console.log("combo: %o", combo);
-
   return (
     <>
-      <Modal
+      <ComboResponsiveOverlay
         open={open && combo != null}
         onClose={onClose}
         ariaLabel="Combo position details"
@@ -77,10 +75,11 @@ export function PositionCardModal({
               connectingLabel={t("connecting")}
               onConnectWallet={() => void auth.openLogin()}
               onCashout={() => void cashout.submitCashout()}
+              onShare={() => setShareModalOpen(true)}
             />
           </div>
         ) : null}
-      </Modal>
+      </ComboResponsiveOverlay>
 
       <ComboPositionShareModal
         open={shareModalOpen}

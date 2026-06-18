@@ -18,7 +18,7 @@ export function PositionCardModalPickList({
   connectorHeightPx = POSITION_CARD_MODAL_PICK_CONNECTOR_HEIGHT_PX
 }: PositionCardModalPickListProps) {
   return (
-    <div className={cn("flex flex-col px-4 pb-4 pt-3", className)}>
+    <div className={cn("flex flex-col px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-3", className)}>
       {picks.map((pick, index) => (
         <Fragment key={pick.id}>
           <PositionCardModalPickItem pick={pick} />

@@ -11,14 +11,14 @@ export function CollapsedBody({
   onSelectOdds,
 }: CollapsedBodyProps) {
   return (
-    <div className="flex items-start gap-3 px-4 pb-4 sm:gap-6">
-      <div className="flex w-[120px] shrink-0 flex-col gap-3 sm:w-[220px]">
+    <div className="hidden flex-col gap-3 px-4 pb-4 sm:flex-row sm:items-center sm:gap-6 md:flex">
+      <div className="flex w-full shrink-0 flex-col gap-2 sm:w-[220px] sm:gap-3">
         <TeamRow team={homeTeam} truncateName />
         <TeamRow team={awayTeam} truncateName />
       </div>
 
       <div className="min-w-0 flex-1 space-y-2">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
           {moneylineOdds.map((option) => (
             <ComboOddsButton
               key={option.id}
@@ -32,7 +32,7 @@ export function CollapsedBody({
         </div>
 
         {previewOdds.length ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="hidden grid-cols-2 gap-1.5 sm:grid sm:grid-cols-4 sm:gap-2">
             {previewOdds.map((option) => (
               <ComboOddsButton
                 key={option.id}

@@ -10,7 +10,7 @@ export const MIN_COMBO_PICKS = 2;
 import type { CSSProperties } from "react";
 
 export const comboWidgetShellClassName =
-  "flex w-full max-w-[345px] flex-col overflow-hidden rounded-xl border border-[#EBEBEB]";
+  "flex w-full max-w-full flex-col overflow-hidden rounded-xl border border-[#EBEBEB] lg:max-w-[345px]";
 
 export const comboWidgetShellStyle: CSSProperties = {
   background:

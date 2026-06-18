@@ -7,7 +7,6 @@ const expandedOddsRowClassName = "flex flex-wrap gap-2";
 export function ExpandedBody({
   moneylineOdds,
   halftimeOdds = [],
-  bttsOdds = [],
   spreadOdds,
   topScoreOdds,
   totalOdds = [],
@@ -93,20 +92,6 @@ export function ExpandedBody({
         </OddsSection>
       ) : null}
 
-      {bttsOdds.length ? (
-        <OddsSection title="BTTS">
-          <div className={expandedOddsRowClassName}>
-            {bttsOdds.map((option) => (
-              <ComboOddsButton
-                key={option.id}
-                option={option}
-                selected={selectedOddsId === option.id}
-                onClick={() => onSelectOdds?.(option)}
-              />
-            ))}
-          </div>
-        </OddsSection>
-      ) : null}
     </div>
   );
 }

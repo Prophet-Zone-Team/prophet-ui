@@ -46,7 +46,7 @@ export function PositionCardModalSummary({
   firstEntryAt
 }: PositionCardModalSummaryProps) {
   return (
-    <div className="flex flex-col gap-2 px-4 pb-4 pt-3">
+    <div className="flex flex-col gap-2 px-3 pb-3 pt-3 sm:px-4 sm:pb-4">
       <SummaryRow
         label="Time"
         value={

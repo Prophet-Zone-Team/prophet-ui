@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import Drawer from "@/components/drawer";
 import { cn } from "@/lib/cn";
 import {
   parseComboMarketOddsId,
@@ -12,6 +13,8 @@ import { comboItemCardClassName } from "@/views/combo/combo-item/constants";
 import { ComboItemHeader } from "@/views/combo/combo-item/combo-item-header";
 import { ExpandedBody } from "@/views/combo/combo-item/expanded-body";
 import { MatchupTitle } from "@/views/combo/combo-item/matchup-title";
+import { MobileCollapsedBody } from "@/views/combo/combo-item/mobile-collapsed-body";
+import { MobileExpandedDrawer } from "@/views/combo/combo-item/mobile-expanded-drawer";
 import type { ComboItemProps, ComboOddsOption } from "@/views/combo/combo-item/types";
 
 export function ComboItem({
@@ -26,6 +29,7 @@ export function ComboItem({
   topScoreOdds,
   totalOdds = [],
   totalOddsCount,
+  selectedLegsCount: selectedLegsCountProp,
   selectedOddsId: selectedOddsIdProp,
   defaultSelectedOddsId,
   expanded: expandedProp,
@@ -35,6 +39,7 @@ export function ComboItem({
   className
 }: ComboItemProps) {
   const [expandedState, setExpandedState] = useState(defaultExpanded);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [selectedOddsIdState, setSelectedOddsIdState] = useState<
     string | undefined
   >(defaultSelectedOddsId);
@@ -66,10 +71,12 @@ export function ComboItem({
     totalOddsCount ??
     moneylineOdds.length +
       halftimeOdds.length +
-      bttsOdds.length +
       spreadOdds.length +
       topScoreOdds.length +
       totalOdds.length;
+
+  const resolvedSelectedLegsCount =
+    selectedLegsCountProp ?? (selectedOddsId ? 1 : 0);
 
   const handleToggleExpanded = () => {
     const next = !expanded;
@@ -82,6 +89,10 @@ export function ComboItem({
   };
 
   const handleSelectOdds = (option: ComboOddsOption) => {
+    if (option.disabled) {
+      return;
+    }
+
     if (!isSelectedOddsControlled) {
       setSelectedOddsIdState((current) =>
         current === option.id ? undefined : option.id,
@@ -98,7 +109,10 @@ export function ComboItem({
         isLive={isLive}
         expanded={expanded}
         totalCount={resolvedTotalCount}
+        selectedLegsCount={resolvedSelectedLegsCount}
         onToggleExpanded={handleToggleExpanded}
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
         centerContent={
           expanded ? (
             <MatchupTitle homeTeam={homeTeam} awayTeam={awayTeam} />
@@ -107,16 +121,18 @@ export function ComboItem({
       />
 
       {expanded ? (
-        <ExpandedBody
-          moneylineOdds={moneylineOdds}
-          halftimeOdds={halftimeOdds}
-          bttsOdds={bttsOdds}
-          spreadOdds={spreadOdds}
-          topScoreOdds={topScoreOdds}
-          totalOdds={totalOdds}
-          selectedOddsId={selectedOddsId}
-          onSelectOdds={handleSelectOdds}
-        />
+        <div className="hidden md:block">
+          <ExpandedBody
+            moneylineOdds={moneylineOdds}
+            halftimeOdds={halftimeOdds}
+            bttsOdds={bttsOdds}
+            spreadOdds={spreadOdds}
+            topScoreOdds={topScoreOdds}
+            totalOdds={totalOdds}
+            selectedOddsId={selectedOddsId}
+            onSelectOdds={handleSelectOdds}
+          />
+        </div>
       ) : (
         <CollapsedBody
           homeTeam={homeTeam}
@@ -127,6 +143,40 @@ export function ComboItem({
           onSelectOdds={handleSelectOdds}
         />
       )}
+
+      <MobileCollapsedBody
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        moneylineOdds={moneylineOdds}
+        previewOdds={previewOdds}
+        selectedOddsId={selectedOddsId}
+        onSelectOdds={handleSelectOdds}
+        totalOddsCount={resolvedTotalCount}
+        onOpenAllOdds={() => setMobileDrawerOpen(true)}
+      />
+
+      <Drawer
+        open={mobileDrawerOpen}
+        onClose={() => setMobileDrawerOpen(false)}
+        hideHeader
+        ariaLabel="All odds"
+        className="!h-auto max-h-[92dvh] md:hidden"
+      >
+        <MobileExpandedDrawer
+          kickoffLabel={kickoffLabel}
+          isLive={isLive}
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          moneylineOdds={moneylineOdds}
+          halftimeOdds={halftimeOdds}
+          bttsOdds={bttsOdds}
+          spreadOdds={spreadOdds}
+          topScoreOdds={topScoreOdds}
+          totalOdds={totalOdds}
+          selectedOddsId={selectedOddsId}
+          onSelectOdds={handleSelectOdds}
+        />
+      </Drawer>
     </article>
   );
 }
