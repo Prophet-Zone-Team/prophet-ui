@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  getBridgeRecipientPlaceholder,
   isValidBridgeRecipientAddress,
+  isValidBridgeStatusAddress,
   isValidBridgeTokenAddress,
   isValidStableflowDepositTxHash,
 } from "./recipient-validation";
@@ -65,6 +67,51 @@ describe("isValidBridgeRecipientAddress", () => {
 
   it("accepts Solana recipient on Solana chain", () => {
     assert.equal(isValidBridgeRecipientAddress(SOLANA_CHAIN_ID, SOLANA_USDC_ADDRESS), true);
+  });
+});
+
+describe("isValidBridgeStatusAddress", () => {
+  it("accepts EVM bridge status addresses", () => {
+    assert.equal(isValidBridgeStatusAddress(EVM_RECIPIENT), true);
+  });
+
+  it("accepts Tron bridge status addresses", () => {
+    assert.equal(isValidBridgeStatusAddress(TRON_USDT_ADDRESS), true);
+  });
+
+  it("accepts Solana bridge status addresses", () => {
+    assert.equal(isValidBridgeStatusAddress(SOLANA_USDC_ADDRESS), true);
+  });
+
+  it("trims whitespace before validating", () => {
+    assert.equal(isValidBridgeStatusAddress(`  ${EVM_RECIPIENT}  `), true);
+  });
+
+  it("rejects empty and whitespace addresses", () => {
+    assert.equal(isValidBridgeStatusAddress(""), false);
+    assert.equal(isValidBridgeStatusAddress("   "), false);
+  });
+
+  it("rejects NEAR account ids", () => {
+    assert.equal(isValidBridgeStatusAddress("user.near"), false);
+  });
+
+  it("rejects invalid addresses", () => {
+    assert.equal(isValidBridgeStatusAddress("not-an-address"), false);
+  });
+});
+
+describe("getBridgeRecipientPlaceholder", () => {
+  it("returns Tron placeholder for Tron chain", () => {
+    assert.equal(getBridgeRecipientPlaceholder(TRON_CHAIN_ID), "T…");
+  });
+
+  it("returns Solana placeholder for Solana chain", () => {
+    assert.equal(getBridgeRecipientPlaceholder(SOLANA_CHAIN_ID), "Solana address");
+  });
+
+  it("returns EVM placeholder for Polygon chain", () => {
+    assert.equal(getBridgeRecipientPlaceholder(POLYGON_CHAIN_ID), "0x…");
   });
 });
 

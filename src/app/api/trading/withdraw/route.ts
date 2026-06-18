@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { recoverTypedDataAddress } from "viem";
 
 import {
+  isValidBridgeRecipientAddress,
+  isValidBridgeStatusAddress,
+  isValidBridgeTokenAddress,
+} from "@/lib/funding/recipient-validation";
+import {
   buildWithdrawTransferBatch,
   resolveBridgeWithdrawDepositAddress,
   type DepositWalletBatchSignablePayload,
@@ -71,12 +76,17 @@ export async function GET(request: Request) {
     }
 
     if (statusAddress) {
-      if (!/^0x[a-fA-F0-9]{40}$/.test(statusAddress)) {
-        return NextResponse.json({ error: "statusAddress must be an EVM address." }, { status: 400 });
+      const normalizedStatusAddress = statusAddress.trim();
+
+      if (!isValidBridgeStatusAddress(normalizedStatusAddress)) {
+        return NextResponse.json(
+          { error: "statusAddress must be a valid EVM, Tron, or Solana address." },
+          { status: 400 },
+        );
       }
 
       return NextResponse.json({
-        status: await fetchBridgeTransactionStatus(statusAddress),
+        status: await fetchBridgeTransactionStatus(normalizedStatusAddress),
       });
     }
 
@@ -92,8 +102,18 @@ export async function GET(request: Request) {
       );
     }
 
-    if (!/^0x[a-fA-F0-9]{40}$/.test(toTokenAddress) || !/^0x[a-fA-F0-9]{40}$/.test(recipientAddr)) {
-      return NextResponse.json({ error: "toTokenAddress and recipientAddr must be EVM addresses." }, { status: 400 });
+    if (!isValidBridgeTokenAddress(toChainId, toTokenAddress)) {
+      return NextResponse.json(
+        { error: `toTokenAddress must be a valid address for chain ${toChainId}.` },
+        { status: 400 },
+      );
+    }
+
+    if (!isValidBridgeRecipientAddress(toChainId, recipientAddr)) {
+      return NextResponse.json(
+        { error: `recipientAddr must be a valid address for chain ${toChainId}.` },
+        { status: 400 },
+      );
     }
 
     const amountBaseUnits = parseUsdAmountToBaseUnits(amount);

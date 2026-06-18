@@ -63,6 +63,34 @@ export function isValidBridgeRecipientAddress(chainId: string, address: string):
   return isValidBridgeTokenAddress(chainId, address);
 }
 
+export function isValidBridgeStatusAddress(address: string): boolean {
+  const normalized = address.trim();
+
+  if (!normalized) {
+    return false;
+  }
+
+  return (
+    isValidEvmAddress(normalized) ||
+    isValidTronAddress(normalized) ||
+    isValidSolanaAddress(normalized)
+  );
+}
+
+export function getBridgeRecipientPlaceholder(chainId: string): string {
+  const normalizedChainId = chainId.trim();
+
+  if (normalizedChainId === TRON_CHAIN_ID) {
+    return getRecipientPlaceholder("tron");
+  }
+
+  if (normalizedChainId === SOLANA_CHAIN_ID) {
+    return getRecipientPlaceholder("sol");
+  }
+
+  return getRecipientPlaceholder("pol");
+}
+
 export function isValidStableflowRefundAddress(
   blockchain: string,
   address: string,
