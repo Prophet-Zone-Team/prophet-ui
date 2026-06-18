@@ -62,8 +62,7 @@ export async function fetchPolymarketUserActivity(
   userAddress: string,
   options: { limit: number; offset: number }
 ): Promise<{ activities: PolymarketActivityRow[]; hasMore: boolean }> {
-  // const trimmedAddress = userAddress.trim();
-  const trimmedAddress = "0xdd3c16a48bAb4A55784C8d371FBaCf43bBC423C3";
+  const trimmedAddress = userAddress.trim();
 
   if (!trimmedAddress) {
     return { activities: [], hasMore: false };
