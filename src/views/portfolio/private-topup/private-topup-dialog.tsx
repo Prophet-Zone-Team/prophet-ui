@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { shouldHideFundingWalletChange } from "@/context/rainbowkit/utils";
 import { isTpFundingSwitchPendingError } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import { FundingNetworkType } from "@/config/funding/networks";
+import { resolvePrivateTopupError } from "@/lib/funding/private-topup-error-message";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
 import { fetchEvmTokenBalances } from "@/lib/funding/evm-balances";
 import {
@@ -62,6 +63,7 @@ const INITIAL_AMOUNT: PrivateTopupAmountState = {
 };
 
 type TopupStatusPhase = "bridging" | "success" | "error";
+type TopupStatusErrorKind = "generic" | "solana_confirmation_timeout";
 
 export interface PrivateTopupDialogProps {
   open: boolean;
@@ -136,6 +138,8 @@ export function PrivateTopupDialog({
   const [statusPhase, setStatusPhase] = useState<TopupStatusPhase>("bridging");
   const [bridgeStatusLabel, setBridgeStatusLabel] = useState<string | undefined>();
   const [statusError, setStatusError] = useState<string | undefined>();
+  const [statusErrorKind, setStatusErrorKind] =
+    useState<TopupStatusErrorKind>("generic");
 
   const evmBalances = useBalancesStore((state) => state.evmBalances);
   const mergeEvmBalances = useBalancesStore((state) => state.mergeEvmBalances);
@@ -225,6 +229,7 @@ export function PrivateTopupDialog({
     setStatusPhase("bridging");
     setBridgeStatusLabel(undefined);
     setStatusError(undefined);
+    setStatusErrorKind("generic");
     stopStatusPoll();
   }, [stopStatusPoll]);
 
@@ -380,8 +385,15 @@ export function PrivateTopupDialog({
         toast.success(t("topUpSuccessful"));
         await onSuccess?.();
       } catch (error) {
+        const { message, isSolanaConfirmationTimeout } =
+          resolvePrivateTopupError(error);
         setStatusPhase("error");
-        setStatusError(error instanceof Error ? error.message : String(error));
+        setStatusError(message);
+        setStatusErrorKind(
+          isSolanaConfirmationTimeout
+            ? "solana_confirmation_timeout"
+            : "generic",
+        );
       }
     },
     [onSuccess, pollTopupStatus, t, tDeposit],
@@ -395,6 +407,7 @@ export function PrivateTopupDialog({
 
     setContinueLoading(true);
     setStatusError(undefined);
+    setStatusErrorKind("generic");
     setStep("status");
     setStatusPhase("bridging");
 
@@ -414,9 +427,13 @@ export function PrivateTopupDialog({
       });
       void runStatusPolling(execution.depositAddress, execution.depositMemo);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const { message, isSolanaConfirmationTimeout } =
+        resolvePrivateTopupError(error);
       setStatusPhase("error");
       setStatusError(message);
+      setStatusErrorKind(
+        isSolanaConfirmationTimeout ? "solana_confirmation_timeout" : "generic",
+      );
       toast.error(message);
     } finally {
       setContinueLoading(false);
@@ -603,6 +620,7 @@ export function PrivateTopupDialog({
               phase={statusPhase}
               bridgeStatusLabel={bridgeStatusLabel}
               error={statusError}
+              errorKind={statusErrorKind}
               onDone={handleClose}
               onRetry={() => setStep("confirm")}
             />
@@ -617,17 +635,20 @@ function TopupStatusView({
   phase,
   bridgeStatusLabel,
   error,
+  errorKind = "generic",
   onDone,
   onRetry,
 }: {
   phase: TopupStatusPhase;
   bridgeStatusLabel?: string;
   error?: string;
+  errorKind?: TopupStatusErrorKind;
   onDone: () => void;
   onRetry: () => void;
 }) {
   const t = useTranslations("privateTopup");
   const tAuth = useTranslations("auth");
+  const isConfirmationTimeout = errorKind === "solana_confirmation_timeout";
 
   return (
     <div className="flex flex-col items-center justify-center gap-5 py-10 text-center">
@@ -664,13 +685,23 @@ function TopupStatusView({
         <>
           <ShieldAlert className="h-10 w-10 text-[#e5484d]" aria-hidden />
           <div>
-            <p className="m-0 text-lg font-[556] text-black">{t("topUpFailed")}</p>
-            <p className="m-0 mt-1 text-sm text-[#e5484d]">
+            <p className="m-0 text-lg font-[556] text-black">
+              {isConfirmationTimeout ? t("statusLookupFailed") : t("topUpFailed")}
+            </p>
+            <p
+              className={`m-0 mt-1 text-sm ${
+                isConfirmationTimeout ? "text-[#909090]" : "text-[#e5484d]"
+              }`}
+            >
               {error ?? t("somethingWentWrong")}
             </p>
           </div>
-          <button type="button" className={fundingPrimaryButtonClass} onClick={onRetry}>
-            {t("tryAgain")}
+          <button
+            type="button"
+            className={fundingPrimaryButtonClass}
+            onClick={isConfirmationTimeout ? onDone : onRetry}
+          >
+            {isConfirmationTimeout ? t("acknowledge") : t("tryAgain")}
           </button>
         </>
       ) : null}
