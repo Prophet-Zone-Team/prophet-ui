@@ -546,16 +546,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         activeStore.setLoginStep(undefined);
         maybeCloseSetupModal(result.readiness);
 
-        // if (!isTradingSetupComplete(result.readiness)) {
-        //   activeStore.setLoginModalOpen(true);
-        // }
+        if (!isTradingSetupComplete(result.readiness)) {
+          activeStore.setLoginModalOpen(true);
+        }
       } catch (switchError) {
         if (!loginAbortRef.current) {
           useAuthStore.getState().setStatus("error");
           useAuthStore
             .getState()
             .setError(resolveWalletErrorMessage(switchError));
-          // useAuthStore.getState().setLoginModalOpen(true);
+          useAuthStore.getState().setLoginModalOpen(true);
         }
       } finally {
         walletHandlingRef.current = false;
@@ -607,17 +607,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const openSetupModalIfNeeded = useCallback(() => {
-    // const store = useAuthStore.getState();
+    const store = useAuthStore.getState();
 
-    // if (
-    //   shouldAutoOpenTradingSetupModal({
-    //     session: store.session,
-    //     readiness: store.readiness,
-    //     isRegionBlocked: isRegionBlockedRef.current
-    //   })
-    // ) {
-    //   store.setLoginModalOpen(true);
-    // }
+    if (
+      shouldAutoOpenTradingSetupModal({
+        session: store.session,
+        readiness: store.readiness,
+        isRegionBlocked: isRegionBlockedRef.current
+      })
+    ) {
+      store.setLoginModalOpen(true);
+    }
   }, []);
 
   const refreshSession = useCallback(async () => {
@@ -632,7 +632,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.clearAuth();
         store.setLoginInProgress(false);
         store.setStatus("ready");
-        openSetupModalIfNeeded();
+        // openSetupModalIfNeeded();
 
         walletHandlingRef.current = false;
         return;
@@ -736,7 +736,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           store.setError(
             "Wallet extension is not connected. Reconnect your wallet to continue."
           );
-          openSetupModalIfNeeded();
+          // openSetupModalIfNeeded();
 
           if (isTradingSetupComplete(nextReadiness)) {
             store.setLoginModalOpen(true);
@@ -1419,13 +1419,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loginMethod, privyAuthenticated, privyUser]);
 
   // openSetupModal
-  useEffect(() => {
-    if (!hydrated) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (!hydrated) {
+  //     return;
+  //   }
 
-    openSetupModalIfNeeded();
-  }, [hydrated, pathname, openSetupModalIfNeeded, session, readiness]);
+  //   openSetupModalIfNeeded();
+  // }, [hydrated, pathname, openSetupModalIfNeeded, session, readiness]);
 
   // refresh cash and private balance
   useEffect(() => {
