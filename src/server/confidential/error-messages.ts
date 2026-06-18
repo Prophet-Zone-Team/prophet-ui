@@ -1,21 +1,14 @@
 import "server-only";
 
-import { formatUnits } from "viem";
+import { getConfidentialTokens } from "@/server/confidential/one-click-client";
 
-const TRY_AT_LEAST_BASE_UNITS_PATTERN = /^(.*try at least )(\d+)$/i;
+export { formatConfidentialApiErrorMessage } from "@/server/confidential/format-confidential-api-error-message";
 
-export function formatConfidentialApiErrorMessage(message: string, decimals = 6): string {
-  const match = message.match(TRY_AT_LEAST_BASE_UNITS_PATTERN);
+const DEFAULT_ORIGIN_TOKEN_DECIMALS = 6;
 
-  if (!match) {
-    return message;
-  }
+export async function resolveOriginTokenDecimals(originAssetId: string): Promise<number> {
+  const tokens = await getConfidentialTokens();
+  const match = tokens.find((token) => token.assetId === originAssetId);
 
-  const [, prefix, baseUnits] = match;
-
-  try {
-    return `${prefix}${formatUnits(BigInt(baseUnits), decimals)}`;
-  } catch {
-    return message;
-  }
+  return match?.decimals ?? DEFAULT_ORIGIN_TOKEN_DECIMALS;
 }
