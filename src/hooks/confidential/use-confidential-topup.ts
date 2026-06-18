@@ -128,11 +128,15 @@ export function useConfidentialTopup(): UseConfidentialTopupResult {
         txHash = result.txHash;
       }
 
-      await submitConfidentialDepositTx({
-        txHash,
-        depositAddress,
-        memo: quote.quote.depositMemo,
-      });
+      try {
+        await submitConfidentialDepositTx({
+          txHash,
+          depositAddress,
+          memo: quote.quote.depositMemo,
+        });
+      } catch (error) {
+        console.error("Failed to submit confidential deposit tx:", error);
+      }
 
       return {
         quote,

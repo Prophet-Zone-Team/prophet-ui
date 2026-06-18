@@ -65,7 +65,7 @@ export function isValidStableflowDepositTxHash(txHash: string): boolean {
     return true;
   }
 
-  return /^[A-Za-z0-9]{40,64}$/.test(normalized);
+  return /^[A-Za-z0-9]{40,88}$/.test(normalized);
 }
 
 export function getRecipientPlaceholder(blockchain: string): string {
