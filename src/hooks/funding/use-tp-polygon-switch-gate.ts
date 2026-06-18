@@ -94,9 +94,13 @@ export function useTpPolygonSwitchGate() {
           await action();
           return;
         }
+
+        openSwitchDialog(variant, action);
+
+        return;
       }
 
-      openSwitchDialog(variant, action);
+      await action();
     },
     [openSwitchDialog, isMobile],
   );
