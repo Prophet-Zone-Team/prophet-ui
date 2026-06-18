@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/context/auth";
+import { mapComboPositionsToCards } from "@/lib/portfolio/combo-positions/map-combo-position-card";
+import type { PortfolioComboPositionCard } from "@/lib/portfolio/combo-positions/types";
+import { fetchPolymarketComboPositions } from "@/lib/portfolio/fetch-polymarket-combo-positions";
 import { PORTFOLIO_HISTORY_PAGE_SIZE } from "@/lib/portfolio/config";
 import type { PolymarketActivityRow } from "@/lib/portfolio/fetch-polymarket-activity";
 import { fetchPolymarketUserActivity } from "@/lib/portfolio/fetch-polymarket-activity";
@@ -33,6 +36,7 @@ export interface UsePortfolioDataResult {
   session: ReturnType<typeof useAuth>["session"];
   isAuthenticated: boolean;
   positions: UserPositionRecord[];
+  comboPositions: PortfolioComboPositionCard[];
   openOrders: UserOpenOrder[];
   marketContextMap: Record<string, OpenOrderMarketContext>;
   transactions: PortfolioTransactionRecord[];
@@ -56,6 +60,9 @@ export interface UsePortfolioDataResult {
 export function usePortfolioData(): UsePortfolioDataResult {
   const { session, isAuthenticated, openLogin, refreshCash } = useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
+  const [comboPositions, setComboPositions] = useState<
+    PortfolioComboPositionCard[]
+  >([]);
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
   const [marketContextMap, setMarketContextMap] = useState<
     Record<string, OpenOrderMarketContext>
@@ -120,6 +127,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
   );
 
   const resetTabData = useCallback(() => {
+    setComboPositions([]);
     setOpenOrders([]);
     setMarketContextMap({});
     setTransactions([]);
@@ -139,6 +147,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const loadCore = useCallback(async (options?: PortfolioLoadOptions) => {
     if (!session) {
       setPositions([]);
+      setComboPositions([]);
       resetTabData();
       coreLoadedRef.current = false;
       setCoreStatus("ready");
@@ -162,19 +171,32 @@ export function usePortfolioData(): UsePortfolioDataResult {
     const loadPromise = (async () => {
       try {
         const errors: string[] = [];
+        const polymarketAddress =
+          session.funderAddress ?? session.walletAddress;
 
-        const positionsPayload = await fetchJson<{
-          positions?: UserPositionRecord[];
-          error?: string;
-        }>("/api/trading/positions?limit=100").catch((error) => {
-          errors.push(error instanceof Error ? error.message : String(error));
-          return undefined;
-        });
+        const [positionsPayload, comboPositionRecords] = await Promise.all([
+          fetchJson<{
+            positions?: UserPositionRecord[];
+            error?: string;
+          }>("/api/trading/positions?limit=100").catch((error) => {
+            errors.push(error instanceof Error ? error.message : String(error));
+            return undefined;
+          }),
+          polymarketAddress?.trim()
+            ? fetchPolymarketComboPositions(polymarketAddress, {
+                limit: 20
+              }).catch((error) => {
+                console.warn("[portfolio] combo positions failed", error);
+                return [];
+              })
+            : Promise.resolve([])
+        ]);
 
         const nextPositions = (positionsPayload?.positions ?? []).filter(
           (position) => position.currentValue !== 0
         );
         setPositions(nextPositions);
+        setComboPositions(mapComboPositionsToCards(comboPositionRecords));
 
         const conditionIds =
           collectUniqueConditionIdsFromPositions(nextPositions);
@@ -408,6 +430,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
       sessionUserIdRef.current = undefined;
       coreLoadInFlightRef.current = null;
       setPositions([]);
+      setComboPositions([]);
       coreLoadedRef.current = false;
       setCoreStatus("ready");
       setMessage(undefined);
@@ -463,6 +486,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     session,
     isAuthenticated,
     positions,
+    comboPositions,
     openOrders,
     marketContextMap,
     transactions,

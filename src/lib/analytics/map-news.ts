@@ -2,11 +2,7 @@ import type { ProphetAnalyticsNewsArticle } from "@/types/prophet-api";
 import type { NewsImpactItem, NewsSentiment } from "@/views/analytics/news/types";
 import type { SignalNewsDetail } from "@/views/signal/news-detail/types";
 
-import {
-  NEWS_HIGH_IMPACT_THRESHOLD,
-  NEWS_IMPACT_NEGATIVE_KEYWORDS,
-  NEWS_IMPACT_POSITIVE_KEYWORDS
-} from "./config";
+import { NEWS_HIGH_IMPACT_THRESHOLD } from "./config";
 import {
   formatDateMonthAndTime,
   formatRelativeTime,
