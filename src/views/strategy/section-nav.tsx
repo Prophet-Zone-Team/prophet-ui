@@ -37,7 +37,7 @@ export function StrategySectionNav() {
     <nav aria-label={t("strategyViews")} className="flex justify-center">
       <div
         role="tablist"
-        className="flex h-[46px] w-[279px] items-center rounded-[12px] bg-[#F4F4F4] p-[5px]"
+        className="flex h-[46px] w-full max-w-[279px] items-center rounded-[12px] bg-[#F4F4F4] p-[5px]"
       >
         {STRATEGY_SECTIONS.map((section) => {
           const isActive = section.href === activeHref;

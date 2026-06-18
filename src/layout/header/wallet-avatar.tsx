@@ -1,5 +1,5 @@
+import { ProphetMarkIcon } from "@/components/icons/prophet-mark-icon";
 import { cn } from "@/lib/cn";
-import { getWalletAvatarGradient } from "@/lib/wallet/avatar-gradient";
 
 export interface WalletAvatarProps {
   address: string;
@@ -13,14 +13,12 @@ const sizeClassName = {
 } as const;
 
 export function WalletAvatar({
-  address,
   size = "sm",
   className,
 }: WalletAvatarProps) {
   return (
-    <span
-      className={cn("shrink-0 rounded-full", sizeClassName[size], className)}
-      style={{ background: getWalletAvatarGradient(address) }}
+    <ProphetMarkIcon
+      className={cn(sizeClassName[size], className)}
       aria-hidden="true"
     />
   );

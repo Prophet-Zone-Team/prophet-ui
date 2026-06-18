@@ -224,6 +224,14 @@ export function translateTradeMessage(
     return t("limitBuyMinShares", { minShares: limitBuyMatch[1] });
   }
 
+  const marketBuyMatch = message.match(
+    /^Market buy orders must be at least (\d+) shares(\. Increase the amount and try again\.)?$/
+  );
+
+  if (marketBuyMatch) {
+    return t("marketBuyMinShares", { minShares: marketBuyMatch[1] });
+  }
+
   if (message.includes("\n")) {
     return message
       .split("\n")
@@ -329,6 +337,34 @@ export function resolveGameOutcomeLabel(
   return homeName;
 }
 
+function formatTotalOutcomeAbbrevLabel(
+  t: TradeTranslator,
+  outcome: FixtureMarketOutcome
+): string | undefined {
+  if (outcome.marketType !== "total") {
+    return undefined;
+  }
+
+  if (outcome.side === "over" && outcome.line !== undefined) {
+    return `${t("overAbbrev")}${outcome.line}`;
+  }
+
+  if (outcome.side === "under" && outcome.line !== undefined) {
+    return `${t("underAbbrev")}${outcome.line}`;
+  }
+
+  const abbrevMatch = outcome.label.match(/^(O|U)(\d+(?:\.\d+)?)$/);
+
+  if (!abbrevMatch) {
+    return undefined;
+  }
+
+  const abbrev =
+    abbrevMatch[1] === "O" ? t("overAbbrev") : t("underAbbrev");
+
+  return `${abbrev}${abbrevMatch[2]}`;
+}
+
 export function resolveFixtureOutcomeLabel(
   t: TradeTranslator,
   outcome: FixtureMarketOutcome
@@ -341,7 +377,7 @@ export function resolveFixtureOutcomeLabel(
     return t("bothTeamsToScore");
   }
 
-  return outcome.label;
+  return formatTotalOutcomeAbbrevLabel(t, outcome) ?? outcome.label;
 }
 
 export function resolveTradeWidgetHeaderTitle(

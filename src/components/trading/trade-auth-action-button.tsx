@@ -8,11 +8,15 @@ import { useAuth } from "@/context/auth";
 import { cn } from "@/lib/cn";
 import { formatEligibilityRestrictionDetail } from "@/lib/trading/trading-eligibility-client";
 import type { BidTradeSide } from "@/types/market";
-import { tradeBidButtonClass } from "@/views/trade/trade-widget/trade-ui";
+import {
+  tradeBidButtonClass,
+  tradeOutcomeBidButtonClass
+} from "@/views/trade/trade-widget/trade-ui";
 
 export interface TradeAuthActionButtonProps {
   className?: string;
   tradeSide?: BidTradeSide;
+  outcomeSide?: "yes" | "no";
   actionLabel: ReactNode;
   connectLabel?: string;
   connectingLabel?: string;
@@ -30,6 +34,7 @@ export interface TradeAuthActionButtonProps {
 export function TradeAuthActionButton({
   className,
   tradeSide = "buy",
+  outcomeSide,
   actionLabel,
   connectLabel = "Connect Wallet",
   connectingLabel = "Connecting…",
@@ -52,7 +57,12 @@ export function TradeAuthActionButton({
     openLoginModalOnly,
     loginInProgress,
   } = useAuth();
-  const buttonClass = cn(tradeBidButtonClass, className);
+  const buttonClass = cn(
+    outcomeSide
+      ? tradeOutcomeBidButtonClass(outcomeSide)
+      : tradeBidButtonClass,
+    className
+  );
   const regionRestricted =
     tradeSide === "buy" ? isBuyRestricted : isRegionBlocked;
   const restrictionDetail = formatEligibilityRestrictionDetail(eligibilityView);

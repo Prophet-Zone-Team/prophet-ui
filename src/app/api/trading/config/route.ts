@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { getBuilderTakerFeeRate, getOrderBuilderCode } from "@/server/trading/builder-code";
+import {
+  getBuilderMakerFeeRate,
+  getBuilderTakerFeeRate,
+  getOrderBuilderCode,
+} from "@/server/trading/builder-code";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +14,7 @@ export async function GET() {
 
   return NextResponse.json({
     builderCode,
-    builderTakerFeeRate: await getBuilderTakerFeeRate(builderCode),
+    builderMakerFeeRate: getBuilderMakerFeeRate(),
+    builderTakerFeeRate: getBuilderTakerFeeRate(),
   });
 }

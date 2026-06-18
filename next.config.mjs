@@ -2,12 +2,27 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+const isVercelBuild = process.env.VERCEL === "1";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Lint and typecheck run in GitHub Actions CI; skipping here avoids slow/OOM Vercel builds.
+  eslint: {
+    ignoreDuringBuilds: true
+  },
+  typescript: {
+    ignoreBuildErrors: true
+  },
+  modularizeImports: {
+    "lucide-react": {
+      transform: "lucide-react/dist/esm/icons/{{member}}"
+    }
+  },
   experimental: {
     webpackMemoryOptimizations: true,
-    // Lower build parallelism to reduce peak memory on Cloudflare Workers Builds.
-    cpus: 4
+    // Vercel build containers have ~8GB RAM; a single worker avoids OOM from parallel heaps.
+    // Cloudflare Workers Builds can use more parallelism with script-level heap limits.
+    cpus: isVercelBuild ? 1 : 4
   },
   images: {
     remotePatterns: [

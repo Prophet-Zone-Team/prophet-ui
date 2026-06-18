@@ -95,11 +95,11 @@ export function BidValueSection({
         </p>
       ) : null}
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <span className="font-[Sora] text-sm font-normal leading-[18px] text-[#909090]">
           {t("balancePrefix")} {balanceLabel}
         </span>
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-wrap gap-2">
           {STRATEGY_BID_QUICK_FRACTIONS.map(({ value }, index) => (
             <button
               key={quickFractionLabels[index]}

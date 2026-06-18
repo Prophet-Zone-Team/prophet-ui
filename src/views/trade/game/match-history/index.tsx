@@ -13,13 +13,15 @@ export type MatchHistoryProps = {
   isLoading?: boolean;
   isError?: boolean;
   className?: string;
+  embedded?: boolean;
 };
 
 export function MatchHistory({
   matches = [],
   isLoading = false,
   isError = false,
-  className
+  className,
+  embedded = false
 }: MatchHistoryProps) {
   const t = useTranslations("trade");
 
@@ -27,16 +29,19 @@ export function MatchHistory({
     <section
       aria-label={t("matchHistoryAria")}
       className={cn(
-        "w-full max-w-none md:max-w-[531px] rounded-[12px] bg-white px-[12px] py-[16px]",
-        "shadow-[0_0_10px_rgba(0,0,0,0.1)]",
+        embedded
+          ? "w-full px-4 pb-4"
+          : "w-full max-w-none md:max-w-[531px] rounded-[12px] bg-white px-[12px] py-[16px] shadow-[0_0_10px_rgba(0,0,0,0.1)]",
         className
       )}
     >
-      <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
-        {t("matchHistory")}
-      </h2>
+      {embedded ? null : (
+        <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
+          {t("matchHistory")}
+        </h2>
+      )}
 
-      <div className="mt-[12px] flex w-full flex-col">
+      <div className={cn("flex w-full flex-col", embedded ? "" : "mt-[12px]")}>
         {isLoading ? (
           <p className="py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090]">
             {t("loadingData")}

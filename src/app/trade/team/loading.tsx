@@ -14,8 +14,29 @@ function LoadingBlock({ className }: { className?: string }) {
 
 export default function TradeTeamRouteLoading() {
   return (
-    <div className={tradePageClass} aria-busy aria-label="Loading trade">
-      <div className="mb-4 flex gap-3 border-b border-prophet-line pb-4">
+    <div
+      className={`${tradePageClass} pb-[130px] md:pb-10`}
+      aria-busy
+      aria-label="Loading trade"
+    >
+      <div className="my-4 flex flex-col gap-3 md:hidden">
+        <div className="flex items-center justify-between">
+          <LoadingBlock className="h-5 w-12" />
+          <LoadingBlock className="h-11 w-24" />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <LoadingBlock className="h-10 w-10 shrink-0 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <LoadingBlock className="h-8 w-40" />
+              <LoadingBlock className="h-4 w-28" />
+            </div>
+          </div>
+          <LoadingBlock className="h-9 w-24 shrink-0 rounded-lg" />
+        </div>
+      </div>
+
+      <div className="mb-4 hidden gap-3 border-b border-prophet-line pb-4 md:flex">
         <LoadingBlock className="h-5 w-12" />
         <LoadingBlock className="h-14 w-14 shrink-0" />
         <div className="flex-1 space-y-2">
@@ -26,11 +47,18 @@ export default function TradeTeamRouteLoading() {
 
       <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="order-2 flex flex-col gap-4 xl:order-1">
+          <LoadingBlock className="h-9 w-40 md:hidden" />
+
           <div className={`${tradeSectionClass} p-5`}>
             <LoadingBlock className="mb-4 h-6 w-40" />
             <LoadingBlock className="mb-6 h-12 w-56" />
             <LoadingBlock className="h-[280px] w-full" />
           </div>
+
+          <div className="md:hidden">
+            <LoadingBlock className="h-12 w-full rounded-[12px]" />
+          </div>
+
           <div className={tradeSectionClass}>
             <div className="border-b border-prophet-line px-4 py-3">
               <LoadingBlock className="h-6 w-64" />
@@ -46,7 +74,7 @@ export default function TradeTeamRouteLoading() {
           </div>
         </div>
 
-        <aside className="order-1 flex flex-col gap-4 xl:order-2">
+        <aside className="order-1 hidden flex-col gap-4 md:flex xl:order-2">
           <div className={`${tradeSectionClass} p-4`}>
             <LoadingBlock className="mb-4 h-6 w-24" />
             <LoadingBlock className="mb-3 h-20 w-full" />
@@ -67,6 +95,11 @@ export default function TradeTeamRouteLoading() {
             ))}
           </div>
         </aside>
+      </div>
+
+      <div className="fixed bottom-0 left-0 z-10 flex w-full gap-5 rounded-t-xl border border-[#EBEBEB] bg-white px-3 pb-10 pt-5 md:hidden">
+        <LoadingBlock className="h-[46px] flex-1 rounded-xl" />
+        <LoadingBlock className="h-[46px] flex-1 rounded-xl" />
       </div>
     </div>
   );

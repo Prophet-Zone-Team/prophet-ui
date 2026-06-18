@@ -165,7 +165,9 @@ function HistoryRowContent({
     redeem: t("txActionRedeem"),
     deposit: t("txActionDeposit"),
     withdraw: t("txActionWithdraw"),
-    claim: t("txActionClaim")
+    claim: t("txActionClaim"),
+    loss: t("txActionLoss"),
+    activity: t("txActionActivity")
   };
   const actionLabel = txActionLabels[transaction.type] ?? titleCase(transaction.type);
 
@@ -203,6 +205,17 @@ function TransactionActionIcon({
     return (
       <span
         className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#E97864]"
+        aria-hidden="true"
+      >
+        <span className="h-px w-2 rounded-full bg-white" />
+      </span>
+    );
+  }
+
+  if (type === "loss") {
+    return (
+      <span
+        className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#FF674B]"
         aria-hidden="true"
       >
         <span className="h-px w-2 rounded-full bg-white" />
@@ -265,6 +278,17 @@ function TransactionActionIcon({
       </svg>
     );
   }
+
+  if (type === "activity") {
+    return (
+      <span
+        className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#909090]"
+        aria-hidden="true"
+      >
+        <span className="size-1.5 rounded-full bg-white" />
+      </span>
+    );
+  }
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -296,7 +320,9 @@ function renderHistoryRow(
     redeem: t("txActionRedeem"),
     deposit: t("txActionDeposit"),
     withdraw: t("txActionWithdraw"),
-    claim: t("txActionClaim")
+    claim: t("txActionClaim"),
+    loss: t("txActionLoss"),
+    activity: t("txActionActivity")
   };
   const showStrategyLabel = transaction.source === "strategy";
 

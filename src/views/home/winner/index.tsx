@@ -25,7 +25,10 @@ export function HomeWinnerPanel() {
   return (
     <div className="px-3 md:px-0">
       <div ref={chartSectionRef}>
-        <WinnerProbabilityChart className="mb-4" teams={teams} />
+        <WinnerProbabilityChart
+          className="mb-4 md:block hidden"
+          teams={teams}
+        />
       </div>
       <div ref={teamListSectionRef}>
         <HomeWinnerMarketList teams={teams} dataStatus={dataStatus} />

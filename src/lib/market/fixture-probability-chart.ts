@@ -47,11 +47,35 @@ export function mapUiRangeToClobInterval(
   }
 }
 
+/** Minimum CLOB `fidelity` (minutes) per interval when using preset ranges. */
+const CLOB_INTERVAL_MIN_FIDELITY_MINUTES: Partial<
+  Record<FixtureHistoryInterval, number>
+> = {
+  "1w": 5,
+  "1m": 60,
+};
+
+export function resolveFixtureChartHistoryFidelityMinutes(
+  timeRange: GameFixtureChartTimeRange,
+): number | undefined {
+  if (timeRange === "all") {
+    return undefined;
+  }
+
+  const interval = mapUiRangeToClobInterval(timeRange);
+  const { intervalMs } = resolveGameChartRangePadding(timeRange);
+  const chartFidelityMinutes = Math.max(1, Math.round(intervalMs / 60_000));
+  const minFidelityMinutes = CLOB_INTERVAL_MIN_FIDELITY_MINUTES[interval] ?? 1;
+
+  return Math.max(chartFidelityMinutes, minFidelityMinutes);
+}
+
 export function resolveFixtureChartHistoryRequest(
   timeRange: GameFixtureChartTimeRange,
   nowMs = Date.now(),
 ): {
   interval: FixtureHistoryInterval;
+  fidelity?: number;
   start_ts?: number;
   end_ts?: number;
 } {
@@ -67,6 +91,7 @@ export function resolveFixtureChartHistoryRequest(
 
   return {
     interval: mapUiRangeToClobInterval(timeRange),
+    fidelity: resolveFixtureChartHistoryFidelityMinutes(timeRange),
   };
 }
 

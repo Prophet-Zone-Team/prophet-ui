@@ -94,6 +94,7 @@ export class PolymarketMarketWsClient {
   private readonly connectionListeners = new Set<(connected: boolean) => void>();
   private connected = false;
   private disposeTimer: ReturnType<typeof setTimeout> | null = null;
+  private connectionEpoch = 0;
 
   private static readonly DISPOSE_DELAY_MS = 250;
 
@@ -174,20 +175,31 @@ export class PolymarketMarketWsClient {
 
   dispose(): void {
     this.disposed = true;
+    this.connectionEpoch += 1;
     this.clearPingTimer();
     this.clearReconnectTimer();
     this.clearDisposeTimer();
+    this.detachSocket();
+    this.setConnected(false);
+  }
 
-    if (this.socket) {
-      this.socket.onopen = null;
-      this.socket.onmessage = null;
-      this.socket.onerror = null;
-      this.socket.onclose = null;
-      this.socket.close();
-      this.socket = null;
+  private detachSocket(): void {
+    if (!this.socket) {
+      return;
     }
 
-    this.setConnected(false);
+    const socket = this.socket;
+    this.socket = null;
+    socket.onopen = null;
+    socket.onmessage = null;
+    socket.onerror = null;
+    socket.onclose = null;
+
+    // Avoid closing CONNECTING sockets — that triggers a browser warning and
+    // can abort the handshake before the initial subscription is sent.
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.close();
+    }
   }
 
   private resetIfDisposed(): void {
@@ -222,11 +234,18 @@ export class PolymarketMarketWsClient {
     }
 
     this.clearReconnectTimer();
+    this.connectionEpoch += 1;
+    const epoch = this.connectionEpoch;
+    this.detachSocket();
 
     const socket = new WebSocket(POLYMARKET_MARKET_WS_URL);
     this.socket = socket;
 
     socket.onopen = () => {
+      if (epoch !== this.connectionEpoch || this.disposed) {
+        return;
+      }
+
       this.reconnectAttempt = 0;
       this.hasInitialSubscription = false;
       this.startPingTimer();
@@ -235,6 +254,10 @@ export class PolymarketMarketWsClient {
     };
 
     socket.onmessage = (message) => {
+      if (epoch !== this.connectionEpoch) {
+        return;
+      }
+
       const events = parseWsPayload(String(message.data));
 
       for (const event of events) {
@@ -243,10 +266,18 @@ export class PolymarketMarketWsClient {
     };
 
     socket.onerror = () => {
+      if (epoch !== this.connectionEpoch) {
+        return;
+      }
+
       this.setConnected(false);
     };
 
     socket.onclose = () => {
+      if (epoch !== this.connectionEpoch) {
+        return;
+      }
+
       this.hasInitialSubscription = false;
       this.clearPingTimer();
       this.socket = null;
