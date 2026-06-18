@@ -81,6 +81,7 @@ class ComboRfqSharedSession {
   private activeFingerprint: string | undefined;
   private activeConsumerId: string | undefined;
   private debounceTimer: ReturnType<typeof setTimeout> | undefined;
+  private quoteLoadTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private refreshingFingerprint: string | undefined;
   private paused = false;
   private generation = 0;
@@ -182,14 +183,19 @@ class ComboRfqSharedSession {
         expiration: input.signedOrder.expiration ?? "0",
       });
 
-      return await this.client.acceptQuote({
+      const result = await this.client.acceptQuote({
         rfqId: input.quote.rfqId,
         quoteId: input.quote.quoteId,
         signedOrder: wsOrder,
         timeoutMs: COMBO_RFQ_EXECUTION_TIMEOUT_MS,
       });
+
+      this.paused = false;
+      this.reconcileActiveConsumer();
+      return result;
     } catch (error) {
       this.paused = false;
+      this.reconcileActiveConsumer();
       throw error;
     }
   }
@@ -263,6 +269,8 @@ class ComboRfqSharedSession {
 
     this.retainCount = 0;
     this.clearDebounce();
+    this.clearAllQuoteLoadTimeouts();
+    this.loadingFingerprints.clear();
     this.rejectQuoteWaiters(new Error("Combo RFQ quoting disabled."));
     this.listenerCleanup?.();
     this.listenerCleanup = undefined;
@@ -320,6 +328,7 @@ class ComboRfqSharedSession {
     } else {
       this.quotesByFingerprint.delete(consumer.fingerprint);
       this.loadingFingerprints.add(consumer.fingerprint);
+      this.startQuoteLoadTimeout(consumer.fingerprint);
     }
 
     this.errorsByFingerprint.delete(consumer.fingerprint);
@@ -333,6 +342,11 @@ class ComboRfqSharedSession {
         this.activeFingerprint !== consumer.fingerprint ||
         this.paused
       ) {
+        if (!isRefresh) {
+          this.clearQuoteLoadState(consumer.fingerprint);
+          this.emit();
+        }
+
         return;
       }
 
@@ -364,12 +378,57 @@ class ComboRfqSharedSession {
         this.quotesByFingerprint.delete(consumer.fingerprint);
       }
 
-      this.loadingFingerprints.delete(consumer.fingerprint);
+      this.clearQuoteLoadState(consumer.fingerprint);
       this.errorsByFingerprint.set(consumer.fingerprint, message);
       this.refreshingFingerprint = undefined;
       this.rejectQuoteWaiters(new Error(message));
       this.emit();
     }
+  }
+
+  private startQuoteLoadTimeout(fingerprint: string): void {
+    this.clearQuoteLoadTimeout(fingerprint);
+
+    const timeoutId = setTimeout(() => {
+      this.quoteLoadTimers.delete(fingerprint);
+
+      if (
+        this.quotesByFingerprint.has(fingerprint) ||
+        !this.loadingFingerprints.has(fingerprint)
+      ) {
+        return;
+      }
+
+      this.clearQuoteLoadState(fingerprint);
+      const message = "Combo quote timed out. Try again.";
+      this.errorsByFingerprint.set(fingerprint, message);
+      this.rejectQuoteWaiters(new Error(message));
+      this.emit();
+    }, COMBO_RFQ_QUOTE_ENSURE_TIMEOUT_MS);
+
+    this.quoteLoadTimers.set(fingerprint, timeoutId);
+  }
+
+  private clearQuoteLoadTimeout(fingerprint: string): void {
+    const timeoutId = this.quoteLoadTimers.get(fingerprint);
+
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      this.quoteLoadTimers.delete(fingerprint);
+    }
+  }
+
+  private clearAllQuoteLoadTimeouts(): void {
+    for (const timeoutId of this.quoteLoadTimers.values()) {
+      clearTimeout(timeoutId);
+    }
+
+    this.quoteLoadTimers.clear();
+  }
+
+  private clearQuoteLoadState(fingerprint: string): void {
+    this.clearQuoteLoadTimeout(fingerprint);
+    this.loadingFingerprints.delete(fingerprint);
   }
 
   private waitForQuote(fingerprint: string): Promise<ComboQuoteSnapshot> {
@@ -441,7 +500,7 @@ class ComboRfqSharedSession {
         });
 
         this.quotesByFingerprint.set(activeFingerprint, nextQuote);
-        this.loadingFingerprints.delete(activeFingerprint);
+        this.clearQuoteLoadState(activeFingerprint);
         this.errorsByFingerprint.delete(activeFingerprint);
         this.refreshingFingerprint = undefined;
         this.resolveQuoteWaiters(activeFingerprint, nextQuote);
@@ -449,7 +508,7 @@ class ComboRfqSharedSession {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         this.quotesByFingerprint.delete(activeFingerprint);
-        this.loadingFingerprints.delete(activeFingerprint);
+        this.clearQuoteLoadState(activeFingerprint);
         this.errorsByFingerprint.set(activeFingerprint, errorMessage);
         this.refreshingFingerprint = undefined;
         this.rejectQuoteWaiters(new Error(errorMessage));

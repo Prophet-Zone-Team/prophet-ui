@@ -24,7 +24,6 @@ export interface UseComboCashoutOptions {
 
 export interface UseComboCashoutResult {
   cashoutAmount: number | undefined;
-  isQuoteLoading: boolean;
   isSubmitting: boolean;
   isCashoutDisabled: boolean;
   isAuthenticated: boolean;
@@ -61,7 +60,7 @@ export function useComboCashout(options: UseComboCashoutOptions): UseComboCashou
     ? executableQuote!.estimatedToWin
     : combo?.cashoutAmount;
 
-  const isQuoteLoading = wsEnabled && rfqWs.quoteLoading && !hasLiveQuote;
+  const isQuotePending = wsEnabled && rfqWs.quoteLoading && !hasLiveQuote;
   const isSubmitting = status === "signing" || status === "submitting";
 
   const isCashoutDisabled =
@@ -71,7 +70,7 @@ export function useComboCashout(options: UseComboCashoutOptions): UseComboCashou
     isSubmitting ||
     !auth.isAuthenticated ||
     auth.isRegionBlocked ||
-    (auth.setupSteps.clobSigned && (!hasLiveQuote || isQuoteLoading));
+    (auth.setupSteps.clobSigned && (!hasLiveQuote || isQuotePending));
 
   const submitCashout = useCallback(async () => {
     if (isCashoutDisabled || !executableQuote) {
@@ -155,7 +154,6 @@ export function useComboCashout(options: UseComboCashoutOptions): UseComboCashou
 
   return {
     cashoutAmount,
-    isQuoteLoading,
     isSubmitting,
     isCashoutDisabled,
     isAuthenticated: auth.isAuthenticated,

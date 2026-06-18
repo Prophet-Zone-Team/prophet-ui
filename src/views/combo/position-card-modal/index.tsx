@@ -68,7 +68,6 @@ export function PositionCardModal({
               cashoutAmount={cashout.cashoutAmount}
               isAuthenticated={cashout.isAuthenticated}
               loginInProgress={auth.loginInProgress}
-              isQuoteLoading={cashout.isQuoteLoading}
               isSubmitting={cashout.isSubmitting}
               isCashoutDisabled={cashout.isCashoutDisabled}
               connectWalletLabel={t("connectWallet")}

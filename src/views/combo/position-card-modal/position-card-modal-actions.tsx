@@ -6,7 +6,6 @@ export type PositionCardModalActionsProps = {
   cashoutAmount?: number;
   isAuthenticated?: boolean;
   loginInProgress?: boolean;
-  isQuoteLoading?: boolean;
   isSubmitting?: boolean;
   isCashoutDisabled?: boolean;
   connectWalletLabel?: string;
@@ -22,7 +21,6 @@ export function PositionCardModalActions({
   onCashout,
   isAuthenticated = true,
   loginInProgress = false,
-  isQuoteLoading = false,
   isSubmitting = false,
   isCashoutDisabled = false,
   connectWalletLabel = "Connect Wallet",
@@ -35,11 +33,9 @@ export function PositionCardModalActions({
       : connectWalletLabel
     : isSubmitting
       ? "Submitting..."
-      : isQuoteLoading
-        ? "Loading..."
-        : cashoutAmount != null && cashoutAmount > 0
-          ? `Cashout ${formatTeamDetailMoney(cashoutAmount)}`
-          : "Cashout";
+      : cashoutAmount != null && cashoutAmount > 0
+        ? `Cashout ${formatTeamDetailMoney(cashoutAmount)}`
+        : "Cashout";
 
   const cashoutDisabled = !isAuthenticated
     ? loginInProgress
@@ -54,7 +50,7 @@ export function PositionCardModalActions({
     onCashout?.();
   };
   return (
-    <div className="flex flex-col gap-3 px-3 pb-[calc(16px+env(safe-area-inset-bottom,0px))] sm:flex-row sm:px-4 sm:pb-4">
+    <div className="flex gap-3 px-3 pb-[calc(16px+env(safe-area-inset-bottom,0px))] sm:px-4 sm:pb-4">
       <button
         type="button"
         disabled={cashoutDisabled}

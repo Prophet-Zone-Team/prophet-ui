@@ -31,12 +31,12 @@ export function PortfolioComboPositions({
         aria-label={t("yourComboPositions")}
       >
         <div className="-mx-1 overflow-x-auto pb-1">
-          <div className="flex w-max min-w-full gap-3 px-1">
+          <div className="flex w-max min-w-full gap-3 px-1 flex-col md:flex-row">
             {combos.map((combo) => (
               <button
                 key={combo.id}
                 type="button"
-                className="shrink-0 cursor-pointer border-0 bg-transparent p-0 transition-opacity hover:opacity-95"
+                className="shrink-0 w-full md:w-auto cursor-pointer border-0 bg-transparent p-0 transition-opacity hover:opacity-95"
                 onClick={() => setSelectedCombo(combo)}
                 aria-label={t("viewComboPosition")}
               >
