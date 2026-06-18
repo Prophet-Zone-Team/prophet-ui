@@ -214,7 +214,7 @@ export function useDeposit(): UseDepositResult {
         token.chainType === FundingNetworkType.SVM
           ? addresses.deposit.address.svm
           : token.chainType === FundingNetworkType.TVM
-            ? addresses.deposit.address.tvm
+            ? addresses.deposit.address.tron
             : addresses.deposit.address.evm;
 
       if (!bridgeAddress) {
