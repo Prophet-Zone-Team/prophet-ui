@@ -441,6 +441,7 @@
       "couldNotCopyAddress": "無法複製地址",
       "minLabel": "最低 {amount}",
       "depositSuccessful": "入金成功",
+      "solanaConfirmationTimeout": "交易狀態確認逾時，您的轉帳可能仍在處理中。請稍後前往 Portfolio 頁面，點擊「確認待處理入金」完成充值。",
       "insufficientBalance": "餘額不足",
       "stableflowNotReady": "Stableflow 入金尚未就緒，請重試。",
       "minDepositAmount": "{symbol} 最低入金金額為 {amount} 或以上",

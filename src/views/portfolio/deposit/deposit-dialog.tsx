@@ -10,6 +10,7 @@ import { useDevice } from "@/hooks/common/use-device";
 import { ensureWalletChain, fundingNetworkTypeToChainType } from "@/lib/wallet";
 import { reportFundingTransaction } from "@/lib/portfolio/user";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
+import { resolveDepositErrorMessage } from "@/lib/funding/deposit-error-message";
 import type { SupportedChainOption } from "@/lib/funding/supported-assets";
 import { FundingNetworkType } from "@/config/funding/networks";
 import {
@@ -140,8 +141,7 @@ export function DepositDialog({
         await syncCash();
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(message);
+      toast.error(resolveDepositErrorMessage(error));
     }
   }, [onConfirmPendingDeposit, onDepositSuccess, syncCash, tDeposit]);
 
@@ -378,8 +378,7 @@ export function DepositDialog({
 
       return payload;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(message);
+      toast.error(resolveDepositErrorMessage(error));
       throw error;
     } finally {
       setStableflowTokensLoading(false);
@@ -659,8 +658,7 @@ export function DepositDialog({
 
       setStep("confirm");
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(message);
+      toast.error(resolveDepositErrorMessage(error));
     } finally {
       setContinueLoading(false);
     }
@@ -740,7 +738,7 @@ export function DepositDialog({
         }
 
         setStatusPhase("error");
-        setStatusError(error instanceof Error ? error.message : String(error));
+        setStatusError(resolveDepositErrorMessage(error));
       }
     },
     [pollFunderCollateralBalances, pollStableflowBridge, tDeposit]
@@ -872,8 +870,7 @@ export function DepositDialog({
           return;
         }
 
-        const message = error instanceof Error ? error.message : String(error);
-        toast.error(message);
+        toast.error(resolveDepositErrorMessage(error));
       })
       .finally(() => {
         if (!controller.signal.aborted) {
@@ -1009,8 +1006,7 @@ export function DepositDialog({
         handleClose();
         syncCash();
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
-        toast.error(message);
+        toast.error(resolveDepositErrorMessage(error));
       } finally {
         setContinueLoading(false);
       }
@@ -1074,8 +1070,8 @@ export function DepositDialog({
       setStableflowExecution(execution);
       void runStatusPolling(execution);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
       setStatusPhase("error");
+      const message = resolveDepositErrorMessage(error);
       setStatusError(message);
       toast.error(message);
     } finally {
@@ -1137,8 +1133,8 @@ export function DepositDialog({
         await syncCash();
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
       setStatusPhase("error");
+      const message = resolveDepositErrorMessage(error);
       setStatusError(message);
       toast.error(message);
     } finally {

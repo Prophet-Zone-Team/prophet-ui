@@ -438,6 +438,7 @@
       "couldNotCopyAddress": "アドレスをコピーできませんでした",
       "minLabel": "最小 {amount}",
       "depositSuccessful": "入金が完了しました",
+      "solanaConfirmationTimeout": "トランザクションの確認がタイムアウトしました。送金はまだ処理中の可能性があります。後で Portfolio を開き、「保留中の入金を確認」をタップして入金を完了してください。",
       "insufficientBalance": "残高不足",
       "stableflowNotReady": "Stableflow 入金の準備ができていません。もう一度お試しください。",
       "minDepositAmount": "{symbol} の最小入金額は {amount} 以上です",

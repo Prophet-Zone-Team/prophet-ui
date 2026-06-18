@@ -438,6 +438,7 @@
       "couldNotCopyAddress": "주소를 복사할 수 없습니다",
       "minLabel": "최소 {amount}",
       "depositSuccessful": "입금 완료",
+      "solanaConfirmationTimeout": "트랜잭션 확인 시간이 초과되었습니다. 이체가 아직 처리 중일 수 있습니다. 나중에 Portfolio를 열고 '대기 중인 입금 확인'을 눌러 입금을 완료하세요.",
       "insufficientBalance": "잔액 부족",
       "stableflowNotReady": "Stableflow 입금이 준비되지 않았습니다. 다시 시도하세요.",
       "minDepositAmount": "{symbol} 최소 입금 금액은 {amount} 이상입니다",
