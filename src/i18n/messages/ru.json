@@ -465,6 +465,7 @@
       "couldNotCopyAddress": "Не удалось скопировать адрес",
       "minLabel": "Мин. {amount}",
       "depositSuccessful": "Пополнение выполнено",
+      "solanaConfirmationTimeout": "Время подтверждения транзакции истекло. Перевод может все еще обрабатываться. Откройте Portfolio позже и нажмите «Подтвердить ожидающий депозит», чтобы завершить пополнение.",
       "insufficientBalance": "Недостаточно средств",
       "stableflowNotReady": "Пополнение через Stableflow не готово. Попробуйте снова.",
       "minDepositAmount": "Минимальная сумма пополнения {symbol} — {amount} или больше",

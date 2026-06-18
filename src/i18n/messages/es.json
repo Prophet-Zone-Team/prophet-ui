@@ -465,6 +465,7 @@
       "couldNotCopyAddress": "No se pudo copiar la dirección",
       "minLabel": "Mín. {amount}",
       "depositSuccessful": "Depósito exitoso",
+      "solanaConfirmationTimeout": "La confirmación de la transacción expiró. Tu transferencia puede seguir procesándose. Abre Portfolio más tarde y pulsa Confirmar depósito pendiente para completar el depósito.",
       "insufficientBalance": "Saldo insuficiente",
       "stableflowNotReady": "El depósito Stableflow no está listo. Inténtalo de nuevo.",
       "minDepositAmount": "El depósito mínimo de {symbol} es {amount} o más",

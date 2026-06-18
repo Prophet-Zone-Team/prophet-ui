@@ -468,6 +468,7 @@
       "couldNotCopyAddress": "Could not copy address",
       "minLabel": "Min {amount}",
       "depositSuccessful": "Deposit successful",
+      "solanaConfirmationTimeout": "Transaction confirmation timed out. Your transfer may still be processing. Open Portfolio later and tap Confirm pending deposit to finish funding your account.",
       "insufficientBalance": "Insufficient balance",
       "stableflowNotReady": "Stableflow deposit is not ready. Try again.",
       "minDepositAmount": "{symbol} minimum deposit amount is {amount} or higher",
