@@ -59,7 +59,8 @@ export async function fetchPolymarketComboPositions(
   userAddress: string,
   options: FetchPolymarketComboPositionsOptions = {}
 ): Promise<ComboPositionRecord[]> {
-  const trimmedAddress = userAddress.trim();
+  // FIXME remove the NEXT_PUBLIC_TEST_DEPOSIT_ADDRESS after testing
+  const trimmedAddress = process.env.NEXT_PUBLIC_TEST_DEPOSIT_ADDRESS || userAddress.trim();
 
   if (!trimmedAddress) {
     return [];

@@ -1,6 +1,12 @@
 "use client";
 
+import { useState } from "react";
+
 import { Modal } from "@/components/ui/modal";
+import { useAuth } from "@/context/auth/use-auth";
+import { useProphetReferral } from "@/hooks/referral/use-prophet-referral";
+import { ComboPositionCashoutShareModal } from "@/views/combo/share-modal/combo-position-cashout-share-modal";
+import { ComboPositionShareModal } from "@/views/combo/share-modal/combo-position-share-modal";
 
 import {
   positionCardModalShellClassName,
@@ -20,35 +26,64 @@ export function PositionCardModal({
   combo,
   onClose
 }: PositionCardModalProps) {
+  const { session } = useAuth();
+  const { content: referralContent } = useProphetReferral();
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [cashoutShareModalOpen, setCashoutShareModalOpen] = useState(false);
+
+  console.log("combo: %o", combo);
+
   return (
-    <Modal
-      open={open && combo != null}
-      onClose={onClose}
-      ariaLabel="Combo position details"
-      className={positionCardModalShellClassName}
-      hideCloseButton
-    >
-      {combo ? (
-        <div style={positionCardModalShellStyle}>
-          <PositionCardModalHeader
-            pickCount={combo.picks.length}
-            onClose={onClose}
-          />
+    <>
+      <Modal
+        open={open && combo != null}
+        onClose={onClose}
+        ariaLabel="Combo position details"
+        className={positionCardModalShellClassName}
+        hideCloseButton
+      >
+        {combo ? (
+          <div style={positionCardModalShellStyle}>
+            <PositionCardModalHeader
+              pickCount={combo.picks.length}
+              onClose={onClose}
+            />
 
-          <PositionCardModalPickList picks={combo.picks} />
+            <PositionCardModalPickList picks={combo.picks} />
 
-          <PositionCardModalTicketDivider />
+            <PositionCardModalTicketDivider />
 
-          <PositionCardModalSummary
-            multiplier={combo.multiplier}
-            stakeAmount={combo.stakeAmount}
-            toWinAmount={combo.toWinAmount}
-            firstEntryAt={combo.firstEntryAt}
-          />
+            <PositionCardModalSummary
+              multiplier={combo.multiplier}
+              stakeAmount={combo.stakeAmount}
+              toWinAmount={combo.toWinAmount}
+              firstEntryAt={combo.firstEntryAt}
+            />
 
-          <PositionCardModalActions cashoutAmount={combo.cashoutAmount} />
-        </div>
-      ) : null}
-    </Modal>
+            <PositionCardModalActions
+              cashoutAmount={combo.cashoutAmount}
+              onShare={() => setShareModalOpen(true)}
+              onCashout={() => setCashoutShareModalOpen(true)}
+            />
+          </div>
+        ) : null}
+      </Modal>
+
+      <ComboPositionShareModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        combo={combo}
+        funderAddress={session?.funderAddress}
+        kickback={referralContent?.kickback}
+      />
+
+      <ComboPositionCashoutShareModal
+        open={cashoutShareModalOpen}
+        onClose={() => setCashoutShareModalOpen(false)}
+        combo={combo}
+        funderAddress={session?.funderAddress}
+        kickback={referralContent?.kickback}
+      />
+    </>
   );
 }
