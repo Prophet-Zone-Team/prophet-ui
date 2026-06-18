@@ -53,7 +53,7 @@ export function ResultPanel({
 }) {
   const t = useTranslations("roadToFinal");
   const tTeamNames = useTranslations("teamNames");
-  const { isAuthenticated, loginInProgress, openLogin } = useAuth();
+  const { isAuthenticated, loginInProgress, openLoginModalOnly } = useAuth();
   const [shareOpen, setShareOpen] = useState(false);
   const champion = getWorldCupTeamByIdOrCode(championTeamId ?? "");
   const championName = useLocalizedTeamName(
@@ -147,7 +147,7 @@ export function ResultPanel({
               type="button"
               className="rounded-[8px] border border-[#EBEBEB] bg-white px-[14px] py-[10px] text-[13px] text-black disabled:cursor-wait disabled:opacity-70"
               disabled={loginInProgress}
-              onClick={() => void openLogin()}
+              onClick={() => void openLoginModalOnly()}
             >
               {loginInProgress ? t("connecting") : t("connectWallet")}
             </button>

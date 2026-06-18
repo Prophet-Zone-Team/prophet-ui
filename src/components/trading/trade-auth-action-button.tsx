@@ -76,7 +76,7 @@ export function TradeAuthActionButton({
         return;
       }
 
-      await openLogin();
+      await openLoginModalOnly();
       await onLoginSuccess?.();
     } catch (error) {
       onLoginError?.(error instanceof Error ? error : new Error(String(error)));

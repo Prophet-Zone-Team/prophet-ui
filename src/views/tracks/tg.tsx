@@ -33,7 +33,7 @@ export default function TracksTelegramBanner({
   onTelegramBound
 }: TracksTelegramBannerProps) {
   const t = useTranslations("tracks");
-  const { openLogin } = useAuth();
+  const { openLoginModalOnly } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bindStatus, setBindStatus] = useState<BindTelegramStatus>("unbound");
   const [connectedAt, setConnectedAt] = useState<string | undefined>();
@@ -54,7 +54,7 @@ export default function TracksTelegramBanner({
 
     if (!isProphetAuthenticated()) {
       try {
-        await openLogin();
+        await openLoginModalOnly();
       } catch {
         return;
       }
@@ -70,7 +70,7 @@ export default function TracksTelegramBanner({
     }
 
     openBindDialog();
-  }, [openBindDialog, openLogin, telegramBound, telegramLoadStatus]);
+  }, [openBindDialog, openLoginModalOnly, telegramBound, telegramLoadStatus]);
 
   const handleOpenBot = useCallback(async () => {
     if (isBinding) {
@@ -78,7 +78,7 @@ export default function TracksTelegramBanner({
     }
 
     if (!isProphetAuthenticated()) {
-      await openLogin();
+      await openLoginModalOnly();
       return;
     }
 
@@ -111,7 +111,7 @@ export default function TracksTelegramBanner({
             setBindStatus("unbound");
 
             if (error instanceof ProphetApiError && error.code === 401) {
-              await openLogin();
+              await openLoginModalOnly();
             } else if (error instanceof ProphetApiError) {
               toast.error(error.message);
             } else if (error instanceof Error) {
@@ -125,7 +125,7 @@ export default function TracksTelegramBanner({
         })();
       }
     );
-  }, [isBinding, onTelegramBound, openLogin, t]);
+  }, [isBinding, onTelegramBound, openLoginModalOnly, t]);
 
   const handleCheckStatus = useCallback(() => {
     setBindStatus((current) => (current === "unbound" ? "binding" : current));
