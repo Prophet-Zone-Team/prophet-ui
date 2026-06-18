@@ -3,6 +3,8 @@ import type {
   PortfolioComboPositionCard
 } from "@/lib/portfolio/combo-positions/types";
 
+import { resolveComboLegSelectionLabel } from "./resolve-combo-leg-selection-label";
+
 const ACTIVE_COMBO_STATUSES = new Set(["OPEN", "PARTIAL"]);
 
 function parseDecimal(value: string | undefined): number {
@@ -65,14 +67,12 @@ export function mapComboPositionToCard(
         leg.market?.title?.trim() ||
         leg.market?.event?.event_title?.trim() ||
         "";
-      const selectionLabel =
-        leg.leg_outcome_label?.trim() ||
-        leg.market?.outcome?.trim() ||
-        "Outcome";
+      const selectionLabel = resolveComboLegSelectionLabel(leg);
       const matchupLabel =
         leg.market?.event?.event_title?.trim() ||
         marketTitle ||
         selectionLabel;
+      const teamCode = leg.market?.title?.trim() || selectionLabel;
 
       return {
         id:
@@ -85,7 +85,7 @@ export function mapComboPositionToCard(
         legPrice: parseDecimal(leg.leg_current_price) || undefined,
         team: {
           name: selectionLabel,
-          code: marketTitle,
+          code: teamCode,
           logoUrl: leg.market?.icon_url ?? leg.market?.image_url
         }
       };

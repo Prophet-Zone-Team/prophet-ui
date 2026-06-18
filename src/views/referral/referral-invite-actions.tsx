@@ -48,6 +48,7 @@ export type ReferralInviteActionsProps = {
   shareImageCacheKey?: ShareImageCacheKey;
   className?: string;
   downloadFilename?: string;
+  shareTweetText?: string;
 };
 
 export function ReferralInviteActions({
@@ -57,7 +58,8 @@ export function ReferralInviteActions({
   shareImageUploadMode,
   shareImageCacheKey,
   className,
-  downloadFilename
+  downloadFilename,
+  shareTweetText,
 }: ReferralInviteActionsProps) {
   const t = useTranslations("referral");
   const [downloading, setDownloading] = useState(false);
@@ -117,7 +119,7 @@ export function ReferralInviteActions({
 
       const origin = resolveOrigin();
       const tweetUrl = `${origin}/api/twitter?img=${encodeURIComponent(imgUrl)}&link=${encodeURIComponent(fullLink)}`;
-      shareToX(t("shareTweetIntro"), `${tweetUrl}\n\n`, {
+      shareToX(shareTweetText || t("shareTweetIntro"), `${tweetUrl}\n\n`, {
         hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket"
       });
     } catch (error) {
