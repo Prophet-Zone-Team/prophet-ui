@@ -477,7 +477,12 @@
       "unshieldAwaitingFunds": "Esperando fondos…",
       "unshieldConverting": "Convirtiendo a pUSD…",
       "usdcDetected": "USDC: {amount}",
-      "usdceDetected": "USDC.e: {amount}"
+      "usdceDetected": "USDC.e: {amount}",
+      "tpSwitchPolygonTitle": "Cambiar a billetera Polygon",
+      "tpSwitchPolygonDescription": "Para convertir tu depósito necesitas tu billetera Polygon (Matic) en TokenPocket. Después de cambiar, esta página se recargará. Pulsa Confirmar depósito pendiente de nuevo para terminar de financiar tu cuenta.",
+      "tpSwitchPolygonOnCloseTitle": "Cambiar a billetera Polygon antes de salir",
+      "tpSwitchPolygonOnCloseDescription": "Vuelve a tu billetera Polygon (Matic) en TokenPocket antes de cerrar. Las operaciones de trading y otras acciones requieren una billetera EVM para firmar. Esta página se recargará después del cambio.",
+      "tpSwitchPolygonConfirm": "Cambiar billetera"
     },
     "migrate": {
       "ariaDefault": "Migrar saldo",

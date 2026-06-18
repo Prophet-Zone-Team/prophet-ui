@@ -480,7 +480,12 @@
       "unshieldAwaitingFunds": "等待資金中…",
       "unshieldConverting": "轉換為 pUSD 中…",
       "usdcDetected": "USDC：{amount}",
-      "usdceDetected": "USDC.e：{amount}"
+      "usdceDetected": "USDC.e：{amount}",
+      "tpSwitchPolygonTitle": "切換至 Polygon 錢包",
+      "tpSwitchPolygonDescription": "轉換入金需要使用 TokenPocket 中的 Polygon（Matic）錢包。切換後此頁面將重新載入。請再次點擊「確認待處理入金」以完成帳戶入金。",
+      "tpSwitchPolygonOnCloseTitle": "離開前請切換至 Polygon 錢包",
+      "tpSwitchPolygonOnCloseDescription": "關閉前請切回 TokenPocket 中的 Polygon（Matic）錢包。交易及其他操作需要 EVM 錢包簽名。切換後此頁面將重新載入。",
+      "tpSwitchPolygonConfirm": "切換錢包"
     },
     "migrate": {
       "ariaDefault": "遷移餘額",

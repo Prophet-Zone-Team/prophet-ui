@@ -482,7 +482,12 @@
       "unshieldAwaitingFunds": "Waiting for funds…",
       "unshieldConverting": "Converting to pUSD…",
       "usdcDetected": "USDC: {amount}",
-      "usdceDetected": "USDC.e: {amount}"
+      "usdceDetected": "USDC.e: {amount}",
+      "tpSwitchPolygonTitle": "Switch to Polygon wallet",
+      "tpSwitchPolygonDescription": "Converting your deposit requires your Polygon (Matic) wallet in TokenPocket. After you switch, this page will reload. Tap Confirm pending deposit again to finish funding your account.",
+      "tpSwitchPolygonOnCloseTitle": "Switch to Polygon wallet before leaving",
+      "tpSwitchPolygonOnCloseDescription": "Switch back to your Polygon (Matic) wallet in TokenPocket before closing. Trading and other actions require an EVM wallet to sign. This page will reload after you switch.",
+      "tpSwitchPolygonConfirm": "Switch wallet"
     },
     "migrate": {
       "ariaDefault": "Migrate balance",

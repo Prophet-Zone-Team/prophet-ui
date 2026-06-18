@@ -477,7 +477,12 @@
       "unshieldAwaitingFunds": "Ожидание средств…",
       "unshieldConverting": "Конвертация в pUSD…",
       "usdcDetected": "USDC: {amount}",
-      "usdceDetected": "USDC.e: {amount}"
+      "usdceDetected": "USDC.e: {amount}",
+      "tpSwitchPolygonTitle": "Переключиться на кошелёк Polygon",
+      "tpSwitchPolygonDescription": "Для конвертации депозита требуется ваш кошелёк Polygon (Matic) в TokenPocket. После переключения страница перезагрузится. Нажмите «Подтвердить ожидающий депозит» ещё раз, чтобы завершить пополнение счёта.",
+      "tpSwitchPolygonOnCloseTitle": "Переключитесь на кошелёк Polygon перед выходом",
+      "tpSwitchPolygonOnCloseDescription": "Перед закрытием вернитесь к кошельку Polygon (Matic) в TokenPocket. Торговля и другие действия требуют подписи EVM-кошелька. После переключения страница перезагрузится.",
+      "tpSwitchPolygonConfirm": "Переключить кошелёк"
     },
     "migrate": {
       "ariaDefault": "Перенос баланса",

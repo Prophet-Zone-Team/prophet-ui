@@ -7,6 +7,7 @@ import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-add
 import { CopyIcon } from "@/components/icons";
 import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth";
+import { useTpPolygonSwitchGate } from "@/hooks/funding/use-tp-polygon-switch-gate";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { WalletAvatar } from "@/layout/header/wallet-avatar";
 import { useDepositDialogStore } from "@/store/use-deposit-dialog";
@@ -27,6 +28,7 @@ import { formatNumber } from "@/utils";
 import { usePortfolioContext } from "./context";
 import { cn } from "@/lib/cn";
 import { depositPendingConfirmButtonClass } from "./deposit/deposit-ui";
+import { TpPolygonSwitchConfirmDialog } from "./deposit/tp-polygon-switch-confirm-dialog";
 import { Loader2 } from "lucide-react";
 
 export interface PortfolioSummarySectionProps { }
@@ -51,6 +53,15 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
   const { isBuyRestricted, confirmPendingDeposit } = useAuth();
   const regionRestricted = Boolean(session && isBuyRestricted);
 
+  const {
+    switchDialogOpen,
+    switchDialogVariant,
+    switchLoading,
+    onCancelSwitch,
+    onConfirmSwitch,
+    runWithTpPolygonGate,
+  } = useTpPolygonSwitchGate();
+
   const portfolioDisplay = session
     ? formatNumber(portfolio?.portfolioValue, 2, true, {
       round: 0,
@@ -65,6 +76,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
     : "—";
 
   return (
+    <>
     <section
       className={portfolioSummaryCardClass}
       aria-label={t("portfolioSummary")}
@@ -104,8 +116,17 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
             <button
               type="button"
               className={cn(depositPendingConfirmButtonClass, "flex-grow-0 w-[230px] h-[42px] text-sm")}
-              disabled={confirmPendingDeposit.converting || regionRestricted}
-              onClick={() => void confirmPendingDeposit.confirmPendingDeposit()}
+              disabled={
+                confirmPendingDeposit.converting ||
+                switchLoading ||
+                regionRestricted
+              }
+              onClick={() =>
+                void runWithTpPolygonGate(
+                  () => confirmPendingDeposit.confirmPendingDeposit(),
+                  "convert",
+                )
+              }
             >
               {confirmPendingDeposit.converting ? (
                 <Loader2
@@ -197,5 +218,13 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
         </>
       ) : null}
     </section>
+    <TpPolygonSwitchConfirmDialog
+      open={switchDialogOpen}
+      loading={switchLoading}
+      variant={switchDialogVariant}
+      onClose={onCancelSwitch}
+      onConfirm={onConfirmSwitch}
+    />
+    </>
   );
 }
