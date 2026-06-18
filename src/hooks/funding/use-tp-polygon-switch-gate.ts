@@ -12,10 +12,14 @@ import {
   isTpNonEvmWalletActive,
   switchTpToMaticWallet,
 } from "@/lib/wallet/tokenpocket/tp-evm-wallet-gate";
+import { useDevice } from "../common/use-device";
+import { isInTokenPocket } from "@/context/rainbowkit/utils";
 
 export type TpPolygonSwitchVariant = "convert" | "close";
 
 export function useTpPolygonSwitchGate() {
+  const isMobile = useDevice();
+
   const [switchDialogOpen, setSwitchDialogOpen] = useState(false);
   const [switchDialogVariant, setSwitchDialogVariant] =
     useState<TpPolygonSwitchVariant>("convert");
@@ -85,14 +89,16 @@ export function useTpPolygonSwitchGate() {
       action: () => Promise<void>,
       variant: TpPolygonSwitchVariant = "convert",
     ) => {
-      if (!(await isTpNonEvmWalletActive())) {
-        await action();
-        return;
+      if (isMobile && isInTokenPocket()) {
+        if (!(await isTpNonEvmWalletActive())) {
+          await action();
+          return;
+        }
       }
 
       openSwitchDialog(variant, action);
     },
-    [openSwitchDialog],
+    [openSwitchDialog, isMobile],
   );
 
   const requestCloseWithTpPolygonGate = useCallback(
