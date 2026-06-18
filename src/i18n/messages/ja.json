@@ -3,6 +3,7 @@
     "matches": "試合",
     "analytics": "分析",
     "strategies": "戦略",
+    "combo": "Combo",
     "tracks": "トラック",
     "portfolio": "ポートフォリオ",
     "worldCup": "WorldCup",
@@ -1528,6 +1529,24 @@
     "step3Description": "Move only the amount you want to use from Private Balance to your connected wallet.",
     "step4Title": "Trade privately",
     "step4Description": "Place bids through your connected wallet without publicly revealing the source of your funds."
+  },
+  "combo": {
+    "title": "Combo",
+    "subtitle": "複数の市場結果を1つのコンボポジションにまとめます。",
+    "marketsTitle": "コンボ市場",
+    "loadingMarkets": "コンボ市場を読み込み中...",
+    "emptyMarkets": "現在利用可能なコンボ市場はありません。",
+    "retry": "再試行",
+    "executableQuote": "実行可能なRFQ見積もり",
+    "connectWallet": "ウォレットを接続",
+    "connecting": "接続中…",
+    "submitCombo": "Combo",
+    "signingCombo": "Signing combo order…",
+    "submittingCombo": "Submitting combo order…",
+    "submittedSummary": "Bid {cost} · To win {toWin} · {picks} picks",
+    "signingCashout": "Signing cashout…",
+    "submittingCashout": "Submitting cashout…",
+    "cashoutSubmittedSummary": "Cashout {amount}"
   },
   "runtime": {
     "connectionLabel": "接続",

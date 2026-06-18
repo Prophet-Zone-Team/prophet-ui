@@ -21,7 +21,7 @@ export interface ComboItemProps {
   /** Over/under preview buttons shown in the collapsed secondary row. */
   totalOdds?: ComboOddsOption[];
   totalOddsCount?: number;
-  selectedOddsId?: string;
+  selectedOddsId?: string | null;
   defaultSelectedOddsId?: string;
   expanded?: boolean;
   defaultExpanded?: boolean;
@@ -35,7 +35,7 @@ export interface CollapsedBodyProps {
   awayTeam: ComboItemTeam;
   moneylineOdds: ComboOddsOption[];
   previewOdds: ComboOddsOption[];
-  selectedOddsId?: string;
+  selectedOddsId?: string | null;
   onSelectOdds?: (option: ComboOddsOption) => void;
 }
 
@@ -43,6 +43,6 @@ export interface ExpandedBodyProps {
   moneylineOdds: ComboOddsOption[];
   spreadOdds: ComboOddsOption[];
   topScoreOdds: ComboOddsOption[];
-  selectedOddsId?: string;
+  selectedOddsId?: string | null;
   onSelectOdds?: (option: ComboOddsOption) => void;
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAuth } from "@/context/auth";
 import { useComboTicket } from "@/hooks/combo/use-combo-ticket";
@@ -10,27 +11,35 @@ import {
   resolveReferencePrice,
 } from "@/lib/combo/markets-client";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
+import {
+  useComboBidAmount,
+  useComboPicks,
+  useRemoveComboPick,
+  useSetComboBidAmount,
+  useSetComboPicks,
+  useUpdateComboPickOutcome,
+} from "@/store/combo-store";
 import type { ComboMarketRecord } from "@/types/combo";
 import { ComboWidget } from "@/views/combo/combo-widget";
+import { MIN_COMBO_PICKS } from "@/views/combo/combo-widget/constants";
 import type {
   ComboPick,
   ComboPickOutcomeSide,
 } from "@/views/combo/combo-widget/types";
 
 export interface ComboTicketContainerProps {
-  initialPicks?: ComboPick[];
-  defaultBidAmount?: number;
   className?: string;
 }
 
-export function ComboTicketContainer({
-  initialPicks = [],
-  defaultBidAmount = 0,
-  className,
-}: ComboTicketContainerProps) {
+export function ComboTicketContainer({ className }: ComboTicketContainerProps) {
+  const t = useTranslations("combo");
   const auth = useAuth();
-  const [picks, setPicks] = useState<ComboPick[]>(initialPicks);
-  const [bidAmount, setBidAmount] = useState(defaultBidAmount);
+  const picks = useComboPicks();
+  const bidAmount = useComboBidAmount();
+  const setBidAmount = useSetComboBidAmount();
+  const setPicks = useSetComboPicks();
+  const updatePickOutcome = useUpdateComboPickOutcome();
+  const removePick = useRemoveComboPick();
 
   const legs = useMemo(
     () =>
@@ -43,7 +52,8 @@ export function ComboTicketContainer({
   const ticket = useComboTicket({
     legs,
     bidAmount,
-    enabled: legs.length > 0 && bidAmount > 0,
+    enabled: legs.length >= MIN_COMBO_PICKS && bidAmount > 0,
+    onSubmitSuccess: () => setPicks([]),
   });
 
   const balance = useMemo(
@@ -53,26 +63,17 @@ export function ComboTicketContainer({
 
   const handlePickOutcomeChange = useCallback(
     (pickId: string, side: ComboPickOutcomeSide) => {
-      setPicks((previous) =>
-        previous.map((pick) => {
-          if (pick.id !== pickId || pick.type !== "moneyline") {
-            return pick;
-          }
-
-          return {
-            ...pick,
-            outcomeSide: side,
-            referencePrice: pick.referencePrice,
-          };
-        }),
-      );
+      updatePickOutcome(pickId, side);
     },
-    [],
+    [updatePickOutcome],
   );
 
-  const handleRemovePick = useCallback((pickId: string) => {
-    setPicks((previous) => previous.filter((pick) => pick.id !== pickId));
-  }, []);
+  const handleRemovePick = useCallback(
+    (pickId: string) => {
+      removePick(pickId);
+    },
+    [removePick],
+  );
 
   return (
     <ComboWidget
@@ -82,11 +83,18 @@ export function ComboTicketContainer({
       bidAmount={bidAmount}
       balance={balance}
       toWinAmount={ticket.toWinAmount}
+      isAuthenticated={ticket.isAuthenticated}
+      loginInProgress={auth.loginInProgress}
+      connectWalletLabel={t("connectWallet")}
+      connectingLabel={t("connecting")}
+      submitLabel={t("submitCombo")}
       isSubmitting={ticket.isSubmitting}
       isSubmitDisabled={ticket.isSubmitDisabled}
+      isQuoteLoading={ticket.isAuthenticated && ticket.isQuotePending}
       onBidAmountChange={setBidAmount}
       onPickOutcomeChange={handlePickOutcomeChange}
       onRemovePick={handleRemovePick}
+      onConnectWallet={() => void auth.openLogin()}
       onSubmit={ticket.submit}
     />
   );

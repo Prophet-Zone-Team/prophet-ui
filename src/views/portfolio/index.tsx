@@ -35,6 +35,7 @@ export function PortfolioView() {
     removeOpenOrder,
     removeOpenOrders,
     removeOpenOrdersByMarket,
+    removeComboPosition,
     loadCore,
     loadOpenOrders,
     loadActivityHistory,
@@ -62,6 +63,7 @@ export function PortfolioView() {
         removeOpenOrder,
         removeOpenOrders,
         removeOpenOrdersByMarket,
+        removeComboPosition,
         coreStatus
       }}
     >

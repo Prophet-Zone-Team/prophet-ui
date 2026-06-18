@@ -1,8 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect } from "react";
 
-import { fetchComboMarkets } from "@/lib/combo/markets-client";
+import {
+  useComboMarketsError,
+  useComboMarketsList,
+  useComboMarketsNextCursor,
+  useComboMarketsStatus,
+  useComboMarketsStore,
+} from "@/store/combo-markets-store";
+import { useComboMarketsHydrated } from "@/store/use-combo-markets-hydrated";
 import type { ComboMarketRecord } from "@/types/combo";
 
 export interface UseComboMarketsOptions {
@@ -23,101 +30,57 @@ export function useComboMarkets(
   options: UseComboMarketsOptions = {},
 ): UseComboMarketsResult {
   const { limit = 50, enabled = true } = options;
-  const [markets, setMarkets] = useState<ComboMarketRecord[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null | undefined>();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | undefined>();
-  const abortRef = useRef<AbortController | undefined>(undefined);
-  const loadingMoreRef = useRef(false);
+  const hydrated = useComboMarketsHydrated();
+  const markets = useComboMarketsList();
+  const nextCursor = useComboMarketsNextCursor();
+  const status = useComboMarketsStatus();
+  const error = useComboMarketsError();
+  const fetchMarkets = useComboMarketsStore((state) => state.fetchMarkets);
+  const loadMoreMarkets = useComboMarketsStore((state) => state.loadMore);
+  const abort = useComboMarketsStore((state) => state.abort);
 
-  const loadPage = useCallback(
-    async (cursor?: string, append = false) => {
-      if (!enabled) {
-        setMarkets([]);
-        setNextCursor(undefined);
-        setLoading(false);
-        setError(undefined);
-        return;
-      }
-
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      setLoading(true);
-      setError(undefined);
-
-      try {
-        const response = await fetchComboMarkets({
-          limit,
-          cursor,
-          signal: controller.signal,
-        });
-
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        setMarkets((previous) =>
-          append ? [...previous, ...response.markets] : response.markets,
-        );
-        setNextCursor(response.nextCursor ?? null);
-      } catch (fetchError) {
-        if (controller.signal.aborted || isAbortError(fetchError)) {
-          return;
-        }
-
-        setError(fetchError instanceof Error ? fetchError.message : String(fetchError));
-
-        if (!append) {
-          setMarkets([]);
-          setNextCursor(undefined);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    },
-    [enabled, limit],
-  );
-
-  const reload = useCallback(async () => {
-    await loadPage(undefined, false);
-  }, [loadPage]);
-
-  const loadMore = useCallback(async () => {
-    if (!nextCursor || loadingMoreRef.current) {
+  useEffect(() => {
+    if (!enabled) {
+      abort();
+      useComboMarketsStore.setState({
+        markets: [],
+        nextCursor: undefined,
+        status: "idle",
+        error: undefined,
+      });
       return;
     }
 
-    loadingMoreRef.current = true;
-
-    try {
-      await loadPage(nextCursor, true);
-    } finally {
-      loadingMoreRef.current = false;
+    if (!hydrated) {
+      return;
     }
-  }, [loadPage, nextCursor]);
 
-  useEffect(() => {
-    void reload();
+    const hasCache = useComboMarketsStore.getState().markets.length > 0;
+    void fetchMarkets({ limit, silent: hasCache });
 
     return () => {
-      abortRef.current?.abort();
+      abort();
     };
-  }, [reload]);
+  }, [abort, enabled, fetchMarkets, hydrated, limit]);
+
+  const reload = useCallback(async () => {
+    const hasCache = useComboMarketsStore.getState().markets.length > 0;
+    await fetchMarkets({ limit, silent: hasCache });
+  }, [fetchMarkets, limit]);
+
+  const loadMore = useCallback(async () => {
+    await loadMoreMarkets(limit);
+  }, [limit, loadMoreMarkets]);
+
+  const loading =
+    enabled && (!hydrated || (status === "loading" && markets.length === 0));
 
   return {
-    markets,
-    nextCursor,
+    markets: enabled ? markets : [],
+    nextCursor: enabled ? nextCursor : undefined,
     loading,
-    error,
+    error: enabled ? error : undefined,
     loadMore,
     reload,
   };
-}
-
-function isAbortError(error: unknown) {
-  return error instanceof Error && error.name === "AbortError";
 }

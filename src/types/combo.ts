@@ -1,5 +1,7 @@
 export type ComboOutcomeSide = "yes" | "no";
 
+export type ComboRfqDirection = "BUY" | "SELL";
+
 export type ComboRfqStatus =
   | "CREATED"
   | "COLLECTING_QUOTES"
@@ -48,6 +50,7 @@ export interface ComboQuoteSnapshot {
   rfqId: string;
   quoteId: string;
   status: ComboRfqStatus;
+  direction: ComboRfqDirection;
   blendedPrice: number;
   shares: number;
   notionalUsd: number;
@@ -58,6 +61,8 @@ export interface ComboQuoteSnapshot {
   expiresAt: number;
   makerAmountBaseUnits: string;
   takerAmountBaseUnits: string;
+  /** Total spend including fees, from RFQ gateway quote (e6 string). */
+  totalRequiredBaseUnits?: string;
 }
 
 export interface ComboExchangeV3Order {
@@ -73,6 +78,7 @@ export interface ComboExchangeV3Order {
   metadata: string;
   builder: string;
   signature: string;
+  expiration?: string;
 }
 
 export interface SignedComboAcceptOrder {
@@ -86,20 +92,6 @@ export interface ComboSubmitResult {
   executionStatus: ComboExecutionStatus;
   txHash?: string;
   error?: string;
-}
-
-export interface ComboRfqQuoteRequest {
-  legs: Array<{
-    legPositionId: string;
-    outcomeSide: ComboOutcomeSide;
-  }>;
-  bidAmountUsd: number;
-}
-
-export interface ComboRfqAcceptRequest {
-  rfqId: string;
-  quoteId: string;
-  signedOrder: ComboExchangeV3Order;
 }
 
 export type ComboQuoteSource = "estimated" | "rfq";

@@ -31,10 +31,13 @@ export function ComboItem({
   const [expandedState, setExpandedState] = useState(defaultExpanded);
   const [selectedOddsIdState, setSelectedOddsIdState] = useState<
     string | undefined
-  >(defaultSelectedOddsId ?? moneylineOdds[0]?.id);
+  >(defaultSelectedOddsId);
 
   const expanded = expandedProp ?? expandedState;
-  const selectedOddsId = selectedOddsIdProp ?? selectedOddsIdState;
+  const isSelectedOddsControlled = selectedOddsIdProp !== undefined;
+  const selectedOddsId = isSelectedOddsControlled
+    ? (selectedOddsIdProp ?? undefined)
+    : selectedOddsIdState;
 
   const previewOdds = [
     ...spreadOdds.slice(0, 2),
@@ -56,8 +59,10 @@ export function ComboItem({
   };
 
   const handleSelectOdds = (option: ComboOddsOption) => {
-    if (selectedOddsIdProp === undefined) {
-      setSelectedOddsIdState(option.id);
+    if (!isSelectedOddsControlled) {
+      setSelectedOddsIdState((current) =>
+        current === option.id ? undefined : option.id,
+      );
     }
 
     onSelectOdds?.(option);

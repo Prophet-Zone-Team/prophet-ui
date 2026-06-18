@@ -46,5 +46,12 @@ export interface ComboWidgetProps {
   onInfoClick?: () => void;
   isSubmitting?: boolean;
   isSubmitDisabled?: boolean;
+  isQuoteLoading?: boolean;
+  isAuthenticated?: boolean;
+  loginInProgress?: boolean;
+  connectWalletLabel?: string;
+  connectingLabel?: string;
+  submitLabel?: string;
+  onConnectWallet?: () => void;
   className?: string;
 }

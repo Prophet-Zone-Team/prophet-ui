@@ -54,6 +54,11 @@ export function mapComboPositionToCard(
     multiplier,
     stakeAmount,
     toWinAmount: sharesBalance,
+    sharesBalance,
+    legPositionIds: legs
+      .map((leg) => leg.leg_position_id)
+      .filter((value): value is string => Boolean(value?.trim())),
+    yesPositionId: record.combo_position_id,
     firstEntryAt: record.first_entry_at,
     picks: legs.map((leg, index) => {
       const marketTitle =

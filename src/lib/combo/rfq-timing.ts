@@ -1,0 +1,1 @@
+export const REQUESTER_ACCEPT_WINDOW_MS = 10_000;

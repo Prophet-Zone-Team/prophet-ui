@@ -21,6 +21,7 @@ export function estimateComboPreview(input: {
   }
 
   const impliedProbability = legs.reduce((product, leg) => {
+    // Each leg price is the buy-side estimate (best ask + slippage when available).
     if (leg.referencePrice <= 0) {
       return 0;
     }

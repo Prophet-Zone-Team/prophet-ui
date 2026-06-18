@@ -1,10 +1,12 @@
+import { fetchJson } from "@/lib/team/client-fetch";
+import { resolveMarketOrderWorstPrice } from "@/lib/market/order-math";
 import type {
   ComboMarketRecord,
   ComboMarketsResponse,
   ComboOutcomeSide,
   ComboTicketLeg,
 } from "@/types/combo";
-import { mockComboMarkets } from "@/data/mock/combo-markets";
+import type { ComboPick } from "@/views/combo/combo-widget/types";
 
 export interface FetchComboMarketsOptions {
   limit?: number;
@@ -20,23 +22,21 @@ export async function fetchComboMarkets(
     throw new DOMException("Aborted", "AbortError");
   }
 
-  const limit = Math.max(1, options.limit ?? 50);
-  const exclude = new Set(options.exclude ?? []);
-  const filtered = mockComboMarkets.filter(
-    (market) => !exclude.has(market.conditionId),
-  );
+  const params = new URLSearchParams();
+  const limit = Math.max(1, Math.min(options.limit ?? 50, 100));
+  params.set("limit", String(limit));
 
-  const startIndex = options.cursor
-    ? Math.max(0, Number.parseInt(options.cursor, 10) || 0)
-    : 0;
-  const page = filtered.slice(startIndex, startIndex + limit);
-  const nextIndex = startIndex + page.length;
-  const hasMore = nextIndex < filtered.length;
+  if (options.cursor) {
+    params.set("cursor", options.cursor);
+  }
 
-  return {
-    markets: page,
-    nextCursor: hasMore ? String(nextIndex) : null,
-  };
+  if (options.exclude?.length) {
+    params.set("exclude", options.exclude.join(","));
+  }
+
+  return fetchJson<ComboMarketsResponse>(`/api/combo/markets?${params.toString()}`, {
+    signal: options.signal,
+  });
 }
 
 export function resolveLegPositionId(
@@ -54,6 +54,46 @@ export function resolveReferencePrice(
   const parsed = Number.parseFloat(raw);
 
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+/** Local buy-side estimate from catalog mid price before RFQ WS quote is available. */
+export function resolveComboLegBuyPrice(
+  market: ComboMarketRecord,
+  outcomeSide: ComboOutcomeSide,
+): number {
+  const sidePrice = resolveReferencePrice(market, outcomeSide);
+
+  if (sidePrice <= 0) {
+    return 0;
+  }
+
+  return resolveMarketOrderWorstPrice({
+    tradeSide: "buy",
+    sidePrice,
+  });
+}
+
+export function buildComboLegsFromPicks(
+  picks: ComboPick[],
+  markets: ComboMarketRecord[],
+): ComboTicketLeg[] {
+  const marketsById = new Map(markets.map((market) => [market.id, market]));
+
+  return picks
+    .map((pick) => {
+      const market = marketsById.get(pick.id);
+
+      if (market && pick.type === "moneyline") {
+        return buildComboTicketLeg({
+          id: pick.id,
+          market,
+          outcomeSide: pick.outcomeSide,
+        });
+      }
+
+      return comboPickToTicketLeg(pick);
+    })
+    .filter((leg): leg is ComboTicketLeg => Boolean(leg));
 }
 
 export function buildComboTicketLeg(input: {

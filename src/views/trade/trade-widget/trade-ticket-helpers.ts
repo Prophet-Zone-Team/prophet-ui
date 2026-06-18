@@ -1029,6 +1029,8 @@ export async function ensureTradingReadyForBid(deps: {
   signClobCredentials: () => Promise<void>;
   signTokenApprovals: () => Promise<void>;
   refreshSetupReadiness?: () => Promise<UserTradingReadiness | undefined>;
+  /** Skip order funding/balance readiness; use for combo cashout RFQ accept. */
+  skipFundingReadiness?: boolean;
 }): Promise<BidGateResult> {
   const tradeSide = deps.tradeSide ?? "buy";
   const eligibilityView = deps.session
@@ -1148,7 +1150,7 @@ export async function ensureTradingReadyForBid(deps: {
     }
   }
 
-  if (!orderReadiness.ready) {
+  if (!deps.skipFundingReadiness && !orderReadiness.ready) {
     return {
       ok: false,
       action: "show_error",

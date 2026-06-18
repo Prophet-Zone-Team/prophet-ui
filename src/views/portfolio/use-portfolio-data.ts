@@ -54,6 +54,7 @@ export interface UsePortfolioDataResult {
   removeOpenOrder: (orderId: string) => void;
   removeOpenOrders: (orderIds: string[]) => void;
   removeOpenOrdersByMarket: (marketId: string) => void;
+  removeComboPosition: (comboId: string) => void;
   connectWallet: () => Promise<void>;
 }
 
@@ -469,6 +470,12 @@ export function usePortfolioData(): UsePortfolioDataResult {
     );
   }, []);
 
+  const removeComboPosition = useCallback((comboId: string) => {
+    setComboPositions((current) =>
+      current.filter((combo) => combo.id !== comboId)
+    );
+  }, []);
+
   const connectWallet = useCallback(async () => {
     setCoreStatus("loading");
     setMessage(undefined);
@@ -504,6 +511,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     removeOpenOrder,
     removeOpenOrders,
     removeOpenOrdersByMarket,
+    removeComboPosition,
     connectWallet
   };
 }

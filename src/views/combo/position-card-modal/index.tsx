@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Modal } from "@/components/ui/modal";
 
 import {
@@ -12,6 +14,7 @@ import { PositionCardModalPickList } from "./position-card-modal-pick-list";
 import { PositionCardModalSummary } from "./position-card-modal-summary";
 import { PositionCardModalTicketDivider } from "./position-card-modal-ticket-divider";
 import type { PositionCardModalProps } from "./types";
+import { usePositionCardModalCashout } from "./use-position-card-modal-cashout";
 
 export type { PositionCardModalProps } from "./types";
 
@@ -20,6 +23,9 @@ export function PositionCardModal({
   combo,
   onClose
 }: PositionCardModalProps) {
+  const t = useTranslations("combo");
+  const { auth, cashout } = usePositionCardModalCashout(combo, open, onClose);
+
   return (
     <Modal
       open={open && combo != null}
@@ -46,7 +52,18 @@ export function PositionCardModal({
             firstEntryAt={combo.firstEntryAt}
           />
 
-          <PositionCardModalActions cashoutAmount={combo.cashoutAmount} />
+          <PositionCardModalActions
+            cashoutAmount={cashout.cashoutAmount}
+            isAuthenticated={cashout.isAuthenticated}
+            loginInProgress={auth.loginInProgress}
+            isQuoteLoading={cashout.isQuoteLoading}
+            isSubmitting={cashout.isSubmitting}
+            isCashoutDisabled={cashout.isCashoutDisabled}
+            connectWalletLabel={t("connectWallet")}
+            connectingLabel={t("connecting")}
+            onConnectWallet={() => void auth.openLogin()}
+            onCashout={() => void cashout.submitCashout()}
+          />
         </div>
       ) : null}
     </Modal>

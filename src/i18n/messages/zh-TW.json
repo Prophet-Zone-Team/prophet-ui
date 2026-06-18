@@ -3,6 +3,7 @@
     "matches": "賽事",
     "analytics": "分析",
     "strategies": "策略",
+    "combo": "Combo",
     "tracks": "追蹤",
     "portfolio": "投資組合",
     "worldCup": "WorldCup",
@@ -1531,6 +1532,24 @@
     "step3Description": "Move only the amount you want to use from Private Balance to your connected wallet.",
     "step4Title": "Trade privately",
     "step4Description": "Place bids through your connected wallet without publicly revealing the source of your funds."
+  },
+  "combo": {
+    "title": "Combo",
+    "subtitle": "將多個市場結果組合成單一 Combo 倉位。",
+    "marketsTitle": "Combo 市場",
+    "loadingMarkets": "正在載入 Combo 市場...",
+    "emptyMarkets": "目前沒有可用的 Combo 市場。",
+    "retry": "重試",
+    "executableQuote": "可執行 RFQ 報價",
+    "connectWallet": "連接錢包",
+    "connecting": "連接中…",
+    "submitCombo": "Combo",
+    "signingCombo": "正在签名 Combo 订单…",
+    "submittingCombo": "正在提交 Combo 订单…",
+    "submittedSummary": "出价 {cost} · 预计赢得 {toWin} · {picks} 项",
+    "signingCashout": "正在签名兑现…",
+    "submittingCashout": "正在提交兑现…",
+    "cashoutSubmittedSummary": "兑现 {amount}"
   },
   "runtime": {
     "connectionLabel": "連線",

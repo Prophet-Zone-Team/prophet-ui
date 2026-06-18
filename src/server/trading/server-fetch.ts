@@ -5,6 +5,7 @@ import { fetch as undiciFetch, ProxyAgent, type RequestInit as UndiciRequestInit
 let cachedProxyAgent: ProxyAgent | undefined;
 let cachedProxyUrl: string | undefined;
 let loggedDevelopmentProxy = false;
+let developmentProxyDisabled = false;
 
 export async function serverFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const dispatcher = getDevelopmentProxyDispatcher(input);
@@ -20,10 +21,24 @@ export async function serverFetch(input: RequestInfo | URL, init?: RequestInit):
     });
   }
 
-  return undiciFetch(normalizeFetchInput(input), {
-    ...(init as UndiciRequestInit),
-    dispatcher,
-  }) as unknown as Promise<Response>;
+  try {
+    return (await undiciFetch(normalizeFetchInput(input), {
+      ...(init as UndiciRequestInit),
+      dispatcher,
+    })) as unknown as Response;
+  } catch (error) {
+    if (!isProxyConnectionError(error)) {
+      throw error;
+    }
+
+    console.warn("[server-fetch] development proxy unreachable, retrying without proxy", {
+      proxyUrl: cachedProxyUrl,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    disableDevelopmentProxy();
+
+    return fetch(input, init);
+  }
 }
 
 function normalizeFetchInput(input: RequestInfo | URL): string | URL {
@@ -35,7 +50,7 @@ function normalizeFetchInput(input: RequestInfo | URL): string | URL {
 }
 
 function getDevelopmentProxyDispatcher(input: RequestInfo | URL) {
-  if (process.env.NODE_ENV !== "development") {
+  if (process.env.NODE_ENV !== "development" || developmentProxyDisabled) {
     return undefined;
   }
 
@@ -67,15 +82,19 @@ function resolveDevelopmentProxyUrl(input: RequestInfo | URL) {
 }
 
 function shouldBypassProxy(input: RequestInfo | URL) {
-  const noProxy = process.env.NO_PROXY?.trim() ?? process.env.no_proxy?.trim();
-
-  if (!noProxy) {
-    return false;
-  }
-
   const hostname = getRequestHostname(input);
 
-  if (!hostname) {
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1"
+  ) {
+    return true;
+  }
+
+  const noProxy = process.env.NO_PROXY?.trim() ?? process.env.no_proxy?.trim();
+
+  if (!noProxy || !hostname) {
     return false;
   }
 
@@ -94,4 +113,29 @@ function getRequestHostname(input: RequestInfo | URL) {
   } catch {
     return undefined;
   }
+}
+
+function disableDevelopmentProxy() {
+  developmentProxyDisabled = true;
+  cachedProxyAgent = undefined;
+  cachedProxyUrl = undefined;
+}
+
+function isProxyConnectionError(error: unknown) {
+  let current: unknown = error;
+
+  while (current) {
+    if (current instanceof Error) {
+      if (/ECONNREFUSED|ECONNRESET|ENOTFOUND/i.test(current.message)) {
+        return true;
+      }
+
+      current = current.cause;
+      continue;
+    }
+
+    break;
+  }
+
+  return false;
 }

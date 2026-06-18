@@ -105,6 +105,61 @@ export function showOrderErrorToast(error: unknown): void {
   });
 }
 
+export function showComboOrderProgressToast(message: string): string | number {
+  return toast.loading(message);
+}
+
+export function updateComboOrderProgressToast(
+  toastId: string | number,
+  message: string,
+): void {
+  toast.loading(message, { id: toastId });
+}
+
+export function showComboOrderSubmittedToast(
+  summary: string,
+  toastId: string | number,
+): void {
+  const t = getRuntimeTranslator("toast");
+  toast.success(t("orderSubmitted"), {
+    id: toastId,
+    description: summary,
+  });
+}
+
+export function showComboOrderErrorToast(
+  error: unknown,
+  toastId: string | number,
+): void {
+  const t = getRuntimeTranslator("toast");
+  toast.error(t("orderFailed"), {
+    id: toastId,
+    description: resolveOrderErrorMessage(error),
+  });
+}
+
+export function formatComboBuyToastSummary(input: {
+  bidAmountUsd: number;
+  toWinAmount: number;
+  pickCount: number;
+}): string {
+  const t = getRuntimeTranslator("combo");
+
+  return t("submittedSummary", {
+    cost: formatTeamDetailMoney(input.bidAmountUsd),
+    toWin: formatTeamDetailMoney(input.toWinAmount),
+    picks: input.pickCount,
+  });
+}
+
+export function formatComboCashoutToastSummary(cashoutAmount: number): string {
+  const t = getRuntimeTranslator("combo");
+
+  return t("cashoutSubmittedSummary", {
+    amount: formatTeamDetailMoney(cashoutAmount),
+  });
+}
+
 export function formatOrderCancelToastSummary(order: UserOpenOrder): string {
   const tTrade = getRuntimeTranslator("trade");
   const outcomeLabel = order.outcome || "—";

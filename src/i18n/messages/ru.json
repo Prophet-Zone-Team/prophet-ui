@@ -3,6 +3,7 @@
     "matches": "Матчи",
     "analytics": "Аналитика",
     "strategies": "Стратегии",
+    "combo": "Combo",
     "tracks": "Отслеживание",
     "portfolio": "Портфель",
     "worldCup": "WorldCup",
@@ -1528,6 +1529,24 @@
     "step3Description": "Move only the amount you want to use from Private Balance to your connected wallet.",
     "step4Title": "Trade privately",
     "step4Description": "Place bids through your connected wallet without publicly revealing the source of your funds."
+  },
+  "combo": {
+    "title": "Combo",
+    "subtitle": "Объединяйте несколько исходов рынка в одну combo-позицию.",
+    "marketsTitle": "Combo-рынки",
+    "loadingMarkets": "Загрузка combo-рынков...",
+    "emptyMarkets": "Сейчас нет доступных combo-рынков.",
+    "retry": "Повторить",
+    "executableQuote": "Исполняемая RFQ-котировка",
+    "connectWallet": "Подключить кошелёк",
+    "connecting": "Подключение…",
+    "submitCombo": "Combo",
+    "signingCombo": "Signing combo order…",
+    "submittingCombo": "Submitting combo order…",
+    "submittedSummary": "Bid {cost} · To win {toWin} · {picks} picks",
+    "signingCashout": "Signing cashout…",
+    "submittingCashout": "Submitting cashout…",
+    "cashoutSubmittedSummary": "Cashout {amount}"
   },
   "runtime": {
     "connectionLabel": "Подключение",

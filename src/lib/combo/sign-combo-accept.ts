@@ -80,6 +80,8 @@ function buildComboExchangeOrder(input: {
   quote: ComboQuoteSnapshot;
   funderAddress: string;
 }): ComboExchangeV3Order {
+  const isSell = input.quote.direction === "SELL";
+
   return {
     salt: createSalt(),
     maker: input.funderAddress,
@@ -87,11 +89,12 @@ function buildComboExchangeOrder(input: {
     tokenId: input.quote.yesPositionId,
     makerAmount: input.quote.makerAmountBaseUnits,
     takerAmount: input.quote.takerAmountBaseUnits,
-    side: 0,
+    side: isSell ? 1 : 0,
     signatureType: SIGNATURE_TYPE_POLY_1271,
     timestamp: Date.now().toString(),
     metadata: BYTES32_ZERO,
     builder: BYTES32_ZERO,
+    expiration: "0",
     signature: "",
   };
 }

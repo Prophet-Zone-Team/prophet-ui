@@ -1,3 +1,5 @@
+export { ComboPageView } from "@/views/combo/combo-page-view";
+
 export { ComboItem } from "@/views/combo/combo-item";
 export type {
   ComboItemProps,

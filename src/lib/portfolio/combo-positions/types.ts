@@ -86,6 +86,9 @@ export interface PortfolioComboPositionCard {
   multiplier: number;
   stakeAmount: number;
   toWinAmount: number;
+  sharesBalance: number;
+  legPositionIds: string[];
+  yesPositionId?: string;
   firstEntryAt?: string;
   cashoutAmount?: number;
 }

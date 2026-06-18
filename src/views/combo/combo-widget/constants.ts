@@ -5,5 +5,14 @@ export const COMBO_QUICK_FRACTIONS = [
   { label: "100%", value: 1 }
 ] as const;
 
+export const MIN_COMBO_PICKS = 2;
+
+import type { CSSProperties } from "react";
+
 export const comboWidgetShellClassName =
-  "flex w-full max-w-[345px] flex-col overflow-hidden rounded-xl border border-[#EBEBEB] bg-[linear-gradient(360deg,rgba(45,151,243,0.1)_0%,rgba(177,68,255,0.1)_90.8%),#FFFFFF]";
+  "flex w-full max-w-[345px] flex-col overflow-hidden rounded-xl border border-[#EBEBEB]";
+
+export const comboWidgetShellStyle: CSSProperties = {
+  background:
+    "linear-gradient(360deg, rgba(45, 151, 243, 0.1) 0%, rgba(177, 68, 255, 0.1) 90.8%), #FFFFFF"
+};
