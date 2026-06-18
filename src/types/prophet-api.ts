@@ -18,21 +18,27 @@ export interface ProphetGetPolymarketStatsData {
 }
 
 export interface ProphetPolyMarketTeam {
+  id?: number;
   logo?: string;
   name?: string;
+  ordering?: string;
 }
 
 export interface ProphetPolyMarketMarket {
   slug?: string;
+  question?: string;
   groupItemTitle?: string;
   outcomes?: string[] | string;
   prices?: string[];
   outcomePrices?: string;
   volume?: number | string;
+  liquidity?: string;
   clobTokenIds?: string;
+  positionIds?: string[];
   acceptingOrders?: boolean;
   negRisk?: boolean;
   conditionId?: string;
+  updatedAt?: string;
   oneHourPriceChange?: number | string;
   oneDayPriceChange?: number | string;
   oneWeekPriceChange?: number | string;
@@ -70,6 +76,16 @@ export interface ProphetPolyMarketGameItem {
 
 export interface ProphetGetGamesData {
   list?: ProphetPolyMarketGameItem[];
+}
+
+/** GET /v1/game/combo-markets — combo-eligible markets grouped by fixture */
+export interface ProphetPolyMarketComboGame extends ProphetPolyMarketGameItem {
+  combo_markets?: string[];
+  events?: (string | ProphetPolyMarketEvent)[];
+}
+
+export interface ProphetGetComboMarketsData {
+  list?: ProphetPolyMarketComboGame[];
 }
 
 /** GET /v1/related-games — related Polymarket games for comma-separated team names */

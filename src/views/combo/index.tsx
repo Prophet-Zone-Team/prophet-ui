@@ -1,3 +1,6 @@
+export { ComboEntry } from "@/views/combo/combo-entry";
+export type { ComboEntryProps } from "@/views/combo/combo-entry";
+
 export { ComboPageView } from "@/views/combo/combo-page-view";
 
 export { ComboItem } from "@/views/combo/combo-item";

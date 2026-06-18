@@ -1,7 +1,8 @@
-import { fetchJson } from "@/lib/team/client-fetch";
+import { fetchProphetComboMarkets } from "@/lib/combo/fetch-prophet-combo-markets";
 import { resolveMarketOrderWorstPrice } from "@/lib/market/order-math";
 import type {
   ComboMarketRecord,
+  ComboMarketsDay,
   ComboMarketsResponse,
   ComboOutcomeSide,
   ComboTicketLeg,
@@ -12,31 +13,15 @@ export interface FetchComboMarketsOptions {
   limit?: number;
   cursor?: string;
   exclude?: string[];
+  timezone?: string;
+  day?: ComboMarketsDay;
   signal?: AbortSignal;
 }
 
 export async function fetchComboMarkets(
   options: FetchComboMarketsOptions = {},
 ): Promise<ComboMarketsResponse> {
-  if (options.signal?.aborted) {
-    throw new DOMException("Aborted", "AbortError");
-  }
-
-  const params = new URLSearchParams();
-  const limit = Math.max(1, Math.min(options.limit ?? 50, 100));
-  params.set("limit", String(limit));
-
-  if (options.cursor) {
-    params.set("cursor", options.cursor);
-  }
-
-  if (options.exclude?.length) {
-    params.set("exclude", options.exclude.join(","));
-  }
-
-  return fetchJson<ComboMarketsResponse>(`/api/combo/markets?${params.toString()}`, {
-    signal: options.signal,
-  });
+  return fetchProphetComboMarkets(options);
 }
 
 export function resolveLegPositionId(

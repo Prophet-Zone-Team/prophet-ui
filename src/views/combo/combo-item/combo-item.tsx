@@ -3,6 +3,10 @@
 import { useState } from "react";
 
 import { cn } from "@/lib/cn";
+import {
+  parseComboMarketOddsId,
+  parseComboMarketSlug,
+} from "@/lib/combo/map-market-to-combo-item";
 import { CollapsedBody } from "@/views/combo/combo-item/collapsed-body";
 import { comboItemCardClassName } from "@/views/combo/combo-item/constants";
 import { ComboItemHeader } from "@/views/combo/combo-item/combo-item-header";
@@ -16,6 +20,8 @@ export function ComboItem({
   homeTeam,
   awayTeam,
   moneylineOdds,
+  halftimeOdds = [],
+  bttsOdds = [],
   spreadOdds,
   topScoreOdds,
   totalOdds = [],
@@ -41,12 +47,29 @@ export function ComboItem({
 
   const previewOdds = [
     ...spreadOdds.slice(0, 2),
-    ...totalOdds.slice(0, 2)
+    ...totalOdds
+      .filter((option) => {
+        const parsed = parseComboMarketOddsId(option.id);
+
+        if (!parsed) {
+          return false;
+        }
+
+        const meta = parseComboMarketSlug(parsed.marketId);
+
+        return meta.marketKind === "total" && meta.totalVariant === "match";
+      })
+      .slice(0, 2),
   ];
 
   const resolvedTotalCount =
     totalOddsCount ??
-    moneylineOdds.length + spreadOdds.length + topScoreOdds.length + totalOdds.length;
+    moneylineOdds.length +
+      halftimeOdds.length +
+      bttsOdds.length +
+      spreadOdds.length +
+      topScoreOdds.length +
+      totalOdds.length;
 
   const handleToggleExpanded = () => {
     const next = !expanded;
@@ -86,8 +109,11 @@ export function ComboItem({
       {expanded ? (
         <ExpandedBody
           moneylineOdds={moneylineOdds}
+          halftimeOdds={halftimeOdds}
+          bttsOdds={bttsOdds}
           spreadOdds={spreadOdds}
           topScoreOdds={topScoreOdds}
+          totalOdds={totalOdds}
           selectedOddsId={selectedOddsId}
           onSelectOdds={handleSelectOdds}
         />

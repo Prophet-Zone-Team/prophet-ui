@@ -34,7 +34,37 @@ export interface ComboMarketRecord {
   tags?: string[];
 }
 
+export interface ComboGameTeam {
+  name: string;
+  code: string;
+  logoUrl?: string;
+}
+
+export interface ComboGameGroup {
+  slug: string;
+  title: string;
+  kickoffAt?: string;
+  kickoffLabel: string;
+  image?: string;
+  homeTeam: ComboGameTeam;
+  awayTeam: ComboGameTeam;
+  markets: ComboMarketRecord[];
+}
+
+export type ComboMarketsDay = "all" | "today" | "tomorrow";
+
+export interface ComboMarketsDaySnapshot {
+  groups: ComboGameGroup[];
+  markets: ComboMarketRecord[];
+  nextCursor?: string | null;
+  /** Calendar date (YYYY-MM-DD) in the request timezone when this snapshot was fetched. */
+  cachedOnDate: string;
+  /** IANA timezone used for the API request, e.g. Asia/Shanghai. */
+  timezone: string;
+}
+
 export interface ComboMarketsResponse {
+  groups: ComboGameGroup[];
   markets: ComboMarketRecord[];
   nextCursor?: string | null;
 }

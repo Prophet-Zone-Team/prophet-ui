@@ -2,17 +2,22 @@ import { ComboOddsButton } from "@/views/combo/combo-item/combo-odds-button";
 import { OddsSection } from "@/views/combo/combo-item/odds-section";
 import type { ExpandedBodyProps } from "@/views/combo/combo-item/types";
 
+const expandedOddsRowClassName = "flex flex-wrap gap-2";
+
 export function ExpandedBody({
   moneylineOdds,
+  halftimeOdds = [],
+  bttsOdds = [],
   spreadOdds,
   topScoreOdds,
+  totalOdds = [],
   selectedOddsId,
-  onSelectOdds
+  onSelectOdds,
 }: ExpandedBodyProps) {
   return (
     <div className="pb-4">
       <OddsSection title="Moneyline">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className={expandedOddsRowClassName}>
           {moneylineOdds.map((option) => (
             <ComboOddsButton
               key={option.id}
@@ -25,9 +30,25 @@ export function ExpandedBody({
         </div>
       </OddsSection>
 
+      {halftimeOdds.length ? (
+        <OddsSection title="Halftime">
+          <div className={expandedOddsRowClassName}>
+            {halftimeOdds.map((option) => (
+              <ComboOddsButton
+                key={option.id}
+                option={option}
+                selected={selectedOddsId === option.id}
+                wide
+                onClick={() => onSelectOdds?.(option)}
+              />
+            ))}
+          </div>
+        </OddsSection>
+      ) : null}
+
       {spreadOdds.length ? (
         <OddsSection title="Spreads">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div className={expandedOddsRowClassName}>
             {spreadOdds.map((option) => (
               <ComboOddsButton
                 key={option.id}
@@ -43,8 +64,39 @@ export function ExpandedBody({
 
       {topScoreOdds.length ? (
         <OddsSection title="Top Scores">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div className={expandedOddsRowClassName}>
             {topScoreOdds.map((option) => (
+              <ComboOddsButton
+                key={option.id}
+                option={option}
+                selected={selectedOddsId === option.id}
+                onClick={() => onSelectOdds?.(option)}
+              />
+            ))}
+          </div>
+        </OddsSection>
+      ) : null}
+
+      {totalOdds.length ? (
+        <OddsSection title="Totals">
+          <div className={expandedOddsRowClassName}>
+            {totalOdds.map((option) => (
+              <ComboOddsButton
+                key={option.id}
+                option={option}
+                selected={selectedOddsId === option.id}
+                mutedLabel
+                onClick={() => onSelectOdds?.(option)}
+              />
+            ))}
+          </div>
+        </OddsSection>
+      ) : null}
+
+      {bttsOdds.length ? (
+        <OddsSection title="BTTS">
+          <div className={expandedOddsRowClassName}>
+            {bttsOdds.map((option) => (
               <ComboOddsButton
                 key={option.id}
                 option={option}

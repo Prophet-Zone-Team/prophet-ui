@@ -53,7 +53,10 @@ export function ComboTicketContainer({ className }: ComboTicketContainerProps) {
     legs,
     bidAmount,
     enabled: legs.length >= MIN_COMBO_PICKS && bidAmount > 0,
-    onSubmitSuccess: () => setPicks([]),
+    onSubmitSuccess: () => {
+      setPicks([]);
+      setBidAmount(0);
+    },
   });
 
   const balance = useMemo(

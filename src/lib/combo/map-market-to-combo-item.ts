@@ -1,4 +1,5 @@
-import type { ComboMarketRecord } from "@/types/combo";
+import type { ComboGameGroup, ComboMarketRecord } from "@/types/combo";
+import { findCuratedTeamByCode } from "@/data/teams/curated-team-list";
 import { getLocalizedTeamName } from "@/lib/i18n/localized-team-name";
 import type {
   ComboItemProps,
@@ -7,7 +8,14 @@ import type {
 } from "@/views/combo/combo-item/types";
 import type { ComboPickOutcomeSide } from "@/views/combo/combo-widget/types";
 
-export type ComboCatalogMarketKind = "moneyline" | "total" | "unknown";
+export type ComboCatalogMarketKind =
+  | "moneyline"
+  | "halftime"
+  | "btts"
+  | "total"
+  | "spread"
+  | "exact_score"
+  | "unknown";
 
 export interface ComboMarketSlugMeta {
   homeCode: string;
@@ -16,6 +24,9 @@ export interface ComboMarketSlugMeta {
   marketKind: ComboCatalogMarketKind;
   pickCode?: string;
   totalLine?: string;
+  scoreLabel?: string;
+  /** Distinguishes full-match, half, and team totals for labeling and previews. */
+  totalVariant?: "match" | "half" | "team" | "half-team";
 }
 
 export function buildComboMarketOddsId(
@@ -62,15 +73,72 @@ export function parseComboMarketSlug(slug: string): ComboMarketSlugMeta {
   const kickoffLabel = `${year}-${month}-${day}`;
   const normalizedHome = homeCode.toLowerCase();
   const normalizedAway = awayCode.toLowerCase();
-  const totalMatch = suffix.match(/^total-(\d+)pt(\d+)$/i);
+  const normalizedSuffix = suffix.toLowerCase();
 
-  if (totalMatch) {
+  if (normalizedSuffix.startsWith("exact-score-")) {
+    const scoreSuffix = normalizedSuffix.slice("exact-score-".length);
+
     return {
       homeCode: normalizedHome,
       awayCode: normalizedAway,
       kickoffLabel,
-      marketKind: "total",
-      totalLine: `${totalMatch[1]}.${totalMatch[2]}`,
+      marketKind: "exact_score",
+      scoreLabel: formatExactScoreLabel(scoreSuffix),
+    };
+  }
+
+  if (normalizedSuffix.includes("spread")) {
+    return {
+      homeCode: normalizedHome,
+      awayCode: normalizedAway,
+      kickoffLabel,
+      marketKind: "spread",
+      pickCode: normalizedSuffix,
+    };
+  }
+
+  if (normalizedSuffix.startsWith("halftime-result-")) {
+    return {
+      homeCode: normalizedHome,
+      awayCode: normalizedAway,
+      kickoffLabel,
+      marketKind: "halftime",
+      pickCode: normalizedSuffix.slice("halftime-result-".length),
+    };
+  }
+
+  if (normalizedSuffix === "btts" || normalizedSuffix.startsWith("btts-")) {
+    return {
+      homeCode: normalizedHome,
+      awayCode: normalizedAway,
+      kickoffLabel,
+      marketKind: "btts",
+      pickCode: normalizedSuffix,
+    };
+  }
+
+  const totalMeta = parseTotalMarketMeta(
+    normalizedSuffix,
+    normalizedHome,
+    normalizedAway,
+    kickoffLabel,
+  );
+
+  if (totalMeta) {
+    return totalMeta;
+  }
+
+  if (
+    normalizedSuffix === "draw" ||
+    normalizedSuffix === normalizedHome ||
+    normalizedSuffix === normalizedAway
+  ) {
+    return {
+      homeCode: normalizedHome,
+      awayCode: normalizedAway,
+      kickoffLabel,
+      marketKind: "moneyline",
+      pickCode: normalizedSuffix,
     };
   }
 
@@ -78,8 +146,134 @@ export function parseComboMarketSlug(slug: string): ComboMarketSlugMeta {
     homeCode: normalizedHome,
     awayCode: normalizedAway,
     kickoffLabel,
-    marketKind: "moneyline",
-    pickCode: suffix.toLowerCase(),
+    marketKind: "unknown",
+    pickCode: normalizedSuffix,
+  };
+}
+
+function parseTotalMarketMeta(
+  normalizedSuffix: string,
+  homeCode: string,
+  awayCode: string,
+  kickoffLabel: string,
+): ComboMarketSlugMeta | undefined {
+  const lineMatch = normalizedSuffix.match(/(\d+)pt(\d+)$/);
+
+  if (!lineMatch) {
+    return undefined;
+  }
+
+  const totalLine = `${lineMatch[1]}.${lineMatch[2]}`;
+  const base = { homeCode, awayCode, kickoffLabel, marketKind: "total" as const, totalLine };
+
+  if (/^total-\d+pt\d+$/.test(normalizedSuffix)) {
+    return { ...base, pickCode: normalizedSuffix, totalVariant: "match" };
+  }
+
+  if (/^first-half-total-\d+pt\d+$/.test(normalizedSuffix)) {
+    return { ...base, pickCode: normalizedSuffix, totalVariant: "half" };
+  }
+
+  if (/^second-half-total-\d+pt\d+$/.test(normalizedSuffix)) {
+    return { ...base, pickCode: normalizedSuffix, totalVariant: "half" };
+  }
+
+  if (/^team-total-(home|away)-\d+pt\d+$/.test(normalizedSuffix)) {
+    return { ...base, pickCode: normalizedSuffix, totalVariant: "team" };
+  }
+
+  if (/^first-half-team-total-(home|away)-\d+pt\d+$/.test(normalizedSuffix)) {
+    return { ...base, pickCode: normalizedSuffix, totalVariant: "half-team" };
+  }
+
+  if (/^second-half-team-total-(home|away)-\d+pt\d+$/.test(normalizedSuffix)) {
+    return { ...base, pickCode: normalizedSuffix, totalVariant: "half-team" };
+  }
+
+  return undefined;
+}
+
+export function mapComboGameToItemProps(
+  group: ComboGameGroup,
+  options?: {
+    selectedMarketId?: string;
+    selectedOutcomeSide?: ComboPickOutcomeSide;
+    isInCombo?: boolean;
+    liveYesPriceByMarketId?: Record<string, number>;
+  },
+): ComboItemProps {
+  const moneylineOdds: ComboOddsOption[] = [];
+  const halftimeOdds: ComboOddsOption[] = [];
+  const bttsOdds: ComboOddsOption[] = [];
+  const spreadOdds: ComboOddsOption[] = [];
+  const topScoreOdds: ComboOddsOption[] = [];
+  const totalOdds: ComboOddsOption[] = [];
+
+  for (const market of group.markets) {
+    const meta = parseComboMarketSlug(market.slug);
+    const yesOption = buildYesOddsOption(
+      market,
+      meta,
+      group,
+      options?.liveYesPriceByMarketId?.[market.id],
+    );
+
+    if (!yesOption || meta.marketKind === "unknown") {
+      continue;
+    }
+
+    if (meta.marketKind === "moneyline") {
+      moneylineOdds.push(yesOption);
+      continue;
+    }
+
+    if (meta.marketKind === "halftime") {
+      halftimeOdds.push(yesOption);
+      continue;
+    }
+
+    if (meta.marketKind === "btts") {
+      bttsOdds.push(yesOption);
+      continue;
+    }
+
+    if (meta.marketKind === "spread") {
+      spreadOdds.push(yesOption);
+      continue;
+    }
+
+    if (meta.marketKind === "exact_score") {
+      topScoreOdds.push(yesOption);
+      continue;
+    }
+
+    if (meta.marketKind === "total") {
+      totalOdds.push(yesOption);
+    }
+  }
+
+  const selectedOddsId =
+    options?.isInCombo &&
+    options.selectedMarketId &&
+    options.selectedOutcomeSide
+      ? buildComboMarketOddsId(
+          options.selectedMarketId,
+          options.selectedOutcomeSide,
+        )
+      : null;
+
+  return {
+    kickoffLabel: group.kickoffLabel,
+    homeTeam: toComboItemTeamFromGame(group.homeTeam),
+    awayTeam: toComboItemTeamFromGame(group.awayTeam),
+    moneylineOdds: sortMoneylineOdds(moneylineOdds, group),
+    halftimeOdds: sortHalftimeOdds(halftimeOdds, group),
+    bttsOdds,
+    spreadOdds,
+    topScoreOdds,
+    totalOdds,
+    selectedOddsId,
+    defaultExpanded: options?.isInCombo,
   };
 }
 
@@ -91,7 +285,7 @@ export function mapComboMarketToItemProps(
   },
 ): ComboItemProps {
   const meta = parseComboMarketSlug(market.slug);
-  const homeTeam = toComboItemTeam(meta.homeCode, market.image);
+  const homeTeam = toComboItemTeam(meta.homeCode);
   const awayTeam = toComboItemTeam(meta.awayCode);
   const primaryOdds = buildPrimaryOdds(market, meta);
 
@@ -114,7 +308,17 @@ export function mapComboMarketToItemProps(
 export function resolveComboMarketTeamCodes(market: ComboMarketRecord) {
   const meta = parseComboMarketSlug(market.slug);
 
-  if (meta.marketKind === "moneyline" && meta.pickCode) {
+  if (
+    (meta.marketKind === "moneyline" || meta.marketKind === "halftime") &&
+    meta.pickCode
+  ) {
+    if (meta.pickCode === "draw") {
+      return {
+        teamCode: "DRAW",
+        teamName: meta.marketKind === "halftime" ? "HT Draw" : "Draw",
+      };
+    }
+
     const teamCode = meta.pickCode.toUpperCase();
 
     return {
@@ -130,9 +334,204 @@ export function resolveComboMarketTeamCodes(market: ComboMarketRecord) {
     };
   }
 
+  if (meta.marketKind === "btts") {
+    return {
+      teamCode: "BTTS",
+      teamName: market.title,
+    };
+  }
+
+  if (meta.marketKind === "exact_score" && meta.scoreLabel) {
+    return {
+      teamCode: meta.scoreLabel,
+      teamName: market.title,
+    };
+  }
+
+  if (meta.marketKind === "spread") {
+    return {
+      teamCode: "SPR",
+      teamName: market.title,
+    };
+  }
+
   return {
     teamCode: market.id.slice(0, 6).toUpperCase(),
     teamName: market.title,
+  };
+}
+
+function buildYesOddsOption(
+  market: ComboMarketRecord,
+  meta: ComboMarketSlugMeta,
+  group: ComboGameGroup,
+  liveYesPrice?: number,
+): ComboOddsOption | undefined {
+  const catalogYesPrice = Number.parseFloat(market.outcomePrices[0]);
+  const yesPrice =
+    typeof liveYesPrice === "number" && Number.isFinite(liveYesPrice) && liveYesPrice > 0
+      ? liveYesPrice
+      : catalogYesPrice;
+
+  if (!Number.isFinite(yesPrice)) {
+    return undefined;
+  }
+
+  return {
+    id: buildComboMarketOddsId(market.id, "yes"),
+    label: formatYesOutcomeLabel(meta, market, group),
+    price: yesPrice,
+  };
+}
+
+function formatYesOutcomeLabel(
+  meta: ComboMarketSlugMeta,
+  market: ComboMarketRecord,
+  group: ComboGameGroup,
+): string {
+  if (
+    (meta.marketKind === "moneyline" || meta.marketKind === "halftime") &&
+    meta.pickCode
+  ) {
+    if (meta.pickCode === "draw") {
+      return meta.marketKind === "halftime" ? "HT Draw" : "Draw";
+    }
+
+    if (meta.pickCode === meta.homeCode) {
+      return meta.marketKind === "halftime"
+        ? `HT ${group.homeTeam.name}`
+        : group.homeTeam.name;
+    }
+
+    if (meta.pickCode === meta.awayCode) {
+      return meta.marketKind === "halftime"
+        ? `HT ${group.awayTeam.name}`
+        : group.awayTeam.name;
+    }
+
+    return getLocalizedTeamName(
+      meta.pickCode.toUpperCase(),
+      meta.pickCode.toUpperCase(),
+    );
+  }
+
+  if (meta.marketKind === "btts") {
+    if (meta.pickCode === "btts") {
+      return "BTTS";
+    }
+
+    if (meta.pickCode === "btts-first-half") {
+      return "1H BTTS";
+    }
+
+    if (meta.pickCode === "btts-second-half") {
+      return "2H BTTS";
+    }
+
+    return market.title;
+  }
+
+  if (meta.marketKind === "total" && meta.totalLine) {
+    return formatTotalYesOutcomeLabel(meta, group);
+  }
+
+  if (meta.marketKind === "exact_score" && meta.scoreLabel) {
+    return meta.scoreLabel;
+  }
+
+  if (meta.marketKind === "spread") {
+    return market.title;
+  }
+
+  return market.outcomes[0] ?? "Yes";
+}
+
+function formatTotalYesOutcomeLabel(
+  meta: ComboMarketSlugMeta,
+  group: ComboGameGroup,
+): string {
+  const line = meta.totalLine ?? "";
+  const pickCode = meta.pickCode ?? "";
+
+  if (meta.totalVariant === "match") {
+    return `Over ${line}`;
+  }
+
+  if (meta.totalVariant === "half") {
+    const halfLabel = pickCode.startsWith("first-half") ? "1H" : "2H";
+
+    return `${halfLabel} O ${line}`;
+  }
+
+  if (meta.totalVariant === "team" || meta.totalVariant === "half-team") {
+    const halfPrefix = pickCode.includes("first-half")
+      ? "1H "
+      : pickCode.includes("second-half")
+        ? "2H "
+        : "";
+    const teamName = pickCode.includes("-home-")
+      ? group.homeTeam.name
+      : group.awayTeam.name;
+
+    return `${halfPrefix}${teamName} O ${line}`;
+  }
+
+  return `Over ${line}`;
+}
+
+function sortHalftimeOdds(
+  odds: ComboOddsOption[],
+  group: ComboGameGroup,
+): ComboOddsOption[] {
+  const priority = new Map<string, number>([
+    [`HT ${group.homeTeam.name}`, 0],
+    ["HT Draw", 1],
+    [`HT ${group.awayTeam.name}`, 2],
+  ]);
+
+  return [...odds].sort(
+    (left, right) =>
+      (priority.get(left.label) ?? 99) - (priority.get(right.label) ?? 99),
+  );
+}
+
+function sortMoneylineOdds(
+  odds: ComboOddsOption[],
+  group: ComboGameGroup,
+): ComboOddsOption[] {
+  const priority = new Map<string, number>([
+    [group.homeTeam.name, 0],
+    ["Draw", 1],
+    [group.awayTeam.name, 2],
+  ]);
+
+  return [...odds].sort(
+    (left, right) =>
+      (priority.get(left.label) ?? 99) - (priority.get(right.label) ?? 99),
+  );
+}
+
+function formatExactScoreLabel(scoreSuffix: string): string {
+  if (scoreSuffix === "any-other") {
+    return "Any Other";
+  }
+
+  const parts = scoreSuffix.split("-");
+
+  if (parts.length === 2 && parts[0] && parts[1]) {
+    return `${parts[0]}-${parts[1]}`;
+  }
+
+  return scoreSuffix;
+}
+
+function toComboItemTeamFromGame(
+  team: ComboGameGroup["homeTeam"],
+): ComboItemTeam {
+  return {
+    name: team.name,
+    code: team.code,
+    logoUrl: team.logoUrl ?? findCuratedTeamByCode(team.code)?.logoUrl,
   };
 }
 
@@ -177,15 +576,19 @@ function formatOutcomeLabel(
     return `${normalizedOutcome} ${meta.totalLine}`;
   }
 
+  if (meta.marketKind === "exact_score" && meta.scoreLabel) {
+    return `${meta.scoreLabel} ${normalizedOutcome}`;
+  }
+
   return normalizedOutcome;
 }
 
-function toComboItemTeam(code: string, logoUrl?: string): ComboItemTeam {
+function toComboItemTeam(code: string): ComboItemTeam {
   const teamCode = code.toUpperCase();
 
   return {
     name: getLocalizedTeamName(teamCode, teamCode),
     code: teamCode,
-    logoUrl,
+    logoUrl: findCuratedTeamByCode(teamCode)?.logoUrl,
   };
 }

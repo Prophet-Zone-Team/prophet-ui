@@ -8,23 +8,24 @@ export function CollapsedBody({
   moneylineOdds,
   previewOdds,
   selectedOddsId,
-  onSelectOdds
+  onSelectOdds,
 }: CollapsedBodyProps) {
   return (
-    <div className="flex flex-col gap-4 px-4 pb-4 lg:flex-row lg:items-center lg:gap-6">
-      <div className="flex min-w-0 flex-col gap-3 lg:w-[220px] lg:shrink-0">
-        <TeamRow team={homeTeam} />
-        <TeamRow team={awayTeam} />
+    <div className="flex items-start gap-3 px-4 pb-4 sm:gap-6">
+      <div className="flex w-[120px] shrink-0 flex-col gap-3 sm:w-[220px]">
+        <TeamRow team={homeTeam} truncateName />
+        <TeamRow team={awayTeam} truncateName />
       </div>
 
       <div className="min-w-0 flex-1 space-y-2">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2">
           {moneylineOdds.map((option) => (
             <ComboOddsButton
               key={option.id}
               option={option}
               selected={selectedOddsId === option.id}
               wide
+              compact
               onClick={() => onSelectOdds?.(option)}
             />
           ))}
@@ -37,6 +38,7 @@ export function CollapsedBody({
                 key={option.id}
                 option={option}
                 selected={selectedOddsId === option.id}
+                compact
                 onClick={() => onSelectOdds?.(option)}
               />
             ))}

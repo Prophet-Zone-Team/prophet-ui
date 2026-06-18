@@ -4,13 +4,15 @@ import type { ComboItemTeam } from "@/views/combo/combo-item/types";
 
 export function TeamRow({
   team,
-  flagSize = "sm"
+  flagSize = "sm",
+  truncateName = false,
 }: {
   team: ComboItemTeam;
   flagSize?: "sm" | "md";
+  truncateName?: boolean;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2 pt-2">
       <TeamFlag
         code={team.code}
         name={team.name}
@@ -20,7 +22,12 @@ export function TeamRow({
           flagSize === "md" ? "h-8 w-8 text-[32px]" : "h-6 w-6 text-[24px]"
         )}
       />
-      <span className="truncate text-lg font-[500] leading-[23px] text-black">
+      <span
+        className={cn(
+          "min-w-0 text-lg font-[500] leading-[23px] text-black",
+          truncateName ? "truncate" : "whitespace-normal break-words"
+        )}
+      >
         {team.name}
       </span>
     </div>

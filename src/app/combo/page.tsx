@@ -1,5 +1,7 @@
 import dynamic from "next/dynamic";
 
+import { MarketWsProvider } from "@/context/market-ws";
+
 const ComboPageView = dynamic(
   () => import("@/views/combo/combo-page-view").then((mod) => mod.ComboPageView),
   {
@@ -12,5 +14,9 @@ const ComboPageView = dynamic(
 );
 
 export default function ComboPage() {
-  return <ComboPageView />;
+  return (
+    <MarketWsProvider enabled customFeatureEnabled>
+      <ComboPageView />
+    </MarketWsProvider>
+  );
 }

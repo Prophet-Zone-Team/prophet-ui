@@ -20,7 +20,9 @@ export {
 export { useComboHydrated } from "@/store/use-combo-hydrated";
 
 export {
+  useComboMarketsDay,
   useComboMarketsError,
+  useComboMarketsGroups,
   useComboMarketsList,
   useComboMarketsNextCursor,
   useComboMarketsStatus,

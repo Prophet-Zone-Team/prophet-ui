@@ -3,12 +3,14 @@
 import { useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 
+import { TabSwitcher } from "@/components/ui/tab-switcher";
 import { useAuth } from "@/context/auth";
+import { useComboLivePrices } from "@/hooks/combo/use-combo-live-prices";
 import { useComboMarkets } from "@/hooks/combo/use-combo-markets";
 import { useComboTicket } from "@/hooks/combo/use-combo-ticket";
 import { buildComboLegsFromPicks } from "@/lib/combo/markets-client";
 import {
-  mapComboMarketToItemProps,
+  mapComboGameToItemProps,
   parseComboMarketOddsId,
   resolveComboMarketTeamCodes
 } from "@/lib/combo/map-market-to-combo-item";
@@ -22,7 +24,7 @@ import {
   useUpdateComboPick,
   useUpsertComboPick
 } from "@/store/combo-store";
-import type { ComboMarketRecord } from "@/types/combo";
+import type { ComboMarketRecord, ComboMarketsDay } from "@/types/combo";
 import { ComboItem } from "@/views/combo/combo-item";
 import type { ComboOddsOption } from "@/views/combo/combo-item/types";
 import { ComboWidget } from "@/views/combo/combo-widget";
@@ -30,10 +32,17 @@ import type { ComboPickOutcomeSide } from "@/views/combo/combo-widget/types";
 import { createComboPickFromMarket } from "@/views/combo/combo-ticket-container";
 import { MIN_COMBO_PICKS } from "@/views/combo/combo-widget/constants";
 
+const COMBO_DAY_TABS: ComboMarketsDay[] = ["today", "tomorrow", "all"];
+
 export function ComboPageView() {
   const t = useTranslations("combo");
   const auth = useAuth();
-  const { markets, loading, error, reload } = useComboMarkets();
+  const { day, setDay, groups, markets, loading, error, reload } =
+    useComboMarkets();
+  const { liveYesPriceByMarketId } = useComboLivePrices({
+    markets,
+    enabled: markets.length > 0
+  });
   const picks = useComboPicks();
   const bidAmount = useComboBidAmount();
   const upsertPick = useUpsertComboPick();
@@ -41,6 +50,20 @@ export function ComboPageView() {
   const removePick = useRemoveComboPick();
   const setBidAmount = useSetComboBidAmount();
   const setPicks = useSetComboPicks();
+
+  const dayTabItems = useMemo(
+    () =>
+      COMBO_DAY_TABS.map((tabDay) => ({
+        id: tabDay,
+        label:
+          tabDay === "all"
+            ? t("all")
+            : tabDay === "today"
+              ? t("today")
+              : t("tomorrow")
+      })),
+    [t]
+  );
 
   const legs = useMemo(
     () => buildComboLegsFromPicks(picks, markets),
@@ -51,12 +74,20 @@ export function ComboPageView() {
     legs,
     bidAmount,
     enabled: legs.length >= MIN_COMBO_PICKS && bidAmount > 0,
-    onSubmitSuccess: () => setPicks([]),
+    onSubmitSuccess: () => {
+      setPicks([]);
+      setBidAmount(0);
+    }
   });
 
   const balance = useMemo(
     () => resolveTradeTicketAvailableCash(auth.readiness) ?? 0,
     [auth.readiness]
+  );
+
+  const marketsById = useMemo(
+    () => new Map(markets.map((market) => [market.id, market])),
+    [markets]
   );
 
   const picksByMarketId = useMemo(() => {
@@ -103,7 +134,7 @@ export function ComboPageView() {
   const handlePickOutcomeChange = useCallback(
     (pickId: string, side: ComboPickOutcomeSide) => {
       const pick = picksByMarketId.get(pickId);
-      const market = markets.find((entry) => entry.id === pickId);
+      const market = marketsById.get(pickId);
 
       if (!pick || !market) {
         return;
@@ -119,7 +150,7 @@ export function ComboPageView() {
         })
       );
     },
-    [markets, picksByMarketId, updatePick]
+    [marketsById, picksByMarketId, updatePick]
   );
 
   const handleRemovePick = useCallback(
@@ -133,6 +164,14 @@ export function ComboPageView() {
     <section className="mx-auto w-full max-w-[1200px] px-3 pb-8 pt-4 md:px-4 md:pt-5">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_345px] lg:items-start">
         <div className="flex min-w-0 flex-col gap-3">
+          <TabSwitcher
+            items={dayTabItems}
+            value={day}
+            onChange={(value) => setDay(value as ComboMarketsDay)}
+            size="compact"
+            aria-label={t("marketsTitle")}
+          />
+
           {loading ? (
             <p className="text-sm text-[#909090]">{t("loadingMarkets")}</p>
           ) : null}
@@ -150,12 +189,14 @@ export function ComboPageView() {
             </div>
           ) : null}
 
-          {!loading && !error && markets.length === 0 ? (
+          {!loading && !error && groups.length === 0 ? (
             <p className="text-sm text-[#909090]">{t("emptyMarkets")}</p>
           ) : null}
 
-          {markets.map((market) => {
-            const selectedPick = picksByMarketId.get(market.id);
+          {groups.map((group) => {
+            const selectedPick = group.markets
+              .map((market) => picksByMarketId.get(market.id))
+              .find(Boolean);
             const selectedOutcomeSide =
               selectedPick?.type === "moneyline"
                 ? selectedPick.outcomeSide
@@ -163,40 +204,51 @@ export function ComboPageView() {
 
             return (
               <ComboItem
-                key={market.id}
-                {...mapComboMarketToItemProps(market, {
+                key={group.slug}
+                {...mapComboGameToItemProps(group, {
+                  selectedMarketId: selectedPick?.id,
                   selectedOutcomeSide,
-                  isInCombo: Boolean(selectedPick)
+                  isInCombo: Boolean(selectedPick),
+                  liveYesPriceByMarketId
                 })}
-                onSelectOdds={(option) =>
-                  handleSelectMarketOdds(market, option)
-                }
+                onSelectOdds={(option) => {
+                  const parsed = parseComboMarketOddsId(option.id);
+                  const market = parsed
+                    ? marketsById.get(parsed.marketId)
+                    : undefined;
+
+                  if (market) {
+                    handleSelectMarketOdds(market, option);
+                  }
+                }}
               />
             );
           })}
         </div>
 
-        <aside className="lg:sticky lg:top-4 lg:self-start">
-          <ComboWidget
-            picks={picks}
-            multiplier={ticket.multiplier}
-            bidAmount={bidAmount}
-            balance={balance}
-            toWinAmount={ticket.toWinAmount}
-            isAuthenticated={ticket.isAuthenticated}
-            loginInProgress={auth.loginInProgress}
-            connectWalletLabel={t("connectWallet")}
-            connectingLabel={t("connecting")}
-            submitLabel={t("submitCombo")}
-            isSubmitting={ticket.isSubmitting}
-            isSubmitDisabled={ticket.isSubmitDisabled}
-            isQuoteLoading={ticket.isAuthenticated && ticket.isQuotePending}
-            onBidAmountChange={setBidAmount}
-            onPickOutcomeChange={handlePickOutcomeChange}
-            onRemovePick={handleRemovePick}
-            onConnectWallet={() => void auth.openLogin()}
-            onSubmit={ticket.submit}
-          />
+        <aside className="lg:w-[345px] lg:shrink-0">
+          <div className="lg:fixed lg:top-[78px] lg:z-20 lg:w-[345px] lg:max-h-[calc(100dvh-94px)] lg:overflow-y-auto lg:[right:max(1rem,calc((100vw-75rem)/2+1rem))]">
+            <ComboWidget
+              picks={picks}
+              multiplier={ticket.multiplier}
+              bidAmount={bidAmount}
+              balance={balance}
+              toWinAmount={ticket.toWinAmount}
+              isAuthenticated={ticket.isAuthenticated}
+              loginInProgress={auth.loginInProgress}
+              connectWalletLabel={t("connectWallet")}
+              connectingLabel={t("connecting")}
+              submitLabel={t("submitCombo")}
+              isSubmitting={ticket.isSubmitting}
+              isSubmitDisabled={ticket.isSubmitDisabled}
+              isQuoteLoading={ticket.isAuthenticated && ticket.isQuotePending}
+              onBidAmountChange={setBidAmount}
+              onPickOutcomeChange={handlePickOutcomeChange}
+              onRemovePick={handleRemovePick}
+              onConnectWallet={() => void auth.openLogin()}
+              onSubmit={ticket.submit}
+            />
+          </div>
         </aside>
       </div>
     </section>

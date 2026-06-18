@@ -127,6 +127,7 @@ export function mapPolymarketActivity(
     teamName: resolveActivityTeamName(row),
     slug,
     source: "",
+    isCombo: row.isCombo === true,
     createdAt,
     tradeCreatedAt: createdAt,
     txHash: row.transactionHash
