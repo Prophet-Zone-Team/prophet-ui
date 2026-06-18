@@ -7,7 +7,6 @@ import { CopyIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { formatNumber } from "@/utils";
-import { shouldHideFundingWalletChange } from "@/context/rainbowkit/utils";
 import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 import {
   privateTopupChangeLinkClass,
@@ -79,7 +78,7 @@ export function TopupWalletCard({
             )}
           </div>
         </div>
-        {connected && !shouldHideFundingWalletChange() ? (
+        {connected ? (
           <button
             type="button"
             className={privateTopupChangeLinkClass}
