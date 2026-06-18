@@ -76,6 +76,11 @@ export function FastBidButton({
       return;
     }
 
+    if (!isAuthenticated) {
+      auth?.openLoginModalOnly();
+      return;
+    }
+
     trackQuickBidClicked({
       teamId: snapshot.team.id,
       teamName: snapshot.team.name,

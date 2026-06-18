@@ -312,11 +312,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.setError(options.error);
       }
 
-      if (options?.openModal !== false) {
-        if (!isRegionBlockedRef.current) {
-          store.setLoginModalOpen(true);
-        }
-      }
+      // if (options?.openModal !== false) {
+      //   if (!isRegionBlockedRef.current) {
+      //     store.setLoginModalOpen(true);
+      //   }
+      // }
     },
     []
   );
@@ -575,16 +575,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         activeStore.setLoginStep(undefined);
         maybeCloseSetupModal(result.readiness);
 
-        if (!isTradingSetupComplete(result.readiness)) {
-          activeStore.setLoginModalOpen(true);
-        }
+        // if (!isTradingSetupComplete(result.readiness)) {
+        //   activeStore.setLoginModalOpen(true);
+        // }
       } catch (switchError) {
         if (!loginAbortRef.current) {
           useAuthStore.getState().setStatus("error");
           useAuthStore
             .getState()
             .setError(resolveWalletErrorMessage(switchError));
-          useAuthStore.getState().setLoginModalOpen(true);
+          // useAuthStore.getState().setLoginModalOpen(true);
         }
       } finally {
         walletHandlingRef.current = false;
@@ -636,17 +636,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const openSetupModalIfNeeded = useCallback(() => {
-    const store = useAuthStore.getState();
+    // const store = useAuthStore.getState();
 
-    if (
-      shouldAutoOpenTradingSetupModal({
-        session: store.session,
-        readiness: store.readiness,
-        isRegionBlocked: isRegionBlockedRef.current
-      })
-    ) {
-      store.setLoginModalOpen(true);
-    }
+    // if (
+    //   shouldAutoOpenTradingSetupModal({
+    //     session: store.session,
+    //     readiness: store.readiness,
+    //     isRegionBlocked: isRegionBlockedRef.current
+    //   })
+    // ) {
+    //   store.setLoginModalOpen(true);
+    // }
   }, []);
 
   const refreshSession = useCallback(async () => {
@@ -1388,9 +1388,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       oauthPending === "google" ||
       hasOAuthReturnParams()
     ) {
-      // const store = useAuthStore.getState();
-      // store.setLoginMethod("google");
-      // store.setLoginModalOpen(true);
       void startPrivyTradingLogin("google");
     }
   }, [privyReady, googleLoginWithOAuthReady, privyWallets]);

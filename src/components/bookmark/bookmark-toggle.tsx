@@ -29,7 +29,7 @@ const TOOLTIP_HIDE_DELAY_MS = 2000;
 export type { ProphetBookmarkTarget } from "@/lib/tracks/track-status";
 
 export function useProphetBookmark(target: ProphetBookmarkTarget) {
-  const { openLogin } = useAuth();
+  const { openLoginModalOnly } = useAuth();
   const storeKey = resolveTrackStoreKeyFromTarget(target);
   const isTracked = useIsTrackTracked(storeKey);
   const isLoading = useTrackPending(storeKey);
@@ -47,7 +47,7 @@ export function useProphetBookmark(target: ProphetBookmarkTarget) {
     }
 
     if (!isProphetAuthenticated()) {
-      await openLogin();
+      await openLoginModalOnly();
       return;
     }
 
@@ -61,10 +61,10 @@ export function useProphetBookmark(target: ProphetBookmarkTarget) {
       }
     } catch (error) {
       if (error instanceof ProphetApiError && error.code === 401) {
-        await openLogin();
+        await openLoginModalOnly();
       }
     }
-  }, [isLoading, isTracked, openLogin, trackTarget, untrackTarget]);
+  }, [isLoading, isTracked, openLoginModalOnly, trackTarget, untrackTarget]);
 
   return {
     isTracked,
