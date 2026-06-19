@@ -101,7 +101,6 @@ export function DepositEntryStep({
               formatNumber(connectedWalletBalanceUsd, 2, true, {
                 round: 0,
                 isZeroPrecision: true,
-                isLessPrecision: false,
               })
             )
           }
