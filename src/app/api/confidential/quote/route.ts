@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 
 import { buildConfidentialTopupQuoteRequest } from "@/lib/funding/confidential";
 import { isValidStableflowRefundAddress } from "@/lib/funding/recipient-validation";
+import {
+  formatConfidentialApiErrorMessage,
+  resolveOriginTokenDecimals,
+} from "@/server/confidential/error-messages";
 import { getConfidentialQuote } from "@/server/confidential/one-click-client";
 import {
   applyRefreshedCookie,
@@ -52,10 +56,11 @@ export async function POST(request: Request) {
 
     return applyRefreshedCookie(NextResponse.json({ quote }), auth.access);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
-      { status: 502 },
-    );
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    const decimals = await resolveOriginTokenDecimals(payload.originAssetId!);
+    const errorMessage = formatConfidentialApiErrorMessage(rawMessage, decimals);
+
+    return NextResponse.json({ error: errorMessage }, { status: 502 });
   }
 }
 

@@ -10,6 +10,7 @@ import { useDevice } from "@/hooks/common/use-device";
 import { ensureWalletChain, fundingNetworkTypeToChainType } from "@/lib/wallet";
 import { reportFundingTransaction } from "@/lib/portfolio/user";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
+import { resolveDepositErrorMessage } from "@/lib/funding/deposit-error-message";
 import type { SupportedChainOption } from "@/lib/funding/supported-assets";
 import { FundingNetworkType } from "@/config/funding/networks";
 import {
@@ -36,9 +37,10 @@ import {
   type FunderCollateralBalances
 } from "@/lib/trading/deposit-wallet-convert";
 import { useDeposit, useEvmBalances, usePrices, useSolBalances, useTronBalances } from "@/hooks/funding";
+import { useTpPolygonSwitchGate } from "@/hooks/funding/use-tp-polygon-switch-gate";
 import { useFundingWalletConnect } from "@/hooks/funding/use-funding-wallet-connect";
 import { useAuth } from "@/context/auth";
-import { shouldHideFundingWalletChange } from "@/context/rainbowkit/utils";
+import { isInTokenPocket, shouldHideFundingWalletChange } from "@/context/rainbowkit/utils";
 import { isTpFundingSwitchPendingError } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { useAuthStore } from "@/store";
@@ -56,6 +58,7 @@ import {
 } from "@/views/portfolio/deposit/deposit-status-step";
 import { DepositStableflowQrStep } from "@/views/portfolio/deposit/deposit-stableflow-qr-step";
 import { DepositTokenStep } from "@/views/portfolio/deposit/deposit-token-step";
+import { TpPolygonSwitchConfirmDialog } from "@/views/portfolio/deposit/tp-polygon-switch-confirm-dialog";
 import type {
   DepositAmountState,
   DepositEntryTab,
@@ -128,22 +131,6 @@ export function DepositDialog({
   useEffect(() => {
     onPendingDepositChange?.(hasPendingDeposit);
   }, [hasPendingDeposit, onPendingDepositChange]);
-
-  const onConfirmPendingDepositFromEntry = useCallback(async () => {
-    try {
-      await onConfirmPendingDeposit();
-      toast.success(tDeposit("depositSuccessful"));
-
-      if (onDepositSuccess) {
-        await onDepositSuccess();
-      } else {
-        await syncCash();
-      }
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(message);
-    }
-  }, [onConfirmPendingDeposit, onDepositSuccess, syncCash, tDeposit]);
 
   const [step, setStep] = useState<DepositStep>(INITIAL_STEP);
   const [entryTab, setEntryTab] = useState<DepositEntryTab>(INITIAL_ENTRY_TAB);
@@ -351,10 +338,28 @@ export function DepositDialog({
     stopStatusPoll();
   }, [stopStatusPoll]);
 
-  const handleClose = useCallback(() => {
+  const performClose = useCallback(() => {
     reset();
     onClose();
   }, [onClose, reset]);
+
+  const {
+    switchDialogOpen,
+    switchDialogVariant,
+    switchLoading,
+    onCancelSwitch,
+    onConfirmSwitch,
+    runWithTpPolygonGate,
+    requestCloseWithTpPolygonGate,
+  } = useTpPolygonSwitchGate();
+
+  const handleClose = useCallback(() => {
+    if (isMobile && isInTokenPocket()) {
+      void requestCloseWithTpPolygonGate(performClose);
+      return;
+    }
+    performClose();
+  }, [performClose, requestCloseWithTpPolygonGate, isMobile]);
 
   useEffect(() => {
     if (!open) {
@@ -378,8 +383,7 @@ export function DepositDialog({
 
       return payload;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(message);
+      toast.error(resolveDepositErrorMessage(error));
       throw error;
     } finally {
       setStableflowTokensLoading(false);
@@ -633,8 +637,8 @@ export function DepositDialog({
             nearAccountId:
               selectedToken.blockchain === "near"
                 ? resolveFundingWalletAddress(selectedToken) ??
-                  getNearAccountSnapshot().accountId ??
-                  undefined
+                getNearAccountSnapshot().accountId ??
+                undefined
                 : undefined,
           }) ?? session.walletAddress;
         const { quote } = await fetchJson<{ quote: QuoteResponse }>(
@@ -659,8 +663,7 @@ export function DepositDialog({
 
       setStep("confirm");
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(message);
+      toast.error(resolveDepositErrorMessage(error));
     } finally {
       setContinueLoading(false);
     }
@@ -740,7 +743,7 @@ export function DepositDialog({
         }
 
         setStatusPhase("error");
-        setStatusError(error instanceof Error ? error.message : String(error));
+        setStatusError(resolveDepositErrorMessage(error));
       }
     },
     [pollFunderCollateralBalances, pollStableflowBridge, tDeposit]
@@ -872,8 +875,7 @@ export function DepositDialog({
           return;
         }
 
-        const message = error instanceof Error ? error.message : String(error);
-        toast.error(message);
+        toast.error(resolveDepositErrorMessage(error));
       })
       .finally(() => {
         if (!controller.signal.aborted) {
@@ -1009,8 +1011,7 @@ export function DepositDialog({
         handleClose();
         syncCash();
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
-        toast.error(message);
+        toast.error(resolveDepositErrorMessage(error));
       } finally {
         setContinueLoading(false);
       }
@@ -1074,8 +1075,8 @@ export function DepositDialog({
       setStableflowExecution(execution);
       void runStatusPolling(execution);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
       setStatusPhase("error");
+      const message = resolveDepositErrorMessage(error);
       setStatusError(message);
       toast.error(message);
     } finally {
@@ -1083,7 +1084,7 @@ export function DepositDialog({
     }
   };
 
-  const onConfirmPendingConvert = async () => {
+  const executePendingConvert = useCallback(async () => {
     if (
       !session?.walletAddress ||
       !stableflowExecution ||
@@ -1130,21 +1131,62 @@ export function DepositDialog({
 
       toast.success(tDeposit("depositSuccessful"));
       syncCash();
-      handleClose();
+      performClose();
       if (onDepositSuccess) {
         await onDepositSuccess();
       } else {
         await syncCash();
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
       setStatusPhase("error");
+      const message = resolveDepositErrorMessage(error);
       setStatusError(message);
       toast.error(message);
     } finally {
       setContinueLoading(false);
     }
-  };
+  }, [
+    amount.amountUsd,
+    funderCollateralBalances,
+    onDepositSuccess,
+    pendingConvertMode,
+    performClose,
+    session,
+    stableflowExecution,
+    syncCash,
+    tDeposit,
+  ]);
+
+  const onConfirmPendingConvert = useCallback(() => {
+    if (isMobile && isInTokenPocket()) {
+      void runWithTpPolygonGate(executePendingConvert, "convert");
+      return;
+    }
+    executePendingConvert();
+  }, [executePendingConvert, runWithTpPolygonGate, isMobile]);
+
+  const onConfirmPendingDepositFromEntry = useCallback(() => {
+    void runWithTpPolygonGate(async () => {
+      try {
+        await onConfirmPendingDeposit();
+        toast.success(tDeposit("depositSuccessful"));
+
+        if (onDepositSuccess) {
+          await onDepositSuccess();
+        } else {
+          await syncCash();
+        }
+      } catch (error: unknown) {
+        toast.error(resolveDepositErrorMessage(error));
+      }
+    }, "convert");
+  }, [
+    onConfirmPendingDeposit,
+    onDepositSuccess,
+    runWithTpPolygonGate,
+    syncCash,
+    tDeposit,
+  ]);
 
   const handleEntryTabChange = async (nextTab: DepositEntryTab) => {
     setEntryTab(nextTab);
@@ -1323,144 +1365,153 @@ export function DepositDialog({
   ]);
 
   return (
-    <FundingResponsiveOverlay
-      open={open}
-      onClose={handleClose}
-      ariaLabel={ariaLabel}
-      className={modalWidth}
-      hideCloseButton
-      overlayCloseable={false}
-    >
-      <DepositProvider
-        value={{
-          depositMethod,
-          selectableTokens,
-          funderAddress: session?.funderAddress,
-          supportedAssets: selectableTokens,
-          balancesLoading,
-          pricesLoading,
-          hasPendingDeposit,
-          converting: pendingConverting,
-          onConfirmPendingDeposit: onConfirmPendingDepositFromEntry,
-          getNearTokenBalance,
-          getSolTokenBalance,
-          getTronTokenBalance,
-        }}
+    <>
+      <FundingResponsiveOverlay
+        open={open}
+        onClose={handleClose}
+        ariaLabel={ariaLabel}
+        className={modalWidth}
+        hideCloseButton
+        overlayCloseable={false}
       >
-        <FundingModalShell
-          title={tPortfolio("depositLabel")}
-          onClose={handleClose}
-          onBack={showBack ? handleBack : undefined}
-          footer={footer}
-          className={
-            step === "entry" && entryModalMinHeight
-              ? entryModalMinHeight
-              : step === "confirm"
-                ? "min-h-0 md:min-h-[600px]"
-                : step === "entry"
-                  ? (isMobile ? "min-h-0" : DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.crypto)
-                  : step === "stableflow_qr"
-                    ? "min-h-0 md:min-h-[600px]"
-                    : "min-h-0 md:min-h-[515px]"
-          }
+        <DepositProvider
+          value={{
+            depositMethod,
+            selectableTokens,
+            funderAddress: session?.funderAddress,
+            supportedAssets: selectableTokens,
+            balancesLoading,
+            pricesLoading,
+            hasPendingDeposit,
+            converting: pendingConverting,
+            onConfirmPendingDeposit: onConfirmPendingDepositFromEntry,
+            getNearTokenBalance,
+            getSolTokenBalance,
+            getTronTokenBalance,
+          }}
         >
-          {step === "entry" ? (
-            <DepositEntryStep
-              entryTab={entryTab}
-              onEntryTabChange={handleEntryTabChange}
-              onSelectConnected={() => {
-                setDepositMethod("connected");
-                setStep("tokens");
-              }}
-              onSelectStableflow={() => void onSelectStableflow()}
-              stableflowLoading={stableflowTokensLoading}
-              onOpenPrivateTopup={() => {
-                handleClose();
-                onOpenPrivateTopup?.();
-              }}
-              onClose={handleClose}
-            />
-          ) : null}
+          <FundingModalShell
+            title={tPortfolio("depositLabel")}
+            onClose={handleClose}
+            onBack={showBack ? handleBack : undefined}
+            footer={footer}
+            className={
+              step === "entry" && entryModalMinHeight
+                ? entryModalMinHeight
+                : step === "confirm"
+                  ? "min-h-0 md:min-h-[600px]"
+                  : step === "entry"
+                    ? (isMobile ? "min-h-0" : DEPOSIT_ENTRY_MODAL_MIN_HEIGHT.crypto)
+                    : step === "stableflow_qr"
+                      ? "min-h-0 md:min-h-[600px]"
+                      : "min-h-0 md:min-h-[515px]"
+            }
+          >
+            {step === "entry" ? (
+              <DepositEntryStep
+                entryTab={entryTab}
+                onEntryTabChange={handleEntryTabChange}
+                onSelectConnected={() => {
+                  setDepositMethod("connected");
+                  setStep("tokens");
+                }}
+                onSelectStableflow={() => void onSelectStableflow()}
+                stableflowLoading={stableflowTokensLoading}
+                onOpenPrivateTopup={() => {
+                  handleClose();
+                  onOpenPrivateTopup?.();
+                }}
+                onClose={handleClose}
+              />
+            ) : null}
 
-          {step === "stableflow_qr" ? (
-            <DepositStableflowQrStep
-              stableflowTokens={depositStableflowTokens}
-              selectedChain={qrSelectedChain}
-              selectedToken={
-                isStableflowDepositToken(selectedToken)
-                  ? selectedToken
-                  : undefined
-              }
-              quoteLoading={stableflowQuoteLoading}
-              tokensLoading={stableflowTokensLoading}
-              depositAddress={stableflowQuote?.quote.depositAddress}
-              onChainChange={handleQrChainChange}
-              onTokenChange={handleQrTokenChange}
-            />
-          ) : null}
+            {step === "stableflow_qr" ? (
+              <DepositStableflowQrStep
+                stableflowTokens={depositStableflowTokens}
+                selectedChain={qrSelectedChain}
+                selectedToken={
+                  isStableflowDepositToken(selectedToken)
+                    ? selectedToken
+                    : undefined
+                }
+                quoteLoading={stableflowQuoteLoading}
+                tokensLoading={stableflowTokensLoading}
+                depositAddress={stableflowQuote?.quote.depositAddress}
+                onChainChange={handleQrChainChange}
+                onTokenChange={handleQrTokenChange}
+              />
+            ) : null}
 
-          {step === "tokens" ? (
-            <DepositTokenStep
-              selectedToken={selectedToken}
-              onSelectToken={setSelectedToken}
-            />
-          ) : null}
+            {step === "tokens" ? (
+              <DepositTokenStep
+                selectedToken={selectedToken}
+                onSelectToken={setSelectedToken}
+              />
+            ) : null}
 
-          {step === "amount" && selectedToken ? (
-            <DepositAmountStep
-              key={`${selectedToken.chainId}-${selectedToken.address}`}
-              token={selectedToken}
-              amount={amount}
-              maxAmount={selectedTokenMaxAmount}
-              minDepositUsd={
-                depositMethod === "stableflow"
-                  ? 0
-                  : getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd)
-              }
-              onAmountChange={setAmount}
-              showChangeWallet={
-                !shouldHideFundingWalletChange() &&
-                !isSocialLogin &&
-                !isNearLogin &&
-                requiresDepositFundingWalletConnection(selectedToken, loginMethod) &&
-                isConnectedForToken(selectedToken)
-              }
-              onChangeWallet={() => void disconnectForToken(selectedToken)}
-            />
-          ) : null}
+            {step === "amount" && selectedToken ? (
+              <DepositAmountStep
+                key={`${selectedToken.chainId}-${selectedToken.address}`}
+                token={selectedToken}
+                amount={amount}
+                maxAmount={selectedTokenMaxAmount}
+                minDepositUsd={
+                  depositMethod === "stableflow"
+                    ? 0
+                    : getEffectiveMinDepositUsd(selectedToken.minCheckoutUsd)
+                }
+                onAmountChange={setAmount}
+                showChangeWallet={
+                  !shouldHideFundingWalletChange() &&
+                  !isSocialLogin &&
+                  !isNearLogin &&
+                  requiresDepositFundingWalletConnection(selectedToken, loginMethod) &&
+                  isConnectedForToken(selectedToken)
+                }
+                onChangeWallet={() => void disconnectForToken(selectedToken)}
+              />
+            ) : null}
 
-          {step === "confirm" && selectedToken ? (
-            <DepositConfirmStep
-              walletAddress={session?.walletAddress ?? ""}
-              token={selectedToken}
-              amount={amount.tokenAmount}
-              amountUsd={amount.amountUsd}
-              quoteMode={
-                depositMethod === "stableflow" ? "stableflow" : "bridge"
-              }
-              stableflowQuote={stableflowQuote}
-              recipientAddress={session?.funderAddress}
-            />
-          ) : null}
+            {step === "confirm" && selectedToken ? (
+              <DepositConfirmStep
+                walletAddress={session?.walletAddress ?? ""}
+                token={selectedToken}
+                amount={amount.tokenAmount}
+                amountUsd={amount.amountUsd}
+                quoteMode={
+                  depositMethod === "stableflow" ? "stableflow" : "bridge"
+                }
+                stableflowQuote={stableflowQuote}
+                recipientAddress={session?.funderAddress}
+              />
+            ) : null}
 
-          {step === "status" && session?.funderAddress ? (
-            <DepositStatusStep
-              phase={statusPhase}
-              funderAddress={session.funderAddress}
-              pendingConvertMode={pendingConvertMode}
-              detectedUsdcAmount={detectedUsdcAmount}
-              detectedUsdceAmount={detectedUsdceAmount}
-              bridgeStatusLabel={bridgeStatusLabel}
-              convertStatusLabel={convertStatusLabel}
-              error={statusError}
-              convertLoading={continueLoading}
-              onConfirmConvert={onConfirmPendingConvert}
-              onClose={handleClose}
-            />
-          ) : null}
-        </FundingModalShell>
-      </DepositProvider>
-    </FundingResponsiveOverlay>
+            {step === "status" && session?.funderAddress ? (
+              <DepositStatusStep
+                phase={statusPhase}
+                funderAddress={session.funderAddress}
+                pendingConvertMode={pendingConvertMode}
+                detectedUsdcAmount={detectedUsdcAmount}
+                detectedUsdceAmount={detectedUsdceAmount}
+                bridgeStatusLabel={bridgeStatusLabel}
+                convertStatusLabel={convertStatusLabel}
+                error={statusError}
+                convertLoading={continueLoading}
+                onConfirmConvert={onConfirmPendingConvert}
+                onClose={handleClose}
+              />
+            ) : null}
+          </FundingModalShell>
+        </DepositProvider>
+      </FundingResponsiveOverlay>
+      <TpPolygonSwitchConfirmDialog
+        open={switchDialogOpen}
+        loading={switchLoading}
+        variant={switchDialogVariant}
+        onClose={onCancelSwitch}
+        onConfirm={onConfirmSwitch}
+      />
+    </>
   );
 }
 

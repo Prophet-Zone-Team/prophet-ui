@@ -466,6 +466,7 @@
       "couldNotCopyAddress": "Не удалось скопировать адрес",
       "minLabel": "Мин. {amount}",
       "depositSuccessful": "Пополнение выполнено",
+      "solanaConfirmationTimeout": "Время подтверждения транзакции истекло. Перевод может все еще обрабатываться. Откройте Portfolio позже и нажмите «Подтвердить ожидающий депозит», чтобы завершить пополнение.",
       "insufficientBalance": "Недостаточно средств",
       "stableflowNotReady": "Пополнение через Stableflow не готово. Попробуйте снова.",
       "minDepositAmount": "Минимальная сумма пополнения {symbol} — {amount} или больше",
@@ -504,7 +505,12 @@
       "unshieldAwaitingFunds": "Waiting for funds…",
       "unshieldConverting": "Converting to pUSD…",
       "usdcDetected": "USDC: {amount}",
-      "usdceDetected": "USDC.e: {amount}"
+      "usdceDetected": "USDC.e: {amount}",
+      "tpSwitchPolygonTitle": "Переключиться на кошелёк Polygon",
+      "tpSwitchPolygonDescription": "Для конвертации депозита требуется ваш кошелёк Polygon (Matic) в TokenPocket. После переключения страница перезагрузится. Нажмите «Подтвердить ожидающий депозит» ещё раз, чтобы завершить пополнение счёта.",
+      "tpSwitchPolygonOnCloseTitle": "Переключитесь на кошелёк Polygon перед выходом",
+      "tpSwitchPolygonOnCloseDescription": "Перед закрытием вернитесь к кошельку Polygon (Matic) в TokenPocket. Торговля и другие действия требуют подписи EVM-кошелька. После переключения страница перезагрузится.",
+      "tpSwitchPolygonConfirm": "Переключить кошелёк"
     },
     "migrate": {
       "ariaDefault": "Перенос баланса",
@@ -1542,6 +1548,9 @@
     "topUpComplete": "Top up complete",
     "topUpCompleteBody": "Your private balance has been updated.",
     "topUpFailed": "Top up failed",
+    "statusLookupFailed": "Не удалось подтвердить статус",
+    "solanaConfirmationTimeout": "Время подтверждения транзакции истекло. Перевод может все еще обрабатываться. Обновите Private Balance позже, чтобы проверить, завершилось ли пополнение.",
+    "acknowledge": "OK",
     "somethingWentWrong": "Something went wrong. Try again.",
     "tryAgain": "Try again",
     "topUpSuccessful": "Top up successful",

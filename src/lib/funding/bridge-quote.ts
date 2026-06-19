@@ -2,14 +2,13 @@ import { formatUnits, parseUnits } from "viem";
 
 import type { FundingAsset } from "@/config/funding";
 import { POLYMARKET_USD } from "@/config/funding";
+import { isValidBridgeRecipientAddress } from "@/lib/funding/recipient-validation";
 import { fetchJson } from "@/lib/team/client-fetch";
 import type { BridgeQuoteRequest, BridgeQuoteResponse } from "@/types/funding";
 import { QuoteResponse } from "@stableflow/core";
 import Big from "big.js";
 
 export const DEFAULT_DEPOSIT_QUOTE_RECIPIENT = "0x17eC161f126e82A8ba337f4022d574DBEaFef575";
-
-const EVM_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 export interface DepositQuoteParams {
   token: FundingAsset;
@@ -54,7 +53,7 @@ export function buildWithdrawQuoteRequest({
 }: WithdrawQuoteParams): BridgeQuoteRequest | undefined {
   const normalizedRecipient = recipientAddress.trim();
 
-  if (!EVM_ADDRESS_PATTERN.test(normalizedRecipient)) {
+  if (!isValidBridgeRecipientAddress(String(token.chainId), normalizedRecipient)) {
     return undefined;
   }
 

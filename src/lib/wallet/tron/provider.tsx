@@ -19,6 +19,7 @@ import { createTronWeb } from "@/lib/wallet/tron/tron-web";
 import TronFundingWallet from "@/lib/wallet/tron/wallet";
 import { TronWalletSelectorModal } from "@/lib/wallet/tron/wallet-selector-modal";
 import { useFundingWalletStore } from "@/store/use-funding-wallet-store";
+import { useDevice } from "@/hooks/common/use-device";
 
 function buildTronAdapters() {
   const projectId = process.env.NEXT_PUBLIC_RAINBOWKIT_PROJECT_ID ?? "";
@@ -57,6 +58,7 @@ export function TronFundingProvider({ children }: { children: React.ReactNode })
   const setSlice = useFundingWalletStore((state) => state.setSlice);
   const registerConnectHandler = useFundingWalletStore((state) => state.registerConnectHandler);
   const registerDisconnectHandler = useFundingWalletStore((state) => state.registerDisconnectHandler);
+  const ismobile = useDevice();
 
   const installedWallets = useMemo(
     () => adapters.filter((adapter) => adapter.readyState === "Found"),
@@ -120,7 +122,7 @@ export function TronFundingProvider({ children }: { children: React.ReactNode })
     setConnecting(true);
 
     try {
-      if (isInWalletInAppBrowser()) {
+      if (isInWalletInAppBrowser() && ismobile) {
         const { address, adapter } = await connectInAppBrowserTronWallet(adapters);
         applyConnectedAdapter(adapter);
         return address;
@@ -128,19 +130,20 @@ export function TronFundingProvider({ children }: { children: React.ReactNode })
 
       setSelectorOpen(true);
 
-      if (installedWallets.length === 1) {
-        const adapter = installedWallets[0];
-        await adapter.connect();
-        applyConnectedAdapter(adapter);
-        setSelectorOpen(false);
-        return adapter.address ?? undefined;
-      }
+      // // Since some wallets' readyState is asynchronous, we can't simply check for a single wallet and auto-connect.
+      // if (installedWallets.length === 1) {
+      //   const adapter = installedWallets[0];
+      //   await adapter.connect();
+      //   applyConnectedAdapter(adapter);
+      //   setSelectorOpen(false);
+      //   return adapter.address ?? undefined;
+      // }
 
       return undefined;
     } finally {
       setConnecting(false);
     }
-  }, [adapters, applyConnectedAdapter, installedWallets]);
+  }, [adapters, applyConnectedAdapter, installedWallets, ismobile]);
 
   const handleSelectWallet = useCallback(
     async (walletName: string) => {

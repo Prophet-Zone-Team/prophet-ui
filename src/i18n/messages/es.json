@@ -466,6 +466,7 @@
       "couldNotCopyAddress": "No se pudo copiar la dirección",
       "minLabel": "Mín. {amount}",
       "depositSuccessful": "Depósito exitoso",
+      "solanaConfirmationTimeout": "La confirmación de la transacción expiró. Tu transferencia puede seguir procesándose. Abre Portfolio más tarde y pulsa Confirmar depósito pendiente para completar el depósito.",
       "insufficientBalance": "Saldo insuficiente",
       "stableflowNotReady": "El depósito Stableflow no está listo. Inténtalo de nuevo.",
       "minDepositAmount": "El depósito mínimo de {symbol} es {amount} o más",
@@ -504,7 +505,12 @@
       "unshieldAwaitingFunds": "Waiting for funds…",
       "unshieldConverting": "Converting to pUSD…",
       "usdcDetected": "USDC: {amount}",
-      "usdceDetected": "USDC.e: {amount}"
+      "usdceDetected": "USDC.e: {amount}",
+      "tpSwitchPolygonTitle": "Cambiar a billetera Polygon",
+      "tpSwitchPolygonDescription": "Para convertir tu depósito necesitas tu billetera Polygon (Matic) en TokenPocket. Después de cambiar, esta página se recargará. Pulsa Confirmar depósito pendiente de nuevo para terminar de financiar tu cuenta.",
+      "tpSwitchPolygonOnCloseTitle": "Cambiar a billetera Polygon antes de salir",
+      "tpSwitchPolygonOnCloseDescription": "Vuelve a tu billetera Polygon (Matic) en TokenPocket antes de cerrar. Las operaciones de trading y otras acciones requieren una billetera EVM para firmar. Esta página se recargará después del cambio.",
+      "tpSwitchPolygonConfirm": "Cambiar billetera"
     },
     "migrate": {
       "ariaDefault": "Migrar saldo",
@@ -1543,6 +1549,9 @@
     "topUpComplete": "Top up complete",
     "topUpCompleteBody": "Your private balance has been updated.",
     "topUpFailed": "Top up failed",
+    "statusLookupFailed": "No se pudo confirmar el estado",
+    "solanaConfirmationTimeout": "La confirmación de la transacción expiró. Tu transferencia puede seguir procesándose. Actualiza tu Private Balance más tarde para comprobar si la recarga se completó.",
+    "acknowledge": "OK",
     "somethingWentWrong": "Something went wrong. Try again.",
     "tryAgain": "Try again",
     "topUpSuccessful": "Top up successful",

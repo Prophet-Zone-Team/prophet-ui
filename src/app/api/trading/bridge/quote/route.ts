@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 
+import {
+  isValidBridgeRecipientAddress,
+  isValidBridgeTokenAddress,
+} from "@/lib/funding/recipient-validation";
 import { fetchBridgeQuote } from "@/server/trading/bridge";
 import type { BridgeQuoteRequest } from "@/types/funding";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const EVM_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 export async function POST(request: Request) {
   try {
@@ -39,16 +41,28 @@ function validateQuoteRequest(body: BridgeQuoteRequest): string | undefined {
     return "fromChainId and toChainId are required.";
   }
 
-  if (!body.fromTokenAddress?.trim() || !EVM_ADDRESS_PATTERN.test(body.fromTokenAddress.trim())) {
-    return "fromTokenAddress must be a valid EVM address.";
+  const fromChainId = body.fromChainId.trim();
+  const toChainId = body.toChainId.trim();
+
+  if (
+    !body.fromTokenAddress?.trim() ||
+    !isValidBridgeTokenAddress(fromChainId, body.fromTokenAddress)
+  ) {
+    return `fromTokenAddress must be a valid address for chain ${fromChainId}.`;
   }
 
-  if (!body.toTokenAddress?.trim() || !EVM_ADDRESS_PATTERN.test(body.toTokenAddress.trim())) {
-    return "toTokenAddress must be a valid EVM address.";
+  if (
+    !body.toTokenAddress?.trim() ||
+    !isValidBridgeTokenAddress(toChainId, body.toTokenAddress)
+  ) {
+    return `toTokenAddress must be a valid address for chain ${toChainId}.`;
   }
 
-  if (!body.recipientAddress?.trim() || !EVM_ADDRESS_PATTERN.test(body.recipientAddress.trim())) {
-    return "recipientAddress must be a valid EVM address.";
+  if (
+    !body.recipientAddress?.trim() ||
+    !isValidBridgeRecipientAddress(toChainId, body.recipientAddress)
+  ) {
+    return `recipientAddress must be a valid address for chain ${toChainId}.`;
   }
 
   return undefined;

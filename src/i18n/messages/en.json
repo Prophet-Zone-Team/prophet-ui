@@ -469,6 +469,7 @@
       "couldNotCopyAddress": "Could not copy address",
       "minLabel": "Min {amount}",
       "depositSuccessful": "Deposit successful",
+      "solanaConfirmationTimeout": "Transaction confirmation timed out. Your transfer may still be processing. Open Portfolio later and tap Confirm pending deposit to finish funding your account.",
       "insufficientBalance": "Insufficient balance",
       "stableflowNotReady": "Stableflow deposit is not ready. Try again.",
       "minDepositAmount": "{symbol} minimum deposit amount is {amount} or higher",
@@ -507,7 +508,12 @@
       "unshieldAwaitingFunds": "Waiting for funds…",
       "unshieldConverting": "Converting to pUSD…",
       "usdcDetected": "USDC: {amount}",
-      "usdceDetected": "USDC.e: {amount}"
+      "usdceDetected": "USDC.e: {amount}",
+      "tpSwitchPolygonTitle": "Switch to Polygon wallet",
+      "tpSwitchPolygonDescription": "Converting your deposit requires your Polygon (Matic) wallet in TokenPocket. After you switch, this page will reload. Tap Confirm pending deposit again to finish funding your account.",
+      "tpSwitchPolygonOnCloseTitle": "Switch to Polygon wallet before leaving",
+      "tpSwitchPolygonOnCloseDescription": "Switch back to your Polygon (Matic) wallet in TokenPocket before closing. Trading and other actions require an EVM wallet to sign. This page will reload after you switch.",
+      "tpSwitchPolygonConfirm": "Switch wallet"
     },
     "migrate": {
       "ariaDefault": "Migrate balance",
@@ -1545,6 +1551,9 @@
     "topUpComplete": "Top up complete",
     "topUpCompleteBody": "Your private balance has been updated.",
     "topUpFailed": "Top up failed",
+    "statusLookupFailed": "Unable to confirm status",
+    "solanaConfirmationTimeout": "Transaction confirmation timed out. Your transfer may still be processing. Refresh your Private Balance later to check whether the top up completed.",
+    "acknowledge": "OK",
     "somethingWentWrong": "Something went wrong. Try again.",
     "tryAgain": "Try again",
     "topUpSuccessful": "Top up successful",
