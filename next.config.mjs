@@ -11,11 +11,11 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true
   },
-  modularizeImports: {
-    "lucide-react": {
-      transform: "lucide-react/dist/esm/icons/{{member}}"
-    }
-  },
+  // modularizeImports: {
+  //   "lucide-react": {
+  //     transform: "lucide-react/dist/esm/icons/{{member}}"
+  //   }
+  // },
   experimental: {
     webpackMemoryOptimizations: true,
     // Vercel build containers have ~8GB RAM; a single worker avoids OOM from parallel heaps.
