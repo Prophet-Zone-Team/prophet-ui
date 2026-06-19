@@ -130,13 +130,14 @@ export function TronFundingProvider({ children }: { children: React.ReactNode })
 
       setSelectorOpen(true);
 
-      if (installedWallets.length === 1) {
-        const adapter = installedWallets[0];
-        await adapter.connect();
-        applyConnectedAdapter(adapter);
-        setSelectorOpen(false);
-        return adapter.address ?? undefined;
-      }
+      // // Since some wallets' readyState is asynchronous, we can't simply check for a single wallet and auto-connect.
+      // if (installedWallets.length === 1) {
+      //   const adapter = installedWallets[0];
+      //   await adapter.connect();
+      //   applyConnectedAdapter(adapter);
+      //   setSelectorOpen(false);
+      //   return adapter.address ?? undefined;
+      // }
 
       return undefined;
     } finally {
