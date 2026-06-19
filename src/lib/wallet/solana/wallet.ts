@@ -121,7 +121,7 @@ export default class SolanaFundingWallet {
 
     const signedTransaction = await this.signTransaction(transaction);
     const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-    await connection.confirmTransaction(signature, "confirmed");
+    // await connection.confirmTransaction(signature, "confirmed");
 
     return signature;
   }
