@@ -8,6 +8,19 @@ export const addThousandSeparator = (numberString: string) => {
   return integerPart + decimalPart;
 };
 
+const isZeroValue = (
+  value: string | number | Big.Big | undefined | null
+): boolean => {
+  if (value === undefined || value === null || value === "") {
+    return true;
+  }
+  try {
+    return Big(value).eq(0);
+  } catch {
+    return true;
+  }
+};
+
 export const formatNumber = (
   value: string | number | Big.Big | undefined,
   precision: number,
@@ -38,17 +51,7 @@ export const formatNumber = (
     isLessPrecision = true,
   } = options || {};
 
-  const isValid = () => {
-    try {
-      if (!value) return false;
-      Big(value);
-      return true;
-    } catch (err: any) {
-      return false;
-    }
-  };
-
-  if (!value || !isValid() || Big(value).eq(0)) {
+  if (isZeroValue(value)) {
     if (isSimple) {
       if (isZeroPrecision) {
         return `${prefix}${Big(0).toFixed(precision, round)}`;
@@ -67,7 +70,9 @@ export const formatNumber = (
     };
   }
 
-  if (isLessPrecision && Big(value).lt(Big(10).pow(-precision))) {
+  const bigValue = Big(value as string | number | Big.Big);
+
+  if (isLessPrecision && bigValue.lt(Big(10).pow(-precision))) {
     if (isSimple) {
       return `< ${prefix}${Big(10).pow(-precision).toFixed(precision, round)}`;
     }
@@ -86,7 +91,7 @@ export const formatNumber = (
     };
   }
 
-  const finalValue = addThousandSeparator(Big(value).toFixed(precision, round));
+  const finalValue = addThousandSeparator(bigValue.toFixed(precision, round));
   const firstPart = finalValue.split(".")[0];
   let secondPart = finalValue.split(".")[1] || "";
   if (secondPart) {
@@ -95,7 +100,7 @@ export const formatNumber = (
   if (isSimple) {
     if (isShort) {
       const formatter = (split: number, unit: string): string => {
-        const _num = Big(value)
+        const _num = bigValue
           .div(split)
           .toFixed(precision, 0)
           .replace(/(?:\.0*|(\.\d+?)0+)$/, "$1");
@@ -120,19 +125,19 @@ export const formatNumber = (
       //   return formatter(1e15, 'q');
       // }
       // trillion
-      if (Big(value).gte(1e12)) {
+      if (bigValue.gte(1e12)) {
         return formatter(1e12, isShortUppercase ? "T" : "t");
       }
       // billion
-      if (Big(value).gte(1e9)) {
+      if (bigValue.gte(1e9)) {
         return formatter(1e9, isShortUppercase ? "B" : "b");
       }
       // million
-      if (Big(value).gte(1e6)) {
+      if (bigValue.gte(1e6)) {
         return formatter(1e6, isShortUppercase ? "M" : "m");
       }
       // thousand
-      if (Big(value).gte(1e3)) {
+      if (bigValue.gte(1e3)) {
         return formatter(1e3, isShortUppercase ? "K" : "k");
       }
     }
