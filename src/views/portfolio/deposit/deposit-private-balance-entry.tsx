@@ -77,7 +77,8 @@ export function DepositPrivateBalanceEntry({
     () =>
       formatNumber(privateBalanceUsd ?? 0, 2, true, {
         round: 0,
-        isZeroPrecision: true
+        isZeroPrecision: true,
+        isLessPrecision: false,
       }),
     [privateBalanceUsd]
   );
