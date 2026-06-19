@@ -22,6 +22,7 @@ function PrivateBalance({ onClick, className }: PrivateBalanceProps) {
         prefix: "$",
         round: 0,
         isZeroPrecision: true,
+        isLessPrecision: false,
       });
 
   return (
