@@ -6,7 +6,7 @@ import { useAuth } from "@/context/auth";
 import { useComboRfqWs } from "@/hooks/combo/use-combo-rfq-ws";
 import {
   estimateComboPreview,
-  isQuoteExpired,
+  isQuoteExpired
 } from "@/lib/combo/estimate-preview";
 import { signComboAcceptOrder } from "@/lib/combo/sign-combo-accept";
 import { getRuntimeTranslator } from "@/lib/i18n/runtime-messages";
@@ -15,14 +15,14 @@ import {
   showComboOrderErrorToast,
   showComboOrderProgressToast,
   showComboOrderSubmittedToast,
-  updateComboOrderProgressToast,
+  updateComboOrderProgressToast
 } from "@/lib/trading/order-toast";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
 import type {
   ComboQuoteSnapshot,
   ComboQuoteSource,
   ComboTicketLeg,
-  ComboTicketStatus,
+  ComboTicketStatus
 } from "@/types/combo";
 import { ensureTradingReadyForBid } from "@/views/trade/trade-widget/trade-ticket-helpers";
 import { MIN_COMBO_PICKS } from "@/views/combo/combo-widget/constants";
@@ -53,13 +53,10 @@ export interface UseComboTicketResult {
   submit: () => Promise<void>;
 }
 
-export function useComboTicket(options: UseComboTicketOptions): UseComboTicketResult {
-  const {
-    legs,
-    bidAmount,
-    enabled = true,
-    onSubmitSuccess,
-  } = options;
+export function useComboTicket(
+  options: UseComboTicketOptions
+): UseComboTicketResult {
+  const { legs, bidAmount, enabled = true, onSubmitSuccess } = options;
 
   const auth = useAuth();
   const [status, setStatus] = useState<ComboTicketStatus>("idle");
@@ -67,17 +64,17 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
 
   const preview = useMemo(
     () => estimateComboPreview({ legs, bidAmountUsd: bidAmount }),
-    [bidAmount, legs],
+    [bidAmount, legs]
   );
 
   const balance = useMemo(
     () => resolveTradeTicketAvailableCash(auth.readiness) ?? 0,
-    [auth.readiness],
+    [auth.readiness]
   );
 
   const legPositionIds = useMemo(
     () => legs.map((leg) => leg.legPositionId).filter(Boolean),
-    [legs],
+    [legs]
   );
 
   const canRequestQuote =
@@ -87,15 +84,13 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
     legs.every((leg) => leg.legPositionId.trim().length > 0);
 
   const wsEnabled =
-    canRequestQuote &&
-    auth.isAuthenticated &&
-    auth.setupSteps.clobSigned;
+    canRequestQuote && auth.isAuthenticated && auth.setupSteps.clobSigned;
 
   const rfqWs = useComboRfqWs({
     legPositionIds,
     direction: "BUY",
     size: bidAmount,
-    enabled: wsEnabled,
+    enabled: wsEnabled
   });
 
   const executableQuote = wsEnabled ? rfqWs.quote : undefined;
@@ -105,15 +100,18 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
   const hasLiveQuote = Boolean(executableQuote);
 
   const isQuoteStale = useMemo(
-    () =>
-      executableQuote ? isQuoteExpired(executableQuote.expiresAt) : false,
-    [executableQuote],
+    () => (executableQuote ? isQuoteExpired(executableQuote.expiresAt) : false),
+    [executableQuote]
   );
 
   const quoteSource: ComboQuoteSource = hasLiveQuote ? "rfq" : "estimated";
 
-  const multiplier = hasLiveQuote ? executableQuote!.multiplier : preview.multiplier;
-  const toWinAmount = hasLiveQuote ? executableQuote!.estimatedToWin : preview.toWinAmount;
+  const multiplier = hasLiveQuote
+    ? executableQuote!.multiplier
+    : preview.multiplier;
+  const toWinAmount = hasLiveQuote
+    ? executableQuote!.estimatedToWin
+    : preview.toWinAmount;
 
   const isQuotePending = wsEnabled && quoteLoading && !hasLiveQuote;
 
@@ -128,7 +126,7 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
     legs.some((leg) => leg.referencePrice <= 0) ||
     (auth.setupSteps.clobSigned &&
       wsEnabled &&
-      (!hasLiveQuote || isQuotePending));
+      (!hasLiveQuote || isQuotePending || isQuoteStale));
 
   const submit = useCallback(async () => {
     if (isSubmitDisabled) {
@@ -138,17 +136,25 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
     setSubmitError(undefined);
     setStatus("signing");
 
-    const tCombo = getRuntimeTranslator("combo");
-    const progressToastId = showComboOrderProgressToast(tCombo("signingCombo"));
+    let progressToastId: string | undefined;
 
     try {
-      const latestReadiness =
-        (await auth.refreshSetupReadiness()) ?? auth.readiness;
+      const session = auth.session;
+
+      if (!session?.walletAddress || !session.funderAddress) {
+        throw new Error("Connected wallet and deposit wallet are required.");
+      }
+
+      const quote = wsEnabled ? await rfqWs.ensureQuote() : executableQuote;
+
+      if (!quote) {
+        throw new Error("Executable combo quote is not available yet.");
+      }
 
       const readiness = await ensureTradingReadyForBid({
         session: auth.session,
         authReadiness: auth.readiness,
-        orderReadiness: latestReadiness,
+        orderReadiness: auth.readiness,
         previewCanSubmit: true,
         isBuyRestricted: auth.isBuyRestricted,
         isRegionFullyBlocked: auth.isRegionBlocked,
@@ -156,6 +162,7 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
         signClobCredentials: auth.signClobCredentials,
         signTokenApprovals: auth.signTokenApprovals,
         refreshSetupReadiness: auth.refreshSetupReadiness,
+        skipFundingReadiness: true
       });
 
       if (!readiness.ok) {
@@ -166,24 +173,15 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
         throw new Error(readiness.message);
       }
 
-      const session = auth.session;
-
-      if (!session?.walletAddress || !session.funderAddress) {
-        throw new Error("Connected wallet and deposit wallet are required.");
-      }
-
-      const quote = wsEnabled
-        ? await rfqWs.ensureQuote()
-        : executableQuote;
-
-      if (!quote) {
-        throw new Error("Executable combo quote is not available yet.");
-      }
+      const tCombo = getRuntimeTranslator("combo");
+      progressToastId = String(
+        showComboOrderProgressToast(tCombo("signingCombo"))
+      );
 
       const signed = await signComboAcceptOrder({
         quote,
         walletAddress: session.walletAddress,
-        funderAddress: session.funderAddress,
+        funderAddress: session.funderAddress
       });
 
       updateComboOrderProgressToast(progressToastId, tCombo("submittingCombo"));
@@ -191,7 +189,7 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
 
       const finalResult = await rfqWs.acceptQuote({
         quote,
-        signedOrder: signed.signedOrder,
+        signedOrder: signed.signedOrder
       });
 
       if (finalResult.executionStatus === "FAILED") {
@@ -202,9 +200,9 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
         formatComboBuyToastSummary({
           bidAmountUsd: bidAmount,
           toWinAmount: quote.estimatedToWin,
-          pickCount: legs.length,
+          pickCount: legs.length
         }),
-        progressToastId,
+        progressToastId
       );
 
       setStatus("success");
@@ -213,7 +211,10 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
       const message = error instanceof Error ? error.message : String(error);
       setStatus("error");
       setSubmitError(message);
-      showComboOrderErrorToast(error, progressToastId);
+      showComboOrderErrorToast(
+        error,
+        progressToastId ?? `combo-error-${Date.now()}`
+      );
       rfqWs.resumeQuoting();
     } finally {
       setStatus((current) => (current === "success" ? "success" : "idle"));
@@ -226,7 +227,7 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
     legs.length,
     onSubmitSuccess,
     rfqWs,
-    wsEnabled,
+    wsEnabled
   ]);
 
   useEffect(() => {
@@ -251,6 +252,6 @@ export function useComboTicket(options: UseComboTicketOptions): UseComboTicketRe
     isSubmitDisabled,
     isAuthenticated: auth.isAuthenticated,
     submitError,
-    submit,
+    submit
   };
 }
