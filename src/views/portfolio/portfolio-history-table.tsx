@@ -63,6 +63,16 @@ function StrategySourceLabel() {
   );
 }
 
+function ComboSourceLabel() {
+  const t = useTranslations("portfolio");
+
+  return (
+    <span className="inline-flex h-6 w-[55px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-l from-[#8833F6] to-[#CCA4FF] font-[Sora] text-[10px] font-normal leading-[13px] text-white">
+      {t("combo")}
+    </span>
+  );
+}
+
 function PortfolioHistoryTableHeader() {
   const t = useTranslations("portfolio");
 
@@ -182,6 +192,7 @@ function HistoryRowContent({
     txActionLabels[transaction.type] ?? titleCase(transaction.type);
 
   const showStrategyLabel = transaction.source === "strategy";
+  const showComboLabel = transaction.isCombo === true;
 
   return (
     <>
@@ -191,6 +202,7 @@ function HistoryRowContent({
           {actionLabel}
         </span>
         {showStrategyLabel ? <StrategySourceLabel /> : null}
+        {showComboLabel ? <ComboSourceLabel /> : null}
       </div>
 
       <HistoryMarketCell transaction={transaction} />
@@ -335,6 +347,7 @@ function renderHistoryRow(
     activity: t("txActionActivity")
   };
   const showStrategyLabel = transaction.source === "strategy";
+  const showComboLabel = transaction.isCombo === true;
 
   if (variant === "mobile") {
     return (
@@ -348,6 +361,7 @@ function renderHistoryRow(
             {txActionLabels[transaction.type] ?? titleCase(transaction.type)}
           </span>
           {showStrategyLabel ? <StrategySourceLabel /> : null}
+          {showComboLabel ? <ComboSourceLabel /> : null}
         </div>
         <HistoryMarketCell transaction={transaction} />
         <div className="flex items-center justify-between gap-3">

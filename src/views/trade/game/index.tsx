@@ -37,6 +37,7 @@ import {
   useTradeOutcomeSide
 } from "@/store";
 import Bg from "@/views/trade/game/header/bg";
+import { ComboEntry } from "@/views/combo/combo-entry";
 
 export type TradeGameViewProps = TradeGameHeaderProps & {
   gameSnapshot: GameMarketSnapshot;
@@ -188,6 +189,7 @@ export default function TradeGameView({
               outcomeButtonClassName="w-full"
               outcomeButtonContainerClassName="gap-3"
             />
+            <ComboEntry />
             {relatedGamesTeamsKey.length > 0 ? (
               <RelatedGames {...sidebar.relatedGames} />
             ) : null}

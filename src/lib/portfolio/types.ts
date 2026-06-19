@@ -21,6 +21,7 @@ export interface PortfolioTransactionRecord {
   teamName: string;
   slug: string;
   source: string;
+  isCombo?: boolean;
   createdAt: string;
   tradeCreatedAt: string;
   txHash: string;

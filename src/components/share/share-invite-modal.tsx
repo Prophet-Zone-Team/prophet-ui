@@ -39,6 +39,7 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
   shareImageUploadMode: "cache" | "always";
   shareImageCacheKey?: ShareImageCacheKey;
   modalShellClass?: string;
+  shareTweetText?: string;
 };
 
 export function ShareInviteModal({
@@ -55,6 +56,7 @@ export function ShareInviteModal({
   shareImageUploadMode,
   shareImageCacheKey,
   modalShellClass,
+  shareTweetText,
 }: ShareInviteModalProps) {
   const isMobile = useDevice();
 
@@ -102,6 +104,7 @@ export function ShareInviteModal({
             shareImageUploadMode={shareImageUploadMode}
             shareImageCacheKey={shareImageCacheKey}
             downloadFilename={downloadFilename}
+            shareTweetText={shareTweetText}
           />
         </div>
       </div>

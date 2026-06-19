@@ -19,6 +19,7 @@ export interface PolymarketActivityRow {
   icon?: string;
   eventSlug?: string;
   outcome?: string;
+  isCombo?: boolean;
 }
 
 function isPolymarketActivityRow(value: unknown): value is PolymarketActivityRow {

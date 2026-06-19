@@ -12,6 +12,7 @@ export interface PortfolioContextType {
   removeOpenOrder: (orderId: string) => void;
   removeOpenOrders: (orderIds: string[]) => void;
   removeOpenOrdersByMarket: (marketId: string) => void;
+  removeComboPosition: (comboId: string) => void;
   coreStatus: PortfolioLoadStatus;
 }
 
@@ -24,6 +25,7 @@ const PortfolioContext = createContext<PortfolioContextType>({
   removeOpenOrder: () => { },
   removeOpenOrders: () => { },
   removeOpenOrdersByMarket: () => { },
+  removeComboPosition: () => { },
   coreStatus: "idle",
 });
 

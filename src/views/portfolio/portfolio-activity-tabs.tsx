@@ -10,12 +10,14 @@ import { PORTFOLIO_TABLE_PAGE_SIZE } from "@/lib/portfolio/config";
 import { groupOpenOrdersByMarket } from "@/lib/portfolio/group-open-orders";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import type { OpenOrderMarketContext } from "@/lib/portfolio/teams-condition";
+import type { PortfolioComboPositionCard } from "@/lib/portfolio/combo-positions/types";
 import type {
   PortfolioLoadStatus,
   PortfolioTransactionRecord,
   UserOpenOrder
 } from "@/lib/portfolio/types";
 import type { UserPositionRecord } from "@/types/market";
+import { PortfolioComboPositions } from "@/views/portfolio/portfolio-combo-positions";
 import { PortfolioHistoryTable } from "@/views/portfolio/portfolio-history-table";
 import { PortfolioOpenOrdersTable } from "@/views/portfolio/portfolio-open-orders-table";
 import { PortfolioPositionsTable } from "@/views/portfolio/portfolio-positions-table";
@@ -47,6 +49,7 @@ function isTabLoading(status: PortfolioLoadStatus): boolean {
 export interface PortfolioActivityTabsProps {
   marketContextMap: Record<string, OpenOrderMarketContext>;
   positions: UserPositionRecord[];
+  comboPositions: PortfolioComboPositionCard[];
   openOrders: UserOpenOrder[];
   transactions: PortfolioTransactionRecord[];
   historyHasMore: boolean;
@@ -66,6 +69,7 @@ export interface PortfolioActivityTabsProps {
 export function PortfolioActivityTabs({
   marketContextMap,
   positions,
+  comboPositions,
   openOrders,
   transactions,
   historyHasMore,
@@ -273,6 +277,10 @@ export function PortfolioActivityTabs({
 
       {tab === "position" ? (
         <>
+          <PortfolioComboPositions
+            combos={comboPositions}
+            loading={coreLoading}
+          />
           <PortfolioPositionsTable
             positions={paginatedPositions}
             marketContextMap={marketContextMap}

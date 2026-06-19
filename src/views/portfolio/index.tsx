@@ -21,6 +21,7 @@ export function PortfolioView() {
   const {
     session,
     positions,
+    comboPositions,
     openOrders,
     marketContextMap,
     transactions,
@@ -34,6 +35,7 @@ export function PortfolioView() {
     removeOpenOrder,
     removeOpenOrders,
     removeOpenOrdersByMarket,
+    removeComboPosition,
     loadCore,
     loadOpenOrders,
     loadActivityHistory,
@@ -61,6 +63,7 @@ export function PortfolioView() {
         removeOpenOrder,
         removeOpenOrders,
         removeOpenOrdersByMarket,
+        removeComboPosition,
         coreStatus
       }}
     >
@@ -71,6 +74,7 @@ export function PortfolioView() {
           <PortfolioActivityTabs
             marketContextMap={marketContextMap}
             positions={positions}
+            comboPositions={comboPositions}
             openOrders={openOrders}
             transactions={transactions}
             historyHasMore={historyHasMore}
