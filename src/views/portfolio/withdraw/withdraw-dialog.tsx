@@ -9,8 +9,15 @@ import Big from "big.js";
 
 import type { FundingAsset } from "@/config/funding";
 import { POLYMARKET_USD } from "@/config/funding";
-import { getEvmFundingNetworks } from "@/config/funding/networks";
 import { useBridgeQuote, useSupportedAssets, useWithdraw } from "@/hooks/funding";
+import {
+  getBridgeRecipientPlaceholder,
+  getRecipientPlaceholder,
+  isValidBridgeRecipientAddress,
+  isValidStableflowRecipientAddress,
+} from "@/lib/funding/recipient-validation";
+import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
+import { useAuthStore } from "@/store";
 import {
   buildWithdrawQuoteRequest,
   formatQuoteTokenAmount,
@@ -65,7 +72,6 @@ import { TokenIcon, WalletAvatarIcon } from "@/views/portfolio/shared/token-icon
 import { formatNumber, removeNumberEndZero } from "@/utils";
 import { usePortfolioContext } from "../context";
 
-const EVM_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const INITIAL_STEP: WithdrawStep = "entry";
 
 export interface WithdrawDialogProps {
@@ -78,6 +84,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   const tWithdraw = useTranslations("portfolio.withdraw");
   const tCommon = useTranslations("common");
   const { session, portfolio, reload } = usePortfolioContext();
+  const loginMethod = useAuthStore((state) => state.loginMethod);
   const { supportedAssets, loading: assetsLoading } = useSupportedAssets({ enabled: open });
   const {
     status,
@@ -87,7 +94,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     executeBridgeWithdraw,
     executeStableflowWithdraw,
     fetchStableflowWithdrawQuote,
-    stopStatusPoll,
+    resetWithdrawFlow,
   } = useWithdraw();
 
   const [step, setStep] = useState<WithdrawStep>(INITIAL_STEP);
@@ -96,6 +103,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   const [selectedChain, setSelectedChain] = useState<SupportedChainOption | undefined>();
   const [selectedToken, setSelectedToken] = useState<WithdrawSelectableToken | undefined>();
   const [recipientInput, setRecipientInput] = useState("");
+  const [recipientValidationActive, setRecipientValidationActive] = useState(false);
   const [stableflowTokens, setStableflowTokens] = useState<StableflowWithdrawToken[]>([]);
   const [stableflowTokensLoading, setStableflowTokensLoading] = useState(false);
   const [stableflowQuote, setStableflowQuote] = useState<QuoteResponse | undefined>();
@@ -113,13 +121,8 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   );
 
   const stableflowChainOptions = useMemo(
-    () =>
-      getEvmFundingNetworks().map((network) => ({
-        chainId: network.chainId,
-        chainName: network.chainName,
-        chainIcon: network.chainIcon,
-      })),
-    [],
+    () => getUniqueChainsFromAssets(stableflowTokens),
+    [stableflowTokens],
   );
 
   const chainOptions = isBridge ? bridgeChainOptions : stableflowChainOptions;
@@ -143,10 +146,19 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
       return;
     }
 
-    if (session?.walletAddress && !recipientInput) {
+    if (loginMethod === "near") {
+      const nearAccountId = getNearAccountSnapshot().accountId;
+
+      if (nearAccountId) {
+        setRecipientInput(nearAccountId);
+        return;
+      }
+    }
+
+    if (session?.walletAddress) {
       setRecipientInput(session.walletAddress);
     }
-  }, [open, session?.walletAddress]);
+  }, [loginMethod, open, session?.walletAddress]);
 
   useEffect(() => {
     if (!open || chainOptions.length === 0) {
@@ -217,11 +229,28 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
       ? tWithdraw("amountBelowMinimum", { amount: `${effectiveMinUsd}` })
       : tWithdraw(validationErrorKey)
     : undefined;
+  const destinationBlockchain =
+    selectedToken && "assetId" in selectedToken
+      ? selectedToken.blockchain
+      : "pol";
+  const bridgeDestinationChainId =
+    isBridge && selectedChain ? String(selectedChain.chainId) : undefined;
+  const recipientChainLabel = bridgeDestinationChainId
+    ? (selectedChain?.chainName ?? "EVM")
+    : destinationBlockchain;
+  const recipientIsValid =
+    recipientInput.trim().length > 0 &&
+    (bridgeDestinationChainId
+      ? isValidBridgeRecipientAddress(bridgeDestinationChainId, recipientInput.trim())
+      : isValidStableflowRecipientAddress(destinationBlockchain, recipientInput.trim()));
   const recipientError =
-    recipientInput.trim() && !EVM_ADDRESS_PATTERN.test(recipientInput.trim())
-      ? tWithdraw("invalidRecipient")
+    (recipientValidationActive || recipientInput.trim()) && !recipientIsValid
+      ? tWithdraw("invalidRecipient", { chainType: recipientChainLabel })
       : undefined;
-  const formError = validationError ?? recipientError;
+  const formError = validationError;
+  const recipientPlaceholder = bridgeDestinationChainId
+    ? getBridgeRecipientPlaceholder(bridgeDestinationChainId)
+    : getRecipientPlaceholder(destinationBlockchain);
 
   const quoteEnabled =
     open &&
@@ -231,7 +260,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     amount !== undefined &&
     amount > 0 &&
     formError === undefined &&
-    EVM_ADDRESS_PATTERN.test(recipientInput.trim());
+    recipientIsValid;
 
   const bridgeQuoteRequest = useMemo(
     () =>
@@ -344,15 +373,25 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     status === "syncing" ||
     (step === "status" && operationPhase !== "idle" && operationPhase !== "error" && operationPhase !== "success");
 
-  const canSubmit =
-    !assetsLoadingForMethod &&
-    !!session?.walletAddress &&
-    !!selectedToken &&
-    !!recipientInput.trim() &&
-    formError === undefined &&
-    quoteError === undefined &&
-    amount !== undefined &&
-    !isBusy;
+  const canSubmit = useMemo(() => {
+    return !assetsLoadingForMethod &&
+      !!session?.walletAddress &&
+      !!selectedToken &&
+      amount !== undefined &&
+      amount > 0 &&
+      validationError === undefined &&
+      quoteError === undefined &&
+      !isBusy;
+  }, [
+    assetsLoadingForMethod,
+    session?.walletAddress,
+    selectedToken,
+    amount,
+    validationError,
+    quoteError,
+    isBusy,
+  ]);
+
 
   const resetForm = useCallback(() => {
     setStep(INITIAL_STEP);
@@ -361,13 +400,14 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     setSelectedChain(undefined);
     setSelectedToken(undefined);
     setRecipientInput("");
+    setRecipientValidationActive(false);
     setStableflowQuote(undefined);
     setStableflowQuoteError(undefined);
     setChainDropdownOpen(false);
     setTokenDropdownOpen(false);
     setSubmitting(false);
-    stopStatusPoll();
-  }, [stopStatusPoll]);
+    resetWithdrawFlow();
+  }, [resetWithdrawFlow]);
 
   const handleClose = useCallback(() => {
     resetForm();
@@ -404,17 +444,20 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
       setSelectedChain(undefined);
       setSelectedToken(undefined);
       setStableflowQuote(undefined);
+      setRecipientValidationActive(false);
+      resetWithdrawFlow();
       return;
     }
 
     if (step === "status") {
       setStep("form");
-      stopStatusPoll();
+      resetWithdrawFlow();
     }
-  }, [step, stopStatusPoll]);
+  }, [resetWithdrawFlow, step]);
 
   const handleChainSelect = useCallback((chain: SupportedChainOption) => {
     setSelectedChain(chain);
+    setRecipientValidationActive(true);
     setChainDropdownOpen(false);
     setTokenDropdownOpen(false);
   }, []);
@@ -433,6 +476,12 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
   }, [portfolio?.availableToTrade]);
 
   const handleWithdraw = useCallback(async () => {
+    setRecipientValidationActive(true);
+
+    if (!recipientIsValid) {
+      return;
+    }
+
     if (!canSubmit || !session?.walletAddress || !selectedToken || amount === undefined) {
       return;
     }
@@ -486,6 +535,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
     handleClose,
     isBridge,
     recipientInput,
+    recipientIsValid,
     reload,
     selectedToken,
     session,
@@ -571,7 +621,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                   value={recipientInput}
                   onChange={(event) => setRecipientInput(event.target.value)}
                   className={withdrawAmountInputClass}
-                  placeholder="0x…"
+                  placeholder={recipientPlaceholder}
                   aria-label={tWithdraw("recipientAddressAria")}
                   spellCheck={false}
                 />

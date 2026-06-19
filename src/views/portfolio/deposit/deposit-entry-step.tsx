@@ -39,7 +39,7 @@ export function DepositEntryStep({
   const t = useTranslations("portfolio");
   const {
     session,
-    openLogin,
+    openLoginModalOnly,
     loginInProgress,
     isBuyRestricted,
     privateBalance,
@@ -70,7 +70,7 @@ export function DepositEntryStep({
         <button
           type="button"
           className="bg-black text-white flex justify-center items-center w-60 h-10 text-base rounded-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() => void openLogin()}
+          onClick={() => void openLoginModalOnly()}
           disabled={loginInProgress}
         >
           {loginInProgress ? t("connecting") : t("connectWallet")}
@@ -101,6 +101,7 @@ export function DepositEntryStep({
               formatNumber(connectedWalletBalanceUsd, 2, true, {
                 round: 0,
                 isZeroPrecision: true,
+                isLessPrecision: false,
               })
             )
           }

@@ -56,6 +56,10 @@ export async function getEvmWalletClient(
 ): Promise<WalletClient> {
   const source = resolveEvmSignerSource(walletAddress);
 
+  if (source.kind === "external") {
+    return source.signer.getWalletClient(options?.chainId);
+  }
+
   if (source.kind === "privy") {
     await prepareWalletSigning({
       chainId: options?.chainId,
@@ -97,6 +101,10 @@ export async function signEvmMessage(
 ): Promise<`0x${string}`> {
   const source = resolveEvmSignerSource(walletAddress);
 
+  if (source.kind === "external") {
+    return source.signer.signMessage(message);
+  }
+
   if (source.kind === "privy") {
     await prepareWalletSigning({ skipConnectorPrewarm: true });
 
@@ -127,6 +135,10 @@ export async function signEvmTypedDataPayload(
   options?: EvmWalletClientOptions,
 ): Promise<string> {
   const source = resolveEvmSignerSource(walletAddress);
+
+  if (source.kind === "external") {
+    return source.signer.signTypedData(payload);
+  }
 
   if (source.kind === "privy") {
     await prepareWalletSigning({

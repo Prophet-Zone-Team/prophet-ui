@@ -2,13 +2,19 @@ import { QuoteRequest, type QuoteResponse, type TokenResponse } from "@stableflo
 import Big from "big.js";
 
 import { FUNDING_NETWORKS, FundingNetworkType, type FundingNetwork } from "@/config/funding/networks";
-import type { FundingAsset } from "@/config/funding/tokens";
+import type { FundingAsset, FundingToken } from "@/config/funding/tokens";
+import type { AuthLoginMethod } from "@/store/auth-store";
+import {
+  getFundingWalletAddress,
+  type FundingWalletChainType,
+} from "@/store/use-funding-wallet-store";
 import {
   getTokensForChain,
   getUniqueChainsFromAssets,
   type SupportedChainOption,
 } from "@/lib/funding/supported-assets";
 import { getTokenLogo } from "@/utils/logo";
+import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
 
 export const POLYGON_USDC_NATIVE = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359";
 
@@ -28,6 +34,9 @@ export const STABLEFLOW_BLOCKCHAIN_TO_CHAIN_ID: Record<string, number> = {
   plasma: FUNDING_NETWORKS.plasma.chainId,
   scroll: FUNDING_NETWORKS.scroll.chainId,
   xlayer: FUNDING_NETWORKS.xlayer.chainId,
+  near: FUNDING_NETWORKS.near.chainId,
+  sol: FUNDING_NETWORKS.solana.chainId,
+  tron: FUNDING_NETWORKS.tron.chainId,
 };
 
 export interface StableflowDepositToken extends FundingAsset {
@@ -66,25 +75,184 @@ export function getFundingNetworkForStableflowBlockchain(blockchain: string): Fu
   return Object.values(FUNDING_NETWORKS).find((network) => network.chainId === chainId);
 }
 
+const NATIVE_FUNDING_BLOCKCHAINS = new Set(["near", "sol", "tron"]);
+
 export function filterStableflowTokensForFundingNetworks(tokens: TokenResponse[]): TokenResponse[] {
   return tokens.filter((token) => {
-    if (!token.contractAddress) {
+    const network = getFundingNetworkForStableflowBlockchain(token.blockchain);
+
+    if (!network) {
       return false;
     }
 
-    const network = getFundingNetworkForStableflowBlockchain(token.blockchain);
+    if (/DEPRECATED/i.test(token.symbol)) {
+      return false;
+    }
 
-    return Boolean(network && network.chainType === FundingNetworkType.EVM);
+    if (network.chainType === FundingNetworkType.EVM) {
+      return Boolean(token.contractAddress);
+    }
+
+    if (NATIVE_FUNDING_BLOCKCHAINS.has(token.blockchain)) {
+      return true;
+    }
+
+    return false;
   });
+}
+
+export function resolveStableflowTokenAddress(token: TokenResponse): string {
+  return token.contractAddress?.trim() || token.assetId;
+}
+
+export function isNearOriginStableflowToken(
+  token: Pick<StableflowDepositToken, "blockchain">,
+): boolean {
+  return token.blockchain === "near";
+}
+
+export function isSocialAuthLoginMethod(
+  loginMethod: AuthLoginMethod | null | undefined,
+): boolean {
+  return loginMethod === "email" || loginMethod === "google";
+}
+
+export function filterStableflowTokensForDeposit(
+  tokens: StableflowDepositToken[],
+  loginMethod: AuthLoginMethod | null | undefined,
+): StableflowDepositToken[] {
+  if (!isSocialAuthLoginMethod(loginMethod)) {
+    return tokens;
+  }
+
+  return tokens.filter(
+    (token) => token.chainType === FundingNetworkType.EVM,
+  );
+}
+
+export function shouldDepositViaStableflowQr(
+  loginMethod: AuthLoginMethod | null | undefined,
+  token: Pick<StableflowDepositToken, "blockchain" | "chainType">,
+): boolean {
+  if (loginMethod === "email" || loginMethod === "google") {
+    return true;
+  }
+
+  if (loginMethod === "near") {
+    return !isNearOriginStableflowToken(token);
+  }
+
+  if (
+    token.chainType === FundingNetworkType.SVM ||
+    token.chainType === FundingNetworkType.TVM ||
+    token.chainType === FundingNetworkType.NEAR
+  ) {
+    return false;
+  }
+
+  if (loginMethod === "wallet") {
+    return token.chainType !== FundingNetworkType.EVM;
+  }
+
+  return false;
+}
+
+export function getFundingWalletChainType(
+  chainType: FundingNetworkType,
+): FundingWalletChainType | undefined {
+  switch (chainType) {
+    case FundingNetworkType.SVM:
+      return "solana";
+    case FundingNetworkType.TVM:
+      return "tron";
+    case FundingNetworkType.EVM:
+      return "evm";
+    case FundingNetworkType.NEAR:
+      return "near";
+    default:
+      return undefined;
+  }
+}
+
+export function requiresFundingWalletConnection(
+  token: Pick<FundingToken, "chainType">,
+): boolean {
+  return (
+    token.chainType === FundingNetworkType.SVM ||
+    token.chainType === FundingNetworkType.TVM ||
+    token.chainType === FundingNetworkType.NEAR
+  );
+}
+
+export function requiresDepositFundingWalletConnection(
+  token: Pick<FundingToken, "chainType"> & { blockchain?: string },
+  loginMethod: AuthLoginMethod | null | undefined,
+): boolean {
+  if (
+    loginMethod === "near" &&
+    token.blockchain &&
+    isNearOriginStableflowToken({ blockchain: token.blockchain })
+  ) {
+    return false;
+  }
+
+  return requiresFundingWalletConnection(token);
+}
+
+export function resolveFundingWalletAddress(
+  token: Pick<FundingToken, "chainType">,
+): string | undefined {
+  const chainType = getFundingWalletChainType(token.chainType);
+
+  if (!chainType) {
+    return undefined;
+  }
+
+  return getFundingWalletAddress(chainType);
+}
+
+export function isFundingWalletConnected(
+  token: Pick<FundingToken, "chainType">,
+): boolean {
+  if (!requiresFundingWalletConnection(token)) {
+    return true;
+  }
+
+  return Boolean(resolveFundingWalletAddress(token));
+}
+
+export function getStableflowRefundAddress(params: {
+  blockchain: string;
+  walletAddress?: string;
+  nearAccountId?: string | null;
+  solanaAddress?: string | null;
+  tronAddress?: string | null;
+}): string | undefined {
+  const { blockchain, walletAddress, nearAccountId, solanaAddress, tronAddress } = params;
+
+  if (blockchain === "near") {
+    return nearAccountId ?? getNearAccountSnapshot().accountId ?? undefined;
+  }
+
+  if (blockchain === "sol") {
+    return solanaAddress ?? getFundingWalletAddress("solana");
+  }
+
+  if (blockchain === "tron") {
+    return tronAddress ?? getFundingWalletAddress("tron");
+  }
+
+  return walletAddress;
 }
 
 export function mapStableflowTokenToDepositToken(token: TokenResponse): StableflowDepositToken | undefined {
   const network = getFundingNetworkForStableflowBlockchain(token.blockchain);
 
-  if (!network || !token.contractAddress) {
+  if (!network) {
     return undefined;
   }
 
+  const address = resolveStableflowTokenAddress(token);
   const icon = getTokenLogo(token.symbol);
 
   return {
@@ -93,7 +261,7 @@ export function mapStableflowTokenToDepositToken(token: TokenResponse): Stablefl
     blockchain: token.blockchain,
     symbol: token.symbol,
     name: token.symbol,
-    address: token.contractAddress,
+    address,
     decimals: token.decimals,
     icon,
     minCheckoutUsd: 0,

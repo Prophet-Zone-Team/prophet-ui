@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Loader2, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
@@ -16,22 +16,30 @@ import {
   privateTopupChangeLinkClass,
   privateTopupFundingWalletRowClass,
   privateTopupSectionLabelClass,
+  privateTopupTokenSearchClearClass,
+  privateTopupTokenSearchEmptyClass,
+  privateTopupTokenSearchInputClass,
+  privateTopupTokenSearchWrapClass,
 } from "@/views/portfolio/private-topup/private-topup-ui";
 import { usePrivateTopupContext } from "@/views/portfolio/private-topup/context";
 import type { PrivateTopupSelectableToken } from "@/views/portfolio/private-topup/types";
+import { matchesPrivateTopupTokenSearch } from "@/views/portfolio/private-topup/utils";
 
 export interface PrivateTopupTokenStepProps {
   selectedToken?: PrivateTopupSelectableToken;
   onSelectToken: (token: PrivateTopupSelectableToken) => void;
   onChangeWallet: () => void;
+  showChangeWallet?: boolean;
 }
 
 export function PrivateTopupTokenStep({
   selectedToken,
   onSelectToken,
   onChangeWallet,
+  showChangeWallet = true,
 }: PrivateTopupTokenStepProps) {
   const t = useTranslations("privateTopup");
+  const [searchQuery, setSearchQuery] = useState("");
   const {
     selectableTokens,
     topupWalletAddress,
@@ -58,20 +66,29 @@ export function PrivateTopupTokenStep({
       .sort((a, b) => b.usdValue - a.usdValue);
   }, [getTokenBalance, getTokenUsdValue, selectableTokens]);
 
+  const filteredTokens = useMemo(() => {
+    return sortedTokens.filter((token) =>
+      matchesPrivateTopupTokenSearch(token, searchQuery),
+    );
+  }, [searchQuery, sortedTokens]);
+
   const loading = balancesLoading || pricesLoading;
+  const hasSearchQuery = searchQuery.trim().length > 0;
 
   return (
     <div className="flex flex-col gap-5 pb-2">
       <div>
         <div className="mb-2 flex items-center justify-between">
           <span className={privateTopupSectionLabelClass}>{t("fundingWallet")}</span>
-          <button
-            type="button"
-            className={privateTopupChangeLinkClass}
-            onClick={onChangeWallet}
-          >
-            {t("change")}
-          </button>
+          {showChangeWallet ? (
+            <button
+              type="button"
+              className={privateTopupChangeLinkClass}
+              onClick={onChangeWallet}
+            >
+              {t("change")}
+            </button>
+          ) : null}
         </div>
         <div className={privateTopupFundingWalletRowClass}>
           <span className="flex min-w-0 items-center gap-2">
@@ -100,8 +117,37 @@ export function PrivateTopupTokenStep({
         <p className={`m-0 mb-2 ${privateTopupSectionLabelClass}`}>
           {t("selectAsset")}
         </p>
+
+        <div className={privateTopupTokenSearchWrapClass}>
+          <Search className="size-[14px] shrink-0 text-black" aria-hidden="true" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder={t("searchAssetsPlaceholder")}
+            aria-label={t("searchAssetsAria")}
+            className={privateTopupTokenSearchInputClass}
+          />
+          {hasSearchQuery ? (
+            <button
+              type="button"
+              className={privateTopupTokenSearchClearClass}
+              aria-label={t("clearSearch")}
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="size-2.5" strokeWidth={2.5} aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
+
         <div className="flex max-h-[340px] flex-col gap-0.5 overflow-y-auto">
-          {sortedTokens.map((token) => {
+          {filteredTokens.length === 0 && hasSearchQuery ? (
+            <div className={privateTopupTokenSearchEmptyClass}>
+              <p className="m-0">{t("noSearchResults")}</p>
+            </div>
+          ) : null}
+
+          {filteredTokens.map((token) => {
             const isSelected =
               selectedToken?.chainId === token.chainId &&
               selectedToken?.address === token.address;

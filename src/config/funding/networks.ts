@@ -6,6 +6,8 @@ export enum FundingNetworkType {
   EVM = "evm",
   SVM = "svm",
   BTC = "btc",
+  NEAR = "near",
+  TVM = "tvm",
 }
 
 export interface FundingNetwork {
@@ -137,6 +139,30 @@ export const FUNDING_NETWORKS: Record<string, FundingNetwork> = {
     chainType: FundingNetworkType.EVM,
     defaultRpcUrl: "https://xlayerrpc.okx.com",
     rpcUrls: ["https://rpcs.stableflow.ai/rpc/xlayer", "https://xlayerrpc.okx.com"],
+  },
+  near: {
+    chainId: 999_999_999,
+    chainName: "Near",
+    chainIcon: getStableflowChainLogo("near"),
+    chainType: FundingNetworkType.NEAR,
+    defaultRpcUrl: "https://nearinner.deltarpc.com",
+    rpcUrls: ["https://nearinner.deltarpc.com", "https://rpc.mainnet.near.org"],
+  },
+  tron: {
+    chainId: 728126428,
+    chainName: "Tron",
+    chainIcon: getStableflowChainLogo("tron"),
+    chainType: FundingNetworkType.TVM,
+    defaultRpcUrl: "https://tron-rpc.publicnode.com",
+    rpcUrls: ["https://rpcs.stableflow.ai/rpc/tron", "https://tron-rpc.publicnode.com"],
+  },
+  solana: {
+    chainId: 1151111081099710,
+    chainName: "Solana",
+    chainIcon: getStableflowChainLogo("solana"),
+    chainType: FundingNetworkType.SVM,
+    defaultRpcUrl: "https://solana-rpc.publicnode.com",
+    rpcUrls: ["https://rpcs.stableflow.ai/rpc/solana", "https://solana-rpc.publicnode.com"],
   },
 };
 

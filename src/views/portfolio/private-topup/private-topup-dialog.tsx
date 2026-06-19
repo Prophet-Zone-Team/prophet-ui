@@ -2,11 +2,15 @@
 
 import type { OneClickStatus, QuoteResponse } from "@stableflow/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Big from "big.js";
+import { useShallow } from "zustand/react/shallow";
 import { CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { shouldHideFundingWalletChange } from "@/context/rainbowkit/utils";
+import { isTpFundingSwitchPendingError } from "@/lib/wallet/tokenpocket/tp-funding-switch";
+import { FundingNetworkType } from "@/config/funding/networks";
+import { resolvePrivateTopupError } from "@/lib/funding/private-topup-error-message";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
 import { fetchEvmTokenBalances } from "@/lib/funding/evm-balances";
 import {
@@ -15,6 +19,9 @@ import {
 } from "@/lib/funding/stableflow";
 import { getConfidentialTokens } from "@/lib/confidential/client";
 import { useConfidentialTopup } from "@/hooks/confidential/use-confidential-topup";
+import { useFundingWalletConnect } from "@/hooks/funding/use-funding-wallet-connect";
+import { useSolBalances, useTronBalances } from "@/hooks/funding";
+import { useNearBalances } from "@/hooks/funding/use-near-balances";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { useBalancesStore } from "@/store/use-balances";
 import { PRIVATE_TOPUP_MODAL_WIDTH } from "@/views/portfolio/private-topup/config";
@@ -33,15 +40,20 @@ import type {
   PrivateTopupStep,
 } from "@/views/portfolio/private-topup/types";
 import {
-  applyTokenBalancePercent,
-  computeUsdFromTokenAmount,
+  formatPrivateTopupConnectLabel,
+  isPrivateTopupTransferWalletConnected,
+  resolvePrivateTopupTransferAddress,
 } from "@/views/portfolio/private-topup/utils";
 import {
   FundingModalShell,
   fundingPrimaryButtonClass,
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
-import { usePricesStore } from "@/store";
+import type { FundingWalletChainType } from "@/store/use-funding-wallet-store";
+import {
+  getFundingWalletAddress,
+  useFundingWalletStore,
+} from "@/store/use-funding-wallet-store";
 
 const INITIAL_STEP: PrivateTopupStep = "tokens";
 
@@ -51,10 +63,11 @@ const INITIAL_AMOUNT: PrivateTopupAmountState = {
 };
 
 type TopupStatusPhase = "bridging" | "success" | "error";
+type TopupStatusErrorKind = "generic" | "solana_confirmation_timeout";
 
 export interface PrivateTopupDialogProps {
   open: boolean;
-  topupWalletAddress: string;
+  topupWalletChainType?: FundingWalletChainType;
   privateAccountAddress: string;
   privateAccountEoaAddress?: string;
   onClose: () => void;
@@ -63,7 +76,7 @@ export interface PrivateTopupDialogProps {
 
 export function PrivateTopupDialog({
   open,
-  topupWalletAddress,
+  topupWalletChainType = "evm",
   privateAccountAddress,
   privateAccountEoaAddress,
   onClose,
@@ -72,8 +85,43 @@ export function PrivateTopupDialog({
   const t = useTranslations("privateTopup");
   const tDeposit = useTranslations("portfolio.deposit");
   const tAuth = useTranslations("auth");
+  const tWallet = useTranslations("wallet");
   const { requestQuote, executeTopup, pollTopupStatus, stopStatusPoll } =
     useConfidentialTopup();
+  const { connectForToken } = useFundingWalletConnect();
+
+  const handleFundingWalletConnect = useCallback(
+    async (token: PrivateTopupSelectableToken) => {
+      try {
+        await connectForToken(token);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (isTpFundingSwitchPendingError(error)) {
+          toast.message(message);
+          return;
+        }
+        toast.error(message);
+      }
+    },
+    [connectForToken],
+  );
+
+  const evmFundingAddress = useFundingWalletStore((state) =>
+    state.evm.connected ? state.evm.address : undefined,
+  );
+
+  const fundingWalletSnapshot = useFundingWalletStore(
+    useShallow((state) => ({
+      evm: state.evm.connected ? state.evm.address : undefined,
+      solana: state.solana.connected ? state.solana.address : undefined,
+      tron: state.tron.connected ? state.tron.address : undefined,
+      near: state.near.connected ? state.near.address : undefined,
+    })),
+  );
+
+  const topupWalletAddress = useMemo(() => {
+    return getFundingWalletAddress(topupWalletChainType);
+  }, [topupWalletChainType, fundingWalletSnapshot]);
 
   const [step, setStep] = useState<PrivateTopupStep>(INITIAL_STEP);
   const [selectedToken, setSelectedToken] = useState<
@@ -90,8 +138,9 @@ export function PrivateTopupDialog({
   const [statusPhase, setStatusPhase] = useState<TopupStatusPhase>("bridging");
   const [bridgeStatusLabel, setBridgeStatusLabel] = useState<string | undefined>();
   const [statusError, setStatusError] = useState<string | undefined>();
+  const [statusErrorKind, setStatusErrorKind] =
+    useState<TopupStatusErrorKind>("generic");
 
-  const prices = usePricesStore((state) => state.prices);
   const evmBalances = useBalancesStore((state) => state.evmBalances);
   const mergeEvmBalances = useBalancesStore((state) => state.mergeEvmBalances);
 
@@ -100,15 +149,76 @@ export function PrivateTopupDialog({
     [stableflowTokens],
   );
 
-  const balancesLoading = stableflowTokensLoading;
+  const {
+    loading: solBalancesLoading,
+    getTokenBalance: getSolTokenBalance,
+  } = useSolBalances({
+    enabled: open,
+    tokens: stableflowFundingTokens,
+  });
+
+  const {
+    loading: tronBalancesLoading,
+    getTokenBalance: getTronTokenBalance,
+  } = useTronBalances({
+    enabled: open,
+    tokens: stableflowFundingTokens,
+  });
+
+  const {
+    loading: nearBalancesLoading,
+    getTokenBalance: getNearTokenBalance,
+  } = useNearBalances({
+    enabled: open,
+    tokens: stableflowTokens,
+  });
+
+  const balancesLoading =
+    stableflowTokensLoading ||
+    solBalancesLoading ||
+    tronBalancesLoading ||
+    nearBalancesLoading;
+
+  const resolveTokenBalance = useCallback(
+    (token: PrivateTopupSelectableToken) => {
+      if (token.blockchain === "near") {
+        return getNearTokenBalance(token);
+      }
+
+      if (token.chainType === FundingNetworkType.SVM) {
+        return getSolTokenBalance(token);
+      }
+
+      if (token.chainType === FundingNetworkType.TVM) {
+        return getTronTokenBalance(token);
+      }
+
+      return selectFundingTokenBalanceString(evmBalances, token);
+    },
+    [evmBalances, getNearTokenBalance, getSolTokenBalance, getTronTokenBalance],
+  );
 
   const selectedTokenMaxAmount = useMemo(() => {
     if (!selectedToken) {
       return "0";
     }
 
-    return selectFundingTokenBalanceString(evmBalances, selectedToken);
-  }, [evmBalances, selectedToken]);
+    return resolveTokenBalance(selectedToken);
+  }, [resolveTokenBalance, selectedToken]);
+
+  const resolveFundingAddressForToken = useCallback(
+    (token: PrivateTopupSelectableToken) =>
+      resolvePrivateTopupTransferAddress(token, topupWalletChainType),
+    [topupWalletChainType],
+  );
+
+  const selectedTokenTransferAddress = useMemo(() => {
+    if (!selectedToken) {
+      return undefined;
+    }
+
+    return resolveFundingAddressForToken(selectedToken);
+  }, [resolveFundingAddressForToken, selectedToken, fundingWalletSnapshot]);
 
   const reset = useCallback(() => {
     setStep(INITIAL_STEP);
@@ -119,6 +229,7 @@ export function PrivateTopupDialog({
     setStatusPhase("bridging");
     setBridgeStatusLabel(undefined);
     setStatusError(undefined);
+    setStatusErrorKind("generic");
     stopStatusPoll();
   }, [stopStatusPoll]);
 
@@ -156,7 +267,7 @@ export function PrivateTopupDialog({
   }, [loadTokens, open, stableflowTokens.length]);
 
   useEffect(() => {
-    if (!open || stableflowFundingTokens.length === 0) {
+    if (!open || stableflowFundingTokens.length === 0 || !evmFundingAddress) {
       return;
     }
 
@@ -164,7 +275,10 @@ export function PrivateTopupDialog({
 
     void (async () => {
       try {
-        const byChain = await fetchEvmTokenBalances(topupWalletAddress, stableflowFundingTokens);
+        const byChain = await fetchEvmTokenBalances(
+          evmFundingAddress,
+          stableflowFundingTokens,
+        );
 
         if (active) {
           mergeEvmBalances(byChain);
@@ -177,7 +291,7 @@ export function PrivateTopupDialog({
     return () => {
       active = false;
     };
-  }, [mergeEvmBalances, open, stableflowFundingTokens, topupWalletAddress]);
+  }, [evmFundingAddress, mergeEvmBalances, open, stableflowFundingTokens]);
 
   const ariaLabel = useMemo(() => {
     switch (step) {
@@ -219,16 +333,7 @@ export function PrivateTopupDialog({
       return;
     }
 
-    const max = selectedTokenMaxAmount;
-
-    if (Big(max || 0).gt(0)) {
-      const tokenAmount = applyTokenBalancePercent(max, 100, selectedToken.decimals);
-      const amountUsd = computeUsdFromTokenAmount(tokenAmount, prices, selectedToken);
-      setAmount({ tokenAmount, amountUsd });
-    } else {
-      setAmount(INITIAL_AMOUNT);
-    }
-
+    setAmount(INITIAL_AMOUNT);
     setStep("amount");
   };
 
@@ -237,14 +342,27 @@ export function PrivateTopupDialog({
       return;
     }
 
+    if (
+      !isPrivateTopupAmountStepValid(amount.tokenAmount, selectedTokenMaxAmount)
+    ) {
+      return;
+    }
+
     setContinueLoading(true);
     setEoaConfirmed(false);
 
     try {
+      const fundingAddress = resolveFundingAddressForToken(selectedToken);
+
+      if (!fundingAddress) {
+        toast.error(formatPrivateTopupConnectLabel(tWallet, selectedToken));
+        return;
+      }
+
       const nextQuote = await requestQuote({
         token: selectedToken,
         tokenAmount: amount.tokenAmount,
-        fundingAddress: topupWalletAddress,
+        fundingAddress,
         destinationAssetId: polygonUsdcDestinationAssetId,
       });
       setQuote(nextQuote);
@@ -267,8 +385,15 @@ export function PrivateTopupDialog({
         toast.success(t("topUpSuccessful"));
         await onSuccess?.();
       } catch (error) {
+        const { message, isSolanaConfirmationTimeout } =
+          resolvePrivateTopupError(error);
         setStatusPhase("error");
-        setStatusError(error instanceof Error ? error.message : String(error));
+        setStatusError(message);
+        setStatusErrorKind(
+          isSolanaConfirmationTimeout
+            ? "solana_confirmation_timeout"
+            : "generic",
+        );
       }
     },
     [onSuccess, pollTopupStatus, t, tDeposit],
@@ -282,21 +407,33 @@ export function PrivateTopupDialog({
 
     setContinueLoading(true);
     setStatusError(undefined);
+    setStatusErrorKind("generic");
     setStep("status");
     setStatusPhase("bridging");
 
     try {
+      const fundingAddress = resolveFundingAddressForToken(selectedToken);
+
+      if (!fundingAddress) {
+        toast.error(t("notReady"));
+        return;
+      }
+
       const execution = await executeTopup({
         token: selectedToken,
         tokenAmount: amount.tokenAmount,
-        fundingAddress: topupWalletAddress,
+        fundingAddress,
         quote,
       });
       void runStatusPolling(execution.depositAddress, execution.depositMemo);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const { message, isSolanaConfirmationTimeout } =
+        resolvePrivateTopupError(error);
       setStatusPhase("error");
       setStatusError(message);
+      setStatusErrorKind(
+        isSolanaConfirmationTimeout ? "solana_confirmation_timeout" : "generic",
+      );
       toast.error(message);
     } finally {
       setContinueLoading(false);
@@ -322,6 +459,25 @@ export function PrivateTopupDialog({
     }
 
     if (step === "amount" && selectedToken) {
+      const transferConnected = isPrivateTopupTransferWalletConnected(
+        selectedToken,
+        topupWalletChainType,
+      );
+
+      if (!transferConnected) {
+        return (
+          <button
+            type="button"
+            className={fundingPrimaryButtonClass}
+            disabled={continueLoading}
+            onClick={() => void handleFundingWalletConnect(selectedToken)}
+          >
+            {continueLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {formatPrivateTopupConnectLabel(tWallet, selectedToken)}
+          </button>
+        );
+      }
+
       const canContinue = isPrivateTopupAmountStepValid(
         amount.tokenAmount,
         selectedTokenMaxAmount,
@@ -359,14 +515,18 @@ export function PrivateTopupDialog({
     amount.tokenAmount,
     continueLoading,
     eoaConfirmed,
+    handleFundingWalletConnect,
     onConfirmTopup,
     onContinueToConfirm,
     quote,
     selectedToken,
     selectedTokenMaxAmount,
     step,
+    topupWalletChainType,
+    fundingWalletSnapshot,
     t,
     tAuth,
+    tWallet,
   ]);
 
   const shellMinHeight =
@@ -390,8 +550,12 @@ export function PrivateTopupDialog({
           selectableTokens: stableflowTokens,
           topupWalletAddress,
           privateAccountAddress,
+          primaryChainType: topupWalletChainType,
           balancesLoading,
           pricesLoading: false,
+          getNearTokenBalance,
+          getSolTokenBalance,
+          getTronTokenBalance,
         }}
       >
         <FundingModalShell
@@ -406,6 +570,7 @@ export function PrivateTopupDialog({
               selectedToken={selectedToken}
               onSelectToken={setSelectedToken}
               onChangeWallet={handleClose}
+              showChangeWallet={!shouldHideFundingWalletChange()}
             />
           ) : null}
 
@@ -415,6 +580,7 @@ export function PrivateTopupDialog({
               token={selectedToken}
               amount={amount}
               maxAmount={selectedTokenMaxAmount}
+              transferWalletAddress={selectedTokenTransferAddress}
               onAmountChange={setAmount}
             />
           ) : null}
@@ -439,7 +605,7 @@ export function PrivateTopupDialog({
                 </span>
               </label>
               <PrivateTopupConfirmStep
-                topupWalletAddress={topupWalletAddress}
+                topupWalletAddress={selectedToken ? resolveFundingAddressForToken(selectedToken) ?? "" : ""}
                 privateAccountAddress={privateAccountAddress}
                 token={selectedToken}
                 tokenAmount={amount.tokenAmount}
@@ -454,6 +620,7 @@ export function PrivateTopupDialog({
               phase={statusPhase}
               bridgeStatusLabel={bridgeStatusLabel}
               error={statusError}
+              errorKind={statusErrorKind}
               onDone={handleClose}
               onRetry={() => setStep("confirm")}
             />
@@ -468,17 +635,20 @@ function TopupStatusView({
   phase,
   bridgeStatusLabel,
   error,
+  errorKind = "generic",
   onDone,
   onRetry,
 }: {
   phase: TopupStatusPhase;
   bridgeStatusLabel?: string;
   error?: string;
+  errorKind?: TopupStatusErrorKind;
   onDone: () => void;
   onRetry: () => void;
 }) {
   const t = useTranslations("privateTopup");
   const tAuth = useTranslations("auth");
+  const isConfirmationTimeout = errorKind === "solana_confirmation_timeout";
 
   return (
     <div className="flex flex-col items-center justify-center gap-5 py-10 text-center">
@@ -515,13 +685,23 @@ function TopupStatusView({
         <>
           <ShieldAlert className="h-10 w-10 text-[#e5484d]" aria-hidden />
           <div>
-            <p className="m-0 text-lg font-[556] text-black">{t("topUpFailed")}</p>
-            <p className="m-0 mt-1 text-sm text-[#e5484d]">
+            <p className="m-0 text-lg font-[556] text-black">
+              {isConfirmationTimeout ? t("statusLookupFailed") : t("topUpFailed")}
+            </p>
+            <p
+              className={`m-0 mt-1 text-sm ${
+                isConfirmationTimeout ? "text-[#909090]" : "text-[#e5484d]"
+              }`}
+            >
               {error ?? t("somethingWentWrong")}
             </p>
           </div>
-          <button type="button" className={fundingPrimaryButtonClass} onClick={onRetry}>
-            {t("tryAgain")}
+          <button
+            type="button"
+            className={fundingPrimaryButtonClass}
+            onClick={isConfirmationTimeout ? onDone : onRetry}
+          >
+            {isConfirmationTimeout ? t("acknowledge") : t("tryAgain")}
           </button>
         </>
       ) : null}

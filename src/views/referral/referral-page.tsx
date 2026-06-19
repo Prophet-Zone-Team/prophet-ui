@@ -16,7 +16,7 @@ import { ReferralShellSkeleton } from "./referral-shell-skeleton";
 export function ReferralPage() {
   const t = useTranslations("referral");
   const authHydrated = useAuthHydrated();
-  const { session, isAuthenticated, openLogin, loginInProgress } = useAuth();
+  const { session, isAuthenticated, openLoginModalOnly, loginInProgress } = useAuth();
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const {
@@ -29,8 +29,8 @@ export function ReferralPage() {
   const needsWallet = authHydrated && !isAuthenticated;
 
   const handleConnectWallet = useCallback(async () => {
-    await openLogin();
-  }, [openLogin]);
+    await openLoginModalOnly();
+  }, [openLoginModalOnly]);
 
   if (!authHydrated) {
     return (

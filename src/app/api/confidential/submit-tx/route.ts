@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isValidStableflowDepositTxHash } from "@/lib/funding/recipient-validation";
 import { submitConfidentialDepositTx } from "@/server/confidential/one-click-client";
 import {
   applyRefreshedCookie,
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
   const txHash = payload.txHash?.trim();
   const depositAddress = payload.depositAddress?.trim();
 
-  if (!txHash || !/^0x[a-fA-F0-9]+$/.test(txHash)) {
+  if (!txHash || !isValidStableflowDepositTxHash(txHash)) {
     return NextResponse.json({ error: "A valid txHash is required." }, { status: 400 });
   }
 

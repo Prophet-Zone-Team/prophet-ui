@@ -54,7 +54,7 @@ export interface UsePortfolioDataResult {
 }
 
 export function usePortfolioData(): UsePortfolioDataResult {
-  const { session, isAuthenticated, openLogin, refreshCash } = useAuth();
+  const { session, isAuthenticated, openLoginModalOnly, refreshCash } = useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
   const [marketContextMap, setMarketContextMap] = useState<
@@ -451,13 +451,13 @@ export function usePortfolioData(): UsePortfolioDataResult {
     setMessage(undefined);
 
     try {
-      await openLogin();
+      await openLoginModalOnly();
       await loadCore();
     } catch (error) {
       setCoreStatus("error");
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [loadCore, openLogin]);
+  }, [loadCore, openLoginModalOnly]);
 
   return {
     session,

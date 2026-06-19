@@ -12,6 +12,7 @@ import {
   depositModalAmountInputClass,
   depositModalAmountInputWrapClass,
   depositPercentButtonClass,
+  depositFundingWalletChangeClass,
   depositTransferBarClass
 } from "@/views/portfolio/deposit/deposit-ui";
 import type {
@@ -36,6 +37,8 @@ export interface DepositAmountStepProps {
   maxAmount: string;
   minDepositUsd: number;
   onAmountChange: (amount: DepositAmountState) => void;
+  showChangeWallet?: boolean;
+  onChangeWallet?: () => void;
 }
 
 export function DepositAmountStep({
@@ -43,9 +46,12 @@ export function DepositAmountStep({
   amount,
   maxAmount,
   minDepositUsd,
-  onAmountChange
+  onAmountChange,
+  showChangeWallet = false,
+  onChangeWallet,
 }: DepositAmountStepProps) {
   const t = useTranslations("portfolio.deposit");
+  const tPrivateTopup = useTranslations("privateTopup");
   const prices = usePricesStore((state) => state.prices);
 
   const [inputValue, setInputValue] = useState(() =>
@@ -192,6 +198,18 @@ export function DepositAmountStep({
           </div>
         </div>
       </div>
+
+      {showChangeWallet && onChangeWallet ? (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            className={depositFundingWalletChangeClass}
+            onClick={onChangeWallet}
+          >
+            {tPrivateTopup("change")}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

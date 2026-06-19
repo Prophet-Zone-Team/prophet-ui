@@ -19,12 +19,12 @@ export async function GET(request: Request) {
   }
 
   try {
-    const allTokens = await getStableflowTokens();
-    const filtered = filterStableflowTokensForFundingNetworks(allTokens);
+    const apiTokens = await getStableflowTokens();
+    const filtered = filterStableflowTokensForFundingNetworks(apiTokens);
     const tokens = filtered
       .map((token) => mapStableflowTokenToDepositToken(token))
       .filter((token): token is NonNullable<typeof token> => Boolean(token));
-    const polygonUsdcDestinationAssetId = resolvePolygonUsdcDestinationAsset(allTokens)?.assetId;
+    const polygonUsdcDestinationAssetId = resolvePolygonUsdcDestinationAsset(apiTokens)?.assetId;
 
     if (!polygonUsdcDestinationAssetId) {
       return NextResponse.json(

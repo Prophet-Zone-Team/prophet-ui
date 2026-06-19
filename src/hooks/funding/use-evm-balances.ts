@@ -9,7 +9,7 @@ import {
 } from "@/config/funding";
 import { useAuthOptional } from "@/context/auth";
 import { selectFundingTokenBalance } from "@/lib/funding/balance-selectors";
-import { fetchEvmTokenBalances } from "@/lib/funding/evm-balances";
+import { fetchEvmTokenBalances, filterEvmFundingTokens } from "@/lib/funding/evm-balances";
 import { useBalancesStore } from "@/store/use-balances";
 import type { EvmBalancesByChain } from "@/types/funding";
 
@@ -56,7 +56,10 @@ export function useEvmBalances(options: UseEvmBalancesOptions = {}): UseEvmBalan
   const auth = useAuthOptional();
   const walletAddress = auth?.session?.walletAddress;
 
-  const resolvedTokens = useMemo(() => tokens ?? EVM_FUNDING_TOKENS, [tokens]);
+  const resolvedTokens = useMemo(
+    () => filterEvmFundingTokens(tokens ?? EVM_FUNDING_TOKENS),
+    [tokens],
+  );
 
   const evmBalances = useBalancesStore((state) => state.evmBalances);
   const loading = useBalancesStore((state) => state.loading);

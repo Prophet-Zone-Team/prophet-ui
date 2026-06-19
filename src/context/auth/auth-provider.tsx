@@ -34,6 +34,12 @@ import {
   trackWalletConnected,
   trackWalletConnectStarted
 } from "@/lib/analytics/tracking";
+import {
+  connectNearAndDeriveAddress,
+  disconnectNearWallet,
+  getNearDerivedEvmAddress,
+  waitForNearDerivedAddress,
+} from "@/lib/wallet/near/near-connect";
 import { mapBalanceSnapshotToCash } from "@/lib/trading/cash-balance-model";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
 import {
@@ -54,6 +60,7 @@ import {
   subscribeWalletConnection,
   inspectWalletConnection
 } from "@/lib/trading/wallet-connection-watch";
+import { isTokenPocketFundingSwitchGracePeriod } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import {
   getTradingSetupSteps,
   isSetupStepComplete,
@@ -105,10 +112,12 @@ import { useDisconnect } from "wagmi";
 import { signConfidentialMessage } from "@/lib/confidential/sign-message";
 import { useConfidentialAccount } from "@/hooks/confidential/use-confidential-account";
 import { usePendingFunderUsdc } from "@/hooks/funding";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { getAccount, watchAccount } from "wagmi/actions";
+import { useConnectModal } from "@/context/rainbowkit/connect-modal";
+import { getAccount } from "wagmi/actions";
 import { wagmiConfig } from "../rainbowkit/wagmi-config";
+import { waitForExternalWalletConnection } from "@/lib/trading/wait-for-wallet-connect";
 import { useMigratePromptStore } from "@/store/use-migrate-prompt-store";
+import { useNearAccountStore } from "@/lib/wallet/near/near-account-store";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
@@ -151,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     undefined
   );
   const confidentialAccount = useConfidentialAccount();
+  const nearAccountStore = useNearAccountStore();
 
   const [googleLoginWithOAuthReady, setGoogleLoginWithOAuthReady] = useState(false);
   useLoginWithOAuth({
@@ -304,11 +314,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.setError(options.error);
       }
 
-      if (options?.openModal !== false) {
-        if (!isRegionBlockedRef.current) {
-          store.setLoginModalOpen(true);
-        }
-      }
+      // if (options?.openModal !== false) {
+      //   if (!isRegionBlockedRef.current) {
+      //     store.setLoginModalOpen(true);
+      //   }
+      // }
     },
     []
   );
@@ -317,6 +327,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
 
     if (!store.session || walletHandlingRef.current) {
+      return;
+    }
+
+    if (isTokenPocketFundingSwitchGracePeriod(true)) {
       return;
     }
 
@@ -421,8 +435,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let finalWalletAddress: string | undefined;
         handleStep("requesting_wallet");
         const preferEmbedded = _loginMethod === "email" || _loginMethod === "google";
+        // near connect: derive the EVM owner address from the NEAR MPC signer
+        if (_loginMethod === "near") {
+          finalWalletAddress = getNearDerivedEvmAddress()
+            ?? (await connectNearAndDeriveAddress());
+        }
         // privy connect
-        if (preferEmbedded) {
+        else if (preferEmbedded) {
           const embeddedWallet = privyWallets.filter(isPrivyEmbeddedWallet)[0];
           const embeddedAddress = embeddedWallet?.address;
           console.log("embeddedAddress: %o", embeddedAddress);
@@ -442,44 +461,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           else {
             openConnectModal?.();
 
-            // wait for connect
-            const timeoutMs = 3_000;
-            const waitForConnect = () => {
-              return new Promise<string>((resolve, reject) => {
-                let unwatch: (() => void) | undefined;
-                let timeoutId: ReturnType<typeof setInterval> | undefined;
-
-                // Check every timeoutMs to see if the connection modal has been closed
-                timeoutId = setInterval(() => {
-                  if (connectModalOpenRef.current) {
-                    return;
-                  }
-                  reject(new Error("Connect cancelled"));
-                  clearInterval(timeoutId);
-                  unwatch?.();
-                }, timeoutMs);
-                const tryResolve = () => {
-                  const account = getAccount(wagmiConfig);
-                  if (!account.isConnected || !account.address) {
-                    return undefined;
-                  }
-
-                  console.log("tryResolve account: %o", account);
-                  console.log("tryResolve account.address: %o", account.address);
-
-                  resolve(account.address);
-                  clearInterval(timeoutId);
-                  unwatch?.();
-                }
-                unwatch = watchAccount(wagmiConfig, {
-                  onChange() {
-                    tryResolve();
-                  },
-                });
-              });
-            }
-
-            finalWalletAddress = await waitForConnect();
+            finalWalletAddress = await waitForExternalWalletConnection({
+              connectModalOpenRef,
+            });
             console.log("finalWalletAddress: %o", finalWalletAddress);
           }
         }
@@ -648,7 +632,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.clearAuth();
         store.setLoginInProgress(false);
         store.setStatus("ready");
-        openSetupModalIfNeeded();
+        // openSetupModalIfNeeded();
 
         walletHandlingRef.current = false;
         return;
@@ -665,8 +649,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // not wrongly clear the session before wagmi rehydrates.
       const embeddedLoginMethod =
         store.loginMethod === "email" || store.loginMethod === "google";
+      const nearLoginMethod = store.loginMethod === "near";
 
-      if (embeddedLoginMethod) {
+      if (embeddedLoginMethod || nearLoginMethod) {
+        if (nearLoginMethod) {
+          try {
+            await waitForNearDerivedAddress(15_000);
+          } catch {
+            const nextReadiness = await refreshReadiness(nextSession);
+            store.setStatus("ready");
+            store.setLoginStep(undefined);
+            store.setError(
+              "NEAR wallet is not connected. Reconnect your wallet to continue."
+            );
+            openSetupModalIfNeeded();
+
+            if (isTradingSetupComplete(nextReadiness)) {
+              store.setLoginModalOpen(true);
+            }
+
+            return;
+          }
+
+          const derivedAddress = getNearDerivedEvmAddress();
+
+          if (
+            derivedAddress &&
+            derivedAddress.toLowerCase() !==
+            nextSession.walletAddress.toLowerCase()
+          ) {
+            await handleWalletAccountSwitch(derivedAddress);
+            return;
+          }
+        }
+
         if (nextSession.depositWalletStatus !== "deployed") {
           await ensureDepositWalletDeployed(nextSession.walletAddress, {
             onStep: (step) => store.setLoginStep(step)
@@ -697,6 +713,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
 
       if (walletSnapshot.status === "disconnected") {
+        if (isTokenPocketFundingSwitchGracePeriod(true)) {
+          const nextReadiness = await refreshReadiness(nextSession);
+          store.setStatus("ready");
+          store.setLoginStep(undefined);
+          store.setError(
+            "Wallet extension is not connected. Reconnect your Polygon wallet after connecting a funding wallet.",
+          );
+          openSetupModalIfNeeded();
+
+          if (isTradingSetupComplete(nextReadiness)) {
+            store.setLoginModalOpen(false);
+          }
+
+          return;
+        }
+
         if (privyAuthenticated) {
           const nextReadiness = await refreshReadiness(nextSession);
           store.setStatus("ready");
@@ -704,7 +736,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           store.setError(
             "Wallet extension is not connected. Reconnect your wallet to continue."
           );
-          openSetupModalIfNeeded();
+          // openSetupModalIfNeeded();
 
           if (isTradingSetupComplete(nextReadiness)) {
             store.setLoginModalOpen(true);
@@ -1073,6 +1105,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return runLogin(Boolean(store.session), method);
   };
 
+  const connectNearWallet = async () => {
+    const store = useAuthStore.getState();
+
+    try {
+      await releaseExternalWalletConnection("near");
+      await wagmiDisconnect();
+    } catch { }
+
+    store.setLoginMethod("near");
+
+    if (isRegionBlockedRef.current) {
+      openLoginModalOnly();
+      return undefined;
+    }
+
+    try {
+      await connectNearAndDeriveAddress();
+    } catch (connectError) {
+      store.setError(resolveWalletErrorMessage(connectError));
+      openLoginModalOnly();
+      return undefined;
+    }
+
+    return runLogin(Boolean(store.session), "near");
+  };
+
   const signClobCredentials = useCallback(async () => {
     await runSignStep("clob");
   }, [runSignStep]);
@@ -1124,8 +1182,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clearAuthState]);
 
-  const disconnect = useCallback(async () => {
+  const disconnect = async () => {
     const store = useAuthStore.getState();
+    const loginMethod = store.loginMethod;
 
     suspendPrivyWalletSync();
     loginAbortRef.current = true;
@@ -1142,6 +1201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setLoginModalOpen(false);
     store.setLoginMethod(undefined);
     store.setLoginEmail(undefined);
+    nearAccountStore.reset();
 
     try {
       // Log out Privy first so PrivyWalletBridge stops re-binding wagmi.
@@ -1153,6 +1213,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         await wagmiDisconnect();
       } catch { }
+      if (loginMethod === "near") {
+        try {
+          await disconnectNearWallet();
+        } catch { }
+      }
 
       await clearAuthState({ openModal: false });
 
@@ -1168,7 +1233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resumePrivyWalletSync();
       walletHandlingRef.current = false;
     }
-  }, [clearAuthState, privyLogout, wagmiDisconnect]);
+  };
 
   const onAuthenticateConfidential = async () => {
     if (!session) {
@@ -1214,10 +1279,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Embedded wallets (email / google) are managed by Privy and do not emit
-    // injected-provider disconnect/account-change events, so skip the watcher
-    // to avoid false "disconnected" detection.
-    if (loginMethod === "email" || loginMethod === "google") {
+    // Embedded wallets (email / google) are managed by Privy and NEAR wallets
+    // are managed by the wallet-selector; none emit injected-provider
+    // disconnect/account-change events, so skip the watcher to avoid false
+    // "disconnected" detection.
+    if (
+      loginMethod === "email" ||
+      loginMethod === "google" ||
+      loginMethod === "near"
+    ) {
       return;
     }
 
@@ -1305,9 +1375,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       oauthPending === "google" ||
       hasOAuthReturnParams()
     ) {
-      // const store = useAuthStore.getState();
-      // store.setLoginMethod("google");
-      // store.setLoginModalOpen(true);
       void startPrivyTradingLogin("google");
     }
   }, [privyReady, googleLoginWithOAuthReady, privyWallets]);
@@ -1352,13 +1419,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loginMethod, privyAuthenticated, privyUser]);
 
   // openSetupModal
-  useEffect(() => {
-    if (!hydrated) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (!hydrated) {
+  //     return;
+  //   }
 
-    openSetupModalIfNeeded();
-  }, [hydrated, pathname, openSetupModalIfNeeded, session, readiness]);
+  //   openSetupModalIfNeeded();
+  // }, [hydrated, pathname, openSetupModalIfNeeded, session, readiness]);
 
   // refresh cash and private balance
   useEffect(() => {
@@ -1406,7 +1473,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoginMethod,
     refreshEligibility,
     openLogin,
-    connectWallet: openLogin,
+    connectNearWallet,
     signClobCredentials,
     signTokenApprovals,
     closeLogin,

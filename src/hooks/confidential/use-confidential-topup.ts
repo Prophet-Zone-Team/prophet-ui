@@ -10,6 +10,7 @@ import {
   submitConfidentialDepositTx,
 } from "@/lib/confidential/client";
 import type { StableflowDepositToken } from "@/lib/funding/stableflow";
+import { transferNearFtToken } from "@/lib/wallet/near/near-transfer";
 import { fundingNetworkTypeToChainType, transferDepositFunds } from "@/lib/wallet";
 import {
   isStableflowSuccessStatus,
@@ -72,6 +73,7 @@ export function useConfidentialTopup(): UseConfidentialTopupResult {
         destinationAssetId,
         amountBaseUnits,
         refundTo: fundingAddress,
+        originBlockchain: token.blockchain,
       });
 
       if (!quote.quote.depositAddress) {
@@ -103,23 +105,38 @@ export function useConfidentialTopup(): UseConfidentialTopupResult {
 
       const amountBaseUnits = parseUnits(tokenAmount, token.decimals).toString();
 
-      // transferDepositFunds switches the funding wallet to the token's chain
-      // before sending, so no separate ensure-chain call is needed here.
-      const { txHash } = await transferDepositFunds({
-        chainType: fundingNetworkTypeToChainType(token.chainType),
-        walletAddress: fundingAddress,
-        tokenAddress: token.address,
-        toAddress: depositAddress,
-        amount: tokenAmount,
-        tokenDecimals: token.decimals,
-        chainId: token.chainId,
-      });
+      let txHash: string;
 
-      await submitConfidentialDepositTx({
-        txHash,
-        depositAddress,
-        memo: quote.quote.depositMemo,
-      });
+      if (token.blockchain === "near") {
+        const nearResult = await transferNearFtToken({
+          contractId: token.address,
+          depositAddress,
+          amountBaseUnits,
+        });
+        txHash = nearResult.txHash;
+      } else {
+        const result = await transferDepositFunds({
+          chainType: fundingNetworkTypeToChainType(token.chainType),
+          walletAddress: fundingAddress,
+          tokenAddress: token.address,
+          toAddress: depositAddress,
+          amount: tokenAmount,
+          tokenDecimals: token.decimals,
+          chainId: token.chainId,
+          symbol: token.symbol,
+        });
+        txHash = result.txHash;
+      }
+
+      try {
+        await submitConfidentialDepositTx({
+          txHash,
+          depositAddress,
+          memo: quote.quote.depositMemo,
+        });
+      } catch (error) {
+        console.error("Failed to submit confidential deposit tx:", error);
+      }
 
       return {
         quote,

@@ -241,7 +241,7 @@ export function PrivyLoginModal({
             <OtpInput
               value={code}
               length={OTP_LENGTH}
-              disabled={!codeSent || submittingCode}
+              disabled={submittingCode}
               onChange={setCode}
               onComplete={() => void handleVerify()}
             />

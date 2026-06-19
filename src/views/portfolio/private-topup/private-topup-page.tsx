@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import {
   stableflowTokensToFundingTokens,
@@ -24,14 +25,25 @@ import {
   privateTopupPageClass,
   privateTopupWarningBannerClass,
 } from "@/views/portfolio/private-topup/private-topup-ui";
+import { PrivateTopupChainPicker } from "@/views/portfolio/private-topup/private-topup-chain-picker";
 import { TopupWalletCard } from "@/views/portfolio/private-topup/topup-wallet-card";
+import { useSolBalances, useTronBalances } from "@/hooks/funding";
+import { useNearBalances } from "@/hooks/funding/use-near-balances";
+import type { FundingWalletChainType } from "@/store/use-funding-wallet-store";
+import {
+  getFundingWalletAddress,
+  useFundingWalletStore,
+} from "@/store/use-funding-wallet-store";
 import { MAIN_HOSTNAME } from "@/config/funding";
+import { TP_FUNDING_SWITCH_EVENT } from "@/lib/wallet/tokenpocket/constants";
+import type { TpFundingSwitchCompleteDetail } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import { useAuth } from "@/context/auth";
 
 export function PrivateTopupPage() {
   const t = useTranslations("privateTopup");
   const fundingWallet = useFundingWallet();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [chainPickerOpen, setChainPickerOpen] = useState(false);
   const [stableflowTokens, setStableflowTokens] = useState<StableflowDepositToken[]>([]);
   const [tokensLoading, setTokensLoading] = useState(false);
   const setEvmBalances = useBalancesStore((state) => state.setEvmBalances);
@@ -73,29 +85,66 @@ export function PrivateTopupPage() {
     enabled: topupWalletConnected,
   });
 
+  const evmFundingAddress = useFundingWalletStore((state) =>
+    state.evm.connected ? state.evm.address : undefined,
+  );
+
+  const {
+    loading: solBalancesLoading,
+    getTokenBalance: getSolTokenBalance,
+    refresh: refreshSolBalances,
+  } = useSolBalances({
+    enabled: topupWalletConnected,
+    tokens: stableflowFundingTokens,
+  });
+
+  const {
+    loading: tronBalancesLoading,
+    getTokenBalance: getTronTokenBalance,
+    refresh: refreshTronBalances,
+  } = useTronBalances({
+    enabled: topupWalletConnected,
+    tokens: stableflowFundingTokens,
+  });
+
+  const {
+    loading: nearBalancesLoading,
+    getTokenBalance: getNearTokenBalance,
+    refresh: refreshNearBalances,
+  } = useNearBalances({
+    enabled: topupWalletConnected,
+    tokens: stableflowTokens,
+  });
+
   const loadFundingBalances = useCallback(async () => {
-    if (!topupWalletAddress || stableflowFundingTokens.length === 0) {
+    const evmAddress = getFundingWalletAddress("evm");
+
+    if (!evmAddress || stableflowFundingTokens.length === 0) {
       return;
     }
 
     try {
-      const byChain = await fetchEvmTokenBalances(topupWalletAddress, stableflowFundingTokens);
+      const byChain = await fetchEvmTokenBalances(evmAddress, stableflowFundingTokens);
       setEvmBalances({ evmBalances: byChain });
     } catch {
       // Balance fetch is best-effort; the UI shows "--" on failure.
     }
-  }, [setEvmBalances, stableflowFundingTokens, topupWalletAddress]);
+  }, [setEvmBalances, stableflowFundingTokens]);
 
   useEffect(() => {
-    if (topupWalletConnected && topupWalletAddress) {
+    if (topupWalletConnected && evmFundingAddress) {
       void loadFundingBalances();
     } else if (!topupWalletConnected) {
       clearEvmBalances();
     }
-  }, [clearEvmBalances, loadFundingBalances, topupWalletAddress, topupWalletConnected]);
+  }, [clearEvmBalances, evmFundingAddress, loadFundingBalances, topupWalletConnected]);
 
   function handleConnectWallet() {
-    void fundingWallet.connect();
+    setChainPickerOpen(true);
+  }
+
+  function handleSelectFundingChain(chainType: FundingWalletChainType) {
+    void fundingWallet.connect(chainType);
   }
 
   function handleDisconnectWallet() {
@@ -105,12 +154,48 @@ export function PrivateTopupPage() {
 
   const handleTopupSuccess = useCallback(async () => {
     await refreshPrivateBalance({ requiredSession: false });
-    await loadFundingBalances();
-  }, [refreshPrivateBalance, loadFundingBalances]);
+    await Promise.all([
+      loadFundingBalances(),
+      refreshSolBalances(),
+      refreshTronBalances(),
+      refreshNearBalances(),
+    ]);
+  }, [
+    loadFundingBalances,
+    refreshNearBalances,
+    refreshPrivateBalance,
+    refreshSolBalances,
+    refreshTronBalances,
+  ]);
 
   useEffect(() => {
     void refreshPrivateBalance({ requiredSession: false });
   }, [refreshPrivateBalance]);
+
+  useEffect(() => {
+    const handleFundingSwitchComplete = (event: Event) => {
+      const detail = (event as CustomEvent<TpFundingSwitchCompleteDetail>).detail;
+
+      if (detail.hostKind !== "private") {
+        return;
+      }
+
+      void refreshPrivateBalance({ requiredSession: false });
+
+      if (!fundingWallet.connected) {
+        toast.message(
+          "Page reloaded in TokenPocket. Reconnect your funding wallet to continue the top up.",
+        );
+        setChainPickerOpen(true);
+      }
+    };
+
+    window.addEventListener(TP_FUNDING_SWITCH_EVENT, handleFundingSwitchComplete);
+
+    return () => {
+      window.removeEventListener(TP_FUNDING_SWITCH_EVENT, handleFundingSwitchComplete);
+    };
+  }, [fundingWallet.connected, refreshPrivateBalance]);
 
   return (
     <PrivateTopupProvider
@@ -118,8 +203,13 @@ export function PrivateTopupPage() {
         selectableTokens: stableflowTokens,
         topupWalletAddress,
         privateAccountAddress,
-        balancesLoading: tokensLoading,
+        primaryChainType: fundingWallet.chainType,
+        balancesLoading:
+          tokensLoading || solBalancesLoading || tronBalancesLoading || nearBalancesLoading,
         pricesLoading,
+        getNearTokenBalance,
+        getSolTokenBalance,
+        getTronTokenBalance,
       }}
     >
       <div className={privateTopupPageClass}>
@@ -147,6 +237,7 @@ export function PrivateTopupPage() {
           <PrivateTopupCardsRow
             topupWalletConnected={topupWalletConnected}
             topupWalletAddress={topupWalletAddress}
+            topupWalletChainType={fundingWallet.chainType}
             tokensLoading={tokensLoading}
             onConnect={handleConnectWallet}
             onDisconnect={handleDisconnectWallet}
@@ -167,16 +258,21 @@ export function PrivateTopupPage() {
         </div>
       </div>
 
-      {topupWalletAddress && privateAccountAddress ? (
+      {topupWalletConnected && privateAccountAddress ? (
         <PrivateTopupDialog
           open={dialogOpen}
-          topupWalletAddress={topupWalletAddress}
+          topupWalletChainType={fundingWallet.chainType}
           privateAccountAddress={privateAccountAddress}
           privateAccountEoaAddress={confidentialAccount.eoaAddress}
           onClose={() => setDialogOpen(false)}
           onSuccess={handleTopupSuccess}
         />
       ) : null}
+      <PrivateTopupChainPicker
+        open={chainPickerOpen}
+        onClose={() => setChainPickerOpen(false)}
+        onSelect={handleSelectFundingChain}
+      />
     </PrivateTopupProvider>
   );
 }
@@ -184,6 +280,7 @@ export function PrivateTopupPage() {
 function PrivateTopupCardsRow({
   topupWalletConnected,
   topupWalletAddress,
+  topupWalletChainType,
   tokensLoading,
   onConnect,
   onDisconnect,
@@ -195,6 +292,7 @@ function PrivateTopupCardsRow({
 }: {
   topupWalletConnected: boolean;
   topupWalletAddress?: string;
+  topupWalletChainType?: FundingWalletChainType;
   tokensLoading: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
@@ -217,6 +315,7 @@ function PrivateTopupCardsRow({
       <TopupWalletCard
         connected={topupWalletConnected}
         address={topupWalletAddress}
+        chainType={topupWalletChainType}
         balanceUsd={topupWalletBalanceUsd}
         balanceLoading={balanceLoading}
         onConnect={onConnect}
