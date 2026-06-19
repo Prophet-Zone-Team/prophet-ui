@@ -11,6 +11,7 @@ import {
   ReferralIcon
 } from "@/layout/header/wallet-menu-icons";
 import { WalletLanguageMenuItem } from "@/layout/header/wallet-language-menu-item";
+import { WalletOutcomeDisplayMenuItem } from "@/layout/header/wallet-outcome-display-menu-item";
 import { CopyIcon, RightArrowIcon } from "@/components/icons";
 import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
 import { Switch } from "@/components/ui/switch";
@@ -176,6 +177,7 @@ export function WalletMenuDropdown({
         )
       }
 
+      <WalletOutcomeDisplayMenuItem onSelect={onClose} />
       <WalletLanguageMenuItem onSelect={onClose} />
 
       <button

@@ -1,7 +1,10 @@
 import curatedTeams from "@/data/teams/index";
+import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import {
   curatedEntryToTeam,
+  findCuratedTeamById,
   findCuratedTeamByName,
+  isCuratedTeamVisible,
 } from "@/data/teams/curated-team-list";
 import { normalizeGammaSearchText } from "@/lib/market/polymarket-gamma";
 import type { Team } from "@/types/market";
@@ -33,6 +36,7 @@ const GROUP_TITLE_ALIASES: Record<string, string> = {
   "new zealand": "New Zealand",
   "cape verde": "Cape Verde",
   "cabo verde": "Cape Verde",
+  "ir iran": "Iran",
 };
 
 export function resolveWorldCupTeamByCuratedKey(indexKey: string): Team | undefined {
@@ -40,6 +44,12 @@ export function resolveWorldCupTeamByCuratedKey(indexKey: string): Team | undefi
 
   if (curated) {
     return curatedEntryToTeam(indexKey, curated);
+  }
+
+  const byId = findCuratedTeamById(indexKey);
+
+  if (byId) {
+    return byId;
   }
 
   return findCuratedTeamByName(indexKey);
@@ -61,18 +71,53 @@ export function resolveWorldCupTeamByGroupItemTitle(groupItemTitle: string): Tea
   return findCuratedTeamByName(trimmed);
 }
 
-function resolveCuratedTeamKey(label: string): string | undefined {
-  const direct = curatedTeamEntries.find(([key]) => key === label);
+export function resolveCanonicalWorldCupTeamId(teamId: string): string {
+  const worldCupTeam = getWorldCupTeamByIdOrCode(teamId);
 
-  if (direct) {
-    return direct[0];
+  if (worldCupTeam) {
+    return worldCupTeam.id;
   }
 
+  const curated = findCuratedTeamById(teamId);
+
+  if (!curated) {
+    return teamId;
+  }
+
+  const byCode = getWorldCupTeamByIdOrCode(curated.code);
+
+  return byCode?.id ?? teamId;
+}
+
+function resolveCuratedTeamKey(label: string): string | undefined {
   const normalized = normalizeGammaSearchText(label);
   const aliasKey = GROUP_TITLE_ALIASES[normalized];
 
   if (aliasKey && curatedTeams[aliasKey as keyof typeof curatedTeams]) {
     return aliasKey;
+  }
+
+  const direct = curatedTeamEntries.find(([key]) => key === label);
+
+  if (direct && isCuratedTeamVisible(direct[1])) {
+    return direct[0];
+  }
+
+  const visibleMatch = curatedTeamEntries.find(([key, value]) => {
+    if (!isCuratedTeamVisible(value)) {
+      return false;
+    }
+
+    const candidates = [key, value.name].map(normalizeGammaSearchText);
+    return candidates.some((candidate) => candidate === normalized);
+  });
+
+  if (visibleMatch) {
+    return visibleMatch[0];
+  }
+
+  if (direct) {
+    return direct[0];
   }
 
   return curatedTeamEntries.find(([key, value]) => {

@@ -76,7 +76,11 @@ export function PortfolioOpenOrderMarketCard({
   const teams = marketContext?.teams ?? [];
   const tradeHref = resolvePortfolioPositionTradeHref(
     { slug: marketContext?.slug || "" },
-    teams
+    {
+      marketKind: marketContext?.marketKind,
+      contextSlug: marketContext?.slug,
+      teams
+    }
   );
   const marketIcon = useMemo(() => {
     const firstOrder = group.orders[0];
@@ -85,8 +89,11 @@ export function PortfolioOpenOrderMarketCard({
       return undefined;
     }
 
-    return resolvePortfolioMarketIcon(teams, firstOrder.outcome);
-  }, [group.orders, teams]);
+    return resolvePortfolioMarketIcon(teams, firstOrder.outcome, {
+      contextIcon: marketContext?.icon,
+      marketKind: marketContext?.marketKind
+    });
+  }, [group.orders, marketContext?.icon, marketContext?.marketKind, teams]);
 
   const orderCount = group.orders.length;
   const isSingleOrder = orderCount === 1;

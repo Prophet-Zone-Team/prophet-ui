@@ -66,6 +66,7 @@ export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPrevi
     getDisabledReason({
       acceptingOrders,
       amount: input.amount,
+      shareSize: estimate.shareSize,
       minOrderSize: metadata?.minOrderSize,
       orderType: input.orderType,
       tradeSide: input.tradeSide,
@@ -97,6 +98,7 @@ export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPrevi
 function getDisabledReason({
   acceptingOrders,
   amount,
+  shareSize,
   minOrderSize,
   orderType,
   tradeSide,
@@ -104,6 +106,7 @@ function getDisabledReason({
 }: {
   acceptingOrders?: boolean;
   amount: number;
+  shareSize: number;
   minOrderSize?: number;
   orderType: TradingOrderType;
   tradeSide: BidTradeSide;
@@ -123,6 +126,7 @@ function getDisabledReason({
 
   return validateOrderAmount({
     amount,
+    shareSize,
     orderType,
     tradeSide,
     minOrderSize

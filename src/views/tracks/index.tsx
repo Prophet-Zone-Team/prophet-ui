@@ -28,7 +28,7 @@ export function TracksView() {
   const tCommon = useTranslations("common");
   const authHydrated = useAuthHydrated();
   const tracksHydrated = useTracksHydrated();
-  const { isAuthenticated, openLogin, loginInProgress, session } = useAuth();
+  const { isAuthenticated, openLoginModalOnly, loginInProgress, session } = useAuth();
   const {
     bound: telegramBound,
     loadStatus: telegramLoadStatus,
@@ -79,7 +79,7 @@ export function TracksView() {
 
   async function handleConnectWallet() {
     try {
-      await openLogin();
+      await openLoginModalOnly();
       await loadTracks();
     } catch (error) {
       console.warn("[tracks] wallet connect failed", error);

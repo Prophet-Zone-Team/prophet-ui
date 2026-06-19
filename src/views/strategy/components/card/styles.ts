@@ -2,7 +2,7 @@ export const strategyCardDescriptionClassName =
   "m-0 min-w-0 font-[Sora] text-base font-normal leading-5 text-[#909090]";
 
 export const strategyCardMetricValueClassName =
-  "font-[Sora] text-[26px] font-medium leading-[33px]";
+  "font-[Sora] text-xl font-medium leading-[26px] md:text-[26px] md:leading-[33px]";
 
 export const strategyCardMetricLabelClassName =
   "mt-0.5 font-[Sora] text-sm font-normal leading-[18px] text-[#909090]";

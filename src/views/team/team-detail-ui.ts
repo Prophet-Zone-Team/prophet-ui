@@ -1,7 +1,6 @@
 import { cn } from "@/lib/cn";
 
-export const teamPageClass =
-  "mx-auto max-w-[1440px] px-4 pb-10 pt-2 sm:px-6";
+export const teamPageClass = "mx-auto max-w-[1440px] px-4 pb-10 md:pt-2 sm:px-6";
 
 export const teamPanelClass = cn(
   "overflow-hidden rounded-[12px] border border-prophet-line bg-white"

@@ -62,7 +62,7 @@ export function TeamLineupPanel({ teamName }: TeamLineupPanelProps) {
         {isLoading ? (
           <LineupPitchSkeleton />
         ) : hasStarters && lineup ? (
-          <div className="w-[700px] mx-auto relative min-h-[280px] rounded-xl p-3">
+          <div className="relative mx-auto min-h-[220px] w-full rounded-xl p-3 md:min-h-[280px] md:w-[700px]">
             {lineup.starters.map((player) => {
               const positionStyle = placementByPlayerId.get(player.playerId);
 

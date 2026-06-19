@@ -118,9 +118,13 @@ export function LoginModal({ auth }: LoginModalProps) {
     return [/^\/private/].some((reg) => reg.test(pathname));
   }, [pathname]);
 
+  const loginModalVisible =
+    hydrated && loginModalOpen && !isPrivateMode && !privyModalOpen;
+
   return (
+    <>
     <Modal
-      open={hydrated && loginModalOpen && !isPrivateMode}
+      open={loginModalVisible}
       onClose={() => void closeLogin()}
       ariaLabel={showRestrictedView ? t("tradingUnavailable") : t("enableTrading")}
       hideCloseButton={loginInProgress}
@@ -292,22 +296,23 @@ export function LoginModal({ auth }: LoginModalProps) {
           </>
         )}
       </div>
-
-      <PrivyLoginModal
-        open={privyModalOpen}
-        onClose={closePrivyLogin}
-        onConnectExtensionWallet={() => {
-          trackLoginClicked({
-            entrySource: "privy_login_modal",
-            label: "Connect with extension wallet"
-          });
-          setLoginMethod("wallet");
-          closePrivyLogin();
-          void openLogin();
-        }}
-        onEmailAuthenticated={completePrivyEmailLogin}
-      />
     </Modal>
+
+    <PrivyLoginModal
+      open={privyModalOpen}
+      onClose={closePrivyLogin}
+      onConnectExtensionWallet={() => {
+        trackLoginClicked({
+          entrySource: "privy_login_modal",
+          label: "Connect with extension wallet"
+        });
+        setLoginMethod("wallet");
+        closePrivyLogin();
+        void openLogin();
+      }}
+      onEmailAuthenticated={completePrivyEmailLogin}
+    />
+    </>
   );
 }
 

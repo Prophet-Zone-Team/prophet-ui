@@ -34,9 +34,12 @@ export {
   useFastBidAmount,
   useLocale,
   useNotificationsEnabled,
+  useOutcomeDisplayModePreference,
+  useResolvedOutcomeDisplayMode,
   useSetFastBidAmount,
   useSetLocale,
   useSetNotificationsEnabled,
+  useSetOutcomeDisplayMode,
   useUserConfigStore
 } from "@/store/user-config-store";
 export { useConfigHydrated } from "@/store/use-config-hydrated";

@@ -86,10 +86,8 @@ export async function resolveOrderFundingRequirementWithFees(
   }
 
   try {
-    const [market, builderTakerFeeRate] = await Promise.all([
-      fetchClobMarketDetails(tokenId),
-      getBuilderTakerFeeRate(),
-    ]);
+    const market = await fetchClobMarketDetails(tokenId);
+    const builderTakerFeeRate = getBuilderTakerFeeRate();
     const estimatedTakerFee = estimateFundingBuyTakerFee({
       cost: requirement.cost,
       price: requirement.cost / requirement.size,

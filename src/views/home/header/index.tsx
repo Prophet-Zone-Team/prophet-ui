@@ -3,25 +3,68 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
+import { formatVolume } from "@/components/home/market-formatters";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { ProbabilityChangeTrend } from "@/components/market/probability-change-trend";
+import { usePolymarketStats } from "@/hooks/market/use-polymarket-stats";
 import { cn } from "@/lib/cn";
+import { MarketListMetricLoading } from "@/views/home/home-data-loading";
 import { HomeHeroTitleIconCycle } from "@/views/home/header/home-hero-title-icon-cycle";
 
 const WORLD_CUP_2026_KICKOFF = new Date(Date.UTC(2026, 5, 11, 18, 0, 0));
 
-export interface HomeHeroProps {
-  totalVolumeLabel: ReactNode;
-  topMoveValue: ReactNode;
-}
-
-export function HomeHero({ totalVolumeLabel, topMoveValue }: HomeHeroProps) {
+export function HomeHero() {
   const t = useTranslations("home");
+  const {
+    volume,
+    topMove,
+    isLoading: isStatsLoading,
+    isError: isStatsError
+  } = usePolymarketStats();
+
+  const totalVolumeLabel = isStatsLoading ? (
+    <MarketListMetricLoading variant="volume" />
+  ) : !isStatsError && volume !== undefined ? (
+    `$${formatVolume(volume)}`
+  ) : (
+    "-"
+  );
+
+  const topMoveValue = (() => {
+    if (isStatsLoading) {
+      return <MarketListMetricLoading variant="probability" />;
+    }
+
+    if (isStatsError || !topMove || topMove.changePercent === undefined) {
+      return "-";
+    }
+
+    return (
+      <div className="inline-flex items-center gap-[5px]">
+        {topMove.team ? (
+          <TeamFlag
+            code={topMove.team.code}
+            name={topMove.team.name}
+            logoUrl={topMove.team.logoUrl}
+            className="rounded-[2px] text-base text-[20px] shrink-0"
+          />
+        ) : null}
+        <span className={heroStatValueClassName}>{topMove.teamCode}</span>
+        <ProbabilityChangeTrend
+          changePercent={topMove.changePercent}
+          decimals={1}
+        />
+      </div>
+    );
+  })();
+
   const showKickoffCountdown = Date.now() < WORLD_CUP_2026_KICKOFF.getTime();
   const kickoffLabel = showKickoffCountdown
     ? formatKickoffCountdown(WORLD_CUP_2026_KICKOFF, t)
     : null;
 
   return (
-    <section className="flex justify-between py-8">
+    <section className="hidden md:flex justify-between py-8">
       <div className="flex-1 px-3 md:px-0">
         <div className="flex items-start gap-5">
           <img

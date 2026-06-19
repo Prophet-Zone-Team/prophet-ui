@@ -314,11 +314,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.setError(options.error);
       }
 
-      if (options?.openModal !== false) {
-        if (!isRegionBlockedRef.current) {
-          store.setLoginModalOpen(true);
-        }
-      }
+      // if (options?.openModal !== false) {
+      //   if (!isRegionBlockedRef.current) {
+      //     store.setLoginModalOpen(true);
+      //   }
+      // }
     },
     []
   );
@@ -632,7 +632,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         store.clearAuth();
         store.setLoginInProgress(false);
         store.setStatus("ready");
-        openSetupModalIfNeeded();
+        // openSetupModalIfNeeded();
 
         walletHandlingRef.current = false;
         return;
@@ -736,7 +736,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           store.setError(
             "Wallet extension is not connected. Reconnect your wallet to continue."
           );
-          openSetupModalIfNeeded();
+          // openSetupModalIfNeeded();
 
           if (isTradingSetupComplete(nextReadiness)) {
             store.setLoginModalOpen(true);
@@ -1375,9 +1375,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       oauthPending === "google" ||
       hasOAuthReturnParams()
     ) {
-      // const store = useAuthStore.getState();
-      // store.setLoginMethod("google");
-      // store.setLoginModalOpen(true);
       void startPrivyTradingLogin("google");
     }
   }, [privyReady, googleLoginWithOAuthReady, privyWallets]);
@@ -1422,13 +1419,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loginMethod, privyAuthenticated, privyUser]);
 
   // openSetupModal
-  useEffect(() => {
-    if (!hydrated) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (!hydrated) {
+  //     return;
+  //   }
 
-    openSetupModalIfNeeded();
-  }, [hydrated, pathname, openSetupModalIfNeeded, session, readiness]);
+  //   openSetupModalIfNeeded();
+  // }, [hydrated, pathname, openSetupModalIfNeeded, session, readiness]);
 
   // refresh cash and private balance
   useEffect(() => {

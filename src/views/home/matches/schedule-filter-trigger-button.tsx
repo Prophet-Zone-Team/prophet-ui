@@ -18,7 +18,7 @@ export function ScheduleFilterTriggerButton({
   return (
     <button
       type="button"
-      className="inline-flex h-[34px] w-[80px] md:w-[98px] items-center justify-center gap-2 md:gap-[10px] rounded-[20px] border border-[#909090] bg-white font-normal leading-[19px] text-black text-sm md:text-base"
+      className="inline-flex h-[30px] w-[77px] md:w-[98px] items-center justify-center gap-2 md:gap-[10px] rounded-[20px] border border-[#909090] bg-white font-normal leading-[19px] text-black text-[12px] md:text-base"
       aria-expanded={open}
       aria-haspopup={ariaHaspopup}
       onClick={onClick}

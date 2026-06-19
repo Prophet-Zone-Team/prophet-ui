@@ -29,13 +29,13 @@ export function StrategyCardHeader({
   const { from, to } = VARIANT_GRADIENT[variant];
 
   return (
-    <header className={cn("relative h-[50px] w-[420px] shrink-0", className)}>
+    <header className={cn("relative h-[50px] w-full shrink-0 md:max-w-[420px]", className)}>
       <StrategyCardHeaderBackground
         gradientId={gradientId}
         from={from}
         to={to}
       />
-      <h3 className="relative z-10 m-0 flex h-full w-full pr-[30px] items-center justify-center px-4 font-[Sora] text-[18px] font-semibold capitalize leading-normal text-white">
+      <h3 className="relative z-10 m-0 flex h-full w-full items-center justify-center px-4 pr-[30px] font-[Sora] text-base font-semibold capitalize leading-normal text-white md:text-[18px]">
         {title}
       </h3>
     </header>

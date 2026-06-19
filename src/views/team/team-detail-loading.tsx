@@ -255,6 +255,20 @@ export function TeamDetailBodySkeleton() {
   );
 }
 
+export function TeamDetailMobileBodySkeleton() {
+  return (
+    <div className="flex flex-col gap-4 md:hidden" aria-hidden>
+      <LoadingBlock className="h-[38px] w-full rounded-md" />
+      {Array.from({ length: 6 }, (_, index) => (
+        <LoadingBlock
+          key={index}
+          className="h-[160px] w-full rounded-[12px] border border-prophet-line bg-white"
+        />
+      ))}
+    </div>
+  );
+}
+
 export function TeamDetailPageSkeleton() {
   return (
     <div className={teamPageClass} aria-busy aria-label="Loading team page">

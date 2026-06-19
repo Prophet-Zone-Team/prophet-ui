@@ -21,6 +21,7 @@ import {
 } from "recharts";
 
 import { formatChartProbability } from "@/components/home/market-formatters";
+import { useDevice } from "@/hooks/common/use-device";
 import {
   formatChartTimestampClockLabel,
   formatGoalEventTime,
@@ -85,6 +86,10 @@ interface ChartCustomizedProps {
 type EndLabelChartConfig = {
   chartData: ChartRow[];
   seriesLabels: Record<(typeof SERIES)[number]["key"], string>;
+  nameFontSize: number;
+  valueFontSize: number;
+  nameOffsetY: number;
+  valueOffsetY: number;
 };
 
 const EndLabelChartContext = createContext<EndLabelChartConfig | null>(null);
@@ -137,18 +142,26 @@ function EndLabelMarker({
   slotY,
   name,
   probability,
-  series
+  series,
+  nameFontSize,
+  valueFontSize,
+  nameOffsetY,
+  valueOffsetY
 }: {
   anchorX: number;
   slotY: number;
   name: string;
   probability: number | undefined;
   series: (typeof SERIES)[number];
+  nameFontSize: number;
+  valueFontSize: number;
+  nameOffsetY: number;
+  valueOffsetY: number;
 }): ReactElement<SVGElement> {
   const probabilityLabel =
     typeof probability === "number" ? formatChartProbability(probability) : "—";
-  const nameY = slotY - 14;
-  const valueY = slotY + 14;
+  const nameY = slotY - nameOffsetY;
+  const valueY = slotY + valueOffsetY;
 
   return (
     <text textAnchor="end">
@@ -156,7 +169,7 @@ function EndLabelMarker({
         x={anchorX}
         y={nameY}
         fill={series.color}
-        fontSize={14}
+        fontSize={nameFontSize}
         fontWeight={400}
       >
         {name}
@@ -165,7 +178,7 @@ function EndLabelMarker({
         x={anchorX}
         y={valueY}
         fill={series.color}
-        fontSize={26}
+        fontSize={valueFontSize}
         fontWeight={600}
       >
         {probabilityLabel}
@@ -204,7 +217,11 @@ function EndLabelLayer({
   width,
   height,
   chartData,
-  seriesLabels
+  seriesLabels,
+  nameFontSize,
+  valueFontSize,
+  nameOffsetY,
+  valueOffsetY
 }: ChartCustomizedProps & EndLabelChartConfig) {
   const anchorX = resolvePlotRightAnchorX(width, offset);
   const latestRow = chartData.at(-1);
@@ -230,6 +247,10 @@ function EndLabelLayer({
             name={seriesLabels[series.key]}
             probability={latestRow[series.key]}
             series={series}
+            nameFontSize={nameFontSize}
+            valueFontSize={valueFontSize}
+            nameOffsetY={nameOffsetY}
+            valueOffsetY={valueOffsetY}
           />
         );
       })}
@@ -283,6 +304,12 @@ export function GameProbabilityChart({
   awayCode,
 }: GameProbabilityChartProps) {
   const t = useTranslations("trade");
+  const isMobile = useDevice();
+  const axisFontSize = isMobile ? 10 : 14;
+  const endLabelNameFontSize = isMobile ? 10 : 14;
+  const endLabelValueFontSize = isMobile ? 10 : 26;
+  const endLabelNameOffsetY = isMobile ? 10 : 14;
+  const endLabelValueOffsetY = isMobile ? 10 : 14;
   const isLive = mode === "live";
   const formatLiveAxisTick = (value: number) => {
     const safeSeconds = Math.max(0, Math.floor(value));
@@ -317,9 +344,20 @@ export function GameProbabilityChart({
   const endLabelChartConfig = useMemo(
     () => ({
       chartData,
-      seriesLabels
+      seriesLabels,
+      nameFontSize: endLabelNameFontSize,
+      valueFontSize: endLabelValueFontSize,
+      nameOffsetY: endLabelNameOffsetY,
+      valueOffsetY: endLabelValueOffsetY
     }),
-    [chartData, seriesLabels]
+    [
+      chartData,
+      endLabelNameFontSize,
+      endLabelNameOffsetY,
+      endLabelValueFontSize,
+      endLabelValueOffsetY,
+      seriesLabels
+    ]
   );
   const dataLength = chartData.length;
 
@@ -379,7 +417,7 @@ export function GameProbabilityChart({
         ticks={
           isLive ? resolveLiveChartAxisTicks(resolvedMaxElapsed) : undefined
         }
-        tick={{ fill: CHART_COLORS.muted, fontSize: 14, dy: 6 }}
+        tick={{ fill: CHART_COLORS.muted, fontSize: axisFontSize, dy: 6 }}
         axisLine={false}
         tickLine={false}
         minTickGap={24}
@@ -393,7 +431,7 @@ export function GameProbabilityChart({
       <YAxis
         domain={yDomain}
         orientation="right"
-        tick={{ fill: CHART_COLORS.muted, fontSize: 14 }}
+        tick={{ fill: CHART_COLORS.muted, fontSize: axisFontSize }}
         axisLine={false}
         tickLine={false}
         tickFormatter={(value: number) => `${value}%`}
@@ -486,7 +524,7 @@ function ChartTooltip({
 
   return (
     <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-      <p className="m-0 mb-1 text-sm font-[400] leading-[17px] text-[#909090]">
+      <p className="m-0 mb-1 text-[10px] md:text-sm font-[400] leading-[17px] text-[#909090]">
         {timeLabel}
       </p>
       {payload.map((entry) => {
@@ -495,7 +533,7 @@ function ChartTooltip({
         return (
           <p
             key={String(entry.dataKey)}
-            className="m-0 text-[12px] font-[400] leading-[20px]"
+            className="m-0 text-[10px] md:text-[12px] font-[400] leading-[20px]"
             style={{ color: entry.color }}
           >
             {series ? seriesLabels[series.key] : entry.dataKey}:{" "}

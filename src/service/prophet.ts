@@ -25,6 +25,9 @@ import type {
   ProphetGetHeadToHeadFixturesData,
   ProphetGetGameStatisticsData,
   ProphetGetGameOddsData,
+  ProphetGetGroupStandingsData,
+  ProphetGetGroupMatchesData,
+  ProphetGetGroupData,
   ProphetGameStatisticsPayload,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
@@ -425,6 +428,39 @@ function parseGameStatisticsPayload(
       "Unable to parse game statistics response."
     );
   }
+}
+
+/** GET /v1/game/group-matches — group stage fixtures for a group code */
+export async function getProphetGroupMatches(params: {
+  group_code: string;
+  signal?: AbortSignal;
+}): Promise<ProphetGetGroupMatchesData> {
+  return prophetGet<ProphetGetGroupMatchesData>("/v1/game/group-matches", {
+    params: { group_code: params.group_code },
+    signal: params.signal,
+  });
+}
+
+/** GET /v1/game/group — group standings, winner market, and fixtures */
+export async function getProphetGroup(params: {
+  group_code: string;
+  signal?: AbortSignal;
+}): Promise<ProphetGetGroupData> {
+  return prophetGet<ProphetGetGroupData>("/v1/game/group", {
+    params: { group_code: params.group_code },
+    signal: params.signal,
+  });
+}
+
+/** GET /v1/game/group-standings — group stage standings with market prices */
+export async function getProphetGroupStandings(params?: {
+  group_code?: string;
+  signal?: AbortSignal;
+}): Promise<ProphetGetGroupStandingsData> {
+  return prophetGet<ProphetGetGroupStandingsData>("/v1/game/group-standings", {
+    params: params?.group_code ? { group_code: params.group_code } : undefined,
+    signal: params?.signal
+  });
 }
 
 /** GET /v1/game/odds — bookmaker odds by market category */

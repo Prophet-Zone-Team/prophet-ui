@@ -1,13 +1,79 @@
-import type { PolymarketFeeDetails } from "@/types/market";
+import type {
+  BidTradeSide,
+  PolymarketFeeDetails,
+  TradingOrderType
+} from "@/types/market";
 
 const MIN_PRICE = 0.01;
 const MAX_PRICE = 0.99;
+
+export const BUILDER_MAKER_FEE_RATE = 0.005;
+export const BUILDER_TAKER_FEE_RATE = 0.01;
+export const TO_WIN_PLATFORM_FEE_RATE = 0.03;
+
+export function resolveBuilderFeeRate(orderType: TradingOrderType): number {
+  return isLimitOrderType(orderType)
+    ? BUILDER_MAKER_FEE_RATE
+    : BUILDER_TAKER_FEE_RATE;
+}
+
+export function calculateToWinAmount({
+  amount,
+  price,
+  orderType,
+  tradeSide = "buy"
+}: {
+  amount: number;
+  price: number;
+  orderType: TradingOrderType;
+  tradeSide?: BidTradeSide;
+}): number {
+  if (
+    tradeSide !== "buy" ||
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    !Number.isFinite(price) ||
+    price <= 0
+  ) {
+    return 0;
+  }
+  const isLimitOrder = isLimitOrderType(orderType);
+  const shares = isLimitOrder ? amount : amount / price;
+  const cost = isLimitOrder ? amount * price : amount;
+  const rate = resolveBuilderFeeRate(orderType);
+  const grossPayout = shares * (1 - rate);
+  const profit = grossPayout - cost;
+  const platformFee = calculateToWinPlatformFee(shares, price);
+  const netProfit = profit - platformFee;
+
+  return roundMoney(netProfit + cost);
+}
+
+export function calculateToWinPlatformFee(
+  shares: number,
+  price: number
+): number {
+  if (
+    !Number.isFinite(shares) ||
+    shares <= 0 ||
+    !Number.isFinite(price) ||
+    price <= 0
+  ) {
+    return 0;
+  }
+
+  const normalizedPrice = clamp(price, MIN_PRICE, MAX_PRICE);
+
+  return (
+    shares * TO_WIN_PLATFORM_FEE_RATE * normalizedPrice * (1 - normalizedPrice)
+  );
+}
 
 export function estimateBuyTakerFee({
   orderCost,
   price,
   fee,
-  builderTakerFeeRate = 0,
+  builderTakerFeeRate = BUILDER_TAKER_FEE_RATE
 }: {
   orderCost: number;
   price: number;
@@ -18,14 +84,16 @@ export function estimateBuyTakerFee({
     return 0;
   }
 
-  return roundMoney(orderCost * getBuyTakerFeeMultiplier({ price, fee, builderTakerFeeRate }));
+  return roundMoney(
+    orderCost * getBuyTakerFeeMultiplier({ price, fee, builderTakerFeeRate })
+  );
 }
 
 export function calculateBuyOrderCostFromBudget({
   budget,
   price,
   fee,
-  builderTakerFeeRate = 0.03
+  builderTakerFeeRate = BUILDER_TAKER_FEE_RATE
 }: {
   budget: number;
   price: number;
@@ -52,21 +120,24 @@ export function calculateBuyOrderCostFromBudget({
 export function getBuyTakerFeeMultiplier({
   price,
   fee,
-  builderTakerFeeRate = 0,
+  builderTakerFeeRate = BUILDER_TAKER_FEE_RATE
 }: {
   price: number;
   fee?: Pick<PolymarketFeeDetails, "rate" | "exponent">;
   builderTakerFeeRate?: number;
 }): number {
   const platformFeeMultiplier = getPlatformBuyTakerFeeMultiplier(price, fee);
-  const builderFeeMultiplier = Number.isFinite(builderTakerFeeRate) && builderTakerFeeRate > 0 ? builderTakerFeeRate : 0;
+  const builderFeeMultiplier =
+    Number.isFinite(builderTakerFeeRate) && builderTakerFeeRate > 0
+      ? builderTakerFeeRate
+      : 0;
 
   return platformFeeMultiplier + builderFeeMultiplier;
 }
 
 function getPlatformBuyTakerFeeMultiplier(
   price: number,
-  fee: Pick<PolymarketFeeDetails, "rate" | "exponent"> | undefined,
+  fee: Pick<PolymarketFeeDetails, "rate" | "exponent"> | undefined
 ): number {
   if (
     !Number.isFinite(price) ||
@@ -81,9 +152,14 @@ function getPlatformBuyTakerFeeMultiplier(
   }
 
   const normalizedPrice = clamp(price, MIN_PRICE, MAX_PRICE);
-  const effectiveFeeRate = fee.rate * (normalizedPrice * (1 - normalizedPrice)) ** fee.exponent;
+  const effectiveFeeRate =
+    fee.rate * (normalizedPrice * (1 - normalizedPrice)) ** fee.exponent;
 
   return effectiveFeeRate / normalizedPrice;
+}
+
+function isLimitOrderType(orderType: TradingOrderType): boolean {
+  return orderType === "GTC" || orderType === "GTD";
 }
 
 function clamp(value: number, min: number, max: number): number {

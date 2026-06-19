@@ -12,8 +12,8 @@ import { RegionRestrictedControl } from "@/components/trading/region-restricted-
 import { TeamFlag } from "@/components/teams/team-flag";
 import { useAuthOptional } from "@/context/auth";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 import { cn } from "@/lib/cn";
-import { formatOrderbookPrice } from "@/lib/market/order-math";
 import { formatScheduleKickoff } from "@/lib/market/schedule-match";
 import { gameTradeHref, teamTradeHref } from "@/lib/routes/trade";
 import {
@@ -424,8 +424,9 @@ function MatchOutcomeQuickBidButton({
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const regionRestricted = isAuthenticated && isBuyRestricted;
   const outcomeLabel = useMatchOutcomeLabel(outcomeSide);
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
   const priceLabel =
-    price !== undefined ? formatOrderbookPrice(price) : undefined;
+    price !== undefined ? formatOutcomeDisplay(price) : undefined;
   const buttonLabel = priceLabel ? `${outcomeLabel} ${priceLabel}` : outcomeLabel;
 
   function handleClick() {
@@ -484,7 +485,8 @@ function OutcomeQuickBidButton({
     snapshot.team.name
   );
   const price = getTeamSimpleSidePrice(snapshot, side);
-  const priceLabel = formatOrderbookPrice(price);
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
+  const priceLabel = formatOutcomeDisplay(price);
   const sideLabel = isYes ? t("yesOutcome").toUpperCase() : t("noOutcome").toUpperCase();
   const buttonLabel = `${sideLabel} ${priceLabel}`;
 

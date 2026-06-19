@@ -128,7 +128,7 @@ function SpecialMatchDataCardContent({
   return (
     <article
       className={cn(
-        "relative min-h-[220px] overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white sm:min-h-[280px] lg:min-h-[345px]",
+        "relative min-h-[160px] overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white sm:min-h-[280px] lg:min-h-[345px]",
         canNavigate &&
           "cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]"
       )}
@@ -152,9 +152,9 @@ function SpecialMatchDataCardContent({
         <div className="absolute inset-0 z-0 bg-[#f4f6f9]" aria-hidden />
       )}
 
-      <div className="relative z-10 flex justify-center pt-[50px] px-2 md:px-0">
-        <div className="w-full flex justify-center items-center md:w-[568px] h-[138px] rounded-[20px] bg-white px-2 md:px-4 py-3 md:py-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] sm:px-8 sm:py-5">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 relative">
+      <div className="relative z-10 flex justify-center pt-[18px] px-[15px] md:pt-[50px] md:px-2 md:px-0">
+        <div className="w-full flex justify-center items-center h-[72px] rounded-[10px] md:w-[568px] md:h-[138px] md:rounded-[20px] bg-white px-2 md:px-4 py-3 md:py-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] sm:px-8 sm:py-5">
+          <div className="flex items-center justify-around relative w-full">
             <TeamColumn
               name={homeDisplayName}
               code={sides.home.code}
@@ -181,13 +181,13 @@ function SpecialMatchDataCardContent({
                 </>
               ) : (
                 <>
-                  <div className="text-[14px] text-[#9D84FF] font-[500]">
+                  <div className="md:text-[14px] text-[12px] text-[#9D84FF] font-[500]">
                     {t("nextMatch")}
                   </div>
-                  <div className="text-[30px] md:text-[36px] text-[#909090] font-[500]">
+                  <div className="text-[24px] md:text-[36px] text-[#909090] font-[500]">
                     {t("versus")}
                   </div>
-                  <div className="text-sm md:text-[16px] text-[#000] font-[400]">
+                  <div className="text-[10px] md:text-[16px] text-[#000] font-[400]">
                     {t("startsAt", {
                       kickoff: formatScheduleKickoff(liveMatch.kickoffAt)
                     })}
@@ -221,14 +221,14 @@ function TeamColumn({
   align: "start" | "end";
 }) {
   return (
-    <div className={cn("flex min-w-0 flex-col gap-2 items-center")}>
+    <div className={cn("flex min-w-0 flex-col gap-1 md:gap-2 items-center")}>
       <TeamFlag
         code={code}
         name={name}
         logoUrl={logoUrl}
-        className="h-[40px] md:h-[50px] w-[40px] md:w-[50px] rounded-[6px] text-[40px] md:text-[50px]"
+        className="h-[20px] md:h-[50px] w-[20px] rounded-[4px] md:w-[50px] md:rounded-[6px] text-[20px] md:text-[50px]"
       />
-      <strong className="max-w-full truncate text-base md:text-[26px] font-[500] leading-[31px] text-black">
+      <strong className="max-w-full truncate text-[14px] md:text-[26px] font-[500] md:leading-[31px] text-black">
         {name}
       </strong>
     </div>
@@ -253,11 +253,7 @@ function ProbabilityStrip({
     slant
   );
   return (
-    <div
-      ref={setContainerRef}
-      className="absolute inset-0 min-h-[345px]"
-      aria-hidden
-    >
+    <div ref={setContainerRef} className="absolute inset-0" aria-hidden>
       <div className="absolute inset-0 z-0">
         <ProbabilitySegmentFill background="#3168FF" clipPath={homeClip} />
         <ProbabilitySegmentFill background="#D9D9D9" clipPath={drawClip} />
@@ -269,7 +265,7 @@ function ProbabilityStrip({
           label={homeName}
           probability={probabilities.home}
           tone="light"
-          percentClassName="text-[36px] sm:text-[52px] sm:leading-[62px]"
+          percentClassName="text-[24px] leading-[29px] sm:text-[36px] sm:leading-[43px] lg:text-[52px] lg:leading-[62px]"
           align="start"
         />
         <ProbabilitySegmentLabel
@@ -277,7 +273,8 @@ function ProbabilityStrip({
           probability={probabilities.draw}
           tone="dark"
           align="start"
-          contentLeft={`calc(${homeEnd}% + 60px)`}
+          contentLeft={`calc(${homeEnd}% + clamp(16px, 4vw, 60px))`}
+          className="hidden sm:block"
         />
         <ProbabilitySegmentLabel
           label={awayName}
@@ -311,7 +308,8 @@ function ProbabilitySegmentLabel({
   tone,
   percentClassName,
   align = "start",
-  contentLeft
+  contentLeft,
+  className
 }: {
   label: string;
   probability: number;
@@ -319,15 +317,16 @@ function ProbabilitySegmentLabel({
   percentClassName?: string;
   align?: "start" | "center" | "end";
   contentLeft?: string;
+  className?: string;
 }) {
   const textColor = tone === "light" ? "text-white" : "text-black";
   const showPercent = Math.round(probability * 100) >= 10;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-30">
+    <div className={cn("pointer-events-none absolute inset-0 z-30", className)}>
       <div
         className={cn(
-          "absolute bottom-5 z-30 flex max-w-[min(100%,280px)] flex-col gap-0.5 sm:bottom-8",
+          "absolute bottom-3 z-30 flex max-w-[min(100%,280px)] flex-col gap-0.5 sm:bottom-8",
           align === "end" && "right-0 items-end px-4 text-right sm:px-6",
           align === "center" &&
             "left-1/2 -translate-x-1/2 items-center px-4 text-center sm:px-6",
@@ -341,12 +340,12 @@ function ProbabilitySegmentLabel({
       >
         {showPercent ? (
           <>
-            <span className="relative z-30 text-[16px] font-semibold leading-[19px]">
+            <span className="relative z-30 text-[12px] font-semibold leading-[14px] sm:text-[16px] sm:leading-[19px]">
               {label}
             </span>
             <span
               className={cn(
-                "relative z-30 text-[36px] font-semibold leading-[43px]",
+                "relative z-30 text-[24px] font-semibold leading-[29px] sm:text-[36px] sm:leading-[43px]",
                 percentClassName,
                 textColor
               )}

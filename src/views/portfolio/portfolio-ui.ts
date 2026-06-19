@@ -106,7 +106,7 @@ export const portfolioOpenOrderRowsRowClass = cn(
 );
 
 const portfolioHistoryTableGridColsClass =
-  "grid-cols-[140px_minmax(0,1fr)_5.5rem_9rem]";
+  "grid-cols-[140px_minmax(0,1fr)_5.5rem_10rem]";
 
 export const portfolioHistoryListClass =
   "flex flex-col gap-1 px-3 py-2 md:px-4";
@@ -138,8 +138,8 @@ export const portfolioActionButtonClass = cn(
 );
 
 export const portfolioSecondaryButtonClass = cn(
-  "flex h-[50px] w-full items-center justify-center rounded-[8px] border border-[#909090] bg-white",
-  "text-base font-[400] leading-[19px] text-black transition-colors hover:bg-[#fafbfc]",
+  "flex items-center justify-center underline",
+  "text-base font-[400] leading-[19px] text-black transition-colors hover:opacity-80",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
