@@ -13,6 +13,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 
+import { confirmSolanaFundingTransaction } from "@/lib/wallet/solana/confirm-transaction";
 import { createSolanaFundingConnection } from "@/lib/wallet/solana/connection";
 
 const SOL_NATIVE_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
@@ -63,13 +64,21 @@ export default class SolanaFundingWallet {
     );
 
     const connection = this.getConnection();
-    const { blockhash } = await connection.getLatestBlockhash();
+    const { blockhash, lastValidBlockHeight } =
+      await connection.getLatestBlockhash("confirmed");
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = fromPubkey;
 
     const signedTransaction = await this.signTransaction(transaction);
-    const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-    await connection.confirmTransaction(signature, "confirmed");
+    const signature = await connection.sendRawTransaction(
+      signedTransaction.serialize(),
+      { preflightCommitment: "confirmed" },
+    );
+    await confirmSolanaFundingTransaction(connection, {
+      signature,
+      blockhash,
+      lastValidBlockHeight,
+    });
 
     return signature;
   }
@@ -115,13 +124,21 @@ export default class SolanaFundingWallet {
       ),
     );
 
-    const { blockhash } = await connection.getLatestBlockhash();
+    const { blockhash, lastValidBlockHeight } =
+      await connection.getLatestBlockhash("confirmed");
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = fromPubkey;
 
     const signedTransaction = await this.signTransaction(transaction);
-    const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-    await connection.confirmTransaction(signature, "confirmed");
+    const signature = await connection.sendRawTransaction(
+      signedTransaction.serialize(),
+      { preflightCommitment: "confirmed" },
+    );
+    await confirmSolanaFundingTransaction(connection, {
+      signature,
+      blockhash,
+      lastValidBlockHeight,
+    });
 
     return signature;
   }
