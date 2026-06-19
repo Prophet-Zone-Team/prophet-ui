@@ -15,8 +15,17 @@ export function resolveTeamDetailSlug(slug: string): string {
   return TEAM_DETAIL_SLUG_ALIASES[slug] ?? slug;
 }
 
-export function teamDetailHref(teamId: string) {
-  return `/team?slug=${encodeURIComponent(teamId)}`;
+export function teamDetailHref(
+  teamId: string,
+  options?: { entry?: "trade" }
+) {
+  const params = new URLSearchParams({ slug: teamId });
+
+  if (options?.entry === "trade") {
+    params.set("entry", "trade");
+  }
+
+  return `/team?${params.toString()}`;
 }
 
 export function buildTeamDetailHref(teamName?: string | null): string | undefined {

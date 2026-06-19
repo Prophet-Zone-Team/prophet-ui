@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { TeamFlag } from "@/components/teams/team-flag";
+import { cn } from "@/lib/cn";
+import { gameTradeHref } from "@/lib/routes/trade";
 import type { TeamMarketSnapshot } from "@/types/market";
 import { formatFixtureDate, NextMatchView } from "@/lib/team/team-detail-model";
 import { TeamEmptyState } from "@/views/team/team-empty-state";
@@ -24,6 +26,8 @@ export function TeamNextMatchPanel({
   snapshot: _snapshot
 }: TeamNextMatchPanelProps) {
   const t = useTranslations("teamDetail");
+  const matchSlug = nextMatch?.slug?.trim();
+  const matchTradeHref = matchSlug ? gameTradeHref(matchSlug) : undefined;
 
   return (
     <section className={teamPanelClass} aria-label={t("nextMatchAria")}>
@@ -61,12 +65,25 @@ export function TeamNextMatchPanel({
               {formatFixtureDate(nextMatch.fixtureDate)}
               {nextMatch.leagueName ? ` / ${nextMatch.leagueName}` : ""}
             </p>
-            <Link
-              href="/fifa"
-              className={`${teamOpenTradeButtonClass} mt-4 w-full`}
-            >
-              {t("viewMatch")}
-            </Link>
+            {matchTradeHref ? (
+              <Link
+                href={matchTradeHref}
+                className={cn(teamOpenTradeButtonClass, "mt-4 w-full")}
+              >
+                {t("viewMatch")}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className={cn(
+                  teamOpenTradeButtonClass,
+                  "mt-4 w-full disabled:cursor-not-allowed disabled:opacity-50"
+                )}
+              >
+                {t("viewMatch")}
+              </button>
+            )}
           </>
         ) : (
           <TeamEmptyState

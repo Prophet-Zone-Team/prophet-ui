@@ -20,7 +20,7 @@ import { PortfolioHistoryTable } from "@/views/portfolio/portfolio-history-table
 import { PortfolioOpenOrdersTable } from "@/views/portfolio/portfolio-open-orders-table";
 import { PortfolioPositionsTable } from "@/views/portfolio/portfolio-positions-table";
 import { PortfolioStrategyList } from "@/views/portfolio/strategy";
-import { portfolioActivityCardClass } from "@/views/portfolio/portfolio-ui";
+import { portfolioActivityCardClass, portfolioSecondaryButtonClass } from "@/views/portfolio/portfolio-ui";
 import type { PortfolioLoadOptions } from "@/views/portfolio/use-portfolio-data";
 
 const PORTFOLIO_TAB_IDS = [
@@ -49,19 +49,18 @@ export interface PortfolioActivityTabsProps {
   positions: UserPositionRecord[];
   openOrders: UserOpenOrder[];
   transactions: PortfolioTransactionRecord[];
-  historyPage: number;
-  historyTotal: number;
-  historyPageSize: number;
+  historyHasMore: boolean;
+  historyLoadingMore: boolean;
   positionTimeMap: Map<string, string>;
   sessionConnected: boolean;
   coreStatus: PortfolioLoadStatus;
   openOrdersStatus: PortfolioLoadStatus;
   historyStatus: PortfolioLoadStatus;
   onConnectWallet: () => void;
-  onHistoryPageChange: (page: number) => void;
   loadCore: (options?: PortfolioLoadOptions) => Promise<void>;
   loadOpenOrders: (options?: PortfolioLoadOptions) => Promise<void>;
   loadActivityHistory: (options?: PortfolioLoadOptions) => Promise<void>;
+  loadMoreActivityHistory: () => Promise<void>;
 }
 
 export function PortfolioActivityTabs({
@@ -69,19 +68,18 @@ export function PortfolioActivityTabs({
   positions,
   openOrders,
   transactions,
-  historyPage,
-  historyTotal,
-  historyPageSize,
+  historyHasMore,
+  historyLoadingMore,
   positionTimeMap,
   sessionConnected,
   coreStatus,
   openOrdersStatus,
   historyStatus,
   onConnectWallet,
-  onHistoryPageChange,
   loadCore,
   loadOpenOrders,
-  loadActivityHistory
+  loadActivityHistory,
+  loadMoreActivityHistory
 }: PortfolioActivityTabsProps) {
   const t = useTranslations("portfolio");
   const router = useRouter();
@@ -175,12 +173,11 @@ export function PortfolioActivityTabs({
 
     if (!loadedTabsRef.current.has("history")) {
       loadedTabsRef.current.add("history");
-      void loadActivityHistory({ page: historyPage });
+      void loadActivityHistory();
     }
 
     prevTabRef.current = tab;
   }, [
-    historyPage,
     loadActivityHistory,
     loadCore,
     loadOpenOrders,
@@ -191,7 +188,10 @@ export function PortfolioActivityTabs({
   const coreLoading = isTabLoading(coreStatus);
   const openOrdersLoading = sessionConnected && isTabLoading(openOrdersStatus);
   const needsWallet = !sessionConnected && !coreLoading;
-  const historyLoading = sessionConnected && isTabLoading(historyStatus);
+  const historyLoading =
+    sessionConnected &&
+    isTabLoading(historyStatus) &&
+    transactions.length === 0;
 
   const paginatedPositions = useMemo(() => {
     const start = (positionPage - 1) * PORTFOLIO_TABLE_PAGE_SIZE;
@@ -247,12 +247,13 @@ export function PortfolioActivityTabs({
     openOrdersStatus !== "error" &&
     openOrderMarketGroups.length > 0;
 
-  const showHistoryPagination =
+  const showHistoryLoadMore =
     tab === "history" &&
     sessionConnected &&
     !historyLoading &&
     historyStatus !== "error" &&
-    historyTotal > 0;
+    historyHasMore &&
+    transactions.length > 0;
 
   return (
     <section
@@ -327,13 +328,19 @@ export function PortfolioActivityTabs({
             loading={historyLoading}
             onConnectWallet={onConnectWallet}
           />
-          {showHistoryPagination ? (
-            <Pagination
-              page={historyPage}
-              pageSize={historyPageSize}
-              total={historyTotal}
-              onPageChange={onHistoryPageChange}
-            />
+          {showHistoryLoadMore ? (
+            <div className="flex justify-center px-4 py-4">
+              <button
+                type="button"
+                className={portfolioSecondaryButtonClass}
+                disabled={historyLoadingMore}
+                onClick={() => void loadMoreActivityHistory()}
+              >
+                {historyLoadingMore
+                  ? t("loadingTransactionHistory")
+                  : t("showMoreHistory")}
+              </button>
+            </div>
           ) : null}
         </>
       ) : null}

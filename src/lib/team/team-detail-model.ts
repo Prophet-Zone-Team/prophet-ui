@@ -48,6 +48,7 @@ export interface RecentMatchView {
 
 export interface NextMatchView {
   id: number;
+  slug?: string;
   apiFixtureId: number;
   referee: string;
   timezone: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { formatOrderbookPrice } from "@/lib/market/order-math";
+import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import {
   useSetTradeMatchOutcomeSide,
@@ -53,6 +53,7 @@ export function GameOutcomeBidButton({
 }: GameOutcomeBidButtonProps) {
   const sizeClass = gameOutcomeBidButtonSizeClass[size];
   const isInteractive = Boolean(onClick) && !disabled;
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
 
   return (
     <button
@@ -75,7 +76,7 @@ export function GameOutcomeBidButton({
     >
       <span className={sizeClass.title}>{title}</span>
       {price !== undefined ? (
-        <span className={sizeClass.price}>{formatOrderbookPrice(price)}</span>
+        <span className={sizeClass.price}>{formatOutcomeDisplay(price)}</span>
       ) : null}
     </button>
   );

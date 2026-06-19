@@ -22,6 +22,7 @@ export interface WinnerTeamMarketDynamic {
   change24h: number;
   change7d: number;
   volume: number;
+  liquidity?: number;
   sentiment: MarketSentiment;
   bookmakerImpliedProbability: number;
   updatedAt: string;
@@ -165,6 +166,7 @@ function mapGammaMarketToWinnerTeamMarketDynamic(
   const change24h = normalizePriceChange(
     firstGammaNumber(market.oneDayPriceChange, market.priceChange24h),
   );
+  const liquidity = firstGammaNumber(market.liquidity);
 
   return {
     team,
@@ -175,6 +177,7 @@ function mapGammaMarketToWinnerTeamMarketDynamic(
         firstGammaNumber(market.oneWeekPriceChange, market.priceChange7d),
       ),
       volume: firstGammaNumber(market.volumeNum, market.volume) ?? 0,
+      ...(liquidity !== undefined ? { liquidity } : {}),
       sentiment: deriveSentiment(change24h),
       bookmakerImpliedProbability: probability,
       updatedAt: market.updatedAt ?? market.createdAt ?? new Date().toISOString(),

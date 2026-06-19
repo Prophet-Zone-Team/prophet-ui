@@ -44,7 +44,7 @@ export function MarketOtherSources({
       <h4 className="m-0 text-[14px] font-[500] leading-[18px] text-[#909090]">
         {t("otherSources")}
       </h4>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-visible">
         {sources.map((source) => (
           <OtherSourcePill
             key={source.sourceName}

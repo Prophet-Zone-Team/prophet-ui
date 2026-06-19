@@ -24,9 +24,8 @@ export function PortfolioView() {
     openOrders,
     marketContextMap,
     transactions,
-    historyPage,
-    historyTotal,
-    historyPageSize,
+    historyHasMore,
+    historyLoadingMore,
     coreStatus,
     openOrdersStatus,
     historyStatus,
@@ -38,7 +37,7 @@ export function PortfolioView() {
     loadCore,
     loadOpenOrders,
     loadActivityHistory,
-    setHistoryPage
+    loadMoreActivityHistory
   } = usePortfolioData();
 
   const portfolio = useMemo(
@@ -74,19 +73,18 @@ export function PortfolioView() {
             positions={positions}
             openOrders={openOrders}
             transactions={transactions}
-            historyPage={historyPage}
-            historyTotal={historyTotal}
-            historyPageSize={historyPageSize}
+            historyHasMore={historyHasMore}
+            historyLoadingMore={historyLoadingMore}
             positionTimeMap={portfolio.positionTimeMap}
             sessionConnected={Boolean(session)}
             coreStatus={coreStatus}
             openOrdersStatus={openOrdersStatus}
             historyStatus={historyStatus}
             onConnectWallet={() => void connectWallet()}
-            onHistoryPageChange={setHistoryPage}
             loadCore={loadCore}
             loadOpenOrders={loadOpenOrders}
             loadActivityHistory={loadActivityHistory}
+            loadMoreActivityHistory={loadMoreActivityHistory}
           />
         </div>
       </section>

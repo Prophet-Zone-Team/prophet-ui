@@ -3,7 +3,7 @@
 import Drawer, { DrawerDirection } from "@/components/drawer";
 import { useDevice } from "@/hooks/common/use-device";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
-import { Check } from "lucide-react";
+import { Check, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -17,12 +17,16 @@ export interface ScheduleTeamFilterProps {
   teams: ScheduleFilterTeam[];
   selectedTeamIds: Team["id"][];
   onSelectedTeamIdsChange: (teamIds: Team["id"][]) => void;
+  teamSearchQuery?: string;
+  onTeamSearchQueryChange?: (query: string) => void;
 }
 
 export function ScheduleTeamFilter({
   teams,
   selectedTeamIds,
-  onSelectedTeamIdsChange
+  onSelectedTeamIdsChange,
+  teamSearchQuery = "",
+  onTeamSearchQueryChange
 }: ScheduleTeamFilterProps) {
   const t = useTranslations("home");
   const isMobile = useDevice();
@@ -82,11 +86,11 @@ export function ScheduleTeamFilter({
 
   return (
     <div
-      className="flex min-w-0 items-center gap-[14px]"
+      className="flex w-full min-w-0 items-center gap-[14px] md:w-auto"
       role="group"
       aria-label={t("filterByTeam")}
     >
-      <span className="hidden md:block shrink-0 text-[16px] font-[500] leading-[19px] text-[#909090]">
+      <span className="shrink-0 text-[12px] md:text-[16px] font-[500] leading-[19px] text-[#909090]">
         {t("filter")}
       </span>
 
@@ -109,6 +113,17 @@ export function ScheduleTeamFilter({
         ) : null}
       </div>
 
+      {isMobile && onTeamSearchQueryChange ? (
+        <>
+          <div className="h-[24px] w-[1px] bg-[#EBEBEB]" />
+          <ScheduleTeamSearchInput
+            value={teamSearchQuery}
+            onChange={onTeamSearchQueryChange}
+            placeholder={t("searchTeams")}
+          />
+        </>
+      ) : null}
+
       {isMobile ? (
         <Drawer
           open={open}
@@ -128,7 +143,7 @@ export function ScheduleTeamFilter({
       ) : null}
 
       {selectedTeams.length > 0 ? (
-        <div className="flex min-w-0 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="hidden min-w-0 items-center gap-2 overflow-x-auto [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
           {selectedTeams.map((team) => (
             <ScheduleTeamFilterChip
               key={team.id}
@@ -180,6 +195,36 @@ function ScheduleTeamFilterChip({
         </svg>
       </button>
     </span>
+  );
+}
+
+function ScheduleTeamSearchInput({
+  value,
+  onChange,
+  placeholder
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  const t = useTranslations("home");
+
+  return (
+    <div className="relative min-w-0 flex-1 md:hidden">
+      <Search
+        className="pointer-events-none absolute left-3 top-1/2 size-[14px] -translate-y-1/2 text-[#222429]"
+        strokeWidth={2}
+        aria-hidden
+      />
+      <input
+        type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        aria-label={t("searchTeams")}
+        className="box-border h-[30px] w-full max-w-[222px] rounded-[18px] border border-[#EBEBEB] bg-white py-0 pl-[34px] pr-3 font-[Sora] text-[12px] font-normal leading-[15px] text-black outline-none placeholder:text-[#909090]"
+      />
+    </div>
   );
 }
 

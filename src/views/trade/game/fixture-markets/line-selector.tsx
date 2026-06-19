@@ -39,7 +39,7 @@ export function LineSelector({
               className={cn(
                 "border bg-transparent w-[40px] md:w-[52px] h-[40px] md:h-[56px] flex items-center justify-center transition-colors rounded-[8px]",
                 isActive
-                  ? "border-[#EBEBEB] text-base md:text-[18px] rounded-[12px] font-[500] text-black bg-white"
+                  ? "border-[#EBEBEB] text-base md:text-[18px] font-[500] text-black bg-white"
                   : "border-transparent text-xs md:text-[14px] font-[400] text-[#909090] hover:text-black"
               )}
             >

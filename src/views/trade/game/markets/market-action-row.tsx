@@ -24,6 +24,7 @@ import {
   resolveTotalVariant
 } from "./fixture-market-actions";
 import { MarketOtherSources, type MarketOtherSourceItem } from "./market-other-sources";
+import { resolveFixtureOutcomeLabel } from "@/views/trade/trade-widget/trade-i18n";
 
 const cardClass = "rounded-[12px] border border-[#EBEBEB] bg-white";
 
@@ -44,6 +45,8 @@ function OutcomeButtons({
   selectedBinarySide?: "yes" | "no";
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
 }) {
+  const t = useTranslations("trade");
+
   if (!outcomes.length) {
     return <EmptyActions />;
   }
@@ -66,7 +69,7 @@ function OutcomeButtons({
         return (
           <LineOutcomeButton
             key={`${outcome.id}-${displayPrice ?? "na"}`}
-            label={outcome.label}
+            label={resolveFixtureOutcomeLabel(t, outcome)}
             price={displayPrice}
             variant={variant}
             active={isOutcomeSelected(
@@ -102,10 +105,10 @@ function MarketActionRowShell({
 
   return (
     <article className={cn(cardClass, className)}>
-      <div className="flex flex-col items-center gap-2 p-3 md:flex-row md:gap-4 md:p-[16px]">
+      <div className="flex flex-col md:items-center gap-2 p-3 md:flex-row md:gap-4 md:p-[16px]">
         <div className="min-w-[88px] shrink-0">
           {volumeLabel ? (
-            <p className="m-0 text-[20px] font-[500] leading-6 text-black">
+            <p className="m-0 text-[16px] md:text-[20px] font-[500] leading-6 text-black">
               {t("compactVolume", { value: volumeLabel })}
             </p>
           ) : null}
@@ -115,7 +118,7 @@ function MarketActionRowShell({
           {lineSelector}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center justify-center gap-2 md:justify-end">
+        <div className="flex shrink-0 flex-wrap items-center justify-start gap-2 md:justify-end">
           {actions}
         </div>
       </div>

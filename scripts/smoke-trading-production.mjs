@@ -59,8 +59,13 @@ async function checkTradingConfig() {
 
   record({
     name: "/api/trading/config exposes builder readiness",
-    pass: response.status === 200 && typeof payload?.builderCode === "string" && payload.builderCode.length > 0,
-    detail: `HTTP ${response.status}${payload?.builderTakerFeeRate !== undefined ? ` / fee ${payload.builderTakerFeeRate}` : ""}`,
+    pass:
+      response.status === 200 &&
+      typeof payload?.builderCode === "string" &&
+      payload.builderCode.length > 0 &&
+      payload.builderMakerFeeRate === 0.005 &&
+      payload.builderTakerFeeRate === 0.01,
+    detail: `HTTP ${response.status}${payload?.builderTakerFeeRate !== undefined ? ` / taker ${payload.builderTakerFeeRate} / maker ${payload.builderMakerFeeRate}` : ""}`,
   });
 }
 

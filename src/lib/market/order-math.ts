@@ -1,3 +1,4 @@
+import type { OutcomeDisplayMode } from "@/lib/market/outcome-display-mode";
 import type {
   BidTradeSide,
   OrderOutcomeSide,
@@ -6,6 +7,7 @@ import type {
 } from "@/types/market";
 import {
   calculateBuyOrderCostFromBudget,
+  calculateToWinAmount,
   estimateBuyTakerFee
 } from "@/lib/market/polymarket-fees";
 
@@ -248,9 +250,18 @@ export function calculateOrderEstimate(
     const orderCost = roundMoney(shareSize * sidePrice);
     const estimatedTakerFee = 0;
     const estimatedTotalCost = orderCost;
+    const toWin =
+      tradeSide === "buy"
+        ? calculateToWinAmount({
+            amount: input.amount,
+            price: sidePrice,
+            orderType: input.orderType,
+            tradeSide,
+          })
+        : 0;
     const potentialPayout =
       tradeSide === "buy"
-        ? roundMoney(shareSize)
+        ? toWin
         : roundMoney(shareSize * sidePrice);
 
     return {
@@ -261,7 +272,7 @@ export function calculateOrderEstimate(
       estimatedTakerFee,
       estimatedTotalCost,
       potentialPayout,
-      potentialOutcome: roundMoney(potentialPayout - estimatedTotalCost)
+      potentialOutcome: tradeSide === "buy" ? toWin : roundMoney(potentialPayout - estimatedTotalCost)
     };
   }
 
@@ -295,10 +306,17 @@ export function calculateOrderEstimate(
   const resolvedOrderCost = tradeSide === "sell" ? shareSize : orderCost;
   const resolvedTotalCost =
     tradeSide === "buy" ? estimatedTotalCost : resolvedOrderCost;
-  const potentialPayout =
+  const toWin =
     tradeSide === "buy"
-      ? roundMoney(shareSize)
-      : roundMoney(shareSize * sidePrice);
+      ? calculateToWinAmount({
+          amount: requestedAmount,
+          price: sidePrice,
+          orderType: input.orderType,
+          tradeSide,
+        })
+      : 0;
+  const potentialPayout =
+    tradeSide === "buy" ? toWin : roundMoney(shareSize * sidePrice);
 
   return {
     sidePrice,
@@ -308,7 +326,7 @@ export function calculateOrderEstimate(
     estimatedTakerFee,
     estimatedTotalCost: resolvedTotalCost,
     potentialPayout,
-    potentialOutcome: roundMoney(potentialPayout - estimatedTotalCost)
+    potentialOutcome: tradeSide === "buy" ? toWin : roundMoney(potentialPayout - estimatedTotalCost)
   };
 }
 
@@ -328,7 +346,7 @@ export function formatLimitPriceInputValue(price: string | number): string {
     return "";
   }
 
-  const cents = normalizeLimitPrice(numeric) * 100;
+  const cents = Math.round(normalizeLimitPrice(numeric) * 1000) / 10;
 
   return Number.isInteger(cents) ? String(cents) : cents.toFixed(1);
 }
@@ -402,6 +420,31 @@ export function formatTradePanelPrice(price: number): string {
 
 export function formatOrderbookPrice(price: number): string {
   return formatTradePanelPrice(price) + "￠";
+}
+
+/** Decimal multiplier (1 / USD share price), 2 decimal places. */
+export function formatOutcomeMultiplier(price: number): string {
+  const usdPrice = normalizeLimitPrice(price);
+
+  if (usdPrice <= 0) {
+    return "—";
+  }
+
+  const multiplier = 1 / usdPrice;
+
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(multiplier);
+}
+
+export function formatOutcomeButtonDisplay(
+  price: number,
+  mode: OutcomeDisplayMode
+): string {
+  return mode === "decimal"
+    ? formatOutcomeMultiplier(price)
+    : formatOrderbookPrice(price);
 }
 
 export function formatOrderbookTotal(size: number, price: number): string {
@@ -489,26 +532,33 @@ function capSellShareSize(
 
 export function validateOrderAmount(input: {
   amount: number;
+  shareSize?: number;
   orderType: TradingOrderType;
   tradeSide: BidTradeSide;
+  /** Polymarket CLOB minimum order size in shares (Gamma `orderMinSize` / CLOB `mos`). */
   minOrderSize?: number;
 }): string | undefined {
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
     return "Enter a positive amount.";
   }
 
+  const minShares = input.minOrderSize ?? LIMIT_BUY_MIN_SHARES;
+
   if (isLimitOrderType(input.orderType) && input.tradeSide === "buy") {
-    if (input.amount < LIMIT_BUY_MIN_SHARES) {
-      return `Limit buy orders must be at least ${LIMIT_BUY_MIN_SHARES} shares.`;
+    if (input.amount < minShares) {
+      return `Limit buy orders must be at least ${minShares} shares.`;
     }
 
     return undefined;
   }
 
-  if (!isLimitOrderType(input.orderType) && input.tradeSide === "buy") {
-    if (input.minOrderSize !== undefined && input.amount < input.minOrderSize) {
-      return `Amount must be at least $${input.minOrderSize}.`;
-    }
+  if (
+    !isLimitOrderType(input.orderType) &&
+    input.tradeSide === "buy" &&
+    input.shareSize !== undefined &&
+    input.shareSize < minShares
+  ) {
+    return `Market buy orders must be at least ${minShares} shares.`;
   }
 
   return undefined;

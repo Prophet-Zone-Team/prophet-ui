@@ -1,3 +1,5 @@
+import type { KeyboardEvent } from "react";
+
 import { cn } from "@/lib/cn";
 
 import type { GridTableProps } from "./types";
@@ -12,7 +14,19 @@ export function GridTable<T>({
   bodyRowClassName,
   minWidth = "930px",
   ariaLabel,
+  onRowClick,
+  getRowAriaLabel,
 }: GridTableProps<T>) {
+  function handleRowKeyDown(row: T, event: KeyboardEvent<HTMLDivElement>) {
+    if (!onRowClick) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onRowClick(row);
+    }
+  }
   const gridStyle = { gridTemplateColumns };
 
   return (
@@ -49,9 +63,16 @@ export function GridTable<T>({
           {rows.map((row) => (
             <div
               key={getRowKey(row)}
-              role="row"
+              role={onRowClick ? "button" : "row"}
+              tabIndex={onRowClick ? 0 : undefined}
+              aria-label={onRowClick ? getRowAriaLabel?.(row) : undefined}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+              onKeyDown={
+                onRowClick ? (event) => handleRowKeyDown(row, event) : undefined
+              }
               className={cn(
                 "grid gap-x-4 px-[30px] py-[19px] text-[14px] leading-[normal] text-black last:border-b-0",
+                onRowClick && "cursor-pointer",
                 bodyRowClassName,
               )}
               style={gridStyle}

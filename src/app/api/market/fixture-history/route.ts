@@ -9,7 +9,8 @@ import {
 import {
   buildBinaryFixtureChartPoints,
   buildFixtureChartPoints,
-  mapUiRangeToClobInterval
+  mapUiRangeToClobInterval,
+  resolveFixtureChartHistoryRequest
 } from "@/lib/market/fixture-probability-chart";
 import {
   fetchBatchTokenPriceHistory,
@@ -116,9 +117,21 @@ export async function GET(request: Request) {
     }
 
     const tokenIds = tokenResolution.inputs.map((input) => input.tokenId);
+    const historyRequest = rangeParam
+      ? resolveFixtureChartHistoryRequest(rangeParam)
+      : { interval };
     const historyByToken = await fetchBatchTokenPriceHistory({
       markets: tokenIds,
-      interval
+      interval: historyRequest.interval,
+      ...(historyRequest.fidelity !== undefined
+        ? { fidelity: historyRequest.fidelity }
+        : {}),
+      ...(historyRequest.start_ts !== undefined
+        ? { startTs: historyRequest.start_ts }
+        : {}),
+      ...(historyRequest.end_ts !== undefined
+        ? { endTs: historyRequest.end_ts }
+        : {}),
     });
 
     const payload: FixtureHistoryResponse = {

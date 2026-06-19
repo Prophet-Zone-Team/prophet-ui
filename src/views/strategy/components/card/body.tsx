@@ -100,7 +100,7 @@ export function StrategyCardBodyTop({
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
-        <div className="grid min-w-0 flex-1 grid-cols-2 gap-x-6 gap-y-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between sm:gap-x-10 md:gap-x-12">
+        <div className="grid min-w-0 flex-1 grid-cols-2 gap-x-4 gap-y-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between sm:gap-x-10 md:gap-x-12">
           <StrategyCardMetricColumn
             label={t("budget")}
             tone="default"
@@ -147,55 +147,55 @@ export function StrategyCardBodyTop({
               className={showEndedOutcome ? "opacity-50" : undefined}
             />
           </StrategyCardMetricColumn>
-          <div className="flex shrink-0 items-center gap-2 self-stretch sm:self-auto">
-            {showEndedOutcome ? (
-              <StrategyCardEndedOutcome
-                variant={variant}
-                winnerTeam={winnerTeam}
-                className="flex-1 sm:flex-initial"
+        </div>
+        <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+          {showEndedOutcome ? (
+            <StrategyCardEndedOutcome
+              variant={variant}
+              winnerTeam={winnerTeam}
+              className="flex-1 sm:flex-initial"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={onPlaceBid}
+              disabled={placeBidDisabled || !onPlaceBid}
+              className={cn(
+                "inline-flex h-[46px] min-w-0 flex-1 items-center justify-center rounded-xl",
+                "bg-[#65AF14] px-4 font-[Sora] text-base font-medium leading-[21px] text-white md:text-lg",
+                "transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50",
+                "sm:min-w-[144px] sm:flex-initial"
+              )}
+            >
+              {resolvedPlaceBidLabel}
+            </button>
+          )}
+          {showExpandControl ? (
+            <button
+              type="button"
+              onClick={onExpandToggle}
+              disabled={expandDisabled}
+              aria-expanded={expanded}
+              aria-label={
+                expanded
+                  ? t("collapseStrategyDetails")
+                  : t("expandStrategyDetails")
+              }
+              className={cn(
+                "inline-flex size-[46px] shrink-0 items-center justify-center rounded-xl",
+                "border border-[#EBEBEB] bg-white text-black transition-colors",
+                "hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-50"
+              )}
+            >
+              <ChevronDown
+                className={cn(
+                  "size-5 shrink-0 transition-transform duration-200",
+                  expanded && "rotate-180"
+                )}
+                aria-hidden
               />
-            ) : (
-              <button
-                type="button"
-                onClick={onPlaceBid}
-                disabled={placeBidDisabled || !onPlaceBid}
-                className={cn(
-                  "inline-flex h-[46px] min-w-[144px] flex-1 items-center justify-center rounded-xl",
-                  "bg-[#65AF14] px-4 font-[Sora] text-lg font-medium leading-[21px] text-white",
-                  "transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50",
-                  "sm:flex-initial"
-                )}
-              >
-                {resolvedPlaceBidLabel}
-              </button>
-            )}
-            {showExpandControl ? (
-              <button
-                type="button"
-                onClick={onExpandToggle}
-                disabled={expandDisabled}
-                aria-expanded={expanded}
-                aria-label={
-                  expanded
-                    ? t("collapseStrategyDetails")
-                    : t("expandStrategyDetails")
-                }
-                className={cn(
-                  "inline-flex size-[46px] shrink-0 items-center justify-center rounded-xl",
-                  "border border-[#EBEBEB] bg-white text-black transition-colors",
-                  "hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-50"
-                )}
-              >
-                <ChevronDown
-                  className={cn(
-                    "size-5 shrink-0 transition-transform duration-200",
-                    expanded && "rotate-180"
-                  )}
-                  aria-hidden
-                />
-              </button>
-            ) : null}
-          </div>
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

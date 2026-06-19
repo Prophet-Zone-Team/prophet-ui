@@ -3,11 +3,12 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { fetchGammaMarketsInformation } from "@/lib/market/gamma-markets-information";
+import { mapGammaMarketsToTeamsConditionData } from "@/lib/portfolio/map-gamma-portfolio-market";
 import {
   buildOpenOrderMarketMap,
   type OpenOrderMarketContext
 } from "@/lib/portfolio/teams-condition";
-import { getProphetTeamsCondition } from "@/service/prophet";
 import type {
   ProphetTeamsConditionEntry,
   ProphetTeamsConditionTeam
@@ -47,17 +48,15 @@ function needsTeamsConditionFetch(
     return true;
   }
 
-  const hasTeams = Array.isArray(entry.teams) && entry.teams.length > 0;
-
-  if (!hasTeams) {
-    return true;
-  }
-
   if (!entry.slug?.trim()) {
     return true;
   }
 
-  return !entry.question?.trim();
+  if (!entry.question?.trim()) {
+    return true;
+  }
+
+  return !entry.marketKind;
 }
 
 function buildContextMapForIds(
@@ -94,6 +93,7 @@ function migrateTeamsConditionEntry(
   if (typeof value === "object") {
     const entry = value as Partial<ProphetTeamsConditionEntry>;
     const teams = Array.isArray(entry.teams) ? entry.teams : [];
+    const marketKind = entry.marketKind;
 
     return {
       teams,
@@ -104,7 +104,14 @@ function migrateTeamsConditionEntry(
           ? entry.main_event_title
           : "",
       event_title:
-        typeof entry.event_title === "string" ? entry.event_title : ""
+        typeof entry.event_title === "string" ? entry.event_title : "",
+      icon: typeof entry.icon === "string" ? entry.icon : undefined,
+      marketKind:
+        marketKind === "team" ||
+        marketKind === "game" ||
+        marketKind === "group"
+          ? marketKind
+          : undefined
     };
   }
 
@@ -161,9 +168,9 @@ export const useTeamsConditionStore = create<TeamsConditionState>()(
         if (!request) {
           request = (async () => {
             try {
-              const teamsCondition = await getProphetTeamsCondition({
-                condition_ids: missingIds.join(",")
-              });
+              const markets = await fetchGammaMarketsInformation(missingIds);
+              const teamsCondition =
+                mapGammaMarketsToTeamsConditionData(markets);
 
               set((state) => ({
                 byConditionId: {
@@ -173,6 +180,13 @@ export const useTeamsConditionStore = create<TeamsConditionState>()(
               }));
 
               return buildOpenOrderMarketMap(teamsCondition);
+            } catch (error) {
+              console.warn(
+                "[teams-condition-store] Gamma markets/information failed:",
+                error
+              );
+
+              return buildContextMapForIds(get().byConditionId, missingIds);
             } finally {
               inFlightRequests.delete(requestKey);
             }
@@ -188,28 +202,19 @@ export const useTeamsConditionStore = create<TeamsConditionState>()(
     }),
     {
       name: "wc-teams-condition",
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         byConditionId: state.byConditionId
       }),
       migrate: (persisted, version) => {
-        const state = persisted as { byConditionId?: unknown } | undefined;
-        const migrated = migrateByConditionId(state?.byConditionId);
-
-        if (version < 2) {
-          const withSlug: Record<string, ProphetTeamsConditionEntry> = {};
-
-          for (const [conditionId, entry] of Object.entries(migrated)) {
-            if (entry.slug?.trim()) {
-              withSlug[conditionId] = entry;
-            }
-          }
-
-          return { byConditionId: withSlug };
+        if (version < 3) {
+          return { byConditionId: {} };
         }
 
-        return { byConditionId: migrated };
+        const state = persisted as { byConditionId?: unknown } | undefined;
+
+        return { byConditionId: migrateByConditionId(state?.byConditionId) };
       }
     }
   )

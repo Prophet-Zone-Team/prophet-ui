@@ -1,9 +1,16 @@
 "use client";
 
-import { useMemo, useState, type ReactElement } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  type ReactElement,
+  type ReactNode
+} from "react";
 
 import { useAnalyticsImpression } from "@/hooks/analytics/use-analytics-impression";
 import {
+  Customized,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -18,6 +25,8 @@ import { useTranslations } from "next-intl";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 
 import { formatProbability } from "@/components/home/market-formatters";
+import { TeamFlag } from "@/components/teams/team-flag";
+import { useDevice } from "@/hooks/common/use-device";
 import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { cn } from "@/lib/cn";
 import {
@@ -46,6 +55,164 @@ export interface WinnerProbabilityChartProps {
   showAxisTooltip?: boolean;
 }
 
+const END_DOT_FLAG_SIZE = 12;
+
+interface ChartCustomizedProps {
+  formattedGraphicalItems?: Array<{
+    item?: {
+      type?: { displayName?: string };
+      props?: { dataKey?: string };
+    };
+    props?: { points?: Array<{ x: number; y: number }> };
+  }>;
+  offset?: { top?: number; right?: number; bottom?: number; left?: number };
+  width?: number;
+  height?: number;
+}
+
+type MobileFlagChartConfig = {
+  series: WinnerChartSeriesConfig[];
+};
+
+const MobileFlagChartContext = createContext<MobileFlagChartConfig | null>(null);
+
+function MobileFlagChartProvider({
+  value,
+  children
+}: {
+  value: MobileFlagChartConfig;
+  children: ReactNode;
+}) {
+  return (
+    <MobileFlagChartContext.Provider value={value}>
+      {children}
+    </MobileFlagChartContext.Provider>
+  );
+}
+
+function getLineSeriesPoints(
+  formattedGraphicalItems: ChartCustomizedProps["formattedGraphicalItems"],
+  dataKey: string
+): Array<{ x: number; y: number }> {
+  const lineItem = formattedGraphicalItems?.find(
+    (item) =>
+      item?.item?.type?.displayName === "Line" &&
+      item?.item?.props?.dataKey === dataKey
+  );
+
+  return lineItem?.props?.points ?? [];
+}
+
+function resolvePlotCenterX(
+  width: number | undefined,
+  offset: ChartCustomizedProps["offset"]
+): number | undefined {
+  if (!width) {
+    return undefined;
+  }
+
+  const left = offset?.left ?? 0;
+  const right = offset?.right ?? 0;
+
+  return left + (width - left - right) / 2;
+}
+
+function MobileLineFlagMarker({
+  cx,
+  cy,
+  teamCode,
+  teamName
+}: {
+  cx: number;
+  cy: number;
+  teamCode: string;
+  teamName: string;
+}): ReactElement<SVGElement> {
+  return (
+    <foreignObject
+      x={cx - END_DOT_FLAG_SIZE / 2}
+      y={cy - END_DOT_FLAG_SIZE / 2}
+      width={END_DOT_FLAG_SIZE}
+      height={END_DOT_FLAG_SIZE}
+      className="overflow-visible"
+    >
+      <div className="flex h-full w-full items-center justify-center">
+        <TeamFlag
+          code={teamCode}
+          name={teamName}
+          className="!h-[12px] !w-[12px] rounded-[2px]"
+        />
+      </div>
+    </foreignObject>
+  );
+}
+
+function MobileLineFlagLayer({
+  formattedGraphicalItems,
+  offset,
+  width,
+  series
+}: ChartCustomizedProps & MobileFlagChartConfig) {
+  const centerX = resolvePlotCenterX(width, offset);
+
+  if (centerX === undefined) {
+    return null;
+  }
+
+  return (
+    <g className="pointer-events-none">
+      {series.map((item) => {
+        const points = getLineSeriesPoints(formattedGraphicalItems, item.dataKey);
+
+        if (points.length === 0) {
+          return null;
+        }
+
+        const anchorPoint = points.reduce((closest, point) =>
+          Math.abs(point.x - centerX) < Math.abs(closest.x - centerX)
+            ? point
+            : closest
+        );
+
+        if (!Number.isFinite(anchorPoint.x) || !Number.isFinite(anchorPoint.y)) {
+          return null;
+        }
+
+        return (
+          <MobileLineFlagMarker
+            key={item.dataKey}
+            cx={anchorPoint.x}
+            cy={anchorPoint.y}
+            teamCode={item.teamCode}
+            teamName={item.label}
+          />
+        );
+      })}
+    </g>
+  );
+}
+
+/** Stable Recharts Customized component — do not pass an inline render function. */
+function MobileLineFlagCustomized(chartProps: Record<string, unknown>) {
+  const config = useContext(MobileFlagChartContext);
+
+  if (!config) {
+    return null;
+  }
+
+  return (
+    <MobileLineFlagLayer
+      offset={chartProps.offset as ChartCustomizedProps["offset"]}
+      width={chartProps.width as number | undefined}
+      height={chartProps.height as number | undefined}
+      formattedGraphicalItems={
+        chartProps.formattedGraphicalItems as ChartCustomizedProps["formattedGraphicalItems"]
+      }
+      {...config}
+    />
+  );
+}
+
 function renderEndDot(
   dataLength: number,
   color: string
@@ -72,7 +239,8 @@ export function WinnerProbabilityChart({
   showAxisTooltip = false
 }: WinnerProbabilityChartProps) {
   const t = useTranslations("home");
-  const [timeRange, setTimeRange] = useState<WinnerChartTimeRange>("all");
+  const isMobile = useDevice();
+  const timeRange = "all";
   const shouldFetch = probabilityHistory === undefined;
 
   const {
@@ -115,6 +283,10 @@ export function WinnerProbabilityChart({
     [chartData, series]
   );
 
+  const mobileFlagConfig = useMemo<MobileFlagChartConfig | null>(
+    () => (isMobile ? { series } : null),
+    [isMobile, series]
+  );
   const showChart = !shouldFetch || fetchStatus === "ready";
   const chartRef = useAnalyticsImpression<HTMLElement>({
     eventName: "chart_viewed",
@@ -137,16 +309,18 @@ export function WinnerProbabilityChart({
     >
       <div
         className={cn(
-          "flex flex-wrap items-center md:items-start flex-col md:flex-row justify-between gap-3",
+          "flex flex-wrap items-start flex-col md:flex-row justify-between gap-3",
           hideTitle ? "pr-0" : "pr-[6px]"
         )}
       >
-        <h2 className="text-base md:text-[20px] font-[500] leading-6 text-black">
+        <h2 className="text-[16px] md:text-[20px] font-[500] leading-6 text-black">
           {t("worldCupWinnerProbability")}
         </h2>
       </div>
 
-      {showChart ? <ChartLegend items={legendValues} className="mt-3" /> : null}
+      {showChart ? (
+        <ChartLegend items={legendValues} className="mt-3 hidden md:flex" />
+      ) : null}
 
       {!showChart && fetchStatus === "loading" ? (
         <p className="mt-4 py-8 text-center text-sm text-[#909090]">
@@ -162,69 +336,122 @@ export function WinnerProbabilityChart({
         </p>
       ) : (
         <div className="mt-4 h-[190px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={chartData}
-              margin={{
-                top: 8,
-                right: showAxisTooltip ? 12 : 0,
-                left: 8,
-                bottom: showAxisTooltip ? 8 : 0
-              }}
-            >
-              {showAxisTooltip ? (
-                <XAxis
-                  dataKey="date"
-                  padding={{ left: 0, right: 6 }}
-                  tick={{
-                    fill: "#909090",
-                    fontSize: 14,
-                    dy: 6
-                  }}
-                  tickLine={false}
-                  axisLine={false}
-                  minTickGap={32}
-                  tickFormatter={formatXAxisTick}
+          {mobileFlagConfig ? (
+            <MobileFlagChartProvider value={mobileFlagConfig}>
+              <ResponsiveContainer width="100%" height="100%">
+                <WinnerLineChartBody
+                  chartData={chartData}
+                  series={series}
+                  yAxis={yAxis}
+                  showAxisTooltip={showAxisTooltip}
+                  formatXAxisTick={formatXAxisTick}
+                  isMobile={isMobile}
                 />
-              ) : (
-                <XAxis dataKey="date" hide />
-              )}
-              <YAxis
-                orientation={showAxisTooltip ? "left" : "right"}
-                domain={yAxis.domain}
-                ticks={yAxis.ticks}
-                tick={{ fill: "#909090", fontSize: 14 }}
-                tickFormatter={(value: number) => `${value}%`}
-                tickLine={false}
-                axisLine={false}
-                width={40}
+              </ResponsiveContainer>
+            </MobileFlagChartProvider>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <WinnerLineChartBody
+                chartData={chartData}
+                series={series}
+                yAxis={yAxis}
+                showAxisTooltip={showAxisTooltip}
+                formatXAxisTick={formatXAxisTick}
+                isMobile={isMobile}
               />
-              <Tooltip
-                cursor={{ stroke: "#EBEBEB", strokeWidth: 1 }}
-                content={<WinnerChartTooltip series={series} />}
-              />
-              {series.map((item) => (
-                <Line
-                  key={item.dataKey}
-                  type="monotone"
-                  dataKey={item.dataKey}
-                  stroke={item.color}
-                  strokeWidth={1}
-                  dot={renderEndDot(chartData.length, item.color)}
-                  activeDot={{
-                    r: 5,
-                    fill: item.color,
-                    stroke: item.color,
-                    strokeWidth: 1
-                  }}
-                  isAnimationActive={false}
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          )}
         </div>
       )}
     </section>
+  );
+}
+
+function WinnerLineChartBody({
+  chartData,
+  series,
+  yAxis,
+  showAxisTooltip,
+  formatXAxisTick,
+  isMobile,
+  width,
+  height
+}: {
+  chartData: ReturnType<typeof filterWinnerChartByRange>;
+  series: WinnerChartSeriesConfig[];
+  yAxis: ReturnType<typeof getWinnerChartYDomain>;
+  showAxisTooltip: boolean;
+  formatXAxisTick: (value: string) => string;
+  isMobile: boolean;
+  width?: number;
+  height?: number;
+}) {
+  return (
+    <LineChart
+      width={width}
+      height={height}
+      data={chartData}
+      margin={{
+        top: 8,
+        right: showAxisTooltip ? 12 : 0,
+        left: 8,
+        bottom: showAxisTooltip ? 8 : 0
+      }}
+    >
+      {showAxisTooltip ? (
+        <XAxis
+          dataKey="date"
+          padding={{ left: 0, right: 6 }}
+          tick={{
+            fill: "#909090",
+            fontSize: 14,
+            dy: 6
+          }}
+          tickLine={false}
+          axisLine={false}
+          minTickGap={32}
+          tickFormatter={formatXAxisTick}
+        />
+      ) : (
+        <XAxis dataKey="date" hide />
+      )}
+      <YAxis
+        orientation={showAxisTooltip ? "left" : "right"}
+        domain={yAxis.domain}
+        ticks={yAxis.ticks}
+        tick={{ fill: "#909090", fontSize: 14 }}
+        tickFormatter={(value: number) => `${value}%`}
+        tickLine={false}
+        axisLine={false}
+        width={40}
+      />
+      <Tooltip
+        cursor={{ stroke: "#EBEBEB", strokeWidth: 1 }}
+        content={<WinnerChartTooltip series={series} />}
+      />
+      {series.map((item) => (
+        <Line
+          key={item.dataKey}
+          type="monotone"
+          dataKey={item.dataKey}
+          stroke={item.color}
+          strokeWidth={1}
+          dot={isMobile ? false : renderEndDot(chartData.length, item.color)}
+          activeDot={
+            isMobile
+              ? false
+              : {
+                  r: 5,
+                  fill: item.color,
+                  stroke: item.color,
+                  strokeWidth: 1
+                }
+          }
+          isAnimationActive={false}
+        />
+      ))}
+      {isMobile ? <Customized component={MobileLineFlagCustomized} /> : null}
+    </LineChart>
   );
 }
 

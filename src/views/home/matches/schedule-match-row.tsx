@@ -343,16 +343,31 @@ function TeamPercentSide({
       code={code}
       name={name}
       logoUrl={logoUrl}
-      className="h-5 w-5 md:h-6 md:w-6 shrink-0 rounded-[2px] text-[20px] md:text-[24px]"
+      className="order-1 shrink-0 md:order-2 md:h-6 md:w-6 shrink-0 rounded-[4px] text-[28px] md:text-[24px]"
     />
   );
+  const textColumn = (
+    <div
+      className={cn(
+        "order-2 flex min-w-0 flex-col md:hidden",
+        align === "end" && "items-end"
+      )}
+    >
+      <span className="truncate text-[12px] font-[500] leading-[19px] text-black">
+        {name}
+      </span>
+      <span className="text-[14px] font-[500] leading-[19px] text-black">
+        {percent}
+      </span>
+    </div>
+  );
   const pct = (
-    <span className="text-sm md:text-[18px] font-[500] leading-[19px] text-black w-[60px]">
+    <span className="hidden md:block md:order-1 text-sm md:text-[18px] font-[500] leading-[19px] text-black w-[60px]">
       {percent}
     </span>
   );
   const label = (
-    <span className="truncate text-sm md:text-[18px] font-[500] leading-[19px] text-black">
+    <span className="hidden md:block md:order-3 truncate text-sm md:text-[18px] font-[500] leading-[19px] text-black">
       {name}
     </span>
   );
@@ -364,6 +379,7 @@ function TeamPercentSide({
         align === "end" && "flex-row-reverse justify-start text-right"
       )}
     >
+      {textColumn}
       {pct}
       {flag}
       {label}

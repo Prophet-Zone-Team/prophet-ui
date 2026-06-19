@@ -12,6 +12,8 @@ import {
   PROPHET_API_TOKEN_CHANGED_EVENT,
 } from "@/service/prophet";
 import { useNotificationWsStore } from "@/store/notification-ws-store";
+import { useNotificationsEnabled } from "@/store/user-config-store";
+import { useConfigHydrated } from "@/store/use-config-hydrated";
 
 const AUTH_STORAGE_KEY = "prophet_api_token";
 
@@ -23,12 +25,19 @@ export function ProphetNotificationWsProvider({
   children,
 }: ProphetNotificationWsProviderProps) {
   const { session, hydrated } = useAuth();
+  const notificationsEnabled = useNotificationsEnabled();
+  const configHydrated = useConfigHydrated();
   const mockSamplesEnqueuedRef = useRef(false);
 
   const walletAddress = session?.walletAddress ?? null;
   const apiToken = hydrated && walletAddress ? getProphetApiToken() : null;
+  const shouldSubscribe = configHydrated && notificationsEnabled;
 
   useEffect(() => {
+    if (!shouldSubscribe) {
+      return;
+    }
+
     const client = getProphetNotificationWsClient();
 
     const unsubscribeMessages = client.subscribe((data) => {
@@ -61,7 +70,7 @@ export function ProphetNotificationWsProvider({
       unsubscribeMessages();
       unsubscribeStatus();
     };
-  }, []);
+  }, [shouldSubscribe]);
 
   useEffect(() => {
     const client = getProphetNotificationWsClient();
@@ -71,7 +80,7 @@ export function ProphetNotificationWsProvider({
     const syncConnection = () => {
       const token = getProphetApiToken();
 
-      if (!hydrated || !walletAddress || !token) {
+      if (!shouldSubscribe || !hydrated || !walletAddress || !token) {
         client.disconnect();
         setConnectionStatus("idle");
         return;
@@ -80,7 +89,7 @@ export function ProphetNotificationWsProvider({
       client.connect(token);
     };
 
-    if (!apiToken) {
+    if (!shouldSubscribe || !apiToken) {
       client.disconnect();
       setConnectionStatus("idle");
     } else {
@@ -107,10 +116,14 @@ export function ProphetNotificationWsProvider({
       client.disconnect();
       setConnectionStatus("idle");
     };
-  }, [apiToken, hydrated, walletAddress]);
+  }, [apiToken, hydrated, shouldSubscribe, walletAddress]);
 
   useEffect(() => {
-    if (!isMockProphetNotificationsEnabled() || !session) {
+    if (
+      !shouldSubscribe ||
+      !isMockProphetNotificationsEnabled() ||
+      !session
+    ) {
       return;
     }
 
@@ -120,7 +133,7 @@ export function ProphetNotificationWsProvider({
 
     mockSamplesEnqueuedRef.current = true;
     enqueueProphetNotificationSamples();
-  }, [session]);
+  }, [session, shouldSubscribe]);
 
   return (
     <>

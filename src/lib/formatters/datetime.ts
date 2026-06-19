@@ -22,6 +22,12 @@ const SHORT_DATE_PARTS: Intl.DateTimeFormatOptions = {
   ...TIME_PARTS,
 };
 
+const KICKOFF_SUBTITLE_PARTS: Intl.DateTimeFormatOptions = {
+  month: "numeric",
+  day: "numeric",
+  ...TIME_PARTS,
+};
+
 function lookupPart(
   parts: Intl.DateTimeFormatPart[],
   type: Intl.DateTimeFormatPartTypes,
@@ -53,6 +59,10 @@ function formatDateTimeFromParts(parts: Intl.DateTimeFormatPart[]): string {
 
 function formatShortDateMinuteFromParts(parts: Intl.DateTimeFormatPart[]): string {
   return `${lookupPart(parts, "month")}-${lookupPart(parts, "day")} ${formatTimeFromParts(parts)}`;
+}
+
+function formatKickoffSubtitleFromParts(parts: Intl.DateTimeFormatPart[]): string {
+  return `${formatTimeFromParts(parts)} ${lookupPart(parts, "month")}/${lookupPart(parts, "day")}`;
 }
 
 export function formatDate(date: Date, timeZone?: string): string {
@@ -175,6 +185,25 @@ export function formatShortDateMinuteFromIso(
   }
 
   return formatShortDateMinute(new Date(value), timeZone);
+}
+
+export function formatKickoffSubtitleFromIso(
+  value: string | undefined,
+  timeZone?: string,
+): string {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return formatKickoffSubtitleFromParts(
+    createFormatter(KICKOFF_SUBTITLE_PARTS, timeZone).formatToParts(date),
+  );
 }
 
 export function formatDateTimeFromUnixSeconds(

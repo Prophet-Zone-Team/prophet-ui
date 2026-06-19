@@ -1,15 +1,67 @@
 import { curatedTeamsById } from "@/data/teams/curated-team-list";
+import { groupDetailHref } from "@/lib/routes/group";
 import { gameTradeHref, teamTradeHref } from "@/lib/routes/trade";
-import { resolveMatchSidesFromTeams } from "@/lib/portfolio/teams-condition";
-import type { ProphetTeamsConditionTeam } from "@/types/prophet-api";
+import { parseGroupLetterFromEventSlug } from "@/lib/portfolio/map-gamma-portfolio-market";
+import type {
+  PortfolioMarketKind,
+  ProphetTeamsConditionTeam
+} from "@/types/prophet-api";
 import type { UserPositionRecord } from "@/types/market";
+import type { WorldCup2026Group } from "@/data/world-cup-2026/groups";
 
 const FIXTURE_SLUG_PATTERN = /^(.+\d{4}-\d{2}-\d{2})(?:-.+)?$/;
 
+export type PortfolioPositionTradeContext = {
+  marketKind?: PortfolioMarketKind;
+  contextSlug?: string;
+  teams?: ProphetTeamsConditionTeam[];
+};
+
+type PortfolioTradeSlugSource = Pick<UserPositionRecord, "slug" | "eventSlug">;
+
+function readSlug(value: string | undefined): string {
+  return value?.trim() ?? "";
+}
+
+export function resolvePortfolioTradeSlug(
+  position: PortfolioTradeSlugSource,
+  context: Pick<PortfolioPositionTradeContext, "marketKind" | "contextSlug"> = {}
+): string {
+  const positionSlug = readSlug(position.slug);
+  const eventSlug = readSlug(position.eventSlug);
+  const contextSlug = readSlug(context.contextSlug);
+  const marketKind = context.marketKind;
+
+  if (marketKind === "group" || marketKind === "game") {
+    return contextSlug || eventSlug || positionSlug;
+  }
+
+  if (marketKind === "team") {
+    return positionSlug || contextSlug;
+  }
+
+  if (eventSlug && parseGroupLetterFromEventSlug(eventSlug)) {
+    return eventSlug;
+  }
+
+  return positionSlug || contextSlug || eventSlug;
+}
+
 export function isPortfolioGamePosition(
-  position: Pick<UserPositionRecord, "slug">,
-  teams: ProphetTeamsConditionTeam[] = []
+  position: Pick<UserPositionRecord, "slug" | "eventSlug">,
+  context: PortfolioPositionTradeContext = {}
 ): boolean {
+  if (context.marketKind === "game") {
+    return true;
+  }
+
+  if (
+    context.marketKind === "team" ||
+    context.marketKind === "group"
+  ) {
+    return false;
+  }
+
   const slug = position.slug?.trim();
 
   if (!slug) {
@@ -18,10 +70,6 @@ export function isPortfolioGamePosition(
 
   if (curatedTeamsById.has(slug)) {
     return false;
-  }
-
-  if (resolveMatchSidesFromTeams(teams)) {
-    return true;
   }
 
   return FIXTURE_SLUG_PATTERN.test(slug);
@@ -34,19 +82,57 @@ function resolveGameTradeSlug(slug: string): string {
   return match?.[1] ?? trimmed;
 }
 
-export function resolvePortfolioPositionTradeHref(
-  position: Pick<UserPositionRecord, "slug">,
-  teams: ProphetTeamsConditionTeam[] = []
-): string | undefined {
-  const slug = position.slug?.trim();
+function resolveGroupTradeHref(slugCandidates: string[]): string | undefined {
+  for (const candidate of slugCandidates) {
+    const groupLetter = parseGroupLetterFromEventSlug(candidate);
 
-  if (!slug) {
+    if (groupLetter) {
+      return groupDetailHref(groupLetter as WorldCup2026Group);
+    }
+  }
+
+  return undefined;
+}
+
+export function resolvePortfolioPositionTradeHref(
+  position: PortfolioTradeSlugSource,
+  context: PortfolioPositionTradeContext = {}
+): string | undefined {
+  const marketKind = context.marketKind;
+  const slugCandidates = [
+    readSlug(context.contextSlug),
+    readSlug(position.eventSlug),
+    readSlug(position.slug)
+  ].filter((slug, index, slugs) => slug && slugs.indexOf(slug) === index);
+
+  if (marketKind === "group") {
+    return resolveGroupTradeHref(slugCandidates);
+  }
+
+  if (!marketKind) {
+    const groupHref = resolveGroupTradeHref([
+      readSlug(context.contextSlug),
+      readSlug(position.eventSlug)
+    ]);
+
+    if (groupHref) {
+      return groupHref;
+    }
+  }
+
+  const resolvedSlug = resolvePortfolioTradeSlug(position, context);
+
+  if (isPortfolioGamePosition(position, context)) {
+    if (!resolvedSlug) {
+      return undefined;
+    }
+
+    return gameTradeHref(resolveGameTradeSlug(resolvedSlug));
+  }
+
+  if (!resolvedSlug) {
     return undefined;
   }
 
-  if (isPortfolioGamePosition(position, teams)) {
-    return gameTradeHref(resolveGameTradeSlug(slug));
-  }
-
-  return teamTradeHref(slug);
+  return teamTradeHref(resolvedSlug);
 }

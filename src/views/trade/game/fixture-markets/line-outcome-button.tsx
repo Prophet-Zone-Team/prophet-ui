@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { formatOrderbookPrice } from "@/lib/market/order-math";
+import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 import { gameColors } from "@/views/trade/game/ui";
 
 export type LineOutcomeButtonVariant =
@@ -41,6 +41,7 @@ export function LineOutcomeButton({
   onClick?: () => void;
 }) {
   const color = variantStyles[variant];
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
 
   return (
     <button
@@ -55,7 +56,7 @@ export function LineOutcomeButton({
         } as React.CSSProperties
       }
       className={cn(
-        "flex h-[40px] md:h-[44px] min-w-[80px] md:min-w-[120px] shrink-0 items-center justify-center gap-1.5 rounded-[12px] border bg-white px-2 md:px-4 text-sm font-[500] leading-[17px] transition-colors duration-200 ease-out",
+        "flex h-[40px] md:h-[44px] min-w-[80px] md:min-w-[120px] shrink-0 items-center justify-center gap-1.5 md:rounded-[12px] rounded-[8px] border bg-white px-2 md:px-4 text-sm font-[500] leading-[17px] transition-colors duration-200 ease-out",
         disabled
           ? "cursor-not-allowed opacity-40"
           : onClick
@@ -70,7 +71,9 @@ export function LineOutcomeButton({
       )}
     >
       <span>{label}</span>
-      {price !== undefined ? <span>{formatOrderbookPrice(price)}</span> : null}
+      {price !== undefined ? (
+        <span>{formatOutcomeDisplay(price)}</span>
+      ) : null}
     </button>
   );
 }
