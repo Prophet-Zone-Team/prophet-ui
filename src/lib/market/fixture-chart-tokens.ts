@@ -58,6 +58,19 @@ function resolveHalftimeTokens(
   return { mode: "ternary", inputs };
 }
 
+/** Shared YES/NO spread market: `:yes` tracks YES token, `:no` tracks NO token. */
+function resolveSpreadChartToken(outcome: {
+  id: string;
+  tokenId?: string;
+  noTokenId?: string;
+}): string | undefined {
+  if (!outcome.tokenId || !outcome.noTokenId) {
+    return undefined;
+  }
+
+  return outcome.id.endsWith(":yes") ? outcome.tokenId : outcome.noTokenId;
+}
+
 function resolveLineGroupTokens(
   group: FixtureMarketGroup | undefined,
   lineKey: string | undefined,
@@ -94,16 +107,18 @@ function resolveLineGroupTokens(
 
   const home = outcomes.find((item) => item.side === "home");
   const away = outcomes.find((item) => item.side === "away");
+  const homeChartToken = home ? resolveSpreadChartToken(home) : undefined;
+  const awayChartToken = away ? resolveSpreadChartToken(away) : undefined;
 
-  if (!home?.tokenId || !away?.noTokenId) {
+  if (!homeChartToken || !awayChartToken) {
     return undefined;
   }
 
   return {
     mode: "binary",
     inputs: [
-      { key: "primary", tokenId: home.tokenId },
-      { key: "secondary", tokenId: away.noTokenId },
+      { key: "primary", tokenId: homeChartToken },
+      { key: "secondary", tokenId: awayChartToken },
     ],
   };
 }
