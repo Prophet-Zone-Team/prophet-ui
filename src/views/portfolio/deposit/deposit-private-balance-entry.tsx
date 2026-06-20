@@ -77,7 +77,7 @@ export function DepositPrivateBalanceEntry({
     () =>
       formatNumber(privateBalanceUsd ?? 0, 2, true, {
         round: 0,
-        isZeroPrecision: true
+        isZeroPrecision: true,
       }),
     [privateBalanceUsd]
   );
@@ -88,7 +88,7 @@ export function DepositPrivateBalanceEntry({
     }
 
     const nextAmount = Big(maxBalanceUsd).times(percent).div(100);
-    setInputValue(nextAmount.toFixed(2, Big.roundDown));
+    setInputValue(nextAmount.toFixed(6, Big.roundDown));
   }
 
   const transferEnabled =
@@ -202,6 +202,7 @@ export function DepositPrivateBalanceEntry({
               aria-label={tDeposit("privateTransferAmountAria")}
               placeholder="0"
               disabled={!isInteractive}
+              decimals={6}
             />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
