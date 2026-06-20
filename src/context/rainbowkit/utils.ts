@@ -103,6 +103,10 @@ export function isInTokenPocket() {
 
 // Determine whether the current environment supports the TP Wallet extension
 export function supportTokenPocket() {
+  if (!isInBrowser()) {
+    return false;
+  }
+
   return !!(window as any).tronWeb && typeof (window as any).tokenpocket !== "undefined";
 }
 
