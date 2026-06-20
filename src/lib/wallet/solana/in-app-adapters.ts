@@ -13,7 +13,7 @@ import {
 import type { Transaction, TransactionVersion, VersionedTransaction } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
 
-import type { InAppBrowserWalletKind } from "@/context/rainbowkit/utils";
+import { isInBrowser, type InAppBrowserWalletKind } from "@/context/rainbowkit/utils";
 import { probeTokenPocketSolanaProvider } from "@/lib/wallet/tokenpocket/tp-provider-probe";
 
 type InjectedSolanaProvider = {
@@ -179,14 +179,26 @@ function getTokenPocketSolanaProvider(): InjectedSolanaProvider | undefined {
 }
 
 function getOkxSolanaProvider(): InjectedSolanaProvider | undefined {
+  if (!isInBrowser()) {
+    return undefined;
+  }
+
   return (window.okxwallet as any)?.solana as InjectedSolanaProvider | undefined;
 }
 
 function getBinanceSolanaProvider(): InjectedSolanaProvider | undefined {
+  if (!isInBrowser()) {
+    return undefined;
+  }
+
   return window.binancew3w?.solana as InjectedSolanaProvider | undefined;
 }
 
 function getMetaMaskSolanaProvider(): InjectedSolanaProvider | undefined {
+  if (!isInBrowser()) {
+    return undefined;
+  }
+
   const candidate = window.solana;
 
   if (!candidate) {

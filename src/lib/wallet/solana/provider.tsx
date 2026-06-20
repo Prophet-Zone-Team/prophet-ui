@@ -1,7 +1,7 @@
 "use client";
 
 import type { WalletAdapter } from "@solana/wallet-adapter-base";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ConnectionProvider, WalletProvider, useWallet } from "@solana/wallet-adapter-react";
 import {
   PhantomWalletAdapter,
@@ -156,7 +156,7 @@ function SolanaFundingBridge() {
 }
 
 export function SolanaFundingProvider({ children }: { children: React.ReactNode }) {
-  const adapters = useMemo(() => buildSolanaAdapters(), []);
+  const [adapters, setAdapters] = useState<WalletAdapter[]>([]);
   const endpoint = useMemo(
     () => FUNDING_NETWORKS.solana.rpcUrls[0] ?? FUNDING_NETWORKS.solana.defaultRpcUrl,
     [],
@@ -164,6 +164,10 @@ export function SolanaFundingProvider({ children }: { children: React.ReactNode 
   const endpointConfig = useMemo(() => {
     const { headers } = generateRpcSignature("solana");
     return { commitment: "confirmed" as const, httpHeaders: headers };
+  }, []);
+
+  useEffect(() => {
+    setAdapters(buildSolanaAdapters());
   }, []);
 
   return (

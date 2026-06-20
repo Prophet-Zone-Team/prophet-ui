@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useConnectModal as useRainbowkitConnectModal } from "@rainbow-me/rainbowkit";
 
 import { useDevice } from "@/hooks/common/use-device";
@@ -38,12 +38,16 @@ export function ConnectModalProvider({ children }: { children: React.ReactNode }
     return isInMobileBrowser() && isMobile;
   }, [isMobile]);
 
-  const isOpenWalletApp = useMemo(() => {
+  const [isOpenWalletApp, setIsOpenWalletApp] = useState(false);
+
+  useEffect(() => {
     const isOpenTp = openTokenPocket({ checkOnly: true });
     const isOpenOK = openOkxWallet({ checkOnly: true });
     const isOpenMM = openMetaMaskWallet({ checkOnly: true });
     const isOpenBinance = openBinanceWallet({ checkOnly: true });
-    return isMobileBrowser && (isOpenTp || isOpenOK || isOpenMM || isOpenBinance);
+    setIsOpenWalletApp(
+      isMobileBrowser && (isOpenTp || isOpenOK || isOpenMM || isOpenBinance),
+    );
   }, [isMobileBrowser]);
 
   const [connectModalOpen, setConnectModalOpen] = useState(false);
