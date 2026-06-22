@@ -388,7 +388,7 @@ export function ProbabilitySection({
             </div>
 
             <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
-              <div className="flex min-w-0 flex-wrap items-end gap-8 sm:gap-10">
+              <div className="flex min-w-0 flex-wrap items-end gap-8 md:hidden sm:gap-10">
                 {groupMetricBlocks}
               </div>
               <div
