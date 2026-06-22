@@ -79,7 +79,6 @@ export function RoadToFinalPage({
 
   const [hydrated, setHydrated] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [shareType, setShareType] = useState<"save" | "share" | null>(null);
   const [recordsOpen, setRecordsOpen] = useState(false);
   const [teamId, setTeamId] = useState(safeInitialTeamId);
   const [knockoutWinners, setKnockoutWinners] = useState<KnockoutWinners>({});
@@ -218,16 +217,14 @@ export function RoadToFinalPage({
           availableChances={availableChances}
           tradePromptAmount={tradePromptAmount}
           statsLoading={statsLoading || recordsLoading}
-          onShare={(type) => {
+          onShare={() => {
             setShareOpen(true);
-            setShareType(type);
           }}
           onOpenRecords={() => setRecordsOpen(true)}
         />
       </div>
 
       <RoadToFinalShareModal
-        type={shareType}
         open={shareOpen && isAuthenticated}
         onClose={() => setShareOpen(false)}
         teamId={shareTeamId}

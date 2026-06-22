@@ -22,7 +22,6 @@ import { Loader2 } from "lucide-react";
 import { useShare } from "@/hooks/referral/use-share";
 
 export type RoadToFinalShareModalProps = {
-  type: "save" | "share" | null;
   open: boolean;
   onClose: () => void;
   teamId: string;
@@ -37,7 +36,6 @@ export type RoadToFinalShareModalProps = {
 };
 
 export function RoadToFinalShareModal({
-  type,
   open,
   onClose,
   teamId,
@@ -70,6 +68,8 @@ export function RoadToFinalShareModal({
     shareCardRef: cardRef,
     downloadFilename: ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME,
     fullLink: inviteLink.fullLink,
+    tweetText: "Think you can call the World Cup? \n\nBuild your full bracket on Prophet — groups, knockouts, finalists, champion.\n\nBack your picks with $10+ in trades. \n\nThe most accurate bracket wins $10,000.\n\nUse the Prophet. Make Profit.\n\n",
+    hashtags: "Prophet,WorldCup2026",
   });
 
   const { simulationTeamId, simulationResult } = useMemo(
@@ -127,14 +127,22 @@ export function RoadToFinalShareModal({
           {t("shareModalTitle")}
         </h2>
       }
-      actionsList={["telegram", "download", "copy"]}
-      content={type === "share" ? (
+      content={(
         <div className="w-full flex flex-col gap-3.5 items-stretch">
           <div className="flex justify-between items-center">
             <div className="text-black text-sm font-normal">
               Entries: 2
             </div>
-            <div className=""></div>
+            <div className="text-[#D1A00F] text-sm font-normal bg-[rgba(253,211,87,0.2)] gap-[6px] rounded-md pl-[10px] pr-[14px] flex items-center justify-center h-[32px] ">
+              <img
+                src="/icons/icon-info.svg"
+                alt=""
+                className="size-4 shrink-0 object-center object-contain"
+              />
+              <div className="">
+                Sharing and pasting X  link is required.
+              </div>
+            </div>
           </div>
           <button
             type="button"
@@ -181,7 +189,7 @@ export function RoadToFinalShareModal({
             }
           </button>
         </div>
-      ) : null}
+      )}
     >
       <RoadToFinalShareCard
         ref={cardRef}

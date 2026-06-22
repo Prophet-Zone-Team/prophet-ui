@@ -23,6 +23,8 @@ export type UseShareProps = {
   shareCardRef: RefObject<HTMLDivElement | null>;
   downloadFilename?: string;
   fullLink: string;
+  tweetText?: string;
+  hashtags?: string;
 };
 
 export function useShare(props: UseShareProps) {
@@ -33,6 +35,8 @@ export function useShare(props: UseShareProps) {
     shareCardRef,
     downloadFilename,
     fullLink,
+    tweetText,
+    hashtags,
   } = props;
 
   const t = useTranslations("referral");
@@ -93,8 +97,8 @@ export function useShare(props: UseShareProps) {
 
       const origin = resolveOrigin();
       const tweetUrl = `${origin}/api/twitter?img=${encodeURIComponent(imgUrl)}&link=${encodeURIComponent(fullLink)}`;
-      shareToX(t("shareTweetIntro"), `${tweetUrl}\n\n`, {
-        hashtags: "Prophet,PredictionMarkets,WorldCup2026,Polymarket"
+      shareToX(tweetText ?? t("shareTweetIntro"), `${tweetUrl}\n\n`, {
+        hashtags: hashtags ?? "Prophet,PredictionMarkets,WorldCup2026,Polymarket"
       });
     } catch (error) {
       if (error instanceof ProphetApiError) {
