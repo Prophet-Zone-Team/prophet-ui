@@ -86,6 +86,8 @@ export interface TradeTicketFormProps {
   takeProfitLimitPrice?: string;
   outcomeButtonClassName?: string;
   outcomeButtonContainerClassName?: string;
+  yesButtonLabel?: string;
+  noButtonLabel?: string;
   onTakeProfitLimitEnabledChange?: (value: boolean) => void;
   onTakeProfitLimitPriceChange?: (value: string) => void;
   walletInsight?: ReactNode;
@@ -135,6 +137,8 @@ export function TradeTicketForm({
   takeProfitLimitPrice = "",
   outcomeButtonClassName,
   outcomeButtonContainerClassName,
+  yesButtonLabel,
+  noButtonLabel,
   onTakeProfitLimitEnabledChange,
   onTakeProfitLimitPriceChange,
   walletInsight
@@ -171,6 +175,7 @@ export function TradeTicketForm({
           priceLabel={formatOutcomeDisplay(yesTokenPrice)}
           probabilityLabel={formatProbability(yesProbability)}
           shareCount={tradeSide === "sell" ? yesShares : undefined}
+          buttonLabel={yesButtonLabel}
           onSelect={() => onSelectOutcome("yes")}
           buttonClassName={outcomeButtonClassName}
         />
@@ -180,6 +185,7 @@ export function TradeTicketForm({
           priceLabel={formatOutcomeDisplay(noTokenPrice)}
           probabilityLabel={formatProbability(noProbability)}
           shareCount={tradeSide === "sell" ? noShares : undefined}
+          buttonLabel={noButtonLabel}
           onSelect={() => onSelectOutcome("no")}
           buttonClassName={outcomeButtonClassName}
         />
@@ -537,6 +543,7 @@ function OutcomeButtonColumn({
   priceLabel,
   probabilityLabel,
   shareCount,
+  buttonLabel,
   className,
   buttonClassName,
   onSelect
@@ -546,6 +553,7 @@ function OutcomeButtonColumn({
   priceLabel: string;
   probabilityLabel: string;
   shareCount?: number;
+  buttonLabel?: string;
   className?: string;
   buttonClassName?: string;
   onSelect: () => void;
@@ -561,6 +569,7 @@ function OutcomeButtonColumn({
         active={active}
         priceLabel={priceLabel}
         probabilityLabel={probabilityLabel}
+        buttonLabel={buttonLabel}
         onSelect={onSelect}
         buttonClassName={buttonClassName}
       />
@@ -583,6 +592,7 @@ function OutcomeButton({
   active,
   priceLabel,
   probabilityLabel,
+  buttonLabel,
   buttonClassName,
   onSelect
 }: {
@@ -590,11 +600,13 @@ function OutcomeButton({
   active: boolean;
   priceLabel: string;
   probabilityLabel: string;
+  buttonLabel?: string;
   buttonClassName?: string;
   onSelect: () => void;
 }) {
   const t = useTranslations("trade");
   const isYes = side === "yes";
+  const label = buttonLabel ?? (isYes ? t("yes") : t("no"));
 
   return (
     <button
@@ -612,9 +624,7 @@ function OutcomeButton({
         buttonClassName
       )}
     >
-      <span className="text-[20px] font-[500] leading-6">
-        {isYes ? t("yes") : t("no")}
-      </span>
+      <span className="text-[20px] font-[500] leading-6">{label}</span>
       <div className="flex items-center gap-2">
         <span
           className={cn(
