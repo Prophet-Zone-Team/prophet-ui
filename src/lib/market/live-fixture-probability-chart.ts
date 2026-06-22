@@ -1,4 +1,7 @@
-import { formatChartTimestampClockLabel } from "@/lib/market/match-display";
+import {
+  formatChartTimestampClockLabel,
+  formatLiveChartClockLabel,
+} from "@/lib/market/match-display";
 import { getScheduleRowVariant } from "@/lib/market/schedule-match";
 import type { FixtureHistoryInterval } from "@/server/market/clob-prices-history";
 import type {
@@ -299,6 +302,90 @@ export function mapBinaryFixturePointsToMatchMinutes(
 /** Baseline live chart x-axis spans 0' through 90'. */
 export const LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS = 90 * 60;
 
+/** Typical halftime break used to map wall-clock elapsed to match clock. */
+export const LIVE_MATCH_HALFTIME_PAUSE_SECONDS = 15 * 60;
+
+/** Regulation half length on the match clock. */
+export const LIVE_MATCH_REGULATION_HALF_SECONDS = 45 * 60;
+
+const LIVE_MATCH_WALL_TO_MATCH_HALFTIME_THRESHOLD_SECONDS = 10 * 60;
+
+export interface ResolveMatchClockSecondsOptions {
+  matchPeriod?: string;
+  currentMatchClockSeconds?: number;
+}
+
+/**
+ * Convert wall-clock seconds since kickoff to match-clock seconds for chart axes.
+ * Price history uses real kickoff timestamps; live WS elapsed is match clock.
+ */
+export function resolveMatchClockSecondsFromWallElapsed(
+  wallElapsedSeconds: number,
+  options: ResolveMatchClockSecondsOptions = {}
+): number {
+  const wall = Math.max(0, Math.floor(wallElapsedSeconds));
+  const period = options.matchPeriod?.trim().toLowerCase();
+  const currentMatchClock = options.currentMatchClockSeconds;
+
+  if (period === "ht") {
+    return LIVE_MATCH_REGULATION_HALF_SECONDS;
+  }
+
+  if (
+    currentMatchClock !== undefined &&
+    currentMatchClock <= LIVE_MATCH_REGULATION_HALF_SECONDS &&
+    wall > LIVE_MATCH_REGULATION_HALF_SECONDS &&
+    wall - currentMatchClock < LIVE_MATCH_HALFTIME_PAUSE_SECONDS
+  ) {
+    return LIVE_MATCH_REGULATION_HALF_SECONDS;
+  }
+
+  const shouldMapWallElapsedToMatchClock =
+    currentMatchClock === undefined
+      ? wall >
+        LIVE_MATCH_REGULATION_HALF_SECONDS +
+          LIVE_MATCH_HALFTIME_PAUSE_SECONDS / 2
+      : wall > LIVE_MATCH_REGULATION_HALF_SECONDS &&
+        wall - currentMatchClock >=
+          LIVE_MATCH_WALL_TO_MATCH_HALFTIME_THRESHOLD_SECONDS;
+
+  if (!shouldMapWallElapsedToMatchClock) {
+    return wall;
+  }
+
+  if (
+    wall <
+    LIVE_MATCH_REGULATION_HALF_SECONDS + LIVE_MATCH_HALFTIME_PAUSE_SECONDS
+  ) {
+    return LIVE_MATCH_REGULATION_HALF_SECONDS;
+  }
+
+  return wall - LIVE_MATCH_HALFTIME_PAUSE_SECONDS;
+}
+
+/** Inverse of match-clock mapping for live chart axis hh:mm labels. */
+export function resolveWallElapsedSecondsFromMatchClock(
+  matchClockSeconds: number
+): number {
+  const match = Math.max(0, Math.floor(matchClockSeconds));
+
+  if (match <= LIVE_MATCH_REGULATION_HALF_SECONDS) {
+    return match;
+  }
+
+  return match + LIVE_MATCH_HALFTIME_PAUSE_SECONDS;
+}
+
+export function formatLiveChartAxisTickLabel(
+  kickoffAt: string | undefined,
+  matchClockSeconds: number
+): string {
+  return formatLiveChartClockLabel(
+    kickoffAt,
+    resolveWallElapsedSecondsFromMatchClock(matchClockSeconds)
+  );
+}
+
 /** Extra x-axis padding after match elapsed exceeds 60 minutes. */
 export const LIVE_MATCH_CHART_OVERTIME_PADDING_SECONDS = 10 * 60;
 
@@ -422,10 +509,18 @@ function ensureLiveBinaryChartLinePoints(
 
 function resolveLiveChartDataMax(
   points: Array<{ elapsedSeconds?: number }>,
-  matchElapsedSeconds?: number
+  matchElapsedSeconds?: number,
+  matchPeriod?: string
 ): number {
   const pointMax = points.reduce(
-    (max, point) => Math.max(max, point.elapsedSeconds ?? 0),
+    (max, point) =>
+      Math.max(
+        max,
+        resolveMatchClockSecondsFromWallElapsed(point.elapsedSeconds ?? 0, {
+          matchPeriod,
+          currentMatchClockSeconds: matchElapsedSeconds
+        })
+      ),
     0
   );
 
@@ -435,14 +530,25 @@ function resolveLiveChartDataMax(
 export function filterLiveFixtureChartByRange(
   points: GameFixtureChartPoint[],
   timeRange: GameFixtureChartTimeRange,
-  matchElapsedSeconds?: number
+  matchElapsedSeconds?: number,
+  matchPeriod?: string
 ): GameFixtureChartPoint[] {
-  const dataMax = resolveLiveChartDataMax(points, matchElapsedSeconds);
+  const dataMax = resolveLiveChartDataMax(
+    points,
+    matchElapsedSeconds,
+    matchPeriod
+  );
   const windowSeconds = resolveLiveChartWindowSeconds(timeRange, dataMax);
   const filtered =
     windowSeconds === undefined
       ? points
-      : points.filter((point) => (point.elapsedSeconds ?? 0) <= windowSeconds);
+      : points.filter(
+          (point) =>
+            resolveMatchClockSecondsFromWallElapsed(point.elapsedSeconds ?? 0, {
+              matchPeriod,
+              currentMatchClockSeconds: matchElapsedSeconds
+            }) <= windowSeconds
+        );
 
   return ensureLiveTernaryChartLinePoints(filtered);
 }
@@ -450,14 +556,25 @@ export function filterLiveFixtureChartByRange(
 export function filterLiveBinaryFixtureChartByRange(
   points: GameFixtureBinaryChartPoint[],
   timeRange: GameFixtureChartTimeRange,
-  matchElapsedSeconds?: number
+  matchElapsedSeconds?: number,
+  matchPeriod?: string
 ): GameFixtureBinaryChartPoint[] {
-  const dataMax = resolveLiveChartDataMax(points, matchElapsedSeconds);
+  const dataMax = resolveLiveChartDataMax(
+    points,
+    matchElapsedSeconds,
+    matchPeriod
+  );
   const windowSeconds = resolveLiveChartWindowSeconds(timeRange, dataMax);
   const filtered =
     windowSeconds === undefined
       ? points
-      : points.filter((point) => (point.elapsedSeconds ?? 0) <= windowSeconds);
+      : points.filter(
+          (point) =>
+            resolveMatchClockSecondsFromWallElapsed(point.elapsedSeconds ?? 0, {
+              matchPeriod,
+              currentMatchClockSeconds: matchElapsedSeconds
+            }) <= windowSeconds
+        );
 
   return ensureLiveBinaryChartLinePoints(filtered);
 }
@@ -467,9 +584,14 @@ export function filterLiveChartEventsByRange<
 >(
   events: T[],
   timeRange: GameFixtureChartTimeRange,
-  matchElapsedSeconds?: number
+  matchElapsedSeconds?: number,
+  matchPeriod?: string
 ): T[] {
-  const dataMax = resolveLiveChartDataMax(events, matchElapsedSeconds);
+  const dataMax = resolveLiveChartDataMax(
+    events,
+    matchElapsedSeconds,
+    matchPeriod
+  );
   const windowSeconds = resolveLiveChartWindowSeconds(timeRange, dataMax);
 
   if (windowSeconds === undefined) {
@@ -484,14 +606,24 @@ export function resolveLiveChartMaxElapsed(
   points: Array<{ elapsedSeconds?: number }> = [],
   timeRange: GameFixtureChartTimeRange = "1H",
   liveElapsedSeconds?: number,
-  nowMs = Date.now()
+  nowMs = Date.now(),
+  matchPeriod?: string
 ): number {
-  const elapsedFromKickoff =
+  const matchClockElapsed =
     liveElapsedSeconds ??
-    (kickoffAt ? resolveKickoffElapsedSeconds(kickoffAt, nowMs) : undefined) ??
+    (kickoffAt
+      ? resolveMatchClockSecondsFromWallElapsed(
+          resolveKickoffElapsedSeconds(kickoffAt, nowMs) ?? 0,
+          { matchPeriod, currentMatchClockSeconds: liveElapsedSeconds }
+        )
+      : undefined) ??
     0;
 
-  const dataMax = resolveLiveChartDataMax(points, elapsedFromKickoff);
+  const dataMax = resolveLiveChartDataMax(
+    points,
+    matchClockElapsed,
+    matchPeriod
+  );
   const windowSeconds = resolveLiveChartWindowSeconds(timeRange, dataMax);
 
   if (windowSeconds !== undefined) {

@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import {
   createContext,
   useContext,
@@ -34,7 +33,9 @@ import {
 } from "@/lib/market/fixture-probability-chart";
 import {
   LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
-  resolveLiveChartAxisTicks
+  formatLiveChartAxisTickLabel,
+  resolveLiveChartAxisTicks,
+  resolveMatchClockSecondsFromWallElapsed
 } from "@/lib/market/live-fixture-probability-chart";
 import type {
   GameFixtureBinaryChartPoint,
@@ -66,6 +67,7 @@ const END_LABEL_SLOT_FRACTIONS: Record<BinarySeriesKey, number> = {
 
 interface ChartRow extends GameFixtureBinaryChartPoint {
   chartLabel: string;
+  matchClockSeconds?: number;
 }
 
 interface ChartCustomizedProps {
@@ -269,6 +271,8 @@ export interface GameBinaryProbabilityChartProps {
   events?: GameMatchChartEvent[];
   maxElapsedSeconds?: number;
   kickoffAt?: string;
+  matchPeriod?: string;
+  matchClockElapsedSeconds?: number;
   homeCode?: string;
   awayCode?: string;
 }
@@ -284,21 +288,14 @@ export function GameBinaryProbabilityChart({
   events = [],
   maxElapsedSeconds = 0,
   kickoffAt,
+  matchPeriod,
+  matchClockElapsedSeconds,
   homeCode,
   awayCode
 }: GameBinaryProbabilityChartProps) {
-  const t = useTranslations("trade");
   const isLive = mode === "live";
-  const formatLiveAxisTick = (value: number) => {
-    const safeSeconds = Math.max(0, Math.floor(value));
-    const minutes = Math.floor(safeSeconds / 60);
-
-    if (minutes === 45) {
-      return t("chartHalfTimeAxisLabel");
-    }
-
-    return `${minutes}'`;
-  };
+  const formatLiveAxisTick = (value: number) =>
+    formatLiveChartAxisTickLabel(kickoffAt, value);
 
   const series = useMemo(
     () => [
@@ -316,9 +313,18 @@ export function GameBinaryProbabilityChart({
     () =>
       data.map((point) => ({
         ...point,
-        chartLabel: point.label
+        chartLabel: point.label,
+        matchClockSeconds: isLive
+          ? resolveMatchClockSecondsFromWallElapsed(
+              point.elapsedSeconds ?? 0,
+              {
+                matchPeriod,
+                currentMatchClockSeconds: matchClockElapsedSeconds
+              }
+            )
+          : undefined
       })),
-    [data]
+    [data, isLive, matchClockElapsedSeconds, matchPeriod]
   );
 
   const yDomain = useMemo(() => getBinaryFixtureChartYDomain(data), [data]);
@@ -341,10 +347,11 @@ export function GameBinaryProbabilityChart({
     }
 
     return Math.max(
-      ...data.map((point) => point.elapsedSeconds ?? 0),
+      ...chartData.map((point) => point.matchClockSeconds ?? 0),
+      matchClockElapsedSeconds ?? 0,
       LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS
     );
-  }, [data, isLive, maxElapsedSeconds]);
+  }, [chartData, isLive, matchClockElapsedSeconds, maxElapsedSeconds]);
 
   const goalMarkerConfig = useMemo(
     () => ({
@@ -382,7 +389,7 @@ export function GameBinaryProbabilityChart({
       <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
       <XAxis
         type={isLive ? "number" : "category"}
-        dataKey={isLive ? "elapsedSeconds" : "timestamp"}
+        dataKey={isLive ? "matchClockSeconds" : "timestamp"}
         domain={isLive ? [0, resolvedMaxElapsed] : undefined}
         ticks={
           isLive ? resolveLiveChartAxisTicks(resolvedMaxElapsed) : undefined

@@ -6,6 +6,8 @@ import {
   mapFixturePointsToElapsedFromStartTs,
   resolveLiveChartPriceHistoryKickoffAt,
   resolveLiveChartTimeWindow,
+  resolveMatchClockSecondsFromWallElapsed,
+  resolveWallElapsedSecondsFromMatchClock,
 } from "@/lib/market/live-fixture-probability-chart";
 import type { GameFixtureChartPoint } from "@/types/market";
 
@@ -65,6 +67,42 @@ describe("live-fixture-probability-chart", () => {
     const mapped = mapFixturePointsToElapsedFromStartTs(rawPoints, startTs);
 
     assert.equal(mapped[0]?.elapsedSeconds, 720);
+  });
+
+  it("resolveMatchClockSecondsFromWallElapsed keeps first-half wall time", () => {
+    assert.equal(
+      resolveMatchClockSecondsFromWallElapsed(30 * 60, {
+        currentMatchClockSeconds: 30 * 60,
+      }),
+      30 * 60
+    );
+  });
+
+  it("resolveMatchClockSecondsFromWallElapsed subtracts halftime for second half", () => {
+    assert.equal(
+      resolveMatchClockSecondsFromWallElapsed(67 * 60, {
+        currentMatchClockSeconds: 52 * 60,
+        matchPeriod: "2H",
+      }),
+      52 * 60
+    );
+  });
+
+  it("resolveMatchClockSecondsFromWallElapsed clamps to 45' during HT", () => {
+    assert.equal(
+      resolveMatchClockSecondsFromWallElapsed(50 * 60, {
+        currentMatchClockSeconds: 45 * 60,
+        matchPeriod: "HT",
+      }),
+      45 * 60
+    );
+  });
+
+  it("resolveWallElapsedSecondsFromMatchClock adds halftime after 45'", () => {
+    assert.equal(
+      resolveWallElapsedSecondsFromMatchClock(52 * 60),
+      67 * 60
+    );
   });
 
   it("timeWindow startTs matches kickoff used for elapsed mapping", () => {
