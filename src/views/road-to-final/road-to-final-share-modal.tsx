@@ -67,10 +67,6 @@ export function RoadToFinalShareModal({
   );
 
   const stages = useMemo(() => {
-    if (!simulationResult) {
-      return [];
-    }
-
     return buildShareCardStages({
       teamId: simulationTeamId,
       result: simulationResult,
@@ -108,6 +104,11 @@ export function RoadToFinalShareModal({
       cardRef={cardRef}
       shareImageUploadMode="always"
       modalShellClass="md:w-[550px]"
+      header={
+        <h2 className="m-0 text-center text-[18px] font-[500] text-black">
+          {t("shareModalTitle")}
+        </h2>
+      }
     >
       <RoadToFinalShareCard
         ref={cardRef}

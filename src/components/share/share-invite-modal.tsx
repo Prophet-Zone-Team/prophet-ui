@@ -3,6 +3,7 @@
 import {
   RefObject,
   type ReactElement,
+  type ReactNode,
   type Ref,
 } from "react";
 import { X } from "lucide-react";
@@ -29,6 +30,7 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
   open: boolean;
   onClose: () => void;
   ariaLabel: string;
+  header?: ReactNode;
   children: ReactElement<{
     ref?: Ref<HTMLDivElement>;
     onBackgroundReady?: () => void;
@@ -45,6 +47,7 @@ export function ShareInviteModal({
   open,
   onClose,
   ariaLabel,
+  header,
   linkPrefix,
   referralCode,
   fullLink,
@@ -87,6 +90,7 @@ export function ShareInviteModal({
         ) : null}
 
         <div className="flex flex-col gap-5">
+          {header}
           {children}
 
           <ReferralInviteLinkRow

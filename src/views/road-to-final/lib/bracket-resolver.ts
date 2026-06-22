@@ -10,14 +10,14 @@ import type { PathResult } from "@/types/market";
 import {
   MATCH_LOOKUP,
   THIRD_PLACE_WINNER_SEEDS
-} from "../lib/bracket-config";
+} from "./bracket-config";
 import type {
   BracketMatchConfig,
   GroupPlacements,
   KnockoutWinners,
   Placement
 } from "../types";
-import { SHORT_ROUND_LABELS } from "../lib/format";
+import { SHORT_ROUND_LABELS } from "./format";
 
 export function getMatchStage(
   match?: BracketMatchConfig

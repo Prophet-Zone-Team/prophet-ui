@@ -1,3 +1,4 @@
+import { getWorldCupGroupForTeam } from "@/data/world-cup-2026/groups";
 import {
   getWorldCupTeamByIdOrCode,
   type WorldCup2026Group,
@@ -5,8 +6,9 @@ import {
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 import type { KnockoutRound, PathResult } from "@/types/market";
 
-import { getMatchCandidateTeams } from "../bracket-graph/bracket-resolver";
+import { getMatchCandidateTeams } from "./bracket-resolver";
 import { MATCH_LOOKUP } from "./bracket-config";
+import { buildChampionPathHighlight } from "./champion-path";
 import { safeCalculatePath } from "./calculate-path";
 import { ROUND_LABELS } from "./format";
 import { getFinishForTeam } from "./placements";
@@ -66,6 +68,53 @@ function toShareCardTeam(teamId: string): ShareCardTeam | null {
     name: team.name,
     code: team.code,
   };
+}
+
+function resolveKnockoutRound(matchId: number): KnockoutRound | undefined {
+  const stage = MATCH_LOOKUP.get(matchId)?.stage;
+
+  if (stage === "R32") {
+    return "R32";
+  }
+
+  if (stage === "R16") {
+    return "R16";
+  }
+
+  if (stage === "QF") {
+    return "QF";
+  }
+
+  if (stage === "SF") {
+    return "SF";
+  }
+
+  if (stage === "FINAL") {
+    return "FINAL";
+  }
+
+  return undefined;
+}
+
+function resolveChampionPathMatchIds(
+  knockoutWinners: KnockoutWinners,
+  championTeamId: string
+): Partial<Record<KnockoutRound, number>> {
+  const { highlightedMatchIds } = buildChampionPathHighlight(
+    knockoutWinners,
+    championTeamId
+  );
+  const matches: Partial<Record<KnockoutRound, number>> = {};
+
+  for (const matchId of highlightedMatchIds) {
+    const round = resolveKnockoutRound(matchId);
+
+    if (round) {
+      matches[round] = matchId;
+    }
+  }
+
+  return matches;
 }
 
 function resolvePathMatchId(
@@ -144,7 +193,7 @@ export function buildShareCardStages({
   thirdPlaceOption,
 }: {
   teamId: string;
-  result: PathResult;
+  result?: PathResult;
   placements: GroupPlacements;
   knockoutWinners: KnockoutWinners;
   thirdPlaceOption?: ThirdPlaceAllocationOption;
@@ -155,9 +204,16 @@ export function buildShareCardStages({
     return [];
   }
 
+  const championPathMatches = resolveChampionPathMatchIds(
+    knockoutWinners,
+    focusTeam.id
+  );
+  const group =
+    result?.group ?? getWorldCupGroupForTeam(focusTeam.id) ?? "A";
+
   return STAGE_LAYOUT.map((layout) => {
     if (layout.key === "GROUP") {
-      return buildGroupStage(focusTeam, result.group, placements);
+      return buildGroupStage(focusTeam, group, placements);
     }
 
     const round = layout.round;
@@ -172,7 +228,9 @@ export function buildShareCardStages({
       };
     }
 
-    const matchId = resolvePathMatchId(result, round);
+    const matchId =
+      championPathMatches[round] ??
+      (result ? resolvePathMatchId(result, round) : undefined);
     const opponent =
       matchId !== undefined
         ? resolveKnockoutOpponent({

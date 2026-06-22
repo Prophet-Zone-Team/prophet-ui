@@ -2,7 +2,7 @@ import { KNOCKOUT_LINKS } from "@/data/world-cup-2026/knockout-links";
 import { ROUND_OF_32 } from "@/data/world-cup-2026/round-of-32";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 
-import { getMatchCandidateTeams } from "../bracket-graph/bracket-resolver";
+import { getMatchCandidateTeams } from "./bracket-resolver";
 import type { GroupPlacements, KnockoutWinners } from "../types";
 import {
   chooseKnockoutWinner,
