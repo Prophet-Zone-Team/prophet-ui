@@ -3,6 +3,9 @@ import {
   parseComboMarketSlug,
 } from "@/lib/combo/map-market-to-combo-item";
 import { applyMatchTotalComboRulesToOdds } from "@/lib/combo/match-total-combo-rules";
+import {
+  resolveSelectedMarketIdByKind,
+} from "@/lib/combo/combo-market-mutex";
 import type { ComboGameGroup } from "@/types/combo";
 import type { ComboOddsOption } from "@/views/combo/combo-item/types";
 import type { ComboPick } from "@/views/combo/combo-widget/types";
@@ -98,6 +101,55 @@ export function resolveSelectedMoneylineSide(
   );
 }
 
+export function resolveSelectedMoneylineSideFromGroupPicks(
+  groupPicks: readonly ComboPick[],
+  group: ComboGameGroup,
+): ComboMoneylineSide | undefined {
+  for (const pick of groupPicks) {
+    const side = resolveSelectedMoneylineSide(pick, group);
+
+    if (side) {
+      return side;
+    }
+  }
+
+  return undefined;
+}
+
+function disableOtherOptionsInGroup(
+  odds: ComboOddsOption[],
+  selectedMarketId: string | undefined,
+  disabledTooltip: string,
+): ComboOddsOption[] {
+  if (!selectedMarketId) {
+    return odds;
+  }
+
+  return odds.map((option) => {
+    const marketId = resolveComboOddsMarketId(option);
+
+    if (marketId && marketId !== selectedMarketId) {
+      return {
+        ...option,
+        disabled: true,
+        disabledTooltip,
+      };
+    }
+
+    return option;
+  });
+}
+
+function disableAllOptions(
+  odds: ComboOddsOption[],
+  disabledTooltip: string,
+): ComboOddsOption[] {
+  return odds.map((option) => ({
+    ...option,
+    disabled: true,
+    disabledTooltip,
+  }));
+}
 export function filterExactScoreOddsByMoneylineSide(
   odds: ComboOddsOption[],
   side: ComboMoneylineSide,
@@ -111,7 +163,6 @@ export function applyComboLegSelectionRules(input: {
   topScoreOdds: ComboOddsOption[];
   totalOdds: ComboOddsOption[];
   groupPicks: readonly ComboPick[];
-  selectedPick?: ComboPick;
   group: ComboGameGroup;
   disabledTooltip: string;
 }): {
@@ -120,22 +171,52 @@ export function applyComboLegSelectionRules(input: {
   topScoreOdds: ComboOddsOption[];
   totalOdds: ComboOddsOption[];
 } {
-  const moneylineSide = resolveSelectedMoneylineSide(input.selectedPick, input.group);
-  const spreadsDisabled = Boolean(moneylineSide);
-
-  const spreadOdds = input.spreadOdds.map((option) =>
-    spreadsDisabled
-      ? {
-          ...option,
-          disabled: true,
-          disabledTooltip: input.disabledTooltip,
-        }
-      : option,
+  const moneylineSide = resolveSelectedMoneylineSideFromGroupPicks(
+    input.groupPicks,
+    input.group,
   );
+  const selectedMoneylineMarketId = resolveSelectedMarketIdByKind(
+    input.groupPicks,
+    input.group,
+    "moneyline",
+  );
+  const selectedSpreadMarketId = resolveSelectedMarketIdByKind(
+    input.groupPicks,
+    input.group,
+    "spread",
+  );
+  const selectedExactScoreMarketId = resolveSelectedMarketIdByKind(
+    input.groupPicks,
+    input.group,
+    "exact_score",
+  );
+  const hasMoneylineSelected = Boolean(selectedMoneylineMarketId);
+  const hasSpreadSelected = Boolean(selectedSpreadMarketId);
 
-  const topScoreOdds = moneylineSide
+  const moneylineOdds = hasSpreadSelected
+    ? disableAllOptions(input.moneylineOdds, input.disabledTooltip)
+    : disableOtherOptionsInGroup(
+        input.moneylineOdds,
+        selectedMoneylineMarketId,
+        input.disabledTooltip,
+      );
+
+  const spreadOdds = hasMoneylineSelected
+    ? disableAllOptions(input.spreadOdds, input.disabledTooltip)
+    : disableOtherOptionsInGroup(
+        input.spreadOdds,
+        selectedSpreadMarketId,
+        input.disabledTooltip,
+      );
+
+  const filteredTopScoreOdds = moneylineSide
     ? filterExactScoreOddsByMoneylineSide(input.topScoreOdds, moneylineSide)
     : input.topScoreOdds;
+  const topScoreOdds = disableOtherOptionsInGroup(
+    filteredTopScoreOdds,
+    selectedExactScoreMarketId,
+    input.disabledTooltip,
+  );
 
   const totalOdds = applyMatchTotalComboRulesToOdds(
     input.totalOdds,
@@ -145,7 +226,7 @@ export function applyComboLegSelectionRules(input: {
   );
 
   return {
-    moneylineOdds: input.moneylineOdds,
+    moneylineOdds,
     spreadOdds,
     topScoreOdds,
     totalOdds,

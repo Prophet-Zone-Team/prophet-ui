@@ -6,6 +6,7 @@ import {
   exactScoreMatchesMoneylineSide,
   filterExactScoreOddsByMoneylineSide,
   resolveMoneylineSide,
+  resolveSelectedMoneylineSideFromGroupPicks,
 } from "@/lib/combo/combo-leg-selection";
 import type { ComboGameGroup } from "@/types/combo";
 
@@ -17,13 +18,40 @@ const sampleGroup: ComboGameGroup = {
   awayTeam: { code: "IRQ", name: "Iraq" },
   markets: [
     {
+      id: "fifwc-fra-irq-2026-06-22-fra",
+      slug: "fifwc-fra-irq-2026-06-22-fra",
+      title: "France",
+      outcomes: ["Yes", "No"],
+      outcomePrices: ["0.8", "0.2"],
+      conditionId: "ml1",
+      positionIds: ["p1", "p2"],
+    },
+    {
+      id: "fifwc-fra-irq-2026-06-22-draw",
+      slug: "fifwc-fra-irq-2026-06-22-draw",
+      title: "Draw",
+      outcomes: ["Yes", "No"],
+      outcomePrices: ["0.1", "0.9"],
+      conditionId: "ml2",
+      positionIds: ["p3", "p4"],
+    },
+    {
+      id: "fifwc-fra-irq-2026-06-22-irq",
+      slug: "fifwc-fra-irq-2026-06-22-irq",
+      title: "Iraq",
+      outcomes: ["Yes", "No"],
+      outcomePrices: ["0.1", "0.9"],
+      conditionId: "ml3",
+      positionIds: ["p5", "p6"],
+    },
+    {
       id: "fifwc-fra-irq-2026-06-22-total-3pt5",
       slug: "fifwc-fra-irq-2026-06-22-total-3pt5",
       title: "Total 3.5",
       outcomes: ["Over", "Under"],
       outcomePrices: ["0.4", "0.6"],
       conditionId: "c1",
-      positionIds: ["p1", "p2"],
+      positionIds: ["p7", "p8"],
     },
     {
       id: "fifwc-fra-irq-2026-06-22-total-5pt5",
@@ -32,9 +60,58 @@ const sampleGroup: ComboGameGroup = {
       outcomes: ["Over", "Under"],
       outcomePrices: ["0.2", "0.8"],
       conditionId: "c2",
-      positionIds: ["p3", "p4"],
+      positionIds: ["p9", "p10"],
+    },
+    {
+      id: "fifwc-fra-irq-2026-06-22-spread-fra-1pt5",
+      slug: "fifwc-fra-irq-2026-06-22-spread-fra-1pt5",
+      title: "France -1.5",
+      outcomes: ["Yes", "No"],
+      outcomePrices: ["0.5", "0.5"],
+      conditionId: "sp1",
+      positionIds: ["p11", "p12"],
+    },
+    {
+      id: "fifwc-fra-irq-2026-06-22-exact-score-1-0",
+      slug: "fifwc-fra-irq-2026-06-22-exact-score-1-0",
+      title: "1-0",
+      outcomes: ["Yes", "No"],
+      outcomePrices: ["0.1", "0.9"],
+      conditionId: "es1",
+      positionIds: ["p13", "p14"],
+    },
+    {
+      id: "fifwc-fra-irq-2026-06-22-exact-score-2-1",
+      slug: "fifwc-fra-irq-2026-06-22-exact-score-2-1",
+      title: "2-1",
+      outcomes: ["Yes", "No"],
+      outcomePrices: ["0.08", "0.92"],
+      conditionId: "es2",
+      positionIds: ["p15", "p16"],
     },
   ],
+};
+
+const moneylinePick = {
+  id: "fifwc-fra-irq-2026-06-22-fra",
+  type: "moneyline" as const,
+  outcomeSide: "yes" as const,
+  matchupLabel: "France vs Iraq",
+  team: { name: "France", code: "FRA" },
+  selectionLabel: "France",
+  legPositionId: "leg-ml",
+  referencePrice: 0.8,
+};
+
+const totalPick = {
+  id: "fifwc-fra-irq-2026-06-22-total-3pt5",
+  type: "moneyline" as const,
+  outcomeSide: "yes" as const,
+  matchupLabel: "Total 3.5",
+  team: { name: "O/U", code: "O/U" },
+  selectionLabel: "Over",
+  legPositionId: "leg-total",
+  referencePrice: 0.4,
 };
 
 describe("combo leg selection", () => {
@@ -74,6 +151,58 @@ describe("combo leg selection", () => {
     assert.equal(exactScoreMatchesMoneylineSide("Any Other", "away"), true);
   });
 
+  it("resolves moneyline side from group picks even when total is listed first", () => {
+    assert.equal(
+      resolveSelectedMoneylineSideFromGroupPicks(
+        [totalPick, moneylinePick],
+        sampleGroup,
+      ),
+      "home",
+    );
+  });
+
+  it("disables other moneyline options when one side is selected", () => {
+    const moneylineOdds = [
+      { id: "fifwc-fra-irq-2026-06-22-fra:yes", label: "France", price: 0.8 },
+      { id: "fifwc-fra-irq-2026-06-22-draw:yes", label: "Draw", price: 0.1 },
+      { id: "fifwc-fra-irq-2026-06-22-irq:yes", label: "Iraq", price: 0.1 },
+    ];
+
+    const rules = applyComboLegSelectionRules({
+      moneylineOdds,
+      spreadOdds: [],
+      topScoreOdds: [],
+      totalOdds: [],
+      groupPicks: [moneylinePick],
+      group: sampleGroup,
+      disabledTooltip: "Cannot add to combo",
+    });
+
+    assert.equal(rules.moneylineOdds[0]?.disabled, undefined);
+    assert.equal(rules.moneylineOdds[1]?.disabled, true);
+    assert.equal(rules.moneylineOdds[2]?.disabled, true);
+  });
+
+  it("disables spreads when moneyline is selected", () => {
+    const rules = applyComboLegSelectionRules({
+      moneylineOdds: [],
+      spreadOdds: [
+        {
+          id: "fifwc-fra-irq-2026-06-22-spread-fra-1pt5:yes",
+          label: "FRA -1.5",
+          price: 0.5,
+        },
+      ],
+      topScoreOdds: [],
+      totalOdds: [],
+      groupPicks: [moneylinePick],
+      group: sampleGroup,
+      disabledTooltip: "Cannot add to combo",
+    });
+
+    assert.equal(rules.spreadOdds[0]?.disabled, true);
+  });
+
   it("keeps compatible unders enabled when O 3.5 is selected", () => {
     const totalOdds = [
       {
@@ -93,23 +222,43 @@ describe("combo leg selection", () => {
       spreadOdds: [],
       topScoreOdds: [],
       totalOdds,
-      groupPicks: [
-        {
-          id: "fifwc-fra-irq-2026-06-22-total-3pt5",
-          type: "moneyline",
-          outcomeSide: "yes",
-          matchupLabel: "Total 3.5",
-          team: { name: "O/U", code: "O/U" },
-          selectionLabel: "Over",
-          legPositionId: "leg-1",
-          referencePrice: 0.4,
-        },
-      ],
+      groupPicks: [totalPick],
       group: sampleGroup,
       disabledTooltip: "Cannot add to combo",
     });
 
     assert.equal(rules.totalOdds[0]?.disabled, undefined);
     assert.equal(rules.totalOdds[1]?.disabled, undefined);
+  });
+
+  it("disables other exact score options when one score is selected", () => {
+    const rules = applyComboLegSelectionRules({
+      moneylineOdds: [],
+      spreadOdds: [],
+      topScoreOdds: [
+        {
+          id: "fifwc-fra-irq-2026-06-22-exact-score-1-0:yes",
+          label: "1-0",
+          price: 0.1,
+        },
+        {
+          id: "fifwc-fra-irq-2026-06-22-exact-score-2-1:yes",
+          label: "2-1",
+          price: 0.08,
+        },
+      ],
+      totalOdds: [],
+      groupPicks: [
+        {
+          ...moneylinePick,
+          id: "fifwc-fra-irq-2026-06-22-exact-score-1-0",
+        },
+      ],
+      group: sampleGroup,
+      disabledTooltip: "Cannot add to combo",
+    });
+
+    assert.equal(rules.topScoreOdds[0]?.disabled, undefined);
+    assert.equal(rules.topScoreOdds[1]?.disabled, true);
   });
 });

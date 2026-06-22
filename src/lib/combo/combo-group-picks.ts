@@ -1,3 +1,9 @@
+import {
+  isExactScoreMarket,
+  isMoneylineMarket,
+  isSpreadMarket,
+  removeOtherMarketsOfKind,
+} from "@/lib/combo/combo-market-mutex";
 import { isMatchTotalMarket, removeConflictingMatchTotalPicks } from "@/lib/combo/match-total-combo-rules";
 import type { ComboGameGroup } from "@/types/combo";
 
@@ -27,19 +33,31 @@ export function applyComboGameGroupPickUpdate<
 ): T[] {
   const market = group.markets.find((entry) => entry.id === marketId);
 
-  if (!market || !isMatchTotalMarket(market)) {
+  if (!market) {
     return applyComboMarketPickUpdate(picks, marketId, outcomeSide, createPick);
   }
 
-  const picksWithoutConflictingTotals = removeConflictingMatchTotalPicks(
-    picks,
-    group,
-    marketId,
-    outcomeSide,
-  );
+  let nextPicks = [...picks];
+
+  if (isMoneylineMarket(market)) {
+    nextPicks = removeOtherMarketsOfKind(nextPicks, group, "moneyline", marketId);
+    nextPicks = removeOtherMarketsOfKind(nextPicks, group, "spread", marketId);
+  } else if (isSpreadMarket(market)) {
+    nextPicks = removeOtherMarketsOfKind(nextPicks, group, "spread", marketId);
+    nextPicks = removeOtherMarketsOfKind(nextPicks, group, "moneyline", marketId);
+  } else if (isExactScoreMarket(market)) {
+    nextPicks = removeOtherMarketsOfKind(nextPicks, group, "exact_score", marketId);
+  } else if (isMatchTotalMarket(market)) {
+    nextPicks = removeConflictingMatchTotalPicks(
+      nextPicks,
+      group,
+      marketId,
+      outcomeSide,
+    );
+  }
 
   return applyComboMarketPickUpdate(
-    picksWithoutConflictingTotals,
+    nextPicks,
     marketId,
     outcomeSide,
     createPick,

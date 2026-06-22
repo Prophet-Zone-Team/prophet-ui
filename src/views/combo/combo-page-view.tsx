@@ -267,7 +267,6 @@ export function ComboPageView() {
               topScoreOdds: baseItemProps.topScoreOdds,
               totalOdds: baseItemProps.totalOdds ?? [],
               groupPicks,
-              selectedPick,
               group,
               disabledTooltip: t("cannotAddToCombo")
             });

@@ -126,6 +126,41 @@ describe("applyComboMarketPickUpdate", () => {
     assert.deepEqual(nextPicks, [moneylinePick, overThreePick]);
   });
 
+  it("replaces an existing moneyline side when selecting another", () => {
+    const homePick = {
+      id: "fifwc-cze-rsa-2026-06-18-cze",
+      outcomeSide: "yes",
+    };
+    const drawPick = {
+      id: "fifwc-cze-rsa-2026-06-18-draw",
+      outcomeSide: "yes",
+    };
+
+    const groupWithDraw: ComboGameGroup = {
+      ...sampleGroup,
+      markets: [
+        ...sampleGroup.markets,
+        {
+          id: "fifwc-cze-rsa-2026-06-18-draw",
+          slug: "fifwc-cze-rsa-2026-06-18-draw",
+          title: "Draw",
+          outcomes: ["Yes", "No"],
+          image: "",
+        },
+      ],
+    };
+
+    const nextPicks = applyComboGameGroupPickUpdate(
+      [homePick],
+      groupWithDraw,
+      drawPick.id,
+      drawPick.outcomeSide,
+      () => drawPick,
+    );
+
+    assert.deepEqual(nextPicks, [drawPick]);
+  });
+
   it("keeps an existing over when adding a compatible under leg", () => {
     const overThreePick = {
       id: "fifwc-cze-rsa-2026-06-18-total-3pt5",
