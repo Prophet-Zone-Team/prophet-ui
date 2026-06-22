@@ -65,7 +65,7 @@ export async function fetchPolymarketComboPositions(
   if (!trimmedAddress) {
     return [];
   }
-
+  console.log("trimmedAddress", trimmedAddress);
   const url = buildComboPositionsUrl(trimmedAddress, options);
   const payload = await fetchJson<ComboPositionsResponse>(url);
 
