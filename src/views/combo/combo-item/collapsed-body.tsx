@@ -7,7 +7,7 @@ export function CollapsedBody({
   awayTeam,
   moneylineOdds,
   previewOdds,
-  selectedOddsId,
+  isOptionSelected,
   onSelectOdds,
 }: CollapsedBodyProps) {
   return (
@@ -23,7 +23,7 @@ export function CollapsedBody({
             <ComboOddsButton
               key={option.id}
               option={option}
-              selected={selectedOddsId === option.id}
+              selected={isOptionSelected(option.id)}
               wide
               compact
               onClick={() => onSelectOdds?.(option)}
@@ -37,7 +37,7 @@ export function CollapsedBody({
               <ComboOddsButton
                 key={option.id}
                 option={option}
-                selected={selectedOddsId === option.id}
+                selected={isOptionSelected(option.id)}
                 compact
                 onClick={() => onSelectOdds?.(option)}
               />

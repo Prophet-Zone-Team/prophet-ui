@@ -27,6 +27,8 @@ export interface ComboItemProps {
   totalOddsCount?: number;
   /** Selected combo legs count for this market group. */
   selectedLegsCount?: number;
+  /** Selected combo leg odds ids for this market group. */
+  selectedOddsIds?: readonly string[];
   selectedOddsId?: string | null;
   defaultSelectedOddsId?: string;
   expanded?: boolean;
@@ -41,7 +43,7 @@ export interface CollapsedBodyProps {
   awayTeam: ComboItemTeam;
   moneylineOdds: ComboOddsOption[];
   previewOdds: ComboOddsOption[];
-  selectedOddsId?: string | null;
+  isOptionSelected: (optionId: string) => boolean;
   onSelectOdds?: (option: ComboOddsOption) => void;
 }
 
@@ -52,6 +54,6 @@ export interface ExpandedBodyProps {
   spreadOdds: ComboOddsOption[];
   topScoreOdds: ComboOddsOption[];
   totalOdds?: ComboOddsOption[];
-  selectedOddsId?: string | null;
+  isOptionSelected: (optionId: string) => boolean;
   onSelectOdds?: (option: ComboOddsOption) => void;
 }

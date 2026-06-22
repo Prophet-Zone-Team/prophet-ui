@@ -10,7 +10,7 @@ export function ExpandedBody({
   spreadOdds,
   topScoreOdds,
   totalOdds = [],
-  selectedOddsId,
+  isOptionSelected,
   onSelectOdds,
 }: ExpandedBodyProps) {
   return (
@@ -21,7 +21,7 @@ export function ExpandedBody({
             <ComboOddsButton
               key={option.id}
               option={option}
-              selected={selectedOddsId === option.id}
+              selected={isOptionSelected(option.id)}
               wide
               onClick={() => onSelectOdds?.(option)}
             />
@@ -36,7 +36,7 @@ export function ExpandedBody({
               <ComboOddsButton
                 key={option.id}
                 option={option}
-                selected={selectedOddsId === option.id}
+                selected={isOptionSelected(option.id)}
                 wide
                 onClick={() => onSelectOdds?.(option)}
               />
@@ -52,7 +52,7 @@ export function ExpandedBody({
               <ComboOddsButton
                 key={option.id}
                 option={option}
-                selected={selectedOddsId === option.id}
+                selected={isOptionSelected(option.id)}
                 mutedLabel
                 onClick={() => onSelectOdds?.(option)}
               />
@@ -68,7 +68,7 @@ export function ExpandedBody({
               <ComboOddsButton
                 key={option.id}
                 option={option}
-                selected={selectedOddsId === option.id}
+                selected={isOptionSelected(option.id)}
                 onClick={() => onSelectOdds?.(option)}
               />
             ))}
@@ -83,7 +83,7 @@ export function ExpandedBody({
               <ComboOddsButton
                 key={option.id}
                 option={option}
-                selected={selectedOddsId === option.id}
+                selected={isOptionSelected(option.id)}
                 mutedLabel
                 onClick={() => onSelectOdds?.(option)}
               />

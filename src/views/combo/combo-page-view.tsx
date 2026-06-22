@@ -9,8 +9,10 @@ import { useComboLivePrices } from "@/hooks/combo/use-combo-live-prices";
 import { useComboMarkets } from "@/hooks/combo/use-combo-markets";
 import { useComboTicket } from "@/hooks/combo/use-combo-ticket";
 import { buildComboLegsFromPicks } from "@/lib/combo/markets-client";
+import { applyComboGameGroupPickUpdate } from "@/lib/combo/combo-group-picks";
 import { applyComboLegSelectionRules } from "@/lib/combo/combo-leg-selection";
 import {
+  buildComboMarketOddsId,
   mapComboGameToItemProps,
   parseComboMarketOddsId,
   resolveComboMarketTeamCodes
@@ -107,7 +109,11 @@ export function ComboPageView() {
   }, [picks]);
 
   const handleSelectMarketOdds = useCallback(
-    (group: ComboGameGroup, market: ComboMarketRecord, option: ComboOddsOption) => {
+    (
+      group: ComboGameGroup,
+      market: ComboMarketRecord,
+      option: ComboOddsOption,
+    ) => {
       if (option.disabled) {
         return;
       }
@@ -118,18 +124,6 @@ export function ComboPageView() {
         return;
       }
 
-      const existingPick = picksByMarketId.get(market.id);
-
-      if (
-        existingPick?.type === "moneyline" &&
-        existingPick.outcomeSide === parsed.outcomeSide
-      ) {
-        removePick(market.id);
-        return;
-      }
-
-      const groupMarketIds = new Set(group.markets.map((entry) => entry.id));
-      const remainingPicks = picks.filter((pick) => !groupMarketIds.has(pick.id));
       const teamMeta = resolveComboMarketTeamCodes(market);
       const pick = createComboPickFromMarket({
         market,
@@ -138,9 +132,17 @@ export function ComboPageView() {
         teamName: teamMeta.teamName
       });
 
-      setPicks([...remainingPicks, pick]);
+      setPicks(
+        applyComboGameGroupPickUpdate(
+          picks,
+          group,
+          market.id,
+          parsed.outcomeSide,
+          () => pick,
+        ),
+      );
     },
-    [picks, picksByMarketId, removePick, setPicks]
+    [picks, setPicks]
   );
 
   const handlePickOutcomeChange = useCallback(
@@ -232,13 +234,22 @@ export function ComboPageView() {
           ) : null}
 
           {groups.map((group) => {
-            const selectedPick = group.markets
+            const groupPicks = group.markets
               .map((market) => picksByMarketId.get(market.id))
-              .find(Boolean);
+              .filter((pick): pick is NonNullable<typeof pick> => Boolean(pick));
+            const selectedPick = groupPicks[0];
             const selectedOutcomeSide =
-              selectedPick?.type === "moneyline"
+              selectedPick &&
+              "outcomeSide" in selectedPick &&
+              selectedPick.type === "moneyline"
                 ? selectedPick.outcomeSide
                 : undefined;
+            const selectedOddsIds = groupPicks
+              .filter(
+                (pick): pick is Extract<typeof pick, { outcomeSide: ComboPickOutcomeSide }> =>
+                  "outcomeSide" in pick,
+              )
+              .map((pick) => buildComboMarketOddsId(pick.id, pick.outcomeSide));
             const selectedLegsCount = group.markets.reduce(
               (count, market) =>
                 count + (picksByMarketId.has(market.id) ? 1 : 0),
@@ -254,6 +265,8 @@ export function ComboPageView() {
               moneylineOdds: baseItemProps.moneylineOdds,
               spreadOdds: baseItemProps.spreadOdds,
               topScoreOdds: baseItemProps.topScoreOdds,
+              totalOdds: baseItemProps.totalOdds ?? [],
+              groupPicks,
               selectedPick,
               group,
               disabledTooltip: t("cannotAddToCombo")
@@ -264,10 +277,12 @@ export function ComboPageView() {
                 key={group.slug}
                 {...baseItemProps}
                 selectedLegsCount={selectedLegsCount}
+                selectedOddsIds={selectedOddsIds}
                 bttsOdds={[]}
                 moneylineOdds={selectionRules.moneylineOdds}
                 spreadOdds={selectionRules.spreadOdds}
                 topScoreOdds={selectionRules.topScoreOdds}
+                totalOdds={selectionRules.totalOdds}
                 onSelectOdds={(option) => {
                   const parsed = parseComboMarketOddsId(option.id);
                   const market = parsed
