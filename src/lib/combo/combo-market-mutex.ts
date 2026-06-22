@@ -10,6 +10,10 @@ export function isMoneylineMarket(market: ComboMarketRecord): boolean {
   return resolveMarketKind(market) === "moneyline";
 }
 
+export function isHalftimeMarket(market: ComboMarketRecord): boolean {
+  return resolveMarketKind(market) === "halftime";
+}
+
 export function isSpreadMarket(market: ComboMarketRecord): boolean {
   return resolveMarketKind(market) === "spread";
 }

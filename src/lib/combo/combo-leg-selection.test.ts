@@ -89,6 +89,33 @@ const sampleGroup: ComboGameGroup = {
       conditionId: "es2",
       positionIds: ["p15", "p16"],
     },
+    {
+      id: "fifwc-fra-irq-2026-06-22-halftime-result-fra",
+      slug: "fifwc-fra-irq-2026-06-22-halftime-result-fra",
+      title: "HT France",
+      outcomes: ["Yes", "No"],
+      outcomePrices: ["0.5", "0.5"],
+      conditionId: "ht1",
+      positionIds: ["p17", "p18"],
+    },
+    {
+      id: "fifwc-fra-irq-2026-06-22-halftime-result-draw",
+      slug: "fifwc-fra-irq-2026-06-22-halftime-result-draw",
+      title: "HT Draw",
+      outcomes: ["Yes", "No"],
+      outcomePrices: ["0.3", "0.7"],
+      conditionId: "ht2",
+      positionIds: ["p19", "p20"],
+    },
+    {
+      id: "fifwc-fra-irq-2026-06-22-halftime-result-irq",
+      slug: "fifwc-fra-irq-2026-06-22-halftime-result-irq",
+      title: "HT Iraq",
+      outcomes: ["Yes", "No"],
+      outcomePrices: ["0.2", "0.8"],
+      conditionId: "ht3",
+      positionIds: ["p21", "p22"],
+    },
   ],
 };
 
@@ -170,6 +197,7 @@ describe("combo leg selection", () => {
 
     const rules = applyComboLegSelectionRules({
       moneylineOdds,
+      halftimeOdds: [],
       spreadOdds: [],
       topScoreOdds: [],
       totalOdds: [],
@@ -186,6 +214,7 @@ describe("combo leg selection", () => {
   it("disables spreads when moneyline is selected", () => {
     const rules = applyComboLegSelectionRules({
       moneylineOdds: [],
+      halftimeOdds: [],
       spreadOdds: [
         {
           id: "fifwc-fra-irq-2026-06-22-spread-fra-1pt5:yes",
@@ -219,6 +248,7 @@ describe("combo leg selection", () => {
 
     const rules = applyComboLegSelectionRules({
       moneylineOdds: [],
+      halftimeOdds: [],
       spreadOdds: [],
       topScoreOdds: [],
       totalOdds,
@@ -234,6 +264,7 @@ describe("combo leg selection", () => {
   it("disables other exact score options when one score is selected", () => {
     const rules = applyComboLegSelectionRules({
       moneylineOdds: [],
+      halftimeOdds: [],
       spreadOdds: [],
       topScoreOdds: [
         {
@@ -260,5 +291,51 @@ describe("combo leg selection", () => {
 
     assert.equal(rules.topScoreOdds[0]?.disabled, undefined);
     assert.equal(rules.topScoreOdds[1]?.disabled, true);
+  });
+
+  it("disables other halftime options when one side is selected", () => {
+    const halftimeOdds = [
+      {
+        id: "fifwc-fra-irq-2026-06-22-halftime-result-fra:yes",
+        label: "HT France",
+        price: 0.5,
+      },
+      {
+        id: "fifwc-fra-irq-2026-06-22-halftime-result-draw:yes",
+        label: "HT Draw",
+        price: 0.3,
+      },
+      {
+        id: "fifwc-fra-irq-2026-06-22-halftime-result-irq:yes",
+        label: "HT Iraq",
+        price: 0.2,
+      },
+    ];
+
+    const rules = applyComboLegSelectionRules({
+      moneylineOdds: [],
+      halftimeOdds,
+      spreadOdds: [],
+      topScoreOdds: [],
+      totalOdds: [],
+      groupPicks: [
+        {
+          id: "fifwc-fra-irq-2026-06-22-halftime-result-fra",
+          type: "moneyline",
+          outcomeSide: "yes",
+          matchupLabel: "HT France",
+          team: { name: "HT France", code: "FRA" },
+          selectionLabel: "France",
+          legPositionId: "leg-ht",
+          referencePrice: 0.5,
+        },
+      ],
+      group: sampleGroup,
+      disabledTooltip: "Cannot add to combo",
+    });
+
+    assert.equal(rules.halftimeOdds[0]?.disabled, undefined);
+    assert.equal(rules.halftimeOdds[1]?.disabled, true);
+    assert.equal(rules.halftimeOdds[2]?.disabled, true);
   });
 });

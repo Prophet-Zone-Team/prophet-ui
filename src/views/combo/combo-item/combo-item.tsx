@@ -4,10 +4,7 @@ import { useState } from "react";
 
 import Drawer from "@/components/drawer";
 import { cn } from "@/lib/cn";
-import {
-  parseComboMarketOddsId,
-  resolveDefaultComboMatchTotalPreviewOdds,
-} from "@/lib/combo/map-market-to-combo-item";
+import { resolveDefaultComboMatchTotalPreviewOdds } from "@/lib/combo/map-market-to-combo-item";
 import { CollapsedBody } from "@/views/combo/combo-item/collapsed-body";
 import { comboItemCardClassName } from "@/views/combo/combo-item/constants";
 import { ComboItemHeader } from "@/views/combo/combo-item/combo-item-header";

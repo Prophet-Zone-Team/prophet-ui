@@ -181,4 +181,45 @@ describe("applyComboMarketPickUpdate", () => {
 
     assert.deepEqual(nextPicks, [overThreePick, underFivePick]);
   });
+
+  it("replaces an existing halftime side when selecting another", () => {
+    const groupWithHalftime: ComboGameGroup = {
+      ...sampleGroup,
+      markets: [
+        ...sampleGroup.markets,
+        {
+          id: "fifwc-cze-rsa-2026-06-18-halftime-result-cze",
+          slug: "fifwc-cze-rsa-2026-06-18-halftime-result-cze",
+          title: "HT Czechia",
+          outcomes: ["Yes", "No"],
+          image: "",
+        },
+        {
+          id: "fifwc-cze-rsa-2026-06-18-halftime-result-draw",
+          slug: "fifwc-cze-rsa-2026-06-18-halftime-result-draw",
+          title: "HT Draw",
+          outcomes: ["Yes", "No"],
+          image: "",
+        },
+      ],
+    };
+    const homeHalftimePick = {
+      id: "fifwc-cze-rsa-2026-06-18-halftime-result-cze",
+      outcomeSide: "yes",
+    };
+    const drawHalftimePick = {
+      id: "fifwc-cze-rsa-2026-06-18-halftime-result-draw",
+      outcomeSide: "yes",
+    };
+
+    const nextPicks = applyComboGameGroupPickUpdate(
+      [homeHalftimePick],
+      groupWithHalftime,
+      drawHalftimePick.id,
+      drawHalftimePick.outcomeSide,
+      () => drawHalftimePick,
+    );
+
+    assert.deepEqual(nextPicks, [drawHalftimePick]);
+  });
 });

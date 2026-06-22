@@ -1,5 +1,6 @@
 import {
   isExactScoreMarket,
+  isHalftimeMarket,
   isMoneylineMarket,
   isSpreadMarket,
   removeOtherMarketsOfKind,
@@ -47,6 +48,8 @@ export function applyComboGameGroupPickUpdate<
     nextPicks = removeOtherMarketsOfKind(nextPicks, group, "moneyline", marketId);
   } else if (isExactScoreMarket(market)) {
     nextPicks = removeOtherMarketsOfKind(nextPicks, group, "exact_score", marketId);
+  } else if (isHalftimeMarket(market)) {
+    nextPicks = removeOtherMarketsOfKind(nextPicks, group, "halftime", marketId);
   } else if (isMatchTotalMarket(market)) {
     nextPicks = removeConflictingMatchTotalPicks(
       nextPicks,
