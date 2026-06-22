@@ -123,32 +123,61 @@ function resolvePlotRightAnchorX(
   return plotRight - END_LABEL_RIGHT_INSET;
 }
 
+function resolveEndLabelProbability(
+  probability: number | undefined
+): number {
+  return typeof probability === "number" && Number.isFinite(probability)
+    ? probability
+    : 0;
+}
+
 function resolveEndLabelSlotFractions(
   homeProbability: number | undefined,
+  drawProbability: number | undefined,
   awayProbability: number | undefined
 ): Record<(typeof SERIES)[number]["key"], number> {
-  const home =
-    typeof homeProbability === "number" && Number.isFinite(homeProbability)
-      ? homeProbability
-      : 0;
-  const away =
-    typeof awayProbability === "number" && Number.isFinite(awayProbability)
-      ? awayProbability
-      : 0;
+  const slotByRank = [
+    END_LABEL_SLOT_TOP,
+    END_LABEL_SLOT_MIDDLE,
+    END_LABEL_SLOT_BOTTOM
+  ] as const;
+  const tieBreakOrder: Array<(typeof SERIES)[number]["key"]> = [
+    "home",
+    "draw",
+    "away"
+  ];
 
-  if (home >= away) {
-    return {
-      home: END_LABEL_SLOT_TOP,
-      draw: END_LABEL_SLOT_MIDDLE,
-      away: END_LABEL_SLOT_BOTTOM
-    };
-  }
+  const ranked = tieBreakOrder
+    .map((key) => ({
+      key,
+      probability:
+        key === "home"
+          ? resolveEndLabelProbability(homeProbability)
+          : key === "draw"
+            ? resolveEndLabelProbability(drawProbability)
+            : resolveEndLabelProbability(awayProbability)
+    }))
+    .sort((left, right) => {
+      if (right.probability !== left.probability) {
+        return right.probability - left.probability;
+      }
 
-  return {
+      return (
+        tieBreakOrder.indexOf(left.key) - tieBreakOrder.indexOf(right.key)
+      );
+    });
+
+  const slots: Record<(typeof SERIES)[number]["key"], number> = {
     home: END_LABEL_SLOT_BOTTOM,
-    draw: END_LABEL_SLOT_MIDDLE,
-    away: END_LABEL_SLOT_TOP
+    draw: END_LABEL_SLOT_BOTTOM,
+    away: END_LABEL_SLOT_BOTTOM
   };
+
+  ranked.forEach((item, index) => {
+    slots[item.key] = slotByRank[index] ?? END_LABEL_SLOT_MIDDLE;
+  });
+
+  return slots;
 }
 
 function resolveLabelSlotY(
@@ -262,6 +291,7 @@ function EndLabelLayer({
 
   const slotFractions = resolveEndLabelSlotFractions(
     latestRow.home,
+    latestRow.draw,
     latestRow.away
   );
 
