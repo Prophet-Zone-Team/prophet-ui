@@ -99,7 +99,7 @@ export function MobileExpandedDrawer({
       ) : null}
 
       {topScoreOdds.length ? (
-        <MobileDrawerOddsSection title="Top Scores">
+        <MobileDrawerOddsSection title="Extra Score">
           {renderOddsGrid(
             topScoreOdds,
             fourColGridClassName,

@@ -2,7 +2,8 @@ import { ComboOddsButton } from "@/views/combo/combo-item/combo-odds-button";
 import { OddsSection } from "@/views/combo/combo-item/odds-section";
 import type { ExpandedBodyProps } from "@/views/combo/combo-item/types";
 
-const expandedOddsRowClassName = "flex flex-wrap gap-2";
+const fullWidthOddsRowClassName = "grid grid-cols-3 gap-2";
+const adaptiveOddsRowClassName = "flex flex-wrap gap-2";
 
 export function ExpandedBody({
   moneylineOdds,
@@ -16,13 +17,13 @@ export function ExpandedBody({
   return (
     <div className="pb-4">
       <OddsSection title="Moneyline">
-        <div className={expandedOddsRowClassName}>
+        <div className={fullWidthOddsRowClassName}>
           {moneylineOdds.map((option) => (
             <ComboOddsButton
               key={option.id}
               option={option}
               selected={isOptionSelected(option.id)}
-              wide
+              fullWidth
               onClick={() => onSelectOdds?.(option)}
             />
           ))}
@@ -31,13 +32,13 @@ export function ExpandedBody({
 
       {halftimeOdds.length ? (
         <OddsSection title="Halftime">
-          <div className={expandedOddsRowClassName}>
+          <div className={fullWidthOddsRowClassName}>
             {halftimeOdds.map((option) => (
               <ComboOddsButton
                 key={option.id}
                 option={option}
                 selected={isOptionSelected(option.id)}
-                wide
+                fullWidth
                 onClick={() => onSelectOdds?.(option)}
               />
             ))}
@@ -47,13 +48,12 @@ export function ExpandedBody({
 
       {spreadOdds.length ? (
         <OddsSection title="Spreads">
-          <div className={expandedOddsRowClassName}>
+          <div className={adaptiveOddsRowClassName}>
             {spreadOdds.map((option) => (
               <ComboOddsButton
                 key={option.id}
                 option={option}
                 selected={isOptionSelected(option.id)}
-                mutedLabel
                 onClick={() => onSelectOdds?.(option)}
               />
             ))}
@@ -62,8 +62,8 @@ export function ExpandedBody({
       ) : null}
 
       {topScoreOdds.length ? (
-        <OddsSection title="Top Scores">
-          <div className={expandedOddsRowClassName}>
+        <OddsSection title="Extra Score">
+          <div className={adaptiveOddsRowClassName}>
             {topScoreOdds.map((option) => (
               <ComboOddsButton
                 key={option.id}
@@ -78,7 +78,7 @@ export function ExpandedBody({
 
       {totalOdds.length ? (
         <OddsSection title="Totals">
-          <div className={expandedOddsRowClassName}>
+          <div className={adaptiveOddsRowClassName}>
             {totalOdds.map((option) => (
               <ComboOddsButton
                 key={option.id}

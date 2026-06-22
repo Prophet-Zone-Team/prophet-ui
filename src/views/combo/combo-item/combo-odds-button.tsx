@@ -12,6 +12,7 @@ export function ComboOddsButton({
   disabledTooltip: disabledTooltipProp,
   mutedLabel = false,
   wide = false,
+  fullWidth = false,
   compact = false,
   mobile = false,
   onClick,
@@ -23,6 +24,8 @@ export function ComboOddsButton({
   disabledTooltip?: string;
   mutedLabel?: boolean;
   wide?: boolean;
+  /** Expanded row: stretch to fill grid cell width. */
+  fullWidth?: boolean;
   /** Collapsed card: fixed cell width with truncated labels. */
   compact?: boolean;
   mobile?: boolean;
@@ -32,6 +35,7 @@ export function ComboOddsButton({
   const formatOutcomeDisplay = useComboFormatOutcomeButtonDisplay();
   const disabled = disabledProp ?? option.disabled ?? false;
   const disabledTooltip = disabledTooltipProp ?? option.disabledTooltip;
+  const hasSpreadLabel = Boolean(option.spreadTeamCode && option.spreadLine);
 
   const button = (
     <button
@@ -57,7 +61,10 @@ export function ComboOddsButton({
             )
           : null,
         !compact && !mobile
-          ? "inline-flex h-[50px] w-auto max-w-full shrink-0 gap-2 px-4"
+          ? cn(
+              "inline-flex h-[50px] gap-2 px-4",
+              fullWidth ? "w-full min-w-0" : "w-auto max-w-full shrink-0"
+            )
           : null,
         compact && mobile ? "min-w-0 w-full" : null,
         disabled
@@ -68,16 +75,38 @@ export function ComboOddsButton({
         className
       )}
     >
-      <span
-        className={cn(
-          "font-[500]",
-          compact || mobile ? "min-w-0 flex-1 truncate" : "whitespace-nowrap",
-          !selected && !disabled && mutedLabel && "text-[#909090]",
-          selected && mutedLabel && "text-white"
-        )}
-      >
-        {option.label}
-      </span>
+      {hasSpreadLabel ? (
+        <span className="min-w-0 flex-1 truncate font-[500] whitespace-nowrap">
+          <span
+            className={cn(
+              !selected && !disabled && "text-[#909090]",
+              selected && !disabled && "text-white"
+            )}
+          >
+            {option.spreadTeamCode}
+          </span>
+          <span
+            className={cn(
+              !selected && !disabled && "text-black",
+              selected && !disabled && "text-white"
+            )}
+          >
+            {" "}
+            {option.spreadLine}
+          </span>
+        </span>
+      ) : (
+        <span
+          className={cn(
+            "font-[500]",
+            compact || mobile ? "min-w-0 flex-1 truncate" : "whitespace-nowrap",
+            !selected && !disabled && mutedLabel && "text-[#909090]",
+            selected && mutedLabel && "text-white"
+          )}
+        >
+          {option.label}
+        </span>
+      )}
       <span className={cn("shrink-0 font-[600]", (compact || mobile) && "pl-1.5")}>
         {formatOutcomeDisplay(option.price)}
       </span>

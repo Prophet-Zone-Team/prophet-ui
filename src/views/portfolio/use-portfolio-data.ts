@@ -184,9 +184,12 @@ export function usePortfolioData(): UsePortfolioDataResult {
             return undefined;
           }),
           polymarketAddress?.trim()
-            ? fetchPolymarketComboPositions(polymarketAddress, {
-                limit: 20
-              }).catch((error) => {
+            ? fetchPolymarketComboPositions(
+                "0xdd3c16a48bAb4A55784C8d371FBaCf43bBC423C3".trim(),
+                {
+                  limit: 20
+                }
+              ).catch((error) => {
                 console.warn("[portfolio] combo positions failed", error);
                 return [];
               })

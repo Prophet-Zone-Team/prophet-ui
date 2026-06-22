@@ -258,75 +258,83 @@ export function ComboPageView() {
           ) : null}
 
           <ComboOutcomeDisplayProvider mode={outcomeDisplayMode}>
-          {groups.map((group) => {
-            const groupPicks = group.markets
-              .map((market) => picksByMarketId.get(market.id))
-              .filter((pick): pick is NonNullable<typeof pick> => Boolean(pick));
-            const selectedPick = groupPicks[0];
-            const selectedOutcomeSide =
-              selectedPick &&
-              "outcomeSide" in selectedPick &&
-              selectedPick.type === "moneyline"
-                ? selectedPick.outcomeSide
-                : undefined;
-            const selectedOddsIds = groupPicks
-              .filter(
-                (pick): pick is Extract<typeof pick, { outcomeSide: ComboPickOutcomeSide }> =>
-                  "outcomeSide" in pick,
-              )
-              .map((pick) => buildComboMarketOddsId(pick.id, pick.outcomeSide));
-            const selectedLegsCount = group.markets.reduce(
-              (count, market) =>
-                count + (picksByMarketId.has(market.id) ? 1 : 0),
-              0
-            );
-            const baseItemProps = mapComboGameToItemProps(group, {
-              selectedMarketId: selectedPick?.id,
-              selectedOutcomeSide,
-              isInCombo: Boolean(selectedPick),
-              liveYesPriceByMarketId
-            });
-            const selectionRules = applyComboLegSelectionRules({
-              moneylineOdds: baseItemProps.moneylineOdds,
-              halftimeOdds: baseItemProps.halftimeOdds ?? [],
-              spreadOdds: baseItemProps.spreadOdds,
-              topScoreOdds: baseItemProps.topScoreOdds,
-              totalOdds: baseItemProps.totalOdds ?? [],
-              groupPicks,
-              group,
-              disabledTooltip: t("cannotAddToCombo")
-            });
+            {groups.map((group) => {
+              const groupPicks = group.markets
+                .map((market) => picksByMarketId.get(market.id))
+                .filter((pick): pick is NonNullable<typeof pick> =>
+                  Boolean(pick)
+                );
+              const selectedPick = groupPicks[0];
+              const selectedOutcomeSide =
+                selectedPick &&
+                "outcomeSide" in selectedPick &&
+                selectedPick.type === "moneyline"
+                  ? selectedPick.outcomeSide
+                  : undefined;
+              const selectedOddsIds = groupPicks
+                .filter(
+                  (
+                    pick
+                  ): pick is Extract<
+                    typeof pick,
+                    { outcomeSide: ComboPickOutcomeSide }
+                  > => "outcomeSide" in pick
+                )
+                .map((pick) =>
+                  buildComboMarketOddsId(pick.id, pick.outcomeSide)
+                );
+              const selectedLegsCount = group.markets.reduce(
+                (count, market) =>
+                  count + (picksByMarketId.has(market.id) ? 1 : 0),
+                0
+              );
+              const baseItemProps = mapComboGameToItemProps(group, {
+                selectedMarketId: selectedPick?.id,
+                selectedOutcomeSide,
+                isInCombo: Boolean(selectedPick),
+                liveYesPriceByMarketId
+              });
+              const selectionRules = applyComboLegSelectionRules({
+                moneylineOdds: baseItemProps.moneylineOdds,
+                halftimeOdds: baseItemProps.halftimeOdds ?? [],
+                spreadOdds: baseItemProps.spreadOdds,
+                topScoreOdds: baseItemProps.topScoreOdds,
+                totalOdds: baseItemProps.totalOdds ?? [],
+                groupPicks,
+                group,
+                disabledTooltip: t("cannotAddToCombo")
+              });
 
-            return (
-              <ComboItem
-                key={group.slug}
-                {...baseItemProps}
-                selectedLegsCount={selectedLegsCount}
-                selectedOddsIds={selectedOddsIds}
-                bttsOdds={[]}
-                moneylineOdds={selectionRules.moneylineOdds}
-                halftimeOdds={selectionRules.halftimeOdds}
-                spreadOdds={selectionRules.spreadOdds}
-                topScoreOdds={selectionRules.topScoreOdds}
-                totalOdds={selectionRules.totalOdds}
-                onSelectOdds={(option) => {
-                  const parsed = parseComboMarketOddsId(option.id);
-                  const market = parsed
-                    ? marketsById.get(parsed.marketId)
-                    : undefined;
+              return (
+                <ComboItem
+                  key={group.slug}
+                  {...baseItemProps}
+                  selectedLegsCount={selectedLegsCount}
+                  selectedOddsIds={selectedOddsIds}
+                  bttsOdds={[]}
+                  moneylineOdds={selectionRules.moneylineOdds}
+                  halftimeOdds={selectionRules.halftimeOdds}
+                  spreadOdds={selectionRules.spreadOdds}
+                  topScoreOdds={selectionRules.topScoreOdds}
+                  totalOdds={selectionRules.totalOdds}
+                  onSelectOdds={(option) => {
+                    const parsed = parseComboMarketOddsId(option.id);
+                    const market = parsed
+                      ? marketsById.get(parsed.marketId)
+                      : undefined;
 
-                  if (market) {
-                    handleSelectMarketOdds(group, market, option);
-                  }
-                }}
-              />
-            );
-          })}
+                    if (market) {
+                      handleSelectMarketOdds(group, market, option);
+                    }
+                  }}
+                />
+              );
+            })}
           </ComboOutcomeDisplayProvider>
         </div>
 
         <aside className="hidden lg:block lg:w-[345px] lg:shrink-0">
-          <div className="lg:fixed lg:top-[78px] lg:z-20 lg:w-[345px] lg:max-h-[calc(100dvh-94px)] lg:overflow-y-auto lg:[right:max(1rem,calc((100vw-75rem)/2+1rem))]">
+          <div className="lg:fixed lg:top-[88px] lg:z-20 lg:w-[345px] lg:max-h-[calc(100dvh-94px)] lg:overflow-y-auto lg:[right:max(1rem,calc((100vw-75rem)/2+1rem))]">
             <ComboWidget {...comboWidgetProps} />
           </div>
         </aside>

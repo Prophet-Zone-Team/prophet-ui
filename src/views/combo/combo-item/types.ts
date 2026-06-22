@@ -4,6 +4,10 @@ export interface ComboOddsOption {
   price: number;
   disabled?: boolean;
   disabledTooltip?: string;
+  /** Spread markets: team code shown before the line value. */
+  spreadTeamCode?: string;
+  /** Spread markets: signed line value such as "-2.5". */
+  spreadLine?: string;
 }
 
 export interface ComboItemTeam {

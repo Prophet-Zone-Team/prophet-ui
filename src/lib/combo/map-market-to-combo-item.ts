@@ -486,11 +486,23 @@ function buildYesOddsOption(
     return undefined;
   }
 
-  return {
+  const option: ComboOddsOption = {
     id: buildComboMarketOddsId(market.id, "yes"),
     label: formatYesOutcomeLabel(meta, market, group),
     price: yesPrice,
   };
+
+  if (meta.marketKind === "spread") {
+    const spreadParts = parseSpreadOutcomeParts(meta, market, group);
+
+    if (spreadParts) {
+      option.spreadTeamCode = spreadParts.teamCode;
+      option.spreadLine = spreadParts.line;
+      option.label = `${spreadParts.teamCode} ${spreadParts.line}`;
+    }
+  }
+
+  return option;
 }
 
 function formatYesOutcomeLabel(
@@ -549,10 +561,90 @@ function formatYesOutcomeLabel(
   }
 
   if (meta.marketKind === "spread") {
+    const spreadParts = parseSpreadOutcomeParts(meta, market, group);
+
+    if (spreadParts) {
+      return `${spreadParts.teamCode} ${spreadParts.line}`;
+    }
+
     return market.title;
   }
 
   return market.outcomes[0] ?? "Yes";
+}
+
+function parseSpreadOutcomeParts(
+  meta: ComboMarketSlugMeta,
+  market: ComboMarketRecord,
+  group: ComboGameGroup,
+): { teamCode: string; line: string } | undefined {
+  const pickCode = meta.pickCode ?? "";
+  const slugMatch = pickCode.match(/^spread-([a-z]+)-(\d+)pt(\d+)$/i);
+
+  if (!slugMatch) {
+    return undefined;
+  }
+
+  const teamCode = resolveSpreadTeamCode(
+    slugMatch[1].toLowerCase(),
+    meta,
+    group,
+    market.title,
+  );
+  const titleMatch = market.title.match(/\s(-?\d+(?:\.\d+)?)\s*$/);
+
+  if (titleMatch) {
+    return { teamCode, line: titleMatch[1] };
+  }
+
+  const rawLine = `${slugMatch[2]}.${slugMatch[3]}`;
+  const line =
+    teamCode === group.homeTeam.code ? `-${rawLine}` : `+${rawLine}`;
+
+  return { teamCode, line };
+}
+
+function resolveSpreadTeamCode(
+  slugTeamKey: string,
+  meta: ComboMarketSlugMeta,
+  group: ComboGameGroup,
+  marketTitle: string,
+): string {
+  if (slugTeamKey === "home") {
+    return group.homeTeam.code;
+  }
+
+  if (slugTeamKey === "away") {
+    return group.awayTeam.code;
+  }
+
+  if (slugTeamKey === meta.homeCode.toLowerCase()) {
+    return group.homeTeam.code;
+  }
+
+  if (slugTeamKey === meta.awayCode.toLowerCase()) {
+    return group.awayTeam.code;
+  }
+
+  const titleTeamPart = marketTitle
+    .replace(/\s[-+]?\d+(?:\.\d+)?\s*$/, "")
+    .trim()
+    .toLowerCase();
+
+  if (titleTeamPart) {
+    const homeName = group.homeTeam.name.toLowerCase();
+    const awayName = group.awayTeam.name.toLowerCase();
+
+    if (titleTeamPart === homeName || homeName.startsWith(titleTeamPart)) {
+      return group.homeTeam.code;
+    }
+
+    if (titleTeamPart === awayName || awayName.startsWith(titleTeamPart)) {
+      return group.awayTeam.code;
+    }
+  }
+
+  return slugTeamKey.toUpperCase();
 }
 
 function formatTotalYesOutcomeLabel(
