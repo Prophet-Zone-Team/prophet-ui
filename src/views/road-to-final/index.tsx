@@ -5,18 +5,15 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { useAuth } from "@/context/auth/use-auth";
-import {
-  getWorldCupGroupForTeam,
-  getWorldCupTeamByIdOrCode
-} from "@/data/world-cup-2026/groups";
+import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { useProphetReferral } from "@/hooks/referral/use-prophet-referral";
 
-import { resolveThirdPlaceOption } from "./bracket-graph/bracket-resolver";
-import { deriveBestThirdGroups, sortPlacementsBy } from "./lib/group-shortcuts";
-import { applyKnockoutShortcut, getChampionTeamId } from "./lib/knockout-shortcuts";
+import { resolveThirdPlaceOption } from "./lib/bracket-resolver";
 import { safeCalculatePath } from "./lib/calculate-path";
+import { deriveBestThirdGroups, sortPlacementsBy } from "./lib/group-shortcuts";
+import { getChampionTeamId } from "./lib/knockout-shortcuts";
 import { getFifaRank, getSquadValue } from "./lib/team-strength";
-import { getFinishForTeam, createDefaultPlacements } from "./lib/placements";
+import { createDefaultPlacements, getFinishForTeam } from "./lib/placements";
 import { DEFAULT_THIRD_PLACE_GROUPS } from "./lib/path-config";
 import {
   decodeUrlState,
@@ -26,27 +23,14 @@ import {
 import { isStepOneComplete } from "./lib/validation";
 import { defaultSimulatorTeamId } from "./lib/teams";
 import type { KnockoutMethodKey, SortMethodKey } from "./lib/method-keys";
-import type { RoadStep } from "./step-stepper";
-import { RoadWorkbench } from "./workbench";
 import type { KnockoutWinners } from "./types";
-import { PageBack } from "@/components/ui/page-back";
-import type { PathResult } from "@/types/market";
+import { KnockoutBracket } from "./knockout-bracket";
+import { RoadToFinalPageShell } from "./page-shell";
+import { RoadToFinalShareModal } from "./road-to-final-share-modal";
+import { ShareFooter } from "./share-footer";
+import dynamic from "next/dynamic";
 
-function resolveAllowedStep(
-  requested: RoadStep,
-  stepOneComplete: boolean,
-  hasChampion: boolean
-): RoadStep {
-  if (requested >= 2 && !stepOneComplete) {
-    return 1;
-  }
-
-  if (requested >= 3 && !hasChampion) {
-    return stepOneComplete ? 2 : 1;
-  }
-
-  return requested;
-}
+const LightRays = dynamic(() => import("@/components/light-rays"), { ssr: false });
 
 export function RoadToFinalPage({
   initialTeamId = defaultSimulatorTeamId
@@ -57,7 +41,7 @@ export function RoadToFinalPage({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { session } = useAuth();
+  const { session, isAuthenticated } = useAuth();
   const { content: referralContent } = useProphetReferral();
   const funderAddress = session?.funderAddress;
   const kickback = referralContent?.kickback;
@@ -65,10 +49,9 @@ export function RoadToFinalPage({
     getWorldCupTeamByIdOrCode(initialTeamId)?.id ?? defaultSimulatorTeamId;
 
   const [hydrated, setHydrated] = useState(false);
-  const [step, setStep] = useState<RoadStep>(1);
+  const [shareOpen, setShareOpen] = useState(false);
   const [placements, setPlacements] = useState(createDefaultPlacements);
   const [teamId, setTeamId] = useState(safeInitialTeamId);
-  const [viewMode, setViewMode] = useState<"graph" | "list">("graph");
   const [thirdGroups, setThirdGroups] = useState<string[]>([
     ...DEFAULT_THIRD_PLACE_GROUPS
   ]);
@@ -77,7 +60,6 @@ export function RoadToFinalPage({
   const [knockoutMethod, setKnockoutMethod] =
     useState<KnockoutMethodKey>("manualSelection");
   const [groupErrorKey, setGroupErrorKey] = useState<string | null>(null);
-  const [knockoutErrorKey, setKnockoutErrorKey] = useState<string | null>(null);
 
   useEffect(() => {
     const encodedState = searchParams.get("state");
@@ -87,25 +69,16 @@ export function RoadToFinalPage({
 
       if (payload) {
         const hydratedState = hydrateFromUrlPayload(payload, safeInitialTeamId);
-        const nextPlacements = hydratedState.placements ?? createDefaultPlacements();
-        const nextThirdGroups = hydratedState.thirdGroups ?? [
-          ...DEFAULT_THIRD_PLACE_GROUPS
-        ];
-        const nextKnockoutWinners = hydratedState.knockoutWinners ?? {};
-        const nextStepOneComplete = isStepOneComplete(
-          nextPlacements,
-          nextThirdGroups
-        );
-        const nextHasChampion = Boolean(getChampionTeamId(nextKnockoutWinners));
 
-        setPlacements(nextPlacements);
-        setThirdGroups(nextThirdGroups);
+        setPlacements(hydratedState.placements ?? createDefaultPlacements());
+        setThirdGroups(
+          hydratedState.thirdGroups ?? [...DEFAULT_THIRD_PLACE_GROUPS]
+        );
+        setKnockoutWinners(hydratedState.knockoutWinners ?? {});
 
         if (hydratedState.teamId) {
           setTeamId(hydratedState.teamId);
         }
-
-        setKnockoutWinners(nextKnockoutWinners);
 
         if (hydratedState.sortMethod) {
           setSortMethod(hydratedState.sortMethod as SortMethodKey);
@@ -114,24 +87,12 @@ export function RoadToFinalPage({
         if (hydratedState.knockoutMethod) {
           setKnockoutMethod(hydratedState.knockoutMethod as KnockoutMethodKey);
         }
-
-        if (hydratedState.step) {
-          setStep(
-            resolveAllowedStep(
-              hydratedState.step,
-              nextStepOneComplete,
-              nextHasChampion
-            )
-          );
-        }
       }
     }
 
     setHydrated(true);
   }, [safeInitialTeamId, searchParams]);
 
-  const activeGroup = getWorldCupGroupForTeam(teamId) ?? "C";
-  const finishType = getFinishForTeam(placements, teamId) ?? "GROUP_WINNER";
   const advancingThirdGroups = useMemo(
     () => thirdGroups.slice().sort(),
     [thirdGroups]
@@ -140,60 +101,26 @@ export function RoadToFinalPage({
   const thirdPlaceOption = resolveThirdPlaceOption(advancingThirdGroups);
   const championTeamId = getChampionTeamId(knockoutWinners);
   const hasChampion = Boolean(championTeamId);
+  const shareTeamId = championTeamId ?? teamId;
 
-  const calculation = useMemo((): {
-    result?: PathResult;
-    errorKey?: "errorCompleteStep1Bracket";
-  } => {
-    if (!stepOneComplete) {
-      return { errorKey: "errorCompleteStep1Bracket" };
+  const sharePathResult = useMemo(() => {
+    if (!stepOneComplete || !shareTeamId) {
+      return undefined;
     }
 
-    const outcome = safeCalculatePath({
-      teamId,
+    const finishType = getFinishForTeam(placements, shareTeamId);
+
+    if (!finishType) {
+      return undefined;
+    }
+
+    return safeCalculatePath({
+      teamId: shareTeamId,
       finishType,
       thirdGroups: advancingThirdGroups,
       placements
-    });
-
-    if (outcome.error) {
-      return { errorKey: "errorCompleteStep1Bracket" };
-    }
-
-    return outcome;
-  }, [advancingThirdGroups, finishType, placements, stepOneComplete, teamId]);
-
-  const result = calculation.result;
-
-  const shareUrl = useMemo(() => {
-    if (typeof window === "undefined") {
-      return "";
-    }
-
-    const url = new URL(window.location.href);
-    url.search = "";
-    url.searchParams.set(
-      "state",
-      encodeUrlState({
-        placements,
-        thirdGroups: advancingThirdGroups,
-        teamId,
-        knockoutWinners,
-        sortMethod,
-        knockoutMethod,
-        step
-      })
-    );
-    return url.toString();
-  }, [
-    advancingThirdGroups,
-    knockoutMethod,
-    knockoutWinners,
-    placements,
-    sortMethod,
-    step,
-    teamId
-  ]);
+    }).result;
+  }, [advancingThirdGroups, placements, shareTeamId, stepOneComplete]);
 
   const writeUrlState = useCallback(() => {
     if (!hydrated || typeof window === "undefined") {
@@ -210,8 +137,7 @@ export function RoadToFinalPage({
         teamId,
         knockoutWinners,
         sortMethod,
-        knockoutMethod,
-        step
+        knockoutMethod
       })
     );
     router.replace(`${pathname}?${url.searchParams.toString()}`, { scroll: false });
@@ -224,7 +150,6 @@ export function RoadToFinalPage({
     placements,
     router,
     sortMethod,
-    step,
     teamId
   ]);
 
@@ -254,121 +179,73 @@ export function RoadToFinalPage({
     setGroupErrorKey(null);
   };
 
-  const stepTo = (nextStep: RoadStep) => {
-    if (nextStep === 2 && !stepOneComplete) {
-      setStep(1);
-      setGroupErrorKey("errorCompleteStep1Knockout");
-      return;
-    }
-
-    if (nextStep === 3 && (!stepOneComplete || !hasChampion)) {
-      setStep(2);
-      setKnockoutErrorKey("errorCompleteStepsForResult");
-      return;
-    }
-
-    setStep(resolveAllowedStep(nextStep, stepOneComplete, hasChampion));
-    setGroupErrorKey(null);
-    setKnockoutErrorKey(null);
-
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  const applyKnockoutFill = (
-    method: KnockoutMethodKey,
-    fillMethod: "random" | "fifa" | "market"
-  ) => {
-    if (!stepOneComplete) {
-      setKnockoutErrorKey("errorCompleteStep1Shortcuts");
-      return;
-    }
-
-    if (!thirdPlaceOption) {
-      setKnockoutErrorKey("errorAnnexeCNotReady");
-      return;
-    }
-
-    setKnockoutWinners(
-      applyKnockoutShortcut({
-        placements,
-        thirdPlaceOption,
-        method: fillMethod
-      })
-    );
-    setKnockoutMethod(method);
-    setKnockoutErrorKey(null);
-  };
+  const groupError = groupErrorKey ? t(groupErrorKey) : null;
 
   return (
-    <div className="relative mx-auto w-full max-w-[1600px] px-4 pb-8 pt-[10px]">
-      <div className="pb-[10px]">
-        <PageBack />
-      </div>
-      <RoadWorkbench
-        activeGroup={activeGroup}
-        activeStep={step}
-        advancingThirdGroups={advancingThirdGroups}
-        calculationErrorKey={calculation.errorKey}
-        championTeamId={championTeamId}
-        funderAddress={funderAddress}
-        kickback={kickback}
-        finishType={finishType}
-        groupError={groupErrorKey ? t(groupErrorKey) : null}
-        hasChampion={hasChampion}
-        knockoutError={knockoutErrorKey ? t(knockoutErrorKey) : null}
-        knockoutMethod={knockoutMethod}
-        knockoutWinners={knockoutWinners}
-        onApplyKnockoutFifa={() => applyKnockoutFill("fifaRank", "fifa")}
-        onApplyKnockoutMarket={() => applyKnockoutFill("squadValueRanking", "market")}
-        onApplyKnockoutRandom={() => applyKnockoutFill("randomFill", "random")}
-        onBackToStep1={() => stepTo(1)}
-        onBackToStep2={() => stepTo(2)}
-        onGoToStep2={() => stepTo(2)}
-        onGoToStep3={() => stepTo(3)}
-        onGroupFifaFill={() =>
+    <div className="relative mx-auto w-full">
+      <RoadToFinalPageShell
+        sortMethod={sortMethod}
+        groupError={groupError}
+        onRandomFill={() =>
+          applyGroupSort("randomFill", () => Math.random() - 0.5)
+        }
+        onFifaFill={() =>
           applyGroupSort(
             "fifaRank",
             (a, b) => getFifaRank(a.id) - getFifaRank(b.id)
           )
         }
-        onGroupMarketFill={() =>
+        onValueFill={() =>
           applyGroupSort(
             "squadValueRanking",
             (a, b) => getSquadValue(b.id) - getSquadValue(a.id)
           )
         }
-        onGroupRandomFill={() =>
-          applyGroupSort("randomFill", () => Math.random() - 0.5)
-        }
-        onGroupReset={() => {
+        onClear={() => {
           setPlacements(createDefaultPlacements());
           setThirdGroups([...DEFAULT_THIRD_PLACE_GROUPS]);
           setSortMethod("defaultOrder");
           resetKnockout();
           setGroupErrorKey(null);
         }}
-        onKnockoutClear={resetKnockout}
-        onKnockoutReset={resetKnockout}
-        onKnockoutWinnersChange={(winners) => {
-          setKnockoutWinners(winners);
-          setKnockoutMethod("manualSelection");
-        }}
-        onPlacementsChange={setPlacements}
-        onSelectTeam={setTeamId}
-        onStepChange={stepTo}
-        onTeamChange={setTeamId}
-        onThirdGroupsChange={setThirdGroups}
-        onViewModeChange={setViewMode}
+      />
+
+      <div className="-mt-[12px] bg-[#0B1020]">
+        <KnockoutBracket
+          placements={placements}
+          thirdPlaceOption={thirdPlaceOption}
+          knockoutWinners={knockoutWinners}
+          championTeamId={championTeamId}
+          hasChampion={hasChampion}
+          disabled={!stepOneComplete || !thirdPlaceOption}
+          onKnockoutWinnersChange={(winners) => {
+            setKnockoutWinners(winners);
+            setKnockoutMethod("manualSelection");
+          }}
+        />
+
+        <ShareFooter
+          hasChampion={hasChampion}
+          onShare={() => setShareOpen(true)}
+        />
+      </div>
+
+      <RoadToFinalShareModal
+        open={shareOpen && isAuthenticated}
+        onClose={() => setShareOpen(false)}
+        teamId={shareTeamId}
+        championTeamId={championTeamId}
+        advancingThirdGroups={advancingThirdGroups}
+        result={sharePathResult}
         placements={placements}
-        result={result}
-        shareUrl={shareUrl}
-        sortMethod={sortMethod}
-        stepOneComplete={stepOneComplete}
-        teamId={teamId}
+        knockoutWinners={knockoutWinners}
         thirdPlaceOption={thirdPlaceOption}
-        viewMode={viewMode}
+        funderAddress={funderAddress}
+        kickback={kickback}
+      />
+
+      <LightRays
+        className="absolute z-0 w-full h-full left-0 top-0"
       />
     </div>
   );

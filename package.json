@@ -60,6 +60,7 @@
     "near-api-js": "^5.1.1",
     "next": "^15.1.7",
     "next-intl": "^4.13.0",
+    "ogl": "^1.0.11",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

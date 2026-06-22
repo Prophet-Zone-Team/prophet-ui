@@ -30,7 +30,7 @@ export type RoadToFinalSharedState = {
   knockoutWinners: KnockoutWinners;
   sortMethod: string;
   knockoutMethod: string;
-  step: 1 | 2 | 3;
+  step?: 1 | 2 | 3;
 };
 
 function sortThirdGroups(groups: string): string[] {
@@ -53,8 +53,7 @@ export function encodeUrlState(state: RoadToFinalSharedState): string {
       ])
     ),
     m: state.sortMethod,
-    km: state.knockoutMethod,
-    s: state.step
+    km: state.knockoutMethod
   };
 
   const json = JSON.stringify(payload);
@@ -154,7 +153,6 @@ export function createDefaultSharedState(teamId: string): RoadToFinalSharedState
     teamId,
     knockoutWinners: {},
     sortMethod: "defaultOrder",
-    knockoutMethod: "manualSelection",
-    step: 1
+    knockoutMethod: "manualSelection"
   };
 }
