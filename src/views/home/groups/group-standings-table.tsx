@@ -23,8 +23,25 @@ import {
   resolveGroupStandingRowTeamId,
 } from "./utils";
 
-const statCellClassName = "text-center opacity-30";
+const statCellClassName = "text-center";
 const statHeaderClassName = "text-center";
+
+type GroupStandingStatField = (typeof GROUP_STANDING_STAT_FIELDS)[number]["key"];
+
+function getStatCellTextClassName(
+  field: GroupStandingStatField,
+  value: number,
+): string {
+  if (value === 0) {
+    return "text-black/30";
+  }
+
+  if (field === "losses") {
+    return "text-[#FF674B]";
+  }
+
+  return "text-black";
+}
 
 function buildColumns(
   group: WorldCup2026Group,
@@ -36,7 +53,15 @@ function buildColumns(
       header: t(field.labelKey),
       headerClassName: statHeaderClassName,
       cellClassName: statCellClassName,
-      renderCell: (row) => row[field.key],
+      renderCell: (row) => {
+        const value = row[field.key];
+
+        return (
+          <span className={getStatCellTextClassName(field.key, value)}>
+            {value}
+          </span>
+        );
+      },
     }));
 
   return [
