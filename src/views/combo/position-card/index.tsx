@@ -43,12 +43,7 @@ export function PositionCard({
         </div>
       </div>
 
-      <div className="shrink-0 px-1.5 pb-1.5">
-        <PositionCardFooter
-          stakeAmount={stakeAmount}
-          toWinAmount={toWinAmount}
-        />
-      </div>
+      <PositionCardFooter stakeAmount={stakeAmount} toWinAmount={toWinAmount} />
     </article>
   );
 }
