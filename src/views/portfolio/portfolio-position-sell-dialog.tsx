@@ -19,10 +19,10 @@ import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import {
   FundingModalShell,
-  fundingPrimaryButtonClass
+  fundingPrimaryButtonClass,
+  fundingSecondaryButtonClass
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { usePortfolioContext } from "@/views/portfolio/context";
-import { portfolioSecondaryButtonClass } from "@/views/portfolio/portfolio-ui";
 import { useTradeTicket } from "@/views/trade/trade-widget/use-trade-ticket";
 import {
   parseOrderAmount,
@@ -125,7 +125,9 @@ function PortfolioPositionSellSharedBody({
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-[500] text-black">{t("receiveToken")}</span>
+            <span className="text-sm font-[500] text-black">
+              {t("receiveToken")}
+            </span>
             <span className="text-xl font-[500] text-black">
               {receiveAmount}
             </span>
@@ -138,7 +140,8 @@ function PortfolioPositionSellSharedBody({
                 aria-pressed={selectedQuickAmount === value}
                 className={cn(
                   tradeQuickAmountClass,
-                  selectedQuickAmount === value && tradeQuickAmountSelectedClass,
+                  selectedQuickAmount === value &&
+                    tradeQuickAmountSelectedClass,
                   "disabled:cursor-not-allowed disabled:opacity-50"
                 )}
                 disabled={sellQuickDisabled}
@@ -167,7 +170,7 @@ function PortfolioPositionSellSharedBody({
       <div className="grid grid-cols-2 gap-3 pt-2 pb-4">
         <button
           type="button"
-          className={portfolioSecondaryButtonClass}
+          className={fundingSecondaryButtonClass}
           disabled={isBusy}
           onClick={handleEditOrder}
         >
