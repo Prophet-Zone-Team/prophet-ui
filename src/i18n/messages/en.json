@@ -1557,7 +1557,8 @@
     "save": "Save",
     "submitPredictionSuccess": "Prediction submitted successfully.",
     "submitPredictionError": "Unable to submit prediction.",
-    "invalidXUrl": "Please enter a valid X URL."
+    "invalidXUrl": "Please enter a valid X URL.",
+    "tweetUrlCloseConfirm": "You have not joined the Campaign yet. Are you sure you want to close?"
   },
   "privateTopup": {
     "privateModeAlt": "Private mode",

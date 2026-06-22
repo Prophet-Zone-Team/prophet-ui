@@ -1554,7 +1554,8 @@
     "save": "저장",
     "submitPredictionSuccess": "예측이 성공적으로 제출되었습니다.",
     "submitPredictionError": "예측을 제출할 수 없습니다.",
-    "invalidXUrl": "유효한 X URL을 입력해 주세요."
+    "invalidXUrl": "유효한 X URL을 입력해 주세요.",
+    "tweetUrlCloseConfirm": "아직 캠페인에 참여하지 않았습니다. 정말 닫으시겠습니까?"
   },
   "privateTopup": {
     "privateModeAlt": "Private mode",

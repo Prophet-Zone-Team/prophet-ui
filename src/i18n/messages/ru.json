@@ -1545,7 +1545,8 @@
     "save": "Сохранить",
     "submitPredictionSuccess": "Прогноз успешно отправлен.",
     "submitPredictionError": "Не удалось отправить прогноз.",
-    "invalidXUrl": "Введите действительный URL X."
+    "invalidXUrl": "Введите действительный URL X.",
+    "tweetUrlCloseConfirm": "Вы ещё не присоединились к кампании. Закрыть окно?"
   },
   "privateTopup": {
     "privateModeAlt": "Private mode",

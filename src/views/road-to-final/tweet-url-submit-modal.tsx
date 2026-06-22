@@ -41,6 +41,33 @@ export function TweetUrlSubmitModal({
   const canSubmit =
     trimmedUrl.length > 0 && isValidXUrl(trimmedUrl) && !isSubmitting;
 
+  const requestClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    if (window.confirm(t("tweetUrlCloseConfirm"))) {
+      onClose();
+    }
+  };
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [open]);
+
   const handleSubmit = async () => {
     if (!canSubmit) {
       return;
@@ -52,7 +79,7 @@ export function TweetUrlSubmitModal({
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={requestClose}
       ariaLabel={t("provideXSharingLink")}
       className="w-full max-w-[500px]"
       overlayClassName="z-[80]"

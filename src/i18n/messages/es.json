@@ -1545,7 +1545,8 @@
     "save": "Guardar",
     "submitPredictionSuccess": "Predicción enviada correctamente.",
     "submitPredictionError": "No se pudo enviar la predicción.",
-    "invalidXUrl": "Introduce una URL de X válida."
+    "invalidXUrl": "Introduce una URL de X válida.",
+    "tweetUrlCloseConfirm": "Aún no te has unido a la campaña. ¿Seguro que quieres cerrar?"
   },
   "privateTopup": {
     "privateModeAlt": "Private mode",

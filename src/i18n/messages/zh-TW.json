@@ -1557,7 +1557,8 @@
     "save": "儲存",
     "submitPredictionSuccess": "預測提交成功。",
     "submitPredictionError": "無法提交預測。",
-    "invalidXUrl": "請輸入有效的 X URL。"
+    "invalidXUrl": "請輸入有效的 X URL。",
+    "tweetUrlCloseConfirm": "您尚未加入活動，確定要關閉嗎？"
   },
   "privateTopup": {
     "privateModeAlt": "Private mode",

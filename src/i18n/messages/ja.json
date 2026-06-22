@@ -1554,7 +1554,8 @@
     "save": "保存",
     "submitPredictionSuccess": "予測が正常に送信されました。",
     "submitPredictionError": "予測を送信できませんでした。",
-    "invalidXUrl": "有効な X URL を入力してください。"
+    "invalidXUrl": "有効な X URL を入力してください。",
+    "tweetUrlCloseConfirm": "まだキャンペーンに参加していません。閉じてもよろしいですか？"
   },
   "privateTopup": {
     "privateModeAlt": "Private mode",
