@@ -9,7 +9,7 @@ export interface WalletAvatarProps {
 
 const sizeClassName = {
   sm: "size-6",
-  lg: "size-[52px] border-4 border-white shadow-[0_0_4px_rgba(0,0,0,0.25)]",
+  lg: "size-[52px]"
 } as const;
 
 export function WalletAvatar({
