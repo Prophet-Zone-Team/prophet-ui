@@ -2,6 +2,7 @@ import {
   parseComboMarketOddsId,
   parseComboMarketSlug,
 } from "@/lib/combo/map-market-to-combo-item";
+import { applyMatchTotalComboRulesToOdds } from "@/lib/combo/match-total-combo-rules";
 import type { ComboGameGroup } from "@/types/combo";
 import type { ComboOddsOption } from "@/views/combo/combo-item/types";
 import type { ComboPick } from "@/views/combo/combo-widget/types";
@@ -108,6 +109,8 @@ export function applyComboLegSelectionRules(input: {
   moneylineOdds: ComboOddsOption[];
   spreadOdds: ComboOddsOption[];
   topScoreOdds: ComboOddsOption[];
+  totalOdds: ComboOddsOption[];
+  groupPicks: readonly ComboPick[];
   selectedPick?: ComboPick;
   group: ComboGameGroup;
   disabledTooltip: string;
@@ -115,6 +118,7 @@ export function applyComboLegSelectionRules(input: {
   moneylineOdds: ComboOddsOption[];
   spreadOdds: ComboOddsOption[];
   topScoreOdds: ComboOddsOption[];
+  totalOdds: ComboOddsOption[];
 } {
   const moneylineSide = resolveSelectedMoneylineSide(input.selectedPick, input.group);
   const spreadsDisabled = Boolean(moneylineSide);
@@ -133,13 +137,23 @@ export function applyComboLegSelectionRules(input: {
     ? filterExactScoreOddsByMoneylineSide(input.topScoreOdds, moneylineSide)
     : input.topScoreOdds;
 
+  const totalOdds = applyMatchTotalComboRulesToOdds(
+    input.totalOdds,
+    input.groupPicks,
+    input.group,
+    input.disabledTooltip,
+  );
+
   return {
     moneylineOdds: input.moneylineOdds,
     spreadOdds,
     topScoreOdds,
+    totalOdds,
   };
 }
 
 export function resolveComboOddsMarketId(option: ComboOddsOption): string | undefined {
   return parseComboMarketOddsId(option.id)?.marketId;
 }
+
+export { isMatchTotalMarket } from "@/lib/combo/match-total-combo-rules";

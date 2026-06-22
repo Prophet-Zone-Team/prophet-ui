@@ -10,7 +10,7 @@ export type MobileCollapsedBodyProps = CollapsedBodyProps & {
 export function MobileCollapsedBody({
   moneylineOdds,
   previewOdds,
-  selectedOddsId,
+  isOptionSelected,
   onSelectOdds,
   totalOddsCount,
   onOpenAllOdds
@@ -25,7 +25,7 @@ export function MobileCollapsedBody({
           <ComboOddsButton
             key={option.id}
             option={option}
-            selected={selectedOddsId === option.id}
+            selected={isOptionSelected(option.id)}
             wide
             compact
             mobile
@@ -40,7 +40,7 @@ export function MobileCollapsedBody({
             <ComboOddsButton
               key={option.id}
               option={option}
-              selected={selectedOddsId === option.id}
+              selected={isOptionSelected(option.id)}
               compact
               mobile
               className="min-w-0 flex-1"

@@ -203,10 +203,48 @@ describe("mapComboGameToItemProps", () => {
 
     assert.equal(props.moneylineOdds.length, 3);
     assert.equal(props.topScoreOdds.length, 1);
-    assert.equal(props.totalOdds?.length, 1);
+    assert.equal(props.totalOdds?.length, 2);
     assert.equal(props.topScoreOdds[0]?.label, "1-0");
     assert.equal(props.moneylineOdds[0]?.label, "Czechia");
     assert.equal(props.moneylineOdds[1]?.label, "Draw");
     assert.equal(props.moneylineOdds[2]?.label, "South Africa");
+    assert.deepEqual(
+      props.totalOdds?.map((option) => option.label),
+      ["O 2.5", "U 2.5"],
+    );
+  });
+
+  it("excludes half and team totals from total odds", () => {
+    const mapped = mapProphetComboMarketsResponse(stagingSample);
+    const group = {
+      ...mapped.groups[0],
+      markets: [
+        ...mapped.groups[0].markets,
+        {
+          id: "fifwc-cze-rsa-2026-06-18-first-half-total-1pt5",
+          slug: "fifwc-cze-rsa-2026-06-18-first-half-total-1pt5",
+          title: "1H O/U 1.5",
+          outcomes: ["Over", "Under"] as [string, string],
+          outcomePrices: ["0.4", "0.6"] as [string, string],
+          positionIds: ["1", "2"] as [string, string],
+          conditionId: "0xhalf",
+        },
+        {
+          id: "fifwc-cze-rsa-2026-06-18-team-total-home-1pt5",
+          slug: "fifwc-cze-rsa-2026-06-18-team-total-home-1pt5",
+          title: "Czechia O/U 1.5",
+          outcomes: ["Over", "Under"] as [string, string],
+          outcomePrices: ["0.35", "0.65"] as [string, string],
+          positionIds: ["3", "4"] as [string, string],
+          conditionId: "0xteam",
+        },
+      ],
+    };
+    const props = mapComboGameToItemProps(group);
+
+    assert.deepEqual(
+      props.totalOdds?.map((option) => option.label),
+      ["O 2.5", "U 2.5"],
+    );
   });
 });

@@ -211,6 +211,22 @@ export function mapComboGameToItemProps(
 
   for (const market of group.markets) {
     const meta = parseComboMarketSlug(market.slug);
+
+    if (meta.marketKind === "unknown") {
+      continue;
+    }
+
+    if (meta.marketKind === "total" && meta.totalVariant === "match") {
+      const matchTotalOptions = buildMatchTotalOddsOptions(
+        market,
+        meta,
+        options?.liveYesPriceByMarketId?.[market.id],
+      );
+
+      totalOdds.push(...matchTotalOptions);
+      continue;
+    }
+
     const yesOption = buildYesOddsOption(
       market,
       meta,
@@ -218,7 +234,7 @@ export function mapComboGameToItemProps(
       options?.liveYesPriceByMarketId?.[market.id],
     );
 
-    if (!yesOption || meta.marketKind === "unknown") {
+    if (!yesOption) {
       continue;
     }
 
@@ -244,11 +260,6 @@ export function mapComboGameToItemProps(
 
     if (meta.marketKind === "exact_score") {
       topScoreOdds.push(yesOption);
-      continue;
-    }
-
-    if (meta.marketKind === "total") {
-      totalOdds.push(yesOption);
     }
   }
 
@@ -271,10 +282,43 @@ export function mapComboGameToItemProps(
     bttsOdds,
     spreadOdds,
     topScoreOdds,
-    totalOdds,
+    totalOdds: sortMatchTotalOdds(totalOdds),
     selectedOddsId,
     defaultExpanded: options?.isInCombo,
   };
+}
+
+export function resolveDefaultComboMatchTotalPreviewOdds(
+  totalOdds: ComboOddsOption[],
+): ComboOddsOption[] {
+  if (totalOdds.length <= 2) {
+    return totalOdds;
+  }
+
+  const byLine = new Map<string, ComboOddsOption[]>();
+
+  for (const option of totalOdds) {
+    const lineMatch = option.label.match(/^[OU] (.+)$/);
+
+    if (!lineMatch?.[1]) {
+      continue;
+    }
+
+    const line = lineMatch[1];
+    byLine.set(line, [...(byLine.get(line) ?? []), option]);
+  }
+
+  const lines = [...byLine.keys()].sort(
+    (left, right) => Number.parseFloat(left) - Number.parseFloat(right),
+  );
+  const defaultLine = lines.includes("2.5")
+    ? "2.5"
+    : lines.includes("1.5")
+      ? "1.5"
+      : lines[0];
+  const defaultLineOdds = defaultLine ? byLine.get(defaultLine) : undefined;
+
+  return defaultLineOdds?.slice(0, 2) ?? totalOdds.slice(0, 2);
 }
 
 export function mapComboMarketToItemProps(
@@ -359,6 +403,71 @@ export function resolveComboMarketTeamCodes(market: ComboMarketRecord) {
     teamCode: market.id.slice(0, 6).toUpperCase(),
     teamName: market.title,
   };
+}
+
+function buildMatchTotalOddsOptions(
+  market: ComboMarketRecord,
+  meta: ComboMarketSlugMeta,
+  liveYesPrice?: number,
+): ComboOddsOption[] {
+  const line = meta.totalLine;
+
+  if (!line) {
+    return [];
+  }
+
+  const catalogYesPrice = Number.parseFloat(market.outcomePrices[0]);
+  const catalogNoPrice = Number.parseFloat(market.outcomePrices[1]);
+  const yesPrice =
+    typeof liveYesPrice === "number" &&
+    Number.isFinite(liveYesPrice) &&
+    liveYesPrice > 0
+      ? liveYesPrice
+      : catalogYesPrice;
+  const options: ComboOddsOption[] = [];
+
+  if (Number.isFinite(yesPrice)) {
+    options.push({
+      id: buildComboMarketOddsId(market.id, "yes"),
+      label: `O ${line}`,
+      price: yesPrice,
+    });
+  }
+
+  if (Number.isFinite(catalogNoPrice)) {
+    options.push({
+      id: buildComboMarketOddsId(market.id, "no"),
+      label: `U ${line}`,
+      price: catalogNoPrice,
+    });
+  }
+
+  return options;
+}
+
+function sortMatchTotalOdds(odds: ComboOddsOption[]): ComboOddsOption[] {
+  return [...odds].sort((left, right) => {
+    const leftLine = parseMatchTotalLineFromLabel(left.label);
+    const rightLine = parseMatchTotalLineFromLabel(right.label);
+
+    if (leftLine !== rightLine) {
+      return leftLine - rightLine;
+    }
+
+    return left.label.startsWith("O ") ? -1 : 1;
+  });
+}
+
+function parseMatchTotalLineFromLabel(label: string): number {
+  const match = label.match(/^[OU] (.+)$/);
+
+  if (!match?.[1]) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const parsed = Number.parseFloat(match[1]);
+
+  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
 }
 
 function buildYesOddsOption(

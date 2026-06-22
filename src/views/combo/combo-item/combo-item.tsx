@@ -6,7 +6,7 @@ import Drawer from "@/components/drawer";
 import { cn } from "@/lib/cn";
 import {
   parseComboMarketOddsId,
-  parseComboMarketSlug,
+  resolveDefaultComboMatchTotalPreviewOdds,
 } from "@/lib/combo/map-market-to-combo-item";
 import { CollapsedBody } from "@/views/combo/combo-item/collapsed-body";
 import { comboItemCardClassName } from "@/views/combo/combo-item/constants";
@@ -15,6 +15,7 @@ import { ExpandedBody } from "@/views/combo/combo-item/expanded-body";
 import { MatchupTitle } from "@/views/combo/combo-item/matchup-title";
 import { MobileCollapsedBody } from "@/views/combo/combo-item/mobile-collapsed-body";
 import { MobileExpandedDrawer } from "@/views/combo/combo-item/mobile-expanded-drawer";
+import { isComboOddsOptionSelected } from "@/views/combo/combo-item/selection";
 import type { ComboItemProps, ComboOddsOption } from "@/views/combo/combo-item/types";
 
 export function ComboItem({
@@ -30,6 +31,7 @@ export function ComboItem({
   totalOdds = [],
   totalOddsCount,
   selectedLegsCount: selectedLegsCountProp,
+  selectedOddsIds: selectedOddsIdsProp,
   selectedOddsId: selectedOddsIdProp,
   defaultSelectedOddsId,
   expanded: expandedProp,
@@ -52,19 +54,7 @@ export function ComboItem({
 
   const previewOdds = [
     ...spreadOdds.slice(0, 2),
-    ...totalOdds
-      .filter((option) => {
-        const parsed = parseComboMarketOddsId(option.id);
-
-        if (!parsed) {
-          return false;
-        }
-
-        const meta = parseComboMarketSlug(parsed.marketId);
-
-        return meta.marketKind === "total" && meta.totalVariant === "match";
-      })
-      .slice(0, 2),
+    ...resolveDefaultComboMatchTotalPreviewOdds(totalOdds),
   ];
 
   const resolvedTotalCount =
@@ -76,7 +66,12 @@ export function ComboItem({
       totalOdds.length;
 
   const resolvedSelectedLegsCount =
-    selectedLegsCountProp ?? (selectedOddsId ? 1 : 0);
+    selectedLegsCountProp ??
+    selectedOddsIdsProp?.length ??
+    (selectedOddsId ? 1 : 0);
+
+  const isOptionSelected = (optionId: string) =>
+    isComboOddsOptionSelected(optionId, selectedOddsIdsProp, selectedOddsId);
 
   const handleToggleExpanded = () => {
     const next = !expanded;
@@ -129,7 +124,7 @@ export function ComboItem({
             spreadOdds={spreadOdds}
             topScoreOdds={topScoreOdds}
             totalOdds={totalOdds}
-            selectedOddsId={selectedOddsId}
+            isOptionSelected={isOptionSelected}
             onSelectOdds={handleSelectOdds}
           />
         </div>
@@ -139,7 +134,7 @@ export function ComboItem({
           awayTeam={awayTeam}
           moneylineOdds={moneylineOdds}
           previewOdds={previewOdds}
-          selectedOddsId={selectedOddsId}
+          isOptionSelected={isOptionSelected}
           onSelectOdds={handleSelectOdds}
         />
       )}
@@ -149,7 +144,7 @@ export function ComboItem({
         awayTeam={awayTeam}
         moneylineOdds={moneylineOdds}
         previewOdds={previewOdds}
-        selectedOddsId={selectedOddsId}
+        isOptionSelected={isOptionSelected}
         onSelectOdds={handleSelectOdds}
         totalOddsCount={resolvedTotalCount}
         onOpenAllOdds={() => setMobileDrawerOpen(true)}
@@ -173,7 +168,7 @@ export function ComboItem({
           spreadOdds={spreadOdds}
           topScoreOdds={topScoreOdds}
           totalOdds={totalOdds}
-          selectedOddsId={selectedOddsId}
+          isOptionSelected={isOptionSelected}
           onSelectOdds={handleSelectOdds}
         />
       </Drawer>

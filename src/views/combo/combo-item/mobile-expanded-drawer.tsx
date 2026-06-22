@@ -21,7 +21,7 @@ const fourColGridClassName = "grid grid-cols-4 gap-1.5";
 function renderOddsGrid(
   options: ComboOddsOption[],
   gridClassName: string,
-  selectedOddsId: string | null | undefined,
+  isOptionSelected: (optionId: string) => boolean,
   onSelectOdds: ExpandedBodyProps["onSelectOdds"],
   optionsConfig?: { mutedLabel?: boolean }
 ) {
@@ -31,7 +31,7 @@ function renderOddsGrid(
         <ComboOddsButton
           key={option.id}
           option={option}
-          selected={selectedOddsId === option.id}
+          selected={isOptionSelected(option.id)}
           mobile
           compact
           mutedLabel={optionsConfig?.mutedLabel}
@@ -53,7 +53,7 @@ export function MobileExpandedDrawer({
   spreadOdds,
   topScoreOdds,
   totalOdds = [],
-  selectedOddsId,
+  isOptionSelected,
   onSelectOdds
 }: MobileExpandedDrawerProps) {
   return (
@@ -69,7 +69,7 @@ export function MobileExpandedDrawer({
         {renderOddsGrid(
           moneylineOdds,
           moneylineGridClassName,
-          selectedOddsId,
+          isOptionSelected,
           onSelectOdds
         )}
       </MobileDrawerOddsSection>
@@ -79,7 +79,7 @@ export function MobileExpandedDrawer({
           {renderOddsGrid(
             spreadOdds,
             threeColGridClassName,
-            selectedOddsId,
+            isOptionSelected,
             onSelectOdds,
             { mutedLabel: true }
           )}
@@ -91,7 +91,7 @@ export function MobileExpandedDrawer({
           {renderOddsGrid(
             totalOdds,
             fourColGridClassName,
-            selectedOddsId,
+            isOptionSelected,
             onSelectOdds,
             { mutedLabel: true }
           )}
@@ -103,7 +103,7 @@ export function MobileExpandedDrawer({
           {renderOddsGrid(
             topScoreOdds,
             fourColGridClassName,
-            selectedOddsId,
+            isOptionSelected,
             onSelectOdds
           )}
         </MobileDrawerOddsSection>
@@ -114,7 +114,7 @@ export function MobileExpandedDrawer({
           {renderOddsGrid(
             halftimeOdds,
             moneylineGridClassName,
-            selectedOddsId,
+            isOptionSelected,
             onSelectOdds
           )}
         </MobileDrawerOddsSection>
@@ -125,7 +125,7 @@ export function MobileExpandedDrawer({
           {renderOddsGrid(
             bttsOdds,
             threeColGridClassName,
-            selectedOddsId,
+            isOptionSelected,
             onSelectOdds
           )}
         </MobileDrawerOddsSection>
