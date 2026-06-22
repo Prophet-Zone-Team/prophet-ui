@@ -26,11 +26,6 @@ export function PositionPickList({ picks }: PositionPickListProps) {
           </Fragment>
         ))}
       </div>
-
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[33px] bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,#FFFFFF_100%)]"
-      />
     </div>
   );
 }
