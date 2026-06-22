@@ -159,6 +159,7 @@ export function filterExactScoreOddsByMoneylineSide(
 
 export function applyComboLegSelectionRules(input: {
   moneylineOdds: ComboOddsOption[];
+  halftimeOdds: ComboOddsOption[];
   spreadOdds: ComboOddsOption[];
   topScoreOdds: ComboOddsOption[];
   totalOdds: ComboOddsOption[];
@@ -167,6 +168,7 @@ export function applyComboLegSelectionRules(input: {
   disabledTooltip: string;
 }): {
   moneylineOdds: ComboOddsOption[];
+  halftimeOdds: ComboOddsOption[];
   spreadOdds: ComboOddsOption[];
   topScoreOdds: ComboOddsOption[];
   totalOdds: ComboOddsOption[];
@@ -190,6 +192,11 @@ export function applyComboLegSelectionRules(input: {
     input.group,
     "exact_score",
   );
+  const selectedHalftimeMarketId = resolveSelectedMarketIdByKind(
+    input.groupPicks,
+    input.group,
+    "halftime",
+  );
   const hasMoneylineSelected = Boolean(selectedMoneylineMarketId);
   const hasSpreadSelected = Boolean(selectedSpreadMarketId);
 
@@ -209,6 +216,12 @@ export function applyComboLegSelectionRules(input: {
         input.disabledTooltip,
       );
 
+  const halftimeOdds = disableOtherOptionsInGroup(
+    input.halftimeOdds,
+    selectedHalftimeMarketId,
+    input.disabledTooltip,
+  );
+
   const filteredTopScoreOdds = moneylineSide
     ? filterExactScoreOddsByMoneylineSide(input.topScoreOdds, moneylineSide)
     : input.topScoreOdds;
@@ -227,6 +240,7 @@ export function applyComboLegSelectionRules(input: {
 
   return {
     moneylineOdds,
+    halftimeOdds,
     spreadOdds,
     topScoreOdds,
     totalOdds,

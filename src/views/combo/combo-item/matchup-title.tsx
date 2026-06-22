@@ -21,7 +21,7 @@ export function MatchupTitle({
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+    <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-[60px]">
       <TeamRow team={homeTeam} flagSize="md" layout="inline" />
       <span className="text-base font-[500] leading-[21px] text-[#909090] sm:text-lg sm:leading-[23px]">
         vs

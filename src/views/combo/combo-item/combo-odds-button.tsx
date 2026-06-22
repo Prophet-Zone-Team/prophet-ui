@@ -1,7 +1,7 @@
 "use client";
 
 import Popover from "@/components/popover";
-import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
+import { useComboFormatOutcomeButtonDisplay } from "@/views/combo/combo-outcome-display-context";
 import { cn } from "@/lib/cn";
 import type { ComboOddsOption } from "@/views/combo/combo-item/types";
 
@@ -29,7 +29,7 @@ export function ComboOddsButton({
   onClick?: () => void;
   className?: string;
 }) {
-  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
+  const formatOutcomeDisplay = useComboFormatOutcomeButtonDisplay();
   const disabled = disabledProp ?? option.disabled ?? false;
   const disabledTooltip = disabledTooltipProp ?? option.disabledTooltip;
 

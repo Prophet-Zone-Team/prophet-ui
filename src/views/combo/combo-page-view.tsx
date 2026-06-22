@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { OutcomeDisplaySwitcher } from "@/components/ui/outcome-display-switcher";
 import { TabSwitcher } from "@/components/ui/tab-switcher";
+import type { OutcomeDisplayMode } from "@/lib/market/outcome-display-mode";
 import { useAuth } from "@/context/auth";
 import { useComboLivePrices } from "@/hooks/combo/use-combo-live-prices";
 import { useComboMarkets } from "@/hooks/combo/use-combo-markets";
@@ -26,8 +28,10 @@ import {
   useSetComboPicks,
   useUpdateComboPick,
 } from "@/store/combo-store";
+import { useSetOutcomeDisplayMode } from "@/store/user-config-store";
 import type { ComboGameGroup, ComboMarketRecord, ComboMarketsDay } from "@/types/combo";
 import { ComboItem } from "@/views/combo/combo-item";
+import { ComboOutcomeDisplayProvider } from "@/views/combo/combo-outcome-display-context";
 import type { ComboOddsOption } from "@/views/combo/combo-item/types";
 import {
   ComboMobileWidget,
@@ -45,7 +49,11 @@ const COMBO_DAY_TABS: ComboMarketsDay[] = ["today", "tomorrow", "all"];
 
 export function ComboPageView() {
   const t = useTranslations("combo");
+  const tWallet = useTranslations("wallet");
   const auth = useAuth();
+  const setOutcomeDisplayMode = useSetOutcomeDisplayMode();
+  const [outcomeDisplayMode, setOutcomeDisplayModeLocal] =
+    useState<OutcomeDisplayMode>("decimal");
   const { day, setDay, groups, markets, loading, error, reload } =
     useComboMarkets();
   const { liveYesPriceByMarketId } = useComboLivePrices({
@@ -174,6 +182,14 @@ export function ComboPageView() {
     [removePick]
   );
 
+  const handleOutcomeDisplayChange = useCallback(
+    (mode: OutcomeDisplayMode) => {
+      setOutcomeDisplayModeLocal(mode);
+      setOutcomeDisplayMode(mode);
+    },
+    [setOutcomeDisplayMode]
+  );
+
   const comboWidgetProps: ComboWidgetProps = {
     picks,
     multiplier: ticket.multiplier,
@@ -204,13 +220,21 @@ export function ComboPageView() {
     <section className="mx-auto w-full max-w-[1200px] px-3 pt-4 md:px-4 md:pt-5 lg:pb-8">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_345px] lg:items-start">
         <div className="flex min-w-0 flex-col gap-3">
-          <TabSwitcher
-            items={dayTabItems}
-            value={day}
-            onChange={(value) => setDay(value as ComboMarketsDay)}
-            size="compact"
-            aria-label={t("marketsTitle")}
-          />
+          <div className="flex items-start justify-between gap-3">
+            <TabSwitcher
+              items={dayTabItems}
+              value={day}
+              onChange={(value) => setDay(value as ComboMarketsDay)}
+              size="compact"
+              className="min-w-0 flex-1"
+              aria-label={t("marketsTitle")}
+            />
+            <OutcomeDisplaySwitcher
+              value={outcomeDisplayMode}
+              onChange={handleOutcomeDisplayChange}
+              aria-label={tWallet("outcomeDisplay")}
+            />
+          </div>
 
           {loading ? (
             <p className="text-sm text-[#909090]">{t("loadingMarkets")}</p>
@@ -233,6 +257,7 @@ export function ComboPageView() {
             <p className="text-sm text-[#909090]">{t("emptyMarkets")}</p>
           ) : null}
 
+          <ComboOutcomeDisplayProvider mode={outcomeDisplayMode}>
           {groups.map((group) => {
             const groupPicks = group.markets
               .map((market) => picksByMarketId.get(market.id))
@@ -263,6 +288,7 @@ export function ComboPageView() {
             });
             const selectionRules = applyComboLegSelectionRules({
               moneylineOdds: baseItemProps.moneylineOdds,
+              halftimeOdds: baseItemProps.halftimeOdds ?? [],
               spreadOdds: baseItemProps.spreadOdds,
               topScoreOdds: baseItemProps.topScoreOdds,
               totalOdds: baseItemProps.totalOdds ?? [],
@@ -279,6 +305,7 @@ export function ComboPageView() {
                 selectedOddsIds={selectedOddsIds}
                 bttsOdds={[]}
                 moneylineOdds={selectionRules.moneylineOdds}
+                halftimeOdds={selectionRules.halftimeOdds}
                 spreadOdds={selectionRules.spreadOdds}
                 topScoreOdds={selectionRules.topScoreOdds}
                 totalOdds={selectionRules.totalOdds}
@@ -295,6 +322,7 @@ export function ComboPageView() {
               />
             );
           })}
+          </ComboOutcomeDisplayProvider>
         </div>
 
         <aside className="hidden lg:block lg:w-[345px] lg:shrink-0">
