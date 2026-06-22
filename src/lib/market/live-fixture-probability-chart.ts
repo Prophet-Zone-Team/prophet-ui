@@ -1,7 +1,4 @@
-import {
-  formatChartTimestampClockLabel,
-  formatLiveChartClockLabel,
-} from "@/lib/market/match-display";
+import { formatChartTimestampClockLabel } from "@/lib/market/match-display";
 import { getScheduleRowVariant } from "@/lib/market/schedule-match";
 import type { FixtureHistoryInterval } from "@/server/market/clob-prices-history";
 import type {
@@ -302,22 +299,112 @@ export function mapBinaryFixturePointsToMatchMinutes(
 /** Baseline live chart x-axis spans 0' through 90'. */
 export const LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS = 90 * 60;
 
-/** Typical halftime break used to map wall-clock elapsed to match clock. */
+/** FIFA World Cup 2026 hydration break duration (whistle to whistle). */
+export const LIVE_MATCH_HYDRATION_BREAK_SECONDS = 3 * 60;
+
+/** Standard halftime interval between halves. */
 export const LIVE_MATCH_HALFTIME_PAUSE_SECONDS = 15 * 60;
+
+/** First-half hydration break anchor (match clock). */
+export const LIVE_MATCH_HYDRATION_BREAK_MATCH_MINUTE = 22;
+
+/** Second-half hydration break anchor (match clock). */
+export const LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_MINUTE = 67;
 
 /** Regulation half length on the match clock. */
 export const LIVE_MATCH_REGULATION_HALF_SECONDS = 45 * 60;
 
-const LIVE_MATCH_WALL_TO_MATCH_HALFTIME_THRESHOLD_SECONDS = 10 * 60;
+const LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS =
+  LIVE_MATCH_HYDRATION_BREAK_MATCH_MINUTE * 60;
+const LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS =
+  LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_MINUTE * 60;
+const LIVE_MATCH_BREAK_OFFSET_AFTER_FIRST_HALF =
+  LIVE_MATCH_HYDRATION_BREAK_SECONDS;
+const LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME =
+  LIVE_MATCH_HYDRATION_BREAK_SECONDS + LIVE_MATCH_HALFTIME_PAUSE_SECONDS;
+const LIVE_MATCH_BREAK_OFFSET_AFTER_SECOND_HALF =
+  LIVE_MATCH_HYDRATION_BREAK_SECONDS +
+  LIVE_MATCH_HALFTIME_PAUSE_SECONDS +
+  LIVE_MATCH_HYDRATION_BREAK_SECONDS;
+
+/** Match-minute ticks shown on the live chart x-axis. */
+export const LIVE_MATCH_CHART_AXIS_TICK_MATCH_MINUTES = [
+  0, 15, 30, 45, 60, 75, 90
+] as const;
+
+const LIVE_MATCH_WALL_TO_MATCH_CLOCK_TOLERANCE_SECONDS = 2 * 60;
 
 export interface ResolveMatchClockSecondsOptions {
   matchPeriod?: string;
   currentMatchClockSeconds?: number;
 }
 
+/** Map match-clock seconds to expanded axis seconds (includes break widths). */
+export function resolveAxisSecondsFromMatchClock(
+  matchClockSeconds: number
+): number {
+  const match = Math.max(0, Math.floor(matchClockSeconds));
+
+  if (match <= LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS) {
+    return match;
+  }
+
+  if (match <= LIVE_MATCH_REGULATION_HALF_SECONDS) {
+    return match + LIVE_MATCH_BREAK_OFFSET_AFTER_FIRST_HALF;
+  }
+
+  if (match <= LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS) {
+    return match + LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME;
+  }
+
+  return match + LIVE_MATCH_BREAK_OFFSET_AFTER_SECOND_HALF;
+}
+
+/** Inverse of `resolveAxisSecondsFromMatchClock` for tick labels. */
+export function resolveMatchClockFromAxisSeconds(
+  axisSeconds: number
+): number {
+  const axis = Math.max(0, Math.floor(axisSeconds));
+
+  if (axis <= LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS) {
+    return axis;
+  }
+
+  if (axis <= LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS + LIVE_MATCH_HYDRATION_BREAK_SECONDS) {
+    return LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS;
+  }
+
+  if (axis <= LIVE_MATCH_REGULATION_HALF_SECONDS + LIVE_MATCH_BREAK_OFFSET_AFTER_FIRST_HALF) {
+    return axis - LIVE_MATCH_BREAK_OFFSET_AFTER_FIRST_HALF;
+  }
+
+  if (
+    axis <=
+    LIVE_MATCH_REGULATION_HALF_SECONDS +
+      LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME
+  ) {
+    return LIVE_MATCH_REGULATION_HALF_SECONDS;
+  }
+
+  if (axis <= LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS + LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME) {
+    return axis - LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME;
+  }
+
+  if (
+    axis <=
+    LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS +
+      LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME +
+      LIVE_MATCH_HYDRATION_BREAK_SECONDS
+  ) {
+    return LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS;
+  }
+
+  return axis - LIVE_MATCH_BREAK_OFFSET_AFTER_SECOND_HALF;
+}
+
 /**
- * Convert wall-clock seconds since kickoff to match-clock seconds for chart axes.
- * Price history uses real kickoff timestamps; live WS elapsed is match clock.
+ * Convert wall-clock seconds since kickoff to match-clock seconds.
+ * Price history uses real kickoff timestamps; WS elapsed is match clock.
  */
 export function resolveMatchClockSecondsFromWallElapsed(
   wallElapsedSeconds: number,
@@ -333,62 +420,101 @@ export function resolveMatchClockSecondsFromWallElapsed(
 
   if (
     currentMatchClock !== undefined &&
+    Math.abs(wall - currentMatchClock) <=
+      LIVE_MATCH_WALL_TO_MATCH_CLOCK_TOLERANCE_SECONDS
+  ) {
+    return currentMatchClock;
+  }
+
+  if (
+    currentMatchClock !== undefined &&
     currentMatchClock <= LIVE_MATCH_REGULATION_HALF_SECONDS &&
     wall > LIVE_MATCH_REGULATION_HALF_SECONDS &&
-    wall - currentMatchClock < LIVE_MATCH_HALFTIME_PAUSE_SECONDS
+    wall - currentMatchClock <
+      LIVE_MATCH_HALFTIME_PAUSE_SECONDS + LIVE_MATCH_HYDRATION_BREAK_SECONDS
   ) {
-    return LIVE_MATCH_REGULATION_HALF_SECONDS;
+    return currentMatchClock;
   }
 
   const shouldMapWallElapsedToMatchClock =
     currentMatchClock === undefined
       ? wall >
         LIVE_MATCH_REGULATION_HALF_SECONDS +
-          LIVE_MATCH_HALFTIME_PAUSE_SECONDS / 2
-      : wall > LIVE_MATCH_REGULATION_HALF_SECONDS &&
+          LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME / 2
+      : wall >
+          LIVE_MATCH_REGULATION_HALF_SECONDS +
+            LIVE_MATCH_HYDRATION_BREAK_SECONDS &&
         wall - currentMatchClock >=
-          LIVE_MATCH_WALL_TO_MATCH_HALFTIME_THRESHOLD_SECONDS;
+          LIVE_MATCH_WALL_TO_MATCH_CLOCK_TOLERANCE_SECONDS;
 
   if (!shouldMapWallElapsedToMatchClock) {
     return wall;
   }
 
+  if (wall <= LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS) {
+    return wall;
+  }
+
   if (
-    wall <
-    LIVE_MATCH_REGULATION_HALF_SECONDS + LIVE_MATCH_HALFTIME_PAUSE_SECONDS
+    wall <=
+    LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS + LIVE_MATCH_HYDRATION_BREAK_SECONDS
+  ) {
+    return LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS;
+  }
+
+  if (
+    wall <=
+    LIVE_MATCH_REGULATION_HALF_SECONDS + LIVE_MATCH_BREAK_OFFSET_AFTER_FIRST_HALF
+  ) {
+    return wall - LIVE_MATCH_BREAK_OFFSET_AFTER_FIRST_HALF;
+  }
+
+  if (
+    wall <=
+    LIVE_MATCH_REGULATION_HALF_SECONDS + LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME
   ) {
     return LIVE_MATCH_REGULATION_HALF_SECONDS;
   }
 
-  return wall - LIVE_MATCH_HALFTIME_PAUSE_SECONDS;
-}
-
-/** Inverse of match-clock mapping for live chart axis hh:mm labels. */
-export function resolveWallElapsedSecondsFromMatchClock(
-  matchClockSeconds: number
-): number {
-  const match = Math.max(0, Math.floor(matchClockSeconds));
-
-  if (match <= LIVE_MATCH_REGULATION_HALF_SECONDS) {
-    return match;
+  if (
+    wall <=
+    LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS +
+      LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME
+  ) {
+    return wall - LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME;
   }
 
-  return match + LIVE_MATCH_HALFTIME_PAUSE_SECONDS;
+  if (
+    wall <=
+    LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS +
+      LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME +
+      LIVE_MATCH_HYDRATION_BREAK_SECONDS
+  ) {
+    return LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS;
+  }
+
+  return wall - LIVE_MATCH_BREAK_OFFSET_AFTER_SECOND_HALF;
 }
 
-export function formatLiveChartAxisTickLabel(
-  kickoffAt: string | undefined,
-  matchClockSeconds: number
-): string {
-  return formatLiveChartClockLabel(
-    kickoffAt,
-    resolveWallElapsedSecondsFromMatchClock(matchClockSeconds)
+export function resolveLiveChartPointCoordinates(
+  wallElapsedSeconds: number,
+  options: ResolveMatchClockSecondsOptions = {}
+): { matchClockSeconds: number; axisSeconds: number } {
+  const matchClockSeconds = resolveMatchClockSecondsFromWallElapsed(
+    wallElapsedSeconds,
+    options
   );
+
+  return {
+    matchClockSeconds,
+    axisSeconds: resolveAxisSecondsFromMatchClock(matchClockSeconds)
+  };
 }
 
 /** Extra x-axis padding after match elapsed exceeds 60 minutes. */
 export const LIVE_MATCH_CHART_OVERTIME_PADDING_SECONDS = 10 * 60;
 
+/** @deprecated Prefer resolveLiveChartAxisTicksWithBreaks. */
 export const LIVE_MATCH_CHART_AXIS_TICK_STEP_SECONDS = 15 * 60;
 
 export function resolveLiveChartAxisMaxElapsed(
@@ -413,6 +539,25 @@ export function resolveLiveChartAxisTicks(maxElapsedSeconds: number): number[] {
   }
 
   return ticks;
+}
+
+/** Axis tick positions for match-minute labels, expanded with break widths. */
+export function resolveLiveChartAxisTicksWithBreaks(
+  maxMatchClockSeconds: number
+): number[] {
+  const safeMax = Math.max(0, Math.floor(maxMatchClockSeconds));
+
+  return LIVE_MATCH_CHART_AXIS_TICK_MATCH_MINUTES.filter(
+    (minute) => minute * 60 <= safeMax
+  ).map((minute) => resolveAxisSecondsFromMatchClock(minute * 60));
+}
+
+export function resolveLiveChartMaxAxisSeconds(
+  maxMatchClockSeconds: number
+): number {
+  return resolveAxisSecondsFromMatchClock(
+    resolveLiveChartAxisMaxElapsed(maxMatchClockSeconds)
+  );
 }
 
 export function resolveLiveChartWindowSeconds(
@@ -512,17 +657,19 @@ function resolveLiveChartDataMax(
   matchElapsedSeconds?: number,
   matchPeriod?: string
 ): number {
-  const pointMax = points.reduce(
-    (max, point) =>
-      Math.max(
-        max,
-        resolveMatchClockSecondsFromWallElapsed(point.elapsedSeconds ?? 0, {
-          matchPeriod,
-          currentMatchClockSeconds: matchElapsedSeconds
-        })
-      ),
-    0
-  );
+  const clockOptions: ResolveMatchClockSecondsOptions = {
+    matchPeriod,
+    currentMatchClockSeconds: matchElapsedSeconds
+  };
+
+  const pointMax = points.reduce((max, point) => {
+    const matchClock = resolveMatchClockSecondsFromWallElapsed(
+      point.elapsedSeconds ?? 0,
+      clockOptions
+    );
+
+    return Math.max(max, matchClock);
+  }, 0);
 
   return Math.max(matchElapsedSeconds ?? 0, pointMax);
 }
@@ -539,16 +686,21 @@ export function filterLiveFixtureChartByRange(
     matchPeriod
   );
   const windowSeconds = resolveLiveChartWindowSeconds(timeRange, dataMax);
+  const clockOptions: ResolveMatchClockSecondsOptions = {
+    matchPeriod,
+    currentMatchClockSeconds: matchElapsedSeconds
+  };
   const filtered =
     windowSeconds === undefined
       ? points
-      : points.filter(
-          (point) =>
-            resolveMatchClockSecondsFromWallElapsed(point.elapsedSeconds ?? 0, {
-              matchPeriod,
-              currentMatchClockSeconds: matchElapsedSeconds
-            }) <= windowSeconds
-        );
+      : points.filter((point) => {
+          const matchClock = resolveMatchClockSecondsFromWallElapsed(
+            point.elapsedSeconds ?? 0,
+            clockOptions
+          );
+
+          return matchClock <= windowSeconds;
+        });
 
   return ensureLiveTernaryChartLinePoints(filtered);
 }
@@ -565,16 +717,21 @@ export function filterLiveBinaryFixtureChartByRange(
     matchPeriod
   );
   const windowSeconds = resolveLiveChartWindowSeconds(timeRange, dataMax);
+  const clockOptions: ResolveMatchClockSecondsOptions = {
+    matchPeriod,
+    currentMatchClockSeconds: matchElapsedSeconds
+  };
   const filtered =
     windowSeconds === undefined
       ? points
-      : points.filter(
-          (point) =>
-            resolveMatchClockSecondsFromWallElapsed(point.elapsedSeconds ?? 0, {
-              matchPeriod,
-              currentMatchClockSeconds: matchElapsedSeconds
-            }) <= windowSeconds
-        );
+      : points.filter((point) => {
+          const matchClock = resolveMatchClockSecondsFromWallElapsed(
+            point.elapsedSeconds ?? 0,
+            clockOptions
+          );
+
+          return matchClock <= windowSeconds;
+        });
 
   return ensureLiveBinaryChartLinePoints(filtered);
 }
@@ -614,7 +771,10 @@ export function resolveLiveChartMaxElapsed(
     (kickoffAt
       ? resolveMatchClockSecondsFromWallElapsed(
           resolveKickoffElapsedSeconds(kickoffAt, nowMs) ?? 0,
-          { matchPeriod, currentMatchClockSeconds: liveElapsedSeconds }
+          {
+            matchPeriod,
+            currentMatchClockSeconds: liveElapsedSeconds
+          }
         )
       : undefined) ??
     0;

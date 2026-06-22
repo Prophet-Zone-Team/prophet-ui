@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   createContext,
   useContext,
@@ -33,9 +34,11 @@ import {
 } from "@/lib/market/fixture-probability-chart";
 import {
   LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
-  formatLiveChartAxisTickLabel,
-  resolveLiveChartAxisTicks,
-  resolveMatchClockSecondsFromWallElapsed
+  resolveLiveChartAxisTicksWithBreaks,
+  resolveLiveChartMaxAxisSeconds,
+  resolveLiveChartPointCoordinates,
+  resolveMatchClockFromAxisSeconds,
+  type ResolveMatchClockSecondsOptions
 } from "@/lib/market/live-fixture-probability-chart";
 import type {
   GameFixtureBinaryChartPoint,
@@ -67,6 +70,7 @@ const END_LABEL_SLOT_FRACTIONS: Record<BinarySeriesKey, number> = {
 
 interface ChartRow extends GameFixtureBinaryChartPoint {
   chartLabel: string;
+  axisSeconds?: number;
   matchClockSeconds?: number;
 }
 
@@ -293,9 +297,25 @@ export function GameBinaryProbabilityChart({
   homeCode,
   awayCode
 }: GameBinaryProbabilityChartProps) {
+  const t = useTranslations("trade");
   const isLive = mode === "live";
-  const formatLiveAxisTick = (value: number) =>
-    formatLiveChartAxisTickLabel(kickoffAt, value);
+  const liveClockOptions = useMemo<ResolveMatchClockSecondsOptions>(
+    () => ({
+      matchPeriod,
+      currentMatchClockSeconds: matchClockElapsedSeconds
+    }),
+    [matchClockElapsedSeconds, matchPeriod]
+  );
+  const formatLiveAxisTick = (value: number) => {
+    const matchClockSeconds = resolveMatchClockFromAxisSeconds(value);
+    const minutes = Math.floor(matchClockSeconds / 60);
+
+    if (minutes === 45) {
+      return t("chartHalfTimeAxisLabel");
+    }
+
+    return `${minutes}'`;
+  };
 
   const series = useMemo(
     () => [
@@ -311,20 +331,22 @@ export function GameBinaryProbabilityChart({
 
   const chartData = useMemo<ChartRow[]>(
     () =>
-      data.map((point) => ({
-        ...point,
-        chartLabel: point.label,
-        matchClockSeconds: isLive
-          ? resolveMatchClockSecondsFromWallElapsed(
+      data.map((point) => {
+        const coordinates = isLive
+          ? resolveLiveChartPointCoordinates(
               point.elapsedSeconds ?? 0,
-              {
-                matchPeriod,
-                currentMatchClockSeconds: matchClockElapsedSeconds
-              }
+              liveClockOptions
             )
-          : undefined
-      })),
-    [data, isLive, matchClockElapsedSeconds, matchPeriod]
+          : undefined;
+
+        return {
+          ...point,
+          chartLabel: point.label,
+          axisSeconds: coordinates?.axisSeconds,
+          matchClockSeconds: coordinates?.matchClockSeconds
+        };
+      }),
+    [data, isLive, liveClockOptions]
   );
 
   const yDomain = useMemo(() => getBinaryFixtureChartYDomain(data), [data]);
@@ -337,7 +359,7 @@ export function GameBinaryProbabilityChart({
   );
   const dataLength = chartData.length;
 
-  const resolvedMaxElapsed = useMemo(() => {
+  const resolvedMaxMatchClock = useMemo(() => {
     if (!isLive) {
       return 0;
     }
@@ -353,10 +375,16 @@ export function GameBinaryProbabilityChart({
     );
   }, [chartData, isLive, matchClockElapsedSeconds, maxElapsedSeconds]);
 
+  const resolvedMaxAxisSeconds = useMemo(
+    () =>
+      isLive ? resolveLiveChartMaxAxisSeconds(resolvedMaxMatchClock) : 0,
+    [isLive, resolvedMaxMatchClock]
+  );
+
   const goalMarkerConfig = useMemo(
     () => ({
       events,
-      maxElapsedSeconds: resolvedMaxElapsed,
+      maxAxisSeconds: resolvedMaxAxisSeconds,
       homeCode,
       homeName: primaryLabel,
       awayCode,
@@ -367,7 +395,7 @@ export function GameBinaryProbabilityChart({
       events,
       homeCode,
       primaryLabel,
-      resolvedMaxElapsed,
+      resolvedMaxAxisSeconds,
       secondaryLabel
     ]
   );
@@ -389,10 +417,12 @@ export function GameBinaryProbabilityChart({
       <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
       <XAxis
         type={isLive ? "number" : "category"}
-        dataKey={isLive ? "matchClockSeconds" : "timestamp"}
-        domain={isLive ? [0, resolvedMaxElapsed] : undefined}
+        dataKey={isLive ? "axisSeconds" : "timestamp"}
+        domain={isLive ? [0, resolvedMaxAxisSeconds] : undefined}
         ticks={
-          isLive ? resolveLiveChartAxisTicks(resolvedMaxElapsed) : undefined
+          isLive
+            ? resolveLiveChartAxisTicksWithBreaks(resolvedMaxMatchClock)
+            : undefined
         }
         tick={{ fill: CHART_COLORS.muted, fontSize: 14, dy: 6 }}
         axisLine={false}
@@ -492,9 +522,13 @@ function BinaryChartTooltip({
   }
 
   const point = payload[0]?.payload as ChartRow | undefined;
-  const timeLabel =
+  const matchClockSeconds =
     isLive && typeof label === "number"
-      ? formatGoalEventTime(label)
+      ? resolveMatchClockFromAxisSeconds(label)
+      : point?.matchClockSeconds;
+  const timeLabel =
+    isLive && typeof matchClockSeconds === "number"
+      ? formatGoalEventTime(matchClockSeconds)
       : isLive && point?.timestamp
         ? formatChartTimestampClockLabel(point.timestamp)
         : formatGameChartXAxisTick(String(label ?? ""), timeRange);
