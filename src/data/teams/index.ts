@@ -240,7 +240,7 @@ export default {
     isWorldCupTeam: true
   },
   "Ivory Coast": {
-    name: "Ivory Coast",
+    name: "Côte d'Ivoire",
     logo: "ci",
     abbreviation: "civ",
     continent: "Africa",

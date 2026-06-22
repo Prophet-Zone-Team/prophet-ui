@@ -18,7 +18,6 @@ import {
   mapBinaryFixturePointsToElapsedFromStartTs,
   mapFixturePointsToElapsedFromStartTs,
   resolveEffectiveKickoffAt,
-  resolveKickoffElapsedSeconds,
   resolveLiveChartClobInterval,
   resolveLiveChartMaxElapsed,
   resolveLiveChartModeFromKind,
@@ -431,19 +430,19 @@ export function useLiveMatchProbabilityChart({
       return 0;
     }
 
-    const elapsedFromStartTime =
-      resolveKickoffElapsedSeconds(priceHistoryKickoffAt) ?? 0;
-
     return resolveLiveChartMaxElapsed(
       priceHistoryKickoffAt,
       chartMode === "binary" ? binaryPoints : points,
       "1D",
-      Math.max(elapsedFromStartTime, matchClockElapsedSeconds ?? 0)
+      matchClockElapsedSeconds,
+      Date.now(),
+      match.period
     );
   }, [
     binaryPoints,
     chartMode,
     enabled,
+    match.period,
     matchClockElapsedSeconds,
     points,
     priceHistoryKickoffAt,

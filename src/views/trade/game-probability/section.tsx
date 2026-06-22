@@ -17,7 +17,6 @@ import {
 import {
   filterLiveBinaryFixtureChartByRange,
   filterLiveFixtureChartByRange,
-  resolveKickoffElapsedSeconds,
   resolveLiveChartMaxElapsed,
   resolveLiveChartPriceHistoryKickoffAt,
   resolveMatchClockElapsedSeconds
@@ -160,19 +159,6 @@ export function GameProbabilitySection({
     () => resolveLiveChartPriceHistoryKickoffAt(liveMatchForChart),
     [liveMatchForChart]
   );
-  const elapsedFromStartTime = useMemo(
-    () =>
-      priceHistoryKickoffAt
-        ? resolveKickoffElapsedSeconds(priceHistoryKickoffAt)
-        : undefined,
-    [priceHistoryKickoffAt]
-  );
-  const liveAxisElapsedSeconds = useMemo(
-    () =>
-      Math.max(elapsedFromStartTime ?? 0, matchClockElapsedSeconds ?? 0) ||
-      undefined,
-    [elapsedFromStartTime, matchClockElapsedSeconds]
-  );
   const {
     points: rawPoints,
     binaryPoints: rawBinaryPoints,
@@ -266,23 +252,36 @@ export function GameProbabilitySection({
     () => filterGameBinaryFixtureChartByRange(rawBinaryPoints, timeRange),
     [rawBinaryPoints, timeRange]
   );
+  const liveMatchPeriod = liveMatchForChart.period;
   const liveFilteredPoints = useMemo(
     () =>
       filterLiveFixtureChartByRange(
         liveChart.points,
         timeRange,
-        liveAxisElapsedSeconds
+        matchClockElapsedSeconds,
+        liveMatchPeriod
       ),
-    [liveChart.points, liveAxisElapsedSeconds, timeRange]
+    [
+      liveChart.points,
+      liveMatchPeriod,
+      matchClockElapsedSeconds,
+      timeRange
+    ]
   );
   const liveFilteredBinaryPoints = useMemo(
     () =>
       filterLiveBinaryFixtureChartByRange(
         liveChart.binaryPoints,
         timeRange,
-        liveAxisElapsedSeconds
+        matchClockElapsedSeconds,
+        liveMatchPeriod
       ),
-    [liveChart.binaryPoints, liveAxisElapsedSeconds, timeRange]
+    [
+      liveChart.binaryPoints,
+      liveMatchPeriod,
+      matchClockElapsedSeconds,
+      timeRange
+    ]
   );
   const liveMaxElapsedSeconds = useMemo(() => {
     if (!liveChartActive) {
@@ -298,15 +297,18 @@ export function GameProbabilitySection({
       priceHistoryKickoffAt,
       points,
       timeRange,
-      liveAxisElapsedSeconds
+      matchClockElapsedSeconds,
+      Date.now(),
+      liveMatchPeriod
     );
   }, [
     effectiveChartMode,
-    liveAxisElapsedSeconds,
     liveChart.maxElapsedSeconds,
     liveChartActive,
     liveFilteredBinaryPoints,
     liveFilteredPoints,
+    liveMatchPeriod,
+    matchClockElapsedSeconds,
     priceHistoryKickoffAt,
     timeRange
   ]);
@@ -457,6 +459,10 @@ export function GameProbabilitySection({
               events={liveChartActive ? goalEvents : []}
               maxElapsedSeconds={liveMaxElapsedSeconds}
               kickoffAt={liveChartActive ? priceHistoryKickoffAt : undefined}
+              matchPeriod={liveChartActive ? liveMatchPeriod : undefined}
+              matchClockElapsedSeconds={
+                liveChartActive ? matchClockElapsedSeconds : undefined
+              }
               homeCode={sides.home.code}
               awayCode={sides.away.code}
             />
@@ -478,6 +484,10 @@ export function GameProbabilitySection({
               events={liveChartActive ? goalEvents : []}
               maxElapsedSeconds={liveMaxElapsedSeconds}
               kickoffAt={liveChartActive ? priceHistoryKickoffAt : undefined}
+              matchPeriod={liveChartActive ? liveMatchPeriod : undefined}
+              matchClockElapsedSeconds={
+                liveChartActive ? matchClockElapsedSeconds : undefined
+              }
               homeCode={sides.home.code}
               awayCode={sides.away.code}
             />
