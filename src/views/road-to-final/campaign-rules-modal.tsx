@@ -32,7 +32,7 @@ export function CampaignRulesModal({
           "relative overflow-hidden bg-white",
           "h-[85vh] rounded-[20px] border border-[#EBEBEB] px-2 py-3",
           "shadow-[0_0_10px_rgba(0,0,0,0.1)]",
-          "max-md:h-auto max-md:rounded-none max-md:border-0 max-md:px-3 max-md:pb-8 max-md:pt-[45px] max-md:shadow-none"
+          "max-md:h-auto max-md:border-0 max-md:px-3 max-md:pb-8 max-md:pt-[45px] max-md:shadow-none"
         )}
       >
         {isMobile ? (

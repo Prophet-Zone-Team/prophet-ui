@@ -43,7 +43,7 @@ export function PredictionRecordsModal({
         className={cn(
           "relative rounded-[20px] border border-[#EBEBEB] bg-white",
           "p-[16px] shadow-[0_0_10px_rgba(0,0,0,0.1)]",
-          "max-md:border-0 max-md:rounded-none max-md:px-3 max-md:pb-8 max-md:pt-[45px] max-md:shadow-none"
+          "max-md:border-0 max-md:px-3 max-md:pb-8 max-md:pt-[20px] max-md:shadow-none"
         )}
       >
         {isMobile ? (

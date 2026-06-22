@@ -145,7 +145,7 @@ export function RoadToFinalShareModal({
         shareCardReady={shareCardReady}
         cardRef={cardRef}
         shareImageUploadMode="always"
-        modalShellClass="md:w-[550px]"
+        modalShellClass="md:w-[550px] px-1 md:px-3"
         header={
           <h2 className="m-0 text-left text-[18px] font-[500] text-black">
             {t("shareModalTitle")}

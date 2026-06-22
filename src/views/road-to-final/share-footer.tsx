@@ -117,7 +117,7 @@ export function ShareFooter({
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end md:gap-6">
             <button
               type="button"
-              disabled={shareDisabled}
+              disabled={shareDisabled || !isAvailableChances}
               className={cn(
                 "inline-flex h-[38px] w-full items-center justify-center gap-[8px]",
                 "rounded-[6px] bg-[linear-gradient(90deg,#F4B600_0%,#8E6A00_100%)]",
