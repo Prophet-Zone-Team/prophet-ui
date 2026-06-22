@@ -16,8 +16,10 @@ import {
 import { getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
 import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity";
 import {
+  isLineOutcomePairSideActive,
   resolveLineOutcomeForSide,
   resolveLineOutcomePair,
+  resolveLineOutcomeTradeBinarySide,
 } from "@/lib/market/fixture-line-outcome-pair";
 import { useMarketWsPrices, useRegisterMarketWsTokens } from "@/context/market-ws";
 import { isValidAskPrice, resolveFixtureDisplayAskPrice } from "@/lib/market/fixture-ask-liquidity";
@@ -1529,15 +1531,13 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       gameFixtureMarkets
     ) {
       const targetOutcome = resolveLineOutcomeForSide(lineOutcomePair, side);
+      const tradeBinarySide = resolveLineOutcomeTradeBinarySide(targetOutcome);
 
-      if (
-        side === outcomeSide &&
-        selectedFixtureOutcome?.id === targetOutcome.id
-      ) {
+      if (selectedFixtureOutcome?.id === targetOutcome.id) {
         return;
       }
 
-      selectFixtureOutcome(targetOutcome, side);
+      selectFixtureOutcome(targetOutcome, tradeBinarySide);
       setMessage(undefined);
       setEligibilityRetryAvailable(false);
       return;
@@ -1580,6 +1580,20 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       yesProbability: display.yesPrice,
       noProbability: display.noPrice,
       outcomeSide,
+      yesButtonActive: lineOutcomePair
+        ? isLineOutcomePairSideActive(
+            lineOutcomePair,
+            selectedFixtureOutcome,
+            "yes"
+          )
+        : undefined,
+      noButtonActive: lineOutcomePair
+        ? isLineOutcomePairSideActive(
+            lineOutcomePair,
+            selectedFixtureOutcome,
+            "no"
+          )
+        : undefined,
       orderMode,
       tradeSide,
       amount,

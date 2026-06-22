@@ -6,7 +6,9 @@ import type {
 } from "@/types/market";
 
 export interface LineOutcomePair {
+  /** Spread: home outcome. Total: over outcome. */
   yesOutcome: FixtureMarketOutcome;
+  /** Spread: away outcome. Total: under outcome. */
   noOutcome: FixtureMarketOutcome;
 }
 
@@ -16,15 +18,14 @@ export function isLineDualOutcomeMarket(
   return outcome.marketType === "spread" || outcome.marketType === "total";
 }
 
-function resolveLineBinarySide(
+export function resolveLineOutcomeTradeBinarySide(
   outcome: FixtureMarketOutcome,
-  groupType: "spread" | "total",
 ): OrderOutcomeSide {
-  if (groupType === "spread") {
+  if (outcome.marketType === "spread") {
     return outcome.id.endsWith(":no") ? "no" : "yes";
   }
 
-  if (groupType === "total" && outcome.side === "under") {
+  if (outcome.marketType === "total" && outcome.side === "under") {
     return "no";
   }
 
@@ -82,24 +83,25 @@ export function resolveLineOutcomePair(
     return undefined;
   }
 
-  let yesOutcome: FixtureMarketOutcome | undefined;
-  let noOutcome: FixtureMarketOutcome | undefined;
+  if (groupType === "spread") {
+    const homeOutcome = lineOutcomes.find((item) => item.side === "home");
+    const awayOutcome = lineOutcomes.find((item) => item.side === "away");
 
-  for (const lineOutcome of lineOutcomes) {
-    const binarySide = resolveLineBinarySide(lineOutcome, groupType);
-
-    if (binarySide === "yes") {
-      yesOutcome = lineOutcome;
-    } else {
-      noOutcome = lineOutcome;
+    if (!homeOutcome || !awayOutcome) {
+      return undefined;
     }
+
+    return { yesOutcome: homeOutcome, noOutcome: awayOutcome };
   }
 
-  if (!yesOutcome || !noOutcome) {
+  const overOutcome = lineOutcomes.find((item) => item.side === "over");
+  const underOutcome = lineOutcomes.find((item) => item.side === "under");
+
+  if (!overOutcome || !underOutcome) {
     return undefined;
   }
 
-  return { yesOutcome, noOutcome };
+  return { yesOutcome: overOutcome, noOutcome: underOutcome };
 }
 
 export function resolveLineOutcomeForSide(
@@ -107,4 +109,13 @@ export function resolveLineOutcomeForSide(
   binarySide: OrderOutcomeSide,
 ): FixtureMarketOutcome {
   return binarySide === "yes" ? pair.yesOutcome : pair.noOutcome;
+}
+
+export function isLineOutcomePairSideActive(
+  pair: LineOutcomePair,
+  selectedOutcome: Pick<FixtureMarketOutcome, "id"> | null | undefined,
+  side: OrderOutcomeSide,
+): boolean {
+  const targetOutcome = resolveLineOutcomeForSide(pair, side);
+  return selectedOutcome?.id === targetOutcome.id;
 }

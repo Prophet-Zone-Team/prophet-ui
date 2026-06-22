@@ -79,7 +79,48 @@ describe("fixture line outcome pair", () => {
     assert.equal(resolveLineKeyFromOutcome(totalOutcome), "2.5");
   });
 
-  it("returns yes/no spread outcomes for the selected line", () => {
+  it("maps spread widget buttons to home and away display order", () => {
+    const spreadGroup: FixtureMarketGroup = {
+      type: "spread",
+      title: "Spreads",
+      defaultLineKey: "spread:cond-1",
+      outcomesByLine: {
+        "spread:cond-1": [
+          buildSpreadOutcome({
+            id: "spread:cond-1:no",
+            side: "home",
+            label: "ARG +1.5",
+          }),
+          buildSpreadOutcome({
+            id: "spread:cond-1:yes",
+            side: "away",
+            label: "AUS -1.5",
+          }),
+        ],
+      },
+      outcomes: [],
+    };
+
+    const fixtureMarkets: Pick<GameFixtureMarketsSnapshot, "lines"> = {
+      lines: [spreadGroup],
+    };
+
+    const pair = resolveLineOutcomePair(
+      buildSpreadOutcome({
+        id: "spread:cond-1:no",
+        side: "home",
+        label: "ARG +1.5",
+      }),
+      fixtureMarkets,
+    );
+
+    assert.equal(pair?.yesOutcome.label, "ARG +1.5");
+    assert.equal(pair?.noOutcome.label, "AUS -1.5");
+    assert.equal(resolveLineOutcomeForSide(pair!, "yes").id, "spread:cond-1:no");
+    assert.equal(resolveLineOutcomeForSide(pair!, "no").id, "spread:cond-1:yes");
+  });
+
+  it("returns home/away spread outcomes when home is favored", () => {
     const spreadGroup: FixtureMarketGroup = {
       type: "spread",
       title: "Spreads",
