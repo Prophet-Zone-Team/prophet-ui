@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { trackWinnerChartTeamSelected } from "@/lib/analytics/tracking";
 import { GameMarketTabSwitcher } from "@/views/trade/game/markets/game-market-tab-switcher";
 import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
 import {
@@ -310,6 +311,23 @@ export function GameMarketsSection({
     outcome: FixtureMarketOutcome,
     binarySide: "yes" | "no" = "yes"
   ) => {
+    if (
+      tab === "moneyline" &&
+      (outcome.side === "home" || outcome.side === "away")
+    ) {
+      const teamSide = outcome.side === "home" ? sides.home : sides.away;
+      trackWinnerChartTeamSelected({
+        chartId: "game_moneyline",
+        seriesKey: outcome.side,
+        teamId:
+          outcome.side === "home"
+            ? liveMatch.homeTeamId
+            : liveMatch.awayTeamId,
+        teamName: teamSide.name,
+        teamCode: teamSide.code
+      });
+    }
+
     selectFixtureOutcome(outcome, binarySide);
   };
 
