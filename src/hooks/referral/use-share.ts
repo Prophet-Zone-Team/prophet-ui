@@ -25,6 +25,7 @@ export type UseShareProps = {
   fullLink: string;
   tweetText?: string;
   hashtags?: string;
+  onAfterTwitterOpen?: () => void;
 };
 
 export function useShare(props: UseShareProps) {
@@ -37,6 +38,7 @@ export function useShare(props: UseShareProps) {
     fullLink,
     tweetText,
     hashtags,
+    onAfterTwitterOpen,
   } = props;
 
   const t = useTranslations("referral");
@@ -100,6 +102,7 @@ export function useShare(props: UseShareProps) {
       shareToX(tweetText ?? t("shareTweetIntro"), `${tweetUrl}\n\n`, {
         hashtags: hashtags ?? "Prophet,PredictionMarkets,WorldCup2026,Polymarket"
       });
+      onAfterTwitterOpen?.();
     } catch (error) {
       if (error instanceof ProphetApiError) {
         toast.error(error.message);

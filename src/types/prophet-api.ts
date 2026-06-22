@@ -984,13 +984,18 @@ export interface ProphetAnalyticsTrackBatchRequest {
   list: ProphetAnalyticsTrackRequest[];
 }
 
+/** Winner activity prediction match pairing */
+export interface WinnerPredictionMatchPair {
+  teams: string[];
+}
+
 /** Winner activity prediction payload */
 export interface WinnerPredictionPayload {
   champion_team: string;
-  final_teams: string[];
-  round_16_teams: string[];
-  round_4_teams: string[];
-  round_8_teams: string[];
+  final_teams: WinnerPredictionMatchPair[];
+  round_16_teams: WinnerPredictionMatchPair[];
+  round_4_teams: WinnerPredictionMatchPair[];
+  round_8_teams: WinnerPredictionMatchPair[];
 }
 
 /** GET /v1/activity/winner/records — submitted prediction record */
@@ -1000,6 +1005,7 @@ export interface WinnerActivityRecord {
   create_time: string;
   prediction: WinnerPredictionPayload;
   status: number;
+  twitter_url?: string;
 }
 
 /** GET /v1/activity/winner/records */

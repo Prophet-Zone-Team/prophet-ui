@@ -4,11 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { ShareInviteModal } from "@/components/share/share-invite-modal";
+import { useSubmitWinnerPrediction } from "@/hooks/road-to-final/use-submit-winner-prediction";
+import { useShare } from "@/hooks/referral/use-share";
 import { ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME } from "@/lib/road-to-final/share-card-config";
 import { resolveShareInviteLink } from "@/lib/referral/share-link";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 import type { PathResult } from "@/types/market";
 import type { ReferralKickback } from "@/types/referral";
+import { Loader2 } from "lucide-react";
 
 import {
   buildShareCardChampion,
@@ -17,9 +20,7 @@ import {
 } from "./lib/build-share-card-stages";
 import type { GroupPlacements, KnockoutWinners } from "./types";
 import { RoadToFinalShareCard } from "./road-to-final-share-card";
-import { ReferralInviteActionsRef } from "../referral/referral-invite-actions";
-import { Loader2 } from "lucide-react";
-import { useShare } from "@/hooks/referral/use-share";
+import { TweetUrlSubmitModal } from "./tweet-url-submit-modal";
 
 export type RoadToFinalShareModalProps = {
   open: boolean;
@@ -33,6 +34,7 @@ export type RoadToFinalShareModalProps = {
   thirdPlaceOption?: ThirdPlaceAllocationOption;
   funderAddress?: string;
   kickback?: ReferralKickback;
+  availableChances: number;
 };
 
 export function RoadToFinalShareModal({
@@ -47,15 +49,23 @@ export function RoadToFinalShareModal({
   thirdPlaceOption,
   funderAddress,
   kickback,
+  availableChances,
 }: RoadToFinalShareModalProps) {
   const t = useTranslations("roadToFinal");
   const cardRef = useRef<HTMLDivElement>(null);
   const [shareCardReady, setShareCardReady] = useState(false);
+  const [tweetUrlOpen, setTweetUrlOpen] = useState(false);
 
   const inviteLink = useMemo(
     () => resolveShareInviteLink(kickback),
     [kickback],
   );
+
+  const { submit, isSubmitting } = useSubmitWinnerPrediction({
+    knockoutWinners,
+    placements,
+    thirdPlaceOption,
+  });
 
   const {
     handleTwitter,
@@ -70,6 +80,7 @@ export function RoadToFinalShareModal({
     fullLink: inviteLink.fullLink,
     tweetText: "Think you can call the World Cup? \n\nBuild your full bracket on Prophet — groups, knockouts, finalists, champion.\n\nBack your picks with $10+ in trades. \n\nThe most accurate bracket wins $10,000.\n\nUse the Prophet. Make Profit.\n\n",
     hashtags: "Prophet,WorldCup2026",
+    onAfterTwitterOpen: () => setTweetUrlOpen(true),
   });
 
   const { simulationTeamId, simulationResult } = useMemo(
@@ -109,49 +120,61 @@ export function RoadToFinalShareModal({
     setShareCardReady(false);
   }, [champion, stages]);
 
+  useEffect(() => {
+    if (!open) {
+      setTweetUrlOpen(false);
+    }
+  }, [open]);
+
+  const handleTweetSubmit = async (twitterUrl: string) => {
+    await submit(twitterUrl);
+    setTweetUrlOpen(false);
+    onClose();
+  };
+
   return (
-    <ShareInviteModal
-      open={open}
-      onClose={onClose}
-      ariaLabel={t("shareSimulationResultAria")}
-      linkPrefix={inviteLink.linkPrefix}
-      referralCode={inviteLink.referralCode}
-      fullLink={inviteLink.fullLink}
-      downloadFilename={ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME}
-      shareCardReady={shareCardReady}
-      cardRef={cardRef}
-      shareImageUploadMode="always"
-      modalShellClass="md:w-[550px]"
-      header={
-        <h2 className="m-0 text-left text-[18px] font-[500] text-black">
-          {t("shareModalTitle")}
-        </h2>
-      }
-      content={(
-        <div className="w-full flex flex-col gap-3.5 items-stretch">
-          <div className="flex justify-between items-center">
-            <div className="text-black text-sm font-normal">
-              Entries: 2
-            </div>
-            <div className="text-[#D1A00F] text-sm font-normal bg-[rgba(253,211,87,0.2)] gap-[6px] rounded-md pl-[10px] pr-[14px] flex items-center justify-center h-[32px] ">
-              <img
-                src="/icons/icon-info.svg"
-                alt=""
-                className="size-4 shrink-0 object-center object-contain"
-              />
-              <div className="">
-                Sharing and pasting X  link is required.
+    <>
+      <ShareInviteModal
+        open={open}
+        onClose={onClose}
+        ariaLabel={t("shareSimulationResultAria")}
+        linkPrefix={inviteLink.linkPrefix}
+        referralCode={inviteLink.referralCode}
+        fullLink={inviteLink.fullLink}
+        downloadFilename={ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME}
+        shareCardReady={shareCardReady}
+        cardRef={cardRef}
+        shareImageUploadMode="always"
+        modalShellClass="md:w-[550px]"
+        header={
+          <h2 className="m-0 text-left text-[18px] font-[500] text-black">
+            {t("shareModalTitle")}
+          </h2>
+        }
+        content={(
+          <div className="flex w-full flex-col items-stretch gap-3.5">
+            <div className="flex items-center justify-between flex-col md:flex-row">
+              <div className="text-sm font-normal text-black">
+                {t("shareModalEntriesLabel", { count: availableChances })}
+              </div>
+              <div className="flex h-[32px] items-center justify-center gap-[6px] rounded-md bg-[rgba(253,211,87,0.2)] pl-[10px] pr-[14px] text-sm font-normal text-[#D1A00F]">
+                <img
+                  src="/icons/icon-info.svg"
+                  alt=""
+                  className="size-4 shrink-0 object-contain object-center"
+                />
+                <div>{t("shareModalXLinkRequired")}</div>
               </div>
             </div>
-          </div>
-          <button
-            type="button"
-            className="h-[52px] hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed duration-150 rounded-xl flex justify-center items-center gap-3 text-white text-center font-normal text-sm bg-[linear-gradient(90deg,#F4B600_0%,#8E6A00_100%)]"
-            onClick={handleTwitter}
-            disabled={sharing}
-          >
-            {
-              sharing ? <Loader2 className="size-4 animate-spin" /> : (
+            <button
+              type="button"
+              className="flex h-[52px] items-center justify-center gap-3 rounded-xl bg-[linear-gradient(90deg,#F4B600_0%,#8E6A00_100%)] text-center text-sm font-normal text-white duration-150 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={handleTwitter}
+              disabled={sharing}
+            >
+              {sharing ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
                 <>
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path
@@ -159,21 +182,19 @@ export function RoadToFinalShareModal({
                       fill="white"
                     />
                   </svg>
-                  <div className="">
-                    Share on X and join the Campaign
-                  </div>
+                  <div>{t("shareOnXAndJoinCampaign")}</div>
                 </>
-              )
-            }
-          </button>
-          <button
-            type="button"
-            className="h-[52px] hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed duration-150 rounded-xl flex justify-center items-center gap-3 text-black text-center font-normal text-sm bg-[#EBEBEB]"
-            onClick={handleDownload}
-            disabled={downloading}
-          >
-            {
-              downloading ? <Loader2 className="size-4 animate-spin" /> : (
+              )}
+            </button>
+            <button
+              type="button"
+              className="flex h-[52px] items-center justify-center gap-3 rounded-xl bg-[#EBEBEB] text-center text-sm font-normal text-black duration-150 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={handleDownload}
+              disabled={downloading}
+            >
+              {downloading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
                 <>
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="16" viewBox="0 0 18 16" fill="none">
                     <path
@@ -181,25 +202,30 @@ export function RoadToFinalShareModal({
                       fill="black"
                     />
                   </svg>
-                  <div className="">
-                    Save Image
-                  </div>
+                  <div>{t("saveImage")}</div>
                 </>
-              )
-            }
-          </button>
-        </div>
-      )}
-    >
-      <RoadToFinalShareCard
-        ref={cardRef}
-        stages={stages}
-        champion={champion}
-        fullLink={inviteLink.fullLink}
-        displayLink={inviteLink.displayLink}
-        funderAddress={funderAddress}
-        onBackgroundReady={() => setShareCardReady(true)}
+              )}
+            </button>
+          </div>
+        )}
+      >
+        <RoadToFinalShareCard
+          ref={cardRef}
+          stages={stages}
+          champion={champion}
+          fullLink={inviteLink.fullLink}
+          displayLink={inviteLink.displayLink}
+          funderAddress={funderAddress}
+          onBackgroundReady={() => setShareCardReady(true)}
+        />
+      </ShareInviteModal>
+
+      <TweetUrlSubmitModal
+        open={tweetUrlOpen}
+        onClose={() => setTweetUrlOpen(false)}
+        onSubmit={handleTweetSubmit}
+        isSubmitting={isSubmitting}
       />
-    </ShareInviteModal>
+    </>
   );
 }

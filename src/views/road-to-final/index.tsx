@@ -31,6 +31,7 @@ import { isStepOneComplete } from "./lib/validation";
 import { defaultSimulatorTeamId } from "./lib/teams";
 import type { KnockoutMethodKey } from "./lib/method-keys";
 import type { KnockoutWinners } from "./types";
+import { CampaignRulesModal } from "./campaign-rules-modal";
 import { KnockoutBracket } from "./knockout-bracket";
 import { RoadToFinalPageShell } from "./page-shell";
 import { PredictionRecordsModal } from "./prediction-records-modal";
@@ -80,6 +81,7 @@ export function RoadToFinalPage({
   const [hydrated, setHydrated] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [recordsOpen, setRecordsOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [teamId, setTeamId] = useState(safeInitialTeamId);
   const [knockoutWinners, setKnockoutWinners] = useState<KnockoutWinners>({});
   const [knockoutMethod, setKnockoutMethod] =
@@ -221,6 +223,7 @@ export function RoadToFinalPage({
             setShareOpen(true);
           }}
           onOpenRecords={() => setRecordsOpen(true)}
+          onOpenRules={() => setRulesOpen(true)}
         />
       </div>
 
@@ -236,6 +239,12 @@ export function RoadToFinalPage({
         thirdPlaceOption={thirdPlaceOption}
         funderAddress={funderAddress}
         kickback={kickback}
+        availableChances={availableChances}
+      />
+
+      <CampaignRulesModal
+        open={rulesOpen}
+        onClose={() => setRulesOpen(false)}
       />
 
       <PredictionRecordsModal
