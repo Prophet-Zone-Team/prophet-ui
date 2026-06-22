@@ -1,17 +1,9 @@
-import {
-  WORLD_CUP_2026_GROUPS,
-  WORLD_CUP_2026_GROUP_ORDER,
-  getWorldCupTeamByIdOrCode
-} from "@/data/world-cup-2026/groups";
+import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 
-import { DEFAULT_THIRD_PLACE_GROUPS } from "./path-config";
 import {
-  normalizeKnockoutMethod,
-  normalizeSortMethod
+  normalizeKnockoutMethod
 } from "./method-keys";
-import { PLACEMENT_OPTIONS, type GroupPlacements, type KnockoutWinners } from "../types";
-
-const RANK_KEYS = PLACEMENT_OPTIONS.map((option) => option.key);
+import type { KnockoutWinners } from "../types";
 
 export type RoadToFinalUrlPayload = {
   p?: string;
@@ -24,27 +16,13 @@ export type RoadToFinalUrlPayload = {
 };
 
 export type RoadToFinalSharedState = {
-  placements: GroupPlacements;
-  thirdGroups: string[];
   teamId: string;
   knockoutWinners: KnockoutWinners;
-  sortMethod: string;
   knockoutMethod: string;
-  step?: 1 | 2 | 3;
 };
-
-function sortThirdGroups(groups: string): string[] {
-  return [...new Set(groups.split("").map((group) => group.trim().toUpperCase()))]
-    .filter((group) => WORLD_CUP_2026_GROUP_ORDER.includes(group as never))
-    .sort();
-}
 
 export function encodeUrlState(state: RoadToFinalSharedState): string {
   const payload: RoadToFinalUrlPayload = {
-    p: WORLD_CUP_2026_GROUP_ORDER.map((group) =>
-      RANK_KEYS.map((rank) => state.placements[group][rank]).join(",")
-    ).join("|"),
-    t: state.thirdGroups.join(""),
     f: state.teamId,
     w: Object.fromEntries(
       Object.entries(state.knockoutWinners).map(([matchId, teamId]) => [
@@ -52,7 +30,6 @@ export function encodeUrlState(state: RoadToFinalSharedState): string {
         teamId
       ])
     ),
-    m: state.sortMethod,
     km: state.knockoutMethod
   };
 
@@ -85,30 +62,6 @@ export function hydrateFromUrlPayload(
 ): Partial<RoadToFinalSharedState> {
   const next: Partial<RoadToFinalSharedState> = {};
 
-  if (payload.p) {
-    const groups = payload.p.split("|");
-    const placements = Object.fromEntries(
-      WORLD_CUP_2026_GROUP_ORDER.map((group, index) => {
-        const ids = (groups[index] ?? "").split(",");
-        return [
-          group,
-          Object.fromEntries(
-            RANK_KEYS.map((rank, rankIndex) => [
-              rank,
-              ids[rankIndex] || WORLD_CUP_2026_GROUPS[group][rankIndex]?.id || ""
-            ])
-          )
-        ];
-      })
-    ) as GroupPlacements;
-
-    next.placements = placements;
-  }
-
-  if (payload.t) {
-    next.thirdGroups = sortThirdGroups(payload.t);
-  }
-
   if (payload.f && getWorldCupTeamByIdOrCode(payload.f)) {
     next.teamId = payload.f;
   } else if (!payload.f) {
@@ -121,38 +74,11 @@ export function hydrateFromUrlPayload(
     );
   }
 
-  if (payload.m) {
-    next.sortMethod = normalizeSortMethod(payload.m);
-  }
-
   if (payload.km) {
     next.knockoutMethod = normalizeKnockoutMethod(payload.km);
-  }
-
-  if (payload.s && payload.s >= 1 && payload.s <= 3) {
-    next.step = payload.s as 1 | 2 | 3;
+  } else if (payload.m) {
+    next.knockoutMethod = normalizeKnockoutMethod(payload.m);
   }
 
   return next;
-}
-
-export function createDefaultSharedState(teamId: string): RoadToFinalSharedState {
-  return {
-    placements: Object.fromEntries(
-      WORLD_CUP_2026_GROUP_ORDER.map((group) => [
-        group,
-        {
-          first: WORLD_CUP_2026_GROUPS[group][0]?.id ?? "",
-          second: WORLD_CUP_2026_GROUPS[group][1]?.id ?? "",
-          third: WORLD_CUP_2026_GROUPS[group][2]?.id ?? "",
-          fourth: WORLD_CUP_2026_GROUPS[group][3]?.id ?? ""
-        }
-      ])
-    ) as GroupPlacements,
-    thirdGroups: [...DEFAULT_THIRD_PLACE_GROUPS],
-    teamId,
-    knockoutWinners: {},
-    sortMethod: "defaultOrder",
-    knockoutMethod: "manualSelection"
-  };
 }

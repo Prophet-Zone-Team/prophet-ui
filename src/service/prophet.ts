@@ -51,7 +51,10 @@ import type {
   ProphetUserTrackListItem,
   ProphetLoginReferral,
   ProphetUploadData,
-  ProphetGetPolymarketStatsData
+  ProphetGetPolymarketStatsData,
+  SubmitWinnerActivityRequest,
+  WinnerActivityRecordsData,
+  WinnerActivityStatsData
 } from "@/types/prophet-api";
 import type { TokenPricesBySymbol } from "@/types/funding";
 import type { TelegramLoginAuthData } from "@/types/telegram-widget";
@@ -914,6 +917,31 @@ export async function getAnalyticsHeadToHeadFixtures(params: {
       }
     }
   );
+}
+
+/** GET /v1/activity/winner/records — user submitted winner predictions */
+export async function getWinnerActivityRecords(
+  signal?: AbortSignal
+): Promise<WinnerActivityRecordsData> {
+  return prophetGet<WinnerActivityRecordsData>("/v1/activity/winner/records", {
+    signal
+  });
+}
+
+/** GET /v1/activity/winner/stats — guess chances and trade volume stats */
+export async function getWinnerActivityStats(
+  signal?: AbortSignal
+): Promise<WinnerActivityStatsData> {
+  return prophetGet<WinnerActivityStatsData>("/v1/activity/winner/stats", {
+    signal
+  });
+}
+
+/** POST /v1/activity/winner — report user share submission */
+export async function submitWinnerActivity(
+  request: SubmitWinnerActivityRequest
+): Promise<unknown> {
+  return prophetPost<unknown>("/v1/activity/winner", request);
 }
 
 export { prophetClient };

@@ -1498,7 +1498,18 @@
     "errorAnnexeCNotReady": "부록 C 옵션이 아직 준비되지 않았습니다.",
     "routeDifficultyWideOpen": "매우 열림",
     "routeDifficultyModerate": "보통",
-    "routeDifficultyNarrow": "좁음"
+    "routeDifficultyNarrow": "좁음",
+    "predictionCountLabel": "Prediction: {count}",
+    "timesLabel": "Times: {count}",
+    "checkRecords": "Check",
+    "tradeToGetMore": "Trade ${amount} to get 1 more",
+    "confirmAndSave": "Confirm and Save",
+    "shareAndJoinCampaign": "Share and Join Campaign",
+    "predictionRecordsTitle": "Prediction",
+    "roadToFinalRecordTitle": "Road to final: {teamName}",
+    "noPredictionRecords": "No predictions yet.",
+    "loadingPredictionRecords": "Loading predictions...",
+    "unableToLoadPredictionRecords": "Unable to load predictions."
   },
   "privateTopup": {
     "privateModeAlt": "Private mode",

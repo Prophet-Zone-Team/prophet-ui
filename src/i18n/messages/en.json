@@ -1501,7 +1501,18 @@
     "errorAnnexeCNotReady": "Annexe C option is not ready yet.",
     "routeDifficultyWideOpen": "Wide open",
     "routeDifficultyModerate": "Moderate",
-    "routeDifficultyNarrow": "Narrow"
+    "routeDifficultyNarrow": "Narrow",
+    "predictionCountLabel": "Prediction: {count}",
+    "timesLabel": "Times: {count}",
+    "checkRecords": "Check",
+    "tradeToGetMore": "Trade ${amount} to get 1 more",
+    "confirmAndSave": "Confirm and Save",
+    "shareAndJoinCampaign": "Share and Join Campaign",
+    "predictionRecordsTitle": "Prediction",
+    "roadToFinalRecordTitle": "Road to final: {teamName}",
+    "noPredictionRecords": "No predictions yet.",
+    "loadingPredictionRecords": "Loading predictions...",
+    "unableToLoadPredictionRecords": "Unable to load predictions."
   },
   "privateTopup": {
     "privateModeAlt": "Private mode",

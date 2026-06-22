@@ -41,6 +41,14 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
   shareImageUploadMode: "cache" | "always";
   shareImageCacheKey?: ShareImageCacheKey;
   modalShellClass?: string;
+  actionsRef?: RefObject<{
+    handleTwitter: () => void;
+    handleTelegram: () => void;
+    handleDownload: () => void;
+    handleCopyLink: () => void;
+  }>;
+  content?: any;
+  actionsList?: ("x" | "telegram" | "download" | "copy")[];
 };
 
 export function ShareInviteModal({
@@ -58,6 +66,9 @@ export function ShareInviteModal({
   shareImageUploadMode,
   shareImageCacheKey,
   modalShellClass,
+  actionsRef,
+  content,
+  actionsList,
 }: ShareInviteModalProps) {
   const isMobile = useDevice();
 
@@ -89,24 +100,40 @@ export function ShareInviteModal({
           </button>
         ) : null}
 
+        {
+          !!header && (
+            <div className="absolute left-1 md:left-3 top-1 md:top-3 z-10">
+              {header}
+            </div>
+          )
+        }
+
         <div className="flex flex-col gap-5">
-          {header}
           {children}
 
-          <ReferralInviteLinkRow
-            linkPrefix={linkPrefix}
-            referralCode={referralCode}
-            fullLink={fullLink}
-          />
+          {
+            !!content ? content : (
+              <>
+                <ReferralInviteLinkRow
+                  linkPrefix={linkPrefix}
+                  referralCode={referralCode}
+                  fullLink={fullLink}
+                />
 
-          <ReferralInviteActions
-            fullLink={fullLink}
-            shareCardRef={cardRef}
-            shareCardReady={shareCardReady}
-            shareImageUploadMode={shareImageUploadMode}
-            shareImageCacheKey={shareImageCacheKey}
-            downloadFilename={downloadFilename}
-          />
+                <ReferralInviteActions
+                  list={actionsList}
+                  ref={actionsRef}
+                  fullLink={fullLink}
+                  shareCardRef={cardRef}
+                  shareCardReady={shareCardReady}
+                  shareImageUploadMode={shareImageUploadMode}
+                  shareImageCacheKey={shareImageCacheKey}
+                  downloadFilename={downloadFilename}
+                />
+              </>
+            )
+          }
+
         </div>
       </div>
     </FundingResponsiveOverlay>

@@ -5,19 +5,17 @@ import { useTranslations } from "next-intl";
 import { PageBack } from "@/components/ui/page-back";
 import { cn } from "@/lib/cn";
 
-import { translateSortMethod } from "./lib/method-keys";
-import type { SortMethodKey } from "./lib/method-keys";
+import { translateKnockoutMethod } from "./lib/method-keys";
+import type { KnockoutMethodKey } from "./lib/method-keys";
 
 export function RoadToFinalPageShell({
-  sortMethod,
-  groupError,
+  knockoutMethod,
   onRandomFill,
   onFifaFill,
   onValueFill,
   onClear
 }: {
-  sortMethod: SortMethodKey;
-  groupError?: string | null;
+  knockoutMethod: KnockoutMethodKey;
   onRandomFill: () => void;
   onFifaFill: () => void;
   onValueFill: () => void;
@@ -56,17 +54,17 @@ export function RoadToFinalPageShell({
         <div className="relative z-[1] mt-[20px] flex flex-wrap items-center justify-center gap-[8px]">
           <ShortcutPill
             label={t("randomFill")}
-            active={sortMethod === "randomFill"}
+            active={knockoutMethod === "randomFill"}
             onClick={onRandomFill}
           />
           <ShortcutPill
             label={t("byFifaRank")}
-            active={sortMethod === "fifaRank"}
+            active={knockoutMethod === "fifaRank"}
             onClick={onFifaFill}
           />
           <ShortcutPill
             label={t("byValue")}
-            active={sortMethod === "squadValueRanking"}
+            active={knockoutMethod === "squadValueRanking"}
             onClick={onValueFill}
           />
           <button
@@ -79,14 +77,8 @@ export function RoadToFinalPageShell({
         </div>
 
         <p className="m-0 mt-[8px] text-center text-[11px] text-white/40">
-          {t("shortcutBasis")}: {translateSortMethod(sortMethod, t)}
+          {t("shortcutBasis")}: {translateKnockoutMethod(knockoutMethod, t)}
         </p>
-
-        {groupError ? (
-          <div className="mx-auto mt-[16px] max-w-[640px] rounded-[8px] border border-[#FECACA] bg-[#FEF2F2] p-[12px] text-[13px] text-[#991B1B]">
-            {groupError}
-          </div>
-        ) : null}
       </div>
     </div>
   );

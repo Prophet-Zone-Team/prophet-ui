@@ -983,3 +983,42 @@ export interface ProphetAnalyticsTrackData {
 export interface ProphetAnalyticsTrackBatchRequest {
   list: ProphetAnalyticsTrackRequest[];
 }
+
+/** Winner activity prediction payload */
+export interface WinnerPredictionPayload {
+  champion_team: string;
+  final_teams: string[];
+  round_16_teams: string[];
+  round_4_teams: string[];
+  round_8_teams: string[];
+}
+
+/** GET /v1/activity/winner/records — submitted prediction record */
+export interface WinnerActivityRecord {
+  id: number;
+  champion_team: string;
+  create_time: string;
+  prediction: WinnerPredictionPayload;
+  status: number;
+}
+
+/** GET /v1/activity/winner/records */
+export interface WinnerActivityRecordsData {
+  list: WinnerActivityRecord[];
+}
+
+/** GET /v1/activity/winner/stats */
+export interface WinnerActivityStatsData {
+  guess_chances: number;
+  used_chances: number;
+  available_chances: number;
+  total_trade_usdc: string;
+  buy_trade_usdc: string;
+  sell_trade_usdc: string;
+}
+
+/** POST /v1/activity/winner */
+export interface SubmitWinnerActivityRequest {
+  prediction: WinnerPredictionPayload;
+  twitter_url: string;
+}
