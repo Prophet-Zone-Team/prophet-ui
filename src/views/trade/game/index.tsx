@@ -34,8 +34,13 @@ import {
   useSetTradeOrderMode,
   useSetTradeOutcomeSide,
   useSetTradeTab,
-  useTradeOutcomeSide
+  useTradeOutcomeSide,
 } from "@/store";
+import {
+  useSelectedFixtureOutcome,
+  useSelectFixtureOutcome,
+} from "@/store/trade-ticket-store";
+import { resolveLineOutcomeForSide, resolveLineOutcomePair } from "@/lib/market/fixture-line-outcome-pair";
 import Bg from "@/views/trade/game/header/bg";
 import { ComboEntry } from "@/views/combo/combo-entry";
 
@@ -131,26 +136,38 @@ export default function TradeGameView({
   const setTab = useSetTradeTab();
   const setOutcomeSide = useSetTradeOutcomeSide();
   const setOrderMode = useSetTradeOrderMode();
+  const selectFixtureOutcome = useSelectFixtureOutcome();
+  const selectedFixtureOutcome = useSelectedFixtureOutcome();
   const outcomeSide = useTradeOutcomeSide();
   const [tradeDrawerOpen, setTradeDrawerOpen] = useState<boolean>(false);
+  const { yesPrice, noPrice, yesLabel, noLabel, selectedOutcomeLabel } =
+    useGameMobileOutcomePrices(gameSnapshot, fixtureMarkets, marketWsEnabled);
+  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
+  const lineOutcomePair = selectedFixtureOutcome
+    ? resolveLineOutcomePair(selectedFixtureOutcome, fixtureMarkets)
+    : undefined;
 
   function openTradeDrawer(side: "yes" | "no") {
     if (!canTrade) {
       return;
     }
 
-    setOutcomeSide(side);
+    if (lineOutcomePair) {
+      selectFixtureOutcome(resolveLineOutcomeForSide(lineOutcomePair, side), side);
+    } else {
+      setOutcomeSide(side);
+    }
+
     setTab("buy");
     setOrderMode("market");
     setTradeDrawerOpen(true);
   }
 
-  const drawerTitle = outcomeSide === "yes" ? t("buyYes") : t("buyNo");
-  const { yesPrice, noPrice } = useGameMobileOutcomePrices(
-    gameSnapshot,
-    marketWsEnabled
-  );
-  const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
+  const drawerTitle = lineOutcomePair
+    ? selectedOutcomeLabel ?? (outcomeSide === "yes" ? t("buyYes") : t("buyNo"))
+    : outcomeSide === "yes"
+      ? t("buyYes")
+      : t("buyNo");
 
   return (
     <MarketWsProvider enabled={marketWsEnabled}>
@@ -203,7 +220,7 @@ export default function TradeGameView({
           disabled={!canTrade}
           onClick={() => openTradeDrawer("no")}
         >
-          <span className="text-lg font-[500]">{t("no")}</span>
+          <span className="text-lg font-[500]">{noLabel ?? t("no")}</span>
           <span className="text-xs font-[500] leading-[14px]">
             {formatOutcomeDisplay(noPrice)}
           </span>
@@ -214,7 +231,7 @@ export default function TradeGameView({
           disabled={!canTrade}
           onClick={() => openTradeDrawer("yes")}
         >
-          <span className="text-lg font-[500]">{t("yes")}</span>
+          <span className="text-lg font-[500]">{yesLabel ?? t("yes")}</span>
           <span className="text-xs font-[500] leading-[14px]">
             {formatOutcomeDisplay(yesPrice)}
           </span>
