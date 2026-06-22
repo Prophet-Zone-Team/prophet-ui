@@ -13,6 +13,7 @@ import {
   getOutcomeToneClass,
   titleCase
 } from "@/lib/portfolio/portfolio-format";
+import { resolvePortfolioTransactionTradeHref } from "@/lib/portfolio/resolve-position-trade-href";
 import type {
   PortfolioTransactionRecord,
   PortfolioTransactionType
@@ -106,6 +107,8 @@ function HistoryMarketCell({
     claim: t("txTypeClaim")
   };
   const nonMarketLabel = nonMarketLabels[transaction.type];
+  const marketName = formatPortfolioTransactionMarketName(transaction);
+  const tradeHref = resolvePortfolioTransactionTradeHref(transaction);
 
   if (nonMarketLabel) {
     return (
@@ -134,9 +137,18 @@ function HistoryMarketCell({
         )}
       </div>
       <div className="min-w-0">
-        <p className="m-0 truncate text-[14px] font-medium leading-[18px] text-black">
-          {formatPortfolioTransactionMarketName(transaction)}
-        </p>
+        {tradeHref ? (
+          <Link
+            href={tradeHref}
+            className="m-0 block truncate text-[14px] font-medium leading-[18px] text-black no-underline hover:underline"
+          >
+            {marketName}
+          </Link>
+        ) : (
+          <p className="m-0 truncate text-[14px] font-medium leading-[18px] text-black">
+            {marketName}
+          </p>
+        )}
         <p
           className={cn(
             "m-0 mt-0.5 text-[12px] font-normal leading-[15px]",

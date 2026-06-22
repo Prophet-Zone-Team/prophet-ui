@@ -6,8 +6,19 @@ import type {
   PortfolioMarketKind,
   ProphetTeamsConditionTeam
 } from "@/types/prophet-api";
+import type {
+  PortfolioTransactionRecord,
+  PortfolioTransactionType
+} from "@/lib/portfolio/types";
 import type { UserPositionRecord } from "@/types/market";
 import type { WorldCup2026Group } from "@/data/world-cup-2026/groups";
+
+const NON_LINKABLE_TRANSACTION_TYPES = new Set<PortfolioTransactionType>([
+  "withdraw",
+  "deposit",
+  "claim",
+  "activity"
+]);
 
 const FIXTURE_SLUG_PATTERN = /^(.+\d{4}-\d{2}-\d{2})(?:-.+)?$/;
 
@@ -135,4 +146,36 @@ export function resolvePortfolioPositionTradeHref(
   }
 
   return teamTradeHref(resolvedSlug);
+}
+
+export function resolvePortfolioTransactionTradeHref(
+  transaction: Pick<
+    PortfolioTransactionRecord,
+    "type" | "slug" | "eventSlug"
+  >
+): string | undefined {
+  if (NON_LINKABLE_TRANSACTION_TYPES.has(transaction.type)) {
+    return undefined;
+  }
+
+  const slug = readSlug(transaction.slug);
+  const eventSlug = readSlug(transaction.eventSlug);
+
+  if (!slug && !eventSlug) {
+    return undefined;
+  }
+
+  const groupHref = resolveGroupTradeHref([eventSlug, slug]);
+
+  if (groupHref) {
+    return groupHref;
+  }
+
+  const href = resolvePortfolioPositionTradeHref({ slug, eventSlug });
+
+  if (href?.startsWith("/trade/") || href?.startsWith("/group")) {
+    return href;
+  }
+
+  return undefined;
 }
