@@ -56,7 +56,8 @@ const VALID_CHART_KINDS: FixtureChartKind[] = [
   "moneyline",
   "halftime",
   "total",
-  "spread"
+  "spread",
+  "exact_score"
 ];
 
 export async function GET(request: Request) {

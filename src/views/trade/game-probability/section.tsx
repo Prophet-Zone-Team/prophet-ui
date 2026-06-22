@@ -807,3 +807,22 @@ export function buildBinarySummaryFromOutcomes(
     }
   ];
 }
+
+export function buildExactScoreBinarySummary(
+  outcome: FixtureMarketOutcome
+): ProbabilitySummaryItem[] {
+  const yesValue = resolveFixtureOutcomeDisplayProbability(outcome);
+
+  return [
+    {
+      label: "Yes",
+      value: yesValue,
+      color: gameColors.home
+    },
+    {
+      label: "No",
+      value: Math.max(0, 100 - yesValue),
+      color: gameColors.awayBar
+    }
+  ];
+}

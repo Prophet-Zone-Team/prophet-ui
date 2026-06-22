@@ -1,5 +1,8 @@
 "use client";
 
+import { useState, type ReactNode } from "react";
+
+import { cn } from "@/lib/cn";
 import { formatCompactVolume } from "@/lib/formatters/volume";
 import { resolveFixtureBuyAsk } from "@/lib/market/fixture-ask-liquidity";
 import type { FixtureMarketOutcome } from "@/types/market";
@@ -39,15 +42,24 @@ export function ExactScorePanel({
   outcomes,
   selectedOutcomeId,
   selectedBinarySide,
-  otherSources,
+  resolveOtherSources,
+  renderExpandedChart,
   onSelect
 }: {
   outcomes: FixtureMarketOutcome[];
   selectedOutcomeId?: string;
   selectedBinarySide?: "yes" | "no";
-  otherSources?: MarketOtherSourceItem[];
+  resolveOtherSources?: (
+    outcome: FixtureMarketOutcome,
+    binarySide: "yes" | "no"
+  ) => MarketOtherSourceItem[];
+  renderExpandedChart?: (outcome: FixtureMarketOutcome) => ReactNode;
   onSelect: (outcome: FixtureMarketOutcome, binarySide?: "yes" | "no") => void;
 }) {
+  const [expandedOutcomeId, setExpandedOutcomeId] = useState<
+    string | undefined
+  >();
+
   if (!outcomes.length) {
     return (
       <div className="rounded-[12px] border border-dashed border-[#EBEBEB] px-4 py-10 text-center">
@@ -58,14 +70,28 @@ export function ExactScorePanel({
     );
   }
 
+  const handleRowClick = (outcomeId: string) => {
+    setExpandedOutcomeId((prev) => (prev === outcomeId ? undefined : outcomeId));
+  };
+
   return (
     <div className={cardClass}>
       {outcomes.map((outcome) => {
-        const isSelectedRow = selectedOutcomeId === outcome.id;
+        const isExpanded = expandedOutcomeId === outcome.id;
+        const otherSourcesBinarySide =
+          selectedOutcomeId === outcome.id
+            ? (selectedBinarySide ?? "yes")
+            : "yes";
 
         return (
           <div key={outcome.id}>
-            <div className="flex flex-col flex-wrap items-stretch justify-between gap-4 p-[16px] transition-colors hover:bg-[#F5F5F5] md:flex-row md:items-center">
+            <div
+              className={cn(
+                "flex cursor-pointer flex-col flex-wrap items-stretch justify-between gap-4 p-[16px] transition-colors hover:bg-[#F5F5F5] md:flex-row md:items-center",
+                isExpanded && "bg-[#F5F5F5]"
+              )}
+              onClick={() => handleRowClick(outcome.id)}
+            >
               <div className="min-w-0 shrink-0">
                 <h3 className="m-0 text-[18px] font-[500] leading-6 text-black">
                   Exact Score: {outcome.label}
@@ -75,7 +101,10 @@ export function ExactScorePanel({
                 </p>
               </div>
 
-              <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 md:justify-end">
+              <div
+                className="flex shrink-0 flex-wrap items-center justify-between gap-2 md:justify-end"
+                onClick={(event) => event.stopPropagation()}
+              >
                 {(["yes", "no"] as const).map((binarySide) => {
                   const buyable = isOutcomeBuyable(outcome, binarySide);
 
@@ -106,11 +135,19 @@ export function ExactScorePanel({
               </div>
             </div>
 
-            {isSelectedRow ? (
-              <MarketOtherSources
-                sources={otherSources ?? []}
-                className="border-t border-[#EBEBEB] p-3 md:p-[16px]"
-              />
+            {isExpanded ? (
+              <div className="border-t border-[#EBEBEB]">
+                <MarketOtherSources
+                  sources={
+                    resolveOtherSources?.(
+                      outcome,
+                      otherSourcesBinarySide
+                    ) ?? []
+                  }
+                  className="p-3 md:p-[16px]"
+                />
+                {renderExpandedChart?.(outcome)}
+              </div>
             ) : null}
           </div>
         );

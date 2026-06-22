@@ -41,6 +41,7 @@ import type {
   WorldCupMatch
 } from "@/types/market";
 import { ExactScorePanel } from "@/views/trade/game/fixture-markets/exact-score-panel";
+import { ExactScoreOutcomeChart } from "@/views/trade/game/fixture-markets/exact-score-outcome-chart";
 import {
   buildBinarySummaryFromOutcomes,
   buildTernarySummaryFromOutcomes,
@@ -160,6 +161,21 @@ export function GameMarketsSection({
       sides.home.name,
       tab
     ]
+  );
+
+  const resolveExactScoreOtherSources = useCallback(
+    (outcome: FixtureMarketOutcome, binarySide: "yes" | "no") =>
+      isGameOngoing
+        ? []
+        : mapGameOddsToOtherSources({
+            odds: gameOdds,
+            tab: "top_scores",
+            selectedOutcome: outcome,
+            selectedBinarySide: binarySide,
+            homeTeamName: sides.home.name,
+            awayTeamName: sides.away.name
+          }),
+    [gameOdds, isGameOngoing, sides.away.name, sides.home.name]
   );
 
   useGameStatisticsNotificationSync({
@@ -444,7 +460,17 @@ export function GameMarketsSection({
           outcomes={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
-          otherSources={otherSources}
+          resolveOtherSources={resolveExactScoreOtherSources}
+          renderExpandedChart={(outcome) => (
+            <ExactScoreOutcomeChart
+              match={liveMatch}
+              gameSnapshot={gameSnapshot}
+              fixtureMarkets={fixtureMarkets}
+              teamSnapshots={teamSnapshots}
+              outcome={outcome}
+              showOrderbook={showOrderbook}
+            />
+          )}
           onSelect={handleSelect}
         />
       ) : null}
