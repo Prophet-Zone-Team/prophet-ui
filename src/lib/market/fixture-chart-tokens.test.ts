@@ -95,4 +95,45 @@ describe("resolveFixtureChartTokens", () => {
       { key: "secondary", tokenId: YES_TOKEN },
     ]);
   });
+
+  it("maps exact score chart tokens to yes/no legs for the selected outcome", () => {
+    const outcomeId = "exact-score:2-1";
+    const resolution = resolveFixtureChartTokens(
+      {
+        id: "test-match",
+        matchId: 1,
+        stage: "GROUP",
+        status: "scheduled",
+        polymarket: {
+          eventId: "event-1",
+          slug: "test-match",
+          moneyline: { outcomes: [], acceptingOrders: true },
+          fixtureMarkets: {
+            lines: [],
+            exactScores: [
+              {
+                id: outcomeId,
+                marketType: "exact_score",
+                category: "exact_score",
+                label: "2-1",
+                probability: 12,
+                price: 0.12,
+                tokenId: YES_TOKEN,
+                noTokenId: NO_TOKEN,
+              },
+            ],
+            halftime: [],
+          },
+        },
+      },
+      "exact_score",
+      outcomeId,
+    );
+
+    assert.equal(resolution?.mode, "binary");
+    assert.deepEqual(resolution?.inputs, [
+      { key: "primary", tokenId: YES_TOKEN },
+      { key: "secondary", tokenId: NO_TOKEN },
+    ]);
+  });
 });
