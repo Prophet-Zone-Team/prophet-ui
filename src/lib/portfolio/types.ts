@@ -20,6 +20,7 @@ export interface PortfolioTransactionRecord {
   marketName: string;
   teamName: string;
   slug: string;
+  eventSlug?: string;
   source: string;
   isCombo?: boolean;
   createdAt: string;

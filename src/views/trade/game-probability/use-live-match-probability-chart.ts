@@ -102,6 +102,8 @@ function chartKindToTab(chartKind: FixtureChartKind): GameMarketTabId {
       return "spreads";
     case "halftime":
       return "halftime";
+    case "exact_score":
+      return "top_scores";
     default:
       return "moneyline";
   }
@@ -129,6 +131,23 @@ function buildFallbackChartData(input: {
   const chartMode = resolveLiveChartModeFromKind(input.chartKind);
 
   if (chartMode === "binary") {
+    if (input.chartKind === "exact_score" && input.lineKey) {
+      const outcome = input.fixtureMarkets.exactScores.find(
+        (item) => item.id === input.lineKey,
+      );
+      const yesProbability = outcome?.probability ?? 50;
+
+      return buildLiveChartFallbackPoints({
+        matchId: input.match.id,
+        kickoffAt,
+        chartMode: "binary",
+        binary: {
+          primary: yesProbability,
+          secondary: Math.max(0, 100 - yesProbability),
+        },
+      });
+    }
+
     const outcomes = resolveFixtureOutcomesForTab(
       input.fixtureMarkets,
       chartKindToTab(input.chartKind),

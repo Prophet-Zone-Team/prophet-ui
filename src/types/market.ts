@@ -708,7 +708,12 @@ export interface GameFixtureBinaryChartPoint {
 
 export type GameFixtureChartTimeRange = "1H" | "1D" | "1W" | "1M" | "all";
 
-export type FixtureChartKind = "moneyline" | "halftime" | "total" | "spread";
+export type FixtureChartKind =
+  | "moneyline"
+  | "halftime"
+  | "total"
+  | "spread"
+  | "exact_score";
 
 export interface GameMatchChartEvent {
   elapsedSeconds: number;
