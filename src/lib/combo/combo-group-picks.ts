@@ -15,8 +15,14 @@ export function applyComboMarketPickUpdate<T extends { id: string; outcomeSide?:
   createPick: () => T,
 ): T[] {
   const existingPick = picks.find((pick) => pick.id === marketId);
+  const existingOutcomeSide =
+    existingPick && "outcomeSide" in existingPick
+      ? existingPick.outcomeSide
+      : existingPick
+        ? "yes"
+        : undefined;
 
-  if (existingPick?.outcomeSide === outcomeSide) {
+  if (existingOutcomeSide === outcomeSide) {
     return picks.filter((pick) => pick.id !== marketId);
   }
 

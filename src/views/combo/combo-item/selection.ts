@@ -3,7 +3,7 @@ export function isComboOddsOptionSelected(
   selectedOddsIds?: readonly string[],
   selectedOddsId?: string | null,
 ): boolean {
-  if (selectedOddsIds?.length) {
+  if (selectedOddsIds !== undefined) {
     return selectedOddsIds.includes(optionId);
   }
 

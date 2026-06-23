@@ -1,12 +1,12 @@
-import type { ComboGameGroup, ComboMarketRecord } from "@/types/combo";
 import { findCuratedTeamByCode } from "@/data/teams/curated-team-list";
 import { getLocalizedTeamName } from "@/lib/i18n/localized-team-name";
+import type { ComboGameGroup, ComboMarketRecord } from "@/types/combo";
 import type {
   ComboItemProps,
   ComboItemTeam,
   ComboOddsOption,
 } from "@/views/combo/combo-item/types";
-import type { ComboPickOutcomeSide } from "@/views/combo/combo-widget/types";
+import type { ComboPickOutcomeSide, ComboPickTeam } from "@/views/combo/combo-widget/types";
 
 export type ComboCatalogMarketKind =
   | "moneyline"
@@ -34,6 +34,347 @@ export function buildComboMarketOddsId(
   outcomeSide: ComboPickOutcomeSide,
 ): string {
   return `${marketId}:${outcomeSide}`;
+}
+
+/** Label shown on combo pick cards; mirrors left-panel odds labels where possible. */
+export function resolveComboPickSelectionLabel(
+  market: ComboMarketRecord,
+  outcomeSide: ComboPickOutcomeSide,
+): string {
+  const meta = parseComboMarketSlug(market.slug);
+
+  if (
+    (meta.marketKind === "moneyline" || meta.marketKind === "halftime") &&
+    isComboTeamTogglePickCode(meta)
+  ) {
+    const teamCode =
+      outcomeSide === "yes"
+        ? meta.homeCode.toUpperCase()
+        : meta.awayCode.toUpperCase();
+
+    return getLocalizedTeamName(teamCode, teamCode);
+  }
+
+  if (meta.marketKind === "halftime" && meta.pickCode === "draw") {
+    return "Draw";
+  }
+
+  if (meta.marketKind === "total" && meta.totalLine) {
+    return outcomeSide === "yes"
+      ? `O ${meta.totalLine}`
+      : `U ${meta.totalLine}`;
+  }
+
+  if (meta.marketKind === "spread") {
+    const teamCode = resolveSpreadTeamCodeFromMeta(meta);
+
+    if (teamCode) {
+      return getLocalizedTeamName(teamCode, teamCode);
+    }
+  }
+
+  if (meta.marketKind === "exact_score" && meta.scoreLabel) {
+    return meta.scoreLabel;
+  }
+
+  const [yesLabel, noLabel] = market.outcomes;
+
+  return outcomeSide === "yes" ? yesLabel : (noLabel ?? yesLabel);
+}
+
+export function shouldShowComboPickTeamFlag(team: { code: string }): boolean {
+  const normalized = team.code.toUpperCase();
+
+  return (
+    normalized !== "O/U" &&
+    normalized !== "BTTS" &&
+    normalized !== "DRAW"
+  );
+}
+
+export function resolveComboPickTeam(
+  market: ComboMarketRecord,
+  outcomeSide: ComboPickOutcomeSide,
+): ComboPickTeam {
+  const meta = parseComboMarketSlug(market.slug);
+
+  if (
+    (meta.marketKind === "moneyline" || meta.marketKind === "halftime") &&
+    isComboTeamTogglePickCode(meta)
+  ) {
+    const teamCode =
+      outcomeSide === "yes"
+        ? meta.homeCode.toUpperCase()
+        : meta.awayCode.toUpperCase();
+
+    return toComboPickTeam(teamCode);
+  }
+
+  if (meta.marketKind === "spread") {
+    const teamCode = resolveSpreadTeamCodeFromMeta(meta);
+
+    if (teamCode) {
+      return toComboPickTeam(teamCode);
+    }
+  }
+
+  const fallback = resolveComboMarketTeamCodes(market);
+
+  if (
+    fallback.teamCode === "O/U" ||
+    fallback.teamCode === "SPR" ||
+    fallback.teamCode === "BTTS"
+  ) {
+    return {
+      name: fallback.teamName,
+      code: fallback.teamCode,
+      logoUrl: market.image,
+    };
+  }
+
+  return toComboPickTeam(fallback.teamCode);
+}
+
+function toComboPickTeam(code: string): ComboPickTeam {
+  const teamCode = code.toUpperCase();
+
+  return {
+    code: teamCode,
+    name: getLocalizedTeamName(teamCode, teamCode),
+    logoUrl: findCuratedTeamByCode(teamCode)?.logoUrl,
+  };
+}
+
+function resolveSpreadTeamCodeFromMeta(
+  meta: ComboMarketSlugMeta,
+): string | undefined {
+  const pickCode = meta.pickCode ?? "";
+  const slugMatch = pickCode.match(/^spread-([a-z]+)-/i);
+
+  if (!slugMatch?.[1]) {
+    return undefined;
+  }
+
+  const key = slugMatch[1].toLowerCase();
+
+  if (key === "home") {
+    return meta.homeCode.toUpperCase();
+  }
+
+  if (key === "away") {
+    return meta.awayCode.toUpperCase();
+  }
+
+  if (key === meta.homeCode.toLowerCase()) {
+    return meta.homeCode.toUpperCase();
+  }
+
+  if (key === meta.awayCode.toLowerCase()) {
+    return meta.awayCode.toUpperCase();
+  }
+
+  return key.toUpperCase();
+}
+
+/** Available spread lines for one team within a game group, sorted numerically. */
+export function resolveSpreadOptionsForTeam(
+  group: ComboGameGroup,
+  teamCode: string,
+): string[] {
+  const normalizedTeamCode = teamCode.toUpperCase();
+  const lines: string[] = [];
+
+  for (const market of group.markets) {
+    const meta = parseComboMarketSlug(market.slug);
+
+    if (meta.marketKind !== "spread") {
+      continue;
+    }
+
+    const parts = parseSpreadOutcomeParts(meta, market, group);
+
+    if (parts?.teamCode === normalizedTeamCode) {
+      lines.push(parts.line);
+    }
+  }
+
+  return sortSpreadLines(lines);
+}
+
+export function resolveSpreadMarketForTeamLine(
+  group: ComboGameGroup,
+  teamCode: string,
+  line: string,
+): ComboMarketRecord | undefined {
+  const normalizedTeamCode = teamCode.toUpperCase();
+
+  for (const market of group.markets) {
+    const meta = parseComboMarketSlug(market.slug);
+
+    if (meta.marketKind !== "spread") {
+      continue;
+    }
+
+    const parts = parseSpreadOutcomeParts(meta, market, group);
+
+    if (parts?.teamCode === normalizedTeamCode && parts.line === line) {
+      return market;
+    }
+  }
+
+  return undefined;
+}
+
+export function resolveSpreadLineForMarket(
+  market: ComboMarketRecord,
+  group: ComboGameGroup,
+): string | undefined {
+  const meta = parseComboMarketSlug(market.slug);
+
+  if (meta.marketKind !== "spread") {
+    return undefined;
+  }
+
+  return parseSpreadOutcomeParts(meta, market, group)?.line;
+}
+
+function sortSpreadLines(lines: string[]): string[] {
+  return [...new Set(lines)].sort((left, right) => {
+    const leftValue = Number.parseFloat(left);
+    const rightValue = Number.parseFloat(right);
+
+    if (Number.isFinite(leftValue) && Number.isFinite(rightValue)) {
+      const leftAbs = Math.abs(leftValue);
+      const rightAbs = Math.abs(rightValue);
+
+      if (leftAbs !== rightAbs) {
+        return leftAbs - rightAbs;
+      }
+
+      return leftValue - rightValue;
+    }
+
+    return left.localeCompare(right);
+  });
+}
+
+function findTeamToggleMarketInGroup(
+  group: ComboGameGroup,
+  marketKind: "moneyline" | "halftime",
+  teamSide: "home" | "away",
+): ComboMarketRecord | undefined {
+  return group.markets.find((market) => {
+    const meta = parseComboMarketSlug(market.slug);
+
+    if (meta.marketKind !== marketKind) {
+      return false;
+    }
+
+    if (teamSide === "home") {
+      return isHomeTeamTogglePickCode(meta);
+    }
+
+    return isAwayTeamTogglePickCode(meta);
+  });
+}
+
+function isComboTeamTogglePickCode(meta: {
+  pickCode?: string;
+  homeCode: string;
+  awayCode: string;
+}): boolean {
+  return isHomeTeamTogglePickCode(meta) || isAwayTeamTogglePickCode(meta);
+}
+
+function isHomeTeamTogglePickCode(meta: {
+  pickCode?: string;
+  homeCode: string;
+}): boolean {
+  return meta.pickCode === meta.homeCode || meta.pickCode === "home";
+}
+
+function isAwayTeamTogglePickCode(meta: {
+  pickCode?: string;
+  awayCode: string;
+}): boolean {
+  return meta.pickCode === meta.awayCode || meta.pickCode === "away";
+}
+
+function resolveComboGameSelectedOddsId(
+  group: ComboGameGroup,
+  isInCombo?: boolean,
+  selectedMarketId?: string,
+  selectedOutcomeSide?: ComboPickOutcomeSide,
+): string | null {
+  if (!isInCombo || !selectedMarketId || !selectedOutcomeSide) {
+    return null;
+  }
+
+  const market = group.markets.find((entry) => entry.id === selectedMarketId);
+  const meta = market ? parseComboMarketSlug(market.slug) : undefined;
+
+  if (meta?.marketKind === "exact_score" && selectedOutcomeSide !== "yes") {
+    return null;
+  }
+
+  return buildComboMarketOddsId(selectedMarketId, selectedOutcomeSide);
+}
+
+/** Odds option id used to highlight the matching left-panel selection. */
+export function buildComboSelectedOddsIdForPick(
+  pick: { id: string; type: string; outcomeSide?: ComboPickOutcomeSide },
+  market?: ComboMarketRecord,
+  group?: ComboGameGroup,
+): string | undefined {
+  if (pick.type === "spread") {
+    return buildComboMarketOddsId(pick.id, "yes");
+  }
+
+  if (pick.type === "total" && pick.outcomeSide) {
+    return buildComboMarketOddsId(pick.id, pick.outcomeSide);
+  }
+
+  if (pick.type !== "moneyline" || !pick.outcomeSide) {
+    return undefined;
+  }
+
+  if (market && group) {
+    const meta = parseComboMarketSlug(market.slug);
+
+    if (
+      (meta.marketKind === "moneyline" || meta.marketKind === "halftime") &&
+      isComboTeamTogglePickCode(meta)
+    ) {
+      const targetMarket = findTeamToggleMarketInGroup(
+        group,
+        meta.marketKind === "halftime" ? "halftime" : "moneyline",
+        pick.outcomeSide === "yes" ? "home" : "away",
+      );
+
+      if (targetMarket) {
+        return buildComboMarketOddsId(targetMarket.id, "yes");
+      }
+    }
+  }
+
+  if (market) {
+    const meta = parseComboMarketSlug(market.slug);
+
+    if (meta.marketKind === "exact_score") {
+      return pick.outcomeSide === "yes"
+        ? buildComboMarketOddsId(pick.id, "yes")
+        : undefined;
+    }
+
+    if (
+      (meta.marketKind === "moneyline" || meta.marketKind === "halftime") &&
+      isComboTeamTogglePickCode(meta)
+    ) {
+      return buildComboMarketOddsId(pick.id, "yes");
+    }
+  }
+
+  return buildComboMarketOddsId(pick.id, pick.outcomeSide);
 }
 
 export function parseComboMarketOddsId(
@@ -263,15 +604,12 @@ export function mapComboGameToItemProps(
     }
   }
 
-  const selectedOddsId =
-    options?.isInCombo &&
-    options.selectedMarketId &&
-    options.selectedOutcomeSide
-      ? buildComboMarketOddsId(
-          options.selectedMarketId,
-          options.selectedOutcomeSide,
-        )
-      : null;
+  const selectedOddsId = resolveComboGameSelectedOddsId(
+    group,
+    options?.isInCombo,
+    options?.selectedMarketId,
+    options?.selectedOutcomeSide,
+  );
 
   return {
     kickoffLabel: group.kickoffLabel,
@@ -359,7 +697,7 @@ export function resolveComboMarketTeamCodes(market: ComboMarketRecord) {
     if (meta.pickCode === "draw") {
       return {
         teamCode: "DRAW",
-        teamName: meta.marketKind === "halftime" ? "HT Draw" : "Draw",
+        teamName: "Draw",
       };
     }
 
@@ -510,24 +848,21 @@ function formatYesOutcomeLabel(
   market: ComboMarketRecord,
   group: ComboGameGroup,
 ): string {
-  if (
-    (meta.marketKind === "moneyline" || meta.marketKind === "halftime") &&
-    meta.pickCode
-  ) {
+  if (meta.marketKind === "halftime" && meta.pickCode) {
+    return formatHalftimeOutcomeLabel(meta, group);
+  }
+
+  if (meta.marketKind === "moneyline" && meta.pickCode) {
     if (meta.pickCode === "draw") {
-      return meta.marketKind === "halftime" ? "HT Draw" : "Draw";
+      return "Draw";
     }
 
     if (meta.pickCode === meta.homeCode) {
-      return meta.marketKind === "halftime"
-        ? `HT ${group.homeTeam.name}`
-        : group.homeTeam.name;
+      return group.homeTeam.name;
     }
 
     if (meta.pickCode === meta.awayCode) {
-      return meta.marketKind === "halftime"
-        ? `HT ${group.awayTeam.name}`
-        : group.awayTeam.name;
+      return group.awayTeam.name;
     }
 
     return getLocalizedTeamName(
@@ -680,20 +1015,72 @@ function formatTotalYesOutcomeLabel(
   return `Over ${line}`;
 }
 
+function formatHalftimeOutcomeLabel(
+  meta: ComboMarketSlugMeta,
+  group: ComboGameGroup,
+): string {
+  if (meta.pickCode === "draw") {
+    return "Draw";
+  }
+
+  if (meta.pickCode === meta.homeCode || meta.pickCode === "home") {
+    return group.homeTeam.code;
+  }
+
+  if (meta.pickCode === meta.awayCode || meta.pickCode === "away") {
+    return group.awayTeam.code;
+  }
+
+  return meta.pickCode?.toUpperCase() ?? "Yes";
+}
+
+function formatHalftimeOutcomeLabelFromSlug(
+  meta: ComboMarketSlugMeta,
+): string {
+  if (meta.pickCode === "draw") {
+    return "Draw";
+  }
+
+  if (meta.pickCode === meta.homeCode || meta.pickCode === "home") {
+    return meta.homeCode.toUpperCase();
+  }
+
+  if (meta.pickCode === meta.awayCode || meta.pickCode === "away") {
+    return meta.awayCode.toUpperCase();
+  }
+
+  return meta.pickCode?.toUpperCase() ?? "Yes";
+}
+
+function resolveHalftimeOutcomeSortOrder(meta: ComboMarketSlugMeta): number {
+  if (meta.pickCode === meta.homeCode || meta.pickCode === "home") {
+    return 0;
+  }
+
+  if (meta.pickCode === "draw") {
+    return 1;
+  }
+
+  if (meta.pickCode === meta.awayCode || meta.pickCode === "away") {
+    return 2;
+  }
+
+  return 99;
+}
+
 function sortHalftimeOdds(
   odds: ComboOddsOption[],
-  group: ComboGameGroup,
+  _group: ComboGameGroup,
 ): ComboOddsOption[] {
-  const priority = new Map<string, number>([
-    [`HT ${group.homeTeam.name}`, 0],
-    ["HT Draw", 1],
-    [`HT ${group.awayTeam.name}`, 2],
-  ]);
+  return [...odds].sort((left, right) => {
+    const leftMeta = parseComboMarketSlug(parseComboMarketOddsId(left.id)?.marketId ?? "");
+    const rightMeta = parseComboMarketSlug(parseComboMarketOddsId(right.id)?.marketId ?? "");
 
-  return [...odds].sort(
-    (left, right) =>
-      (priority.get(left.label) ?? 99) - (priority.get(right.label) ?? 99),
-  );
+    return (
+      resolveHalftimeOutcomeSortOrder(leftMeta) -
+      resolveHalftimeOutcomeSortOrder(rightMeta)
+    );
+  });
 }
 
 function sortMoneylineOdds(

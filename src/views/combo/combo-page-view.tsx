@@ -12,13 +12,27 @@ import { useComboMarkets } from "@/hooks/combo/use-combo-markets";
 import { useComboTicket } from "@/hooks/combo/use-combo-ticket";
 import { buildComboLegsFromPicks } from "@/lib/combo/markets-client";
 import { applyComboGameGroupPickUpdate } from "@/lib/combo/combo-group-picks";
+import { isExactScoreMarket } from "@/lib/combo/combo-market-mutex";
 import { applyComboLegSelectionRules } from "@/lib/combo/combo-leg-selection";
 import {
-  buildComboMarketOddsId,
+  buildComboSelectedOddsIdForPick,
   mapComboGameToItemProps,
   parseComboMarketOddsId,
-  resolveComboMarketTeamCodes
+  parseComboMarketSlug,
+  resolveComboMarketTeamCodes,
+  resolveSpreadMarketForTeamLine,
 } from "@/lib/combo/map-market-to-combo-item";
+import {
+  findComboGameGroupForMarket,
+  resolveComboPickStoredOutcomeSide,
+  resolveHalftimeTeamMarket,
+  resolveMatchMoneylineMarket,
+} from "@/lib/combo/combo-pick-outcome";
+import {
+  isMatchTotalMarket,
+  resolveMatchTotalMarketForLine,
+  resolveTotalLineOptionsForPick,
+} from "@/lib/combo/match-total-combo-rules";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
 import {
   useComboBidAmount,
@@ -26,7 +40,6 @@ import {
   useRemoveComboPick,
   useSetComboBidAmount,
   useSetComboPicks,
-  useUpdateComboPick,
 } from "@/store/combo-store";
 import { useSetOutcomeDisplayMode } from "@/store/user-config-store";
 import type { ComboGameGroup, ComboMarketRecord, ComboMarketsDay } from "@/types/combo";
@@ -40,12 +53,38 @@ import {
   getComboMobileReserveHeight
 } from "@/views/combo/combo-mobile-widget";
 import { ComboWidget } from "@/views/combo/combo-widget";
-import type { ComboWidgetProps } from "@/views/combo/combo-widget/types";
+import type { ComboPick, ComboWidgetProps } from "@/views/combo/combo-widget/types";
 import type { ComboPickOutcomeSide } from "@/views/combo/combo-widget/types";
 import { createComboPickFromMarket } from "@/views/combo/combo-ticket-container";
 import { MIN_COMBO_PICKS } from "@/views/combo/combo-widget/constants";
 
 const COMBO_DAY_TABS: ComboMarketsDay[] = ["today", "tomorrow", "all"];
+
+function enrichComboPicksWithTotalLineOptions(
+  picks: ComboPick[],
+  groups: ComboGameGroup[],
+): ComboPick[] {
+  return picks.map((pick) => {
+    if (pick.type !== "total") {
+      return pick;
+    }
+
+    const group = findComboGameGroupForMarket(groups, pick.id);
+
+    if (!group) {
+      return pick;
+    }
+
+    const groupPicks = picks.filter((entry) =>
+      group.markets.some((market) => market.id === entry.id),
+    );
+
+    return {
+      ...pick,
+      totalOptions: resolveTotalLineOptionsForPick(group, pick, groupPicks),
+    };
+  });
+}
 
 export function ComboPageView() {
   const t = useTranslations("combo");
@@ -62,7 +101,6 @@ export function ComboPageView() {
   });
   const picks = useComboPicks();
   const bidAmount = useComboBidAmount();
-  const updatePick = useUpdateComboPick();
   const removePick = useRemoveComboPick();
   const setBidAmount = useSetComboBidAmount();
   const setPicks = useSetComboPicks();
@@ -133,8 +171,13 @@ export function ComboPageView() {
       }
 
       const teamMeta = resolveComboMarketTeamCodes(market);
+      const storedOutcomeSide = resolveComboPickStoredOutcomeSide(
+        market,
+        parsed.outcomeSide,
+      );
       const pick = createComboPickFromMarket({
         market,
+        group,
         outcomeSide: parsed.outcomeSide,
         teamCode: teamMeta.teamCode,
         teamName: teamMeta.teamName
@@ -145,7 +188,7 @@ export function ComboPageView() {
           picks,
           group,
           market.id,
-          parsed.outcomeSide,
+          storedOutcomeSide,
           () => pick,
         ),
       );
@@ -155,24 +198,225 @@ export function ComboPageView() {
 
   const handlePickOutcomeChange = useCallback(
     (pickId: string, side: ComboPickOutcomeSide) => {
-      const pick = picksByMarketId.get(pickId);
       const market = marketsById.get(pickId);
 
-      if (!pick || !market) {
+      if (!market || !picksByMarketId.has(pickId)) {
+        return;
+      }
+
+      const group = findComboGameGroupForMarket(groups, pickId);
+
+      if (!group) {
+        return;
+      }
+
+      const marketKind = parseComboMarketSlug(market.slug).marketKind;
+
+      if (marketKind === "moneyline") {
+        const targetMarket = resolveMatchMoneylineMarket(
+          group,
+          side === "yes" ? "home" : "away",
+        );
+
+        if (!targetMarket) {
+          return;
+        }
+
+        const teamMeta = resolveComboMarketTeamCodes(targetMarket);
+        const pick = createComboPickFromMarket({
+          market: targetMarket,
+          group,
+          outcomeSide: side,
+          teamCode: teamMeta.teamCode,
+          teamName: teamMeta.teamName,
+        });
+
+        setPicks(
+          applyComboGameGroupPickUpdate(
+            picks,
+            group,
+            targetMarket.id,
+            side,
+            () => pick,
+          ),
+        );
+        return;
+      }
+
+      if (marketKind === "halftime") {
+        const targetMarket = resolveHalftimeTeamMarket(
+          group,
+          side === "yes" ? "home" : "away",
+        );
+
+        if (!targetMarket) {
+          return;
+        }
+
+        const teamMeta = resolveComboMarketTeamCodes(targetMarket);
+        const pick = createComboPickFromMarket({
+          market: targetMarket,
+          group,
+          outcomeSide: side,
+          teamCode: teamMeta.teamCode,
+          teamName: teamMeta.teamName,
+        });
+
+        setPicks(
+          applyComboGameGroupPickUpdate(
+            picks,
+            group,
+            targetMarket.id,
+            side,
+            () => pick,
+          ),
+        );
+        return;
+      }
+
+      if (isMatchTotalMarket(market)) {
+        const teamMeta = resolveComboMarketTeamCodes(market);
+        const pick = createComboPickFromMarket({
+          market,
+          group,
+          outcomeSide: side,
+          teamCode: teamMeta.teamCode,
+          teamName: teamMeta.teamName,
+        });
+
+        setPicks(
+          applyComboGameGroupPickUpdate(
+            picks,
+            group,
+            market.id,
+            side,
+            () => pick,
+          ),
+        );
+        return;
+      }
+
+      if (isExactScoreMarket(market)) {
+        const teamMeta = resolveComboMarketTeamCodes(market);
+        const pick = createComboPickFromMarket({
+          market,
+          group,
+          outcomeSide: side,
+          teamCode: teamMeta.teamCode,
+          teamName: teamMeta.teamName,
+        });
+
+        setPicks(
+          applyComboGameGroupPickUpdate(
+            picks,
+            group,
+            market.id,
+            side,
+            () => pick,
+          ),
+        );
         return;
       }
 
       const teamMeta = resolveComboMarketTeamCodes(market);
-      updatePick(
-        createComboPickFromMarket({
-          market,
-          outcomeSide: side,
-          teamCode: teamMeta.teamCode,
-          teamName: teamMeta.teamName
-        })
+      const nextPick = createComboPickFromMarket({
+        market,
+        group,
+        outcomeSide: side,
+        teamCode: teamMeta.teamCode,
+        teamName: teamMeta.teamName,
+      });
+
+      setPicks(
+        picks.map((pick) => (pick.id === pickId ? nextPick : pick)),
       );
     },
-    [marketsById, picksByMarketId, updatePick]
+    [groups, marketsById, picks, picksByMarketId, setPicks],
+  );
+
+  const handlePickSpreadChange = useCallback(
+    (pickId: string, spread: string) => {
+      const pick = picksByMarketId.get(pickId);
+
+      if (!pick || pick.type !== "spread" || pick.spreadValue === spread) {
+        return;
+      }
+
+      const group = findComboGameGroupForMarket(groups, pickId);
+
+      if (!group) {
+        return;
+      }
+
+      const targetMarket = resolveSpreadMarketForTeamLine(
+        group,
+        pick.team.code,
+        spread,
+      );
+
+      if (!targetMarket) {
+        return;
+      }
+
+      const nextPick = createComboPickFromMarket({
+        market: targetMarket,
+        group,
+      });
+
+      setPicks(
+        picks.map((entry) => (entry.id === pickId ? nextPick : entry)),
+      );
+    },
+    [groups, picks, picksByMarketId, setPicks],
+  );
+
+  const handlePickTotalChange = useCallback(
+    (pickId: string, total: string) => {
+      const pick = picksByMarketId.get(pickId);
+
+      if (!pick || pick.type !== "total" || pick.totalValue === total) {
+        return;
+      }
+
+      const group = findComboGameGroupForMarket(groups, pickId);
+
+      if (!group) {
+        return;
+      }
+
+      const targetMarket = resolveMatchTotalMarketForLine(group, total);
+
+      if (!targetMarket) {
+        return;
+      }
+
+      const groupPicks = picks.filter((entry) =>
+        group.markets.some((market) => market.id === entry.id),
+      );
+      const lineOptions = resolveTotalLineOptionsForPick(group, pick, groupPicks);
+      const selectedOption = lineOptions.find((option) => option.value === total);
+
+      if (selectedOption?.disabled) {
+        return;
+      }
+
+      const nextPick = createComboPickFromMarket({
+        market: targetMarket,
+        group,
+        outcomeSide: pick.outcomeSide,
+      });
+
+      setPicks(
+        applyComboGameGroupPickUpdate(
+          picks.filter((entry) => entry.id !== pickId),
+          group,
+          targetMarket.id,
+          pick.outcomeSide,
+          () => nextPick,
+        ),
+      );
+    },
+    [groups, picks, picksByMarketId, setPicks],
   );
 
   const handleRemovePick = useCallback(
@@ -190,8 +434,13 @@ export function ComboPageView() {
     [setOutcomeDisplayMode]
   );
 
+  const widgetPicks = useMemo(
+    () => enrichComboPicksWithTotalLineOptions(picks, groups),
+    [groups, picks],
+  );
+
   const comboWidgetProps: ComboWidgetProps = {
-    picks,
+    picks: widgetPicks,
     multiplier: ticket.multiplier,
     bidAmount,
     balance,
@@ -206,6 +455,8 @@ export function ComboPageView() {
     isQuoteLoading: ticket.isAuthenticated && ticket.isQuotePending,
     onBidAmountChange: setBidAmount,
     onPickOutcomeChange: handlePickOutcomeChange,
+    onPickSpreadChange: handlePickSpreadChange,
+    onPickTotalChange: handlePickTotalChange,
     onRemovePick: handleRemovePick,
     onConnectWallet: () => void auth.openLogin(),
     onSubmit: ticket.submit
@@ -272,17 +523,14 @@ export function ComboPageView() {
                   ? selectedPick.outcomeSide
                   : undefined;
               const selectedOddsIds = groupPicks
-                .filter(
-                  (
-                    pick
-                  ): pick is Extract<
-                    typeof pick,
-                    { outcomeSide: ComboPickOutcomeSide }
-                  > => "outcomeSide" in pick
-                )
                 .map((pick) =>
-                  buildComboMarketOddsId(pick.id, pick.outcomeSide)
-                );
+                  buildComboSelectedOddsIdForPick(
+                    pick,
+                    marketsById.get(pick.id),
+                    group,
+                  ),
+                )
+                .filter((id): id is string => Boolean(id));
               const selectedLegsCount = group.markets.reduce(
                 (count, market) =>
                   count + (picksByMarketId.has(market.id) ? 1 : 0),

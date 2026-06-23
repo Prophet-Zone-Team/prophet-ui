@@ -6,6 +6,9 @@ import {
   areMatchTotalSelectionsCompatible,
   areOverUnderLinesCompatible,
   removeConflictingMatchTotalPicks,
+  resolveMatchTotalMarketForLine,
+  resolveTotalLineOptionsForGroup,
+  resolveTotalLineOptionsForPick,
 } from "@/lib/combo/match-total-combo-rules";
 import type { ComboGameGroup } from "@/types/combo";
 
@@ -109,7 +112,7 @@ describe("match total combo rules", () => {
     );
 
     assert.equal(rules.find((option) => option.label === "O 3.5")?.disabled, undefined);
-    assert.equal(rules.find((option) => option.label === "U 3.5")?.disabled, undefined);
+    assert.equal(rules.find((option) => option.label === "U 3.5")?.disabled, true);
     assert.equal(rules.find((option) => option.label === "O 2.5")?.disabled, true);
     assert.equal(rules.find((option) => option.label === "U 5.5")?.disabled, undefined);
     assert.equal(rules.find((option) => option.label === "U 2.5")?.disabled, true);
@@ -179,5 +182,78 @@ describe("match total combo rules", () => {
     );
 
     assert.deepEqual(nextPicks, []);
+  });
+
+  it("resolves total line options and markets by line", () => {
+    assert.deepEqual(resolveTotalLineOptionsForGroup(sampleGroup), [
+      "2.5",
+      "3.5",
+      "5.5",
+    ]);
+    assert.equal(
+      resolveMatchTotalMarketForLine(sampleGroup, "3.5")?.id,
+      "fifwc-fra-irq-2026-06-22-total-3pt5",
+    );
+  });
+
+  it("disables incompatible total lines in the widget dropdown", () => {
+    const overPick = {
+      id: "fifwc-fra-irq-2026-06-22-total-3pt5",
+      outcomeSide: "yes",
+    };
+    const underPick = {
+      id: "fifwc-fra-irq-2026-06-22-total-5pt5",
+      outcomeSide: "no",
+    };
+
+    const overOptions = resolveTotalLineOptionsForPick(
+      sampleGroup,
+      overPick,
+      [overPick, underPick],
+    );
+    const underOptions = resolveTotalLineOptionsForPick(
+      sampleGroup,
+      underPick,
+      [overPick, underPick],
+    );
+
+    assert.equal(
+      overOptions.find((option) => option.value === "2.5")?.disabled,
+      undefined,
+    );
+    assert.equal(
+      overOptions.find((option) => option.value === "3.5")?.disabled,
+      undefined,
+    );
+    assert.equal(
+      overOptions.find((option) => option.value === "5.5")?.disabled,
+      true,
+    );
+    assert.equal(
+      underOptions.find((option) => option.value === "2.5")?.disabled,
+      true,
+    );
+    assert.equal(
+      underOptions.find((option) => option.value === "5.5")?.disabled,
+      undefined,
+    );
+  });
+
+  it("keeps all total lines enabled when no other group totals conflict", () => {
+    const overPick = {
+      id: "fifwc-fra-irq-2026-06-22-total-3pt5",
+      outcomeSide: "yes",
+    };
+
+    const options = resolveTotalLineOptionsForPick(
+      sampleGroup,
+      overPick,
+      [overPick],
+    );
+
+    assert.equal(
+      options.every((option) => !option.disabled),
+      true,
+    );
   });
 });

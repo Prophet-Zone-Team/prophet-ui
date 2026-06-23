@@ -16,6 +16,7 @@ export type {
   ComboPickOutcomeSide,
   ComboPickTeam,
   ComboSpreadPick,
+  ComboTotalPick,
   ComboWidgetProps
 } from "./types";
 
@@ -30,6 +31,7 @@ export function ComboWidget({
   onApplyBalanceFraction,
   onPickOutcomeChange,
   onPickSpreadChange,
+  onPickTotalChange,
   onRemovePick,
   onSubmit,
   onInfoClick,
@@ -103,6 +105,7 @@ export function ComboWidget({
         onInfoClick={onInfoClick}
         onPickOutcomeChange={onPickOutcomeChange}
         onPickSpreadChange={onPickSpreadChange}
+        onPickTotalChange={onPickTotalChange}
         onRemovePick={onRemovePick}
       />
 

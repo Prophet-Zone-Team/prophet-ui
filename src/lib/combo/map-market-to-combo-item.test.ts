@@ -2,8 +2,12 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  buildComboSelectedOddsIdForPick,
   mapComboGameToItemProps,
+  resolveComboPickSelectionLabel,
   resolveDefaultComboMatchTotalPreviewOdds,
+  resolveSpreadMarketForTeamLine,
+  resolveSpreadOptionsForTeam,
 } from "@/lib/combo/map-market-to-combo-item";
 import type { ComboGameGroup } from "@/types/combo";
 import { isComboOddsOptionSelected } from "@/views/combo/combo-item/selection";
@@ -90,6 +94,34 @@ describe("mapComboGameToItemProps spread labels", () => {
     assert.equal(spread?.spreadTeamCode, "FRA");
     assert.equal(spread?.label, "FRA -1.5");
   });
+
+  it("resolves spread line options for one team", () => {
+    const multiLineGroup: ComboGameGroup = {
+      ...group,
+      markets: [
+        ...group.markets,
+        {
+          id: "spread-home-25",
+          slug: "fifwc-arg-aut-2026-06-22-spread-home-2pt5",
+          title: "Argentina -2.5",
+          outcomes: ["Yes", "No"],
+          outcomePrices: ["0.4", "0.6"],
+        },
+      ],
+    };
+
+    assert.deepEqual(resolveSpreadOptionsForTeam(multiLineGroup, "ARG"), [
+      "-1.5",
+      "-2.5",
+    ]);
+    assert.deepEqual(resolveSpreadOptionsForTeam(multiLineGroup, "AUT"), [
+      "+1.5",
+    ]);
+    assert.equal(
+      resolveSpreadMarketForTeamLine(multiLineGroup, "ARG", "-2.5")?.id,
+      "spread-home-25",
+    );
+  });
 });
 
 describe("isComboOddsOptionSelected", () => {
@@ -101,6 +133,156 @@ describe("isComboOddsOptionSelected", () => {
     assert.equal(
       isComboOddsOptionSelected("draw:yes", ["home:yes", "total:yes"], undefined),
       false,
+    );
+  });
+});
+
+describe("resolveComboPickSelectionLabel", () => {
+  it("uses over/under labels for match totals", () => {
+    const market = {
+      id: "total-25",
+      slug: "fifwc-arg-aut-2026-06-22-total-2pt5",
+      title: "Argentina vs Austria: O/U 2.5",
+      outcomes: ["Yes", "No"] as [string, string],
+      outcomePrices: ["0.5", "0.5"] as [string, string],
+      conditionId: "cond-total",
+      positionIds: ["pos-over", "pos-under"] as [string, string],
+    };
+
+    assert.equal(resolveComboPickSelectionLabel(market, "yes"), "O 2.5");
+    assert.equal(resolveComboPickSelectionLabel(market, "no"), "U 2.5");
+  });
+
+  it("uses home and away team names for moneyline toggle sides", () => {
+    const market = {
+      id: "fifwc-fra-irq-2026-06-22-fra",
+      slug: "fifwc-fra-irq-2026-06-22-fra",
+      title: "France vs Iraq",
+      outcomes: ["France", "No"] as [string, string],
+      outcomePrices: ["0.8", "0.2"] as [string, string],
+      conditionId: "ml-home",
+      positionIds: ["pos-home-yes", "pos-home-no"] as [string, string],
+    };
+
+    assert.equal(resolveComboPickSelectionLabel(market, "yes"), "France");
+    assert.equal(resolveComboPickSelectionLabel(market, "no"), "Iraq");
+  });
+
+  it("uses team abbreviations and Draw for halftime markets", () => {
+    const homeMarket = {
+      id: "fifwc-fra-irq-2026-06-22-halftime-result-fra",
+      slug: "fifwc-fra-irq-2026-06-22-halftime-result-fra",
+      title: "HT France",
+      outcomes: ["Yes", "No"] as [string, string],
+      outcomePrices: ["0.5", "0.5"] as [string, string],
+      conditionId: "cond-ht-home",
+      positionIds: ["pos-ht-home-yes", "pos-ht-home-no"] as [string, string],
+    };
+    const drawMarket = {
+      id: "fifwc-fra-irq-2026-06-22-halftime-result-draw",
+      slug: "fifwc-fra-irq-2026-06-22-halftime-result-draw",
+      title: "HT Draw",
+      outcomes: ["Yes", "No"] as [string, string],
+      outcomePrices: ["0.3", "0.7"] as [string, string],
+      conditionId: "cond-ht-draw",
+      positionIds: ["pos-ht-draw-yes", "pos-ht-draw-no"] as [string, string],
+    };
+
+    assert.equal(resolveComboPickSelectionLabel(homeMarket, "yes"), "France");
+    assert.equal(resolveComboPickSelectionLabel(homeMarket, "no"), "Iraq");
+    assert.equal(resolveComboPickSelectionLabel(drawMarket, "yes"), "Draw");
+  });
+
+  it("uses team names for spread markets", () => {
+    const market = {
+      id: "spread-home",
+      slug: "fifwc-arg-aut-2026-06-22-spread-home-1pt5",
+      title: "Argentina -1.5",
+      outcomes: ["Yes", "No"] as [string, string],
+      outcomePrices: ["0.5", "0.5"] as [string, string],
+      conditionId: "cond-spread",
+      positionIds: ["pos-spread-yes", "pos-spread-no"] as [string, string],
+    };
+
+    assert.equal(resolveComboPickSelectionLabel(market, "yes"), "Argentina");
+  });
+});
+
+describe("buildComboSelectedOddsIdForPick", () => {
+  it("only highlights exact score picks on yes", () => {
+    const market = {
+      id: "fifwc-fra-irq-2026-06-22-exact-score-2-1",
+      slug: "fifwc-fra-irq-2026-06-22-exact-score-2-1",
+      title: "2-1",
+      outcomes: ["Yes", "No"] as [string, string],
+      outcomePrices: ["0.1", "0.9"] as [string, string],
+      conditionId: "cond-exact",
+      positionIds: ["pos-exact-yes", "pos-exact-no"] as [string, string],
+    };
+
+    assert.equal(
+      buildComboSelectedOddsIdForPick(
+        {
+          id: market.id,
+          type: "moneyline",
+          outcomeSide: "yes",
+        },
+        market,
+      ),
+      `${market.id}:yes`,
+    );
+    assert.equal(
+      buildComboSelectedOddsIdForPick(
+        {
+          id: market.id,
+          type: "moneyline",
+          outcomeSide: "no",
+        },
+        market,
+      ),
+      undefined,
+    );
+  });
+});
+
+describe("mapComboGameToItemProps halftime labels", () => {
+  it("maps halftime odds to team codes in home-draw-away order", () => {
+    const group: ComboGameGroup = {
+      slug: "fifwc-fra-irq-2026-06-22",
+      title: "France vs Iraq",
+      kickoffLabel: "2026-06-22",
+      homeTeam: { name: "France", code: "FRA" },
+      awayTeam: { name: "Iraq", code: "IRQ" },
+      markets: [
+        {
+          id: "fifwc-fra-irq-2026-06-22-halftime-result-irq",
+          slug: "fifwc-fra-irq-2026-06-22-halftime-result-irq",
+          title: "HT Iraq",
+          outcomes: ["Yes", "No"],
+          outcomePrices: ["0.2", "0.8"],
+        },
+        {
+          id: "fifwc-fra-irq-2026-06-22-halftime-result-draw",
+          slug: "fifwc-fra-irq-2026-06-22-halftime-result-draw",
+          title: "HT Draw",
+          outcomes: ["Yes", "No"],
+          outcomePrices: ["0.3", "0.7"],
+        },
+        {
+          id: "fifwc-fra-irq-2026-06-22-halftime-result-fra",
+          slug: "fifwc-fra-irq-2026-06-22-halftime-result-fra",
+          title: "HT France",
+          outcomes: ["Yes", "No"],
+          outcomePrices: ["0.5", "0.5"],
+        },
+      ],
+    };
+
+    const props = mapComboGameToItemProps(group);
+
+    assert.deepEqual(
+      props.halftimeOdds?.map((option) => option.label),
+      ["FRA", "Draw", "IRQ"],
     );
   });
 });

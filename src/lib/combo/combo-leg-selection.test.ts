@@ -297,17 +297,17 @@ describe("combo leg selection", () => {
     const halftimeOdds = [
       {
         id: "fifwc-fra-irq-2026-06-22-halftime-result-fra:yes",
-        label: "HT France",
+        label: "FRA",
         price: 0.5,
       },
       {
         id: "fifwc-fra-irq-2026-06-22-halftime-result-draw:yes",
-        label: "HT Draw",
+        label: "Draw",
         price: 0.3,
       },
       {
         id: "fifwc-fra-irq-2026-06-22-halftime-result-irq:yes",
-        label: "HT Iraq",
+        label: "IRQ",
         price: 0.2,
       },
     ];

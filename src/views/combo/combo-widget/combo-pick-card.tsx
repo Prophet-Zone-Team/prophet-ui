@@ -1,4 +1,5 @@
 import { TeamFlag } from "@/components/teams/team-flag";
+import { shouldShowComboPickTeamFlag } from "@/lib/combo/map-market-to-combo-item";
 
 import { RemovePickButton } from "./remove-pick-button";
 import { SpreadSelector } from "./spread-selector";
@@ -9,6 +10,7 @@ export type ComboPickCardProps = {
   pick: ComboPick;
   onOutcomeChange?: (side: ComboPickOutcomeSide) => void;
   onSpreadChange?: (spread: string) => void;
+  onTotalChange?: (total: string) => void;
   onRemove?: () => void;
 };
 
@@ -16,6 +18,7 @@ export function ComboPickCard({
   pick,
   onOutcomeChange,
   onSpreadChange,
+  onTotalChange,
   onRemove
 }: ComboPickCardProps) {
   return (
@@ -28,13 +31,20 @@ export function ComboPickCard({
 
           {pick.type === "moneyline" ? (
             <YesNoToggle value={pick.outcomeSide} onChange={onOutcomeChange} />
-          ) : (
+          ) : pick.type === "spread" ? (
             <SpreadSelector
               value={pick.spreadValue}
               options={pick.spreadOptions}
               onChange={onSpreadChange}
             />
-          )}
+          ) : pick.type === "total" ? (
+            <SpreadSelector
+              value={pick.totalValue}
+              options={pick.totalOptions}
+              onChange={onTotalChange}
+              ariaLabel="Total line"
+            />
+          ) : null}
 
           <RemovePickButton
             onClick={onRemove}
@@ -43,14 +53,16 @@ export function ComboPickCard({
         </div>
 
         <div className="mt-2 flex items-center gap-2">
-          <TeamFlag
-            code={pick.team.code}
-            name={pick.team.name}
-            logoUrl={pick.team.logoUrl}
-            className="h-6 w-6 shrink-0 rounded-[2px] drop-shadow-[0_0_2px_rgba(0,0,0,0.2)]"
-          />
+          {shouldShowComboPickTeamFlag(pick.team) ? (
+            <TeamFlag
+              code={pick.team.code}
+              name={pick.team.name}
+              logoUrl={pick.team.logoUrl}
+              className="h-6 w-6 shrink-0 rounded-[2px] drop-shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+            />
+          ) : null}
           <span className="truncate text-sm font-[500] leading-[18px] text-black">
-            {pick.selectionLabel}
+            {pick.type === "spread" ? pick.spreadValue : pick.selectionLabel}
           </span>
         </div>
       </div>

@@ -7,6 +7,10 @@ export function formatComboMobilePickSummary(picks: ComboPick[]): string {
         return `${pick.team.name} ${pick.spreadValue}`;
       }
 
+      if (pick.type === "total") {
+        return pick.selectionLabel;
+      }
+
       return pick.team.name;
     })
     .join(", ");
