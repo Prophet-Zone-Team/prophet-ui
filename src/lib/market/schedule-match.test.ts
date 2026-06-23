@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { mapProphetGameToMatch } from "@/lib/market/prophet-game-mapper";
-import { filterScheduleMatchesByTeams } from "@/lib/market/schedule-match";
+import {
+  buildScheduleMatchList,
+  filterScheduleMatches,
+  filterScheduleMatchesByTeams,
+} from "@/lib/market/schedule-match";
 
 describe("schedule-match team filtering", () => {
   it("filters matches for teams whose polymarket labels use alternate curated keys", () => {
@@ -67,5 +71,68 @@ describe("schedule-match team filtering", () => {
         `expected ${teamId} to match ${slug}`,
       );
     }
+  });
+});
+
+describe("schedule-match ended filter", () => {
+  const baseMatch = {
+    homeTeamId: "usa",
+    awayTeamId: "mex",
+    kickoffAt: "2026-06-11T18:00:00.000Z",
+  } as const;
+
+  const upcoming = {
+    ...baseMatch,
+    id: "upcoming",
+    status: "scheduled" as const,
+    kickoffAt: "2026-06-20T18:00:00.000Z",
+  };
+  const live = {
+    ...baseMatch,
+    id: "live",
+    status: "live" as const,
+    kickoffAt: "2026-06-15T18:00:00.000Z",
+  };
+  const olderEnded = {
+    ...baseMatch,
+    id: "older-ended",
+    status: "finished" as const,
+    kickoffAt: "2026-06-10T18:00:00.000Z",
+  };
+  const newerEnded = {
+    ...baseMatch,
+    id: "newer-ended",
+    status: "finished" as const,
+    kickoffAt: "2026-06-12T18:00:00.000Z",
+  };
+
+  const matches = [upcoming, live, olderEnded, newerEnded];
+
+  it("hides ended matches when showEnded is false", () => {
+    const filtered = filterScheduleMatches(matches, false);
+
+    assert.deepEqual(
+      filtered.map((match) => match.id),
+      ["upcoming", "live"],
+    );
+  });
+
+  it("shows only ended matches in reverse time order when showEnded is true", () => {
+    const filtered = filterScheduleMatches(matches, true);
+
+    assert.deepEqual(
+      filtered.map((match) => match.id),
+      ["older-ended", "newer-ended"],
+    );
+
+    const sorted = buildScheduleMatchList(matches, [], {
+      showEnded: true,
+      sortKey: "time",
+    });
+
+    assert.deepEqual(
+      sorted.map((match) => match.id),
+      ["newer-ended", "older-ended"],
+    );
   });
 });
