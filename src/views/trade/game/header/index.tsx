@@ -18,6 +18,7 @@ import {
   resolveMatchSides
 } from "@/lib/market/schedule-match";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { teamDetailHref } from "@/lib/routes/team";
 import { LiveMatchElapsedClock } from "@/views/trade/game/header/live-match-elapsed-clock";
@@ -203,6 +204,11 @@ export function TradeGameHeader({
   const sides = resolveMatchSides(liveMatch, snapshots);
   const homeDisplayName = useLocalizedTeamName(sides.home.code, sides.home.name);
   const awayDisplayName = useLocalizedTeamName(sides.away.code, sides.away.name);
+  const { stoppageExtraMinutes } = useGameStatistics({
+    match,
+    homeTeamName: homeDisplayName,
+    awayTeamName: awayDisplayName
+  });
 
   const homeProfile = liveMatch.homeTeamId
     ? teamProfiles?.[liveMatch.homeTeamId]
@@ -230,12 +236,19 @@ export function TradeGameHeader({
         : tHome("matchStatusEnded");
   const badgeLabel = effectiveLive ? "" : statusLabel;
   const badgeTrailing = effectiveLive ? (
-    <LiveMatchElapsedClock
-      baseElapsedSeconds={resolvedElapsedSeconds}
-      kickoffAt={liveMatch.kickoffAt}
-      isLive={effectiveLive}
-      className="text-sm font-[500] leading-[17px] text-[#7BCA25] whitespace-nowrap"
-    />
+    <span className="inline-flex items-baseline whitespace-nowrap">
+      <LiveMatchElapsedClock
+        baseElapsedSeconds={resolvedElapsedSeconds}
+        kickoffAt={liveMatch.kickoffAt}
+        isLive={effectiveLive}
+        className="text-sm font-[400] leading-[18px] text-[#7BCA25]"
+      />
+      {stoppageExtraMinutes !== undefined ? (
+        <span className="text-sm font-[556] leading-[17px] text-[#909090]">
+          +{stoppageExtraMinutes}
+        </span>
+      ) : null}
+    </span>
   ) : undefined;
   const subtitle = effectiveLive
     ? undefined

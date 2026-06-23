@@ -10,6 +10,7 @@ import { normalizeTeamCode } from "@/lib/i18n/localized-team-name";
 import type { Team } from "@/types/market";
 import type {
   ProphetGameStatisticsPayload,
+  ProphetGameStatisticsStatus,
   ProphetGameStatisticValue
 } from "@/types/prophet-api";
 import type { GameMatchChartEvent } from "@/types/market";
@@ -264,6 +265,24 @@ export function mapGameStatisticsRows(
 
 export function buildEmptyGameStatisticsGoalEvents(): GameMatchChartEvent[] {
   return [];
+}
+
+/** Announced stoppage minutes from live match status, e.g. 6 → display "+6". */
+export function resolveMatchStoppageExtraMinutes(
+  status: ProphetGameStatisticsStatus | undefined
+): number | undefined {
+  const extra = status?.extra;
+
+  if (
+    extra === null ||
+    extra === undefined ||
+    !Number.isFinite(extra) ||
+    extra <= 0
+  ) {
+    return undefined;
+  }
+
+  return Math.floor(extra);
 }
 
 /**
