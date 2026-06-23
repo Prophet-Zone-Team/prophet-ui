@@ -37,6 +37,7 @@ interface LoginModalProps {
     | "isAuthenticated"
     | "isRegionBlocked"
     | "isRegionCloseOnly"
+    | "whitelistLoginMode"
     | "eligibilityView"
     | "privyModalOpen"
     | "closeLogin"
@@ -86,6 +87,7 @@ export function LoginModal({ auth }: LoginModalProps) {
     isAuthenticated,
     isRegionBlocked,
     isRegionCloseOnly,
+    whitelistLoginMode,
     eligibilityView,
     privyModalOpen,
     closeLogin,
@@ -110,7 +112,8 @@ export function LoginModal({ auth }: LoginModalProps) {
   }, [hydrated, loginModalOpen, session, refreshSetupReadiness]);
 
   const showPolygonHint = Boolean(error) && /chainId|137|polygon/i.test(error ?? "");
-  const showRestrictedView = isRegionBlocked && !loginInProgress;
+  const showRestrictedView =
+    isRegionBlocked && !whitelistLoginMode && !loginInProgress;
   const showCloseOnlyBanner = isRegionCloseOnly && !showRestrictedView && !loginInProgress;
 
   const pathname = usePathname();
@@ -150,6 +153,11 @@ export function LoginModal({ auth }: LoginModalProps) {
           <p className="text-[12px] font-[400] text-[#3168FF] px-[10px] py-[4px] rounded-[8px] bg-[#E3E9FF]">
             {formatCloseOnlyLabel(eligibilityView)}:{" "}
             {formatCloseOnlyDetail(eligibilityView)}
+          </p>
+        ) : null}
+        {whitelistLoginMode && !showRestrictedView ? (
+          <p className="text-[12px] font-[400] text-[#3168FF] px-[10px] py-[4px] rounded-[8px] bg-[#E3E9FF]">
+            {t("whitelistEmailLoginHint")}
           </p>
         ) : null}
         {showRestrictedView ? (
@@ -232,12 +240,20 @@ export function LoginModal({ auth }: LoginModalProps) {
                             stepId={step.id}
                             state={state}
                             loginInProgress={loginInProgress}
+                            emailOnlyConnect={whitelistLoginMode && step.id === "deploy_wallet"}
                             onConnectWallet={() => {
                               trackLoginClicked({
                                 entrySource: "login_modal_setup",
                                 label: "Connect wallet"
                               });
                               void openLogin("wallet");
+                            }}
+                            onConnectEmail={() => {
+                              trackLoginClicked({
+                                entrySource: "login_modal_setup",
+                                label: "Login by email"
+                              });
+                              openPrivyLogin();
                             }}
                             onConnectNear={() => {
                               trackLoginClicked({
@@ -282,7 +298,7 @@ export function LoginModal({ auth }: LoginModalProps) {
               </div>
             ) : null}
 
-            {!isAuthenticated ? (
+            {!isAuthenticated && !whitelistLoginMode ? (
               <button
                 type="button"
                 className="flex items-center justify-center gap-1 border-t border-prophet-line pt-4 text-[14px] font-[500] leading-[normal] text-black disabled:opacity-60 disabled:cursor-not-allowed"
@@ -301,6 +317,7 @@ export function LoginModal({ auth }: LoginModalProps) {
     <PrivyLoginModal
       open={privyModalOpen}
       onClose={closePrivyLogin}
+      emailOnlyMode={whitelistLoginMode}
       onConnectExtensionWallet={() => {
         trackLoginClicked({
           entrySource: "privy_login_modal",
@@ -514,7 +531,9 @@ function StepAction({
   stepId,
   state,
   loginInProgress,
+  emailOnlyConnect = false,
   onConnectWallet,
+  onConnectEmail,
   onConnectNear,
   onSignClob,
   onSignTokens,
@@ -523,7 +542,9 @@ function StepAction({
   stepId: SetupStepId;
   state: StepVisualState;
   loginInProgress: boolean;
+  emailOnlyConnect?: boolean;
   onConnectWallet: () => void;
+  onConnectEmail: () => void;
   onConnectNear: () => void;
   onSignClob: () => void;
   onSignTokens: () => void;
@@ -541,6 +562,19 @@ function StepAction({
           onClick={onRefresh}
         >
           {t("retry")}
+        </button>
+      );
+    }
+
+    if (emailOnlyConnect) {
+      return (
+        <button
+          type="button"
+          className="flex h-[50px] w-full items-center justify-center rounded-[8px] bg-black text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
+          disabled={loginInProgress}
+          onClick={onConnectEmail}
+        >
+          {t("loginByEmail")}
         </button>
       );
     }

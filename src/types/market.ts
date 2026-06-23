@@ -103,6 +103,7 @@ export interface TradingUserSession {
   eligibilityCountry?: string;
   eligibilityRegion?: string;
   eligibilityReason?: string;
+  eligibilityWhitelistEmail?: string;
   setupAllowances?: TradingSetupAllowances;
   setupAllowancesCheckedAt?: string;
   authenticatedAt?: string;

@@ -49,6 +49,7 @@ export interface TradingEligibilityView {
   country?: string;
   region?: string;
   reason?: string;
+  whitelistLoginMode?: boolean;
 }
 
 export function formatRegionBlockedLabel(
@@ -186,6 +187,21 @@ export async function fetchTradingEligibility(): Promise<TradingEligibilityView>
   );
 
   return response.eligibility;
+}
+
+export async function checkEligibilityWhitelistEmail(
+  email: string,
+): Promise<{ allowed: boolean; reason?: string }> {
+  return fetchJson<{ allowed: boolean; reason?: string }>(
+    "/api/trading/eligibility/whitelist-check",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    },
+  );
 }
 
 export function syncStandaloneFromSession(

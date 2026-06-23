@@ -77,6 +77,7 @@ import {
   isBuyRestricted as checkIsBuyRestricted,
   isRegionBlocked as checkIsRegionBlocked,
   isRegionCloseOnly as checkIsRegionCloseOnly,
+  resolveEligibilityView,
   type TradingEligibilityView
 } from "@/lib/trading/trading-eligibility-client";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
@@ -118,6 +119,7 @@ import { wagmiConfig } from "../rainbowkit/wagmi-config";
 import { waitForExternalWalletConnection } from "@/lib/trading/wait-for-wallet-connect";
 import { useMigratePromptStore } from "@/store/use-migrate-prompt-store";
 import { useNearAccountStore } from "@/lib/wallet/near/near-account-store";
+import { useUserConfigStore } from "@/store/user-config-store";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
@@ -187,6 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isRegionBlocked, setIsRegionBlocked] = useState(false);
   const [isBuyRestricted, setIsBuyRestricted] = useState(false);
   const [isRegionCloseOnly, setIsRegionCloseOnly] = useState(false);
+  const [whitelistLoginMode, setWhitelistLoginMode] = useState(false);
   const [eligibilityView, setEligibilityView] = useState<
     TradingEligibilityView | undefined
   >();
@@ -207,24 +210,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isRegionBlockedRef = useRef(false);
   const isBuyRestrictedRef = useRef(false);
   const isRegionCloseOnlyRef = useRef(false);
+  const whitelistLoginModeRef = useRef(false);
   const eligibilityViewRef = useRef<TradingEligibilityView | undefined>(
     undefined
   );
   const regionRestrictionToastShownRef = useRef(false);
 
+  const isLoginRegionBlocked = useCallback(() => {
+    return isRegionBlockedRef.current && !whitelistLoginModeRef.current;
+  }, []);
+
   const syncEligibilityFlags = useCallback(
-    (eligibility: TradingEligibilityView | undefined) => {
-      const status = eligibility?.status;
+    (eligibility: TradingEligibilityView | undefined, activeSession?: TradingUserSession) => {
+      const view = resolveEligibilityView(
+        activeSession ?? useAuthStore.getState().session,
+        eligibility,
+      );
+      const status = view?.status;
       const fullyBlocked = checkIsRegionBlocked(status);
       const buyRestricted = checkIsBuyRestricted(status);
       const closeOnly = checkIsRegionCloseOnly(status);
+      const nextWhitelistLoginMode = Boolean(eligibility?.whitelistLoginMode);
 
       setIsRegionBlocked(fullyBlocked);
       setIsBuyRestricted(buyRestricted);
       setIsRegionCloseOnly(closeOnly);
+      setWhitelistLoginMode(nextWhitelistLoginMode);
       isRegionBlockedRef.current = fullyBlocked;
       isBuyRestrictedRef.current = buyRestricted;
       isRegionCloseOnlyRef.current = closeOnly;
+      whitelistLoginModeRef.current = nextWhitelistLoginMode;
     },
     []
   );
@@ -244,6 +259,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     eligibilityViewRef.current = eligibilityView;
   }, [eligibilityView]);
+
+  useEffect(() => {
+    if (!eligibilityView) {
+      return;
+    }
+
+    syncEligibilityFlags(eligibilityView, session);
+  }, [eligibilityView, session, syncEligibilityFlags]);
 
   const refreshEligibility = useCallback(async () => {
     if (eligibilityRefreshRef.current) {
@@ -477,6 +500,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         session = await createTradingSession(finalWalletAddress, {
           onStep: handleStep,
+          ...(_loginMethod === "email" && store.loginEmail
+            ? { email: store.loginEmail }
+            : {}),
         });
       } else if (session.depositWalletStatus !== "deployed") {
         await ensureDepositWalletDeployed(session.walletAddress, {
@@ -839,7 +865,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
     const _loginMethod = method ?? store.loginMethod;
 
-    if (isRegionBlockedRef.current) {
+    if (isLoginRegionBlocked()) {
       store.setLoginModalOpen(true);
       store.setPrivyLoginInProgress(false);
       return undefined;
@@ -935,7 +961,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
     store.setPrivyLoginInProgress(true);
 
-    if (store.session || isRegionBlockedRef.current) {
+    if (store.session || isLoginRegionBlocked()) {
       consumeOAuthPending();
       clearOAuthUrlParams();
       store.setPrivyLoginInProgress(false);
@@ -1097,7 +1123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setLoginMethod(method);
     }
 
-    if (isRegionBlockedRef.current) {
+    if (isLoginRegionBlocked()) {
       openLoginModalOnly();
       return undefined;
     }
@@ -1115,7 +1141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     store.setLoginMethod("near");
 
-    if (isRegionBlockedRef.current) {
+    if (isLoginRegionBlocked()) {
       openLoginModalOnly();
       return undefined;
     }
@@ -1158,6 +1184,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setLoginModalOpen(true);
     setPrivyModalOpen(false);
     pendingPrivyLoginMethodRef.current = "email";
+
+    if (whitelistLoginModeRef.current) {
+      useUserConfigStore.getState().setLocale("zh-TW");
+    }
+
     void startPrivyTradingLogin("email");
   }, [startPrivyTradingLogin]);
 
@@ -1325,6 +1356,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (eligibilityView.whitelistLoginMode) {
+      return;
+    }
+
     regionRestrictionToastShownRef.current = true;
     showRegionRestrictionToast(eligibilityView);
   }, [eligibilityLoadStatus, eligibilityView, hydrated]);
@@ -1463,6 +1498,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isRegionBlocked,
     isBuyRestricted,
     isRegionCloseOnly,
+    whitelistLoginMode,
     loginMethod,
     privyModalOpen,
     privyReady,
