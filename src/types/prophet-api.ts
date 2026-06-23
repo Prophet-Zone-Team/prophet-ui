@@ -281,8 +281,17 @@ export interface ProphetGameStatisticsEvent {
   detail: string;
 }
 
+/** Live match clock status from the parsed `statistics` JSON string. */
+export interface ProphetGameStatisticsStatus {
+  short?: string;
+  long?: string;
+  elapsed?: number;
+  extra?: number | null;
+}
+
 /** Parsed payload from the `statistics` JSON string. */
 export interface ProphetGameStatisticsPayload {
+  status?: ProphetGameStatisticsStatus;
   statistics: ProphetGameStatisticsTeamBlock[];
   events: ProphetGameStatisticsEvent[];
 }

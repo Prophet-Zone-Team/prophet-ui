@@ -206,7 +206,7 @@ export function filterScheduleMatches(
   showEnded: boolean
 ): WorldCupMatch[] {
   if (showEnded) {
-    return matches;
+    return matches.filter((match) => isEndedMatchStatus(match.status));
   }
 
   return matches.filter((match) => !isEndedMatchStatus(match.status));
@@ -363,7 +363,8 @@ export function combineScheduleTeamFilterIds(
 export function sortScheduleMatches(
   matches: WorldCupMatch[],
   snapshots: TeamMarketSnapshot[],
-  sortKey: ScheduleSortKey
+  sortKey: ScheduleSortKey,
+  options?: { reverseTime?: boolean }
 ): WorldCupMatch[] {
   return [...matches].sort((left, right) => {
     if (sortKey === "volume") {
@@ -372,7 +373,8 @@ export function sortScheduleMatches(
       );
     }
 
-    return getMatchKickoffTime(left) - getMatchKickoffTime(right);
+    const timeDelta = getMatchKickoffTime(left) - getMatchKickoffTime(right);
+    return options?.reverseTime ? -timeDelta : timeDelta;
   });
 }
 
@@ -443,7 +445,9 @@ export function buildScheduleMatchList(
     filteredByStatus,
     options.teamIds
   );
-  return sortScheduleMatches(filteredByTeams, snapshots, options.sortKey);
+  return sortScheduleMatches(filteredByTeams, snapshots, options.sortKey, {
+    reverseTime: options.showEnded
+  });
 }
 
 export function buildScheduleDateGroups(
