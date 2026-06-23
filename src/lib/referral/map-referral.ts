@@ -1,7 +1,7 @@
 import Big from "big.js";
 
 import { formatRelativeTime } from "@/lib/analytics/format-relative-time";
-import { REFERRAL_KICKBACK_DESCRIPTION } from "@/lib/referral/config";
+import { REFERRAL_CLAIM_MIN_AMOUNT, REFERRAL_KICKBACK_DESCRIPTION } from "@/lib/referral/config";
 import { formatShortAddress } from "@/lib/referral/format-address";
 import { buildReferralLinkParts } from "@/lib/referral/referral-link";
 import type {
@@ -59,7 +59,7 @@ export function mapProphetReferralToContent(
 
   let canClaim = false;
   try {
-    canClaim = Big(claimable).gt(100);
+    canClaim = Big(claimable).gt(REFERRAL_CLAIM_MIN_AMOUNT);
   } catch {
     canClaim = false;
   }

@@ -1086,6 +1086,7 @@
     "toBeClaimedLabel": "To be Claimed",
     "claim": "Claim",
     "claiming": "Claiming…",
+    "claimAvailableTooltip": "Claim available when earnings exceed {minAmount}",
     "connectWalletToViewActivity": "Connect your wallet to view referral activity.",
     "noRewardsFound": "No rewards found",
     "tableUser": "User",
