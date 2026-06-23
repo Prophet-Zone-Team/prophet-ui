@@ -17,6 +17,7 @@ export type {
   ComboPickOutcomeSide,
   ComboPickTeam,
   ComboSpreadPick,
+  ComboTotalPick,
   ComboWidgetProps,
 } from "@/views/combo/combo-widget";
 

@@ -5,6 +5,17 @@ import { useTranslations } from "next-intl";
 
 import { useAuth } from "@/context/auth";
 import { useComboTicket } from "@/hooks/combo/use-combo-ticket";
+import { isSpreadMarket } from "@/lib/combo/combo-market-mutex";
+import {
+  resolveComboPickSelectionLabel,
+  resolveComboPickTeam,
+  resolveSpreadLineForMarket,
+  resolveSpreadOptionsForTeam,
+} from "@/lib/combo/map-market-to-combo-item";
+import {
+  resolveComboLegOutcomeSide,
+  resolveComboPickStoredOutcomeSide,
+} from "@/lib/combo/combo-pick-outcome";
 import {
   buildComboTicketLeg,
   comboPickToTicketLeg,
@@ -19,12 +30,13 @@ import {
   useSetComboPicks,
   useUpdateComboPickOutcome,
 } from "@/store/combo-store";
-import type { ComboMarketRecord } from "@/types/combo";
+import type { ComboGameGroup, ComboMarketRecord } from "@/types/combo";
 import { ComboWidget } from "@/views/combo/combo-widget";
 import { MIN_COMBO_PICKS } from "@/views/combo/combo-widget/constants";
 import type {
   ComboPick,
   ComboPickOutcomeSide,
+  ComboSpreadPick,
 } from "@/views/combo/combo-widget/types";
 
 export interface ComboTicketContainerProps {
@@ -105,31 +117,69 @@ export function ComboTicketContainer({ className }: ComboTicketContainerProps) {
 
 export function createComboPickFromMarket(input: {
   market: ComboMarketRecord;
+  group?: ComboGameGroup;
   outcomeSide?: ComboPickOutcomeSide;
   teamCode?: string;
   teamName?: string;
 }): ComboPick {
-  const outcomeSide = input.outcomeSide ?? "yes";
+  if (isSpreadMarket(input.market) && input.group) {
+    return createComboSpreadPickFromMarket(input.market, input.group);
+  }
+
+  const requestedSide = input.outcomeSide ?? "yes";
+  const storedOutcomeSide = resolveComboPickStoredOutcomeSide(
+    input.market,
+    requestedSide,
+  );
+  const legOutcomeSide = resolveComboLegOutcomeSide(
+    input.market,
+    storedOutcomeSide,
+  );
   const leg = buildComboTicketLeg({
     id: input.market.id,
     market: input.market,
-    outcomeSide,
+    outcomeSide: legOutcomeSide,
   });
-  const selectionLabel =
-    outcomeSide === "yes" ? input.market.outcomes[0] : input.market.outcomes[1];
+  const selectionLabel = resolveComboPickSelectionLabel(
+    input.market,
+    storedOutcomeSide,
+  );
+  const team = resolveComboPickTeam(input.market, storedOutcomeSide);
 
   return {
     id: input.market.id,
     type: "moneyline",
-    outcomeSide,
-    matchupLabel: input.market.title,
-    team: {
-      name: input.teamName ?? selectionLabel,
-      code: input.teamCode ?? selectionLabel.slice(0, 3).toUpperCase(),
-      logoUrl: input.market.image,
-    },
+    outcomeSide: storedOutcomeSide,
+    matchupLabel: input.group?.title ?? input.market.title,
+    team,
     selectionLabel,
     legPositionId: leg.legPositionId,
-    referencePrice: resolveReferencePrice(input.market, outcomeSide),
+    referencePrice: resolveReferencePrice(input.market, legOutcomeSide),
+  };
+}
+
+function createComboSpreadPickFromMarket(
+  market: ComboMarketRecord,
+  group: ComboGameGroup,
+): ComboSpreadPick {
+  const team = resolveComboPickTeam(market, "yes");
+  const spreadValue = resolveSpreadLineForMarket(market, group) ?? "";
+  const spreadOptions = resolveSpreadOptionsForTeam(group, team.code);
+  const leg = buildComboTicketLeg({
+    id: market.id,
+    market,
+    outcomeSide: "yes",
+  });
+
+  return {
+    id: market.id,
+    type: "spread",
+    spreadValue,
+    spreadOptions,
+    matchupLabel: group.title,
+    team,
+    selectionLabel: resolveComboPickSelectionLabel(market, "yes"),
+    legPositionId: leg.legPositionId,
+    referencePrice: resolveReferencePrice(market, "yes"),
   };
 }

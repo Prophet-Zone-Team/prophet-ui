@@ -1,4 +1,5 @@
 import { TeamFlag } from "@/components/teams/team-flag";
+import { shouldShowComboPickTeamFlag } from "@/lib/combo/map-market-to-combo-item";
 
 import { RemovePickButton } from "./remove-pick-button";
 import { SpreadSelector } from "./spread-selector";
@@ -43,14 +44,16 @@ export function ComboPickCard({
         </div>
 
         <div className="mt-2 flex items-center gap-2">
-          <TeamFlag
-            code={pick.team.code}
-            name={pick.team.name}
-            logoUrl={pick.team.logoUrl}
-            className="h-6 w-6 shrink-0 rounded-[2px] drop-shadow-[0_0_2px_rgba(0,0,0,0.2)]"
-          />
+          {shouldShowComboPickTeamFlag(pick.team) ? (
+            <TeamFlag
+              code={pick.team.code}
+              name={pick.team.name}
+              logoUrl={pick.team.logoUrl}
+              className="h-6 w-6 shrink-0 rounded-[2px] drop-shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+            />
+          ) : null}
           <span className="truncate text-sm font-[500] leading-[18px] text-black">
-            {pick.selectionLabel}
+            {pick.type === "spread" ? pick.spreadValue : pick.selectionLabel}
           </span>
         </div>
       </div>

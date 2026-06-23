@@ -241,5 +241,36 @@ function sanitizeComboPick(value: unknown): ComboPick | undefined {
     };
   }
 
+  if (pick.type === "total") {
+    if (
+      typeof pick.totalValue !== "string" ||
+      (pick.outcomeSide !== "yes" && pick.outcomeSide !== "no")
+    ) {
+      return undefined;
+    }
+
+    return {
+      id: pick.id,
+      type: "total",
+      totalValue: pick.totalValue,
+      totalOptions: Array.isArray(pick.totalOptions)
+        ? pick.totalOptions.filter((entry): entry is string => typeof entry === "string")
+        : undefined,
+      outcomeSide: pick.outcomeSide,
+      matchupLabel: pick.matchupLabel,
+      team: {
+        name: pick.team.name,
+        code: pick.team.code,
+        logoUrl: pick.team.logoUrl,
+      },
+      selectionLabel: pick.selectionLabel,
+      legPositionId: pick.legPositionId,
+      referencePrice:
+        typeof pick.referencePrice === "number" && pick.referencePrice >= 0
+          ? pick.referencePrice
+          : undefined,
+    };
+  }
+
   return undefined;
 }

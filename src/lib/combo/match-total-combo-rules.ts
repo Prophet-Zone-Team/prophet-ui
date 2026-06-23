@@ -25,6 +25,104 @@ export function resolveMatchTotalLineFromMarket(
   return Number.isFinite(line) ? line : undefined;
 }
 
+/** Catalog total line label such as "2.5" for match-total markets. */
+export function resolveTotalLineLabelForMarket(
+  market: ComboMarketRecord,
+): string | undefined {
+  if (!isMatchTotalMarket(market)) {
+    return undefined;
+  }
+
+  const meta = parseComboMarketSlug(market.slug);
+
+  return meta.totalLine;
+}
+
+/** Available match-total lines within a game group, sorted numerically. */
+export function resolveTotalLineOptionsForGroup(
+  group: ComboGameGroup,
+): string[] {
+  const lines: string[] = [];
+
+  for (const market of group.markets) {
+    const line = resolveTotalLineLabelForMarket(market);
+
+    if (line) {
+      lines.push(line);
+    }
+  }
+
+  return sortTotalLines(lines);
+}
+
+export function resolveMatchTotalMarketForLine(
+  group: ComboGameGroup,
+  line: string,
+): ComboMarketRecord | undefined {
+  return group.markets.find((market) => {
+    if (!isMatchTotalMarket(market)) {
+      return false;
+    }
+
+    return resolveTotalLineLabelForMarket(market) === line;
+  });
+}
+
+export interface ComboTotalLineOption {
+  value: string;
+  disabled?: boolean;
+}
+
+/** Total line dropdown options for one pick, respecting combo mutex rules. */
+export function resolveTotalLineOptionsForPick(
+  group: ComboGameGroup,
+  pick: { id: string; outcomeSide: string },
+  groupPicks: readonly { id: string; outcomeSide?: string }[],
+): ComboTotalLineOption[] {
+  const side = resolveMatchTotalSideFromOutcomeSide(pick.outcomeSide);
+  const otherSelections = resolveMatchTotalSelectionsFromGroupPicks(
+    groupPicks.filter((entry) => entry.id !== pick.id),
+    group,
+  );
+
+  return resolveTotalLineOptionsForGroup(group).map((line) => {
+    const market = resolveMatchTotalMarketForLine(group, line);
+    const lineValue = market ? resolveMatchTotalLineFromMarket(market) : undefined;
+
+    if (!market || lineValue === undefined) {
+      return { value: line, disabled: true };
+    }
+
+    const candidate: MatchTotalSelection = {
+      marketId: market.id,
+      line: lineValue,
+      side,
+    };
+
+    const compatible = isMatchTotalOptionCompatibleWithSelections(
+      candidate,
+      otherSelections,
+    );
+
+    return compatible
+      ? { value: line }
+      : { value: line, disabled: true };
+  });
+}
+
+function sortTotalLines(lines: string[]): string[] {
+  return [...new Set(lines)].sort((left, right) => {
+    const leftValue = Number.parseFloat(left);
+    const rightValue = Number.parseFloat(right);
+
+    if (Number.isFinite(leftValue) && Number.isFinite(rightValue)) {
+      return leftValue - rightValue;
+    }
+
+    return left.localeCompare(right);
+  });
+}
+
 export function resolveMatchTotalSideFromOutcomeSide(
   outcomeSide: string,
 ): MatchTotalSide {
@@ -84,7 +182,7 @@ export function areMatchTotalSelectionsCompatible(
   right: MatchTotalSelection,
 ): boolean {
   if (left.marketId === right.marketId) {
-    return true;
+    return left.side === right.side;
   }
 
   if (left.side === "over" && right.side === "over") {

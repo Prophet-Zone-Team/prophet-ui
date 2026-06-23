@@ -1,5 +1,10 @@
 export type ComboPickOutcomeSide = "yes" | "no";
 
+export interface ComboLineOption {
+  value: string;
+  disabled?: boolean;
+}
+
 export interface ComboPickTeam {
   name: string;
   code: string;
@@ -28,7 +33,15 @@ export interface ComboSpreadPick extends ComboPickBase {
   spreadOptions?: string[];
 }
 
-export type ComboPick = ComboMoneylinePick | ComboSpreadPick;
+export interface ComboTotalPick extends ComboPickBase {
+  type: "total";
+  totalValue: string;
+  totalOptions?: Array<string | ComboLineOption>;
+  /** yes = over, no = under */
+  outcomeSide: ComboPickOutcomeSide;
+}
+
+export type ComboPick = ComboMoneylinePick | ComboSpreadPick | ComboTotalPick;
 
 export interface ComboWidgetProps {
   picks: ComboPick[];
@@ -41,6 +54,7 @@ export interface ComboWidgetProps {
   onApplyBalanceFraction?: (fraction: number) => void;
   onPickOutcomeChange?: (pickId: string, side: ComboPickOutcomeSide) => void;
   onPickSpreadChange?: (pickId: string, spread: string) => void;
+  onPickTotalChange?: (pickId: string, total: string) => void;
   onRemovePick?: (pickId: string) => void;
   onSubmit?: () => void;
   onInfoClick?: () => void;

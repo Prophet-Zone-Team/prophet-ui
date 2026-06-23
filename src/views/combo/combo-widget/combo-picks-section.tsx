@@ -12,6 +12,7 @@ export type ComboPicksSectionProps = {
   onInfoClick?: () => void;
   onPickOutcomeChange?: (pickId: string, side: ComboPickOutcomeSide) => void;
   onPickSpreadChange?: (pickId: string, spread: string) => void;
+  onPickTotalChange?: (pickId: string, total: string) => void;
   onRemovePick?: (pickId: string) => void;
 };
 
@@ -22,6 +23,7 @@ export function ComboPicksSection({
   onInfoClick,
   onPickOutcomeChange,
   onPickSpreadChange,
+  onPickTotalChange,
   onRemovePick
 }: ComboPicksSectionProps) {
   return (
@@ -65,6 +67,7 @@ export function ComboPicksSection({
             pick={pick}
             onOutcomeChange={(side) => onPickOutcomeChange?.(pick.id, side)}
             onSpreadChange={(spread) => onPickSpreadChange?.(pick.id, spread)}
+            onTotalChange={(total) => onPickTotalChange?.(pick.id, total)}
             onRemove={() => onRemovePick?.(pick.id)}
           />
         ))}

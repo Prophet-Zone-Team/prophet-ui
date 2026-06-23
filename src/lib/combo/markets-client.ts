@@ -1,4 +1,5 @@
 import { fetchProphetComboMarkets } from "@/lib/combo/fetch-prophet-combo-markets";
+import { resolveComboLegOutcomeSide } from "@/lib/combo/combo-pick-outcome";
 import { resolveMarketOrderWorstPrice } from "@/lib/market/order-math";
 import type {
   ComboMarketRecord,
@@ -69,10 +70,20 @@ export function buildComboLegsFromPicks(
       const market = marketsById.get(pick.id);
 
       if (market && pick.type === "moneyline") {
+        const outcomeSide = resolveComboLegOutcomeSide(market, pick.outcomeSide);
+
         return buildComboTicketLeg({
           id: pick.id,
           market,
-          outcomeSide: pick.outcomeSide,
+          outcomeSide,
+        });
+      }
+
+      if (market && pick.type === "spread") {
+        return buildComboTicketLeg({
+          id: pick.id,
+          market,
+          outcomeSide: "yes",
         });
       }
 
