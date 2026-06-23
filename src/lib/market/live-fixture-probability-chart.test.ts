@@ -5,10 +5,14 @@ import {
   filterPriceHistoryByMatchStart,
   LIVE_MATCH_HALFTIME_PAUSE_SECONDS,
   LIVE_MATCH_HYDRATION_BREAK_SECONDS,
+  LIVE_MATCH_REGULATION_HALF_SECONDS,
   mapFixturePointsToElapsedFromStartTs,
+  mapLiveFixtureChartPointsToAxis,
+  mapWallElapsedToMatchClockSeconds,
   resolveAxisSecondsFromMatchClock,
   resolveLiveChartAxisTicksWithBreaks,
   resolveLiveChartMaxAxisSeconds,
+  resolveLiveChartPointCoordinates,
   resolveLiveChartPriceHistoryKickoffAt,
   resolveLiveChartTimeWindow,
   resolveMatchClockFromAxisSeconds,
@@ -144,6 +148,65 @@ describe("live-fixture-probability-chart", () => {
       }),
       45 * 60
     );
+  });
+
+  it("mapWallElapsedToMatchClockSeconds maps first-half wall time consistently in 2H", () => {
+    const firstHalfWall = 44 * 60 + LIVE_MATCH_HYDRATION_BREAK_SECONDS;
+
+    assert.equal(
+      mapWallElapsedToMatchClockSeconds(firstHalfWall),
+      44 * 60
+    );
+    assert.equal(
+      resolveLiveChartPointCoordinates(firstHalfWall, {
+        currentMatchClockSeconds: 52 * 60,
+        matchPeriod: "2H",
+      }).axisSeconds,
+      resolveAxisSecondsFromMatchClock(44 * 60)
+    );
+  });
+
+  it("mapWallElapsedToMatchClockSeconds maps halftime wall gap to 45'", () => {
+    const halftimeWall =
+      LIVE_MATCH_REGULATION_HALF_SECONDS +
+      LIVE_MATCH_HYDRATION_BREAK_SECONDS +
+      10 * 60;
+
+    assert.equal(
+      mapWallElapsedToMatchClockSeconds(halftimeWall),
+      LIVE_MATCH_REGULATION_HALF_SECONDS
+    );
+  });
+
+  it("mapLiveFixtureChartPointsToAxis dedupes points that share axisSeconds", () => {
+    const mapped = mapLiveFixtureChartPointsToAxis(
+      [
+        {
+          matchId: "test",
+          timestamp: "2026-06-02T19:44:00.000Z",
+          label: "44'",
+          elapsedSeconds:
+            44 * 60 + LIVE_MATCH_HYDRATION_BREAK_SECONDS,
+          home: 40,
+          draw: 30,
+          away: 30,
+        },
+        {
+          matchId: "test",
+          timestamp: "2026-06-02T19:44:30.000Z",
+          label: "44'",
+          elapsedSeconds:
+            44 * 60 + LIVE_MATCH_HYDRATION_BREAK_SECONDS + 30,
+          home: 42,
+          draw: 28,
+          away: 30,
+        },
+      ],
+      { matchPeriod: "HT" }
+    );
+
+    assert.equal(mapped.length, 1);
+    assert.equal(mapped[0]?.home, 42);
   });
 
   it("resolveLiveChartAxisTicksWithBreaks expands halftime gap between 30' and 45'", () => {

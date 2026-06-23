@@ -133,7 +133,11 @@ function mergeSnapshotFromMatch(
   }
 
   return seedTrackedScores({
+    ...current,
     ...next,
+    period: next.period ?? current.period,
+    liveElapsedSeconds:
+      next.liveElapsedSeconds ?? current.liveElapsedSeconds,
     goalEvents: current.goalEvents ?? [],
     trackedHomeScore: current.trackedHomeScore ?? next.trackedHomeScore,
     trackedAwayScore: current.trackedAwayScore ?? next.trackedAwayScore,
