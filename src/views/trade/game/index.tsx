@@ -40,7 +40,11 @@ import {
   useSelectedFixtureOutcome,
   useSelectFixtureOutcome,
 } from "@/store/trade-ticket-store";
-import { resolveLineOutcomeForSide, resolveLineOutcomePair } from "@/lib/market/fixture-line-outcome-pair";
+import {
+  resolveLineOutcomeForSide,
+  resolveLineOutcomePair,
+  resolveLineOutcomeTradeBinarySide,
+} from "@/lib/market/fixture-line-outcome-pair";
 import Bg from "@/views/trade/game/header/bg";
 import { ComboEntry } from "@/views/combo/combo-entry";
 
@@ -153,7 +157,11 @@ export default function TradeGameView({
     }
 
     if (lineOutcomePair) {
-      selectFixtureOutcome(resolveLineOutcomeForSide(lineOutcomePair, side), side);
+      const targetOutcome = resolveLineOutcomeForSide(lineOutcomePair, side);
+      selectFixtureOutcome(
+        targetOutcome,
+        resolveLineOutcomeTradeBinarySide(targetOutcome)
+      );
     } else {
       setOutcomeSide(side);
     }

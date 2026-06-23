@@ -88,6 +88,8 @@ export interface TradeTicketFormProps {
   outcomeButtonContainerClassName?: string;
   yesButtonLabel?: string;
   noButtonLabel?: string;
+  yesButtonActive?: boolean;
+  noButtonActive?: boolean;
   onTakeProfitLimitEnabledChange?: (value: boolean) => void;
   onTakeProfitLimitPriceChange?: (value: string) => void;
   walletInsight?: ReactNode;
@@ -139,6 +141,8 @@ export function TradeTicketForm({
   outcomeButtonContainerClassName,
   yesButtonLabel,
   noButtonLabel,
+  yesButtonActive,
+  noButtonActive,
   onTakeProfitLimitEnabledChange,
   onTakeProfitLimitPriceChange,
   walletInsight
@@ -171,7 +175,7 @@ export function TradeTicketForm({
       >
         <OutcomeButtonColumn
           side="yes"
-          active={outcomeSide === "yes"}
+          active={yesButtonActive ?? outcomeSide === "yes"}
           priceLabel={formatOutcomeDisplay(yesTokenPrice)}
           probabilityLabel={formatProbability(yesProbability)}
           shareCount={tradeSide === "sell" ? yesShares : undefined}
@@ -181,7 +185,7 @@ export function TradeTicketForm({
         />
         <OutcomeButtonColumn
           side="no"
-          active={outcomeSide === "no"}
+          active={noButtonActive ?? outcomeSide === "no"}
           priceLabel={formatOutcomeDisplay(noTokenPrice)}
           probabilityLabel={formatProbability(noProbability)}
           shareCount={tradeSide === "sell" ? noShares : undefined}
