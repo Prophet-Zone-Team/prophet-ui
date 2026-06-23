@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { OutcomeDisplaySwitcher } from "@/components/ui/outcome-display-switcher";
@@ -65,6 +65,12 @@ export function ComboPageView() {
     useState<OutcomeDisplayMode>("decimal");
   const { day, setDay, groups, markets, loading, error, reload } =
     useComboMarkets();
+
+  useEffect(() => {
+    if (day === "today" && !loading && !error && groups.length === 0) {
+      setDay("tomorrow");
+    }
+  }, [day, error, groups.length, loading, setDay]);
   const { liveYesPriceByMarketId } = useComboLivePrices({
     markets,
     enabled: markets.length > 0
