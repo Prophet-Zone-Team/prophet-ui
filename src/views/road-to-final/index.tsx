@@ -2,12 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
 
 import { useAuth } from "@/context/auth/use-auth";
 import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { useProphetReferral } from "@/hooks/referral/use-prophet-referral";
 import { useWinnerRecords } from "@/hooks/road-to-final/use-winner-records";
 import { useWinnerStats } from "@/hooks/road-to-final/use-winner-stats";
+import {
+  hasPersistedRoadToFinalStorage,
+  useRoadToFinalHydrated,
+  useRoadToFinalStore,
+} from "@/store/road-to-final-store";
 import dynamic from "next/dynamic";
 
 import { resolveThirdPlaceOption } from "./lib/bracket-resolver";
@@ -25,7 +31,7 @@ import type { KnockoutPickMethod } from "./lib/team-strength";
 import {
   decodeUrlState,
   encodeUrlState,
-  hydrateFromUrlPayload
+  hydrateFromUrlPayload,
 } from "./lib/url-state";
 import { isStepOneComplete } from "./lib/validation";
 import { defaultSimulatorTeamId } from "./lib/teams";
@@ -57,6 +63,7 @@ export function RoadToFinalPage({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const storeHydrated = useRoadToFinalHydrated();
   const { session, isAuthenticated } = useAuth();
   const { content: referralContent } = useProphetReferral();
   const { records, count: predictionCount, isLoading: recordsLoading, isError: recordsError } =
@@ -72,44 +79,67 @@ export function RoadToFinalPage({
   const safeInitialTeamId =
     getWorldCupTeamByIdOrCode(initialTeamId)?.id ?? defaultSimulatorTeamId;
 
+  const {
+    teamId,
+    knockoutWinners,
+    knockoutMethod,
+    setTeamId,
+    setKnockoutWinners,
+    setKnockoutMethod,
+    applySharedState,
+    clearKnockoutSelections,
+  } = useRoadToFinalStore(
+    useShallow((state) => ({
+      teamId: state.teamId,
+      knockoutWinners: state.knockoutWinners,
+      knockoutMethod: state.knockoutMethod,
+      setTeamId: state.setTeamId,
+      setKnockoutWinners: state.setKnockoutWinners,
+      setKnockoutMethod: state.setKnockoutMethod,
+      applySharedState: state.applySharedState,
+      clearKnockoutSelections: state.clearKnockoutSelections,
+    }))
+  );
+
   const placements = FIXED_GROUP_PLACEMENTS;
   const advancingThirdGroups = useMemo(
     () => [...FIXED_THIRD_PLACE_GROUPS].sort(),
     []
   );
 
-  const [hydrated, setHydrated] = useState(false);
+  const [urlHydrated, setUrlHydrated] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [recordsOpen, setRecordsOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [teamId, setTeamId] = useState(safeInitialTeamId);
-  const [knockoutWinners, setKnockoutWinners] = useState<KnockoutWinners>({});
-  const [knockoutMethod, setKnockoutMethod] =
-    useState<KnockoutMethodKey>("manualSelection");
 
   useEffect(() => {
+    if (!storeHydrated) {
+      return;
+    }
+
     const encodedState = searchParams.get("state");
 
     if (encodedState) {
       const payload = decodeUrlState(encodedState);
 
       if (payload) {
-        const hydratedState = hydrateFromUrlPayload(payload, safeInitialTeamId);
-
-        setKnockoutWinners(hydratedState.knockoutWinners ?? {});
-
-        if (hydratedState.teamId) {
-          setTeamId(hydratedState.teamId);
-        }
-
-        if (hydratedState.knockoutMethod) {
-          setKnockoutMethod(hydratedState.knockoutMethod as KnockoutMethodKey);
-        }
+        applySharedState(hydrateFromUrlPayload(payload, safeInitialTeamId));
       }
+    } else if (
+      !hasPersistedRoadToFinalStorage() &&
+      safeInitialTeamId !== defaultSimulatorTeamId
+    ) {
+      setTeamId(safeInitialTeamId);
     }
 
-    setHydrated(true);
-  }, [safeInitialTeamId, searchParams]);
+    setUrlHydrated(true);
+  }, [
+    applySharedState,
+    safeInitialTeamId,
+    searchParams,
+    setTeamId,
+    storeHydrated,
+  ]);
 
   const stepOneComplete = isStepOneComplete(placements, advancingThirdGroups);
   const thirdPlaceOption = resolveThirdPlaceOption(advancingThirdGroups);
@@ -137,7 +167,7 @@ export function RoadToFinalPage({
   }, [advancingThirdGroups, placements, shareTeamId, stepOneComplete]);
 
   const writeUrlState = useCallback(() => {
-    if (!hydrated || typeof window === "undefined") {
+    if (!urlHydrated || typeof window === "undefined") {
       return;
     }
 
@@ -152,15 +182,15 @@ export function RoadToFinalPage({
       })
     );
     router.replace(`${pathname}?${url.searchParams.toString()}`, { scroll: false });
-  }, [hydrated, knockoutMethod, knockoutWinners, pathname, router, teamId]);
+  }, [knockoutMethod, knockoutWinners, pathname, router, teamId, urlHydrated]);
 
   useEffect(() => {
-    if (!hydrated) {
+    if (!urlHydrated) {
       return;
     }
 
     writeUrlState();
-  }, [hydrated, writeUrlState]);
+  }, [urlHydrated, writeUrlState]);
 
   const handleKnockoutFill = (method: KnockoutMethodKey) => {
     if (!thirdPlaceOption || method === "manualSelection") {
@@ -196,10 +226,7 @@ export function RoadToFinalPage({
         onRandomFill={() => handleKnockoutFill("randomFill")}
         onFifaFill={() => handleKnockoutFill("fifaRank")}
         onValueFill={() => handleKnockoutFill("squadValueRanking")}
-        onClear={() => {
-          setKnockoutWinners({});
-          setKnockoutMethod("manualSelection");
-        }}
+        onClear={clearKnockoutSelections}
       />
 
       <div className="-mt-[12px] bg-[#0B1020]">
