@@ -465,10 +465,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         // privy connect
         else if (preferEmbedded) {
-          const embeddedWallet = privyWallets.filter(isPrivyEmbeddedWallet)[0];
-          const embeddedAddress = embeddedWallet?.address;
-          console.log("embeddedAddress: %o", embeddedAddress);
-          finalWalletAddress = embeddedAddress;
+          const embeddedFromHook = privyWallets.find(isPrivyEmbeddedWallet);
+          const embeddedWallet =
+            embeddedFromHook ??
+            (await waitForPrivyWallet({
+              timeoutMs: 20_000,
+              preferEmbedded: true,
+            }));
+          finalWalletAddress = embeddedWallet?.address;
+          console.log("embeddedAddress: %o", finalWalletAddress);
         }
         // rainbowkit connect
         else {
@@ -961,10 +966,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
     store.setPrivyLoginInProgress(true);
 
-    if (store.session || isLoginRegionBlocked()) {
+    if (isLoginRegionBlocked()) {
       consumeOAuthPending();
       clearOAuthUrlParams();
       store.setPrivyLoginInProgress(false);
+      return;
+    }
+
+    if (store.session) {
+      consumeOAuthPending();
+      clearOAuthUrlParams();
+      store.setPrivyLoginInProgress(false);
+
+      if (!isTradingSetupComplete(store.readiness)) {
+        store.setLoginModalOpen(true);
+        const nextReadiness = await refreshReadiness(store.session);
+        store.setReadiness(nextReadiness);
+        maybeCloseSetupModal(nextReadiness);
+      }
+
       return;
     }
 
@@ -996,11 +1016,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await releaseExternalWalletConnection(method);
 
-      const hasEmbeddedWallet = privyWallets.some(isPrivyEmbeddedWallet);
+      let embeddedWallet = privyWallets.find(isPrivyEmbeddedWallet);
 
-      console.log("hasEmbeddedWallet: %o", hasEmbeddedWallet)
-
-      if (!hasEmbeddedWallet && !privyWalletCreatingRef.current) {
+      if (!embeddedWallet && !privyWalletCreatingRef.current) {
         privyWalletCreatingRef.current = true;
 
         try {
@@ -1010,8 +1028,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
           privyWalletCreatingRef.current = false;
         }
+      }
 
-        await waitForPrivyWallet({ timeoutMs: 15_000, preferEmbedded: true });
+      embeddedWallet =
+        embeddedWallet ??
+        (await waitForPrivyWallet({ timeoutMs: 20_000, preferEmbedded: true }));
+
+      if (!embeddedWallet) {
+        throw new Error("Unable to connect your Privy wallet. Please try again.");
       }
 
       await runLogin(false, method);
@@ -1040,6 +1064,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     maybeCloseSetupModal(nextReadiness);
     return nextReadiness;
   }, [maybeCloseSetupModal, refreshReadiness]);
+
+  const resumePrivyEmailLogin = useCallback(async () => {
+    const store = useAuthStore.getState();
+    const email =
+      store.loginEmail?.trim() || resolvePrivyLoginEmail(privyUser) || undefined;
+
+    if (!privyReady || !privyAuthenticated || !email) {
+      setPrivyModalOpen(true);
+      return;
+    }
+
+    store.setLoginMethod("email");
+    store.setLoginEmail(email);
+    store.setLoginModalOpen(true);
+    setPrivyModalOpen(false);
+    pendingPrivyLoginMethodRef.current = "email";
+
+    if (whitelistLoginModeRef.current) {
+      useUserConfigStore.getState().setLocale("zh-TW");
+    }
+
+    if (store.session) {
+      if (!isTradingSetupComplete(store.readiness)) {
+        await refreshSetupReadiness();
+      }
+
+      return;
+    }
+
+    privyAutoLoginRef.current = false;
+    loginAbortRef.current = false;
+    void startPrivyTradingLogin("email");
+  }, [
+    privyAuthenticated,
+    privyReady,
+    privyUser,
+    refreshSetupReadiness,
+  ]);
 
   const runSignStep = useCallback(
     async (action: "clob" | "tokens") => {
@@ -1170,6 +1232,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setError(undefined);
     await releaseExternalWalletConnection("email");
     await wagmiDisconnect();
+
+    const hasVerifiedPrivyEmail =
+      privyReady &&
+      privyAuthenticated &&
+      Boolean(store.loginEmail?.trim() || resolvePrivyLoginEmail(privyUser));
+
+    if (hasVerifiedPrivyEmail) {
+      await resumePrivyEmailLogin();
+      return;
+    }
+
     setPrivyModalOpen(true);
   };
 
@@ -1178,19 +1251,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const completePrivyEmailLogin = useCallback((email: string) => {
-    const store = useAuthStore.getState();
-    store.setLoginMethod("email");
-    store.setLoginEmail(email);
-    store.setLoginModalOpen(true);
-    setPrivyModalOpen(false);
-    pendingPrivyLoginMethodRef.current = "email";
-
-    if (whitelistLoginModeRef.current) {
-      useUserConfigStore.getState().setLocale("zh-TW");
-    }
-
-    void startPrivyTradingLogin("email");
-  }, [startPrivyTradingLogin]);
+    useAuthStore.getState().setLoginEmail(email.trim());
+    void resumePrivyEmailLogin();
+  }, [resumePrivyEmailLogin]);
 
   const setLoginMethod = useCallback((method: AuthLoginMethod | undefined) => {
     useAuthStore.getState().setLoginMethod(method);
@@ -1452,6 +1515,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void syncProphetWalletLogin(walletAddress, { email });
     }
   }, [loginMethod, privyAuthenticated, privyUser]);
+
+  // Resume email login setup after refresh when Privy OTP was already verified.
+  useEffect(() => {
+    if (!hydrated || !privyReady || !privyAuthenticated || !privyUser) {
+      return;
+    }
+
+    const store = useAuthStore.getState();
+    const email =
+      store.loginEmail?.trim() || resolvePrivyLoginEmail(privyUser) || undefined;
+
+    if (!email) {
+      return;
+    }
+
+    const shouldUseEmailLoginFlow =
+      store.loginMethod === "email" ||
+      (whitelistLoginMode && !store.loginMethod);
+
+    if (!shouldUseEmailLoginFlow) {
+      return;
+    }
+
+    if (!store.loginMethod) {
+      store.setLoginMethod("email");
+    }
+
+    if (!store.loginEmail) {
+      store.setLoginEmail(email);
+    }
+
+    if (isTradingSetupComplete(store.readiness)) {
+      return;
+    }
+
+    openSetupModalIfNeeded();
+  }, [
+    hydrated,
+    openSetupModalIfNeeded,
+    privyAuthenticated,
+    privyReady,
+    privyUser,
+    readiness,
+    session,
+    whitelistLoginMode,
+  ]);
 
   // openSetupModal
   // useEffect(() => {
