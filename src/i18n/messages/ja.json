@@ -1093,6 +1093,7 @@
     "toBeClaimedLabel": "受け取り待ち",
     "claim": "受け取る",
     "claiming": "受け取り中…",
+    "claimAvailableTooltip": "収益が {minAmount} を超えると受け取り可能です",
     "connectWalletToViewActivity": "紹介アクティビティを表示するにはウォレットを接続してください。",
     "noRewardsFound": "リワードが見つかりません",
     "tableUser": "ユーザー",

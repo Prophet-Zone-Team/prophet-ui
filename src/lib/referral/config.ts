@@ -33,3 +33,5 @@ export const REFERRAL_TWITTER_SHARE_URL = SOCIALS_MAP.x.url;
 export const REFERRAL_TELEGRAM_SHARE_URL = SOCIALS_MAP.telegram.url;
 
 export { COPIED_TOAST_VISIBLE_MS } from "@/lib/clipboard/config";
+
+export const REFERRAL_CLAIM_MIN_AMOUNT = 100;

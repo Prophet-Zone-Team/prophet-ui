@@ -1093,6 +1093,7 @@
     "toBeClaimedLabel": "청구 대기",
     "claim": "청구",
     "claiming": "청구 중…",
+    "claimAvailableTooltip": "수익이 {minAmount}를 초과하면 청구할 수 있습니다",
     "connectWalletToViewActivity": "추천 활동을 보려면 지갑을 연결하세요.",
     "noRewardsFound": "리워드가 없습니다",
     "tableUser": "사용자",

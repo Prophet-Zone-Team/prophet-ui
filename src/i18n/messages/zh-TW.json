@@ -1096,6 +1096,7 @@
     "toBeClaimedLabel": "待領取",
     "claim": "領取",
     "claiming": "領取中…",
+    "claimAvailableTooltip": "收益超過 {minAmount} 時可領取",
     "connectWalletToViewActivity": "連接錢包以查看推薦活動。",
     "noRewardsFound": "尚無獎勵記錄",
     "tableUser": "用戶",
