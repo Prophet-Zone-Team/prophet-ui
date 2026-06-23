@@ -87,14 +87,6 @@ export function buildComboLegsFromPicks(
         });
       }
 
-      if (market && pick.type === "total") {
-        return buildComboTicketLeg({
-          id: pick.id,
-          market,
-          outcomeSide: pick.outcomeSide,
-        });
-      }
-
       return comboPickToTicketLeg(pick);
     })
     .filter((leg): leg is ComboTicketLeg => Boolean(leg));
@@ -133,9 +125,7 @@ export function comboPickToTicketLeg(pick: {
     id: pick.id,
     legPositionId: pick.legPositionId,
     outcomeSide:
-      (pick.type === "moneyline" || pick.type === "total") && pick.outcomeSide
-        ? pick.outcomeSide
-        : "yes",
+      pick.type === "moneyline" && pick.outcomeSide ? pick.outcomeSide : "yes",
     referencePrice,
   };
 }

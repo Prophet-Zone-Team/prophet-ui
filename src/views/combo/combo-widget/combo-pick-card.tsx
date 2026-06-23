@@ -10,7 +10,6 @@ export type ComboPickCardProps = {
   pick: ComboPick;
   onOutcomeChange?: (side: ComboPickOutcomeSide) => void;
   onSpreadChange?: (spread: string) => void;
-  onTotalChange?: (total: string) => void;
   onRemove?: () => void;
 };
 
@@ -18,7 +17,6 @@ export function ComboPickCard({
   pick,
   onOutcomeChange,
   onSpreadChange,
-  onTotalChange,
   onRemove
 }: ComboPickCardProps) {
   return (
@@ -31,20 +29,13 @@ export function ComboPickCard({
 
           {pick.type === "moneyline" ? (
             <YesNoToggle value={pick.outcomeSide} onChange={onOutcomeChange} />
-          ) : pick.type === "spread" ? (
+          ) : (
             <SpreadSelector
               value={pick.spreadValue}
               options={pick.spreadOptions}
               onChange={onSpreadChange}
             />
-          ) : pick.type === "total" ? (
-            <SpreadSelector
-              value={pick.totalValue}
-              options={pick.totalOptions}
-              onChange={onTotalChange}
-              ariaLabel="Total line"
-            />
-          ) : null}
+          )}
 
           <RemovePickButton
             onClick={onRemove}

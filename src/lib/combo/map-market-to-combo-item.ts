@@ -73,10 +73,6 @@ export function resolveComboPickSelectionLabel(
     }
   }
 
-  if (meta.marketKind === "exact_score" && meta.scoreLabel) {
-    return meta.scoreLabel;
-  }
-
   const [yesLabel, noLabel] = market.outcomes;
 
   return outcomeSide === "yes" ? yesLabel : (noLabel ?? yesLabel);
@@ -300,26 +296,6 @@ function isAwayTeamTogglePickCode(meta: {
   return meta.pickCode === meta.awayCode || meta.pickCode === "away";
 }
 
-function resolveComboGameSelectedOddsId(
-  group: ComboGameGroup,
-  isInCombo?: boolean,
-  selectedMarketId?: string,
-  selectedOutcomeSide?: ComboPickOutcomeSide,
-): string | null {
-  if (!isInCombo || !selectedMarketId || !selectedOutcomeSide) {
-    return null;
-  }
-
-  const market = group.markets.find((entry) => entry.id === selectedMarketId);
-  const meta = market ? parseComboMarketSlug(market.slug) : undefined;
-
-  if (meta?.marketKind === "exact_score" && selectedOutcomeSide !== "yes") {
-    return null;
-  }
-
-  return buildComboMarketOddsId(selectedMarketId, selectedOutcomeSide);
-}
-
 /** Odds option id used to highlight the matching left-panel selection. */
 export function buildComboSelectedOddsIdForPick(
   pick: { id: string; type: string; outcomeSide?: ComboPickOutcomeSide },
@@ -328,10 +304,6 @@ export function buildComboSelectedOddsIdForPick(
 ): string | undefined {
   if (pick.type === "spread") {
     return buildComboMarketOddsId(pick.id, "yes");
-  }
-
-  if (pick.type === "total" && pick.outcomeSide) {
-    return buildComboMarketOddsId(pick.id, pick.outcomeSide);
   }
 
   if (pick.type !== "moneyline" || !pick.outcomeSide) {
@@ -361,9 +333,8 @@ export function buildComboSelectedOddsIdForPick(
     const meta = parseComboMarketSlug(market.slug);
 
     if (meta.marketKind === "exact_score") {
-      return pick.outcomeSide === "yes"
-        ? buildComboMarketOddsId(pick.id, "yes")
-        : undefined;
+      // Left panel lists yes-side odds only; highlight the score row for both yes/no picks.
+      return buildComboMarketOddsId(pick.id, "yes");
     }
 
     if (
@@ -604,12 +575,24 @@ export function mapComboGameToItemProps(
     }
   }
 
-  const selectedOddsId = resolveComboGameSelectedOddsId(
-    group,
-    options?.isInCombo,
-    options?.selectedMarketId,
-    options?.selectedOutcomeSide,
-  );
+  const selectedMarket =
+    options?.selectedMarketId !== undefined
+      ? group.markets.find((market) => market.id === options.selectedMarketId)
+      : undefined;
+  const selectedOddsId =
+    options?.isInCombo &&
+    options.selectedMarketId &&
+    options.selectedOutcomeSide
+      ? buildComboSelectedOddsIdForPick(
+          {
+            id: options.selectedMarketId,
+            type: "moneyline",
+            outcomeSide: options.selectedOutcomeSide,
+          },
+          selectedMarket,
+          group,
+        ) ?? null
+      : null;
 
   return {
     kickoffLabel: group.kickoffLabel,

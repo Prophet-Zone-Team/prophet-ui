@@ -7,12 +7,6 @@ import { useAuth } from "@/context/auth";
 import { useComboTicket } from "@/hooks/combo/use-combo-ticket";
 import { isSpreadMarket } from "@/lib/combo/combo-market-mutex";
 import {
-  isMatchTotalMarket,
-  resolveMatchTotalMarketForLine,
-  resolveTotalLineLabelForMarket,
-  resolveTotalLineOptionsForGroup,
-} from "@/lib/combo/match-total-combo-rules";
-import {
   resolveComboPickSelectionLabel,
   resolveComboPickTeam,
   resolveSpreadLineForMarket,
@@ -43,7 +37,6 @@ import type {
   ComboPick,
   ComboPickOutcomeSide,
   ComboSpreadPick,
-  ComboTotalPick,
 } from "@/views/combo/combo-widget/types";
 
 export interface ComboTicketContainerProps {
@@ -133,14 +126,6 @@ export function createComboPickFromMarket(input: {
     return createComboSpreadPickFromMarket(input.market, input.group);
   }
 
-  if (isMatchTotalMarket(input.market) && input.group) {
-    return createComboTotalPickFromMarket(
-      input.market,
-      input.group,
-      input.outcomeSide ?? "yes",
-    );
-  }
-
   const requestedSide = input.outcomeSide ?? "yes";
   const storedOutcomeSide = resolveComboPickStoredOutcomeSide(
     input.market,
@@ -196,40 +181,5 @@ function createComboSpreadPickFromMarket(
     selectionLabel: resolveComboPickSelectionLabel(market, "yes"),
     legPositionId: leg.legPositionId,
     referencePrice: resolveReferencePrice(market, "yes"),
-  };
-}
-
-function createComboTotalPickFromMarket(
-  market: ComboMarketRecord,
-  group: ComboGameGroup,
-  outcomeSide: ComboPickOutcomeSide,
-): ComboTotalPick {
-  const storedOutcomeSide = resolveComboPickStoredOutcomeSide(
-    market,
-    outcomeSide,
-  );
-  const legOutcomeSide = resolveComboLegOutcomeSide(
-    market,
-    storedOutcomeSide,
-  );
-  const leg = buildComboTicketLeg({
-    id: market.id,
-    market,
-    outcomeSide: legOutcomeSide,
-  });
-  const team = resolveComboPickTeam(market, storedOutcomeSide);
-  const totalValue = resolveTotalLineLabelForMarket(market) ?? "";
-
-  return {
-    id: market.id,
-    type: "total",
-    totalValue,
-    totalOptions: resolveTotalLineOptionsForGroup(group),
-    outcomeSide: storedOutcomeSide,
-    matchupLabel: group.title,
-    team,
-    selectionLabel: resolveComboPickSelectionLabel(market, storedOutcomeSide),
-    legPositionId: leg.legPositionId,
-    referencePrice: resolveReferencePrice(market, legOutcomeSide),
   };
 }

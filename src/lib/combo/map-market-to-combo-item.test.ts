@@ -135,6 +135,13 @@ describe("isComboOddsOptionSelected", () => {
       false,
     );
   });
+
+  it("treats an empty selectedOddsIds array as controlled with no selection", () => {
+    assert.equal(
+      isComboOddsOptionSelected("exact-score:yes", [], "exact-score:yes"),
+      false,
+    );
+  });
 });
 
 describe("resolveComboPickSelectionLabel", () => {
@@ -209,7 +216,7 @@ describe("resolveComboPickSelectionLabel", () => {
 });
 
 describe("buildComboSelectedOddsIdForPick", () => {
-  it("only highlights exact score picks on yes", () => {
+  it("highlights exact score outcome for both yes and no picks", () => {
     const market = {
       id: "fifwc-fra-irq-2026-06-22-exact-score-2-1",
       slug: "fifwc-fra-irq-2026-06-22-exact-score-2-1",
@@ -240,7 +247,7 @@ describe("buildComboSelectedOddsIdForPick", () => {
         },
         market,
       ),
-      undefined,
+      `${market.id}:yes`,
     );
   });
 });

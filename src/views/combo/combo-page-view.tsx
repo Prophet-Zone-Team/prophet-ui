@@ -28,11 +28,7 @@ import {
   resolveHalftimeTeamMarket,
   resolveMatchMoneylineMarket,
 } from "@/lib/combo/combo-pick-outcome";
-import {
-  isMatchTotalMarket,
-  resolveMatchTotalMarketForLine,
-  resolveTotalLineOptionsForPick,
-} from "@/lib/combo/match-total-combo-rules";
+import { isMatchTotalMarket } from "@/lib/combo/match-total-combo-rules";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
 import {
   useComboBidAmount,
@@ -53,38 +49,12 @@ import {
   getComboMobileReserveHeight
 } from "@/views/combo/combo-mobile-widget";
 import { ComboWidget } from "@/views/combo/combo-widget";
-import type { ComboPick, ComboWidgetProps } from "@/views/combo/combo-widget/types";
+import type { ComboWidgetProps } from "@/views/combo/combo-widget/types";
 import type { ComboPickOutcomeSide } from "@/views/combo/combo-widget/types";
 import { createComboPickFromMarket } from "@/views/combo/combo-ticket-container";
 import { MIN_COMBO_PICKS } from "@/views/combo/combo-widget/constants";
 
 const COMBO_DAY_TABS: ComboMarketsDay[] = ["today", "tomorrow", "all"];
-
-function enrichComboPicksWithTotalLineOptions(
-  picks: ComboPick[],
-  groups: ComboGameGroup[],
-): ComboPick[] {
-  return picks.map((pick) => {
-    if (pick.type !== "total") {
-      return pick;
-    }
-
-    const group = findComboGameGroupForMarket(groups, pick.id);
-
-    if (!group) {
-      return pick;
-    }
-
-    const groupPicks = picks.filter((entry) =>
-      group.markets.some((market) => market.id === entry.id),
-    );
-
-    return {
-      ...pick,
-      totalOptions: resolveTotalLineOptionsForPick(group, pick, groupPicks),
-    };
-  });
-}
 
 export function ComboPageView() {
   const t = useTranslations("combo");
@@ -370,55 +340,6 @@ export function ComboPageView() {
     [groups, picks, picksByMarketId, setPicks],
   );
 
-  const handlePickTotalChange = useCallback(
-    (pickId: string, total: string) => {
-      const pick = picksByMarketId.get(pickId);
-
-      if (!pick || pick.type !== "total" || pick.totalValue === total) {
-        return;
-      }
-
-      const group = findComboGameGroupForMarket(groups, pickId);
-
-      if (!group) {
-        return;
-      }
-
-      const targetMarket = resolveMatchTotalMarketForLine(group, total);
-
-      if (!targetMarket) {
-        return;
-      }
-
-      const groupPicks = picks.filter((entry) =>
-        group.markets.some((market) => market.id === entry.id),
-      );
-      const lineOptions = resolveTotalLineOptionsForPick(group, pick, groupPicks);
-      const selectedOption = lineOptions.find((option) => option.value === total);
-
-      if (selectedOption?.disabled) {
-        return;
-      }
-
-      const nextPick = createComboPickFromMarket({
-        market: targetMarket,
-        group,
-        outcomeSide: pick.outcomeSide,
-      });
-
-      setPicks(
-        applyComboGameGroupPickUpdate(
-          picks.filter((entry) => entry.id !== pickId),
-          group,
-          targetMarket.id,
-          pick.outcomeSide,
-          () => nextPick,
-        ),
-      );
-    },
-    [groups, picks, picksByMarketId, setPicks],
-  );
-
   const handleRemovePick = useCallback(
     (pickId: string) => {
       removePick(pickId);
@@ -434,13 +355,8 @@ export function ComboPageView() {
     [setOutcomeDisplayMode]
   );
 
-  const widgetPicks = useMemo(
-    () => enrichComboPicksWithTotalLineOptions(picks, groups),
-    [groups, picks],
-  );
-
   const comboWidgetProps: ComboWidgetProps = {
-    picks: widgetPicks,
+    picks,
     multiplier: ticket.multiplier,
     bidAmount,
     balance,
@@ -456,7 +372,6 @@ export function ComboPageView() {
     onBidAmountChange: setBidAmount,
     onPickOutcomeChange: handlePickOutcomeChange,
     onPickSpreadChange: handlePickSpreadChange,
-    onPickTotalChange: handlePickTotalChange,
     onRemovePick: handleRemovePick,
     onConnectWallet: () => void auth.openLogin(),
     onSubmit: ticket.submit
