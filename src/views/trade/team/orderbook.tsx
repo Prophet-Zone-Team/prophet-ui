@@ -184,7 +184,7 @@ export function Orderbook({
         {loading && !book ? (
           <div
             className={cn(
-              "absolute inset-0 z-10 flex items-center justify-center bg-white",
+              "absolute inset-0 z-10 flex items-center justify-center bg-white/80",
               isMirror && "min-h-[200px]"
             )}
             aria-busy="true"

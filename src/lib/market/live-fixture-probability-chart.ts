@@ -897,5 +897,9 @@ export function buildLiveChartFallbackPoints(
 export function resolveLiveChartModeFromKind(
   chartKind: FixtureChartKind
 ): "ternary" | "binary" {
-  return chartKind === "total" || chartKind === "spread" ? "binary" : "ternary";
+  return chartKind === "total" ||
+    chartKind === "spread" ||
+    chartKind === "exact_score"
+    ? "binary"
+    : "ternary";
 }

@@ -5,6 +5,7 @@ export type { GameProbabilityChartProps } from "@/views/trade/game-probability/c
 export {
   GameProbabilitySection,
   buildBinarySummaryFromOutcomes,
+  buildExactScoreBinarySummary,
   buildTernarySummaryFromOutcomes,
 } from "@/views/trade/game-probability/section";
 export type {

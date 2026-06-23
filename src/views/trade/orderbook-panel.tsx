@@ -42,7 +42,6 @@ export function OrderbookPanel({
           )}
         >
           <Orderbook
-            key={tokenId ?? "orderbook"}
             tokenId={tokenId}
             variant={variant}
             className={cn("min-h-0 flex-1", orderbookClassName)}

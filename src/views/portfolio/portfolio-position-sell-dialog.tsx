@@ -14,15 +14,14 @@ import {
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
 import { derivePositionSellReceiveAmount } from "@/lib/portfolio/portfolio-metrics";
-import { resolveTradeHref } from "@/lib/routes/trade";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import {
   FundingModalShell,
-  fundingPrimaryButtonClass
+  fundingPrimaryButtonClass,
+  fundingSecondaryButtonClass
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { usePortfolioContext } from "@/views/portfolio/context";
-import { portfolioSecondaryButtonClass } from "@/views/portfolio/portfolio-ui";
 import { useTradeTicket } from "@/views/trade/trade-widget/use-trade-ticket";
 import {
   parseOrderAmount,
@@ -42,25 +41,28 @@ const SELL_QUICK_FRACTIONS = [
 
 export const PORTFOLIO_SELL_MODAL_WIDTH = "w-[492px]";
 
-export type PortfolioPositionSellDialogProps =
+export type PortfolioPositionSellDialogProps = {
+  tradeHref?: string;
+  onClose: () => void;
+} & (
   | {
       open: boolean;
       variant: "team";
       position: UserPositionRecord;
       snapshot: TeamMarketSnapshot;
-      onClose: () => void;
     }
   | {
       open: boolean;
       variant: "game";
       position: UserPositionRecord;
       context: PositionGameSellContext;
-      onClose: () => void;
-    };
+    }
+);
 
 interface PortfolioPositionSellSharedBodyProps {
   position: UserPositionRecord;
   headerIcon: ReactNode;
+  tradeHref?: string;
   onClose: () => void;
   ticket: ReturnType<typeof useTradeTicket> | null;
 }
@@ -68,6 +70,7 @@ interface PortfolioPositionSellSharedBodyProps {
 function PortfolioPositionSellSharedBody({
   position,
   headerIcon,
+  tradeHref,
   onClose,
   ticket
 }: PortfolioPositionSellSharedBodyProps) {
@@ -96,8 +99,8 @@ function PortfolioPositionSellSharedBody({
   const isBusy = formProps.actionInProgress;
 
   function handleEditOrder() {
-    if (position.eventSlug || position.slug) {
-      router.push(resolveTradeHref(position.eventSlug ?? position.slug));
+    if (tradeHref) {
+      router.push(tradeHref);
     }
 
     onClose();
@@ -125,7 +128,9 @@ function PortfolioPositionSellSharedBody({
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-[500] text-black">{t("receiveToken")}</span>
+            <span className="text-sm font-[500] text-black">
+              {t("receiveToken")}
+            </span>
             <span className="text-xl font-[500] text-black">
               {receiveAmount}
             </span>
@@ -138,7 +143,8 @@ function PortfolioPositionSellSharedBody({
                 aria-pressed={selectedQuickAmount === value}
                 className={cn(
                   tradeQuickAmountClass,
-                  selectedQuickAmount === value && tradeQuickAmountSelectedClass,
+                  selectedQuickAmount === value &&
+                    tradeQuickAmountSelectedClass,
                   "disabled:cursor-not-allowed disabled:opacity-50"
                 )}
                 disabled={sellQuickDisabled}
@@ -167,7 +173,7 @@ function PortfolioPositionSellSharedBody({
       <div className="grid grid-cols-2 gap-3 pt-2 pb-4">
         <button
           type="button"
-          className={portfolioSecondaryButtonClass}
+          className={fundingSecondaryButtonClass}
           disabled={isBusy}
           onClick={handleEditOrder}
         >
@@ -219,10 +225,12 @@ function PortfolioPositionGameIcon({ position }: { position: UserPositionRecord 
 function PortfolioPositionTeamSellBody({
   position,
   snapshot,
+  tradeHref,
   onClose
 }: {
   position: UserPositionRecord;
   snapshot: TeamMarketSnapshot;
+  tradeHref?: string;
   onClose: () => void;
 }) {
   const { reload } = usePortfolioContext();
@@ -245,6 +253,7 @@ function PortfolioPositionTeamSellBody({
       headerIcon={
         <TeamFlag code={snapshot.team.code} name={snapshot.team.name} />
       }
+      tradeHref={tradeHref}
       onClose={onClose}
       ticket={ticket}
     />
@@ -254,10 +263,12 @@ function PortfolioPositionTeamSellBody({
 function PortfolioPositionGameSellBody({
   position,
   context,
+  tradeHref,
   onClose
 }: {
   position: UserPositionRecord;
   context: PositionGameSellContext;
+  tradeHref?: string;
   onClose: () => void;
 }) {
   const { reload } = usePortfolioContext();
@@ -278,6 +289,7 @@ function PortfolioPositionGameSellBody({
     <PortfolioPositionSellSharedBody
       position={position}
       headerIcon={<PortfolioPositionGameIcon position={position} />}
+      tradeHref={tradeHref}
       onClose={onClose}
       ticket={ticket}
     />
@@ -286,7 +298,7 @@ function PortfolioPositionGameSellBody({
 
 export function PortfolioPositionSellDialog(props: PortfolioPositionSellDialogProps) {
   const t = useTranslations("portfolio");
-  const { open, position, onClose } = props;
+  const { open, position, tradeHref, onClose } = props;
 
   return (
     <Modal
@@ -301,12 +313,14 @@ export function PortfolioPositionSellDialog(props: PortfolioPositionSellDialogPr
           <PortfolioPositionTeamSellBody
             position={position}
             snapshot={props.snapshot}
+            tradeHref={tradeHref}
             onClose={onClose}
           />
         ) : (
           <PortfolioPositionGameSellBody
             position={position}
             context={props.context}
+            tradeHref={tradeHref}
             onClose={onClose}
           />
         )}
