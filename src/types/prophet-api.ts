@@ -17,6 +17,14 @@ export interface ProphetGetPolymarketStatsData {
   oneDayPriceChangeTeam?: string;
 }
 
+/** GET /v1/game/winner-probability — World Cup winner probabilities by team */
+export interface ProphetWinnerProbabilityItem {
+  team: string;
+  probability: string;
+}
+
+export type ProphetGetWinnerProbabilityData = ProphetWinnerProbabilityItem[];
+
 export interface ProphetPolyMarketTeam {
   id?: number;
   logo?: string;

@@ -1,7 +1,8 @@
 import { findCuratedTeamById } from "@/data/teams/curated-team-list";
 import { getTeamFootballMetadata } from "@/data/teams/football-metadata";
 import type { WorldCup2026GroupTeam } from "@/data/world-cup-2026/groups";
-import { strengthScore } from "../lib/team-strength";
+import { formatWinnerProbabilityLabel } from "@/lib/market/map-winner-probability";
+import { getTeamStrength } from "../lib/team-strength";
 
 export type TeamTooltipStats = {
   teamName: string;
@@ -40,7 +41,7 @@ export function buildTeamTooltipStats(
   const metadata = getTeamFootballMetadata(team.id);
   const fifaRank = metadata?.fifaRank;
   const squadValue = metadata?.squadValue ?? 0;
-  const score = strengthScore(team);
+  const teamStrength = getTeamStrength(team.id);
 
   return {
     teamName: team.name,
@@ -49,11 +50,11 @@ export function buildTeamTooltipStats(
     fifaRankLabel: fifaRank && fifaRank < 999 ? `#${fifaRank}` : "—",
     winnerProbabilityLabel:
       winnerProbability !== undefined
-        ? `${Math.round(winnerProbability)}%`
+        ? formatWinnerProbabilityLabel(winnerProbability)
         : "—",
     valueLabel: squadValue > 0
       ? formatSquadValue(squadValue, metadata?.squadValueCurrency)
       : "—",
-    strengthLabel: score > 0 ? score.toFixed(1) : "—"
+    strengthLabel: teamStrength > 0 ? String(teamStrength) : "—"
   };
 }

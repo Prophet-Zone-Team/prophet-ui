@@ -53,6 +53,7 @@ import type {
   ProphetLoginReferral,
   ProphetUploadData,
   ProphetGetPolymarketStatsData,
+  ProphetGetWinnerProbabilityData,
   SubmitWinnerActivityRequest,
   WinnerActivityRecordsData,
   WinnerActivityStatsData
@@ -491,6 +492,15 @@ export async function getProphetGroupStandings(params?: {
   return prophetGet<ProphetGetGroupStandingsData>("/v1/game/group-standings", {
     params: params?.group_code ? { group_code: params.group_code } : undefined,
     signal: params?.signal
+  });
+}
+
+/** GET /v1/game/winner-probability — World Cup winner probabilities by team */
+export async function getProphetWinnerProbability(
+  signal?: AbortSignal,
+): Promise<ProphetGetWinnerProbabilityData> {
+  return prophetGet<ProphetGetWinnerProbabilityData>("/v1/game/winner-probability", {
+    signal,
   });
 }
 
