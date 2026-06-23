@@ -80,26 +80,55 @@ export function worldCupMatchToLiveSnapshot(
 }
 
 export function parseSportsElapsedSeconds(
-  elapsed: string | undefined
+  elapsed: string | number | undefined | null
 ): number | undefined {
-  if (!elapsed) {
+  if (elapsed === undefined || elapsed === null) {
     return undefined;
   }
 
-  const parts = elapsed.trim().split(":");
+  if (typeof elapsed === "number") {
+    if (!Number.isFinite(elapsed) || elapsed < 0) {
+      return undefined;
+    }
 
-  if (parts.length !== 2) {
+    // WS payloads often send whole match minutes (e.g. 72) rather than total seconds.
+    if (elapsed <= 120) {
+      return Math.floor(elapsed) * 60;
+    }
+
+    return Math.floor(elapsed);
+  }
+
+  const trimmed = elapsed.trim();
+
+  if (!trimmed) {
     return undefined;
   }
 
-  const minutes = Number(parts[0]);
-  const seconds = Number(parts[1]);
+  if (trimmed.includes(":")) {
+    const parts = trimmed.split(":");
 
-  if (!Number.isFinite(minutes) || !Number.isFinite(seconds)) {
-    return undefined;
+    if (parts.length !== 2) {
+      return undefined;
+    }
+
+    const minutes = Number(parts[0]);
+    const seconds = Number(parts[1]);
+
+    if (!Number.isFinite(minutes) || !Number.isFinite(seconds)) {
+      return undefined;
+    }
+
+    return minutes * 60 + seconds;
   }
 
-  return minutes * 60 + seconds;
+  const minutesOnly = Number(trimmed);
+
+  if (Number.isFinite(minutesOnly) && minutesOnly >= 0) {
+    return Math.floor(minutesOnly) * 60;
+  }
+
+  return undefined;
 }
 
 export function mapSportsWsUpdateStatus(

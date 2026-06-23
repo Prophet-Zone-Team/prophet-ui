@@ -32,9 +32,9 @@ import {
 } from "@/lib/market/fixture-probability-chart";
 import {
   LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
+  mapLiveFixtureChartPointsToAxis,
   resolveLiveChartAxisTicksWithBreaks,
   resolveLiveChartMaxAxisSeconds,
-  resolveLiveChartPointCoordinates,
   resolveMatchClockFromAxisSeconds,
   type ResolveMatchClockSecondsOptions
 } from "@/lib/market/live-fixture-probability-chart";
@@ -412,22 +412,21 @@ export function GameProbabilityChart({
   );
 
   const chartData = useMemo<ChartRow[]>(
-    () =>
-      data.map((point) => {
-        const coordinates = isLive
-          ? resolveLiveChartPointCoordinates(
-              point.elapsedSeconds ?? 0,
-              liveClockOptions
-            )
-          : undefined;
-
-        return {
+    () => {
+      if (!isLive) {
+        return data.map((point) => ({
           ...point,
-          chartLabel: point.label,
-          axisSeconds: coordinates?.axisSeconds,
-          matchClockSeconds: coordinates?.matchClockSeconds
-        };
-      }),
+          chartLabel: point.label
+        }));
+      }
+
+      return mapLiveFixtureChartPointsToAxis(data, liveClockOptions).map(
+        (point) => ({
+          ...point,
+          chartLabel: point.label
+        })
+      );
+    },
     [data, isLive, liveClockOptions]
   );
 

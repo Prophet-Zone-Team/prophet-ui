@@ -332,11 +332,61 @@ export const LIVE_MATCH_CHART_AXIS_TICK_MATCH_MINUTES = [
   0, 15, 30, 45, 60, 75, 90
 ] as const;
 
-const LIVE_MATCH_WALL_TO_MATCH_CLOCK_TOLERANCE_SECONDS = 2 * 60;
-
 export interface ResolveMatchClockSecondsOptions {
   matchPeriod?: string;
+  /** @deprecated Chart history uses deterministic wall→match mapping only. */
   currentMatchClockSeconds?: number;
+}
+
+/** Deterministic wall-clock elapsed → match-clock seconds (includes scheduled breaks). */
+export function mapWallElapsedToMatchClockSeconds(
+  wallElapsedSeconds: number
+): number {
+  const wall = Math.max(0, Math.floor(wallElapsedSeconds));
+
+  if (wall <= LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS) {
+    return wall;
+  }
+
+  if (
+    wall <=
+    LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS + LIVE_MATCH_HYDRATION_BREAK_SECONDS
+  ) {
+    return LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS;
+  }
+
+  if (
+    wall <=
+    LIVE_MATCH_REGULATION_HALF_SECONDS + LIVE_MATCH_BREAK_OFFSET_AFTER_FIRST_HALF
+  ) {
+    return wall - LIVE_MATCH_BREAK_OFFSET_AFTER_FIRST_HALF;
+  }
+
+  if (
+    wall <=
+    LIVE_MATCH_REGULATION_HALF_SECONDS + LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME
+  ) {
+    return LIVE_MATCH_REGULATION_HALF_SECONDS;
+  }
+
+  if (
+    wall <=
+    LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS +
+      LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME
+  ) {
+    return wall - LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME;
+  }
+
+  if (
+    wall <=
+    LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS +
+      LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME +
+      LIVE_MATCH_HYDRATION_BREAK_SECONDS
+  ) {
+    return LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS;
+  }
+
+  return wall - LIVE_MATCH_BREAK_OFFSET_AFTER_SECOND_HALF;
 }
 
 /** Map match-clock seconds to expanded axis seconds (includes break widths). */
@@ -410,90 +460,13 @@ export function resolveMatchClockSecondsFromWallElapsed(
   wallElapsedSeconds: number,
   options: ResolveMatchClockSecondsOptions = {}
 ): number {
-  const wall = Math.max(0, Math.floor(wallElapsedSeconds));
   const period = options.matchPeriod?.trim().toLowerCase();
-  const currentMatchClock = options.currentMatchClockSeconds;
 
   if (period === "ht") {
     return LIVE_MATCH_REGULATION_HALF_SECONDS;
   }
 
-  if (
-    currentMatchClock !== undefined &&
-    Math.abs(wall - currentMatchClock) <=
-      LIVE_MATCH_WALL_TO_MATCH_CLOCK_TOLERANCE_SECONDS
-  ) {
-    return currentMatchClock;
-  }
-
-  if (
-    currentMatchClock !== undefined &&
-    currentMatchClock <= LIVE_MATCH_REGULATION_HALF_SECONDS &&
-    wall > LIVE_MATCH_REGULATION_HALF_SECONDS &&
-    wall - currentMatchClock <
-      LIVE_MATCH_HALFTIME_PAUSE_SECONDS + LIVE_MATCH_HYDRATION_BREAK_SECONDS
-  ) {
-    return currentMatchClock;
-  }
-
-  const shouldMapWallElapsedToMatchClock =
-    currentMatchClock === undefined
-      ? wall >
-        LIVE_MATCH_REGULATION_HALF_SECONDS +
-          LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME / 2
-      : wall >
-          LIVE_MATCH_REGULATION_HALF_SECONDS +
-            LIVE_MATCH_HYDRATION_BREAK_SECONDS &&
-        wall - currentMatchClock >=
-          LIVE_MATCH_WALL_TO_MATCH_CLOCK_TOLERANCE_SECONDS;
-
-  if (!shouldMapWallElapsedToMatchClock) {
-    return wall;
-  }
-
-  if (wall <= LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS) {
-    return wall;
-  }
-
-  if (
-    wall <=
-    LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS + LIVE_MATCH_HYDRATION_BREAK_SECONDS
-  ) {
-    return LIVE_MATCH_HYDRATION_BREAK_MATCH_SECONDS;
-  }
-
-  if (
-    wall <=
-    LIVE_MATCH_REGULATION_HALF_SECONDS + LIVE_MATCH_BREAK_OFFSET_AFTER_FIRST_HALF
-  ) {
-    return wall - LIVE_MATCH_BREAK_OFFSET_AFTER_FIRST_HALF;
-  }
-
-  if (
-    wall <=
-    LIVE_MATCH_REGULATION_HALF_SECONDS + LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME
-  ) {
-    return LIVE_MATCH_REGULATION_HALF_SECONDS;
-  }
-
-  if (
-    wall <=
-    LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS +
-      LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME
-  ) {
-    return wall - LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME;
-  }
-
-  if (
-    wall <=
-    LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS +
-      LIVE_MATCH_BREAK_OFFSET_AFTER_HALFTIME +
-      LIVE_MATCH_HYDRATION_BREAK_SECONDS
-  ) {
-    return LIVE_MATCH_SECOND_HALF_HYDRATION_MATCH_SECONDS;
-  }
-
-  return wall - LIVE_MATCH_BREAK_OFFSET_AFTER_SECOND_HALF;
+  return mapWallElapsedToMatchClockSeconds(wallElapsedSeconds);
 }
 
 export function resolveLiveChartPointCoordinates(
@@ -509,6 +482,37 @@ export function resolveLiveChartPointCoordinates(
     matchClockSeconds,
     axisSeconds: resolveAxisSecondsFromMatchClock(matchClockSeconds)
   };
+}
+
+/** Map live chart points to axis coordinates and drop duplicate x positions. */
+export function mapLiveFixtureChartPointsToAxis<
+  T extends { elapsedSeconds?: number },
+>(
+  points: T[],
+  options: ResolveMatchClockSecondsOptions = {},
+): Array<T & { axisSeconds: number; matchClockSeconds: number }> {
+  const deduped = new Map<
+    number,
+    T & { axisSeconds: number; matchClockSeconds: number }
+  >();
+
+  for (const point of points) {
+    const coordinates = resolveLiveChartPointCoordinates(
+      point.elapsedSeconds ?? 0,
+      options
+    );
+    const mapped = {
+      ...point,
+      axisSeconds: coordinates.axisSeconds,
+      matchClockSeconds: coordinates.matchClockSeconds
+    };
+
+    deduped.set(coordinates.axisSeconds, mapped);
+  }
+
+  return [...deduped.values()].sort(
+    (left, right) => left.axisSeconds - right.axisSeconds
+  );
 }
 
 /** Extra x-axis padding after match elapsed exceeds 60 minutes. */
