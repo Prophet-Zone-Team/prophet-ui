@@ -36,6 +36,10 @@ function getStatCellTextClassName(
     return "text-black/30";
   }
 
+  if (field === "wins") {
+    return "text-[#65AF14]";
+  }
+
   if (field === "losses") {
     return "text-[#FF674B]";
   }

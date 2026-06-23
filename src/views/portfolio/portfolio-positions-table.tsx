@@ -60,11 +60,13 @@ type SellTarget =
       variant: "team";
       position: UserPositionRecord;
       snapshot: TeamMarketSnapshot;
+      tradeHref?: string;
     }
   | {
       variant: "game";
       position: UserPositionRecord;
       context: PositionGameSellContext;
+      tradeHref?: string;
     };
 
 type RedeemTarget = {
@@ -215,7 +217,12 @@ export function PortfolioPositionsTable({
             teamSnapshot,
             position
           );
-          setSellTarget({ variant: "team", position, snapshot: teamSnapshot });
+          setSellTarget({
+            variant: "team",
+            position,
+            snapshot: teamSnapshot,
+            tradeHref
+          });
           return;
         }
 
@@ -242,7 +249,12 @@ export function PortfolioPositionsTable({
           gameContext,
           position
         );
-        setSellTarget({ variant: "game", position, context: gameContext });
+        setSellTarget({
+          variant: "game",
+          position,
+          context: gameContext,
+          tradeHref
+        });
       } catch (error) {
         const message =
           error instanceof Error
@@ -417,6 +429,7 @@ export function PortfolioPositionsTable({
           variant="team"
           position={sellTarget.position}
           snapshot={sellTarget.snapshot}
+          tradeHref={sellTarget.tradeHref}
           onClose={() => setSellTarget(null)}
         />
       ) : null}
@@ -427,6 +440,7 @@ export function PortfolioPositionsTable({
           variant="game"
           position={sellTarget.position}
           context={sellTarget.context}
+          tradeHref={sellTarget.tradeHref}
           onClose={() => setSellTarget(null)}
         />
       ) : null}
