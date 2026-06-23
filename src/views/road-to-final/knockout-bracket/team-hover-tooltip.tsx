@@ -30,6 +30,7 @@ export function TeamHoverTooltip({
       offset={10}
       triggerContainerClassName="flex h-full min-h-0 min-w-0 flex-1"
       contentStyle={{ pointerEvents: "none" }}
+      closeDelayDuration={0}
       content={
         <div className="w-[203px] rounded-[12px] border border-[#EBEBEB] bg-white p-[12px] shadow-[0_0_10px_rgba(0,0,0,0.1)]">
           <div className="flex items-start gap-[8px]">

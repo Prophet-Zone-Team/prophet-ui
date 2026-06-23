@@ -6,6 +6,7 @@ import { useShallow } from "zustand/react/shallow";
 
 import { useAuth } from "@/context/auth/use-auth";
 import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
+import { useWinnerProbability } from "@/hooks/market/use-winner-probability";
 import { useProphetReferral } from "@/hooks/referral/use-prophet-referral";
 import { useWinnerRecords } from "@/hooks/road-to-final/use-winner-records";
 import { useWinnerStats } from "@/hooks/road-to-final/use-winner-stats";
@@ -73,6 +74,7 @@ export function RoadToFinalPage({
     tradePromptAmount,
     isLoading: statsLoading
   } = useWinnerStats();
+  const { probabilityByTeamId } = useWinnerProbability();
   const funderAddress = session?.funderAddress;
   const kickback = referralContent?.kickback;
 
@@ -238,6 +240,7 @@ export function RoadToFinalPage({
           hasChampion={hasChampion}
           disabled={!stepOneComplete || !thirdPlaceOption}
           onKnockoutWinnersChange={handleKnockoutWinnersChange}
+          probabilityByTeamId={probabilityByTeamId}
         />
 
         <ShareFooter

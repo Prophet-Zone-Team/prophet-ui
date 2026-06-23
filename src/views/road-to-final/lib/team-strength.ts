@@ -11,7 +11,16 @@ export function getSquadValue(teamId: string): number {
   return getTeamFootballMetadata(teamId)?.squadValue ?? 0;
 }
 
+export function getTeamStrength(teamId: string): number {
+  return getTeamFootballMetadata(teamId)?.teamStrength ?? 0;
+}
+
 export function strengthScore(team: WorldCup2026GroupTeam): number {
+  const curated = getTeamStrength(team.id);
+  if (curated > 0) {
+    return curated;
+  }
+
   const market = getSquadValue(team.id);
   const fifa = getFifaRank(team.id);
   const fifaBoost = fifa < 999 ? (250 - fifa) * 2 : 0;
