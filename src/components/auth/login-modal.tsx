@@ -38,6 +38,7 @@ interface LoginModalProps {
     | "isRegionBlocked"
     | "isRegionCloseOnly"
     | "whitelistLoginMode"
+    | "emailOnlyLogin"
     | "eligibilityView"
     | "privyModalOpen"
     | "closeLogin"
@@ -88,6 +89,7 @@ export function LoginModal({ auth }: LoginModalProps) {
     isRegionBlocked,
     isRegionCloseOnly,
     whitelistLoginMode,
+    emailOnlyLogin,
     eligibilityView,
     privyModalOpen,
     closeLogin,
@@ -100,7 +102,7 @@ export function LoginModal({ auth }: LoginModalProps) {
     signClobCredentials,
     signTokenApprovals,
     refreshSession,
-    refreshSetupReadiness,
+    refreshSetupReadiness
   } = auth;
 
   useEffect(() => {
@@ -160,7 +162,7 @@ export function LoginModal({ auth }: LoginModalProps) {
               {formatCloseOnlyDetail(eligibilityView)}
             </p>
           ) : null}
-          {whitelistLoginMode && !showRestrictedView ? (
+          {emailOnlyLogin && !showRestrictedView ? (
             <p className="text-[12px] font-[400] text-[#3168FF] px-[10px] py-[4px] rounded-[8px] bg-[#E3E9FF]">
               {t("whitelistEmailLoginHint")}
             </p>
@@ -241,7 +243,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                             privyLoginInProgress,
                             session,
                             emailOnlyConnect:
-                              whitelistLoginMode && step.id === "deploy_wallet"
+                              emailOnlyLogin && step.id === "deploy_wallet"
                           }) ? (
                             <StepAction
                               stepId={step.id}
@@ -249,8 +251,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                               loginInProgress={loginInProgress}
                               privyLoginInProgress={privyLoginInProgress}
                               emailOnlyConnect={
-                                whitelistLoginMode &&
-                                step.id === "deploy_wallet"
+                                emailOnlyLogin && step.id === "deploy_wallet"
                               }
                               onConnectWallet={() => {
                                 trackLoginClicked({
@@ -309,7 +310,7 @@ export function LoginModal({ auth }: LoginModalProps) {
                 </div>
               ) : null}
 
-              {!isAuthenticated && !whitelistLoginMode ? (
+              {!isAuthenticated && !emailOnlyLogin ? (
                 <button
                   type="button"
                   className="flex items-center justify-center gap-1 border-t border-prophet-line pt-4 text-[14px] font-[500] leading-[normal] text-black disabled:opacity-60 disabled:cursor-not-allowed"
@@ -328,7 +329,8 @@ export function LoginModal({ auth }: LoginModalProps) {
       <PrivyLoginModal
         open={privyModalOpen}
         onClose={closePrivyLogin}
-        emailOnlyMode={whitelistLoginMode}
+        emailOnlyMode={emailOnlyLogin}
+        requireWhitelistEmail={whitelistLoginMode}
         onConnectExtensionWallet={() => {
           trackLoginClicked({
             entrySource: "privy_login_modal",

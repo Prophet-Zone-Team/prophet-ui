@@ -120,6 +120,10 @@ import { waitForExternalWalletConnection } from "@/lib/trading/wait-for-wallet-c
 import { useMigratePromptStore } from "@/store/use-migrate-prompt-store";
 import { useNearAccountStore } from "@/lib/wallet/near/near-account-store";
 import { useUserConfigStore } from "@/store/user-config-store";
+import {
+  isPackagedAppEmailOnlyLogin,
+  resolveEmailOnlyLoginEnabled,
+} from "@/config/auth-login";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
@@ -1185,6 +1189,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setLoginMethod(method);
     }
 
+    if (
+      resolveEmailOnlyLoginEnabled(whitelistLoginModeRef.current) &&
+      (method === "wallet" || method === "near" || !method)
+    ) {
+      await openPrivyLogin();
+      return undefined;
+    }
+
     if (isLoginRegionBlocked()) {
       openLoginModalOnly();
       return undefined;
@@ -1195,6 +1207,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const connectNearWallet = async () => {
     const store = useAuthStore.getState();
+
+    if (resolveEmailOnlyLoginEnabled(whitelistLoginModeRef.current)) {
+      await openPrivyLogin();
+      return undefined;
+    }
 
     try {
       await releaseExternalWalletConnection("near");
@@ -1367,6 +1384,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     syncCash,
   });
 
+  const emailOnlyLogin = resolveEmailOnlyLoginEnabled(whitelistLoginMode);
+
   // subscribeWalletConnection
   useEffect(() => {
     if (!hydrated || !session?.walletAddress) {
@@ -1532,7 +1551,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const shouldUseEmailLoginFlow =
       store.loginMethod === "email" ||
-      (whitelistLoginMode && !store.loginMethod);
+      ((whitelistLoginMode || isPackagedAppEmailOnlyLogin) && !store.loginMethod);
 
     if (!shouldUseEmailLoginFlow) {
       return;
@@ -1608,6 +1627,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isBuyRestricted,
     isRegionCloseOnly,
     whitelistLoginMode,
+    emailOnlyLogin,
     loginMethod,
     privyModalOpen,
     privyReady,

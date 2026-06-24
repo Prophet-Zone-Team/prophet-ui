@@ -15,7 +15,13 @@
     "preview": "node scripts/stop-preview-ports.mjs && NODE_OPTIONS='--max-old-space-size=6144' opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "NODE_OPTIONS='--max-old-space-size=6144' opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "mobile:sync": "cd mobile && pnpm run cap:sync",
+    "mobile:sync:production": "cd mobile && pnpm run cap:sync:production",
+    "mobile:sync:staging": "cd mobile && pnpm run cap:sync:staging",
+    "mobile:sync:local": "cd mobile && pnpm run cap:sync:local",
+    "mobile:ios": "cd mobile && pnpm run cap:ios",
+    "dev:mobile": "next dev --port 3000"
   },
   "dependencies": {
     "@defuse-protocol/contract-types": "^0.6.4",

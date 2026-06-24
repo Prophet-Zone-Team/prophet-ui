@@ -41,6 +41,8 @@ export interface AuthContextValue {
   isRegionCloseOnly: boolean;
   /** CN geo with configured email whitelist: email-only login is available. */
   whitelistLoginMode: boolean;
+  /** Packaged app or CN whitelist: hide EVM/NEAR/Google login entry points. */
+  emailOnlyLogin: boolean;
   loginMethod: AuthLoginMethod | undefined;
   privyModalOpen: boolean;
   privyReady: boolean;

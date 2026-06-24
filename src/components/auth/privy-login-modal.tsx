@@ -29,6 +29,7 @@ interface PrivyLoginModalProps {
   open: boolean;
   onClose: () => void;
   emailOnlyMode?: boolean;
+  requireWhitelistEmail?: boolean;
   onConnectExtensionWallet: () => void;
   onEmailAuthenticated: (email: string) => void;
 }
@@ -37,6 +38,7 @@ export function PrivyLoginModal({
   open,
   onClose,
   emailOnlyMode = false,
+  requireWhitelistEmail = false,
   onConnectExtensionWallet,
   onEmailAuthenticated,
 }: PrivyLoginModalProps) {
@@ -127,7 +129,7 @@ export function PrivyLoginModal({
     setErrorMessage(undefined);
 
     try {
-      if (emailOnlyMode) {
+      if (requireWhitelistEmail) {
         const whitelistCheck = await checkEligibilityWhitelistEmail(email.trim());
 
         if (!whitelistCheck.allowed) {
@@ -141,7 +143,7 @@ export function PrivyLoginModal({
     } catch (error) {
       setErrorMessage(resolvePrivyError(error, t("somethingWentWrongPleaseRetry")));
     }
-  }, [email, emailOnlyMode, sendCode, sendCodeDisabled, t]);
+  }, [email, requireWhitelistEmail, sendCode, sendCodeDisabled, t]);
 
   const handleVerify = useCallback(async () => {
     if (verifyDisabled) {
