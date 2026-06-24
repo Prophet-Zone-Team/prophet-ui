@@ -18,3 +18,7 @@ cloudflare-env.d.ts
 .pnpm-store/
 
 standalone/
+
+mobile/node_modules/
+mobile/ios/App/Pods/
+mobile/ios/DerivedData/

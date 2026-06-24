@@ -104,6 +104,8 @@
     "deployingDepositWallet": "正在部署您的 Polymarket 入金錢包。",
     "prepareDepositWallet": "登入前請先準備您的 Polymarket 入金錢包。",
     "loginByEmail": "使用電子郵件登入",
+    "whitelistRequired": "請加白名單",
+    "whitelistEmailLoginHint": "目前區域僅支援白名單電子郵件登入。",
     "continueWithGoogle": "使用 Google 繼續",
     "orOtherEmail": "或使用其他電子郵件",
     "emailAddress": "電子郵件地址",

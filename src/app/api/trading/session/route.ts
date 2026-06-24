@@ -9,6 +9,11 @@ import {
   getTradingSessionFromCookie,
 } from "@/server/trading/session-store";
 import { checkTradingEligibility, getClientGeoFromRequest } from "@/server/trading/eligibility";
+import {
+  assertWhitelistEmailAccess,
+  isWhitelistLoginGeo,
+} from "@/server/trading/eligibility-whitelist";
+import { normalizeWhitelistEmail } from "@/lib/trading/eligibility-whitelist";
 import { setupDepositWalletForOwner } from "@/server/trading/deposit-wallet";
 import { recordTradingAuditEvent } from "@/server/trading/order-store";
 import {
@@ -25,6 +30,7 @@ interface CreateSessionPayload {
   token?: string;
   signature?: string;
   signatureType?: number;
+  email?: string;
 }
 
 export async function GET(request: Request) {
@@ -71,9 +77,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const eligibility = await checkTradingEligibility(getClientGeoFromRequest(request));
+  const clientGeo = getClientGeoFromRequest(request);
+  const eligibility = await checkTradingEligibility(clientGeo);
+  const whitelistEmail = payload.email?.trim();
+  const whitelistAccess =
+    whitelistEmail && isWhitelistLoginGeo(clientGeo)
+      ? assertWhitelistEmailAccess(whitelistEmail, clientGeo)
+      : undefined;
+  const whitelistBypass = whitelistAccess?.ok === true;
 
-  if (eligibility.status === "blocked_region") {
+  if (eligibility.status === "blocked_region" && !whitelistBypass) {
     return NextResponse.json(
       {
         error: eligibility.reason ?? "Trading is unavailable in your region.",
@@ -82,6 +95,9 @@ export async function POST(request: Request) {
       { status: 403 },
     );
   }
+
+  const sessionEligibilityStatus = whitelistBypass ? "eligible" : eligibility.status;
+  const sessionEligibilityReason = whitelistBypass ? undefined : eligibility.reason;
 
   const depositWallet = await setupDepositWalletForOwner(payload.walletAddress ?? "");
   const session = createTradingSession({
@@ -93,11 +109,14 @@ export async function POST(request: Request) {
     depositWalletTransactionHash: depositWallet.transactionHash,
     depositWalletError: depositWallet.error,
     signatureType: payload.signatureType ?? 3,
-    eligibilityStatus: eligibility.status,
+    eligibilityStatus: sessionEligibilityStatus,
     eligibilityCheckedAt: eligibility.checkedAt,
     eligibilityCountry: eligibility.country,
     eligibilityRegion: eligibility.region,
-    eligibilityReason: eligibility.reason,
+    eligibilityReason: sessionEligibilityReason,
+    eligibilityWhitelistEmail: whitelistBypass
+      ? normalizeWhitelistEmail(whitelistEmail!)
+      : undefined,
   });
   await recordTradingAuditEvent({
     userId: session.userId,
