@@ -360,6 +360,8 @@ export interface PolymarketOutcomeToken {
   tokenId: string;
   outcome: string;
   price?: number;
+  bestBid?: number;
+  bestAsk?: number;
 }
 
 export interface MarketTopHolder {

@@ -13,7 +13,6 @@ import {
   formatSharePrice,
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
-import { derivePositionSellReceiveAmount } from "@/lib/portfolio/portfolio-metrics";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import {
@@ -23,10 +22,7 @@ import {
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { usePortfolioContext } from "@/views/portfolio/context";
 import { useTradeTicket } from "@/views/trade/trade-widget/use-trade-ticket";
-import {
-  parseOrderAmount,
-  resolveSelectedSellQuickAmount
-} from "@/views/trade/trade-widget/trade-ticket-helpers";
+import { resolveSelectedSellQuickAmount } from "@/views/trade/trade-widget/trade-ticket-helpers";
 import {
   tradeQuickAmountClass,
   tradeQuickAmountSelectedClass
@@ -86,15 +82,10 @@ function PortfolioPositionSellSharedBody({
   }
 
   const { formProps } = ticket;
-  const selectedShares = parseOrderAmount(formProps.amount);
-  const liveSidePrice = formProps.preview.sidePrice;
   const receiveAmount = formatTeamDetailMoney(
-    derivePositionSellReceiveAmount(
-      position,
-      selectedShares,
-      liveSidePrice
-    )
+    formProps.preview.potentialPayout
   );
+  const sellPriceLabel = formatSharePrice(formProps.preview.sidePrice);
 
   const sellQuickDisabled = formProps.availableShares <= 0;
   const selectedQuickAmount = resolveSelectedSellQuickAmount(
@@ -126,10 +117,7 @@ function PortfolioPositionSellSharedBody({
                 getOutcomeToneClass(position.outcome)
               )}
             >
-              {position.outcome}{" "}
-              {formatSharePrice(
-                liveSidePrice > 0 ? liveSidePrice : position.curPrice
-              )}
+              {position.outcome} {sellPriceLabel}
             </p>
           </div>
         </div>
@@ -211,7 +199,11 @@ function PortfolioPositionSellSharedBody({
   );
 }
 
-function PortfolioPositionGameIcon({ position }: { position: UserPositionRecord }) {
+function PortfolioPositionGameIcon({
+  position
+}: {
+  position: UserPositionRecord;
+}) {
   if (position.icon) {
     return (
       <img
@@ -223,10 +215,7 @@ function PortfolioPositionGameIcon({ position }: { position: UserPositionRecord 
   }
 
   return (
-    <div
-      className="h-5 w-5 shrink-0 rounded-[2px] bg-[#E8E8E8]"
-      aria-hidden
-    />
+    <div className="h-5 w-5 shrink-0 rounded-[2px] bg-[#E8E8E8]" aria-hidden />
   );
 }
 
@@ -305,7 +294,9 @@ function PortfolioPositionGameSellBody({
   );
 }
 
-export function PortfolioPositionSellDialog(props: PortfolioPositionSellDialogProps) {
+export function PortfolioPositionSellDialog(
+  props: PortfolioPositionSellDialogProps
+) {
   const t = useTranslations("portfolio");
   const { open, position, tradeHref, onClose } = props;
 
