@@ -21,7 +21,9 @@ export interface PolymarketActivityRow {
   outcome?: string;
 }
 
-function isPolymarketActivityRow(value: unknown): value is PolymarketActivityRow {
+export function isPolymarketActivityRow(
+  value: unknown
+): value is PolymarketActivityRow {
   if (!value || typeof value !== "object") {
     return false;
   }
@@ -44,12 +46,25 @@ function isPolymarketActivityRow(value: unknown): value is PolymarketActivityRow
 
 function buildActivityUrl(
   userAddress: string,
-  options: { limit: number; offset: number }
+  options: { limit: number; offset: number },
+  useProxy: boolean
 ): string {
+  const limit = Math.max(1, Math.min(options.limit, 500));
+  const offset = Math.max(0, options.offset);
+
+  if (useProxy) {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset)
+    });
+
+    return `/api/portfolio/activity?${params.toString()}`;
+  }
+
   const params = new URLSearchParams({
     user: userAddress.toLowerCase(),
-    limit: String(Math.max(1, Math.min(options.limit, 500))),
-    offset: String(Math.max(0, options.offset)),
+    limit: String(limit),
+    offset: String(offset),
     excludeDepositsWithdrawals: "false",
     sortBy: "TIMESTAMP",
     sortDirection: "DESC"
@@ -58,21 +73,45 @@ function buildActivityUrl(
   return `${ACTIVITY_API_BASE}?${params.toString()}`;
 }
 
+interface ActivityProxyResponse {
+  activities?: PolymarketActivityRow[];
+  hasMore?: boolean;
+  error?: string;
+}
+
 export async function fetchPolymarketUserActivity(
   userAddress: string,
-  options: { limit: number; offset: number }
+  options: { limit: number; offset: number },
+  proxyOptions?: { useProxy?: boolean }
 ): Promise<{ activities: PolymarketActivityRow[]; hasMore: boolean }> {
   const trimmedAddress = userAddress.trim();
+  const useProxy = proxyOptions?.useProxy ?? true;
 
-  if (!trimmedAddress) {
+  if (!trimmedAddress && !useProxy) {
     return { activities: [], hasMore: false };
   }
 
   const limit = Math.max(1, Math.min(options.limit, 500));
-  const url = buildActivityUrl(trimmedAddress, {
-    limit,
-    offset: options.offset
-  });
+  const url = buildActivityUrl(
+    trimmedAddress,
+    {
+      limit,
+      offset: options.offset
+    },
+    useProxy
+  );
+
+  if (useProxy) {
+    const payload = await fetchJson<ActivityProxyResponse>(url);
+
+    return {
+      activities: Array.isArray(payload.activities)
+        ? payload.activities.filter(isPolymarketActivityRow)
+        : [],
+      hasMore: payload.hasMore === true
+    };
+  }
+
   const payload = await fetchJson<unknown>(url);
 
   if (!Array.isArray(payload)) {
