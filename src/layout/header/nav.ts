@@ -12,7 +12,11 @@ export const MOBILE_BOTTOM_NAV = [
     labelKey: "worldCup" as const,
     icon: "worldCup" as const
   },
-  { href: "/strategy", labelKey: "strategies" as const, icon: "strategies" as const },
+  {
+    href: "/strategy",
+    labelKey: "strategies" as const,
+    icon: "strategies" as const
+  },
   {
     href: "/portfolio",
     labelKey: "portfolio" as const,
@@ -43,6 +47,11 @@ export function shouldHideMobileBottomNav(pathname: string) {
     pathname === "/team" ||
     pathname === "/group" ||
     pathname === "/combo" ||
-    pathname.startsWith("/trade")
+    pathname.startsWith("/trade") ||
+    pathname.startsWith("/download")
   );
+}
+
+export function shouldHideAppChrome(pathname: string) {
+  return pathname.startsWith("/download");
 }
