@@ -1,10 +1,6 @@
-import { IS_PRODUCTION } from "@/config/funding";
-
-/** Packaged production builds expose email-only wallet connection (all viewports). */
-export const isPackagedAppEmailOnlyLogin = IS_PRODUCTION;
-
+/** Email-only login UI when CN geo + whitelist is active (server-driven). */
 export function resolveEmailOnlyLoginEnabled(
-  whitelistLoginMode?: boolean,
+  whitelistLoginMode?: boolean
 ): boolean {
-  return Boolean(whitelistLoginMode) || isPackagedAppEmailOnlyLogin;
+  return Boolean(whitelistLoginMode);
 }
