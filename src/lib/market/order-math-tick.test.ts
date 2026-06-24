@@ -12,6 +12,7 @@ describe("roundPriceToTick", () => {
   it("respects finer tick sizes", () => {
     assert.equal(roundPriceToTick(0.07622572313223767, "0.001"), 0.076);
     assert.equal(roundPriceToTick(0.07622572313223767, "0.0001"), 0.0762);
+    assert.equal(roundPriceToTick(0.006, "0.001"), 0.006);
   });
 
   it("clamps invalid prices to the tradable range before rounding", () => {
