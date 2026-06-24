@@ -121,7 +121,6 @@ import { useMigratePromptStore } from "@/store/use-migrate-prompt-store";
 import { useNearAccountStore } from "@/lib/wallet/near/near-account-store";
 import { useUserConfigStore } from "@/store/user-config-store";
 import {
-  isPackagedAppEmailOnlyLogin,
   resolveEmailOnlyLoginEnabled,
 } from "@/config/auth-login";
 
@@ -1551,7 +1550,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const shouldUseEmailLoginFlow =
       store.loginMethod === "email" ||
-      ((whitelistLoginMode || isPackagedAppEmailOnlyLogin) && !store.loginMethod);
+      (whitelistLoginMode && !store.loginMethod);
 
     if (!shouldUseEmailLoginFlow) {
       return;
