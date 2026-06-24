@@ -507,10 +507,17 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     const snapshot = input.snapshot;
+    const liveSellBid =
+      tradeSide === "sell"
+        ? outcomeSide === "yes"
+          ? teamTokenPrices[yesTokenId]?.bestBid
+          : teamTokenPrices[noTokenId]?.bestBid
+        : undefined;
     const defaultLimit = getTeamDefaultLimitPrice(
       snapshot,
       outcomeSide,
-      tradeSide
+      tradeSide,
+      liveSellBid
     );
     const orderLimitPrice = resolveOrderLimitPrice(
       orderMode,

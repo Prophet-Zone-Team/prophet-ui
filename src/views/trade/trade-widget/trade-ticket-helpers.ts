@@ -149,17 +149,25 @@ export function resolveOrderLimitPrice(
 export function getTeamDefaultLimitPrice(
   snapshot: TeamMarketSnapshot,
   outcomeSide: OrderOutcomeSide,
-  tradeSide: BidTradeSide
+  tradeSide: BidTradeSide,
+  liveBookPrice?: number
 ): number {
+  const yesToken = snapshot.market.polymarket?.tokens.yes;
+  const noToken = snapshot.market.polymarket?.tokens.no;
   const yesPrice =
-    snapshot.market.polymarket?.tokens.yes?.price ??
-    calculateReferencePrice(snapshot.market.probability, "yes");
+    yesToken?.price ?? calculateReferencePrice(snapshot.market.probability, "yes");
   const noPrice =
-    snapshot.market.polymarket?.tokens.no?.price ??
-    calculateReferencePrice(snapshot.market.probability, "no");
+    noToken?.price ?? calculateReferencePrice(snapshot.market.probability, "no");
   const sidePrice = outcomeSide === "yes" ? yesPrice : noPrice;
 
   if (tradeSide === "sell") {
+    const token = outcomeSide === "yes" ? yesToken : noToken;
+    const bookBid = liveBookPrice ?? token?.bestBid;
+
+    if (bookBid !== undefined && bookBid > 0) {
+      return bookBid;
+    }
+
     return sidePrice;
   }
 
