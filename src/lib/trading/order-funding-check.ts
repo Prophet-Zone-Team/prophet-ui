@@ -1,6 +1,7 @@
 import type { BidTradeSide, UserBalanceSnapshot } from "@/types/market";
 
 import { getFundingSourceSuffix } from "@/lib/trading/collateral-balance-merge";
+import { isTradeSkipSellBalanceCheckEnabled } from "@/lib/trading/trade-sell-test-mode";
 
 export interface OrderFundingRequirement {
   tradeSide: BidTradeSide;
@@ -146,6 +147,16 @@ function checkSellFunding({
   balances: UserBalanceSnapshot;
   requiredShares: number;
 }): OrderFundingCheck {
+  if (isTradeSkipSellBalanceCheckEnabled()) {
+    return {
+      balance: "pass",
+      allowance: "pass",
+      balanceDetail: "Sell balance check skipped (test mode).",
+      allowanceDetail:
+        "Outcome token spending was authorized during account setup.",
+    };
+  }
+
   return {
     balance: compareAvailable(balances.conditionalTokenBalance, requiredShares),
     // Sell relies on one-time setup approvals from login; only share balance gates the order.

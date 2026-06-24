@@ -1,7 +1,6 @@
 import type { BidTradeSide, OrderOutcomeSide, TeamMarketSnapshot, TradingOrderType } from "@/types/market";
 import {
   calculateOrderEstimate,
-  normalizeLimitPrice,
   validateOrderAmount
 } from "@/lib/market/order-math";
 import { getClosedMarketDisabledReason } from "@/lib/market/trading-market-status";
@@ -48,16 +47,16 @@ export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPrevi
   const token = input.snapshot.market.polymarket?.tokens[input.outcomeSide];
   const metadata = input.snapshot.market.polymarket;
   const tokenId = input.tokenId ?? token?.tokenId;
-  const sidePrice = normalizeLimitPrice(input.limitPrice);
   const estimate = calculateOrderEstimate({
     side: input.outcomeSide,
     tradeSide: input.tradeSide,
     amount: input.amount,
     probability: input.snapshot.market.probability,
-    limitPrice: sidePrice,
+    limitPrice: input.limitPrice,
     orderType: input.orderType,
     fee: metadata?.fee,
     maxShareSize: input.maxShareSize,
+    tickSize: metadata?.tickSize,
   });
   const acceptingOrders =
     input.acceptingOrders ?? metadata?.acceptingOrders;
@@ -82,7 +81,7 @@ export function buildBidOrderPreview(input: BidOrderPreviewInput): BidOrderPrevi
     negRisk: metadata?.negRisk,
     acceptingOrders: acceptingOrders === true,
     minOrderSize: metadata?.minOrderSize,
-    sidePrice,
+    sidePrice: estimate.sidePrice,
     shareSize: estimate.shareSize,
     inputAmount: input.amount,
     estimatedCost: estimate.estimatedCost,

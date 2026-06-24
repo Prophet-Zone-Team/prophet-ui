@@ -19,6 +19,7 @@ import {
 } from "@/lib/market/trade-ticket";
 import { buildSdkSignedUserOrder } from "@/lib/market/sdk-user-order";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
+import { isTradeSkipSellBalanceCheckEnabled } from "@/lib/trading/trade-sell-test-mode";
 import {
   buildBalancesQuery,
   mergeTradingReadiness,
@@ -907,6 +908,10 @@ export function resolveQuickAmountAllBalance(
   if (tradeSide === "sell") {
     if (availableShares !== undefined && availableShares > 0) {
       return availableShares;
+    }
+
+    if (isTradeSkipSellBalanceCheckEnabled()) {
+      return undefined;
     }
 
     const shares = readiness?.balances?.conditionalTokenBalance;

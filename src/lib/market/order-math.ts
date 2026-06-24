@@ -46,6 +46,16 @@ export function resolveTickPriceDecimalPlaces(
   return TICK_PRICE_DECIMALS[DEFAULT_MARKET_TICK_SIZE];
 }
 
+export function resolveMinLimitPrice(
+  tickSize: MarketTickSize | string | undefined = DEFAULT_MARKET_TICK_SIZE
+): number {
+  if (isMarketTickSize(tickSize)) {
+    return Number(tickSize);
+  }
+
+  return MIN_PRICE;
+}
+
 /** Aligns CLOB prices to the market tick precision (matches Polymarket ROUNDING_CONFIG). */
 export function roundPriceToTick(
   price: number,
@@ -55,7 +65,8 @@ export function roundPriceToTick(
     return price;
   }
 
-  const clamped = clamp(price, MIN_PRICE, MAX_PRICE);
+  const minPrice = resolveMinLimitPrice(tickSize);
+  const clamped = clamp(price, minPrice, MAX_PRICE);
   const decimals = resolveTickPriceDecimalPlaces(tickSize);
   const factor = 10 ** decimals;
 
@@ -165,6 +176,7 @@ export interface OrderEstimateInput {
   fee?: PolymarketFeeDetails;
   /** Caps sell share size to on-chain balance or position size. */
   maxShareSize?: number;
+  tickSize?: MarketTickSize | string;
 }
 
 export interface OrderEstimate {
@@ -207,12 +219,17 @@ export function calculateOutcomeReferencePrice(
   return calculateReferencePrice(probability, side);
 }
 
-export function normalizeLimitPrice(price: number): number {
+export function normalizeLimitPrice(
+  price: number,
+  tickSize?: MarketTickSize | string
+): number {
   if (!Number.isFinite(price)) {
-    return MIN_PRICE;
+    return resolveMinLimitPrice(tickSize);
   }
 
-  return roundPrice(clamp(price, MIN_PRICE, MAX_PRICE));
+  const minPrice = resolveMinLimitPrice(tickSize);
+
+  return roundPrice(clamp(price, minPrice, MAX_PRICE));
 }
 
 export const TAKE_PROFIT_LIMIT_DEFAULT_MULTIPLIER = 1.2;
@@ -239,7 +256,8 @@ export function calculateOrderEstimate(
   input: OrderEstimateInput
 ): OrderEstimate {
   const sidePrice = normalizeLimitPrice(
-    input.limitPrice ?? calculateReferencePrice(input.probability, input.side)
+    input.limitPrice ?? calculateReferencePrice(input.probability, input.side),
+    input.tickSize
   );
   const tradeSide = input.tradeSide ?? "buy";
   const isLimitOrder = isLimitOrderType(input.orderType);
