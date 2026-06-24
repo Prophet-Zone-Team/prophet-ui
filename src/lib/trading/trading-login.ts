@@ -303,6 +303,7 @@ export async function fetchTradingReadinessWithBalances() {
 export async function createTradingSession(
   walletAddress: string,
   options?: {
+    email?: string;
     onStep?: (step: TradingLoginStep) => void;
   }
 ): Promise<TradingUserSession> {
@@ -352,7 +353,8 @@ export async function createTradingSession(
       walletAddress,
       token: challengePayload.challenge.token,
       signature,
-      signatureType: DEFAULT_SIGNATURE_TYPE
+      signatureType: DEFAULT_SIGNATURE_TYPE,
+      ...(options?.email ? { email: options.email.trim() } : {})
     })
   });
   const payload = (await response.json()) as {

@@ -4,7 +4,12 @@ import {
   defaultReasonForKind,
   resolveLocalGeoEligibility
 } from "@/lib/trading/geo-restrictions";
+import { isChinaGeo } from "@/lib/trading/eligibility-whitelist";
 import type { TradingEligibilityStatus, TradingUserSession } from "@/types/market";
+import {
+  isEligibilityWhitelistConfigured,
+  resolveWhitelistSessionEligibility,
+} from "@/server/trading/eligibility-whitelist";
 import { lookupGeoFromIp } from "@/server/trading/ip-geolocation";
 import { updateTradingSession } from "@/server/trading/session-store";
 
@@ -14,12 +19,17 @@ export interface TradingEligibilityResult {
   country?: string;
   region?: string;
   reason?: string;
+  whitelistLoginMode?: boolean;
 }
 
 export interface ClientGeoHeaders {
   ip?: string;
   country?: string;
   region?: string;
+}
+
+function resolveWhitelistLoginMode(country?: string): boolean {
+  return isEligibilityWhitelistConfigured() && isChinaGeo(country);
 }
 
 export async function checkTradingEligibility(
@@ -48,14 +58,45 @@ export async function checkTradingEligibility(
   }
 
   const resolved = resolveLocalGeoEligibility(country, region);
+  const whitelistLoginMode = resolveWhitelistLoginMode(country);
 
   return {
     status: resolved.status,
     checkedAt,
     country,
     region,
-    reason: resolved.reason
+    reason: resolved.reason,
+    whitelistLoginMode: whitelistLoginMode || undefined,
   };
+}
+
+export async function resolveSessionEligibility(
+  session: TradingUserSession,
+  clientGeo?: ClientGeoHeaders,
+): Promise<TradingEligibilityResult> {
+  const geoEligibility = await checkTradingEligibility(clientGeo);
+
+  if (
+    resolveWhitelistSessionEligibility({
+      whitelistEmail: session.eligibilityWhitelistEmail,
+      clientGeo: {
+        country: geoEligibility.country ?? clientGeo?.country,
+        region: geoEligibility.region ?? clientGeo?.region,
+        ip: clientGeo?.ip,
+      },
+    })
+  ) {
+    return {
+      status: "eligible",
+      checkedAt: geoEligibility.checkedAt,
+      country: geoEligibility.country,
+      region: geoEligibility.region,
+      reason: undefined,
+      whitelistLoginMode: geoEligibility.whitelistLoginMode,
+    };
+  }
+
+  return geoEligibility;
 }
 
 export function formatEligibilityRestrictionReason(
@@ -83,7 +124,7 @@ export async function refreshSessionEligibility(
   session: TradingUserSession,
   clientGeo?: ClientGeoHeaders,
 ): Promise<TradingUserSession> {
-  const eligibility = await checkTradingEligibility(clientGeo);
+  const eligibility = await resolveSessionEligibility(session, clientGeo);
 
   return updateTradingSession(withEligibility(session, eligibility));
 }

@@ -105,6 +105,8 @@
     "deployingDepositWallet": "Deploying your Polymarket deposit wallet.",
     "prepareDepositWallet": "Prepare your Polymarket deposit wallet before signing in.",
     "loginByEmail": "Login by Email",
+    "whitelistRequired": "Please request whitelist access.",
+    "whitelistEmailLoginHint": "Only whitelisted email login is available in your region.",
     "continueWithGoogle": "Continue with Google",
     "orOtherEmail": "Or other email",
     "emailAddress": "Email address",

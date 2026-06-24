@@ -2,10 +2,17 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { isAllowedCorsOrigin } from "@/lib/cors/allowed-origins";
-import { applyCorsHeaders, createCorsPreflightResponse } from "@/lib/cors/cors-headers";
+import {
+  applyCorsHeaders,
+  createCorsPreflightResponse
+} from "@/lib/cors/cors-headers";
+import { applyDevMockEligibilityGeoHeaders } from "@/lib/runtime/dev-mock-eligibility-geo";
 import { isLocalhostHostname } from "@/lib/runtime/is-secure-app-context";
 
-function withApiCors(request: NextRequest, response: NextResponse): NextResponse {
+function withApiCors(
+  request: NextRequest,
+  response: NextResponse
+): NextResponse {
   const origin = request.headers.get("origin");
 
   if (isAllowedCorsOrigin(origin) && origin) {
@@ -40,9 +47,18 @@ export function middleware(request: NextRequest) {
     return withApiCors(request, NextResponse.redirect(url, 308));
   }
 
-  return withApiCors(request, NextResponse.next());
+  const requestHeaders = applyDevMockEligibilityGeoHeaders(request, hostname);
+
+  return withApiCors(
+    request,
+    NextResponse.next({
+      request: {
+        headers: requestHeaders
+      }
+    })
+  );
 }
 
 export const config = {
-  matcher: "/:path*",
+  matcher: "/:path*"
 };

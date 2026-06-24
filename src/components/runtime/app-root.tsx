@@ -6,12 +6,13 @@ import type { ReactNode } from "react";
 import { AnalyticsProvider } from "@/context/analytics";
 import { LocaleProvider } from "@/components/runtime/locale-provider";
 import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen";
+import { NativeAppShell } from "@/components/runtime/native-app-shell";
 import { MobileVConsole } from "@/components/runtime/mobile-vconsole";
 import type { AppLocale } from "@/i18n/config";
 
 const WalletRuntimeProviders = dynamic(
   () => import("@/components/runtime/wallet-runtime-providers"),
-  { ssr: false },
+  { ssr: false }
 );
 
 interface AppRootProps {
@@ -26,7 +27,7 @@ export function AppRoot({
   cookie,
   initialLocale,
   initialMessages,
-  children,
+  children
 }: AppRootProps) {
   return (
     <LocaleProvider
@@ -34,6 +35,7 @@ export function AppRoot({
       initialMessages={initialMessages}
     >
       <AnalyticsProvider>
+        <NativeAppShell />
         <MobileLoadingScreen />
         <MobileVConsole />
         <WalletRuntimeProviders cookie={cookie}>
