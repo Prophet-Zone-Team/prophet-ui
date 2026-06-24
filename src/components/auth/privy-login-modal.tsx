@@ -19,7 +19,7 @@ const OTP_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const modalShellClass = cn(
-  "relative w-full overflow-y-auto bg-white",
+  "relative w-full bg-white",
   "p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]",
   "sm:max-w-[468px] sm:rounded-[20px] sm:border sm:border-[#ebebeb] sm:p-6 sm:pb-6",
   "sm:shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]"
