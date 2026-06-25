@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { useTranslations } from "next-intl";
 
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 import type { WorldCup2026GroupTeam } from "@/data/world-cup-2026/groups";
@@ -99,6 +100,7 @@ export function BracketMatchPair({
   onWinnerChange,
   probabilityByTeamId,
   highlightedTeamIds,
+  showValidationHint = false,
   variant = "inner",
   className,
   style
@@ -113,10 +115,12 @@ export function BracketMatchPair({
   onWinnerChange: (matchId: number, teamId: string) => void;
   probabilityByTeamId?: Map<string, number>;
   highlightedTeamIds?: Set<string>;
+  showValidationHint?: boolean;
   variant?: "r32" | "inner" | "final";
   className?: string;
   style?: CSSProperties;
 }) {
+  const t = useTranslations("roadToFinal");
   const match = MATCH_LOOKUP.get(matchId);
 
   if (!match) {
@@ -209,17 +213,30 @@ export function BracketMatchPair({
   };
 
   return (
-    <article
-      className={cn(
-        "absolute flex flex-row items-stretch overflow-hidden rounded-[12px] border border-[#33375A] bg-[rgba(50,57,66,0.5)] backdrop-blur-[5px]",
-        isFinal ? "p-[5px]" : "p-[4px]",
-        className
-      )}
-      style={{ width: cardWidth, height: cardHeight, ...style }}
-      aria-label={`Match ${matchId}`}
-    >
-      {renderSlot(leftTeam, leftCandidates)}
-      {renderSlot(rightTeam, rightCandidates)}
-    </article>
+    <div className="absolute" style={style}>
+      <article
+        className={cn(
+          "flex flex-row items-stretch overflow-hidden rounded-[12px] border border-[#33375A] bg-[rgba(50,57,66,0.5)] backdrop-blur-[5px]",
+          isFinal ? "p-[5px]" : "p-[4px]",
+          className
+        )}
+        style={{ width: cardWidth, height: cardHeight }}
+        aria-label={`Match ${matchId}`}
+        aria-invalid={showValidationHint}
+      >
+        {renderSlot(leftTeam, leftCandidates)}
+        {renderSlot(rightTeam, rightCandidates)}
+      </article>
+      {showValidationHint ? (
+        <span
+          className={cn(
+            "absolute left-0 top-full mt-[4px] w-full text-center",
+            "whitespace-nowrap text-[11px] leading-tight text-[#FF674B]"
+          )}
+        >
+          {t("selectAtLeastOne")}
+        </span>
+      ) : null}
+    </div>
   );
 }

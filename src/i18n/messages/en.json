@@ -1509,6 +1509,7 @@
     "tradeToGetMore": "Trade ${amount} to get 1 more",
     "confirmAndSave": "Confirm and Save",
     "shareAndJoinCampaign": "Share and Join Campaign",
+    "selectAtLeastOne": "Select at least one",
     "predictionRecordsTitle": "Prediction",
     "roadToFinalRecordTitle": "Road to final: {teamName}",
     "noPredictionRecords": "No joined yet.",

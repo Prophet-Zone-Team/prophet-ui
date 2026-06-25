@@ -1497,6 +1497,7 @@
     "tradeToGetMore": "Opera ${amount} más para obtener 1 entrada",
     "confirmAndSave": "Confirmar y guardar",
     "shareAndJoinCampaign": "Compartir y unirse a la campaña",
+    "selectAtLeastOne": "Selecciona al menos uno",
     "predictionRecordsTitle": "Predicciones",
     "roadToFinalRecordTitle": "Camino a la final: {teamName}",
     "noPredictionRecords": "Aún no hay predicciones.",

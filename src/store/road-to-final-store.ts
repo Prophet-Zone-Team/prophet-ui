@@ -102,7 +102,11 @@ export const useRoadToFinalStore = create<RoadToFinalStoreState>()(
         });
       },
       clearKnockoutSelections: () => {
-        set({ knockoutWinners: {}, knockoutMethod: "manualSelection" });
+        set({
+          teamId: defaultSimulatorTeamId,
+          knockoutWinners: {},
+          knockoutMethod: "manualSelection",
+        });
       },
     }),
     {
