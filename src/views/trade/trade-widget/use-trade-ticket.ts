@@ -20,7 +20,8 @@ import {
   isLineOutcomePairSideActive,
   resolveLineOutcomeForSide,
   resolveLineOutcomePair,
-  resolveLineOutcomeTradeBinarySide
+  resolveLineOutcomeTradeBinarySide,
+  resolveLineOutcomeTradeTokenId
 } from "@/lib/market/fixture-line-outcome-pair";
 import {
   useMarketWsPrices,
@@ -654,9 +655,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       yesTokenPrice:
         (lineOutcomePair && mergedYesLineOutcome
           ? resolveLiveOutcomeButtonPrice(
-              mergedYesLineOutcome.tokenId,
+              resolveLineOutcomeTradeTokenId(mergedYesLineOutcome),
               fixtureTokenPrices,
-              "yes",
+              resolveLineOutcomeTradeBinarySide(mergedYesLineOutcome),
               mergedYesLineOutcome,
               matchOutcome,
               yesLineProbability ?? matchProbability,
@@ -674,9 +675,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       noTokenPrice:
         (lineOutcomePair && mergedNoLineOutcome
           ? resolveLiveOutcomeButtonPrice(
-              mergedNoLineOutcome.noTokenId ?? mergedNoLineOutcome.tokenId,
+              resolveLineOutcomeTradeTokenId(mergedNoLineOutcome),
               fixtureTokenPrices,
-              "no",
+              resolveLineOutcomeTradeBinarySide(mergedNoLineOutcome),
               mergedNoLineOutcome,
               matchOutcome,
               noLineProbability ?? Math.max(0, 100 - matchProbability),
