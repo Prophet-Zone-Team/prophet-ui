@@ -67,13 +67,21 @@ const Drawer = (props: DrawerProps) => {
   }, [open]);
 
   useEffect(() => {
-    if (open) {
-      setContentOpen(true);
-      document.body.classList.add("drawer-open");
+    if (!open) {
+      setContentOpen(false);
+      document.body.classList.remove("drawer-open");
       return;
     }
-    setContentOpen(false);
-    document.body.classList.remove("drawer-open");
+
+    setContentOpen(true);
+    const previousOverflow = document.body.style.overflow;
+    document.body.classList.add("drawer-open");
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.classList.remove("drawer-open");
+      document.body.style.overflow = previousOverflow;
+    };
   }, [open]);
 
   if (typeof window === "undefined") {
@@ -174,7 +182,11 @@ const DrawerContent = (props: DrawerContentProps) => {
           {title}
         </DrawerTitle>
       ) : null}
-      <div className={clsx("min-h-0 flex-1 overflow-y-auto overflow-x-hidden")}>
+      <div
+        className={clsx(
+          "min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain"
+        )}
+      >
         {children}
       </div>
     </motion.div>

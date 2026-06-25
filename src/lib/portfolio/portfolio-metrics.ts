@@ -258,14 +258,21 @@ export interface PortfolioViewModel {
 export function buildPortfolioView({
   positions,
   cash,
-  transactions
+  transactions,
+  totalPositionValue: totalPositionValueFromApi
 }: {
   positions: UserPositionRecord[];
   cash?: CashBalanceView;
   transactions: PortfolioTransactionRecord[];
+  totalPositionValue?: number;
 }): PortfolioViewModel {
-  const totalPositionValue = roundMoney(
+  const summedPositionValue = roundMoney(
     positions.reduce((sum, position) => sum + safeNumber(position.currentValue), 0)
+  );
+  const totalPositionValue = roundMoney(
+    totalPositionValueFromApi !== undefined
+      ? safeNumber(totalPositionValueFromApi)
+      : summedPositionValue
   );
   const availableToTrade = safeNumber(cash?.available);
   const portfolioValue = roundMoney(totalPositionValue + availableToTrade);

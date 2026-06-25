@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { ClipboardEvent, KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 
+import { useDevice } from "@/hooks/common/use-device";
 import { cn } from "@/lib/cn";
 
 interface OtpInputProps {
@@ -16,6 +17,123 @@ interface OtpInputProps {
 }
 
 export function OtpInput({
+  value,
+  length = 6,
+  disabled = false,
+  className,
+  onChange,
+  onComplete,
+}: OtpInputProps) {
+  const isMobile = useDevice();
+
+  if (isMobile) {
+    return (
+      <MobileOtpInput
+        value={value}
+        length={length}
+        disabled={disabled}
+        className={className}
+        onChange={onChange}
+        onComplete={onComplete}
+      />
+    );
+  }
+
+  return (
+    <DesktopOtpInput
+      value={value}
+      length={length}
+      disabled={disabled}
+      className={className}
+      onChange={onChange}
+      onComplete={onComplete}
+    />
+  );
+}
+
+function MobileOtpInput({
+  value,
+  length = 6,
+  disabled = false,
+  className,
+  onChange,
+  onComplete,
+}: OtpInputProps) {
+  const t = useTranslations("auth");
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const digits = Array.from({ length }, (_, index) => value[index] ?? "");
+  const activeIndex = Math.min(value.length, length - 1);
+
+  const commit = (next: string) => {
+    const normalized = next.slice(0, length);
+    onChange(normalized);
+
+    if (normalized.length === length) {
+      onComplete?.(normalized);
+    }
+  };
+
+  const handleChange = (raw: string) => {
+    const sanitized = raw.replace(/\D/g, "");
+    commit(sanitized);
+  };
+
+  const handlePaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const pasted = event.clipboardData.getData("text").replace(/\D/g, "");
+
+    if (!pasted) {
+      return;
+    }
+
+    commit(pasted);
+  };
+
+  return (
+    <div
+      className={cn(
+        "relative grid min-w-0 grid-cols-6 gap-1",
+        "w-full sm:w-auto",
+        className,
+      )}
+      onClick={() => inputRef.current?.focus()}
+    >
+      <input
+        ref={inputRef}
+        type="text"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        maxLength={length}
+        disabled={disabled}
+        value={value}
+        aria-label={t("verificationCodeDigit", { index: 1 })}
+        onChange={(event) => handleChange(event.target.value)}
+        onPaste={handlePaste}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        className="absolute inset-0 z-10 cursor-text opacity-0"
+      />
+      {digits.map((digit, index) => (
+        <div
+          key={index}
+          aria-hidden="true"
+          className={cn(
+            "flex h-11 w-full min-w-0 items-center justify-center rounded-[6px] border border-[#ebebeb] bg-white",
+            "text-[16px] font-[500] text-black",
+            isFocused && index === activeIndex && "border-black",
+            disabled && "opacity-50",
+          )}
+        >
+          {digit}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DesktopOtpInput({
   value,
   length = 6,
   disabled = false,

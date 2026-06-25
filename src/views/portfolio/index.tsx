@@ -22,6 +22,7 @@ export function PortfolioView() {
     session,
     positions,
     comboPositions,
+    totalPositionValue,
     openOrders,
     marketContextMap,
     transactions,
@@ -47,9 +48,10 @@ export function PortfolioView() {
       buildPortfolioView({
         positions,
         cash,
-        transactions
+        transactions,
+        totalPositionValue
       }),
-    [cash, positions, transactions]
+    [cash, positions, totalPositionValue, transactions]
   );
 
   return (

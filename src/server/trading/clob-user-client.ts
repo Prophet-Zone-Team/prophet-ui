@@ -430,6 +430,50 @@ export async function fetchUserPositions({
   return Array.isArray(payload) ? payload.filter(isUserPositionRecord) : [];
 }
 
+interface PolymarketPositionsValueRecord {
+  user: string;
+  value: number;
+}
+
+export async function fetchUserPositionsTotalValue({
+  userAddress,
+  conditionIds
+}: {
+  userAddress: string;
+  conditionIds?: string[];
+}): Promise<number> {
+  const params = new URLSearchParams({
+    user: userAddress
+  });
+
+  if (conditionIds?.length) {
+    params.set("market", conditionIds.join(","));
+  }
+
+  const response = await serverFetch(
+    `https://data-api.polymarket.com/value?${params.toString()}`,
+    {
+      cache: "no-store"
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Unable to fetch user positions total value: ${await readResponseError(response)}`
+    );
+  }
+
+  const payload = (await response.json()) as unknown;
+
+  if (!Array.isArray(payload)) {
+    return 0;
+  }
+
+  return payload
+      .filter(isPolymarketPositionsValueRecord)
+      .reduce((sum, record) => sum + record.value, 0);
+}
+
 export async function postSignedUserOrder({
   address,
   credentials,
@@ -1061,6 +1105,18 @@ function normalizeUserActivityRecord(
     eventSlug: record.eventSlug,
     outcome: record.outcome
   };
+}
+
+function isPolymarketPositionsValueRecord(
+  value: unknown
+): value is PolymarketPositionsValueRecord {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const record = value as Partial<PolymarketPositionsValueRecord>;
+
+  return typeof record.user === "string" && typeof record.value === "number";
 }
 
 function isUserPositionRecord(value: unknown): value is UserPositionRecord {
