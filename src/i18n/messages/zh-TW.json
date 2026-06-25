@@ -1523,6 +1523,7 @@
     "tradeToGetMore": "再交易 ${amount} 可獲得 1 次",
     "confirmAndSave": "確認並儲存",
     "shareAndJoinCampaign": "分享並加入活動",
+    "selectAtLeastOne": "至少選擇一項",
     "predictionRecordsTitle": "預測記錄",
     "roadToFinalRecordTitle": "決賽之路：{teamName}",
     "noPredictionRecords": "尚無預測記錄。",

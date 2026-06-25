@@ -11,20 +11,20 @@ import { cn } from "@/lib/cn";
 import { EntryStructurePanel } from "./entry-structure-panel";
 
 export function ShareFooter({
-  hasChampion,
   predictionCount,
   availableChances,
   tradePromptAmount,
   statsLoading,
+  onBeforeShare,
   onShare,
   onOpenRecords,
   onOpenRules,
 }: {
-  hasChampion: boolean;
   predictionCount: number;
   availableChances: number;
   tradePromptAmount: number | null;
   statsLoading?: boolean;
+  onBeforeShare: () => boolean;
   onShare: () => void;
   onOpenRecords: () => void;
   onOpenRules: () => void;
@@ -34,7 +34,11 @@ export function ShareFooter({
   const isMobile = useDevice();
 
   const handleShare = () => {
-    if (!hasChampion) {
+    if (loginInProgress || availableChances <= 0) {
+      return;
+    }
+
+    if (!onBeforeShare()) {
       return;
     }
 
@@ -47,7 +51,7 @@ export function ShareFooter({
   };
 
   const isAvailableChances = availableChances > 0;
-  const shareDisabled = !hasChampion || loginInProgress;
+  const shareDisabled = loginInProgress;
   const timesLabel = statsLoading && isAuthenticated
     ? t("timesLabel", { count: "-" })
     : t("timesLabel", { count: predictionCount });
@@ -122,7 +126,7 @@ export function ShareFooter({
                 "inline-flex h-[38px] w-full items-center justify-center gap-[8px]",
                 "rounded-[6px] bg-[linear-gradient(90deg,#F4B600_0%,#8E6A00_100%)]",
                 "px-[16px] text-[14px] text-white transition sm:w-auto md:min-w-[229px]",
-                shareDisabled
+                (shareDisabled || !isAvailableChances)
                   ? "cursor-not-allowed opacity-40"
                   : "hover:opacity-80"
               )}

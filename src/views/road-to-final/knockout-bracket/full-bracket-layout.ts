@@ -1,4 +1,4 @@
-export const R32_MATCH_CARD_WIDTH = 132;
+export const R32_MATCH_CARD_WIDTH = 148;
 export const R32_MATCH_CARD_HEIGHT = 86;
 export const INNER_MATCH_CARD_WIDTH = 132;
 export const INNER_MATCH_CARD_HEIGHT = 86;
@@ -6,7 +6,7 @@ export const FINAL_MATCH_CARD_WIDTH = 182;
 export const FINAL_MATCH_CARD_HEIGHT = 118;
 
 export const TEAM_CHIP_HEIGHT = 26;
-export const BRACKET_R32_GAP = 12;
+export const BRACKET_R32_GAP = 20;
 export const BRACKET_INNER_GAP = 20;
 
 export const CONNECTOR_WIDTH = {
