@@ -446,6 +446,15 @@ function sanitizeComboGroup(value: unknown): ComboGameGroup | undefined {
           : undefined,
     },
     markets,
+    status:
+      typeof group.status === "string" && group.status.length > 0
+        ? group.status
+        : "scheduled",
+    eventId: typeof group.eventId === "string" ? group.eventId : undefined,
+    homeScore:
+      typeof group.homeScore === "number" ? group.homeScore : undefined,
+    awayScore:
+      typeof group.awayScore === "number" ? group.awayScore : undefined,
   };
 }
 

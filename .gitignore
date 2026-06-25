@@ -19,6 +19,4 @@ cloudflare-env.d.ts
 
 standalone/
 
-mobile/node_modules/
-mobile/ios/App/Pods/
-mobile/ios/DerivedData/
+mobile/

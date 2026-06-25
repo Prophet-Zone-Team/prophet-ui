@@ -247,4 +247,34 @@ describe("mapComboGameToItemProps", () => {
       ["O 2.5", "U 2.5"],
     );
   });
+
+  it("sets isLive when group status is live", () => {
+    const mapped = mapProphetComboMarketsResponse(stagingSample);
+    const liveGroup = {
+      ...mapped.groups[0],
+      status: "live" as const,
+    };
+    const props = mapComboGameToItemProps(liveGroup);
+
+    assert.equal(props.isLive, true);
+  });
+});
+
+describe("combo game status mapping", () => {
+  it("maps status 1 to live", () => {
+    const mapped = mapProphetComboMarketsResponse({
+      list: [{ ...stagingSample.list![0], status: 1, gameId: 99 }],
+    });
+
+    assert.equal(mapped.groups[0].status, "live");
+    assert.equal(mapped.groups[0].eventId, "99");
+  });
+
+  it("maps status 2 to finished", () => {
+    const mapped = mapProphetComboMarketsResponse({
+      list: [{ ...stagingSample.list![0], status: 2 }],
+    });
+
+    assert.equal(mapped.groups[0].status, "finished");
+  });
 });

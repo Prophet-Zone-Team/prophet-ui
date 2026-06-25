@@ -34,6 +34,8 @@ export interface ComboMarketRecord {
   tags?: string[];
 }
 
+import type { WorldCupMatchStatus } from "@/types/market";
+
 export interface ComboGameTeam {
   name: string;
   code: string;
@@ -49,6 +51,10 @@ export interface ComboGameGroup {
   homeTeam: ComboGameTeam;
   awayTeam: ComboGameTeam;
   markets: ComboMarketRecord[];
+  status: WorldCupMatchStatus;
+  eventId?: string;
+  homeScore?: number;
+  awayScore?: number;
 }
 
 export type ComboMarketsDay = "all" | "today" | "tomorrow";

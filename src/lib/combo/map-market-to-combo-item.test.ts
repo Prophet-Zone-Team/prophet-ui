@@ -35,6 +35,7 @@ describe("mapComboGameToItemProps spread labels", () => {
     slug: "fifwc-arg-aut-2026-06-22",
     title: "Argentina vs Austria",
     kickoffLabel: "2026-06-22",
+    status: "scheduled",
     homeTeam: { name: "Argentina", code: "ARG" },
     awayTeam: { name: "Austria", code: "AUT" },
     markets: [
@@ -98,6 +99,7 @@ describe("mapComboGameToItemProps spread labels", () => {
   it("resolves spread line options for one team", () => {
     const multiLineGroup: ComboGameGroup = {
       ...group,
+      status: "scheduled",
       markets: [
         ...group.markets,
         {
@@ -258,6 +260,7 @@ describe("mapComboGameToItemProps halftime labels", () => {
       slug: "fifwc-fra-irq-2026-06-22",
       title: "France vs Iraq",
       kickoffLabel: "2026-06-22",
+      status: "scheduled",
       homeTeam: { name: "France", code: "FRA" },
       awayTeam: { name: "Iraq", code: "IRQ" },
       markets: [
