@@ -1,6 +1,7 @@
 import { flattenProphetEventMarkets } from "@/lib/market/prophet-game-detail-mapper";
 import {
   extractFixtureTeamAbbreviations,
+  mapProphetGameStatus,
   parseTeamsFromTitle,
 } from "@/lib/market/prophet-game-mapper";
 import { parseGammaArrayField } from "@/lib/market/polymarket-gamma";
@@ -79,6 +80,10 @@ function mapProphetComboGame(
     homeTeam,
     awayTeam,
     markets: mappedMarkets,
+    status: mapProphetGameStatus(game),
+    eventId: game.gameId ? String(game.gameId) : undefined,
+    homeScore: game.home_score,
+    awayScore: game.away_score,
   };
 }
 

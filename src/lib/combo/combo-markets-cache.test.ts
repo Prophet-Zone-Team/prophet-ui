@@ -15,6 +15,7 @@ function buildSnapshot(cachedOnDate: string): ComboMarketsDaySnapshot {
         slug: "fifwc-a-b-2026-06-18",
         title: "A vs B",
         kickoffLabel: "2026-06-18",
+        status: "scheduled",
         homeTeam: { name: "A", code: "A" },
         awayTeam: { name: "B", code: "B" },
         markets: [

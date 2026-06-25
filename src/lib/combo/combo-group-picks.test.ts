@@ -9,7 +9,9 @@ import type { ComboGameGroup } from "@/types/combo";
 
 const sampleGroup: ComboGameGroup = {
   slug: "fifwc-cze-rsa-2026-06-18",
+  title: "Czechia vs South Africa",
   kickoffLabel: "2026-06-18",
+  status: "scheduled",
   homeTeam: { code: "CZE", name: "Czechia" },
   awayTeam: { code: "RSA", name: "South Africa" },
   markets: [

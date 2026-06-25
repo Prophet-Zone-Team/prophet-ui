@@ -16,6 +16,7 @@ const sampleGroup: ComboGameGroup = {
   slug: "fifwc-fra-irq-2026-06-22",
   title: "France vs Iraq",
   kickoffLabel: "2026-06-22",
+  status: "scheduled",
   homeTeam: { code: "FRA", name: "France" },
   awayTeam: { code: "IRQ", name: "Iraq" },
   markets: [

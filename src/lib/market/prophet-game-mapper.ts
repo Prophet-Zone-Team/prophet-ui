@@ -153,7 +153,7 @@ export function parseTeamsFromTitle(title: string): {
   };
 }
 
-function mapProphetGameStatus(
+export function mapProphetGameStatus(
   game: ProphetPolyMarketGameItem
 ): WorldCupMatchStatus {
   if (game.closed === 1 || game.status === 2) {

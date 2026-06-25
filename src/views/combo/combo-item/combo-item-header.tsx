@@ -52,7 +52,7 @@ export function ComboItemHeader({
 
       <div
         className={cn(
-          "hidden flex-col gap-3 px-4 pt-4 pb-2 md:flex",
+          "hidden flex-col gap-3 p-4 md:flex",
           expanded && "border-b border-[#EBEBEB] pb-4"
         )}
       >

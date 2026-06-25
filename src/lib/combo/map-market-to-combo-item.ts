@@ -1,4 +1,5 @@
 import { findCuratedTeamByCode } from "@/data/teams/curated-team-list";
+import { isComboGameLive } from "@/lib/combo/combo-game-live-state";
 import { getLocalizedTeamName } from "@/lib/i18n/localized-team-name";
 import type { ComboGameGroup, ComboMarketRecord } from "@/types/combo";
 import type {
@@ -596,6 +597,7 @@ export function mapComboGameToItemProps(
 
   return {
     kickoffLabel: group.kickoffLabel,
+    isLive: isComboGameLive(group),
     homeTeam: toComboItemTeamFromGame(group.homeTeam),
     awayTeam: toComboItemTeamFromGame(group.awayTeam),
     moneylineOdds: sortMoneylineOdds(moneylineOdds, group),

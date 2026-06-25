@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { OutcomeDisplaySwitcher } from "@/components/ui/outcome-display-switcher";
@@ -10,8 +10,10 @@ import { useAuth } from "@/context/auth";
 import { useComboLivePrices } from "@/hooks/combo/use-combo-live-prices";
 import { useComboMarkets } from "@/hooks/combo/use-combo-markets";
 import { useComboTicket } from "@/hooks/combo/use-combo-ticket";
-import { buildComboLegsFromPicks } from "@/lib/combo/markets-client";
+import { filterComboGroupsForDay } from "@/lib/combo/combo-game-live-state";
+import { useComboGroupsWithLiveState } from "@/hooks/combo/use-combo-groups-with-live-state";
 import { applyComboGameGroupPickUpdate } from "@/lib/combo/combo-group-picks";
+import { buildComboLegsFromPicks } from "@/lib/combo/markets-client";
 import { isExactScoreMarket } from "@/lib/combo/combo-market-mutex";
 import { applyComboLegSelectionRules } from "@/lib/combo/combo-leg-selection";
 import {
@@ -52,6 +54,7 @@ import { ComboWidget } from "@/views/combo/combo-widget";
 import type { ComboWidgetProps } from "@/views/combo/combo-widget/types";
 import type { ComboPickOutcomeSide } from "@/views/combo/combo-widget/types";
 import { createComboPickFromMarket } from "@/views/combo/combo-ticket-container";
+import { SyncComboLiveStore } from "@/views/combo/sync-combo-live-store";
 import { MIN_COMBO_PICKS } from "@/views/combo/combo-widget/constants";
 
 const COMBO_DAY_TABS: ComboMarketsDay[] = ["today", "tomorrow", "all"];
@@ -65,12 +68,42 @@ export function ComboPageView() {
     useState<OutcomeDisplayMode>("decimal");
   const { day, setDay, groups, markets, loading, error, reload } =
     useComboMarkets();
+  const hasUserSelectedDayRef = useRef(false);
+  const hasAttemptedInitialTodayFallbackRef = useRef(false);
+
+  const groupsWithLive = useComboGroupsWithLiveState(groups);
+  const visibleGroups = useMemo(
+    () => filterComboGroupsForDay(groupsWithLive, day),
+    [groupsWithLive, day],
+  );
+
+  const handleDayChange = useCallback(
+    (value: ComboMarketsDay) => {
+      hasUserSelectedDayRef.current = true;
+      setDay(value);
+    },
+    [setDay],
+  );
 
   useEffect(() => {
-    if (day === "today" && !loading && !error && groups.length === 0) {
+    if (hasUserSelectedDayRef.current) {
+      return;
+    }
+
+    if (hasAttemptedInitialTodayFallbackRef.current) {
+      return;
+    }
+
+    if (day !== "today" || loading || error) {
+      return;
+    }
+
+    hasAttemptedInitialTodayFallbackRef.current = true;
+
+    if (visibleGroups.length === 0) {
       setDay("tomorrow");
     }
-  }, [day, error, groups.length, loading, setDay]);
+  }, [day, error, loading, setDay, visibleGroups.length]);
   const { liveYesPriceByMarketId } = useComboLivePrices({
     markets,
     enabled: markets.length > 0
@@ -390,13 +423,14 @@ export function ComboPageView() {
 
   return (
     <section className="mx-auto w-full max-w-[1200px] px-3 pt-4 md:px-4 md:pt-5 lg:pb-8">
+      <SyncComboLiveStore groups={groupsWithLive} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_345px] lg:items-start">
         <div className="flex min-w-0 flex-col gap-3">
           <div className="flex items-start justify-between gap-3">
             <TabSwitcher
               items={dayTabItems}
               value={day}
-              onChange={(value) => setDay(value as ComboMarketsDay)}
+              onChange={(value) => handleDayChange(value as ComboMarketsDay)}
               size="compact"
               className="min-w-0 flex-1"
               aria-label={t("marketsTitle")}
@@ -425,12 +459,12 @@ export function ComboPageView() {
             </div>
           ) : null}
 
-          {!loading && !error && groups.length === 0 ? (
+          {!loading && !error && visibleGroups.length === 0 ? (
             <p className="text-sm text-[#909090]">{t("emptyMarkets")}</p>
           ) : null}
 
           <ComboOutcomeDisplayProvider mode={outcomeDisplayMode}>
-            {groups.map((group) => {
+            {visibleGroups.map((group) => {
               const groupPicks = group.markets
                 .map((market) => picksByMarketId.get(market.id))
                 .filter((pick): pick is NonNullable<typeof pick> =>
