@@ -32,6 +32,30 @@ export function resolveLineOutcomeTradeBinarySide(
   return "yes";
 }
 
+/** CLOB token used to price a spread/total line outcome button. */
+export function resolveLineOutcomeTradeTokenId(
+  outcome: Pick<
+    FixtureMarketOutcome,
+    "id" | "marketType" | "side" | "tokenId" | "noTokenId"
+  >,
+): string | undefined {
+  if (outcome.marketType === "spread") {
+    if (!outcome.tokenId || !outcome.noTokenId) {
+      return outcome.tokenId;
+    }
+
+    return outcome.id.endsWith(":yes")
+      ? outcome.tokenId
+      : outcome.noTokenId;
+  }
+
+  if (outcome.marketType === "total" && outcome.side === "under") {
+    return outcome.noTokenId ?? outcome.tokenId;
+  }
+
+  return outcome.tokenId;
+}
+
 export function resolveLineKeyFromOutcome(
   outcome: FixtureMarketOutcome,
 ): string | undefined {

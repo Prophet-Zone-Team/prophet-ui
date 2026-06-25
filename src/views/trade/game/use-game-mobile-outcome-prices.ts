@@ -12,7 +12,11 @@ import {
   isValidAskPrice,
   resolveFixtureDisplayAskPrice
 } from "@/lib/market/fixture-ask-liquidity";
-import { resolveLineOutcomePair } from "@/lib/market/fixture-line-outcome-pair";
+import {
+  resolveLineOutcomePair,
+  resolveLineOutcomeTradeBinarySide,
+  resolveLineOutcomeTradeTokenId,
+} from "@/lib/market/fixture-line-outcome-pair";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
 import {
   findGameMarketOutcome,
@@ -165,9 +169,9 @@ export function useGameMobileOutcomePrices(
     const yesPrice =
       (lineOutcomePair && mergedYesLineOutcome
         ? resolveOutcomeButtonPrice(
-            mergedYesLineOutcome.tokenId,
+            resolveLineOutcomeTradeTokenId(mergedYesLineOutcome),
             fixtureTokenPrices,
-            "yes",
+            resolveLineOutcomeTradeBinarySide(mergedYesLineOutcome),
             mergedYesLineOutcome,
             matchOutcome,
             yesLineProbability ?? matchProbability
@@ -184,9 +188,9 @@ export function useGameMobileOutcomePrices(
     const noPrice =
       (lineOutcomePair && mergedNoLineOutcome
         ? resolveOutcomeButtonPrice(
-            mergedNoLineOutcome.noTokenId ?? mergedNoLineOutcome.tokenId,
+            resolveLineOutcomeTradeTokenId(mergedNoLineOutcome),
             fixtureTokenPrices,
-            "no",
+            resolveLineOutcomeTradeBinarySide(mergedNoLineOutcome),
             mergedNoLineOutcome,
             matchOutcome,
             noLineProbability ?? Math.max(0, 100 - matchProbability)

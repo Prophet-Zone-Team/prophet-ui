@@ -6,6 +6,8 @@ import {
   resolveLineKeyFromOutcome,
   resolveLineOutcomeForSide,
   resolveLineOutcomePair,
+  resolveLineOutcomeTradeBinarySide,
+  resolveLineOutcomeTradeTokenId,
 } from "@/lib/market/fixture-line-outcome-pair";
 import type {
   FixtureMarketGroup,
@@ -159,6 +161,50 @@ describe("fixture line outcome pair", () => {
     assert.equal(pair?.noOutcome.label, "AUS -1.5");
     assert.equal(resolveLineOutcomeForSide(pair!, "yes").id, "spread:cond-1:yes");
     assert.equal(resolveLineOutcomeForSide(pair!, "no").id, "spread:cond-1:no");
+  });
+
+  it("maps spread trade token ids from outcome suffix when home is underdog", () => {
+    const homeUnderdog = buildSpreadOutcome({
+      id: "spread:cond-1:no",
+      side: "home",
+      label: "CUR +1.5",
+      tokenId: "yes-token",
+      noTokenId: "no-token",
+    });
+    const awayFavorite = buildSpreadOutcome({
+      id: "spread:cond-1:yes",
+      side: "away",
+      label: "COT -1.5",
+      tokenId: "yes-token",
+      noTokenId: "no-token",
+    });
+
+    assert.equal(resolveLineOutcomeTradeBinarySide(homeUnderdog), "no");
+    assert.equal(resolveLineOutcomeTradeBinarySide(awayFavorite), "yes");
+    assert.equal(resolveLineOutcomeTradeTokenId(homeUnderdog), "no-token");
+    assert.equal(resolveLineOutcomeTradeTokenId(awayFavorite), "yes-token");
+  });
+
+  it("maps spread trade token ids from outcome suffix when home is favorite", () => {
+    const homeFavorite = buildSpreadOutcome({
+      id: "spread:cond-1:yes",
+      side: "home",
+      label: "CUR -1.5",
+      tokenId: "yes-token",
+      noTokenId: "no-token",
+    });
+    const awayUnderdog = buildSpreadOutcome({
+      id: "spread:cond-1:no",
+      side: "away",
+      label: "COT +1.5",
+      tokenId: "yes-token",
+      noTokenId: "no-token",
+    });
+
+    assert.equal(resolveLineOutcomeTradeBinarySide(homeFavorite), "yes");
+    assert.equal(resolveLineOutcomeTradeBinarySide(awayUnderdog), "no");
+    assert.equal(resolveLineOutcomeTradeTokenId(homeFavorite), "yes-token");
+    assert.equal(resolveLineOutcomeTradeTokenId(awayUnderdog), "no-token");
   });
 
   it("returns over/under total outcomes for the selected line", () => {
