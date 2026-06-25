@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { resolveFreshFixtureOutcome } from "@/lib/market/trade-ticket";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
+import { isTradeSkipSellBalanceCheckEnabled } from "@/lib/trading/trade-sell-test-mode";
 import { fireBasicConfettiFromElement } from "@/lib/confetti/fire-basic-cannon";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import {
@@ -468,10 +469,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       sellPosition?.size ??
       (outcomeShares[outcomeSide] > 0 ? outcomeShares[outcomeSide] : undefined);
 
-    return resolveMaxSellShares(
-      positionSize,
-      readiness?.balances?.conditionalTokenBalance
-    );
+    return isTradeSkipSellBalanceCheckEnabled()
+      ? resolveMaxSellShares(positionSize)
+      : resolveMaxSellShares(
+          positionSize,
+          readiness?.balances?.conditionalTokenBalance
+        );
   }, [
     outcomeShares,
     outcomeSide,
@@ -507,10 +510,17 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     const snapshot = input.snapshot;
+    const liveSellBid =
+      tradeSide === "sell"
+        ? outcomeSide === "yes"
+          ? teamTokenPrices[yesTokenId]?.bestBid
+          : teamTokenPrices[noTokenId]?.bestBid
+        : undefined;
     const defaultLimit = getTeamDefaultLimitPrice(
       snapshot,
       outcomeSide,
-      tradeSide
+      tradeSide,
+      liveSellBid
     );
     const orderLimitPrice = resolveOrderLimitPrice(
       orderMode,
@@ -1192,9 +1202,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             takeProfitLimitPrice,
             preview.sidePrice
           );
-          const conditionalBalance = await fetchConditionalTokenBalance(
-            preview.tokenId
-          ).catch(() => undefined);
+          const conditionalBalance = isTradeSkipSellBalanceCheckEnabled()
+            ? undefined
+            : await fetchConditionalTokenBalance(preview.tokenId).catch(
+                () => undefined
+              );
           const cappedShareSize = resolveMaxSellShares(
             preview.shareSize,
             conditionalBalance

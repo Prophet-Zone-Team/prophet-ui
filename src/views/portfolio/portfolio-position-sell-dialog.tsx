@@ -13,7 +13,6 @@ import {
   formatSharePrice,
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
-import { derivePositionSellReceiveAmount } from "@/lib/portfolio/portfolio-metrics";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { TeamMarketSnapshot, UserPositionRecord } from "@/types/market";
 import {
@@ -24,7 +23,6 @@ import {
 import { usePortfolioContext } from "@/views/portfolio/context";
 import { useTradeTicket } from "@/views/trade/trade-widget/use-trade-ticket";
 import {
-  parseOrderAmount,
   resolveSelectedSellQuickAmount
 } from "@/views/trade/trade-widget/trade-ticket-helpers";
 import {
@@ -86,10 +84,8 @@ function PortfolioPositionSellSharedBody({
   }
 
   const { formProps } = ticket;
-  const selectedShares = parseOrderAmount(formProps.amount);
-  const receiveAmount = formatTeamDetailMoney(
-    derivePositionSellReceiveAmount(position, selectedShares)
-  );
+  const receiveAmount = formatTeamDetailMoney(formProps.preview.potentialPayout);
+  const sellPriceLabel = formatSharePrice(formProps.preview.sidePrice);
 
   const sellQuickDisabled = position.size <= 0;
   const selectedQuickAmount = resolveSelectedSellQuickAmount(
@@ -121,7 +117,7 @@ function PortfolioPositionSellSharedBody({
                 getOutcomeToneClass(position.outcome)
               )}
             >
-              {position.outcome} {formatSharePrice(position.curPrice)}
+              {position.outcome} {sellPriceLabel}
             </p>
           </div>
         </div>
