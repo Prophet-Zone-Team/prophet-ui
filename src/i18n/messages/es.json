@@ -1664,6 +1664,7 @@
     "submittingCashout": "Submitting cashout…",
     "cashoutSubmittedSummary": "Cashout {amount}",
     "cannotAddToCombo": "No se puede añadir al combo",
+    "cannotSwitchPickOutcome": "No se puede cambiar aquí. Modifica la selección desde la lista de mercados.",
     "selectMinPicksHint": "Select atleast 2 picks to build a combo",
     "allIn": "All-in",
     "toWin": "Por ganar",

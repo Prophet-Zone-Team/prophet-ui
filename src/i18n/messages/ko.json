@@ -1672,6 +1672,7 @@
     "submittingCashout": "Submitting cashout…",
     "cashoutSubmittedSummary": "Cashout {amount}",
     "cannotAddToCombo": "콤보에 추가할 수 없습니다",
+    "cannotSwitchPickOutcome": "여기에서는 전환할 수 없습니다. 왼쪽 마켓 목록에서 변경하세요.",
     "selectMinPicksHint": "Select atleast 2 picks to build a combo",
     "allIn": "All-in",
     "toWin": "예상 수익",

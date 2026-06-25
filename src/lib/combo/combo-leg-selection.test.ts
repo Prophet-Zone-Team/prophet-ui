@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   applyComboLegSelectionRules,
+  applyMoneylineExactScoreSideRulesToOdds,
   exactScoreMatchesMoneylineSide,
   filterExactScoreOddsByMoneylineSide,
   resolveMoneylineSide,
@@ -152,22 +153,129 @@ describe("combo leg selection", () => {
   it("filters exact scores by selected moneyline side", () => {
     const odds = [
       { id: "1:yes", label: "1-0", price: 0.1 },
+      { id: "1:no", label: "1-0 No", price: 0.9 },
       { id: "2:yes", label: "1-1", price: 0.12 },
+      { id: "2:no", label: "1-1 No", price: 0.88 },
       { id: "3:yes", label: "0-1", price: 0.08 },
+      { id: "3:no", label: "0-1 No", price: 0.92 },
       { id: "4:yes", label: "Any Other", price: 0.2 },
+      { id: "4:no", label: "Any Other No", price: 0.8 },
     ];
 
     assert.deepEqual(
-      filterExactScoreOddsByMoneylineSide(odds, "home").map((entry) => entry.label),
-      ["1-0", "Any Other"],
+      filterExactScoreOddsByMoneylineSide(odds, "home").map((entry) => entry.id),
+      ["1:yes", "1:no", "4:yes", "4:no"],
     );
     assert.deepEqual(
-      filterExactScoreOddsByMoneylineSide(odds, "draw").map((entry) => entry.label),
-      ["1-1", "Any Other"],
+      filterExactScoreOddsByMoneylineSide(odds, "draw").map((entry) => entry.id),
+      ["2:yes", "2:no", "4:yes", "4:no"],
     );
     assert.deepEqual(
-      filterExactScoreOddsByMoneylineSide(odds, "away").map((entry) => entry.label),
-      ["0-1", "Any Other"],
+      filterExactScoreOddsByMoneylineSide(odds, "away").map((entry) => entry.id),
+      ["3:yes", "3:no", "4:yes", "4:no"],
+    );
+  });
+
+  it("disables yes on matching exact scores when moneyline side is selected", () => {
+    const odds = [
+      { id: "1:yes", label: "1-0", price: 0.1 },
+      { id: "1:no", label: "1-0 No", price: 0.9 },
+      { id: "4:yes", label: "Any Other", price: 0.2 },
+      { id: "4:no", label: "Any Other No", price: 0.8 },
+    ];
+
+    const rules = applyMoneylineExactScoreSideRulesToOdds(
+      odds,
+      "home",
+      "Cannot add to combo",
+    );
+
+    assert.equal(rules[0]?.disabled, true);
+    assert.equal(rules[1]?.disabled, undefined);
+    assert.equal(rules[2]?.disabled, undefined);
+    assert.equal(rules[3]?.disabled, undefined);
+  });
+
+  it("disables yes on draw exact scores when draw moneyline is selected", () => {
+    const drawPick = {
+      ...moneylinePick,
+      id: "fifwc-fra-irq-2026-06-22-draw",
+      team: { name: "Draw", code: "DRAW" },
+      selectionLabel: "Draw",
+    };
+
+    const rules = applyComboLegSelectionRules({
+      moneylineOdds: [],
+      halftimeOdds: [],
+      spreadOdds: [],
+      topScoreOdds: [
+        {
+          id: "fifwc-fra-irq-2026-06-22-exact-score-1-0:yes",
+          label: "1-0",
+          price: 0.1,
+        },
+        {
+          id: "fifwc-fra-irq-2026-06-22-exact-score-1-0:no",
+          label: "1-0 No",
+          price: 0.9,
+        },
+        {
+          id: "fifwc-fra-irq-2026-06-22-exact-score-2-1:yes",
+          label: "2-1",
+          price: 0.08,
+        },
+        {
+          id: "fifwc-fra-irq-2026-06-22-exact-score-2-1:no",
+          label: "2-1 No",
+          price: 0.92,
+        },
+        {
+          id: "fifwc-fra-irq-2026-06-22-exact-score-1-1:yes",
+          label: "1-1",
+          price: 0.12,
+        },
+        {
+          id: "fifwc-fra-irq-2026-06-22-exact-score-1-1:no",
+          label: "1-1 No",
+          price: 0.88,
+        },
+        {
+          id: "fifwc-fra-irq-2026-06-22-exact-score-any-other:yes",
+          label: "Any Other",
+          price: 0.2,
+        },
+        {
+          id: "fifwc-fra-irq-2026-06-22-exact-score-any-other:no",
+          label: "Any Other No",
+          price: 0.8,
+        },
+      ],
+      totalOdds: [],
+      groupPicks: [drawPick],
+      group: sampleGroup,
+      disabledTooltip: "Cannot add to combo",
+    });
+
+    const topScoreById = new Map(
+      rules.topScoreOdds.map((option) => [option.id, option]),
+    );
+
+    assert.equal(
+      topScoreById.get("fifwc-fra-irq-2026-06-22-exact-score-1-1:yes")?.disabled,
+      true,
+    );
+    assert.equal(
+      topScoreById.get("fifwc-fra-irq-2026-06-22-exact-score-1-1:no")?.disabled,
+      undefined,
+    );
+    assert.equal(
+      topScoreById.get("fifwc-fra-irq-2026-06-22-exact-score-any-other:yes")
+        ?.disabled,
+      undefined,
+    );
+    assert.equal(
+      topScoreById.has("fifwc-fra-irq-2026-06-22-exact-score-2-1:yes"),
+      false,
     );
   });
 

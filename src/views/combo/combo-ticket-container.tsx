@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useAuth } from "@/context/auth";
 import { useComboTicket } from "@/hooks/combo/use-combo-ticket";
 import { isSpreadMarket } from "@/lib/combo/combo-market-mutex";
+import { isComboPickOutcomeToggleLocked } from "@/lib/combo/combo-pick-toggle";
 import {
   resolveComboPickSelectionLabel,
   resolveComboPickTeam,
@@ -78,9 +79,15 @@ export function ComboTicketContainer({ className }: ComboTicketContainerProps) {
 
   const handlePickOutcomeChange = useCallback(
     (pickId: string, side: ComboPickOutcomeSide) => {
+      const pick = picks.find((entry) => entry.id === pickId);
+
+      if (pick && isComboPickOutcomeToggleLocked(pick)) {
+        return;
+      }
+
       updatePickOutcome(pickId, side);
     },
-    [updatePickOutcome],
+    [picks, updatePickOutcome],
   );
 
   const handleRemovePick = useCallback(
@@ -108,6 +115,7 @@ export function ComboTicketContainer({ className }: ComboTicketContainerProps) {
       isQuoteLoading={ticket.isAuthenticated && ticket.isQuotePending}
       onBidAmountChange={setBidAmount}
       onPickOutcomeChange={handlePickOutcomeChange}
+      outcomeToggleDisabledTooltip={t("cannotSwitchPickOutcome")}
       onRemovePick={handleRemovePick}
       onConnectWallet={() => void auth.openLogin()}
       onSubmit={ticket.submit}

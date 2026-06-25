@@ -15,6 +15,7 @@ import { useComboGroupsWithLiveState } from "@/hooks/combo/use-combo-groups-with
 import { applyComboGameGroupPickUpdate } from "@/lib/combo/combo-group-picks";
 import { buildComboLegsFromPicks } from "@/lib/combo/markets-client";
 import { isExactScoreMarket } from "@/lib/combo/combo-market-mutex";
+import { isComboPickOutcomeToggleLocked } from "@/lib/combo/combo-pick-toggle";
 import { applyComboLegSelectionRules } from "@/lib/combo/combo-leg-selection";
 import {
   buildComboSelectedOddsIdForPick,
@@ -207,6 +208,12 @@ export function ComboPageView() {
 
   const handlePickOutcomeChange = useCallback(
     (pickId: string, side: ComboPickOutcomeSide) => {
+      const existingPick = picksByMarketId.get(pickId);
+
+      if (existingPick && isComboPickOutcomeToggleLocked(existingPick)) {
+        return;
+      }
+
       const market = marketsById.get(pickId);
 
       if (!market || !picksByMarketId.has(pickId)) {
@@ -410,6 +417,7 @@ export function ComboPageView() {
     isQuoteLoading: ticket.isAuthenticated && ticket.isQuotePending,
     onBidAmountChange: setBidAmount,
     onPickOutcomeChange: handlePickOutcomeChange,
+    outcomeToggleDisabledTooltip: t("cannotSwitchPickOutcome"),
     onPickSpreadChange: handlePickSpreadChange,
     onRemovePick: handleRemovePick,
     onConnectWallet: () => void auth.openLogin(),

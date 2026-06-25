@@ -202,9 +202,10 @@ describe("mapComboGameToItemProps", () => {
     const props = mapComboGameToItemProps(mapped.groups[0]);
 
     assert.equal(props.moneylineOdds.length, 3);
-    assert.equal(props.topScoreOdds.length, 1);
+    assert.equal(props.topScoreOdds.length, 2);
     assert.equal(props.totalOdds?.length, 2);
     assert.equal(props.topScoreOdds[0]?.label, "1-0");
+    assert.equal(props.topScoreOdds[1]?.label, "1-0 No");
     assert.equal(props.moneylineOdds[0]?.label, "Czechia");
     assert.equal(props.moneylineOdds[1]?.label, "Draw");
     assert.equal(props.moneylineOdds[2]?.label, "South Africa");

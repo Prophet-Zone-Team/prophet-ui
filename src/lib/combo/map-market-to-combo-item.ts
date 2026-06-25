@@ -334,8 +334,7 @@ export function buildComboSelectedOddsIdForPick(
     const meta = parseComboMarketSlug(market.slug);
 
     if (meta.marketKind === "exact_score") {
-      // Left panel lists yes-side odds only; highlight the score row for both yes/no picks.
-      return buildComboMarketOddsId(pick.id, "yes");
+      return buildComboMarketOddsId(pick.id, pick.outcomeSide);
     }
 
     if (
@@ -572,7 +571,13 @@ export function mapComboGameToItemProps(
     }
 
     if (meta.marketKind === "exact_score") {
-      topScoreOdds.push(yesOption);
+      topScoreOdds.push(
+        ...buildExactScoreOddsOptions(
+          market,
+          meta,
+          options?.liveYesPriceByMarketId?.[market.id],
+        ),
+      );
     }
   }
 
@@ -726,6 +731,46 @@ export function resolveComboMarketTeamCodes(market: ComboMarketRecord) {
     teamCode: market.id.slice(0, 6).toUpperCase(),
     teamName: market.title,
   };
+}
+
+function buildExactScoreOddsOptions(
+  market: ComboMarketRecord,
+  meta: ComboMarketSlugMeta,
+  liveYesPrice?: number,
+): ComboOddsOption[] {
+  const scoreLabel = meta.scoreLabel;
+
+  if (!scoreLabel) {
+    return [];
+  }
+
+  const catalogYesPrice = Number.parseFloat(market.outcomePrices[0]);
+  const catalogNoPrice = Number.parseFloat(market.outcomePrices[1]);
+  const yesPrice =
+    typeof liveYesPrice === "number" &&
+    Number.isFinite(liveYesPrice) &&
+    liveYesPrice > 0
+      ? liveYesPrice
+      : catalogYesPrice;
+  const options: ComboOddsOption[] = [];
+
+  if (Number.isFinite(yesPrice)) {
+    options.push({
+      id: buildComboMarketOddsId(market.id, "yes"),
+      label: scoreLabel,
+      price: yesPrice,
+    });
+  }
+
+  if (Number.isFinite(catalogNoPrice)) {
+    options.push({
+      id: buildComboMarketOddsId(market.id, "no"),
+      label: `${scoreLabel} No`,
+      price: catalogNoPrice,
+    });
+  }
+
+  return options;
 }
 
 function buildMatchTotalOddsOptions(
