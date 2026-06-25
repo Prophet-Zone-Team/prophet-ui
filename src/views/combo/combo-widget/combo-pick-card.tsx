@@ -6,10 +6,35 @@ import { SpreadSelector } from "./spread-selector";
 import type { ComboPick, ComboPickOutcomeSide } from "./types";
 import { YesNoToggle } from "./yes-no-toggle";
 
+function isDrawMoneylinePick(pick: ComboPick): boolean {
+  return pick.type === "moneyline" && pick.team.code.toUpperCase() === "DRAW";
+}
+
+function isHalftimeMoneylinePick(pick: ComboPick): boolean {
+  return pick.type === "moneyline" && /-halftime-result-/i.test(pick.id);
+}
+
+function resolvePickDisplayLabel(pick: ComboPick): string {
+  if (pick.type === "spread") {
+    return pick.spreadValue;
+  }
+
+  if (isHalftimeMoneylinePick(pick)) {
+    return `Halftime: ${pick.selectionLabel}`;
+  }
+
+  if (isDrawMoneylinePick(pick)) {
+    return pick.team.name;
+  }
+
+  return pick.selectionLabel;
+}
+
 export type ComboPickCardProps = {
   pick: ComboPick;
   onOutcomeChange?: (side: ComboPickOutcomeSide) => void;
   onSpreadChange?: (spread: string) => void;
+  onTotalChange?: (total: string) => void;
   onRemove?: () => void;
 };
 
@@ -17,6 +42,7 @@ export function ComboPickCard({
   pick,
   onOutcomeChange,
   onSpreadChange,
+  onTotalChange,
   onRemove
 }: ComboPickCardProps) {
   return (
@@ -28,13 +54,31 @@ export function ComboPickCard({
           </p>
 
           {pick.type === "moneyline" ? (
-            <YesNoToggle value={pick.outcomeSide} onChange={onOutcomeChange} />
-          ) : (
+            isDrawMoneylinePick(pick) ? null : (
+              <YesNoToggle
+                value={pick.outcomeSide}
+                onChange={onOutcomeChange}
+              />
+            )
+          ) : pick.type === "spread" ? (
             <SpreadSelector
               value={pick.spreadValue}
               options={pick.spreadOptions}
               onChange={onSpreadChange}
             />
+          ) : (
+            <>
+              <SpreadSelector
+                value={pick.totalValue}
+                options={pick.totalOptions}
+                onChange={onTotalChange}
+                ariaLabel="Total line"
+              />
+              <YesNoToggle
+                value={pick.outcomeSide}
+                onChange={onOutcomeChange}
+              />
+            </>
           )}
 
           <RemovePickButton
@@ -53,7 +97,7 @@ export function ComboPickCard({
             />
           ) : null}
           <span className="truncate text-sm font-[500] leading-[18px] text-black">
-            {pick.type === "spread" ? pick.spreadValue : pick.selectionLabel}
+            {resolvePickDisplayLabel(pick)}
           </span>
         </div>
       </div>
