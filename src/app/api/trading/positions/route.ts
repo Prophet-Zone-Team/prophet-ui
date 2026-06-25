@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { fetchUserPositions } from "@/server/trading/clob-user-client";
+import {
+  fetchUserPositions,
+  fetchUserPositionsTotalValue
+} from "@/server/trading/clob-user-client";
 import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 
 export const runtime = "nodejs";
@@ -31,18 +34,28 @@ export async function GET(request: Request) {
   const offset = Number(url.searchParams.get("offset") ?? "0");
 
   try {
-    const positions = await fetchUserPositions({
-      userAddress: record.session.funderAddress ?? record.session.walletAddress,
-      conditionIds,
-      limit: Number.isFinite(limit) ? limit : 100,
-      redeemable,
-      sizeThreshold,
-      offset: Number.isFinite(offset) && offset > 0 ? offset : undefined
-    });
+    const userAddress =
+      record.session.funderAddress ?? record.session.walletAddress;
+
+    const [positions, totalPositionValue] = await Promise.all([
+      fetchUserPositions({
+        userAddress,
+        conditionIds,
+        limit: Number.isFinite(limit) ? limit : 100,
+        redeemable,
+        sizeThreshold,
+        offset: Number.isFinite(offset) && offset > 0 ? offset : undefined
+      }),
+      fetchUserPositionsTotalValue({
+        userAddress,
+        conditionIds
+      }).catch(() => undefined)
+    ]);
 
     return NextResponse.json({
       positions,
-      updatedAt: new Date().toISOString(),
+      totalPositionValue,
+      updatedAt: new Date().toISOString()
     });
   } catch (error) {
     return NextResponse.json(
