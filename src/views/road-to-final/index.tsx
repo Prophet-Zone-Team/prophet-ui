@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useShallow } from "zustand/react/shallow";
 
@@ -27,13 +27,14 @@ import {
   applyKnockoutShortcut as runKnockoutShortcut,
   getChampionTeamId
 } from "./lib/knockout-shortcuts";
+import { getUnpickedKnockoutMatchIds } from "./lib/knockout-validation";
 import { getFinishForTeam } from "./lib/placements";
 import type { KnockoutPickMethod } from "./lib/team-strength";
 import {
   decodeUrlState,
-  encodeUrlState,
   hydrateFromUrlPayload,
 } from "./lib/url-state";
+import { replaceRoadToFinalUrlState } from "./lib/url-state-sync";
 import { isStepOneComplete } from "./lib/validation";
 import { defaultSimulatorTeamId } from "./lib/teams";
 import type { KnockoutMethodKey } from "./lib/method-keys";
@@ -65,6 +66,7 @@ export function RoadToFinalPage({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const storeHydrated = useRoadToFinalHydrated();
+  const hasAppliedInitialUrlState = useRef(false);
   const { session, isAuthenticated } = useAuth();
   const { content: referralContent } = useProphetReferral();
   const { records, count: predictionCount, isLoading: recordsLoading, isError: recordsError } =
@@ -113,11 +115,16 @@ export function RoadToFinalPage({
   const [shareOpen, setShareOpen] = useState(false);
   const [recordsOpen, setRecordsOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [validationErrorMatchIds, setValidationErrorMatchIds] = useState<
+    ReadonlySet<number>
+  >(() => new Set());
 
   useEffect(() => {
-    if (!storeHydrated) {
+    if (!storeHydrated || hasAppliedInitialUrlState.current) {
       return;
     }
+
+    hasAppliedInitialUrlState.current = true;
 
     const encodedState = searchParams.get("state");
 
@@ -169,21 +176,15 @@ export function RoadToFinalPage({
   }, [advancingThirdGroups, placements, shareTeamId, stepOneComplete]);
 
   const writeUrlState = useCallback(() => {
-    if (!urlHydrated || typeof window === "undefined") {
+    if (!urlHydrated) {
       return;
     }
 
-    const url = new URL(window.location.href);
-    url.search = "";
-    url.searchParams.set(
-      "state",
-      encodeUrlState({
-        teamId,
-        knockoutWinners,
-        knockoutMethod
-      })
-    );
-    router.replace(`${pathname}?${url.searchParams.toString()}`, { scroll: false });
+    replaceRoadToFinalUrlState(router, pathname, {
+      teamId,
+      knockoutWinners,
+      knockoutMethod
+    });
   }, [knockoutMethod, knockoutWinners, pathname, router, teamId, urlHydrated]);
 
   useEffect(() => {
@@ -208,6 +209,7 @@ export function RoadToFinalPage({
 
     setKnockoutWinners(nextWinners);
     setKnockoutMethod(method);
+    setValidationErrorMatchIds(new Set());
 
     const nextChampion = getChampionTeamId(nextWinners);
 
@@ -219,7 +221,52 @@ export function RoadToFinalPage({
   const handleKnockoutWinnersChange = (winners: KnockoutWinners) => {
     setKnockoutWinners(winners);
     setKnockoutMethod("manualSelection");
+
+    setValidationErrorMatchIds((current) => {
+      if (current.size === 0) {
+        return current;
+      }
+
+      const next = new Set(current);
+
+      for (const matchId of current) {
+        if (winners[matchId]) {
+          next.delete(matchId);
+        }
+      }
+
+      return next.size === current.size ? current : next;
+    });
   };
+
+  const handleBeforeShare = useCallback((): boolean => {
+    const missing = getUnpickedKnockoutMatchIds(
+      placements,
+      thirdPlaceOption,
+      knockoutWinners
+    );
+
+    if (missing.length > 0) {
+      setValidationErrorMatchIds(new Set(missing));
+      return false;
+    }
+
+    setValidationErrorMatchIds(new Set());
+    return true;
+  }, [knockoutWinners, placements, thirdPlaceOption]);
+
+  const handleClearKnockout = useCallback(() => {
+    clearKnockoutSelections();
+    setValidationErrorMatchIds(new Set());
+
+    if (urlHydrated) {
+      replaceRoadToFinalUrlState(router, pathname, {
+        teamId: defaultSimulatorTeamId,
+        knockoutWinners: {},
+        knockoutMethod: "manualSelection",
+      });
+    }
+  }, [clearKnockoutSelections, pathname, router, urlHydrated]);
 
   return (
     <div className="relative mx-auto w-full">
@@ -228,7 +275,7 @@ export function RoadToFinalPage({
         onRandomFill={() => handleKnockoutFill("randomFill")}
         onFifaFill={() => handleKnockoutFill("fifaRank")}
         onValueFill={() => handleKnockoutFill("squadValueRanking")}
-        onClear={clearKnockoutSelections}
+        onClear={handleClearKnockout}
       />
 
       <div className="-mt-[12px] bg-[#0B1020]">
@@ -241,14 +288,15 @@ export function RoadToFinalPage({
           disabled={!stepOneComplete || !thirdPlaceOption}
           onKnockoutWinnersChange={handleKnockoutWinnersChange}
           probabilityByTeamId={probabilityByTeamId}
+          validationErrorMatchIds={validationErrorMatchIds}
         />
 
         <ShareFooter
-          hasChampion={hasChampion}
           predictionCount={predictionCount}
           availableChances={availableChances}
           tradePromptAmount={tradePromptAmount}
           statsLoading={statsLoading || recordsLoading}
+          onBeforeShare={handleBeforeShare}
           onShare={() => {
             setShareOpen(true);
           }}

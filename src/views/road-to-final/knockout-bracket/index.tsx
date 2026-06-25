@@ -57,6 +57,7 @@ function BracketHalf({
   probabilityByTeamId,
   highlightedConnectorKeys,
   highlightedTeamIds,
+  validationErrorMatchIds,
   bodyHeight
 }: {
   side: "left" | "right";
@@ -71,6 +72,7 @@ function BracketHalf({
   probabilityByTeamId?: Map<string, number>;
   highlightedConnectorKeys: Set<string>;
   highlightedTeamIds: Set<string>;
+  validationErrorMatchIds?: ReadonlySet<number>;
   bodyHeight: number;
 }) {
   const t = useTranslations("roadToFinal");
@@ -126,7 +128,7 @@ function BracketHalf({
     columnElements.push(
       <div
         key={`${side}-${column.key}`}
-        className="relative shrink-0"
+        className="relative shrink-0 overflow-visible"
         style={{ width: columnWidth(round), height: bodyHeight }}
       >
         <span
@@ -153,6 +155,7 @@ function BracketHalf({
               onWinnerChange(updateKnockoutWinner(knockoutWinners, id, teamId))
             }
             probabilityByTeamId={probabilityByTeamId}
+            showValidationHint={validationErrorMatchIds?.has(matchId) ?? false}
             variant={round === "r32" ? "r32" : "inner"}
             style={{ top: tops[index], left: 0 }}
           />
@@ -182,6 +185,7 @@ export function KnockoutBracket({
   disabled,
   onKnockoutWinnersChange,
   probabilityByTeamId,
+  validationErrorMatchIds,
   className
 }: {
   placements: GroupPlacements;
@@ -192,6 +196,7 @@ export function KnockoutBracket({
   disabled?: boolean;
   onKnockoutWinnersChange: (winners: KnockoutWinners) => void;
   probabilityByTeamId?: Map<string, number>;
+  validationErrorMatchIds?: ReadonlySet<number>;
   className?: string;
 }) {
   const t = useTranslations("roadToFinal");
@@ -209,7 +214,7 @@ export function KnockoutBracket({
   return (
     <div className={cn("min-w-0", className)} aria-label={t("fullKnockoutBracketAria")}>
       <div className="overflow-x-auto overscroll-x-contain pb-[0px] [scrollbar-color:rgba(0,0,0,0.3)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[rgba(0,0,0,0.3)]">
-        <div className="mx-auto flex w-fit min-w-[1180px] shrink-0 items-stretch justify-center py-[32px]">
+        <div className="mx-auto flex w-fit min-w-[1212px] shrink-0 items-stretch justify-center py-[32px]">
           <BracketHalf
             side="left"
             columns={LEFT_BRACKET_COLUMNS}
@@ -223,6 +228,7 @@ export function KnockoutBracket({
             probabilityByTeamId={probabilityByTeamId}
             highlightedConnectorKeys={pathHighlight.highlightedConnectorKeys}
             highlightedTeamIds={pathHighlight.highlightedTeamIds}
+            validationErrorMatchIds={validationErrorMatchIds}
             bodyHeight={bodyHeight}
           />
 
@@ -259,6 +265,7 @@ export function KnockoutBracket({
             probabilityByTeamId={probabilityByTeamId}
             bodyHeight={bodyHeight}
             highlightedTeamIds={pathHighlight.highlightedTeamIds}
+            validationErrorMatchIds={validationErrorMatchIds}
           />
 
           <BracketConnectors
@@ -293,6 +300,7 @@ export function KnockoutBracket({
             probabilityByTeamId={probabilityByTeamId}
             highlightedConnectorKeys={pathHighlight.highlightedConnectorKeys}
             highlightedTeamIds={pathHighlight.highlightedTeamIds}
+            validationErrorMatchIds={validationErrorMatchIds}
             bodyHeight={bodyHeight}
           />
         </div>

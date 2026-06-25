@@ -1509,6 +1509,7 @@
     "tradeToGetMore": "Совершите сделки на ${amount}, чтобы получить +1",
     "confirmAndSave": "Подтвердить и сохранить",
     "shareAndJoinCampaign": "Поделиться и присоединиться к кампании",
+    "selectAtLeastOne": "Выберите хотя бы один",
     "predictionRecordsTitle": "Прогнозы",
     "roadToFinalRecordTitle": "Путь к финалу: {teamName}",
     "noPredictionRecords": "Прогнозов пока нет.",

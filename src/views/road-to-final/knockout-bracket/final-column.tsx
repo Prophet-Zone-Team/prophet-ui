@@ -31,7 +31,8 @@ export function FinalColumn({
   onWinnerChange,
   probabilityByTeamId,
   bodyHeight,
-  highlightedTeamIds
+  highlightedTeamIds,
+  validationErrorMatchIds
 }: {
   placements: GroupPlacements;
   thirdPlaceOption?: ThirdPlaceAllocationOption;
@@ -43,6 +44,7 @@ export function FinalColumn({
   probabilityByTeamId?: Map<string, number>;
   bodyHeight: number;
   highlightedTeamIds: Set<string>;
+  validationErrorMatchIds?: ReadonlySet<number>;
 }) {
   const t = useTranslations("roadToFinal");
   const finalTop = finalMatchTop();
@@ -110,6 +112,7 @@ export function FinalColumn({
         onWinnerChange={onWinnerChange}
         probabilityByTeamId={probabilityByTeamId}
         highlightedTeamIds={highlightedTeamIds}
+        showValidationHint={validationErrorMatchIds?.has(FINAL_MATCH_ID) ?? false}
         variant="final"
         style={{ top: finalTop, left: 0 }}
       />
