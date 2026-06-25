@@ -1564,6 +1564,7 @@
     "submittingCashout": "正在提交兑现…",
     "cashoutSubmittedSummary": "兑现 {amount}",
     "cannotAddToCombo": "无法加入组合",
+    "cannotSwitchPickOutcome": "无法在此切换，请从左侧市场列表修改",
     "selectMinPicksHint": "请至少选择 2 项来构建组合",
     "allIn": "全押",
     "toWin": "预期获利",

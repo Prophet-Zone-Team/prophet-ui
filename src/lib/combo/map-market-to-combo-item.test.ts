@@ -218,7 +218,7 @@ describe("resolveComboPickSelectionLabel", () => {
 });
 
 describe("buildComboSelectedOddsIdForPick", () => {
-  it("highlights exact score outcome for both yes and no picks", () => {
+  it("highlights exact score yes and no picks separately", () => {
     const market = {
       id: "fifwc-fra-irq-2026-06-22-exact-score-2-1",
       slug: "fifwc-fra-irq-2026-06-22-exact-score-2-1",
@@ -249,7 +249,7 @@ describe("buildComboSelectedOddsIdForPick", () => {
         },
         market,
       ),
-      `${market.id}:yes`,
+      `${market.id}:no`,
     );
   });
 });

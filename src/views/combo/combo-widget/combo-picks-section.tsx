@@ -9,6 +9,7 @@ export type ComboPicksSectionProps = {
   picks: ComboPick[];
   multiplier: number;
   isQuoteLoading?: boolean;
+  outcomeToggleDisabledTooltip?: string;
   onInfoClick?: () => void;
   onPickOutcomeChange?: (pickId: string, side: ComboPickOutcomeSide) => void;
   onPickSpreadChange?: (pickId: string, spread: string) => void;
@@ -20,6 +21,7 @@ export function ComboPicksSection({
   picks,
   multiplier,
   isQuoteLoading = false,
+  outcomeToggleDisabledTooltip,
   onInfoClick,
   onPickOutcomeChange,
   onPickSpreadChange,
@@ -65,6 +67,7 @@ export function ComboPicksSection({
           <ComboPickCard
             key={pick.id}
             pick={pick}
+            outcomeToggleDisabledTooltip={outcomeToggleDisabledTooltip}
             onOutcomeChange={(side) => onPickOutcomeChange?.(pick.id, side)}
             onSpreadChange={(spread) => onPickSpreadChange?.(pick.id, spread)}
             onTotalChange={(total) => onPickTotalChange?.(pick.id, total)}

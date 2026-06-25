@@ -150,11 +150,71 @@ function disableAllOptions(
     disabledTooltip,
   }));
 }
+function resolveExactScoreLabelFromOption(
+  option: ComboOddsOption,
+): string | undefined {
+  const parsed = parseComboMarketOddsId(option.id);
+
+  if (!parsed) {
+    return undefined;
+  }
+
+  if (parsed.outcomeSide === "yes") {
+    return option.label;
+  }
+
+  if (option.label.endsWith(" No")) {
+    return option.label.slice(0, -3);
+  }
+
+  return option.label;
+}
+
 export function filterExactScoreOddsByMoneylineSide(
   odds: ComboOddsOption[],
   side: ComboMoneylineSide,
 ): ComboOddsOption[] {
-  return odds.filter((option) => exactScoreMatchesMoneylineSide(option.label, side));
+  return odds.filter((option) => {
+    const scoreLabel = resolveExactScoreLabelFromOption(option);
+
+    return scoreLabel
+      ? exactScoreMatchesMoneylineSide(scoreLabel, side)
+      : false;
+  });
+}
+
+export function applyMoneylineExactScoreSideRulesToOdds(
+  odds: ComboOddsOption[],
+  moneylineSide: ComboMoneylineSide | undefined,
+  disabledTooltip: string,
+): ComboOddsOption[] {
+  if (!moneylineSide) {
+    return odds;
+  }
+
+  return odds.map((option) => {
+    const parsed = parseComboMarketOddsId(option.id);
+
+    if (!parsed || parsed.outcomeSide !== "yes") {
+      return option;
+    }
+
+    const scoreLabel = resolveExactScoreLabelFromOption(option);
+
+    if (!scoreLabel || scoreLabel === "Any Other") {
+      return option;
+    }
+
+    if (!exactScoreMatchesMoneylineSide(scoreLabel, moneylineSide)) {
+      return option;
+    }
+
+    return {
+      ...option,
+      disabled: true,
+      disabledTooltip,
+    };
+  });
 }
 
 export function applyComboLegSelectionRules(input: {
@@ -225,8 +285,14 @@ export function applyComboLegSelectionRules(input: {
   const filteredTopScoreOdds = moneylineSide
     ? filterExactScoreOddsByMoneylineSide(input.topScoreOdds, moneylineSide)
     : input.topScoreOdds;
+  const topScoreOddsWithMoneylineSideRules =
+    applyMoneylineExactScoreSideRulesToOdds(
+      filteredTopScoreOdds,
+      moneylineSide,
+      input.disabledTooltip,
+    );
   const topScoreOdds = disableOtherOptionsInGroup(
-    filteredTopScoreOdds,
+    topScoreOddsWithMoneylineSideRules,
     selectedExactScoreMarketId,
     input.disabledTooltip,
   );

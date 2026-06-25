@@ -1561,6 +1561,7 @@
     "submittingCashout": "Submitting cashout…",
     "cashoutSubmittedSummary": "Cashout {amount}",
     "cannotAddToCombo": "Нельзя добавить в комбо",
+    "cannotSwitchPickOutcome": "Здесь нельзя переключить. Измените выбор в списке рынков слева.",
     "selectMinPicksHint": "Select atleast 2 picks to build a combo",
     "allIn": "All-in",
     "toWin": "К выигрышу",

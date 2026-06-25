@@ -30,6 +30,7 @@ export function ComboWidget({
   onBidAmountChange,
   onApplyBalanceFraction,
   onPickOutcomeChange,
+  outcomeToggleDisabledTooltip,
   onPickSpreadChange,
   onPickTotalChange,
   onRemovePick,
@@ -104,6 +105,7 @@ export function ComboWidget({
         isQuoteLoading={isQuoteLoading}
         onInfoClick={onInfoClick}
         onPickOutcomeChange={onPickOutcomeChange}
+        outcomeToggleDisabledTooltip={outcomeToggleDisabledTooltip}
         onPickSpreadChange={onPickSpreadChange}
         onPickTotalChange={onPickTotalChange}
         onRemovePick={onRemovePick}

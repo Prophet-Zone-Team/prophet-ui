@@ -53,6 +53,8 @@ export interface ComboWidgetProps {
   onBidAmountChange?: (amount: number) => void;
   onApplyBalanceFraction?: (fraction: number) => void;
   onPickOutcomeChange?: (pickId: string, side: ComboPickOutcomeSide) => void;
+  /** Shown when a pick's yes/no toggle is locked in the widget. */
+  outcomeToggleDisabledTooltip?: string;
   onPickSpreadChange?: (pickId: string, spread: string) => void;
   onPickTotalChange?: (pickId: string, total: string) => void;
   onRemovePick?: (pickId: string) => void;
