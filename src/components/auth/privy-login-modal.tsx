@@ -1,15 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, Loader2, X } from "lucide-react";
+import { ChevronRight, Loader2 } from "lucide-react";
 import { useLoginWithEmail, useLoginWithOAuth, usePrivy } from "@privy-io/react-auth";
 
 import { useTranslations } from "next-intl";
 
 import { OtpInput } from "@/components/auth/otp-input";
-import { useDevice } from "@/hooks/common/use-device";
+import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
-import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
 import { trackLoginClicked } from "@/lib/analytics/tracking";
 import { checkEligibilityWhitelistEmail } from "@/lib/trading/trading-eligibility-client";
 import { markOAuthPending, consumeOAuthPending } from "@/context/privy/privy-oauth";
@@ -18,11 +17,9 @@ const RESEND_COUNTDOWN_SECONDS = 60;
 const OTP_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const modalShellClass = cn(
-  "relative w-full bg-white",
-  "p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]",
-  "sm:max-w-[468px] sm:rounded-[20px] sm:border sm:border-[#ebebeb] sm:p-6 sm:pb-6",
-  "sm:shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]"
+const modalClassName = cn(
+  "w-full max-w-[468px] rounded-[20px] border border-[#ebebeb] bg-white p-6",
+  "shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]",
 );
 
 interface PrivyLoginModalProps {
@@ -43,7 +40,6 @@ export function PrivyLoginModal({
   onEmailAuthenticated,
 }: PrivyLoginModalProps) {
   const t = useTranslations("auth");
-  const isMobile = useDevice();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [countdown, setCountdown] = useState(0);
@@ -180,29 +176,18 @@ export function PrivyLoginModal({
   }, [initOAuth, t]);
 
   return (
-    <FundingResponsiveOverlay
+    <Modal
       open={open}
       onClose={onClose}
       ariaLabel={t("loginByEmail")}
       overlayClassName="z-[70]"
       closeButtonClassName="border-0"
+      className={modalClassName}
     >
-      <div className={modalShellClass}>
-        {isMobile ? (
-          <button
-            type="button"
-            className="absolute right-0 top-0 z-10 inline-flex size-8 items-center justify-center rounded-lg bg-white text-[#18110F] transition-colors hover:bg-[#fafbfc]"
-            aria-label="Close"
-            onClick={onClose}
-          >
-            <X className="size-4" aria-hidden="true" />
-          </button>
-        ) : null}
-
-        <div className="flex flex-col gap-5">
-          <h2 className="pr-8 text-[18px] font-[500] leading-[21px] text-black sm:pr-0">
-            {t("loginByEmail")}
-          </h2>
+      <div className="flex flex-col gap-5">
+        <h2 className="pr-8 text-[18px] font-[500] leading-[21px] text-black">
+          {t("loginByEmail")}
+        </h2>
 
           {!emailOnlyMode ? (
             <button
@@ -302,9 +287,8 @@ export function PrivyLoginModal({
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </button>
           ) : null}
-        </div>
       </div>
-    </FundingResponsiveOverlay>
+    </Modal>
   );
 }
 
