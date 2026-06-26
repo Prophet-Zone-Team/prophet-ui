@@ -8,6 +8,7 @@ import type {
 } from "@/views/combo/combo-item/types";
 
 export type MobileExpandedDrawerProps = ExpandedBodyProps & {
+  kickoffAt?: string;
   kickoffLabel: string;
   isLive?: boolean;
   homeTeam: ComboItemTeam;
@@ -43,6 +44,7 @@ function renderOddsGrid(
 }
 
 export function MobileExpandedDrawer({
+  kickoffAt,
   kickoffLabel,
   isLive,
   homeTeam,
@@ -59,6 +61,7 @@ export function MobileExpandedDrawer({
   return (
     <div className="pb-[calc(16px+env(safe-area-inset-bottom,0px))]">
       <MobileDrawerHeader
+        kickoffAt={kickoffAt}
         kickoffLabel={kickoffLabel}
         isLive={isLive}
         homeTeam={homeTeam}

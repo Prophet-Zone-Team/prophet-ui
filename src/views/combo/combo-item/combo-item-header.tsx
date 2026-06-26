@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
+import { formatScheduleKickoff } from "@/lib/market/schedule-match";
 import { ExpandToggle } from "@/views/combo/combo-item/expand-toggle";
 import { LiveIndicator } from "@/views/combo/combo-item/live-indicator";
 import { MatchupTitle } from "@/views/combo/combo-item/matchup-title";
@@ -8,6 +9,7 @@ import { MobileOddsCountBadge } from "@/views/combo/combo-item/mobile-odds-count
 import type { ComboItemTeam } from "@/views/combo/combo-item/types";
 
 export function ComboItemHeader({
+  kickoffAt,
   kickoffLabel,
   isLive,
   expanded,
@@ -18,6 +20,7 @@ export function ComboItemHeader({
   homeTeam,
   awayTeam
 }: {
+  kickoffAt?: string;
   kickoffLabel: string;
   isLive?: boolean;
   expanded: boolean;
@@ -28,13 +31,17 @@ export function ComboItemHeader({
   homeTeam?: ComboItemTeam;
   awayTeam?: ComboItemTeam;
 }) {
+  const displayKickoff = kickoffAt
+    ? formatScheduleKickoff(kickoffAt)
+    : kickoffLabel;
+
   return (
     <>
       <div className="border-b border-[#EBEBEB] px-3 pb-3 pt-3 md:hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <span className="text-xs font-[400] leading-[15px] text-[#909090]">
-              {kickoffLabel}
+              {displayKickoff}
             </span>
             {isLive ? <LiveIndicator compact mobile /> : null}
           </div>
@@ -59,7 +66,7 @@ export function ComboItemHeader({
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <span className="text-sm font-[400] leading-[18px] text-[#909090]">
-              {kickoffLabel}
+              {displayKickoff}
             </span>
             {isLive ? <LiveIndicator compact={expanded} /> : null}
           </div>
