@@ -1,7 +1,7 @@
 "use client";
 
 import type { QuoteResponse } from "@stableflow/core";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -150,13 +150,13 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
       const nearAccountId = getNearAccountSnapshot().accountId;
 
       if (nearAccountId) {
-        setRecipientInput(nearAccountId);
+        // setRecipientInput(nearAccountId);
         return;
       }
     }
 
     if (session?.walletAddress) {
-      setRecipientInput(session.walletAddress);
+      // setRecipientInput(session.walletAddress);
     }
   }, [loginMethod, open, session?.walletAddress]);
 
@@ -625,6 +625,17 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                   aria-label={tWithdraw("recipientAddressAria")}
                   spellCheck={false}
                 />
+                {
+                  !!recipientInput && recipientInput.trim().length > 0 ? (
+                    <button
+                      type="button"
+                      className="absolute right-1.5 z-[1] size-5 rounded-full bg-[#F4F4F4] flex justify-center items-center hover:bg-[#E0E0E0]"
+                      onClick={() => setRecipientInput("")}
+                    >
+                      <X className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    </button>
+                  ) : null
+                }
               </div>
               {recipientError ? (
                 <p className="m-0 text-sm text-prophet-red">{recipientError}</p>
