@@ -3,5 +3,6 @@ export const ELIGIBILITY_WHITELIST_EMAILS: string[] = [
   "emily@ref.finance",
   "amy@ref.finance",
   "w583003181@gmail.com",
-  "55263511@qq.com"
+  "55263511@qq.com",
+  "910878681@qq.com"
 ];
