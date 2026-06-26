@@ -601,6 +601,7 @@ export function mapComboGameToItemProps(
       : null;
 
   return {
+    kickoffAt: group.kickoffAt,
     kickoffLabel: group.kickoffLabel,
     isLive: isComboGameLive(group),
     homeTeam: toComboItemTeamFromGame(group.homeTeam),

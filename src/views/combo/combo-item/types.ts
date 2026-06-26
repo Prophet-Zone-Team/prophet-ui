@@ -17,6 +17,7 @@ export interface ComboItemTeam {
 }
 
 export interface ComboItemProps {
+  kickoffAt?: string;
   kickoffLabel: string;
   isLive?: boolean;
   homeTeam: ComboItemTeam;

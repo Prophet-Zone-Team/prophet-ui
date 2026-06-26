@@ -16,6 +16,7 @@ import { isComboOddsOptionSelected } from "@/views/combo/combo-item/selection";
 import type { ComboItemProps, ComboOddsOption } from "@/views/combo/combo-item/types";
 
 export function ComboItem({
+  kickoffAt,
   kickoffLabel,
   isLive = false,
   homeTeam,
@@ -97,6 +98,7 @@ export function ComboItem({
   return (
     <article className={cn(comboItemCardClassName, className)}>
       <ComboItemHeader
+        kickoffAt={kickoffAt}
         kickoffLabel={kickoffLabel}
         isLive={isLive}
         expanded={expanded}
@@ -155,6 +157,7 @@ export function ComboItem({
         className="!h-auto max-h-[92dvh] md:hidden"
       >
         <MobileExpandedDrawer
+          kickoffAt={kickoffAt}
           kickoffLabel={kickoffLabel}
           isLive={isLive}
           homeTeam={homeTeam}
