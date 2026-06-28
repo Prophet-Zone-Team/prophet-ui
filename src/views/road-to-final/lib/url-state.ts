@@ -3,6 +3,7 @@ import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import {
   normalizeKnockoutMethod
 } from "./method-keys";
+import { ROAD_TO_FINAL_BRACKET_VERSION } from "./fixed-group-stage";
 import type { KnockoutWinners } from "../types";
 
 export type RoadToFinalUrlPayload = {
@@ -13,6 +14,7 @@ export type RoadToFinalUrlPayload = {
   m?: string;
   km?: string;
   s?: number;
+  bv?: number;
 };
 
 export type RoadToFinalSharedState = {
@@ -30,7 +32,8 @@ export function encodeUrlState(state: RoadToFinalSharedState): string {
         teamId
       ])
     ),
-    km: state.knockoutMethod
+    km: state.knockoutMethod,
+    bv: ROAD_TO_FINAL_BRACKET_VERSION
   };
 
   const json = JSON.stringify(payload);
@@ -69,14 +72,22 @@ export function hydrateFromUrlPayload(
   }
 
   if (payload.w) {
-    next.knockoutWinners = Object.fromEntries(
-      Object.entries(payload.w).map(([matchId, teamId]) => [Number(matchId), teamId])
-    );
+    if (payload.bv === ROAD_TO_FINAL_BRACKET_VERSION) {
+      next.knockoutWinners = Object.fromEntries(
+        Object.entries(payload.w).map(([matchId, teamId]) => [
+          Number(matchId),
+          teamId
+        ])
+      );
+    } else {
+      next.knockoutWinners = {};
+      next.knockoutMethod = "manualSelection";
+    }
   }
 
-  if (payload.km) {
+  if (payload.km && payload.bv === ROAD_TO_FINAL_BRACKET_VERSION) {
     next.knockoutMethod = normalizeKnockoutMethod(payload.km);
-  } else if (payload.m) {
+  } else if (payload.m && payload.bv === ROAD_TO_FINAL_BRACKET_VERSION) {
     next.knockoutMethod = normalizeKnockoutMethod(payload.m);
   }
 
