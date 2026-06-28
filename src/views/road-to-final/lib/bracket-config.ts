@@ -30,9 +30,12 @@ export const THIRD_PLACE_WINNER_SEEDS: readonly ThirdPlaceWinnerSeed[] = [
 ];
 
 export const MATCH_LOOKUP: Map<number, BracketMatchConfig> = new Map(
-  [...ROUND_OF_32, ...KNOCKOUT_LINKS].map(
-    (match): [number, BracketMatchConfig] => [match.matchId, match]
-  )
+  [
+    ...ROUND_OF_32.map(
+      (match): BracketMatchConfig => ({ ...match, stage: "R32" })
+    ),
+    ...KNOCKOUT_LINKS
+  ].map((match): [number, BracketMatchConfig] => [match.matchId, match])
 );
 
 function buildDownstreamMatchMap(): Map<number, number[]> {

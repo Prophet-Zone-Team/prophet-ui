@@ -36,7 +36,7 @@ export function ReferralInviteLinkRow({
           <p className="flex flex-1 flex-nowrap items-center truncate text-[16px] leading-[normal] text-black">
             {referralCode ? (
               <>
-                <span className="w-0 flex-1 overflow-hidden text-ellipsis text-[#909090]">
+                <span className="w-0 flex-1 overflow-hidden text-ellipsis text-[#909090] text-right">
                   {linkPrefix.replace(/\?r\=$/, "")}
                 </span>
                 <span className="shrink-0 text-[#909090]">?r=</span>

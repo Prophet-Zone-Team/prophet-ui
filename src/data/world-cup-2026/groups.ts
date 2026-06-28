@@ -99,7 +99,12 @@ export function getWorldCupTeamByIdOrCode(teamIdOrCode: string): WorldCup2026Gro
 
   return WORLD_CUP_2026_GROUP_ORDER
     .flatMap((group) => WORLD_CUP_2026_GROUPS[group])
-    .find((team) => team.id === normalized || team.code.toLowerCase() === normalized);
+    .find(
+      (team) =>
+        team.id === normalized ||
+        team.code.toLowerCase() === normalized ||
+        team.name.toLowerCase() === normalized
+    );
 }
 
 export function getAllWorldCup2026Teams(): WorldCup2026GroupTeam[] {

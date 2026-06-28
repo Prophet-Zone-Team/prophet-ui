@@ -288,6 +288,7 @@ export interface TeamFootballMetadata {
   fifaRank?: number;
   squadValue?: number;
   squadValueCurrency?: "EUR" | "USD";
+  teamStrength?: number;
   worldCupBestFinish: string;
   worldCupTitles: number;
   group?: string;
