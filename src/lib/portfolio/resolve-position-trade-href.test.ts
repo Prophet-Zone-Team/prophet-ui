@@ -3,7 +3,8 @@ import { describe, it } from "node:test";
 
 import {
   isPortfolioGamePosition,
-  resolvePortfolioPositionTradeHref
+  resolvePortfolioPositionTradeHref,
+  resolvePortfolioTransactionTradeHref
 } from "@/lib/portfolio/resolve-position-trade-href";
 
 describe("resolvePortfolioPositionTradeHref", () => {
@@ -94,6 +95,89 @@ describe("resolvePortfolioPositionTradeHref", () => {
         { marketKind: "team" }
       ),
       false
+    );
+  });
+});
+
+describe("resolvePortfolioTransactionTradeHref", () => {
+  it("links buy and sell game trades to the game trade page", () => {
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({
+        type: "buy",
+        slug: "fifwc-bra-mar-2026-06-13-bra"
+      }),
+      "/trade/game?slug=fifwc-bra-mar-2026-06-13"
+    );
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({
+        type: "sell",
+        slug: "fif-lie-cyp-2026-06-07-draw"
+      }),
+      "/trade/game?slug=fif-lie-cyp-2026-06-07"
+    );
+  });
+
+  it("links redeem and loss rows with team slugs to the team trade page", () => {
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({
+        type: "redeem",
+        slug: "will-brazil-win-the-2026-fifa-world-cup"
+      }),
+      "/trade/team?slug=will-brazil-win-the-2026-fifa-world-cup"
+    );
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({
+        type: "loss",
+        slug: "will-brazil-win-the-2026-fifa-world-cup"
+      }),
+      "/trade/team?slug=will-brazil-win-the-2026-fifa-world-cup"
+    );
+  });
+
+  it("does not link funding or activity rows", () => {
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({ type: "deposit", slug: "ignored" }),
+      undefined
+    );
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({ type: "withdraw", slug: "ignored" }),
+      undefined
+    );
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({ type: "claim", slug: "ignored" }),
+      undefined
+    );
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({ type: "activity", slug: "ignored" }),
+      undefined
+    );
+  });
+
+  it("links group markets to the group detail page", () => {
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({
+        type: "buy",
+        slug: "world-cup-group-a-winner"
+      }),
+      "/group?n=a"
+    );
+  });
+
+  it("links group team outcomes using eventSlug", () => {
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({
+        type: "buy",
+        slug: "will-south-korea-win-group-a-in-the-2026-fifa-world-cup",
+        eventSlug: "world-cup-group-a-winner"
+      }),
+      "/group?n=a"
+    );
+  });
+
+  it("does not link market rows without a slug", () => {
+    assert.equal(
+      resolvePortfolioTransactionTradeHref({ type: "buy", slug: "" }),
+      undefined
     );
   });
 });

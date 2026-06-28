@@ -77,6 +77,7 @@ import {
   isBuyRestricted as checkIsBuyRestricted,
   isRegionBlocked as checkIsRegionBlocked,
   isRegionCloseOnly as checkIsRegionCloseOnly,
+  resolveEligibilityView,
   type TradingEligibilityView
 } from "@/lib/trading/trading-eligibility-client";
 import { resolveWalletErrorMessage } from "@/lib/trading/wallet-error-message";
@@ -118,6 +119,10 @@ import { wagmiConfig } from "../rainbowkit/wagmi-config";
 import { waitForExternalWalletConnection } from "@/lib/trading/wait-for-wallet-connect";
 import { useMigratePromptStore } from "@/store/use-migrate-prompt-store";
 import { useNearAccountStore } from "@/lib/wallet/near/near-account-store";
+import { useUserConfigStore } from "@/store/user-config-store";
+import {
+  resolveEmailOnlyLoginEnabled,
+} from "@/config/auth-login";
 
 const ELIGIBILITY_REFRESH_INTERVAL_MS = 1000 * 60 * 5;
 
@@ -187,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isRegionBlocked, setIsRegionBlocked] = useState(false);
   const [isBuyRestricted, setIsBuyRestricted] = useState(false);
   const [isRegionCloseOnly, setIsRegionCloseOnly] = useState(false);
+  const [whitelistLoginMode, setWhitelistLoginMode] = useState(false);
   const [eligibilityView, setEligibilityView] = useState<
     TradingEligibilityView | undefined
   >();
@@ -207,24 +213,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isRegionBlockedRef = useRef(false);
   const isBuyRestrictedRef = useRef(false);
   const isRegionCloseOnlyRef = useRef(false);
+  const whitelistLoginModeRef = useRef(false);
   const eligibilityViewRef = useRef<TradingEligibilityView | undefined>(
     undefined
   );
   const regionRestrictionToastShownRef = useRef(false);
 
+  const isLoginRegionBlocked = useCallback(() => {
+    return isRegionBlockedRef.current && !whitelistLoginModeRef.current;
+  }, []);
+
   const syncEligibilityFlags = useCallback(
-    (eligibility: TradingEligibilityView | undefined) => {
-      const status = eligibility?.status;
+    (eligibility: TradingEligibilityView | undefined, activeSession?: TradingUserSession) => {
+      const view = resolveEligibilityView(
+        activeSession ?? useAuthStore.getState().session,
+        eligibility,
+      );
+      const status = view?.status;
       const fullyBlocked = checkIsRegionBlocked(status);
       const buyRestricted = checkIsBuyRestricted(status);
       const closeOnly = checkIsRegionCloseOnly(status);
+      const nextWhitelistLoginMode = Boolean(eligibility?.whitelistLoginMode);
 
       setIsRegionBlocked(fullyBlocked);
       setIsBuyRestricted(buyRestricted);
       setIsRegionCloseOnly(closeOnly);
+      setWhitelistLoginMode(nextWhitelistLoginMode);
       isRegionBlockedRef.current = fullyBlocked;
       isBuyRestrictedRef.current = buyRestricted;
       isRegionCloseOnlyRef.current = closeOnly;
+      whitelistLoginModeRef.current = nextWhitelistLoginMode;
     },
     []
   );
@@ -244,6 +262,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     eligibilityViewRef.current = eligibilityView;
   }, [eligibilityView]);
+
+  useEffect(() => {
+    if (!eligibilityView) {
+      return;
+    }
+
+    syncEligibilityFlags(eligibilityView, session);
+  }, [eligibilityView, session, syncEligibilityFlags]);
 
   const refreshEligibility = useCallback(async () => {
     if (eligibilityRefreshRef.current) {
@@ -442,10 +468,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         // privy connect
         else if (preferEmbedded) {
-          const embeddedWallet = privyWallets.filter(isPrivyEmbeddedWallet)[0];
-          const embeddedAddress = embeddedWallet?.address;
-          console.log("embeddedAddress: %o", embeddedAddress);
-          finalWalletAddress = embeddedAddress;
+          const embeddedFromHook = privyWallets.find(isPrivyEmbeddedWallet);
+          const embeddedWallet =
+            embeddedFromHook ??
+            (await waitForPrivyWallet({
+              timeoutMs: 20_000,
+              preferEmbedded: true,
+            }));
+          finalWalletAddress = embeddedWallet?.address;
+          console.log("embeddedAddress: %o", finalWalletAddress);
         }
         // rainbowkit connect
         else {
@@ -477,6 +508,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         session = await createTradingSession(finalWalletAddress, {
           onStep: handleStep,
+          ...(_loginMethod === "email" && store.loginEmail
+            ? { email: store.loginEmail }
+            : {}),
         });
       } else if (session.depositWalletStatus !== "deployed") {
         await ensureDepositWalletDeployed(session.walletAddress, {
@@ -839,7 +873,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
     const _loginMethod = method ?? store.loginMethod;
 
-    if (isRegionBlockedRef.current) {
+    if (isLoginRegionBlocked()) {
       store.setLoginModalOpen(true);
       store.setPrivyLoginInProgress(false);
       return undefined;
@@ -935,10 +969,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const store = useAuthStore.getState();
     store.setPrivyLoginInProgress(true);
 
-    if (store.session || isRegionBlockedRef.current) {
+    if (isLoginRegionBlocked()) {
       consumeOAuthPending();
       clearOAuthUrlParams();
       store.setPrivyLoginInProgress(false);
+      return;
+    }
+
+    if (store.session) {
+      consumeOAuthPending();
+      clearOAuthUrlParams();
+      store.setPrivyLoginInProgress(false);
+
+      if (!isTradingSetupComplete(store.readiness)) {
+        store.setLoginModalOpen(true);
+        const nextReadiness = await refreshReadiness(store.session);
+        store.setReadiness(nextReadiness);
+        maybeCloseSetupModal(nextReadiness);
+      }
+
       return;
     }
 
@@ -970,11 +1019,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await releaseExternalWalletConnection(method);
 
-      const hasEmbeddedWallet = privyWallets.some(isPrivyEmbeddedWallet);
+      let embeddedWallet = privyWallets.find(isPrivyEmbeddedWallet);
 
-      console.log("hasEmbeddedWallet: %o", hasEmbeddedWallet)
-
-      if (!hasEmbeddedWallet && !privyWalletCreatingRef.current) {
+      if (!embeddedWallet && !privyWalletCreatingRef.current) {
         privyWalletCreatingRef.current = true;
 
         try {
@@ -984,8 +1031,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
           privyWalletCreatingRef.current = false;
         }
+      }
 
-        await waitForPrivyWallet({ timeoutMs: 15_000, preferEmbedded: true });
+      embeddedWallet =
+        embeddedWallet ??
+        (await waitForPrivyWallet({ timeoutMs: 20_000, preferEmbedded: true }));
+
+      if (!embeddedWallet) {
+        throw new Error("Unable to connect your Privy wallet. Please try again.");
       }
 
       await runLogin(false, method);
@@ -1014,6 +1067,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     maybeCloseSetupModal(nextReadiness);
     return nextReadiness;
   }, [maybeCloseSetupModal, refreshReadiness]);
+
+  const resumePrivyEmailLogin = useCallback(async () => {
+    const store = useAuthStore.getState();
+    const email =
+      store.loginEmail?.trim() || resolvePrivyLoginEmail(privyUser) || undefined;
+
+    if (!privyReady || !privyAuthenticated || !email) {
+      setPrivyModalOpen(true);
+      return;
+    }
+
+    store.setLoginMethod("email");
+    store.setLoginEmail(email);
+    store.setLoginModalOpen(true);
+    setPrivyModalOpen(false);
+    pendingPrivyLoginMethodRef.current = "email";
+
+    if (whitelistLoginModeRef.current) {
+      useUserConfigStore.getState().setLocale("zh-TW");
+    }
+
+    if (store.session) {
+      if (!isTradingSetupComplete(store.readiness)) {
+        await refreshSetupReadiness();
+      }
+
+      return;
+    }
+
+    privyAutoLoginRef.current = false;
+    loginAbortRef.current = false;
+    void startPrivyTradingLogin("email");
+  }, [
+    privyAuthenticated,
+    privyReady,
+    privyUser,
+    refreshSetupReadiness,
+  ]);
 
   const runSignStep = useCallback(
     async (action: "clob" | "tokens") => {
@@ -1097,7 +1188,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       store.setLoginMethod(method);
     }
 
-    if (isRegionBlockedRef.current) {
+    if (
+      resolveEmailOnlyLoginEnabled(whitelistLoginModeRef.current) &&
+      (method === "wallet" || method === "near" || !method)
+    ) {
+      await openPrivyLogin();
+      return undefined;
+    }
+
+    if (isLoginRegionBlocked()) {
       openLoginModalOnly();
       return undefined;
     }
@@ -1108,6 +1207,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const connectNearWallet = async () => {
     const store = useAuthStore.getState();
 
+    if (resolveEmailOnlyLoginEnabled(whitelistLoginModeRef.current)) {
+      await openPrivyLogin();
+      return undefined;
+    }
+
     try {
       await releaseExternalWalletConnection("near");
       await wagmiDisconnect();
@@ -1115,7 +1219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     store.setLoginMethod("near");
 
-    if (isRegionBlockedRef.current) {
+    if (isLoginRegionBlocked()) {
       openLoginModalOnly();
       return undefined;
     }
@@ -1144,6 +1248,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     store.setError(undefined);
     await releaseExternalWalletConnection("email");
     await wagmiDisconnect();
+
+    const hasVerifiedPrivyEmail =
+      privyReady &&
+      privyAuthenticated &&
+      Boolean(store.loginEmail?.trim() || resolvePrivyLoginEmail(privyUser));
+
+    if (hasVerifiedPrivyEmail) {
+      await resumePrivyEmailLogin();
+      return;
+    }
+
     setPrivyModalOpen(true);
   };
 
@@ -1152,14 +1267,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const completePrivyEmailLogin = useCallback((email: string) => {
-    const store = useAuthStore.getState();
-    store.setLoginMethod("email");
-    store.setLoginEmail(email);
-    store.setLoginModalOpen(true);
-    setPrivyModalOpen(false);
-    pendingPrivyLoginMethodRef.current = "email";
-    void startPrivyTradingLogin("email");
-  }, [startPrivyTradingLogin]);
+    useAuthStore.getState().setLoginEmail(email.trim());
+    void resumePrivyEmailLogin();
+  }, [resumePrivyEmailLogin]);
 
   const setLoginMethod = useCallback((method: AuthLoginMethod | undefined) => {
     useAuthStore.getState().setLoginMethod(method);
@@ -1273,6 +1383,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     syncCash,
   });
 
+  const emailOnlyLogin = resolveEmailOnlyLoginEnabled(whitelistLoginMode);
+
   // subscribeWalletConnection
   useEffect(() => {
     if (!hydrated || !session?.walletAddress) {
@@ -1322,6 +1434,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!isTradingEligibilityRestricted(eligibilityView)) {
+      return;
+    }
+
+    if (eligibilityView.whitelistLoginMode) {
       return;
     }
 
@@ -1418,6 +1534,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [loginMethod, privyAuthenticated, privyUser]);
 
+  // Resume email login setup after refresh when Privy OTP was already verified.
+  useEffect(() => {
+    if (!hydrated || !privyReady || !privyAuthenticated || !privyUser) {
+      return;
+    }
+
+    const store = useAuthStore.getState();
+    const email =
+      store.loginEmail?.trim() || resolvePrivyLoginEmail(privyUser) || undefined;
+
+    if (!email) {
+      return;
+    }
+
+    const shouldUseEmailLoginFlow =
+      store.loginMethod === "email" ||
+      (whitelistLoginMode && !store.loginMethod);
+
+    if (!shouldUseEmailLoginFlow) {
+      return;
+    }
+
+    if (!store.loginMethod) {
+      store.setLoginMethod("email");
+    }
+
+    if (!store.loginEmail) {
+      store.setLoginEmail(email);
+    }
+
+    if (isTradingSetupComplete(store.readiness)) {
+      return;
+    }
+
+    openSetupModalIfNeeded();
+  }, [
+    hydrated,
+    openSetupModalIfNeeded,
+    privyAuthenticated,
+    privyReady,
+    privyUser,
+    readiness,
+    session,
+    whitelistLoginMode,
+  ]);
+
   // openSetupModal
   // useEffect(() => {
   //   if (!hydrated) {
@@ -1463,6 +1625,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isRegionBlocked,
     isBuyRestricted,
     isRegionCloseOnly,
+    whitelistLoginMode,
+    emailOnlyLogin,
     loginMethod,
     privyModalOpen,
     privyReady,

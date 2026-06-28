@@ -12,6 +12,7 @@ import RainbowProvider from "@/context/rainbowkit/provider";
 import { LocaleProvider } from "@/components/runtime/locale-provider";
 import { AppChrome } from "@/layout/app-chrome";
 import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen";
+import { NativeAppShell } from "@/components/runtime/native-app-shell";
 import type { AppLocale } from "@/i18n/config";
 
 interface AppRootProps {
@@ -41,6 +42,7 @@ export function AppRoot({
               <SportsWsProvider>
                 <ProphetNotificationWsProvider>
                   <main className="flex min-h-0 flex-1 flex-col overflow-x-hidden font-body">
+                    <NativeAppShell />
                     <MobileLoadingScreen />
                     <AppChrome>{children}</AppChrome>
                   </main>

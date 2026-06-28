@@ -123,6 +123,31 @@ function resolveLineGroupTokens(
   };
 }
 
+function resolveExactScoreChartTokens(
+  match: WorldCupMatch,
+  outcomeId: string | undefined,
+): FixtureChartTokenResolution | undefined {
+  if (!outcomeId) {
+    return undefined;
+  }
+
+  const outcome = match.polymarket?.fixtureMarkets?.exactScores.find(
+    (item) => item.id === outcomeId,
+  );
+
+  if (!outcome?.tokenId || !outcome.noTokenId) {
+    return undefined;
+  }
+
+  return {
+    mode: "binary",
+    inputs: [
+      { key: "primary", tokenId: outcome.tokenId },
+      { key: "secondary", tokenId: outcome.noTokenId },
+    ],
+  };
+}
+
 export function resolveFixtureChartTokens(
   match: WorldCupMatch,
   chartKind: FixtureChartKind,
@@ -175,6 +200,10 @@ export function resolveFixtureChartTokens(
       lineKey,
       "spread"
     );
+  }
+
+  if (chartKind === "exact_score") {
+    return resolveExactScoreChartTokens(match, lineKey);
   }
 
   return undefined;

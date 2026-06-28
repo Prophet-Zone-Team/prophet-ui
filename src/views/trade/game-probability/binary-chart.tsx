@@ -34,9 +34,9 @@ import {
 } from "@/lib/market/fixture-probability-chart";
 import {
   LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
+  mapLiveFixtureChartPointsToAxis,
   resolveLiveChartAxisTicksWithBreaks,
   resolveLiveChartMaxAxisSeconds,
-  resolveLiveChartPointCoordinates,
   resolveMatchClockFromAxisSeconds,
   type ResolveMatchClockSecondsOptions
 } from "@/lib/market/live-fixture-probability-chart";
@@ -63,10 +63,8 @@ const END_LABEL_GUTTER = END_LABEL_RIGHT_INSET + END_LABEL_ESTIMATED_WIDTH + 8;
 
 type BinarySeriesKey = "primary" | "secondary";
 
-const END_LABEL_SLOT_FRACTIONS: Record<BinarySeriesKey, number> = {
-  primary: 1 / 3,
-  secondary: 2 / 3
-};
+const END_LABEL_SLOT_TOP = 1 / 3;
+const END_LABEL_SLOT_BOTTOM = 2 / 3;
 
 interface ChartRow extends GameFixtureBinaryChartPoint {
   chartLabel: string;
@@ -124,8 +122,36 @@ function resolvePlotRightAnchorX(
   return plotRight - END_LABEL_RIGHT_INSET;
 }
 
-function resolveFixedLabelSlotY(
-  seriesKey: BinarySeriesKey,
+function resolveEndLabelProbability(
+  probability: number | undefined
+): number {
+  return typeof probability === "number" && Number.isFinite(probability)
+    ? probability
+    : 0;
+}
+
+function resolveBinaryEndLabelSlotFractions(
+  primaryProbability: number | undefined,
+  secondaryProbability: number | undefined
+): Record<BinarySeriesKey, number> {
+  const primary = resolveEndLabelProbability(primaryProbability);
+  const secondary = resolveEndLabelProbability(secondaryProbability);
+
+  if (primary >= secondary) {
+    return {
+      primary: END_LABEL_SLOT_TOP,
+      secondary: END_LABEL_SLOT_BOTTOM
+    };
+  }
+
+  return {
+    primary: END_LABEL_SLOT_BOTTOM,
+    secondary: END_LABEL_SLOT_TOP
+  };
+}
+
+function resolveLabelSlotY(
+  slotFraction: number,
   offset: ChartCustomizedProps["offset"],
   height: number | undefined
 ): number | undefined {
@@ -136,9 +162,8 @@ function resolveFixedLabelSlotY(
   const top = offset?.top ?? 0;
   const bottom = offset?.bottom ?? 0;
   const plotHeight = height - top - bottom;
-  const fraction = END_LABEL_SLOT_FRACTIONS[seriesKey];
 
-  return top + plotHeight * fraction;
+  return top + plotHeight * slotFraction;
 }
 
 function EndLabelMarker({
@@ -222,10 +247,19 @@ function EndLabelLayer({
     return null;
   }
 
+  const slotFractions = resolveBinaryEndLabelSlotFractions(
+    latestRow.primary,
+    latestRow.secondary
+  );
+
   return (
     <g className="pointer-events-none">
       {series.map((item) => {
-        const slotY = resolveFixedLabelSlotY(item.key, offset, height);
+        const slotY = resolveLabelSlotY(
+          slotFractions[item.key],
+          offset,
+          height
+        );
 
         if (slotY === undefined || !Number.isFinite(slotY)) {
           return null;
@@ -330,22 +364,21 @@ export function GameBinaryProbabilityChart({
   );
 
   const chartData = useMemo<ChartRow[]>(
-    () =>
-      data.map((point) => {
-        const coordinates = isLive
-          ? resolveLiveChartPointCoordinates(
-              point.elapsedSeconds ?? 0,
-              liveClockOptions
-            )
-          : undefined;
-
-        return {
+    () => {
+      if (!isLive) {
+        return data.map((point) => ({
           ...point,
-          chartLabel: point.label,
-          axisSeconds: coordinates?.axisSeconds,
-          matchClockSeconds: coordinates?.matchClockSeconds
-        };
-      }),
+          chartLabel: point.label
+        }));
+      }
+
+      return mapLiveFixtureChartPointsToAxis(data, liveClockOptions).map(
+        (point) => ({
+          ...point,
+          chartLabel: point.label
+        })
+      );
+    },
     [data, isLive, liveClockOptions]
   );
 

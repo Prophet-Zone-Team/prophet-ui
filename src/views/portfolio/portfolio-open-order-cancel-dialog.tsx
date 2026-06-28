@@ -16,11 +16,11 @@ import type { UserOpenOrder } from "@/lib/portfolio/types";
 import { TeamFlag } from "@/components/teams/team-flag";
 import {
   FundingModalShell,
-  fundingPrimaryButtonClass
+  fundingPrimaryButtonClass,
+  fundingSecondaryButtonClass
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { usePortfolioContext } from "@/views/portfolio/context";
 import { PORTFOLIO_SELL_MODAL_WIDTH } from "@/views/portfolio/portfolio-position-sell-dialog";
-import { portfolioSecondaryButtonClass } from "@/views/portfolio/portfolio-ui";
 import { useCancelOpenOrder } from "@/views/portfolio/use-cancel-open-order";
 
 export interface PortfolioOpenOrderCancelDialogProps {
@@ -157,7 +157,7 @@ export function PortfolioOpenOrderCancelDialog({
         <div className="grid grid-cols-2 gap-3 pt-2 pb-4">
           <button
             type="button"
-            className={portfolioSecondaryButtonClass}
+            className={fundingSecondaryButtonClass}
             disabled={isBusy}
             onClick={onClose}
           >

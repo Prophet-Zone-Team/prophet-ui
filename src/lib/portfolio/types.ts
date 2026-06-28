@@ -18,6 +18,7 @@ export interface PortfolioTransactionRecord {
   marketName: string;
   teamName: string;
   slug: string;
+  eventSlug?: string;
   source: string;
   createdAt: string;
   tradeCreatedAt: string;

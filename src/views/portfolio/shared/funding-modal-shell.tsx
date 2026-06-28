@@ -18,6 +18,12 @@ export const fundingPrimaryButtonClass = cn(
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
+export const fundingSecondaryButtonClass = cn(
+  "box-border flex h-[50px] w-full items-center justify-center rounded-[8px] border border-[#909090]",
+  "font-[Sora] text-base font-[400] leading-5 text-black transition-opacity hover:opacity-80",
+  "disabled:cursor-not-allowed disabled:opacity-50"
+);
+
 export interface FundingModalShellProps {
   title: string;
   onClose: () => void;

@@ -114,6 +114,7 @@ export function mapPolymarketActivity(
   }
 
   const slug = resolveActivitySlug(row);
+  const eventSlug = row.eventSlug?.trim() || undefined;
   const createdAt = timestampToIso(row.timestamp);
 
   return {
@@ -126,6 +127,7 @@ export function mapPolymarketActivity(
     marketName: row.title?.trim() || "—",
     teamName: resolveActivityTeamName(row),
     slug,
+    eventSlug,
     source: "",
     createdAt,
     tradeCreatedAt: createdAt,
@@ -143,6 +145,7 @@ export function mapLossPositionToTransaction(
   position: UserPositionRecord
 ): PortfolioTransactionRecord {
   const slug = position.slug?.trim() || position.eventSlug?.trim() || "";
+  const eventSlug = position.eventSlug?.trim() || undefined;
   const createdAt = endDateToIso(position.endDate);
 
   return {
@@ -158,6 +161,7 @@ export function mapLossPositionToTransaction(
       outcome: position.outcome
     }),
     slug,
+    eventSlug,
     source: "",
     createdAt,
     tradeCreatedAt: createdAt,

@@ -42,6 +42,11 @@ export function shouldHideMobileBottomNav(pathname: string) {
     /^\/private/.test(pathname) ||
     pathname === "/team" ||
     pathname === "/group" ||
-    pathname.startsWith("/trade")
+    pathname.startsWith("/trade") ||
+    pathname.startsWith("/download")
   );
+}
+
+export function shouldHideAppChrome(pathname: string) {
+  return pathname.startsWith("/download");
 }

@@ -29,6 +29,7 @@ import type {
   ProphetGetGroupMatchesData,
   ProphetGetGroupData,
   ProphetGameStatisticsPayload,
+  ProphetGameStatisticsStatus,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
   ProphetGetTeamDetailData,
@@ -410,6 +411,32 @@ export async function getProphetGame(
   });
 }
 
+function parseGameStatisticsStatus(
+  value: unknown
+): ProphetGameStatisticsStatus | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const raw = value as Record<string, unknown>;
+  const extra =
+    raw.extra === null
+      ? null
+      : typeof raw.extra === "number" && Number.isFinite(raw.extra)
+        ? raw.extra
+        : undefined;
+
+  return {
+    short: typeof raw.short === "string" ? raw.short : undefined,
+    long: typeof raw.long === "string" ? raw.long : undefined,
+    elapsed:
+      typeof raw.elapsed === "number" && Number.isFinite(raw.elapsed)
+        ? raw.elapsed
+        : undefined,
+    extra
+  };
+}
+
 function parseGameStatisticsPayload(
   raw: ProphetGetGameStatisticsData
 ): ProphetGameStatisticsPayload {
@@ -423,6 +450,7 @@ function parseGameStatisticsPayload(
     const parsed = JSON.parse(json) as Partial<ProphetGameStatisticsPayload>;
 
     return {
+      status: parseGameStatisticsStatus(parsed.status),
       statistics: Array.isArray(parsed.statistics) ? parsed.statistics : [],
       events: Array.isArray(parsed.events) ? parsed.events : []
     };

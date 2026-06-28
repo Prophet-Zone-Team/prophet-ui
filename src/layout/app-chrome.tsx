@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { MobileBottomNav } from "@/components/mb/nav/mobile-bottom-nav";
 import { AppHeader } from "@/layout/header";
-import { shouldHideMobileBottomNav } from "@/layout/header/nav";
+import { shouldHideAppChrome, shouldHideMobileBottomNav } from "@/layout/header/nav";
 import { cn } from "@/lib/cn";
 import AppFooter from "./footer";
 
@@ -15,7 +15,16 @@ interface AppChromeProps {
 
 export function AppChrome({ children }: AppChromeProps) {
   const pathname = usePathname();
+  const hideAppChrome = shouldHideAppChrome(pathname);
   const hideMobileBottomNav = shouldHideMobileBottomNav(pathname);
+
+  if (hideAppChrome) {
+    return (
+      <div className="flex min-h-dvh flex-1 flex-col overflow-x-hidden overflow-y-auto">
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

@@ -7,7 +7,7 @@ export interface PolymarketSportsWsUpdate {
   ended?: boolean;
   score?: string;
   period?: string;
-  elapsed?: string;
+  elapsed?: string | number;
   last_update?: string;
   finished_timestamp?: string;
   turn?: string;

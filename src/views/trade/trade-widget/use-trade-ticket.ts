@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { resolveFreshFixtureOutcome } from "@/lib/market/trade-ticket";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
+import { isTradeSkipSellBalanceCheckEnabled } from "@/lib/trading/trade-sell-test-mode";
 import { fireBasicConfettiFromElement } from "@/lib/confetti/fire-basic-cannon";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import {
@@ -20,6 +21,7 @@ import {
   resolveLineOutcomeForSide,
   resolveLineOutcomePair,
   resolveLineOutcomeTradeBinarySide,
+  resolveLineOutcomeTradeTokenId,
 } from "@/lib/market/fixture-line-outcome-pair";
 import { useMarketWsPrices, useRegisterMarketWsTokens } from "@/context/market-ws";
 import { isValidAskPrice, resolveFixtureDisplayAskPrice } from "@/lib/market/fixture-ask-liquidity";
@@ -468,10 +470,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       sellPosition?.size ??
       (outcomeShares[outcomeSide] > 0 ? outcomeShares[outcomeSide] : undefined);
 
-    return resolveMaxSellShares(
-      positionSize,
-      readiness?.balances?.conditionalTokenBalance
-    );
+    return isTradeSkipSellBalanceCheckEnabled()
+      ? resolveMaxSellShares(positionSize)
+      : resolveMaxSellShares(
+          positionSize,
+          readiness?.balances?.conditionalTokenBalance
+        );
   }, [
     outcomeShares,
     outcomeSide,
@@ -507,10 +511,17 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     const snapshot = input.snapshot;
+    const liveSellBid =
+      tradeSide === "sell"
+        ? outcomeSide === "yes"
+          ? teamTokenPrices[yesTokenId]?.bestBid
+          : teamTokenPrices[noTokenId]?.bestBid
+        : undefined;
     const defaultLimit = getTeamDefaultLimitPrice(
       snapshot,
       outcomeSide,
-      tradeSide
+      tradeSide,
+      liveSellBid
     );
     const orderLimitPrice = resolveOrderLimitPrice(
       orderMode,
@@ -635,9 +646,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       yesTokenPrice:
         (lineOutcomePair && mergedYesLineOutcome
           ? resolveLiveOutcomeButtonPrice(
-              mergedYesLineOutcome.tokenId,
+              resolveLineOutcomeTradeTokenId(mergedYesLineOutcome),
               fixtureTokenPrices,
-              "yes",
+              resolveLineOutcomeTradeBinarySide(mergedYesLineOutcome),
               mergedYesLineOutcome,
               matchOutcome,
               yesLineProbability ?? matchProbability,
@@ -655,9 +666,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       noTokenPrice:
         (lineOutcomePair && mergedNoLineOutcome
           ? resolveLiveOutcomeButtonPrice(
-              mergedNoLineOutcome.noTokenId ?? mergedNoLineOutcome.tokenId,
+              resolveLineOutcomeTradeTokenId(mergedNoLineOutcome),
               fixtureTokenPrices,
-              "no",
+              resolveLineOutcomeTradeBinarySide(mergedNoLineOutcome),
               mergedNoLineOutcome,
               matchOutcome,
               noLineProbability ?? Math.max(0, 100 - matchProbability),
@@ -1192,9 +1203,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             takeProfitLimitPrice,
             preview.sidePrice
           );
-          const conditionalBalance = await fetchConditionalTokenBalance(
-            preview.tokenId
-          ).catch(() => undefined);
+          const conditionalBalance = isTradeSkipSellBalanceCheckEnabled()
+            ? undefined
+            : await fetchConditionalTokenBalance(preview.tokenId).catch(
+                () => undefined
+              );
           const cappedShareSize = resolveMaxSellShares(
             preview.shareSize,
             conditionalBalance

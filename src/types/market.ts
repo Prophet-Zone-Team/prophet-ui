@@ -103,6 +103,7 @@ export interface TradingUserSession {
   eligibilityCountry?: string;
   eligibilityRegion?: string;
   eligibilityReason?: string;
+  eligibilityWhitelistEmail?: string;
   setupAllowances?: TradingSetupAllowances;
   setupAllowancesCheckedAt?: string;
   authenticatedAt?: string;
@@ -359,6 +360,8 @@ export interface PolymarketOutcomeToken {
   tokenId: string;
   outcome: string;
   price?: number;
+  bestBid?: number;
+  bestAsk?: number;
 }
 
 export interface MarketTopHolder {
@@ -709,7 +712,12 @@ export interface GameFixtureBinaryChartPoint {
 
 export type GameFixtureChartTimeRange = "1H" | "1D" | "1W" | "1M" | "all";
 
-export type FixtureChartKind = "moneyline" | "halftime" | "total" | "spread";
+export type FixtureChartKind =
+  | "moneyline"
+  | "halftime"
+  | "total"
+  | "spread"
+  | "exact_score";
 
 export interface GameMatchChartEvent {
   elapsedSeconds: number;

@@ -7,7 +7,8 @@ import {
   buildEmptyGameStatisticsRows,
   buildEmptyGameStatisticsGoalEvents,
   mapGameStatisticsGoalEvents,
-  mapGameStatisticsRows
+  mapGameStatisticsRows,
+  resolveMatchStoppageExtraMinutes
 } from "@/lib/market/map-game-statistics";
 import { marketQueryKeys } from "@/lib/market/query-keys";
 import { getScheduleRowVariant } from "@/lib/market/schedule-match";
@@ -74,9 +75,15 @@ export function useGameStatistics(params: {
     variant
   ]);
 
+  const stoppageExtraMinutes = useMemo(
+    () => resolveMatchStoppageExtraMinutes(query.data?.status),
+    [query.data?.status]
+  );
+
   return {
     rows,
     goalEvents,
+    stoppageExtraMinutes,
     payload: query.data,
     slug,
     variant,

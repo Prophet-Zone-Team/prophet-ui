@@ -32,6 +32,8 @@ export interface GammaMarketRecord {
   events?: GammaEventRecord[];
   updatedAt?: string;
   createdAt?: string;
+  bestBid?: number | string;
+  bestAsk?: number | string;
 }
 
 export interface GammaEventRecord {

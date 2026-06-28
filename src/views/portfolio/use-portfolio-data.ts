@@ -33,6 +33,7 @@ export interface UsePortfolioDataResult {
   session: ReturnType<typeof useAuth>["session"];
   isAuthenticated: boolean;
   positions: UserPositionRecord[];
+  totalPositionValue: number | undefined;
   openOrders: UserOpenOrder[];
   marketContextMap: Record<string, OpenOrderMarketContext>;
   transactions: PortfolioTransactionRecord[];
@@ -56,6 +57,7 @@ export interface UsePortfolioDataResult {
 export function usePortfolioData(): UsePortfolioDataResult {
   const { session, isAuthenticated, openLoginModalOnly, refreshCash } = useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
+  const [totalPositionValue, setTotalPositionValue] = useState<number | undefined>();
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
   const [marketContextMap, setMarketContextMap] = useState<
     Record<string, OpenOrderMarketContext>
@@ -121,6 +123,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
 
   const resetTabData = useCallback(() => {
     setOpenOrders([]);
+    setTotalPositionValue(undefined);
     setMarketContextMap({});
     setTransactions([]);
     setHistoryHasMore(false);
@@ -139,6 +142,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const loadCore = useCallback(async (options?: PortfolioLoadOptions) => {
     if (!session) {
       setPositions([]);
+      setTotalPositionValue(undefined);
       resetTabData();
       coreLoadedRef.current = false;
       setCoreStatus("ready");
@@ -165,6 +169,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
 
         const positionsPayload = await fetchJson<{
           positions?: UserPositionRecord[];
+          totalPositionValue?: number;
           error?: string;
         }>("/api/trading/positions?limit=100").catch((error) => {
           errors.push(error instanceof Error ? error.message : String(error));
@@ -175,6 +180,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
           (position) => position.currentValue !== 0
         );
         setPositions(nextPositions);
+        setTotalPositionValue(positionsPayload?.totalPositionValue);
 
         const conditionIds =
           collectUniqueConditionIdsFromPositions(nextPositions);
@@ -408,6 +414,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
       sessionUserIdRef.current = undefined;
       coreLoadInFlightRef.current = null;
       setPositions([]);
+      setTotalPositionValue(undefined);
       coreLoadedRef.current = false;
       setCoreStatus("ready");
       setMessage(undefined);
@@ -463,6 +470,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     session,
     isAuthenticated,
     positions,
+    totalPositionValue,
     openOrders,
     marketContextMap,
     transactions,

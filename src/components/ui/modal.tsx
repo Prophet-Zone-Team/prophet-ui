@@ -44,6 +44,7 @@ export interface ModalProps {
   overlayClassName?: string;
   hideCloseButton?: boolean;
   overlayCloseable?: boolean;
+  escapeCloseable?: boolean;
   closeButtonClassName?: string;
 }
 
@@ -56,6 +57,7 @@ export function Modal({
   overlayClassName,
   hideCloseButton = false,
   overlayCloseable = true,
+  escapeCloseable = true,
   closeButtonClassName,
 }: ModalProps) {
   useEffect(() => {
@@ -66,7 +68,7 @@ export function Modal({
     lockBodyScroll();
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && escapeCloseable) {
         onClose();
       }
     }
@@ -77,7 +79,7 @@ export function Modal({
       unlockBodyScroll();
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open, onClose]);
+  }, [escapeCloseable, open, onClose]);
 
   if (!open || typeof document === "undefined") {
     return null;

@@ -75,28 +75,19 @@ export function ScheduleMatchRow({
     liveMatch.homeScore,
     liveMatch.awayScore
   );
-  const canNavigate = variant !== "ended";
-
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-xl border border-[#EBEBEB] bg-white px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4",
-        canNavigate
-          ? "cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]"
-          : "cursor-default",
+        "flex flex-col gap-3 rounded-xl border border-[#EBEBEB] bg-white px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4 cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]",
         variant === "ended" && "opacity-90",
         variant === "ongoing" &&
           "border-[#7BCA25] shadow-[0_0_10px_rgba(123,202,37,0.25)]",
         className
       )}
       aria-label={`${t("specialMatchAria", { home: homeDisplayName, away: awayDisplayName })}, ${statusLabel}`}
-      onClick={
-        canNavigate
-          ? () => {
-              router.push(gameTradeHref(match.id));
-            }
-          : undefined
-      }
+      onClick={() => {
+        router.push(gameTradeHref(match.id));
+      }}
     >
       <div className="flex shrink-0 justify-between items-center gap-1 md:w-[20%]">
         <div className="flex shrink-0 items-center gap-3">

@@ -8,15 +8,20 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { formatMatchScore } from "@/lib/market/match-display";
 import { isEffectiveLiveMatch } from "@/lib/market/live-match";
-import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
+import {
+  isMockLiveFixtureEnabled,
+  MOCK_LIVE_FIXTURE_ELAPSED_SECONDS
+} from "@/lib/market/mock-live-fixture-config";
 import {
   formatScheduleKickoff,
   getScheduleRowVariant,
   resolveMatchSides
 } from "@/lib/market/schedule-match";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { teamDetailHref } from "@/lib/routes/team";
+import { LiveMatchElapsedClock } from "@/views/trade/game/header/live-match-elapsed-clock";
 import type {
   ApiFootballTeamProfile,
   TeamMarketSnapshot,
@@ -112,12 +117,16 @@ function HeaderMetric({
   statusVariant,
   subtitle,
   badgeLabel,
+  badgeTrailing,
+  statusAriaLabel,
   versusLabel
 }: {
   value: string;
   statusVariant?: ReturnType<typeof getScheduleRowVariant>;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   badgeLabel?: string;
+  badgeTrailing?: React.ReactNode;
+  statusAriaLabel?: string;
   versusLabel: string;
 }) {
   return (
@@ -135,23 +144,31 @@ function HeaderMetric({
 
         {statusVariant ? (
           <div className="mt-4 flex flex-col items-center gap-1 sm:mt-7">
-            <MatchStatusBadge
-              variant={statusVariant}
-              className="gap-[7px]"
-              label={badgeLabel}
-            />
+            <div className="inline-flex items-center gap-[7px]">
+              <MatchStatusBadge
+                variant={statusVariant}
+                className="gap-[7px]"
+                label={badgeLabel}
+                ariaLabel={badgeTrailing ? statusAriaLabel : undefined}
+              />
+              {badgeTrailing}
+            </div>
           </div>
         ) : null}
 
         {subtitle ? (
-          <span
-            className={cn(
-              "text-xs font-[500] leading-[17px] text-[#909090] sm:text-sm whitespace-nowrap",
-              statusVariant ? "mt-5 sm:mt-[33px]" : "mt-4 sm:mt-7"
-            )}
-          >
-            {subtitle}
-          </span>
+          typeof subtitle === "string" ? (
+            <span
+              className={cn(
+                "text-xs font-[500] leading-[17px] text-[#909090] sm:text-sm whitespace-nowrap",
+                statusVariant ? "mt-5 sm:mt-[33px]" : "mt-4 sm:mt-7"
+              )}
+            >
+              {subtitle}
+            </span>
+          ) : (
+            subtitle
+          )
         ) : null}
       </div>
     </div>
@@ -187,6 +204,11 @@ export function TradeGameHeader({
   const sides = resolveMatchSides(liveMatch, snapshots);
   const homeDisplayName = useLocalizedTeamName(sides.home.code, sides.home.name);
   const awayDisplayName = useLocalizedTeamName(sides.away.code, sides.away.name);
+  const { stoppageExtraMinutes } = useGameStatistics({
+    match,
+    homeTeamName: homeDisplayName,
+    awayTeamName: awayDisplayName
+  });
 
   const homeProfile = liveMatch.homeTeamId
     ? teamProfiles?.[liveMatch.homeTeamId]
@@ -194,15 +216,15 @@ export function TradeGameHeader({
   const awayProfile = liveMatch.awayTeamId
     ? teamProfiles?.[liveMatch.awayTeamId]
     : undefined;
-  const effectiveLive = isEffectiveLiveMatch(liveMatch);
+  const mockLiveFixture = isMockLiveFixtureEnabled();
+  const effectiveLive = isEffectiveLiveMatch(liveMatch) || mockLiveFixture;
+  const resolvedElapsedSeconds = mockLiveFixture
+    ? MOCK_LIVE_FIXTURE_ELAPSED_SECONDS
+    : liveMatch.liveElapsedSeconds;
   const displayScore = {
     homeScore: liveMatch.homeScore,
     awayScore: liveMatch.awayScore
   };
-  const liveClock = useLiveElapsedClock(
-    liveMatch.liveElapsedSeconds,
-    effectiveLive
-  );
   const statusVariant = effectiveLive
     ? "ongoing"
     : getScheduleRowVariant(liveMatch.status);
@@ -212,12 +234,24 @@ export function TradeGameHeader({
       : statusVariant === "upcoming"
         ? tHome("matchStatusUpcoming")
         : tHome("matchStatusEnded");
-  const badgeLabel =
-    effectiveLive && liveMatch.period?.trim()
-      ? liveMatch.period.trim()
-      : statusLabel;
+  const badgeLabel = effectiveLive ? "" : statusLabel;
+  const badgeTrailing = effectiveLive ? (
+    <span className="inline-flex items-baseline whitespace-nowrap">
+      <LiveMatchElapsedClock
+        baseElapsedSeconds={resolvedElapsedSeconds}
+        kickoffAt={liveMatch.kickoffAt}
+        isLive={effectiveLive}
+        className="text-sm font-[400] leading-[18px] text-[#7BCA25]"
+      />
+      {stoppageExtraMinutes !== undefined ? (
+        <span className="text-sm font-[556] leading-[17px] text-[#909090]">
+          +{stoppageExtraMinutes}
+        </span>
+      ) : null}
+    </span>
+  ) : undefined;
   const subtitle = effectiveLive
-    ? liveClock
+    ? undefined
     : formatScheduleKickoff(liveMatch.kickoffAt);
 
   return (
@@ -236,6 +270,8 @@ export function TradeGameHeader({
         statusVariant={statusVariant}
         subtitle={subtitle}
         badgeLabel={badgeLabel}
+        badgeTrailing={badgeTrailing}
+        statusAriaLabel={statusLabel}
         versusLabel={tHome("versus")}
       />
       <TeamSideColumn
