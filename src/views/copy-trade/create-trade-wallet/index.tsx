@@ -353,7 +353,7 @@ export function CreateTradeWalletModal({
               busyPoll
             });
             const action = stepActions[step.id];
-            const isLast = index === STEPS.length - 1;
+            const isLast = index === steps.length - 1;
             const actionLabel =
               step.id === "create-wallet"
                 ? createActionLabel
@@ -394,8 +394,7 @@ export function CreateTradeWalletModal({
                       isWalletCreated &&
                       !isWalletReady ? (
                         <p className="mt-1 text-xs text-[#3168FF]">
-                          Wallet deployment or approval sync is still in
-                          progress.
+                          {t("deploymentSyncInProgress")}
                         </p>
                       ) : null}
                     </div>
