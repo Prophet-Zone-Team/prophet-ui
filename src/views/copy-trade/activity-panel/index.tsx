@@ -87,7 +87,7 @@ export function CopyTradeActivityPanel({
         ) : null}
       </div>
 
-      <div className="mt-2 flex min-h-0 flex-1 flex-col">
+      <div className="mt-2 flex min-h-0 flex-col">
         <div
           className={cn(
             "flex min-h-0 flex-1 flex-col",
