@@ -78,8 +78,8 @@ export function RoadToFinalShareModal({
     shareCardRef: cardRef,
     downloadFilename: ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME,
     fullLink: inviteLink.fullLink,
-    tweetText: "Think you can call the World Cup? \n\nBuild your full bracket on Prophet — groups, knockouts, finalists, champion.\n\nBack your picks with $10+ in trades. \n\nThe most accurate bracket wins $10,000.\n\nUse the Prophet. Make Profit.\n\n",
-    hashtags: "Prophet,WorldCup2026",
+    tweetText: "",
+    hashtags: "",
     onAfterTwitterOpen: () => setTweetUrlOpen(true),
   });
 
