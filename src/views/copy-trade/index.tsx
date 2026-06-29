@@ -37,5 +37,5 @@ export {
 } from "./wallet-copy-modal";
 export { useCopyTradeTest } from "./use-copy-trade-test";
 export { useCopyTradeSession } from "./use-copy-trade-session";
-export { useCopyTradeRank } from "./use-copy-trade-rank";
+export { useCopyTradeRank, COPY_TRADE_TRADERS_QUERY_KEY, fetchCopyTradeTraders } from "./use-copy-trade-rank";
 export { useCopyTradeTargets } from "./use-copy-trade-targets";

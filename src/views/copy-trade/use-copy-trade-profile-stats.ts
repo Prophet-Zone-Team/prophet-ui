@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { ANALYTICS_QUERY_STALE_TIME_MS } from "@/lib/analytics/config";
 import { getCopyTradeBalances, getCopyTradePnL } from "@/service/copy-trade";
+import type { CopyPnLSummary } from "@/types/copy-trade-api";
 
 import { useCopyTradeSession } from "./use-copy-trade-session";
 
@@ -46,23 +47,28 @@ export function useCopyTradeProfileStats(
     queryKey: userId
       ? copyTradePnLQueryKey(userId)
       : ["copy-trade", "pnl", "anonymous"],
-    queryFn: async (): Promise<number | null> => {
+    queryFn: async (): Promise<CopyPnLSummary> => {
       if (!userId) {
         throw new Error("Copy-trade session is required.");
       }
 
-      const pnl = await getCopyTradePnL(userId);
-      return pnl.total_cash_pnl ?? null;
+      return getCopyTradePnL(userId);
     },
     enabled,
     staleTime: ANALYTICS_QUERY_STALE_TIME_MS,
   });
 
+  const pnlSummary = pnlQuery.data ?? null;
+
   return {
     balance: balanceQuery.data ?? null,
-    totalPnL: pnlQuery.data ?? null,
+    totalPnL: pnlSummary?.total_cash_pnl ?? null,
+    positionsValue: pnlSummary?.total_current_value ?? null,
+    openPositions: pnlSummary?.open_positions ?? null,
+    pnlSummary,
     isLoadingBalance: enabled && balanceQuery.isLoading,
     isLoadingPnL: enabled && pnlQuery.isLoading,
+    isLoadingSummary: enabled && pnlQuery.isLoading,
     isError: balanceQuery.isError || pnlQuery.isError,
     refetch: async () => {
       await Promise.all([balanceQuery.refetch(), pnlQuery.refetch()]);

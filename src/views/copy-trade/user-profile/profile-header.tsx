@@ -6,8 +6,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { CopyIcon, RightArrowIcon } from "@/components/icons";
-import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
+import { RightArrowIcon } from "@/components/icons";
 import { LogoutIcon, PortfolioIcon } from "@/layout/header/wallet-menu-icons";
 import {
   walletMenuDropdownClass,
@@ -15,9 +14,11 @@ import {
   walletMenuLogoutClass
 } from "@/layout/header/wallet-menu-ui";
 import { clearCopyTradeSession } from "@/lib/copy-trade/copy-trade-session";
-import { formatShortWallet } from "@/lib/team/detail-format";
-import { getWalletAvatarGradient } from "@/lib/wallet/avatar-gradient";
 import type { CopyWallet } from "@/types/copy-trade-api";
+
+import {
+  CopyTradeWalletIdentity
+} from "./copy-trade-wallet-identity";
 
 const MENU_DROPDOWN_TRANSITION = {
   type: "spring" as const,
@@ -28,16 +29,6 @@ const MENU_DROPDOWN_TRANSITION = {
 
 export interface ProfileHeaderProps {
   copyWallet: CopyWallet;
-}
-
-function ProfileAvatar({ address }: { address: string }) {
-  return (
-    <div
-      className="size-8 shrink-0 rounded-full border border-white"
-      style={{ background: getWalletAvatarGradient(address) }}
-      aria-hidden="true"
-    />
-  );
 }
 
 function ProfileHeaderMenu({
@@ -61,22 +52,12 @@ function ProfileHeaderMenu({
       transition={MENU_DROPDOWN_TRANSITION}
       style={{ transformOrigin: "top right" }}
     >
-      <div className="mb-2 flex items-center gap-2 border-b border-prophet-line pb-3">
-        <ProfileAvatar address={depositAddress} />
-        <span className="truncate text-[14px] font-[400] leading-[17px] text-black">
-          {formatShortWallet(depositAddress)}
-        </span>
-        <PolymarketAddressCopyButton
-          address={depositAddress}
-          ariaLabel={t("copyPolymarketAddress")}
-          className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
-        >
-          <CopyIcon />
-        </PolymarketAddressCopyButton>
+      <div className="mb-2 border-b border-prophet-line pb-3">
+        <CopyTradeWalletIdentity address={depositAddress} size="sm" />
       </div>
 
       <Link
-        href="/portfolio"
+        href="/smart-money/portfolio"
         role="menuitem"
         className={walletMenuItemClass}
         onClick={onClose}
@@ -143,19 +124,22 @@ export function ProfileHeader({ copyWallet }: ProfileHeaderProps) {
 
   return (
     <div ref={menuRef} className="relative flex items-center gap-3">
-      <ProfileAvatar address={depositAddress} />
-      <span className="min-w-0 truncate text-[16px] font-medium leading-5 text-black">
-        {formatShortWallet(depositAddress)}
-      </span>
-      <button
-        type="button"
-        className="ml-auto inline-flex shrink-0 items-center justify-center p-1 text-[#909090] transition-opacity hover:opacity-70"
-        aria-label="More options"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((value) => !value)}
-      >
-        <MoreHorizontal className="size-4" strokeWidth={2} />
-      </button>
+      <CopyTradeWalletIdentity
+        address={depositAddress}
+        size="sm"
+        className="min-w-0 flex-1"
+        trailing={
+          <button
+            type="button"
+            className="ml-auto inline-flex shrink-0 items-center justify-center p-1 text-[#909090] transition-opacity hover:opacity-70"
+            aria-label="More options"
+            aria-expanded={isOpen}
+            onClick={() => setIsOpen((value) => !value)}
+          >
+            <MoreHorizontal className="size-4" strokeWidth={2} />
+          </button>
+        }
+      />
 
       <AnimatePresence>
         {isOpen ? (
