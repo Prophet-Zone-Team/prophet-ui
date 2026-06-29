@@ -66,6 +66,23 @@ export function NotificationIcon() {
   );
 }
 
+export function DarkModeIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+    >
+      <path
+        d="M8.74779 0C8.90668 0.591425 8.99496 1.21816 8.99496 1.86255C8.99496 5.7995 5.80832 8.98613 1.87137 8.98613C1.22699 8.98613 0.600252 8.89786 0 8.73897C0.820933 11.7667 3.58386 14 6.87642 14C10.8134 14 14 10.8134 14 6.87642C14 3.58386 11.7755 0.820933 8.74779 0Z"
+        fill="#909090"
+      />
+    </svg>
+  );
+}
+
 export function LanguageIcon() {
   return (
     <svg

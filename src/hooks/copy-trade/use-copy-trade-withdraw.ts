@@ -6,7 +6,8 @@ import {
   isCopyWalletReady,
   submitCopyTradeWithdrawalSigned,
 } from "@/lib/copy-trade/auth";
-import { getCopyWithdrawalBlockReason } from "@/lib/copy-trade/withdrawal-readiness";
+import { getCopyWithdrawalBlockReasonCode } from "@/lib/copy-trade/withdrawal-readiness";
+import type { CopyWithdrawalBlockReasonCode } from "@/lib/copy-trade/withdrawal-readiness";
 import { newCopyWithdrawalClientRequestId } from "@/lib/copy-trade/withdrawal-id";
 import {
   getCopyTradeBalances,
@@ -23,6 +24,22 @@ import type {
 
 const EVM_ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 
+export type CopyWithdrawSubmitErrorCode =
+  | "sessionNotReady"
+  | "connectWallet"
+  | "invalidRecipient"
+  | "validAmount";
+
+export class CopyWithdrawSubmitError extends Error {
+  readonly code: CopyWithdrawSubmitErrorCode;
+
+  constructor(code: CopyWithdrawSubmitErrorCode) {
+    super(code);
+    this.name = "CopyWithdrawSubmitError";
+    this.code = code;
+  }
+}
+
 export interface SubmitCopyWithdrawArgs {
   amount: string;
   recipient: string;
@@ -38,7 +55,7 @@ export interface UseCopyTradeWithdrawResult {
   availableAssets: CopyWithdrawalAssetInfo[];
   allAssets: CopyWithdrawalAssetInfo[];
   maxAmount: number;
-  blockReason: string;
+  blockReasonCode: CopyWithdrawalBlockReasonCode | null;
   defaultRecipient: string;
   isValidRecipient: (recipient: string) => boolean;
   refresh: () => Promise<void>;
@@ -82,8 +99,8 @@ export function useCopyTradeWithdraw(open: boolean): UseCopyTradeWithdrawResult 
 
   const maxAmount = balance?.Available ?? readiness?.available_pusd ?? 0;
 
-  const blockReason = useMemo(
-    () => getCopyWithdrawalBlockReason({ walletReady, readiness }),
+  const blockReasonCode = useMemo(
+    () => getCopyWithdrawalBlockReasonCode({ walletReady, readiness }),
     [readiness, walletReady],
   );
 
@@ -117,20 +134,20 @@ export function useCopyTradeWithdraw(open: boolean): UseCopyTradeWithdrawResult 
       asset,
     }: SubmitCopyWithdrawArgs): Promise<CopyWithdrawal> => {
       if (!userId) {
-        throw new Error("Copy trade session is not ready.");
+        throw new CopyWithdrawSubmitError("sessionNotReady");
       }
       if (!walletAddress) {
-        throw new Error("Connect your wallet to sign the withdrawal.");
+        throw new CopyWithdrawSubmitError("connectWallet");
       }
 
       const trimmedRecipient = recipient.trim();
       if (!EVM_ADDRESS_PATTERN.test(trimmedRecipient)) {
-        throw new Error("Enter a valid recipient address.");
+        throw new CopyWithdrawSubmitError("invalidRecipient");
       }
 
       const amountPusd = Number(amount);
       if (!Number.isFinite(amountPusd) || amountPusd <= 0) {
-        throw new Error("Enter a valid withdrawal amount.");
+        throw new CopyWithdrawSubmitError("validAmount");
       }
 
       setSubmitting(true);
@@ -174,7 +191,7 @@ export function useCopyTradeWithdraw(open: boolean): UseCopyTradeWithdrawResult 
     availableAssets,
     allAssets,
     maxAmount,
-    blockReason,
+    blockReasonCode,
     defaultRecipient,
     isValidRecipient,
     refresh,

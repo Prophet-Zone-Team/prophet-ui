@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/utils";
@@ -49,6 +50,8 @@ export function WithdrawFormStep({
   onRecipientChange,
   onAmountChange,
 }: WithdrawFormStepProps) {
+  const t = useTranslations("copyTrade.funding.withdraw");
+  const tWithdraw = useTranslations("portfolio.withdraw");
   const [assetOpen, setAssetOpen] = useState(false);
 
   const handleAmountChange = (value: string) => {
@@ -66,8 +69,8 @@ export function WithdrawFormStep({
       ) : null}
 
       <FundingSelectorDropdown
-        label="Asset"
-        triggerLabel={selectedAsset?.label ?? "Select asset"}
+        label={t("asset")}
+        triggerLabel={selectedAsset?.label ?? t("selectAsset")}
         open={assetOpen}
         onOpenChange={setAssetOpen}
         triggerIcon={
@@ -113,7 +116,7 @@ export function WithdrawFormStep({
               </span>
               {disabled ? (
                 <span className="text-xs text-[#909090]">
-                  {asset.reason || "Unavailable"}
+                  {asset.reason || t("unavailable")}
                 </span>
               ) : null}
             </button>
@@ -122,11 +125,11 @@ export function WithdrawFormStep({
       </FundingSelectorDropdown>
 
       <div className="flex flex-col gap-2">
-        <span className={withdrawFieldLabelClass}>Recipient address</span>
+        <span className={withdrawFieldLabelClass}>{t("recipientAddress")}</span>
         <div className={withdrawInputBoxClass}>
           <input
             className={withdrawAmountInputClass}
-            placeholder="0x…"
+            placeholder={t("recipientPlaceholder")}
             value={recipient}
             spellCheck={false}
             autoComplete="off"
@@ -148,16 +151,18 @@ export function WithdrawFormStep({
           <span className="text-xs text-[#E5484D]">{recipientError}</span>
         ) : (
           <span className="text-xs text-[#909090]">
-            Funds are sent on Polygon as the selected asset.
+            {t("fundsSentOnPolygon")}
           </span>
         )}
       </div>
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <span className={withdrawFieldLabelClass}>Amount (pUSD)</span>
+          <span className={withdrawFieldLabelClass}>{t("amountPusd")}</span>
           <span className="text-xs text-[#909090]">
-            Available: {formatNumber(maxAmount, 2, true, { round: 0 })}
+            {t("available", {
+              amount: formatNumber(maxAmount, 2, true, { round: 0 }),
+            })}
           </span>
         </div>
         <div className={withdrawInputBoxClass}>
@@ -174,13 +179,14 @@ export function WithdrawFormStep({
             disabled={maxAmount <= 0}
             onClick={() => onAmountChange(String(maxAmount))}
           >
-            Max
+            {tWithdraw("max")}
           </button>
         </div>
         {selectedAsset?.min_amount_pusd ? (
           <span className="text-xs text-[#909090]">
-            Minimum withdrawal: {formatNumber(selectedAsset.min_amount_pusd, 2, true)}{" "}
-            pUSD
+            {t("minimumWithdrawal", {
+              amount: formatNumber(selectedAsset.min_amount_pusd, 2, true),
+            })}
           </span>
         ) : null}
         {errorText ? (
@@ -190,17 +196,17 @@ export function WithdrawFormStep({
 
       <div className="flex flex-col gap-2 rounded-[8px] border border-[#EBEBEB] bg-[#FAFBFC] px-4 py-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#909090]">Asset</span>
+          <span className="text-sm text-[#909090]">{t("asset")}</span>
           <span className="text-sm font-[500] text-black">
             {selectedAsset?.label ?? "—"}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#909090]">Network</span>
-          <span className="text-sm font-[500] text-black">Polygon</span>
+          <span className="text-sm text-[#909090]">{t("network")}</span>
+          <span className="text-sm font-[500] text-black">{t("polygon")}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#909090]">You receive</span>
+          <span className="text-sm text-[#909090]">{t("youReceive")}</span>
           <span className="text-sm font-[500] text-black">
             {amount ? `${formatNumber(Number(amount), 2, true, { round: 0 })}` : "—"}
           </span>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import { cn } from "@/lib/cn";
@@ -10,13 +11,10 @@ import type { UserPositionRecord } from "@/types/market";
 import { PortfolioPositionsTable } from "@/views/portfolio/portfolio-positions-table";
 import { portfolioActivityCardClass } from "@/views/portfolio/portfolio-ui";
 
-const COPY_TRADE_PORTFOLIO_TABS = [
-  { id: "position", label: "Position" },
-  { id: "closed", label: "Closed" }
-] as const;
+const COPY_TRADE_PORTFOLIO_TAB_IDS = ["position", "closed"] as const;
 
 type CopyTradePortfolioTabId =
-  (typeof COPY_TRADE_PORTFOLIO_TABS)[number]["id"];
+  (typeof COPY_TRADE_PORTFOLIO_TAB_IDS)[number];
 
 export interface CopyTradePortfolioActivityProps {
   openPositions: UserPositionRecord[];
@@ -37,33 +35,43 @@ export function CopyTradePortfolioActivity({
   onConnectWallet,
   className
 }: CopyTradePortfolioActivityProps) {
+  const t = useTranslations("copyTrade.portfolio");
+  const tPortfolio = useTranslations("portfolio");
   const [tab, setTab] = useState<CopyTradePortfolioTabId>("position");
+
+  const tabs = useMemo(
+    () => [
+      { id: "position" as const, label: tPortfolio("tabPosition") },
+      { id: "closed" as const, label: t("tabClosed") }
+    ],
+    [t, tPortfolio]
+  );
+
   const positions = tab === "position" ? openPositions : closedPositions;
   const loading = status === "loading" || status === "idle";
   const emptyPositionTitle =
-    tab === "position" ? "No open positions" : "No closed positions";
+    tab === "position"
+      ? tPortfolio("noOpenPositions")
+      : t("noClosedPositions");
 
   return (
     <section
       className={cn(portfolioActivityCardClass, "overflow-hidden", className)}
-      aria-label="Copy trade portfolio activity"
+      aria-label={t("activityAria")}
     >
       <div className="border-b border-[#EBEBEB] px-4 pt-4 md:px-[30px]">
         <TabSwitcher
-          items={COPY_TRADE_PORTFOLIO_TABS.map((item) => ({
-            id: item.id,
-            label: item.label
-          }))}
+          items={tabs}
           value={tab}
           onChange={(value) => setTab(value as CopyTradePortfolioTabId)}
-          aria-label="Copy trade portfolio tabs"
+          aria-label={t("tabsAria")}
         />
       </div>
 
       <div className="min-h-0 flex-1 overflow-x-auto py-2 md:py-0">
         {status === "error" ? (
           <p className="px-4 py-8 text-center text-sm text-prophet-muted">
-            Unable to load positions.
+            {t("unableToLoadPositions")}
           </p>
         ) : positions.length === 0 && !loading && !needsWallet ? (
           <p className="px-4 py-8 text-center text-sm text-prophet-muted">

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import type { FundingAsset } from "@/config/funding";
 import { cn } from "@/lib/cn";
 import { formatLongText } from "@/utils";
@@ -20,6 +22,8 @@ export function DepositConnectedStep({
   toAddress,
   errorText,
 }: DepositConnectedStepProps) {
+  const t = useTranslations("copyTrade.funding.deposit");
+
   return (
     <div className="flex flex-col gap-4 pb-2">
       <div className="flex flex-col items-center gap-2 py-2">
@@ -31,17 +35,17 @@ export function DepositConnectedStep({
 
       <div className="flex flex-col divide-y divide-[#EBEBEB] rounded-[8px] border border-[#EBEBEB] px-4">
         <div className={rowClass}>
-          <span className="text-sm text-[#909090]">Network</span>
+          <span className="text-sm text-[#909090]">{t("network")}</span>
           <span className="text-sm font-[500] text-black">
             {token.chainName}
           </span>
         </div>
         <div className={rowClass}>
-          <span className="text-sm text-[#909090]">Token</span>
+          <span className="text-sm text-[#909090]">{t("token")}</span>
           <span className="text-sm font-[500] text-black">{token.symbol}</span>
         </div>
         <div className={rowClass}>
-          <span className="text-sm text-[#909090]">Deposit address</span>
+          <span className="text-sm text-[#909090]">{t("depositAddress")}</span>
           <span className="text-sm font-[500] text-black">
             {formatLongText(toAddress, 6, 4)}
           </span>
@@ -49,8 +53,7 @@ export function DepositConnectedStep({
       </div>
 
       <p className="text-xs leading-5 text-[#909090]">
-        You will send this transfer from your connected wallet. Funds are
-        bridged automatically and credited to your copy wallet as pUSD.
+        {t("connectedTransferDescription")}
       </p>
 
       {errorText ? (

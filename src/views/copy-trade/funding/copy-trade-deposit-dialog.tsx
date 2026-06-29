@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import type { FundingAsset } from "@/config/funding";
@@ -29,9 +30,18 @@ export function CopyTradeDepositDialog({
   open,
   onClose,
 }: CopyTradeDepositDialogProps) {
-  const handleCredited = useCallback((credited: number) => {
-    toast.success(`Deposit credited: ${formatNumber(credited, 2)} pUSD`);
-  }, []);
+  const t = useTranslations("copyTrade.funding.deposit");
+  const tPortfolio = useTranslations("portfolio");
+  const tAuth = useTranslations("auth");
+
+  const handleCredited = useCallback(
+    (credited: number) => {
+      toast.success(
+        t("depositCredited", { amount: formatNumber(credited, 2) })
+      );
+    },
+    [t]
+  );
 
   const deposit = useCopyTradeDeposit({
     open,
@@ -53,7 +63,6 @@ export function CopyTradeDepositDialog({
     [deposit, selectedChain],
   );
 
-  // Reset internal state whenever the dialog opens.
   useEffect(() => {
     if (!open) {
       return;
@@ -64,7 +73,6 @@ export function CopyTradeDepositDialog({
     setErrorText(undefined);
   }, [open]);
 
-  // Default the chain/token selection once supported assets are available.
   useEffect(() => {
     if (deposit.isSocialLogin) {
       return;
@@ -99,23 +107,22 @@ export function CopyTradeDepositDialog({
 
   const validateAmount = (): string | undefined => {
     if (!selectedToken) {
-      return "Select a token to deposit.";
+      return t("selectTokenToDeposit");
     }
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) {
-      return "Enter a valid amount.";
+      return t("validAmount");
     }
     const balance = Number(deposit.resolveTokenBalance(selectedToken));
     if (value > balance) {
-      return "Amount exceeds your wallet balance.";
+      return t("amountExceedsWalletBalance");
     }
     if (value < selectedToken.minCheckoutUsd) {
-      return `Minimum deposit is ${formatNumber(
-        selectedToken.minCheckoutUsd,
-        2,
-        true,
-        { prefix: "$" }
-      )}.`;
+      return t("minimumDeposit", {
+        amount: formatNumber(selectedToken.minCheckoutUsd, 2, true, {
+          prefix: "$",
+        }),
+      });
     }
     return undefined;
   };
@@ -140,7 +147,7 @@ export function CopyTradeDepositDialog({
       const hash = await deposit.transferDeposit(amount, selectedToken);
       setTxHash(hash);
       setStep("status");
-      toast.success("Transfer submitted");
+      toast.success(t("transferSubmitted"));
     } catch (error) {
       setErrorText(error instanceof Error ? error.message : String(error));
     } finally {
@@ -152,8 +159,7 @@ export function CopyTradeDepositDialog({
     if (!deposit.walletReady) {
       return (
         <p className="py-8 text-center text-sm text-[#909090]">
-          Your copy wallet is being set up. Deposits will be available once it is
-          ready.
+          {t("walletNotReady")}
         </p>
       );
     }
@@ -224,7 +230,7 @@ export function CopyTradeDepositDialog({
           disabled={!selectedToken || !amount || Big(amount).lte(0) || deposit.balancesLoading}
           onClick={handleContinue}
         >
-          Continue
+          {tAuth("continue")}
         </button>
       );
     }
@@ -237,7 +243,7 @@ export function CopyTradeDepositDialog({
           disabled={submitting}
           onClick={() => void handleConfirmTransfer()}
         >
-          {submitting ? "Confirm in wallet…" : "Confirm deposit"}
+          {submitting ? t("confirmInWallet") : t("confirmDeposit")}
         </button>
       );
     }
@@ -248,7 +254,7 @@ export function CopyTradeDepositDialog({
         className={fundingPrimaryButtonClass}
         onClick={onClose}
       >
-        Done
+        {tAuth("done")}
       </button>
     );
   };
@@ -265,11 +271,11 @@ export function CopyTradeDepositDialog({
     <FundingResponsiveOverlay
       open={open}
       onClose={onClose}
-      ariaLabel="Copy trade deposit"
+      ariaLabel={t("ariaDeposit")}
       overlayCloseable={false}
     >
       <FundingModalShell
-        title="Deposit"
+        title={tPortfolio("depositLabel")}
         onClose={onClose}
         onBack={onBack}
         footer={renderFooter()}

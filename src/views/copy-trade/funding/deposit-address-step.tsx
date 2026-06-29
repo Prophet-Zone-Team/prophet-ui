@@ -1,6 +1,7 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/cn";
@@ -22,6 +23,9 @@ export function DepositAddressStep({
   loading,
   status,
 }: DepositAddressStepProps) {
+  const t = useTranslations("copyTrade.funding.deposit");
+  const tPortfolioDeposit = useTranslations("portfolio.deposit");
+
   const handleCopy = async () => {
     if (!address) {
       return;
@@ -29,9 +33,9 @@ export function DepositAddressStep({
 
     try {
       await navigator.clipboard.writeText(address);
-      toast.success("Address copied");
+      toast.success(tPortfolioDeposit("addressCopied"));
     } catch {
-      toast.error("Could not copy address");
+      toast.error(tPortfolioDeposit("couldNotCopyAddress"));
     }
   };
 
@@ -40,9 +44,7 @@ export function DepositAddressStep({
   return (
     <div className="relative flex flex-col gap-5 pb-2">
       <p className="text-sm leading-5 text-[#909090]">
-        Send any supported stablecoin on a supported EVM network to the address
-        below. Funds are bridged automatically and credited to your copy wallet
-        as pUSD.
+        {t("socialDepositDescription")}
       </p>
 
       <div className="flex justify-center">
@@ -67,7 +69,7 @@ export function DepositAddressStep({
 
       <div className="flex flex-col gap-2">
         <span className="text-sm font-[500] text-black">
-          Your deposit address
+          {tPortfolioDeposit("yourDepositAddress")}
         </span>
         <div className="flex items-center justify-between gap-3 rounded-[6px] border border-[#EBEBEB] bg-white px-4 py-3">
           {loading || !address ? (
@@ -92,22 +94,24 @@ export function DepositAddressStep({
               className="size-3 shrink-0"
               aria-hidden="true"
             />
-            Copy
+            {t("copy")}
           </button>
         </div>
       </div>
 
       <div className={cardClass}>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#909090]">Credited so far</span>
+          <span className="text-sm text-[#909090]">{t("creditedSoFar")}</span>
           <span className="text-sm font-[600] text-black">
             {formatNumber(status?.credited_pusd ?? 0, 2, true, { round: 0 })} pUSD
           </span>
         </div>
         <span className="text-xs text-[#909090]">
           {recentTransactions.length > 0
-            ? `${recentTransactions.length} bridge transaction(s) detected. This view refreshes automatically.`
-            : "Waiting for an incoming transfer. This view refreshes automatically."}
+            ? t("bridgeTransactionsDetected", {
+                count: recentTransactions.length,
+              })
+            : t("waitingForTransfer")}
         </span>
       </div>
     </div>

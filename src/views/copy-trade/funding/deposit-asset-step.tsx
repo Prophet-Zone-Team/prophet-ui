@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { FundingAsset } from "@/config/funding";
 import { cn } from "@/lib/cn";
@@ -52,6 +53,10 @@ export function DepositAssetStep({
   onAmountChange,
   errorText,
 }: DepositAssetStepProps) {
+  const t = useTranslations("copyTrade.funding.deposit");
+  const tPortfolioDeposit = useTranslations("portfolio.deposit");
+  const tWithdraw = useTranslations("portfolio.withdraw");
+  const tWallet = useTranslations("wallet");
   const [chainOpen, setChainOpen] = useState(false);
   const [tokenOpen, setTokenOpen] = useState(false);
 
@@ -68,7 +73,7 @@ export function DepositAssetStep({
   return (
     <div className="flex flex-col gap-5 pb-2">
       <div className="flex flex-col gap-1 rounded-[8px] border border-[#EBEBEB] bg-[#FAFBFC] px-4 py-3">
-        <span className="text-sm text-[#909090]">Wallet balance (deposit-able)</span>
+        <span className="text-sm text-[#909090]">{t("walletBalanceDepositable")}</span>
         <span className="text-2xl font-[600] text-black">
           {formatNumber(totalBalanceUsd, 2, true, { prefix: "$", round: 0 })}
         </span>
@@ -77,10 +82,10 @@ export function DepositAssetStep({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <FundingSelectorDropdown
           dropdownClassName="max-h-[160px]"
-          label="Network"
+          label={t("network")}
           triggerLabel={
             selectedChain?.chainName ??
-            (assetsLoading ? "Loading…" : "Select network")
+            (assetsLoading ? tPortfolioDeposit("loading") : t("selectNetwork"))
           }
           disabled={assetsLoading || chainOptions.length === 0}
           open={chainOpen}
@@ -135,10 +140,10 @@ export function DepositAssetStep({
 
         <FundingSelectorDropdown
           dropdownClassName="max-h-[160px]"
-          label="Token"
+          label={t("token")}
           triggerLabel={
             selectedToken?.symbol ??
-            (assetsLoading ? "Loading…" : "Select token")
+            (assetsLoading ? tPortfolioDeposit("loading") : tPortfolioDeposit("selectToken"))
           }
           disabled={assetsLoading || tokensForChain.length === 0}
           open={tokenOpen}
@@ -204,9 +209,9 @@ export function DepositAssetStep({
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <span className={withdrawFieldLabelClass}>Amount</span>
+          <span className={withdrawFieldLabelClass}>{tWithdraw("amount")}</span>
           <span className="text-xs text-[#909090]">
-            Balance: {formatNumber(selectedBalance, 4, true, { round: 0 })}{" "}
+            {tWallet("balance")}: {formatNumber(selectedBalance, 4, true, { round: 0 })}{" "}
             {selectedToken?.symbol ?? ""}
           </span>
         </div>
@@ -225,12 +230,14 @@ export function DepositAssetStep({
             disabled={!selectedToken}
             onClick={() => onAmountChange(selectedBalance)}
           >
-            Max
+            {tWithdraw("max")}
           </button>
         </div>
         {selectedToken ? (
           <span className="text-xs text-[#909090]">
-            Minimum deposit: {formatNumber(selectedToken.minCheckoutUsd, 2, true, { prefix: "$" })}
+            {t("minimumDepositLabel", {
+              amount: formatNumber(selectedToken.minCheckoutUsd, 2, true, { prefix: "$" }),
+            })}
           </span>
         ) : null}
         {errorText ? (

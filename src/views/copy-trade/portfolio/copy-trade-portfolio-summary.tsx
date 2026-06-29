@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { CopyWallet } from "@/types/copy-trade-api";
@@ -35,6 +37,7 @@ export function CopyTradePortfolioSummary({
   openPositions,
   isLoading = false
 }: CopyTradePortfolioSummaryProps) {
+  const t = useTranslations("copyTrade.portfolio");
   const displayAddress = copyWallet.BridgeEVMDepositAddress;
 
   return (
@@ -43,7 +46,7 @@ export function CopyTradePortfolioSummary({
         portfolioSummaryCardClass,
         "flex min-h-[278px] flex-col gap-6 lg:min-h-[278px] lg:h-auto"
       )}
-      aria-label="Copy trade portfolio summary"
+      aria-label={t("summaryAria")}
     >
       <CopyTradeWalletIdentity address={displayAddress} size="lg" />
 
@@ -51,7 +54,7 @@ export function CopyTradePortfolioSummary({
         <div className="flex w-full flex-col justify-between gap-6 lg:w-1/2 lg:pr-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <div className={portfolioSummaryLabelClass}>Positions Value</div>
+              <div className={portfolioSummaryLabelClass}>{t("positionsValue")}</div>
               <div
                 className={cn(
                   portfolioSummaryValueMediumClass,
@@ -64,11 +67,11 @@ export function CopyTradePortfolioSummary({
               </div>
             </div>
             <div>
-              <div className={portfolioSummaryLabelClass}>Biggest Win</div>
+              <div className={portfolioSummaryLabelClass}>{t("biggestWin")}</div>
               <div className={portfolioSummaryValueMediumClass}>—</div>
             </div>
             <div>
-              <div className={portfolioSummaryLabelClass}>Predictions</div>
+              <div className={portfolioSummaryLabelClass}>{t("predictions")}</div>
               <div
                 className={cn(
                   portfolioSummaryValueMediumClass,

@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import type { CopyWithdrawal, CopyWithdrawalAssetInfo } from "@/types/copy-trade-funding";
-import { useCopyTradeWithdraw } from "@/hooks/copy-trade/use-copy-trade-withdraw";
+import {
+  CopyWithdrawSubmitError,
+  useCopyTradeWithdraw,
+} from "@/hooks/copy-trade/use-copy-trade-withdraw";
 import {
   FundingModalShell,
   fundingPrimaryButtonClass,
@@ -23,6 +27,9 @@ export function CopyTradeWithdrawDialog({
   open,
   onClose,
 }: CopyTradeWithdrawDialogProps) {
+  const t = useTranslations("copyTrade.funding.withdraw");
+  const tPortfolio = useTranslations("portfolio");
+  const tAuth = useTranslations("auth");
   const withdraw = useCopyTradeWithdraw(open);
 
   const [step, setStep] = useState<CopyWithdrawStep>("form");
@@ -32,6 +39,14 @@ export function CopyTradeWithdrawDialog({
   const [amount, setAmount] = useState("");
   const [errorText, setErrorText] = useState<string | undefined>();
   const [result, setResult] = useState<CopyWithdrawal | null>(null);
+
+  const blockReason = useMemo(
+    () =>
+      withdraw.blockReasonCode
+        ? t(`blockReason.${withdraw.blockReasonCode}`)
+        : "",
+    [t, withdraw.blockReasonCode]
+  );
 
   useEffect(() => {
     if (!open) {
@@ -43,14 +58,12 @@ export function CopyTradeWithdrawDialog({
     setResult(null);
   }, [open]);
 
-  // Default recipient to the linked web wallet once available.
   useEffect(() => {
     if (open && !recipient && withdraw.defaultRecipient) {
       setRecipient(withdraw.defaultRecipient);
     }
-  }, [open, withdraw.defaultRecipient]);
+  }, [open, withdraw.defaultRecipient, recipient]);
 
-  // Default to the first available asset.
   useEffect(() => {
     if (!open) {
       return;
@@ -58,7 +71,7 @@ export function CopyTradeWithdrawDialog({
     if (!selectedAsset) {
       setSelectedAsset(withdraw.availableAssets[0] ?? null);
     }
-  }, [open, withdraw.availableAssets]);
+  }, [open, selectedAsset, withdraw.availableAssets]);
 
   const recipientError = useMemo(() => {
     if (!recipient) {
@@ -66,17 +79,24 @@ export function CopyTradeWithdrawDialog({
     }
     return withdraw.isValidRecipient(recipient)
       ? undefined
-      : "Enter a valid 0x recipient address.";
-  }, [recipient, withdraw]);
+      : t("invalidRecipient");
+  }, [recipient, t, withdraw]);
 
   const submitDisabled =
     withdraw.submitting ||
-    Boolean(withdraw.blockReason) ||
+    Boolean(withdraw.blockReasonCode) ||
     !selectedAsset ||
     withdraw.maxAmount <= 0 ||
     amount === "" ||
     Boolean(recipientError) ||
     !recipient;
+
+  const resolveSubmitError = (error: unknown): string => {
+    if (error instanceof CopyWithdrawSubmitError) {
+      return t(`errors.${error.code}`);
+    }
+    return error instanceof Error ? error.message : String(error);
+  };
 
   const handleSubmit = async () => {
     if (!selectedAsset) {
@@ -84,18 +104,18 @@ export function CopyTradeWithdrawDialog({
     }
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) {
-      setErrorText("Enter a valid amount.");
+      setErrorText(t("validAmount"));
       return;
     }
     if (value > withdraw.maxAmount) {
-      setErrorText("Amount exceeds your available balance.");
+      setErrorText(t("amountExceedsAvailable"));
       return;
     }
     if (
       selectedAsset.min_amount_pusd &&
       value < selectedAsset.min_amount_pusd
     ) {
-      setErrorText("Amount is below the minimum withdrawal.");
+      setErrorText(t("amountBelowMinimum"));
       return;
     }
 
@@ -108,9 +128,9 @@ export function CopyTradeWithdrawDialog({
       });
       setResult(withdrawal);
       setStep("status");
-      toast.success("Withdrawal submitted");
+      toast.success(t("withdrawalSubmittedToast"));
     } catch (error) {
-      setErrorText(error instanceof Error ? error.message : String(error));
+      setErrorText(resolveSubmitError(error));
     }
   };
 
@@ -122,7 +142,7 @@ export function CopyTradeWithdrawDialog({
           className={fundingPrimaryButtonClass}
           onClick={onClose}
         >
-          Done
+          {tAuth("done")}
         </button>
       );
     }
@@ -134,7 +154,9 @@ export function CopyTradeWithdrawDialog({
         disabled={submitDisabled}
         onClick={() => void handleSubmit()}
       >
-        {withdraw.submitting ? "Sign in wallet…" : "Withdraw"}
+        {withdraw.submitting
+          ? t("signInWallet")
+          : tPortfolio("withdrawLabel")}
       </button>
     );
   };
@@ -143,11 +165,11 @@ export function CopyTradeWithdrawDialog({
     <FundingResponsiveOverlay
       open={open}
       onClose={onClose}
-      ariaLabel="Copy trade withdraw"
+      ariaLabel={t("ariaWithdraw")}
       overlayCloseable={false}
     >
       <FundingModalShell
-        title="Withdraw"
+        title={tPortfolio("withdrawLabel")}
         onClose={onClose}
         footer={renderFooter()}
         className="w-full md:w-[500px] min-h-[500px]"
@@ -162,7 +184,7 @@ export function CopyTradeWithdrawDialog({
             recipient={recipient}
             amount={amount}
             maxAmount={withdraw.maxAmount}
-            blockReason={withdraw.blockReason}
+            blockReason={blockReason}
             recipientError={recipientError}
             errorText={errorText}
             onAssetChange={(asset) => {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import { formatLongText, formatNumber } from "@/utils";
 import type { CopyDepositStatusResult } from "@/types/copy-trade-funding";
@@ -14,6 +16,7 @@ const cardClass = cn(
 );
 
 export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
+  const t = useTranslations("copyTrade.funding.deposit");
   const credited = status?.credited_pusd ?? 0;
   const transactions = status?.transactions ?? [];
 
@@ -24,24 +27,24 @@ export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
           <span className="size-3 animate-ping rounded-full bg-[#65AF14]" />
         </div>
         <span className="text-lg font-[600] text-black">
-          Transfer submitted
+          {t("transferSubmittedTitle")}
         </span>
         <span className="text-sm text-[#909090]">
-          Your deposit is being bridged. This can take a few minutes.
+          {t("bridgingDescription")}
         </span>
       </div>
 
       <div className={cardClass}>
         {txHash ? (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-[#909090]">Transaction</span>
+            <span className="text-sm text-[#909090]">{t("transaction")}</span>
             <span className="text-sm font-[500] text-black">
               {formatLongText(txHash, 6, 4)}
             </span>
           </div>
         ) : null}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#909090]">Credited so far</span>
+          <span className="text-sm text-[#909090]">{t("creditedSoFar")}</span>
           <span className="text-sm font-[600] text-black">
             {formatNumber(credited, 2, true, { round: 0 })} pUSD
           </span>
@@ -51,7 +54,7 @@ export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
       {transactions.length > 0 ? (
         <div className="flex flex-col gap-2">
           <span className="text-sm font-[500] text-black">
-            Bridge transactions
+            {t("bridgeTransactions")}
           </span>
           {transactions.slice(0, 4).map((tx) => (
             <div
@@ -69,7 +72,7 @@ export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
               >
                 {tx.credited
                   ? `+${formatNumber(tx.amount_pusd, 2, true, { round: 0 })} pUSD`
-                  : tx.status || "pending"}
+                  : tx.status || t("pending")}
               </span>
             </div>
           ))}
