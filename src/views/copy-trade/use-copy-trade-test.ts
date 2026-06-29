@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useAuth } from "@/context/auth/use-auth";
@@ -83,6 +84,7 @@ async function buildCopyTradeSession(
 }
 
 export function useCopyTradeTest() {
+  const t = useTranslations("copyTrade.toast");
   const authHydrated = useAuthHydrated();
   const copyTradeHydrated = useCopyTradeHydrated();
   const { address: wagmiAddress } = useAccount();
@@ -184,7 +186,7 @@ export function useCopyTradeTest() {
     const nextAddress = result?.session.walletAddress?.trim();
 
     if (!nextAddress) {
-      throw new Error("Connect your wallet to continue.");
+      throw new Error(t("connectWalletToContinue"));
     }
 
     return normalizeCopyTradeWalletAddress(nextAddress);
@@ -192,6 +194,7 @@ export function useCopyTradeTest() {
     copyTradeSession,
     openLogin,
     prophetSession?.walletAddress,
+    t,
     wagmiAddress,
   ]);
 
@@ -202,17 +205,17 @@ export function useCopyTradeTest() {
       const email = loginEmail?.trim() ?? "";
       const next = await buildCopyTradeSession(account, email);
       applySession(next);
-      toast.success("Signed in to copy trading.");
+      toast.success(t("signedIn"));
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Unable to sign in to copy trading.",
+          : t("unableToSignIn"),
       );
     } finally {
       setBusyLogin(false);
     }
-  }, [applySession, loginEmail, resolveWalletAddress]);
+  }, [applySession, loginEmail, resolveWalletAddress, t]);
 
   const refreshCopyTradeSession = useCallback(async () => {
     const current = copyTradeSession;
@@ -238,18 +241,18 @@ export function useCopyTradeTest() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Unable to refresh copy-trade session.",
+          : t("unableToRefreshSession"),
       );
     } finally {
       setBusyRefresh(false);
     }
-  }, [copyTradeSession, loginCopyTrade, updateCopyWallet]);
+  }, [copyTradeSession, loginCopyTrade, t, updateCopyWallet]);
 
   const deployCopyWallet = useCallback(async (): Promise<boolean> => {
     const current = copyTradeSession;
 
     if (!current?.user?.ID) {
-      toast.error("Sign in to copy trading first.");
+      toast.error(t("signInFirst"));
       return false;
     }
 
@@ -271,23 +274,23 @@ export function useCopyTradeTest() {
       applySession(next);
 
       if (isCopyWalletReady(wallet)) {
-        toast.success("Copy wallet is ready.");
+        toast.success(t("copyWalletReady"));
       } else if (isCopyWalletPending(wallet)) {
-        toast.success("Copy wallet deployment in progress.");
+        toast.success(t("deploymentInProgress"));
       } else {
-        toast.success("Copy wallet deployment started.");
+        toast.success(t("deploymentStarted"));
       }
 
       return true;
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Unable to deploy copy wallet.",
+        error instanceof Error ? error.message : t("unableToDeploy"),
       );
       return false;
     } finally {
       setBusyDeploy(false);
     }
-  }, [applySession, copyTradeSession, resolveWalletAddress]);
+  }, [applySession, copyTradeSession, resolveWalletAddress, t]);
 
   const pollCopyWalletReadyState = useCallback(async () => {
     const userId = copyTradeSession?.user?.ID;

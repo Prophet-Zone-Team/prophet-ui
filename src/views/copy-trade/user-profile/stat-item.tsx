@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 export interface StatItemProps {
@@ -15,13 +19,15 @@ export function StatItem({
   className,
   isLoading = false
 }: StatItemProps) {
+  const tCommon = useTranslations("copyTrade.common");
+
   return (
     <div className={cn("flex flex-col gap-1", className)}>
       <span className="text-[14px] leading-[18px] text-[#909090]">{label}</span>
       {isLoading ? (
         <div
           className="h-[25px] w-24 animate-pulse rounded bg-[#EBEBEB]"
-          aria-label="Loading"
+          aria-label={tCommon("loadingAria")}
         />
       ) : (
         <span

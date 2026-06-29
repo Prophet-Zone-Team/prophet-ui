@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import {
   formatOrderbookPrice,
@@ -65,8 +67,9 @@ function TraderAvatar({ wallet }: { wallet: string }) {
 }
 
 export function LatestItem({ item, now = Date.now(), className }: LatestItemProps) {
+  const tCommon = useTranslations("copyTrade.common");
   const displayName = resolveDisplayName(item);
-  const title = item.title?.trim() || "Unknown market";
+  const title = item.title?.trim() || tCommon("unknownMarket");
   const tradeDetail = formatTradeDetail(item);
   const relativeTime = formatShortRelativeTime(item.timestamp, now);
 

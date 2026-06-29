@@ -389,7 +389,6 @@ function WalletIdentityBlock({
   tag: TraderTag | "";
   onCopyWallet: (event: MouseEvent<HTMLButtonElement>) => void;
 }) {
-  const t = useTranslations("copyTrade.copiedWallet");
   const tCommon = useTranslations("copyTrade.common");
 
   return (

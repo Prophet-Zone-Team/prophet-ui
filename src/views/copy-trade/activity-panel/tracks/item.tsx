@@ -2,6 +2,7 @@
 
 import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyIcon } from "@/components/icons";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import {
   traderPnL24h,
@@ -66,6 +67,7 @@ function TraderTagIcon({ tag }: { tag: TraderTag }) {
 }
 
 export function TracksItem({ trader, className }: TracksItemProps) {
+  const tCommon = useTranslations("copyTrade.common");
   const displayName = trader.DisplayName?.trim();
   const walletLabel = formatShortWallet(trader.Wallet);
   const tag = traderTag(trader);
@@ -86,7 +88,7 @@ export function TracksItem({ trader, className }: TracksItemProps) {
               {tag ? <TraderTagIcon tag={tag} /> : null}
               <CopyButton
                 text={trader.Wallet}
-                ariaLabel="Copy wallet address"
+                ariaLabel={tCommon("copyWalletAddress")}
                 className="inline-flex shrink-0 items-center justify-center p-0 text-[#909090] transition-opacity hover:opacity-70"
               >
                 <CopyIcon />
