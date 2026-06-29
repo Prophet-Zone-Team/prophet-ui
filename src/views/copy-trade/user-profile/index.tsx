@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
 import { useAuthStore } from "@/store/auth-store";
+import { openCopyTradeDeposit } from "@/store/copy-trade-funding-store";
 import { useCopyTradeStore } from "@/store/copy-trade-store";
 import { useCopyTradeHydrated } from "@/store/use-copy-trade-hydrated";
 import { CreateTradeWalletModal } from "@/views/copy-trade/create-trade-wallet";
@@ -94,6 +95,10 @@ export function CopyTradeUserProfile({ className }: CopyTradeUserProfileProps) {
         <CreateTradeWalletModal
           open={createWalletOpen}
           onClose={() => setCreateWalletOpen(false)}
+          onDeposit={() => {
+            setCreateWalletOpen(false);
+            openCopyTradeDeposit();
+          }}
         />
       </>
     );
@@ -127,6 +132,10 @@ export function CopyTradeUserProfile({ className }: CopyTradeUserProfileProps) {
       <CreateTradeWalletModal
         open={createWalletOpen}
         onClose={() => setCreateWalletOpen(false)}
+        onDeposit={() => {
+          setCreateWalletOpen(false);
+          openCopyTradeDeposit();
+        }}
       />
     </>
   );

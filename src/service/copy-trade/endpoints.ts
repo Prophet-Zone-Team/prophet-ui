@@ -18,6 +18,15 @@ import type {
   CreateCopyTradeUserRequest,
   UserWithCopyWallet
 } from "@/types/copy-trade-api";
+import type {
+  CopyBridgeSupportedAsset,
+  CopyDepositAddress,
+  CopyDepositStatusResult,
+  CopyWithdrawal,
+  CopyWithdrawalAssetInfo,
+  CopyWithdrawalReadiness,
+  CreateCopyWithdrawalRequest
+} from "@/types/copy-trade-funding";
 
 import { copyTradeRequest } from "./client";
 
@@ -206,6 +215,100 @@ export async function getCopyTradePlatformMetrics(
     "GET",
     "/platform-metrics",
     undefined,
+    config
+  );
+}
+
+/** POST /users/{id}/deposit/address — get or refresh the bridge deposit address */
+export async function createCopyTradeDepositAddress(
+  userId: number,
+  config?: AxiosRequestConfig
+): Promise<CopyDepositAddress> {
+  return copyTradeRequest<CopyDepositAddress>(
+    "POST",
+    userPath(userId, "deposit/address"),
+    undefined,
+    config
+  );
+}
+
+/** GET /users/{id}/deposit/status — poll bridge transactions and credited pUSD */
+export async function getCopyTradeDepositStatus(
+  userId: number,
+  config?: AxiosRequestConfig
+): Promise<CopyDepositStatusResult> {
+  return copyTradeRequest<CopyDepositStatusResult>(
+    "GET",
+    userPath(userId, "deposit/status"),
+    undefined,
+    config
+  );
+}
+
+/** GET /copy-deposit/supported-assets */
+export async function getCopyTradeDepositSupportedAssets(
+  config?: AxiosRequestConfig
+): Promise<CopyBridgeSupportedAsset[]> {
+  const response = await copyTradeRequest<{ items: CopyBridgeSupportedAsset[] }>(
+    "GET",
+    "/copy-deposit/supported-assets",
+    undefined,
+    config
+  );
+
+  return response.items ?? [];
+}
+
+/** GET /copy-withdrawal/supported-assets */
+export async function getCopyTradeWithdrawalSupportedAssets(
+  config?: AxiosRequestConfig
+): Promise<CopyWithdrawalAssetInfo[]> {
+  const response = await copyTradeRequest<{ items: CopyWithdrawalAssetInfo[] }>(
+    "GET",
+    "/copy-withdrawal/supported-assets",
+    undefined,
+    config
+  );
+
+  return response.items ?? [];
+}
+
+/** GET /users/{id}/withdrawals — withdrawal history (latest first) */
+export async function listCopyTradeWithdrawals(
+  userId: number,
+  config?: AxiosRequestConfig
+): Promise<CopyWithdrawal[]> {
+  return copyTradeRequest<CopyWithdrawal[]>(
+    "GET",
+    userPath(userId, "withdrawals"),
+    undefined,
+    config
+  );
+}
+
+/** GET /users/{id}/withdrawals/readiness */
+export async function getCopyTradeWithdrawalReadiness(
+  userId: number,
+  config?: AxiosRequestConfig
+): Promise<CopyWithdrawalReadiness> {
+  return copyTradeRequest<CopyWithdrawalReadiness>(
+    "GET",
+    userPath(userId, "withdrawals/readiness"),
+    undefined,
+    config
+  );
+}
+
+/** POST /users/{id}/withdrawals — requires wallet signature headers */
+export async function createCopyTradeWithdrawal(
+  userId: number,
+  body: CreateCopyWithdrawalRequest,
+  config?: AxiosRequestConfig
+): Promise<CopyWithdrawal> {
+  return copyTradeRequest<CopyWithdrawal>(
+    "POST",
+    userPath(userId, "withdrawals"),
+    body,
     config
   );
 }

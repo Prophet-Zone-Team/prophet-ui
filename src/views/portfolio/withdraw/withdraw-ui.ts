@@ -4,8 +4,8 @@ export const withdrawFieldLabelClass =
   "text-sm font-[500] leading-[17px] text-black";
 
 export const withdrawInputBoxClass = cn(
-  "flex h-[57px] w-full items-center justify-between rounded-[6px] border border-[#EBEBEB]",
-  "bg-white px-4"
+  "relative flex h-[57px] w-full items-center justify-between rounded-[6px] border border-[#EBEBEB]",
+  "bg-white pl-4 pr-7"
 );
 
 export const withdrawSelectorBoxClass = cn(

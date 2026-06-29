@@ -3,6 +3,7 @@
 import { cn } from "@/lib/cn";
 import { tradePageClass } from "@/views/trade/trade-widget/trade-ui";
 
+import { CopyTradeFundingHost } from "./funding/copy-trade-funding-host";
 import { CopyTradeListPanel } from "./list";
 import { CopyTradeUserProfile } from "./user-profile";
 
@@ -18,6 +19,8 @@ export function CopyTradePage() {
           <CopyTradeUserProfile className="w-full xl:w-[355px]" />
         </aside>
       </div>
+
+      <CopyTradeFundingHost />
     </div>
   );
 }

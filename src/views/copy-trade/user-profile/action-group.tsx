@@ -1,4 +1,10 @@
+"use client";
+
 import { cn } from "@/lib/cn";
+import {
+  openCopyTradeDeposit,
+  openCopyTradeWithdraw,
+} from "@/store/copy-trade-funding-store";
 
 export interface ActionGroupProps {
   className?: string;
@@ -10,7 +16,11 @@ const actionButtonClass =
 export function ActionGroup({ className }: ActionGroupProps) {
   return (
     <div className={cn("flex gap-3", className)}>
-      <button type="button" className={cn(actionButtonClass, "bg-black text-white")}>
+      <button
+        type="button"
+        className={cn(actionButtonClass, "bg-black text-white")}
+        onClick={() => openCopyTradeDeposit()}
+      >
         Deposit
       </button>
       <button
@@ -19,6 +29,7 @@ export function ActionGroup({ className }: ActionGroupProps) {
           actionButtonClass,
           "border border-[#909090] bg-white text-black"
         )}
+        onClick={() => openCopyTradeWithdraw()}
       >
         Withdraw
       </button>

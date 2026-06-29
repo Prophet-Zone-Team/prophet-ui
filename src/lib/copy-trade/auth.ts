@@ -7,6 +7,7 @@ import {
 import {
   createCopyTradeUser,
   createCopyTradeWallet,
+  createCopyTradeWithdrawal,
   getCopyTradeWallet,
 } from "@/service/copy-trade/endpoints";
 import type {
@@ -14,6 +15,10 @@ import type {
   CreateCopyTradeUserRequest,
   UserWithCopyWallet,
 } from "@/types/copy-trade-api";
+import type {
+  CopyWithdrawal,
+  CreateCopyWithdrawalRequest,
+} from "@/types/copy-trade-funding";
 
 interface WalletAuthMessageResponse {
   message: string;
@@ -151,6 +156,27 @@ export async function createCopyTradeWalletSigned(
   );
 
   return createCopyTradeWallet(userId, signedConfig);
+}
+
+export async function submitCopyTradeWithdrawalSigned(
+  walletAddress: string,
+  userId: number,
+  body: CreateCopyWithdrawalRequest,
+): Promise<CopyWithdrawal> {
+  const account = normalizeCopyTradeWalletAddress(walletAddress);
+  if (!account) {
+    throw new Error("Wallet address is required.");
+  }
+
+  const path = `/users/${userId}/withdrawals`;
+  const signedConfig = await buildCopyTradeSignedRequestConfig(
+    account,
+    "POST",
+    path,
+    body,
+  );
+
+  return createCopyTradeWithdrawal(userId, body, signedConfig);
 }
 
 export async function verifyCopyTradeSessionCookie(
