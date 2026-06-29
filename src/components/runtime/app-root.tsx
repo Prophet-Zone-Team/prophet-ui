@@ -8,11 +8,14 @@ import { LocaleProvider } from "@/components/runtime/locale-provider";
 import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen";
 import { NativeAppShell } from "@/components/runtime/native-app-shell";
 import { MobileVConsole } from "@/components/runtime/mobile-vconsole";
-import { RoadToFinalFloatingPromo } from "@/components/promo/road-to-final-floating-promo";
 import type { AppLocale } from "@/i18n/config";
 
 const WalletRuntimeProviders = dynamic(
   () => import("@/components/runtime/wallet-runtime-providers"),
+  { ssr: false }
+);
+const RoadToFinalFloatingPromo = dynamic(
+  () => import("@/components/promo/road-to-final-floating-promo"),
   { ssr: false }
 );
 
