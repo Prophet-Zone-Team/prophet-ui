@@ -9,6 +9,7 @@ import {
   normalizeKnockoutMethod,
   type KnockoutMethodKey,
 } from "@/views/road-to-final/lib/method-keys";
+import { ROAD_TO_FINAL_BRACKET_VERSION } from "@/views/road-to-final/lib/fixed-group-stage";
 import { defaultSimulatorTeamId } from "@/views/road-to-final/lib/teams";
 import type { KnockoutWinners } from "@/views/road-to-final/types";
 
@@ -111,12 +112,26 @@ export const useRoadToFinalStore = create<RoadToFinalStoreState>()(
     }),
     {
       name: ROAD_TO_FINAL_STORAGE_KEY,
+      version: ROAD_TO_FINAL_BRACKET_VERSION,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         teamId: state.teamId,
         knockoutWinners: state.knockoutWinners,
         knockoutMethod: state.knockoutMethod,
       }),
+      migrate: (persisted, version) => {
+        const state = persisted as Partial<PersistedRoadToFinalState> | undefined;
+
+        if (version < ROAD_TO_FINAL_BRACKET_VERSION) {
+          return sanitizePersistedState({
+            ...state,
+            knockoutWinners: {},
+            knockoutMethod: "manualSelection",
+          });
+        }
+
+        return sanitizePersistedState(state);
+      },
       merge: (persisted, current) => ({
         ...current,
         ...sanitizePersistedState(
