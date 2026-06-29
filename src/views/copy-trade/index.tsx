@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 import { tradePageClass } from "@/views/trade/trade-widget/trade-ui";
 
 import { CopyTradeActivityPanel } from "./activity-panel";
+import { CopyTradeFundingHost } from "./funding/copy-trade-funding-host";
 import { CopyTradeListPanel } from "./list";
 import { CopyTradeUserProfile } from "./user-profile";
 
@@ -20,6 +21,8 @@ export function CopyTradePage() {
           <CopyTradeActivityPanel className="w-full min-h-0 flex-1 xl:w-[355px]" />
         </aside>
       </div>
+
+      <CopyTradeFundingHost />
     </div>
   );
 }
@@ -38,5 +41,9 @@ export { useCopyTradeProfile } from "./use-copy-trade-profile";
 export { useCopyTradeReadiness } from "./use-copy-trade-readiness";
 export { useCopyTradeSession } from "./use-copy-trade-session";
 export { useCopyTradeTest } from "./use-copy-trade-test";
-export { useCopyTradeRank } from "./use-copy-trade-rank";
+export {
+  useCopyTradeRank,
+  COPY_TRADE_TRADERS_QUERY_KEY,
+  fetchCopyTradeTraders
+} from "./use-copy-trade-rank";
 export { useCopyTradeTargets } from "./use-copy-trade-targets";

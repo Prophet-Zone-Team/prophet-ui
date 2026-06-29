@@ -16,9 +16,11 @@ import {
   type CopyTradeRankTimeRange
 } from "@/lib/copy-trade/trader-rank-filters";
 import { formatCompactVolume } from "@/lib/formatters/volume";
-import { formatShortWallet } from "@/lib/team/detail-format";
-import { getWalletAvatarGradient } from "@/lib/wallet/avatar-gradient";
 import type { TraderCatalogEntry } from "@/types/copy-trade-api";
+import {
+  TraderIdentity,
+  TraderTrackButton
+} from "@/views/copy-trade/trader-identity";
 
 import {
   copyTradeRankColActionClass,
@@ -29,7 +31,6 @@ import {
   copyTradeRankGridStyle,
   copyTradeRankRowGridClass
 } from "./grid";
-import { SmartMoneyIcon, WhaleIcon } from "./trader-tag-icons";
 
 export interface CopyTradeRankItemProps {
   rank: number;
@@ -66,43 +67,6 @@ function formatStatValue(
   return formatter(value);
 }
 
-function TraderAvatar({ wallet }: { wallet: string }) {
-  return (
-    <div
-      className="size-9 shrink-0 rounded-full"
-      style={{ background: getWalletAvatarGradient(wallet) }}
-      aria-hidden="true"
-    />
-  );
-}
-
-function TraderBadge({
-  children,
-  className
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] leading-[13px]",
-        className
-      )}
-    >
-      {children}
-    </span>
-  );
-}
-
-function TraderTagIcon({ tag }: { tag: TraderTag }) {
-  return (
-    <span className="inline-flex shrink-0 items-center" aria-hidden="true">
-      {tag === "whale" ? <WhaleIcon /> : <SmartMoneyIcon />}
-    </span>
-  );
-}
-
 export function CopyTradeRankItem({
   rank,
   trader,
@@ -119,8 +83,6 @@ export function CopyTradeRankItem({
   const walletLabel = formatShortWallet(trader.Wallet);
   const isCopyButtonDisabled = copyTradeBusy || copyTradeDisabled;
   const stats = resolveTraderRankDisplayStats(trader, timeRange);
-  const imported = isUserImportedTrader(trader);
-  const tag = traderTag(trader);
   const pnlValue = stats.pnl ?? 0;
 
   return (
