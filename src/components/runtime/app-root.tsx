@@ -10,11 +10,16 @@ import { ProphetNotificationWsProvider } from "@/context/prophet-notification-ws
 import { SportsWsProvider } from "@/context/sports-ws";
 import RainbowProvider from "@/context/rainbowkit/provider";
 import { LocaleProvider } from "@/components/runtime/locale-provider";
-import { RoadToFinalFloatingPromo } from "@/components/promo/road-to-final-floating-promo";
 import { AppChrome } from "@/layout/app-chrome";
 import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen";
 import { NativeAppShell } from "@/components/runtime/native-app-shell";
 import type { AppLocale } from "@/i18n/config";
+import dynamic from "next/dynamic";
+
+const RoadToFinalFloatingPromo = dynamic(
+  () => import("@/components/promo/road-to-final-floating-promo"),
+  { ssr: false }
+);
 
 interface AppRootProps {
   initialSecure: boolean;

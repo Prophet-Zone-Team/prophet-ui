@@ -119,3 +119,5 @@ export function RoadToFinalFloatingPromo() {
     </AnimatePresence>
   );
 }
+
+export default RoadToFinalFloatingPromo;
