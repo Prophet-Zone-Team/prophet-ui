@@ -11,6 +11,7 @@ import type {
   CopyWithdrawalAssetInfo,
 } from "@/types/copy-trade-funding";
 import { getTokenLogo } from "@/utils/logo";
+import Big from "big.js";
 
 interface CopyTradeFundingState {
   depositOpen: boolean;
@@ -65,6 +66,9 @@ export const useCopyTradeFundingStore = create<CopyTradeFundingState>(
       set({ depositAssetsLoading: true });
       try {
         const items = await getCopyTradeDepositSupportedAssets();
+        items.forEach((item) => {
+          item.minCheckoutUsd = Big(item.minCheckoutUsd || 1).plus(1).toNumber();
+        });
         set({
           depositAssets: items,
           depositAssetsLoaded: true,

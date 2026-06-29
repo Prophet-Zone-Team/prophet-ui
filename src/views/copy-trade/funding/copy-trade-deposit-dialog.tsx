@@ -18,6 +18,7 @@ import { DepositConnectedStep } from "@/views/copy-trade/funding/deposit-connect
 import { DepositStatusStep } from "@/views/copy-trade/funding/deposit-status-step";
 import type { CopyDepositStep } from "@/views/copy-trade/funding/types";
 import { DEFAULT_DEPOSIT_ASSET, POLYGON_NETWORK } from "@/lib/market/deposit-assets";
+import Big from "big.js";
 
 export interface CopyTradeDepositDialogProps {
   open: boolean;
@@ -86,7 +87,12 @@ export function CopyTradeDepositDialog({
           token.chainId === selectedToken.chainId,
       );
     if (!exists) {
-      const defaultSelectedToken = tokensForChain.find((token) => token.symbol === DEFAULT_DEPOSIT_ASSET.symbol) ?? tokensForChain[0];
+      const defaultSelectedToken = tokensForChain.find((token) => {
+        if (token.chainId === 56) {
+          return token.symbol === DEFAULT_DEPOSIT_ASSET.symbol && token.name === "USD Coin";
+        }
+        return token.symbol === DEFAULT_DEPOSIT_ASSET.symbol;
+      }) ?? tokensForChain[0];
       setSelectedToken(defaultSelectedToken);
     }
   }, [deposit.isSocialLogin, selectedChain, selectedToken, tokensForChain]);
@@ -104,9 +110,11 @@ export function CopyTradeDepositDialog({
       return "Amount exceeds your wallet balance.";
     }
     if (value < selectedToken.minCheckoutUsd) {
-      return `Minimum deposit is $${formatNumber(
+      return `Minimum deposit is ${formatNumber(
         selectedToken.minCheckoutUsd,
         2,
+        true,
+        { prefix: "$" }
       )}.`;
     }
     return undefined;
@@ -213,7 +221,7 @@ export function CopyTradeDepositDialog({
         <button
           type="button"
           className={fundingPrimaryButtonClass}
-          disabled={!selectedToken || amount === ""}
+          disabled={!selectedToken || !amount || Big(amount).lte(0) || deposit.balancesLoading}
           onClick={handleContinue}
         >
           Continue
@@ -248,9 +256,9 @@ export function CopyTradeDepositDialog({
   const onBack =
     !deposit.isSocialLogin && step === "confirm"
       ? () => {
-          setErrorText(undefined);
-          setStep("asset");
-        }
+        setErrorText(undefined);
+        setStep("asset");
+      }
       : undefined;
 
   return (

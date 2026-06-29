@@ -202,7 +202,7 @@ export function WithdrawFormStep({
         <div className="flex items-center justify-between">
           <span className="text-sm text-[#909090]">You receive</span>
           <span className="text-sm font-[500] text-black">
-            {amount ? `${formatNumber(Number(amount), 2, true)}` : "—"}
+            {amount ? `${formatNumber(Number(amount), 2, true, { round: 0 })}` : "—"}
           </span>
         </div>
       </div>

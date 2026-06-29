@@ -14,6 +14,8 @@ import {
   withdrawInputBoxClass,
   withdrawMaxButtonClass,
 } from "@/views/portfolio/withdraw/withdraw-ui";
+import Big from "big.js";
+import InputNumber from "@/components/input-number";
 
 export interface DepositAssetStepProps {
   totalBalanceUsd: number;
@@ -156,39 +158,47 @@ export function DepositAssetStep({
             ) : null
           }
         >
-          {tokensForChain.map((token) => {
-            const isSelected =
-              selectedToken?.chainId === token.chainId &&
-              selectedToken?.address === token.address;
+          {
+            tokensForChain
+              .sort((a, b) => {
+                const aBalance = resolveTokenBalance(a) || "0";
+                const bBalance = resolveTokenBalance(b) || "0";
+                return Big(bBalance).gt(aBalance) ? 1 : -1;
+              })
+              .map((token) => {
+                const isSelected =
+                  selectedToken?.chainId === token.chainId &&
+                  selectedToken?.address === token.address;
 
-            return (
-              <button
-                key={`${token.chainId}-${token.address}`}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                className={cn(tokenRowClass, isSelected && "bg-[#F4F6FF]")}
-                onClick={() => {
-                  onTokenChange(token);
-                  setTokenOpen(false);
-                }}
-              >
-                <span className="flex min-w-0 items-center gap-3">
-                  <TokenIcon
-                    symbol={token.symbol}
-                    icon={token.icon}
-                    size="sm"
-                  />
-                  <span className="text-sm font-[500] text-black">
-                    {token.symbol}
-                  </span>
-                </span>
-                <span className="text-xs text-[#909090]">
-                  {formatNumber(resolveTokenBalance(token), 4, true, { round: 0 })}
-                </span>
-              </button>
-            );
-          })}
+                return (
+                  <button
+                    key={`${token.chainId}-${token.address}`}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    className={cn(tokenRowClass, isSelected && "bg-[#F4F6FF]")}
+                    onClick={() => {
+                      onTokenChange(token);
+                      setTokenOpen(false);
+                    }}
+                  >
+                    <span className="flex min-w-0 items-center gap-3">
+                      <TokenIcon
+                        symbol={token.symbol}
+                        icon={token.icon}
+                        size="sm"
+                      />
+                      <span className="text-sm font-[500] text-black">
+                        {token.symbol}
+                      </span>
+                    </span>
+                    <span className="text-xs text-[#909090]">
+                      {formatNumber(resolveTokenBalance(token), 4, true, { round: 0 })}
+                    </span>
+                  </button>
+                );
+              })
+          }
         </FundingSelectorDropdown>
       </div>
 
@@ -201,13 +211,13 @@ export function DepositAssetStep({
           </span>
         </div>
         <div className={withdrawInputBoxClass}>
-          <input
+          <InputNumber
             className={withdrawAmountInputClass}
-            inputMode="decimal"
+            decimals={selectedToken?.decimals ?? 6}
+            disabled={!selectedToken}
             placeholder="0.00"
             value={amount}
-            onChange={(event) => handleAmountChange(event.target.value)}
-            disabled={!selectedToken}
+            onNumberChange={handleAmountChange}
           />
           <button
             type="button"
@@ -220,7 +230,7 @@ export function DepositAssetStep({
         </div>
         {selectedToken ? (
           <span className="text-xs text-[#909090]">
-            Minimum deposit: ${formatNumber(selectedToken.minCheckoutUsd, 2, true)}
+            Minimum deposit: {formatNumber(selectedToken.minCheckoutUsd, 2, true, { prefix: "$" })}
           </span>
         ) : null}
         {errorText ? (

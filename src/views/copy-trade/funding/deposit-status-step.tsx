@@ -43,7 +43,7 @@ export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
         <div className="flex items-center justify-between">
           <span className="text-sm text-[#909090]">Credited so far</span>
           <span className="text-sm font-[600] text-black">
-            {formatNumber(credited, 2)} pUSD
+            {formatNumber(credited, 2, true, { round: 0 })} pUSD
           </span>
         </div>
       </div>
@@ -68,7 +68,7 @@ export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
                 )}
               >
                 {tx.credited
-                  ? `+${formatNumber(tx.amount_pusd, 2)} pUSD`
+                  ? `+${formatNumber(tx.amount_pusd, 2, true, { round: 0 })} pUSD`
                   : tx.status || "pending"}
               </span>
             </div>

@@ -101,7 +101,7 @@ export function DepositAddressStep({
         <div className="flex items-center justify-between">
           <span className="text-sm text-[#909090]">Credited so far</span>
           <span className="text-sm font-[600] text-black">
-            {formatNumber(status?.credited_pusd ?? 0, 2)} pUSD
+            {formatNumber(status?.credited_pusd ?? 0, 2, true, { round: 0 })} pUSD
           </span>
         </div>
         <span className="text-xs text-[#909090]">

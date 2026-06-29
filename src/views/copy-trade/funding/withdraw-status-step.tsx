@@ -33,7 +33,7 @@ export function WithdrawStatusStep({ withdrawal }: WithdrawStatusStepProps) {
         <div className="flex items-center justify-between">
           <span className="text-sm text-[#909090]">Amount</span>
           <span className="text-sm font-[600] text-black">
-            {formatNumber(withdrawal.AmountPUSD, 2)} pUSD
+            {formatNumber(withdrawal.AmountPUSD, 2, true, { round: 0 })} pUSD
           </span>
         </div>
         <div className="flex items-center justify-between">
