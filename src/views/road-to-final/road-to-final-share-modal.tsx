@@ -79,7 +79,7 @@ export function RoadToFinalShareModal({
     downloadFilename: ROAD_TO_FINAL_SHARE_CARD_DOWNLOAD_FILENAME,
     fullLink: inviteLink.fullLink,
     tweetText: "",
-    hashtags: "",
+    hashtags: "Prophet,WorldCup2026",
     onAfterTwitterOpen: () => setTweetUrlOpen(true),
   });
 
