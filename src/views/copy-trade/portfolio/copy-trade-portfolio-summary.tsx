@@ -38,7 +38,7 @@ export function CopyTradePortfolioSummary({
   isLoading = false
 }: CopyTradePortfolioSummaryProps) {
   const t = useTranslations("copyTrade.portfolio");
-  const displayAddress = copyWallet.BridgeEVMDepositAddress;
+  const displayAddress = copyWallet.CopyDepositWalletAddress;
 
   return (
     <section

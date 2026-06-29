@@ -85,7 +85,7 @@ function ProfileHeaderMenu({
 }
 
 export function ProfileHeader({ copyWallet }: ProfileHeaderProps) {
-  const depositAddress = copyWallet.BridgeEVMDepositAddress;
+  const depositAddress = copyWallet.CopyDepositWalletAddress;
   const menuRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
