@@ -8,7 +8,8 @@ import {
   LogoutIcon,
   FastBidIcon,
   NotificationIcon,
-  ReferralIcon
+  ReferralIcon,
+  DarkModeIcon
 } from "@/layout/header/wallet-menu-icons";
 import { WalletLanguageMenuItem } from "@/layout/header/wallet-language-menu-item";
 import { WalletOutcomeDisplayMenuItem } from "@/layout/header/wallet-outcome-display-menu-item";
@@ -173,6 +174,29 @@ export function WalletMenuDropdown({
                 />
               </span>
             </div>
+
+            {/* <div
+              role="menuitem"
+              className={walletMenuItemClass}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-[14px]">
+                  <DarkModeIcon />
+                </div>
+                <span>{t("darkMode")}</span>
+              </div>
+              <span
+                className="shrink-0"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <Switch
+                  checked={false}
+                  onCheckedChange={() => {}}
+                  aria-label={t("darkMode")}
+                />
+              </span>
+            </div> */}
           </>
         )
       }

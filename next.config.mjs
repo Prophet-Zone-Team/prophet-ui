@@ -2,6 +2,11 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+const isVercelBuild = process.env.VERCEL === "1";
+const copyTradeApiUpstream = (
+  process.env.COPY_TRADE_API_URL ?? "https://api.zerostrategy.fun"
+).replace(/\/$/, "");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Lint and typecheck run in GitHub Actions CI; skipping here avoids slow/OOM Vercel builds.
@@ -75,6 +80,14 @@ const nextConfig = {
         source: "/landing/:path*",
         destination: "/referral/:path*",
         permanent: true
+      }
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/copy-trade/:path*",
+        destination: `${copyTradeApiUpstream}/:path*`
       }
     ];
   }

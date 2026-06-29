@@ -85,6 +85,7 @@ import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect
 import { useTracksStore } from "@/store/tracks-store";
 import { useNotificationWsStore } from "@/store/notification-ws-store";
 import { logoutProphet, syncProphetWalletLogin } from "@/service/prophet";
+import { clearCopyTradeSession } from "@/lib/copy-trade/copy-trade-session";
 import { selectIsAuthenticated, useAuthStore } from "@/store/auth-store";
 import type { AuthLoginMethod } from "@/store/auth-store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
@@ -326,6 +327,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearStoredWalletConnectors();
 
       logoutProphet();
+      try {
+        await clearCopyTradeSession();
+      } catch {
+        // ignore copy-trade session clear errors during cleanup
+      }
       useTracksStore.getState().reset();
       useNotificationWsStore.getState().reset();
 

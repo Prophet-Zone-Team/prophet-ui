@@ -1,0 +1,1 @@
+export const COPY_WALLET_POSITIONS_PAGE_SIZE = 5;

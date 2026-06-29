@@ -52,8 +52,22 @@ export interface PortfolioPositionsTableProps {
   positionTimeMap: Map<string, string>;
   needsWallet: boolean;
   loading: boolean;
+  readOnly?: boolean;
   onConnectWallet: () => void;
 }
+
+const portfolioPositionsReadOnlyGridClass =
+  "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]";
+
+const portfolioPositionsReadOnlyHeadClass = cn(
+  "hidden min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
+  portfolioPositionsReadOnlyGridClass
+);
+
+const portfolioPositionsReadOnlyRowClass = cn(
+  "hidden min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
+  portfolioPositionsReadOnlyGridClass
+);
 
 type SellTarget =
   | {
@@ -74,16 +88,26 @@ type RedeemTarget = {
   teamName?: string;
 };
 
-function PortfolioPositionsTableHeader() {
+function PortfolioPositionsTableHeader({
+  readOnly = false
+}: {
+  readOnly?: boolean;
+}) {
   const t = useTranslations("portfolio");
 
   return (
-    <div className={portfolioPositionsTableHeadClass}>
+    <div
+      className={
+        readOnly ? portfolioPositionsReadOnlyHeadClass : portfolioPositionsTableHeadClass
+      }
+    >
       <span>{t("market")}</span>
       <span>{t("traded")}</span>
       <span>{t("toWin")}</span>
       <span>{t("value")}</span>
-      <span className="justify-self-end text-right">{t("action")}</span>
+      {readOnly ? null : (
+        <span className="justify-self-end text-right">{t("action")}</span>
+      )}
     </div>
   );
 }
@@ -94,6 +118,7 @@ export function PortfolioPositionsTable({
   positionTimeMap,
   needsWallet,
   loading,
+  readOnly = false,
   onConnectWallet
 }: PortfolioPositionsTableProps) {
   const t = useTranslations("portfolio");
@@ -150,7 +175,7 @@ export function PortfolioPositionsTable({
     return (
       <div className={portfolioTableScrollClass} aria-label={t("yourPositions")}>
         <div className={portfolioTableDesktopScrollClass}>
-          <PortfolioPositionsTableHeader />
+          <PortfolioPositionsTableHeader readOnly={readOnly} />
         </div>
         <PortfolioEmptyState
           title={t("noOpenPositions")}
@@ -294,7 +319,7 @@ export function PortfolioPositionsTable({
       }
     };
 
-    const actionButtons = (
+    const actionButtons = readOnly ? null : (
       <div className="flex w-full flex-col items-stretch justify-end gap-1 md:items-end">
         {canRedeem ? (
           <RegionRestrictedControl restricted={regionRestricted}>
@@ -346,7 +371,12 @@ export function PortfolioPositionsTable({
     );
 
     desktopRows.push(
-      <div key={rowKey} className={portfolioPositionsTableRowClass}>
+      <div
+        key={rowKey}
+        className={
+          readOnly ? portfolioPositionsReadOnlyRowClass : portfolioPositionsTableRowClass
+        }
+      >
         <PortfolioMarketCell
           title={position.title}
           href={tradeHref}
@@ -417,13 +447,13 @@ export function PortfolioPositionsTable({
     <>
       <div className={portfolioTableScrollClass} aria-label={t("yourPositions")}>
         <div className={portfolioTableDesktopScrollClass}>
-          <PortfolioPositionsTableHeader />
+          <PortfolioPositionsTableHeader readOnly={readOnly} />
           {desktopRows}
         </div>
         <div className={portfolioTableMobileListClass}>{mobileCards}</div>
       </div>
 
-      {sellTarget?.variant === "team" ? (
+      {!readOnly && sellTarget?.variant === "team" ? (
         <PortfolioPositionSellDialog
           open
           variant="team"
@@ -434,7 +464,7 @@ export function PortfolioPositionsTable({
         />
       ) : null}
 
-      {sellTarget?.variant === "game" ? (
+      {!readOnly && sellTarget?.variant === "game" ? (
         <PortfolioPositionSellDialog
           open
           variant="game"
@@ -445,7 +475,7 @@ export function PortfolioPositionsTable({
         />
       ) : null}
 
-      {redeemTarget ? (
+      {!readOnly && redeemTarget ? (
         <PortfolioPositionRedeemDialog
           open
           position={redeemTarget.position}
