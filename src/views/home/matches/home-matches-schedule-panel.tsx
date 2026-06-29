@@ -20,7 +20,7 @@ import { useScheduleMatchesWithLiveState } from "@/store/match-live-store";
 import type { Team, TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
 import { ScheduleFilterBar } from "@/views/home/matches/schedule-filter-bar";
 import { ScheduleMatchRow } from "@/views/home/matches/schedule-match-row";
-import { SpecialMatchDataCard } from "@/views/home/matches/special-match-data-card";
+import { HomeMatchesFeatureCarousel } from "@/views/home/matches/home-matches-feature-carousel";
 
 const SCHEDULE_FILTER_TEAMS: (ScheduleFilterTeam & { logoUrl?: string })[] =
   curatedNationalTeamsList
@@ -84,7 +84,7 @@ export function HomeMatchesSchedulePanel({
     <section className="min-w-0" aria-label={t("footballMatchSchedule")}>
       <SyncMatchLiveStore matches={matches} />
       <div className="pb-[20px]">
-        <SpecialMatchDataCard matches={matches} snapshots={snapshots} />
+        <HomeMatchesFeatureCarousel matches={matches} snapshots={snapshots} />
       </div>
 
       <ScheduleFilterBar

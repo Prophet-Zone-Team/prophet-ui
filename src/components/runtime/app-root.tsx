@@ -10,6 +10,7 @@ import { ProphetNotificationWsProvider } from "@/context/prophet-notification-ws
 import { SportsWsProvider } from "@/context/sports-ws";
 import RainbowProvider from "@/context/rainbowkit/provider";
 import { LocaleProvider } from "@/components/runtime/locale-provider";
+import { RoadToFinalFloatingPromo } from "@/components/promo/road-to-final-floating-promo";
 import { AppChrome } from "@/layout/app-chrome";
 import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen";
 import { NativeAppShell } from "@/components/runtime/native-app-shell";
@@ -47,6 +48,7 @@ export function AppRoot({
                     <AppChrome>{children}</AppChrome>
                   </main>
                   <Toaster />
+                  <RoadToFinalFloatingPromo />
                 </ProphetNotificationWsProvider>
               </SportsWsProvider>
             </MigrateProvider>
