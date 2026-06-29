@@ -26,7 +26,7 @@ function NavBar(props: any) {
             key={href}
             href={href}
             className={cn(
-              "group relative text-[16px] inline-flex h-[40px] items-center rounded-[40px] px-[20px] transition-colors duration-200",
+              "group relative text-[16px] inline-flex h-[40px] items-center rounded-[40px] px-[10px] transition-colors duration-200",
               active ? "text-white" : "text-prophet-nav hover:text-[#14203a]",
               navClassName
             )}
