@@ -14,8 +14,12 @@ import type {
   CopyTradeSellableBalance,
   CopyTradeUserOrder,
   CopyTradersListResponse,
+  CopyTraderTracksLatestResponse,
+  CopyTraderTracksListResponse,
   CopyWallet,
   CreateCopyTradeUserRequest,
+  ImportCopyTraderResponse,
+  TrackCopyTraderResponse,
   UserWithCopyWallet
 } from "@/types/copy-trade-api";
 
@@ -195,6 +199,76 @@ export async function listCopyTraders(
     "/copy-traders",
     undefined,
     config
+  );
+}
+
+/** POST /copy-traders/import */
+export async function importCopyTrader(
+  wallet: string,
+  config?: AxiosRequestConfig
+): Promise<ImportCopyTraderResponse> {
+  return copyTradeRequest<ImportCopyTraderResponse>(
+    "POST",
+    "/copy-traders/import",
+    { wallet: wallet.trim().toLowerCase() },
+    config
+  );
+}
+
+/** GET /copy-traders/tracks */
+export async function listCopyTraderTracks(
+  config?: AxiosRequestConfig
+): Promise<CopyTraderTracksListResponse> {
+  return copyTradeRequest<CopyTraderTracksListResponse>(
+    "GET",
+    "/copy-traders/tracks",
+    undefined,
+    config
+  );
+}
+
+/** POST /copy-traders/tracks */
+export async function trackCopyTrader(
+  wallet: string,
+  config?: AxiosRequestConfig
+): Promise<TrackCopyTraderResponse> {
+  return copyTradeRequest<TrackCopyTraderResponse>(
+    "POST",
+    "/copy-traders/tracks",
+    { wallet: wallet.trim().toLowerCase() },
+    config
+  );
+}
+
+/** DELETE /copy-traders/tracks/{wallet} */
+export async function untrackCopyTrader(
+  wallet: string,
+  config?: AxiosRequestConfig
+): Promise<TrackCopyTraderResponse> {
+  return copyTradeRequest<TrackCopyTraderResponse>(
+    "DELETE",
+    `/copy-traders/tracks/${encodeURIComponent(wallet.trim().toLowerCase())}`,
+    undefined,
+    config
+  );
+}
+
+/** GET /copy-traders/tracks/latest */
+export async function listCopyTraderTracksLatest(
+  limit?: number,
+  config?: AxiosRequestConfig
+): Promise<CopyTraderTracksLatestResponse> {
+  return copyTradeRequest<CopyTraderTracksLatestResponse>(
+    "GET",
+    "/copy-traders/tracks/latest",
+    undefined,
+    {
+      ...config,
+      params: {
+        ...config?.params,
+        ...(limit != null ? { limit } : {})
+      }
+    }
   );
 }
 

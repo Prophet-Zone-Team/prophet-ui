@@ -38,16 +38,6 @@ export function StatusStat() {
         >
           {label}
         </span>
-        <div
-          className={`relative h-5 w-[36px] shrink-0 rounded-[10px] ${ready ? "bg-[#65AF14]" : "bg-[#EBEBEB]"}`}
-          aria-hidden="true"
-        >
-          <span
-            className={`absolute top-1/2 size-4 -translate-y-1/2 rounded-full border border-[#EAEAEA] bg-white ${
-              ready ? "right-0.5" : "left-0.5"
-            }`}
-          />
-        </div>
       </div>
     </div>
   );

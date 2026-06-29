@@ -14,6 +14,8 @@ import type { TraderCatalogEntry } from "@/types/copy-trade-api";
 
 const copyTradeRankQueryKey = ["copy-trade", "traders"] as const;
 
+export { copyTradeRankQueryKey };
+
 export interface UseCopyTradeRankOptions {
   enabled?: boolean;
   filters?: CopyTradeRankFilters;

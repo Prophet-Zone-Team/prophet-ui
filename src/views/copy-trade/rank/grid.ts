@@ -1,14 +1,23 @@
+export const copyTradeRankGridTemplateColumns =
+  "36px minmax(0,1.6fr) minmax(88px,1fr) minmax(112px,1fr) minmax(96px,1fr) minmax(88px,1fr) minmax(112px,1fr)";
+
+export const copyTradeRankTableGridClass =
+  "grid w-full min-w-0 gap-y-2 [grid-template-columns:var(--copy-trade-rank-cols)]";
+
 export const copyTradeRankRowGridClass =
-  "grid grid-cols-[24px_minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_auto] items-center gap-x-6";
+  "col-span-full grid gap-x-6 items-center max-md:[grid-template-columns:var(--copy-trade-rank-cols)] md:grid-cols-subgrid md:[grid-column:1/-1]";
 
-export const copyTradeRankColRankClass = "text-center justify-self-center";
+export const copyTradeRankColRankClass = "w-full text-center tabular-nums";
 
-export const copyTradeRankColPlayerClass =
-  "min-w-0 justify-self-stretch text-left";
+export const copyTradeRankColPlayerClass = "min-w-0 w-full text-left";
 
-export const copyTradeRankColCenterClass = "text-center justify-self-center";
+export const copyTradeRankColCenterClass = "w-full text-center tabular-nums";
 
-export const copyTradeRankColPredictionsClass =
-  "text-left justify-self-start tabular-nums";
+export const copyTradeRankColPredictionsClass = "w-full text-left tabular-nums";
 
-export const copyTradeRankColActionClass = "justify-self-end";
+export const copyTradeRankColActionClass =
+  "flex w-full items-center justify-end gap-2";
+
+export const copyTradeRankGridStyle = {
+  ["--copy-trade-rank-cols" as string]: copyTradeRankGridTemplateColumns
+};

@@ -5,12 +5,18 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
+import {
+  normalizeTargetForm,
+  validateTargetForm,
+  walletCopyFormToTargetForm,
+  type CopyTargetForm
+} from "@/lib/copy-trade/transforms";
 import { formatCompactVolume } from "@/lib/formatters/volume";
 import {
   resolveTraderRankDisplayStats,
   type CopyTradeRankTimeRange
 } from "@/lib/copy-trade/trader-rank-filters";
-import type { CopyTarget, TraderCatalogEntry } from "@/types/copy-trade-api";
+import type { TraderCatalogEntry } from "@/types/copy-trade-api";
 
 import { CopyTradeInfoTooltip } from "./info-tooltip";
 import {
@@ -27,7 +33,12 @@ export interface WalletCopyModalProps {
   wallet: string;
   stats?: WalletCopyTraderStats;
   initialValues?: Partial<WalletCopyFormValues>;
-  onSubmit?: (values: WalletCopyFormValues) => void;
+  saving?: boolean;
+  availableBalance?: number | null;
+  isLoadingBalance?: boolean;
+  canSubmitCopy?: boolean;
+  balanceWarning?: string | null;
+  onSubmit?: (form: CopyTargetForm) => void | Promise<void>;
 }
 
 export function buildWalletCopyStatsFromTrader(
@@ -58,28 +69,6 @@ export function buildWalletCopyStatsFromTrader(
   };
 }
 
-export function buildWalletCopyFormFromTarget(
-  target: CopyTarget
-): Partial<WalletCopyFormValues> {
-  return {
-    ratio: Math.round(target.Ratio * 100) || DEFAULT_WALLET_COPY_FORM.ratio,
-    buyEnabled: target.BuyEnabled,
-    sellEnabled: target.SellEnabled,
-    buyTakerOnly: target.BuyTakerOnly,
-    sellTakerOnly: target.SellTakerOnly,
-    maxUsdPerTrade: String(target.MaxUSDPerTrade),
-    maxUsdPerMarket: String(target.MaxUSDPerMarket),
-    maxUsdPerHour: String(target.MaxUSDPerHour),
-    maxUsdTotal: String(target.MaxUSDTotal),
-    minPrice: String(target.MinPrice),
-    maxPrice: String(target.MaxPrice),
-    maxSlippage: String(target.MaxSlippage),
-    orderType:
-      (target.OrderType as WalletCopyFormValues["orderType"]) ||
-      DEFAULT_WALLET_COPY_FORM.orderType
-  };
-}
-
 function formatPnlDisplay(stats?: WalletCopyTraderStats): string | null {
   if (!stats) {
     return null;
@@ -99,19 +88,24 @@ export function WalletCopyModal({
   wallet,
   stats,
   initialValues,
+  saving = false,
+  isLoadingBalance = false,
+  canSubmitCopy = true,
+  balanceWarning = null,
   onSubmit
 }: WalletCopyModalProps) {
   const [form, setForm] = useState<WalletCopyFormValues>(() => ({
     ...DEFAULT_WALLET_COPY_FORM,
     ...initialValues
   }));
-  const [advancedOpen, setAdvancedOpen] = useState(true);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState<WalletCopyFormValues>(
     () => ({
       ...DEFAULT_WALLET_COPY_FORM,
       ...initialValues
     })
   );
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) {
@@ -124,10 +118,12 @@ export function WalletCopyModal({
     };
     setForm(nextValues);
     setSavedSnapshot(nextValues);
-    setAdvancedOpen(true);
+    setAdvancedOpen(false);
+    setError("");
   }, [initialValues, open, wallet]);
 
   const patchForm = useCallback((patch: Partial<WalletCopyFormValues>) => {
+    setError("");
     setForm((current) => ({ ...current, ...patch }));
   }, []);
 
@@ -141,8 +137,40 @@ export function WalletCopyModal({
   }, [form]);
 
   const handleSubmit = useCallback(() => {
-    onSubmit?.(form);
-  }, [form, onSubmit]);
+    if (!canSubmitCopy) {
+      setError(
+        balanceWarning ??
+          "Copy wallet balance is unavailable. Deposit funds before continuing."
+      );
+      return;
+    }
+
+    if (!form.buyEnabled && !form.sellEnabled) {
+      setError("Enable copy buy or copy sell before continuing.");
+      return;
+    }
+
+    const draft = walletCopyFormToTargetForm(wallet, form, {
+      enabled: true,
+      dryRun: false
+    });
+    const errors = validateTargetForm(draft);
+    if (errors.length > 0) {
+      setError(errors[0]);
+      return;
+    }
+
+    try {
+      const normalized = normalizeTargetForm(draft);
+      void onSubmit?.(normalized);
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Unable to validate copy settings."
+      );
+    }
+  }, [balanceWarning, canSubmitCopy, form, onSubmit, wallet]);
 
   const pnlDisplay = formatPnlDisplay(stats);
 
@@ -157,7 +185,7 @@ export function WalletCopyModal({
       )}
       closeButtonClassName="right-5 top-5 border-0 bg-transparent text-[#909090] hover:bg-transparent hover:text-black"
     >
-      <div className="flex flex-col gap-5 pr-6">
+      <div className="flex flex-col gap-5">
         <header>
           <h2 className="text-xl font-medium leading-[25px] text-black">
             WalletCopy
@@ -166,12 +194,12 @@ export function WalletCopyModal({
 
         <section className="flex flex-col gap-2">
           <p className="text-sm leading-[18px] text-black">Copy From</p>
-          <div className="rounded-lg border border-[#EBEBEB] bg-white px-3 py-3">
-            <p className="break-all text-sm leading-[18px] text-black">
+          <div className="box-border flex h-[104px] flex-col rounded-lg border border-[#EBEBEB] bg-white px-2 py-3">
+            <p className="truncate text-[14px] px-[8px] py-[11px] leading-[18px] text-black rounded-[6px] bg-[#F6F6F6]">
               {wallet}
             </p>
-            <div className="mt-3 rounded-md bg-[#F6F6F6] px-3 py-2.5">
-              <div className="grid grid-cols-3 gap-2">
+            <div className="mt-[10px] flex h-10 items-center px-2">
+              <div className="grid h-full w-full grid-cols-3 items-center">
                 <StatCell
                   label="PnL"
                   value={pnlDisplay ?? "—"}
@@ -228,7 +256,7 @@ export function WalletCopyModal({
                 aria-label="Copy trade ratio"
               />
               <div
-                className="pointer-events-none absolute top-1/2 size-[18px] -translate-y-1/2 rounded-md border border-[#909090] bg-black"
+                className="pointer-events-none absolute top-1/2 size-[18px] -translate-y-1/2 rounded-full border border-[#909090] bg-black"
                 style={{ left: `calc(${form.ratio}% - 9px)` }}
                 aria-hidden="true"
               />
@@ -319,7 +347,7 @@ export function WalletCopyModal({
 
           {advancedOpen ? (
             <div className="flex flex-col gap-3 border-t border-[#EBEBEB] px-3 pb-3 pt-3">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
                 <ToggleRow
                   label="Buy only take orders"
                   checked={form.buyTakerOnly}
@@ -429,15 +457,38 @@ export function WalletCopyModal({
           ) : null}
         </section>
 
+        {error ? (
+          <p className="m-0 text-sm leading-[18px] text-[#FF674B]">{error}</p>
+        ) : null}
+
+        {balanceWarning && !error ? (
+          <div className="rounded-lg border border-[#FF674B]/30 bg-[#FF674B]/10 px-3 py-3 text-sm leading-[150%] text-[#FF674B]">
+            {balanceWarning}
+          </div>
+        ) : null}
+
+        {isLoadingBalance && open ? (
+          <p className="m-0 text-sm leading-[18px] text-[#909090]">
+            Checking copy wallet balance…
+          </p>
+        ) : null}
+
         <button
           type="button"
           className={cn(
             "flex h-[50px] w-full items-center justify-center rounded-lg bg-black",
-            "text-base leading-5 text-white transition-opacity hover:opacity-90"
+            "text-base leading-5 text-white transition-opacity hover:opacity-90",
+            "disabled:cursor-not-allowed disabled:opacity-50"
           )}
+          disabled={
+            saving ||
+            !canSubmitCopy ||
+            isLoadingBalance ||
+            (!form.buyEnabled && !form.sellEnabled)
+          }
           onClick={handleSubmit}
         >
-          Copy
+          {saving ? "Saving…" : "Copy"}
         </button>
       </div>
     </Modal>
@@ -456,16 +507,21 @@ function StatCell({
   align?: "left" | "right";
 }) {
   return (
-    <div className={cn("min-w-0", align === "right" && "text-right")}>
-      <p className="text-xs leading-[15px] text-[#909090]">{label}</p>
+    <div
+      className={cn(
+        "flex min-w-0 flex-col justify-center",
+        align === "right" && "items-end text-right"
+      )}
+    >
       <p
         className={cn(
-          "mt-0.5 truncate text-sm leading-[18px] tabular-nums",
+          "truncate text-[14px] leading-[18px] tabular-nums",
           valueClassName ?? "text-black"
         )}
       >
         {value}
       </p>
+      <p className="text-[12px] leading-[15px] text-[#909090]">{label}</p>
     </div>
   );
 }

@@ -68,7 +68,7 @@ export function resolveCopyWalletStatusLabel(
   }
 
   if (isCopyWalletReady(wallet)) {
-    return "Ready";
+    return "Running";
   }
 
   if (wallet.WalletStatus?.toLowerCase() === "pending") {

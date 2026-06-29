@@ -294,6 +294,55 @@ export interface CopyTradersListResponse {
   items: TraderCatalogEntry[];
 }
 
+export interface ImportCopyTraderRequest {
+  wallet: string;
+}
+
+export interface ImportCopyTraderResponse {
+  ok: boolean;
+}
+
+export interface CopyTraderTracksListResponse {
+  items: TraderCatalogEntry[];
+}
+
+export interface TrackCopyTraderRequest {
+  wallet: string;
+}
+
+export interface TrackCopyTraderResponse {
+  ok: boolean;
+}
+
+export interface CopyTraderTrackLatestItem {
+  wallet: string;
+  display_name: string;
+  source: "catalog" | "user_imported" | string;
+  transaction_hash: string;
+  condition_id: string;
+  token_id: string;
+  side: "BUY" | "SELL" | string;
+  price: number;
+  size: number;
+  notional_usd: number;
+  outcome: string;
+  title: string;
+  slug: string;
+  event_slug: string;
+  event_end: string;
+  timestamp: number;
+}
+
+export interface CopyTraderTrackLatestError {
+  wallet: string;
+  error: string;
+}
+
+export interface CopyTraderTracksLatestResponse {
+  items: CopyTraderTrackLatestItem[];
+  errors: CopyTraderTrackLatestError[];
+}
+
 export interface CopyTargetsUpdateResponse {
   ok: boolean;
 }

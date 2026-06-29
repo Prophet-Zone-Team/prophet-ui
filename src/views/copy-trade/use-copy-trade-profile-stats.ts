@@ -46,13 +46,16 @@ export function useCopyTradeProfileStats(
     queryKey: userId
       ? copyTradePnLQueryKey(userId)
       : ["copy-trade", "pnl", "anonymous"],
-    queryFn: async (): Promise<number | null> => {
+    queryFn: async () => {
       if (!userId) {
         throw new Error("Copy-trade session is required.");
       }
 
       const pnl = await getCopyTradePnL(userId);
-      return pnl.total_cash_pnl ?? null;
+      return {
+        totalCashPnL: pnl.total_cash_pnl ?? null,
+        totalTrades: pnl.total_trades ?? null,
+      };
     },
     enabled,
     staleTime: ANALYTICS_QUERY_STALE_TIME_MS,
@@ -60,7 +63,8 @@ export function useCopyTradeProfileStats(
 
   return {
     balance: balanceQuery.data ?? null,
-    totalPnL: pnlQuery.data ?? null,
+    totalPnL: pnlQuery.data?.totalCashPnL ?? null,
+    totalTrades: pnlQuery.data?.totalTrades ?? null,
     isLoadingBalance: enabled && balanceQuery.isLoading,
     isLoadingPnL: enabled && pnlQuery.isLoading,
     isError: balanceQuery.isError || pnlQuery.isError,

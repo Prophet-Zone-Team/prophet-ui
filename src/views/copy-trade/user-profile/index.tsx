@@ -31,6 +31,14 @@ function formatStatMoney(value: number | null | undefined): string {
   return formatTeamDetailMoney(value);
 }
 
+function formatStatCount(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "-";
+  }
+
+  return value.toLocaleString("en-US");
+}
+
 function UserProfileSkeleton({ className }: { className?: string }) {
   return (
     <UserProfileCard
@@ -63,6 +71,7 @@ export function CopyTradeUserProfile({ className }: CopyTradeUserProfileProps) {
   const {
     balance,
     totalPnL,
+    totalTrades,
     isLoadingBalance,
     isLoadingPnL
   } = useCopyTradeProfileStats({
@@ -119,7 +128,11 @@ export function CopyTradeUserProfile({ className }: CopyTradeUserProfileProps) {
             }
             isLoading={isLoadingPnL}
           />
-          <StatItem label="Copied Trades" value="-" />
+          <StatItem
+            label="Copied Trades"
+            value={formatStatCount(totalTrades)}
+            isLoading={isLoadingPnL}
+          />
         </div>
 
         <ActionGroup className="mt-5" />

@@ -216,3 +216,47 @@ export function formatDateTimeFromUnixSeconds(
 
   return formatDateTime(new Date(value * 1000), timeZone);
 }
+
+export function formatCompactRelativeTime(
+  value: string | undefined,
+): string {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const diffMs = Date.now() - date.getTime();
+
+  if (diffMs < 0) {
+    return formatDate(date);
+  }
+
+  const diffMinutes = Math.floor(diffMs / 60_000);
+
+  if (diffMinutes < 1) {
+    return "Just now";
+  }
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+
+  if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays < 7) {
+    return `${diffDays}d ago`;
+  }
+
+  return formatDate(date);
+}

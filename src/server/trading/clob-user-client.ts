@@ -22,6 +22,7 @@ import { roundPriceToTick } from "@/lib/market/order-math";
 import type {
   BidTradeSide,
   TradingOrderType,
+  UserClosedPositionRecord,
   UserPositionRecord
 } from "@/types/market";
 import { getTradingHost } from "@/server/trading/clob-auth";
@@ -428,6 +429,59 @@ export async function fetchUserPositions({
 
   const payload = (await response.json()) as unknown;
   return Array.isArray(payload) ? payload.filter(isUserPositionRecord) : [];
+}
+
+export type UserClosedPositionsSortBy =
+  | "REALIZEDPNL"
+  | "TITLE"
+  | "PRICE"
+  | "AVGPRICE"
+  | "TIMESTAMP";
+
+export async function fetchUserClosedPositions({
+  userAddress,
+  conditionIds,
+  limit = 10,
+  offset = 0,
+  sortBy = "TIMESTAMP",
+  sortDirection = "DESC"
+}: {
+  userAddress: string;
+  conditionIds?: string[];
+  limit?: number;
+  offset?: number;
+  sortBy?: UserClosedPositionsSortBy;
+  sortDirection?: "ASC" | "DESC";
+}): Promise<UserClosedPositionRecord[]> {
+  const params = new URLSearchParams({
+    user: userAddress,
+    limit: String(Math.max(0, Math.min(limit, 50))),
+    offset: String(Math.max(0, Math.min(offset, 100000))),
+    sortBy,
+    sortDirection
+  });
+
+  if (conditionIds?.length) {
+    params.set("market", conditionIds.join(","));
+  }
+
+  const response = await serverFetch(
+    `https://data-api.polymarket.com/closed-positions?${params.toString()}`,
+    {
+      cache: "no-store"
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Unable to fetch user closed positions: ${await readResponseError(response)}`
+    );
+  }
+
+  const payload = (await response.json()) as unknown;
+  return Array.isArray(payload)
+    ? payload.filter(isUserClosedPositionRecord)
+    : [];
 }
 
 interface PolymarketPositionsValueRecord {
@@ -1133,6 +1187,29 @@ function isUserPositionRecord(value: unknown): value is UserPositionRecord {
     typeof record.size === "number" &&
     typeof record.avgPrice === "number" &&
     typeof record.currentValue === "number" &&
+    typeof record.title === "string" &&
+    typeof record.outcome === "string"
+  );
+}
+
+function isUserClosedPositionRecord(
+  value: unknown
+): value is UserClosedPositionRecord {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const record = value as Partial<UserClosedPositionRecord>;
+
+  return (
+    typeof record.proxyWallet === "string" &&
+    typeof record.asset === "string" &&
+    typeof record.conditionId === "string" &&
+    typeof record.avgPrice === "number" &&
+    typeof record.totalBought === "number" &&
+    typeof record.realizedPnl === "number" &&
+    typeof record.curPrice === "number" &&
+    typeof record.timestamp === "number" &&
     typeof record.title === "string" &&
     typeof record.outcome === "string"
   );

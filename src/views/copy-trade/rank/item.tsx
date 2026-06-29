@@ -2,13 +2,13 @@
 
 import type { ReactNode } from "react";
 
+import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyIcon } from "@/components/icons";
-import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
+import Popover from "@/components/popover";
 import { cn } from "@/lib/cn";
 import {
   isUserImportedTrader,
   traderTag,
-  traderTagLabel,
   type TraderTag
 } from "@/lib/copy-trade/trader-catalog-stats";
 import {
@@ -26,6 +26,7 @@ import {
   copyTradeRankColPlayerClass,
   copyTradeRankColPredictionsClass,
   copyTradeRankColRankClass,
+  copyTradeRankGridStyle,
   copyTradeRankRowGridClass
 } from "./grid";
 import { SmartMoneyIcon, WhaleIcon } from "./trader-tag-icons";
@@ -39,6 +40,7 @@ export interface CopyTradeRankItemProps {
   onCopyTrade?: (trader: TraderCatalogEntry) => void;
   copyTradeBusy?: boolean;
   copyTradeDisabled?: boolean;
+  copyTradeDisabledReason?: string | null;
   className?: string;
 }
 
@@ -110,9 +112,9 @@ export function CopyTradeRankItem({
   onCopyTrade,
   copyTradeBusy = false,
   copyTradeDisabled = false,
+  copyTradeDisabledReason = null,
   className
 }: CopyTradeRankItemProps) {
-  const { copy } = useCopyWithToast();
   const displayName = trader.DisplayName || formatShortWallet(trader.Wallet);
   const walletLabel = formatShortWallet(trader.Wallet);
   const isCopyButtonDisabled = copyTradeBusy || copyTradeDisabled;
@@ -123,6 +125,7 @@ export function CopyTradeRankItem({
 
   return (
     <article
+      style={copyTradeRankGridStyle}
       className={cn(
         "box-border h-[74px] rounded-xl border border-[#EBEBEB] bg-white px-4",
         copyTradeRankRowGridClass,
@@ -144,7 +147,7 @@ export function CopyTradeRankItem({
         <TraderAvatar wallet={trader.Wallet} />
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-1.5">
-            <p className="truncate text-[16px] leading-5 text-black">
+            <p className="truncate text-[16px] leading-5 text-black max-w-[160px]">
               {displayName}
             </p>
             {imported ? (
@@ -158,14 +161,13 @@ export function CopyTradeRankItem({
             <span className="truncate text-[12px] leading-[15px] text-[#909090]">
               {walletLabel}
             </span>
-            <button
-              type="button"
+            <CopyButton
+              text={trader.Wallet}
+              ariaLabel="Copy wallet address"
               className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
-              aria-label="Copy wallet address"
-              onClick={() => void copy(trader.Wallet)}
             >
               <CopyIcon />
-            </button>
+            </CopyButton>
           </div>
         </div>
       </div>
@@ -211,9 +213,7 @@ export function CopyTradeRankItem({
         {formatStatValue(stats.trades, (value) => String(value))}
       </span>
 
-      <div
-        className={cn(copyTradeRankColActionClass, "flex items-center gap-2")}
-      >
+      <div className={copyTradeRankColActionClass}>
         <button
           type="button"
           className="inline-flex size-5 shrink-0 items-center justify-center border-0 bg-transparent p-0 transition-opacity hover:opacity-70"
@@ -224,26 +224,67 @@ export function CopyTradeRankItem({
           {tracked ? <TrackedIcon /> : <UntrackedIcon />}
         </button>
 
-        <button
-          type="button"
-          className={cn(
-            "inline-flex h-10 shrink-0 items-center justify-center rounded-lg text-[16px] leading-5",
-            "transition-opacity disabled:cursor-not-allowed",
-            copyTradeBusy
-              ? "w-[84px] border border-[#909090] bg-transparent text-black opacity-50"
-              : cn(
-                  "w-20 bg-black text-white hover:opacity-90",
-                  copyTradeDisabled && "opacity-30 hover:opacity-30"
-                )
-          )}
+        <CopyTradeButton
+          busy={copyTradeBusy}
           disabled={isCopyButtonDisabled}
+          disabledReason={copyTradeDisabledReason}
           onClick={() => onCopyTrade?.(trader)}
-        >
-          {copyTradeBusy ? "Copying" : "Copy"}
-        </button>
+        />
       </div>
     </article>
   );
+}
+
+function CopyTradeButton({
+  busy,
+  disabled,
+  disabledReason,
+  onClick
+}: {
+  busy: boolean;
+  disabled: boolean;
+  disabledReason: string | null;
+  onClick: () => void;
+}) {
+  const button = (
+    <button
+      type="button"
+      className={cn(
+        "inline-flex h-10 shrink-0 items-center justify-center rounded-lg text-[16px] leading-5",
+        "transition-opacity disabled:cursor-not-allowed",
+        busy
+          ? "w-[84px] border border-[#909090] bg-transparent text-black opacity-50"
+          : cn(
+              "w-20 bg-black text-white hover:opacity-90",
+              disabled && "opacity-30 hover:opacity-30"
+            )
+      )}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {busy ? "Copying" : "Copy"}
+    </button>
+  );
+
+  if (disabled && disabledReason) {
+    return (
+      <Popover
+        placement="Top"
+        trigger="Hover"
+        offset={8}
+        contentClassName="z-[12]"
+        content={
+          <div className="max-w-[280px] rounded-xl border border-[#EBEBEB] bg-white px-4 py-3 text-sm leading-[150%] text-black shadow-[0px_0px_10px_rgba(0,0,0,0.1)]">
+            {disabledReason}
+          </div>
+        }
+      >
+        <span className="inline-flex">{button}</span>
+      </Popover>
+    );
+  }
+
+  return button;
 }
 
 function UntrackedIcon() {

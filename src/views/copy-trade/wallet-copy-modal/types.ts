@@ -2,8 +2,7 @@ export const COPY_TRADE_RATIO_PRESETS = [10, 25, 50, 100] as const;
 
 export const COPY_TRADE_ORDER_TYPES = [
   { value: "FAK", label: "FAK (Fill And Kill)" },
-  { value: "FOK", label: "FOK (Fill Or Kill)" },
-  { value: "GTC", label: "GTC (Good Till Cancel)" }
+  { value: "FOK", label: "FOK (Fill Or Kill)" }
 ] as const;
 
 export type CopyTradeOrderType =
@@ -26,18 +25,18 @@ export interface WalletCopyFormValues {
 }
 
 export const DEFAULT_WALLET_COPY_FORM: WalletCopyFormValues = {
-  ratio: 25,
+  ratio: 10,
   buyEnabled: true,
   sellEnabled: true,
   buyTakerOnly: true,
   sellTakerOnly: false,
-  maxUsdPerTrade: "5",
-  maxUsdPerMarket: "5",
-  maxUsdPerHour: "5",
-  maxUsdTotal: "1000",
-  minPrice: "0",
-  maxPrice: "0.99",
-  maxSlippage: "0.1",
+  maxUsdPerTrade: "50",
+  maxUsdPerMarket: "200",
+  maxUsdPerHour: "500",
+  maxUsdTotal: "2000",
+  minPrice: "0.02",
+  maxPrice: "0.97",
+  maxSlippage: "0.03",
   orderType: "FAK"
 };
 
