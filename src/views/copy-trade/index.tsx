@@ -18,7 +18,7 @@ export function CopyTradePage() {
 
         <aside className="order-1 flex min-h-0 min-w-0 flex-col gap-4 xl:order-2 xl:sticky xl:top-14 xl:self-stretch">
           <CopyTradeUserProfile className="w-full shrink-0 xl:w-[355px]" />
-          <CopyTradeActivityPanel className="w-full min-h-0 flex-1 xl:w-[355px]" />
+          <CopyTradeActivityPanel className="w-full min-h-0 flex-0 xl:w-[355px]" />
         </aside>
       </div>
 
