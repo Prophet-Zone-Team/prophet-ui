@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
@@ -14,6 +15,7 @@ import { useCopyTradeSession } from "./use-copy-trade-session";
 import { copyTradeTracksQueryKey } from "./use-copy-trade-tracks";
 
 export function useCopyTradeTrackActions() {
+  const t = useTranslations("copyTrade.toast");
   const queryClient = useQueryClient();
   const { userId } = useCopyTradeSession();
   const [toggling, setToggling] = useState(false);
@@ -24,13 +26,15 @@ export function useCopyTradeTrackActions() {
       tracked: boolean
     ): Promise<boolean> => {
       if (!userId) {
-        toast.error("Create or load a copy-trade account first.");
+        toast.error(t("createAccountFirst"));
         return false;
       }
 
       const wallet = trader.Wallet.trim().toLowerCase();
       setToggling(true);
-      const toastId = toast.loading(tracked ? "Untracking trader…" : "Tracking trader…");
+      const toastId = toast.loading(
+        tracked ? t("untrackingTrader") : t("trackingTrader")
+      );
 
       try {
         if (tracked) {
@@ -45,7 +49,7 @@ export function useCopyTradeTrackActions() {
         await queryClient.invalidateQueries({
           queryKey: ["copy-trade", "tracks-latest", userId],
         });
-        toast.success(tracked ? "Trader untracked." : "Trader tracked.", {
+        toast.success(tracked ? t("traderUntracked") : t("traderTracked"), {
           id: toastId,
         });
         return true;
@@ -54,8 +58,8 @@ export function useCopyTradeTrackActions() {
           error instanceof Error
             ? error.message
             : tracked
-              ? "Unable to untrack trader."
-              : "Unable to track trader.",
+              ? t("unableToUntrack")
+              : t("unableToTrack"),
           { id: toastId }
         );
         return false;
@@ -63,7 +67,7 @@ export function useCopyTradeTrackActions() {
         setToggling(false);
       }
     },
-    [queryClient, userId]
+    [queryClient, t, userId]
   );
 
   return { toggling, toggleTrack };

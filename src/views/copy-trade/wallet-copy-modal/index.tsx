@@ -2,6 +2,7 @@
 
 import { Check, ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
@@ -20,7 +21,6 @@ import type { TraderCatalogEntry } from "@/types/copy-trade-api";
 
 import { CopyTradeInfoTooltip } from "./info-tooltip";
 import {
-  COPY_TRADE_ORDER_TYPES,
   COPY_TRADE_RATIO_PRESETS,
   DEFAULT_WALLET_COPY_FORM,
   type WalletCopyFormValues,
@@ -94,6 +94,8 @@ export function WalletCopyModal({
   balanceWarning = null,
   onSubmit
 }: WalletCopyModalProps) {
+  const t = useTranslations("copyTrade.walletCopy");
+  const tCommon = useTranslations("copyTrade.common");
   const [form, setForm] = useState<WalletCopyFormValues>(() => ({
     ...DEFAULT_WALLET_COPY_FORM,
     ...initialValues
@@ -136,17 +138,24 @@ export function WalletCopyModal({
     setSavedSnapshot(form);
   }, [form]);
 
+  const orderTypeOptions = useMemo(
+    () => [
+      { value: "FAK" as const, label: t("orderTypeFak") },
+      { value: "FOK" as const, label: t("orderTypeFok") }
+    ],
+    [t]
+  );
+
   const handleSubmit = useCallback(() => {
     if (!canSubmitCopy) {
       setError(
-        balanceWarning ??
-          "Copy wallet balance is unavailable. Deposit funds before continuing."
+        balanceWarning ?? t("balanceUnavailable")
       );
       return;
     }
 
     if (!form.buyEnabled && !form.sellEnabled) {
-      setError("Enable copy buy or copy sell before continuing.");
+      setError(t("enableCopySide"));
       return;
     }
 
@@ -167,10 +176,10 @@ export function WalletCopyModal({
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Unable to validate copy settings."
+          : t("unableToValidate")
       );
     }
-  }, [balanceWarning, canSubmitCopy, form, onSubmit, wallet]);
+  }, [balanceWarning, canSubmitCopy, form, onSubmit, t, wallet]);
 
   const pnlDisplay = formatPnlDisplay(stats);
 
@@ -178,7 +187,7 @@ export function WalletCopyModal({
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel="WalletCopy"
+      ariaLabel={t("ariaLabel")}
       className={cn(
         "w-full max-w-[500px] rounded-[20px] border border-[#EBEBEB] bg-white",
         "p-5 shadow-[0px_0px_10px_rgba(0,0,0,0.1)]"
@@ -188,12 +197,12 @@ export function WalletCopyModal({
       <div className="flex flex-col gap-5">
         <header>
           <h2 className="text-xl font-medium leading-[25px] text-black">
-            WalletCopy
+            {t("title")}
           </h2>
         </header>
 
         <section className="flex flex-col gap-2">
-          <p className="text-sm leading-[18px] text-black">Copy From</p>
+          <p className="text-sm leading-[18px] text-black">{t("copyFrom")}</p>
           <div className="box-border flex h-[104px] flex-col rounded-lg border border-[#EBEBEB] bg-white px-2 py-3">
             <p className="truncate text-[14px] px-[8px] py-[11px] leading-[18px] text-black rounded-[6px] bg-[#F6F6F6]">
               {wallet}
@@ -201,17 +210,17 @@ export function WalletCopyModal({
             <div className="mt-[10px] flex h-10 items-center px-2">
               <div className="grid h-full w-full grid-cols-3 items-center">
                 <StatCell
-                  label="PnL"
+                  label={t("pnl")}
                   value={pnlDisplay ?? "—"}
                   valueClassName="text-[#65AF14]"
                 />
                 <StatCell
-                  label="7D Win Rate"
+                  label={t("winRate7d")}
                   value={stats?.winRate ?? "—"}
                   valueClassName="text-[#65AF14]"
                 />
                 <StatCell
-                  label="Last Trade"
+                  label={t("lastTrade")}
                   value={stats?.lastTrade ?? "—"}
                   valueClassName="text-[#65AF14]"
                   align="right"
@@ -224,15 +233,10 @@ export function WalletCopyModal({
         <section className="flex flex-col gap-3">
           <div className="flex items-center gap-1.5">
             <p className="text-sm leading-[18px] text-black">
-              Copy Trade Ratio
+              {t("copyTradeRatio")}
             </p>
             <CopyTradeInfoTooltip
-              content={
-                <>
-                  Buy Order Value = Target Filled Amount × Ratio; Sell Order
-                  Quantity = Target Filled Volume × Ratio.
-                </>
-              }
+              content={<>{t("ratioTooltip")}</>}
             />
           </div>
 
@@ -253,7 +257,7 @@ export function WalletCopyModal({
                   patchForm({ ratio: Number(event.target.value) })
                 }
                 className="absolute inset-0 z-[1] h-full w-full cursor-pointer appearance-none bg-transparent opacity-0"
-                aria-label="Copy trade ratio"
+                aria-label={t("ariaCopyRatio")}
               />
               <div
                 className="pointer-events-none absolute top-1/2 size-[18px] -translate-y-1/2 rounded-full border border-[#909090] bg-black"
@@ -290,13 +294,13 @@ export function WalletCopyModal({
 
         <div className="grid grid-cols-2 gap-2">
           <CopySideButton
-            label="Copy Buy"
+            label={t("copyBuy")}
             selected={form.buyEnabled}
             tone="buy"
             onClick={() => patchForm({ buyEnabled: !form.buyEnabled })}
           />
           <CopySideButton
-            label="Copy Sell"
+            label={t("copySell")}
             selected={form.sellEnabled}
             tone="sell"
             onClick={() => patchForm({ sellEnabled: !form.sellEnabled })}
@@ -306,7 +310,7 @@ export function WalletCopyModal({
         <section className="rounded-lg border border-[#EBEBEB] bg-white">
           <div className="flex items-center justify-between gap-3 px-3 py-3">
             <p className="text-sm leading-[18px] text-black">
-              Advanced Setting
+              {t("advancedSetting")}
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -321,15 +325,13 @@ export function WalletCopyModal({
                 disabled={!advancedDirty}
                 onClick={handleSaveAdvanced}
               >
-                Save
+                {tCommon("save")}
               </button>
               <button
                 type="button"
                 className="inline-flex size-5 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-transform"
                 aria-label={
-                  advancedOpen
-                    ? "Collapse advanced settings"
-                    : "Expand advanced settings"
+                  advancedOpen ? t("collapseAdvanced") : t("expandAdvanced")
                 }
                 aria-expanded={advancedOpen}
                 onClick={() => setAdvancedOpen((current) => !current)}
@@ -349,40 +351,40 @@ export function WalletCopyModal({
             <div className="flex flex-col gap-3 border-t border-[#EBEBEB] px-3 pb-3 pt-3">
               <div>
                 <ToggleRow
-                  label="Buy only take orders"
+                  label={t("buyTakerOnly")}
                   checked={form.buyTakerOnly}
                   onCheckedChange={(checked) =>
                     patchForm({ buyTakerOnly: checked })
                   }
-                  tooltip="Buy orders shall only execute immediately; no GTC maker orders allowed."
+                  tooltip={t("buyTakerOnlyTooltip")}
                 />
                 <ToggleRow
-                  label="Sell only take orders"
+                  label={t("sellTakerOnly")}
                   checked={form.sellTakerOnly}
                   onCheckedChange={(checked) =>
                     patchForm({ sellTakerOnly: checked })
                   }
-                  tooltip="Sell orders shall only execute immediately; no GTC maker orders allowed."
+                  tooltip={t("sellTakerOnlyTooltip")}
                 />
               </div>
 
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <CapInput
-                  label="Single Order Cap"
+                  label={t("singleOrderCap")}
                   value={form.maxUsdPerTrade}
                   hint="≥$5"
                   prefix="$"
                   onChange={(value) => patchForm({ maxUsdPerTrade: value })}
                 />
                 <CapInput
-                  label="Per-Market Cap"
+                  label={t("perMarketCap")}
                   value={form.maxUsdPerMarket}
                   hint="≥$5"
                   prefix="$"
                   onChange={(value) => patchForm({ maxUsdPerMarket: value })}
                 />
                 <CapInput
-                  label="Hourly Cap"
+                  label={t("hourlyCap")}
                   value={form.maxUsdPerHour}
                   hint="≥$5"
                   prefix="$"
@@ -392,7 +394,7 @@ export function WalletCopyModal({
 
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <CapInput
-                  label="Total Cap"
+                  label={t("totalCap")}
                   value={form.maxUsdTotal}
                   hint="≥$5"
                   prefix="$"
@@ -400,13 +402,13 @@ export function WalletCopyModal({
                   className="sm:col-span-1"
                 />
                 <CapInput
-                  label="Min. Price"
+                  label={t("minPrice")}
                   value={form.minPrice}
                   hint="0≤x<1"
                   onChange={(value) => patchForm({ minPrice: value })}
                 />
                 <CapInput
-                  label="Max Price"
+                  label={t("maxPrice")}
                   value={form.maxPrice}
                   hint="0<x<1"
                   onChange={(value) => patchForm({ maxPrice: value })}
@@ -415,14 +417,14 @@ export function WalletCopyModal({
 
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <CapInput
-                  label="Max Slippage"
+                  label={t("maxSlippage")}
                   value={form.maxSlippage}
                   hint="<0.5"
                   onChange={(value) => patchForm({ maxSlippage: value })}
                 />
                 <div className="flex min-w-0 flex-col gap-1.5">
                   <span className="text-sm leading-[18px] text-[#909090]">
-                    Order Type
+                    {t("orderType")}
                   </span>
                   <div className="relative">
                     <select
@@ -438,9 +440,9 @@ export function WalletCopyModal({
                         "px-3 pr-8 text-sm leading-[18px] text-black outline-none",
                         "focus:border-[#909090]"
                       )}
-                      aria-label="Order type"
+                      aria-label={t("ariaOrderType")}
                     >
-                      {COPY_TRADE_ORDER_TYPES.map((option) => (
+                      {orderTypeOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
@@ -469,7 +471,7 @@ export function WalletCopyModal({
 
         {isLoadingBalance && open ? (
           <p className="m-0 text-sm leading-[18px] text-[#909090]">
-            Checking copy wallet balance…
+            {t("checkingBalance")}
           </p>
         ) : null}
 
@@ -488,7 +490,7 @@ export function WalletCopyModal({
           }
           onClick={handleSubmit}
         >
-          {saving ? "Saving…" : "Copy"}
+          {saving ? tCommon("saving") : tCommon("copy")}
         </button>
       </div>
     </Modal>

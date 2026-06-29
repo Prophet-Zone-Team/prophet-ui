@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { isCopyWalletReady } from "@/lib/copy-trade/auth";
@@ -32,6 +33,7 @@ function isLiveCopyForm(form: CopyTargetForm): boolean {
 }
 
 export function useCopyActions() {
+  const t = useTranslations("copyTrade.toast");
   const { userId } = useCopyTradeSession();
   const session = useCopyTradeStoredSession();
   const copyWallet = session?.copyWallet ?? null;
@@ -41,12 +43,12 @@ export function useCopyActions() {
 
   const guard = useCallback((): boolean => {
     if (!userId) {
-      toast.error("Create or load a copy-trade account first.");
+      toast.error(t("createAccountFirst"));
       return false;
     }
 
     return true;
-  }, [userId]);
+  }, [t, userId]);
 
   const refresh = useCallback(async () => {
     await Promise.all([refetchTargets(), refetchProfile()]);
@@ -62,7 +64,7 @@ export function useCopyActions() {
       nextForms: CopyTargetForm[],
       ensureMaster: boolean,
       okMessage: string,
-      loadingMessage = "Updating copy target…"
+      loadingMessage = t("updatingCopyTarget")
     ): Promise<boolean> => {
       if (!guard() || !userId) {
         return false;
@@ -82,10 +84,7 @@ export function useCopyActions() {
       try {
         if (ensureMaster) {
           if (!isCopyWalletReady(copyWallet)) {
-            toast.error(
-              "Copy-trade wallet approvals are incomplete. Create or refresh your copy-trade wallet first.",
-              { id: toastId }
-            );
+            toast.error(t("approvalsIncomplete"), { id: toastId });
             return false;
           }
 
@@ -100,7 +99,7 @@ export function useCopyActions() {
         return true;
       } catch (error) {
         toast.error(
-          error instanceof Error ? error.message : "Unable to save copy target.",
+          error instanceof Error ? error.message : t("unableToSaveCopyTarget"),
           { id: toastId }
         );
         return false;
@@ -108,7 +107,7 @@ export function useCopyActions() {
         setSaving(false);
       }
     },
-    [copyWallet, guard, profile, refresh, userId]
+    [copyWallet, guard, profile, refresh, t, userId]
   );
 
   const upsertCopy = useCallback(
@@ -125,8 +124,8 @@ export function useCopyActions() {
       return writeTargets(
         next,
         live,
-        live ? "Live copy trading started." : "Copy target saved as dry run.",
-        "Saving copy target…"
+        live ? t("liveCopyStarted") : t("copyTargetSavedDryRun"),
+        t("savingCopyTarget")
       );
     },
     [currentForms, writeTargets]
@@ -138,8 +137,8 @@ export function useCopyActions() {
       return writeTargets(
         currentForms().filter((item) => item.wallet !== normalizedWallet),
         false,
-        "Copy target removed.",
-        "Removing copy target…"
+        t("copyTargetRemoved"),
+        t("removingCopyTarget")
       );
     },
     [currentForms, writeTargets]
@@ -168,8 +167,8 @@ export function useCopyActions() {
       patchCopy(
         target,
         { enabled: !paused },
-        paused ? "Copy target paused." : "Copy target resumed.",
-        paused ? "Pausing copy target…" : "Resuming copy target…"
+        paused ? t("copyTargetPaused") : t("copyTargetResumed"),
+        paused ? t("pausingCopyTarget") : t("resumingCopyTarget")
       ),
     [patchCopy]
   );
@@ -187,24 +186,24 @@ export function useCopyActions() {
       }
 
       setSaving(true);
-      const toastId = toast.loading("Saving default copy parameters…");
+      const toastId = toast.loading(t("savingDefaultParams"));
 
       try {
         await updateCopyTradeProfile(userId, body);
         await refresh();
-        toast.success("Default copy parameters saved.", { id: toastId });
+        toast.success(t("defaultParamsSaved"), { id: toastId });
       } catch (error) {
         toast.error(
           error instanceof Error
             ? error.message
-            : "Unable to save default copy parameters.",
+            : t("unableToSaveDefaultParams"),
           { id: toastId }
         );
       } finally {
         setSaving(false);
       }
     },
-    [guard, refresh, userId]
+    [guard, refresh, t, userId]
   );
 
   return {

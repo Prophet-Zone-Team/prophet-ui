@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import {
@@ -16,6 +17,7 @@ import type {
 } from "@/lib/copy-trade/trader-rank-filters";
 import type { CopyTarget, TraderCatalogEntry } from "@/types/copy-trade-api";
 import { CopyTradeListStatusMessage } from "@/views/copy-trade/list/status-message";
+import { copyTradeTableMobileListClass } from "@/views/copy-trade/copy-trade-ui";
 import { useCopyActions } from "@/views/copy-trade/use-copy-actions";
 import { useCopyTradeProfile } from "@/views/copy-trade/use-copy-trade-profile";
 import { useCopyTradeReadiness } from "@/views/copy-trade/use-copy-trade-readiness";
@@ -50,6 +52,7 @@ export function CopyTradeRankPanel({
   className,
   enabled = true
 }: CopyTradeRankPanelProps) {
+  const t = useTranslations("copyTrade.rank");
   const [walletType, setWalletType] = useState<CopyTradeRankWalletType>("all");
   const [timeRange, setTimeRange] = useState<CopyTradeRankTimeRange>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,6 +136,56 @@ export function CopyTradeRankPanel({
     [upsertCopy]
   );
 
+  const rankItemProps = (trader: TraderCatalogEntry, index: number) => ({
+    rank: index + 1,
+    trader,
+    timeRange,
+    tracked: trackedWallets.has(trader.Wallet.toLowerCase()),
+    onTrackToggle: handleTrackToggle,
+    onCopyTrade: handleCopyTrade,
+    copyTradeDisabled: !readiness.canOpenCopy,
+    copyTradeDisabledReason: readiness.disabledReason,
+    copyTradeBusy: saving
+  });
+
+  const renderRankList = (layout: "desktop" | "mobile") => {
+    const statusClassName = layout === "desktop" ? "col-span-full" : undefined;
+
+    if (isLoading) {
+      return (
+        <CopyTradeListStatusMessage className={statusClassName}>
+          {t("loadingTraders")}
+        </CopyTradeListStatusMessage>
+      );
+    }
+
+    if (isError) {
+      return (
+        <CopyTradeListStatusMessage className={statusClassName}>
+          {errorDetail instanceof Error
+            ? errorDetail.message
+            : t("unableToLoad")}
+        </CopyTradeListStatusMessage>
+      );
+    }
+
+    if (traders.length === 0) {
+      return (
+        <CopyTradeListStatusMessage className={statusClassName}>
+          {t("noTraders")}
+        </CopyTradeListStatusMessage>
+      );
+    }
+
+    return traders.map((trader, index) => (
+      <CopyTradeRankItem
+        key={traderRowKey(trader)}
+        layout={layout}
+        {...rankItemProps(trader, index)}
+      />
+    ));
+  };
+
   return (
     <div className={cn("flex min-w-0 flex-col", className)}>
       <CopyTradeRankFilterToolbar
@@ -148,44 +201,22 @@ export function CopyTradeRankPanel({
       />
 
       <div
+        className={cn(copyTradeTableMobileListClass, "mt-3 gap-3 px-4 md:px-0")}
+        aria-label={t("ariaList")}
+      >
+        {renderRankList("mobile")}
+      </div>
+
+      <div
         style={copyTradeRankGridStyle}
         className={cn(
-          "mt-3 flex flex-col gap-y-2 md:grid",
+          "mt-3 hidden gap-y-2 md:grid",
           copyTradeRankTableGridClass
         )}
-        aria-label="Trader rank list"
+        aria-label={t("ariaList")}
       >
-        <CopyTradeRankTableHeader className="hidden md:grid" />
-        {isLoading ? (
-          <CopyTradeListStatusMessage className="md:col-span-full">
-            Loading traders…
-          </CopyTradeListStatusMessage>
-        ) : isError ? (
-          <CopyTradeListStatusMessage className="md:col-span-full">
-            {errorDetail instanceof Error
-              ? errorDetail.message
-              : "Unable to load trader rank."}
-          </CopyTradeListStatusMessage>
-        ) : traders.length > 0 ? (
-          traders.map((trader, index) => (
-            <CopyTradeRankItem
-              key={traderRowKey(trader)}
-              rank={index + 1}
-              trader={trader}
-              timeRange={timeRange}
-              tracked={trackedWallets.has(trader.Wallet.toLowerCase())}
-              onTrackToggle={handleTrackToggle}
-              onCopyTrade={handleCopyTrade}
-              copyTradeDisabled={!readiness.canOpenCopy}
-              copyTradeDisabledReason={readiness.disabledReason}
-              copyTradeBusy={saving}
-            />
-          ))
-        ) : (
-          <CopyTradeListStatusMessage className="md:col-span-full">
-            No traders available.
-          </CopyTradeListStatusMessage>
-        )}
+        <CopyTradeRankTableHeader className="col-span-full" />
+        {renderRankList("desktop")}
       </div>
 
       <WalletCopyModal

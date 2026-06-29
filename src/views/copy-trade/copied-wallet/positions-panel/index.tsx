@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type MouseEventHandler } from "react";
+import { useTranslations } from "next-intl";
 
 import { Pagination } from "@/components/pagination/pagination";
 import { cn } from "@/lib/cn";
@@ -32,26 +33,30 @@ export interface CopyTradeCopiedWalletPositionsPanelProps {
 }
 
 function PositionsTableHeader() {
+  const t = useTranslations("copyTrade.copiedWallet.positions");
+
   return (
     <div
       className={cn(
         copyWalletPositionsGridClass,
-        "px-4 py-2 text-[14px] leading-[18px] text-[#909090]"
+        "hidden px-4 py-2 text-[14px] leading-[18px] text-[#909090] md:grid"
       )}
     >
-      <span className="font-[500]">Market</span>
-      <span>AVG</span>
-      <span>Current</span>
-      <span>Value</span>
-      <span className="justify-self-end text-right">Time</span>
+      <span className="font-[500]">{t("market")}</span>
+      <span>{t("avg")}</span>
+      <span>{t("current")}</span>
+      <span>{t("value")}</span>
+      <span className="justify-self-end text-right">{t("time")}</span>
     </div>
   );
 }
 
 function PositionsEmptyState({ status }: { status: CopyWalletPositionStatus }) {
+  const t = useTranslations("copyTrade.copiedWallet.positions");
+
   return (
     <p className="border-t border-[#EBEBEB] px-4 py-6 text-center text-[14px] leading-[18px] text-[#909090]">
-      {status === "active" ? "No active positions." : "No ended positions."}
+      {status === "active" ? t("noActive") : t("noEnded")}
     </p>
   );
 }
@@ -65,9 +70,11 @@ function PositionsErrorState({ message }: { message: string }) {
 }
 
 function PositionsLoadingState() {
+  const t = useTranslations("copyTrade.copiedWallet.positions");
+
   return (
     <p className="border-t border-[#EBEBEB] px-4 py-6 text-center text-[14px] leading-[18px] text-[#909090]">
-      Loading positions…
+      {t("loading")}
     </p>
   );
 }
@@ -113,6 +120,7 @@ export function CopyTradeCopiedWalletPositionsPanel({
   className,
   onClick
 }: CopyTradeCopiedWalletPositionsPanelProps) {
+  const t = useTranslations("copyTrade.copiedWallet.positions");
   const [status, setStatus] = useState<CopyWalletPositionStatus>("active");
 
   const handleStatusChange = (nextStatus: CopyWalletPositionStatus) => {
@@ -135,12 +143,12 @@ export function CopyTradeCopiedWalletPositionsPanel({
     >
       <div className="flex items-center gap-4 px-4 pt-3">
         <PositionsTab
-          label="Active"
+          label={t("active")}
           selected={status === "active"}
           onClick={() => handleStatusChange("active")}
         />
         <PositionsTab
-          label="Ended"
+          label={t("ended")}
           selected={status === "ended"}
           onClick={() => handleStatusChange("ended")}
         />

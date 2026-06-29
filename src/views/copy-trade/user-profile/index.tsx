@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAuth } from "@/context/auth/use-auth";
 import { cn } from "@/lib/cn";
@@ -61,6 +62,7 @@ function UserProfileSkeleton({ className }: { className?: string }) {
 }
 
 export function CopyTradeUserProfile({ className }: CopyTradeUserProfileProps) {
+  const t = useTranslations("copyTrade.profile");
   const authHydrated = useAuthHydrated();
   const copyTradeHydrated = useCopyTradeHydrated();
   const prophetWalletAddress = useAuthStore(
@@ -120,13 +122,13 @@ export function CopyTradeUserProfile({ className }: CopyTradeUserProfileProps) {
 
         <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">
           <StatItem
-            label="Balance"
+            label={t("balance")}
             value={formatStatMoney(balance)}
             isLoading={isLoadingBalance}
           />
           <StatusStat />
           <StatItem
-            label="Total PnL"
+            label={t("totalPnl")}
             value={formatStatMoney(totalPnL)}
             valueClassName={
               totalPnL != null && totalPnL > 0 ? "text-[#65AF14]" : undefined
@@ -134,7 +136,7 @@ export function CopyTradeUserProfile({ className }: CopyTradeUserProfileProps) {
             isLoading={isLoadingPnL}
           />
           <StatItem
-            label="Copied Trades"
+            label={t("copiedTrades")}
             value={formatStatCount(totalTrades)}
             isLoading={isLoadingPnL}
           />

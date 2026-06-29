@@ -19,8 +19,6 @@ export async function fetchCopyTradeTraders(): Promise<TraderCatalogEntry[]> {
   return response.items ?? [];
 }
 
-export { copyTradeRankQueryKey };
-
 export interface UseCopyTradeRankOptions {
   enabled?: boolean;
   filters?: CopyTradeRankFilters;

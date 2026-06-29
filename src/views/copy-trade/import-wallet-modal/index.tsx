@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
@@ -14,6 +15,7 @@ export interface ImportWalletModalProps {
 }
 
 export function ImportWalletModal({ open, onClose }: ImportWalletModalProps) {
+  const t = useTranslations("copyTrade.importWallet");
   const [walletAddress, setWalletAddress] = useState("");
   const { importing, importWallet } = useImportCopyTrader();
 
@@ -39,7 +41,7 @@ export function ImportWalletModal({ open, onClose }: ImportWalletModalProps) {
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel="Import Wallet"
+      ariaLabel={t("ariaLabel")}
       className={cn(
         "w-full max-w-[500px] rounded-[20px] border border-[#EBEBEB] bg-white",
         "p-5 shadow-[0px_0px_10px_rgba(0,0,0,0.1)]"
@@ -50,7 +52,7 @@ export function ImportWalletModal({ open, onClose }: ImportWalletModalProps) {
       <div className="flex flex-col gap-3">
         <header>
           <h2 className="text-xl font-medium leading-[25px] text-black">
-            Import Wallet
+            {t("title")}
           </h2>
         </header>
 
@@ -59,7 +61,7 @@ export function ImportWalletModal({ open, onClose }: ImportWalletModalProps) {
             htmlFor="import-wallet-address"
             className="text-sm leading-[18px] text-black"
           >
-            Track Wallet
+            {t("trackWalletLabel")}
           </label>
 
           <input
@@ -67,7 +69,7 @@ export function ImportWalletModal({ open, onClose }: ImportWalletModalProps) {
             type="text"
             value={walletAddress}
             onChange={(event) => setWalletAddress(event.target.value)}
-            placeholder="0x0000000000000000000000000000000000000abc"
+            placeholder={t("placeholder")}
             autoComplete="off"
             spellCheck={false}
             disabled={importing}
@@ -94,7 +96,7 @@ export function ImportWalletModal({ open, onClose }: ImportWalletModalProps) {
           {importing ? (
             <Loader2 className="size-5 animate-spin" aria-hidden="true" />
           ) : (
-            "Import Wallet"
+            t("submit")
           )}
         </button>
       </div>

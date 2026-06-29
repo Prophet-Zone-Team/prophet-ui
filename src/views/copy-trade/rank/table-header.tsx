@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import {
@@ -17,6 +21,9 @@ export interface CopyTradeRankTableHeaderProps {
 export function CopyTradeRankTableHeader({
   className
 }: CopyTradeRankTableHeaderProps) {
+  const t = useTranslations("copyTrade.rank");
+  const tCommon = useTranslations("copyTrade.common");
+
   return (
     <div
       role="row"
@@ -31,22 +38,22 @@ export function CopyTradeRankTableHeader({
         #
       </span>
       <span role="columnheader" className={copyTradeRankColPlayerClass}>
-        Player
+        {tCommon("player")}
       </span>
       <span role="columnheader" className={copyTradeRankColCenterClass}>
-        Win Rate
+        {t("winRate")}
       </span>
       <span role="columnheader" className={copyTradeRankColCenterClass}>
-        Profit/Loss
+        {t("profitLoss")}
       </span>
       <span role="columnheader" className={copyTradeRankColCenterClass}>
-        Volume
+        {t("volume")}
       </span>
       <span role="columnheader" className={copyTradeRankColPredictionsClass}>
-        Predictions
+        {t("predictions")}
       </span>
       <span role="columnheader" className={copyTradeRankColActionClass}>
-        Action
+        {tCommon("action")}
       </span>
     </div>
   );

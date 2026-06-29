@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import { UserProfileCard } from "./user-profile-card";
@@ -8,23 +12,12 @@ export interface UserProfileEmptyStateProps {
   onAction?: () => void;
 }
 
-const VARIANT_COPY = {
-  connect: {
-    description: "Connect your wallet to continue",
-    actionLabel: "Connect Wallet",
-  },
-  create: {
-    description: "Start with creating an account",
-    actionLabel: "Create CopyTrade Wallet",
-  },
-} as const;
-
 export function UserProfileEmptyState({
   className,
   variant = "create",
   onAction,
 }: UserProfileEmptyStateProps) {
-  const copy = VARIANT_COPY[variant];
+  const t = useTranslations("copyTrade.profile");
 
   return (
     <UserProfileCard
@@ -39,7 +32,9 @@ export function UserProfileEmptyState({
       />
 
       <p className="text-center text-[16px] leading-5 text-[#909090]">
-        {copy.description}
+        {variant === "connect"
+          ? t("connectDescription")
+          : t("createDescription")}
       </p>
 
       <button
@@ -47,7 +42,7 @@ export function UserProfileEmptyState({
         className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-black text-[16px] leading-5 text-white transition-opacity hover:opacity-90"
         onClick={onAction}
       >
-        {copy.actionLabel}
+        {variant === "connect" ? t("connectAction") : t("createAction")}
       </button>
     </UserProfileCard>
   );

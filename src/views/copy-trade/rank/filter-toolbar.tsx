@@ -2,6 +2,8 @@
 
 import type { ReactNode } from "react";
 import { RefreshCw, Search } from "lucide-react";
+import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import type {
@@ -23,32 +25,6 @@ export interface CopyTradeRankFilterToolbarProps {
   className?: string;
 }
 
-const WALLET_TYPE_OPTIONS: {
-  id: CopyTradeRankWalletType;
-  label: string;
-  icon?: ReactNode;
-}[] = [
-  { id: "all", label: "All" },
-  {
-    id: "whale",
-    label: "Whale",
-    icon: <WhaleIcon />
-  },
-  {
-    id: "smart",
-    label: "Smart Money",
-    icon: <SmartMoneyIcon />
-  }
-];
-
-const TIME_RANGE_OPTIONS: {
-  id: CopyTradeRankTimeRange;
-  label: string;
-}[] = [
-  { id: "1d", label: "1D" },
-  { id: "all", label: "All" }
-];
-
 export function CopyTradeRankFilterToolbar({
   walletType,
   timeRange,
@@ -60,18 +36,50 @@ export function CopyTradeRankFilterToolbar({
   onRefresh,
   className
 }: CopyTradeRankFilterToolbarProps) {
+  const t = useTranslations("copyTrade.rank");
+  const tCommon = useTranslations("copyTrade.common");
+
+  const walletTypeOptions = useMemo(
+    (): {
+      id: CopyTradeRankWalletType;
+      label: string;
+      icon?: ReactNode;
+    }[] => [
+      { id: "all", label: t("filterAll") },
+      {
+        id: "whale",
+        label: t("filterWhale"),
+        icon: <WhaleIcon />
+      },
+      {
+        id: "smart",
+        label: t("filterSmartMoney"),
+        icon: <SmartMoneyIcon />
+      }
+    ],
+    [t]
+  );
+
+  const timeRangeOptions = useMemo(
+    (): { id: CopyTradeRankTimeRange; label: string }[] => [
+      { id: "1d", label: t("filter1d") },
+      { id: "all", label: t("filterAll") }
+    ],
+    [t]
+  );
+
   return (
     <div
       role="toolbar"
-      aria-label="Trader rank filters"
+      aria-label={t("ariaFilters")}
       className={cn(
-        "flex flex-col gap-3 md:flex-row md:items-center md:justify-between",
+        "flex flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between md:px-0",
         className
       )}
     >
       <div className="flex min-w-0 flex-wrap items-center gap-3">
-        <FilterSegmentGroup aria-label="Wallet type">
-          {WALLET_TYPE_OPTIONS.map((option) => (
+        <FilterSegmentGroup aria-label={t("ariaWalletType")}>
+          {walletTypeOptions.map((option) => (
             <FilterSegmentButton
               key={option.id}
               active={walletType === option.id}
@@ -87,8 +95,8 @@ export function CopyTradeRankFilterToolbar({
           ))}
         </FilterSegmentGroup>
 
-        <FilterSegmentGroup aria-label="Time range">
-          {TIME_RANGE_OPTIONS.map((option) => (
+        <FilterSegmentGroup aria-label={t("ariaTimeRange")}>
+          {timeRangeOptions.map((option) => (
             <FilterSegmentButton
               key={option.id}
               active={timeRange === option.id}
@@ -102,7 +110,7 @@ export function CopyTradeRankFilterToolbar({
         <button
           type="button"
           className="inline-flex h-[34px] shrink-0 items-center gap-1.5 border-0 bg-transparent p-0 text-[14px] leading-[18px] text-[#909090] transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label="Refresh trader rank"
+          aria-label={t("ariaRefresh")}
           disabled={refreshing}
           onClick={onRefresh}
         >
@@ -110,12 +118,12 @@ export function CopyTradeRankFilterToolbar({
             className={cn("size-[13px]", refreshing && "animate-spin")}
             aria-hidden="true"
           />
-          Refresh
+          {tCommon("refresh")}
         </button>
       </div>
 
       <label className="relative block w-full md:w-[302px]">
-        <span className="sr-only">Search by name or wallet</span>
+        <span className="sr-only">{t("searchSrOnly")}</span>
         <Search
           className="pointer-events-none absolute left-3 top-1/2 size-[14px] -translate-y-1/2 text-[#222429]"
           aria-hidden="true"
@@ -123,7 +131,7 @@ export function CopyTradeRankFilterToolbar({
         <input
           type="search"
           value={searchQuery}
-          placeholder="Search by name / wallet"
+          placeholder={t("searchPlaceholder")}
           className="box-border h-[34px] w-full rounded-[18px] border border-[#EBEBEB] bg-white py-0 pl-9 pr-3 text-[14px] leading-[18px] text-black outline-none placeholder:text-[#909090] focus-visible:border-[#909090]"
           onChange={(event) => onSearchQueryChange(event.target.value)}
         />

@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 export interface TracksEmptyStateProps {
@@ -11,6 +15,9 @@ export function TracksEmptyState({
   disabled = false,
   onImport
 }: TracksEmptyStateProps) {
+  const t = useTranslations("copyTrade.activity");
+  const tCommon = useTranslations("copyTrade.common");
+
   return (
     <div
       className={cn(
@@ -19,7 +26,7 @@ export function TracksEmptyState({
       )}
     >
       <p className="text-center text-[16px] leading-5 text-[#909090]">
-        No tracked wallet yet
+        {t("noTrackedWallet")}
       </p>
 
       <button
@@ -33,7 +40,7 @@ export function TracksEmptyState({
         )}
         onClick={onImport}
       >
-        Import
+        {tCommon("import")}
       </button>
     </div>
   );

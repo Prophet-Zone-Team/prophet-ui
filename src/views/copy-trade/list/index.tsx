@@ -1,40 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
-import { TabSwitcher } from "@/components/ui/tab-switcher";
+import { TabSwitcher, type TabSwitcherItem } from "@/components/ui/tab-switcher";
 import { cn } from "@/lib/cn";
 import { CopyTradeCopiedWalletPanel } from "@/views/copy-trade/copied-wallet";
 import { CopyTradeRankPanel } from "@/views/copy-trade/rank";
 
-const COPY_TRADE_LIST_TABS = [
-  { id: "rank", label: "Rank" },
-  { id: "copied-wallet", label: "Copied Wallet" }
-] as const;
-
-type CopyTradeListTabId = (typeof COPY_TRADE_LIST_TABS)[number]["id"];
+type CopyTradeListTabId = "rank" | "copied-wallet";
 
 export interface CopyTradeListPanelProps {
   className?: string;
 }
 
 export function CopyTradeListPanel({ className }: CopyTradeListPanelProps) {
+  const t = useTranslations("copyTrade.list");
   const [tab, setTab] = useState<CopyTradeListTabId>("rank");
+
+  const tabs = useMemo<TabSwitcherItem[]>(
+    () => [
+      { id: "rank", label: t("tabRank") },
+      {
+        id: "copied-wallet",
+        label: t("tabCopiedWallet"),
+        mobileLabel: t("tabCopiedWalletMobile")
+      }
+    ],
+    [t]
+  );
 
   return (
     <section
       className={cn("flex min-w-0 flex-col", className)}
-      aria-label="Copy trade traders"
+      aria-label={t("ariaTraders")}
     >
       <div className="px-4 pt-2 md:px-0 md:pt-0">
         <TabSwitcher
-          items={COPY_TRADE_LIST_TABS.map((item) => ({
-            id: item.id,
-            label: item.label
-          }))}
+          items={tabs}
           value={tab}
           onChange={(value) => setTab(value as CopyTradeListTabId)}
-          aria-label="Copy trade list tabs"
+          aria-label={t("ariaTabs")}
         />
       </div>
 

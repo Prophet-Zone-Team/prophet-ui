@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
 import { cn } from "@/lib/cn";
@@ -15,12 +16,7 @@ import { ImportWalletModal } from "@/views/copy-trade/import-wallet-modal";
 import { TracksList } from "./tracks";
 import { LatestList } from "./latest";
 
-const ACTIVITY_TABS = [
-  { id: "tracks", label: "Tracks" },
-  { id: "latest", label: "Latest" }
-] as const;
-
-type ActivityTabId = (typeof ACTIVITY_TABS)[number]["id"];
+type ActivityTabId = "tracks" | "latest";
 
 export interface CopyTradeActivityPanelProps {
   className?: string;
@@ -29,6 +25,8 @@ export interface CopyTradeActivityPanelProps {
 export function CopyTradeActivityPanel({
   className
 }: CopyTradeActivityPanelProps) {
+  const t = useTranslations("copyTrade.activity");
+  const tCommon = useTranslations("copyTrade.common");
   const [tab, setTab] = useState<ActivityTabId>("tracks");
   const [importOpen, setImportOpen] = useState(false);
   const authHydrated = useAuthHydrated();
@@ -42,6 +40,14 @@ export function CopyTradeActivityPanel({
   });
   const showTracksImportButton =
     tab === "tracks" && !tracksLoading && tracks.length > 0;
+
+  const activityTabs = useMemo(
+    () => [
+      { id: "tracks", label: t("tabTracks") },
+      { id: "latest", label: t("tabLatest") }
+    ],
+    [t]
+  );
 
   const handleImportClick = () => {
     if (!importDisabled) {
@@ -58,13 +64,10 @@ export function CopyTradeActivityPanel({
     >
       <div className="flex shrink-0 items-start justify-between gap-4 p-3 pb-0">
         <TabSwitcher
-          items={ACTIVITY_TABS.map((item) => ({
-            id: item.id,
-            label: item.label
-          }))}
+          items={activityTabs}
           value={tab}
           onChange={(value) => setTab(value as ActivityTabId)}
-          aria-label="Copy trade activity tabs"
+          aria-label={t("ariaTabs")}
           tabLabelClassName="leading-5"
         />
         {showTracksImportButton ? (
@@ -79,7 +82,7 @@ export function CopyTradeActivityPanel({
             )}
             onClick={handleImportClick}
           >
-            Import
+            {tCommon("import")}
           </button>
         ) : null}
       </div>

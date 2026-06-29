@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import { traderRowKey } from "@/lib/copy-trade/trader-catalog-stats";
 import { CopyTradeListStatusMessage } from "@/views/copy-trade/list/status-message";
@@ -22,6 +24,7 @@ export function TracksList({
   importDisabled = false,
   onImport
 }: TracksListProps) {
+  const t = useTranslations("copyTrade.activity");
   const { tracks, isLoading, isError, error } = useCopyTradeTracks({ enabled });
 
   if (isLoading) {
@@ -29,7 +32,7 @@ export function TracksList({
       <CopyTradeListStatusMessage
         className={cn("min-h-0 flex-1 px-3 py-4", className)}
       >
-        Loading tracks…
+        {t("loadingTracks")}
       </CopyTradeListStatusMessage>
     );
   }
@@ -39,7 +42,7 @@ export function TracksList({
       <CopyTradeListStatusMessage
         className={cn("min-h-0 flex-1 px-3 py-4", className)}
       >
-        {error instanceof Error ? error.message : "Unable to load tracks."}
+        {error instanceof Error ? error.message : t("unableToLoadTracks")}
       </CopyTradeListStatusMessage>
     );
   }
@@ -57,7 +60,7 @@ export function TracksList({
   return (
     <div
       className={cn("flex min-h-0 flex-1 flex-col px-3", className)}
-      aria-label="Tracks"
+      aria-label={t("ariaTracks")}
     >
       <TracksTableHeader />
       <ul className="mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">

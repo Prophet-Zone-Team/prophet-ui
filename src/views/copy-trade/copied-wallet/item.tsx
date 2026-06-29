@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { CopyIcon } from "@/components/icons";
 import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
@@ -19,9 +20,13 @@ import {
 import { getWalletAvatarGradient } from "@/lib/wallet/avatar-gradient";
 import type { CopyTarget, TraderCatalogEntry } from "@/types/copy-trade-api";
 import {
+  copyTradeTableMobileCardClass
+} from "@/views/copy-trade/copy-trade-ui";
+import {
   SmartMoneyIcon,
   WhaleIcon
 } from "@/views/copy-trade/rank/trader-tag-icons";
+import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mobile";
 
 import {
   copyTradeCopiedWalletColActionClass,
@@ -41,6 +46,7 @@ export interface CopyTradeCopiedWalletItemProps {
   onManage?: (target: CopyTarget) => void;
   onPauseToggle?: (target: CopyTarget) => void;
   onRemove?: (target: CopyTarget) => void;
+  layout?: "desktop" | "mobile";
   className?: string;
 }
 
@@ -136,8 +142,10 @@ export function CopyTradeCopiedWalletItem({
   onManage,
   onPauseToggle,
   onRemove,
+  layout = "desktop",
   className
 }: CopyTradeCopiedWalletItemProps) {
+  const t = useTranslations("copyTrade.copiedWallet");
   const { copy } = useCopyWithToast();
   const [expanded, setExpanded] = useState(false);
   const displayName = trader?.DisplayName || formatShortWallet(target.Wallet);
@@ -149,6 +157,13 @@ export function CopyTradeCopiedWalletItem({
   const lastTradeLabel = stats?.lastTradeAt
     ? formatCompactRelativeTime(stats.lastTradeAt)
     : "--";
+
+  const pnlTone =
+    pnlValue == null
+      ? undefined
+      : pnlValue >= 0
+        ? "text-[#65AF14]"
+        : "text-[#FF674B]";
 
   const handleRowClick = () => {
     setExpanded((current) => !current);
@@ -172,6 +187,104 @@ export function CopyTradeCopiedWalletItem({
     endedEnabled
   });
 
+  const positionsPanel = expanded ? (
+    <CopyTradeCopiedWalletPositionsPanel
+      activePositions={targetPositions.activePositions}
+      endedPositions={targetPositions.endedPositions}
+      activePage={targetPositions.activePage}
+      endedPage={targetPositions.endedPage}
+      activeHasMore={targetPositions.activeHasMore}
+      endedHasMore={targetPositions.endedHasMore}
+      loadingActive={targetPositions.loadingActive}
+      loadingEnded={targetPositions.loadingEnded}
+      errorActive={targetPositions.errorActive}
+      errorEnded={targetPositions.errorEnded}
+      onActivePageChange={targetPositions.setActivePage}
+      onEndedPageChange={targetPositions.setEndedPage}
+      onStatusChange={(status) => {
+        if (status === "ended") {
+          setEndedEnabled(true);
+        }
+      }}
+      onClick={stopRowToggle}
+    />
+  ) : null;
+
+  const rowKeyHandlers = {
+    role: "button" as const,
+    tabIndex: 0,
+    "aria-expanded": expanded,
+    "aria-label": `${displayName} copied wallet details`,
+    onClick: handleRowClick,
+    onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleRowClick();
+      }
+    }
+  };
+
+  if (layout === "mobile") {
+    return (
+      <div
+        className={cn(
+          "overflow-hidden rounded-xl border border-[#EBEBEB] bg-white",
+          className
+        )}
+      >
+        <article className={cn(copyTradeTableMobileCardClass, "border-0")} {...rowKeyHandlers}>
+          <WalletIdentityBlock
+            active={isActive}
+            wallet={target.Wallet}
+            displayName={displayName}
+            walletLabel={walletLabel}
+            imported={imported}
+            tag={tag}
+            onCopyWallet={(event) => {
+              stopRowToggle(event);
+              void copy(target.Wallet);
+            }}
+          />
+
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            <PortfolioTableMobileField label={t("totalBuy")}>
+              {formatMoneyOrDash(stats?.totalBuy)}
+            </PortfolioTableMobileField>
+            <PortfolioTableMobileField label={t("totalSell")}>
+              {formatMoneyOrDash(stats?.totalSell)}
+            </PortfolioTableMobileField>
+            <PortfolioTableMobileField label={t("buySell")}>
+              <span className="text-[#65AF14]">{stats?.buyCount ?? 0}</span>
+              <span className="text-[#909090]">/</span>
+              <span className="text-[#FF674B]">{stats?.sellCount ?? 0}</span>
+            </PortfolioTableMobileField>
+            <PortfolioTableMobileField label={t("pnl")} valueClassName={pnlTone}>
+              {formatPnlValue(stats)}
+            </PortfolioTableMobileField>
+            <PortfolioTableMobileField
+              label={t("lastTrade")}
+              valueClassName="font-normal text-[#909090]"
+            >
+              {lastTradeLabel}
+            </PortfolioTableMobileField>
+          </div>
+
+          <WalletActionButtons
+            active={isActive}
+            saving={saving}
+            onPauseToggle={() => onPauseToggle?.(target)}
+            onManage={() => onManage?.(target)}
+            onRemove={() => onRemove?.(target)}
+            onClick={stopRowToggle}
+            className="justify-end border-t border-[#EBEBEB] pt-3"
+          />
+        </article>
+
+        {positionsPanel}
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -185,56 +298,20 @@ export function CopyTradeCopiedWalletItem({
           "box-border h-[74px] cursor-pointer px-4 transition-colors hover:bg-[#FAFAFA]",
           copyTradeCopiedWalletRowGridClass
         )}
-        role="button"
-        tabIndex={0}
-        aria-expanded={expanded}
-        aria-label={`${displayName} copied wallet details`}
-        onClick={handleRowClick}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            handleRowClick();
-          }
-        }}
+        {...rowKeyHandlers}
       >
-        <div
-          className={cn(
-            copyTradeCopiedWalletColWalletClass,
-            "flex min-w-0 items-center gap-3"
-          )}
-        >
-          <CopyStatusIndicator active={isActive} />
-          <TraderAvatar wallet={target.Wallet} />
-          <div className="min-w-0">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <p className="truncate text-[16px] leading-5 text-black max-w-[160px]">
-                {displayName}
-              </p>
-              {imported ? (
-                <span className="inline-flex shrink-0 items-center rounded bg-[#EBEBEB] px-1.5 py-0.5 text-[10px] leading-[13px] text-[#909090]">
-                  Imported
-                </span>
-              ) : null}
-              {tag ? <TraderTagIcon tag={tag} /> : null}
-            </div>
-            <div className="mt-px flex min-w-0 items-center gap-1">
-              <span className="truncate text-[12px] leading-[15px] text-[#909090]">
-                {walletLabel}
-              </span>
-              <button
-                type="button"
-                className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
-                aria-label="Copy wallet address"
-                onClick={(event) => {
-                  stopRowToggle(event);
-                  void copy(target.Wallet);
-                }}
-              >
-                <CopyIcon />
-              </button>
-            </div>
-          </div>
-        </div>
+        <WalletIdentityBlock
+          active={isActive}
+          wallet={target.Wallet}
+          displayName={displayName}
+          walletLabel={walletLabel}
+          imported={imported}
+          tag={tag}
+          onCopyWallet={(event) => {
+            stopRowToggle(event);
+            void copy(target.Wallet);
+          }}
+        />
 
         <span
           className={cn(
@@ -266,11 +343,7 @@ export function CopyTradeCopiedWalletItem({
           className={cn(
             copyTradeCopiedWalletColDataClass,
             "text-[16px] leading-5 tabular-nums",
-            pnlValue == null
-              ? "text-black"
-              : pnlValue >= 0
-                ? "text-[#65AF14]"
-                : "text-[#FF674B]"
+            pnlTone
           )}
         >
           {formatPnlValue(stats)}
@@ -284,56 +357,125 @@ export function CopyTradeCopiedWalletItem({
           {lastTradeLabel}
         </span>
 
-        <div
-          className={copyTradeCopiedWalletColActionClass}
-          onClick={stopRowToggle}
-        >
-          <ActionButton
-            label={isActive ? "Pause copied wallet" : "Resume copied wallet"}
-            disabled={saving}
-            onClick={() => onPauseToggle?.(target)}
-          >
-            {isActive ? <PauseIcon /> : <PlayIcon />}
-          </ActionButton>
-          <ActionButton
-            label="Manage copied wallet settings"
-            disabled={saving}
-            onClick={() => onManage?.(target)}
-          >
-            <SettingsIcon />
-          </ActionButton>
-          <ActionButton
-            label="Remove copied wallet"
-            disabled={saving}
-            onClick={() => onRemove?.(target)}
-          >
-            <CloseIcon />
-          </ActionButton>
-        </div>
-      </article>
-
-      {expanded ? (
-        <CopyTradeCopiedWalletPositionsPanel
-          activePositions={targetPositions.activePositions}
-          endedPositions={targetPositions.endedPositions}
-          activePage={targetPositions.activePage}
-          endedPage={targetPositions.endedPage}
-          activeHasMore={targetPositions.activeHasMore}
-          endedHasMore={targetPositions.endedHasMore}
-          loadingActive={targetPositions.loadingActive}
-          loadingEnded={targetPositions.loadingEnded}
-          errorActive={targetPositions.errorActive}
-          errorEnded={targetPositions.errorEnded}
-          onActivePageChange={targetPositions.setActivePage}
-          onEndedPageChange={targetPositions.setEndedPage}
-          onStatusChange={(status) => {
-            if (status === "ended") {
-              setEndedEnabled(true);
-            }
-          }}
+        <WalletActionButtons
+          active={isActive}
+          saving={saving}
+          onPauseToggle={() => onPauseToggle?.(target)}
+          onManage={() => onManage?.(target)}
+          onRemove={() => onRemove?.(target)}
           onClick={stopRowToggle}
         />
-      ) : null}
+      </article>
+
+      {positionsPanel}
+    </div>
+  );
+}
+
+function WalletIdentityBlock({
+  active,
+  wallet,
+  displayName,
+  walletLabel,
+  imported,
+  tag,
+  onCopyWallet
+}: {
+  active: boolean;
+  wallet: string;
+  displayName: string;
+  walletLabel: string;
+  imported: boolean;
+  tag: TraderTag | "";
+  onCopyWallet: (event: MouseEvent<HTMLButtonElement>) => void;
+}) {
+  const t = useTranslations("copyTrade.copiedWallet");
+  const tCommon = useTranslations("copyTrade.common");
+
+  return (
+    <div
+      className={cn(
+        copyTradeCopiedWalletColWalletClass,
+        "flex min-w-0 items-center gap-3"
+      )}
+    >
+      <CopyStatusIndicator active={active} />
+      <TraderAvatar wallet={wallet} />
+      <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <p className="max-w-[160px] truncate text-[16px] leading-5 text-black">
+            {displayName}
+          </p>
+          {imported ? (
+            <span className="inline-flex shrink-0 items-center rounded bg-[#EBEBEB] px-1.5 py-0.5 text-[10px] leading-[13px] text-[#909090]">
+              {tCommon("imported")}
+            </span>
+          ) : null}
+          {tag ? <TraderTagIcon tag={tag} /> : null}
+        </div>
+        <div className="mt-px flex min-w-0 items-center gap-1">
+          <span className="truncate text-[12px] leading-[15px] text-[#909090]">
+            {walletLabel}
+          </span>
+          <button
+            type="button"
+            className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
+            aria-label={tCommon("copyWalletAddress")}
+            onClick={onCopyWallet}
+          >
+            <CopyIcon />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WalletActionButtons({
+  active,
+  saving,
+  onPauseToggle,
+  onManage,
+  onRemove,
+  onClick,
+  className
+}: {
+  active: boolean;
+  saving: boolean;
+  onPauseToggle: () => void;
+  onManage: () => void;
+  onRemove: () => void;
+  onClick: (event: MouseEvent<HTMLDivElement>) => void;
+  className?: string;
+}) {
+  const t = useTranslations("copyTrade.copiedWallet");
+
+  return (
+    <div
+      className={cn(copyTradeCopiedWalletColActionClass, className)}
+      onClick={onClick}
+    >
+      <ActionButton
+        label={active ? t("pauseCopiedWallet") : t("resumeCopiedWallet")}
+        disabled={saving}
+        onClick={onPauseToggle}
+      >
+        {active ? <PauseIcon /> : <PlayIcon />}
+      </ActionButton>
+      <ActionButton
+        label={t("manageSettings")}
+        disabled={saving}
+        onClick={onManage}
+      >
+        <SettingsIcon />
+      </ActionButton>
+      <ActionButton
+        label={t("removeCopiedWallet")}
+        disabled={saving}
+        onClick={onRemove}
+      >
+        <CloseIcon />
+      </ActionButton>
     </div>
   );
 }

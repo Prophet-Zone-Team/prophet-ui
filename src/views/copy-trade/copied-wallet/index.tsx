@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { getCopyTargetStats } from "@/lib/copy-trade/target-stats";
 import { targetToWalletCopyForm } from "@/lib/copy-trade/transforms";
 import type { CopyTargetForm } from "@/lib/copy-trade/transforms";
 import type { CopyTarget, TraderCatalogEntry } from "@/types/copy-trade-api";
+import { copyTradeTableMobileListClass } from "@/views/copy-trade/copy-trade-ui";
 import { CopyTradeListStatusMessage } from "@/views/copy-trade/list/status-message";
 import { useCopyActions } from "@/views/copy-trade/use-copy-actions";
 import { useCopyTradeRank } from "@/views/copy-trade/use-copy-trade-rank";
@@ -43,6 +45,7 @@ export function CopyTradeCopiedWalletPanel({
   className,
   enabled = true
 }: CopyTradeCopiedWalletPanelProps) {
+  const t = useTranslations("copyTrade.copiedWallet");
   const {
     targets,
     isLoading,
@@ -91,49 +94,81 @@ export function CopyTradeCopiedWalletPanel({
     [removeCopy]
   );
 
+  const copiedWalletItemProps = (target: CopyTarget) => ({
+    target,
+    trader: tradersByWallet.get(target.Wallet.toLowerCase()) ?? null,
+    stats: getCopyTargetStats(statsByWallet, target.Wallet),
+    saving,
+    onManage: setManageTarget,
+    onPauseToggle: handlePauseToggle,
+    onRemove: handleRemove
+  });
+
+  const renderCopiedWalletList = (layout: "desktop" | "mobile") => {
+    const statusClassName = layout === "desktop" ? "col-span-full" : undefined;
+
+    if (!hasSession) {
+      return (
+        <CopyTradeListStatusMessage className={statusClassName}>
+          {t("createWalletToView")}
+        </CopyTradeListStatusMessage>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <CopyTradeListStatusMessage className={statusClassName}>
+          {t("loading")}
+        </CopyTradeListStatusMessage>
+      );
+    }
+
+    if (isError) {
+      return (
+        <CopyTradeListStatusMessage className={statusClassName}>
+          {errorDetail instanceof Error
+            ? errorDetail.message
+            : t("unableToLoad")}
+        </CopyTradeListStatusMessage>
+      );
+    }
+
+    if (targets.length === 0) {
+      return (
+        <CopyTradeListStatusMessage className={statusClassName}>
+          {t("empty")}
+        </CopyTradeListStatusMessage>
+      );
+    }
+
+    return targets.map((target) => (
+      <CopyTradeCopiedWalletItem
+        key={target.Wallet}
+        layout={layout}
+        {...copiedWalletItemProps(target)}
+      />
+    ));
+  };
+
   return (
     <div className={cn("flex min-w-0 flex-col", className)}>
       <div
+        className={cn(copyTradeTableMobileListClass, "mt-4 gap-3 px-4 md:px-0")}
+        aria-label={t("ariaList")}
+      >
+        {renderCopiedWalletList("mobile")}
+      </div>
+
+      <div
         style={copyTradeCopiedWalletGridStyle}
         className={cn(
-          "mt-4 flex flex-col gap-y-2 md:grid",
+          "mt-4 hidden gap-y-2 md:grid",
           copyTradeCopiedWalletTableGridClass
         )}
-        aria-label="Copied wallet list"
+        aria-label={t("ariaList")}
       >
-        <CopyTradeCopiedWalletTableHeader className="hidden md:grid" />
-        {!hasSession ? (
-          <CopyTradeListStatusMessage className="md:col-span-full">
-            Create a copy-trade wallet to view copied wallets.
-          </CopyTradeListStatusMessage>
-        ) : isLoading ? (
-          <CopyTradeListStatusMessage className="md:col-span-full">
-            Loading copied wallets…
-          </CopyTradeListStatusMessage>
-        ) : isError ? (
-          <CopyTradeListStatusMessage className="md:col-span-full">
-            {errorDetail instanceof Error
-              ? errorDetail.message
-              : "Unable to load copied wallets."}
-          </CopyTradeListStatusMessage>
-        ) : targets.length > 0 ? (
-          targets.map((target) => (
-            <CopyTradeCopiedWalletItem
-              key={target.Wallet}
-              target={target}
-              trader={tradersByWallet.get(target.Wallet.toLowerCase()) ?? null}
-              stats={getCopyTargetStats(statsByWallet, target.Wallet)}
-              saving={saving}
-              onManage={setManageTarget}
-              onPauseToggle={handlePauseToggle}
-              onRemove={handleRemove}
-            />
-          ))
-        ) : (
-          <CopyTradeListStatusMessage className="md:col-span-full">
-            No copied wallets yet.
-          </CopyTradeListStatusMessage>
-        )}
+        <CopyTradeCopiedWalletTableHeader className="col-span-full" />
+        {renderCopiedWalletList("desktop")}
       </div>
 
       <WalletCopyModal

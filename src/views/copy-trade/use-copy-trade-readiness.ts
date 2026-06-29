@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
 import { useAuthStore } from "@/store/auth-store";
@@ -10,9 +11,6 @@ import type { CopyWallet } from "@/types/copy-trade-api";
 
 import { useCopyTradeProfileStats } from "./use-copy-trade-profile-stats";
 import { useCopyTradeSession } from "./use-copy-trade-session";
-
-export const COPY_ZERO_BALANCE_WARNING =
-  "Copy wallet balance is $0. Deposit funds before live copy orders can execute.";
 
 export interface CopyTradeReadiness {
   hydrated: boolean;
@@ -26,6 +24,8 @@ export interface CopyTradeReadiness {
 }
 
 export function useCopyTradeReadiness(): CopyTradeReadiness {
+  const tReadiness = useTranslations("copyTrade.readiness");
+  const tWalletCopy = useTranslations("copyTrade.walletCopy");
   const authHydrated = useAuthHydrated();
   const copyTradeHydrated = useCopyTradeHydrated();
   const prophetWalletAddress = useAuthStore(
@@ -57,17 +57,17 @@ export function useCopyTradeReadiness(): CopyTradeReadiness {
     let disabledReason: string | null = null;
 
     if (!prophetWalletAddress) {
-      disabledReason = "Connect wallet to copy";
+      disabledReason = tReadiness("connectWallet");
     } else if (!userId) {
-      disabledReason = "Create copy-trade account first";
+      disabledReason = tReadiness("createAccount");
     } else if (!copyWallet) {
-      disabledReason = "Create copy-trade wallet first";
+      disabledReason = tReadiness("createWallet");
     }
 
     const canOpenCopy = disabledReason === null;
     const balanceWarning =
       canOpenCopy && balance !== null && balance <= 0
-        ? COPY_ZERO_BALANCE_WARNING
+        ? tWalletCopy("zeroBalanceWarning")
         : null;
     const canSubmitCopy =
       canOpenCopy &&
@@ -91,6 +91,8 @@ export function useCopyTradeReadiness(): CopyTradeReadiness {
     hydrated,
     isLoadingBalance,
     prophetWalletAddress,
+    tReadiness,
+    tWalletCopy,
     userId
   ]);
 }

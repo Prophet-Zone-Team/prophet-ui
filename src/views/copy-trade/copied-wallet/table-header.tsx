@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 import {
@@ -15,6 +19,9 @@ export interface CopyTradeCopiedWalletTableHeaderProps {
 export function CopyTradeCopiedWalletTableHeader({
   className
 }: CopyTradeCopiedWalletTableHeaderProps) {
+  const t = useTranslations("copyTrade.copiedWallet");
+  const tCommon = useTranslations("copyTrade.common");
+
   return (
     <div
       role="row"
@@ -29,43 +36,43 @@ export function CopyTradeCopiedWalletTableHeader({
         role="columnheader"
         className={copyTradeCopiedWalletColWalletClass}
       >
-        Copied/Wallet
+        {t("colCopiedWallet")}
       </span>
       <span
         role="columnheader"
         className={copyTradeCopiedWalletColDataClass}
       >
-        Total Buy
+        {t("totalBuy")}
       </span>
       <span
         role="columnheader"
         className={copyTradeCopiedWalletColDataClass}
       >
-        Total Sell
+        {t("totalSell")}
       </span>
       <span
         role="columnheader"
         className={copyTradeCopiedWalletColDataClass}
       >
-        Buy/Sell
+        {t("buySell")}
       </span>
       <span
         role="columnheader"
         className={copyTradeCopiedWalletColDataClass}
       >
-        PnL
+        {t("pnl")}
       </span>
       <span
         role="columnheader"
         className={copyTradeCopiedWalletColDataClass}
       >
-        Last trade
+        {t("lastTrade")}
       </span>
       <span
         role="columnheader"
         className={copyTradeCopiedWalletColActionClass}
       >
-        Action
+        {tCommon("action")}
       </span>
     </div>
   );

@@ -1,15 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
-
-import { CopyButton } from "@/components/feedback/copy-button";
-import { CopyIcon } from "@/components/icons";
 import Popover from "@/components/popover";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import {
   isUserImportedTrader,
-  traderTag,
-  type TraderTag
+  traderTag
 } from "@/lib/copy-trade/trader-catalog-stats";
 import {
   resolveTraderRankDisplayStats,
@@ -18,9 +14,19 @@ import {
 import { formatCompactVolume } from "@/lib/formatters/volume";
 import type { TraderCatalogEntry } from "@/types/copy-trade-api";
 import {
+  copyTradeTableMobileCardClass
+} from "@/views/copy-trade/copy-trade-ui";
+import { CopyButton } from "@/components/feedback/copy-button";
+import { CopyIcon } from "@/components/icons";
+import { formatShortWallet } from "@/lib/team/detail-format";
+import {
+  TraderAvatar,
+  TraderBadge,
   TraderIdentity,
+  TraderTagIcon,
   TraderTrackButton
 } from "@/views/copy-trade/trader-identity";
+import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mobile";
 
 import {
   copyTradeRankColActionClass,
@@ -42,6 +48,7 @@ export interface CopyTradeRankItemProps {
   copyTradeBusy?: boolean;
   copyTradeDisabled?: boolean;
   copyTradeDisabledReason?: string | null;
+  layout?: "desktop" | "mobile";
   className?: string;
 }
 
@@ -77,123 +84,168 @@ export function CopyTradeRankItem({
   copyTradeBusy = false,
   copyTradeDisabled = false,
   copyTradeDisabledReason = null,
+  layout = "desktop",
   className
 }: CopyTradeRankItemProps) {
+  const t = useTranslations("copyTrade.rank");
+  const tCommon = useTranslations("copyTrade.common");
   const displayName = trader.DisplayName || formatShortWallet(trader.Wallet);
   const walletLabel = formatShortWallet(trader.Wallet);
+  const imported = isUserImportedTrader(trader);
+  const tag = traderTag(trader);
   const isCopyButtonDisabled = copyTradeBusy || copyTradeDisabled;
   const stats = resolveTraderRankDisplayStats(trader, timeRange);
   const pnlValue = stats.pnl ?? 0;
+  const pnlTone =
+    stats.pnl === null
+      ? "text-[#909090]"
+      : pnlValue >= 0
+        ? "text-[#65AF14]"
+        : "text-[#FF674B]";
+
+  if (layout === "mobile") {
+    return (
+      <article className={cn(copyTradeTableMobileCardClass, className)}>
+        <div className="flex items-start gap-3">
+          <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#F6F6F6] text-[16px] leading-5 text-black tabular-nums">
+            {rank}
+          </span>
+          <TraderIdentity trader={trader} className="min-w-0 flex-1" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          <PortfolioTableMobileField label={t("winRate")}>
+            {formatStatValue(stats.winRate, formatWinRate)}
+          </PortfolioTableMobileField>
+          <PortfolioTableMobileField label={t("profitLoss")} valueClassName={pnlTone}>
+            {formatStatValue(stats.pnl, formatSignedCompactUsd)}
+          </PortfolioTableMobileField>
+          <PortfolioTableMobileField label={t("volume")}>
+            {formatStatValue(
+              stats.volume,
+              (value) => formatCompactVolume(value) ?? "$0"
+            )}
+          </PortfolioTableMobileField>
+          <PortfolioTableMobileField label={t("predictions")}>
+            {formatStatValue(stats.trades, (value) => String(value))}
+          </PortfolioTableMobileField>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-[#EBEBEB] pt-3">
+          <TraderTrackButton
+            tracked={tracked}
+            onToggle={() => onTrackToggle?.(trader)}
+          />
+          <CopyTradeButton
+            busy={copyTradeBusy}
+            disabled={isCopyButtonDisabled}
+            disabledReason={copyTradeDisabledReason}
+            onClick={() => onCopyTrade?.(trader)}
+          />
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article
       style={copyTradeRankGridStyle}
       className={cn(
-        "box-border h-[74px] rounded-xl border border-[#EBEBEB] bg-white px-4",
+        "box-border col-span-full h-[74px] rounded-xl border border-[#EBEBEB] bg-white px-4",
         copyTradeRankRowGridClass,
         className
       )}
     >
-      <span
-        className={cn(
-          copyTradeRankColRankClass,
-          "text-[16px] leading-5 text-black tabular-nums"
-        )}
-      >
-        {rank}
-      </span>
+        <span
+          className={cn(
+            copyTradeRankColRankClass,
+            "text-[16px] leading-5 text-black tabular-nums"
+          )}
+        >
+          {rank}
+        </span>
 
-      <div
-        className={cn(copyTradeRankColPlayerClass, "flex items-center gap-3")}
-      >
-        <TraderAvatar wallet={trader.Wallet} />
-        <div className="min-w-0">
-          <div className="flex min-w-0 items-center gap-1.5">
-            <p className="truncate text-[16px] leading-5 text-black max-w-[160px]">
-              {displayName}
-            </p>
-            {imported ? (
-              <TraderBadge className="bg-[#EBEBEB] text-[#909090]">
-                Imported
-              </TraderBadge>
-            ) : null}
-            {tag ? <TraderTagIcon tag={tag} /> : null}
-          </div>
-          <div className="mt-px flex min-w-0 items-center gap-1">
-            <span className="truncate text-[12px] leading-[15px] text-[#909090]">
-              {walletLabel}
-            </span>
-            <CopyButton
-              text={trader.Wallet}
-              ariaLabel="Copy wallet address"
-              className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
-            >
-              <CopyIcon />
-            </CopyButton>
+        <div
+          className={cn(copyTradeRankColPlayerClass, "flex items-center gap-3")}
+        >
+          <TraderAvatar wallet={trader.Wallet} />
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <p className="max-w-[160px] truncate text-[16px] leading-5 text-black">
+                {displayName}
+              </p>
+              {imported ? (
+                <TraderBadge className="bg-[#EBEBEB] text-[#909090]">
+                  {tCommon("imported")}
+                </TraderBadge>
+              ) : null}
+              {tag ? <TraderTagIcon tag={tag} /> : null}
+            </div>
+            <div className="mt-px flex min-w-0 items-center gap-1">
+              <span className="truncate text-[12px] leading-[15px] text-[#909090]">
+                {walletLabel}
+              </span>
+              <CopyButton
+                text={trader.Wallet}
+                ariaLabel={tCommon("copyWalletAddress")}
+                className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
+              >
+                <CopyIcon />
+              </CopyButton>
+            </div>
           </div>
         </div>
-      </div>
 
-      <span
-        className={cn(
-          copyTradeRankColCenterClass,
-          "text-[16px] leading-5 text-[#909090] tabular-nums"
-        )}
-      >
-        {formatStatValue(stats.winRate, formatWinRate)}
-      </span>
-      <span
-        className={cn(
-          copyTradeRankColCenterClass,
-          "text-[16px] leading-5 tabular-nums",
-          stats.pnl === null
-            ? "text-[#909090]"
-            : pnlValue >= 0
-              ? "text-[#65AF14]"
-              : "text-[#FF674B]"
-        )}
-      >
-        {formatStatValue(stats.pnl, formatSignedCompactUsd)}
-      </span>
-      <span
-        className={cn(
-          copyTradeRankColCenterClass,
-          "text-[16px] leading-5 text-[#909090] tabular-nums"
-        )}
-      >
-        {formatStatValue(
-          stats.volume,
-          (value) => formatCompactVolume(value) ?? "$0"
-        )}
-      </span>
-      <span
-        className={cn(
-          copyTradeRankColPredictionsClass,
-          "text-[16px] leading-5 text-[#909090]"
-        )}
-      >
-        {formatStatValue(stats.trades, (value) => String(value))}
-      </span>
-
-      <div className={copyTradeRankColActionClass}>
-        <button
-          type="button"
-          className="inline-flex size-5 shrink-0 items-center justify-center border-0 bg-transparent p-0 transition-opacity hover:opacity-70"
-          aria-label={tracked ? "Untrack trader" : "Track trader"}
-          aria-pressed={tracked}
-          onClick={() => onTrackToggle?.(trader)}
+        <span
+          className={cn(
+            copyTradeRankColCenterClass,
+            "text-[16px] leading-5 text-[#909090] tabular-nums"
+          )}
         >
-          {tracked ? <TrackedIcon /> : <UntrackedIcon />}
-        </button>
+          {formatStatValue(stats.winRate, formatWinRate)}
+        </span>
+        <span
+          className={cn(
+            copyTradeRankColCenterClass,
+            "text-[16px] leading-5 tabular-nums",
+            pnlTone
+          )}
+        >
+          {formatStatValue(stats.pnl, formatSignedCompactUsd)}
+        </span>
+        <span
+          className={cn(
+            copyTradeRankColCenterClass,
+            "text-[16px] leading-5 text-[#909090] tabular-nums"
+          )}
+        >
+          {formatStatValue(
+            stats.volume,
+            (value) => formatCompactVolume(value) ?? "$0"
+          )}
+        </span>
+        <span
+          className={cn(
+            copyTradeRankColPredictionsClass,
+            "text-[16px] leading-5 text-[#909090]"
+          )}
+        >
+          {formatStatValue(stats.trades, (value) => String(value))}
+        </span>
 
-        <CopyTradeButton
-          busy={copyTradeBusy}
-          disabled={isCopyButtonDisabled}
-          disabledReason={copyTradeDisabledReason}
-          onClick={() => onCopyTrade?.(trader)}
-        />
-      </div>
-    </article>
+        <div className={copyTradeRankColActionClass}>
+          <TraderTrackButton
+            tracked={tracked}
+            onToggle={() => onTrackToggle?.(trader)}
+          />
+          <CopyTradeButton
+            busy={copyTradeBusy}
+            disabled={isCopyButtonDisabled}
+            disabledReason={copyTradeDisabledReason}
+            onClick={() => onCopyTrade?.(trader)}
+          />
+        </div>
+      </article>
   );
 }
 
@@ -208,6 +260,7 @@ function CopyTradeButton({
   disabledReason: string | null;
   onClick: () => void;
 }) {
+  const tCommon = useTranslations("copyTrade.common");
   const button = (
     <button
       type="button"
@@ -224,7 +277,7 @@ function CopyTradeButton({
       disabled={disabled}
       onClick={onClick}
     >
-      {busy ? "Copying" : "Copy"}
+      {busy ? tCommon("copying") : tCommon("copy")}
     </button>
   );
 
@@ -247,41 +300,4 @@ function CopyTradeButton({
   }
 
   return button;
-}
-
-function UntrackedIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="18"
-      viewBox="0 0 20 18"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M13.6887 0.75C11.7436 0.75 10.3503 2.48836 9.74984 3.40778C9.14872 2.48836 7.75604 0.75 5.81101 0.75C3.01994 0.75 0.75 3.24461 0.75 6.31059C0.75 7.74428 1.73045 9.79959 2.92063 10.8752C4.56702 12.9732 9.19553 16.75 9.76692 16.75C10.3484 16.75 14.8776 13.0466 16.5537 10.9004C17.7648 9.80587 18.75 7.74773 18.75 6.31059C18.75 3.24459 16.4797 0.75 13.6887 0.75Z"
-        stroke="#909090"
-        strokeWidth="1.5"
-      />
-    </svg>
-  );
-}
-
-function TrackedIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="16"
-      viewBox="0 0 18 16"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M12.9387 0C10.9936 0 9.6003 1.73836 8.99984 2.65778C8.39872 1.73836 7.00604 0 5.06101 0C2.26994 0 0 2.49461 0 5.56059C0 6.99428 0.980452 9.04959 2.17063 10.1252C3.81702 12.2232 8.44553 16 9.01692 16C9.59841 16 14.1276 12.2966 15.8037 10.1504C17.0148 9.05587 18 6.99773 18 5.56059C18 2.49459 15.7297 0 12.9387 0Z"
-        fill="#FF674B"
-      />
-    </svg>
-  );
 }

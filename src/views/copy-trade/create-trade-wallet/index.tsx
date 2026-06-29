@@ -2,6 +2,7 @@
 
 import { Check, Loader2 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
@@ -13,36 +14,7 @@ import {
 
 import { useCopyTradeTest } from "../use-copy-trade-test";
 
-const STEPS = [
-  {
-    id: "sign-in",
-    title: "Sign up / Sign in",
-    description:
-      "A platform account and independent copy-trading identity will be generated for you.",
-    actionLabel: "Sign",
-    loadingLabel: "Signing…"
-  },
-  {
-    id: "create-wallet",
-    title: "Create CopyTrading Wallet",
-    description:
-      "Generate your exclusive on-chain copy-trade wallet for fund custody and order placement.",
-    actionLabel: "Create",
-    continueLabel: "Continue",
-    refreshLabel: "Refresh",
-    loadingLabel: "Creating…"
-  },
-  {
-    id: "deposit",
-    title: "Deposit / Transfer",
-    description:
-      "Deposit USDC from your browser wallet or exchange; it will be automatically cross-chain wrapped into pUSD.",
-    actionLabel: "Deposit",
-    loadingLabel: "Checking…"
-  }
-] as const;
-
-type StepId = (typeof STEPS)[number]["id"];
+type StepId = "sign-in" | "create-wallet" | "deposit";
 type StepVisualState = "pending" | "active" | "done";
 
 export interface CreateTradeWalletModalProps {
@@ -181,6 +153,7 @@ export function CreateTradeWalletModal({
   onClose,
   onDeposit
 }: CreateTradeWalletModalProps) {
+  const t = useTranslations("copyTrade.createWallet");
   const {
     copyWallet,
     isWalletReady,
@@ -195,6 +168,36 @@ export function CreateTradeWalletModal({
     pollCopyWalletReady
   } = useCopyTradeTest();
   const [busyBalanceCheck, setBusyBalanceCheck] = useState(false);
+
+  const steps = useMemo(
+    () =>
+      [
+        {
+          id: "sign-in" as const,
+          title: t("signInTitle"),
+          description: t("signInDescription"),
+          actionLabel: t("signInAction"),
+          loadingLabel: t("signInLoading")
+        },
+        {
+          id: "create-wallet" as const,
+          title: t("createTitle"),
+          description: t("createDescription"),
+          actionLabel: t("createAction"),
+          continueLabel: t("createContinue"),
+          refreshLabel: t("createRefresh"),
+          loadingLabel: t("createLoading")
+        },
+        {
+          id: "deposit" as const,
+          title: t("depositTitle"),
+          description: t("depositDescription"),
+          actionLabel: t("depositAction"),
+          loadingLabel: t("depositLoading")
+        }
+      ] as const,
+    [t]
+  );
 
   const isWalletCreated = Boolean(copyWallet);
   const createStepBusy = busyDeploy || busyPoll;
@@ -269,15 +272,15 @@ export function CreateTradeWalletModal({
 
   const createActionLabel = useMemo(() => {
     if (!copyWallet) {
-      return STEPS[1].actionLabel;
+      return steps[1].actionLabel;
     }
 
     if (isWalletPending && !isWalletReady) {
-      return STEPS[1].continueLabel;
+      return steps[1].continueLabel;
     }
 
-    return STEPS[1].refreshLabel;
-  }, [copyWallet, isWalletPending, isWalletReady]);
+    return steps[1].refreshLabel;
+  }, [copyWallet, isWalletPending, isWalletReady, steps]);
 
   const stepActions = useMemo(
     () => ({
@@ -320,7 +323,7 @@ export function CreateTradeWalletModal({
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel="Create CopyTrade Wallet"
+      ariaLabel={t("ariaLabel")}
       className={cn(
         "w-full max-w-[556px] rounded-[20px] border border-[#EBEBEB] bg-white",
         "p-5 shadow-[0px_0px_10px_rgba(0,0,0,0.1)] sm:p-5"
@@ -330,16 +333,15 @@ export function CreateTradeWalletModal({
       <div className="flex flex-col gap-5 pr-8">
         <header className="flex flex-col gap-2">
           <h2 className="text-lg font-medium leading-[23px] text-black">
-            Create CopyTrade Wallet
+            {t("modalTitle")}
           </h2>
           <p className="text-sm font-normal leading-[18px] text-[#909090]">
-            Complete identity verification, create copy-trade wallet and deposit
-            funds to enable real-time copy trading.
+            {t("modalDescription")}
           </p>
         </header>
 
         <ol className="m-0 flex list-none flex-col gap-0 p-0">
-          {STEPS.map((step, index) => {
+          {steps.map((step, index) => {
             const state = resolveStepState(step.id, {
               isCopyTradeLoggedIn,
               isWalletCreated,

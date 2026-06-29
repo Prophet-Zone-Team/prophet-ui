@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 
 export interface TracksTableHeaderProps {
@@ -5,6 +9,9 @@ export interface TracksTableHeaderProps {
 }
 
 export function TracksTableHeader({ className }: TracksTableHeaderProps) {
+  const tCommon = useTranslations("copyTrade.common");
+  const t = useTranslations("copyTrade.activity");
+
   return (
     <div
       role="row"
@@ -13,8 +20,8 @@ export function TracksTableHeader({ className }: TracksTableHeaderProps) {
         className
       )}
     >
-      <span role="columnheader">Player</span>
-      <span role="columnheader">24h PnL</span>
+      <span role="columnheader">{tCommon("player")}</span>
+      <span role="columnheader">{t("pnl24h")}</span>
     </div>
   );
 }

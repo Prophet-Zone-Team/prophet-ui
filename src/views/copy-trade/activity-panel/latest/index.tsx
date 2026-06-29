@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { CopyTradeListStatusMessage } from "@/views/copy-trade/list/status-message";
@@ -24,6 +25,7 @@ export interface LatestListProps {
 }
 
 export function LatestList({ className, enabled = true }: LatestListProps) {
+  const t = useTranslations("copyTrade.activity");
   const { items, isLoading, isError, error } = useCopyTradeTracksLatest({
     enabled
   });
@@ -46,7 +48,7 @@ export function LatestList({ className, enabled = true }: LatestListProps) {
       <CopyTradeListStatusMessage
         className={cn("min-h-0 flex-1 px-2 py-4", className)}
       >
-        Loading latest trades…
+        {t("loadingLatest")}
       </CopyTradeListStatusMessage>
     );
   }
@@ -58,7 +60,7 @@ export function LatestList({ className, enabled = true }: LatestListProps) {
       >
         {error instanceof Error
           ? error.message
-          : "Unable to load latest trades."}
+          : t("unableToLoadLatest")}
       </CopyTradeListStatusMessage>
     );
   }
@@ -75,7 +77,7 @@ export function LatestList({ className, enabled = true }: LatestListProps) {
         "flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2",
         className
       )}
-      aria-label="Latest"
+      aria-label={t("ariaLatest")}
     >
       {items.map((item) => (
         <li key={latestItemKey(item)}>

@@ -1,6 +1,7 @@
 "use client";
 
 import type { MouseEvent, ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 import { CopyIcon } from "@/components/icons";
 import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
@@ -77,6 +78,7 @@ export function TraderIdentity({
   showWalletCopy = true,
   className
 }: TraderIdentityProps) {
+  const tCommon = useTranslations("copyTrade.common");
   const { copy } = useCopyWithToast();
   const displayName = trader.DisplayName || formatShortWallet(trader.Wallet);
   const walletLabel = formatShortWallet(trader.Wallet);
@@ -106,7 +108,7 @@ export function TraderIdentity({
           </p>
           {imported ? (
             <TraderBadge className="bg-[#EBEBEB] text-[#909090]">
-              Imported
+              {tCommon("imported")}
             </TraderBadge>
           ) : null}
           {tag ? <TraderTagIcon tag={tag} /> : null}
@@ -119,7 +121,7 @@ export function TraderIdentity({
             <button
               type="button"
               className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
-              aria-label="Copy wallet address"
+              aria-label={tCommon("copyWalletAddress")}
               onClick={handleCopyWallet}
             >
               <CopyIcon />
@@ -142,6 +144,9 @@ export function TraderTrackButton({
   variant?: "icon" | "button";
   className?: string;
 }) {
+  const t = useTranslations("copyTrade.trader");
+  const tCommon = useTranslations("copyTrade.common");
+
   if (variant === "button") {
     return (
       <button
@@ -151,12 +156,12 @@ export function TraderTrackButton({
           tracked ? "opacity-100" : "opacity-50",
           className
         )}
-        aria-label={tracked ? "Untrack trader" : "Track trader"}
+        aria-label={tracked ? t("untrack") : t("track")}
         aria-pressed={tracked}
         onClick={onToggle}
       >
         {tracked ? <TrackedIcon /> : <UntrackedIcon />}
-        <span>Track</span>
+        <span>{tCommon("track")}</span>
       </button>
     );
   }
@@ -168,7 +173,7 @@ export function TraderTrackButton({
         "inline-flex size-5 shrink-0 items-center justify-center border-0 bg-transparent p-0 transition-opacity hover:opacity-70",
         className
       )}
-      aria-label={tracked ? "Untrack trader" : "Track trader"}
+      aria-label={tracked ? t("untrack") : t("track")}
       aria-pressed={tracked}
       onClick={onToggle}
     >

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/cn";
 import {
   openCopyTradeDeposit,
@@ -14,6 +16,8 @@ const actionButtonClass =
   "inline-flex h-10 flex-1 items-center justify-center rounded-lg text-[16px] leading-5 transition-opacity hover:opacity-90";
 
 export function ActionGroup({ className }: ActionGroupProps) {
+  const t = useTranslations("copyTrade.profile");
+
   return (
     <div className={cn("flex gap-3", className)}>
       <button
@@ -21,7 +25,7 @@ export function ActionGroup({ className }: ActionGroupProps) {
         className={cn(actionButtonClass, "bg-black text-white")}
         onClick={() => openCopyTradeDeposit()}
       >
-        Deposit
+        {t("deposit")}
       </button>
       <button
         type="button"
@@ -31,7 +35,7 @@ export function ActionGroup({ className }: ActionGroupProps) {
         )}
         onClick={() => openCopyTradeWithdraw()}
       >
-        Withdraw
+        {t("withdraw")}
       </button>
     </div>
   );
