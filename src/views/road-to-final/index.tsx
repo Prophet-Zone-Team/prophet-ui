@@ -36,6 +36,7 @@ import {
 } from "./lib/url-state";
 import { replaceRoadToFinalUrlState } from "./lib/url-state-sync";
 import { isStepOneComplete } from "./lib/validation";
+import { getFixedKnockoutWinners } from "./lib/fixed-knockout";
 import { defaultSimulatorTeamId } from "./lib/teams";
 import type { KnockoutMethodKey } from "./lib/method-keys";
 import type { KnockoutWinners } from "./types";
@@ -262,7 +263,7 @@ export function RoadToFinalPage({
     if (urlHydrated) {
       replaceRoadToFinalUrlState(router, pathname, {
         teamId: defaultSimulatorTeamId,
-        knockoutWinners: {},
+        knockoutWinners: getFixedKnockoutWinners(),
         knockoutMethod: "manualSelection",
       });
     }
