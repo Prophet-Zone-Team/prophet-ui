@@ -19,7 +19,7 @@ export const migrateAccountBalanceClass =
   "shrink-0 text-base font-[500] leading-[19px] text-prophet-foreground";
 
 export const migrateInfoBannerClass =
-  "rounded-[8px] bg-[#e3e9ff] px-2.5 py-2.5 text-sm font-[400] leading-[normal] text-[#3168ff]";
+  "rounded-[8px] bg-[#e3e9ff] dark:bg-[rgba(49,104,255,0.15)] px-2.5 py-2.5 text-sm font-[400] leading-[normal] text-[#3168ff]";
 
 export const migrateMinimumNoticeClass =
   "flex items-center gap-2 rounded-[6px] bg-[#fdd357]/20 px-3 py-2";
