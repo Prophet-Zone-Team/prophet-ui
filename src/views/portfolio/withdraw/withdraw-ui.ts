@@ -1,21 +1,21 @@
 import { cn } from "@/lib/cn";
 
 export const withdrawFieldLabelClass =
-  "text-sm font-[500] leading-[17px] text-black";
+  "text-sm font-[500] leading-[17px] text-prophet-foreground";
 
 export const withdrawInputBoxClass = cn(
-  "relative flex h-[57px] w-full items-center justify-between rounded-[6px] border border-[#EBEBEB]",
-  "bg-white pl-4 pr-8"
+  "relative flex h-[57px] w-full items-center justify-between rounded-[6px] border border-prophet-line",
+  "bg-prophet-panel pl-4 pr-8"
 );
 
 export const withdrawSelectorBoxClass = cn(
   "flex h-[57px] w-full cursor-pointer items-center justify-between rounded-[6px]",
-  "border border-[#EBEBEB] bg-white px-4 transition-colors hover:bg-[#fafbfc]"
+  "border border-prophet-line bg-prophet-panel px-4 transition-colors hover:bg-prophet-base"
 );
 
 export const withdrawAmountInputClass = cn(
-  "min-w-0 flex-1 border-0 bg-transparent p-0 text-base font-[500] text-black outline-none",
-  "placeholder:text-[#909090]"
+  "min-w-0 flex-1 border-0 bg-transparent p-0 text-base font-[500] text-prophet-foreground outline-none",
+  "placeholder:text-prophet-muted"
 );
 
 export const withdrawMaxButtonClass =

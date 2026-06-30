@@ -3,13 +3,13 @@ import { cn } from "@/lib/cn";
 export const teamPageClass = "mx-auto max-w-[1440px] px-4 pb-10 md:pt-2 sm:px-6";
 
 export const teamPanelClass = cn(
-  "overflow-hidden rounded-[12px] border border-prophet-line bg-white"
+  "overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel"
 );
 
 export const teamPanelHeadClass =
   "flex flex-wrap items-center justify-between gap-2 border-b border-prophet-line px-4 py-3";
 
-export const teamPanelTitleClass = "m-0 text-base font-[500] text-black sm:text-lg";
+export const teamPanelTitleClass = "m-0 text-base font-[500] text-prophet-foreground sm:text-lg";
 
 export const teamPanelBadgeClass = "text-xs font-[500] text-prophet-muted";
 
@@ -44,7 +44,7 @@ export const teamMetricToneClass = (tone?: "up" | "down") =>
 
 export const teamMetricValueClass = (tone?: "up" | "down") =>
   cn(
-    "text-sm font-[500] text-black",
+    "text-sm font-[500] text-prophet-foreground",
     tone === "up" && "text-prophet-green",
     tone === "down" && "text-prophet-red"
   );
@@ -52,6 +52,6 @@ export const teamMetricValueClass = (tone?: "up" | "down") =>
 export const teamMiniGridClass = "grid grid-cols-2 gap-2 sm:grid-cols-3";
 
 export const teamOpenTradeButtonClass = cn(
-  "inline-flex h-9 items-center justify-center rounded-lg border border-prophet-line bg-white px-4",
-  "text-sm font-[500] text-black transition-colors hover:bg-[#fafbfc]"
+  "inline-flex h-9 items-center justify-center rounded-lg border border-prophet-line bg-prophet-panel px-4",
+  "text-sm font-[500] text-prophet-foreground transition-colors hover:bg-prophet-base"
 );

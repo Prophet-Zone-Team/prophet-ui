@@ -42,7 +42,7 @@ export function WalletLanguageMenuItem({
       <div className="relative">
         <button
           type="button"
-          className="inline-flex h-10 min-w-[40px] items-center justify-center rounded-[20px] px-3 text-sm text-black transition-colors hover:bg-[#fafbfc]"
+          className="inline-flex h-10 min-w-[40px] items-center justify-center rounded-[20px] px-3 text-sm text-prophet-foreground transition-colors hover:bg-prophet-base"
           aria-label={t("language")}
           aria-haspopup="listbox"
           onClick={() => setExpanded((value) => !value)}
@@ -51,7 +51,7 @@ export function WalletLanguageMenuItem({
           <span className="ml-1.5 text-xs font-medium">{LOCALE_SHORT_LABELS[locale]}</span>
         </button>
         {expanded ? (
-          <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-[140px] rounded-xl border border-prophet-line bg-white p-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+          <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-[140px] rounded-xl border border-prophet-line bg-prophet-panel p-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
             {locales.map((item) => (
               <button
                 key={item}
@@ -59,8 +59,8 @@ export function WalletLanguageMenuItem({
                 role="option"
                 aria-selected={item === locale}
                 className={cn(
-                  "flex w-full items-center rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-[#f3f8fd]",
-                  item === locale ? "font-medium text-black" : "text-[#606060]"
+                  "flex w-full items-center rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-prophet-hover",
+                  item === locale ? "font-medium text-prophet-foreground" : "text-prophet-muted"
                 )}
                 onClick={() => void handleSelect(item)}
               >
@@ -83,13 +83,13 @@ export function WalletLanguageMenuItem({
         onClick={() => setExpanded((value) => !value)}
       >
         <div className="flex items-center gap-2">
-          <div className="w-[14px]">
+          <div className="w-[14px] text-prophet-muted">
             <LanguageIcon />
           </div>
           <span>{t("language")}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="shrink-0 text-sm text-[#909090]">{LOCALE_SHORT_LABELS[locale]}</span>
+          <span className="shrink-0 text-sm text-prophet-muted">{LOCALE_SHORT_LABELS[locale]}</span>
           <RightArrowIcon />
         </div>
       </button>
@@ -102,8 +102,8 @@ export function WalletLanguageMenuItem({
               type="button"
               role="menuitem"
               className={cn(
-                "flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-[#f3f8fd]",
-                item === locale ? "font-medium text-black" : "text-[#606060]"
+                "flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-prophet-hover",
+                item === locale ? "font-medium text-prophet-foreground" : "text-prophet-muted"
               )}
               onClick={() => void handleSelect(item)}
             >

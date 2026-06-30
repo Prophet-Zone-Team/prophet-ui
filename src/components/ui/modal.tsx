@@ -108,7 +108,7 @@ export function Modal({
         {!hideCloseButton ? (
           <button
             type="button"
-            className={cn("absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#EBEBEB] bg-white text-[#18110F] transition-colors hover:bg-[#fafbfc]", closeButtonClassName)}
+            className={cn("absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-prophet-line bg-prophet-panel text-prophet-foreground transition-colors hover:bg-prophet-hover", closeButtonClassName)}
             aria-label="Close"
             onClick={onClose}
           >

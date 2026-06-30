@@ -2,6 +2,7 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -9,9 +10,14 @@ const config: Config = {
           navy: "#07142d",
           ink: "#07142d",
           nav: "#667188",
-          muted: "#909090",
-          line: "#ebebeb",
-          panel: "#ffffff",
+          base: "var(--prophet-bg-base)",
+          panel: "var(--prophet-bg-panel)",
+          line: "var(--prophet-border)",
+          foreground: "var(--prophet-text)",
+          muted: "var(--prophet-text-muted)",
+          primary: "var(--prophet-btn-primary)",
+          "primary-foreground": "var(--prophet-btn-primary-text)",
+          hover: "var(--prophet-bg-hover)",
           red: "#d64545",
           green: "#65af14"
         },

@@ -18,7 +18,7 @@ const OTP_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const modalClassName = cn(
-  "w-full max-w-[468px] rounded-[20px] border border-[#ebebeb] bg-white p-6",
+  "w-full max-w-[468px] rounded-[20px] border border-prophet-line bg-prophet-panel p-6",
   "shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]",
 );
 
@@ -185,14 +185,14 @@ export function PrivyLoginModal({
       className={modalClassName}
     >
       <div className="flex flex-col gap-5">
-        <h2 className="pr-8 text-[18px] font-[500] leading-[21px] text-black">
+        <h2 className="pr-8 text-[18px] font-[500] leading-[21px] text-prophet-foreground">
           {t("loginByEmail")}
         </h2>
 
           {!emailOnlyMode ? (
             <button
               type="button"
-              className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[8px] bg-black text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
+              className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[8px] bg-black dark:bg-[#313134] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
               disabled={oauthLoading || !ready}
               onClick={() => void handleGoogle()}
             >
@@ -219,12 +219,12 @@ export function PrivyLoginModal({
               placeholder={t("emailAddress")}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="h-[50px] w-full rounded-[6px] border border-[#ebebeb] bg-white pl-3 pr-3 text-[16px] text-black outline-none placeholder:text-[#909090] focus:border-black sm:pr-[120px] sm:text-[14px]"
+              className="h-[50px] w-full rounded-[6px] border border-prophet-line bg-white dark:bg-[#17171A] pl-3 pr-3 text-[16px] text-black dark:text-white outline-none placeholder:text-[#909090] focus:border-black sm:pr-[120px] sm:text-[14px]"
             />
             <button
               type="button"
               className={cn(
-                "flex h-[50px] w-full items-center justify-center rounded-[6px] bg-black text-[14px] font-[500] leading-[18px] text-white disabled:opacity-30",
+                "flex h-[50px] w-full items-center justify-center rounded-[6px] bg-black dark:bg-[#313134] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-30",
                 "sm:absolute sm:right-[4px] sm:top-1/2 sm:h-[38px] sm:w-[105px] sm:-translate-y-1/2"
               )}
               disabled={sendCodeDisabled}
@@ -250,7 +250,7 @@ export function PrivyLoginModal({
             />
             <button
               type="button"
-              className="flex h-[42px] w-full shrink-0 items-center justify-center rounded-[6px] bg-black text-[14px] font-[500] leading-[18px] text-white disabled:opacity-30 sm:w-[105px]"
+              className="flex h-[42px] w-full shrink-0 items-center justify-center rounded-[6px] bg-prophet-primary text-[14px] font-[500] leading-[18px] text-white disabled:opacity-30 sm:w-[105px]"
               disabled={verifyDisabled || !ready}
               onClick={() => void handleVerify()}
             >
@@ -272,8 +272,8 @@ export function PrivyLoginModal({
             <button
               type="button"
               className={cn(
-                "flex items-center justify-center gap-1 border-t border-[#ebebeb] pt-4",
-                "text-[14px] font-[500] leading-[normal] text-black"
+                "flex items-center justify-center gap-1 border-t border-prophet-line pt-4",
+                "text-[14px] font-[500] leading-[normal] text-prophet-foreground"
               )}
               onClick={() => {
                 trackLoginClicked({

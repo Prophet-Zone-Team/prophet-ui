@@ -4,11 +4,11 @@ export const portfolioPageClass =
   "mx-auto w-full md:w-[1112px] px-3 md:px-4 py-[20px] sm:px-6";
 
 export const portfolioSummaryCardClass = cn(
-  "box-border min-h-[300px] rounded-[20px] border border-prophet-line bg-white p-3 md:p-6 lg:h-[300px]"
+  "box-border min-h-[300px] rounded-[20px] border border-prophet-line bg-prophet-panel p-3 md:p-6 lg:h-[300px]"
 );
 
 export const portfolioActivityCardClass = cn(
-  "box-border flex min-h-0 flex-col rounded-[12px] border border-[#EBEBEB] bg-white md:min-h-[523px]"
+  "box-border flex min-h-0 flex-col rounded-[12px] border border-prophet-line bg-prophet-panel md:min-h-[523px]"
 );
 
 export const portfolioTableDesktopScrollClass =
@@ -22,29 +22,29 @@ export const portfolioTableMobileCardClass = cn(
 
 export const portfolioTableMobileLabelClass = "text-xs text-prophet-muted";
 
-export const portfolioTableMobileValueClass = "text-sm font-[500] text-black";
+export const portfolioTableMobileValueClass = "text-sm font-[500] text-prophet-foreground";
 
 export const portfolioSummaryLabelClass =
-  "text-[14px] font-[500] leading-[17px] text-[#909090] pb-[10px]";
+  "text-[14px] font-[500] leading-[17px] text-prophet-muted pb-[10px]";
 
 export const portfolioSummaryValueLargeClass =
-  "text-[32px] font-[500] leading-[38px] text-black";
+  "text-[32px] font-[500] leading-[38px] text-prophet-foreground";
 
 export const portfolioSummaryValueMediumClass =
-  "text-[32px] md:text-[20px] font-[500] leading-[38px] md:leading-12 text-black mt-2";
+  "text-[32px] md:text-[20px] font-[500] leading-[38px] md:leading-12 text-prophet-foreground mt-2";
 
 export const portfolioPendingDepositButtonClass = cn(
-  "inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-black px-2 md:px-3 mt-2",
-  "text-xs font-[500] leading-[14px] text-white transition-opacity hover:opacity-90",
+  "inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-prophet-primary px-2 md:px-3 mt-2",
+  "text-xs font-[500] leading-[14px] text-prophet-primary-foreground transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50",
   "md:absolute md:right-0 md:top-[-55px] md:z-10"
 );
 
 export const portfolioWalletAddressClass =
-  "truncate text-[20px] font-[500] leading-6 text-black";
+  "truncate text-[20px] font-[500] leading-6 text-prophet-foreground";
 
 export const portfolioAvatarClass = cn(
-  "size-[52px] shrink-0 rounded-full border-4 border-white shadow-[0_0_4px_rgba(0,0,0,0.25)]",
+  "size-[52px] shrink-0 rounded-full border-4 border-prophet-panel shadow-[0_0_4px_rgba(0,0,0,0.25)]",
   "bg-[radial-gradient(100%_100%_at_50%_0%,#FF6BBA_0%,#4DA0FF_65.38%,#59FFA1_100%)]"
 );
 
@@ -56,8 +56,8 @@ export const portfolioDepositButtonClass = cn(
 
 export const portfolioWithdrawButtonClass = cn(
   "flex h-[55px] w-full max-w-[235px] items-center justify-center rounded-xl",
-  "border border-prophet-muted bg-white text-base font-[400] leading-[19px] text-black",
-  "transition-colors hover:bg-[#fafbfc] disabled:cursor-not-allowed disabled:opacity-50"
+  "border border-prophet-muted bg-prophet-panel text-base font-[400] leading-[19px] text-prophet-foreground",
+  "transition-colors hover:bg-prophet-base disabled:cursor-not-allowed disabled:opacity-50"
 );
 
 export const portfolioConnectButtonClass = cn(
@@ -117,8 +117,8 @@ export const portfolioHistoryTableHeadClass = cn(
 );
 
 export const portfolioHistoryRowClass = cn(
-  "grid min-h-[62px] w-full items-center gap-3 rounded-[12px] bg-white px-3 py-2",
-  "text-left transition-colors hover:bg-[#F9FAFC] md:gap-4 md:px-4",
+  "grid min-h-[62px] w-full items-center gap-3 rounded-[12px] bg-prophet-panel px-3 py-2",
+  "text-left transition-colors hover:bg-prophet-base md:gap-4 md:px-4",
   portfolioHistoryTableGridColsClass
 );
 
@@ -128,18 +128,18 @@ export const portfolioHistoryRowLinkClass = cn(
 );
 
 export const portfolioHistoryMobileCardClass = cn(
-  "flex flex-col gap-2.5 rounded-[12px] bg-white px-3 py-3 transition-colors hover:bg-[#F9FAFC]"
+  "flex flex-col gap-2.5 rounded-[12px] bg-prophet-panel px-3 py-3 transition-colors hover:bg-prophet-base"
 );
 
 export const portfolioActionButtonClass = cn(
-  "flex h-8 shrink-0 items-center justify-center rounded-md bg-black px-4",
+  "flex h-8 shrink-0 items-center justify-center rounded-md bg-prophet-primary px-4",
   "text-sm font-[500] text-white transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 
 export const portfolioSecondaryButtonClass = cn(
   "flex items-center justify-center underline",
-  "text-base font-[400] leading-[19px] text-black transition-colors hover:opacity-80",
+  "text-base font-[400] leading-[19px] text-prophet-foreground transition-colors hover:opacity-80",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
 

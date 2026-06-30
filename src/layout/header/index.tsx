@@ -8,10 +8,13 @@ import { cn } from "@/lib/cn";
 import { WalletMenuButton } from "@/layout/header/wallet-menu-button";
 import NavBar from "./navigation-bar";
 import { useTranslations } from "next-intl";
+import { useDarkModeEnabled } from "@/store";
 
 export function AppHeader() {
   const t = useTranslations("common");
   const pathname = usePathname();
+  const darkModeEnabled = useDarkModeEnabled();
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
@@ -42,7 +45,7 @@ export function AppHeader() {
       className={cn(
         "fixed inset-x-0 z-50 flex h-[60px] items-center justify-center transition-[background-color,box-shadow,border-color] duration-200",
         isScrolled &&
-          "border-b border-prophet-line/50 bg-white/75 shadow-prophet-wallet backdrop-blur-2xl backdrop-saturate-150",
+          "border-b border-prophet-line/50 bg-prophet-panel/75 shadow-prophet-wallet backdrop-blur-2xl backdrop-saturate-150",
         "pl-3 pr-3 md:pl-2 md:pr-0"
       )}
     >
@@ -55,14 +58,14 @@ export function AppHeader() {
               aria-label={t("prophetHome")}
             >
               <img
-                src="/logo.svg"
+                src={darkModeEnabled ? "/logo-light.svg" : "/logo.svg"}
                 alt=""
                 width={29}
                 height={27}
                 className="block"
                 aria-hidden
               />
-              <span className="hidden md:block text-[20px] font-[500]">
+              <span className="hidden md:block text-[20px] font-[500] text-prophet-foreground">
                 PROPHET
               </span>
             </Link>

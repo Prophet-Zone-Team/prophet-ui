@@ -120,7 +120,7 @@ function MobileOtpInput({
           key={index}
           aria-hidden="true"
           className={cn(
-            "flex h-11 w-full min-w-0 items-center justify-center rounded-[6px] border border-[#ebebeb] bg-white",
+            "flex h-11 w-full min-w-0 items-center justify-center rounded-[6px] border border-prophet-line bg-white dark:bg-[#17171A]",
             "text-[16px] font-[500] text-black",
             isFocused && index === activeIndex && "border-black",
             disabled && "opacity-50",
@@ -259,8 +259,8 @@ function DesktopOtpInput({
           onPaste={handlePaste}
           onFocus={(event) => event.target.select()}
           className={cn(
-            "aspect-square w-full min-w-0 rounded-[6px] border border-[#ebebeb] bg-white text-center",
-            "text-[16px] font-[500] text-black outline-none",
+            "aspect-square w-full min-w-0 rounded-[6px] border border-prophet-line bg-white dark:bg-[#17171A] text-center",
+            "text-[16px] font-[500] text-black dark:text-white outline-none",
             "focus:border-black disabled:opacity-50",
             "sm:size-[42px]",
           )}

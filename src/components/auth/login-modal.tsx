@@ -138,21 +138,21 @@ export function LoginModal({ auth }: LoginModalProps) {
         hideCloseButton={false}
         overlayCloseable={!preventAutoDismiss}
         escapeCloseable={!preventAutoDismiss}
-        className="w-full max-w-md rounded-xl border border-prophet-line bg-white p-6 shadow-prophet"
+        className="w-full max-w-md rounded-xl border border-prophet-line bg-prophet-panel p-6 shadow-prophet"
       >
         <div className="flex flex-col gap-5">
           <div>
-            <h2 className="text-[18px] font-[500] leading-[21px] text-black">
+            <h2 className="text-[18px] font-[500] leading-[21px] text-prophet-foreground">
               {t("welcomeTitle")}
             </h2>
             <div className="text-[14px] font-[400] leading-[21px] text-[#909090] mt-2">
               {t.rich("welcomeDescription", {
                 brand: (chunks) => (
-                  <span className="text-black font-[500]">{chunks}</span>
+                  <span className="text-prophet-foreground font-[500]">{chunks}</span>
                 )
               })}
             </div>
-            <p className="mt-2 text-[12px] font-[400] text-[#3168FF] px-[10px] py-[4px] rounded-[8px] bg-[#E3E9FF]">
+            <p className="mt-2 text-[12px] font-[400] text-[#3168FF] px-[10px] py-[4px] rounded-[8px] bg-[#E3E9FF] dark:bg-[rgba(49,104,255,0.15)]">
               {t("disclaimer")}
             </p>
           </div>
@@ -216,8 +216,8 @@ export function LoginModal({ auth }: LoginModalProps) {
                               className={cn(
                                 "text-sm font-semibold",
                                 state === "done" || state === "active"
-                                  ? "text-prophet-ink"
-                                  : "text-prophet-muted",
+                                  ? "text-[--prophet-btn-primary]"
+                                  : "text-prophet-muted dark:text-white",
                                 state === "failed" && "text-prophet-red"
                               )}
                             >
@@ -313,7 +313,7 @@ export function LoginModal({ auth }: LoginModalProps) {
               {!isAuthenticated && !emailOnlyLogin ? (
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-1 border-t border-prophet-line pt-4 text-[14px] font-[500] leading-[normal] text-black disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-1 border-t border-prophet-line pt-4 text-[14px] font-[500] leading-[normal] text-black dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={openPrivyLogin}
                   disabled={loginInProgress || privyLoginInProgress}
                 >
@@ -592,7 +592,7 @@ function StepAction({
       return (
         <button
           type="button"
-          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[8px] bg-black text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[8px] bg-prophet-primary text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
           disabled={isEmailConnectLoading}
           onClick={onConnectEmail}
         >
@@ -609,10 +609,10 @@ function StepAction({
     }
 
     return (
-      <div className="w-full grid grid-cols-2 border border-[#EBEBEB] rounded-[12px] p-[3px]">
+      <div className="w-full grid grid-cols-2 border border-[#EBEBEB] dark:border-[#353535] rounded-[12px] p-[3px]">
         <button
           type="button"
-          className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] w-full h-[50px] text-[14px] font-[500] leading-[18px] text-white bg-black disabled:opacity-60 duration-150"
+          className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] w-full h-[50px] text-[14px] font-[500] leading-[18px] text-white bg-prophet-primary disabled:opacity-60 duration-150"
           disabled={loginInProgress}
           onClick={onConnectWallet}
         >
@@ -620,7 +620,7 @@ function StepAction({
         </button>
         <button
           type="button"
-          className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] w-full h-[50px] text-[14px] font-[500] leading-[18px] text-black disabled:opacity-60 duration-150"
+          className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] w-full h-[50px] text-[14px] font-[500] leading-[18px] text-prophet-primary-foreground disabled:opacity-60 duration-150"
           disabled={loginInProgress}
           onClick={onConnectNear}
         >
@@ -634,7 +634,7 @@ function StepAction({
     return (
       <button
         type="button"
-        className="shrink-0 rounded-[8px] bg-black w-[100px] h-[40px] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
+        className="shrink-0 rounded-[8px] bg-prophet-primary w-[100px] h-[40px] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
         disabled={loginInProgress}
         onClick={onSignTokens}
       >
@@ -646,7 +646,7 @@ function StepAction({
   return (
     <button
       type="button"
-      className="shrink-0 rounded-[8px] bg-black w-[100px] h-[40px] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
+      className="shrink-0 rounded-[8px] bg-prophet-primary w-[100px] h-[40px] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
       disabled={loginInProgress}
       onClick={onSignClob}
     >
@@ -681,7 +681,7 @@ function StepIcon({ state }: { state: StepVisualState }) {
   }
 
   return (
-    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-prophet-line bg-white" />
+    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-prophet-line bg-white dark:bg-[#17171A]" />
   );
 }
 

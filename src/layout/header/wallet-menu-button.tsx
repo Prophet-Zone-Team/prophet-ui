@@ -14,6 +14,7 @@ import { DepositDialog } from "@/views/portfolio/deposit";
 import { MigrateDialog } from "@/views/portfolio/migrate";
 import { PrivateTopupOnboarding } from "@/views/portfolio/private-topup/private-topup-onboarding";
 import { formatNumber } from "@/utils";
+import { WalletDarkModeMenuItem } from "./wallet-dark-mode-menu-item";
 import { WalletLanguageMenuItem } from "./wallet-language-menu-item";
 import { WalletOutcomeDisplayMenuItem } from "./wallet-outcome-display-menu-item";
 import { useTranslations } from "next-intl";
@@ -166,6 +167,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
     return (
       <div ref={menuRef} className="relative inline-flex flex-col items-end">
         <div className="flex items-center gap-2">
+          <WalletDarkModeMenuItem variant="compact" />
           <WalletOutcomeDisplayMenuItem variant="compact" />
           <WalletLanguageMenuItem variant="compact" />
           <WalletLoginButton
