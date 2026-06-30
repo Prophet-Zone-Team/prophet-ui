@@ -1681,6 +1681,8 @@
     "walletStatus": {
       "notCreated": "未建立",
       "running": "運行中",
+      "paused": "已暫停",
+      "na": "N/A",
       "deploying": "部署中",
       "awaitingApproval": "等待授權",
       "unknown": "未知"

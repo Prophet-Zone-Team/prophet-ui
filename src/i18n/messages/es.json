@@ -1676,6 +1676,8 @@
     "walletStatus": {
       "notCreated": "No creada",
       "running": "En ejecución",
+      "paused": "Pausada",
+      "na": "N/A",
       "deploying": "Desplegando",
       "awaitingApproval": "Esperando aprobación",
       "unknown": "Desconocido"

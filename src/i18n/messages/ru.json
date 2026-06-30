@@ -1676,6 +1676,8 @@
     "walletStatus": {
       "notCreated": "Не создан",
       "running": "Работает",
+      "paused": "Приостановлено",
+      "na": "N/A",
       "deploying": "Развёртывание",
       "awaitingApproval": "Ожидание одобрения",
       "unknown": "Неизвестно"

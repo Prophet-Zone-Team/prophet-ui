@@ -2,9 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-
-import { CopyIcon } from "@/components/icons";
-import { PolymarketAddressCopyButton } from "@/components/trading/polymarket-address-copy-button";
 import { cn } from "@/lib/cn";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { getWalletAvatarGradient } from "@/lib/wallet/avatar-gradient";
@@ -64,15 +61,6 @@ export function CopyTradeWalletIdentity({
           >
             {walletLabel}
           </span>
-          {showCopy ? (
-            <PolymarketAddressCopyButton
-              address={address}
-              ariaLabel={t("copyPolymarketAddress")}
-              className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
-            >
-              <CopyIcon />
-            </PolymarketAddressCopyButton>
-          ) : null}
         </div>
       </div>
       {trailing}

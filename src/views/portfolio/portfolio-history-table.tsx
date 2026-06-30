@@ -86,6 +86,35 @@ export interface PortfolioHistoryTableProps {
   onConnectWallet: () => void;
 }
 
+function TransactionValueDisplay({
+  transaction
+}: {
+  transaction: PortfolioTransactionRecord;
+}) {
+  const amountLabel = formatTeamDetailMoney(Number(transaction.amount));
+  const isTrade =
+    transaction.type === "buy" || transaction.type === "sell";
+  const filledUsdc = transaction.filledUsdc.trim();
+  const filledUsdcValue = Number(filledUsdc);
+  const showFilledUsdc =
+    isTrade &&
+    filledUsdc &&
+    Number.isFinite(filledUsdcValue);
+
+  if (!showFilledUsdc) {
+    return <>{amountLabel}</>;
+  }
+
+  return (
+    <>
+      {amountLabel}
+      <span className="text-xs font-normal text-prophet-muted">
+        ({formatTeamDetailMoney(filledUsdcValue)})
+      </span>
+    </>
+  );
+}
+
 function HistoryMarketCell({
   transaction
 }: {
@@ -198,7 +227,7 @@ function HistoryRowContent({
       <HistoryMarketCell transaction={transaction} />
 
       <span className="hidden text-[14px] font-normal leading-[18px] text-black md:block">
-        {formatTeamDetailMoney(Number(transaction.amount))}
+        <TransactionValueDisplay transaction={transaction} />
       </span>
 
       <span className="hidden text-right text-[14px] font-normal leading-[18px] text-black md:block">
@@ -356,7 +385,7 @@ function renderHistoryRow(
           <div>
             <p className={portfolioTableMobileLabelClass}>{t("value")}</p>
             <p className={portfolioTableMobileValueClass}>
-              {formatTeamDetailMoney(Number(transaction.amount))}
+              <TransactionValueDisplay transaction={transaction} />
             </p>
           </div>
           <div className="text-right">

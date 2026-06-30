@@ -81,7 +81,7 @@ export function TracksItem({ trader, className }: TracksItemProps) {
         <TraderAvatar wallet={trader.Wallet} />
         <div>
           <div className="flex items-center gap-2">
-            <p className="truncate text-[16px] leading-5 text-black">
+            <p className="max-w-[150px] truncate text-[16px] leading-5 text-black">
               {displayName}
             </p>
             <div className="flex shrink-0 items-center gap-1.5">

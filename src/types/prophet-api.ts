@@ -320,8 +320,7 @@ export interface ProphetLoginReferral {
  * Why redeclare a ProphetReferral type?
  * To prevent issues if the login API no longer returns referral details in the future.
  */
-export interface ProphetReferral extends ProphetLoginReferral {
-}
+export interface ProphetReferral extends ProphetLoginReferral {}
 
 export type ProphetReferralClaimSummary = ProphetLoginReferral;
 
@@ -435,6 +434,7 @@ export interface ProphetUserTransaction {
   amount?: string;
   created_at?: string;
   trade_create_at?: string;
+  filled_usdc?: string;
   id?: number;
   market_name?: string;
   order_type?: ProphetReportOrderType;

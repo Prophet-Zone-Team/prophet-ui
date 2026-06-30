@@ -1676,6 +1676,8 @@
     "walletStatus": {
       "notCreated": "미생성",
       "running": "실행 중",
+      "paused": "일시 중지",
+      "na": "N/A",
       "deploying": "배포 중",
       "awaitingApproval": "승인 대기",
       "unknown": "알 수 없음"

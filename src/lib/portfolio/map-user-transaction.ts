@@ -107,9 +107,7 @@ export function mapProphetUserTransaction(
 
   return {
     id: String(
-      row.id ??
-        row.tx_hash ??
-        `${tradeCreatedAt}-${row.market_name ?? index}`
+      row.id ?? row.tx_hash ?? `${tradeCreatedAt}-${row.market_name ?? index}`
     ),
     type,
     side: row.side?.trim() || "—",
