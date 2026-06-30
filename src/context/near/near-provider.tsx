@@ -5,6 +5,7 @@ import type { WalletSelector } from "@near-wallet-selector/core";
 
 import "@near-wallet-selector/modal-ui/styles.css";
 
+import { useResolvedDarkMode } from "@/hooks/common/use-resolved-dark-mode";
 import {
   registerExternalEvmSigner,
   unregisterExternalEvmSigner,
@@ -13,7 +14,10 @@ import {
   getNearAccountSnapshot,
   useNearAccountStore,
 } from "@/lib/wallet/near/near-account-store";
-import { createNearSelectorBundle } from "@/lib/wallet/near/near-wallet-selector";
+import {
+  createNearSelectorBundle,
+  setNearWalletModalTheme,
+} from "@/lib/wallet/near/near-wallet-selector";
 import { createNearEvmSigner } from "@/lib/wallet/near/near-evm-signer";
 import { deriveV1SignerEvmAddress } from "@/lib/wallet/near/v1-signer";
 import { useAuthStore } from "@/store/auth-store";
@@ -41,11 +45,16 @@ function shouldDeriveNearEvmAddress(): boolean {
  * wagmi/Privy flows and any parallel wallet integrations.
  */
 export function NearProvider({ children }: { children: React.ReactNode }) {
+  const resolvedDarkMode = useResolvedDarkMode();
   const lastAccountIdRef = useRef<string | null>(null);
   const registeredAddressRef = useRef<string | null>(null);
   const syncAccountRef = useRef<
     ((accountId: string | null, options?: { force?: boolean }) => Promise<void>) | null
   >(null);
+
+  useEffect(() => {
+    setNearWalletModalTheme(resolvedDarkMode);
+  }, [resolvedDarkMode]);
 
   useEffect(() => {
     let cancelled = false;
