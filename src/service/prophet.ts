@@ -23,6 +23,7 @@ import type {
   ProphetGetTeamGameResultsData,
   ProphetGetTeamLineupData,
   ProphetGetHeadToHeadFixturesData,
+  ProphetTeamStatsInfo,
   ProphetGetGameStatisticsData,
   ProphetGetGameOddsData,
   ProphetGetGroupStandingsData,
@@ -955,6 +956,17 @@ export async function getAnalyticsHeadToHeadFixtures(params: {
       }
     }
   );
+}
+
+/** GET /v1/analytics/teams/stats — recent fixtures and strength per team */
+export async function getAnalyticsTeamsStats(params: {
+  teams: string;
+}): Promise<ProphetTeamStatsInfo[]> {
+  return prophetGet<ProphetTeamStatsInfo[]>("/v1/analytics/teams/stats", {
+    params: {
+      teams: params.teams
+    }
+  });
 }
 
 /** GET /v1/activity/winner/records — user submitted winner predictions */
