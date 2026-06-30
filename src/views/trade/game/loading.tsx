@@ -11,7 +11,7 @@ function LoadingBlock({
   return (
     <div
       className={`animate-pulse rounded-md ${
-        onDark ? "bg-prophet-panel/20" : "bg-[#ebebeb]/80"
+        onDark ? "bg-prophet-panel/20 dark:bg-[#000000]/50" : "bg-[#ebebeb]/80 dark:bg-[#000000]/50"
       } ${className ?? "h-4 w-full"}`}
       aria-hidden
     />

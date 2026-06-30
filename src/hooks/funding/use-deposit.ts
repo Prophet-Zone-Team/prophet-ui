@@ -7,17 +7,18 @@ import { parseUnits } from "viem";
 import { useAuth } from "@/context/auth";
 import type { FundingAsset } from "@/config/funding";
 import { FundingNetworkType } from "@/config/funding/networks";
+import { resolveDepositTransferWalletAddress } from "@/lib/funding/deposit-transfer-wallet";
 import { useSupportedAssets } from "@/hooks/funding/use-supported-assets";
 import {
   getStableflowRefundAddress,
   isPolygonNativeUsdcToken,
   resolveFundingWalletAddress,
-  requiresFundingWalletConnection,
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
 import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
 import { transferNearFtToken } from "@/lib/wallet/near/near-transfer";
 import { isTerminalBridgeStatus, pollBridgeAddress } from "@/lib/trading/bridge-status";
+import { useAuthStore } from "@/store/auth-store";
 import {
   fetchFunderCollateralBalances,
   resolvePendingDepositConvertMode,
@@ -74,6 +75,7 @@ export interface UseDepositResult {
 
 export function useDeposit(): UseDepositResult {
   const { session, syncCash } = useAuth();
+  const loginMethod = useAuthStore((state) => state.loginMethod);
   const [status, setStatus] = useState<BridgeFlowStatus>("idle");
   const [bridgeStatus, setBridgeStatus] = useState<BridgeAggregateStatus>("pending");
   const [transactions, setTransactions] = useState<BridgeTransactionRecord[]>([]);
@@ -197,9 +199,11 @@ export function useDeposit(): UseDepositResult {
   }, []);
 
   const depositViaPolygon = async (amountUsd: string, token: FundingAsset) => {
-    const transferWalletAddress = requiresFundingWalletConnection(token)
-      ? resolveFundingWalletAddress(token)
-      : session?.walletAddress;
+    const transferWalletAddress = resolveDepositTransferWalletAddress(
+      token,
+      loginMethod,
+      session?.walletAddress,
+    );
 
     if (!transferWalletAddress) {
       throw new Error("Connect a wallet before depositing funds.");
@@ -251,21 +255,17 @@ export function useDeposit(): UseDepositResult {
   };
 
   const resolveStableflowTransferWallet = (token: StableflowDepositToken): string => {
-    if (requiresFundingWalletConnection(token)) {
-      const fundingAddress = resolveFundingWalletAddress(token);
+    const transferWalletAddress = resolveDepositTransferWalletAddress(
+      token,
+      loginMethod,
+      session?.walletAddress,
+    );
 
-      if (!fundingAddress) {
-        throw new Error(`Connect a ${token.chainName} wallet before depositing funds.`);
-      }
-
-      return fundingAddress;
+    if (!transferWalletAddress) {
+      throw new Error(`Connect a ${token.chainName} wallet before depositing funds.`);
     }
 
-    if (!session?.walletAddress) {
-      throw new Error("Connect a wallet before depositing funds.");
-    }
-
-    return session.walletAddress;
+    return transferWalletAddress;
   };
 
   const depositViaStableflow = async (

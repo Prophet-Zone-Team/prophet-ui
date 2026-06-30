@@ -5,6 +5,8 @@ import {
 } from "@near-wallet-selector/core";
 import {
   setupModal,
+  type ModalOptions,
+  type Theme,
   type WalletSelectorModal,
 } from "@near-wallet-selector/modal-ui";
 import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
@@ -14,6 +16,7 @@ import { setupHotWallet } from "@near-wallet-selector/hot-wallet";
 import { setupWalletConnect } from "rhea-wallet-connect";
 
 import { Metadata } from "@/context/rainbowkit/metadata";
+import { readResolvedDarkModeFromDocument } from "@/hooks/common/use-resolved-dark-mode";
 
 import { NEAR_NETWORK } from "./near-config";
 
@@ -23,6 +26,20 @@ const WALLET_CONNECT_PROJECT_ID =
 export interface NearSelectorBundle {
   selector: WalletSelector;
   modal: WalletSelectorModal;
+}
+
+export function resolveNearModalTheme(darkModeEnabled: boolean): Theme {
+  return darkModeEnabled ? "dark" : "light";
+}
+
+/** Mutable options passed by reference into NEAR modal-ui setupModal. */
+export const nearModalOptions: ModalOptions = {
+  contractId: "",
+  theme: resolveNearModalTheme(readResolvedDarkModeFromDocument()),
+};
+
+export function setNearWalletModalTheme(darkModeEnabled: boolean): void {
+  nearModalOptions.theme = resolveNearModalTheme(darkModeEnabled);
 }
 
 /**
@@ -56,7 +73,7 @@ export async function createNearSelectorBundle(): Promise<NearSelectorBundle> {
     ],
   });
 
-  const modal = setupModal(selector, { contractId: "" });
+  const modal = setupModal(selector, nearModalOptions);
 
   return { selector, modal };
 }

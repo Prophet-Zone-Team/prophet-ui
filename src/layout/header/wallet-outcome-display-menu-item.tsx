@@ -95,7 +95,7 @@ export function WalletOutcomeDisplayMenuItem({
         onClick={() => setExpanded((value) => !value)}
       >
         <div className="flex items-center gap-2">
-          <div className="w-[14px] text-prophet-muted">
+          <div className="w-[14px] text-prophet-muted dark:text-white">
             <OutcomeDisplayIcon />
           </div>
           <span>{t("outcomeDisplay")}</span>
