@@ -1542,7 +1542,7 @@
     "entryStructureEntriesHeader": "エントリー",
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, other {# エントリー}}",
-    "entryStructureMaxNote": "1人あたり最大5エントリー（IP追跡エントリー注記を追加してください）",
+    "entryStructureMaxNote": "1人あたり最大5エントリー",
     "campaignRulesTitle": "Prophet ワールドカップ $10K ブラケットチャレンジ",
     "campaignRulesIntro": "ルートを予測。Prophet でピックを裏付け。$10,000 を獲得。完全なワールドカップブラケットを作成し、実際のポジションで予測を裏付け、最も正確なブラケットがグランプリを獲得。抽選なし。運なし。純粋な予測スキル。",
     "campaignRulesHowToPlayTitle": "参加方法",
