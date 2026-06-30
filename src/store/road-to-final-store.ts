@@ -10,6 +10,10 @@ import {
   type KnockoutMethodKey,
 } from "@/views/road-to-final/lib/method-keys";
 import { ROAD_TO_FINAL_BRACKET_VERSION } from "@/views/road-to-final/lib/fixed-group-stage";
+import {
+  getFixedKnockoutWinners,
+  mergeWithFixedKnockoutWinners,
+} from "@/views/road-to-final/lib/fixed-knockout";
 import { defaultSimulatorTeamId } from "@/views/road-to-final/lib/teams";
 import type { KnockoutWinners } from "@/views/road-to-final/types";
 
@@ -25,7 +29,7 @@ function sanitizeKnockoutWinners(
   winners: KnockoutWinners | Record<string, string> | undefined
 ): KnockoutWinners {
   if (!winners) {
-    return {};
+    return getFixedKnockoutWinners();
   }
 
   const sanitized: KnockoutWinners = {};
@@ -36,7 +40,7 @@ function sanitizeKnockoutWinners(
     }
   }
 
-  return sanitized;
+  return mergeWithFixedKnockoutWinners(sanitized);
 }
 
 function sanitizePersistedState(
@@ -69,7 +73,7 @@ export const useRoadToFinalStore = create<RoadToFinalStoreState>()(
   persist(
     (set) => ({
       teamId: defaultSimulatorTeamId,
-      knockoutWinners: {},
+      knockoutWinners: getFixedKnockoutWinners(),
       knockoutMethod: "manualSelection",
       setTeamId: (teamId) => {
         const team = getWorldCupTeamByIdOrCode(teamId);
@@ -105,7 +109,7 @@ export const useRoadToFinalStore = create<RoadToFinalStoreState>()(
       clearKnockoutSelections: () => {
         set({
           teamId: defaultSimulatorTeamId,
-          knockoutWinners: {},
+          knockoutWinners: getFixedKnockoutWinners(),
           knockoutMethod: "manualSelection",
         });
       },
@@ -125,7 +129,7 @@ export const useRoadToFinalStore = create<RoadToFinalStoreState>()(
         if (version < ROAD_TO_FINAL_BRACKET_VERSION) {
           return sanitizePersistedState({
             ...state,
-            knockoutWinners: {},
+            knockoutWinners: getFixedKnockoutWinners(),
             knockoutMethod: "manualSelection",
           });
         }

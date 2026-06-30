@@ -4,6 +4,7 @@ import {
   normalizeKnockoutMethod
 } from "./method-keys";
 import { ROAD_TO_FINAL_BRACKET_VERSION } from "./fixed-group-stage";
+import { mergeWithFixedKnockoutWinners } from "./fixed-knockout";
 import type { KnockoutWinners } from "../types";
 
 export type RoadToFinalUrlPayload = {
@@ -73,14 +74,16 @@ export function hydrateFromUrlPayload(
 
   if (payload.w) {
     if (payload.bv === ROAD_TO_FINAL_BRACKET_VERSION) {
-      next.knockoutWinners = Object.fromEntries(
-        Object.entries(payload.w).map(([matchId, teamId]) => [
-          Number(matchId),
-          teamId
-        ])
+      next.knockoutWinners = mergeWithFixedKnockoutWinners(
+        Object.fromEntries(
+          Object.entries(payload.w).map(([matchId, teamId]) => [
+            Number(matchId),
+            teamId,
+          ])
+        )
       );
     } else {
-      next.knockoutWinners = {};
+      next.knockoutWinners = mergeWithFixedKnockoutWinners({});
       next.knockoutMethod = "manualSelection";
     }
   }
