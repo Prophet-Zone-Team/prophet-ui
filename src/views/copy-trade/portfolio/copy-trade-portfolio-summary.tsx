@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
-import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { CopyWallet } from "@/types/copy-trade-api";
 import { CopyTradeWalletIdentity } from "@/views/copy-trade/user-profile/copy-trade-wallet-identity";
 import { PortfolioPerformanceChartContent } from "@/views/portfolio/portfolio-performance-chart-content";
@@ -12,23 +11,13 @@ import {
   portfolioSummaryLabelClass,
   portfolioSummaryValueMediumClass
 } from "@/views/portfolio/portfolio-ui";
+import { formatNumber } from "@/utils";
 
 export interface CopyTradePortfolioSummaryProps {
   copyWallet: CopyWallet;
   positionsValue: number | null;
   openPositions: number | null;
   isLoading?: boolean;
-}
-
-function formatStatValue(
-  value: number | null,
-  formatter: (next: number) => string
-): string {
-  if (value === null || Number.isNaN(value)) {
-    return "—";
-  }
-
-  return formatter(value);
 }
 
 export function CopyTradePortfolioSummary({
@@ -61,9 +50,7 @@ export function CopyTradePortfolioSummary({
                   isLoading && "animate-pulse opacity-60"
                 )}
               >
-                {formatStatValue(positionsValue, (value) =>
-                  formatTeamDetailMoney(value)
-                )}
+                {formatNumber(positionsValue ?? 0, 2, true, { round: 0, prefix: "$", isZeroPrecision: true })}
               </div>
             </div>
             <div>
@@ -78,7 +65,7 @@ export function CopyTradePortfolioSummary({
                   isLoading && "animate-pulse opacity-60"
                 )}
               >
-                {formatStatValue(openPositions, (value) => String(value))}
+                {formatNumber(openPositions ?? 0, 0, true)}
               </div>
             </div>
           </div>
