@@ -28,12 +28,12 @@ export const migrateMinimumNoticeTextClass =
   "text-sm font-[400] leading-[normal] text-[#d1a00f]";
 
 export const migrateSecondaryButtonClass = cn(
-  "flex h-[50px] w-full items-center justify-center rounded-[8px] border border-[#909090]",
+  "flex h-[50px] w-full items-center justify-center rounded-[8px] border border-prophet-muted",
   "bg-prophet-panel text-base font-[400] text-prophet-foreground transition-opacity hover:opacity-90"
 );
 
 export const migratePrimaryButtonClass = cn(
-  "flex h-[50px] w-full items-center justify-center rounded-[8px] bg-black",
+  "flex h-[50px] w-full items-center justify-center rounded-[8px] bg-black dark:bg-prophet-primary",
   "text-base font-[400] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
 );
 
@@ -56,7 +56,7 @@ export const migrateAddressRowValueClass =
   "w-[200px] break-all text-right text-sm font-[500] text-prophet-foreground shrink-0";
 
 export const migrateTransferBarClass =
-  "relative rounded-[6px] bg-[#f4f4f4] px-3 py-4 grid grid-cols-[1fr_36px_1fr] gap-2";
+  "relative rounded-[6px] bg-prophet-action-panel px-3 py-4 grid grid-cols-[1fr_36px_1fr] gap-2";
 
 export const migrateTransferSideClass = "flex min-w-0 items-center gap-2";
 
@@ -66,7 +66,7 @@ export const migrateTransferSubLabelClass = "text-[10px] font-[500] text-prophet
 
 export const migratePercentButtonClass = cn(
   "flex h-[30px] min-w-[50px] items-center justify-center rounded-[8px] border border-prophet-line",
-  "bg-prophet-panel px-3 text-sm font-[400] text-prophet-muted transition-colors hover:border-black hover:text-prophet-foreground"
+  "bg-prophet-panel px-3 text-sm font-[400] text-prophet-muted transition-colors hover:border-prophet-foreground hover:text-prophet-foreground"
 );
 
 export const migrateAmountInputWrapClass =

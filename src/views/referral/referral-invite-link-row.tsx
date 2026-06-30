@@ -29,28 +29,28 @@ export function ReferralInviteLinkRow({
   return (
     <div className={cn("relative", inviteLinkRowShellClass, className)}>
       <div className="flex items-center justify-between gap-3">
-        <span className="shrink-0 text-[14px] leading-[normal] text-[#909090]">
+        <span className="shrink-0 text-[14px] leading-[normal] text-prophet-muted">
           {referralCode ? t("referralLink") : t("inviteLink")}
         </span>
         <div className="flex min-w-0 items-center gap-1.5 flex-1">
-          <p className="flex flex-1 flex-nowrap items-center truncate text-[16px] leading-[normal] text-black">
+          <p className="flex flex-1 flex-nowrap items-center truncate text-[16px] leading-[normal] text-prophet-foreground">
             {referralCode ? (
               <>
-                <span className="w-0 flex-1 overflow-hidden text-ellipsis text-[#909090] text-right">
+                <span className="w-0 flex-1 overflow-hidden text-ellipsis text-prophet-muted text-right">
                   {linkPrefix.replace(/\?r\=$/, "")}
                 </span>
-                <span className="shrink-0 text-[#909090]">?r=</span>
+                <span className="shrink-0 text-prophet-muted">?r=</span>
                 <span className="shrink-0">{referralCode}</span>
               </>
             ) : (
-              <span className="w-0 flex-1 overflow-hidden text-ellipsis text-[#909090]">
+              <span className="w-0 flex-1 overflow-hidden text-ellipsis text-prophet-muted">
                 {displayLink}
               </span>
             )}
           </p>
           <button
             type="button"
-            className="inline-flex shrink-0 items-center justify-center p-1 text-[#909090] transition-opacity hover:opacity-70"
+            className="inline-flex shrink-0 items-center justify-center p-1 text-prophet-muted transition-opacity hover:opacity-70"
             aria-label={t("copyReferralLink")}
             onClick={() => void copy(fullLink)}
           >

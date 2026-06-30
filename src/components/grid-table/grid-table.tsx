@@ -59,7 +59,7 @@ export function GridTable<T>({
           ))}
         </div>
 
-        <div className="flex flex-col border-b border-[#EBEBEB]">
+        <div className="flex flex-col border-b border-prophet-line">
           {rows.map((row) => (
             <div
               key={getRowKey(row)}

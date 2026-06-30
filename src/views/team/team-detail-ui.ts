@@ -14,7 +14,7 @@ export const teamPanelTitleClass = "m-0 text-base font-[500] text-prophet-foregr
 export const teamPanelBadgeClass = "text-xs font-[500] text-prophet-muted";
 
 export const teamHeroCardClass = cn(
-  "rounded-[12px] border border-prophet-line bg-gradient-to-br from-[#f5f9ff] to-white p-5 shadow-prophet",
+  "rounded-[12px] border border-prophet-line bg-gradient-to-br from-prophet-base to-prophet-panel p-5 shadow-prophet",
   "grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,1.2fr)] lg:items-center"
 );
 
@@ -37,7 +37,7 @@ export const teamTwoUpClass =
 
 export const teamMetricToneClass = (tone?: "up" | "down") =>
   cn(
-    "flex flex-col gap-0.5 rounded-lg border border-prophet-line/80 bg-[#fafbfc] px-3 py-2",
+    "flex flex-col gap-0.5 rounded-lg border border-prophet-line bg-prophet-panel px-3 py-2",
     tone === "up" && "border-prophet-green/30",
     tone === "down" && "border-prophet-red/30"
   );
@@ -52,6 +52,6 @@ export const teamMetricValueClass = (tone?: "up" | "down") =>
 export const teamMiniGridClass = "grid grid-cols-2 gap-2 sm:grid-cols-3";
 
 export const teamOpenTradeButtonClass = cn(
-  "inline-flex h-9 items-center justify-center rounded-lg border border-prophet-line bg-prophet-panel px-4",
-  "text-sm font-[500] text-prophet-foreground transition-colors hover:bg-prophet-base"
+  "inline-flex h-9 items-center justify-center rounded-lg border border-prophet-line bg-prophet-primary px-4",
+  "text-sm font-[500] text-prophet-foreground transition-colors hover:opacity-80"
 );

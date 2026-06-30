@@ -78,13 +78,13 @@ export function FundingSelectorDropdown({
       >
         <span className="flex items-center gap-2">
           {triggerIcon}
-          <span className="text-base font-[500] text-black">
+          <span className="text-base font-[500] text-prophet-foreground">
             {triggerLabel}
           </span>
         </span>
         <ChevronDown
           className={cn(
-            "h-4 w-4 shrink-0 text-[#909090] transition-transform",
+            "h-4 w-4 shrink-0 text-prophet-muted transition-transform",
             open && "rotate-180"
           )}
           aria-hidden="true"
@@ -92,7 +92,7 @@ export function FundingSelectorDropdown({
       </button>
       {open ? (
         <div
-          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[220px] overflow-y-auto rounded-[6px] border border-[#EBEBEB] bg-white py-1 shadow-lg"
+          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[220px] overflow-y-auto rounded-[6px] border border-prophet-line bg-prophet-panel py-1 shadow-lg"
           role="listbox"
         >
           {children}

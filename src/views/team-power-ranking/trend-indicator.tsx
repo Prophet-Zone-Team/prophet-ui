@@ -21,7 +21,7 @@ export function TrendIndicator({ trend, className }: TrendIndicatorProps) {
       >
         <path
           d="M1 8H13"
-          stroke="#909090"
+          stroke="var(--prophet-text-muted)"
           strokeWidth="2"
           strokeLinecap="round"
         />

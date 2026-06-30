@@ -20,7 +20,7 @@ export const tradeTableHeadClass =
   "grid grid-cols-[minmax(0,1fr)_repeat(5,minmax(0,1fr))] gap-2 border-b border-prophet-line px-4 py-2 text-xs text-prophet-muted";
 
 export const tradeTableRowClass =
-  "grid grid-cols-[minmax(0,1fr)_repeat(5,minmax(0,1fr))] gap-2 border-b border-prophet-line/60 px-4 py-2.5 text-sm last:border-b-0";
+  "grid grid-cols-[minmax(0,1fr)_repeat(5,minmax(0,1fr))] gap-2 border-b border-prophet-line px-4 py-2.5 text-sm last:border-b-0";
 
 export function tradeYesNoPill(active: boolean, side: "yes" | "no") {
   return cn(
@@ -53,11 +53,11 @@ export const TRADE_BID_BUTTON_ID = "widget-trade-bid-button";
 
 export const tradeQuickAmountClass = cn(
   "flex h-[30px] items-center justify-center rounded-lg border border-prophet-line bg-prophet-panel px-3",
-  "text-sm font-[400] text-prophet-muted transition-colors hover:bg-prophet-base"
+  "text-sm font-[400] text-prophet-muted transition-colors hover:bg-prophet-hover"
 );
 
 export const tradeQuickAmountSelectedClass = cn(
-  "border-black bg-[#F5F5F5] text-prophet-foreground"
+  "border-prophet-line bg-[#F5F5F5] dark:bg-prophet-hover text-prophet-foreground"
 );
 
 export const tradeMarketButtonClass = cn(

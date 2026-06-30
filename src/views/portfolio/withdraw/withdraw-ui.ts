@@ -10,7 +10,7 @@ export const withdrawInputBoxClass = cn(
 
 export const withdrawSelectorBoxClass = cn(
   "flex h-[57px] w-full cursor-pointer items-center justify-between rounded-[6px]",
-  "border border-prophet-line bg-prophet-panel px-4 transition-colors hover:bg-prophet-base"
+  "border border-prophet-line bg-prophet-panel px-4 transition-colors hover:bg-prophet-hover"
 );
 
 export const withdrawAmountInputClass = cn(

@@ -39,7 +39,7 @@ export function TokenIcon({
             src={chainIcon}
             alt={chainLabel}
             containerClassName={cn(
-              "rounded-[4px] border border-white font-[500] text-white",
+              "rounded-[4px] border border-prophet-panel font-[500] text-white",
               iconSize
             )}
             width={size === "sm" ? 23 : 30}
@@ -48,9 +48,9 @@ export function TokenIcon({
         ) : chainLabel ? (
           <div
             className={cn(
-              "rounded-[4px] border border-white font-[500] text-white",
+              "rounded-[4px] border border-prophet-panel font-[500] text-white",
               iconSize,
-              "bg-[#909090]"
+              "bg-prophet-muted"
             )}
             aria-hidden="true"
           >
@@ -76,7 +76,7 @@ export function TokenIcon({
           className={cn(
             "flex items-center justify-center rounded-full font-[500] text-white",
             iconSize,
-            "bg-[#909090]"
+            "bg-prophet-muted"
           )}
           aria-hidden="true"
         >
@@ -88,7 +88,7 @@ export function TokenIcon({
           src={chainIcon}
           alt={chainLabel}
           containerClassName={cn(
-            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-white font-[500] text-white",
+            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-prophet-panel font-[500] text-white",
             badgeSize
           )}
           containerStyle={{
@@ -100,9 +100,9 @@ export function TokenIcon({
       ) : chainLabel ? (
         <div
           className={cn(
-            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-white font-[500] text-white",
+            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-[4px] border border-prophet-panel font-[500] text-white",
             badgeSize,
-            "bg-[#909090]"
+            "bg-prophet-muted"
           )}
           aria-hidden="true"
         >

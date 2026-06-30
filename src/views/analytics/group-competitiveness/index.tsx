@@ -22,18 +22,18 @@ export function GroupCompetitiveness({ className }: GroupCompetitivenessProps) {
       aria-label={t("groupCompetitivenessAria")}
       className={cn(
         "box-border flex h-auto w-full max-w-none flex-col md:h-[453px]",
-        "rounded-[12px] border border-[#EBEBEB] bg-white",
+        "rounded-[12px] border border-prophet-line bg-prophet-panel",
         className
       )}
     >
       <CompetitivenessHeader />
 
       {isLoading ? (
-        <p className="px-3 py-8 text-center text-[14px] text-[#909090] md:px-[25px]">
+        <p className="px-3 py-8 text-center text-[14px] text-prophet-muted md:px-[25px]">
           {t("loading")}
         </p>
       ) : isError ? (
-        <p className="px-3 py-8 text-center text-[14px] text-[#909090] md:px-[25px]">
+        <p className="px-3 py-8 text-center text-[14px] text-prophet-muted md:px-[25px]">
           {t("unableToLoadData")}
         </p>
       ) : (
@@ -41,7 +41,7 @@ export function GroupCompetitiveness({ className }: GroupCompetitivenessProps) {
           <CompetitivenessSection data={deathSection} />
 
           <div
-            className="mx-3 border-t border-[#EBEBEB] md:mx-[25px]"
+            className="mx-3 border-t border-prophet-line md:mx-[25px]"
             role="separator"
             aria-hidden
           />

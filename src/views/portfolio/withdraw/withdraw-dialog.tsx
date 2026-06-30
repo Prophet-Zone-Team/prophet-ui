@@ -629,7 +629,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                   !!recipientInput && recipientInput.trim().length > 0 ? (
                     <button
                       type="button"
-                      className="absolute right-1.5 z-[1] size-5 rounded-full bg-[#F4F4F4] flex justify-center items-center hover:bg-[#E0E0E0]"
+                      className="absolute right-1.5 z-[1] size-5 rounded-full bg-prophet-action-panel flex justify-center items-center hover:bg-[#E0E0E0]"
                       onClick={() => setRecipientInput("")}
                     >
                       <X className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -655,7 +655,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                   aria-label={tWithdraw("amountAria")}
                 />
                 <span className="flex shrink-0 items-center gap-3">
-                  <span className="text-base font-[500] text-[#909090]">
+                  <span className="text-base font-[500] text-prophet-muted">
                     {WITHDRAW_SOURCE_TOKEN_LABEL}
                   </span>
                   <button
@@ -728,7 +728,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                       size="sm"
                       chainOnly
                     />
-                    <span className="text-sm font-[500] text-black">
+                    <span className="text-sm font-[500] text-prophet-foreground">
                       {chain.chainName}
                     </span>
                   </button>
@@ -784,7 +784,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                       chainIcon={token.chainIcon}
                       size="sm"
                     />
-                    <span className="text-sm font-[500] text-black">
+                    <span className="text-sm font-[500] text-prophet-foreground">
                       {token.symbol}
                     </span>
                   </button>
@@ -796,10 +796,10 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
               <div className="flex items-center justify-between">
                 <span className={withdrawFieldLabelClass}>{tWithdraw("estReceive")}</span>
                 <div className="flex flex-col items-end gap-0.5">
-                  <span className="text-base font-[500] text-black">
+                  <span className="text-base font-[500] text-prophet-foreground">
                     {receiveLabel}
                   </span>
-                  <span className="text-base font-[500] text-[#909090]">
+                  <span className="text-base font-[500] text-prophet-muted">
                     {fiatLabel}
                   </span>
                 </div>

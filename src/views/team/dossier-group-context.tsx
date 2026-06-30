@@ -19,7 +19,7 @@ export interface DossierGroupContextProps {
 }
 
 const mobileTextClassName =
-  "font-[Sora] text-[14px] font-[500] leading-[18px] text-black";
+  "font-[Sora] text-[14px] font-[500] leading-[18px] text-prophet-foreground";
 
 const mobileFlagClassName =
   "size-6 shrink-0 rounded-[2px] shadow-[0_0_2px_rgba(0,0,0,0.2)] object-cover";
@@ -89,7 +89,7 @@ function MobileGroupContext({
 
   return (
     <section
-      className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white md:hidden"
+      className="overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel md:hidden"
       aria-label={t("groupContextAria")}
     >
       {groupLabel && peers.length > 0 ? (
@@ -152,8 +152,8 @@ function DesktopGroupContext({
               <span
                 key={peer.code}
                 className={cn(
-                  "flex items-center gap-2 rounded-md border border-prophet-line px-2 py-1.5 text-xs capitalize text-black duration-150",
-                  peer.link ? "cursor-pointer hover:bg-[#F0F2F5]" : "cursor-default"
+                  "flex items-center gap-2 rounded-md border border-prophet-line px-2 py-1.5 text-xs capitalize text-prophet-foreground duration-150",
+                  peer.link ? "cursor-pointer hover:bg-prophet-hover" : "cursor-default"
                 )}
                 onClick={() => {
                   if (peer.link) {

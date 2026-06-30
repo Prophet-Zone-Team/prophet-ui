@@ -1,16 +1,9 @@
+import { LoadingBlock } from "@/components/ui/loading-block";
+import { groupDetailCardClass, groupDetailPanelClass } from "@/views/group-detail/group-detail-ui";
 import {
   tradePageClass,
-  tradeSectionClass
+  tradePanelClass
 } from "@/views/trade/trade-widget/trade-ui";
-
-function LoadingBlock({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-md bg-[#ebebeb]/80 ${className ?? "h-4 w-full"}`}
-      aria-hidden
-    />
-  );
-}
 
 export default function GroupPageLoading() {
   return (
@@ -28,11 +21,11 @@ export default function GroupPageLoading() {
               <LoadingBlock className="h-4 w-64" />
             </div>
           </div>
-          <div className={`${tradeSectionClass} rounded-[12px] border border-[#EBEBEB] p-5`}>
+          <div className={`${groupDetailPanelClass} p-5`}>
             <LoadingBlock className="mb-4 h-6 w-40" />
             <LoadingBlock className="h-[220px] w-full" />
           </div>
-          <div className="rounded-[12px] border border-[#EBEBEB] p-5">
+          <div className={`${groupDetailCardClass} p-5`}>
             <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
               {Array.from({ length: 4 }, (_, index) => (
                 <LoadingBlock key={index} className="h-[102px] w-full rounded-lg" />
@@ -43,12 +36,12 @@ export default function GroupPageLoading() {
         </div>
 
         <aside className="order-1 flex flex-col gap-4 xl:order-2">
-          <div className={`${tradeSectionClass} rounded-[12px] border border-[#EBEBEB] p-4`}>
+          <div className={`${tradePanelClass} p-4`}>
             <LoadingBlock className="mb-4 h-6 w-24" />
             <LoadingBlock className="mb-3 h-20 w-full" />
             <LoadingBlock className="h-11 w-full rounded-lg" />
           </div>
-          <div className={tradeSectionClass}>
+          <div className={tradePanelClass}>
             <div className="border-b border-prophet-line px-4 py-3">
               <LoadingBlock className="h-5 w-36" />
             </div>

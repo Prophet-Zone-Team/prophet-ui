@@ -89,7 +89,7 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
             >
               {formatTeamDetailMoney(displayPnl)}
             </span>
-            <span className="text-sm text-[#909090]">{timeLabel}</span>
+            <span className="text-sm text-prophet-muted">{timeLabel}</span>
           </div>
         </div>
         <div
@@ -107,8 +107,8 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
               className={cn(
                 "border-0 bg-transparent p-0 text-sm font-[500] leading-[17px] transition-colors",
                 range === item
-                  ? "text-black"
-                  : "text-prophet-muted hover:text-black"
+                  ? "text-prophet-foreground"
+                  : "text-prophet-muted hover:text-prophet-foreground"
               )}
             >
               {item}

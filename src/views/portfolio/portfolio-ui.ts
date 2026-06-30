@@ -17,7 +17,7 @@ export const portfolioTableDesktopScrollClass =
 export const portfolioTableMobileListClass = "flex flex-col md:hidden";
 
 export const portfolioTableMobileCardClass = cn(
-  "flex flex-col gap-2.5 border-b border-prophet-line/60 px-3 py-3 last:border-b-0"
+  "flex flex-col gap-2.5 border-b border-prophet-line px-3 py-3 last:border-b-0"
 );
 
 export const portfolioTableMobileLabelClass = "text-xs text-prophet-muted";
@@ -49,7 +49,7 @@ export const portfolioAvatarClass = cn(
 );
 
 export const portfolioDepositButtonClass = cn(
-  "flex h-[55px] w-[235px] items-center justify-center rounded-xl bg-black",
+  "flex h-[55px] w-[235px] items-center justify-center rounded-xl bg-black dark:bg-prophet-primary",
   "text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
@@ -57,11 +57,11 @@ export const portfolioDepositButtonClass = cn(
 export const portfolioWithdrawButtonClass = cn(
   "flex h-[55px] w-full max-w-[235px] items-center justify-center rounded-xl",
   "border border-prophet-muted bg-prophet-panel text-base font-[400] leading-[19px] text-prophet-foreground",
-  "transition-colors hover:bg-prophet-base disabled:cursor-not-allowed disabled:opacity-50"
+  "transition-colors hover:bg-prophet-hover disabled:cursor-not-allowed disabled:opacity-50"
 );
 
 export const portfolioConnectButtonClass = cn(
-  "flex h-[55px] w-full max-w-[235px] items-center justify-center rounded-xl bg-black",
+  "flex h-[55px] w-full max-w-[235px] items-center justify-center rounded-xl bg-black dark:bg-prophet-primary",
   "text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
@@ -78,7 +78,7 @@ export const portfolioPositionsTableHeadClass = cn(
 );
 
 export const portfolioPositionsTableRowClass = cn(
-  "hidden min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
+  "hidden min-w-[720px] gap-3 border-b border-prophet-line px-4 py-3 text-sm last:border-b-0 items-center md:grid",
   portfolioPositionsTableGridColsClass
 );
 
@@ -88,7 +88,7 @@ export const portfolioOrdersTableHeadClass = cn(
 );
 
 export const portfolioOrdersTableRowClass = cn(
-  "hidden min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
+  "hidden min-w-[720px] gap-3 border-b border-prophet-line px-4 py-3 text-sm last:border-b-0 items-center md:grid",
   portfolioOrdersTableGridColsClass
 );
 
@@ -101,7 +101,7 @@ export const portfolioOpenOrderRowsHeadClass = cn(
 );
 
 export const portfolioOpenOrderRowsRowClass = cn(
-  "hidden min-w-[640px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
+  "hidden min-w-[640px] gap-3 border-b border-prophet-line px-4 py-3 text-sm last:border-b-0 items-center md:grid",
   portfolioOpenOrderRowsGridColsClass
 );
 
@@ -118,7 +118,7 @@ export const portfolioHistoryTableHeadClass = cn(
 
 export const portfolioHistoryRowClass = cn(
   "grid min-h-[62px] w-full items-center gap-3 rounded-[12px] bg-prophet-panel px-3 py-2",
-  "text-left transition-colors hover:bg-prophet-base md:gap-4 md:px-4",
+  "text-left transition-colors hover:bg-prophet-hover md:gap-4 md:px-4",
   portfolioHistoryTableGridColsClass
 );
 
@@ -128,7 +128,7 @@ export const portfolioHistoryRowLinkClass = cn(
 );
 
 export const portfolioHistoryMobileCardClass = cn(
-  "flex flex-col gap-2.5 rounded-[12px] bg-prophet-panel px-3 py-3 transition-colors hover:bg-prophet-base"
+  "flex flex-col gap-2.5 rounded-[12px] bg-prophet-panel px-3 py-3 transition-colors hover:bg-prophet-hover"
 );
 
 export const portfolioActionButtonClass = cn(

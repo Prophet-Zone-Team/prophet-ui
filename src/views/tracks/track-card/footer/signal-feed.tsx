@@ -76,7 +76,7 @@ export function SignalFeed({ items, className }: SignalFeedProps) {
 
   if (items.length === 0) {
     return (
-      <p className="m-0 min-w-0 flex-1 truncate text-[16px] font-[400] leading-[20px] text-[#909090]">
+      <p className="m-0 min-w-0 flex-1 truncate text-[16px] font-[400] leading-[20px] text-prophet-muted">
         {t("noRelatedSignals")}
       </p>
     );
@@ -89,7 +89,7 @@ export function SignalFeed({ items, className }: SignalFeedProps) {
       ref={containerRef}
       className={cn(
         "group relative w-full min-w-0 overflow-hidden md:w-[75%]",
-        "before:pointer-events-none before:absolute before:inset-y-0 before:right-0 before:z-[1] before:w-16 before:bg-gradient-to-l before:from-[#EDF0F3] before:to-transparent",
+        "before:pointer-events-none before:absolute before:inset-y-0 before:right-0 before:z-[1] before:w-16 before:bg-gradient-to-l before:from-prophet-action-panel before:to-transparent",
         className
       )}
       aria-label={t("relatedSignals")}

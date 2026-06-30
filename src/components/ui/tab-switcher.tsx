@@ -71,7 +71,7 @@ export function TabSwitcher({
           >
             <span
               className={cn(
-                "flex items-center gap-1 text-center text-black transition-opacity duration-200",
+                "flex items-center gap-1 text-center text-prophet-foreground transition-opacity duration-200",
                 tabLabelSizeClass[size],
                 isActive && tabLabelActiveClass[size],
                 isActive ? "opacity-100" : "opacity-55",
@@ -99,7 +99,7 @@ export function TabSwitcher({
               <motion.span
                 layoutId={underlineLayoutId}
                 aria-hidden="true"
-                className="mt-auto block h-0 w-10 shrink-0 border-b-[3px] border-black rounded-[6px]"
+                className="mt-auto block h-0 w-10 shrink-0 border-b-[3px] border-black dark:border-white rounded-[6px]"
                 transition={TAB_UNDERLINE_TRANSITION}
               />
             ) : (

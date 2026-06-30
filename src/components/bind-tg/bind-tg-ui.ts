@@ -6,7 +6,7 @@ export const bindTgCardClass = cn(
 );
 
 export const bindTgPrimaryButtonClass = cn(
-  "flex h-[50px] w-full items-center justify-center rounded-[10px] bg-black",
+  "flex h-[50px] w-full items-center justify-center rounded-[10px] bg-prophet-primary text-prophet-primary-foreground",
   "text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-100"
 );

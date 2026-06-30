@@ -30,6 +30,7 @@ import {
   type GroupChartSeriesConfig,
   type GroupChartTimeRange
 } from "@/lib/market/group-probability-chart";
+import { useDarkModeEnabled } from "@/store";
 import type { TeamMarketSnapshot } from "@/types/market";
 
 export interface GroupProbabilityChartProps {
@@ -79,6 +80,9 @@ export function GroupProbabilityChart({
 }: GroupProbabilityChartProps) {
   const t = useTranslations("trade");
   const tHome = useTranslations("home");
+  const darkModeEnabled = useDarkModeEnabled();
+  const chartMutedColor = darkModeEnabled ? "#666668" : "#909090";
+  const chartCursorColor = darkModeEnabled ? "#353535" : "#EBEBEB";
   const [timeRange, setTimeRange] = useState<GroupChartTimeRange>("all");
 
   const { points: fetchedPoints, status: fetchStatus } = useProbabilityChart({
@@ -128,13 +132,13 @@ export function GroupProbabilityChart({
   return (
     <section
       className={cn(
-        "min-w-0 rounded-xl border border-[#EBEBEB] bg-white px-4 pb-4 pt-3",
+        "min-w-0 rounded-xl border border-prophet-line bg-prophet-panel px-4 pb-4 pt-3",
         className
       )}
       aria-label={t("groupWinnerProbabilityChartAria")}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h2 className="m-0 text-base font-[500] leading-6 text-black md:text-[20px]">
+        <h2 className="m-0 text-base font-[500] leading-6 text-prophet-foreground md:text-[20px]">
           {t("groupWinnerProbability")}
         </h2>
 
@@ -150,8 +154,8 @@ export function GroupProbabilityChart({
               className={cn(
                 "border-0 bg-transparent p-0 text-[10px] leading-[12px]",
                 timeRange === range.id
-                  ? "font-[500] text-black"
-                  : "font-[400] text-[#909090]"
+                  ? "font-[500] text-prophet-foreground"
+                  : "font-[400] text-prophet-muted"
               )}
               onClick={() => setTimeRange(range.id)}
             >
@@ -162,15 +166,15 @@ export function GroupProbabilityChart({
       </div>
 
       {!showChart && fetchStatus === "loading" ? (
-        <p className="mt-4 py-8 text-center text-sm text-[#909090]">
+        <p className="mt-4 py-8 text-center text-sm text-prophet-muted">
           {tHome("loadingProbabilityHistory")}
         </p>
       ) : !showChart && fetchStatus === "error" ? (
-        <p className="mt-4 py-8 text-center text-sm text-[#909090]">
+        <p className="mt-4 py-8 text-center text-sm text-prophet-muted">
           {tHome("unableToLoadProbabilityHistory")}
         </p>
       ) : !showChart && fetchStatus === "empty" ? (
-        <p className="mt-4 py-8 text-center text-sm text-[#909090]">
+        <p className="mt-4 py-8 text-center text-sm text-prophet-muted">
           {tHome("marketTokenUnavailable")}
         </p>
       ) : (
@@ -187,7 +191,7 @@ export function GroupProbabilityChart({
                   dataKey="date"
                   padding={{ left: 0, right: 12 }}
                   tick={{
-                    fill: "#909090",
+                    fill: chartMutedColor,
                     fontSize: 10,
                     dy: 6
                   }}
@@ -200,14 +204,14 @@ export function GroupProbabilityChart({
                   orientation="right"
                   domain={yAxis.domain}
                   ticks={yAxis.ticks}
-                  tick={{ fill: "#909090", fontSize: 10 }}
+                  tick={{ fill: chartMutedColor, fontSize: 10 }}
                   tickFormatter={(value: number) => `${value}%`}
                   tickLine={false}
                   axisLine={false}
                   width={44}
                 />
                 <Tooltip
-                  cursor={{ stroke: "#EBEBEB", strokeWidth: 1 }}
+                  cursor={{ stroke: chartCursorColor, strokeWidth: 1 }}
                   content={<GroupChartTooltip series={series} />}
                 />
                 {series.map((item) => (
@@ -271,8 +275,8 @@ function GroupChartLegendItem({ item }: { item: GroupChartLegendValue }) {
         style={{ backgroundColor: item.color }}
         aria-hidden="true"
       />
-      <span className="text-[#909090]">{teamDisplayName}</span>
-      <span className="font-[500] text-black">
+      <span className="text-prophet-muted">{teamDisplayName}</span>
+      <span className="font-[500] text-prophet-foreground">
         {formatProbability(item.value)}
       </span>
     </div>
@@ -294,8 +298,8 @@ function GroupChartTooltip({
   const dateLabel = typeof label === "string" ? label : String(label ?? "");
 
   return (
-    <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-      <p className="m-0 mb-1 text-[10px] font-[400] leading-[12px] text-[#909090]">
+    <div className="rounded-xl border border-prophet-line bg-prophet-panel px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+      <p className="m-0 mb-1 text-[10px] font-[400] leading-[12px] text-prophet-muted">
         {formatGroupChartTooltipDate(dateLabel)}
       </p>
       {payload.map((entry) => {

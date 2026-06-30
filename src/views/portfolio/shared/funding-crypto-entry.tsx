@@ -29,7 +29,7 @@ export function FundingCryptoEntry({
   reference,
   walletAddress,
   connectedBalance,
-  connectedBalanceClassName = "text-black",
+  connectedBalanceClassName = "text-prophet-foreground",
   onSelectConnected,
   onSelectStableflow,
   stableflowLoading = false,
@@ -56,7 +56,7 @@ export function FundingCryptoEntry({
             >
               <span className="flex min-w-0 items-center gap-3">
                 <WalletAvatarIcon address={walletAddress} />
-                <span className="truncate text-base font-[500] text-black">
+                <span className="truncate text-base font-[500] text-prophet-foreground">
                   {formatShortWallet(walletAddress)}
                 </span>
               </span>
@@ -83,7 +83,7 @@ export function FundingCryptoEntry({
         <span className="flex min-w-0 items-center gap-3">
           {stableflowLoading ? (
             <Loader2
-              className="h-5 w-5 animate-spin text-[#909090]"
+              className="h-5 w-5 animate-spin text-prophet-muted"
               aria-hidden="true"
             />
           ) : (

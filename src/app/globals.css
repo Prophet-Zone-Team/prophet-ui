@@ -79,7 +79,8 @@
   --prophet-text-muted: #909090;
   --prophet-btn-primary: #000000;
   --prophet-btn-primary-text: #ffffff;
-  --prophet-bg-hover: #f3f8fd;
+  --prophet-bg-hover: #EBEBEB;
+  --prophet-bg-action-panel: #F4F4F4;
   color-scheme: light;
 }
 
@@ -92,6 +93,7 @@
   --prophet-btn-primary: #3168ff;
   --prophet-btn-primary-text: #ffffff;
   --prophet-bg-hover: #2e2e31;
+  --prophet-bg-action-panel: #17171A;
   color-scheme: dark;
 }
 

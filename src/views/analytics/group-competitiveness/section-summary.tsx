@@ -48,13 +48,13 @@ export function SectionSummary({
       </div>
 
       <div className="mt-3 flex items-baseline justify-between gap-3 md:mt-[16px]">
-        <h3 className="m-0 text-lg font-[500] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
+        <h3 className="m-0 text-lg font-[500] leading-[22px] text-prophet-foreground md:text-[20px] md:leading-[24px]">
           {t("groupLabel", { groupId })}
         </h3>
         <CompetitivenessScore score={score} />
       </div>
 
-      <p className="m-0 mt-3 max-w-full text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-[12px] md:max-w-[317px]">
+      <p className="m-0 mt-3 max-w-full text-[14px] font-[400] leading-[17px] text-prophet-muted md:mt-[12px] md:max-w-[317px]">
         {description}
       </p>
     </div>

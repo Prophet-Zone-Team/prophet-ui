@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import { LoadingBlock } from "@/components/ui/loading-block";
 import { cn } from "@/lib/cn";
 
 import {
@@ -12,18 +13,6 @@ import {
   referralSummaryBarClass,
   referralTopGridClass,
 } from "./referral-ui";
-
-function LoadingBlock({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "animate-pulse rounded-md bg-[#ebebeb]/80",
-        className ?? "h-4 w-full"
-      )}
-      aria-hidden
-    />
-  );
-}
 
 export function ReferralShellSkeleton() {
   const t = useTranslations("referral");
@@ -37,9 +26,15 @@ export function ReferralShellSkeleton() {
       <div className={referralTopGridClass}>
         <div className={referralRewardsCardClass} aria-hidden>
           <div className="flex h-full flex-col justify-between p-6 md:p-8">
-            <LoadingBlock className="h-4 w-40 bg-white/20" />
-            <LoadingBlock className="h-[72px] w-48 bg-white/20" />
-            <LoadingBlock className="h-4 w-56 bg-white/20" />
+            <LoadingBlock
+              className={cn("h-4 w-40 bg-white/20 dark:bg-[#000000]/50")}
+            />
+            <LoadingBlock
+              className={cn("h-[72px] w-48 bg-white/20 dark:bg-[#000000]/50")}
+            />
+            <LoadingBlock
+              className={cn("h-4 w-56 bg-white/20 dark:bg-[#000000]/50")}
+            />
           </div>
         </div>
 

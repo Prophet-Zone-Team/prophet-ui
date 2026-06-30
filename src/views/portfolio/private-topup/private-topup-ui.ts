@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 import { fundingModalCardClass } from "@/views/portfolio/shared/funding-modal-shell";
 
-export const privateTopupPageClass = "min-h-[calc(100vh-44px)] bg-[#f9fafc] px-4 pb-16 pt-8";
+export const privateTopupPageClass = "min-h-[calc(100vh-44px)] bg-prophet-base px-4 pb-16 pt-8";
 
 export const privateTopupCardClass = cn(
   "rounded-[20px] border border-prophet-line bg-prophet-panel",
@@ -25,7 +25,7 @@ export const privateTopupChangeLinkClass =
   "text-sm font-[400] text-[#3168ff] transition-opacity hover:opacity-80";
 
 export const privateTopupPrimaryButtonClass = cn(
-  "flex h-[55px] w-full items-center justify-center rounded-[12px] bg-black",
+  "flex h-[55px] w-full items-center justify-center rounded-[12px] bg-black dark:bg-prophet-primary",
   "text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90",
 );
 
@@ -46,7 +46,7 @@ export const privateTopupPrivateBalanceLargeClass =
 export const privateTopupSectionLabelClass = "text-sm font-[500] text-prophet-muted";
 
 export const privateTopupSecureIconWrapClass = cn(
-  "relative flex size-[24px] border-[2px] bg-[#616161] border-white shrink-0 items-center justify-center rounded-full",
+  "relative flex size-[24px] border-[2px] bg-[#616161] border-prophet-panel shrink-0 items-center justify-center rounded-full",
   "ring-4 ring-white/10",
 );
 
@@ -87,13 +87,13 @@ export const privateTopupWarningBannerClass = cn(
 );
 
 export const privateTopupInfoBannerClass = cn(
-  "rounded-[8px] bg-[#e3e9ff] px-4 py-3 text-center",
+  "rounded-[8px] bg-[#e3e9ff] dark:bg-[rgba(49,104,255,0.15)] px-4 py-3 text-center",
   "text-[14px] font-[400] leading-normal text-[#007aff]",
 );
 
 export const privateTopupIntroFooterCancelClass = cn(
   "inline-flex h-[50px] w-[210px] items-center justify-center rounded-[8px]",
-  "border border-[#909090] bg-prophet-panel text-[16px] font-[400] text-prophet-foreground",
+  "border border-prophet-muted bg-prophet-panel text-[16px] font-[400] text-prophet-foreground",
   "transition-opacity hover:opacity-80",
 );
 
@@ -105,7 +105,7 @@ export const privateTopupIntroFooterProceedClass = cn(
 
 export const privateTopupGuideFooterCancelClass = cn(
   "inline-flex h-[38px] min-w-[107px] items-center justify-center rounded-[8px]",
-  "border border-[#909090] bg-prophet-panel px-4 text-[16px] font-[400] text-prophet-foreground",
+  "border border-prophet-muted bg-prophet-panel px-4 text-[16px] font-[400] text-prophet-foreground",
   "transition-opacity hover:opacity-80",
 );
 
@@ -127,7 +127,7 @@ export const privateTopupTokenSearchInputClass = cn(
 );
 
 export const privateTopupTokenSearchClearClass = cn(
-  "flex size-4 shrink-0 items-center justify-center rounded-full bg-[#ebebeb]",
+  "flex size-4 shrink-0 items-center justify-center rounded-full bg-prophet-line",
   "text-prophet-muted transition-opacity hover:opacity-80",
 );
 

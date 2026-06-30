@@ -27,7 +27,7 @@ export interface TakeProfitLimitRowProps {
 
 function TakeProfitLimitTooltip({ message }: { message: string }) {
   return (
-    <div className="rounded-lg border border-[#EBEBEB] bg-white px-3 py-2 text-sm font-[400] text-black shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
+    <div className="rounded-lg border border-prophet-line bg-prophet-panel px-3 py-2 text-sm font-[400] text-prophet-foreground shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
       {message}
     </div>
   );
@@ -64,7 +64,7 @@ export function TakeProfitLimitRow({
   const rowContent = (
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-[500] leading-[18px] text-black">
+        <span className="text-sm font-[500] leading-[18px] text-prophet-foreground">
           {t("takeProfitLimit")}
         </span>
         <Switch

@@ -91,10 +91,10 @@ export function TeamOddsComparisonPanel({
                 className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] gap-2 rounded-md border border-prophet-line px-3 py-2 text-xs"
               >
                 <span className="text-prophet-muted">{item.bookmaker}</span>
-                <strong className="font-[500] text-black">
+                <strong className="font-[500] text-prophet-foreground">
                   {t("winnerOutright")}
                 </strong>
-                <b className="font-[500] text-black">
+                <b className="font-[500] text-prophet-foreground">
                   {formatProbability(item.impliedProbability)}
                 </b>
               </div>
@@ -108,10 +108,10 @@ export function TeamOddsComparisonPanel({
                 <span className="text-prophet-muted">
                   {item.bookmaker ?? t("bookmaker")}
                 </span>
-                <strong className="font-[500] text-black">
+                <strong className="font-[500] text-prophet-foreground">
                   {item.selectionName ?? item.marketName ?? t("fixtureOdds")}
                 </strong>
-                <b className="font-[500] text-black">
+                <b className="font-[500] text-prophet-foreground">
                   {item.odd ?? t("pending")}
                 </b>
               </div>

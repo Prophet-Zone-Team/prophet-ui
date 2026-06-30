@@ -28,7 +28,7 @@ export function StrategySummary({
 
   return (
     <div className={cn("flex flex-col gap-5", className)}>
-      <h3 className="m-0 text-center font-[Sora] text-lg font-semibold capitalize leading-[23px] text-black">
+      <h3 className="m-0 text-center font-[Sora] text-lg font-semibold capitalize leading-[23px] text-prophet-foreground">
         {name}
       </h3>
 

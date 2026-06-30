@@ -51,7 +51,7 @@ export function StrategyNotice({ className }: StrategyNoticeProps) {
           <button
             type="button"
             onClick={dismiss}
-            className="inline-flex h-10 w-full shrink-0 items-center justify-center rounded-lg bg-white text-base leading-5 text-black transition-opacity hover:opacity-90 sm:w-32"
+            className="inline-flex h-10 w-full shrink-0 items-center justify-center rounded-lg bg-prophet-action-panel text-base leading-5 text-prophet-foreground transition-opacity hover:opacity-90 sm:w-32"
           >
             {t("understood")}
           </button>

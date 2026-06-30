@@ -20,9 +20,9 @@ const DEPOSIT_ADDRESS_STEPS: Array<{
     title: <>Transfer on Polygon</>,
     description: (
       <>
-        Send only <strong className="font-[600] text-black">USDC</strong> or{" "}
-        <strong className="font-[600] text-black">USDC.e</strong> on{" "}
-        <strong className="font-[600] text-black">Polygon</strong> to this
+        Send only <strong className="font-[600] text-prophet-foreground">USDC</strong> or{" "}
+        <strong className="font-[600] text-prophet-foreground">USDC.e</strong> on{" "}
+        <strong className="font-[600] text-prophet-foreground">Polygon</strong> to this
         address.
       </>
     )
@@ -63,9 +63,9 @@ export function PolymarketAddressCopyConfirmDialog({
     >
       <div
         data-polymarket-address-copy-dialog
-        className="min-w-0 rounded-[20px] border border-[#EBEBEB] bg-white p-5 shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]"
+        className="min-w-0 rounded-[20px] border border-prophet-line bg-prophet-panel p-5 shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]"
       >
-        <h2 className="m-0 pr-8 text-xl font-[500] leading-6 text-black">
+        <h2 className="m-0 pr-8 text-xl font-[500] leading-6 text-prophet-foreground">
           Copy deposit address
         </h2>
 
@@ -77,7 +77,7 @@ export function PolymarketAddressCopyConfirmDialog({
               <li key={index} className="flex gap-3">
                 <div className="flex flex-col items-center">
                   <span
-                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#F5F5F5] text-sm font-[500] text-black"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-prophet-action-panel text-sm font-[500] text-prophet-foreground"
                     aria-hidden="true"
                   >
                     {index + 1}
@@ -91,7 +91,7 @@ export function PolymarketAddressCopyConfirmDialog({
                 </div>
 
                 <div className={cn("min-w-0 flex-1", !isLast && "pb-4")}>
-                  <p className="m-0 text-sm font-[500] leading-normal text-black">
+                  <p className="m-0 text-sm font-[500] leading-normal text-prophet-foreground">
                     {step.title}
                   </p>
                   <p className="m-0 mt-1 text-sm font-[400] leading-normal text-[#909090]">

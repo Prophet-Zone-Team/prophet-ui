@@ -28,13 +28,18 @@ export const referralKickbackCardClass =
   "relative flex h-[250px] flex-col overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel";
 
 export const referralKickbackFooterClass =
-  "relative mt-auto flex min-h-[131px] flex-col px-6 pb-6 pt-4 bg-[linear-gradient(180deg,#FFFBE0_9.13%,#FFCF00_100%)]";
+  "relative mt-auto flex min-h-[131px] flex-col px-6 pb-6 pt-4";
 
 export const referralKickbackLinkBarClass =
   "flex items-center justify-between gap-3 rounded-[8px] px-0 py-1";
 
 export const referralPrimaryButtonClass = cn(
   "inline-flex h-[50px] w-full items-center justify-center rounded-[12px] bg-prophet-primary text-prophet-primary-foreground text-[16px] font-medium leading-[normal] transition-opacity disabled:cursor-not-allowed disabled:opacity-30 hover:opacity-90",
+);
+
+export const referralInviteFriendsButtonClass = cn(
+  referralPrimaryButtonClass,
+  "dark:bg-[linear-gradient(180deg,#FEFCEF_0%,#FFCF00_100%)] dark:text-black",
 );
 
 export const referralInviteButtonClass = referralPrimaryButtonClass;
@@ -48,7 +53,7 @@ export const referralActivityPanelClass =
   "flex min-h-[608px] flex-col rounded-[12px] border border-prophet-line bg-prophet-panel";
 
 export const referralSummaryBarClass =
-  "relative grid min-h-[112px] grid-cols-1 gap-4 border-b border-prophet-line bg-[#fafbfc] px-[30px] py-6 sm:grid-cols-[1fr_1fr_1fr_1fr_auto] sm:items-center";
+  "relative grid min-h-[112px] rounded-t-[12px] grid-cols-1 gap-4 border-b border-prophet-line bg-prophet-action-panel px-[30px] py-6 sm:grid-cols-[1fr_1fr_1fr_1fr_auto] sm:items-center";
 
 export const referralSummaryStatValueClass = "text-[26px] font-medium leading-none text-prophet-foreground";
 
@@ -58,7 +63,7 @@ export const referralSummaryStatValueMutedClass =
 export const referralSummaryStatLabelClass = "mt-2 text-[14px] leading-[normal] text-prophet-muted";
 
 export const referralSummaryDividerClass =
-  "absolute bottom-6 top-6 hidden w-px bg-[#EBEBEB] sm:block";
+  "absolute bottom-6 top-6 hidden w-px bg-prophet-line sm:block";
 
 export const referralEmptyStateClass =
   "flex flex-col items-center justify-center gap-6 px-[30px] py-16";
@@ -66,7 +71,7 @@ export const referralEmptyStateClass =
 export const referralEmptyMessageClass = "text-[14px] leading-[normal] text-prophet-muted";
 
 export const referralEmptyInviteButtonClass = cn(
-  referralPrimaryButtonClass,
+  referralInviteFriendsButtonClass,
   "w-[233px]",
 );
 
@@ -121,6 +126,6 @@ export const inviteLinkRowShellClass =
 
 export const inviteActionButtonClass = cn(
   "inline-flex h-[52px] w-full items-center justify-center rounded-[12px] border border-prophet-line bg-prophet-panel",
-  "text-prophet-muted transition-colors hover:bg-[#f5f5f5] focus-visible:bg-[#f5f5f5]",
+  "text-prophet-muted transition-colors hover:bg-prophet-hover focus-visible:bg-prophet-hover",
   "disabled:cursor-not-allowed disabled:opacity-30",
 );

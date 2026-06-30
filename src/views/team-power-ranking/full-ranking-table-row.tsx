@@ -30,8 +30,8 @@ export function FullRankingDesktopRow({
       role="row"
       className={cn(
         fullRankingTableGridClass,
-        "items-center py-[10px] text-[16px] font-[400] leading-[19px] text-black",
-        entry.link ? "cursor-pointer hover:bg-[#EDEDED] duration-150" : "cursor-default",
+        "items-center py-[10px] text-[16px] font-[400] leading-[19px] text-prophet-foreground",
+        entry.link ? "cursor-pointer hover:bg-prophet-hover duration-150" : "cursor-default",
       )}
       onClick={() => entry.link ? router.push(entry.link) : void 0}
     >
@@ -90,7 +90,7 @@ export function FullRankingMobileCard({
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black",
+        "flex flex-col gap-3 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-prophet-foreground",
         className
       )}
       onClick={() => entry.link ? router.push(entry.link) : void 0}
@@ -108,17 +108,17 @@ export function FullRankingMobileCard({
             className="min-w-0"
           />
         </div>
-        <span className="shrink-0 text-[14px] leading-[17px] text-[#909090]">
+        <span className="shrink-0 text-[14px] leading-[17px] text-prophet-muted">
           {entry.group}
         </span>
       </div>
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[12px] leading-[17px] text-[#909090]">
+          <span className="text-[12px] leading-[17px] text-prophet-muted">
             {t("titleProbability")}
           </span>
-          <span className="shrink-0 tabular-nums text-black">
+          <span className="shrink-0 tabular-nums text-prophet-foreground">
             {formatTitleProbability(entry.titleProbability)}
           </span>
         </div>
@@ -131,10 +131,10 @@ export function FullRankingMobileCard({
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[12px] leading-[17px] text-[#909090]">
+          <span className="text-[12px] leading-[17px] text-prophet-muted">
             {t("roundOf16")}
           </span>
-          <span className="shrink-0 tabular-nums text-black">
+          <span className="shrink-0 tabular-nums text-prophet-foreground">
             {formatAdvanceOdds(entry.roundOf16Probability)}
           </span>
         </div>
@@ -145,21 +145,21 @@ export function FullRankingMobileCard({
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-2 border-t border-[#EBEBEB] pt-2">
+      <div className="grid grid-cols-3 gap-2 border-t border-prophet-line pt-2">
         <div className="flex min-w-0 flex-col items-start gap-1">
-          <span className="text-[12px] leading-[17px] text-[#909090]">
+          <span className="text-[12px] leading-[17px] text-prophet-muted">
             {t("pathShort")}
           </span>
           <PathDifficultyLabel difficulty={entry.pathDifficulty} />
         </div>
         <div className="flex flex-col items-center gap-1">
-          <span className="text-[12px] leading-[17px] text-[#909090]">
+          <span className="text-[12px] leading-[17px] text-prophet-muted">
             {t("trend")}
           </span>
           <TrendIndicator trend={entry.trend} />
         </div>
         <div className="flex min-w-0 flex-col items-end gap-1">
-          <span className="text-[12px] leading-[17px] text-[#909090]">
+          <span className="text-[12px] leading-[17px] text-prophet-muted">
             {t("signalShort")}
           </span>
           <SignalStatusLabel status={entry.signalStatus} />

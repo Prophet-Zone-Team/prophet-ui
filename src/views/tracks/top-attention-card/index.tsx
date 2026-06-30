@@ -128,15 +128,15 @@ export type TopAttentionCardProps =
   | TopAttentionTeamCardProps
   | TopAttentionMatchCardProps;
 
-const labelClassName = "text-[12px] font-[400] leading-[15px] text-[#909090]";
+const labelClassName = "text-[12px] font-[400] leading-[15px] text-prophet-muted";
 const valueClassName =
-  "text-[18px] font-[500] leading-[23px] text-black mt-[2px]";
+  "text-[18px] font-[500] leading-[23px] text-prophet-foreground mt-[2px]";
 
 const cardClassName =
-  "box-border flex h-auto min-h-[214px] w-full max-w-[345px] flex-col rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-3 md:px-4 md:py-4";
+  "box-border flex h-auto min-h-[214px] w-full max-w-[345px] flex-col rounded-[12px] border border-prophet-line bg-prophet-panel px-3 py-3 md:px-4 md:py-4";
 
 const cardInteractiveClassName =
-  "cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]";
+  "cursor-pointer transition-colors hover:border-prophet-line hover:bg-prophet-hover";
 
 function formatAttention(value: number): string {
   return new Intl.NumberFormat("en-US").format(Math.round(value));
@@ -211,7 +211,7 @@ function TopAttentionTeamCard({
       onKeyDown={handleCardKeyDown}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="m-0 text-[12px] font-[400] capitalize leading-[15px] text-[#909090]">
+        <p className="m-0 text-[12px] font-[400] capitalize leading-[15px] text-prophet-muted">
           {resolvedCategoryLabel}
         </p>
         <MarketBookmarkControl
@@ -226,7 +226,7 @@ function TopAttentionTeamCard({
           name={displayName}
           className="h-[26px] w-[26px] shrink-0 rounded-[4px] text-[26px]"
         />
-        <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-black">
+        <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-prophet-foreground">
           {displayName}
         </h3>
         {badges?.map((label) => (
@@ -291,7 +291,7 @@ function TopAttentionMatchCard({
       onKeyDown={handleCardKeyDown}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="m-0 text-[12px] font-[400] leading-[15px] text-[#909090]">
+        <p className="m-0 text-[12px] font-[400] leading-[15px] text-prophet-muted">
           {kickoffLabel}
         </p>
         <MatchBookmarkControl
@@ -314,7 +314,7 @@ function TopAttentionMatchCard({
             className="relative h-[26px] w-[26px] rounded-[4px] text-[26px]"
           />
         </div>
-        <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-black">
+        <h3 className="m-0 min-w-0 truncate text-[16px] font-[500] leading-[20px] text-prophet-foreground">
           {matchTitle}
         </h3>
       </div>

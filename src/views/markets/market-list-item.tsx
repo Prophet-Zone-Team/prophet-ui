@@ -22,6 +22,11 @@ import {
 } from "@/components/home/market-formatters";
 import { cn } from "@/lib/cn";
 import type { TeamMarketSnapshot } from "@/types/market";
+import {
+  homeBidButtonClass,
+  homeMarketListRowBackground,
+  homeOutlineButtonClass
+} from "@/views/home/home-ui";
 import { MarketListMetricLoading } from "@/views/home/home-data-loading";
 import { useTranslations } from "next-intl";
 
@@ -38,10 +43,7 @@ export interface MarketListItemProps {
   navigationDisabled?: boolean;
 }
 
-const rowLabelClassName = "text-[12px] font-[400] text-[#909090]";
-
-const bidButtonClassName =
-  "inline-flex h-[36px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] px-2 text-[14px] font-[500] leading-[17px] text-white disabled:cursor-wait disabled:opacity-70";
+const rowLabelClassName = "text-[12px] font-[400] text-prophet-muted";
 
 function MarketListMobileProbability({
   probability,
@@ -75,16 +77,16 @@ function MarketListMobileProbability({
         />
       ) : null}
       <div className="flex w-[94px] flex-col items-end gap-[10px] pb-[4px]">
-        <span className="text-right text-[18px] font-[500] leading-[23px] text-black">
+        <span className="text-right text-[18px] font-[500] leading-[23px] text-prophet-foreground">
           {probabilityLabel}
         </span>
         {hasLiveValues ? (
           <div
-            className="h-[8px] w-[94px] overflow-hidden rounded-[4px] bg-[#D9D9D9]"
+            className="h-[8px] w-[94px] overflow-hidden rounded-[4px] bg-prophet-line"
             role="presentation"
           >
             <div
-              className="h-full rounded-[4px] bg-black"
+              className="h-full rounded-[4px] bg-black dark:bg-prophet-primary"
               style={{ width: `${fillPercent}%` }}
             />
           </div>
@@ -169,17 +171,14 @@ export function MarketListItem({
       onClick={canNavigate ? navigateToTrade : undefined}
       onKeyDown={canNavigate ? handleRowKeyDown : undefined}
       className={cn(
-        "flex md:min-h-[78px] items-center gap-x-10 gap-y-3 overflow-visible rounded-xl border border-[#EBEBEB] px-4",
+        "flex md:min-h-[78px] items-center gap-x-10 gap-y-3 overflow-visible rounded-xl border border-prophet-line px-4",
         canNavigate
-          ? "cursor-pointer transition-colors hover:border-[#d0d0d0]"
+          ? "cursor-pointer transition-colors hover:border-prophet-line"
           : "cursor-default opacity-90",
         "max-lg:flex-col max-lg:items-stretch max-lg:gap-4 max-lg:py-3"
       )}
       style={{
-        background:
-          changePercent >= 0
-            ? "linear-gradient(90deg, rgba(220, 255, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
-            : "linear-gradient(90deg, rgba(255, 181, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), #FFF"
+        background: homeMarketListRowBackground(changePercent)
       }}
     >
       <div className="flex w-full items-center gap-[20px] max-lg:justify-between max-lg:gap-3 lg:w-2/5">
@@ -190,7 +189,7 @@ export function MarketListItem({
               teamName={teamDisplayName}
             />
           </div>
-          <span className="hidden w-[18px] shrink-0 text-center text-[18px] font-[500] leading-[21px] text-black lg:inline">
+          <span className="hidden w-[18px] shrink-0 text-center text-[18px] font-[500] leading-[21px] text-prophet-foreground lg:inline">
             {rank}
           </span>
           <TeamFlag
@@ -200,7 +199,7 @@ export function MarketListItem({
             className="h-[32px] w-[32px] shrink-0 rounded-[2px] text-[32px]"
           />
           <div className="min-w-0">
-            <h3 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
+            <h3 className="m-0 text-[18px] font-[500] leading-[21px] text-prophet-foreground">
               {teamDisplayName}
             </h3>
             <p className={cn("m-0 mt-0.5", rowLabelClassName)}>{subtitle}</p>
@@ -222,7 +221,7 @@ export function MarketListItem({
             {isLoading ? (
               <MarketListMetricLoading variant="probability" />
             ) : (
-              <span className="text-[24px] font-[500] leading-[29px] text-black">
+              <span className="text-[24px] font-[500] leading-[29px] text-prophet-foreground">
                 {hasLiveValues
                   ? formatListProbability(market.probability)
                   : "-"}
@@ -244,7 +243,7 @@ export function MarketListItem({
           {isLoading ? (
             <MarketListMetricLoading variant="volume" />
           ) : (
-            <strong className="text-lg font-[500] leading-[21px] text-black">
+            <strong className="text-lg font-[500] leading-[21px] text-prophet-foreground">
               {hasLiveValues ? `$${formatVolume(market.volume)}` : "-"}
             </strong>
           )}
@@ -259,7 +258,7 @@ export function MarketListItem({
       >
         <FastBidButton
           snapshot={snapshot}
-          className={cn(bidButtonClassName, "flex-1 md:flex-grow-0")}
+          className={cn(homeBidButtonClass, "h-[36px] min-w-[96px] flex-1 md:flex-grow-0 px-2")}
           disabled={isLoading || !hasLiveValues || !yesTokenId}
         >
           <>
@@ -271,7 +270,7 @@ export function MarketListItem({
           </>
         </FastBidButton>
         <Link
-          className="flex-1 md:shrink-0 px-2 inline-flex h-[36px] w-[83px] items-center justify-center rounded-lg border border-[#909090] bg-white text-[14px] font-[500] leading-[17px] text-[#18110F]"
+          className={cn(homeOutlineButtonClass, "flex-1 md:shrink-0 px-2 h-[36px] w-[83px]")}
           href={detailHref}
           onClick={() =>
             trackDetailsClicked({

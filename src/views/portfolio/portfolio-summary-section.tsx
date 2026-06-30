@@ -89,7 +89,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
           />
         ) : (
           <div
-            className="size-[52px] shrink-0 rounded-full border-4 border-white bg-prophet-line shadow-[0_0_4px_rgba(0,0,0,0.25)]"
+            className="size-[52px] shrink-0 rounded-full border-4 border-prophet-panel bg-prophet-line shadow-[0_0_4px_rgba(0,0,0,0.25)]"
             aria-hidden="true"
           />
         )}
@@ -101,7 +101,7 @@ export function PortfolioSummarySection({ }: PortfolioSummarySectionProps) {
             <PolymarketAddressCopyButton
               address={polymarketAddress}
               ariaLabel={t("copyPolymarketAddress")}
-              className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
+              className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-prophet-foreground"
             >
               <CopyIcon />
             </PolymarketAddressCopyButton>

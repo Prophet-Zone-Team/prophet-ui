@@ -83,9 +83,9 @@ export function AnalyticsTopSection() {
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="box-border flex h-[145px] items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white"
+            className="box-border flex h-[145px] items-center justify-center rounded-[12px] border border-prophet-line bg-prophet-panel"
           >
-            <span className="text-[14px] text-[#909090]">{t("loading")}</span>
+            <span className="text-[14px] text-prophet-muted">{t("loading")}</span>
           </div>
         ))}
       </section>
@@ -96,7 +96,7 @@ export function AnalyticsTopSection() {
     return (
       <section
         aria-label={t("topHighlights")}
-        className="rounded-[12px] border border-[#EBEBEB] bg-white px-4 py-8 text-center text-[14px] text-[#909090]"
+        className="rounded-[12px] border border-prophet-line bg-prophet-panel px-4 py-8 text-center text-[14px] text-prophet-muted"
       >
         {t("unableToLoadData")}
       </section>

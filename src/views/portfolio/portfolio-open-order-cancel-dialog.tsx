@@ -113,7 +113,7 @@ export function PortfolioOpenOrderCancelDialog({
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
+              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-prophet-foreground">
                 {marketLabel}
               </p>
               <p
@@ -135,7 +135,7 @@ export function PortfolioOpenOrderCancelDialog({
               <span className="text-sm font-[500] text-prophet-muted">
                 {t("remainingSize")}
               </span>
-              <span className="text-sm font-[500] text-black">
+              <span className="text-sm font-[500] text-prophet-foreground">
                 {formatShareSize(getRemainingSize(order))}
               </span>
             </div>
@@ -143,7 +143,7 @@ export function PortfolioOpenOrderCancelDialog({
               <span className="text-sm font-[500] text-prophet-muted">
                 {t("filled")}
               </span>
-              <span className="text-sm font-[500] text-black">
+              <span className="text-sm font-[500] text-prophet-foreground">
                 {getFilledPercent(order)}
               </span>
             </div>
