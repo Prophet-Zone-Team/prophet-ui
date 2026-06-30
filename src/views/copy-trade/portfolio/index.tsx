@@ -66,10 +66,7 @@ export function CopyTradePortfolioView() {
     return (
       <section className={portfolioPageClass}>
         <PageBack />
-        <UserProfileEmptyState
-          variant="connect"
-          onAction={() => void openLogin()}
-        />
+        <UserProfileEmptyState variant="connect" />
       </section>
     );
   }

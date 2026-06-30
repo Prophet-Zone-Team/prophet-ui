@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { useAuth } from "@/context/auth/use-auth";
 import { cn } from "@/lib/cn";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
@@ -69,7 +68,6 @@ export function CopyTradeUserProfile({ className }: CopyTradeUserProfileProps) {
     (state) => state.session?.walletAddress
   );
   const copyWallet = useCopyTradeStore((state) => state.copyWallet);
-  const { openLogin } = useAuth();
   const [createWalletOpen, setCreateWalletOpen] = useState(false);
   const {
     balance,
@@ -87,11 +85,7 @@ export function CopyTradeUserProfile({ className }: CopyTradeUserProfileProps) {
 
   if (!prophetWalletAddress) {
     return (
-      <UserProfileEmptyState
-        className={className}
-        variant="connect"
-        onAction={() => void openLogin()}
-      />
+      <UserProfileEmptyState className={className} variant="connect" />
     );
   }
 
