@@ -96,13 +96,30 @@ export interface PortfolioHistoryTableProps {
   onConnectWallet: () => void;
 }
 
-function formatTransactionValue(
-  transaction: PortfolioTransactionRecord
-): string {
-  const raw = transaction.filledUsdc || transaction.amount;
-  const value = Number(raw);
+function TransactionValueDisplay({
+  transaction
+}: {
+  transaction: PortfolioTransactionRecord;
+}) {
+  const amountLabel = formatTeamDetailMoney(Number(transaction.amount));
+  const isTrade = transaction.type === "buy" || transaction.type === "sell";
+  const filledUsdc = transaction.filledUsdc.trim();
+  const filledUsdcValue = Number(filledUsdc);
+  const showFilledUsdc =
+    isTrade && filledUsdc && Number.isFinite(filledUsdcValue);
 
-  return Number.isFinite(value) ? formatTeamDetailMoney(value) : raw || "—";
+  if (!showFilledUsdc) {
+    return <>{amountLabel}</>;
+  }
+
+  return (
+    <>
+      {amountLabel}
+      <span className="text-xs font-normal text-prophet-muted">
+        ({formatTeamDetailMoney(filledUsdcValue)})
+      </span>
+    </>
+  );
 }
 
 function HistoryMarketCell({
@@ -220,7 +237,7 @@ function HistoryRowContent({
       <HistoryMarketCell transaction={transaction} />
 
       <span className="hidden text-[14px] font-normal leading-[18px] text-black md:block">
-        {formatTeamDetailMoney(Number(transaction.amount))}
+        <TransactionValueDisplay transaction={transaction} />
       </span>
 
       <span className="hidden text-right text-[14px] font-normal leading-[18px] text-black md:block">
@@ -380,7 +397,7 @@ function renderHistoryRow(
           <div>
             <p className={portfolioTableMobileLabelClass}>{t("value")}</p>
             <p className={portfolioTableMobileValueClass}>
-              {formatTransactionValue(transaction)}
+              <TransactionValueDisplay transaction={transaction} />
             </p>
           </div>
           <div className="text-right">

@@ -458,6 +458,7 @@ export interface ProphetUserTransaction {
   amount?: string;
   created_at?: string;
   trade_create_at?: string;
+  filled_usdc?: string;
   id?: number;
   market_name?: string;
   order_type?: ProphetReportOrderType;

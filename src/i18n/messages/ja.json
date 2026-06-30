@@ -1808,6 +1808,8 @@
     "walletStatus": {
       "notCreated": "未作成",
       "running": "稼働中",
+      "paused": "一時停止",
+      "na": "N/A",
       "deploying": "デプロイ中",
       "awaitingApproval": "承認待ち",
       "unknown": "不明"
