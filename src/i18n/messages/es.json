@@ -1728,6 +1728,7 @@
       "orderTypeFok": "FOK (Fill Or Kill)",
       "balanceUnavailable": "El saldo de la billetera copy no está disponible. Deposita fondos antes de continuar.",
       "enableCopySide": "Activa copiar compra o copiar venta antes de continuar.",
+      "invalidAdvancedSettings": "Corrige los valores no válidos en la configuración avanzada antes de continuar.",
       "unableToValidate": "No se pudo validar la configuración de copia.",
       "checkingBalance": "Comprobando saldo de billetera copy…",
       "zeroBalanceWarning": "El saldo de la billetera copy es $0. Deposita fondos antes de ejecutar órdenes en vivo."

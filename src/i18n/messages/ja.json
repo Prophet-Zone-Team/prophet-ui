@@ -1728,6 +1728,7 @@
       "orderTypeFok": "FOK（Fill Or Kill）",
       "balanceUnavailable": "コピーウォレット残高が利用できません。続行する前に入金してください。",
       "enableCopySide": "続行する前に買いコピーまたは売りコピーを有効にしてください。",
+      "invalidAdvancedSettings": "続行する前に詳細設定の無効な値を修正してください。",
       "unableToValidate": "コピー設定を検証できません。",
       "checkingBalance": "コピーウォレット残高を確認中…",
       "zeroBalanceWarning": "コピーウォレット残高が $0 です。実取引コピーを実行する前に入金してください。"

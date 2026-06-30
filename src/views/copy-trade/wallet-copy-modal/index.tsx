@@ -7,6 +7,9 @@ import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
 import {
+  isValidPriceInput,
+  isValidSlippageInput,
+  isValidUsdCapInput,
   normalizeTargetForm,
   validateTargetForm,
   walletCopyFormToTargetForm,
@@ -134,9 +137,31 @@ export function WalletCopyModal({
     [form, savedSnapshot]
   );
 
+  const advancedFieldErrors = useMemo(
+    () => ({
+      maxUsdPerTrade: !isValidUsdCapInput(form.maxUsdPerTrade),
+      maxUsdPerMarket: !isValidUsdCapInput(form.maxUsdPerMarket),
+      maxUsdPerHour: !isValidUsdCapInput(form.maxUsdPerHour),
+      maxUsdTotal: !isValidUsdCapInput(form.maxUsdTotal),
+      minPrice: !isValidPriceInput(form.minPrice),
+      maxPrice: !isValidPriceInput(form.maxPrice),
+      maxSlippage: !isValidSlippageInput(form.maxSlippage)
+    }),
+    [form]
+  );
+
+  const hasAdvancedFieldErrors = useMemo(
+    () => Object.values(advancedFieldErrors).some(Boolean),
+    [advancedFieldErrors]
+  );
+
   const handleSaveAdvanced = useCallback(() => {
+    if (hasAdvancedFieldErrors) {
+      return;
+    }
+
     setSavedSnapshot(form);
-  }, [form]);
+  }, [form, hasAdvancedFieldErrors]);
 
   const orderTypeOptions = useMemo(
     () => [
@@ -148,14 +173,17 @@ export function WalletCopyModal({
 
   const handleSubmit = useCallback(() => {
     if (!canSubmitCopy) {
-      setError(
-        balanceWarning ?? t("balanceUnavailable")
-      );
+      setError(balanceWarning ?? t("balanceUnavailable"));
       return;
     }
 
     if (!form.buyEnabled && !form.sellEnabled) {
       setError(t("enableCopySide"));
+      return;
+    }
+
+    if (hasAdvancedFieldErrors) {
+      setError(t("invalidAdvancedSettings"));
       return;
     }
 
@@ -179,7 +207,15 @@ export function WalletCopyModal({
           : t("unableToValidate")
       );
     }
-  }, [balanceWarning, canSubmitCopy, form, onSubmit, t, wallet]);
+  }, [
+    balanceWarning,
+    canSubmitCopy,
+    form,
+    hasAdvancedFieldErrors,
+    onSubmit,
+    t,
+    wallet
+  ]);
 
   const pnlDisplay = formatPnlDisplay(stats);
 
@@ -235,9 +271,7 @@ export function WalletCopyModal({
             <p className="text-sm leading-[18px] text-black">
               {t("copyTradeRatio")}
             </p>
-            <CopyTradeInfoTooltip
-              content={<>{t("ratioTooltip")}</>}
-            />
+            <CopyTradeInfoTooltip content={<>{t("ratioTooltip")}</>} />
           </div>
 
           <div className="flex flex-col gap-3">
@@ -318,11 +352,11 @@ export function WalletCopyModal({
                 className={cn(
                   "inline-flex h-[26px] items-center justify-center rounded-md px-2.5",
                   "text-sm leading-[18px] text-white transition-opacity",
-                  advancedDirty
+                  advancedDirty && !hasAdvancedFieldErrors
                     ? "bg-black hover:opacity-90"
                     : "cursor-default bg-[#909090] opacity-50"
                 )}
-                disabled={!advancedDirty}
+                disabled={!advancedDirty || hasAdvancedFieldErrors}
                 onClick={handleSaveAdvanced}
               >
                 {tCommon("save")}
@@ -374,6 +408,7 @@ export function WalletCopyModal({
                   value={form.maxUsdPerTrade}
                   hint="≥$5"
                   prefix="$"
+                  invalid={advancedFieldErrors.maxUsdPerTrade}
                   onChange={(value) => patchForm({ maxUsdPerTrade: value })}
                 />
                 <CapInput
@@ -381,6 +416,7 @@ export function WalletCopyModal({
                   value={form.maxUsdPerMarket}
                   hint="≥$5"
                   prefix="$"
+                  invalid={advancedFieldErrors.maxUsdPerMarket}
                   onChange={(value) => patchForm({ maxUsdPerMarket: value })}
                 />
                 <CapInput
@@ -388,6 +424,7 @@ export function WalletCopyModal({
                   value={form.maxUsdPerHour}
                   hint="≥$5"
                   prefix="$"
+                  invalid={advancedFieldErrors.maxUsdPerHour}
                   onChange={(value) => patchForm({ maxUsdPerHour: value })}
                 />
               </div>
@@ -398,19 +435,22 @@ export function WalletCopyModal({
                   value={form.maxUsdTotal}
                   hint="≥$5"
                   prefix="$"
+                  invalid={advancedFieldErrors.maxUsdTotal}
                   onChange={(value) => patchForm({ maxUsdTotal: value })}
                   className="sm:col-span-1"
                 />
                 <CapInput
                   label={t("minPrice")}
                   value={form.minPrice}
-                  hint="0≤x<1"
+                  hint="0<x<1"
+                  invalid={advancedFieldErrors.minPrice}
                   onChange={(value) => patchForm({ minPrice: value })}
                 />
                 <CapInput
                   label={t("maxPrice")}
                   value={form.maxPrice}
                   hint="0<x<1"
+                  invalid={advancedFieldErrors.maxPrice}
                   onChange={(value) => patchForm({ maxPrice: value })}
                 />
               </div>
@@ -420,6 +460,7 @@ export function WalletCopyModal({
                   label={t("maxSlippage")}
                   value={form.maxSlippage}
                   hint="<0.5"
+                  invalid={advancedFieldErrors.maxSlippage}
                   onChange={(value) => patchForm({ maxSlippage: value })}
                 />
                 <div className="flex min-w-0 flex-col gap-1.5">
@@ -486,6 +527,7 @@ export function WalletCopyModal({
             saving ||
             !canSubmitCopy ||
             isLoadingBalance ||
+            hasAdvancedFieldErrors ||
             (!form.buyEnabled && !form.sellEnabled)
           }
           onClick={handleSubmit}
@@ -620,6 +662,7 @@ function CapInput({
   value,
   hint,
   prefix,
+  invalid = false,
   onChange,
   className
 }: {
@@ -627,13 +670,19 @@ function CapInput({
   value: string;
   hint: string;
   prefix?: string;
+  invalid?: boolean;
   onChange: (value: string) => void;
   className?: string;
 }) {
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
       <span className="text-sm leading-[18px] text-[#909090]">{label}</span>
-      <div className="relative flex h-9 items-center rounded-lg border border-[#EBEBEB] bg-white px-3">
+      <div
+        className={cn(
+          "relative flex h-9 items-center rounded-lg border bg-white px-3",
+          invalid ? "border-[#FF674B]" : "border-[#EBEBEB]"
+        )}
+      >
         <input
           type="text"
           inputMode="decimal"
@@ -645,8 +694,14 @@ function CapInput({
           }}
           className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm leading-[18px] text-black outline-none"
           aria-label={label}
+          aria-invalid={invalid}
         />
-        <span className="shrink-0 pl-2 text-xs leading-[15px] text-[#909090]">
+        <span
+          className={cn(
+            "shrink-0 pl-2 text-xs leading-[15px]",
+            invalid ? "text-[#FF674B]" : "text-[#909090]"
+          )}
+        >
           {hint}
         </span>
       </div>
