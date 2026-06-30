@@ -33,7 +33,9 @@ describe("road-to-final url-state bracket version", () => {
     );
 
     assert.deepEqual(hydrated.knockoutWinners, {
+      73: "canada",
       74: "paraguay",
+      75: "morocco",
       76: "brazil",
       89: "brazil",
       101: "brazil",
@@ -53,7 +55,9 @@ describe("road-to-final url-state bracket version", () => {
     );
 
     assert.deepEqual(hydrated.knockoutWinners, {
+      73: "canada",
       74: "paraguay",
+      75: "morocco",
       76: "brazil",
     });
     assert.equal(hydrated.knockoutMethod, "manualSelection");
@@ -71,7 +75,9 @@ describe("road-to-final url-state bracket version", () => {
     );
 
     assert.deepEqual(hydrated.knockoutWinners, {
+      73: "canada",
       74: "paraguay",
+      75: "morocco",
       76: "brazil",
     });
     assert.equal(hydrated.knockoutMethod, "manualSelection");
@@ -89,7 +95,9 @@ describe("road-to-final url-state bracket version", () => {
       "germany"
     );
 
+    assert.equal(hydrated.knockoutWinners?.[73], "canada");
     assert.equal(hydrated.knockoutWinners?.[74], "paraguay");
+    assert.equal(hydrated.knockoutWinners?.[75], "morocco");
     assert.equal(hydrated.knockoutWinners?.[76], "brazil");
     assert.equal(hydrated.knockoutWinners?.[89], "germany");
   });

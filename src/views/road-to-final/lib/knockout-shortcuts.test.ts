@@ -14,7 +14,9 @@ describe("knockout-shortcuts fixed results", () => {
       method: "random",
     });
 
+    assert.equal(winners[73], "canada");
     assert.equal(winners[74], "paraguay");
+    assert.equal(winners[75], "morocco");
     assert.equal(winners[76], "brazil");
     assert.ok(winners[104], "full bracket fill should pick a champion");
   });
@@ -28,7 +30,7 @@ describe("knockout-shortcuts fixed results", () => {
       method: "fifa",
     });
 
-    const filledNonFixedR32 = [73, 75, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88];
+    const filledNonFixedR32 = [77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88];
 
     for (const matchId of filledNonFixedR32) {
       assert.ok(
