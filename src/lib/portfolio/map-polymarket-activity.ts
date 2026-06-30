@@ -34,7 +34,7 @@ export function resolveActivityPortfolioType(
   type: string,
   side?: string
 ): PortfolioTransactionType {
-  const normalizedType = type.trim().toUpperCase();
+  const normalizedType = type?.trim().toUpperCase() ?? "";
   const normalizedSide = side?.trim().toUpperCase();
 
   if (normalizedType === "TRADE") {
@@ -172,7 +172,7 @@ export function mapLossPositionToTransaction(
 
 function isActivityTradeBuy(row: PolymarketActivityRow): boolean {
   return (
-    row.type.trim().toUpperCase() === "TRADE" &&
+    row.type?.trim().toUpperCase() === "TRADE" &&
     row.side?.trim().toUpperCase() === "BUY"
   );
 }

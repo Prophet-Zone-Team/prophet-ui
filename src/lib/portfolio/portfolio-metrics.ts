@@ -126,7 +126,7 @@ export function resolveOutcomeSideForPosition(
     return "no";
   }
 
-  const normalizedOutcome = position.outcome.trim().toLowerCase();
+  const normalizedOutcome = position.outcome?.trim().toLowerCase() ?? "";
 
   if (
     tokens?.yes?.outcome &&
@@ -157,7 +157,7 @@ export function resolveOutcomeSideForGamePosition(
     return "no";
   }
 
-  const normalizedOutcome = position.outcome.trim().toLowerCase();
+  const normalizedOutcome = position.outcome?.trim().toLowerCase() ?? "";
 
   if (
     tokens.yesOutcome &&
