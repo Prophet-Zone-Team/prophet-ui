@@ -141,7 +141,7 @@ export function UsualLineup({
         </h2>
 
         <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-4">
-          <ManagerBlock align="start" />
+          <ManagerBlock align="start" managerName={homeLineup?.coach} />
 
           <div className="flex flex-col items-center gap-1 px-2">
             <span className="text-[14px] font-[400] leading-[18px] text-[#909090]">
@@ -153,7 +153,7 @@ export function UsualLineup({
             </div>
           </div>
 
-          <ManagerBlock align="end" />
+          <ManagerBlock align="end" managerName={awayLineup?.coach} />
         </div>
       </div>
 
