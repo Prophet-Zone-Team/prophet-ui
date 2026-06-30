@@ -198,7 +198,7 @@ function SpecialMatchDataCardContent({
                   <div className="text-[24px] md:text-[36px] text-prophet-muted font-[500]">
                     {t("versus")}
                   </div>
-                  <div className="text-[10px] md:text-[16px] text-[#000] font-[400]">
+                  <div className="text-[10px] md:text-[16px] text-prophet-foreground font-[400]">
                     {t("startsAt", {
                       kickoff: formatScheduleKickoff(liveMatch.kickoffAt)
                     })}

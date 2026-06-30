@@ -41,7 +41,7 @@ export function PredictionRecordsModal({
     >
       <div
         className={cn(
-          "relative rounded-[20px] border border-[#EBEBEB] bg-white",
+          "relative rounded-[20px] border border-prophet-line bg-prophet-panel",
           "p-[16px] shadow-[0_0_10px_rgba(0,0,0,0.1)]",
           "max-md:border-0 max-md:px-3 max-md:pb-8 max-md:pt-[20px] max-md:shadow-none"
         )}
@@ -49,7 +49,7 @@ export function PredictionRecordsModal({
         {isMobile ? (
           <button
             type="button"
-            className="absolute right-0 top-0 z-10 inline-flex size-8 items-center justify-center rounded-lg bg-white text-[#18110F] transition-colors hover:bg-[#fafbfc]"
+            className="absolute right-0 top-0 z-10 inline-flex size-8 items-center justify-center rounded-lg bg-prophet-panel text-[#18110F] transition-colors hover:bg-[#fafbfc]"
             aria-label="Close"
             onClick={onClose}
           >
@@ -57,7 +57,7 @@ export function PredictionRecordsModal({
           </button>
         ) : null}
 
-        <h2 className="m-0 pr-[32px] text-[20px] font-medium text-black">
+        <h2 className="m-0 pr-[32px] text-[20px] font-medium text-prophet-foreground">
           {t("joinedHistoryTitle")}
         </h2>
 
@@ -95,11 +95,11 @@ export function PredictionRecordsModal({
                 return (
                   <article
                     key={record.id}
-                    className="overflow-hidden rounded-[8px] border border-[#EBEBEB] bg-white"
+                    className="overflow-hidden rounded-[8px] border border-prophet-line bg-prophet-panel"
                   >
                     <div className="px-[16px] py-[12px]">
                       <div className="flex items-start justify-between gap-[12px]">
-                        <p className="m-0 text-[14px] font-medium text-black">
+                        <p className="m-0 text-[14px] font-medium text-prophet-foreground">
                           {t("roadToFinalRecordTitle", {
                             teamName: championName,
                           })}
@@ -108,12 +108,12 @@ export function PredictionRecordsModal({
                           {timestamp}
                         </p>
                       </div>
-                      <p className="m-0 mt-[6px] truncate text-[12px] text-black">
+                      <p className="m-0 mt-[6px] truncate text-[12px] text-prophet-foreground">
                         {path}
                       </p>
                     </div>
 
-                    <div className="border-t border-[#EBEBEB] bg-[#F5F5F5] px-[16px] py-[10px]">
+                    <div className="border-t border-prophet-line bg-[#F5F5F5] px-[16px] py-[10px]">
                       <p className="m-0 truncate text-[12px] text-[#909090]">
                         {t("sharingLinkLabel")}{" "}
                         {twitterUrl ? (

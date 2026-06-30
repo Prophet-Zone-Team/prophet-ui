@@ -66,7 +66,7 @@ export function RelatedNewsRow({
     <article
       className={cn(
         "relative flex w-full items-center gap-[12px] rounded-[12px] px-[12px] py-[12px]",
-        item.highlighted && "bg-[#F9FAFC]",
+        item.highlighted && "bg-prophet-hover",
         onSelect && "cursor-pointer duration-150 hover:bg-prophet-hover",
         className
       )}
@@ -92,11 +92,11 @@ export function RelatedNewsRow({
             name={item.teamName}
             className="h-[20px] w-[20px] shrink-0 rounded-[4px] text-[20px]"
           />
-          <span className="truncate text-[14px] font-[500] leading-[21px] text-black">
+          <span className="truncate text-[14px] font-[500] leading-[21px] text-prophet-foreground">
             {teamDisplayName}
           </span>
         </div>
-        <h3 className="m-0 mt-[8px] line-clamp-2 text-[14px] font-[500] leading-[19px] text-black">
+        <h3 className="m-0 mt-[8px] line-clamp-2 text-[14px] font-[500] leading-[19px] text-prophet-foreground">
           {item.headline}
         </h3>
       </div>

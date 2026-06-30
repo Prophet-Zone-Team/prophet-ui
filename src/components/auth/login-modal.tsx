@@ -313,7 +313,7 @@ export function LoginModal({ auth }: LoginModalProps) {
               {!isAuthenticated && !emailOnlyLogin ? (
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-1 border-t border-prophet-line pt-4 text-[14px] font-[500] leading-[normal] text-black dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-1 border-t border-prophet-line pt-4 text-[14px] font-[500] leading-[normal] text-prophet-foreground dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={openPrivyLogin}
                   disabled={loginInProgress || privyLoginInProgress}
                 >
@@ -378,7 +378,7 @@ function RestrictedRegionView({
       <div className="flex justify-end">
         <button
           type="button"
-          className="rounded-lg border border-prophet-line bg-white px-4 py-2 text-sm font-extrabold text-prophet-ink"
+          className="rounded-lg border border-prophet-line bg-prophet-panel px-4 py-2 text-sm font-extrabold text-prophet-ink"
           onClick={onClose}
         >
           {tCommon("close")}
@@ -609,7 +609,7 @@ function StepAction({
     }
 
     return (
-      <div className="w-full grid grid-cols-2 border border-[#EBEBEB] dark:border-[#353535] rounded-[12px] p-[3px]">
+      <div className="w-full grid grid-cols-2 border border-prophet-line dark:border-[#353535] rounded-[12px] p-[3px]">
         <button
           type="button"
           className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] w-full h-[50px] text-[14px] font-[500] leading-[18px] text-white bg-prophet-primary disabled:opacity-60 duration-150"
@@ -681,7 +681,7 @@ function StepIcon({ state }: { state: StepVisualState }) {
   }
 
   return (
-    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-prophet-line bg-white dark:bg-[#17171A]" />
+    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-prophet-line bg-prophet-panel dark:bg-[#17171A]" />
   );
 }
 

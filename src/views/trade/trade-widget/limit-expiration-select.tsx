@@ -88,7 +88,7 @@ export function LimitExpirationSelect({
           <div
             role="listbox"
             aria-label={t("orderExpiration")}
-            className="absolute right-0 top-[calc(100%+4px)] z-20 min-w-[140px] overflow-hidden rounded-md border border-prophet-line bg-white py-1 shadow-prophet"
+            className="absolute right-0 top-[calc(100%+4px)] z-20 min-w-[140px] overflow-hidden rounded-md border border-prophet-line bg-prophet-panel py-1 shadow-prophet"
           >
             {LIMIT_EXPIRATION_PRESETS.map((preset) => {
               const isSelected = preset === value;
@@ -102,8 +102,8 @@ export function LimitExpirationSelect({
                   className={cn(
                     "block w-full px-3 py-1.5 text-left text-sm font-[500] leading-[17px] transition-colors",
                     isSelected
-                      ? "bg-[#fafbfc] text-black"
-                      : "text-prophet-muted hover:bg-[#fafbfc] hover:text-black"
+                      ? "bg-[#fafbfc] text-prophet-foreground"
+                      : "text-prophet-muted hover:bg-[#fafbfc] hover:text-prophet-foreground"
                   )}
                   onClick={() => selectOption(preset)}
                 >
@@ -121,7 +121,7 @@ export function LimitExpirationSelect({
           aria-label={t("expirationCustomDateSrOnly")}
           value={customDate ?? ""}
           onChange={(event) => onCustomDateChange(event.target.value)}
-          className="rounded-md border border-prophet-line px-2 py-1 text-xs font-[400] text-black"
+          className="rounded-md border border-prophet-line px-2 py-1 text-xs font-[400] text-prophet-foreground"
         />
       ) : null}
     </div>

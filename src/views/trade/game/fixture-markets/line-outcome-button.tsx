@@ -56,13 +56,13 @@ export function LineOutcomeButton({
         } as React.CSSProperties
       }
       className={cn(
-        "flex h-[40px] md:h-[44px] min-w-[80px] md:min-w-[120px] shrink-0 items-center justify-center gap-1.5 md:rounded-[12px] rounded-[8px] border bg-white px-2 md:px-4 text-sm font-[500] leading-[17px] transition-colors duration-200 ease-out",
+        "flex h-[40px] md:h-[44px] min-w-[80px] md:min-w-[120px] shrink-0 items-center justify-center gap-1.5 md:rounded-[12px] rounded-[8px] border bg-prophet-panel px-2 md:px-4 text-sm font-[500] leading-[17px] transition-colors duration-200 ease-out",
         disabled
           ? "cursor-not-allowed opacity-40"
           : onClick
             ? "cursor-pointer"
             : "cursor-default",
-        active ? "text-white" : "text-black",
+        active ? "text-white" : "text-prophet-foreground",
         !disabled &&
           !active &&
           onClick &&

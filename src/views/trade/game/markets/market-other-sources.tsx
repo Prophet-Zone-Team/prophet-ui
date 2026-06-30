@@ -15,11 +15,11 @@ function OtherSourcePill({
   netPercentLabel
 }: MarketOtherSourceItem & { netPercentLabel: string }) {
   return (
-    <div className="inline-flex h-[36px] shrink-0 items-center gap-2 rounded-[18px] border border-[#EBEBEB] bg-white px-3">
+    <div className="inline-flex h-[36px] shrink-0 items-center gap-2 rounded-[18px] border border-prophet-line bg-prophet-panel px-3">
       <span className="text-[12px] font-[500] leading-[15px] text-[#909090]">
         {sourceName}
       </span>
-      <span className="text-[12px] font-[500] leading-[15px] text-black">
+      <span className="text-[12px] font-[500] leading-[15px] text-prophet-foreground">
         {netPercentLabel}
       </span>
     </div>

@@ -27,13 +27,13 @@ export function ReferralShellSkeleton() {
         <div className={referralRewardsCardClass} aria-hidden>
           <div className="flex h-full flex-col justify-between p-6 md:p-8">
             <LoadingBlock
-              className={cn("h-4 w-40 bg-white/20 dark:bg-[#000000]/50")}
+              className={cn("h-4 w-40 bg-prophet-panel/20 dark:bg-[#000000]/50")}
             />
             <LoadingBlock
-              className={cn("h-[72px] w-48 bg-white/20 dark:bg-[#000000]/50")}
+              className={cn("h-[72px] w-48 bg-prophet-panel/20 dark:bg-[#000000]/50")}
             />
             <LoadingBlock
-              className={cn("h-4 w-56 bg-white/20 dark:bg-[#000000]/50")}
+              className={cn("h-4 w-56 bg-prophet-panel/20 dark:bg-[#000000]/50")}
             />
           </div>
         </div>

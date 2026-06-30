@@ -52,7 +52,7 @@ function NavBar(props: any) {
             ) : (
               <span
                 className={cn(
-                  "pointer-events-none absolute inset-0 rounded-[40px] bg-black/0 transition-colors duration-200 group-hover:bg-black/[0.07] dark:group-hover:bg-white/[0.07]",
+                  "pointer-events-none absolute inset-0 rounded-[40px] bg-black/0 transition-colors duration-200 group-hover:bg-black/[0.07] dark:group-hover:bg-prophet-panel/[0.07]",
                   activeClassName
                 )}
                 aria-hidden

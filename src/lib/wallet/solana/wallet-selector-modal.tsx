@@ -33,8 +33,8 @@ export function SolanaWalletSelectorModal() {
       ariaLabel={t("selectSolanaWallet")}
       className="max-w-[400px]"
     >
-      <div className="w-[350px] rounded-[16px] border border-prophet-border bg-white flex flex-col gap-2 p-4">
-        <h2 className="m-0 text-lg font-[500] text-black">{t("selectSolanaWallet")}</h2>
+      <div className="w-[350px] rounded-[16px] border border-prophet-border bg-prophet-panel flex flex-col gap-2 p-4">
+        <h2 className="m-0 text-lg font-[500] text-prophet-foreground">{t("selectSolanaWallet")}</h2>
         {sortedWallets.length === 0 ? (
           <p className="m-0 text-sm text-[#909090]">{t("noSolanaWalletDetected")}</p>
         ) : (
@@ -58,7 +58,7 @@ export function SolanaWalletSelectorModal() {
                 ) : (
                   <span className="size-8 rounded-full bg-[#f4f4f4]" />
                 )}
-                <span className="text-base font-[500] text-black">{wallet.adapter.name}</span>
+                <span className="text-base font-[500] text-prophet-foreground">{wallet.adapter.name}</span>
               </div>
               {
                 wallet.readyState === "Installed" && (

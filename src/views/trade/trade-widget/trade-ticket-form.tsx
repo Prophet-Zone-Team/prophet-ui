@@ -623,8 +623,8 @@ function OutcomeButton({
             ? "border-[#65AF14] bg-[#65AF14] text-white"
             : "border-[#FF674B] bg-[#FF674B] text-white"
           : isYes
-            ? "border-prophet-line bg-white text-[#65AF14] hover:bg-[#fafbfc]"
-            : "border-[#FF674B] bg-white text-[#FF674B] hover:bg-[#fafbfc]",
+            ? "border-prophet-line bg-prophet-panel text-[#65AF14] hover:bg-[#fafbfc]"
+            : "border-[#FF674B] bg-prophet-panel text-[#FF674B] hover:bg-[#fafbfc]",
         buttonClassName
       )}
     >

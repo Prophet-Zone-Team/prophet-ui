@@ -39,7 +39,7 @@ export const referralPrimaryButtonClass = cn(
 
 export const referralInviteFriendsButtonClass = cn(
   referralPrimaryButtonClass,
-  "dark:bg-[linear-gradient(180deg,#FEFCEF_0%,#FFCF00_100%)] dark:text-black",
+  "dark:bg-[linear-gradient(180deg,#FEFCEF_0%,#FFCF00_100%)] dark:text-prophet-foreground",
 );
 
 export const referralInviteButtonClass = referralPrimaryButtonClass;

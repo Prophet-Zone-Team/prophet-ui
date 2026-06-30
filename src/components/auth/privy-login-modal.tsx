@@ -219,7 +219,7 @@ export function PrivyLoginModal({
               placeholder={t("emailAddress")}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="h-[50px] w-full rounded-[6px] border border-prophet-line bg-white dark:bg-[#17171A] pl-3 pr-3 text-[16px] text-black dark:text-white outline-none placeholder:text-[#909090] focus:border-black sm:pr-[120px] sm:text-[14px]"
+              className="h-[50px] w-full rounded-[6px] border border-prophet-line bg-prophet-panel dark:bg-[#17171A] pl-3 pr-3 text-[16px] text-prophet-foreground dark:text-white outline-none placeholder:text-[#909090] focus:border-black sm:pr-[120px] sm:text-[14px]"
             />
             <button
               type="button"
