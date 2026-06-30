@@ -64,6 +64,7 @@ import {
 } from "@/views/trade/game/markets/market-action-row";
 import { GAME_MARKET_TAB_ICONS } from "@/views/trade/game/icons";
 import { MarketContextRow } from "@/views/trade/game/markets/market-context-row";
+import { GameStatsSection } from "@/views/trade/game/stats";
 import { useGameMarketWsTokens } from "@/views/trade/game/markets/use-game-market-ws-tokens";
 import { useLiveFixtureTabPrices } from "@/views/trade/game/markets/use-live-fixture-tab-prices";
 
@@ -92,6 +93,11 @@ const GAME_MARKET_TABS = [
     id: "top_scores",
     labelKey: "topScores",
     iconSrc: GAME_MARKET_TAB_ICONS.top_scores
+  },
+  {
+    id: "stats",
+    labelKey: "stats",
+    iconSrc: GAME_MARKET_TAB_ICONS.stats
   }
 ] as const satisfies ReadonlyArray<{
   id: GameMarketTabId;
@@ -283,6 +289,10 @@ export function GameMarketsSection({
   ]);
 
   useEffect(() => {
+    if (tab === "stats") {
+      return;
+    }
+
     if (!selectedOutcome || outcomeBelongsToTab(selectedOutcome, tab)) {
       return;
     }
@@ -302,8 +312,10 @@ export function GameMarketsSection({
           ? spreadsLineKey
           : undefined;
 
-    if (!selectedOutcome || !outcomeBelongsToTab(selectedOutcome, nextTab)) {
-      selectDefaultForTab(nextTab, nextLineKey);
+    if (nextTab !== "stats") {
+      if (!selectedOutcome || !outcomeBelongsToTab(selectedOutcome, nextTab)) {
+        selectDefaultForTab(nextTab, nextLineKey);
+      }
     }
   };
 
@@ -420,10 +432,18 @@ export function GameMarketsSection({
           variant="game"
           checked={showOrderbook}
           onChange={setShowOrderbook}
-          className="hidden shrink-0 md:flex"
+          className={tab === "stats" ? "hidden" : "hidden shrink-0 md:flex"}
         />
       </div>
 
+      {tab === "stats" ? (
+        <GameStatsSection
+          match={liveMatch}
+          teamSnapshots={teamSnapshots}
+          gameSnapshotHomeTeamId={gameSnapshot.homeTeamId}
+        />
+      ) : (
+        <>
       {tab === "moneyline" ? (
         <MoneylineActionRow
           group={moneylineGroup}
@@ -520,6 +540,8 @@ export function GameMarketsSection({
         teamSnapshots={teamSnapshots}
         gameSnapshotHomeTeamId={gameSnapshot.homeTeamId}
       />
+        </>
+      )}
     </section>
   );
 }

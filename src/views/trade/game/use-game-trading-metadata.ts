@@ -77,6 +77,10 @@ function tabTradingDataLoaded(
     return fixtureMarkets.exactScores.length > 0;
   }
 
+  if (tab === "stats") {
+    return true;
+  }
+
   return false;
 }
 
@@ -116,6 +120,15 @@ export function useGameTradingMetadata({
 
   const loadTabTradingData = useCallback(
     async (tab: GameMarketTabId) => {
+      if (tab === "stats") {
+        setLoadedTabs((current) => {
+          const next = new Set(current);
+          next.add("stats");
+          return next;
+        });
+        return;
+      }
+
       const eventSlug = resolveSiblingEventSlugForTab(tab, siblingEventSlugs);
 
       if (!eventSlug) {
