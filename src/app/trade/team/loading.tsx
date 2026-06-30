@@ -1,16 +1,8 @@
+import { LoadingBlock } from "@/components/ui/loading-block";
 import {
   tradePageClass,
-  tradeSectionClass
+  tradePanelClass
 } from "@/views/trade/trade-widget/trade-ui";
-
-function LoadingBlock({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-md bg-[#ebebeb]/80 ${className ?? "h-4 w-full"}`}
-      aria-hidden
-    />
-  );
-}
 
 export default function TradeTeamRouteLoading() {
   return (
@@ -49,7 +41,7 @@ export default function TradeTeamRouteLoading() {
         <div className="order-2 flex flex-col gap-4 xl:order-1">
           <LoadingBlock className="h-9 w-40 md:hidden" />
 
-          <div className={`${tradeSectionClass} p-5`}>
+          <div className={`${tradePanelClass} p-5`}>
             <LoadingBlock className="mb-4 h-6 w-40" />
             <LoadingBlock className="mb-6 h-12 w-56" />
             <LoadingBlock className="h-[280px] w-full" />
@@ -59,14 +51,14 @@ export default function TradeTeamRouteLoading() {
             <LoadingBlock className="h-12 w-full rounded-[12px]" />
           </div>
 
-          <div className={tradeSectionClass}>
+          <div className={tradePanelClass}>
             <div className="border-b border-prophet-line px-4 py-3">
               <LoadingBlock className="h-6 w-64" />
             </div>
             {Array.from({ length: 6 }, (_, index) => (
               <div
                 key={index}
-                className="border-b border-prophet-line/60 px-4 py-3"
+                className="border-b border-prophet-line px-4 py-3"
               >
                 <LoadingBlock className="h-4 w-full" />
               </div>
@@ -75,12 +67,12 @@ export default function TradeTeamRouteLoading() {
         </div>
 
         <aside className="order-1 hidden flex-col gap-4 md:flex xl:order-2">
-          <div className={`${tradeSectionClass} p-4`}>
+          <div className={`${tradePanelClass} p-4`}>
             <LoadingBlock className="mb-4 h-6 w-24" />
             <LoadingBlock className="mb-3 h-20 w-full" />
             <LoadingBlock className="h-11 w-full rounded-lg" />
           </div>
-          <div className={tradeSectionClass}>
+          <div className={tradePanelClass}>
             <div className="border-b border-prophet-line px-4 py-3">
               <LoadingBlock className="h-5 w-36" />
             </div>
@@ -97,7 +89,7 @@ export default function TradeTeamRouteLoading() {
         </aside>
       </div>
 
-      <div className="fixed bottom-0 left-0 z-10 flex w-full gap-5 rounded-t-xl border border-[#EBEBEB] bg-white px-3 pb-10 pt-5 md:hidden">
+      <div className="fixed bottom-0 left-0 z-10 flex w-full gap-5 rounded-t-xl border border-prophet-line bg-prophet-panel px-3 pb-10 pt-5 md:hidden">
         <LoadingBlock className="h-[46px] flex-1 rounded-xl" />
         <LoadingBlock className="h-[46px] flex-1 rounded-xl" />
       </div>

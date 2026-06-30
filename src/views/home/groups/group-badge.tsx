@@ -24,7 +24,7 @@ export function GroupBadge({
     <Link
       href={groupDetailHref(group)}
       className={cn(
-        "group inline-flex h-[36px] items-center gap-1.5 rounded-[8px] border border-[#909090] bg-white px-3 text-[18px] font-medium leading-normal text-black transition-colors hover:border-black hover:bg-[#fafafa]",
+        "group inline-flex h-[36px] items-center gap-1.5 rounded-[8px] border border-prophet-muted bg-prophet-panel px-3 text-[18px] font-medium leading-normal text-prophet-foreground transition-colors hover:border-prophet-foreground hover:bg-prophet-hover",
         className,
       )}
       aria-label={label}

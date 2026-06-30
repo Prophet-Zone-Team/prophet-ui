@@ -187,7 +187,7 @@ export const RoadToFinalShareCard = forwardRef<
                           key={index}
                           className="relative size-[17px] shrink-0 rounded-full border-[4px] border-[rgba(255,255,255,0.30)]"
                         >
-                          <div className="w-full h-full bg-white rounded-full"></div>
+                          <div className="w-full h-full bg-prophet-panel rounded-full"></div>
                           <div
                             className={cn(
                               "absolute left-1/2 -translate-x-1/2 w-[1px] h-[70px] bg-[#EBEBEB]",
@@ -202,7 +202,7 @@ export const RoadToFinalShareCard = forwardRef<
               </div>
 
               <div
-                className="absolute rounded-[4px] border border-black bg-white p-[2px] right-[10px] bottom-[5px] md:bottom-[10px]"
+                className="absolute rounded-[4px] border border-black bg-prophet-panel p-[2px] right-[10px] bottom-[5px] md:bottom-[10px]"
                 aria-hidden="true"
               >
                 <QRCodeSVG

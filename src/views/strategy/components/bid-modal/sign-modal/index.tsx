@@ -88,19 +88,19 @@ export function StrategyBidSignModal({
       >
         <div className="flex flex-col gap-4 pb-2">
           <div className="flex items-center justify-between">
-            <span className="font-[Sora] text-sm font-normal leading-[18px] text-black">
+            <span className="font-[Sora] text-sm font-normal leading-[18px] text-prophet-foreground">
               {t("totalBidValue")}
             </span>
-            <span className="font-[Sora] text-sm font-medium leading-[18px] text-black">
+            <span className="font-[Sora] text-sm font-medium leading-[18px] text-prophet-foreground">
               {formatStrategyBudgetLabel(bidAmount)}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="font-[Sora] text-sm font-normal leading-[18px] text-[#909090]">
+            <span className="font-[Sora] text-sm font-normal leading-[18px] text-prophet-muted">
               {t("tableMarket")}
             </span>
-            <span className="font-[Sora] text-sm font-normal leading-[18px] text-[#909090]">
+            <span className="font-[Sora] text-sm font-normal leading-[18px] text-prophet-muted">
               {t("valued")}
             </span>
           </div>

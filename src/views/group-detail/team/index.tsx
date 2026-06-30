@@ -19,6 +19,7 @@ import {
   useTradeOutcomeSide
 } from "@/store";
 import type { OrderOutcomeSide, TeamMarketSnapshot } from "@/types/market";
+import { groupDetailPopoverClass } from "@/views/group-detail/group-detail-ui";
 import { getTeamSimpleSidePrice } from "@/views/trade/game/market-section/format-bid-label";
 
 const TAB_UNDERLINE_TRANSITION = {
@@ -78,8 +79,8 @@ function OutcomeButton({
             ? "border-[#65AF14] bg-[#65AF14] text-white"
             : "border-[#FF674B] bg-[#FF674B] text-white"
           : isYes
-            ? "border-[#65AF14] bg-transparent text-[#65AF14] hover:bg-[#fafbfc]"
-            : "border-[#FF674B] bg-transparent text-[#FF674B] hover:bg-[#fafbfc]"
+            ? "border-[#65AF14] bg-transparent text-[#65AF14] hover:bg-prophet-hover"
+            : "border-[#FF674B] bg-transparent text-[#FF674B] hover:bg-prophet-hover"
       )}
     >
       {label}
@@ -158,7 +159,7 @@ export function GroupDetailTeam({
       >
         <span
           className={cn(
-            "text-[20px] leading-[24px] text-black",
+            "text-[20px] leading-[24px] text-prophet-foreground",
             selected ? "font-[600]" : "font-[400]"
           )}
         >
@@ -174,7 +175,7 @@ export function GroupDetailTeam({
 
         <span
           className={cn(
-            "mt-1 max-w-full truncate px-1 text-[14px] leading-[15px] text-black",
+            "mt-1 max-w-full truncate px-1 text-[14px] leading-[15px] text-prophet-foreground",
             selected ? "font-[600]" : "font-[400]"
           )}
         >
@@ -185,7 +186,7 @@ export function GroupDetailTeam({
           <motion.span
             layoutId={underlineLayoutId}
             aria-hidden="true"
-            className="mt-2 block h-0 w-10 shrink-0 rounded-[6px] border-b-[3px] border-black"
+            className="mt-2 block h-0 w-10 shrink-0 rounded-[6px] border-b-[3px] border-prophet-foreground"
             transition={TAB_UNDERLINE_TRANSITION}
           />
         ) : (
@@ -218,7 +219,7 @@ export function GroupDetailTeam({
           />
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 justify-between items-center gap-1.5">
-              <div className="truncate text-[16px] font-[500] leading-5 text-black">
+              <div className="truncate text-[16px] font-[500] leading-5 text-prophet-foreground">
                 {displayName}
               </div>
               {points != null ? (
@@ -226,20 +227,20 @@ export function GroupDetailTeam({
                   placement="Top"
                   trigger="Hover"
                   content={
-                    <div className="flex h-[46px] w-[118px] items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white px-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-                      <span className="text-[14px] font-[400] leading-[18px] text-black">
+                    <div className={groupDetailPopoverClass}>
+                      <span className="text-[14px] font-[400] leading-[18px] text-prophet-foreground">
                         {t("currentPoint")}
                       </span>
                     </div>
                   }
                 >
-                  <span className="shrink-0 text-[16px] font-[500] leading-5 text-black">
+                  <span className="shrink-0 text-[16px] font-[500] leading-5 text-prophet-foreground">
                     {points}
                   </span>
                 </Popover>
               ) : null}
             </div>
-            <div className="shrink-0 text-[24px] font-[500] leading-[30px] text-black">
+            <div className="shrink-0 text-[24px] font-[500] leading-[30px] text-prophet-foreground">
               {probabilityLabel}
             </div>
           </div>

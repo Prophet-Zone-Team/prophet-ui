@@ -21,7 +21,7 @@ export function TeamMobileTradeButtons({
   const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
 
   return (
-    <div className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-between gap-5 border-t border-[#EBEBEB] bg-white p-3 pb-[calc(12px+env(safe-area-inset-bottom,0px))] md:hidden">
+    <div className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-between gap-5 border-t border-prophet-line bg-prophet-panel p-3 pb-[calc(12px+env(safe-area-inset-bottom,0px))] md:hidden">
       <button
         type="button"
         className="flex h-[46px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#FF674B] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"

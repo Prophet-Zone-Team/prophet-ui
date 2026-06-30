@@ -37,8 +37,8 @@ function TeamSelectOption({
         aria-selected={isSelected}
         className={cn(
           "flex w-full items-center gap-[10px] border-0 px-[20px] py-[10px] text-left",
-          "bg-transparent transition-colors hover:bg-[#F9FAFC]",
-          isSelected && "bg-[#F9FAFC]"
+          "bg-transparent transition-colors hover:bg-prophet-hover",
+          isSelected && "bg-prophet-hover"
         )}
         onClick={onSelect}
       >
@@ -48,11 +48,11 @@ function TeamSelectOption({
           logoUrl={team.logoUrl}
           className="h-[28px] w-[28px] shrink-0 rounded-[6px] text-[28px]"
         />
-        <span className="min-w-0 flex-1 truncate text-[16px] font-[500] leading-[19px] text-black">
+        <span className="min-w-0 flex-1 truncate text-[16px] font-[500] leading-[19px] text-prophet-foreground">
           {teamDisplayName}
         </span>
         {isSelected ? (
-          <span className="shrink-0 text-[12px] font-[400] leading-[14px] text-[#909090]">
+          <span className="shrink-0 text-[12px] font-[400] leading-[14px] text-prophet-muted">
             {t("selected")}
           </span>
         ) : null}
@@ -79,14 +79,14 @@ export function TeamSelectModal({
     >
       <div
         className={cn(
-          "box-border rounded-[12px] border border-[#EBEBEB] bg-white",
+          "box-border rounded-[12px] border border-prophet-line bg-prophet-panel",
           "px-0 pb-[12px] pt-[20px]"
         )}
       >
-        <h2 className="m-0 px-[20px] text-[18px] font-[500] leading-[21px] text-black">
+        <h2 className="m-0 px-[20px] text-[18px] font-[500] leading-[21px] text-prophet-foreground">
           {t("selectTeam")}
         </h2>
-        <p className="m-0 mt-[6px] px-[20px] text-[14px] font-[400] leading-[17px] text-[#909090]">
+        <p className="m-0 mt-[6px] px-[20px] text-[14px] font-[400] leading-[17px] text-prophet-muted">
           {t("chooseTeamPreviewPath")}
         </p>
         <ul

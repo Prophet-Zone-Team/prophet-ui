@@ -119,12 +119,12 @@ export function DepositConfirmStep({
 
   return (
     <div className="flex flex-col gap-4 pb-2">
-      <p className="m-0 text-center text-[36px] font-[500] leading-[43px] text-black">
+      <p className="m-0 text-center text-[36px] font-[500] leading-[43px] text-prophet-foreground">
         {formatNumber(amountUsd, 2, true, { prefix: "$", round: 0 })}
       </p>
 
       {showQuoteLoading ? (
-        <div className="flex items-center justify-center gap-2 text-sm text-[#909090]">
+        <div className="flex items-center justify-center gap-2 text-sm text-prophet-muted">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           <span>{t("fetchingQuote")}</span>
         </div>
@@ -222,9 +222,9 @@ function DetailRow({
 }) {
   return (
     <div className={depositDetailRowClass}>
-      <span className="text-[#909090]">{label}</span>
-      <span className="flex-1 border-t border-[#EBEBEB]/60"></span>
-      <span className="font-[500] text-black">{children}</span>
+      <span className="text-prophet-muted">{label}</span>
+      <span className="flex-1 border-t border-prophet-line"></span>
+      <span className="font-[500] text-prophet-foreground">{children}</span>
     </div>
   );
 }

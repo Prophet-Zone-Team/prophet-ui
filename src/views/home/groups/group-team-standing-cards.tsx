@@ -20,7 +20,7 @@ export function GroupTeamStandingCards({
 
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
-      <h3 className="m-0 text-[18px] font-medium leading-[23px] text-black">
+      <h3 className="m-0 text-[18px] font-medium leading-[23px] text-prophet-foreground">
         {groupLabel}
       </h3>
       <div className="flex flex-col gap-4">

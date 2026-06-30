@@ -567,7 +567,7 @@ function BinaryChartTooltip({
         : formatGameChartXAxisTick(String(label ?? ""), timeRange);
 
   return (
-    <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+    <div className="rounded-xl border border-prophet-line bg-prophet-panel px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
       <p className="m-0 mb-1 text-sm font-[500] leading-[17px] text-[#909090]">
         {timeLabel}
       </p>

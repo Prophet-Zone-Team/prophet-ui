@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/cn";
 import { useRef } from "react";
 import PrivateBalance from "./private-balance";
+import { useDarkModeEnabled } from "@/store";
 
 export interface WalletConnectedBarProps {
   polymarketAddress: string;
@@ -94,7 +95,7 @@ export function WalletConnectedBar({
       <div className="hidden md:block h-[31px] w-px shrink-0 bg-prophet-line"></div>
       <Link
         href="/portfolio"
-        className="hidden md:flex flex-col justify-center items-end gap-0 cursor-pointer h-[50px] px-2.5 rounded-lg border border-[#FFFFFF] transition-colors hover:border-[#EBEBEB]"
+        className="hidden md:flex flex-col justify-center items-end gap-0 cursor-pointer h-[50px] px-2.5 rounded-lg border border-prophet-panel dark:hover:border-white transition-colors hover:border-prophet-line"
         aria-label={t("openPortfolio")}
       >
         <span className={walletBalanceLabelClass}>{t("balance")}</span>
@@ -111,7 +112,7 @@ export function WalletConnectedBar({
         //   placement="BottomRight"
         //   trigger="Hover"
         //   content={
-        //     <div className="w-[130px] flex flex-col items-stretch gap-1 py-1 text-black text-sm rounded-xl bg-white border border-[#EBEBEB] shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
+        //     <div className="w-[130px] flex flex-col items-stretch gap-1 py-1 text-prophet-foreground text-sm rounded-xl bg-prophet-panel border border-prophet-line shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
         //       <button
         //         type="button"
         //         className="w-full text-left cursor-pointer hover:bg-[#999]/10 duration-150 px-3 py-2"
@@ -156,6 +157,8 @@ export function WalletConnectedBar({
 }
 
 function ChevronIcon({ open }: { open: boolean }) {
+  const darkModeEnabled = useDarkModeEnabled();
+
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -167,7 +170,7 @@ function ChevronIcon({ open }: { open: boolean }) {
     >
       <path
         d="M0.5 0.5L5.86828 4.5L11.5 0.5"
-        stroke="black"
+        stroke={darkModeEnabled ? "#909090" : "black"}
         strokeLinecap="round"
       />
     </svg>

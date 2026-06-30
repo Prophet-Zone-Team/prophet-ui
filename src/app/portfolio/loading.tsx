@@ -1,3 +1,4 @@
+import { LoadingBlock } from "@/components/ui/loading-block";
 import {
   portfolioActivityCardClass,
   portfolioPageClass,
@@ -6,15 +7,6 @@ import {
   portfolioSummaryCardClass,
   portfolioTableScrollClass
 } from "@/views/portfolio/portfolio-ui";
-
-function LoadingBlock({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-md bg-[#ebebeb]/80 ${className ?? "h-4 w-full"}`}
-      aria-hidden="true"
-    />
-  );
-}
 
 export default function PortfolioLoading() {
   return (
@@ -67,7 +59,7 @@ export default function PortfolioLoading() {
         </section>
 
         <section className={portfolioActivityCardClass} aria-hidden="true">
-          <div className="shrink-0 border-b border-[#EBEBEB] px-4 pt-3">
+          <div className="shrink-0 border-b border-prophet-line px-4 pt-3">
             <div className="flex h-9 items-start gap-6">
               <LoadingBlock className="h-[19px] w-16" />
               <LoadingBlock className="h-[19px] w-24" />

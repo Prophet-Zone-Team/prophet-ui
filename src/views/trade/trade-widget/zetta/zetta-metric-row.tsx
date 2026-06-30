@@ -22,11 +22,11 @@ export function ZettaMetricRow({
       <span className="shrink-0 text-[14px] leading-none" aria-hidden>
         {icon}
       </span>
-      <span className="w-[100px] text-[12px] font-[500] leading-[15px] text-black">
+      <span className="w-[100px] text-[12px] font-[500] leading-[15px] text-prophet-foreground">
         {label}
       </span>
       <div className="ml-auto flex min-w-0 flex-1 items-center gap-2 pl-2">
-        <span className="w-[14px] shrink-0 text-right text-[12px] font-[500] leading-[15px] tabular-nums text-black">
+        <span className="w-[14px] shrink-0 text-right text-[12px] font-[500] leading-[15px] tabular-nums text-prophet-foreground">
           {yesCount}
         </span>
         <ZettaSplitBar
@@ -34,7 +34,7 @@ export function ZettaMetricRow({
           noCount={noCount}
           className="min-w-[72px]"
         />
-        <span className="w-[14px] shrink-0 text-left text-[12px] font-[500] leading-[15px] tabular-nums text-black">
+        <span className="w-[14px] shrink-0 text-left text-[12px] font-[500] leading-[15px] tabular-nums text-prophet-foreground">
           {noCount}
         </span>
       </div>

@@ -36,14 +36,14 @@ function HeroMetric({
   tone?: "up" | "down";
 }) {
   return (
-    <div className="rounded-lg border border-prophet-line/80 bg-white/80 px-3 py-2.5 text-center sm:text-left">
+    <div className="rounded-lg border border-prophet-line/80 dark:border-prophet-line bg-prophet-panel/80 px-3 py-2.5 text-center sm:text-left">
       <strong
         className={
           tone === "down"
             ? "block text-base font-[500] text-prophet-red"
             : tone === "up"
               ? "block text-base font-[500] text-prophet-green"
-              : "block text-base font-[500] text-black"
+              : "block text-base font-[500] text-prophet-foreground"
         }
       >
         {value}
@@ -103,10 +103,10 @@ export function TeamDetailHeader({
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="m-0 truncate text-2xl font-[500] capitalize text-black sm:text-[32px]">
+              <h1 className="m-0 truncate text-2xl font-[500] capitalize text-prophet-foreground sm:text-[32px]">
                 {displayName}
               </h1>
-              <span className="inline-flex h-[26px] items-center rounded-[14px] border border-[#909090] px-3 text-sm font-[500] text-[#909090]">
+              <span className="inline-flex h-[26px] items-center rounded-[14px] border border-prophet-muted px-3 text-sm font-[500] text-prophet-muted">
                 {t("team")}
               </span>
             </div>
@@ -179,7 +179,7 @@ export function TeamDetailHeader({
               <CopyButton
                 text={getPageUrl}
                 ariaLabel={t("copyPageLink")}
-                className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted hover:text-black"
+                className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted hover:text-prophet-foreground"
                 onCopy={() =>
                   trackCopyLinkClicked({
                     target: "page_link",

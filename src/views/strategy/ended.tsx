@@ -45,7 +45,7 @@ export function StrategyEnded() {
   if (!hasTournamentWinner() || endedStrategies.length === 0) {
     return (
       <section aria-label={t("endedStrategies")}>
-        <p className="py-8 text-center text-sm text-[#909090] md:py-12">
+        <p className="py-8 text-center text-sm text-prophet-muted md:py-12">
           {t("noEndedStrategies")}
         </p>
       </section>

@@ -25,7 +25,7 @@ export function MigrateDepositEntry({ onOpen }: MigrateDepositEntryProps) {
 
   return (
     <>
-      <p className="text-sm font-[500] leading-[17px] text-black">
+      <p className="text-sm font-[500] leading-[17px] text-prophet-foreground">
         {t("depositEntryTitle")}
       </p>
       <button type="button" className={migrateDepositEntryClass} onClick={onOpen}>

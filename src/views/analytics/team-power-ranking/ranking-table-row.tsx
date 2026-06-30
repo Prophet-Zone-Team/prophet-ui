@@ -25,8 +25,8 @@ export function RankingTableDesktopRow({ entry }: RankingTableRowProps) {
       role="row"
       className={cn(
         rankingPreviewTableGridClass,
-        "px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-black",
-        entry.link ? "cursor-pointer hover:bg-[#EDEDED] duration-150" : "cursor-default",
+        "px-[20px] py-[6px] text-[14px] font-[400] leading-[17px] text-prophet-foreground",
+        entry.link ? "cursor-pointer hover:bg-prophet-hover duration-150" : "cursor-default",
       )}
       onClick={() => entry.link ? router.push(entry.link) : void 0}
     >
@@ -51,7 +51,7 @@ export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
 
   return (
     <article
-      className="flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black"
+      className="flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-prophet-foreground"
       onClick={() => entry.link ? router.push(entry.link) : void 0}
     >
       <div className="flex items-center justify-between gap-3">
@@ -66,9 +66,9 @@ export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
         <TrendIndicator trend={entry.trend} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 border-t border-[#EBEBEB] pt-2">
+      <div className="grid grid-cols-2 gap-3 border-t border-prophet-line pt-2">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-[12px] leading-[17px] text-[#909090]">
+          <span className="text-[12px] leading-[17px] text-prophet-muted">
             {t("titleProbability")}
           </span>
           <span className="tabular-nums">
@@ -76,7 +76,7 @@ export function RankingTableMobileCard({ entry }: RankingTableRowProps) {
           </span>
         </div>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-[12px] leading-[17px] text-[#909090]">
+          <span className="text-[12px] leading-[17px] text-prophet-muted">
             {t("roundOf16")}
           </span>
           <span className="tabular-nums">

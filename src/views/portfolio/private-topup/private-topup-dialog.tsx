@@ -654,12 +654,12 @@ function TopupStatusView({
     <div className="flex flex-col items-center justify-center gap-5 py-10 text-center">
       {phase === "bridging" ? (
         <>
-          <Loader2 className="h-10 w-10 animate-spin text-black" aria-hidden />
+          <Loader2 className="h-10 w-10 animate-spin text-prophet-foreground" aria-hidden />
           <div>
-            <p className="m-0 text-lg font-[556] text-black">
+            <p className="m-0 text-lg font-[556] text-prophet-foreground">
               {t("movingFunds")}
             </p>
-            <p className="m-0 mt-1 text-sm text-[#909090]">
+            <p className="m-0 mt-1 text-sm text-prophet-muted">
               {bridgeStatusLabel ?? t("bridgeStatusFallback")}
             </p>
           </div>
@@ -670,8 +670,8 @@ function TopupStatusView({
         <>
           <CheckCircle2 className="h-10 w-10 text-[#16a34a]" aria-hidden />
           <div>
-            <p className="m-0 text-lg font-[556] text-black">{t("topUpComplete")}</p>
-            <p className="m-0 mt-1 text-sm text-[#909090]">
+            <p className="m-0 text-lg font-[556] text-prophet-foreground">{t("topUpComplete")}</p>
+            <p className="m-0 mt-1 text-sm text-prophet-muted">
               {t("topUpCompleteBody")}
             </p>
           </div>
@@ -685,12 +685,12 @@ function TopupStatusView({
         <>
           <ShieldAlert className="h-10 w-10 text-[#e5484d]" aria-hidden />
           <div>
-            <p className="m-0 text-lg font-[556] text-black">
+            <p className="m-0 text-lg font-[556] text-prophet-foreground">
               {isConfirmationTimeout ? t("statusLookupFailed") : t("topUpFailed")}
             </p>
             <p
               className={`m-0 mt-1 text-sm ${
-                isConfirmationTimeout ? "text-[#909090]" : "text-[#e5484d]"
+                isConfirmationTimeout ? "text-prophet-muted" : "text-[#e5484d]"
               }`}
             >
               {error ?? t("somethingWentWrong")}

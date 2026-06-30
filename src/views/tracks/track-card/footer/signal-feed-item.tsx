@@ -71,7 +71,7 @@ export function SignalFeedItem({
       </span>
       <p
         className={cn(
-          "m-0 whitespace-nowrap text-[16px] font-[400] leading-[20px] text-[#909090]",
+          "m-0 whitespace-nowrap text-[16px] font-[400] leading-[20px] text-prophet-muted",
           truncateHeadline && "min-w-0 truncate"
         )}
       >

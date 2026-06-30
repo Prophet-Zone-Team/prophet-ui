@@ -136,12 +136,12 @@ function SpecialMatchDataCardContent({
   return (
     <article
       className={cn(
-        "relative min-h-[160px] overflow-hidden bg-white sm:min-h-[280px] lg:min-h-[345px]",
+        "relative min-h-[160px] overflow-hidden bg-prophet-panel sm:min-h-[280px] lg:min-h-[345px]",
         embedded
           ? "h-full min-h-[inherit] rounded-none border-0"
-          : "rounded-[12px] border border-[#EBEBEB]",
+          : "rounded-[12px] border border-prophet-line",
         canNavigate &&
-          "cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]"
+          "cursor-pointer transition-colors hover:border-prophet-line hover:bg-prophet-hover"
       )}
       aria-label={ariaLabel}
       onClick={
@@ -160,11 +160,11 @@ function SpecialMatchDataCardContent({
           probabilities={oddsResult.probabilities}
         />
       ) : (
-        <div className="absolute inset-0 z-0 bg-[#f4f6f9]" aria-hidden />
+        <div className="absolute inset-0 z-0 bg-prophet-action-panel" aria-hidden />
       )}
 
       <div className="relative z-10 flex justify-center pt-[18px] px-[15px] md:pt-[50px] md:px-2 md:px-0">
-        <div className="w-full flex justify-center items-center h-[72px] rounded-[10px] md:w-[568px] md:h-[138px] md:rounded-[20px] bg-white px-2 md:px-4 py-3 md:py-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] sm:px-8 sm:py-5">
+        <div className="w-full flex justify-center items-center h-[72px] rounded-[10px] md:w-[568px] md:h-[138px] md:rounded-[20px] bg-prophet-panel px-2 md:px-4 py-3 md:py-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] sm:px-8 sm:py-5">
           <div className="flex items-center justify-around relative w-full">
             <TeamColumn
               name={homeDisplayName}
@@ -181,11 +181,11 @@ function SpecialMatchDataCardContent({
                     className="font-semibold"
                     label={t("matchStatusOngoing")}
                   />
-                  <strong className="text-[22px] md:text-[28px] font-semibold leading-none text-black sm:text-4xl">
+                  <strong className="text-[22px] md:text-[28px] font-semibold leading-none text-prophet-foreground sm:text-4xl">
                     {scoreLabel}
                   </strong>
                   {liveClock ? (
-                    <span className="text-sm md:text-base font-normal text-black">
+                    <span className="text-sm md:text-base font-normal text-prophet-foreground">
                       {liveClock}
                     </span>
                   ) : null}
@@ -195,10 +195,10 @@ function SpecialMatchDataCardContent({
                   <div className="md:text-[14px] text-[12px] text-[#9D84FF] font-[500]">
                     {t("nextMatch")}
                   </div>
-                  <div className="text-[24px] md:text-[36px] text-[#909090] font-[500]">
+                  <div className="text-[24px] md:text-[36px] text-prophet-muted font-[500]">
                     {t("versus")}
                   </div>
-                  <div className="text-[10px] md:text-[16px] text-[#000] font-[400]">
+                  <div className="text-[10px] md:text-[16px] text-prophet-foreground font-[400]">
                     {t("startsAt", {
                       kickoff: formatScheduleKickoff(liveMatch.kickoffAt)
                     })}
@@ -239,7 +239,7 @@ function TeamColumn({
         logoUrl={logoUrl}
         className="h-[20px] md:h-[50px] w-[20px] rounded-[4px] md:w-[50px] md:rounded-[6px] text-[20px] md:text-[50px]"
       />
-      <strong className="max-w-full truncate text-[14px] md:text-[26px] font-[500] md:leading-[31px] text-black">
+      <strong className="max-w-full truncate text-[14px] md:text-[26px] font-[500] md:leading-[31px] text-prophet-foreground">
         {name}
       </strong>
     </div>
@@ -267,7 +267,7 @@ function ProbabilityStrip({
     <div ref={setContainerRef} className="absolute inset-0" aria-hidden>
       <div className="absolute inset-0 z-0">
         <ProbabilitySegmentFill background="#3168FF" clipPath={homeClip} />
-        <ProbabilitySegmentFill background="#D9D9D9" clipPath={drawClip} />
+        <ProbabilitySegmentFill background="var(--prophet-border)" clipPath={drawClip} />
         <ProbabilitySegmentFill background="#F4B600" clipPath={awayClip} />
       </div>
 
@@ -330,7 +330,7 @@ function ProbabilitySegmentLabel({
   contentLeft?: string;
   className?: string;
 }) {
-  const textColor = tone === "light" ? "text-white" : "text-black";
+  const textColor = tone === "light" ? "text-white" : "text-prophet-foreground";
   const showPercent = Math.round(probability * 100) >= 10;
 
   return (

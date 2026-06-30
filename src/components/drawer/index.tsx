@@ -161,7 +161,7 @@ const DrawerContent = (props: DrawerContentProps) => {
       }}
       style={{ zIndex: contentZIndex }}
       className={clsx(
-        "fixed flex flex-col bg-white shadow-[0_0_10px_0_rgba(0,0,0,0.10)]",
+        "fixed flex flex-col bg-prophet-panel shadow-[0_0_10px_0_rgba(0,0,0,0.10)]",
         direction === DrawerDirection.Bottom
           ? "rounded-b-0 rounded-t-2xl w-full h-[70dvh] left-0 bottom-0"
           : "",

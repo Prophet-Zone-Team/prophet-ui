@@ -40,7 +40,7 @@ export function MobileLoadingScreen() {
       {visible ? (
         <motion.div
           key="mobile-loading-screen"
-          className="fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden bg-[#F9FAFC] md:hidden"
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden bg-prophet-base md:hidden"
           role="status"
           aria-live="polite"
           aria-busy="true"
@@ -68,12 +68,12 @@ export function MobileLoadingScreen() {
                 aria-hidden="true"
                 draggable={false}
               />
-              <span className="font-[Sora] text-[18px] font-medium leading-[19px] text-black">
+              <span className="font-[Sora] text-[18px] font-medium leading-[19px] text-prophet-foreground">
                 PROPHET
               </span>
             </div>
 
-            <div className="mt-[33px] flex flex-col items-center text-center font-[Sora] text-[36px] font-semibold capitalize leading-[45px] text-black">
+            <div className="mt-[33px] flex flex-col items-center text-center font-[Sora] text-[36px] font-semibold capitalize leading-[45px] text-prophet-foreground">
               <p className="m-0">{t("heroTaglineBefore")}</p>
               <p className="m-0 inline-flex items-center gap-[6px]">
                 <span>{t("heroTaglineMoves")}</span>

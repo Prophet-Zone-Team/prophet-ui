@@ -90,7 +90,7 @@ export function ScheduleTeamFilter({
       role="group"
       aria-label={t("filterByTeam")}
     >
-      <span className="shrink-0 text-[12px] md:text-[16px] font-[500] leading-[19px] text-[#909090]">
+      <span className="shrink-0 text-[12px] md:text-[16px] font-[500] leading-[19px] text-prophet-muted">
         {t("filter")}
       </span>
 
@@ -103,7 +103,7 @@ export function ScheduleTeamFilter({
         />
 
         {!isMobile && open ? (
-          <div className="absolute left-0 top-full z-50 mt-2 w-[min(920px,calc(100vw-2rem))] rounded-xl border border-[#EBEBEB] bg-white p-4 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+          <div className="absolute left-0 top-full z-50 mt-2 w-[min(920px,calc(100vw-2rem))] rounded-xl border border-prophet-line bg-prophet-panel p-4 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
             <ScheduleTeamFilterPanelContent
               teams={teams}
               selectedTeamIds={selectedTeamIds}
@@ -115,7 +115,7 @@ export function ScheduleTeamFilter({
 
       {isMobile && onTeamSearchQueryChange ? (
         <>
-          <div className="h-[24px] w-[1px] bg-[#EBEBEB]" />
+          <div className="h-[24px] w-[1px] bg-prophet-line" />
           <ScheduleTeamSearchInput
             value={teamSearchQuery}
             onChange={onTeamSearchQueryChange}
@@ -168,18 +168,18 @@ function ScheduleTeamFilterChip({
   const displayName = useLocalizedTeamName(team.code, team.name);
 
   return (
-    <span className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-[20px] bg-[#EBEBEB] pl-[10px] pr-[14px]">
+    <span className="inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-[20px] bg-prophet-line pl-[10px] pr-[14px]">
       <TeamFlag
         code={team.code}
         name={displayName}
         className="h-[16px] w-[16px] shrink-0 rounded-[2px] text-[16px]"
       />
-      <span className="text-[16px] font-[400] leading-[19px] text-black">
+      <span className="text-[16px] font-[400] leading-[19px] text-prophet-foreground">
         {team.code}
       </span>
       <button
         type="button"
-        className="inline-flex size-4 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-black"
+        className="inline-flex size-4 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-prophet-foreground"
         aria-label={t("removeTeamFilter", { team: displayName })}
         onClick={onRemove}
       >
@@ -212,7 +212,7 @@ function ScheduleTeamSearchInput({
   return (
     <div className="relative min-w-0 flex-1 md:hidden">
       <Search
-        className="pointer-events-none absolute left-3 top-1/2 size-[14px] -translate-y-1/2 text-[#222429]"
+        className="pointer-events-none absolute left-3 top-1/2 size-[14px] -translate-y-1/2 text-prophet-foreground"
         strokeWidth={2}
         aria-hidden
       />
@@ -222,7 +222,7 @@ function ScheduleTeamSearchInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={t("searchTeams")}
-        className="box-border h-[30px] w-full max-w-[222px] rounded-[18px] border border-[#EBEBEB] bg-white py-0 pl-[34px] pr-3 font-[Sora] text-[12px] font-normal leading-[15px] text-black outline-none placeholder:text-[#909090]"
+        className="box-border h-[30px] w-full max-w-[222px] rounded-[18px] border border-prophet-line bg-prophet-panel py-0 pl-[34px] pr-3 font-[Sora] text-[12px] font-normal leading-[15px] text-prophet-foreground outline-none placeholder:text-prophet-muted"
       />
     </div>
   );
@@ -280,7 +280,7 @@ function ScheduleTeamFilterOption({
       <span
         className={cn(
           "inline-flex size-[18px] shrink-0 items-center justify-center rounded-[2px] border border-[#CFCFCF]",
-          selected ? "border-black bg-black" : "bg-white"
+          selected ? "border-black bg-black dark:border-prophet-primary dark:bg-prophet-primary" : "bg-prophet-panel"
         )}
         aria-hidden
       >
@@ -294,10 +294,10 @@ function ScheduleTeamFilterOption({
         logoUrl={team.logoUrl}
         className="h-[26px] w-[26px] shrink-0 rounded text-[26px]"
       />
-      <span className="truncate text-[14px] font-[500] leading-[17px] text-black">
+      <span className="truncate text-[14px] font-[500] leading-[17px] text-prophet-foreground">
         {displayName}
       </span>
-      <span className="shrink-0 text-[14px] font-[500] leading-[17px] text-[#909090]">
+      <span className="shrink-0 text-[14px] font-[500] leading-[17px] text-prophet-muted">
         {team.code}
       </span>
     </button>

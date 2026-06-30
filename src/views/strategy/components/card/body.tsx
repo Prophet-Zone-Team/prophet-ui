@@ -30,7 +30,7 @@ export function StrategyCardBody({
   className
 }: StrategyCardBodyProps) {
   return (
-    <div className={cn("border border-[#EBEBEB] bg-white", className)}>
+    <div className={cn("border border-prophet-line bg-prophet-panel", className)}>
       {children}
     </div>
   );
@@ -183,8 +183,8 @@ export function StrategyCardBodyTop({
               }
               className={cn(
                 "inline-flex size-[46px] shrink-0 items-center justify-center rounded-xl",
-                "border border-[#EBEBEB] bg-white text-black transition-colors",
-                "hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-50"
+                "border border-prophet-line bg-prophet-panel text-prophet-foreground transition-colors",
+                "hover:bg-prophet-hover disabled:cursor-not-allowed disabled:opacity-50"
               )}
             >
               <ChevronDown
@@ -254,7 +254,7 @@ function StrategyCardEndedOutcome({
             fallback={false}
             className={endedOutcomeFlagClassName}
           />
-          <span className="font-[Sora] text-sm font-normal leading-[18px] text-[#909090]">
+          <span className="font-[Sora] text-sm font-normal leading-[18px] text-prophet-muted">
             {t("winnerPrefix", { name: winnerName })}
           </span>
         </div>
@@ -272,10 +272,10 @@ function StrategyCardMetricColumn({
   className
 }: StrategyCardMetricColumnProps) {
   const valueColorClassName = muted
-    ? "text-[#909090]"
+    ? "text-prophet-muted"
     : tone === "positive"
       ? "text-[#65AF14]"
-      : "text-black";
+      : "text-prophet-foreground";
 
   return (
     <div

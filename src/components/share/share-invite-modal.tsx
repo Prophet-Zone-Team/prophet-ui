@@ -94,7 +94,7 @@ export function ShareInviteModal({
         {isMobile ? (
           <button
             type="button"
-            className="absolute right-0 top-0 z-10 inline-flex size-8 items-center justify-center rounded-lg bg-white text-[#18110F] transition-colors hover:bg-[#fafbfc]"
+            className="absolute right-0 top-0 z-10 inline-flex size-8 items-center justify-center rounded-lg bg-prophet-panel text-[#18110F] transition-colors hover:bg-[#fafbfc]"
             aria-label="Close"
             onClick={onClose}
           >

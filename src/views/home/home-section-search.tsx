@@ -21,7 +21,7 @@ export function HomeSectionSearch(props: any) {
 
   return (
     <div className="hidden md:flex -translate-y-3">
-      <div className="relative h-[34px] border border-[#EBEBEB] bg-white rounded-2xl px-3 flex items-center gap-3">
+      <div className="relative h-[34px] border border-prophet-line bg-prophet-panel rounded-2xl px-3 flex items-center gap-3">
         <img
           src="/icons/icon-search.svg"
           alt="Search"
@@ -31,7 +31,7 @@ export function HomeSectionSearch(props: any) {
           type="text"
           maxLength={10}
           placeholder="Search"
-          className="flex-1 pr-4 text-sm text-[#222429] placeholder:text-[#909090] outline-none border-0 h-full"
+          className="flex-1 pr-4 text-sm text-prophet-foreground placeholder:text-prophet-muted outline-none border-0 h-full"
           value={innerValue}
           onChange={handleChange}
         />
@@ -39,7 +39,7 @@ export function HomeSectionSearch(props: any) {
           isClose && (
             <button
               type="button"
-              className="absolute right-3 z-[1] size-3.5 rounded-full overflow-hidden bg-[#EDEDED] hover:bg-[#cdcdcd] duration-150 flex justify-center items-center"
+              className="absolute right-3 z-[1] size-3.5 rounded-full overflow-hidden bg-prophet-line hover:bg-prophet-hover duration-150 flex justify-center items-center"
               onClick={() => handleChange({ target: { value: "" } })}
             >
               <img

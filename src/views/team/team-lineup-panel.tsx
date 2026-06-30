@@ -22,7 +22,7 @@ export interface TeamLineupPanelProps {
 
 function PlayerAvatar({ player }: { player: TeamLineupPlayerView }) {
   return (
-    <span className="mx-auto flex size-8 items-center justify-center rounded-full bg-white/90 text-[9px] font-[500] text-[#125afc]">
+    <span className="mx-auto flex size-8 items-center justify-center rounded-full bg-prophet-panel/90 text-[9px] font-[500] text-[#125afc]">
       {player.number ?? getInitials(player.name)}
     </span>
   );
@@ -31,7 +31,7 @@ function PlayerAvatar({ player }: { player: TeamLineupPlayerView }) {
 function LineupPitchSkeleton() {
   return (
     <div
-      className="min-h-[280px] animate-pulse rounded-xl border border-[#65af14]/40 bg-[#ebebeb]/50"
+      className="min-h-[280px] animate-pulse rounded-xl border border-[#65af14]/40 bg-prophet-line/50"
       aria-hidden
     />
   );
@@ -58,7 +58,7 @@ export function TeamLineupPanel({ teamName }: TeamLineupPanelProps) {
           ) : null}
         </div>
       </div>
-      <div className="p-4 bg-gradient-to-b from-[#e8f5e0] to-[#d4edc4]">
+      <div className="p-4 bg-gradient-to-b from-[#e8f5e0] to-[#d4edc4] dark:from-[#1e2a1a] dark:to-[#243318]">
         {isLoading ? (
           <LineupPitchSkeleton />
         ) : hasStarters && lineup ? (
@@ -77,7 +77,7 @@ export function TeamLineupPanel({ teamName }: TeamLineupPanelProps) {
                   style={positionStyle}
                 >
                   <PlayerAvatar player={player} />
-                  <strong className="mt-1 max-w-[96px] truncate text-[10px] font-[500] text-black">
+                  <strong className="mt-1 max-w-[96px] truncate text-[10px] font-[500] text-prophet-foreground">
                     {shortenName(player.name)}
                     {player.position ? (
                       <span className="ml-1 font-[400] text-prophet-muted">

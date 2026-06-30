@@ -48,7 +48,7 @@ export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowPro
             showError={entry.status === "pending" && Boolean(entry.errorMessage)}
           />
           {!isLast ? (
-            <span className="mt-1 w-px flex-1 min-h-[24px] bg-[#EBEBEB]" aria-hidden />
+            <span className="mt-1 w-px flex-1 min-h-[24px] bg-prophet-line" aria-hidden />
           ) : null}
         </div>
 
@@ -67,12 +67,12 @@ export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowPro
                 fallback={false}
                 className="size-[26px] rounded-[4px] object-cover shadow-[0_0_2px_rgba(0,0,0,0.2)]"
               />
-              <span className="font-[Sora] text-sm font-normal leading-[18px] text-black">
+              <span className="font-[Sora] text-sm font-normal leading-[18px] text-prophet-foreground">
                 {teamDisplayName}
               </span>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-0.5">
-              <span className="font-[Sora] text-sm font-medium leading-[18px] text-black">
+              <span className="font-[Sora] text-sm font-medium leading-[18px] text-prophet-foreground">
                 {entry.leg.valuedLabel}
               </span>
               <span className="font-[Sora] text-sm font-normal leading-[18px] text-[#FF674B]">
@@ -86,7 +86,7 @@ export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowPro
             onClick={() =>
               isRetry ? onSignAgain(entry.leg.id) : onSign(entry.leg.id)
             }
-            className="flex h-[50px] w-full items-center justify-center rounded-xl border border-[#EBEBEB] bg-white font-[Sora] text-base font-normal leading-5 text-black transition-opacity hover:opacity-90"
+            className="flex h-[50px] w-full items-center justify-center rounded-xl border border-prophet-line bg-prophet-panel font-[Sora] text-base font-normal leading-5 text-prophet-foreground transition-opacity hover:opacity-90"
           >
             {isRetry ? t("signAgain") : tAuth("sign")}
           </button>
@@ -100,7 +100,7 @@ export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowPro
       <div className="flex flex-col items-center">
         <SignLegStatusIcon status={entry.status} />
         {!isLast ? (
-          <span className="mt-1 w-px flex-1 min-h-[24px] bg-[#EBEBEB]" aria-hidden />
+          <span className="mt-1 w-px flex-1 min-h-[24px] bg-prophet-line" aria-hidden />
         ) : null}
       </div>
 
@@ -113,12 +113,12 @@ export function SignLegRow({ entry, isLast, onSign, onSignAgain }: SignLegRowPro
             fallback={false}
             className="size-[26px] rounded-[4px] object-cover shadow-[0_0_2px_rgba(0,0,0,0.2)]"
           />
-          <span className="font-[Sora] text-sm font-normal leading-[18px] text-black">
+          <span className="font-[Sora] text-sm font-normal leading-[18px] text-prophet-foreground">
             {teamDisplayName}
           </span>
-          <span className="hidden min-w-0 flex-1 border-t border-[#EBEBEB] sm:block" aria-hidden />
+          <span className="hidden min-w-0 flex-1 border-t border-prophet-line sm:block" aria-hidden />
         </div>
-        <span className="font-[Sora] text-sm font-medium leading-[18px] text-black">
+        <span className="font-[Sora] text-sm font-medium leading-[18px] text-prophet-foreground">
           {entry.leg.valuedLabel}
         </span>
       </div>

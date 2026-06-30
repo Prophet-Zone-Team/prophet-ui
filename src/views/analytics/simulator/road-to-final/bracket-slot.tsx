@@ -16,7 +16,7 @@ export function BracketSlot({ team, className, style }: BracketSlotProps) {
   return (
     <div
       className={cn(
-        "flex h-[30px] shrink-0 items-center rounded-[6px] bg-[#EDEDED] px-[6px]",
+        "flex h-[30px] shrink-0 items-center rounded-[6px] bg-prophet-line/40 px-[6px]",
         className
       )}
       style={{ width: BRACKET_SLOT_WIDTH, ...style }}

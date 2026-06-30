@@ -78,10 +78,10 @@ export function PrivateTopupIntroDialog({
               alt={t("privateModeAlt")}
               className="h-[52px] w-[70px] object-contain"
             />
-            <h2 className="m-0 mt-4 text-center text-[26px] font-[500] leading-normal text-black">
+            <h2 className="m-0 mt-4 text-center text-[26px] font-[500] leading-normal text-prophet-foreground">
               {tWallet("privateBalance")}
             </h2>
-            <p className="m-0 mt-4 max-w-[416px] whitespace-pre-line text-center text-[16px] font-[400] leading-normal text-black">
+            <p className="m-0 mt-4 max-w-[416px] whitespace-pre-line text-center text-[16px] font-[400] leading-normal text-prophet-foreground">
               {t("introDescription")}
             </p>
           </div>
@@ -103,11 +103,11 @@ export function PrivateTopupIntroDialog({
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <WalletAvatar address={walletAddress} className="size-[34px]" />
                 <div className="min-w-0">
-                  <p className="m-0 text-[14px] font-[500] text-[#909090]">
+                  <p className="m-0 text-[14px] font-[500] text-prophet-muted">
                     {t("connectedAccount")}
                   </p>
                   <div className="mt-0.5 flex items-center gap-2">
-                    <p className="m-0 truncate text-[16px] font-[500] text-black">
+                    <p className="m-0 truncate text-[16px] font-[500] text-prophet-foreground">
                       {formatShortWallet(walletAddress)}
                     </p>
                     <CopyButton
