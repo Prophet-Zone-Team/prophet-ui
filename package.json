@@ -6,7 +6,7 @@
     "dev": "NODE_OPTIONS='--max-old-space-size=8192' next dev",
     "dev:turbo": "NODE_OPTIONS='--max-old-space-size=8192' next dev --turbo",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --no-lint",
-    "cf:build": "NODE_OPTIONS='--max-old-space-size=6144' opennextjs-cloudflare build",
+    "cf:build": "NODE_OPTIONS='--max-old-space-size=5120' opennextjs-cloudflare build",
     "lint": "eslint . --quiet",
     "lint:strict": "eslint . --max-warnings=0",
     "check:trading-safety": "node scripts/check-trading-safety.mjs",
