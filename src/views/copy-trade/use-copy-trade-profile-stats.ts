@@ -52,20 +52,22 @@ export function useCopyTradeProfileStats(
         throw new Error("Copy-trade session is required.");
       }
 
-      return getCopyTradePnL(userId);
+      const pnl = await getCopyTradePnL(userId);
+      return pnl;
     },
     enabled,
     staleTime: ANALYTICS_QUERY_STALE_TIME_MS,
   });
 
-  const pnlSummary = pnlQuery.data ?? null;
+  const pnlSummaryData = pnlQuery.data ?? null;
 
   return {
     balance: balanceQuery.data ?? null,
-    totalPnL: pnlSummary?.total_cash_pnl ?? null,
-    positionsValue: pnlSummary?.total_current_value ?? null,
-    openPositions: pnlSummary?.open_positions ?? null,
-    pnlSummary,
+    totalPnL: pnlSummaryData?.total_cash_pnl ?? null,
+    positionsValue: pnlSummaryData?.total_current_value ?? null,
+    openPositions: pnlSummaryData?.open_positions ?? null,
+    biggestWinAmount: pnlSummaryData?.biggest_win_amount ?? null,
+    pnlSummary: pnlSummaryData,
     isLoadingBalance: enabled && balanceQuery.isLoading,
     isLoadingPnL: enabled && pnlQuery.isLoading,
     isLoadingSummary: enabled && pnlQuery.isLoading,

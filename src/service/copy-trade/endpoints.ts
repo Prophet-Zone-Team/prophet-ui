@@ -1,6 +1,7 @@
 import type { AxiosRequestConfig } from "axios";
 
 import type {
+  CopyPnLPointsResponse,
   CopyPnLSummary,
   CopyProfile,
   CopyProfileUpdateRequest,
@@ -156,6 +157,19 @@ export async function getCopyTradePnL(
   return copyTradeRequest<CopyPnLSummary>(
     "GET",
     userPath(userId, "copy-pnl"),
+    undefined,
+    config
+  );
+}
+
+/** GET /users/{id}/copy-pnl/points */
+export async function getCopyTradePnLPoints(
+  userId: number,
+  config?: AxiosRequestConfig
+): Promise<CopyPnLPointsResponse> {
+  return copyTradeRequest<CopyPnLPointsResponse>(
+    "GET",
+    userPath(userId, "copy-pnl/points"),
     undefined,
     config
   );

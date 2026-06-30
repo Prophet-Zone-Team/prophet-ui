@@ -1584,6 +1584,8 @@
       "positionsValue": "持倉價值",
       "biggestWin": "最大獲利",
       "predictions": "預測數",
+      "profitLoss": "損益",
+      "performanceTimeRange": "績效時間區間",
       "tabClosed": "已平倉",
       "noClosedPositions": "尚無已平倉持倉",
       "unableToLoadPositions": "無法載入持倉。"

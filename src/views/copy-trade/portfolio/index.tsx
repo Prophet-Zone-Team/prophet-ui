@@ -42,6 +42,7 @@ export function CopyTradePortfolioView() {
   const {
     positionsValue,
     openPositions,
+    biggestWinAmount,
     isLoadingSummary
   } = useCopyTradeProfileStats({
     enabled: hasCopyWallet
@@ -103,7 +104,9 @@ export function CopyTradePortfolioView() {
           copyWallet={copyWallet}
           positionsValue={positionsValue}
           openPositions={openPositions}
+          biggestWinAmount={biggestWinAmount}
           isLoading={isLoadingSummary}
+          chartEnabled={hasCopyWallet}
         />
 
         <CopyTradePortfolioActivity
