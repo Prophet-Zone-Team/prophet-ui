@@ -87,6 +87,7 @@ export default function TradeGameView({
   const marketWsEnabled = isGameMarketWsEnabled(liveMatch);
 
   const canTrade =
+    activeMarketTab !== "stats" &&
     isTabTradingReady(activeMarketTab) &&
     loadingTab !== activeMarketTab &&
     !isGameClosedForTrading(liveMatch, gameSnapshot.market.closed);
