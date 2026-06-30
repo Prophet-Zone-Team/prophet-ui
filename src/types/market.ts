@@ -658,6 +658,8 @@ export interface WorldCupMatch {
   odds?: MatchOddsSummary;
   /** Elapsed match time in seconds (API-Football live clock baseline for client timer). */
   liveElapsedSeconds?: number;
+  /** WS sent elapsed but it was empty or unparseable; UI should show period instead of a clock. */
+  liveElapsedUnavailable?: boolean;
   /** Current match period from Polymarket sports WS (e.g. "1H", "2H", "HT"). */
   period?: string;
   freshness: FreshnessMeta;

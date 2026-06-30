@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { MatchStatusBadge } from "@/components/match/match-status-badge";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
-import { formatMatchScore } from "@/lib/market/match-display";
+import { formatMatchScore, formatSportsMatchPeriod } from "@/lib/market/match-display";
 import { isEffectiveLiveMatch } from "@/lib/market/live-match";
 import {
   isMockLiveFixtureEnabled,
@@ -221,6 +221,9 @@ export function TradeGameHeader({
   const resolvedElapsedSeconds = mockLiveFixture
     ? MOCK_LIVE_FIXTURE_ELAPSED_SECONDS
     : liveMatch.liveElapsedSeconds;
+  const showPeriodInsteadOfClock =
+    !mockLiveFixture && Boolean(liveMatch.liveElapsedUnavailable);
+  const periodLabel = formatSportsMatchPeriod(liveMatch.period);
   const displayScore = {
     homeScore: liveMatch.homeScore,
     awayScore: liveMatch.awayScore
@@ -237,17 +240,27 @@ export function TradeGameHeader({
   const badgeLabel = effectiveLive ? "" : statusLabel;
   const badgeTrailing = effectiveLive ? (
     <span className="inline-flex items-baseline whitespace-nowrap">
-      <LiveMatchElapsedClock
-        baseElapsedSeconds={resolvedElapsedSeconds}
-        kickoffAt={liveMatch.kickoffAt}
-        isLive={effectiveLive}
-        className="text-sm font-[400] leading-[18px] text-[#7BCA25]"
-      />
-      {stoppageExtraMinutes !== undefined ? (
-        <span className="text-sm font-[556] leading-[17px] text-[#909090]">
-          +{stoppageExtraMinutes}
-        </span>
-      ) : null}
+      {showPeriodInsteadOfClock ? (
+        periodLabel ? (
+          <span className="text-sm font-[400] leading-[18px] text-[#7BCA25]">
+            {periodLabel}
+          </span>
+        ) : null
+      ) : (
+        <>
+          <LiveMatchElapsedClock
+            baseElapsedSeconds={resolvedElapsedSeconds}
+            kickoffAt={liveMatch.kickoffAt}
+            isLive={effectiveLive}
+            className="text-sm font-[400] leading-[18px] text-[#7BCA25]"
+          />
+          {stoppageExtraMinutes !== undefined ? (
+            <span className="text-sm font-[556] leading-[17px] text-[#909090]">
+              +{stoppageExtraMinutes}
+            </span>
+          ) : null}
+        </>
+      )}
     </span>
   ) : undefined;
   const subtitle = effectiveLive

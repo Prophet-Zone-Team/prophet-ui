@@ -13,6 +13,8 @@ export interface MatchLiveSnapshot {
   /** Current match period from Polymarket sports WS (e.g. "1H", "2H", "HT"). */
   period?: string;
   liveElapsedSeconds?: number;
+  /** WS sent elapsed but it was empty or unparseable; UI should show period instead of a clock. */
+  liveElapsedUnavailable?: boolean;
   goalEvents?: GameMatchChartEvent[];
   /** Last score used for goal-increment detection; seeded from REST. */
   trackedHomeScore?: number;
@@ -73,6 +75,7 @@ export function worldCupMatchToLiveSnapshot(
     status: match.status,
     period: match.period,
     liveElapsedSeconds: match.liveElapsedSeconds,
+    liveElapsedUnavailable: match.liveElapsedUnavailable,
     goalEvents: [],
     trackedHomeScore: homeScore,
     trackedAwayScore: awayScore,
@@ -129,6 +132,35 @@ export function parseSportsElapsedSeconds(
   }
 
   return undefined;
+}
+
+export function mergeLiveMatchElapsedState(
+  current:
+    | Pick<MatchLiveSnapshot, "liveElapsedSeconds" | "liveElapsedUnavailable">
+    | undefined,
+  patch: Pick<
+    MatchLiveSnapshotPatch,
+    "liveElapsedSeconds" | "liveElapsedUnavailable"
+  >
+): Pick<MatchLiveSnapshot, "liveElapsedSeconds" | "liveElapsedUnavailable"> {
+  if (patch.liveElapsedSeconds !== undefined) {
+    return {
+      liveElapsedSeconds: patch.liveElapsedSeconds,
+      liveElapsedUnavailable: false,
+    };
+  }
+
+  if (patch.liveElapsedUnavailable === true) {
+    return {
+      liveElapsedSeconds: undefined,
+      liveElapsedUnavailable: true,
+    };
+  }
+
+  return {
+    liveElapsedSeconds: current?.liveElapsedSeconds,
+    liveElapsedUnavailable: current?.liveElapsedUnavailable,
+  };
 }
 
 export function mapSportsWsUpdateStatus(
@@ -196,10 +228,15 @@ export function polymarketSportsWsUpdateToLivePatch(
     patch.status = current.status;
   }
 
-  const elapsedSeconds = parseSportsElapsedSeconds(update.elapsed);
+  if (update.elapsed !== undefined && update.elapsed !== null) {
+    const elapsedSeconds = parseSportsElapsedSeconds(update.elapsed);
 
-  if (elapsedSeconds !== undefined) {
-    patch.liveElapsedSeconds = elapsedSeconds;
+    if (elapsedSeconds !== undefined) {
+      patch.liveElapsedSeconds = elapsedSeconds;
+      patch.liveElapsedUnavailable = false;
+    } else {
+      patch.liveElapsedUnavailable = true;
+    }
   }
 
   const period = update.period?.trim();
@@ -219,13 +256,15 @@ export function mergeLiveSnapshot(
     return undefined;
   }
 
+  const elapsedState = mergeLiveMatchElapsedState(current, patch);
+
   return {
     homeScore: patch.homeScore ?? current?.homeScore,
     awayScore: patch.awayScore ?? current?.awayScore,
     status: patch.status ?? current?.status ?? "unknown",
     period: patch.period ?? current?.period,
-    liveElapsedSeconds:
-      patch.liveElapsedSeconds ?? current?.liveElapsedSeconds,
+    liveElapsedSeconds: elapsedState.liveElapsedSeconds,
+    liveElapsedUnavailable: elapsedState.liveElapsedUnavailable,
     goalEvents: current?.goalEvents ?? [],
     trackedHomeScore: current?.trackedHomeScore,
     trackedAwayScore: current?.trackedAwayScore,
@@ -248,5 +287,7 @@ export function mergeMatchWithLiveSnapshot(
     period: snapshot.period ?? match.period,
     liveElapsedSeconds:
       snapshot.liveElapsedSeconds ?? match.liveElapsedSeconds,
+    liveElapsedUnavailable:
+      snapshot.liveElapsedUnavailable ?? match.liveElapsedUnavailable,
   };
 }
