@@ -110,7 +110,7 @@ export function RoadToFinalFloatingPromo() {
               dismiss();
               setVisible(false);
             }}
-            className="absolute -right-3 -top-3 inline-flex size-6 items-center justify-center rounded-full bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-opacity hover:opacity-90"
+            className="absolute -right-3 -top-3 inline-flex size-6 items-center justify-center rounded-full bg-prophet-panel text-prophet-foreground shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-opacity hover:opacity-90"
           >
             <X className="size-3.5" aria-hidden="true" />
           </button>

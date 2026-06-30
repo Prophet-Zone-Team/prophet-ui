@@ -39,7 +39,7 @@ function MatchSide({
       <span
         className={cn(
           "max-w-full truncate text-center text-[16px] font-[500]",
-          emphasized ? "text-black" : "text-[#909090]"
+          emphasized ? "text-prophet-foreground" : "text-prophet-muted"
         )}
       >
         {name}
@@ -84,7 +84,7 @@ export function RelatedGameCard({
         : tHome("matchStatusEnded");
 
   return (
-    <div className="w-full md:max-w-[313px] rounded-xl bg-white px-4 py-3 shadow-[0_0_10px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0_0_14px_rgba(0,0,0,0.14)]">
+    <div className="w-full md:max-w-[313px] rounded-xl bg-prophet-panel px-4 py-3 shadow-[0_0_10px_rgba(0,0,0,0.1)] transition-shadow hover:shadow-[0_0_14px_rgba(0,0,0,0.14)]">
       <Link href={gameTradeHref(match.id)} className="block">
         <div className="flex items-center justify-between">
           <MatchStatusBadge
@@ -92,7 +92,7 @@ export function RelatedGameCard({
             size="sm"
             label={statusLabel}
           />
-          <span className="text-[14px] font-[500] leading-[17px] text-[#909090]">
+          <span className="text-[14px] font-[500] leading-[17px] text-prophet-muted">
             {kickoffLabel}
           </span>
         </div>
@@ -107,8 +107,8 @@ export function RelatedGameCard({
             className={cn(
               "text-center font-[500] leading-[31px] pb-[24px]",
               statusVariant === "upcoming"
-                ? "text-[#909090] text-[16px]"
-                : "text-black text-[26px]"
+                ? "text-prophet-muted text-[16px]"
+                : "text-prophet-foreground text-[26px]"
             )}
           >
             {statusVariant === "upcoming" ? t("versusShort") : scoreLabel}

@@ -53,7 +53,7 @@ export function MigrateDialog() {
       closeButtonClassName={dialogStep === "prompt" ? "bg-[none] border-0 text-white hover:bg-[none]" : ""}
     >
       {dialogStep === "prompt" ? (
-        <div className="w-[492px] overflow-hidden rounded-[20px] bg-white shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]">
+        <div className="w-[492px] overflow-hidden rounded-[20px] bg-prophet-panel shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]">
           <MigratePromptStep
             account={sourceAccount}
             onIgnore={closeMigrateDialog}

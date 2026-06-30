@@ -93,13 +93,13 @@ export function PrivateTopupTokenStep({
         <div className={privateTopupFundingWalletRowClass}>
           <span className="flex min-w-0 items-center gap-2">
             <WalletAvatarIcon address={topupWalletAddress} className="size-5" />
-            <span className="text-base font-[500] text-black">
+            <span className="text-base font-[500] text-prophet-foreground">
               {topupWalletAddress
                 ? formatShortWallet(topupWalletAddress)
                 : "--"}
             </span>
           </span>
-          <span className="shrink-0 text-base font-[500] text-black">
+          <span className="shrink-0 text-base font-[500] text-prophet-foreground">
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
@@ -119,7 +119,7 @@ export function PrivateTopupTokenStep({
         </p>
 
         <div className={privateTopupTokenSearchWrapClass}>
-          <Search className="size-[14px] shrink-0 text-black" aria-hidden="true" />
+          <Search className="size-[14px] shrink-0 text-prophet-foreground" aria-hidden="true" />
           <input
             type="search"
             value={searchQuery}
@@ -177,10 +177,10 @@ export function PrivateTopupTokenStep({
                   chainIcon={token.chainIcon}
                 />
                 <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-                  <span className="text-sm font-[500] text-black">
+                  <span className="text-sm font-[500] text-prophet-foreground">
                     {token.symbol}
                   </span>
-                  <span className="text-xs font-[500] text-[#909090]">
+                  <span className="text-xs font-[500] text-prophet-muted">
                     {formatNumber(token.balance, 4, true, {
                       round: 0,
                       isZeroPrecision: true
@@ -191,7 +191,7 @@ export function PrivateTopupTokenStep({
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <span className="text-sm font-[500] text-black">
+                    <span className="text-sm font-[500] text-prophet-foreground">
                       {usdDisplay}
                     </span>
                   )}

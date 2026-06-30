@@ -33,7 +33,7 @@ export function SignalNewsDetailMetadataRow({
       )}
     >
       <div className="flex items-center gap-[8px]">
-        <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
+        <dt className="m-0 text-[14px] font-[400] leading-[17px] text-prophet-muted">
           {t("impact")}
         </dt>
         <dd className="m-0 flex items-center gap-[4px]">
@@ -52,19 +52,19 @@ export function SignalNewsDetailMetadataRow({
       </div>
 
       <div className="flex items-center gap-[8px]">
-        <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
+        <dt className="m-0 text-[14px] font-[400] leading-[17px] text-prophet-muted">
           {t("related")}
         </dt>
-        <dd className="m-0 text-[14px] font-[400] leading-[17px] text-black">
+        <dd className="m-0 text-[14px] font-[400] leading-[17px] text-prophet-foreground">
           {relatedLabel}
         </dd>
       </div>
 
       <div className="flex items-center gap-[8px]">
-        <dt className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
+        <dt className="m-0 text-[14px] font-[400] leading-[17px] text-prophet-muted">
           {t("categories")}
         </dt>
-        <dd className="m-0 text-[14px] font-[400] leading-[17px] text-black">
+        <dd className="m-0 text-[14px] font-[400] leading-[17px] text-prophet-foreground">
           {categoryLabel}
         </dd>
       </div>

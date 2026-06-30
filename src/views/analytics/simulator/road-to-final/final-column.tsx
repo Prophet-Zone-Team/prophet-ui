@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import {
   BRACKET_SLOT_WIDTH,
   BRACKET_TROPHY_GAP,
@@ -51,7 +49,7 @@ export function FinalColumn({ teams, bodyHeight }: FinalColumnProps) {
         <FinalTrophyConnector />
       </div>
 
-      <Image
+      <img
         src="/prize.png"
         alt="FIFA World Cup trophy"
         width={BRACKET_TROPHY_IMAGE_WIDTH}

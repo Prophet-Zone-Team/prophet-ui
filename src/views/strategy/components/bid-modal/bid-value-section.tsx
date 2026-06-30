@@ -45,13 +45,13 @@ export function BidValueSection({
     <div className={cn("flex flex-col gap-3", className)}>
       {minBidLabel ? (
         <div className="flex items-center justify-end gap-1">
-          <span className="font-[Sora] text-sm font-light leading-[18px] text-[#909090]">
+          <span className="font-[Sora] text-sm font-light leading-[18px] text-prophet-muted">
             {t("minBidValue")}
           </span>
           <button
             type="button"
             onClick={onApplyMinBidAmount}
-            className="font-[Sora] text-sm font-normal leading-[18px] text-black underline"
+            className="font-[Sora] text-sm font-normal leading-[18px] text-prophet-foreground underline"
           >
             {minBidLabel}
           </button>
@@ -60,19 +60,19 @@ export function BidValueSection({
 
       <div
         className={cn(
-          "flex h-[57px] items-center justify-between rounded-md border bg-white px-4",
+          "flex h-[57px] items-center justify-between rounded-md border bg-prophet-panel px-4",
           insufficientFunds
             ? STRATEGY_BID_INVALID_SURFACE_CLASS
-            : "border-[#EBEBEB]"
+            : "border-prophet-line"
         )}
       >
-        <span className="font-[Sora] text-sm font-normal leading-[18px] text-black">
+        <span className="font-[Sora] text-sm font-normal leading-[18px] text-prophet-foreground">
           {t("bidValue")}
         </span>
         <label className="sr-only" htmlFor="strategy-bid-amount">
           {t("bidValueSrOnly")}
         </label>
-        <div className="flex items-baseline font-[Sora] text-xl font-medium leading-[25px] text-black">
+        <div className="flex items-baseline font-[Sora] text-xl font-medium leading-[25px] text-prophet-foreground">
           <span aria-hidden="true">$</span>
           <input
             id="strategy-bid-amount"
@@ -96,7 +96,7 @@ export function BidValueSection({
       ) : null}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-        <span className="font-[Sora] text-sm font-normal leading-[18px] text-[#909090]">
+        <span className="font-[Sora] text-sm font-normal leading-[18px] text-prophet-muted">
           {t("balancePrefix")} {balanceLabel}
         </span>
         <div className="flex flex-wrap gap-2">
@@ -106,7 +106,7 @@ export function BidValueSection({
               type="button"
               className={cn(
                 tradeQuickAmountClass,
-                "h-[30px] rounded-lg px-3 text-[#909090]"
+                "h-[30px] rounded-lg px-3 text-prophet-muted"
               )}
               onClick={() => onApplyBalanceFraction(value)}
             >

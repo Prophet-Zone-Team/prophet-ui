@@ -35,8 +35,8 @@ export function PrivateTopupChainPicker({
       ariaLabel={t("selectFundingWalletChain")}
       className="max-w-[400px]"
     >
-      <div className="w-[350px] rounded-[16px] border border-prophet-border bg-white flex flex-col gap-2 p-4">
-        <h2 className="m-0 text-lg font-[500] text-black">
+      <div className="w-[350px] rounded-[16px] border border-prophet-border bg-prophet-panel flex flex-col gap-2 p-4">
+        <h2 className="m-0 text-lg font-[500] text-prophet-foreground">
           {t("selectFundingWalletChain")}
         </h2>
         <div className="w-full mt-2 flex flex-col gap-2">
@@ -44,7 +44,7 @@ export function PrivateTopupChainPicker({
             <button
               key={option.id}
               type="button"
-              className="rounded-lg border border-[#ececec] px-4 py-3 text-left text-base font-[500] text-black transition-colors hover:bg-[#f8f8f8]"
+              className="rounded-lg border border-prophet-line px-4 py-3 text-left text-base font-[500] text-prophet-foreground transition-colors hover:bg-prophet-hover"
               onClick={() => {
                 onSelect(option.id);
                 onClose();

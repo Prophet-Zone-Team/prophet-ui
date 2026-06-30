@@ -62,7 +62,7 @@ export function TeamPowerRankingPage() {
     <div className="mx-auto w-full max-w-[1408px] px-3 pb-8 md:px-4">
       <PageBack />
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="m-0 pt-4 text-[22px] font-[400] leading-[26px] text-black md:pt-[20px] md:text-[26px] md:leading-[31px]">
+        <h1 className="m-0 pt-4 text-[22px] font-[400] leading-[26px] text-prophet-foreground md:pt-[20px] md:text-[26px] md:leading-[31px]">
           {t("teamPowerRanking")}
         </h1>
 
@@ -87,15 +87,15 @@ export function TeamPowerRankingPage() {
       <div
         className={cn(
           "mt-4 box-border overflow-hidden rounded-[12px] md:mt-5",
-          "border border-[#EBEBEB] bg-white pb-4 pt-4 md:pb-5 md:pt-5"
+          "border border-prophet-line bg-prophet-panel pb-4 pt-4 md:pb-5 md:pt-5"
         )}
       >
         {isLoading ? (
-          <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-[#909090] md:px-5">
+          <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-prophet-muted md:px-5">
             {t("loading")}
           </p>
         ) : isError ? (
-          <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-[#909090] md:px-5">
+          <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-prophet-muted md:px-5">
             {t("unableToLoadData")}
           </p>
         ) : (

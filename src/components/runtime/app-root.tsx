@@ -8,6 +8,7 @@ import { LocaleProvider } from "@/components/runtime/locale-provider";
 import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen";
 import { NativeAppShell } from "@/components/runtime/native-app-shell";
 import { MobileVConsole } from "@/components/runtime/mobile-vconsole";
+import { ThemeApplier } from "@/components/runtime/theme-applier";
 import type { AppLocale } from "@/i18n/config";
 
 const WalletRuntimeProviders = dynamic(
@@ -38,6 +39,7 @@ export function AppRoot({
       initialLocale={initialLocale}
       initialMessages={initialMessages}
     >
+      <ThemeApplier />
       <AnalyticsProvider>
         <NativeAppShell />
         <MobileLoadingScreen />

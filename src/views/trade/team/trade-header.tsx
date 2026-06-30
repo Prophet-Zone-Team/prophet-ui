@@ -36,7 +36,7 @@ export interface TradeHeaderProps {
 }
 
 const fastBidButtonClassName =
-  "inline-flex h-[36px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] px-2 text-[14px] font-[500] leading-[17px] text-white disabled:cursor-wait disabled:opacity-70";
+  "inline-flex h-[36px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] dark:bg-prophet-primary px-2 text-[14px] font-[500] leading-[17px] text-white disabled:cursor-wait disabled:opacity-70";
 
 function TeamLogo({
   code,
@@ -75,7 +75,7 @@ function HeaderActionButtons({ bookmark }: { bookmark: ReactNode }) {
       <CopyButton
         text={getPageUrl}
         ariaLabel={t("copyPageLink")}
-        className="inline-flex size-11 items-center justify-center rounded-sm text-[#909090] transition-colors hover:text-black"
+        className="inline-flex size-11 items-center justify-center rounded-sm text-prophet-muted transition-colors hover:text-prophet-foreground"
         onCopy={() =>
           trackCopyLinkClicked({
             target: "page_link",
@@ -108,10 +108,10 @@ function TeamIdentityBlock({
       <TeamLogo code={team.code} name={teamDisplayName} logoUrl={logoUrl} />
 
       <div className="min-w-0 flex-1 pb-0.5">
-        <h1 className="m-0 truncate text-[20px] md:text-[36px] font-[500] capitalize leading-[24px] md:leading-[43px] text-black">
+        <h1 className="m-0 truncate text-[20px] md:text-[36px] font-[500] capitalize leading-[24px] md:leading-[43px] text-prophet-foreground">
           {teamDisplayName}
         </h1>
-        <p className="m-0 mt-0.5 text-right text-[12px] md:text-sm font-[500] text-[#909090] sm:text-left">
+        <p className="m-0 mt-0.5 text-right text-[12px] md:text-sm font-[500] text-prophet-muted sm:text-left">
           {fifaRank ? (
             <span className="text-prophet-green">
               {t("currentFifaRank", { rank: fifaRank })}

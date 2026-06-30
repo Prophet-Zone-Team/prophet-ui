@@ -18,7 +18,7 @@ export function RankingHeader({ className }: RankingHeaderProps) {
         className
       )}
     >
-      <h2 className="m-0 text-base md:text-[18px] font-[400] leading-[21px] text-black">
+      <h2 className="m-0 text-base md:text-[18px] font-[400] leading-[21px] text-prophet-foreground">
         {t("teamPowerRanking")}
       </h2>
       <ViewFullRankingLink />

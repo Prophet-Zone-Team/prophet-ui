@@ -33,7 +33,7 @@ function getStatCellTextClassName(
   value: number,
 ): string {
   if (value === 0) {
-    return "text-black/30";
+    return "text-prophet-foreground/30";
   }
 
   if (field === "wins") {
@@ -44,7 +44,7 @@ function getStatCellTextClassName(
     return "text-[#FF674B]";
   }
 
-  return "text-black";
+  return "text-prophet-foreground";
 }
 
 function buildColumns(
@@ -80,7 +80,7 @@ function buildColumns(
             logoUrl={row.logoUrl}
             className="h-6 w-6 shrink-0 rounded-[2px] text-2xl"
           />
-          <span className="truncate text-[16px] leading-normal text-black">
+          <span className="truncate text-[16px] leading-normal text-prophet-foreground">
             {row.teamName}
           </span>
         </div>
@@ -134,7 +134,7 @@ export function GroupStandingsTable({
       minWidth={GROUP_STANDINGS_TABLE_MIN_WIDTH}
       ariaLabel={t("groupStandingsTableAria", { groupLabel })}
       headerRowClassName="items-center pt-[14px]"
-      bodyRowClassName="items-center rounded-[12px] transition-colors hover:bg-[#F9FAFC]"
+      bodyRowClassName="items-center rounded-[12px] transition-colors hover:bg-prophet-hover"
       onRowClick={handleRowClick}
       getRowAriaLabel={(row) =>
         t("groupStandingRowNavigateAria", {

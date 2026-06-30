@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useGroupStandings } from "@/hooks/market/use-group-standings";
 import { useHomeContext } from "@/views/home/context";
 
+import { homeEmptyStateClass } from "@/views/home/home-ui";
 import { GroupStandingsCard } from "./group-standings-card";
 import { GroupStandingsSkeleton } from "./group-standings-skeleton";
 import { filterGroupsBySearch } from "./utils";
@@ -29,11 +30,8 @@ export function HomeGroupsPanel() {
   if (isError) {
     return (
       <div className="min-w-0 pb-4">
-        <section
-          className="min-w-0 rounded-xl border border-[#EBEBEB] bg-white px-4 py-8 text-center"
-          aria-label={t("groupStandingsAria")}
-        >
-          <p className="m-0 text-sm text-[#909090]">
+        <section className={homeEmptyStateClass} aria-label={t("groupStandingsAria")}>
+          <p className="m-0 text-sm text-prophet-muted">
             {t("unableToLoadGroupStandings")}
           </p>
         </section>
@@ -44,11 +42,8 @@ export function HomeGroupsPanel() {
   if (apiGroups.length === 0) {
     return (
       <div className="min-w-0 pb-4">
-        <section
-          className="min-w-0 rounded-xl border border-[#EBEBEB] bg-white px-4 py-8 text-center"
-          aria-label={t("groupStandingsAria")}
-        >
-          <p className="m-0 text-sm text-[#909090]">
+        <section className={homeEmptyStateClass} aria-label={t("groupStandingsAria")}>
+          <p className="m-0 text-sm text-prophet-muted">
             {t("noGroupStandingsAvailable")}
           </p>
         </section>
@@ -59,11 +54,8 @@ export function HomeGroupsPanel() {
   if (groups.length === 0) {
     return (
       <div className="min-w-0 pb-4">
-        <section
-          className="min-w-0 rounded-xl border border-[#EBEBEB] bg-white px-4 py-8 text-center"
-          aria-label={t("groupStandingsAria")}
-        >
-          <p className="m-0 text-sm text-[#909090]">
+        <section className={homeEmptyStateClass} aria-label={t("groupStandingsAria")}>
+          <p className="m-0 text-sm text-prophet-muted">
             {t("noGroupsMatchSearch")}
           </p>
         </section>

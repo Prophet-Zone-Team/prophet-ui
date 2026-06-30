@@ -14,7 +14,7 @@ export type ZettaWalletPanelProps = {
 };
 
 const panelShellClassName =
-  "mx-4 flex w-full max-w-[313px] flex-col justify-center gap-[5px] rounded-lg bg-[#F5F5F5] px-3 py-2";
+  "mx-4 flex w-full max-w-[313px] flex-col justify-center gap-[5px] rounded-lg bg-[#F5F5F5] dark:bg-prophet-action-panel px-3 py-2";
 
 export function ZettaWalletPanel({
   counts,
@@ -33,8 +33,8 @@ export function ZettaWalletPanel({
           className={cn(panelShellClassName, "h-[61px]", className)}
           aria-hidden
         >
-          <div className="h-[15px] animate-pulse rounded bg-[#E8E8E8]" />
-          <div className="h-[15px] animate-pulse rounded bg-[#E8E8E8]" />
+          <div className="h-[15px] animate-pulse rounded bg-[#E8E8E8] dark:bg-prophet-hover" />
+          <div className="h-[15px] animate-pulse rounded bg-[#E8E8E8] dark:bg-prophet-hover" />
         </div>
       );
     }

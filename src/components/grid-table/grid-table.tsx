@@ -59,7 +59,7 @@ export function GridTable<T>({
           ))}
         </div>
 
-        <div className="flex flex-col border-b border-[#EBEBEB]">
+        <div className="flex flex-col border-b border-prophet-line">
           {rows.map((row) => (
             <div
               key={getRowKey(row)}
@@ -71,7 +71,7 @@ export function GridTable<T>({
                 onRowClick ? (event) => handleRowKeyDown(row, event) : undefined
               }
               className={cn(
-                "grid gap-x-4 px-[30px] py-[19px] text-[14px] leading-[normal] text-black last:border-b-0",
+                "grid gap-x-4 px-[30px] py-[19px] text-[14px] leading-[normal] text-prophet-foreground last:border-b-0",
                 onRowClick && "cursor-pointer",
                 bodyRowClassName,
               )}

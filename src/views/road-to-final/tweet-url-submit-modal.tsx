@@ -86,15 +86,15 @@ export function TweetUrlSubmitModal({
     >
       <div
         className={cn(
-          "rounded-[20px] border border-[#EBEBEB] bg-white",
+          "rounded-[20px] border border-prophet-line bg-prophet-panel",
           "p-[20px] shadow-[0_0_10px_rgba(0,0,0,0.1)]"
         )}
       >
-        <h2 className="m-0 pr-[32px] text-[16px] font-medium text-black">
+        <h2 className="m-0 pr-[32px] text-[16px] font-medium text-prophet-foreground">
           {t("shareModalTitle")}
         </h2>
 
-        <p className="m-0 mt-[16px] text-[14px] font-medium text-black">
+        <p className="m-0 mt-[16px] text-[14px] font-medium text-prophet-foreground">
           {t("provideXSharingLink")}
         </p>
 
@@ -120,9 +120,9 @@ export function TweetUrlSubmitModal({
           onChange={(event) => setTwitterUrl(event.target.value)}
           placeholder={t("xUrlPlaceholder")}
           className={cn(
-            "mt-[16px] h-[57px] w-full rounded-[6px] border border-[#EBEBEB]",
-            "px-[14px] text-[14px] text-black outline-none",
-            "placeholder:text-black/30 focus:border-black/20"
+            "mt-[16px] h-[57px] w-full rounded-[6px] border border-prophet-line",
+            "px-[14px] text-[14px] text-prophet-foreground outline-none",
+            "placeholder:text-prophet-foreground/30 focus:border-black/20"
           )}
         />
 

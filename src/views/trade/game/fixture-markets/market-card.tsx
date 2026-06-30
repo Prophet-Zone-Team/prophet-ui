@@ -12,7 +12,7 @@ import {
 } from "@/views/trade/shared/game-outcome-bid-buttons";
 import { resolveFixtureOutcomeLabel } from "@/views/trade/trade-widget/trade-i18n";
 
-const cardClass = "rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
+const cardClass = "rounded-[12px] border border-prophet-line bg-prophet-panel p-4 sm:p-5";
 
 export function MarketCard({
   title,
@@ -42,7 +42,7 @@ function MarketCardHeader({
 }) {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <h3 className="m-0 text-base font-[500] leading-[19px] text-black">
+      <h3 className="m-0 text-base font-[500] leading-[19px] text-prophet-foreground">
         {title}
       </h3>
       {volumeLabel ? (

@@ -22,12 +22,14 @@ interface UserConfigState {
   showOrderbook: boolean;
   showStrategyNotice: boolean;
   notificationsEnabled: boolean;
+  darkModeEnabled: boolean;
   locale: AppLocale;
   outcomeDisplayMode?: OutcomeDisplayMode;
   setFastBidAmount: (amount: number) => void;
   setShowOrderbook: (value: boolean) => void;
   dismissStrategyNotice: () => void;
   setNotificationsEnabled: (value: boolean) => void;
+  setDarkModeEnabled: (value: boolean) => void;
   setLocale: (locale: AppLocale) => void;
   setOutcomeDisplayMode: (mode: OutcomeDisplayMode) => void;
 }
@@ -57,6 +59,7 @@ export const useUserConfigStore = create<UserConfigState>()(
       showOrderbook: true,
       showStrategyNotice: true,
       notificationsEnabled: true,
+      darkModeEnabled: false,
       locale: defaultLocale,
       outcomeDisplayMode: undefined,
       setFastBidAmount: (amount) => {
@@ -71,6 +74,9 @@ export const useUserConfigStore = create<UserConfigState>()(
       setNotificationsEnabled: (value) => {
         set({ notificationsEnabled: value });
       },
+      setDarkModeEnabled: (value) => {
+        set({ darkModeEnabled: value });
+      },
       setLocale: (locale) => {
         if (locale === "zh-TW") {
           set({ outcomeDisplayMode: "decimal" });
@@ -83,13 +89,14 @@ export const useUserConfigStore = create<UserConfigState>()(
     }),
     {
       name: "wc-user-config",
-      version: 6,
+      version: 7,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         fastBidAmount: state.fastBidAmount,
         showOrderbook: state.showOrderbook,
         showStrategyNotice: state.showStrategyNotice,
         notificationsEnabled: state.notificationsEnabled,
+        darkModeEnabled: state.darkModeEnabled,
         locale: state.locale,
         outcomeDisplayMode: state.outcomeDisplayMode
       }),
@@ -100,6 +107,7 @@ export const useUserConfigStore = create<UserConfigState>()(
               showOrderbook?: boolean;
               showStrategyNotice?: boolean;
               notificationsEnabled?: boolean;
+              darkModeEnabled?: boolean;
               locale?: AppLocale;
               outcomeDisplayMode?: OutcomeDisplayMode;
             }
@@ -112,6 +120,7 @@ export const useUserConfigStore = create<UserConfigState>()(
           showOrderbook: state?.showOrderbook ?? true,
           showStrategyNotice: state?.showStrategyNotice ?? true,
           notificationsEnabled: state?.notificationsEnabled ?? true,
+          darkModeEnabled: state?.darkModeEnabled ?? false,
           locale: state?.locale ?? defaultLocale,
           outcomeDisplayMode: state?.outcomeDisplayMode
         };
@@ -150,6 +159,14 @@ export function useNotificationsEnabled() {
 
 export function useSetNotificationsEnabled() {
   return useUserConfigStore((state) => state.setNotificationsEnabled);
+}
+
+export function useDarkModeEnabled() {
+  return useUserConfigStore((state) => state.darkModeEnabled);
+}
+
+export function useSetDarkModeEnabled() {
+  return useUserConfigStore((state) => state.setDarkModeEnabled);
 }
 
 export function useLocale() {

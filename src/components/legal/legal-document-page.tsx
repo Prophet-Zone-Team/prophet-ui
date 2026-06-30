@@ -27,7 +27,7 @@ function renderSegments(segments: LegalTextSegment[]) {
         <Link
           key={`${segment.href}-${index}`}
           href={segment.href}
-          className="text-black underline decoration-black underline-offset-2 hover:opacity-70"
+          className="text-prophet-foreground underline decoration-black underline-offset-2 hover:opacity-70"
         >
           {segment.label}
         </Link>
@@ -53,7 +53,7 @@ function renderListItem(item: LegalListItem, index: number) {
 function LegalBlockView({ block }: { block: LegalBlock }) {
   if (block.kind === "paragraph") {
     return (
-      <p className="m-0 text-[14px] font-[400] leading-[150%] text-black">
+      <p className="m-0 text-[14px] font-[400] leading-[150%] text-prophet-foreground">
         {renderSegments(block.segments)}
       </p>
     );
@@ -69,7 +69,7 @@ function LegalBlockView({ block }: { block: LegalBlock }) {
     <ListTag
       className={cn(
         listClass,
-        "flex flex-col gap-2 text-[14px] font-[400] leading-[150%] text-black"
+        "flex flex-col gap-2 text-[14px] font-[400] leading-[150%] text-prophet-foreground"
       )}
     >
       {block.items.map((item, index) => renderListItem(item, index))}
@@ -113,14 +113,14 @@ export function LegalDocumentPage({
         {showTranslationNotice ? (
           <div
             role="status"
-            className="rounded-[8px] border border-[#EBEBEB] bg-[#F7F7F7] px-4 py-3 text-[13px] font-[400] leading-[150%] text-[#606060]"
+            className="rounded-[8px] border border-prophet-line bg-[#F7F7F7] px-4 py-3 text-[13px] font-[400] leading-[150%] text-[#606060]"
           >
             {t("translationNotice")}
           </div>
         ) : null}
 
-        <header className="flex flex-col gap-2 border-b border-[#EBEBEB] pb-6">
-          <h1 className="m-0 text-[24px] font-[600] leading-[120%] text-black md:text-[28px]">
+        <header className="flex flex-col gap-2 border-b border-prophet-line pb-6">
+          <h1 className="m-0 text-[24px] font-[600] leading-[120%] text-prophet-foreground md:text-[28px]">
             {title}
           </h1>
           <p className="m-0 text-[12px] font-[400] leading-[150%] text-[#909090]">
@@ -140,7 +140,7 @@ export function LegalDocumentPage({
             id={section.id}
             className="flex flex-col gap-4 scroll-mt-24"
           >
-            <h2 className="m-0 text-[18px] font-[600] leading-[130%] text-black">
+            <h2 className="m-0 text-[18px] font-[600] leading-[130%] text-prophet-foreground">
               {formatLegalString(section.title)}
             </h2>
 
@@ -150,7 +150,7 @@ export function LegalDocumentPage({
 
             {section.subsections?.map((subsection) => (
               <div key={subsection.title} className="flex flex-col gap-4">
-                <h3 className="m-0 text-[15px] font-[500] leading-[130%] text-black">
+                <h3 className="m-0 text-[15px] font-[500] leading-[130%] text-prophet-foreground">
                   {formatLegalString(subsection.title)}
                 </h3>
                 <LegalBlocksView blocks={subsection.blocks} />

@@ -18,7 +18,7 @@ export function StrategyShell({ children }: StrategyShellProps) {
       <StrategyNotice />
 
       <section className="mx-auto w-full max-w-[1112px] px-3 pb-8 pt-4 md:px-4 md:pt-5">
-        <h1 className="text-center text-[22px] font-[400] text-black md:text-[52px]">
+        <h1 className="text-center text-[22px] font-[400] text-prophet-foreground md:text-[52px]">
           {t("heroTitle")}
         </h1>
 

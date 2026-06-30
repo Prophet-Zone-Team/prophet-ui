@@ -35,6 +35,7 @@ import {
 } from "@/store";
 import { useShowOrderbook } from "@/store/user-config-store";
 import type { OrderOutcomeSide, TeamMarketSnapshot } from "@/types/market";
+import { groupDetailPanelClass } from "@/views/group-detail/group-detail-ui";
 import { GroupDetailHeader } from "@/views/group-detail/header";
 import { GroupMatchesPanel } from "@/views/group-detail/group-matches-panel";
 import { GroupMatchesTable } from "@/views/group-detail/group-matches-table";
@@ -242,7 +243,7 @@ function GroupDetailViewContent({
             group={group}
           />
 
-          <section className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white">
+          <section className={groupDetailPanelClass}>
             <div
               role="tablist"
               aria-label={t("winnerProbabilityAria")}
@@ -285,14 +286,14 @@ function GroupDetailViewContent({
                   team,
                   <div
                     key={`divider-${snapshot.team.id}`}
-                    className="hidden w-px self-stretch bg-[#EBEBEB] xl:block"
+                    className="hidden w-px self-stretch bg-prophet-line xl:block"
                     aria-hidden
                   />
                 ];
               })}
             </div>
 
-            <div className="border-t border-[#EBEBEB]">
+            <div className="border-t border-prophet-line">
               <ProbabilitySection
                 snapshot={selectedSnapshot}
                 showOrderbook={showOrderbook}
@@ -309,7 +310,7 @@ function GroupDetailViewContent({
             className="md:hidden"
           />
           <GroupProbabilityChart
-            className="rounded-[12px] border border-[#EBEBEB] bg-white px-4 pb-4 pt-3 my-2 md:block hidden"
+            className={cn(groupDetailPanelClass, "my-2 hidden px-4 pb-4 pt-3 md:block")}
             teams={snapshots}
           />
           <GroupMatchesTable

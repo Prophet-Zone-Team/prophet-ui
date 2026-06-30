@@ -11,7 +11,7 @@ function LoadingBlock({
   return (
     <div
       className={`animate-pulse rounded-md ${
-        onDark ? "bg-white/20" : "bg-[#ebebeb]/80"
+        onDark ? "bg-prophet-panel/20" : "bg-[#ebebeb]/80"
       } ${className ?? "h-4 w-full"}`}
       aria-hidden
     />
@@ -71,7 +71,7 @@ function MarketSectionSkeleton() {
 
 function ChartSectionSkeleton() {
   return (
-    <section className="min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5">
+    <section className="min-w-0 flex-1 rounded-[12px] border border-prophet-line bg-prophet-panel p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <LoadingBlock className="h-6 w-40" />
         <div className="flex gap-2">
@@ -112,7 +112,7 @@ function RelatedGamesSkeleton() {
         {Array.from({ length: 3 }, (_, index) => (
           <div
             key={index}
-            className="rounded-xl border border-[#EBEBEB] bg-white p-3"
+            className="rounded-xl border border-prophet-line bg-prophet-panel p-3"
           >
             <LoadingBlock className="mb-2 h-4 w-24" />
             <LoadingBlock className="h-14 w-full rounded-lg" />
@@ -126,7 +126,7 @@ function RelatedGamesSkeleton() {
 export function TradeGameLoading() {
   return (
     <div
-      className="relative left-1/2 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2 bg-white pt-6"
+      className="relative left-1/2 min-h-[calc(100vh-2.75rem)] w-screen max-w-[100vw] -translate-x-1/2 bg-prophet-panel pt-6"
       aria-busy
       aria-label="Loading trade"
     >

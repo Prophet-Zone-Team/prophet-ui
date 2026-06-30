@@ -61,12 +61,12 @@ export function RelatedNews({
         className={cn(
           embedded
             ? "w-full px-4 pb-4"
-            : "w-full max-w-[531px] rounded-[12px] bg-white px-[16px] py-[16px] shadow-[0_0_10px_rgba(0,0,0,0.1)]",
+            : "w-full max-w-[531px] rounded-[12px] bg-prophet-panel px-[16px] py-[16px] shadow-[0_0_10px_rgba(0,0,0,0.1)]",
           className
         )}
       >
         {embedded ? null : (
-          <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-black">
+          <h2 className="m-0 text-[18px] font-[500] leading-[21px] text-prophet-foreground">
             {t("relatedNews")}
           </h2>
         )}

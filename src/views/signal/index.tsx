@@ -93,15 +93,15 @@ export function SignalPage({
         aria-label={t("signalAndNewsImpact")}
         className="pt-4 md:pt-[20px]"
       >
-        <h1 className="m-0 text-[22px] font-[400] leading-[26px] text-black md:text-[26px] md:leading-[31px]">
+        <h1 className="m-0 text-[22px] font-[400] leading-[26px] text-prophet-foreground md:text-[26px] md:leading-[31px]">
           {t("signalAndNewsImpact")}
         </h1>
         {isTopLoading ? (
-          <p className="mt-4 py-8 text-center text-[14px] text-[#909090] md:mt-[24px]">
+          <p className="mt-4 py-8 text-center text-[14px] text-prophet-muted md:mt-[24px]">
             {t("loading")}
           </p>
         ) : topImpactItems.length === 0 ? (
-          <p className="mt-4 py-8 text-center text-[14px] text-[#909090] md:mt-[24px]">
+          <p className="mt-4 py-8 text-center text-[14px] text-prophet-muted md:mt-[24px]">
             {t("noNewsAvailable")}
           </p>
         ) : (
@@ -121,7 +121,7 @@ export function SignalPage({
         aria-label={t("allSignalsAndNewsAria")}
         className="mt-5 md:mt-[20px]"
       >
-        <h2 className="m-0 text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
+        <h2 className="m-0 text-lg font-[400] leading-[22px] text-prophet-foreground md:text-[20px] md:leading-[24px]">
           {t("allSignalsAndNews")}
         </h2>
         <div className="mt-4 grid grid-cols-2 gap-3 md:mt-[20px] md:grid-cols-3 md:gap-[21px]">
@@ -141,7 +141,7 @@ export function SignalPage({
 
       <div className="mt-5 flex flex-col items-stretch gap-3 md:mt-[20px] lg:flex-row lg:gap-5">
         <SignalAllList
-          className="min-w-0 w-full shrink-0 rounded-[12px] border border-[#EBEBEB] bg-white lg:w-[679px]"
+          className="min-w-0 w-full shrink-0 rounded-[12px] border border-prophet-line bg-prophet-panel lg:w-[679px]"
           onItemSelect={handleListItemSelect}
         />
 

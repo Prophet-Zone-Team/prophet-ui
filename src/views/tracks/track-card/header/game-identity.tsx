@@ -47,7 +47,7 @@ export function GameIdentity({ match, homeTeam, awayTeam }: GameIdentityProps) {
         />
       </div>
       <div className="min-w-0">
-        <h3 className="m-0 truncate text-[18px] font-[500] leading-[23px] text-black">
+        <h3 className="m-0 truncate text-[18px] font-[500] leading-[23px] text-prophet-foreground">
           {title}
         </h3>
         <div className="m-0 mt-0.5 flex min-w-0 items-center gap-1 truncate text-[12px] font-[400] leading-[15px]">
@@ -56,7 +56,7 @@ export function GameIdentity({ match, homeTeam, awayTeam }: GameIdentityProps) {
             size="sm"
             className="capitalize text-[12px] leading-[15px]"
           />
-          <span className="text-[#909090]">{kickoffLabel}</span>
+          <span className="text-prophet-muted">{kickoffLabel}</span>
         </div>
       </div>
     </div>

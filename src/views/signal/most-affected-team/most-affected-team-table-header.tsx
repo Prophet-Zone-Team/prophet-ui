@@ -15,7 +15,7 @@ export function MostAffectedTeamTableHeader() {
       role="row"
       className={cn(
         mostAffectedTeamTableGridClass,
-        "text-[16px] font-[400] leading-[19px] text-[#909090]"
+        "text-[16px] font-[400] leading-[19px] text-prophet-muted"
       )}
     >
       <span role="columnheader">{t("rank")}</span>

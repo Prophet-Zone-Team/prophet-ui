@@ -28,7 +28,7 @@ export function OutcomeStat({
     >
       <p
         className={cn(
-          "font-[500] capitalize text-black",
+          "font-[500] capitalize text-prophet-foreground",
           large ? "text-[60px] leading-[72px]" : "text-xl leading-6"
         )}
       >
@@ -46,7 +46,7 @@ export function OutcomeStat({
         {changeLabel && changeColor ? (
           <ChangePill label={changeLabel} color={changeColor} />
         ) : null}
-        <p className="truncate text-xl font-[500] capitalize leading-6 text-black">
+        <p className="truncate text-xl font-[500] capitalize leading-6 text-prophet-foreground">
           {label}
         </p>
       </div>

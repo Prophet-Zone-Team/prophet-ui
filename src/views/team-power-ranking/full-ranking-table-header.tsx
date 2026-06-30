@@ -14,7 +14,7 @@ export function FullRankingTableHeader() {
       role="row"
       className={cn(
         HEADER_GRID,
-        "text-[16px] font-[400] leading-[19px] text-[#909090]"
+        "text-[16px] font-[400] leading-[19px] text-prophet-muted"
       )}
     >
       <span role="columnheader">{t("rank")}</span>

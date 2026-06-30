@@ -32,16 +32,16 @@ export function WithdrawStatusStep({ phase, detail, error }: WithdrawStatusStepP
     <div className="flex flex-col items-center gap-4 pb-10 md:pb-2 pt-16 text-center">
       {loading ? (
         <Loader2
-          className="h-8 w-8 animate-spin text-[#909090]"
+          className="h-8 w-8 animate-spin text-prophet-muted"
           aria-hidden="true"
         />
       ) : null}
       <p
-        className={`m-0 text-xl font-[500] ${isError ? "text-prophet-red" : "text-black"}`}
+        className={`m-0 text-xl font-[500] ${isError ? "text-prophet-red" : "text-prophet-foreground"}`}
       >
         {title}
       </p>
-      <p className="m-0 max-w-sm text-sm text-[#909090]">{description}</p>
+      <p className="m-0 max-w-sm text-sm text-prophet-muted">{description}</p>
     </div>
   );
 }

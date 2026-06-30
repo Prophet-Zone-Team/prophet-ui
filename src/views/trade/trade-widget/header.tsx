@@ -160,7 +160,7 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
           awayName={awayName}
         />
         <div className="min-w-0 flex-1">
-          <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-black">
+          <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-prophet-foreground">
             {headerTitle}
           </p>
           {showOutcomeLabel ? (
@@ -191,7 +191,7 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
         className="!h-[36px] !w-[36px] shrink-0 rounded-md"
       />
       <div className="min-w-0 flex-1">
-        <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-black">
+        <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-prophet-foreground">
           {question}
         </p>
         {showOutcomeLabel ? (

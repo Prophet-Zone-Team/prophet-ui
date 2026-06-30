@@ -46,12 +46,12 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 my-2">
-      <span className="shrink-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
+      <span className="shrink-0 text-[14px] font-[400] leading-[17px] text-prophet-muted">
         {label}
       </span>
       <span
         className={cn(
-          "min-w-0 text-right text-[14px] font-[400] leading-[17px] text-black",
+          "min-w-0 text-right text-[14px] font-[400] leading-[17px] text-prophet-foreground",
           valueClassName
         )}
         style={valueStyle}
@@ -118,7 +118,7 @@ export function Simulator() {
   if (isLoading) {
     return (
       <div className="flex h-[300px] w-[327px] shrink-0 items-center justify-center pl-[20px]">
-        <span className="text-[14px] text-[#909090]">{t("loading")}</span>
+        <span className="text-[14px] text-prophet-muted">{t("loading")}</span>
       </div>
     );
   }
@@ -126,7 +126,7 @@ export function Simulator() {
   if (isError || teams.length === 0 || !selectedTeam) {
     return (
       <div className="flex h-[300px] w-[327px] shrink-0 items-center justify-center pl-[20px]">
-        <span className="text-[14px] text-[#909090]">
+        <span className="text-[14px] text-prophet-muted">
           {t("unableToLoadData")}
         </span>
       </div>
@@ -151,7 +151,7 @@ export function Simulator() {
             logoUrl={selectedTeam.logoUrl}
             className="h-[36px] w-[36px] shrink-0 rounded-[6px] text-[36px]"
           />
-          <span className="text-[18px] font-[500] leading-[21px] text-black">
+          <span className="text-[18px] font-[500] leading-[21px] text-prophet-foreground">
             {teamDisplayName}
           </span>
           <svg
@@ -163,7 +163,7 @@ export function Simulator() {
           >
             <path
               d="M9.7998 0.800781L5.40757 4.80078L0.799805 0.800781"
-              stroke="#909090"
+              stroke="var(--prophet-text-muted)"
               strokeWidth="1.6"
               strokeLinecap="round"
             />
@@ -182,7 +182,7 @@ export function Simulator() {
 
         <Link
           href={`/road-to-final?team=${encodeURIComponent(selectedTeamId)}`}
-          className="mt-auto flex h-[42px] w-full max-w-[307px] items-center justify-center gap-[6px] rounded-[8px] bg-[#18110F] no-underline"
+          className="mt-auto flex h-[42px] w-full max-w-[307px] items-center justify-center gap-[6px] rounded-[8px] bg-[#18110F] dark:bg-[unset] dark:border-[#4E4E4E] dark:border dark:rounded-[8px] dark:hover:border-[#ffffff] duration-150 no-underline"
           aria-label={t("openRoadToFinalSimulatorFor", {
             teamName: teamDisplayName
           })}
