@@ -16,7 +16,9 @@ import type { KnockoutWinners } from "../types";
  * - FINAL: 104
  */
 export const CONFIRMED_KNOCKOUT_WINNERS: KnockoutWinners = {
+  73: "canada", // R32: South Africa vs Canada — Canada advances (feeds W73 → R16 M90)
   74: "paraguay", // R32: Germany vs Paraguay — Paraguay advances (feeds W74 → R16 M89)
+  75: "morocco", // R32: Netherlands vs Morocco — Morocco advances (feeds W75 → R16 M90)
   76: "brazil", // R32: Brazil vs Japan — Brazil advances (feeds W76 → R16 M91)
 };
 
