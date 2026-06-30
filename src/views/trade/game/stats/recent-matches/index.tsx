@@ -6,7 +6,10 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { useLocalizedLeagueName } from "@/hooks/i18n/use-localized-league-name";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
-import { recentFixturesTableGridClass } from "@/views/trade/game/stats/recent-matches/table-grid";
+import {
+  recentFixturesColumnAlignClass,
+  recentFixturesTableGridClass
+} from "@/views/trade/game/stats/recent-matches/table-grid";
 import type {
   RecentFixtureResult,
   RecentFixtureRow,
@@ -59,7 +62,7 @@ function RecentFixtureOpponent({ name }: { name: string }) {
   const displayName = useLocalizedTeamName(undefined, name);
 
   return (
-    <span className="truncate text-[14px] font-[400] leading-[18px] text-black">
+    <span className="block w-full truncate text-center text-[14px] font-[400] leading-[18px] text-black">
       {displayName}
     </span>
   );
@@ -89,11 +92,21 @@ function RecentFixturesTableHeader() {
         "pb-2 text-[14px] font-[400] leading-[18px] text-[#909090]"
       )}
     >
-      <span role="columnheader">{t("time")}</span>
-      <span role="columnheader">{t("opponent")}</span>
-      <span role="columnheader">{t("result")}</span>
-      <span role="columnheader">{t("score")}</span>
-      <span role="columnheader">{t("competition")}</span>
+      <span role="columnheader" className={recentFixturesColumnAlignClass[0]}>
+        {t("time")}
+      </span>
+      <span role="columnheader" className={recentFixturesColumnAlignClass[1]}>
+        {t("opponent")}
+      </span>
+      <span role="columnheader" className={recentFixturesColumnAlignClass[2]}>
+        {t("result")}
+      </span>
+      <span role="columnheader" className={recentFixturesColumnAlignClass[3]}>
+        {t("score")}
+      </span>
+      <span role="columnheader" className={recentFixturesColumnAlignClass[4]}>
+        {t("competition")}
+      </span>
     </div>
   );
 }
@@ -110,15 +123,30 @@ function RecentFixturesTableRow({
       role="row"
       className={cn(
         recentFixturesTableGridClass,
-        "h-10 rounded-[6px] px-2 text-[14px] leading-[18px]",
+        "h-10 rounded-[6px] text-[14px] leading-[18px]",
         highlighted ? "bg-[#F9FAFC]" : "bg-white"
       )}
     >
-      <span className="truncate text-[#909090]">{row.date}</span>
-      <RecentFixtureOpponent name={row.opponent} />
-      <RecentFixtureResultLabel result={row.result} />
-      <span className="whitespace-nowrap text-black">{row.score}</span>
-      <RecentFixtureCompetition name={row.competition} />
+      <span className={cn(recentFixturesColumnAlignClass[0], "text-[#909090]")}>
+        {row.date}
+      </span>
+      <div className={recentFixturesColumnAlignClass[1]}>
+        <RecentFixtureOpponent name={row.opponent} />
+      </div>
+      <div className={recentFixturesColumnAlignClass[2]}>
+        <RecentFixtureResultLabel result={row.result} />
+      </div>
+      <span
+        className={cn(
+          recentFixturesColumnAlignClass[3],
+          "whitespace-nowrap text-black"
+        )}
+      >
+        {row.score}
+      </span>
+      <div className={recentFixturesColumnAlignClass[4]}>
+        <RecentFixtureCompetition name={row.competition} />
+      </div>
     </div>
   );
 }
