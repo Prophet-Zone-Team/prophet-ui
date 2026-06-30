@@ -1865,6 +1865,7 @@
       "orderTypeFok": "FOK（全部成交或取消）",
       "balanceUnavailable": "跟單錢包餘額不可用，請先入金後再繼續。",
       "enableCopySide": "請至少啟用跟單買入或跟單賣出後再繼續。",
+      "invalidAdvancedSettings": "請先修正進階設定中的無效數值後再繼續。",
       "unableToValidate": "無法驗證跟單設定。",
       "checkingBalance": "正在檢查跟單錢包餘額…",
       "zeroBalanceWarning": "跟單錢包餘額為 $0，請先入金後才能執行實盤跟單。"

@@ -1865,6 +1865,7 @@
       "orderTypeFok": "FOK (Fill Or Kill)",
       "balanceUnavailable": "Copy wallet balance is unavailable. Deposit funds before continuing.",
       "enableCopySide": "Enable copy buy or copy sell before continuing.",
+      "invalidAdvancedSettings": "Fix invalid advanced settings before continuing.",
       "unableToValidate": "Unable to validate copy settings.",
       "checkingBalance": "Checking copy wallet balance…",
       "zeroBalanceWarning": "Copy wallet balance is $0. Deposit funds before live copy orders can execute."

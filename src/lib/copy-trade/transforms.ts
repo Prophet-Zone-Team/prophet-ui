@@ -124,8 +124,8 @@ function validateRiskParams(params: CopyRiskParams): string[] {
     }
   });
 
-  if (params.minPrice < 0 || params.minPrice >= MAX_PRICE_EXCLUSIVE) {
-    errors.push("Min. price must be between 0 and 1, and cannot equal 1.");
+  if (params.minPrice <= 0 || params.minPrice >= MAX_PRICE_EXCLUSIVE) {
+    errors.push("Min. price must be greater than 0 and less than 1.");
   }
 
   if (params.maxPrice <= 0 || params.maxPrice >= MAX_PRICE_EXCLUSIVE) {
@@ -147,6 +147,31 @@ function validateRiskParams(params: CopyRiskParams): string[] {
   }
 
   return errors;
+}
+
+function parseFiniteNumber(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function isValidUsdCapInput(value: string): boolean {
+  const parsed = parseFiniteNumber(value);
+  return parsed != null && parsed >= MIN_MONEY_LIMIT_USD;
+}
+
+export function isValidPriceInput(value: string): boolean {
+  const parsed = parseFiniteNumber(value);
+  return parsed != null && parsed > 0 && parsed < MAX_PRICE_EXCLUSIVE;
+}
+
+export function isValidSlippageInput(value: string): boolean {
+  const parsed = parseFiniteNumber(value);
+  return parsed != null && parsed >= 0 && parsed < MAX_SLIPPAGE_EXCLUSIVE;
 }
 
 export function validateTargetForm(form: CopyTargetForm): string[] {
