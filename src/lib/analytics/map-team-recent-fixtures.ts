@@ -1,4 +1,5 @@
 import { formatDateFromIso } from "@/lib/formatters/datetime";
+import { resolveTeamSide } from "@/lib/market/map-game-statistics";
 import type { ProphetTeamStatsFixture } from "@/types/prophet-api";
 import { formatMatchScore } from "@/views/trade/game/match-history/format";
 import type {
@@ -14,12 +15,19 @@ function resolveOpponentName(
   teamName: string,
   fixture: ProphetTeamStatsFixture
 ): string {
-  const isHome =
-    normalizeTeamName(fixture.home_team_name) === normalizeTeamName(teamName);
+  const homeName = fixture.home_team_name ?? "";
+  const awayName = fixture.away_team_name ?? "";
+  const side = resolveTeamSide(teamName, homeName, awayName);
 
-  return isHome
-    ? (fixture.away_team_name ?? "")
-    : (fixture.home_team_name ?? "");
+  if (side === "home") {
+    return awayName;
+  }
+
+  if (side === "away") {
+    return homeName;
+  }
+
+  return "";
 }
 
 function resolveFixtureResult(
