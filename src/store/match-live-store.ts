@@ -53,6 +53,7 @@ function snapshotsEqual(
     left.status === right.status &&
     left.period === right.period &&
     left.liveElapsedSeconds === right.liveElapsedSeconds &&
+    left.liveElapsedUnavailable === right.liveElapsedUnavailable &&
     left.trackedHomeScore === right.trackedHomeScore &&
     left.trackedAwayScore === right.trackedAwayScore &&
     JSON.stringify(left.goalEvents ?? []) === JSON.stringify(right.goalEvents ?? [])
@@ -137,7 +138,15 @@ function mergeSnapshotFromMatch(
     ...next,
     period: next.period ?? current.period,
     liveElapsedSeconds:
-      next.liveElapsedSeconds ?? current.liveElapsedSeconds,
+      next.liveElapsedSeconds !== undefined
+        ? next.liveElapsedSeconds
+        : current.liveElapsedUnavailable
+          ? undefined
+          : current.liveElapsedSeconds,
+    liveElapsedUnavailable:
+      next.liveElapsedSeconds !== undefined
+        ? false
+        : current.liveElapsedUnavailable,
     goalEvents: current.goalEvents ?? [],
     trackedHomeScore: current.trackedHomeScore ?? next.trackedHomeScore,
     trackedAwayScore: current.trackedAwayScore ?? next.trackedAwayScore,

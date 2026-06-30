@@ -42,6 +42,16 @@ export function formatLiveClockLabel(totalSeconds: number): string {
   return `Lasts ${formatElapsedDuration(totalSeconds)}`;
 }
 
+export function formatSportsMatchPeriod(period: string | undefined): string | undefined {
+  const trimmed = period?.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  return trimmed.toUpperCase();
+}
+
 export function formatGoalEventTime(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
   const minutes = Math.floor(safeSeconds / 60);
