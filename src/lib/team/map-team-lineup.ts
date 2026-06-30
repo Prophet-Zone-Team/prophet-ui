@@ -13,6 +13,7 @@ export interface TeamLineupPlayerView {
 
 export interface TeamLineupView {
   formation?: string;
+  coach?: string;
   matchTime?: number;
   starters: TeamLineupPlayerView[];
 }
@@ -71,6 +72,7 @@ function mapLineupEntry(
 
   return {
     formation: entry.formation,
+    coach: entry.coach,
     matchTime: entry.match_time,
     starters
   };
