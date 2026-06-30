@@ -2,7 +2,6 @@
 
 import type { WalletName } from "@solana/wallet-adapter-base";
 import { useWallet } from "@solana/wallet-adapter-react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
@@ -33,7 +32,7 @@ export function SolanaWalletSelectorModal() {
       ariaLabel={t("selectSolanaWallet")}
       className="max-w-[400px]"
     >
-      <div className="w-[350px] rounded-[16px] border border-prophet-border bg-prophet-panel flex flex-col gap-2 p-4">
+      <div className="w-[350px] rounded-[16px] border border-prophet-line bg-prophet-panel flex flex-col gap-2 p-4">
         <h2 className="m-0 text-lg font-[500] text-prophet-foreground">{t("selectSolanaWallet")}</h2>
         {sortedWallets.length === 0 ? (
           <p className="m-0 text-sm text-[#909090]">{t("noSolanaWalletDetected")}</p>
@@ -43,12 +42,12 @@ export function SolanaWalletSelectorModal() {
               key={wallet.adapter.name}
               type="button"
               disabled={connecting}
-              className="flex items-center gap-3 rounded-lg border border-[#ececec] px-4 py-3 text-left transition-colors hover:bg-[#f8f8f8]"
+              className="flex items-center gap-3 rounded-lg border border-prophet-line px-4 py-3 text-left transition-colors hover:bg-prophet-hover"
               onClick={() => void handleSelect(wallet)}
             >
               <div className="flex items-center gap-3">
                 {wallet.adapter.icon ? (
-                  <Image
+                  <img
                     src={wallet.adapter.icon}
                     alt=""
                     width={32}

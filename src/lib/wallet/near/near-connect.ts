@@ -1,4 +1,5 @@
 import { getNearAccountSnapshot, useNearAccountStore } from "./near-account-store";
+import { setNearWalletModalTheme } from "./near-wallet-selector";
 
 const DEFAULT_CONNECT_TIMEOUT_MS = 120_000;
 const CONNECT_POLL_MS = 200;
@@ -12,11 +13,15 @@ export function getNearDerivedEvmAddress(): string | null {
   return getNearAccountSnapshot().derivedEvmAddress;
 }
 
-export function openNearWalletModal(): void {
+export function openNearWalletModal(darkModeEnabled?: boolean): void {
   const { modal } = getNearAccountSnapshot();
 
   if (!modal) {
     throw new Error("NEAR wallet selector is not ready yet. Try again shortly.");
+  }
+
+  if (typeof darkModeEnabled === "boolean") {
+    setNearWalletModalTheme(darkModeEnabled);
   }
 
   modal.show();
