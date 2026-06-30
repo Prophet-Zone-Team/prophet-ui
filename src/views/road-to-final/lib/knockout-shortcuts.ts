@@ -3,6 +3,10 @@ import { ROUND_OF_32 } from "@/data/world-cup-2026/round-of-32";
 import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-place-options";
 
 import { getMatchCandidateTeams } from "./bracket-resolver";
+import {
+  isFixedKnockoutMatch,
+  mergeWithFixedKnockoutWinners,
+} from "./fixed-knockout";
 import type { GroupPlacements, KnockoutWinners } from "../types";
 import {
   chooseKnockoutWinner,
@@ -40,10 +44,14 @@ function applyKnockoutRounds({
   baseWinners: KnockoutWinners;
   method: KnockoutPickMethod;
 }): KnockoutWinners {
-  const winners: KnockoutWinners = { ...baseWinners };
+  const winners: KnockoutWinners = mergeWithFixedKnockoutWinners(baseWinners);
 
   for (const round of rounds) {
     for (const match of round) {
+      if (isFixedKnockoutMatch(match.matchId)) {
+        continue;
+      }
+
       const candidates = getMatchCandidateTeams(
         match,
         placements,
@@ -58,7 +66,7 @@ function applyKnockoutRounds({
     }
   }
 
-  return winners;
+  return mergeWithFixedKnockoutWinners(winners);
 }
 
 export function applyKnockoutShortcut({
