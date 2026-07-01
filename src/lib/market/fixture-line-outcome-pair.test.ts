@@ -48,6 +48,20 @@ function buildTotalOutcome(
   };
 }
 
+function buildTeamAdvanceOutcome(
+  overrides: Partial<FixtureMarketOutcome> & Pick<FixtureMarketOutcome, "id" | "side">,
+): FixtureMarketOutcome {
+  return {
+    marketType: "team_to_advance",
+    category: "lines",
+    label: "Test",
+    probability: 50,
+    price: 0.5,
+    tokenId: "yes-token",
+    ...overrides,
+  };
+}
+
 describe("fixture line outcome pair", () => {
   it("detects spread and total dual-outcome markets", () => {
     assert.equal(
@@ -59,6 +73,12 @@ describe("fixture line outcome pair", () => {
       true,
     );
     assert.equal(isLineDualOutcomeMarket({ marketType: "moneyline" }), false);
+    assert.equal(
+      isLineDualOutcomeMarket(
+        buildTeamAdvanceOutcome({ id: "team_to_advance:home:cond-1", side: "home" }),
+      ),
+      true,
+    );
   });
 
   it("resolves spread line keys from outcome ids or condition ids", () => {
@@ -244,5 +264,77 @@ describe("fixture line outcome pair", () => {
 
     assert.equal(pair?.yesOutcome.side, "over");
     assert.equal(pair?.noOutcome.side, "under");
+  });
+
+  it("maps team to advance widget buttons to home and away outcomes", () => {
+    const advanceGroup: FixtureMarketGroup = {
+      type: "team_to_advance",
+      title: "Team to Advance",
+      outcomes: [
+        buildTeamAdvanceOutcome({
+          id: "team_to_advance:away:cond-2",
+          side: "away",
+          label: "AUS",
+        }),
+        buildTeamAdvanceOutcome({
+          id: "team_to_advance:home:cond-1",
+          side: "home",
+          label: "ARG",
+        }),
+      ],
+    };
+
+    const fixtureMarkets: Pick<GameFixtureMarketsSnapshot, "lines"> = {
+      lines: [advanceGroup],
+    };
+
+    const pair = resolveLineOutcomePair(
+      buildTeamAdvanceOutcome({
+        id: "team_to_advance:home:cond-1",
+        side: "home",
+        label: "ARG",
+      }),
+      fixtureMarkets,
+    );
+
+    assert.equal(pair?.yesOutcome.label, "ARG");
+    assert.equal(pair?.noOutcome.label, "AUS");
+    assert.equal(resolveLineOutcomeForSide(pair!, "yes").side, "home");
+    assert.equal(resolveLineOutcomeForSide(pair!, "no").side, "away");
+  });
+
+  it("falls back to index order for team to advance when sides are missing", () => {
+    const advanceGroup: FixtureMarketGroup = {
+      type: "team_to_advance",
+      title: "Team to Advance",
+      outcomes: [
+        buildTeamAdvanceOutcome({
+          id: "team_to_advance:cond-1:0",
+          side: undefined,
+          label: "ARG",
+        }),
+        buildTeamAdvanceOutcome({
+          id: "team_to_advance:cond-2:1",
+          side: undefined,
+          label: "AUS",
+        }),
+      ],
+    };
+
+    const fixtureMarkets: Pick<GameFixtureMarketsSnapshot, "lines"> = {
+      lines: [advanceGroup],
+    };
+
+    const pair = resolveLineOutcomePair(
+      buildTeamAdvanceOutcome({
+        id: "team_to_advance:cond-1:0",
+        side: undefined,
+        label: "ARG",
+      }),
+      fixtureMarkets,
+    );
+
+    assert.equal(pair?.yesOutcome.label, "ARG");
+    assert.equal(pair?.noOutcome.label, "AUS");
   });
 });

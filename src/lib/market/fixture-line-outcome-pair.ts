@@ -1,4 +1,7 @@
-import { getFixtureOutcomesForGroup } from "@/lib/market/build-fixture-markets-snapshot";
+import {
+  getFixtureOutcomesForGroup,
+  sortFixtureGroupOutcomes,
+} from "@/lib/market/build-fixture-markets-snapshot";
 import type {
   FixtureMarketOutcome,
   GameFixtureMarketsSnapshot,
@@ -15,7 +18,11 @@ export interface LineOutcomePair {
 export function isLineDualOutcomeMarket(
   outcome: Pick<FixtureMarketOutcome, "marketType">,
 ): boolean {
-  return outcome.marketType === "spread" || outcome.marketType === "total";
+  return (
+    outcome.marketType === "spread" ||
+    outcome.marketType === "total" ||
+    outcome.marketType === "team_to_advance"
+  );
 }
 
 export function resolveLineOutcomeTradeBinarySide(
@@ -80,12 +87,53 @@ export function resolveLineKeyFromOutcome(
   return undefined;
 }
 
+function resolveTeamAdvanceOutcomePair(
+  fixtureMarkets: Pick<GameFixtureMarketsSnapshot, "lines">,
+): LineOutcomePair | undefined {
+  const group = fixtureMarkets.lines.find(
+    (item) => item.type === "team_to_advance",
+  );
+
+  if (!group) {
+    return undefined;
+  }
+
+  const sortedOutcomes = sortFixtureGroupOutcomes(
+    group.outcomes,
+    "team_to_advance",
+  );
+
+  if (sortedOutcomes.length < 2) {
+    return undefined;
+  }
+
+  let homeOutcome = sortedOutcomes.find((item) => item.side === "home");
+  let awayOutcome = sortedOutcomes.find((item) => item.side === "away");
+
+  if (!homeOutcome && !awayOutcome) {
+    homeOutcome = sortedOutcomes[0];
+    awayOutcome = sortedOutcomes[1];
+  } else if (!awayOutcome) {
+    awayOutcome = sortedOutcomes.find((item) => item.id !== homeOutcome?.id);
+  }
+
+  if (!homeOutcome || !awayOutcome) {
+    return undefined;
+  }
+
+  return { yesOutcome: homeOutcome, noOutcome: awayOutcome };
+}
+
 export function resolveLineOutcomePair(
   outcome: FixtureMarketOutcome,
   fixtureMarkets: Pick<GameFixtureMarketsSnapshot, "lines">,
 ): LineOutcomePair | undefined {
   if (!isLineDualOutcomeMarket(outcome)) {
     return undefined;
+  }
+
+  if (outcome.marketType === "team_to_advance") {
+    return resolveTeamAdvanceOutcomePair(fixtureMarkets);
   }
 
   const groupType = outcome.marketType as "spread" | "total";
