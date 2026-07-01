@@ -1550,6 +1550,7 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, one {# entrada} other {# entradas}}",
     "entryStructureMaxNote": "Máximo 5 entradas por persona",
+    "entryStructureMaxNoteReadMore": "Leer más",
     "campaignRulesTitle": "Desafío de Bracket Prophet World Cup $10K",
     "campaignRulesIntro": "Predice el camino. Respalda tus picks en Prophet. Gana $10,000. Crea un bracket completo del Mundial, respalda tus predicciones con posiciones reales, y el bracket más preciso gana el gran premio. Sin sorteo. Sin suerte. Solo habilidad de predicción.",
     "campaignRulesHowToPlayTitle": "Cómo jugar",
@@ -1923,6 +1924,8 @@
       "positionsValue": "Positions Value",
       "biggestWin": "Biggest Win",
       "predictions": "Predictions",
+      "profitLoss": "Profit / Loss",
+      "performanceTimeRange": "Performance time range",
       "tabClosed": "Closed",
       "noClosedPositions": "No closed positions",
       "unableToLoadPositions": "Unable to load positions."

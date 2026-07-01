@@ -14,6 +14,7 @@ export {
   getCopyTradeDepositSupportedAssets,
   getCopyTradePlatformMetrics,
   getCopyTradePnL,
+  getCopyTradePnLPoints,
   getCopyTradeProfile,
   getCopyTradeSellableBalance,
   getCopyTradeTargets,
