@@ -8,7 +8,8 @@ import {
   LogoutIcon,
   FastBidIcon,
   NotificationIcon,
-  ReferralIcon
+  ReferralIcon,
+  AttentionIcon
 } from "@/layout/header/wallet-menu-icons";
 import { WalletLanguageMenuItem } from "@/layout/header/wallet-language-menu-item";
 import { WalletOutcomeDisplayMenuItem } from "@/layout/header/wallet-outcome-display-menu-item";
@@ -126,6 +127,21 @@ export function WalletMenuDropdown({
                   <ReferralIcon />
                 </div>
                 <span className="flex-1">{t("referral")}</span>
+              </div>
+              <RightArrowIcon />
+            </Link>
+
+            <Link
+              href="/tracks"
+              role="menuitem"
+              className={walletMenuItemClass}
+              onClick={onClose}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-[14px]">
+                  <AttentionIcon />
+                </div>
+                <span className="flex-1">{t("attention")}</span>
               </div>
               <RightArrowIcon />
             </Link>

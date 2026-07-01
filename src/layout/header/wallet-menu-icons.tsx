@@ -115,6 +115,23 @@ export function OutcomeDisplayIcon() {
   );
 }
 
+export function AttentionIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="12"
+      height="13"
+      viewBox="0 0 12 13"
+      fill="none"
+    >
+      <path
+        d="M0 1.2C0 0.537258 0.537258 0 1.2 0H10.8C11.4627 0 12 0.537258 12 1.2V11.6678C12 12.6439 10.8966 13.2116 10.1024 12.6442L6.69762 10.2115C6.28032 9.91333 5.71968 9.91333 5.30238 10.2115L1.89762 12.6442C1.10339 13.2116 0 12.6439 0 11.6678V1.2Z"
+        fill="#909090"
+      />
+    </svg>
+  );
+}
+
 export function ReferralIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">
