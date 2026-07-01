@@ -15,11 +15,14 @@ import {
   walletCopyFormToTargetForm,
   type CopyTargetForm
 } from "@/lib/copy-trade/transforms";
+import type { CopyTargetDisplayStats } from "@/lib/copy-trade/target-stats";
+import { formatCompactRelativeTime } from "@/lib/formatters/datetime";
 import { formatCompactVolume } from "@/lib/formatters/volume";
 import {
   resolveTraderRankDisplayStats,
   type CopyTradeRankTimeRange
 } from "@/lib/copy-trade/trader-rank-filters";
+import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { TraderCatalogEntry } from "@/types/copy-trade-api";
 
 import { CopyTradeInfoTooltip } from "./info-tooltip";
@@ -69,6 +72,37 @@ export function buildWalletCopyStatsFromTrader(
         ? `${(winRate > 0 && winRate <= 1 ? winRate * 100 : winRate).toFixed(1)}%`
         : null,
     lastTrade: null
+  };
+}
+
+export function buildWalletCopyStatsForManageModal(
+  targetStats: CopyTargetDisplayStats | null,
+  trader?: TraderCatalogEntry | null
+): WalletCopyTraderStats | undefined {
+  const winRate = trader
+    ? buildWalletCopyStatsFromTrader(trader, "1d").winRate
+    : null;
+
+  let pnlUsd: string | null = null;
+  if (targetStats?.pnl != null) {
+    const sign =
+      targetStats.pnl > 0 ? "+" : targetStats.pnl < 0 ? "-" : "";
+    pnlUsd = `${sign}${formatTeamDetailMoney(Math.abs(targetStats.pnl))}`;
+  }
+
+  const lastTrade = targetStats?.lastTradeAt
+    ? formatCompactRelativeTime(targetStats.lastTradeAt) || null
+    : null;
+
+  if (pnlUsd == null && winRate == null && lastTrade == null) {
+    return undefined;
+  }
+
+  return {
+    pnlPercent: null,
+    pnlUsd,
+    winRate,
+    lastTrade
   };
 }
 

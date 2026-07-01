@@ -3,16 +3,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
-  collectUniqueConditionIdsFromClosedPositions,
-  mapActiveTargetPositionsToDisplay,
-  mapEndedTargetPositionsToDisplay
-} from "@/lib/copy-trade/map-target-positions";
-import { collectUniqueConditionIdsFromPositions } from "@/lib/portfolio/teams-condition";
-import { fetchJson } from "@/lib/team/client-fetch";
+  collectUniqueConditionIdsFromCopyPositionPnL,
+  mapActiveCopyPositionPnLToDisplay,
+  mapEndedCopyPositionPnLToDisplay
+} from "@/lib/copy-trade/map-copy-position-pnl";
+import {
+  getCopyTradePnLTargetHistory,
+  getCopyTradePnLTargetPositions
+} from "@/service/copy-trade";
 import { useTeamsConditionStore } from "@/store/teams-condition-store";
-import type { UserClosedPositionRecord, UserPositionRecord } from "@/types/market";
 import { COPY_WALLET_POSITIONS_PAGE_SIZE } from "@/views/copy-trade/copied-wallet/positions-panel/constants";
 import type { CopyWalletPositionDisplay } from "@/views/copy-trade/copied-wallet/positions-panel/types";
+
+import { useCopyTradeSession } from "../use-copy-trade-session";
 
 export interface UseCopyTradeTargetPositionsOptions {
   wallet: string;
@@ -40,6 +43,7 @@ export function useCopyTradeTargetPositions({
   enabled,
   endedEnabled = false
 }: UseCopyTradeTargetPositionsOptions): UseCopyTradeTargetPositionsResult {
+  const { userId } = useCopyTradeSession();
   const ensureTeamsCondition = useTeamsConditionStore(
     (state) => state.ensureTeamsCondition
   );
@@ -80,10 +84,11 @@ export function useCopyTradeTargetPositions({
   }, [enabled, wallet]);
 
   useEffect(() => {
-    if (!enabled || !wallet) {
+    if (!enabled || !wallet || userId == null) {
       return;
     }
 
+    const resolvedUserId = userId;
     let cancelled = false;
 
     async function loadActivePositions() {
@@ -91,24 +96,28 @@ export function useCopyTradeTargetPositions({
       setErrorActive(undefined);
 
       try {
-        const offset = (activePage - 1) * COPY_WALLET_POSITIONS_PAGE_SIZE;
-        const payload = await fetchJson<{ positions?: UserPositionRecord[] }>(
-          `/api/market/user-positions?user=${encodeURIComponent(wallet)}&limit=${COPY_WALLET_POSITIONS_PAGE_SIZE}&offset=${offset}&sizeThreshold=0`
+        const payload = await getCopyTradePnLTargetPositions(
+          resolvedUserId,
+          wallet,
+          {
+            params: {
+              page: activePage,
+              page_size: COPY_WALLET_POSITIONS_PAGE_SIZE
+            }
+          }
         );
-        const rawPositions = payload.positions ?? [];
+        const rawPositions = payload.items ?? [];
         const conditionIds =
-          collectUniqueConditionIdsFromPositions(rawPositions);
+          collectUniqueConditionIdsFromCopyPositionPnL(rawPositions);
         const marketContextMap = await ensureTeamsCondition(conditionIds);
-        const nextPositions = mapActiveTargetPositionsToDisplay(
+        const nextPositions = mapActiveCopyPositionPnLToDisplay(
           rawPositions,
           marketContextMap
         );
 
         if (!cancelled) {
           setActivePositions(nextPositions);
-          setActiveHasMore(
-            rawPositions.length === COPY_WALLET_POSITIONS_PAGE_SIZE
-          );
+          setActiveHasMore(payload.has_more);
         }
       } catch (error) {
         if (!cancelled) {
@@ -130,13 +139,14 @@ export function useCopyTradeTargetPositions({
     return () => {
       cancelled = true;
     };
-  }, [activePage, enabled, ensureTeamsCondition, wallet]);
+  }, [activePage, enabled, ensureTeamsCondition, userId, wallet]);
 
   useEffect(() => {
-    if (!enabled || !wallet || !endedEnabled) {
+    if (!enabled || !wallet || userId == null || !endedEnabled) {
       return;
     }
 
+    const resolvedUserId = userId;
     let cancelled = false;
 
     async function loadEndedPositions() {
@@ -144,26 +154,28 @@ export function useCopyTradeTargetPositions({
       setErrorEnded(undefined);
 
       try {
-        const offset = (endedPage - 1) * COPY_WALLET_POSITIONS_PAGE_SIZE;
-        const payload = await fetchJson<{
-          positions?: UserClosedPositionRecord[];
-        }>(
-          `/api/market/user-closed-positions?user=${encodeURIComponent(wallet)}&limit=${COPY_WALLET_POSITIONS_PAGE_SIZE}&offset=${offset}&sortBy=TIMESTAMP&sortDirection=DESC`
+        const payload = await getCopyTradePnLTargetHistory(
+          resolvedUserId,
+          wallet,
+          {
+            params: {
+              page: endedPage,
+              page_size: COPY_WALLET_POSITIONS_PAGE_SIZE
+            }
+          }
         );
-        const rawPositions = payload.positions ?? [];
+        const rawPositions = payload.items ?? [];
         const conditionIds =
-          collectUniqueConditionIdsFromClosedPositions(rawPositions);
+          collectUniqueConditionIdsFromCopyPositionPnL(rawPositions);
         const marketContextMap = await ensureTeamsCondition(conditionIds);
-        const nextPositions = mapEndedTargetPositionsToDisplay(
+        const nextPositions = mapEndedCopyPositionPnLToDisplay(
           rawPositions,
           marketContextMap
         );
 
         if (!cancelled) {
           setEndedPositions(nextPositions);
-          setEndedHasMore(
-            rawPositions.length === COPY_WALLET_POSITIONS_PAGE_SIZE
-          );
+          setEndedHasMore(payload.has_more);
         }
       } catch (error) {
         if (!cancelled) {
@@ -183,7 +195,7 @@ export function useCopyTradeTargetPositions({
     return () => {
       cancelled = true;
     };
-  }, [enabled, endedEnabled, endedPage, ensureTeamsCondition, wallet]);
+  }, [enabled, endedEnabled, endedPage, ensureTeamsCondition, userId, wallet]);
 
   const handleSetActivePage = useCallback((page: number) => {
     setActivePage(page);

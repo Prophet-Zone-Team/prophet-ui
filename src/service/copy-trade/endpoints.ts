@@ -3,6 +3,7 @@ import type { AxiosRequestConfig } from "axios";
 import type {
   CopyPnLPointsResponse,
   CopyPnLSummary,
+  CopyPnLTargetPage,
   CopyProfile,
   CopyProfileUpdateRequest,
   CopySellRequest,
@@ -174,6 +175,34 @@ export async function getCopyTradePnLPoints(
   return copyTradeRequest<CopyPnLPointsResponse>(
     "GET",
     userPath(userId, "copy-pnl/points"),
+    undefined,
+    config
+  );
+}
+
+/** GET /users/{id}/copy-pnl/targets/{wallet}/positions */
+export async function getCopyTradePnLTargetPositions(
+  userId: number,
+  wallet: string,
+  config?: AxiosRequestConfig
+): Promise<CopyPnLTargetPage> {
+  return copyTradeRequest<CopyPnLTargetPage>(
+    "GET",
+    `${userPath(userId, "copy-pnl/targets")}/${encodeURIComponent(wallet.trim().toLowerCase())}/positions`,
+    undefined,
+    config
+  );
+}
+
+/** GET /users/{id}/copy-pnl/targets/{wallet}/history */
+export async function getCopyTradePnLTargetHistory(
+  userId: number,
+  wallet: string,
+  config?: AxiosRequestConfig
+): Promise<CopyPnLTargetPage> {
+  return copyTradeRequest<CopyPnLTargetPage>(
+    "GET",
+    `${userPath(userId, "copy-pnl/targets")}/${encodeURIComponent(wallet.trim().toLowerCase())}/history`,
     undefined,
     config
   );
