@@ -12,6 +12,7 @@
   "wallet": {
     "portfolio": "Portfolio",
     "referral": "Referral",
+    "attention": "Attention",
     "fastBid": "Fast Bid",
     "notification": "Notification",
     "logout": "Logout",
