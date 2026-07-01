@@ -121,7 +121,8 @@ function enrichMatchFromGammaEvent(
     event.markets ?? [],
     homeName,
     awayName,
-    enriched.polymarket.moneyline.outcomes
+    enriched.polymarket.moneyline.outcomes,
+    enriched.polymarket.slug ?? enriched.id,
   );
 
   if (

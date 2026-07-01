@@ -207,6 +207,7 @@ export function mapGammaEventToMatch(event: GammaEventRecord): WorldCupMatch | u
         sides.homeName,
         sides.awayName,
         outcomes,
+        slug,
       ),
     },
   };

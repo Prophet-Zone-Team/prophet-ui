@@ -148,6 +148,47 @@ function resolveExactScoreChartTokens(
   };
 }
 
+function resolveBinaryPropGroupTokens(
+  group: FixtureMarketGroup | undefined,
+): FixtureChartTokenResolution | undefined {
+  const outcome = group?.outcomes[0];
+
+  if (!outcome?.tokenId || !outcome.noTokenId) {
+    return undefined;
+  }
+
+  return {
+    mode: "binary",
+    inputs: [
+      { key: "primary", tokenId: outcome.tokenId },
+      { key: "secondary", tokenId: outcome.noTokenId },
+    ],
+  };
+}
+
+function resolveTeamToAdvanceChartTokens(
+  group: FixtureMarketGroup | undefined,
+): FixtureChartTokenResolution | undefined {
+  if (!group?.outcomes.length) {
+    return undefined;
+  }
+
+  const home = group.outcomes.find((item) => item.side === "home");
+  const away = group.outcomes.find((item) => item.side === "away");
+
+  if (!home?.tokenId || !away?.tokenId) {
+    return undefined;
+  }
+
+  return {
+    mode: "binary",
+    inputs: [
+      { key: "primary", tokenId: home.tokenId },
+      { key: "secondary", tokenId: away.tokenId },
+    ],
+  };
+}
+
 export function resolveFixtureChartTokens(
   match: WorldCupMatch,
   chartKind: FixtureChartKind,
@@ -204,6 +245,22 @@ export function resolveFixtureChartTokens(
 
   if (chartKind === "exact_score") {
     return resolveExactScoreChartTokens(match, lineKey);
+  }
+
+  if (chartKind === "team_to_advance") {
+    return resolveTeamToAdvanceChartTokens(
+      findGroupByType(lines, "team_to_advance"),
+    );
+  }
+
+  if (chartKind === "extra_time") {
+    return resolveBinaryPropGroupTokens(findGroupByType(lines, "extra_time"));
+  }
+
+  if (chartKind === "penalty_shootout") {
+    return resolveBinaryPropGroupTokens(
+      findGroupByType(lines, "penalty_shootout"),
+    );
   }
 
   return undefined;

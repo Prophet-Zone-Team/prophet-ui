@@ -145,6 +145,22 @@ export function resolveOutcomeSideForPosition(
   return position.outcomeIndex === 0 ? "yes" : "no";
 }
 
+export function resolveOrderOutcomeSideFromLabel(
+  outcome: string | undefined
+): OrderOutcomeSide | undefined {
+  const normalized = outcome?.trim().toLowerCase() ?? "";
+
+  if (normalized === "yes") {
+    return "yes";
+  }
+
+  if (normalized === "no") {
+    return "no";
+  }
+
+  return undefined;
+}
+
 export function resolveOutcomeSideForGamePosition(
   position: UserPositionRecord,
   tokens: GamePositionTokenMatch
@@ -155,6 +171,12 @@ export function resolveOutcomeSideForGamePosition(
 
   if (tokens.noTokenId && tokens.noTokenId === position.asset) {
     return "no";
+  }
+
+  const fromLabel = resolveOrderOutcomeSideFromLabel(position.outcome);
+
+  if (fromLabel) {
+    return fromLabel;
   }
 
   const normalizedOutcome = position.outcome?.trim().toLowerCase() ?? "";

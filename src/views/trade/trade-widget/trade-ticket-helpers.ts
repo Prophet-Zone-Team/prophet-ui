@@ -324,6 +324,7 @@ export function buildGameTradePreview(input: {
   limitPrice: number;
   orderType: TradingOrderType;
   fixtureOutcome?: FixtureMarketOutcome | null;
+  sellTokenId?: string;
 }): ReturnType<typeof buildGameBidOrderPreview> {
   if (input.fixtureOutcome) {
     return buildFixtureBidOrderPreview({
@@ -337,7 +338,8 @@ export function buildGameTradePreview(input: {
       tradeSide: input.tradeSide,
       amount: input.amount,
       limitPrice: input.limitPrice,
-      orderType: input.orderType
+      orderType: input.orderType,
+      tokenId: input.sellTokenId,
     });
   }
 

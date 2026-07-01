@@ -86,6 +86,7 @@ export interface GameProbabilitySectionProps {
   fixtureMarkets?: GameFixtureMarketsSnapshot;
   showOrderbook?: boolean;
   className?: string;
+  variant?: "default" | "embedded";
   chartKind?: FixtureChartKind;
   lineKey?: string;
   summaryMode?: "ternary" | "binary";
@@ -101,6 +102,7 @@ export function GameProbabilitySection({
   fixtureMarkets,
   showOrderbook = true,
   className,
+  variant = "default",
   chartKind = "moneyline",
   lineKey,
   summaryMode = "ternary",
@@ -345,13 +347,25 @@ export function GameProbabilitySection({
     [t]
   );
 
+  const embedded = variant === "embedded";
+  const probabilitySurfaceClass = embedded
+    ? "min-w-0 flex-1 bg-white p-4 sm:p-5"
+    : probabilityCardClass;
+  const embeddedOrderbookClassName =
+    "border-0 rounded-none bg-transparent shadow-none";
+
   return (
     <section
       className={cn(
-        "mt-[8px] flex flex-col gap-3",
+        embedded ? "mt-0" : "mt-[8px]",
+        "flex flex-col gap-3",
         orderbookEnabled
-          ? "xl:grid xl:grid-cols-[minmax(0,1fr)_272px] xl:items-stretch"
-          : "xl:flex-col",
+          ? embedded
+            ? "md:grid md:grid-cols-[minmax(0,1fr)_272px] md:items-stretch md:divide-x md:divide-[#EBEBEB]"
+            : "xl:grid xl:grid-cols-[minmax(0,1fr)_272px] xl:items-stretch"
+          : embedded
+            ? "flex-col"
+            : "xl:flex-col",
         className
       )}
       aria-label={t("matchOutcomeProbabilityAria")}
@@ -359,7 +373,7 @@ export function GameProbabilitySection({
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.85 }}
-        className={cn(probabilityCardClass, !orderbookEnabled && "w-full")}
+        className={cn(probabilitySurfaceClass, !orderbookEnabled && "w-full")}
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -500,12 +514,18 @@ export function GameProbabilitySection({
           visible={orderbookEnabled}
           tokenId={tokenId}
           className="min-h-0 w-full"
+          orderbookClassName={embedded ? embeddedOrderbookClassName : undefined}
         />
       </div>
 
       <div className="md:hidden">
         {orderbookEnabled ? (
-          <div className="overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel">
+          <div
+            className={cn(
+              "overflow-hidden bg-white",
+              !embedded && "rounded-[12px] border border-[#EBEBEB]",
+            )}
+          >
             <button
               type="button"
               className="flex w-full items-center justify-between px-4 py-3 text-left"
@@ -535,6 +555,9 @@ export function GameProbabilitySection({
                   tokenId={tokenId}
                   variant="mirror"
                   className="min-h-0 w-full"
+                  orderbookClassName={
+                    embedded ? embeddedOrderbookClassName : undefined
+                  }
                 />
               </div>
             ) : null}

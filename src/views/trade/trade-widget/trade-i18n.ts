@@ -397,6 +397,12 @@ export function resolveTradeWidgetHeaderTitle(
       return t("totals");
     case "btts":
       return t("bttsQuestion");
+    case "team_to_advance":
+      return t("teamToAdvance");
+    case "extra_time":
+      return t("extraTimeQuestion");
+    case "penalty_shootout":
+      return t("penaltyShootoutQuestion");
     case "exact_score":
       return t("exactScore");
     case "halftime":
