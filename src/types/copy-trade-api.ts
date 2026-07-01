@@ -210,6 +210,15 @@ export interface CopyPnLSummary {
   history: CopyPositionPnL[];
 }
 
+export interface CopyPnLTargetPage {
+  target_wallet: string;
+  items: CopyPositionPnL[];
+  page: number;
+  page_size: number;
+  total: number;
+  has_more: boolean;
+}
+
 export type CopyPnLRange = "24H" | "7D" | "30D" | "1Year" | "Total";
 
 export interface CopyPnLPoint {

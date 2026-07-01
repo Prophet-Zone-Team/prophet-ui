@@ -15,7 +15,10 @@ import { useCopyTradeRank } from "@/views/copy-trade/use-copy-trade-rank";
 import { useCopyTradeReadiness } from "@/views/copy-trade/use-copy-trade-readiness";
 import { useCopyTradeTargetStats } from "@/views/copy-trade/use-copy-trade-target-stats";
 import { useCopyTradeTargets } from "@/views/copy-trade/use-copy-trade-targets";
-import { WalletCopyModal } from "@/views/copy-trade/wallet-copy-modal";
+import {
+  buildWalletCopyStatsForManageModal,
+  WalletCopyModal
+} from "@/views/copy-trade/wallet-copy-modal";
 
 import { CopyTradeCopiedWalletItem } from "./item";
 import {
@@ -69,6 +72,17 @@ export function CopyTradeCopiedWalletPanel({
       manageTarget ? targetToWalletCopyForm(manageTarget) : undefined,
     [manageTarget]
   );
+
+  const manageModalStats = useMemo(() => {
+    if (!manageTarget) {
+      return undefined;
+    }
+
+    const targetStats = getCopyTargetStats(statsByWallet, manageTarget.Wallet);
+    const trader = tradersByWallet.get(manageTarget.Wallet.toLowerCase()) ?? null;
+
+    return buildWalletCopyStatsForManageModal(targetStats, trader);
+  }, [manageTarget, statsByWallet, tradersByWallet]);
 
   const handleCopySubmit = useCallback(
     async (form: CopyTargetForm) => {
@@ -175,6 +189,7 @@ export function CopyTradeCopiedWalletPanel({
         open={manageTarget != null}
         onClose={() => setManageTarget(null)}
         wallet={manageTarget?.Wallet ?? ""}
+        stats={manageModalStats}
         initialValues={manageInitialValues}
         saving={saving}
         availableBalance={readiness.availableBalance}

@@ -15,6 +15,8 @@ export {
   getCopyTradePlatformMetrics,
   getCopyTradePnL,
   getCopyTradePnLPoints,
+  getCopyTradePnLTargetHistory,
+  getCopyTradePnLTargetPositions,
   getCopyTradeProfile,
   getCopyTradeSellableBalance,
   getCopyTradeTargets,
