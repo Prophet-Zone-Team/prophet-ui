@@ -46,6 +46,19 @@ export function isCopyWalletReady(
   );
 }
 
+export function shouldRefreshCopyWalletBeforeLiveCopy(
+  wallet: CopyWallet | null | undefined,
+): boolean {
+  if (!wallet) {
+    return true;
+  }
+
+  return (
+    wallet.WalletStatus?.toLowerCase() !== "deployed" ||
+    !wallet.CollateralApproved
+  );
+}
+
 export function isCopyWalletPending(
   wallet: CopyWallet | null | undefined,
 ): boolean {

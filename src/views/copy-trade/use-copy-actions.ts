@@ -4,7 +4,11 @@ import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { isCopyWalletReady } from "@/lib/copy-trade/auth";
+import {
+  fetchCopyTradeWallet,
+  isCopyWalletReady,
+  shouldRefreshCopyWalletBeforeLiveCopy
+} from "@/lib/copy-trade/auth";
 import {
   enableProfilePatch,
   formToApiTarget,
@@ -18,7 +22,10 @@ import {
   updateCopyTradeProfile,
   updateCopyTradeTargets
 } from "@/service/copy-trade";
-import { useCopyTradeStoredSession } from "@/store/copy-trade-store";
+import {
+  useCopyTradeStore,
+  useCopyTradeStoredSession
+} from "@/store/copy-trade-store";
 import type {
   CopyProfileUpdateRequest,
   CopyTarget
@@ -37,6 +44,7 @@ export function useCopyActions() {
   const { userId } = useCopyTradeSession();
   const session = useCopyTradeStoredSession();
   const copyWallet = session?.copyWallet ?? null;
+  const updateCopyWallet = useCopyTradeStore((state) => state.updateCopyWallet);
   const { targets, refetch: refetchTargets } = useCopyTradeTargets();
   const { profile, refetch: refetchProfile } = useCopyTradeProfile();
   const [saving, setSaving] = useState(false);
@@ -83,7 +91,19 @@ export function useCopyActions() {
 
       try {
         if (ensureMaster) {
-          if (!isCopyWalletReady(copyWallet)) {
+          let wallet = copyWallet;
+
+          if (shouldRefreshCopyWalletBeforeLiveCopy(wallet)) {
+            try {
+              const refreshed = await fetchCopyTradeWallet(userId);
+              updateCopyWallet(refreshed);
+              wallet = refreshed;
+            } catch {
+              // Fall back to the cached wallet for the readiness check below.
+            }
+          }
+
+          if (!isCopyWalletReady(wallet)) {
             toast.error(t("approvalsIncomplete"), { id: toastId });
             return false;
           }
@@ -107,7 +127,7 @@ export function useCopyActions() {
         setSaving(false);
       }
     },
-    [copyWallet, guard, profile, refresh, t, userId]
+    [copyWallet, guard, profile, refresh, t, updateCopyWallet, userId]
   );
 
   const upsertCopy = useCallback(
