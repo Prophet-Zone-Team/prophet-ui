@@ -23,6 +23,7 @@ import type {
   ProphetGetTeamGameResultsData,
   ProphetGetTeamLineupData,
   ProphetGetHeadToHeadFixturesData,
+  ProphetTeamStatsInfo,
   ProphetGetGameStatisticsData,
   ProphetGetGameOddsData,
   ProphetGetGroupStandingsData,
@@ -52,7 +53,11 @@ import type {
   ProphetUserTrackListItem,
   ProphetLoginReferral,
   ProphetUploadData,
-  ProphetGetPolymarketStatsData
+  ProphetGetPolymarketStatsData,
+  ProphetGetWinnerProbabilityData,
+  SubmitWinnerActivityRequest,
+  WinnerActivityRecordsData,
+  WinnerActivityStatsData
 } from "@/types/prophet-api";
 import type { TokenPricesBySymbol } from "@/types/funding";
 import type { TelegramLoginAuthData } from "@/types/telegram-widget";
@@ -488,6 +493,15 @@ export async function getProphetGroupStandings(params?: {
   return prophetGet<ProphetGetGroupStandingsData>("/v1/game/group-standings", {
     params: params?.group_code ? { group_code: params.group_code } : undefined,
     signal: params?.signal
+  });
+}
+
+/** GET /v1/game/winner-probability — World Cup winner probabilities by team */
+export async function getProphetWinnerProbability(
+  signal?: AbortSignal,
+): Promise<ProphetGetWinnerProbabilityData> {
+  return prophetGet<ProphetGetWinnerProbabilityData>("/v1/game/winner-probability", {
+    signal,
   });
 }
 
@@ -942,6 +956,42 @@ export async function getAnalyticsHeadToHeadFixtures(params: {
       }
     }
   );
+}
+
+/** GET /v1/analytics/teams/stats — recent fixtures and strength per team */
+export async function getAnalyticsTeamsStats(params: {
+  teams: string;
+}): Promise<ProphetTeamStatsInfo[]> {
+  return prophetGet<ProphetTeamStatsInfo[]>("/v1/analytics/teams/stats", {
+    params: {
+      teams: params.teams
+    }
+  });
+}
+
+/** GET /v1/activity/winner/records — user submitted winner predictions */
+export async function getWinnerActivityRecords(
+  signal?: AbortSignal
+): Promise<WinnerActivityRecordsData> {
+  return prophetGet<WinnerActivityRecordsData>("/v1/activity/winner/records", {
+    signal
+  });
+}
+
+/** GET /v1/activity/winner/stats — guess chances and trade volume stats */
+export async function getWinnerActivityStats(
+  signal?: AbortSignal
+): Promise<WinnerActivityStatsData> {
+  return prophetGet<WinnerActivityStatsData>("/v1/activity/winner/stats", {
+    signal
+  });
+}
+
+/** POST /v1/activity/winner — report user share submission */
+export async function submitWinnerActivity(
+  request: SubmitWinnerActivityRequest
+): Promise<unknown> {
+  return prophetPost<unknown>("/v1/activity/winner", request);
 }
 
 export { prophetClient };

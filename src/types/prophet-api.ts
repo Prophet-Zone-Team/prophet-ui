@@ -17,6 +17,14 @@ export interface ProphetGetPolymarketStatsData {
   oneDayPriceChangeTeam?: string;
 }
 
+/** GET /v1/game/winner-probability — World Cup winner probabilities by team */
+export interface ProphetWinnerProbabilityItem {
+  team: string;
+  probability: string;
+}
+
+export type ProphetGetWinnerProbabilityData = ProphetWinnerProbabilityItem[];
+
 export interface ProphetPolyMarketTeam {
   logo?: string;
   name?: string;
@@ -146,6 +154,7 @@ export interface ProphetTeamLineupEntry {
   team_name?: string;
   match_time?: number;
   formation?: string;
+  coach?: string;
   startXIs?: ProphetTeamLineupStarter[] | null;
 }
 
@@ -722,6 +731,48 @@ export interface ProphetGetHeadToHeadFixturesData {
   list?: ProphetHeadToHeadFixture[];
 }
 
+/** GET /v1/analytics/teams/stats — recent fixtures and strength per team */
+export interface ProphetTeamStatsFixture {
+  id: number;
+  api_fixture_id: number;
+  referee?: string;
+  timezone?: string;
+  fixture_date: string;
+  fixture_timestamp: number;
+  status_long?: string;
+  status_short?: string;
+  status_elapsed?: number;
+  league_id?: number;
+  league_name?: string;
+  league_country?: string;
+  season?: number;
+  round?: string;
+  home_team_id?: number;
+  home_team_name?: string;
+  away_team_id?: number;
+  away_team_name?: string;
+  home_goals: number;
+  away_goals: number;
+  slug?: string;
+}
+
+export interface ProphetTeamStatsStrengthDimension {
+  key: string;
+  label: string;
+  score: number;
+}
+
+export interface ProphetTeamStatsStrength {
+  score?: number;
+  dimensions?: ProphetTeamStatsStrengthDimension[];
+}
+
+export interface ProphetTeamStatsInfo {
+  name: string;
+  recent_fixtures?: ProphetTeamStatsFixture[] | null;
+  team_strength?: ProphetTeamStatsStrength;
+}
+
 export interface ProphetGetTeamDetailMatch {
   id: number;
   api_fixture_id: number;
@@ -991,4 +1042,49 @@ export interface ProphetAnalyticsTrackData {
 /** POST /v1/analytics/track — batch event payload (list: 1-5 events) */
 export interface ProphetAnalyticsTrackBatchRequest {
   list: ProphetAnalyticsTrackRequest[];
+}
+
+/** Winner activity prediction match pairing */
+export interface WinnerPredictionMatchPair {
+  teams: string[];
+}
+
+/** Winner activity prediction payload */
+export interface WinnerPredictionPayload {
+  champion_team: string;
+  final_teams: WinnerPredictionMatchPair[];
+  round_16_teams: WinnerPredictionMatchPair[];
+  round_4_teams: WinnerPredictionMatchPair[];
+  round_8_teams: WinnerPredictionMatchPair[];
+}
+
+/** GET /v1/activity/winner/records — submitted prediction record */
+export interface WinnerActivityRecord {
+  id: number;
+  champion_team: string;
+  create_time: string;
+  prediction: WinnerPredictionPayload;
+  status: number;
+  twitter_url?: string;
+}
+
+/** GET /v1/activity/winner/records */
+export interface WinnerActivityRecordsData {
+  list: WinnerActivityRecord[];
+}
+
+/** GET /v1/activity/winner/stats */
+export interface WinnerActivityStatsData {
+  guess_chances: number;
+  used_chances: number;
+  available_chances: number;
+  total_trade_usdc: string;
+  buy_trade_usdc: string;
+  sell_trade_usdc: string;
+}
+
+/** POST /v1/activity/winner */
+export interface SubmitWinnerActivityRequest {
+  prediction: WinnerPredictionPayload;
+  twitter_url: string;
 }

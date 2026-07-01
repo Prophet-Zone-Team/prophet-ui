@@ -5,7 +5,7 @@ export const withdrawFieldLabelClass =
 
 export const withdrawInputBoxClass = cn(
   "relative flex h-[57px] w-full items-center justify-between rounded-[6px] border border-[#EBEBEB]",
-  "bg-white pl-4 pr-7"
+  "bg-white pl-4 pr-8"
 );
 
 export const withdrawSelectorBoxClass = cn(

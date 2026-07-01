@@ -7,6 +7,34 @@ import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/cn";
 
+let bodyScrollLockCount = 0;
+let savedBodyOverflow = "";
+
+function lockBodyScroll(): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  if (bodyScrollLockCount === 0) {
+    savedBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+  }
+
+  bodyScrollLockCount += 1;
+}
+
+function unlockBodyScroll(): void {
+  if (typeof document === "undefined" || bodyScrollLockCount <= 0) {
+    return;
+  }
+
+  bodyScrollLockCount -= 1;
+
+  if (bodyScrollLockCount === 0) {
+    document.body.style.overflow = savedBodyOverflow;
+  }
+}
+
 export interface ModalProps {
   open: boolean;
   onClose: () => void;
@@ -39,8 +67,7 @@ export function Modal({
       return undefined;
     }
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && escapeCloseable) {
@@ -51,7 +78,7 @@ export function Modal({
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      unlockBodyScroll();
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [escapeCloseable, open, onClose]);

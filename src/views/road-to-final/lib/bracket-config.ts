@@ -3,6 +3,10 @@ import { ROUND_OF_32 } from "@/data/world-cup-2026/round-of-32";
 import type { ThirdPlaceWinnerSeed } from "@/data/world-cup-2026/third-place-options";
 
 import type { BracketColumnConfig, BracketMatchConfig } from "../types";
+import {
+  isFixedKnockoutMatch,
+  mergeWithFixedKnockoutWinners,
+} from "./fixed-knockout";
 
 export const LEFT_BRACKET_COLUMNS: BracketColumnConfig[] = [
   { key: "r32", label: "Round of 32", matchIds: [74, 77, 73, 75, 83, 84, 81, 82] },
@@ -30,9 +34,12 @@ export const THIRD_PLACE_WINNER_SEEDS: readonly ThirdPlaceWinnerSeed[] = [
 ];
 
 export const MATCH_LOOKUP: Map<number, BracketMatchConfig> = new Map(
-  [...ROUND_OF_32, ...KNOCKOUT_LINKS].map(
-    (match): [number, BracketMatchConfig] => [match.matchId, match]
-  )
+  [
+    ...ROUND_OF_32.map(
+      (match): BracketMatchConfig => ({ ...match, stage: "R32" })
+    ),
+    ...KNOCKOUT_LINKS
+  ].map((match): [number, BracketMatchConfig] => [match.matchId, match])
 );
 
 function buildDownstreamMatchMap(): Map<number, number[]> {
@@ -80,6 +87,10 @@ export function updateKnockoutWinner(
   matchId: number,
   nextTeamId: string
 ): Record<number, string> {
+  if (isFixedKnockoutMatch(matchId)) {
+    return mergeWithFixedKnockoutWinners(current);
+  }
+
   const next = { ...current, [matchId]: nextTeamId };
 
   if (!nextTeamId) {
@@ -87,8 +98,12 @@ export function updateKnockoutWinner(
   }
 
   for (const downstreamMatchId of collectDownstreamMatchIds(matchId)) {
+    if (isFixedKnockoutMatch(downstreamMatchId)) {
+      continue;
+    }
+
     delete next[downstreamMatchId];
   }
 
-  return next;
+  return mergeWithFixedKnockoutWinners(next);
 }

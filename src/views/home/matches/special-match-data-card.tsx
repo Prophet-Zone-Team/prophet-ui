@@ -61,11 +61,13 @@ function useSlantOffsetPx(): [number, (node: HTMLDivElement | null) => void] {
 export interface SpecialMatchDataCardProps {
   matches: WorldCupMatch[];
   snapshots?: TeamMarketSnapshot[];
+  embedded?: boolean;
 }
 
 export function SpecialMatchDataCard({
   matches,
-  snapshots = []
+  snapshots = [],
+  embedded = false,
 }: SpecialMatchDataCardProps) {
   const featuredMatch = useFeaturedScheduleMatch(matches);
 
@@ -74,16 +76,22 @@ export function SpecialMatchDataCard({
   }
 
   return (
-    <SpecialMatchDataCardContent match={featuredMatch} snapshots={snapshots} />
+    <SpecialMatchDataCardContent
+      match={featuredMatch}
+      snapshots={snapshots}
+      embedded={embedded}
+    />
   );
 }
 
 function SpecialMatchDataCardContent({
   match,
-  snapshots = []
+  snapshots = [],
+  embedded = false,
 }: {
   match: WorldCupMatch;
   snapshots?: TeamMarketSnapshot[];
+  embedded?: boolean;
 }) {
   const router = useRouter();
   const t = useTranslations("home");
@@ -128,7 +136,10 @@ function SpecialMatchDataCardContent({
   return (
     <article
       className={cn(
-        "relative min-h-[160px] overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white sm:min-h-[280px] lg:min-h-[345px]",
+        "relative min-h-[160px] overflow-hidden bg-white sm:min-h-[280px] lg:min-h-[345px]",
+        embedded
+          ? "h-full min-h-[inherit] rounded-none border-0"
+          : "rounded-[12px] border border-[#EBEBEB]",
         canNavigate &&
           "cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]"
       )}
