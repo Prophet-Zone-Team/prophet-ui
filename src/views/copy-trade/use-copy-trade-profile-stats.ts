@@ -12,7 +12,7 @@ function copyTradeBalanceQueryKey(userId: number) {
   return ["copy-trade", "balance", userId] as const;
 }
 
-function copyTradePnLQueryKey(userId: number) {
+export function copyTradePnLQueryKey(userId: number) {
   return ["copy-trade", "pnl", userId] as const;
 }
 

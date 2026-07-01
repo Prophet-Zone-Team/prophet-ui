@@ -51,6 +51,7 @@ export function CopyTradePortfolioView() {
     openPositions: openPositionRows,
     closedPositions,
     marketContextMap,
+    positionTimeMap,
     status: positionsStatus
   } = useCopyTradePortfolioData(hasCopyWallet);
 
@@ -110,6 +111,7 @@ export function CopyTradePortfolioView() {
           openPositions={openPositionRows}
           closedPositions={closedPositions}
           marketContextMap={marketContextMap}
+          positionTimeMap={positionTimeMap}
           status={positionsStatus}
           needsWallet={false}
           onConnectWallet={() => void openLogin()}
