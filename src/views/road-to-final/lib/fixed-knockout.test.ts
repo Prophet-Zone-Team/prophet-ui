@@ -9,20 +9,21 @@ import {
 } from "./fixed-knockout";
 
 describe("fixed-knockout", () => {
-  it("defines confirmed R32 winners for matches 73 through 76", () => {
+  it("defines confirmed R32 winners for matches 73 through 78", () => {
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[73], "canada");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[74], "paraguay");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[75], "morocco");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[76], "brazil");
-    assert.equal(FIXED_KNOCKOUT_MATCH_IDS.size, 4);
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[77], "france");
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[78], "norway");
+    assert.equal(FIXED_KNOCKOUT_MATCH_IDS.size, 6);
   });
 
   it("identifies fixed match ids", () => {
     assert.equal(isFixedKnockoutMatch(73), true);
-    assert.equal(isFixedKnockoutMatch(74), true);
-    assert.equal(isFixedKnockoutMatch(75), true);
-    assert.equal(isFixedKnockoutMatch(76), true);
-    assert.equal(isFixedKnockoutMatch(77), false);
+    assert.equal(isFixedKnockoutMatch(77), true);
+    assert.equal(isFixedKnockoutMatch(78), true);
+    assert.equal(isFixedKnockoutMatch(79), false);
     assert.equal(isFixedKnockoutMatch(89), false);
   });
 
@@ -32,6 +33,8 @@ describe("fixed-knockout", () => {
       74: "germany",
       75: "netherlands",
       76: "japan",
+      77: "sweden",
+      78: "ivory-coast",
       89: "france",
     });
 
@@ -39,6 +42,8 @@ describe("fixed-knockout", () => {
     assert.equal(merged[74], "paraguay");
     assert.equal(merged[75], "morocco");
     assert.equal(merged[76], "brazil");
+    assert.equal(merged[77], "france");
+    assert.equal(merged[78], "norway");
     assert.equal(merged[89], "france");
   });
 });
