@@ -380,6 +380,35 @@ export function resolveFixtureOutcomeLabel(
   return formatTotalOutcomeAbbrevLabel(t, outcome) ?? outcome.label;
 }
 
+function isSingleOutcomeBinaryMarket(
+  marketType: FixtureMarketOutcome["marketType"],
+): boolean {
+  return (
+    marketType === "extra_time" ||
+    marketType === "penalty_shootout" ||
+    marketType === "btts"
+  );
+}
+
+export function resolveTradeWidgetOutcomeLabel(
+  t: TradeTranslator,
+  outcome: FixtureMarketOutcome | null,
+  binarySide: OrderOutcomeSide,
+  matchOutcomeSide: MatchOutcomeSide,
+  homeName: string,
+  awayName: string,
+): string {
+  if (!outcome) {
+    return resolveGameOutcomeLabel(t, matchOutcomeSide, homeName, awayName);
+  }
+
+  if (isSingleOutcomeBinaryMarket(outcome.marketType)) {
+    return binarySide === "yes" ? t("yes") : t("no");
+  }
+
+  return resolveFixtureOutcomeLabel(t, outcome);
+}
+
 export function resolveTradeWidgetHeaderTitle(
   t: TradeTranslator,
   outcome: FixtureMarketOutcome | null,
