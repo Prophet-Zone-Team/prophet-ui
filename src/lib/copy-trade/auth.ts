@@ -46,6 +46,37 @@ export function isCopyWalletReady(
   );
 }
 
+export function shouldRefreshCopyWalletBeforeLiveCopy(
+  wallet: CopyWallet | null | undefined,
+): boolean {
+  if (!wallet) {
+    return true;
+  }
+
+  return (
+    wallet.WalletStatus?.toLowerCase() !== "deployed" ||
+    !wallet.CollateralApproved
+  );
+}
+
+export async function refreshCopyWalletIfStale(
+  userId: number,
+  wallet: CopyWallet | null | undefined,
+  updateCopyWallet: (copyWallet: CopyWallet | null) => void,
+): Promise<CopyWallet | null | undefined> {
+  if (!shouldRefreshCopyWalletBeforeLiveCopy(wallet)) {
+    return wallet;
+  }
+
+  try {
+    const refreshed = await fetchCopyTradeWallet(userId);
+    updateCopyWallet(refreshed);
+    return refreshed;
+  } catch {
+    return wallet;
+  }
+}
+
 export function isCopyWalletPending(
   wallet: CopyWallet | null | undefined,
 ): boolean {
