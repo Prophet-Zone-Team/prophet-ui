@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import type { CopyWallet } from "@/types/copy-trade-api";
 import { CopyTradeWalletIdentity } from "@/views/copy-trade/user-profile/copy-trade-wallet-identity";
-import { PortfolioPerformanceChartContent } from "@/views/portfolio/portfolio-performance-chart-content";
 import {
   portfolioSummaryCardClass,
   portfolioSummaryLabelClass,
@@ -13,18 +12,24 @@ import {
 } from "@/views/portfolio/portfolio-ui";
 import { formatNumber } from "@/utils";
 
+import { CopyTradePortfolioPerformanceChart } from "./copy-trade-portfolio-performance-chart";
+
 export interface CopyTradePortfolioSummaryProps {
   copyWallet: CopyWallet;
   positionsValue: number | null;
   openPositions: number | null;
+  biggestWinAmount: number | null;
   isLoading?: boolean;
+  chartEnabled?: boolean;
 }
 
 export function CopyTradePortfolioSummary({
   copyWallet,
   positionsValue,
   openPositions,
-  isLoading = false
+  biggestWinAmount,
+  isLoading = false,
+  chartEnabled = true
 }: CopyTradePortfolioSummaryProps) {
   const t = useTranslations("copyTrade.portfolio");
   const displayAddress = copyWallet.CopyDepositWalletAddress;
@@ -55,7 +60,9 @@ export function CopyTradePortfolioSummary({
             </div>
             <div>
               <div className={portfolioSummaryLabelClass}>{t("biggestWin")}</div>
-              <div className={portfolioSummaryValueMediumClass}>—</div>
+              <div className={portfolioSummaryValueMediumClass}>
+                {formatNumber(biggestWinAmount ?? 0, 0, true)}
+              </div>
             </div>
             <div>
               <div className={portfolioSummaryLabelClass}>{t("predictions")}</div>
@@ -76,8 +83,7 @@ export function CopyTradePortfolioSummary({
           aria-hidden="true"
         />
 
-        {/* TODO: wire copy-trade PnL series API — pass fetched series via seriesOverride */}
-        <PortfolioPerformanceChartContent series={[]} />
+        <CopyTradePortfolioPerformanceChart enabled={chartEnabled} />
       </div>
     </section>
   );

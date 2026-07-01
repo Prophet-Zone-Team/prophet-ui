@@ -1798,6 +1798,8 @@
       "positionsValue": "Positions Value",
       "biggestWin": "Biggest Win",
       "predictions": "Predictions",
+      "profitLoss": "Profit / Loss",
+      "performanceTimeRange": "Performance time range",
       "tabClosed": "Closed",
       "noClosedPositions": "No closed positions",
       "unableToLoadPositions": "Unable to load positions."

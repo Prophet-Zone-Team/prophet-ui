@@ -204,10 +204,20 @@ export interface CopyPnLSummary {
   total_initial_value: number;
   total_current_value: number;
   open_positions: number;
+  biggest_win_amount: number;
   targets: CopyTargetPnL[];
   positions: CopyPositionPnL[];
   history: CopyPositionPnL[];
 }
+
+export type CopyPnLRange = "24H" | "7D" | "30D" | "1Year" | "Total";
+
+export interface CopyPnLPoint {
+  t: number;
+  p: number;
+}
+
+export type CopyPnLPointsResponse = Record<CopyPnLRange, CopyPnLPoint[]>;
 
 export interface CopyTradeManualSellResult {
   order_id: string;
