@@ -14,6 +14,7 @@
   "wallet": {
     "portfolio": "Portafolio",
     "referral": "Referidos",
+    "attention": "Attention",
     "fastBid": "Oferta rápida",
     "notification": "Notificaciones",
     "darkMode": "Modo oscuro",
@@ -1548,7 +1549,7 @@
     "entryStructureEntriesHeader": "Entradas",
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, one {# entrada} other {# entradas}}",
-    "entryStructureMaxNote": "Máximo 5 entradas por persona (asegúrate de añadir la nota de seguimiento IP)",
+    "entryStructureMaxNote": "Máximo 5 entradas por persona",
     "campaignRulesTitle": "Desafío de Bracket Prophet World Cup $10K",
     "campaignRulesIntro": "Predice el camino. Respalda tus picks en Prophet. Gana $10,000. Crea un bracket completo del Mundial, respalda tus predicciones con posiciones reales, y el bracket más preciso gana el gran premio. Sin sorteo. Sin suerte. Solo habilidad de predicción.",
     "campaignRulesHowToPlayTitle": "Cómo jugar",
