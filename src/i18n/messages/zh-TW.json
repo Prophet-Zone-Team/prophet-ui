@@ -1548,6 +1548,7 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, other {# 次}}",
     "entryStructureMaxNote": "每人最多 5 次參賽",
+    "entryStructureMaxNoteReadMore": "詳細說明",
     "campaignRulesTitle": "Prophet 世界盃 $10K 對陣挑戰",
     "campaignRulesIntro": "預測路線。在 Prophet 支持你的選擇。贏取 $10,000。建立完整世界盃對陣表，以真實倉位支持你的預測，最準確的對陣表將贏得大獎。無抽獎。無運氣。純粹的預測技巧。",
     "campaignRulesHowToPlayTitle": "如何參與",
