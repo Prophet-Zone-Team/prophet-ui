@@ -3,9 +3,11 @@
 import { create } from "zustand";
 
 import { resolveFixtureDisplayAskPrice } from "@/lib/market/fixture-ask-liquidity";
+import { getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
 import {
   formatDefaultGameTradeLimitPrice,
   formatDefaultTradeLimitPrice,
+  getDefaultGameTradeLimitPrice,
   resolveFreshFixtureOutcome,
   resolveGameDefaultFixtureOutcome,
   shouldDefaultGameMarketOrder
@@ -224,13 +226,17 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
   syncForGamePositionSell: (context, position) => {
     const { gameSnapshot, matchOutcomeSide, fixtureOutcome, outcomeSide } =
       context;
-    const limitPrice = fixtureOutcome
-      ? resolveFixtureSelectionLimitPrice(fixtureOutcome, outcomeSide).toFixed(3)
-      : formatDefaultGameTradeLimitPrice(
-          gameSnapshot,
-          matchOutcomeSide,
-          outcomeSide
-        );
+    const limitPrice =
+      position.curPrice > 0
+        ? position.curPrice
+        : fixtureOutcome
+          ? getDefaultFixtureLimitPrice(fixtureOutcome, outcomeSide, "sell")
+          : getDefaultGameTradeLimitPrice(
+              gameSnapshot,
+              matchOutcomeSide,
+              outcomeSide,
+              "sell",
+            );
 
     set({
       marketKey: gameSnapshot.match.id,
@@ -241,7 +247,7 @@ export const useTradeTicketStore = create<TradeTicketState>()((set, get) => ({
       tab: "sell",
       orderMode: "market",
       amount: String(resolveMaxSellShares(position.size) ?? position.size),
-      limitPrice,
+      limitPrice: (limitPrice ?? 0).toFixed(3),
       limitExpiration: "never",
       limitExpirationCustom: undefined,
       ...resetTakeProfitLimitState()

@@ -111,7 +111,12 @@ export function outcomeBelongsToTab(
 ): boolean {
   switch (tab) {
     case "moneyline":
-      return outcome.marketType === "moneyline";
+      return (
+        outcome.marketType === "moneyline" ||
+        outcome.marketType === "team_to_advance" ||
+        outcome.marketType === "extra_time" ||
+        outcome.marketType === "penalty_shootout"
+      );
     case "totals":
       return outcome.marketType === "total";
     case "spreads":

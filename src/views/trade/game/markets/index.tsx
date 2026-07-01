@@ -59,9 +59,9 @@ import {
 import {
   HalftimeActionRow,
   LineGroupActionRow,
-  MoneylineActionRow,
   resolveLineGroupForTab
 } from "@/views/trade/game/markets/market-action-row";
+import { MoneyLineSection } from "@/views/trade/game/money-line";
 import { GAME_MARKET_TAB_ICONS } from "@/views/trade/game/icons";
 import { MarketContextRow } from "@/views/trade/game/markets/market-context-row";
 import { GameStatsSection } from "@/views/trade/game/stats";
@@ -403,7 +403,6 @@ export function GameMarketsSection({
     ]
   );
 
-  const moneylineGroup = findFixtureGroupByType(fixtureMarkets.lines, "moneyline");
   const tabItems = useMemo(
     () =>
       GAME_MARKET_TABS.map((tabItem) => ({
@@ -445,9 +444,14 @@ export function GameMarketsSection({
       ) : (
         <>
       {tab === "moneyline" ? (
-        <MoneylineActionRow
-          group={moneylineGroup}
-          outcomesOverride={liveActiveTabOutcomes}
+        <MoneyLineSection
+          match={liveMatch}
+          gameSnapshot={gameSnapshot}
+          fixtureMarkets={fixtureMarkets}
+          teamSnapshots={teamSnapshots}
+          liveOutcomes={liveActiveTabOutcomes}
+          liveGameOutcomes={liveGameOutcomes}
+          showOrderbook={showOrderbook}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
           otherSources={otherSources}
@@ -513,7 +517,7 @@ export function GameMarketsSection({
         />
       ) : null}
 
-      {chartKind ? (
+      {chartKind && tab !== "moneyline" ? (
         <GameProbabilitySection
           match={liveMatch}
           snapshots={teamSnapshots}

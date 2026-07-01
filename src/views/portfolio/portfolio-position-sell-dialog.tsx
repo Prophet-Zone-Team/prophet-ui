@@ -277,6 +277,7 @@ function PortfolioPositionGameSellBody({
   const ticket = useTradeTicket({
     variant: "game",
     gameSnapshot: context.gameSnapshot,
+    fixtureMarkets: context.fixtureMarkets,
     sellPosition: position,
     onOrderSuccess: handleOrderSuccess
   });

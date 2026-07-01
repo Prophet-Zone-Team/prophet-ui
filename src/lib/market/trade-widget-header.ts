@@ -34,6 +34,12 @@ export function resolveTradeWidgetHeaderTitle(
       return "Totals";
     case "btts":
       return "Both Teams to Score?";
+    case "team_to_advance":
+      return "Team to Advance";
+    case "extra_time":
+      return "Extra Time?";
+    case "penalty_shootout":
+      return "Penalty Shootout?";
     case "exact_score":
       return "Exact Score";
     case "halftime":
@@ -63,6 +69,8 @@ export function resolveTradeWidgetHeaderIconKind(
         activeSide: resolveTotalActiveSide(outcome, outcomeSide)
       };
     case "btts":
+    case "extra_time":
+    case "penalty_shootout":
       return {
         kind: "split",
         variant: "yes_no",
@@ -71,6 +79,7 @@ export function resolveTradeWidgetHeaderIconKind(
     case "moneyline":
     case "halftime":
     case "spread":
+    case "team_to_advance":
       return resolveFixtureSideIconKind(outcome.side, matchOutcomeSide);
     default:
       return resolveMatchSideIconKind(matchOutcomeSide);

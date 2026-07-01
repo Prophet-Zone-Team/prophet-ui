@@ -93,7 +93,10 @@ import {
   trackOrderSubmitSucceeded
 } from "@/lib/analytics/tracking";
 import { resolveTradeAnalyticsContext } from "@/lib/analytics/tracking/resolve-trade-context";
-import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
+import {
+  resolveOrderOutcomeSideFromLabel,
+  resolveOutcomeSideForPosition,
+} from "@/lib/portfolio/portfolio-metrics";
 import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import {
   buildGameTradePreview,
@@ -615,7 +618,9 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       amount: cappedOrderAmount,
       limitPrice: orderLimitPrice,
       orderType,
-      fixtureOutcome: effectiveFixtureOutcome
+      fixtureOutcome: effectiveFixtureOutcome,
+      sellTokenId:
+        sellPosition && tradeSide === "sell" ? sellPosition.asset : undefined,
     });
     const preview = toBidOrderPreview(gamePreview);
     const matchOutcome = effectiveFixtureOutcome
@@ -705,6 +710,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     orderType,
     outcomeSide,
     limitPrice,
+    sellPosition,
     tradeSide
   ]);
 
@@ -802,6 +808,24 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         )
       );
       return;
+    }
+
+    if (sellPosition && tradeSide === "sell" && sellPosition.curPrice > 0) {
+      setLimitPrice(sellPosition.curPrice.toFixed(3));
+      return;
+    }
+
+    if (selectedFixtureOutcome) {
+      const fixtureLimit = getDefaultFixtureLimitPrice(
+        selectedFixtureOutcome,
+        outcomeSide,
+        tradeSide
+      );
+
+      if (fixtureLimit !== undefined) {
+        setLimitPrice(fixtureLimit.toFixed(3));
+        return;
+      }
     }
 
     setLimitPrice(
@@ -981,6 +1005,24 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       cancelled = true;
     };
   }, [sellPosition?.asset, sellPosition?.conditionId, sellPosition?.slug]);
+
+  useEffect(() => {
+    if (!sellPosition || tradeSide !== "sell") {
+      return;
+    }
+
+    const fromLabel = resolveOrderOutcomeSideFromLabel(sellPosition.outcome);
+
+    if (fromLabel && fromLabel !== outcomeSide) {
+      setOutcomeSide(fromLabel);
+    }
+  }, [
+    outcomeSide,
+    sellPosition?.asset,
+    sellPosition?.outcome,
+    setOutcomeSide,
+    tradeSide,
+  ]);
 
   useEffect(() => {
     if (maxSellShares === undefined || maxSellShares <= 0) {

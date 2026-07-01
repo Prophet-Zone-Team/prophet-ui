@@ -1,3 +1,6 @@
+import { findCuratedTeamByCode } from "@/data/teams/curated-team-list";
+import { sortFixtureGroupOutcomes } from "@/lib/market/build-fixture-markets-snapshot";
+import { extractFixtureTeamAbbreviations } from "@/lib/market/prophet-game-mapper";
 import {
   firstGammaNumber,
   normalizeGammaSearchText,
@@ -6,7 +9,7 @@ import {
   toGammaNumber,
   type GammaMarketRecord,
 } from "@/lib/market/polymarket-gamma";
-import { sortFixtureGroupOutcomes } from "@/lib/market/build-fixture-markets-snapshot";
+import { resolveWorldCupTeamByGroupItemTitle } from "@/lib/market/resolve-winner-team";
 import type {
   FixtureLineOption,
   FixtureMarketGroup,
@@ -37,11 +40,15 @@ export function mapEventSportsMarkets(
   markets: GammaMarketRecord[],
   homeName: string,
   awayName: string,
-  moneylineOutcomes: PolymarketFixtureMoneylineOutcome[] = []
+  moneylineOutcomes: PolymarketFixtureMoneylineOutcome[] = [],
+  fixtureSlug?: string,
 ): PolymarketFixtureMarketsData {
   const spreadMarkets: SpreadMarketBundle[] = [];
   const totalOutcomes: FixtureMarketOutcome[] = [];
   const bttsOutcomes: FixtureMarketOutcome[] = [];
+  const teamToAdvanceOutcomes: FixtureMarketOutcome[] = [];
+  const extraTimeOutcomes: FixtureMarketOutcome[] = [];
+  const penaltyShootoutOutcomes: FixtureMarketOutcome[] = [];
   const exactScores: FixtureMarketOutcome[] = [];
   const halftime: FixtureMarketOutcome[] = [];
 
@@ -73,11 +80,31 @@ export function mapEventSportsMarkets(
       continue;
     }
 
+    if (marketType === "team_to_advance") {
+      const advanceOutcomes = mapTeamToAdvanceMarketToFixtureOutcomes(
+        market,
+        homeName,
+        awayName,
+        fixtureSlug,
+      );
+
+      for (const advanceOutcome of advanceOutcomes) {
+        if (teamToAdvanceOutcomes.some((item) => item.id === advanceOutcome.id)) {
+          continue;
+        }
+
+        teamToAdvanceOutcomes.push(advanceOutcome);
+      }
+
+      continue;
+    }
+
     const outcome = mapMarketToFixtureOutcome(
       market,
       marketType,
       homeName,
-      awayName
+      awayName,
+      fixtureSlug,
     );
 
     if (!outcome) {
@@ -94,6 +121,28 @@ export function mapEventSportsMarkets(
           break;
         }
         bttsOutcomes.push(outcome);
+        break;
+      }
+      case "extra_time": {
+        const conditionId = market.conditionId;
+        if (
+          conditionId &&
+          extraTimeOutcomes.some((item) => item.conditionId === conditionId)
+        ) {
+          break;
+        }
+        extraTimeOutcomes.push(outcome);
+        break;
+      }
+      case "penalty_shootout": {
+        const conditionId = market.conditionId;
+        if (
+          conditionId &&
+          penaltyShootoutOutcomes.some((item) => item.conditionId === conditionId)
+        ) {
+          break;
+        }
+        penaltyShootoutOutcomes.push(outcome);
         break;
       }
       case "exact_score":
@@ -131,6 +180,29 @@ export function mapEventSportsMarkets(
   const bttsGroup = buildBttsGroup(bttsOutcomes);
   if (bttsGroup) {
     lines.push(bttsGroup);
+  }
+
+  const teamToAdvanceGroup = buildTeamToAdvanceGroup(teamToAdvanceOutcomes);
+  if (teamToAdvanceGroup) {
+    lines.push(teamToAdvanceGroup);
+  }
+
+  const extraTimeGroup = buildBinaryPropGroup(
+    extraTimeOutcomes,
+    "extra_time",
+    "Extra Time?",
+  );
+  if (extraTimeGroup) {
+    lines.push(extraTimeGroup);
+  }
+
+  const penaltyShootoutGroup = buildBinaryPropGroup(
+    penaltyShootoutOutcomes,
+    "penalty_shootout",
+    "Penalty Shootout?",
+  );
+  if (penaltyShootoutGroup) {
+    lines.push(penaltyShootoutGroup);
   }
 
   return {
@@ -315,6 +387,49 @@ function buildBttsGroup(outcomes: FixtureMarketOutcome[]): FixtureMarketGroup | 
   };
 }
 
+function buildTeamToAdvanceGroup(
+  outcomes: FixtureMarketOutcome[],
+): FixtureMarketGroup | undefined {
+  if (!outcomes.length) {
+    return undefined;
+  }
+
+  const sideOrder: Record<string, number> = { home: 0, away: 1 };
+  const sortedOutcomes = [...outcomes].sort((left, right) => {
+    const leftOrder = left.side ? (sideOrder[left.side] ?? 2) : 2;
+    const rightOrder = right.side ? (sideOrder[right.side] ?? 2) : 2;
+    return leftOrder - rightOrder;
+  });
+
+  const volume = sortedOutcomes.reduce((sum, item) => sum + (item.volume ?? 0), 0);
+
+  return {
+    type: "team_to_advance",
+    title: "Team to Advance",
+    volume,
+    outcomes: sortedOutcomes,
+  };
+}
+
+function buildBinaryPropGroup(
+  outcomes: FixtureMarketOutcome[],
+  type: "extra_time" | "penalty_shootout",
+  title: string,
+): FixtureMarketGroup | undefined {
+  if (!outcomes.length) {
+    return undefined;
+  }
+
+  const volume = outcomes.reduce((sum, item) => sum + (item.volume ?? 0), 0);
+
+  return {
+    type,
+    title,
+    volume,
+    outcomes: [outcomes[0]!],
+  };
+}
+
 function classifySportsMarketType(market: GammaMarketRecord): FixtureSportsMarketType | null {
   const type = normalizeGammaSearchText(market.sportsMarketType ?? "");
   const question = normalizeGammaSearchText(market.question ?? market.title ?? "");
@@ -334,9 +449,35 @@ function classifySportsMarketType(market: GammaMarketRecord): FixtureSportsMarke
   if (
     type === "both_teams_to_score" ||
     type === "btts" ||
+    type === "soccer_game_btts" ||
     (type.includes("both") && type.includes("score"))
   ) {
     return "btts";
+  }
+
+  if (
+    type === "soccer_game_to_advance" ||
+    type === "soccer_team_to_advance" ||
+    type === "team_to_advance" ||
+    (type.includes("advance") && !type.includes("group"))
+  ) {
+    return "team_to_advance";
+  }
+
+  if (
+    type === "soccer_game_goes_to_extra_time" ||
+    type === "extra_time" ||
+    (type.includes("extra") && type.includes("time"))
+  ) {
+    return "extra_time";
+  }
+
+  if (
+    type === "soccer_game_goes_to_penalty_shootout" ||
+    type === "penalty_shootout" ||
+    (type.includes("penalty") && type.includes("shootout"))
+  ) {
+    return "penalty_shootout";
   }
 
   if (
@@ -366,6 +507,26 @@ function classifySportsMarketType(market: GammaMarketRecord): FixtureSportsMarke
 
   if (question.includes("both teams to score") || question.includes("both teams score")) {
     return "btts";
+  }
+
+  if (
+    question.includes("to advance") ||
+    question.includes("advance to") ||
+    (question.includes("advance") && !question.includes("group"))
+  ) {
+    return "team_to_advance";
+  }
+
+  if (question.includes("extra time") || question.includes("go to extra time")) {
+    return "extra_time";
+  }
+
+  if (
+    question.includes("penalty shootout") ||
+    question.includes("penalties") ||
+    question.includes("go to penalties")
+  ) {
+    return "penalty_shootout";
   }
 
   if (question.includes("exact score") || question.includes("final score")) {
@@ -548,6 +709,7 @@ function mapMarketToFixtureOutcome(
   marketType: FixtureSportsMarketType,
   homeName: string,
   awayName: string,
+  fixtureSlug?: string,
 ): FixtureMarketOutcome | undefined {
   const yesOutcome = getYesMarketOutcome(market);
   const noOutcome = getNoMarketOutcome(market);
@@ -568,6 +730,7 @@ function mapMarketToFixtureOutcome(
     marketType,
     homeName,
     awayName,
+    fixtureSlug,
   );
 
   const id = buildOutcomeId(marketType, parsed, market.conditionId);
@@ -598,6 +761,7 @@ function parseMarketLabel(
   marketType: FixtureSportsMarketType,
   homeName: string,
   awayName: string,
+  fixtureSlug?: string,
 ): ParsedMarketSide {
   const groupTitle = market.groupItemTitle?.trim() ?? "";
   const question = market.question ?? market.title ?? "";
@@ -627,6 +791,22 @@ function parseMarketLabel(
 
   if (marketType === "btts") {
     return { side: "yes", label: "Yes" };
+  }
+
+  if (marketType === "extra_time" || marketType === "penalty_shootout") {
+    return { side: "yes", label: "Yes" };
+  }
+
+  if (marketType === "team_to_advance") {
+    const side = classifyAdvanceTeamSide(market, homeName, awayName, fixtureSlug);
+    const label =
+      side === "home"
+        ? abbreviateTeamName(homeName)
+        : side === "away"
+          ? abbreviateTeamName(awayName)
+          : groupTitle || question.slice(0, 24);
+
+    return { side, label };
   }
 
   if (marketType === "spread") {
@@ -780,6 +960,211 @@ function classifyHalftimeSide(
   return classifyTeamSide(question, homeName, awayName);
 }
 
+function isBinaryYesNoMarket(market: GammaMarketRecord): boolean {
+  const outcomes = parseGammaArrayField(market.outcomes).map(String);
+
+  return outcomes.some((outcome) => outcome.toLowerCase() === "yes");
+}
+
+function extractAdvanceTeamFromQuestion(question: string): string | undefined {
+  const match = question.match(/Will\s+(.+?)\s+advance\b/i);
+
+  return match?.[1]?.trim();
+}
+
+function extractMarketSlugSuffix(slug: string): string | undefined {
+  const match = slug.match(/(\d{4}-\d{2}-\d{2})-(.+)$/);
+
+  return match?.[2]?.trim().toLowerCase();
+}
+
+function classifyTeamSideWithCuratedTeams(
+  teamLabel: string,
+  homeName: string,
+  awayName: string,
+): MatchOutcomeSide | undefined {
+  const homeTeam = resolveWorldCupTeamByGroupItemTitle(homeName);
+  const awayTeam = resolveWorldCupTeamByGroupItemTitle(awayName);
+  const labelTeam = resolveWorldCupTeamByGroupItemTitle(teamLabel);
+
+  if (labelTeam && homeTeam && labelTeam.id === homeTeam.id) {
+    return "home";
+  }
+
+  if (labelTeam && awayTeam && labelTeam.id === awayTeam.id) {
+    return "away";
+  }
+
+  return classifyTeamSide(teamLabel, homeName, awayName);
+}
+
+function classifyAdvanceTeamSide(
+  market: GammaMarketRecord,
+  homeName: string,
+  awayName: string,
+  fixtureSlug?: string,
+): MatchOutcomeSide | undefined {
+  const groupTitle = market.groupItemTitle?.trim() ?? "";
+  const question = market.question ?? market.title ?? "";
+
+  if (groupTitle) {
+    const side = classifyTeamSideWithCuratedTeams(groupTitle, homeName, awayName);
+
+    if (side && side !== "draw") {
+      return side;
+    }
+  }
+
+  const advanceTeam = extractAdvanceTeamFromQuestion(question);
+
+  if (advanceTeam) {
+    const side = classifyTeamSideWithCuratedTeams(advanceTeam, homeName, awayName);
+
+    if (side && side !== "draw") {
+      return side;
+    }
+  }
+
+  const slug = market.slug?.trim();
+
+  if (slug) {
+    const suffix = extractMarketSlugSuffix(slug);
+
+    if (suffix) {
+      const fixtureAbbrevs = fixtureSlug
+        ? extractFixtureTeamAbbreviations(fixtureSlug)
+        : {};
+
+      if (fixtureAbbrevs.homeAbbrev && suffix === fixtureAbbrevs.homeAbbrev) {
+        return "home";
+      }
+
+      if (fixtureAbbrevs.awayAbbrev && suffix === fixtureAbbrevs.awayAbbrev) {
+        return "away";
+      }
+
+      const team = findCuratedTeamByCode(suffix);
+
+      if (team) {
+        const side = classifyTeamSideWithCuratedTeams(team.name, homeName, awayName);
+
+        if (side && side !== "draw") {
+          return side;
+        }
+      }
+    }
+  }
+
+  return (
+    classifyTeamSide(groupTitle, homeName, awayName) ??
+    classifyTeamSide(question, homeName, awayName)
+  );
+}
+
+function mapTeamToAdvanceMarketToFixtureOutcomes(
+  market: GammaMarketRecord,
+  homeName: string,
+  awayName: string,
+  fixtureSlug?: string,
+): FixtureMarketOutcome[] {
+  if (!isBinaryYesNoMarket(market)) {
+    return mapCategoricalTeamToAdvanceMarket(
+      market,
+      homeName,
+      awayName,
+      fixtureSlug,
+    );
+  }
+
+  const outcome = mapMarketToFixtureOutcome(
+    market,
+    "team_to_advance",
+    homeName,
+    awayName,
+    fixtureSlug,
+  );
+
+  return outcome ? [outcome] : [];
+}
+
+function mapCategoricalTeamToAdvanceMarket(
+  market: GammaMarketRecord,
+  homeName: string,
+  awayName: string,
+  fixtureSlug?: string,
+): FixtureMarketOutcome[] {
+  const labels = parseGammaArrayField(market.outcomes).map(String);
+  const prices = parseGammaArrayField(market.outcomePrices);
+  const tokenIds = parseGammaArrayField(market.clobTokenIds).map(String);
+  const outcomes: FixtureMarketOutcome[] = [];
+  const implicitHomeAway =
+    labels.length === 0 && tokenIds.length >= 2 && prices.length >= 2;
+  const entryCount = implicitHomeAway
+    ? Math.min(2, tokenIds.length)
+    : labels.length;
+
+  for (let index = 0; index < entryCount; index += 1) {
+    const label = labels[index]?.trim();
+    const tokenId = tokenIds[index];
+
+    if (!tokenId) {
+      continue;
+    }
+
+    let side: MatchOutcomeSide | undefined;
+    let displayLabel: string;
+
+    if (label) {
+      side = classifyTeamSideWithCuratedTeams(label, homeName, awayName);
+      displayLabel =
+        side === "home"
+          ? abbreviateTeamName(homeName)
+          : side === "away"
+            ? abbreviateTeamName(awayName)
+            : label;
+    } else if (implicitHomeAway) {
+      side = index === 0 ? "home" : index === 1 ? "away" : undefined;
+      displayLabel =
+        side === "home"
+          ? abbreviateTeamName(homeName)
+          : side === "away"
+            ? abbreviateTeamName(awayName)
+            : `Outcome ${index + 1}`;
+    } else {
+      continue;
+    }
+
+    if (!side) {
+      continue;
+    }
+
+    const parsed: ParsedMarketSide = {
+      side,
+      label: displayLabel,
+    };
+    const rawPrice = toGammaNumber(prices[index]);
+    const probability = priceToProbability(rawPrice) ?? 0;
+
+    outcomes.push({
+      id: buildOutcomeId("team_to_advance", parsed, `${market.conditionId ?? "unknown"}:${index}`),
+      marketType: "team_to_advance",
+      category: "lines",
+      label: parsed.label,
+      side: parsed.side,
+      probability,
+      price: resolveOutcomePrice(probability, rawPrice),
+      volume: firstGammaNumber(market.volumeNum, market.volume),
+      tokenId,
+      conditionId: market.conditionId,
+      yesAsk: rawPrice,
+      yesBid: rawPrice,
+      acceptingOrders: market.acceptingOrders === true,
+    });
+  }
+
+  return outcomes;
+}
+
 function classifyTeamSide(
   label: string,
   homeName: string,
@@ -809,6 +1194,14 @@ function buildOutcomeId(
   parsed: ParsedMarketSide,
   conditionId?: string,
 ): string {
+  if (marketType === "team_to_advance" && conditionId) {
+    if (parsed.side) {
+      return `${marketType}:${parsed.side}:${conditionId}`;
+    }
+
+    return `${marketType}:${conditionId}`;
+  }
+
   if (parsed.line !== undefined && parsed.side) {
     return `${marketType}:${parsed.line}:${parsed.side}`;
   }
