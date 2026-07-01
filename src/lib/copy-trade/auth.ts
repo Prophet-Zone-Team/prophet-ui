@@ -59,6 +59,24 @@ export function shouldRefreshCopyWalletBeforeLiveCopy(
   );
 }
 
+export async function refreshCopyWalletIfStale(
+  userId: number,
+  wallet: CopyWallet | null | undefined,
+  updateCopyWallet: (copyWallet: CopyWallet | null) => void,
+): Promise<CopyWallet | null | undefined> {
+  if (!shouldRefreshCopyWalletBeforeLiveCopy(wallet)) {
+    return wallet;
+  }
+
+  try {
+    const refreshed = await fetchCopyTradeWallet(userId);
+    updateCopyWallet(refreshed);
+    return refreshed;
+  } catch {
+    return wallet;
+  }
+}
+
 export function isCopyWalletPending(
   wallet: CopyWallet | null | undefined,
 ): boolean {

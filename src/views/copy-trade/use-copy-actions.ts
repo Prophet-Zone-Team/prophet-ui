@@ -5,9 +5,8 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import {
-  fetchCopyTradeWallet,
   isCopyWalletReady,
-  shouldRefreshCopyWalletBeforeLiveCopy
+  refreshCopyWalletIfStale,
 } from "@/lib/copy-trade/auth";
 import {
   enableProfilePatch,
@@ -91,17 +90,11 @@ export function useCopyActions() {
 
       try {
         if (ensureMaster) {
-          let wallet = copyWallet;
-
-          if (shouldRefreshCopyWalletBeforeLiveCopy(wallet)) {
-            try {
-              const refreshed = await fetchCopyTradeWallet(userId);
-              updateCopyWallet(refreshed);
-              wallet = refreshed;
-            } catch {
-              // Fall back to the cached wallet for the readiness check below.
-            }
-          }
+          const wallet = await refreshCopyWalletIfStale(
+            userId,
+            copyWallet,
+            updateCopyWallet,
+          );
 
           if (!isCopyWalletReady(wallet)) {
             toast.error(t("approvalsIncomplete"), { id: toastId });
