@@ -11,7 +11,7 @@ export const copyTradeRankColRankClass = "w-full text-center tabular-nums";
 
 export const copyTradeRankColPlayerClass = "min-w-0 w-full text-left";
 
-export const copyTradeRankColCenterClass = "w-full text-center tabular-nums";
+export const copyTradeRankColStatClass = "w-full text-left tabular-nums";
 
 export const copyTradeRankColPredictionsClass = "w-full text-left tabular-nums";
 

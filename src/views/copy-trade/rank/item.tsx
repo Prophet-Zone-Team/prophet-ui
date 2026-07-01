@@ -30,7 +30,7 @@ import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mob
 
 import {
   copyTradeRankColActionClass,
-  copyTradeRankColCenterClass,
+  copyTradeRankColStatClass,
   copyTradeRankColPlayerClass,
   copyTradeRankColPredictionsClass,
   copyTradeRankColRankClass,
@@ -105,7 +105,13 @@ export function CopyTradeRankItem({
 
   if (layout === "mobile") {
     return (
-      <article className={cn(copyTradeTableMobileCardClass, className)}>
+      <article
+        className={cn(
+          copyTradeTableMobileCardClass,
+          "transition-colors hover:bg-[#FAFAFA]",
+          className
+        )}
+      >
         <div className="flex items-start gap-3">
           <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#F6F6F6] text-[16px] leading-5 text-black tabular-nums">
             {rank}
@@ -151,7 +157,7 @@ export function CopyTradeRankItem({
     <article
       style={copyTradeRankGridStyle}
       className={cn(
-        "box-border col-span-full h-[74px] rounded-xl border border-[#EBEBEB] bg-white px-4",
+        "box-border col-span-full h-[74px] rounded-xl border border-[#EBEBEB] bg-white px-4 transition-colors hover:bg-[#FAFAFA]",
         copyTradeRankRowGridClass,
         className
       )}
@@ -198,7 +204,7 @@ export function CopyTradeRankItem({
 
         <span
           className={cn(
-            copyTradeRankColCenterClass,
+            copyTradeRankColStatClass,
             "text-[16px] leading-5 text-[#909090] tabular-nums"
           )}
         >
@@ -206,7 +212,7 @@ export function CopyTradeRankItem({
         </span>
         <span
           className={cn(
-            copyTradeRankColCenterClass,
+            copyTradeRankColStatClass,
             "text-[16px] leading-5 tabular-nums",
             pnlTone
           )}
@@ -215,7 +221,7 @@ export function CopyTradeRankItem({
         </span>
         <span
           className={cn(
-            copyTradeRankColCenterClass,
+            copyTradeRankColStatClass,
             "text-[16px] leading-5 text-[#909090] tabular-nums"
           )}
         >
