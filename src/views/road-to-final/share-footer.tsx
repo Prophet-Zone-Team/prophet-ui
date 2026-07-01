@@ -110,7 +110,7 @@ export function ShareFooter({
                 <Popover
                   placement="TopLeft"
                   trigger="Hover"
-                  content={<EntryStructurePanel variant="tooltip" />}
+                  content={<EntryStructurePanel variant="tooltip" onOpenRules={onOpenRules} />}
                 >
                   {howToGetButton}
                 </Popover>

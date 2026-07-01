@@ -37,6 +37,8 @@ describe("road-to-final url-state bracket version", () => {
       74: "paraguay",
       75: "morocco",
       76: "brazil",
+      77: "france",
+      78: "norway",
       89: "brazil",
       101: "brazil",
       104: "brazil",
@@ -59,6 +61,8 @@ describe("road-to-final url-state bracket version", () => {
       74: "paraguay",
       75: "morocco",
       76: "brazil",
+      77: "france",
+      78: "norway",
     });
     assert.equal(hydrated.knockoutMethod, "manualSelection");
   });
@@ -79,6 +83,8 @@ describe("road-to-final url-state bracket version", () => {
       74: "paraguay",
       75: "morocco",
       76: "brazil",
+      77: "france",
+      78: "norway",
     });
     assert.equal(hydrated.knockoutMethod, "manualSelection");
   });
@@ -99,6 +105,8 @@ describe("road-to-final url-state bracket version", () => {
     assert.equal(hydrated.knockoutWinners?.[74], "paraguay");
     assert.equal(hydrated.knockoutWinners?.[75], "morocco");
     assert.equal(hydrated.knockoutWinners?.[76], "brazil");
+    assert.equal(hydrated.knockoutWinners?.[77], "france");
+    assert.equal(hydrated.knockoutWinners?.[78], "norway");
     assert.equal(hydrated.knockoutWinners?.[89], "germany");
   });
 });

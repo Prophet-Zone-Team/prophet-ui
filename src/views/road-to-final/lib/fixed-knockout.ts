@@ -20,6 +20,8 @@ export const CONFIRMED_KNOCKOUT_WINNERS: KnockoutWinners = {
   74: "paraguay", // R32: Germany vs Paraguay — Paraguay advances (feeds W74 → R16 M89)
   75: "morocco", // R32: Netherlands vs Morocco — Morocco advances (feeds W75 → R16 M90)
   76: "brazil", // R32: Brazil vs Japan — Brazil advances (feeds W76 → R16 M91)
+  77: "france", // R32: France vs Sweden — France advances (feeds W77 → R16 M89)
+  78: "norway", // R32: Côte d'Ivoire vs Norway — Norway advances (feeds W78 → R16 M91)
 };
 
 export const FIXED_KNOCKOUT_WINNERS: KnockoutWinners = CONFIRMED_KNOCKOUT_WINNERS;
