@@ -154,6 +154,7 @@ export interface ProphetTeamLineupEntry {
   team_name?: string;
   match_time?: number;
   formation?: string;
+  coach?: string;
   startXIs?: ProphetTeamLineupStarter[] | null;
 }
 
