@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 
 import {
   copyTradeRankColActionClass,
-  copyTradeRankColCenterClass,
+  copyTradeRankColStatClass,
   copyTradeRankColPlayerClass,
   copyTradeRankColPredictionsClass,
   copyTradeRankColRankClass,
@@ -40,13 +40,13 @@ export function CopyTradeRankTableHeader({
       <span role="columnheader" className={copyTradeRankColPlayerClass}>
         {tCommon("player")}
       </span>
-      <span role="columnheader" className={copyTradeRankColCenterClass}>
+      <span role="columnheader" className={copyTradeRankColStatClass}>
         {t("winRate")}
       </span>
-      <span role="columnheader" className={copyTradeRankColCenterClass}>
+      <span role="columnheader" className={copyTradeRankColStatClass}>
         {t("profitLoss")}
       </span>
-      <span role="columnheader" className={copyTradeRankColCenterClass}>
+      <span role="columnheader" className={copyTradeRankColStatClass}>
         {t("volume")}
       </span>
       <span role="columnheader" className={copyTradeRankColPredictionsClass}>
