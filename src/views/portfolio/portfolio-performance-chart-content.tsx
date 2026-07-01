@@ -17,7 +17,7 @@ import type {
 } from "@/lib/portfolio/types";
 import { portfolioSummaryLabelClass } from "@/views/portfolio/portfolio-ui";
 
-const TIME_RANGES: PortfolioTimeRange[] = ["1H", "1D", "1W", "1M", "All"];
+const TIME_RANGES: PortfolioTimeRange[] = ["1D", "1W", "1M", "YTD", "All"];
 
 const CHART_POSITIVE = {
   stroke: "#65AF14",
@@ -29,29 +29,45 @@ const CHART_NEGATIVE = {
   fillTop: "rgba(229, 72, 77, 0.3)"
 };
 
-export interface PortfolioPerformanceChartContentProps {
+export interface PortfolioPerformanceChartContentProps<
+  TRange extends string = PortfolioTimeRange
+> {
   series: PortfolioSeriesPoint[];
   status?: PortfolioLoadStatus;
-  range?: PortfolioTimeRange;
-  onRangeChange?: (range: PortfolioTimeRange) => void;
+  range?: TRange;
+  onRangeChange?: (range: TRange) => void;
   className?: string;
+  rangeOptions?: readonly TRange[];
+  defaultRange?: TRange;
+  getRangePeriodLabel?: (range: TRange) => string;
+  profitLossLabel?: string;
+  performanceTimeRangeAriaLabel?: string;
 }
 
-export function PortfolioPerformanceChartContent({
+export function PortfolioPerformanceChartContent<
+  TRange extends string = PortfolioTimeRange
+>({
   series,
   status = "ready",
   range: controlledRange,
   onRangeChange,
-  className
-}: PortfolioPerformanceChartContentProps) {
+  className,
+  rangeOptions,
+  defaultRange = "All" as TRange,
+  getRangePeriodLabel,
+  profitLossLabel,
+  performanceTimeRangeAriaLabel
+}: PortfolioPerformanceChartContentProps<TRange>) {
   const t = useTranslations("portfolio");
   const locale = useLocale();
-  const [internalRange, setInternalRange] = useState<PortfolioTimeRange>("All");
+  const effectiveRangeOptions = (rangeOptions ??
+    TIME_RANGES) as readonly TRange[];
+  const [internalRange, setInternalRange] = useState<TRange>(defaultRange);
   const range = controlledRange ?? internalRange;
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const gradientId = useId().replace(/:/g, "");
 
-  const handleRangeChange = (nextRange: PortfolioTimeRange) => {
+  const handleRangeChange = (nextRange: TRange) => {
     if (onRangeChange) {
       onRangeChange(nextRange);
       return;
@@ -88,7 +104,9 @@ export function PortfolioPerformanceChartContent({
   const timeLabel =
     activeIndex != null
       ? formatPortfolioPnlHoverTime(displayTimestamp, locale)
-      : getPortfolioPnlPeriodLabel(t, range);
+      : getRangePeriodLabel
+        ? getRangePeriodLabel(range)
+        : getPortfolioPnlPeriodLabel(t, range as PortfolioTimeRange);
 
   const handleChartMouseMove = (state: { activeTooltipIndex?: number }) => {
     const index = state?.activeTooltipIndex;
@@ -107,7 +125,9 @@ export function PortfolioPerformanceChartContent({
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <span className={portfolioSummaryLabelClass}>{t("profitLoss")}</span>
+          <span className={portfolioSummaryLabelClass}>
+            {profitLossLabel ?? t("profitLoss")}
+          </span>
           <div className="flex flex-col gap-1">
             <span
               className={cn("text-[32px] font-[500] leading-[38px]", pnlTone)}
@@ -120,9 +140,9 @@ export function PortfolioPerformanceChartContent({
         <div
           className="flex shrink-0 gap-4"
           role="tablist"
-          aria-label={t("performanceTimeRange")}
+          aria-label={performanceTimeRangeAriaLabel ?? t("performanceTimeRange")}
         >
-          {TIME_RANGES.map((item) => (
+          {effectiveRangeOptions.map((item) => (
             <button
               key={item}
               type="button"

@@ -12,7 +12,7 @@ function copyTradeBalanceQueryKey(userId: number) {
   return ["copy-trade", "balance", userId] as const;
 }
 
-function copyTradePnLQueryKey(userId: number) {
+export function copyTradePnLQueryKey(userId: number) {
   return ["copy-trade", "pnl", userId] as const;
 }
 
@@ -47,27 +47,31 @@ export function useCopyTradeProfileStats(
     queryKey: userId
       ? copyTradePnLQueryKey(userId)
       : ["copy-trade", "pnl", "anonymous"],
-    queryFn: async () => {
+    queryFn: async (): Promise<CopyPnLSummary> => {
       if (!userId) {
         throw new Error("Copy-trade session is required.");
       }
 
-      const pnl = await getCopyTradePnL(userId);
-      return {
-        totalCashPnL: pnl.total_cash_pnl ?? null,
-        totalTrades: pnl.total_trades ?? null
-      };
+      return getCopyTradePnL(userId);
     },
     enabled,
     staleTime: ANALYTICS_QUERY_STALE_TIME_MS
   });
 
-  const pnlSummary = pnlQuery.data ?? null;
+  const pnlSummaryData = pnlQuery.data ?? null;
+  const totalTrades =
+    pnlSummaryData === null
+      ? null
+      : pnlSummaryData.positions.length + pnlSummaryData.history.length;
 
   return {
     balance: balanceQuery.data ?? null,
-    totalPnL: pnlQuery.data?.totalCashPnL ?? null,
-    totalTrades: pnlQuery.data?.totalTrades ?? null,
+    totalPnL: pnlSummaryData?.total_cash_pnl ?? null,
+    totalTrades,
+    positionsValue: pnlSummaryData?.total_current_value ?? null,
+    openPositions: pnlSummaryData?.open_positions ?? null,
+    biggestWinAmount: pnlSummaryData?.biggest_win_amount ?? null,
+    pnlSummary: pnlSummaryData,
     isLoadingBalance: enabled && balanceQuery.isLoading,
     isLoadingPnL: enabled && pnlQuery.isLoading,
     isLoadingSummary: enabled && pnlQuery.isLoading,

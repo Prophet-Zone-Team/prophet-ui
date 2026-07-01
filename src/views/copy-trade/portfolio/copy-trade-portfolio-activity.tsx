@@ -20,6 +20,7 @@ export interface CopyTradePortfolioActivityProps {
   openPositions: UserPositionRecord[];
   closedPositions: UserPositionRecord[];
   marketContextMap: Record<string, OpenOrderMarketContext>;
+  positionTimeMap?: Map<string, string>;
   status: PortfolioLoadStatus;
   needsWallet: boolean;
   onConnectWallet: () => void;
@@ -30,6 +31,7 @@ export function CopyTradePortfolioActivity({
   openPositions,
   closedPositions,
   marketContextMap,
+  positionTimeMap = new Map(),
   status,
   needsWallet,
   onConnectWallet,
@@ -81,7 +83,7 @@ export function CopyTradePortfolioActivity({
           <PortfolioPositionsTable
             positions={positions}
             marketContextMap={marketContextMap}
-            positionTimeMap={new Map()}
+            positionTimeMap={positionTimeMap}
             needsWallet={needsWallet}
             loading={loading}
             readOnly
