@@ -11,7 +11,7 @@ export function EntryStructurePanel({
   onOpenRules,
 }: {
   variant?: "tooltip" | "embedded";
-  onOpenRules: () => void;
+  onOpenRules?: () => void;
 }) {
   const t = useTranslations("roadToFinal");
 
@@ -55,13 +55,17 @@ export function EntryStructurePanel({
 
       <p className="m-0 mt-[16px] text-[14px] leading-[1.2] text-black">
         {t("entryStructureMaxNote")}.&nbsp;&nbsp;
-        <button
-          type="button"
-          className="text-[#77A4EF] underline underline-offset-1"
-          onClick={onOpenRules}
-        >
-          {t("entryStructureMaxNoteReadMore")}
-        </button>
+        {
+          variant === "tooltip" && (
+            <button
+              type="button"
+              className="text-[#77A4EF] underline underline-offset-1"
+              onClick={onOpenRules}
+            >
+              {t("entryStructureMaxNoteReadMore")}
+            </button>
+          )
+        }
       </p>
     </div>
   );
