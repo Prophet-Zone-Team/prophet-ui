@@ -13,9 +13,8 @@ import {
 } from "@/store/trade-ticket-store";
 import { FixtureOutcomeSplitIcon } from "@/views/trade/trade-widget/fixture-outcome-split-icon";
 import {
-  resolveFixtureOutcomeLabel,
-  resolveGameOutcomeLabel,
-  resolveTradeWidgetHeaderTitle
+  resolveTradeWidgetHeaderTitle,
+  resolveTradeWidgetOutcomeLabel
 } from "@/views/trade/trade-widget/trade-i18n";
 import type {
   GameMarketSnapshot,
@@ -124,14 +123,14 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
 
   if (isGameVariant) {
     const { showOutcomeLabel = true } = props;
-    const outcomeLabel = selectedFixtureOutcome
-      ? resolveFixtureOutcomeLabel(t, selectedFixtureOutcome)
-      : resolveGameOutcomeLabel(
-          t,
-          props.matchOutcomeSide,
-          homeName,
-          awayName
-        );
+    const outcomeLabel = resolveTradeWidgetOutcomeLabel(
+      t,
+      selectedFixtureOutcome,
+      tradeOutcomeSide,
+      props.matchOutcomeSide,
+      homeName,
+      awayName,
+    );
     const headerTitle = resolveTradeWidgetHeaderTitle(
       t,
       selectedFixtureOutcome,

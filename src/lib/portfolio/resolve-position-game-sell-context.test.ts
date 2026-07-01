@@ -241,6 +241,50 @@ describe("resolvePositionGameSellContext", () => {
     assert.equal(context.outcomeSide, "yes");
   });
 
+  it("matches extra time fixture position from more-markets sibling data", () => {
+    const { gameSnapshot, fixtureMarkets } = buildLiechtensteinCyprusContext();
+    const extraTimeYesToken =
+      "99999999999999999999999999999999999999999999999999999999999999999999";
+    const extraTimeNoToken =
+      "88888888888888888888888888888888888888888888888888888888888888888888";
+
+    fixtureMarkets.lines.push({
+      type: "extra_time",
+      title: "Extra Time?",
+      outcomes: [
+        {
+          id: "extra-time",
+          marketType: "extra_time",
+          category: "lines",
+          label: "Yes",
+          probability: 47,
+          price: 0.47,
+          tokenId: extraTimeYesToken,
+          noTokenId: extraTimeNoToken,
+          conditionId: "0xextra-time-condition",
+          acceptingOrders: true,
+        },
+      ],
+    });
+
+    const context = resolvePositionGameSellContext(
+      buildPosition({
+        asset: extraTimeYesToken,
+        conditionId: "0xextra-time-condition",
+        slug: "fif-lie-cyp-2026-06-07-extra-time",
+        eventSlug: "fif-lie-cyp-2026-06-07-more-markets",
+        title: "Liechtenstein vs. Cyprus: Extra Time?",
+        outcome: "Yes",
+      }),
+      gameSnapshot,
+      fixtureMarkets
+    );
+
+    assert.ok(context);
+    assert.equal(context.fixtureOutcome?.marketType, "extra_time");
+    assert.equal(context.outcomeSide, "yes");
+  });
+
   it("returns undefined when position does not match any outcome", () => {
     const { gameSnapshot, fixtureMarkets } = buildLiechtensteinCyprusContext();
     const context = resolvePositionGameSellContext(
