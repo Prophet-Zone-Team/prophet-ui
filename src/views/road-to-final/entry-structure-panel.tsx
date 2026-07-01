@@ -8,8 +8,10 @@ import { TRADE_ENTRY_TIERS } from "./lib/trade-entry-tiers";
 
 export function EntryStructurePanel({
   variant = "embedded",
+  onOpenRules,
 }: {
   variant?: "tooltip" | "embedded";
+  onOpenRules?: () => void;
 }) {
   const t = useTranslations("roadToFinal");
 
@@ -52,7 +54,18 @@ export function EntryStructurePanel({
       </div>
 
       <p className="m-0 mt-[16px] text-[14px] leading-[1.2] text-black">
-        {t("entryStructureMaxNote")}
+        {t("entryStructureMaxNote")}.&nbsp;&nbsp;
+        {
+          variant === "tooltip" && (
+            <button
+              type="button"
+              className="text-[#77A4EF] underline underline-offset-1"
+              onClick={onOpenRules}
+            >
+              {t("entryStructureMaxNoteReadMore")}
+            </button>
+          )
+        }
       </p>
     </div>
   );

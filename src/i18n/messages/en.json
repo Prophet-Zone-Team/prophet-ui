@@ -1549,6 +1549,7 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, one {# Entry} other {# Entries}}",
     "entryStructureMaxNote": "Maximum 5 entries per person",
+    "entryStructureMaxNoteReadMore": "Read more",
     "campaignRulesTitle": "Prophet World Cup $10K Bracket Challenge",
     "campaignRulesIntro": "Predict the path. Back your picks on Prophet. Win $10,000. Build a full World Cup bracket, put real positions behind your predictions, and the most accurate bracket takes the grand prize. No raffle. No luck. Just prediction skill.",
     "campaignRulesHowToPlayTitle": "How to Play",
