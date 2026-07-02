@@ -5,20 +5,15 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { getCopyTargetStats } from "@/lib/copy-trade/target-stats";
-import { targetToWalletCopyForm } from "@/lib/copy-trade/transforms";
 import type { CopyTargetForm } from "@/lib/copy-trade/transforms";
 import type { CopyTarget, TraderCatalogEntry } from "@/types/copy-trade-api";
 import { copyTradeTableMobileListClass } from "@/views/copy-trade/copy-trade-ui";
 import { CopyTradeListStatusMessage } from "@/views/copy-trade/list/status-message";
 import { useCopyActions } from "@/views/copy-trade/use-copy-actions";
 import { useCopyTradeRank } from "@/views/copy-trade/use-copy-trade-rank";
-import { useCopyTradeReadiness } from "@/views/copy-trade/use-copy-trade-readiness";
 import { useCopyTradeTargetStats } from "@/views/copy-trade/use-copy-trade-target-stats";
 import { useCopyTradeTargets } from "@/views/copy-trade/use-copy-trade-targets";
-import {
-  buildWalletCopyStatsForManageModal,
-  WalletCopyModal
-} from "@/views/copy-trade/wallet-copy-modal";
+import { WalletCopyTargetAdvancedSettingsModal } from "@/views/copy-trade/wallet-copy-modal/target-advanced-settings-modal";
 
 import { CopyTradeCopiedWalletItem } from "./item";
 import {
@@ -58,8 +53,7 @@ export function CopyTradeCopiedWalletPanel({
   } = useCopyTradeTargets({ enabled });
   const { traders } = useCopyTradeRank({ enabled });
   const { statsByWallet } = useCopyTradeTargetStats({ enabled, targets });
-  const { saving, upsertCopy, setPaused, removeCopy } = useCopyActions();
-  const readiness = useCopyTradeReadiness();
+  const { saving, updateCopySettings, setPaused, removeCopy } = useCopyActions();
   const [manageTarget, setManageTarget] = useState<CopyTarget | null>(null);
 
   const tradersByWallet = useMemo(
@@ -67,31 +61,9 @@ export function CopyTradeCopiedWalletPanel({
     [traders]
   );
 
-  const manageInitialValues = useMemo(
-    () =>
-      manageTarget ? targetToWalletCopyForm(manageTarget) : undefined,
-    [manageTarget]
-  );
-
-  const manageModalStats = useMemo(() => {
-    if (!manageTarget) {
-      return undefined;
-    }
-
-    const targetStats = getCopyTargetStats(statsByWallet, manageTarget.Wallet);
-    const trader = tradersByWallet.get(manageTarget.Wallet.toLowerCase()) ?? null;
-
-    return buildWalletCopyStatsForManageModal(targetStats, trader);
-  }, [manageTarget, statsByWallet, tradersByWallet]);
-
-  const handleCopySubmit = useCallback(
-    async (form: CopyTargetForm) => {
-      const ok = await upsertCopy(form);
-      if (ok) {
-        setManageTarget(null);
-      }
-    },
-    [upsertCopy]
+  const handlePersistSettings = useCallback(
+    async (form: CopyTargetForm) => updateCopySettings(form),
+    [updateCopySettings]
   );
 
   const handlePauseToggle = useCallback(
@@ -185,18 +157,12 @@ export function CopyTradeCopiedWalletPanel({
         {renderCopiedWalletList("desktop")}
       </div>
 
-      <WalletCopyModal
+      <WalletCopyTargetAdvancedSettingsModal
         open={manageTarget != null}
         onClose={() => setManageTarget(null)}
-        wallet={manageTarget?.Wallet ?? ""}
-        stats={manageModalStats}
-        initialValues={manageInitialValues}
+        target={manageTarget}
         saving={saving}
-        availableBalance={readiness.availableBalance}
-        isLoadingBalance={readiness.isLoadingBalance}
-        canSubmitCopy={readiness.canSubmitCopy}
-        balanceWarning={readiness.balanceWarning}
-        onSubmit={handleCopySubmit}
+        onPersist={handlePersistSettings}
       />
     </div>
   );

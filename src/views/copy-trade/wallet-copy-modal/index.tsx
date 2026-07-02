@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -23,12 +23,17 @@ import {
   type CopyTradeRankTimeRange
 } from "@/lib/copy-trade/trader-rank-filters";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
-import type { TraderCatalogEntry } from "@/types/copy-trade-api";
+import type { CopyTarget, TraderCatalogEntry } from "@/types/copy-trade-api";
 
+import { WalletCopyAdvancedSettingsModal } from "./advanced-settings-modal";
 import { CopyTradeInfoTooltip } from "./info-tooltip";
 import {
   COPY_TRADE_RATIO_PRESETS,
   DEFAULT_WALLET_COPY_FORM,
+  applyAdvancedFields,
+  pickAdvancedFields,
+  pickDefaultAdvancedFields,
+  type WalletCopyAdvancedFields,
   type WalletCopyFormValues,
   type WalletCopyTraderStats
 } from "./types";
@@ -44,7 +49,40 @@ export interface WalletCopyModalProps {
   isLoadingBalance?: boolean;
   canSubmitCopy?: boolean;
   balanceWarning?: string | null;
+  existingTarget?: CopyTarget | null;
   onSubmit?: (form: CopyTargetForm) => void | Promise<void>;
+  onPersistSettings?: (form: CopyTargetForm) => Promise<boolean>;
+}
+
+function withFixedCopyPolicy(
+  values: WalletCopyFormValues
+): WalletCopyFormValues {
+  return {
+    ...values,
+    buyTakerOnly: true,
+    sellTakerOnly: true,
+    orderType: "FAK"
+  };
+}
+
+export function buildTargetFormFromWalletCopy(
+  wallet: string,
+  values: WalletCopyFormValues,
+  existingTarget?: CopyTarget | null
+): CopyTargetForm {
+  const overrides = existingTarget
+    ? {
+        enabled: existingTarget.Enabled,
+        dryRun: existingTarget.DryRun,
+        allowedConditions: existingTarget.AllowedConditions ?? [],
+        blockedConditions: existingTarget.BlockedConditions ?? []
+      }
+    : {
+        enabled: true,
+        dryRun: false
+      };
+
+  return walletCopyFormToTargetForm(wallet, values, overrides);
 }
 
 export function buildWalletCopyStatsFromTrader(
@@ -129,7 +167,9 @@ export function WalletCopyModal({
   isLoadingBalance = false,
   canSubmitCopy = true,
   balanceWarning = null,
-  onSubmit
+  existingTarget = null,
+  onSubmit,
+  onPersistSettings
 }: WalletCopyModalProps) {
   const t = useTranslations("copyTrade.walletCopy");
   const tCommon = useTranslations("copyTrade.common");
@@ -137,7 +177,10 @@ export function WalletCopyModal({
     ...DEFAULT_WALLET_COPY_FORM,
     ...initialValues
   }));
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
+  const [advancedDraft, setAdvancedDraft] = useState<WalletCopyAdvancedFields>(
+    () => pickDefaultAdvancedFields()
+  );
   const [savedSnapshot, setSavedSnapshot] = useState<WalletCopyFormValues>(
     () => ({
       ...DEFAULT_WALLET_COPY_FORM,
@@ -157,7 +200,8 @@ export function WalletCopyModal({
     };
     setForm(nextValues);
     setSavedSnapshot(nextValues);
-    setAdvancedOpen(false);
+    setAdvancedModalOpen(false);
+    setAdvancedDraft(pickAdvancedFields(nextValues));
     setError("");
   }, [initialValues, open, wallet]);
 
@@ -166,9 +210,9 @@ export function WalletCopyModal({
     setForm((current) => ({ ...current, ...patch }));
   }, []);
 
-  const advancedDirty = useMemo(
-    () => JSON.stringify(form) !== JSON.stringify(savedSnapshot),
-    [form, savedSnapshot]
+  const savedAdvanced = useMemo(
+    () => pickAdvancedFields(savedSnapshot),
+    [savedSnapshot]
   );
 
   const advancedFieldErrors = useMemo(
@@ -189,21 +233,107 @@ export function WalletCopyModal({
     [advancedFieldErrors]
   );
 
-  const handleSaveAdvanced = useCallback(() => {
-    if (hasAdvancedFieldErrors) {
+  const advancedDraftFieldErrors = useMemo(
+    () => ({
+      maxUsdPerTrade: !isValidUsdCapInput(advancedDraft.maxUsdPerTrade),
+      maxUsdPerMarket: !isValidUsdCapInput(advancedDraft.maxUsdPerMarket),
+      maxUsdPerHour: !isValidUsdCapInput(advancedDraft.maxUsdPerHour),
+      maxUsdTotal: !isValidUsdCapInput(advancedDraft.maxUsdTotal),
+      minPrice: !isValidPriceInput(advancedDraft.minPrice),
+      maxPrice: !isValidPriceInput(advancedDraft.maxPrice),
+      maxSlippage: !isValidSlippageInput(advancedDraft.maxSlippage)
+    }),
+    [advancedDraft]
+  );
+
+  const hasAdvancedDraftFieldErrors = useMemo(
+    () => Object.values(advancedDraftFieldErrors).some(Boolean),
+    [advancedDraftFieldErrors]
+  );
+
+  const handleOpenAdvancedModal = useCallback(() => {
+    setAdvancedDraft(pickAdvancedFields(form));
+    setAdvancedModalOpen(true);
+  }, [form]);
+
+  const handleCloseAdvancedModal = useCallback(() => {
+    setAdvancedModalOpen(false);
+    setAdvancedDraft(pickAdvancedFields(form));
+  }, [form]);
+
+  const handlePatchAdvancedDraft = useCallback(
+    (patch: Partial<WalletCopyAdvancedFields>) => {
+      setAdvancedDraft((current) => ({ ...current, ...patch }));
+    },
+    []
+  );
+
+  const handleClearAdvancedDraft = useCallback(() => {
+    setAdvancedDraft(pickDefaultAdvancedFields());
+  }, []);
+
+  const handleSaveAdvanced = useCallback(async () => {
+    if (hasAdvancedDraftFieldErrors) {
       return;
     }
 
-    setSavedSnapshot(form);
-  }, [form, hasAdvancedFieldErrors]);
+    const nextForm = withFixedCopyPolicy(
+      applyAdvancedFields(form, advancedDraft)
+    );
+    const draft = buildTargetFormFromWalletCopy(
+      wallet,
+      nextForm,
+      existingTarget
+    );
+    const errors = validateTargetForm(draft);
+    if (errors.length > 0) {
+      setError(errors[0]);
+      return;
+    }
 
-  const orderTypeOptions = useMemo(
-    () => [
-      { value: "FAK" as const, label: t("orderTypeFak") },
-      { value: "FOK" as const, label: t("orderTypeFok") }
-    ],
-    [t]
-  );
+    let normalized: CopyTargetForm;
+    try {
+      normalized = normalizeTargetForm(draft);
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : t("unableToValidate")
+      );
+      return;
+    }
+
+    if (onPersistSettings) {
+      const ok = await onPersistSettings(normalized);
+      if (!ok) {
+        return;
+      }
+    }
+
+    setError("");
+    setForm(nextForm);
+    setSavedSnapshot(nextForm);
+    setAdvancedDraft(pickAdvancedFields(nextForm));
+    setAdvancedModalOpen(false);
+  }, [
+    advancedDraft,
+    existingTarget,
+    form,
+    hasAdvancedDraftFieldErrors,
+    onPersistSettings,
+    t,
+    wallet
+  ]);
+
+  const hasUnsavedAdvancedDraft = useMemo(() => {
+    if (advancedModalOpen) {
+      return true;
+    }
+
+    return (
+      Object.keys(advancedDraft) as Array<keyof WalletCopyAdvancedFields>
+    ).some((key) => advancedDraft[key] !== savedAdvanced[key]);
+  }, [advancedDraft, advancedModalOpen, savedAdvanced]);
 
   const handleSubmit = useCallback(() => {
     if (!canSubmitCopy) {
@@ -216,15 +346,27 @@ export function WalletCopyModal({
       return;
     }
 
-    if (hasAdvancedFieldErrors) {
+    if (hasUnsavedAdvancedDraft) {
+      if (hasAdvancedDraftFieldErrors) {
+        setError(t("invalidAdvancedSettings"));
+        return;
+      }
+    } else if (hasAdvancedFieldErrors) {
       setError(t("invalidAdvancedSettings"));
       return;
     }
 
-    const draft = walletCopyFormToTargetForm(wallet, form, {
-      enabled: true,
-      dryRun: false
-    });
+    const effectiveForm = withFixedCopyPolicy(
+      hasUnsavedAdvancedDraft
+        ? applyAdvancedFields(form, advancedDraft)
+        : form
+    );
+
+    const draft = buildTargetFormFromWalletCopy(
+      wallet,
+      effectiveForm,
+      existingTarget
+    );
     const errors = validateTargetForm(draft);
     if (errors.length > 0) {
       setError(errors[0]);
@@ -242,10 +384,14 @@ export function WalletCopyModal({
       );
     }
   }, [
+    advancedDraft,
     balanceWarning,
     canSubmitCopy,
     form,
+    hasAdvancedDraftFieldErrors,
     hasAdvancedFieldErrors,
+    existingTarget,
+    hasUnsavedAdvancedDraft,
     onSubmit,
     t,
     wallet
@@ -254,322 +400,198 @@ export function WalletCopyModal({
   const pnlDisplay = formatPnlDisplay(stats);
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      ariaLabel={t("ariaLabel")}
-      className={cn(
-        "w-full max-w-[500px] rounded-[20px] border border-[#EBEBEB] bg-white",
-        "p-5 shadow-[0px_0px_10px_rgba(0,0,0,0.1)]"
-      )}
-      closeButtonClassName="right-5 top-5 border-0 bg-transparent text-[#909090] hover:bg-transparent hover:text-black"
-    >
-      <div className="flex flex-col gap-5">
-        <header>
-          <h2 className="text-xl font-medium leading-[25px] text-black">
-            {t("title")}
-          </h2>
-        </header>
+    <>
+      <Modal
+        open={open}
+        onClose={onClose}
+        ariaLabel={t("ariaLabel")}
+        escapeCloseable={!advancedModalOpen}
+        overlayCloseable={!advancedModalOpen}
+        className={cn(
+          "w-full max-w-[500px] rounded-[20px] border border-[#EBEBEB] bg-white",
+          "p-5 shadow-[0px_0px_10px_rgba(0,0,0,0.1)]"
+        )}
+        closeButtonClassName="right-5 top-5 border-0 bg-transparent text-[#909090] hover:bg-transparent hover:text-black"
+      >
+        <div className="flex flex-col gap-5">
+          <header>
+            <h2 className="text-xl font-medium leading-[25px] text-black">
+              {t("title")}
+            </h2>
+          </header>
 
-        <section className="flex flex-col gap-2">
-          <p className="text-sm leading-[18px] text-black">{t("copyFrom")}</p>
-          <div className="box-border flex h-[104px] flex-col rounded-lg border border-[#EBEBEB] bg-white px-2 py-3">
-            <p className="truncate text-[14px] px-[8px] py-[11px] leading-[18px] text-black rounded-[6px] bg-[#F6F6F6]">
-              {wallet}
-            </p>
-            <div className="mt-[10px] flex h-10 items-center px-2">
-              <div className="grid h-full w-full grid-cols-3 items-center">
-                <StatCell
-                  label={t("pnl")}
-                  value={pnlDisplay ?? "—"}
-                  valueClassName="text-[#65AF14]"
-                />
-                <StatCell
-                  label={t("winRate7d")}
-                  value={stats?.winRate ?? "—"}
-                  valueClassName="text-[#65AF14]"
-                />
-                <StatCell
-                  label={t("lastTrade")}
-                  value={stats?.lastTrade ?? "—"}
-                  valueClassName="text-[#65AF14]"
-                  align="right"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="flex flex-col gap-3">
-          <div className="flex items-center gap-1.5">
-            <p className="text-sm leading-[18px] text-black">
-              {t("copyTradeRatio")}
-            </p>
-            <CopyTradeInfoTooltip content={<>{t("ratioTooltip")}</>} />
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <div className="relative h-2.5">
-              <div className="absolute inset-0 rounded-md border border-[#EBEBEB] bg-[#EBEBEB]" />
-              <div
-                className="absolute inset-y-0 left-0 rounded-md bg-black"
-                style={{ width: `${form.ratio}%` }}
-              />
-              <input
-                type="range"
-                min={1}
-                max={100}
-                step={1}
-                value={form.ratio}
-                onChange={(event) =>
-                  patchForm({ ratio: Number(event.target.value) })
-                }
-                className="absolute inset-0 z-[1] h-full w-full cursor-pointer appearance-none bg-transparent opacity-0"
-                aria-label={t("ariaCopyRatio")}
-              />
-              <div
-                className="pointer-events-none absolute top-1/2 size-[18px] -translate-y-1/2 rounded-full border border-[#909090] bg-black"
-                style={{ left: `calc(${form.ratio}% - 9px)` }}
-                aria-hidden="true"
-              />
-            </div>
-
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex flex-wrap gap-2">
-                {COPY_TRADE_RATIO_PRESETS.map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    className={cn(
-                      "inline-flex h-[30px] min-w-[50px] items-center justify-center rounded-lg border px-2",
-                      "text-sm leading-[18px] transition-colors",
-                      form.ratio === preset
-                        ? "border-black bg-black text-white"
-                        : "border-[#EBEBEB] bg-white text-[#909090] hover:border-[#909090]"
-                    )}
-                    onClick={() => patchForm({ ratio: preset })}
-                  >
-                    {preset}%
-                  </button>
-                ))}
-              </div>
-              <span className="text-lg leading-[23px] text-black tabular-nums">
-                {form.ratio}%
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <div className="grid grid-cols-2 gap-2">
-          <CopySideButton
-            label={t("copyBuy")}
-            selected={form.buyEnabled}
-            tone="buy"
-            onClick={() => patchForm({ buyEnabled: !form.buyEnabled })}
-          />
-          <CopySideButton
-            label={t("copySell")}
-            selected={form.sellEnabled}
-            tone="sell"
-            onClick={() => patchForm({ sellEnabled: !form.sellEnabled })}
-          />
-        </div>
-
-        <section className="rounded-lg border border-[#EBEBEB] bg-white">
-          <div className="flex items-center justify-between gap-3 px-3 py-3">
-            <p className="text-sm leading-[18px] text-black">
-              {t("advancedSetting")}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className={cn(
-                  "inline-flex h-[26px] items-center justify-center rounded-md px-2.5",
-                  "text-sm leading-[18px] text-white transition-opacity",
-                  advancedDirty && !hasAdvancedFieldErrors
-                    ? "bg-black hover:opacity-90"
-                    : "cursor-default bg-[#909090] opacity-50"
-                )}
-                disabled={!advancedDirty || hasAdvancedFieldErrors}
-                onClick={handleSaveAdvanced}
-              >
-                {tCommon("save")}
-              </button>
-              <button
-                type="button"
-                className="inline-flex size-5 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-transform"
-                aria-label={
-                  advancedOpen ? t("collapseAdvanced") : t("expandAdvanced")
-                }
-                aria-expanded={advancedOpen}
-                onClick={() => setAdvancedOpen((current) => !current)}
-              >
-                <ChevronDown
-                  className={cn(
-                    "size-4 transition-transform",
-                    advancedOpen && "rotate-180"
-                  )}
-                  aria-hidden="true"
-                />
-              </button>
-            </div>
-          </div>
-
-          {advancedOpen ? (
-            <div className="flex flex-col gap-3 border-t border-[#EBEBEB] px-3 pb-3 pt-3">
-              <div>
-                <ToggleRow
-                  label={t("buyTakerOnly")}
-                  checked={form.buyTakerOnly}
-                  onCheckedChange={(checked) =>
-                    patchForm({ buyTakerOnly: checked })
-                  }
-                  tooltip={t("buyTakerOnlyTooltip")}
-                />
-                <ToggleRow
-                  label={t("sellTakerOnly")}
-                  checked={form.sellTakerOnly}
-                  onCheckedChange={(checked) =>
-                    patchForm({ sellTakerOnly: checked })
-                  }
-                  tooltip={t("sellTakerOnlyTooltip")}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <CapInput
-                  label={t("singleOrderCap")}
-                  value={form.maxUsdPerTrade}
-                  hint="≥$5"
-                  prefix="$"
-                  invalid={advancedFieldErrors.maxUsdPerTrade}
-                  onChange={(value) => patchForm({ maxUsdPerTrade: value })}
-                />
-                <CapInput
-                  label={t("perMarketCap")}
-                  value={form.maxUsdPerMarket}
-                  hint="≥$5"
-                  prefix="$"
-                  invalid={advancedFieldErrors.maxUsdPerMarket}
-                  onChange={(value) => patchForm({ maxUsdPerMarket: value })}
-                />
-                <CapInput
-                  label={t("hourlyCap")}
-                  value={form.maxUsdPerHour}
-                  hint="≥$5"
-                  prefix="$"
-                  invalid={advancedFieldErrors.maxUsdPerHour}
-                  onChange={(value) => patchForm({ maxUsdPerHour: value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <CapInput
-                  label={t("totalCap")}
-                  value={form.maxUsdTotal}
-                  hint="≥$5"
-                  prefix="$"
-                  invalid={advancedFieldErrors.maxUsdTotal}
-                  onChange={(value) => patchForm({ maxUsdTotal: value })}
-                  className="sm:col-span-1"
-                />
-                <CapInput
-                  label={t("minPrice")}
-                  value={form.minPrice}
-                  hint="0<x<1"
-                  invalid={advancedFieldErrors.minPrice}
-                  onChange={(value) => patchForm({ minPrice: value })}
-                />
-                <CapInput
-                  label={t("maxPrice")}
-                  value={form.maxPrice}
-                  hint="0<x<1"
-                  invalid={advancedFieldErrors.maxPrice}
-                  onChange={(value) => patchForm({ maxPrice: value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <CapInput
-                  label={t("maxSlippage")}
-                  value={form.maxSlippage}
-                  hint="<0.5"
-                  invalid={advancedFieldErrors.maxSlippage}
-                  onChange={(value) => patchForm({ maxSlippage: value })}
-                />
-                <div className="flex min-w-0 flex-col gap-1.5">
-                  <span className="text-sm leading-[18px] text-[#909090]">
-                    {t("orderType")}
-                  </span>
-                  <div className="relative">
-                    <select
-                      value={form.orderType}
-                      onChange={(event) =>
-                        patchForm({
-                          orderType: event.target
-                            .value as WalletCopyFormValues["orderType"]
-                        })
-                      }
-                      className={cn(
-                        "h-9 w-full appearance-none rounded-lg border border-[#EBEBEB] bg-white",
-                        "px-3 pr-8 text-sm leading-[18px] text-black outline-none",
-                        "focus:border-[#909090]"
-                      )}
-                      aria-label={t("ariaOrderType")}
-                    >
-                      {orderTypeOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#909090]"
-                      aria-hidden="true"
-                    />
-                  </div>
+          <section className="flex flex-col gap-2">
+            <p className="text-sm leading-[18px] text-black">{t("copyFrom")}</p>
+            <div className="box-border flex h-[104px] flex-col rounded-lg border border-[#EBEBEB] bg-white px-2 py-3">
+              <p className="truncate text-[14px] px-[8px] py-[11px] leading-[18px] text-black rounded-[6px] bg-[#F6F6F6]">
+                {wallet}
+              </p>
+              <div className="mt-[10px] flex h-10 items-center px-2">
+                <div className="grid h-full w-full grid-cols-3 items-center">
+                  <StatCell
+                    label={t("pnl")}
+                    value={pnlDisplay ?? "—"}
+                    valueClassName="text-[#65AF14]"
+                  />
+                  <StatCell
+                    label={t("winRate7d")}
+                    value={stats?.winRate ?? "—"}
+                    valueClassName="text-[#65AF14]"
+                  />
+                  <StatCell
+                    label={t("lastTrade")}
+                    value={stats?.lastTrade ?? "—"}
+                    valueClassName="text-[#65AF14]"
+                    align="right"
+                  />
                 </div>
               </div>
             </div>
-          ) : null}
-        </section>
+          </section>
 
-        {error ? (
-          <p className="m-0 text-sm leading-[18px] text-[#FF674B]">{error}</p>
-        ) : null}
+          <section className="flex flex-col gap-3">
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm leading-[18px] text-black">
+                {t("copyTradeRatio")}
+              </p>
+              <CopyTradeInfoTooltip content={<>{t("ratioTooltip")}</>} />
+            </div>
 
-        {balanceWarning && !error ? (
-          <div className="rounded-lg border border-[#FF674B]/30 bg-[#FF674B]/10 px-3 py-3 text-sm leading-[150%] text-[#FF674B]">
-            {balanceWarning}
+            <div className="flex flex-col gap-3">
+              <div className="relative h-2.5">
+                <div className="absolute inset-0 rounded-md border border-[#EBEBEB] bg-[#EBEBEB]" />
+                <div
+                  className="absolute inset-y-0 left-0 rounded-md bg-black"
+                  style={{ width: `${form.ratio}%` }}
+                />
+                <input
+                  type="range"
+                  min={1}
+                  max={100}
+                  step={1}
+                  value={form.ratio}
+                  onChange={(event) =>
+                    patchForm({ ratio: Number(event.target.value) })
+                  }
+                  className="absolute inset-0 z-[1] h-full w-full cursor-pointer appearance-none bg-transparent opacity-0"
+                  aria-label={t("ariaCopyRatio")}
+                />
+                <div
+                  className="pointer-events-none absolute top-1/2 size-[18px] -translate-y-1/2 rounded-full border border-[#909090] bg-black"
+                  style={{ left: `calc(${form.ratio}% - 9px)` }}
+                  aria-hidden="true"
+                />
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap gap-2">
+                  {COPY_TRADE_RATIO_PRESETS.map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      className={cn(
+                        "inline-flex h-[30px] min-w-[50px] items-center justify-center rounded-lg border px-2",
+                        "text-sm leading-[18px] transition-colors",
+                        form.ratio === preset
+                          ? "border-black bg-black text-white"
+                          : "border-[#EBEBEB] bg-white text-[#909090] hover:border-[#909090]"
+                      )}
+                      onClick={() => patchForm({ ratio: preset })}
+                    >
+                      {preset}%
+                    </button>
+                  ))}
+                </div>
+                <span className="text-lg leading-[23px] text-black tabular-nums">
+                  {form.ratio}%
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <div className="grid grid-cols-2 gap-2">
+            <CopySideButton
+              label={t("copyBuy")}
+              selected={form.buyEnabled}
+              tone="buy"
+              onClick={() => patchForm({ buyEnabled: !form.buyEnabled })}
+            />
+            <CopySideButton
+              label={t("copySell")}
+              selected={form.sellEnabled}
+              tone="sell"
+              onClick={() => patchForm({ sellEnabled: !form.sellEnabled })}
+            />
           </div>
-        ) : null}
 
-        {isLoadingBalance && open ? (
-          <p className="m-0 text-sm leading-[18px] text-[#909090]">
-            {t("checkingBalance")}
-          </p>
-        ) : null}
+          <button
+            type="button"
+            className={cn(
+              "flex w-full items-center justify-between gap-3 rounded-lg border border-[#EBEBEB]",
+              "bg-white px-3 py-3 text-left transition-colors hover:border-[#909090]"
+            )}
+            aria-label={t("openAdvancedSettings")}
+            onClick={handleOpenAdvancedModal}
+          >
+            <span className="text-sm leading-[18px] text-black">
+              {t("advancedSetting")}
+            </span>
+            <ChevronRight
+              className="size-4 shrink-0 text-[#909090]"
+              aria-hidden="true"
+            />
+          </button>
 
-        <button
-          type="button"
-          className={cn(
-            "flex h-[50px] w-full items-center justify-center rounded-lg bg-black",
-            "text-base leading-5 text-white transition-opacity hover:opacity-90",
-            "disabled:cursor-not-allowed disabled:opacity-50"
-          )}
-          disabled={
-            saving ||
-            !canSubmitCopy ||
-            isLoadingBalance ||
-            hasAdvancedFieldErrors ||
-            (!form.buyEnabled && !form.sellEnabled)
-          }
-          onClick={handleSubmit}
-        >
-          {saving ? tCommon("saving") : tCommon("copy")}
-        </button>
-      </div>
-    </Modal>
+          {error ? (
+            <p className="m-0 text-sm leading-[18px] text-[#FF674B]">{error}</p>
+          ) : null}
+
+          {balanceWarning && !error ? (
+            <div className="rounded-lg border border-[#FF674B]/30 bg-[#FF674B]/10 px-3 py-3 text-sm leading-[150%] text-[#FF674B]">
+              {balanceWarning}
+            </div>
+          ) : null}
+
+          {isLoadingBalance && open ? (
+            <p className="m-0 text-sm leading-[18px] text-[#909090]">
+              {t("checkingBalance")}
+            </p>
+          ) : null}
+
+          <button
+            type="button"
+            className={cn(
+              "flex h-[50px] w-full items-center justify-center rounded-lg bg-black",
+              "text-base leading-5 text-white transition-opacity hover:opacity-90",
+              "disabled:cursor-not-allowed disabled:opacity-50"
+            )}
+            disabled={
+              saving ||
+              !canSubmitCopy ||
+              isLoadingBalance ||
+              hasAdvancedFieldErrors ||
+              (!form.buyEnabled && !form.sellEnabled)
+            }
+            onClick={handleSubmit}
+          >
+            {saving ? tCommon("saving") : tCommon("copy")}
+          </button>
+        </div>
+      </Modal>
+
+      <WalletCopyAdvancedSettingsModal
+        open={advancedModalOpen}
+        draft={advancedDraft}
+        savedAdvanced={savedAdvanced}
+        saving={saving}
+        onDraftChange={handlePatchAdvancedDraft}
+        onSave={() => {
+          void handleSaveAdvanced();
+        }}
+        onClose={handleCloseAdvancedModal}
+        onClear={handleClearAdvancedDraft}
+      />
+    </>
   );
 }
 
@@ -630,116 +652,6 @@ function CopySideButton({
       <Check className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
       {label}
     </button>
-  );
-}
-
-function ToggleRow({
-  label,
-  checked,
-  onCheckedChange,
-  tooltip
-}: {
-  label: string;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  tooltip: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-1.5">
-        <span className="text-sm leading-[18px] text-[#909090]">{label}</span>
-        <CopyTradeInfoTooltip content={tooltip} />
-      </div>
-      <CopyTradeToggle
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        aria-label={label}
-      />
-    </div>
-  );
-}
-
-function CopyTradeToggle({
-  checked,
-  onCheckedChange,
-  "aria-label": ariaLabel
-}: {
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  "aria-label": string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={ariaLabel}
-      onClick={() => onCheckedChange(!checked)}
-      className={cn(
-        "relative h-5 w-[36px] shrink-0 rounded-[10px] border transition-colors",
-        checked ? "border-black bg-black" : "border-[#EAEAEA] bg-[#EBEBEB]"
-      )}
-    >
-      <span
-        className={cn(
-          "absolute top-1/2 size-4 -translate-y-1/2 rounded-lg border border-[#EAEAEA] bg-white transition-[left]",
-          checked ? "left-[calc(100%-17px)]" : "left-0.5"
-        )}
-        aria-hidden="true"
-      />
-    </button>
-  );
-}
-
-function CapInput({
-  label,
-  value,
-  hint,
-  prefix,
-  invalid = false,
-  onChange,
-  className
-}: {
-  label: string;
-  value: string;
-  hint: string;
-  prefix?: string;
-  invalid?: boolean;
-  onChange: (value: string) => void;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
-      <span className="text-sm leading-[18px] text-[#909090]">{label}</span>
-      <div
-        className={cn(
-          "relative flex h-9 items-center rounded-lg border bg-white px-3",
-          invalid ? "border-[#FF674B]" : "border-[#EBEBEB]"
-        )}
-      >
-        <input
-          type="text"
-          inputMode="decimal"
-          value={prefix ? `${prefix}${value}` : value}
-          onChange={(event) => {
-            const raw = event.target.value;
-            const next = prefix ? raw.replace(/^\$/, "") : raw;
-            onChange(next);
-          }}
-          className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm leading-[18px] text-black outline-none"
-          aria-label={label}
-          aria-invalid={invalid}
-        />
-        <span
-          className={cn(
-            "shrink-0 pl-2 text-xs leading-[15px]",
-            invalid ? "text-[#FF674B]" : "text-[#909090]"
-          )}
-        >
-          {hint}
-        </span>
-      </div>
-    </div>
   );
 }
 
