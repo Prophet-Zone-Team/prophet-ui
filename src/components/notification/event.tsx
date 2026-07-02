@@ -81,8 +81,8 @@ export function EventNotification(props: EventNotificationProps) {
     <div className={cn("relative w-[352px] pt-[19px]", className)}>
       <div
         className={cn(
-          "relative flex h-[108px] w-[352px] items-center justify-between rounded-[12px] border bg-white px-6",
-          "font-[Sora] font-medium text-black"
+          "relative flex h-[108px] w-[352px] items-center justify-between rounded-[12px] border bg-prophet-panel px-6",
+          "font-[Sora] font-medium text-prophet-foreground"
         )}
         style={{
           borderColor: levelInfo.color,

@@ -112,7 +112,7 @@ export function IosDownloadPage() {
         className="pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover object-top"
       />
 
-      <div className="relative mx-auto mt-20 w-[96%] max-w-[750px] rounded-t-[30px] bg-white">
+      <div className="relative mx-auto mt-20 w-[96%] max-w-[750px] rounded-t-[30px] bg-prophet-panel">
         {showSafetyModal ? (
           <div className="px-[5%] py-2.5" onClick={(event) => event.stopPropagation()}>
             <button
@@ -325,7 +325,7 @@ export function IosDownloadPage() {
 
       {context.showCopyBar ? (
         <div
-          className="fixed inset-x-0 bottom-0 z-10 border-t border-[#ccc] bg-white"
+          className="fixed inset-x-0 bottom-0 z-10 border-t border-[#ccc] bg-prophet-panel"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="flex flex-col items-center gap-2 px-4 py-2.5">

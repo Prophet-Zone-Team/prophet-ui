@@ -37,7 +37,7 @@ export function StrategySectionNav() {
     <nav aria-label={t("strategyViews")} className="flex justify-center">
       <div
         role="tablist"
-        className="flex h-[46px] w-full max-w-[279px] items-center rounded-[12px] bg-[#F4F4F4] p-[5px]"
+        className="flex h-[46px] w-full max-w-[279px] items-center rounded-[12px] bg-prophet-line/30 p-[5px]"
       >
         {STRATEGY_SECTIONS.map((section) => {
           const isActive = section.href === activeHref;
@@ -56,14 +56,16 @@ export function StrategySectionNav() {
                 <motion.span
                   layoutId={pillLayoutId}
                   aria-hidden="true"
-                  className="absolute inset-y-0 w-full rounded-[8px] border border-[#EBEBEB] bg-white"
+                  className="absolute inset-y-0 w-full rounded-[8px] border border-prophet-line bg-prophet-panel"
                   transition={PILL_TRANSITION}
                 />
               ) : null}
               <span
                 className={cn(
-                  "relative z-10 font-[Sora] text-base leading-5 text-black",
-                  isActive ? "font-medium" : "font-normal"
+                  "relative z-10 font-[Sora] text-base leading-5",
+                  isActive
+                    ? "font-medium text-prophet-foreground"
+                    : "font-normal text-prophet-muted"
                 )}
               >
                 {t(section.labelKey)}

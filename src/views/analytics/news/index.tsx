@@ -50,22 +50,22 @@ export function SignalNewsImpact({ className }: SignalNewsImpactProps) {
         aria-label={t("signalNewsImpactAria")}
         className={cn(
           "box-border flex h-auto w-full max-w-none flex-col md:h-[453px]",
-          "rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-4 md:px-[20px] md:py-[20px]",
+          "rounded-[12px] border border-prophet-line bg-prophet-panel px-3 py-4 md:px-[20px] md:py-[20px]",
           className
         )}
       >
         <NewsHeader />
         <div className="mt-[16px] min-h-0 flex-1 overflow-hidden">
           {isLoading ? (
-            <p className="py-8 text-center text-[14px] text-[#909090]">
+            <p className="py-8 text-center text-[14px] text-prophet-muted">
               {t("loading")}
             </p>
           ) : isError ? (
-            <p className="py-8 text-center text-[14px] text-[#909090]">
+            <p className="py-8 text-center text-[14px] text-prophet-muted">
               {t("unableToLoadData")}
             </p>
           ) : items.length === 0 ? (
-            <p className="py-8 text-center text-[14px] text-[#909090]">
+            <p className="py-8 text-center text-[14px] text-prophet-muted">
               {t("noNewsAvailable")}
             </p>
           ) : (

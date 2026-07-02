@@ -112,8 +112,8 @@ export function DepositStatusStep({
 
       {phase === "ready" ? (
         <div className="flex flex-col items-center gap-4 text-center">
-          <p className="m-0 text-xl font-[500] text-black">{readyTitle}</p>
-          <p className="m-0 max-w-sm text-sm text-[#909090]">
+          <p className="m-0 text-xl font-[500] text-prophet-foreground">{readyTitle}</p>
+          <p className="m-0 max-w-sm text-sm text-prophet-muted">
             {readyDescription}
           </p>
           <button
@@ -192,17 +192,17 @@ function StatusBlock({
     <div className="flex flex-col items-center gap-3 text-center">
       {loading ? (
         <Loader2
-          className="h-8 w-8 animate-spin text-[#909090]"
+          className="h-8 w-8 animate-spin text-prophet-muted"
           aria-hidden="true"
         />
       ) : null}
       <p
-        className={`m-0 text-xl font-[500] ${isError ? "text-prophet-red" : "text-black"}`}
+        className={`m-0 text-xl font-[500] ${isError ? "text-prophet-red" : "text-prophet-foreground"}`}
       >
         {title}
       </p>
-      <p className="m-0 max-w-sm text-sm text-[#909090]">{description}</p>
-      {detail ? <p className="m-0 text-xs text-[#909090]">{detail}</p> : null}
+      <p className="m-0 max-w-sm text-sm text-prophet-muted">{description}</p>
+      {detail ? <p className="m-0 text-xs text-prophet-muted">{detail}</p> : null}
     </div>
   );
 }

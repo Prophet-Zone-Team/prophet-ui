@@ -54,10 +54,10 @@ export function TopCategoriesDonutChart({
         </PieChart>
 
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[16px] font-[400] leading-[19px] text-[#909090]">
+          <span className="text-[16px] font-[400] leading-[19px] text-prophet-muted">
             {t("total")}
           </span>
-          <span className="text-[20px] font-[400] leading-[24px] text-black tabular-nums">
+          <span className="text-[20px] font-[400] leading-[24px] text-prophet-foreground tabular-nums">
             {total}
           </span>
         </div>

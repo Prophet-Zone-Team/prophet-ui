@@ -81,7 +81,7 @@ export function SignalAllTeamFilterControl({
       <button
         type="button"
         className={cn(
-          "inline-flex max-w-[140px] items-center gap-[6px] border-0 bg-transparent p-0 text-[14px] font-[400] leading-[17px] text-[#909090] md:max-w-[180px]",
+          "inline-flex max-w-[140px] items-center gap-[6px] border-0 bg-transparent p-0 text-[14px] font-[400] leading-[17px] text-prophet-muted md:max-w-[180px]",
           disabled && "cursor-not-allowed opacity-50"
         )}
         aria-expanded={open}
@@ -109,14 +109,14 @@ export function SignalAllTeamFilterControl({
           viewBox="0 0 11 6"
           fill="none"
           className={cn(
-            "shrink-0 text-[#909090] transition-transform",
+            "shrink-0 text-prophet-muted transition-transform",
             open && "rotate-180"
           )}
           aria-hidden
         >
           <path
             d="M9.7998 0.800781L5.40757 4.80078L0.799805 0.800781"
-            stroke="#909090"
+            stroke="var(--prophet-text-muted)"
             strokeWidth="1.6"
             strokeLinecap="round"
           />
@@ -128,7 +128,7 @@ export function SignalAllTeamFilterControl({
           {open ? (
             <motion.div
               key="team-filter-dropdown"
-              className="absolute right-0 top-full z-50 mt-2 max-h-[min(360px,60vh)] min-w-[220px] overflow-y-auto rounded-[8px] border border-[#EBEBEB] bg-white py-1 shadow-[0_0_10px_rgba(0,0,0,0.1)]"
+              className="absolute right-0 top-full z-50 mt-2 max-h-[min(360px,60vh)] min-w-[220px] overflow-y-auto rounded-[8px] border border-prophet-line bg-prophet-panel py-1 shadow-[0_0_10px_rgba(0,0,0,0.1)]"
               role="listbox"
               aria-label="Select team"
               initial={{ opacity: 0, scaleY: 0.88, y: -6 }}
@@ -215,7 +215,7 @@ function SignalAllTeamFilterOption({
       aria-selected={selected}
       className={cn(
         "flex w-full items-center justify-between gap-3 border-0 bg-transparent px-3 py-2 text-[14px] font-[400] leading-[17px]",
-        selected ? "text-black" : "text-[#909090] hover:text-black"
+        selected ? "text-prophet-foreground" : "text-prophet-muted hover:text-prophet-foreground"
       )}
       onClick={onSelect}
     >

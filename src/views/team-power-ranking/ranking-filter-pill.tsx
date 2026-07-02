@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { useDarkModeEnabled } from "@/store";
 
 export type RankingFilterOption = {
   value: string;
@@ -22,6 +23,8 @@ export function RankingFilterPill({
   onChange,
   className
 }: RankingFilterPillProps) {
+  const darkModeEnabled = useDarkModeEnabled();
+
   const selectedLabel =
     options.find((option) => option.value === value)?.label ?? value;
 
@@ -29,11 +32,11 @@ export function RankingFilterPill({
     <label
       className={cn(
         "relative inline-flex h-[34px] max-w-full cursor-pointer items-center text-[14px] font-[400] md:text-[16px]",
-        "rounded-[20px] border border-[#909090] px-3 gap-3 md:px-[12px] md:gap-[18px]",
+        "rounded-[20px] border border-prophet-muted px-3 gap-3 md:px-[12px] md:gap-[18px]",
         className
       )}
     >
-      <span className="pointer-events-none leading-[19px] text-black">
+      <span className="pointer-events-none leading-[19px] text-prophet-foreground">
         {prefix}: {selectedLabel}
       </span>
       <select
@@ -60,7 +63,7 @@ export function RankingFilterPill({
       >
         <path
           d="M0.5 0.5L4.89223 4.5L9.5 0.5"
-          stroke="black"
+          stroke={darkModeEnabled ? "white" : "black"}
           strokeLinecap="round"
         />
       </svg>

@@ -11,6 +11,7 @@ import {
   ReferralIcon,
   AttentionIcon
 } from "@/layout/header/wallet-menu-icons";
+import { WalletDarkModeMenuItem } from "@/layout/header/wallet-dark-mode-menu-item";
 import { WalletLanguageMenuItem } from "@/layout/header/wallet-language-menu-item";
 import { WalletOutcomeDisplayMenuItem } from "@/layout/header/wallet-outcome-display-menu-item";
 import { CopyIcon, RightArrowIcon } from "@/components/icons";
@@ -79,13 +80,13 @@ export function WalletMenuDropdown({
     >
       <div className="mb-2 flex items-center gap-2 border-b border-prophet-line pb-3">
         <WalletAvatar address={polymarketAddress} />
-        <span className="truncate text-[14px] font-[400] leading-[17px] text-black">
+        <span className="truncate text-[14px] font-[400] leading-[17px] text-prophet-foreground">
           {formatShortWallet(polymarketAddress)}
         </span>
         <PolymarketAddressCopyButton
           address={polymarketAddress}
           ariaLabel={t("copyPolymarketAddress")}
-          className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-black"
+          className="shrink-0 border-0 bg-transparent p-0 text-prophet-muted dark:text-white transition-colors hover:text-prophet-foreground"
         >
           <CopyIcon />
         </PolymarketAddressCopyButton>
@@ -108,7 +109,7 @@ export function WalletMenuDropdown({
               onClick={onClose}
             >
               <div className="flex items-center gap-2">
-                <div className="w-[14px]">
+                <div className="w-[14px] text-prophet-muted dark:text-white">
                   <PortfolioIcon />
                 </div>
                 <span className="flex-1">{t("portfolio")}</span>
@@ -123,7 +124,7 @@ export function WalletMenuDropdown({
               onClick={onClose}
             >
               <div className="flex items-center gap-2">
-                <div className="w-[14px]">
+                <div className="w-[14px] text-prophet-muted dark:text-white">
                   <ReferralIcon />
                 </div>
                 <span className="flex-1">{t("referral")}</span>
@@ -156,13 +157,13 @@ export function WalletMenuDropdown({
               }}
             >
               <div className="flex items-center gap-2">
-                <div className="w-[14px]">
+                <div className="w-[14px] text-prophet-muted dark:text-white">
                   <FastBidIcon />
                 </div>
                 <span>{t("fastBid")}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="shrink-0 text-sm text-black">{fastBidDisplay}</span>
+                <span className="shrink-0 text-sm text-prophet-foreground">{fastBidDisplay}</span>
                 <RightArrowIcon />
               </div>
             </button>
@@ -173,7 +174,7 @@ export function WalletMenuDropdown({
               onClick={(event) => event.stopPropagation()}
             >
               <div className="flex items-center gap-2">
-                <div className="w-[14px]">
+                <div className="w-[14px] text-prophet-muted dark:text-white">
                   <NotificationIcon />
                 </div>
                 <span>{t("notification")}</span>
@@ -189,6 +190,8 @@ export function WalletMenuDropdown({
                 />
               </span>
             </div>
+
+            <WalletDarkModeMenuItem />
           </>
         )
       }

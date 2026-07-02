@@ -139,7 +139,7 @@ export function DepositStableflowQrStep({
                       icon={token.icon}
                       size="sm"
                     />
-                    <span className="text-sm font-[500] text-black">
+                    <span className="text-sm font-[500] text-prophet-foreground">
                       {token.symbol}
                     </span>
                   </span>
@@ -206,7 +206,7 @@ export function DepositStableflowQrStep({
                       size="sm"
                       chainOnly
                     />
-                    <span className="text-sm font-[500] text-black">
+                    <span className="text-sm font-[500] text-prophet-foreground">
                       {chain.chainName}
                     </span>
                   </span>
@@ -242,14 +242,14 @@ export function DepositStableflowQrStep({
             <img
               src={selectedChain.chainIcon}
               alt=""
-              className="absolute left-1/2 top-1/2 size-9 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-white object-contain"
+              className="absolute left-1/2 top-1/2 size-9 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-prophet-panel bg-prophet-panel object-contain"
             />
           ) : null}
         </div>
       )}
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm font-[500] text-black">{t("yourDepositAddress")}</span>
+        <span className="text-sm font-[500] text-prophet-foreground">{t("yourDepositAddress")}</span>
         <div className={depositStableflowAddressBoxClass}>
           {quoteLoading || !depositAddress ? (
             <div className={depositStableflowAddressSkeletonClass} aria-hidden="true" />

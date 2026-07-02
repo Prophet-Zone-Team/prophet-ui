@@ -25,7 +25,7 @@ export function MostAffectedTeamTable({
 
   if (entries.length === 0) {
     return (
-      <p className="py-8 text-center text-[16px] leading-[19px] text-[#909090]">
+      <p className="py-8 text-center text-[16px] leading-[19px] text-prophet-muted">
         {t("noTeamImpactData")}
       </p>
     );
@@ -51,7 +51,7 @@ export function MostAffectedTeamTable({
           <MostAffectedTeamMobileCard
             key={entry.id}
             entry={entry}
-            className={index % 2 === 0 ? "bg-[#F9FAFC]" : "bg-white"}
+            className={index % 2 === 0 ? "bg-prophet-base" : "bg-prophet-panel"}
           />
         ))}
       </div>

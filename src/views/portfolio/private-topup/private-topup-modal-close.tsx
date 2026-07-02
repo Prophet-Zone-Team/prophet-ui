@@ -17,7 +17,7 @@ export function PrivateTopupModalClose({
     <button
       type="button"
       onClick={onClose}
-      className={`${className} inline-flex h-[10px] w-[10px] items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-opacity hover:opacity-70`}
+      className={`${className} inline-flex h-[10px] w-[10px] items-center justify-center border-0 bg-transparent p-0 text-prophet-muted transition-opacity hover:opacity-70`}
       aria-label={tCommon("close")}
     >
       <span className="relative block h-[10px] w-[10px]" aria-hidden="true">

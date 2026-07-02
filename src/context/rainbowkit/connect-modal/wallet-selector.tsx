@@ -85,12 +85,12 @@ export function launchWalletApp(walletId: WalletId) {
 }
 
 const modalCardClass = cn(
-  "w-full max-w-[420px] rounded-[24px] border border-[#EBEBEB] bg-white px-6 py-8",
+  "w-full max-w-[420px] rounded-[24px] border border-prophet-line bg-prophet-panel px-6 py-8",
   "shadow-[0_0_10px_rgba(0,0,0,0.1)]",
 );
 
 const walletCardClass = cn(
-  "flex w-full items-center gap-3 rounded-xl border border-[#EBEBEB] bg-white p-4",
+  "flex w-full items-center gap-3 rounded-xl border border-prophet-line bg-prophet-panel p-4",
   "text-left transition-colors hover:bg-[#fafbfc]",
 );
 

@@ -60,7 +60,7 @@ export function HomeWinnerMarketList({
   return (
     <>
       {showSearchEmptyState ? (
-        <p className="m-0 text-sm text-[#909090]">
+        <p className="m-0 text-sm text-prophet-muted">
           {tSignal("noTeamsMatchFilters")}
         </p>
       ) : (
@@ -71,7 +71,7 @@ export function HomeWinnerMarketList({
           isLoading={isLoading}
           ariaLabel="All World Cup team markets"
           emptyState={
-            <p className="m-0 text-sm text-[#909090]">
+            <p className="m-0 text-sm text-prophet-muted">
               {dataStatus.error ??
                 "Live market data is unavailable. Check Polymarket connectivity and try again."}
             </p>

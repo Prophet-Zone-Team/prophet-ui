@@ -6,6 +6,7 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import type { GameStatisticsRowData } from "@/lib/market/map-game-statistics";
 import type { GameStatisticLabel } from "@/lib/market/map-game-statistics";
+import { useDarkModeEnabled } from "@/store";
 
 export {
   GAME_STATISTIC_LABELS,
@@ -30,6 +31,7 @@ export type GameStatisticsProps = {
 const STAT_BAR_HEIGHT_CLASS = "h-2";
 const STAT_BAR_RADIUS_CLASS = "rounded-[4px]";
 const STAT_BAR_TRACK_COLOR = "#ECECEC";
+const STAT_BAR_TRACK_COLOR_DARK = "#353535";
 const STAT_BAR_HIGHER_COLOR = "#7BCA25";
 const STAT_BAR_LOWER_COLOR = "#909090";
 
@@ -57,6 +59,7 @@ function StatComparisonBar({
   compareValue: number;
   side: "home" | "away";
 }) {
+  const darkModeEnabled = useDarkModeEnabled();
   const total = value + compareValue;
   const fillPercent = total > 0 ? (value / total) * 100 : 0;
   const fillColor =
@@ -73,7 +76,7 @@ function StatComparisonBar({
         STAT_BAR_HEIGHT_CLASS,
         STAT_BAR_RADIUS_CLASS
       )}
-      style={{ backgroundColor: STAT_BAR_TRACK_COLOR }}
+      style={{ backgroundColor: darkModeEnabled ? STAT_BAR_TRACK_COLOR_DARK : STAT_BAR_TRACK_COLOR }}
     >
       <div
         className={cn(
@@ -102,7 +105,7 @@ function StatRow({
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_minmax(180px,auto)_minmax(0,1fr)] w-full">
       <div className="flex items-center gap-[10px]">
-        <span className="text-right text-[14px] font-[400] leading-[18px] text-black">
+        <span className="text-right text-[14px] font-[400] leading-[18px] text-prophet-foreground">
           {homeValue}
         </span>
         <StatComparisonBar
@@ -111,7 +114,7 @@ function StatRow({
           side="home"
         />
       </div>
-      <span className="text-center shrink-0 w-[180px] text-[14px] font-[500] leading-[18px] text-black">
+      <span className="text-center shrink-0 w-[180px] text-[14px] font-[500] leading-[18px] text-prophet-foreground">
         {label}
       </span>
       <div className="flex items-center gap-[10px]">
@@ -120,7 +123,7 @@ function StatRow({
           compareValue={homeValue}
           side="away"
         />
-        <span className="text-[14px] font-[400] leading-[18px] text-black">
+        <span className="text-[14px] font-[400] leading-[18px] text-prophet-foreground">
           {awayValue}
         </span>
       </div>
@@ -151,7 +154,7 @@ function TeamHeaderSide({
         align === "end" && "flex-row-reverse"
       )}
     >
-      <span className="truncate text-[16px] font-[500] leading-[20px] text-black">
+      <span className="truncate text-[16px] font-[500] leading-[20px] text-prophet-foreground">
         {team.name}
       </span>
       {flag}
@@ -173,11 +176,11 @@ export function GameStatistics({
     <section
       aria-label={t("statisticsAria")}
       className={cn(
-        "hidden w-full rounded-[12px] border border-[#EBEBEB] bg-white px-4 py-4 sm:px-5 md:block",
+        "hidden w-full rounded-[12px] border border-prophet-line bg-prophet-panel px-4 py-4 sm:px-5 md:block",
         className
       )}
     >
-      <h2 className="m-0 text-[18px] font-[500] leading-[23px] text-black">
+      <h2 className="m-0 text-[18px] font-[500] leading-[23px] text-prophet-foreground">
         {t("statistics")}
       </h2>
 

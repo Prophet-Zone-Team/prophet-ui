@@ -42,8 +42,8 @@ export function TopAnalyticsCard({
     <article
       className={cn(
         "box-border flex flex-col md:flex-row md:h-[145px] items-center gap-4 md:gap-[20px] rounded-[12px]",
-        "border border-[#EBEBEB] bg-white px-3 md:px-[20px] py-3 md:py-0",
-        "cursor-pointer hover:bg-[#EDEDED] duration-150",
+        "border border-prophet-line bg-prophet-panel px-3 md:px-[20px] py-3 md:py-0",
+        "cursor-pointer hover:bg-prophet-hover duration-150",
         className
       )}
       aria-label={resolvedAriaLabel}
@@ -54,7 +54,7 @@ export function TopAnalyticsCard({
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <p className="m-0 text-[14px] font-[400] capitalize leading-[17px] text-[#909090] h-[34px] md:h-auto">
+        <p className="m-0 text-[14px] font-[400] capitalize leading-[17px] text-prophet-muted h-[34px] md:h-auto">
           {categoryLabel}
         </p>
 
@@ -64,12 +64,12 @@ export function TopAnalyticsCard({
             name={teamName}
             className="h-[26px] w-[26px] shrink-0 rounded-[6px] text-[26px]"
           />
-          <h3 className="m-0 truncate text-base md:text-[20px] font-[500] leading-[24px] text-black">
+          <h3 className="m-0 truncate text-base md:text-[20px] font-[500] leading-[24px] text-prophet-foreground">
             {teamName}
           </h3>
         </div>
 
-        <p className="m-0 mt-[10px] max-w-[226px] text-[14px] font-[400] leading-[17px] text-black">
+        <p className="m-0 mt-[10px] max-w-[226px] text-[14px] font-[400] leading-[17px] text-prophet-foreground">
           {description}
         </p>
       </div>

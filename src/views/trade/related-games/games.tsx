@@ -34,7 +34,7 @@ function RelatedGamesLoading() {
       {Array.from({ length: 3 }, (_, index) => (
         <div
           key={index}
-          className="rounded-xl border border-[#EBEBEB] bg-white p-3"
+          className="rounded-xl border border-prophet-line bg-prophet-panel p-3"
         >
           <LoadingBlock className="mb-2 h-4 w-24" />
           <LoadingBlock className="h-14 w-full rounded-lg" />

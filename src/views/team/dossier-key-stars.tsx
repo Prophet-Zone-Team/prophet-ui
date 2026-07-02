@@ -40,7 +40,7 @@ export function DossierKeyStars({ players }: DossierKeyStarsProps) {
                 </span>
               )}
               <div className="min-w-0">
-                <strong className="block truncate text-xs font-[500] text-black">
+                <strong className="block truncate text-xs font-[500] text-prophet-foreground">
                   {player.name}
                 </strong>
                 <span className="block truncate text-[10px] text-prophet-muted">

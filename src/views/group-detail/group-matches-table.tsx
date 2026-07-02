@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import { LoadingBlock } from "@/components/ui/loading-block";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { cn } from "@/lib/cn";
@@ -13,6 +14,7 @@ import { formatMatchScore } from "@/lib/market/match-display";
 import { resolveWorldCupTeamByGroupItemTitle } from "@/lib/market/resolve-winner-team";
 import { isEndedMatchStatus } from "@/lib/market/schedule-match";
 import type { WorldCupMatch, WorldCupMatchStatus } from "@/types/market";
+import { groupDetailPanelClass } from "@/views/group-detail/group-detail-ui";
 
 const GROUP_MATCH_TIMEZONE = "Asia/Shanghai";
 
@@ -21,18 +23,6 @@ export interface GroupMatchesTableProps {
   isLoading?: boolean;
   isError?: boolean;
   className?: string;
-}
-
-function LoadingBlock({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "animate-pulse rounded-md bg-[#ebebeb]/80",
-        className ?? "h-4 w-full"
-      )}
-      aria-hidden
-    />
-  );
 }
 
 function GroupMatchesTableLoading() {
@@ -129,7 +119,7 @@ function MatchTeamSideRow({
         logoUrl={logoUrl}
         className="h-9 w-9 shrink-0 rounded-[6px] text-[36px] drop-shadow-[0_0_2px_rgba(0,0,0,0.2)]"
       />
-      <span className="truncate text-[16px] font-[500] leading-5 text-black">
+      <span className="truncate text-[16px] font-[500] leading-5 text-prophet-foreground">
         {displayName}
       </span>
       <MatchOutcomeLabel outcome={outcome} />
@@ -159,7 +149,7 @@ function MatchTeamSideStack({
         className="h-9 w-9 shrink-0 rounded-[6px] text-[36px] drop-shadow-[0_0_2px_rgba(0,0,0,0.2)]"
       />
       <div className="flex min-w-0 max-w-full flex-col items-center gap-0.5">
-        <span className="max-w-full truncate text-center text-[14px] font-[500] leading-5 text-black">
+        <span className="max-w-full truncate text-center text-[14px] font-[500] leading-5 text-prophet-foreground">
           {displayName}
         </span>
         <MatchOutcomeLabel outcome={outcome} />
@@ -181,12 +171,12 @@ function GroupMatchRowMeta({
     <div className="flex min-w-0 items-center gap-2.5">
       <time
         dateTime={kickoffAt}
-        className="text-[14px] font-[500] leading-5 text-black sm:text-[16px]"
+        className="text-[14px] font-[500] leading-5 text-prophet-foreground sm:text-[16px]"
       >
         {formatGroupMatchDateTime(kickoffAt)}
       </time>
       {ended ? (
-        <span className="shrink-0 text-[14px] font-[500] leading-5 text-[#909090] sm:text-[16px]">
+        <span className="shrink-0 text-[14px] font-[500] leading-5 text-prophet-muted sm:text-[16px]">
           {t("groupMatchStatusEnded")}
         </span>
       ) : null}
@@ -210,7 +200,7 @@ function GroupMatchScore({
   return (
     <div
       className={cn(
-        "text-center text-[16px] font-[500] leading-5 text-black",
+        "text-center text-[16px] font-[500] leading-5 text-prophet-foreground",
         className
       )}
     >
@@ -248,7 +238,7 @@ function GroupMatchRow({ match }: { match: WorldCupMatch }) {
   };
 
   return (
-    <article className="border-t border-[#EBEBEB] px-4 py-4 first:border-t-0">
+    <article className="border-t border-prophet-line px-4 py-4 first:border-t-0">
       <div className="md:hidden">
         <GroupMatchRowMeta kickoffAt={match.kickoffAt} ended={ended} />
 
@@ -292,12 +282,12 @@ export function GroupMatchesTable({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white",
+        groupDetailPanelClass,
         className
       )}
       aria-label={t("groupMatchesAria")}
     >
-      <h2 className="px-4 py-4 text-[18px] font-[500] leading-[23px] text-black">
+      <h2 className="px-4 py-4 text-[18px] font-[500] leading-[23px] text-prophet-foreground">
         {t("scores")}
       </h2>
 

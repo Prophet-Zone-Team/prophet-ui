@@ -159,7 +159,7 @@ export function StrategyBidModal({
         >
           <div className="flex flex-col gap-6 pb-2">
             {skipPreValidation ? (
-              <p className="m-0 rounded-lg border border-[#EBEBEB] bg-[#F7F7F7] px-3 py-2 text-center text-xs leading-[16px] text-[#909090]">
+              <p className="m-0 rounded-lg border border-prophet-line bg-prophet-base px-3 py-2 text-center text-xs leading-[16px] text-prophet-muted">
                 {t("testModeSkipPreValidation")}
               </p>
             ) : null}

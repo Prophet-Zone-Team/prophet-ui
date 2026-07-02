@@ -70,7 +70,7 @@ const GAME_PROBABILITY_TIME_RANGES = [
 }>;
 
 const probabilityCardClass =
-  "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
+  "min-w-0 flex-1 rounded-[12px] border border-prophet-line bg-prophet-panel p-4 sm:p-5";
 
 export type ProbabilitySummaryItem = {
   label: string;
@@ -377,7 +377,7 @@ export function GameProbabilitySection({
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <h2 className="m-0 text-[18px] font-[500] leading-6 text-black">
+            <h2 className="m-0 text-[18px] font-[500] leading-6 text-prophet-foreground">
               {t("probabilityLabel")}
             </h2>
           </div>
@@ -409,7 +409,7 @@ export function GameProbabilitySection({
                     className={cn(
                       "border-0 bg-transparent p-0 text-[14px] leading-[17px]",
                       timeRange === range.id
-                        ? "font-[500] text-black"
+                        ? "font-[500] text-prophet-foreground"
                         : "font-[400] text-[#909090]"
                     )}
                     onClick={() => setTimeRange(range.id)}
@@ -522,8 +522,8 @@ export function GameProbabilitySection({
         {orderbookEnabled ? (
           <div
             className={cn(
-              "overflow-hidden bg-white",
-              !embedded && "rounded-[12px] border border-[#EBEBEB]",
+              "overflow-hidden bg-prophet-panel",
+              !embedded && "rounded-[12px] border border-prophet-line",
             )}
           >
             <button
@@ -533,7 +533,7 @@ export function GameProbabilitySection({
               aria-controls="game-trade-mobile-orderbook"
               onClick={() => setOrderbookExpanded((current) => !current)}
             >
-              <span className="text-base font-[500] leading-[19px] text-black">
+              <span className="text-base font-[500] leading-[19px] text-prophet-foreground">
                 {t("orderbook")}
               </span>
               <ChevronDown
@@ -548,7 +548,7 @@ export function GameProbabilitySection({
             {orderbookExpanded ? (
               <div
                 id="game-trade-mobile-orderbook"
-                className="border-t border-[#EBEBEB]"
+                className="border-t border-prophet-line"
               >
                 <OrderbookPanel
                   visible
@@ -688,7 +688,7 @@ function ProbabilitySummaryRow({ items }: { items: ProbabilitySummaryItem[] }) {
             aria-hidden
           />
           <ProbabilitySummaryItemLabel code={item.code} label={item.label} />
-          <span className="text-[12px] font-[500] leading-[17px] text-black">
+          <span className="text-[12px] font-[500] leading-[17px] text-prophet-foreground">
             {formatChartProbability(item.value)}
           </span>
         </div>
@@ -707,14 +707,14 @@ function ChartStateMessage({
   onAction?: () => void;
 }) {
   return (
-    <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 rounded-[8px] border border-dashed border-[#EBEBEB] px-4 py-8 text-center">
+    <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 rounded-[8px] border border-dashed border-prophet-line px-4 py-8 text-center">
       <p className="m-0 text-sm font-[400] leading-[17px] text-[#909090]">
         {message}
       </p>
       {actionLabel && onAction ? (
         <button
           type="button"
-          className="border-0 bg-transparent p-0 text-sm font-[500] leading-[17px] text-black underline"
+          className="border-0 bg-transparent p-0 text-sm font-[500] leading-[17px] text-prophet-foreground underline"
           onClick={onAction}
         >
           {actionLabel}
@@ -747,7 +747,7 @@ function LiveScoreBadge({
         {t("liveBadge")}
       </span>
 
-      <span className="inline-flex items-center gap-1.5 text-black">
+      <span className="inline-flex items-center gap-1.5 text-prophet-foreground">
         <TeamFlag
           code={homeCode}
           name={homeName}
@@ -756,7 +756,7 @@ function LiveScoreBadge({
         {homeScore?.trim() ?? "—"}
       </span>
 
-      <span className="inline-flex items-center gap-1.5 text-black">
+      <span className="inline-flex items-center gap-1.5 text-prophet-foreground">
         <TeamFlag
           code={awayCode}
           name={awayName}

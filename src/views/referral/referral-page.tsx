@@ -71,11 +71,11 @@ export function ReferralPage() {
   if (isError) {
     return (
       <div className={portfolioPageClass}>
-        <div className="flex flex-col items-center gap-3 pt-[34px] text-[14px] text-[#909090]">
+        <div className="flex flex-col items-center gap-3 pt-[34px] text-[14px] text-prophet-muted">
           <p>{t("loadError")}</p>
           <button
             type="button"
-            className="text-black underline-offset-2 hover:underline"
+            className="text-prophet-foreground underline-offset-2 hover:underline"
             onClick={() => void refetch()}
           >
             {t("retry")}

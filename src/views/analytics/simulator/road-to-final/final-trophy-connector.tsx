@@ -43,17 +43,17 @@ function FinalTrophyConnectorSvg({
     >
       <path
         d={`M 0 ${rel(y1)} H ${forkX} V ${rel(y3)} H ${hEnd}`}
-        stroke="#909090"
+        stroke="var(--prophet-text-muted)"
         strokeWidth="1"
       />
       <path
         d={`M 0 ${rel(y2)} H ${forkX} V ${rel(y3)}`}
-        stroke="#909090"
+        stroke="var(--prophet-text-muted)"
         strokeWidth="1"
       />
       <path
         d={`M ${hEnd} ${rel(y3 - halfVertical)} V ${rel(y3 + halfVertical)}`}
-        stroke="#909090"
+        stroke="var(--prophet-text-muted)"
         strokeWidth="1"
       />
     </svg>

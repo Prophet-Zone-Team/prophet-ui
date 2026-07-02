@@ -18,7 +18,7 @@ export function SignalNewsDetailCloseButton({
     <button
       type="button"
       className={cn(
-        "inline-flex h-[10px] w-[10px] items-center justify-center p-0",
+        "inline-flex h-[10px] w-[10px] items-center justify-center p-0 text-prophet-muted",
         className
       )}
       aria-label={t("closeNewsDetail")}
@@ -34,7 +34,7 @@ export function SignalNewsDetailCloseButton({
       >
         <path
           d="M1 1L9 9M9 1L1 9"
-          stroke="#909090"
+          stroke="currentColor"
           strokeWidth="1.6"
           strokeLinecap="round"
         />
