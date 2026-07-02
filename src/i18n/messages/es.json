@@ -238,6 +238,7 @@
     "matchMarketCategories": "Categorías de mercado del partido",
     "marketCategories": "Categorías de mercado",
     "moneyline": "Moneyline",
+    "gameLines": "Líneas del partido",
     "teamToAdvance": "Equipo que avanza",
     "teamToAdvanceHelp": "Se resuelve al equipo que avance oficialmente a la siguiente ronda. Incluye tiempo reglamentario, prórroga, penaltis y decisiones oficiales como abandono o descalificación.",
     "moneylineHelp": "Se resuelve según el resultado al final de los 90 minutos reglamentarios más el tiempo añadido. No incluye prórroga ni penaltis.",
