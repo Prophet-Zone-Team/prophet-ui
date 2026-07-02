@@ -24,7 +24,7 @@ export function showProphetNotificationToast(
     {
       duration: resolved.duration,
       className:
-        "rounded-prophet border border-prophet-line bg-white p-0 shadow-prophet-wallet",
+        "rounded-prophet border border-prophet-line bg-prophet-panel p-0 shadow-prophet-wallet",
     },
   );
 }

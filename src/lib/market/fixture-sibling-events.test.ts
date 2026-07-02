@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   isFixtureMainEventSlug,
+  resolveFixtureMainEventSlug,
   resolveFixtureSiblingSlugs,
 } from "@/lib/market/fixture-sibling-events";
 
@@ -30,6 +31,21 @@ describe("fixture sibling events", () => {
     assert.deepEqual(
       resolveFixtureSiblingSlugs("fifwc-mex-rsa-2026-06-11-more-markets"),
       [],
+    );
+  });
+
+  it("normalizes sibling and market slugs to the main fixture event slug", () => {
+    assert.equal(
+      resolveFixtureMainEventSlug("fifwc-eng-cdr-2026-07-01-more-markets"),
+      "fifwc-eng-cdr-2026-07-01",
+    );
+    assert.equal(
+      resolveFixtureMainEventSlug("fifwc-eng-cdr-2026-07-01-extra-time"),
+      "fifwc-eng-cdr-2026-07-01",
+    );
+    assert.equal(
+      resolveFixtureMainEventSlug("fifwc-eng-cdr-2026-07-01"),
+      "fifwc-eng-cdr-2026-07-01",
     );
   });
 });

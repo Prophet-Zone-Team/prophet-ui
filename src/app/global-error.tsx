@@ -13,9 +13,9 @@ export default function GlobalError({
 
   return (
     <html lang="en">
-      <body className="bg-[#F9FAFC] min-h-screen">
+      <body className="bg-prophet-base min-h-screen">
         <div className="flex min-h-screen flex-col items-center justify-center px-5 py-12">
-          <section className="w-full max-w-lg rounded-lg border border-[#E4E7EC] bg-white p-8 shadow-sm">
+          <section className="w-full max-w-lg rounded-lg border border-[#E4E7EC] bg-prophet-panel p-8 shadow-sm">
             <p className="m-0 text-[10px] font-medium uppercase tracking-[0.28em] text-[#6B7280]">
               Application error
             </p>

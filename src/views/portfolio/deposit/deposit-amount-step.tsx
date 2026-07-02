@@ -148,8 +148,8 @@ export function DepositAmountStep({
 
       <div className="mt-20">
         <div className="flex items-center justify-between gap-1 px-4 py-3">
-          <span className="text-sm font-[500] text-[#909090]">{t("send")}</span>
-          <span className="text-sm font-[500] text-[#909090]">{t("receive")}</span>
+          <span className="text-sm font-[500] text-prophet-muted">{t("send")}</span>
+          <span className="text-sm font-[500] text-prophet-muted">{t("receive")}</span>
         </div>
         <div className={depositTransferBarClass}>
           <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -162,10 +162,10 @@ export function DepositAmountStep({
                 size="md"
               />
               <div className="flex min-w-0 flex-col">
-                <span className="text-sm font-[500] text-black">
+                <span className="text-sm font-[500] text-prophet-foreground">
                   {token.symbol}
                 </span>
-                <span className="text-xs font-[500] text-[#909090]">
+                <span className="text-xs font-[500] text-prophet-muted">
                   {token.chainName}
                 </span>
               </div>
@@ -173,17 +173,17 @@ export function DepositAmountStep({
           </div>
 
           <ArrowRight
-            className="h-4 w-4 shrink-0 text-[#909090]"
+            className="h-4 w-4 shrink-0 text-prophet-muted"
             aria-hidden="true"
           />
 
           <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
             <div className="flex items-center gap-2">
               <div className="flex min-w-0 flex-col items-end">
-                <span className="text-sm font-[500] text-black">
+                <span className="text-sm font-[500] text-prophet-foreground">
                   {POLYMARKET_USD.symbol}
                 </span>
-                <span className="text-xs font-[500] text-[#909090]">
+                <span className="text-xs font-[500] text-prophet-muted">
                   {POLYMARKET_USD.chainName}
                 </span>
               </div>

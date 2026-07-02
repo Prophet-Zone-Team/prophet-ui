@@ -139,7 +139,7 @@ export function shouldDepositViaStableflowQr(
   }
 
   if (loginMethod === "near") {
-    return !isNearOriginStableflowToken(token);
+    return false;
   }
 
   if (

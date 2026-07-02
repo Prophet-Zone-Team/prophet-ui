@@ -157,6 +157,121 @@ describe("mapEventSportsMarkets", () => {
     assert.equal(totalGroup?.outcomesByLine?.["2.5"]?.[1]?.price, 0.54);
   });
 
+  it("maps team to advance, extra time, and penalty shootout markets", () => {
+    const markets: GammaMarketRecord[] = [
+      binaryMarket({
+        sportsMarketType: "soccer_game_to_advance",
+        question: "Will Mexico advance?",
+        conditionId: "advance-home",
+        yesPrice: 0.62,
+        noPrice: 0.38,
+      }),
+      binaryMarket({
+        sportsMarketType: "soccer_game_to_advance",
+        question: "Will South Africa advance?",
+        conditionId: "advance-away",
+        yesPrice: 0.41,
+        noPrice: 0.59,
+      }),
+      binaryMarket({
+        sportsMarketType: "soccer_game_goes_to_extra_time",
+        question: "Will the match go to extra time?",
+        conditionId: "extra-time",
+        yesPrice: 0.47,
+        noPrice: 0.56,
+      }),
+      binaryMarket({
+        sportsMarketType: "penalty_shootout",
+        question: "Will the match go to a penalty shootout?",
+        conditionId: "penalty-shootout",
+        yesPrice: 0.22,
+        noPrice: 0.81,
+      }),
+    ];
+
+    const snapshot = mapEventSportsMarkets(markets, "Mexico", "South Africa", []);
+
+    assert.equal(
+      snapshot.lines.find((group) => group.type === "team_to_advance")?.outcomes.length,
+      2,
+    );
+    assert.equal(
+      snapshot.lines.find((group) => group.type === "extra_time")?.outcomes.length,
+      1,
+    );
+    assert.equal(
+      snapshot.lines.find((group) => group.type === "penalty_shootout")?.outcomes.length,
+      1,
+    );
+  });
+
+  it("maps team to advance markets using abbreviations and fixture slug", () => {
+    const markets: GammaMarketRecord[] = [
+      binaryMarket({
+        sportsMarketType: "soccer_game_to_advance",
+        groupItemTitle: "Mexico",
+        question: "Will Mexico advance?",
+        conditionId: "advance-home",
+        yesPrice: 0.62,
+        noPrice: 0.38,
+      }),
+      binaryMarket({
+        sportsMarketType: "soccer_game_to_advance",
+        groupItemTitle: "RSA",
+        question: "Will South Africa advance?",
+        conditionId: "advance-away",
+        yesPrice: 0.41,
+        noPrice: 0.59,
+      }),
+    ];
+
+    const snapshot = mapEventSportsMarkets(
+      markets,
+      "Mexico",
+      "South Africa",
+      [],
+      "fifwc-mex-rsa-2026-06-11",
+    );
+    const group = snapshot.lines.find((item) => item.type === "team_to_advance");
+
+    assert.equal(group?.outcomes.length, 2);
+    assert.equal(group?.outcomes[0]?.side, "home");
+    assert.equal(group?.outcomes[1]?.side, "away");
+    assert.notEqual(group?.outcomes[0]?.id, group?.outcomes[1]?.id);
+  });
+
+  it("maps combined team to advance market with missing outcome labels", () => {
+    const markets: GammaMarketRecord[] = [
+      {
+        slug: "fifwc-eng-cdr-2026-07-01-team-to-advance",
+        question: "England vs. DR Congo: Team to Advance",
+        groupItemTitle: "Team to Advance",
+        conditionId: "advance-combined",
+        acceptingOrders: true,
+        outcomes: null,
+        outcomePrices: '["0.885", "0.115"]',
+        clobTokenIds:
+          '["1111111111111111111111111111111111111111111111111111111111111111", "2222222222222222222222222222222222222222222222222222222222222222"]',
+        volumeNum: 250,
+      },
+    ];
+
+    const snapshot = mapEventSportsMarkets(
+      markets,
+      "England",
+      "DR Congo",
+      [],
+      "fifwc-eng-cdr-2026-07-01",
+    );
+    const group = snapshot.lines.find((item) => item.type === "team_to_advance");
+
+    assert.equal(group?.outcomes.length, 2);
+    assert.equal(group?.outcomes[0]?.side, "home");
+    assert.equal(group?.outcomes[1]?.side, "away");
+    assert.equal(group?.outcomes[0]?.probability, 88.5);
+    assert.equal(group?.outcomes[1]?.probability, 11.5);
+  });
+
   it("maps closed markets for historical display when acceptingOrders is false", () => {
     const markets: GammaMarketRecord[] = [
       binaryMarket({

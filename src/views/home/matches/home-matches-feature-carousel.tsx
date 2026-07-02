@@ -21,7 +21,7 @@ import { SpecialMatchDataCard } from "@/views/home/matches/special-match-data-ca
 const AUTO_PLAY_INTERVAL_MS = 5000;
 
 const VIEWPORT_CLASS =
-  "relative min-h-[160px] overflow-hidden rounded-[12px] border border-[#EBEBEB] sm:min-h-[280px] lg:min-h-[345px]";
+  "relative min-h-[160px] overflow-hidden rounded-[12px] border border-prophet-line sm:min-h-[280px] lg:min-h-[345px]";
 
 interface CarouselSlide {
   id: string;

@@ -143,7 +143,7 @@ function HistoryMarketCell({
     return (
       <div className="flex min-w-0 items-center gap-2 md:gap-3">
         <ProphetMarkIcon className="size-[30px]" aria-hidden="true" />
-        <p className="m-0 truncate text-[14px] font-medium leading-[18px] text-black">
+        <p className="m-0 truncate text-[14px] font-medium leading-[18px] text-prophet-foreground">
           {nonMarketLabel}
         </p>
       </div>
@@ -169,12 +169,12 @@ function HistoryMarketCell({
         {tradeHref ? (
           <Link
             href={tradeHref}
-            className="m-0 block truncate text-[14px] font-medium leading-[18px] text-black no-underline hover:underline"
+            className="m-0 block truncate text-[14px] font-medium leading-[18px] text-prophet-foreground no-underline hover:underline"
           >
             {marketName}
           </Link>
         ) : (
-          <p className="m-0 truncate text-[14px] font-medium leading-[18px] text-black">
+          <p className="m-0 truncate text-[14px] font-medium leading-[18px] text-prophet-foreground">
             {marketName}
           </p>
         )}
@@ -218,7 +218,7 @@ function HistoryRowContent({
     <>
       <div className="flex items-center gap-2">
         <TransactionActionIcon type={transaction.type} />
-        <span className="text-[14px] font-normal leading-[18px] text-black">
+        <span className="text-[14px] font-normal leading-[18px] text-prophet-foreground">
           {actionLabel}
         </span>
         {showStrategyLabel ? <StrategySourceLabel /> : null}
@@ -226,11 +226,11 @@ function HistoryRowContent({
 
       <HistoryMarketCell transaction={transaction} />
 
-      <span className="hidden text-[14px] font-normal leading-[18px] text-black md:block">
+      <span className="hidden text-[14px] font-normal leading-[18px] text-prophet-foreground md:block">
         <TransactionValueDisplay transaction={transaction} />
       </span>
 
-      <span className="hidden text-right text-[14px] font-normal leading-[18px] text-black md:block">
+      <span className="hidden text-right text-[14px] font-normal leading-[18px] text-prophet-foreground md:block">
         {formatPortfolioDateTime(transaction.tradeCreatedAt)}
       </span>
     </>
@@ -248,7 +248,7 @@ function TransactionActionIcon({
         className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#E97864]"
         aria-hidden="true"
       >
-        <span className="h-px w-2 rounded-full bg-white" />
+        <span className="h-px w-2 rounded-full bg-prophet-panel" />
       </span>
     );
   }
@@ -259,7 +259,7 @@ function TransactionActionIcon({
         className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#FF674B]"
         aria-hidden="true"
       >
-        <span className="h-px w-2 rounded-full bg-white" />
+        <span className="h-px w-2 rounded-full bg-prophet-panel" />
       </span>
     );
   }
@@ -292,8 +292,8 @@ function TransactionActionIcon({
         aria-hidden="true"
       >
         <span className="relative size-2">
-          <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-white" />
-          <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white" />
+          <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-prophet-panel" />
+          <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-prophet-panel" />
         </span>
       </span>
     );
@@ -307,9 +307,9 @@ function TransactionActionIcon({
         height="20"
         viewBox="0 0 20 20"
         fill="none"
-        className="shrink-0"
+        className="shrink-0 text-prophet-muted"
       >
-        <circle cx="10" cy="10" r="10" fill="#909090" />
+        <circle cx="10" cy="10" r="10" fill="currentColor" />
         <path
           d="M10 6V13.5M14 10.1906L10 13.5L6 10.1906"
           stroke="white"
@@ -323,10 +323,10 @@ function TransactionActionIcon({
   if (type === "activity") {
     return (
       <span
-        className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#909090]"
+        className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-muted"
         aria-hidden="true"
       >
-        <span className="size-1.5 rounded-full bg-white" />
+        <span className="size-1.5 rounded-full bg-prophet-panel" />
       </span>
     );
   }
@@ -337,9 +337,9 @@ function TransactionActionIcon({
       height="20"
       viewBox="0 0 20 20"
       fill="none"
-      className="shrink-0"
+      className="shrink-0 text-prophet-muted"
     >
-      <circle cx="10" cy="10" r="10" fill="#909090" />
+      <circle cx="10" cy="10" r="10" fill="currentColor" />
       <path
         d="M10 13.5V6M14 9.3094L10 6L6 9.3094"
         stroke="white"
@@ -375,7 +375,7 @@ function renderHistoryRow(
       >
         <div className="flex flex-wrap items-center gap-2">
           <TransactionActionIcon type={transaction.type} />
-          <span className="text-[14px] font-normal text-black">
+          <span className="text-[14px] font-normal text-prophet-foreground">
             {txActionLabels[transaction.type] ?? titleCase(transaction.type)}
           </span>
           {showStrategyLabel ? <StrategySourceLabel /> : null}

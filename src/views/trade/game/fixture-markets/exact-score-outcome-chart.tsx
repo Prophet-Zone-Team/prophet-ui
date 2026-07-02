@@ -40,7 +40,7 @@ export function ExactScoreOutcomeChart({
       summaryItems={buildExactScoreBinarySummary(outcome)}
       binaryPrimaryLabel="Yes"
       binarySecondaryLabel="No"
-      className="min-w-0 border-t border-[#EBEBEB] bg-white p-3 md:p-[16px]"
+      className="min-w-0 border-t border-prophet-line bg-prophet-panel p-3 md:p-[16px]"
     />
   );
 }

@@ -157,12 +157,12 @@ export function PortfolioOpenOrderMarketCard({
               }
               className="mt-0.5 inline-flex items-center gap-1 text-left"
             >
-              <span className="font-[Sora] text-xs font-normal text-[#909090]">
+              <span className="font-[Sora] text-xs font-normal text-prophet-muted">
                 {t("orderCount", { count: orderCount })}
               </span>
               <ChevronDown
                 className={cn(
-                  "size-3.5 shrink-0 text-[#909090] transition-transform duration-200",
+                  "size-3.5 shrink-0 text-prophet-muted transition-transform duration-200",
                   expanded && "rotate-180"
                 )}
                 aria-hidden
@@ -290,12 +290,12 @@ export function PortfolioOpenOrderMarketCard({
           }
           className="inline-flex items-center gap-1 text-left"
         >
-          <span className="font-[Sora] text-xs font-normal text-[#909090]">
+          <span className="font-[Sora] text-xs font-normal text-prophet-muted">
             {t("orderCount", { count: orderCount })}
           </span>
           <ChevronDown
             className={cn(
-              "size-3.5 shrink-0 text-[#909090] transition-transform duration-200",
+              "size-3.5 shrink-0 text-prophet-muted transition-transform duration-200",
               expanded && "rotate-180"
             )}
             aria-hidden

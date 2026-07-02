@@ -14,6 +14,7 @@ import {
   REFERRAL_CLAIM_MIN_AMOUNT,
 } from "@/lib/referral/config";
 import type { ReferralActivityRow, ReferralSummary } from "@/types/referral";
+import { LoadingBlock } from "@/components/ui/loading-block";
 import { cn } from "@/lib/cn";
 
 import {
@@ -29,18 +30,6 @@ import {
   referralSummaryStatValueClass,
   referralSummaryStatValueMutedClass,
 } from "./referral-ui";
-
-function LoadingBlock({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "animate-pulse rounded-md bg-[#ebebeb]/80",
-        className ?? "h-4 w-full"
-      )}
-      aria-hidden
-    />
-  );
-}
 
 function ActivityTableSkeleton() {
   return (
@@ -189,8 +178,8 @@ export function ReferralActivityPanel({
               triggerContainerClassName="w-[152px] shrink-0 max-md:w-full"
               contentStyle={{ pointerEvents: "none" }}
               content={
-                <div className="rounded-[12px] border border-[#EBEBEB] bg-white px-4 py-3 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-                  <p className="m-0 text-[14px] leading-[normal] text-black">
+                <div className="rounded-[12px] border border-prophet-line bg-prophet-panel px-4 py-3 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+                  <p className="m-0 text-[14px] leading-[normal] text-prophet-foreground">
                     {t("claimAvailableTooltip", {
                       minAmount: `$${REFERRAL_CLAIM_MIN_AMOUNT}`,
                     })}

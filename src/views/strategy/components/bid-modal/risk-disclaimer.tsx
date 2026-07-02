@@ -35,7 +35,7 @@ export function RiskDisclaimer({
         <span
           aria-hidden="true"
           className={cn(
-            "inline-flex size-4 items-center justify-center rounded border border-[#909090] bg-[#F5F5F5]",
+            "inline-flex size-4 items-center justify-center rounded border border-prophet-muted bg-prophet-base",
             "peer-checked:border-[#65AF14] peer-checked:bg-[#65AF14]"
           )}
         >
@@ -44,7 +44,7 @@ export function RiskDisclaimer({
           ) : null}
         </span>
       </span>
-      <span className="font-[Sora] text-sm font-light leading-[18px] text-[#909090]">
+      <span className="font-[Sora] text-sm font-light leading-[18px] text-prophet-muted">
         {t("riskDisclaimer")}
       </span>
     </label>

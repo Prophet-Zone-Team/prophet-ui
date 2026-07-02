@@ -21,10 +21,10 @@ export type UsualLineupProps = {
 function LineupPlayerMarker({ player }: { player: TeamLineupPlayerView }) {
   return (
     <>
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[16px] font-[500] leading-[20px] text-black">
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-prophet-panel text-[16px] font-[500] leading-[20px] text-prophet-foreground">
         {player.number ?? "—"}
       </div>
-      <span className="mt-0.5 max-w-[80px] text-center text-[12px] font-[500] leading-[15px] text-black/80">
+      <span className="mt-0.5 max-w-[80px] text-center text-[12px] font-[500] leading-[15px] text-prophet-foreground/80">
         {formatLineupPlayerName(player.name)}
       </span>
     </>
@@ -48,7 +48,7 @@ function DualLineupPitch({
   );
 
   return (
-    <div className="relative h-[409px] w-full bg-gradient-to-b from-[#ECFFD6] to-[#CFEFAC]">
+    <div className="relative h-[409px] w-full bg-gradient-to-b from-[#ECFFD6] to-[#CFEFAC] dark:from-[#1e2a1a] dark:to-[#243318]">
       {(homeLineup?.starters ?? []).map((player) => {
         const positionStyle = homePlacement.get(player.playerId);
 
@@ -104,10 +104,10 @@ function ManagerBlock({
         align === "end" ? "items-end text-right" : "items-start text-left"
       )}
     >
-      <span className="text-[14px] font-[400] leading-[18px] text-[#909090]">
+      <span className="text-[14px] font-[400] leading-[18px] text-prophet-muted">
         {t("manager")}
       </span>
-      <span className="truncate text-[14px] font-[500] leading-[18px] text-black">
+      <span className="truncate text-[14px] font-[500] leading-[18px] text-prophet-foreground">
         {managerName?.trim() || "—"}
       </span>
     </div>
@@ -131,12 +131,12 @@ export function UsualLineup({
     <section
       aria-label={t("usualLineupAria")}
       className={cn(
-        "block w-full overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white",
+        "block w-full overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel",
         className
       )}
     >
       <div className="px-4 py-4 sm:px-5">
-        <h2 className="m-0 text-[18px] font-[500] leading-[23px] text-black">
+        <h2 className="m-0 text-[18px] font-[500] leading-[23px] text-prophet-foreground">
           {t("usualLineup")}
         </h2>
 
@@ -144,10 +144,10 @@ export function UsualLineup({
           <ManagerBlock align="start" managerName={homeLineup?.coach} />
 
           <div className="flex flex-col items-center gap-1 px-2">
-            <span className="text-[14px] font-[400] leading-[18px] text-[#909090]">
+            <span className="text-[14px] font-[400] leading-[18px] text-prophet-muted">
               {t("formation")}
             </span>
-            <div className="flex items-center gap-3 text-[14px] font-[500] leading-[18px] text-black">
+            <div className="flex items-center gap-3 text-[14px] font-[500] leading-[18px] text-prophet-foreground">
               <span>{homeLineup?.formation ?? "—"}</span>
               <span>{awayLineup?.formation ?? "—"}</span>
             </div>
@@ -158,15 +158,15 @@ export function UsualLineup({
       </div>
 
       {isLoading ? (
-        <p className="px-4 pb-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090] sm:px-5">
+        <p className="px-4 pb-6 text-center text-[14px] font-[400] leading-[17px] text-prophet-muted sm:px-5">
           {t("loadingData")}
         </p>
       ) : isError ? (
-        <p className="px-4 pb-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090] sm:px-5">
+        <p className="px-4 pb-6 text-center text-[14px] font-[400] leading-[17px] text-prophet-muted sm:px-5">
           {t("unableToLoadData")}
         </p>
       ) : !hasStarters ? (
-        <p className="px-4 pb-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090] sm:px-5">
+        <p className="px-4 pb-6 text-center text-[14px] font-[400] leading-[17px] text-prophet-muted sm:px-5">
           {t("usualLineupEmpty")}
         </p>
       ) : (

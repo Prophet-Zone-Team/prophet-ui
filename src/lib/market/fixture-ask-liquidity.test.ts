@@ -7,6 +7,7 @@ import {
   mergeFixtureOutcomeLiveAsks,
   NO_ASK_LIQUIDITY_MESSAGE,
   resolveFixtureBuyAskDisabledReason,
+  resolveOutcomeLiveAsksFromTokenPrices,
 } from "@/lib/market/fixture-ask-liquidity";
 import type { FixtureMarketOutcome } from "@/types/market";
 import { buildFixtureBidOrderPreview } from "@/lib/market/game-order";
@@ -122,5 +123,19 @@ describe("fixture ask liquidity", () => {
 
     assert.equal(merged.yesAsk, 0.58);
     assert.equal(merged.noAsk, 0.45);
+  });
+
+  it("maps token prices to the matching outcome token ids", () => {
+    const homeAsks = resolveOutcomeLiveAsksFromTokenPrices(
+      { tokenId: "home-token" },
+      { "home-token": { bestAsk: 0.61, bestBid: 0.59 } },
+    );
+    const awayAsks = resolveOutcomeLiveAsksFromTokenPrices(
+      { tokenId: "away-token" },
+      { "away-token": { bestAsk: 0.42, bestBid: 0.4 } },
+    );
+
+    assert.equal(homeAsks?.yesAsk, 0.61);
+    assert.equal(awayAsks?.yesAsk, 0.42);
   });
 });

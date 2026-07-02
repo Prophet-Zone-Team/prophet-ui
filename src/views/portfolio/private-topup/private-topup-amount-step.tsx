@@ -168,12 +168,12 @@ export function PrivateTopupAmountStep({
 
       <div className={cn(depositTransferBarClass, "mt-[3.5rem]")}>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <span className="text-sm font-[400] text-[#909090]">
+          <span className="text-sm font-[400] text-prophet-muted">
             {t("fundingWallet")}
           </span>
           <div className="flex items-center gap-2">
             <WalletAvatarIcon address={fundingWalletAddress} className="size-5" />
-            <span className="truncate text-base font-[500] text-black">
+            <span className="truncate text-base font-[500] text-prophet-foreground">
               {fundingWalletAddress
                 ? formatShortWallet(fundingWalletAddress)
                 : "--"}
@@ -188,10 +188,10 @@ export function PrivateTopupAmountStep({
               size="md"
             />
             <div className="flex min-w-0 flex-col">
-              <span className="text-sm font-[500] text-black">
+              <span className="text-sm font-[500] text-prophet-foreground">
                 {token.symbol}
               </span>
-              <span className="text-xs font-[500] text-[#909090]">
+              <span className="text-xs font-[500] text-prophet-muted">
                 {token.chainName}
               </span>
             </div>
@@ -199,12 +199,12 @@ export function PrivateTopupAmountStep({
         </div>
 
         <ArrowRight
-          className="h-4 w-4 shrink-0 text-[#909090]"
+          className="h-4 w-4 shrink-0 text-prophet-muted"
           aria-hidden="true"
         />
 
         <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
-          <span className="text-sm font-[400] text-[#909090]">
+          <span className="text-sm font-[400] text-prophet-muted">
             {t("privateWallet")}
           </span>
           <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export function PrivateTopupAmountStep({
                 aria-hidden
               />
             </div>
-            <span className="truncate text-base font-[500] text-black">
+            <span className="truncate text-base font-[500] text-prophet-foreground">
               {privateAccountAddress
                 ? formatShortWallet(privateAccountAddress)
                 : "--"}
@@ -231,10 +231,10 @@ export function PrivateTopupAmountStep({
               size="md"
             />
             <div className="flex min-w-0 flex-col items-start">
-              <span className="text-sm font-[500] text-black">
+              <span className="text-sm font-[500] text-prophet-foreground">
                 {POLYMARKET_USD.symbol}
               </span>
-              <span className="text-xs font-[500] text-[#909090]">
+              <span className="text-xs font-[500] text-prophet-muted">
                 {POLYMARKET_USD.chainName}
               </span>
             </div>

@@ -38,7 +38,7 @@ export function WithdrawEntryStep({
       <div className="flex justify-center gap-3 pb-2 pt-[120px]">
         <button
           type="button"
-          className="bg-black text-white flex justify-center items-center w-60 h-10 text-base rounded-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="bg-black dark:bg-prophet-primary text-white flex justify-center items-center w-60 h-10 text-base rounded-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           onClick={() => void onConnectWallet()}
           disabled={status === "loading"}
         >
@@ -55,12 +55,12 @@ export function WithdrawEntryStep({
         walletAddress={session.walletAddress}
         connectedBalance={
           coreStatus === "loading" ? (
-            <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
+            <Loader2 className="h-5 w-5 animate-spin text-prophet-muted" aria-hidden="true" />
           ) : (
             availableDisplay
           )
         }
-        connectedBalanceClassName="text-[#909090]"
+        connectedBalanceClassName="text-prophet-muted"
         onSelectConnected={onSelectBridge}
         onSelectStableflow={onSelectStableflow}
         stableflowLoading={stableflowLoading}

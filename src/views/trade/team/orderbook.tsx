@@ -138,7 +138,7 @@ export function Orderbook({
     return (
       <div
         className={cn(
-          "flex min-h-0 flex-1 items-center justify-center rounded-[12px] border border-[#EBEBEB] bg-white px-3 text-center text-sm text-prophet-muted",
+          "flex min-h-0 flex-1 items-center justify-center rounded-[12px] border border-prophet-line bg-prophet-panel px-3 text-center text-sm text-prophet-muted",
           className
         )}
       >
@@ -152,23 +152,23 @@ export function Orderbook({
       className={cn(
         "flex min-h-0 flex-1 flex-col text-[12px]",
         isMirror
-          ? "bg-white px-4 pb-4 pt-2"
-          : "rounded-[12px] border border-[#EBEBEB] bg-white p-3",
+          ? "bg-prophet-panel px-4 pb-4 pt-2"
+          : "rounded-[12px] border border-prophet-line bg-prophet-panel p-3",
         className
       )}
       aria-label={t("marketOrderBookAria")}
     >
       {isMirror ? (
-        <div className="flex shrink-0 justify-between pb-2 font-[400] leading-[15px] text-[#909090]">
+        <div className="flex shrink-0 justify-between pb-2 font-[400] leading-[15px] text-prophet-muted">
           <span>{t("buy")}</span>
           <span>{t("sell")}</span>
         </div>
       ) : (
         <>
-          <div className="text-[18px] font-[500] pb-[10px] text-black">
+          <div className="text-[18px] font-[500] pb-[10px] text-prophet-foreground">
             {t("orderbook")}
           </div>
-          <div className="grid shrink-0 grid-cols-2 gap-2 px-1 pb-2 font-[400] leading-[17px] text-[#909090]">
+          <div className="grid shrink-0 grid-cols-2 gap-2 px-1 pb-2 font-[400] leading-[17px] text-prophet-muted">
             <span>{t("price")}</span>
             <span className="text-right">{t("shares")}</span>
           </div>
@@ -184,14 +184,14 @@ export function Orderbook({
         {loading && !book ? (
           <div
             className={cn(
-              "absolute inset-0 z-10 flex items-center justify-center bg-white/80",
+              "absolute inset-0 z-10 flex items-center justify-center bg-prophet-panel/80",
               isMirror && "min-h-[200px]"
             )}
             aria-busy="true"
             aria-label={t("loadingOrderBookAria")}
           >
             <Loader2
-              className="h-5 w-5 animate-spin text-[#909090]"
+              className="h-5 w-5 animate-spin text-prophet-muted"
               aria-hidden="true"
             />
           </div>
@@ -200,11 +200,11 @@ export function Orderbook({
         {error && !book ? (
           <div
             className={cn(
-              "absolute inset-0 z-10 flex items-center justify-center bg-white px-1",
+              "absolute inset-0 z-10 flex items-center justify-center bg-prophet-panel px-1",
               isMirror && "min-h-[200px]"
             )}
           >
-            <p className="text-center text-[#909090]">{t("noData")}</p>
+            <p className="text-center text-prophet-muted">{t("noData")}</p>
           </div>
         ) : null}
 
@@ -242,13 +242,13 @@ export function Orderbook({
               )}
             </div>
 
-            <div className="mx-[-4px] flex h-8 shrink-0 items-center justify-between bg-[#EBEBEB] px-2">
-              <span className="font-[400] leading-[17px] text-black">
+            <div className="mx-[-4px] flex h-8 shrink-0 items-center justify-between bg-prophet-action-panel px-2">
+              <span className="font-[400] leading-[17px] text-prophet-foreground">
                 {marketPrice !== undefined
                   ? formatOrderbookDisplayPrice(marketPrice)
                   : "—"}
               </span>
-              <span className="font-[400] leading-[17px] text-[#909090]">
+              <span className="font-[400] leading-[17px] text-prophet-muted">
                 {t("marketPrice")}
               </span>
             </div>
@@ -311,7 +311,7 @@ function MirrorOrderbookRow({
       <div className="relative flex min-w-0 flex-1 items-center justify-end px-1">
         {bid ? (
           <>
-            <span className="absolute left-0 z-10 max-w-[45%] truncate pr-1 text-right font-[400] leading-[15px] text-black">
+            <span className="absolute left-0 z-10 max-w-[45%] truncate pr-1 text-right font-[400] leading-[15px] text-prophet-foreground">
               {formatOrderbookTotal(bid.size, bid.price)}
             </span>
             <div
@@ -351,7 +351,7 @@ function MirrorOrderbookRow({
               style={{ width: `${askBarWidth}%` }}
               aria-hidden="true"
             />
-            <span className="absolute right-0 z-10 max-w-[45%] truncate pl-1 text-right font-[400] leading-[15px] text-black">
+            <span className="absolute right-0 z-10 max-w-[45%] truncate pl-1 text-right font-[400] leading-[15px] text-prophet-foreground">
               {formatOrderbookTotal(ask.size, ask.price)}
             </span>
           </>
@@ -396,7 +396,7 @@ function OrderbookRow({
       >
         {priceLabel}
       </span>
-      <span className="text-right font-[400] text-black">
+      <span className="text-right font-[400] text-prophet-foreground">
         {formatShareSize(size)}
       </span>
     </button>

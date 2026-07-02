@@ -9,21 +9,29 @@ import {
 } from "./fixed-knockout";
 
 describe("fixed-knockout", () => {
-  it("defines confirmed R32 winners for matches 73 through 78", () => {
+  it("defines confirmed R32 winners for matches 73 through 82", () => {
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[73], "canada");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[74], "paraguay");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[75], "morocco");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[76], "brazil");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[77], "france");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[78], "norway");
-    assert.equal(FIXED_KNOCKOUT_MATCH_IDS.size, 6);
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[79], "mexico");
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[80], "england");
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[81], "usa");
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[82], "belgium");
+    assert.equal(FIXED_KNOCKOUT_MATCH_IDS.size, 10);
   });
 
   it("identifies fixed match ids", () => {
     assert.equal(isFixedKnockoutMatch(73), true);
     assert.equal(isFixedKnockoutMatch(77), true);
     assert.equal(isFixedKnockoutMatch(78), true);
-    assert.equal(isFixedKnockoutMatch(79), false);
+    assert.equal(isFixedKnockoutMatch(79), true);
+    assert.equal(isFixedKnockoutMatch(80), true);
+    assert.equal(isFixedKnockoutMatch(81), true);
+    assert.equal(isFixedKnockoutMatch(82), true);
+    assert.equal(isFixedKnockoutMatch(83), false);
     assert.equal(isFixedKnockoutMatch(89), false);
   });
 
@@ -35,6 +43,10 @@ describe("fixed-knockout", () => {
       76: "japan",
       77: "sweden",
       78: "ivory-coast",
+      79: "ecuador",
+      80: "congo-dr",
+      81: "bosnia-herzegovina",
+      82: "senegal",
       89: "france",
     });
 
@@ -44,6 +56,10 @@ describe("fixed-knockout", () => {
     assert.equal(merged[76], "brazil");
     assert.equal(merged[77], "france");
     assert.equal(merged[78], "norway");
+    assert.equal(merged[79], "mexico");
+    assert.equal(merged[80], "england");
+    assert.equal(merged[81], "usa");
+    assert.equal(merged[82], "belgium");
     assert.equal(merged[89], "france");
   });
 });

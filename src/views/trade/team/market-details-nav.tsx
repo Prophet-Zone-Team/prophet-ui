@@ -10,7 +10,7 @@ import { teamDetailHref } from "@/lib/routes/team";
 import type { TeamMarketSnapshot } from "@/types/market";
 
 const segmentLabelClassName =
-  "font-[Sora] text-[14px] font-[500] leading-[18px] text-black";
+  "font-[Sora] text-[14px] font-[500] leading-[18px] text-prophet-foreground";
 
 export interface MarketDetailsNavProps {
   snapshot: TeamMarketSnapshot;
@@ -55,7 +55,7 @@ export function MarketDetailsNav({
       <div
         role="tablist"
         aria-label={t("marketDetailsNavAria")}
-        className="flex h-[46px] items-center rounded-[12px] bg-[#F4F4F4] p-[5px]"
+        className="flex h-[46px] items-center rounded-[12px] bg-prophet-action-panel border border-prophet-line p-[5px]"
       >
         <button
           type="button"
@@ -64,7 +64,7 @@ export function MarketDetailsNav({
           className={cn(
             "flex h-[36px] flex-1 items-center justify-center rounded-[8px] border",
             isMarketActive
-              ? "border-[#EBEBEB] bg-white"
+              ? "border-prophet-line bg-prophet-panel"
               : "border-transparent bg-transparent",
             segmentLabelClassName
           )}
@@ -80,7 +80,7 @@ export function MarketDetailsNav({
             "flex h-[36px] flex-1 items-center justify-center rounded-[8px] border",
             isMarketActive
               ? "border-transparent bg-transparent"
-              : "border-[#EBEBEB] bg-white",
+              : "border-prophet-line bg-prophet-panel",
             segmentLabelClassName
           )}
           onClick={isMarketActive ? handleDetailsClick : undefined}

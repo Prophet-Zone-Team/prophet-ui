@@ -190,7 +190,7 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
   if (error && !hasData) {
     return (
       <div className="px-4 py-10 text-center">
-        <strong className="block text-sm font-[500] text-black">
+        <strong className="block text-sm font-[500] text-prophet-foreground">
           {t("tradesUnavailable")}
         </strong>
         <p className="m-0 mt-2 text-sm text-prophet-muted">{error}</p>
@@ -223,7 +223,7 @@ export function TradesTable({ snapshot, active }: TradesTableProps) {
       {trades.map((trade) => (
         <div
           key={`${trade.transactionHash ?? trade.timestamp}:${trade.proxyWallet}:${trade.asset}:${trade.side}`}
-          className="grid grid-cols-[minmax(0,0.8fr)_repeat(5,minmax(0,1fr))] gap-2 border-b border-prophet-line/60 px-4 py-2.5 text-sm last:border-b-0"
+          className="grid grid-cols-[minmax(0,0.8fr)_repeat(5,minmax(0,1fr))] gap-2 border-b border-prophet-line px-4 py-2.5 text-sm last:border-b-0"
         >
           <span className="truncate text-prophet-muted">
             {formatUnixRelativeTime(trade.timestamp)}

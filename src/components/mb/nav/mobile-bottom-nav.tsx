@@ -150,7 +150,7 @@ export function MobileBottomNav() {
           </filter>
         </defs>
         <g filter={`url(#${shadowFilterId})`}>
-          <path d={navBarPath} fill="#F9FAFC" />
+          <path d={navBarPath} fill="var(--prophet-bg-base)" />
         </g>
       </svg>
 
@@ -183,7 +183,7 @@ export function MobileBottomNav() {
               <span
                 className={cn(
                   "max-w-full truncate text-center font-[Sora] text-[10px] leading-[13px]",
-                  active ? "text-black" : "text-[#979797]",
+                  active ? "text-prophet-foreground" : "text-prophet-muted",
                   showBalance && "text-right"
                 )}
               >

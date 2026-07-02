@@ -40,7 +40,7 @@ export function MatchProbabilityBar({
       aria-hidden
     >
       <ProbabilitySegmentFill background="#3168FF" clipPath={homeClip} />
-      <ProbabilitySegmentFill background="#D9D9D9" clipPath={drawClip} />
+      <ProbabilitySegmentFill background="var(--prophet-border)" clipPath={drawClip} />
       <ProbabilitySegmentFill background="#F4B600" clipPath={awayClip} />
     </div>
   );

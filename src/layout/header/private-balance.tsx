@@ -28,7 +28,7 @@ function PrivateBalance({ onClick, className }: PrivateBalanceProps) {
     <button
       type="button"
       className={cn(
-        "cursor-pointer text-[#909090] text-sm font-[400] px-2.5 rounded-lg border border-[#FFFFFF] h-[50px] flex flex-col items-end justify-center gap-0 transition-colors hover:border-[#EBEBEB]",
+        "cursor-pointer text-prophet-muted text-sm font-[400] px-2.5 rounded-lg border border-prophet-panel h-[50px] flex flex-col items-end justify-center gap-0 transition-colors hover:border-prophet-line dark:hover:border-white",
         className,
       )}
       onClick={onClick}
@@ -42,7 +42,7 @@ function PrivateBalance({ onClick, className }: PrivateBalanceProps) {
         />
         <div className="">{t("privateBalance")}</div>
       </div>
-      <div className="text-black text-base leading-[19px]">{balanceDisplay}</div>
+      <div className="text-prophet-foreground text-base leading-[19px]">{balanceDisplay}</div>
     </button>
   );
 }

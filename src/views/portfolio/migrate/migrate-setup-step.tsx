@@ -51,7 +51,7 @@ export function MigrateSetupStep({
       </div>
 
       <div className="my-4 flex justify-center">
-        <ArrowDown className="h-4 w-4 text-black" aria-hidden="true" />
+        <ArrowDown className="h-4 w-4 text-prophet-foreground" aria-hidden="true" />
       </div>
 
       <div>

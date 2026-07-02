@@ -52,7 +52,7 @@ export function TpPolygonSwitchConfirmDialog({
     >
       <FundingModalShell title={title} onClose={onClose}>
         <div className="flex flex-col gap-5 pb-2">
-          <p className="m-0 text-sm text-[#909090]">{description}</p>
+          <p className="m-0 text-sm text-prophet-muted">{description}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 pt-2 pb-4">

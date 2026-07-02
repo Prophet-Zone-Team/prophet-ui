@@ -6,7 +6,7 @@ export default function TeamFlagsTestPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-semibold text-black">Team Flags Preview</h1>
+      <h1 className="text-2xl font-semibold text-prophet-foreground">Team Flags Preview</h1>
       <p className="mt-2 text-sm text-prophet-muted">
         {entries.length} teams from <code>src/data/teams/index.ts</code>
       </p>
@@ -15,11 +15,11 @@ export default function TeamFlagsTestPage() {
         {entries.map(([key, team]) => (
           <li
             key={key}
-            className="flex items-center gap-3 rounded-lg border border-prophet-line/80 bg-white px-3 py-2.5"
+            className="flex items-center gap-3 rounded-lg border border-prophet-line/80 bg-prophet-panel px-3 py-2.5"
           >
             <TeamFlag name={key} logoUrl={team.logo} className="h-8 w-8 text-[28px]" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-black">{team.name}</p>
+              <p className="truncate text-sm font-medium text-prophet-foreground">{team.name}</p>
               <p className="truncate text-xs text-prophet-muted">
                 {team.logo} · {team.abbreviation}
               </p>

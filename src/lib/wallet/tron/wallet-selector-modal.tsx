@@ -45,8 +45,8 @@ export function TronWalletSelectorModal({
       ariaLabel={t("selectTronWallet")}
       className="max-w-[400px]"
     >
-      <div className="w-[350px] rounded-[16px] border border-prophet-border flex flex-col gap-2 p-4 bg-white">
-        <h2 className="m-0 text-lg font-[500] text-black">{t("selectTronWallet")}</h2>
+      <div className="w-[350px] rounded-[16px] border border-prophet-line flex flex-col gap-2 p-4 bg-prophet-panel">
+        <h2 className="m-0 text-lg font-[500] text-prophet-foreground">{t("selectTronWallet")}</h2>
         {sortedWallets.length === 0 ? (
           <p className="m-0 text-sm text-[#909090]">{t("noTronWalletDetected")}</p>
         ) : (
@@ -55,7 +55,7 @@ export function TronWalletSelectorModal({
               key={wallet.name}
               type="button"
               disabled={connecting}
-              className="flex justify-between items-center gap-3 rounded-lg border border-[#ececec] px-4 py-3 text-left transition-colors hover:bg-[#f8f8f8]"
+              className="flex justify-between items-center gap-3 rounded-lg border border-prophet-line px-4 py-3 text-left transition-colors hover:bg-prophet-hover"
               onClick={() => onSelect(wallet)}
             >
               <div className="flex items-center gap-3">
@@ -70,7 +70,7 @@ export function TronWalletSelectorModal({
                 ) : (
                   <span className="size-8 rounded-[4px] bg-[#f4f4f4]" />
                 )}
-                <span className="text-base font-[500] text-black">{wallet.name}</span>
+                <span className="text-base font-[500] text-prophet-foreground">{wallet.name}</span>
               </div>
               {
                 wallet.readyState === "Found" && (
