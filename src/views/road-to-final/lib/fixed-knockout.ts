@@ -22,6 +22,10 @@ export const CONFIRMED_KNOCKOUT_WINNERS: KnockoutWinners = {
   76: "brazil", // R32: Brazil vs Japan — Brazil advances (feeds W76 → R16 M91)
   77: "france", // R32: France vs Sweden — France advances (feeds W77 → R16 M89)
   78: "norway", // R32: Côte d'Ivoire vs Norway — Norway advances (feeds W78 → R16 M91)
+  79: "mexico", // R32: Mexico vs Ecuador — Mexico advances (feeds W79 → R16 M92)
+  80: "england", // R32: England vs Congo DR — England advances (feeds W80 → R16 M92)
+  81: "usa", // R32: USA vs Bosnia and Herzegovina — USA advances (feeds W81 → R16 M94)
+  82: "belgium", // R32: Belgium vs Senegal — Belgium advances (feeds W82 → R16 M94)
 };
 
 export const FIXED_KNOCKOUT_WINNERS: KnockoutWinners = CONFIRMED_KNOCKOUT_WINNERS;
