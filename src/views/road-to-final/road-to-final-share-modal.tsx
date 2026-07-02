@@ -147,14 +147,14 @@ export function RoadToFinalShareModal({
         shareImageUploadMode="always"
         modalShellClass="md:w-[550px] px-1 md:px-3"
         header={
-          <h2 className="m-0 text-left text-[18px] font-[500] text-black">
+          <h2 className="m-0 text-left text-[18px] font-[500] text-prophet-foreground">
             {t("shareModalTitle")}
           </h2>
         }
         content={(
           <div className="flex w-full flex-col items-stretch gap-3.5">
             <div className="flex items-center justify-between flex-col md:flex-row">
-              <div className="text-sm font-normal text-black">
+              <div className="text-sm font-normal text-prophet-foreground">
                 {t("shareModalEntriesLabel", { count: availableChances })}
               </div>
               <div className="flex h-[32px] items-center justify-center gap-[6px] rounded-md bg-[rgba(253,211,87,0.2)] pl-[10px] pr-[14px] text-sm font-normal text-[#D1A00F]">
@@ -188,7 +188,7 @@ export function RoadToFinalShareModal({
             </button>
             <button
               type="button"
-              className="flex h-[52px] items-center justify-center gap-3 rounded-xl bg-[#EBEBEB] text-center text-sm font-normal text-black duration-150 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-[52px] items-center justify-center gap-3 rounded-xl bg-[#EBEBEB] text-center text-sm font-normal text-prophet-foreground duration-150 hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
               onClick={handleDownload}
               disabled={downloading}
             >

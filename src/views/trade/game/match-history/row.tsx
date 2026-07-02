@@ -57,7 +57,7 @@ function PenaltyScoreLabel({ score }: { score: string }) {
   const t = useTranslations("trade");
 
   return (
-    <span className="mt-[2px] whitespace-nowrap text-[12px] font-[400] leading-[17px] text-black">
+    <span className="mt-[2px] whitespace-nowrap text-[12px] font-[400] leading-[17px] text-prophet-foreground">
       {t("penaltiesScore", { score })}
     </span>
   );
@@ -75,8 +75,8 @@ export function MatchHistoryDesktopRow({
       role="row"
       className={cn(
         matchHistoryTableGridClass,
-        "items-center rounded-[6px] px-[12px] text-[12px] font-[400] leading-[17px] text-black",
-        highlighted ? "bg-[#F9FAFC]" : "bg-white",
+        "items-center rounded-[6px] px-[12px] text-[12px] font-[400] leading-[17px] text-prophet-foreground",
+        highlighted ? "bg-prophet-hover" : "bg-prophet-panel",
         tall || hasPenaltyDetail
           ? "min-h-[66px] py-[8px]"
           : "min-h-[33px] py-[8px]"
@@ -112,8 +112,8 @@ export function MatchHistoryMobileCard({
   return (
     <article
       className={cn(
-        "flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[12px] font-[400] leading-[17px] text-black",
-        highlighted ? "bg-[#F9FAFC]" : "bg-white"
+        "flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[12px] font-[400] leading-[17px] text-prophet-foreground",
+        highlighted ? "bg-prophet-hover" : "bg-prophet-panel"
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -142,7 +142,7 @@ export function MatchHistoryMobileCard({
         </span>
       </div>
 
-      <div className="flex items-start justify-between gap-3 border-t border-[#EBEBEB] pt-2">
+      <div className="flex items-start justify-between gap-3 border-t border-prophet-line pt-2">
         <span className="text-[12px] leading-[17px] text-[#909090]">
           {t("result")}
         </span>

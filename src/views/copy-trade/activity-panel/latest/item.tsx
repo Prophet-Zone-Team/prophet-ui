@@ -79,7 +79,7 @@ export function LatestItem({ item, now = Date.now(), className }: LatestItemProp
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-[12px] leading-[15px] text-black">
+          <p className="truncate text-[12px] leading-[15px] text-prophet-foreground">
             {displayName}
           </p>
           <span className="shrink-0 text-[12px] leading-[15px] text-[#77A4EF]">
@@ -87,7 +87,7 @@ export function LatestItem({ item, now = Date.now(), className }: LatestItemProp
           </span>
         </div>
 
-        <p className="truncate text-[14px] leading-[18px] text-black">
+        <p className="truncate text-[14px] leading-[18px] text-prophet-foreground">
           {title}
         </p>
 

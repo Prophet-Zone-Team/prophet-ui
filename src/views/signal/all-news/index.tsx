@@ -54,15 +54,15 @@ export function SignalAllList({
 
       <div className="mt-3 flex flex-col gap-2 px-3 md:mt-[12px] md:gap-0 md:px-0">
         {isLoading ? (
-          <p className="py-8 text-center text-[16px] font-[400] leading-[19px] text-[#909090]">
+          <p className="py-8 text-center text-[16px] font-[400] leading-[19px] text-prophet-muted">
             {t("loading")}
           </p>
         ) : isError ? (
-          <p className="py-8 text-center text-[16px] font-[400] leading-[19px] text-[#909090]">
+          <p className="py-8 text-center text-[16px] font-[400] leading-[19px] text-prophet-muted">
             {t("unableToLoadData")}
           </p>
         ) : items.length === 0 ? (
-          <p className="py-8 text-center text-[16px] font-[400] leading-[19px] text-[#909090]">
+          <p className="py-8 text-center text-[16px] font-[400] leading-[19px] text-prophet-muted">
             {t("noSignalsAvailable")}
           </p>
         ) : (

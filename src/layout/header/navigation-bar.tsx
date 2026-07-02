@@ -27,7 +27,7 @@ function NavBar(props: any) {
             href={href}
             className={cn(
               "group relative text-[16px] inline-flex h-[40px] items-center rounded-[40px] px-[10px] transition-colors duration-200",
-              active ? "text-white" : "text-prophet-nav hover:text-[#14203a]",
+              active ? "text-white" : "text-prophet-nav dark:text-white hover:text-[#14203a] dark:hover:text-white",
               navClassName
             )}
             aria-current={active ? "page" : undefined}
@@ -43,7 +43,7 @@ function NavBar(props: any) {
               <motion.span
                 layoutId="header-nav-pill"
                 className={cn(
-                  "absolute inset-0 rounded-[40px] bg-black",
+                  "absolute inset-0 rounded-[40px] bg-prophet-primary",
                   activeClassName
                 )}
                 transition={NAV_PILL_TRANSITION}
@@ -52,7 +52,7 @@ function NavBar(props: any) {
             ) : (
               <span
                 className={cn(
-                  "pointer-events-none absolute inset-0 rounded-[40px] bg-black/0 transition-colors duration-200 group-hover:bg-black/[0.07]",
+                  "pointer-events-none absolute inset-0 rounded-[40px] bg-black/0 transition-colors duration-200 group-hover:bg-black/[0.07] dark:group-hover:bg-prophet-panel/[0.07]",
                   activeClassName
                 )}
                 aria-hidden

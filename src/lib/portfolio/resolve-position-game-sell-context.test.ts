@@ -131,6 +131,77 @@ describe("resolvePositionGameSellContext", () => {
     assert.equal(context.outcomeSide, "no");
   });
 
+  it("matches no position from outcome label when outcome index is inconsistent", () => {
+    const { gameSnapshot, fixtureMarkets } = buildLiechtensteinCyprusContext();
+    const context = resolvePositionGameSellContext(
+      buildPosition({
+        asset: DRAW_NO_TOKEN,
+        outcome: "No",
+        outcomeIndex: 0,
+      }),
+      gameSnapshot,
+      fixtureMarkets
+    );
+
+    assert.ok(context);
+    assert.equal(context.outcomeSide, "no");
+  });
+
+  it("prefers asset match over shared condition id for fixture outcomes", () => {
+    const { gameSnapshot, fixtureMarkets } = buildLiechtensteinCyprusContext();
+    const sharedConditionId = "0xshared-team-to-advance";
+    const homeToken = "home-advance-token";
+    const awayToken = "away-advance-token";
+
+    fixtureMarkets.lines.push({
+      type: "team_to_advance",
+      title: "Team to Advance",
+      outcomes: [
+        {
+          id: "advance-home",
+          marketType: "team_to_advance",
+          category: "lines",
+          label: "Liechtenstein",
+          side: "home",
+          probability: 12.5,
+          price: 0.125,
+          tokenId: homeToken,
+          conditionId: sharedConditionId,
+          acceptingOrders: true,
+        },
+        {
+          id: "advance-away",
+          marketType: "team_to_advance",
+          category: "lines",
+          label: "Cyprus",
+          side: "away",
+          probability: 71,
+          price: 0.71,
+          tokenId: awayToken,
+          conditionId: sharedConditionId,
+          acceptingOrders: true,
+        },
+      ],
+    });
+
+    const context = resolvePositionGameSellContext(
+      buildPosition({
+        asset: awayToken,
+        conditionId: sharedConditionId,
+        slug: "fif-lie-cyp-2026-06-07-team-to-advance",
+        title: "Liechtenstein vs. Cyprus: Team to Advance",
+        outcome: "Cyprus",
+        outcomeIndex: 1,
+      }),
+      gameSnapshot,
+      fixtureMarkets
+    );
+
+    assert.ok(context);
+    assert.equal(context.fixtureOutcome?.side, "away");
+    assert.equal(context.outcomeSide, "yes");
+  });
+
   it("matches fixture market position by condition id", () => {
     const { gameSnapshot, fixtureMarkets } = buildLiechtensteinCyprusContext();
     const fixtureOutcome = {
@@ -167,6 +238,50 @@ describe("resolvePositionGameSellContext", () => {
 
     assert.ok(context);
     assert.equal(context.fixtureOutcome?.id, "total-2pt5-over");
+    assert.equal(context.outcomeSide, "yes");
+  });
+
+  it("matches extra time fixture position from more-markets sibling data", () => {
+    const { gameSnapshot, fixtureMarkets } = buildLiechtensteinCyprusContext();
+    const extraTimeYesToken =
+      "99999999999999999999999999999999999999999999999999999999999999999999";
+    const extraTimeNoToken =
+      "88888888888888888888888888888888888888888888888888888888888888888888";
+
+    fixtureMarkets.lines.push({
+      type: "extra_time",
+      title: "Extra Time?",
+      outcomes: [
+        {
+          id: "extra-time",
+          marketType: "extra_time",
+          category: "lines",
+          label: "Yes",
+          probability: 47,
+          price: 0.47,
+          tokenId: extraTimeYesToken,
+          noTokenId: extraTimeNoToken,
+          conditionId: "0xextra-time-condition",
+          acceptingOrders: true,
+        },
+      ],
+    });
+
+    const context = resolvePositionGameSellContext(
+      buildPosition({
+        asset: extraTimeYesToken,
+        conditionId: "0xextra-time-condition",
+        slug: "fif-lie-cyp-2026-06-07-extra-time",
+        eventSlug: "fif-lie-cyp-2026-06-07-more-markets",
+        title: "Liechtenstein vs. Cyprus: Extra Time?",
+        outcome: "Yes",
+      }),
+      gameSnapshot,
+      fixtureMarkets
+    );
+
+    assert.ok(context);
+    assert.equal(context.fixtureOutcome?.marketType, "extra_time");
     assert.equal(context.outcomeSide, "yes");
   });
 

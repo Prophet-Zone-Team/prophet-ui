@@ -29,7 +29,7 @@ export function TeamInfo({
       />
       <span
         className={cn(
-          "truncate font-[400] text-black",
+          "truncate font-[400] text-prophet-foreground",
           textClassName ?? "text-[12px] leading-[14px]"
         )}
       >

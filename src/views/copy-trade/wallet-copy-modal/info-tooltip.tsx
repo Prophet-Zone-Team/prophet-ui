@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import Popover from "@/components/popover";
 import { cn } from "@/lib/cn";
+import { copyTradeTooltipClass } from "@/views/copy-trade/copy-trade-ui";
 
 export function CopyTradeInfoIcon({ className }: { className?: string }) {
   return (
@@ -16,14 +17,14 @@ export function CopyTradeInfoIcon({ className }: { className?: string }) {
       className={cn("shrink-0", className)}
       aria-hidden="true"
     >
-      <circle cx="7" cy="7" r="6.2" stroke="#909090" strokeWidth="1.2" />
+      <circle cx="7" cy="7" r="6.2" stroke="currentColor" strokeWidth="1.2" />
       <path
         d="M7 6.2V10"
-        stroke="#909090"
+        stroke="currentColor"
         strokeWidth="1.2"
         strokeLinecap="round"
       />
-      <circle cx="7" cy="4.3" r="0.75" fill="#909090" />
+      <circle cx="7" cy="4.3" r="0.75" fill="currentColor" />
     </svg>
   );
 }
@@ -46,7 +47,7 @@ export function CopyTradeInfoTooltip({
       offset={8}
       contentClassName="z-[70]"
       content={
-        <div className="max-w-[377px] rounded-xl border border-[#EBEBEB] bg-white px-4 py-3 text-sm leading-[150%] text-black shadow-[0px_0px_10px_rgba(0,0,0,0.1)]">
+        <div className={cn(copyTradeTooltipClass, "max-w-[377px]")}>
           {content}
         </div>
       }
@@ -55,7 +56,7 @@ export function CopyTradeInfoTooltip({
         type="button"
         className={cn(
           "inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0",
-          "cursor-default text-[#909090] transition-opacity hover:opacity-70",
+          "cursor-default text-prophet-muted transition-opacity hover:opacity-70",
           className
         )}
         aria-label="More information"

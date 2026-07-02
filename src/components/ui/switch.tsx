@@ -26,15 +26,15 @@ export function Switch({
       disabled={disabled}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
-        "relative h-4 w-[29px] shrink-0 rounded-lg border border-[#EAEAEA] transition-colors",
-        checked ? "bg-[#000]" : "bg-[#EBEBEB]",
+        "relative h-4 w-[29px] shrink-0 rounded-lg border border-prophet-line transition-colors",
+        checked ? "bg-prophet-primary" : "bg-prophet-line",
         disabled && "cursor-not-allowed opacity-50",
         className
       )}
     >
       <span
         className={cn(
-          "absolute top-1/2 size-3 -translate-y-1/2 rounded-lg border border-[#EAEAEA] bg-white transition-[left]",
+          "absolute top-1/2 size-3 -translate-y-1/2 rounded-lg border border-prophet-line bg-prophet-panel transition-[left]",
           checked ? "left-[calc(100%-14px)]" : "left-0.5"
         )}
         aria-hidden

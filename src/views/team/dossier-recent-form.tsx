@@ -37,7 +37,7 @@ export function DossierRecentForm({
                       ? "inline-flex size-8 items-center justify-center rounded-md bg-[#f1fdf8] text-sm font-[500] text-prophet-green"
                       : result === "L"
                         ? "inline-flex size-8 items-center justify-center rounded-md bg-[#fff4f6] text-sm font-[500] text-prophet-red"
-                        : "inline-flex size-8 items-center justify-center rounded-md bg-[#fafbfc] text-sm font-[500] text-prophet-muted"
+                        : "inline-flex size-8 items-center justify-center rounded-md bg-prophet-base text-sm font-[500] text-prophet-muted"
                   }
                 >
                   {result}

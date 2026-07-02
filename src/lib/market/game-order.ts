@@ -66,12 +66,22 @@ export function buildFixtureBidOrderPreview(input: {
   amount: number;
   limitPrice: number;
   orderType: TradingOrderType;
+  tokenId?: string;
 }): GameBidOrderPreview {
   const tokenId =
-    input.binarySide === "yes" ? input.outcome.tokenId : input.outcome.noTokenId;
+    input.tokenId ??
+    (input.binarySide === "yes"
+      ? input.outcome.tokenId
+      : input.outcome.noTokenId);
+  const binarySide =
+    input.tokenId === input.outcome.noTokenId
+      ? "no"
+      : input.tokenId === input.outcome.tokenId
+        ? "yes"
+        : input.binarySide;
   const sidePrice = normalizeLimitPrice(input.limitPrice);
   const estimate = calculateOrderEstimate({
-    side: input.binarySide,
+    side: binarySide,
     tradeSide: input.tradeSide,
     amount: input.amount,
     probability: input.outcome.probability,
@@ -87,7 +97,7 @@ export function buildFixtureBidOrderPreview(input: {
     }) ??
     resolveFixtureBuyAskDisabledReason(
       input.outcome,
-      input.binarySide,
+      binarySide,
       input.tradeSide,
       input.orderType,
     ) ??
@@ -112,7 +122,7 @@ export function buildFixtureBidOrderPreview(input: {
 
   return {
     outcomeSide,
-    binarySide: input.binarySide,
+    binarySide,
     tradeSide: input.tradeSide,
     orderType: input.orderType,
     tokenId,

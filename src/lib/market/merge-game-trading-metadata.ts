@@ -136,6 +136,7 @@ export function mergeFixtureMarketsFromGammaEvent(
     homeName,
     awayName,
     match.polymarket.moneyline.outcomes,
+    match.polymarket.slug ?? match.id,
   );
   const existing = match.polymarket.fixtureMarkets ?? {
     lines: [],

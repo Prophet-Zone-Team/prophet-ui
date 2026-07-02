@@ -13,7 +13,7 @@ import {
 } from "@/views/trade/game/markets/market-other-sources";
 
 const cardClass =
-  "rounded-[12px] border border-[#EBEBEB] bg-white divide-y divide-[#EBEBEB]";
+  "rounded-[12px] border border-prophet-line bg-prophet-panel divide-y divide-prophet-line";
 
 function isOutcomeBuyable(
   outcome: FixtureMarketOutcome,
@@ -62,7 +62,7 @@ export function ExactScorePanel({
 
   if (!outcomes.length) {
     return (
-      <div className="rounded-[12px] border border-dashed border-[#EBEBEB] px-4 py-10 text-center">
+      <div className="rounded-[12px] border border-dashed border-prophet-line px-4 py-10 text-center">
         <p className="m-0 text-sm font-[400] leading-[17px] text-[#909090]">
           No exact score markets available for this match.
         </p>
@@ -87,13 +87,13 @@ export function ExactScorePanel({
           <div key={outcome.id}>
             <div
               className={cn(
-                "flex cursor-pointer flex-col flex-wrap items-stretch justify-between gap-4 p-[16px] transition-colors hover:bg-[#F5F5F5] md:flex-row md:items-center",
-                isExpanded && "bg-[#F5F5F5]"
+                "flex cursor-pointer flex-col flex-wrap items-stretch justify-between gap-4 p-[16px] transition-colors hover:bg-prophet-hover md:flex-row md:items-center",
+                isExpanded && "bg-prophet-hover"
               )}
               onClick={() => handleRowClick(outcome.id)}
             >
               <div className="min-w-0 shrink-0">
-                <h3 className="m-0 text-[18px] font-[500] leading-6 text-black">
+                <h3 className="m-0 text-[18px] font-[500] leading-6 text-prophet-foreground">
                   Exact Score: {outcome.label}
                 </h3>
                 <p className="m-0 mt-[6px] text-[14px] font-[500] leading-[17px] text-[#909090]">
@@ -136,7 +136,7 @@ export function ExactScorePanel({
             </div>
 
             {isExpanded ? (
-              <div className="border-t border-[#EBEBEB]">
+              <div className="border-t border-prophet-line">
                 <MarketOtherSources
                   sources={
                     resolveOtherSources?.(

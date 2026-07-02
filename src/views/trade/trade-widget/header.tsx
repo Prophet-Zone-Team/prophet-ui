@@ -13,9 +13,8 @@ import {
 } from "@/store/trade-ticket-store";
 import { FixtureOutcomeSplitIcon } from "@/views/trade/trade-widget/fixture-outcome-split-icon";
 import {
-  resolveFixtureOutcomeLabel,
-  resolveGameOutcomeLabel,
-  resolveTradeWidgetHeaderTitle
+  resolveTradeWidgetHeaderTitle,
+  resolveTradeWidgetOutcomeLabel
 } from "@/views/trade/trade-widget/trade-i18n";
 import type {
   GameMarketSnapshot,
@@ -124,14 +123,14 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
 
   if (isGameVariant) {
     const { showOutcomeLabel = true } = props;
-    const outcomeLabel = selectedFixtureOutcome
-      ? resolveFixtureOutcomeLabel(t, selectedFixtureOutcome)
-      : resolveGameOutcomeLabel(
-          t,
-          props.matchOutcomeSide,
-          homeName,
-          awayName
-        );
+    const outcomeLabel = resolveTradeWidgetOutcomeLabel(
+      t,
+      selectedFixtureOutcome,
+      tradeOutcomeSide,
+      props.matchOutcomeSide,
+      homeName,
+      awayName,
+    );
     const headerTitle = resolveTradeWidgetHeaderTitle(
       t,
       selectedFixtureOutcome,
@@ -160,7 +159,7 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
           awayName={awayName}
         />
         <div className="min-w-0 flex-1">
-          <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-black">
+          <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-prophet-foreground">
             {headerTitle}
           </p>
           {showOutcomeLabel ? (
@@ -191,7 +190,7 @@ export function TradeWidgetHeader(props: TradeWidgetHeaderProps) {
         className="!h-[36px] !w-[36px] shrink-0 rounded-md"
       />
       <div className="min-w-0 flex-1">
-        <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-black">
+        <p className="m-0 line-clamp-2 text-[14px] font-[500] leading-[17px] text-prophet-foreground">
           {question}
         </p>
         {showOutcomeLabel ? (

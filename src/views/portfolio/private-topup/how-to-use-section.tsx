@@ -13,7 +13,7 @@ export function HowToUseSection() {
     <section
       className={`${privateTopupCardClass} mx-auto w-full max-w-[966px] px-6 pb-8 pt-6`}
     >
-      <h2 className="m-0 mb-6 text-center text-xl font-[500] text-black">
+      <h2 className="m-0 mb-6 text-center text-xl font-[500] text-prophet-foreground">
         {t("howToUseTitle")}
       </h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

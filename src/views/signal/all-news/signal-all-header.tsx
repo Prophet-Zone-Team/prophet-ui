@@ -48,7 +48,7 @@ export function SignalAllHeader({
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 className="m-0 min-w-0 truncate text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
+        <h2 className="m-0 min-w-0 truncate text-lg font-[400] leading-[22px] text-prophet-foreground md:text-[20px] md:leading-[24px]">
           {t("allSignalsAndNews")}
         </h2>
         <SignalAllTeamFilterControl
@@ -64,7 +64,7 @@ export function SignalAllHeader({
         role="row"
         className={cn(
           signalAllListRowClass,
-          "mt-4 hidden text-[16px] font-[400] leading-[19px] text-[#909090] md:flex md:mt-[22px]"
+          "mt-4 hidden text-[16px] font-[400] leading-[19px] text-prophet-muted md:flex md:mt-[22px]"
         )}
       >
         {/* <SortableColumnHeader
@@ -131,8 +131,8 @@ function SortableColumnHeader({
           : "none"
       }
       className={cn(
-        "inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[16px] font-[400] leading-[19px] text-[#909090]",
-        !disabled && "hover:text-black",
+        "inline-flex items-center gap-[6px] border-0 bg-transparent p-0 text-[16px] font-[400] leading-[19px] text-prophet-muted",
+        !disabled && "hover:text-prophet-foreground",
         disabled && "cursor-not-allowed opacity-50",
         align === "right" && "justify-end",
         className

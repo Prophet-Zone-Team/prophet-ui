@@ -131,7 +131,7 @@ export function PortfolioPositionRedeemDialog({
           <div className="flex items-start gap-2.5">
             {teamName ? <TeamFlag name={teamName} /> : null}
             <div className="min-w-0 flex-1">
-              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
+              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-prophet-foreground">
                 {position.title}
               </p>
               <p
@@ -145,16 +145,16 @@ export function PortfolioPositionRedeemDialog({
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 rounded-lg border border-prophet-line/80 bg-[#FAFAFA] px-3 py-3">
+          <div className="flex flex-col gap-1 rounded-lg border border-prophet-line/80 bg-prophet-base px-3 py-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-prophet-muted">{t("shares")}</span>
-              <span className="font-[500] text-black">
+              <span className="font-[500] text-prophet-foreground">
                 {formatTeamDetailMoney(position.size)}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-prophet-muted">{t("estimatedOutcome")}</span>
-              <span className="font-[500] text-black">{estimatedValue}</span>
+              <span className="font-[500] text-prophet-foreground">{estimatedValue}</span>
             </div>
             <p className="m-0 text-xs text-prophet-muted">
               {t("redeemDescription")}

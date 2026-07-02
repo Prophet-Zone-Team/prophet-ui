@@ -5,9 +5,16 @@ import { useCallback } from "react";
 import { FundingNetworkType } from "@/config/funding/networks";
 import type { FundingToken } from "@/config/funding/tokens";
 import {
+  getDepositConnectLabelKey,
+  isDepositTransferWalletConnected,
+  type DepositConnectLabelKey,
+} from "@/lib/funding/deposit-transfer-wallet";
+import {
   getFundingWalletChainType,
+  requiresDepositFundingWalletConnection,
   requiresFundingWalletConnection,
 } from "@/lib/funding/stableflow";
+import type { AuthLoginMethod } from "@/store/auth-store";
 import {
   getFundingWalletAddress,
   getFundingWalletConnectHandler,
@@ -27,6 +34,20 @@ export function useFundingWalletConnect() {
       return handler ? handler() : undefined;
     },
     [],
+  );
+
+  const connectForDepositToken = useCallback(
+    async (
+      token: Pick<FundingToken, "chainType" | "chainName"> & { blockchain?: string },
+      loginMethod: AuthLoginMethod | null | undefined,
+    ) => {
+      if (!requiresDepositFundingWalletConnection(token, loginMethod)) {
+        return undefined;
+      }
+
+      return connectForToken(token);
+    },
+    [connectForToken],
   );
 
   const disconnectForToken = useCallback(
@@ -58,6 +79,21 @@ export function useFundingWalletConnect() {
     [],
   );
 
+  const isConnectedForDepositToken = useCallback(
+    (
+      token: Pick<FundingToken, "chainType" | "chainName"> & { blockchain?: string },
+      loginMethod: AuthLoginMethod | null | undefined,
+      sessionWalletAddress?: string,
+    ) => {
+      return isDepositTransferWalletConnected(
+        token,
+        loginMethod,
+        sessionWalletAddress,
+      );
+    },
+    [],
+  );
+
   const getConnectLabelKey = useCallback((token: Pick<FundingToken, "chainType">) => {
     switch (token.chainType) {
       case FundingNetworkType.SVM:
@@ -71,10 +107,22 @@ export function useFundingWalletConnect() {
     }
   }, []);
 
+  const getDepositConnectLabelKeyForToken = useCallback(
+    (
+      token: Pick<FundingToken, "chainType" | "chainName">,
+    ): DepositConnectLabelKey => {
+      return getDepositConnectLabelKey(token);
+    },
+    [],
+  );
+
   return {
     connectForToken,
+    connectForDepositToken,
     disconnectForToken,
     isConnectedForToken,
+    isConnectedForDepositToken,
     getConnectLabelKey,
+    getDepositConnectLabelKey: getDepositConnectLabelKeyForToken,
   };
 }

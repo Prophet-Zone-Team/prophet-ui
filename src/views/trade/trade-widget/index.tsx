@@ -137,7 +137,7 @@ export function TradeWidget(
       )}
 
       <div className="flex items-end justify-between gap-3 px-4 pt-3">
-        <div className="border-b border-[#EBEBEB] flex-1">
+        <div className="border-b border-prophet-line flex-1">
           <TabSwitcher
             items={tradeTabs}
             value={tab}

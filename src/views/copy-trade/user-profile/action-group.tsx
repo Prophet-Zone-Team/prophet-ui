@@ -2,11 +2,12 @@
 
 import { useTranslations } from "next-intl";
 
-import { cn } from "@/lib/cn";
+import { copyTradePrimaryButtonClass } from "@/views/copy-trade/copy-trade-ui";
 import {
   openCopyTradeDeposit,
   openCopyTradeWithdraw,
 } from "@/store/copy-trade-funding-store";
+import { cn } from "@/lib/cn";
 
 export interface ActionGroupProps {
   className?: string;
@@ -22,7 +23,7 @@ export function ActionGroup({ className }: ActionGroupProps) {
     <div className={cn("flex gap-3", className)}>
       <button
         type="button"
-        className={cn(actionButtonClass, "bg-black text-white")}
+        className={cn(actionButtonClass, copyTradePrimaryButtonClass, "flex-1")}
         onClick={() => openCopyTradeDeposit()}
       >
         {t("deposit")}
@@ -31,7 +32,7 @@ export function ActionGroup({ className }: ActionGroupProps) {
         type="button"
         className={cn(
           actionButtonClass,
-          "border border-[#909090] bg-white text-black"
+          "border border-prophet-muted bg-prophet-panel text-prophet-foreground"
         )}
         onClick={() => openCopyTradeWithdraw()}
       >

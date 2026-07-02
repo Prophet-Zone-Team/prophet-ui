@@ -9,7 +9,7 @@ export type SignalSummaryTagTone =
   | "high-impact";
 
 const toneClassNames: Record<SignalSummaryTagTone, string> = {
-  neutral: "bg-[#909090]/10",
+  neutral: "bg-prophet-muted/10",
   positive: "bg-[#7BCA25]/10",
   negative: "bg-[#FF674B]/10",
   "high-impact": "bg-[#F4B600]/10"
@@ -39,7 +39,7 @@ export function SignalSummaryTag({
       )}
     >
       {icon}
-      <span className="whitespace-nowrap text-[16px] font-[500] leading-[19px] text-black">
+      <span className="whitespace-nowrap text-[16px] font-[500] leading-[19px] text-prophet-foreground">
         {label} {count}
       </span>
     </div>

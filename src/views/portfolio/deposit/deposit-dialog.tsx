@@ -11,6 +11,7 @@ import { ensureWalletChain, fundingNetworkTypeToChainType } from "@/lib/wallet";
 import { reportFundingTransaction } from "@/lib/portfolio/user";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
 import { resolveDepositErrorMessage } from "@/lib/funding/deposit-error-message";
+import { resolveDepositTransferWalletAddress } from "@/lib/funding/deposit-transfer-wallet";
 import type { SupportedChainOption } from "@/lib/funding/supported-assets";
 import { FundingNetworkType } from "@/config/funding/networks";
 import {
@@ -44,6 +45,7 @@ import { isInTokenPocket, shouldHideFundingWalletChange } from "@/context/rainbo
 import { isTpFundingSwitchPendingError } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { useAuthStore } from "@/store";
+import { getFundingWalletAddress } from "@/store/use-funding-wallet-store";
 import { useBalancesStore } from "@/store/use-balances";
 import { usePricesStore } from "@/store";
 import { DEPOSIT_ENTRY_MODAL_MIN_HEIGHT, DEPOSIT_MODAL_WIDTH } from "@/views/portfolio/deposit/config";
@@ -119,7 +121,6 @@ export function DepositDialog({
   } = useAuth();
   const loginMethod = useAuthStore((state) => state.loginMethod);
   const isSocialLogin = loginMethod === "email" || loginMethod === "google";
-  const isNearLogin = loginMethod === "near";
   const isMobile = useDevice();
 
   const {
@@ -249,12 +250,17 @@ export function DepositDialog({
     tokens: depositMethod === "stableflow" ? depositStableflowTokens : supportedAssets,
   });
 
-  const { connectForToken, disconnectForToken, isConnectedForToken, getConnectLabelKey } = useFundingWalletConnect();
+  const {
+    connectForDepositToken,
+    disconnectForToken,
+    isConnectedForDepositToken,
+    getDepositConnectLabelKey,
+  } = useFundingWalletConnect();
 
   const handleFundingWalletConnect = useCallback(
     async (token: DepositSelectableToken) => {
       try {
-        await connectForToken(token);
+        await connectForDepositToken(token, loginMethod);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         if (isTpFundingSwitchPendingError(error)) {
@@ -264,7 +270,20 @@ export function DepositDialog({
         toast.error(message);
       }
     },
-    [connectForToken],
+    [connectForDepositToken, loginMethod],
+  );
+
+  const formatDepositConnectLabel = useCallback(
+    (token: DepositSelectableToken) => {
+      const labelKey = getDepositConnectLabelKey(token);
+
+      if (labelKey === "connectChainWallet") {
+        return tWallet(labelKey, { chainName: token.chainName });
+      }
+
+      return tWallet(labelKey);
+    },
+    [getDepositConnectLabelKey, tWallet],
   );
 
   const { loading: pricesLoading } = usePrices({
@@ -640,6 +659,8 @@ export function DepositDialog({
                 getNearAccountSnapshot().accountId ??
                 undefined
                 : undefined,
+            solanaAddress: getFundingWalletAddress("solana"),
+            tronAddress: getFundingWalletAddress("tron"),
           }) ?? session.walletAddress;
         const { quote } = await fetchJson<{ quote: QuoteResponse }>(
           "/api/trading/stableflow/quote",
@@ -970,8 +991,8 @@ export function DepositDialog({
       return;
     }
 
-    if (needsFundingWallet && !isConnectedForToken(selectedToken)) {
-      toast.error(tWallet(getConnectLabelKey(selectedToken)));
+    if (needsFundingWallet && !isConnectedForDepositToken(selectedToken, loginMethod, session?.walletAddress)) {
+      toast.error(formatDepositConnectLabel(selectedToken));
       return;
     }
 
@@ -979,27 +1000,21 @@ export function DepositDialog({
       setContinueLoading(true);
 
       try {
-        const transferWalletAddress = needsFundingWallet
-          ? resolveFundingWalletAddress(selectedToken)
-          : session?.walletAddress;
+        const transferWalletAddress = resolveDepositTransferWalletAddress(
+          selectedToken,
+          loginMethod,
+          session?.walletAddress,
+        );
 
         if (!transferWalletAddress) {
           throw new Error("Connect a wallet before depositing funds.");
         }
 
-        if (!needsFundingWallet) {
-          await ensureWalletChain({
-            chainType: fundingNetworkTypeToChainType(selectedToken.chainType),
-            walletAddress: transferWalletAddress,
-            chainId: selectedToken.chainId,
-          });
-        } else {
-          await ensureWalletChain({
-            chainType: fundingNetworkTypeToChainType(selectedToken.chainType),
-            walletAddress: transferWalletAddress,
-            chainId: selectedToken.chainId,
-          });
-        }
+        await ensureWalletChain({
+          chainType: fundingNetworkTypeToChainType(selectedToken.chainType),
+          walletAddress: transferWalletAddress,
+          chainId: selectedToken.chainId,
+        });
 
         const { txHash } = await depositViaPolygon(amount.tokenAmount, selectedToken);
         void reportFundingTransaction({
@@ -1050,9 +1065,11 @@ export function DepositDialog({
           stableflowQuote,
         );
       } else {
-        const transferWalletAddress = needsFundingWallet
-          ? resolveFundingWalletAddress(selectedToken)
-          : session?.walletAddress;
+        const transferWalletAddress = resolveDepositTransferWalletAddress(
+          selectedToken,
+          loginMethod,
+          session?.walletAddress,
+        );
 
         if (!transferWalletAddress) {
           throw new Error("Connect a wallet before depositing funds.");
@@ -1294,7 +1311,11 @@ export function DepositDialog({
         selectedToken,
         loginMethod,
       );
-      const walletConnected = isConnectedForToken(selectedToken);
+      const walletConnected = isConnectedForDepositToken(
+        selectedToken,
+        loginMethod,
+        session?.walletAddress,
+      );
 
       if (needsFundingWallet && !walletConnected) {
         return (
@@ -1305,7 +1326,7 @@ export function DepositDialog({
             onClick={() => void handleFundingWalletConnect(selectedToken)}
           >
             {continueLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-            {tWallet(getConnectLabelKey(selectedToken))}
+            {formatDepositConnectLabel(selectedToken)}
           </button>
         );
       }
@@ -1345,8 +1366,8 @@ export function DepositDialog({
     entryTab,
     handleClose,
     handleFundingWalletConnect,
-    getConnectLabelKey,
-    isConnectedForToken,
+    formatDepositConnectLabel,
+    isConnectedForDepositToken,
     onConfirmDeposit,
     onContinueFromQr,
     onContinueToAmount,
@@ -1359,6 +1380,7 @@ export function DepositDialog({
     stableflowQuoteLoading,
     step,
     loginMethod,
+    session?.walletAddress,
     tAuth,
     tCommon,
     tWallet,
@@ -1464,9 +1486,12 @@ export function DepositDialog({
                 showChangeWallet={
                   !shouldHideFundingWalletChange() &&
                   !isSocialLogin &&
-                  !isNearLogin &&
                   requiresDepositFundingWalletConnection(selectedToken, loginMethod) &&
-                  isConnectedForToken(selectedToken)
+                  isConnectedForDepositToken(
+                    selectedToken,
+                    loginMethod,
+                    session?.walletAddress,
+                  )
                 }
                 onChangeWallet={() => void disconnectForToken(selectedToken)}
               />
@@ -1474,7 +1499,13 @@ export function DepositDialog({
 
             {step === "confirm" && selectedToken ? (
               <DepositConfirmStep
-                walletAddress={session?.walletAddress ?? ""}
+                walletAddress={
+                  resolveDepositTransferWalletAddress(
+                    selectedToken,
+                    loginMethod,
+                    session?.walletAddress,
+                  ) ?? session?.walletAddress ?? ""
+                }
                 token={selectedToken}
                 amount={amount.tokenAmount}
                 amountUsd={amount.amountUsd}

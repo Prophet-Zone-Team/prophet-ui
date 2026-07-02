@@ -22,8 +22,8 @@ import { useCopyTradePortfolioData } from "./use-copy-trade-portfolio-data";
 function CopyTradePortfolioSkeleton() {
   return (
     <div className="flex flex-col gap-4">
-      <div className="h-[278px] animate-pulse rounded-[20px] border border-prophet-line bg-white" />
-      <div className="h-[523px] animate-pulse rounded-[12px] border border-[#EBEBEB] bg-white" />
+      <div className="h-[278px] animate-pulse rounded-[20px] border border-prophet-line bg-prophet-panel" />
+      <div className="h-[523px] animate-pulse rounded-[12px] border border-prophet-line bg-prophet-panel" />
     </div>
   );
 }

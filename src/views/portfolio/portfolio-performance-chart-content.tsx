@@ -152,8 +152,8 @@ export function PortfolioPerformanceChartContent<
               className={cn(
                 "border-0 bg-transparent p-0 text-sm font-[500] leading-[17px] transition-colors",
                 range === item
-                  ? "text-black"
-                  : "text-prophet-muted hover:text-black"
+                  ? "text-black dark:text-white"
+                  : "text-prophet-muted hover:text-black dark:hover:text-white"
               )}
             >
               {item}

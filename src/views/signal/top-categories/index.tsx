@@ -30,18 +30,18 @@ export function TopCategories({
       aria-label={t("topCategoriesAria")}
       className={cn(
         "box-border flex h-auto w-full max-w-none flex-col md:h-[277px]",
-        "rounded-[12px] border border-[#EBEBEB] bg-white px-3 py-4 md:px-5 md:py-5",
+        "rounded-[12px] border border-prophet-line bg-prophet-panel px-3 py-4 md:px-5 md:py-5",
         className
       )}
     >
-      <h2 className="m-0 shrink-0 text-lg font-[400] leading-[22px] text-black md:text-[20px] md:leading-[24px]">
+      <h2 className="m-0 shrink-0 text-lg font-[400] leading-[22px] text-prophet-foreground md:text-[20px] md:leading-[24px]">
         {t("topCategories")}
       </h2>
 
       {isLoading ? (
-        <p className="mt-4 flex-1 text-[14px] text-[#909090]">{t("loading")}</p>
+        <p className="mt-4 flex-1 text-[14px] text-prophet-muted">{t("loading")}</p>
       ) : isEmpty ? (
-        <p className="mt-4 flex flex-1 items-center justify-center py-8 text-center text-[14px] text-[#909090] md:text-[16px]">
+        <p className="mt-4 flex flex-1 items-center justify-center py-8 text-center text-[14px] text-prophet-muted md:text-[16px]">
           {t("noCategoryData")}
         </p>
       ) : (

@@ -61,7 +61,7 @@ export function CopyTradePortfolioActivity({
       className={cn(portfolioActivityCardClass, "overflow-hidden", className)}
       aria-label={t("activityAria")}
     >
-      <div className="border-b border-[#EBEBEB] px-4 pt-4 md:px-[30px]">
+      <div className="border-b border-prophet-line px-4 pt-4 md:px-[30px]">
         <TabSwitcher
           items={tabs}
           value={tab}

@@ -81,8 +81,20 @@ function findFixtureOutcomeForPosition(
   position: UserPositionRecord,
   fixtureMarkets: GameFixtureMarketsSnapshot
 ): FixtureMarketOutcome | undefined {
-  return collectFixtureOutcomes(fixtureMarkets).find((outcome) =>
-    matchesPositionTokens(position, outcome)
+  const outcomes = collectFixtureOutcomes(fixtureMarkets);
+
+  const byAsset = outcomes.find(
+    (outcome) =>
+      outcome.tokenId === position.asset ||
+      outcome.noTokenId === position.asset,
+  );
+
+  if (byAsset) {
+    return byAsset;
+  }
+
+  return outcomes.find((outcome) =>
+    matchesPositionTokens(position, outcome),
   );
 }
 
@@ -140,7 +152,8 @@ export function resolvePositionGameSellContext(
     fixtureOutcome,
     outcomeSide: resolveOutcomeSideForGamePosition(position, {
       yesTokenId: fixtureOutcome.tokenId,
-      noTokenId: fixtureOutcome.noTokenId
-    })
+      noTokenId: fixtureOutcome.noTokenId,
+      yesOutcome: fixtureOutcome.label,
+    }),
   };
 }

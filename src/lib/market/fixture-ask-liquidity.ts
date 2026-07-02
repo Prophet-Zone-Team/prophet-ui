@@ -151,3 +151,52 @@ export function mergeFixtureOutcomeLiveAsks(
     price: isValidAskPrice(yesAsk) ? yesAsk : outcome.price
   };
 }
+
+export type FixtureOutcomeLiveAsks = {
+  yesAsk?: number;
+  noAsk?: number;
+  yesBid?: number;
+  noBid?: number;
+};
+
+export function collectFixtureOutcomeWsTokenIds(
+  outcome: Pick<FixtureMarketOutcome, "tokenId" | "noTokenId"> | null | undefined,
+): string[] {
+  if (!outcome) {
+    return [];
+  }
+
+  return [outcome.tokenId, outcome.noTokenId].filter((id): id is string =>
+    Boolean(id),
+  );
+}
+
+export function resolveOutcomeLiveAsksFromTokenPrices(
+  outcome: Pick<FixtureMarketOutcome, "tokenId" | "noTokenId">,
+  tokenPrices: Record<
+    string,
+    { bestAsk?: number; bestBid?: number } | undefined
+  >,
+): FixtureOutcomeLiveAsks | undefined {
+  const yesPrices = outcome.tokenId
+    ? tokenPrices[outcome.tokenId]
+    : undefined;
+  const noPrices = outcome.noTokenId
+    ? tokenPrices[outcome.noTokenId]
+    : undefined;
+  const yesAsk = yesPrices?.bestAsk;
+  const noAsk = noPrices?.bestAsk;
+  const yesBid = yesPrices?.bestBid;
+  const noBid = noPrices?.bestBid;
+
+  if (
+    yesAsk === undefined &&
+    noAsk === undefined &&
+    yesBid === undefined &&
+    noBid === undefined
+  ) {
+    return undefined;
+  }
+
+  return { yesAsk, noAsk, yesBid, noBid };
+}

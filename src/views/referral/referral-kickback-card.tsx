@@ -6,10 +6,11 @@ import type { ReferralKickback } from "@/types/referral";
 
 import { ReferralLinkCopy } from "./referral-link-copy";
 import {
-  referralInviteButtonClass,
+  referralInviteFriendsButtonClass,
   referralKickbackCardClass,
   referralKickbackFooterClass,
   referralKickbackLinkBarClass,
+  referralPrimaryButtonClass,
 } from "./referral-ui";
 import { cn } from "@/lib/cn";
 
@@ -37,14 +38,14 @@ export function ReferralKickbackCard({
     >
       <div className="flex flex-1 flex-col px-6 pt-6">
         <div className="flex items-start justify-between gap-4">
-          <span className="text-[14px] leading-[normal] text-[#909090]">
+          <span className="text-[14px] leading-[normal] text-prophet-muted">
             {t("kickbackRate")}
           </span>
-          <span className="text-[18px] font-medium leading-[normal] text-black">
+          <span className="text-[18px] font-medium leading-[normal] text-prophet-foreground">
             {kickback.ratePercent}
           </span>
         </div>
-        <p className="mt-3 text-[14px] leading-[normal] text-[#909090]">
+        <p className="mt-3 text-[14px] leading-[normal] text-prophet-muted">
           {t("kickbackDescription")}
         </p>
       </div>
@@ -54,7 +55,7 @@ export function ReferralKickbackCard({
           {needsWallet ? (
             <button
               type="button"
-              className={cn(referralInviteButtonClass, "mt-6")}
+              className={cn(referralPrimaryButtonClass, "mt-6")}
               disabled={loginInProgress}
               onClick={onConnectWallet}
             >
@@ -72,7 +73,7 @@ export function ReferralKickbackCard({
               </div>
               <button
                 type="button"
-                className={referralInviteButtonClass}
+                className={referralInviteFriendsButtonClass}
                 onClick={onInviteFriends}
               >
                 {t("inviteFriends")}

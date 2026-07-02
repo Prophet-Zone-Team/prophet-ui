@@ -12,10 +12,10 @@ export interface TeamDetailMobileStatsProps {
 function MobileStat({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col items-center gap-[3px] text-center">
-      <span className="font-[Sora] text-[16px] font-[500] leading-[20px] capitalize text-black">
+      <span className="font-[Sora] text-[16px] font-[500] leading-[20px] capitalize text-prophet-foreground">
         {value}
       </span>
-      <span className="font-[Sora] text-[12px] font-[400] leading-[15px] text-[#909090]">
+      <span className="font-[Sora] text-[12px] font-[400] leading-[15px] text-prophet-muted">
         {label}
       </span>
     </div>

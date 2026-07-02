@@ -99,7 +99,7 @@ function ShortcutPill({
       className={cn(
         "rounded-[18px] border px-[14px] py-[7px] text-[14px] transition",
         active
-          ? "border-[#EBEBEB] bg-white text-black"
+          ? "border-prophet-line bg-prophet-panel text-prophet-foreground"
           : "border-white/40 bg-transparent text-white hover:border-white/70"
       )}
       onClick={onClick}

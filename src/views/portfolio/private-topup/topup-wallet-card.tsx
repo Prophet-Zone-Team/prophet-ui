@@ -47,7 +47,7 @@ export function TopupWalletCard({
             <WalletAvatarIcon address={address} className="size-[50px]" />
           ) : (
             <div
-              className="size-[50px] shrink-0 rounded-full bg-[#f4f4f4]"
+              className="size-[50px] shrink-0 rounded-full bg-prophet-action-panel"
               aria-hidden
             />
           )}
@@ -55,26 +55,26 @@ export function TopupWalletCard({
             <p className={`m-0 ${privateTopupSectionLabelClass}`}>
               {t("fundingWallet")}
               {chainType ? (
-                <span className="ml-2 text-[#909090]">
+                <span className="ml-2 text-prophet-muted">
                   {t(`fundingChain.${chainType === "evm" ? "evm" : chainType}`)}
                 </span>
               ) : null}
             </p>
             {connected && address ? (
               <div className="mt-1 flex items-center gap-2">
-                <p className="m-0 truncate text-lg font-[500] text-black">
+                <p className="m-0 truncate text-lg font-[500] text-prophet-foreground">
                   {formatShortWallet(address)}
                 </p>
                 <CopyButton
                   text={address}
                   ariaLabel={t("copyWalletAddress")}
-                  className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-colors hover:text-black"
+                  className="inline-flex shrink-0 items-center justify-center border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-prophet-foreground"
                 >
                   <CopyIcon />
                 </CopyButton>
               </div>
             ) : (
-              <p className="m-0 mt-1 text-lg font-[500] text-black">-</p>
+              <p className="m-0 mt-1 text-lg font-[500] text-prophet-foreground">-</p>
             )}
           </div>
         </div>

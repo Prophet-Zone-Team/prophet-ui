@@ -2,9 +2,14 @@ import { buildFixtureMarketsSnapshot } from "@/lib/market/build-fixture-markets-
 import { buildGameMarketSnapshot } from "@/lib/market/game-market-snapshot";
 import { mapEventSportsMarkets } from "@/lib/market/fixture-markets-mapper";
 import {
+  mergeGammaMarkets,
+  resolveFixtureMainEventSlug,
+  resolveFixtureSiblingSlugs,
+} from "@/lib/market/fixture-sibling-events";
+import {
   isGammaEventPayload,
   mergeMoneylineFromGammaEvent,
-  syncFixtureMoneylineGroup
+  syncFixtureMoneylineGroup,
 } from "@/lib/market/merge-game-trading-metadata";
 import { fetchPolymarket } from "@/lib/market/polymarket-api-client";
 import type { GammaEventRecord, GammaMarketRecord } from "@/lib/market/polymarket-gamma";
@@ -12,10 +17,14 @@ import { mapGammaEventToMatch } from "@/lib/market/polymarket-football-match-map
 import { mapProphetGameDetailToMatch } from "@/lib/market/prophet-game-detail-mapper";
 import {
   resolvePositionGameSellContext,
-  type PositionGameSellContext
+  type PositionGameSellContext,
 } from "@/lib/portfolio/resolve-position-game-sell-context";
 import { getProphetGame } from "@/service/prophet";
-import type { UserPositionRecord, WorldCupMatch } from "@/types/market";
+import type {
+  PolymarketFixtureMarketsData,
+  UserPositionRecord,
+  WorldCupMatch,
+} from "@/types/market";
 
 export type { PositionGameSellContext } from "@/lib/portfolio/resolve-position-game-sell-context";
 
@@ -28,11 +37,14 @@ export async function fetchPositionGameSellContext(
     return undefined;
   }
 
-  const match = await loadMatchForEventSlug(eventSlug);
+  const mainEventSlug = resolveFixtureMainEventSlug(eventSlug);
+  let match = await loadMatchForEventSlug(mainEventSlug);
 
   if (!match) {
     return undefined;
   }
+
+  match = await enrichMatchWithSiblingFixtureMarkets(match, mainEventSlug);
 
   const gameSnapshot = buildGameMarketSnapshot(match, []);
   const fixtureMarkets = buildFixtureMarketsSnapshot(match);
@@ -65,10 +77,10 @@ async function resolveEventSlug(
       return eventSlugFromMarket;
     }
   } catch {
-    return undefined;
+    return resolveFixtureMainEventSlug(slug);
   }
 
-  return undefined;
+  return resolveFixtureMainEventSlug(slug);
 }
 
 async function loadMatchForEventSlug(
@@ -100,6 +112,100 @@ async function loadMatchFromGammaEvent(
   }
 }
 
+async function enrichMatchWithSiblingFixtureMarkets(
+  match: WorldCupMatch,
+  mainEventSlug: string
+): Promise<WorldCupMatch> {
+  if (!match.polymarket || !isFixtureMainEventSlugForEnrichment(mainEventSlug)) {
+    return match;
+  }
+
+  const siblingSlugs = resolveFixtureSiblingSlugs(mainEventSlug);
+  const siblingEvents = await Promise.all(
+    siblingSlugs.map((slug) => fetchGammaEventBySlug(slug))
+  );
+  const siblingMarkets = mergeGammaMarkets(
+    ...siblingEvents.map((event) => event?.markets)
+  );
+
+  if (siblingMarkets.length === 0) {
+    return match;
+  }
+
+  const homeName = match.homeDisplayName ?? match.homeSeed ?? "Home";
+  const awayName = match.awayDisplayName ?? match.awaySeed ?? "Away";
+  const incoming = mapEventSportsMarkets(
+    siblingMarkets,
+    homeName,
+    awayName,
+    match.polymarket.moneyline.outcomes,
+    match.polymarket.slug ?? match.id,
+  );
+  const existing = match.polymarket.fixtureMarkets ?? {
+    lines: [],
+    exactScores: [],
+    halftime: [],
+  };
+
+  return {
+    ...match,
+    polymarket: {
+      ...match.polymarket,
+      fixtureMarkets: mergeFixtureMarketsData(existing, incoming),
+    },
+  };
+}
+
+function isFixtureMainEventSlugForEnrichment(slug: string): boolean {
+  return slug.startsWith("fifwc-") || slug.startsWith("fif-");
+}
+
+function mergeFixtureMarketsData(
+  existing: PolymarketFixtureMarketsData,
+  incoming: PolymarketFixtureMarketsData
+): PolymarketFixtureMarketsData {
+  const mergedLines = [...existing.lines];
+
+  for (const incomingGroup of incoming.lines) {
+    if (incomingGroup.outcomes.length === 0) {
+      continue;
+    }
+
+    const existingIndex = mergedLines.findIndex(
+      (group) => group.type === incomingGroup.type
+    );
+
+    if (existingIndex >= 0) {
+      mergedLines[existingIndex] = incomingGroup;
+      continue;
+    }
+
+    mergedLines.push(incomingGroup);
+  }
+
+  return {
+    lines: mergedLines,
+    exactScores: incoming.exactScores.length
+      ? incoming.exactScores
+      : existing.exactScores,
+    halftime: incoming.halftime.length ? incoming.halftime : existing.halftime,
+  };
+}
+
+async function fetchGammaEventBySlug(
+  slug: string
+): Promise<GammaEventRecord | undefined> {
+  try {
+    const payload = await fetchPolymarket<unknown>(
+      `/events/slug/${encodeURIComponent(slug)}`
+    );
+
+    return isGammaEventPayload(payload) ? payload : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function enrichMatchFromGammaEvent(
   match: WorldCupMatch | undefined,
   event: GammaEventRecord
@@ -121,7 +227,8 @@ function enrichMatchFromGammaEvent(
     event.markets ?? [],
     homeName,
     awayName,
-    enriched.polymarket.moneyline.outcomes
+    enriched.polymarket.moneyline.outcomes,
+    enriched.polymarket.slug ?? enriched.id,
   );
 
   if (
@@ -136,7 +243,7 @@ function enrichMatchFromGammaEvent(
     ...enriched,
     polymarket: {
       ...enriched.polymarket,
-      fixtureMarkets
-    }
+      fixtureMarkets,
+    },
   };
 }

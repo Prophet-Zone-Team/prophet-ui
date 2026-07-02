@@ -146,8 +146,8 @@ export function MarketContextRow({
       />
 
       {showMobileContextTabs ? (
-        <div className="flex flex-col gap-0 overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white md:hidden">
-          <div className="border-b border-[#EBEBEB] px-3 pt-3">
+        <div className="flex flex-col gap-0 overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel md:hidden">
+          <div className="border-b border-prophet-line px-3 pt-3">
             <TabSwitcher
               items={contextTabs}
               value={tab}

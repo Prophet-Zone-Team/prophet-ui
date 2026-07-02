@@ -16,7 +16,7 @@ import {
 function LoadingBlock({ className }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-md bg-[#ebebeb]/80 ${className ?? "h-4 w-full"}`}
+      className={`animate-pulse rounded-md bg-[#ebebeb]/80 dark:bg-[#000000]/50 ${className ?? "h-4 w-full"}`}
       aria-hidden
     />
   );
@@ -219,7 +219,7 @@ function SidebarSkeleton() {
         <LoadingBlock className="mt-4 h-9 w-full rounded-lg" />
       </PanelSkeleton>
 
-      <LoadingBlock className="h-[420px] w-full rounded-[12px] border border-prophet-line bg-white" />
+      <LoadingBlock className="h-[420px] w-full rounded-[12px] border border-prophet-line bg-prophet-panel" />
 
       <PanelSkeleton titleWidth="w-40">
         <LoadingBlock className="h-24 w-full rounded-lg" />
@@ -262,7 +262,7 @@ export function TeamDetailMobileBodySkeleton() {
       {Array.from({ length: 6 }, (_, index) => (
         <LoadingBlock
           key={index}
-          className="h-[160px] w-full rounded-[12px] border border-prophet-line bg-white"
+          className="h-[160px] w-full rounded-[12px] border border-prophet-line bg-prophet-panel"
         />
       ))}
     </div>

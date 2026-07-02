@@ -52,7 +52,7 @@ export function SignLegStatusIcon({
     return (
       <span
         className={cn(
-          "inline-flex size-5 shrink-0 items-center justify-center rounded-md border border-[#EBEBEB] bg-white",
+          "inline-flex size-5 shrink-0 items-center justify-center rounded-md border border-prophet-line bg-prophet-panel",
           className
         )}
         aria-label={t("signing")}
@@ -65,7 +65,7 @@ export function SignLegStatusIcon({
   return (
     <span
       className={cn(
-        "inline-flex size-5 shrink-0 items-center justify-center rounded-md border border-[#EBEBEB] bg-white",
+        "inline-flex size-5 shrink-0 items-center justify-center rounded-md border border-prophet-line bg-prophet-panel",
         className
       )}
       aria-hidden

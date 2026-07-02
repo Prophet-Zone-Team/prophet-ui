@@ -35,7 +35,7 @@ export function PrivateModeStepCard({
       )}
     >
       <div className="flex items-center gap-1">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-black text-base font-[500] text-white">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-black dark:bg-prophet-primary text-base font-[500] text-white">
           {step === 1 ? (
             <svg
               width="17"
@@ -46,7 +46,8 @@ export function PrivateModeStepCard({
             >
               <path
                 d="M1.5 6.5L6 11L15.5 1.5"
-                stroke="#EBEBEB"
+                stroke="currentColor"
+                className="text-white/80"
                 strokeWidth="3"
                 strokeLinecap="round"
               />
@@ -55,9 +56,9 @@ export function PrivateModeStepCard({
             step
           )}
         </div>
-        <h3 className="m-0 text-base font-[400] text-black">{title}</h3>
+        <h3 className="m-0 text-base font-[400] text-prophet-foreground">{title}</h3>
       </div>
-      <p className="m-0 mt-5 text-sm font-[400] leading-normal text-[#909090]">
+      <p className="m-0 mt-5 text-sm font-[400] leading-normal text-prophet-muted">
         {description}
       </p>
       {footer ? <div className="mt-auto pt-4">{footer}</div> : null}

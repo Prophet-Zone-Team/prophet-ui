@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/cn";
+import { useDarkModeEnabled } from "@/store";
 import { formatNumber } from "@/utils";
 import type { CopyDepositStatusResult } from "@/types/copy-trade-funding";
 
@@ -15,7 +16,7 @@ export interface DepositAddressStepProps {
 }
 
 const cardClass = cn(
-  "flex flex-col gap-1 rounded-[8px] border border-[#EBEBEB] bg-[#FAFBFC] px-4 py-3",
+  "flex flex-col gap-1 rounded-[8px] border border-prophet-line bg-prophet-action-panel px-4 py-3",
 );
 
 export function DepositAddressStep({
@@ -25,6 +26,7 @@ export function DepositAddressStep({
 }: DepositAddressStepProps) {
   const t = useTranslations("copyTrade.funding.deposit");
   const tPortfolioDeposit = useTranslations("portfolio.deposit");
+  const darkModeEnabled = useDarkModeEnabled();
 
   const handleCopy = async () => {
     if (!address) {
@@ -43,42 +45,42 @@ export function DepositAddressStep({
 
   return (
     <div className="relative flex flex-col gap-5 pb-2">
-      <p className="text-sm leading-5 text-[#909090]">
+      <p className="text-sm leading-5 text-prophet-muted">
         {t("socialDepositDescription")}
       </p>
 
       <div className="flex justify-center">
         {loading || !address ? (
           <div
-            className="size-[200px] animate-pulse rounded-[12px] bg-[#F1F1F1]"
+            className="size-[200px] animate-pulse rounded-[12px] bg-prophet-hover"
             aria-hidden="true"
           />
         ) : (
-          <div className="rounded-[12px] border border-[#EBEBEB] p-3">
+          <div className="rounded-[12px] border border-prophet-line p-3">
             <QRCodeSVG
               value={address}
               size={200}
               level="M"
               marginSize={2}
-              bgColor="#ffffff"
-              fgColor="#000000"
+              bgColor={darkModeEnabled ? "#242427" : "#ffffff"}
+              fgColor={darkModeEnabled ? "#ffffff" : "#000000"}
             />
           </div>
         )}
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm font-[500] text-black">
+        <span className="text-sm font-[500] text-prophet-foreground">
           {tPortfolioDeposit("yourDepositAddress")}
         </span>
-        <div className="flex items-center justify-between gap-3 rounded-[6px] border border-[#EBEBEB] bg-white px-4 py-3">
+        <div className="flex items-center justify-between gap-3 rounded-[6px] border border-prophet-line bg-prophet-panel px-4 py-3">
           {loading || !address ? (
             <div
-              className="h-4 w-full animate-pulse rounded bg-[#F1F1F1]"
+              className="h-4 w-full animate-pulse rounded bg-prophet-hover"
               aria-hidden="true"
             />
           ) : (
-            <p className="min-w-0 flex-1 break-all text-sm font-[500] text-black">
+            <p className="min-w-0 flex-1 break-all text-sm font-[500] text-prophet-foreground">
               {address}
             </p>
           )}
@@ -101,12 +103,12 @@ export function DepositAddressStep({
 
       <div className={cardClass}>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#909090]">{t("creditedSoFar")}</span>
-          <span className="text-sm font-[600] text-black">
+          <span className="text-sm text-prophet-muted">{t("creditedSoFar")}</span>
+          <span className="text-sm font-[600] text-prophet-foreground">
             {formatNumber(status?.credited_pusd ?? 0, 2, true, { round: 0 })} pUSD
           </span>
         </div>
-        <span className="text-xs text-[#909090]">
+        <span className="text-xs text-prophet-muted">
           {recentTransactions.length > 0
             ? t("bridgeTransactionsDetected", {
                 count: recentTransactions.length,

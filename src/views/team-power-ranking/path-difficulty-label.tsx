@@ -19,7 +19,7 @@ export function PathDifficultyLabel({
     <span
       className={cn(
         "text-[16px] font-[400] leading-[19px]",
-        difficulty === "Hard" ? "text-[#FF674B]" : "text-[#909090]",
+        difficulty === "Hard" ? "text-[#FF674B]" : "text-prophet-muted",
         className
       )}
     >

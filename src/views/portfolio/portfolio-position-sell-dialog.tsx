@@ -108,7 +108,7 @@ function PortfolioPositionSellSharedBody({
         <div className="flex items-start gap-2.5">
           {headerIcon}
           <div className="min-w-0 flex-1">
-            <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
+            <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-prophet-foreground">
               {position.title}
             </p>
             <p
@@ -124,10 +124,10 @@ function PortfolioPositionSellSharedBody({
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-[500] text-black">
+            <span className="text-sm font-[500] text-prophet-foreground">
               {t("receiveToken")}
             </span>
-            <span className="text-xl font-[500] text-black">
+            <span className="text-xl font-[500] text-prophet-foreground">
               {receiveAmount}
             </span>
           </div>
@@ -212,7 +212,7 @@ function PortfolioPositionGameIcon({ position }: { position: UserPositionRecord 
 
   return (
     <div
-      className="h-5 w-5 shrink-0 rounded-[2px] bg-[#E8E8E8]"
+      className="h-5 w-5 shrink-0 rounded-[2px] bg-prophet-line"
       aria-hidden
     />
   );
@@ -277,6 +277,7 @@ function PortfolioPositionGameSellBody({
   const ticket = useTradeTicket({
     variant: "game",
     gameSnapshot: context.gameSnapshot,
+    fixtureMarkets: context.fixtureMarkets,
     sellPosition: position,
     onOrderSuccess: handleOrderSuccess
   });

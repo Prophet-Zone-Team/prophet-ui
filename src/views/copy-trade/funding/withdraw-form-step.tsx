@@ -32,7 +32,7 @@ export interface WithdrawFormStepProps {
 }
 
 const assetRowClass = cn(
-  "flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-[#FAFBFC]",
+  "flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-prophet-action-panel",
   "disabled:cursor-not-allowed disabled:opacity-50",
 );
 
@@ -63,7 +63,7 @@ export function WithdrawFormStep({
   return (
     <div className="flex flex-col gap-5 pb-2">
       {blockReason ? (
-        <div className="rounded-[8px] border border-[#F5C2C2] bg-[#FDECEC] px-4 py-3 text-sm text-[#B42318]">
+        <div className="rounded-[8px] border border-[#FF674B]/30 bg-[#FF674B]/10 px-4 py-3 text-sm text-[#FF674B]">
           {blockReason}
         </div>
       ) : null}
@@ -95,7 +95,7 @@ export function WithdrawFormStep({
               role="option"
               aria-selected={isSelected}
               disabled={disabled}
-              className={cn(assetRowClass, isSelected && "bg-[#F4F6FF]")}
+              className={cn(assetRowClass, isSelected && "bg-prophet-hover")}
               onClick={() => {
                 if (disabled) {
                   return;
@@ -110,12 +110,12 @@ export function WithdrawFormStep({
                   icon={asset.icon}
                   size="sm"
                 />
-                <span className="text-sm font-[500] text-black">
+                <span className="text-sm font-[500] text-prophet-foreground">
                   {asset.label}
                 </span>
               </span>
               {disabled ? (
-                <span className="text-xs text-[#909090]">
+                <span className="text-xs text-prophet-muted">
                   {asset.reason || t("unavailable")}
                 </span>
               ) : null}
@@ -139,7 +139,7 @@ export function WithdrawFormStep({
             !!recipient && (
               <button
                 type="button"
-                className="absolute right-1.5 z-[1] size-5 rounded-full bg-[#F4F4F4] flex justify-center items-center hover:bg-[#E0E0E0]"
+                className="absolute right-1.5 z-[1] flex size-5 items-center justify-center rounded-full bg-prophet-action-panel hover:bg-prophet-hover"
                 onClick={() => onRecipientChange("")}
               >
                 <X className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -148,9 +148,9 @@ export function WithdrawFormStep({
           }
         </div>
         {recipientError ? (
-          <span className="text-xs text-[#E5484D]">{recipientError}</span>
+          <span className="text-xs text-[#FF674B]">{recipientError}</span>
         ) : (
-          <span className="text-xs text-[#909090]">
+          <span className="text-xs text-prophet-muted">
             {t("fundsSentOnPolygon")}
           </span>
         )}
@@ -159,7 +159,7 @@ export function WithdrawFormStep({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <span className={withdrawFieldLabelClass}>{t("amountPusd")}</span>
-          <span className="text-xs text-[#909090]">
+          <span className="text-xs text-prophet-muted">
             {t("available", {
               amount: formatNumber(maxAmount, 2, true, { round: 0 }),
             })}
@@ -183,31 +183,31 @@ export function WithdrawFormStep({
           </button>
         </div>
         {selectedAsset?.min_amount_pusd ? (
-          <span className="text-xs text-[#909090]">
+          <span className="text-xs text-prophet-muted">
             {t("minimumWithdrawal", {
               amount: formatNumber(selectedAsset.min_amount_pusd, 2, true),
             })}
           </span>
         ) : null}
         {errorText ? (
-          <span className="text-xs text-[#E5484D]">{errorText}</span>
+          <span className="text-xs text-[#FF674B]">{errorText}</span>
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-2 rounded-[8px] border border-[#EBEBEB] bg-[#FAFBFC] px-4 py-3">
+      <div className="flex flex-col gap-2 rounded-[8px] border border-prophet-line bg-prophet-action-panel px-4 py-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#909090]">{t("asset")}</span>
-          <span className="text-sm font-[500] text-black">
+          <span className="text-sm text-prophet-muted">{t("asset")}</span>
+          <span className="text-sm font-[500] text-prophet-foreground">
             {selectedAsset?.label ?? "—"}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#909090]">{t("network")}</span>
-          <span className="text-sm font-[500] text-black">{t("polygon")}</span>
+          <span className="text-sm text-prophet-muted">{t("network")}</span>
+          <span className="text-sm font-[500] text-prophet-foreground">{t("polygon")}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#909090]">{t("youReceive")}</span>
-          <span className="text-sm font-[500] text-black">
+          <span className="text-sm text-prophet-muted">{t("youReceive")}</span>
+          <span className="text-sm font-[500] text-prophet-foreground">
             {amount ? `${formatNumber(Number(amount), 2, true, { round: 0 })}` : "—"}
           </span>
         </div>

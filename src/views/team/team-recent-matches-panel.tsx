@@ -34,7 +34,7 @@ function resolveOpponentCode(name: string): string | undefined {
 function RecentMatchOpponent({ name }: { name: string }) {
   const displayName = useLocalizedTeamName(resolveOpponentCode(name), name);
 
-  return <strong className="font-[500] text-black">{displayName}</strong>;
+  return <strong className="font-[500] text-prophet-foreground">{displayName}</strong>;
 }
 
 function RecentMatchCompetition({ note }: { note: string }) {
@@ -69,7 +69,7 @@ export function TeamRecentMatchesPanel({
               {matches.map((match) => (
                 <div
                   key={match.id}
-                  className="grid grid-cols-[140px_1fr_48px_72px_1fr] gap-2 border-b border-prophet-line/60 py-2.5 text-sm last:border-b-0"
+                  className="grid grid-cols-[140px_1fr_48px_72px_1fr] gap-2 border-b border-prophet-line py-2.5 text-sm last:border-b-0"
                 >
                   <span className="text-prophet-muted text-[10px]">
                     {match.date}

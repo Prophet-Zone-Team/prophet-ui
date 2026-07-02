@@ -26,6 +26,7 @@ import {
   type TeamChartTimeRange
 } from "@/lib/team/probability-history";
 import type { ProbabilityHistoryPoint } from "@/types/market";
+import { useDarkModeEnabled } from "@/store";
 
 const CHART_LINE_COLOR = "#8AB956";
 const CHART_FILL_TOP = "rgba(138, 185, 86, 0.3)";
@@ -65,6 +66,9 @@ export function ProbabilityChart({
   timeRange
 }: ProbabilityChartProps) {
   const isMobile = useDevice();
+  const darkModeEnabled = useDarkModeEnabled();
+  const chartMutedColor = darkModeEnabled ? "#666668" : "#909090";
+  const chartCursorColor = darkModeEnabled ? "#353535" : "#EBEBEB";
   const gradientId = useId().replace(/:/g, "");
   const formatXAxisTick = (value: string) =>
     formatTeamChartXAxisTick(value, timeRange);
@@ -89,10 +93,10 @@ export function ProbabilityChart({
               <stop offset="100%" stopColor="rgba(138, 185, 86, 0)" />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="#ebebeb" vertical={false} />
+          <CartesianGrid stroke={darkModeEnabled ? "#353535" : "#ebebeb"} vertical={false} />
           <XAxis
             dataKey="date"
-            tick={{ fill: "#909090", fontSize: isMobile ? 10 : 14, dy: 6 }}
+            tick={{ fill: chartMutedColor, fontSize: isMobile ? 10 : 14, dy: 6 }}
             tickLine={false}
             axisLine={false}
             minTickGap={32}
@@ -100,14 +104,14 @@ export function ProbabilityChart({
           />
           <YAxis
             domain={yDomain}
-            tick={{ fill: "#909090", fontSize: isMobile ? 10 : 14 }}
+            tick={{ fill: chartMutedColor, fontSize: isMobile ? 10 : 14 }}
             tickFormatter={(value: number) => `${Number(value).toFixed(0)}%`}
             tickLine={false}
             axisLine={false}
             width={36}
           />
           <Tooltip
-            cursor={{ stroke: "#EBEBEB", strokeWidth: 1 }}
+            cursor={{ stroke: chartCursorColor, strokeWidth: 1 }}
             content={<ChartTooltip annotations={annotations} />}
           />
           <Area
@@ -180,13 +184,13 @@ const MatchMarkerDot = memo(function MatchMarkerDot({
         height={MATCH_LABEL_HEIGHT}
         className="overflow-visible"
       >
-        <div className="flex h-full items-center justify-center  gap-1 rounded border border-[#EBEBEB] bg-white px-1.5 py-1 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+        <div className="flex h-full items-center justify-center  gap-1 rounded border border-prophet-line bg-prophet-panel px-1.5 py-1 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
           <TeamFlag
             code={annotation.homeCode}
             name={annotation.homeName}
             className="!h-4 !w-4 rounded-[2px]"
           />
-          <span className="text-sm shrink-0 font-[500] leading-[17px] text-[#909090]">
+          <span className="text-sm shrink-0 font-[500] leading-[17px] text-prophet-muted">
             {annotation.scoreLabel}
           </span>
           <TeamFlag
@@ -264,19 +268,19 @@ function ChartTooltip({
   const annotation = findAnnotationForChartPoint(annotations, dateLabel);
 
   return (
-    <div className="min-w-[140px] rounded-xl border border-[#EBEBEB] bg-white p-3 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-      <p className="m-0 text-[14px] font-[400] leading-[17px] text-[#909090]">
+    <div className="min-w-[140px] rounded-xl border border-prophet-line bg-prophet-panel p-3 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+      <p className="m-0 text-[14px] font-[400] leading-[17px] text-prophet-muted">
         {formatTooltipDate(dateLabel)}
       </p>
-      <p className="m-0 mt-2 text-[16px] font-[500] leading-[19px] text-black">
+      <p className="m-0 mt-2 text-[16px] font-[500] leading-[19px] text-prophet-foreground">
         {typeof probability === "number" ? formatProbability(probability) : "—"}
       </p>
       {annotation ? (
         <>
-          <p className="m-0 mt-3 text-[14px] font-[400] leading-[17px] text-[#909090]">
+          <p className="m-0 mt-3 text-[14px] font-[400] leading-[17px] text-prophet-muted">
             Match
           </p>
-          <p className="m-0 mt-1 text-[16px] font-[500] leading-[19px] text-black">
+          <p className="m-0 mt-1 text-[16px] font-[500] leading-[19px] text-prophet-foreground">
             {annotation.matchLabel}
           </p>
         </>

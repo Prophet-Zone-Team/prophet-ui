@@ -18,7 +18,7 @@ export type SignalNewsDetailArticleBodyProps = {
 };
 
 const sourceLinkClass =
-  "text-black underline decoration-black underline-offset-2";
+  "text-prophet-foreground underline decoration-prophet-foreground underline-offset-2";
 
 type PendingExternalLink = {
   href: string;
@@ -89,7 +89,7 @@ export function SignalNewsDetailArticleBody({
             return (
               <h3
                 key={`${block.text}-${index}`}
-                className="m-0 text-[14px] font-[500] leading-[150%] text-black"
+                className="m-0 text-[14px] font-[500] leading-[150%] text-prophet-foreground"
               >
                 {block.text}
               </h3>
@@ -99,7 +99,7 @@ export function SignalNewsDetailArticleBody({
           return (
             <p
               key={`paragraph-${index}`}
-              className="m-0 text-[14px] font-[400] leading-[150%] text-black"
+              className="m-0 text-[14px] font-[400] leading-[150%] text-prophet-foreground"
             >
               {renderSegments(block.segments)}
             </p>

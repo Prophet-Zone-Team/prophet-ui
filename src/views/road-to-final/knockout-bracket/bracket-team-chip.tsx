@@ -95,7 +95,7 @@ export function BracketTeamChip({
             "absolute rounded-[8px]",
             hasPathGradient
               ? "[background:linear-gradient(180deg,#FFF_0%,#7BCA25_100%)]"
-              : "border border-[#EBEBEB] bg-white"
+              : "border border-prophet-line bg-prophet-panel"
           )}
           style={{
             width: surface.width,
@@ -120,7 +120,7 @@ export function BracketTeamChip({
         <span
           className={cn(
             "text-[14px] font-medium leading-none",
-            isWinner && "text-black",
+            isWinner && "text-prophet-foreground",
             isLoser && "text-white/50",
             !isWinner && !isLoser && "text-white"
           )}

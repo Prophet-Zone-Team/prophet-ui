@@ -158,7 +158,7 @@ export function CopyTradeDepositDialog({
   const renderBody = () => {
     if (!deposit.walletReady) {
       return (
-        <p className="py-8 text-center text-sm text-[#909090]">
+        <p className="py-8 text-center text-sm text-prophet-muted">
           {t("walletNotReady")}
         </p>
       );

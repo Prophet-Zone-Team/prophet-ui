@@ -93,7 +93,7 @@ export function TradeMarketButton({ value, onChange }: TradeMarketButtonProps) {
         <div
           role="listbox"
           aria-label={t("orderType")}
-          className="absolute right-0 top-[calc(100%+4px)] z-20 min-w-[120px] overflow-hidden rounded-md border border-prophet-line bg-white py-1 shadow-prophet"
+          className="absolute right-0 top-[calc(100%+4px)] z-20 min-w-[120px] overflow-hidden rounded-md border border-prophet-line bg-prophet-panel py-1 shadow-prophet"
         >
           {orderModeOptions.map((option) => {
             const isSelected = option.id === value;
@@ -108,8 +108,8 @@ export function TradeMarketButton({ value, onChange }: TradeMarketButtonProps) {
                 className={cn(
                   "block w-full px-3 py-1.5 text-left text-[14px] font-[400] leading-[17px] transition-colors",
                   isSelected
-                    ? "bg-[#fafbfc] text-black"
-                    : "text-prophet-muted hover:bg-[#fafbfc] hover:text-black"
+                    ? "bg-prophet-hover text-prophet-foreground"
+                    : "text-prophet-muted hover:bg-prophet-hover hover:text-prophet-foreground"
                 )}
                 onClick={() => selectOption(option.id)}
               >

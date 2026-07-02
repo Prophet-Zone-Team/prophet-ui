@@ -12,6 +12,10 @@ import {
   useCopyTradeStore
 } from "@/store/copy-trade-store";
 
+import {
+  copyTradeModalSurfaceClass,
+  copyTradePrimaryButtonClass
+} from "@/views/copy-trade/copy-trade-ui";
 import { useCopyTradeTest } from "../use-copy-trade-test";
 
 type StepId = "sign-in" | "create-wallet" | "deposit";
@@ -41,7 +45,7 @@ function StepIcon({ state }: { state: StepVisualState }) {
   }
 
   return (
-    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-prophet-line bg-white" />
+    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-prophet-line bg-prophet-panel" />
   );
 }
 
@@ -62,9 +66,8 @@ function StepActionButton({
       disabled={disabled || loading}
       onClick={onClick}
       className={cn(
-        "inline-flex h-10 w-[100px] shrink-0 items-center justify-center rounded-[8px]",
-        "bg-black text-sm font-medium leading-[18px] text-white transition-opacity",
-        "hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+        "inline-flex h-10 w-[100px] shrink-0 items-center justify-center rounded-[8px] text-sm font-medium leading-[18px]",
+        copyTradePrimaryButtonClass
       )}
     >
       {loading ? (
@@ -324,18 +327,15 @@ export function CreateTradeWalletModal({
       open={open}
       onClose={onClose}
       ariaLabel={t("ariaLabel")}
-      className={cn(
-        "w-full max-w-[556px] rounded-[20px] border border-[#EBEBEB] bg-white",
-        "p-5 shadow-[0px_0px_10px_rgba(0,0,0,0.1)] sm:p-5"
-      )}
-      closeButtonClassName="right-5 top-5 border-0 bg-transparent text-[#909090] hover:bg-transparent hover:text-black"
+      className={cn(copyTradeModalSurfaceClass, "max-w-[556px]")}
+      closeButtonClassName="right-5 top-5 border-0 bg-transparent text-prophet-muted hover:bg-transparent hover:text-prophet-foreground"
     >
       <div className="flex flex-col gap-5 pr-8">
         <header className="flex flex-col gap-2">
-          <h2 className="text-lg font-medium leading-[23px] text-black">
+          <h2 className="text-lg font-medium leading-[23px] text-prophet-foreground">
             {t("modalTitle")}
           </h2>
-          <p className="text-sm font-normal leading-[18px] text-[#909090]">
+          <p className="text-sm font-normal leading-[18px] text-prophet-muted">
             {t("modalDescription")}
           </p>
         </header>

@@ -26,7 +26,7 @@ import {
 import { MarketOtherSources, type MarketOtherSourceItem } from "./market-other-sources";
 import { resolveFixtureOutcomeLabel } from "@/views/trade/trade-widget/trade-i18n";
 
-const cardClass = "rounded-[12px] border border-[#EBEBEB] bg-white";
+const cardClass = "rounded-[12px] border border-prophet-line bg-prophet-panel";
 
 function EmptyActions() {
   return <LineOutcomeButton label="—" variant="draw" disabled />;
@@ -108,7 +108,7 @@ function MarketActionRowShell({
       <div className="flex flex-col md:items-center gap-2 p-3 md:flex-row md:gap-4 md:p-[16px]">
         <div className="min-w-[88px] shrink-0">
           {volumeLabel ? (
-            <p className="m-0 text-[16px] md:text-[20px] font-[500] leading-6 text-black">
+            <p className="m-0 text-[16px] md:text-[20px] font-[500] leading-6 text-prophet-foreground">
               {t("compactVolume", { value: volumeLabel })}
             </p>
           ) : null}
@@ -125,7 +125,7 @@ function MarketActionRowShell({
 
       <MarketOtherSources
         sources={otherSources ?? []}
-        className="border-t border-[#EBEBEB] p-3 md:p-[16px]"
+        className="border-t border-prophet-line p-3 md:p-[16px]"
       />
     </article>
   );
