@@ -45,6 +45,7 @@ import type {
   GameFixtureChartTimeRange,
   GameMatchChartEvent
 } from "@/types/market";
+import { useDarkModeEnabled } from "@/store";
 import {
   GoalEventMarkerChartProvider,
   GoalEventMarkerCustomized
@@ -332,6 +333,7 @@ export function GameBinaryProbabilityChart({
   awayCode
 }: GameBinaryProbabilityChartProps) {
   const t = useTranslations("trade");
+  const darkModeEnabled = useDarkModeEnabled();
   const isLive = mode === "live";
   const liveClockOptions = useMemo<ResolveMatchClockSecondsOptions>(
     () => ({
@@ -447,7 +449,10 @@ export function GameBinaryProbabilityChart({
         bottom: isLive ? 36 : 4
       }}
     >
-      <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
+      <CartesianGrid
+        stroke={darkModeEnabled ? "#353535" : CHART_COLORS.grid}
+        vertical={false}
+      />
       <XAxis
         type={isLive ? "number" : "category"}
         dataKey={isLive ? "axisSeconds" : "timestamp"}

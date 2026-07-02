@@ -53,5 +53,5 @@ export const teamMiniGridClass = "grid grid-cols-2 gap-2 sm:grid-cols-3";
 
 export const teamOpenTradeButtonClass = cn(
   "inline-flex h-9 items-center justify-center rounded-lg border border-prophet-line bg-prophet-primary px-4",
-  "text-sm font-[500] text-prophet-foreground transition-colors hover:opacity-80"
+  "text-sm font-[500] text-prophet-primary-foreground transition-colors hover:opacity-80"
 );

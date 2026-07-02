@@ -113,7 +113,7 @@ export function PredictionRecordsModal({
                       </p>
                     </div>
 
-                    <div className="border-t border-prophet-line bg-[#F5F5F5] px-[16px] py-[10px]">
+                    <div className="border-t border-prophet-line bg-prophet-action-panel px-[16px] py-[10px]">
                       <p className="m-0 truncate text-[12px] text-[#909090]">
                         {t("sharingLinkLabel")}{" "}
                         {twitterUrl ? (
