@@ -1859,6 +1859,8 @@
       "liveCopyStarted": "ライブコピートレードを開始しました。",
       "copyTargetSavedDryRun": "コピーターゲットをドライランとして保存しました。",
       "savingCopyTarget": "コピーターゲットを保存中…",
+      "savingCopySettings": "コピー設定を保存中…",
+      "copySettingsSaved": "コピー設定を保存しました。",
       "copyTargetRemoved": "コピーターゲットを削除しました。",
       "removingCopyTarget": "コピーターゲットを削除中…",
       "copyTargetPaused": "コピーターゲットを一時停止しました。",

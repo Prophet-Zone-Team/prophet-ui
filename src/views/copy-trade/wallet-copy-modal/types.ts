@@ -26,8 +26,6 @@ export interface WalletCopyFormValues {
 
 export type WalletCopyAdvancedFields = Pick<
   WalletCopyFormValues,
-  | "buyTakerOnly"
-  | "sellTakerOnly"
   | "maxUsdPerTrade"
   | "maxUsdPerMarket"
   | "maxUsdPerHour"
@@ -35,23 +33,19 @@ export type WalletCopyAdvancedFields = Pick<
   | "minPrice"
   | "maxPrice"
   | "maxSlippage"
-  | "orderType"
 >;
 
 export function pickAdvancedFields(
   form: WalletCopyFormValues
 ): WalletCopyAdvancedFields {
   return {
-    buyTakerOnly: form.buyTakerOnly,
-    sellTakerOnly: form.sellTakerOnly,
     maxUsdPerTrade: form.maxUsdPerTrade,
     maxUsdPerMarket: form.maxUsdPerMarket,
     maxUsdPerHour: form.maxUsdPerHour,
     maxUsdTotal: form.maxUsdTotal,
     minPrice: form.minPrice,
     maxPrice: form.maxPrice,
-    maxSlippage: form.maxSlippage,
-    orderType: form.orderType
+    maxSlippage: form.maxSlippage
   };
 }
 
@@ -67,13 +61,13 @@ export const DEFAULT_WALLET_COPY_FORM: WalletCopyFormValues = {
   buyEnabled: true,
   sellEnabled: true,
   buyTakerOnly: true,
-  sellTakerOnly: false,
-  maxUsdPerTrade: "50",
-  maxUsdPerMarket: "200",
-  maxUsdPerHour: "500",
-  maxUsdTotal: "2000",
-  minPrice: "0.02",
-  maxPrice: "0.97",
+  sellTakerOnly: true,
+  maxUsdPerTrade: "10",
+  maxUsdPerMarket: "50",
+  maxUsdPerHour: "200",
+  maxUsdTotal: "500",
+  minPrice: "0.2",
+  maxPrice: "0.95",
   maxSlippage: "0.03",
   orderType: "FAK"
 };

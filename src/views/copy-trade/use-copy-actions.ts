@@ -12,6 +12,7 @@ import {
   enableProfilePatch,
   formToApiTarget,
   normalizeTargetForm,
+  targetFormToProfilePatch,
   targetToForm,
   validateProfileDefaults,
   validateTargetForm,
@@ -36,6 +37,17 @@ import { useCopyTradeTargets } from "./use-copy-trade-targets";
 
 function isLiveCopyForm(form: CopyTargetForm): boolean {
   return form.enabled && !form.dryRun && (form.buyEnabled || form.sellEnabled);
+}
+
+function resolveProfileFormForWrite(
+  profileForm: CopyTargetForm | undefined,
+  nextForms: CopyTargetForm[]
+): CopyTargetForm | undefined {
+  if (profileForm) {
+    return profileForm;
+  }
+
+  return nextForms.find(isLiveCopyForm);
 }
 
 export function useCopyActions() {
@@ -71,7 +83,8 @@ export function useCopyActions() {
       nextForms: CopyTargetForm[],
       ensureMaster: boolean,
       okMessage: string,
-      loadingMessage = t("updatingCopyTarget")
+      loadingMessage = t("updatingCopyTarget"),
+      profileForm?: CopyTargetForm
     ): Promise<boolean> => {
       if (!guard() || !userId) {
         return false;
@@ -101,7 +114,17 @@ export function useCopyActions() {
             return false;
           }
 
-          await updateCopyTradeProfile(userId, enableProfilePatch(profile));
+          const profileSource = resolveProfileFormForWrite(
+            profileForm,
+            nextForms
+          );
+
+          await updateCopyTradeProfile(
+            userId,
+            profileSource
+              ? targetFormToProfilePatch(profileSource, { enabled: true })
+              : enableProfilePatch(profile)
+          );
         }
 
         await updateCopyTradeTargets(userId, {
@@ -138,10 +161,31 @@ export function useCopyActions() {
         next,
         live,
         live ? t("liveCopyStarted") : t("copyTargetSavedDryRun"),
-        t("savingCopyTarget")
+        t("savingCopyTarget"),
+        live ? normalized : undefined
       );
     },
-    [currentForms, writeTargets]
+    [currentForms, writeTargets, t]
+  );
+
+  const updateCopySettings = useCallback(
+    async (form: CopyTargetForm): Promise<boolean> => {
+      const normalized = normalizeTargetForm(form);
+      const wallet = normalized.wallet.toLowerCase();
+      const next = currentForms().map((item) =>
+        item.wallet === wallet ? normalized : item
+      );
+      const live = isLiveCopyForm(normalized);
+
+      return writeTargets(
+        next,
+        live,
+        t("copySettingsSaved"),
+        t("savingCopySettings"),
+        live ? normalized : undefined
+      );
+    },
+    [currentForms, writeTargets, t]
   );
 
   const removeCopy = useCallback(
@@ -170,7 +214,13 @@ export function useCopyActions() {
         item.wallet === form.wallet ? form : item
       );
 
-      return writeTargets(next, live, okMessage, loadingMessage);
+      return writeTargets(
+        next,
+        live,
+        okMessage,
+        loadingMessage,
+        live ? normalizeTargetForm(form) : undefined
+      );
     },
     [currentForms, writeTargets]
   );
@@ -222,6 +272,7 @@ export function useCopyActions() {
   return {
     saving,
     upsertCopy,
+    updateCopySettings,
     removeCopy,
     setPaused,
     patchCopy,

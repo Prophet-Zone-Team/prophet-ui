@@ -1850,6 +1850,8 @@
       "liveCopyStarted": "Live copy trading запущен.",
       "copyTargetSavedDryRun": "Цель копирования сохранена как dry run.",
       "savingCopyTarget": "Сохранение цели копирования…",
+      "savingCopySettings": "Сохранение настроек копирования…",
+      "copySettingsSaved": "Настройки копирования сохранены.",
       "copyTargetRemoved": "Цель копирования удалена.",
       "removingCopyTarget": "Удаление цели копирования…",
       "copyTargetPaused": "Цель копирования приостановлена.",

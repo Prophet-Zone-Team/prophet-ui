@@ -15,15 +15,15 @@ export const MAX_SLIPPAGE_EXCLUSIVE = 0.5;
 
 export const COPY_DEFAULTS = {
   ratio: 0.1,
-  minPrice: 0.02,
-  maxPrice: 0.97,
+  minPrice: 0.2,
+  maxPrice: 0.95,
   maxSlippage: 0.03,
-  maxUSDPerTrade: 50,
-  maxUSDPerMarket: 200,
-  maxUSDPerHour: 500,
-  maxUSDTotal: 2000,
+  maxUSDPerTrade: 10,
+  maxUSDPerMarket: 50,
+  maxUSDPerHour: 200,
+  maxUSDTotal: 500,
   buyTakerOnly: true,
-  sellTakerOnly: false
+  sellTakerOnly: true
 } as const;
 
 export const ORDER_TYPES = new Set(["FAK", "FOK"]);
@@ -339,6 +339,33 @@ export function formToApiTarget(form: CopyTargetForm): CopyTargetUpdateItem {
   };
 }
 
+export function targetFormToProfilePatch(
+  form: CopyTargetForm,
+  options?: { enabled?: boolean }
+): CopyProfileUpdateRequest {
+  const normalized = normalizeTargetForm(form);
+
+  return {
+    enabled: options?.enabled ?? true,
+    dry_run: normalized.dryRun,
+    buy_enabled: normalized.buyEnabled,
+    sell_enabled: normalized.sellEnabled,
+    taker_only: normalized.buyTakerOnly && normalized.sellTakerOnly,
+    buy_taker_only: normalized.buyTakerOnly,
+    sell_taker_only: normalized.sellTakerOnly,
+    size_mode: "ratio",
+    ratio: normalized.ratio,
+    order_type: normalized.orderType,
+    min_price: normalized.minPrice,
+    max_price: normalized.maxPrice,
+    max_slippage: normalized.maxSlippage,
+    max_usd_per_trade: normalized.maxUSDPerTrade,
+    max_usd_per_market: normalized.maxUSDPerMarket,
+    max_usd_per_hour: normalized.maxUSDPerHour,
+    max_usd_total: normalized.maxUSDTotal
+  };
+}
+
 export function enableProfilePatch(
   profile: CopyProfile | null
 ): CopyProfileUpdateRequest {
@@ -418,10 +445,10 @@ export function walletCopyFormToTargetForm(
     dryRun: overrides?.dryRun ?? false,
     buyEnabled: form.buyEnabled,
     sellEnabled: form.sellEnabled,
-    buyTakerOnly: form.buyTakerOnly,
-    sellTakerOnly: form.sellTakerOnly,
+    buyTakerOnly: true,
+    sellTakerOnly: true,
     sizeMode: overrides?.sizeMode ?? "ratio",
-    orderType: form.orderType,
+    orderType: "FAK",
     ratio: form.ratio / 100,
     minPrice: asNumber(form.minPrice),
     maxPrice: asNumber(form.maxPrice),

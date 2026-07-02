@@ -1864,6 +1864,8 @@
       "liveCopyStarted": "Live copy trading started.",
       "copyTargetSavedDryRun": "Copy target saved as dry run.",
       "savingCopyTarget": "Saving copy target…",
+      "savingCopySettings": "Saving copy settings…",
+      "copySettingsSaved": "Copy settings saved.",
       "copyTargetRemoved": "Copy target removed.",
       "removingCopyTarget": "Removing copy target…",
       "copyTargetPaused": "Copy target paused.",

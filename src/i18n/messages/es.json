@@ -1850,6 +1850,8 @@
       "liveCopyStarted": "Copy trading en vivo iniciado.",
       "copyTargetSavedDryRun": "Objetivo de copia guardado como simulación.",
       "savingCopyTarget": "Guardando objetivo de copia…",
+      "savingCopySettings": "Guardando ajustes de copia…",
+      "copySettingsSaved": "Ajustes de copia guardados.",
       "copyTargetRemoved": "Objetivo de copia eliminado.",
       "removingCopyTarget": "Eliminando objetivo de copia…",
       "copyTargetPaused": "Objetivo de copia pausado.",

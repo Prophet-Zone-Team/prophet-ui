@@ -23,7 +23,7 @@ import {
   type CopyTradeRankTimeRange
 } from "@/lib/copy-trade/trader-rank-filters";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
-import type { TraderCatalogEntry } from "@/types/copy-trade-api";
+import type { CopyTarget, TraderCatalogEntry } from "@/types/copy-trade-api";
 
 import { WalletCopyAdvancedSettingsModal } from "./advanced-settings-modal";
 import { CopyTradeInfoTooltip } from "./info-tooltip";
@@ -49,7 +49,40 @@ export interface WalletCopyModalProps {
   isLoadingBalance?: boolean;
   canSubmitCopy?: boolean;
   balanceWarning?: string | null;
+  existingTarget?: CopyTarget | null;
   onSubmit?: (form: CopyTargetForm) => void | Promise<void>;
+  onPersistSettings?: (form: CopyTargetForm) => Promise<boolean>;
+}
+
+function withFixedCopyPolicy(
+  values: WalletCopyFormValues
+): WalletCopyFormValues {
+  return {
+    ...values,
+    buyTakerOnly: true,
+    sellTakerOnly: true,
+    orderType: "FAK"
+  };
+}
+
+export function buildTargetFormFromWalletCopy(
+  wallet: string,
+  values: WalletCopyFormValues,
+  existingTarget?: CopyTarget | null
+): CopyTargetForm {
+  const overrides = existingTarget
+    ? {
+        enabled: existingTarget.Enabled,
+        dryRun: existingTarget.DryRun,
+        allowedConditions: existingTarget.AllowedConditions ?? [],
+        blockedConditions: existingTarget.BlockedConditions ?? []
+      }
+    : {
+        enabled: true,
+        dryRun: false
+      };
+
+  return walletCopyFormToTargetForm(wallet, values, overrides);
 }
 
 export function buildWalletCopyStatsFromTrader(
@@ -134,7 +167,9 @@ export function WalletCopyModal({
   isLoadingBalance = false,
   canSubmitCopy = true,
   balanceWarning = null,
-  onSubmit
+  existingTarget = null,
+  onSubmit,
+  onPersistSettings
 }: WalletCopyModalProps) {
   const t = useTranslations("copyTrade.walletCopy");
   const tCommon = useTranslations("copyTrade.common");
@@ -237,16 +272,68 @@ export function WalletCopyModal({
     setAdvancedDraft(pickDefaultAdvancedFields());
   }, []);
 
-  const handleSaveAdvanced = useCallback(() => {
+  const handleSaveAdvanced = useCallback(async () => {
     if (hasAdvancedDraftFieldErrors) {
       return;
     }
 
-    const nextForm = applyAdvancedFields(form, advancedDraft);
+    const nextForm = withFixedCopyPolicy(
+      applyAdvancedFields(form, advancedDraft)
+    );
+    const draft = buildTargetFormFromWalletCopy(
+      wallet,
+      nextForm,
+      existingTarget
+    );
+    const errors = validateTargetForm(draft);
+    if (errors.length > 0) {
+      setError(errors[0]);
+      return;
+    }
+
+    let normalized: CopyTargetForm;
+    try {
+      normalized = normalizeTargetForm(draft);
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : t("unableToValidate")
+      );
+      return;
+    }
+
+    if (onPersistSettings) {
+      const ok = await onPersistSettings(normalized);
+      if (!ok) {
+        return;
+      }
+    }
+
+    setError("");
     setForm(nextForm);
     setSavedSnapshot(nextForm);
+    setAdvancedDraft(pickAdvancedFields(nextForm));
     setAdvancedModalOpen(false);
-  }, [advancedDraft, form, hasAdvancedDraftFieldErrors]);
+  }, [
+    advancedDraft,
+    existingTarget,
+    form,
+    hasAdvancedDraftFieldErrors,
+    onPersistSettings,
+    t,
+    wallet
+  ]);
+
+  const hasUnsavedAdvancedDraft = useMemo(() => {
+    if (advancedModalOpen) {
+      return true;
+    }
+
+    return (
+      Object.keys(advancedDraft) as Array<keyof WalletCopyAdvancedFields>
+    ).some((key) => advancedDraft[key] !== savedAdvanced[key]);
+  }, [advancedDraft, advancedModalOpen, savedAdvanced]);
 
   const handleSubmit = useCallback(() => {
     if (!canSubmitCopy) {
@@ -259,15 +346,27 @@ export function WalletCopyModal({
       return;
     }
 
-    if (hasAdvancedFieldErrors) {
+    if (hasUnsavedAdvancedDraft) {
+      if (hasAdvancedDraftFieldErrors) {
+        setError(t("invalidAdvancedSettings"));
+        return;
+      }
+    } else if (hasAdvancedFieldErrors) {
       setError(t("invalidAdvancedSettings"));
       return;
     }
 
-    const draft = walletCopyFormToTargetForm(wallet, form, {
-      enabled: true,
-      dryRun: false
-    });
+    const effectiveForm = withFixedCopyPolicy(
+      hasUnsavedAdvancedDraft
+        ? applyAdvancedFields(form, advancedDraft)
+        : form
+    );
+
+    const draft = buildTargetFormFromWalletCopy(
+      wallet,
+      effectiveForm,
+      existingTarget
+    );
     const errors = validateTargetForm(draft);
     if (errors.length > 0) {
       setError(errors[0]);
@@ -285,10 +384,14 @@ export function WalletCopyModal({
       );
     }
   }, [
+    advancedDraft,
     balanceWarning,
     canSubmitCopy,
     form,
+    hasAdvancedDraftFieldErrors,
     hasAdvancedFieldErrors,
+    existingTarget,
+    hasUnsavedAdvancedDraft,
     onSubmit,
     t,
     wallet
@@ -480,8 +583,11 @@ export function WalletCopyModal({
         open={advancedModalOpen}
         draft={advancedDraft}
         savedAdvanced={savedAdvanced}
+        saving={saving}
         onDraftChange={handlePatchAdvancedDraft}
-        onSave={handleSaveAdvanced}
+        onSave={() => {
+          void handleSaveAdvanced();
+        }}
         onClose={handleCloseAdvancedModal}
         onClear={handleClearAdvancedDraft}
       />

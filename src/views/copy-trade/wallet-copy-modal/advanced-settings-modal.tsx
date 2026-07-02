@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronLeft, RotateCcw, X } from "lucide-react";
+import { ChevronLeft, RotateCcw, X } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 
@@ -12,13 +12,13 @@ import {
   isValidUsdCapInput
 } from "@/lib/copy-trade/transforms";
 
-import { CopyTradeInfoTooltip } from "./info-tooltip";
-import type { WalletCopyAdvancedFields, WalletCopyFormValues } from "./types";
+import type { WalletCopyAdvancedFields } from "./types";
 
 export interface WalletCopyAdvancedSettingsModalProps {
   open: boolean;
   draft: WalletCopyAdvancedFields;
   savedAdvanced: WalletCopyAdvancedFields;
+  saving?: boolean;
   onDraftChange: (patch: Partial<WalletCopyAdvancedFields>) => void;
   onSave: () => void;
   onClose: () => void;
@@ -29,6 +29,7 @@ export function WalletCopyAdvancedSettingsModal({
   open,
   draft,
   savedAdvanced,
+  saving = false,
   onDraftChange,
   onSave,
   onClose,
@@ -61,14 +62,6 @@ export function WalletCopyAdvancedSettingsModal({
     [draft, savedAdvanced]
   );
 
-  const orderTypeOptions = useMemo(
-    () => [
-      { value: "FAK" as const, label: t("orderTypeFak") },
-      { value: "FOK" as const, label: t("orderTypeFok") }
-    ],
-    [t]
-  );
-
   return (
     <Modal
       open={open}
@@ -90,7 +83,11 @@ export function WalletCopyAdvancedSettingsModal({
               className="inline-flex size-5 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-colors hover:text-black"
               aria-label={t("backToCopySettings")}
             >
-              <ChevronLeft className="size-4" strokeWidth={1.6} aria-hidden="true" />
+              <ChevronLeft
+                className="size-4"
+                strokeWidth={1.6}
+                aria-hidden="true"
+              />
             </button>
             <h2 className="text-base font-medium leading-5 text-black">
               {t("advancedSetting")}
@@ -103,7 +100,11 @@ export function WalletCopyAdvancedSettingsModal({
               className="inline-flex items-center gap-1 border-0 bg-transparent p-0 text-sm leading-[18px] text-[#3168FF] transition-opacity hover:opacity-80"
             >
               {t("clearAdvanced")}
-              <RotateCcw className="size-3" strokeWidth={1.6} aria-hidden="true" />
+              <RotateCcw
+                className="size-3"
+                strokeWidth={1.6}
+                aria-hidden="true"
+              />
             </button>
             <button
               type="button"
@@ -117,25 +118,6 @@ export function WalletCopyAdvancedSettingsModal({
         </header>
 
         <div className="flex flex-col gap-3">
-          <div>
-            <ToggleRow
-              label={t("buyTakerOnly")}
-              checked={draft.buyTakerOnly}
-              onCheckedChange={(checked) =>
-                onDraftChange({ buyTakerOnly: checked })
-              }
-              tooltip={t("buyTakerOnlyTooltip")}
-            />
-            <ToggleRow
-              label={t("sellTakerOnly")}
-              checked={draft.sellTakerOnly}
-              onCheckedChange={(checked) =>
-                onDraftChange({ sellTakerOnly: checked })
-              }
-              tooltip={t("sellTakerOnlyTooltip")}
-            />
-          </div>
-
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <CapInput
               label={t("singleOrderCap")}
@@ -188,47 +170,13 @@ export function WalletCopyAdvancedSettingsModal({
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <CapInput
-              label={t("maxSlippage")}
-              value={draft.maxSlippage}
-              hint="<0.5"
-              invalid={fieldErrors.maxSlippage}
-              onChange={(value) => onDraftChange({ maxSlippage: value })}
-            />
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <span className="text-sm leading-[18px] text-[#909090]">
-                {t("orderType")}
-              </span>
-              <div className="relative">
-                <select
-                  value={draft.orderType}
-                  onChange={(event) =>
-                    onDraftChange({
-                      orderType: event.target
-                        .value as WalletCopyFormValues["orderType"]
-                    })
-                  }
-                  className={cn(
-                    "h-9 w-full appearance-none rounded-lg border border-[#EBEBEB] bg-white",
-                    "px-3 pr-8 text-sm leading-[18px] text-black outline-none",
-                    "focus:border-[#909090]"
-                  )}
-                  aria-label={t("ariaOrderType")}
-                >
-                  {orderTypeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[#909090]"
-                  aria-hidden="true"
-                />
-              </div>
-            </div>
-          </div>
+          <CapInput
+            label={t("maxSlippage")}
+            value={draft.maxSlippage}
+            hint="<0.5"
+            invalid={fieldErrors.maxSlippage}
+            onChange={(value) => onDraftChange({ maxSlippage: value })}
+          />
         </div>
 
         <button
@@ -238,71 +186,13 @@ export function WalletCopyAdvancedSettingsModal({
             "text-base leading-5 text-white transition-opacity hover:opacity-90",
             "disabled:cursor-not-allowed disabled:opacity-50"
           )}
-          disabled={hasFieldErrors || !isDirty}
+          disabled={saving || hasFieldErrors || !isDirty}
           onClick={onSave}
         >
-          {tCommon("save")}
+          {saving ? tCommon("saving") : tCommon("save")}
         </button>
       </div>
     </Modal>
-  );
-}
-
-function ToggleRow({
-  label,
-  checked,
-  onCheckedChange,
-  tooltip
-}: {
-  label: string;
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  tooltip: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-1.5">
-        <span className="text-sm leading-[18px] text-[#909090]">{label}</span>
-        <CopyTradeInfoTooltip content={tooltip} />
-      </div>
-      <CopyTradeToggle
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        aria-label={label}
-      />
-    </div>
-  );
-}
-
-function CopyTradeToggle({
-  checked,
-  onCheckedChange,
-  "aria-label": ariaLabel
-}: {
-  checked: boolean;
-  onCheckedChange: (checked: boolean) => void;
-  "aria-label": string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={ariaLabel}
-      onClick={() => onCheckedChange(!checked)}
-      className={cn(
-        "relative h-5 w-[36px] shrink-0 rounded-[10px] border transition-colors",
-        checked ? "border-black bg-black" : "border-[#EAEAEA] bg-[#EBEBEB]"
-      )}
-    >
-      <span
-        className={cn(
-          "absolute top-1/2 size-4 -translate-y-1/2 rounded-lg border border-[#EAEAEA] bg-white transition-[left]",
-          checked ? "left-[calc(100%-17px)]" : "left-0.5"
-        )}
-        aria-hidden="true"
-      />
-    </button>
   );
 }
 
