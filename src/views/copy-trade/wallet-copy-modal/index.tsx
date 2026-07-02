@@ -7,6 +7,10 @@ import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
 import {
+  getCopyTargetTotalCapUsage,
+  isCopyTargetTotalCapReached
+} from "@/lib/copy-trade/copy-target-cap";
+import {
   isValidPriceInput,
   isValidSlippageInput,
   isValidUsdCapInput,
@@ -402,6 +406,12 @@ export function WalletCopyModal({
   ]);
 
   const pnlDisplay = formatPnlDisplay(stats);
+  const totalCapReached = existingTarget
+    ? isCopyTargetTotalCapReached(existingTarget)
+    : false;
+  const totalCapUsage = existingTarget
+    ? getCopyTargetTotalCapUsage(existingTarget)
+    : null;
 
   return (
     <>
@@ -550,6 +560,15 @@ export function WalletCopyModal({
           {balanceWarning && !error ? (
             <div className="rounded-lg border border-[#FF674B]/30 bg-[#FF674B]/10 px-3 py-3 text-sm leading-[150%] text-[#FF674B]">
               {balanceWarning}
+            </div>
+          ) : null}
+
+          {totalCapReached && totalCapUsage && !error ? (
+            <div className="flex items-start gap-2 rounded-[6px] bg-[#fdd357]/20 px-3 py-2 text-sm leading-[150%] text-[#d1a00f]">
+              {t("totalCapReachedWarning", {
+                used: formatTeamDetailMoney(totalCapUsage.used),
+                max: formatTeamDetailMoney(totalCapUsage.max)
+              })}
             </div>
           ) : null}
 

@@ -1787,6 +1787,8 @@
       "resumeCopiedWallet": "Resume copied wallet",
       "manageSettings": "Manage copied wallet settings",
       "removeCopiedWallet": "Remove copied wallet",
+      "totalCapReached": "Total cap reached",
+      "totalCapReachedDetail": "Used {used} / {max}. New copy orders will not execute.",
       "positions": {
         "market": "Market",
         "active": "Active",
@@ -1886,7 +1888,8 @@
       "invalidAdvancedSettings": "Fix invalid advanced settings before continuing.",
       "unableToValidate": "Unable to validate copy settings.",
       "checkingBalance": "Checking copy wallet balance…",
-      "zeroBalanceWarning": "Copy wallet balance is $0. Deposit funds before live copy orders can execute."
+      "zeroBalanceWarning": "Copy wallet balance is $0. Deposit funds before live copy orders can execute.",
+      "totalCapReachedWarning": "Total copy amount cap reached ({used} / {max}). New copy orders will not execute. Raise the total cap in advanced settings to resume."
     },
     "createWallet": {
       "ariaLabel": "Create CopyTrade Wallet",

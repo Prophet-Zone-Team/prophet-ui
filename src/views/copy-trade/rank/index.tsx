@@ -225,6 +225,11 @@ export function CopyTradeRankPanel({
         wallet={copyModalTrader?.Wallet ?? ""}
         stats={copyModalStats}
         initialValues={copyModalInitialValues}
+        existingTarget={
+          copyModalTrader
+            ? findTargetByWallet(targets, copyModalTrader.Wallet) ?? null
+            : null
+        }
         saving={saving}
         availableBalance={readiness.availableBalance}
         isLoadingBalance={readiness.isLoadingBalance}

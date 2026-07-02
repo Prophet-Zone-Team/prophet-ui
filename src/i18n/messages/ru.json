@@ -1773,6 +1773,8 @@
       "resumeCopiedWallet": "Возобновить скопированный кошелёк",
       "manageSettings": "Управление настройками кошелька",
       "removeCopiedWallet": "Удалить скопированный кошелёк",
+      "totalCapReached": "Достигнут общий лимит",
+      "totalCapReachedDetail": "Использовано {used} / {max}. Новые copy-ордера не будут исполняться.",
       "positions": {
         "market": "Рынок",
         "active": "Активные",
@@ -1872,7 +1874,8 @@
       "invalidAdvancedSettings": "Исправьте недопустимые значения в расширенных настройках перед продолжением.",
       "unableToValidate": "Не удалось проверить настройки копирования.",
       "checkingBalance": "Проверка баланса copy-кошелька…",
-      "zeroBalanceWarning": "Баланс copy-кошелька $0. Пополните счёт перед исполнением live-ордеров."
+      "zeroBalanceWarning": "Баланс copy-кошелька $0. Пополните счёт перед исполнением live-ордеров.",
+      "totalCapReachedWarning": "Достигнут общий лимит copy ({used} / {max}). Новые copy-ордера не будут исполняться. Увеличьте общий лимит в расширенных настройках."
     },
     "createWallet": {
       "ariaLabel": "Создать кошелёк CopyTrade",

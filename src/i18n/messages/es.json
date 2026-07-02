@@ -1774,6 +1774,8 @@
       "resumeCopiedWallet": "Reanudar billetera copiada",
       "manageSettings": "Administrar configuración de billetera copiada",
       "removeCopiedWallet": "Eliminar billetera copiada",
+      "totalCapReached": "Límite total alcanzado",
+      "totalCapReachedDetail": "Usado {used} / {max}. No se ejecutarán nuevas órdenes de copy.",
       "positions": {
         "market": "Mercado",
         "active": "Activas",
@@ -1873,7 +1875,8 @@
       "invalidAdvancedSettings": "Corrige los valores no válidos en la configuración avanzada antes de continuar.",
       "unableToValidate": "No se pudo validar la configuración de copia.",
       "checkingBalance": "Comprobando saldo de billetera copy…",
-      "zeroBalanceWarning": "El saldo de la billetera copy es $0. Deposita fondos antes de ejecutar órdenes en vivo."
+      "zeroBalanceWarning": "El saldo de la billetera copy es $0. Deposita fondos antes de ejecutar órdenes en vivo.",
+      "totalCapReachedWarning": "Se alcanzó el límite total de copy ({used} / {max}). No se ejecutarán nuevas órdenes. Aumenta el límite total en ajustes avanzados."
     },
     "createWallet": {
       "ariaLabel": "Crear billetera CopyTrade",

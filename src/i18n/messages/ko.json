@@ -1782,6 +1782,8 @@
       "resumeCopiedWallet": "카피된 지갑 재개",
       "manageSettings": "카피된 지갑 설정 관리",
       "removeCopiedWallet": "카피된 지갑 제거",
+      "totalCapReached": "총 한도 도달",
+      "totalCapReachedDetail": "사용 {used} / {max}. 새 카피 주문은 실행되지 않습니다.",
       "positions": {
         "market": "마켓",
         "active": "진행 중",
@@ -1881,7 +1883,8 @@
       "invalidAdvancedSettings": "계속하기 전에 고급 설정의 잘못된 값을 수정하세요.",
       "unableToValidate": "카피 설정을 검증할 수 없습니다.",
       "checkingBalance": "카피 지갑 잔액 확인 중…",
-      "zeroBalanceWarning": "카피 지갑 잔액이 $0입니다. 실거래 카피를 실행하려면 먼저 입금하세요."
+      "zeroBalanceWarning": "카피 지갑 잔액이 $0입니다. 실거래 카피를 실행하려면 먼저 입금하세요.",
+      "totalCapReachedWarning": "총 카피 금액 한도에 도달했습니다 ({used} / {max}). 새 카피 주문은 실행되지 않습니다. 고급 설정에서 총 한도를 높이세요."
     },
     "createWallet": {
       "ariaLabel": "카피 트레이드 지갑 생성",
