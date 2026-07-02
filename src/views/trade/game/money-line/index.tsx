@@ -320,7 +320,7 @@ export function MoneyLineSection({
             footer={
               <MarketOtherSources
                 sources={cardOtherSources}
-                className="border-t border-[#EBEBEB] p-3 md:p-[16px]"
+                className="border-t border-prophet-line p-3 md:p-[16px]"
               />
             }
           />
