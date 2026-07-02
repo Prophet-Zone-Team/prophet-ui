@@ -7,6 +7,7 @@ import { useAuth } from "@/context/auth";
 import { WalletLoginButton } from "@/layout/header/wallet-login-button";
 import { trackLoginClicked } from "@/lib/analytics/tracking";
 import { cn } from "@/lib/cn";
+import { copyTradePrimaryButtonClass } from "@/views/copy-trade/copy-trade-ui";
 
 import { UserProfileCard } from "./user-profile-card";
 
@@ -79,11 +80,11 @@ export function UserProfileEmptyState({
       )}
     >
       <div
-        className="size-[46px] shrink-0 rounded-full border border-white bg-[#EBEBEB]"
+        className="size-[46px] shrink-0 rounded-full border border-prophet-panel bg-prophet-hover"
         aria-hidden="true"
       />
 
-      <p className="text-center text-[16px] leading-5 text-[#909090]">
+      <p className="text-center text-[16px] leading-5 text-prophet-muted">
         {variant === "connect"
           ? t("connectDescription")
           : t("createDescription")}
@@ -99,7 +100,10 @@ export function UserProfileEmptyState({
       ) : (
         <button
           type="button"
-          className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-black text-[16px] leading-5 text-white transition-opacity hover:opacity-90"
+          className={cn(
+            "inline-flex h-10 w-full items-center justify-center rounded-lg",
+            copyTradePrimaryButtonClass
+          )}
           onClick={onAction}
         >
           {t("createAction")}

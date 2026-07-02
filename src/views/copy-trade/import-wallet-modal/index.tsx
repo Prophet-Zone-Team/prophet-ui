@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
+import { copyTradePrimaryButtonClass, copyTradeModalSurfaceClass } from "@/views/copy-trade/copy-trade-ui";
 import { validateImportWalletAddress } from "@/lib/copy-trade/import-wallet";
 import { useImportCopyTrader } from "@/views/copy-trade/use-import-copy-trader";
 
@@ -42,16 +43,13 @@ export function ImportWalletModal({ open, onClose }: ImportWalletModalProps) {
       open={open}
       onClose={onClose}
       ariaLabel={t("ariaLabel")}
-      className={cn(
-        "w-full max-w-[500px] rounded-[20px] border border-[#EBEBEB] bg-white",
-        "p-5 shadow-[0px_0px_10px_rgba(0,0,0,0.1)]"
-      )}
-      closeButtonClassName="right-5 top-5 h-[10px] w-[10px] border-0 bg-transparent p-0 text-[#909090] hover:bg-transparent hover:text-black"
+      className={copyTradeModalSurfaceClass}
+      closeButtonClassName="right-5 top-5 h-[10px] w-[10px] border-0 bg-transparent p-0 text-prophet-muted hover:bg-transparent hover:text-prophet-foreground"
       closeIconClassName="h-[10px] w-[10px] stroke-[1.6]"
     >
       <div className="flex flex-col gap-3">
         <header>
-          <h2 className="text-xl font-medium leading-[25px] text-black">
+          <h2 className="text-xl font-medium leading-[25px] text-prophet-foreground">
             {t("title")}
           </h2>
         </header>
@@ -59,7 +57,7 @@ export function ImportWalletModal({ open, onClose }: ImportWalletModalProps) {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="import-wallet-address"
-            className="text-sm leading-[18px] text-black"
+            className="text-sm leading-[18px] text-prophet-foreground"
           >
             {t("trackWalletLabel")}
           </label>
@@ -74,10 +72,10 @@ export function ImportWalletModal({ open, onClose }: ImportWalletModalProps) {
             spellCheck={false}
             disabled={importing}
             className={cn(
-              "box-border h-[50px] w-full rounded-lg border border-[#EBEBEB] bg-white",
-              "px-3 text-sm leading-[18px] text-black outline-none",
-              "placeholder:text-black/30",
-              "focus:border-black/20",
+              "box-border h-[50px] w-full rounded-lg border border-prophet-line bg-prophet-panel",
+              "px-3 text-sm leading-[18px] text-prophet-foreground outline-none",
+              "placeholder:text-prophet-muted/30",
+              "focus:border-prophet-muted",
               "disabled:cursor-not-allowed disabled:opacity-60"
             )}
           />
@@ -88,9 +86,8 @@ export function ImportWalletModal({ open, onClose }: ImportWalletModalProps) {
           disabled={!canSubmit}
           onClick={() => void handleSubmit()}
           className={cn(
-            "inline-flex h-[50px] w-full items-center justify-center rounded-lg",
-            "bg-black text-base leading-5 text-white transition-opacity",
-            "hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            "inline-flex h-[50px] w-full items-center justify-center rounded-lg text-base leading-5",
+            copyTradePrimaryButtonClass
           )}
         >
           {importing ? (

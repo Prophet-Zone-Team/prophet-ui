@@ -16,7 +16,7 @@ export function TracksTableHeader({ className }: TracksTableHeaderProps) {
     <div
       role="row"
       className={cn(
-        "flex items-center justify-between text-[12px] leading-[15px] text-[#909090]",
+        "flex items-center justify-between text-[12px] leading-[15px] text-prophet-muted",
         className
       )}
     >

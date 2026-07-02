@@ -49,12 +49,12 @@ function UserProfileSkeleton({ className }: { className?: string }) {
       )}
       aria-hidden="true"
     >
-      <div className="h-8 w-40 rounded bg-[#EBEBEB]" />
+      <div className="h-8 w-40 rounded bg-prophet-hover" />
       <div className="grid grid-cols-2 gap-4">
-        <div className="h-12 rounded bg-[#EBEBEB]" />
-        <div className="h-12 rounded bg-[#EBEBEB]" />
-        <div className="h-12 rounded bg-[#EBEBEB]" />
-        <div className="h-12 rounded bg-[#EBEBEB]" />
+        <div className="h-12 rounded bg-prophet-hover" />
+        <div className="h-12 rounded bg-prophet-hover" />
+        <div className="h-12 rounded bg-prophet-hover" />
+        <div className="h-12 rounded bg-prophet-hover" />
       </div>
     </UserProfileCard>
   );

@@ -39,7 +39,7 @@ function PositionsTableHeader() {
     <div
       className={cn(
         copyWalletPositionsGridClass,
-        "hidden px-4 py-2 text-[14px] leading-[18px] text-[#909090] md:grid"
+        "hidden px-4 py-2 text-[14px] leading-[18px] text-prophet-muted md:grid"
       )}
     >
       <span className="font-[500]">{t("market")}</span>
@@ -55,7 +55,7 @@ function PositionsEmptyState({ status }: { status: CopyWalletPositionStatus }) {
   const t = useTranslations("copyTrade.copiedWallet.positions");
 
   return (
-    <p className="border-t border-[#EBEBEB] px-4 py-6 text-center text-[14px] leading-[18px] text-[#909090]">
+    <p className="border-t border-prophet-line px-4 py-6 text-center text-[14px] leading-[18px] text-prophet-muted">
       {status === "active" ? t("noActive") : t("noEnded")}
     </p>
   );
@@ -63,7 +63,7 @@ function PositionsEmptyState({ status }: { status: CopyWalletPositionStatus }) {
 
 function PositionsErrorState({ message }: { message: string }) {
   return (
-    <p className="border-t border-[#EBEBEB] px-4 py-6 text-center text-[14px] leading-[18px] text-[#FF674B]">
+    <p className="border-t border-prophet-line px-4 py-6 text-center text-[14px] leading-[18px] text-[#FF674B]">
       {message}
     </p>
   );
@@ -73,7 +73,7 @@ function PositionsLoadingState() {
   const t = useTranslations("copyTrade.copiedWallet.positions");
 
   return (
-    <p className="border-t border-[#EBEBEB] px-4 py-6 text-center text-[14px] leading-[18px] text-[#909090]">
+    <p className="border-t border-prophet-line px-4 py-6 text-center text-[14px] leading-[18px] text-prophet-muted">
       {t("loading")}
     </p>
   );
@@ -93,7 +93,7 @@ function PositionsTab({
       type="button"
       className={cn(
         "text-[14px] leading-[18px] transition-opacity hover:opacity-70",
-        selected ? "text-black" : "text-[#909090]"
+        selected ? "text-prophet-foreground" : "text-prophet-muted"
       )}
       aria-pressed={selected}
       onClick={onClick}
@@ -138,7 +138,7 @@ export function CopyTradeCopiedWalletPositionsPanel({
 
   return (
     <div
-      className={cn("border-t border-[#EBEBEB]", className)}
+      className={cn("border-t border-prophet-line", className)}
       onClick={onClick}
     >
       <div className="flex items-center gap-4 px-4 pt-3">

@@ -12,7 +12,7 @@ export function CopyTradeListStatusMessage({
   return (
     <p
       className={cn(
-        "px-4 py-10 text-center text-[16px] leading-5 text-[#909090] md:px-0",
+        "px-4 py-10 text-center text-[16px] leading-5 text-prophet-muted md:px-0",
         className
       )}
     >

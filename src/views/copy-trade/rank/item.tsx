@@ -13,6 +13,7 @@ import {
 } from "@/lib/copy-trade/trader-rank-filters";
 import { formatCompactVolume } from "@/lib/formatters/volume";
 import type { TraderCatalogEntry } from "@/types/copy-trade-api";
+import { copyTradeTooltipClass } from "@/views/copy-trade/copy-trade-ui";
 import {
   copyTradeTableMobileCardClass
 } from "@/views/copy-trade/copy-trade-ui";
@@ -98,7 +99,7 @@ export function CopyTradeRankItem({
   const pnlValue = stats.pnl ?? 0;
   const pnlTone =
     stats.pnl === null
-      ? "text-[#909090]"
+      ? "text-prophet-muted"
       : pnlValue >= 0
         ? "text-[#65AF14]"
         : "text-[#FF674B]";
@@ -108,12 +109,12 @@ export function CopyTradeRankItem({
       <article
         className={cn(
           copyTradeTableMobileCardClass,
-          "transition-colors hover:bg-[#FAFAFA]",
+          "transition-colors hover:bg-prophet-hover",
           className
         )}
       >
         <div className="flex items-start gap-3">
-          <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#F6F6F6] text-[16px] leading-5 text-black tabular-nums">
+          <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-prophet-action-panel text-[16px] leading-5 text-prophet-foreground tabular-nums">
             {rank}
           </span>
           <TraderIdentity trader={trader} className="min-w-0 flex-1" />
@@ -137,7 +138,7 @@ export function CopyTradeRankItem({
           </PortfolioTableMobileField>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-[#EBEBEB] pt-3">
+        <div className="flex items-center justify-end gap-2 border-t border-prophet-line pt-3">
           <TraderTrackButton
             tracked={tracked}
             onToggle={() => onTrackToggle?.(trader)}
@@ -157,7 +158,7 @@ export function CopyTradeRankItem({
     <article
       style={copyTradeRankGridStyle}
       className={cn(
-        "box-border col-span-full h-[74px] rounded-xl border border-[#EBEBEB] bg-white px-4 transition-colors hover:bg-[#FAFAFA]",
+        "box-border col-span-full h-[74px] rounded-xl border border-prophet-line bg-prophet-panel px-4 transition-colors hover:bg-prophet-hover",
         copyTradeRankRowGridClass,
         className
       )}
@@ -165,7 +166,7 @@ export function CopyTradeRankItem({
         <span
           className={cn(
             copyTradeRankColRankClass,
-            "text-[16px] leading-5 text-black tabular-nums"
+            "text-[16px] leading-5 text-prophet-foreground tabular-nums"
           )}
         >
           {rank}
@@ -177,24 +178,24 @@ export function CopyTradeRankItem({
           <TraderAvatar wallet={trader.Wallet} />
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-1.5">
-              <p className="max-w-[160px] truncate text-[16px] leading-5 text-black">
+              <p className="max-w-[160px] truncate text-[16px] leading-5 text-prophet-foreground">
                 {displayName}
               </p>
               {imported ? (
-                <TraderBadge className="bg-[#EBEBEB] text-[#909090]">
+                <TraderBadge className="bg-prophet-hover text-prophet-muted">
                   {tCommon("imported")}
                 </TraderBadge>
               ) : null}
               {tag ? <TraderTagIcon tag={tag} /> : null}
             </div>
             <div className="mt-px flex min-w-0 items-center gap-1">
-              <span className="truncate text-[12px] leading-[15px] text-[#909090]">
+              <span className="truncate text-[12px] leading-[15px] text-prophet-muted">
                 {walletLabel}
               </span>
               <CopyButton
                 text={trader.Wallet}
                 ariaLabel={tCommon("copyWalletAddress")}
-                className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
+                className="inline-flex shrink-0 items-center justify-center p-0.5 text-prophet-muted transition-opacity hover:opacity-70"
               >
                 <CopyIcon />
               </CopyButton>
@@ -205,7 +206,7 @@ export function CopyTradeRankItem({
         <span
           className={cn(
             copyTradeRankColStatClass,
-            "text-[16px] leading-5 text-[#909090] tabular-nums"
+            "text-[16px] leading-5 text-prophet-muted tabular-nums"
           )}
         >
           {formatStatValue(stats.winRate, formatWinRate)}
@@ -222,7 +223,7 @@ export function CopyTradeRankItem({
         <span
           className={cn(
             copyTradeRankColStatClass,
-            "text-[16px] leading-5 text-[#909090] tabular-nums"
+            "text-[16px] leading-5 text-prophet-muted tabular-nums"
           )}
         >
           {formatStatValue(
@@ -233,7 +234,7 @@ export function CopyTradeRankItem({
         <span
           className={cn(
             copyTradeRankColPredictionsClass,
-            "text-[16px] leading-5 text-[#909090]"
+            "text-[16px] leading-5 text-prophet-muted"
           )}
         >
           {formatStatValue(stats.trades, (value) => String(value))}
@@ -274,9 +275,9 @@ function CopyTradeButton({
         "inline-flex h-10 shrink-0 items-center justify-center rounded-lg text-[16px] leading-5",
         "transition-opacity disabled:cursor-not-allowed",
         busy
-          ? "w-[84px] border border-[#909090] bg-transparent text-black opacity-50"
+          ? "w-[84px] border border-prophet-muted bg-transparent text-prophet-foreground opacity-50"
           : cn(
-              "w-20 bg-black text-white hover:opacity-90",
+              "w-20 bg-prophet-primary text-prophet-primary-foreground hover:opacity-90",
               disabled && "opacity-30 hover:opacity-30"
             )
       )}
@@ -295,7 +296,7 @@ function CopyTradeButton({
         offset={8}
         contentClassName="z-[12]"
         content={
-          <div className="max-w-[280px] rounded-xl border border-[#EBEBEB] bg-white px-4 py-3 text-sm leading-[150%] text-black shadow-[0px_0px_10px_rgba(0,0,0,0.1)]">
+          <div className={copyTradeTooltipClass}>
             {disabledReason}
           </div>
         }
