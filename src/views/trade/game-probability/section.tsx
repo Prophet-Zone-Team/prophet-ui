@@ -349,7 +349,7 @@ export function GameProbabilitySection({
 
   const embedded = variant === "embedded";
   const probabilitySurfaceClass = embedded
-    ? "min-w-0 flex-1 bg-white p-4 sm:p-5"
+    ? "min-w-0 flex-1 bg-prophet-panel p-4 sm:p-5"
     : probabilityCardClass;
   const embeddedOrderbookClassName =
     "border-0 rounded-none bg-transparent shadow-none";

@@ -4,7 +4,8 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 
-const cardClass = "overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white";
+const cardClass =
+  "overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel";
 
 export function MoneyLineCard({
   expanded,
@@ -26,7 +27,7 @@ export function MoneyLineCard({
       {header}
       {position}
       {expanded && expandedContent ? (
-        <div className="border-t border-[#EBEBEB]">{expandedContent}</div>
+        <div className="border-t border-prophet-line">{expandedContent}</div>
       ) : null}
       {footer}
     </article>

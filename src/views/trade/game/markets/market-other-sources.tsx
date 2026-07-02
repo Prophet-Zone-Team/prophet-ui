@@ -65,7 +65,7 @@ function MorePill({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex h-[30px] shrink-0 items-center gap-1 rounded-[15px] border border-[#EBEBEB] bg-white px-3 text-[12px] font-[400] leading-[15px] text-[#909090]",
+        "inline-flex h-[30px] shrink-0 items-center gap-1 rounded-[15px] border border-prophet-line bg-prophet-panel px-3 text-[12px] font-[400] leading-[15px] text-[#909090]",
         className
       )}
       aria-expanded={expanded}
