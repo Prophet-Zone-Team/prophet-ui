@@ -240,6 +240,7 @@
     "matchMarketCategories": "Match market categories",
     "marketCategories": "Market categories",
     "moneyline": "Moneyline",
+    "gameLines": "Game Lines",
     "teamToAdvance": "Team to Advance",
     "teamToAdvanceHelp": "Resolves to the team that officially advances to the next round. Includes regulation, extra time, penalty shootout, and official rulings such as forfeit or abandonment.",
     "moneylineHelp": "Resolves based on the result at the end of 90 minutes of regulation plus stoppage time. Extra time and penalty shootouts are excluded.",
