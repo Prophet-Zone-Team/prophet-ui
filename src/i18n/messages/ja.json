@@ -1725,6 +1725,8 @@
       "resumeCopiedWallet": "コピー済みウォレットを再開",
       "manageSettings": "コピー済みウォレット設定を管理",
       "removeCopiedWallet": "コピー済みウォレットを削除",
+      "totalCapReached": "総上限に到達",
+      "totalCapReachedDetail": "使用 {used} / {max}。新しいコピー注文は実行されません。",
       "positions": {
         "market": "マーケット",
         "active": "アクティブ",
@@ -1824,7 +1826,8 @@
       "invalidAdvancedSettings": "続行する前に詳細設定の無効な値を修正してください。",
       "unableToValidate": "コピー設定を検証できません。",
       "checkingBalance": "コピーウォレット残高を確認中…",
-      "zeroBalanceWarning": "コピーウォレット残高が $0 です。実取引コピーを実行する前に入金してください。"
+      "zeroBalanceWarning": "コピーウォレット残高が $0 です。実取引コピーを実行する前に入金してください。",
+      "totalCapReachedWarning": "総コピー金額の上限に達しました（{used} / {max}）。新しいコピー注文は実行されません。詳細設定で総上限を引き上げてください。"
     },
     "createWallet": {
       "ariaLabel": "コピートレードウォレットを作成",

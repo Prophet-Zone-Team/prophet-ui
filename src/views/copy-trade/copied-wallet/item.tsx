@@ -4,8 +4,13 @@ import { useEffect, useState, type KeyboardEvent, type MouseEvent, type ReactNod
 import { useTranslations } from "next-intl";
 
 import { CopyIcon } from "@/components/icons";
+import Popover from "@/components/popover";
 import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
 import { cn } from "@/lib/cn";
+import {
+  getCopyTargetTotalCapUsage,
+  isCopyTargetTotalCapReached
+} from "@/lib/copy-trade/copy-target-cap";
 import type { CopyTargetDisplayStats } from "@/lib/copy-trade/target-stats";
 import {
   isUserImportedTrader,
@@ -85,16 +90,32 @@ function formatPnlValue(stats?: CopyTargetDisplayStats | null): string {
   return `${sign}${formatTeamDetailMoney(Math.abs(stats.pnl))}`;
 }
 
-function CopyStatusIndicator({ active }: { active: boolean }) {
+function CopyStatusIndicator({
+  active,
+  capReached = false
+}: {
+  active: boolean;
+  capReached?: boolean;
+}) {
+  const showCapWarning = active && capReached;
+
   return (
     <span
       className={cn(
         "inline-flex h-5 w-[23px] shrink-0 items-center justify-center rounded-md",
-        active ? "bg-[#65AF14]/20" : "bg-[#909090]/20"
+        showCapWarning
+          ? "bg-[#fdd357]/30"
+          : active
+            ? "bg-[#65AF14]/20"
+            : "bg-[#909090]/20"
       )}
       aria-hidden="true"
     >
-      {active ? (
+      {showCapWarning ? (
+        <span className="text-[11px] font-bold leading-none text-[#d1a00f]">
+          !
+        </span>
+      ) : active ? (
         <span className="ml-0.5 size-0 border-y-[5px] border-l-[8px] border-y-transparent border-l-[#65AF14]" />
       ) : (
         <span className="flex items-center gap-[3px]">
@@ -153,6 +174,8 @@ export function CopyTradeCopiedWalletItem({
   const tag = trader ? traderTag(trader) : "";
   const imported = trader ? isUserImportedTrader(trader) : false;
   const isActive = target.Enabled;
+  const totalCapReached = isCopyTargetTotalCapReached(target);
+  const totalCapUsage = getCopyTargetTotalCapUsage(target);
   const pnlValue = stats?.pnl ?? null;
   const lastTradeLabel = stats?.lastTradeAt
     ? formatCompactRelativeTime(stats.lastTradeAt)
@@ -232,9 +255,14 @@ export function CopyTradeCopiedWalletItem({
           className
         )}
       >
-        <article className={cn(copyTradeTableMobileCardClass, "border-0")} {...rowKeyHandlers}>
+        <article
+          className={cn(copyTradeTableMobileCardClass, "border-0")}
+          {...rowKeyHandlers}
+        >
           <WalletIdentityBlock
             active={isActive}
+            capReached={totalCapReached}
+            capUsage={totalCapUsage}
             wallet={target.Wallet}
             displayName={displayName}
             walletLabel={walletLabel}
@@ -258,7 +286,10 @@ export function CopyTradeCopiedWalletItem({
               <span className="text-[#909090]">/</span>
               <span className="text-[#FF674B]">{stats?.sellCount ?? 0}</span>
             </PortfolioTableMobileField>
-            <PortfolioTableMobileField label={t("pnl")} valueClassName={pnlTone}>
+            <PortfolioTableMobileField
+              label={t("pnl")}
+              valueClassName={pnlTone}
+            >
               {formatPnlValue(stats)}
             </PortfolioTableMobileField>
             <PortfolioTableMobileField
@@ -271,6 +302,7 @@ export function CopyTradeCopiedWalletItem({
 
           <WalletActionButtons
             active={isActive}
+            capReached={totalCapReached}
             saving={saving}
             onPauseToggle={() => onPauseToggle?.(target)}
             onManage={() => onManage?.(target)}
@@ -302,6 +334,8 @@ export function CopyTradeCopiedWalletItem({
       >
         <WalletIdentityBlock
           active={isActive}
+          capReached={totalCapReached}
+          capUsage={totalCapUsage}
           wallet={target.Wallet}
           displayName={displayName}
           walletLabel={walletLabel}
@@ -359,6 +393,7 @@ export function CopyTradeCopiedWalletItem({
 
         <WalletActionButtons
           active={isActive}
+          capReached={totalCapReached}
           saving={saving}
           onPauseToggle={() => onPauseToggle?.(target)}
           onManage={() => onManage?.(target)}
@@ -374,6 +409,8 @@ export function CopyTradeCopiedWalletItem({
 
 function WalletIdentityBlock({
   active,
+  capReached = false,
+  capUsage = null,
   wallet,
   displayName,
   walletLabel,
@@ -382,6 +419,8 @@ function WalletIdentityBlock({
   onCopyWallet
 }: {
   active: boolean;
+  capReached?: boolean;
+  capUsage?: { used: number; max: number } | null;
   wallet: string;
   displayName: string;
   walletLabel: string;
@@ -389,7 +428,18 @@ function WalletIdentityBlock({
   tag: TraderTag | "";
   onCopyWallet: (event: MouseEvent<HTMLButtonElement>) => void;
 }) {
+  const t = useTranslations("copyTrade.copiedWallet");
   const tCommon = useTranslations("copyTrade.common");
+  const capDetail =
+    capReached && capUsage
+      ? t("totalCapReachedDetail", {
+          used: formatTeamDetailMoney(capUsage.used),
+          max: formatTeamDetailMoney(capUsage.max)
+        })
+      : null;
+  const statusIndicator = (
+    <CopyStatusIndicator active={active} capReached={capReached} />
+  );
 
   return (
     <div
@@ -398,7 +448,28 @@ function WalletIdentityBlock({
         "flex min-w-0 items-center gap-3"
       )}
     >
-      <CopyStatusIndicator active={active} />
+      {capDetail ? (
+        <Popover
+          placement="TopLeft"
+          trigger="Hover"
+          offset={8}
+          contentClassName="z-[70]"
+          content={
+            <div className="max-w-[280px] rounded-lg border border-[#EBEBEB] bg-white px-3 py-2 text-xs leading-[150%] text-[#d1a00f] shadow-[0px_0px_10px_rgba(0,0,0,0.1)]">
+              {capDetail}
+            </div>
+          }
+        >
+          <span
+            className="inline-flex cursor-default"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {statusIndicator}
+          </span>
+        </Popover>
+      ) : (
+        statusIndicator
+      )}
       <TraderAvatar wallet={wallet} />
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
@@ -432,6 +503,7 @@ function WalletIdentityBlock({
 
 function WalletActionButtons({
   active,
+  capReached = false,
   saving,
   onPauseToggle,
   onManage,
@@ -440,6 +512,7 @@ function WalletActionButtons({
   className
 }: {
   active: boolean;
+  capReached?: boolean;
   saving: boolean;
   onPauseToggle: () => void;
   onManage: () => void;
@@ -448,6 +521,7 @@ function WalletActionButtons({
   className?: string;
 }) {
   const t = useTranslations("copyTrade.copiedWallet");
+  const actionsLocked = saving || capReached;
 
   return (
     <div
@@ -456,14 +530,14 @@ function WalletActionButtons({
     >
       <ActionButton
         label={active ? t("pauseCopiedWallet") : t("resumeCopiedWallet")}
-        disabled={saving}
+        disabled={actionsLocked}
         onClick={onPauseToggle}
       >
         {active ? <PauseIcon /> : <PlayIcon />}
       </ActionButton>
       <ActionButton
         label={t("manageSettings")}
-        disabled={saving}
+        disabled={actionsLocked}
         onClick={onManage}
       >
         <SettingsIcon />

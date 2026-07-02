@@ -1730,6 +1730,8 @@
       "resumeCopiedWallet": "恢復跟單錢包",
       "manageSettings": "管理跟單錢包設定",
       "removeCopiedWallet": "移除跟單錢包",
+      "totalCapReached": "已達總跟單上限",
+      "totalCapReachedDetail": "已用 {used} / {max}，不會再執行新的跟單。",
       "positions": {
         "market": "市場",
         "active": "進行中",
@@ -1829,7 +1831,8 @@
       "invalidAdvancedSettings": "請先修正進階設定中的無效數值後再繼續。",
       "unableToValidate": "無法驗證跟單設定。",
       "checkingBalance": "正在檢查跟單錢包餘額…",
-      "zeroBalanceWarning": "跟單錢包餘額為 $0，請先入金後才能執行實盤跟單。"
+      "zeroBalanceWarning": "跟單錢包餘額為 $0，請先入金後才能執行實盤跟單。",
+      "totalCapReachedWarning": "總跟單金額已達上限（{used} / {max}）。新的跟單訂單不會再執行，請在進階設定中提高總上限。"
     },
     "createWallet": {
       "ariaLabel": "建立跟單錢包",
