@@ -67,7 +67,7 @@ function PositionOutcomeLabel({
   outcomeTone: string;
 }) {
   return (
-    <p className="m-0 truncate text-[14px] leading-[18px] text-black">
+    <p className="m-0 truncate text-[14px] leading-[18px] text-prophet-foreground">
       <span>{teamLabel}</span> <span className={outcomeTone}>{outcome}</span>{" "}
       <span className={outcomeTone}>{priceLabel}</span>
     </p>
@@ -183,30 +183,30 @@ export function MoneyLineCardPosition({
 
   return (
     <>
-      <div className="border-t border-[#EBEBEB] bg-[#FCFCFC]">
+      <div className="border-t border-prophet-line bg-prophet-action-panel">
         <button
           type="button"
           className="flex w-full items-center justify-between px-4 py-3 text-left"
           onClick={() => setExpanded((current) => !current)}
           aria-expanded={expanded}
         >
-          <span className="flex items-center gap-1 text-[14px] font-[500] leading-[18px] text-[#909090]">
+          <span className="flex items-center gap-1 text-[14px] font-[500] leading-[18px] text-prophet-muted">
             {t("position")}
             <ChevronDown
               className={cn(
-                "size-3 text-[#909090] transition-transform",
+                "size-3 text-prophet-muted transition-transform",
                 expanded && "rotate-180"
               )}
               aria-hidden
             />
           </span>
-          <span className="text-[14px] font-[400] leading-[18px] text-black">
+          <span className="text-[14px] font-[400] leading-[18px] text-prophet-foreground">
             {formatTeamDetailMoney(totalCurrentValue)}
           </span>
         </button>
 
         {expanded ? (
-          <div className="border-t border-[#EBEBEB] px-4 pb-4 pt-3">
+          <div className="border-t border-prophet-line px-4 pb-4 pt-3">
             <div className="hidden overflow-x-auto md:block">
               <div
                 className={cn(
@@ -215,19 +215,19 @@ export function MoneyLineCardPosition({
                 )}
               >
                 <PositionDesktopTableRow>
-                  <span className="text-[12px] leading-[15px] text-[#909090]">
+                  <span className="text-[12px] leading-[15px] text-prophet-muted">
                     {t("positionOutcome")}
                   </span>
-                  <span className="text-[12px] leading-[15px] text-[#909090]">
+                  <span className="text-[12px] leading-[15px] text-prophet-muted">
                     {t("positionAvg")}
                   </span>
-                  <span className="text-[12px] leading-[15px] text-[#909090]">
+                  <span className="text-[12px] leading-[15px] text-prophet-muted">
                     {t("positionCost")}
                   </span>
-                  <span className="text-[12px] leading-[15px] text-[#909090]">
+                  <span className="text-[12px] leading-[15px] text-prophet-muted">
                     {t("toWin")}
                   </span>
-                  <span className="text-[12px] leading-[15px] text-[#909090]">
+                  <span className="text-[12px] leading-[15px] text-prophet-muted">
                     {t("positionCurrent")}
                   </span>
                   <span className="sr-only">{t("sell")}</span>
@@ -262,20 +262,20 @@ export function MoneyLineCardPosition({
                         />
                       </div>
 
-                      <p className="m-0 text-[14px] leading-[18px] text-black">
+                      <p className="m-0 text-[14px] leading-[18px] text-prophet-foreground">
                         {formatSharePrice(position.avgPrice)}
                       </p>
 
-                      <p className="m-0 text-[14px] leading-[18px] text-black">
+                      <p className="m-0 text-[14px] leading-[18px] text-prophet-foreground">
                         {formatTeamDetailMoney(position.initialValue)}
                       </p>
 
-                      <p className="m-0 text-[14px] leading-[18px] text-black">
+                      <p className="m-0 text-[14px] leading-[18px] text-prophet-foreground">
                         {formatTeamDetailMoney(position.size)}
                       </p>
 
                       <div className="min-w-0">
-                        <p className="m-0 text-[14px] leading-[18px] text-black">
+                        <p className="m-0 text-[14px] leading-[18px] text-prophet-foreground">
                           {formatTeamDetailMoney(position.currentValue)}
                         </p>
                         <p
@@ -295,7 +295,7 @@ export function MoneyLineCardPosition({
                         <RegionRestrictedControl restricted={isRegionBlocked}>
                           <button
                             type="button"
-                            className="inline-flex h-[30px] min-w-[54px] items-center justify-center rounded-[6px] bg-black px-3 text-[14px] leading-[18px] text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            className="inline-flex h-[30px] min-w-[54px] items-center justify-center rounded-[6px] bg-prophet-primary px-3 text-[14px] leading-[18px] text-prophet-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={isLoading || position.size <= 0}
                             onClick={() => void handleSell(position)}
                           >
@@ -331,10 +331,10 @@ export function MoneyLineCardPosition({
                 return (
                   <div
                     key={`${position.conditionId}:${position.asset}`}
-                    className="grid gap-3 border-t border-[#EBEBEB] pt-3 first:border-t-0 first:pt-0"
+                    className="grid gap-3 border-t border-prophet-line pt-3 first:border-t-0 first:pt-0"
                   >
                     <div className="min-w-0">
-                      <p className="m-0 text-[12px] leading-[15px] text-[#909090]">
+                      <p className="m-0 text-[12px] leading-[15px] text-prophet-muted">
                         {t("positionOutcome")}
                       </p>
                       <PositionOutcomeLabel
@@ -346,37 +346,37 @@ export function MoneyLineCardPosition({
                     </div>
 
                     <div>
-                      <p className="m-0 text-[12px] leading-[15px] text-[#909090]">
+                      <p className="m-0 text-[12px] leading-[15px] text-prophet-muted">
                         {t("positionAvg")}
                       </p>
-                      <p className="m-0 text-[14px] leading-[18px] text-black">
+                      <p className="m-0 text-[14px] leading-[18px] text-prophet-foreground">
                         {formatSharePrice(position.avgPrice)}
                       </p>
                     </div>
 
                     <div>
-                      <p className="m-0 text-[12px] leading-[15px] text-[#909090]">
+                      <p className="m-0 text-[12px] leading-[15px] text-prophet-muted">
                         {t("positionCost")}
                       </p>
-                      <p className="m-0 text-[14px] leading-[18px] text-black">
+                      <p className="m-0 text-[14px] leading-[18px] text-prophet-foreground">
                         {formatTeamDetailMoney(position.initialValue)}
                       </p>
                     </div>
 
                     <div>
-                      <p className="m-0 text-[12px] leading-[15px] text-[#909090]">
+                      <p className="m-0 text-[12px] leading-[15px] text-prophet-muted">
                         {t("toWin")}
                       </p>
-                      <p className="m-0 text-[14px] leading-[18px] text-black">
+                      <p className="m-0 text-[14px] leading-[18px] text-prophet-foreground">
                         {formatTeamDetailMoney(position.size)}
                       </p>
                     </div>
 
                     <div>
-                      <p className="m-0 text-[12px] leading-[15px] text-[#909090]">
+                      <p className="m-0 text-[12px] leading-[15px] text-prophet-muted">
                         {t("positionCurrent")}
                       </p>
-                      <p className="m-0 text-[14px] leading-[18px] text-black">
+                      <p className="m-0 text-[14px] leading-[18px] text-prophet-foreground">
                         {formatTeamDetailMoney(position.currentValue)}
                       </p>
                       <p
@@ -396,7 +396,7 @@ export function MoneyLineCardPosition({
                       <RegionRestrictedControl restricted={isRegionBlocked}>
                         <button
                           type="button"
-                          className="inline-flex h-[30px] min-w-[54px] items-center justify-center rounded-[6px] bg-black px-3 text-[14px] leading-[18px] text-white disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex h-[30px] min-w-[54px] items-center justify-center rounded-[6px] bg-prophet-primary px-3 text-[14px] leading-[18px] text-prophet-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
                           disabled={isLoading || position.size <= 0}
                           onClick={() => void handleSell(position)}
                         >
