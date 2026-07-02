@@ -551,6 +551,7 @@ function WalletActionButtons({
   );
 }
 
+
 function PauseIcon() {
   return (
     <svg
