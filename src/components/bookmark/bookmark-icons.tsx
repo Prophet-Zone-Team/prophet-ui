@@ -1,4 +1,7 @@
+import { useDarkModeEnabled } from "@/store";
+
 export function UntrackedBookmarkIcon() {
+  const darkModeEnabled = useDarkModeEnabled();
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -11,7 +14,7 @@ export function UntrackedBookmarkIcon() {
     >
       <path
         d="M17 0.5C18.3807 0.5 19.5 1.61929 19.5 3V17.7002C19.5 19.5775 17.5082 20.7853 15.8438 19.917L10.6943 17.2305C10.2596 17.0036 9.74042 17.0036 9.30566 17.2305L4.15625 19.917C2.49185 20.7853 0.5 19.5775 0.5 17.7002V3C0.5 1.61929 1.61929 0.5 3 0.5H17Z"
-        fill="white"
+        fill={darkModeEnabled ? "none" : "white"}
         stroke="#CFCFCF"
       />
     </svg>
@@ -19,6 +22,7 @@ export function UntrackedBookmarkIcon() {
 }
 
 export function TrackedBookmarkIcon() {
+  const darkModeEnabled = useDarkModeEnabled();
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -31,7 +35,7 @@ export function TrackedBookmarkIcon() {
     >
       <path
         d="M2 0.5H16C16.8284 0.5 17.5 1.17157 17.5 2V16.7002C17.5 17.8266 16.3043 18.5513 15.3057 18.0303L10.1562 15.3438C9.43172 14.9658 8.56828 14.9658 7.84375 15.3438L2.69434 18.0303C1.69569 18.5513 0.5 17.8266 0.5 16.7002V2C0.5 1.17157 1.17157 0.5 2 0.5Z"
-        fill="black"
+        fill={darkModeEnabled ? "white" : "black"}
         stroke="#909090"
       />
     </svg>
