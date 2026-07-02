@@ -12,7 +12,7 @@ import {
   isValidUsdCapInput
 } from "@/lib/copy-trade/transforms";
 
-import type { WalletCopyAdvancedFields } from "./types";
+import { copyTradeModalSurfaceClass, copyTradePrimaryButtonClass } from "@/views/copy-trade/copy-trade-ui";
 
 export interface WalletCopyAdvancedSettingsModalProps {
   open: boolean;
@@ -69,10 +69,7 @@ export function WalletCopyAdvancedSettingsModal({
       ariaLabel={t("advancedSettingsAriaLabel")}
       hideCloseButton
       overlayClassName="z-[70]"
-      className={cn(
-        "w-full max-w-[500px] rounded-[20px] border border-[#EBEBEB] bg-white",
-        "p-5 shadow-[0px_0px_10px_rgba(0,0,0,0.1)]"
-      )}
+      className={copyTradeModalSurfaceClass}
     >
       <div className="flex flex-col gap-5">
         <header className="relative flex items-center justify-between gap-3">
@@ -80,7 +77,7 @@ export function WalletCopyAdvancedSettingsModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex size-5 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-colors hover:text-black"
+              className="inline-flex size-5 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-prophet-foreground"
               aria-label={t("backToCopySettings")}
             >
               <ChevronLeft
@@ -89,7 +86,7 @@ export function WalletCopyAdvancedSettingsModal({
                 aria-hidden="true"
               />
             </button>
-            <h2 className="text-base font-medium leading-5 text-black">
+            <h2 className="text-base font-medium leading-5 text-prophet-foreground">
               {t("advancedSetting")}
             </h2>
           </div>
@@ -109,7 +106,7 @@ export function WalletCopyAdvancedSettingsModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex size-[10px] items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-colors hover:text-black"
+              className="inline-flex size-[10px] items-center justify-center border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-prophet-foreground"
               aria-label={tRootCommon("close")}
             >
               <X className="size-[10px]" strokeWidth={1.6} aria-hidden="true" />
@@ -182,9 +179,9 @@ export function WalletCopyAdvancedSettingsModal({
         <button
           type="button"
           className={cn(
-            "flex h-[50px] w-full items-center justify-center rounded-lg bg-black",
-            "text-base leading-5 text-white transition-opacity hover:opacity-90",
-            "disabled:cursor-not-allowed disabled:opacity-50"
+            "flex h-[50px] w-full items-center justify-center rounded-lg text-base leading-5",
+            copyTradePrimaryButtonClass,
+            "disabled:opacity-50"
           )}
           disabled={saving || hasFieldErrors || !isDirty}
           onClick={onSave}
@@ -215,11 +212,11 @@ function CapInput({
 }) {
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
-      <span className="text-sm leading-[18px] text-[#909090]">{label}</span>
+      <span className="text-sm leading-[18px] text-prophet-muted">{label}</span>
       <div
         className={cn(
-          "relative flex h-9 items-center rounded-lg border bg-white px-3",
-          invalid ? "border-[#FF674B]" : "border-[#EBEBEB]"
+          "relative flex h-9 items-center rounded-lg border bg-prophet-panel px-3",
+          invalid ? "border-[#FF674B]" : "border-prophet-line"
         )}
       >
         <input
@@ -231,14 +228,14 @@ function CapInput({
             const next = prefix ? raw.replace(/^\$/, "") : raw;
             onChange(next);
           }}
-          className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm leading-[18px] text-black outline-none"
+          className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm leading-[18px] text-prophet-foreground outline-none"
           aria-label={label}
           aria-invalid={invalid}
         />
         <span
           className={cn(
             "shrink-0 pl-2 text-xs leading-[15px]",
-            invalid ? "text-[#FF674B]" : "text-[#909090]"
+            invalid ? "text-[#FF674B]" : "text-prophet-muted"
           )}
         >
           {hint}

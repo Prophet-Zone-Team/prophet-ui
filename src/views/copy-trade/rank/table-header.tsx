@@ -30,7 +30,7 @@ export function CopyTradeRankTableHeader({
       style={copyTradeRankGridStyle}
       className={cn(
         copyTradeRankRowGridClass,
-        "px-4 text-[14px] font-[400] leading-[17px] text-[#909090]",
+        "px-4 text-[14px] font-[400] leading-[17px] text-prophet-muted",
         className
       )}
     >

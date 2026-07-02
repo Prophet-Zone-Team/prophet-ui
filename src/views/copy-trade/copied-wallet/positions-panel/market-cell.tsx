@@ -9,12 +9,12 @@ const portfolioFlagClassName = "!h-5 !w-5 shrink-0 rounded-[2px] object-cover";
 function PortfolioDrawIcon() {
   return (
     <div
-      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[2px] bg-[#E8E8E8] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[2px] bg-prophet-action-panel shadow-[0_0_2px_rgba(0,0,0,0.2)]"
       aria-hidden
     >
       <div className="flex flex-col gap-[2px]">
-        <span className="block h-[1.5px] w-3 rounded-full bg-black" />
-        <span className="block h-[1.5px] w-3 rounded-full bg-black" />
+        <span className="block h-[1.5px] w-3 rounded-full bg-prophet-foreground" />
+        <span className="block h-[1.5px] w-3 rounded-full bg-prophet-foreground" />
       </div>
     </div>
   );
@@ -55,7 +55,7 @@ function PositionMarketIcon({ icon }: { icon: PortfolioMarketIcon }) {
     case "placeholder":
       return (
         <span
-          className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-[#EBEBEB] text-[10px] text-[#909090]"
+          className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-prophet-hover text-[10px] text-prophet-muted"
           aria-hidden="true"
         >
           ?
@@ -72,7 +72,7 @@ function getOutcomeToneClass(outcome: string): string {
   }
 
   if (normalized === "draw") {
-    return "text-[#909090]";
+    return "text-prophet-muted";
   }
 
   if (normalized === "no") {
@@ -106,12 +106,12 @@ export function CopyWalletPositionMarketCell({
     <div className="flex min-w-0 items-start gap-2">
       <PositionMarketIcon icon={icon} />
       <div className="min-w-0">
-        <p className="truncate text-[14px] font-[500] leading-[18px] text-black">
+        <p className="truncate text-[14px] font-[500] leading-[18px] text-prophet-foreground">
           {title}
         </p>
         <p className="mt-0.5 truncate text-[12px] leading-[15px]">
           <span className={getOutcomeToneClass(outcome)}>{subline}</span>
-          <span className="text-[#909090]"> {sharesLabel}</span>
+          <span className="text-prophet-muted"> {sharesLabel}</span>
         </p>
       </div>
     </div>

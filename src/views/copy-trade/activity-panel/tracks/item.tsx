@@ -45,7 +45,7 @@ function pnlToneClass(value: number): string {
     return "text-[#FF674B]";
   }
 
-  return "text-[#909090]";
+  return "text-prophet-muted";
 }
 
 function TraderAvatar({ wallet }: { wallet: string }) {
@@ -81,7 +81,7 @@ export function TracksItem({ trader, className }: TracksItemProps) {
         <TraderAvatar wallet={trader.Wallet} />
         <div>
           <div className="flex items-center gap-2">
-            <p className="max-w-[150px] truncate text-[16px] leading-5 text-black">
+            <p className="max-w-[150px] truncate text-[16px] leading-5 text-prophet-foreground">
               {displayName}
             </p>
             <div className="flex shrink-0 items-center gap-1.5">
@@ -89,13 +89,13 @@ export function TracksItem({ trader, className }: TracksItemProps) {
               <CopyButton
                 text={trader.Wallet}
                 ariaLabel={tCommon("copyWalletAddress")}
-                className="inline-flex shrink-0 items-center justify-center p-0 text-[#909090] transition-opacity hover:opacity-70"
+                className="inline-flex shrink-0 items-center justify-center p-0 text-prophet-muted transition-opacity hover:opacity-70"
               >
                 <CopyIcon />
               </CopyButton>
             </div>
           </div>
-          <p className="mt-px truncate text-[12px] leading-[15px] text-[#909090]">
+          <p className="mt-px truncate text-[12px] leading-[15px] text-prophet-muted">
             {walletLabel}
           </p>
         </div>

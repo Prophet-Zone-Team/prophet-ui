@@ -48,7 +48,7 @@ function DualLineupPitch({
   );
 
   return (
-    <div className="relative h-[409px] w-full bg-gradient-to-b from-[#ECFFD6] to-[#CFEFAC] dark:from-[#1e2a1a] dark:to-[#243318]">
+    <div className="relative h-[409px] w-full bg-gradient-to-b from-[#ECFFD6] to-[#CFEFAC] dark:from-[rgba(255,255,255,0.06)] dark:to-[rgba(255,255,255,0.06)]">
       {(homeLineup?.starters ?? []).map((player) => {
         const positionStyle = homePlacement.get(player.playerId);
 

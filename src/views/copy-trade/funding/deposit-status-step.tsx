@@ -12,7 +12,7 @@ export interface DepositStatusStepProps {
 }
 
 const cardClass = cn(
-  "flex flex-col gap-1 rounded-[8px] border border-[#EBEBEB] bg-[#FAFBFC] px-4 py-3",
+  "flex flex-col gap-1 rounded-[8px] border border-prophet-line bg-prophet-action-panel px-4 py-3",
 );
 
 export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
@@ -23,13 +23,13 @@ export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
   return (
     <div className="flex flex-col gap-4 pb-2">
       <div className="flex flex-col items-center gap-2 py-2 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-[#EAF6E0]">
+        <div className="flex size-12 items-center justify-center rounded-full bg-[#65AF14]/15">
           <span className="size-3 animate-ping rounded-full bg-[#65AF14]" />
         </div>
-        <span className="text-lg font-[600] text-black">
+        <span className="text-lg font-[600] text-prophet-foreground">
           {t("transferSubmittedTitle")}
         </span>
-        <span className="text-sm text-[#909090]">
+        <span className="text-sm text-prophet-muted">
           {t("bridgingDescription")}
         </span>
       </div>
@@ -37,15 +37,15 @@ export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
       <div className={cardClass}>
         {txHash ? (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-[#909090]">{t("transaction")}</span>
-            <span className="text-sm font-[500] text-black">
+            <span className="text-sm text-prophet-muted">{t("transaction")}</span>
+            <span className="text-sm font-[500] text-prophet-foreground">
               {formatLongText(txHash, 6, 4)}
             </span>
           </div>
         ) : null}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[#909090]">{t("creditedSoFar")}</span>
-          <span className="text-sm font-[600] text-black">
+          <span className="text-sm text-prophet-muted">{t("creditedSoFar")}</span>
+          <span className="text-sm font-[600] text-prophet-foreground">
             {formatNumber(credited, 2, true, { round: 0 })} pUSD
           </span>
         </div>
@@ -53,21 +53,21 @@ export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
 
       {transactions.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-[500] text-black">
+          <span className="text-sm font-[500] text-prophet-foreground">
             {t("bridgeTransactions")}
           </span>
           {transactions.slice(0, 4).map((tx) => (
             <div
               key={tx.tx_hash}
-              className="flex items-center justify-between rounded-[6px] border border-[#EBEBEB] px-3 py-2"
+              className="flex items-center justify-between rounded-[6px] border border-prophet-line px-3 py-2"
             >
-              <span className="text-xs text-[#909090]">
+              <span className="text-xs text-prophet-muted">
                 {formatLongText(tx.tx_hash, 6, 4)}
               </span>
               <span
                 className={cn(
                   "text-xs font-[500]",
-                  tx.credited ? "text-[#65AF14]" : "text-[#909090]",
+                  tx.credited ? "text-[#65AF14]" : "text-prophet-muted",
                 )}
               >
                 {tx.credited

@@ -25,7 +25,7 @@ export function TracksEmptyState({
         className
       )}
     >
-      <p className="text-center text-[16px] leading-5 text-[#909090]">
+      <p className="text-center text-[16px] leading-5 text-prophet-muted">
         {t("noTrackedWallet")}
       </p>
 
@@ -35,8 +35,8 @@ export function TracksEmptyState({
         className={cn(
           "inline-flex h-10 w-[96px] items-center justify-center rounded-lg text-[16px] leading-5 text-white transition-opacity",
           disabled
-            ? "cursor-not-allowed bg-black/30"
-            : "bg-black hover:opacity-90"
+            ? "cursor-not-allowed bg-prophet-primary/30"
+            : "bg-prophet-primary hover:opacity-90"
         )}
         onClick={onImport}
       >

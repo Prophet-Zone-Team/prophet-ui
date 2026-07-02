@@ -97,7 +97,7 @@ export function TraderIdentity({
         <div className="flex min-w-0 items-center gap-1.5">
           <p
             className={cn(
-              "truncate text-black",
+              "truncate text-prophet-foreground",
               size === "lg"
                 ? "text-[26px] font-[500] leading-[32px]"
                 : "text-[16px] leading-5",
@@ -107,20 +107,20 @@ export function TraderIdentity({
             {displayName}
           </p>
           {imported ? (
-            <TraderBadge className="bg-[#EBEBEB] text-[#909090]">
+            <TraderBadge className="bg-prophet-hover text-prophet-muted">
               {tCommon("imported")}
             </TraderBadge>
           ) : null}
           {tag ? <TraderTagIcon tag={tag} /> : null}
         </div>
         <div className="mt-px flex min-w-0 items-center gap-1">
-          <span className="truncate text-[12px] leading-[15px] text-[#909090]">
+          <span className="truncate text-[12px] leading-[15px] text-prophet-muted">
             {walletLabel}
           </span>
           {showWalletCopy ? (
             <button
               type="button"
-              className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
+              className="inline-flex shrink-0 items-center justify-center p-0.5 text-prophet-muted transition-opacity hover:opacity-70"
               aria-label={tCommon("copyWalletAddress")}
               onClick={handleCopyWallet}
             >
@@ -152,7 +152,7 @@ export function TraderTrackButton({
       <button
         type="button"
         className={cn(
-          "inline-flex h-[46px] items-center justify-center gap-2 rounded-xl border border-[#909090] px-4 text-[16px] leading-5 text-black transition-opacity hover:opacity-80",
+          "inline-flex h-[46px] items-center justify-center gap-2 rounded-xl border border-prophet-muted px-4 text-[16px] leading-5 text-prophet-foreground transition-opacity hover:opacity-80",
           tracked ? "opacity-100" : "opacity-50",
           className
         )}
@@ -190,11 +190,12 @@ export function UntrackedIcon() {
       height="18"
       viewBox="0 0 20 18"
       fill="none"
+      className="text-prophet-muted"
       aria-hidden="true"
     >
       <path
         d="M13.6887 0.75C11.7436 0.75 10.3503 2.48836 9.74984 3.40778C9.14872 2.48836 7.75604 0.75 5.81101 0.75C3.01994 0.75 0.75 3.24461 0.75 6.31059C0.75 7.74428 1.73045 9.79959 2.92063 10.8752C4.56702 12.9732 9.19553 16.75 9.76692 16.75C10.3484 16.75 14.8776 13.0466 16.5537 10.9004C17.7648 9.80587 18.75 7.74773 18.75 6.31059C18.75 3.24459 16.4797 0.75 13.6887 0.75Z"
-        stroke="#909090"
+        stroke="currentColor"
         strokeWidth="1.5"
       />
     </svg>

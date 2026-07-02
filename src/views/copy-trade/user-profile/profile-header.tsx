@@ -131,7 +131,7 @@ export function ProfileHeader({ copyWallet }: ProfileHeaderProps) {
         trailing={
           <button
             type="button"
-            className="ml-auto inline-flex shrink-0 items-center justify-center p-1 text-[#909090] transition-opacity hover:opacity-70"
+            className="ml-auto inline-flex shrink-0 items-center justify-center p-1 text-prophet-muted transition-opacity hover:opacity-70"
             aria-label="More options"
             aria-expanded={isOpen}
             onClick={() => setIsOpen((value) => !value)}

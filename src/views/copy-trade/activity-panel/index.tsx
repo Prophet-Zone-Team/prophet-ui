@@ -75,7 +75,7 @@ export function CopyTradeActivityPanel({
             type="button"
             disabled={importDisabled}
             className={cn(
-              "inline-flex h-[30px] w-[77px] shrink-0 items-center justify-center rounded-lg border border-[#909090] text-[14px] leading-[18px] text-black transition-opacity",
+              "inline-flex h-[30px] w-[77px] shrink-0 items-center justify-center rounded-lg border border-prophet-muted text-[14px] leading-[18px] text-prophet-foreground transition-opacity",
               importDisabled
                 ? "cursor-not-allowed opacity-30"
                 : "opacity-50 hover:opacity-70"
