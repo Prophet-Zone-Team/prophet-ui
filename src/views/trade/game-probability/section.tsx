@@ -522,8 +522,8 @@ export function GameProbabilitySection({
         {orderbookEnabled ? (
           <div
             className={cn(
-              "overflow-hidden bg-white",
-              !embedded && "rounded-[12px] border border-[#EBEBEB]",
+              "overflow-hidden bg-prophet-panel",
+              !embedded && "rounded-[12px] border border-prophet-line",
             )}
           >
             <button

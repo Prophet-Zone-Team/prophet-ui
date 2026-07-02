@@ -32,14 +32,14 @@ function OtherSourcePill({
   return (
     <div
       className={cn(
-        "inline-flex h-[30px] min-w-[71px] shrink-0 items-center justify-between gap-2 rounded-[15px] border border-[#EBEBEB] bg-white px-3",
+        "inline-flex h-[30px] min-w-[71px] shrink-0 items-center justify-between gap-2 rounded-[15px] border border-prophet-line bg-prophet-panel px-3",
         className
       )}
     >
       <span className="truncate text-[12px] font-[400] leading-[15px] text-[#909090]">
         {sourceName}
       </span>
-      <span className="shrink-0 text-[12px] font-[400] leading-[15px] text-black">
+      <span className="shrink-0 text-[12px] font-[400] leading-[15px] text-prophet-foreground">
         {netPercentLabel}
       </span>
     </div>

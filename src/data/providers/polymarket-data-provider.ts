@@ -12,6 +12,7 @@ import type {
   Team,
   TeamMarketSnapshot,
 } from "@/types/market";
+import { normalizeMarketTickSize } from "@/lib/market/order-math";
 import type { WorldCupMarketData, WorldCupMarketDataProvider } from "@/data/providers/types";
 import { extractFastBidPolymarketMetadata } from "@/lib/market/polymarket-fast-bid-metadata";
 import type { GammaMarketRecord } from "@/lib/market/polymarket-gamma";
@@ -438,21 +439,7 @@ function toPolymarketFeeDetails(payload: ClobMarketDetails): PolymarketFeeDetail
 }
 
 function normalizeTickSize(value: number | string | undefined): PolymarketMarketMetadata["tickSize"] {
-  const parsed = toNumber(value);
-
-  if (parsed === 0.1) {
-    return "0.1";
-  }
-
-  if (parsed === 0.001) {
-    return "0.001";
-  }
-
-  if (parsed === 0.0001) {
-    return "0.0001";
-  }
-
-  return "0.01";
+  return normalizeMarketTickSize(value) ?? "0.01";
 }
 
 function extractYesProbability(market: GammaMarket): number | undefined {

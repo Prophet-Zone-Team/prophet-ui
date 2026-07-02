@@ -13,7 +13,7 @@ import {
 } from "@/views/trade/game/markets/market-other-sources";
 
 const cardClass =
-  "rounded-[12px] border border-prophet-line bg-prophet-panel divide-y divide-[#EBEBEB]";
+  "rounded-[12px] border border-prophet-line bg-prophet-panel divide-y divide-prophet-line";
 
 function isOutcomeBuyable(
   outcome: FixtureMarketOutcome,
@@ -87,8 +87,8 @@ export function ExactScorePanel({
           <div key={outcome.id}>
             <div
               className={cn(
-                "flex cursor-pointer flex-col flex-wrap items-stretch justify-between gap-4 p-[16px] transition-colors hover:bg-[#F5F5F5] md:flex-row md:items-center",
-                isExpanded && "bg-[#F5F5F5]"
+                "flex cursor-pointer flex-col flex-wrap items-stretch justify-between gap-4 p-[16px] transition-colors hover:bg-prophet-hover md:flex-row md:items-center",
+                isExpanded && "bg-prophet-hover"
               )}
               onClick={() => handleRowClick(outcome.id)}
             >

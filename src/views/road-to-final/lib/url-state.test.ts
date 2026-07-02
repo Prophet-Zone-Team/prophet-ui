@@ -8,6 +8,19 @@ import {
   hydrateFromUrlPayload
 } from "./url-state";
 
+const EXPECTED_FIXED_WINNERS = {
+  73: "canada",
+  74: "paraguay",
+  75: "morocco",
+  76: "brazil",
+  77: "france",
+  78: "norway",
+  79: "mexico",
+  80: "england",
+  81: "usa",
+  82: "belgium",
+};
+
 describe("road-to-final url-state bracket version", () => {
   it("encodes the current bracket version in shared state", () => {
     const encoded = encodeUrlState({
@@ -33,12 +46,7 @@ describe("road-to-final url-state bracket version", () => {
     );
 
     assert.deepEqual(hydrated.knockoutWinners, {
-      73: "canada",
-      74: "paraguay",
-      75: "morocco",
-      76: "brazil",
-      77: "france",
-      78: "norway",
+      ...EXPECTED_FIXED_WINNERS,
       89: "brazil",
       101: "brazil",
       104: "brazil",
@@ -56,14 +64,7 @@ describe("road-to-final url-state bracket version", () => {
       "brazil"
     );
 
-    assert.deepEqual(hydrated.knockoutWinners, {
-      73: "canada",
-      74: "paraguay",
-      75: "morocco",
-      76: "brazil",
-      77: "france",
-      78: "norway",
-    });
+    assert.deepEqual(hydrated.knockoutWinners, EXPECTED_FIXED_WINNERS);
     assert.equal(hydrated.knockoutMethod, "manualSelection");
   });
 
@@ -78,21 +79,22 @@ describe("road-to-final url-state bracket version", () => {
       "brazil"
     );
 
-    assert.deepEqual(hydrated.knockoutWinners, {
-      73: "canada",
-      74: "paraguay",
-      75: "morocco",
-      76: "brazil",
-      77: "france",
-      78: "norway",
-    });
+    assert.deepEqual(hydrated.knockoutWinners, EXPECTED_FIXED_WINNERS);
     assert.equal(hydrated.knockoutMethod, "manualSelection");
   });
 
   it("overrides incorrect fixed-match picks from shared URL state", () => {
     const encoded = encodeUrlState({
       teamId: "germany",
-      knockoutWinners: { 74: "germany", 76: "japan", 89: "germany" },
+      knockoutWinners: {
+        74: "germany",
+        76: "japan",
+        79: "ecuador",
+        80: "congo-dr",
+        81: "bosnia-herzegovina",
+        82: "senegal",
+        89: "germany",
+      },
       knockoutMethod: "manualSelection",
     });
 
@@ -107,6 +109,10 @@ describe("road-to-final url-state bracket version", () => {
     assert.equal(hydrated.knockoutWinners?.[76], "brazil");
     assert.equal(hydrated.knockoutWinners?.[77], "france");
     assert.equal(hydrated.knockoutWinners?.[78], "norway");
+    assert.equal(hydrated.knockoutWinners?.[79], "mexico");
+    assert.equal(hydrated.knockoutWinners?.[80], "england");
+    assert.equal(hydrated.knockoutWinners?.[81], "usa");
+    assert.equal(hydrated.knockoutWinners?.[82], "belgium");
     assert.equal(hydrated.knockoutWinners?.[89], "germany");
   });
 });

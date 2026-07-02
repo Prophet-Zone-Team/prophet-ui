@@ -5,6 +5,7 @@ import {
   toGammaNumber,
   type GammaMarketRecord,
 } from "@/lib/market/polymarket-gamma";
+import { normalizeMarketTickSize } from "@/lib/market/order-math";
 import type { PolymarketMarketMetadata } from "@/types/market";
 
 export function extractWinnerProbability(market: GammaMarketRecord): number | undefined {
@@ -85,19 +86,5 @@ function normalizeComplementPrice(value: number): number | undefined {
 function normalizeTickSize(
   value: number | string | undefined,
 ): PolymarketMarketMetadata["tickSize"] {
-  const parsed = toGammaNumber(value);
-
-  if (parsed === 0.1) {
-    return "0.1";
-  }
-
-  if (parsed === 0.001) {
-    return "0.001";
-  }
-
-  if (parsed === 0.0001) {
-    return "0.0001";
-  }
-
-  return "0.01";
+  return normalizeMarketTickSize(value) ?? "0.01";
 }
