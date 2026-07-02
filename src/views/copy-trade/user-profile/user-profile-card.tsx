@@ -9,7 +9,7 @@ export function UserProfileCard({ children, className }: UserProfileCardProps) {
   return (
     <section
       className={cn(
-        "box-border w-[355px] rounded-xl border border-[#EBEBEB] bg-white",
+        "box-border w-[355px] rounded-xl border border-prophet-line bg-prophet-panel",
         className
       )}
     >

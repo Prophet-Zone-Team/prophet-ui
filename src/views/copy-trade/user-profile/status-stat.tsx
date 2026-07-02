@@ -13,15 +13,15 @@ function statusDotClass(status: CopyTradeAggregateStatus): string {
     return "bg-[#65AF14]";
   }
 
-  return "bg-[#EBEBEB]";
+  return "bg-prophet-hover";
 }
 
 function statusLabelClass(status: CopyTradeAggregateStatus): string {
   if (status === "running") {
-    return "text-black";
+    return "text-prophet-foreground";
   }
 
-  return "text-[#909090]";
+  return "text-prophet-muted";
 }
 
 export function StatusStat() {
@@ -33,12 +33,12 @@ export function StatusStat() {
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[14px] leading-[18px] text-[#909090]">
+      <span className="text-[14px] leading-[18px] text-prophet-muted">
         {tCommon("status")}
       </span>
       {isLoading ? (
         <div
-          className="h-5 w-24 animate-pulse rounded bg-[#EBEBEB]"
+          className="h-5 w-24 animate-pulse rounded bg-prophet-hover"
           aria-label={tCommon("loadingAria")}
         />
       ) : (

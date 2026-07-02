@@ -109,7 +109,7 @@ export function CopyTradeRankFilterToolbar({
 
         <button
           type="button"
-          className="inline-flex h-[34px] shrink-0 items-center gap-1.5 border-0 bg-transparent p-0 text-[14px] leading-[18px] text-[#909090] transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-[34px] shrink-0 items-center gap-1.5 border-0 bg-transparent p-0 text-[14px] leading-[18px] text-prophet-muted transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label={t("ariaRefresh")}
           disabled={refreshing}
           onClick={onRefresh}
@@ -125,14 +125,14 @@ export function CopyTradeRankFilterToolbar({
       <label className="relative block w-full md:w-[302px]">
         <span className="sr-only">{t("searchSrOnly")}</span>
         <Search
-          className="pointer-events-none absolute left-3 top-1/2 size-[14px] -translate-y-1/2 text-[#222429]"
+          className="pointer-events-none absolute left-3 top-1/2 size-[14px] -translate-y-1/2 text-prophet-muted"
           aria-hidden="true"
         />
         <input
           type="search"
           value={searchQuery}
           placeholder={t("searchPlaceholder")}
-          className="box-border h-[34px] w-full rounded-[18px] border border-[#EBEBEB] bg-white py-0 pl-9 pr-3 text-[14px] leading-[18px] text-black outline-none placeholder:text-[#909090] focus-visible:border-[#909090]"
+          className="box-border h-[34px] w-full rounded-[18px] border border-prophet-line bg-prophet-panel py-0 pl-9 pr-3 text-[14px] leading-[18px] text-prophet-foreground outline-none placeholder:text-prophet-muted focus-visible:border-prophet-muted"
           onChange={(event) => onSearchQueryChange(event.target.value)}
         />
       </label>
@@ -151,7 +151,7 @@ function FilterSegmentGroup({
     <div
       role="group"
       aria-label={ariaLabel}
-      className="box-border inline-flex h-[34px] items-center gap-0.5 rounded-lg border border-[#EBEBEB] bg-white px-1"
+      className="box-border inline-flex h-[34px] items-center gap-0.5 rounded-lg border border-prophet-line bg-prophet-panel px-1"
     >
       {children}
     </div>
@@ -174,8 +174,8 @@ function FilterSegmentButton({
       className={cn(
         "inline-flex h-[26px] shrink-0 items-center gap-1 rounded-md border px-2 text-[14px] leading-[18px] transition-colors",
         active
-          ? "border-[#EBEBEB] bg-[#EBEBEB] text-black"
-          : "border-transparent bg-transparent text-[#909090] hover:text-black"
+          ? "border-prophet-line bg-prophet-hover text-prophet-foreground"
+          : "border-transparent bg-transparent text-prophet-muted hover:text-prophet-foreground"
       )}
       onClick={onClick}
     >

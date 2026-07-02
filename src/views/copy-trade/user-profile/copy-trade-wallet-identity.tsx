@@ -25,7 +25,7 @@ export function CopyTradeWalletAvatar({
   return (
     <div
       className={cn(
-        "shrink-0 rounded-full border border-white",
+        "shrink-0 rounded-full border border-prophet-panel",
         size === "lg" ? "size-[52px]" : "size-8"
       )}
       style={{ background: getWalletAvatarGradient(address) }}
@@ -52,7 +52,7 @@ export function CopyTradeWalletIdentity({
         <div className="flex min-w-0 items-center gap-1">
           <span
             className={cn(
-              "truncate text-black",
+              "truncate text-prophet-foreground",
               size === "lg"
                 ? "text-[26px] font-[500] leading-[32px]"
                 : "text-[16px] font-medium leading-5",

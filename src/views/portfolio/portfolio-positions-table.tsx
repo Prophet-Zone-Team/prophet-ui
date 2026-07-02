@@ -65,7 +65,7 @@ const portfolioPositionsReadOnlyHeadClass = cn(
 );
 
 const portfolioPositionsReadOnlyRowClass = cn(
-  "hidden min-w-[720px] gap-3 border-b border-prophet-line/60 px-4 py-3 text-sm last:border-b-0 items-center md:grid",
+  "hidden min-w-[720px] gap-3 border-b border-prophet-line px-4 py-3 text-sm last:border-b-0 items-center md:grid",
   portfolioPositionsReadOnlyGridClass
 );
 

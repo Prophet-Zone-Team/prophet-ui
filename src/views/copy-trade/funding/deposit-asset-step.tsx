@@ -35,7 +35,7 @@ export interface DepositAssetStepProps {
 }
 
 const tokenRowClass = cn(
-  "flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-[#FAFBFC]",
+  "flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-prophet-action-panel",
 );
 
 export function DepositAssetStep({
@@ -72,9 +72,9 @@ export function DepositAssetStep({
 
   return (
     <div className="flex flex-col gap-5 pb-2">
-      <div className="flex flex-col gap-1 rounded-[8px] border border-[#EBEBEB] bg-[#FAFBFC] px-4 py-3">
-        <span className="text-sm text-[#909090]">{t("walletBalanceDepositable")}</span>
-        <span className="text-2xl font-[600] text-black">
+      <div className="flex flex-col gap-1 rounded-[8px] border border-prophet-line bg-prophet-action-panel px-4 py-3">
+        <span className="text-sm text-prophet-muted">{t("walletBalanceDepositable")}</span>
+        <span className="text-2xl font-[600] text-prophet-foreground">
           {formatNumber(totalBalanceUsd, 2, true, { prefix: "$", round: 0 })}
         </span>
       </div>
@@ -115,7 +115,7 @@ export function DepositAssetStep({
                 type="button"
                 role="option"
                 aria-selected={isSelected}
-                className={cn(tokenRowClass, isSelected && "bg-[#F4F6FF]")}
+                className={cn(tokenRowClass, isSelected && "bg-prophet-hover")}
                 onClick={() => {
                   onChainChange(chain);
                   setChainOpen(false);
@@ -129,7 +129,7 @@ export function DepositAssetStep({
                     size="sm"
                     chainOnly
                   />
-                  <span className="text-sm font-[500] text-black">
+                  <span className="text-sm font-[500] text-prophet-foreground">
                     {chain.chainName}
                   </span>
                 </span>
@@ -181,7 +181,7 @@ export function DepositAssetStep({
                     type="button"
                     role="option"
                     aria-selected={isSelected}
-                    className={cn(tokenRowClass, isSelected && "bg-[#F4F6FF]")}
+                    className={cn(tokenRowClass, isSelected && "bg-prophet-hover")}
                     onClick={() => {
                       onTokenChange(token);
                       setTokenOpen(false);
@@ -193,11 +193,11 @@ export function DepositAssetStep({
                         icon={token.icon}
                         size="sm"
                       />
-                      <span className="text-sm font-[500] text-black">
+                      <span className="text-sm font-[500] text-prophet-foreground">
                         {token.symbol}
                       </span>
                     </span>
-                    <span className="text-xs text-[#909090]">
+                    <span className="text-xs text-prophet-muted">
                       {formatNumber(resolveTokenBalance(token), 4, true, { round: 0 })}
                     </span>
                   </button>
@@ -210,7 +210,7 @@ export function DepositAssetStep({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <span className={withdrawFieldLabelClass}>{tWithdraw("amount")}</span>
-          <span className="text-xs text-[#909090]">
+          <span className="text-xs text-prophet-muted">
             {tWallet("balance")}: {formatNumber(selectedBalance, 4, true, { round: 0 })}{" "}
             {selectedToken?.symbol ?? ""}
           </span>
@@ -234,14 +234,14 @@ export function DepositAssetStep({
           </button>
         </div>
         {selectedToken ? (
-          <span className="text-xs text-[#909090]">
+          <span className="text-xs text-prophet-muted">
             {t("minimumDepositLabel", {
               amount: formatNumber(selectedToken.minCheckoutUsd, 2, true, { prefix: "$" }),
             })}
           </span>
         ) : null}
         {errorText ? (
-          <span className="text-xs text-[#E5484D]">{errorText}</span>
+          <span className="text-xs text-[#FF674B]">{errorText}</span>
         ) : null}
       </div>
     </div>

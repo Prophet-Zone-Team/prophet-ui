@@ -35,7 +35,7 @@ export function CopyWalletPositionRow({
       <div
         className={cn(
           copyWalletPositionsGridClass,
-          "hidden border-t border-[#EBEBEB] px-4 py-3 md:grid",
+          "hidden border-t border-prophet-line px-4 py-3 md:grid",
           className
         )}
       >
@@ -46,21 +46,21 @@ export function CopyWalletPositionRow({
           shares={position.shares}
           icon={position.icon}
         />
-        <span className="text-[14px] leading-[18px] text-black tabular-nums">
+        <span className="text-[14px] leading-[18px] text-prophet-foreground tabular-nums">
           {formatSharePrice(position.avgPrice)}
         </span>
-        <span className="text-[14px] leading-[18px] text-black tabular-nums">
+        <span className="text-[14px] leading-[18px] text-prophet-foreground tabular-nums">
           {formatSharePrice(position.currentPrice)}
         </span>
         <div className="flex flex-col items-start gap-0.5">
-          <span className="text-[14px] leading-[18px] text-black tabular-nums">
+          <span className="text-[14px] leading-[18px] text-prophet-foreground tabular-nums">
             {formatTeamDetailMoney(position.currentValue)}
           </span>
           <span className={cn("text-[12px] leading-[15px] tabular-nums", pnlTone)}>
             {formatPnlSubline(position.cashPnl, position.percentPnl)}
           </span>
         </div>
-        <span className="justify-self-end text-right text-[14px] leading-[18px] text-black tabular-nums">
+        <span className="justify-self-end text-right text-[14px] leading-[18px] text-prophet-foreground tabular-nums">
           {timeLabel}
         </span>
       </div>
@@ -68,7 +68,7 @@ export function CopyWalletPositionRow({
       <article
         className={cn(
           copyTradeTableMobileCardClass,
-          "rounded-none border-0 border-t border-[#EBEBEB] py-3 md:hidden",
+          "rounded-none border-0 border-t border-prophet-line py-3 md:hidden",
           className
         )}
       >
@@ -96,7 +96,7 @@ export function CopyWalletPositionRow({
           </PortfolioTableMobileField>
           <PortfolioTableMobileField
             label={t("time")}
-            valueClassName="font-normal text-[#909090]"
+            valueClassName="font-normal text-prophet-muted"
           >
             {timeLabel}
           </PortfolioTableMobileField>
