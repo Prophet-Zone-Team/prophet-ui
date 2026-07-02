@@ -47,7 +47,7 @@ function TeamPowerRankingMetric({
 
   return (
     <div className={cn("flex shrink-0 flex-col md:w-[15%]", className)}>
-      <span className="text-[16px] font-[400] leading-[20px] text-black">
+      <span className="text-[16px] font-[400] leading-[20px] text-prophet-foreground">
         {formatFifaRank(powerRanking.rank)}
       </span>
       <span className={trackCardLabelClassName}>{t("fifaRanking")}</span>
@@ -96,7 +96,7 @@ function PowerRankingTeamEntry({
         name={name}
         className="h-[16px] w-[16px] shrink-0 rounded-[2px] text-[16px]"
       />
-      <span className="text-[16px] font-[400] leading-[20px] text-black">
+      <span className="text-[16px] font-[400] leading-[20px] text-prophet-foreground">
         {formatFifaRank(rank)}
       </span>
     </span>

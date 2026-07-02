@@ -11,12 +11,12 @@ import { showProphetNotificationToast } from "@/lib/notification/show-prophet-no
 import { useNotificationWsStore } from "@/store/notification-ws-store";
 
 const testButtonClass =
-  "rounded-lg border border-prophet-line bg-white px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-[#fafbfc]";
+  "rounded-lg border border-prophet-line bg-prophet-panel px-4 py-2 text-sm font-medium text-prophet-foreground transition-colors hover:bg-[#fafbfc]";
 
 export default function ToastTestPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="text-2xl font-semibold text-black">Toast Preview</h1>
+      <h1 className="text-2xl font-semibold text-prophet-foreground">Toast Preview</h1>
       <p className="mt-2 text-sm text-prophet-muted">
         Test toast positioning below the top navigation bar.
       </p>

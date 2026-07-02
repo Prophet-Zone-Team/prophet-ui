@@ -29,8 +29,8 @@ export function CampaignRulesModal({
     >
       <div
         className={cn(
-          "relative overflow-hidden bg-white",
-          "h-[85vh] rounded-[20px] border border-[#EBEBEB] px-2 py-3",
+          "relative overflow-hidden bg-prophet-panel",
+          "h-[85vh] rounded-[20px] border border-prophet-line px-2 py-3",
           "shadow-[0_0_10px_rgba(0,0,0,0.1)]",
           "max-md:h-auto max-md:border-0 max-md:px-3 max-md:pb-8 max-md:pt-[45px] max-md:shadow-none"
         )}
@@ -38,7 +38,7 @@ export function CampaignRulesModal({
         {isMobile ? (
           <button
             type="button"
-            className="absolute right-0 top-0 z-10 inline-flex size-8 items-center justify-center rounded-lg bg-white text-[#18110F] transition-colors hover:bg-[#fafbfc]"
+            className="absolute right-0 top-0 z-10 inline-flex size-8 items-center justify-center rounded-lg bg-prophet-panel text-[#18110F] transition-colors hover:bg-[#fafbfc]"
             aria-label="Close"
             onClick={onClose}
           >
@@ -46,21 +46,21 @@ export function CampaignRulesModal({
           </button>
         ) : null}
 
-        <h2 className="m-0 px-1 pr-[32px] text-[16px] font-medium text-black">
+        <h2 className="m-0 px-1 pr-[32px] text-[16px] font-medium text-prophet-foreground">
           {t("campaignRulesTitle")}
         </h2>
 
         <div className="mt-3 h-[calc(100%_-_28px)] overflow-y-auto px-1 pb-10 max-md:h-auto max-md:overflow-visible">
 
-          <p className="m-0 mt-[12px] text-[14px] leading-[1.5] text-black">
+          <p className="m-0 mt-[12px] text-[14px] leading-[1.5] text-prophet-foreground">
             {t("campaignRulesIntro")}
           </p>
 
           <section className="pt-[20px]">
-            <p className="m-0 text-[14px] font-medium text-black">
+            <p className="m-0 text-[14px] font-medium text-prophet-foreground">
               {t("campaignRulesHowToPlayTitle")}
             </p>
-            <ol className="m-0 mt-[8px] list-decimal space-y-[8px] pl-[21px] text-[14px] leading-[1.5] text-black">
+            <ol className="m-0 mt-[8px] list-decimal space-y-[8px] pl-[21px] text-[14px] leading-[1.5] text-prophet-foreground">
               <li>{t("campaignRulesHowToPlayStep1")}</li>
               <li>{t("campaignRulesHowToPlayStep2")}</li>
               <li>{t("campaignRulesHowToPlayStep3")}</li>
@@ -73,10 +73,10 @@ export function CampaignRulesModal({
           </div>
 
           <section className="mt-[20px]">
-            <p className="m-0 text-[14px] font-semibold text-black">
+            <p className="m-0 text-[14px] font-semibold text-prophet-foreground">
               {t("campaignRulesQualificationTitle")}
             </p>
-            <ol className="m-0 mt-[8px] list-decimal space-y-[8px] pl-[21px] text-[14px] leading-[1.5] text-black">
+            <ol className="m-0 mt-[8px] list-decimal space-y-[8px] pl-[21px] text-[14px] leading-[1.5] text-prophet-foreground">
               <li>{t("campaignRulesQualificationItem1")}</li>
               <li>{t("campaignRulesQualificationItem2")}</li>
               <li>{t("campaignRulesQualificationItem3")}</li>
@@ -86,16 +86,16 @@ export function CampaignRulesModal({
           </section>
 
           <section className="mt-[20px]">
-            <p className="m-0 text-[14px] font-semibold text-black">
+            <p className="m-0 text-[14px] font-semibold text-prophet-foreground">
               {t("campaignRulesPrizeTitle")}
             </p>
-            <p className="m-0 mt-[8px] text-[14px] leading-[1.2] text-black">
+            <p className="m-0 mt-[8px] text-[14px] leading-[1.2] text-prophet-foreground">
               {t("campaignRulesPrizeBody")}
             </p>
-            <p className="m-0 mt-[12px] text-[14px] leading-[1.2] text-black">
+            <p className="m-0 mt-[12px] text-[14px] leading-[1.2] text-prophet-foreground">
               {t("campaignRulesTiebreakersTitle")}
             </p>
-            <ol className="m-0 mt-[8px] list-decimal space-y-[4px] pl-[21px] text-[14px] leading-[1.2] text-black">
+            <ol className="m-0 mt-[8px] list-decimal space-y-[4px] pl-[21px] text-[14px] leading-[1.2] text-prophet-foreground">
               <li>{t("campaignRulesTiebreaker1")}</li>
               <li>{t("campaignRulesTiebreaker2")}</li>
               <li>{t("campaignRulesTiebreaker3")}</li>
@@ -105,12 +105,12 @@ export function CampaignRulesModal({
           </section>
 
           <section className="mt-[20px]">
-            <p className="m-0 text-[14px] leading-[1.2] text-black">
+            <p className="m-0 text-[14px] leading-[1.2] text-prophet-foreground">
               {t("campaignRulesShortCopy")}
             </p>
           </section>
 
-          <p className="m-0 mt-[20px] text-[14px] leading-[1.2] text-black">
+          <p className="m-0 mt-[20px] text-[14px] leading-[1.2] text-prophet-foreground">
             {t("campaignRulesFooter")}
           </p>
         </div>

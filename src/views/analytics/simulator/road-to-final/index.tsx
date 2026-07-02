@@ -49,7 +49,7 @@ export function RoadToFinal({
         {roundHeaders.map((round) => (
           <span
             key={round.key}
-            className="shrink-0 text-[12px] font-[400] leading-[17px] text-[#909090] whitespace-nowrap"
+            className="shrink-0 text-[12px] font-[400] leading-[17px] text-prophet-muted whitespace-nowrap"
             style={{ width: round.width }}
             aria-hidden={round.label ? undefined : true}
           >

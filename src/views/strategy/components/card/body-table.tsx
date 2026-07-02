@@ -54,7 +54,7 @@ export function StrategyCardBodyTable({
       <div
         role="table"
         aria-label={t("strategyLegs")}
-        className="min-w-[640px] border border-[#EBEBEB] bg-[#FCFCFC] md:min-w-[720px]"
+        className="min-w-[640px] border border-prophet-line bg-prophet-action-panel md:min-w-[720px]"
       >
         <div
           role="row"
@@ -103,7 +103,7 @@ function StrategyCardLegRow({
       role="row"
       className={cn(
         strategyCardLegsTableGridClass,
-        isMuted ? "text-[#909090]" : strategyCardTableCellClassName,
+        isMuted ? "text-prophet-muted" : strategyCardTableCellClassName,
         "h-[52px] px-4",
         isHighlighted && "mx-1 bg-[#65AF1433] rounded-[8px]"
       )}
@@ -167,7 +167,7 @@ function OutcomeSideLabel({
       className={cn(
         "font-[Sora] text-sm font-medium leading-[18px]",
         muted
-          ? "text-[#909090]"
+          ? "text-prophet-muted"
           : side === "yes"
             ? "text-[#65AF14]"
             : "text-[#FF674B]"

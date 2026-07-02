@@ -8,12 +8,12 @@ export function TracksEmptyState() {
 
   return (
     <div className="flex flex-col items-center justify-center gap-5 px-3 py-10 md:gap-[26px] md:py-[60px]">
-      <p className="m-0 w-full max-w-[313px] text-center text-[16px] font-[400] leading-[20px] text-black">
+      <p className="m-0 w-full max-w-[313px] text-center text-[16px] font-[400] leading-[20px] text-prophet-foreground">
         {t("emptyMessage")}
       </p>
       <Link
         href="/fifa"
-        className="flex h-[42px] w-full max-w-[307px] items-center justify-center gap-[6px] rounded-[8px] bg-[#18110F] no-underline"
+        className="flex h-[42px] w-full max-w-[307px] items-center justify-center gap-[6px] rounded-[8px] bg-[#18110F] dark:bg-prophet-primary no-underline"
         aria-label={t("startToExploreAria")}
       >
         <span className="text-[14px] font-[500] leading-[18px] text-white">

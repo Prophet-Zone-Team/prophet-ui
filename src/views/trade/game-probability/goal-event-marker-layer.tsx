@@ -222,7 +222,7 @@ export const GoalEventMarkerLayer = memo(
                     className="absolute z-20 -translate-x-1/2"
                     style={{ left: x, top: markerY - 58 }}
                   >
-                    <div className="relative rounded-[8px] border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+                    <div className="relative rounded-[8px] border border-prophet-line bg-prophet-panel px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
                       <p className="m-0 text-[12px] font-[400] leading-[17px] text-[#909090]">
                         {formatGoalEventTime(event.elapsedSeconds)}
                       </p>

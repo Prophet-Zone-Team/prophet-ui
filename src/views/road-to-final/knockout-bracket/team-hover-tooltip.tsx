@@ -32,7 +32,7 @@ export function TeamHoverTooltip({
       contentStyle={{ pointerEvents: "none" }}
       closeDelayDuration={0}
       content={
-        <div className="w-[203px] rounded-[12px] border border-[#EBEBEB] bg-white p-[12px] shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+        <div className="w-[203px] rounded-[12px] border border-prophet-line bg-prophet-panel p-[12px] shadow-[0_0_10px_rgba(0,0,0,0.1)]">
           <div className="flex items-start gap-[8px]">
             <TeamFlag
               code={team.code}
@@ -40,10 +40,10 @@ export function TeamHoverTooltip({
               className="h-[26px] w-[26px] shrink-0 rounded-[4px] text-[26px]"
             />
             <div className="min-w-0">
-              <strong className="block truncate text-[14px] font-[500] text-black">
+              <strong className="block truncate text-[14px] font-[500] text-prophet-foreground">
                 {displayName}
               </strong>
-              <span className="block text-[12px] text-black">
+              <span className="block text-[12px] text-prophet-foreground">
                 {stats.teamCode} / {stats.confederation}
               </span>
             </div>
@@ -73,7 +73,7 @@ function TooltipRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-[8px] text-[12px]">
       <dt className="text-[#909090]">{label}</dt>
-      <dd className="m-0 text-right text-black">{value}</dd>
+      <dd className="m-0 text-right text-prophet-foreground">{value}</dd>
     </div>
   );
 }

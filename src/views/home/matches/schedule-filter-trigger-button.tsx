@@ -18,7 +18,7 @@ export function ScheduleFilterTriggerButton({
   return (
     <button
       type="button"
-      className="inline-flex h-[30px] w-[77px] md:w-[98px] items-center justify-center gap-2 md:gap-[10px] rounded-[20px] border border-[#909090] bg-white font-normal leading-[19px] text-black text-[12px] md:text-base"
+      className="inline-flex h-[30px] w-[77px] md:w-[98px] items-center justify-center gap-2 md:gap-[10px] rounded-[20px] border border-prophet-muted bg-prophet-panel font-normal leading-[19px] text-prophet-foreground text-[12px] md:text-base"
       aria-expanded={open}
       aria-haspopup={ariaHaspopup}
       onClick={onClick}
@@ -34,7 +34,8 @@ export function ScheduleFilterTriggerButton({
       >
         <path
           d="M0.5 0.5L4.89223 4.5L9.5 0.5"
-          stroke="black"
+          stroke="currentColor"
+          className="text-prophet-foreground"
           strokeLinecap="round"
         />
       </svg>

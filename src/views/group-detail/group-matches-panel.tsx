@@ -2,10 +2,12 @@
 
 import { useTranslations } from "next-intl";
 
+import { LoadingBlock } from "@/components/ui/loading-block";
 import type { WorldCup2026Group } from "@/data/world-cup-2026/groups";
 import { useGroupMatches } from "@/hooks/market/use-group-matches";
 import { cn } from "@/lib/cn";
 import type { TeamMarketSnapshot } from "@/types/market";
+import { groupDetailCardClass } from "@/views/group-detail/group-detail-ui";
 import { RelatedGameCard } from "@/views/trade/related-games/card";
 import {
   tradePanelClass,
@@ -19,22 +21,13 @@ export interface GroupMatchesPanelProps {
   highlightTeamId: string;
 }
 
-function LoadingBlock({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-md bg-[#ebebeb]/80 ${className ?? "h-4 w-full"}`}
-      aria-hidden
-    />
-  );
-}
-
 function GroupMatchesLoading() {
   return (
     <div className="flex flex-col gap-3 px-3" aria-hidden>
       {Array.from({ length: 3 }, (_, index) => (
         <div
           key={index}
-          className="rounded-xl border border-[#EBEBEB] bg-white p-3"
+          className={cn(groupDetailCardClass, "p-3")}
         >
           <LoadingBlock className="mb-2 h-4 w-24" />
           <LoadingBlock className="h-14 w-full rounded-lg" />

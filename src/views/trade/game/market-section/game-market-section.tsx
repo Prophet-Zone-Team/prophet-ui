@@ -46,7 +46,7 @@ export function GameMarketSection({
             {Math.round(homeProb)}%
           </p>
           <div className="flex min-w-0 items-center gap-2">
-            <p className="truncate text-xl font-[400] capitalize leading-6 text-black min-w-[100px]">
+            <p className="truncate text-xl font-[400] capitalize leading-6 text-prophet-foreground min-w-[100px]">
               {sides.home.name}
             </p>
             {homeChange ? (
@@ -64,7 +64,7 @@ export function GameMarketSection({
             {Math.round(drawProb)}%
           </p>
           <div className="flex items-center gap-2">
-            <p className="text-xl font-[400] capitalize leading-6 text-black">
+            <p className="text-xl font-[400] capitalize leading-6 text-prophet-foreground">
               Draw
             </p>
             {drawChange ? (
@@ -80,7 +80,7 @@ export function GameMarketSection({
             {awayChange ? (
               <ChangePill label={awayChange} color={gameColors.awayBar} />
             ) : null}
-            <p className="truncate text-right text-xl font-[400] capitalize leading-6 text-black">
+            <p className="truncate text-right text-xl font-[400] capitalize leading-6 text-prophet-foreground">
               {sides.away.name}
             </p>
           </div>

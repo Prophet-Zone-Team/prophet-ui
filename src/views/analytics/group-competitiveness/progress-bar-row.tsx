@@ -35,7 +35,7 @@ export function ProgressBarRow({ entry, variant, className }: ProgressBarRowProp
       })}
     >
       <span
-        className="text-[14px] font-[400] leading-[17px] text-[#909090] overflow-hidden"
+        className="text-[14px] font-[400] leading-[17px] text-prophet-muted overflow-hidden"
         title={groupLabel}
       >
         {formatLongText(groupLabel, 6, 1)}

@@ -10,6 +10,7 @@ import { usePolymarketStats } from "@/hooks/market/use-polymarket-stats";
 import { cn } from "@/lib/cn";
 import { MarketListMetricLoading } from "@/views/home/home-data-loading";
 import { HomeHeroTitleIconCycle } from "@/views/home/header/home-hero-title-icon-cycle";
+import { useDarkModeEnabled } from "@/store";
 
 const WORLD_CUP_2026_KICKOFF = new Date(Date.UTC(2026, 5, 11, 18, 0, 0));
 
@@ -21,6 +22,7 @@ export function HomeHero() {
     isLoading: isStatsLoading,
     isError: isStatsError
   } = usePolymarketStats();
+  const darkModeEnabled = useDarkModeEnabled();
 
   const totalVolumeLabel = isStatsLoading ? (
     <MarketListMetricLoading variant="volume" />
@@ -68,7 +70,7 @@ export function HomeHero() {
       <div className="flex-1 px-3 md:px-0">
         <div className="flex items-start gap-5">
           <img
-            src="/fifa.png"
+            src={darkModeEnabled ? "/fifa-light.png" : "/fifa.png"}
             className="block md:hidden w-[80px] object-top object-contain shrink-0"
           />
           <div className="flex-1">
@@ -86,7 +88,7 @@ export function HomeHero() {
                 <HomeHeroTitleIconCycle className="w-[40px] h-[40px] md:w-[56px] md:h-[56px]" />
               </span>
             </h1>
-            <p className="text-[#909090] text-[14px] mt-[8px]">
+            <p className="text-prophet-muted text-[14px] mt-[8px]">
               {t("sourcePolymarket")}
             </p>
           </div>
@@ -104,7 +106,7 @@ export function HomeHero() {
         </div>
       </div>
       <img
-        src="/fifa.png"
+        src={darkModeEnabled ? "/fifa-light.png" : "/fifa.png"}
         className="hidden md:block w-[180px] object-center object-contain shrink-0"
       />
     </section>
@@ -112,7 +114,7 @@ export function HomeHero() {
 }
 
 const heroStatValueClassName =
-  "text-[26px] md:text-[32px] font-[500] leading-[38px] text-black";
+  "text-[26px] md:text-[32px] font-[500] leading-[38px] text-prophet-foreground";
 
 function HomeHeroStat({ label, value }: { label: string; value: ReactNode }) {
   const valueContent =
@@ -124,10 +126,10 @@ function HomeHeroStat({ label, value }: { label: string; value: ReactNode }) {
 
   return (
     <div className="px-2 md:p-3 text-center">
-      <div className="flex min-h-[38px] items-center justify-center text-[26px] md:text-[32px] font-[500] leading-[38px] text-black">
+      <div className="flex min-h-[38px] items-center justify-center text-[26px] md:text-[32px] font-[500] leading-[38px] text-prophet-foreground">
         {valueContent}
       </div>
-      <span className="mt-1 block text-[14px] leading-tight text-black">
+      <span className="mt-1 block text-[14px] leading-tight text-prophet-foreground">
         {label}
       </span>
     </div>

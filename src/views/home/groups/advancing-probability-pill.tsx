@@ -11,7 +11,7 @@ export function AdvancingProbabilityPill({
   return (
     <span
       className={cn(
-        "inline-flex h-[36px] min-w-[100px] items-center justify-center rounded-[8px] bg-[#18110F] px-2 text-[14px] font-medium leading-normal text-white",
+        "inline-flex h-[36px] min-w-[100px] items-center justify-center rounded-[8px] bg-[#18110F] dark:bg-prophet-primary px-2 text-[14px] font-medium leading-normal text-white",
         className,
       )}
     >

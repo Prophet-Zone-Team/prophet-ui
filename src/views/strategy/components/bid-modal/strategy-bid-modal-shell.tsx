@@ -37,13 +37,13 @@ export function StrategyBidModalShell({
       )}
     >
       <header className="relative flex shrink-0 items-center justify-between px-5 pb-4 pt-5">
-        <h2 className="m-0 font-[Sora] text-xl font-medium leading-[25px] text-black">
+        <h2 className="m-0 font-[Sora] text-xl font-medium leading-[25px] text-prophet-foreground">
           {t("joinStrategy")}
         </h2>
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex size-8 items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-colors hover:text-black"
+          className="inline-flex size-8 items-center justify-center border-0 bg-transparent p-0 text-prophet-muted transition-colors hover:text-prophet-foreground"
           aria-label={tCommon("close")}
         >
           <X className="size-4" aria-hidden="true" />

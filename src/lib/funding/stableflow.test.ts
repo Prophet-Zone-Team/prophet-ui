@@ -5,6 +5,7 @@ import { FUNDING_NETWORKS, FundingNetworkType } from "@/config/funding/networks"
 import {
   filterStableflowTokensForDeposit,
   isSocialAuthLoginMethod,
+  shouldDepositViaStableflowQr,
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
 
@@ -81,5 +82,26 @@ describe("filterStableflowTokensForDeposit", () => {
       filterStableflowTokensForDeposit(allTokens, "google"),
       tokens,
     );
+  });
+});
+
+describe("shouldDepositViaStableflowQr", () => {
+  it("returns true for email and google login regardless of chain", () => {
+    assert.equal(shouldDepositViaStableflowQr("email", evmToken), true);
+    assert.equal(shouldDepositViaStableflowQr("google", solToken), true);
+  });
+
+  it("returns false for near login on all chains", () => {
+    assert.equal(shouldDepositViaStableflowQr("near", nearToken), false);
+    assert.equal(shouldDepositViaStableflowQr("near", evmToken), false);
+    assert.equal(shouldDepositViaStableflowQr("near", solToken), false);
+    assert.equal(shouldDepositViaStableflowQr("near", tronToken), false);
+  });
+
+  it("returns false for wallet login on EVM, SVM, TVM, and NEAR", () => {
+    assert.equal(shouldDepositViaStableflowQr("wallet", evmToken), false);
+    assert.equal(shouldDepositViaStableflowQr("wallet", solToken), false);
+    assert.equal(shouldDepositViaStableflowQr("wallet", tronToken), false);
+    assert.equal(shouldDepositViaStableflowQr("wallet", nearToken), false);
   });
 });

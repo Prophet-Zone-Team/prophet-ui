@@ -27,6 +27,7 @@ import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { formatProbability } from "@/components/home/market-formatters";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { useDevice } from "@/hooks/common/use-device";
+import { useDarkModeEnabled } from "@/store";
 import { useProbabilityChart } from "@/hooks/market/use-probability-chart";
 import { cn } from "@/lib/cn";
 import {
@@ -240,6 +241,9 @@ export function WinnerProbabilityChart({
 }: WinnerProbabilityChartProps) {
   const t = useTranslations("home");
   const isMobile = useDevice();
+  const darkModeEnabled = useDarkModeEnabled();
+  const chartMutedColor = darkModeEnabled ? "#666668" : "#909090";
+  const chartCursorColor = darkModeEnabled ? "#353535" : "#EBEBEB";
   const timeRange = "all";
   const shouldFetch = probabilityHistory === undefined;
 
@@ -302,7 +306,7 @@ export function WinnerProbabilityChart({
     <section
       ref={chartRef}
       className={cn(
-        "min-w-0 rounded-xl border border-[#EBEBEB] bg-white px-3 md:px-5 pb-5 pt-4",
+        "min-w-0 rounded-xl border border-prophet-line bg-prophet-panel px-3 md:px-5 pb-5 pt-4",
         className
       )}
       aria-label={t("worldCupWinnerProbabilityChartAria")}
@@ -313,7 +317,7 @@ export function WinnerProbabilityChart({
           hideTitle ? "pr-0" : "pr-[6px]"
         )}
       >
-        <h2 className="text-[16px] md:text-[20px] font-[500] leading-6 text-black">
+        <h2 className="text-[16px] md:text-[20px] font-[500] leading-6 text-prophet-foreground">
           {t("worldCupWinnerProbability")}
         </h2>
       </div>
@@ -323,15 +327,15 @@ export function WinnerProbabilityChart({
       ) : null}
 
       {!showChart && fetchStatus === "loading" ? (
-        <p className="mt-4 py-8 text-center text-sm text-[#909090]">
+        <p className="mt-4 py-8 text-center text-sm text-prophet-muted">
           {t("loadingProbabilityHistory")}
         </p>
       ) : !showChart && fetchStatus === "error" ? (
-        <p className="mt-4 py-8 text-center text-sm text-[#909090]">
+        <p className="mt-4 py-8 text-center text-sm text-prophet-muted">
           {t("unableToLoadProbabilityHistory")}
         </p>
       ) : !showChart && fetchStatus === "empty" ? (
-        <p className="mt-4 py-8 text-center text-sm text-[#909090]">
+        <p className="mt-4 py-8 text-center text-sm text-prophet-muted">
           {t("marketTokenUnavailable")}
         </p>
       ) : (
@@ -346,6 +350,8 @@ export function WinnerProbabilityChart({
                   showAxisTooltip={showAxisTooltip}
                   formatXAxisTick={formatXAxisTick}
                   isMobile={isMobile}
+                  chartMutedColor={chartMutedColor}
+                  chartCursorColor={chartCursorColor}
                 />
               </ResponsiveContainer>
             </MobileFlagChartProvider>
@@ -358,6 +364,8 @@ export function WinnerProbabilityChart({
                 showAxisTooltip={showAxisTooltip}
                 formatXAxisTick={formatXAxisTick}
                 isMobile={isMobile}
+                chartMutedColor={chartMutedColor}
+                chartCursorColor={chartCursorColor}
               />
             </ResponsiveContainer>
           )}
@@ -374,6 +382,8 @@ function WinnerLineChartBody({
   showAxisTooltip,
   formatXAxisTick,
   isMobile,
+  chartMutedColor,
+  chartCursorColor,
   width,
   height
 }: {
@@ -383,6 +393,8 @@ function WinnerLineChartBody({
   showAxisTooltip: boolean;
   formatXAxisTick: (value: string) => string;
   isMobile: boolean;
+  chartMutedColor: string;
+  chartCursorColor: string;
   width?: number;
   height?: number;
 }) {
@@ -403,7 +415,7 @@ function WinnerLineChartBody({
           dataKey="date"
           padding={{ left: 0, right: 6 }}
           tick={{
-            fill: "#909090",
+            fill: chartMutedColor,
             fontSize: 14,
             dy: 6
           }}
@@ -419,14 +431,14 @@ function WinnerLineChartBody({
         orientation={showAxisTooltip ? "left" : "right"}
         domain={yAxis.domain}
         ticks={yAxis.ticks}
-        tick={{ fill: "#909090", fontSize: 14 }}
+        tick={{ fill: chartMutedColor, fontSize: 14 }}
         tickFormatter={(value: number) => `${value}%`}
         tickLine={false}
         axisLine={false}
         width={40}
       />
       <Tooltip
-        cursor={{ stroke: "#EBEBEB", strokeWidth: 1 }}
+        cursor={{ stroke: chartCursorColor, strokeWidth: 1 }}
         content={<WinnerChartTooltip series={series} />}
       />
       {series.map((item) => (
@@ -491,8 +503,8 @@ function WinnerChartTooltip({
   const dateLabel = typeof label === "string" ? label : String(label ?? "");
 
   return (
-    <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
-      <p className="m-0 mb-1 text-sm font-[400] leading-[17px] text-[#909090]">
+    <div className="rounded-xl border border-prophet-line bg-prophet-panel px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+      <p className="m-0 mb-1 text-sm font-[400] leading-[17px] text-prophet-muted">
         {formatWinnerChartTooltipDate(dateLabel)}
       </p>
       {payload.map((entry) => {
@@ -555,8 +567,8 @@ function ChartLegendItem({
         style={{ backgroundColor: item.color }}
         aria-hidden="true"
       />
-      <span className="text-[#909090]">{teamDisplayName}</span>
-      <span className="font-[500] text-black">
+      <span className="text-prophet-muted">{teamDisplayName}</span>
+      <span className="font-[500] text-prophet-foreground">
         {formatProbability(item.value)}
       </span>
     </div>

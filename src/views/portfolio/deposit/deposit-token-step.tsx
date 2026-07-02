@@ -106,7 +106,7 @@ export function DepositTokenStep({
   return (
     <div className="flex flex-col pb-2">
       <div className={depositTokenSearchWrapClass}>
-        <Search className="size-[14px] shrink-0 text-black" aria-hidden="true" />
+        <Search className="size-[14px] shrink-0 text-prophet-foreground" aria-hidden="true" />
         <input
           type="search"
           value={searchQuery}
@@ -179,10 +179,10 @@ export function DepositTokenStep({
                 dimmed={isDisabled}
               />
               <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-                <span className="text-sm font-[500] text-black">
+                <span className="text-sm font-[500] text-prophet-foreground">
                   {token.symbol}
                 </span>
-                <span className="text-xs font-[500] text-[#909090]">
+                <span className="text-xs font-[500] text-prophet-muted">
                   {formatNumber(token.balance, 4, true, {
                     round: 0,
                     isZeroPrecision: true
@@ -191,7 +191,7 @@ export function DepositTokenStep({
               </span>
               <span className="flex shrink-0 flex-col items-end gap-0.5">
                 {isDisabled ? (
-                  <span className="text-sm font-[500] text-[#909090]">
+                  <span className="text-sm font-[500] text-prophet-muted">
                     {t("unsupported")}
                   </span>
                 ) : null}
@@ -204,7 +204,7 @@ export function DepositTokenStep({
                         {t("lowBalance")}
                       </span>
                     )}
-                    <span className="text-sm font-[500] text-black">
+                    <span className="text-sm font-[500] text-prophet-foreground">
                       {usdDisplay}
                     </span>
                   </>

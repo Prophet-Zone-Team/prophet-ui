@@ -55,7 +55,7 @@ export function ActivityTabs({ snapshot }: ActivityTabsProps) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-0 bg-white border-[#EBEBEB] border rounded-[12px]">
+    <div className="flex flex-col gap-0 rounded-[12px] border border-prophet-line bg-prophet-panel">
       <div className={tradeSectionClass}>
         <div className="border-b border-prophet-line px-4 pt-4">
           <TabSwitcher

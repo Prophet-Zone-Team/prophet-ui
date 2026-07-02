@@ -32,13 +32,13 @@ const SUMMARY_GRID =
   "grid w-full grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))_auto] items-center gap-x-3";
 
 const SUMMARY_LABEL_CLASS =
-  "font-[Sora] text-sm font-normal leading-normal text-[#909090]";
+  "font-[Sora] text-sm font-normal leading-normal text-prophet-muted";
 
 const SUMMARY_VALUE_CLASS =
-  "font-[Sora] text-base font-normal capitalize leading-5 text-black";
+  "font-[Sora] text-base font-normal capitalize leading-5 text-prophet-foreground";
 
 const BID_AGAIN_BUTTON_CLASS =
-  "inline-flex h-[32px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] px-2 text-xs font-medium leading-[15px] text-white transition-opacity hover:opacity-90";
+  "inline-flex h-[32px] min-w-[96px] items-center justify-center gap-1 rounded-lg bg-[#18110F] dark:bg-prophet-primary px-2 text-xs font-medium leading-[15px] text-white transition-opacity hover:opacity-90";
 
 export type PortfolioStrategyCardProps = {
   strategy: PortfolioStrategyRecord;
@@ -78,11 +78,11 @@ export function PortfolioStrategyCard({
   return (
     <>
       <article
-        className={cn("overflow-hidden border-b border-[#EBEBEB]", className)}
+        className={cn("overflow-hidden border-b border-prophet-line", className)}
         aria-label={strategy.name}
       >
         <div className="overflow-x-auto">
-          <div className={cn(SUMMARY_GRID, "min-w-[720px] bg-white px-4 pb-4 pt-4")}>
+          <div className={cn(SUMMARY_GRID, "min-w-[720px] bg-prophet-panel px-4 pb-4 pt-4")}>
             <span className={cn(SUMMARY_LABEL_CLASS, "pb-2")} role="columnheader">
               {t("strategy")}
             </span>
@@ -99,7 +99,7 @@ export function PortfolioStrategyCard({
               {t("status")}
             </span>
             <div className="pb-2" aria-hidden />
-            <h3 className="m-0 min-w-0 truncate font-[Sora] text-base font-semibold capitalize leading-5 text-black">
+            <h3 className="m-0 min-w-0 truncate font-[Sora] text-base font-semibold capitalize leading-5 text-prophet-foreground">
               {strategy.name}
             </h3>
             <span className={cn(SUMMARY_VALUE_CLASS, "min-w-0 truncate")}>
@@ -134,7 +134,7 @@ export function PortfolioStrategyCard({
                 }
                 className={cn(
                   "inline-flex size-9 shrink-0 items-center justify-center rounded-lg",
-                  "border border-[#EBEBEB] bg-white text-black transition-colors hover:bg-[#fafafa]"
+                  "border border-prophet-line bg-prophet-panel text-prophet-foreground transition-colors hover:bg-prophet-hover"
                 )}
               >
                 <ChevronDown

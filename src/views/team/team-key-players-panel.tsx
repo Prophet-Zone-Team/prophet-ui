@@ -17,16 +17,16 @@ export interface TeamKeyPlayersPanelProps {
 }
 
 const mobileTitleClassName =
-  "font-[Sora] text-[14px] font-[500] leading-[18px] text-black";
+  "font-[Sora] text-[14px] font-[500] leading-[18px] text-prophet-foreground";
 
 const mobileNameClassName =
-  "font-[Sora] text-[14px] font-[500] leading-[18px] text-black";
+  "font-[Sora] text-[14px] font-[500] leading-[18px] text-prophet-foreground";
 
 const mobileMetaClassName =
-  "font-[Sora] text-[12px] font-[400] leading-[15px] text-[#979797]";
+  "font-[Sora] text-[12px] font-[400] leading-[15px] text-prophet-muted";
 
 const mobileRankClassName =
-  "font-[Sora] text-[14px] font-[500] leading-[18px] text-black";
+  "font-[Sora] text-[14px] font-[500] leading-[18px] text-prophet-foreground";
 
 const mobileAvatarClassName =
   "size-6 shrink-0 rounded-[2px] object-cover shadow-[0_0_2px_rgba(0,0,0,0.2)]";
@@ -48,7 +48,7 @@ function PlayerMetric({
           "font-[500]",
           tone === "down" && "text-prophet-red",
           tone === "up" && "text-prophet-green",
-          !tone && "text-black"
+          !tone && "text-prophet-foreground"
         )}
       >
         {value}
@@ -126,7 +126,7 @@ function MobileKeyPlayersPanel({ players }: TeamKeyPlayersPanelProps) {
 
   return (
     <section
-      className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white md:hidden"
+      className="overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel md:hidden"
       aria-label={t("keyPlayersAria")}
     >
       {players.length > 0 ? (
@@ -168,7 +168,7 @@ function DesktopKeyPlayersPanel({ players }: TeamKeyPlayersPanelProps) {
           players.map((player) => (
             <article
               key={player.name}
-              className="rounded-lg border border-prophet-line bg-[#fafbfc] p-3"
+              className="rounded-lg border border-prophet-line bg-prophet-panel p-3"
             >
               <div className="flex items-center gap-2">
                 {player.logo ? (
@@ -183,7 +183,7 @@ function DesktopKeyPlayersPanel({ players }: TeamKeyPlayersPanelProps) {
                   </span>
                 )}
                 <div className="min-w-0">
-                  <h3 className="m-0 truncate text-sm font-[500] text-black">
+                  <h3 className="m-0 truncate text-sm font-[500] text-prophet-foreground">
                     {player.name}
                   </h3>
                   <p className="m-0 text-xs text-prophet-muted">
@@ -215,7 +215,7 @@ function DesktopKeyPlayersPanel({ players }: TeamKeyPlayersPanelProps) {
                 <span className="text-prophet-muted">
                   {player.club ? t("club") : t("profileNote")}
                 </span>
-                <strong className="truncate font-[500] text-black">
+                <strong className="truncate font-[500] text-prophet-foreground">
                   {player.club ?? player.note ?? player.topMarket}
                 </strong>
               </div>

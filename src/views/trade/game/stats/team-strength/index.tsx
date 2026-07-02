@@ -22,8 +22,6 @@ import type {
 
 const RADAR_STROKE_COLOR = "#5983EC";
 const RADAR_FILL_COLOR = "rgba(89, 131, 236, 0.4)";
-const RADAR_GRID_COLOR = "#EBEBEB";
-const RADAR_LABEL_COLOR = "#909090";
 
 export type TeamStrengthProps = {
   homeTeam: TeamStrengthTeam;
@@ -38,7 +36,7 @@ export type TeamStrengthProps = {
 function TeamStrengthRadarChart({ metrics }: { metrics: StrengthMetric[] }) {
   if (metrics.length === 0) {
     return (
-      <div className="flex h-[200px] w-full items-center justify-center text-[14px] leading-[18px] text-[#909090]">
+      <div className="flex h-[200px] w-full items-center justify-center text-[14px] leading-[18px] text-prophet-muted">
         —
       </div>
     );
@@ -48,7 +46,7 @@ function TeamStrengthRadarChart({ metrics }: { metrics: StrengthMetric[] }) {
     <div className="h-[200px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={metrics} outerRadius="72%">
-          <PolarGrid gridType="polygon" stroke={RADAR_GRID_COLOR} />
+          <PolarGrid gridType="polygon" stroke="var(--prophet-border)" />
           <PolarRadiusAxis
             domain={[0, 100]}
             tick={false}
@@ -58,7 +56,7 @@ function TeamStrengthRadarChart({ metrics }: { metrics: StrengthMetric[] }) {
           <PolarAngleAxis
             dataKey="label"
             tick={{
-              fill: RADAR_LABEL_COLOR,
+              fill: "var(--prophet-text-muted)",
               fontSize: 14,
               fontWeight: 400
             }}
@@ -95,16 +93,16 @@ function TeamStrengthColumn({
             logoUrl={team.logoUrl}
             className="h-[22px] w-[22px] shrink-0 rounded-[6px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
           />
-          <span className="truncate text-[14px] font-[500] leading-[18px] text-black">
+          <span className="truncate text-[14px] font-[500] leading-[18px] text-prophet-foreground">
             {displayName}
           </span>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <span className="text-[14px] font-[400] leading-[18px] text-[#909090]">
+          <span className="text-[14px] font-[400] leading-[18px] text-prophet-muted">
             {t("strengthScore")}
           </span>
-          <span className="text-[20px] font-[500] leading-[25px] text-black">
+          <span className="text-[20px] font-[500] leading-[25px] text-prophet-foreground">
             {formatStrengthScore(strength.score)}
           </span>
         </div>
@@ -140,29 +138,29 @@ export function TeamStrength({
     <section
       aria-label={t("teamStrengthAria")}
       className={cn(
-        "block w-full rounded-[12px] border border-[#EBEBEB] bg-white py-4",
+        "block w-full rounded-[12px] border border-prophet-line bg-prophet-panel py-4",
         className
       )}
     >
-      <h2 className="m-0 px-4 text-[18px] font-[500] leading-[23px] text-black sm:px-5">
+      <h2 className="m-0 px-4 text-[18px] font-[500] leading-[23px] text-prophet-foreground sm:px-5">
         {t("teamStrength")}
       </h2>
 
       <div className="mt-3">
         {isLoading ? (
-          <p className="px-4 py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090] sm:px-5">
+          <p className="px-4 py-6 text-center text-[14px] font-[400] leading-[17px] text-prophet-muted sm:px-5">
             {t("loadingData")}
           </p>
         ) : isError ? (
-          <p className="px-4 py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090] sm:px-5">
+          <p className="px-4 py-6 text-center text-[14px] font-[400] leading-[17px] text-prophet-muted sm:px-5">
             {t("unableToLoadData")}
           </p>
         ) : !hasData ? (
-          <p className="px-4 py-6 text-center text-[14px] font-[400] leading-[17px] text-[#909090] sm:px-5">
+          <p className="px-4 py-6 text-center text-[14px] font-[400] leading-[17px] text-prophet-muted sm:px-5">
             {t("teamStrengthEmpty")}
           </p>
         ) : (
-          <div className="flex flex-col divide-y divide-[#EBEBEB] md:flex-row md:divide-x md:divide-y-0">
+          <div className="flex flex-col divide-y divide-prophet-line md:flex-row md:divide-x md:divide-y-0">
             {columns.map(({ team, strength }) => (
               <TeamStrengthColumn
                 key={team.name}

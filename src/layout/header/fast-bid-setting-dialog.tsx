@@ -68,13 +68,13 @@ export function FastBidSettingDialog({
     >
       <div className={cn(fundingModalCardClass, "w-[320px]")}>
         <header className="relative flex shrink-0 items-center px-5 pb-4 pt-5">
-          <h2 className="m-0 text-xl font-[500] leading-6 text-black">
+          <h2 className="m-0 text-xl font-[500] leading-6 text-prophet-foreground">
             {t("fastBidSetting")}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-5 top-5 inline-flex h-[10px] w-[10px] items-center justify-center border-0 bg-transparent p-0 text-[#909090] transition-opacity hover:opacity-70"
+            className="absolute right-5 top-5 inline-flex h-[10px] w-[10px] items-center justify-center border-0 bg-transparent p-0 text-prophet-muted transition-opacity hover:opacity-70"
             aria-label={t("close")}
           >
             <span
@@ -89,7 +89,7 @@ export function FastBidSettingDialog({
 
         <div className="flex flex-col items-center px-5 pb-5">
           <label className="inline-flex items-center justify-center">
-            <span className="text-[36px] flex-1 font-[500] leading-[43px] text-black">
+            <span className="text-[36px] flex-1 font-[500] leading-[43px] text-prophet-foreground">
               $
             </span>
             <input
@@ -99,7 +99,7 @@ export function FastBidSettingDialog({
               onChange={(event) => handleInputChange(event.target.value)}
               aria-label={t("fastBidAmount")}
               style={{ fieldSizing: "content" }}
-              className="max-w-full border-0 bg-transparent text-[36px] font-[500] leading-[43px] text-black outline-none focus:ring-0"
+              className="max-w-full border-0 bg-transparent text-[36px] font-[500] leading-[43px] text-prophet-foreground outline-none focus:ring-0"
             />
           </label>
 
@@ -108,7 +108,7 @@ export function FastBidSettingDialog({
               <button
                 key={amount}
                 type="button"
-                className="inline-flex h-[30px] min-w-[50px] items-center justify-center rounded-lg border border-[#EBEBEB] bg-white px-3 text-sm font-[400] leading-[17px] text-[#909090] transition-colors hover:border-[#d0d0d0] hover:text-black"
+                className="inline-flex h-[30px] min-w-[50px] items-center justify-center rounded-lg border border-prophet-line bg-prophet-panel px-3 text-sm font-[400] leading-[17px] text-prophet-muted transition-colors hover:border-prophet-muted hover:text-prophet-foreground"
                 onClick={() => handlePresetSelect(amount)}
               >
                 {formatFastBidAmountDisplay(amount)}
@@ -119,7 +119,7 @@ export function FastBidSettingDialog({
           <button
             type="button"
             disabled={isSaveDisabled}
-            className="mt-8 inline-flex h-[50px] w-[280px] items-center justify-center rounded-xl bg-black text-base font-[400] leading-[19px] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-8 inline-flex h-[50px] w-[280px] items-center justify-center rounded-xl bg-prophet-primary text-base font-[400] leading-[19px] text-prophet-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSave}
           >
             {t("save")}

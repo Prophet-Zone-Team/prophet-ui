@@ -26,7 +26,7 @@ export function FullRankingTable({ entries, className }: FullRankingTableProps) 
 
   if (entries.length === 0) {
     return (
-      <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-[#909090] md:px-5">
+      <p className="px-3 py-8 text-center text-[16px] leading-[19px] text-prophet-muted md:px-5">
         {t("noTeamsMatchFilters")}
       </p>
     );
@@ -62,7 +62,7 @@ export function FullRankingTable({ entries, className }: FullRankingTableProps) 
             entry={entry}
             titleOddsMax={titleOddsMax}
             advanceOddsMax={advanceOddsMax}
-            className={index % 2 === 0 ? "bg-[#F9FAFC]" : "bg-white"}
+            className={index % 2 === 0 ? "bg-prophet-base" : "bg-prophet-panel"}
           />
         ))}
       </div>

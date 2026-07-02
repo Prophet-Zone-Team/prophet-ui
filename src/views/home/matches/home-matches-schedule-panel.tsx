@@ -108,7 +108,7 @@ export function HomeMatchesSchedulePanel({
                 aria-label={group.label}
                 className="mt-[16px]"
               >
-                <h3 className="m-0 mb-2.5 text-[20px] font-[500] leading-[19px] text-black">
+                <h3 className="m-0 mb-2.5 text-[20px] font-[500] leading-[19px] text-prophet-foreground">
                   {group.label}
                 </h3>
                 <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -131,7 +131,7 @@ export function HomeMatchesSchedulePanel({
           </ul>
         )
       ) : (
-        <p className="m-0 text-sm text-[#909090]">
+        <p className="m-0 text-sm text-prophet-muted">
           {t("noFixturesMatchFilters")}
         </p>
       )}

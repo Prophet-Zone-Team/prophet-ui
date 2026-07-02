@@ -31,7 +31,7 @@ export function CopiedToast({ visible, className, style }: CopiedToastProps) {
           transition={COPIED_TOAST_TRANSITION}
           style={style}
           className={cn(
-            "flex h-[46px] w-[118px] items-center justify-center gap-2 rounded-[12px] border border-[#EBEBEB] bg-white shadow-[0_0_10px_rgba(0,0,0,0.1)]",
+            "flex h-[46px] w-[118px] items-center justify-center gap-2 rounded-[12px] border border-prophet-line bg-prophet-panel shadow-[0_0_10px_rgba(0,0,0,0.1)]",
             className
           )}
         >
@@ -41,7 +41,7 @@ export function CopiedToast({ visible, className, style }: CopiedToastProps) {
           >
             <CheckIcon className="size-[11px]" />
           </span>
-          <span className="text-[14px] font-normal leading-[18px] text-black">
+          <span className="text-[14px] font-normal leading-[18px] text-prophet-foreground">
             Copied!
           </span>
         </motion.div>

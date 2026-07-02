@@ -23,7 +23,7 @@ export function SuccessView({
     <div className="flex h-full flex-col items-center text-center">
       <SuccessIcon />
 
-      <h2 className="m-0 mt-6 text-lg font-[500] leading-6 text-black">
+      <h2 className="m-0 mt-6 text-lg font-[500] leading-6 text-prophet-foreground">
         Telegram Connected
       </h2>
       <p className="m-0 mt-2 max-w-[300px] text-sm font-[400] leading-normal text-[#909090]">
@@ -36,7 +36,7 @@ export function SuccessView({
             className="size-2 shrink-0 rounded-full bg-[#22C55E]"
             aria-hidden="true"
           />
-          <span className="text-sm font-[500] text-black">{handle}</span>
+          <span className="text-sm font-[500] text-prophet-foreground">{handle}</span>
         </div>
         {connectedAt ? (
           <p className="m-0 text-xs font-[400] text-[#909090]">

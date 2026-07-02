@@ -60,7 +60,7 @@ export function PrivateTopupGuideDialog({
               alt={t("privateModeAlt")}
               className="h-[52px] w-[70px] object-contain"
             />
-            <h2 className="m-0 mt-4 text-center text-[26px] font-[500] leading-normal text-black">
+            <h2 className="m-0 mt-4 text-center text-[26px] font-[500] leading-normal text-prophet-foreground">
               {t("howToUseTitle")}
             </h2>
           </div>
@@ -91,7 +91,7 @@ export function PrivateTopupGuideDialog({
           <div className="mt-6 flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-center md:gap-4">
             <button
               type="button"
-              className="border-0 bg-transparent p-0 text-left text-[14px] font-[400] text-black transition-opacity hover:opacity-70 md:text-center"
+              className="border-0 bg-transparent p-0 text-left text-[14px] font-[400] text-prophet-foreground transition-opacity hover:opacity-70 md:text-center"
               onClick={onProceed}
             >
               {t("skipGuide")}

@@ -13,6 +13,7 @@ import { LocaleProvider } from "@/components/runtime/locale-provider";
 import { AppChrome } from "@/layout/app-chrome";
 import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen";
 import { NativeAppShell } from "@/components/runtime/native-app-shell";
+import { ThemeApplier } from "@/components/runtime/theme-applier";
 import type { AppLocale } from "@/i18n/config";
 import dynamic from "next/dynamic";
 
@@ -41,6 +42,7 @@ export function AppRoot({
       initialLocale={initialLocale}
       initialMessages={initialMessages}
     >
+      <ThemeApplier />
       <RainbowProvider cookie={cookie}>
         <AnalyticsProvider>
           <AuthProvider>

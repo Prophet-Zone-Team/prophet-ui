@@ -5,19 +5,21 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
+import { useDarkModeEnabled } from "@/store";
 
 interface AppFooterProps {
   className?: string;
 }
 
 function AppFooter({ className }: AppFooterProps) {
+  const darkModeEnabled = useDarkModeEnabled();
   const t = useTranslations("footer");
   const currentYear = new Date().getFullYear();
 
   return (
     <footer
       className={cn(
-        "w-full border-t border-[#E9E9E9] py-4 px-10 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-2 font-[Sora] text-[#909090] text-xs font-normal",
+        "w-full border-t border-prophet-line py-4 px-10 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-2 font-[Sora] text-prophet-muted text-xs font-normal",
         className
       )}
     >
@@ -31,10 +33,14 @@ function AppFooter({ className }: AppFooterProps) {
               key={index}
               href={social.url}
               target="_blank"
-              className="shrink-0 size-9 bg-white border border-[#EBEBEB] rounded-lg flex items-center justify-center hover:bg-[#EBEBEB] duration-150"
+              className="shrink-0 size-9 bg-prophet-panel dark:bg-black border border-prophet-line rounded-lg flex items-center justify-center hover:bg-prophet-line duration-150"
               aria-label={social.label}
             >
-              <img src={social.icon} alt={social.label} className="w-3 h-3 shrink-0 object-center object-contain" />
+              <img
+                src={darkModeEnabled ? social.iconLight : social.icon}
+                alt={social.label}
+                className="w-3 h-3 shrink-0 object-center object-contain"
+              />
             </Link>
           ))
         }

@@ -72,8 +72,8 @@ export function SignalTopCard({
     <article
       className={cn(
         "relative box-border flex h-auto min-h-[120px] w-full max-w-none items-start gap-3 p-3 md:h-[140px] md:max-w-[458px] md:items-center md:gap-[14px] md:p-[12px]",
-        "rounded-[12px] border border-[#EBEBEB] bg-white",
-        onSelect && "cursor-pointer transition-colors hover:border-[#D8D8D8]",
+        "rounded-[12px] border border-prophet-line bg-prophet-panel",
+        onSelect && "cursor-pointer transition-colors hover:border-prophet-muted",
         className
       )}
       aria-label={t("newsCardAria", {
@@ -104,28 +104,28 @@ export function SignalTopCard({
               className="h-4 w-4 shrink-0 rounded-[4px] text-[16px] md:h-[20px] md:w-[20px] md:text-[20px]"
               fallback={false}
             />
-            <span className="truncate text-base font-[500] leading-[19px] text-black md:text-[18px] md:leading-[21px]">
+            <span className="truncate text-base font-[500] leading-[19px] text-prophet-foreground md:text-[18px] md:leading-[21px]">
               {teamDisplayName}
             </span>
             <span className="shrink-0 [&_svg]:size-[18px]">
               <SentimentIcon sentiment={item.sentiment} />
             </span>
           </div>
-          <span className="shrink-0 whitespace-nowrap text-[12px] font-[400] leading-[14px] text-[#909090] md:hidden">
+          <span className="shrink-0 whitespace-nowrap text-[12px] font-[400] leading-[14px] text-prophet-muted md:hidden">
             {item.publishedAtLabel}
           </span>
         </div>
 
-        <h3 className="m-0 mt-1 line-clamp-2 text-base font-[500] leading-[19px] text-black md:mt-[8px] md:line-clamp-1 md:text-[18px] md:leading-[21px]">
+        <h3 className="m-0 mt-1 line-clamp-2 text-base font-[500] leading-[19px] text-prophet-foreground md:mt-[8px] md:line-clamp-1 md:text-[18px] md:leading-[21px]">
           {item.headline}
         </h3>
 
-        <p className="m-0 mt-1 line-clamp-2 text-[14px] font-[400] leading-[17px] text-[#909090] md:mt-[6px]">
+        <p className="m-0 mt-1 line-clamp-2 text-[14px] font-[400] leading-[17px] text-prophet-muted md:mt-[6px]">
           {item.summary}
         </p>
 
         <div className="mt-2 flex items-baseline justify-between md:hidden">
-          <span className="text-[12px] font-[400] leading-[14px] text-[#909090]">
+          <span className="text-[12px] font-[400] leading-[14px] text-prophet-muted">
             {t("impact")}
           </span>
           <span
@@ -140,7 +140,7 @@ export function SignalTopCard({
       </div>
 
       <div className="hidden w-[52px] shrink-0 flex-col items-end pb-[18px] md:flex">
-        <span className="whitespace-nowrap text-[12px] font-[400] leading-[14px] text-[#909090]">
+        <span className="whitespace-nowrap text-[12px] font-[400] leading-[14px] text-prophet-muted">
           {item.publishedAtLabel}
         </span>
         <span
@@ -151,7 +151,7 @@ export function SignalTopCard({
         >
           {formatImpactScore(item.impactScore)}
         </span>
-        <span className="mt-[8px] text-[12px] font-[400] leading-[14px] text-[#909090]">
+        <span className="mt-[8px] text-[12px] font-[400] leading-[14px] text-prophet-muted">
           {t("impact")}
         </span>
       </div>

@@ -8,7 +8,7 @@ export function RankingTableHeader() {
   return (
     <div
       role="row"
-      className={`${rankingPreviewTableGridClass} px-[20px] text-[14px] font-[400] leading-[17px] text-[#909090]`}
+      className={`${rankingPreviewTableGridClass} px-[20px] text-[14px] font-[400] leading-[17px] text-prophet-muted`}
     >
       <span role="columnheader">{t("rank")}</span>
       <span role="columnheader">{t("team")}</span>
