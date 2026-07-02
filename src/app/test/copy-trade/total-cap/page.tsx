@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { isCopyTargetTotalCapReached } from "@/lib/copy-trade/copy-target-cap";
 import { targetToWalletCopyForm } from "@/lib/copy-trade/transforms";
 import {
   COPY_TRADE_TOTAL_CAP_MODAL_TARGET,
@@ -118,6 +119,7 @@ export default function CopyTradeTotalCapPreviewPage() {
         wallet={modalTarget.Wallet}
         initialValues={modalInitialValues}
         existingTarget={modalTarget}
+        autoOpenAdvancedSettings={isCopyTargetTotalCapReached(modalTarget)}
         canSubmitCopy
         availableBalance={250}
         onSubmit={async () => {

@@ -28,10 +28,6 @@ import {
 } from "@/lib/copy-trade/trader-rank-filters";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import type { CopyTarget, TraderCatalogEntry } from "@/types/copy-trade-api";
-import {
-  copyTradeModalSurfaceClass,
-  copyTradePrimaryButtonClass
-} from "@/views/copy-trade/copy-trade-ui";
 
 import { WalletCopyAdvancedSettingsModal } from "./advanced-settings-modal";
 import { CopyTradeInfoTooltip } from "./info-tooltip";
@@ -58,6 +54,7 @@ export interface WalletCopyModalProps {
   canSubmitCopy?: boolean;
   balanceWarning?: string | null;
   existingTarget?: CopyTarget | null;
+  autoOpenAdvancedSettings?: boolean;
   onSubmit?: (form: CopyTargetForm) => void | Promise<void>;
   onPersistSettings?: (form: CopyTargetForm) => Promise<boolean>;
 }
@@ -176,6 +173,7 @@ export function WalletCopyModal({
   canSubmitCopy = true,
   balanceWarning = null,
   existingTarget = null,
+  autoOpenAdvancedSettings = false,
   onSubmit,
   onPersistSettings
 }: WalletCopyModalProps) {
@@ -208,10 +206,14 @@ export function WalletCopyModal({
     };
     setForm(nextValues);
     setSavedSnapshot(nextValues);
-    setAdvancedModalOpen(false);
+    const shouldOpenAdvanced =
+      autoOpenAdvancedSettings &&
+      existingTarget != null &&
+      isCopyTargetTotalCapReached(existingTarget);
+    setAdvancedModalOpen(shouldOpenAdvanced);
     setAdvancedDraft(pickAdvancedFields(nextValues));
     setError("");
-  }, [initialValues, open, wallet]);
+  }, [autoOpenAdvancedSettings, existingTarget, initialValues, open, wallet]);
 
   const patchForm = useCallback((patch: Partial<WalletCopyFormValues>) => {
     setError("");
@@ -421,20 +423,23 @@ export function WalletCopyModal({
         ariaLabel={t("ariaLabel")}
         escapeCloseable={!advancedModalOpen}
         overlayCloseable={!advancedModalOpen}
-        className={copyTradeModalSurfaceClass}
-        closeButtonClassName="right-5 top-5 border-0 bg-transparent text-prophet-muted hover:bg-transparent hover:text-prophet-foreground"
+        className={cn(
+          "w-full max-w-[500px] rounded-[20px] border border-[#EBEBEB] bg-white",
+          "p-5 shadow-[0px_0px_10px_rgba(0,0,0,0.1)]"
+        )}
+        closeButtonClassName="right-5 top-5 border-0 bg-transparent text-[#909090] hover:bg-transparent hover:text-black"
       >
         <div className="flex flex-col gap-5">
           <header>
-            <h2 className="text-xl font-medium leading-[25px] text-prophet-foreground">
+            <h2 className="text-xl font-medium leading-[25px] text-black">
               {t("title")}
             </h2>
           </header>
 
           <section className="flex flex-col gap-2">
-            <p className="text-sm leading-[18px] text-prophet-foreground">{t("copyFrom")}</p>
-            <div className="box-border flex h-[104px] flex-col rounded-lg border border-prophet-line bg-prophet-panel px-2 py-3">
-              <p className="truncate text-[14px] px-[8px] py-[11px] leading-[18px] text-prophet-foreground rounded-[6px] bg-prophet-action-panel">
+            <p className="text-sm leading-[18px] text-black">{t("copyFrom")}</p>
+            <div className="box-border flex h-[104px] flex-col rounded-lg border border-[#EBEBEB] bg-white px-2 py-3">
+              <p className="truncate text-[14px] px-[8px] py-[11px] leading-[18px] text-black rounded-[6px] bg-[#F6F6F6]">
                 {wallet}
               </p>
               <div className="mt-[10px] flex h-10 items-center px-2">
@@ -462,7 +467,7 @@ export function WalletCopyModal({
 
           <section className="flex flex-col gap-3">
             <div className="flex items-center gap-1.5">
-              <p className="text-sm leading-[18px] text-prophet-foreground">
+              <p className="text-sm leading-[18px] text-black">
                 {t("copyTradeRatio")}
               </p>
               <CopyTradeInfoTooltip content={<>{t("ratioTooltip")}</>} />
@@ -470,9 +475,9 @@ export function WalletCopyModal({
 
             <div className="flex flex-col gap-3">
               <div className="relative h-2.5">
-                <div className="absolute inset-0 rounded-md border border-prophet-line bg-prophet-hover" />
+                <div className="absolute inset-0 rounded-md border border-[#EBEBEB] bg-[#EBEBEB]" />
                 <div
-                  className="absolute inset-y-0 left-0 rounded-md bg-prophet-primary"
+                  className="absolute inset-y-0 left-0 rounded-md bg-black"
                   style={{ width: `${form.ratio}%` }}
                 />
                 <input
@@ -488,7 +493,7 @@ export function WalletCopyModal({
                   aria-label={t("ariaCopyRatio")}
                 />
                 <div
-                  className="pointer-events-none absolute top-1/2 size-[18px] -translate-y-1/2 rounded-full border border-prophet-muted bg-prophet-primary"
+                  className="pointer-events-none absolute top-1/2 size-[18px] -translate-y-1/2 rounded-full border border-[#909090] bg-black"
                   style={{ left: `calc(${form.ratio}% - 9px)` }}
                   aria-hidden="true"
                 />
@@ -504,8 +509,8 @@ export function WalletCopyModal({
                         "inline-flex h-[30px] min-w-[50px] items-center justify-center rounded-lg border px-2",
                         "text-sm leading-[18px] transition-colors",
                         form.ratio === preset
-                          ? "border-prophet-primary bg-prophet-primary text-prophet-primary-foreground"
-                          : "border-prophet-line bg-prophet-panel text-prophet-muted hover:border-prophet-muted"
+                          ? "border-black bg-black text-white"
+                          : "border-[#EBEBEB] bg-white text-[#909090] hover:border-[#909090]"
                       )}
                       onClick={() => patchForm({ ratio: preset })}
                     >
@@ -513,7 +518,7 @@ export function WalletCopyModal({
                     </button>
                   ))}
                 </div>
-                <span className="text-lg leading-[23px] text-prophet-foreground tabular-nums">
+                <span className="text-lg leading-[23px] text-black tabular-nums">
                   {form.ratio}%
                 </span>
               </div>
@@ -538,17 +543,17 @@ export function WalletCopyModal({
           <button
             type="button"
             className={cn(
-              "flex w-full items-center justify-between gap-3 rounded-lg border border-prophet-line",
-              "bg-prophet-panel px-3 py-3 text-left transition-colors hover:border-prophet-muted"
+              "flex w-full items-center justify-between gap-3 rounded-lg border border-[#EBEBEB]",
+              "bg-white px-3 py-3 text-left transition-colors hover:border-[#909090]"
             )}
             aria-label={t("openAdvancedSettings")}
             onClick={handleOpenAdvancedModal}
           >
-            <span className="text-sm leading-[18px] text-prophet-foreground">
+            <span className="text-sm leading-[18px] text-black">
               {t("advancedSetting")}
             </span>
             <ChevronRight
-              className="size-4 shrink-0 text-prophet-muted"
+              className="size-4 shrink-0 text-[#909090]"
               aria-hidden="true"
             />
           </button>
@@ -564,16 +569,25 @@ export function WalletCopyModal({
           ) : null}
 
           {totalCapReached && totalCapUsage && !error ? (
-            <div className="flex items-start gap-2 rounded-[6px] bg-[#fdd357]/20 px-3 py-2 text-sm leading-[150%] text-[#d1a00f]">
-              {t("totalCapReachedWarning", {
-                used: formatTeamDetailMoney(totalCapUsage.used),
-                max: formatTeamDetailMoney(totalCapUsage.max)
-              })}
+            <div className="flex flex-col gap-2 rounded-[6px] bg-[#fdd357]/20 px-3 py-2 text-sm leading-[150%] text-[#d1a00f]">
+              <p className="m-0">
+                {t("totalCapReachedWarning", {
+                  used: formatTeamDetailMoney(totalCapUsage.used),
+                  max: formatTeamDetailMoney(totalCapUsage.max)
+                })}
+              </p>
+              <button
+                type="button"
+                className="self-start text-sm font-medium underline underline-offset-2 transition-opacity hover:opacity-70"
+                onClick={handleOpenAdvancedModal}
+              >
+                {t("totalCapReachedRaiseCap")}
+              </button>
             </div>
           ) : null}
 
           {isLoadingBalance && open ? (
-            <p className="m-0 text-sm leading-[18px] text-prophet-muted">
+            <p className="m-0 text-sm leading-[18px] text-[#909090]">
               {t("checkingBalance")}
             </p>
           ) : null}
@@ -581,9 +595,9 @@ export function WalletCopyModal({
           <button
             type="button"
             className={cn(
-              "flex h-[50px] w-full items-center justify-center rounded-lg text-base leading-5",
-              copyTradePrimaryButtonClass,
-              "disabled:opacity-50"
+              "flex h-[50px] w-full items-center justify-center rounded-lg bg-black",
+              "text-base leading-5 text-white transition-opacity hover:opacity-90",
+              "disabled:cursor-not-allowed disabled:opacity-50"
             )}
             disabled={
               saving ||
@@ -636,12 +650,12 @@ function StatCell({
       <p
         className={cn(
           "truncate text-[14px] leading-[18px] tabular-nums",
-          valueClassName ?? "text-prophet-foreground"
+          valueClassName ?? "text-black"
         )}
       >
         {value}
       </p>
-      <p className="text-[12px] leading-[15px] text-prophet-muted">{label}</p>
+      <p className="text-[12px] leading-[15px] text-[#909090]">{label}</p>
     </div>
   );
 }

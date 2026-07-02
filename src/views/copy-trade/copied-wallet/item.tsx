@@ -107,7 +107,7 @@ function CopyStatusIndicator({
           ? "bg-[#fdd357]/30"
           : active
             ? "bg-[#65AF14]/20"
-            : "bg-prophet-muted/20"
+            : "bg-[#909090]/20"
       )}
       aria-hidden="true"
     >
@@ -119,8 +119,8 @@ function CopyStatusIndicator({
         <span className="ml-0.5 size-0 border-y-[5px] border-l-[8px] border-y-transparent border-l-[#65AF14]" />
       ) : (
         <span className="flex items-center gap-[3px]">
-          <span className="h-[13px] w-1 rounded-[1px] bg-prophet-muted" />
-          <span className="h-[13px] w-1 rounded-[1px] bg-prophet-muted" />
+          <span className="h-[13px] w-1 rounded-[1px] bg-[#909090]" />
+          <span className="h-[13px] w-1 rounded-[1px] bg-[#909090]" />
         </span>
       )}
     </span>
@@ -143,12 +143,15 @@ function ActionButton({
       type="button"
       className={cn(
         "inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
-        "border border-prophet-line bg-prophet-panel text-prophet-muted transition-opacity",
+        "border border-[#EBEBEB] bg-white text-[#909090] transition-opacity",
         "hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-40"
       )}
       aria-label={label}
       disabled={disabled}
-      onClick={onClick}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick?.();
+      }}
     >
       {children}
     </button>
@@ -251,7 +254,7 @@ export function CopyTradeCopiedWalletItem({
     return (
       <div
         className={cn(
-          "overflow-hidden rounded-xl border border-prophet-line bg-prophet-panel",
+          "overflow-hidden rounded-xl border border-[#EBEBEB] bg-white",
           className
         )}
       >
@@ -283,7 +286,7 @@ export function CopyTradeCopiedWalletItem({
             </PortfolioTableMobileField>
             <PortfolioTableMobileField label={t("buySell")}>
               <span className="text-[#65AF14]">{stats?.buyCount ?? 0}</span>
-              <span className="text-prophet-muted">/</span>
+              <span className="text-[#909090]">/</span>
               <span className="text-[#FF674B]">{stats?.sellCount ?? 0}</span>
             </PortfolioTableMobileField>
             <PortfolioTableMobileField
@@ -294,7 +297,7 @@ export function CopyTradeCopiedWalletItem({
             </PortfolioTableMobileField>
             <PortfolioTableMobileField
               label={t("lastTrade")}
-              valueClassName="font-normal text-prophet-muted"
+              valueClassName="font-normal text-[#909090]"
             >
               {lastTradeLabel}
             </PortfolioTableMobileField>
@@ -302,13 +305,12 @@ export function CopyTradeCopiedWalletItem({
 
           <WalletActionButtons
             active={isActive}
-            capReached={totalCapReached}
             saving={saving}
             onPauseToggle={() => onPauseToggle?.(target)}
             onManage={() => onManage?.(target)}
             onRemove={() => onRemove?.(target)}
             onClick={stopRowToggle}
-            className="justify-end border-t border-prophet-line pt-3"
+            className="justify-end border-t border-[#EBEBEB] pt-3"
           />
         </article>
 
@@ -320,14 +322,14 @@ export function CopyTradeCopiedWalletItem({
   return (
     <div
       className={cn(
-        "col-span-full overflow-hidden rounded-xl border border-prophet-line bg-prophet-panel",
+        "col-span-full overflow-hidden rounded-xl border border-[#EBEBEB] bg-white",
         className
       )}
     >
       <article
         style={copyTradeCopiedWalletGridStyle}
         className={cn(
-          "box-border h-[74px] cursor-pointer px-4 transition-colors hover:bg-prophet-hover",
+          "box-border h-[74px] cursor-pointer px-4 transition-colors hover:bg-[#FAFAFA]",
           copyTradeCopiedWalletRowGridClass
         )}
         {...rowKeyHandlers}
@@ -350,7 +352,7 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[16px] leading-5 text-prophet-foreground"
+            "text-[16px] leading-5 text-black"
           )}
         >
           {formatMoneyOrDash(stats?.totalBuy)}
@@ -358,7 +360,7 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[16px] leading-5 text-prophet-foreground"
+            "text-[16px] leading-5 text-black"
           )}
         >
           {formatMoneyOrDash(stats?.totalSell)}
@@ -370,7 +372,7 @@ export function CopyTradeCopiedWalletItem({
           )}
         >
           <span className="text-[#65AF14]">{stats?.buyCount ?? 0}</span>
-          <span className="text-prophet-muted">/</span>
+          <span className="text-[#909090]">/</span>
           <span className="text-[#FF674B]">{stats?.sellCount ?? 0}</span>
         </span>
         <span
@@ -385,7 +387,7 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[14px] leading-[18px] text-prophet-foreground"
+            "text-[14px] leading-[18px] text-black"
           )}
         >
           {lastTradeLabel}
@@ -393,7 +395,6 @@ export function CopyTradeCopiedWalletItem({
 
         <WalletActionButtons
           active={isActive}
-          capReached={totalCapReached}
           saving={saving}
           onPauseToggle={() => onPauseToggle?.(target)}
           onManage={() => onManage?.(target)}
@@ -473,23 +474,23 @@ function WalletIdentityBlock({
       <TraderAvatar wallet={wallet} />
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
-          <p className="max-w-[160px] truncate text-[16px] leading-5 text-prophet-foreground">
+          <p className="max-w-[160px] truncate text-[16px] leading-5 text-black">
             {displayName}
           </p>
           {imported ? (
-            <span className="inline-flex shrink-0 items-center rounded bg-prophet-hover px-1.5 py-0.5 text-[10px] leading-[13px] text-prophet-muted">
+            <span className="inline-flex shrink-0 items-center rounded bg-[#EBEBEB] px-1.5 py-0.5 text-[10px] leading-[13px] text-[#909090]">
               {tCommon("imported")}
             </span>
           ) : null}
           {tag ? <TraderTagIcon tag={tag} /> : null}
         </div>
         <div className="mt-px flex min-w-0 items-center gap-1">
-          <span className="truncate text-[12px] leading-[15px] text-prophet-muted">
+          <span className="truncate text-[12px] leading-[15px] text-[#909090]">
             {walletLabel}
           </span>
           <button
             type="button"
-            className="inline-flex shrink-0 items-center justify-center p-0.5 text-prophet-muted transition-opacity hover:opacity-70"
+            className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
             aria-label={tCommon("copyWalletAddress")}
             onClick={onCopyWallet}
           >
@@ -503,7 +504,6 @@ function WalletIdentityBlock({
 
 function WalletActionButtons({
   active,
-  capReached = false,
   saving,
   onPauseToggle,
   onManage,
@@ -512,7 +512,6 @@ function WalletActionButtons({
   className
 }: {
   active: boolean;
-  capReached?: boolean;
   saving: boolean;
   onPauseToggle: () => void;
   onManage: () => void;
@@ -521,7 +520,6 @@ function WalletActionButtons({
   className?: string;
 }) {
   const t = useTranslations("copyTrade.copiedWallet");
-  const actionsLocked = saving || capReached;
 
   return (
     <div
@@ -530,14 +528,14 @@ function WalletActionButtons({
     >
       <ActionButton
         label={active ? t("pauseCopiedWallet") : t("resumeCopiedWallet")}
-        disabled={actionsLocked}
+        disabled={saving}
         onClick={onPauseToggle}
       >
         {active ? <PauseIcon /> : <PlayIcon />}
       </ActionButton>
       <ActionButton
         label={t("manageSettings")}
-        disabled={actionsLocked}
+        disabled={saving}
         onClick={onManage}
       >
         <SettingsIcon />
@@ -562,7 +560,7 @@ function PauseIcon() {
       viewBox="0 0 13 13"
       fill="none"
     >
-      <path d="M4 13H0V0H4V13ZM13 13H9V0H13V13Z" fill="currentColor" />
+      <path d="M4 13H0V0H4V13ZM13 13H9V0H13V13Z" fill="#909090" />
     </svg>
   );
 }
@@ -593,7 +591,7 @@ function SettingsIcon() {
     >
       <path
         d="M10.9098 0C9.56237 0 8.43153 0.973079 8.10501 2.27568H0.00212505V3.79286H8.10501C8.43153 5.09546 9.56237 6.06835 10.9098 6.06835C12.2571 6.06835 13.388 5.09546 13.7145 3.79286H16V2.27568H13.7145C13.388 0.973079 12.2571 0 10.9098 0ZM10.9098 1.51718C11.7096 1.51718 12.3642 2.19977 12.3642 3.03417C12.3642 3.86858 11.7096 4.55135 10.9098 4.55135C10.1099 4.55135 9.4555 3.86858 9.4555 3.03417C9.4555 2.19977 10.1099 1.51718 10.9098 1.51718ZM5.09025 5.87365C3.74287 5.87365 2.61203 6.84672 2.28551 8.14932H0V9.6665H2.28551C2.61203 10.9691 3.74287 11.942 5.09025 11.942C6.43761 11.942 7.56829 10.9691 7.89481 9.6665H15.9977V8.14932H7.89481C7.56829 6.84672 6.43761 5.87365 5.09025 5.87365ZM5.09025 7.39083C5.89014 7.39083 6.54451 8.07342 6.54451 8.90782C6.54451 9.74222 5.89014 10.425 5.09025 10.425C4.29036 10.425 3.63582 9.74222 3.63582 8.90782C3.63582 8.07342 4.29036 7.39083 5.09025 7.39083ZM10.9076 11.9317C9.56019 11.9317 8.42935 12.9046 8.10289 14.2073H0V15.7243H8.10289C8.42941 17.0269 9.56024 18 10.9076 18C12.255 18 13.3857 17.0269 13.7122 15.7243H15.9977V14.2073H13.7124C13.3859 12.9046 12.2551 11.9317 10.9076 11.9317ZM10.9076 13.4486C11.7075 13.4486 12.3619 14.1314 12.3619 14.9658C12.3619 15.8002 11.7075 16.4828 10.9076 16.4828C10.1077 16.4828 9.45319 15.8002 9.45319 14.9658C9.45319 14.1314 10.1077 13.4486 10.9076 13.4486Z"
-        fill="currentColor"
+        fill="#909090"
       />
     </svg>
   );
@@ -610,7 +608,7 @@ function CloseIcon() {
     >
       <path
         d="M1.18306 0.168867L1.22244 0.204509L6.08801 5.00056L10.7746 0.381304C10.9054 0.251113 11.0824 0.176171 11.2683 0.172324C11.4542 0.168478 11.6343 0.236028 11.7705 0.360692C11.9068 0.485355 11.9885 0.657359 11.9984 0.840332C12.0083 1.0233 11.9456 1.2029 11.8236 1.34115L11.7878 1.37997L7.10051 5.99851L11.7874 10.6178C11.9197 10.7466 11.9958 10.9212 11.9998 11.1044C12.0038 11.2876 11.9354 11.4652 11.8089 11.5996C11.6824 11.734 11.5079 11.8146 11.3222 11.8244C11.1365 11.8342 10.9542 11.7724 10.814 11.6521L10.7746 11.6161L6.08801 6.99682L1.22244 11.7932C1.09143 11.9224 0.914729 11.9965 0.729464 11.9999C0.5442 12.0033 0.364803 11.9358 0.228979 11.8116C0.0931554 11.6873 0.0114806 11.516 0.00112092 11.3337C-0.00923877 11.1513 0.0525232 10.9721 0.173426 10.8337L0.209587 10.7949L5.07552 5.99851L0.209945 1.20282C0.0798237 1.07353 0.00544039 0.899676 0.00234498 0.717593C-0.00075042 0.53551 0.0676815 0.359295 0.193336 0.225786C0.31899 0.0922763 0.492139 0.0118068 0.676587 0.00119928C0.861036 -0.00940825 1.0425 0.0506673 1.18306 0.168867Z"
-        fill="currentColor"
+        fill="#909090"
       />
     </svg>
   );
