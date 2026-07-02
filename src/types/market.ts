@@ -528,7 +528,10 @@ export type FixtureSportsMarketType =
   | "total"
   | "btts"
   | "exact_score"
-  | "halftime";
+  | "halftime"
+  | "team_to_advance"
+  | "extra_time"
+  | "penalty_shootout";
 
 export type FixtureOutcomeSide =
   | MatchOutcomeSide
@@ -717,7 +720,10 @@ export type FixtureChartKind =
   | "halftime"
   | "total"
   | "spread"
-  | "exact_score";
+  | "exact_score"
+  | "team_to_advance"
+  | "extra_time"
+  | "penalty_shootout";
 
 export interface GameMatchChartEvent {
   elapsedSeconds: number;

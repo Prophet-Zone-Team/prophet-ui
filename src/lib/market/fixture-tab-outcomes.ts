@@ -66,8 +66,32 @@ export function resolveFixtureOutcomesForTab(
 ): FixtureMarketOutcome[] {
   switch (tab) {
     case "moneyline": {
-      const group = findFixtureGroupByType(fixtureMarkets.lines, "moneyline");
-      return sortFixtureGroupOutcomes(group?.outcomes ?? [], "moneyline");
+      const outcomes: FixtureMarketOutcome[] = [];
+      const moneylineGroup = findFixtureGroupByType(fixtureMarkets.lines, "moneyline");
+      const teamToAdvanceGroup = findFixtureGroupByType(
+        fixtureMarkets.lines,
+        "team_to_advance",
+      );
+      const extraTimeGroup = findFixtureGroupByType(fixtureMarkets.lines, "extra_time");
+      const penaltyGroup = findFixtureGroupByType(
+        fixtureMarkets.lines,
+        "penalty_shootout",
+      );
+
+      if (moneylineGroup) {
+        outcomes.push(...sortFixtureGroupOutcomes(moneylineGroup.outcomes, "moneyline"));
+      }
+      if (teamToAdvanceGroup) {
+        outcomes.push(...teamToAdvanceGroup.outcomes);
+      }
+      if (extraTimeGroup) {
+        outcomes.push(...extraTimeGroup.outcomes);
+      }
+      if (penaltyGroup) {
+        outcomes.push(...penaltyGroup.outcomes);
+      }
+
+      return outcomes;
     }
     case "halftime":
       return sortFixtureGroupOutcomes(fixtureMarkets.halftime, "halftime");

@@ -69,6 +69,10 @@ function getOutcomeSortOrder(
     return moneylineOrder;
   }
 
+  if (type === "team_to_advance") {
+    return spreadOrder;
+  }
+
   if (type === "spread") {
     return spreadOrder;
   }

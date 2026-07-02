@@ -43,7 +43,8 @@ export async function enrichMatchWithSiblingFixtureMarkets(
     siblingMarkets,
     homeName,
     awayName,
-    moneylineOutcomes
+    moneylineOutcomes,
+    slug,
   );
 
   return {

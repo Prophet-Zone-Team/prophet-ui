@@ -903,7 +903,10 @@ export function resolveLiveChartModeFromKind(
 ): "ternary" | "binary" {
   return chartKind === "total" ||
     chartKind === "spread" ||
-    chartKind === "exact_score"
+    chartKind === "exact_score" ||
+    chartKind === "team_to_advance" ||
+    chartKind === "extra_time" ||
+    chartKind === "penalty_shootout"
     ? "binary"
     : "ternary";
 }

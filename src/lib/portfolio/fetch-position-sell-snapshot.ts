@@ -12,9 +12,13 @@ export async function fetchPositionSellSnapshot(
     return undefined;
   }
 
-  const market = await fetchPolymarket<GammaMarketRecord>(
-    `/markets/slug/${encodeURIComponent(slug)}`
-  );
+  try {
+    const market = await fetchPolymarket<GammaMarketRecord>(
+      `/markets/slug/${encodeURIComponent(slug)}`
+    );
 
-  return mapGammaMarketToTeamSnapshot(market, { expectedSlug: slug });
+    return mapGammaMarketToTeamSnapshot(market, { expectedSlug: slug });
+  } catch {
+    return undefined;
+  }
 }
