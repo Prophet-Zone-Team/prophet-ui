@@ -13,6 +13,7 @@ export interface TeamLineupPlayerView {
 
 export interface TeamLineupView {
   formation?: string;
+  coach?: string;
   matchTime?: number;
   starters: TeamLineupPlayerView[];
 }
@@ -45,14 +46,13 @@ function parseGrid(grid?: string): { line: number; position: number } | undefine
   return { line, position };
 }
 
-export function mapProphetTeamLineup(
-  data: ProphetGetTeamLineupData | null | undefined
-): TeamLineupView | undefined {
-  if (!data?.length) {
-    return undefined;
-  }
+function normalizeTeamName(value: string | undefined): string {
+  return (value ?? "").trim().toLowerCase();
+}
 
-  const entry = data[0];
+function mapLineupEntry(
+  entry: ProphetGetTeamLineupData[number]
+): TeamLineupView | undefined {
   const starters = (entry.startXIs ?? []).map(({ player }) => {
     const grid = parseGrid(player.grid);
 
@@ -72,9 +72,32 @@ export function mapProphetTeamLineup(
 
   return {
     formation: entry.formation,
+    coach: entry.coach,
     matchTime: entry.match_time,
     starters
   };
+}
+
+export function mapProphetTeamLineup(
+  data: ProphetGetTeamLineupData | null | undefined
+): TeamLineupView | undefined {
+  if (!data?.length) {
+    return undefined;
+  }
+
+  return mapLineupEntry(data[0]);
+}
+
+export function findTeamLineupByName(
+  data: ProphetGetTeamLineupData | null | undefined,
+  teamName: string
+): TeamLineupView | undefined {
+  const normalized = normalizeTeamName(teamName);
+  const entry = data?.find(
+    (item) => normalizeTeamName(item.team_name) === normalized
+  );
+
+  return entry ? mapLineupEntry(entry) : undefined;
 }
 
 const LINEUP_MAX_LINE = 5;

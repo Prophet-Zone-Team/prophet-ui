@@ -154,6 +154,7 @@ export interface ProphetTeamLineupEntry {
   team_name?: string;
   match_time?: number;
   formation?: string;
+  coach?: string;
   startXIs?: ProphetTeamLineupStarter[] | null;
 }
 
@@ -728,6 +729,48 @@ export interface ProphetHeadToHeadFixture {
 
 export interface ProphetGetHeadToHeadFixturesData {
   list?: ProphetHeadToHeadFixture[];
+}
+
+/** GET /v1/analytics/teams/stats — recent fixtures and strength per team */
+export interface ProphetTeamStatsFixture {
+  id: number;
+  api_fixture_id: number;
+  referee?: string;
+  timezone?: string;
+  fixture_date: string;
+  fixture_timestamp: number;
+  status_long?: string;
+  status_short?: string;
+  status_elapsed?: number;
+  league_id?: number;
+  league_name?: string;
+  league_country?: string;
+  season?: number;
+  round?: string;
+  home_team_id?: number;
+  home_team_name?: string;
+  away_team_id?: number;
+  away_team_name?: string;
+  home_goals: number;
+  away_goals: number;
+  slug?: string;
+}
+
+export interface ProphetTeamStatsStrengthDimension {
+  key: string;
+  label: string;
+  score: number;
+}
+
+export interface ProphetTeamStatsStrength {
+  score?: number;
+  dimensions?: ProphetTeamStatsStrengthDimension[];
+}
+
+export interface ProphetTeamStatsInfo {
+  name: string;
+  recent_fixtures?: ProphetTeamStatsFixture[] | null;
+  team_strength?: ProphetTeamStatsStrength;
 }
 
 export interface ProphetGetTeamDetailMatch {

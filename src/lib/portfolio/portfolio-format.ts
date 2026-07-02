@@ -110,13 +110,13 @@ export function formatPortfolioTransactionMarketName(
     "marketName" | "teamName" | "source"
   >
 ): string {
-  const marketName = transaction.marketName.trim();
+  const marketName = transaction.marketName?.trim() ?? "";
 
   if (marketName && marketName !== "—") {
     return marketName;
   }
 
-  const teamName = transaction.teamName.trim();
+  const teamName = transaction.teamName?.trim() ?? "";
 
   if (transaction.source === "strategy" && teamName) {
     return `Will ${teamName} win the 2026 FIFA World Cup?`;

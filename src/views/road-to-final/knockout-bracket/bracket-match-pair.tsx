@@ -7,6 +7,7 @@ import type { ThirdPlaceAllocationOption } from "@/data/world-cup-2026/third-pla
 import type { WorldCup2026GroupTeam } from "@/data/world-cup-2026/groups";
 import { cn } from "@/lib/cn";
 
+import { isFixedKnockoutMatch } from "../lib/fixed-knockout";
 import { MATCH_LOOKUP } from "../lib/bracket-config";
 import {
   getMatchCandidateTeams,
@@ -192,6 +193,7 @@ export function BracketMatchPair({
     });
     const canSelect =
       !disabled &&
+      !isFixedKnockoutMatch(matchId) &&
       matchReady &&
       team &&
       candidates.some((candidate) => candidate.id === team.id);

@@ -21,7 +21,8 @@ export type GameMarketTabId =
   | "totals"
   | "spreads"
   | "halftime"
-  | "top_scores";
+  | "top_scores"
+  | "stats";
 
 export function findFixtureGroupByType(
   groups: FixtureMarketGroup[],

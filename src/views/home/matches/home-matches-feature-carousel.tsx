@@ -45,7 +45,12 @@ export function HomeMatchesFeatureCarousel({
   const intervalRef = useRef<number | null>(null);
 
   const slides = useMemo(() => {
-    const items: CarouselSlide[] = [];
+    const items: CarouselSlide[] = [
+      {
+        id: "road-to-final",
+        node: <RoadToFinalBannerSlide />,
+      },
+    ];
 
     if (featuredMatch) {
       items.push({
@@ -59,11 +64,6 @@ export function HomeMatchesFeatureCarousel({
         ),
       });
     }
-
-    items.push({
-      id: "road-to-final",
-      node: <RoadToFinalBannerSlide />,
-    });
 
     return items;
   }, [featuredMatch, matches, snapshots]);
@@ -142,11 +142,19 @@ export function HomeMatchesFeatureCarousel({
   return (
     <div
       className="w-full"
-      onMouseEnter={() => {
+      onPointerEnter={(event) => {
+        if (event.pointerType !== "mouse") {
+          return;
+        }
+
         setIsPaused(true);
         clearAutoPlay();
       }}
-      onMouseLeave={() => {
+      onPointerLeave={(event) => {
+        if (event.pointerType !== "mouse") {
+          return;
+        }
+
         setIsPaused(false);
       }}
     >
