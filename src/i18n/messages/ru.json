@@ -265,7 +265,6 @@
     "home": "Дома",
     "away": "В гостях",
     "otherSources": "Другие источники",
-    "otherSourcesMore": "More",
     "netPercent": "NET {value}%",
     "orderbook": "Стакан",
     "showOrderbook": "Показать стакан",
@@ -1563,7 +1562,6 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, one {# участие} few {# участия} many {# участий} other {# участий}}",
     "entryStructureMaxNote": "Максимум 5 участий на человека",
-    "entryStructureMaxNoteReadMore": "Подробнее",
     "campaignRulesTitle": "Prophet World Cup $10K Bracket Challenge",
     "campaignRulesIntro": "Предскажите путь. Подкрепите выбор на Prophet. Выиграйте $10,000. Создайте полную сетку ЧМ, подкрепите прогнозы реальными позициями — самая точная сетка получит главный приз. Без розыгрыша. Без удачи. Только навык прогнозирования.",
     "campaignRulesHowToPlayTitle": "Как участвовать",
@@ -1875,7 +1873,8 @@
       "unableToValidate": "Не удалось проверить настройки копирования.",
       "checkingBalance": "Проверка баланса copy-кошелька…",
       "zeroBalanceWarning": "Баланс copy-кошелька $0. Пополните счёт перед исполнением live-ордеров.",
-      "totalCapReachedWarning": "Достигнут общий лимит copy ({used} / {max}). Новые copy-ордера не будут исполняться. Увеличьте общий лимит в расширенных настройках."
+      "totalCapReachedWarning": "Достигнут общий лимит copy ({used} / {max}). Новые copy-ордера не будут исполняться. Увеличьте общий лимит в расширенных настройках.",
+      "totalCapReachedRaiseCap": "Изменить общий лимит"
     },
     "createWallet": {
       "ariaLabel": "Создать кошелёк CopyTrade",

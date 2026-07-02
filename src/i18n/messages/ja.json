@@ -265,7 +265,6 @@
     "home": "ホーム",
     "away": "アウェイ",
     "otherSources": "その他のソース",
-    "otherSourcesMore": "More",
     "netPercent": "NET {value}%",
     "orderbook": "板情報",
     "showOrderbook": "板情報を表示",
@@ -1572,7 +1571,6 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, other {# エントリー}}",
     "entryStructureMaxNote": "1人あたり最大5エントリー",
-    "entryStructureMaxNoteReadMore": "詳細を見る",
     "campaignRulesTitle": "Prophet ワールドカップ $10K ブラケットチャレンジ",
     "campaignRulesIntro": "ルートを予測。Prophet でピックを裏付け。$10,000 を獲得。完全なワールドカップブラケットを作成し、実際のポジションで予測を裏付け、最も正確なブラケットがグランプリを獲得。抽選なし。運なし。純粋な予測スキル。",
     "campaignRulesHowToPlayTitle": "参加方法",
@@ -1884,7 +1882,8 @@
       "unableToValidate": "コピー設定を検証できません。",
       "checkingBalance": "コピーウォレット残高を確認中…",
       "zeroBalanceWarning": "コピーウォレット残高が $0 です。実取引コピーを実行する前に入金してください。",
-      "totalCapReachedWarning": "総コピー金額の上限に達しました（{used} / {max}）。新しいコピー注文は実行されません。詳細設定で総上限を引き上げてください。"
+      "totalCapReachedWarning": "総コピー金額の上限に達しました（{used} / {max}）。新しいコピー注文は実行されません。詳細設定で総上限を引き上げてください。",
+      "totalCapReachedRaiseCap": "総上限を調整"
     },
     "createWallet": {
       "ariaLabel": "コピートレードウォレットを作成",

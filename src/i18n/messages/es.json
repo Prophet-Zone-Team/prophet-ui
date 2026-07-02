@@ -265,7 +265,6 @@
     "home": "Local",
     "away": "Visitante",
     "otherSources": "Otras fuentes",
-    "otherSourcesMore": "More",
     "netPercent": "NET {value}%",
     "orderbook": "Libro de órdenes",
     "showOrderbook": "Mostrar libro de órdenes",
@@ -1564,7 +1563,6 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, one {# entrada} other {# entradas}}",
     "entryStructureMaxNote": "Máximo 5 entradas por persona",
-    "entryStructureMaxNoteReadMore": "Leer más",
     "campaignRulesTitle": "Desafío de Bracket Prophet World Cup $10K",
     "campaignRulesIntro": "Predice el camino. Respalda tus picks en Prophet. Gana $10,000. Crea un bracket completo del Mundial, respalda tus predicciones con posiciones reales, y el bracket más preciso gana el gran premio. Sin sorteo. Sin suerte. Solo habilidad de predicción.",
     "campaignRulesHowToPlayTitle": "Cómo jugar",
@@ -1876,7 +1874,8 @@
       "unableToValidate": "No se pudo validar la configuración de copia.",
       "checkingBalance": "Comprobando saldo de billetera copy…",
       "zeroBalanceWarning": "El saldo de la billetera copy es $0. Deposita fondos antes de ejecutar órdenes en vivo.",
-      "totalCapReachedWarning": "Se alcanzó el límite total de copy ({used} / {max}). No se ejecutarán nuevas órdenes. Aumenta el límite total en ajustes avanzados."
+      "totalCapReachedWarning": "Se alcanzó el límite total de copy ({used} / {max}). No se ejecutarán nuevas órdenes. Aumenta el límite total en ajustes avanzados.",
+      "totalCapReachedRaiseCap": "Ajustar límite total"
     },
     "createWallet": {
       "ariaLabel": "Crear billetera CopyTrade",

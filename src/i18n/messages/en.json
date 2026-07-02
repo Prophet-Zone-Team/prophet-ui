@@ -267,7 +267,6 @@
     "home": "Home",
     "away": "Away",
     "otherSources": "Other Sources",
-    "otherSourcesMore": "More",
     "smartWallet": "Smart Wallets",
     "bigWhale": "Whales",
     "zettaWalletInsightAria": "Smart wallet and whale positioning",
@@ -1577,7 +1576,6 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, one {# Entry} other {# Entries}}",
     "entryStructureMaxNote": "Maximum 5 entries per person",
-    "entryStructureMaxNoteReadMore": "Read more",
     "campaignRulesTitle": "Prophet World Cup $10K Bracket Challenge",
     "campaignRulesIntro": "Predict the path. Back your picks on Prophet. Win $10,000. Build a full World Cup bracket, put real positions behind your predictions, and the most accurate bracket takes the grand prize. No raffle. No luck. Just prediction skill.",
     "campaignRulesHowToPlayTitle": "How to Play",
@@ -1889,7 +1887,8 @@
       "unableToValidate": "Unable to validate copy settings.",
       "checkingBalance": "Checking copy wallet balance…",
       "zeroBalanceWarning": "Copy wallet balance is $0. Deposit funds before live copy orders can execute.",
-      "totalCapReachedWarning": "Total copy amount cap reached ({used} / {max}). New copy orders will not execute. Raise the total cap in advanced settings to resume."
+      "totalCapReachedWarning": "Total copy amount cap reached ({used} / {max}). New copy orders will not execute. Raise the total cap in advanced settings to resume.",
+      "totalCapReachedRaiseCap": "Adjust total cap"
     },
     "createWallet": {
       "ariaLabel": "Create CopyTrade Wallet",

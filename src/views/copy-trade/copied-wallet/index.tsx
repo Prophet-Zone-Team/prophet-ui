@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
+import { isCopyTargetTotalCapReached } from "@/lib/copy-trade/copy-target-cap";
 import { getCopyTargetStats } from "@/lib/copy-trade/target-stats";
 import { targetToWalletCopyForm } from "@/lib/copy-trade/transforms";
 import type { CopyTargetForm } from "@/lib/copy-trade/transforms";
@@ -84,6 +85,11 @@ export function CopyTradeCopiedWalletPanel({
 
     return buildWalletCopyStatsForManageModal(targetStats, trader);
   }, [manageTarget, statsByWallet, tradersByWallet]);
+
+  const manageTargetCapReached = useMemo(
+    () => (manageTarget ? isCopyTargetTotalCapReached(manageTarget) : false),
+    [manageTarget]
+  );
 
   const handleCopySubmit = useCallback(
     async (form: CopyTargetForm) => {
@@ -198,6 +204,7 @@ export function CopyTradeCopiedWalletPanel({
         stats={manageModalStats}
         initialValues={manageInitialValues}
         existingTarget={manageTarget}
+        autoOpenAdvancedSettings={manageTargetCapReached}
         saving={saving}
         availableBalance={readiness.availableBalance}
         isLoadingBalance={readiness.isLoadingBalance}

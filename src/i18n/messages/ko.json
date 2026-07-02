@@ -265,7 +265,6 @@
     "home": "홈",
     "away": "원정",
     "otherSources": "기타 출처",
-    "otherSourcesMore": "More",
     "netPercent": "NET {value}%",
     "orderbook": "호가창",
     "showOrderbook": "호가창 표시",
@@ -1572,7 +1571,6 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, other {#회}}",
     "entryStructureMaxNote": "1인당 최대 5회 참가",
-    "entryStructureMaxNoteReadMore": "자세히 보기",
     "campaignRulesTitle": "Prophet 월드컵 $10K 대진표 챌린지",
     "campaignRulesIntro": "경로를 예측하세요. Prophet에서 픽을 뒷받침하세요. $10,000을 획득하세요. 완전한 월드컵 대진표를 만들고 실제 포지션으로 예측을 뒷받침하면, 가장 정확한 대진표가 그랑프리를 차지합니다. 추첨 없음. 운 없음. 순수한 예측 실력.",
     "campaignRulesHowToPlayTitle": "참여 방법",
@@ -1884,7 +1882,8 @@
       "unableToValidate": "카피 설정을 검증할 수 없습니다.",
       "checkingBalance": "카피 지갑 잔액 확인 중…",
       "zeroBalanceWarning": "카피 지갑 잔액이 $0입니다. 실거래 카피를 실행하려면 먼저 입금하세요.",
-      "totalCapReachedWarning": "총 카피 금액 한도에 도달했습니다 ({used} / {max}). 새 카피 주문은 실행되지 않습니다. 고급 설정에서 총 한도를 높이세요."
+      "totalCapReachedWarning": "총 카피 금액 한도에 도달했습니다 ({used} / {max}). 새 카피 주문은 실행되지 않습니다. 고급 설정에서 총 한도를 높이세요.",
+      "totalCapReachedRaiseCap": "총 한도 조정"
     },
     "createWallet": {
       "ariaLabel": "카피 트레이드 지갑 생성",
