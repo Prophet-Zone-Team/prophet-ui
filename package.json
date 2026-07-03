@@ -33,6 +33,7 @@
     "@near-wallet-selector/hot-wallet": "9.3.0",
     "@near-wallet-selector/intear-wallet": "9.3.0",
     "@near-wallet-selector/meteor-wallet": "9.3.0",
+    "@near-wallet-selector/meteor-wallet-app": "9.3.0",
     "@near-wallet-selector/modal-ui": "9.3.0",
     "@near-wallet-selector/my-near-wallet": "9.3.0",
     "@noble/hashes": "^2.2.0",

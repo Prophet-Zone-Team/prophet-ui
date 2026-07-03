@@ -1,4 +1,8 @@
 import { getNearAccountSnapshot, useNearAccountStore } from "./near-account-store";
+import {
+  getActiveSelectorAccountId,
+  tryConnectMeteorWalletApp,
+} from "./meteor-wallet-app-connect";
 import { setNearWalletModalTheme } from "./near-wallet-selector";
 
 const DEFAULT_CONNECT_TIMEOUT_MS = 120_000;
@@ -25,6 +29,22 @@ export function openNearWalletModal(darkModeEnabled?: boolean): void {
   }
 
   modal.show();
+}
+
+export async function openNearWalletConnection(): Promise<void> {
+  if (getNearAccountSnapshot().accountId || getActiveSelectorAccountId()) {
+    return;
+  }
+
+  const connected = await tryConnectMeteorWalletApp();
+
+  if (
+    !connected &&
+    !getNearAccountSnapshot().accountId &&
+    !getActiveSelectorAccountId()
+  ) {
+    openNearWalletModal();
+  }
 }
 
 /**
@@ -89,8 +109,8 @@ export async function connectNearAndDeriveAddress(
   try {
     const { accountId } = getNearAccountSnapshot();
 
-    if (!accountId) {
-      openNearWalletModal();
+    if (!accountId && !getActiveSelectorAccountId()) {
+      await openNearWalletConnection();
     }
 
     return await waitForNearDerivedAddress(timeoutMs);
