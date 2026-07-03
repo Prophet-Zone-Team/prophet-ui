@@ -240,6 +240,7 @@
     "matchMarketCategories": "試合マーケットカテゴリー",
     "marketCategories": "マーケットカテゴリー",
     "moneyline": "マネーライン",
+    "gameLines": "ゲームライン",
     "teamToAdvance": "進出チーム",
     "teamToAdvanceHelp": "公式に次のラウンドへ進出するチームで決済されます。レギュレーション、延長、PK戦、棄権などの公式裁定も含みます。",
     "moneylineHelp": "レギュレーション90分＋アディショナルタイム終了時点の結果で決済されます。延長戦とPK戦は含まれません。",

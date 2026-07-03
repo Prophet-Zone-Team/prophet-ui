@@ -240,6 +240,7 @@
     "matchMarketCategories": "경기 마켓 카테고리",
     "marketCategories": "마켓 카테고리",
     "moneyline": "머니라인",
+    "gameLines": "게임 라인",
     "teamToAdvance": "진출 팀",
     "teamToAdvanceHelp": "공식적으로 다음 라운드에 진출하는 팀으로 정산됩니다. 정규 시간, 연장전, 승부차기 및 기권 등 공식 판정도 포함됩니다.",
     "moneylineHelp": "정규 시간 90분과 추가 시간 종료 시점의 결과로 정산됩니다. 연장전과 승부차기는 포함되지 않습니다.",

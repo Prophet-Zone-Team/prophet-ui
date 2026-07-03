@@ -620,7 +620,7 @@ function StepAction({
         </button>
         <button
           type="button"
-          className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] w-full h-[50px] text-[14px] font-[500] leading-[18px] text-prophet-primary-foreground disabled:opacity-60 duration-150"
+          className="flex justify-center items-center gap-2 shrink-0 rounded-[8px] w-full h-[50px] text-[14px] font-[500] leading-[18px] text-prophet-foreground disabled:opacity-60 duration-150"
           disabled={loginInProgress}
           onClick={onConnectNear}
         >
