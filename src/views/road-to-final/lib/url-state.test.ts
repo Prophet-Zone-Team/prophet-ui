@@ -19,6 +19,9 @@ const EXPECTED_FIXED_WINNERS = {
   80: "england",
   81: "usa",
   82: "belgium",
+  83: "portugal",
+  84: "spain",
+  85: "switzerland",
 };
 
 describe("road-to-final url-state bracket version", () => {
@@ -93,6 +96,9 @@ describe("road-to-final url-state bracket version", () => {
         80: "congo-dr",
         81: "bosnia-herzegovina",
         82: "senegal",
+        83: "croatia",
+        84: "austria",
+        85: "algeria",
         89: "germany",
       },
       knockoutMethod: "manualSelection",
@@ -113,6 +119,9 @@ describe("road-to-final url-state bracket version", () => {
     assert.equal(hydrated.knockoutWinners?.[80], "england");
     assert.equal(hydrated.knockoutWinners?.[81], "usa");
     assert.equal(hydrated.knockoutWinners?.[82], "belgium");
+    assert.equal(hydrated.knockoutWinners?.[83], "portugal");
+    assert.equal(hydrated.knockoutWinners?.[84], "spain");
+    assert.equal(hydrated.knockoutWinners?.[85], "switzerland");
     assert.equal(hydrated.knockoutWinners?.[89], "germany");
   });
 });
