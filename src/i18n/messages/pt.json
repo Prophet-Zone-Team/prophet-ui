@@ -217,6 +217,7 @@
     "home": "Casa",
     "away": "Fora",
     "otherSources": "Outras fontes",
+    "otherSourcesMore": "Mais",
     "netPercent": "NET {value}%",
     "orderbook": "Livro de ordens",
     "showOrderbook": "Mostrar livro de ordens",

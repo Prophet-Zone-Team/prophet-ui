@@ -219,6 +219,7 @@ const ruMap = {
     home: "Дома",
     away: "В гостях",
     otherSources: "Другие источники",
+    otherSourcesMore: "Ещё",
     netPercent: "NET {value}%",
     matchMarkets: "Рынки матча",
     matchMarketCategories: "Категории рынков матча",

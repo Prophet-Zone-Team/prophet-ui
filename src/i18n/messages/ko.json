@@ -265,6 +265,7 @@
     "home": "홈",
     "away": "원정",
     "otherSources": "기타 출처",
+    "otherSourcesMore": "더보기",
     "netPercent": "NET {value}%",
     "orderbook": "호가창",
     "showOrderbook": "호가창 표시",

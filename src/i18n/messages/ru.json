@@ -265,6 +265,7 @@
     "home": "Дома",
     "away": "В гостях",
     "otherSources": "Другие источники",
+    "otherSourcesMore": "Ещё",
     "netPercent": "NET {value}%",
     "orderbook": "Стакан",
     "showOrderbook": "Показать стакан",

@@ -218,6 +218,7 @@ const ptMap = {
     home: "Casa",
     away: "Fora",
     otherSources: "Outras fontes",
+    otherSourcesMore: "Mais",
     netPercent: "NET {value}%",
     matchMarkets: "Mercados da partida",
     matchMarketCategories: "Categorias de mercados da partida",

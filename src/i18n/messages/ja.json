@@ -265,6 +265,7 @@
     "home": "ホーム",
     "away": "アウェイ",
     "otherSources": "その他のソース",
+    "otherSourcesMore": "もっと見る",
     "netPercent": "NET {value}%",
     "orderbook": "板情報",
     "showOrderbook": "板情報を表示",

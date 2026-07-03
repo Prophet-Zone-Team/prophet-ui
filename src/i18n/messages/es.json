@@ -265,6 +265,7 @@
     "home": "Local",
     "away": "Visitante",
     "otherSources": "Otras fuentes",
+    "otherSourcesMore": "Más",
     "netPercent": "NET {value}%",
     "orderbook": "Libro de órdenes",
     "showOrderbook": "Mostrar libro de órdenes",
