@@ -40,6 +40,7 @@ import {
   getNearDerivedEvmAddress,
   waitForNearDerivedAddress,
 } from "@/lib/wallet/near/near-connect";
+import { reloadPageAfterMeteorNearLogout } from "@/lib/wallet/near/meteor-wallet-app-connect";
 import { mapBalanceSnapshotToCash } from "@/lib/trading/cash-balance-model";
 import { mergeTradingReadiness } from "@/lib/trading/merge-trading-readiness";
 import {
@@ -1301,6 +1302,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const disconnect = async () => {
     const store = useAuthStore.getState();
     const loginMethod = store.loginMethod;
+    const shouldReloadMeteorApp = loginMethod === "near";
 
     suspendPrivyWalletSync();
     loginAbortRef.current = true;
@@ -1341,6 +1343,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // any stale connector state persisted in wagmi cookie storage.
       await disconnectWagmiWallet();
       store.setError(undefined);
+
+      if (shouldReloadMeteorApp) {
+        reloadPageAfterMeteorNearLogout();
+        return;
+      }
     } catch (disconnectError) {
       store.setStatus("error");
       store.setError(resolveWalletErrorMessage(disconnectError));
