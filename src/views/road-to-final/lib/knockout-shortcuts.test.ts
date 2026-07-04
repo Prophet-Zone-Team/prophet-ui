@@ -27,6 +27,9 @@ describe("knockout-shortcuts fixed results", () => {
     assert.equal(winners[83], "portugal");
     assert.equal(winners[84], "spain");
     assert.equal(winners[85], "switzerland");
+    assert.equal(winners[86], "argentina");
+    assert.equal(winners[87], "colombia");
+    assert.equal(winners[88], "egypt");
     assert.ok(winners[104], "full bracket fill should pick a champion");
   });
 
@@ -39,9 +42,9 @@ describe("knockout-shortcuts fixed results", () => {
       method: "fifa",
     });
 
-    const filledNonFixedR32 = [86, 87, 88];
+    const filledNonFixedR16 = [89, 90, 91, 92, 93, 94, 95, 96];
 
-    for (const matchId of filledNonFixedR32) {
+    for (const matchId of filledNonFixedR16) {
       assert.ok(
         winners[matchId],
         `Match ${matchId} should be filled by shortcut`
