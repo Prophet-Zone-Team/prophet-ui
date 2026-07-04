@@ -9,7 +9,7 @@ import {
 } from "./fixed-knockout";
 
 describe("fixed-knockout", () => {
-  it("defines confirmed R32 winners for matches 73 through 85", () => {
+  it("defines confirmed R32 winners for all 16 matches 73 through 88", () => {
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[73], "canada");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[74], "paraguay");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[75], "morocco");
@@ -23,21 +23,18 @@ describe("fixed-knockout", () => {
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[83], "portugal");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[84], "spain");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[85], "switzerland");
-    assert.equal(FIXED_KNOCKOUT_MATCH_IDS.size, 13);
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[86], "argentina");
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[87], "colombia");
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[88], "egypt");
+    assert.equal(FIXED_KNOCKOUT_MATCH_IDS.size, 16);
   });
 
   it("identifies fixed match ids", () => {
     assert.equal(isFixedKnockoutMatch(73), true);
-    assert.equal(isFixedKnockoutMatch(77), true);
-    assert.equal(isFixedKnockoutMatch(78), true);
-    assert.equal(isFixedKnockoutMatch(79), true);
-    assert.equal(isFixedKnockoutMatch(80), true);
-    assert.equal(isFixedKnockoutMatch(81), true);
-    assert.equal(isFixedKnockoutMatch(82), true);
-    assert.equal(isFixedKnockoutMatch(83), true);
-    assert.equal(isFixedKnockoutMatch(84), true);
     assert.equal(isFixedKnockoutMatch(85), true);
-    assert.equal(isFixedKnockoutMatch(86), false);
+    assert.equal(isFixedKnockoutMatch(86), true);
+    assert.equal(isFixedKnockoutMatch(87), true);
+    assert.equal(isFixedKnockoutMatch(88), true);
     assert.equal(isFixedKnockoutMatch(89), false);
   });
 
@@ -56,6 +53,9 @@ describe("fixed-knockout", () => {
       83: "croatia",
       84: "austria",
       85: "algeria",
+      86: "cape-verde",
+      87: "ghana",
+      88: "australia",
       89: "france",
     });
 
@@ -72,6 +72,9 @@ describe("fixed-knockout", () => {
     assert.equal(merged[83], "portugal");
     assert.equal(merged[84], "spain");
     assert.equal(merged[85], "switzerland");
+    assert.equal(merged[86], "argentina");
+    assert.equal(merged[87], "colombia");
+    assert.equal(merged[88], "egypt");
     assert.equal(merged[89], "france");
   });
 });
