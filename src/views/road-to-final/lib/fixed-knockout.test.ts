@@ -26,16 +26,20 @@ describe("fixed-knockout", () => {
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[86], "argentina");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[87], "colombia");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[88], "egypt");
-    assert.equal(FIXED_KNOCKOUT_MATCH_IDS.size, 16);
+  });
+
+  it("defines confirmed R16 winners for matches 89 and 90", () => {
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[89], "france");
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[90], "morocco");
+    assert.equal(FIXED_KNOCKOUT_MATCH_IDS.size, 18);
   });
 
   it("identifies fixed match ids", () => {
-    assert.equal(isFixedKnockoutMatch(73), true);
-    assert.equal(isFixedKnockoutMatch(85), true);
-    assert.equal(isFixedKnockoutMatch(86), true);
-    assert.equal(isFixedKnockoutMatch(87), true);
     assert.equal(isFixedKnockoutMatch(88), true);
-    assert.equal(isFixedKnockoutMatch(89), false);
+    assert.equal(isFixedKnockoutMatch(89), true);
+    assert.equal(isFixedKnockoutMatch(90), true);
+    assert.equal(isFixedKnockoutMatch(91), false);
+    assert.equal(isFixedKnockoutMatch(97), false);
   });
 
   it("merges fixed winners over conflicting user picks", () => {
@@ -56,7 +60,9 @@ describe("fixed-knockout", () => {
       86: "cape-verde",
       87: "ghana",
       88: "australia",
-      89: "france",
+      89: "paraguay",
+      90: "canada",
+      91: "brazil",
     });
 
     assert.equal(merged[73], "canada");
@@ -76,5 +82,7 @@ describe("fixed-knockout", () => {
     assert.equal(merged[87], "colombia");
     assert.equal(merged[88], "egypt");
     assert.equal(merged[89], "france");
+    assert.equal(merged[90], "morocco");
+    assert.equal(merged[91], "brazil");
   });
 });

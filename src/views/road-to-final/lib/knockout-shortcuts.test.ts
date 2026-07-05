@@ -5,7 +5,7 @@ import { FIXED_GROUP_PLACEMENTS, fixedThirdPlaceOption } from "./fixed-group-sta
 import { applyKnockoutShortcut } from "./knockout-shortcuts";
 
 describe("knockout-shortcuts fixed results", () => {
-  it("preserves confirmed R32 winners when filling the full bracket", () => {
+  it("preserves confirmed R32 and R16 winners when filling the full bracket", () => {
     assert.ok(fixedThirdPlaceOption);
 
     const winners = applyKnockoutShortcut({
@@ -30,6 +30,8 @@ describe("knockout-shortcuts fixed results", () => {
     assert.equal(winners[86], "argentina");
     assert.equal(winners[87], "colombia");
     assert.equal(winners[88], "egypt");
+    assert.equal(winners[89], "france");
+    assert.equal(winners[90], "morocco");
     assert.ok(winners[104], "full bracket fill should pick a champion");
   });
 
@@ -42,7 +44,7 @@ describe("knockout-shortcuts fixed results", () => {
       method: "fifa",
     });
 
-    const filledNonFixedR16 = [89, 90, 91, 92, 93, 94, 95, 96];
+    const filledNonFixedR16 = [91, 92, 93, 94, 95, 96];
 
     for (const matchId of filledNonFixedR16) {
       assert.ok(
