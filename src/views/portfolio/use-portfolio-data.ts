@@ -209,7 +209,6 @@ export function usePortfolioData(): UsePortfolioDataResult {
 
           const conditionIds =
             collectUniqueConditionIdsFromPositions(nextPositions);
-          await ensureMarketContext(conditionIds, { force: options?.force });
 
           const apiErrors = [positionsPayload?.error].filter(Boolean);
           const combinedMessage =
@@ -219,6 +218,8 @@ export function usePortfolioData(): UsePortfolioDataResult {
           setCoreStatus(
             combinedMessage && !positionsPayload ? "error" : "ready"
           );
+
+          void ensureMarketContext(conditionIds, { force: options?.force });
         } catch (error) {
           coreLoadedRef.current = true;
           setCoreStatus("error");
@@ -263,10 +264,10 @@ export function usePortfolioData(): UsePortfolioDataResult {
         setOpenOrders(orders);
 
         const conditionIds = collectUniqueConditionIds(orders);
-        await ensureMarketContext(conditionIds, { force: options?.force });
-
         openOrdersLoadedRef.current = true;
         setOpenOrdersStatus(payload?.error ? "error" : "ready");
+
+        void ensureMarketContext(conditionIds, { force: options?.force });
       } catch {
         openOrdersLoadedRef.current = true;
         setOpenOrders([]);

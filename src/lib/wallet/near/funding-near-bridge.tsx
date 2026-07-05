@@ -4,8 +4,9 @@ import { useCallback, useEffect, useRef } from "react";
 
 import {
   disconnectNearWallet,
-  openNearWalletModal,
+  openNearWalletConnection,
 } from "@/lib/wallet/near/near-connect";
+import { getActiveSelectorAccountId } from "@/lib/wallet/near/meteor-wallet-app-connect";
 import { getNearAccountSnapshot, useNearAccountStore } from "@/lib/wallet/near/near-account-store";
 import { buildNearFundingSlicePatch } from "@/lib/wallet/near/sync-near-funding-slice";
 import { useFundingWalletStore } from "@/store/use-funding-wallet-store";
@@ -67,7 +68,8 @@ export function FundingNearBridge() {
   const registerDisconnectHandler = useFundingWalletStore((state) => state.registerDisconnectHandler);
 
   const handleConnect = useCallback(async () => {
-    const existingAccountId = getNearAccountSnapshot().accountId;
+    const existingAccountId =
+      getNearAccountSnapshot().accountId ?? getActiveSelectorAccountId();
 
     if (existingAccountId) {
       const { walletName } = getNearAccountSnapshot();
@@ -78,7 +80,7 @@ export function FundingNearBridge() {
     setSlice("near", { connecting: true });
 
     try {
-      openNearWalletModal();
+      await openNearWalletConnection();
       const accountId = await waitForNearAccountId();
       const { walletName } = getNearAccountSnapshot();
       setSlice("near", buildNearFundingSlicePatch(accountId, walletName));
