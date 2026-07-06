@@ -63,6 +63,35 @@ export function formatSignedPercent(value?: number): string {
   return `${sign}${value.toFixed(1)}%`;
 }
 
+export function formatSignedPortfolioPnl(value: number): string {
+  const formatted = formatTeamDetailMoney(Math.abs(value));
+
+  if (value > 0) {
+    return `+${formatted}`;
+  }
+
+  if (value < 0) {
+    return `-${formatted}`;
+  }
+
+  return formatted;
+}
+
+export function formatShareCardInviteDisplay(
+  linkPrefix: string,
+  referralCode: string,
+  fullLink: string,
+): string {
+  if (referralCode) {
+    return `${linkPrefix.replace(/\?r=$/, "")}?r=${referralCode}`.replace(
+      /^https?:\/\//,
+      "",
+    );
+  }
+
+  return fullLink.replace(/^https?:\/\//, "");
+}
+
 export function formatPortfolioDateTime(value: string): string {
   return formatDateTimeFromIso(value);
 }
