@@ -451,6 +451,7 @@
   "portfolio": {
     "portfolioSummary": "ポートフォリオ概要",
     "copyPolymarketAddress": "Polymarketアドレスをコピー",
+    "refreshPortfolioBalance": "ポートフォリオ残高を更新",
     "walletNotConnected": "ウォレット未接続",
     "confirmPendingDeposit": "保留中の入金を確認",
     "portfolio": "ポートフォリオ",

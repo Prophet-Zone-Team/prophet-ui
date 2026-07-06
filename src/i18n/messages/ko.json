@@ -451,6 +451,7 @@
   "portfolio": {
     "portfolioSummary": "포트폴리오 요약",
     "copyPolymarketAddress": "Polymarket 주소 복사",
+    "refreshPortfolioBalance": "포트폴리오 잔액 새로고침",
     "walletNotConnected": "지갑이 연결되지 않음",
     "confirmPendingDeposit": "대기 중인 입금 확인",
     "portfolio": "포트폴리오",
