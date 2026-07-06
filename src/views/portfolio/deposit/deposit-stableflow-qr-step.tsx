@@ -1,6 +1,7 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
+import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ import {
   sumStableflowChainBalanceUsd,
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
+import { formatShortWallet } from "@/lib/team/detail-format";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/utils";
 import {
@@ -37,6 +39,9 @@ export interface DepositStableflowQrStepProps {
   quoteLoading: boolean;
   tokensLoading: boolean;
   depositAddress?: string;
+  mode?: "stableflow" | "direct_funder";
+  awaitingFunds?: boolean;
+  awaitingDetail?: string;
   onChainChange: (chain: SupportedChainOption) => void;
   onTokenChange: (token: StableflowDepositToken) => void;
 }
@@ -48,6 +53,9 @@ export function DepositStableflowQrStep({
   quoteLoading,
   tokensLoading,
   depositAddress,
+  mode = "stableflow",
+  awaitingFunds = false,
+  awaitingDetail,
   onChainChange,
   onTokenChange,
 }: DepositStableflowQrStepProps) {
@@ -69,10 +77,17 @@ export function DepositStableflowQrStep({
     return getStableflowTokensForChain(stableflowTokens, selectedChain.chainId);
   }, [selectedChain, stableflowTokens]);
 
-  const selectorsDisabled = quoteLoading || tokensLoading;
+  const isDirectFunder = mode === "direct_funder";
+  const selectorsDisabled = isDirectFunder
+    ? tokensLoading
+    : quoteLoading || tokensLoading;
+  const showQrSkeleton =
+    !isDirectFunder && (quoteLoading || !depositAddress);
+  const showAddressSkeleton =
+    !isDirectFunder && (quoteLoading || !depositAddress);
 
   const handleCopyAddress = async () => {
-    if (!depositAddress || quoteLoading) {
+    if (!depositAddress || showAddressSkeleton) {
       return;
     }
 
@@ -226,9 +241,9 @@ export function DepositStableflowQrStep({
         </span>
       </div>
 
-      {quoteLoading || !depositAddress ? (
+      {showQrSkeleton ? (
         <div className={depositStableflowQrSkeletonClass} aria-hidden="true" />
-      ) : (
+      ) : depositAddress ? (
         <div className={depositStableflowQrWrapClass}>
           <QRCodeSVG
             value={depositAddress}
@@ -246,12 +261,12 @@ export function DepositStableflowQrStep({
             />
           ) : null}
         </div>
-      )}
+      ) : null}
 
       <div className="flex flex-col gap-2">
         <span className="text-sm font-[500] text-prophet-foreground">{t("yourDepositAddress")}</span>
         <div className={depositStableflowAddressBoxClass}>
-          {quoteLoading || !depositAddress ? (
+          {showAddressSkeleton ? (
             <div className={depositStableflowAddressSkeletonClass} aria-hidden="true" />
           ) : (
             <p className={depositStableflowAddressTextClass}>{depositAddress}</p>
@@ -259,7 +274,7 @@ export function DepositStableflowQrStep({
           <button
             type="button"
             className={depositStableflowCopyButtonClass}
-            disabled={quoteLoading || !depositAddress}
+            disabled={showAddressSkeleton || !depositAddress}
             onClick={() => void handleCopyAddress()}
           >
             <img
@@ -272,6 +287,26 @@ export function DepositStableflowQrStep({
           </button>
         </div>
       </div>
+
+      {isDirectFunder && awaitingFunds && depositAddress ? (
+        <div className="flex flex-col items-center gap-3 text-center">
+          <Loader2
+            className="h-6 w-6 animate-spin text-prophet-muted"
+            aria-hidden="true"
+          />
+          <p className="m-0 text-sm font-[500] text-prophet-foreground">
+            {t("statusAwaitingTitle")}
+          </p>
+          <p className="m-0 max-w-sm text-sm text-prophet-muted">
+            {t("statusAwaitingDescription", {
+              address: formatShortWallet(depositAddress),
+            })}
+          </p>
+          {awaitingDetail ? (
+            <p className="m-0 text-xs text-prophet-muted">{awaitingDetail}</p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

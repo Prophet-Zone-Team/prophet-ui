@@ -6,7 +6,7 @@ import {
 } from "@/lib/funding/stableflow";
 import { selectTokenPrice } from "@/lib/funding/price-selectors";
 import type { TokenPricesBySymbol } from "@/types/funding";
-import { removeNumberEndZero } from "@/utils";
+import { formatNumber, removeNumberEndZero } from "@/utils";
 
 import { DEFAULT_DEPOSIT_TOKEN_ORDER } from "./config";
 import type { DepositSelectableToken } from "./types";
@@ -243,6 +243,35 @@ export function buildDepositAmountFromMaxBalance(
   const amountUsd = computeUsdFromTokenAmount(tokenAmount, prices, token);
 
   return { tokenAmount, amountUsd };
+}
+
+export function formatDepositAwaitingDetail(
+  translate: (
+    key: "usdcDetected" | "usdceDetected",
+    values: { amount: string },
+  ) => string,
+  detectedUsdcAmount?: string,
+  detectedUsdceAmount?: string,
+): string | undefined {
+  const parts: string[] = [];
+
+  if (detectedUsdcAmount && Big(detectedUsdcAmount || 0).gt(0)) {
+    parts.push(
+      translate("usdcDetected", {
+        amount: formatNumber(detectedUsdcAmount, 4, true, { round: 0 }),
+      }),
+    );
+  }
+
+  if (detectedUsdceAmount && Big(detectedUsdceAmount || 0).gt(0)) {
+    parts.push(
+      translate("usdceDetected", {
+        amount: formatNumber(detectedUsdceAmount, 4, true, { round: 0 }),
+      }),
+    );
+  }
+
+  return parts.length > 0 ? parts.join(" · ") : undefined;
 }
 
 export function matchesDepositTokenSearch(

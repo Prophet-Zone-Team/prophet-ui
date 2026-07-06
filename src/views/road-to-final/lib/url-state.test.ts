@@ -27,6 +27,8 @@ const EXPECTED_FIXED_WINNERS = {
   88: "egypt",
   89: "france",
   90: "morocco",
+  91: "norway",
+  92: "england",
 };
 
 describe("road-to-final url-state bracket version", () => {
@@ -44,7 +46,7 @@ describe("road-to-final url-state bracket version", () => {
   it("hydrates knockout winners only for the current bracket version", () => {
     const encoded = encodeUrlState({
       teamId: "brazil",
-      knockoutWinners: { 91: "brazil", 101: "brazil", 104: "brazil" },
+      knockoutWinners: { 93: "brazil", 101: "brazil", 104: "brazil" },
       knockoutMethod: "fifaRank"
     });
 
@@ -55,7 +57,7 @@ describe("road-to-final url-state bracket version", () => {
 
     assert.deepEqual(hydrated.knockoutWinners, {
       ...EXPECTED_FIXED_WINNERS,
-      91: "brazil",
+      93: "brazil",
       101: "brazil",
       104: "brazil",
     });
@@ -66,7 +68,7 @@ describe("road-to-final url-state bracket version", () => {
     const hydrated = hydrateFromUrlPayload(
       {
         f: "brazil",
-        w: { "91": "brazil", "104": "brazil" },
+        w: { "93": "brazil", "104": "brazil" },
         km: "fifaRank"
       },
       "brazil"
@@ -80,7 +82,7 @@ describe("road-to-final url-state bracket version", () => {
     const hydrated = hydrateFromUrlPayload(
       {
         f: "brazil",
-        w: { "91": "brazil", "104": "brazil" },
+        w: { "93": "brazil", "104": "brazil" },
         km: "fifaRank",
         bv: ROAD_TO_FINAL_BRACKET_VERSION - 1
       },
@@ -109,7 +111,9 @@ describe("road-to-final url-state bracket version", () => {
         88: "australia",
         89: "paraguay",
         90: "canada",
-        91: "germany",
+        91: "brazil",
+        92: "mexico",
+        93: "germany",
       },
       knockoutMethod: "manualSelection",
     });
@@ -137,6 +141,8 @@ describe("road-to-final url-state bracket version", () => {
     assert.equal(hydrated.knockoutWinners?.[88], "egypt");
     assert.equal(hydrated.knockoutWinners?.[89], "france");
     assert.equal(hydrated.knockoutWinners?.[90], "morocco");
-    assert.equal(hydrated.knockoutWinners?.[91], "germany");
+    assert.equal(hydrated.knockoutWinners?.[91], "norway");
+    assert.equal(hydrated.knockoutWinners?.[92], "england");
+    assert.equal(hydrated.knockoutWinners?.[93], "germany");
   });
 });
