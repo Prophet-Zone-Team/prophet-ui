@@ -44,18 +44,17 @@ type TeamSideData = {
   logoUrl?: string;
 };
 
-function ForwardChevronIcon() {
+function ForwardChevronIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="5"
-      height="11"
-      viewBox="0 0 5 11"
+      xmlns="http://www.w3.org/2000/svg"
+      width="7"
+      height="12"
+      viewBox="0 0 7 12"
       fill="none"
-      className="mt-1 shrink-0"
-      aria-hidden
     >
       <path
-        d="M0.5 0.5L4.5 5.5L0.5 10.5"
+        d="M0.5 0.5L5.5 5.86828L0.5 11.5"
         stroke="#909090"
         strokeLinecap="round"
       />
@@ -68,9 +67,13 @@ function TeamSide({
   name,
   code,
   logoUrl,
+  detailsLabel,
   align = "center"
-}: TeamSideData & { align?: "center" | "start" | "end" }) {
-  const content = (
+}: TeamSideData & {
+  detailsLabel: string;
+  align?: "center" | "start" | "end";
+}) {
+  return (
     <div
       className={cn(
         "flex w-[108px] flex-col md:w-[170px]",
@@ -89,26 +92,23 @@ function TeamSide({
         )}
       />
 
-      <span className="mt-3 inline-flex max-w-full items-center gap-[8px] sm:mt-[21px] sm:gap-1.5">
+      <span className="mt-3 sm:mt-[10px]">
         <span className="truncate text-lg font-[400] capitalize leading-6 text-white sm:text-[26px] sm:leading-[31px]">
           {name}
         </span>
-        {teamId ? <ForwardChevronIcon /> : null}
       </span>
+
+      {teamId ? (
+        <Link
+          href={teamDetailHref(teamId)}
+          aria-label={`${name} ${detailsLabel}`}
+          className="group mt-1.5 inline-flex items-center gap-[6px] font-[Sora] text-xs font-normal leading-[15px] text-[#909090] transition-colors hover:text-white"
+        >
+          <span>{detailsLabel}</span>
+          <ForwardChevronIcon />
+        </Link>
+      ) : null}
     </div>
-  );
-
-  if (!teamId) {
-    return content;
-  }
-
-  return (
-    <Link
-      href={teamDetailHref(teamId)}
-      className="min-w-0 transition-opacity hover:opacity-80"
-    >
-      {content}
-    </Link>
   );
 }
 
@@ -177,10 +177,12 @@ function HeaderMetric({
 
 function TeamSideColumn({
   team,
-  justify
+  justify,
+  detailsLabel
 }: {
   team?: TeamSideData;
   justify: "start" | "end";
+  detailsLabel: string;
 }) {
   return (
     <div
@@ -189,7 +191,9 @@ function TeamSideColumn({
         justify === "end" ? "justify-end" : "justify-start"
       )}
     >
-      {team ? <TeamSide {...team} align="center" /> : null}
+      {team ? (
+        <TeamSide {...team} align="center" detailsLabel={detailsLabel} />
+      ) : null}
     </div>
   );
 }
@@ -264,6 +268,7 @@ export function TradeGameHeader({
           logoUrl: sides.home.logoUrl ?? homeProfile?.logoUrl
         }}
         justify="end"
+        detailsLabel={tHome("details")}
       />
       <HeaderMetric
         value={formatMatchScore(displayScore.homeScore, displayScore.awayScore)}
@@ -282,6 +287,7 @@ export function TradeGameHeader({
           logoUrl: sides.away.logoUrl ?? awayProfile?.logoUrl
         }}
         justify="start"
+        detailsLabel={tHome("details")}
       />
     </div>
   );
