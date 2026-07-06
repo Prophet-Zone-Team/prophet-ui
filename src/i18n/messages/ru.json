@@ -449,6 +449,7 @@
   "portfolio": {
     "portfolioSummary": "Сводка портфеля",
     "copyPolymarketAddress": "Копировать адрес Polymarket",
+    "refreshPortfolioBalance": "Обновить баланс портфеля",
     "walletNotConnected": "Кошелёк не подключён",
     "confirmPendingDeposit": "Подтвердить ожидающий депозит",
     "portfolio": "Портфель",

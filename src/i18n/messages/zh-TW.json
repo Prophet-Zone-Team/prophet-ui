@@ -454,6 +454,7 @@
   "portfolio": {
     "portfolioSummary": "投資組合摘要",
     "copyPolymarketAddress": "複製 Polymarket 地址",
+    "refreshPortfolioBalance": "重新整理投資組合餘額",
     "walletNotConnected": "尚未連接錢包",
     "confirmPendingDeposit": "確認待處理入金",
     "portfolio": "投資組合",
