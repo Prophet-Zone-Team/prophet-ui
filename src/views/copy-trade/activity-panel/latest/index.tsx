@@ -27,7 +27,8 @@ export interface LatestListProps {
 export function LatestList({ className, enabled = true }: LatestListProps) {
   const t = useTranslations("copyTrade.activity");
   const { items, isLoading, isError, error } = useCopyTradeTracksLatest({
-    enabled
+    enabled,
+    limit: 20
   });
   const [now, setNow] = useState(() => Date.now());
 
