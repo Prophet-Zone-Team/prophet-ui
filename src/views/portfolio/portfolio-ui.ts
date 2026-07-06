@@ -67,7 +67,7 @@ export const portfolioConnectButtonClass = cn(
 );
 
 const portfolioPositionsTableGridColsClass =
-  "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_5.5rem]";
+  "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_6rem]";
 
 const portfolioOrdersTableGridColsClass =
   "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_7.5rem]";

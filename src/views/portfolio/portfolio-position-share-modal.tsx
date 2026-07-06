@@ -5,29 +5,35 @@ import { useTranslations } from "next-intl";
 
 import { ShareInviteModal } from "@/components/share/share-invite-modal";
 import { useProphetReferral } from "@/hooks/referral/use-prophet-referral";
-import { PORTFOLIO_PNL_SHARE_CARD_DOWNLOAD_FILENAME } from "@/lib/portfolio/share-card-config";
+import { PORTFOLIO_POSITION_SHARE_CARD_DOWNLOAD_FILENAME } from "@/lib/portfolio/share-card-config";
 import { resolveShareInviteLink } from "@/lib/referral/share-link";
-import type { PortfolioSeriesPoint, PortfolioTimeRange } from "@/lib/portfolio/types";
+import type { PortfolioMarketIcon } from "@/lib/portfolio/teams-condition";
+import type { UserPositionRecord } from "@/types/market";
 
-import { PortfolioPnlShareCard } from "./portfolio-pnl-share-card";
+import {
+  PortfolioPositionShareCard,
+  type PortfolioPositionShareVariant,
+} from "./portfolio-position-share-card";
 
-export type PortfolioPnlShareModalProps = {
+export type PortfolioPositionShareModalProps = {
   open: boolean;
   onClose: () => void;
-  series: PortfolioSeriesPoint[];
-  range: PortfolioTimeRange;
-  displayPnl: number;
+  position: UserPositionRecord;
+  marketIcon: PortfolioMarketIcon;
+  variant: PortfolioPositionShareVariant;
+  cashedOutAmount?: number;
   funderAddress?: string;
 };
 
-export function PortfolioPnlShareModal({
+export function PortfolioPositionShareModal({
   open,
   onClose,
-  series,
-  range,
-  displayPnl,
+  position,
+  marketIcon,
+  variant,
+  cashedOutAmount,
   funderAddress,
-}: PortfolioPnlShareModalProps) {
+}: PortfolioPositionShareModalProps) {
   const t = useTranslations("portfolio");
   const cardRef = useRef<HTMLDivElement>(null);
   const [shareCardReady, setShareCardReady] = useState(false);
@@ -40,17 +46,22 @@ export function PortfolioPnlShareModal({
 
   useEffect(() => {
     setShareCardReady(false);
-  }, [open, series, range, displayPnl]);
+  }, [open, position.asset, variant, cashedOutAmount]);
 
   return (
     <ShareInviteModal
       open={open}
       onClose={onClose}
-      ariaLabel={t("sharePnlAria")}
+      ariaLabel={t("shareMyPositionAria")}
+      header={
+        <h2 className="m-0 text-left text-[18px] font-[500] text-prophet-foreground">
+          {t("shareMyPosition")}
+        </h2>
+      }
       linkPrefix={inviteLink.linkPrefix}
       referralCode={inviteLink.referralCode}
       fullLink={inviteLink.fullLink}
-      downloadFilename={PORTFOLIO_PNL_SHARE_CARD_DOWNLOAD_FILENAME}
+      downloadFilename={PORTFOLIO_POSITION_SHARE_CARD_DOWNLOAD_FILENAME}
       shareCardReady={shareCardReady}
       cardRef={cardRef}
       shareImageUploadMode="always"
@@ -59,11 +70,12 @@ export function PortfolioPnlShareModal({
       shareTweetText=""
       shareTweetHashtags="Prophet,WorldCup2026"
     >
-      <PortfolioPnlShareCard
+      <PortfolioPositionShareCard
         ref={cardRef}
-        series={series}
-        range={range}
-        displayPnl={displayPnl}
+        position={position}
+        marketIcon={marketIcon}
+        variant={variant}
+        cashedOutAmount={cashedOutAmount}
         funderAddress={funderAddress}
         fullLink={inviteLink.fullLink}
         linkPrefix={inviteLink.linkPrefix}

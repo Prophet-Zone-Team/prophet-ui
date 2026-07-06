@@ -17,6 +17,7 @@ import {
   PORTFOLIO_PNL_SHARE_CARD_NEGATIVE_BG,
   PORTFOLIO_PNL_SHARE_CARD_POSITIVE_BG,
   PORTFOLIO_PNL_SHARE_CARD_QR_SIZE_PX,
+  PORTFOLIO_PNL_SHARE_CARD_QR_SIZE_PX_MOBILE,
   PORTFOLIO_PNL_SHARE_CARD_WIDTH,
   PORTFOLIO_PNL_CHART_NEGATIVE,
   PORTFOLIO_PNL_CHART_POSITIVE,
@@ -26,6 +27,7 @@ import type { PortfolioSeriesPoint, PortfolioTimeRange } from "@/lib/portfolio/t
 import { WalletAvatarIcon } from "@/views/portfolio/shared/token-icon";
 
 import { PortfolioPnlAreaChart } from "./portfolio-pnl-area-chart";
+import { useDevice } from "@/hooks/common/use-device";
 
 export type PortfolioPnlShareCardProps = {
   series: PortfolioSeriesPoint[];
@@ -56,6 +58,7 @@ export const PortfolioPnlShareCard = forwardRef<
   },
   ref,
 ) {
+  const isMobile = useDevice();
   const t = useTranslations("portfolio");
   const [bgReady, setBgReady] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -135,13 +138,13 @@ export const PortfolioPnlShareCard = forwardRef<
               />
             </div>
 
-            <div className="mt-[6%] flex flex-1 items-start gap-[4%] px-[5.5%]">
+            <div className="mt-[3%] md:mt-[6%] flex flex-1 items-start gap-[4%] px-[5.5%]">
               <div className="flex min-w-0 shrink-0 flex-col">
-                <p className="m-0 text-[16px] font-normal leading-normal text-white">
+                <p className="m-0 text-[12px] md:text-[16px] font-normal leading-normal text-white">
                   {getPortfolioPnlPeriodLabel(t, range)}
                 </p>
                 <p
-                  className="m-0 mt-3 text-[30px] font-semibold leading-none"
+                  className="m-0 mt-1 md:mt-3 text-[16px] md:text-[30px] font-semibold leading-none"
                   style={{ color: chartTone.valueColor }}
                 >
                   {formatSignedPortfolioPnl(displayPnl)}
@@ -153,7 +156,7 @@ export const PortfolioPnlShareCard = forwardRef<
                   series={series}
                   isPositive={isPositive}
                   interactive={false}
-                  className="h-full min-h-[120px]"
+                  className="h-[80px] md:h-full min-h-[80px] md:min-h-[120px]"
                 />
               </div>
             </div>
@@ -165,14 +168,14 @@ export const PortfolioPnlShareCard = forwardRef<
               >
                 <QRCodeSVG
                   value={fullLink}
-                  size={PORTFOLIO_PNL_SHARE_CARD_QR_SIZE_PX}
+                  size={isMobile ? PORTFOLIO_PNL_SHARE_CARD_QR_SIZE_PX_MOBILE : PORTFOLIO_PNL_SHARE_CARD_QR_SIZE_PX}
                   level="M"
                   marginSize={0}
                   bgColor="#ffffff"
                   fgColor="#000000"
                 />
               </div>
-              <p className="m-0 truncate text-[14px] font-normal leading-normal text-white">
+              <p className="m-0 truncate text-[10px] md:text-[14px] font-normal leading-normal text-white">
                 {t("shareCardInviteLink", { link: inviteDisplay })}
               </p>
             </div>
