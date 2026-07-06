@@ -1,5 +1,9 @@
 import { toBlob } from "html-to-image";
 
+/** 1x1 transparent PNG used when an embedded image cannot be fetched. */
+const SHARE_CARD_IMAGE_PLACEHOLDER =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
 function resolveShareCardRenderOptions(element: HTMLElement) {
   const width = element.offsetWidth;
   const height = element.offsetHeight;
@@ -14,6 +18,10 @@ function resolveShareCardRenderOptions(element: HTMLElement) {
       height,
       canvasWidth: width * 1.4,
       canvasHeight: height * 1.4,
+      imagePlaceholder: SHARE_CARD_IMAGE_PLACEHOLDER,
+      onImageErrorHandler: () => {
+        // html-to-image rejects by default; keep capture going for broken icons.
+      },
       style: {
         width: `${width}px`,
         height: `${height}px`,
@@ -21,8 +29,17 @@ function resolveShareCardRenderOptions(element: HTMLElement) {
         boxSizing: "border-box",
         overflow: "visible",
       },
+      type: "image/png",
     },
   };
+}
+
+function normalizeShareCardBlob(blob: Blob): Blob {
+  if (blob.type === "image/png") {
+    return blob;
+  }
+
+  return new Blob([blob], { type: "image/png" });
 }
 
 export async function renderShareCardBlob(
@@ -37,7 +54,7 @@ export async function renderShareCardBlob(
 
     const blob = await toBlob(element, options);
 
-    return blob ?? null;
+    return blob ? normalizeShareCardBlob(blob) : null;
   } catch {
     return null;
   }

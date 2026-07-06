@@ -1,13 +1,14 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import {
   formatSharePrice,
   getOutcomeToneClass
 } from "@/lib/portfolio/portfolio-format";
 import type { PortfolioMarketIcon } from "@/lib/portfolio/teams-condition";
+
+import { PortfolioMarketIconView } from "./portfolio-market-icon";
 
 export interface PortfolioMarketCellProps {
   title: string;
@@ -18,63 +19,6 @@ export interface PortfolioMarketCellProps {
   priceLabel?: string;
   shares?: number;
   icon?: PortfolioMarketIcon;
-}
-
-const portfolioFlagClassName = "!h-5 !w-5 shrink-0 rounded-[2px] object-cover";
-
-function PortfolioDrawIcon() {
-  return (
-    <div
-      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[2px] bg-prophet-line shadow-[0_0_2px_rgba(0,0,0,0.2)]"
-      aria-hidden
-    >
-      <div className="flex flex-col gap-[2px]">
-        <span className="block h-[1.5px] w-3 rounded-full bg-prophet-foreground" />
-        <span className="block h-[1.5px] w-3 rounded-full bg-prophet-foreground" />
-      </div>
-    </div>
-  );
-}
-
-function PortfolioMarketIconView({ icon }: { icon: PortfolioMarketIcon }) {
-  switch (icon.kind) {
-    case "image":
-      return (
-        <img
-          src={icon.src}
-          alt=""
-          className="h-5 w-5 shrink-0 rounded-[2px] object-cover"
-        />
-      );
-    case "single":
-      return (
-        <TeamFlag name={icon.teamName} className={portfolioFlagClassName} />
-      );
-    case "match":
-      return (
-        <div className="flex w-7 shrink-0 items-center" aria-hidden>
-          <TeamFlag
-            name={icon.homeName}
-            className={cn(portfolioFlagClassName, "relative z-[1] -mt-2")}
-          />
-          <TeamFlag
-            name={icon.awayName}
-            className={cn(portfolioFlagClassName, "relative -ml-3 mt-2")}
-          />
-        </div>
-      );
-    case "draw":
-      return <PortfolioDrawIcon />;
-    case "placeholder":
-      return (
-        <span
-          className="flex size-5 shrink-0 items-center justify-center rounded-full bg-prophet-line text-[10px] text-prophet-muted"
-          aria-hidden="true"
-        >
-          ?
-        </span>
-      );
-  }
 }
 
 export function PortfolioMarketCell({
