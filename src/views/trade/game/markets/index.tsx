@@ -71,7 +71,7 @@ import { useLiveFixtureTabPrices } from "@/views/trade/game/markets/use-live-fix
 const GAME_MARKET_TABS = [
   {
     id: "moneyline",
-    labelKey: "moneyline",
+    labelKey: "gameLines",
     iconSrc: GAME_MARKET_TAB_ICONS.moneyline
   },
   {

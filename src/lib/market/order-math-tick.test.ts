@@ -15,6 +15,12 @@ describe("roundPriceToTick", () => {
     assert.equal(roundPriceToTick(0.006, "0.001"), 0.006);
   });
 
+  it("rounds sports tick sizes to four decimal places", () => {
+    assert.equal(roundPriceToTick(0.8725, "0.0025"), 0.8725);
+    assert.equal(roundPriceToTick(0.87, "0.0025"), 0.87);
+    assert.equal(roundPriceToTick(0.87125, "0.0025"), 0.8713);
+  });
+
   it("clamps invalid prices to the tradable range before rounding", () => {
     assert.equal(roundPriceToTick(0.005, "0.01"), 0.01);
     assert.equal(roundPriceToTick(0.995, "0.01"), 0.99);

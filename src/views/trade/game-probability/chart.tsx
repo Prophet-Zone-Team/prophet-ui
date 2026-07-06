@@ -22,6 +22,7 @@ import {
 
 import { formatChartProbability } from "@/components/home/market-formatters";
 import { useDevice } from "@/hooks/common/use-device";
+import { useDarkModeEnabled } from "@/store";
 import {
   formatChartTimestampClockLabel,
   formatGoalEventTime,
@@ -378,6 +379,7 @@ export function GameProbabilityChart({
 }: GameProbabilityChartProps) {
   const t = useTranslations("trade");
   const isMobile = useDevice();
+  const darkModeEnabled = useDarkModeEnabled();
   const axisFontSize = isMobile ? 10 : 14;
   const endLabelNameFontSize = isMobile ? 10 : 14;
   const endLabelValueFontSize = isMobile ? 10 : 26;
@@ -506,7 +508,10 @@ export function GameProbabilityChart({
         bottom: isLive ? 36 : 4
       }}
     >
-      <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
+      <CartesianGrid
+        stroke={darkModeEnabled ? "#353535" : CHART_COLORS.grid}
+        vertical={false}
+      />
       <XAxis
         type={isLive ? "number" : "category"}
         dataKey={isLive ? "axisSeconds" : "timestamp"}

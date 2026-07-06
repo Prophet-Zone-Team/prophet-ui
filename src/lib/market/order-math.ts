@@ -14,13 +14,21 @@ import {
 const MIN_PRICE = 0.01;
 const MAX_PRICE = 0.99;
 
-export type MarketTickSize = "0.1" | "0.01" | "0.001" | "0.0001";
+export type MarketTickSize =
+  | "0.1"
+  | "0.01"
+  | "0.005"
+  | "0.0025"
+  | "0.001"
+  | "0.0001";
 
 export const DEFAULT_MARKET_TICK_SIZE: MarketTickSize = "0.01";
 
 const TICK_PRICE_DECIMALS: Record<MarketTickSize, number> = {
   "0.1": 1,
   "0.01": 2,
+  "0.005": 3,
+  "0.0025": 4,
   "0.001": 3,
   "0.0001": 4
 };
@@ -31,9 +39,52 @@ export function isMarketTickSize(value: unknown): value is MarketTickSize {
   return (
     value === "0.1" ||
     value === "0.01" ||
+    value === "0.005" ||
+    value === "0.0025" ||
     value === "0.001" ||
     value === "0.0001"
   );
+}
+
+export function normalizeMarketTickSize(
+  value: number | string | undefined
+): MarketTickSize | undefined {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : Number.NaN;
+
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+
+  if (parsed === 0.1) {
+    return "0.1";
+  }
+
+  if (parsed === 0.01) {
+    return "0.01";
+  }
+
+  if (parsed === 0.005) {
+    return "0.005";
+  }
+
+  if (parsed === 0.0025) {
+    return "0.0025";
+  }
+
+  if (parsed === 0.001) {
+    return "0.001";
+  }
+
+  if (parsed === 0.0001) {
+    return "0.0001";
+  }
+
+  return undefined;
 }
 
 export function resolveTickPriceDecimalPlaces(
@@ -65,9 +116,12 @@ export function roundPriceToTick(
     return price;
   }
 
-  const minPrice = resolveMinLimitPrice(tickSize);
+  const resolvedTickSize = isMarketTickSize(tickSize)
+    ? tickSize
+    : DEFAULT_MARKET_TICK_SIZE;
+  const minPrice = resolveMinLimitPrice(resolvedTickSize);
   const clamped = clamp(price, minPrice, MAX_PRICE);
-  const decimals = resolveTickPriceDecimalPlaces(tickSize);
+  const decimals = TICK_PRICE_DECIMALS[resolvedTickSize];
   const factor = 10 ** decimals;
 
   return Math.round((clamped + Number.EPSILON) * factor) / factor;

@@ -272,6 +272,8 @@ function toSupportedTickSize(tickSize: BidOrderPreview["tickSize"]): TickSize {
   if (
     tickSize === "0.1" ||
     tickSize === "0.01" ||
+    tickSize === "0.005" ||
+    tickSize === "0.0025" ||
     tickSize === "0.001" ||
     tickSize === "0.0001"
   ) {
