@@ -3,9 +3,9 @@
 import { useEffect, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
+import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyIcon } from "@/components/icons";
 import Popover from "@/components/popover";
-import { useCopyWithToast } from "@/hooks/use-copy-with-toast";
 import { cn } from "@/lib/cn";
 import {
   getCopyTargetTotalCapUsage,
@@ -170,7 +170,6 @@ export function CopyTradeCopiedWalletItem({
   className
 }: CopyTradeCopiedWalletItemProps) {
   const t = useTranslations("copyTrade.copiedWallet");
-  const { copy } = useCopyWithToast();
   const [expanded, setExpanded] = useState(false);
   const displayName = trader?.DisplayName || formatShortWallet(target.Wallet);
   const walletLabel = formatShortWallet(target.Wallet);
@@ -271,10 +270,6 @@ export function CopyTradeCopiedWalletItem({
             walletLabel={walletLabel}
             imported={imported}
             tag={tag}
-            onCopyWallet={(event) => {
-              stopRowToggle(event);
-              void copy(target.Wallet);
-            }}
           />
 
           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -343,10 +338,6 @@ export function CopyTradeCopiedWalletItem({
           walletLabel={walletLabel}
           imported={imported}
           tag={tag}
-          onCopyWallet={(event) => {
-            stopRowToggle(event);
-            void copy(target.Wallet);
-          }}
         />
 
         <span
@@ -416,8 +407,7 @@ function WalletIdentityBlock({
   displayName,
   walletLabel,
   imported,
-  tag,
-  onCopyWallet
+  tag
 }: {
   active: boolean;
   capReached?: boolean;
@@ -427,7 +417,6 @@ function WalletIdentityBlock({
   walletLabel: string;
   imported: boolean;
   tag: TraderTag | "";
-  onCopyWallet: (event: MouseEvent<HTMLButtonElement>) => void;
 }) {
   const t = useTranslations("copyTrade.copiedWallet");
   const tCommon = useTranslations("copyTrade.common");
@@ -488,14 +477,18 @@ function WalletIdentityBlock({
           <span className="truncate text-[12px] leading-[15px] text-[#909090]">
             {walletLabel}
           </span>
-          <button
-            type="button"
-            className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
-            aria-label={tCommon("copyWalletAddress")}
-            onClick={onCopyWallet}
+          <span
+            className="inline-flex shrink-0"
+            onClick={(event) => event.stopPropagation()}
           >
-            <CopyIcon />
-          </button>
+            <CopyButton
+              text={wallet}
+              ariaLabel={tCommon("copyWalletAddress")}
+              className="inline-flex shrink-0 items-center justify-center p-0.5 text-[#909090] transition-opacity hover:opacity-70"
+            >
+              <CopyIcon />
+            </CopyButton>
+          </span>
         </div>
       </div>
     </div>
