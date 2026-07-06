@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 
 import { TabSwitcher, type TabSwitcherItem } from "@/components/ui/tab-switcher";
@@ -8,7 +9,17 @@ import { cn } from "@/lib/cn";
 import { CopyTradeCopiedWalletPanel } from "@/views/copy-trade/copied-wallet";
 import { CopyTradeRankPanel } from "@/views/copy-trade/rank";
 
-type CopyTradeListTabId = "rank" | "copied-wallet";
+const COPY_TRADE_LIST_TAB_IDS = ["rank", "copied-wallet"] as const;
+
+type CopyTradeListTabId = (typeof COPY_TRADE_LIST_TAB_IDS)[number];
+
+function parseCopyTradeListTab(value: string | null): CopyTradeListTabId | null {
+  if (value && COPY_TRADE_LIST_TAB_IDS.some((id) => id === value)) {
+    return value as CopyTradeListTabId;
+  }
+
+  return null;
+}
 
 export interface CopyTradeListPanelProps {
   className?: string;
@@ -16,7 +27,10 @@ export interface CopyTradeListPanelProps {
 
 export function CopyTradeListPanel({ className }: CopyTradeListPanelProps) {
   const t = useTranslations("copyTrade.list");
-  const [tab, setTab] = useState<CopyTradeListTabId>("rank");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tab = parseCopyTradeListTab(searchParams.get("tab")) ?? "rank";
 
   const tabs = useMemo<TabSwitcherItem[]>(
     () => [
@@ -30,6 +44,30 @@ export function CopyTradeListPanel({ className }: CopyTradeListPanelProps) {
     [t]
   );
 
+  const handleTabChange = useCallback(
+    (value: string) => {
+      const nextTab = parseCopyTradeListTab(value);
+
+      if (!nextTab) {
+        return;
+      }
+
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (nextTab === "rank") {
+        params.delete("tab");
+      } else {
+        params.set("tab", nextTab);
+      }
+
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false
+      });
+    },
+    [pathname, router, searchParams]
+  );
+
   return (
     <section
       className={cn("flex min-w-0 flex-col", className)}
@@ -39,7 +77,7 @@ export function CopyTradeListPanel({ className }: CopyTradeListPanelProps) {
         <TabSwitcher
           items={tabs}
           value={tab}
-          onChange={(value) => setTab(value as CopyTradeListTabId)}
+          onChange={handleTabChange}
           aria-label={t("ariaTabs")}
         />
       </div>

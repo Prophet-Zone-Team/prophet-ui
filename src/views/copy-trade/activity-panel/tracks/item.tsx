@@ -84,20 +84,20 @@ export function TracksItem({ trader, className }: TracksItemProps) {
             <p className="max-w-[150px] truncate text-[16px] leading-5 text-prophet-foreground">
               {displayName}
             </p>
-            <div className="flex shrink-0 items-center gap-1.5">
-              {tag ? <TraderTagIcon tag={tag} /> : null}
-              <CopyButton
-                text={trader.Wallet}
-                ariaLabel={tCommon("copyWalletAddress")}
-                className="inline-flex shrink-0 items-center justify-center p-0 text-prophet-muted transition-opacity hover:opacity-70"
-              >
-                <CopyIcon />
-              </CopyButton>
-            </div>
+            {tag ? <TraderTagIcon tag={tag} /> : null}
           </div>
-          <p className="mt-px truncate text-[12px] leading-[15px] text-prophet-muted">
-            {walletLabel}
-          </p>
+          <div className="mt-px flex min-w-0 items-center gap-1">
+            <span className="truncate text-[12px] leading-[15px] text-prophet-muted">
+              {walletLabel}
+            </span>
+            <CopyButton
+              text={trader.Wallet}
+              ariaLabel={tCommon("copyWalletAddress")}
+              className="inline-flex shrink-0 items-center justify-center p-0.5 text-prophet-muted transition-opacity hover:opacity-70"
+            >
+              <CopyIcon />
+            </CopyButton>
+          </div>
         </div>
       </div>
 

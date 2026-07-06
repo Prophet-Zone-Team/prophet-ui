@@ -1,5 +1,6 @@
 "use client";
 
+import { ProphetMarkIcon } from "@/components/icons/prophet-mark-icon";
 import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import type { PortfolioMarketIcon } from "@/lib/portfolio/teams-condition";
@@ -54,12 +55,7 @@ function PositionMarketIcon({ icon }: { icon: PortfolioMarketIcon }) {
       return <PortfolioDrawIcon />;
     case "placeholder":
       return (
-        <span
-          className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-prophet-hover text-[10px] text-prophet-muted"
-          aria-hidden="true"
-        >
-          ?
-        </span>
+        <ProphetMarkIcon className="size-[30px]" aria-hidden="true" />
       );
   }
 }
