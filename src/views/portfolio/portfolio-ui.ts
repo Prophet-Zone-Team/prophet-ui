@@ -25,7 +25,7 @@ export const portfolioTableMobileLabelClass = "text-xs text-prophet-muted";
 export const portfolioTableMobileValueClass = "text-sm font-[500] text-prophet-foreground";
 
 export const portfolioSummaryLabelClass =
-  "text-[14px] font-[500] leading-[17px] text-prophet-muted pb-[10px]";
+  "text-[14px] font-[500] leading-[17px] text-prophet-muted pb-[10px] flex items-center gap-2";
 
 export const portfolioSummaryValueLargeClass =
   "text-[32px] font-[500] leading-[38px] text-prophet-foreground";
