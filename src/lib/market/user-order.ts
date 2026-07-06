@@ -522,6 +522,18 @@ function getRoundingConfig(tickSize: NonNullable<BidOrderPreview["tickSize"]>) {
         size: 2,
         amount: 3,
       };
+    case "0.005":
+      return {
+        price: 3,
+        size: 2,
+        amount: 5,
+      };
+    case "0.0025":
+      return {
+        price: 4,
+        size: 2,
+        amount: 6,
+      };
     case "0.001":
       return {
         price: 3,

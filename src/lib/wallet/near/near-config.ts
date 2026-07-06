@@ -18,6 +18,10 @@ export const NEAR_NETWORK: NearNetworkConfig = {
 export const V1_SIGNER_CONTRACT_ID = process.env.NEXT_PUBLIC_NEAR_MPC_CONTRACT_ID
   || "v1.signer";
 
+/** Contract ID used for NEAR wallet sign-in (limited access key). */
+export const NEAR_SIGN_IN_CONTRACT_ID = process.env.NEXT_PUBLIC_NEAR_SIGN_IN_CONTRACT_ID
+  || V1_SIGNER_CONTRACT_ID;
+
 /**
  * Derivation path prefix for the MPC-derived EVM owner address. Reusing the
  * rhea prefix keeps the same derived account (and Polymarket deposit wallet)

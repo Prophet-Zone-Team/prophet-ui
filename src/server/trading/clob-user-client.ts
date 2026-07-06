@@ -18,7 +18,7 @@ import type {
 } from "@polymarket/clob-client-v2";
 
 import type { UserActivityRecord } from "@/lib/portfolio/types";
-import { roundPriceToTick } from "@/lib/market/order-math";
+import { roundPriceToTick, normalizeMarketTickSize, isMarketTickSize } from "@/lib/market/order-math";
 import type {
   BidTradeSide,
   TradingOrderType,
@@ -656,12 +656,7 @@ export function isSupportedOrderType(
 }
 
 export function isSupportedTickSize(value: unknown): value is TickSize {
-  return (
-    value === "0.1" ||
-    value === "0.01" ||
-    value === "0.001" ||
-    value === "0.0001"
-  );
+  return isMarketTickSize(value);
 }
 
 export interface ClobTokenSigningMeta {
@@ -808,27 +803,8 @@ function parseNegRiskValue(payload: {
 }
 
 function normalizeClobTickSize(value: unknown): TickSize | undefined {
-  const parsed =
-    typeof value === "number"
-      ? value
-      : typeof value === "string"
-        ? Number(value)
-        : Number.NaN;
-
-  if (parsed === 0.1) {
-    return "0.1";
-  }
-
-  if (parsed === 0.01) {
-    return "0.01";
-  }
-
-  if (parsed === 0.001) {
-    return "0.001";
-  }
-
-  if (parsed === 0.0001) {
-    return "0.0001";
+  if (typeof value === "number" || typeof value === "string") {
+    return normalizeMarketTickSize(value);
   }
 
   return undefined;

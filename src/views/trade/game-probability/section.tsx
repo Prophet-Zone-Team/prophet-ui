@@ -361,7 +361,7 @@ export function GameProbabilitySection({
         "flex flex-col gap-3",
         orderbookEnabled
           ? embedded
-            ? "md:grid md:grid-cols-[minmax(0,1fr)_272px] md:items-stretch md:divide-x md:divide-[#EBEBEB]"
+            ? "md:grid md:grid-cols-[minmax(0,1fr)_272px] md:items-stretch md:divide-x md:divide-prophet-line"
             : "xl:grid xl:grid-cols-[minmax(0,1fr)_272px] xl:items-stretch"
           : embedded
             ? "flex-col"

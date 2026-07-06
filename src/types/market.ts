@@ -356,7 +356,7 @@ export interface PolymarketMarketMetadata {
   acceptingOrders: boolean;
   closed?: boolean;
   negRisk: boolean;
-  tickSize: "0.1" | "0.01" | "0.001" | "0.0001";
+  tickSize: "0.1" | "0.01" | "0.005" | "0.0025" | "0.001" | "0.0001";
   /** Minimum order size in outcome shares (Gamma `orderMinSize`, CLOB `mos`). */
   minOrderSize?: number;
   fee?: PolymarketFeeDetails;
