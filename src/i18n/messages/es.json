@@ -449,6 +449,7 @@
   "portfolio": {
     "portfolioSummary": "Resumen del portafolio",
     "copyPolymarketAddress": "Copiar dirección de Polymarket",
+    "refreshPortfolioBalance": "Actualizar saldo del portafolio",
     "walletNotConnected": "Billetera no conectada",
     "confirmPendingDeposit": "Confirmar depósito pendiente",
     "portfolio": "Portafolio",

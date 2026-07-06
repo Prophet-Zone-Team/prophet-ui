@@ -454,6 +454,7 @@
   "portfolio": {
     "portfolioSummary": "Portfolio summary",
     "copyPolymarketAddress": "Copy Polymarket address",
+    "refreshPortfolioBalance": "Refresh portfolio balance",
     "walletNotConnected": "Wallet not connected",
     "confirmPendingDeposit": "Confirm pending deposit",
     "portfolio": "Portfolio",
