@@ -88,6 +88,10 @@ export interface CopyProfile {
   BlockedConditions: string[] | null;
 }
 
+export interface CopyTargetEmbeddedPnL {
+  realized_pnl: number;
+}
+
 export interface CopyTarget {
   UserID: number;
   Wallet: string;
@@ -112,6 +116,12 @@ export interface CopyTarget {
   SellEnabled: boolean;
   AllowedConditions: string[] | null;
   BlockedConditions: string[] | null;
+  BuyVolumePUSD?: number;
+  SellVolumePUSD?: number;
+  BuyTradeCount?: number;
+  SellTradeCount?: number;
+  LastTradeAt?: string;
+  PnL?: CopyTargetEmbeddedPnL | null;
 }
 
 export interface TraderCatalogEntry {

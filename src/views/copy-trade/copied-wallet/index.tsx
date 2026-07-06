@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
 import { isCopyTargetTotalCapReached } from "@/lib/copy-trade/copy-target-cap";
-import { getCopyTargetStats } from "@/lib/copy-trade/target-stats";
+import { copyTargetToDisplayStats } from "@/lib/copy-trade/target-stats";
 import { targetToWalletCopyForm } from "@/lib/copy-trade/transforms";
 import type { CopyTargetForm } from "@/lib/copy-trade/transforms";
 import type { CopyTarget, TraderCatalogEntry } from "@/types/copy-trade-api";
@@ -14,7 +14,6 @@ import { CopyTradeListStatusMessage } from "@/views/copy-trade/list/status-messa
 import { useCopyActions } from "@/views/copy-trade/use-copy-actions";
 import { useCopyTradeRank } from "@/views/copy-trade/use-copy-trade-rank";
 import { useCopyTradeReadiness } from "@/views/copy-trade/use-copy-trade-readiness";
-import { useCopyTradeTargetStats } from "@/views/copy-trade/use-copy-trade-target-stats";
 import { useCopyTradeTargets } from "@/views/copy-trade/use-copy-trade-targets";
 import {
   buildWalletCopyStatsForManageModal,
@@ -58,7 +57,6 @@ export function CopyTradeCopiedWalletPanel({
     hasSession
   } = useCopyTradeTargets({ enabled });
   const { traders } = useCopyTradeRank({ enabled });
-  const { statsByWallet } = useCopyTradeTargetStats({ enabled, targets });
   const { saving, upsertCopy, updateCopySettings, setPaused, removeCopy } =
     useCopyActions();
   const readiness = useCopyTradeReadiness();
@@ -80,11 +78,11 @@ export function CopyTradeCopiedWalletPanel({
       return undefined;
     }
 
-    const targetStats = getCopyTargetStats(statsByWallet, manageTarget.Wallet);
+    const targetStats = copyTargetToDisplayStats(manageTarget);
     const trader = tradersByWallet.get(manageTarget.Wallet.toLowerCase()) ?? null;
 
     return buildWalletCopyStatsForManageModal(targetStats, trader);
-  }, [manageTarget, statsByWallet, tradersByWallet]);
+  }, [manageTarget, tradersByWallet]);
 
   const manageTargetCapReached = useMemo(
     () => (manageTarget ? isCopyTargetTotalCapReached(manageTarget) : false),
@@ -123,7 +121,7 @@ export function CopyTradeCopiedWalletPanel({
   const copiedWalletItemProps = (target: CopyTarget) => ({
     target,
     trader: tradersByWallet.get(target.Wallet.toLowerCase()) ?? null,
-    stats: getCopyTargetStats(statsByWallet, target.Wallet),
+    stats: copyTargetToDisplayStats(target),
     saving,
     onManage: setManageTarget,
     onPauseToggle: handlePauseToggle,
