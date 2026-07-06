@@ -1,7 +1,6 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
-import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -14,9 +13,7 @@ import {
   sumStableflowChainBalanceUsd,
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
-import { formatShortWallet } from "@/lib/team/detail-format";
 import { cn } from "@/lib/cn";
-import { formatNumber } from "@/utils";
 import {
   depositStableflowAddressBoxClass,
   depositStableflowAddressSkeletonClass,
@@ -40,8 +37,6 @@ export interface DepositStableflowQrStepProps {
   tokensLoading: boolean;
   depositAddress?: string;
   mode?: "stableflow" | "direct_funder";
-  awaitingFunds?: boolean;
-  awaitingDetail?: string;
   onChainChange: (chain: SupportedChainOption) => void;
   onTokenChange: (token: StableflowDepositToken) => void;
 }
@@ -54,8 +49,6 @@ export function DepositStableflowQrStep({
   tokensLoading,
   depositAddress,
   mode = "stableflow",
-  awaitingFunds = false,
-  awaitingDetail,
   onChainChange,
   onTokenChange,
 }: DepositStableflowQrStepProps) {
@@ -287,26 +280,6 @@ export function DepositStableflowQrStep({
           </button>
         </div>
       </div>
-
-      {isDirectFunder && awaitingFunds && depositAddress ? (
-        <div className="flex flex-col items-center gap-3 text-center">
-          <Loader2
-            className="h-6 w-6 animate-spin text-prophet-muted"
-            aria-hidden="true"
-          />
-          <p className="m-0 text-sm font-[500] text-prophet-foreground">
-            {t("statusAwaitingTitle")}
-          </p>
-          <p className="m-0 max-w-sm text-sm text-prophet-muted">
-            {t("statusAwaitingDescription", {
-              address: formatShortWallet(depositAddress),
-            })}
-          </p>
-          {awaitingDetail ? (
-            <p className="m-0 text-xs text-prophet-muted">{awaitingDetail}</p>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   );
 }
