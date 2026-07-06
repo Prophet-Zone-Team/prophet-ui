@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
-import { formatCompactRelativeTime } from "@/lib/formatters/datetime";
+import { formatShortDateMinuteFromIso } from "@/lib/formatters/datetime";
 import {
   formatPnlSubline,
   formatSharePrice
@@ -28,7 +28,7 @@ export function CopyWalletPositionRow({
   const t = useTranslations("copyTrade.copiedWallet.positions");
   const pnlTone =
     position.cashPnl >= 0 ? "text-[#65AF14]" : "text-[#FF674B]";
-  const timeLabel = formatCompactRelativeTime(position.lastTradeAt) || "--";
+  const timeLabel = formatShortDateMinuteFromIso(position.lastTradeAt) || "--";
 
   return (
     <>
