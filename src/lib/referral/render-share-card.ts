@@ -29,8 +29,17 @@ function resolveShareCardRenderOptions(element: HTMLElement) {
         boxSizing: "border-box",
         overflow: "visible",
       },
+      type: "image/png",
     },
   };
+}
+
+function normalizeShareCardBlob(blob: Blob): Blob {
+  if (blob.type === "image/png") {
+    return blob;
+  }
+
+  return new Blob([blob], { type: "image/png" });
 }
 
 export async function renderShareCardBlob(
@@ -45,7 +54,7 @@ export async function renderShareCardBlob(
 
     const blob = await toBlob(element, options);
 
-    return blob ?? null;
+    return blob ? normalizeShareCardBlob(blob) : null;
   } catch {
     return null;
   }
