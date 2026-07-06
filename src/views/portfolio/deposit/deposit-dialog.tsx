@@ -24,6 +24,7 @@ import {
   filterStableflowTokensForDeposit,
   requiresDepositFundingWalletConnection,
   resolveFundingWalletAddress,
+  isPolygonNativeUsdcToken,
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
 import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
@@ -35,7 +36,8 @@ import {
   executePendingDepositConvert,
   getPendingConvertAmountUsd,
   resolvePendingDepositConvertMode,
-  type FunderCollateralBalances
+  type FunderCollateralBalances,
+  type PendingDepositConvertMode,
 } from "@/lib/trading/deposit-wallet-convert";
 import { useDeposit, useEvmBalances, usePrices, useSolBalances, useTronBalances } from "@/hooks/funding";
 import { useTpPolygonSwitchGate } from "@/hooks/funding/use-tp-polygon-switch-gate";
@@ -327,6 +329,14 @@ export function DepositDialog({
     return resolveTokenBalanceString(selectedToken);
   }, [resolveTokenBalanceString, selectedToken]);
 
+  const isDirectPolygonUsdcQr = useMemo(
+    () =>
+      step === "stableflow_qr" &&
+      isStableflowDepositToken(selectedToken) &&
+      isPolygonNativeUsdcToken(selectedToken),
+    [step, selectedToken],
+  );
+
   const reset = useCallback(() => {
     setStep(INITIAL_STEP);
     setEntryTab(INITIAL_ENTRY_TAB);
@@ -438,9 +448,13 @@ export function DepositDialog({
       qrStatusPollAbortRef.current?.abort();
       qrStatusPollAbortRef.current = undefined;
       qrTransitionStartedRef.current = false;
+      stopStatusPoll();
       setStableflowQuote(undefined);
       setStableflowQuoteLoading(false);
       setQrSelectedChain(undefined);
+      setDetectedUsdcAmount(undefined);
+      setDetectedUsdceAmount(undefined);
+      setFunderCollateralBalances(null);
       setStep(stableflowQrEntry);
       if (stableflowQrEntry === "tokens") {
         return;
@@ -520,6 +534,10 @@ export function DepositDialog({
     (chain: SupportedChainOption) => {
       setQrSelectedChain(chain);
       qrTransitionStartedRef.current = false;
+      stopStatusPoll();
+      setDetectedUsdcAmount(undefined);
+      setDetectedUsdceAmount(undefined);
+      setFunderCollateralBalances(null);
 
       const tokensOnChain = getStableflowTokensForChain(
         depositStableflowTokens,
@@ -533,15 +551,19 @@ export function DepositDialog({
         setSelectedToken(nextToken);
       }
     },
-    [depositStableflowTokens],
+    [depositStableflowTokens, stopStatusPoll],
   );
 
   const handleQrTokenChange = useCallback(
     (token: StableflowDepositToken) => {
       qrTransitionStartedRef.current = false;
+      stopStatusPoll();
+      setDetectedUsdcAmount(undefined);
+      setDetectedUsdceAmount(undefined);
+      setFunderCollateralBalances(null);
       setSelectedToken(token);
     },
-    [],
+    [stopStatusPoll],
   );
 
   const onContinueToAmount = async () => {
@@ -763,12 +785,83 @@ export function DepositDialog({
           return;
         }
 
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
         setStatusPhase("error");
         setStatusError(resolveDepositErrorMessage(error));
       }
     },
     [pollFunderCollateralBalances, pollStableflowBridge, tDeposit]
   );
+
+  const transitionToDirectFunderDepositStatus = useCallback(
+    (
+      balancePayload: FunderCollateralBalances,
+      readyMode: PendingDepositConvertMode,
+    ) => {
+      if (qrTransitionStartedRef.current) {
+        return;
+      }
+
+      qrTransitionStartedRef.current = true;
+      stopStatusPoll();
+
+      if (readyMode === "wrap-only") {
+        setDetectedUsdceAmount(balancePayload.usdce.balance);
+        setDetectedUsdcAmount(undefined);
+      } else {
+        setDetectedUsdcAmount(balancePayload.usdc.balance);
+        setDetectedUsdceAmount(
+          BigInt(balancePayload.usdce.balanceBaseUnits || "0") > 0n
+            ? balancePayload.usdce.balance
+            : undefined,
+        );
+      }
+
+      setFunderCollateralBalances(balancePayload);
+
+      const expectedAmountBaseUnits =
+        readyMode === "wrap-only"
+          ? balancePayload.usdce.balanceBaseUnits
+          : balancePayload.usdc.balanceBaseUnits;
+      const amountUsd = getPendingConvertAmountUsd(balancePayload, readyMode);
+
+      setAmount({
+        tokenAmount: amountUsd,
+        amountUsd,
+      });
+      setStableflowExecution({
+        skipBridgePoll: true,
+        expectedAmountBaseUnits,
+      });
+      setStatusReturnStep("stableflow_qr");
+      setStep("status");
+      setStatusPhase("ready");
+    },
+    [stopStatusPoll],
+  );
+
+  const transitionToDirectFunderDepositFromQr = useCallback(() => {
+    if (qrTransitionStartedRef.current || !session?.funderAddress) {
+      return;
+    }
+
+    qrTransitionStartedRef.current = true;
+    stopStatusPoll();
+
+    const execution: StableflowDepositContext = {
+      skipBridgePoll: true,
+      expectedAmountBaseUnits: "0",
+    };
+
+    setStableflowExecution(execution);
+    setStatusReturnStep("stableflow_qr");
+    setStep("status");
+    setStatusPhase("awaiting_funds");
+    void runStatusPolling(execution);
+  }, [runStatusPolling, session?.funderAddress, stopStatusPoll]);
 
   const transitionToStableflowStatus = useCallback(
     (quote: QuoteResponse) => {
@@ -806,12 +899,22 @@ export function DepositDialog({
   );
 
   const onContinueFromQr = useCallback(() => {
+    if (isDirectPolygonUsdcQr) {
+      transitionToDirectFunderDepositFromQr();
+      return;
+    }
+
     if (!stableflowQuote) {
       return;
     }
 
     transitionToStableflowStatus(stableflowQuote);
-  }, [stableflowQuote, transitionToStableflowStatus]);
+  }, [
+    isDirectPolygonUsdcQr,
+    stableflowQuote,
+    transitionToDirectFunderDepositFromQr,
+    transitionToStableflowStatus,
+  ]);
 
   const stableflowQrTokenKey = isStableflowDepositToken(selectedToken)
     ? selectedToken.assetId
@@ -829,6 +932,7 @@ export function DepositDialog({
       step !== "stableflow_qr" ||
       !selectedToken ||
       !isStableflowDepositToken(selectedToken) ||
+      isPolygonNativeUsdcToken(selectedToken) ||
       !session?.funderAddress ||
       !session?.walletAddress ||
       !polygonUsdcDestinationAssetId ||
@@ -922,7 +1026,9 @@ export function DepositDialog({
     if (
       step !== "stableflow_qr" ||
       stableflowQuoteLoading ||
-      !stableflowQuote?.quote.depositAddress
+      !stableflowQuote?.quote.depositAddress ||
+      (isStableflowDepositToken(selectedToken) &&
+        isPolygonNativeUsdcToken(selectedToken))
     ) {
       return;
     }
@@ -975,6 +1081,67 @@ export function DepositDialog({
     stableflowQuote,
     stableflowQuoteLoading,
     transitionToStableflowStatus,
+  ]);
+
+  useEffect(() => {
+    if (!isDirectPolygonUsdcQr || !session?.funderAddress) {
+      return;
+    }
+
+    setStableflowQuote(undefined);
+    setStableflowQuoteLoading(false);
+    qrQuoteAbortRef.current?.abort();
+    qrQuoteAbortRef.current = undefined;
+    qrStatusPollAbortRef.current?.abort();
+    qrStatusPollAbortRef.current = undefined;
+    qrTransitionStartedRef.current = false;
+    setDetectedUsdcAmount(undefined);
+    setDetectedUsdceAmount(undefined);
+    setFunderCollateralBalances(null);
+    stopStatusPoll();
+
+    let cancelled = false;
+
+    void pollFunderCollateralBalances()
+      .then((balancePayload) => {
+        if (cancelled || qrTransitionStartedRef.current) {
+          return;
+        }
+
+        const readyMode = resolvePendingDepositConvertMode(balancePayload);
+
+        if (!readyMode) {
+          return;
+        }
+
+        transitionToDirectFunderDepositStatus(balancePayload, readyMode);
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        toast.error(resolveDepositErrorMessage(error));
+      });
+
+    return () => {
+      cancelled = true;
+
+      if (!qrTransitionStartedRef.current) {
+        stopStatusPoll();
+      }
+    };
+  }, [
+    isDirectPolygonUsdcQr,
+    pollFunderCollateralBalances,
+    session?.funderAddress,
+    stableflowQrTokenKey,
+    stopStatusPoll,
+    transitionToDirectFunderDepositStatus,
   ]);
 
   const onConfirmDeposit = async () => {
@@ -1274,8 +1441,9 @@ export function DepositDialog({
     }
 
     if (step === "stableflow_qr") {
-      const canContinue =
-        !!stableflowQuote?.quote.depositAddress && !stableflowQuoteLoading;
+      const canContinue = isDirectPolygonUsdcQr
+        ? Boolean(session?.funderAddress)
+        : Boolean(stableflowQuote?.quote.depositAddress) && !stableflowQuoteLoading;
 
       return (
         <button
@@ -1378,8 +1546,10 @@ export function DepositDialog({
     selectedTokenMaxAmount,
     stableflowQuote,
     stableflowQuoteLoading,
+    isDirectPolygonUsdcQr,
     step,
     loginMethod,
+    session?.funderAddress,
     session?.walletAddress,
     tAuth,
     tCommon,
@@ -1456,9 +1626,16 @@ export function DepositDialog({
                     ? selectedToken
                     : undefined
                 }
-                quoteLoading={stableflowQuoteLoading}
+                mode={isDirectPolygonUsdcQr ? "direct_funder" : "stableflow"}
+                quoteLoading={
+                  isDirectPolygonUsdcQr ? false : stableflowQuoteLoading
+                }
                 tokensLoading={stableflowTokensLoading}
-                depositAddress={stableflowQuote?.quote.depositAddress}
+                depositAddress={
+                  isDirectPolygonUsdcQr
+                    ? session?.funderAddress
+                    : stableflowQuote?.quote.depositAddress
+                }
                 onChainChange={handleQrChainChange}
                 onTokenChange={handleQrTokenChange}
               />
