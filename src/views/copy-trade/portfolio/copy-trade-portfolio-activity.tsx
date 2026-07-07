@@ -86,7 +86,7 @@ export function CopyTradePortfolioActivity({
             positionTimeMap={positionTimeMap}
             needsWallet={needsWallet}
             loading={loading}
-            readOnly
+            readOnly={tab === "closed"}
             onConnectWallet={onConnectWallet}
           />
         )}
