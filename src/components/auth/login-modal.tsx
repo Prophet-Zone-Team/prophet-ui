@@ -138,7 +138,7 @@ export function LoginModal({ auth }: LoginModalProps) {
         hideCloseButton={false}
         overlayCloseable={!preventAutoDismiss}
         escapeCloseable={!preventAutoDismiss}
-        className="w-full max-w-md rounded-xl border border-prophet-line bg-prophet-panel p-6 shadow-prophet"
+        className="w-full max-w-md rounded-xl border border-prophet-line bg-prophet-modal-panel p-6 shadow-prophet"
       >
         <div className="flex flex-col gap-5">
           <div>

@@ -145,7 +145,7 @@ function DesktopGroupContext({
       <div className="p-4">
         {groupLabel && peers.length > 0 ? (
           <div className="grid gap-1.5">
-            <strong className="rounded-md border border-prophet-line bg-prophet-action-panel px-2 py-1.5 text-xs font-[500] text-[#125afc]">
+            <strong className="rounded-md border border-prophet-line bg-prophet-panel px-2 py-1.5 text-xs font-[500] text-[#125afc]">
               {formatLabel(groupLabel)}
             </strong>
             {peers.slice(0, 4).map((peer) => (

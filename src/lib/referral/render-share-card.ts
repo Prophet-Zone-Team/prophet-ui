@@ -1,5 +1,7 @@
 import { toBlob } from "html-to-image";
 
+import { inlineExternalImagesForCapture } from "@/lib/referral/inline-external-images-for-capture";
+
 /** 1x1 transparent PNG used when an embedded image cannot be fetched. */
 const SHARE_CARD_IMAGE_PLACEHOLDER =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
@@ -45,6 +47,8 @@ function normalizeShareCardBlob(blob: Blob): Blob {
 export async function renderShareCardBlob(
   element: HTMLElement,
 ): Promise<Blob | null> {
+  const restoreImages = await inlineExternalImagesForCapture(element);
+
   try {
     const { width, height, options } = resolveShareCardRenderOptions(element);
 
@@ -57,5 +61,7 @@ export async function renderShareCardBlob(
     return blob ? normalizeShareCardBlob(blob) : null;
   } catch {
     return null;
+  } finally {
+    restoreImages();
   }
 }

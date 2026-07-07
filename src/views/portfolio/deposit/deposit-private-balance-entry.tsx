@@ -165,7 +165,7 @@ export function DepositPrivateBalanceEntry({
         ) : (
           <>
             <span className="flex min-w-0 items-center gap-3">
-              <span className="relative flex size-[22px] shrink-0 items-center justify-center rounded-full bg-[#616161] ring-2 ring-prophet-action-panel">
+              <span className="relative flex size-[22px] shrink-0 items-center justify-center rounded-full bg-[#616161] ring-2 ring-prophet-panel">
                 <img
                   src="/icons/icon-secure.svg"
                   alt=""

@@ -1,6 +1,12 @@
 "use client";
 
-import { forwardRef, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslations } from "next-intl";
 
 import { inviteShareCardOuterClass } from "@/components/share/share-modal-ui";
@@ -9,9 +15,10 @@ import {
   COMBO_SHARE_CARD_EXPORT_PADDING,
   COMBO_SHARE_CARD_HEIGHT,
   COMBO_SHARE_CARD_WIDTH,
-  COMBO_SHARE_COUPON_COLUMN_WIDTH_PX,
   COMBO_SHARE_COUPON_IMAGE_PATH,
 } from "@/lib/combo/share-card-config";
+import { waitForElementImages } from "@/lib/referral/wait-for-element-images";
+import { inlineExternalImagesForCapture } from "@/lib/referral/inline-external-images-for-capture";
 import type { PortfolioComboPositionPick } from "@/lib/portfolio/combo-positions/types";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { PositionCardModalPickList } from "@/views/combo/position-card-modal/position-card-modal-pick-list";
@@ -51,37 +58,65 @@ export const ComboPositionShareCard = forwardRef<
   ref,
 ) {
   const t = useTranslations("portfolio");
-  const [bgReady, setBgReady] = useState(false);
+  const [shareAssetsReady, setShareAssetsReady] = useState(false);
+  const [couponReady, setCouponReady] = useState(false);
+  const captureRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const onBackgroundReadyRef = useRef(onBackgroundReady);
 
-  const previewWidth =
-    COMBO_SHARE_CARD_WIDTH + COMBO_SHARE_CARD_EXPORT_PADDING * 2;
-  const previewHeight =
-    COMBO_SHARE_CARD_HEIGHT + COMBO_SHARE_CARD_EXPORT_PADDING * 2;
+  onBackgroundReadyRef.current = onBackgroundReady;
 
-  function handleBgLoad() {
-    setBgReady(true);
-    onBackgroundReady?.();
-  }
+  const setCaptureRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      captureRef.current = node;
+
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    },
+    [ref],
+  );
 
   useEffect(() => {
-    if (imgRef.current?.complete) {
-      handleBgLoad();
+    setShareAssetsReady(false);
+    setCouponReady(imgRef.current?.complete ?? false);
+  }, [picks]);
+
+  useEffect(() => {
+    if (!couponReady || !captureRef.current) {
+      return undefined;
     }
-  }, []);
+
+    let cancelled = false;
+
+    void (async () => {
+      await inlineExternalImagesForCapture(captureRef.current!);
+      await waitForElementImages(captureRef.current!);
+
+      if (!cancelled) {
+        setShareAssetsReady(true);
+        onBackgroundReadyRef.current?.();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [couponReady, picks]);
 
   return (
     <div
       className={cn(inviteShareCardOuterClass, className, "rounded-[14px] w-full h-full")}
-      data-share-card-ready={bgReady ? "true" : "false"}
+      data-share-card-ready={shareAssetsReady ? "true" : "false"}
     >
       <div className="box-border h-full w-full rounded-[12px] p-1 shadow-[0_0_20px_rgba(0,0,0,0.2)]">
         <div
-          ref={ref}
+          ref={setCaptureRef}
           className="grid grid-cols-2 h-full w-full overflow-hidden rounded-[10px] bg-gradient-to-b from-[#030538] to-[#00011b]"
-          data-share-card-ready={bgReady ? "true" : "false"}
+          data-share-card-ready={shareAssetsReady ? "true" : "false"}
         >
-
           <div className="h-full p-[20px]">
             <div className="relative flex shrink-0 flex-col px-3 pb-4 pt-2 w-full h-full">
               <img
@@ -89,7 +124,7 @@ export const ComboPositionShareCard = forwardRef<
                 src={COMBO_SHARE_COUPON_IMAGE_PATH}
                 alt=""
                 className="pointer-events-none absolute inset-0 block h-full w-full object-fill"
-                onLoad={handleBgLoad}
+                onLoad={() => setCouponReady(true)}
               />
 
               <div className="relative z-10 flex min-h-0 flex-1 flex-col">
