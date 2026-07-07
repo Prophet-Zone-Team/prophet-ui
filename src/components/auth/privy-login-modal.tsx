@@ -18,7 +18,7 @@ const OTP_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const modalClassName = cn(
-  "w-full max-w-[468px] rounded-[20px] border border-prophet-line bg-prophet-panel p-6",
+  "w-full max-w-[468px] rounded-[20px] border border-prophet-line bg-prophet-modal-panel p-6",
   "shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]",
 );
 

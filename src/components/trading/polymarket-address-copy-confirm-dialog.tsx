@@ -77,7 +77,7 @@ export function PolymarketAddressCopyConfirmDialog({
               <li key={index} className="flex gap-3">
                 <div className="flex flex-col items-center">
                   <span
-                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-prophet-action-panel text-sm font-[500] text-prophet-foreground"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-prophet-panel text-sm font-[500] text-prophet-foreground"
                     aria-hidden="true"
                   >
                     {index + 1}

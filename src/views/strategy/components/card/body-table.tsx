@@ -54,7 +54,7 @@ export function StrategyCardBodyTable({
       <div
         role="table"
         aria-label={t("strategyLegs")}
-        className="min-w-[640px] border border-prophet-line bg-prophet-action-panel md:min-w-[720px]"
+        className="min-w-[640px] border border-prophet-line bg-prophet-panel md:min-w-[720px]"
       >
         <div
           role="row"

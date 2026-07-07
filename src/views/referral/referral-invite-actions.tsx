@@ -31,6 +31,7 @@ export type ReferralInviteActionsProps = {
   className?: string;
   downloadFilename?: string;
   shareTweetText?: string;
+  shareTweetHashtags?: string;
   list?: ("x" | "telegram" | "download" | "copy")[];
 };
 
@@ -53,6 +54,7 @@ export const ReferralInviteActions = forwardRef<
   className,
   downloadFilename,
   shareTweetText,
+  shareTweetHashtags,
   list = ["x", "telegram", "download", "copy"]
 }, ref) {
   const t = useTranslations("referral");
@@ -73,6 +75,7 @@ export const ReferralInviteActions = forwardRef<
     downloadFilename,
     fullLink,
     tweetText: shareTweetText,
+    hashtags: shareTweetHashtags,
   });
 
   const refs = {
