@@ -1,4 +1,9 @@
-import { Info } from "lucide-react";
+import { cn } from "@/lib/cn";
+import {
+  comboMultiplierBadgeClass,
+  comboSkeletonClass,
+  comboTitleTextClass
+} from "@/views/combo/combo-ui";
 
 import { ComboLogo } from "./combo-logo";
 import { ComboPickCard } from "./combo-pick-card";
@@ -36,29 +41,21 @@ export function ComboPicksSection({
           <span className="bg-[linear-gradient(270deg,#542099_0%,#8C35FF_100%)] bg-clip-text text-lg font-[600] leading-[23px] text-transparent">
             Combo
           </span>
-          {/* <button
-            type="button"
-            onClick={onInfoClick}
-            className="inline-flex size-3.5 shrink-0 items-center justify-center text-[#909090] transition-opacity hover:opacity-70"
-            aria-label="Combo info"
-          >
-            <Info className="size-3.5" strokeWidth={1.75} aria-hidden />
-          </button> */}
         </div>
 
         {isQuoteLoading ? (
           <span
-            className="inline-flex h-7 w-[52px] shrink-0 animate-pulse rounded-[15px] bg-[#E8E8E8]"
+            className={comboSkeletonClass}
             aria-label="Loading multiplier"
           />
         ) : (
-          <span className="inline-flex h-7 shrink-0 items-center rounded-[15px] bg-black px-3 text-sm font-[500] leading-[18px] text-white">
+          <span className={comboMultiplierBadgeClass}>
             {formatComboMultiplierLabel(multiplier)}
           </span>
         )}
       </div>
 
-      <h2 className="m-0 text-base font-[500] leading-5 text-black">
+      <h2 className={cn("m-0 text-base font-[500] leading-5", comboTitleTextClass)}>
         {formatComboPicksLabel(picks.length)}
       </h2>
 

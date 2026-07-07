@@ -10,7 +10,7 @@ export function RemovePickButton({ onClick, label }: RemovePickButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex size-5 shrink-0 items-center justify-center rounded-full border-[1.4px] border-[#909090] text-[#909090] transition-opacity hover:opacity-70"
+      className="inline-flex size-5 shrink-0 items-center justify-center rounded-full border-[1.4px] border-prophet-muted text-prophet-muted transition-opacity hover:opacity-70"
       aria-label={label}
     >
       <Minus className="size-2.5" strokeWidth={2} aria-hidden />

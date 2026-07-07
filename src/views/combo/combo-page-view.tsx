@@ -451,16 +451,16 @@ export function ComboPageView() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-[#909090]">{t("loadingMarkets")}</p>
+            <p className="text-sm text-prophet-muted">{t("loadingMarkets")}</p>
           ) : null}
 
           {error ? (
-            <div className="flex flex-col gap-2 rounded-lg border border-[#EBEBEB] bg-white p-4">
-              <p className="text-sm text-[#909090]">{error}</p>
+            <div className="flex flex-col gap-2 rounded-lg border border-prophet-line bg-prophet-panel p-4">
+              <p className="text-sm text-prophet-muted">{error}</p>
               <button
                 type="button"
                 onClick={() => void reload()}
-                className="self-start text-sm font-[500] text-black underline"
+                className="self-start text-sm font-[500] text-prophet-foreground underline"
               >
                 {t("retry")}
               </button>
@@ -468,7 +468,7 @@ export function ComboPageView() {
           ) : null}
 
           {!loading && !error && visibleGroups.length === 0 ? (
-            <p className="text-sm text-[#909090]">{t("emptyMarkets")}</p>
+            <p className="text-sm text-prophet-muted">{t("emptyMarkets")}</p>
           ) : null}
 
           <ComboOutcomeDisplayProvider mode={outcomeDisplayMode}>

@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/cn";
+import {
+  comboMultiplierBadgeClass,
+  comboMutedTextClass,
+  comboPrimaryButtonClass,
+  comboSkeletonClass,
+  comboTitleTextClass
+} from "@/views/combo/combo-ui";
 import { ComboLogo } from "@/views/combo/combo-widget/combo-logo";
 import { MIN_COMBO_PICKS } from "@/views/combo/combo-widget/constants";
 import {
@@ -94,7 +101,7 @@ export function ComboMobileWidget({
         }}
       >
         <div
-          className="pointer-events-auto mx-auto w-full max-w-[370px] rounded-2xl border border-[#EBEBEB] shadow-[0_0_10px_rgba(0,0,0,0.1)]"
+          className="pointer-events-auto mx-auto w-full max-w-[370px] rounded-2xl border border-prophet-line shadow-[0_0_10px_rgba(0,0,0,0.1)] dark:shadow-[0_0_10px_rgba(0,0,0,0.35)]"
           style={comboMobileWidgetShellStyle}
         >
           <div className="flex flex-col gap-2.5 p-2.5">
@@ -105,11 +112,11 @@ export function ComboMobileWidget({
                   {t("title")}
                 </span>
                 {showPicks ? (
-                  <span className="truncate text-base font-[500] leading-5 text-black">
+                  <span className={cn("truncate text-base font-[500] leading-5", comboTitleTextClass)}>
                     {formatComboPicksLabel(picks.length)}
                   </span>
                 ) : (
-                  <span className="truncate text-xs font-[400] leading-[15px] text-[#909090]">
+                  <span className={cn("truncate text-xs font-[400] leading-[15px]", comboMutedTextClass)}>
                     {t("selectMinPicksHint")}
                   </span>
                 )}
@@ -118,11 +125,11 @@ export function ComboMobileWidget({
               {showPicks && hasMinimumPicks ? (
                 isQuoteLoading ? (
                   <span
-                    className="inline-flex h-7 w-[52px] shrink-0 animate-pulse rounded-[15px] bg-[#E8E8E8]"
+                    className={comboSkeletonClass}
                     aria-label={t("executableQuote")}
                   />
                 ) : (
-                  <span className="inline-flex h-7 shrink-0 items-center rounded-[15px] bg-black px-3 text-sm font-[500] leading-[18px] text-white">
+                  <span className={comboMultiplierBadgeClass}>
                     {formatComboMultiplierLabel(multiplier)}
                   </span>
                 )
@@ -148,8 +155,8 @@ export function ComboMobileWidget({
               className={cn(
                 "flex h-[46px] w-full items-center justify-center rounded-xl text-base font-[400] leading-5 text-white transition-opacity",
                 hasMinimumPicks
-                  ? "bg-black hover:opacity-90 active:opacity-90"
-                  : "cursor-not-allowed bg-black/30"
+                  ? comboPrimaryButtonClass
+                  : "cursor-not-allowed bg-black/30 dark:bg-prophet-primary/30"
               )}
             >
               {t("submitCombo")}

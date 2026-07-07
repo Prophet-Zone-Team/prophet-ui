@@ -33,11 +33,11 @@ export function SpreadSelector({
   const normalizedOptions = normalizeSpreadSelectorOptions(options, value);
 
   return (
-    <label className="relative inline-flex h-[30px] w-16 shrink-0 items-center rounded-lg border border-[#EBEBEB] bg-white px-2">
+    <label className="relative inline-flex h-[30px] w-16 shrink-0 items-center rounded-lg border border-prophet-line bg-prophet-panel px-2">
       <select
         value={value}
         onChange={(event) => onChange?.(event.target.value)}
-        className="w-full appearance-none bg-transparent pr-4 text-xs font-[500] leading-[15px] text-black outline-none disabled:text-[#909090]"
+        className="w-full appearance-none bg-transparent pr-4 text-xs font-[500] leading-[15px] text-prophet-foreground outline-none disabled:text-prophet-muted"
         aria-label={ariaLabel}
       >
         {normalizedOptions.map((option) => (
@@ -47,7 +47,7 @@ export function SpreadSelector({
         ))}
       </select>
       <ChevronDown
-        className="pointer-events-none absolute right-2 size-2.5 text-[#909090]"
+        className="pointer-events-none absolute right-2 size-2.5 text-prophet-muted"
         aria-hidden
       />
     </label>

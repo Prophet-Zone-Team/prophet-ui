@@ -35,7 +35,7 @@ export function TeamRow({
       />
       <span
         className={cn(
-          "min-w-0 font-[500] text-black",
+          "min-w-0 font-[500] text-prophet-foreground",
           flagSize === "xs"
             ? "text-base leading-5"
             : "text-base leading-[21px] sm:text-lg sm:leading-[23px]",

@@ -1,5 +1,10 @@
 import { TeamFlag } from "@/components/teams/team-flag";
-
+import { cn } from "@/lib/cn";
+import {
+  comboInnerCardClass,
+  comboMutedTextClass,
+  comboTitleTextClass
+} from "@/views/combo/combo-ui";
 import { RemovePickButton } from "@/views/combo/combo-widget/remove-pick-button";
 import type { ComboPick } from "@/views/combo/combo-widget/types";
 
@@ -10,7 +15,7 @@ export type ComboMobilePickRowProps = {
 
 export function ComboMobilePickRow({ pick, onRemove }: ComboMobilePickRowProps) {
   return (
-    <div className="flex h-[46px] items-center gap-2 rounded-xl bg-white/50 px-2.5">
+    <div className={cn("flex h-[46px] items-center gap-2 px-2.5", comboInnerCardClass)}>
       <TeamFlag
         code={pick.team.code}
         name={pick.team.name}
@@ -19,10 +24,10 @@ export function ComboMobilePickRow({ pick, onRemove }: ComboMobilePickRowProps) 
       />
 
       <div className="min-w-0 flex-1">
-        <p className="m-0 truncate text-[10px] font-[400] leading-[13px] text-[#909090]">
+        <p className={cn("m-0 truncate text-[10px] font-[400] leading-[13px]", comboMutedTextClass)}>
           {pick.matchupLabel}
         </p>
-        <p className="m-0 truncate text-sm font-[500] leading-[18px] text-black">
+        <p className={cn("m-0 truncate text-sm font-[500] leading-[18px]", comboTitleTextClass)}>
           {pick.selectionLabel}
         </p>
       </div>

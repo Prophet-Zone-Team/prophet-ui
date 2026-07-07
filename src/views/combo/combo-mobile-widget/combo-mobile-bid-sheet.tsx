@@ -6,6 +6,13 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
 import { ComboResponsiveOverlay } from "@/views/combo/combo-responsive-overlay";
+import {
+  comboMultiplierBadgeClass,
+  comboMutedTextClass,
+  comboPrimaryButtonClass,
+  comboSkeletonClass,
+  comboTitleTextClass
+} from "@/views/combo/combo-ui";
 import { ComboLogo } from "@/views/combo/combo-widget/combo-logo";
 import {
   formatComboMultiplierLabel,
@@ -123,18 +130,18 @@ export function ComboMobileBidSheet({
             <span className="bg-[linear-gradient(270deg,#542099_0%,#8C35FF_100%)] bg-clip-text text-base font-[600] leading-5 text-transparent">
               {t("title")}
             </span>
-            <span className="text-base font-[500] leading-5 text-black">
+            <span className={cn("text-base font-[500] leading-5", comboTitleTextClass)}>
               {formatComboPicksLabel(picks.length)}
             </span>
           </div>
 
           {isQuoteLoading ? (
             <span
-              className="inline-flex h-7 w-[52px] shrink-0 animate-pulse rounded-[15px] bg-[#E8E8E8]"
+              className={comboSkeletonClass}
               aria-label={t("executableQuote")}
             />
           ) : (
-            <span className="inline-flex h-7 shrink-0 items-center rounded-[15px] bg-black px-3 text-sm font-[500] leading-[18px] text-white">
+            <span className={comboMultiplierBadgeClass}>
               {formatComboMultiplierLabel(multiplier)}
             </span>
           )}
@@ -148,17 +155,17 @@ export function ComboMobileBidSheet({
                 code={pick.team.code}
                 name={pick.team.name}
                 logoUrl={pick.team.logoUrl}
-                className="size-[25px] shrink-0 rounded-md border-2 border-white drop-shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+                className="size-[25px] shrink-0 rounded-md border-2 border-prophet-panel drop-shadow-[0_0_2px_rgba(0,0,0,0.2)]"
               />
             ))}
           </div>
-          <span className="truncate text-sm font-[500] leading-[18px] text-black">
+          <span className={cn("truncate text-sm font-[500] leading-[18px]", comboTitleTextClass)}>
             {formatComboMobilePickSummary(picks)}
           </span>
         </div>
 
         <div className="flex flex-col items-center gap-4">
-          <label className="flex items-baseline text-[36px] font-[500] leading-[45px] text-black">
+          <label className={cn("flex items-baseline text-[36px] font-[500] leading-[45px]", comboTitleTextClass)}>
             <span className="sr-only">{t("bidAmount")}</span>
             <span aria-hidden="true">$</span>
             <input
@@ -179,7 +186,7 @@ export function ComboMobileBidSheet({
                 type="button"
                 className={cn(
                   tradeQuickAmountClass,
-                  "h-[30px] min-w-[52px] px-3 text-sm font-[400] leading-[18px] text-[#909090]"
+                  "h-[30px] min-w-[52px] px-3 text-sm font-[400] leading-[18px] text-prophet-muted"
                 )}
                 onClick={() => handleQuickAdd(amount)}
               >
@@ -190,7 +197,7 @@ export function ComboMobileBidSheet({
               type="button"
               className={cn(
                 tradeQuickAmountClass,
-                "h-[30px] min-w-[53px] px-3 text-sm font-[400] leading-[18px] text-[#909090]"
+                "h-[30px] min-w-[53px] px-3 text-sm font-[400] leading-[18px] text-prophet-muted"
               )}
               onClick={handleAllIn}
             >
@@ -200,7 +207,7 @@ export function ComboMobileBidSheet({
         </div>
 
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-[500] leading-[18px] text-black">
+          <span className={cn("text-sm font-[500] leading-[18px]", comboTitleTextClass)}>
             {t("toWin")}
           </span>
           <span className="text-xl font-[500] leading-[25px] text-[#69C800]">
@@ -212,7 +219,10 @@ export function ComboMobileBidSheet({
           type="button"
           disabled={actionDisabled}
           onClick={handleAction}
-          className="flex h-[46px] w-full items-center justify-center rounded-xl bg-black text-base font-[500] leading-5 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className={cn(
+            "flex h-[46px] w-full items-center justify-center rounded-xl text-base font-[500] leading-5",
+            comboPrimaryButtonClass
+          )}
         >
           {actionLabel}
         </button>

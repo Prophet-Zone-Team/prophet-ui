@@ -14,7 +14,7 @@ export function MatchupTitle({
     return (
       <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1">
         <TeamRow team={homeTeam} flagSize="xs" layout="inline" />
-        <span className="text-lg font-[500] leading-[23px] text-[#909090]">vs</span>
+        <span className="text-lg font-[500] leading-[23px] text-prophet-muted">vs</span>
         <TeamRow team={awayTeam} flagSize="xs" layout="inline" />
       </div>
     );
@@ -23,7 +23,7 @@ export function MatchupTitle({
   return (
     <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-[60px]">
       <TeamRow team={homeTeam} flagSize="md" layout="inline" />
-      <span className="text-base font-[500] leading-[21px] text-[#909090] sm:text-lg sm:leading-[23px]">
+      <span className="text-base font-[500] leading-[21px] text-prophet-muted sm:text-lg sm:leading-[23px]">
         vs
       </span>
       <TeamRow team={awayTeam} flagSize="md" layout="inline" />

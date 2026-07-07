@@ -73,7 +73,7 @@ export function ComboResponsiveOverlay({
       hideHeader
       ariaLabel={ariaLabel}
       overlayCloseable={overlayCloseable}
-      className="z-[61] h-auto max-h-[92dvh] w-full rounded-b-none rounded-t-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.12)]"
+      className="z-[61] h-auto max-h-[92dvh] w-full rounded-b-none rounded-t-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.4)]"
     >
       {children}
     </Drawer>
