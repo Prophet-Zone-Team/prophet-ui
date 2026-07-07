@@ -381,7 +381,7 @@ export function CreateTradeWalletModal({
                         className={cn(
                           "text-sm font-semibold",
                           state === "done" || state === "active"
-                            ? "text-prophet-ink"
+                            ? "text-prophet-primary"
                             : "text-prophet-muted"
                         )}
                       >

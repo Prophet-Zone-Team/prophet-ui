@@ -5,7 +5,7 @@ export const copyTradePanelClass = cn(
 );
 
 export const copyTradeModalClass = cn(
-  "w-full max-w-[500px] rounded-[20px] border border-prophet-line bg-prophet-panel"
+  "w-full max-w-[500px] rounded-[20px] border border-prophet-line bg-prophet-modal-panel"
 );
 
 export const copyTradeModalCloseButtonClass = cn(
