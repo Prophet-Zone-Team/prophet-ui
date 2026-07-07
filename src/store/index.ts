@@ -10,6 +10,13 @@ export { selectIsAuthenticated, useAuthStore } from "@/store/auth-store";
 export { useAuthHydrated } from "@/store/use-auth-hydrated";
 
 export {
+  selectCopyTradeSession,
+  useCopyTradeStore,
+  useCopyTradeStoredSession,
+} from "@/store/copy-trade-store";
+export { useCopyTradeHydrated } from "@/store/use-copy-trade-hydrated";
+
+export {
   useSetTradeAmount,
   useSetTradeLimitPrice,
   useSetTradeOrderMode,

@@ -1,20 +1,23 @@
+import { cn } from "@/lib/cn";
 import { walletLoginButtonClass } from "@/layout/header/wallet-menu-ui";
 
 export interface WalletLoginButtonProps {
   label: string;
+  className?: string;
   disabled?: boolean;
   onClick?: () => void;
 }
 
 export function WalletLoginButton({
   label,
+  className,
   disabled,
   onClick,
 }: WalletLoginButtonProps) {
   return (
     <button
       type="button"
-      className={walletLoginButtonClass}
+      className={cn(walletLoginButtonClass, className)}
       disabled={disabled}
       onClick={onClick}
     >

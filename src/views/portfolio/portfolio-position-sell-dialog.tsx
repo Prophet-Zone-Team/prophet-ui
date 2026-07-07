@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, type ReactNode } from "react";
+import { useCallback, useRef, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { Modal } from "@/components/ui/modal";
@@ -39,9 +39,15 @@ const SELL_QUICK_FRACTIONS = [
 
 export const PORTFOLIO_SELL_MODAL_WIDTH = "w-[492px]";
 
+export type PortfolioPositionCashOutSuccessPayload = {
+  position: UserPositionRecord;
+  cashedOutAmount: number;
+};
+
 export type PortfolioPositionSellDialogProps = {
   tradeHref?: string;
   onClose: () => void;
+  onCashOutSuccess?: (payload: PortfolioPositionCashOutSuccessPayload) => void;
 } & (
   | {
       open: boolean;
@@ -222,19 +228,24 @@ function PortfolioPositionTeamSellBody({
   position,
   snapshot,
   tradeHref,
-  onClose
+  onClose,
+  onCashOutSuccess,
 }: {
   position: UserPositionRecord;
   snapshot: TeamMarketSnapshot;
   tradeHref?: string;
   onClose: () => void;
+  onCashOutSuccess?: (payload: PortfolioPositionCashOutSuccessPayload) => void;
 }) {
   const { reload } = usePortfolioContext();
+  const payoutRef = useRef(0);
 
   const handleOrderSuccess = useCallback(async () => {
+    const cashedOutAmount = payoutRef.current;
     onClose();
-    reload();
-  }, [onClose, reload]);
+    await reload();
+    onCashOutSuccess?.({ position, cashedOutAmount });
+  }, [onCashOutSuccess, onClose, position, reload]);
 
   const ticket = useTradeTicket({
     variant: "team",
@@ -242,6 +253,8 @@ function PortfolioPositionTeamSellBody({
     sellPosition: position,
     onOrderSuccess: handleOrderSuccess
   });
+
+  payoutRef.current = ticket?.formProps.preview.potentialPayout ?? 0;
 
   return (
     <PortfolioPositionSellSharedBody
@@ -260,19 +273,24 @@ function PortfolioPositionGameSellBody({
   position,
   context,
   tradeHref,
-  onClose
+  onClose,
+  onCashOutSuccess,
 }: {
   position: UserPositionRecord;
   context: PositionGameSellContext;
   tradeHref?: string;
   onClose: () => void;
+  onCashOutSuccess?: (payload: PortfolioPositionCashOutSuccessPayload) => void;
 }) {
   const { reload } = usePortfolioContext();
+  const payoutRef = useRef(0);
 
   const handleOrderSuccess = useCallback(async () => {
+    const cashedOutAmount = payoutRef.current;
     onClose();
-    reload();
-  }, [onClose, reload]);
+    await reload();
+    onCashOutSuccess?.({ position, cashedOutAmount });
+  }, [onCashOutSuccess, onClose, position, reload]);
 
   const ticket = useTradeTicket({
     variant: "game",
@@ -281,6 +299,8 @@ function PortfolioPositionGameSellBody({
     sellPosition: position,
     onOrderSuccess: handleOrderSuccess
   });
+
+  payoutRef.current = ticket?.formProps.preview.potentialPayout ?? 0;
 
   return (
     <PortfolioPositionSellSharedBody
@@ -295,7 +315,7 @@ function PortfolioPositionGameSellBody({
 
 export function PortfolioPositionSellDialog(props: PortfolioPositionSellDialogProps) {
   const t = useTranslations("portfolio");
-  const { open, position, tradeHref, onClose } = props;
+  const { open, position, tradeHref, onClose, onCashOutSuccess } = props;
 
   return (
     <Modal
@@ -312,6 +332,7 @@ export function PortfolioPositionSellDialog(props: PortfolioPositionSellDialogPr
             snapshot={props.snapshot}
             tradeHref={tradeHref}
             onClose={onClose}
+            onCashOutSuccess={onCashOutSuccess}
           />
         ) : (
           <PortfolioPositionGameSellBody
@@ -319,6 +340,7 @@ export function PortfolioPositionSellDialog(props: PortfolioPositionSellDialogPr
             context={props.context}
             tradeHref={tradeHref}
             onClose={onClose}
+            onCashOutSuccess={onCashOutSuccess}
           />
         )}
       </FundingModalShell>

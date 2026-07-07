@@ -41,6 +41,8 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
   shareImageUploadMode: "cache" | "always";
   shareImageCacheKey?: ShareImageCacheKey;
   modalShellClass?: string;
+  shareTweetText?: string;
+  shareTweetHashtags?: string;
   actionsRef?: RefObject<{
     handleTwitter: () => void;
     handleTelegram: () => void;
@@ -49,6 +51,7 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
   }>;
   content?: any;
   actionsList?: ("x" | "telegram" | "download" | "copy")[];
+  showInviteLinkRow?: boolean;
 };
 
 export function ShareInviteModal({
@@ -66,9 +69,12 @@ export function ShareInviteModal({
   shareImageUploadMode,
   shareImageCacheKey,
   modalShellClass,
+  shareTweetText,
+  shareTweetHashtags,
   actionsRef,
   content,
   actionsList,
+  showInviteLinkRow = true,
 }: ShareInviteModalProps) {
   const isMobile = useDevice();
 
@@ -114,11 +120,13 @@ export function ShareInviteModal({
           {
             !!content ? content : (
               <>
-                <ReferralInviteLinkRow
-                  linkPrefix={linkPrefix}
-                  referralCode={referralCode}
-                  fullLink={fullLink}
-                />
+                {showInviteLinkRow ? (
+                  <ReferralInviteLinkRow
+                    linkPrefix={linkPrefix}
+                    referralCode={referralCode}
+                    fullLink={fullLink}
+                  />
+                ) : null}
 
                 <ReferralInviteActions
                   list={actionsList}
@@ -129,6 +137,8 @@ export function ShareInviteModal({
                   shareImageUploadMode={shareImageUploadMode}
                   shareImageCacheKey={shareImageCacheKey}
                   downloadFilename={downloadFilename}
+                  shareTweetText={shareTweetText}
+                  shareTweetHashtags={shareTweetHashtags}
                 />
               </>
             )

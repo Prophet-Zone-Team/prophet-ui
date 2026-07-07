@@ -15,6 +15,7 @@ export interface FundingSelectorDropdownProps {
   disabled?: boolean;
   children: ReactNode;
   className?: string;
+  dropdownClassName?: string;
 }
 
 export function FundingSelectorDropdown({
@@ -26,6 +27,7 @@ export function FundingSelectorDropdown({
   disabled = false,
   children,
   className,
+  dropdownClassName,
 }: FundingSelectorDropdownProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -92,7 +94,10 @@ export function FundingSelectorDropdown({
       </button>
       {open ? (
         <div
-          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[220px] overflow-y-auto rounded-[6px] border border-prophet-line bg-prophet-panel py-1 shadow-lg"
+          className={cn(
+            "absolute left-0 right-0 top-full z-50 mt-1 max-h-[220px] overflow-y-auto rounded-[6px] border border-prophet-line bg-prophet-panel py-1 shadow-lg",
+            dropdownClassName,
+          )}
           role="listbox"
         >
           {children}

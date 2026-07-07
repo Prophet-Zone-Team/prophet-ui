@@ -25,7 +25,7 @@ export const portfolioTableMobileLabelClass = "text-xs text-prophet-muted";
 export const portfolioTableMobileValueClass = "text-sm font-[500] text-prophet-foreground";
 
 export const portfolioSummaryLabelClass =
-  "text-[14px] font-[500] leading-[17px] text-prophet-muted pb-[10px]";
+  "text-[14px] font-[500] leading-[17px] text-prophet-muted pb-[10px] flex items-center gap-2";
 
 export const portfolioSummaryValueLargeClass =
   "text-[32px] font-[500] leading-[38px] text-prophet-foreground";
@@ -67,7 +67,7 @@ export const portfolioConnectButtonClass = cn(
 );
 
 const portfolioPositionsTableGridColsClass =
-  "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_5.5rem]";
+  "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_6rem]";
 
 const portfolioOrdersTableGridColsClass =
   "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_7.5rem]";

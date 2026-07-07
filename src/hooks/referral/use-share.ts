@@ -10,6 +10,7 @@ import { shareToX } from "@/utils/x";
 import { REFERRAL_TELEGRAM_SHARE_URL } from "@/lib/referral/config";
 import { trackCopyLinkClicked, trackShareClicked } from "@/lib/analytics/tracking";
 import { downloadShareCardPng } from "@/lib/referral/download-share-card";
+import { waitForShareImageReady } from "@/lib/referral/wait-for-share-image";
 
 export type ShareImageCacheKey = {
   referralCode: string;
@@ -95,7 +96,11 @@ export function useShare(props: UseShareProps) {
         }
       }
 
-      // imgUrl = "https://assets.dapdap.net/monad/upload/47a465d1-47cd-4d0c-8933-568ff1e6f862";
+      const imageReady = await waitForShareImageReady(imgUrl);
+      if (!imageReady) {
+        toast.error(t("shareUploadError"));
+        return;
+      }
 
       const origin = resolveOrigin();
       const tweetUrl = `${origin}/api/twitter?img=${encodeURIComponent(imgUrl)}&link=${encodeURIComponent(fullLink)}`;
