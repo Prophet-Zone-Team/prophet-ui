@@ -3,9 +3,8 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const isVercelBuild = process.env.VERCEL === "1";
-const copyTradeApiUpstream = (
-  process.env.COPY_TRADE_API_URL ?? "https://api.zerostrategy.fun"
-).replace(/\/$/, "");
+
+const copyTradeApiUpstream = "https://apicopy.prophet.zone";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
