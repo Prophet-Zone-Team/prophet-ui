@@ -1,10 +1,11 @@
 import type { CopyWallet } from "@/types/copy-trade-api";
 
-const copyTradeApiUpstream = (
+const copyTradeApiUpstream =
   process.env.NEXT_PUBLIC_ENV === "production"
-    ? "https://apicopy.prophet.zone/"
-    : "https://api.zerostrategy.fun"
-).replace(/\/$/, "");
+    ? "https://apicopy.prophet.zone"
+    : "https://api.zerostrategy.fun";
+
+
 
 export async function fetchCopyTradeWalletForUser(
   userId: number,
