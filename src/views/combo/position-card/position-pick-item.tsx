@@ -31,10 +31,10 @@ export function PositionPickItem({ pick }: PositionPickItemProps) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className={cn("m-0 truncate text-xs font-[400] leading-[15px]", comboMutedTextClass)}>
+        <p className={cn("m-0 truncate text-xs font-[400] leading-[15px] text-left", comboMutedTextClass)}>
           {pick.matchupLabel}
         </p>
-        <p className={cn("m-0 truncate text-sm font-[500] leading-[18px]", comboTitleTextClass)}>
+        <p className={cn("m-0 truncate text-sm font-[500] leading-[18px] text-left", comboTitleTextClass)}>
           {pick.selectionLabel}
         </p>
       </div>
