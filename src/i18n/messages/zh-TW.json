@@ -1776,7 +1776,8 @@
       "winRate": "勝率",
       "profitLoss": "盈虧",
       "volume": "成交量",
-      "predictions": "預測數"
+      "predictions": "預測數",
+      "pnl7d": "7日盈虧"
     },
     "copiedWallet": {
       "ariaList": "已跟單錢包列表",

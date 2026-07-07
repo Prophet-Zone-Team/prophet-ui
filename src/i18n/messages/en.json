@@ -1776,7 +1776,8 @@
       "winRate": "Win Rate",
       "profitLoss": "Profit/Loss",
       "volume": "Volume",
-      "predictions": "Predictions"
+      "predictions": "Predictions",
+      "pnl7d": "7D PnL"
     },
     "copiedWallet": {
       "ariaList": "Copied wallet list",

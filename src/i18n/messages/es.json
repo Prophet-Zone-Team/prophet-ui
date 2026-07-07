@@ -1763,7 +1763,8 @@
       "winRate": "Tasa de acierto",
       "profitLoss": "Ganancias/Pérdidas",
       "volume": "Volumen",
-      "predictions": "Predicciones"
+      "predictions": "Predicciones",
+      "pnl7d": "PnL 7D"
     },
     "copiedWallet": {
       "ariaList": "Lista de billeteras copiadas",

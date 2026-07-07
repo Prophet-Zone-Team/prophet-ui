@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import {
   isUserImportedTrader,
+  traderPnL7d,
   traderTag
 } from "@/lib/copy-trade/trader-catalog-stats";
 import {
@@ -103,6 +104,14 @@ export function CopyTradeRankItem({
       : pnlValue >= 0
         ? "text-[#65AF14]"
         : "text-[#FF674B]";
+  const pnl7d = traderPnL7d(trader);
+  const pnl7dValue = pnl7d ?? 0;
+  const pnl7dTone =
+    pnl7d === null
+      ? "text-prophet-muted"
+      : pnl7dValue >= 0
+        ? "text-[#65AF14]"
+        : "text-[#FF674B]";
 
   if (layout === "mobile") {
     return (
@@ -124,7 +133,10 @@ export function CopyTradeRankItem({
           <PortfolioTableMobileField label={t("winRate")}>
             {formatStatValue(stats.winRate, formatWinRate)}
           </PortfolioTableMobileField>
-          <PortfolioTableMobileField label={t("profitLoss")} valueClassName={pnlTone}>
+          <PortfolioTableMobileField
+            label={t("profitLoss")}
+            valueClassName={pnlTone}
+          >
             {formatStatValue(stats.pnl, formatSignedCompactUsd)}
           </PortfolioTableMobileField>
           <PortfolioTableMobileField label={t("volume")}>
@@ -135,6 +147,12 @@ export function CopyTradeRankItem({
           </PortfolioTableMobileField>
           <PortfolioTableMobileField label={t("predictions")}>
             {formatStatValue(stats.trades, (value) => String(value))}
+          </PortfolioTableMobileField>
+          <PortfolioTableMobileField
+            label={t("pnl7d")}
+            valueClassName={pnl7dTone}
+          >
+            {formatStatValue(pnl7d, formatSignedCompactUsd)}
           </PortfolioTableMobileField>
         </div>
 
@@ -163,96 +181,105 @@ export function CopyTradeRankItem({
         className
       )}
     >
-        <span
-          className={cn(
-            copyTradeRankColRankClass,
-            "text-[16px] leading-5 text-prophet-foreground tabular-nums"
-          )}
-        >
-          {rank}
-        </span>
+      <span
+        className={cn(
+          copyTradeRankColRankClass,
+          "text-[16px] leading-5 text-prophet-foreground tabular-nums"
+        )}
+      >
+        {rank}
+      </span>
 
-        <div
-          className={cn(copyTradeRankColPlayerClass, "flex items-center gap-3")}
-        >
-          <TraderAvatar wallet={trader.Wallet} />
-          <div className="min-w-0">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <p className="max-w-[160px] truncate text-[16px] leading-5 text-prophet-foreground">
-                {displayName}
-              </p>
-              {imported ? (
-                <TraderBadge className="bg-prophet-hover text-prophet-muted">
-                  {tCommon("imported")}
-                </TraderBadge>
-              ) : null}
-              {tag ? <TraderTagIcon tag={tag} /> : null}
-            </div>
-            <div className="mt-px flex min-w-0 items-center gap-1">
-              <span className="truncate text-[12px] leading-[15px] text-prophet-muted">
-                {walletLabel}
-              </span>
-              <CopyButton
-                text={trader.Wallet}
-                ariaLabel={tCommon("copyWalletAddress")}
-                className="inline-flex shrink-0 items-center justify-center p-0.5 text-prophet-muted transition-opacity hover:opacity-70"
-              >
-                <CopyIcon />
-              </CopyButton>
-            </div>
+      <div
+        className={cn(copyTradeRankColPlayerClass, "flex items-center gap-3")}
+      >
+        <TraderAvatar wallet={trader.Wallet} />
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p className="max-w-[160px] truncate text-[16px] leading-5 text-prophet-foreground">
+              {displayName}
+            </p>
+            {imported ? (
+              <TraderBadge className="bg-prophet-hover text-prophet-muted">
+                {tCommon("imported")}
+              </TraderBadge>
+            ) : null}
+            {tag ? <TraderTagIcon tag={tag} /> : null}
+          </div>
+          <div className="mt-px flex min-w-0 items-center gap-1">
+            <span className="truncate text-[12px] leading-[15px] text-prophet-muted">
+              {walletLabel}
+            </span>
+            <CopyButton
+              text={trader.Wallet}
+              ariaLabel={tCommon("copyWalletAddress")}
+              className="inline-flex shrink-0 items-center justify-center p-0.5 text-prophet-muted transition-opacity hover:opacity-70"
+            >
+              <CopyIcon />
+            </CopyButton>
           </div>
         </div>
+      </div>
 
-        <span
-          className={cn(
-            copyTradeRankColStatClass,
-            "text-[16px] leading-5 text-prophet-muted tabular-nums"
-          )}
-        >
-          {formatStatValue(stats.winRate, formatWinRate)}
-        </span>
-        <span
-          className={cn(
-            copyTradeRankColStatClass,
-            "text-[16px] leading-5 tabular-nums",
-            pnlTone
-          )}
-        >
-          {formatStatValue(stats.pnl, formatSignedCompactUsd)}
-        </span>
-        <span
-          className={cn(
-            copyTradeRankColStatClass,
-            "text-[16px] leading-5 text-prophet-muted tabular-nums"
-          )}
-        >
-          {formatStatValue(
-            stats.volume,
-            (value) => formatCompactVolume(value) ?? "$0"
-          )}
-        </span>
-        <span
-          className={cn(
-            copyTradeRankColPredictionsClass,
-            "text-[16px] leading-5 text-prophet-muted"
-          )}
-        >
-          {formatStatValue(stats.trades, (value) => String(value))}
-        </span>
+      <span
+        className={cn(
+          copyTradeRankColStatClass,
+          "text-[16px] leading-5 text-prophet-muted tabular-nums"
+        )}
+      >
+        {formatStatValue(stats.winRate, formatWinRate)}
+      </span>
+      <span
+        className={cn(
+          copyTradeRankColStatClass,
+          "text-[16px] leading-5 tabular-nums",
+          pnlTone
+        )}
+      >
+        {formatStatValue(stats.pnl, formatSignedCompactUsd)}
+      </span>
+      <span
+        className={cn(
+          copyTradeRankColStatClass,
+          "text-[16px] leading-5 text-prophet-muted tabular-nums"
+        )}
+      >
+        {formatStatValue(
+          stats.volume,
+          (value) => formatCompactVolume(value) ?? "$0"
+        )}
+      </span>
+      <span
+        className={cn(
+          copyTradeRankColPredictionsClass,
+          "text-[16px] leading-5 text-prophet-muted"
+        )}
+      >
+        {formatStatValue(stats.trades, (value) => String(value))}
+      </span>
+      <span
+        className={cn(
+          copyTradeRankColStatClass,
+          "text-[16px] leading-5 tabular-nums",
+          pnl7dTone
+        )}
+      >
+        {formatStatValue(pnl7d, formatSignedCompactUsd)}
+      </span>
 
-        <div className={copyTradeRankColActionClass}>
-          <TraderTrackButton
-            tracked={tracked}
-            onToggle={() => onTrackToggle?.(trader)}
-          />
-          <CopyTradeButton
-            busy={copyTradeBusy}
-            disabled={isCopyButtonDisabled}
-            disabledReason={copyTradeDisabledReason}
-            onClick={() => onCopyTrade?.(trader)}
-          />
-        </div>
-      </article>
+      <div className={copyTradeRankColActionClass}>
+        <TraderTrackButton
+          tracked={tracked}
+          onToggle={() => onTrackToggle?.(trader)}
+        />
+        <CopyTradeButton
+          busy={copyTradeBusy}
+          disabled={isCopyButtonDisabled}
+          disabledReason={copyTradeDisabledReason}
+          onClick={() => onCopyTrade?.(trader)}
+        />
+      </div>
+    </article>
   );
 }
 
