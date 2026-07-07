@@ -24,6 +24,7 @@ export interface WalletConnectedBarProps {
   isMenuOpen: boolean;
   regionRestricted?: boolean;
   isPrivateMode?: boolean;
+  hideWalletFundingControls?: boolean;
   showDepositPendingIndicator?: boolean;
   onDeposit: () => void;
   onPrivateTopup: () => void;
@@ -41,6 +42,7 @@ export function WalletConnectedBar({
   onPrivateBalanceClick,
   onToggleMenu,
   isPrivateMode,
+  hideWalletFundingControls = false,
   showDepositPendingIndicator = false,
 }: WalletConnectedBarProps) {
   const t = useTranslations("wallet");
@@ -86,61 +88,35 @@ export function WalletConnectedBar({
 
   return (
     <div className={walletConnectedBarClass}>
-      <RegionRestrictedControl restricted={regionRestricted}>
-        <PrivateBalance
-          onClick={onPrivateBalanceClick}
-          className="hidden md:flex"
-        />
-      </RegionRestrictedControl>
-      <div className="hidden md:block h-[31px] w-px shrink-0 bg-prophet-line"></div>
-      <Link
-        href="/portfolio"
-        className="hidden md:flex flex-col justify-center items-end gap-0 cursor-pointer h-[50px] px-2.5 rounded-lg border border-prophet-panel dark:hover:border-white transition-colors hover:border-prophet-line"
-        aria-label={t("openPortfolio")}
-      >
-        <span className={walletBalanceLabelClass}>{t("balance")}</span>
-        <span className={walletBalanceValueClass}>${balanceDisplay}</span>
-      </Link>
+      {!hideWalletFundingControls ? (
+        <>
+          <RegionRestrictedControl restricted={regionRestricted}>
+            <PrivateBalance
+              onClick={onPrivateBalanceClick}
+              className="hidden md:flex"
+            />
+          </RegionRestrictedControl>
+          <div className="hidden md:block h-[31px] w-px shrink-0 bg-prophet-line"></div>
+          <Link
+            href="/portfolio"
+            className="hidden md:flex flex-col justify-center items-end gap-0 cursor-pointer h-[50px] px-2.5 rounded-lg border border-prophet-panel dark:hover:border-white transition-colors hover:border-prophet-line"
+            aria-label={t("openPortfolio")}
+          >
+            <span className={walletBalanceLabelClass}>{t("balance")}</span>
+            <span className={walletBalanceValueClass}>${balanceDisplay}</span>
+          </Link>
 
-      {regionRestricted ? (
-        <RegionRestrictedControl restricted>
-          {depositButton}
-        </RegionRestrictedControl>
-      ) : (
-        // <Popover
-        //   ref={popoverRef}
-        //   placement="BottomRight"
-        //   trigger="Hover"
-        //   content={
-        //     <div className="w-[130px] flex flex-col items-stretch gap-1 py-1 text-prophet-foreground text-sm rounded-xl bg-prophet-panel border border-prophet-line shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
-        //       <button
-        //         type="button"
-        //         className="w-full text-left cursor-pointer hover:bg-[#999]/10 duration-150 px-3 py-2"
-        //         onClick={() => {
-        //           onDeposit();
-        //           popoverRef.current?.onClose?.();
-        //         }}
-        //       >
-        //         Deposit
-        //       </button>
-        //       <button
-        //         type="button"
-        //         className="w-full text-left cursor-pointer hover:bg-[#999]/10 duration-150 px-3 py-2"
-        //         onClick={() => {
-        //           onPrivateTopup();
-        //           popoverRef.current?.onClose?.();
-        //         }}
-        //       >
-        //         Private Topup
-        //       </button>
-        //     </div>
-        //   }
-        // >
-        depositButton
-        // </Popover>
-      )}
+          {regionRestricted ? (
+            <RegionRestrictedControl restricted>
+              {depositButton}
+            </RegionRestrictedControl>
+          ) : (
+            depositButton
+          )}
 
-      <span className={walletMenuDividerClass} aria-hidden="true" />
+          <span className={walletMenuDividerClass} aria-hidden="true" />
+        </>
+      ) : null}
 
       <button
         type="button"
