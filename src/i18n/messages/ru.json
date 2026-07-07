@@ -1719,7 +1719,8 @@
       "winRate": "Винрейт",
       "profitLoss": "Прибыль/убыток",
       "volume": "Объём",
-      "predictions": "Прогнозы"
+      "predictions": "Прогнозы",
+      "pnl7d": "PnL 7Д"
     },
     "copiedWallet": {
       "ariaList": "Список скопированных кошельков",

@@ -1728,7 +1728,8 @@
       "winRate": "勝率",
       "profitLoss": "損益",
       "volume": "出来高",
-      "predictions": "予測数"
+      "predictions": "予測数",
+      "pnl7d": "7日損益"
     },
     "copiedWallet": {
       "ariaList": "コピー済みウォレットリスト",
