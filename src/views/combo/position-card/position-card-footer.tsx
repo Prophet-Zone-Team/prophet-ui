@@ -15,7 +15,7 @@ export function PositionCardFooter({
   toWinAmount
 }: PositionCardFooterProps) {
   return (
-    <div className="relative flex h-10 shrink-0 items-center justify-between rounded-lg bg-prophet-panel px-3">
+    <div className="relative flex h-10 shrink-0 items-center justify-between rounded-lg bg-prophet-panel px-3 dark:bg-[rgba(255,255,255,0.05)]">
       <span className={cn("text-sm font-[500] leading-[18px]", comboMutedTextClass)}>
         {formatTeamDetailMoney(stakeAmount)}
       </span>

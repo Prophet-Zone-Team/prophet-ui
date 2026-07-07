@@ -5,7 +5,7 @@ export const comboPanelClass = cn(
   "overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel dark:bg-prophet-action-panel"
 );
 
-export const comboMutedTextClass = "text-prophet-muted";
+export const comboMutedTextClass = "text-prophet-muted dark:text-white";
 
 export const comboTitleTextClass = "text-prophet-foreground";
 
@@ -15,7 +15,7 @@ export const comboPrimaryButtonClass = cn(
 );
 
 export const comboSecondaryButtonClass = cn(
-  "border border-prophet-line bg-prophet-panel text-prophet-foreground transition-colors hover:bg-prophet-hover",
+  "border border-prophet-line bg-prophet-panel dark:bg-[rgba(255,255,255,0.05)] text-prophet-foreground transition-colors hover:bg-prophet-hover",
   "disabled:cursor-not-allowed disabled:opacity-70"
 );
 
