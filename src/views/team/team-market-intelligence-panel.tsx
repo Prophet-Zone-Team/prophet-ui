@@ -99,7 +99,7 @@ export function TeamMarketIntelligencePanel({
               />
             </div>
 
-            <div className="rounded-lg border border-prophet-line bg-prophet-action-panel px-3 py-2.5">
+            <div className="rounded-lg border border-prophet-line bg-prophet-panel px-3 py-2.5">
               <span className="text-[10px] font-[500] uppercase tracking-wide text-prophet-muted">
                 {t("whyItMoved")}
               </span>

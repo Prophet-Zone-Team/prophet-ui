@@ -39,7 +39,7 @@ export const referralPrimaryButtonClass = cn(
 
 export const referralInviteFriendsButtonClass = cn(
   referralPrimaryButtonClass,
-  "dark:bg-[linear-gradient(180deg,#FEFCEF_0%,#FFCF00_100%)] dark:text-prophet-foreground",
+  "dark:bg-[linear-gradient(180deg,#FEFCEF_0%,#FFCF00_100%)] dark:text-black",
 );
 
 export const referralInviteButtonClass = referralPrimaryButtonClass;
@@ -53,7 +53,7 @@ export const referralActivityPanelClass =
   "flex min-h-[608px] flex-col rounded-[12px] border border-prophet-line bg-prophet-panel";
 
 export const referralSummaryBarClass =
-  "relative grid min-h-[112px] rounded-t-[12px] grid-cols-1 gap-4 border-b border-prophet-line bg-prophet-action-panel px-[30px] py-6 sm:grid-cols-[1fr_1fr_1fr_1fr_auto] sm:items-center";
+  "relative grid min-h-[112px] rounded-t-[12px] grid-cols-1 gap-4 border-b border-prophet-line bg-prophet-panel px-[30px] py-6 sm:grid-cols-[1fr_1fr_1fr_1fr_auto] sm:items-center";
 
 export const referralSummaryStatValueClass = "text-[26px] font-medium leading-none text-prophet-foreground";
 
