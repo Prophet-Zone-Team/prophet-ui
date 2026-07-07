@@ -69,7 +69,7 @@ export function ScheduleFilterBar({
             onCheckedChange={onShowEndedChange}
             aria-label={t("showEndedMatches")}
           />
-          <span className="whitespace-nowrap text-[12px] font-normal leading-[19px] text-prophet-foreground md:text-[16px]">
+          <span className="whitespace-nowrap text-[12px] font-normal leading-[19px] text-prophet-foreground dark:text-prophet-muted md:text-[16px]">
             {t("showEnded")}
           </span>
         </label>
@@ -103,8 +103,8 @@ function SortPill({
     <button
       type="button"
       className={cn(
-        "inline-flex md:h-[34px] h-[30px] items-center gap-1.5 rounded-[20px] border border-prophet-muted px-[10px] md:px-[16px] text-[12px] md:text-[16px] font-[400] leading-[19px] transition-colors",
-        active ? "bg-black dark:bg-prophet-primary text-white" : "bg-prophet-panel text-prophet-foreground",
+        "inline-flex md:h-[34px] h-[30px] items-center gap-1.5 rounded-[20px] border border-prophet-line px-[10px] md:px-[16px] text-[12px] md:text-[16px] font-[400] leading-[19px] transition-colors",
+        active ? "bg-black dark:bg-[#404045] text-white" : "bg-prophet-panel dark:bg-[unset] text-prophet-foreground",
         className
       )}
       aria-pressed={active}

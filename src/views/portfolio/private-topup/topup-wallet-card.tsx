@@ -47,7 +47,7 @@ export function TopupWalletCard({
             <WalletAvatarIcon address={address} className="size-[50px]" />
           ) : (
             <div
-              className="size-[50px] shrink-0 rounded-full bg-prophet-action-panel"
+              className="size-[50px] shrink-0 rounded-full bg-prophet-panel"
               aria-hidden
             />
           )}

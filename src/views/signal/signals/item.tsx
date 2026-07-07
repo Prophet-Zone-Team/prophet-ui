@@ -21,7 +21,7 @@ export type SignalNewsItemProps = {
 };
 
 const BACKGROUND_CLASS_NAMES: Record<SignalNewsItemVariant, string> = {
-  today: "bg-prophet-muted/10",
+  today: "bg-[rgba(144,144,144,0.1)] dark:bg-[#404045]/10",
   positive: "bg-[#7BCA25]/10",
   negative: "bg-[#FF674B]/10",
 };

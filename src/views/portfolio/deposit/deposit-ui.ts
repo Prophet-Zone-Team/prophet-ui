@@ -10,17 +10,17 @@ export const depositConnectedRowClass = cn(
 
 export const depositConnectedRowHighlightedClass = cn(
   depositConnectedRowClass,
-  "border-prophet-muted"
+  ""
 );
 
 export const depositBridgeLabelClass = "text-sm font-semibold text-prophet-foreground";
 
 export const depositSourceTabsTrackClass =
-  "flex h-[46px] w-full min-w-0 items-center gap-1 rounded-[6px] bg-prophet-action-panel p-1";
+  "flex h-[46px] w-full min-w-0 items-center gap-1 rounded-[6px] bg-prophet-panel p-1";
 
 export const depositSourceTabActiveClass = cn(
   "flex h-[36px] min-w-0 flex-1 items-center justify-center rounded-[6px] border border-prophet-line",
-  "bg-prophet-panel px-2 text-sm font-[500] text-prophet-foreground md:flex-none md:px-4 md:text-base"
+  "bg-prophet-panel dark:bg-prophet-primary px-2 text-sm font-[500] text-prophet-foreground md:flex-none md:px-4 md:text-base"
 );
 
 export const depositSourceTabInactiveClass =
@@ -44,10 +44,10 @@ export const depositPrivatePanelDisabledClass = "pointer-events-none opacity-30"
 
 export const depositTokenRowClass = cn(
   "flex w-full items-center gap-3 rounded-[6px] px-3 py-2.5 text-left transition-colors",
-  "hover:bg-prophet-action-panel"
+  "hover:bg-prophet-panel"
 );
 
-export const depositTokenRowSelectedClass = "bg-prophet-action-panel";
+export const depositTokenRowSelectedClass = "bg-prophet-panel";
 
 export const depositTokenRowDisabledClass = "cursor-not-allowed opacity-30 hover:bg-transparent";
 
@@ -70,7 +70,7 @@ export const depositPercentButtonClass = cn(
 );
 
 export const depositTransferBarClass =
-  "flex items-center justify-between gap-3 rounded-[6px] bg-prophet-action-panel px-4 py-3";
+  "flex items-center justify-between gap-3 rounded-[6px] bg-prophet-panel px-4 py-3";
 
 export const depositFundingWalletChangeClass =
   "border-0 bg-transparent p-0 text-sm font-[400] text-[#3168ff] transition-opacity hover:opacity-80";
@@ -78,7 +78,7 @@ export const depositFundingWalletChangeClass =
 export const depositDetailRowClass =
   "flex items-center justify-between py-3 text-sm last:border-b-0 gap-2";
 
-export const depositBreakdownBoxClass = "rounded-[6px] bg-prophet-action-panel p-4";
+export const depositBreakdownBoxClass = "rounded-[6px] bg-prophet-panel p-4";
 
 export const depositBreakdownRowClass =
   "flex items-center justify-between py-1 text-sm text-prophet-muted";
@@ -90,7 +90,7 @@ export const depositStableflowQrWrapClass =
   "relative mx-auto flex items-center justify-center rounded-[12px] border border-prophet-line bg-prophet-panel p-4";
 
 export const depositStableflowQrSkeletonClass =
-  "mx-auto h-[200px] w-[200px] rounded-[12px] bg-prophet-action-panel animate-pulse";
+  "mx-auto h-[200px] w-[200px] rounded-[12px] bg-prophet-panel animate-pulse";
 
 export const depositStableflowAddressBoxClass =
   "rounded-[6px] border border-prophet-line bg-prophet-panel";
@@ -105,7 +105,7 @@ export const depositStableflowCopyButtonClass = cn(
 );
 
 export const depositStableflowAddressSkeletonClass =
-  "mx-4 my-3 h-5 rounded-[4px] bg-prophet-action-panel animate-pulse";
+  "mx-4 my-3 h-5 rounded-[4px] bg-prophet-panel animate-pulse";
 
 export const depositPendingConfirmButtonClass = cn(
   "flex h-[50px] w-full items-center justify-center rounded-[8px] bg-black dark:bg-prophet-primary",

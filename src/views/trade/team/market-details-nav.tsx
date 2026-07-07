@@ -55,7 +55,7 @@ export function MarketDetailsNav({
       <div
         role="tablist"
         aria-label={t("marketDetailsNavAria")}
-        className="flex h-[46px] items-center rounded-[12px] bg-prophet-action-panel border border-prophet-line p-[5px]"
+        className="flex h-[46px] items-center rounded-[12px] bg-prophet-panel border border-prophet-line p-[5px]"
       >
         <button
           type="button"

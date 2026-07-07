@@ -363,7 +363,7 @@ export function PortfolioPositionsTable({
             </RegionRestrictedControl>
             <button
               type="button"
-              className="shrink-0 px-[8px] h-[32px] cursor-pointer hover:bg-prophet-action-panel disabled:cursor-not-allowed disabled:opacity-40"
+              className="shrink-0 px-[8px] h-[32px] cursor-pointer hover:bg-prophet-panel disabled:cursor-not-allowed disabled:opacity-40"
               aria-label={t("shareMyPosition")}
               disabled={needsWallet || !polymarketAddress}
               onClick={() =>

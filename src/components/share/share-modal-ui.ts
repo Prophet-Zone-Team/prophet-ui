@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 export const inviteModalShellClass = cn(
-  "w-full md:w-[492px] rounded-[20px] border border-prophet-line bg-prophet-panel p-[30px]",
+  "w-full md:w-[492px] rounded-[20px] border border-prophet-line bg-prophet-modal-panel p-[30px]",
   "shadow-[0_0_10px_rgba(0,0,0,0.1)]",
 );
 

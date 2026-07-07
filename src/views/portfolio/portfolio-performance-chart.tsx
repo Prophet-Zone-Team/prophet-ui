@@ -79,7 +79,7 @@ export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
               <span>{t("profitLoss")}</span>
               <button
                 type="button"
-                className="border border-prophet-line rounded-[6px] px-[7px] h-[22px] cursor-pointer hover:bg-prophet-action-panel disabled:cursor-not-allowed disabled:opacity-40"
+                className="border border-prophet-line rounded-[6px] px-[7px] h-[22px] cursor-pointer hover:bg-prophet-panel disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label={t("sharePnl")}
                 disabled={!polymarketAddress}
                 onClick={() => setShareOpen(true)}

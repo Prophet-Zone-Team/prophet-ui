@@ -30,7 +30,7 @@ function TrackCardSkeleton() {
           <LoadingBlock className="h-[34px] flex-1 rounded-[8px] md:h-[36px] md:flex-none md:w-[72px]" />
         </div>
       </div>
-      <div className="flex min-h-0 flex-col gap-3 border-t border-prophet-line bg-prophet-action-panel px-3 py-3 md:min-h-[60px] md:flex-row md:flex-nowrap md:items-center md:gap-6 md:px-4">
+      <div className="flex min-h-0 flex-col gap-3 border-t border-prophet-line bg-prophet-panel px-3 py-3 md:min-h-[60px] md:flex-row md:flex-nowrap md:items-center md:gap-6 md:px-4">
         <LoadingBlock className="h-5 w-28 shrink-0" />
         <LoadingBlock className="h-5 flex-1" />
         <LoadingBlock className="h-5 w-24 shrink-0 md:ml-auto" />

@@ -160,7 +160,7 @@ function SpecialMatchDataCardContent({
           probabilities={oddsResult.probabilities}
         />
       ) : (
-        <div className="absolute inset-0 z-0 bg-prophet-action-panel" aria-hidden />
+        <div className="absolute inset-0 z-0 bg-prophet-panel" aria-hidden />
       )}
 
       <div className="relative z-10 flex justify-center pt-[18px] px-[15px] md:pt-[50px] md:px-2 md:px-0">
