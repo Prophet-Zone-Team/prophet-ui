@@ -19,7 +19,7 @@ export function PositionPickList({ picks }: PositionPickListProps) {
             {index < picks.length - 1 ? (
               <div
                 aria-hidden="true"
-                className="ml-[11px] w-px shrink-0 bg-[#909090]"
+                className="ml-[11px] w-px shrink-0 bg-prophet-muted"
                 style={{ height: `${POSITION_PICK_CONNECTOR_HEIGHT_PX}px` }}
               />
             ) : null}

@@ -1,5 +1,11 @@
 import { cn } from "@/lib/cn";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import {
+  comboBidInputShellClass,
+  comboMutedTextClass,
+  comboPrimaryButtonClass,
+  comboTitleTextClass
+} from "@/views/combo/combo-ui";
 import { tradeQuickAmountClass } from "@/views/trade/trade-widget/trade-ui";
 
 import { COMBO_QUICK_FRACTIONS } from "./constants";
@@ -70,15 +76,15 @@ export function ComboBidSection({
     <div className="flex flex-col gap-3 px-3 pb-[calc(16px+env(safe-area-inset-bottom,0px))] pt-3 sm:px-4 sm:pb-4 sm:pt-4">
       {showBidDetails ? (
         <>
-          <h2 className="m-0 text-base font-[500] leading-5 text-black">
+          <h2 className={cn("m-0 text-base font-[500] leading-5", comboTitleTextClass)}>
             Bid Size
           </h2>
 
-          <div className="flex h-[57px] items-center justify-between rounded-md border border-[#EBEBEB] bg-white px-4">
-            <span className="text-sm font-[400] leading-[18px] text-black">
+          <div className={cn(comboBidInputShellClass, "h-[57px]")}>
+            <span className={cn("text-sm font-[400] leading-[18px]", comboTitleTextClass)}>
               Bid
             </span>
-            <label className="flex items-baseline text-xl font-[500] leading-[25px] text-black">
+            <label className={cn("flex items-baseline text-xl font-[500] leading-[25px]", comboTitleTextClass)}>
               <span className="sr-only">Bid amount</span>
               <span aria-hidden="true">$</span>
               <input
@@ -95,7 +101,7 @@ export function ComboBidSection({
           </div>
 
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-[400] leading-[18px] text-[#909090]">
+            <span className={cn("text-sm font-[400] leading-[18px]", comboMutedTextClass)}>
               Bal. {formatComboBalanceLabel(balance)}
             </span>
 
@@ -106,7 +112,7 @@ export function ComboBidSection({
                   type="button"
                   className={cn(
                     tradeQuickAmountClass,
-                    "h-6 min-w-[42px] rounded-lg px-2 text-xs font-[400] leading-[15px] text-[#909090]"
+                    "h-6 min-w-[42px] rounded-lg px-2 text-xs font-[400] leading-[15px] text-prophet-muted"
                   )}
                   onClick={() => onApplyBalanceFraction(value)}
                 >
@@ -117,7 +123,7 @@ export function ComboBidSection({
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-[500] leading-[18px] text-black">
+            <span className={cn("text-sm font-[500] leading-[18px]", comboTitleTextClass)}>
               To Win
             </span>
             <span className="text-xl font-[500] leading-[25px] text-[#69C800]">
@@ -131,7 +137,10 @@ export function ComboBidSection({
         type="button"
         disabled={actionDisabled}
         onClick={handleAction}
-        className="flex h-[46px] w-full items-center justify-center rounded-lg bg-black text-base font-[500] leading-5 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+        className={cn(
+          "flex h-[46px] w-full items-center justify-center rounded-lg text-base font-[500] leading-5",
+          comboPrimaryButtonClass
+        )}
       >
         {actionLabel}
       </button>

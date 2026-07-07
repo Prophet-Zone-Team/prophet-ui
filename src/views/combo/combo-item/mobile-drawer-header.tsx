@@ -21,9 +21,9 @@ export function MobileDrawerHeader({
     : kickoffLabel;
 
   return (
-    <div className="border-b border-[#EBEBEB] px-3 pb-3 pt-3">
+    <div className="border-b border-prophet-line px-3 pb-3 pt-3">
       <div className="flex min-w-0 flex-wrap items-center gap-3">
-        <span className="text-xs font-[400] leading-[15px] text-[#909090]">
+        <span className="text-xs font-[400] leading-[15px] text-prophet-muted">
           {displayKickoff}
         </span>
         {isLive ? <LiveIndicator compact mobile /> : null}

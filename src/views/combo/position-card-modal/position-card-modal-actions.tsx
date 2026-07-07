@@ -1,6 +1,11 @@
 "use client";
 
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import { cn } from "@/lib/cn";
+import {
+  comboPrimaryButtonClass,
+  comboSecondaryButtonClass
+} from "@/views/combo/combo-ui";
 
 export type PositionCardModalActionsProps = {
   cashoutAmount?: number;
@@ -55,7 +60,10 @@ export function PositionCardModalActions({
         type="button"
         disabled={cashoutDisabled}
         onClick={handleCashout}
-        className="flex h-[46px] flex-1 items-center justify-center rounded-lg border border-[#EBEBEB] bg-white text-base font-[500] leading-5 text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+        className={cn(
+          "flex h-[46px] flex-1 items-center justify-center rounded-lg text-base font-[500] leading-5 transition-opacity hover:opacity-90",
+          comboSecondaryButtonClass
+        )}
       >
         {cashoutLabel}
       </button>
@@ -63,7 +71,10 @@ export function PositionCardModalActions({
       <button
         type="button"
         onClick={onShare}
-        className="flex h-[46px] flex-1 items-center justify-center rounded-lg bg-black text-base font-[500] leading-5 text-white transition-opacity hover:opacity-90"
+        className={cn(
+          "flex h-[46px] flex-1 items-center justify-center rounded-lg text-base font-[500] leading-5",
+          comboPrimaryButtonClass
+        )}
       >
         Share
       </button>

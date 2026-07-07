@@ -45,7 +45,7 @@ export function OutcomeDisplaySwitcher({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "flex h-[30px] w-[203px] shrink-0 rounded-lg border border-[#EBEBEB] bg-white p-[2px]",
+        "flex h-[30px] w-[203px] shrink-0 rounded-lg border border-prophet-line bg-prophet-panel p-[2px]",
         className
       )}
     >
@@ -73,7 +73,7 @@ export function OutcomeDisplaySwitcher({
             <span
               className={cn(
                 "relative z-10 px-1 text-center text-xs leading-[15px] font-[400] transition-colors duration-200",
-                isActive ? "text-white" : "text-black"
+                isActive ? "text-white" : "text-prophet-foreground"
               )}
             >
               {t(MODE_LABEL_KEYS[mode])}

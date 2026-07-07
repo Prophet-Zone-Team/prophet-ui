@@ -1,7 +1,12 @@
+import { cn } from "@/lib/cn";
+import {
+  comboMutedTextClass,
+  comboTitleTextClass
+} from "@/views/combo/combo-ui";
+
 import type { PositionPick } from "./types";
 import { PositionPickTeamFlag } from "./position-pick-team-flag";
 import { resolvePickTeamFromMarketTitle } from "./resolve-pick-team";
-import { cn } from "@/lib/cn";
 
 export type PositionPickItemProps = {
   pick: PositionPick;
@@ -26,10 +31,10 @@ export function PositionPickItem({ pick }: PositionPickItemProps) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="m-0 truncate text-xs font-[400] leading-[15px] text-black">
+        <p className={cn("m-0 truncate text-xs font-[400] leading-[15px]", comboMutedTextClass)}>
           {pick.matchupLabel}
         </p>
-        <p className="m-0 truncate text-sm font-[500] leading-[18px] text-black">
+        <p className={cn("m-0 truncate text-sm font-[500] leading-[18px]", comboTitleTextClass)}>
           {pick.selectionLabel}
         </p>
       </div>

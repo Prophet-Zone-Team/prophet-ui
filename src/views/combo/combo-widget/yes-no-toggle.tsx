@@ -2,6 +2,7 @@
 
 import Popover from "@/components/popover";
 import { cn } from "@/lib/cn";
+import { comboTooltipClass } from "@/views/combo/combo-ui";
 
 import type { ComboPickOutcomeSide } from "./types";
 
@@ -21,8 +22,8 @@ export function YesNoToggle({
   const toggle = (
     <div
       className={cn(
-        "inline-flex h-[30px] w-16 shrink-0 items-center rounded-lg border border-[#EBEBEB] bg-white p-0.5",
-        disabled && "cursor-not-allowed bg-[#F3F4F6]",
+        "inline-flex h-[30px] w-16 shrink-0 items-center rounded-lg border border-prophet-line bg-prophet-panel p-0.5",
+        disabled && "cursor-not-allowed bg-prophet-hover",
       )}
     >
       {(["yes", "no"] as const).map((side) => {
@@ -48,11 +49,11 @@ export function YesNoToggle({
                     "cursor-not-allowed",
                     active
                       ? "bg-[#666666] text-white"
-                      : "bg-transparent text-[#909090]",
+                      : "bg-transparent text-prophet-muted",
                   )
                 : active
-                  ? "bg-black text-white"
-                  : "bg-transparent text-black",
+                  ? "bg-black text-white dark:bg-prophet-primary"
+                  : "bg-transparent text-prophet-foreground",
             )}
           >
             {side}
@@ -68,11 +69,7 @@ export function YesNoToggle({
         placement="Top"
         trigger="Hover"
         contentClassName="!z-50"
-        content={
-          <div className="rounded-lg border border-[#EBEBEB] bg-white px-3 py-2 text-sm font-[400] text-black shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
-            {disabledTooltip}
-          </div>
-        }
+        content={<div className={comboTooltipClass}>{disabledTooltip}</div>}
       >
         {toggle}
       </Popover>
