@@ -1,7 +1,15 @@
 import createNextIntlPlugin from "next-intl/plugin";
-import { copyTradeApiUpstream } from "@/config/copy-trade";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+// Keep in sync with src/config/copy-trade.ts — next.config runs in plain Node (no @/ aliases).
+// const copyTradeApiUpstream = (
+//   process.env.NEXT_PUBLIC_ENV === "production"
+//     ? "https://apicopy.prophet.zone"
+//     : "https://api.zerostrategy.fun"
+// ).replace(/\/$/, "");
+
+const copyTradeApiUpstream = "https://apicopy.prophet.zone";
 
 const isVercelBuild = process.env.VERCEL === "1";
 
