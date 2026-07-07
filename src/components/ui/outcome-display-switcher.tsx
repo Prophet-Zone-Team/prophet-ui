@@ -45,7 +45,7 @@ export function OutcomeDisplaySwitcher({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "flex h-[30px] w-[203px] shrink-0 rounded-lg border border-prophet-line bg-prophet-panel p-[2px]",
+        "flex h-[30px] w-[203px] shrink-0 rounded-lg border border-prophet-line bg-prophet-action-panel p-[2px]",
         className
       )}
     >
@@ -66,7 +66,7 @@ export function OutcomeDisplaySwitcher({
               <motion.span
                 layoutId={pillLayoutId}
                 aria-hidden="true"
-                className="absolute inset-0 rounded-md bg-black"
+                className="absolute inset-0 rounded-md bg-black dark:bg-[#404045]"
                 transition={PILL_TRANSITION}
               />
             ) : null}

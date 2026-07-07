@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 import { homeLoadingSurfaceClass } from "@/views/home/home-ui";
 
 export const comboPanelClass = cn(
-  "overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel"
+  "overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel dark:bg-prophet-action-panel"
 );
 
 export const comboMutedTextClass = "text-prophet-muted";
@@ -20,7 +20,7 @@ export const comboSecondaryButtonClass = cn(
 );
 
 export const comboMultiplierBadgeClass = cn(
-  "inline-flex h-7 shrink-0 items-center rounded-[15px] bg-black px-3 text-sm font-[500] leading-[18px] text-white dark:bg-prophet-primary"
+  "inline-flex h-7 shrink-0 items-center rounded-[15px] bg-black px-3 text-sm font-[500] leading-[18px] text-white dark:bg-white dark:text-prophet-primary"
 );
 
 export const comboSkeletonClass = cn(
@@ -29,13 +29,13 @@ export const comboSkeletonClass = cn(
 );
 
 export const comboBidInputShellClass = cn(
-  "flex items-center justify-between rounded-md border border-prophet-line bg-prophet-panel px-4"
+  "flex items-center justify-between rounded-md border border-prophet-line bg-prophet-panel dark:bg-[rgba(255,255,255,0.05)] px-4"
 );
 
 export const comboInnerCardClass = "rounded-xl bg-prophet-action-panel/50 p-2.5";
 
 export const comboInnerCardSolidClass = cn(
-  "rounded-md border border-prophet-line bg-prophet-panel px-3 py-2.5"
+  "rounded-md border border-prophet-line bg-prophet-panel dark:bg-[rgba(255,255,255,0.05)] px-3 py-2.5"
 );
 
 export const comboDividerClass = "border-t border-dashed border-prophet-line";
@@ -55,14 +55,14 @@ export function comboOddsButtonStateClass({
   disabled?: boolean;
 }) {
   if (disabled) {
-    return "cursor-not-allowed border-prophet-line bg-prophet-hover text-prophet-muted";
+    return "cursor-not-allowed border-prophet-line opacity-70 text-prophet-muted";
   }
 
   if (selected) {
-    return "border-prophet-line bg-[linear-gradient(180deg,#666666_0%,#000000_100%)] text-white";
+    return "border-prophet-line bg-[linear-gradient(180deg,#666666_0%,#000000_100%)] dark:bg-prophet-primary dark:[background-image:unset] text-white";
   }
 
-  return "bg-prophet-action-panel text-prophet-foreground hover:bg-prophet-hover";
+  return "bg-prophet-hover text-prophet-foreground hover:bg-prophet-action-panel";
 }
 
 export function comboOddsButtonLabelClass({
