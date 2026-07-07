@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isValidStableflowDepositTxHash } from "@/lib/funding/recipient-validation";
 import { submitStableflowDepositTx } from "@/server/trading/stableflow";
 import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
 
   const payload = (await request.json()) as SubmitDepositTxPayload;
 
-  if (!payload.txHash?.trim() || !/^0x[a-fA-F0-9]+$/.test(payload.txHash.trim())) {
+  if (!payload.txHash?.trim() || !isValidStableflowDepositTxHash(payload.txHash)) {
     return NextResponse.json({ error: "txHash must be a valid transaction hash." }, { status: 400 });
   }
 

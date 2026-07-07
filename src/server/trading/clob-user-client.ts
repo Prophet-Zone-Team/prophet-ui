@@ -18,7 +18,7 @@ import type {
 } from "@polymarket/clob-client-v2";
 
 import type { UserActivityRecord } from "@/lib/portfolio/types";
-import { roundPriceToTick } from "@/lib/market/order-math";
+import { roundPriceToTick, normalizeMarketTickSize, isMarketTickSize } from "@/lib/market/order-math";
 import type {
   BidTradeSide,
   TradingOrderType,
@@ -430,6 +430,50 @@ export async function fetchUserPositions({
   return Array.isArray(payload) ? payload.filter(isUserPositionRecord) : [];
 }
 
+interface PolymarketPositionsValueRecord {
+  user: string;
+  value: number;
+}
+
+export async function fetchUserPositionsTotalValue({
+  userAddress,
+  conditionIds
+}: {
+  userAddress: string;
+  conditionIds?: string[];
+}): Promise<number> {
+  const params = new URLSearchParams({
+    user: userAddress
+  });
+
+  if (conditionIds?.length) {
+    params.set("market", conditionIds.join(","));
+  }
+
+  const response = await serverFetch(
+    `https://data-api.polymarket.com/value?${params.toString()}`,
+    {
+      cache: "no-store"
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Unable to fetch user positions total value: ${await readResponseError(response)}`
+    );
+  }
+
+  const payload = (await response.json()) as unknown;
+
+  if (!Array.isArray(payload)) {
+    return 0;
+  }
+
+  return payload
+      .filter(isPolymarketPositionsValueRecord)
+      .reduce((sum, record) => sum + record.value, 0);
+}
+
 export async function postSignedUserOrder({
   address,
   credentials,
@@ -558,12 +602,7 @@ export function isSupportedOrderType(
 }
 
 export function isSupportedTickSize(value: unknown): value is TickSize {
-  return (
-    value === "0.1" ||
-    value === "0.01" ||
-    value === "0.001" ||
-    value === "0.0001"
-  );
+  return isMarketTickSize(value);
 }
 
 export interface ClobTokenSigningMeta {
@@ -710,27 +749,8 @@ function parseNegRiskValue(payload: {
 }
 
 function normalizeClobTickSize(value: unknown): TickSize | undefined {
-  const parsed =
-    typeof value === "number"
-      ? value
-      : typeof value === "string"
-        ? Number(value)
-        : Number.NaN;
-
-  if (parsed === 0.1) {
-    return "0.1";
-  }
-
-  if (parsed === 0.01) {
-    return "0.01";
-  }
-
-  if (parsed === 0.001) {
-    return "0.001";
-  }
-
-  if (parsed === 0.0001) {
-    return "0.0001";
+  if (typeof value === "number" || typeof value === "string") {
+    return normalizeMarketTickSize(value);
   }
 
   return undefined;
@@ -1061,6 +1081,18 @@ function normalizeUserActivityRecord(
     eventSlug: record.eventSlug,
     outcome: record.outcome
   };
+}
+
+function isPolymarketPositionsValueRecord(
+  value: unknown
+): value is PolymarketPositionsValueRecord {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const record = value as Partial<PolymarketPositionsValueRecord>;
+
+  return typeof record.user === "string" && typeof record.value === "number";
 }
 
 function isUserPositionRecord(value: unknown): value is UserPositionRecord {

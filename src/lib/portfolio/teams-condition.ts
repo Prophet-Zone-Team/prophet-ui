@@ -114,6 +114,10 @@ export type PortfolioMarketIconOptions = {
   marketKind?: PortfolioMarketKind;
 };
 
+function normalizeOptionalText(value?: string): string {
+  return value?.trim() ?? "";
+}
+
 export function resolvePortfolioPositionIcon(
   position: Pick<UserPositionRecord, "icon" | "outcome">,
   teams: ProphetTeamsConditionTeam[],
@@ -130,7 +134,7 @@ export function resolvePortfolioPositionIcon(
 
 export function resolvePortfolioMarketIcon(
   teams: ProphetTeamsConditionTeam[],
-  outcome: string,
+  outcome?: string,
   options: PortfolioMarketIconOptions = {}
 ): PortfolioMarketIcon {
   const contextIcon = options.contextIcon?.trim();
@@ -143,7 +147,7 @@ export function resolvePortfolioMarketIcon(
     return { kind: "placeholder" };
   }
 
-  const normalizedOutcome = outcome.trim().toLowerCase();
+  const normalizedOutcome = normalizeOptionalText(outcome).toLowerCase();
 
   if (teams.length === 0) {
     return { kind: "placeholder" };
@@ -161,7 +165,8 @@ export function resolvePortfolioMarketIcon(
   }
 
   const matchedTeam = teams.find(
-    (team) => team.name.trim().toLowerCase() === normalizedOutcome
+    (team) =>
+      normalizeOptionalText(team.name).toLowerCase() === normalizedOutcome
   );
 
   if (matchedTeam) {
@@ -181,16 +186,17 @@ export function resolvePortfolioMarketIcon(
 
 export function resolveTeamForOutcome(
   teams: ProphetTeamsConditionTeam[],
-  outcome: string
+  outcome?: string
 ): ProphetTeamsConditionTeam | undefined {
-  const normalizedOutcome = outcome.trim().toLowerCase();
+  const normalizedOutcome = normalizeOptionalText(outcome).toLowerCase();
 
   if (!normalizedOutcome) {
     return undefined;
   }
 
   const matched = teams.find(
-    (team) => team.name.trim().toLowerCase() === normalizedOutcome
+    (team) =>
+      normalizeOptionalText(team.name).toLowerCase() === normalizedOutcome
   );
 
   if (matched) {
@@ -220,7 +226,12 @@ function findTeamByNameFragment(
   }
 
   return teams.find((team) => {
-    const normalizedName = team.name.trim().toLowerCase();
+    const normalizedName = normalizeOptionalText(team.name).toLowerCase();
+
+    if (!normalizedName) {
+      return false;
+    }
+
     return (
       normalizedName === normalizedFragment ||
       normalizedName.includes(normalizedFragment) ||
@@ -233,13 +244,12 @@ export function resolvePortfolioTeamName(
   teams: ProphetTeamsConditionTeam[],
   position: Pick<UserPositionRecord, "outcome" | "title">
 ): string | undefined {
+  const normalizedOutcome = normalizeOptionalText(position.outcome).toLowerCase();
   const fromOutcome = resolveTeamForOutcome(teams, position.outcome)?.name;
 
   if (fromOutcome) {
     return fromOutcome;
   }
-
-  const normalizedOutcome = position.outcome.trim().toLowerCase();
 
   if (normalizedOutcome === "yes" || normalizedOutcome === "no") {
     const subject = extractSubjectTeamFromTitle(position.title);

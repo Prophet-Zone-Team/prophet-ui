@@ -3,6 +3,7 @@ import {
   isGammaMarketRecord,
   type GammaMarketRecord
 } from "@/lib/market/polymarket-gamma";
+import { proxyPolymarketPost } from "@/service/prophet";
 
 const GAMMA_MARKETS_INFORMATION_LIMIT = 100;
 
@@ -22,23 +23,9 @@ export async function fetchGammaMarketsInformation(
   const url = new URL(`${GAMMA_API_BASE}/markets/information`);
   url.searchParams.set("limit", String(GAMMA_MARKETS_INFORMATION_LIMIT));
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json"
-    },
-    body: JSON.stringify({ conditionIds: normalizedIds }),
-    cache: "no-store"
+  const payload = await proxyPolymarketPost<unknown>(url.toString(), {
+    conditionIds: normalizedIds
   });
-
-  if (!response.ok) {
-    throw new Error(
-      `Gamma markets/information returned HTTP ${response.status}.`
-    );
-  }
-
-  const payload = (await response.json()) as unknown;
 
   if (!Array.isArray(payload)) {
     throw new Error("Gamma markets/information returned a non-array payload.");

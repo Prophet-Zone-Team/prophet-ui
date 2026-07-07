@@ -34,13 +34,18 @@ import {
 } from "@/lib/market/fixture-probability-chart";
 import {
   LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
-  resolveLiveChartAxisTicks
+  mapLiveFixtureChartPointsToAxis,
+  resolveLiveChartAxisTicksWithBreaks,
+  resolveLiveChartMaxAxisSeconds,
+  resolveMatchClockFromAxisSeconds,
+  type ResolveMatchClockSecondsOptions
 } from "@/lib/market/live-fixture-probability-chart";
 import type {
   GameFixtureBinaryChartPoint,
   GameFixtureChartTimeRange,
   GameMatchChartEvent
 } from "@/types/market";
+import { useDarkModeEnabled } from "@/store";
 import {
   GoalEventMarkerChartProvider,
   GoalEventMarkerCustomized
@@ -59,13 +64,13 @@ const END_LABEL_GUTTER = END_LABEL_RIGHT_INSET + END_LABEL_ESTIMATED_WIDTH + 8;
 
 type BinarySeriesKey = "primary" | "secondary";
 
-const END_LABEL_SLOT_FRACTIONS: Record<BinarySeriesKey, number> = {
-  primary: 1 / 3,
-  secondary: 2 / 3
-};
+const END_LABEL_SLOT_TOP = 1 / 3;
+const END_LABEL_SLOT_BOTTOM = 2 / 3;
 
 interface ChartRow extends GameFixtureBinaryChartPoint {
   chartLabel: string;
+  axisSeconds?: number;
+  matchClockSeconds?: number;
 }
 
 interface ChartCustomizedProps {
@@ -118,8 +123,36 @@ function resolvePlotRightAnchorX(
   return plotRight - END_LABEL_RIGHT_INSET;
 }
 
-function resolveFixedLabelSlotY(
-  seriesKey: BinarySeriesKey,
+function resolveEndLabelProbability(
+  probability: number | undefined
+): number {
+  return typeof probability === "number" && Number.isFinite(probability)
+    ? probability
+    : 0;
+}
+
+function resolveBinaryEndLabelSlotFractions(
+  primaryProbability: number | undefined,
+  secondaryProbability: number | undefined
+): Record<BinarySeriesKey, number> {
+  const primary = resolveEndLabelProbability(primaryProbability);
+  const secondary = resolveEndLabelProbability(secondaryProbability);
+
+  if (primary >= secondary) {
+    return {
+      primary: END_LABEL_SLOT_TOP,
+      secondary: END_LABEL_SLOT_BOTTOM
+    };
+  }
+
+  return {
+    primary: END_LABEL_SLOT_BOTTOM,
+    secondary: END_LABEL_SLOT_TOP
+  };
+}
+
+function resolveLabelSlotY(
+  slotFraction: number,
   offset: ChartCustomizedProps["offset"],
   height: number | undefined
 ): number | undefined {
@@ -130,9 +163,8 @@ function resolveFixedLabelSlotY(
   const top = offset?.top ?? 0;
   const bottom = offset?.bottom ?? 0;
   const plotHeight = height - top - bottom;
-  const fraction = END_LABEL_SLOT_FRACTIONS[seriesKey];
 
-  return top + plotHeight * fraction;
+  return top + plotHeight * slotFraction;
 }
 
 function EndLabelMarker({
@@ -216,10 +248,19 @@ function EndLabelLayer({
     return null;
   }
 
+  const slotFractions = resolveBinaryEndLabelSlotFractions(
+    latestRow.primary,
+    latestRow.secondary
+  );
+
   return (
     <g className="pointer-events-none">
       {series.map((item) => {
-        const slotY = resolveFixedLabelSlotY(item.key, offset, height);
+        const slotY = resolveLabelSlotY(
+          slotFractions[item.key],
+          offset,
+          height
+        );
 
         if (slotY === undefined || !Number.isFinite(slotY)) {
           return null;
@@ -269,6 +310,8 @@ export interface GameBinaryProbabilityChartProps {
   events?: GameMatchChartEvent[];
   maxElapsedSeconds?: number;
   kickoffAt?: string;
+  matchPeriod?: string;
+  matchClockElapsedSeconds?: number;
   homeCode?: string;
   awayCode?: string;
 }
@@ -284,14 +327,24 @@ export function GameBinaryProbabilityChart({
   events = [],
   maxElapsedSeconds = 0,
   kickoffAt,
+  matchPeriod,
+  matchClockElapsedSeconds,
   homeCode,
   awayCode
 }: GameBinaryProbabilityChartProps) {
   const t = useTranslations("trade");
+  const darkModeEnabled = useDarkModeEnabled();
   const isLive = mode === "live";
+  const liveClockOptions = useMemo<ResolveMatchClockSecondsOptions>(
+    () => ({
+      matchPeriod,
+      currentMatchClockSeconds: matchClockElapsedSeconds
+    }),
+    [matchClockElapsedSeconds, matchPeriod]
+  );
   const formatLiveAxisTick = (value: number) => {
-    const safeSeconds = Math.max(0, Math.floor(value));
-    const minutes = Math.floor(safeSeconds / 60);
+    const matchClockSeconds = resolveMatchClockFromAxisSeconds(value);
+    const minutes = Math.floor(matchClockSeconds / 60);
 
     if (minutes === 45) {
       return t("chartHalfTimeAxisLabel");
@@ -313,12 +366,22 @@ export function GameBinaryProbabilityChart({
   );
 
   const chartData = useMemo<ChartRow[]>(
-    () =>
-      data.map((point) => ({
-        ...point,
-        chartLabel: point.label
-      })),
-    [data]
+    () => {
+      if (!isLive) {
+        return data.map((point) => ({
+          ...point,
+          chartLabel: point.label
+        }));
+      }
+
+      return mapLiveFixtureChartPointsToAxis(data, liveClockOptions).map(
+        (point) => ({
+          ...point,
+          chartLabel: point.label
+        })
+      );
+    },
+    [data, isLive, liveClockOptions]
   );
 
   const yDomain = useMemo(() => getBinaryFixtureChartYDomain(data), [data]);
@@ -331,7 +394,7 @@ export function GameBinaryProbabilityChart({
   );
   const dataLength = chartData.length;
 
-  const resolvedMaxElapsed = useMemo(() => {
+  const resolvedMaxMatchClock = useMemo(() => {
     if (!isLive) {
       return 0;
     }
@@ -341,15 +404,22 @@ export function GameBinaryProbabilityChart({
     }
 
     return Math.max(
-      ...data.map((point) => point.elapsedSeconds ?? 0),
+      ...chartData.map((point) => point.matchClockSeconds ?? 0),
+      matchClockElapsedSeconds ?? 0,
       LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS
     );
-  }, [data, isLive, maxElapsedSeconds]);
+  }, [chartData, isLive, matchClockElapsedSeconds, maxElapsedSeconds]);
+
+  const resolvedMaxAxisSeconds = useMemo(
+    () =>
+      isLive ? resolveLiveChartMaxAxisSeconds(resolvedMaxMatchClock) : 0,
+    [isLive, resolvedMaxMatchClock]
+  );
 
   const goalMarkerConfig = useMemo(
     () => ({
       events,
-      maxElapsedSeconds: resolvedMaxElapsed,
+      maxAxisSeconds: resolvedMaxAxisSeconds,
       homeCode,
       homeName: primaryLabel,
       awayCode,
@@ -360,7 +430,7 @@ export function GameBinaryProbabilityChart({
       events,
       homeCode,
       primaryLabel,
-      resolvedMaxElapsed,
+      resolvedMaxAxisSeconds,
       secondaryLabel
     ]
   );
@@ -379,13 +449,18 @@ export function GameBinaryProbabilityChart({
         bottom: isLive ? 36 : 4
       }}
     >
-      <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
+      <CartesianGrid
+        stroke={darkModeEnabled ? "#353535" : CHART_COLORS.grid}
+        vertical={false}
+      />
       <XAxis
         type={isLive ? "number" : "category"}
-        dataKey={isLive ? "elapsedSeconds" : "timestamp"}
-        domain={isLive ? [0, resolvedMaxElapsed] : undefined}
+        dataKey={isLive ? "axisSeconds" : "timestamp"}
+        domain={isLive ? [0, resolvedMaxAxisSeconds] : undefined}
         ticks={
-          isLive ? resolveLiveChartAxisTicks(resolvedMaxElapsed) : undefined
+          isLive
+            ? resolveLiveChartAxisTicksWithBreaks(resolvedMaxMatchClock)
+            : undefined
         }
         tick={{ fill: CHART_COLORS.muted, fontSize: 14, dy: 6 }}
         axisLine={false}
@@ -485,15 +560,19 @@ function BinaryChartTooltip({
   }
 
   const point = payload[0]?.payload as ChartRow | undefined;
-  const timeLabel =
+  const matchClockSeconds =
     isLive && typeof label === "number"
-      ? formatGoalEventTime(label)
+      ? resolveMatchClockFromAxisSeconds(label)
+      : point?.matchClockSeconds;
+  const timeLabel =
+    isLive && typeof matchClockSeconds === "number"
+      ? formatGoalEventTime(matchClockSeconds)
       : isLive && point?.timestamp
         ? formatChartTimestampClockLabel(point.timestamp)
         : formatGameChartXAxisTick(String(label ?? ""), timeRange);
 
   return (
-    <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+    <div className="rounded-xl border border-prophet-line bg-prophet-panel px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
       <p className="m-0 mb-1 text-sm font-[500] leading-[17px] text-[#909090]">
         {timeLabel}
       </p>

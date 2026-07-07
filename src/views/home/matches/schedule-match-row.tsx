@@ -75,28 +75,19 @@ export function ScheduleMatchRow({
     liveMatch.homeScore,
     liveMatch.awayScore
   );
-  const canNavigate = variant !== "ended";
-
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-xl border border-[#EBEBEB] bg-white px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4",
-        canNavigate
-          ? "cursor-pointer transition-colors hover:border-[#d0d0d0] hover:bg-[#fafbfc]"
-          : "cursor-default",
+        "flex flex-col gap-3 rounded-xl border border-prophet-line bg-prophet-panel px-3 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4 cursor-pointer transition-colors hover:border-prophet-line hover:bg-prophet-hover",
         variant === "ended" && "opacity-90",
         variant === "ongoing" &&
           "border-[#7BCA25] shadow-[0_0_10px_rgba(123,202,37,0.25)]",
         className
       )}
       aria-label={`${t("specialMatchAria", { home: homeDisplayName, away: awayDisplayName })}, ${statusLabel}`}
-      onClick={
-        canNavigate
-          ? () => {
-              router.push(gameTradeHref(match.id));
-            }
-          : undefined
-      }
+      onClick={() => {
+        router.push(gameTradeHref(match.id));
+      }}
     >
       <div className="flex shrink-0 justify-between items-center gap-1 md:w-[20%]">
         <div className="flex shrink-0 items-center gap-3">
@@ -180,7 +171,7 @@ function StatusColumn({
         className="font-semibold"
         label={statusLabel}
       />
-      <p className="m-0 mt-[4px] text-xs md:text-[14px] leading-[14px] text-[#909090]">
+      <p className="m-0 mt-[4px] text-xs md:text-[14px] leading-[14px] text-prophet-muted">
         {kickoffLabel}
       </p>
     </div>
@@ -214,7 +205,7 @@ function UpcomingMatchBody({
           code={sides.home.code}
           logoUrl={sides.home.logoUrl}
         />
-        <span className="px-1 text-sm font-normal text-[#909090]">
+        <span className="px-1 text-sm font-normal text-prophet-muted">
           {t("versus")}
         </span>
         <TeamPercentSide
@@ -259,7 +250,7 @@ function OngoingMatchBody({
           code={sides.home.code}
           logoUrl={sides.home.logoUrl}
         />
-        <strong className="px-1 text-lg font-[500] leading-[21px] text-black">
+        <strong className="px-1 text-lg font-[500] leading-[21px] text-prophet-foreground">
           {scoreLabel}
         </strong>
         <TeamPercentSide
@@ -309,7 +300,7 @@ function EndedMatchBody({
           code={sides.home.code}
           logoUrl={sides.home.logoUrl}
         />
-        <strong className="px-1 text-lg font-[500] leading-[21px] text-black">
+        <strong className="px-1 text-lg font-[500] leading-[21px] text-prophet-foreground">
           {scoreLabel}
         </strong>
         <TeamResultSide
@@ -353,21 +344,21 @@ function TeamPercentSide({
         align === "end" && "items-end"
       )}
     >
-      <span className="truncate text-[12px] font-[500] leading-[19px] text-black">
+      <span className="truncate text-[12px] font-[500] leading-[19px] text-prophet-foreground">
         {name}
       </span>
-      <span className="text-[14px] font-[500] leading-[19px] text-black">
+      <span className="text-[14px] font-[500] leading-[19px] text-prophet-foreground">
         {percent}
       </span>
     </div>
   );
   const pct = (
-    <span className="hidden md:block md:order-1 text-sm md:text-[18px] font-[500] leading-[19px] text-black w-[60px]">
+    <span className="hidden md:block md:order-1 text-sm md:text-[18px] font-[500] leading-[19px] text-prophet-foreground w-[60px]">
       {percent}
     </span>
   );
   const label = (
-    <span className="hidden md:block md:order-3 truncate text-sm md:text-[18px] font-[500] leading-[19px] text-black">
+    <span className="hidden md:block md:order-3 truncate text-sm md:text-[18px] font-[500] leading-[19px] text-prophet-foreground">
       {name}
     </span>
   );
@@ -410,7 +401,7 @@ function TeamResultSide({
   );
   const pill = outcome ? <OutcomePill outcome={outcome} /> : null;
   const label = (
-    <span className="truncate text-base font-[500] leading-[19px] text-black">
+    <span className="truncate text-base font-[500] leading-[19px] text-prophet-foreground">
       {name}
     </span>
   );
@@ -454,10 +445,10 @@ function VolumeColumn({ amount }: { amount: string }) {
 
   return (
     <div className="flex flex-1 md:flex-grow-0 md:w-full shrink-0 flex-col items-end sm:w-[88px]">
-      <strong className="text-lg font-[500] leading-[21px] text-black">
+      <strong className="text-lg font-[500] leading-[21px] text-prophet-foreground">
         {amount}
       </strong>
-      <span className="text-xs font-normal leading-[14px] text-[#909090]">
+      <span className="text-xs font-normal leading-[14px] text-prophet-muted">
         {t("volume")}
       </span>
     </div>

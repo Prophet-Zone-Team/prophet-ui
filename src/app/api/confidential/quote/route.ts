@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { buildConfidentialTopupQuoteRequest } from "@/lib/funding/confidential";
+import { isValidStableflowRefundAddress } from "@/lib/funding/recipient-validation";
+import {
+  formatConfidentialApiErrorMessage,
+  resolveOriginTokenDecimals,
+} from "@/server/confidential/error-messages";
 import { getConfidentialQuote } from "@/server/confidential/one-click-client";
 import {
   applyRefreshedCookie,
@@ -15,6 +20,7 @@ interface QuotePayload {
   destinationAssetId?: string;
   amountBaseUnits?: string;
   refundTo?: string;
+  originBlockchain?: string;
 }
 
 export async function POST(request: Request) {
@@ -50,10 +56,11 @@ export async function POST(request: Request) {
 
     return applyRefreshedCookie(NextResponse.json({ quote }), auth.access);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
-      { status: 502 },
-    );
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    const decimals = await resolveOriginTokenDecimals(payload.originAssetId!);
+    const errorMessage = formatConfidentialApiErrorMessage(rawMessage, decimals);
+
+    return NextResponse.json({ error: errorMessage }, { status: 502 });
   }
 }
 
@@ -70,9 +77,33 @@ function validatePayload(payload: QuotePayload): string | undefined {
     return "amountBaseUnits must be a positive integer string.";
   }
 
-  if (!payload.refundTo?.trim() || !/^0x[a-fA-F0-9]{40}$/.test(payload.refundTo.trim())) {
-    return "refundTo must be a valid EVM address.";
+  const originBlockchain =
+    payload.originBlockchain?.trim() ||
+    inferBlockchainFromAssetId(payload.originAssetId);
+
+  if (!payload.refundTo?.trim()) {
+    return "refundTo is required.";
+  }
+
+  if (!isValidStableflowRefundAddress(originBlockchain, payload.refundTo)) {
+    return "refundTo must be a valid address for the origin chain.";
   }
 
   return undefined;
+}
+
+function inferBlockchainFromAssetId(assetId: string): string {
+  if (assetId.startsWith("1cs_v1:sol:")) {
+    return "sol";
+  }
+
+  if (assetId.includes(":tron")) {
+    return "tron";
+  }
+
+  if (assetId.startsWith("nep141:") && !assetId.includes(":sol") && !assetId.includes(":tron")) {
+    return "near";
+  }
+
+  return "pol";
 }

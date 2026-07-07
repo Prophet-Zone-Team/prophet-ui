@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { trackWinnerChartTeamSelected } from "@/lib/analytics/tracking";
 import { GameMarketTabSwitcher } from "@/views/trade/game/markets/game-market-tab-switcher";
 import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
 import {
@@ -41,6 +42,7 @@ import type {
   WorldCupMatch
 } from "@/types/market";
 import { ExactScorePanel } from "@/views/trade/game/fixture-markets/exact-score-panel";
+import { ExactScoreOutcomeChart } from "@/views/trade/game/fixture-markets/exact-score-outcome-chart";
 import {
   buildBinarySummaryFromOutcomes,
   buildTernarySummaryFromOutcomes,
@@ -57,18 +59,19 @@ import {
 import {
   HalftimeActionRow,
   LineGroupActionRow,
-  MoneylineActionRow,
   resolveLineGroupForTab
 } from "@/views/trade/game/markets/market-action-row";
+import { MoneyLineSection } from "@/views/trade/game/money-line";
 import { GAME_MARKET_TAB_ICONS } from "@/views/trade/game/icons";
 import { MarketContextRow } from "@/views/trade/game/markets/market-context-row";
+import { GameStatsSection } from "@/views/trade/game/stats";
 import { useGameMarketWsTokens } from "@/views/trade/game/markets/use-game-market-ws-tokens";
 import { useLiveFixtureTabPrices } from "@/views/trade/game/markets/use-live-fixture-tab-prices";
 
 const GAME_MARKET_TABS = [
   {
     id: "moneyline",
-    labelKey: "moneyline",
+    labelKey: "gameLines",
     iconSrc: GAME_MARKET_TAB_ICONS.moneyline
   },
   {
@@ -90,6 +93,11 @@ const GAME_MARKET_TABS = [
     id: "top_scores",
     labelKey: "topScores",
     iconSrc: GAME_MARKET_TAB_ICONS.top_scores
+  },
+  {
+    id: "stats",
+    labelKey: "stats",
+    iconSrc: GAME_MARKET_TAB_ICONS.stats
   }
 ] as const satisfies ReadonlyArray<{
   id: GameMarketTabId;
@@ -160,6 +168,21 @@ export function GameMarketsSection({
       sides.home.name,
       tab
     ]
+  );
+
+  const resolveExactScoreOtherSources = useCallback(
+    (outcome: FixtureMarketOutcome, binarySide: "yes" | "no") =>
+      isGameOngoing
+        ? []
+        : mapGameOddsToOtherSources({
+            odds: gameOdds,
+            tab: "top_scores",
+            selectedOutcome: outcome,
+            selectedBinarySide: binarySide,
+            homeTeamName: sides.home.name,
+            awayTeamName: sides.away.name
+          }),
+    [gameOdds, isGameOngoing, sides.away.name, sides.home.name]
   );
 
   useGameStatisticsNotificationSync({
@@ -266,6 +289,10 @@ export function GameMarketsSection({
   ]);
 
   useEffect(() => {
+    if (tab === "stats") {
+      return;
+    }
+
     if (!selectedOutcome || outcomeBelongsToTab(selectedOutcome, tab)) {
       return;
     }
@@ -285,8 +312,10 @@ export function GameMarketsSection({
           ? spreadsLineKey
           : undefined;
 
-    if (!selectedOutcome || !outcomeBelongsToTab(selectedOutcome, nextTab)) {
-      selectDefaultForTab(nextTab, nextLineKey);
+    if (nextTab !== "stats") {
+      if (!selectedOutcome || !outcomeBelongsToTab(selectedOutcome, nextTab)) {
+        selectDefaultForTab(nextTab, nextLineKey);
+      }
     }
   };
 
@@ -294,6 +323,23 @@ export function GameMarketsSection({
     outcome: FixtureMarketOutcome,
     binarySide: "yes" | "no" = "yes"
   ) => {
+    if (
+      tab === "moneyline" &&
+      (outcome.side === "home" || outcome.side === "away")
+    ) {
+      const teamSide = outcome.side === "home" ? sides.home : sides.away;
+      trackWinnerChartTeamSelected({
+        chartId: "game_moneyline",
+        seriesKey: outcome.side,
+        teamId:
+          outcome.side === "home"
+            ? liveMatch.homeTeamId
+            : liveMatch.awayTeamId,
+        teamName: teamSide.name,
+        teamCode: teamSide.code
+      });
+    }
+
     selectFixtureOutcome(outcome, binarySide);
   };
 
@@ -357,7 +403,6 @@ export function GameMarketsSection({
     ]
   );
 
-  const moneylineGroup = findFixtureGroupByType(fixtureMarkets.lines, "moneyline");
   const tabItems = useMemo(
     () =>
       GAME_MARKET_TABS.map((tabItem) => ({
@@ -386,14 +431,27 @@ export function GameMarketsSection({
           variant="game"
           checked={showOrderbook}
           onChange={setShowOrderbook}
-          className="hidden shrink-0 md:flex"
+          className={tab === "stats" ? "hidden" : "hidden shrink-0 md:flex"}
         />
       </div>
 
+      {tab === "stats" ? (
+        <GameStatsSection
+          match={liveMatch}
+          teamSnapshots={teamSnapshots}
+          gameSnapshotHomeTeamId={gameSnapshot.homeTeamId}
+        />
+      ) : (
+        <>
       {tab === "moneyline" ? (
-        <MoneylineActionRow
-          group={moneylineGroup}
-          outcomesOverride={liveActiveTabOutcomes}
+        <MoneyLineSection
+          match={liveMatch}
+          gameSnapshot={gameSnapshot}
+          fixtureMarkets={fixtureMarkets}
+          teamSnapshots={teamSnapshots}
+          liveOutcomes={liveActiveTabOutcomes}
+          liveGameOutcomes={liveGameOutcomes}
+          showOrderbook={showOrderbook}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
           otherSources={otherSources}
@@ -444,12 +502,22 @@ export function GameMarketsSection({
           outcomes={liveActiveTabOutcomes}
           selectedOutcomeId={selectedOutcome?.id}
           selectedBinarySide={selectedBinarySide}
-          otherSources={otherSources}
+          resolveOtherSources={resolveExactScoreOtherSources}
+          renderExpandedChart={(outcome) => (
+            <ExactScoreOutcomeChart
+              match={liveMatch}
+              gameSnapshot={gameSnapshot}
+              fixtureMarkets={fixtureMarkets}
+              teamSnapshots={teamSnapshots}
+              outcome={outcome}
+              showOrderbook={showOrderbook}
+            />
+          )}
           onSelect={handleSelect}
         />
       ) : null}
 
-      {chartKind ? (
+      {chartKind && tab !== "moneyline" ? (
         <GameProbabilitySection
           match={liveMatch}
           snapshots={teamSnapshots}
@@ -476,6 +544,8 @@ export function GameMarketsSection({
         teamSnapshots={teamSnapshots}
         gameSnapshotHomeTeamId={gameSnapshot.homeTeamId}
       />
+        </>
+      )}
     </section>
   );
 }

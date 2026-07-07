@@ -57,7 +57,7 @@ export function TeamStandingCard({
             logoUrl={row.logoUrl}
             className="h-6 w-6 text-[24px] shrink-0 rounded-[2px] drop-shadow-[0_0_2px_rgba(0,0,0,0.2)] text-2xl"
           />
-          <span className="truncate text-[16px] leading-5 text-black">
+          <span className="truncate text-[16px] leading-5 text-prophet-foreground">
             {row.teamName}
           </span>
         </div>

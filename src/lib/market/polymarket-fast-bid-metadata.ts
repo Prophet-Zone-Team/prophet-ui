@@ -5,6 +5,7 @@ import {
   toGammaNumber,
   type GammaMarketRecord,
 } from "@/lib/market/polymarket-gamma";
+import { normalizeMarketTickSize } from "@/lib/market/order-math";
 import type { PolymarketMarketMetadata } from "@/types/market";
 
 export function extractWinnerProbability(market: GammaMarketRecord): number | undefined {
@@ -25,6 +26,17 @@ export function extractFastBidPolymarketMetadata(
   const yesTokenId = clobTokenIds[yesIndex >= 0 ? yesIndex : 0];
   const noTokenId = clobTokenIds[noIndex >= 0 ? noIndex : 1];
   const yesPrice = toGammaNumber(outcomePrices[0]);
+  const noPrice = toGammaNumber(outcomePrices[noIndex >= 0 ? noIndex : 1]);
+  const yesBestBid = toGammaNumber(market.bestBid);
+  const yesBestAsk = toGammaNumber(market.bestAsk);
+  const noBestBid =
+    yesBestAsk !== undefined && yesBestAsk > 0 && yesBestAsk < 1
+      ? normalizeComplementPrice(1 - yesBestAsk)
+      : undefined;
+  const noBestAsk =
+    yesBestBid !== undefined && yesBestBid > 0 && yesBestBid < 1
+      ? normalizeComplementPrice(1 - yesBestBid)
+      : undefined;
 
   if (!yesTokenId && !noTokenId) {
     return undefined;
@@ -46,35 +58,33 @@ export function extractFastBidPolymarketMetadata(
             tokenId: yesTokenId,
             outcome: outcomes[yesIndex >= 0 ? yesIndex : 0] ?? "Yes",
             price: yesPrice,
+            ...(yesBestBid !== undefined && yesBestBid > 0 ? { bestBid: yesBestBid } : {}),
+            ...(yesBestAsk !== undefined && yesBestAsk > 0 ? { bestAsk: yesBestAsk } : {}),
           }
         : undefined,
       no: noTokenId
         ? {
             tokenId: noTokenId,
             outcome: outcomes[noIndex >= 0 ? noIndex : 1] ?? "No",
-            price: toGammaNumber(outcomePrices[noIndex >= 0 ? noIndex : 1]),
+            price: noPrice,
+            ...(noBestBid !== undefined ? { bestBid: noBestBid } : {}),
+            ...(noBestAsk !== undefined ? { bestAsk: noBestAsk } : {}),
           }
         : undefined,
     },
   };
 }
 
+function normalizeComplementPrice(value: number): number | undefined {
+  if (!Number.isFinite(value) || value <= 0 || value >= 1) {
+    return undefined;
+  }
+
+  return value;
+}
+
 function normalizeTickSize(
   value: number | string | undefined,
 ): PolymarketMarketMetadata["tickSize"] {
-  const parsed = toGammaNumber(value);
-
-  if (parsed === 0.1) {
-    return "0.1";
-  }
-
-  if (parsed === 0.001) {
-    return "0.001";
-  }
-
-  if (parsed === 0.0001) {
-    return "0.0001";
-  }
-
-  return "0.01";
+  return normalizeMarketTickSize(value) ?? "0.01";
 }

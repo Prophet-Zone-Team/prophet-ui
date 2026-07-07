@@ -23,8 +23,8 @@ import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mob
 
 type OutcomePillTone = "yes" | "no" | "neutral";
 
-function resolveOutcomePillTone(outcome: string): OutcomePillTone {
-  const normalized = outcome.toLowerCase().trim();
+function resolveOutcomePillTone(outcome?: string): OutcomePillTone {
+  const normalized = outcome?.toLowerCase().trim() ?? "";
 
   if (normalized === "yes" || normalized === "draw") {
     return "yes";

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { buildStableflowQuoteRequest } from "@/lib/funding/stableflow";
+import {
+  isValidEvmAddress,
+  isValidStableflowRefundAddress,
+} from "@/lib/funding/recipient-validation";
 import { getStableflowQuote } from "@/server/trading/stableflow";
 import { getTradingSessionFromCookie } from "@/server/trading/session-store";
 import { QuoteRequest } from "@stableflow/core";
@@ -15,6 +19,7 @@ interface StableflowQuotePayload {
   refundTo?: string;
   recipient?: string;
   swapType?: QuoteRequest.swapType;
+  originBlockchain?: string;
 }
 
 export async function POST(request: Request) {
@@ -78,11 +83,18 @@ function validatePayload(payload: StableflowQuotePayload, funderAddress: string)
     return "amountBaseUnits must be a positive integer string.";
   }
 
-  if (!payload.refundTo?.trim() || !/^0x[a-fA-F0-9]{40}$/.test(payload.refundTo.trim())) {
-    return "refundTo must be a valid EVM address.";
+  const originBlockchain = payload.originBlockchain?.trim() || inferBlockchainFromAssetId(payload.originAssetId);
+  const isFlexInput = payload.swapType === QuoteRequest.swapType.FLEX_INPUT;
+
+  if (!payload.refundTo?.trim()) {
+    return "refundTo is required.";
   }
 
-  if (!payload.recipient?.trim() || !/^0x[a-fA-F0-9]{40}$/.test(payload.recipient.trim())) {
+  if (!isFlexInput && !isValidStableflowRefundAddress(originBlockchain, payload.refundTo)) {
+    return "refundTo must be a valid address for the origin chain.";
+  }
+
+  if (!payload.recipient?.trim() || !isValidEvmAddress(payload.recipient.trim())) {
     return "recipient must be a valid EVM address.";
   }
 
@@ -91,4 +103,20 @@ function validatePayload(payload: StableflowQuotePayload, funderAddress: string)
   }
 
   return undefined;
+}
+
+function inferBlockchainFromAssetId(assetId: string): string {
+  if (assetId.startsWith("1cs_v1:sol:")) {
+    return "sol";
+  }
+
+  if (assetId.includes(":tron")) {
+    return "tron";
+  }
+
+  if (assetId.startsWith("nep141:") && !assetId.includes(":sol") && !assetId.includes(":tron")) {
+    return "near";
+  }
+
+  return "pol";
 }

@@ -39,6 +39,10 @@ export interface AuthContextValue {
   isBuyRestricted: boolean;
   /** Close-only region: sell/cancel allowed; buy/deposit blocked. */
   isRegionCloseOnly: boolean;
+  /** CN geo with configured email whitelist: email-only login is available. */
+  whitelistLoginMode: boolean;
+  /** Packaged app or CN whitelist: hide EVM/NEAR/Google login entry points. */
+  emailOnlyLogin: boolean;
   loginMethod: AuthLoginMethod | undefined;
   privyModalOpen: boolean;
   privyReady: boolean;
@@ -50,7 +54,7 @@ export interface AuthContextValue {
   setLoginMethod: (method: AuthLoginMethod | undefined) => void;
   refreshEligibility: () => Promise<TradingEligibilityView | undefined>;
   openLogin: (method?: AuthLoginMethod) => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
-  connectWallet: (method?: AuthLoginMethod) => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
+  connectNearWallet: () => Promise<{ session: TradingUserSession; readiness: UserTradingReadiness } | undefined>;
   signClobCredentials: () => Promise<void>;
   signTokenApprovals: () => Promise<void>;
   closeLogin: () => Promise<void>;

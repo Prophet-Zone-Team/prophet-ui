@@ -9,7 +9,7 @@ import { isTradingSetupComplete } from "@/lib/trading/trading-setup";
 import type { CashBalanceView, FundingLoadStatus } from "@/types/funding";
 import type { TradingUserSession, UserTradingReadiness } from "@/types/market";
 
-export type AuthLoginMethod = "wallet" | "email" | "google";
+export type AuthLoginMethod = "wallet" | "email" | "google" | "near";
 
 interface AuthPersistedState {
   session: TradingUserSession | undefined;

@@ -3,6 +3,7 @@
 import {
   RefObject,
   type ReactElement,
+  type ReactNode,
   type Ref,
 } from "react";
 import { X } from "lucide-react";
@@ -29,6 +30,7 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
   open: boolean;
   onClose: () => void;
   ariaLabel: string;
+  header?: ReactNode;
   children: ReactElement<{
     ref?: Ref<HTMLDivElement>;
     onBackgroundReady?: () => void;
@@ -40,12 +42,21 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
   shareImageCacheKey?: ShareImageCacheKey;
   modalShellClass?: string;
   shareTweetText?: string;
+  actionsRef?: RefObject<{
+    handleTwitter: () => void;
+    handleTelegram: () => void;
+    handleDownload: () => void;
+    handleCopyLink: () => void;
+  }>;
+  content?: ReactNode;
+  actionsList?: ("x" | "telegram" | "download" | "copy")[];
 };
 
 export function ShareInviteModal({
   open,
   onClose,
   ariaLabel,
+  header,
   linkPrefix,
   referralCode,
   fullLink,
@@ -57,6 +68,9 @@ export function ShareInviteModal({
   shareImageCacheKey,
   modalShellClass,
   shareTweetText,
+  actionsRef,
+  content,
+  actionsList,
 }: ShareInviteModalProps) {
   const isMobile = useDevice();
 
@@ -80,7 +94,7 @@ export function ShareInviteModal({
         {isMobile ? (
           <button
             type="button"
-            className="absolute right-0 top-0 z-10 inline-flex size-8 items-center justify-center rounded-lg bg-white text-[#18110F] transition-colors hover:bg-[#fafbfc]"
+            className="absolute right-0 top-0 z-10 inline-flex size-8 items-center justify-center rounded-lg bg-prophet-panel text-[#18110F] transition-colors hover:bg-[#fafbfc]"
             aria-label="Close"
             onClick={onClose}
           >
@@ -88,24 +102,40 @@ export function ShareInviteModal({
           </button>
         ) : null}
 
+        {
+          !!header && (
+            <div className="absolute left-1 md:left-3 top-1 md:top-3 z-10">
+              {header}
+            </div>
+          )
+        }
+
         <div className="flex flex-col gap-5">
           {children}
 
-          <ReferralInviteLinkRow
-            linkPrefix={linkPrefix}
-            referralCode={referralCode}
-            fullLink={fullLink}
-          />
+          {
+            !!content ? content : (
+              <>
+                <ReferralInviteLinkRow
+                  linkPrefix={linkPrefix}
+                  referralCode={referralCode}
+                  fullLink={fullLink}
+                />
 
-          <ReferralInviteActions
-            fullLink={fullLink}
-            shareCardRef={cardRef}
-            shareCardReady={shareCardReady}
-            shareImageUploadMode={shareImageUploadMode}
-            shareImageCacheKey={shareImageCacheKey}
-            downloadFilename={downloadFilename}
-            shareTweetText={shareTweetText}
-          />
+                <ReferralInviteActions
+                  list={actionsList}
+                  ref={actionsRef}
+                  fullLink={fullLink}
+                  shareCardRef={cardRef}
+                  shareCardReady={shareCardReady}
+                  shareImageUploadMode={shareImageUploadMode}
+                  shareImageCacheKey={shareImageCacheKey}
+                  downloadFilename={downloadFilename}
+                  shareTweetText={shareTweetText}
+                />
+              </>
+            )
+          }
         </div>
       </div>
     </FundingResponsiveOverlay>

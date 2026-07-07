@@ -46,7 +46,7 @@ export function TeamStrengthPanel({
                   <PolarGrid stroke="#ebebeb" />
                   <PolarAngleAxis
                     dataKey="label"
-                    tick={{ fill: "#909090", fontSize: 10 }}
+                    tick={{ fill: "var(--prophet-text-muted)", fontSize: 10 }}
                   />
                   <Radar
                     dataKey="value"
@@ -61,7 +61,7 @@ export function TeamStrengthPanel({
               <span className="text-xs text-prophet-muted">
                 {t("strengthScore")}
               </span>
-              <strong className="text-2xl font-[500] text-black">
+              <strong className="text-2xl font-[500] text-prophet-foreground">
                 {score ?? "—"}
               </strong>
               <small className="text-xs text-prophet-muted">

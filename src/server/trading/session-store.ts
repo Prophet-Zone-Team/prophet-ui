@@ -37,6 +37,7 @@ export function createTradingSession({
   eligibilityCountry,
   eligibilityRegion,
   eligibilityReason,
+  eligibilityWhitelistEmail,
 }: {
   walletAddress: string;
   funderAddress?: string;
@@ -51,6 +52,7 @@ export function createTradingSession({
   eligibilityCountry?: string;
   eligibilityRegion?: string;
   eligibilityReason?: string;
+  eligibilityWhitelistEmail?: string;
 }): TradingUserSession {
   const normalizedWallet = normalizeAddress(walletAddress);
   const createdAt = new Date().toISOString();
@@ -72,6 +74,7 @@ export function createTradingSession({
     eligibilityCountry,
     eligibilityRegion,
     eligibilityReason,
+    eligibilityWhitelistEmail,
     authenticatedAt: createdAt,
     createdAt,
     expiresAt,

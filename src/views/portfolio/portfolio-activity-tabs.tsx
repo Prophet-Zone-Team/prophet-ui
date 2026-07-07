@@ -264,7 +264,7 @@ export function PortfolioActivityTabs({
       className={portfolioActivityCardClass}
       aria-label={t("portfolioActivity")}
     >
-      <div className="shrink-0 overflow-x-auto border-b border-[#EBEBEB] px-3 pt-3 md:px-4">
+      <div className="shrink-0 overflow-x-auto border-b border-prophet-line px-3 pt-3 md:px-4">
         <TabSwitcher
           items={portfolioTabs}
           value={tab}

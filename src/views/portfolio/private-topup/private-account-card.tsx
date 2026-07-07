@@ -61,7 +61,7 @@ export function PrivateAccountCard({
             </div>
             <div className="min-w-0 flex-1">
               <p
-                className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}
+                className={`m-0 ${privateTopupSectionLabelClass} text-prophet-muted`}
               >
                 {t("privateAccount")}
               </p>
@@ -104,7 +104,7 @@ export function PrivateAccountCard({
         <div className="mt-auto flex items-end justify-between gap-4 pt-8">
           <div>
             <p
-              className={`m-0 ${privateTopupSectionLabelClass} text-[#909090]`}
+              className={`m-0 ${privateTopupSectionLabelClass} text-prophet-muted`}
             >
               {tWallet("privateBalance")}
             </p>

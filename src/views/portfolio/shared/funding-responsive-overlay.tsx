@@ -87,7 +87,7 @@ export function FundingResponsiveOverlay({
         hideHeader
         ariaLabel={ariaLabel}
         overlayCloseable={overlayCloseable}
-        className="z-[61] h-auto max-h-[92dvh] rounded-t-2xl rounded-b-none shadow-[0_-10px_30px_rgba(0,0,0,0.12)]"
+        className="z-[61] h-auto max-h-[92svh] rounded-t-2xl rounded-b-none shadow-[0_-10px_30px_rgba(0,0,0,0.12)]"
       >
         {children}
       </Drawer>

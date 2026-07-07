@@ -54,6 +54,7 @@ export function requestConfidentialTopupQuote(payload: {
   destinationAssetId: string;
   amountBaseUnits: string;
   refundTo: string;
+  originBlockchain?: string;
 }): Promise<ConfidentialQuoteResponse> {
   return fetchJson<ConfidentialQuoteResponse>(`${BASE}/quote`, {
     method: "POST",

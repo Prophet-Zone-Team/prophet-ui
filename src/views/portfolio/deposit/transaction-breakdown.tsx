@@ -39,10 +39,10 @@ export function TransactionBreakdown({
   return (
     <div className={depositBreakdownBoxClass}>
       <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="m-0 text-sm text-[#909090]">{t("transactionBreakdown")}</p>
+        <p className="m-0 text-sm text-prophet-muted">{t("transactionBreakdown")}</p>
         {poweredByLogoSrc ? (
           <div className="flex items-center gap-1.5">
-            <span className="text-sm text-[#909090]">{t("poweredBy")}</span>
+            <span className="text-sm text-prophet-muted">{t("poweredBy")}</span>
             <img
               src={poweredByLogoSrc}
               alt={t("stableflowAlt")}

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { formatCompactVolume } from "@/lib/formatters/volume";
 import { cn } from "@/lib/cn";
 
-const cardClass = "rounded-[12px] border border-[#EBEBEB] bg-white";
+const cardClass = "rounded-[12px] border border-prophet-line bg-prophet-panel";
 
 export function LineMarketCard({
   title,
@@ -26,7 +26,7 @@ export function LineMarketCard({
     <article className={cn(cardClass, className)}>
       <div className="flex items-start justify-between gap-4 p-[16px]">
         <div className="min-w-0 shrink-0">
-          <h3 className="m-0 text-[20px] font-[500] leading-6 text-black">
+          <h3 className="m-0 text-[20px] font-[500] leading-6 text-prophet-foreground">
             {title}
           </h3>
           {volumeLabel ? (
@@ -42,7 +42,7 @@ export function LineMarketCard({
       </div>
 
       {footer ? (
-        <div className="mt-4 border-t border-[#EBEBEB] pt-3">{footer}</div>
+        <div className="mt-4 border-t border-prophet-line pt-3">{footer}</div>
       ) : null}
     </article>
   );

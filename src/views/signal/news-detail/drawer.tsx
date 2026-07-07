@@ -89,7 +89,7 @@ export function SignalNewsDetailDrawer({
             aria-modal="true"
             aria-label={detail.title}
             className={cn(
-              "relative flex w-full flex-col bg-white",
+              "relative flex w-full flex-col bg-prophet-panel",
               isMobile
                 ? "max-h-[92dvh] rounded-t-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.12)]"
                 : "h-full max-w-[660px] shadow-[-10px_0px_10px_rgba(0,0,0,0.1)]"
@@ -114,18 +114,18 @@ export function SignalNewsDetailDrawer({
                   />
                 ) : (
                   <div
-                    className="flex h-[200px] w-full items-center justify-center rounded-[12px] bg-[#F0F2F5] text-[14px] font-[400] text-[#909090] md:h-[338px]"
+                    className="flex h-[200px] w-full items-center justify-center rounded-[12px] bg-prophet-base text-[14px] font-[400] text-prophet-muted md:h-[338px]"
                     aria-hidden="true"
                   >
                     {t("noImageAvailable")}
                   </div>
                 )}
 
-                <h2 className="m-0 mt-[20px] text-[20px] font-[500] leading-[24px] text-black">
+                <h2 className="m-0 mt-[20px] text-[20px] font-[500] leading-[24px] text-prophet-foreground">
                   {detail.title}
                 </h2>
 
-                <p className="m-0 mt-[12px] text-[14px] font-[400] leading-[17px] text-[#909090]">
+                <p className="m-0 mt-[12px] text-[14px] font-[400] leading-[17px] text-prophet-muted">
                   {detail.updatedAtLabel}
                 </p>
 

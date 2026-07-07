@@ -103,6 +103,7 @@ export interface TradingUserSession {
   eligibilityCountry?: string;
   eligibilityRegion?: string;
   eligibilityReason?: string;
+  eligibilityWhitelistEmail?: string;
   setupAllowances?: TradingSetupAllowances;
   setupAllowancesCheckedAt?: string;
   authenticatedAt?: string;
@@ -287,6 +288,7 @@ export interface TeamFootballMetadata {
   fifaRank?: number;
   squadValue?: number;
   squadValueCurrency?: "EUR" | "USD";
+  teamStrength?: number;
   worldCupBestFinish: string;
   worldCupTitles: number;
   group?: string;
@@ -334,7 +336,7 @@ export interface PolymarketMarketMetadata {
   acceptingOrders: boolean;
   closed?: boolean;
   negRisk: boolean;
-  tickSize: "0.1" | "0.01" | "0.001" | "0.0001";
+  tickSize: "0.1" | "0.01" | "0.005" | "0.0025" | "0.001" | "0.0001";
   /** Minimum order size in outcome shares (Gamma `orderMinSize`, CLOB `mos`). */
   minOrderSize?: number;
   fee?: PolymarketFeeDetails;
@@ -358,6 +360,8 @@ export interface PolymarketOutcomeToken {
   tokenId: string;
   outcome: string;
   price?: number;
+  bestBid?: number;
+  bestAsk?: number;
 }
 
 export interface MarketTopHolder {
@@ -524,7 +528,10 @@ export type FixtureSportsMarketType =
   | "total"
   | "btts"
   | "exact_score"
-  | "halftime";
+  | "halftime"
+  | "team_to_advance"
+  | "extra_time"
+  | "penalty_shootout";
 
 export type FixtureOutcomeSide =
   | MatchOutcomeSide
@@ -708,7 +715,15 @@ export interface GameFixtureBinaryChartPoint {
 
 export type GameFixtureChartTimeRange = "1H" | "1D" | "1W" | "1M" | "all";
 
-export type FixtureChartKind = "moneyline" | "halftime" | "total" | "spread";
+export type FixtureChartKind =
+  | "moneyline"
+  | "halftime"
+  | "total"
+  | "spread"
+  | "exact_score"
+  | "team_to_advance"
+  | "extra_time"
+  | "penalty_shootout";
 
 export interface GameMatchChartEvent {
   elapsedSeconds: number;

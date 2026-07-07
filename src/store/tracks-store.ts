@@ -27,6 +27,8 @@ import {
   getPrivyLoginEmail,
   waitForPrivyLoginEmail
 } from "@/context/privy/privy-wallet-bridge";
+import { getNearAccountSnapshot } from "@/lib/wallet/near/near-account-store";
+import { waitForNearDerivedAddress } from "@/lib/wallet/near/near-connect";
 import { useAuthStore } from "@/store/auth-store";
 import type { ProphetUserTrackItem } from "@/types/prophet-api";
 
@@ -48,6 +50,28 @@ async function resolveProphetLoginEmail(): Promise<string | undefined> {
   }
 
   return waitForPrivyLoginEmail({ timeoutMs: 5_000 });
+}
+
+async function resolveProphetNearAddress(): Promise<string | undefined> {
+  const { loginMethod } = useAuthStore.getState();
+
+  if (loginMethod !== "near") {
+    return undefined;
+  }
+
+  const existingAccountId = getNearAccountSnapshot().accountId;
+
+  if (existingAccountId) {
+    return existingAccountId;
+  }
+
+  try {
+    await waitForNearDerivedAddress(10_000);
+  } catch {
+    return undefined;
+  }
+
+  return getNearAccountSnapshot().accountId ?? undefined;
 }
 
 export type TracksLoadStatus = "idle" | "loading" | "ready" | "error";
@@ -130,7 +154,8 @@ export const useTracksStore = create<TracksStore>()(
 
         try {
           await syncProphetWalletLogin(walletAddress, {
-            email: await resolveProphetLoginEmail()
+            email: await resolveProphetLoginEmail(),
+            nearAddress: await resolveProphetNearAddress(),
           });
 
           if (!isProphetAuthenticated()) {

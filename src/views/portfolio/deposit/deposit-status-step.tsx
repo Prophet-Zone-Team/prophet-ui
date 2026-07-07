@@ -1,7 +1,6 @@
 "use client";
 
 import type { OneClickStatus } from "@stableflow/core";
-import Big from "big.js";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -9,6 +8,7 @@ import { formatShortWallet } from "@/lib/team/detail-format";
 import type { PendingDepositConvertMode } from "@/lib/trading/deposit-wallet-convert";
 import { fundingPrimaryButtonClass } from "@/views/portfolio/shared/funding-modal-shell";
 import type { DepositStatusPhase } from "@/views/portfolio/deposit/types";
+import { formatDepositAwaitingDetail } from "@/views/portfolio/deposit/utils";
 import { formatNumber } from "@/utils";
 import { cn } from "@/lib/cn";
 
@@ -66,27 +66,11 @@ export function DepositStatusStep({
     return tDeposit("statusUsdcReady");
   })();
 
-  const awaitingDetail = (() => {
-    const parts: string[] = [];
-
-    if (detectedUsdcAmount && Big(detectedUsdcAmount || 0).gt(0)) {
-      parts.push(
-        tDeposit("usdcDetected", {
-          amount: formatNumber(detectedUsdcAmount, 4, true, { round: 0 })
-        })
-      );
-    }
-
-    if (detectedUsdceAmount && Big(detectedUsdceAmount || 0).gt(0)) {
-      parts.push(
-        tDeposit("usdceDetected", {
-          amount: formatNumber(detectedUsdceAmount, 4, true, { round: 0 })
-        })
-      );
-    }
-
-    return parts.length > 0 ? parts.join(" · ") : undefined;
-  })();
+  const awaitingDetail = formatDepositAwaitingDetail(
+    tDeposit,
+    detectedUsdcAmount,
+    detectedUsdceAmount,
+  );
 
   return (
     <div className="flex flex-col gap-6 pb-2 pt-16">
@@ -112,8 +96,8 @@ export function DepositStatusStep({
 
       {phase === "ready" ? (
         <div className="flex flex-col items-center gap-4 text-center">
-          <p className="m-0 text-xl font-[500] text-black">{readyTitle}</p>
-          <p className="m-0 max-w-sm text-sm text-[#909090]">
+          <p className="m-0 text-xl font-[500] text-prophet-foreground">{readyTitle}</p>
+          <p className="m-0 max-w-sm text-sm text-prophet-muted">
             {readyDescription}
           </p>
           <button
@@ -192,17 +176,17 @@ function StatusBlock({
     <div className="flex flex-col items-center gap-3 text-center">
       {loading ? (
         <Loader2
-          className="h-8 w-8 animate-spin text-[#909090]"
+          className="h-8 w-8 animate-spin text-prophet-muted"
           aria-hidden="true"
         />
       ) : null}
       <p
-        className={`m-0 text-xl font-[500] ${isError ? "text-prophet-red" : "text-black"}`}
+        className={`m-0 text-xl font-[500] ${isError ? "text-prophet-red" : "text-prophet-foreground"}`}
       >
         {title}
       </p>
-      <p className="m-0 max-w-sm text-sm text-[#909090]">{description}</p>
-      {detail ? <p className="m-0 text-xs text-[#909090]">{detail}</p> : null}
+      <p className="m-0 max-w-sm text-sm text-prophet-muted">{description}</p>
+      {detail ? <p className="m-0 text-xs text-prophet-muted">{detail}</p> : null}
     </div>
   );
 }

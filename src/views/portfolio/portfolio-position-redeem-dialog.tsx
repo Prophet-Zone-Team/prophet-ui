@@ -18,11 +18,11 @@ import { executeRedeem } from "@/lib/trading/deposit-wallet-redeem";
 import type { UserPositionRecord } from "@/types/market";
 import {
   FundingModalShell,
-  fundingPrimaryButtonClass
+  fundingPrimaryButtonClass,
+  fundingSecondaryButtonClass
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { usePortfolioContext } from "@/views/portfolio/context";
 import { PORTFOLIO_SELL_MODAL_WIDTH } from "@/views/portfolio/portfolio-position-sell-dialog";
-import { portfolioSecondaryButtonClass } from "@/views/portfolio/portfolio-ui";
 
 export const PORTFOLIO_REDEEM_MODAL_WIDTH = PORTFOLIO_SELL_MODAL_WIDTH;
 
@@ -131,7 +131,7 @@ export function PortfolioPositionRedeemDialog({
           <div className="flex items-start gap-2.5">
             {teamName ? <TeamFlag name={teamName} /> : null}
             <div className="min-w-0 flex-1">
-              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
+              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-prophet-foreground">
                 {position.title}
               </p>
               <p
@@ -145,16 +145,16 @@ export function PortfolioPositionRedeemDialog({
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 rounded-lg border border-prophet-line/80 bg-[#FAFAFA] px-3 py-3">
+          <div className="flex flex-col gap-1 rounded-lg border border-prophet-line/80 bg-prophet-base px-3 py-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-prophet-muted">{t("shares")}</span>
-              <span className="font-[500] text-black">
+              <span className="font-[500] text-prophet-foreground">
                 {formatTeamDetailMoney(position.size)}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-prophet-muted">{t("estimatedOutcome")}</span>
-              <span className="font-[500] text-black">{estimatedValue}</span>
+              <span className="font-[500] text-prophet-foreground">{estimatedValue}</span>
             </div>
             <p className="m-0 text-xs text-prophet-muted">
               {t("redeemDescription")}
@@ -173,7 +173,7 @@ export function PortfolioPositionRedeemDialog({
         <div className="grid grid-cols-2 gap-3 pt-2 pb-4">
           <button
             type="button"
-            className={portfolioSecondaryButtonClass}
+            className={fundingSecondaryButtonClass}
             disabled={isBusy}
             onClick={handleClose}
           >

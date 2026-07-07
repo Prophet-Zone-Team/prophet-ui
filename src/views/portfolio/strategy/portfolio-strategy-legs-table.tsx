@@ -24,12 +24,12 @@ const LEGS_TABLE_GRID =
 
 const LEGS_TABLE_HEAD_CLASS = cn(
   LEGS_TABLE_GRID,
-  "border-b border-[#EBEBEB] px-4 py-2 font-[Sora] text-sm font-normal leading-[18px] text-[#909090]"
+  "border-b border-prophet-line px-4 py-2 font-[Sora] text-sm font-normal leading-[18px] text-prophet-muted"
 );
 
 const LEGS_TABLE_ROW_CLASS = cn(
   LEGS_TABLE_GRID,
-  "px-4 py-3 font-[Sora] text-sm font-medium leading-[18px] text-black"
+  "px-4 py-3 font-[Sora] text-sm font-medium leading-[18px] text-prophet-foreground"
 );
 
 export type PortfolioStrategyLegsTableProps = {
@@ -49,7 +49,7 @@ export function PortfolioStrategyLegsTable({
   }
 
   return (
-    <div className={cn("bg-[#FCFCFC]", className)}>
+    <div className={cn("bg-[#FCFCFC] dark:bg-prophet-action-panel", className)}>
       <div className="hidden min-w-[720px] md:block">
         <div className={LEGS_TABLE_HEAD_CLASS} role="row">
           <span role="columnheader">{t("market")}</span>
@@ -200,7 +200,7 @@ function PortfolioStrategyMarketCell({
         className={strategyCardTableFlagClassName}
       />
       <div className="min-w-0">
-        <p className="m-0 truncate font-medium text-black">{leg.marketTitle}</p>
+        <p className="m-0 truncate font-medium text-prophet-foreground">{leg.marketTitle}</p>
         <p
           className={cn(
             "m-0 mt-0.5 text-xs font-medium leading-[15px]",

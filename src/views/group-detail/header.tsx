@@ -40,7 +40,7 @@ function HeaderActionButtons({ slug, title }: { slug: string; title: string }) {
       <CopyButton
         text={getPageUrl}
         ariaLabel={t("copyPageLink")}
-        className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted transition-colors hover:text-black md:size-11 md:text-[#909090]"
+        className="inline-flex size-9 items-center justify-center rounded-sm text-prophet-muted transition-colors hover:text-prophet-foreground md:size-11 md:text-prophet-muted"
         onCopy={() =>
           trackCopyLinkClicked({
             target: "page_link",
@@ -79,21 +79,21 @@ function GroupIdentity({
       />
 
       <div className="min-w-0 flex-1">
-        <h1 className="m-0 truncate text-[20px] font-[500] leading-[30px] text-black md:text-[36px] md:leading-[45px]">
+        <h1 className="m-0 truncate text-[20px] font-[500] leading-[30px] text-prophet-foreground md:text-[36px] md:leading-[45px]">
           {title}
         </h1>
 
         <p className="m-0 mt-1 text-sm leading-[18px]">
           <span className="block md:inline">
-            <span className="text-[#909090] md:hidden">{t("timeLabel")} </span>
-            <span className="font-[500] text-black md:font-normal md:text-[#909090]">
+            <span className="text-prophet-muted md:hidden">{t("timeLabel")} </span>
+            <span className="font-[500] text-prophet-foreground md:font-normal md:text-prophet-muted">
               {dateRange}
             </span>
           </span>
           <span className="block md:inline">
-            <span className="hidden text-[#909090] md:inline"> | </span>
-            <span className="text-[#909090]">{t("volumeLabel")} </span>
-            <span className="font-[500] text-black">
+            <span className="hidden text-prophet-muted md:inline"> | </span>
+            <span className="text-prophet-muted">{t("volumeLabel")} </span>
+            <span className="font-[500] text-prophet-foreground">
               {formatGroupVolume(volume)}
             </span>
           </span>

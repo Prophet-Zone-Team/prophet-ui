@@ -16,11 +16,11 @@ import type { UserOpenOrder } from "@/lib/portfolio/types";
 import { TeamFlag } from "@/components/teams/team-flag";
 import {
   FundingModalShell,
-  fundingPrimaryButtonClass
+  fundingPrimaryButtonClass,
+  fundingSecondaryButtonClass
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { usePortfolioContext } from "@/views/portfolio/context";
 import { PORTFOLIO_SELL_MODAL_WIDTH } from "@/views/portfolio/portfolio-position-sell-dialog";
-import { portfolioSecondaryButtonClass } from "@/views/portfolio/portfolio-ui";
 import { useCancelOpenOrder } from "@/views/portfolio/use-cancel-open-order";
 
 export interface PortfolioOpenOrderCancelDialogProps {
@@ -113,7 +113,7 @@ export function PortfolioOpenOrderCancelDialog({
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
+              <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-prophet-foreground">
                 {marketLabel}
               </p>
               <p
@@ -135,7 +135,7 @@ export function PortfolioOpenOrderCancelDialog({
               <span className="text-sm font-[500] text-prophet-muted">
                 {t("remainingSize")}
               </span>
-              <span className="text-sm font-[500] text-black">
+              <span className="text-sm font-[500] text-prophet-foreground">
                 {formatShareSize(getRemainingSize(order))}
               </span>
             </div>
@@ -143,7 +143,7 @@ export function PortfolioOpenOrderCancelDialog({
               <span className="text-sm font-[500] text-prophet-muted">
                 {t("filled")}
               </span>
-              <span className="text-sm font-[500] text-black">
+              <span className="text-sm font-[500] text-prophet-foreground">
                 {getFilledPercent(order)}
               </span>
             </div>
@@ -157,7 +157,7 @@ export function PortfolioOpenOrderCancelDialog({
         <div className="grid grid-cols-2 gap-3 pt-2 pb-4">
           <button
             type="button"
-            className={portfolioSecondaryButtonClass}
+            className={fundingSecondaryButtonClass}
             disabled={isBusy}
             onClick={onClose}
           >

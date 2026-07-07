@@ -23,8 +23,29 @@ import {
   resolveGroupStandingRowTeamId,
 } from "./utils";
 
-const statCellClassName = "text-center opacity-30";
+const statCellClassName = "text-center";
 const statHeaderClassName = "text-center";
+
+type GroupStandingStatField = (typeof GROUP_STANDING_STAT_FIELDS)[number]["key"];
+
+function getStatCellTextClassName(
+  field: GroupStandingStatField,
+  value: number,
+): string {
+  if (value === 0) {
+    return "text-prophet-foreground/30";
+  }
+
+  if (field === "wins") {
+    return "text-[#65AF14]";
+  }
+
+  if (field === "losses") {
+    return "text-[#FF674B]";
+  }
+
+  return "text-prophet-foreground";
+}
 
 function buildColumns(
   group: WorldCup2026Group,
@@ -36,7 +57,15 @@ function buildColumns(
       header: t(field.labelKey),
       headerClassName: statHeaderClassName,
       cellClassName: statCellClassName,
-      renderCell: (row) => row[field.key],
+      renderCell: (row) => {
+        const value = row[field.key];
+
+        return (
+          <span className={getStatCellTextClassName(field.key, value)}>
+            {value}
+          </span>
+        );
+      },
     }));
 
   return [
@@ -51,7 +80,7 @@ function buildColumns(
             logoUrl={row.logoUrl}
             className="h-6 w-6 shrink-0 rounded-[2px] text-2xl"
           />
-          <span className="truncate text-[16px] leading-normal text-black">
+          <span className="truncate text-[16px] leading-normal text-prophet-foreground">
             {row.teamName}
           </span>
         </div>
@@ -105,7 +134,7 @@ export function GroupStandingsTable({
       minWidth={GROUP_STANDINGS_TABLE_MIN_WIDTH}
       ariaLabel={t("groupStandingsTableAria", { groupLabel })}
       headerRowClassName="items-center pt-[14px]"
-      bodyRowClassName="items-center rounded-[12px] transition-colors hover:bg-[#F9FAFC]"
+      bodyRowClassName="items-center rounded-[12px] transition-colors hover:bg-prophet-hover"
       onRowClick={handleRowClick}
       getRowAriaLabel={(row) =>
         t("groupStandingRowNavigateAria", {

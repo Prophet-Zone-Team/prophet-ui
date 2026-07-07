@@ -3,6 +3,7 @@
 import type { TradingUserSession } from "@/types/market";
 import type { WalletProviderKind } from "@/components/trading/wallet-provider";
 import { connectorIdToProviderKind } from "@/components/trading/wallet-provider";
+import { getStableflowWalletLogo } from "@/utils/logo";
 
 const PROVIDER_STORAGE_PREFIX = "wc_trading_wallet_provider";
 
@@ -59,8 +60,8 @@ export function getStoredTradingWalletProvider(
 export function getStoredTradingWalletInfo(walletAddress?: string) {
   const walletKind = getStoredTradingWalletProvider(walletAddress ?? "");
   const walletLogos: Record<WalletProviderKind, string> = {
-    okx: "/wallets/logo-okx.png",
-    metamask: "/wallets/logo-metamask.png",
+    okx: getStableflowWalletLogo("logo-okx.png"),
+    metamask: getStableflowWalletLogo("logo-metamask.png"),
     privy: "",
     injected: "",
   };

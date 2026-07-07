@@ -8,7 +8,7 @@ export interface PortfolioContextType {
   portfolio: PortfolioViewModel | undefined;
   status: PortfolioLoadStatus;
   onConnectWallet: () => void;
-  reload: () => void;
+  reload: () => Promise<void>;
   removeOpenOrder: (orderId: string) => void;
   removeOpenOrders: (orderIds: string[]) => void;
   removeOpenOrdersByMarket: (marketId: string) => void;
@@ -21,7 +21,7 @@ const PortfolioContext = createContext<PortfolioContextType>({
   portfolio: undefined,
   status: "idle",
   onConnectWallet: () => { },
-  reload: () => { },
+  reload: async () => { },
   removeOpenOrder: () => { },
   removeOpenOrders: () => { },
   removeOpenOrdersByMarket: () => { },

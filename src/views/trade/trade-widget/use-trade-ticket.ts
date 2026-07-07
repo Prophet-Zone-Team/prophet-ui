@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { resolveFreshFixtureOutcome } from "@/lib/market/trade-ticket";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
+import { isTradeSkipSellBalanceCheckEnabled } from "@/lib/trading/trade-sell-test-mode";
 import { fireBasicConfettiFromElement } from "@/lib/confetti/fire-basic-cannon";
 import { postCollateralBalanceSync } from "@/lib/trading/sync-collateral-balance";
 import {
@@ -14,10 +15,24 @@ import {
 } from "@/lib/trading/trade-primary-action";
 
 import { getDefaultFixtureLimitPrice } from "@/lib/market/game-order";
-import { mergeFixtureOutcomeLiveAsks } from "@/lib/market/fixture-ask-liquidity";
+import {
+  collectFixtureOutcomeWsTokenIds,
+  mergeFixtureOutcomeLiveAsks,
+  resolveOutcomeLiveAsksFromTokenPrices,
+} from "@/lib/market/fixture-ask-liquidity";
+import {
+  isLineOutcomePairSideActive,
+  resolveLineOutcomeForSide,
+  resolveLineOutcomePair,
+  resolveLineOutcomeTradeBinarySide,
+  resolveLineOutcomeTradeTokenId,
+} from "@/lib/market/fixture-line-outcome-pair";
 import { useMarketWsPrices, useRegisterMarketWsTokens } from "@/context/market-ws";
 import { isValidAskPrice, resolveFixtureDisplayAskPrice } from "@/lib/market/fixture-ask-liquidity";
-import { resolveLiveOutcomeYesNoProbabilities } from "@/lib/market/merge-live-outcome-prices";
+import {
+  resolveFixtureOutcomeDisplayProbability,
+  resolveLiveOutcomeYesNoProbabilities,
+} from "@/lib/market/merge-live-outcome-prices";
 import { isGameMarketWsEnabled } from "@/lib/market/live-match";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { getOutcomeProbability } from "@/lib/market/game-market-snapshot";
@@ -49,6 +64,7 @@ import {
   useSetTradeTakeProfitLimitEnabled,
   useSetTradeTakeProfitLimitPrice,
   useTradeAmount,
+  useSelectFixtureOutcome,
   useTradeLimitExpiration,
   useTradeLimitExpirationCustom,
   useTradeLimitPrice,
@@ -81,7 +97,10 @@ import {
   trackOrderSubmitSucceeded
 } from "@/lib/analytics/tracking";
 import { resolveTradeAnalyticsContext } from "@/lib/analytics/tracking/resolve-trade-context";
-import { resolveOutcomeSideForPosition } from "@/lib/portfolio/portfolio-metrics";
+import {
+  resolveOrderOutcomeSideFromLabel,
+  resolveOutcomeSideForPosition,
+} from "@/lib/portfolio/portfolio-metrics";
 import { reportTradeOrderTransaction } from "@/lib/portfolio/user";
 import {
   buildGameTradePreview,
@@ -127,6 +146,7 @@ import {
 import {
   resolveTradeActionLabel,
   resolveTradePrimaryActionLabel,
+  resolveFixtureOutcomeLabel,
   translateTradeMessage,
   validateLimitExpirationCustom
 } from "@/views/trade/trade-widget/trade-i18n";
@@ -224,6 +244,7 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   const setLimitExpirationCustom = useSetTradeLimitExpirationCustom();
   const setTakeProfitLimitEnabled = useSetTradeTakeProfitLimitEnabled();
   const setTakeProfitLimitPrice = useSetTradeTakeProfitLimitPrice();
+  const selectFixtureOutcome = useSelectFixtureOutcome();
 
   const [readiness, setReadiness] = useState<
     Awaited<ReturnType<typeof fetchReadinessForPreview>> | undefined
@@ -305,12 +326,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       : TRADE_TICKET_NON_GAME_MATCH
   );
 
-  const freshSelectedFixtureOutcome = useMemo(() => {
+  const gameFixtureMarkets = useMemo(() => {
     if (input.variant !== "game") {
-      return selectedFixtureOutcome ?? undefined;
+      return undefined;
     }
 
-    const fixtureMarkets =
+    return (
       input.fixtureMarkets ??
       (input.gameSnapshot.match.polymarket?.fixtureMarkets
         ? {
@@ -321,13 +342,57 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             halftime: input.gameSnapshot.match.polymarket.fixtureMarkets.halftime,
             freshness: input.gameSnapshot.match.freshness,
           }
-        : undefined);
+        : undefined)
+    );
+  }, [input]);
+
+  const freshSelectedFixtureOutcome = useMemo(() => {
+    if (input.variant !== "game") {
+      return selectedFixtureOutcome ?? undefined;
+    }
 
     return resolveFreshFixtureOutcome(
       selectedFixtureOutcome,
-      fixtureMarkets
+      gameFixtureMarkets,
     );
-  }, [input, selectedFixtureOutcome]);
+  }, [gameFixtureMarkets, input.variant, selectedFixtureOutcome]);
+
+  const snapshotLineOutcomePair = useMemo(() => {
+    if (!freshSelectedFixtureOutcome || !gameFixtureMarkets) {
+      return undefined;
+    }
+
+    return resolveLineOutcomePair(
+      freshSelectedFixtureOutcome,
+      gameFixtureMarkets,
+    );
+  }, [freshSelectedFixtureOutcome, gameFixtureMarkets]);
+
+  const fixtureWsTokenIds = useMemo(() => {
+    const tokenIds = new Set<string>();
+
+    for (const tokenId of collectFixtureOutcomeWsTokenIds(
+      freshSelectedFixtureOutcome,
+    )) {
+      tokenIds.add(tokenId);
+    }
+
+    if (snapshotLineOutcomePair) {
+      for (const tokenId of collectFixtureOutcomeWsTokenIds(
+        snapshotLineOutcomePair.yesOutcome,
+      )) {
+        tokenIds.add(tokenId);
+      }
+
+      for (const tokenId of collectFixtureOutcomeWsTokenIds(
+        snapshotLineOutcomePair.noOutcome,
+      )) {
+        tokenIds.add(tokenId);
+      }
+    }
+
+    return [...tokenIds];
+  }, [freshSelectedFixtureOutcome, snapshotLineOutcomePair]);
 
   const fixtureWsEnabled =
     input.variant === "game" &&
@@ -335,49 +400,22 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     isGameMarketWsEnabled(liveGameMatch);
 
   const { pricesByTokenId: fixtureTokenPrices } = useMarketWsPrices(
-    fixtureWsEnabled
-      ? [
-          freshSelectedFixtureOutcome?.tokenId,
-          freshSelectedFixtureOutcome?.noTokenId,
-        ]
-      : []
+    fixtureWsEnabled ? fixtureWsTokenIds : [],
   );
 
-  useRegisterMarketWsTokens(
-    "trade-ticket-game",
-    fixtureWsEnabled
-      ? [
-          freshSelectedFixtureOutcome?.tokenId,
-          freshSelectedFixtureOutcome?.noTokenId,
-        ]
-      : [],
-    { enabled: fixtureWsEnabled }
-  );
+  useRegisterMarketWsTokens("trade-ticket-game", fixtureWsTokenIds, {
+    enabled: fixtureWsEnabled,
+  });
 
   const liveFixtureAsks = useMemo(() => {
     if (input.variant !== "game" || !freshSelectedFixtureOutcome) {
       return undefined;
     }
 
-    const yesTokenId = freshSelectedFixtureOutcome.tokenId;
-    const noTokenId = freshSelectedFixtureOutcome.noTokenId;
-    const yesPrices = yesTokenId ? fixtureTokenPrices[yesTokenId] : undefined;
-    const noPrices = noTokenId ? fixtureTokenPrices[noTokenId] : undefined;
-    const yesAsk = yesPrices?.bestAsk;
-    const noAsk = noPrices?.bestAsk;
-    const yesBid = yesPrices?.bestBid;
-    const noBid = noPrices?.bestBid;
-
-    if (
-      yesAsk === undefined &&
-      noAsk === undefined &&
-      yesBid === undefined &&
-      noBid === undefined
-    ) {
-      return undefined;
-    }
-
-    return { yesAsk, noAsk, yesBid, noBid };
+    return resolveOutcomeLiveAsksFromTokenPrices(
+      freshSelectedFixtureOutcome,
+      fixtureTokenPrices,
+    );
   }, [fixtureTokenPrices, freshSelectedFixtureOutcome, input.variant]);
 
   const effectiveFixtureOutcome = useMemo(() => {
@@ -387,9 +425,17 @@ export function useTradeTicket(input: UseTradeTicketInput) {
 
     return mergeFixtureOutcomeLiveAsks(
       freshSelectedFixtureOutcome,
-      liveFixtureAsks
+      liveFixtureAsks,
     );
   }, [freshSelectedFixtureOutcome, liveFixtureAsks]);
+
+  const lineOutcomePair = useMemo(() => {
+    if (!effectiveFixtureOutcome || !gameFixtureMarkets) {
+      return undefined;
+    }
+
+    return resolveLineOutcomePair(effectiveFixtureOutcome, gameFixtureMarkets);
+  }, [effectiveFixtureOutcome, gameFixtureMarkets]);
 
   const { conditionId, yesTokenId, noTokenId } = marketTokenIds;
 
@@ -428,10 +474,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       sellPosition?.size ??
       (outcomeShares[outcomeSide] > 0 ? outcomeShares[outcomeSide] : undefined);
 
-    return resolveMaxSellShares(
-      positionSize,
-      readiness?.balances?.conditionalTokenBalance
-    );
+    return isTradeSkipSellBalanceCheckEnabled()
+      ? resolveMaxSellShares(positionSize)
+      : resolveMaxSellShares(
+          positionSize,
+          readiness?.balances?.conditionalTokenBalance
+        );
   }, [
     outcomeShares,
     outcomeSide,
@@ -467,10 +515,17 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     }
 
     const snapshot = input.snapshot;
+    const liveSellBid =
+      tradeSide === "sell"
+        ? outcomeSide === "yes"
+          ? teamTokenPrices[yesTokenId]?.bestBid
+          : teamTokenPrices[noTokenId]?.bestBid
+        : undefined;
     const defaultLimit = getTeamDefaultLimitPrice(
       snapshot,
       outcomeSide,
-      tradeSide
+      tradeSide,
+      liveSellBid
     );
     const orderLimitPrice = resolveOrderLimitPrice(
       orderMode,
@@ -564,41 +619,92 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       amount: cappedOrderAmount,
       limitPrice: orderLimitPrice,
       orderType,
-      fixtureOutcome: effectiveFixtureOutcome
+      fixtureOutcome: effectiveFixtureOutcome,
+      sellTokenId:
+        sellPosition && tradeSide === "sell" ? sellPosition.asset : undefined,
     });
     const preview = toBidOrderPreview(gamePreview);
     const matchOutcome = effectiveFixtureOutcome
       ? undefined
       : findGameMarketOutcome(gameSnapshot.outcomes, matchOutcomeSide);
+    const mergedYesLineOutcome = lineOutcomePair
+      ? mergeFixtureOutcomeLiveAsks(
+          lineOutcomePair.yesOutcome,
+          resolveOutcomeLiveAsksFromTokenPrices(
+            lineOutcomePair.yesOutcome,
+            fixtureTokenPrices,
+          ),
+        )
+      : undefined;
+    const mergedNoLineOutcome = lineOutcomePair
+      ? mergeFixtureOutcomeLiveAsks(
+          lineOutcomePair.noOutcome,
+          resolveOutcomeLiveAsksFromTokenPrices(
+            lineOutcomePair.noOutcome,
+            fixtureTokenPrices,
+          ),
+        )
+      : undefined;
+    const yesLineProbability = mergedYesLineOutcome
+      ? resolveFixtureOutcomeDisplayProbability(mergedYesLineOutcome)
+      : undefined;
+    const noLineProbability = mergedNoLineOutcome
+      ? resolveFixtureOutcomeDisplayProbability(mergedNoLineOutcome)
+      : undefined;
 
     return {
       gameSnapshot,
       gamePreview,
       preview,
-      yesPrice: liveProbabilities?.yes ?? matchProbability,
-      noPrice: liveProbabilities?.no ?? Math.max(0, 100 - matchProbability),
+      yesPrice: yesLineProbability ?? liveProbabilities?.yes ?? matchProbability,
+      noPrice:
+        noLineProbability ??
+        liveProbabilities?.no ??
+        Math.max(0, 100 - matchProbability),
       yesTokenPrice:
-        resolveLiveOutcomeButtonPrice(
-          effectiveFixtureOutcome?.tokenId,
-          fixtureTokenPrices,
-          "yes",
-          effectiveFixtureOutcome,
-          matchOutcome,
-          matchProbability,
-          tradeSide
-        ) ?? calculateReferencePrice(matchProbability, "yes"),
+        (lineOutcomePair && mergedYesLineOutcome
+          ? resolveLiveOutcomeButtonPrice(
+              resolveLineOutcomeTradeTokenId(mergedYesLineOutcome),
+              fixtureTokenPrices,
+              resolveLineOutcomeTradeBinarySide(mergedYesLineOutcome),
+              mergedYesLineOutcome,
+              matchOutcome,
+              yesLineProbability ?? matchProbability,
+              tradeSide
+            )
+          : resolveLiveOutcomeButtonPrice(
+              effectiveFixtureOutcome?.tokenId,
+              fixtureTokenPrices,
+              "yes",
+              effectiveFixtureOutcome,
+              matchOutcome,
+              matchProbability,
+              tradeSide
+            )) ?? calculateReferencePrice(matchProbability, "yes"),
       noTokenPrice:
-        resolveLiveOutcomeButtonPrice(
-          effectiveFixtureOutcome?.noTokenId,
-          fixtureTokenPrices,
-          "no",
-          effectiveFixtureOutcome,
-          matchOutcome,
-          matchProbability,
-          tradeSide
-        ) ??
+        (lineOutcomePair && mergedNoLineOutcome
+          ? resolveLiveOutcomeButtonPrice(
+              resolveLineOutcomeTradeTokenId(mergedNoLineOutcome),
+              fixtureTokenPrices,
+              resolveLineOutcomeTradeBinarySide(mergedNoLineOutcome),
+              mergedNoLineOutcome,
+              matchOutcome,
+              noLineProbability ?? Math.max(0, 100 - matchProbability),
+              tradeSide
+            )
+          : resolveLiveOutcomeButtonPrice(
+              effectiveFixtureOutcome?.noTokenId,
+              fixtureTokenPrices,
+              "no",
+              effectiveFixtureOutcome,
+              matchOutcome,
+              matchProbability,
+              tradeSide
+            )) ??
         calculateReferencePrice(
-          liveProbabilities?.no ?? Math.max(0, 100 - matchProbability),
+          noLineProbability ??
+            liveProbabilities?.no ??
+            Math.max(0, 100 - matchProbability),
           "no"
         ),
       defaultLimit,
@@ -609,12 +715,15 @@ export function useTradeTicket(input: UseTradeTicketInput) {
     effectiveFixtureOutcome,
     fixtureTokenPrices,
     input,
+    lineOutcomePair,
+    fixtureTokenPrices,
     matchOutcomeSide,
     maxSellShares,
     orderMode,
     orderType,
     outcomeSide,
     limitPrice,
+    sellPosition,
     tradeSide
   ]);
 
@@ -712,6 +821,24 @@ export function useTradeTicket(input: UseTradeTicketInput) {
         )
       );
       return;
+    }
+
+    if (sellPosition && tradeSide === "sell" && sellPosition.curPrice > 0) {
+      setLimitPrice(sellPosition.curPrice.toFixed(3));
+      return;
+    }
+
+    if (selectedFixtureOutcome) {
+      const fixtureLimit = getDefaultFixtureLimitPrice(
+        selectedFixtureOutcome,
+        outcomeSide,
+        tradeSide
+      );
+
+      if (fixtureLimit !== undefined) {
+        setLimitPrice(fixtureLimit.toFixed(3));
+        return;
+      }
     }
 
     setLimitPrice(
@@ -891,6 +1018,24 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       cancelled = true;
     };
   }, [sellPosition?.asset, sellPosition?.conditionId, sellPosition?.slug]);
+
+  useEffect(() => {
+    if (!sellPosition || tradeSide !== "sell") {
+      return;
+    }
+
+    const fromLabel = resolveOrderOutcomeSideFromLabel(sellPosition.outcome);
+
+    if (fromLabel && fromLabel !== outcomeSide) {
+      setOutcomeSide(fromLabel);
+    }
+  }, [
+    outcomeSide,
+    sellPosition?.asset,
+    sellPosition?.outcome,
+    setOutcomeSide,
+    tradeSide,
+  ]);
 
   useEffect(() => {
     if (maxSellShares === undefined || maxSellShares <= 0) {
@@ -1113,9 +1258,11 @@ export function useTradeTicket(input: UseTradeTicketInput) {
             takeProfitLimitPrice,
             preview.sidePrice
           );
-          const conditionalBalance = await fetchConditionalTokenBalance(
-            preview.tokenId
-          ).catch(() => undefined);
+          const conditionalBalance = isTradeSkipSellBalanceCheckEnabled()
+            ? undefined
+            : await fetchConditionalTokenBalance(preview.tokenId).catch(
+                () => undefined
+              );
           const cappedShareSize = resolveMaxSellShares(
             preview.shareSize,
             conditionalBalance
@@ -1446,6 +1593,24 @@ export function useTradeTicket(input: UseTradeTicketInput) {
   }
 
   function selectOutcome(side: typeof outcomeSide) {
+    if (
+      input.variant === "game" &&
+      lineOutcomePair &&
+      gameFixtureMarkets
+    ) {
+      const targetOutcome = resolveLineOutcomeForSide(lineOutcomePair, side);
+      const tradeBinarySide = resolveLineOutcomeTradeBinarySide(targetOutcome);
+
+      if (selectedFixtureOutcome?.id === targetOutcome.id) {
+        return;
+      }
+
+      selectFixtureOutcome(targetOutcome, tradeBinarySide);
+      setMessage(undefined);
+      setEligibilityRetryAvailable(false);
+      return;
+    }
+
     if (side === outcomeSide) {
       return;
     }
@@ -1483,6 +1648,20 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       yesProbability: display.yesPrice,
       noProbability: display.noPrice,
       outcomeSide,
+      yesButtonActive: lineOutcomePair
+        ? isLineOutcomePairSideActive(
+            lineOutcomePair,
+            selectedFixtureOutcome,
+            "yes"
+          )
+        : undefined,
+      noButtonActive: lineOutcomePair
+        ? isLineOutcomePairSideActive(
+            lineOutcomePair,
+            selectedFixtureOutcome,
+            "no"
+          )
+        : undefined,
       orderMode,
       tradeSide,
       amount,
@@ -1507,6 +1686,12 @@ export function useTradeTicket(input: UseTradeTicketInput) {
       eligibilityRetryAvailable:
         eligibilityRetryAvailable || primaryAction.kind === "retry_eligibility",
       onSelectOutcome: selectOutcome,
+      yesButtonLabel: lineOutcomePair
+        ? resolveFixtureOutcomeLabel(t, lineOutcomePair.yesOutcome)
+        : undefined,
+      noButtonLabel: lineOutcomePair
+        ? resolveFixtureOutcomeLabel(t, lineOutcomePair.noOutcome)
+        : undefined,
       onAmountChange: setAmount,
       onLimitPriceChange: setLimitPrice,
       onLimitExpirationChange: setLimitExpiration,

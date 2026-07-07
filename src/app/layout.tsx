@@ -40,6 +40,20 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <meta name="twitter:site" content="@prophet" />
         <meta name="twitter:card" content="summary_large_image"></meta>
         <meta name="twitter:title" content="Prophet"></meta>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`
+            (function () {
+              try {
+                var raw = localStorage.getItem("wc-user-config");
+                if (!raw) return;
+                var parsed = JSON.parse(raw);
+                if (parsed && parsed.state && parsed.state.darkModeEnabled) {
+                  document.documentElement.classList.add("dark");
+                }
+              } catch (e) {}
+            })();
+          `}
+        </Script>
         <Script id="crypto-randomuuid-polyfill" strategy="beforeInteractive">
           {`
             (function () {
@@ -69,7 +83,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           `}
         </Script>
       </head>
-      <body className="flex min-h-dvh flex-col bg-[#F9FAFC]">
+      <body className="flex min-h-dvh flex-col bg-prophet-base text-prophet-foreground">
         <AppRoot
           initialSecure={initialSecure}
           cookie={cookie}

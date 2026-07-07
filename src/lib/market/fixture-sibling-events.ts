@@ -8,8 +8,33 @@ export const FIXTURE_SIBLING_EVENT_SUFFIXES = [
 ] as const;
 
 export function isFixtureMainEventSlug(slug: string): boolean {
-  return true;
-  return slug.startsWith("fifwc-") && !FIXTURE_SIBLING_EVENT_SUFFIXES.some((suffix) => slug.endsWith(`-${suffix}`));
+  const trimmed = slug.trim();
+
+  return (
+    trimmed.startsWith("fifwc-") &&
+    !FIXTURE_SIBLING_EVENT_SUFFIXES.some((suffix) =>
+      trimmed.endsWith(`-${suffix}`),
+    )
+  );
+}
+
+/** Normalize fixture sibling event or market slugs to the main game event slug. */
+export function resolveFixtureMainEventSlug(slug: string): string {
+  const trimmed = slug.trim();
+
+  if (!trimmed) {
+    return trimmed;
+  }
+
+  for (const suffix of FIXTURE_SIBLING_EVENT_SUFFIXES) {
+    if (trimmed.endsWith(`-${suffix}`)) {
+      return trimmed.slice(0, -(suffix.length + 1));
+    }
+  }
+
+  const match = trimmed.match(/^(.+\d{4}-\d{2}-\d{2})(?:-.+)?$/);
+
+  return match?.[1] ?? trimmed;
 }
 
 export function resolveFixtureSiblingSlugs(slug: string): string[] {

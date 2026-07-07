@@ -1,5 +1,6 @@
 "use client";
 
+import { FUNDING_NETWORKS } from "@/config/funding/networks";
 import { type FundingToken } from "@/config/funding";
 import {
   selectFundingTokenBalance,
@@ -7,9 +8,9 @@ import {
 } from "@/lib/funding/balance-selectors";
 import {
   hasTokenPrice,
-  selectTokenUsdValue,
 } from "@/lib/funding/price-selectors";
 import type { StableflowDepositToken } from "@/lib/funding/stableflow";
+import type { FundingWalletChainType } from "@/store/use-funding-wallet-store";
 import { useBalancesStore } from "@/store/use-balances";
 import { usePricesStore } from "@/store/use-prices";
 import { createContext, useCallback, useContext, useMemo } from "react";
@@ -21,11 +22,18 @@ export interface PrivateTopupContextType {
   selectableTokens: PrivateTopupSelectableToken[];
   topupWalletAddress?: string;
   privateAccountAddress?: string;
+  primaryChainType?: FundingWalletChainType;
   balancesLoading: boolean;
   pricesLoading: boolean;
-  getTokenBalance: (token: Pick<FundingToken, "chainId" | "address">) => string;
+  getTokenBalance: (
+    token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals"> & {
+      blockchain?: string;
+    },
+  ) => string;
   getTokenBalanceString: (
-    token: Pick<FundingToken, "chainId" | "address" | "decimals">,
+    token: Pick<FundingToken, "chainId" | "address" | "decimals" | "symbol"> & {
+      blockchain?: string;
+    },
   ) => string;
   getTokenUsdValue: (token: StableflowDepositToken) => number;
   hasTokenUsdPrice: (symbol: string) => boolean;
@@ -53,31 +61,76 @@ export function PrivateTopupProvider({
     | "selectableTokens"
     | "topupWalletAddress"
     | "privateAccountAddress"
+    | "primaryChainType"
     | "balancesLoading"
     | "pricesLoading"
-  >;
+  > & {
+    getNearTokenBalance?: (
+      token: Pick<StableflowDepositToken, "chainId" | "address" | "blockchain">,
+    ) => string;
+    getSolTokenBalance?: (
+      token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals">,
+    ) => string;
+    getTronTokenBalance?: (
+      token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals">,
+    ) => string;
+  };
 }) {
   const evmBalances = useBalancesStore((state) => state.evmBalances);
   const prices = usePricesStore((state) => state.prices);
 
   const getTokenBalance = useCallback(
-    (token: Pick<FundingToken, "chainId" | "address">) =>
-      selectFundingTokenBalance(evmBalances, token),
-    [evmBalances],
+    (
+      token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals"> & {
+        blockchain?: string;
+      },
+    ) => {
+      if (token.blockchain === "near" && value.getNearTokenBalance) {
+        return value.getNearTokenBalance(token as StableflowDepositToken);
+      }
+
+      if (token.chainId === FUNDING_NETWORKS.solana.chainId && value.getSolTokenBalance) {
+        return value.getSolTokenBalance(token);
+      }
+
+      if (token.chainId === FUNDING_NETWORKS.tron.chainId && value.getTronTokenBalance) {
+        return value.getTronTokenBalance(token);
+      }
+
+      return selectFundingTokenBalance(evmBalances, token);
+    },
+    [evmBalances, value.getNearTokenBalance, value.getSolTokenBalance, value.getTronTokenBalance],
   );
 
   const getTokenBalanceString = useCallback(
-    (token: Pick<FundingToken, "chainId" | "address" | "decimals">) =>
-      selectFundingTokenBalanceString(evmBalances, token),
-    [evmBalances],
+    (
+      token: Pick<FundingToken, "chainId" | "address" | "decimals" | "symbol"> & {
+        blockchain?: string;
+      },
+    ) => {
+      if (token.blockchain === "near" && value.getNearTokenBalance) {
+        return value.getNearTokenBalance(token as StableflowDepositToken);
+      }
+
+      if (token.chainId === FUNDING_NETWORKS.solana.chainId && value.getSolTokenBalance) {
+        return value.getSolTokenBalance(token);
+      }
+
+      if (token.chainId === FUNDING_NETWORKS.tron.chainId && value.getTronTokenBalance) {
+        return value.getTronTokenBalance(token);
+      }
+
+      return selectFundingTokenBalanceString(evmBalances, token);
+    },
+    [evmBalances, value.getNearTokenBalance, value.getSolTokenBalance, value.getTronTokenBalance],
   );
 
   const getTokenUsdValue = useCallback(
     (token: StableflowDepositToken) => {
-      const balance = selectFundingTokenBalance(evmBalances, token);
+      const balance = getTokenBalance(token);
       return getTokenUsdValueForTopup(prices, token, balance);
     },
-    [evmBalances, prices],
+    [getTokenBalance, prices],
   );
 
   const hasTokenUsdPrice = useCallback(
@@ -99,6 +152,7 @@ export function PrivateTopupProvider({
       selectableTokens: value.selectableTokens,
       topupWalletAddress: value.topupWalletAddress,
       privateAccountAddress: value.privateAccountAddress,
+      primaryChainType: value.primaryChainType,
       balancesLoading: value.balancesLoading,
       pricesLoading: value.pricesLoading,
       getTokenBalance,
@@ -114,7 +168,11 @@ export function PrivateTopupProvider({
       hasTokenUsdPrice,
       topupWalletBalanceUsd,
       value.balancesLoading,
+      value.getNearTokenBalance,
+      value.getSolTokenBalance,
+      value.getTronTokenBalance,
       value.pricesLoading,
+      value.primaryChainType,
       value.privateAccountAddress,
       value.selectableTokens,
       value.topupWalletAddress,

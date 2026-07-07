@@ -34,7 +34,10 @@ function parseSportsWsUpdate(raw: any): PolymarketSportsWsUpdate | undefined {
     ended: typeof raw.ended === "boolean" ? raw.ended : undefined,
     score: typeof raw.score === "string" ? raw.score : undefined,
     period: typeof raw.period === "string" ? raw.period : undefined,
-    elapsed: typeof raw.elapsed === "string" ? raw.elapsed : undefined,
+    elapsed:
+      typeof raw.elapsed === "string" || typeof raw.elapsed === "number"
+        ? raw.elapsed
+        : undefined,
     last_update:
       typeof raw.last_update === "string" ? raw.last_update : undefined,
     finished_timestamp:

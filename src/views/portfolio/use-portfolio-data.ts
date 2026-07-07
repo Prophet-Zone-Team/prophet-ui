@@ -9,9 +9,7 @@ import { fetchPolymarketComboPositions } from "@/lib/portfolio/fetch-polymarket-
 import { PORTFOLIO_HISTORY_PAGE_SIZE } from "@/lib/portfolio/config";
 import type { PolymarketActivityRow } from "@/lib/portfolio/fetch-polymarket-activity";
 import { fetchPolymarketUserActivity } from "@/lib/portfolio/fetch-polymarket-activity";
-import {
-  mapActivityBatchWithLossInsertions
-} from "@/lib/portfolio/map-polymarket-activity";
+import { mapActivityBatchWithLossInsertions } from "@/lib/portfolio/map-polymarket-activity";
 import {
   collectUniqueConditionIds,
   collectUniqueConditionIdsFromPositions,
@@ -37,6 +35,7 @@ export interface UsePortfolioDataResult {
   isAuthenticated: boolean;
   positions: UserPositionRecord[];
   comboPositions: PortfolioComboPositionCard[];
+  totalPositionValue: number | undefined;
   openOrders: UserOpenOrder[];
   marketContextMap: Record<string, OpenOrderMarketContext>;
   transactions: PortfolioTransactionRecord[];
@@ -59,18 +58,22 @@ export interface UsePortfolioDataResult {
 }
 
 export function usePortfolioData(): UsePortfolioDataResult {
-  const { session, isAuthenticated, openLogin, refreshCash } = useAuth();
+  const { session, isAuthenticated, openLoginModalOnly, refreshCash } =
+    useAuth();
   const [positions, setPositions] = useState<UserPositionRecord[]>([]);
   const [comboPositions, setComboPositions] = useState<
     PortfolioComboPositionCard[]
   >([]);
+  const [totalPositionValue, setTotalPositionValue] = useState<
+    number | undefined
+  >();
   const [openOrders, setOpenOrders] = useState<UserOpenOrder[]>([]);
   const [marketContextMap, setMarketContextMap] = useState<
     Record<string, OpenOrderMarketContext>
   >({});
-  const [transactions, setTransactions] = useState<PortfolioTransactionRecord[]>(
-    []
-  );
+  const [transactions, setTransactions] = useState<
+    PortfolioTransactionRecord[]
+  >([]);
   const [historyHasMore, setHistoryHasMore] = useState(false);
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [coreStatus, setCoreStatus] = useState<PortfolioLoadStatus>("idle");
@@ -94,12 +97,10 @@ export function usePortfolioData(): UsePortfolioDataResult {
     try {
       const positionsPayload = await fetchJson<{
         positions?: UserPositionRecord[];
-      }>(
-        "/api/trading/positions?limit=100&redeemable=true&sizeThreshold=0.1"
-      );
-      lossPositionsCacheRef.current = (positionsPayload?.positions ?? []).filter(
-        (position) => position.currentValue === 0
-      );
+      }>("/api/trading/positions?limit=100&redeemable=true&sizeThreshold=0.1");
+      lossPositionsCacheRef.current = (
+        positionsPayload?.positions ?? []
+      ).filter((position) => position.currentValue === 0);
     } catch (positionsError) {
       console.warn(
         "[portfolio] redeemable positions failed for loss history",
@@ -130,6 +131,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
   const resetTabData = useCallback(() => {
     setComboPositions([]);
     setOpenOrders([]);
+    setTotalPositionValue(undefined);
     setMarketContextMap({});
     setTransactions([]);
     setHistoryHasMore(false);
@@ -145,87 +147,97 @@ export function usePortfolioData(): UsePortfolioDataResult {
     loadMoreRequestIdRef.current = 0;
   }, []);
 
-  const loadCore = useCallback(async (options?: PortfolioLoadOptions) => {
-    if (!session) {
-      setPositions([]);
-      setComboPositions([]);
-      resetTabData();
-      coreLoadedRef.current = false;
-      setCoreStatus("ready");
-      setMessage(undefined);
-      return;
-    }
-
-    if (coreLoadedRef.current && !options?.force) {
-      return;
-    }
-
-    if (!options?.force && coreLoadInFlightRef.current) {
-      return coreLoadInFlightRef.current;
-    }
-
-    if (!options?.silent) {
-      setCoreStatus("loading");
-    }
-    setMessage(undefined);
-
-    const loadPromise = (async () => {
-      try {
-        const errors: string[] = [];
-        const polymarketAddress =
-          session.funderAddress ?? session.walletAddress;
-
-        const [positionsPayload, comboPositionRecords] = await Promise.all([
-          fetchJson<{
-            positions?: UserPositionRecord[];
-            error?: string;
-          }>("/api/trading/positions?limit=100").catch((error) => {
-            errors.push(error instanceof Error ? error.message : String(error));
-            return undefined;
-          }),
-          polymarketAddress?.trim()
-            ? fetchPolymarketComboPositions(polymarketAddress.trim(), {
-                limit: 20
-              }).catch((error) => {
-                console.warn("[portfolio] combo positions failed", error);
-                return [];
-              })
-            : Promise.resolve([])
-        ]);
-
-        const nextPositions = (positionsPayload?.positions ?? []).filter(
-          (position) => position.currentValue !== 0
-        );
-        setPositions(nextPositions);
-        setComboPositions(mapComboPositionsToCards(comboPositionRecords));
-
-        const conditionIds =
-          collectUniqueConditionIdsFromPositions(nextPositions);
-        await ensureMarketContext(conditionIds, { force: options?.force });
-
-        const apiErrors = [positionsPayload?.error].filter(Boolean);
-        const combinedMessage =
-          [...errors, ...apiErrors].join(" ").trim() || undefined;
-        setMessage(combinedMessage);
-        coreLoadedRef.current = true;
-        setCoreStatus(combinedMessage && !positionsPayload ? "error" : "ready");
-      } catch (error) {
-        coreLoadedRef.current = true;
-        setCoreStatus("error");
-        setMessage(error instanceof Error ? error.message : String(error));
-      } finally {
-        if (!options?.force) {
-          coreLoadInFlightRef.current = null;
-        }
+  const loadCore = useCallback(
+    async (options?: PortfolioLoadOptions) => {
+      if (!session) {
+        setPositions([]);
+        setComboPositions([]);
+        setTotalPositionValue(undefined);
+        resetTabData();
+        coreLoadedRef.current = false;
+        setCoreStatus("ready");
+        setMessage(undefined);
+        return;
       }
-    })();
 
-    if (!options?.force) {
-      coreLoadInFlightRef.current = loadPromise;
-    }
+      if (coreLoadedRef.current && !options?.force) {
+        return;
+      }
 
-    return loadPromise;
-  }, [ensureMarketContext, resetTabData, session]);
+      if (!options?.force && coreLoadInFlightRef.current) {
+        return coreLoadInFlightRef.current;
+      }
+
+      if (!options?.silent) {
+        setCoreStatus("loading");
+      }
+      setMessage(undefined);
+
+      const loadPromise = (async () => {
+        try {
+          const errors: string[] = [];
+          const polymarketAddress =
+            session.funderAddress ?? session.walletAddress;
+
+          const [positionsPayload, comboPositionRecords] = await Promise.all([
+            fetchJson<{
+              positions?: UserPositionRecord[];
+              totalPositionValue?: number;
+              error?: string;
+            }>("/api/trading/positions?limit=100").catch((error) => {
+              errors.push(
+                error instanceof Error ? error.message : String(error)
+              );
+              return undefined;
+            }),
+            polymarketAddress?.trim()
+              ? fetchPolymarketComboPositions(polymarketAddress.trim(), {
+                  limit: 20
+                }).catch((error) => {
+                  console.warn("[portfolio] combo positions failed", error);
+                  return [];
+                })
+              : Promise.resolve([])
+          ]);
+
+          const nextPositions = (positionsPayload?.positions ?? []).filter(
+            (position) => position.currentValue !== 0
+          );
+          setPositions(nextPositions);
+          setTotalPositionValue(positionsPayload?.totalPositionValue);
+          setComboPositions(mapComboPositionsToCards(comboPositionRecords));
+
+          const conditionIds =
+            collectUniqueConditionIdsFromPositions(nextPositions);
+          const apiErrors = [positionsPayload?.error].filter(Boolean);
+          const combinedMessage =
+            [...errors, ...apiErrors].join(" ").trim() || undefined;
+          setMessage(combinedMessage);
+          coreLoadedRef.current = true;
+          setCoreStatus(
+            combinedMessage && !positionsPayload ? "error" : "ready"
+          );
+
+          void ensureMarketContext(conditionIds, { force: options?.force });
+        } catch (error) {
+          coreLoadedRef.current = true;
+          setCoreStatus("error");
+          setMessage(error instanceof Error ? error.message : String(error));
+        } finally {
+          if (!options?.force) {
+            coreLoadInFlightRef.current = null;
+          }
+        }
+      })();
+
+      if (!options?.force) {
+        coreLoadInFlightRef.current = loadPromise;
+      }
+
+      return loadPromise;
+    },
+    [ensureMarketContext, resetTabData, session]
+  );
 
   const loadOpenOrders = useCallback(
     async (options?: PortfolioLoadOptions) => {
@@ -251,10 +263,10 @@ export function usePortfolioData(): UsePortfolioDataResult {
         setOpenOrders(orders);
 
         const conditionIds = collectUniqueConditionIds(orders);
-        await ensureMarketContext(conditionIds, { force: options?.force });
-
         openOrdersLoadedRef.current = true;
         setOpenOrdersStatus(payload?.error ? "error" : "ready");
+
+        void ensureMarketContext(conditionIds, { force: options?.force });
       } catch {
         openOrdersLoadedRef.current = true;
         setOpenOrders([]);
@@ -274,8 +286,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
         return;
       }
 
-      const polymarketAddress =
-        session.funderAddress ?? session.walletAddress;
+      const polymarketAddress = session.funderAddress ?? session.walletAddress;
 
       if (!polymarketAddress?.trim()) {
         setTransactions([]);
@@ -339,8 +350,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
       return;
     }
 
-    const polymarketAddress =
-      session.funderAddress ?? session.walletAddress;
+    const polymarketAddress = session.funderAddress ?? session.walletAddress;
 
     if (!polymarketAddress?.trim()) {
       return;
@@ -395,11 +405,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
         setHistoryLoadingMore(false);
       }
     }
-  }, [
-    historyHasMore,
-    historyLoadingMore,
-    session
-  ]);
+  }, [historyHasMore, historyLoadingMore, session]);
 
   const reload = useCallback(async () => {
     if (!session) {
@@ -415,13 +421,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
     if (historyLoadedRef.current) {
       await loadActivityHistory({ force: true });
     }
-  }, [
-    loadActivityHistory,
-    loadCore,
-    loadOpenOrders,
-    refreshCash,
-    session
-  ]);
+  }, [loadActivityHistory, loadCore, loadOpenOrders, refreshCash, session]);
 
   useEffect(() => {
     if (!session) {
@@ -432,6 +432,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
       coreLoadInFlightRef.current = null;
       setPositions([]);
       setComboPositions([]);
+      setTotalPositionValue(undefined);
       coreLoadedRef.current = false;
       setCoreStatus("ready");
       setMessage(undefined);
@@ -481,19 +482,20 @@ export function usePortfolioData(): UsePortfolioDataResult {
     setMessage(undefined);
 
     try {
-      await openLogin();
+      await openLoginModalOnly();
       await loadCore();
     } catch (error) {
       setCoreStatus("error");
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [loadCore, openLogin]);
+  }, [loadCore, openLoginModalOnly]);
 
   return {
     session,
     isAuthenticated,
     positions,
     comboPositions,
+    totalPositionValue,
     openOrders,
     marketContextMap,
     transactions,

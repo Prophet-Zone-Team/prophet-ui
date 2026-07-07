@@ -47,7 +47,7 @@ export function MarketBreakdownTable({
       </div>
 
       <div className="flex items-end justify-between gap-3 pt-1">
-        <span className="font-[Sora] text-sm font-medium leading-[18px] text-black">
+        <span className="font-[Sora] text-sm font-medium leading-[18px] text-prophet-foreground">
           {tTrade("toWin")}
         </span>
         <span className="font-[Sora] text-[26px] font-medium leading-[33px] text-[#69C800]">

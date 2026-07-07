@@ -12,6 +12,7 @@ import { useAuthHydrated } from "@/store/use-auth-hydrated";
 import { TracksEmptyState } from "./empty";
 import TracksTitle from "./title";
 import { TrackCard } from "./track-card";
+import { TracksListSkeleton, TopAttentionSkeleton } from "./tracks-loading";
 import { useProphetTopTracks } from "@/hooks/tracks/use-prophet-top-tracks";
 import { useTracksTelegramBind } from "@/hooks/tracks/use-tracks-telegram-bind";
 import { TopAttentionCard } from "./top-attention-card";
@@ -25,10 +26,9 @@ export function TracksView() {
   }, []);
 
   const t = useTranslations("tracks");
-  const tCommon = useTranslations("common");
   const authHydrated = useAuthHydrated();
   const tracksHydrated = useTracksHydrated();
-  const { isAuthenticated, openLogin, loginInProgress, session } = useAuth();
+  const { isAuthenticated, openLoginModalOnly, loginInProgress, session } = useAuth();
   const {
     bound: telegramBound,
     loadStatus: telegramLoadStatus,
@@ -79,7 +79,7 @@ export function TracksView() {
 
   async function handleConnectWallet() {
     try {
-      await openLogin();
+      await openLoginModalOnly();
       await loadTracks();
     } catch (error) {
       console.warn("[tracks] wallet connect failed", error);
@@ -88,11 +88,7 @@ export function TracksView() {
 
   function renderMainContent() {
     if (!authHydrated || !tracksHydrated) {
-      return (
-        <p className="py-[60px] text-center text-[16px] text-[#909090]">
-          {tCommon("loading")}
-        </p>
-      );
+      return <TracksListSkeleton count={2} />;
     }
 
     if (!isAuthenticated) {
@@ -108,11 +104,7 @@ export function TracksView() {
       (status === "loading" || status === "idle") && trackCards.length === 0;
 
     if (showLoadingState) {
-      return (
-        <p className="py-[60px] text-center text-[16px] text-[#909090]">
-          {t("loadingTracks")}
-        </p>
-      );
+      return <TracksListSkeleton />;
     }
 
     if (trackCards.length === 0) {
@@ -135,23 +127,19 @@ export function TracksView() {
 
   function renderTopAttention() {
     if (topAttentionLoading) {
-      return (
-        <p className="py-8 text-center text-[14px] text-[#909090]">
-          {t("loadingTopAttention")}
-        </p>
-      );
+      return <TopAttentionSkeleton />;
     }
 
     if (topAttentionError) {
       return (
         <div className="flex flex-col items-center gap-4 py-8">
-          <p className="m-0 text-center text-[14px] text-[#909090]">
+          <p className="m-0 text-center text-[14px] text-prophet-muted">
             {t("topAttentionLoadError")}
           </p>
           <button
             type="button"
             onClick={() => void refetchTopAttention()}
-            className="rounded-[8px] border border-[#EBEBEB] bg-white px-4 py-2 text-[14px] font-[500] text-black"
+            className="rounded-[8px] border border-prophet-line bg-prophet-panel px-4 py-2 text-[14px] font-[500] text-prophet-foreground transition-colors hover:bg-prophet-hover"
           >
             {t("retry")}
           </button>
@@ -185,10 +173,10 @@ export function TracksView() {
 
   return (
     <section className="mx-auto w-full max-w-[1436px] px-3 py-6 md:px-4 md:py-8">
-      <div className="mx-auto w-[1260px]">
+      <div className="mx-auto w-full md:w-[1260px]">
         <TracksTitle />
         {errorMessage ? (
-          <p className="mt-4 text-center text-[14px] text-[#909090]">
+          <p className="mt-4 text-center text-[14px] text-prophet-muted">
             {errorMessage}
           </p>
         ) : null}
@@ -200,7 +188,7 @@ export function TracksView() {
         />
       </div>
       <div className="mt-3 lg:mt-4">
-        <div className="my-5 text-base font-[500] text-black md:mt-4 md:text-[18px]">
+        <div className="my-5 text-base font-[500] text-prophet-foreground md:mt-4 md:text-[18px]">
           {t("topAttention")}
         </div>
         {renderTopAttention()}

@@ -5,7 +5,8 @@ import {
   mapGameStatisticsGoalEvents,
   mapGameStatisticsRows,
   parseStatisticValue,
-  resolveGoalElapsedSeconds
+  resolveGoalElapsedSeconds,
+  resolveMatchStoppageExtraMinutes
 } from "@/lib/market/map-game-statistics";
 import type { ProphetGameStatisticsPayload } from "@/types/prophet-api";
 
@@ -30,6 +31,14 @@ describe("map-game-statistics", () => {
     assert.equal(parseStatisticValue("75%"), 75);
     assert.equal(parseStatisticValue(null), 0);
     assert.equal(parseStatisticValue("1.72"), 1.72);
+  });
+
+  it("resolveMatchStoppageExtraMinutes returns positive announced extra minutes only", () => {
+    assert.equal(resolveMatchStoppageExtraMinutes({ extra: 6 }), 6);
+    assert.equal(resolveMatchStoppageExtraMinutes({ extra: 8 }), 8);
+    assert.equal(resolveMatchStoppageExtraMinutes({ extra: 0 }), undefined);
+    assert.equal(resolveMatchStoppageExtraMinutes({ extra: null }), undefined);
+    assert.equal(resolveMatchStoppageExtraMinutes(undefined), undefined);
   });
 
   it("maps ucl-psg-ars-2026-05-30 statistics to UI rows for prophet team names", () => {

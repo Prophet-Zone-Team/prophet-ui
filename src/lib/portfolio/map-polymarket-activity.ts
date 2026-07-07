@@ -34,7 +34,7 @@ export function resolveActivityPortfolioType(
   type: string,
   side?: string
 ): PortfolioTransactionType {
-  const normalizedType = type.trim().toUpperCase();
+  const normalizedType = type?.trim().toUpperCase() ?? "";
   const normalizedSide = side?.trim().toUpperCase();
 
   if (normalizedType === "TRADE") {
@@ -114,6 +114,7 @@ export function mapPolymarketActivity(
   }
 
   const slug = resolveActivitySlug(row);
+  const eventSlug = row.eventSlug?.trim() || undefined;
   const createdAt = timestampToIso(row.timestamp);
 
   return {
@@ -126,6 +127,7 @@ export function mapPolymarketActivity(
     marketName: row.title?.trim() || "—",
     teamName: resolveActivityTeamName(row),
     slug,
+    eventSlug,
     source: "",
     isCombo: row.isCombo === true,
     createdAt,
@@ -144,6 +146,7 @@ export function mapLossPositionToTransaction(
   position: UserPositionRecord
 ): PortfolioTransactionRecord {
   const slug = position.slug?.trim() || position.eventSlug?.trim() || "";
+  const eventSlug = position.eventSlug?.trim() || undefined;
   const createdAt = endDateToIso(position.endDate);
 
   return {
@@ -159,6 +162,7 @@ export function mapLossPositionToTransaction(
       outcome: position.outcome
     }),
     slug,
+    eventSlug,
     source: "",
     createdAt,
     tradeCreatedAt: createdAt,
@@ -168,7 +172,7 @@ export function mapLossPositionToTransaction(
 
 function isActivityTradeBuy(row: PolymarketActivityRow): boolean {
   return (
-    row.type.trim().toUpperCase() === "TRADE" &&
+    row.type?.trim().toUpperCase() === "TRADE" &&
     row.side?.trim().toUpperCase() === "BUY"
   );
 }

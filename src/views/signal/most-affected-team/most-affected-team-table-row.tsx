@@ -26,7 +26,7 @@ export function MostAffectedTeamDesktopRow({ entry }: MostAffectedTeamTableRowPr
       role="row"
       className={cn(
         mostAffectedTeamTableGridClass,
-        "items-center py-[10px] text-[16px] font-[400] leading-[19px] text-black cursor-pointer hover:bg-[#F0F2F5] duration-150"
+        "items-center py-[10px] text-[16px] font-[400] leading-[19px] text-prophet-foreground cursor-pointer hover:bg-prophet-hover duration-150"
       )}
       onClick={() => {
         if (entry.link) {
@@ -54,7 +54,7 @@ export function MostAffectedTeamDesktopRow({ entry }: MostAffectedTeamTableRowPr
         role="cell"
         className={cn(
           "tabular-nums",
-          isNegativeImpact ? "text-[#FF674B]" : "text-black"
+          isNegativeImpact ? "text-[#FF674B]" : "text-prophet-foreground"
         )}
       >
         {formatNetImpact(entry.netImpact)}
@@ -78,7 +78,7 @@ export function MostAffectedTeamMobileCard({
   return (
     <article
       className={cn(
-        "flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-black",
+        "flex flex-col gap-2 rounded-[6px] px-3 py-3 text-[14px] font-[400] leading-[17px] text-prophet-foreground",
         className
       )}
       onClick={() => {
@@ -98,20 +98,20 @@ export function MostAffectedTeamMobileCard({
         />
         <span className="min-w-0 truncate font-[500]">{teamDisplayName}</span>
       </div>
-      <div className="grid grid-cols-2 gap-3 border-t border-[#EBEBEB] pt-2">
+      <div className="grid grid-cols-2 gap-3 border-t border-prophet-line pt-2">
         <div className="flex flex-col gap-0.5">
-          <span className="text-[12px] text-[#909090]">{t("netImpact")}</span>
+          <span className="text-[12px] text-prophet-muted">{t("netImpact")}</span>
           <span
             className={cn(
               "tabular-nums",
-              isNegativeImpact ? "text-[#FF674B]" : "text-black"
+              isNegativeImpact ? "text-[#FF674B]" : "text-prophet-foreground"
             )}
           >
             {formatNetImpact(entry.netImpact)}
           </span>
         </div>
         <div className="flex flex-col items-end gap-0.5">
-          <span className="text-[12px] text-[#909090]">
+          <span className="text-[12px] text-prophet-muted">
             {t("highImpactEvents")}
           </span>
           <span className="tabular-nums">{entry.highImpactEventCount}</span>

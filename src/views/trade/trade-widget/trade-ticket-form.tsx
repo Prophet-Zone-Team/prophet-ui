@@ -86,6 +86,10 @@ export interface TradeTicketFormProps {
   takeProfitLimitPrice?: string;
   outcomeButtonClassName?: string;
   outcomeButtonContainerClassName?: string;
+  yesButtonLabel?: string;
+  noButtonLabel?: string;
+  yesButtonActive?: boolean;
+  noButtonActive?: boolean;
   onTakeProfitLimitEnabledChange?: (value: boolean) => void;
   onTakeProfitLimitPriceChange?: (value: string) => void;
   walletInsight?: ReactNode;
@@ -135,6 +139,10 @@ export function TradeTicketForm({
   takeProfitLimitPrice = "",
   outcomeButtonClassName,
   outcomeButtonContainerClassName,
+  yesButtonLabel,
+  noButtonLabel,
+  yesButtonActive,
+  noButtonActive,
   onTakeProfitLimitEnabledChange,
   onTakeProfitLimitPriceChange,
   walletInsight
@@ -167,19 +175,21 @@ export function TradeTicketForm({
       >
         <OutcomeButtonColumn
           side="yes"
-          active={outcomeSide === "yes"}
+          active={yesButtonActive ?? outcomeSide === "yes"}
           priceLabel={formatOutcomeDisplay(yesTokenPrice)}
           probabilityLabel={formatProbability(yesProbability)}
           shareCount={tradeSide === "sell" ? yesShares : undefined}
+          buttonLabel={yesButtonLabel}
           onSelect={() => onSelectOutcome("yes")}
           buttonClassName={outcomeButtonClassName}
         />
         <OutcomeButtonColumn
           side="no"
-          active={outcomeSide === "no"}
+          active={noButtonActive ?? outcomeSide === "no"}
           priceLabel={formatOutcomeDisplay(noTokenPrice)}
           probabilityLabel={formatProbability(noProbability)}
           shareCount={tradeSide === "sell" ? noShares : undefined}
+          buttonLabel={noButtonLabel}
           onSelect={() => onSelectOutcome("no")}
           buttonClassName={outcomeButtonClassName}
         />
@@ -189,7 +199,7 @@ export function TradeTicketForm({
 
       {isLimitOrder ? (
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-[500] leading-[17px] text-black">
+          <span className="text-sm font-[500] leading-[17px] text-prophet-foreground">
             {t("limitPrice")}
           </span>
           <label className="sr-only" htmlFor="trade-limit-price">
@@ -207,7 +217,7 @@ export function TradeTicketForm({
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-[500] leading-[17px] text-black">
+            <span className="text-sm font-[500] leading-[17px] text-prophet-foreground">
               {amountInputLabel}
             </span>
             {showCashBalance ? (
@@ -234,7 +244,7 @@ export function TradeTicketForm({
                 onAmountMessageClear();
               }}
               style={{ fieldSizing: "content" }}
-              className="border-0 bg-transparent p-0 leading-[38px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="border-0 bg-transparent p-0 leading-[38px] text-prophet-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
         </div>
@@ -328,7 +338,7 @@ export function TradeTicketForm({
       ) : (
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-0.5">
-            <span className="text-[14px] font-[400] leading-[17px] text-black">
+            <span className="text-[14px] font-[400] leading-[17px] text-prophet-foreground">
               {outcomeSummaryLabel}
             </span>
             <span className="text-sm font-[400] leading-[17px] text-prophet-muted">
@@ -379,7 +389,7 @@ export function TradeTicketForm({
           {eligibilityRetryAvailable && onRetryEligibility ? (
             <button
               type="button"
-              className="self-start text-xs font-[500] text-black underline underline-offset-2 disabled:opacity-50"
+              className="self-start text-xs font-[500] text-prophet-foreground underline underline-offset-2 disabled:opacity-50"
               disabled={actionInProgress || status === "loading"}
               onClick={() => void onRetryEligibility()}
             >
@@ -452,7 +462,7 @@ function LimitPriceInput({
           onLimitPriceChange(parsed);
           onAmountMessageClear();
         }}
-        className="min-w-[4ch] max-w-[8ch] flex-1 border-0 bg-transparent p-0 text-right text-[32px] font-[500] leading-[38px] text-black outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="min-w-[4ch] max-w-[8ch] flex-1 border-0 bg-transparent p-0 text-right text-[32px] font-[500] leading-[38px] text-prophet-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
     </div>
   );
@@ -481,7 +491,7 @@ function LimitOrderSummary({
   return (
     <div className="flex flex-col gap-3 border-t border-prophet-line pt-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-[500] leading-[17px] text-black">
+        <span className="text-sm font-[500] leading-[17px] text-prophet-foreground">
           {t("expiration")}
         </span>
         <LimitExpirationSelect
@@ -493,8 +503,8 @@ function LimitOrderSummary({
       </div>
 
       {tradeSide === "buy" ? (
-        <div className="flex items-center justify-between gap-2 border-t border-prophet-line/60 pt-3">
-          <span className="text-sm font-[500] leading-[17px] text-black">
+        <div className="flex items-center justify-between gap-2 border-t border-prophet-line pt-3">
+          <span className="text-sm font-[500] leading-[17px] text-prophet-foreground">
             {t("total")}
           </span>
           <span className="text-sm font-[500] leading-[17px] text-[#0d69ff]">
@@ -503,9 +513,9 @@ function LimitOrderSummary({
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between gap-2 border-t border-prophet-line/60 pt-3">
+      <div className="flex items-center justify-between gap-2 border-t border-prophet-line pt-3">
         <div className="flex items-center gap-1">
-          <span className="text-sm font-[500] leading-[17px] text-black">
+          <span className="text-sm font-[500] leading-[17px] text-prophet-foreground">
             {outcomeSummaryLabel}
           </span>
         </div>
@@ -537,6 +547,7 @@ function OutcomeButtonColumn({
   priceLabel,
   probabilityLabel,
   shareCount,
+  buttonLabel,
   className,
   buttonClassName,
   onSelect
@@ -546,6 +557,7 @@ function OutcomeButtonColumn({
   priceLabel: string;
   probabilityLabel: string;
   shareCount?: number;
+  buttonLabel?: string;
   className?: string;
   buttonClassName?: string;
   onSelect: () => void;
@@ -561,6 +573,7 @@ function OutcomeButtonColumn({
         active={active}
         priceLabel={priceLabel}
         probabilityLabel={probabilityLabel}
+        buttonLabel={buttonLabel}
         onSelect={onSelect}
         buttonClassName={buttonClassName}
       />
@@ -583,6 +596,7 @@ function OutcomeButton({
   active,
   priceLabel,
   probabilityLabel,
+  buttonLabel,
   buttonClassName,
   onSelect
 }: {
@@ -590,11 +604,13 @@ function OutcomeButton({
   active: boolean;
   priceLabel: string;
   probabilityLabel: string;
+  buttonLabel?: string;
   buttonClassName?: string;
   onSelect: () => void;
 }) {
   const t = useTranslations("trade");
   const isYes = side === "yes";
+  const label = buttonLabel ?? (isYes ? t("yes") : t("no"));
 
   return (
     <button
@@ -607,14 +623,12 @@ function OutcomeButton({
             ? "border-[#65AF14] bg-[#65AF14] text-white"
             : "border-[#FF674B] bg-[#FF674B] text-white"
           : isYes
-            ? "border-prophet-line bg-white text-[#65AF14] hover:bg-[#fafbfc]"
-            : "border-[#FF674B] bg-white text-[#FF674B] hover:bg-[#fafbfc]",
+            ? "border-prophet-line bg-prophet-panel text-[#65AF14] hover:bg-[#fafbfc]"
+            : "border-[#FF674B] bg-prophet-panel text-[#FF674B] hover:bg-[#fafbfc]",
         buttonClassName
       )}
     >
-      <span className="text-[20px] font-[500] leading-6">
-        {isYes ? t("yes") : t("no")}
-      </span>
+      <span className="text-[20px] font-[500] leading-6">{label}</span>
       <div className="flex items-center gap-2">
         <span
           className={cn(

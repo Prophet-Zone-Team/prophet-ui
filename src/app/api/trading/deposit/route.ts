@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isValidBridgeStatusAddress } from "@/lib/funding/recipient-validation";
 import {
   createBridgeDepositAddresses,
   fetchBridgeTransactionStatus,
@@ -32,12 +33,17 @@ export async function GET(request: Request) {
 
   try {
     if (statusAddress) {
-      if (!/^0x[a-fA-F0-9]{40}$/.test(statusAddress)) {
-        return NextResponse.json({ error: "statusAddress must be an EVM address." }, { status: 400 });
+      const normalizedStatusAddress = statusAddress.trim();
+
+      if (!isValidBridgeStatusAddress(normalizedStatusAddress)) {
+        return NextResponse.json(
+          { error: "statusAddress must be a valid EVM, Tron, or Solana address." },
+          { status: 400 },
+        );
       }
 
       return NextResponse.json({
-        status: await fetchBridgeTransactionStatus(statusAddress),
+        status: await fetchBridgeTransactionStatus(normalizedStatusAddress),
       });
     }
 

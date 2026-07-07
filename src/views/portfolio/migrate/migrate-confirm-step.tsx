@@ -74,12 +74,12 @@ export function MigrateConfirmStep({
       <div className="space-y-1">
         <div className={migrateAddressRowClass}>
           <span className="shrink-0">{t("sourceAccount")}</span>
-          <span className="flex-1 h-[1px] bg-[#EBEBEB] translate-y-[10px]"></span>
+          <span className="flex-1 h-[1px] bg-prophet-line translate-y-[10px]"></span>
           <span className={migrateAddressRowValueClass}>{sourceAccount.address}</span>
         </div>
         <div className={migrateAddressRowClass}>
           <span>{t("destinationAccount")}</span>
-          <span className="flex-1 h-[1px] bg-[#EBEBEB] translate-y-[10px]"></span>
+          <span className="flex-1 h-[1px] bg-prophet-line translate-y-[10px]"></span>
           <span className={migrateAddressRowValueClass}>{destinationAddress}</span>
         </div>
       </div>
@@ -111,7 +111,7 @@ export function MigrateConfirmStep({
       </div>
 
       <div className="relative mt-6">
-        <div className="mb-2 flex items-center justify-between px-1 text-sm text-[#909090]">
+        <div className="mb-2 flex items-center justify-between px-1 text-sm text-prophet-muted">
           <span>{t("from")}</span>
           <span>{t("to")}</span>
         </div>
@@ -133,7 +133,7 @@ export function MigrateConfirmStep({
           </div>
 
           <div className="flex justify-center items-center">
-            <ArrowRight className="h-3 w-5 shrink-0 text-black" aria-hidden="true" />
+            <ArrowRight className="h-3 w-5 shrink-0 text-prophet-foreground" aria-hidden="true" />
           </div>
 
           <div className={cn(migrateTransferSideClass, "justify-end")}>

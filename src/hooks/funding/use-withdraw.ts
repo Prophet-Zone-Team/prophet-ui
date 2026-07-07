@@ -55,6 +55,7 @@ export interface UseWithdrawResult {
   executeStableflowWithdraw: (params: StableflowWithdrawParams) => Promise<{ txHash: string }>;
   startStatusPoll: (statusAddress: string) => Promise<BridgeAggregateStatus>;
   stopStatusPoll: () => void;
+  resetWithdrawFlow: () => void;
   /** @deprecated Use executeBridgeWithdraw */
   executeWithdraw: (params: BridgeWithdrawParams & { amountUsd: number }) => Promise<{ txHash?: string }>;
 }
@@ -84,6 +85,16 @@ export function useWithdraw(): UseWithdrawResult {
     stableflowPollAbortRef.current?.abort();
     stableflowPollAbortRef.current = undefined;
   }, []);
+
+  const resetWithdrawFlow = useCallback(() => {
+    stopStatusPoll();
+    setStatus("idle");
+    setBridgeStatus("pending");
+    setTransactions([]);
+    setError(undefined);
+    setOperationPhase("idle");
+    setOperationDetail(undefined);
+  }, [stopStatusPoll]);
 
   const finalizeIfCompleted = useCallback(
     async (aggregateStatus: BridgeAggregateStatus) => {
@@ -299,6 +310,7 @@ export function useWithdraw(): UseWithdrawResult {
           amountBaseUnits,
           recipient,
           dry,
+          destinationBlockchain: destinationToken.blockchain,
         }),
       });
 
@@ -458,6 +470,7 @@ export function useWithdraw(): UseWithdrawResult {
     executeStableflowWithdraw,
     startStatusPoll,
     stopStatusPoll,
+    resetWithdrawFlow,
     executeWithdraw: executeBridgeWithdraw,
   };
 }

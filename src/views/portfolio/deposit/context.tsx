@@ -1,6 +1,7 @@
 "use client";
 
-import { type FundingToken } from "@/config/funding";
+import { FUNDING_NETWORKS } from "@/config/funding/networks";
+import type { FundingToken } from "@/config/funding/tokens";
 import {
   selectFundingTokenBalance,
   selectFundingTokenBalanceString,
@@ -25,9 +26,9 @@ export interface DepositContextType {
   supportedAssets: DepositSelectableToken[];
   balancesLoading: boolean;
   pricesLoading: boolean;
-  getTokenBalance: (token: Pick<FundingToken, "chainId" | "address">) => string;
-  getTokenBalanceString: (token: Pick<FundingToken, "chainId" | "address" | "decimals">) => string;
-  getTokenUsdValue: (token: Pick<FundingToken, "symbol" | "chainId" | "address">) => number;
+  getTokenBalance: (token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals">) => string;
+  getTokenBalanceString: (token: Pick<FundingToken, "chainId" | "address" | "decimals" | "symbol">) => string;
+  getTokenUsdValue: (token: Pick<FundingToken, "symbol" | "chainId" | "address"> & { decimals?: number }) => number;
   hasTokenUsdPrice: (symbol: string) => boolean;
   connectedWalletBalanceUsd: number;
   stableflowBalanceUsd: number;
@@ -69,26 +70,77 @@ export function DepositProvider({
     | "hasPendingDeposit"
     | "converting"
     | "onConfirmPendingDeposit"
-  >;
+  > & {
+    getNearTokenBalance?: (
+      token: Pick<StableflowDepositToken, "chainId" | "address" | "blockchain">,
+    ) => string;
+    getSolTokenBalance?: (
+      token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals">,
+    ) => string;
+    getTronTokenBalance?: (
+      token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals">,
+    ) => string;
+  };
 }) {
   const evmBalances = useBalancesStore((state) => state.evmBalances);
   const prices = usePricesStore((state) => state.prices);
 
   const getTokenBalance = useCallback(
-    (token: Pick<FundingToken, "chainId" | "address">) =>
-      selectFundingTokenBalance(evmBalances, token),
-    [evmBalances],
+    (token: Pick<FundingToken, "chainId" | "address" | "symbol" | "decimals"> & { assetId?: string; blockchain?: string; }) => {
+      if (
+        isStableflowDepositToken(token as DepositSelectableToken) &&
+        (token as StableflowDepositToken).blockchain === "near" &&
+        value.getNearTokenBalance
+      ) {
+        return value.getNearTokenBalance(token as StableflowDepositToken);
+      }
+
+      if (token.chainId === FUNDING_NETWORKS.solana.chainId && value.getSolTokenBalance) {
+        return value.getSolTokenBalance(token);
+      }
+
+      if (token.chainId === FUNDING_NETWORKS.tron.chainId && value.getTronTokenBalance) {
+        return value.getTronTokenBalance(token);
+      }
+
+      return selectFundingTokenBalance(evmBalances, token);
+    },
+    [evmBalances, value.getNearTokenBalance, value.getSolTokenBalance, value.getTronTokenBalance],
   );
 
   const getTokenBalanceString = useCallback(
-    (token: Pick<FundingToken, "chainId" | "address" | "decimals">) =>
-      selectFundingTokenBalanceString(evmBalances, token),
-    [evmBalances],
+    (token: Pick<FundingToken, "chainId" | "address" | "decimals" | "symbol"> & { assetId?: string; blockchain?: string; }) => {
+      if (
+        isStableflowDepositToken(token as DepositSelectableToken) &&
+        (token as StableflowDepositToken).blockchain === "near" &&
+        value.getNearTokenBalance
+      ) {
+        return value.getNearTokenBalance(token as StableflowDepositToken);
+      }
+
+      if (token.chainId === FUNDING_NETWORKS.solana.chainId && value.getSolTokenBalance) {
+        return value.getSolTokenBalance(token);
+      }
+
+      if (token.chainId === FUNDING_NETWORKS.tron.chainId && value.getTronTokenBalance) {
+        return value.getTronTokenBalance(token);
+      }
+
+      return selectFundingTokenBalanceString(evmBalances, token);
+    },
+    [evmBalances, value.getNearTokenBalance, value.getSolTokenBalance, value.getTronTokenBalance],
   );
 
   const getTokenUsdValue = useCallback(
-    (token: Pick<FundingToken, "symbol" | "chainId" | "address">) => {
-      const balance = selectFundingTokenBalance(evmBalances, token);
+    (token: Pick<FundingToken, "symbol" | "chainId" | "address"> & { decimals?: number; assetId?: string; blockchain?: string; }) => {
+      const balance = getTokenBalance({
+        symbol: token.symbol,
+        chainId: token.chainId,
+        address: token.address,
+        decimals: token.decimals ?? 0,
+        assetId: token.assetId,
+        blockchain: token.blockchain,
+      });
 
       if (isStableflowDepositToken(token as DepositSelectableToken)) {
         const stableflowToken = token as StableflowDepositToken;
@@ -101,7 +153,7 @@ export function DepositProvider({
 
       return selectTokenUsdValue(prices, token.symbol, balance);
     },
-    [evmBalances, prices],
+    [getTokenBalance, prices],
   );
 
   const hasTokenUsdPrice = useCallback(
@@ -153,6 +205,9 @@ export function DepositProvider({
       value.funderAddress,
       value.hasPendingDeposit,
       value.onConfirmPendingDeposit,
+      value.getNearTokenBalance,
+      value.getSolTokenBalance,
+      value.getTronTokenBalance,
       value.pricesLoading,
       value.selectableTokens,
       value.supportedAssets,

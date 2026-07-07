@@ -77,7 +77,7 @@ export function DepositPrivateBalanceEntry({
     () =>
       formatNumber(privateBalanceUsd ?? 0, 2, true, {
         round: 0,
-        isZeroPrecision: true
+        isZeroPrecision: true,
       }),
     [privateBalanceUsd]
   );
@@ -88,7 +88,7 @@ export function DepositPrivateBalanceEntry({
     }
 
     const nextAmount = Big(maxBalanceUsd).times(percent).div(100);
-    setInputValue(nextAmount.toFixed(2, Big.roundDown));
+    setInputValue(nextAmount.toFixed(6, Big.roundDown));
   }
 
   const transferEnabled =
@@ -151,7 +151,7 @@ export function DepositPrivateBalanceEntry({
       <div className={depositPrivateAccountRowClass}>
         {status === "not_created" ? (
           <span className="flex min-w-0 items-center gap-3">
-            <div className="size-[30px] border-[4px] rounded-full border-white bg-[#616161] shadow-[0_0_4px_0px_rgba(0,0,0,0.25)] shrink-0 flex justify-center items-center">
+            <div className="size-[30px] border-[4px] rounded-full border-prophet-panel bg-[#616161] shadow-[0_0_4px_0px_rgba(0,0,0,0.25)] shrink-0 flex justify-center items-center">
               <img
                 src="/icons/icon-secure.svg"
                 alt=""
@@ -160,12 +160,12 @@ export function DepositPrivateBalanceEntry({
               />
             </div>
 
-            <span className="text-base font-[500] text-black">{tDeposit("notCreated")}</span>
+            <span className="text-base font-[500] text-prophet-foreground">{tDeposit("notCreated")}</span>
           </span>
         ) : (
           <>
             <span className="flex min-w-0 items-center gap-3">
-              <span className="relative flex size-[22px] shrink-0 items-center justify-center rounded-full bg-[#616161] ring-2 ring-[#f4f4f4]">
+              <span className="relative flex size-[22px] shrink-0 items-center justify-center rounded-full bg-[#616161] ring-2 ring-prophet-action-panel">
                 <img
                   src="/icons/icon-secure.svg"
                   alt=""
@@ -173,13 +173,13 @@ export function DepositPrivateBalanceEntry({
                   aria-hidden="true"
                 />
               </span>
-              <span className="truncate text-base font-[500] text-black">
+              <span className="truncate text-base font-[500] text-prophet-foreground">
                 {privateAccountAddress
                   ? formatShortWallet(privateAccountAddress)
                   : "—"}
               </span>
             </span>
-            <span className="shrink-0 text-base font-[500] text-black">
+            <span className="shrink-0 text-base font-[500] text-prophet-foreground">
               {formattedAccountBalance}
             </span>
           </>
@@ -202,6 +202,7 @@ export function DepositPrivateBalanceEntry({
               aria-label={tDeposit("privateTransferAmountAria")}
               placeholder="0"
               disabled={!isInteractive}
+              decimals={6}
             />
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
@@ -221,8 +222,8 @@ export function DepositPrivateBalanceEntry({
 
         <div>
           <div className="flex items-center justify-between gap-1 px-4 py-3">
-            <span className="text-sm font-[500] text-[#909090]">{tDeposit("from")}</span>
-            <span className="text-sm font-[500] text-[#909090]">{tDeposit("to")}</span>
+            <span className="text-sm font-[500] text-prophet-muted">{tDeposit("from")}</span>
+            <span className="text-sm font-[500] text-prophet-muted">{tDeposit("to")}</span>
           </div>
           <div className={depositTransferBarClass}>
             <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -236,27 +237,27 @@ export function DepositPrivateBalanceEntry({
                 <img
                   src="/icons/icon-secure.svg"
                   alt=""
-                  className="absolute -bottom-0.5 -right-0.5 size-4 rounded-full border border-white bg-[#616161] p-0.5"
+                  className="absolute -bottom-0.5 -right-0.5 size-4 rounded-full border border-prophet-panel bg-[#616161] p-0.5"
                   aria-hidden="true"
                 />
               </div>
               <div className="flex min-w-0 flex-col">
-                <span className="text-sm font-[500] text-black">USDC</span>
-                <span className="text-xs font-[500] text-[#909090]">
+                <span className="text-sm font-[500] text-prophet-foreground">USDC</span>
+                <span className="text-xs font-[500] text-prophet-muted">
                   {tDeposit("privateLabel")}
                 </span>
               </div>
             </div>
 
             <ArrowRight
-              className="h-4 w-4 shrink-0 text-[#909090]"
+              className="h-4 w-4 shrink-0 text-prophet-muted"
               aria-hidden="true"
             />
 
             <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
               <div className="flex min-w-0 flex-col items-end">
-                <span className="text-sm font-[500] text-black">USDC</span>
-                <span className="text-xs font-[500] text-[#909090]">
+                <span className="text-sm font-[500] text-prophet-foreground">USDC</span>
+                <span className="text-xs font-[500] text-prophet-muted">
                   {tDeposit("prophetLabel")}
                 </span>
               </div>
@@ -272,7 +273,7 @@ export function DepositPrivateBalanceEntry({
         </div>
 
         {isInteractive && privateAccountEoaAddress ? (
-          <p className="m-0 text-center text-xs font-[400] text-[#909090]">
+          <p className="m-0 text-center text-xs font-[400] text-prophet-muted">
             {tDeposit("linkedTo", {
               address: formatShortWallet(privateAccountEoaAddress),
             })}

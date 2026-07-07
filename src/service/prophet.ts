@@ -23,12 +23,14 @@ import type {
   ProphetGetTeamGameResultsData,
   ProphetGetTeamLineupData,
   ProphetGetHeadToHeadFixturesData,
+  ProphetTeamStatsInfo,
   ProphetGetGameStatisticsData,
   ProphetGetGameOddsData,
   ProphetGetGroupStandingsData,
   ProphetGetGroupMatchesData,
   ProphetGetGroupData,
   ProphetGameStatisticsPayload,
+  ProphetGameStatisticsStatus,
   ProphetPolyMarketGameDetail,
   ProphetGetLatestAnalyticsNewsData,
   ProphetGetTeamDetailData,
@@ -51,7 +53,11 @@ import type {
   ProphetUserTrackListItem,
   ProphetLoginReferral,
   ProphetUploadData,
-  ProphetGetPolymarketStatsData
+  ProphetGetPolymarketStatsData,
+  ProphetGetWinnerProbabilityData,
+  SubmitWinnerActivityRequest,
+  WinnerActivityRecordsData,
+  WinnerActivityStatsData
 } from "@/types/prophet-api";
 import type { TokenPricesBySymbol } from "@/types/funding";
 import type { TelegramLoginAuthData } from "@/types/telegram-widget";
@@ -62,6 +68,7 @@ const REFERRAL_STORAGE_KEY = "prophet_api_referral";
 
 export const PROPHET_API_TOKEN_CHANGED_EVENT = "prophet-api-token-changed";
 const WALLET_STORAGE_KEY = "prophet_api_wallet";
+const NEAR_ADDRESS_STORAGE_KEY = "prophet_api_near_address";
 
 const PROPHET_AUTH_REQUIRED_MESSAGE =
   "Connect your wallet to use this feature.";
@@ -149,12 +156,33 @@ function writeStoredWallet(wallet: string | null): void {
   }
 }
 
+function readStoredNearAddress(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem(NEAR_ADDRESS_STORAGE_KEY);
+}
+
+function writeStoredNearAddress(nearAddress: string | null): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (nearAddress) {
+    window.localStorage.setItem(NEAR_ADDRESS_STORAGE_KEY, nearAddress);
+  } else {
+    window.localStorage.removeItem(NEAR_ADDRESS_STORAGE_KEY);
+  }
+}
+
 function normalizeWalletAddress(address: string): string {
   return address.toLowerCase();
 }
 
 let memoryToken: string | null = null;
 let memoryWallet: string | null = null;
+let memoryNearAddress: string | null = null;
 let memoryReferral: ProphetLoginReferral | null = null;
 
 export function getProphetApiToken(): string | null {
@@ -169,6 +197,10 @@ export function getProphetApiWallet(): string | null {
   return memoryWallet ?? readStoredWallet();
 }
 
+export function getProphetApiNearAddress(): string | null {
+  return memoryNearAddress ?? readStoredNearAddress();
+}
+
 export function setProphetApiToken(token: string | null): void {
   memoryToken = token;
   writeStoredToken(token);
@@ -176,6 +208,8 @@ export function setProphetApiToken(token: string | null): void {
   if (!token) {
     memoryWallet = null;
     writeStoredWallet(null);
+    memoryNearAddress = null;
+    writeStoredNearAddress(null);
     setProphetReferral(null);
   }
 
@@ -236,6 +270,11 @@ function shouldApplyReferralOnCache(
 function setProphetApiWallet(wallet: string | null): void {
   memoryWallet = wallet ? normalizeWalletAddress(wallet) : null;
   writeStoredWallet(memoryWallet);
+}
+
+function setProphetApiNearAddress(nearAddress: string | null): void {
+  memoryNearAddress = nearAddress?.trim() || null;
+  writeStoredNearAddress(memoryNearAddress);
 }
 
 export function isProphetAuthenticated(): boolean {
@@ -373,6 +412,32 @@ export async function getProphetGame(
   });
 }
 
+function parseGameStatisticsStatus(
+  value: unknown
+): ProphetGameStatisticsStatus | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const raw = value as Record<string, unknown>;
+  const extra =
+    raw.extra === null
+      ? null
+      : typeof raw.extra === "number" && Number.isFinite(raw.extra)
+        ? raw.extra
+        : undefined;
+
+  return {
+    short: typeof raw.short === "string" ? raw.short : undefined,
+    long: typeof raw.long === "string" ? raw.long : undefined,
+    elapsed:
+      typeof raw.elapsed === "number" && Number.isFinite(raw.elapsed)
+        ? raw.elapsed
+        : undefined,
+    extra
+  };
+}
+
 function parseGameStatisticsPayload(
   raw: ProphetGetGameStatisticsData
 ): ProphetGameStatisticsPayload {
@@ -386,6 +451,7 @@ function parseGameStatisticsPayload(
     const parsed = JSON.parse(json) as Partial<ProphetGameStatisticsPayload>;
 
     return {
+      status: parseGameStatisticsStatus(parsed.status),
       statistics: Array.isArray(parsed.statistics) ? parsed.statistics : [],
       events: Array.isArray(parsed.events) ? parsed.events : []
     };
@@ -427,6 +493,15 @@ export async function getProphetGroupStandings(params?: {
   return prophetGet<ProphetGetGroupStandingsData>("/v1/game/group-standings", {
     params: params?.group_code ? { group_code: params.group_code } : undefined,
     signal: params?.signal
+  });
+}
+
+/** GET /v1/game/winner-probability — World Cup winner probabilities by team */
+export async function getProphetWinnerProbability(
+  signal?: AbortSignal,
+): Promise<ProphetGetWinnerProbabilityData> {
+  return prophetGet<ProphetGetWinnerProbabilityData>("/v1/game/winner-probability", {
+    signal,
   });
 }
 
@@ -497,6 +572,10 @@ export async function loginProphet(
   if (data.token) {
     setProphetApiToken(data.token);
     setProphetApiWallet(request.address);
+
+    if (request.near_address) {
+      setProphetApiNearAddress(request.near_address);
+    }
   }
 
   if (data.referral) {
@@ -551,21 +630,27 @@ export async function applyProphetReferral(
 /** Sync Prophet session for the connected wallet; never throws. */
 export async function syncProphetWalletLogin(
   address: string,
-  options?: { email?: string }
+  options?: { email?: string; nearAddress?: string }
 ): Promise<ProphetLoginData | null> {
   const normalizedAddress = normalizeWalletAddress(address);
   const existingToken = getProphetApiToken();
   const existingWallet = getProphetApiWallet();
+  const existingNearAddress = getProphetApiNearAddress();
   const existingReferral = getProphetReferral();
   const referralCodeFromQuery = readReferralCodeFromQuery();
+  const nextNearAddress = options?.nearAddress?.trim() || undefined;
 
-  // Re-login when email is available so returning Privy users can still
-  // associate email after an earlier login raced without it.
+  // Re-login when email or near_address is available so returning users can
+  // still associate missing fields after an earlier login raced without them.
+  const needsNearAddressSync =
+    Boolean(nextNearAddress) && existingNearAddress !== nextNearAddress;
+
   if (
     existingToken &&
     existingWallet === normalizedAddress &&
     existingReferral &&
-    !options?.email
+    !options?.email &&
+    !needsNearAddressSync
   ) {
     if (shouldApplyReferralOnCache(referralCodeFromQuery, existingReferral)) {
       try {
@@ -587,6 +672,7 @@ export async function syncProphetWalletLogin(
     return await loginProphet({
       address: normalizedAddress,
       ...(options?.email ? { email: options.email } : {}),
+      ...(nextNearAddress ? { near_address: nextNearAddress } : {}),
       ...(referralCodeFromQuery
         ? { referral_code: referralCodeFromQuery }
         : {})
@@ -870,6 +956,42 @@ export async function getAnalyticsHeadToHeadFixtures(params: {
       }
     }
   );
+}
+
+/** GET /v1/analytics/teams/stats — recent fixtures and strength per team */
+export async function getAnalyticsTeamsStats(params: {
+  teams: string;
+}): Promise<ProphetTeamStatsInfo[]> {
+  return prophetGet<ProphetTeamStatsInfo[]>("/v1/analytics/teams/stats", {
+    params: {
+      teams: params.teams
+    }
+  });
+}
+
+/** GET /v1/activity/winner/records — user submitted winner predictions */
+export async function getWinnerActivityRecords(
+  signal?: AbortSignal
+): Promise<WinnerActivityRecordsData> {
+  return prophetGet<WinnerActivityRecordsData>("/v1/activity/winner/records", {
+    signal
+  });
+}
+
+/** GET /v1/activity/winner/stats — guess chances and trade volume stats */
+export async function getWinnerActivityStats(
+  signal?: AbortSignal
+): Promise<WinnerActivityStatsData> {
+  return prophetGet<WinnerActivityStatsData>("/v1/activity/winner/stats", {
+    signal
+  });
+}
+
+/** POST /v1/activity/winner — report user share submission */
+export async function submitWinnerActivity(
+  request: SubmitWinnerActivityRequest
+): Promise<unknown> {
+  return prophetPost<unknown>("/v1/activity/winner", request);
 }
 
 export { prophetClient };

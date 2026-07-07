@@ -2,13 +2,14 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
   type ReactNode,
 } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { getAccount, watchAccount } from "wagmi/actions";
+import { getAccount } from "wagmi/actions";
 
 import { wagmiConfig } from "@/context/rainbowkit/wagmi-config";
 import {
@@ -16,9 +17,10 @@ import {
   findPrivyEmbeddedWallet,
 } from "@/context/privy/privy-wallet-bridge";
 import { trackWalletConnectFailed } from "@/lib/analytics/tracking";
+import { waitForExternalWalletConnection } from "@/lib/trading/wait-for-wallet-connect";
 import { releaseExternalWalletConnection } from "@/lib/trading/wallet-disconnect";
 import { AuthLoginMethod, useAuthStore } from "@/store/auth-store";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useConnectModal } from "@/context/rainbowkit/connect-modal";
 
 export interface OpenConnectOptions {
   loginMethod?: AuthLoginMethod;
@@ -83,7 +85,6 @@ function resolveConnectedAddress(
 }
 
 export function RainbowConnectGate({ children }: { children: ReactNode }) {
-  const pendingErrorRef = useRef<((error: Error) => void) | null>(null);
   const loginMethod = useAuthStore((state) => state.loginMethod);
   const { authenticated: privyAuthenticated } = usePrivy();
   const { connectModalOpen, openConnectModal } = useConnectModal();
@@ -93,19 +94,7 @@ export function RainbowConnectGate({ children }: { children: ReactNode }) {
     connectModalOpenRef.current = connectModalOpen;
   }, [connectModalOpen]);
 
-  // const { connectWallet } = useConnectWallet({
-  //   onError: (error) => {
-  //     pendingErrorRef.current?.(
-  //       new Error(
-  //         typeof error === "string"
-  //           ? `Wallet connection failed: ${error}`
-  //           : "Wallet connection failed.",
-  //       ),
-  //     );
-  //   },
-  // });
-
-  const openConnectAndWait = async (options?: OpenConnectOptions) => {
+  const openConnectAndWait = useCallback(async (options?: OpenConnectOptions) => {
     const _loginMethod = options?.loginMethod ?? loginMethod;
     const isEmbeddedLogin =
       privyAuthenticated &&
@@ -146,86 +135,25 @@ export function RainbowConnectGate({ children }: { children: ReactNode }) {
 
     openConnectModal?.();
 
-    return new Promise<string>((resolve, reject) => {
-      const timeoutMs = 3_000;
-      let settled = false;
-      let timeoutId: number | undefined;
-      let unwatch: (() => void) | undefined;
-
-      const finish = (handler: () => void) => {
-        if (settled) {
-          return;
-        }
-
-        settled = true;
-
-        if (timeoutId !== undefined) {
-          window.clearInterval(timeoutId);
-        }
-
-        unwatch?.();
-        options?.signal?.removeEventListener("abort", onAbort);
-
-        if (pendingErrorRef.current === onConnectError) {
-          pendingErrorRef.current = null;
-        }
-
-        handler();
-      };
-
-      const onAbort = () => {
-        finish(() => {
-          reject(new Error("Wallet connection was cancelled."));
+    try {
+      return await waitForExternalWalletConnection({
+        expectedAddress: options?.expectedAddress,
+        timeoutMs: options?.timeoutMs,
+        connectModalOpenRef,
+        signal: options?.signal,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "Connect cancelled") {
+        trackWalletConnectFailed({
+          failureReason: "wallet_rejected",
+          errorCode: "WALLET_CONNECT_GATE_ERROR",
+          walletType: "wallet",
         });
-      };
-
-      const onConnectError = (error: Error) => {
-        finish(() => {
-          reject(error);
-        });
-      };
-
-      pendingErrorRef.current = onConnectError;
-
-      if (options?.signal) {
-        options.signal.addEventListener("abort", onAbort);
       }
 
-      timeoutId = window.setInterval(() => {
-        if (connectModalOpenRef.current) {
-          return;
-        }
-        finish(() => {
-          trackWalletConnectFailed({
-            failureReason: "wallet_rejected",
-            errorCode: "WALLET_CONNECT_GATE_ERROR",
-            walletType: "wallet"
-          });
-          reject(new Error("Connect cancelled"));
-        });
-      }, timeoutMs);
-
-      const tryResolve = () => {
-        const address = resolveConnectedAddress(options?.expectedAddress, {
-          embeddedOnly: isEmbeddedLogin,
-        });
-
-        if (address) {
-          finish(() => {
-            resolve(address);
-          });
-        }
-      };
-
-      unwatch = watchAccount(wagmiConfig, {
-        onChange() {
-          tryResolve();
-        },
-      });
-
-      tryResolve();
-    });
-  };
+      throw error;
+    }
+  }, [loginMethod, openConnectModal, privyAuthenticated]);
 
   useEffect(() => {
     const api: ConnectGateApi = { openConnectAndWait };

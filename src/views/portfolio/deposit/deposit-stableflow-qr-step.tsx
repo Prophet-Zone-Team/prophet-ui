@@ -14,7 +14,6 @@ import {
   type StableflowDepositToken,
 } from "@/lib/funding/stableflow";
 import { cn } from "@/lib/cn";
-import { formatNumber } from "@/utils";
 import {
   depositStableflowAddressBoxClass,
   depositStableflowAddressSkeletonClass,
@@ -37,6 +36,7 @@ export interface DepositStableflowQrStepProps {
   quoteLoading: boolean;
   tokensLoading: boolean;
   depositAddress?: string;
+  mode?: "stableflow" | "direct_funder";
   onChainChange: (chain: SupportedChainOption) => void;
   onTokenChange: (token: StableflowDepositToken) => void;
 }
@@ -48,6 +48,7 @@ export function DepositStableflowQrStep({
   quoteLoading,
   tokensLoading,
   depositAddress,
+  mode = "stableflow",
   onChainChange,
   onTokenChange,
 }: DepositStableflowQrStepProps) {
@@ -69,10 +70,17 @@ export function DepositStableflowQrStep({
     return getStableflowTokensForChain(stableflowTokens, selectedChain.chainId);
   }, [selectedChain, stableflowTokens]);
 
-  const selectorsDisabled = quoteLoading || tokensLoading;
+  const isDirectFunder = mode === "direct_funder";
+  const selectorsDisabled = isDirectFunder
+    ? tokensLoading
+    : quoteLoading || tokensLoading;
+  const showQrSkeleton =
+    !isDirectFunder && (quoteLoading || !depositAddress);
+  const showAddressSkeleton =
+    !isDirectFunder && (quoteLoading || !depositAddress);
 
   const handleCopyAddress = async () => {
-    if (!depositAddress || quoteLoading) {
+    if (!depositAddress || showAddressSkeleton) {
       return;
     }
 
@@ -139,7 +147,7 @@ export function DepositStableflowQrStep({
                       icon={token.icon}
                       size="sm"
                     />
-                    <span className="text-sm font-[500] text-black">
+                    <span className="text-sm font-[500] text-prophet-foreground">
                       {token.symbol}
                     </span>
                   </span>
@@ -206,7 +214,7 @@ export function DepositStableflowQrStep({
                       size="sm"
                       chainOnly
                     />
-                    <span className="text-sm font-[500] text-black">
+                    <span className="text-sm font-[500] text-prophet-foreground">
                       {chain.chainName}
                     </span>
                   </span>
@@ -226,9 +234,9 @@ export function DepositStableflowQrStep({
         </span>
       </div>
 
-      {quoteLoading || !depositAddress ? (
+      {showQrSkeleton ? (
         <div className={depositStableflowQrSkeletonClass} aria-hidden="true" />
-      ) : (
+      ) : depositAddress ? (
         <div className={depositStableflowQrWrapClass}>
           <QRCodeSVG
             value={depositAddress}
@@ -242,16 +250,16 @@ export function DepositStableflowQrStep({
             <img
               src={selectedChain.chainIcon}
               alt=""
-              className="absolute left-1/2 top-1/2 size-9 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-white object-contain"
+              className="absolute left-1/2 top-1/2 size-9 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-prophet-panel bg-prophet-panel object-contain"
             />
           ) : null}
         </div>
-      )}
+      ) : null}
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm font-[500] text-black">{t("yourDepositAddress")}</span>
+        <span className="text-sm font-[500] text-prophet-foreground">{t("yourDepositAddress")}</span>
         <div className={depositStableflowAddressBoxClass}>
-          {quoteLoading || !depositAddress ? (
+          {showAddressSkeleton ? (
             <div className={depositStableflowAddressSkeletonClass} aria-hidden="true" />
           ) : (
             <p className={depositStableflowAddressTextClass}>{depositAddress}</p>
@@ -259,7 +267,7 @@ export function DepositStableflowQrStep({
           <button
             type="button"
             className={depositStableflowCopyButtonClass}
-            disabled={quoteLoading || !depositAddress}
+            disabled={showAddressSkeleton || !depositAddress}
             onClick={() => void handleCopyAddress()}
           >
             <img

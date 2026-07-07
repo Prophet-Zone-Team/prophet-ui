@@ -22,6 +22,7 @@ import {
 
 import { formatChartProbability } from "@/components/home/market-formatters";
 import { useDevice } from "@/hooks/common/use-device";
+import { useDarkModeEnabled } from "@/store";
 import {
   formatChartTimestampClockLabel,
   formatGoalEventTime,
@@ -32,7 +33,11 @@ import {
 } from "@/lib/market/fixture-probability-chart";
 import {
   LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS,
-  resolveLiveChartAxisTicks
+  mapLiveFixtureChartPointsToAxis,
+  resolveLiveChartAxisTicksWithBreaks,
+  resolveLiveChartMaxAxisSeconds,
+  resolveMatchClockFromAxisSeconds,
+  type ResolveMatchClockSecondsOptions
 } from "@/lib/market/live-fixture-probability-chart";
 import type {
   GameFixtureChartPoint,
@@ -61,15 +66,14 @@ const SERIES = [
 const END_LABEL_RIGHT_INSET = 10;
 const END_LABEL_ESTIMATED_WIDTH = 130;
 const END_LABEL_GUTTER = END_LABEL_RIGHT_INSET + END_LABEL_ESTIMATED_WIDTH + 8;
-const END_LABEL_SLOT_FRACTIONS: Record<(typeof SERIES)[number]["key"], number> =
-  {
-    home: 1 / 6,
-    draw: 1 / 2,
-    away: 5 / 6
-  };
+const END_LABEL_SLOT_TOP = 1 / 6;
+const END_LABEL_SLOT_MIDDLE = 1 / 2;
+const END_LABEL_SLOT_BOTTOM = 5 / 6;
 
 interface ChartRow extends GameFixtureChartPoint {
   chartLabel: string;
+  axisSeconds?: number;
+  matchClockSeconds?: number;
 }
 
 interface ChartCustomizedProps {
@@ -120,8 +124,65 @@ function resolvePlotRightAnchorX(
   return plotRight - END_LABEL_RIGHT_INSET;
 }
 
-function resolveFixedLabelSlotY(
-  seriesKey: (typeof SERIES)[number]["key"],
+function resolveEndLabelProbability(
+  probability: number | undefined
+): number {
+  return typeof probability === "number" && Number.isFinite(probability)
+    ? probability
+    : 0;
+}
+
+function resolveEndLabelSlotFractions(
+  homeProbability: number | undefined,
+  drawProbability: number | undefined,
+  awayProbability: number | undefined
+): Record<(typeof SERIES)[number]["key"], number> {
+  const slotByRank = [
+    END_LABEL_SLOT_TOP,
+    END_LABEL_SLOT_MIDDLE,
+    END_LABEL_SLOT_BOTTOM
+  ] as const;
+  const tieBreakOrder: Array<(typeof SERIES)[number]["key"]> = [
+    "home",
+    "draw",
+    "away"
+  ];
+
+  const ranked = tieBreakOrder
+    .map((key) => ({
+      key,
+      probability:
+        key === "home"
+          ? resolveEndLabelProbability(homeProbability)
+          : key === "draw"
+            ? resolveEndLabelProbability(drawProbability)
+            : resolveEndLabelProbability(awayProbability)
+    }))
+    .sort((left, right) => {
+      if (right.probability !== left.probability) {
+        return right.probability - left.probability;
+      }
+
+      return (
+        tieBreakOrder.indexOf(left.key) - tieBreakOrder.indexOf(right.key)
+      );
+    });
+
+  const slots: Record<(typeof SERIES)[number]["key"], number> = {
+    home: END_LABEL_SLOT_BOTTOM,
+    draw: END_LABEL_SLOT_BOTTOM,
+    away: END_LABEL_SLOT_BOTTOM
+  };
+
+  ranked.forEach((item, index) => {
+    slots[item.key] = slotByRank[index] ?? END_LABEL_SLOT_MIDDLE;
+  });
+
+  return slots;
+}
+
+function resolveLabelSlotY(
+  slotFraction: number,
   offset: ChartCustomizedProps["offset"],
   height: number | undefined
 ): number | undefined {
@@ -132,9 +193,8 @@ function resolveFixedLabelSlotY(
   const top = offset?.top ?? 0;
   const bottom = offset?.bottom ?? 0;
   const plotHeight = height - top - bottom;
-  const fraction = END_LABEL_SLOT_FRACTIONS[seriesKey];
 
-  return top + plotHeight * fraction;
+  return top + plotHeight * slotFraction;
 }
 
 function EndLabelMarker({
@@ -230,10 +290,20 @@ function EndLabelLayer({
     return null;
   }
 
+  const slotFractions = resolveEndLabelSlotFractions(
+    latestRow.home,
+    latestRow.draw,
+    latestRow.away
+  );
+
   return (
     <g className="pointer-events-none">
       {SERIES.map((series) => {
-        const slotY = resolveFixedLabelSlotY(series.key, offset, height);
+        const slotY = resolveLabelSlotY(
+          slotFractions[series.key],
+          offset,
+          height
+        );
 
         if (slotY === undefined || !Number.isFinite(slotY)) {
           return null;
@@ -286,6 +356,8 @@ export interface GameProbabilityChartProps {
   events?: GameMatchChartEvent[];
   maxElapsedSeconds?: number;
   kickoffAt?: string;
+  matchPeriod?: string;
+  matchClockElapsedSeconds?: number;
   homeCode?: string;
   awayCode?: string;
 }
@@ -300,20 +372,30 @@ export function GameProbabilityChart({
   events = [],
   maxElapsedSeconds = 0,
   kickoffAt,
+  matchPeriod,
+  matchClockElapsedSeconds,
   homeCode,
   awayCode,
 }: GameProbabilityChartProps) {
   const t = useTranslations("trade");
   const isMobile = useDevice();
+  const darkModeEnabled = useDarkModeEnabled();
   const axisFontSize = isMobile ? 10 : 14;
   const endLabelNameFontSize = isMobile ? 10 : 14;
   const endLabelValueFontSize = isMobile ? 10 : 26;
   const endLabelNameOffsetY = isMobile ? 10 : 14;
   const endLabelValueOffsetY = isMobile ? 10 : 14;
   const isLive = mode === "live";
+  const liveClockOptions = useMemo<ResolveMatchClockSecondsOptions>(
+    () => ({
+      matchPeriod,
+      currentMatchClockSeconds: matchClockElapsedSeconds
+    }),
+    [matchClockElapsedSeconds, matchPeriod]
+  );
   const formatLiveAxisTick = (value: number) => {
-    const safeSeconds = Math.max(0, Math.floor(value));
-    const minutes = Math.floor(safeSeconds / 60);
+    const matchClockSeconds = resolveMatchClockFromAxisSeconds(value);
+    const minutes = Math.floor(matchClockSeconds / 60);
 
     if (minutes === 45) {
       return t("chartHalfTimeAxisLabel");
@@ -332,12 +414,22 @@ export function GameProbabilityChart({
   );
 
   const chartData = useMemo<ChartRow[]>(
-    () =>
-      data.map((point) => ({
-        ...point,
-        chartLabel: point.label
-      })),
-    [data]
+    () => {
+      if (!isLive) {
+        return data.map((point) => ({
+          ...point,
+          chartLabel: point.label
+        }));
+      }
+
+      return mapLiveFixtureChartPointsToAxis(data, liveClockOptions).map(
+        (point) => ({
+          ...point,
+          chartLabel: point.label
+        })
+      );
+    },
+    [data, isLive, liveClockOptions]
   );
 
   const yDomain = useMemo(() => getFixtureChartYDomain(data), [data]);
@@ -361,7 +453,7 @@ export function GameProbabilityChart({
   );
   const dataLength = chartData.length;
 
-  const resolvedMaxElapsed = useMemo(() => {
+  const resolvedMaxMatchClock = useMemo(() => {
     if (!isLive) {
       return 0;
     }
@@ -371,15 +463,22 @@ export function GameProbabilityChart({
     }
 
     return Math.max(
-      ...data.map((point) => point.elapsedSeconds ?? 0),
+      ...chartData.map((point) => point.matchClockSeconds ?? 0),
+      matchClockElapsedSeconds ?? 0,
       LIVE_MATCH_CHART_AXIS_MAX_ELAPSED_SECONDS
     );
-  }, [data, isLive, maxElapsedSeconds]);
+  }, [chartData, isLive, matchClockElapsedSeconds, maxElapsedSeconds]);
+
+  const resolvedMaxAxisSeconds = useMemo(
+    () =>
+      isLive ? resolveLiveChartMaxAxisSeconds(resolvedMaxMatchClock) : 0,
+    [isLive, resolvedMaxMatchClock]
+  );
 
   const goalMarkerConfig = useMemo(
     () => ({
       events,
-      maxElapsedSeconds: resolvedMaxElapsed,
+      maxAxisSeconds: resolvedMaxAxisSeconds,
       homeCode,
       homeName: seriesLabels.home,
       awayCode,
@@ -389,7 +488,7 @@ export function GameProbabilityChart({
       awayCode,
       events,
       homeCode,
-      resolvedMaxElapsed,
+      resolvedMaxAxisSeconds,
       seriesLabels.away,
       seriesLabels.home,
     ]
@@ -409,13 +508,18 @@ export function GameProbabilityChart({
         bottom: isLive ? 36 : 4
       }}
     >
-      <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
+      <CartesianGrid
+        stroke={darkModeEnabled ? "#353535" : CHART_COLORS.grid}
+        vertical={false}
+      />
       <XAxis
         type={isLive ? "number" : "category"}
-        dataKey={isLive ? "elapsedSeconds" : "timestamp"}
-        domain={isLive ? [0, resolvedMaxElapsed] : undefined}
+        dataKey={isLive ? "axisSeconds" : "timestamp"}
+        domain={isLive ? [0, resolvedMaxAxisSeconds] : undefined}
         ticks={
-          isLive ? resolveLiveChartAxisTicks(resolvedMaxElapsed) : undefined
+          isLive
+            ? resolveLiveChartAxisTicksWithBreaks(resolvedMaxMatchClock)
+            : undefined
         }
         tick={{ fill: CHART_COLORS.muted, fontSize: axisFontSize, dy: 6 }}
         axisLine={false}
@@ -515,15 +619,19 @@ function ChartTooltip({
   }
 
   const point = payload[0]?.payload as ChartRow | undefined;
-  const timeLabel =
+  const matchClockSeconds =
     isLive && typeof label === "number"
-      ? formatGoalEventTime(label)
+      ? resolveMatchClockFromAxisSeconds(label)
+      : point?.matchClockSeconds;
+  const timeLabel =
+    isLive && typeof matchClockSeconds === "number"
+      ? formatGoalEventTime(matchClockSeconds)
       : isLive && point?.timestamp
         ? formatChartTimestampClockLabel(point.timestamp)
         : formatGameChartXAxisTick(String(label ?? ""), timeRange);
 
   return (
-    <div className="rounded-xl border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+    <div className="rounded-xl border border-prophet-line bg-prophet-panel px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
       <p className="m-0 mb-1 text-[10px] md:text-sm font-[400] leading-[17px] text-[#909090]">
         {timeLabel}
       </p>

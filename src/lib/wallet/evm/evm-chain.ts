@@ -32,6 +32,10 @@ export function isActiveWalletOnChain(
   try {
     const source = resolveEvmSignerSource(walletAddress);
 
+    if (source.kind === "external") {
+      return true;
+    }
+
     if (source.kind === "privy") {
       return parseCaip2ChainId(source.wallet.chainId) === chainId;
     }

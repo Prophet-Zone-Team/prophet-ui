@@ -3,10 +3,12 @@
 import { ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useShallow } from "zustand/react/shallow";
 import Big from "big.js";
 
 import { POLYMARKET_USD } from "@/config/funding";
 import { formatShortWallet } from "@/lib/team/detail-format";
+import { useFundingWalletStore } from "@/store/use-funding-wallet-store";
 import { usePricesStore } from "@/store/use-prices";
 import { formatNumber } from "@/utils";
 import {
@@ -29,7 +31,9 @@ import {
   applyTokenBalancePercent,
   computeUsdFromTokenAmount,
   parseUsdInput,
+  resolvePrivateTopupTransferAddress,
   selectTokenUnitPrice,
+  usdInputToTokenAmount,
   validatePrivateTopupAmount,
 } from "@/views/portfolio/private-topup/utils";
 import { cn } from "@/lib/cn";
@@ -41,6 +45,7 @@ export interface PrivateTopupAmountStepProps {
   token: PrivateTopupSelectableToken;
   amount: PrivateTopupAmountState;
   maxAmount: string;
+  transferWalletAddress?: string;
   onAmountChange: (amount: PrivateTopupAmountState) => void;
 }
 
@@ -48,13 +53,40 @@ export function PrivateTopupAmountStep({
   token,
   amount,
   maxAmount,
+  transferWalletAddress,
   onAmountChange,
 }: PrivateTopupAmountStepProps) {
   const t = useTranslations("privateTopup");
-  const { topupWalletAddress, privateAccountAddress } = usePrivateTopupContext();
+  const { topupWalletAddress, privateAccountAddress, primaryChainType } =
+    usePrivateTopupContext();
   const prices = usePricesStore((state) => state.prices);
 
-  const [inputValue, setInputValue] = useState("0");
+  const fundingWalletSnapshot = useFundingWalletStore(
+    useShallow((state) => ({
+      evm: state.evm.connected ? state.evm.address : undefined,
+      solana: state.solana.connected ? state.solana.address : undefined,
+      tron: state.tron.connected ? state.tron.address : undefined,
+      near: state.near.connected ? state.near.address : undefined,
+    })),
+  );
+
+  const fundingWalletAddress = useMemo(() => {
+    if (primaryChainType) {
+      return resolvePrivateTopupTransferAddress(token, primaryChainType);
+    }
+
+    return transferWalletAddress ?? topupWalletAddress;
+  }, [
+    fundingWalletSnapshot,
+    primaryChainType,
+    token,
+    topupWalletAddress,
+    transferWalletAddress,
+  ]);
+
+  const [inputValue, setInputValue] = useState(() =>
+    Big(amount.amountUsd || 0).gt(0) ? amount.amountUsd : "0",
+  );
 
   const validationErrorKey = useMemo(
     () => validatePrivateTopupAmount(amount.tokenAmount, maxAmount),
@@ -84,15 +116,13 @@ export function PrivateTopupAmountStep({
       return;
     }
 
-    let tokenAmount = Big(parsedUsd)
-      .div(unitPrice)
-      .toFixed(token.decimals, Big.roundDown);
+    const { tokenAmount, amountUsd } = usdInputToTokenAmount({
+      usdInput: parsedUsd,
+      maxAmount,
+      price: unitPrice,
+      decimals: token.decimals,
+    });
 
-    if (Big(tokenAmount).gt(maxAmount || 0)) {
-      tokenAmount = applyTokenBalancePercent(maxAmount, 100, token.decimals);
-    }
-
-    const amountUsd = computeUsdFromTokenAmount(tokenAmount, prices, token);
     onAmountChange({ tokenAmount, amountUsd });
   }
 
@@ -138,14 +168,14 @@ export function PrivateTopupAmountStep({
 
       <div className={cn(depositTransferBarClass, "mt-[3.5rem]")}>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <span className="text-sm font-[400] text-[#909090]">
+          <span className="text-sm font-[400] text-prophet-muted">
             {t("fundingWallet")}
           </span>
           <div className="flex items-center gap-2">
-            <WalletAvatarIcon address={topupWalletAddress} className="size-5" />
-            <span className="truncate text-base font-[500] text-black">
-              {topupWalletAddress
-                ? formatShortWallet(topupWalletAddress)
+            <WalletAvatarIcon address={fundingWalletAddress} className="size-5" />
+            <span className="truncate text-base font-[500] text-prophet-foreground">
+              {fundingWalletAddress
+                ? formatShortWallet(fundingWalletAddress)
                 : "--"}
             </span>
           </div>
@@ -158,10 +188,10 @@ export function PrivateTopupAmountStep({
               size="md"
             />
             <div className="flex min-w-0 flex-col">
-              <span className="text-sm font-[500] text-black">
+              <span className="text-sm font-[500] text-prophet-foreground">
                 {token.symbol}
               </span>
-              <span className="text-xs font-[500] text-[#909090]">
+              <span className="text-xs font-[500] text-prophet-muted">
                 {token.chainName}
               </span>
             </div>
@@ -169,12 +199,12 @@ export function PrivateTopupAmountStep({
         </div>
 
         <ArrowRight
-          className="h-4 w-4 shrink-0 text-[#909090]"
+          className="h-4 w-4 shrink-0 text-prophet-muted"
           aria-hidden="true"
         />
 
         <div className="flex min-w-0 flex-1 flex-col items-end gap-2">
-          <span className="text-sm font-[400] text-[#909090]">
+          <span className="text-sm font-[400] text-prophet-muted">
             {t("privateWallet")}
           </span>
           <div className="flex items-center gap-2">
@@ -186,7 +216,7 @@ export function PrivateTopupAmountStep({
                 aria-hidden
               />
             </div>
-            <span className="truncate text-base font-[500] text-black">
+            <span className="truncate text-base font-[500] text-prophet-foreground">
               {privateAccountAddress
                 ? formatShortWallet(privateAccountAddress)
                 : "--"}
@@ -201,10 +231,10 @@ export function PrivateTopupAmountStep({
               size="md"
             />
             <div className="flex min-w-0 flex-col items-start">
-              <span className="text-sm font-[500] text-black">
+              <span className="text-sm font-[500] text-prophet-foreground">
                 {POLYMARKET_USD.symbol}
               </span>
-              <span className="text-xs font-[500] text-[#909090]">
+              <span className="text-xs font-[500] text-prophet-muted">
                 {POLYMARKET_USD.chainName}
               </span>
             </div>

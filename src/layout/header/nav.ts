@@ -2,7 +2,6 @@ export const PRIMARY_NAV = [
   { href: "/fifa", labelKey: "matches" as const },
   { href: "/analytics", labelKey: "analytics" as const },
   { href: "/strategy", labelKey: "strategies" as const },
-  { href: "/tracks", labelKey: "tracks" as const },
   { href: "/portfolio", labelKey: "portfolio" as const }
 ] as const;
 
@@ -43,6 +42,11 @@ export function shouldHideMobileBottomNav(pathname: string) {
     pathname === "/team" ||
     pathname === "/group" ||
     pathname === "/combo" ||
-    pathname.startsWith("/trade")
+    pathname.startsWith("/trade") ||
+    pathname.startsWith("/download")
   );
+}
+
+export function shouldHideAppChrome(pathname: string) {
+  return pathname.startsWith("/download");
 }

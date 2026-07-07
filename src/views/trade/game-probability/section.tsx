@@ -17,7 +17,6 @@ import {
 import {
   filterLiveBinaryFixtureChartByRange,
   filterLiveFixtureChartByRange,
-  resolveKickoffElapsedSeconds,
   resolveLiveChartMaxElapsed,
   resolveLiveChartPriceHistoryKickoffAt,
   resolveMatchClockElapsedSeconds
@@ -71,7 +70,7 @@ const GAME_PROBABILITY_TIME_RANGES = [
 }>;
 
 const probabilityCardClass =
-  "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
+  "min-w-0 flex-1 rounded-[12px] border border-prophet-line bg-prophet-panel p-4 sm:p-5";
 
 export type ProbabilitySummaryItem = {
   label: string;
@@ -87,6 +86,7 @@ export interface GameProbabilitySectionProps {
   fixtureMarkets?: GameFixtureMarketsSnapshot;
   showOrderbook?: boolean;
   className?: string;
+  variant?: "default" | "embedded";
   chartKind?: FixtureChartKind;
   lineKey?: string;
   summaryMode?: "ternary" | "binary";
@@ -102,6 +102,7 @@ export function GameProbabilitySection({
   fixtureMarkets,
   showOrderbook = true,
   className,
+  variant = "default",
   chartKind = "moneyline",
   lineKey,
   summaryMode = "ternary",
@@ -159,19 +160,6 @@ export function GameProbabilitySection({
   const priceHistoryKickoffAt = useMemo(
     () => resolveLiveChartPriceHistoryKickoffAt(liveMatchForChart),
     [liveMatchForChart]
-  );
-  const elapsedFromStartTime = useMemo(
-    () =>
-      priceHistoryKickoffAt
-        ? resolveKickoffElapsedSeconds(priceHistoryKickoffAt)
-        : undefined,
-    [priceHistoryKickoffAt]
-  );
-  const liveAxisElapsedSeconds = useMemo(
-    () =>
-      Math.max(elapsedFromStartTime ?? 0, matchClockElapsedSeconds ?? 0) ||
-      undefined,
-    [elapsedFromStartTime, matchClockElapsedSeconds]
   );
   const {
     points: rawPoints,
@@ -266,23 +254,36 @@ export function GameProbabilitySection({
     () => filterGameBinaryFixtureChartByRange(rawBinaryPoints, timeRange),
     [rawBinaryPoints, timeRange]
   );
+  const liveMatchPeriod = liveMatchForChart.period;
   const liveFilteredPoints = useMemo(
     () =>
       filterLiveFixtureChartByRange(
         liveChart.points,
         timeRange,
-        liveAxisElapsedSeconds
+        matchClockElapsedSeconds,
+        liveMatchPeriod
       ),
-    [liveChart.points, liveAxisElapsedSeconds, timeRange]
+    [
+      liveChart.points,
+      liveMatchPeriod,
+      matchClockElapsedSeconds,
+      timeRange
+    ]
   );
   const liveFilteredBinaryPoints = useMemo(
     () =>
       filterLiveBinaryFixtureChartByRange(
         liveChart.binaryPoints,
         timeRange,
-        liveAxisElapsedSeconds
+        matchClockElapsedSeconds,
+        liveMatchPeriod
       ),
-    [liveChart.binaryPoints, liveAxisElapsedSeconds, timeRange]
+    [
+      liveChart.binaryPoints,
+      liveMatchPeriod,
+      matchClockElapsedSeconds,
+      timeRange
+    ]
   );
   const liveMaxElapsedSeconds = useMemo(() => {
     if (!liveChartActive) {
@@ -298,15 +299,18 @@ export function GameProbabilitySection({
       priceHistoryKickoffAt,
       points,
       timeRange,
-      liveAxisElapsedSeconds
+      matchClockElapsedSeconds,
+      Date.now(),
+      liveMatchPeriod
     );
   }, [
     effectiveChartMode,
-    liveAxisElapsedSeconds,
     liveChart.maxElapsedSeconds,
     liveChartActive,
     liveFilteredBinaryPoints,
     liveFilteredPoints,
+    liveMatchPeriod,
+    matchClockElapsedSeconds,
     priceHistoryKickoffAt,
     timeRange
   ]);
@@ -343,13 +347,25 @@ export function GameProbabilitySection({
     ]
   );
 
+  const embedded = variant === "embedded";
+  const probabilitySurfaceClass = embedded
+    ? "min-w-0 flex-1 bg-prophet-panel p-4 sm:p-5"
+    : probabilityCardClass;
+  const embeddedOrderbookClassName =
+    "border-0 rounded-none bg-transparent shadow-none";
+
   return (
     <section
       className={cn(
-        "mt-[8px] flex flex-col gap-3",
+        embedded ? "mt-0" : "mt-[8px]",
+        "flex flex-col gap-3",
         orderbookEnabled
-          ? "xl:grid xl:grid-cols-[minmax(0,1fr)_272px] xl:items-stretch"
-          : "xl:flex-col",
+          ? embedded
+            ? "md:grid md:grid-cols-[minmax(0,1fr)_272px] md:items-stretch md:divide-x md:divide-prophet-line"
+            : "xl:grid xl:grid-cols-[minmax(0,1fr)_272px] xl:items-stretch"
+          : embedded
+            ? "flex-col"
+            : "xl:flex-col",
         className
       )}
       aria-label={t("matchOutcomeProbabilityAria")}
@@ -357,11 +373,11 @@ export function GameProbabilitySection({
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.85 }}
-        className={cn(probabilityCardClass, !orderbookEnabled && "w-full")}
+        className={cn(probabilitySurfaceClass, !orderbookEnabled && "w-full")}
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <h2 className="m-0 text-[18px] font-[500] leading-6 text-black">
+            <h2 className="m-0 text-[18px] font-[500] leading-6 text-prophet-foreground">
               {t("probabilityLabel")}
             </h2>
           </div>
@@ -393,7 +409,7 @@ export function GameProbabilitySection({
                     className={cn(
                       "border-0 bg-transparent p-0 text-[14px] leading-[17px]",
                       timeRange === range.id
-                        ? "font-[500] text-black"
+                        ? "font-[500] text-prophet-foreground"
                         : "font-[400] text-[#909090]"
                     )}
                     onClick={() => setTimeRange(range.id)}
@@ -457,6 +473,10 @@ export function GameProbabilitySection({
               events={liveChartActive ? goalEvents : []}
               maxElapsedSeconds={liveMaxElapsedSeconds}
               kickoffAt={liveChartActive ? priceHistoryKickoffAt : undefined}
+              matchPeriod={liveChartActive ? liveMatchPeriod : undefined}
+              matchClockElapsedSeconds={
+                liveChartActive ? matchClockElapsedSeconds : undefined
+              }
               homeCode={sides.home.code}
               awayCode={sides.away.code}
             />
@@ -478,6 +498,10 @@ export function GameProbabilitySection({
               events={liveChartActive ? goalEvents : []}
               maxElapsedSeconds={liveMaxElapsedSeconds}
               kickoffAt={liveChartActive ? priceHistoryKickoffAt : undefined}
+              matchPeriod={liveChartActive ? liveMatchPeriod : undefined}
+              matchClockElapsedSeconds={
+                liveChartActive ? matchClockElapsedSeconds : undefined
+              }
               homeCode={sides.home.code}
               awayCode={sides.away.code}
             />
@@ -490,12 +514,18 @@ export function GameProbabilitySection({
           visible={orderbookEnabled}
           tokenId={tokenId}
           className="min-h-0 w-full"
+          orderbookClassName={embedded ? embeddedOrderbookClassName : undefined}
         />
       </div>
 
       <div className="md:hidden">
         {orderbookEnabled ? (
-          <div className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white">
+          <div
+            className={cn(
+              "overflow-hidden bg-prophet-panel",
+              !embedded && "rounded-[12px] border border-prophet-line",
+            )}
+          >
             <button
               type="button"
               className="flex w-full items-center justify-between px-4 py-3 text-left"
@@ -503,7 +533,7 @@ export function GameProbabilitySection({
               aria-controls="game-trade-mobile-orderbook"
               onClick={() => setOrderbookExpanded((current) => !current)}
             >
-              <span className="text-base font-[500] leading-[19px] text-black">
+              <span className="text-base font-[500] leading-[19px] text-prophet-foreground">
                 {t("orderbook")}
               </span>
               <ChevronDown
@@ -518,13 +548,16 @@ export function GameProbabilitySection({
             {orderbookExpanded ? (
               <div
                 id="game-trade-mobile-orderbook"
-                className="border-t border-[#EBEBEB]"
+                className="border-t border-prophet-line"
               >
                 <OrderbookPanel
                   visible
                   tokenId={tokenId}
                   variant="mirror"
                   className="min-h-0 w-full"
+                  orderbookClassName={
+                    embedded ? embeddedOrderbookClassName : undefined
+                  }
                 />
               </div>
             ) : null}
@@ -655,7 +688,7 @@ function ProbabilitySummaryRow({ items }: { items: ProbabilitySummaryItem[] }) {
             aria-hidden
           />
           <ProbabilitySummaryItemLabel code={item.code} label={item.label} />
-          <span className="text-[12px] font-[500] leading-[17px] text-black">
+          <span className="text-[12px] font-[500] leading-[17px] text-prophet-foreground">
             {formatChartProbability(item.value)}
           </span>
         </div>
@@ -674,14 +707,14 @@ function ChartStateMessage({
   onAction?: () => void;
 }) {
   return (
-    <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 rounded-[8px] border border-dashed border-[#EBEBEB] px-4 py-8 text-center">
+    <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 rounded-[8px] border border-dashed border-prophet-line px-4 py-8 text-center">
       <p className="m-0 text-sm font-[400] leading-[17px] text-[#909090]">
         {message}
       </p>
       {actionLabel && onAction ? (
         <button
           type="button"
-          className="border-0 bg-transparent p-0 text-sm font-[500] leading-[17px] text-black underline"
+          className="border-0 bg-transparent p-0 text-sm font-[500] leading-[17px] text-prophet-foreground underline"
           onClick={onAction}
         >
           {actionLabel}
@@ -714,7 +747,7 @@ function LiveScoreBadge({
         {t("liveBadge")}
       </span>
 
-      <span className="inline-flex items-center gap-1.5 text-black">
+      <span className="inline-flex items-center gap-1.5 text-prophet-foreground">
         <TeamFlag
           code={homeCode}
           name={homeName}
@@ -723,7 +756,7 @@ function LiveScoreBadge({
         {homeScore?.trim() ?? "—"}
       </span>
 
-      <span className="inline-flex items-center gap-1.5 text-black">
+      <span className="inline-flex items-center gap-1.5 text-prophet-foreground">
         <TeamFlag
           code={awayCode}
           name={awayName}
@@ -794,6 +827,25 @@ export function buildBinarySummaryFromOutcomes(
       value: resolveFixtureOutcomeDisplayProbability(secondary),
       color: gameColors.awayBar,
       code: secondaryCode
+    }
+  ];
+}
+
+export function buildExactScoreBinarySummary(
+  outcome: FixtureMarketOutcome
+): ProbabilitySummaryItem[] {
+  const yesValue = resolveFixtureOutcomeDisplayProbability(outcome);
+
+  return [
+    {
+      label: "Yes",
+      value: yesValue,
+      color: gameColors.home
+    },
+    {
+      label: "No",
+      value: Math.max(0, 100 - yesValue),
+      color: gameColors.awayBar
     }
   ];
 }

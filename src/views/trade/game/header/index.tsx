@@ -8,15 +8,20 @@ import { TeamFlag } from "@/components/teams/team-flag";
 import { cn } from "@/lib/cn";
 import { formatMatchScore } from "@/lib/market/match-display";
 import { isEffectiveLiveMatch } from "@/lib/market/live-match";
-import { useLiveElapsedClock } from "@/lib/market/use-live-elapsed-clock";
+import {
+  isMockLiveFixtureEnabled,
+  MOCK_LIVE_FIXTURE_ELAPSED_SECONDS
+} from "@/lib/market/mock-live-fixture-config";
 import {
   formatScheduleKickoff,
   getScheduleRowVariant,
   resolveMatchSides
 } from "@/lib/market/schedule-match";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { useMatchWithLiveState } from "@/store/match-live-store";
 import { teamDetailHref } from "@/lib/routes/team";
+import { LiveMatchElapsedClock } from "@/views/trade/game/header/live-match-elapsed-clock";
 import type {
   ApiFootballTeamProfile,
   TeamMarketSnapshot,
@@ -39,18 +44,17 @@ type TeamSideData = {
   logoUrl?: string;
 };
 
-function ForwardChevronIcon() {
+function ForwardChevronIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="5"
-      height="11"
-      viewBox="0 0 5 11"
+      xmlns="http://www.w3.org/2000/svg"
+      width="7"
+      height="12"
+      viewBox="0 0 7 12"
       fill="none"
-      className="mt-1 shrink-0"
-      aria-hidden
     >
       <path
-        d="M0.5 0.5L4.5 5.5L0.5 10.5"
+        d="M0.5 0.5L5.5 5.86828L0.5 11.5"
         stroke="#909090"
         strokeLinecap="round"
       />
@@ -63,9 +67,13 @@ function TeamSide({
   name,
   code,
   logoUrl,
+  detailsLabel,
   align = "center"
-}: TeamSideData & { align?: "center" | "start" | "end" }) {
-  const content = (
+}: TeamSideData & {
+  detailsLabel: string;
+  align?: "center" | "start" | "end";
+}) {
+  return (
     <div
       className={cn(
         "flex w-[108px] flex-col md:w-[170px]",
@@ -84,26 +92,23 @@ function TeamSide({
         )}
       />
 
-      <span className="mt-3 inline-flex max-w-full items-center gap-[8px] sm:mt-[21px] sm:gap-1.5">
+      <span className="mt-3 sm:mt-[10px]">
         <span className="truncate text-lg font-[400] capitalize leading-6 text-white sm:text-[26px] sm:leading-[31px]">
           {name}
         </span>
-        {teamId ? <ForwardChevronIcon /> : null}
       </span>
+
+      {teamId ? (
+        <Link
+          href={teamDetailHref(teamId)}
+          aria-label={`${name} ${detailsLabel}`}
+          className="group mt-1.5 inline-flex items-center gap-[6px] font-[Sora] text-xs font-normal leading-[15px] text-[#909090] transition-colors hover:text-white"
+        >
+          <span>{detailsLabel}</span>
+          <ForwardChevronIcon />
+        </Link>
+      ) : null}
     </div>
-  );
-
-  if (!teamId) {
-    return content;
-  }
-
-  return (
-    <Link
-      href={teamDetailHref(teamId)}
-      className="min-w-0 transition-opacity hover:opacity-80"
-    >
-      {content}
-    </Link>
   );
 }
 
@@ -112,12 +117,16 @@ function HeaderMetric({
   statusVariant,
   subtitle,
   badgeLabel,
+  badgeTrailing,
+  statusAriaLabel,
   versusLabel
 }: {
   value: string;
   statusVariant?: ReturnType<typeof getScheduleRowVariant>;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   badgeLabel?: string;
+  badgeTrailing?: React.ReactNode;
+  statusAriaLabel?: string;
   versusLabel: string;
 }) {
   return (
@@ -135,23 +144,31 @@ function HeaderMetric({
 
         {statusVariant ? (
           <div className="mt-4 flex flex-col items-center gap-1 sm:mt-7">
-            <MatchStatusBadge
-              variant={statusVariant}
-              className="gap-[7px]"
-              label={badgeLabel}
-            />
+            <div className="inline-flex items-center gap-[7px]">
+              <MatchStatusBadge
+                variant={statusVariant}
+                className="gap-[7px]"
+                label={badgeLabel}
+                ariaLabel={badgeTrailing ? statusAriaLabel : undefined}
+              />
+              {badgeTrailing}
+            </div>
           </div>
         ) : null}
 
         {subtitle ? (
-          <span
-            className={cn(
-              "text-xs font-[500] leading-[17px] text-[#909090] sm:text-sm whitespace-nowrap",
-              statusVariant ? "mt-5 sm:mt-[33px]" : "mt-4 sm:mt-7"
-            )}
-          >
-            {subtitle}
-          </span>
+          typeof subtitle === "string" ? (
+            <span
+              className={cn(
+                "text-xs font-[500] leading-[17px] text-[#909090] sm:text-sm whitespace-nowrap",
+                statusVariant ? "mt-5 sm:mt-[33px]" : "mt-4 sm:mt-7"
+              )}
+            >
+              {subtitle}
+            </span>
+          ) : (
+            subtitle
+          )
         ) : null}
       </div>
     </div>
@@ -160,10 +177,12 @@ function HeaderMetric({
 
 function TeamSideColumn({
   team,
-  justify
+  justify,
+  detailsLabel
 }: {
   team?: TeamSideData;
   justify: "start" | "end";
+  detailsLabel: string;
 }) {
   return (
     <div
@@ -172,7 +191,9 @@ function TeamSideColumn({
         justify === "end" ? "justify-end" : "justify-start"
       )}
     >
-      {team ? <TeamSide {...team} align="center" /> : null}
+      {team ? (
+        <TeamSide {...team} align="center" detailsLabel={detailsLabel} />
+      ) : null}
     </div>
   );
 }
@@ -187,6 +208,11 @@ export function TradeGameHeader({
   const sides = resolveMatchSides(liveMatch, snapshots);
   const homeDisplayName = useLocalizedTeamName(sides.home.code, sides.home.name);
   const awayDisplayName = useLocalizedTeamName(sides.away.code, sides.away.name);
+  const { stoppageExtraMinutes } = useGameStatistics({
+    match,
+    homeTeamName: homeDisplayName,
+    awayTeamName: awayDisplayName
+  });
 
   const homeProfile = liveMatch.homeTeamId
     ? teamProfiles?.[liveMatch.homeTeamId]
@@ -194,15 +220,15 @@ export function TradeGameHeader({
   const awayProfile = liveMatch.awayTeamId
     ? teamProfiles?.[liveMatch.awayTeamId]
     : undefined;
-  const effectiveLive = isEffectiveLiveMatch(liveMatch);
+  const mockLiveFixture = isMockLiveFixtureEnabled();
+  const effectiveLive = isEffectiveLiveMatch(liveMatch) || mockLiveFixture;
+  const resolvedElapsedSeconds = mockLiveFixture
+    ? MOCK_LIVE_FIXTURE_ELAPSED_SECONDS
+    : liveMatch.liveElapsedSeconds;
   const displayScore = {
     homeScore: liveMatch.homeScore,
     awayScore: liveMatch.awayScore
   };
-  const liveClock = useLiveElapsedClock(
-    liveMatch.liveElapsedSeconds,
-    effectiveLive
-  );
   const statusVariant = effectiveLive
     ? "ongoing"
     : getScheduleRowVariant(liveMatch.status);
@@ -212,12 +238,24 @@ export function TradeGameHeader({
       : statusVariant === "upcoming"
         ? tHome("matchStatusUpcoming")
         : tHome("matchStatusEnded");
-  const badgeLabel =
-    effectiveLive && liveMatch.period?.trim()
-      ? liveMatch.period.trim()
-      : statusLabel;
+  const badgeLabel = effectiveLive ? "" : statusLabel;
+  const badgeTrailing = effectiveLive ? (
+    <span className="inline-flex items-baseline whitespace-nowrap">
+      <LiveMatchElapsedClock
+        baseElapsedSeconds={resolvedElapsedSeconds}
+        kickoffAt={liveMatch.kickoffAt}
+        isLive={effectiveLive}
+        className="text-sm font-[400] leading-[18px] text-[#7BCA25]"
+      />
+      {stoppageExtraMinutes !== undefined ? (
+        <span className="text-sm font-[556] leading-[17px] text-[#909090]">
+          +{stoppageExtraMinutes}
+        </span>
+      ) : null}
+    </span>
+  ) : undefined;
   const subtitle = effectiveLive
-    ? liveClock
+    ? undefined
     : formatScheduleKickoff(liveMatch.kickoffAt);
 
   return (
@@ -230,12 +268,15 @@ export function TradeGameHeader({
           logoUrl: sides.home.logoUrl ?? homeProfile?.logoUrl
         }}
         justify="end"
+        detailsLabel={tHome("details")}
       />
       <HeaderMetric
         value={formatMatchScore(displayScore.homeScore, displayScore.awayScore)}
         statusVariant={statusVariant}
         subtitle={subtitle}
         badgeLabel={badgeLabel}
+        badgeTrailing={badgeTrailing}
+        statusAriaLabel={statusLabel}
         versusLabel={tHome("versus")}
       />
       <TeamSideColumn
@@ -246,6 +287,7 @@ export function TradeGameHeader({
           logoUrl: sides.away.logoUrl ?? awayProfile?.logoUrl
         }}
         justify="start"
+        detailsLabel={tHome("details")}
       />
     </div>
   );

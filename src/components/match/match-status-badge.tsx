@@ -36,6 +36,7 @@ export interface MatchStatusBadgeProps {
   size?: "sm" | "md";
   className?: string;
   label?: string;
+  ariaLabel?: string;
 }
 
 function OngoingStatusDot({ size }: { size: "sm" | "md" }) {
@@ -83,14 +84,16 @@ export function MatchStatusBadge({
   variant,
   size = "md",
   className,
-  label
+  label,
+  ariaLabel
 }: MatchStatusBadgeProps) {
   const config = STATUS_CONFIG[variant];
-  const displayLabel = label ?? config.label;
+  const displayLabel = label !== undefined ? label : config.label;
 
   return (
     <span
       role="status"
+      aria-label={ariaLabel}
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 text-sm font-[400] leading-[17px]",
         config.textClass,
@@ -102,7 +105,7 @@ export function MatchStatusBadge({
       ) : (
         <StaticStatusDot dotClass={config.dotClass} size={size} />
       )}
-      {displayLabel}
+      {displayLabel ? displayLabel : null}
     </span>
   );
 }

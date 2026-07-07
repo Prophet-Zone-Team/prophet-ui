@@ -1,0 +1,254 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
+import { TeamFlag } from "@/components/teams/team-flag";
+import { useLocalizedLeagueName } from "@/hooks/i18n/use-localized-league-name";
+import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+import { cn } from "@/lib/cn";
+import {
+  recentFixturesColumnAlignClass,
+  recentFixturesTableGridClass
+} from "@/views/trade/game/stats/recent-matches/table-grid";
+import type {
+  RecentFixtureResult,
+  RecentFixtureRow,
+  RecentFixturesTeamColumn
+} from "@/views/trade/game/stats/recent-matches/types";
+
+export type RecentMatchesTeam = {
+  name: string;
+  code?: string;
+  logoUrl?: string;
+};
+
+export type RecentMatchesProps = {
+  homeTeam: RecentMatchesTeam;
+  awayTeam: RecentMatchesTeam;
+  homeRows: RecentFixtureRow[];
+  awayRows: RecentFixtureRow[];
+  isLoading?: boolean;
+  isError?: boolean;
+  className?: string;
+};
+
+function RecentFixtureResultLabel({ result }: { result: RecentFixtureResult }) {
+  const t = useTranslations("trade");
+
+  if (result === "win") {
+    return (
+      <span className="text-[14px] font-[400] uppercase leading-[18px] text-[#65AF14]">
+        {t("win")}
+      </span>
+    );
+  }
+
+  if (result === "lose") {
+    return (
+      <span className="text-[14px] font-[400] uppercase leading-[18px] text-[#FF674B]">
+        {t("lose")}
+      </span>
+    );
+  }
+
+  return (
+    <span className="text-[14px] font-[400] uppercase leading-[18px] text-prophet-muted">
+      {t("draw")}
+    </span>
+  );
+}
+
+function RecentFixtureOpponent({ name }: { name: string }) {
+  const displayName = useLocalizedTeamName(undefined, name);
+
+  return (
+    <span className="block w-full truncate text-center text-[14px] font-[400] leading-[18px] text-prophet-foreground">
+      {displayName}
+    </span>
+  );
+}
+
+function RecentFixtureCompetition({ name }: { name: string }) {
+  const displayName = useLocalizedLeagueName(name);
+
+  return (
+    <span
+      className="truncate text-[14px] font-[400] leading-[18px] text-prophet-muted"
+      title={displayName}
+    >
+      {displayName}
+    </span>
+  );
+}
+
+function RecentFixturesTableHeader() {
+  const t = useTranslations("trade");
+
+  return (
+    <div
+      role="row"
+      className={cn(
+        recentFixturesTableGridClass,
+        "pb-2 text-[14px] font-[400] leading-[18px] text-prophet-muted"
+      )}
+    >
+      <span role="columnheader" className={recentFixturesColumnAlignClass[0]}>
+        {t("time")}
+      </span>
+      <span role="columnheader" className={recentFixturesColumnAlignClass[1]}>
+        {t("opponent")}
+      </span>
+      <span role="columnheader" className={recentFixturesColumnAlignClass[2]}>
+        {t("result")}
+      </span>
+      <span role="columnheader" className={recentFixturesColumnAlignClass[3]}>
+        {t("score")}
+      </span>
+      <span role="columnheader" className={recentFixturesColumnAlignClass[4]}>
+        {t("competition")}
+      </span>
+    </div>
+  );
+}
+
+function RecentFixturesTableRow({
+  row,
+  highlighted
+}: {
+  row: RecentFixtureRow;
+  highlighted: boolean;
+}) {
+  return (
+    <div
+      role="row"
+      className={cn(
+        recentFixturesTableGridClass,
+        "h-10 rounded-[6px] text-[14px] leading-[18px]",
+        highlighted ? "bg-prophet-hover" : "bg-prophet-panel"
+      )}
+    >
+      <span className={cn(recentFixturesColumnAlignClass[0], "text-prophet-muted")}>
+        {row.date}
+      </span>
+      <div className={recentFixturesColumnAlignClass[1]}>
+        <RecentFixtureOpponent name={row.opponent} />
+      </div>
+      <div className={recentFixturesColumnAlignClass[2]}>
+        <RecentFixtureResultLabel result={row.result} />
+      </div>
+      <span
+        className={cn(
+          recentFixturesColumnAlignClass[3],
+          "whitespace-nowrap text-prophet-foreground"
+        )}
+      >
+        {row.score}
+      </span>
+      <div className={recentFixturesColumnAlignClass[4]}>
+        <RecentFixtureCompetition name={row.competition} />
+      </div>
+    </div>
+  );
+}
+
+function TeamRecentFixturesColumn({
+  team,
+  rows
+}: {
+  team: RecentMatchesTeam;
+  rows: RecentFixtureRow[];
+}) {
+  const displayName = useLocalizedTeamName(team.code, team.name);
+
+  return (
+    <div className="min-w-0 flex-1 px-3 py-3 md:px-4">
+      <div className="flex items-center gap-2">
+        <TeamFlag
+          code={team.code}
+          name={team.name}
+          logoUrl={team.logoUrl}
+          className="h-[22px] w-[22px] shrink-0 rounded-[6px] shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        />
+        <span className="truncate text-[14px] font-[500] leading-[18px] text-prophet-foreground">
+          {displayName}
+        </span>
+      </div>
+
+      <div
+        role="table"
+        className="mt-3 flex w-full flex-col gap-[2px]"
+        aria-label={displayName}
+      >
+        <RecentFixturesTableHeader />
+        <div className="flex flex-col gap-[2px]">
+          {rows.map((row, index) => (
+            <RecentFixturesTableRow
+              key={row.id}
+              row={row}
+              highlighted={index % 2 === 1}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function RecentMatches({
+  homeTeam,
+  awayTeam,
+  homeRows,
+  awayRows,
+  isLoading = false,
+  isError = false,
+  className
+}: RecentMatchesProps) {
+  const t = useTranslations("trade");
+
+  const columns: RecentFixturesTeamColumn[] = [
+    { ...homeTeam, rows: homeRows },
+    { ...awayTeam, rows: awayRows }
+  ];
+
+  return (
+    <section
+      aria-label={t("recentMatchesAria")}
+      className={cn(
+        "block w-full rounded-[12px] border border-prophet-line bg-prophet-panel py-4",
+        className
+      )}
+    >
+      <h2 className="m-0 px-4 text-[18px] font-[500] leading-[23px] text-prophet-foreground sm:px-5">
+        {t("recentMatches")}
+      </h2>
+
+      <div className="mt-3">
+        {isLoading ? (
+          <p className="px-4 py-6 text-center text-[14px] font-[400] leading-[17px] text-prophet-muted sm:px-5">
+            {t("loadingData")}
+          </p>
+        ) : isError ? (
+          <p className="px-4 py-6 text-center text-[14px] font-[400] leading-[17px] text-prophet-muted sm:px-5">
+            {t("unableToLoadData")}
+          </p>
+        ) : homeRows.length === 0 && awayRows.length === 0 ? (
+          <p className="px-4 py-6 text-center text-[14px] font-[400] leading-[17px] text-prophet-muted sm:px-5">
+            {t("recentMatchesEmpty")}
+          </p>
+        ) : (
+          <div className="flex flex-col divide-y divide-prophet-line md:flex-row md:divide-x md:divide-y-0">
+            {columns.map((column) => (
+              <TeamRecentFixturesColumn
+                key={column.name}
+                team={column}
+                rows={column.rows}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export type { RecentFixtureRow } from "@/views/trade/game/stats/recent-matches/types";

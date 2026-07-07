@@ -18,6 +18,7 @@ import {
 } from "@/lib/market/trade-ticket";
 import { buildSdkSignedUserOrder } from "@/lib/market/sdk-user-order";
 import { resolveTradeTicketAvailableCash } from "@/lib/trading/cash-balance-model";
+import { isTradeSkipSellBalanceCheckEnabled } from "@/lib/trading/trade-sell-test-mode";
 import {
   buildBalancesQuery,
   mergeTradingReadiness,
@@ -149,17 +150,25 @@ export function resolveOrderLimitPrice(
 export function getTeamDefaultLimitPrice(
   snapshot: TeamMarketSnapshot,
   outcomeSide: OrderOutcomeSide,
-  tradeSide: BidTradeSide
+  tradeSide: BidTradeSide,
+  liveBookPrice?: number
 ): number {
+  const yesToken = snapshot.market.polymarket?.tokens.yes;
+  const noToken = snapshot.market.polymarket?.tokens.no;
   const yesPrice =
-    snapshot.market.polymarket?.tokens.yes?.price ??
-    calculateReferencePrice(snapshot.market.probability, "yes");
+    yesToken?.price ?? calculateReferencePrice(snapshot.market.probability, "yes");
   const noPrice =
-    snapshot.market.polymarket?.tokens.no?.price ??
-    calculateReferencePrice(snapshot.market.probability, "no");
+    noToken?.price ?? calculateReferencePrice(snapshot.market.probability, "no");
   const sidePrice = outcomeSide === "yes" ? yesPrice : noPrice;
 
   if (tradeSide === "sell") {
+    const token = outcomeSide === "yes" ? yesToken : noToken;
+    const bookBid = liveBookPrice ?? token?.bestBid;
+
+    if (bookBid !== undefined && bookBid > 0) {
+      return bookBid;
+    }
+
     return sidePrice;
   }
 
@@ -253,6 +262,7 @@ export function buildGameTradePreview(input: {
   limitPrice: number;
   orderType: TradingOrderType;
   fixtureOutcome?: FixtureMarketOutcome | null;
+  sellTokenId?: string;
 }): ReturnType<typeof buildGameBidOrderPreview> {
   if (input.fixtureOutcome) {
     return buildFixtureBidOrderPreview({
@@ -266,7 +276,8 @@ export function buildGameTradePreview(input: {
       tradeSide: input.tradeSide,
       amount: input.amount,
       limitPrice: input.limitPrice,
-      orderType: input.orderType
+      orderType: input.orderType,
+      tokenId: input.sellTokenId,
     });
   }
 
@@ -837,6 +848,10 @@ export function resolveQuickAmountAllBalance(
   if (tradeSide === "sell") {
     if (availableShares !== undefined && availableShares > 0) {
       return availableShares;
+    }
+
+    if (isTradeSkipSellBalanceCheckEnabled()) {
+      return undefined;
     }
 
     const shares = readiness?.balances?.conditionalTokenBalance;

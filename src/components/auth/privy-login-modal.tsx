@@ -1,32 +1,32 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, Loader2, X } from "lucide-react";
+import { ChevronRight, Loader2 } from "lucide-react";
 import { useLoginWithEmail, useLoginWithOAuth, usePrivy } from "@privy-io/react-auth";
 
 import { useTranslations } from "next-intl";
 
 import { OtpInput } from "@/components/auth/otp-input";
-import { useDevice } from "@/hooks/common/use-device";
+import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/cn";
-import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
 import { trackLoginClicked } from "@/lib/analytics/tracking";
+import { checkEligibilityWhitelistEmail } from "@/lib/trading/trading-eligibility-client";
 import { markOAuthPending, consumeOAuthPending } from "@/context/privy/privy-oauth";
 import { resolvePrivyLoginEmail } from "@/context/privy/resolve-privy-login-email";
 const RESEND_COUNTDOWN_SECONDS = 60;
 const OTP_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const modalShellClass = cn(
-  "relative w-full overflow-y-auto bg-white",
-  "p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]",
-  "sm:max-w-[468px] sm:rounded-[20px] sm:border sm:border-[#ebebeb] sm:p-6 sm:pb-6",
-  "sm:shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]"
+const modalClassName = cn(
+  "w-full max-w-[468px] rounded-[20px] border border-prophet-line bg-prophet-panel p-6",
+  "shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]",
 );
 
 interface PrivyLoginModalProps {
   open: boolean;
   onClose: () => void;
+  emailOnlyMode?: boolean;
+  requireWhitelistEmail?: boolean;
   onConnectExtensionWallet: () => void;
   onEmailAuthenticated: (email: string) => void;
 }
@@ -34,11 +34,12 @@ interface PrivyLoginModalProps {
 export function PrivyLoginModal({
   open,
   onClose,
+  emailOnlyMode = false,
+  requireWhitelistEmail = false,
   onConnectExtensionWallet,
   onEmailAuthenticated,
 }: PrivyLoginModalProps) {
   const t = useTranslations("auth");
-  const isMobile = useDevice();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [countdown, setCountdown] = useState(0);
@@ -124,12 +125,21 @@ export function PrivyLoginModal({
     setErrorMessage(undefined);
 
     try {
+      if (requireWhitelistEmail) {
+        const whitelistCheck = await checkEligibilityWhitelistEmail(email.trim());
+
+        if (!whitelistCheck.allowed) {
+          setErrorMessage(t("whitelistRequired"));
+          return;
+        }
+      }
+
       await sendCode({ email: email.trim() });
       setCountdown(RESEND_COUNTDOWN_SECONDS);
     } catch (error) {
       setErrorMessage(resolvePrivyError(error, t("somethingWentWrongPleaseRetry")));
     }
-  }, [email, sendCode, sendCodeDisabled, t]);
+  }, [email, requireWhitelistEmail, sendCode, sendCodeDisabled, t]);
 
   const handleVerify = useCallback(async () => {
     if (verifyDisabled) {
@@ -166,47 +176,40 @@ export function PrivyLoginModal({
   }, [initOAuth, t]);
 
   return (
-    <FundingResponsiveOverlay
+    <Modal
       open={open}
       onClose={onClose}
       ariaLabel={t("loginByEmail")}
       overlayClassName="z-[70]"
       closeButtonClassName="border-0"
+      className={modalClassName}
     >
-      <div className={modalShellClass}>
-        {isMobile ? (
-          <button
-            type="button"
-            className="absolute right-0 top-0 z-10 inline-flex size-8 items-center justify-center rounded-lg bg-white text-[#18110F] transition-colors hover:bg-[#fafbfc]"
-            aria-label="Close"
-            onClick={onClose}
-          >
-            <X className="size-4" aria-hidden="true" />
-          </button>
-        ) : null}
+      <div className="flex flex-col gap-5">
+        <h2 className="pr-8 text-[18px] font-[500] leading-[21px] text-prophet-foreground">
+          {t("loginByEmail")}
+        </h2>
 
-        <div className="flex flex-col gap-5">
-          <h2 className="pr-8 text-[18px] font-[500] leading-[21px] text-black sm:pr-0">
-            {t("loginByEmail")}
-          </h2>
+          {!emailOnlyMode ? (
+            <button
+              type="button"
+              className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[8px] bg-black dark:bg-[#313134] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
+              disabled={oauthLoading || !ready}
+              onClick={() => void handleGoogle()}
+            >
+              {oauthLoading || !ready ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <GoogleIcon />
+              )}
+              {t("continueWithGoogle")}
+            </button>
+          ) : null}
 
-          <button
-            type="button"
-            className="flex h-[50px] w-full items-center justify-center gap-2 rounded-[8px] bg-black text-[14px] font-[500] leading-[18px] text-white disabled:opacity-60"
-            disabled={oauthLoading || !ready}
-            onClick={() => void handleGoogle()}
-          >
-            {oauthLoading || !ready ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <GoogleIcon />
-            )}
-            {t("continueWithGoogle")}
-          </button>
-
-          <p className="text-center text-[14px] font-[400] leading-[normal] text-[#909090]">
-            {t("orOtherEmail")}
-          </p>
+          {!emailOnlyMode ? (
+            <p className="text-center text-[14px] font-[400] leading-[normal] text-[#909090]">
+              {t("orOtherEmail")}
+            </p>
+          ) : null}
 
           <div className="flex flex-col gap-2 sm:relative">
             <input
@@ -216,12 +219,12 @@ export function PrivyLoginModal({
               placeholder={t("emailAddress")}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="h-[50px] w-full rounded-[6px] border border-[#ebebeb] bg-white pl-3 pr-3 text-[16px] text-black outline-none placeholder:text-[#909090] focus:border-black sm:pr-[120px] sm:text-[14px]"
+              className="h-[50px] w-full rounded-[6px] border border-prophet-line bg-prophet-panel dark:bg-[#17171A] pl-3 pr-3 text-[16px] text-prophet-foreground dark:text-white outline-none placeholder:text-[#909090] focus:border-black sm:pr-[120px] sm:text-[14px]"
             />
             <button
               type="button"
               className={cn(
-                "flex h-[50px] w-full items-center justify-center rounded-[6px] bg-black text-[14px] font-[500] leading-[18px] text-white disabled:opacity-30",
+                "flex h-[50px] w-full items-center justify-center rounded-[6px] bg-black dark:bg-[#313134] text-[14px] font-[500] leading-[18px] text-white disabled:opacity-30",
                 "sm:absolute sm:right-[4px] sm:top-1/2 sm:h-[38px] sm:w-[105px] sm:-translate-y-1/2"
               )}
               disabled={sendCodeDisabled}
@@ -241,13 +244,13 @@ export function PrivyLoginModal({
             <OtpInput
               value={code}
               length={OTP_LENGTH}
-              disabled={!codeSent || submittingCode}
+              disabled={submittingCode}
               onChange={setCode}
               onComplete={() => void handleVerify()}
             />
             <button
               type="button"
-              className="flex h-[42px] w-full shrink-0 items-center justify-center rounded-[6px] bg-black text-[14px] font-[500] leading-[18px] text-white disabled:opacity-30 sm:w-[105px]"
+              className="flex h-[42px] w-full shrink-0 items-center justify-center rounded-[6px] bg-prophet-primary text-[14px] font-[500] leading-[18px] text-white disabled:opacity-30 sm:w-[105px]"
               disabled={verifyDisabled || !ready}
               onClick={() => void handleVerify()}
             >
@@ -265,26 +268,27 @@ export function PrivyLoginModal({
             </p>
           ) : null}
 
-          <button
-            type="button"
-            className={cn(
-              "flex items-center justify-center gap-1 border-t border-[#ebebeb] pt-4",
-              "text-[14px] font-[500] leading-[normal] text-black"
-            )}
-            onClick={() => {
-              trackLoginClicked({
-                entrySource: "privy_login_modal",
-                label: "Connect with extension wallet"
-              });
-              onConnectExtensionWallet();
-            }}
-          >
-            {t("connectWithExtensionWallet")}
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
+          {!emailOnlyMode ? (
+            <button
+              type="button"
+              className={cn(
+                "flex items-center justify-center gap-1 border-t border-prophet-line pt-4",
+                "text-[14px] font-[500] leading-[normal] text-prophet-foreground"
+              )}
+              onClick={() => {
+                trackLoginClicked({
+                  entrySource: "privy_login_modal",
+                  label: "Connect with extension wallet"
+                });
+                onConnectExtensionWallet();
+              }}
+            >
+              {t("connectWithExtensionWallet")}
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          ) : null}
       </div>
-    </FundingResponsiveOverlay>
+    </Modal>
   );
 }
 

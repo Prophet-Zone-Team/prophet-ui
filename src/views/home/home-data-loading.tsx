@@ -17,7 +17,7 @@ export function MarketListMetricLoading({
   return (
     <div
       className={cn(
-        "animate-pulse rounded-md bg-[#ebebeb]/80",
+        "animate-pulse rounded-md bg-[#ebebeb]/80 dark:bg-[#000000]/50",
         metricLoadingClassName[variant],
         className
       )}

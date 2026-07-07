@@ -21,7 +21,8 @@ export type GameMarketTabId =
   | "totals"
   | "spreads"
   | "halftime"
-  | "top_scores";
+  | "top_scores"
+  | "stats";
 
 export function findFixtureGroupByType(
   groups: FixtureMarketGroup[],
@@ -94,14 +95,32 @@ export function resolveLineBinarySide(
   return "yes";
 }
 
+function isSingleOutcomeBinaryMarket(
+  marketType: FixtureSportsMarketType,
+): boolean {
+  return (
+    marketType === "extra_time" ||
+    marketType === "penalty_shootout" ||
+    marketType === "btts"
+  );
+}
+
 export function isOutcomeSelected(
   outcome: FixtureMarketOutcome,
-  _binarySide: "yes" | "no",
+  binarySide: "yes" | "no",
   selectedOutcomeId?: string,
-  _selectedBinarySide?: "yes" | "no",
+  selectedBinarySide?: "yes" | "no",
 ): boolean {
-  // Trade-ticket Yes/No only switches token side; market row stays on the fixture outcome.
-  return selectedOutcomeId === outcome.id;
+  if (selectedOutcomeId !== outcome.id) {
+    return false;
+  }
+
+  if (isSingleOutcomeBinaryMarket(outcome.marketType)) {
+    return selectedBinarySide === binarySide;
+  }
+
+  // Multi-outcome markets: selection is by fixture outcome id only.
+  return true;
 }
 
 export function outcomeBelongsToTab(
@@ -110,7 +129,12 @@ export function outcomeBelongsToTab(
 ): boolean {
   switch (tab) {
     case "moneyline":
-      return outcome.marketType === "moneyline";
+      return (
+        outcome.marketType === "moneyline" ||
+        outcome.marketType === "team_to_advance" ||
+        outcome.marketType === "extra_time" ||
+        outcome.marketType === "penalty_shootout"
+      );
     case "totals":
       return outcome.marketType === "total";
     case "spreads":

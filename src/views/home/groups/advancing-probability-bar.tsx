@@ -12,7 +12,7 @@ export function AdvancingProbabilityBar({
   return (
     <div
       className={cn(
-        "h-[6px] overflow-hidden rounded-[4px] bg-[#D9D9D9] w-[90%]",
+        "h-[6px] overflow-hidden rounded-[4px] bg-prophet-line w-[90%]",
         className
       )}
       role="presentation"

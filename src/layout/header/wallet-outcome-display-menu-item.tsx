@@ -49,7 +49,7 @@ export function WalletOutcomeDisplayMenuItem({
       <div className="relative">
         <button
           type="button"
-          className="inline-flex h-10 min-w-[40px] items-center justify-center rounded-[20px] px-3 text-sm text-black transition-colors hover:bg-[#fafbfc]"
+          className="inline-flex h-10 min-w-[40px] items-center justify-center rounded-[20px] px-3 text-sm text-prophet-foreground transition-colors hover:bg-prophet-base"
           aria-label={t("outcomeDisplay")}
           aria-haspopup="listbox"
           onClick={() => setExpanded((value) => !value)}
@@ -60,7 +60,7 @@ export function WalletOutcomeDisplayMenuItem({
           </span>
         </button>
         {expanded ? (
-          <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-[160px] rounded-xl border border-prophet-line bg-white p-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+          <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-[160px] rounded-xl border border-prophet-line bg-prophet-panel p-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
             {OUTCOME_DISPLAY_MODES.map((mode) => (
               <button
                 key={mode}
@@ -68,8 +68,8 @@ export function WalletOutcomeDisplayMenuItem({
                 role="option"
                 aria-selected={mode === resolvedMode}
                 className={cn(
-                  "flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-[#f3f8fd]",
-                  mode === resolvedMode ? "font-medium text-black" : "text-[#606060]"
+                  "flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-prophet-hover",
+                  mode === resolvedMode ? "font-medium text-prophet-foreground" : "text-prophet-muted"
                 )}
                 onClick={() => handleSelect(mode)}
               >
@@ -95,13 +95,13 @@ export function WalletOutcomeDisplayMenuItem({
         onClick={() => setExpanded((value) => !value)}
       >
         <div className="flex items-center gap-2">
-          <div className="w-[14px]">
+          <div className="w-[14px] text-prophet-muted dark:text-white">
             <OutcomeDisplayIcon />
           </div>
           <span>{t("outcomeDisplay")}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="shrink-0 text-sm text-[#909090]">{resolvedLabel}</span>
+          <span className="shrink-0 text-sm text-prophet-muted">{resolvedLabel}</span>
           <RightArrowIcon />
         </div>
       </button>
@@ -114,8 +114,8 @@ export function WalletOutcomeDisplayMenuItem({
               type="button"
               role="menuitem"
               className={cn(
-                "flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-[#f3f8fd]",
-                mode === resolvedMode ? "font-medium text-black" : "text-[#606060]"
+                "flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-prophet-hover",
+                mode === resolvedMode ? "font-medium text-prophet-foreground" : "text-prophet-muted"
               )}
               onClick={() => handleSelect(mode)}
             >

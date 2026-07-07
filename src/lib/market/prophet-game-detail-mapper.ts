@@ -174,6 +174,7 @@ export function mapProphetGameDetailToMatch(
     homeName,
     awayName,
     matchWithDisplayOutcomes.polymarket?.moneyline.outcomes ?? [],
+    fixtureSlug,
   );
 
   if (

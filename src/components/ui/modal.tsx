@@ -7,6 +7,34 @@ import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/cn";
 
+let bodyScrollLockCount = 0;
+let savedBodyOverflow = "";
+
+function lockBodyScroll(): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  if (bodyScrollLockCount === 0) {
+    savedBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+  }
+
+  bodyScrollLockCount += 1;
+}
+
+function unlockBodyScroll(): void {
+  if (typeof document === "undefined" || bodyScrollLockCount <= 0) {
+    return;
+  }
+
+  bodyScrollLockCount -= 1;
+
+  if (bodyScrollLockCount === 0) {
+    document.body.style.overflow = savedBodyOverflow;
+  }
+}
+
 export interface ModalProps {
   open: boolean;
   onClose: () => void;
@@ -16,6 +44,7 @@ export interface ModalProps {
   overlayClassName?: string;
   hideCloseButton?: boolean;
   overlayCloseable?: boolean;
+  escapeCloseable?: boolean;
   closeButtonClassName?: string;
 }
 
@@ -28,6 +57,7 @@ export function Modal({
   overlayClassName,
   hideCloseButton = false,
   overlayCloseable = true,
+  escapeCloseable = true,
   closeButtonClassName,
 }: ModalProps) {
   useEffect(() => {
@@ -35,11 +65,10 @@ export function Modal({
       return undefined;
     }
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && escapeCloseable) {
         onClose();
       }
     }
@@ -47,10 +76,10 @@ export function Modal({
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      unlockBodyScroll();
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open, onClose]);
+  }, [escapeCloseable, open, onClose]);
 
   if (!open || typeof document === "undefined") {
     return null;
@@ -79,7 +108,7 @@ export function Modal({
         {!hideCloseButton ? (
           <button
             type="button"
-            className={cn("absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#EBEBEB] bg-white text-[#18110F] transition-colors hover:bg-[#fafbfc]", closeButtonClassName)}
+            className={cn("absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-prophet-line bg-prophet-panel text-prophet-foreground transition-colors hover:bg-prophet-hover", closeButtonClassName)}
             aria-label="Close"
             onClick={onClose}
           >

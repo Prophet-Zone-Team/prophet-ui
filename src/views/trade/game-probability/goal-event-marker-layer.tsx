@@ -12,6 +12,7 @@ import { useTranslations } from "next-intl";
 
 import { TeamFlag } from "@/components/teams/team-flag";
 import { formatGoalEventTime } from "@/lib/market/match-display";
+import { resolveAxisSecondsFromMatchClock } from "@/lib/market/live-fixture-probability-chart";
 import type { GameMatchChartEvent } from "@/types/market";
 
 interface ChartCustomizedProps {
@@ -36,12 +37,13 @@ function resolveMarkerX(
   xAxisMap: ChartCustomizedProps["xAxisMap"],
   offset: ChartCustomizedProps["offset"],
   width: number | undefined,
-  maxElapsedSeconds: number
+  maxAxisSeconds: number
 ): number {
+  const axisSeconds = resolveAxisSecondsFromMatchClock(elapsedSeconds);
   const xAxis = xAxisMap ? Object.values(xAxisMap)[0] : undefined;
 
   if (xAxis?.scale) {
-    const scaled = xAxis.scale(elapsedSeconds);
+    const scaled = xAxis.scale(axisSeconds);
 
     if (Number.isFinite(scaled)) {
       return scaled;
@@ -52,7 +54,7 @@ function resolveMarkerX(
   const right = offset?.right ?? 0;
   const plotWidth = (width ?? 0) - left - right;
 
-  return left + (elapsedSeconds / maxElapsedSeconds) * plotWidth;
+  return left + (axisSeconds / maxAxisSeconds) * plotWidth;
 }
 
 function SoccerBallIcon({ className }: { className?: string }) {
@@ -81,7 +83,7 @@ function SoccerBallIcon({ className }: { className?: string }) {
 
 export interface GoalEventMarkerLayerProps extends ChartCustomizedProps {
   events: GameMatchChartEvent[];
-  maxElapsedSeconds: number;
+  maxAxisSeconds: number;
   homeCode?: string;
   homeName?: string;
   awayCode?: string;
@@ -152,7 +154,7 @@ export const GoalEventMarkerLayer = memo(
     height,
     xAxisMap,
     events,
-    maxElapsedSeconds,
+    maxAxisSeconds,
     homeCode,
     homeName,
     awayCode,
@@ -161,7 +163,7 @@ export const GoalEventMarkerLayer = memo(
     const t = useTranslations("trade");
     const [hoveredEventKey, setHoveredEventKey] = useState<string | null>(null);
 
-    if (!events.length || !height || !width || maxElapsedSeconds <= 0) {
+    if (!events.length || !height || !width || maxAxisSeconds <= 0) {
       return null;
     }
 
@@ -183,7 +185,7 @@ export const GoalEventMarkerLayer = memo(
               xAxisMap,
               offset,
               width,
-              maxElapsedSeconds
+              maxAxisSeconds
             );
 
             const eventKey = `${event.elapsedSeconds}-${event.side}`;
@@ -220,7 +222,7 @@ export const GoalEventMarkerLayer = memo(
                     className="absolute z-20 -translate-x-1/2"
                     style={{ left: x, top: markerY - 58 }}
                   >
-                    <div className="relative rounded-[8px] border border-[#EBEBEB] bg-white px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
+                    <div className="relative rounded-[8px] border border-prophet-line bg-prophet-panel px-3 py-2 shadow-[0_0_10px_rgba(0,0,0,0.1)]">
                       <p className="m-0 text-[12px] font-[400] leading-[17px] text-[#909090]">
                         {formatGoalEventTime(event.elapsedSeconds)}
                       </p>
@@ -250,7 +252,7 @@ export const GoalEventMarkerLayer = memo(
   },
   (previous, next) => {
     return (
-      previous.maxElapsedSeconds === next.maxElapsedSeconds &&
+      previous.maxAxisSeconds === next.maxAxisSeconds &&
       previous.homeCode === next.homeCode &&
       previous.homeName === next.homeName &&
       previous.awayCode === next.awayCode &&

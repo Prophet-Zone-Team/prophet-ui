@@ -39,7 +39,7 @@ export function DepositEntryStep({
   const t = useTranslations("portfolio");
   const {
     session,
-    openLogin,
+    openLoginModalOnly,
     loginInProgress,
     isBuyRestricted,
     privateBalance,
@@ -69,8 +69,8 @@ export function DepositEntryStep({
       <div className="flex justify-center gap-3 pb-2 pt-[120px]">
         <button
           type="button"
-          className="bg-black text-white flex justify-center items-center w-60 h-10 text-base rounded-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() => void openLogin()}
+          className="bg-black dark:bg-prophet-primary text-white flex justify-center items-center w-60 h-10 text-base rounded-lg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => void openLoginModalOnly()}
           disabled={loginInProgress}
         >
           {loginInProgress ? t("connecting") : t("connectWallet")}
@@ -96,7 +96,7 @@ export function DepositEntryStep({
           walletAddress={session.walletAddress}
           connectedBalance={
             isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-[#909090]" aria-hidden="true" />
+              <Loader2 className="h-5 w-5 animate-spin text-prophet-muted" aria-hidden="true" />
             ) : (
               formatNumber(connectedWalletBalanceUsd, 2, true, {
                 round: 0,
@@ -104,7 +104,7 @@ export function DepositEntryStep({
               })
             )
           }
-          connectedBalanceClassName="text-black"
+          connectedBalanceClassName="text-prophet-foreground"
           onSelectConnected={onSelectConnected}
           onSelectStableflow={onSelectStableflow}
           stableflowLoading={stableflowLoading}

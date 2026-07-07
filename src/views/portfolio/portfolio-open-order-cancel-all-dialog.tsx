@@ -8,11 +8,11 @@ import { useAuth } from "@/context/auth";
 import type { UserOpenOrder } from "@/lib/portfolio/types";
 import {
   FundingModalShell,
-  fundingPrimaryButtonClass
+  fundingPrimaryButtonClass,
+  fundingSecondaryButtonClass
 } from "@/views/portfolio/shared/funding-modal-shell";
 import { usePortfolioContext } from "@/views/portfolio/context";
 import { PORTFOLIO_SELL_MODAL_WIDTH } from "@/views/portfolio/portfolio-position-sell-dialog";
-import { portfolioSecondaryButtonClass } from "@/views/portfolio/portfolio-ui";
 import { useCancelOpenOrder } from "@/views/portfolio/use-cancel-open-order";
 
 export interface PortfolioOpenOrderCancelAllDialogProps {
@@ -55,7 +55,7 @@ export function PortfolioOpenOrderCancelAllDialog({
       <FundingModalShell title={t("cancelAllOrders")} onClose={onClose}>
         <div className="flex flex-col gap-5 pb-2">
           <div className="min-w-0">
-            <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-black">
+            <p className="m-0 line-clamp-2 text-sm font-[500] leading-[17px] text-prophet-foreground">
               {marketTitle}
             </p>
             <p className="m-0 mt-1 text-xs font-[500] text-prophet-muted">
@@ -71,7 +71,7 @@ export function PortfolioOpenOrderCancelAllDialog({
         <div className="grid grid-cols-2 gap-3 pt-2 pb-4">
           <button
             type="button"
-            className={portfolioSecondaryButtonClass}
+            className={fundingSecondaryButtonClass}
             disabled={isBusy}
             onClick={onClose}
           >

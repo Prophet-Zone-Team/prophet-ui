@@ -18,7 +18,6 @@ import {
   mapBinaryFixturePointsToElapsedFromStartTs,
   mapFixturePointsToElapsedFromStartTs,
   resolveEffectiveKickoffAt,
-  resolveKickoffElapsedSeconds,
   resolveLiveChartClobInterval,
   resolveLiveChartMaxElapsed,
   resolveLiveChartModeFromKind,
@@ -103,6 +102,8 @@ function chartKindToTab(chartKind: FixtureChartKind): GameMarketTabId {
       return "spreads";
     case "halftime":
       return "halftime";
+    case "exact_score":
+      return "top_scores";
     default:
       return "moneyline";
   }
@@ -130,6 +131,23 @@ function buildFallbackChartData(input: {
   const chartMode = resolveLiveChartModeFromKind(input.chartKind);
 
   if (chartMode === "binary") {
+    if (input.chartKind === "exact_score" && input.lineKey) {
+      const outcome = input.fixtureMarkets.exactScores.find(
+        (item) => item.id === input.lineKey,
+      );
+      const yesProbability = outcome?.probability ?? 50;
+
+      return buildLiveChartFallbackPoints({
+        matchId: input.match.id,
+        kickoffAt,
+        chartMode: "binary",
+        binary: {
+          primary: yesProbability,
+          secondary: Math.max(0, 100 - yesProbability),
+        },
+      });
+    }
+
     const outcomes = resolveFixtureOutcomesForTab(
       input.fixtureMarkets,
       chartKindToTab(input.chartKind),
@@ -431,19 +449,19 @@ export function useLiveMatchProbabilityChart({
       return 0;
     }
 
-    const elapsedFromStartTime =
-      resolveKickoffElapsedSeconds(priceHistoryKickoffAt) ?? 0;
-
     return resolveLiveChartMaxElapsed(
       priceHistoryKickoffAt,
       chartMode === "binary" ? binaryPoints : points,
       "1D",
-      Math.max(elapsedFromStartTime, matchClockElapsedSeconds ?? 0)
+      matchClockElapsedSeconds,
+      Date.now(),
+      match.period
     );
   }, [
     binaryPoints,
     chartMode,
     enabled,
+    match.period,
     matchClockElapsedSeconds,
     points,
     priceHistoryKickoffAt,

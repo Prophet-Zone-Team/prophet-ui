@@ -38,9 +38,9 @@ import { ProbabilityChart } from "@/views/trade/team-probability/chart";
 import { tradeYesNoPill } from "@/views/trade/trade-widget/trade-ui";
 
 const probabilityCardClass =
-  "min-w-0 flex-1 rounded-[12px] border border-[#EBEBEB] bg-white p-4 sm:p-5";
+  "min-w-0 flex-1 rounded-[12px] border border-prophet-line bg-prophet-panel p-4 sm:p-5";
 
-const probabilityCardBorderlessClass = "min-w-0 flex-1 bg-white p-4 sm:p-5";
+const probabilityCardBorderlessClass = "min-w-0 flex-1 bg-prophet-panel p-4 sm:p-5";
 
 const orderbookBorderlessClass = "rounded-none border-0";
 
@@ -79,7 +79,7 @@ export function ProbabilityMobileOrderbook({
 
   return (
     <div className={className}>
-      <div className="overflow-hidden rounded-[12px] border border-[#EBEBEB] bg-white">
+      <div className="overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel">
         <button
           type="button"
           className="flex w-full items-center justify-between px-4 py-3 text-left"
@@ -87,12 +87,12 @@ export function ProbabilityMobileOrderbook({
           aria-controls="team-trade-mobile-orderbook"
           onClick={() => setOrderbookExpanded((current) => !current)}
         >
-          <span className="text-base font-[500] leading-[19px] text-black">
+          <span className="text-base font-[500] leading-[19px] text-prophet-foreground">
             {t("orderbook")}
           </span>
           <ChevronDown
             className={cn(
-              "h-4 w-4 shrink-0 text-[#909090] transition-transform",
+              "h-4 w-4 shrink-0 text-prophet-muted transition-transform",
               orderbookExpanded && "rotate-180"
             )}
             aria-hidden="true"
@@ -102,7 +102,7 @@ export function ProbabilityMobileOrderbook({
         {orderbookExpanded ? (
           <div
             id="team-trade-mobile-orderbook"
-            className="border-t border-[#EBEBEB]"
+            className="border-t border-prophet-line"
           >
             <OrderbookPanel
               visible
@@ -199,7 +199,7 @@ export function ProbabilitySection({
   );
   const yesNoToggle = (
     <div
-      className="flex h-[30px] w-[96px] gap-0.5 rounded-lg border border-[#EBEBEB] bg-white p-0.5"
+      className="flex h-[30px] w-[96px] gap-0.5 rounded-lg border border-prophet-line bg-prophet-panel p-0.5"
       role="group"
       aria-label={t("outcomeViewAria")}
     >
@@ -247,8 +247,8 @@ export function ProbabilitySection({
           className={cn(
             "border-0 bg-transparent p-0 md:text-sm text-[12px] leading-[17px]",
             timeRange === range.id
-              ? "font-[500] text-black"
-              : "font-[400] text-[#909090]"
+              ? "font-[500] text-prophet-foreground"
+              : "font-[400] text-prophet-muted"
           )}
           onClick={() => {
             trackWinnerChartRangeChanged({
@@ -271,7 +271,7 @@ export function ProbabilitySection({
   const groupMetricBlocks = (
     <div>
       <div className="flex items-end gap-2">
-        <p className="m-0 text-[20px] font-[500] leading-[24px] text-black md:text-[36px] md:leading-[43px]">
+        <p className="m-0 text-[20px] font-[500] leading-[24px] text-prophet-foreground md:text-[36px] md:leading-[43px]">
           {formatProbability(displayProbability)}
         </p>
         {!!change24hPoints ? (
@@ -281,7 +281,7 @@ export function ProbabilitySection({
           />
         ) : null}
       </div>
-      <p className="m-0 mt-1 hidden text-sm font-[500] leading-[17px] text-[#909090] md:block">
+      <p className="m-0 mt-1 hidden text-sm font-[500] leading-[17px] text-prophet-muted md:block">
         {t("probabilityLabel")}
       </p>
     </div>
@@ -317,8 +317,8 @@ export function ProbabilitySection({
           className={cn(
             "border-0 bg-transparent p-0 text-sm leading-[17px]",
             timeRange === range.id
-              ? "font-[500] text-black"
-              : "font-[400] text-[#909090]"
+              ? "font-[500] text-prophet-foreground"
+              : "font-[400] text-prophet-muted"
           )}
           onClick={() => setTimeRange(range.id)}
         >
@@ -358,14 +358,14 @@ export function ProbabilitySection({
         {showHeaderControls ? (
           <>
             <div className="flex items-center justify-between gap-3">
-              <h2 className="m-0 text-[16px] font-[500] leading-6 text-black md:text-[20px]">
+              <h2 className="m-0 text-[16px] font-[500] leading-6 text-prophet-foreground md:text-[20px]">
                 {t("probabilityLabel")}
               </h2>
               {yesNoToggle}
             </div>
 
             <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
-              <div className="flex min-w-0 flex-wrap items-end gap-8 sm:gap-10">
+              <div className="flex min-w-0 flex-wrap items-end gap-8 md:hidden sm:gap-10">
                 {groupMetricBlocks}
               </div>
               <div
@@ -404,7 +404,7 @@ export function ProbabilitySection({
 
       {showChartOrderbookDivider && showOrderbook ? (
         <div
-          className="h-px w-full shrink-0 bg-[#EBEBEB] xl:h-auto xl:w-px xl:self-stretch"
+          className="h-px w-full shrink-0 bg-prophet-line xl:h-auto xl:w-px xl:self-stretch"
           aria-hidden
         />
       ) : null}
@@ -444,13 +444,13 @@ function MetricBlock({
     <div className={className}>
       <p
         className={cn(
-          "m-0 font-[500] text-black",
+          "m-0 font-[500] text-prophet-foreground",
           valueClassName ?? "text-base leading-[19px]"
         )}
       >
         {value}
       </p>
-      <p className="m-0 mt-1 md:block hidden text-sm font-[500] leading-[17px] text-[#909090]">
+      <p className="m-0 mt-1 md:block hidden text-sm font-[500] leading-[17px] text-prophet-muted">
         {label}
       </p>
     </div>

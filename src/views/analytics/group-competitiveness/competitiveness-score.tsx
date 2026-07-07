@@ -21,14 +21,14 @@ export function CompetitivenessScore({
         "whitespace-nowrap tabular-nums",
         isLarge
           ? "text-[22px] font-[500] leading-[26px] md:text-[26px] md:leading-[31px]"
-          : "text-[14px] font-[400] leading-[17px] text-[#909090]",
+          : "text-[14px] font-[400] leading-[17px] text-prophet-muted",
         className
       )}
     >
       {isLarge ? (
         <>
-          <span className="text-black">{score}</span>
-          <span className="text-[#909090]">/100</span>
+          <span className="text-prophet-foreground">{score}</span>
+          <span className="text-prophet-muted">/100</span>
         </>
       ) : (
         formatCompetitivenessScore(score)

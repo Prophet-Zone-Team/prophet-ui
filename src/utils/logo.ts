@@ -47,6 +47,11 @@ export const getStableflowTrustAvatar = (name: string) => {
   name = formatPath(name);
   return getLogo(`/stableflow/trusts${name}`);
 };
+export const getStableflowWalletLogo = (name: string) => {
+  name = name.toLowerCase();
+  name = formatPath(name);
+  return getLogo(`/stableflow/wallets${name}`);
+};
 
 export const SpecialTokenIconSuffixes: Record<string, string> = {
   aave: "svg",

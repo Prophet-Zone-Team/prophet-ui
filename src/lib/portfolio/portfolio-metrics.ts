@@ -126,7 +126,7 @@ export function resolveOutcomeSideForPosition(
     return "no";
   }
 
-  const normalizedOutcome = position.outcome.trim().toLowerCase();
+  const normalizedOutcome = position.outcome?.trim().toLowerCase() ?? "";
 
   if (
     tokens?.yes?.outcome &&
@@ -145,6 +145,22 @@ export function resolveOutcomeSideForPosition(
   return position.outcomeIndex === 0 ? "yes" : "no";
 }
 
+export function resolveOrderOutcomeSideFromLabel(
+  outcome: string | undefined
+): OrderOutcomeSide | undefined {
+  const normalized = outcome?.trim().toLowerCase() ?? "";
+
+  if (normalized === "yes") {
+    return "yes";
+  }
+
+  if (normalized === "no") {
+    return "no";
+  }
+
+  return undefined;
+}
+
 export function resolveOutcomeSideForGamePosition(
   position: UserPositionRecord,
   tokens: GamePositionTokenMatch
@@ -157,7 +173,13 @@ export function resolveOutcomeSideForGamePosition(
     return "no";
   }
 
-  const normalizedOutcome = position.outcome.trim().toLowerCase();
+  const fromLabel = resolveOrderOutcomeSideFromLabel(position.outcome);
+
+  if (fromLabel) {
+    return fromLabel;
+  }
+
+  const normalizedOutcome = position.outcome?.trim().toLowerCase() ?? "";
 
   if (
     tokens.yesOutcome &&
@@ -249,14 +271,21 @@ export interface PortfolioViewModel {
 export function buildPortfolioView({
   positions,
   cash,
-  transactions
+  transactions,
+  totalPositionValue: totalPositionValueFromApi
 }: {
   positions: UserPositionRecord[];
   cash?: CashBalanceView;
   transactions: PortfolioTransactionRecord[];
+  totalPositionValue?: number;
 }): PortfolioViewModel {
-  const totalPositionValue = roundMoney(
+  const summedPositionValue = roundMoney(
     positions.reduce((sum, position) => sum + safeNumber(position.currentValue), 0)
+  );
+  const totalPositionValue = roundMoney(
+    totalPositionValueFromApi !== undefined
+      ? safeNumber(totalPositionValueFromApi)
+      : summedPositionValue
   );
   const availableToTrade = safeNumber(cash?.available);
   const portfolioValue = roundMoney(totalPositionValue + availableToTrade);

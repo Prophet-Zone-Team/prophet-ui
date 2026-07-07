@@ -67,13 +67,21 @@ const Drawer = (props: DrawerProps) => {
   }, [open]);
 
   useEffect(() => {
-    if (open) {
-      setContentOpen(true);
-      document.body.classList.add("drawer-open");
+    if (!open) {
+      setContentOpen(false);
+      document.body.classList.remove("drawer-open");
       return;
     }
-    setContentOpen(false);
-    document.body.classList.remove("drawer-open");
+
+    setContentOpen(true);
+    const previousOverflow = document.body.style.overflow;
+    document.body.classList.add("drawer-open");
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.classList.remove("drawer-open");
+      document.body.style.overflow = previousOverflow;
+    };
   }, [open]);
 
   if (typeof window === "undefined") {
@@ -153,7 +161,7 @@ const DrawerContent = (props: DrawerContentProps) => {
       }}
       style={{ zIndex: contentZIndex }}
       className={clsx(
-        "fixed flex flex-col bg-white shadow-[0_0_10px_0_rgba(0,0,0,0.10)]",
+        "fixed flex flex-col bg-prophet-panel shadow-[0_0_10px_0_rgba(0,0,0,0.10)]",
         direction === DrawerDirection.Bottom
           ? "rounded-b-0 rounded-t-2xl w-full h-[70dvh] left-0 bottom-0"
           : "",
@@ -174,7 +182,11 @@ const DrawerContent = (props: DrawerContentProps) => {
           {title}
         </DrawerTitle>
       ) : null}
-      <div className={clsx("min-h-0 flex-1 overflow-y-auto overflow-x-hidden")}>
+      <div
+        className={clsx(
+          "min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain"
+        )}
+      >
         {children}
       </div>
     </motion.div>

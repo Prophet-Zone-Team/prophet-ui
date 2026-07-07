@@ -58,6 +58,19 @@ function resolveHalftimeTokens(
   return { mode: "ternary", inputs };
 }
 
+/** Shared YES/NO spread market: `:yes` tracks YES token, `:no` tracks NO token. */
+function resolveSpreadChartToken(outcome: {
+  id: string;
+  tokenId?: string;
+  noTokenId?: string;
+}): string | undefined {
+  if (!outcome.tokenId || !outcome.noTokenId) {
+    return undefined;
+  }
+
+  return outcome.id.endsWith(":yes") ? outcome.tokenId : outcome.noTokenId;
+}
+
 function resolveLineGroupTokens(
   group: FixtureMarketGroup | undefined,
   lineKey: string | undefined,
@@ -94,8 +107,76 @@ function resolveLineGroupTokens(
 
   const home = outcomes.find((item) => item.side === "home");
   const away = outcomes.find((item) => item.side === "away");
+  const homeChartToken = home ? resolveSpreadChartToken(home) : undefined;
+  const awayChartToken = away ? resolveSpreadChartToken(away) : undefined;
 
-  if (!home?.tokenId || !away?.noTokenId) {
+  if (!homeChartToken || !awayChartToken) {
+    return undefined;
+  }
+
+  return {
+    mode: "binary",
+    inputs: [
+      { key: "primary", tokenId: homeChartToken },
+      { key: "secondary", tokenId: awayChartToken },
+    ],
+  };
+}
+
+function resolveExactScoreChartTokens(
+  match: WorldCupMatch,
+  outcomeId: string | undefined,
+): FixtureChartTokenResolution | undefined {
+  if (!outcomeId) {
+    return undefined;
+  }
+
+  const outcome = match.polymarket?.fixtureMarkets?.exactScores.find(
+    (item) => item.id === outcomeId,
+  );
+
+  if (!outcome?.tokenId || !outcome.noTokenId) {
+    return undefined;
+  }
+
+  return {
+    mode: "binary",
+    inputs: [
+      { key: "primary", tokenId: outcome.tokenId },
+      { key: "secondary", tokenId: outcome.noTokenId },
+    ],
+  };
+}
+
+function resolveBinaryPropGroupTokens(
+  group: FixtureMarketGroup | undefined,
+): FixtureChartTokenResolution | undefined {
+  const outcome = group?.outcomes[0];
+
+  if (!outcome?.tokenId || !outcome.noTokenId) {
+    return undefined;
+  }
+
+  return {
+    mode: "binary",
+    inputs: [
+      { key: "primary", tokenId: outcome.tokenId },
+      { key: "secondary", tokenId: outcome.noTokenId },
+    ],
+  };
+}
+
+function resolveTeamToAdvanceChartTokens(
+  group: FixtureMarketGroup | undefined,
+): FixtureChartTokenResolution | undefined {
+  if (!group?.outcomes.length) {
+    return undefined;
+  }
+
+  const home = group.outcomes.find((item) => item.side === "home");
+  const away = group.outcomes.find((item) => item.side === "away");
+
+  if (!home?.tokenId || !away?.tokenId) {
     return undefined;
   }
 
@@ -103,7 +184,7 @@ function resolveLineGroupTokens(
     mode: "binary",
     inputs: [
       { key: "primary", tokenId: home.tokenId },
-      { key: "secondary", tokenId: away.noTokenId },
+      { key: "secondary", tokenId: away.tokenId },
     ],
   };
 }
@@ -159,6 +240,26 @@ export function resolveFixtureChartTokens(
       findGroupByType(lines, "spread"),
       lineKey,
       "spread"
+    );
+  }
+
+  if (chartKind === "exact_score") {
+    return resolveExactScoreChartTokens(match, lineKey);
+  }
+
+  if (chartKind === "team_to_advance") {
+    return resolveTeamToAdvanceChartTokens(
+      findGroupByType(lines, "team_to_advance"),
+    );
+  }
+
+  if (chartKind === "extra_time") {
+    return resolveBinaryPropGroupTokens(findGroupByType(lines, "extra_time"));
+  }
+
+  if (chartKind === "penalty_shootout") {
+    return resolveBinaryPropGroupTokens(
+      findGroupByType(lines, "penalty_shootout"),
     );
   }
 
