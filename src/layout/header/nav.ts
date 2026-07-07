@@ -50,3 +50,7 @@ export function shouldHideMobileBottomNav(pathname: string) {
 export function shouldHideAppChrome(pathname: string) {
   return pathname.startsWith("/download");
 }
+
+export function shouldHideWalletFundingControls(pathname: string) {
+  return pathname === "/smart-money" || pathname.startsWith("/smart-money/");
+}
