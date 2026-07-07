@@ -183,7 +183,7 @@ export function MoneyLineCardPosition({
 
   return (
     <>
-      <div className="border-t border-prophet-line bg-prophet-action-panel">
+      <div className="border-t border-prophet-line bg-prophet-panel">
         <button
           type="button"
           className="flex w-full items-center justify-between px-4 py-3 text-left"

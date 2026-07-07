@@ -242,7 +242,7 @@ export function Orderbook({
               )}
             </div>
 
-            <div className="mx-[-4px] flex h-8 shrink-0 items-center justify-between bg-prophet-action-panel px-2">
+            <div className="mx-[-4px] flex h-8 shrink-0 items-center justify-between bg-prophet-panel px-2">
               <span className="font-[400] leading-[17px] text-prophet-foreground">
                 {marketPrice !== undefined
                   ? formatOrderbookDisplayPrice(marketPrice)

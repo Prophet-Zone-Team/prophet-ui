@@ -629,7 +629,7 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
                   !!recipientInput && recipientInput.trim().length > 0 ? (
                     <button
                       type="button"
-                      className="absolute right-1.5 z-[1] size-5 rounded-full bg-prophet-action-panel flex justify-center items-center hover:bg-[#E0E0E0]"
+                      className="absolute right-1.5 z-[1] size-5 rounded-full bg-prophet-panel flex justify-center items-center hover:bg-[#E0E0E0]"
                       onClick={() => setRecipientInput("")}
                     >
                       <X className="h-4 w-4 shrink-0" aria-hidden="true" />

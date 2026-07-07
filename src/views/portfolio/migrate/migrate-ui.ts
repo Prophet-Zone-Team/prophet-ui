@@ -56,7 +56,7 @@ export const migrateAddressRowValueClass =
   "w-[200px] break-all text-right text-sm font-[500] text-prophet-foreground shrink-0";
 
 export const migrateTransferBarClass =
-  "relative rounded-[6px] bg-prophet-action-panel px-3 py-4 grid grid-cols-[1fr_36px_1fr] gap-2";
+  "relative rounded-[6px] bg-prophet-panel px-3 py-4 grid grid-cols-[1fr_36px_1fr] gap-2";
 
 export const migrateTransferSideClass = "flex min-w-0 items-center gap-2";
 

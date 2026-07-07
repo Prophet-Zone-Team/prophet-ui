@@ -49,7 +49,7 @@ export function PortfolioStrategyLegsTable({
   }
 
   return (
-    <div className={cn("bg-[#FCFCFC] dark:bg-prophet-action-panel", className)}>
+    <div className={cn("bg-[#FCFCFC] dark:bg-prophet-panel", className)}>
       <div className="hidden min-w-[720px] md:block">
         <div className={LEGS_TABLE_HEAD_CLASS} role="row">
           <span role="columnheader">{t("market")}</span>
