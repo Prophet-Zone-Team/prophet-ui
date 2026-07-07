@@ -16,7 +16,7 @@ export const depositConnectedRowHighlightedClass = cn(
 export const depositBridgeLabelClass = "text-sm font-semibold text-prophet-foreground";
 
 export const depositSourceTabsTrackClass =
-  "flex h-[46px] w-full min-w-0 items-center gap-1 rounded-[6px] bg-prophet-panel p-1";
+  "flex h-[46px] w-full min-w-0 items-center gap-1 rounded-[6px] bg-[#F4F4F4] dark:bg-prophet-panel p-1";
 
 export const depositSourceTabActiveClass = cn(
   "flex h-[36px] min-w-0 flex-1 items-center justify-center rounded-[6px] border border-prophet-line",
