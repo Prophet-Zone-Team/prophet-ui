@@ -49,7 +49,7 @@ export type ShareInviteModalProps = ShareInviteLinkProps & {
     handleDownload: () => void;
     handleCopyLink: () => void;
   }>;
-  content?: any;
+  content?: ReactNode;
   actionsList?: ("x" | "telegram" | "download" | "copy")[];
   showInviteLinkRow?: boolean;
 };
@@ -143,7 +143,6 @@ export function ShareInviteModal({
               </>
             )
           }
-
         </div>
       </div>
     </FundingResponsiveOverlay>

@@ -4,6 +4,12 @@ import Popover from "@/components/popover";
 import { useComboFormatOutcomeButtonDisplay } from "@/views/combo/combo-outcome-display-context";
 import { cn } from "@/lib/cn";
 import type { ComboOddsOption } from "@/views/combo/combo-item/types";
+import {
+  comboOddsButtonBaseClass,
+  comboOddsButtonLabelClass,
+  comboOddsButtonStateClass,
+  comboTooltipClass
+} from "@/views/combo/combo-ui";
 
 export function ComboOddsButton({
   option,
@@ -50,7 +56,7 @@ export function ComboOddsButton({
           : onClick
       }
       className={cn(
-        "flex items-center justify-between border border-[#EBEBEB] transition-colors",
+        comboOddsButtonBaseClass,
         mobile
           ? "h-[42px] rounded-[10px] px-2 text-xs leading-[15px]"
           : "rounded-[12px] text-sm leading-[18px]",
@@ -67,29 +73,26 @@ export function ComboOddsButton({
             )
           : null,
         compact && mobile ? "min-w-0 w-full" : null,
-        disabled
-          ? "cursor-not-allowed border-[#EBEBEB] bg-[#F3F4F6] text-[#909090]"
-          : selected
-            ? "border-[#EBEBEB] bg-[linear-gradient(180deg,#666666_0%,#000000_100%)] text-white"
-            : "bg-[#F9FAFC] text-black hover:bg-[#F0F2F5]",
+        comboOddsButtonStateClass({ selected, disabled }),
         className
       )}
     >
       {hasSpreadLabel ? (
         <span className="min-w-0 flex-1 truncate font-[500] whitespace-nowrap">
           <span
-            className={cn(
-              !selected && !disabled && "text-[#909090]",
-              selected && !disabled && "text-white"
-            )}
+            className={comboOddsButtonLabelClass({
+              selected,
+              disabled,
+              mutedLabel: true
+            })}
           >
             {option.spreadTeamCode}
           </span>
           <span
-            className={cn(
-              !selected && !disabled && "text-black",
-              selected && !disabled && "text-white"
-            )}
+            className={comboOddsButtonLabelClass({
+              selected,
+              disabled
+            })}
           >
             {" "}
             {option.spreadLine}
@@ -100,8 +103,7 @@ export function ComboOddsButton({
           className={cn(
             "font-[500]",
             compact || mobile ? "min-w-0 flex-1 truncate" : "whitespace-nowrap",
-            !selected && !disabled && mutedLabel && "text-[#909090]",
-            selected && mutedLabel && "text-white"
+            comboOddsButtonLabelClass({ selected, disabled, mutedLabel })
           )}
         >
           {option.label}
@@ -118,11 +120,7 @@ export function ComboOddsButton({
       <Popover
         placement="Bottom"
         trigger="Hover"
-        content={
-          <div className="rounded-lg border border-[#EBEBEB] bg-white px-3 py-2 text-sm font-[400] text-black shadow-[0_0_10px_0_rgba(0,0,0,0.10)]">
-            {disabledTooltip}
-          </div>
-        }
+        content={<div className={comboTooltipClass}>{disabledTooltip}</div>}
       >
         {button}
       </Popover>

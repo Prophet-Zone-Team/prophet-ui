@@ -37,10 +37,10 @@ export function ComboItemHeader({
 
   return (
     <>
-      <div className="border-b border-[#EBEBEB] px-3 pb-3 pt-3 md:hidden">
+      <div className="border-b border-prophet-line px-3 pb-3 pt-3 md:hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
-            <span className="text-xs font-[400] leading-[15px] text-[#909090]">
+            <span className="text-xs font-[400] leading-[15px] text-prophet-muted">
               {displayKickoff}
             </span>
             {isLive ? <LiveIndicator compact mobile /> : null}
@@ -60,12 +60,12 @@ export function ComboItemHeader({
       <div
         className={cn(
           "hidden flex-col gap-3 p-4 md:flex",
-          expanded && "border-b border-[#EBEBEB] pb-4"
+          expanded && "border-b border-prophet-line pb-4"
         )}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
-            <span className="text-sm font-[400] leading-[18px] text-[#909090]">
+            <span className="text-sm font-[400] leading-[18px] text-prophet-muted">
               {displayKickoff}
             </span>
             {isLive ? <LiveIndicator compact={expanded} /> : null}

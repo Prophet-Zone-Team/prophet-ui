@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 
+import { cn } from "@/lib/cn";
 import { formatPortfolioDateTime } from "@/lib/portfolio/portfolio-format";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
+import {
+  comboMultiplierBadgeClass,
+  comboTitleTextClass
+} from "@/views/combo/combo-ui";
 import {
   formatComboMultiplierLabel
 } from "@/views/combo/combo-widget/formatters";
@@ -24,13 +29,13 @@ function SummaryRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-sm font-[400] leading-[18px] text-black">
+      <span className={cn("text-sm font-[400] leading-[18px]", comboTitleTextClass)}>
         {label}
       </span>
       <span
         className={
           valueClassName ??
-          "text-sm font-[500] leading-[18px] text-black"
+          cn("text-sm font-[500] leading-[18px]", comboTitleTextClass)
         }
       >
         {value}
@@ -54,14 +59,14 @@ export function PositionCardModalSummary({
             ? formatPortfolioDateTime(firstEntryAt)
             : "—"
         }
-        valueClassName="text-sm font-[400] leading-[18px] text-black"
+        valueClassName={cn("text-sm font-[400] leading-[18px]", comboTitleTextClass)}
       />
       <SummaryRow label="Cost" value={formatTeamDetailMoney(stakeAmount)} />
       <SummaryRow
         label={
           <span className="inline-flex items-center gap-2">
             <span>To Win</span>
-            <span className="inline-flex h-7 items-center rounded-[15px] bg-black px-3 text-sm font-[500] leading-[18px] text-white">
+            <span className={comboMultiplierBadgeClass}>
               {formatComboMultiplierLabel(multiplier)}
             </span>
           </span>

@@ -104,6 +104,7 @@ export const ComboPositionShareCard = forwardRef<
                     picks={picks}
                     className="px-2 pb-0 pt-2"
                     connectorHeightPx={20}
+                    tone="export"
                   />
                 </div>
 

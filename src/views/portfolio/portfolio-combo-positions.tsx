@@ -27,7 +27,7 @@ export function PortfolioComboPositions({
   return (
     <>
       <div
-        className="border-b border-[#EBEBEB] px-4 py-4"
+        className="border-b border-prophet-line px-4 py-4"
         aria-label={t("yourComboPositions")}
       >
         <div className="-mx-1 overflow-x-auto pb-1">

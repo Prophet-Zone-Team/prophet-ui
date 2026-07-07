@@ -1,3 +1,8 @@
+import { cn } from "@/lib/cn";
+import {
+  comboMultiplierBadgeClass,
+  comboTitleTextClass
+} from "@/views/combo/combo-ui";
 import {
   formatComboMultiplierLabel,
   formatComboPicksLabel
@@ -14,11 +19,11 @@ export function PositionCardHeader({
 }: PositionCardHeaderProps) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <h2 className="m-0 text-sm font-[500] leading-[18px] text-black">
+      <h2 className={cn("m-0 text-sm font-[500] leading-[18px]", comboTitleTextClass)}>
         {formatComboPicksLabel(pickCount)}
       </h2>
 
-      <span className="inline-flex h-7 shrink-0 items-center rounded-[15px] bg-black px-3 text-sm font-[500] leading-[18px] text-white">
+      <span className={comboMultiplierBadgeClass}>
         {formatComboMultiplierLabel(multiplier)}
       </span>
     </div>

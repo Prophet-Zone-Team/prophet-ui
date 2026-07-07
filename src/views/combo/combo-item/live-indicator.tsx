@@ -22,8 +22,8 @@ export function LiveIndicator({
           mobile
             ? "text-xs leading-[15px] text-[#65AF14]"
             : compact
-              ? "text-sm leading-[18px] text-black"
-              : "text-base leading-5 text-black"
+              ? "text-sm leading-[18px] text-prophet-foreground"
+              : "text-base leading-5 text-prophet-foreground"
         )}
       >
         Live

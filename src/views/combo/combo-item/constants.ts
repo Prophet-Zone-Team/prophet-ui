@@ -1,2 +1,7 @@
-export const comboItemCardClassName =
-  "w-full max-w-[858px] rounded-[12px] border border-[#EBEBEB] bg-white";
+import { cn } from "@/lib/cn";
+import { comboPanelClass } from "@/views/combo/combo-ui";
+
+export const comboItemCardClassName = cn(
+  "w-full max-w-[858px]",
+  comboPanelClass
+);

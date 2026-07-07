@@ -206,6 +206,7 @@ export function usePortfolioData(): UsePortfolioDataResult {
           setPositions(nextPositions);
           setComboPositions(mapComboPositionsToCards(comboPositionRecords));
           setTotalPositionValue(positionsPayload?.totalPositionValue);
+          setComboPositions(mapComboPositionsToCards(comboPositionRecords));
 
           const conditionIds =
             collectUniqueConditionIdsFromPositions(nextPositions);

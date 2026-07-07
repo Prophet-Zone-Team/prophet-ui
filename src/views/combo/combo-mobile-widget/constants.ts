@@ -8,14 +8,14 @@ export const COMBO_MOBILE_PICK_ROW_EXTRA_HEIGHT_PX = 54;
 
 export const COMBO_MOBILE_QUICK_AMOUNTS = [10, 50, 100] as const;
 
+import { comboShellBackground } from "@/views/combo/combo-ui";
+
 export const comboMobileWidgetShellStyle = {
-  background:
-    "linear-gradient(360deg, rgba(45, 151, 243, 0.1) 0%, rgba(177, 68, 255, 0.1) 100%), #FFFFFF"
+  background: comboShellBackground("mobile")
 } as const;
 
 export const comboMobileBidSheetShellStyle = {
-  background:
-    "linear-gradient(360deg, rgba(45, 151, 243, 0) 0%, rgba(177, 68, 255, 0.1) 100%), #FFFFFF"
+  background: comboShellBackground("mobileBidSheet")
 } as const;
 
 export function getComboMobileReserveHeight(pickCount: number): number {
