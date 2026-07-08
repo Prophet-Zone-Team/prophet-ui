@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ANALYTICS_QUERY_STALE_TIME_MS } from "@/lib/analytics/config";
 import {
   buildCopyPositionTimeMap,
+  mapCopyPositionPnLToClosedUserPositionRecord,
   mapCopyPositionPnLToUserPositionRecord
 } from "@/lib/copy-trade/map-copy-position-pnl";
 import { collectUniqueConditionIdsFromPositions } from "@/lib/portfolio/teams-condition";
@@ -63,7 +64,7 @@ export function useCopyTradePortfolioData(
 
   const closedPositions = useMemo(() => {
     return (pnlSummary?.history ?? []).map((row) =>
-      mapCopyPositionPnLToUserPositionRecord(row, { proxyWallet })
+      mapCopyPositionPnLToClosedUserPositionRecord(row, { proxyWallet })
     );
   }, [pnlSummary?.history, proxyWallet]);
 
