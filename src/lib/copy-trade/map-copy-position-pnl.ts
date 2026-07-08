@@ -135,6 +135,16 @@ export function mapCopyPositionPnLToUserPositionRecord(
   };
 }
 
+export function mapCopyPositionPnLToClosedUserPositionRecord(
+  row: CopyPositionPnL,
+  options?: MapCopyPositionPnLOptions
+): UserPositionRecord {
+  return {
+    ...mapCopyPositionPnLToUserPositionRecord(row, options),
+    currentValue: row.sell_proceeds_usd
+  };
+}
+
 export function buildCopyPositionTimeMap(
   rows: CopyPositionPnL[]
 ): Map<string, string> {
