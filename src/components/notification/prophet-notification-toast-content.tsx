@@ -84,14 +84,14 @@ function MatchVsTitle({
 
   if (!homeTeam || !awayTeam) {
     return (
-      <p className="m-0 text-sm font-medium leading-5 text-[#18110F]">
+      <p className="m-0 text-sm font-medium leading-5 text-[#18110F] dark:text-white">
         {title}
       </p>
     );
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium leading-5 text-[#18110F]">
+    <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium leading-5 text-[#18110F] dark:text-white">
       <TeamFlag
         name={homeTeam}
         className="size-[23px] rounded-sm shrink-0 text-[20px]"
@@ -121,7 +121,7 @@ export function ProphetNotificationToastContentView({
   return (
     <div
       className={cn(
-        "flex w-full min-w-[280px] max-w-[360px] gap-3 p-4 font-body text-[#18110F]",
+        "flex w-full min-w-[280px] max-w-[360px] gap-3 p-4 font-body text-[#18110F] dark:text-white",
         className
       )}
     >
@@ -141,7 +141,7 @@ export function ProphetNotificationToastContentView({
         {content.titleLayout === "match_vs" ? (
           <MatchVsTitle teamNames={content.teamNames} title={content.title} />
         ) : (
-          <p className="m-0 text-sm font-medium leading-5 text-[#18110F]">
+          <p className="m-0 text-sm font-medium leading-5 text-[#18110F] dark:text-white">
             {content.titleParts
               ? renderTitleParts(content.titleParts)
               : content.title}
