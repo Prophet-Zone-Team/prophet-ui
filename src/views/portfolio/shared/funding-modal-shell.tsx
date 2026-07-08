@@ -13,7 +13,7 @@ export const fundingModalCardClass = cn(
 );
 
 export const fundingPrimaryButtonClass = cn(
-  "flex h-[50px] w-full items-center justify-center rounded-[8px] bg-prophet-primary",
+  "flex h-[50px] w-full items-center justify-center gap-2 rounded-[8px] bg-prophet-primary",
   "text-base font-[400] leading-[19px] text-prophet-primary-foreground transition-opacity hover:opacity-90",
   "disabled:cursor-not-allowed disabled:opacity-50"
 );
