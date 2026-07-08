@@ -1928,7 +1928,34 @@
       "performanceTimeRange": "績效時間區間",
       "tabClosed": "已平倉",
       "noClosedPositions": "尚無已平倉持倉",
-      "unableToLoadPositions": "無法載入持倉。"
+      "unableToLoadPositions": "無法載入持倉。",
+      "sell": {
+        "title": "賣出持倉",
+        "confirm": "確認賣出",
+        "cancel": "取消",
+        "loadingBalance": "正在讀取鏈上可賣份額…",
+        "sellableShares": "可賣 {shares} share（鏈上）",
+        "currentPrice": "現價 {price}",
+        "sharesLabel": "賣出份額",
+        "sharesHint": "最多 {shares}",
+        "estProceeds": "預估回收（現價）",
+        "submittedShares": "預計提交",
+        "residualShares": "賣出後剩餘",
+        "footerNote": "實盤：按市價吃單賣出，回收 pUSD。",
+        "reconciling": "有 {count} 筆交易正在對帳，暫不可賣出。",
+        "positionTooSmall": "持倉不足 {min} share，無法賣出。",
+        "belowMin": "賣出份額不能少於 {min} share（Polymarket 最小下單量）。",
+        "overMax": "賣出份額不能超過 {max} share。",
+        "willClearResidual": "剩餘 {residual} share 低於最小可賣份額，後端可能按全部持倉嘗試賣出；CLOB 精度後可能留下少量 dust。",
+        "willLeaveDust": "CLOB 份額精度為 0.01，本次可能留下約 {residual} share 的 dust。",
+        "signing": "簽名中…",
+        "selling": "賣出中…",
+        "success": "已提交賣出 {shares} share",
+        "failed": "無法賣出持倉。",
+        "missingToken": "此持倉缺少 token 資訊，無法賣出。",
+        "missingCondition": "此持倉缺少市場資訊，無法賣出。",
+        "balanceFailed": "無法讀取可賣份額。"
+      }
     },
     "funding": {
       "deposit": {

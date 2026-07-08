@@ -1923,7 +1923,34 @@
       "performanceTimeRange": "Performance time range",
       "tabClosed": "Closed",
       "noClosedPositions": "No closed positions",
-      "unableToLoadPositions": "Unable to load positions."
+      "unableToLoadPositions": "Unable to load positions.",
+      "sell": {
+        "title": "Sell position",
+        "confirm": "Confirm sell",
+        "cancel": "Cancel",
+        "loadingBalance": "Loading on-chain sellable shares…",
+        "sellableShares": "Sellable {shares} shares (on-chain)",
+        "currentPrice": "Current price {price}",
+        "sharesLabel": "Shares to sell",
+        "sharesHint": "Max {shares}",
+        "estProceeds": "Est. proceeds (current price)",
+        "submittedShares": "Est. submitted",
+        "residualShares": "Remaining after sell",
+        "footerNote": "Live: market taker sell; proceeds return as pUSD.",
+        "reconciling": "{count} trade(s) are still reconciling. Selling is temporarily unavailable.",
+        "positionTooSmall": "Position is below the minimum {min} shares required to sell.",
+        "belowMin": "Sell amount must be at least {min} shares (Polymarket minimum).",
+        "overMax": "Sell amount cannot exceed {max} shares.",
+        "willClearResidual": "Remaining {residual} shares are below the minimum; the backend may sell the full position. A small dust amount may remain after CLOB rounding.",
+        "willLeaveDust": "CLOB share precision is 0.01; a small dust amount of about {residual} shares may remain.",
+        "signing": "Signing…",
+        "selling": "Selling…",
+        "success": "Sell submitted: {shares} shares",
+        "failed": "Unable to sell position.",
+        "missingToken": "This position is missing token data and cannot be sold.",
+        "missingCondition": "This position is missing market data and cannot be sold.",
+        "balanceFailed": "Unable to load sellable balance."
+      }
     },
     "funding": {
       "deposit": {

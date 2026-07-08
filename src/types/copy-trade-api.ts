@@ -314,8 +314,9 @@ export interface CopyTargetsUpdateRequest {
 
 export interface CopySellRequest {
   token_id: string;
-  condition_id?: string;
+  condition_id: string;
   shares?: number;
+  sell_all?: boolean;
   max_slippage?: number;
   min_price?: number;
 }

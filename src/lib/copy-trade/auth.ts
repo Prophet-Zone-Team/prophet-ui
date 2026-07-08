@@ -9,8 +9,11 @@ import {
   createCopyTradeWallet,
   createCopyTradeWithdrawal,
   getCopyTradeWallet,
+  sellCopyTradePosition,
 } from "@/service/copy-trade/endpoints";
 import type {
+  CopySellRequest,
+  CopyTradeManualSellResult,
   CopyWallet,
   CreateCopyTradeUserRequest,
   UserWithCopyWallet,
@@ -208,6 +211,27 @@ export async function submitCopyTradeWithdrawalSigned(
   );
 
   return createCopyTradeWithdrawal(userId, body, signedConfig);
+}
+
+export async function submitCopyTradeSellSigned(
+  walletAddress: string,
+  userId: number,
+  body: CopySellRequest,
+): Promise<CopyTradeManualSellResult> {
+  const account = normalizeCopyTradeWalletAddress(walletAddress);
+  if (!account) {
+    throw new Error("Wallet address is required.");
+  }
+
+  const path = `/users/${userId}/copy-sell`;
+  const signedConfig = await buildCopyTradeSignedRequestConfig(
+    account,
+    "POST",
+    path,
+    body,
+  );
+
+  return sellCopyTradePosition(userId, body, signedConfig);
 }
 
 export async function verifyCopyTradeSessionCookie(
