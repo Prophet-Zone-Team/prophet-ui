@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, type MouseEvent } from "react";
+
 import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyIcon } from "@/components/icons";
 import { useTranslations } from "next-intl";
@@ -13,6 +15,7 @@ import { formatCompactVolume } from "@/lib/formatters/volume";
 import { formatShortWallet } from "@/lib/team/detail-format";
 import { getWalletAvatarGradient } from "@/lib/wallet/avatar-gradient";
 import type { TraderCatalogEntry } from "@/types/copy-trade-api";
+import { CopyTradeButton } from "@/views/copy-trade/copy-trade-button";
 import {
   SmartMoneyIcon,
   WhaleIcon
@@ -20,6 +23,10 @@ import {
 
 export interface TracksItemProps {
   trader: TraderCatalogEntry;
+  onCopyTrade?: (trader: TraderCatalogEntry) => void;
+  copyTradeBusy?: boolean;
+  copyTradeDisabled?: boolean;
+  copyTradeDisabledReason?: string | null;
   className?: string;
 }
 
@@ -66,16 +73,41 @@ function TraderTagIcon({ tag }: { tag: TraderTag }) {
   );
 }
 
-export function TracksItem({ trader, className }: TracksItemProps) {
+export function TracksItem({
+  trader,
+  onCopyTrade,
+  copyTradeBusy = false,
+  copyTradeDisabled = false,
+  copyTradeDisabledReason = null,
+  className
+}: TracksItemProps) {
   const tCommon = useTranslations("copyTrade.common");
+  const [mobileExpanded, setMobileExpanded] = useState(false);
   const displayName = trader.DisplayName?.trim();
   const walletLabel = formatShortWallet(trader.Wallet);
   const tag = traderTag(trader);
   const pnl24h = traderPnL24h(trader);
+  const isCopyButtonDisabled = copyTradeBusy || copyTradeDisabled;
+
+  const handleRowClick = (event: MouseEvent<HTMLElement>) => {
+    if (window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
+
+    if ((event.target as HTMLElement).closest("button")) {
+      return;
+    }
+
+    setMobileExpanded((prev) => !prev);
+  };
 
   return (
     <article
-      className={cn("flex items-center justify-between gap-3", className)}
+      className={cn(
+        "group flex cursor-pointer items-center justify-between gap-3 md:cursor-default",
+        className
+      )}
+      onClick={handleRowClick}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <TraderAvatar wallet={trader.Wallet} />
@@ -101,14 +133,37 @@ export function TracksItem({ trader, className }: TracksItemProps) {
         </div>
       </div>
 
-      <span
-        className={cn(
-          "shrink-0 text-[14px] leading-[18px] tabular-nums",
-          pnlToneClass(pnl24h)
-        )}
-      >
-        {formatPnl24h(pnl24h)}
-      </span>
+      <div className="relative min-w-[77px] shrink-0">
+        <span
+          className={cn(
+            "text-[14px] leading-[18px] tabular-nums",
+            pnlToneClass(pnl24h),
+            mobileExpanded && "invisible",
+            "md:group-hover:invisible"
+          )}
+        >
+          {formatPnl24h(pnl24h)}
+        </span>
+
+        <div
+          className={cn(
+            "absolute inset-0 hidden items-center justify-end",
+            mobileExpanded && "flex",
+            "md:group-hover:flex"
+          )}
+        >
+          <CopyTradeButton
+            busy={copyTradeBusy}
+            disabled={isCopyButtonDisabled}
+            disabledReason={copyTradeDisabledReason}
+            size="compact"
+            onClick={(event) => {
+              event.stopPropagation();
+              onCopyTrade?.(trader);
+            }}
+          />
+        </div>
+      </div>
     </article>
   );
 }

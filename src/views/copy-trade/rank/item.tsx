@@ -1,6 +1,5 @@
 "use client";
 
-import Popover from "@/components/popover";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import {
@@ -14,10 +13,8 @@ import {
 } from "@/lib/copy-trade/trader-rank-filters";
 import { formatCompactVolume } from "@/lib/formatters/volume";
 import type { TraderCatalogEntry } from "@/types/copy-trade-api";
-import { copyTradeTooltipClass } from "@/views/copy-trade/copy-trade-ui";
-import {
-  copyTradeTableMobileCardClass
-} from "@/views/copy-trade/copy-trade-ui";
+import { CopyTradeButton } from "@/views/copy-trade/copy-trade-button";
+import { copyTradeTableMobileCardClass } from "@/views/copy-trade/copy-trade-ui";
 import { CopyButton } from "@/components/feedback/copy-button";
 import { CopyIcon } from "@/components/icons";
 import { formatShortWallet } from "@/lib/team/detail-format";
@@ -281,57 +278,4 @@ export function CopyTradeRankItem({
       </div>
     </article>
   );
-}
-
-function CopyTradeButton({
-  busy,
-  disabled,
-  disabledReason,
-  onClick
-}: {
-  busy: boolean;
-  disabled: boolean;
-  disabledReason: string | null;
-  onClick: () => void;
-}) {
-  const tCommon = useTranslations("copyTrade.common");
-  const button = (
-    <button
-      type="button"
-      className={cn(
-        "inline-flex h-10 shrink-0 items-center justify-center rounded-lg text-[16px] leading-5",
-        "transition-opacity disabled:cursor-not-allowed",
-        busy
-          ? "w-[84px] border border-prophet-muted bg-transparent text-prophet-foreground opacity-50"
-          : cn(
-              "w-20 bg-prophet-primary text-prophet-primary-foreground hover:opacity-90",
-              disabled && "opacity-30 hover:opacity-30"
-            )
-      )}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {busy ? tCommon("copying") : tCommon("copy")}
-    </button>
-  );
-
-  if (disabled && disabledReason) {
-    return (
-      <Popover
-        placement="Top"
-        trigger="Hover"
-        offset={8}
-        contentClassName="z-[12]"
-        content={
-          <div className={copyTradeTooltipClass}>
-            {disabledReason}
-          </div>
-        }
-      >
-        <span className="inline-flex">{button}</span>
-      </Popover>
-    );
-  }
-
-  return button;
 }
