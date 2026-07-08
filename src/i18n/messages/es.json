@@ -1794,7 +1794,8 @@
         "avg": "Prom.",
         "current": "Actual",
         "value": "Valor",
-        "time": "Hora"
+        "time": "Hora",
+        "settlementTime": "Hora de liquidación"
       }
     },
     "activity": {
@@ -1844,6 +1845,7 @@
       "submit": "Importar billetera",
       "importing": "Importando billetera…",
       "success": "Billetera importada.",
+      "successAndTracked": "Billetera importada y trader seguido.",
       "unableToImport": "No se pudo importar la billetera."
     },
     "walletCopy": {

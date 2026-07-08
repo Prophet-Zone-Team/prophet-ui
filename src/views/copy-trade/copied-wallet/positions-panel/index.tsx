@@ -32,8 +32,13 @@ export interface CopyTradeCopiedWalletPositionsPanelProps {
   onClick?: MouseEventHandler<HTMLDivElement>;
 }
 
-function PositionsTableHeader() {
+function PositionsTableHeader({
+  status
+}: {
+  status: CopyWalletPositionStatus;
+}) {
   const t = useTranslations("copyTrade.copiedWallet.positions");
+  const timeLabel = status === "ended" ? t("settlementTime") : t("time");
 
   return (
     <div
@@ -46,7 +51,7 @@ function PositionsTableHeader() {
       <span>{t("avg")}</span>
       <span>{t("current")}</span>
       <span>{t("value")}</span>
-      <span className="justify-self-end text-right">{t("time")}</span>
+      <span className="justify-self-end text-right">{timeLabel}</span>
     </div>
   );
 }
@@ -155,14 +160,18 @@ export function CopyTradeCopiedWalletPositionsPanel({
       </div>
 
       <div className="mt-2 pb-1">
-        <PositionsTableHeader />
+        <PositionsTableHeader status={status} />
         {loading ? (
           <PositionsLoadingState />
         ) : error ? (
           <PositionsErrorState message={error} />
         ) : positions.length > 0 ? (
           positions.map((position) => (
-            <CopyWalletPositionRow key={position.id} position={position} />
+            <CopyWalletPositionRow
+              key={position.id}
+              position={position}
+              status={status}
+            />
           ))
         ) : (
           <PositionsEmptyState status={status} />

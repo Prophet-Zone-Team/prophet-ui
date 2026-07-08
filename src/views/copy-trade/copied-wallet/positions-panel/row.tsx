@@ -14,18 +14,25 @@ import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mob
 
 import { copyWalletPositionsGridClass } from "./grid";
 import { CopyWalletPositionMarketCell } from "./market-cell";
-import type { CopyWalletPositionDisplay } from "./types";
+import type {
+  CopyWalletPositionDisplay,
+  CopyWalletPositionStatus
+} from "./types";
 
 export interface CopyWalletPositionRowProps {
   position: CopyWalletPositionDisplay;
+  status: CopyWalletPositionStatus;
   className?: string;
 }
 
 export function CopyWalletPositionRow({
   position,
+  status,
   className
 }: CopyWalletPositionRowProps) {
   const t = useTranslations("copyTrade.copiedWallet.positions");
+  const timeFieldLabel =
+    status === "ended" ? t("settlementTime") : t("time");
   const pnlTone =
     position.cashPnl >= 0 ? "text-[#65AF14]" : "text-[#FF674B]";
   const timeLabel = formatShortDateMinuteFromIso(position.lastTradeAt) || "--";
@@ -95,7 +102,7 @@ export function CopyWalletPositionRow({
             </div>
           </PortfolioTableMobileField>
           <PortfolioTableMobileField
-            label={t("time")}
+            label={timeFieldLabel}
             valueClassName="font-normal text-prophet-muted"
           >
             {timeLabel}

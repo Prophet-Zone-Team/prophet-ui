@@ -1802,7 +1802,8 @@
         "avg": "平均",
         "current": "現在",
         "value": "価値",
-        "time": "時間"
+        "time": "時間",
+        "settlementTime": "決済時間"
       }
     },
     "activity": {
@@ -1852,6 +1853,7 @@
       "submit": "ウォレットをインポート",
       "importing": "ウォレットをインポート中…",
       "success": "ウォレットをインポートしました。",
+      "successAndTracked": "ウォレットをインポートし、トレーダーを追跡しました。",
       "unableToImport": "ウォレットをインポートできません。"
     },
     "walletCopy": {

@@ -1802,7 +1802,8 @@
         "avg": "평균",
         "current": "현재",
         "value": "가치",
-        "time": "시간"
+        "time": "시간",
+        "settlementTime": "정산 시간"
       }
     },
     "activity": {
@@ -1852,6 +1853,7 @@
       "submit": "지갑 가져오기",
       "importing": "지갑 가져오는 중…",
       "success": "지갑을 가져왔습니다.",
+      "successAndTracked": "지갑을 가져왔고 트레이더를 추적했습니다.",
       "unableToImport": "지갑을 가져올 수 없습니다."
     },
     "walletCopy": {

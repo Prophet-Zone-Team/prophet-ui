@@ -23,3 +23,14 @@ export function validateImportWalletAddress(
 
   return { ok: true, wallet: normalized };
 }
+
+export function isCatalogWalletAlreadyExistsError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("already exists") && message.includes("public catalog")
+  );
+}
