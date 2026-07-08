@@ -59,12 +59,6 @@ export function CopyTradeWithdrawDialog({
   }, [open]);
 
   useEffect(() => {
-    if (open && !recipient && withdraw.defaultRecipient) {
-      setRecipient(withdraw.defaultRecipient);
-    }
-  }, [open, withdraw.defaultRecipient, recipient]);
-
-  useEffect(() => {
     if (!open) {
       return;
     }
