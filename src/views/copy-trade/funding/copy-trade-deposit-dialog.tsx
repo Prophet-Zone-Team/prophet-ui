@@ -20,6 +20,7 @@ import { DepositStatusStep } from "@/views/copy-trade/funding/deposit-status-ste
 import type { CopyDepositStep } from "@/views/copy-trade/funding/types";
 import { DEFAULT_DEPOSIT_ASSET, POLYGON_NETWORK } from "@/lib/market/deposit-assets";
 import Big from "big.js";
+import { Loader2 } from "lucide-react";
 
 export interface CopyTradeDepositDialogProps {
   open: boolean;
@@ -230,7 +231,14 @@ export function CopyTradeDepositDialog({
           disabled={!selectedToken || !amount || Big(amount).lte(0) || deposit.balancesLoading}
           onClick={handleContinue}
         >
-          {tAuth("continue")}
+          {
+            deposit.balancesLoading && (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            )
+          }
+          <div className="">
+            {tAuth("continue")}
+          </div>
         </button>
       );
     }
