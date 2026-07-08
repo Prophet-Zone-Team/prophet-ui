@@ -1764,7 +1764,8 @@
         "avg": "AVG",
         "current": "Current",
         "value": "Value",
-        "time": "Time"
+        "time": "Time",
+        "settlementTime": "Settlement Time"
       }
     },
     "activity": {
@@ -1814,6 +1815,7 @@
       "submit": "Import Wallet",
       "importing": "Importing wallet…",
       "success": "Wallet imported.",
+      "successAndTracked": "Wallet imported and trader tracked.",
       "unableToImport": "Unable to import wallet."
     },
     "walletCopy": {

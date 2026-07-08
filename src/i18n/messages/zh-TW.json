@@ -1764,7 +1764,8 @@
         "avg": "均價",
         "current": "現價",
         "value": "價值",
-        "time": "時間"
+        "time": "時間",
+        "settlementTime": "結算時間"
       }
     },
     "activity": {
@@ -1814,6 +1815,7 @@
       "submit": "匯入錢包",
       "importing": "匯入錢包中…",
       "success": "錢包已匯入。",
+      "successAndTracked": "錢包已匯入並已追蹤交易者。",
       "unableToImport": "無法匯入錢包。"
     },
     "walletCopy": {

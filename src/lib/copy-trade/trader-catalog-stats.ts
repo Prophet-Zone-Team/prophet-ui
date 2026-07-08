@@ -8,6 +8,18 @@ export function isUserImportedTrader(trader: TraderCatalogEntry): boolean {
   return trader.Source === "user_imported";
 }
 
+export function findCatalogTraderByWallet(
+  traders: TraderCatalogEntry[],
+  wallet: string
+): TraderCatalogEntry | undefined {
+  const normalized = wallet.trim().toLowerCase();
+
+  return traders.find(
+    (trader) =>
+      trader.Wallet.toLowerCase() === normalized && !isUserImportedTrader(trader)
+  );
+}
+
 export function traderTag(trader: TraderCatalogEntry): TraderTag | "" {
   const tag = String(trader.Tag || "").toLowerCase();
   if (tag === "") {
