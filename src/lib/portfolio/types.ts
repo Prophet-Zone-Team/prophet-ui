@@ -15,6 +15,7 @@ export interface PortfolioTransactionRecord {
   price: string;
   size?: number;
   amount: string;
+  filledUsdc: string;
   marketName: string;
   teamName: string;
   slug: string;

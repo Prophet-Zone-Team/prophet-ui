@@ -41,12 +41,18 @@ const LOGIN_STEP_KEYS = {
 
 interface WalletMenuButtonProps {
   isPrivateMode?: boolean;
+  hideWalletFundingControls?: boolean;
   isMobileDrawerOpen: boolean;
   onMobileDrawerClose: () => void;
 }
 
 export function WalletMenuButton(props: WalletMenuButtonProps) {
-  const { isPrivateMode, isMobileDrawerOpen, onMobileDrawerClose } = props;
+  const {
+    isPrivateMode,
+    hideWalletFundingControls,
+    isMobileDrawerOpen,
+    onMobileDrawerClose
+  } = props;
 
   const menuRef = useRef<HTMLDivElement>(null);
   const {
@@ -204,6 +210,7 @@ export function WalletMenuButton(props: WalletMenuButtonProps) {
         onPrivateBalanceClick={() => handlePrivateBalanceClick()}
         onToggleMenu={() => setIsOpen((value) => !value)}
         isPrivateMode={isPrivateMode}
+        hideWalletFundingControls={hideWalletFundingControls}
       />
 
       <AnimatePresence>

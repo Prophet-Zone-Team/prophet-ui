@@ -9,7 +9,11 @@ import {
   getPortfolioPnlPeriodLabel,
 } from "@/lib/portfolio/portfolio-format";
 import { formatTeamDetailMoney } from "@/lib/team/detail-format";
-import type { PortfolioTimeRange } from "@/lib/portfolio/types";
+import type {
+  PortfolioLoadStatus,
+  PortfolioSeriesPoint,
+  PortfolioTimeRange,
+} from "@/lib/portfolio/types";
 import { portfolioSummaryLabelClass } from "@/views/portfolio/portfolio-ui";
 
 import { usePortfolioContext } from "./context";
@@ -19,22 +23,51 @@ import { usePortfolioUserPnl } from "./use-portfolio-user-pnl";
 
 const TIME_RANGES: PortfolioTimeRange[] = ["1D", "1W", "1M", "YTD", "All"];
 
-export interface PortfolioPerformanceChartProps {}
+export interface PortfolioPerformanceChartProps {
+  /** When set, skip remote fetch and render with this data. */
+  seriesOverride?: PortfolioSeriesPoint[];
+  /** Disable remote PnL fetch. Defaults to true when seriesOverride is provided. */
+  disableFetch?: boolean;
+}
 
-export function PortfolioPerformanceChart({}: PortfolioPerformanceChartProps) {
+export function PortfolioPerformanceChart({
+  seriesOverride,
+  disableFetch,
+}: PortfolioPerformanceChartProps) {
+  return (
+    <PortfolioPerformanceChartConnected
+      seriesOverride={seriesOverride}
+      disableFetch={disableFetch}
+    />
+  );
+}
+
+function PortfolioPerformanceChartConnected({
+  seriesOverride,
+  disableFetch,
+}: {
+  seriesOverride?: PortfolioSeriesPoint[];
+  disableFetch?: boolean;
+}) {
   const t = useTranslations("portfolio");
   const locale = useLocale();
   const { session } = usePortfolioContext();
   const polymarketAddress = session?.funderAddress ?? session?.walletAddress;
-
   const [range, setRange] = useState<PortfolioTimeRange>("All");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
-  const { series, status } = usePortfolioUserPnl(polymarketAddress, range);
+  const shouldFetch = disableFetch !== true && seriesOverride === undefined;
+  const { series: fetchedSeries, status: fetchedStatus } = usePortfolioUserPnl(
+    shouldFetch ? polymarketAddress : undefined,
+    range,
+  );
+  const series = seriesOverride ?? fetchedSeries;
+  const status: PortfolioLoadStatus =
+    seriesOverride !== undefined ? "ready" : fetchedStatus;
 
   useEffect(() => {
     setActiveIndex(null);
-  }, [range, polymarketAddress]);
+  }, [range, polymarketAddress, seriesOverride]);
 
   const displayIndex = useMemo(() => {
     if (series.length === 0) {

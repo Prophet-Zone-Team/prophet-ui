@@ -58,7 +58,7 @@ export function TeamLineupPanel({ teamName }: TeamLineupPanelProps) {
           ) : null}
         </div>
       </div>
-      <div className="p-4 bg-gradient-to-b from-[#e8f5e0] to-[#d4edc4] dark:from-[#1e2a1a] dark:to-[#243318]">
+      <div className="p-4 bg-gradient-to-b from-[#e8f5e0] to-[#d4edc4] dark:from-[rgba(255,255,255,0.06)] dark:to-[rgba(255,255,255,0.06)]">
         {isLoading ? (
           <LineupPitchSkeleton />
         ) : hasStarters && lineup ? (

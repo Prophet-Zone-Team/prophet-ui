@@ -258,6 +258,26 @@ export interface UserPositionRecord {
   negativeRisk: boolean;
 }
 
+export interface UserClosedPositionRecord {
+  proxyWallet: string;
+  asset: string;
+  conditionId: string;
+  avgPrice: number;
+  totalBought: number;
+  realizedPnl: number;
+  curPrice: number;
+  timestamp: number;
+  title: string;
+  slug: string;
+  icon?: string;
+  eventSlug?: string;
+  outcome: string;
+  outcomeIndex: number;
+  oppositeOutcome?: string;
+  oppositeAsset?: string;
+  endDate?: string;
+}
+
 export interface Team {
   id: string;
   name: string;

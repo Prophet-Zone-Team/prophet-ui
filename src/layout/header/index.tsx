@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import { WalletMenuButton } from "@/layout/header/wallet-menu-button";
 import NavBar from "./navigation-bar";
+import { shouldHideWalletFundingControls } from "./nav";
 import { useTranslations } from "next-intl";
 import { useDarkModeEnabled } from "@/store";
 
@@ -21,6 +22,11 @@ export function AppHeader() {
   const isPrivateMode = useMemo(() => {
     return [/^\/private/].some((reg) => reg.test(pathname));
   }, [pathname]);
+
+  const hideWalletFundingControls = useMemo(
+    () => shouldHideWalletFundingControls(pathname),
+    [pathname]
+  );
 
   const homeLink = useMemo(() => {
     let _homeLink = "/fifa";
@@ -77,6 +83,7 @@ export function AppHeader() {
 
         <WalletMenuButton
           isPrivateMode={isPrivateMode}
+          hideWalletFundingControls={hideWalletFundingControls}
           isMobileDrawerOpen={isMobileDrawerOpen}
           onMobileDrawerClose={() => setIsMobileDrawerOpen(false)}
         />

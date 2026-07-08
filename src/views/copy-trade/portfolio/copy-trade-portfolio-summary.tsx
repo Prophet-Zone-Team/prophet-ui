@@ -1,0 +1,90 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
+import { cn } from "@/lib/cn";
+import type { CopyWallet } from "@/types/copy-trade-api";
+import { CopyTradeWalletIdentity } from "@/views/copy-trade/user-profile/copy-trade-wallet-identity";
+import {
+  portfolioSummaryCardClass,
+  portfolioSummaryLabelClass,
+  portfolioSummaryValueMediumClass
+} from "@/views/portfolio/portfolio-ui";
+import { formatNumber } from "@/utils";
+
+import { CopyTradePortfolioPerformanceChart } from "./copy-trade-portfolio-performance-chart";
+
+export interface CopyTradePortfolioSummaryProps {
+  copyWallet: CopyWallet;
+  positionsValue: number | null;
+  openPositions: number | null;
+  biggestWinAmount: number | null;
+  isLoading?: boolean;
+  chartEnabled?: boolean;
+}
+
+export function CopyTradePortfolioSummary({
+  copyWallet,
+  positionsValue,
+  openPositions,
+  biggestWinAmount,
+  isLoading = false,
+  chartEnabled = true
+}: CopyTradePortfolioSummaryProps) {
+  const t = useTranslations("copyTrade.portfolio");
+  const displayAddress = copyWallet.CopyDepositWalletAddress;
+
+  return (
+    <section
+      className={cn(
+        portfolioSummaryCardClass,
+        "flex min-h-[278px] flex-col gap-6 lg:min-h-[278px] lg:h-auto"
+      )}
+      aria-label={t("summaryAria")}
+    >
+      <CopyTradeWalletIdentity address={displayAddress} size="lg" />
+
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
+        <div className="flex w-full flex-col justify-between gap-6 lg:w-1/2 lg:pr-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <div className={portfolioSummaryLabelClass}>{t("positionsValue")}</div>
+              <div
+                className={cn(
+                  portfolioSummaryValueMediumClass,
+                  isLoading && "animate-pulse opacity-60"
+                )}
+              >
+                {formatNumber(positionsValue ?? 0, 2, true, { round: 0, prefix: "$", isZeroPrecision: true })}
+              </div>
+            </div>
+            <div>
+              <div className={portfolioSummaryLabelClass}>{t("biggestWin")}</div>
+              <div className={portfolioSummaryValueMediumClass}>
+                {formatNumber(biggestWinAmount ?? 0, 0, true)}
+              </div>
+            </div>
+            <div>
+              <div className={portfolioSummaryLabelClass}>{t("predictions")}</div>
+              <div
+                className={cn(
+                  portfolioSummaryValueMediumClass,
+                  isLoading && "animate-pulse opacity-60"
+                )}
+              >
+                {formatNumber(openPositions ?? 0, 0, true)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="hidden w-px shrink-0 self-stretch bg-prophet-line lg:block"
+          aria-hidden="true"
+        />
+
+        <CopyTradePortfolioPerformanceChart enabled={chartEnabled} />
+      </div>
+    </section>
+  );
+}

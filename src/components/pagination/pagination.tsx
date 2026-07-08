@@ -17,6 +17,10 @@ export type PaginationProps = {
   total: number;
   onPageChange: (page: number) => void;
   className?: string;
+  /** When false, label shows only the current page and Last is hidden. */
+  showTotalPages?: boolean;
+  /** Used for Next disabled state when showTotalPages is false. */
+  hasMore?: boolean;
 };
 
 function PaginationNavButton({
@@ -57,12 +61,14 @@ function CompactPagination({
   total,
   onPageChange,
   className,
+  showTotalPages = true,
+  hasMore = false,
 }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const canGoPrevious = page > 1;
-  const canGoNext = page < totalPages;
+  const canGoNext = showTotalPages ? page < totalPages : hasMore;
   const canGoFirst = page > 1;
-  const canGoLast = page < totalPages;
+  const canGoLast = showTotalPages && page < totalPages;
 
   // if (total <= pageSize) {
   //   return null;
@@ -93,7 +99,7 @@ function CompactPagination({
       </PaginationNavButton>
 
       <span className="text-[12px] leading-[normal] text-[#909090]">
-        Page {page} / {totalPages}
+        {showTotalPages ? `Page ${page} / ${totalPages}` : `Page ${page}`}
       </span>
 
       <PaginationNavButton
@@ -104,13 +110,15 @@ function CompactPagination({
         <PaginationNextIcon />
       </PaginationNavButton>
 
-      <PaginationNavButton
-        label="Last page"
-        disabled={!canGoLast}
-        onClick={() => onPageChange(totalPages)}
-      >
-        <PaginationLastIcon />
-      </PaginationNavButton>
+      {showTotalPages ? (
+        <PaginationNavButton
+          label="Last page"
+          disabled={!canGoLast}
+          onClick={() => onPageChange(totalPages)}
+        >
+          <PaginationLastIcon />
+        </PaginationNavButton>
+      ) : null}
     </nav>
   );
 }

@@ -2,6 +2,15 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+// Keep in sync with src/config/copy-trade.ts — next.config runs in plain Node (no @/ aliases).
+// const copyTradeApiUpstream = (
+//   process.env.NEXT_PUBLIC_ENV === "production"
+//     ? "https://apicopy.prophet.zone"
+//     : "https://api.zerostrategy.fun"
+// ).replace(/\/$/, "");
+
+const copyTradeApiUpstream = "https://apicopy.prophet.zone";
+
 const isVercelBuild = process.env.VERCEL === "1";
 
 /** @type {import('next').NextConfig} */
@@ -75,6 +84,14 @@ const nextConfig = {
         source: "/landing/:path*",
         destination: "/referral/:path*",
         permanent: true
+      }
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/copy-trade/:path*",
+        destination: `${copyTradeApiUpstream}/:path*`
       }
     ];
   }

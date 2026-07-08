@@ -46,6 +46,7 @@ export interface ModalProps {
   overlayCloseable?: boolean;
   escapeCloseable?: boolean;
   closeButtonClassName?: string;
+  closeIconClassName?: string;
 }
 
 export function Modal({
@@ -59,6 +60,7 @@ export function Modal({
   overlayCloseable = true,
   escapeCloseable = true,
   closeButtonClassName,
+  closeIconClassName,
 }: ModalProps) {
   useEffect(() => {
     if (!open) {
@@ -112,7 +114,7 @@ export function Modal({
             aria-label="Close"
             onClick={onClose}
           >
-            <X className="h-4 w-4" aria-hidden="true" />
+            <X className={cn("h-4 w-4", closeIconClassName)} aria-hidden="true" />
           </button>
         ) : null}
         {children}
