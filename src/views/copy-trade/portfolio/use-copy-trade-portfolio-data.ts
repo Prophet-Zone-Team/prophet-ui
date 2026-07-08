@@ -14,6 +14,7 @@ import type { OpenOrderMarketContext } from "@/lib/portfolio/teams-condition";
 import type { PortfolioLoadStatus } from "@/lib/portfolio/types";
 import { getCopyTradePnL } from "@/service/copy-trade";
 import { useTeamsConditionStore } from "@/store/teams-condition-store";
+import type { CopyPositionPnL } from "@/types/copy-trade-api";
 import type { UserPositionRecord } from "@/types/market";
 
 import { copyTradePnLQueryKey } from "../use-copy-trade-profile-stats";
@@ -22,8 +23,11 @@ import { useCopyTradeSession } from "../use-copy-trade-session";
 export interface UseCopyTradePortfolioDataResult {
   openPositions: UserPositionRecord[];
   closedPositions: UserPositionRecord[];
+  rawOpenPositions: CopyPositionPnL[];
+  rawClosedPositions: CopyPositionPnL[];
   marketContextMap: Record<string, OpenOrderMarketContext>;
   positionTimeMap: Map<string, string>;
+  proxyWallet: string;
   status: PortfolioLoadStatus;
   error?: string;
   refetch: () => Promise<void>;
@@ -67,6 +71,16 @@ export function useCopyTradePortfolioData(
       mapCopyPositionPnLToClosedUserPositionRecord(row, { proxyWallet })
     );
   }, [pnlSummary?.history, proxyWallet]);
+
+  const rawOpenPositions = useMemo(
+    () => pnlSummary?.positions ?? [],
+    [pnlSummary?.positions]
+  );
+
+  const rawClosedPositions = useMemo(
+    () => pnlSummary?.history ?? [],
+    [pnlSummary?.history]
+  );
 
   const positionTimeMap = useMemo(() => {
     const rows = [
@@ -125,8 +139,11 @@ export function useCopyTradePortfolioData(
   return {
     openPositions,
     closedPositions,
+    rawOpenPositions,
+    rawClosedPositions,
     marketContextMap,
     positionTimeMap,
+    proxyWallet,
     status,
     error,
     refetch: async () => {

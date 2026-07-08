@@ -7,9 +7,10 @@ import { TabSwitcher } from "@/components/ui/tab-switcher";
 import { cn } from "@/lib/cn";
 import type { OpenOrderMarketContext } from "@/lib/portfolio/teams-condition";
 import type { PortfolioLoadStatus } from "@/lib/portfolio/types";
-import type { UserPositionRecord } from "@/types/market";
-import { PortfolioPositionsTable } from "@/views/portfolio/portfolio-positions-table";
+import type { CopyPositionPnL } from "@/types/copy-trade-api";
 import { portfolioActivityCardClass } from "@/views/portfolio/portfolio-ui";
+
+import { CopyTradePortfolioPositionsTable } from "./copy-trade-portfolio-positions-table";
 
 const COPY_TRADE_PORTFOLIO_TAB_IDS = ["position", "closed"] as const;
 
@@ -17,24 +18,32 @@ type CopyTradePortfolioTabId =
   (typeof COPY_TRADE_PORTFOLIO_TAB_IDS)[number];
 
 export interface CopyTradePortfolioActivityProps {
-  openPositions: UserPositionRecord[];
-  closedPositions: UserPositionRecord[];
+  rawOpenPositions: CopyPositionPnL[];
+  rawClosedPositions: CopyPositionPnL[];
   marketContextMap: Record<string, OpenOrderMarketContext>;
   positionTimeMap?: Map<string, string>;
+  proxyWallet?: string;
+  userId?: number;
+  walletAddress?: string;
   status: PortfolioLoadStatus;
   needsWallet: boolean;
   onConnectWallet: () => void;
+  onSellSuccess?: () => void | Promise<void>;
   className?: string;
 }
 
 export function CopyTradePortfolioActivity({
-  openPositions,
-  closedPositions,
+  rawOpenPositions,
+  rawClosedPositions,
   marketContextMap,
   positionTimeMap = new Map(),
+  proxyWallet = "",
+  userId,
+  walletAddress,
   status,
   needsWallet,
   onConnectWallet,
+  onSellSuccess,
   className
 }: CopyTradePortfolioActivityProps) {
   const t = useTranslations("copyTrade.portfolio");
@@ -49,7 +58,8 @@ export function CopyTradePortfolioActivity({
     [t, tPortfolio]
   );
 
-  const positions = tab === "position" ? openPositions : closedPositions;
+  const positions =
+    tab === "position" ? rawOpenPositions : rawClosedPositions;
   const loading = status === "loading" || status === "idle";
   const emptyPositionTitle =
     tab === "position"
@@ -80,14 +90,18 @@ export function CopyTradePortfolioActivity({
             {emptyPositionTitle}
           </p>
         ) : (
-          <PortfolioPositionsTable
+          <CopyTradePortfolioPositionsTable
             positions={positions}
             marketContextMap={marketContextMap}
             positionTimeMap={positionTimeMap}
+            userId={userId}
+            walletAddress={walletAddress}
+            proxyWallet={proxyWallet}
             needsWallet={needsWallet}
             loading={loading}
             readOnly={tab === "closed"}
             onConnectWallet={onConnectWallet}
+            onSellSuccess={onSellSuccess}
           />
         )}
       </div>

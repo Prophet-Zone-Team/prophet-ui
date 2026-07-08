@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { PageBack } from "@/components/ui/page-back";
@@ -12,7 +13,11 @@ import { useCopyTradeHydrated } from "@/store/use-copy-trade-hydrated";
 import { CreateTradeWalletModal } from "@/views/copy-trade/create-trade-wallet";
 import { openCopyTradeDeposit } from "@/store/copy-trade-funding-store";
 import { UserProfileEmptyState } from "@/views/copy-trade/user-profile/empty-state";
-import { useCopyTradeProfileStats } from "@/views/copy-trade/use-copy-trade-profile-stats";
+import {
+  copyTradePnLQueryKey,
+  useCopyTradeProfileStats,
+} from "@/views/copy-trade/use-copy-trade-profile-stats";
+import { useCopyTradeSession } from "@/views/copy-trade/use-copy-trade-session";
 import { portfolioPageClass } from "@/views/portfolio/portfolio-ui";
 
 import { CopyTradePortfolioActivity } from "./copy-trade-portfolio-activity";
@@ -29,8 +34,10 @@ function CopyTradePortfolioSkeleton() {
 }
 
 export function CopyTradePortfolioView() {
+  const queryClient = useQueryClient();
   const authHydrated = useAuthHydrated();
   const copyTradeHydrated = useCopyTradeHydrated();
+  const { userId, walletAddress } = useCopyTradeSession();
   const prophetWalletAddress = useAuthStore(
     (state) => state.session?.walletAddress
   );
@@ -48,12 +55,24 @@ export function CopyTradePortfolioView() {
     enabled: hasCopyWallet
   });
   const {
-    openPositions: openPositionRows,
-    closedPositions,
+    rawOpenPositions,
+    rawClosedPositions,
     marketContextMap,
     positionTimeMap,
-    status: positionsStatus
+    proxyWallet,
+    status: positionsStatus,
+    refetch: refetchPositions
   } = useCopyTradePortfolioData(hasCopyWallet);
+
+  const handleSellSuccess = async () => {
+    if (userId) {
+      await queryClient.invalidateQueries({
+        queryKey: copyTradePnLQueryKey(userId)
+      });
+    }
+
+    await refetchPositions();
+  };
 
   if (!authHydrated || !copyTradeHydrated) {
     return (
@@ -108,13 +127,17 @@ export function CopyTradePortfolioView() {
         />
 
         <CopyTradePortfolioActivity
-          openPositions={openPositionRows}
-          closedPositions={closedPositions}
+          rawOpenPositions={rawOpenPositions}
+          rawClosedPositions={rawClosedPositions}
           marketContextMap={marketContextMap}
           positionTimeMap={positionTimeMap}
+          proxyWallet={proxyWallet}
+          userId={userId}
+          walletAddress={walletAddress}
           status={positionsStatus}
           needsWallet={false}
           onConnectWallet={() => void openLogin()}
+          onSellSuccess={handleSellSuccess}
         />
       </div>
 
