@@ -12,7 +12,7 @@ const config: Config = {
           nav: "#667188",
           base: "var(--prophet-bg-base)",
           panel: "var(--prophet-bg-panel)",
-          "action-panel": "var(--prophet-bg-action-panel)",
+          "modal-panel": "var(--prophet-bg-modal-panel)",
           line: "var(--prophet-border)",
           foreground: "var(--prophet-text)",
           muted: "var(--prophet-text-muted)",

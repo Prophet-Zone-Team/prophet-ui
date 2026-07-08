@@ -9,7 +9,7 @@ export const privateTopupCardClass = cn(
 );
 
 export const privateTopupAccountCardClass = cn(
-  "rounded-[20px] border border-prophet-line bg-black",
+  "rounded-[20px] border border-prophet-line bg-black dark:bg-prophet-panel",
   "shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]",
 );
 
@@ -30,7 +30,7 @@ export const privateTopupPrimaryButtonClass = cn(
 );
 
 export const privateTopupTopUpButtonClass = cn(
-  "flex h-[50px] min-w-[115px] items-center justify-center rounded-[12px] bg-prophet-panel",
+  "flex h-[50px] min-w-[115px] items-center justify-center rounded-[12px] bg-prophet-panel dark:bg-prophet-primary",
   "text-base font-[400] text-prophet-foreground transition-opacity hover:opacity-90",
 );
 

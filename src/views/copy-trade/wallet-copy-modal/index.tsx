@@ -424,22 +424,22 @@ export function WalletCopyModal({
         escapeCloseable={!advancedModalOpen}
         overlayCloseable={!advancedModalOpen}
         className={cn(
-          "w-full max-w-[500px] rounded-[20px] border border-[#EBEBEB] bg-white",
+          "w-full max-w-[500px] rounded-[20px] border border-prophet-line bg-prophet-modal-panel",
           "p-5 shadow-[0px_0px_10px_rgba(0,0,0,0.1)]"
         )}
-        closeButtonClassName="right-5 top-5 border-0 bg-transparent text-[#909090] hover:bg-transparent hover:text-black"
+        closeButtonClassName="right-5 top-5 border-0 bg-transparent text-[#909090] hover:bg-transparent hover:text-black dark:hover:text-white"
       >
         <div className="flex flex-col gap-5">
           <header>
-            <h2 className="text-xl font-medium leading-[25px] text-black">
+            <h2 className="text-xl font-medium leading-[25px] text-prophet-foreground">
               {t("title")}
             </h2>
           </header>
 
           <section className="flex flex-col gap-2">
-            <p className="text-sm leading-[18px] text-black">{t("copyFrom")}</p>
-            <div className="box-border flex h-[104px] flex-col rounded-lg border border-[#EBEBEB] bg-white px-2 py-3">
-              <p className="truncate text-[14px] px-[8px] py-[11px] leading-[18px] text-black rounded-[6px] bg-[#F6F6F6]">
+            <p className="text-sm leading-[18px] text-prophet-foreground">{t("copyFrom")}</p>
+            <div className="box-border flex h-[104px] flex-col rounded-lg border border-prophet-line bg-prophet-panel px-2 py-3">
+              <p className="truncate text-[14px] px-[8px] py-[11px] leading-[18px] text-prophet-foreground rounded-[6px] bg-[#F6F6F6] dark:bg-prophet-panel">
                 {wallet}
               </p>
               <div className="mt-[10px] flex h-10 items-center px-2">
@@ -467,7 +467,7 @@ export function WalletCopyModal({
 
           <section className="flex flex-col gap-3">
             <div className="flex items-center gap-1.5">
-              <p className="text-sm leading-[18px] text-black">
+              <p className="text-sm leading-[18px] text-prophet-foreground">
                 {t("copyTradeRatio")}
               </p>
               <CopyTradeInfoTooltip content={<>{t("ratioTooltip")}</>} />
@@ -475,9 +475,9 @@ export function WalletCopyModal({
 
             <div className="flex flex-col gap-3">
               <div className="relative h-2.5">
-                <div className="absolute inset-0 rounded-md border border-[#EBEBEB] bg-[#EBEBEB]" />
+                <div className="absolute inset-0 rounded-md border border-prophet-line bg-[#EBEBEB]" />
                 <div
-                  className="absolute inset-y-0 left-0 rounded-md bg-black"
+                  className="absolute inset-y-0 left-0 rounded-md bg-prophet-primary"
                   style={{ width: `${form.ratio}%` }}
                 />
                 <input
@@ -493,7 +493,7 @@ export function WalletCopyModal({
                   aria-label={t("ariaCopyRatio")}
                 />
                 <div
-                  className="pointer-events-none absolute top-1/2 size-[18px] -translate-y-1/2 rounded-full border border-[#909090] bg-black"
+                  className="pointer-events-none absolute top-1/2 size-[18px] -translate-y-1/2 rounded-full border border-[#909090] bg-prophet-primary"
                   style={{ left: `calc(${form.ratio}% - 9px)` }}
                   aria-hidden="true"
                 />
@@ -509,8 +509,8 @@ export function WalletCopyModal({
                         "inline-flex h-[30px] min-w-[50px] items-center justify-center rounded-lg border px-2",
                         "text-sm leading-[18px] transition-colors",
                         form.ratio === preset
-                          ? "border-black bg-black text-white"
-                          : "border-[#EBEBEB] bg-white text-[#909090] hover:border-[#909090]"
+                          ? "border-prophet-primary bg-prophet-primary text-white"
+                          : "border-prophet-line bg-prophet-panelbg-white text-[#909090] hover:border-[#909090]"
                       )}
                       onClick={() => patchForm({ ratio: preset })}
                     >
@@ -518,7 +518,7 @@ export function WalletCopyModal({
                     </button>
                   ))}
                 </div>
-                <span className="text-lg leading-[23px] text-black tabular-nums">
+                <span className="text-lg leading-[23px] text-prophet-foreground tabular-nums">
                   {form.ratio}%
                 </span>
               </div>
@@ -543,13 +543,13 @@ export function WalletCopyModal({
           <button
             type="button"
             className={cn(
-              "flex w-full items-center justify-between gap-3 rounded-lg border border-[#EBEBEB]",
-              "bg-white px-3 py-3 text-left transition-colors hover:border-[#909090]"
+              "flex w-full items-center justify-between gap-3 rounded-lg border border-prophet-line",
+              "bg-prophet-panel px-3 py-3 text-left transition-colors hover:border-[#909090]"
             )}
             aria-label={t("openAdvancedSettings")}
             onClick={handleOpenAdvancedModal}
           >
-            <span className="text-sm leading-[18px] text-black">
+            <span className="text-sm leading-[18px] text-prophet-foreground">
               {t("advancedSetting")}
             </span>
             <ChevronRight
@@ -595,7 +595,7 @@ export function WalletCopyModal({
           <button
             type="button"
             className={cn(
-              "flex h-[50px] w-full items-center justify-center rounded-lg bg-black",
+              "flex h-[50px] w-full items-center justify-center rounded-lg bg-prophet-primary",
               "text-base leading-5 text-white transition-opacity hover:opacity-90",
               "disabled:cursor-not-allowed disabled:opacity-50"
             )}
@@ -650,7 +650,7 @@ function StatCell({
       <p
         className={cn(
           "truncate text-[14px] leading-[18px] tabular-nums",
-          valueClassName ?? "text-black"
+          valueClassName ?? "text-prophet-foreground"
         )}
       >
         {value}

@@ -89,7 +89,7 @@ export function SignalFeed({ items, className }: SignalFeedProps) {
       ref={containerRef}
       className={cn(
         "group relative w-full min-w-0 overflow-hidden md:w-[75%]",
-        "before:pointer-events-none before:absolute before:inset-y-0 before:right-0 before:z-[1] before:w-16 before:bg-gradient-to-l before:from-prophet-action-panel before:to-transparent",
+        "before:pointer-events-none before:absolute before:inset-y-0 before:right-0 before:z-[1] before:w-16 before:bg-gradient-to-l before:from-prophet-panel before:to-transparent",
         className
       )}
       aria-label={t("relatedSignals")}

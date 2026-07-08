@@ -33,6 +33,7 @@ import { useTranslations } from "next-intl";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useLocalizedTeamRegion } from "@/hooks/i18n/use-localized-team-region";
 import { MarketBookmarkControl } from "@/views/home/winner/market-bookmark-control";
+import { useDarkModeEnabled } from "@/store";
 
 export interface MarketListItemProps {
   snapshot: TeamMarketSnapshot;
@@ -103,6 +104,7 @@ export function MarketListItem({
   isLoading = false,
   navigationDisabled = false
 }: MarketListItemProps) {
+  const darkModeEnabled = useDarkModeEnabled();
   const router = useRouter();
   const t = useTranslations("home");
   const { team, market } = snapshot;
@@ -178,7 +180,7 @@ export function MarketListItem({
         "max-lg:flex-col max-lg:items-stretch max-lg:gap-4 max-lg:py-3"
       )}
       style={{
-        background: homeMarketListRowBackground(changePercent)
+        background: homeMarketListRowBackground(changePercent, { darkModeEnabled })
       }}
     >
       <div className="flex w-full items-center gap-[20px] max-lg:justify-between max-lg:gap-3 lg:w-2/5">

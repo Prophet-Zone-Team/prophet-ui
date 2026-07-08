@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 import { useFundingOverlayLayout } from "@/views/portfolio/shared/funding-responsive-overlay";
 
 export const fundingModalCardClass = cn(
-  "flex w-full flex-col overflow-hidden rounded-[20px] border border-prophet-line bg-prophet-panel",
+  "flex w-full flex-col overflow-hidden rounded-[20px] border border-prophet-line bg-prophet-modal-panel",
   "shadow-[0px_0px_10px_0px_rgba(0,0,0,0.1)]"
 );
 

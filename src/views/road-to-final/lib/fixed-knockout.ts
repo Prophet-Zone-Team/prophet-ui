@@ -36,6 +36,8 @@ export const CONFIRMED_KNOCKOUT_WINNERS: KnockoutWinners = {
   90: "morocco", // R16: Canada vs Morocco — Morocco advances (feeds W90 → QF M97)
   91: "norway", // R16: Brazil vs Norway — Norway advances (feeds W91 → QF M99)
   92: "england", // R16: Mexico vs England — England advances (feeds W92 → QF M99)
+  93: "spain", // R16: Portugal vs Spain — Spain advances (feeds W93 → QF M98)
+  94: "belgium", // R16: USA vs Belgium — Belgium advances (feeds W94 → QF M98)
 };
 
 export const FIXED_KNOCKOUT_WINNERS: KnockoutWinners = CONFIRMED_KNOCKOUT_WINNERS;

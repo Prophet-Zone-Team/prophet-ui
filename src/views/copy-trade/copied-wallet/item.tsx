@@ -143,7 +143,7 @@ function ActionButton({
       type="button"
       className={cn(
         "inline-flex size-10 shrink-0 items-center justify-center rounded-lg",
-        "border border-[#EBEBEB] bg-white text-[#909090] transition-opacity",
+        "border border-prophet-line bg-prophet-panel text-[#909090] transition-opacity",
         "hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-40"
       )}
       aria-label={label}
@@ -253,7 +253,7 @@ export function CopyTradeCopiedWalletItem({
     return (
       <div
         className={cn(
-          "overflow-hidden rounded-xl border border-[#EBEBEB] bg-white",
+          "overflow-hidden rounded-xl border border-prophet-line bg-prophet-panel",
           className
         )}
       >
@@ -317,14 +317,14 @@ export function CopyTradeCopiedWalletItem({
   return (
     <div
       className={cn(
-        "col-span-full overflow-hidden rounded-xl border border-[#EBEBEB] bg-white",
+        "col-span-full overflow-hidden rounded-xl border border-prophet-line bg-prophet-panel",
         className
       )}
     >
       <article
         style={copyTradeCopiedWalletGridStyle}
         className={cn(
-          "box-border h-[74px] cursor-pointer px-4 transition-colors hover:bg-[#FAFAFA]",
+          "box-border h-[74px] cursor-pointer px-4 transition-colors hover:bg-prophet-hover",
           copyTradeCopiedWalletRowGridClass
         )}
         {...rowKeyHandlers}
@@ -343,7 +343,7 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[16px] leading-5 text-black"
+            "text-[16px] leading-5 text-prophet-foreground"
           )}
         >
           {formatMoneyOrDash(stats?.totalBuy)}
@@ -351,7 +351,7 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[16px] leading-5 text-black"
+            "text-[16px] leading-5 text-prophet-foreground"
           )}
         >
           {formatMoneyOrDash(stats?.totalSell)}
@@ -378,7 +378,7 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[14px] leading-[18px] text-black"
+            "text-[14px] leading-[18px] text-prophet-foreground"
           )}
         >
           {lastTradeLabel}
@@ -445,7 +445,7 @@ function WalletIdentityBlock({
           offset={8}
           contentClassName="z-[70]"
           content={
-            <div className="max-w-[280px] rounded-lg border border-[#EBEBEB] bg-white px-3 py-2 text-xs leading-[150%] text-[#d1a00f] shadow-[0px_0px_10px_rgba(0,0,0,0.1)]">
+            <div className="max-w-[280px] rounded-lg border border-prophet-line bg-prophet-panel px-3 py-2 text-xs leading-[150%] text-[#d1a00f] shadow-[0px_0px_10px_rgba(0,0,0,0.1)]">
               {capDetail}
             </div>
           }
@@ -463,7 +463,7 @@ function WalletIdentityBlock({
       <TraderAvatar wallet={wallet} />
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
-          <p className="max-w-[160px] truncate text-[16px] leading-5 text-black">
+          <p className="max-w-[160px] truncate text-[16px] leading-5 text-prophet-foreground">
             {displayName}
           </p>
           {imported ? (

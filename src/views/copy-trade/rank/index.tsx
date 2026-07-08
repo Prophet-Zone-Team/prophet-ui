@@ -210,7 +210,7 @@ export function CopyTradeRankPanel({
       <div
         style={copyTradeRankGridStyle}
         className={cn(
-          "mt-3 hidden gap-y-2 md:grid",
+          "mt-5 hidden gap-y-2 md:grid",
           copyTradeRankTableGridClass
         )}
         aria-label={t("ariaList")}

@@ -46,8 +46,9 @@ export const homeBidButtonClass = cn(
   "text-[14px] font-[500] leading-[17px] text-white disabled:cursor-wait disabled:opacity-70"
 );
 
-export function homeMarketListRowBackground(changePercent: number): string {
+export function homeMarketListRowBackground(changePercent: number, options?: { darkModeEnabled?: boolean; }): string {
+  const { darkModeEnabled = false } = options || {};
   return changePercent >= 0
-    ? "linear-gradient(90deg, rgba(220, 255, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), var(--prophet-bg-panel)"
-    : "linear-gradient(90deg, rgba(255, 181, 181, 0.20) 0%, rgba(255, 255, 255, 0.20) 38.67%), var(--prophet-bg-panel)";
+    ? `linear-gradient(90deg, rgba(220, 255, 181, 0.20) 0%, ${darkModeEnabled ? "rgba(23, 23, 26, 0.20) 38.67%" : "rgba(255, 255, 255, 0.20) 38.67%"}), var(--prophet-bg-panel)`
+    : `linear-gradient(90deg, rgba(255, 181, 181, 0.20) 0%, ${darkModeEnabled ? "rgba(23, 23, 26, 0.20) 38.67%" : "rgba(255, 255, 255, 0.20) 38.67%"}), var(--prophet-bg-panel)`;
 }
