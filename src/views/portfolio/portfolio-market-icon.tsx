@@ -57,7 +57,6 @@ function PortfolioMarketImageIcon({
     <img
       src={src}
       alt=""
-      crossOrigin="anonymous"
       className={cn("h-5 w-5 shrink-0 rounded-[2px] object-cover", className)}
       onError={fallbackOnError ? () => setFailed(true) : undefined}
     />
