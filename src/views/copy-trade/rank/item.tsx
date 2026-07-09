@@ -4,7 +4,6 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import {
   isUserImportedTrader,
-  traderPnL7d,
   traderTag
 } from "@/lib/copy-trade/trader-catalog-stats";
 import {
@@ -101,15 +100,6 @@ export function CopyTradeRankItem({
       : pnlValue >= 0
         ? "text-[#65AF14]"
         : "text-[#FF674B]";
-  const pnl7d = traderPnL7d(trader);
-  const pnl7dValue = pnl7d ?? 0;
-  const pnl7dTone =
-    pnl7d === null
-      ? "text-prophet-muted"
-      : pnl7dValue >= 0
-        ? "text-[#65AF14]"
-        : "text-[#FF674B]";
-
   if (layout === "mobile") {
     return (
       <article
@@ -144,12 +134,6 @@ export function CopyTradeRankItem({
           </PortfolioTableMobileField>
           <PortfolioTableMobileField label={t("predictions")}>
             {formatStatValue(stats.trades, (value) => String(value))}
-          </PortfolioTableMobileField>
-          <PortfolioTableMobileField
-            label={t("pnl7d")}
-            valueClassName={pnl7dTone}
-          >
-            {formatStatValue(pnl7d, formatSignedCompactUsd)}
           </PortfolioTableMobileField>
         </div>
 
@@ -253,15 +237,6 @@ export function CopyTradeRankItem({
         )}
       >
         {formatStatValue(stats.trades, (value) => String(value))}
-      </span>
-      <span
-        className={cn(
-          copyTradeRankColStatClass,
-          "text-[16px] leading-5 tabular-nums",
-          pnl7dTone
-        )}
-      >
-        {formatStatValue(pnl7d, formatSignedCompactUsd)}
       </span>
 
       <div className={copyTradeRankColActionClass}>
