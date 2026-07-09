@@ -94,7 +94,7 @@ function TransactionValueDisplay({
   const amountLabel = formatTeamDetailMoney(Number(transaction.amount));
   const isTrade =
     transaction.type === "buy" || transaction.type === "sell";
-  const filledUsdc = transaction.filledUsdc.trim();
+  const filledUsdc = transaction.filledUsdc?.trim() ?? "";
   const filledUsdcValue = Number(filledUsdc);
   const showFilledUsdc =
     isTrade &&

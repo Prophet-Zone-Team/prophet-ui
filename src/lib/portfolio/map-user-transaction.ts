@@ -114,6 +114,7 @@ export function mapProphetUserTransaction(
     price: row.price?.trim() || "0",
     size,
     amount: resolveTransactionAmount(row, type, size),
+    filledUsdc: row.filled_usdc?.trim() || "",
     marketName: row.market_name?.trim() || "—",
     teamName: row.team_name?.trim() || "",
     slug: row.slug?.trim() || "",
