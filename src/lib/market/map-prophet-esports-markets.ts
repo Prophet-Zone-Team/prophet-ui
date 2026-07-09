@@ -257,6 +257,130 @@ function parseHandicapLineKey(title: string): string | undefined {
   return match?.[0];
 }
 
+function parseHandicapSlugLineKey(
+  slug: string,
+): { side: "home" | "away"; line: number; lineKey: string } | undefined {
+  const match = slug.match(/game-handicap-(home|away)-(\d+)pt5$/i);
+
+  if (!match) {
+    return undefined;
+  }
+
+  const side = match[1]!.toLowerCase() as "home" | "away";
+  const line = Number(`${match[2]}.5`);
+
+  return {
+    side,
+    line,
+    lineKey: `${side}:${line}`,
+  };
+}
+
+function parseHandicapTitleTeams(title: string): string[] | undefined {
+  const match = title.match(
+    /game handicap:\s*(.+?)\s*\([+-][\d.]+\)\s*vs\s*(.+?)\s*\([+-][\d.]+\)/i,
+  );
+
+  if (!match) {
+    return undefined;
+  }
+
+  return [match[1]!.trim(), match[2]!.trim()];
+}
+
+function formatHandicapLineLabel(lineKey: string): string {
+  const keyMatch = lineKey.match(/^(?:home|away):([\d.]+)$/);
+
+  if (keyMatch) {
+    return keyMatch[1]!;
+  }
+
+  const numeric = Number(lineKey);
+
+  if (Number.isFinite(numeric)) {
+    return String(numeric);
+  }
+
+  const signed = lineKey.match(/[+-]?([\d.]+)/);
+  return signed?.[1] ?? lineKey;
+}
+
+function buildHandicapOutcomes(
+  market: ProphetMarketInput,
+  homeName: string,
+  awayName: string,
+): FixtureMarketOutcome[] {
+  const title = market.groupItemTitle?.trim() ?? "";
+  const slug = market.slug?.trim() ?? "";
+  const prices = parseGammaArrayField(market.outcomePrices);
+  const tokenIds = parseGammaArrayField(market.clobTokenIds).map(String);
+  const titleTeams = parseHandicapTitleTeams(title);
+  const slugLine = parseHandicapSlugLineKey(slug);
+  const volume = parseVolume(market.volume);
+  const conditionId = market.conditionId ?? market.slug ?? "unknown";
+
+  if (tokenIds.length < 2) {
+    return [];
+  }
+
+  const outcomes: FixtureMarketOutcome[] = [];
+
+  for (let index = 0; index < 2; index += 1) {
+    const tokenId = tokenIds[index];
+
+    if (!tokenId) {
+      continue;
+    }
+
+    let side: "home" | "away" | undefined;
+
+    if (slugLine) {
+      const firstOutcomeSide: "home" | "away" =
+        slugLine.side === "away" ? "home" : "away";
+      side =
+        index === 0
+          ? firstOutcomeSide
+          : firstOutcomeSide === "home"
+            ? "away"
+            : "home";
+    } else {
+      const label = titleTeams?.[index];
+      side = label
+        ? classifyTeamSide(label, homeName, awayName)
+        : index === 0
+          ? "home"
+          : "away";
+    }
+
+    if (!side) {
+      continue;
+    }
+
+    const rawPrice = toGammaNumber(prices[index]);
+    const probability = priceToProbability(rawPrice) ?? 0;
+    const displayLabel =
+      side === "home" ? abbreviateTeamName(homeName) : abbreviateTeamName(awayName);
+
+    outcomes.push({
+      id: `esports_handicap:${side}:${conditionId}`,
+      marketType: "esports_handicap",
+      category: "lines",
+      label: displayLabel,
+      side,
+      probability,
+      price: resolveOutcomePrice(probability, rawPrice),
+      volume,
+      tokenId,
+      conditionId: market.conditionId,
+      yesAsk: rawPrice,
+      yesBid: rawPrice,
+      acceptingOrders: market.acceptingOrders === true,
+    });
+  }
+
+  return outcomes;
+}
+
 function classifyEsportsMarket(
   market: ProphetMarketInput,
   fixtureSlug: string,
@@ -306,14 +430,20 @@ function classifyEsportsMarket(
     normalizedTitle.includes("game handicap") ||
     normalizedSlug.includes("game-handicap")
   ) {
-    const lineKey = parseHandicapLineKey(title);
-    const handicapValue = lineKey ? Math.abs(Number(lineKey)) : 0;
+    const slugLine = parseHandicapSlugLineKey(slug);
+    const titleLineKey = parseHandicapLineKey(title);
+    const handicapValue = slugLine?.line ?? (titleLineKey ? Math.abs(Number(titleLineKey)) : 0);
+    const sideOffset = slugLine?.side === "away" ? 40 : 0;
+
     return {
       market,
       kind: "game_handicap",
-      sortOrder: 200 + handicapValue,
+      sortOrder: 200 + sideOffset + handicapValue * 10,
       marketType: "esports_handicap",
-      lineKey: lineKey ?? String(handicapValue),
+      lineKey:
+        slugLine?.lineKey ??
+        titleLineKey ??
+        String(handicapValue),
     };
   }
 
@@ -375,10 +505,11 @@ function mapClassifiedMarketToCard(
 
   if (
     marketType === "esports_match_winner" ||
-    marketType === "esports_game_winner" ||
-    marketType === "esports_handicap"
+    marketType === "esports_game_winner"
   ) {
     outcomes = buildDualTeamOutcomes(market, marketType, homeName, awayName);
+  } else if (marketType === "esports_handicap") {
+    outcomes = buildHandicapOutcomes(market, homeName, awayName);
   } else if (marketType === "total" && kind === "kill_total") {
     const line = lineKey ? Number(lineKey) : 0;
     outcomes = buildDualOverUnderOutcomes(market, line, "total");
@@ -437,6 +568,17 @@ export function mapProphetEsportsMarkets(
 
 function sortLineKeys(keys: string[]): string[] {
   return [...keys].sort((left, right) => {
+    const leftHandicap = left.match(/^(home|away):([\d.]+)$/);
+    const rightHandicap = right.match(/^(home|away):([\d.]+)$/);
+
+    if (leftHandicap && rightHandicap) {
+      if (leftHandicap[1] !== rightHandicap[1]) {
+        return leftHandicap[1] === "home" ? -1 : 1;
+      }
+
+      return Number(leftHandicap[2]) - Number(rightHandicap[2]);
+    }
+
     const leftNum = Number(left);
     const rightNum = Number(right);
 
@@ -561,7 +703,7 @@ export function buildEsportsMarketSections(
     "esportsGameHandicap",
     "home_away",
     cards.filter((card) => card.marketKind === "game_handicap"),
-    (lineKey) => lineKey,
+    (lineKey) => formatHandicapLineLabel(lineKey),
   );
   if (handicapGroup) {
     seriesGroups.push(handicapGroup);

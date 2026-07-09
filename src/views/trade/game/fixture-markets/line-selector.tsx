@@ -29,6 +29,9 @@ export function LineSelector({
     >
       {options.map((option) => {
         const isActive = option.key === value;
+        const isCompactLabel =
+          typeof option.label === "number" ||
+          (typeof option.label === "string" && option.label.length <= 4);
 
         if (variant === "pill") {
           return (
@@ -37,7 +40,10 @@ export function LineSelector({
               type="button"
               onClick={() => onChange(option.key)}
               className={cn(
-                "border bg-transparent w-[40px] md:w-[52px] h-[40px] md:h-[56px] flex items-center justify-center transition-colors rounded-[8px]",
+                "border bg-transparent flex items-center justify-center transition-colors rounded-[8px]",
+                isCompactLabel
+                  ? "w-[40px] md:w-[52px] h-[40px] md:h-[56px]"
+                  : "min-w-[40px] h-[40px] md:h-[56px] px-2",
                 isActive
                   ? "border-prophet-line text-base md:text-[18px] font-[500] text-prophet-foreground bg-prophet-panel"
                   : "border-transparent text-xs md:text-[14px] font-[400] text-[#909090] hover:text-prophet-foreground"

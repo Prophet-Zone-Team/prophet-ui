@@ -94,6 +94,28 @@ const sampleMarkets: ProphetPolyMarketMarket[] = [
     acceptingOrders: true,
   },
   {
+    slug: "lol-blg-hle1-2026-07-09-game-handicap-away-1pt5",
+    groupItemTitle: "Game Handicap: BLG (-1.5) vs Hanwha Life Esports (+1.5)",
+    outcomePrices: '["0.66", "0.34"]',
+    clobTokenIds:
+      '["11111111111111111111111111111111111111111111111111111111111111111111", "22222222222222222222222222222222222222222222222222222222222222222222"]',
+    conditionId:
+      "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    volume: "1200.5",
+    acceptingOrders: true,
+  },
+  {
+    slug: "lol-blg-hle1-2026-07-09-game-handicap-away-2pt5",
+    groupItemTitle: "Game Handicap: BLG (-2.5) vs Hanwha Life Esports (+2.5)",
+    outcomePrices: '["0.41", "0.59"]',
+    clobTokenIds:
+      '["33333333333333333333333333333333333333333333333333333333333333333333", "44444444444444444444444444444444444444444444444444444444444444444444"]',
+    conditionId:
+      "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    volume: "980.25",
+    acceptingOrders: true,
+  },
+  {
     slug: "lol-blg-hle1-2026-07-09-game1-first-blood",
     groupItemTitle: "First Blood in Game 1?",
     outcomePrices: '["0.49", "0.51"]',
@@ -158,7 +180,7 @@ describe("map-prophet-esports-markets", () => {
       FIXTURE_SLUG,
     );
 
-    assert.equal(cards.length, 11);
+    assert.equal(cards.length, 13);
     assert.ok(!cards.some((card) => card.title.includes("Baron")));
     assert.ok(cards.some((card) => card.marketKind === "first_blood"));
     assert.ok(cards.some((card) => card.marketKind === "kill_total"));
@@ -192,7 +214,27 @@ describe("map-prophet-esports-markets", () => {
     );
 
     const handicap = series?.groups.find((group) => group.kind === "game_handicap");
-    assert.equal(handicap?.lineOptions.length, 2);
+    assert.equal(handicap?.lineOptions.length, 4);
+    assert.deepEqual(
+      handicap?.lineOptions.map((option) => option.key),
+      ["home:1.5", "home:2.5", "away:1.5", "away:2.5"],
+    );
+    assert.deepEqual(
+      handicap?.lineOptions.map((option) => option.label),
+      ["1.5", "2.5", "1.5", "2.5"],
+    );
+
+    const homeHandicapAwayLine = handicap?.outcomesByLine["home:1.5"];
+    assert.deepEqual(
+      homeHandicapAwayLine?.map((outcome) => outcome.side),
+      ["away", "home"],
+    );
+
+    const awayHandicapHomeLine = handicap?.outcomesByLine["away:1.5"];
+    assert.deepEqual(
+      awayHandicapHomeLine?.map((outcome) => outcome.side),
+      ["home", "away"],
+    );
 
     const totalGames = series?.groups.find((group) => group.kind === "total_games");
     assert.equal(totalGames?.lineOptions.length, 2);
