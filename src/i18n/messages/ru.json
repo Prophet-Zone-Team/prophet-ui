@@ -1580,6 +1580,7 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, one {# участие} few {# участия} many {# участий} other {# участий}}",
     "entryStructureMaxNote": "Максимум 5 участий на человека",
+    "entryStructureMaxNoteReadMore": "Подробнее",
     "campaignRulesTitle": "Prophet World Cup $10K Bracket Challenge",
     "campaignRulesIntro": "Предскажите путь. Подкрепите выбор на Prophet. Выиграйте $10,000. Создайте полную сетку ЧМ, подкрепите прогнозы реальными позициями — самая точная сетка получит главный приз. Без розыгрыша. Без удачи. Только навык прогнозирования.",
     "campaignRulesHowToPlayTitle": "Как участвовать",
