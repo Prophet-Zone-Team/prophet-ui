@@ -906,7 +906,8 @@ export function resolveLiveChartModeFromKind(
     chartKind === "exact_score" ||
     chartKind === "team_to_advance" ||
     chartKind === "extra_time" ||
-    chartKind === "penalty_shootout"
+    chartKind === "penalty_shootout" ||
+    chartKind === "esports_group"
     ? "binary"
     : "ternary";
 }

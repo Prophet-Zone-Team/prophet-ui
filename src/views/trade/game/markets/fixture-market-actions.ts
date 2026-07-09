@@ -101,7 +101,8 @@ function isSingleOutcomeBinaryMarket(
   return (
     marketType === "extra_time" ||
     marketType === "penalty_shootout" ||
-    marketType === "btts"
+    marketType === "btts" ||
+    marketType === "esports_prop"
   );
 }
 

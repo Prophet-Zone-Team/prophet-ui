@@ -3,12 +3,22 @@ import {
   sortFixtureGroupOutcomes,
 } from "@/lib/market/build-fixture-markets-snapshot";
 import { findFixtureGroupByType } from "@/views/trade/game/markets/fixture-market-actions";
+import { collectEsportsFixtureOutcomes } from "@/lib/market/map-prophet-esports-markets";
 import type { GameMarketTabId } from "@/views/trade/game/markets/fixture-market-actions";
 import type {
   FixtureMarketGroup,
   FixtureMarketOutcome,
   GameFixtureMarketsSnapshot,
 } from "@/types/market";
+
+function collectEsportsFixtureOutcomesFromSnapshot(
+  fixtureMarkets: GameFixtureMarketsSnapshot,
+): FixtureMarketOutcome[] {
+  return collectEsportsFixtureOutcomes(
+    fixtureMarkets.esportsSections,
+    fixtureMarkets.esportsMarkets,
+  );
+}
 
 function collectAllOutcomesForLineGroup(
   group: FixtureMarketGroup,
@@ -54,6 +64,18 @@ export function resolveAllFixtureOutcomes(
 
   if (spreadGroup) {
     addUniqueOutcomes(byId, collectAllOutcomesForLineGroup(spreadGroup));
+  }
+
+  if (fixtureMarkets.esportsSections?.length) {
+    addUniqueOutcomes(
+      byId,
+      collectEsportsFixtureOutcomesFromSnapshot(fixtureMarkets),
+    );
+  } else if (fixtureMarkets.esportsMarkets?.length) {
+    addUniqueOutcomes(
+      byId,
+      fixtureMarkets.esportsMarkets.flatMap((card) => card.outcomes),
+    );
   }
 
   return [...byId.values()];

@@ -18,6 +18,7 @@ import { RelatedGames } from "@/views/trade/related-games";
 import { gameContentClass } from "@/views/trade/game/ui";
 import { useGameTradingMetadata } from "@/views/trade/game/use-game-trading-metadata";
 import { isGameMarketWsEnabled } from "@/lib/market/live-match";
+import { isEsportsGameSlug } from "@/lib/market/esports-game";
 import { isGameClosedForTrading } from "@/lib/market/trading-market-status";
 import { useFormatOutcomeButtonDisplay } from "@/hooks/market/use-format-outcome-button-display";
 import { useMatchWithLiveState } from "@/store/match-live-store";
@@ -84,11 +85,12 @@ export default function TradeGameView({
 
   const liveMatch = useMatchWithLiveState(match);
   const marketWsEnabled = isGameMarketWsEnabled(liveMatch);
+  const isEsportsGame = isEsportsGameSlug(match.id);
 
   const canTrade =
-    activeMarketTab !== "stats" &&
-    isTabTradingReady(activeMarketTab) &&
-    loadingTab !== activeMarketTab &&
+    (isEsportsGame || activeMarketTab !== "stats") &&
+    (isEsportsGame || isTabTradingReady(activeMarketTab)) &&
+    (isEsportsGame || loadingTab !== activeMarketTab) &&
     !isGameClosedForTrading(liveMatch, gameSnapshot.market.closed);
 
   const handleMarketTabChange = (tab: GameMarketTabId) => {

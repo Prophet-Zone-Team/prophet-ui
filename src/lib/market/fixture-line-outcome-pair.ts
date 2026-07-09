@@ -2,6 +2,7 @@ import {
   getFixtureOutcomesForGroup,
   sortFixtureGroupOutcomes,
 } from "@/lib/market/build-fixture-markets-snapshot";
+import { resolveEsportsOutcomePair } from "@/lib/market/map-prophet-esports-markets";
 import type {
   FixtureMarketOutcome,
   GameFixtureMarketsSnapshot,
@@ -21,7 +22,10 @@ export function isLineDualOutcomeMarket(
   return (
     outcome.marketType === "spread" ||
     outcome.marketType === "total" ||
-    outcome.marketType === "team_to_advance"
+    outcome.marketType === "team_to_advance" ||
+    outcome.marketType === "esports_match_winner" ||
+    outcome.marketType === "esports_game_winner" ||
+    outcome.marketType === "esports_handicap"
   );
 }
 
@@ -126,10 +130,23 @@ function resolveTeamAdvanceOutcomePair(
 
 export function resolveLineOutcomePair(
   outcome: FixtureMarketOutcome,
-  fixtureMarkets: Pick<GameFixtureMarketsSnapshot, "lines">,
+  fixtureMarkets: Pick<
+    GameFixtureMarketsSnapshot,
+    "lines" | "esportsMarkets" | "esportsSections"
+  >,
 ): LineOutcomePair | undefined {
   if (!isLineDualOutcomeMarket(outcome)) {
     return undefined;
+  }
+
+  const esportsPair = resolveEsportsOutcomePair(
+    outcome,
+    fixtureMarkets.esportsSections,
+    fixtureMarkets.esportsMarkets,
+  );
+
+  if (esportsPair) {
+    return esportsPair;
   }
 
   if (outcome.marketType === "team_to_advance") {

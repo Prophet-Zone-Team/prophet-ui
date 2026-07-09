@@ -28,6 +28,7 @@ export type ProphetGetWinnerProbabilityData = ProphetWinnerProbabilityItem[];
 export interface ProphetPolyMarketTeam {
   logo?: string;
   name?: string;
+  ordering?: "home" | "away";
 }
 
 export interface ProphetPolyMarketMarket {
