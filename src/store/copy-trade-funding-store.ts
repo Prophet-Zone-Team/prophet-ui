@@ -99,6 +99,9 @@ export const useCopyTradeFundingStore = create<CopyTradeFundingState>(
               item.label = "USDC";
             }
             item.icon = getTokenLogo("usdc");
+            if (item.label === "pUSD") {
+              item.icon = "/tokens/pusd.webp";
+            }
             return item;
           }),
           withdrawalAssetsLoaded: true,
