@@ -1987,7 +1987,11 @@
         "bridgingDescription": "您的入金正在跨鏈處理中，可能需要數分鐘。",
         "transaction": "交易",
         "bridgeTransactions": "跨鏈交易",
-        "pending": "處理中"
+        "pending": "處理中",
+        "iHaveTransferred": "我已完成轉帳",
+        "qrMinDepositWarning": "低於 {amount} 的轉帳可能無法到帳。",
+        "waitingForDepositTitle": "等待入金",
+        "waitingForDepositDescription": "正在確認您的轉帳，可能需要數分鐘。"
       },
       "withdraw": {
         "ariaWithdraw": "跟單出金",

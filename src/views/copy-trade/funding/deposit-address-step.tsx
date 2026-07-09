@@ -1,93 +1,239 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import type { FundingAsset } from "@/config/funding";
 import { cn } from "@/lib/cn";
+import type { CopyDepositChainOption } from "@/lib/copy-trade/deposit-assets";
 import { useDarkModeEnabled } from "@/store";
 import { formatNumber } from "@/utils";
-import type { CopyDepositStatusResult } from "@/types/copy-trade-funding";
+import {
+  depositStableflowAddressBoxClass,
+  depositStableflowAddressSkeletonClass,
+  depositStableflowAddressTextClass,
+  depositStableflowCopyButtonClass,
+  depositStableflowQrMinLabelClass,
+  depositStableflowQrSkeletonClass,
+  depositStableflowQrWrapClass,
+} from "@/views/portfolio/deposit/deposit-ui";
+import { FundingSelectorDropdown } from "@/views/portfolio/shared/funding-selector-dropdown";
+import { TokenIcon } from "@/views/portfolio/shared/token-icon";
 
-export interface DepositAddressStepProps {
-  address: string;
+export interface DepositQrStepProps {
+  chainOptions: CopyDepositChainOption[];
+  tokensForChain: FundingAsset[];
+  selectedChain: CopyDepositChainOption | null;
+  selectedToken: FundingAsset | null;
+  depositAddress: string;
   loading: boolean;
-  status: CopyDepositStatusResult | null;
+  assetsLoading: boolean;
+  onChainChange: (chain: CopyDepositChainOption) => void;
+  onTokenChange: (token: FundingAsset) => void;
 }
 
-const cardClass = cn(
-  "flex flex-col gap-1 rounded-[8px] border border-prophet-line bg-prophet-action-panel px-4 py-3",
+const tokenRowClass = cn(
+  "flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-prophet-action-panel",
 );
 
-export function DepositAddressStep({
-  address,
+export function DepositQrStep({
+  chainOptions,
+  tokensForChain,
+  selectedChain,
+  selectedToken,
+  depositAddress,
   loading,
-  status,
-}: DepositAddressStepProps) {
+  assetsLoading,
+  onChainChange,
+  onTokenChange,
+}: DepositQrStepProps) {
   const t = useTranslations("copyTrade.funding.deposit");
   const tPortfolioDeposit = useTranslations("portfolio.deposit");
   const darkModeEnabled = useDarkModeEnabled();
+  const [chainOpen, setChainOpen] = useState(false);
+  const [tokenOpen, setTokenOpen] = useState(false);
+
+  const showQrSkeleton = loading || !depositAddress;
+  const minDepositUsd = selectedToken?.minCheckoutUsd ?? 0;
 
   const handleCopy = async () => {
-    if (!address) {
+    if (!depositAddress || showQrSkeleton) {
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(address);
+      await navigator.clipboard.writeText(depositAddress);
       toast.success(tPortfolioDeposit("addressCopied"));
     } catch {
       toast.error(tPortfolioDeposit("couldNotCopyAddress"));
     }
   };
 
-  const recentTransactions = status?.transactions ?? [];
-
   return (
     <div className="relative flex flex-col gap-5 pb-2">
-      <p className="text-sm leading-5 text-prophet-muted">
-        {t("socialDepositDescription")}
-      </p>
+      <div className="relative flex items-start gap-3">
+        <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-2">
+          <FundingSelectorDropdown
+            label={t("network")}
+            triggerLabel={
+              selectedChain?.chainName ??
+              (assetsLoading ? tPortfolioDeposit("loading") : t("selectNetwork"))
+            }
+            disabled={assetsLoading || loading || chainOptions.length === 0}
+            open={chainOpen}
+            onOpenChange={(next) => {
+              setChainOpen(next);
+              if (next) {
+                setTokenOpen(false);
+              }
+            }}
+            triggerIcon={
+              selectedChain ? (
+                <TokenIcon
+                  symbol="token"
+                  chainLabel={selectedChain.chainName}
+                  chainIcon={selectedChain.chainIcon}
+                  size="sm"
+                  chainOnly
+                />
+              ) : null
+            }
+          >
+            {chainOptions.map((chain) => {
+              const isSelected = selectedChain?.chainId === chain.chainId;
+              return (
+                <button
+                  key={chain.chainId}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  className={cn(tokenRowClass, isSelected && "bg-prophet-hover")}
+                  onClick={() => {
+                    onChainChange(chain);
+                    setChainOpen(false);
+                  }}
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <TokenIcon
+                      symbol="token"
+                      chainLabel={chain.chainName}
+                      chainIcon={chain.chainIcon}
+                      size="sm"
+                      chainOnly
+                    />
+                    <span className="text-sm font-[500] text-prophet-foreground">
+                      {chain.chainName}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </FundingSelectorDropdown>
 
-      <div className="flex justify-center">
-        {loading || !address ? (
-          <div
-            className="size-[200px] animate-pulse rounded-[12px] bg-prophet-hover"
-            aria-hidden="true"
-          />
-        ) : (
-          <div className="rounded-[12px] border border-prophet-line p-3">
-            <QRCodeSVG
-              value={address}
-              size={200}
-              level="M"
-              marginSize={2}
-              bgColor={darkModeEnabled ? "#242427" : "#ffffff"}
-              fgColor={darkModeEnabled ? "#ffffff" : "#000000"}
-            />
-          </div>
-        )}
+          <FundingSelectorDropdown
+            label={t("token")}
+            triggerLabel={
+              selectedToken?.symbol ??
+              (assetsLoading ? tPortfolioDeposit("loading") : tPortfolioDeposit("selectToken"))
+            }
+            disabled={assetsLoading || loading || tokensForChain.length === 0}
+            open={tokenOpen}
+            onOpenChange={(next) => {
+              setTokenOpen(next);
+              if (next) {
+                setChainOpen(false);
+              }
+            }}
+            triggerIcon={
+              selectedToken ? (
+                <TokenIcon
+                  symbol={selectedToken.symbol}
+                  icon={selectedToken.icon}
+                  size="sm"
+                />
+              ) : null
+            }
+          >
+            {tokensForChain.map((token) => {
+              const isSelected =
+                selectedToken?.chainId === token.chainId &&
+                selectedToken?.address === token.address;
+
+              return (
+                <button
+                  key={`${token.chainId}-${token.address}`}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  className={cn(tokenRowClass, isSelected && "bg-prophet-hover")}
+                  onClick={() => {
+                    onTokenChange(token);
+                    setTokenOpen(false);
+                  }}
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <TokenIcon
+                      symbol={token.symbol}
+                      icon={token.icon}
+                      size="sm"
+                    />
+                    <span className="text-sm font-[500] text-prophet-foreground">
+                      {token.symbol}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </FundingSelectorDropdown>
+        </div>
       </div>
+
+      {showQrSkeleton ? (
+        <div className={depositStableflowQrSkeletonClass} aria-hidden="true" />
+      ) : (
+        <div className={depositStableflowQrWrapClass}>
+          <QRCodeSVG
+            value={depositAddress}
+            size={200}
+            level="M"
+            marginSize={2}
+            bgColor={darkModeEnabled ? "#242427" : "#ffffff"}
+            fgColor={darkModeEnabled ? "#ffffff" : "#000000"}
+          />
+          {selectedChain ? (
+            <img
+              src={selectedChain.chainIcon}
+              alt=""
+              className="absolute left-1/2 top-1/2 size-9 -translate-x-1/2 -translate-y-1/2 rounded-[8px] border-2 border-prophet-panel bg-prophet-panel object-contain"
+            />
+          ) : null}
+        </div>
+      )}
+
+      {selectedToken && minDepositUsd > 0 ? (
+        <p className="text-xs leading-5 text-prophet-muted">
+          {t("qrMinDepositWarning", {
+            amount: formatNumber(minDepositUsd, 2, true, { prefix: "$" }),
+          })}
+        </p>
+      ) : null}
 
       <div className="flex flex-col gap-2">
         <span className="text-sm font-[500] text-prophet-foreground">
           {tPortfolioDeposit("yourDepositAddress")}
         </span>
-        <div className="flex items-center justify-between gap-3 rounded-[6px] border border-prophet-line bg-prophet-panel px-4 py-3">
-          {loading || !address ? (
-            <div
-              className="h-4 w-full animate-pulse rounded bg-prophet-hover"
-              aria-hidden="true"
-            />
+        <div className={depositStableflowAddressBoxClass}>
+          {showQrSkeleton ? (
+            <div className={depositStableflowAddressSkeletonClass} aria-hidden="true" />
           ) : (
-            <p className="min-w-0 flex-1 break-all text-sm font-[500] text-prophet-foreground">
-              {address}
-            </p>
+            <p className={depositStableflowAddressTextClass}>{depositAddress}</p>
           )}
           <button
             type="button"
-            className="flex shrink-0 items-center gap-1 border-0 bg-transparent p-0 text-sm font-[500] text-[#3168FF] hover:opacity-80 disabled:opacity-50"
-            disabled={loading || !address}
+            className={depositStableflowCopyButtonClass}
+            disabled={showQrSkeleton || !depositAddress}
             onClick={() => void handleCopy()}
           >
             <img
@@ -96,26 +242,13 @@ export function DepositAddressStep({
               className="size-3 shrink-0"
               aria-hidden="true"
             />
-            {t("copy")}
+            {tPortfolioDeposit("copyAddress")}
           </button>
         </div>
-      </div>
-
-      <div className={cardClass}>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-prophet-muted">{t("creditedSoFar")}</span>
-          <span className="text-sm font-[600] text-prophet-foreground">
-            {formatNumber(status?.credited_pusd ?? 0, 2, true, { round: 0 })} pUSD
-          </span>
-        </div>
-        <span className="text-xs text-prophet-muted">
-          {recentTransactions.length > 0
-            ? t("bridgeTransactionsDetected", {
-                count: recentTransactions.length,
-              })
-            : t("waitingForTransfer")}
-        </span>
       </div>
     </div>
   );
 }
+
+// Backward-compatible alias for any existing imports.
+export { DepositQrStep as DepositAddressStep };

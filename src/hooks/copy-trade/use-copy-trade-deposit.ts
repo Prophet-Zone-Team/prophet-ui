@@ -4,7 +4,10 @@ import Big from "big.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { FundingAsset } from "@/config/funding";
+import { FundingNetworkType } from "@/config/funding";
 import { useEvmBalances } from "@/hooks/funding/use-evm-balances";
+import { useSolBalances } from "@/hooks/funding/use-sol-balances";
+import { useTronBalances } from "@/hooks/funding/use-tron-balances";
 import {
   copyAssetsToFundingAssets,
   fundingNetworkTypeToWalletChainType,
@@ -15,6 +18,7 @@ import {
   type CopyDepositChainOption,
 } from "@/lib/copy-trade/deposit-assets";
 import { selectFundingTokenBalanceString } from "@/lib/funding/balance-selectors";
+import { resolveDepositTransferWalletAddress } from "@/lib/funding/deposit-transfer-wallet";
 import { ensureWalletChain, transferDepositFunds } from "@/lib/wallet";
 import {
   createCopyTradeDepositAddress,
@@ -24,16 +28,19 @@ import { useAuthStore } from "@/store/auth-store";
 import { useBalancesStore } from "@/store/use-balances";
 import { useCopyTradeFundingStore } from "@/store/copy-trade-funding-store";
 import { useCopyTradeStoredSession } from "@/store/copy-trade-store";
+import { useFundingWalletStore } from "@/store/use-funding-wallet-store";
 import type {
   CopyDepositAddress,
   CopyDepositStatusResult,
 } from "@/types/copy-trade-funding";
 
 const STATUS_POLL_INTERVAL_MS = 18_000;
+const AGGRESSIVE_STATUS_POLL_INTERVAL_MS = 5_000;
 
 export interface UseCopyTradeDepositOptions {
   open: boolean;
   onCredited?: (creditedPusd: number) => void;
+  aggressiveStatusPolling?: boolean;
 }
 
 export interface UseCopyTradeDepositResult {
@@ -49,6 +56,7 @@ export interface UseCopyTradeDepositResult {
   chainOptions: CopyDepositChainOption[];
   getTokensForChain: (chainId: number) => FundingAsset[];
   resolveTokenBalance: (token: FundingAsset) => string;
+  resolveDepositAddressForToken: (token: FundingAsset) => string;
   totalBalanceUsd: number;
   balancesLoading: boolean;
   refreshAddress: () => Promise<void>;
@@ -59,7 +67,7 @@ export interface UseCopyTradeDepositResult {
 export function useCopyTradeDeposit(
   options: UseCopyTradeDepositOptions,
 ): UseCopyTradeDepositResult {
-  const { open, onCredited } = options;
+  const { open, onCredited, aggressiveStatusPolling = false } = options;
 
   const loginMethod = useAuthStore((state) => state.loginMethod);
   const isSocialLogin = loginMethod === "email" || loginMethod === "google";
@@ -70,8 +78,6 @@ export function useCopyTradeDeposit(
   const copyTradeSession = useCopyTradeStoredSession();
   const userId = copyTradeSession?.user?.ID;
   const copyWallet = copyTradeSession?.copyWallet ?? null;
-  // Deposits only require the bridge wallet to be deployed with an address;
-  // trading approvals (collateral / auto-redeem) are not needed to receive funds.
   const walletReady = Boolean(
     copyWallet?.CopyDepositWalletAddress &&
       copyWallet.WalletStatus?.toLowerCase() === "deployed",
@@ -86,6 +92,9 @@ export function useCopyTradeDeposit(
   const loadDepositAssets = useCopyTradeFundingStore(
     (state) => state.loadDepositAssets,
   );
+
+  const solanaConnected = useFundingWalletStore((state) => state.solana.connected);
+  const tronConnected = useFundingWalletStore((state) => state.tron.connected);
 
   const [depositAddress, setDepositAddress] =
     useState<CopyDepositAddress | null>(null);
@@ -110,23 +119,73 @@ export function useCopyTradeDeposit(
     [fundingAssets],
   );
 
+  const solAssets = useMemo(
+    () =>
+      fundingAssets.filter(
+        (asset) => asset.chainType === FundingNetworkType.SVM,
+      ),
+    [fundingAssets],
+  );
+
+  const tronAssets = useMemo(
+    () =>
+      fundingAssets.filter(
+        (asset) => asset.chainType === FundingNetworkType.TVM,
+      ),
+    [fundingAssets],
+  );
+
   const chainOptions = useMemo(
     () => getCopyDepositChainOptions(fundingAssets),
     [fundingAssets],
   );
 
-  const { loading: balancesLoading } = useEvmBalances({
-    auto: open && !isSocialLogin,
-    enabled: open && !isSocialLogin && connectedAssets.length > 0,
+  const walletFlowEnabled = open && !isSocialLogin;
+
+  const { loading: evmBalancesLoading } = useEvmBalances({
+    auto: walletFlowEnabled,
+    enabled: walletFlowEnabled && connectedAssets.length > 0,
     tokens: connectedAssets,
   });
+
+  const { loading: solBalancesLoading, getTokenBalance: getSolTokenBalance } =
+    useSolBalances({
+      enabled: walletFlowEnabled && solAssets.length > 0,
+      tokens: solAssets,
+    });
+
+  const { loading: tronBalancesLoading, getTokenBalance: getTronTokenBalance } =
+    useTronBalances({
+      enabled: walletFlowEnabled && tronAssets.length > 0,
+      tokens: tronAssets,
+    });
 
   const evmBalances = useBalancesStore((state) => state.evmBalances);
 
   const resolveTokenBalance = useCallback(
-    (token: FundingAsset) => selectFundingTokenBalanceString(evmBalances, token),
-    [evmBalances],
+    (token: FundingAsset) => {
+      switch (token.chainType) {
+        case FundingNetworkType.SVM:
+          return solanaConnected ? getSolTokenBalance(token) : "0";
+        case FundingNetworkType.TVM:
+          return tronConnected ? getTronTokenBalance(token) : "0";
+        default:
+          return selectFundingTokenBalanceString(evmBalances, token);
+      }
+    },
+    [
+      evmBalances,
+      getSolTokenBalance,
+      getTronTokenBalance,
+      solanaConnected,
+      tronConnected,
+    ],
   );
+
+  const balancesLoading =
+    evmBalancesLoading ||
+    (solanaConnected && solBalancesLoading) ||
+    (tronConnected && tronBalancesLoading);
 
   const totalBalanceUsd = useMemo(() => {
     let total = Big(0);
@@ -140,12 +199,47 @@ export function useCopyTradeDeposit(
       }
     }
 
+    if (solanaConnected) {
+      for (const asset of solAssets) {
+        try {
+          total = total.plus(Big(getSolTokenBalance(asset) || 0));
+        } catch {
+          continue;
+        }
+      }
+    }
+
+    if (tronConnected) {
+      for (const asset of tronAssets) {
+        try {
+          total = total.plus(Big(getTronTokenBalance(asset) || 0));
+        } catch {
+          continue;
+        }
+      }
+    }
+
     return total.toNumber();
-  }, [connectedAssets, evmBalances]);
+  }, [
+    connectedAssets,
+    evmBalances,
+    getSolTokenBalance,
+    getTronTokenBalance,
+    solAssets,
+    solanaConnected,
+    tronAssets,
+    tronConnected,
+  ]);
 
   const getTokensForChain = useCallback(
     (chainId: number) => getCopyDepositTokensForChain(fundingAssets, chainId),
     [fundingAssets],
+  );
+
+  const resolveDepositAddressForToken = useCallback(
+    (token: FundingAsset) =>
+      resolveCopyDepositAddress(depositAddress, token.chainType),
+    [depositAddress],
   );
 
   const refreshAddress = useCallback(async () => {
@@ -192,7 +286,13 @@ export function useCopyTradeDeposit(
 
   const transferDeposit = useCallback(
     async (amount: string, token: FundingAsset): Promise<string> => {
-      if (!connectedWalletAddress) {
+      const transferWalletAddress = resolveDepositTransferWalletAddress(
+        token,
+        loginMethod,
+        connectedWalletAddress,
+      );
+
+      if (!transferWalletAddress) {
         throw new Error("Connect a wallet before depositing funds.");
       }
 
@@ -211,13 +311,13 @@ export function useCopyTradeDeposit(
 
       await ensureWalletChain({
         chainType,
-        walletAddress: connectedWalletAddress,
+        walletAddress: transferWalletAddress,
         chainId: token.chainId,
       });
 
       const { txHash } = await transferDepositFunds({
         chainType,
-        walletAddress: connectedWalletAddress,
+        walletAddress: transferWalletAddress,
         tokenAddress: token.address,
         toAddress,
         amount,
@@ -230,10 +330,9 @@ export function useCopyTradeDeposit(
 
       return txHash;
     },
-    [connectedWalletAddress, depositAddress, refreshStatus],
+    [connectedWalletAddress, depositAddress, loginMethod, refreshStatus],
   );
 
-  // Load supported assets and the deposit address when the dialog opens.
   useEffect(() => {
     if (!open || !userId || !walletReady) {
       return;
@@ -243,7 +342,10 @@ export function useCopyTradeDeposit(
     void refreshAddress();
   }, [loadDepositAssets, open, refreshAddress, userId, walletReady]);
 
-  // Poll deposit status while the dialog is open.
+  const pollIntervalMs = aggressiveStatusPolling
+    ? AGGRESSIVE_STATUS_POLL_INTERVAL_MS
+    : STATUS_POLL_INTERVAL_MS;
+
   useEffect(() => {
     if (!open || !userId || !walletReady) {
       return undefined;
@@ -252,7 +354,7 @@ export function useCopyTradeDeposit(
     void refreshStatus();
     pollTimerRef.current = setInterval(() => {
       void refreshStatus();
-    }, STATUS_POLL_INTERVAL_MS);
+    }, pollIntervalMs);
 
     return () => {
       if (pollTimerRef.current) {
@@ -260,9 +362,8 @@ export function useCopyTradeDeposit(
         pollTimerRef.current = null;
       }
     };
-  }, [open, refreshStatus, userId, walletReady]);
+  }, [open, pollIntervalMs, refreshStatus, userId, walletReady]);
 
-  // Reset transient state when the dialog closes.
   useEffect(() => {
     if (open) {
       return;
@@ -288,6 +389,7 @@ export function useCopyTradeDeposit(
     chainOptions,
     getTokensForChain,
     resolveTokenBalance,
+    resolveDepositAddressForToken,
     totalBalanceUsd,
     balancesLoading,
     refreshAddress,

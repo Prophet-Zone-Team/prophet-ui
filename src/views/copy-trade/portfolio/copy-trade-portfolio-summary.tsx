@@ -61,7 +61,7 @@ export function CopyTradePortfolioSummary({
             <div>
               <div className={portfolioSummaryLabelClass}>{t("biggestWin")}</div>
               <div className={portfolioSummaryValueMediumClass}>
-                {formatNumber(biggestWinAmount ?? 0, 0, true)}
+                {formatNumber(biggestWinAmount ?? 0, 2, true, { prefix: "$" })}
               </div>
             </div>
             <div>
