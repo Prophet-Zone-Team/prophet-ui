@@ -17,6 +17,8 @@ export function buildFixtureMarketsSnapshot(
     lines: fixtureMarkets?.lines ?? [],
     exactScores: fixtureMarkets?.exactScores ?? [],
     halftime: fixtureMarkets?.halftime ?? [],
+    esportsMarkets: fixtureMarkets?.esportsMarkets,
+    esportsSections: fixtureMarkets?.esportsSections,
     freshness: match.freshness,
   };
 }
@@ -25,7 +27,9 @@ export function hasFixtureMarkets(snapshot: GameFixtureMarketsSnapshot): boolean
   return (
     snapshot.lines.length > 0 ||
     snapshot.exactScores.length > 0 ||
-    snapshot.halftime.length > 0
+    snapshot.halftime.length > 0 ||
+    (snapshot.esportsMarkets?.length ?? 0) > 0 ||
+    (snapshot.esportsSections?.length ?? 0) > 0
   );
 }
 

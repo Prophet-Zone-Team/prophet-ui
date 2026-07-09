@@ -9,6 +9,8 @@ import type {
 import type {
   FixtureChartKind,
   FixtureMarketGroup,
+  FixtureMarketOutcome,
+  GameFixtureMarketsSnapshot,
   MatchOutcomeSide,
   WorldCupMatch,
 } from "@/types/market";
@@ -166,6 +168,127 @@ function resolveBinaryPropGroupTokens(
   };
 }
 
+function parseEsportsChartLineKey(lineKey: string | undefined): {
+  groupId: string;
+  activeLineKey: string;
+} | undefined {
+  if (!lineKey) {
+    return undefined;
+  }
+
+  const separatorIndex = lineKey.indexOf("|");
+
+  if (separatorIndex < 0) {
+    return undefined;
+  }
+
+  return {
+    groupId: lineKey.slice(0, separatorIndex),
+    activeLineKey: lineKey.slice(separatorIndex + 1) || "_default",
+  };
+}
+
+function resolveEsportsGroupChartTokens(
+  match: WorldCupMatch,
+  lineKey: string | undefined,
+): FixtureChartTokenResolution | undefined {
+  const parsed = parseEsportsChartLineKey(lineKey);
+
+  if (!parsed) {
+    return undefined;
+  }
+
+  const sections = match.polymarket?.fixtureMarkets?.esportsSections ?? [];
+
+  for (const section of sections) {
+    const group = section.groups.find((item) => item.id === parsed.groupId);
+
+    if (!group) {
+      continue;
+    }
+
+    const outcomes = group.outcomesByLine[parsed.activeLineKey] ?? [];
+
+    if (group.buttonMode === "yes_no") {
+      const outcome = outcomes[0];
+
+      if (!outcome?.tokenId || !outcome.noTokenId) {
+        return undefined;
+      }
+
+      return {
+        mode: "binary",
+        inputs: [
+          { key: "primary", tokenId: outcome.tokenId },
+          { key: "secondary", tokenId: outcome.noTokenId },
+        ],
+      };
+    }
+
+    if (group.buttonMode === "over_under") {
+      const over = outcomes.find((item) => item.side === "over");
+      const under = outcomes.find((item) => item.side === "under");
+
+      if (!over?.tokenId || !under?.tokenId) {
+        return undefined;
+      }
+
+      return {
+        mode: "binary",
+        inputs: [
+          { key: "primary", tokenId: over.tokenId },
+          { key: "secondary", tokenId: under.tokenId },
+        ],
+      };
+    }
+
+    const home = outcomes.find((item) => item.side === "home");
+    const away = outcomes.find((item) => item.side === "away");
+
+    if (!home?.tokenId || !away?.tokenId) {
+      return undefined;
+    }
+
+    return {
+      mode: "binary",
+      inputs: [
+        { key: "primary", tokenId: home.tokenId },
+        { key: "secondary", tokenId: away.tokenId },
+      ],
+    };
+  }
+
+  return undefined;
+}
+
+export function buildEsportsGroupChartLineKey(
+  groupId: string,
+  activeLineKey: string,
+): string {
+  return `${groupId}|${activeLineKey}`;
+}
+
+export function resolveEsportsGroupOutcomesFromChartLineKey(
+  fixtureMarkets: GameFixtureMarketsSnapshot,
+  lineKey: string | undefined,
+): FixtureMarketOutcome[] {
+  const parsed = parseEsportsChartLineKey(lineKey);
+
+  if (!parsed) {
+    return [];
+  }
+
+  for (const section of fixtureMarkets.esportsSections ?? []) {
+    const group = section.groups.find((item) => item.id === parsed.groupId);
+
+    if (group) {
+      return group.outcomesByLine[parsed.activeLineKey] ?? [];
+    }
+  }
+
+  return [];
+}
+
 function resolveTeamToAdvanceChartTokens(
   group: FixtureMarketGroup | undefined,
 ): FixtureChartTokenResolution | undefined {
@@ -261,6 +384,10 @@ export function resolveFixtureChartTokens(
     return resolveBinaryPropGroupTokens(
       findGroupByType(lines, "penalty_shootout"),
     );
+  }
+
+  if (chartKind === "esports_group") {
+    return resolveEsportsGroupChartTokens(match, lineKey);
   }
 
   return undefined;

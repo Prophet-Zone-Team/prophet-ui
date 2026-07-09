@@ -551,7 +551,70 @@ export type FixtureSportsMarketType =
   | "halftime"
   | "team_to_advance"
   | "extra_time"
-  | "penalty_shootout";
+  | "penalty_shootout"
+  | "esports_match_winner"
+  | "esports_game_winner"
+  | "esports_handicap"
+  | "esports_prop";
+
+export type EsportsMarketKind =
+  | "match_winner"
+  | "game_winner"
+  | "series_total"
+  | "game_handicap"
+  | "first_blood"
+  | "kill_total"
+  | "odd_even_kills";
+
+export type EsportsDisplayGroupKind =
+  | "moneyline"
+  | "game_winner"
+  | "game_handicap"
+  | "total_games"
+  | "first_blood"
+  | "kill_totals"
+  | "odd_even_kills";
+
+export interface EsportsDisplayGroup {
+  id: string;
+  title: string;
+  titleKey?: EsportsDisplayGroupTitleKey;
+  kind: EsportsDisplayGroupKind;
+  buttonMode: "home_away" | "over_under" | "yes_no";
+  lineOptions: FixtureLineOption[];
+  outcomesByLine: Record<string, FixtureMarketOutcome[]>;
+  defaultLineKey?: string;
+  volume?: number;
+}
+
+export type EsportsDisplayGroupTitleKey =
+  | "esportsMoneyline"
+  | "esportsGameWinner"
+  | "esportsGameHandicap"
+  | "esportsTotalGames"
+  | "esportsFirstBlood"
+  | "esportsKillTotals"
+  | "esportsOddEvenKills";
+
+export type EsportsMarketSectionId = "series_lines" | `game_${number}`;
+
+export interface EsportsMarketSection {
+  id: EsportsMarketSectionId;
+  titleKey: "esportsSeriesLines" | "esportsGameSection";
+  gameNumber?: number;
+  groups: EsportsDisplayGroup[];
+}
+
+export interface EsportsMarketCard {
+  id: string;
+  title: string;
+  volume?: number;
+  marketKind: EsportsMarketKind;
+  sortOrder: number;
+  lineKey?: string;
+  gameNumber?: number;
+  outcomes: FixtureMarketOutcome[];
+}
 
 export type FixtureOutcomeSide =
   | MatchOutcomeSide
@@ -583,7 +646,7 @@ export interface FixtureMarketOutcome {
 
 export interface FixtureLineOption {
   key: string;
-  label: number;
+  label: number | string;
 }
 
 export interface FixtureMarketGroup {
@@ -603,6 +666,8 @@ export interface PolymarketFixtureMarketsData {
   lines: FixtureMarketGroup[];
   exactScores: FixtureMarketOutcome[];
   halftime: FixtureMarketOutcome[];
+  esportsMarkets?: EsportsMarketCard[];
+  esportsSections?: EsportsMarketSection[];
 }
 
 export interface GameFixtureMarketsSnapshot {
@@ -610,6 +675,8 @@ export interface GameFixtureMarketsSnapshot {
   lines: FixtureMarketGroup[];
   exactScores: FixtureMarketOutcome[];
   halftime: FixtureMarketOutcome[];
+  esportsMarkets?: EsportsMarketCard[];
+  esportsSections?: EsportsMarketSection[];
   freshness: FreshnessMeta;
 }
 
@@ -745,7 +812,8 @@ export type FixtureChartKind =
   | "exact_score"
   | "team_to_advance"
   | "extra_time"
-  | "penalty_shootout";
+  | "penalty_shootout"
+  | "esports_group";
 
 export interface GameMatchChartEvent {
   elapsedSeconds: number;

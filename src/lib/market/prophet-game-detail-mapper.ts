@@ -1,4 +1,10 @@
 import { mapEventSportsMarkets } from "@/lib/market/fixture-markets-mapper";
+import { isEsportsGameSlug } from "@/lib/market/esports-game";
+import {
+  buildEsportsMarketSections,
+  esportsMatchWinnerToMoneylineOutcomes,
+  mapProphetEsportsMarkets,
+} from "@/lib/market/map-prophet-esports-markets";
 import { parseMatchOutcomeOdds } from "@/lib/market/match-outcome-odds";
 import {
   isGammaEventRecord,
@@ -135,6 +141,50 @@ export function mapProphetGameDetailToMatch(
   const homeName = match.homeDisplayName ?? match.homeSeed ?? "Home";
   const awayName = match.awayDisplayName ?? match.awaySeed ?? "Away";
   const fixtureSlug = detail.slug?.trim() ?? match.id;
+
+  if (isEsportsGameSlug(fixtureSlug)) {
+    const esportsMarkets = mapProphetEsportsMarkets(
+      detail.markets,
+      homeName,
+      awayName,
+      fixtureSlug,
+    );
+    const esportsSections = buildEsportsMarketSections(esportsMarkets);
+    const moneylineOutcomes = esportsMatchWinnerToMoneylineOutcomes(esportsMarkets);
+    const acceptingOrders =
+      detail.markets?.some((market) => market.acceptingOrders === true) ??
+      match.polymarket?.moneyline.acceptingOrders ??
+      false;
+    const closed = detail.closed === 1;
+
+    if (!esportsMarkets.length) {
+      return match;
+    }
+
+    return {
+      ...match,
+      polymarket: {
+        ...match.polymarket!,
+        closed,
+        moneyline: {
+          ...match.polymarket!.moneyline,
+          acceptingOrders,
+          conditionId:
+            moneylineOutcomes[0]?.conditionId ??
+            match.polymarket?.moneyline.conditionId,
+          outcomes: moneylineOutcomes,
+        },
+        fixtureMarkets: {
+          lines: [],
+          exactScores: [],
+          halftime: [],
+          esportsMarkets,
+          esportsSections,
+        },
+      },
+    };
+  }
+
   const tradingOutcomes = buildFixtureMoneylineOutcomesFromProphetMarkets(
     detail.markets,
     homeName,

@@ -6,6 +6,7 @@ import {
   attachHistoryToBinaryInputs,
   attachHistoryToTernaryInputs,
   buildFixtureChartFetchKey,
+  resolveEsportsGroupOutcomesFromChartLineKey,
   resolveFixtureChartTokens,
 } from "@/lib/market/fixture-chart-tokens";
 import {
@@ -130,7 +131,7 @@ function buildFallbackChartData(input: {
 
   const chartMode = resolveLiveChartModeFromKind(input.chartKind);
 
-  if (chartMode === "binary") {
+    if (chartMode === "binary") {
     if (input.chartKind === "exact_score" && input.lineKey) {
       const outcome = input.fixtureMarkets.exactScores.find(
         (item) => item.id === input.lineKey,
@@ -144,6 +145,23 @@ function buildFallbackChartData(input: {
         binary: {
           primary: yesProbability,
           secondary: Math.max(0, 100 - yesProbability),
+        },
+      });
+    }
+
+    if (input.chartKind === "esports_group" && input.lineKey) {
+      const outcomes = resolveEsportsGroupOutcomesFromChartLineKey(
+        input.fixtureMarkets,
+        input.lineKey,
+      ).slice(0, 2);
+
+      return buildLiveChartFallbackPoints({
+        matchId: input.match.id,
+        kickoffAt,
+        chartMode: "binary",
+        binary: {
+          primary: outcomes[0]?.probability ?? 50,
+          secondary: outcomes[1]?.probability ?? 50,
         },
       });
     }

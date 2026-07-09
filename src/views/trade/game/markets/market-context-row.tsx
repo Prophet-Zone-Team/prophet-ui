@@ -24,12 +24,14 @@ export type MarketContextRowProps = {
   match: WorldCupMatch;
   teamSnapshots: TeamMarketSnapshot[];
   gameSnapshotHomeTeamId?: string;
+  hideStatistics?: boolean;
 };
 
 export function MarketContextRow({
   match,
   teamSnapshots,
-  gameSnapshotHomeTeamId
+  gameSnapshotHomeTeamId,
+  hideStatistics = false,
 }: MarketContextRowProps) {
   const t = useTranslations("trade");
   const [tab, setTab] = useState<ContextTabId>("related-games");
@@ -129,21 +131,23 @@ export function MarketContextRow({
 
   return (
     <div className="mt-[8px] flex flex-col gap-4">
-      <GameStatistics
-        homeTeam={{
-          name: homeDisplayName,
-          code: sides.home.code,
-          logoUrl: sides.home.logoUrl
-        }}
-        awayTeam={{
-          name: awayDisplayName,
-          code: sides.away.code,
-          logoUrl: sides.away.logoUrl
-        }}
-        rows={statisticsRows}
-        isLoading={statisticsLoading}
-        isError={statisticsError}
-      />
+      {hideStatistics ? null : (
+        <GameStatistics
+          homeTeam={{
+            name: homeDisplayName,
+            code: sides.home.code,
+            logoUrl: sides.home.logoUrl
+          }}
+          awayTeam={{
+            name: awayDisplayName,
+            code: sides.away.code,
+            logoUrl: sides.away.logoUrl
+          }}
+          rows={statisticsRows}
+          isLoading={statisticsLoading}
+          isError={statisticsError}
+        />
+      )}
 
       {showMobileContextTabs ? (
         <div className="flex flex-col gap-0 overflow-hidden rounded-[12px] border border-prophet-line bg-prophet-panel md:hidden">

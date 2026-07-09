@@ -210,4 +210,65 @@ describe("prophet-game-detail-mapper", () => {
       "0xfef657b2f9ed83dd3db24c61d115203e836f9967289cd3281b6b91dcd7338104",
     );
   });
+
+  it("maps LOL esports markets into flat esports cards", () => {
+    const detail: ProphetPolyMarketGameDetail = {
+      slug: "lol-blg-hle1-2026-07-09",
+      title:
+        "LoL: Bilibili Gaming vs Hanwha Life Esports (BO5) - Mid-Season Invitational Playoffs",
+      teams: [
+        {
+          name: "Bilibili Gaming",
+          ordering: "home",
+        },
+        {
+          name: "Hanwha Life Esports",
+          ordering: "away",
+        },
+      ],
+      markets: [
+        {
+          slug: "lol-blg-hle1-2026-07-09",
+          groupItemTitle: "Match Winner",
+          outcomePrices: '["0.385", "0.615"]',
+          clobTokenIds:
+            '["54865409545970127818483222224309761077922946344974606824700577010363479992269", "39577055225479084916752164627874450289163320947168445560952025705247541157415"]',
+          conditionId:
+            "0x487187034dadebc71441bd70c34351eb189c12a05c99220eb43be41b919e9261",
+          acceptingOrders: true,
+        },
+        {
+          slug: "lol-blg-hle1-2026-07-09-game1",
+          groupItemTitle: "Game 1 Winner",
+          outcomePrices: '["0.425", "0.575"]',
+          clobTokenIds:
+            '["34899681629975596680823272511407820643214154601485383259115476523364469117569", "92155896711226508531656306422645708487529460510087463062559535463800385306518"]',
+          conditionId:
+            "0x86d9c29b6bd497d00ea0bfd1341caf040bbf7e04bc603a55f0353f2594f0f17c",
+          acceptingOrders: true,
+        },
+      ],
+      events: undefined,
+    };
+
+    const match = mapProphetGameDetailToMatch(detail);
+
+    assert.ok(match);
+    assert.equal(match?.league, "Mid-Season Invitational Playoffs");
+    assert.equal(match?.polymarket?.moneyline.outcomes.length, 2);
+    assert.deepEqual(
+      match?.polymarket?.moneyline.outcomes.map((outcome) => outcome.side),
+      ["home", "away"],
+    );
+    assert.equal(match?.polymarket?.fixtureMarkets?.esportsMarkets?.length, 2);
+    assert.ok(match?.polymarket?.fixtureMarkets?.esportsSections?.length);
+    assert.equal(
+      match?.polymarket?.fixtureMarkets?.esportsSections?.[0]?.id,
+      "series_lines",
+    );
+    assert.equal(
+      match?.polymarket?.fixtureMarkets?.esportsSections?.[0]?.groups[0]?.titleKey,
+      "esportsMoneyline",
+    );
+  });
 });

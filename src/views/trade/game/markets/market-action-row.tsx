@@ -32,7 +32,7 @@ function EmptyActions() {
   return <LineOutcomeButton label="—" variant="draw" disabled />;
 }
 
-function OutcomeButtons({
+export function OutcomeButtons({
   outcomes,
   groupType,
   selectedOutcomeId,
@@ -87,7 +87,7 @@ function OutcomeButtons({
   );
 }
 
-function MarketActionRowShell({
+export function MarketActionRowShell({
   volume,
   lineSelector,
   actions,

@@ -1,5 +1,9 @@
 import { findCuratedTeamByCode } from "@/data/teams/curated-team-list";
 import {
+  extractEsportsLeagueFromTitle,
+  isEsportsGameSlug,
+} from "@/lib/market/esports-game";
+import {
   normalizeGammaSearchText,
   parseGammaArrayField,
   priceToProbability,
@@ -55,8 +59,13 @@ export function mapProphetGameToMatch(
     return undefined;
   }
 
-  const homeTeam = resolveWorldCupTeamByGroupItemTitle(homeName);
-  const awayTeam = resolveWorldCupTeamByGroupItemTitle(awayName);
+  const isEsports = isEsportsGameSlug(slug);
+  const homeTeam = isEsports
+    ? undefined
+    : resolveWorldCupTeamByGroupItemTitle(homeName);
+  const awayTeam = isEsports
+    ? undefined
+    : resolveWorldCupTeamByGroupItemTitle(awayName);
   const eventId = game.gameId ? String(game.gameId) : slug;
   const lastUpdated = game.start_time ?? new Date().toISOString();
   const volume = parseProphetVolume(game.volume);
@@ -86,7 +95,9 @@ export function mapProphetGameToMatch(
     kickoffAt: game.start_time,
     homeScore: game.home_score,
     awayScore: game.away_score,
-    league: "FIFA World Cup",
+    league: isEsports
+      ? extractEsportsLeagueFromTitle(game.title ?? "") ?? "Esports"
+      : "FIFA World Cup",
     odds:
       oddsOutcomes.length >= 3
         ? {
@@ -120,8 +131,10 @@ function resolveProphetFixtureSides(game: ProphetPolyMarketGameItem): {
   awayLogoUrl?: string;
 } {
   const teams = game.teams ?? [];
-  const homeTeam = teams[0];
-  const awayTeam = teams[1];
+  const homeTeam =
+    teams.find((team) => team.ordering === "home") ?? teams[0];
+  const awayTeam =
+    teams.find((team) => team.ordering === "away") ?? teams[1];
   const homeName = homeTeam?.name?.trim();
   const awayName = awayTeam?.name?.trim();
 

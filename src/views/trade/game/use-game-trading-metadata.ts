@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { buildFixtureMarketsSnapshot } from "@/lib/market/build-fixture-markets-snapshot";
 import { buildGameMarketSnapshot } from "@/lib/market/game-market-snapshot";
+import { isEsportsGameSlug } from "@/lib/market/esports-game";
 import {
   isGammaEventPayload,
   mergeFixtureMarketsFromGammaEvent,
@@ -57,8 +58,13 @@ function tabTradingDataLoaded(
 ): boolean {
   if (tab === "moneyline") {
     const outcomes = match.polymarket?.moneyline.outcomes ?? [];
+    const isEsports = isEsportsGameSlug(match.id);
+    const minOutcomes = isEsports ? 2 : 3;
 
-    return outcomes.length >= 3 && outcomes.every((outcome) => Boolean(outcome.tokenId));
+    return (
+      outcomes.length >= minOutcomes &&
+      outcomes.every((outcome) => Boolean(outcome.tokenId))
+    );
   }
 
   if (tab === "totals") {
@@ -94,9 +100,12 @@ export function useGameTradingMetadata({
   const [match, setMatch] = useState(initialMatch);
   const [gameSnapshot, setGameSnapshot] = useState(initialGameSnapshot);
   const [fixtureMarkets, setFixtureMarkets] = useState(initialFixtureMarkets);
+  const isEsportsGame = isEsportsGameSlug(initialMatch.id);
   const moneylineReadyInitially = useMemo(
-    () => tabTradingDataLoaded("moneyline", initialMatch, initialFixtureMarkets),
-    [initialFixtureMarkets, initialMatch],
+    () =>
+      isEsportsGame ||
+      tabTradingDataLoaded("moneyline", initialMatch, initialFixtureMarkets),
+    [initialFixtureMarkets, initialMatch, isEsportsGame],
   );
   const [loadedTabs, setLoadedTabs] = useState<Set<GameMarketTabId>>(() =>
     moneylineReadyInitially ? new Set(["moneyline"]) : new Set(),
@@ -120,6 +129,15 @@ export function useGameTradingMetadata({
 
   const loadTabTradingData = useCallback(
     async (tab: GameMarketTabId) => {
+      if (isEsportsGameSlug(match.id)) {
+        setLoadedTabs((current) => {
+          const next = new Set(current);
+          next.add(tab);
+          return next;
+        });
+        return;
+      }
+
       if (tab === "stats") {
         setLoadedTabs((current) => {
           const next = new Set(current);
@@ -173,7 +191,7 @@ export function useGameTradingMetadata({
         setLoadingTab((current) => (current === tab ? null : current));
       }
     },
-    [siblingEventSlugs, teamSnapshots],
+    [match.id, siblingEventSlugs, teamSnapshots],
   );
 
   useEffect(() => {
@@ -197,6 +215,10 @@ export function useGameTradingMetadata({
 
   const isTabTradingReady = useCallback(
     (tab: GameMarketTabId) => {
+      if (isEsportsGameSlug(match.id)) {
+        return tabTradingDataLoaded(tab, match, fixtureMarkets);
+      }
+
       if (!loadedTabs.has(tab)) {
         return false;
       }

@@ -29,7 +29,7 @@ export interface ProphetPolyMarketTeam {
   id?: number;
   logo?: string;
   name?: string;
-  ordering?: string;
+  ordering?: "home" | "away";
 }
 
 export interface ProphetPolyMarketMarket {

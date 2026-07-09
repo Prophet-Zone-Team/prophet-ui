@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { isEsportsGameSlug } from "@/lib/market/esports-game";
+
 import { trackWinnerChartTeamSelected } from "@/lib/analytics/tracking";
 import { GameMarketTabSwitcher } from "@/views/trade/game/markets/game-market-tab-switcher";
 import { OrderbookToggle } from "@/components/ui/orderbook-toggle";
@@ -67,6 +69,7 @@ import { MarketContextRow } from "@/views/trade/game/markets/market-context-row"
 import { GameStatsSection } from "@/views/trade/game/stats";
 import { useGameMarketWsTokens } from "@/views/trade/game/markets/use-game-market-ws-tokens";
 import { useLiveFixtureTabPrices } from "@/views/trade/game/markets/use-live-fixture-tab-prices";
+import { EsportsMarketsSection } from "@/views/trade/game/markets/esports-markets-section";
 
 const GAME_MARKET_TABS = [
   {
@@ -114,6 +117,35 @@ export interface GameMarketsSectionProps {
 }
 
 export function GameMarketsSection({
+  match,
+  gameSnapshot,
+  fixtureMarkets,
+  teamSnapshots,
+  onTabChange
+}: GameMarketsSectionProps) {
+  if (isEsportsGameSlug(match.id)) {
+    return (
+      <EsportsMarketsSection
+        match={match}
+        gameSnapshot={gameSnapshot}
+        fixtureMarkets={fixtureMarkets}
+        teamSnapshots={teamSnapshots}
+      />
+    );
+  }
+
+  return (
+    <FootballGameMarketsSection
+      match={match}
+      gameSnapshot={gameSnapshot}
+      fixtureMarkets={fixtureMarkets}
+      teamSnapshots={teamSnapshots}
+      onTabChange={onTabChange}
+    />
+  );
+}
+
+function FootballGameMarketsSection({
   match,
   gameSnapshot,
   fixtureMarkets,
