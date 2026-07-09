@@ -124,6 +124,7 @@ export function mapPolymarketActivity(
     price: String(row.price),
     size: row.size > 0 ? row.size : undefined,
     amount: String(row.usdcSize),
+    filledUsdc: "",
     marketName: row.title?.trim() || "—",
     teamName: resolveActivityTeamName(row),
     slug,
@@ -156,6 +157,7 @@ export function mapLossPositionToTransaction(
     price: String(position.avgPrice),
     size: position.size > 0 ? position.size : undefined,
     amount: String(position.initialValue),
+    filledUsdc: "",
     marketName: position.title?.trim() || "—",
     teamName: resolveReportTeamName({
       title: position.title,
