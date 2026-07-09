@@ -9,16 +9,22 @@ import type { CopyDepositStatusResult } from "@/types/copy-trade-funding";
 export interface DepositStatusStepProps {
   txHash: string;
   status: CopyDepositStatusResult | null;
+  mode?: "wallet" | "qr";
 }
 
 const cardClass = cn(
   "flex flex-col gap-1 rounded-[8px] border border-prophet-line bg-prophet-action-panel px-4 py-3",
 );
 
-export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
+export function DepositStatusStep({
+  txHash,
+  status,
+  mode = "wallet",
+}: DepositStatusStepProps) {
   const t = useTranslations("copyTrade.funding.deposit");
   const credited = status?.credited_pusd ?? 0;
   const transactions = status?.transactions ?? [];
+  const isQrMode = mode === "qr";
 
   return (
     <div className="flex flex-col gap-4 pb-2">
@@ -27,15 +33,15 @@ export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
           <span className="size-3 animate-ping rounded-full bg-[#65AF14]" />
         </div>
         <span className="text-lg font-[600] text-prophet-foreground">
-          {t("transferSubmittedTitle")}
+          {isQrMode ? t("waitingForDepositTitle") : t("transferSubmittedTitle")}
         </span>
         <span className="text-sm text-prophet-muted">
-          {t("bridgingDescription")}
+          {isQrMode ? t("waitingForDepositDescription") : t("bridgingDescription")}
         </span>
       </div>
 
       <div className={cardClass}>
-        {txHash ? (
+        {!isQrMode && txHash ? (
           <div className="flex items-center justify-between">
             <span className="text-sm text-prophet-muted">{t("transaction")}</span>
             <span className="text-sm font-[500] text-prophet-foreground">
@@ -49,6 +55,15 @@ export function DepositStatusStep({ txHash, status }: DepositStatusStepProps) {
             {formatNumber(credited, 2, true, { round: 0 })} pUSD
           </span>
         </div>
+        {isQrMode ? (
+          <span className="text-xs text-prophet-muted">
+            {transactions.length > 0
+              ? t("bridgeTransactionsDetected", {
+                  count: transactions.length,
+                })
+              : t("waitingForTransfer")}
+          </span>
+        ) : null}
       </div>
 
       {transactions.length > 0 ? (

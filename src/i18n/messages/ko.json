@@ -2025,7 +2025,11 @@
         "bridgingDescription": "Your deposit is being bridged. This can take a few minutes.",
         "transaction": "Transaction",
         "bridgeTransactions": "Bridge transactions",
-        "pending": "pending"
+        "pending": "pending",
+        "iHaveTransferred": "I have transferred",
+        "qrMinDepositWarning": "Deposits below {amount} may not be credited.",
+        "waitingForDepositTitle": "Waiting for deposit",
+        "waitingForDepositDescription": "We are checking for your transfer. This can take a few minutes."
       },
       "withdraw": {
         "ariaWithdraw": "Copy trade withdraw",
