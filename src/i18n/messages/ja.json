@@ -1982,7 +1982,16 @@
         "bridgingDescription": "Your deposit is being bridged. This can take a few minutes.",
         "transaction": "Transaction",
         "bridgeTransactions": "Bridge transactions",
-        "pending": "pending"
+        "pending": "pending",
+        "polymarketDepositTitle": "From Polymarket account",
+        "polymarketDepositDescription": "Transfer pUSD from your Polymarket deposit wallet",
+        "walletDepositTitle": "From connected wallet",
+        "polymarketBalanceLabel": "Polymarket balance (pUSD)",
+        "polymarketTransferDescription": "Funds transfer from your Polymarket deposit wallet and are credited to your copy wallet as pUSD.",
+        "transfer": "Transfer",
+        "polymarketDepositWalletNotReady": "Polymarket deposit wallet is not ready.",
+        "amountExceedsPolymarketBalance": "Amount exceeds your Polymarket balance.",
+        "backToWalletDeposit": "Change source"
       },
       "withdraw": {
         "ariaWithdraw": "Copy trade withdraw",

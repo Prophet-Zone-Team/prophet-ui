@@ -1,7 +1,15 @@
+import type { DepositWalletBatchSignablePayload } from "@/lib/market/deposit-wallet-batch";
+
 // Copy Trade funding (deposit / withdrawal) API shapes.
 // Field casing mirrors the copy-trade Go backend exactly:
 // deposit/supported-assets/withdrawal readiness use snake_case;
 // the Withdrawal lifecycle row uses PascalCase.
+
+export interface CopyTradePolymarketDepositPreparePayload {
+  funderAddress: string;
+  recipient: string;
+  transfer: DepositWalletBatchSignablePayload;
+}
 
 export interface CopyDepositAddress {
   user_id: number;
