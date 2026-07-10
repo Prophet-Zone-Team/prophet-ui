@@ -83,7 +83,7 @@ export function traderPnL24h(trader: TraderCatalogEntry): number {
 }
 
 export function traderPnL7d(trader: TraderCatalogEntry): number | null {
-  const value = trader.PnL7D ?? trader.FifaPnL7d;
+  const value = trader.FifaPnL7d;
   if (value == null || !Number.isFinite(value)) {
     return null;
   }
