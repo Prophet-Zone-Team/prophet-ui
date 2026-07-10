@@ -676,7 +676,7 @@ function CopySideButton({
       type="button"
       aria-pressed={selected}
       className={cn(
-        "inline-flex h-[42px] items-center justify-center rounded-lg border text-base leading-5 transition-opacity hover:opacity-90",
+        "inline-flex h-[42px] items-center justify-center gap-2 rounded-lg border text-base leading-5 transition-opacity hover:opacity-90",
         selected
           ? cn(
               "border-transparent text-white",
@@ -691,7 +691,28 @@ function CopySideButton({
       )}
       onClick={onClick}
     >
-      {label}
+      {selected ? (
+        <>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="12"
+            viewBox="0 0 16 12"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M1 5.05L5.96774 10L15 1"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+          {label}
+        </>
+      ) : (
+        label
+      )}
     </button>
   );
 }
