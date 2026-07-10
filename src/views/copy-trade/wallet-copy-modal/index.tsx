@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -676,15 +676,43 @@ function CopySideButton({
       type="button"
       aria-pressed={selected}
       className={cn(
-        "inline-flex h-[42px] items-center justify-center gap-2 rounded-lg",
-        "text-base leading-5 text-white transition-opacity hover:opacity-90",
-        tone === "buy" ? "bg-[#65AF14]" : "bg-[#FF674B]",
-        !selected && "opacity-40"
+        "inline-flex h-[42px] items-center justify-center gap-2 rounded-lg border text-base leading-5 transition-opacity hover:opacity-90",
+        selected
+          ? cn(
+              "border-transparent text-white",
+              tone === "buy" ? "bg-[#65AF14]" : "bg-[#FF674B]"
+            )
+          : cn(
+              "bg-transparent",
+              tone === "buy"
+                ? "border-[#65AF14] text-[#65AF14]"
+                : "border-[#FF674B] text-[#FF674B]"
+            )
       )}
       onClick={onClick}
     >
-      <Check className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
-      {label}
+      {selected ? (
+        <>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="12"
+            viewBox="0 0 16 12"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M1 5.05L5.96774 10L15 1"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+          {label}
+        </>
+      ) : (
+        label
+      )}
     </button>
   );
 }

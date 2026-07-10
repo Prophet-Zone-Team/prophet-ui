@@ -5,3 +5,8 @@
 // ).replace(/\/$/, "");
 
 export const copyTradeApiUpstream = "https://apicopy.prophet.zone";
+
+/** Show 7D PnL / FIFA 7D PnL column on copy-trade rank table. Off by default. */
+export function isCopyTradeRankPnl7dEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_COPY_TRADE_RANK_PNL7D_ENABLED === "true";
+}

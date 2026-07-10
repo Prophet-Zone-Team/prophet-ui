@@ -134,6 +134,7 @@ export interface TraderCatalogEntry {
   PnL30d: number;
   PnL24h: number;
   FifaPnL24h: number;
+  PnL7D?: number;
   FifaPnL7d?: number;
   Volume30d: number;
   Trades30d: number;

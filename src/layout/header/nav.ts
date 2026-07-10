@@ -12,6 +12,11 @@ export const MOBILE_BOTTOM_NAV = [
     labelKey: "worldCup" as const,
     icon: "worldCup" as const
   },
+  {
+    href: "/smart-money",
+    labelKey: "smartMoney" as const,
+    icon: "smartMoney" as const
+  },
   { href: "/strategy", labelKey: "strategies" as const, icon: "strategies" as const },
   {
     href: "/portfolio",
