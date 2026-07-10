@@ -4,7 +4,6 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import {
   isUserImportedTrader,
-  traderPnL7d,
   traderTag
 } from "@/lib/copy-trade/trader-catalog-stats";
 import {
@@ -29,6 +28,7 @@ import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mob
 
 import {
   copyTradeRankColActionClass,
+  copyTradeRankColPnl7dClass,
   copyTradeRankColStatClass,
   copyTradeRankColPlayerClass,
   copyTradeRankColPredictionsClass,
@@ -73,6 +73,46 @@ function formatStatValue(
   return formatter(value);
 }
 
+function resolveTraderPnl7d(trader: TraderCatalogEntry): number | null {
+  const value = trader.PnL7D;
+  if (value == null || !Number.isFinite(value)) {
+    return null;
+  }
+
+  return value;
+}
+
+function resolveTraderFifaPnl7d(trader: TraderCatalogEntry): number | null {
+  const value = trader.FifaPnL7d;
+  if (value == null || !Number.isFinite(value)) {
+    return null;
+  }
+
+  return value;
+}
+
+function pnlToneClass(value: number | null): string {
+  if (value === null) {
+    return "text-prophet-muted";
+  }
+
+  return value >= 0 ? "text-[#65AF14]" : "text-[#FF674B]";
+}
+
+function Pnl7dDualValue({ pnl7d, fifaPnl7d }: { pnl7d: number | null; fifaPnl7d: number | null }) {
+  return (
+    <span className="inline-flex min-w-0 items-center gap-0.5">
+      <span className={pnlToneClass(pnl7d)}>
+        {formatStatValue(pnl7d, formatSignedCompactUsd)}
+      </span>
+      <span className="shrink-0 text-prophet-muted">/</span>
+      <span className={pnlToneClass(fifaPnl7d)}>
+        {formatStatValue(fifaPnl7d, formatSignedCompactUsd)}
+      </span>
+    </span>
+  );
+}
+
 export function CopyTradeRankItem({
   rank,
   trader,
@@ -94,19 +134,13 @@ export function CopyTradeRankItem({
   const tag = traderTag(trader);
   const isCopyButtonDisabled = copyTradeBusy || copyTradeDisabled;
   const stats = resolveTraderRankDisplayStats(trader, timeRange);
-  const pnl7d = traderPnL7d(trader);
+  const pnl7d = resolveTraderPnl7d(trader);
+  const fifaPnl7d = resolveTraderFifaPnl7d(trader);
   const pnlValue = stats.pnl ?? 0;
-  const pnl7dValue = pnl7d ?? 0;
   const pnlTone =
     stats.pnl === null
       ? "text-prophet-muted"
       : pnlValue >= 0
-        ? "text-[#65AF14]"
-        : "text-[#FF674B]";
-  const pnl7dTone =
-    pnl7d === null
-      ? "text-prophet-muted"
-      : pnl7dValue >= 0
         ? "text-[#65AF14]"
         : "text-[#FF674B]";
   if (layout === "mobile") {
@@ -144,12 +178,16 @@ export function CopyTradeRankItem({
           <PortfolioTableMobileField label={t("predictions")}>
             {formatStatValue(stats.trades, (value) => String(value))}
           </PortfolioTableMobileField>
-          <PortfolioTableMobileField
-            label={t("pnl7d")}
-            valueClassName={pnl7dTone}
-          >
-            {formatStatValue(pnl7d, formatSignedCompactUsd)}
-          </PortfolioTableMobileField>
+          <div className="col-span-2">
+            <PortfolioTableMobileField
+              label={t("pnl7d")}
+              inline
+              labelClassName="shrink-0 whitespace-nowrap"
+              valueClassName="text-[12px] leading-[14px] tabular-nums"
+            >
+              <Pnl7dDualValue pnl7d={pnl7d} fifaPnl7d={fifaPnl7d} />
+            </PortfolioTableMobileField>
+          </div>
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-prophet-line pt-3">
@@ -253,14 +291,8 @@ export function CopyTradeRankItem({
       >
         {formatStatValue(stats.trades, (value) => String(value))}
       </span>
-      <span
-        className={cn(
-          copyTradeRankColStatClass,
-          "text-[16px] leading-5 tabular-nums",
-          pnl7dTone
-        )}
-      >
-        {formatStatValue(pnl7d, formatSignedCompactUsd)}
+      <span className={copyTradeRankColPnl7dClass}>
+        <Pnl7dDualValue pnl7d={pnl7d} fifaPnl7d={fifaPnl7d} />
       </span>
 
       <div className={copyTradeRankColActionClass}>
