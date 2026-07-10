@@ -34,6 +34,7 @@ import {
   copyTradeRankColPredictionsClass,
   copyTradeRankColRankClass,
   copyTradeRankGridStyle,
+  copyTradeRankPnl7dEnabled,
   copyTradeRankRowGridClass
 } from "./grid";
 
@@ -178,16 +179,18 @@ export function CopyTradeRankItem({
           <PortfolioTableMobileField label={t("predictions")}>
             {formatStatValue(stats.trades, (value) => String(value))}
           </PortfolioTableMobileField>
-          <div className="col-span-2">
-            <PortfolioTableMobileField
-              label={t("pnl7d")}
-              inline
-              labelClassName="shrink-0 whitespace-nowrap"
-              valueClassName="text-[12px] leading-[14px] tabular-nums"
-            >
-              <Pnl7dDualValue pnl7d={pnl7d} fifaPnl7d={fifaPnl7d} />
-            </PortfolioTableMobileField>
-          </div>
+          {copyTradeRankPnl7dEnabled ? (
+            <div className="col-span-2">
+              <PortfolioTableMobileField
+                label={t("pnl7d")}
+                inline
+                labelClassName="shrink-0 whitespace-nowrap"
+                valueClassName="text-[12px] leading-[14px] tabular-nums"
+              >
+                <Pnl7dDualValue pnl7d={pnl7d} fifaPnl7d={fifaPnl7d} />
+              </PortfolioTableMobileField>
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-prophet-line pt-3">
@@ -291,9 +294,11 @@ export function CopyTradeRankItem({
       >
         {formatStatValue(stats.trades, (value) => String(value))}
       </span>
-      <span className={copyTradeRankColPnl7dClass}>
-        <Pnl7dDualValue pnl7d={pnl7d} fifaPnl7d={fifaPnl7d} />
-      </span>
+      {copyTradeRankPnl7dEnabled ? (
+        <span className={copyTradeRankColPnl7dClass}>
+          <Pnl7dDualValue pnl7d={pnl7d} fifaPnl7d={fifaPnl7d} />
+        </span>
+      ) : null}
 
       <div className={copyTradeRankColActionClass}>
         <TraderTrackButton

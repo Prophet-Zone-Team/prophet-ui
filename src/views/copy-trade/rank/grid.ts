@@ -1,5 +1,16 @@
-export const copyTradeRankGridTemplateColumns =
+import { isCopyTradeRankPnl7dEnabled } from "@/config/copy-trade";
+
+const copyTradeRankGridTemplateColumnsWithoutPnl7d =
+  "36px minmax(0,1.4fr) minmax(72px,0.8fr) minmax(92px,0.85fr) minmax(80px,0.8fr) minmax(68px,0.75fr) minmax(104px,1fr)";
+
+const copyTradeRankGridTemplateColumnsWithPnl7d =
   "36px minmax(0,1.4fr) minmax(72px,0.8fr) minmax(92px,0.85fr) minmax(80px,0.8fr) minmax(68px,0.75fr) minmax(180px,1.6fr) minmax(104px,1fr)";
+
+export const copyTradeRankPnl7dEnabled = isCopyTradeRankPnl7dEnabled();
+
+export const copyTradeRankGridTemplateColumns = copyTradeRankPnl7dEnabled
+  ? copyTradeRankGridTemplateColumnsWithPnl7d
+  : copyTradeRankGridTemplateColumnsWithoutPnl7d;
 
 export const copyTradeRankTableGridClass =
   "grid w-full min-w-0 gap-y-2 [grid-template-columns:var(--copy-trade-rank-cols)]";
