@@ -1,5 +1,5 @@
 export const copyTradeRankGridTemplateColumns =
-  "36px minmax(0,1.6fr) minmax(88px,1fr) minmax(112px,1fr) minmax(96px,1fr) minmax(88px,1fr) minmax(112px,1fr) minmax(112px,1fr)";
+  "36px minmax(0,1.6fr) minmax(88px,1fr) minmax(112px,1fr) minmax(96px,1fr) minmax(88px,1fr) minmax(96px,1fr) minmax(112px,1fr)";
 
 export const copyTradeRankTableGridClass =
   "grid w-full min-w-0 gap-y-2 [grid-template-columns:var(--copy-trade-rank-cols)]";

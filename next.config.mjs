@@ -3,15 +3,11 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 // Keep in sync with src/config/copy-trade.ts — next.config runs in plain Node (no @/ aliases).
-// const copyTradeApiUpstream = (
-//   process.env.NEXT_PUBLIC_ENV === "production"
-//     ? "https://apicopy.prophet.zone"
-//     : "https://api.zerostrategy.fun"
-// ).replace(/\/$/, "");
-
-const copyTradeApiUpstream = "https://api.zerostrategy.fun";
-
-const isVercelBuild = process.env.VERCEL === "1";
+const copyTradeApiUpstream = (
+  process.env.NEXT_PUBLIC_ENV === "production"
+    ? "https://apicopy.prophet.zone"
+    : "https://api.zerostrategy.fun"
+).replace(/\/$/, "");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -39,6 +35,13 @@ const nextConfig = {
         protocol: "https",
         hostname: "**"
       }
+    ]
+  },
+  outputFileTracingIncludes: {
+    "/trade/game": [
+      "./node_modules/@resvg/resvg-wasm/index_bg.wasm",
+      "./public/fonts/Sora-*.ttf",
+      "./public/referral/prophet-logo.png"
     ]
   },
   outputFileTracingExcludes: {

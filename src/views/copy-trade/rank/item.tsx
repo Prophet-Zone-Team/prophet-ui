@@ -94,22 +94,21 @@ export function CopyTradeRankItem({
   const tag = traderTag(trader);
   const isCopyButtonDisabled = copyTradeBusy || copyTradeDisabled;
   const stats = resolveTraderRankDisplayStats(trader, timeRange);
+  const pnl7d = traderPnL7d(trader);
   const pnlValue = stats.pnl ?? 0;
+  const pnl7dValue = pnl7d ?? 0;
   const pnlTone =
     stats.pnl === null
       ? "text-prophet-muted"
       : pnlValue >= 0
         ? "text-[#65AF14]"
         : "text-[#FF674B]";
-  const pnl7d = traderPnL7d(trader);
-  const pnl7dValue = pnl7d ?? 0;
   const pnl7dTone =
     pnl7d === null
       ? "text-prophet-muted"
       : pnl7dValue >= 0
         ? "text-[#65AF14]"
         : "text-[#FF674B]";
-
   if (layout === "mobile") {
     return (
       <article

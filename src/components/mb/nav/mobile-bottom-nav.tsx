@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 
 import {
   PortfolioIcon,
+  SmartMoneyIcon,
   StrategiesIcon,
   WorldCupIcon
 } from "@/components/mb/nav/icons";
@@ -22,6 +23,7 @@ import { formatNumber } from "@/utils";
 
 const NAV_ICON_MAP = {
   strategies: StrategiesIcon,
+  smartMoney: SmartMoneyIcon,
   worldCup: WorldCupIcon,
   portfolio: PortfolioIcon
 } as const;
