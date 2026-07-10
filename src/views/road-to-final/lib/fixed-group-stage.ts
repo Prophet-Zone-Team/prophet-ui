@@ -7,7 +7,7 @@ import type { GroupPlacements } from "../types";
  * Bump when confirmed group-stage inputs or confirmed knockout results change
  * (see fixed-knockout.ts) and persisted knockout picks must reset.
  */
-export const ROAD_TO_FINAL_BRACKET_VERSION = 13;
+export const ROAD_TO_FINAL_BRACKET_VERSION = 14;
 
 // Final 2026 World Cup group-stage standings used to resolve confirmed Round of 32 matchups.
 export const CONFIRMED_GROUP_PLACEMENTS: GroupPlacements = {
