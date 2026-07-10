@@ -12,7 +12,6 @@ import {
   copyTradeRankColPredictionsClass,
   copyTradeRankColRankClass,
   copyTradeRankGridStyle,
-  copyTradeRankPnl7dEnabled,
   copyTradeRankRowGridClass
 } from "./grid";
 
@@ -54,15 +53,9 @@ export function CopyTradeRankTableHeader({
       <span role="columnheader" className={copyTradeRankColPredictionsClass}>
         {t("predictions")}
       </span>
-      {copyTradeRankPnl7dEnabled ? (
-        <span
-          role="columnheader"
-          className={cn(copyTradeRankColPnl7dClass, "flex flex-col gap-0.5")}
-        >
-          <span>{t("pnl7dLabel")}</span>
-          <span>{t("fifaPnl7dLabel")}</span>
-        </span>
-      ) : null}
+      <span role="columnheader" className={copyTradeRankColPnl7dClass}>
+        {t("pnl7dLabel")}
+      </span>
       <span role="columnheader" className={copyTradeRankColActionClass}>
         {tCommon("action")}
       </span>
