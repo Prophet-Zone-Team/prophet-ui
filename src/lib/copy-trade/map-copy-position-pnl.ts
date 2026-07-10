@@ -1,3 +1,4 @@
+import { resolvePortfolioPositionTradeHref } from "@/lib/portfolio/resolve-position-trade-href";
 import {
   resolvePortfolioPositionIcon,
   type OpenOrderMarketContext
@@ -15,6 +16,23 @@ function resolveMarketContext(
   marketContextMap: Record<string, OpenOrderMarketContext>
 ): OpenOrderMarketContext | undefined {
   return marketContextMap[conditionId.trim()];
+}
+
+function resolveCopyPositionTradeHref(
+  positionLike: UserPositionRecord,
+  context: OpenOrderMarketContext | undefined
+): string | undefined {
+  return resolvePortfolioPositionTradeHref(
+    {
+      slug: positionLike.slug,
+      eventSlug: positionLike.eventSlug
+    },
+    {
+      marketKind: context?.marketKind,
+      contextSlug: context?.slug,
+      teams: context?.teams ?? []
+    }
+  );
 }
 
 export function collectUniqueConditionIdsFromCopyPositionPnL(
@@ -39,6 +57,7 @@ export function mapCopyPositionPnLToActiveDisplay(
 ): CopyWalletPositionDisplay {
   const context = resolveMarketContext(row.condition_id, marketContextMap);
   const positionLike = mapCopyPositionPnLToUserPositionRecord(row);
+  const teams = context?.teams ?? [];
 
   return {
     id: row.token_id || `${row.condition_id}:${row.outcome}`,
@@ -52,10 +71,11 @@ export function mapCopyPositionPnLToActiveDisplay(
     cashPnl: row.cash_pnl,
     percentPnl: row.percent_pnl,
     lastTradeAt: row.last_trade_at?.trim() ?? "",
-    icon: resolvePortfolioPositionIcon(positionLike, context?.teams ?? [], {
+    icon: resolvePortfolioPositionIcon(positionLike, teams, {
       contextIcon: context?.icon,
       marketKind: context?.marketKind
-    })
+    }),
+    tradeHref: resolveCopyPositionTradeHref(positionLike, context)
   };
 }
 
@@ -67,6 +87,7 @@ export function mapCopyPositionPnLToEndedDisplay(
   const positionLike = mapCopyPositionPnLToUserPositionRecord(row);
   const currentValue = row.spent_usd > 0 ? row.spent_usd : row.initial_value;
   const cashPnl = row.realized_pnl ?? row.cash_pnl;
+  const teams = context?.teams ?? [];
 
   return {
     id: row.token_id || `${row.condition_id}:${row.outcome}`,
@@ -80,10 +101,11 @@ export function mapCopyPositionPnLToEndedDisplay(
     cashPnl,
     percentPnl: row.percent_pnl,
     lastTradeAt: row.last_trade_at?.trim() ?? "",
-    icon: resolvePortfolioPositionIcon(positionLike, context?.teams ?? [], {
+    icon: resolvePortfolioPositionIcon(positionLike, teams, {
       contextIcon: context?.icon,
       marketKind: context?.marketKind
-    })
+    }),
+    tradeHref: resolveCopyPositionTradeHref(positionLike, context)
   };
 }
 

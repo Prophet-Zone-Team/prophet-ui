@@ -1567,6 +1567,7 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, other {# エントリー}}",
     "entryStructureMaxNote": "1人あたり最大5エントリー",
+    "entryStructureMaxNoteReadMore": "詳細を見る",
     "campaignRulesTitle": "Prophet ワールドカップ $10K ブラケットチャレンジ",
     "campaignRulesIntro": "ルートを予測。Prophet でピックを裏付け。$10,000 を獲得。完全なワールドカップブラケットを作成し、実際のポジションで予測を裏付け、最も正確なブラケットがグランプリを獲得。抽選なし。運なし。純粋な予測スキル。",
     "campaignRulesHowToPlayTitle": "参加方法",
@@ -1729,7 +1730,7 @@
       "profitLoss": "損益",
       "volume": "出来高",
       "predictions": "予測数",
-      "pnl7d": "7日損益"
+      "pnl7d": "7日損益/FIFA 7日損益"
     },
     "copiedWallet": {
       "ariaList": "コピー済みウォレットリスト",
@@ -2002,7 +2003,11 @@
         "transferDepositStatusWaitingConfirmations": "Transaction found. Waiting for block confirmations.",
         "transferDepositStatusTxNotFound": "Transaction not found on-chain yet. Retrying shortly.",
         "transferDepositStatusRpcRetry": "Temporary network issue while checking status. Retrying shortly.",
-        "transferDepositConfirmations": "Confirmations"
+        "transferDepositConfirmations": "Confirmations",
+        "iHaveTransferred": "I have transferred",
+        "qrMinDepositWarning": "Deposits below {amount} may not be credited.",
+        "waitingForDepositTitle": "Waiting for deposit",
+        "waitingForDepositDescription": "We are checking for your transfer. This can take a few minutes."
       },
       "withdraw": {
         "ariaWithdraw": "Copy trade withdraw",

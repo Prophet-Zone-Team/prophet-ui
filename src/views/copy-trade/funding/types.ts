@@ -1,4 +1,4 @@
-export type CopyDepositStep = "asset" | "confirm" | "status";
+export type CopyDepositStep = "qr" | "asset" | "confirm" | "status";
 
 export type CopyDepositMethod = "connected" | "polymarket";
 

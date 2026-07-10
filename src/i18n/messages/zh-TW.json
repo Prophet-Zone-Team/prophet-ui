@@ -1572,6 +1572,7 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, other {# 次}}",
     "entryStructureMaxNote": "每人最多 5 次參賽",
+    "entryStructureMaxNoteReadMore": "了解更多",
     "campaignRulesTitle": "Prophet 世界盃 $10K 對陣挑戰",
     "campaignRulesIntro": "預測路線。在 Prophet 支持你的選擇。贏取 $10,000。建立完整世界盃對陣表，以真實倉位支持你的預測，最準確的對陣表將贏得大獎。無抽獎。無運氣。純粹的預測技巧。",
     "campaignRulesHowToPlayTitle": "如何參與",
@@ -1734,7 +1735,7 @@
       "profitLoss": "盈虧",
       "volume": "成交量",
       "predictions": "預測數",
-      "pnl7d": "7日盈虧"
+      "pnl7d": "7日盈虧/FIFA 7日盈虧"
     },
     "copiedWallet": {
       "ariaList": "已跟單錢包列表",
@@ -1987,7 +1988,11 @@
         "bridgingDescription": "您的入金正在跨鏈處理中，可能需要數分鐘。",
         "transaction": "交易",
         "bridgeTransactions": "跨鏈交易",
-        "pending": "處理中"
+        "pending": "處理中",
+        "iHaveTransferred": "我已完成轉帳",
+        "qrMinDepositWarning": "低於 {amount} 的轉帳可能無法到帳。",
+        "waitingForDepositTitle": "等待入金",
+        "waitingForDepositDescription": "正在確認您的轉帳，可能需要數分鐘。"
       },
       "withdraw": {
         "ariaWithdraw": "跟單出金",

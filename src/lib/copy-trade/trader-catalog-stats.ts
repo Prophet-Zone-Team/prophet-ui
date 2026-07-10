@@ -83,11 +83,12 @@ export function traderPnL24h(trader: TraderCatalogEntry): number {
 }
 
 export function traderPnL7d(trader: TraderCatalogEntry): number | null {
-  if (trader.FifaPnL7d == null || !Number.isFinite(trader.FifaPnL7d)) {
+  const value = trader.FifaPnL7d;
+  if (value == null || !Number.isFinite(value)) {
     return null;
   }
 
-  return trader.FifaPnL7d;
+  return value;
 }
 
 export function resolveRiskTone(level: string): TraderRiskTone {

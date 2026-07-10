@@ -1558,6 +1558,7 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, one {# участие} few {# участия} many {# участий} other {# участий}}",
     "entryStructureMaxNote": "Максимум 5 участий на человека",
+    "entryStructureMaxNoteReadMore": "Подробнее",
     "campaignRulesTitle": "Prophet World Cup $10K Bracket Challenge",
     "campaignRulesIntro": "Предскажите путь. Подкрепите выбор на Prophet. Выиграйте $10,000. Создайте полную сетку ЧМ, подкрепите прогнозы реальными позициями — самая точная сетка получит главный приз. Без розыгрыша. Без удачи. Только навык прогнозирования.",
     "campaignRulesHowToPlayTitle": "Как участвовать",
@@ -1720,7 +1721,7 @@
       "profitLoss": "Прибыль/убыток",
       "volume": "Объём",
       "predictions": "Прогнозы",
-      "pnl7d": "PnL 7Д"
+      "pnl7d": "PnL 7Д/PnL FIFA 7Д"
     },
     "copiedWallet": {
       "ariaList": "Список скопированных кошельков",
@@ -1993,7 +1994,11 @@
         "transferDepositStatusWaitingConfirmations": "Transaction found. Waiting for block confirmations.",
         "transferDepositStatusTxNotFound": "Transaction not found on-chain yet. Retrying shortly.",
         "transferDepositStatusRpcRetry": "Temporary network issue while checking status. Retrying shortly.",
-        "transferDepositConfirmations": "Confirmations"
+        "transferDepositConfirmations": "Confirmations",
+        "iHaveTransferred": "I have transferred",
+        "qrMinDepositWarning": "Deposits below {amount} may not be credited.",
+        "waitingForDepositTitle": "Waiting for deposit",
+        "waitingForDepositDescription": "We are checking for your transfer. This can take a few minutes."
       },
       "withdraw": {
         "ariaWithdraw": "Copy trade withdraw",

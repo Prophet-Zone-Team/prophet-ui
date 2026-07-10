@@ -1572,6 +1572,7 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, one {# Entry} other {# Entries}}",
     "entryStructureMaxNote": "Maximum 5 entries per person",
+    "entryStructureMaxNoteReadMore": "Read more",
     "campaignRulesTitle": "Prophet World Cup $10K Bracket Challenge",
     "campaignRulesIntro": "Predict the path. Back your picks on Prophet. Win $10,000. Build a full World Cup bracket, put real positions behind your predictions, and the most accurate bracket takes the grand prize. No raffle. No luck. Just prediction skill.",
     "campaignRulesHowToPlayTitle": "How to Play",
@@ -1734,7 +1735,7 @@
       "profitLoss": "Profit/Loss",
       "volume": "Volume",
       "predictions": "Predictions",
-      "pnl7d": "7D PnL"
+      "pnl7d": "7D PnL/FIFA 7D PnL"
     },
     "copiedWallet": {
       "ariaList": "Copied wallet list",
@@ -2007,7 +2008,11 @@
         "transferDepositStatusWaitingConfirmations": "Transaction found. Waiting for block confirmations.",
         "transferDepositStatusTxNotFound": "Transaction not found on-chain yet. Retrying shortly.",
         "transferDepositStatusRpcRetry": "Temporary network issue while checking status. Retrying shortly.",
-        "transferDepositConfirmations": "Confirmations"
+        "transferDepositConfirmations": "Confirmations",
+        "iHaveTransferred": "I have transferred",
+        "qrMinDepositWarning": "Deposits below {amount} may not be credited.",
+        "waitingForDepositTitle": "Waiting for deposit",
+        "waitingForDepositDescription": "We are checking for your transfer. This can take a few minutes."
       },
       "withdraw": {
         "ariaWithdraw": "Copy trade withdraw",

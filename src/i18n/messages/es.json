@@ -1558,6 +1558,7 @@
     "entryStructureTierVolume": "${amount}+",
     "entryStructureTierEntries": "{count, plural, one {# entrada} other {# entradas}}",
     "entryStructureMaxNote": "Máximo 5 entradas por persona",
+    "entryStructureMaxNoteReadMore": "Leer más",
     "campaignRulesTitle": "Desafío de Bracket Prophet World Cup $10K",
     "campaignRulesIntro": "Predice el camino. Respalda tus picks en Prophet. Gana $10,000. Crea un bracket completo del Mundial, respalda tus predicciones con posiciones reales, y el bracket más preciso gana el gran premio. Sin sorteo. Sin suerte. Solo habilidad de predicción.",
     "campaignRulesHowToPlayTitle": "Cómo jugar",
@@ -1720,7 +1721,7 @@
       "profitLoss": "Ganancias/Pérdidas",
       "volume": "Volumen",
       "predictions": "Predicciones",
-      "pnl7d": "PnL 7D"
+      "pnl7d": "PnL 7D/PnL FIFA 7D"
     },
     "copiedWallet": {
       "ariaList": "Lista de billeteras copiadas",
@@ -1993,7 +1994,11 @@
         "transferDepositStatusWaitingConfirmations": "Transaction found. Waiting for block confirmations.",
         "transferDepositStatusTxNotFound": "Transaction not found on-chain yet. Retrying shortly.",
         "transferDepositStatusRpcRetry": "Temporary network issue while checking status. Retrying shortly.",
-        "transferDepositConfirmations": "Confirmations"
+        "transferDepositConfirmations": "Confirmations",
+        "iHaveTransferred": "I have transferred",
+        "qrMinDepositWarning": "Deposits below {amount} may not be credited.",
+        "waitingForDepositTitle": "Waiting for deposit",
+        "waitingForDepositDescription": "We are checking for your transfer. This can take a few minutes."
       },
       "withdraw": {
         "ariaWithdraw": "Copy trade withdraw",

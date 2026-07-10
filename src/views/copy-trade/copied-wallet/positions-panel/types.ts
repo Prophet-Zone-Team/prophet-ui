@@ -15,4 +15,5 @@ export interface CopyWalletPositionDisplay {
   percentPnl: number;
   lastTradeAt: string;
   icon: PortfolioMarketIcon;
+  tradeHref?: string;
 }

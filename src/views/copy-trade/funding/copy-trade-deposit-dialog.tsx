@@ -12,14 +12,17 @@ import {
 } from "@/hooks/copy-trade/use-copy-trade-polymarket-deposit";
 import { useCopyTradeDeposit } from "@/hooks/copy-trade/use-copy-trade-deposit";
 import { useCopyTradeTransferDepositStatus } from "@/hooks/copy-trade/use-copy-trade-transfer-deposit-status";
-import type { CopyDepositChainOption } from "@/lib/copy-trade/deposit-assets";
-import { formatNumber } from "@/utils";
+import { useFundingWalletConnect } from "@/hooks/funding/use-funding-wallet-connect";
 import {
-  FundingModalShell,
-  fundingPrimaryButtonClass,
-} from "@/views/portfolio/shared/funding-modal-shell";
-import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
-import { DepositAddressStep } from "@/views/copy-trade/funding/deposit-address-step";
+  resolveCopyDepositAddress,
+  type CopyDepositChainOption,
+} from "@/lib/copy-trade/deposit-assets";
+import { requiresDepositFundingWalletConnection } from "@/lib/funding/stableflow";
+import { DEFAULT_DEPOSIT_ASSET, POLYGON_NETWORK } from "@/lib/market/deposit-assets";
+import { isTpFundingSwitchPendingError } from "@/lib/wallet/tokenpocket/tp-funding-switch";
+import { useAuthStore } from "@/store/auth-store";
+import { formatNumber } from "@/utils";
+import { DepositQrStep } from "@/views/copy-trade/funding/deposit-address-step";
 import { DepositAssetStep } from "@/views/copy-trade/funding/deposit-asset-step";
 import { DepositConnectedStep } from "@/views/copy-trade/funding/deposit-connected-step";
 import {
@@ -32,13 +35,31 @@ import { DepositTransferStatusStep } from "@/views/copy-trade/funding/deposit-tr
 import type { CopyDepositMethod, CopyDepositStep } from "@/views/copy-trade/funding/types";
 import { copyTradeBalanceQueryKey } from "@/views/copy-trade/use-copy-trade-profile-stats";
 import { useCopyTradeSession } from "@/views/copy-trade/use-copy-trade-session";
-import { DEFAULT_DEPOSIT_ASSET, POLYGON_NETWORK } from "@/lib/market/deposit-assets";
+import {
+  FundingModalShell,
+  fundingPrimaryButtonClass,
+} from "@/views/portfolio/shared/funding-modal-shell";
+import { FundingResponsiveOverlay } from "@/views/portfolio/shared/funding-responsive-overlay";
 import Big from "big.js";
 import { Loader2 } from "lucide-react";
 
 export interface CopyTradeDepositDialogProps {
   open: boolean;
   onClose: () => void;
+}
+
+function pickDefaultToken(tokens: FundingAsset[]): FundingAsset | undefined {
+  return (
+    tokens.find((token) => {
+      if (token.chainId === 56) {
+        return (
+          token.symbol === DEFAULT_DEPOSIT_ASSET.symbol &&
+          token.name === "USD Coin"
+        );
+      }
+      return token.symbol === DEFAULT_DEPOSIT_ASSET.symbol;
+    }) ?? tokens[0]
+  );
 }
 
 export function CopyTradeDepositDialog({
@@ -48,13 +69,18 @@ export function CopyTradeDepositDialog({
   const t = useTranslations("copyTrade.funding.deposit");
   const tPortfolio = useTranslations("portfolio");
   const tAuth = useTranslations("auth");
+  const tWallet = useTranslations("wallet");
   const queryClient = useQueryClient();
   const { userId } = useCopyTradeSession();
+  const loginMethod = useAuthStore((state) => state.loginMethod);
+  const sessionWalletAddress = useAuthStore(
+    (state) => state.session?.walletAddress,
+  );
 
   const handleCredited = useCallback(
     (credited: number) => {
       toast.success(
-        t("depositCredited", { amount: formatNumber(credited, 2) })
+        t("depositCredited", { amount: formatNumber(credited, 2) }),
       );
 
       if (userId) {
@@ -63,35 +89,44 @@ export function CopyTradeDepositDialog({
         });
       }
     },
-    [queryClient, t, userId]
+    [queryClient, t, userId],
   );
 
-  const deposit = useCopyTradeDeposit({
-    open,
-    onCredited: handleCredited,
-  });
-
   const [step, setStep] = useState<CopyDepositStep>("asset");
-  const [depositMethod, setDepositMethod] = useState<CopyDepositMethod>("connected");
+  const [depositMethod, setDepositMethod] =
+    useState<CopyDepositMethod>("connected");
   const [selectedChain, setSelectedChain] =
     useState<CopyDepositChainOption | null>(null);
   const [selectedToken, setSelectedToken] = useState<FundingAsset | null>(null);
   const [amount, setAmount] = useState("");
   const [txHash, setTxHash] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [connectingWallet, setConnectingWallet] = useState(false);
   const [errorText, setErrorText] = useState<string | undefined>();
+
+  const deposit = useCopyTradeDeposit({
+    open,
+    onCredited: handleCredited,
+    aggressiveStatusPolling: step === "status",
+  });
 
   const polymarketDeposit = useCopyTradePolymarketDeposit({
     copyDepositWalletAddress: deposit.copyDepositWalletAddress,
     walletReady: deposit.walletReady,
-    isSocialLogin: deposit.isSocialLogin
+    isSocialLogin: deposit.isSocialLogin,
   });
 
   const transferDepositStatus = useCopyTradeTransferDepositStatus({
     open: open && step === "status" && depositMethod === "polymarket",
     txHash,
-    onCredited: handleCredited
+    onCredited: handleCredited,
   });
+
+  const {
+    connectForDepositToken,
+    isConnectedForDepositToken,
+    getDepositConnectLabelKey,
+  } = useFundingWalletConnect();
 
   const tokensForChain = useMemo(
     () =>
@@ -99,31 +134,72 @@ export function CopyTradeDepositDialog({
     [deposit, selectedChain],
   );
 
+  const qrDepositAddress = useMemo(() => {
+    if (!selectedChain) {
+      return "";
+    }
+    return resolveCopyDepositAddress(
+      deposit.depositAddress,
+      selectedChain.chainType,
+    );
+  }, [deposit.depositAddress, selectedChain]);
+
+  const formatDepositConnectLabel = useCallback(
+    (token: FundingAsset) => {
+      const labelKey = getDepositConnectLabelKey(token);
+      if (labelKey === "connectChainWallet") {
+        return tWallet(labelKey, { chainName: token.chainName });
+      }
+      return tWallet(labelKey);
+    },
+    [getDepositConnectLabelKey, tWallet],
+  );
+
+  const handleFundingWalletConnect = useCallback(
+    async (token: FundingAsset) => {
+      setConnectingWallet(true);
+      try {
+        await connectForDepositToken(token, loginMethod);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (isTpFundingSwitchPendingError(error)) {
+          toast.message(message);
+          return;
+        }
+        toast.error(message);
+      } finally {
+        setConnectingWallet(false);
+      }
+    },
+    [connectForDepositToken, loginMethod],
+  );
+
   useEffect(() => {
     if (!open) {
       return;
     }
-    setStep("asset");
+    setStep(deposit.isSocialLogin ? "qr" : "asset");
     setDepositMethod("connected");
     setAmount("");
     setTxHash("");
     setErrorText(undefined);
-  }, [open]);
+  }, [deposit.isSocialLogin, open]);
 
   useEffect(() => {
-    if (deposit.isSocialLogin) {
-      return;
-    }
     if (!selectedChain && deposit.chainOptions.length > 0) {
-      const defaultSelectedChain = deposit.chainOptions.find((chain) => chain.chainId === POLYGON_NETWORK.chainId) ?? deposit.chainOptions[0];
+      const defaultSelectedChain =
+        deposit.chainOptions.find(
+          (chain) => chain.chainId === POLYGON_NETWORK.chainId,
+        ) ?? deposit.chainOptions[0];
       setSelectedChain(defaultSelectedChain);
     }
-  }, [deposit.chainOptions, deposit.isSocialLogin, selectedChain]);
+  }, [deposit.chainOptions, selectedChain]);
 
   useEffect(() => {
-    if (deposit.isSocialLogin || !selectedChain) {
+    if (!selectedChain) {
       return;
     }
+
     const exists =
       selectedToken &&
       tokensForChain.some(
@@ -131,16 +207,12 @@ export function CopyTradeDepositDialog({
           token.address === selectedToken.address &&
           token.chainId === selectedToken.chainId,
       );
+
     if (!exists) {
-      const defaultSelectedToken = tokensForChain.find((token) => {
-        if (token.chainId === 56) {
-          return token.symbol === DEFAULT_DEPOSIT_ASSET.symbol && token.name === "USD Coin";
-        }
-        return token.symbol === DEFAULT_DEPOSIT_ASSET.symbol;
-      }) ?? tokensForChain[0];
-      setSelectedToken(defaultSelectedToken);
+      const defaultSelectedToken = pickDefaultToken(tokensForChain);
+      setSelectedToken(defaultSelectedToken ?? null);
     }
-  }, [deposit.isSocialLogin, selectedChain, selectedToken, tokensForChain]);
+  }, [selectedChain, selectedToken, tokensForChain]);
 
   const validateConnectedAmount = (): string | undefined => {
     if (!selectedToken) {
@@ -195,6 +267,11 @@ export function CopyTradeDepositDialog({
     setStep("confirm");
   };
 
+  const handleContinueFromQr = () => {
+    setStep("status");
+    void deposit.refreshStatus();
+  };
+
   const handleConfirmTransfer = async () => {
     if (!selectedToken) {
       return;
@@ -244,11 +321,29 @@ export function CopyTradeDepositDialog({
     }
 
     if (deposit.isSocialLogin) {
+      if (step === "qr") {
+        return (
+          <DepositQrStep
+            chainOptions={deposit.chainOptions}
+            tokensForChain={tokensForChain}
+            selectedChain={selectedChain}
+            selectedToken={selectedToken}
+            depositAddress={qrDepositAddress}
+            loading={deposit.addressLoading}
+            assetsLoading={deposit.assetsLoading}
+            onChainChange={(chain) => {
+              setSelectedChain(chain);
+            }}
+            onTokenChange={setSelectedToken}
+          />
+        );
+      }
+
       return (
-        <DepositAddressStep
-          address={deposit.evmDepositAddress}
-          loading={deposit.addressLoading}
+        <DepositStatusStep
+          txHash=""
           status={deposit.status}
+          mode="qr"
         />
       );
     }
@@ -326,7 +421,7 @@ export function CopyTradeDepositDialog({
         <DepositConnectedStep
           token={selectedToken}
           amount={amount}
-          toAddress={deposit.evmDepositAddress}
+          toAddress={deposit.resolveDepositAddressForToken(selectedToken)}
           errorText={errorText}
         />
       );
@@ -343,11 +438,49 @@ export function CopyTradeDepositDialog({
       );
     }
 
-    return <DepositStatusStep txHash={txHash} status={deposit.status} />;
+    return (
+      <DepositStatusStep
+        txHash={txHash}
+        status={deposit.status}
+        mode="wallet"
+      />
+    );
   };
 
   const renderFooter = () => {
-    if (!deposit.walletReady || deposit.isSocialLogin) {
+    if (!deposit.walletReady) {
+      return undefined;
+    }
+
+    if (deposit.isSocialLogin) {
+      if (step === "qr") {
+        const canContinue =
+          Boolean(qrDepositAddress) && !deposit.addressLoading;
+
+        return (
+          <button
+            type="button"
+            className={fundingPrimaryButtonClass}
+            disabled={!canContinue}
+            onClick={handleContinueFromQr}
+          >
+            {t("iHaveTransferred")}
+          </button>
+        );
+      }
+
+      if (step === "status") {
+        return (
+          <button
+            type="button"
+            className={fundingPrimaryButtonClass}
+            onClick={onClose}
+          >
+            {tAuth("done")}
+          </button>
+        );
+      }
+
       return undefined;
     }
 
@@ -368,21 +501,50 @@ export function CopyTradeDepositDialog({
     }
 
     if (step === "asset") {
+      if (selectedToken) {
+        const needsFundingWallet = requiresDepositFundingWalletConnection(
+          selectedToken,
+          loginMethod,
+        );
+        const walletConnected = isConnectedForDepositToken(
+          selectedToken,
+          loginMethod,
+          sessionWalletAddress,
+        );
+
+        if (needsFundingWallet && !walletConnected) {
+          return (
+            <button
+              type="button"
+              className={fundingPrimaryButtonClass}
+              disabled={connectingWallet}
+              onClick={() => void handleFundingWalletConnect(selectedToken)}
+            >
+              {connectingWallet ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              {formatDepositConnectLabel(selectedToken)}
+            </button>
+          );
+        }
+      }
+
       return (
         <button
           type="button"
           className={fundingPrimaryButtonClass}
-          disabled={!selectedToken || !amount || Big(amount).lte(0) || deposit.balancesLoading}
+          disabled={
+            !selectedToken ||
+            !amount ||
+            Big(amount).lte(0) ||
+            deposit.balancesLoading
+          }
           onClick={handleContinue}
         >
-          {
-            deposit.balancesLoading && (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            )
-          }
-          <div className="">
-            {tAuth("continue")}
-          </div>
+          {deposit.balancesLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : null}
+          {tAuth("continue")}
         </button>
       );
     }
@@ -400,29 +562,36 @@ export function CopyTradeDepositDialog({
       );
     }
 
-    return (
-      <button
-        type="button"
-        className={fundingPrimaryButtonClass}
-        onClick={onClose}
-      >
-        {tAuth("done")}
-      </button>
-    );
+    if (step === "status") {
+      return (
+        <button
+          type="button"
+          className={fundingPrimaryButtonClass}
+          onClick={onClose}
+        >
+          {tAuth("done")}
+        </button>
+      );
+    }
+
+    return undefined;
   };
 
-  const onBack =
-    !deposit.isSocialLogin && step === "confirm"
+  const onBack = deposit.isSocialLogin
+    ? step === "status"
+      ? () => setStep("qr")
+      : undefined
+    : step === "confirm"
       ? () => {
-        setErrorText(undefined);
-        setStep("asset");
-      }
-      : !deposit.isSocialLogin && step === "asset" && depositMethod === "polymarket"
-        ? () => {
-          setDepositMethod("connected");
-          setAmount("");
           setErrorText(undefined);
+          setStep("asset");
         }
+      : step === "asset" && depositMethod === "polymarket"
+        ? () => {
+            setDepositMethod("connected");
+            setAmount("");
+            setErrorText(undefined);
+          }
         : undefined;
 
   return (
