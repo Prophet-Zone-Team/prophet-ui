@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -32,6 +33,8 @@ import { DepositPolymarketStep } from "@/views/copy-trade/funding/deposit-polyma
 import { DepositStatusStep } from "@/views/copy-trade/funding/deposit-status-step";
 import { DepositTransferStatusStep } from "@/views/copy-trade/funding/deposit-transfer-status-step";
 import type { CopyDepositMethod, CopyDepositStep } from "@/views/copy-trade/funding/types";
+import { copyTradeBalanceQueryKey } from "@/views/copy-trade/use-copy-trade-profile-stats";
+import { useCopyTradeSession } from "@/views/copy-trade/use-copy-trade-session";
 import {
   FundingModalShell,
   fundingPrimaryButtonClass,
@@ -67,6 +70,8 @@ export function CopyTradeDepositDialog({
   const tPortfolio = useTranslations("portfolio");
   const tAuth = useTranslations("auth");
   const tWallet = useTranslations("wallet");
+  const queryClient = useQueryClient();
+  const { userId } = useCopyTradeSession();
   const loginMethod = useAuthStore((state) => state.loginMethod);
   const sessionWalletAddress = useAuthStore(
     (state) => state.session?.walletAddress,
@@ -88,8 +93,14 @@ export function CopyTradeDepositDialog({
       toast.success(
         t("depositCredited", { amount: formatNumber(credited, 2) }),
       );
+
+      if (userId) {
+        void queryClient.invalidateQueries({
+          queryKey: copyTradeBalanceQueryKey(userId),
+        });
+      }
     },
-    [t],
+    [queryClient, t, userId],
   );
 
   const deposit = useCopyTradeDeposit({
