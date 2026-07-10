@@ -37,8 +37,6 @@ import { PortfolioTableMobileField } from "@/views/portfolio/portfolio-table-mob
 import {
   portfolioActionButtonClass,
   portfolioConnectButtonClass,
-  portfolioPositionsTableHeadClass,
-  portfolioPositionsTableRowClass,
   portfolioTableDesktopScrollClass,
   portfolioTableMobileCardClass,
   portfolioTableMobileListClass,
@@ -50,16 +48,29 @@ import {
   type CopyTradePositionSellConfirm
 } from "./copy-trade-position-sell-dialog";
 
+const portfolioPositionsGridClass =
+  "grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))_6rem]";
+
 const portfolioPositionsReadOnlyGridClass =
-  "grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]";
+  "grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]";
+
+const portfolioPositionsHeadClass = cn(
+  "hidden min-w-[840px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
+  portfolioPositionsGridClass
+);
+
+const portfolioPositionsRowClass = cn(
+  "hidden min-w-[840px] gap-3 border-b border-prophet-line px-4 py-3 text-sm last:border-b-0 items-center md:grid",
+  portfolioPositionsGridClass
+);
 
 const portfolioPositionsReadOnlyHeadClass = cn(
-  "hidden min-w-[720px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
+  "hidden min-w-[840px] gap-3 px-4 py-2 text-xs text-prophet-muted md:grid",
   portfolioPositionsReadOnlyGridClass
 );
 
 const portfolioPositionsReadOnlyRowClass = cn(
-  "hidden min-w-[720px] gap-3 border-b border-prophet-line px-4 py-3 text-sm last:border-b-0 items-center md:grid",
+  "hidden min-w-[840px] gap-3 border-b border-prophet-line px-4 py-3 text-sm last:border-b-0 items-center md:grid",
   portfolioPositionsReadOnlyGridClass
 );
 
@@ -87,13 +98,12 @@ function PortfolioPositionsTableHeader({
   return (
     <div
       className={
-        readOnly
-          ? portfolioPositionsReadOnlyHeadClass
-          : portfolioPositionsTableHeadClass
+        readOnly ? portfolioPositionsReadOnlyHeadClass : portfolioPositionsHeadClass
       }
     >
       <span>{t("market")}</span>
       <span>{t("traded")}</span>
+      <span>{t("sell")}</span>
       <span>{t("toWin")}</span>
       <span>{t("value")}</span>
       {readOnly ? null : (
@@ -340,9 +350,7 @@ export function CopyTradePortfolioPositionsTable({
       <div
         key={rowKey}
         className={
-          readOnly
-            ? portfolioPositionsReadOnlyRowClass
-            : portfolioPositionsTableRowClass
+          readOnly ? portfolioPositionsReadOnlyRowClass : portfolioPositionsRowClass
         }
       >
         <PortfolioMarketCell
@@ -355,6 +363,9 @@ export function CopyTradePortfolioPositionsTable({
         />
         <span className="font-[500]">
           {formatTeamDetailMoney(position.initialValue)}
+        </span>
+        <span className="font-[500]">
+          {formatTeamDetailMoney(row.sell_proceeds_usd)}
         </span>
         <span className="font-[500]">
           {formatTeamDetailMoney(position.size)}
@@ -387,6 +398,9 @@ export function CopyTradePortfolioPositionsTable({
         <div className="grid grid-cols-2 gap-2">
           <PortfolioTableMobileField label={t("traded")}>
             {formatTeamDetailMoney(position.initialValue)}
+          </PortfolioTableMobileField>
+          <PortfolioTableMobileField label={t("sell")}>
+            {formatTeamDetailMoney(row.sell_proceeds_usd)}
           </PortfolioTableMobileField>
           <PortfolioTableMobileField label={t("toWin")}>
             {formatTeamDetailMoney(position.size)}
