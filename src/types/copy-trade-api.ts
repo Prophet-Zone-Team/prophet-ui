@@ -136,6 +136,7 @@ export interface TraderCatalogEntry {
   FifaPnL24h: number;
   PnL7D?: number;
   FifaPnL7d?: number;
+  FifaBuyCount?: number;
   Volume30d: number;
   Trades30d: number;
   TotalWinRate?: number;

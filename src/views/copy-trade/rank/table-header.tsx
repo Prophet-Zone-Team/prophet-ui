@@ -57,9 +57,10 @@ export function CopyTradeRankTableHeader({
       {copyTradeRankPnl7dEnabled ? (
         <span
           role="columnheader"
-          className={cn(copyTradeRankColPnl7dClass, "min-w-[180px]")}
+          className={cn(copyTradeRankColPnl7dClass, "flex flex-col gap-0.5")}
         >
-          {t("pnl7d")}
+          <span>{t("pnl7dLabel")}</span>
+          <span>{t("fifaPnl7dLabel")}</span>
         </span>
       ) : null}
       <span role="columnheader" className={copyTradeRankColActionClass}>

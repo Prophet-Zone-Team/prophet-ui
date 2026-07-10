@@ -1721,7 +1721,9 @@
       "profitLoss": "Прибыль/убыток",
       "volume": "Объём",
       "predictions": "Прогнозы",
-      "pnl7d": "PnL 7Д/PnL FIFA 7Д"
+      "pnl7d": "PnL 7Д/PnL FIFA 7Д",
+      "pnl7dLabel": "PnL 7Д",
+      "fifaPnl7dLabel": "PnL FIFA 7Д"
     },
     "copiedWallet": {
       "ariaList": "Список скопированных кошельков",
