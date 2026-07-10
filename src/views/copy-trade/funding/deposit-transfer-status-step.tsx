@@ -125,7 +125,7 @@ export function DepositTransferStatusStep({
         ) : null}
       </div>
 
-      {errorText || record?.error ? (
+      {errorText || (isFailure && record?.error) ? (
         <p className="text-center text-sm text-red-500">
           {errorText || record?.error}
         </p>
