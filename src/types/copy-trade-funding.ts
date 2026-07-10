@@ -1,7 +1,15 @@
+import type { DepositWalletBatchSignablePayload } from "@/lib/market/deposit-wallet-batch";
+
 // Copy Trade funding (deposit / withdrawal) API shapes.
 // Field casing mirrors the copy-trade Go backend exactly:
 // deposit/supported-assets/withdrawal readiness use snake_case;
 // the Withdrawal lifecycle row uses PascalCase.
+
+export interface CopyTradePolymarketDepositPreparePayload {
+  funderAddress: string;
+  recipient: string;
+  transfer: DepositWalletBatchSignablePayload;
+}
 
 export interface CopyDepositAddress {
   user_id: number;
@@ -30,6 +38,38 @@ export interface CopyDepositStatusResult {
   evm_deposit_address: string;
   transactions: CopyDepositTransaction[];
   credited_pusd: number;
+}
+
+export type CopyTransferDepositStatus =
+  | "submitted"
+  | "waiting_confirmations"
+  | "tx_not_found_retry"
+  | "rpc_retry"
+  | "credited"
+  | "invalid"
+  | "ambiguous";
+
+export interface CopyTransferDeposit {
+  id: number;
+  tx_hash: string;
+  submitter_user_id: number;
+  submitter_wallet_address: string;
+  matched_user_id: number;
+  deposit_wallet_address: string;
+  amount_base_unit: string;
+  amount_pusd: number;
+  status: CopyTransferDepositStatus | string;
+  tx_block_number?: number;
+  latest_block_number?: number;
+  confirmations?: number;
+  log_index?: number;
+  ledger_ref_id?: string;
+  attempts?: number;
+  next_attempt_at?: string | null;
+  last_alert_at?: string | null;
+  error?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CopyBridgeSupportedAsset {

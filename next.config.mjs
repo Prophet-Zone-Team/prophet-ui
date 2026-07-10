@@ -9,7 +9,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 //     : "https://api.zerostrategy.fun"
 // ).replace(/\/$/, "");
 
-const copyTradeApiUpstream = "https://apicopy.prophet.zone";
+const copyTradeApiUpstream = "https://api.zerostrategy.fun";
 
 const isVercelBuild = process.env.VERCEL === "1";
 

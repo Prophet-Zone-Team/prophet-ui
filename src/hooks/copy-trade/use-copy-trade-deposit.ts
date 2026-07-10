@@ -49,6 +49,7 @@ export interface UseCopyTradeDepositResult {
   walletReady: boolean;
   depositAddress: CopyDepositAddress | null;
   evmDepositAddress: string;
+  copyDepositWalletAddress: string;
   addressLoading: boolean;
   addressError: string | undefined;
   status: CopyDepositStatusResult | null;
@@ -375,6 +376,7 @@ export function useCopyTradeDeposit(
   }, [open]);
 
   const evmDepositAddress = depositAddress?.evm_deposit_address ?? "";
+  const copyDepositWalletAddress = copyWallet?.CopyDepositWalletAddress ?? "";
 
   return {
     isSocialLogin,
@@ -382,6 +384,7 @@ export function useCopyTradeDeposit(
     walletReady,
     depositAddress,
     evmDepositAddress,
+    copyDepositWalletAddress,
     addressLoading,
     addressError,
     status,
