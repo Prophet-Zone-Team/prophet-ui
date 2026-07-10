@@ -28,6 +28,7 @@ import type {
   CopyBridgeSupportedAsset,
   CopyDepositAddress,
   CopyDepositStatusResult,
+  CopyTransferDeposit,
   CopyWithdrawal,
   CopyWithdrawalAssetInfo,
   CopyWithdrawalReadiness,
@@ -359,6 +360,32 @@ export async function getCopyTradeDepositStatus(
     userPath(userId, "deposit/status"),
     undefined,
     config
+  );
+}
+
+/** POST /copy-deposit/transfer-deposits — report a pUSD transfer tx hash */
+export async function submitCopyTradeTransferDeposit(
+  txHash: string,
+  config?: AxiosRequestConfig,
+): Promise<CopyTransferDeposit> {
+  return copyTradeRequest<CopyTransferDeposit>(
+    "POST",
+    "/copy-deposit/transfer-deposits",
+    { tx_hash: txHash },
+    config,
+  );
+}
+
+/** GET /copy-deposit/transfer-deposits/{tx_hash} — poll transfer deposit status */
+export async function getCopyTradeTransferDeposit(
+  txHash: string,
+  config?: AxiosRequestConfig,
+): Promise<CopyTransferDeposit> {
+  return copyTradeRequest<CopyTransferDeposit>(
+    "GET",
+    `/copy-deposit/transfer-deposits/${encodeURIComponent(txHash)}`,
+    undefined,
+    config,
   );
 }
 

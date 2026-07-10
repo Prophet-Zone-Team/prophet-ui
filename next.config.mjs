@@ -9,7 +9,6 @@ const copyTradeApiUpstream = (
     : "https://api.zerostrategy.fun"
 ).replace(/\/$/, "");
 
-
 const isVercelBuild = process.env.VERCEL === "1";
 
 /** @type {import('next').NextConfig} */
