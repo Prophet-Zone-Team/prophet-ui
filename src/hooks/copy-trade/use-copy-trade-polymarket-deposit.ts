@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from "react";
 
 import { useAuth } from "@/context/auth";
+import { submitCopyTradeTransferDeposit } from "@/service/copy-trade";
 import { pollRelayerTransaction } from "@/lib/trading/deposit-wallet-relayer";
 import { fetchJson } from "@/lib/team/client-fetch";
 import { signTypedData } from "@/lib/trading/wallet-typed-data-sign";
@@ -17,7 +18,6 @@ export interface UseCopyTradePolymarketDepositOptions {
   copyDepositWalletAddress: string;
   walletReady: boolean;
   isSocialLogin: boolean;
-  refreshStatus: () => Promise<void>;
 }
 
 export interface UseCopyTradePolymarketDepositResult {
@@ -25,16 +25,15 @@ export interface UseCopyTradePolymarketDepositResult {
   funderAddress: string | undefined;
   depositWalletReady: boolean;
   canUsePolymarketDeposit: boolean;
-  transferFromPolymarket: (amount: string) => Promise<string | undefined>;
+  transferFromPolymarket: (amount: string) => Promise<string>;
 }
 
 export function useCopyTradePolymarketDeposit(
   options: UseCopyTradePolymarketDepositOptions,
 ): UseCopyTradePolymarketDepositResult {
-  const { copyDepositWalletAddress, walletReady, isSocialLogin, refreshStatus } =
-    options;
+  const { copyDepositWalletAddress, walletReady, isSocialLogin } = options;
 
-  const { session, cash, syncCash } = useAuth();
+  const { session, cash } = useAuth();
   const loginMethod = useAuthStore((state) => state.loginMethod);
 
   const funderAddress = session?.funderAddress;
@@ -61,7 +60,7 @@ export function useCopyTradePolymarketDeposit(
   );
 
   const transferFromPolymarket = useCallback(
-    async (amount: string): Promise<string | undefined> => {
+    async (amount: string): Promise<string> => {
       if (!session?.walletAddress) {
         throw new Error("Connect a wallet before transferring funds.");
       }
@@ -125,17 +124,18 @@ export function useCopyTradePolymarketDeposit(
         txHash = transaction.transactionHash;
       }
 
-      await refreshStatus();
-      await syncCash();
+      if (!txHash) {
+        throw new Error("Transfer completed without a transaction hash.");
+      }
+
+      await submitCopyTradeTransferDeposit(txHash);
 
       return txHash;
     },
     [
       copyDepositWalletAddress,
       polymarketBalance,
-      refreshStatus,
       session?.walletAddress,
-      syncCash,
     ],
   );
 

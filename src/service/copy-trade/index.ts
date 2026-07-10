@@ -12,6 +12,8 @@ export {
   getCopyTradeBalances,
   getCopyTradeDepositStatus,
   getCopyTradeDepositSupportedAssets,
+  getCopyTradeTransferDeposit,
+  submitCopyTradeTransferDeposit,
   getCopyTradePlatformMetrics,
   getCopyTradePnL,
   getCopyTradePnLPoints,

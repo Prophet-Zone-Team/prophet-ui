@@ -10,6 +10,7 @@ import {
   useCopyTradePolymarketDeposit,
 } from "@/hooks/copy-trade/use-copy-trade-polymarket-deposit";
 import { useCopyTradeDeposit } from "@/hooks/copy-trade/use-copy-trade-deposit";
+import { useCopyTradeTransferDepositStatus } from "@/hooks/copy-trade/use-copy-trade-transfer-deposit-status";
 import type { CopyDepositChainOption } from "@/lib/copy-trade/deposit-assets";
 import { formatNumber } from "@/utils";
 import {
@@ -26,6 +27,7 @@ import {
 } from "@/views/copy-trade/funding/deposit-method-entry";
 import { DepositPolymarketStep } from "@/views/copy-trade/funding/deposit-polymarket-step";
 import { DepositStatusStep } from "@/views/copy-trade/funding/deposit-status-step";
+import { DepositTransferStatusStep } from "@/views/copy-trade/funding/deposit-transfer-status-step";
 import type { CopyDepositMethod, CopyDepositStep } from "@/views/copy-trade/funding/types";
 import { DEFAULT_DEPOSIT_ASSET, POLYGON_NETWORK } from "@/lib/market/deposit-assets";
 import Big from "big.js";
@@ -58,13 +60,6 @@ export function CopyTradeDepositDialog({
     onCredited: handleCredited,
   });
 
-  const polymarketDeposit = useCopyTradePolymarketDeposit({
-    copyDepositWalletAddress: deposit.copyDepositWalletAddress,
-    walletReady: deposit.walletReady,
-    isSocialLogin: deposit.isSocialLogin,
-    refreshStatus: deposit.refreshStatus,
-  });
-
   const [step, setStep] = useState<CopyDepositStep>("asset");
   const [depositMethod, setDepositMethod] = useState<CopyDepositMethod>("connected");
   const [selectedChain, setSelectedChain] =
@@ -74,6 +69,18 @@ export function CopyTradeDepositDialog({
   const [txHash, setTxHash] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorText, setErrorText] = useState<string | undefined>();
+
+  const polymarketDeposit = useCopyTradePolymarketDeposit({
+    copyDepositWalletAddress: deposit.copyDepositWalletAddress,
+    walletReady: deposit.walletReady,
+    isSocialLogin: deposit.isSocialLogin
+  });
+
+  const transferDepositStatus = useCopyTradeTransferDepositStatus({
+    open: open && step === "status" && depositMethod === "polymarket",
+    txHash,
+    onCredited: handleCredited
+  });
 
   const tokensForChain = useMemo(
     () =>
@@ -310,6 +317,17 @@ export function CopyTradeDepositDialog({
           amount={amount}
           toAddress={deposit.evmDepositAddress}
           errorText={errorText}
+        />
+      );
+    }
+
+    if (step === "status" && depositMethod === "polymarket") {
+      return (
+        <DepositTransferStatusStep
+          txHash={txHash}
+          record={transferDepositStatus.record}
+          loading={transferDepositStatus.loading}
+          errorText={transferDepositStatus.errorText}
         />
       );
     }
