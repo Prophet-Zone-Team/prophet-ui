@@ -80,6 +80,7 @@ function getOutcomeToneClass(outcome: string): string {
 
 export interface CopyWalletPositionMarketCellProps {
   title: string;
+  href?: string;
   outcome: string;
   priceLabel: string;
   shares: number;
@@ -88,6 +89,7 @@ export interface CopyWalletPositionMarketCellProps {
 
 export function CopyWalletPositionMarketCell({
   title,
+  href,
   outcome,
   priceLabel,
   shares,
@@ -102,9 +104,18 @@ export function CopyWalletPositionMarketCell({
     <div className="flex min-w-0 items-start gap-2">
       <PositionMarketIcon icon={icon} />
       <div className="min-w-0">
-        <p className="truncate text-[14px] font-[500] leading-[18px] text-prophet-foreground">
-          {title}
-        </p>
+        {href ? (
+          <a
+            href={href}
+            className="block truncate text-[14px] font-[500] leading-[18px] text-prophet-foreground hover:underline"
+          >
+            {title}
+          </a>
+        ) : (
+          <p className="truncate text-[14px] font-[500] leading-[18px] text-prophet-foreground">
+            {title}
+          </p>
+        )}
         <p className="mt-0.5 truncate text-[12px] leading-[15px]">
           <span className={getOutcomeToneClass(outcome)}>{subline}</span>
           <span className="text-prophet-muted"> {sharesLabel}</span>

@@ -48,6 +48,7 @@ export function CopyWalletPositionRow({
       >
         <CopyWalletPositionMarketCell
           title={position.title}
+          href={position.tradeHref}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
           shares={position.shares}
@@ -81,6 +82,7 @@ export function CopyWalletPositionRow({
       >
         <CopyWalletPositionMarketCell
           title={position.title}
+          href={position.tradeHref}
           outcome={position.outcome}
           priceLabel={formatSharePrice(position.avgPrice)}
           shares={position.shares}
