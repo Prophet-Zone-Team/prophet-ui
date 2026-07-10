@@ -18,13 +18,13 @@ import {
   type CopyDepositChainOption,
 } from "@/lib/copy-trade/deposit-assets";
 import { requiresDepositFundingWalletConnection } from "@/lib/funding/stableflow";
-import { isTpFundingSwitchPendingError } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import { DEFAULT_DEPOSIT_ASSET, POLYGON_NETWORK } from "@/lib/market/deposit-assets";
+import { isTpFundingSwitchPendingError } from "@/lib/wallet/tokenpocket/tp-funding-switch";
 import { useAuthStore } from "@/store/auth-store";
 import { formatNumber } from "@/utils";
+import { DepositQrStep } from "@/views/copy-trade/funding/deposit-address-step";
 import { DepositAssetStep } from "@/views/copy-trade/funding/deposit-asset-step";
 import { DepositConnectedStep } from "@/views/copy-trade/funding/deposit-connected-step";
-import { DepositQrStep } from "@/views/copy-trade/funding/deposit-address-step";
 import {
   DepositMethodBackRow,
   DepositMethodEntry,
@@ -77,17 +77,6 @@ export function CopyTradeDepositDialog({
     (state) => state.session?.walletAddress,
   );
 
-  const [step, setStep] = useState<CopyDepositStep>("asset");
-  const [depositMethod, setDepositMethod] = useState<CopyDepositMethod>("connected");
-  const [selectedChain, setSelectedChain] =
-    useState<CopyDepositChainOption | null>(null);
-  const [selectedToken, setSelectedToken] = useState<FundingAsset | null>(null);
-  const [amount, setAmount] = useState("");
-  const [txHash, setTxHash] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [connectingWallet, setConnectingWallet] = useState(false);
-  const [errorText, setErrorText] = useState<string | undefined>();
-
   const handleCredited = useCallback(
     (credited: number) => {
       toast.success(
@@ -103,17 +92,23 @@ export function CopyTradeDepositDialog({
     [queryClient, t, userId],
   );
 
+  const [step, setStep] = useState<CopyDepositStep>("asset");
+  const [depositMethod, setDepositMethod] =
+    useState<CopyDepositMethod>("connected");
+  const [selectedChain, setSelectedChain] =
+    useState<CopyDepositChainOption | null>(null);
+  const [selectedToken, setSelectedToken] = useState<FundingAsset | null>(null);
+  const [amount, setAmount] = useState("");
+  const [txHash, setTxHash] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [connectingWallet, setConnectingWallet] = useState(false);
+  const [errorText, setErrorText] = useState<string | undefined>();
+
   const deposit = useCopyTradeDeposit({
     open,
     onCredited: handleCredited,
     aggressiveStatusPolling: step === "status",
   });
-
-  const {
-    connectForDepositToken,
-    isConnectedForDepositToken,
-    getDepositConnectLabelKey,
-  } = useFundingWalletConnect();
 
   const polymarketDeposit = useCopyTradePolymarketDeposit({
     copyDepositWalletAddress: deposit.copyDepositWalletAddress,
@@ -126,6 +121,12 @@ export function CopyTradeDepositDialog({
     txHash,
     onCredited: handleCredited,
   });
+
+  const {
+    connectForDepositToken,
+    isConnectedForDepositToken,
+    getDepositConnectLabelKey,
+  } = useFundingWalletConnect();
 
   const tokensForChain = useMemo(
     () =>

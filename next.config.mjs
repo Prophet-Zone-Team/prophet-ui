@@ -9,6 +9,8 @@ const copyTradeApiUpstream = (
     : "https://api.zerostrategy.fun"
 ).replace(/\/$/, "");
 
+const isVercelBuild = process.env.VERCEL === "1";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Lint and typecheck run in GitHub Actions CI; skipping here avoids slow/OOM Vercel builds.
@@ -27,7 +29,7 @@ const nextConfig = {
     webpackMemoryOptimizations: true,
     // Vercel build containers have ~8GB RAM; a single worker avoids OOM from parallel heaps.
     // Cloudflare Workers Builds can use more parallelism with script-level heap limits.
-    cpus: 1
+    cpus: isVercelBuild ? 1 : 4
   },
   images: {
     remotePatterns: [

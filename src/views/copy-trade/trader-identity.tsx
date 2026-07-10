@@ -67,6 +67,7 @@ export interface TraderIdentityProps {
   trader: TraderCatalogEntry;
   size?: "sm" | "lg";
   displayNameClassName?: string;
+  walletLabelClassName?: string;
   showWalletCopy?: boolean;
   className?: string;
 }
@@ -75,6 +76,7 @@ export function TraderIdentity({
   trader,
   size = "sm",
   displayNameClassName,
+  walletLabelClassName,
   showWalletCopy = true,
   className
 }: TraderIdentityProps) {
@@ -114,7 +116,12 @@ export function TraderIdentity({
           {tag ? <TraderTagIcon tag={tag} /> : null}
         </div>
         <div className="mt-px flex min-w-0 items-center gap-1">
-          <span className="truncate text-[12px] leading-[15px] text-prophet-muted">
+          <span
+            className={cn(
+              "truncate text-prophet-muted",
+              walletLabelClassName ?? "text-[12px] leading-[15px]"
+            )}
+          >
             {walletLabel}
           </span>
           {showWalletCopy ? (
