@@ -25,6 +25,9 @@ import {
 import { getWalletAvatarGradient } from "@/lib/wallet/avatar-gradient";
 import type { CopyTarget, TraderCatalogEntry } from "@/types/copy-trade-api";
 import {
+  copyTradeListMobileFieldLabelClass,
+  copyTradeListMobileFieldValueClass,
+  copyTradeListTextClass,
   copyTradeTableMobileCardClass
 } from "@/views/copy-trade/copy-trade-ui";
 import {
@@ -273,26 +276,43 @@ export function CopyTradeCopiedWalletItem({
           />
 
           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            <PortfolioTableMobileField label={t("totalBuy")}>
+            <PortfolioTableMobileField
+              label={t("totalBuy")}
+              labelClassName={copyTradeListMobileFieldLabelClass}
+              valueClassName={copyTradeListMobileFieldValueClass}
+            >
               {formatMoneyOrDash(stats?.totalBuy)}
             </PortfolioTableMobileField>
-            <PortfolioTableMobileField label={t("totalSell")}>
+            <PortfolioTableMobileField
+              label={t("totalSell")}
+              labelClassName={copyTradeListMobileFieldLabelClass}
+              valueClassName={copyTradeListMobileFieldValueClass}
+            >
               {formatMoneyOrDash(stats?.totalSell)}
             </PortfolioTableMobileField>
-            <PortfolioTableMobileField label={t("buySell")}>
+            <PortfolioTableMobileField
+              label={t("buySell")}
+              labelClassName={copyTradeListMobileFieldLabelClass}
+              valueClassName={copyTradeListMobileFieldValueClass}
+            >
               <span className="text-[#65AF14]">{stats?.buyCount ?? 0}</span>
               <span className="text-[#909090]">/</span>
               <span className="text-[#FF674B]">{stats?.sellCount ?? 0}</span>
             </PortfolioTableMobileField>
             <PortfolioTableMobileField
               label={t("pnl")}
-              valueClassName={pnlTone}
+              labelClassName={copyTradeListMobileFieldLabelClass}
+              valueClassName={cn(copyTradeListMobileFieldValueClass, pnlTone)}
             >
               {formatPnlValue(stats)}
             </PortfolioTableMobileField>
             <PortfolioTableMobileField
               label={t("lastTrade")}
-              valueClassName="font-normal text-[#909090]"
+              labelClassName={copyTradeListMobileFieldLabelClass}
+              valueClassName={cn(
+                copyTradeListMobileFieldValueClass,
+                "font-normal text-[#909090]"
+              )}
             >
               {lastTradeLabel}
             </PortfolioTableMobileField>
@@ -343,7 +363,8 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[16px] leading-5 text-prophet-foreground"
+            copyTradeListTextClass,
+            "text-prophet-foreground"
           )}
         >
           {formatMoneyOrDash(stats?.totalBuy)}
@@ -351,7 +372,8 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[16px] leading-5 text-prophet-foreground"
+            copyTradeListTextClass,
+            "text-prophet-foreground"
           )}
         >
           {formatMoneyOrDash(stats?.totalSell)}
@@ -359,7 +381,8 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[16px] leading-5 tabular-nums"
+            copyTradeListTextClass,
+            "tabular-nums"
           )}
         >
           <span className="text-[#65AF14]">{stats?.buyCount ?? 0}</span>
@@ -369,7 +392,8 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[16px] leading-5 tabular-nums",
+            copyTradeListTextClass,
+            "tabular-nums",
             pnlTone
           )}
         >
@@ -378,7 +402,8 @@ export function CopyTradeCopiedWalletItem({
         <span
           className={cn(
             copyTradeCopiedWalletColDataClass,
-            "text-[14px] leading-[18px] text-prophet-foreground"
+            copyTradeListTextClass,
+            "text-prophet-foreground"
           )}
         >
           {lastTradeLabel}
@@ -463,7 +488,12 @@ function WalletIdentityBlock({
       <TraderAvatar wallet={wallet} />
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
-          <p className="max-w-[160px] truncate text-[16px] leading-5 text-prophet-foreground">
+          <p
+            className={cn(
+              "max-w-[160px] truncate text-prophet-foreground",
+              copyTradeListTextClass
+            )}
+          >
             {displayName}
           </p>
           {imported ? (
@@ -474,7 +504,9 @@ function WalletIdentityBlock({
           {tag ? <TraderTagIcon tag={tag} /> : null}
         </div>
         <div className="mt-px flex min-w-0 items-center gap-1">
-          <span className="truncate text-[12px] leading-[15px] text-[#909090]">
+          <span
+            className={cn("truncate text-[#909090]", copyTradeListTextClass)}
+          >
             {walletLabel}
           </span>
           <span

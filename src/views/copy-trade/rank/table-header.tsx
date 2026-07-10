@@ -12,7 +12,6 @@ import {
   copyTradeRankColPredictionsClass,
   copyTradeRankColRankClass,
   copyTradeRankGridStyle,
-  copyTradeRankPnl7dEnabled,
   copyTradeRankRowGridClass
 } from "./grid";
 
@@ -54,14 +53,9 @@ export function CopyTradeRankTableHeader({
       <span role="columnheader" className={copyTradeRankColPredictionsClass}>
         {t("predictions")}
       </span>
-      {copyTradeRankPnl7dEnabled ? (
-        <span
-          role="columnheader"
-          className={cn(copyTradeRankColPnl7dClass, "min-w-[180px]")}
-        >
-          {t("pnl7d")}
-        </span>
-      ) : null}
+      <span role="columnheader" className={copyTradeRankColPnl7dClass}>
+        {t("pnl7dLabel")}
+      </span>
       <span role="columnheader" className={copyTradeRankColActionClass}>
         {tCommon("action")}
       </span>

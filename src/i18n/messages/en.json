@@ -1735,7 +1735,9 @@
       "profitLoss": "Profit/Loss",
       "volume": "Volume",
       "predictions": "Predictions",
-      "pnl7d": "7D PnL/FIFA 7D PnL"
+      "pnl7d": "7D PnL/FIFA 7D PnL",
+      "pnl7dLabel": "7D PnL",
+      "fifaPnl7dLabel": "FIFA 7D PnL"
     },
     "copiedWallet": {
       "ariaList": "Copied wallet list",

@@ -32,4 +32,20 @@ export const copyTradeTableMobileCardClass = cn(
   "flex flex-col gap-3 rounded-xl border border-prophet-line bg-prophet-panel px-4 py-3"
 );
 
+export const copyTradeListTextClass = "text-[14px] leading-[17px]";
+
+export const copyTradeListMutedTextClass = cn(
+  copyTradeListTextClass,
+  "text-prophet-muted"
+);
+
+export const copyTradeListValueTextClass = cn(
+  copyTradeListTextClass,
+  "font-[500] text-prophet-foreground"
+);
+
+export const copyTradeListMobileFieldLabelClass = copyTradeListMutedTextClass;
+
+export const copyTradeListMobileFieldValueClass = copyTradeListValueTextClass;
+
 export const copyTradeTableDesktopRowClass = "hidden md:grid";
