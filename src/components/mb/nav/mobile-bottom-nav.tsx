@@ -8,7 +8,6 @@ import { useTranslations } from "next-intl";
 import {
   PortfolioIcon,
   SmartMoneyIcon,
-  StrategiesIcon,
   WorldCupIcon
 } from "@/components/mb/nav/icons";
 import { useAuth } from "@/context/auth";
@@ -22,7 +21,6 @@ import { cn } from "@/lib/cn";
 import { formatNumber } from "@/utils";
 
 const NAV_ICON_MAP = {
-  strategies: StrategiesIcon,
   smartMoney: SmartMoneyIcon,
   worldCup: WorldCupIcon,
   portfolio: PortfolioIcon

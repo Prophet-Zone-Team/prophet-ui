@@ -2,7 +2,6 @@ export const PRIMARY_NAV = [
   { href: "/fifa", labelKey: "matches" as const },
   { href: "/analytics", labelKey: "analytics" as const },
   { href: "/smart-money", labelKey: "smartMoney" as const },
-  { href: "/strategy", labelKey: "strategies" as const },
   { href: "/portfolio", labelKey: "portfolio" as const }
 ] as const;
 
@@ -17,7 +16,6 @@ export const MOBILE_BOTTOM_NAV = [
     labelKey: "smartMoney" as const,
     icon: "smartMoney" as const
   },
-  { href: "/strategy", labelKey: "strategies" as const, icon: "strategies" as const },
   {
     href: "/portfolio",
     labelKey: "portfolio" as const,
