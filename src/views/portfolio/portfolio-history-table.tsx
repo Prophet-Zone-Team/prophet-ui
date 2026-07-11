@@ -32,35 +32,16 @@ import {
   portfolioTableScrollClass
 } from "@/views/portfolio/portfolio-ui";
 
-const STRATEGY_PAGE_HREF = "/strategy/available";
-
 function StrategySourceLabel() {
   const t = useTranslations("portfolio");
 
   return (
-    <Link
-      href={STRATEGY_PAGE_HREF}
-      className="inline-flex h-6 w-[75px] shrink-0 items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-black to-[#666666] font-[Sora] text-[10px] font-normal leading-[13px] text-white no-underline backdrop-blur-[5px] transition-opacity hover:opacity-90"
-      aria-label={t("viewStrategy")}
+    <span
+      className="inline-flex h-6 w-[75px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-black to-[#666666] font-[Sora] text-[10px] font-normal leading-[13px] text-white backdrop-blur-[5px]"
+      aria-label={t("strategy")}
     >
       {t("strategy")}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="8"
-        height="8"
-        viewBox="0 0 8 8"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M1.25 6.75L6.75 1.25M6.75 1.25H2.25M6.75 1.25V5.75"
-          stroke="white"
-          strokeWidth="1"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </Link>
+    </span>
   );
 }
 

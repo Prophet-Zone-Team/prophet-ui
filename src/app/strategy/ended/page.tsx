@@ -1,5 +1,5 @@
-import { StrategyEnded } from "@/views/strategy";
+import { redirect } from "next/navigation";
 
 export default function StrategyEndedPage() {
-  return <StrategyEnded />;
+  redirect("/fifa");
 }
