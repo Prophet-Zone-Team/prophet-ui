@@ -41,6 +41,7 @@ export const CONFIRMED_KNOCKOUT_WINNERS: KnockoutWinners = {
   95: "argentina", // R16: Argentina vs Egypt — Argentina advances (feeds W95 → QF M100)
   96: "switzerland", // R16: Switzerland vs Colombia — Switzerland advances (feeds W96 → QF M100)
   97: "france", // QF: France vs Morocco — France advances (feeds W97 → SF M101)
+  98: "spain", // QF: Spain vs Belgium — Spain advances (feeds W98 → SF M101)
 };
 
 export const FIXED_KNOCKOUT_WINNERS: KnockoutWinners = CONFIRMED_KNOCKOUT_WINNERS;
