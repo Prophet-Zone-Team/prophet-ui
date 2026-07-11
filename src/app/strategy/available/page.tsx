@@ -1,5 +1,5 @@
-import { StrategyAvailable } from "@/views/strategy";
+import { redirect } from "next/navigation";
 
 export default function StrategyAvailablePage() {
-  return <StrategyAvailable />;
+  redirect("/fifa");
 }
