@@ -327,6 +327,14 @@ export interface CopyTradersListResponse {
   items: TraderCatalogEntry[];
 }
 
+export interface CopyTraderPnLSummary {
+  TotalPnL: number;
+  FifaTotalPnL: number;
+  TotalPnL7D: number;
+  FifaPnL7D: number;
+  WalletCount: number;
+}
+
 export interface ImportCopyTraderRequest {
   wallet: string;
 }
