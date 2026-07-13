@@ -1769,6 +1769,8 @@
       "tabCopiedWalletMobile": "已跟單"
     },
     "rank": {
+      "heroTitle": "聰明資金，更輕鬆獲利",
+      "summaryTotalPnlLabel": "聰明資金總盈虧",
       "ariaList": "交易者排行榜",
       "ariaFilters": "排行榜篩選",
       "ariaWalletType": "錢包類型",

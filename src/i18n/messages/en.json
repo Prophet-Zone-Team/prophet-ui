@@ -1769,6 +1769,8 @@
       "tabCopiedWalletMobile": "Copied"
     },
     "rank": {
+      "heroTitle": "Smart Money, Get Your Profit Easier",
+      "summaryTotalPnlLabel": "Total PnL of SmartMoney",
       "ariaList": "Trader rank list",
       "ariaFilters": "Trader rank filters",
       "ariaWalletType": "Wallet type",

@@ -16,6 +16,7 @@ import type {
   CopyTradeSellableBalance,
   CopyTradeUserOrder,
   CopyTradersListResponse,
+  CopyTraderPnLSummary,
   CopyTraderTracksLatestResponse,
   CopyTraderTracksListResponse,
   CopyWallet,
@@ -250,6 +251,18 @@ export async function listCopyTraders(
   return copyTradeRequest<CopyTradersListResponse>(
     "GET",
     "/copy-traders",
+    undefined,
+    config
+  );
+}
+
+/** GET /copy-traders/summary — public smart/whale catalog PnL aggregate */
+export async function getCopyTraderSummary(
+  config?: AxiosRequestConfig
+): Promise<CopyTraderPnLSummary> {
+  return copyTradeRequest<CopyTraderPnLSummary>(
+    "GET",
+    "/copy-traders/summary",
     undefined,
     config
   );

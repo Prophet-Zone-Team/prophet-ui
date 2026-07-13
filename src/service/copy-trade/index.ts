@@ -24,6 +24,7 @@ export {
   getCopyTradeTargets,
   getCopyTradeWallet,
   importCopyTrader,
+  getCopyTraderSummary,
   getCopyTradeWithdrawalReadiness,
   getCopyTradeWithdrawalSupportedAssets,
   listCopyTradeOrders,

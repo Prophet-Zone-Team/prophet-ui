@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -37,6 +38,7 @@ import {
 } from "./grid";
 import { CopyTradeRankItem } from "./item";
 import { CopyTradeRankTableHeader } from "./table-header";
+import { COPY_TRADE_TRADER_SUMMARY_QUERY_KEY } from "../use-copy-trade-trader-summary";
 
 export interface CopyTradeRankPanelProps {
   className?: string;
@@ -53,6 +55,7 @@ export function CopyTradeRankPanel({
   enabled = true
 }: CopyTradeRankPanelProps) {
   const t = useTranslations("copyTrade.rank");
+  const queryClient = useQueryClient();
   const [walletType, setWalletType] = useState<CopyTradeRankWalletType>("all");
   const [timeRange, setTimeRange] = useState<CopyTradeRankTimeRange>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -197,7 +200,12 @@ export function CopyTradeRankPanel({
         onWalletTypeChange={setWalletType}
         onTimeRangeChange={setTimeRange}
         onSearchQueryChange={setSearchQuery}
-        onRefresh={() => void refetch()}
+        onRefresh={() => {
+          void refetch();
+          void queryClient.invalidateQueries({
+            queryKey: COPY_TRADE_TRADER_SUMMARY_QUERY_KEY
+          });
+        }}
       />
 
       <div
