@@ -1712,6 +1712,8 @@
       "tabCopiedWalletMobile": "コピー済"
     },
     "rank": {
+      "heroTitle": "スマートマネーで、もっと簡単に利益を",
+      "summaryTotalPnlLabel": "スマートマネー総損益",
       "ariaList": "トレーダーランキング",
       "ariaFilters": "ランキングフィルター",
       "ariaWalletType": "ウォレットタイプ",

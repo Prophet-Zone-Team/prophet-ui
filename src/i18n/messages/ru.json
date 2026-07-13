@@ -1703,6 +1703,8 @@
       "tabCopiedWalletMobile": "Скопир."
     },
     "rank": {
+      "heroTitle": "Smart Money — Проще К Прибыли",
+      "summaryTotalPnlLabel": "Общий PnL Smart Money",
       "ariaList": "Рейтинг трейдеров",
       "ariaFilters": "Фильтры рейтинга",
       "ariaWalletType": "Тип кошелька",

@@ -1712,6 +1712,8 @@
       "tabCopiedWalletMobile": "카피됨"
     },
     "rank": {
+      "heroTitle": "스마트 머니로 더 쉽게 수익을",
+      "summaryTotalPnlLabel": "스마트 머니 총 손익",
       "ariaList": "트레이더 순위",
       "ariaFilters": "순위 필터",
       "ariaWalletType": "지갑 유형",

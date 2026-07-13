@@ -8,6 +8,8 @@ import { TabSwitcher, type TabSwitcherItem } from "@/components/ui/tab-switcher"
 import { cn } from "@/lib/cn";
 import { CopyTradeCopiedWalletPanel } from "@/views/copy-trade/copied-wallet";
 import { CopyTradeRankPanel } from "@/views/copy-trade/rank";
+import { CopyTradeRankSummaryHero } from "@/views/copy-trade/rank/summary-hero";
+import { useCopyTradeTraderSummary } from "@/views/copy-trade/use-copy-trade-trader-summary";
 
 const COPY_TRADE_LIST_TAB_IDS = ["rank", "copied-wallet"] as const;
 
@@ -31,6 +33,8 @@ export function CopyTradeListPanel({ className }: CopyTradeListPanelProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const tab = parseCopyTradeListTab(searchParams.get("tab")) ?? "rank";
+  const { data: traderSummary, isLoading: isSummaryLoading } =
+    useCopyTradeTraderSummary();
 
   const tabs = useMemo<TabSwitcherItem[]>(
     () => [
@@ -73,7 +77,13 @@ export function CopyTradeListPanel({ className }: CopyTradeListPanelProps) {
       className={cn("flex min-w-0 flex-col", className)}
       aria-label={t("ariaTraders")}
     >
-      <div className="px-4 pt-2 md:px-0 md:pt-0">
+      <CopyTradeRankSummaryHero
+        totalPnL={traderSummary?.TotalPnL}
+        isLoading={isSummaryLoading}
+        className="pb-4 pt-2 md:pt-0"
+      />
+
+      <div className="px-4 md:px-0">
         <TabSwitcher
           items={tabs}
           value={tab}
