@@ -44,14 +44,17 @@ describe("fixed-knockout", () => {
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[98], "spain");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[99], "england");
     assert.equal(CONFIRMED_KNOCKOUT_WINNERS[100], "argentina");
-    assert.equal(FIXED_KNOCKOUT_MATCH_IDS.size, 28);
+  });
+
+  it("defines confirmed SF winner for match 101", () => {
+    assert.equal(CONFIRMED_KNOCKOUT_WINNERS[101], "spain");
+    assert.equal(FIXED_KNOCKOUT_MATCH_IDS.size, 29);
   });
 
   it("identifies fixed match ids", () => {
-    assert.equal(isFixedKnockoutMatch(98), true);
-    assert.equal(isFixedKnockoutMatch(99), true);
     assert.equal(isFixedKnockoutMatch(100), true);
-    assert.equal(isFixedKnockoutMatch(101), false);
+    assert.equal(isFixedKnockoutMatch(101), true);
+    assert.equal(isFixedKnockoutMatch(102), false);
   });
 
   it("merges fixed winners over conflicting user picks", () => {
@@ -84,7 +87,8 @@ describe("fixed-knockout", () => {
       98: "belgium",
       99: "norway",
       100: "switzerland",
-      101: "germany",
+      101: "france",
+      102: "germany",
     });
 
     assert.equal(merged[73], "canada");
@@ -115,6 +119,7 @@ describe("fixed-knockout", () => {
     assert.equal(merged[98], "spain");
     assert.equal(merged[99], "england");
     assert.equal(merged[100], "argentina");
-    assert.equal(merged[101], "germany");
+    assert.equal(merged[101], "spain");
+    assert.equal(merged[102], "germany");
   });
 });
