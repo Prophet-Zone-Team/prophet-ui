@@ -6,8 +6,6 @@ import { useShallow } from "zustand/react/shallow";
 
 import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { useWinnerProbability } from "@/hooks/market/use-winner-probability";
-import { useWinnerRecords } from "@/hooks/road-to-final/use-winner-records";
-import { useWinnerStats } from "@/hooks/road-to-final/use-winner-stats";
 import {
   hasPersistedRoadToFinalStorage,
   useRoadToFinalHydrated,
@@ -35,11 +33,8 @@ import { getFixedKnockoutWinners } from "./lib/fixed-knockout";
 import { defaultSimulatorTeamId } from "./lib/teams";
 import type { KnockoutMethodKey } from "./lib/method-keys";
 import type { KnockoutWinners } from "./types";
-import { CampaignRulesModal } from "./campaign-rules-modal";
 import { KnockoutBracket } from "./knockout-bracket";
 import { RoadToFinalPageShell } from "./page-shell";
-import { PredictionRecordsModal } from "./prediction-records-modal";
-import { ShareFooter } from "./share-footer";
 
 const LightRays = dynamic(() => import("@/components/light-rays"), { ssr: false });
 
@@ -62,13 +57,6 @@ export function RoadToFinalPage({
   const searchParams = useSearchParams();
   const storeHydrated = useRoadToFinalHydrated();
   const hasAppliedInitialUrlState = useRef(false);
-  const { records, count: predictionCount, isLoading: recordsLoading, isError: recordsError } =
-    useWinnerRecords();
-  const {
-    availableChances,
-    tradePromptAmount,
-    isLoading: statsLoading
-  } = useWinnerStats();
   const { probabilityByTeamId } = useWinnerProbability();
 
   const safeInitialTeamId =
@@ -103,11 +91,6 @@ export function RoadToFinalPage({
   );
 
   const [urlHydrated, setUrlHydrated] = useState(false);
-  const [recordsOpen, setRecordsOpen] = useState(false);
-  const [rulesOpen, setRulesOpen] = useState(false);
-  const [validationErrorMatchIds, setValidationErrorMatchIds] = useState<
-    ReadonlySet<number>
-  >(() => new Set());
 
   useEffect(() => {
     if (!storeHydrated || hasAppliedInitialUrlState.current) {
@@ -179,7 +162,6 @@ export function RoadToFinalPage({
 
     setKnockoutWinners(nextWinners);
     setKnockoutMethod(method);
-    setValidationErrorMatchIds(new Set());
 
     const nextChampion = getChampionTeamId(nextWinners);
 
@@ -191,27 +173,10 @@ export function RoadToFinalPage({
   const handleKnockoutWinnersChange = (winners: KnockoutWinners) => {
     setKnockoutWinners(winners);
     setKnockoutMethod("manualSelection");
-
-    setValidationErrorMatchIds((current) => {
-      if (current.size === 0) {
-        return current;
-      }
-
-      const next = new Set(current);
-
-      for (const matchId of current) {
-        if (winners[matchId]) {
-          next.delete(matchId);
-        }
-      }
-
-      return next.size === current.size ? current : next;
-    });
   };
 
   const handleClearKnockout = useCallback(() => {
     clearKnockoutSelections();
-    setValidationErrorMatchIds(new Set());
 
     if (urlHydrated) {
       replaceRoadToFinalUrlState(router, pathname, {
@@ -242,31 +207,8 @@ export function RoadToFinalPage({
           disabled={!stepOneComplete || !thirdPlaceOption}
           onKnockoutWinnersChange={handleKnockoutWinnersChange}
           probabilityByTeamId={probabilityByTeamId}
-          validationErrorMatchIds={validationErrorMatchIds}
-        />
-
-        <ShareFooter
-          predictionCount={predictionCount}
-          availableChances={availableChances}
-          tradePromptAmount={tradePromptAmount}
-          statsLoading={statsLoading || recordsLoading}
-          onOpenRecords={() => setRecordsOpen(true)}
-          onOpenRules={() => setRulesOpen(true)}
         />
       </div>
-
-      <CampaignRulesModal
-        open={rulesOpen}
-        onClose={() => setRulesOpen(false)}
-      />
-
-      <PredictionRecordsModal
-        open={recordsOpen}
-        onClose={() => setRecordsOpen(false)}
-        records={records}
-        isLoading={recordsLoading}
-        isError={recordsError}
-      />
 
       <LightRays className="absolute left-0 top-0 z-0 h-full w-full" />
     </div>
