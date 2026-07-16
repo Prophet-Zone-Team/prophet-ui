@@ -4,10 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useShallow } from "zustand/react/shallow";
 
-import { useAuth } from "@/context/auth/use-auth";
 import { getWorldCupTeamByIdOrCode } from "@/data/world-cup-2026/groups";
 import { useWinnerProbability } from "@/hooks/market/use-winner-probability";
-import { useProphetReferral } from "@/hooks/referral/use-prophet-referral";
 import { useWinnerRecords } from "@/hooks/road-to-final/use-winner-records";
 import { useWinnerStats } from "@/hooks/road-to-final/use-winner-stats";
 import {
@@ -18,7 +16,6 @@ import {
 import dynamic from "next/dynamic";
 
 import { resolveThirdPlaceOption } from "./lib/bracket-resolver";
-import { safeCalculatePath } from "./lib/calculate-path";
 import {
   FIXED_GROUP_PLACEMENTS,
   FIXED_THIRD_PLACE_GROUPS
@@ -27,8 +24,6 @@ import {
   applyKnockoutShortcut as runKnockoutShortcut,
   getChampionTeamId
 } from "./lib/knockout-shortcuts";
-import { getUnpickedKnockoutMatchIds } from "./lib/knockout-validation";
-import { getFinishForTeam } from "./lib/placements";
 import type { KnockoutPickMethod } from "./lib/team-strength";
 import {
   decodeUrlState,
@@ -44,7 +39,6 @@ import { CampaignRulesModal } from "./campaign-rules-modal";
 import { KnockoutBracket } from "./knockout-bracket";
 import { RoadToFinalPageShell } from "./page-shell";
 import { PredictionRecordsModal } from "./prediction-records-modal";
-import { RoadToFinalShareModal } from "./road-to-final-share-modal";
 import { ShareFooter } from "./share-footer";
 
 const LightRays = dynamic(() => import("@/components/light-rays"), { ssr: false });
@@ -68,8 +62,6 @@ export function RoadToFinalPage({
   const searchParams = useSearchParams();
   const storeHydrated = useRoadToFinalHydrated();
   const hasAppliedInitialUrlState = useRef(false);
-  const { session, isAuthenticated } = useAuth();
-  const { content: referralContent } = useProphetReferral();
   const { records, count: predictionCount, isLoading: recordsLoading, isError: recordsError } =
     useWinnerRecords();
   const {
@@ -78,8 +70,6 @@ export function RoadToFinalPage({
     isLoading: statsLoading
   } = useWinnerStats();
   const { probabilityByTeamId } = useWinnerProbability();
-  const funderAddress = session?.funderAddress;
-  const kickback = referralContent?.kickback;
 
   const safeInitialTeamId =
     getWorldCupTeamByIdOrCode(initialTeamId)?.id ?? defaultSimulatorTeamId;
@@ -113,7 +103,6 @@ export function RoadToFinalPage({
   );
 
   const [urlHydrated, setUrlHydrated] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
   const [recordsOpen, setRecordsOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [validationErrorMatchIds, setValidationErrorMatchIds] = useState<
@@ -155,26 +144,6 @@ export function RoadToFinalPage({
   const thirdPlaceOption = resolveThirdPlaceOption(advancingThirdGroups);
   const championTeamId = getChampionTeamId(knockoutWinners);
   const hasChampion = Boolean(championTeamId);
-  const shareTeamId = championTeamId ?? teamId;
-
-  const sharePathResult = useMemo(() => {
-    if (!stepOneComplete || !shareTeamId) {
-      return undefined;
-    }
-
-    const finishType = getFinishForTeam(placements, shareTeamId);
-
-    if (!finishType) {
-      return undefined;
-    }
-
-    return safeCalculatePath({
-      teamId: shareTeamId,
-      finishType,
-      thirdGroups: advancingThirdGroups,
-      placements
-    }).result;
-  }, [advancingThirdGroups, placements, shareTeamId, stepOneComplete]);
 
   const writeUrlState = useCallback(() => {
     if (!urlHydrated) {
@@ -240,22 +209,6 @@ export function RoadToFinalPage({
     });
   };
 
-  const handleBeforeShare = useCallback((): boolean => {
-    const missing = getUnpickedKnockoutMatchIds(
-      placements,
-      thirdPlaceOption,
-      knockoutWinners
-    );
-
-    if (missing.length > 0) {
-      setValidationErrorMatchIds(new Set(missing));
-      return false;
-    }
-
-    setValidationErrorMatchIds(new Set());
-    return true;
-  }, [knockoutWinners, placements, thirdPlaceOption]);
-
   const handleClearKnockout = useCallback(() => {
     clearKnockoutSelections();
     setValidationErrorMatchIds(new Set());
@@ -297,29 +250,10 @@ export function RoadToFinalPage({
           availableChances={availableChances}
           tradePromptAmount={tradePromptAmount}
           statsLoading={statsLoading || recordsLoading}
-          onBeforeShare={handleBeforeShare}
-          onShare={() => {
-            setShareOpen(true);
-          }}
           onOpenRecords={() => setRecordsOpen(true)}
           onOpenRules={() => setRulesOpen(true)}
         />
       </div>
-
-      <RoadToFinalShareModal
-        open={shareOpen && isAuthenticated}
-        onClose={() => setShareOpen(false)}
-        teamId={shareTeamId}
-        championTeamId={championTeamId}
-        advancingThirdGroups={advancingThirdGroups}
-        result={sharePathResult}
-        placements={placements}
-        knockoutWinners={knockoutWinners}
-        thirdPlaceOption={thirdPlaceOption}
-        funderAddress={funderAddress}
-        kickback={kickback}
-        availableChances={availableChances}
-      />
 
       <CampaignRulesModal
         open={rulesOpen}

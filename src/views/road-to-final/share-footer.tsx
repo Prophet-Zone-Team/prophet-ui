@@ -1,6 +1,5 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Popover } from "@/components/popover";
@@ -15,8 +14,6 @@ export function ShareFooter({
   availableChances,
   tradePromptAmount,
   statsLoading,
-  onBeforeShare,
-  onShare,
   onOpenRecords,
   onOpenRules,
 }: {
@@ -24,34 +21,14 @@ export function ShareFooter({
   availableChances: number;
   tradePromptAmount: number | null;
   statsLoading?: boolean;
-  onBeforeShare: () => boolean;
-  onShare: () => void;
   onOpenRecords: () => void;
   onOpenRules: () => void;
 }) {
   const t = useTranslations("roadToFinal");
-  const { isAuthenticated, loginInProgress, openLoginModalOnly } = useAuth();
+  const { isAuthenticated } = useAuth();
   const isMobile = useDevice();
 
-  const handleShare = () => {
-    if (loginInProgress || availableChances <= 0) {
-      return;
-    }
-
-    if (!onBeforeShare()) {
-      return;
-    }
-
-    if (isAuthenticated) {
-      onShare();
-      return;
-    }
-
-    void openLoginModalOnly();
-  };
-
   const isAvailableChances = availableChances > 0;
-  const shareDisabled = loginInProgress;
   const timesLabel = statsLoading && isAuthenticated
     ? t("timesLabel", { count: "-" })
     : t("timesLabel", { count: predictionCount });
@@ -118,40 +95,21 @@ export function ShareFooter({
             </div>
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end md:gap-6">
+          <div className="flex w-full items-center justify-between gap-[13px] sm:w-auto sm:justify-end">
+            <span className="whitespace-nowrap text-[16px] text-white">
+              {timesLabel}
+            </span>
             <button
               type="button"
-              disabled={shareDisabled || !isAvailableChances}
               className={cn(
-                "inline-flex h-[38px] w-full items-center justify-center gap-[8px]",
-                "rounded-[6px] bg-[linear-gradient(90deg,#F4B600_0%,#8E6A00_100%)]",
-                "px-[16px] text-[14px] text-white transition sm:w-auto md:min-w-[229px]",
-                (shareDisabled || !isAvailableChances)
-                  ? "cursor-not-allowed opacity-40"
-                  : "hover:opacity-80"
+                "inline-flex h-[30px] min-w-[80px] items-center justify-center rounded-[6px]",
+                "border border-[#33375A] bg-[rgba(50,57,66,0.5)] px-[12px]",
+                "text-[12px] font-[500] text-white transition hover:border-white/30"
               )}
-              onClick={() => handleShare()}
+              onClick={onOpenRecords}
             >
-              {t("shareAndJoinCampaign")}
-              <ChevronRight className="h-4 w-4" aria-hidden />
+              {t("checkRecords")}
             </button>
-
-            <div className="flex w-full items-center justify-between gap-[13px] sm:w-auto sm:justify-end">
-              <span className="whitespace-nowrap text-[16px] text-white">
-                {timesLabel}
-              </span>
-              <button
-                type="button"
-                className={cn(
-                  "inline-flex h-[30px] min-w-[80px] items-center justify-center rounded-[6px]",
-                  "border border-[#33375A] bg-[rgba(50,57,66,0.5)] px-[12px]",
-                  "text-[12px] font-[500] text-white transition hover:border-white/30"
-                )}
-                onClick={onOpenRecords}
-              >
-                {t("checkRecords")}
-              </button>
-            </div>
           </div>
         </div>
       </div>
