@@ -15,10 +15,6 @@ const WalletRuntimeProviders = dynamic(
   () => import("@/components/runtime/wallet-runtime-providers"),
   { ssr: false }
 );
-const RoadToFinalFloatingPromo = dynamic(
-  () => import("@/components/promo/road-to-final-floating-promo"),
-  { ssr: false }
-);
 
 interface AppRootProps {
   initialSecure: boolean;
@@ -46,7 +42,6 @@ export function AppRoot({
         <MobileVConsole />
         <WalletRuntimeProviders cookie={cookie}>
           {children}
-          <RoadToFinalFloatingPromo />
         </WalletRuntimeProviders>
       </AnalyticsProvider>
     </LocaleProvider>
