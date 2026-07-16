@@ -15,12 +15,6 @@ import { MobileLoadingScreen } from "@/components/runtime/mobile-loading-screen"
 import { NativeAppShell } from "@/components/runtime/native-app-shell";
 import { ThemeApplier } from "@/components/runtime/theme-applier";
 import type { AppLocale } from "@/i18n/config";
-import dynamic from "next/dynamic";
-
-const RoadToFinalFloatingPromo = dynamic(
-  () => import("@/components/promo/road-to-final-floating-promo"),
-  { ssr: false }
-);
 
 interface AppRootProps {
   initialSecure: boolean;
@@ -55,7 +49,6 @@ export function AppRoot({
                     <AppChrome>{children}</AppChrome>
                   </main>
                   <Toaster />
-                  <RoadToFinalFloatingPromo />
                 </ProphetNotificationWsProvider>
               </SportsWsProvider>
             </MigrateProvider>
