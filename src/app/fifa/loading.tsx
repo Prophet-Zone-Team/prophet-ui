@@ -1,36 +1,27 @@
-import { homeLoadingSurfaceClass } from "@/views/home/home-ui";
+import { LoadingBlock } from "@/components/ui/loading-block";
+import { homeCardClass, homeLoadingSurfaceClass } from "@/views/home/home-ui";
 
-export default function FifaMatchesLoading() {
+export default function FifaWinnerLoading() {
   return (
-    <div role="tabpanel" className="min-w-0 pb-4">
-      <div
-        className={`${homeLoadingSurfaceClass} mb-3.5 h-[120px] w-full rounded-xl`}
-        aria-hidden="true"
-      />
-
-      <div
-        className="mb-3 flex h-[34px] items-center justify-between gap-3 rounded-[20px] px-3 sm:px-4"
-        aria-hidden="true"
-      >
-        <div className="flex items-center gap-2">
-          <div className={`${homeLoadingSurfaceClass} h-7 w-16 rounded-full`} />
-          <div className={`${homeLoadingSurfaceClass} h-7 w-14 rounded-full`} />
-        </div>
-        <div className={`${homeLoadingSurfaceClass} h-4 w-24`} />
-      </div>
-
-      <section aria-label="Loading match schedule">
-        <div className={`${homeLoadingSurfaceClass} mb-2.5 h-[19px] w-32`} />
-        <ul className="m-0 flex list-none flex-col gap-2.5 p-0" aria-hidden="true">
-          {Array.from({ length: 6 }, (_, index) => (
-            <li key={index}>
-              <div
-                className={`${homeLoadingSurfaceClass} min-h-[88px] w-full rounded-xl border border-prophet-line`}
-              />
-            </li>
+    <div role="tabpanel" className="min-w-0 px-3 pb-4 md:px-0" aria-label="Loading winner markets">
+      <section className={`${homeCardClass} mb-4 hidden px-3 pb-5 pt-4 md:block`} aria-hidden>
+        <LoadingBlock className="mb-3 h-6 w-56" />
+        <div className="mb-4 flex flex-wrap gap-x-8 gap-y-2">
+          {Array.from({ length: 4 }, (_, index) => (
+            <LoadingBlock key={index} className="h-4 w-28" />
           ))}
-        </ul>
+        </div>
+        <LoadingBlock className="h-[190px] w-full rounded-lg" />
       </section>
+
+      <div className="flex flex-col gap-2 pb-10" aria-hidden>
+        {Array.from({ length: 8 }, (_, index) => (
+          <div
+            key={index}
+            className={`${homeLoadingSurfaceClass} min-h-[78px] w-full rounded-xl border border-prophet-line`}
+          />
+        ))}
+      </div>
     </div>
   );
 }

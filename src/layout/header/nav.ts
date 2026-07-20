@@ -1,5 +1,5 @@
 export const PRIMARY_NAV = [
-  { href: "/fifa", labelKey: "matches" as const },
+  { href: "/fifa/matches", labelKey: "matches" as const },
   { href: "/analytics", labelKey: "analytics" as const },
   { href: "/smart-money", labelKey: "smartMoney" as const },
   { href: "/portfolio", labelKey: "portfolio" as const }
@@ -25,8 +25,12 @@ export const MOBILE_BOTTOM_NAV = [
 ] as const;
 
 export function isNavActive(pathname: string, href: string): boolean {
+  if (href === "/fifa/matches") {
+    return pathname === "/fifa/matches";
+  }
+
   if (href === "/fifa") {
-    return pathname === "/fifa" || pathname === "/fifa/matches";
+    return pathname === "/fifa" || pathname.startsWith("/fifa/");
   }
 
   if (href === "/portfolio") {

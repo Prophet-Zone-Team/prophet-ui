@@ -1,5 +1,8 @@
-import { redirect } from "next/navigation";
+import { getFootballMatches } from "@/data/providers/football-matches";
+import { HomeMatchesPanel } from "@/views/home";
 
-export default function FifaMatchesRedirectPage() {
-  redirect("/fifa");
+export default async function FifaMatchesPage() {
+  const { matches, meta: matchesMeta } = await getFootballMatches();
+
+  return <HomeMatchesPanel matches={matches} matchesMeta={matchesMeta} />;
 }
