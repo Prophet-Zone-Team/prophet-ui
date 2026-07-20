@@ -7,12 +7,12 @@ import { TabSwitcher } from "@/components/ui/tab-switcher";
 import { trackMarketTabChanged } from "@/lib/analytics/tracking";
 
 const HOME_SECTIONS = [
-  { href: "/fifa", labelKey: "matches" as const },
   {
-    href: "/fifa/winner",
+    href: "/fifa",
     labelKey: "worldCupWinner" as const,
     mobileLabelKey: "winner" as const
   },
+  { href: "/fifa/matches", labelKey: "matches" as const },
   {
     href: "/fifa/groups",
     labelKey: "groups" as const
@@ -21,7 +21,7 @@ const HOME_SECTIONS = [
 
 function isSectionActive(pathname: string, href: string): boolean {
   if (href === "/fifa") {
-    return pathname === "/fifa";
+    return pathname === "/fifa" || pathname === "/fifa/winner";
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);

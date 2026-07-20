@@ -88,7 +88,7 @@ export const STRATEGY_DATA: Record<string, StrategyDataEntry> = {
 };
 
 /** Set when the tournament winner is known; unset to hide ended strategies. */
-export const WINNER: CuratedTeamEntry | null = null;
+export const WINNER: CuratedTeamEntry | null = teams["Spain"];
 
 export function getTournamentWinner(): CuratedTeamEntry | null {
   return WINNER;

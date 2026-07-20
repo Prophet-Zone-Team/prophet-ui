@@ -1,5 +1,5 @@
-import { HomeWinnerPanel } from "@/views/home";
+import { redirect } from "next/navigation";
 
-export default function FifaWinnerPage() {
-  return <HomeWinnerPanel />;
+export default function FifaWinnerRedirectPage() {
+  redirect("/fifa");
 }

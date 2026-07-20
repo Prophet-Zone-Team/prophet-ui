@@ -13,7 +13,7 @@ export function ReferralMatches({ matches }: ReferralMatchesProps) {
     <section className="panel matches" aria-labelledby="matches-title">
       <div className="section-head">
         <h2 id="matches-title">Upcoming Matches</h2>
-        <Link className="matches-link" href="/fifa">
+        <Link className="matches-link" href="/fifa/matches">
           View all matches <span aria-hidden="true">›</span>
         </Link>
       </div>
