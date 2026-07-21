@@ -605,8 +605,12 @@ export function WithdrawDialog({ open, onClose }: WithdrawDialogProps) {
             onSelectBridge={() => {
               setWithdrawMethod("bridge");
               setStep("form");
+              session && setRecipientInput(session.walletAddress);
             }}
-            onSelectStableflow={() => void onSelectStableflow()}
+            onSelectStableflow={() => {
+              onSelectStableflow();
+              setRecipientInput("");
+            }}
             stableflowLoading={stableflowTokensLoading}
           />
         ) : null}
