@@ -955,6 +955,7 @@
   },
   "home": {
     "fifaWorldCup2026": "2026 FIFAワールドカップ",
+    "uefaConferenceLeague": "UEFAカンファレンスリーグ",
     "heroTaglineBefore": "ニュースより先に、",
     "heroTaglineMoves": "動く",
     "mobileLoadingAria": "Prophet を読み込み中",
@@ -987,6 +988,9 @@
     "time": "時間",
     "showEnded": "終了試合を表示",
     "showEndedMatches": "終了した試合を表示",
+    "liveMatches": "ライブ試合",
+    "weekLabel": "第{week}週",
+    "allWeeks": "すべての週",
     "filter": "フィルター",
     "teams": "チーム",
     "filterByTeam": "チームで絞り込み",

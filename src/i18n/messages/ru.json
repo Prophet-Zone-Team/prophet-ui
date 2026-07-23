@@ -955,6 +955,7 @@
   },
   "home": {
     "fifaWorldCup2026": "ЧМ FIFA 2026",
+    "uefaConferenceLeague": "Лига конференций УЕФА",
     "heroTaglineBefore": "До новостей",
     "heroTaglineMoves": "уже движется",
     "mobileLoadingAria": "Загрузка Prophet",
@@ -987,6 +988,9 @@
     "time": "Время",
     "showEnded": "Показать завершённые",
     "showEndedMatches": "Показать завершённые матчи",
+    "liveMatches": "Матчи в эфире",
+    "weekLabel": "Неделя {week}",
+    "allWeeks": "Все недели",
     "filter": "Фильтр",
     "teams": "Команды",
     "filterByTeam": "Фильтр по команде",

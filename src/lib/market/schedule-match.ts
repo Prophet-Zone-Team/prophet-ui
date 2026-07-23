@@ -37,6 +37,9 @@ export interface ScheduleMatchListOptions {
   showEnded: boolean;
   sortKey: ScheduleSortKey;
   teamIds?: Team["id"][];
+  liveOnly?: boolean;
+  /** ISO week number; `null`/`undefined` means all weeks. */
+  week?: number | null;
 }
 
 const ENDED_STATUSES = new Set<WorldCupMatchStatus>([
@@ -210,6 +213,85 @@ export function filterScheduleMatches(
   }
 
   return matches.filter((match) => !isEndedMatchStatus(match.status));
+}
+
+/** ISO week number (1–53) for a kickoff instant. */
+export function getScheduleIsoWeek(
+  kickoffAt: string | undefined
+): number | null {
+  if (!kickoffAt) {
+    return null;
+  }
+
+  const date = new Date(kickoffAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const utc = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  );
+  const day = utc.getUTCDay() || 7;
+  utc.setUTCDate(utc.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1));
+  return Math.ceil(((utc.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
+}
+
+export function buildScheduleWeekOptions(matches: WorldCupMatch[]): number[] {
+  const weeks = new Set<number>();
+
+  for (const match of matches) {
+    const week = getScheduleIsoWeek(match.kickoffAt);
+
+    if (week !== null) {
+      weeks.add(week);
+    }
+  }
+
+  return [...weeks].sort((left, right) => left - right);
+}
+
+export function resolveDefaultScheduleWeek(
+  matches: WorldCupMatch[],
+  weeks: number[]
+): number | null {
+  if (weeks.length === 0) {
+    return null;
+  }
+
+  const featured = findFeaturedScheduleMatch(matches, { showEnded: false });
+  const featuredWeek = getScheduleIsoWeek(featured?.kickoffAt);
+
+  if (featuredWeek !== null && weeks.includes(featuredWeek)) {
+    return featuredWeek;
+  }
+
+  return weeks[0] ?? null;
+}
+
+export function filterScheduleMatchesByWeek(
+  matches: WorldCupMatch[],
+  week: number | null | undefined
+): WorldCupMatch[] {
+  if (week === null || week === undefined) {
+    return matches;
+  }
+
+  return matches.filter(
+    (match) => getScheduleIsoWeek(match.kickoffAt) === week
+  );
+}
+
+export function filterScheduleMatchesByLive(
+  matches: WorldCupMatch[],
+  liveOnly: boolean | undefined
+): WorldCupMatch[] {
+  if (!liveOnly) {
+    return matches;
+  }
+
+  return matches.filter((match) => match.status === "live");
 }
 
 function resolveScheduleFilterTeam(
@@ -441,8 +523,16 @@ export function buildScheduleMatchList(
   options: ScheduleMatchListOptions
 ): WorldCupMatch[] {
   const filteredByStatus = filterScheduleMatches(matches, options.showEnded);
-  const filteredByTeams = filterScheduleMatchesByTeams(
+  const filteredByLive = filterScheduleMatchesByLive(
     filteredByStatus,
+    options.liveOnly
+  );
+  const filteredByWeek = filterScheduleMatchesByWeek(
+    filteredByLive,
+    options.week
+  );
+  const filteredByTeams = filterScheduleMatchesByTeams(
+    filteredByWeek,
     options.teamIds
   );
   return sortScheduleMatches(filteredByTeams, snapshots, options.sortKey, {

@@ -960,6 +960,7 @@
   },
   "home": {
     "fifaWorldCup2026": "2026 FIFA World Cup",
+    "uefaConferenceLeague": "UEFA Conference League",
     "heroTaglineBefore": "Before the news,",
     "heroTaglineMoves": "it moves",
     "mobileLoadingAria": "Loading Prophet",
@@ -992,6 +993,9 @@
     "time": "Time",
     "showEnded": "Show Ended",
     "showEndedMatches": "Show ended matches",
+    "liveMatches": "Live Matches",
+    "weekLabel": "Week {week}",
+    "allWeeks": "All Weeks",
     "filter": "Filter",
     "teams": "Teams",
     "filterByTeam": "Filter by team",
