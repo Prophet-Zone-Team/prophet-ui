@@ -938,6 +938,7 @@
   },
   "home": {
     "fifaWorldCup2026": "2026 FIFA 世界盃",
+    "uefaConferenceLeague": "UEFA 歐洲協會聯賽",
     "heroTaglineBefore": "新聞之前，",
     "heroTaglineMoves": "市場先動",
     "mobileLoadingAria": "正在載入 Prophet",
@@ -970,6 +971,9 @@
     "time": "時間",
     "showEnded": "顯示已結束",
     "showEndedMatches": "顯示已結束賽事",
+    "liveMatches": "進行中比賽",
+    "weekLabel": "第 {week} 週",
+    "allWeeks": "全部週次",
     "filter": "篩選",
     "teams": "球隊",
     "filterByTeam": "依球隊篩選",

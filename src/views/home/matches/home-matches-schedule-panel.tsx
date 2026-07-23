@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { resolveLocalizedTeamName } from "@/lib/i18n/localized-team-name";
 
@@ -10,11 +10,13 @@ import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { curatedNationalTeamsList } from "@/data/teams/curated-team-list";
 import {
   buildScheduleDateGroups,
+  buildScheduleFilterTeams,
   buildScheduleMatchList,
+  buildScheduleWeekOptions,
   combineScheduleTeamFilterIds,
+  resolveDefaultScheduleWeek,
   resolveScheduleTeamSearchMatches,
-  type ScheduleFilterTeam,
-  type ScheduleSortKey
+  type ScheduleFilterTeam
 } from "@/lib/market/schedule-match";
 import { useScheduleMatchesWithLiveState } from "@/store/match-live-store";
 import type { Team, TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
@@ -22,10 +24,45 @@ import { ScheduleFilterBar } from "@/views/home/matches/schedule-filter-bar";
 import { ScheduleMatchRow } from "@/views/home/matches/schedule-match-row";
 import { SpecialMatchDataCard } from "@/views/home/matches/special-match-data-card";
 
-const SCHEDULE_FILTER_TEAMS: (ScheduleFilterTeam & { logoUrl?: string })[] =
+type ScheduleFilterTeamWithLogo = ScheduleFilterTeam & { logoUrl?: string };
+
+const FALLBACK_SCHEDULE_FILTER_TEAMS: ScheduleFilterTeamWithLogo[] =
   curatedNationalTeamsList
     .map(({ id, name, code, logoUrl }) => ({ id, name, code, logoUrl }))
     .sort((left, right) => left.name.localeCompare(right.name));
+
+function buildScheduleFilterTeamsWithLogos(
+  matches: WorldCupMatch[],
+  snapshots: TeamMarketSnapshot[]
+): ScheduleFilterTeamWithLogo[] {
+  const teams = buildScheduleFilterTeams(matches, snapshots);
+
+  if (teams.length === 0) {
+    return FALLBACK_SCHEDULE_FILTER_TEAMS;
+  }
+
+  const logoByTeamId = new Map<Team["id"], string>();
+
+  for (const match of matches) {
+    if (match.homeTeamId && match.homeLogoUrl) {
+      logoByTeamId.set(match.homeTeamId, match.homeLogoUrl);
+    }
+    if (match.awayTeamId && match.awayLogoUrl) {
+      logoByTeamId.set(match.awayTeamId, match.awayLogoUrl);
+    }
+  }
+
+  for (const snapshot of snapshots) {
+    if (snapshot.team.logoUrl && !logoByTeamId.has(snapshot.team.id)) {
+      logoByTeamId.set(snapshot.team.id, snapshot.team.logoUrl);
+    }
+  }
+
+  return teams.map((team) => ({
+    ...team,
+    logoUrl: logoByTeamId.get(team.id)
+  }));
+}
 
 export interface HomeMatchesSchedulePanelProps {
   matches: WorldCupMatch[];
@@ -38,11 +75,31 @@ export function HomeMatchesSchedulePanel({
 }: HomeMatchesSchedulePanelProps) {
   const t = useTranslations("home");
   const tTeamNames = useTranslations("teamNames");
-  const [sortKey, setSortKey] = useState<ScheduleSortKey>("time");
   const [showEnded, setShowEnded] = useState(false);
-  const [selectedTeamIds, setSelectedTeamIds] = useState<Team["id"][]>([]);
+  const [liveOnly, setLiveOnly] = useState(true);
+  const [week, setWeek] = useState<number | null>(null);
+  const [weekInitialized, setWeekInitialized] = useState(false);
   const [teamSearchQuery, setTeamSearchQuery] = useState("");
   const matchesWithLive = useScheduleMatchesWithLiveState(matches);
+
+  const scheduleFilterTeams = useMemo(
+    () => buildScheduleFilterTeamsWithLogos(matches, snapshots),
+    [matches, snapshots]
+  );
+
+  const weekOptions = useMemo(
+    () => buildScheduleWeekOptions(matchesWithLive),
+    [matchesWithLive]
+  );
+
+  useEffect(() => {
+    if (weekInitialized || weekOptions.length === 0) {
+      return;
+    }
+
+    setWeek(resolveDefaultScheduleWeek(matchesWithLive, weekOptions));
+    setWeekInitialized(true);
+  }, [matchesWithLive, weekInitialized, weekOptions]);
 
   const resolveTeamDisplayName = useCallback(
     (team: ScheduleFilterTeam) =>
@@ -52,32 +109,33 @@ export function HomeMatchesSchedulePanel({
 
   const filteredTeamIds = useMemo(() => {
     const searchMatchedTeamIds = resolveScheduleTeamSearchMatches(
-      SCHEDULE_FILTER_TEAMS,
+      scheduleFilterTeams,
       teamSearchQuery,
       resolveTeamDisplayName
     );
 
-    return combineScheduleTeamFilterIds(selectedTeamIds, searchMatchedTeamIds);
-  }, [resolveTeamDisplayName, selectedTeamIds, teamSearchQuery]);
+    return combineScheduleTeamFilterIds([], searchMatchedTeamIds);
+  }, [resolveTeamDisplayName, scheduleFilterTeams, teamSearchQuery]);
+
+  const listOptions = useMemo(
+    () => ({
+      showEnded,
+      sortKey: "time" as const,
+      teamIds: filteredTeamIds,
+      liveOnly,
+      week
+    }),
+    [filteredTeamIds, liveOnly, showEnded, week]
+  );
 
   const sortedMatches = useMemo(
-    () =>
-      buildScheduleMatchList(matchesWithLive, snapshots, {
-        showEnded,
-        sortKey,
-        teamIds: filteredTeamIds
-      }),
-    [filteredTeamIds, matchesWithLive, snapshots, showEnded, sortKey]
+    () => buildScheduleMatchList(matchesWithLive, snapshots, listOptions),
+    [listOptions, matchesWithLive, snapshots]
   );
 
   const dateGroups = useMemo(
-    () =>
-      buildScheduleDateGroups(matchesWithLive, snapshots, {
-        showEnded,
-        sortKey,
-        teamIds: filteredTeamIds
-      }),
-    [filteredTeamIds, matchesWithLive, snapshots, showEnded, sortKey]
+    () => buildScheduleDateGroups(matchesWithLive, snapshots, listOptions),
+    [listOptions, matchesWithLive, snapshots]
   );
 
   return (
@@ -88,15 +146,15 @@ export function HomeMatchesSchedulePanel({
       </div>
 
       <ScheduleFilterBar
-        sortKey={sortKey}
-        showEnded={showEnded}
-        teams={SCHEDULE_FILTER_TEAMS}
-        selectedTeamIds={selectedTeamIds}
         teamSearchQuery={teamSearchQuery}
-        onSortKeyChange={setSortKey}
-        onShowEndedChange={setShowEnded}
-        onSelectedTeamIdsChange={setSelectedTeamIds}
+        liveOnly={liveOnly}
+        week={week}
+        weekOptions={weekOptions}
+        showEnded={showEnded}
         onTeamSearchQueryChange={setTeamSearchQuery}
+        onLiveOnlyChange={setLiveOnly}
+        onWeekChange={setWeek}
+        onShowEndedChange={setShowEnded}
       />
 
       {sortedMatches.length > 0 ? (

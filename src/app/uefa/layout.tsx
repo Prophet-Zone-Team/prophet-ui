@@ -1,9 +1,11 @@
+import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { isPrivateModeHost } from "@/config/funding";
+import { UefaPageShell } from "@/views/home";
 
-export default async function RootPage() {
+export default async function UEFALayout({ children }: { children: ReactNode }) {
   const hostHeader = (await headers()).get("host") ?? "";
   const hostname = hostHeader.split(":")[0] ?? "";
 
@@ -11,5 +13,5 @@ export default async function RootPage() {
     redirect("/private");
   }
 
-  redirect("/uefa/matches");
+  return <UefaPageShell>{children}</UefaPageShell>;
 }
