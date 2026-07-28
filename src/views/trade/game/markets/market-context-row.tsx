@@ -4,19 +4,23 @@ import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
-import { useAnalyticsHeadToHeadFixtures } from "@/hooks/analytics/use-analytics-head-to-head-fixtures";
-import { useAnalyticsTeamRelatedNews } from "@/hooks/analytics/use-analytics-team-related-news";
+// Temporarily hidden on /trade/game — restore Related News / Match History when ready.
+// import { useAnalyticsHeadToHeadFixtures } from "@/hooks/analytics/use-analytics-head-to-head-fixtures";
+// import { useAnalyticsTeamRelatedNews } from "@/hooks/analytics/use-analytics-team-related-news";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
 import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { buildRelatedGamesTeamsQuery } from "@/lib/market/related-games-query";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
-import { MatchHistory } from "@/views/trade/game/match-history";
-import { RelatedNews } from "@/views/trade/game/related-news";
+// Temporarily hidden on /trade/game — restore Related News / Match History when ready.
+// import { MatchHistory } from "@/views/trade/game/match-history";
+// import { RelatedNews } from "@/views/trade/game/related-news";
 import { GameStatistics } from "@/views/trade/game/statistics";
 import { RelatedGames } from "@/views/trade/related-games";
 
-const CONTEXT_TAB_IDS = ["related-games", "news", "history"] as const;
+// Temporarily narrowed — restore "news" / "history" when Related News / Match History return.
+const CONTEXT_TAB_IDS = ["related-games"] as const;
+// const CONTEXT_TAB_IDS = ["related-games", "news", "history"] as const;
 
 type ContextTabId = (typeof CONTEXT_TAB_IDS)[number];
 
@@ -64,23 +68,24 @@ export function MarketContextRow({
     teamSnapshots[0]?.team.id ??
     "";
 
-  const {
-    items: relatedNewsItems,
-    isLoading: relatedNewsLoading,
-    isError: relatedNewsError
-  } = useAnalyticsTeamRelatedNews({
-    homeTeamName,
-    awayTeamName
-  });
-
-  const {
-    matches: matchHistoryEntries,
-    isLoading: matchHistoryLoading,
-    isError: matchHistoryError
-  } = useAnalyticsHeadToHeadFixtures({
-    teamA: homeTeamName,
-    teamB: awayTeamName
-  });
+  // Temporarily hidden on /trade/game — restore Related News / Match History when ready.
+  // const {
+  //   items: relatedNewsItems,
+  //   isLoading: relatedNewsLoading,
+  //   isError: relatedNewsError
+  // } = useAnalyticsTeamRelatedNews({
+  //   homeTeamName,
+  //   awayTeamName
+  // });
+  //
+  // const {
+  //   matches: matchHistoryEntries,
+  //   isLoading: matchHistoryLoading,
+  //   isError: matchHistoryError
+  // } = useAnalyticsHeadToHeadFixtures({
+  //   teamA: homeTeamName,
+  //   teamB: awayTeamName
+  // });
 
   const {
     rows: statisticsRows,
@@ -98,17 +103,18 @@ export function MarketContextRow({
         id: "related-games" as const,
         label: t("relatedGames"),
         mobileLabel: t("tabRelatedGamesMobile")
-      },
-      {
-        id: "news" as const,
-        label: t("relatedNews"),
-        mobileLabel: t("tabRelatedNewsMobile")
-      },
-      {
-        id: "history" as const,
-        label: t("matchHistory"),
-        mobileLabel: t("tabMatchHistoryMobile")
       }
+      // Temporarily hidden on /trade/game — restore Related News / Match History when ready.
+      // {
+      //   id: "news" as const,
+      //   label: t("relatedNews"),
+      //   mobileLabel: t("tabRelatedNewsMobile")
+      // },
+      // {
+      //   id: "history" as const,
+      //   label: t("matchHistory"),
+      //   mobileLabel: t("tabMatchHistoryMobile")
+      // }
     ],
     [t]
   );
@@ -173,6 +179,7 @@ export function MarketContextRow({
               />
             </div>
           ) : null}
+          {/* Temporarily hidden on /trade/game — restore Related News / Match History when ready.
           {visitedTabs.has("news") ? (
             <div hidden={tab !== "news"}>
               <RelatedNews
@@ -193,7 +200,10 @@ export function MarketContextRow({
               />
             </div>
           ) : null}
+          */}
         </div>
+      ) : null}
+      {/* Temporarily hidden on /trade/game — restore Related News / Match History when ready.
       ) : (
         <div className="flex flex-col gap-4 md:hidden">
           <RelatedNews
@@ -223,6 +233,7 @@ export function MarketContextRow({
           isError={matchHistoryError}
         />
       </div>
+      */}
     </div>
   );
 }
