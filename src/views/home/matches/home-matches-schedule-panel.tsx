@@ -76,7 +76,7 @@ export function HomeMatchesSchedulePanel({
   const t = useTranslations("home");
   const tTeamNames = useTranslations("teamNames");
   const [showEnded, setShowEnded] = useState(false);
-  const [liveOnly, setLiveOnly] = useState(true);
+  const [liveOnly, setLiveOnly] = useState(false);
   const [week, setWeek] = useState<number | null>(null);
   const [weekInitialized, setWeekInitialized] = useState(false);
   const [teamSearchQuery, setTeamSearchQuery] = useState("");
