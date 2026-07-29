@@ -208,6 +208,7 @@ function ScheduleTeamSearchInput({
   placeholder: string;
 }) {
   const t = useTranslations("home");
+  const hasValue = value.trim().length > 0;
 
   return (
     <div className="relative min-w-0 flex-1 md:hidden">
@@ -222,8 +223,23 @@ function ScheduleTeamSearchInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={t("searchTeams")}
-        className="box-border h-[30px] w-full max-w-[222px] rounded-[18px] border border-prophet-line bg-prophet-panel py-0 pl-[34px] pr-3 font-[Sora] text-[12px] font-normal leading-[15px] text-prophet-foreground outline-none placeholder:text-prophet-muted"
+        className="box-border h-[30px] w-full max-w-[222px] rounded-[18px] border border-prophet-line bg-prophet-panel py-0 pl-[34px] pr-8 font-[Sora] text-[12px] font-normal leading-[15px] text-prophet-foreground outline-none placeholder:text-prophet-muted [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
       />
+      {hasValue ? (
+        <button
+          type="button"
+          className="absolute right-2.5 top-1/2 z-[1] flex size-3.5 -translate-y-1/2 items-center justify-center overflow-hidden rounded-full bg-prophet-line duration-150 hover:bg-prophet-hover"
+          aria-label="Clear search"
+          onClick={() => onChange("")}
+        >
+          <img
+            src="/icons/icon-close.svg"
+            alt=""
+            className="h-1.5 w-1.5 shrink-0 object-contain object-center"
+            aria-hidden
+          />
+        </button>
+      ) : null}
     </div>
   );
 }

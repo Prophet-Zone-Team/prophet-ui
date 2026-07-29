@@ -226,11 +226,101 @@ export function filterScheduleMatchesByLive(
   return matches.filter((match) => match.status === "live");
 }
 
+const EXTERNAL_SCHEDULE_TEAM_ID_PREFIX = "ext:";
+
+function normalizeScheduleTeamNameKey(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+/** Synthetic id for club/display-name teams without curated World Cup ids. */
+export function buildExternalScheduleTeamId(displayName: string): Team["id"] {
+  return `${EXTERNAL_SCHEDULE_TEAM_ID_PREFIX}${normalizeScheduleTeamNameKey(displayName)}`;
+}
+
+function isExternalScheduleTeamId(teamId: Team["id"]): boolean {
+  return teamId.startsWith(EXTERNAL_SCHEDULE_TEAM_ID_PREFIX);
+}
+
+function resolveMatchSideScheduleTeamId(
+  teamId: Team["id"] | undefined,
+  displayName: string | undefined
+): Team["id"] | undefined {
+  if (teamId) {
+    return resolveCanonicalWorldCupTeamId(teamId);
+  }
+
+  const trimmed = displayName?.trim();
+
+  if (!trimmed || trimmed === "TBD") {
+    return undefined;
+  }
+
+  return buildExternalScheduleTeamId(trimmed);
+}
+
+function codeFromDisplayName(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) {
+    return "UNK";
+  }
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 3).toUpperCase();
+  }
+
+  return parts
+    .slice(0, 3)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 function resolveScheduleFilterTeam(
   teamId: Team["id"],
   snapshots: TeamMarketSnapshot[],
   matches: WorldCupMatch[]
 ): ScheduleFilterTeam {
+  if (isExternalScheduleTeamId(teamId)) {
+    const matchWithTeam = matches.find((match) => {
+      const sides = resolveMatchSides(match, snapshots);
+      return (
+        resolveMatchSideScheduleTeamId(match.homeTeamId, sides.home.name) ===
+          teamId ||
+        resolveMatchSideScheduleTeamId(match.awayTeamId, sides.away.name) ===
+          teamId
+      );
+    });
+
+    if (matchWithTeam) {
+      const sides = resolveMatchSides(matchWithTeam, snapshots);
+      const side =
+        resolveMatchSideScheduleTeamId(
+          matchWithTeam.homeTeamId,
+          sides.home.name
+        ) === teamId
+          ? sides.home
+          : sides.away;
+
+      return {
+        id: teamId,
+        name: side.name,
+        code: side.code ?? codeFromDisplayName(side.name)
+      };
+    }
+
+    const rawName = teamId.slice(EXTERNAL_SCHEDULE_TEAM_ID_PREFIX.length);
+
+    return {
+      id: teamId,
+      name: rawName,
+      code: codeFromDisplayName(rawName)
+    };
+  }
+
   const snapshot = snapshots.find((item) => item.team.id === teamId);
 
   if (snapshot) {
@@ -281,12 +371,22 @@ export function buildScheduleFilterTeams(
   const teamIds = new Set<Team["id"]>();
 
   for (const match of matches) {
-    if (match.homeTeamId) {
-      teamIds.add(match.homeTeamId);
+    const sides = resolveMatchSides(match, snapshots);
+    const homeId = resolveMatchSideScheduleTeamId(
+      match.homeTeamId,
+      sides.home.name
+    );
+    const awayId = resolveMatchSideScheduleTeamId(
+      match.awayTeamId,
+      sides.away.name
+    );
+
+    if (homeId) {
+      teamIds.add(homeId);
     }
 
-    if (match.awayTeamId) {
-      teamIds.add(match.awayTeamId);
+    if (awayId) {
+      teamIds.add(awayId);
     }
   }
 
@@ -297,7 +397,8 @@ export function buildScheduleFilterTeams(
 
 export function filterScheduleMatchesByTeams(
   matches: WorldCupMatch[],
-  teamIds?: Team["id"][]
+  teamIds?: Team["id"][],
+  snapshots: TeamMarketSnapshot[] = []
 ): WorldCupMatch[] {
   if (teamIds === undefined) {
     return matches;
@@ -308,18 +409,23 @@ export function filterScheduleMatchesByTeams(
   }
 
   const selectedTeamIds = new Set(
-    teamIds.map((teamId) => resolveCanonicalWorldCupTeamId(teamId))
+    teamIds.map((teamId) =>
+      isExternalScheduleTeamId(teamId)
+        ? teamId
+        : resolveCanonicalWorldCupTeamId(teamId)
+    )
   );
 
   return matches.filter((match) => {
-    const homeTeamId =
-      match.homeTeamId !== undefined
-        ? resolveCanonicalWorldCupTeamId(match.homeTeamId)
-        : undefined;
-    const awayTeamId =
-      match.awayTeamId !== undefined
-        ? resolveCanonicalWorldCupTeamId(match.awayTeamId)
-        : undefined;
+    const sides = resolveMatchSides(match, snapshots);
+    const homeTeamId = resolveMatchSideScheduleTeamId(
+      match.homeTeamId,
+      sides.home.name
+    );
+    const awayTeamId = resolveMatchSideScheduleTeamId(
+      match.awayTeamId,
+      sides.away.name
+    );
     const homeSelected =
       homeTeamId !== undefined && selectedTeamIds.has(homeTeamId);
     const awaySelected =
@@ -463,7 +569,8 @@ export function buildScheduleMatchList(
   );
   const filteredByTeams = filterScheduleMatchesByTeams(
     filteredByLive,
-    options.teamIds
+    options.teamIds,
+    snapshots
   );
   return sortScheduleMatches(filteredByTeams, snapshots, options.sortKey, {
     reverseTime: options.showEnded

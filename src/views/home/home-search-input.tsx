@@ -47,7 +47,7 @@ export function HomeSearchInput({
         placeholder={placeholder}
         aria-label={ariaLabel ?? placeholder}
         className={cn(
-          "h-full flex-1 border-0 bg-transparent pr-4 text-[14px] text-prophet-foreground outline-none placeholder:text-prophet-muted",
+          "h-full flex-1 border-0 bg-transparent pr-4 text-[14px] text-prophet-foreground outline-none placeholder:text-prophet-muted [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none",
           inputClassName
         )}
         value={value}

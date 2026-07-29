@@ -13,6 +13,7 @@ import { TradeGameHeaderToolbar } from "@/views/trade/game/header-toolbar";
 import { GameMarketsSection } from "@/views/trade/game/markets";
 import type { GameMarketTabId } from "@/views/trade/game/markets/fixture-market-actions";
 import { useRelatedGames } from "@/hooks/market/use-related-games";
+import { isFifaWorldCupGameSlug } from "@/lib/market/game-competition";
 import { buildRelatedGamesTeamsQuery } from "@/lib/market/related-games-query";
 import { RelatedGames } from "@/views/trade/related-games";
 import { gameContentClass } from "@/views/trade/game/ui";
@@ -87,6 +88,9 @@ export default function TradeGameView({
   const liveMatch = useMatchWithLiveState(match);
   const marketWsEnabled = isGameMarketWsEnabled(liveMatch);
   const isEsportsGame = isEsportsGameSlug(match.id);
+  const isFifaGame = isFifaWorldCupGameSlug(
+    liveMatch.polymarket?.slug ?? liveMatch.id
+  );
 
   const canTrade =
     (isEsportsGame || activeMarketTab !== "stats") &&
@@ -101,14 +105,16 @@ export default function TradeGameView({
 
   const relatedGameTeamNames = useMemo(
     () =>
-      [match.homeDisplayName, match.awayDisplayName].filter(
-        (name): name is string => Boolean(name?.trim())
-      ),
-    [match.awayDisplayName, match.homeDisplayName]
+      isFifaGame
+        ? [match.homeDisplayName, match.awayDisplayName].filter(
+            (name): name is string => Boolean(name?.trim())
+          )
+        : [],
+    [isFifaGame, match.awayDisplayName, match.homeDisplayName]
   );
 
-  const relatedGamesTeamsKey =
-    buildRelatedGamesTeamsQuery(relatedGameTeamNames);
+  const relatedGamesTeamsKey = buildRelatedGamesTeamsQuery(relatedGameTeamNames);
+  const showRelatedGames = isFifaGame && relatedGamesTeamsKey.length > 0;
 
   const { matches: relatedMatches } = useRelatedGames({
     teamNames: relatedGameTeamNames,
@@ -136,8 +142,8 @@ export default function TradeGameView({
   ]);
 
   const matchesToSync = useMemo(
-    () => [match, ...relatedMatches],
-    [match, relatedMatches]
+    () => (showRelatedGames ? [match, ...relatedMatches] : [match]),
+    [match, relatedMatches, showRelatedGames]
   );
 
   const setTab = useSetTradeTab();
@@ -218,7 +224,7 @@ export default function TradeGameView({
               outcomeButtonContainerClassName="gap-3"
             />
             <ComboEntry />
-            {relatedGamesTeamsKey.length > 0 ? (
+            {showRelatedGames ? (
               <RelatedGames {...sidebar.relatedGames} />
             ) : null}
           </div>
