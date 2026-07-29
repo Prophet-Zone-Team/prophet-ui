@@ -100,6 +100,24 @@ export function findTeamLineupByName(
   return entry ? mapLineupEntry(entry) : undefined;
 }
 
+export function findTeamLineupByApiTeamId(
+  data:
+    | Array<{
+        api_team_id?: number;
+        lineup?: ProphetGetTeamLineupData[number] | null;
+      }>
+    | null
+    | undefined,
+  apiTeamId: number
+): TeamLineupView | undefined {
+  const entry = data?.find(
+    (item) =>
+      item.api_team_id === apiTeamId || item.lineup?.team_id === apiTeamId
+  );
+
+  return entry?.lineup ? mapLineupEntry(entry.lineup) : undefined;
+}
+
 const LINEUP_MAX_LINE = 5;
 
 /** Map player id to pitch placement; position is normalized within each line. */

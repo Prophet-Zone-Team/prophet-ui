@@ -29,6 +29,8 @@ export function useGameStatistics(params: {
   const slug = liveMatch.polymarket?.slug?.trim() ?? "";
   const variant = getScheduleRowVariant(liveMatch.status);
   const enabled = variant !== "upcoming" && slug.length > 0;
+  const homeApiTeamId = liveMatch.homeApiTeamId;
+  const awayApiTeamId = liveMatch.awayApiTeamId;
 
   const query = useQuery({
     queryKey: marketQueryKeys.gameStatistics(slug),
@@ -50,9 +52,17 @@ export function useGameStatistics(params: {
     return mapGameStatisticsRows(
       query.data,
       params.homeTeamName,
-      params.awayTeamName
+      params.awayTeamName,
+      { homeApiTeamId, awayApiTeamId }
     );
-  }, [enabled, params.awayTeamName, params.homeTeamName, query.data]);
+  }, [
+    awayApiTeamId,
+    enabled,
+    homeApiTeamId,
+    params.awayTeamName,
+    params.homeTeamName,
+    query.data
+  ]);
 
   const goalEvents = useMemo(() => {
     const shouldIncludeGoalEvents =
@@ -65,9 +75,12 @@ export function useGameStatistics(params: {
     return mapGameStatisticsGoalEvents(
       query.data,
       params.homeTeamName,
-      params.awayTeamName
+      params.awayTeamName,
+      { homeApiTeamId, awayApiTeamId }
     );
   }, [
+    awayApiTeamId,
+    homeApiTeamId,
     params.awayTeamName,
     params.homeTeamName,
     params.includeGoalEvents,

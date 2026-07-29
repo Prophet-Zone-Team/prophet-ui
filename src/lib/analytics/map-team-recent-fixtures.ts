@@ -1,5 +1,4 @@
 import { formatDateFromIso } from "@/lib/formatters/datetime";
-import { resolveTeamSide } from "@/lib/market/map-game-statistics";
 import type { ProphetTeamStatsFixture } from "@/types/prophet-api";
 import { formatMatchScore } from "@/views/trade/game/match-history/format";
 import type {
@@ -7,35 +6,26 @@ import type {
   RecentFixtureRow
 } from "@/views/trade/game/stats/recent-matches/types";
 
-function normalizeTeamName(value: string | undefined): string {
-  return (value ?? "").trim().toLowerCase();
-}
-
 function resolveOpponentName(
-  teamName: string,
+  apiTeamId: number,
   fixture: ProphetTeamStatsFixture
 ): string {
-  const homeName = fixture.home_team_name ?? "";
-  const awayName = fixture.away_team_name ?? "";
-  const side = resolveTeamSide(teamName, homeName, awayName);
-
-  if (side === "home") {
-    return awayName;
+  if (fixture.home_team_id === apiTeamId) {
+    return fixture.away_team_name ?? "";
   }
 
-  if (side === "away") {
-    return homeName;
+  if (fixture.away_team_id === apiTeamId) {
+    return fixture.home_team_name ?? "";
   }
 
   return "";
 }
 
 function resolveFixtureResult(
-  teamName: string,
+  apiTeamId: number,
   fixture: ProphetTeamStatsFixture
 ): RecentFixtureResult {
-  const isHome =
-    normalizeTeamName(fixture.home_team_name) === normalizeTeamName(teamName);
+  const isHome = fixture.home_team_id === apiTeamId;
   const goalsFor = isHome ? fixture.home_goals : fixture.away_goals;
   const goalsAgainst = isHome ? fixture.away_goals : fixture.home_goals;
 
@@ -51,7 +41,7 @@ function resolveFixtureResult(
 }
 
 export function mapTeamRecentFixtures(
-  teamName: string,
+  apiTeamId: number,
   fixtures: ProphetTeamStatsFixture[] | null | undefined
 ): RecentFixtureRow[] {
   return (fixtures ?? [])
@@ -61,18 +51,22 @@ export function mapTeamRecentFixtures(
     .map((fixture) => ({
       id: String(fixture.id),
       date: formatDateFromIso(fixture.fixture_date),
-      opponent: resolveOpponentName(teamName, fixture),
-      result: resolveFixtureResult(teamName, fixture),
+      opponent: resolveOpponentName(apiTeamId, fixture),
+      result: resolveFixtureResult(apiTeamId, fixture),
       score: formatMatchScore(fixture.home_goals, fixture.away_goals),
       competition: fixture.league_name?.trim() || "Match"
     }));
 }
 
-export function findTeamStatsByName<T extends { name: string }>(
-  teams: T[] | undefined,
-  teamName: string
-): T | undefined {
-  const normalized = normalizeTeamName(teamName);
+export function findTeamStatsByPolymarketTeamId<
+  T extends { polymarket_team_id?: number }
+>(teams: T[] | undefined, polymarketTeamId: number): T | undefined {
+  return teams?.find((team) => team.polymarket_team_id === polymarketTeamId);
+}
 
-  return teams?.find((team) => normalizeTeamName(team.name) === normalized);
+export function findTeamStatsByApiTeamId<T extends { api_team_id?: number }>(
+  teams: T[] | undefined,
+  apiTeamId: number
+): T | undefined {
+  return teams?.find((team) => team.api_team_id === apiTeamId);
 }

@@ -83,6 +83,10 @@ export function useGameStatisticsNotificationSync(params: {
       params.homeTeamName,
       params.awayTeamName,
       slug,
+      {
+        homeApiTeamId: params.match.homeApiTeamId,
+        awayApiTeamId: params.match.awayApiTeamId,
+      },
     );
     const syncState = syncStateRef.current;
 
@@ -111,6 +115,8 @@ export function useGameStatisticsNotificationSync(params: {
     enqueueEventNotification,
     params.awayTeamName,
     params.homeTeamName,
+    params.match.awayApiTeamId,
+    params.match.homeApiTeamId,
     payload,
     shouldSync,
     slug,

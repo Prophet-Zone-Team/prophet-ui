@@ -41,6 +41,8 @@ export const loadGameTradeContext = cache(async (slug: string): Promise<GameTrad
     notFound();
   }
 
+  console.log("detail", detail);
+
   if (!detail) {
     notFound();
   }

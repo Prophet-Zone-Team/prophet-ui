@@ -154,15 +154,59 @@ function resolveTeamSideByAliasOverlap(
   return undefined;
 }
 
+export type ResolveTeamSideOptions = {
+  homeCode?: string;
+  awayCode?: string;
+  /** API-Football team id from statistics payload `team.id`. */
+  teamId?: number;
+  homeApiTeamId?: number;
+  awayApiTeamId?: number;
+};
+
+function resolveTeamSideByApiId(
+  teamId: number | undefined,
+  homeApiTeamId: number | undefined,
+  awayApiTeamId: number | undefined
+): "home" | "away" | undefined {
+  if (typeof teamId !== "number" || !Number.isFinite(teamId)) {
+    return undefined;
+  }
+
+  if (
+    typeof homeApiTeamId === "number" &&
+    Number.isFinite(homeApiTeamId) &&
+    teamId === homeApiTeamId
+  ) {
+    return "home";
+  }
+
+  if (
+    typeof awayApiTeamId === "number" &&
+    Number.isFinite(awayApiTeamId) &&
+    teamId === awayApiTeamId
+  ) {
+    return "away";
+  }
+
+  return undefined;
+}
+
 export function resolveTeamSide(
   teamName: string,
   homeTeamName: string,
   awayTeamName: string,
-  options?: {
-    homeCode?: string;
-    awayCode?: string;
-  }
+  options?: ResolveTeamSideOptions
 ): "home" | "away" | undefined {
+  const byApiId = resolveTeamSideByApiId(
+    options?.teamId,
+    options?.homeApiTeamId,
+    options?.awayApiTeamId
+  );
+
+  if (byApiId) {
+    return byApiId;
+  }
+
   const normalized = normalizeTeamName(teamName);
   const normalizedHome = normalizeTeamName(homeTeamName);
   const normalizedAway = normalizeTeamName(awayTeamName);
@@ -195,15 +239,30 @@ export function resolveTeamSide(
   );
 }
 
+export type GameStatisticsTeamSides = {
+  homeTeamName: string;
+  awayTeamName: string;
+  homeApiTeamId?: number;
+  awayApiTeamId?: number;
+};
+
 function buildStatLookup(
   payload: ProphetGameStatisticsPayload,
-  homeTeamName: string,
-  awayTeamName: string
+  sides: GameStatisticsTeamSides
 ): Map<string, { home: number; away: number }> {
   const lookup = new Map<string, { home: number; away: number }>();
 
   for (const block of payload.statistics) {
-    const side = resolveTeamSide(block.team.name, homeTeamName, awayTeamName);
+    const side = resolveTeamSide(
+      block.team.name,
+      sides.homeTeamName,
+      sides.awayTeamName,
+      {
+        teamId: block.team.id,
+        homeApiTeamId: sides.homeApiTeamId,
+        awayApiTeamId: sides.awayApiTeamId
+      }
+    );
 
     if (!side) {
       continue;
@@ -238,13 +297,22 @@ export function buildEmptyGameStatisticsRows(): GameStatisticsRowData[] {
 export function mapGameStatisticsRows(
   payload: ProphetGameStatisticsPayload | undefined,
   homeTeamName: string,
-  awayTeamName: string
+  awayTeamName: string,
+  options?: {
+    homeApiTeamId?: number;
+    awayApiTeamId?: number;
+  }
 ): GameStatisticsRowData[] {
   if (!payload) {
     return buildEmptyGameStatisticsRows();
   }
 
-  const lookup = buildStatLookup(payload, homeTeamName, awayTeamName);
+  const lookup = buildStatLookup(payload, {
+    homeTeamName,
+    awayTeamName,
+    homeApiTeamId: options?.homeApiTeamId,
+    awayApiTeamId: options?.awayApiTeamId
+  });
 
   return GAME_STATISTIC_LABELS.map((label) => {
     const apiType = API_STAT_TYPE_BY_LABEL[label];
@@ -305,7 +373,11 @@ export function resolveGoalElapsedSeconds(
 export function mapGameStatisticsGoalEvents(
   payload: ProphetGameStatisticsPayload | undefined,
   homeTeamName: string,
-  awayTeamName: string
+  awayTeamName: string,
+  options?: {
+    homeApiTeamId?: number;
+    awayApiTeamId?: number;
+  }
 ): GameMatchChartEvent[] {
   if (!payload?.events?.length) {
     return buildEmptyGameStatisticsGoalEvents();
@@ -321,7 +393,12 @@ export function mapGameStatisticsGoalEvents(
     const side = resolveTeamSide(
       event.team.name,
       homeTeamName,
-      awayTeamName
+      awayTeamName,
+      {
+        teamId: event.team.id,
+        homeApiTeamId: options?.homeApiTeamId,
+        awayApiTeamId: options?.awayApiTeamId
+      }
     );
 
     if (!side) {

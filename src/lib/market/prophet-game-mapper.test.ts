@@ -31,11 +31,56 @@ describe("prophet-game-mapper", () => {
     assert.equal(match.id, "fifwc-mex-rsa-2026-06-11");
     assert.equal(match.homeDisplayName, "Mexico");
     assert.equal(match.awayDisplayName, "South Africa");
+    assert.equal(match.homeApiTeamId, undefined);
+    assert.equal(match.awayApiTeamId, undefined);
+    assert.equal(match.homePolymarketTeamId, undefined);
+    assert.equal(match.awayPolymarketTeamId, undefined);
     assert.equal(match.kickoffAt, "2026-06-11T19:00:00Z");
     assert.equal(match.status, "scheduled");
     assert.equal(match.polymarket?.volume, 22374.91);
     assert.equal(match.polymarket?.slug, "fifwc-mex-rsa-2026-06-11");
     assert.equal(match.odds, undefined);
+  });
+
+  it("resolves home/away by ordering and maps api/polymarket team ids", () => {
+    const game: ProphetPolyMarketGameItem = {
+      slug: "uecl-drita-floriana-2026-07-28",
+      title: "Floriana vs. Drita",
+      start_time: "2026-07-28T18:00:00Z",
+      volume: "100",
+      active: 1,
+      closed: 0,
+      markets: null,
+      teams: [
+        {
+          name: "Floriana",
+          ordering: "away",
+          api_team_id: 4625,
+          polymarket_team_id: 177742,
+          logo: "https://example.com/floriana.png"
+        },
+        {
+          name: "Drita",
+          ordering: "home",
+          api_team_id: 14281,
+          polymarket_team_id: 177752,
+          logo: "https://example.com/drita.png"
+        }
+      ],
+      status: 0
+    };
+
+    const match = mapProphetGameToMatch(game);
+
+    assert.ok(match);
+    assert.equal(match.homeDisplayName, "Drita");
+    assert.equal(match.awayDisplayName, "Floriana");
+    assert.equal(match.homeApiTeamId, 14281);
+    assert.equal(match.awayApiTeamId, 4625);
+    assert.equal(match.homePolymarketTeamId, 177752);
+    assert.equal(match.awayPolymarketTeamId, 177742);
+    assert.equal(match.homeLogoUrl, "https://example.com/drita.png");
+    assert.equal(match.awayLogoUrl, "https://example.com/floriana.png");
   });
 
   it("skips games without slug or unparseable title", () => {

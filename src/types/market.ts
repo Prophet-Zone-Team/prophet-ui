@@ -715,6 +715,12 @@ export interface WorldCupMatch {
   awaySeed?: string;
   homeDisplayName?: string;
   awayDisplayName?: string;
+  /** API-Football team id from Prophet `/v1/game` teams. */
+  homeApiTeamId?: number;
+  awayApiTeamId?: number;
+  /** Polymarket team id from Prophet `/v1/game` teams. */
+  homePolymarketTeamId?: number;
+  awayPolymarketTeamId?: number;
   homeLogoUrl?: string;
   awayLogoUrl?: string;
   league?: string;

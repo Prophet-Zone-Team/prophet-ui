@@ -18,6 +18,8 @@ export const analyticsQueryKeys = {
     ["analytics", "fixtures", "head-to-head", teamA, teamB] as const,
   teamsStats: (teamsKey: string) =>
     ["analytics", "teams", "stats", teamsKey] as const,
+  teamStatsByPolymarketIds: (idsKey: string) =>
+    ["team", "stats", idsKey] as const,
   teamDetail: (teamName: string) => ["analytics", "team", teamName] as const,
   teamMarketNews: (teamName: string) =>
     ["analytics", "team-market-news", teamName] as const
