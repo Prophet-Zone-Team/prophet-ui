@@ -3,9 +3,11 @@ import { describe, it } from "node:test";
 
 import { mapProphetGameToMatch } from "@/lib/market/prophet-game-mapper";
 import {
+  buildScheduleFilterTeams,
   buildScheduleMatchList,
   filterScheduleMatches,
   filterScheduleMatchesByTeams,
+  resolveScheduleTeamSearchMatches,
 } from "@/lib/market/schedule-match";
 
 describe("schedule-match team filtering", () => {
@@ -71,6 +73,41 @@ describe("schedule-match team filtering", () => {
         `expected ${teamId} to match ${slug}`,
       );
     }
+  });
+
+  it("indexes and filters UEFA club matches by display name when curated ids are missing", () => {
+    const match = mapProphetGameToMatch({
+      slug: "col-tob-pan-2026-07-30",
+      title: "Tobol vs. Panathinaikos",
+      teams: [
+        { name: "Tobol", ordering: "home" },
+        { name: "Panathinaikos", ordering: "away" },
+      ],
+      active: 1,
+    });
+
+    assert.ok(match);
+    assert.equal(match.homeTeamId, undefined);
+    assert.equal(match.awayTeamId, undefined);
+
+    const filterTeams = buildScheduleFilterTeams([match], []);
+    assert.equal(filterTeams.length, 2);
+    assert.ok(filterTeams.some((team) => team.name === "Tobol"));
+    assert.ok(filterTeams.some((team) => team.name === "Panathinaikos"));
+
+    const tobolId = filterTeams.find((team) => team.name === "Tobol")?.id;
+    assert.ok(tobolId);
+
+    const searchMatched = resolveScheduleTeamSearchMatches(
+      filterTeams,
+      "tob",
+      (team) => team.name,
+    );
+    assert.deepEqual(searchMatched, [tobolId]);
+
+    const filtered = filterScheduleMatchesByTeams([match], [tobolId], []);
+    assert.equal(filtered.length, 1);
+    assert.equal(filtered[0]?.id, "col-tob-pan-2026-07-30");
   });
 });
 
