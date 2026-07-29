@@ -8,8 +8,6 @@ import { buildMatchHistoryEntries } from "@/lib/analytics/map-head-to-head-fixtu
 import { analyticsQueryKeys } from "@/lib/analytics/query-keys";
 import { getAnalyticsHeadToHeadFixtures } from "@/service/prophet";
 
-import { useAnalyticsTeamPowerRankings } from "./use-analytics-team-power-rankings";
-
 const INVALID_TEAM_NAME = "TBD";
 
 function isValidTeamName(name: string): boolean {
@@ -20,7 +18,6 @@ export function useAnalyticsHeadToHeadFixtures(params: {
   teamA: string;
   teamB: string;
 }) {
-  const { teamCodeLookup } = useAnalyticsTeamPowerRankings();
   const enabled =
     isValidTeamName(params.teamA) && isValidTeamName(params.teamB);
 
@@ -36,8 +33,8 @@ export function useAnalyticsHeadToHeadFixtures(params: {
   });
 
   const matches = useMemo(
-    () => buildMatchHistoryEntries(query.data?.list, teamCodeLookup),
-    [query.data?.list, teamCodeLookup]
+    () => buildMatchHistoryEntries(query.data?.list),
+    [query.data?.list]
   );
 
   return {

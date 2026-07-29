@@ -13,11 +13,7 @@ import {
 import { analyticsQueryKeys } from "@/lib/analytics/query-keys";
 import { getAnalyticsNewsTopCategoryImpact } from "@/service/prophet";
 
-import { useAnalyticsTeamPowerRankings } from "./use-analytics-team-power-rankings";
-
 export function useAnalyticsNewsTopCategoryImpact() {
-  const { teamCodeLookup } = useAnalyticsTeamPowerRankings();
-
   const query = useQuery({
     queryKey: analyticsQueryKeys.newsTopCategoryImpact,
     queryFn: () => getAnalyticsNewsTopCategoryImpact(),
@@ -37,12 +33,8 @@ export function useAnalyticsNewsTopCategoryImpact() {
     [query.data?.impact]
   );
   const mostAffectedTeam = useMemo(
-    () =>
-      mapTopCategoryImpactToMostAffectedTeams(
-        query.data?.most_affected_teams,
-        teamCodeLookup
-      ),
-    [query.data?.most_affected_teams, teamCodeLookup]
+    () => mapTopCategoryImpactToMostAffectedTeams(query.data?.most_affected_teams),
+    [query.data?.most_affected_teams]
   );
 
   return {

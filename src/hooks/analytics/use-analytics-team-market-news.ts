@@ -11,10 +11,7 @@ import {
 import { analyticsQueryKeys } from "@/lib/analytics/query-keys";
 import { getAnalyticsTeamMarketNews } from "@/service/prophet";
 
-import { useAnalyticsTeamPowerRankings } from "./use-analytics-team-power-rankings";
-
 export function useAnalyticsTeamMarketNews(teamName: string) {
-  const { teamCodeLookup } = useAnalyticsTeamPowerRankings();
   const query = useQuery({
     queryKey: analyticsQueryKeys.teamMarketNews(teamName),
     queryFn: () => getAnalyticsTeamMarketNews({ team_name: teamName }),
@@ -27,8 +24,8 @@ export function useAnalyticsTeamMarketNews(teamName: string) {
     [query.data?.market]
   );
   const newsItems = useMemo(
-    () => mapTeamMarketNewsToImpactItems(query.data?.news, teamName, teamCodeLookup),
-    [query.data?.news, teamCodeLookup, teamName]
+    () => mapTeamMarketNewsToImpactItems(query.data?.news, teamName),
+    [query.data?.news, teamName]
   );
 
   return {

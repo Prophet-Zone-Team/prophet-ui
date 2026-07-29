@@ -670,12 +670,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const nextSession = await loadTradingSession();
 
       if (!nextSession) {
+        // Keep UI logout and Prophet Bearer in sync: clearAuth alone left
+        // prophet_api_token / tracks state behind, so bookmarks still sent Bearer.
+        logoutProphet();
+        useTracksStore.getState().reset();
+        useNotificationWsStore.getState().reset();
         store.clearAuth();
         store.setLoginInProgress(false);
         store.setStatus("ready");
-        // openSetupModalIfNeeded();
-
-        walletHandlingRef.current = false;
+        store.setReadiness(undefined);
         return;
       }
 
