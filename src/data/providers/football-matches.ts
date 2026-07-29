@@ -1,7 +1,5 @@
 import {
   clearMockScheduleMatchesCache,
-  getMockScheduleMatchesFromFile,
-  getMockScheduleMatchesMeta
 } from "@/data/mock/schedule-matches";
 import { clearFootballMatchesFileFallbackCache } from "@/data/providers/football-matches-fallback";
 import {
@@ -10,7 +8,11 @@ import {
 import { mapProphetGameDetailToMatch } from "@/lib/market/prophet-game-detail-mapper";
 import { mapProphetGamesToMatches } from "@/lib/market/prophet-game-mapper";
 import { clearFixtureSiblingMarketsCache } from "@/server/market/fixture-sibling-enrichment";
-import { getProphetGame, getProphetGames } from "@/service/prophet";
+import {
+  getProphetGame,
+  getProphetGames,
+  type ProphetGamesQuery
+} from "@/service/prophet";
 import type { FreshnessMeta, WorldCupMatch } from "@/types/market";
 
 export interface FootballMatchesResult {
@@ -18,11 +20,27 @@ export interface FootballMatchesResult {
   meta: FreshnessMeta;
 }
 
-let cachedResult: (FootballMatchesResult & { expiresAt: number }) | undefined;
+export type FootballMatchesQuery = ProphetGamesQuery;
+
+type CachedFootballMatches = FootballMatchesResult & { expiresAt: number };
+
+const matchesCacheByKey = new Map<string, CachedFootballMatches>();
 
 const MATCHES_CACHE_TTL_MS = 60_000;
 
-export async function getFootballMatches(): Promise<FootballMatchesResult> {
+function buildFootballMatchesCacheKey(params?: FootballMatchesQuery): string {
+  const league = params?.league?.trim() || "all";
+  const ended =
+    params?.ended === undefined ? "default" : params.ended ? "true" : "false";
+  return `${league}:${ended}`;
+}
+
+export async function getFootballMatches(
+  params?: FootballMatchesQuery
+): Promise<FootballMatchesResult> {
+  const cacheKey = buildFootballMatchesCacheKey(params);
+  const cachedResult = matchesCacheByKey.get(cacheKey);
+
   if (cachedResult && cachedResult.expiresAt > Date.now()) {
     return {
       matches: cachedResult.matches,
@@ -30,12 +48,12 @@ export async function getFootballMatches(): Promise<FootballMatchesResult> {
     };
   }
 
-  const result = await fetchProphetFootballMatches();
+  const result = await fetchProphetFootballMatches(params);
 
-  cachedResult = {
+  matchesCacheByKey.set(cacheKey, {
     ...result,
     expiresAt: Date.now() + MATCHES_CACHE_TTL_MS
-  };
+  });
 
   return result;
 }
@@ -52,11 +70,13 @@ export async function getFootballMatchBySlug(
   }
 }
 
-async function fetchProphetFootballMatches(): Promise<FootballMatchesResult> {
+async function fetchProphetFootballMatches(
+  params?: FootballMatchesQuery
+): Promise<FootballMatchesResult> {
   const lastUpdated = new Date().toISOString();
 
   try {
-    const { list } = await getProphetGames();
+    const { list } = await getProphetGames(params);
     const matches = mapProphetGamesToMatches(list ?? []);
 
     return {
@@ -83,7 +103,7 @@ async function fetchProphetFootballMatches(): Promise<FootballMatchesResult> {
 }
 
 export function clearFootballMatchesCache(): void {
-  cachedResult = undefined;
+  matchesCacheByKey.clear();
   clearMockScheduleMatchesCache();
   clearPolymarketFootballEventsCache();
   clearFootballMatchesFileFallbackCache();

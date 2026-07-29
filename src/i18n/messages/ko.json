@@ -967,8 +967,6 @@
     "showEnded": "종료 경기 표시",
     "showEndedMatches": "종료된 경기 표시",
     "liveMatches": "라이브 경기",
-    "weekLabel": "{week}주차",
-    "allWeeks": "전체 주차",
     "filter": "필터",
     "teams": "팀",
     "filterByTeam": "팀별 필터",

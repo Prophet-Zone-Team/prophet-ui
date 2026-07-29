@@ -967,8 +967,6 @@
     "showEnded": "Показать завершённые",
     "showEndedMatches": "Показать завершённые матчи",
     "liveMatches": "Матчи в эфире",
-    "weekLabel": "Неделя {week}",
-    "allWeeks": "Все недели",
     "filter": "Фильтр",
     "teams": "Команды",
     "filterByTeam": "Фильтр по команде",
