@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { TrackedBookmarkIcon, UntrackedBookmarkIcon } from "@/components/bookmark/bookmark-icons";
+import { RegionRestrictedControl } from "@/components/trading/region-restricted-control";
 import { useAuth } from "@/context/auth/use-auth";
 import { cn } from "@/lib/cn";
 import { trackTrackClicked } from "@/lib/analytics/tracking";
@@ -17,7 +18,7 @@ import {
   resolveTrackStoreKeyFromTarget,
   type ProphetBookmarkTarget
 } from "@/lib/tracks/track-status";
-import { isProphetAuthenticated, ProphetApiError } from "@/service/prophet";
+import { ProphetApiError } from "@/service/prophet";
 import {
   useIsTrackTracked,
   useTrackPending,
@@ -28,30 +29,53 @@ const TOOLTIP_HIDE_DELAY_MS = 2000;
 
 export type { ProphetBookmarkTarget } from "@/lib/tracks/track-status";
 
-export function useProphetBookmark(target: ProphetBookmarkTarget) {
-  const { openLoginModalOnly } = useAuth();
+export function useProphetBookmark(
+  target: ProphetBookmarkTarget,
+  options?: { onTrackAuthorized?: () => void }
+) {
+  const { isAuthenticated, isRegionBlocked, openLoginModalOnly } = useAuth();
   const storeKey = resolveTrackStoreKeyFromTarget(target);
   const isTracked = useIsTrackTracked(storeKey);
   const isLoading = useTrackPending(storeKey);
   const trackTarget = useTracksStore((state) => state.trackTarget);
   const untrackTarget = useTracksStore((state) => state.untrackTarget);
   const targetRef = useRef(target);
+  const onTrackAuthorizedRef = useRef(options?.onTrackAuthorized);
 
   useEffect(() => {
     targetRef.current = target;
   }, [target]);
+
+  useEffect(() => {
+    onTrackAuthorizedRef.current = options?.onTrackAuthorized;
+  }, [options?.onTrackAuthorized]);
 
   const toggle = useCallback(async () => {
     if (isLoading) {
       return;
     }
 
-    if (!isProphetAuthenticated()) {
-      await openLoginModalOnly();
+    if (isRegionBlocked) {
+      openLoginModalOnly();
+      return;
+    }
+
+    if (!isAuthenticated) {
+      openLoginModalOnly();
       return;
     }
 
     const currentTarget = targetRef.current;
+
+    trackTrackClicked({
+      teamName: currentTarget.category === "team" ? currentTarget.teamName : undefined,
+      target: isTracked ? "untrack" : "track",
+      entrySource: "bookmark_toggle"
+    });
+
+    if (!isTracked) {
+      onTrackAuthorizedRef.current?.();
+    }
 
     try {
       if (isTracked) {
@@ -61,14 +85,23 @@ export function useProphetBookmark(target: ProphetBookmarkTarget) {
       }
     } catch (error) {
       if (error instanceof ProphetApiError && error.code === 401) {
-        await openLoginModalOnly();
+        openLoginModalOnly();
       }
     }
-  }, [isLoading, isTracked, openLoginModalOnly, trackTarget, untrackTarget]);
+  }, [
+    isAuthenticated,
+    isLoading,
+    isRegionBlocked,
+    isTracked,
+    openLoginModalOnly,
+    trackTarget,
+    untrackTarget
+  ]);
 
   return {
     isTracked,
     isLoading,
+    isRegionBlocked,
     toggle
   };
 }
@@ -88,10 +121,16 @@ export function BookmarkToggle({
   tooltip,
   className
 }: BookmarkToggleProps) {
-  const { isTracked, isLoading, toggle } = useProphetBookmark(target);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingTrackSuccessTooltipRef = useRef(false);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const markPendingTrackSuccessTooltip = useCallback(() => {
+    pendingTrackSuccessTooltipRef.current = true;
+  }, []);
+  const { isTracked, isLoading, isRegionBlocked, toggle } = useProphetBookmark(
+    target,
+    { onTrackAuthorized: markPendingTrackSuccessTooltip }
+  );
   const buttonAriaLabel = isTracked
     ? (trackedAriaLabel ?? ariaLabel)
     : ariaLabel;
@@ -137,6 +176,32 @@ export function BookmarkToggle({
 
   useEffect(() => clearHideTimeout, [clearHideTimeout]);
 
+  const bookmarkButton = (
+    <button
+      type="button"
+      className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] p-0 disabled:cursor-not-allowed disabled:opacity-60 md:h-5 md:w-5"
+      aria-pressed={isTracked}
+      aria-busy={isLoading}
+      aria-label={buttonAriaLabel}
+      disabled={isLoading}
+      onClick={(event) => {
+        event.stopPropagation();
+        void toggle();
+      }}
+    >
+      {isLoading ? (
+        <Loader2
+          className="h-[12.8px] w-[12.8px] animate-spin text-[#909090] md:h-4 md:w-4"
+          aria-hidden="true"
+        />
+      ) : isTracked ? (
+        <TrackedBookmarkIcon />
+      ) : (
+        <UntrackedBookmarkIcon />
+      )}
+    </button>
+  );
+
   return (
     <div
       className={cn("relative flex shrink-0 items-center", className)}
@@ -146,40 +211,9 @@ export function BookmarkToggle({
         }
       }}
     >
-      <button
-        type="button"
-        className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] p-0 disabled:cursor-not-allowed disabled:opacity-60 md:h-5 md:w-5"
-        aria-pressed={isTracked}
-        aria-busy={isLoading}
-        aria-label={buttonAriaLabel}
-        disabled={isLoading}
-        onClick={(event) => {
-          event.stopPropagation();
-
-          trackTrackClicked({
-            teamName: target.category === "team" ? target.teamName : undefined,
-            target: isTracked ? "untrack" : "track",
-            entrySource: "bookmark_toggle"
-          });
-
-          if (!isTracked && !isLoading) {
-            pendingTrackSuccessTooltipRef.current = true;
-          }
-
-          void toggle();
-        }}
-      >
-        {isLoading ? (
-          <Loader2
-            className="h-[12.8px] w-[12.8px] animate-spin text-[#909090] md:h-4 md:w-4"
-            aria-hidden="true"
-          />
-        ) : isTracked ? (
-          <TrackedBookmarkIcon />
-        ) : (
-          <UntrackedBookmarkIcon />
-        )}
-      </button>
+      <RegionRestrictedControl restricted={isRegionBlocked}>
+        {bookmarkButton}
+      </RegionRestrictedControl>
 
       {isTracked && tooltip && isTooltipVisible ? (
         <div
