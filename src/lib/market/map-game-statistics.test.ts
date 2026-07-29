@@ -101,6 +101,38 @@ describe("map-game-statistics", () => {
     });
   });
 
+  it("maps statistics rows by api_team_id when display names do not match", () => {
+    const payload = parseGameStatisticsPayload(UCL_PSG_ARS_STATISTICS_JSON);
+    const rows = mapGameStatisticsRows(payload, "Home Alias", "Away Alias", {
+      homeApiTeamId: 85,
+      awayApiTeamId: 42
+    });
+
+    const byLabel = Object.fromEntries(rows.map((row) => [row.label, row]));
+
+    assert.deepEqual(byLabel.Possession, {
+      label: "Possession",
+      homeValue: 75,
+      awayValue: 25
+    });
+  });
+
+  it("maps goal events by api_team_id when display names do not match", () => {
+    const payload = parseGameStatisticsPayload(UCL_PSG_ARS_STATISTICS_JSON);
+    const goalEvents = mapGameStatisticsGoalEvents(
+      payload,
+      "Home Alias",
+      "Away Alias",
+      {
+        homeApiTeamId: 85,
+        awayApiTeamId: 42
+      }
+    );
+
+    assert.equal(goalEvents.length, 1);
+    assert.equal(goalEvents[0]?.side, "away");
+  });
+
   it("maps ucl-psg-ars goal events and filters non-goal types", () => {
     const payload = parseGameStatisticsPayload(
       `{"statistics":[],"events":${UCL_PSG_ARS_EVENTS_JSON}}`

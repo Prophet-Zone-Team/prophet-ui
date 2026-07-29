@@ -78,6 +78,10 @@ export function mapProphetGameToMatch(
     awayTeamId: awayTeam?.id,
     homeDisplayName: homeName,
     awayDisplayName: awayName,
+    homeApiTeamId: sides.homeApiTeamId,
+    awayApiTeamId: sides.awayApiTeamId,
+    homePolymarketTeamId: sides.homePolymarketTeamId,
+    awayPolymarketTeamId: sides.awayPolymarketTeamId,
     homeLogoUrl: sides.homeLogoUrl,
     awayLogoUrl: sides.awayLogoUrl,
     homeSeed: homeTeam ? undefined : homeName,
@@ -118,10 +122,16 @@ function resolveProphetFixtureSides(game: ProphetPolyMarketGameItem): {
   awayName?: string;
   homeLogoUrl?: string;
   awayLogoUrl?: string;
+  homeApiTeamId?: number;
+  awayApiTeamId?: number;
+  homePolymarketTeamId?: number;
+  awayPolymarketTeamId?: number;
 } {
   const teams = game.teams ?? [];
-  const homeTeam = teams[0];
-  const awayTeam = teams[1];
+  const homeByOrdering = teams.find((team) => team.ordering === "home");
+  const awayByOrdering = teams.find((team) => team.ordering === "away");
+  const homeTeam = homeByOrdering ?? teams[0];
+  const awayTeam = awayByOrdering ?? teams[1];
   const homeName = homeTeam?.name?.trim();
   const awayName = awayTeam?.name?.trim();
 
@@ -130,7 +140,11 @@ function resolveProphetFixtureSides(game: ProphetPolyMarketGameItem): {
       homeName,
       awayName,
       homeLogoUrl: homeTeam?.logo?.trim() || undefined,
-      awayLogoUrl: awayTeam?.logo?.trim() || undefined
+      awayLogoUrl: awayTeam?.logo?.trim() || undefined,
+      homeApiTeamId: homeTeam?.api_team_id,
+      awayApiTeamId: awayTeam?.api_team_id,
+      homePolymarketTeamId: homeTeam?.polymarket_team_id,
+      awayPolymarketTeamId: awayTeam?.polymarket_team_id
     };
   }
 

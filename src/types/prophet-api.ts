@@ -25,9 +25,14 @@ export interface ProphetWinnerProbabilityItem {
 
 export type ProphetGetWinnerProbabilityData = ProphetWinnerProbabilityItem[];
 
+export type ProphetTeamOrdering = "home" | "away";
+
 export interface ProphetPolyMarketTeam {
+  api_team_id?: number;
+  polymarket_team_id?: number;
   logo?: string;
   name?: string;
+  ordering?: ProphetTeamOrdering;
 }
 
 export interface ProphetPolyMarketMarket {
@@ -731,7 +736,7 @@ export interface ProphetGetHeadToHeadFixturesData {
   list?: ProphetHeadToHeadFixture[];
 }
 
-/** GET /v1/analytics/teams/stats — recent fixtures and strength per team */
+/** GET /v1/team/stats (and legacy analytics/teams/stats) — recent fixtures and strength per team */
 export interface ProphetTeamStatsFixture {
   id: number;
   api_fixture_id: number;
@@ -768,10 +773,16 @@ export interface ProphetTeamStatsStrength {
 }
 
 export interface ProphetTeamStatsInfo {
-  name: string;
+  /** Legacy analytics/teams/stats field; absent on /v1/team/stats. */
+  name?: string;
+  polymarket_team_id?: number;
+  api_team_id?: number;
   recent_fixtures?: ProphetTeamStatsFixture[] | null;
-  team_strength?: ProphetTeamStatsStrength;
+  team_strength?: ProphetTeamStatsStrength | null;
+  lineup?: ProphetTeamLineupEntry | null;
 }
+
+export type ProphetGetTeamStatsData = ProphetTeamStatsInfo[];
 
 export interface ProphetGetTeamDetailMatch {
   id: number;

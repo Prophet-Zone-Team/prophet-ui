@@ -575,6 +575,42 @@ export async function getProphetTeamLineup(params: {
   });
 }
 
+/** Serialize array query params as repeated keys: `key=1&key=2` (not `key[]=`). */
+function serializeRepeatedQueryParams(
+  params: Record<string, string | number | Array<string | number> | undefined>
+): string {
+  const search = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined) {
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        search.append(key, String(item));
+      }
+      continue;
+    }
+
+    search.append(key, String(value));
+  }
+
+  return search.toString();
+}
+
+/** GET /v1/team/stats — recent fixtures, strength, and lineup by polymarket team ids */
+export async function getProphetTeamStats(params: {
+  polymarket_team_ids: number[];
+}): Promise<ProphetTeamStatsInfo[]> {
+  return prophetGet<ProphetTeamStatsInfo[]>("/v1/team/stats", {
+    params: {
+      polymarket_team_ids: params.polymarket_team_ids
+    },
+    paramsSerializer: serializeRepeatedQueryParams
+  });
+}
+
 /** POST /v1/login — wallet login; creates account if missing */
 export async function loginProphet(
   request: ProphetLoginRequest

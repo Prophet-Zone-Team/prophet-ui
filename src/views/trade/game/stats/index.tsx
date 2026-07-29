@@ -2,9 +2,8 @@
 
 import { useMemo } from "react";
 
-import { useAnalyticsTeamsStats } from "@/hooks/analytics/use-analytics-teams-stats";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
-import { useGameUsualLineup } from "@/hooks/market/use-game-usual-lineup";
+import { useGameTeamStats } from "@/hooks/market/use-game-team-stats";
 import { cn } from "@/lib/cn";
 import { resolveMatchSides } from "@/lib/market/schedule-match";
 import type { TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
@@ -39,21 +38,16 @@ export function GameStatsSection({
     awayFixtures,
     homeStrength,
     awayStrength,
-    isLoading: teamsStatsLoading,
-    isError: teamsStatsError
-  } = useAnalyticsTeamsStats({
-    homeTeamName,
-    awayTeamName
-  });
-
-  const {
     homeLineup,
     awayLineup,
-    isLoading: usualLineupLoading,
-    isError: usualLineupError
-  } = useGameUsualLineup({
-    homeTeamName,
-    awayTeamName
+    isLoading: teamsStatsLoading,
+    isError: teamsStatsError,
+    isLineupError
+  } = useGameTeamStats({
+    homePolymarketTeamId: match.homePolymarketTeamId,
+    awayPolymarketTeamId: match.awayPolymarketTeamId,
+    homeApiTeamId: match.homeApiTeamId,
+    awayApiTeamId: match.awayApiTeamId
   });
 
   const homeTeam = {
@@ -90,8 +84,8 @@ export function GameStatsSection({
       <UsualLineup
         homeLineup={homeLineup}
         awayLineup={awayLineup}
-        isLoading={usualLineupLoading}
-        isError={usualLineupError}
+        isLoading={teamsStatsLoading}
+        isError={isLineupError}
       />
     </div>
   );

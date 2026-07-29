@@ -84,6 +84,10 @@ export function mapGameStatisticsEventNotifications(
   homeTeamName: string,
   awayTeamName: string,
   slug = "",
+  options?: {
+    homeApiTeamId?: number;
+    awayApiTeamId?: number;
+  },
 ): GameStatisticsEventNotification[] {
   if (!payload?.events?.length) {
     return [];
@@ -102,7 +106,11 @@ export function mapGameStatisticsEventNotifications(
       continue;
     }
 
-    const side = resolveTeamSide(event.team.name, homeTeamName, awayTeamName);
+    const side = resolveTeamSide(event.team.name, homeTeamName, awayTeamName, {
+      teamId: event.team.id,
+      homeApiTeamId: options?.homeApiTeamId,
+      awayApiTeamId: options?.awayApiTeamId,
+    });
 
     if (!side) {
       continue;
