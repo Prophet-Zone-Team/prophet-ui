@@ -8,8 +8,6 @@ import { mapTeamRelatedNewsArticles } from "@/lib/analytics/map-trade-game-relat
 import { analyticsQueryKeys } from "@/lib/analytics/query-keys";
 import { getAnalyticsTeamRelatedNews } from "@/service/prophet";
 
-import { useAnalyticsTeamPowerRankings } from "./use-analytics-team-power-rankings";
-
 const INVALID_TEAM_NAME = "TBD";
 
 function buildTeamsQueryKey(homeTeamName: string, awayTeamName: string): string {
@@ -22,7 +20,6 @@ export function useAnalyticsTeamRelatedNews(params: {
   homeTeamName: string;
   awayTeamName: string;
 }) {
-  const { teamCodeLookup } = useAnalyticsTeamPowerRankings();
   const teamsKey = buildTeamsQueryKey(params.homeTeamName, params.awayTeamName);
 
   const query = useQuery({
@@ -33,8 +30,12 @@ export function useAnalyticsTeamRelatedNews(params: {
   });
 
   const items = useMemo(
-    () => mapTeamRelatedNewsArticles(query.data?.list, teamCodeLookup, { homeTeamName: params.homeTeamName, awayTeamName: params.awayTeamName }),
-    [query.data?.list, teamCodeLookup]
+    () =>
+      mapTeamRelatedNewsArticles(query.data?.list, undefined, {
+        homeTeamName: params.homeTeamName,
+        awayTeamName: params.awayTeamName
+      }),
+    [params.awayTeamName, params.homeTeamName, query.data?.list]
   );
 
   return {

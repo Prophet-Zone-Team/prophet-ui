@@ -10,16 +10,12 @@ import { mapNewsArticleToAllListItem } from "@/lib/analytics/map-news";
 import { analyticsQueryKeys } from "@/lib/analytics/query-keys";
 import { getAnalyticsNews } from "@/service/prophet";
 
-import { useAnalyticsTeamPowerRankings } from "./use-analytics-team-power-rankings";
-
 export function useAnalyticsNewsPage(
   page: number,
   pageSize: number = ANALYTICS_NEWS_PAGE_SIZE,
   category = "",
   teams = ""
 ) {
-  const { teamCodeLookup } = useAnalyticsTeamPowerRankings();
-
   const query = useQuery({
     queryKey: analyticsQueryKeys.newsPage(page, pageSize, category, teams),
     queryFn: () =>
@@ -33,7 +29,7 @@ export function useAnalyticsNewsPage(
   });
 
   const items = (query.data?.list ?? []).map((article) =>
-    mapNewsArticleToAllListItem(article, teamCodeLookup)
+    mapNewsArticleToAllListItem(article)
   );
 
   return {

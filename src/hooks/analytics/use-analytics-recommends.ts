@@ -7,11 +7,7 @@ import { mapRecommendsResponse } from "@/lib/analytics/map-recommends";
 import { analyticsQueryKeys } from "@/lib/analytics/query-keys";
 import { getAnalyticsRecommends } from "@/service/prophet";
 
-import { useAnalyticsTeamPowerRankings } from "./use-analytics-team-power-rankings";
-
 export function useAnalyticsRecommends() {
-  const { teamCodeLookup } = useAnalyticsTeamPowerRankings();
-
   const query = useQuery({
     queryKey: analyticsQueryKeys.recommends,
     queryFn: getAnalyticsRecommends,
@@ -19,7 +15,7 @@ export function useAnalyticsRecommends() {
   });
 
   return {
-    cards: mapRecommendsResponse(query.data, teamCodeLookup),
+    cards: mapRecommendsResponse(query.data),
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error
