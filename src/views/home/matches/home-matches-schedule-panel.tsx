@@ -1,25 +1,29 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { resolveLocalizedTeamName } from "@/lib/i18n/localized-team-name";
 
 import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 
 import { curatedNationalTeamsList } from "@/data/teams/curated-team-list";
+import { useFootballMatches } from "@/hooks/market/use-football-matches";
 import {
   buildScheduleDateGroups,
   buildScheduleFilterTeams,
   buildScheduleMatchList,
-  buildScheduleWeekOptions,
   combineScheduleTeamFilterIds,
-  resolveDefaultScheduleWeek,
   resolveScheduleTeamSearchMatches,
   type ScheduleFilterTeam
 } from "@/lib/market/schedule-match";
 import { useScheduleMatchesWithLiveState } from "@/store/match-live-store";
-import type { Team, TeamMarketSnapshot, WorldCupMatch } from "@/types/market";
+import type {
+  FreshnessMeta,
+  Team,
+  TeamMarketSnapshot,
+  WorldCupMatch
+} from "@/types/market";
 import { ScheduleFilterBar } from "@/views/home/matches/schedule-filter-bar";
 import { ScheduleMatchRow } from "@/views/home/matches/schedule-match-row";
 import { SpecialMatchDataCard } from "@/views/home/matches/special-match-data-card";
@@ -67,39 +71,42 @@ function buildScheduleFilterTeamsWithLogos(
 export interface HomeMatchesSchedulePanelProps {
   matches: WorldCupMatch[];
   snapshots: TeamMarketSnapshot[];
+  /** When set (e.g. UEFA `ucol`), Show Ended refetches `/v1/games` with `ended`. */
+  league?: string;
+  matchesMeta?: FreshnessMeta;
 }
 
 export function HomeMatchesSchedulePanel({
-  matches,
-  snapshots
+  matches: initialMatches,
+  snapshots,
+  league,
+  matchesMeta
 }: HomeMatchesSchedulePanelProps) {
   const t = useTranslations("home");
   const tTeamNames = useTranslations("teamNames");
   const [showEnded, setShowEnded] = useState(false);
   const [liveOnly, setLiveOnly] = useState(false);
-  const [week, setWeek] = useState<number | null>(null);
-  const [weekInitialized, setWeekInitialized] = useState(false);
   const [teamSearchQuery, setTeamSearchQuery] = useState("");
-  const matchesWithLive = useScheduleMatchesWithLiveState(matches);
+
+  const leagueDriven = Boolean(league?.trim());
+  const footballMatchesQuery = useFootballMatches({
+    league: league ?? "",
+    ended: showEnded,
+    initialMatches,
+    initialMeta: matchesMeta,
+    enabled: leagueDriven
+  });
+
+  const sourceMatches = leagueDriven
+    ? footballMatchesQuery.matches
+    : initialMatches;
+
+  const matchesWithLive = useScheduleMatchesWithLiveState(sourceMatches);
 
   const scheduleFilterTeams = useMemo(
-    () => buildScheduleFilterTeamsWithLogos(matches, snapshots),
-    [matches, snapshots]
+    () => buildScheduleFilterTeamsWithLogos(sourceMatches, snapshots),
+    [sourceMatches, snapshots]
   );
-
-  const weekOptions = useMemo(
-    () => buildScheduleWeekOptions(matchesWithLive),
-    [matchesWithLive]
-  );
-
-  useEffect(() => {
-    if (weekInitialized || weekOptions.length === 0) {
-      return;
-    }
-
-    setWeek(resolveDefaultScheduleWeek(matchesWithLive, weekOptions));
-    setWeekInitialized(true);
-  }, [matchesWithLive, weekInitialized, weekOptions]);
 
   const resolveTeamDisplayName = useCallback(
     (team: ScheduleFilterTeam) =>
@@ -123,9 +130,9 @@ export function HomeMatchesSchedulePanel({
       sortKey: "time" as const,
       teamIds: filteredTeamIds,
       liveOnly,
-      week
+      skipEndedFilter: leagueDriven
     }),
-    [filteredTeamIds, liveOnly, showEnded, week]
+    [filteredTeamIds, leagueDriven, liveOnly, showEnded]
   );
 
   const sortedMatches = useMemo(
@@ -140,20 +147,17 @@ export function HomeMatchesSchedulePanel({
 
   return (
     <section className="min-w-0" aria-label={t("footballMatchSchedule")}>
-      <SyncMatchLiveStore matches={matches} />
+      <SyncMatchLiveStore matches={sourceMatches} />
       <div className="pb-[20px]">
-        <SpecialMatchDataCard matches={matches} snapshots={snapshots} />
+        <SpecialMatchDataCard matches={sourceMatches} snapshots={snapshots} />
       </div>
 
       <ScheduleFilterBar
         teamSearchQuery={teamSearchQuery}
         liveOnly={liveOnly}
-        week={week}
-        weekOptions={weekOptions}
         showEnded={showEnded}
         onTeamSearchQueryChange={setTeamSearchQuery}
         onLiveOnlyChange={setLiveOnly}
-        onWeekChange={setWeek}
         onShowEndedChange={setShowEnded}
       />
 
@@ -190,7 +194,9 @@ export function HomeMatchesSchedulePanel({
         )
       ) : (
         <p className="m-0 text-sm text-prophet-muted">
-          {t("noFixturesMatchFilters")}
+          {leagueDriven && footballMatchesQuery.isFetching
+            ? t("mobileLoadingAria")
+            : t("noFixturesMatchFilters")}
         </p>
       )}
     </section>

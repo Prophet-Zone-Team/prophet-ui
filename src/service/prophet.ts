@@ -387,9 +387,21 @@ export async function getProphetPolymarketStats(
   });
 }
 
-/** GET /v1/games — all Polymarket games, sorted by start_time ascending */
-export async function getProphetGames(): Promise<ProphetGetGamesData> {
-  return prophetGet<ProphetGetGamesData>("/v1/games");
+/** GET /v1/games — Polymarket games, sorted by start_time ascending */
+export type ProphetGamesQuery = {
+  league?: string;
+  ended?: boolean;
+};
+
+export async function getProphetGames(
+  params?: ProphetGamesQuery
+): Promise<ProphetGetGamesData> {
+  return prophetGet<ProphetGetGamesData>("/v1/games", {
+    params: {
+      ...(params?.league ? { league: params.league } : {}),
+      ...(params?.ended !== undefined ? { ended: params.ended } : {})
+    }
+  });
 }
 
 /** GET /v1/teams-condition — teams for comma-separated condition ids */

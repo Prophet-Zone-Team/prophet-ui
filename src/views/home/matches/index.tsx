@@ -12,16 +12,19 @@ export interface HomeMatchesPanelProps {
   matchesMeta: FootballMatchesResult["meta"];
   /** Optional team winner snapshots; schedule rows use match display names when empty. */
   snapshots?: TeamMarketSnapshot[];
+  /** When set (e.g. UEFA `ucol`), Show Ended refetches `/v1/games` with `ended`. */
+  league?: string;
 }
 
 export function HomeMatchesPanel({
   matches,
   matchesMeta,
-  snapshots = []
+  snapshots = [],
+  league
 }: HomeMatchesPanelProps) {
   const t = useTranslations("home");
 
-  if (matches.length === 0) {
+  if (matches.length === 0 && !league) {
     return (
       <div className="min-w-0 pb-4">
         <section
@@ -40,7 +43,12 @@ export function HomeMatchesPanel({
 
   return (
     <div className="min-w-0 pb-4">
-      <HomeMatchesSchedulePanel matches={matches} snapshots={snapshots} />
+      <HomeMatchesSchedulePanel
+        matches={matches}
+        snapshots={snapshots}
+        league={league}
+        matchesMeta={matchesMeta}
+      />
     </div>
   );
 }
