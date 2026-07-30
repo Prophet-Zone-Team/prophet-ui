@@ -23,8 +23,9 @@ export const GAME_STATISTIC_LABELS = [
   "Fouls",
   "Yellow Cards",
   "Red Cards",
-  "Corners",
-  "Free Kicks"
+  "Corners"
+  // Free Kicks: API has no matching stat type yet; temporarily disabled until available
+  // "Free Kicks"
 ] as const;
 
 export type GameStatisticLabel = (typeof GAME_STATISTIC_LABELS)[number];
@@ -44,8 +45,9 @@ const API_STAT_TYPE_BY_LABEL: Record<GameStatisticLabel, string | undefined> =
     Fouls: "Fouls",
     "Yellow Cards": "Yellow Cards",
     "Red Cards": "Red Cards",
-    Corners: "Corner Kicks",
-    "Free Kicks": undefined
+    Corners: "Corner Kicks"
+    // Free Kicks: API has no matching stat type yet; temporarily disabled until available
+    // "Free Kicks": undefined
   };
 
 function normalizeTeamName(value: string | undefined): string {
