@@ -85,6 +85,8 @@ export function mapHeadToHeadFixtureToEntry(
   };
 }
 
+const MATCH_HISTORY_LIMIT = 5;
+
 export function buildMatchHistoryEntries(
   fixtures: ProphetHeadToHeadFixture[] | undefined,
   teamCodeLookup?: TeamCodeLookup
@@ -99,5 +101,6 @@ export function buildMatchHistoryEntries(
         teamCodeLookup
       )
     )
-    .sort((a, b) => b.playedAt.localeCompare(a.playedAt));
+    .sort((a, b) => b.playedAt.localeCompare(a.playedAt))
+    .slice(0, MATCH_HISTORY_LIMIT);
 }

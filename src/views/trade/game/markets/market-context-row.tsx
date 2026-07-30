@@ -4,9 +4,9 @@ import { useCallback, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { TabSwitcher } from "@/components/ui/tab-switcher";
-import { useAnalyticsHeadToHeadFixtures } from "@/hooks/analytics/use-analytics-head-to-head-fixtures";
 import { useAnalyticsTeamRelatedNews } from "@/hooks/analytics/use-analytics-team-related-news";
 import { useLocalizedTeamName } from "@/hooks/i18n/use-localized-team-name";
+import { useGameHeadToHeadFixtures } from "@/hooks/market/use-game-head-to-head-fixtures";
 import { useGameStatistics } from "@/hooks/market/use-game-statistics";
 import { isFifaWorldCupGameSlug } from "@/lib/market/game-competition";
 import { buildRelatedGamesTeamsQuery } from "@/lib/market/related-games-query";
@@ -86,9 +86,9 @@ export function MarketContextRow({
     matches: matchHistoryEntries,
     isLoading: matchHistoryLoading,
     isError: matchHistoryError
-  } = useAnalyticsHeadToHeadFixtures({
-    teamA: newsHomeTeamName,
-    teamB: newsAwayTeamName
+  } = useGameHeadToHeadFixtures({
+    homePolymarketTeamId: match.homePolymarketTeamId,
+    awayPolymarketTeamId: match.awayPolymarketTeamId
   });
 
   const {
@@ -221,7 +221,13 @@ export function MarketContextRow({
             isError={matchHistoryError}
           />
         </div>
-      ) : null}
+      ) : (
+        <MatchHistory
+          matches={matchHistoryEntries}
+          isLoading={matchHistoryLoading}
+          isError={matchHistoryError}
+        />
+      )}
     </div>
   );
 }

@@ -14,8 +14,8 @@ export const analyticsQueryKeys = {
   teamRelatedNews: (teamsKey: string) =>
     ["analytics", "news", "team-related", teamsKey] as const,
   newsTopCategoryImpact: ["analytics", "news", "top-category-impact"] as const,
-  headToHead: (teamA: string, teamB: string) =>
-    ["analytics", "fixtures", "head-to-head", teamA, teamB] as const,
+  headToHead: (idsKey: string) =>
+    ["game", "head-to-head", idsKey] as const,
   teamsStats: (teamsKey: string) =>
     ["analytics", "teams", "stats", teamsKey] as const,
   teamStatsByPolymarketIds: (idsKey: string) =>

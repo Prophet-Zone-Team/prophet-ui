@@ -22,7 +22,7 @@ import type {
   ProphetGetRelatedGamesData,
   ProphetGetTeamGameResultsData,
   ProphetGetTeamLineupData,
-  ProphetGetHeadToHeadFixturesData,
+  ProphetHeadToHeadFixture,
   ProphetTeamStatsInfo,
   ProphetGetGameStatisticsData,
   ProphetGetGameOddsData,
@@ -990,20 +990,16 @@ export async function getAnalyticsTeamRelatedNews(params: {
   );
 }
 
-/** GET /v1/analytics/fixtures/head-to-head */
-export async function getAnalyticsHeadToHeadFixtures(params: {
-  team_a: string;
-  team_b: string;
-}): Promise<ProphetGetHeadToHeadFixturesData> {
-  return prophetGet<ProphetGetHeadToHeadFixturesData>(
-    "/v1/analytics/fixtures/head-to-head",
-    {
-      params: {
-        team_a: params.team_a,
-        team_b: params.team_b
-      }
-    }
-  );
+/** GET /v1/game/head-to-head — recent fixtures between two polymarket teams */
+export async function getProphetHeadToHead(params: {
+  polymarket_team_ids: number[];
+}): Promise<ProphetHeadToHeadFixture[]> {
+  return prophetGet<ProphetHeadToHeadFixture[]>("/v1/game/head-to-head", {
+    params: {
+      polymarket_team_ids: params.polymarket_team_ids
+    },
+    paramsSerializer: serializeRepeatedQueryParams
+  });
 }
 
 /** GET /v1/analytics/teams/stats — recent fixtures and strength per team */
