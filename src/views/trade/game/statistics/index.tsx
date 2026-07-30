@@ -37,7 +37,7 @@ const STAT_BAR_LOWER_COLOR = "#909090";
 
 const GAME_STAT_LABEL_KEYS: Record<
   GameStatisticLabel,
-  "gameStatPossession" | "gameStatShots" | "gameStatShotsOnTarget" | "gameStatShotsOffTarget" | "gameStatFouls" | "gameStatYellowCards" | "gameStatRedCards" | "gameStatCorners" | "gameStatFreeKicks"
+  "gameStatPossession" | "gameStatShots" | "gameStatShotsOnTarget" | "gameStatShotsOffTarget" | "gameStatFouls" | "gameStatYellowCards" | "gameStatRedCards" | "gameStatCorners"
 > = {
   Possession: "gameStatPossession",
   Shots: "gameStatShots",
@@ -46,8 +46,9 @@ const GAME_STAT_LABEL_KEYS: Record<
   Fouls: "gameStatFouls",
   "Yellow Cards": "gameStatYellowCards",
   "Red Cards": "gameStatRedCards",
-  Corners: "gameStatCorners",
-  "Free Kicks": "gameStatFreeKicks"
+  Corners: "gameStatCorners"
+  // Free Kicks: API has no matching stat type yet; temporarily disabled until available
+  // "Free Kicks": "gameStatFreeKicks"
 };
 
 function StatComparisonBar({
