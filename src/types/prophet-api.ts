@@ -721,6 +721,7 @@ export interface ProphetGetNewsTopCategoryImpactData {
   most_affected_teams?: ProphetAnalyticsMostAffectedTeamItem[];
 }
 
+/** GET /v1/game/head-to-head — recent head-to-head fixtures */
 export interface ProphetHeadToHeadFixture {
   fixture_date?: string;
   home_team_name?: string;
@@ -730,10 +731,10 @@ export interface ProphetHeadToHeadFixture {
   league_name?: string;
   season?: number;
   status_short?: string;
-}
-
-export interface ProphetGetHeadToHeadFixturesData {
-  list?: ProphetHeadToHeadFixture[];
+  home_api_team_id?: number;
+  away_api_team_id?: number;
+  home_polymarket_team_id?: number;
+  away_polymarket_team_id?: number;
 }
 
 /** GET /v1/team/stats (and legacy analytics/teams/stats) — recent fixtures and strength per team */
