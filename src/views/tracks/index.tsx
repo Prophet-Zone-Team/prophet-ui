@@ -9,6 +9,7 @@ import { useAuth } from "@/context/auth";
 import { mapProphetTracksToCardProps } from "@/lib/tracks/prophet-track-mapper";
 import { useTracksHydrated, useTracksItems, useTracksStore } from "@/store";
 import { useAuthHydrated } from "@/store/use-auth-hydrated";
+import { SyncMatchLiveStore } from "@/components/match/sync-match-live-store";
 import { TracksEmptyState } from "./empty";
 import TracksTitle from "./title";
 import { TrackCard } from "./track-card";
@@ -50,6 +51,14 @@ export function TracksView() {
   } = useProphetTopTracks();
 
   const trackCards = useMemo(() => mapProphetTracksToCardProps(items), [items]);
+
+  const trackGameMatches = useMemo(
+    () =>
+      trackCards
+        .filter((card) => card.variant === "game")
+        .map((card) => card.match),
+    [trackCards]
+  );
 
   const topAttentionTeamCards = useMemo(
     () => topAttentionCards.filter((card) => card.variant !== "match"),
@@ -173,6 +182,7 @@ export function TracksView() {
 
   return (
     <section className="mx-auto w-full max-w-[1436px] px-3 py-6 md:px-4 md:py-8">
+      <SyncMatchLiveStore matches={trackGameMatches} />
       <div className="mx-auto w-full md:w-[1260px]">
         <TracksTitle />
         {errorMessage ? (

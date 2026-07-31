@@ -21,7 +21,8 @@ import type {
   Team,
   TeamMarketData,
   TeamMarketSnapshot,
-  WorldCupMatch
+  WorldCupMatch,
+  WorldCupMatchStatus
 } from "@/types/market";
 import type {
   TrackCardGameProps,
@@ -85,6 +86,37 @@ function parseGameTeamNames(
   return [parts[0]!, parts[1]!];
 }
 
+function slugifyTeamName(name: string): string {
+  return (
+    name
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "unknown"
+  );
+}
+
+function createSyntheticTeam(name: string): Team {
+  const trimmed = name.trim() || "—";
+  const asciiLetters = trimmed
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z]/g, "");
+  const code = (asciiLetters.slice(0, 3) || "UNK").toUpperCase();
+
+  return {
+    id: slugifyTeamName(trimmed),
+    name: trimmed,
+    code,
+    region: "Europe"
+  };
+}
+
+function resolveGameTrackTeamByName(name: string): Team {
+  return resolveWorldCupTeamByGroupItemTitle(name) ?? createSyntheticTeam(name);
+}
+
 function resolveGameTrackTeams(
   item: ProphetUserTrackItem
 ): { homeTeam: Team; awayTeam: Team } | undefined {
@@ -94,14 +126,10 @@ function resolveGameTrackTeams(
     return undefined;
   }
 
-  const homeTeam = resolveWorldCupTeamByGroupItemTitle(names[0]);
-  const awayTeam = resolveWorldCupTeamByGroupItemTitle(names[1]);
-
-  if (!homeTeam || !awayTeam) {
-    return undefined;
-  }
-
-  return { homeTeam, awayTeam };
+  return {
+    homeTeam: resolveGameTrackTeamByName(names[0]),
+    awayTeam: resolveGameTrackTeamByName(names[1])
+  };
 }
 
 function resolveTrackProbability(item: ProphetUserTrackItem): number {
@@ -335,6 +363,53 @@ function mapTrackNewsStat(item: ProphetUserTrackItem): {
   };
 }
 
+function mapTrackMatchStatus(
+  matchStatus: number | string | null | undefined
+): WorldCupMatchStatus {
+  // Aligned with mapProphetGameStatus in prophet-game-mapper.
+  const normalized =
+    typeof matchStatus === "string" ? Number(matchStatus.trim()) : matchStatus;
+
+  if (normalized === 2) {
+    return "finished";
+  }
+
+  if (normalized === 1) {
+    return "live";
+  }
+
+  return "scheduled";
+}
+
+function resolveTrackMatchScores(
+  item: ProphetUserTrackItem
+): { homeScore?: number; awayScore?: number } {
+  const scores =
+    Array.isArray(item.scores) && item.scores.length >= 2
+      ? item.scores
+      : Array.isArray(item.goals) && item.goals.length >= 2
+        ? item.goals
+        : undefined;
+
+  if (!scores) {
+    return {};
+  }
+
+  const homeScore = scores[0];
+  const awayScore = scores[1];
+
+  return {
+    homeScore:
+      typeof homeScore === "number" && Number.isFinite(homeScore)
+        ? homeScore
+        : undefined,
+    awayScore:
+      typeof awayScore === "number" && Number.isFinite(awayScore)
+        ? awayScore
+        : undefined
+  };
+}
+
 function buildGameMatch(
   item: ProphetUserTrackItem,
   homeTeam: Team,
@@ -347,6 +422,7 @@ function buildGameMatch(
   }
 
   const lastUpdated = new Date().toISOString();
+  const { homeScore, awayScore } = resolveTrackMatchScores(item);
 
   return {
     id: slug,
@@ -356,7 +432,9 @@ function buildGameMatch(
     awayTeamId: awayTeam.id,
     homeDisplayName: homeTeam.name,
     awayDisplayName: awayTeam.name,
-    status: "scheduled",
+    status: mapTrackMatchStatus(item.match_status),
+    homeScore,
+    awayScore,
     kickoffAt: item.start_time?.trim() || parseKickoffFromSlug(slug),
     league: "FIFA World Cup",
     freshness: {

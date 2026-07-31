@@ -583,6 +583,10 @@ export interface ProphetUserTrackItem {
   oneMonthPriceChange?: string;
   start_time?: string;
   goals?: number[] | null;
+  /** Match lifecycle code aligned with /v1/game status (0 scheduled, 1 live, 2 finished). */
+  match_status?: number | string | null;
+  /** Home/away scores when available, e.g. [1, 1]. */
+  scores?: number[] | null;
   team?: ProphetWorldCupTeam;
   markets?: ProphetUserTrackMarket[];
   attention?: number;
