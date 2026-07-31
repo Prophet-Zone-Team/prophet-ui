@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 export type TrackCardShellProps = {
   ariaLabel: string;
   header: ReactNode;
-  footer: ReactNode;
+  footer?: ReactNode;
   className?: string;
 };
 
@@ -26,9 +26,11 @@ export function TrackCardShell({
       <div className="flex min-h-0 flex-col gap-3 px-3 py-3 md:min-h-[78px] md:flex-row md:flex-nowrap md:items-center md:gap-6 md:px-4">
         {header}
       </div>
-      <div className="flex min-h-0 flex-col gap-3 border-t border-prophet-line bg-prophet-panel px-3 py-3 md:min-h-[60px] md:flex-row md:flex-nowrap md:items-center md:gap-6 md:px-4">
-        {footer}
-      </div>
+      {footer != null ? (
+        <div className="flex min-h-0 flex-col gap-3 border-t border-prophet-line bg-prophet-panel px-3 py-3 md:min-h-[60px] md:flex-row md:flex-nowrap md:items-center md:gap-6 md:px-4">
+          {footer}
+        </div>
+      ) : null}
     </article>
   );
 }

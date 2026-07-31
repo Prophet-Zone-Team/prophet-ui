@@ -156,23 +156,87 @@ describe("prophet-track-mapper", () => {
     assert.equal(card.match.kickoffAt, "2026-06-11T00:00:00.000Z");
   });
 
-  it("skips unresolvable teams and game tracks without fixture sides", () => {
+  it("skips unresolvable team tracks", () => {
     const unknownTeam: ProphetUserTrackItem = {
       slug: "unknown-team-xyz",
       team_name: "Not A Real Team"
     };
-    const unknownGame: ProphetUserTrackItem = {
-      category: "game",
-      slug: "unknown-game",
-      team_name: "Not A Real Team,Also Unknown"
-    };
 
     assert.equal(mapProphetTrackToCardProps(unknownTeam), undefined);
-    assert.equal(mapProphetTrackToCardProps(unknownGame), undefined);
-    assert.deepEqual(
-      mapProphetTracksToCardProps([unknownTeam, unknownGame]),
-      []
-    );
+    assert.deepEqual(mapProphetTracksToCardProps([unknownTeam]), []);
+  });
+
+  it("maps non-curated game tracks with synthetic teams", () => {
+    const item: ProphetUserTrackItem = {
+      category: "game",
+      slug: "col-ves-rfs-2026-07-30",
+      team_name: "ÍF Vestri,FK Rīgas Futbola Skola",
+      start_time: "2026-07-30T20:00:00Z",
+      volume: "40264.280317",
+      match_status: 2,
+      scores: [1, 1],
+      markets: [
+        {
+          slug: "col-ves-rfs-2026-07-30-ves",
+          groupItemTitle: "ÍF Vestri",
+          outcomePrices: '["0", "1"]'
+        }
+      ]
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.equal(card.variant, "game");
+    assert.equal(card.match.id, "col-ves-rfs-2026-07-30");
+    assert.equal(card.homeTeam.name, "ÍF Vestri");
+    assert.equal(card.awayTeam.name, "FK Rīgas Futbola Skola");
+    assert.equal(card.homeTeam.code, "IFV");
+    assert.equal(card.awayTeam.code, "FKR");
+    assert.equal(card.match.kickoffAt, "2026-07-30T20:00:00Z");
+    assert.equal(card.match.status, "finished");
+    assert.equal(card.match.homeScore, 1);
+    assert.equal(card.match.awayScore, 1);
+  });
+
+  it("maps match_status live and scheduled for game tracks", () => {
+    const liveItem: ProphetUserTrackItem = {
+      category: "game",
+      slug: "fifwc-mex-rsa-2026-06-11",
+      team_name: "Mexico,South Africa",
+      match_status: 1,
+      markets: [
+        {
+          slug: "fifwc-mex-rsa-2026-06-11-mex",
+          groupItemTitle: "Mexico",
+          outcomePrices: '["0.665", "0.335"]'
+        }
+      ]
+    };
+    const scheduledItem: ProphetUserTrackItem = {
+      ...liveItem,
+      match_status: 0
+    };
+
+    const liveCard = mapProphetTrackToCardProps(liveItem);
+    const scheduledCard = mapProphetTrackToCardProps(scheduledItem);
+
+    assert.ok(liveCard);
+    assert.ok(scheduledCard);
+    assert.equal(liveCard.variant, "game");
+    assert.equal(scheduledCard.variant, "game");
+    assert.equal(liveCard.match.status, "live");
+    assert.equal(scheduledCard.match.status, "scheduled");
+  });
+
+  it("skips game tracks without fixture sides", () => {
+    const incompleteGame: ProphetUserTrackItem = {
+      category: "game",
+      slug: "unknown-game",
+      team_name: "Only One Side"
+    };
+
+    assert.equal(mapProphetTrackToCardProps(incompleteGame), undefined);
   });
 
   it("maps multiple valid team tracks", () => {

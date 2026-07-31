@@ -271,6 +271,26 @@ export function mergeLiveSnapshot(
   };
 }
 
+const MATCH_STATUS_RANK: Record<WorldCupMatchStatus, number> = {
+  unknown: 0,
+  scheduled: 1,
+  live: 2,
+  postponed: 3,
+  cancelled: 3,
+  finished: 3
+};
+
+/** Prefer the more advanced lifecycle status so stale live snapshots cannot downgrade REST. */
+export function resolveMergedMatchStatus(
+  matchStatus: WorldCupMatchStatus,
+  snapshotStatus: WorldCupMatchStatus
+): WorldCupMatchStatus {
+  const matchRank = MATCH_STATUS_RANK[matchStatus] ?? 0;
+  const snapshotRank = MATCH_STATUS_RANK[snapshotStatus] ?? 0;
+
+  return snapshotRank >= matchRank ? snapshotStatus : matchStatus;
+}
+
 export function mergeMatchWithLiveSnapshot(
   match: WorldCupMatch,
   snapshot: MatchLiveSnapshot | undefined
@@ -283,7 +303,7 @@ export function mergeMatchWithLiveSnapshot(
     ...match,
     homeScore: snapshot.homeScore ?? match.homeScore,
     awayScore: snapshot.awayScore ?? match.awayScore,
-    status: snapshot.status,
+    status: resolveMergedMatchStatus(match.status, snapshot.status),
     period: snapshot.period ?? match.period,
     liveElapsedSeconds:
       snapshot.liveElapsedSeconds ?? match.liveElapsedSeconds,

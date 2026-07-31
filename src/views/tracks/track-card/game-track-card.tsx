@@ -33,6 +33,7 @@ export function GameTrackCard({
   const liveMatch = useMatchWithLiveState(match);
   const title = `${homeDisplayName} vs ${awayDisplayName}`;
   const isOngoing = getScheduleRowVariant(liveMatch.status) === "ongoing";
+  const showFooter = match.id.startsWith("fifwc-");
 
   return (
     <TrackCardShell
@@ -51,12 +52,14 @@ export function GameTrackCard({
         </>
       }
       footer={
-        <TrackCardFooter
-          variant="game"
-          signals={signals}
-          powerRanking={powerRanking}
-          signalItems={signalItems}
-        />
+        showFooter ? (
+          <TrackCardFooter
+            variant="game"
+            signals={signals}
+            powerRanking={powerRanking}
+            signalItems={signalItems}
+          />
+        ) : undefined
       }
     />
   );
