@@ -58,7 +58,7 @@ function renderFlagAsset(
       <img
         src={flagCode}
         alt={label}
-        className={cn(defaultFlagClassName, "object-cover", className)}
+        className={cn(defaultFlagClassName, "object-contain", className)}
       />
     );
   }
