@@ -1,6 +1,6 @@
 import { homeLoadingSurfaceClass } from "@/views/home/home-ui";
 
-export default function UEFAMatchesLoading() {
+export default function MatchesLoading() {
   return (
     <div role="tabpanel" className="min-w-0 pb-4">
       <div

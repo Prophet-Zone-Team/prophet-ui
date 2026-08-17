@@ -35,7 +35,7 @@ function MobileDrawer(props: any) {
     <Drawer
       title={(
         <Link
-          href="/uefa"
+          href="/matches"
           className="flex items-center gap-2"
           onClick={onClose}
         >

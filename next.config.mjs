@@ -82,6 +82,16 @@ const nextConfig = {
         source: "/landing/:path*",
         destination: "/referral/:path*",
         permanent: true
+      },
+      {
+        source: "/uefa",
+        destination: "/matches",
+        permanent: true
+      },
+      {
+        source: "/uefa/matches",
+        destination: "/matches",
+        permanent: true
       }
     ];
   },

@@ -1,10 +1,10 @@
 import { getFootballMatches } from "@/data/providers/football-matches";
 import { HomeMatchesPanel } from "@/views/home";
-import { UEFA_GAMES_LEAGUE } from "@/views/home/matches/config";
+import { LALIGA_GAMES_LEAGUE } from "@/views/home/matches/config";
 
-export default async function UEFAMatchesPage() {
+export default async function MatchesPage() {
   const { matches, meta: matchesMeta } = await getFootballMatches({
-    league: UEFA_GAMES_LEAGUE,
+    league: LALIGA_GAMES_LEAGUE,
     ended: false
   });
 
@@ -12,7 +12,7 @@ export default async function UEFAMatchesPage() {
     <HomeMatchesPanel
       matches={matches}
       matchesMeta={matchesMeta}
-      league={UEFA_GAMES_LEAGUE}
+      league={LALIGA_GAMES_LEAGUE}
     />
   );
 }

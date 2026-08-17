@@ -29,7 +29,7 @@ export function AppHeader() {
   );
 
   const homeLink = useMemo(() => {
-    let _homeLink = "/uefa";
+    let _homeLink = "/matches";
     if (isPrivateMode) {
       _homeLink = "/private";
     }
