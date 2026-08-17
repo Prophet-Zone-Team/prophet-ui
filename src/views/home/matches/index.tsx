@@ -12,7 +12,7 @@ export interface HomeMatchesPanelProps {
   matchesMeta: FootballMatchesResult["meta"];
   /** Optional team winner snapshots; schedule rows use match display names when empty. */
   snapshots?: TeamMarketSnapshot[];
-  /** When set (e.g. UEFA `ucol`), Show Ended refetches `/v1/games` with `ended`. */
+  /** When set (e.g. La Liga `laliga`), Show Ended refetches `/v1/games` with `ended`. */
   league?: string;
 }
 

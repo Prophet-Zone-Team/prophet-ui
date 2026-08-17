@@ -1,1 +1,1 @@
-export const UEFA_GAMES_LEAGUE = "ucol";
+export const LALIGA_GAMES_LEAGUE = "laliga";

@@ -11,5 +11,5 @@ export default async function RootPage() {
     redirect("/private");
   }
 
-  redirect("/uefa/matches");
+  redirect("/matches");
 }

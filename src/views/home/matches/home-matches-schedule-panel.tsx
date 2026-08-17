@@ -71,7 +71,7 @@ function buildScheduleFilterTeamsWithLogos(
 export interface HomeMatchesSchedulePanelProps {
   matches: WorldCupMatch[];
   snapshots: TeamMarketSnapshot[];
-  /** When set (e.g. UEFA `ucol`), Show Ended refetches `/v1/games` with `ended`. */
+  /** When set (e.g. La Liga `laliga`), Show Ended refetches `/v1/games` with `ended`. */
   league?: string;
   matchesMeta?: FreshnessMeta;
 }
