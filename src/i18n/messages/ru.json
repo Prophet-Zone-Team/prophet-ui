@@ -1,5 +1,8 @@
 {
   "nav": {
+    "markets": "Рынки",
+    "marketsNavigation": "Навигация по рынкам",
+    "marketsList": "Список рынков",
     "matches": "Матчи",
     "analytics": "Аналитика",
     "smartMoney": "Smart Money",
@@ -9,6 +12,23 @@
     "worldCup": "WorldCup",
     "primaryNavigation": "Основная навигация",
     "bottomNavigation": "Нижняя навигация"
+  },
+  "marketsNav": {
+    "navigationAria": "Категории рынков",
+    "listAria": "Список рынков",
+    "laLiga": "LaLiga",
+    "lol": "LOL"
+  },
+  "marketsFilter": {
+    "filtersAria": "Фильтры рынков",
+    "searchPlaceholder": "Prophet",
+    "searchAria": "Поиск рынков",
+    "showEnded": "Показать завершённые",
+    "showEndedAria": "Показать завершённые матчи",
+    "allTiers": "Все уровни",
+    "allTiersAria": "Фильтр по уровню",
+    "allTournaments": "Все турниры",
+    "allTournamentsAria": "Фильтр по турниру"
   },
   "wallet": {
     "portfolio": "Портфель",

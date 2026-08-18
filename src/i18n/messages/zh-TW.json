@@ -1,5 +1,8 @@
 {
   "nav": {
+    "markets": "市場",
+    "marketsNavigation": "市場導覽",
+    "marketsList": "市場列表",
     "matches": "賽事",
     "analytics": "分析",
     "smartMoney": "聰明資金",
@@ -9,6 +12,23 @@
     "worldCup": "WorldCup",
     "primaryNavigation": "主要導覽",
     "bottomNavigation": "底部導覽"
+  },
+  "marketsNav": {
+    "navigationAria": "市場分類",
+    "listAria": "市場列表",
+    "laLiga": "LaLiga",
+    "lol": "LOL"
+  },
+  "marketsFilter": {
+    "filtersAria": "市場篩選",
+    "searchPlaceholder": "Prophet",
+    "searchAria": "搜尋市場",
+    "showEnded": "顯示已結束",
+    "showEndedAria": "顯示已結束賽事",
+    "allTiers": "全部級別",
+    "allTiersAria": "依級別篩選",
+    "allTournaments": "全部賽事",
+    "allTournamentsAria": "依賽事篩選"
   },
   "wallet": {
     "portfolio": "投資組合",
