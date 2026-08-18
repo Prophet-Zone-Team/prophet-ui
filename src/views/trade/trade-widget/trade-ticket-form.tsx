@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatProbability } from "@/components/home/market-formatters";
 import { TradeAuthActionButton } from "@/components/trading/trade-auth-action-button";
@@ -92,7 +92,6 @@ export interface TradeTicketFormProps {
   noButtonActive?: boolean;
   onTakeProfitLimitEnabledChange?: (value: boolean) => void;
   onTakeProfitLimitPriceChange?: (value: string) => void;
-  walletInsight?: ReactNode;
 }
 
 export function TradeTicketForm({
@@ -144,8 +143,7 @@ export function TradeTicketForm({
   yesButtonActive,
   noButtonActive,
   onTakeProfitLimitEnabledChange,
-  onTakeProfitLimitPriceChange,
-  walletInsight
+  onTakeProfitLimitPriceChange
 }: TradeTicketFormProps) {
   const t = useTranslations("trade");
   const formatOutcomeDisplay = useFormatOutcomeButtonDisplay();
@@ -194,8 +192,6 @@ export function TradeTicketForm({
           buttonClassName={outcomeButtonClassName}
         />
       </div>
-
-      {walletInsight}
 
       {isLimitOrder ? (
         <div className="flex items-center justify-between gap-2">
