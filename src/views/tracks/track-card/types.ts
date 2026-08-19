@@ -46,6 +46,8 @@ export type TrackCardGameProps = {
   awayTeam: Team;
   probability: number;
   probabilityTeamCode: string;
+  homeProbability?: number;
+  awayProbability?: number;
   volume: number;
   powerRanking: TrackCardGamePowerRanking;
   signals: TrackCardSignalsSummary;

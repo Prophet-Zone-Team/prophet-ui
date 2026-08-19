@@ -87,7 +87,7 @@ export function MarketsFilterBar({
 
   return (
     <div
-      className="mb-3 flex min-h-[34px] flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-3"
+      className="mb-3 mt-2 flex min-h-[34px] flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-3"
       role="toolbar"
       aria-label={t("filtersAria")}
     >

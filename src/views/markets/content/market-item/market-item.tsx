@@ -14,6 +14,7 @@ import type {
 } from "@/views/markets/content/market-item/types";
 
 export function MarketItem({
+  matchId,
   kickoffLabel,
   isLive = false,
   homeTeam,
@@ -74,8 +75,11 @@ export function MarketItem({
   return (
     <article className={cn(marketItemCardClassName, className)}>
       <MarketItemHeader
+        matchId={matchId}
         kickoffLabel={kickoffLabel}
         isLive={isLive}
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
         expanded={expanded}
         totalCount={resolvedTotalCount}
         onToggleExpanded={handleToggleExpanded}

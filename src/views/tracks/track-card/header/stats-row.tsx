@@ -11,13 +11,6 @@ export type TeamStatsRowProps = {
   youBid?: TrackCardYouBid;
 };
 
-export type GameStatsRowProps = {
-  probability: number;
-  probabilityTeamCode: string;
-  volume: number;
-  youBid?: TrackCardYouBid;
-};
-
 export function TeamStatsRow({
   probability,
   change24h,
@@ -32,25 +25,6 @@ export function TeamStatsRow({
         amountLabel={youBid?.amountLabel ?? "-"}
         outcomeSide={youBid?.outcomeSide}
       />
-    </div>
-  );
-}
-
-export function GameStatsRow({
-  probability,
-  probabilityTeamCode,
-  volume,
-  youBid
-}: GameStatsRowProps) {
-  return (
-    <div className="grid w-full grid-cols-3 gap-2 md:flex md:w-[37%] md:shrink-0 md:items-end md:gap-[50px]">
-      <ProbabilityStat
-        probability={probability}
-        change24h={0}
-        teamCode={probabilityTeamCode}
-      />
-      <VolumeStat volumeLabel={`$${formatVolume(volume)}`} />
-      <YouBidStat amountLabel={youBid?.amountLabel ?? "-"} />
     </div>
   );
 }

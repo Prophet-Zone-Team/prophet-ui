@@ -11,6 +11,7 @@ export interface MarketItemTeam {
 }
 
 export interface MarketItemProps {
+  matchId?: string;
   kickoffLabel: string;
   isLive?: boolean;
   homeTeam: MarketItemTeam;

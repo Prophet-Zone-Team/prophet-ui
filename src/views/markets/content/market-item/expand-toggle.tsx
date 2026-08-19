@@ -16,7 +16,10 @@ export function ExpandToggle({
   return (
     <button
       type="button"
-      onClick={onToggle}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle();
+      }}
       className="inline-flex shrink-0 items-center gap-1.5 text-[14px] font-[400] leading-[18px] text-black transition-opacity hover:opacity-70"
       aria-expanded={expanded}
     >

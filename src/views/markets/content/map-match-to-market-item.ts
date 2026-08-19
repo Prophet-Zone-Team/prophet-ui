@@ -159,6 +159,7 @@ export function mapMatchToMarketItemProps(match: WorldCupMatch): MarketItemProps
   const totalOdds = mapTotalOdds(match);
 
   return {
+    matchId: match.id,
     kickoffLabel: formatScheduleKickoff(match.kickoffAt),
     isLive: match.status === "live",
     homeTeam: toMarketItemTeam(

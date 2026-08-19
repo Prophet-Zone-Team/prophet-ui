@@ -15,6 +15,7 @@ import { parseJsonArrayField } from "@/lib/analytics/map-news";
 import type {
   ProphetUserTrackItem,
   ProphetUserTrackLatestNews,
+  ProphetUserTrackMarket,
   ProphetUserTrackNewsStat
 } from "@/types/prophet-api";
 import type {
@@ -160,6 +161,55 @@ function resolveGameTrackProbability(item: ProphetUserTrackItem): {
     probability,
     teamCode: marketTeam?.code ?? firstMarket?.groupItemTitle?.trim() ?? ""
   };
+}
+
+function normalizeTeamKey(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function marketMatchesTeam(
+  market: ProphetUserTrackMarket,
+  team: Team
+): boolean {
+  const title = normalizeTeamKey(market.groupItemTitle ?? "");
+  const teamName = normalizeTeamKey(team.name);
+  const teamCode = normalizeTeamKey(team.code);
+  const slug = market.slug?.trim().toLowerCase() ?? "";
+
+  if (title && (title === teamName || title.startsWith(`${teamName} `))) {
+    return true;
+  }
+
+  return Boolean(teamCode && slug.endsWith(`-${teamCode}`));
+}
+
+function resolveMarketYesProbability(
+  market: ProphetUserTrackMarket | undefined
+): number | undefined {
+  if (!market?.outcomePrices) {
+    return undefined;
+  }
+
+  const prices = parseGammaArrayField(market.outcomePrices);
+  return priceToProbability(toGammaNumber(prices[0]));
+}
+
+function resolveGameSideProbability(
+  item: ProphetUserTrackItem,
+  team: Team,
+  fallbackProbability: number,
+  fallbackTeamCode: string
+): number {
+  const market = (item.markets ?? []).find((entry) =>
+    marketMatchesTeam(entry, team)
+  );
+  const fromMarket = resolveMarketYesProbability(market);
+
+  if (fromMarket !== undefined) {
+    return fromMarket;
+  }
+
+  return fallbackTeamCode === team.code ? fallbackProbability : 0;
 }
 
 function parseKickoffFromSlug(slug: string | undefined): string | undefined {
@@ -478,6 +528,18 @@ function mapProphetGameTrackToCardProps(
     awayTeam: teams.awayTeam,
     probability,
     probabilityTeamCode: teamCode,
+    homeProbability: resolveGameSideProbability(
+      item,
+      teams.homeTeam,
+      probability,
+      teamCode
+    ),
+    awayProbability: resolveGameSideProbability(
+      item,
+      teams.awayTeam,
+      probability,
+      teamCode
+    ),
     volume: parseNumericField(item.volume) ?? 0,
     powerRanking: mapTrackFifaRankingForGame(
       item,
