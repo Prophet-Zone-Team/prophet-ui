@@ -271,4 +271,61 @@ describe("prophet-game-detail-mapper", () => {
       "esportsMoneyline",
     );
   });
+
+  it("maps La Liga list-style markets into tradeable moneyline outcomes", () => {
+    const detail: ProphetPolyMarketGameDetail = {
+      slug: "lal-mad-mala-2026-08-19",
+      title: "Club Atlético de Madrid vs. Málaga CF",
+      teams: [
+        { name: "Club Atlético de Madrid", ordering: "home" },
+        { name: "Málaga CF", ordering: "away" },
+      ],
+      markets: [
+        {
+          slug: "lal-mad-mala-2026-08-19-mad",
+          groupItemTitle: "Club Atlético de Madrid",
+          outcomePrices: '["0.725", "0.275"]',
+          clobTokenIds:
+            '["65764753688143016983294497100440298277585437652399725714764558979814196484842", "19932614258411033232715178400246259576160922249181697150993830259893250431700"]',
+          conditionId:
+            "0x02c913fd89ec97f63af1a3b2ce975def0d13163635f451fb0c8226f867daaa00",
+          acceptingOrders: true,
+        },
+        {
+          slug: "lal-mad-mala-2026-08-19-draw",
+          groupItemTitle: "Draw (Club Atlético de Madrid vs. Málaga CF)",
+          outcomePrices: '["0.185", "0.815"]',
+          clobTokenIds:
+            '["105339803239391297429498994429284203707450508078120434797395677949082543763496", "102291628423297704435385023709202560745151596712800432175782101596218132910750"]',
+          conditionId:
+            "0x5eb6a7f6e789ca62b01c90d48028a84b27e517fae201d43996976c6230c7afc1",
+          acceptingOrders: true,
+        },
+        {
+          slug: "lal-mad-mala-2026-08-19-mala",
+          groupItemTitle: "Málaga CF",
+          outcomePrices: '["0.085", "0.915"]',
+          clobTokenIds:
+            '["78762622681385252990884332280791090511455719672840183196353283577791064936623", "61670342448653283095383367969896571837606164243787626624214243321592507799673"]',
+          conditionId:
+            "0x3e5ad7b79195e0fb562ec9c2e27bce01936bc38dd6244802666626ca835850b6",
+          acceptingOrders: true,
+        },
+      ],
+      events: [],
+    };
+
+    const match = mapProphetGameDetailToMatch(detail);
+    const moneylineGroup = match?.polymarket?.fixtureMarkets?.lines.find(
+      (group) => group.type === "moneyline",
+    );
+
+    assert.ok(match);
+    assert.equal(match?.polymarket?.moneyline.outcomes.length, 3);
+    assert.ok(
+      match?.polymarket?.moneyline.outcomes.every((outcome) => Boolean(outcome.tokenId)),
+    );
+    assert.equal(moneylineGroup?.outcomes.length, 3);
+    assert.ok(moneylineGroup?.outcomes.every((outcome) => Boolean(outcome.tokenId)));
+  });
 });
