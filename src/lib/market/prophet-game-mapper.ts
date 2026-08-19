@@ -68,6 +68,15 @@ export function mapProphetGameToMatch(
     lastUpdated,
     fixtureAbbrevs
   );
+  const moneylineOutcomes = buildFixtureMoneylineOutcomesFromProphetMarkets(
+    game.markets,
+    homeName,
+    awayName,
+    slug
+  );
+  const acceptingOrders =
+    Boolean(game.markets?.some((market) => market.acceptingOrders === true)) ||
+    game.active === 1;
 
   return {
     id: slug,
@@ -109,9 +118,11 @@ export function mapProphetGameToMatch(
       eventId,
       slug,
       volume,
+      closed: game.closed === 1,
       moneyline: {
-        acceptingOrders: game.active === 1,
-        outcomes: []
+        acceptingOrders,
+        conditionId: moneylineOutcomes[0]?.conditionId,
+        outcomes: moneylineOutcomes
       }
     }
   };
@@ -191,7 +202,7 @@ export function extractFixtureTeamAbbreviations(fixtureSlug: string): {
   awayAbbrev?: string;
 } {
   const match = fixtureSlug.match(
-    /^(?:fifwc|ucl)-([^-]+)-([^-]+)-\d{4}-\d{2}-\d{2}$/i
+    /^[a-z0-9]+-([^-]+)-([^-]+)-\d{4}-\d{2}-\d{2}$/i
   );
 
   if (!match) {

@@ -5,10 +5,7 @@ import {
   type GammaEventRecord,
   type GammaMarketRecord,
 } from "@/lib/market/polymarket-gamma";
-import {
-  buildFixtureMoneylineOutcomesFromProphetMarkets,
-  mapProphetGameToMatch,
-} from "@/lib/market/prophet-game-mapper";
+import { mapProphetGameToMatch } from "@/lib/market/prophet-game-mapper";
 import type {
   ProphetGameSiblingEventSlugs,
   ProphetPolyMarketEvent,
@@ -135,19 +132,14 @@ export function mapProphetGameDetailToMatch(
   const homeName = match.homeDisplayName ?? match.homeSeed ?? "Home";
   const awayName = match.awayDisplayName ?? match.awaySeed ?? "Away";
   const fixtureSlug = detail.slug?.trim() ?? match.id;
-  const tradingOutcomes = buildFixtureMoneylineOutcomesFromProphetMarkets(
-    detail.markets,
-    homeName,
-    awayName,
-    fixtureSlug,
-  );
+  const tradingOutcomes = match.polymarket?.moneyline.outcomes ?? [];
   const moneylineOutcomes =
     tradingOutcomes.length >= 3
       ? tradingOutcomes
       : buildDisplayMoneylineOutcomesFromMatch(match);
   const acceptingOrders =
-    detail.markets?.some((market) => market.acceptingOrders === true) ??
     match.polymarket?.moneyline.acceptingOrders ??
+    detail.markets?.some((market) => market.acceptingOrders === true) ??
     false;
   const closed = detail.closed === 1;
   const matchWithDisplayOutcomes =
