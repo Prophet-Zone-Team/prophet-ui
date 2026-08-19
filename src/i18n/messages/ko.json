@@ -1,5 +1,8 @@
 {
   "nav": {
+    "markets": "마켓",
+    "marketsNavigation": "마켓 내비게이션",
+    "marketsList": "마켓 목록",
     "matches": "경기",
     "analytics": "분석",
     "smartMoney": "스마트 머니",
@@ -10,6 +13,23 @@
     "worldCup": "WorldCup",
     "primaryNavigation": "기본 탐색",
     "bottomNavigation": "하단 탐색"
+  },
+  "marketsNav": {
+    "navigationAria": "마켓 카테고리",
+    "listAria": "마켓 목록",
+    "laLiga": "LaLiga",
+    "lol": "LOL"
+  },
+  "marketsFilter": {
+    "filtersAria": "마켓 필터",
+    "searchPlaceholder": "Prophet",
+    "searchAria": "마켓 검색",
+    "showEnded": "종료 표시",
+    "showEndedAria": "종료된 경기 표시",
+    "allTiers": "전체 티어",
+    "allTiersAria": "티어별 필터",
+    "allTournaments": "전체 토너먼트",
+    "allTournamentsAria": "토너먼트별 필터"
   },
   "wallet": {
     "portfolio": "포트폴리오",
@@ -1103,6 +1123,9 @@
     "unableToBindTelegram": "Telegram을 연결할 수 없습니다.",
     "probability": "확률",
     "volume": "거래량",
+    "volumeShort": "vol",
+    "kickoffToday": "오늘, {time}",
+    "kickoffTomorrow": "내일, {time}",
     "youBid": "내 입찰",
     "net": "순",
     "attention": "관심도",

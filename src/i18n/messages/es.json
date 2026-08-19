@@ -1,5 +1,8 @@
 {
   "nav": {
+    "markets": "Mercados",
+    "marketsNavigation": "Navegación de mercados",
+    "marketsList": "Lista de mercados",
     "matches": "Partidos",
     "analytics": "Análisis",
     "smartMoney": "Smart Money",
@@ -10,6 +13,23 @@
     "worldCup": "WorldCup",
     "primaryNavigation": "Navegación principal",
     "bottomNavigation": "Navegación inferior"
+  },
+  "marketsNav": {
+    "navigationAria": "Categorías de mercados",
+    "listAria": "Lista de mercados",
+    "laLiga": "LaLiga",
+    "lol": "LOL"
+  },
+  "marketsFilter": {
+    "filtersAria": "Filtros de mercados",
+    "searchPlaceholder": "Prophet",
+    "searchAria": "Buscar mercados",
+    "showEnded": "Mostrar finalizados",
+    "showEndedAria": "Mostrar partidos finalizados",
+    "allTiers": "Todos los niveles",
+    "allTiersAria": "Filtrar por nivel",
+    "allTournaments": "Todos los torneos",
+    "allTournamentsAria": "Filtrar por torneo"
   },
   "wallet": {
     "portfolio": "Portafolio",
@@ -1104,6 +1124,9 @@
     "unableToBindTelegram": "No se puede vincular Telegram.",
     "probability": "Probabilidad",
     "volume": "Volumen",
+    "volumeShort": "vol",
+    "kickoffToday": "Hoy, {time}",
+    "kickoffTomorrow": "Mañana, {time}",
     "youBid": "Tu oferta",
     "net": "Neto",
     "attention": "Atención",

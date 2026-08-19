@@ -131,8 +131,37 @@ describe("prophet-track-mapper", () => {
     assert.equal(card.awayTeam.code, "RSA");
     assert.equal(card.probability, 66.5);
     assert.equal(card.probabilityTeamCode, "MEX");
+    assert.equal(card.homeProbability, 66.5);
+    assert.equal(card.awayProbability, 0);
     assert.equal(card.volume, 32383.844867000007);
     assert.equal(card.match.kickoffAt, "2026-06-11T19:00:00Z");
+  });
+
+  it("maps home and away game track probabilities from matching markets", () => {
+    const item: ProphetUserTrackItem = {
+      category: "game",
+      slug: "fifwc-mex-rsa-2026-06-11",
+      team_name: "Mexico,South Africa",
+      markets: [
+        {
+          slug: "fifwc-mex-rsa-2026-06-11-mex",
+          groupItemTitle: "Mexico",
+          outcomePrices: '["0.53", "0.47"]'
+        },
+        {
+          slug: "fifwc-mex-rsa-2026-06-11-rsa",
+          groupItemTitle: "South Africa",
+          outcomePrices: '["0.47", "0.53"]'
+        }
+      ]
+    };
+
+    const card = mapProphetTrackToCardProps(item);
+
+    assert.ok(card);
+    assert.equal(card.variant, "game");
+    assert.equal(card.homeProbability, 53);
+    assert.equal(card.awayProbability, 47);
   });
 
   it("falls back to slug date when game track start_time is missing", () => {

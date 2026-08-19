@@ -7,13 +7,15 @@ export type TrackCardShellProps = {
   header: ReactNode;
   footer?: ReactNode;
   className?: string;
+  headerClassName?: string;
 };
 
 export function TrackCardShell({
   ariaLabel,
   header,
   footer,
-  className
+  className,
+  headerClassName
 }: TrackCardShellProps) {
   return (
     <article
@@ -23,7 +25,12 @@ export function TrackCardShell({
       )}
       aria-label={ariaLabel}
     >
-      <div className="flex min-h-0 flex-col gap-3 px-3 py-3 md:min-h-[78px] md:flex-row md:flex-nowrap md:items-center md:gap-6 md:px-4">
+      <div
+        className={cn(
+          "flex min-h-0 flex-col gap-3 px-3 py-3 md:min-h-[78px] md:flex-row md:flex-nowrap md:items-center md:gap-6 md:px-4",
+          headerClassName
+        )}
+      >
         {header}
       </div>
       {footer != null ? (

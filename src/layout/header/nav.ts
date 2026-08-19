@@ -1,16 +1,17 @@
 export const PRIMARY_NAV = [
-  { href: "/matches", labelKey: "matches" as const },
-  { href: "/analytics", labelKey: "analytics" as const },
+  { href: "/", labelKey: "markets" as const },
+  // { href: "/matches", labelKey: "matches" as const },
+  // { href: "/analytics", labelKey: "analytics" as const },
   { href: "/smart-money", labelKey: "smartMoney" as const },
   { href: "/portfolio", labelKey: "portfolio" as const }
 ] as const;
 
 export const MOBILE_BOTTOM_NAV = [
-  {
-    href: "/matches",
-    labelKey: "worldCup" as const,
-    icon: "worldCup" as const
-  },
+  // {
+  //   href: "/matches",
+  //   labelKey: "worldCup" as const,
+  //   icon: "worldCup" as const
+  // },
   {
     href: "/smart-money",
     labelKey: "smartMoney" as const,
@@ -25,6 +26,10 @@ export const MOBILE_BOTTOM_NAV = [
 ] as const;
 
 export function isNavActive(pathname: string, href: string): boolean {
+  if (href === "/") {
+    return pathname === "/";
+  }
+
   if (href === "/matches") {
     return pathname === "/matches";
   }

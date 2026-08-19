@@ -1,5 +1,8 @@
 {
   "nav": {
+    "markets": "マーケット",
+    "marketsNavigation": "マーケットナビ",
+    "marketsList": "マーケット一覧",
     "matches": "試合",
     "analytics": "分析",
     "smartMoney": "スマートマネー",
@@ -10,6 +13,23 @@
     "worldCup": "WorldCup",
     "primaryNavigation": "メインナビゲーション",
     "bottomNavigation": "ボトムナビゲーション"
+  },
+  "marketsNav": {
+    "navigationAria": "マーケットカテゴリ",
+    "listAria": "マーケット一覧",
+    "laLiga": "LaLiga",
+    "lol": "LOL"
+  },
+  "marketsFilter": {
+    "filtersAria": "マーケットフィルター",
+    "searchPlaceholder": "Prophet",
+    "searchAria": "マーケットを検索",
+    "showEnded": "終了を表示",
+    "showEndedAria": "終了した試合を表示",
+    "allTiers": "すべてのティア",
+    "allTiersAria": "ティアで絞り込み",
+    "allTournaments": "すべてのトーナメント",
+    "allTournamentsAria": "トーナメントで絞り込み"
   },
   "wallet": {
     "portfolio": "ポートフォリオ",
@@ -1103,6 +1123,9 @@
     "unableToBindTelegram": "Telegramを連携できません。",
     "probability": "確率",
     "volume": "取引量",
+    "volumeShort": "vol",
+    "kickoffToday": "今日、{time}",
+    "kickoffTomorrow": "明日、{time}",
     "youBid": "あなたの入札",
     "net": "ネット",
     "attention": "注目度",

@@ -12,7 +12,7 @@ export function TracksEmptyState() {
         {t("emptyMessage")}
       </p>
       <Link
-        href="/fifa"
+        href="/"
         className="flex h-[42px] w-full max-w-[307px] items-center justify-center gap-[6px] rounded-[8px] bg-[#18110F] dark:bg-prophet-primary no-underline"
         aria-label={t("startToExploreAria")}
       >

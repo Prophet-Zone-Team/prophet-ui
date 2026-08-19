@@ -1,5 +1,8 @@
 {
   "nav": {
+    "markets": "Markets",
+    "marketsNavigation": "Markets navigation",
+    "marketsList": "Markets list",
     "matches": "Matches",
     "analytics": "Analytics",
     "smartMoney": "Smart Money",
@@ -10,6 +13,23 @@
     "worldCup": "WorldCup",
     "primaryNavigation": "Primary navigation",
     "bottomNavigation": "Bottom navigation"
+  },
+  "marketsNav": {
+    "navigationAria": "Markets categories",
+    "listAria": "Markets list",
+    "laLiga": "LaLiga",
+    "lol": "LOL"
+  },
+  "marketsFilter": {
+    "filtersAria": "Markets filters",
+    "searchPlaceholder": "Prophet",
+    "searchAria": "Search markets",
+    "showEnded": "Show Ended",
+    "showEndedAria": "Show ended matches",
+    "allTiers": "All Tiers",
+    "allTiersAria": "Filter by tier",
+    "allTournaments": "All Tournaments",
+    "allTournamentsAria": "Filter by tournament"
   },
   "wallet": {
     "portfolio": "Portfolio",
@@ -1108,6 +1128,9 @@
     "unableToBindTelegram": "Unable to bind Telegram.",
     "probability": "Probability",
     "volume": "Volume",
+    "volumeShort": "vol",
+    "kickoffToday": "Today, {time}",
+    "kickoffTomorrow": "Tomorrow, {time}",
     "youBid": "You Bid",
     "net": "Net",
     "attention": "Attention",
